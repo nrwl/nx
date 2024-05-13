@@ -15,7 +15,7 @@
       "type": "string",
       "description": "A browser builder target to serve in the format of `project:target[:configuration]`.",
       "pattern": "^[^:\\s]+:[^:\\s]+(:[^\\s]+)?$",
-      "x-deprecated": "Use 'buildTarget' instead. It will be removed in Nx v19."
+      "x-deprecated": "Use 'buildTarget' instead. It will be removed in Nx v20."
     },
     "buildTarget": {
       "type": "string",
@@ -112,7 +112,24 @@
     "devRemotes": {
       "type": "array",
       "items": {
-        "type": "string"
+        "oneOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "remoteName": {
+                "type": "string"
+              },
+              "configuration": {
+                "type": "string"
+              }
+            },
+            "required": ["remoteName"],
+            "additionalProperties": false
+          }
+        ]
       },
       "description": "List of remote applications to run in development mode (i.e. using serve target).",
       "x-priority": "important"

@@ -43,14 +43,19 @@ export default function BlogPostDetail({ post }: BlogPostDetailProps) {
 
 export const getStaticProps: GetStaticProps = async (context) => {
   // optimize s.t. we don't read the FS multiple times; for now it's ok
-  const posts = await blogApi.getBlogPosts();
-  const post = posts.find((p) => p.slug === context.params?.slug);
-
-  return {
-    props: {
-      post,
-    },
-  };
+  // const posts = await blogApi.getBlogPosts();
+  // const post = posts.find((p) => p.slug === context.params?.slug);
+  try {
+    const post = await blogApi.getBlogPost(context.params?.slug as string);
+    return { props: { post } };
+  } catch (e) {
+    return {
+      notFound: true,
+      props: {
+        statusCode: 404,
+      },
+    };
+  }
 };
 
 export const getStaticPaths: GetStaticPaths = async () => {
@@ -60,5 +65,5 @@ export const getStaticPaths: GetStaticPaths = async () => {
     params: { slug: post.slug },
   }));
 
-  return { paths, fallback: false };
+  return { paths, fallback: 'blocking' };
 };

@@ -4,7 +4,6 @@ import { removeSync } from 'fs-extra';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { valid } from 'semver';
 import { dirSync } from 'tmp';
-import type { ChangelogRenderer } from '../../../release/changelog-renderer';
 import {
   NxReleaseChangelogConfiguration,
   readNxJson,
@@ -16,7 +15,6 @@ import {
   ProjectGraphProjectNode,
 } from '../../config/project-graph';
 import { FsTree, Tree } from '../../generators/tree';
-import { registerTsProject } from '../../plugins/js/utils/register';
 import {
   createFileMapUsingProjectGraph,
   createProjectFileMapUsingProjectGraph,
@@ -61,6 +59,7 @@ import { createOrUpdateGithubRelease, getGitHubRepoSlug } from './utils/github';
 import { launchEditor } from './utils/launch-editor';
 import { parseChangelogMarkdown } from './utils/markdown';
 import { printAndFlushChanges } from './utils/print-changes';
+import { resolveChangelogRenderer } from './utils/resolve-changelog-renderer';
 import { resolveNxJsonConfigErrorMessage } from './utils/resolve-nx-json-error-message';
 import {
   ReleaseVersion,
@@ -71,7 +70,6 @@ import {
   handleDuplicateGitTags,
   noDiffInChangelogMessage,
 } from './utils/shared';
-import { getRootTsConfigPath } from '../../plugins/js/utils/typescript';
 
 export interface NxReleaseChangelogResult {
   workspaceChangelog?: {
@@ -845,30 +843,6 @@ async function applyChangesAndExit(
   }
 
   return;
-}
-
-function resolveChangelogRenderer(
-  changelogRendererPath: string
-): ChangelogRenderer {
-  const interpolatedChangelogRendererPath = interpolate(changelogRendererPath, {
-    workspaceRoot,
-  });
-
-  // Try and load the provided (or default) changelog renderer
-  let changelogRenderer: ChangelogRenderer;
-  let cleanupTranspiler = () => {};
-  try {
-    const rootTsconfigPath = getRootTsConfigPath();
-    if (rootTsconfigPath) {
-      cleanupTranspiler = registerTsProject(rootTsconfigPath);
-    }
-    const r = require(interpolatedChangelogRendererPath);
-    changelogRenderer = r.default || r;
-  } catch {
-  } finally {
-    cleanupTranspiler();
-  }
-  return changelogRenderer;
 }
 
 async function generateChangelogForWorkspace(

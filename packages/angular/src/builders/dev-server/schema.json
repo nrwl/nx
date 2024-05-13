@@ -17,7 +17,7 @@
       "type": "string",
       "description": "A browser builder target to serve in the format of `project:target[:configuration]`. Ignored if `buildTarget` is set.",
       "pattern": "^[^:\\s]+:[^:\\s]+(:[^\\s]+)?$",
-      "x-deprecated": "Use 'buildTarget' instead. It will be removed in Nx v19."
+      "x-deprecated": "Use 'buildTarget' instead. It will be removed in Nx v20."
     },
     "buildTarget": {
       "type": "string",

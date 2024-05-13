@@ -9,6 +9,12 @@ import * as ts from 'typescript';
 import { mapFilePath } from './path-utils';
 
 /**
+ * Supports direct identifiers, and those nested within an object (of arbitrary depth)
+ * E.g. `...foo` and `...foo.bar.baz.qux` etc
+ */
+const SPREAD_ELEMENTS_REGEXP = /\s*\.\.\.[a-zA-Z0-9_]+(\.[a-zA-Z0-9_]+)*,?\n?/g;
+
+/**
  * Remove all overrides from the config file
  */
 export function removeOverridesFromLintConfig(content: string): string {
@@ -87,11 +93,13 @@ export function hasOverride(
       let objSource;
       if (ts.isObjectLiteralExpression(node)) {
         objSource = node.getFullText();
+        // strip any spread elements
+        objSource = objSource.replace(SPREAD_ELEMENTS_REGEXP, '');
       } else {
         const fullNodeText =
           node['expression'].arguments[0].body.expression.getFullText();
         // strip any spread elements
-        objSource = fullNodeText.replace(/\s*\.\.\.[a-zA-Z0-9_]+,?\n?/, '');
+        objSource = fullNodeText.replace(SPREAD_ELEMENTS_REGEXP, '');
       }
       const data = parseJson(
         objSource
@@ -106,8 +114,6 @@ export function hasOverride(
   }
   return false;
 }
-
-const STRIP_SPREAD_ELEMENTS = /\s*\.\.\.[a-zA-Z0-9_]+,?\n?/g;
 
 function parseTextToJson(text: string): any {
   return parseJson(
@@ -153,7 +159,7 @@ export function replaceOverride(
         const fullNodeText =
           node['expression'].arguments[0].body.expression.getFullText();
         // strip any spread elements
-        objSource = fullNodeText.replace(STRIP_SPREAD_ELEMENTS, '');
+        objSource = fullNodeText.replace(SPREAD_ELEMENTS_REGEXP, '');
         start =
           node['expression'].arguments[0].body.expression.properties.pos +
           (fullNodeText.length - objSource.length);
@@ -415,7 +421,7 @@ export function removePlugin(
             const plugins = parseTextToJson(
               pluginsElem.initializer
                 .getText()
-                .replace(STRIP_SPREAD_ELEMENTS, '')
+                .replace(SPREAD_ELEMENTS_REGEXP, '')
             );
 
             if (plugins.length > 1) {
@@ -762,7 +768,7 @@ export function generateFlatOverride(
   ) {
     if (override.parserOptions) {
       const { parserOptions, ...rest } = override;
-      return generateAst({ ...rest, languageSettings: { parserOptions } });
+      return generateAst({ ...rest, languageOptions: { parserOptions } });
     }
     return generateAst(override);
   }
@@ -773,9 +779,28 @@ export function generateFlatOverride(
   ];
   addTSObjectProperty(objectLiteralElements, 'files', files);
   addTSObjectProperty(objectLiteralElements, 'excludedFiles', excludedFiles);
-  addTSObjectProperty(objectLiteralElements, 'rules', rules);
+
+  // Apply rules (and spread ...config.rules into it as the first assignment)
+  addTSObjectProperty(objectLiteralElements, 'rules', rules || {});
+  const rulesObjectAST = objectLiteralElements.pop() as ts.PropertyAssignment;
+  const rulesObjectInitializer =
+    rulesObjectAST.initializer as ts.ObjectLiteralExpression;
+  const spreadAssignment = ts.factory.createSpreadAssignment(
+    ts.factory.createIdentifier('config.rules')
+  );
+  const updatedRulesProperties = [
+    spreadAssignment,
+    ...rulesObjectInitializer.properties,
+  ];
+  objectLiteralElements.push(
+    ts.factory.createPropertyAssignment(
+      'rules',
+      ts.factory.createObjectLiteralExpression(updatedRulesProperties, true)
+    )
+  );
+
   if (parserOptions) {
-    addTSObjectProperty(objectLiteralElements, 'languageSettings', {
+    addTSObjectProperty(objectLiteralElements, 'languageOptions', {
       parserOptions,
     });
   }

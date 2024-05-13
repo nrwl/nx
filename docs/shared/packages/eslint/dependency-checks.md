@@ -61,12 +61,13 @@ Sometimes we intentionally want to add or remove a dependency from our `package.
     "error",
     {
       "buildTargets": ["build", "custom-build"], // add non standard build target names
-      "ignoredDependencies": ["lodash"], // these libs will be omitted from checks
-      "includeTransitiveDependencies": true, // collect dependencies transitively from children
-      "ignoredFiles": ["webpack.config.js", "eslint.config.js"], // list of files that should be skipped for check
       "checkMissingDependencies": true, // toggle to disable
       "checkObsoleteDependencies": true, // toggle to disable
-      "checkVersionMismatches": true // toggle to disable
+      "checkVersionMismatches": true, // toggle to disable
+      "ignoredDependencies": ["lodash"], // these libs will be omitted from checks
+      "ignoredFiles": ["webpack.config.js", "eslint.config.js"], // list of files that should be skipped for check
+      "includeTransitiveDependencies": true, // collect dependencies transitively from children
+      "useLocalPathsForWorkspaceDependencies": true // toggle to disable
     }
   ]
 }
@@ -74,12 +75,13 @@ Sometimes we intentionally want to add or remove a dependency from our `package.
 
 ## Options
 
-| Property                      | Type            | Default     | Description                                                                                                                               |
-| ----------------------------- | --------------- | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| buildTargets                  | _Array<string>_ | _["build"]_ | List of build target names                                                                                                                |
-| ignoredDependencies           | _Array<string>_ | _[]_        | List of dependencies to ignore for checks                                                                                                 |
-| includeTransitiveDependencies | _boolean_       | _false_     | Enable to collect dependencies of children projects                                                                                       |
-| ignoredFiles                  | _Array<string>_ | N/A         | List of files to ignore when collecting dependencies. The default value will be set based on the selected executor during the generation. |
-| checkMissingDependencies      | _boolean_       | _true_      | Disable to skip checking for missing dependencies                                                                                         |
-| checkObsoleteDependencies     | _boolean_       | _true_      | Disable to skip checking for unused dependencies                                                                                          |
-| checkVersionMismatches        | _boolean_       | _true_      | Disable to skip checking if version specifier matches installed version                                                                   |
+| Property                              | Type            | Default     | Description                                                                                                                               |
+| ------------------------------------- | --------------- | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| buildTargets                          | _Array<string>_ | _["build"]_ | List of build target names                                                                                                                |
+| checkMissingDependencies              | _boolean_       | _true_      | Disable to skip checking for missing dependencies                                                                                         |
+| checkObsoleteDependencies             | _boolean_       | _true_      | Disable to skip checking for unused dependencies                                                                                          |
+| checkVersionMismatches                | _boolean_       | _true_      | Disable to skip checking if version specifier matches installed version                                                                   |
+| ignoredDependencies                   | _Array<string>_ | _[]_        | List of dependencies to ignore for checks                                                                                                 |
+| ignoredFiles                          | _Array<string>_ | N/A         | List of files to ignore when collecting dependencies. The default value will be set based on the selected executor during the generation. |
+| includeTransitiveDependencies         | _boolean_       | _false_     | Enable to collect dependencies of children projects                                                                                       |
+| useLocalPathsForWorkspaceDependencies | _boolean_       | _false_     | Set workspace dependencies as relative file:// paths. Useful for monorepos that link via file:// in package.json files.                   |

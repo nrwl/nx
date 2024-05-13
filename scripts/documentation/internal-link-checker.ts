@@ -1,8 +1,7 @@
 import { workspaceRoot } from '@nx/devkit';
 import { XMLParser } from 'fast-xml-parser';
-import { existsSync, readJSONSync } from 'fs-extra';
 import * as glob from 'glob';
-import { readFileSync } from 'node:fs';
+import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import * as parseLinks from 'parse-markdown-links';
 
@@ -52,6 +51,18 @@ function extractAllLinks(basePath: string): Record<string, string[]> {
     return acc;
   }, {});
 }
+function extractImageLinks(basePath: string): Record<string, string[]> {
+  return glob.sync(`${basePath}/**/*.md`).reduce((acc, path) => {
+    const fileContents = readFileContents(path);
+    const imageLinks = Array.from(
+      fileContents.matchAll(/!\[.*?\]\((.*?)\)/g)
+    ).map((matches) => decodeURI(matches[1]));
+    if (imageLinks.length) {
+      acc[path.replace(basePath, '')] = imageLinks;
+    }
+    return acc;
+  }, {});
+}
 function readSiteMapIndex(directoryPath: string, filename: string): string[] {
   const parser = new XMLParser();
   const sitemapIndex: {
@@ -93,6 +104,15 @@ const errors: Array<{ file: string; link: string }> = [];
 for (let file in documentLinks) {
   for (let link of documentLinks[file]) {
     if (!sitemapLinks.includes(['https://nx.dev', link].join(''))) {
+      errors.push({ file, link });
+    }
+  }
+}
+
+const imageLinks = extractImageLinks(join(workspaceRoot, 'docs'));
+for (let file in imageLinks) {
+  for (let link of imageLinks[file]) {
+    if (!existsSync(join(workspaceRoot, 'docs', link))) {
       errors.push({ file, link });
     }
   }

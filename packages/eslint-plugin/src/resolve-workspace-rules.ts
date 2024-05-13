@@ -31,6 +31,7 @@ export const workspaceRules = ((): ESLintRules => {
     }
     return namespacedRules;
   } catch (err) {
+    console.error(err);
     return {};
   } finally {
     if (registrationCleanup) {

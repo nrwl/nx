@@ -210,6 +210,14 @@ export interface NxAppWebpackPluginOptions {
    * Watch for file changes.
    */
   watch?: boolean;
+  /**
+   * Set a public path for assets resources with absolute paths.
+   */
+  publicPath?: string;
+  /**
+   * Whether to rebase absolute path for assets in postcss cli resources.
+   */
+  rebaseRootRelative?: boolean;
 }
 
 export interface NormalizedNxAppWebpackPluginOptions

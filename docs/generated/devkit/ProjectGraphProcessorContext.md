@@ -4,7 +4,7 @@ Additional information to be used to process a project graph
 
 **`Deprecated`**
 
-The ProjectGraphProcessor is deprecated. This will be removed in Nx 19.
+The ProjectGraphProcessor is deprecated. This will be removed in Nx 20.
 
 ## Table of contents
 

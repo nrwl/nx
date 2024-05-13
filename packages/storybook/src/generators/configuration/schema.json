@@ -28,12 +28,12 @@
     "configureCypress": {
       "type": "boolean",
       "description": "Run the cypress-configure generator.",
-      "x-deprecated": "Use interactionTests instead. This option will be removed in v19."
+      "x-deprecated": "Use interactionTests instead. This option will be removed in v20."
     },
     "cypressDirectory": {
       "type": "string",
       "description": "A directory where the Cypress project will be placed. Added at root by default.",
-      "x-deprecated": "Use interactionTests instead. This option will be removed in v19."
+      "x-deprecated": "Use interactionTests instead. This option will be removed in v20."
     },
     "linter": {
       "description": "The tool to use for running lint checks.",

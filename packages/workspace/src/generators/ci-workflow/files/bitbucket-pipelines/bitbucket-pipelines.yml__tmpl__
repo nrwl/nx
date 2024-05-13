@@ -22,7 +22,8 @@ pipelines:
             - <%= packageManagerInstall %>
 
             - <%= packageManagerPrefix %> nx-cloud record -- nx format:check
-            - <%= packageManagerPrefix %> nx affected -t lint test build<% if(hasE2E){ %> e2e-ci<% } %> --base=origin/<%= mainBranch %>
+            - <%= packageManagerPrefix %> nx affected --base=origin/<%= mainBranch %> -t lint test build<% if(hasE2E){ %>
+            - <%= packageManagerPrefix %> nx affected --base=origin/<%= mainBranch %> --parallel 1 -t e2e-ci<% } %>
 
   branches:
     main:

@@ -20,9 +20,8 @@
     "prepare": "is-ci || husky install",
     "echo": "echo 123458",
     "preinstall": "node ./scripts/preinstall.js",
-    "test": "nx test",
-    "e2e": "nx e2e",
-    "build-project": "nx build"
+    "test": "nx run-many -t test",
+    "e2e": "nx run-many -t e2e --projects ./e2e/*"
   },
   "devDependencies": {
     "@actions/core": "^1.10.0",

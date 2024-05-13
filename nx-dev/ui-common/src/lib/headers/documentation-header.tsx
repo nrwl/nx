@@ -20,6 +20,7 @@ import {
 } from './menu-items';
 import { SectionsMenu } from './sections-menu';
 import { NxCloudIcon } from '../nx-cloud-icon';
+import { AnnouncementBanner } from '../announcement-banner';
 
 function Menu({ tabs }: { tabs: any[] }): JSX.Element {
   return (
@@ -179,7 +180,7 @@ export function DocumentationHeader({
 
   return (
     <div className="border-b border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800/60 print:hidden">
-      <div className="mx-auto flex w-full items-center gap-6 lg:py-4 lg:px-8">
+      <div className="mx-auto flex w-full items-center gap-6 lg:px-8 lg:py-4">
         {/*MOBILE MENU*/}
         <div className="flex w-full items-center lg:hidden">
           <button
@@ -207,14 +208,14 @@ export function DocumentationHeader({
         <div className="flex items-center">
           <Link
             href="/"
-            className="flex flex-grow items-center px-4 text-slate-900 dark:text-white lg:px-0"
+            className="flex flex-grow items-center px-4 text-slate-900 lg:px-0 dark:text-white"
           >
             <span className="sr-only">Nx</span>
             <NxIcon aria-hidden="true" className="h-8 w-8" />
           </Link>
           <Link
             href="/getting-started/intro"
-            className="ml-2 hidden items-center px-4 text-slate-900 dark:text-white lg:flex lg:px-0"
+            className="ml-2 hidden items-center px-4 text-slate-900 lg:flex lg:px-0 dark:text-white"
           >
             <span className="text-xl font-bold uppercase tracking-wide">
               Docs
@@ -324,14 +325,14 @@ export function DocumentationHeader({
             <Link
               href="/getting-started/intro"
               title="Documentation"
-              className="hidden px-3 py-2 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500 md:inline-flex"
+              className="hidden px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-slate-200 dark:hover:text-sky-500"
             >
               Documentation
             </Link>
             <Link
               href="/blog"
               title="Blog"
-              className="hidden px-3 py-2 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500 md:inline-flex"
+              className="hidden px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-slate-200 dark:hover:text-sky-500"
             >
               Blog
             </Link>
@@ -339,7 +340,7 @@ export function DocumentationHeader({
               href="https://nx.app/pricing"
               title="Nx Cloud"
               target="_blank"
-              className="hidden gap-2 px-3 py-2 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500 md:inline-flex"
+              className="hidden gap-2 px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-slate-200 dark:hover:text-sky-500"
             >
               CI Pricing
               <ArrowUpRightIcon className="h-2 w-2 align-super" />
@@ -387,16 +388,17 @@ export function DocumentationHeader({
           </nav>
         </div>
         <div className="hidden flex-grow lg:flex">{/* SPACER */}</div>
-        {/*<div className="hidden w-full xl:flex">*/}
-        {/*  <AnnouncementBanner />*/}
-        {/*</div>*/}
+        <div className="hidden w-full lg:flex xl:hidden">
+          <div className="flex-grow"></div>
+          <AnnouncementBanner />
+        </div>
         <div className="hidden flex-shrink-0 lg:flex">
           <nav
             role="menu"
             className="items-justified hidden justify-center space-x-4 lg:flex"
           >
             <Link
-              className="hidden cursor-pointer px-3 py-2 text-sm font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500 md:inline-flex"
+              className="hidden cursor-pointer px-3 py-2 text-sm font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-slate-200 dark:hover:text-sky-500"
               title="Contact Us"
               href="/contact"
             >
@@ -417,7 +419,14 @@ export function DocumentationHeader({
       <div className="mx-auto hidden w-full items-center px-4 sm:space-x-10 sm:px-6 lg:flex lg:px-8">
         <Menu tabs={sections} />
         <div className="flex-grow"></div>
-        <nav aria-labelledby="community-links" className="space-x-2">
+        <div className="hidden w-full xl:flex">
+          <div className="flex-grow"></div>
+          <AnnouncementBanner />
+        </div>
+        <nav
+          aria-labelledby="community-links"
+          className="block min-w-36 space-x-2 text-right"
+        >
           {communityLinks.map((item) => (
             <a
               key={item.name}
