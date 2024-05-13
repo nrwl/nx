@@ -145,10 +145,10 @@ const showProjectCommand: CommandModule<NxShowArgs, ShowProjectOptions> = {
         alias: 'p',
         description: 'Which project should be viewed?',
       })
-      .default('json', true)
       .option('web', {
         type: 'boolean',
-        description: 'Show project details in the browser',
+        description:
+          'Show project details in the browser. (default when interactive)',
       })
       .option('open', {
         type: 'boolean',
@@ -157,8 +157,15 @@ const showProjectCommand: CommandModule<NxShowArgs, ShowProjectOptions> = {
         implies: 'web',
       })
       .check((argv) => {
-        if (argv.web) {
-          argv.json = false;
+        // If TTY is enabled, default to web. Otherwise, default to JSON.
+        const alreadySpecified =
+          argv.web !== undefined || argv.json !== undefined;
+        if (!alreadySpecified) {
+          if (process.stdout.isTTY) {
+            argv.web = true;
+          } else {
+            argv.json = true;
+          }
         }
         return true;
       })
