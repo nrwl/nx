@@ -22,6 +22,11 @@ describe('Node Applications + webpack', () => {
     });
   });
 
+  afterEach(() => {
+    const projectGraphJson = readFile('.nx/cache/project-graph.json');
+    console.log('projectGraphJson', projectGraphJson);
+  });
+
   afterAll(() => cleanupProject());
 
   function addLibImport(appName: string, libName: string, importPath?: string) {

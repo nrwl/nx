@@ -28,6 +28,7 @@ export async function initTasksRunner(nxArgs: NxArgs) {
       // TODO: This polyfills the outputs if someone doesn't pass a task with outputs. Remove this in Nx 20
       opts.tasks.forEach((t) => {
         if (!t.outputs) {
+          console.log('[DEBUG][INIT TASK RUNNER] getOutputs', t.target);
           t.outputs = getOutputs(projectGraph.nodes, t.target, t.overrides);
         }
       });

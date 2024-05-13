@@ -3,6 +3,7 @@ import {
   killPorts,
   newProject,
   promisifiedTreeKill,
+  readFile,
   runCLI,
   runCommandUntil,
   uniq,
@@ -12,7 +13,10 @@ describe('file-server', () => {
   beforeAll(() => {
     newProject({ name: uniq('fileserver') });
   });
-
+  afterEach(() => {
+    const projectGraphJson = readFile('.nx/cache/project-graph.json');
+    console.log('projectGraphJson', projectGraphJson);
+  });
   afterAll(() => cleanupProject());
 
   it('should setup and serve static files from app', async () => {

@@ -148,6 +148,7 @@ export async function runCommand(
       );
       const projectNames = projectsToRun.map((t) => t.name);
 
+      console.log('[DEBUG][NX][RUN COMMANDS] runCommand');
       const taskGraph = createTaskGraphAndValidateCycles(
         projectGraph,
         defaultDependencyConfigs,

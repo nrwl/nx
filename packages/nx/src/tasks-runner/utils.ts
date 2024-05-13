@@ -88,6 +88,7 @@ export function getOutputs(
   target: Task['target'],
   overrides: Task['overrides']
 ) {
+  console.log('[DEBUG][UTILS] getOutputs');
   return getOutputsForTargetAndConfiguration(
     target,
     overrides,
@@ -208,6 +209,13 @@ export function getOutputsForTargetAndConfiguration(
     ...targetConfiguration?.configurations?.[configuration],
     ...overrides,
   };
+
+  console.log(
+    '[DEBUG][Utils][getOutputsForTargetAndConfiguration] validateOutputs',
+    taskTargetOrTask,
+    overridesOrNode,
+    targetConfiguration.outputs
+  );
 
   if (targetConfiguration?.outputs) {
     validateOutputs(targetConfiguration.outputs);

@@ -269,6 +269,9 @@ export class NodeTaskHasherImpl implements TaskHasherImpl {
     const partialHashes: PartialHash[] = [];
     for (const d of taskGraph.dependencies[task.id]) {
       const childTask = taskGraph.tasks[d];
+      console.log(
+        '[DEBUG][NodeTaskHasher] getOutputsForTargetAndConfiguration'
+      );
       const outputs = getOutputsForTargetAndConfiguration(
         childTask.target,
         childTask.overrides,

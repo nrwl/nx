@@ -9,6 +9,7 @@ import {
   updateFile,
   runCommandAsync,
   listFiles,
+  readFile,
 } from '@nx/e2e/utils';
 
 describe('Remix E2E Tests', () => {
@@ -17,6 +18,11 @@ describe('Remix E2E Tests', () => {
 
     beforeAll(() => {
       proj = newProject({ packages: ['@nx/remix', '@nx/react'] });
+    });
+
+    afterEach(() => {
+      const projectGraphJson = readFile('.nx/cache/project-graph.json');
+      console.log('projectGraphJson', projectGraphJson);
     });
 
     afterAll(() => {

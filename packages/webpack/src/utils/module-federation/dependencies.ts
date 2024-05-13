@@ -74,6 +74,7 @@ function getLibraryImportPath(
       process.env.NX_BUILD_TARGET,
       projectGraph
     );
+    console.log('[DEBUG][Webpack][Module Federation] getLibraryImportPath');
     sourceRoots = getOutputsForTargetAndConfiguration(
       buildTarget,
       {},

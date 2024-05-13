@@ -6,6 +6,7 @@ import {
   isNotWindows,
   killPorts,
   newProject,
+  readFile,
   runCLI,
   runCLIAsync,
   runE2ETests,
@@ -14,6 +15,10 @@ import {
 
 describe('Web Components Applications with bundler set as vite', () => {
   beforeEach(() => newProject());
+  afterEach(() => {
+    const projectGraphJson = readFile('.nx/cache/project-graph.json');
+    console.log('projectGraphJson', projectGraphJson);
+  });
   afterEach(() => cleanupProject());
 
   it('should be able to generate a web app', async () => {

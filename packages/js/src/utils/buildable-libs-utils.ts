@@ -562,6 +562,9 @@ export function updateBuildableProjectPackageJsonDependencies(
   dependencies: DependentBuildableProjectNode[],
   typeOfDependency: 'dependencies' | 'peerDependencies' = 'dependencies'
 ) {
+  console.log(
+    '[DEBUG][JS][BUILDABLE LIBS UTILS] updateBuildableProjectPackageJsonDependencies'
+  );
   const outputs = getOutputsForTargetAndConfiguration(
     {
       project: projectName,

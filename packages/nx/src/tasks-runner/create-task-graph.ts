@@ -335,6 +335,7 @@ export class ProcessTasks {
       project.data
     );
 
+    console.log('[DEBUG][CREATE TASK GRAPH] createTask', qualifiedTarget);
     return {
       id,
       target: qualifiedTarget,

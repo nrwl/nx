@@ -62,6 +62,11 @@ describe('Node Applications', () => {
     });
   });
 
+  afterEach(() => {
+    const projectGraphJson = readFile('.nx/cache/project-graph.json');
+    console.log('projectGraphJson', projectGraphJson);
+  });
+
   afterAll(() => {
     process.env.PORT = originalEnvPort;
     cleanupProject();

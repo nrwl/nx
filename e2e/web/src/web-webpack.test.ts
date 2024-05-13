@@ -2,6 +2,7 @@ import {
   cleanupProject,
   killProcessAndPorts,
   newProject,
+  readFile,
   runCLI,
   runCommandUntil,
   uniq,
@@ -9,6 +10,10 @@ import {
 
 describe('Web Components Applications with bundler set as webpack', () => {
   beforeEach(() => newProject());
+  afterEach(() => {
+    const projectGraphJson = readFile('.nx/cache/project-graph.json');
+    console.log('projectGraphJson', projectGraphJson);
+  });
   afterEach(() => cleanupProject());
 
   it('should support https for dev-server (legacy)', async () => {

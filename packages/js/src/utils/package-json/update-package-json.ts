@@ -173,6 +173,7 @@ function addMissingDependencies(
         !packageJson.devDependencies?.[packageName] &&
         !packageJson.peerDependencies?.[packageName]
       ) {
+        console.log('[DEBUG][JS][PACKAGE JSON] addMissingDependencies');
         const outputs = getOutputsForTargetAndConfiguration(
           {
             project: projectName,

@@ -20,6 +20,10 @@ import { copyFileSync } from 'fs';
 
 describe('Web Components Applications', () => {
   beforeAll(() => newProject());
+  afterEach(() => {
+    const projectGraphJson = readFile('.nx/cache/project-graph.json');
+    console.log('projectGraphJson', projectGraphJson);
+  });
   afterAll(() => cleanupProject());
 
   it('should be able to generate a web app', async () => {
