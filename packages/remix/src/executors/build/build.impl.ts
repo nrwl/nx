@@ -12,9 +12,17 @@ import { copySync, mkdir, writeFileSync } from 'fs-extra';
 import { type PackageJson } from 'nx/src/utils/package-json';
 import { join } from 'path';
 import { type RemixBuildSchema } from './schema';
+import { getBunlderType } from '../../utils/vite-config';
 
-function buildRemixBuildArgs(options: RemixBuildSchema) {
-  const args = ['build'];
+async function buildRemixBuildArgs(
+  options: RemixBuildSchema,
+  context: ExecutorContext
+) {
+  const projectRoot = context.projectGraph.nodes[context.projectName].data.root;
+  const bundlerType = await getBunlderType(projectRoot);
+  const buildTargetName = bundlerType === 'vite' ? 'vite:build' : 'build';
+
+  const args = [buildTargetName];
 
   if (options.sourcemap) {
     args.push(`--sourcemap`);
@@ -28,9 +36,9 @@ async function runBuild(
   context: ExecutorContext
 ): Promise<void> {
   const projectRoot = context.projectGraph.nodes[context.projectName].data.root;
-  return new Promise<void>((resolve, reject) => {
+  return new Promise<void>(async (resolve, reject) => {
     const remixBin = require.resolve('@remix-run/dev/dist/cli');
-    const args = buildRemixBuildArgs(options);
+    const args = await buildRemixBuildArgs(options, context);
     const p = fork(remixBin, args, {
       cwd: join(context.root, projectRoot),
       stdio: 'inherit',
@@ -75,7 +83,7 @@ export default async function buildExecutor(
       packageJson.scripts['start'] = 'remix-serve ./build/index.js';
     }
 
-    updatePackageJson(packageJson, context);
+    await updatePackageJson(packageJson, context);
     writeJsonFile(`${options.outputPath}/package.json`, packageJson);
   } else {
     packageJson = readJsonFile(join(projectRoot, 'package.json'));
@@ -111,7 +119,11 @@ export default async function buildExecutor(
   return { success: true };
 }
 
-function updatePackageJson(packageJson: PackageJson, context: ExecutorContext) {
+async function updatePackageJson(
+  packageJson: PackageJson,
+  context: ExecutorContext
+) {
+  const projectRoot = context.projectGraph.nodes[context.projectName].data.root;
   if (!packageJson.scripts) {
     packageJson.scripts = {};
   }
@@ -122,16 +134,23 @@ function updatePackageJson(packageJson: PackageJson, context: ExecutorContext) {
   packageJson.dependencies ??= {};
 
   // These are always required for a production Remix app to run.
-  const requiredPackages = [
-    'react',
-    'react-dom',
-    'isbot',
-    '@remix-run/css-bundle',
-    '@remix-run/node',
-    '@remix-run/react',
-    '@remix-run/serve',
-    '@remix-run/dev',
-  ];
+  const requiredPackages = ['react', 'react-dom', 'isbot', '@remix-run/node'];
+
+  const bundlerType = await getBunlderType(projectRoot);
+
+  if (bundlerType === 'classic') {
+    // These packages seem to be required for the older Remix version
+    // However, newer Vite version does not need them
+    requiredPackages.push(
+      ...[
+        '@remix-run/css-bundle',
+        '@remix-run/react',
+        '@remix-run/serve',
+        '@remix-run/dev',
+      ]
+    );
+  }
+
   for (const pkg of requiredPackages) {
     const externalNode = context.projectGraph.externalNodes[`npm:${pkg}`];
     if (externalNode) {

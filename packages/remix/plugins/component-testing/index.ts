@@ -1,8 +1,7 @@
 import { nxBaseCypressPreset } from '@nx/cypress/plugins/cypress-preset';
 import { joinPathFragments, workspaceRoot } from '@nx/devkit';
-
-import { existsSync } from 'fs';
-import { dirname, join } from 'path';
+import { findViteConfig } from '../../src/utils/vite-config';
+import { dirname } from 'path';
 
 type ViteDevServer = {
   framework: 'react';
@@ -72,14 +71,4 @@ export function nxComponentTestingPreset(pathToConfig: string): {
       },
     },
   };
-}
-
-function findViteConfig(projectRootFullPath: string): string {
-  const allowsExt = ['js', 'mjs', 'ts', 'cjs', 'mts', 'cts'];
-
-  for (const ext of allowsExt) {
-    if (existsSync(join(projectRootFullPath, `vite.config.${ext}`))) {
-      return join(projectRootFullPath, `vite.config.${ext}`);
-    }
-  }
 }

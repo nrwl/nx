@@ -19,6 +19,13 @@
       "description": "Generate JavaScript files rather than TypeScript files.",
       "default": false
     },
+    "bundler": {
+      "type": "string",
+      "enum": ["classic", "vite"],
+      "default": "vite",
+      "description": "Bundler option (newer Remix versions use vite by default)",
+      "x-prompt": "What type of bundler should be used?"
+    },
     "directory": {
       "type": "string",
       "description": "A directory where the app is placed.",

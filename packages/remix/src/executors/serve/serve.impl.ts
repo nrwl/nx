@@ -4,6 +4,7 @@ import { waitForPortOpen } from '@nx/web/src/utils/wait-for-port-open';
 import { fork } from 'node:child_process';
 import { join } from 'node:path';
 import { type RemixServeSchema } from './schema';
+import { getBunlderType } from '../../utils/vite-config';
 
 function normalizeOptions(schema: RemixServeSchema) {
   return {
@@ -17,6 +18,7 @@ function normalizeOptions(schema: RemixServeSchema) {
 function buildRemixDevArgs(options: RemixServeSchema) {
   const args = [];
 
+  // TODO this might be deprecated
   if (options.command) {
     args.push(`--command=${options.command}`);
   }
@@ -59,9 +61,12 @@ export default async function* serveExecutor(
     : 'development';
   process.env.PORT = `${options.port}`;
 
+  const bundlerType = await getBunlderType(projectRoot);
+  const serveTargetName = bundlerType === 'vite' ? 'vite:dev' : 'dev';
+
   yield* createAsyncIterable<{ success: boolean; baseUrl: string }>(
     async ({ done, next, error }) => {
-      const server = fork(remixBin, ['dev', ...args], {
+      const server = fork(remixBin, [serveTargetName, ...args], {
         cwd: join(workspaceRoot, projectRoot),
         stdio: 'inherit',
       });

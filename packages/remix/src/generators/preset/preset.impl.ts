@@ -20,6 +20,7 @@ export default async function (tree: Tree, _options: RemixGeneratorSchema) {
 
   const appGenTask = await applicationGenerator(tree, {
     name: options.appName,
+    bundler: options.bundler ?? 'vite',
     tags: options.tags,
     skipFormat: true,
     rootProject: true,

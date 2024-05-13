@@ -23,7 +23,7 @@ describe('route', () => {
   });
 
   it('should add css file to shared styles directory', async () => {
-    await applicationGenerator(tree, { name: 'demo' });
+    await applicationGenerator(tree, { name: 'demo', bundler: 'classic' });
     await routeGenerator(tree, {
       project: 'demo',
       path: 'path/to/example',
@@ -44,7 +44,7 @@ describe('route', () => {
   });
 
   it('should handle routes that have a param', async () => {
-    await applicationGenerator(tree, { name: 'demo' });
+    await applicationGenerator(tree, { name: 'demo', bundler: 'classic' });
     await routeGenerator(tree, {
       project: 'demo',
       path: '/example/$withParam.tsx',
@@ -65,7 +65,7 @@ describe('route', () => {
   });
 
   it('should place styles correctly when app dir is changed', async () => {
-    await applicationGenerator(tree, { name: 'demo' });
+    await applicationGenerator(tree, { name: 'demo', bundler: 'classic' });
 
     tree.write(
       'apps/demo/remix.config.js',
@@ -103,7 +103,7 @@ describe('route', () => {
   });
 
   it('should import stylesheet with a relative path in an integrated workspace', async () => {
-    await applicationGenerator(tree, { name: 'demo' });
+    await applicationGenerator(tree, { name: 'demo', bundler: 'classic' });
     await routeGenerator(tree, {
       project: 'demo',
       path: '/example/$withParam.tsx',
@@ -152,7 +152,7 @@ describe('route', () => {
   });
 
   it('--nameAndDirectoryFormat=as-provided', async () => {
-    await applicationGenerator(tree, { name: 'demo' });
+    await applicationGenerator(tree, { name: 'demo', bundler: 'classic' });
     await routeGenerator(tree, {
       path: 'apps/demo/app/routes/example/$withParam.tsx',
       nameAndDirectoryFormat: 'as-provided',

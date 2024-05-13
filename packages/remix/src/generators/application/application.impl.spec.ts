@@ -7,7 +7,7 @@ import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import applicationGenerator from './application.impl';
 import { join } from 'path';
 
-describe('Remix Application', () => {
+describe('Classic Remix Application', () => {
   describe('Standalone Project Repo', () => {
     it('should create the application correctly', async () => {
       // ARRANGE
@@ -16,6 +16,7 @@ describe('Remix Application', () => {
       // ACT
       await applicationGenerator(tree, {
         name: 'test',
+        bundler: 'classic',
         rootProject: true,
         addPlugin: true,
       });
@@ -41,6 +42,7 @@ describe('Remix Application', () => {
         // ACT
         await applicationGenerator(tree, {
           name: 'test',
+          bundler: 'classic',
           js: true,
           rootProject: true,
           addPlugin: true,
@@ -63,6 +65,7 @@ describe('Remix Application', () => {
         // ACT
         await applicationGenerator(tree, {
           name: 'test',
+          bundler: 'classic',
           unitTestRunner: 'vitest',
           rootProject: true,
           addPlugin: true,
@@ -87,6 +90,7 @@ describe('Remix Application', () => {
         // ACT
         await applicationGenerator(tree, {
           name: 'test',
+          bundler: 'classic',
           unitTestRunner: 'jest',
           rootProject: true,
           addPlugin: true,
@@ -113,6 +117,7 @@ describe('Remix Application', () => {
         // ACT
         await applicationGenerator(tree, {
           name: 'test',
+          bundler: 'classic',
           e2eTestRunner: 'cypress',
           rootProject: true,
           addPlugin: true,
@@ -132,6 +137,7 @@ describe('Remix Application', () => {
       // ACT
       await applicationGenerator(tree, {
         name: 'test',
+        bundler: 'classic',
         e2eTestRunner: 'playwright',
         rootProject: true,
         addPlugin: true,
@@ -157,6 +163,7 @@ describe('Remix Application', () => {
         // ACT
         await applicationGenerator(tree, {
           name: 'test',
+          bundler: 'classic',
           projectNameAndRootFormat,
           addPlugin: true,
         });
@@ -181,6 +188,7 @@ describe('Remix Application', () => {
           // ACT
           await applicationGenerator(tree, {
             name: 'test',
+            bundler: 'classic',
             js: true,
             projectNameAndRootFormat,
             addPlugin: true,
@@ -210,6 +218,7 @@ describe('Remix Application', () => {
           // ACT
           await applicationGenerator(tree, {
             name: 'test',
+            bundler: 'classic',
             directory: 'demo',
             projectNameAndRootFormat,
             addPlugin: true,
@@ -240,6 +249,7 @@ describe('Remix Application', () => {
           // ACT
           await applicationGenerator(tree, {
             name: 'test',
+            bundler: 'classic',
             directory: 'apps/demo',
             projectNameAndRootFormat,
             addPlugin: true,
@@ -268,6 +278,7 @@ describe('Remix Application', () => {
           // ACT
           await applicationGenerator(tree, {
             name: 'test',
+            bundler: 'classic',
             unitTestRunner: 'vitest',
             projectNameAndRootFormat,
             addPlugin: true,
@@ -297,6 +308,7 @@ describe('Remix Application', () => {
           // ACT
           await applicationGenerator(tree, {
             name: 'test',
+            bundler: 'classic',
             unitTestRunner: 'jest',
             projectNameAndRootFormat,
             addPlugin: true,
@@ -325,6 +337,7 @@ describe('Remix Application', () => {
           // ACT
           await applicationGenerator(tree, {
             name: 'test',
+            bundler: 'classic',
             e2eTestRunner: 'cypress',
             projectNameAndRootFormat,
             addPlugin: true,
@@ -345,6 +358,7 @@ describe('Remix Application', () => {
           // ACT
           await applicationGenerator(tree, {
             name: 'test',
+            bundler: 'classic',
             e2eTestRunner: 'playwright',
             projectNameAndRootFormat,
             addPlugin: true,
@@ -363,7 +377,7 @@ describe('Remix Application', () => {
 });
 
 function expectTargetsToBeCorrect(tree: Tree, projectRoot: string) {
-  const { targets } = readJson(
+  readJson(
     tree,
     joinPathFragments(projectRoot === '.' ? '/' : projectRoot, 'project.json')
   );
