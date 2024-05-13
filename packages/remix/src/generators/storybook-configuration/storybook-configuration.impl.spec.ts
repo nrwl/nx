@@ -28,7 +28,9 @@ describe('Storybook Configuration', () => {
       });
 
       // ASSERT
-      expect(tree.exists(`libs/storybook-test/vite.config.ts`));
+      expect(
+        tree.read(`libs/storybook-test/vite.config.ts`, 'utf-8')
+      ).toMatchSnapshot();
       expect(
         tree.read(`libs/storybook-test/.storybook/main.ts`, 'utf-8')
       ).toMatchSnapshot();
