@@ -708,4 +708,93 @@ feat: Update packages in both groups with a feat
 
     expect(exists(join(versionPlansDir, 'bump-mixed1.md'))).toBeFalsy();
   });
+
+  fit('should pick new versions based on version plans using subcommands', async () => {
+    updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
+      nxJson.release = {
+        groups: {
+          'fixed-group': {
+            projects: [pkg1, pkg2],
+            releaseTagPattern: 'v{version}',
+          },
+        },
+        version: {
+          generatorOptions: {
+            specifierSource: 'version-plans',
+          },
+        },
+        changelog: {
+          projectChangelogs: true,
+        },
+        versionPlans: true,
+      };
+      return nxJson;
+    });
+
+    const versionPlansDir = tmpProjPath('.nx/version-plans');
+    await ensureDir(versionPlansDir);
+
+    await writeFile(
+      join(versionPlansDir, 'bump-fixed.md'),
+      `---
+fixed-group: minor
+---
+
+feat: Update the fixed packages with a minor release.
+`
+    );
+
+    expect(exists(join(versionPlansDir, 'bump-fixed.md'))).toBe(true);
+
+    await runCommandAsync(`git add ${join(versionPlansDir, 'bump-fixed.md')}`);
+    await runCommandAsync(
+      `git commit -m "chore: add version plans for fixed groups"`
+    );
+
+    const versionResult = runCLI('release version --verbose', {
+      silenceError: true,
+    });
+
+    expect(versionResult).toContain(
+      `${pkg1} 📄 Resolved the specifier as "minor" using version plans.`
+    );
+    // pkg2 uses the previously resolved specifier from pkg1
+    expect(versionResult).toContain(
+      `${pkg2} ✍️  New version 0.1.0 written to ${pkg2}/package.json`
+    );
+
+    const changelogResult = runCLI('release changelog 0.1.0 --verbose', {
+      silenceError: true,
+    });
+
+    const changelogResultWithoutDate = changelogResult.replace(
+      /\(\d{4}-\d{2}-\d{2}\)/g,
+      '(YYYY-MM-DD)'
+    );
+
+    expect(changelogResultWithoutDate).toContain(
+      `NX   Generating an entry in ${pkg1}/CHANGELOG.md for v0.1.0
+
+
++ ## 0.1.0 (YYYY-MM-DD)
++
++
++ ### 🚀 Features
++
++ - Update the fixed packages with a minor release.`
+    );
+    expect(changelogResultWithoutDate).toContain(
+      `NX   Generating an entry in ${pkg2}/CHANGELOG.md for v0.1.0
+
+
++ ## 0.1.0 (YYYY-MM-DD)
++
++
++ ### 🚀 Features
++
++ - Update the fixed packages with a minor release.`
+    );
+
+    expect(exists(join(versionPlansDir, 'bump-fixed.md'))).toBeFalsy();
+  });
 });
