@@ -12,9 +12,15 @@ import {
   type Target,
 } from '@nx/devkit';
 
+export interface SvgrOptions {
+  svgo?: boolean;
+  titleProp?: boolean;
+  ref?: boolean;
+}
+
 export interface WithNxOptions extends NextConfig {
   nx?: {
-    svgr?: boolean;
+    svgr?: boolean | SvgrOptions;
     babelUpwardRootMode?: boolean;
   };
 }
@@ -331,7 +337,15 @@ export function getNextConfig(
        */
 
       // Default SVGR support to be on for projects.
-      if (nx?.svgr !== false) {
+      if (nx?.svgr !== false || typeof nx?.svgr === 'object') {
+        const defaultSvgrOptions = {
+          svgo: false,
+          titleProp: true,
+          ref: true,
+        };
+
+        const svgrOptions =
+          typeof nx?.svgr === 'object' ? nx.svgr : defaultSvgrOptions;
         // TODO(v20): Remove file-loader and use `?react` querystring to differentiate between asset and SVGR.
         // It should be:
         // use: [{
@@ -365,11 +379,7 @@ export function getNextConfig(
           use: [
             {
               loader: require.resolve('@svgr/webpack'),
-              options: {
-                svgo: false,
-                titleProp: true,
-                ref: true,
-              },
+              options: svgrOptions,
             },
             {
               loader: require.resolve('file-loader'),
