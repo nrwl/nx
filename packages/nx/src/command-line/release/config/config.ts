@@ -178,12 +178,18 @@ export async function createNxReleaseConfig(
   const workspaceProjectsRelationship =
     userConfig.projectsRelationship || 'fixed';
 
-  const defaultGeneratorOptions = userConfig.version?.conventionalCommits
-    ? {
-        currentVersionResolver: 'git-tag',
-        specifierSource: 'conventional-commits',
-      }
-    : {};
+  const defaultGeneratorOptions: {
+    currentVersionResolver?: string;
+    specifierSource?: string;
+  } = {};
+
+  if (userConfig.version?.conventionalCommits) {
+    defaultGeneratorOptions.currentVersionResolver = 'git-tag';
+    defaultGeneratorOptions.specifierSource = 'conventional-commits';
+  }
+  if (userConfig.versionPlans) {
+    defaultGeneratorOptions.specifierSource = 'version-plans';
+  }
 
   const userGroups = Object.values(userConfig.groups ?? {});
   const disableWorkspaceChangelog =
@@ -358,6 +364,17 @@ export async function createNxReleaseConfig(
     delete rootVersionWithoutGlobalOptions.generatorOptions.specifierSource;
   }
 
+  // Apply versionPlans shorthand to the final group defaults if explicitly configured in the original user config
+  if (userConfig.versionPlans) {
+    rootVersionWithoutGlobalOptions.generatorOptions = {
+      ...rootVersionWithoutGlobalOptions.generatorOptions,
+      specifierSource: 'version-plans',
+    };
+  }
+  if (userConfig.versionPlans === false) {
+    delete rootVersionWithoutGlobalOptions.generatorOptions.specifierSource;
+  }
+
   const groups: NxReleaseConfig['groups'] =
     userConfig.groups && Object.keys(userConfig.groups).length
       ? ensureProjectsConfigIsArray(userConfig.groups)
@@ -510,6 +527,23 @@ export async function createNxReleaseConfig(
       releaseGroupName !== IMPLICIT_DEFAULT_RELEASE_GROUP
     ) {
       delete finalReleaseGroup.version.generatorOptions.currentVersionResolver;
+      delete finalReleaseGroup.version.generatorOptions.specifierSource;
+    }
+
+    // Apply versionPlans shorthand to the final group if explicitly configured in the original group
+    if (releaseGroup.versionPlans) {
+      finalReleaseGroup.version = {
+        ...finalReleaseGroup.version,
+        generatorOptions: {
+          ...finalReleaseGroup.version?.generatorOptions,
+          specifierSource: 'version-plans',
+        },
+      };
+    }
+    if (
+      releaseGroup.versionPlans === false &&
+      releaseGroupName !== IMPLICIT_DEFAULT_RELEASE_GROUP
+    ) {
       delete finalReleaseGroup.version.generatorOptions.specifierSource;
     }
 

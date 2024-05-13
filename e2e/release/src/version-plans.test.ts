@@ -701,17 +701,8 @@ feat: Update packages in both groups with a feat
   it('should pick new versions based on version plans using subcommands', async () => {
     updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
       nxJson.release = {
-        groups: {
-          'fixed-group': {
-            projects: [pkg1, pkg2],
-            releaseTagPattern: 'v{version}',
-          },
-        },
-        version: {
-          generatorOptions: {
-            specifierSource: 'version-plans',
-          },
-        },
+        projects: [pkg1, pkg2],
+        releaseTagPattern: 'v{version}',
         changelog: {
           projectChangelogs: true,
         },
@@ -730,10 +721,7 @@ feat: Update packages in both groups with a feat
       }
     );
 
-    await runCommandAsync(`git add ${versionPlansDir}`);
-    await runCommandAsync(
-      `git commit -m "chore: add version plans for fixed groups"`
-    );
+    // don't commit the new version plan file - it should still be picked up by the release command and deleted appropriately
 
     const versionResult = runCLI('release version --verbose', {
       silenceError: true,

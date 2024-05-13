@@ -8153,7 +8153,9 @@ describe('createNxReleaseConfig()', () => {
                 "version": {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
-                  "generatorOptions": {},
+                  "generatorOptions": {
+                    "specifierSource": "version-plans",
+                  },
                 },
                 "versionPlans": true,
               },
@@ -8163,7 +8165,9 @@ describe('createNxReleaseConfig()', () => {
             "version": {
               "conventionalCommits": false,
               "generator": "@nx/js:release-version",
-              "generatorOptions": {},
+              "generatorOptions": {
+                "specifierSource": "version-plans",
+              },
               "git": {
                 "commit": false,
                 "commitArgs": "",
@@ -8328,7 +8332,9 @@ describe('createNxReleaseConfig()', () => {
                 "version": {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
-                  "generatorOptions": {},
+                  "generatorOptions": {
+                    "specifierSource": "version-plans",
+                  },
                 },
                 "versionPlans": true,
               },
@@ -8531,7 +8537,9 @@ describe('createNxReleaseConfig()', () => {
                 "version": {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
-                  "generatorOptions": {},
+                  "generatorOptions": {
+                    "specifierSource": "version-plans",
+                  },
                 },
                 "versionPlans": true,
               },
@@ -8541,7 +8549,9 @@ describe('createNxReleaseConfig()', () => {
             "version": {
               "conventionalCommits": false,
               "generator": "@nx/js:release-version",
-              "generatorOptions": {},
+              "generatorOptions": {
+                "specifierSource": "version-plans",
+              },
               "git": {
                 "commit": false,
                 "commitArgs": "",
