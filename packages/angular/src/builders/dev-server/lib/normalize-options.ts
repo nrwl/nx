@@ -1,3 +1,4 @@
+import { getInstalledAngularVersionInfo } from '../../../executors/utilities/angular-version-utils';
 import type {
   NormalizedSchema,
   Schema,
@@ -10,6 +11,11 @@ export function normalizeOptions(schema: Schema): NormalizedSchema {
   if ((schema as SchemaWithBrowserTarget).browserTarget) {
     buildTarget ??= (schema as SchemaWithBrowserTarget).browserTarget;
     delete (schema as SchemaWithBrowserTarget).browserTarget;
+  }
+
+  const { major: angularMajorVersion } = getInstalledAngularVersionInfo();
+  if (angularMajorVersion >= 18 && schema.prebundle === undefined) {
+    schema.prebundle = true;
   }
 
   return {

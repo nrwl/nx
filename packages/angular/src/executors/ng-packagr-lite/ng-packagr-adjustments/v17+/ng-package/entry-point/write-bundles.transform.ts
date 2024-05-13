@@ -6,7 +6,7 @@
  */
 
 import { transformFromPromise } from 'ng-packagr/lib/graph/transform';
-import { NgPackagrOptions } from 'ng-packagr/lib/ng-package/options.di';
+import type { NgPackagrOptions } from 'ng-packagr';
 
 export const writeBundlesTransform = (_options: NgPackagrOptions) =>
   transformFromPromise(async (graph) => graph);

@@ -1,39 +1,66 @@
 import {
+  addDependenciesToPackageJson,
   formatFiles,
-  getProjects,
-  installPackagesTask,
   logger,
   readJson,
   readProjectConfiguration,
   updateProjectConfiguration,
   writeJson,
+  type GeneratorCallback,
+  type ProjectConfiguration,
   type TargetConfiguration,
   type Tree,
 } from '@nx/devkit';
 import { dirname, join } from 'node:path/posix';
 import { gte, lt } from 'semver';
-import { allTargetOptions } from '../../utils/targets';
+import { getProjectsFilteredByDependencies } from '../../migrations/utils/projects';
+import { allProjectTargets, allTargetOptions } from '../../utils/targets';
 import { setupSsr } from '../setup-ssr/setup-ssr';
-import { validateProject } from '../utils/validations';
-import { getInstalledAngularVersionInfo } from '../utils/version-utils';
+import {
+  getInstalledAngularVersionInfo,
+  versions,
+} from '../utils/version-utils';
 import type { GeneratorOptions } from './schema';
 
-const executorsToConvert = new Set([
-  '@angular-devkit/build-angular:browser',
-  '@angular-devkit/build-angular:browser-esbuild',
-  '@nx/angular:webpack-browser',
-  '@nx/angular:browser-esbuild',
+const enum Builders {
+  Application = '@angular-devkit/build-angular:application',
+  AppShell = '@angular-devkit/build-angular:app-shell',
+  Server = '@angular-devkit/build-angular:server',
+  Browser = '@angular-devkit/build-angular:browser',
+  SsrDevServer = '@angular-devkit/build-angular:ssr-dev-server',
+  Prerender = '@angular-devkit/build-angular:prerender',
+  BrowserEsbuild = '@angular-devkit/build-angular:browser-esbuild',
+  DevServer = '@angular-devkit/build-angular:dev-server',
+  ExtractI18n = '@angular-devkit/build-angular:extract-i18n',
+}
+const enum Executors {
+  Application = '@nx/angular:application',
+  Server = '@nx/angular:webpack-server',
+  Browser = '@nx/angular:webpack-browser',
+  BrowserEsbuild = '@nx/angular:browser-esbuild',
+}
+
+const executorsToConvert = new Set<string>([
+  Builders.Browser,
+  Builders.BrowserEsbuild,
+  Executors.Browser,
+  Executors.BrowserEsbuild,
 ]);
-const serverTargetExecutors = new Set([
-  '@angular-devkit/build-angular:server',
-  '@nx/angular:webpack-server',
+const serverTargetExecutors = new Set<string>([
+  Builders.Server,
+  Executors.Server,
 ]);
-const redundantExecutors = new Set([
-  '@angular-devkit/build-angular:server',
-  '@angular-devkit/build-angular:prerender',
-  '@angular-devkit/build-angular:app-shell',
-  '@angular-devkit/build-angular:ssr-dev-server',
-  '@nx/angular:webpack-server',
+const redundantExecutors = new Set<string>([
+  Builders.Server,
+  Builders.Prerender,
+  Builders.AppShell,
+  Builders.SsrDevServer,
+  Executors.Server,
+]);
+const angularDevkitToAngularBuild = new Map<string, string>([
+  [Builders.Application, '@angular/build:application'],
+  [Builders.DevServer, '@angular/build:dev-server'],
+  [Builders.ExtractI18n, '@angular/build:extract-i18n'],
 ]);
 
 export async function convertToApplicationExecutor(
@@ -48,22 +75,31 @@ export async function convertToApplicationExecutor(
     );
   }
 
+  const angularProjects = await getAngularProjects(tree);
+
   let didAnySucceed = false;
   if (options.project) {
-    validateProject(tree, options.project);
+    const project = angularProjects.get(options.project);
+    if (!project) {
+      throw new Error(
+        `Project "${options.project}" does not exist! Please provide an existing project name.`
+      );
+    }
+
     didAnySucceed = await convertProjectTargets(
       tree,
       options.project,
+      project,
       angularVersion,
       true
     );
   } else {
-    const projects = getProjects(tree);
-    for (const [projectName] of projects) {
+    for (const [projectName, project] of angularProjects) {
       logger.info(`Converting project "${projectName}"...`);
       const success = await convertProjectTargets(
         tree,
         projectName,
+        project,
         angularVersion
       );
 
@@ -79,16 +115,36 @@ export async function convertToApplicationExecutor(
     }
   }
 
+  let task: GeneratorCallback = () => {};
+  // Use @angular/build directly if not using executors that are only exposed in the angular devkit
+  if (
+    didAnySucceed &&
+    angularMajorVersion >= 18 &&
+    !hasAngularDevkitOnlyExecutors(angularProjects)
+  ) {
+    for (const [projectName, project] of angularProjects) {
+      for (const target of allProjectTargets(project)) {
+        if (angularDevkitToAngularBuild.has(target.executor)) {
+          target.executor = angularDevkitToAngularBuild.get(target.executor);
+        }
+      }
+      updateProjectConfiguration(tree, projectName, project);
+    }
+
+    task = installAngularBuildPackage(tree);
+  }
+
   if (!options.skipFormat) {
     await formatFiles(tree);
   }
 
-  return didAnySucceed ? () => installPackagesTask(tree) : () => {};
+  return task;
 }
 
 async function convertProjectTargets(
   tree: Tree,
   projectName: string,
+  project: ProjectConfiguration,
   angularVersion: string,
   isProvidedProject = false
 ): Promise<boolean> {
@@ -98,7 +154,6 @@ async function convertProjectTargets(
     }
   }
 
-  let project = readProjectConfiguration(tree, projectName);
   if (project.projectType !== 'application') {
     warnIfProvided(
       `The provided project "${projectName}" is not an application. Skipping conversion.`
@@ -113,8 +168,8 @@ async function convertProjectTargets(
   if (!buildTargetName) {
     warnIfProvided(
       `The provided project "${projectName}" does not have any targets using on of the ` +
-        `'@angular-devkit/build-angular:browser', '@angular-devkit/build-angular:browser-esbuild', ` +
-        `'@nx/angular:browser' and '@nx/angular:browser-esbuild' executors. Skipping conversion.`
+        `'${Builders.Browser}', '${Builders.BrowserEsbuild}', '${Executors.Browser}' ` +
+        `and '${Executors.BrowserEsbuild}' executors. Skipping conversion.`
     );
     return false;
   }
@@ -122,8 +177,8 @@ async function convertProjectTargets(
   const useNxExecutor =
     project.targets[buildTargetName].executor.startsWith('@nx/angular:');
   const newExecutor = useNxExecutor
-    ? '@nx/angular:application'
-    : '@angular-devkit/build-angular:application';
+    ? Executors.Application
+    : Builders.Application;
 
   const buildTarget = project.targets[buildTargetName];
   buildTarget.executor = newExecutor;
@@ -280,8 +335,8 @@ function getTargetsToConvert(
   let serverTargetName: string;
   for (const target of Object.keys(targets)) {
     if (
-      targets[target].executor === '@nx/angular:application' ||
-      targets[target].executor === '@angular-devkit/build-angular:application'
+      targets[target].executor === Executors.Application ||
+      targets[target].executor === Builders.Application
     ) {
       logger.warn(
         'The project is already using the application builder. Skipping conversion.'
@@ -339,6 +394,51 @@ function getTargetsToConvert(
   }
 
   return { buildTargetName, serverTargetName };
+}
+
+// Determine if there's any usage of executors only available in the angular devkit
+function hasAngularDevkitOnlyExecutors(
+  projects: Map<string, ProjectConfiguration>
+): boolean {
+  for (const [, project] of projects) {
+    for (const [, target] of Object.entries(project.targets ?? {})) {
+      if (
+        !target.executor ||
+        (target.executor && angularDevkitToAngularBuild.has(target.executor))
+      ) {
+        continue;
+      }
+
+      if (
+        target.executor.startsWith('@angular-devkit/build-angular:') ||
+        target.executor.startsWith('@nx/angular:')
+      ) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+function installAngularBuildPackage(tree: Tree): GeneratorCallback {
+  return addDependenciesToPackageJson(
+    tree,
+    {},
+    { '@angular/build': versions(tree).angularDevkitVersion },
+    undefined,
+    true
+  );
+}
+
+async function getAngularProjects(
+  tree: Tree
+): Promise<Map<string, ProjectConfiguration>> {
+  return (
+    await getProjectsFilteredByDependencies(tree, ['npm:@angular/core'])
+  ).reduce((projects, { project }) => {
+    projects.set(project.name, project);
+    return projects;
+  }, new Map<string, ProjectConfiguration>());
 }
 
 export default convertToApplicationExecutor;

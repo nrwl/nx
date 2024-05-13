@@ -10,6 +10,7 @@ import type { NgPackagr } from 'ng-packagr';
 import { join, resolve } from 'path';
 import { from } from 'rxjs';
 import { mapTo, switchMap } from 'rxjs/operators';
+import { getInstalledAngularVersionInfo } from '../utilities/angular-version-utils';
 import { parseRemappedTsConfigAndMergeDefaults } from '../utilities/typescript';
 import { getNgPackagrInstance } from './ng-packagr-adjustments/ng-packagr';
 import type { BuildAngularLibraryExecutorOptions } from './schema';
@@ -40,6 +41,16 @@ async function initializeNgPackagr(
   return ngPackagr;
 }
 
+function validateOptions(options: BuildAngularLibraryExecutorOptions): void {
+  const { major: angularMajorVersion, version: angularVersion } =
+    getInstalledAngularVersionInfo();
+  if (angularMajorVersion < 18 && options.poll !== undefined) {
+    throw new Error(
+      `The "poll" option requires Angular version 18.0.0 or greater. You are currently using version ${angularVersion}.`
+    );
+  }
+}
+
 /**
  * Creates an executor function that executes the library build of an Angular
  * package using ng-packagr.
@@ -56,6 +67,8 @@ export function createLibraryExecutor(
     options: BuildAngularLibraryExecutorOptions,
     context: ExecutorContext
   ) {
+    validateOptions(options);
+
     const { target, dependencies, topLevelDependencies } =
       calculateProjectBuildableDependencies(
         context.taskGraph,

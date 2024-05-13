@@ -18,7 +18,7 @@ import {
   isPackage,
   PackageNode,
 } from 'ng-packagr/lib/ng-package/nodes';
-import { NgPackagrOptions } from 'ng-packagr/lib/ng-package/options.di';
+import type { NgPackagrOptions } from 'ng-packagr';
 import { NgPackage } from 'ng-packagr/lib/ng-package/package';
 import {
   copyFile,
