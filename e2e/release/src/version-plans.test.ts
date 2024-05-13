@@ -80,7 +80,8 @@ describe('nx release version plans', () => {
     await runCommandAsync(`git tag -a ${pkg4}@0.0.0 -m "${pkg4}@0.0.0"`);
     await runCommandAsync(`git tag -a ${pkg5}@0.0.0 -m "${pkg5}@0.0.0"`);
   }, 60000);
-  beforeEach(() => cleanupProject());
+
+  afterEach(() => cleanupProject());
 
   it('should pick new versions based on version plans', async () => {
     updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
