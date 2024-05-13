@@ -12,7 +12,7 @@ import { setupWorkspaceContext } from '../../utils/workspace-context';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { writeDaemonJsonProcessCache } from '../cache';
 import {
-  FULL_OS_SOCKET_PATH,
+  getFullOsSocketPath,
   isWindows,
   killSocketOrPath,
 } from '../socket-utils';
@@ -388,9 +388,9 @@ export async function startServer(): Promise<Server> {
 
   return new Promise(async (resolve, reject) => {
     try {
-      server.listen(FULL_OS_SOCKET_PATH, async () => {
+      server.listen(getFullOsSocketPath(), async () => {
         try {
-          serverLogger.log(`Started listening on: ${FULL_OS_SOCKET_PATH}`);
+          serverLogger.log(`Started listening on: ${getFullOsSocketPath()}`);
           // this triggers the storage of the lock file hash
           daemonIsOutdated();
 
