@@ -2,10 +2,13 @@ import {
   checkFilesExist,
   cleanupProject,
   createFile,
+  isWindows,
   killPort,
+  killProcessAndPorts,
   newProject,
   readJson,
   runCLI,
+  runCommandUntil,
   runE2ETests,
   uniq,
   updateFile,
@@ -77,11 +80,14 @@ describe('env vars', () => {
 
       if (runE2ETests('cypress')) {
         // contains the correct output and works
-        const run1 = runCLI(
-          `e2e ${myapp}-e2e --config \\'{\\"env\\":{\\"cliArg\\":\\"i am from the cli args\\"}}\\'`
+        const envVar = isWindows
+          ? `'{\\"env\\":{\\"cliArg\\":\\"i am from the cli args\\"}}'`
+          : `\\'{\\"env\\":{\\"cliArg\\":\\"i am from the cli args\\"}}\\'`;
+        const run1 = await runCommandUntil(
+          `e2e ${myapp}-e2e --config ${envVar}`,
+          (output) => output.includes('All specs passed!')
         );
-        expect(run1).toContain('All specs passed!');
-        await killPort(4200);
+        await killProcessAndPorts(run1.pid, 4200);
         // tests should not fail because of a config change
         updateFile(
           `apps/${myapp}-e2e/cypress.config.ts`,
@@ -110,11 +116,11 @@ export default defineConfig({
 });`
         );
 
-        const run2 = runCLI(
-          `e2e ${myapp}-e2e --config \\'{\\"env\\":{\\"cliArg\\":\\"i am from the cli args\\"}}\\'`
+        const run2 = await runCommandUntil(
+          `e2e ${myapp}-e2e --config ${envVar}`,
+          (output) => output.includes('All specs passed!')
         );
-        expect(run2).toContain('All specs passed!');
-        await killPort(4200);
+        await killProcessAndPorts(run2.pid, 4200);
 
         // make sure project.json env vars also work
         updateFile(
@@ -140,10 +146,11 @@ export default defineConfig({
           });
         });`
         );
-        const run3 = runCLI(`e2e ${myapp}-e2e`);
-        expect(run3).toContain('All specs passed!');
+        const run3 = await runCommandUntil(`e2e ${myapp}-e2e`, (output) =>
+          output.includes('All specs passed!')
+        );
 
-        expect(await killPort(4200)).toBeTruthy();
+        await killProcessAndPorts(run3.pid, 4200);
       }
     },
     TEN_MINS_MS
@@ -167,12 +174,17 @@ export default defineConfig({
       );
 
       if (runE2ETests('cypress')) {
-        expect(runCLI(`run ${appName}:component-test`)).toContain(
-          'All specs passed!'
+        const ctProcess = await runCommandUntil(
+          `run ${appName}:component-test`,
+          (output) => output.includes('All specs passed!')
         );
-        expect(runCLI(`run ${appName}:e2e`)).toContain('All specs passed!');
+        await killProcessAndPorts(ctProcess.pid, 4200);
+        const e2eProcess = await runCommandUntil(
+          `run ${appName}:e2e`,
+          (output) => output.includes('All specs passed!')
+        );
+        await killProcessAndPorts(e2eProcess.pid, 4200);
       }
-      expect(await killPort(4200)).toBeTruthy();
     },
     TEN_MINS_MS
   );
@@ -195,12 +207,17 @@ export default defineConfig({
       );
 
       if (runE2ETests('cypress')) {
-        expect(runCLI(`run ${appName}:component-test`)).toContain(
-          'All specs passed!'
+        const ctProcess = await runCommandUntil(
+          `run ${appName}:component-test`,
+          (output) => output.includes('All specs passed!')
         );
-        expect(runCLI(`run ${appName}:e2e`)).toContain('All specs passed!');
+        await killProcessAndPorts(ctProcess.pid, 4200);
+        const e2eProcess = await runCommandUntil(
+          `run ${appName}:e2e`,
+          (output) => output.includes('All specs passed!')
+        );
+        await killProcessAndPorts(e2eProcess.pid, 4200);
       }
-      expect(await killPort(4200)).toBeTruthy();
     },
     TEN_MINS_MS
   );

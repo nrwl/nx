@@ -1,8 +1,10 @@
 import {
   cleanupProject,
   killPort,
+  killProcessAndPorts,
   newProject,
   runCLI,
+  runCommandUntil,
   runE2ETests,
   uniq,
 } from '@nx/e2e/utils';
@@ -31,10 +33,12 @@ describe('Cypress E2E Test runner (legacy)', () => {
       );
 
       if (runE2ETests('cypress')) {
-        const results = runCLI(
-          `run-many --target=e2e --parallel=2 --port=cypress-auto --output-style=stream`
+        const runManyProcess = await runCommandUntil(
+          `run-many --target=e2e --parallel=2 --port=cypress-auto --output-style=stream`,
+          (output) =>
+            output.includes('Successfully ran target e2e for 2 projects')
         );
-        expect(results).toContain('Successfully ran target e2e for 2 projects');
+        await killProcessAndPorts(runManyProcess.pid, 4200);
       }
     },
     TEN_MINS_MS
@@ -61,12 +65,17 @@ describe('Cypress E2E Test runner (legacy)', () => {
       });
 
       if (runE2ETests('cypress')) {
-        expect(runCLI(`run ${appName}:component-test`)).toContain(
-          'All specs passed!'
+        const componentTestProcess = await runCommandUntil(
+          `run ${appName}:component-test`,
+          (output) => output.includes('All specs passed!')
         );
-        expect(runCLI(`run ${appName}:e2e`)).toContain('All specs passed!');
+        await killProcessAndPorts(componentTestProcess.pid, 4200);
+        const e2eTestProcess = await runCommandUntil(
+          `run ${appName}:e2e`,
+          (output) => output.includes('All specs passed!')
+        );
+        await killProcessAndPorts(e2eTestProcess.pid, 4200);
       }
-      expect(await killPort(4200)).toBeTruthy();
     },
     TEN_MINS_MS
   );
