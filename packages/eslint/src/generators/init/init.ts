@@ -61,8 +61,6 @@ export async function initEsLint(
   const hasPlugin = hasEslintPlugin(tree);
   const rootEslintFile = findEslintFile(tree);
 
-  const graph = await createProjectGraphAsync();
-
   const lintTargetNames = [
     'lint',
     'eslint:lint',
@@ -75,7 +73,6 @@ export async function initEsLint(
   if (rootEslintFile && options.addPlugin && !hasPlugin) {
     await addPlugin(
       tree,
-      graph,
       '@nx/eslint/plugin',
       createNodes,
       {
@@ -96,7 +93,6 @@ export async function initEsLint(
   if (options.addPlugin) {
     await addPlugin(
       tree,
-      graph,
       '@nx/eslint/plugin',
       createNodes,
       {
