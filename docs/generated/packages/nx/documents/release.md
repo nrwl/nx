@@ -412,16 +412,30 @@ Show version number
 Create a plan to pick a new version and generate a changelog entry.
 
 ```shell
-nx release plan
+nx release plan [bump]
 ```
 
 #### Options
+
+##### bump
+
+Type: `string`
+
+Choices: [major, premajor, minor, preminor, patch, prepatch, prerelease]
+
+Semver keyword to use for the selected release group.
 
 ##### help
 
 Type: `boolean`
 
 Show help
+
+##### message
+
+Type: `string`
+
+Custom message to use for the changelog entry
 
 ##### version
 
