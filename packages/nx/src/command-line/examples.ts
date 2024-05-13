@@ -4,33 +4,6 @@ export interface Example {
 }
 
 export const examples: Record<string, Example[]> = {
-  'print-affected': [
-    {
-      command: 'print-affected',
-      description:
-        'Print information about affected projects and the project graph',
-    },
-    {
-      command: 'print-affected --base=main --head=HEAD',
-      description:
-        'Print information about the projects affected by the changes between main and HEAD (e.g,. PR)',
-    },
-    {
-      command: 'print-affected -t test',
-      description:
-        'Prints information about the affected projects and a list of tasks to test them',
-    },
-    {
-      command: 'print-affected -t build --select=projects',
-      description:
-        'Prints the projects property from the print-affected output',
-    },
-    {
-      command: 'print-affected -t build --select=tasks.target.project',
-      description:
-        'Prints the tasks.target.project property from the print-affected output',
-    },
-  ],
   affected: [
     {
       command: 'affected -t custom-target',

@@ -36,6 +36,7 @@ import { yargsWatchCommand } from './watch/command-object';
 import { yargsResetCommand } from './reset/command-object';
 import { yargsReleaseCommand } from './release/command-object';
 import { yargsAddCommand } from './add/command-object';
+import { output } from '../devkit-exports';
 
 // Ensure that the output takes up the available width of the terminal.
 yargs.wrap(yargs.terminalWidth());
@@ -83,6 +84,18 @@ export const commandsObject = yargs
   .command(yargsViewLogsCommand)
   .command(yargsWatchCommand)
   .command(yargsNxInfixCommand)
+  .command({
+    command: 'print-affected',
+    // Hides the command from the help output
+    describe: false,
+    handler: () => {
+      output.error({
+        title:
+          'Error: "nx print-affected" was removed in v19. Please use "nx show projects --affected" instead.',
+      });
+      process.exit(1);
+    },
+  })
   .scriptName('nx')
   .help()
   // NOTE: we handle --version in nx.ts, this just tells yargs that the option exists
