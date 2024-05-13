@@ -20,8 +20,6 @@ import { parseConventionalCommitsMessage } from './utils/git';
 export const releasePlanCLIHandler = (args: PlanOptions) =>
   handleErrors(args.verbose, () => releasePlan(args));
 
-// TODO: add a way to pass bump values directly into this function so it can be called programmatically and not prompt
-// (this would allow users to create their own UX on top of this function to further restrict version plan creation)
 export async function releasePlan(args: PlanOptions): Promise<string | number> {
   const projectGraph = await createProjectGraphAsync({ exitOnError: true });
   const nxJson = readNxJson();
@@ -62,24 +60,46 @@ export async function releasePlan(args: PlanOptions): Promise<string | number> {
     }
   };
 
+  if (args.message) {
+    const message = parseConventionalCommitsMessage(args.message);
+    if (!message) {
+      output.error({
+        title: 'Changelog message is not in conventional commits format.',
+        bodyLines: [
+          'Please ensure your message is in the form of:',
+          '  type(optional scope): description',
+          '',
+          'For example:',
+          '  feat(pkg-b): add new feature',
+          '  fix(pkg-a): correct a bug',
+          '  chore: update build process',
+          '  fix(core)!: breaking change in core package',
+        ],
+      });
+      process.exit(1);
+    }
+  }
+
   if (releaseGroups[0].name === IMPLICIT_DEFAULT_RELEASE_GROUP) {
     const group = releaseGroups[0];
     if (group.projectsRelationship === 'independent') {
       for (const project of group.projects) {
         setBumpIfNotNone(
           project,
-          await promptForVersion(
-            `How do you want to bump the version of the project "${project}"?`
-          )
+          args.bump ||
+            (await promptForVersion(
+              `How do you want to bump the version of the project "${project}"?`
+            ))
         );
       }
     } else {
       // TODO: use project names instead of the implicit default release group name? (though this might be confusing, as users might think they can just delete one of the project bumps to change the behavior to independent versioning)
       setBumpIfNotNone(
         group.name,
-        await promptForVersion(
-          `How do you want to bump the versions of all projects?`
-        )
+        args.bump ||
+          (await promptForVersion(
+            `How do you want to bump the versions of all projects?`
+          ))
       );
     }
   } else {
@@ -88,17 +108,19 @@ export async function releasePlan(args: PlanOptions): Promise<string | number> {
         for (const project of releaseGroupToFilteredProjects.get(group)) {
           setBumpIfNotNone(
             project,
-            await promptForVersion(
-              `How do you want to bump the version of the project "${project}" within group "${group.name}"?`
-            )
+            args.bump ||
+              (await promptForVersion(
+                `How do you want to bump the version of the project "${project}" within group "${group.name}"?`
+              ))
           );
         }
       } else {
         setBumpIfNotNone(
           group.name,
-          await promptForVersion(
-            `How do you want to bump the versions of the projects in the group "${group.name}"?`
-          )
+          args.bump ||
+            (await promptForVersion(
+              `How do you want to bump the versions of the projects in the group "${group.name}"?`
+            ))
         );
       }
     }
@@ -112,7 +134,7 @@ export async function releasePlan(args: PlanOptions): Promise<string | number> {
     return 0;
   }
 
-  const versionPlanMessage = await promptForMessage();
+  const versionPlanMessage = args.message || (await promptForMessage());
   const versionPlanFileContent = getVersionPlanFileContent(
     versionPlanBumps,
     versionPlanMessage

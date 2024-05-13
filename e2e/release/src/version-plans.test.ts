@@ -11,7 +11,7 @@ import {
   uniq,
   updateJson,
 } from '@nx/e2e/utils';
-import { ensureDir, writeFile } from 'fs-extra';
+import { ensureDir, readdirSync, writeFile } from 'fs-extra';
 import { join } from 'path';
 
 expect.addSnapshotSerializer({
@@ -112,14 +112,11 @@ describe('nx release version plans', () => {
     const versionPlansDir = tmpProjPath('.nx/version-plans');
     await ensureDir(versionPlansDir);
 
-    await writeFile(
-      join(versionPlansDir, 'bump-fixed.md'),
-      `---
-fixed-group: minor
----
-
-feat: Update the fixed packages with a minor release.
-`
+    runCLI(
+      'release plan minor -g fixed-group -m "feat: Update the fixed packages with a minor release." --verbose',
+      {
+        silenceError: true,
+      }
     );
 
     await writeFile(
@@ -134,13 +131,7 @@ feat: Update the independent packages with a patch, preminor, and prerelease.
 `
     );
 
-    expect(exists(join(versionPlansDir, 'bump-fixed.md'))).toBe(true);
-    expect(exists(join(versionPlansDir, 'bump-independent.md'))).toBe(true);
-
-    await runCommandAsync(`git add ${join(versionPlansDir, 'bump-fixed.md')}`);
-    await runCommandAsync(
-      `git add ${join(versionPlansDir, 'bump-independent.md')}`
-    );
+    await runCommandAsync(`git add ${versionPlansDir}`);
     await runCommandAsync(
       `git commit -m "chore: add version plans for fixed and independent groups"`
     );
@@ -229,9 +220,6 @@ feat: Update the independent packages with a patch, preminor, and prerelease.
 +
 + - Update the independent packages with a patch, preminor, and prerelease.`
     );
-
-    expect(exists(join(versionPlansDir, 'bump-fixed.md'))).toBeFalsy();
-    expect(exists(join(versionPlansDir, 'bump-independent.md'))).toBeFalsy();
 
     await writeFile(
       join(versionPlansDir, 'bump-mixed1.md'),
@@ -709,7 +697,7 @@ feat: Update packages in both groups with a feat
     expect(exists(join(versionPlansDir, 'bump-mixed1.md'))).toBeFalsy();
   });
 
-  fit('should pick new versions based on version plans using subcommands', async () => {
+  it('should pick new versions based on version plans using subcommands', async () => {
     updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
       nxJson.release = {
         groups: {
@@ -734,19 +722,14 @@ feat: Update packages in both groups with a feat
     const versionPlansDir = tmpProjPath('.nx/version-plans');
     await ensureDir(versionPlansDir);
 
-    await writeFile(
-      join(versionPlansDir, 'bump-fixed.md'),
-      `---
-fixed-group: minor
----
-
-feat: Update the fixed packages with a minor release.
-`
+    runCLI(
+      'release plan minor -m "feat: Update the fixed packages with a minor release." --verbose',
+      {
+        silenceError: true,
+      }
     );
 
-    expect(exists(join(versionPlansDir, 'bump-fixed.md'))).toBe(true);
-
-    await runCommandAsync(`git add ${join(versionPlansDir, 'bump-fixed.md')}`);
+    await runCommandAsync(`git add ${versionPlansDir}`);
     await runCommandAsync(
       `git commit -m "chore: add version plans for fixed groups"`
     );
@@ -795,6 +778,6 @@ feat: Update the fixed packages with a minor release.
 + - Update the fixed packages with a minor release.`
     );
 
-    expect(exists(join(versionPlansDir, 'bump-fixed.md'))).toBeFalsy();
+    expect(readdirSync(versionPlansDir)).toEqual([]);
   });
 });

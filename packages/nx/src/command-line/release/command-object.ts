@@ -59,7 +59,10 @@ export type PublishOptions = NxReleaseArgs &
     otp?: number;
   };
 
-export type PlanOptions = NxReleaseArgs & {};
+export type PlanOptions = NxReleaseArgs & {
+  bump?: string;
+  message?: string;
+};
 
 export type ReleaseOptions = NxReleaseArgs &
   FirstReleaseArgs & {
@@ -324,11 +327,30 @@ const publishCommand: CommandModule<NxReleaseArgs, PublishOptions> = {
 };
 
 const planCommand: CommandModule<NxReleaseArgs, PlanOptions> = {
-  command: 'plan',
+  command: 'plan [bump]',
   aliases: ['pl'],
   describe:
     'Create a plan to pick a new version and generate a changelog entry.',
-  builder: (yargs) => yargs,
+  builder: (yargs) =>
+    yargs
+      .positional('bump', {
+        type: 'string',
+        describe: 'Semver keyword to use for the selected release group.',
+        choices: [
+          'major',
+          'premajor',
+          'minor',
+          'preminor',
+          'patch',
+          'prepatch',
+          'prerelease',
+        ],
+      })
+      .option('message', {
+        type: 'string',
+        alias: 'm',
+        describe: 'Custom message to use for the changelog entry',
+      }),
   handler: async (args) => {
     const release = await import('./plan');
     const result = await release.releasePlanCLIHandler(args);
