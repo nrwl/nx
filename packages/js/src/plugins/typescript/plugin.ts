@@ -17,7 +17,7 @@ import { basename, dirname, join, relative } from 'node:path';
 import { minimatch } from 'minimatch';
 // eslint-disable-next-line @typescript-eslint/no-restricted-imports
 import { getLockFileName } from 'nx/src/plugins/js/lock-file/lock-file';
-import { projectGraphCacheDirectory } from 'nx/src/utils/cache-directory';
+import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import type { ParsedCommandLine } from 'typescript';
 import { readTsConfig } from '../../utils/typescript/ts-config';
 
@@ -49,7 +49,7 @@ interface NormalizedPluginOptions {
       };
 }
 
-const cachePath = join(projectGraphCacheDirectory, 'tsc.hash');
+const cachePath = join(workspaceDataDirectory, 'tsc.hash');
 const targetsCache = readTargetsCache();
 
 function readTargetsCache(): Record<

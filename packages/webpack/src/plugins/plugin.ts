@@ -16,7 +16,7 @@ import { existsSync, readdirSync } from 'fs';
 import { readWebpackOptions } from '../utils/webpack/read-webpack-options';
 import { resolveUserDefinedWebpackConfig } from '../utils/webpack/resolve-user-defined-webpack-config';
 import { getLockFileName, getRootTsConfigPath } from '@nx/js';
-import { projectGraphCacheDirectory } from 'nx/src/utils/cache-directory';
+import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 
 export interface WebpackPluginOptions {
@@ -26,7 +26,7 @@ export interface WebpackPluginOptions {
   previewTargetName?: string;
 }
 
-const cachePath = join(projectGraphCacheDirectory, 'webpack.hash');
+const cachePath = join(workspaceDataDirectory, 'webpack.hash');
 const targetsCache = readTargetsCache();
 
 function readTargetsCache(): Record<

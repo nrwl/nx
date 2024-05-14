@@ -6,13 +6,13 @@
 import { statSync, writeFileSync } from 'fs';
 import { ensureDirSync, rmSync } from 'fs-extra';
 import { join } from 'path';
-import { projectGraphCacheDirectory } from '../utils/cache-directory';
+import { workspaceDataDirectory } from '../utils/cache-directory';
 import { createHash } from 'crypto';
 import { tmpdir } from 'tmp';
 import { workspaceRoot } from '../utils/workspace-root';
 
 export const DAEMON_DIR_FOR_CURRENT_WORKSPACE = join(
-  projectGraphCacheDirectory,
+  workspaceDataDirectory,
   'd'
 );
 

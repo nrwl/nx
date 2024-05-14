@@ -6,7 +6,7 @@ import { mkdirSync, rmdirSync } from 'fs';
 
 jest.mock('nx/src/utils/cache-directory', () => ({
   ...jest.requireActual('nx/src/utils/cache-directory'),
-  projectGraphCacheDirectory: 'tmp/project-graph-cache',
+  workspaceDataDirectory: 'tmp/project-graph-cache',
 }));
 
 describe('@nx/eslint/plugin', () => {
