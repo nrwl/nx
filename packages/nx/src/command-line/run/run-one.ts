@@ -27,7 +27,10 @@ export async function runOne(
     string,
     (TargetDependencyConfig | string)[]
   > = {},
-  extraOptions = { excludeTaskDependencies: false, loadDotEnvFiles: true } as {
+  extraOptions = {
+    excludeTaskDependencies: false,
+    loadDotEnvFiles: process.env.NX_LOAD_DOT_ENV_FILES !== 'false',
+  } as {
     excludeTaskDependencies: boolean;
     loadDotEnvFiles: boolean;
   }
