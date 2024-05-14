@@ -666,15 +666,15 @@
       "type": "object",
       "properties": {
         "authors": {
-          "type": boolean,
+          "type": "boolean",
           "default": true
         },
         "commitReferences": {
-          "type": boolean,
+          "type": "boolean",
           "default": true
         },
         "versionTitleDate": {
-          "type": boolean,
+          "type": "boolean",
           "default": true
         }
       },
