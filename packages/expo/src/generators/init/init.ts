@@ -38,6 +38,7 @@ export async function expoInitGeneratorInternal(host: Tree, schema: Schema) {
   if (schema.addPlugin) {
     await addPlugin(
       host,
+      await createProjectGraphAsync(),
       '@nx/expo/plugin',
       createNodes,
       {
