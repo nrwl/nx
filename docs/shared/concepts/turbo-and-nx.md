@@ -137,7 +137,7 @@ Nx helps with these by using plugins and the Nx Cloud web app. For example, you 
 At this point, Turborepo doesn’t do any of that. So for a monorepo of any non-trivial size you will have to implement all of those things using some other tools.
 
 Nx is like the **VSCode of build tools**. In VSCode you can get started with the plain, core VSCode setup and it would be fine. But if you want to enhance your experience, there's the option to add extensions for managing Git, Docker, Mongo etc. Similarly, **you don’t have to use all the Nx plugins or, say, the Nx Cloud GitHub integration.**  
-Nx doesn’t replace any of your tools, and it’s not “all in”. You can start without any Nx plugins and Nx Cloud affordances, as with Turborepo. Or you can add them in as you go, both natively supported plugins by Nx as well as our growing [set of community plugins](https://nx.dev/community). **Turborepo isn’t pluggable**, so if you use the same analogy, you would have to use different tools (GitTower, DataGrip, Mongo Compass) to meet the same needs.
+Nx doesn’t replace any of your tools, and it’s not “all in”. You can start without any Nx plugins and Nx Cloud affordances, as with Turborepo. Or you can add them in as you go, both natively supported plugins by Nx as well as our growing [set of community plugins](/community). **Turborepo isn’t pluggable**, so if you use the same analogy, you would have to use different tools (GitTower, DataGrip, Mongo Compass) to meet the same needs.
 
 ## Tech and Performance
 
@@ -172,7 +172,7 @@ Nx was released in 2016. Turborepo was open sourced in December of 2021. Turbore
 
 - There are about [4 million downloads per week](https://www.npmjs.com/package/nx).
 - There are about 1 million+ unique [Nx Console](https://marketplace.visualstudio.com/items?itemName=nrwl.angular-console) (a plugin for VSCode) installations.
-- There is a rich ecosystem of [third-party plugins](https://nx.dev/plugin-registry).
+- There is a rich ecosystem of [third-party plugins](/plugin-registry).
 
 From day 1 Nx has always been an **MIT-licensed open source project**, and we did everything to make sure companies using Nx won’t end up in the vendor lock-in. We clearly separated Nx the open source project and Nx Cloud the SAAS product. For instance, Nx Cloud is built using the public APIs Nx provides (you can build your own and some companies do). Nx Cloud docs are on a separate domain etc.
 
