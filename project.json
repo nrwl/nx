@@ -9,6 +9,19 @@
         "config": ".verdaccio/config.yml",
         "storage": "build/local-registry/storage"
       }
+    },
+    "wait-for-local-registry": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "nx local-registry",
+        "readyWhen": "http address -"
+      }
+    },
+    "populate-local-registry-storage": {
+      "dependsOn": ["wait-for-local-registry"],
+      "cache": true,
+      "command": "pnpm nx-release --local major",
+      "outputs": ["{workspaceRoot}/build/local-registry/storage"]
     }
   }
 }
