@@ -5,10 +5,11 @@
   "projectType": "application",
   "implicitDependencies": ["nx", "devkit"],
   "targets": {
-    "e2e-lerna-smoke-tests:e2e-ci--src/lerna-smoke-tests.test.ts": {
-      "inputs": ["e2eInputs"]
-    },
     "e2e-ci--src/lerna-smoke-tests.test.ts": {
+      "dependsOn": [
+        "nx:build-native",
+        "@nx/nx-source:populate-local-registry-storage"
+      ],
       "inputs": ["e2eInputs", "^production"]
     }
   }
