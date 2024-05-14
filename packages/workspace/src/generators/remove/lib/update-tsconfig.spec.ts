@@ -38,6 +38,11 @@ describe('updateTsconfig', () => {
       forceRemove: false,
       importPath: '@proj/whatever-name',
     };
+
+    graph = {
+      nodes: {},
+      dependencies: {},
+    };
   });
 
   it('should delete project ref from the root tsconfig.base.json', async () => {

@@ -30,7 +30,14 @@ export async function affected(
   extraTargetDependencies: Record<
     string,
     (TargetDependencyConfig | string)[]
-  > = {}
+  > = {},
+  extraOptions = {
+    excludeTaskDependencies: false,
+    loadDotEnvFiles: process.env.NX_LOAD_DOT_ENV_FILES !== 'false',
+  } as {
+    excludeTaskDependencies: boolean;
+    loadDotEnvFiles: boolean;
+  }
 ): Promise<void> {
   performance.mark('code-loading:end');
   performance.measure('code-loading', 'init-local', 'code-loading:end');
@@ -84,7 +91,7 @@ export async function affected(
             overrides,
             null,
             extraTargetDependencies,
-            { excludeTaskDependencies: false, loadDotEnvFiles: true }
+            extraOptions
           );
           process.exit(status);
         }
