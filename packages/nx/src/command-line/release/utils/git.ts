@@ -2,7 +2,10 @@
  * Special thanks to changelogen for the original inspiration for many of these utilities:
  * https://github.com/unjs/changelogen
  */
+import { existsSync } from 'fs-extra';
+import { join } from 'path';
 import { interpolate } from '../../../tasks-runner/utils';
+import { workspaceRoot } from '../../../utils/workspace-root';
 import { execCommand } from './exec-command';
 
 export interface GitCommitAuthor {
@@ -139,11 +142,11 @@ export async function getGitDiff(
     });
 }
 
-// export async function getChangedTrackedFiles(): Promise<Set<string>> {
-//   const result = await execCommand('git', ['status', '--porcelain']);
-//   const lines = result.split('\n').filter((l) => l.trim().length > 0);
-//   return new Set(lines.map((l) => l.substring(3)));
-// }
+export async function getChangedTrackedFiles(): Promise<Set<string>> {
+  const result = await execCommand('git', ['status', '--porcelain']);
+  const lines = result.split('\n').filter((l) => l.trim().length > 0);
+  return new Set(lines.map((l) => l.substring(3)));
+}
 
 export async function gitAdd({
   changedFiles,
@@ -158,13 +161,18 @@ export async function gitAdd({
 }): Promise<string> {
   logFn = logFn || console.log;
 
+  const changedTrackedFiles = await getChangedTrackedFiles();
+
   let ignoredFiles: string[] = [];
   let filesToAdd: string[] = [];
   for (const f of changedFiles) {
     const isFileIgnored = await isIgnored(f);
     if (isFileIgnored) {
       ignoredFiles.push(f);
-    } else {
+    } else if (
+      changedTrackedFiles.has(f) ||
+      existsSync(join(workspaceRoot, f))
+    ) {
       filesToAdd.push(f);
     }
   }
@@ -175,7 +183,10 @@ export async function gitAdd({
   }
 
   if (!filesToAdd.length) {
-    logFn('\nNo files to stage. Skipping git add.');
+    if (!dryRun) {
+      logFn('\nNo files to stage. Skipping git add.');
+    }
+    // if this is a dry run, it's possible that there would have been actual files to add, so it's deceptive to say "No files to stage".
     return;
   }
 
