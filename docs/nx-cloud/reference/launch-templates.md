@@ -125,7 +125,7 @@ launch-templates:
 
 When defined, specifies an existing step file to be used. **Cannot be used when `script` is also defined**
 
-You can find the [list of Nx Cloud reusable steps here](https://github.com/nrwl/nx-cloud-workflows/tree/main/workflow-steps).
+You can find the [list of Nx Cloud reusable steps here](https://github.com/nrwl/nx-cloud-workflows/tree/main/workflow-steps). If you cannot find a reusable step that suits your needs, [you can create your own custom steps](/ci/reference/custom-steps).
 
 ```yaml {% fileName=".nx/workflows/agents.yaml" %}
 launch-templates:
