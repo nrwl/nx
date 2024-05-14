@@ -58,9 +58,9 @@ If you prefer a more minimalist changelog, you can set all the options to false,
     "changelog": {
       "projectChangelogs": {
         "renderOptions": {
-          "authors": true,
-          "commitReferences": true,
-          "versionTitleDate": true
+          "authors": false,
+          "commitReferences": false,
+          "versionTitleDate": false
         }
       }
     }
