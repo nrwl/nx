@@ -2,7 +2,7 @@
 
 exports[`NxPlugin e2e-project Generator should setup the eslint builder 1`] = `
 "{
-  "extends": ["../../.eslintrc.base.json"],
+  "extends": ["../../.eslintrc.json"],
   "ignorePatterns": ["!**/*"],
   "overrides": [
     {

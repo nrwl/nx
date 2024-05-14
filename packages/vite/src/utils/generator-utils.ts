@@ -432,7 +432,12 @@ export function createOrEditViteConfig(
     ? `test: {
     globals: true,
     cache: {
-      dir: '${offsetFromRoot(projectRoot)}node_modules/.vitest'
+      dir: '${normalizedJoinPaths(
+        offsetFromRoot(projectRoot),
+        'node_modules',
+        '.vitest',
+        projectRoot === '.' ? options.project : projectRoot
+      )}'
     },
     environment: '${options.testEnvironment ?? 'jsdom'}',
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
@@ -483,9 +488,12 @@ export function createOrEditViteConfig(
     //  plugins: [ nxViteTsPaths() ],
     // },`;
 
-  const cacheDir = `cacheDir: '${offsetFromRoot(
-    projectRoot
-  )}node_modules/.vite/${projectRoot}',`;
+  const cacheDir = `cacheDir: '${normalizedJoinPaths(
+    offsetFromRoot(projectRoot),
+    'node_modules',
+    '.vite',
+    projectRoot === '.' ? options.project : projectRoot
+  )}',`;
 
   if (tree.exists(viteConfigPath)) {
     handleViteConfigFileExists(
@@ -499,6 +507,7 @@ export function createOrEditViteConfig(
       testOption,
       reportsDirectory,
       cacheDir,
+      projectRoot,
       offsetFromRoot(projectRoot),
       projectAlreadyHasViteTargets
     );
@@ -670,6 +679,7 @@ function handleViteConfigFileExists(
   testOption: string,
   reportsDirectory: string,
   cacheDir: string,
+  projectRoot: string,
   offsetFromRoot: string,
   projectAlreadyHasViteTargets?: TargetFlags
 ) {
@@ -714,7 +724,12 @@ function handleViteConfigFileExists(
   const testOptionObject = {
     globals: true,
     cache: {
-      dir: `${offsetFromRoot}node_modules/.vitest`,
+      dir: normalizedJoinPaths(
+        offsetFromRoot,
+        'node_modules',
+        '.vitest',
+        projectRoot === '.' ? options.project : projectRoot
+      ),
     },
     environment: options.testEnvironment ?? 'jsdom',
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
@@ -747,4 +762,10 @@ function handleViteConfigFileExists(
         `
     );
   }
+}
+
+function normalizedJoinPaths(...paths: string[]): string {
+  const path = joinPathFragments(...paths);
+
+  return path.startsWith('.') ? path : `./${path}`;
 }

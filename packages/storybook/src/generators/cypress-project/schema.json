@@ -4,6 +4,7 @@
   "$id": "cypress-configure",
   "title": "Cypress Configuration",
   "description": "Add cypress E2E app to test a ui library that is set up for Storybook.",
+  "x-deprecated": "Use 'interactionTests' instead when running '@nx/storybook:configuration'. This generator will be removed in v21.",
   "type": "object",
   "properties": {
     "name": {

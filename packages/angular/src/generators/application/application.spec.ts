@@ -1,3 +1,5 @@
+import 'nx/src/internal-testing-utils/mock-load-nx-plugin';
+
 import { installedCypressVersion } from '@nx/cypress/src/utils/cypress-version';
 import type { Tree } from '@nx/devkit';
 import * as devkit from '@nx/devkit';

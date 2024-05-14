@@ -1,5 +1,4 @@
 import {
-  createProjectGraphAsync,
   formatFiles,
   GeneratorCallback,
   readNxJson,
@@ -62,7 +61,6 @@ export async function initGeneratorInternal(
   if (schema.addPlugin) {
     await addPlugin(
       tree,
-      await createProjectGraphAsync(),
       '@nx/vite/plugin',
       createNodes,
       {

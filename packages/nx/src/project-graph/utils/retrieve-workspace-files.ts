@@ -16,6 +16,7 @@ import {
 } from '../../utils/workspace-context';
 import { buildAllWorkspaceFiles } from './build-all-workspace-files';
 import { join } from 'path';
+import { ProjectConfigurationsError } from '../error-types';
 
 /**
  * Walks the workspace directory to create the `projectFileMap`, `ProjectConfigurations` and `allWorkspaceFiles`
