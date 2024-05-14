@@ -1985,6 +1985,14 @@
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
+              },
+              {
+                "name": "Configure Changelog Format",
+                "path": "/recipes/nx-release/configure-changelog-format",
+                "id": "configure-changelog-format",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
               }
             ],
             "disableCollapsible": false
@@ -3656,6 +3664,14 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
+          },
+          {
+            "name": "Configure Changelog Format",
+            "path": "/recipes/nx-release/configure-changelog-format",
+            "id": "configure-changelog-format",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -3728,6 +3744,14 @@
         "name": "Customize Conventional Commit Types",
         "path": "/recipes/nx-release/customize-conventional-commit-types",
         "id": "customize-conventional-commit-types",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Configure Changelog Format",
+        "path": "/recipes/nx-release/configure-changelog-format",
+        "id": "configure-changelog-format",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
