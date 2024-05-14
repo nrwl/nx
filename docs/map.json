@@ -1036,6 +1036,12 @@
                   "id": "customize-conventional-commit-types",
                   "tags": ["nx-release"],
                   "file": "shared/recipes/nx-release/customize-conventional-commit-types"
+                },
+                {
+                  "name": "Configure Changelog Format",
+                  "id": "configure-changelog-format",
+                  "tags": ["nx-release"],
+                  "file": "shared/recipes/nx-release/configure-changelog-format"
                 }
               ]
             },
