@@ -1,6 +1,5 @@
 import {
   addDependenciesToPackageJson,
-  createProjectGraphAsync,
   formatFiles,
   GeneratorCallback,
   readNxJson,
@@ -25,7 +24,6 @@ export async function webpackInitGeneratorInternal(tree: Tree, schema: Schema) {
   if (schema.addPlugin) {
     await addPlugin(
       tree,
-      await createProjectGraphAsync(),
       '@nx/webpack/plugin',
       createNodes,
       {

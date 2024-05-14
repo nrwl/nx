@@ -153,7 +153,7 @@ import solidPlugin from 'vite-plugin-solid';
 import viteTsConfigPaths from 'vite-tsconfig-paths';
 
 export default defineConfig({
-  cacheDir: '../../node_modules/.vite/my-solid-app',
+  cacheDir: '../../node_modules/.vite/apps/my-solid-app',
 
   server: {
     port: 3000,
@@ -187,7 +187,7 @@ export default defineConfig({
   test: {
     globals: true,
     cache: {
-      dir: '../../node_modules/.vitest',
+      dir: '../../node_modules/.vitest/apps/my-solid-app',
     },
     environment: 'jsdom',
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],

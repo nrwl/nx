@@ -111,7 +111,7 @@ Getting started quickly is very easy. Check out some of the examples below:
 
 Nx core make things faster but doesn't change how your commands run or how the terminal output looks. Compare Nx's and Turbo's terminal outputs:
 
-![nx and turbo terminal output](/shared/turbo-nx-terminal.gif)
+![nx and turbo terminal output](/shared/concepts/turbo-nx-terminal.gif)
 
 Nx doesn't change your terminal output. Spinners, animations, colors are the same whether you use Nx or not (we instrument Node.js to get this result). What is also important is that when you restore things from cache, Nx will replay the terminal output identical to the one you would have had you run the command. Examine Turbo's output: no spinners, no animations, no colors. Pretty much anything you run with Turbo looks different (and in our opinion worse) from running the same command without Turbo.
 
@@ -146,7 +146,7 @@ Turborepo is mostly written in Golang and Rust. Nx is mostly written in TypeScri
 Benchmarking is hard because a lot depends on what you are trying to run, in what environment, etc. This is one benchmark we use when measuring Nx perf: [Nx and Turbo benchmark](https://github.com/vsavkin/large-monorepo/). It is a repo with 5 Next.js apps. We are measuring how quickly Nx and Turbo can figure out what needs to be restored from cache, and how quickly they can do it.
 
 This is the result:
-![nx and turbo benchmark](/shared/turbo-nx-perf.gif)
+![nx and turbo benchmark](/shared/concepts/turbo-nx-perf.gif)
 
 Nx is 9.4 times faster on the latest MBP. We have made several changes to [the benchmark](https://github.com/vsavkin/large-monorepo/) since it was released (removed the usage `npx` and addressed other concerns folks had), but the result remained roughly the same. Please check out the benchmark.
 

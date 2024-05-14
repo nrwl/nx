@@ -1,5 +1,3 @@
-import 'nx/src/internal-testing-utils/mock-project-graph';
-
 import {
   type NxJsonConfiguration,
   readJson,

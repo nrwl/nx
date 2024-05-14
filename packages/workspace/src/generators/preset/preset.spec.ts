@@ -1,4 +1,4 @@
-import 'nx/src/internal-testing-utils/mock-project-graph';
+import 'nx/src/internal-testing-utils/mock-load-nx-plugin';
 
 import { readProjectConfiguration, Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
@@ -87,15 +87,11 @@ describe('preset', () => {
   });
 
   it('should create files (preset = react-native)', async () => {
-    console.log('Hello');
     await presetGenerator(tree, {
       name: 'proj',
       preset: Preset.ReactNative,
       linter: 'eslint',
     });
-
-    process.stderr.write('HELLO');
-    process.stderr.write(tree.listChanges().toString());
 
     expect(tree.exists('/apps/proj/src/app/App.tsx')).toBe(true);
   });

@@ -321,7 +321,7 @@ within the launch template and all respective inputs within each step are approp
 To do this, run the `nx-cloud validate` command, with the path to the launch template:
 
 ```shell
-nx-cloud validate --workflow-file=./nx/workflows/agents.yaml
+nx-cloud validate --workflow-file=./.nx/workflows/agents.yaml
 ```
 
 ## Pass Environment Variables to Agents

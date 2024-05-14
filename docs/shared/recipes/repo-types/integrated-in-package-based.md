@@ -11,7 +11,7 @@ The integrated project is now ready to use. Next, we'll discuss some of the chan
 
 ## package.json dependencies
 
-All the dependencies that are required for an integrated project are maintained in the root `package.json` file. In order to use the plugin's [Automate Updating Framework Dependencies](/features/automate-updating-dependencies) feature, we recommend using a [Single Version Policy](/concepts/more-concepts/dependency-management#single-version-policy) for integrated projects.
+All the dependencies that are required for an integrated project are maintained in the root `package.json` file. In order to use the plugin's [Automate Updating Framework Dependencies](/features/automate-updating-dependencies) feature, we recommend using a [Single Version Policy](/concepts/decisions/dependency-management#single-version-policy) for integrated projects.
 
 ## tsconfig.base.json
 

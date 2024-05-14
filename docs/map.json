@@ -201,7 +201,7 @@
               "name": "Mental Model",
               "tags": ["intro", "inferred-tasks"],
               "id": "mental-model",
-              "file": "shared/mental-model"
+              "file": "shared/concepts/mental-model"
             },
             {
               "name": "How Caching Works",
@@ -241,13 +241,29 @@
               "name": "Executors and Configurations",
               "id": "executors-and-configurations",
               "tags": ["run-tasks"],
-              "file": "shared/recipes/running-tasks/executors-and-configurations"
+              "file": "shared/concepts/executors-and-configurations"
             },
             {
               "name": "Integrated Repos vs. Package-Based Repos vs. Standalone Apps",
               "tags": ["intro", "repository-types"],
               "id": "integrated-vs-package-based",
               "file": "shared/concepts/integrated-vs-package-based"
+            },
+            {
+              "name": "Nx Daemon",
+              "id": "nx-daemon",
+              "file": "shared/concepts/daemon"
+            },
+            {
+              "name": "Nx and Turborepo",
+              "id": "turbo-and-nx",
+              "mediaImage": "./shared/concepts/nx-media-monorepo.jpg",
+              "file": "shared/concepts/turbo-and-nx"
+            },
+            {
+              "name": "Buildable and Publishable Libraries",
+              "id": "buildable-and-publishable-libraries",
+              "file": "shared/concepts/buildable-and-publishable-libraries"
             },
             {
               "name": "Module Federation",
@@ -258,85 +274,68 @@
                   "name": "Module Federation and Nx",
                   "id": "module-federation-and-nx",
                   "tags": ["module-federation", "angular", "react"],
-                  "file": "shared/guides/module-federation/module-federation-and-nx"
+                  "file": "shared/concepts/module-federation/module-federation-and-nx"
                 },
                 {
                   "name": "Faster Builds with Module Federation",
                   "id": "faster-builds-with-module-federation",
                   "tags": ["module-federation", "angular", "react"],
-                  "file": "shared/guides/module-federation/faster-builds"
+                  "file": "shared/concepts/module-federation/faster-builds"
                 },
                 {
                   "name": "Micro Frontend Architecture",
                   "id": "micro-frontend-architecture",
-                  "file": "shared/guides/module-federation/micro-frontend-architecture"
+                  "file": "shared/concepts/module-federation/micro-frontend-architecture"
                 },
                 {
                   "name": "Manage Library Versions with Module Federation",
                   "id": "manage-library-versions-with-module-federation",
-                  "file": "shared/guides/module-federation/manage-library-versions-with-module-federation"
+                  "file": "shared/concepts/module-federation/manage-library-versions-with-module-federation"
                 }
               ]
             },
             {
-              "name": "More Concepts",
-              "id": "more-concepts",
-              "description": "Get deeper into how Nx works and its different aspects.",
+              "name": "Organizational Decisions",
+              "id": "decisions",
+              "description": "Topics that need to be considered when structuring your repository",
               "itemList": [
+                {
+                  "name": "Overview",
+                  "id": "overview",
+                  "file": "shared/concepts/decisions/monorepo-polyrepo"
+                },
                 {
                   "name": "Monorepos",
                   "id": "why-monorepos",
-                  "file": "shared/guides/why-monorepos"
+                  "file": "shared/concepts/decisions/monorepos"
                 },
                 {
                   "name": "Dependency Management",
                   "id": "dependency-management",
-                  "file": "shared/concepts/dependency-management"
+                  "file": "shared/concepts/decisions/dependency-management"
                 },
                 {
-                  "name": "Code Sharing",
-                  "id": "code-sharing",
-                  "file": "shared/concepts/code-sharing"
+                  "name": "Code Ownership",
+                  "id": "code-ownership",
+                  "file": "shared/concepts/decisions/code-ownership"
                 },
                 {
-                  "name": "Nx Daemon",
-                  "id": "nx-daemon",
-                  "file": "shared/daemon"
-                },
-                {
-                  "name": "Nx and Turborepo",
-                  "id": "turbo-and-nx",
-                  "mediaImage": "./shared/guides/nx-media-monorepo.jpg",
-                  "file": "shared/guides/turbo-and-nx"
-                },
-                {
-                  "name": "Applications and Libraries",
-                  "id": "applications-and-libraries",
+                  "name": "Project Size",
+                  "id": "project-size",
                   "tags": ["enforce-module-boundaries"],
-                  "file": "shared/workspace/applications-and-libraries"
+                  "file": "shared/concepts/decisions/project-size"
                 },
                 {
-                  "name": "When to Create a New Library",
-                  "id": "creating-libraries",
+                  "name": "Project Dependency Rules",
+                  "id": "project-dependency-rules",
                   "tags": ["enforce-module-boundaries"],
-                  "file": "shared/workspace/creating-libraries"
+                  "file": "shared/concepts/decisions/project-dependency-rules"
                 },
                 {
-                  "name": "Library Types",
-                  "id": "library-types",
+                  "name": "Folder Structure",
+                  "id": "folder-structure",
                   "tags": ["enforce-module-boundaries"],
-                  "file": "shared/workspace/library-types"
-                },
-                {
-                  "name": "Grouping Libraries",
-                  "id": "grouping-libraries",
-                  "tags": ["enforce-module-boundaries"],
-                  "file": "shared/workspace/grouping-libraries"
-                },
-                {
-                  "name": "Buildable and Publishable Libraries",
-                  "id": "buildable-and-publishable-libraries",
-                  "file": "shared/workspace/buildable-and-publishable-libraries"
+                  "file": "shared/concepts/decisions/folder-structure"
                 }
               ]
             }
@@ -550,7 +549,7 @@
                   "name": "Advanced Micro Frontends with Angular using Dynamic Federation",
                   "id": "dynamic-module-federation-with-angular",
                   "tags": ["module-federation", "angular"],
-                  "file": "shared/guides/module-federation/dynamic-mfe-angular"
+                  "file": "shared/recipes/module-federation/dynamic-mfe-angular"
                 },
                 {
                   "name": "Setup incremental builds for Angular applications",
@@ -1037,6 +1036,12 @@
                   "id": "customize-conventional-commit-types",
                   "tags": ["nx-release"],
                   "file": "shared/recipes/nx-release/customize-conventional-commit-types"
+                },
+                {
+                  "name": "Configure Changelog Format",
+                  "id": "configure-changelog-format",
+                  "tags": ["nx-release"],
+                  "file": "shared/recipes/nx-release/configure-changelog-format"
                 }
               ]
             },

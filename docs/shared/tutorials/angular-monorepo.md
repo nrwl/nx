@@ -106,7 +106,7 @@ The setup includes:
 - ESLint preconfigured
 - Jest preconfigured
 
-Typically, an integrated Nx workspace places application projects in the `apps` folder and library projects in the `libs` folder. [Applications are encouraged to be as light-weight as possible](/concepts/more-concepts/applications-and-libraries) so that more code is pushed into libraries and can be reused in other projects. This folder structure is just a suggestion and can be modified to suit your organization's needs.
+Typically, an integrated Nx workspace places application projects in the `apps` folder and library projects in the `libs` folder. Applications are encouraged to be as light-weight as possible so that more code is pushed into libraries and can be reused in other projects. This folder structure is just a suggestion and can be modified to suit your organization's needs.
 
 The [`nx.json` file](/reference/nx-json) contains configuration settings for Nx itself and global default settings that individual projects inherit. The `apps/angular-store/project.json` file contains [settings that are specific to the `angular-store` project](/reference/project-configuration). We'll examine that file more in the next section.
 

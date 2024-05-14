@@ -1,6 +1,5 @@
 import {
   addDependenciesToPackageJson,
-  createProjectGraphAsync,
   formatFiles,
   GeneratorCallback,
   readNxJson,
@@ -41,7 +40,6 @@ export async function reactNativeInitGeneratorInternal(
   if (schema.addPlugin) {
     await addPlugin(
       host,
-      await createProjectGraphAsync(),
       '@nx/react-native/plugin',
       createNodes,
       {

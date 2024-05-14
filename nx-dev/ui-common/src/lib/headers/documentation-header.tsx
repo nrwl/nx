@@ -180,6 +180,9 @@ export function DocumentationHeader({
 
   return (
     <div className="border-b border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800/60 print:hidden">
+      <div className="hidden w-full md:block">
+        <AnnouncementBanner />
+      </div>
       <div className="mx-auto flex w-full items-center gap-6 lg:px-8 lg:py-4">
         {/*MOBILE MENU*/}
         <div className="flex w-full items-center lg:hidden">
@@ -388,10 +391,6 @@ export function DocumentationHeader({
           </nav>
         </div>
         <div className="hidden flex-grow lg:flex">{/* SPACER */}</div>
-        <div className="hidden w-full lg:flex xl:hidden">
-          <div className="flex-grow"></div>
-          <AnnouncementBanner />
-        </div>
         <div className="hidden flex-shrink-0 lg:flex">
           <nav
             role="menu"
@@ -419,10 +418,6 @@ export function DocumentationHeader({
       <div className="mx-auto hidden w-full items-center px-4 sm:space-x-10 sm:px-6 lg:flex lg:px-8">
         <Menu tabs={sections} />
         <div className="flex-grow"></div>
-        <div className="hidden w-full xl:flex">
-          <div className="flex-grow"></div>
-          <AnnouncementBanner />
-        </div>
         <nav
           aria-labelledby="community-links"
           className="block min-w-36 space-x-2 text-right"
