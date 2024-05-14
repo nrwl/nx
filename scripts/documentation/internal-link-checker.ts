@@ -101,9 +101,12 @@ const sitemapLinks = readSiteMapIndex(
   'sitemap.xml'
 ).flatMap((path) => readSiteMapLinks(path));
 const errors: Array<{ file: string; link: string }> = [];
+const localLinkErrors: Array<{ file: string; link: string }> = [];
 for (let file in documentLinks) {
   for (let link of documentLinks[file]) {
-    if (!sitemapLinks.includes(['https://nx.dev', link].join(''))) {
+    if (link.startsWith('https://nx.dev')) {
+      localLinkErrors.push({ file, link });
+    } else if (!sitemapLinks.includes(['https://nx.dev', link].join(''))) {
       errors.push({ file, link });
     }
   }
@@ -119,11 +122,21 @@ for (let file in imageLinks) {
 }
 
 console.log(`i/ Internal Link Check`);
-if (errors.length) {
-  console.log(`ERROR\n${errors.length} links are pointing to nowhere:`);
-  errors.forEach((error) =>
-    console.error(`⚠ File:${error.file}\n -> ${error.link}\n`)
-  );
+if (errors.length || localLinkErrors.length) {
+  if (errors.length) {
+    console.log(`ERROR\n${errors.length} links are pointing to nowhere:`);
+    errors.forEach((error) => {
+      console.error(`⚠ File:${error.file}\n -> ${error.link}\n`);
+    });
+  }
+  if (localLinkErrors.length) {
+    console.log(
+      `ERROR\n${localLinkErrors.length} local links should not include the domain:`
+    );
+    localLinkErrors.forEach((error) => {
+      console.error(`⚠ File:${error.file}\n -> ${error.link}\n`);
+    });
+  }
   process.exit(1);
 }
 console.log(`i/ No internal 404 link detected.`);
