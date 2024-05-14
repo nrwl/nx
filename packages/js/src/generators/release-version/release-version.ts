@@ -473,18 +473,20 @@ To fix this you will either need to add a package.json file at that location, or
               );
             }
 
-            options.releaseGroup.versionPlans.forEach((p) => {
-              additionalCallbacks.push(async (dryRun?: boolean) => {
-                if (!dryRun && options.deleteVersionPlans) {
-                  await remove(p.absolutePath);
-                  // the relative path is easier to digest, so use that for
-                  // git operations and logging
-                  return [p.relativePath];
-                } else {
-                  return [];
-                }
+            if (options.deleteVersionPlans) {
+              options.releaseGroup.versionPlans.forEach((p) => {
+                additionalCallbacks.push(async (dryRun?: boolean) => {
+                  if (!dryRun) {
+                    await remove(p.absolutePath);
+                    // the relative path is easier to digest, so use that for
+                    // git operations and logging
+                    return [p.relativePath];
+                  } else {
+                    return [];
+                  }
+                });
               });
-            });
+            }
 
             break;
           }

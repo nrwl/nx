@@ -170,6 +170,7 @@ export async function gitAdd({
     if (isFileIgnored) {
       ignoredFiles.push(f);
     } else if (
+      // git add will fail if trying to add an untracked file that doesn't exist
       changedTrackedFiles.has(f) ||
       existsSync(join(workspaceRoot, f))
     ) {
