@@ -1,5 +1,6 @@
 import {
   addDependenciesToPackageJson,
+  createProjectGraphAsync,
   formatFiles,
   GeneratorCallback,
   readNxJson,
@@ -7,8 +8,11 @@ import {
   runTasksInSerial,
   Tree,
 } from '@nx/devkit';
-import { addPlugin } from '@nx/devkit/src/utils/add-plugin';
-import { createNodes } from '../../plugins/plugin';
+import {
+  addPlugin,
+  generateCombinations,
+} from '@nx/devkit/src/utils/add-plugin';
+import { createNodes, DetoxPluginOptions } from '../../plugins/plugin';
 import { detoxVersion, nxVersion } from '../../utils/versions';
 import { Schema } from './schema';
 
@@ -34,6 +38,7 @@ export async function detoxInitGeneratorInternal(host: Tree, schema: Schema) {
   if (schema.addPlugin) {
     await addPlugin(
       host,
+      await createProjectGraphAsync(),
       '@nx/detox/plugin',
       createNodes,
       {

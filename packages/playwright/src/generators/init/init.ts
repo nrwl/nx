@@ -47,6 +47,7 @@ export async function initGeneratorInternal(
   if (options.addPlugin) {
     await addPlugin(
       tree,
+      await createProjectGraphAsync(),
       '@nx/playwright/plugin',
       createNodes,
       { targetName: ['e2e', 'playwright:e2e', 'playwright-e2e'] },

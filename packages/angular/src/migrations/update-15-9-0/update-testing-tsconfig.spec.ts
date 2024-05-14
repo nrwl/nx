@@ -1,5 +1,3 @@
-import 'nx/src/internal-testing-utils/mock-load-nx-plugin';
-
 import {
   ProjectGraph,
   readJson,
