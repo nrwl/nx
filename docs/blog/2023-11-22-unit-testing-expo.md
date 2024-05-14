@@ -5,7 +5,7 @@ cover_image: '/blog/images/2023-11-22/featured_img.webp'
 tags: [nx, unit testing]
 ---
 
-In my latest [blog](https://dev.to/nx/step-by-step-guide-to-creating-an-expo-monorepo-with-nx-3b17), I successfully navigated through the steps of setting up an Expo Monorepo with [Nx](https://nx.dev). The next challenge? Testing! This blog dives into:
+In my latest [blog](https://dev.to/nx/step-by-step-guide-to-creating-an-expo-monorepo-with-nx-3b17), I successfully navigated through the steps of setting up an Expo Monorepo with [Nx](). The next challenge? Testing! This blog dives into:
 
 - Crafting effective unit tests for Expo components utilizing Jest
 - Addressing common issues encountered during unit testing

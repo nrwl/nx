@@ -14,7 +14,7 @@ function readFileContents(path: string): string {
   return readFileSync(path, 'utf-8');
 }
 function isLinkInternal(linkPath: string): boolean {
-  return linkPath.startsWith('/');
+  return linkPath.startsWith('/') || linkPath.startsWith('https://nx.dev');
 }
 function isNotAsset(linkPath: string): boolean {
   return !linkPath.startsWith('/assets');
@@ -34,7 +34,7 @@ function removeAnchors(linkPath: string): string {
   return linkPath.split('#')[0];
 }
 function extractAllLinks(basePath: string): Record<string, string[]> {
-  return glob.sync(`${basePath}/**/*.md`).reduce((acc, path) => {
+  return glob.sync(`${basePath}/*/**/*.md`).reduce((acc, path) => {
     const fileContents = readFileContents(path);
     const cardLinks = (fileContents.match(/url="(.*?)"/g) || []).map((v) =>
       v.slice(5, -1)
