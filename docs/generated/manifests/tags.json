@@ -533,6 +533,13 @@
       "path": "/recipes/nx-release/customize-conventional-commit-types"
     },
     {
+      "description": "",
+      "file": "shared/recipes/nx-release/configure-changelog-format",
+      "id": "configure-changelog-format",
+      "name": "Configure Changelog Format",
+      "path": "/recipes/nx-release/configure-changelog-format"
+    },
+    {
       "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
       "file": "generated/packages/generated/packages/nx/documents/release",
       "id": "release",
