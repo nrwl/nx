@@ -12,6 +12,7 @@ describe('Nuxt Plugin', () => {
   const app = uniq('app');
 
   beforeAll(() => {
+    console.log('HELLO JIMBO');
     newProject({
       packages: ['@nx/nuxt'],
       unsetProjectNameAndRootFormat: false,

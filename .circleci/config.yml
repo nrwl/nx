@@ -90,7 +90,7 @@ jobs:
       - checkout
       - nx/set-shas:
           main-branch-name: 'master'
-      - run: npx nx-cloud@next start-ci-run --distribute-on=".nx/workflows/dynamic-changesets.yaml" --stop-agents-after="e2e"
+      - run: npx nx-cloud@next start-ci-run --distribute-on=".nx/workflows/dynamic-changesets.yaml"
       # - run:
       #     command: |
       #       sudo apt-get update
@@ -106,7 +106,6 @@ jobs:
           name: Run Checks/Lint/Test/Build
           no_output_timeout: 60m
           command: |
-            pnpm exec nx populate-local-registry-storage
             pnpm exec nx e2e-ci e2e-nuxt --verbose
             pnpm exec nx-cloud stop-all-agents
   # -------------------------
