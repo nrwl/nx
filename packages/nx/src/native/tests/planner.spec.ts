@@ -1,4 +1,5 @@
 import { TempFs } from '../../internal-testing-utils/temp-fs';
+
 let tempFs = new TempFs('task-planner');
 
 import { HashPlanner, transferProjectGraph } from '../index';
@@ -164,10 +165,10 @@ describe('task planner', () => {
         {}
       );
 
-      const planner = new HashPlanner(
-        nxJson as any,
-        transferProjectGraph(transformProjectGraphForRust(projectGraph))
+      const ref = transferProjectGraph(
+        transformProjectGraphForRust(projectGraph)
       );
+      const planner = new HashPlanner(nxJson as any, ref);
 
       await assertHashPlan(
         taskGraph.tasks['parent:build'],
