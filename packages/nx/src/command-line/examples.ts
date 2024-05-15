@@ -302,6 +302,12 @@ export const examples: Record<string, Example[]> = {
 
     {
       command: 'show project my-app',
+      description:
+        'If in an interactive terminal, opens the project detail view. If not in an interactive terminal, defaults to JSON.',
+    },
+
+    {
+      command: 'show project my-app --json',
       description: 'Show detailed information about "my-app" in a json format.',
     },
 

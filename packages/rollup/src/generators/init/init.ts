@@ -1,5 +1,6 @@
 import {
   addDependenciesToPackageJson,
+  createProjectGraphAsync,
   formatFiles,
   GeneratorCallback,
   Tree,
@@ -26,6 +27,7 @@ export async function rollupInitGenerator(tree: Tree, schema: Schema) {
   if (schema.addPlugin) {
     await addPlugin(
       tree,
+      await createProjectGraphAsync(),
       '@nx/rollup/plugin',
       createNodes,
       {

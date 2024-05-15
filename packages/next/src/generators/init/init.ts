@@ -55,6 +55,7 @@ export async function nextInitGeneratorInternal(
     const { createNodes } = await import('../../plugins/plugin');
     await addPlugin(
       host,
+      await createProjectGraphAsync(),
       '@nx/next/plugin',
       createNodes,
       {

@@ -1,4 +1,4 @@
-import 'nx/src/internal-testing-utils/mock-load-nx-plugin';
+import 'nx/src/internal-testing-utils/mock-project-graph';
 
 import * as devkit from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
