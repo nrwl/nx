@@ -36,7 +36,8 @@ export default async function (globalConfig: Config.ConfigGlobals) {
     if (requiresLocalRelease) {
       console.log('Publishing packages to local registry');
       const publishVersion = process.env.PUBLISHED_VERSION ?? 'major';
-      await runLocalRelease(publishVersion, isVerbose);
+      // Always show full release logs on CI, they should only happen once via e2e-ci
+      await runLocalRelease(publishVersion, isCI || isVerbose);
     }
   }
 }
