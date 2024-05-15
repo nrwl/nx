@@ -139,7 +139,7 @@ describe('getImplicitlyTouchedProjects', () => {
         root: 'a',
         targets: {
           build: {
-            inputs: ['files'],
+            inputs: ['files', '{workspaceRoot}/b.txt'],
           },
         },
       },
@@ -148,6 +148,10 @@ describe('getImplicitlyTouchedProjects', () => {
       },
     });
     let fileChanges = getFileChanges(['a.txt']);
+    expect(getImplicitlyTouchedProjects(fileChanges, graph, nxJson)).toEqual([
+      'a',
+    ]);
+    fileChanges = getFileChanges(['b.txt']);
     expect(getImplicitlyTouchedProjects(fileChanges, graph, nxJson)).toEqual([
       'a',
     ]);
