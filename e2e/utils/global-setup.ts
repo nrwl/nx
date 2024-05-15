@@ -29,7 +29,6 @@ export default async function (globalConfig: Config.ConfigGlobals) {
    * verdaccio storage.
    */
   if (!requiresLocalRelease) {
-    console.log(execSync('npm view nx').toString());
     const publishedVersion = await getPublishedVersion();
     console.log({ publishedVersion });
     if (publishedVersion) {
@@ -55,7 +54,7 @@ export default async function (globalConfig: Config.ConfigGlobals) {
 function getPublishedVersion(): Promise<string | undefined> {
   return new Promise((resolve) => {
     // Resolve the published nx version from verdaccio
-    exec('npm view nx@next version', (error, stdout, stderr) => {
+    exec('npm view nx@latest version', (error, stdout, stderr) => {
       if (error) {
         return resolve(undefined);
       }
