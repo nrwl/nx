@@ -15,6 +15,9 @@ if (process.env.NX_PERF_LOGGING === 'true') {
 
 const LARGE_BUFFER = 1024 * 1000000;
 
+// TODO: figure out why workspaceRoot and therefore getPublishedVersion() is not working
+process.env.PUBLISHED_VERSION = '20.0.0';
+
 export default async function (globalConfig: Config.ConfigGlobals) {
   performance.mark('global-setup:start');
   const isVerbose: boolean =
