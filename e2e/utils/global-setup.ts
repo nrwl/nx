@@ -1,5 +1,4 @@
 import { Config } from '@jest/types';
-import { workspaceRoot } from '@nx/devkit';
 import { startLocalRegistry } from '@nx/js/plugins/jest/local-registry';
 import { existsSync, removeSync } from 'fs-extra';
 import * as isCI from 'is-ci';
@@ -7,12 +6,7 @@ import { join } from 'node:path';
 import { registerTsConfigPaths } from '../../packages/nx/src/plugins/js/utils/register';
 import { runLocalRelease } from '../../scripts/local-registry/populate-storage';
 
-// TODO: figure out why workspaceRoot and therefore getPublishedVersion() is not working
-process.env.PUBLISHED_VERSION = '20.0.0';
-
 export default async function (globalConfig: Config.ConfigGlobals) {
-  console.log({ isCI });
-
   const isVerbose: boolean =
     process.env.NX_VERBOSE_LOGGING === 'true' || !!globalConfig.verbose;
 
