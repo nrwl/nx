@@ -74,6 +74,10 @@ console.log(`The value of input1 is: ${input1}`);
 
 Once you've defined your custom step, you can use it in your launch templates by referencing the custom step file. Here's an example:
 
+{% callout type="check" title="Custom Step location" %}
+When specifying the location for the custom step, you must include a branch or tag (e.g., `main`). Using a direct URL to the repository without a branch or tag will not work.
+{% /callout %}
+
 ```yaml {% fileName=".nx/workflows/agents.yaml" %}
 launch-templates:
   custom-template:
@@ -89,9 +93,6 @@ launch-templates:
           input2: 'value2'
 ```
 
-{% callout type="check" title="Custom Step location" %}
-When specifying the location for the custom step, you must include a branch or tag (e.g., `main`). Using a direct URL to the repository without a branch or tag will not work.
-{% /callout %}
 {% callout type="note" title="Recommendation on Using Inputs vs. Env" %}
 While you can use both `env` and `inputs` to pass values to custom steps, it is recommended to use `inputs` as they offer validation support, whereas `env` does not.
 {% /callout %}
