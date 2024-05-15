@@ -1,13 +1,45 @@
 import { TempFs } from '../../../../internal-testing-utils/temp-fs';
 const tempFs = new TempFs('explicit-package-json');
 
-import { buildExplicitPackageJsonDependencies } from './explicit-package-json-dependencies';
-
+import { join } from 'node:path';
 import { ProjectGraphProjectNode } from '../../../../config/project-graph';
-import { ProjectGraphBuilder } from '../../../../project-graph/project-graph-builder';
 import { createFileMap } from '../../../../project-graph/file-map-utils';
 import { CreateDependenciesContext } from '../../../../project-graph/plugins';
+import { ProjectGraphBuilder } from '../../../../project-graph/project-graph-builder';
 import { getAllFileDataInContext } from '../../../../utils/workspace-context';
+
+import { buildExplicitPackageJsonDependencies } from './explicit-package-json-dependencies';
+
+jest.mock('../../utils/find-external-package-json-path', () => ({
+  findExternalPackageJsonPath: jest
+    .fn()
+    .mockImplementation((packageName, relativeToDir) => {
+      if (packageName === 'lodash') {
+        if (relativeToDir) {
+          // project specific lodash 3
+          if (relativeToDir.includes('proj3')) {
+            return join(
+              tempFs.tempDir,
+              'libs',
+              'proj3',
+              'node_modules',
+              'lodash',
+              'package.json'
+            );
+          }
+          // lodash 4
+          if (relativeToDir.includes('proj')) {
+            return join(
+              tempFs.tempDir,
+              'node_modules',
+              'lodash',
+              'package.json'
+            );
+          }
+        }
+      }
+    }),
+}));
 
 describe('explicit package json dependencies', () => {
   let ctx: CreateDependenciesContext;
@@ -38,6 +70,11 @@ describe('explicit package json dependencies', () => {
     const nxJsonConfiguration = {};
 
     await tempFs.createFiles({
+      './node_modules/lodash/lodash.js': '',
+      './node_modules/lodash/package.json': JSON.stringify({
+        name: 'lodash',
+        version: '4.0.0',
+      }),
       './package.json': `{
             "name": "test",
             "dependencies": [],
@@ -49,6 +86,11 @@ describe('explicit package json dependencies', () => {
       './libs/proj3/package.json': JSON.stringify({
         name: 'proj3',
         dependencies: { lodash: '3.0.0' },
+      }),
+      './libs/proj3/node_modules/lodash/index.js': '',
+      './libs/proj3/node_modules/lodash/package.json': JSON.stringify({
+        name: 'lodash',
+        version: '3.0.0',
       }),
       './libs/proj/package.json': JSON.stringify({
         dependencies: { proj2: '*', lodash: '4.0.0' },

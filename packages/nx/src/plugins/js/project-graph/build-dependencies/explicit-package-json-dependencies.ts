@@ -1,4 +1,5 @@
-import { join } from 'path';
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
 import { DependencyType } from '../../../../config/project-graph';
 import {
   ProjectConfiguration,
@@ -13,8 +14,8 @@ import {
 import { parseJson } from '../../../../utils/json';
 import { PackageJson } from '../../../../utils/package-json';
 import { joinPathFragments } from '../../../../utils/path';
+import { findExternalPackageJsonPath } from '../../utils/find-external-package-json-path';
 import { ExternalDependenciesCache } from './build-dependencies';
-import { satisfies } from 'semver';
 
 export function buildExplicitPackageJsonDependencies(
   ctx: CreateDependenciesContext,
@@ -68,6 +69,9 @@ function isPackageJsonAtProjectRoot(
   );
 }
 
+// package.json path => package.json contents to avoid reading the same file multiple times from disk
+const externalPackageJsonCache = new Map<string, PackageJson>();
+
 function processPackageJson(
   sourceProject: string,
   fileName: string,
@@ -94,32 +98,7 @@ function processPackageJson(
       externalDependenciesCache.set(sourceProject, depsForSource);
     }
 
-    // Preprocess relevant external nodes for the given deps for optimal traversal
-    let fallbackExternalNodeVersion: string | undefined;
-    const depToRelevantExternalNodes = new Map<string, string[]>();
-    for (const externalNode of Object.keys(ctx.externalNodes)) {
-      const [depName] = externalNode.match(/^npm:(.*)/)?.[1].split('@') ?? [];
-      if (!deps[depName]) {
-        continue;
-      }
-      if (!depToRelevantExternalNodes.has(depName)) {
-        depToRelevantExternalNodes.set(depName, []);
-      }
-      const isFallback = !externalNode.includes('@');
-      if (isFallback) {
-        fallbackExternalNodeVersion =
-          ctx.externalNodes[externalNode].data.version;
-      }
-      depToRelevantExternalNodes.get(depName).push(
-        // For the fallback external node with no version, add the version so that we can more accurately match it later
-        isFallback
-          ? `${externalNode}@${fallbackExternalNodeVersion}`
-          : externalNode
-      );
-    }
-
-    // the name matches the import path
-    Object.entries(deps).forEach(([d, version]) => {
+    for (const d of Object.keys(deps)) {
       // package.json refers to another project in the monorepo
       if (packageNameMap[d]) {
         const dependency: RawProjectGraphDependency = {
@@ -130,52 +109,55 @@ function processPackageJson(
         };
         validateDependency(dependency, ctx);
         collectedDeps.push(dependency);
-        return;
+        continue;
       }
 
-      /**
-       * For external (npm) packages we need to match them as accurately and granularly as possible:
-       * - If the package.json specifies an exact version, we can match that directly.
-       * - If the package.json specifies something other than an exact version, we need to look up
-       * possible matching nodes from the graph.
-       * - If we have not found any matches yet, we may still have a node containing only the package name
-       * as a fallback.
-       */
+      try {
+        // package.json refers to an external package, we do not match against the version found in there, we instead try and resolve the relevant package how node would
+        let externalPackageVersion: string | undefined;
+        const externalPackageJsonPath = findExternalPackageJsonPath(
+          d,
+          dirname(fileName)
+        );
+        // The package.json path might be not be resolvable, e.g. if a reference has been added to the package.json, but the install command has not been run yet.
+        if (!externalPackageJsonPath) {
+          continue;
+        }
+        if (!externalPackageJsonCache.has(externalPackageJsonPath)) {
+          const externalPackageJson = parseJson(
+            readFileSync(externalPackageJsonPath, 'utf-8')
+          );
+          externalPackageJsonCache.set(
+            externalPackageJsonPath,
+            externalPackageJson
+          );
+          externalPackageVersion = externalPackageJson.version;
+        } else {
+          externalPackageVersion = externalPackageJsonCache.get(
+            externalPackageJsonPath
+          ).version;
+        }
 
-      const externalWithExactVersion = `npm:${d}@${version}`;
+        const externalWithExactVersion = `npm:${d}@${externalPackageVersion}`;
+        if (ctx.externalNodes[externalWithExactVersion]) {
+          applyDependencyTarget(externalWithExactVersion);
+          continue;
+        }
 
-      if (ctx.externalNodes[externalWithExactVersion]) {
-        applyDependencyTarget(externalWithExactVersion);
-        return;
-      }
-
-      const externalWithNoVersion = `npm:${d}`;
-
-      const relevantExternalNodes = depToRelevantExternalNodes.get(d);
-      if (relevantExternalNodes?.length > 0) {
-        // Nodes will already be in the order of highest version first, so the match should be most appropriate
-        for (const node of relevantExternalNodes) {
-          // see if the version is compatible
-          const [_, externalDepVersion] = node.split('@');
-          if (satisfies(externalDepVersion, version)) {
-            applyDependencyTarget(
-              externalDepVersion === fallbackExternalNodeVersion
-                ? externalWithNoVersion
-                : node
-            );
-            return;
-          }
+        const externalWithNoVersion = `npm:${d}`;
+        if (ctx.externalNodes[externalWithNoVersion]) {
+          applyDependencyTarget(externalWithNoVersion);
+          continue;
+        }
+      } catch (e) {
+        if (process.env.NX_VERBOSE_LOGGING === 'true') {
+          console.error(e);
         }
       }
-
-      if (ctx.externalNodes[externalWithNoVersion]) {
-        applyDependencyTarget(externalWithNoVersion);
-        return;
-      }
-    });
+    }
   } catch (e) {
     if (process.env.NX_VERBOSE_LOGGING === 'true') {
-      console.log(e);
+      console.error(e);
     }
   }
 }
