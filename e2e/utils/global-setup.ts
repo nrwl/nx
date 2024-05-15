@@ -18,7 +18,8 @@ export default async function (globalConfig: Config.ConfigGlobals) {
    * For e2e-ci we populate the verdaccio storage up front, but for other workflows we need
    * to run the full local release process before running tests.
    */
-  const requiresLocalRelease = process.env.NX_TASK_TARGET_TARGET !== 'e2e-ci';
+  const requiresLocalRelease =
+    !process.env.NX_TASK_TARGET_TARGET?.startsWith('e2e-ci');
 
   global.e2eTeardown = await startLocalRegistry({
     localRegistryTarget: '@nx/nx-source:local-registry',

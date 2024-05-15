@@ -7,8 +7,6 @@
 
 <div style="text-align: center;">
 
-<!-- README only change -->
-
 [![CircleCI](https://circleci.com/gh/nrwl/nx.svg?style=svg)](https://circleci.com/gh/nrwl/nx)
 [![License](https://img.shields.io/npm/l/nx.svg?style=flat-square)]()
 [![NPM Version](https://badge.fury.io/js/nx.svg)](https://www.npmjs.com/package/nx)
