@@ -1,8 +1,7 @@
 import { join } from 'path';
 
 import { registerTsConfigPaths } from '../../packages/nx/src/plugins/js/utils/register';
-// import { startLocalRegistry } from '@nx/js/plugins/jest/local-registry';
-import { startLocalRegistry } from '../../scripts/start-local-registry';
+import { startLocalRegistry } from '@nx/js/plugins/jest/local-registry';
 import { exec } from 'child_process';
 import { tmpdir } from 'tmp';
 import { existsSync, removeSync } from 'fs-extra';
@@ -28,7 +27,8 @@ export default async function (globalConfig: Config.ConfigGlobals) {
   global.e2eTeardown = await startLocalRegistry({
     localRegistryTarget: '@nx/nx-source:local-registry',
     verbose: isVerbose,
-  } as any);
+    clearStorage: false,
+  });
   performance.mark('global-setup:registry-started');
   performance.measure(
     'global-setup-registry',
