@@ -8,3 +8,5 @@ export function getCloudOptions(): CloudTaskRunnerOptions {
   // TODO: The default is not always cloud? But it's not handled at the moment
   return getRunnerOptions('default', nxJson, {}, true);
 }
+
+
