@@ -11,6 +11,8 @@ import { runLocalRelease } from '../../scripts/local-registry/populate-storage';
 process.env.PUBLISHED_VERSION = '20.0.0';
 
 export default async function (globalConfig: Config.ConfigGlobals) {
+  console.log({ isCI });
+
   const isVerbose: boolean =
     process.env.NX_VERBOSE_LOGGING === 'true' || !!globalConfig.verbose;
 
