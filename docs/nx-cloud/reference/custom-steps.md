@@ -99,10 +99,10 @@ While you can use both `env` and `inputs` to pass values to custom steps, it is 
 
 ### Validating Custom Steps
 
-Just like launch templates, you should validate your custom steps to ensure they are defined correctly. In your CI pipeline, use the `nx-cloud validate` command with the `--stepFile` flag to ensure nobody merges in invalid changes to your step:
+Just like launch templates, you should validate your custom steps to ensure they are defined correctly. In your CI pipeline, use the `nx-cloud validate` command with the `--step-file` flag to ensure nobody merges in invalid changes to your step:
 
 ```shell
-nx-cloud validate --workflow-file=./.nx/workflows/custom-steps.yaml --stepFile
+nx-cloud validate --workflow-file=./.nx/workflows/custom-steps.yaml --step-file
 ```
 
 Ensure your custom steps are committed to your source control repository before running the validation.
