@@ -1,6 +1,8 @@
 import { ChildProcess, exec, execSync, spawn } from 'node:child_process';
 import { LARGE_BUFFER } from 'nx/src/executors/run-commands/run-commands.impl';
 
+process.env.NX_VERBOSE_LOGGING = 'true';
+
 (async function populateLocalRegistry() {
   try {
     const isVerbose = process.env.NX_VERBOSE_LOGGING === 'true';
