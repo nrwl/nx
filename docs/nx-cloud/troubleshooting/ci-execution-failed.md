@@ -6,17 +6,17 @@
 
 Nx Cloud is not aware of any more tasks to distribute. This can occur if Nx Cloud thinks it is done receiving tasks to distribute and all existing tasks have been completed.
 
-If you are receiving this error before your full pipeline has completed, consider using [--stop-agents-after](https://nx.dev/ci/reference/nx-cloud-cli#stopagentsafter) with the target set to the last target run in your pipeline.
+If you are receiving this error before your full pipeline has completed, consider using [--stop-agents-after](/ci/reference/nx-cloud-cli#stopagentsafter) with the target set to the last target run in your pipeline.
 
 ### The Nx Cloud heartbeat process failed to report its status in time
 
 While running in CI environments, Nx Cloud spawns a background process called the "heartbeat" to help maintain status synchronization between itself and external platforms. When the heartbeat process does not report to Nx Cloud for 30 seconds or longer, Nx Cloud assumes something has gone wrong and terminates the current CI Pipeline Execution.
 
-This behavior can be disabled by setting the [--require-explicit-completion](https://nx.dev/ci/reference/nx-cloud-cli#requireexplicitcompletion) flag to `true` on your `nx-cloud start-ci-run` command.
+This behavior can be disabled by setting the [--require-explicit-completion](/ci/reference/nx-cloud-cli#requireexplicitcompletion) flag to `true` on your `nx-cloud start-ci-run` command.
 
 ### A command was issued to stop all Nx Cloud agents
 
-Nx Cloud provides two commands to forcibly stop agents, [stop-all-agents and complete-ci-run](https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-stopallagents).
+Nx Cloud provides two commands to forcibly stop agents, [stop-all-agents and complete-ci-run](/ci/reference/nx-cloud-cli#npx-nxcloud-stopallagents).
 
 Once these commands are invoked, the current CI Pipeline Execution is closed and can no longer receive new work.
 
@@ -24,7 +24,7 @@ Once these commands are invoked, the current CI Pipeline Execution is closed and
 
 Nx Cloud detected a failed task in the current CI Pipeline Execution and has halted further execution.
 
-This behavior can be disabled by setting the [--stop-agents-on-failure](https://nx.dev/ci/reference/nx-cloud-cli#stopagentsonfailure) flag to `false` on your `nx-cloud start-ci-run` command.
+This behavior can be disabled by setting the [--stop-agents-on-failure](/ci/reference/nx-cloud-cli#stopagentsonfailure) flag to `false` on your `nx-cloud start-ci-run` command.
 
 ## Nx Agents-Related
 

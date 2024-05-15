@@ -1,3 +1,4 @@
+import { env as appendLocalEnv } from 'npm-run-path';
 import {
   combineOptionsForExecutor,
   handleErrors,
@@ -131,16 +132,23 @@ async function printTargetRunHelpInternal(
   ) {
     const command = targetConfig.options.command.split(' ')[0];
     const helpCommand = `${command} --help`;
+    const localEnv = appendLocalEnv();
+    const env = {
+      ...process.env,
+      ...localEnv,
+    };
     if (PseudoTerminal.isSupported()) {
       const terminal = getPseudoTerminal();
       await new Promise(() => {
-        const cp = terminal.runCommand(helpCommand);
+        const cp = terminal.runCommand(helpCommand, { jsEnv: env });
         cp.onExit((code) => {
           process.exit(code);
         });
       });
     } else {
-      const cp = exec(helpCommand);
+      const cp = exec(helpCommand, {
+        env,
+      });
       cp.on('exit', (code) => {
         process.exit(code);
       });

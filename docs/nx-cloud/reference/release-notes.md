@@ -58,16 +58,16 @@ This includes events such as when a workspace was created, when a new VCS integr
 
 ### 2402.27.3
 
-With this version you can take advantage of most features announced during our recent [launch week](https://nx.dev/launch-nx).
+With this version you can take advantage of most features announced during our recent [launch week](/launch-nx).
 
 ##### Nx Agents
 
-This release contains everything needed to run [Nx Agents](https://nx.dev/ci/features/distribute-task-execution) on-prem. While the on-prem configuration is still experimental, we are actively running Nx Agents trials at the moment, and if you'd like to take part please reach out to your DPE.
+This release contains everything needed to run [Nx Agents](/ci/features/distribute-task-execution) on-prem. While the on-prem configuration is still experimental, we are actively running Nx Agents trials at the moment, and if you'd like to take part please reach out to your DPE.
 
 If you already running DTE, there are a few advantages to upgrading to Agents:
 
 - simplified CI config: you will need to maintain just a single, main CI job config. NxCloud will create needed CI agents for you as needed.
-- [dynamic agent allocation based on PR size](https://nx.dev/ci/features/dynamic-agents): instead of always launching all your agents NxCloud will now launch different number of agents dynamically based on your PR size
+- [dynamic agent allocation based on PR size](/ci/features/dynamic-agents): instead of always launching all your agents NxCloud will now launch different number of agents dynamically based on your PR size
 - access to [Spot instances](https://aws.amazon.com/ec2/spot/): if you are running your clusters on any of the popular cloud providers (AWS, Google Cloud, Azure etc.), you can now use their Spot instances for running your CI job. This is possible due to NxCloud's distribution model, which allows work on a reclaimed node to be re-distributed to the remaining agents.
 
 We will shortly make available a new Helm chart that will allow you to deploy a separate Agents cluster to launch workflows: [https://github.com/nrwl/nx-cloud-helm](https://github.com/nrwl/nx-cloud-helm).
@@ -76,11 +76,11 @@ We will shortly make available a new Helm chart that will allow you to deploy a 
 
 ##### Task Atomizer and task retries
 
-If you combine this release + upgrade to the latest Nx 18, you will have access to both the [task atomizer](https://nx.dev/ci/features/split-e2e-tasks) (which allows your e2e to be distributed among agents PER FILE, instead of previously per project) and the [flaky task retry functionality](https://nx.dev/ci/features/flaky-tasks).
+If you combine this release + upgrade to the latest Nx 18, you will have access to both the [task atomizer](/ci/features/split-e2e-tasks) (which allows your e2e to be distributed among agents PER FILE, instead of previously per project) and the [flaky task retry functionality](/ci/features/flaky-tasks).
 
 ##### CIPE page improvements
 
-Along with all the UI changes to support agents (following their logs and track how tasks get distributed,details of which you'll find demoed on [this page](https://nx.dev/ci/features/distribute-task-execution)) this release also brings all the new improvements to the CI pipeline execution page, including the commit info panel at the top:
+Along with all the UI changes to support agents (following their logs and track how tasks get distributed,details of which you'll find demoed on [this page](/ci/features/distribute-task-execution)) this release also brings all the new improvements to the CI pipeline execution page, including the commit info panel at the top:
 
 ![cipe_top_half_screen](/nx-cloud/reference/images/cipe_top.webp)
 
@@ -148,7 +148,7 @@ To enable the light runner feature, make sure you:
 
 ##### Nx Agents
 
-This release is also the first one to support ["Nx Agents"](https://nx.dev/ci/features/distribute-task-execution#managed-agents-seamless-configuration).
+This release is also the first one to support ["Nx Agents"](/ci/features/distribute-task-execution#managed-agents-seamless-configuration).
 
 While currently experimental and disabled by default for on-prem users, we are looking for more on-prem workspaces to try it out with
 so please reach out to your DPE contact or to [cloud-suppport@nrwl.io](mailto:cloud-support@nrwl.io) if you are interested in helping us shape this according to your needs!
