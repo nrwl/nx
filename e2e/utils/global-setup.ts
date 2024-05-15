@@ -6,6 +6,9 @@ import { join } from 'node:path';
 import { registerTsConfigPaths } from '../../packages/nx/src/plugins/js/utils/register';
 import { runLocalRelease } from '../../scripts/local-registry/populate-storage';
 
+// TODO: figure out why workspaceRoot and therefore getPublishedVersion() is not working
+process.env.PUBLISHED_VERSION = '20.0.0';
+
 export default async function (globalConfig: Config.ConfigGlobals) {
   const isVerbose: boolean =
     process.env.NX_VERBOSE_LOGGING === 'true' || !!globalConfig.verbose;
