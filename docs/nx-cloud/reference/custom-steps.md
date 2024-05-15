@@ -89,8 +89,11 @@ launch-templates:
           input2: 'value2'
 ```
 
+{% callout type="check" title="Custom Step location" %}
+When specifying the location for the custom step, you must include a branch or tag (e.g., `main`). Using a direct URL to the repository without a branch or tag will not work.
+{% /callout %}
 {% callout type="note" title="Recommendation on Using Inputs vs. Env" %}
-While you can use both env and inputs to pass values to custom steps, it is recommended to use inputs as they offer validation support, whereas env does not.
+While you can use both `env` and `inputs` to pass values to custom steps, it is recommended to use `inputs` as they offer validation support, whereas `env` does not.
 {% /callout %}
 
 ### Validating Custom Steps
