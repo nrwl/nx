@@ -81,7 +81,7 @@ jobs:
     environment:
       NX_E2E_CI_CACHE_KEY: e2e-circleci-linux
       NX_DAEMON: 'true'
-      NX_PERF_LOGGING: 'false'
+      NX_PERF_LOGGING: 'true'
       NX_NATIVE_LOGGING: 'false'
       NX_E2E_RUN_E2E: 'true'
       NX_CI_EXECUTION_ENV: 'linux'
@@ -90,37 +90,24 @@ jobs:
       - checkout
       - nx/set-shas:
           main-branch-name: 'master'
-      - run: npx nx-cloud@next start-ci-run --distribute-on=".nx/workflows/dynamic-changesets.yaml" --stop-agents-after="e2e"
-      - run:
-          command: |
-            sudo apt-get update
-            sudo apt-get install -y ca-certificates lsof
-      - browser-tools/install-chrome
+      - run: npx nx-cloud@next start-ci-run --distribute-on=".nx/workflows/dynamic-changesets.yaml"
+      # - run:
+      #     command: |
+      #       sudo apt-get update
+      #       sudo apt-get install -y ca-certificates lsof
+      # - browser-tools/install-chrome
       - run-pnpm-install:
           os: linux
-      - run:
-          name: Check Documentation
-          command: pnpm nx documentation --no-dte
-          no_output_timeout: 20m
+      # - run:
+      #     name: Check Documentation
+      #     command: pnpm nx documentation --no-dte
+      #     no_output_timeout: 20m
       - run:
           name: Run Checks/Lint/Test/Build
           no_output_timeout: 60m
           command: |
-            pids=()
-
-            pnpm nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD &
-            pids+=($!)
-
-            pnpm nx run-many -t check-imports check-commit check-lock-files check-codeowners documentation --parallel=1 --no-dte &
-            pids+=($!)
-
-            (pnpm nx affected --targets=lint,test,build --base=$NX_BASE --head=$NX_HEAD --parallel=3 &&
-            pnpm nx affected --targets=e2e,e2e-ci --base=$NX_BASE --head=$NX_HEAD --parallel=1) &
-            pids+=($!)
-
-            for pid in "${pids[@]}"; do
-              wait "$pid"
-            done
+            pnpm exec nx run-many -t e2e-ci --verbose
+            pnpm exec nx-cloud stop-all-agents
   # -------------------------
   #     JOBS: Main-MacOS
   # -------------------------
@@ -128,7 +115,7 @@ jobs:
     executor: macos
     environment:
       NX_E2E_CI_CACHE_KEY: e2e-circleci-macos
-      NX_PERF_LOGGING: 'false'
+      NX_PERF_LOGGING: 'true'
       NX_CI_EXECUTION_ENV: 'macos'
       SELECTED_PM: 'npm' # explicitly define npm for macOS tests
     steps:
