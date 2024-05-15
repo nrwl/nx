@@ -299,6 +299,7 @@
     - [Configuration Options](/ci/reference/config)
     - [nx-cloud CLI](/ci/reference/nx-cloud-cli)
     - [Launch Templates](/ci/reference/launch-templates)
+    - [Custom Steps](/ci/reference/custom-steps)
     - [Environment Variables](/ci/reference/env-vars)
     - [Release Notes](/ci/reference/release-notes)
   - [Troubleshooting](/ci/troubleshooting)

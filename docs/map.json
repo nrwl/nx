@@ -1878,6 +1878,11 @@
               "file": "nx-cloud/reference/launch-templates"
             },
             {
+              "name": "Custom Steps",
+              "id": "custom-steps",
+              "file": "nx-cloud/reference/custom-steps"
+            },
+            {
               "name": "Environment Variables",
               "id": "env-vars",
               "file": "nx-cloud/reference/env-vars"
