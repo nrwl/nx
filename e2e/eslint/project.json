@@ -6,11 +6,17 @@
   "implicitDependencies": ["eslint"],
   "targets": {
     "e2e-ci--src/linter.test.ts": {
-      "dependsOn": ["@nx/nx-source:populate-local-registry-storage"],
+      "dependsOn": [
+        "nx:build-native",
+        "@nx/nx-source:populate-local-registry-storage"
+      ],
       "inputs": ["e2eInputs", "^production"]
     },
     "e2e-ci--src/linter-legacy.test.ts": {
-      "dependsOn": ["@nx/nx-source:populate-local-registry-storage"],
+      "dependsOn": [
+        "nx:build-native",
+        "@nx/nx-source:populate-local-registry-storage"
+      ],
       "inputs": ["e2eInputs", "^production"]
     }
   }

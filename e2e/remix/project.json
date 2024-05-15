@@ -7,7 +7,10 @@
   "// targets": "to see all targets run: nx show project e2e-remix --web",
   "targets": {
     "e2e-ci--src/nx-remix.test.ts": {
-      "dependsOn": ["@nx/nx-source:populate-local-registry-storage"],
+      "dependsOn": [
+        "nx:build-native",
+        "@nx/nx-source:populate-local-registry-storage"
+      ],
       "inputs": ["e2eInputs", "^production"]
     }
   }

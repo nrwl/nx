@@ -6,7 +6,10 @@
   "implicitDependencies": ["rollup", "js"],
   "targets": {
     "e2e-ci--src/rollup.test.ts": {
-      "dependsOn": ["@nx/nx-source:populate-local-registry-storage"],
+      "dependsOn": [
+        "nx:build-native",
+        "@nx/nx-source:populate-local-registry-storage"
+      ],
       "inputs": ["e2eInputs", "^production"]
     }
   }
