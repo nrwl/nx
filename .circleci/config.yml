@@ -106,7 +106,7 @@ jobs:
           name: Run Checks/Lint/Test/Build
           no_output_timeout: 60m
           command: |
-            pnpm exec nx e2e-ci e2e-nuxt --verbose
+            pnpm exec nx run-many -t e2e-ci --projects e2e-nuxt,e2e-esbuild --verbose
             pnpm exec nx-cloud stop-all-agents
   # -------------------------
   #     JOBS: Main-MacOS

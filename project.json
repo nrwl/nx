@@ -12,7 +12,7 @@
     },
     "populate-local-registry-storage": {
       "cache": true,
-      "command": "ts-node -P scripts/tsconfig.scripts.json ./scripts/populate-local-registry-storage.ts",
+      "command": "node ./scripts/populate-local-registry-storage.js",
       "outputs": ["{workspaceRoot}/build/local-registry/storage"]
     }
   }

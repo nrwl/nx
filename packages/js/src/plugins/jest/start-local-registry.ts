@@ -26,7 +26,7 @@ export function startLocalRegistry({
       require.resolve('nx'),
       [
         ...`run ${localRegistryTarget} --location none --clear ${
-          clearStorage || true
+          clearStorage ?? true
         }`.split(' '),
         ...(storage ? [`--storage`, storage] : []),
       ],
