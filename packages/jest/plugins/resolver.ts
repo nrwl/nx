@@ -67,7 +67,8 @@ module.exports = function (path: string, options: ResolveOptions) {
   } catch (e) {
     if (
       path === 'jest-sequencer-@jest/test-sequencer' ||
-      path === '@jest/test-sequencer'
+      path === '@jest/test-sequencer' ||
+      path.startsWith('jest-sequencer-')
     ) {
       return;
     }
