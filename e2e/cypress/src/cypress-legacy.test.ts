@@ -1,6 +1,7 @@
 import {
   cleanupProject,
   killPort,
+  killPorts,
   newProject,
   runCLI,
   runE2ETests,
@@ -34,6 +35,7 @@ describe('Cypress E2E Test runner (legacy)', () => {
         const results = runCLI(
           `run-many --target=e2e --parallel=2 --port=cypress-auto --output-style=stream`
         );
+        await killPorts();
         expect(results).toContain('Successfully ran target e2e for 2 projects');
       }
     },
@@ -64,6 +66,7 @@ describe('Cypress E2E Test runner (legacy)', () => {
         expect(runCLI(`run ${appName}:component-test`)).toContain(
           'All specs passed!'
         );
+        await killPorts();
         expect(runCLI(`run ${appName}:e2e`)).toContain('All specs passed!');
       }
       expect(await killPort(4200)).toBeTruthy();

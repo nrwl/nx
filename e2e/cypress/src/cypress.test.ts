@@ -3,6 +3,7 @@ import {
   cleanupProject,
   createFile,
   killPort,
+  killPorts,
   newProject,
   readJson,
   runCLI,
@@ -170,6 +171,7 @@ export default defineConfig({
         expect(runCLI(`run ${appName}:component-test`)).toContain(
           'All specs passed!'
         );
+        await killPorts();
         expect(runCLI(`run ${appName}:e2e`)).toContain('All specs passed!');
       }
       expect(await killPort(4200)).toBeTruthy();
@@ -198,6 +200,7 @@ export default defineConfig({
         expect(runCLI(`run ${appName}:component-test`)).toContain(
           'All specs passed!'
         );
+        await killPorts();
         expect(runCLI(`run ${appName}:e2e`)).toContain('All specs passed!');
       }
       expect(await killPort(4200)).toBeTruthy();
