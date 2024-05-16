@@ -83,11 +83,9 @@ export function stringifyToPnpmYaml(lockfile: Lockfile): string {
   const { dump } = require('@zkochan/js-yaml');
   const lockfileVersion = +lockfile.lockfileVersion;
   if (lockfileVersion >= 9) {
-    // TODO: Implement this logic
-    const {
-      convertToLockfileFile,
-    } = require('@pnpm/lockfile-file/lib/lockfileFormatConverters.js');
-    const adaptedLockfile = convertToLockfileFile(lockfile);
+    const adaptedLockfile = convertToLockfileFile(lockfile, {
+      forceSharedFormat: true,
+    });
     return dump(sortLockfileKeys(adaptedLockfile), LOCKFILE_YAML_FORMAT);
   } else {
     // https://github.com/pnpm/pnpm/blob/af3e5559d377870d4c3d303429b3ed1a4e64fedc/lockfile/lockfile-file/src/write.ts#L77
@@ -700,7 +698,7 @@ interface NormalizeLockfileOpts {
 }
 
 // https://github.com/pnpm/pnpm/blob/34bc8f48e10dc5a7d54eaa657638f8ccfb406aa4/lockfile/lockfile-file/src/lockfileFormatConverters.ts#L29
-export function convertToLockfileFile(
+function convertToLockfileFile(
   lockfile: Lockfile,
   opts: NormalizeLockfileOpts
 ): LockfileFile {
@@ -721,6 +719,7 @@ export function convertToLockfileFile(
     if (!packages[pkgId]) {
       packages[pkgId] = pick(
         [
+          'resolution',
           'bundledDependencies',
           'cpu',
           'deprecated',
@@ -731,7 +730,6 @@ export function convertToLockfileFile(
           'os',
           'peerDependencies',
           'peerDependenciesMeta',
-          'resolution',
           'version',
         ],
         pkg

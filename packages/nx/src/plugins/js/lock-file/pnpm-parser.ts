@@ -391,6 +391,7 @@ export function stringifyPnpmLockfile(
   );
 
   const output: Lockfile = {
+    ...data,
     lockfileVersion,
     importers: {
       '.': rootSnapshot,
@@ -506,11 +507,15 @@ function findOriginalKeys(
     }
     // alias package
     if (versionIsAlias(key, version, lockfileVersion)) {
-      // for root specifiers we need to ensure alias is prefixed with /
-      const prefixedKey =
-        lockfileVersion < 9 && !returnFullKey ? `/${key}` : key;
-      const mappedKey = prefixedKey.replace(/(\/?..+)@/, '$1/');
-      matchedKeys.push([mappedKey, snapshot]);
+      if (lockfileVersion >= 9) {
+        // no postprocessing needed for v9
+        matchedKeys.push([key, snapshot]);
+      } else {
+        // for root specifiers we need to ensure alias is prefixed with /
+        const prefixedKey = returnFullKey ? key : `/${key}`;
+        const mappedKey = prefixedKey.replace(/(\/?..+)@/, '$1/');
+        matchedKeys.push([mappedKey, snapshot]);
+      }
     }
   }
   return matchedKeys;
