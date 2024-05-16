@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
 
-import { normalizePath, workspaceRoot } from '@nx/devkit';
+import { logger, normalizePath, workspaceRoot } from '@nx/devkit';
 
 import { execGradleAsync } from './exec-gradle';
 import { hashWithWorkspaceContext } from 'nx/src/utils/workspace-context';
@@ -49,13 +49,24 @@ export async function populateGradleReport(
   const gradleProjectReportStart = performance.mark(
     'gradleProjectReport:start'
   );
-  const projectReportLines = (
-    await execGradleAsync(['projectReport'], {
+  let projectReportLines;
+  try {
+    projectReportLines = await execGradleAsync(['projectReportAll'], {
       cwd: workspaceRoot,
-    })
-  )
+    });
+  } catch (e) {
+    logger.warn(
+      'Could not generate gradle project report when running `projectReportAll`. Please run `nx generate @nx/gradle:init` and make sure `projectReportAll` task is included in your build.gradle or build.gradle.kts.'
+    );
+    projectReportLines = await execGradleAsync(['projectReport'], {
+      cwd: workspaceRoot,
+    });
+  }
+  projectReportLines = projectReportLines
     .toString()
-    .split(newLineSeparator);
+    .split(newLineSeparator)
+    .filter((line) => line.trim() !== '');
+
   const gradleProjectReportEnd = performance.mark('gradleProjectReport:end');
   performance.measure(
     'gradleProjectReport',
@@ -72,10 +83,6 @@ export function processProjectReports(
    * Map of Gradle File path to Gradle Project Name
    */
   const gradleFileToGradleProjectMap = new Map<string, string>();
-  /**
-   * Map of Gradle Project Name to Gradle File
-   */
-  const gradleProjectToGradleFileMap = new Map<string, string>();
   const dependenciesMap = new Map<string, string>();
   /**
    * Map of Gradle Build File to tasks type map
@@ -170,7 +177,6 @@ export function processProjectReports(
 
         gradleFileToOutputDirsMap.set(buildFile, outputDirMap);
         gradleFileToGradleProjectMap.set(buildFile, gradleProject);
-        gradleProjectToGradleFileMap.set(gradleProject, buildFile);
         gradleProjectToProjectName.set(gradleProject, projectName);
       }
       if (line.endsWith('taskReport')) {

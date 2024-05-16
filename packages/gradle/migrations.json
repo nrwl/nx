@@ -1,4 +1,11 @@
 {
-  "generators": {},
+  "generators": {
+    "add-project-report-all": {
+      "version": "19.3.0-beta.4",
+      "cli": "nx",
+      "description": "Add task projectReportAll to build.gradle file",
+      "factory": "./src/migrations/19-3-0/add-project-report-all"
+    }
+  },
   "packageJsonUpdates": {}
 }

@@ -2,6 +2,7 @@ import {
   addDependenciesToPackageJson,
   formatFiles,
   GeneratorCallback,
+  globAsync,
   logger,
   readNxJson,
   runTasksInSerial,
@@ -12,6 +13,7 @@ import { execSync } from 'child_process';
 import { nxVersion } from '../../utils/versions';
 import { InitGeneratorSchema } from './schema';
 import { hasGradlePlugin } from '../../utils/has-gradle-plugin';
+import { dirname, join, basename } from 'path';
 
 export async function initGenerator(tree: Tree, options: InitGeneratorSchema) {
   const tasks: GeneratorCallback[] = [];
@@ -36,10 +38,9 @@ Running 'gradle init':`);
       )
     );
   }
-
+  await addBuildGradleFileNextToSettingsGradle(tree);
   addPlugin(tree);
   updateNxJsonConfiguration(tree);
-  addProjectReportToBuildGradle(tree);
 
   if (!options.skipFormat) {
     await formatFiles(tree);
@@ -66,23 +67,44 @@ function addPlugin(tree: Tree) {
 }
 
 /**
- * This function adds the project-report plugin to the build.gradle or build.gradle.kts file
+ * This function creates and populate build.gradle file next to the settings.gradle file.
  */
-function addProjectReportToBuildGradle(tree: Tree) {
-  let buildGradleFile: string;
-  if (tree.exists('settings.gradle.kts')) {
-    buildGradleFile = 'build.gradle.kts';
-  } else if (tree.exists('settings.gradle')) {
-    buildGradleFile = 'build.gradle';
+export async function addBuildGradleFileNextToSettingsGradle(tree: Tree) {
+  const settingsGradleFiles = await globAsync(tree, ['**/settings.gradle*']);
+  settingsGradleFiles.forEach((settingsGradleFile) => {
+    addProjectReportToBuildGradle(settingsGradleFile, tree);
+  });
+}
+
+/**
+ * - creates a build.gradle file next to the settings.gradle file if it does not exist.
+ * - adds the project-report plugin to the build.gradle file if it does not exist.
+ * - adds a task to generate project reports for all subprojects and included builds.
+ */
+function addProjectReportToBuildGradle(settingsGradleFile: string, tree: Tree) {
+  const filename = basename(settingsGradleFile);
+  let gradleFilePath;
+  if (filename === 'settings.gradle.kts') {
+    gradleFilePath = 'build.gradle.kts';
+  } else if (filename === 'settings.gradle') {
+    gradleFilePath = 'build.gradle';
+  } else {
+    logger.warn(
+      `Could not find 'settings.gradle' or 'settings.gradle.kts' file in your gradle workspace.`
+    );
+    return;
+  }
+  gradleFilePath = join(dirname(settingsGradleFile), gradleFilePath);
+  let buildGradleContent = '';
+  if (!tree.exists(gradleFilePath)) {
+    tree.write(gradleFilePath, buildGradleContent); // create a build.gradle file near settings.gradle file if it does not exist
+  } else {
+    buildGradleContent = tree.read(gradleFilePath).toString();
   }
 
-  let buildGradleContent = '';
-  if (tree.exists(buildGradleFile)) {
-    buildGradleContent = tree.read(buildGradleFile).toString();
-  }
   if (buildGradleContent.includes('allprojects')) {
-    if (!buildGradleContent.includes('"project-report')) {
-      logger.warn(`Please add the project-report plugin to your ${buildGradleFile}:
+    if (!buildGradleContent.includes('"project-report"')) {
+      logger.warn(`Please add the project-report plugin to your ${gradleFilePath}:
 allprojects {
   apply {
       plugin("project-report")
@@ -95,7 +117,37 @@ allprojects {
       plugin("project-report")
   }
 }`;
-    tree.write(buildGradleFile, buildGradleContent);
+  }
+
+  if (!buildGradleContent.includes(`tasks.register("projectReportAll")`)) {
+    if (gradleFilePath.endsWith('.kts')) {
+      buildGradleContent += `\n\rtasks.register("projectReportAll") {
+    // All project reports of subprojects
+    allprojects.forEach {
+        dependsOn(it.tasks.get("projectReport"))
+    }
+
+    // All projectReportAll of included builds
+    gradle.includedBuilds.forEach {
+        dependsOn(it.task(":projectReportAll"))
+    }
+}`;
+    } else {
+      buildGradleContent += `\n\rtasks.register("projectReportAll") {
+        // All project reports of subprojects
+        allprojects.forEach {
+            dependsOn(it.tasks.getAt("projectReport"))
+        }
+    
+        // All projectReportAll of included builds
+        gradle.includedBuilds.forEach {
+            dependsOn(it.task(":projectReportAll"))
+        }
+    }`;
+    }
+  }
+  if (buildGradleContent) {
+    tree.write(gradleFilePath, buildGradleContent);
   }
 }
 

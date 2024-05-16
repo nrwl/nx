@@ -23,13 +23,13 @@ export const createDependencies: CreateDependencies = async (
     return [];
   }
 
-  let dependencies: RawProjectGraphDependency[] = [];
   const gradleDependenciesStart = performance.mark('gradleDependencies:start');
   const {
     gradleFileToGradleProjectMap,
     gradleProjectToProjectName,
     buildFileToDepsMap,
   } = getCurrentGradleReport();
+  const dependencies: Set<RawProjectGraphDependency> = new Set();
 
   for (const gradleFile of gradleFiles) {
     const gradleProject = gradleFileToGradleProjectMap.get(gradleFile);
@@ -37,19 +37,17 @@ export const createDependencies: CreateDependencies = async (
     const depsFile = buildFileToDepsMap.get(gradleFile);
 
     if (projectName && depsFile) {
-      dependencies = dependencies.concat(
-        Array.from(
-          processGradleDependencies(
-            depsFile,
-            gradleProjectToProjectName,
-            projectName,
-            gradleFile,
-            context
-          )
-        )
+      processGradleDependencies(
+        depsFile,
+        gradleProjectToProjectName,
+        projectName,
+        gradleFile,
+        context,
+        dependencies
       );
     }
   }
+
   const gradleDependenciesEnd = performance.mark('gradleDependencies:end');
   performance.measure(
     'gradleDependencies',
@@ -57,7 +55,7 @@ export const createDependencies: CreateDependencies = async (
     gradleDependenciesEnd.name
   );
 
-  return dependencies;
+  return Array.from(dependencies);
 };
 
 const gradleConfigFileNames = new Set(['build.gradle', 'build.gradle.kts']);
@@ -76,14 +74,14 @@ function findGradleFiles(fileMap: FileMap): string[] {
   return gradleFiles;
 }
 
-function processGradleDependencies(
+export function processGradleDependencies(
   depsFile: string,
   gradleProjectToProjectName: Map<string, string>,
   sourceProjectName: string,
   gradleFile: string,
-  context: CreateDependenciesContext
-): Set<RawProjectGraphDependency> {
-  const dependencies: Set<RawProjectGraphDependency> = new Set();
+  context: CreateDependenciesContext,
+  dependencies: Set<RawProjectGraphDependency>
+): void {
   const lines = readFileSync(depsFile).toString().split(newLineSeparator);
   let inDeps = false;
   for (const line of lines) {
@@ -101,24 +99,31 @@ function processGradleDependencies(
         continue;
       }
       const [indents, dep] = line.split('--- ');
-      if ((indents === '\\' || indents === '+') && dep.startsWith('project ')) {
-        const gradleProjectName = dep
-          .substring('project '.length)
-          .replace(/ \(n\)$/, '')
-          .trim();
+      if (indents === '\\' || indents === '+') {
+        let gradleProjectName: string | undefined;
+        if (dep.startsWith('project ')) {
+          gradleProjectName = dep
+            .substring('project '.length)
+            .replace(/ \(n\)$/, '')
+            .trim();
+        } else if (dep.includes('-> project')) {
+          const [_, projectName] = dep.split('-> project');
+          gradleProjectName = projectName.trim();
+        }
         const target = gradleProjectToProjectName.get(
           gradleProjectName
         ) as string;
-        const dependency: RawProjectGraphDependency = {
-          source: sourceProjectName,
-          target,
-          type: DependencyType.static,
-          sourceFile: gradleFile,
-        };
-        validateDependency(dependency, context);
-        dependencies.add(dependency);
+        if (target) {
+          const dependency: RawProjectGraphDependency = {
+            source: sourceProjectName,
+            target,
+            type: DependencyType.static,
+            sourceFile: gradleFile,
+          };
+          validateDependency(dependency, context);
+          dependencies.add(dependency);
+        }
       }
     }
   }
-  return dependencies;
 }
