@@ -239,7 +239,11 @@ export default function Changelog(props: ChangeLogProps): JSX.Element {
               Nx Changelog
             </h1>
             <p className="mt-4">
-              All the Nx goodies in one page, sorted by release.
+              All the Nx goodies in one page, sorted by release. See our{' '}
+              <Link className="underline" href="/reference/releases">
+                release page
+              </Link>{' '}
+              for information about the release cycle and LTS policy.
             </p>
           </header>
           <ul className="m-0 space-y-6 py-6">

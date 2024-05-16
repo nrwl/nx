@@ -194,6 +194,7 @@
     - [.nxignore](/reference/nxignore)
     - [Environment Variables](/reference/environment-variables)
     - [Glossary](/reference/glossary)
+    - [Releases](/reference/releases)
   - [Troubleshooting](/troubleshooting)
     - [Resolve Circular Dependencies](/troubleshooting/resolve-circular-dependencies)
     - [Troubleshooting Nx Install Issues](/troubleshooting/troubleshoot-nx-install-issues)
