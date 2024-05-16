@@ -5946,6 +5946,17 @@
         "isExternal": false,
         "path": "/reference/glossary",
         "tags": []
+      },
+      {
+        "id": "releases",
+        "name": "Releases",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/reference/releases",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/reference/releases",
+        "tags": []
       }
     ],
     "isExternal": false,
@@ -6027,6 +6038,17 @@
     "itemList": [],
     "isExternal": false,
     "path": "/reference/glossary",
+    "tags": []
+  },
+  "/reference/releases": {
+    "id": "releases",
+    "name": "Releases",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/reference/releases",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/reference/releases",
     "tags": []
   },
   "/troubleshooting": {
