@@ -71,6 +71,24 @@ Run lint, test, and build targets for all projects. Requires Nx v15.4+:
  nx run-many --targets=lint,test,build
 ```
 
+Preview the task graph that Nx would run inside a webview.:
+
+```shell
+ nx run-many -t=build --graph
+```
+
+Save the task graph to a file.:
+
+```shell
+ nx run-many -t=build --graph=output.json
+```
+
+Print the task graph to the console.:
+
+```shell
+ nx run-many -t=build --graph=stdout
+```
+
 ## Options
 
 ### all
@@ -105,7 +123,7 @@ Exclude certain projects from being processed
 
 Type: `string`
 
-Show the task graph of the command. Pass a file path to save the graph data instead of viewing it in the browser.
+Show the task graph of the command. Pass a file path to save the graph data instead of viewing it in the browser. Pass "stdout" to print the results to the terminal.
 
 ### help
 

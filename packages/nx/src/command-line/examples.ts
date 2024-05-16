@@ -41,6 +41,21 @@ export const examples: Record<string, Example[]> = {
       command: 'affected -t build --tag=$NX_TASK_TARGET_PROJECT:latest',
       description: 'Use the currently executing project name in your command.',
     },
+
+    {
+      command: 'affected -t=build --graph',
+      description: 'Preview the task graph that Nx would run inside a webview.',
+    },
+
+    {
+      command: 'affected -t=build --graph=output.json',
+      description: 'Save the task graph to a file.',
+    },
+
+    {
+      command: 'affected -t=build --graph=stdout',
+      description: 'Print the task graph to the console.',
+    },
   ],
   'affected:test': [
     {
@@ -142,6 +157,17 @@ export const examples: Record<string, Example[]> = {
       description:
         'Generate a static website with project graph into an html file, accompanied by an asset folder called static',
     },
+
+    {
+      command: 'graph --file=stdout',
+      description: 'Print the project graph as JSON to the console',
+    },
+
+    {
+      command: 'graph --print',
+      description: 'Print the project graph as JSON to the console',
+    },
+
     {
       command: 'graph --focus=todos-feature-main',
       description:
@@ -216,6 +242,54 @@ export const examples: Record<string, Example[]> = {
       command: 'run-many --targets=lint,test,build',
       description:
         'Run lint, test, and build targets for all projects. Requires Nx v15.4+',
+    },
+
+    {
+      command: 'run-many -t=build --graph',
+      description: 'Preview the task graph that Nx would run inside a webview.',
+    },
+
+    {
+      command: 'run-many -t=build --graph=output.json',
+      description: 'Save the task graph to a file.',
+    },
+
+    {
+      command: 'run-many -t=build --graph=stdout',
+      description: 'Print the task graph to the console.',
+    },
+  ],
+  run: [
+    {
+      command: 'run myapp:build',
+      description: 'Run the target build for the myapp project',
+    },
+
+    {
+      command: 'run myapp:build:production',
+      description:
+        'Run the target build for the myapp project, with production configuration',
+    },
+
+    {
+      command: 'run myapp:build --graph',
+      description: 'Preview the task graph that Nx would run inside a webview.',
+    },
+
+    {
+      command: 'run myapp:build --graph=output.json',
+      description: 'Save the task graph to a file.',
+    },
+
+    {
+      command: 'run myapp:build --graph=stdout',
+      description: 'Print the task graph to the console.',
+    },
+
+    {
+      command: 'run myapp:"build:test"',
+      description:
+        'Run\'s a target named build:test for the myapp project. Note the quotes around the target name to prevent "test" from being considered a configuration.',
     },
   ],
   migrate: [

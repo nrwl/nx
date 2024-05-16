@@ -2,9 +2,9 @@ import { CommandModule } from 'yargs';
 import { handleErrors } from '../../utils/params';
 import {
   withAffectedOptions,
-  withDepGraphOptions,
   withTargetAndConfigurationOption,
 } from '../yargs-utils/shared-options';
+import { withGraphOptions } from '../graph/command-object';
 
 const affectedGraphDeprecationMessage =
   'Use `nx graph --affected`, or `nx affected --graph` instead depending on which best suits your use case. The `affected:graph` command has been removed in Nx 19.';
@@ -18,7 +18,7 @@ export const yargsAffectedGraphCommand: CommandModule = {
   command: 'affected:graph',
   describe: false,
   aliases: ['affected:dep-graph'],
-  builder: (yargs) => withAffectedOptions(withDepGraphOptions(yargs)),
+  builder: (yargs) => withAffectedOptions(withGraphOptions(yargs)),
   handler: (args) =>
     handleErrors(false, () => {
       throw new Error(affectedGraphDeprecationMessage);

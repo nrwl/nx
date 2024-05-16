@@ -17,7 +17,10 @@ import {
 
 const importFresh = require('import-fresh');
 
-const sharedCommands = ['generate', 'run', 'exec'];
+// Docs for these commands are inside docs/shared/cli - they are not dynamically generated.
+const sharedCommands = ['generate', 'exec'];
+
+// These commands are hidden from the documentation.
 const hiddenCommands = ['$0'];
 
 export async function generateCliDocumentation(

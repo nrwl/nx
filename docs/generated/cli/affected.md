@@ -65,6 +65,24 @@ Use the currently executing project name in your command.:
  nx affected -t build --tag=$NX_TASK_TARGET_PROJECT:latest
 ```
 
+Preview the task graph that Nx would run inside a webview.:
+
+```shell
+ nx affected -t=build --graph
+```
+
+Save the task graph to a file.:
+
+```shell
+ nx affected -t=build --graph=output.json
+```
+
+Print the task graph to the console.:
+
+```shell
+ nx affected -t=build --graph=stdout
+```
+
 ## Options
 
 ### ~~all~~
@@ -109,7 +127,7 @@ Change the way Nx is calculating the affected command by providing directly chan
 
 Type: `string`
 
-Show the task graph of the command. Pass a file path to save the graph data instead of viewing it in the browser.
+Show the task graph of the command. Pass a file path to save the graph data instead of viewing it in the browser. Pass "stdout" to print the results to the terminal.
 
 ### head
 

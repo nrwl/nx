@@ -301,7 +301,7 @@ Exclude certain projects from being processed
 
 Type: `string`
 
-Show the task graph of the command. Pass a file path to save the graph data instead of viewing it in the browser.
+Show the task graph of the command. Pass a file path to save the graph data instead of viewing it in the browser. Pass "stdout" to print the results to the terminal.
 
 ##### help
 

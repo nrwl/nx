@@ -52,7 +52,7 @@ export function withRunOptions<T>(yargs: Argv<T>): Argv<T & RunOptions> {
     .option('graph', {
       type: 'string',
       describe:
-        'Show the task graph of the command. Pass a file path to save the graph data instead of viewing it in the browser.',
+        'Show the task graph of the command. Pass a file path to save the graph data instead of viewing it in the browser. Pass "stdout" to print the results to the terminal.',
       coerce: (value) =>
         // when the type of an opt is "string", passing `--opt` comes through as having an empty string value.
         // this coercion allows `--graph` to be passed through as a boolean directly, and also normalizes the
@@ -271,60 +271,6 @@ export function withOutputStyleOption(
     type: 'string',
     choices,
   });
-}
-
-export function withDepGraphOptions(yargs: Argv) {
-  return yargs
-    .option('file', {
-      describe:
-        'Output file (e.g. --file=output.json or --file=dep-graph.html)',
-      type: 'string',
-    })
-    .option('view', {
-      describe: 'Choose whether to view the projects or task graph',
-      type: 'string',
-      default: 'projects',
-      choices: ['projects', 'tasks'],
-    })
-    .option('targets', {
-      describe: 'The target to show tasks for in the task graph',
-      type: 'string',
-      coerce: parseCSV,
-    })
-    .option('focus', {
-      describe:
-        'Use to show the project graph for a particular project and every node that is either an ancestor or a descendant.',
-      type: 'string',
-    })
-    .option('exclude', {
-      describe:
-        'List of projects delimited by commas to exclude from the project graph.',
-      type: 'string',
-      coerce: parseCSV,
-    })
-
-    .option('groupByFolder', {
-      describe: 'Group projects by folder in the project graph',
-      type: 'boolean',
-    })
-    .option('host', {
-      describe: 'Bind the project graph server to a specific ip address.',
-      type: 'string',
-    })
-    .option('port', {
-      describe: 'Bind the project graph server to a specific port.',
-      type: 'number',
-    })
-    .option('watch', {
-      describe: 'Watch for changes to project graph and update in-browser',
-      type: 'boolean',
-      default: true,
-    })
-    .option('open', {
-      describe: 'Open the project graph in the browser.',
-      type: 'boolean',
-      default: true,
-    });
 }
 
 export function withRunOneOptions(yargs: Argv) {
