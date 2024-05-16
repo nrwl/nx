@@ -3,29 +3,15 @@ import {
   addProjectConfiguration,
   ensurePackage,
   formatFiles,
-  generateFiles,
   GeneratorCallback,
   getPackageManagerCommand,
   joinPathFragments,
-  names,
-  offsetFromRoot,
-  readNxJson,
-  readProjectConfiguration,
   runTasksInSerial,
-  TargetConfiguration,
   Tree,
-  updateNxJson,
-  updateProjectConfiguration,
   writeJson,
 } from '@nx/devkit';
-import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
-import {
-  getRelativePathToRootTsConfig,
-  initGenerator as jsInitGenerator,
-} from '@nx/js';
+import { initGenerator as jsInitGenerator } from '@nx/js';
 import { swcCoreVersion } from '@nx/js/src/utils/versions';
-import type { Linter } from '@nx/eslint';
-import { join } from 'path';
 import {
   nxVersion,
   swcLoaderVersion,
@@ -34,201 +20,13 @@ import {
 } from '../../utils/versions';
 import { webInitGenerator } from '../init/init';
 import { Schema } from './schema';
-import { getNpmScope } from '@nx/js/src/utils/package-json/get-npm-scope';
-import { hasWebpackPlugin } from '../../utils/has-webpack-plugin';
-import { addBuildTargetDefaults } from '@nx/devkit/src/generators/add-build-target-defaults';
+
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
-import { VitePluginOptions } from '@nx/vite/src/plugins/plugin';
-import { WebpackPluginOptions } from '@nx/webpack/src/plugins/plugin';
-
-interface NormalizedSchema extends Schema {
-  projectName: string;
-  appProjectRoot: string;
-  e2eProjectName: string;
-  e2eProjectRoot: string;
-  e2eWebServerAddress: string;
-  e2eWebServerTarget: string;
-  e2ePort: number;
-  parsedTags: string[];
-}
-
-function createApplicationFiles(tree: Tree, options: NormalizedSchema) {
-  if (options.bundler === 'vite') {
-    generateFiles(
-      tree,
-      join(__dirname, './files/app-vite'),
-      options.appProjectRoot,
-      {
-        ...options,
-        ...names(options.name),
-        tmpl: '',
-        offsetFromRoot: offsetFromRoot(options.appProjectRoot),
-        rootTsConfigPath: getRelativePathToRootTsConfig(
-          tree,
-          options.appProjectRoot
-        ),
-      }
-    );
-  } else {
-    generateFiles(
-      tree,
-      join(__dirname, './files/app-webpack'),
-      options.appProjectRoot,
-      {
-        ...options,
-        ...names(options.name),
-        tmpl: '',
-        offsetFromRoot: offsetFromRoot(options.appProjectRoot),
-        rootTsConfigPath: getRelativePathToRootTsConfig(
-          tree,
-          options.appProjectRoot
-        ),
-        webpackPluginOptions: hasWebpackPlugin(tree)
-          ? {
-              compiler: options.compiler,
-              target: 'web',
-              outputPath: joinPathFragments(
-                'dist',
-                options.appProjectRoot != '.'
-                  ? options.appProjectRoot
-                  : options.projectName
-              ),
-              tsConfig: './tsconfig.app.json',
-              main: './src/main.ts',
-              assets: ['./src/favicon.ico', './src/assets'],
-              index: './src/index.html',
-              baseHref: '/',
-              styles: [`./src/styles.${options.style}`],
-            }
-          : null,
-      }
-    );
-    if (options.unitTestRunner === 'none') {
-      tree.delete(
-        join(options.appProjectRoot, './src/app/app.element.spec.ts')
-      );
-    }
-  }
-}
-
-async function setupBundler(tree: Tree, options: NormalizedSchema) {
-  const main = joinPathFragments(options.appProjectRoot, 'src/main.ts');
-  const tsConfig = joinPathFragments(
-    options.appProjectRoot,
-    'tsconfig.app.json'
-  );
-  const assets = [
-    joinPathFragments(options.appProjectRoot, 'src/favicon.ico'),
-    joinPathFragments(options.appProjectRoot, 'src/assets'),
-  ];
-
-  if (options.bundler === 'webpack') {
-    const { configurationGenerator } = ensurePackage<
-      typeof import('@nx/webpack')
-    >('@nx/webpack', nxVersion);
-    await configurationGenerator(tree, {
-      target: 'web',
-      project: options.projectName,
-      main,
-      tsConfig,
-      compiler: options.compiler ?? 'babel',
-      devServer: true,
-      webpackConfig: joinPathFragments(
-        options.appProjectRoot,
-        'webpack.config.js'
-      ),
-      skipFormat: true,
-      addPlugin: options.addPlugin,
-    });
-    const project = readProjectConfiguration(tree, options.projectName);
-    if (project.targets.build) {
-      const prodConfig = project.targets.build.configurations.production;
-      const buildOptions = project.targets.build.options;
-      buildOptions.assets = assets;
-      buildOptions.index = joinPathFragments(
-        options.appProjectRoot,
-        'src/index.html'
-      );
-      buildOptions.baseHref = '/';
-      buildOptions.styles = [
-        joinPathFragments(
-          options.appProjectRoot,
-          `src/styles.${options.style}`
-        ),
-      ];
-      // We can delete that, because this projest is an application
-      // and applications have a .babelrc file in their root dir.
-      // So Nx will find it and use it
-      delete buildOptions.babelUpwardRootMode;
-      buildOptions.scripts = [];
-      prodConfig.fileReplacements = [
-        {
-          replace: joinPathFragments(
-            options.appProjectRoot,
-            `src/environments/environment.ts`
-          ),
-          with: joinPathFragments(
-            options.appProjectRoot,
-            `src/environments/environment.prod.ts`
-          ),
-        },
-      ];
-      prodConfig.optimization = true;
-      prodConfig.outputHashing = 'all';
-      prodConfig.sourceMap = false;
-      prodConfig.namedChunks = false;
-      prodConfig.extractLicenses = true;
-      prodConfig.vendorChunk = false;
-      updateProjectConfiguration(tree, options.projectName, project);
-    }
-    // TODO(jack): Flush this out... no bundler should be possible for web but the experience isn't holistic due to missing features (e.g. writing index.html).
-  } else if (options.bundler === 'none') {
-    const project = readProjectConfiguration(tree, options.projectName);
-    addBuildTargetDefaults(tree, `@nx/js:${options.compiler}`);
-    project.targets.build = {
-      executor: `@nx/js:${options.compiler}`,
-      outputs: ['{options.outputPath}'],
-      options: {
-        main,
-        outputPath: joinPathFragments('dist', options.appProjectRoot),
-        tsConfig,
-      },
-    };
-    updateProjectConfiguration(tree, options.projectName, project);
-  } else {
-    throw new Error('Unsupported bundler type');
-  }
-}
-
-async function addProject(tree: Tree, options: NormalizedSchema) {
-  const targets: Record<string, TargetConfiguration> = {};
-
-  addProjectConfiguration(
-    tree,
-    options.projectName,
-    {
-      projectType: 'application',
-      root: options.appProjectRoot,
-      sourceRoot: joinPathFragments(options.appProjectRoot, 'src'),
-      tags: options.parsedTags,
-      targets,
-    },
-    options.standaloneConfig
-  );
-}
-
-function setDefaults(tree: Tree, options: NormalizedSchema) {
-  const nxJson = readNxJson(tree);
-  nxJson.generators = nxJson.generators || {};
-  nxJson.generators['@nx/web:application'] = {
-    style: options.style,
-    linter: options.linter,
-    unitTestRunner: options.unitTestRunner,
-    e2eTestRunner: options.e2eTestRunner,
-    ...nxJson.generators['@nx/web:application'],
-  };
-  updateNxJson(tree, nxJson);
-}
+import { addProject } from './lib/add-project';
+import { setupBundler } from './lib/setup-bundler';
+import { createApplicationFiles } from './lib/create-application-files';
+import { setDefaults } from './lib/set-defaults';
+import { normalizeOptions } from './lib/normalize-options';
 
 export async function applicationGenerator(host: Tree, schema: Schema) {
   return await applicationGeneratorInternal(host, {
@@ -455,93 +253,6 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
   });
 
   return runTasksInSerial(...tasks);
-}
-
-async function normalizeOptions(
-  host: Tree,
-  options: Schema
-): Promise<NormalizedSchema> {
-  const {
-    projectName: appProjectName,
-    projectRoot: appProjectRoot,
-    projectNameAndRootFormat,
-  } = await determineProjectNameAndRootOptions(host, {
-    name: options.name,
-    projectType: 'application',
-    directory: options.directory,
-    projectNameAndRootFormat: options.projectNameAndRootFormat,
-    callingGenerator: '@nx/web:application',
-  });
-  options.projectNameAndRootFormat = projectNameAndRootFormat;
-  const nxJson = readNxJson(host);
-  const addPluginDefault =
-    process.env.NX_ADD_PLUGINS !== 'false' &&
-    nxJson.useInferencePlugins !== false;
-  options.addPlugin ??= addPluginDefault;
-
-  let e2eWebServerTarget = 'serve';
-  if (options.addPlugin) {
-    if (nxJson.plugins) {
-      for (const plugin of nxJson.plugins) {
-        if (
-          options.bundler === 'vite' &&
-          typeof plugin === 'object' &&
-          plugin.plugin === '@nx/vite/plugin' &&
-          (plugin.options as VitePluginOptions).serveTargetName
-        ) {
-          e2eWebServerTarget = (plugin.options as VitePluginOptions)
-            .serveTargetName;
-        } else if (
-          options.bundler === 'webpack' &&
-          typeof plugin === 'object' &&
-          plugin.plugin === '@nx/webpack/plugin' &&
-          (plugin.options as WebpackPluginOptions).serveTargetName
-        ) {
-          e2eWebServerTarget = (plugin.options as WebpackPluginOptions)
-            .serveTargetName;
-        }
-      }
-    }
-  }
-
-  let e2ePort = 4200;
-  if (
-    nxJson.targetDefaults?.[e2eWebServerTarget] &&
-    nxJson.targetDefaults?.[e2eWebServerTarget].options?.port
-  ) {
-    e2ePort = nxJson.targetDefaults?.[e2eWebServerTarget].options?.port;
-  }
-
-  const e2eProjectName = `${appProjectName}-e2e`;
-  const e2eProjectRoot = `${appProjectRoot}-e2e`;
-  const e2eWebServerAddress = `http://localhost:${e2ePort}`;
-
-  const npmScope = getNpmScope(host);
-
-  const parsedTags = options.tags
-    ? options.tags.split(',').map((s) => s.trim())
-    : [];
-
-  options.style = options.style || 'css';
-  options.linter = options.linter || ('eslint' as Linter.EsLint);
-  options.unitTestRunner = options.unitTestRunner || 'jest';
-  options.e2eTestRunner = options.e2eTestRunner || 'playwright';
-
-  return {
-    ...options,
-    prefix: options.prefix ?? npmScope ?? 'app',
-    name: names(options.name).fileName,
-    compiler: options.compiler ?? 'babel',
-    bundler: options.bundler ?? 'webpack',
-    projectName: appProjectName,
-    appProjectRoot,
-    e2eProjectRoot,
-    e2eProjectName,
-    e2eWebServerAddress,
-    e2eWebServerTarget,
-    e2ePort,
-    parsedTags,
-  };
 }
 
 export default applicationGenerator;
