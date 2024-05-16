@@ -33,7 +33,7 @@ export default async function update(tree: Tree) {
         : p[0] === '@nrwl/web/babel'
     );
 
-    if (idx === -1) return;
+    if (idx === undefined || idx === -1) return;
 
     const preset = babelrc.presets[idx];
     if (typeof preset === 'string') {
