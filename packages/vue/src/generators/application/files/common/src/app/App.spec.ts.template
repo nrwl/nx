@@ -1,12 +1,17 @@
 <% if ( unitTestRunner === 'vitest' ) { %>
 import { describe, it, expect } from 'vitest'
+<% } %><% if( routing ) { %>
+import router from '../router';
 <% } %>
 import { mount } from '@vue/test-utils'
 import App from './App.vue';
 
 describe('App', () => {
-  it('renders properly', () => {
-    const wrapper = mount(App, {})
+  it('renders properly', async () => {
+    const wrapper = mount(App, <% if( routing ) { %>{ global: { plugins: [router] }}<% } else { %>{}<% } %>)
+    <% if( routing ) { %>
+    await router.isReady();
+    <% } %>
     expect(wrapper.text()).toContain('Welcome <%= title %> 👋')
   })
 });
