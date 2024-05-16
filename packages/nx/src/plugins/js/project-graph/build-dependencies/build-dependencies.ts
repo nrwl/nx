@@ -28,20 +28,6 @@ export function buildExplicitDependencies(
   const externalDependenciesCache: ExternalDependenciesCache = new Map();
   let dependencies: RawProjectGraphDependency[] = [];
 
-  /**
-   * NOTE: It is important that we process package.json files first so that accurate versions for
-   * external dependencies are captured in the ExternalDependenciesCache before converting
-   * imports within TS files.
-   */
-  if (
-    jsPluginConfig.analyzePackageJson === undefined ||
-    jsPluginConfig.analyzePackageJson === true
-  ) {
-    dependencies = dependencies.concat(
-      buildExplicitPackageJsonDependencies(ctx, externalDependenciesCache)
-    );
-  }
-
   if (
     jsPluginConfig.analyzeSourceFiles === undefined ||
     jsPluginConfig.analyzeSourceFiles === true
@@ -56,6 +42,14 @@ export function buildExplicitDependencies(
         buildExplicitTypeScriptDependencies(ctx, externalDependenciesCache)
       );
     }
+  }
+  if (
+    jsPluginConfig.analyzePackageJson === undefined ||
+    jsPluginConfig.analyzePackageJson === true
+  ) {
+    dependencies = dependencies.concat(
+      buildExplicitPackageJsonDependencies(ctx, externalDependenciesCache)
+    );
   }
 
   return dependencies;

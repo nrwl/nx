@@ -21,44 +21,23 @@ function isRoot(
   return projects[projectName]?.root === '.';
 }
 
-function getPackageName(importExpression: string) {
-  // Check if the package is scoped
-  if (importExpression.startsWith('@')) {
-    // For scoped packages, the package name is up to the second '/'
-    return importExpression.split('/').slice(0, 2).join('/');
-  }
-  // For unscoped packages, the package name is up to the first '/'
-  return importExpression.split('/')[0];
-}
-
 function convertImportToDependency(
   importExpr: string,
+  projectRoot: string,
   externalDependenciesCache: ExternalDependenciesCache,
   sourceFile: string,
   source: string,
   type: RawProjectGraphDependency['type'],
   targetProjectLocator: TargetProjectLocator
-): RawProjectGraphDependency {
-  /**
-   * First try and find in the cache populated by the package.json dependencies, then try and find in the project graph,
-   * and finally default to an assumed root level external dependency.
-   */
-  const cachedDeps = externalDependenciesCache.get(source);
-  let target: string | undefined;
-  if (cachedDeps) {
-    // Certain dependencies contain nested entrypoints, we need to compare to the actual package name within the importExpr
-    const packageName = getPackageName(importExpr);
-    for (const dep of cachedDeps) {
-      if (dep.startsWith(`npm:${packageName}`)) {
-        target = dep;
-        break;
-      }
-    }
+): RawProjectGraphDependency | undefined {
+  const target = targetProjectLocator.findProjectWithImport(
+    importExpr,
+    projectRoot,
+    sourceFile
+  );
+  if (!target) {
+    return;
   }
-  target =
-    target ??
-    targetProjectLocator.findProjectWithImport(importExpr, sourceFile) ??
-    `npm:${importExpr}`;
   return {
     source,
     target,
@@ -130,15 +109,22 @@ export function buildExplicitTypeScriptDependencies(
     dynamicImportExpressions,
   } of imports) {
     const normalizedFilePath = normalizePath(relative(workspaceRoot, file));
+    const sourceProjectRoot = ctx.projects[sourceProject].root;
+
     for (const importExpr of staticImportExpressions) {
       const dependency = convertImportToDependency(
         importExpr,
+        sourceProjectRoot,
         externalDependenciesCache,
         normalizedFilePath,
         sourceProject,
         DependencyType.static,
         targetProjectLocator
       );
+      if (!dependency) {
+        continue;
+      }
+
       // TODO: These edges technically should be allowed but we need to figure out how to separate config files out from root
       if (
         isRoot(ctx.projects, dependency.source) ||
@@ -150,12 +136,17 @@ export function buildExplicitTypeScriptDependencies(
     for (const importExpr of dynamicImportExpressions) {
       const dependency = convertImportToDependency(
         importExpr,
+        sourceProjectRoot,
         externalDependenciesCache,
         normalizedFilePath,
         sourceProject,
         DependencyType.dynamic,
         targetProjectLocator
       );
+      if (!dependency) {
+        continue;
+      }
+
       // TODO: These edges technically should be allowed but we need to figure out how to separate config files out from root
       if (
         isRoot(ctx.projects, dependency.source) ||
