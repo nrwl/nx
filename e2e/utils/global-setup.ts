@@ -30,7 +30,6 @@ export default async function (globalConfig: Config.ConfigGlobals) {
    */
   if (!requiresLocalRelease) {
     const publishedVersion = await getPublishedVersion();
-    console.log({ publishedVersion });
     if (publishedVersion) {
       process.env.PUBLISHED_VERSION = publishedVersion;
     }
