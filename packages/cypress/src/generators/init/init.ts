@@ -1,17 +1,23 @@
 import {
   addDependenciesToPackageJson,
+  createProjectGraphAsync,
   formatFiles,
   GeneratorCallback,
+  ProjectGraph,
   readNxJson,
   removeDependenciesFromPackageJson,
   runTasksInSerial,
   Tree,
   updateNxJson,
 } from '@nx/devkit';
-import { addPlugin as _addPlugin } from '@nx/devkit/src/utils/add-plugin';
+import {
+  addPlugin as _addPlugin,
+  generateCombinations,
+} from '@nx/devkit/src/utils/add-plugin';
 import { createNodes } from '../../plugins/plugin';
 import { cypressVersion, nxVersion } from '../../utils/versions';
 import { Schema } from './schema';
+import { CypressPluginOptions } from '../../plugins/plugin';
 
 function setupE2ETargetDefaults(tree: Tree) {
   const nxJson = readNxJson(tree);
@@ -54,9 +60,14 @@ function updateDependencies(tree: Tree, options: Schema) {
   return runTasksInSerial(...tasks);
 }
 
-export function addPlugin(tree: Tree, updatePackageScripts: boolean) {
+export function addPlugin(
+  tree: Tree,
+  graph: ProjectGraph,
+  updatePackageScripts: boolean
+) {
   return _addPlugin(
     tree,
+    graph,
     '@nx/cypress/plugin',
     createNodes,
     {
@@ -107,7 +118,11 @@ export async function cypressInitGeneratorInternal(
     nxJson.useInferencePlugins !== false;
 
   if (options.addPlugin) {
-    await addPlugin(tree, options.updatePackageScripts);
+    await addPlugin(
+      tree,
+      await createProjectGraphAsync(),
+      options.updatePackageScripts
+    );
   } else {
     setupE2ETargetDefaults(tree);
   }

@@ -155,7 +155,7 @@ secret:
 We send out emails with every new Nx Cloud release to all our Enterprise customers:
 
 1. You can view your current version at the `/version` route: https://your-nx-cloud-url.com/version
-2. [And these are the latest Nx Cloud releases](https://nx.dev/ci/reference/release-notes#docker-containers)
+2. [And these are the latest Nx Cloud releases](/ci/reference/release-notes#docker-containers)
 
 To upgrade to a newer version, add the below line to your `myconfiguration.yml` file:
 

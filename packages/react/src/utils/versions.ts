@@ -45,7 +45,7 @@ export const babelPluginStyledComponentsVersion = '1.10.7';
 export const tsLibVersion = '^2.3.0';
 
 export const postcssVersion = '8.4.21';
-export const tailwindcssVersion = '3.2.7';
+export const tailwindcssVersion = '3.4.3';
 export const autoprefixerVersion = '10.4.13';
 
 // SSR and Module Federation

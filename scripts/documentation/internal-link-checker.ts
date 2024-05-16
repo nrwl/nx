@@ -14,7 +14,7 @@ function readFileContents(path: string): string {
   return readFileSync(path, 'utf-8');
 }
 function isLinkInternal(linkPath: string): boolean {
-  return linkPath.startsWith('/');
+  return linkPath.startsWith('/') || linkPath.startsWith('https://nx.dev');
 }
 function isNotAsset(linkPath: string): boolean {
   return !linkPath.startsWith('/assets');
@@ -34,7 +34,7 @@ function removeAnchors(linkPath: string): string {
   return linkPath.split('#')[0];
 }
 function extractAllLinks(basePath: string): Record<string, string[]> {
-  return glob.sync(`${basePath}/**/*.md`).reduce((acc, path) => {
+  return glob.sync(`${basePath}/*/**/*.md`).reduce((acc, path) => {
     const fileContents = readFileContents(path);
     const cardLinks = (fileContents.match(/url="(.*?)"/g) || []).map((v) =>
       v.slice(5, -1)
@@ -101,9 +101,12 @@ const sitemapLinks = readSiteMapIndex(
   'sitemap.xml'
 ).flatMap((path) => readSiteMapLinks(path));
 const errors: Array<{ file: string; link: string }> = [];
+const localLinkErrors: Array<{ file: string; link: string }> = [];
 for (let file in documentLinks) {
   for (let link of documentLinks[file]) {
-    if (!sitemapLinks.includes(['https://nx.dev', link].join(''))) {
+    if (link.startsWith('https://nx.dev')) {
+      localLinkErrors.push({ file, link });
+    } else if (!sitemapLinks.includes(['https://nx.dev', link].join(''))) {
       errors.push({ file, link });
     }
   }
@@ -119,11 +122,21 @@ for (let file in imageLinks) {
 }
 
 console.log(`i/ Internal Link Check`);
-if (errors.length) {
-  console.log(`ERROR\n${errors.length} links are pointing to nowhere:`);
-  errors.forEach((error) =>
-    console.error(`⚠ File:${error.file}\n -> ${error.link}\n`)
-  );
+if (errors.length || localLinkErrors.length) {
+  if (errors.length) {
+    console.log(`ERROR\n${errors.length} links are pointing to nowhere:`);
+    errors.forEach((error) => {
+      console.error(`⚠ File:${error.file}\n -> ${error.link}\n`);
+    });
+  }
+  if (localLinkErrors.length) {
+    console.log(
+      `ERROR\n${localLinkErrors.length} local links should not include the domain:`
+    );
+    localLinkErrors.forEach((error) => {
+      console.error(`⚠ File:${error.file}\n -> ${error.link}\n`);
+    });
+  }
   process.exit(1);
 }
 console.log(`i/ No internal 404 link detected.`);

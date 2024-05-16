@@ -1,4 +1,4 @@
-import 'nx/src/internal-testing-utils/mock-load-nx-plugin';
+import 'nx/src/internal-testing-utils/mock-project-graph';
 
 import { installedCypressVersion } from '@nx/cypress/src/utils/cypress-version';
 import { readProjectConfiguration, Tree } from '@nx/devkit';
