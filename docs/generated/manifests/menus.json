@@ -4343,6 +4343,14 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
+          },
+          {
+            "name": "Releases",
+            "path": "/reference/releases",
+            "id": "releases",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -4399,6 +4407,14 @@
         "name": "Glossary",
         "path": "/reference/glossary",
         "id": "glossary",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Releases",
+        "path": "/reference/releases",
+        "id": "releases",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
