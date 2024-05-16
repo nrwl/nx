@@ -6,6 +6,10 @@
   "implicitDependencies": ["playwright"],
   "targets": {
     "e2e-ci--src/playwright.test.ts": {
+      "dependsOn": [
+        "nx:build-native",
+        "@nx/nx-source:populate-local-registry-storage"
+      ],
       "inputs": ["e2eInputs", "^production"]
     }
   }
