@@ -266,7 +266,6 @@
     "source-map-support": "0.5.19",
     "storybook-dark-mode": "^3.0.0",
     "style-loader": "^3.3.0",
-    "tar-fs": "^2.1.1",
     "tar-stream": "~2.2.0",
     "tcp-port-used": "^1.0.2",
     "terser-webpack-plugin": "^5.3.3",
