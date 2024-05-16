@@ -1,6 +1,7 @@
 import {
   addDependenciesToPackageJson,
   NxJsonConfiguration,
+  ProjectGraph,
   readJson,
   readNxJson,
   Tree,
@@ -9,6 +10,14 @@ import {
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { nxVersion } from '../../utils/versions';
 
+let projectGraph: ProjectGraph;
+jest.mock('@nx/devkit', () => ({
+  ...jest.requireActual<any>('@nx/devkit'),
+  createProjectGraphAsync: jest.fn().mockImplementation(async () => {
+    return projectGraph;
+  }),
+}));
+
 import { initGenerator } from './init';
 
 describe('@nx/vite:init', () => {
@@ -16,6 +25,10 @@ describe('@nx/vite:init', () => {
 
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace();
+    projectGraph = {
+      nodes: {},
+      dependencies: {},
+    };
   });
 
   describe('dependencies for package.json', () => {

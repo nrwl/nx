@@ -25,7 +25,6 @@ import { ProjectList } from './project-list';
 // nx-ignore-next-line
 import { ProjectGraphClientResponse } from 'nx/src/command-line/graph/graph';
 /* eslint-enable @nx/enforce-module-boundaries */
-import { useFloating } from '@floating-ui/react';
 import {
   fetchProjectGraph,
   getProjectGraphDataService,
@@ -66,6 +65,7 @@ export function ProjectsSidebar(): JSX.Element {
   const selectedProjectRouteData = useRouteLoaderData(
     'selectedWorkspace'
   ) as ProjectGraphClientResponse;
+  const [lastHash, setLastHash] = useState(selectedProjectRouteData.hash);
   const params = useParams();
   const navigate = useNavigate();
   const routeContructor = useRouteConstructor();
@@ -302,12 +302,16 @@ export function ProjectsSidebar(): JSX.Element {
         params,
         environmentConfig.appConfig
       ).then((response: ProjectGraphClientResponse) => {
+        if (response.hash === lastHash) {
+          return;
+        }
         projectGraphService.send({
           type: 'updateGraph',
           projects: response.projects,
           dependencies: response.dependencies,
           fileMap: response.fileMap,
         });
+        setLastHash(response.hash);
       });
     },
     5000,
@@ -375,7 +379,7 @@ export function ProjectsSidebar(): JSX.Element {
 
         <ExperimentalFeature>
           <div className="mx-4 mt-4 rounded-lg border-2 border-dashed border-purple-500 p-4 shadow-lg dark:border-purple-600 dark:bg-[#0B1221]">
-            <h3 className="cursor-text px-4 py-2 text-sm font-semibold uppercase tracking-wide text-slate-800 dark:text-slate-200 lg:text-xs">
+            <h3 className="cursor-text px-4 py-2 text-sm font-semibold uppercase tracking-wide text-slate-800 lg:text-xs dark:text-slate-200">
               Experimental Features
             </h3>
             <CollapseEdgesPanel

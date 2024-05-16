@@ -103,6 +103,7 @@ export async function jestInitGeneratorInternal(
     if (options.addPlugin) {
       await addPlugin(
         tree,
+        await createProjectGraphAsync(),
         '@nx/jest/plugin',
         createNodes,
         {

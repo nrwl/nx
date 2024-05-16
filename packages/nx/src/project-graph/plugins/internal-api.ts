@@ -98,8 +98,7 @@ export const nxPluginCache: Map<
 
 export async function loadNxPlugins(
   plugins: PluginConfiguration[],
-  root = workspaceRoot,
-  skipDefaultPlugins = false
+  root = workspaceRoot
 ): Promise<[LoadedNxPlugin[], () => void]> {
   const result: Promise<LoadedNxPlugin>[] = [];
 
@@ -108,9 +107,7 @@ export async function loadNxPlugins(
       ? loadNxPluginInIsolation
       : loadNxPlugin;
 
-  plugins = skipDefaultPlugins
-    ? plugins ?? []
-    : await normalizePlugins(plugins, root);
+  plugins = await normalizePlugins(plugins, root);
 
   const cleanupFunctions: Array<() => void> = [];
   for (const plugin of plugins) {

@@ -1,5 +1,6 @@
 import {
   addDependenciesToPackageJson,
+  createProjectGraphAsync,
   formatFiles,
   GeneratorCallback,
   installPackagesTask,
@@ -103,6 +104,7 @@ export async function initGeneratorInternal(tree: Tree, schema: Schema) {
   if (schema.addPlugin) {
     await addPlugin(
       tree,
+      await createProjectGraphAsync(),
       '@nx/storybook/plugin',
       createNodes,
       {
