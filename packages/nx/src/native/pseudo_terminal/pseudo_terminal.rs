@@ -112,7 +112,7 @@ pub fn create_pseudo_terminal() -> napi::Result<PseudoTerminal> {
                 printing_tx.send(()).ok();
             }
         }
-        
+
         printing_tx.send(()).ok();
     });
     if std::io::stdout().is_tty() {
@@ -188,7 +188,7 @@ pub fn run_command(
                 let timeout = 500;
                 let a = Instant::now();
                 loop {
-                    if let Ok(_) = printing_rx.try_recv() {
+                    if printing_rx.try_recv().is_ok() {
                         break;
                     }
                     if a.elapsed().as_millis() > timeout {
