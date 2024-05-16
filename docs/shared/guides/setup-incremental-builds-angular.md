@@ -3,47 +3,6 @@
 In this guide we’ll specifically look into which changes need to be made to enable incremental builds for Angular
 applications.
 
-## Requirements
-
-If your library consumes any Angular package that has not been compiled with Ivy, you must ensure the
-Angular compatibility compiler (`ngcc`) has run before building the library. The incremental build relies
-on the fact that `ngcc` must have already been run. One way to do this is to run `ngcc` after every package
-installation. You can check your `package.json` and make sure you have the following:
-
-```jsonc {% fileName="package.json" %}
-{
-  ...
-  "scripts": {
-    ...
-    "postinstall": "ngcc --properties es2015 browser module main",
-    ...
-  }
-  ...
-}
-```
-
-{% callout type="warning" title="PNPM support" %}
-To use `ngcc` with `pnpm`, set [`node-linker=hoisted` in `.npmrc`](https://pnpm.io/npmrc#node-linker) and explicitly declare `node-gyp-build` in `package.json`
-See [angular/angular#50735](https://github.com/angular/angular/issues/50735), [nrwl/nx#16319](https://github.com/nrwl/nx/issues/16319) and [parcel-bundler/watcher#142](https://github.com/parcel-bundler/watcher/issues/142) for more details.
-
-```ini {% fileName=".npmrc" %}
-node-linker=hoisted
-```
-
-```jsonc {% fileName="package.json" %}
-{
-  ...
-  "devDependencies": {
-    ...
-    "node-gyp-build": "4.6.0",
-    ...
-  }
-  ...
-}
-```
-
-{% /callout %}
-
 ## Use buildable libraries
 
 To enable incremental builds you need to use buildable libraries.
@@ -94,7 +53,7 @@ The `@nx/angular:package` executor also supports incremental builds. It is used 
 ## Adjust the application executor
 
 Change your Angular application’s "build" target executor to `@nx/angular:webpack-browser` and the "serve" target
-executor to `@nx/web:file-server` as shown below:
+executor to `@nx/angular:dev-server` as shown below:
 
 ```jsonc
 {
@@ -116,9 +75,10 @@ executor to `@nx/web:file-server` as shown below:
       "defaultConfiguration": "production"
     },
     "serve": {
-      "executor": "@nx/web:file-server",
+      "executor": "@nx/angular:dev-server",
       "options": {
-        "buildTarget": "my-app:build"
+        "buildTarget": "my-app:build",
+        "buildLibsFromSource": false
       },
       "configurations": {
         "production": {
@@ -142,47 +102,7 @@ nx build my-app --parallel
 To serve an application incrementally use this command:
 
 ```shell
-nx serve my-app --parallel
-```
-
-{% callout type="note" title="Project configuration option" %}
-You can specify the `--parallel` flags as part of the options property on the file-server executor in
-your `project.json` file. The file-server executor will pass those to the `nx build` command it invokes.
-{% /callout %}
-
-```jsonc
-{
-  "projectType": "application",
-  ...
-  "targets": {
-    "build": {
-      "executor": "@nx/angular:webpack-browser",
-      "outputs": [
-        "{options.outputPath}"
-      ],
-      "options": {
-        "buildLibsFromSource": false
-        ...
-      },
-      "configurations": {
-        ...
-      }
-    },
-    "serve": {
-      "executor": "@nx/web:file-server",
-      "options": {
-        "buildTarget": "my-app:build",
-        "parallel": true
-      },
-      "configurations": {
-        "production": {
-          "buildTarget": "my-app:build:production"
-        }
-      }
-    },
-    ...
-  }
-},
+nx serve my-app
 ```
 
 ### Build target name
@@ -232,10 +152,10 @@ Say you have the same application above with a configuration as follows:
       }
     },
     "serve": {
-      "executor": "@nx/web:file-server",
+      "executor": "@nx/angular:dev-server",
       "options": {
         "buildTarget": "my-app:build-base",
-        "parallel": true
+        "buildLibsFromSource": false
       },
       "configurations": {
         "production": {
