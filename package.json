@@ -82,7 +82,6 @@
     "@phenomnomnominal/tsquery": "~5.0.1",
     "@playwright/test": "^1.36.1",
     "@pmmmwh/react-refresh-webpack-plugin": "^0.5.7",
-    "@pnpm/lockfile-file": "^9.0.0",
     "@pnpm/lockfile-types": "^6.0.0",
     "@reduxjs/toolkit": "1.9.0",
     "@remix-run/dev": "^2.8.1",
