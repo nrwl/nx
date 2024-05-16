@@ -85,6 +85,9 @@ export function createPackageJson(
         delete packageJson.dependencies;
         delete packageJson.devDependencies;
       }
+      if (options.isProduction) {
+        delete packageJson.devDependencies;
+      }
     } catch (e) {}
   }
 
