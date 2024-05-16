@@ -17,7 +17,7 @@ import {
   getRootTsConfigFileName,
   resolveModuleByImport,
 } from '../../utils/typescript';
-
+import { getPackageNameFromImportPath } from '../../../../utils/get-package-name-from-import-path';
 /**
  * The key is a combination of the package name and the workspace relative directory
  * containing the file importing it e.g. `lodash__packages/my-lib`, the value is the
@@ -36,7 +36,7 @@ const builtInModuleSet = new Set<string>([
 ]);
 
 export function isBuiltinModuleImport(importExpr: string): boolean {
-  const packageName = parsePackageNameFromImportExpression(importExpr);
+  const packageName = getPackageNameFromImportPath(importExpr);
   return builtInModuleSet.has(packageName);
 }
 
@@ -153,7 +153,7 @@ export class TargetProjectLocator {
     importExpr: string,
     fromFilePath: string
   ): string | null {
-    const packageName = parsePackageNameFromImportExpression(importExpr);
+    const packageName = getPackageNameFromImportPath(importExpr);
 
     let fullFilePath = fromFilePath;
     let workspaceRelativeFilePath = fromFilePath;
@@ -361,16 +361,4 @@ export class TargetProjectLocator {
       return null;
     }
   }
-}
-
-function parsePackageNameFromImportExpression(
-  importExpression: string
-): string {
-  // Check if the package is scoped
-  if (importExpression.startsWith('@')) {
-    // For scoped packages, the package name is up to the second '/'
-    return importExpression.split('/').slice(0, 2).join('/');
-  }
-  // For unscoped packages, the package name is up to the first '/'
-  return importExpression.split('/')[0];
 }
