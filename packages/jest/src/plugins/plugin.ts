@@ -36,16 +36,16 @@ function readTargetsCache(): Record<string, JestTargets> {
   return existsSync(cachePath) ? readJsonFile(cachePath) : {};
 }
 
-function writeTargetsToCache(targetCache: Record<string, JestTargets>) {
+function writeTargetsToCache() {
   const cache = readTargetsCache();
   writeJsonFile(cachePath, {
     ...cache,
-    ...targetCache,
+    ...targetsCache,
   });
 }
 
 export const createDependencies: CreateDependencies = () => {
-  writeTargetsToCache(targetsCache);
+  writeTargetsToCache();
   return [];
 };
 

@@ -34,7 +34,7 @@ export interface GradlePluginOptions {
 }
 
 const cachePath = join(projectGraphCacheDirectory, 'gradle.hash');
-export const targetsCache = readTargetsCache();
+const targetsCache = readTargetsCache();
 type GradleTargets = Record<
   string,
   {
@@ -75,9 +75,13 @@ export const createNodes: CreateNodes<GradlePluginOptions> = [
       options,
       context
     );
+    const project = targetsCache[hash];
+    if (!project) {
+      return {};
+    }
     return {
       projects: {
-        [projectRoot]: targetsCache[hash],
+        [projectRoot]: project,
       },
     };
   },

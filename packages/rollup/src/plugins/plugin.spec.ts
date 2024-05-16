@@ -50,6 +50,9 @@ describe('@nx/rollup/plugin', () => {
         ],
       };
 
+      // This isn't JS, but all that really matters here
+      // is that the hash is different after updating the
+      // config file. The actual config read is mocked below.
       tempFs.createFileSync(
         'rollup.config.js',
         JSON.stringify(rollupConfigOptions)
@@ -120,6 +123,9 @@ describe('@nx/rollup/plugin', () => {
           },
         ],
       };
+      // This isn't JS, but all that really matters here
+      // is that the hash is different after updating the
+      // config file. The actual config read is mocked below.
       tempFs.createFileSync(
         'mylib/rollup.config.js',
         JSON.stringify(rollupConfigOptions)

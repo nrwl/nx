@@ -348,6 +348,9 @@ describe('@nx/cypress/plugin', () => {
   });
 
   function mockCypressConfig(cypressConfig: Cypress.ConfigOptions) {
+    // This isn't JS, but all that really matters here
+    // is that the hash is different after updating the
+    // config file. The actual config read is mocked below.
     tempFs.createFileSync('cypress.config.js', JSON.stringify(cypressConfig));
     jest.mock(
       join(tempFs.tempDir, 'cypress.config.js'),

@@ -1064,9 +1064,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           }),
           'libs/my-lib/package.json': `{}`,
         });
-
-        await new Promise((res) => setTimeout(res, 2000)); // wait for the file to be created
-
         expect(await invokeCreateNodesOnMatchingFiles(context, {}))
           .toMatchInlineSnapshot(`
           {
