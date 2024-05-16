@@ -1,0 +1,7 @@
+
+Root project 'my-composite'
+No sub-projects
+
+Included builds
++--- Included build ':my-app'
+\--- Included build ':my-utils'

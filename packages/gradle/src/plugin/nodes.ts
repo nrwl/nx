@@ -112,7 +112,7 @@ export const createNodes: CreateNodes<GradlePluginOptions> = [
         gradleProject
       ) as Map<string, string>;
       let tasks: GradleTask[] = [];
-      for (let [taskName, taskType] of tasksTypeMap.entries()) {
+      for (let [taskName, taskType] of tasksTypeMap?.entries() ?? []) {
         tasks.push({
           type: taskType,
           name: taskName,

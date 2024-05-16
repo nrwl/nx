@@ -24,13 +24,15 @@ export const createDependencies: CreateDependencies = async (
     return [];
   }
 
-  let dependencies: RawProjectGraphDependency[] = [];
   const gradleDependenciesStart = performance.mark('gradleDependencies:start');
   const {
     gradleFileToGradleProjectMap,
     gradleProjectToProjectName,
     buildFileToDepsMap,
+    gradleProjectToCompositeProjectsMap,
+    gradleProjectNameToSettingsFileMap,
   } = getGradleReport();
+  const dependencies: Set<RawProjectGraphDependency> = new Set();
 
   for (const gradleFile of gradleFiles) {
     const gradleProject = gradleFileToGradleProjectMap.get(gradleFile);
@@ -38,19 +40,25 @@ export const createDependencies: CreateDependencies = async (
     const depsFile = buildFileToDepsMap.get(gradleFile);
 
     if (projectName && depsFile) {
-      dependencies = dependencies.concat(
-        Array.from(
-          processGradleDependencies(
-            depsFile,
-            gradleProjectToProjectName,
-            projectName,
-            gradleFile,
-            context
-          )
-        )
+      processGradleDependencies(
+        depsFile,
+        gradleProjectToProjectName,
+        projectName,
+        gradleFile,
+        context,
+        dependencies
       );
     }
   }
+
+  processCompsiteBuildDependencies(
+    gradleProjectToCompositeProjectsMap,
+    gradleProjectToProjectName,
+    gradleProjectNameToSettingsFileMap,
+    context,
+    dependencies
+  );
+
   const gradleDependenciesEnd = performance.mark('gradleDependencies:end');
   performance.measure(
     'gradleDependencies',
@@ -59,10 +67,10 @@ export const createDependencies: CreateDependencies = async (
   );
 
   writeTargetsToCache(calculatedTargets);
-  if (dependencies.length) {
+  if (dependencies.size > 0) {
     invalidateGradleReportCache();
   }
-  return dependencies;
+  return Array.from(dependencies);
 };
 
 const gradleConfigFileNames = new Set(['build.gradle', 'build.gradle.kts']);
@@ -86,9 +94,9 @@ function processGradleDependencies(
   gradleProjectToProjectName: Map<string, string>,
   sourceProjectName: string,
   gradleFile: string,
-  context: CreateDependenciesContext
+  context: CreateDependenciesContext,
+  dependencies: Set<RawProjectGraphDependency> = new Set()
 ): Set<RawProjectGraphDependency> {
-  const dependencies: Set<RawProjectGraphDependency> = new Set();
   const lines = readFileSync(depsFile).toString().split('\n');
   let inDeps = false;
   for (const line of lines) {
@@ -126,4 +134,59 @@ function processGradleDependencies(
     }
   }
   return dependencies;
+}
+
+export function processCompsiteBuildDependencies(
+  gradleProjectToCompositeProjectsMap: Map<string, string[]>,
+  gradleProjectToProjectName: Map<string, string>,
+  gradleProjectToSettingFileMap: Map<string, string>,
+  context: CreateDependenciesContext,
+  dependencies: Set<RawProjectGraphDependency> = new Set()
+) {
+  const rootProjects = gradleProjectToCompositeProjectsMap.keys();
+  const projectNames = Array.from(gradleProjectToProjectName.values());
+  for (const rootProject of rootProjects) {
+    if (!projectNames.includes(rootProject)) {
+      continue;
+    }
+    const subProjects = new Set<string>();
+    getSubprojects(
+      gradleProjectToCompositeProjectsMap,
+      projectNames,
+      rootProject,
+      subProjects
+    );
+    subProjects.forEach((subProject) => {
+      const dependency: RawProjectGraphDependency = {
+        source: rootProject,
+        target: subProject,
+        type: DependencyType.static,
+        sourceFile: gradleProjectToSettingFileMap.get(rootProject),
+      };
+      validateDependency(dependency, context);
+      dependencies.add(dependency);
+    });
+  }
+}
+
+export function getSubprojects(
+  gradleProjectToCompositeProjectsMap: Map<string, string[]>,
+  projectNames: string[],
+  rootProject: string,
+  subProjects: Set<string>
+) {
+  const includedBuildProjects =
+    gradleProjectToCompositeProjectsMap.get(rootProject) ?? [];
+  includedBuildProjects.forEach((includedBuildProject) => {
+    if (projectNames.includes(includedBuildProject)) {
+      subProjects.add(includedBuildProject);
+    } else {
+      getSubprojects(
+        gradleProjectToCompositeProjectsMap,
+        projectNames,
+        includedBuildProject,
+        subProjects
+      );
+    }
+  });
 }

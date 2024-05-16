@@ -33,7 +33,8 @@
     "migrations": "./migrations.json"
   },
   "dependencies": {
-    "@nx/devkit": "file:../devkit"
+    "@nx/devkit": "file:../devkit",
+    "glob": "7.1.4"
   },
   "publishConfig": {
     "access": "public"

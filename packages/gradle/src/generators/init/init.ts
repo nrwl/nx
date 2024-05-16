@@ -2,6 +2,7 @@ import {
   addDependenciesToPackageJson,
   formatFiles,
   GeneratorCallback,
+  glob,
   logger,
   readNxJson,
   runTasksInSerial,
@@ -39,7 +40,17 @@ Running 'gradle init':`);
 
   addPlugin(tree);
   updateNxJsonConfiguration(tree);
-  addProjectReportToBuildGradle(tree);
+
+  glob(tree, ['**/build.{gradle.kts,gradle}']).forEach((buildGradleFile) => {
+    addProjectReportToBuildGradle(buildGradleFile, tree);
+  });
+  let rootBuildGradleFile: string;
+  if (tree.exists('settings.gradle.kts')) {
+    rootBuildGradleFile = 'build.gradle.kts';
+  } else if (tree.exists('settings.gradle')) {
+    rootBuildGradleFile = 'build.gradle';
+  }
+  addProjectReportToBuildGradle(rootBuildGradleFile, tree);
 
   if (!options.skipFormat) {
     await formatFiles(tree);
@@ -68,14 +79,7 @@ function addPlugin(tree: Tree) {
 /**
  * This function adds the project-report plugin to the build.gradle or build.gradle.kts file
  */
-function addProjectReportToBuildGradle(tree: Tree) {
-  let buildGradleFile: string;
-  if (tree.exists('settings.gradle.kts')) {
-    buildGradleFile = 'build.gradle.kts';
-  } else if (tree.exists('settings.gradle')) {
-    buildGradleFile = 'build.gradle';
-  }
-
+function addProjectReportToBuildGradle(buildGradleFile: string, tree: Tree) {
   let buildGradleContent = '';
   if (tree.exists(buildGradleFile)) {
     buildGradleContent = tree.read(buildGradleFile).toString();
