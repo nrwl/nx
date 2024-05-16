@@ -126,20 +126,7 @@ nxViteTsPaths()],
     },
     
         
-        test: {
-    globals: true,
-    cache: {
-      dir: '../node_modules/.vitest/my-app'
-    },
-    environment: 'jsdom',
-    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-    
-    reporters: ['default'],
-    coverage: {
-      reportsDirectory: '../coverage/my-app',
-      provider: 'v8',
-    }
-  },
+        
       });"
 `;
 
@@ -217,20 +204,7 @@ nxViteTsPaths()],
     },
     
         
-        test: {
-    globals: true,
-    cache: {
-      dir: '../node_modules/.vitest/my-app'
-    },
-    environment: 'jsdom',
-    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-    
-    reporters: ['default'],
-    coverage: {
-      reportsDirectory: '../coverage/my-app',
-      provider: 'v8',
-    }
-  },
+        
       });"
 `;
 
@@ -355,20 +329,7 @@ nxViteTsPaths()],
     },
     
         
-        test: {
-    globals: true,
-    cache: {
-      dir: '../node_modules/.vitest/my-app'
-    },
-    environment: 'jsdom',
-    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-    
-    reporters: ['default'],
-    coverage: {
-      reportsDirectory: '../coverage/my-app',
-      provider: 'v8',
-    }
-  },
+        
       });"
 `;
 
