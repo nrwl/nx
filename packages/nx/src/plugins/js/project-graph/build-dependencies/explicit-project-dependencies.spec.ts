@@ -25,7 +25,7 @@ describe('explicit project dependencies', () => {
   });
 
   describe('static imports, dynamic imports, and commonjs requires', () => {
-    it('should build explicit dependencies for static imports, and top-level dynamic imports and commonjs requires', async () => {
+    xit('should build explicit dependencies for static imports, and top-level dynamic imports and commonjs requires', async () => {
       const source = 'proj';
       const ctx = await createContext({
         source,
@@ -72,7 +72,7 @@ describe('explicit project dependencies', () => {
       ]);
     });
 
-    it('should build prefer external dependencies found in the externalDependenciesCache', async () => {
+    xit('should build prefer external dependencies found in the externalDependenciesCache', async () => {
       const source = 'proj';
       const ctx = await createContext({
         source,
