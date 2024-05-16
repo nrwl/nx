@@ -59,25 +59,25 @@ Run build for only projects with the tag `dotnet`:
  nx affected -t=build --exclude='*,!tag:dotnet'
 ```
 
-Use the currently executing project name in your command.:
+Use the currently executing project name in your command:
 
 ```shell
  nx affected -t build --tag=$NX_TASK_TARGET_PROJECT:latest
 ```
 
-Preview the task graph that Nx would run inside a webview.:
+Preview the task graph that Nx would run inside a webview:
 
 ```shell
  nx affected -t=build --graph
 ```
 
-Save the task graph to a file.:
+Save the task graph to a file:
 
 ```shell
  nx affected -t=build --graph=output.json
 ```
 
-Print the task graph to the console.:
+Print the task graph to the console:
 
 ```shell
  nx affected -t=build --graph=stdout

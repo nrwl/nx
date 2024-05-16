@@ -32,13 +32,12 @@ export function withGraphOptions(yargs: Argv) {
   return yargs
     .option('file', {
       describe:
-        'Output file (e.g. --file=output.json or --file=dep-graph.html). Provide --file=stdout to print the project graph in the terminal.',
+        'Output file (e.g. --file=output.json or --file=dep-graph.html).',
       type: 'string',
     })
 
     .option('print', {
-      describe:
-        'Print the project graph in the terminal. (equivalent to --file=stdout)',
+      describe: 'Print the project graph to stdout in the terminal.',
       type: 'boolean',
     })
 

@@ -38,12 +38,6 @@ Generate a static website with project graph into an html file, accompanied by a
 Print the project graph as JSON to the console:
 
 ```shell
- nx graph --file=stdout
-```
-
-Print the project graph as JSON to the console:
-
-```shell
  nx graph --print
 ```
 
@@ -101,7 +95,7 @@ Exclude certain projects from being processed
 
 Type: `string`
 
-Output file (e.g. --file=output.json or --file=dep-graph.html). Provide --file=stdout to print the project graph in the terminal.
+Output file (e.g. --file=output.json or --file=dep-graph.html).
 
 ### files
 
@@ -157,7 +151,7 @@ Bind the project graph server to a specific port.
 
 Type: `boolean`
 
-Print the project graph in the terminal. (equivalent to --file=stdout)
+Print the project graph to stdout in the terminal.
 
 ### targets
 

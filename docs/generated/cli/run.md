@@ -41,25 +41,25 @@ Run the target build for the myapp project, with production configuration:
  nx run myapp:build:production
 ```
 
-Preview the task graph that Nx would run inside a webview.:
+Preview the task graph that Nx would run inside a webview:
 
 ```shell
  nx run myapp:build --graph
 ```
 
-Save the task graph to a file.:
+Save the task graph to a file:
 
 ```shell
  nx run myapp:build --graph=output.json
 ```
 
-Print the task graph to the console.:
+Print the task graph to the console:
 
 ```shell
  nx run myapp:build --graph=stdout
 ```
 
-Run's a target named build:test for the myapp project. Note the quotes around the target name to prevent "test" from being considered a configuration.:
+Run's a target named build:test for the myapp project. Note the quotes around the target name to prevent "test" from being considered a configuration:
 
 ```shell
  nx run myapp:"build:test"
@@ -116,6 +116,13 @@ Type: `string`
 Choices: [dynamic, static, stream, stream-without-prefixes, compact]
 
 Defines how Nx emits outputs tasks logs
+
+| option                  | description                                                                                                                                                                                                                         |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| dynamic                 | use dynamic output life cycle, previous content is overwritten or modified as new outputs are added, display minimal logs by default, always show errors. This output format is recommended on your local development environments. |
+| static                  | uses static output life cycle, no previous content is rewritten or modified as new outputs are added. This output format is recommened for CI environments.                                                                         |
+| stream                  | nx by default logs output to an internal output stream, enable this option to stream logs to stdout / stderr                                                                                                                        |
+| stream-without-prefixes | nx prefixes the project name the target is running on, use this option remove the project name prefix from output                                                                                                                   |
 
 ### parallel
 

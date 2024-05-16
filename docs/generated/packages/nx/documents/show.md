@@ -23,7 +23,7 @@ Show all projects in the workspace:
  nx show projects
 ```
 
-Show all projects with names starting with "api-". The "projects" option is useful to see which projects would be selected by run-many.:
+Show all projects with names starting with "api-". The "projects" option is useful to see which projects would be selected by run-many:
 
 ```shell
  nx show projects --projects api-*
@@ -53,19 +53,19 @@ Show affected projects in the workspace, excluding end-to-end projects:
  nx show projects --affected --exclude=*-e2e
 ```
 
-If in an interactive terminal, opens the project detail view. If not in an interactive terminal, defaults to JSON.:
+If in an interactive terminal, opens the project detail view. If not in an interactive terminal, defaults to JSON:
 
 ```shell
  nx show project my-app
 ```
 
-Show detailed information about "my-app" in a json format.:
+Show detailed information about "my-app" in a json format:
 
 ```shell
  nx show project my-app --json
 ```
 
-Show information about "my-app" in a human readable format.:
+Show information about "my-app" in a human readable format:
 
 ```shell
  nx show project my-app --json false

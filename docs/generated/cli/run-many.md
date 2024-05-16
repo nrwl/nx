@@ -71,19 +71,19 @@ Run lint, test, and build targets for all projects. Requires Nx v15.4+:
  nx run-many --targets=lint,test,build
 ```
 
-Preview the task graph that Nx would run inside a webview.:
+Preview the task graph that Nx would run inside a webview:
 
 ```shell
  nx run-many -t=build --graph
 ```
 
-Save the task graph to a file.:
+Save the task graph to a file:
 
 ```shell
  nx run-many -t=build --graph=output.json
 ```
 
-Print the task graph to the console.:
+Print the task graph to the console:
 
 ```shell
  nx run-many -t=build --graph=stdout
