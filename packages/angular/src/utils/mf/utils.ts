@@ -39,6 +39,7 @@ export const DEFAULT_NPM_PACKAGES_TO_AVOID = [
   '@nrwl/angular/mf',
 ];
 export const DEFAULT_ANGULAR_PACKAGES_TO_SHARE = [
+  '@angular/core',
   '@angular/animations',
   '@angular/common',
 ];
