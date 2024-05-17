@@ -14,6 +14,7 @@ import {
   runTasksInSerial,
   TargetConfiguration,
   Tree,
+  updateJson,
   updateNxJson,
   updateProjectConfiguration,
   writeJson,
@@ -109,6 +110,19 @@ function createApplicationFiles(tree: Tree, options: NormalizedSchema) {
       );
     }
   }
+  updateJson(
+    tree,
+    joinPathFragments(options.appProjectRoot, 'tsconfig.json'),
+    (json) => {
+      return {
+        ...json,
+        compilerOptions: {
+          ...(json.compilerOptions || {}),
+          strict: options.strict,
+        },
+      };
+    }
+  );
 }
 
 async function setupBundler(tree: Tree, options: NormalizedSchema) {
@@ -534,6 +548,7 @@ async function normalizeOptions(
     compiler: options.compiler ?? 'babel',
     bundler: options.bundler ?? 'webpack',
     projectName: appProjectName,
+    strict: options.strict ?? true,
     appProjectRoot,
     e2eProjectRoot,
     e2eProjectName,
