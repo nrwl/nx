@@ -1,17 +1,50 @@
+jest.mock('vite', () => ({
+  resolveConfig: jest.fn().mockImplementation(() => {
+    return Promise.resolve({
+      path: 'vite.config.ts',
+      config: {},
+      build: {},
+      dependencies: [],
+    });
+  }),
+}));
+
+jest.mock('@nx/vite/plugin', () => ({
+  createNodes: [
+    '**/vite.config.{js,cjs,mjs}',
+    (_, { targetName }) => ({
+      projects: {
+        app1: {
+          name: 'app1',
+          targets: {
+            [targetName]: { command: 'vite build' },
+          },
+        },
+        app2: {
+          name: 'app2',
+          targets: {
+            [targetName]: { command: 'vite build' },
+          },
+        },
+      },
+    }),
+  ],
+  createDependencies: jest.fn(),
+}));
+
 import { createTreeWithEmptyWorkspace } from 'nx/src/generators/testing-utils/create-tree-with-empty-workspace';
 import type { Tree } from 'nx/src/generators/tree';
 import { readJson, writeJson } from 'nx/src/generators/utils/json';
 import type { PackageJson } from 'nx/src/utils/package-json';
 import { CreateNodes } from 'nx/src/project-graph/plugins';
-import { ProjectGraph } from 'nx/src/devkit-exports';
 import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
 
 import { addPlugin, generateCombinations } from './add-plugin';
+import { updateNxJson } from 'nx/src/generators/utils/nx-json';
 
 describe('addPlugin', () => {
   let tree: Tree;
   let createNodes: CreateNodes<{ targetName: string }>;
-  let graph: ProjectGraph;
   let fs: TempFs;
 
   beforeEach(async () => {
@@ -20,39 +53,6 @@ describe('addPlugin', () => {
     fs = new TempFs('add-plugin');
     tree.root = fs.tempDir;
 
-    graph = {
-      nodes: {
-        app1: {
-          name: 'app1',
-          type: 'app',
-          data: {
-            root: 'app1',
-            targets: {},
-          },
-        },
-        app2: {
-          name: 'app2',
-          type: 'app',
-          data: {
-            root: 'app2',
-            targets: {},
-          },
-        },
-        app3: {
-          name: 'app3',
-          type: 'app',
-          data: {
-            root: 'app3',
-            targets: {},
-          },
-        },
-      },
-      dependencies: {
-        app1: [],
-        app2: [],
-        app3: [],
-      },
-    };
     createNodes = [
       '**/next.config.{js,cjs,mjs}',
       (_, { targetName }) => ({
@@ -84,41 +84,148 @@ describe('addPlugin', () => {
   });
 
   describe('adding the plugin', () => {
-    it('should not conflicting with the existing graph', async () => {
-      graph.nodes.app1.data.targets.build = {};
-      graph.nodes.app2.data.targets.build1 = {};
-      // app 3 doesn't have a next config, so it having this
-      // target should not affect the plugin options
-      graph.nodes.app3.data.targets.build2 = {};
+    it('should not conflicting with the existing plugins', async () => {
+      // ARRANGE
+      const nxJson = readJson(tree, 'nx.json');
+      nxJson.plugins ??= [];
+      nxJson.plugins.push({
+        plugin: '@nx/vite/plugin',
+        options: { targetName: 'build' },
+      });
+      updateNxJson(tree, nxJson);
+      fs.createFilesSync({
+        'app1/vite.config.js': '',
+        'app2/vite.config.js': '',
+      });
 
+      // ACT
       await addPlugin(
         tree,
-        graph,
         '@nx/next/plugin',
         createNodes,
 
         {
-          targetName: ['build', 'build1', 'build2'],
+          targetName: ['build', 'build1'],
         },
         true
       );
 
-      expect(readJson(tree, 'nx.json').plugins).toContainEqual({
+      // ASSERT
+      expect(
+        readJson(tree, 'nx.json').plugins.find(
+          (p) => p.plugin === '@nx/next/plugin'
+        )
+      ).toEqual({
         plugin: '@nx/next/plugin',
         options: {
-          targetName: 'build2',
+          targetName: 'build1',
+        },
+      });
+    });
+
+    it('should not conflicting with existing project.json with executor and run-commands in plugin', async () => {
+      // ARRANGE
+      fs.createFilesSync({
+        'app1/project.json': JSON.stringify({
+          targets: { build: { executor: '@nx/next:build' } },
+        }),
+      });
+
+      // ACT
+      await addPlugin(
+        tree,
+        '@nx/next/plugin',
+        createNodes,
+
+        {
+          targetName: ['build'],
+        },
+        true
+      );
+
+      // ASSERT
+      expect(
+        readJson(tree, 'nx.json').plugins.find(
+          (p) => p.plugin === '@nx/next/plugin'
+        )
+      ).toEqual({
+        plugin: '@nx/next/plugin',
+        options: {
+          targetName: 'build',
+        },
+      });
+    });
+
+    it('should not conflicting with existing project.json with executor and executor in plugin', async () => {
+      // ARRANGE
+      fs.createFilesSync({
+        'app1/project.json': JSON.stringify({
+          targets: { build: { executor: '@nx/next:build' } },
+        }),
+      });
+
+      createNodes = [
+        '**/next.config.{js,cjs,mjs}',
+        (_, { targetName }) => ({
+          projects: {
+            app1: {
+              name: 'app1',
+              targets: {
+                [targetName]: { executor: '@nx/next:build' },
+              },
+            },
+            app2: {
+              name: 'app2',
+              targets: {
+                [targetName]: { executor: '@nx/next:build' },
+              },
+            },
+          },
+        }),
+      ];
+
+      // ACT
+      await addPlugin(
+        tree,
+        '@nx/next/plugin',
+        createNodes,
+
+        {
+          targetName: ['build'],
+        },
+        true
+      );
+
+      // ASSERT
+      expect(
+        readJson(tree, 'nx.json').plugins.find(
+          (p) => p.plugin === '@nx/next/plugin'
+        )
+      ).toEqual({
+        plugin: '@nx/next/plugin',
+        options: {
+          targetName: 'build',
         },
       });
     });
   });
 
   it('should throw an error if no non-conflicting options are provided', async () => {
-    graph.nodes.app1.data.targets.build = {};
+    const nxJson = readJson(tree, 'nx.json');
+    nxJson.plugins ??= [];
+    nxJson.plugins.push({
+      plugin: '@nx/vite/plugin',
+      options: { targetName: 'build' },
+    });
+    updateNxJson(tree, nxJson);
+    fs.createFilesSync({
+      'app1/vite.config.js': '',
+      'app2/vite.config.js': '',
+    });
 
     try {
       await addPlugin(
         tree,
-        graph,
         '@nx/next/plugin',
         createNodes,
 
@@ -147,7 +254,6 @@ describe('addPlugin', () => {
 
       await addPlugin(
         tree,
-        graph,
         '@nx/next/plugin',
         createNodes,
 
@@ -185,7 +291,6 @@ describe('addPlugin', () => {
 
         await addPlugin(
           tree,
-          graph,
           '@nx/next/plugin',
           createNodes,
 
@@ -234,7 +339,6 @@ describe('addPlugin', () => {
 
         await addPlugin(
           tree,
-          graph,
           '@nx/cypress/plugin',
           createNodes,
 
@@ -259,7 +363,6 @@ describe('addPlugin', () => {
 
       await addPlugin(
         tree,
-        graph,
         '@nx/next/plugin',
         createNodes,
 
@@ -300,7 +403,6 @@ describe('addPlugin', () => {
 
       await addPlugin(
         tree,
-        graph,
         '@nx/next/plugin',
         createNodes,
 
@@ -342,7 +444,6 @@ describe('addPlugin', () => {
 
       await addPlugin(
         tree,
-        graph,
         '@nx/next/plugin',
         createNodes,
 
@@ -384,7 +485,6 @@ describe('addPlugin', () => {
 
       await addPlugin(
         tree,
-        graph,
         '@nx/next/plugin',
         createNodes,
 

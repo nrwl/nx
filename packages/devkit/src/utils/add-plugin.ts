@@ -1,12 +1,12 @@
 import type { PackageJson } from 'nx/src/utils/package-json';
-
 import type { ConfigurationResult } from 'nx/src/project-graph/utils/project-configuration-utils';
+
 import * as yargs from 'yargs-parser';
 
 import {
   CreateNodes,
+  NxJsonConfiguration,
   ProjectConfiguration,
-  ProjectGraph,
   readJson,
   readNxJson,
   Tree,
@@ -15,6 +15,10 @@ import {
 } from 'nx/src/devkit-exports';
 import {
   LoadedNxPlugin,
+  loadNxPlugins,
+  isCompatibleTarget,
+  mergeTargetConfigurations,
+  deepEquals,
   ProjectConfigurationsError,
   retrieveProjectConfigurations,
 } from 'nx/src/devkit-internals';
@@ -25,7 +29,6 @@ import {
  */
 export async function addPlugin<PluginOptions>(
   tree: Tree,
-  graph: ProjectGraph,
   pluginName: string,
   createNodesTuple: CreateNodes<PluginOptions>,
   options: Partial<
@@ -33,11 +36,12 @@ export async function addPlugin<PluginOptions>(
   >,
   shouldUpdatePackageJsonScripts: boolean
 ): Promise<void> {
-  const graphNodes = Object.values(graph.nodes);
   const nxJson = readNxJson(tree);
 
   let pluginOptions: PluginOptions;
-  let projConfigs: ConfigurationResult;
+  let projConfigsWithExistingNxJsonPlugins: ConfigurationResult;
+  let projConfigsWithNewPlugin: ConfigurationResult;
+  let projConfigsWithCorePlugins: ConfigurationResult;
   const combinations = generateCombinations(options);
   optionsLoop: for (const _pluginOptions of combinations) {
     pluginOptions = _pluginOptions as PluginOptions;
@@ -54,8 +58,21 @@ export async function addPlugin<PluginOptions>(
       return;
     }
     global.NX_GRAPH_CREATION = true;
-    try {
-      projConfigs = await retrieveProjectConfigurations(
+
+    const [nxJsonPlugins] = await loadNxPlugins(
+      nxJson.plugins,
+      tree.root,
+      true
+    );
+    projConfigsWithExistingNxJsonPlugins =
+      await retrieveProjectConfigurationsWithPartialResult(
+        nxJsonPlugins,
+        tree.root,
+        nxJson
+      );
+
+    projConfigsWithNewPlugin =
+      await retrieveProjectConfigurationsWithPartialResult(
         [
           new LoadedNxPlugin(
             {
@@ -71,27 +88,38 @@ export async function addPlugin<PluginOptions>(
         tree.root,
         nxJson
       );
-    } catch (e) {
-      // Errors are okay for this because we're only running 1 plugin
-      if (e instanceof ProjectConfigurationsError) {
-        projConfigs = e.partialProjectConfigurationsResult;
-      } else {
-        throw e;
-      }
-    }
-    global.NX_GRAPH_CREATION = false;
 
-    for (const projConfig of Object.values(projConfigs.projects)) {
-      const node = graphNodes.find(
-        (node) => node.data.root === projConfig.root
+    const [corePlugins] = await loadNxPlugins([], tree.root);
+    projConfigsWithCorePlugins =
+      await retrieveProjectConfigurationsWithPartialResult(
+        corePlugins,
+        tree.root,
+        nxJson
       );
 
-      if (!node) {
-        continue;
-      }
+    global.NX_GRAPH_CREATION = false;
 
+    for (const projConfig of Object.values(projConfigsWithNewPlugin.projects)) {
       for (const targetName in projConfig.targets) {
-        if (node.data.targets[targetName]) {
+        const existingPluginCreatedTarget =
+          projConfigsWithExistingNxJsonPlugins?.projects?.[projConfig.root]
+            ?.targets?.[targetName];
+
+        const corePluginsCreatedTarget =
+          projConfigsWithCorePlugins?.projects?.[projConfig.root]?.targets?.[
+            targetName
+          ];
+        if (
+          existingPluginCreatedTarget ||
+          (corePluginsCreatedTarget &&
+            !deepEquals(
+              corePluginsCreatedTarget,
+              mergeTargetConfigurations(
+                corePluginsCreatedTarget,
+                projConfig.targets[targetName]
+              )
+            ))
+        ) {
           // Conflicting Target Name, check the next one
           pluginOptions = null;
           continue optionsLoop;
@@ -116,7 +144,7 @@ export async function addPlugin<PluginOptions>(
   updateNxJson(tree, nxJson);
 
   if (shouldUpdatePackageJsonScripts) {
-    updatePackageScripts(tree, projConfigs);
+    updatePackageScripts(tree, projConfigsWithNewPlugin);
   }
 }
 
@@ -352,4 +380,27 @@ function _generateCombinations<T>(input: T[][]): T[][] {
       partialCombinations.map((combination) => [value, ...combination])
     );
   }
+}
+
+export async function retrieveProjectConfigurationsWithPartialResult(
+  plugins: LoadedNxPlugin[],
+  workspaceRoot: string,
+  nxJson: NxJsonConfiguration
+): Promise<ConfigurationResult> {
+  let projConfigs: ConfigurationResult;
+  try {
+    projConfigs = await retrieveProjectConfigurations(
+      plugins,
+      workspaceRoot,
+      nxJson
+    );
+  } catch (e) {
+    // Errors are okay for this because we're only running 1 plugin
+    if (e instanceof ProjectConfigurationsError) {
+      projConfigs = e.partialProjectConfigurationsResult;
+    } else {
+      throw e;
+    }
+  }
+  return projConfigs;
 }

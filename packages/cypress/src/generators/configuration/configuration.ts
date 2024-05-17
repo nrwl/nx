@@ -80,7 +80,7 @@ export async function configurationGeneratorInternal(
       })
     );
   } else if (opts.addPlugin) {
-    await addPlugin(tree, projectGraph, false);
+    await addPlugin(tree, false);
   }
 
   const nxJson = readNxJson(tree);

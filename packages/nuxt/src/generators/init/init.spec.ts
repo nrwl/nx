@@ -1,5 +1,3 @@
-import 'nx/src/internal-testing-utils/mock-project-graph';
-
 import { readJson, readNxJson, Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { nuxtInitGenerator } from './init';
