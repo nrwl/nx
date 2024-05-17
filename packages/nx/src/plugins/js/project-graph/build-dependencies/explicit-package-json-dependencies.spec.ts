@@ -1,7 +1,6 @@
 import { TempFs } from '../../../../internal-testing-utils/temp-fs';
 const tempFs = new TempFs('explicit-package-json');
 
-import { join } from 'node:path';
 import { ProjectGraphProjectNode } from '../../../../config/project-graph';
 import { createFileMap } from '../../../../project-graph/file-map-utils';
 import { CreateDependenciesContext } from '../../../../project-graph/plugins';
