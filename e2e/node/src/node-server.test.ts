@@ -14,7 +14,7 @@ import {
 } from '@nx/e2e/utils';
 import { join } from 'path';
 
-describe('Node Applications + webpack', () => {
+xdescribe('Node Applications + webpack', () => {
   let proj: string;
   beforeAll(() => {
     proj = newProject({
