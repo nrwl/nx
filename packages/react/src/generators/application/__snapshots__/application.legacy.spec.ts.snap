@@ -31,6 +31,7 @@ nxViteTsPaths()],
         
     build: {
       outDir: '../dist/my-vite-app',
+      emptyOutDir: true,
       reportCompressedSize: true,
       commonjsOptions: {
         transformMixedEsModules: true,
