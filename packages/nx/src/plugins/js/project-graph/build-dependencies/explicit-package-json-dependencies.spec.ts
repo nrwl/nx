@@ -10,37 +10,6 @@ import { getAllFileDataInContext } from '../../../../utils/workspace-context';
 
 import { buildExplicitPackageJsonDependencies } from './explicit-package-json-dependencies';
 
-jest.mock('../../utils/find-external-package-json-path', () => ({
-  findExternalPackageJsonPath: jest
-    .fn()
-    .mockImplementation((packageName, relativeToDir) => {
-      if (packageName === 'lodash') {
-        if (relativeToDir) {
-          // project specific lodash 3
-          if (relativeToDir.includes('proj3')) {
-            return join(
-              tempFs.tempDir,
-              'libs',
-              'proj3',
-              'node_modules',
-              'lodash',
-              'package.json'
-            );
-          }
-          // lodash 4
-          if (relativeToDir.includes('proj')) {
-            return join(
-              tempFs.tempDir,
-              'node_modules',
-              'lodash',
-              'package.json'
-            );
-          }
-        }
-      }
-    }),
-}));
-
 describe('explicit package json dependencies', () => {
   let ctx: CreateDependenciesContext;
   let projects: Record<string, ProjectGraphProjectNode>;
