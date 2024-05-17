@@ -39,7 +39,8 @@
               "typescript",
               "eslint",
               "@angular-devkit/core",
-              "@typescript-eslint/eslint-plugin"
+              "@typescript-eslint/eslint-plugin",
+              "js-yaml" // The rule is failing with alias dependencies see
             ]
           }
         ]
