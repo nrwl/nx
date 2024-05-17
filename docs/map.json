@@ -1237,6 +1237,12 @@
               "id": "glossary",
               "tags": [],
               "file": "shared/reference/glossary"
+            },
+            {
+              "name": "Releases",
+              "id": "releases",
+              "tags": [],
+              "file": "shared/reference/releases"
             }
           ]
         },
@@ -1876,6 +1882,11 @@
               "name": "Launch Templates",
               "id": "launch-templates",
               "file": "nx-cloud/reference/launch-templates"
+            },
+            {
+              "name": "Custom Steps",
+              "id": "custom-steps",
+              "file": "nx-cloud/reference/custom-steps"
             },
             {
               "name": "Environment Variables",

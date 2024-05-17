@@ -72,7 +72,10 @@ export async function addLinterToPlaywrightProject(
       : () => {}
   );
 
-  if (isEslintConfigSupported(tree)) {
+  if (
+    isEslintConfigSupported(tree, projectConfig.root) ||
+    isEslintConfigSupported(tree)
+  ) {
     addExtendsToLintConfig(
       tree,
       projectConfig.root,

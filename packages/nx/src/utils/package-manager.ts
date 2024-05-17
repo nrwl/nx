@@ -306,11 +306,21 @@ export async function resolvePackageVersionUsingRegistry(
       throw new Error(`Unable to resolve version ${packageName}@${version}.`);
     }
 
-    // get the last line of the output, strip the package version and quotes
-    const resolvedVersion = result
-      .split('\n')
-      .pop()
-      .split(' ')
+    const lines = result.split('\n');
+    if (lines.length === 1) {
+      return lines[0];
+    }
+
+    /**
+     * The output contains multiple lines ordered by release date, so the last
+     * version might not be the last one in the list. We need to sort it. Each
+     * line looks like:
+     *
+     * <package>@<version> '<version>'
+     */
+    const resolvedVersion = lines
+      .map((line) => line.split(' ')[1])
+      .sort()
       .pop()
       .replace(/'/g, '');
 

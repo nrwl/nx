@@ -6,18 +6,38 @@
   "implicitDependencies": ["nx", "angular", "react", "js", "nest"],
   "targets": {
     "e2e-ci--src/nx-init-angular.test.ts": {
+      "dependsOn": [
+        "nx:build-native",
+        "@nx/nx-source:populate-local-registry-storage"
+      ],
       "inputs": ["e2eInputs", "^production"]
     },
     "e2e-ci--src/nx-init-monorepo.test.ts": {
+      "dependsOn": [
+        "nx:build-native",
+        "@nx/nx-source:populate-local-registry-storage"
+      ],
       "inputs": ["e2eInputs", "^production"]
     },
     "e2e-ci--src/nx-init-nest.test.ts": {
+      "dependsOn": [
+        "nx:build-native",
+        "@nx/nx-source:populate-local-registry-storage"
+      ],
       "inputs": ["e2eInputs", "^production"]
     },
     "e2e-ci--src/nx-init-npm-repo.test.ts": {
+      "dependsOn": [
+        "nx:build-native",
+        "@nx/nx-source:populate-local-registry-storage"
+      ],
       "inputs": ["e2eInputs", "^production"]
     },
     "e2e-ci--src/nx-init-react.test.ts": {
+      "dependsOn": [
+        "nx:build-native",
+        "@nx/nx-source:populate-local-registry-storage"
+      ],
       "inputs": ["e2eInputs", "^production"]
     }
   }

@@ -4343,6 +4343,14 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
+          },
+          {
+            "name": "Releases",
+            "path": "/reference/releases",
+            "id": "releases",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -4399,6 +4407,14 @@
         "name": "Glossary",
         "path": "/reference/glossary",
         "id": "glossary",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Releases",
+        "path": "/reference/releases",
+        "id": "releases",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -6400,6 +6416,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Custom Steps",
+            "path": "/ci/reference/custom-steps",
+            "id": "custom-steps",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Environment Variables",
             "path": "/ci/reference/env-vars",
             "id": "env-vars",
@@ -6438,6 +6462,14 @@
         "name": "Launch Templates",
         "path": "/ci/reference/launch-templates",
         "id": "launch-templates",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Custom Steps",
+        "path": "/ci/reference/custom-steps",
+        "id": "custom-steps",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
