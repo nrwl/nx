@@ -367,7 +367,7 @@
       "documentation"
     ]
   },
-  "packageManager": "pnpm@9.1.1",
+  "packageManager": "pnpm@8.15.7",
   "pnpm": {
     "patchedDependencies": {
       "@nx/js@19.0.0-rc.1": "patches/@nx__js@19.0.0-rc.1.patch"
