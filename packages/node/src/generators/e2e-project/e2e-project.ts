@@ -28,6 +28,7 @@ import {
   replaceOverridesInLintConfig,
 } from '@nx/eslint/src/generators/utils/eslint-file';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
+import { findRootJestPreset } from '@nx/jest/src/utils/config/config-file';
 
 export async function e2eProjectGenerator(host: Tree, options: Schema) {
   return await e2eProjectGeneratorInternal(host, {
@@ -90,6 +91,7 @@ export async function e2eProjectGeneratorInternal(
     });
   }
 
+  const jestPreset = findRootJestPreset(host) ?? 'jest.preset.js';
   if (options.projectType === 'server') {
     generateFiles(
       host,
@@ -99,6 +101,7 @@ export async function e2eProjectGeneratorInternal(
         ...options,
         ...names(options.rootProject ? 'server' : options.project),
         offsetFromRoot: offsetFromRoot(options.e2eProjectRoot),
+        jestPreset,
         tmpl: '',
       }
     );
@@ -127,6 +130,7 @@ export async function e2eProjectGeneratorInternal(
         ...names(options.rootProject ? 'cli' : options.project),
         mainFile,
         offsetFromRoot: offsetFromRoot(options.e2eProjectRoot),
+        jestPreset,
         tmpl: '',
       }
     );
