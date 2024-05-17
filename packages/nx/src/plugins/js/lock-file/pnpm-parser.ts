@@ -32,7 +32,10 @@ let keyMap = new Map<string, ProjectGraphExternalNode>();
 let currentLockFileHash: string;
 
 let parsedLockFile: Lockfile;
-function parsePnpmLockFile(lockFileContent: string, lockFileHash: string) {
+function parsePnpmLockFile(
+  lockFileContent: string,
+  lockFileHash: string
+): Lockfile {
   if (lockFileHash === currentLockFileHash) {
     return parsedLockFile;
   }
@@ -49,6 +52,9 @@ export function getPnpmLockfileNodes(
   lockFileHash: string
 ): Record<string, ProjectGraphExternalNode> {
   const data = parsePnpmLockFile(lockFileContent, lockFileHash);
+  if (+data.lockfileVersion.toString() >= 10) {
+    throw new Error('Nx only supports pnpm lockfile version 5-9');
+  }
   const isV5 = isV5Syntax(data);
   return getNodes(data, keyMap, isV5);
 }
@@ -59,6 +65,9 @@ export function getPnpmLockfileDependencies(
   ctx: CreateDependenciesContext
 ) {
   const data = parsePnpmLockFile(lockFileContent, lockFileHash);
+  if (+data.lockfileVersion.toString() >= 10) {
+    throw new Error('Nx only supports pnpm lockfile version 5-9');
+  }
   const isV5 = isV5Syntax(data);
 
   return getDependencies(data, keyMap, isV5, ctx);
