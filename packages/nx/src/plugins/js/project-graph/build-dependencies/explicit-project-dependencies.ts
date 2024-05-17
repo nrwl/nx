@@ -31,10 +31,10 @@ function convertImportToDependency(
   type: RawProjectGraphDependency['type'],
   targetProjectLocator: TargetProjectLocator
 ): RawProjectGraphDependency | undefined {
-  const target = targetProjectLocator.findProjectWithImport(
+  const target = targetProjectLocator.findProjectFromImport(
     importExpr,
-    projectRoot,
-    sourceFile
+    sourceFile,
+    projectRoot
   );
   if (!target) {
     return;

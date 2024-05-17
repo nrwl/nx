@@ -49,17 +49,20 @@ export class TargetProjectLocator {
   ) {}
 
   /**
-   * Find a project based on its import
+   * Resolve any workspace or external project that matches the given import expression,
+   * originating from the given filePath, relative to the given project root.
    *
    * @param importExpr
-   * @param projectRoot
    * @param filePath
+   * @param projectRoot
    */
-  findProjectWithImport(
+  findProjectFromImport(
     importExpr: string,
-    projectRoot: string,
-    filePath: string
+    filePath: string,
+    projectRoot: string
   ): string {
+    console.log({ importExpr, filePath, projectRoot });
+
     if (isRelativePath(importExpr)) {
       const resolvedModule = posix.join(dirname(filePath), importExpr);
       return this.findProjectOfResolvedModule(resolvedModule);
@@ -86,9 +89,12 @@ export class TargetProjectLocator {
     }
 
     // try to find npm package before using expensive typescript resolution
-    const npmProject = this.findNpmPackage(importExpr, projectRoot);
-    if (npmProject) {
-      return npmProject;
+    const externalProject = this.findExternalProjectFromImport(
+      importExpr,
+      projectRoot
+    );
+    if (externalProject) {
+      return externalProject;
     }
 
     if (this.tsConfig.config) {
@@ -116,6 +122,63 @@ export class TargetProjectLocator {
     // nothing found, cache for later
     this.npmResolutionCache.set(importExpr, null);
     return null;
+  }
+
+  /**
+   * Resolve any external project that matches the given import expression,
+   * relative to the given project root.
+   *
+   * @param importExpr
+   * @param projectRoot
+   */
+  findExternalProjectFromImport(
+    importExpr: string,
+    projectRoot: string
+  ): string | undefined {
+    const packageName = this.parsePackageNameFromImportExpression(importExpr);
+
+    const npmImportForProject = `${packageName}__${projectRoot}`;
+    if (this.npmResolutionCache.has(npmImportForProject)) {
+      return this.npmResolutionCache.get(npmImportForProject);
+    }
+
+    try {
+      const fullProjectRootPath = join(workspaceRoot, projectRoot);
+      // package.json refers to an external package, we do not match against the version found in there, we instead try and resolve the relevant package how node would
+      const externalPackageJsonPath = findExternalPackageJsonPath(
+        packageName,
+        fullProjectRootPath
+      );
+      // The external package.json path might be not be resolvable, e.g. if a reference has been added to a project package.json, but the install command has not been run yet.
+      if (!externalPackageJsonPath) {
+        return undefined;
+      }
+
+      const externalPackageJson = parseJson(
+        readFileSync(externalPackageJsonPath, 'utf-8')
+      );
+
+      // Find the matching external node based on the name and version
+      const matchingExternalNode = this.npmProjects.find((pkg) => {
+        return (
+          pkg.data.packageName === externalPackageJson.name &&
+          pkg.data.version === externalPackageJson.version
+        );
+      });
+      if (!matchingExternalNode) {
+        return undefined;
+      }
+      this.npmResolutionCache.set(
+        npmImportForProject,
+        matchingExternalNode.name
+      );
+      return matchingExternalNode.name;
+    } catch (e) {
+      if (process.env.NX_VERBOSE_LOGGING === 'true') {
+        console.error(e);
+      }
+      return undefined;
+    }
   }
 
   /**
@@ -181,53 +244,6 @@ export class TargetProjectLocator {
         paths: [dirname(filePath)],
       })
     );
-  }
-
-  findNpmPackage(importExpr: string, projectRoot: string): string | undefined {
-    const packageName = this.parsePackageNameFromImportExpression(importExpr);
-
-    const npmImportForProject = `${packageName}__${projectRoot}`;
-    if (this.npmResolutionCache.has(npmImportForProject)) {
-      return this.npmResolutionCache.get(npmImportForProject);
-    }
-
-    try {
-      const fullProjectRootPath = join(workspaceRoot, projectRoot);
-      // package.json refers to an external package, we do not match against the version found in there, we instead try and resolve the relevant package how node would
-      const externalPackageJsonPath = findExternalPackageJsonPath(
-        packageName,
-        fullProjectRootPath
-      );
-      // The external package.json path might be not be resolvable, e.g. if a reference has been added to a project package.json, but the install command has not been run yet.
-      if (!externalPackageJsonPath) {
-        return undefined;
-      }
-
-      const externalPackageJson = parseJson(
-        readFileSync(externalPackageJsonPath, 'utf-8')
-      );
-
-      // Find the matching external node based on the name and version
-      const matchingExternalNode = this.npmProjects.find((pkg) => {
-        return (
-          pkg.data.packageName === externalPackageJson.name &&
-          pkg.data.version === externalPackageJson.version
-        );
-      });
-      if (!matchingExternalNode) {
-        return undefined;
-      }
-      this.npmResolutionCache.set(
-        npmImportForProject,
-        matchingExternalNode.name
-      );
-      return matchingExternalNode.name;
-    } catch (e) {
-      if (process.env.NX_VERBOSE_LOGGING === 'true') {
-        console.error(e);
-      }
-      return undefined;
-    }
   }
 
   private findProjectOfResolvedModule(

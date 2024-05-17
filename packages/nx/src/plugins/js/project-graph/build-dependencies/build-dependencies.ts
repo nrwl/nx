@@ -13,6 +13,10 @@ export function buildExplicitDependencies(
 ): RawProjectGraphDependency[] {
   if (totalNumberOfFilesToProcess(ctx) === 0) return [];
 
+  /**
+   * If both analyzeSourceFiles and analyzePackageJson are enabled there would be some repeated work in terms of resolving
+   * external nodes from disk, so we use a shared cache to avoid that.
+   */
   const npmResolutionCache: NpmResolutionCache = new Map();
 
   let dependencies: RawProjectGraphDependency[] = [];

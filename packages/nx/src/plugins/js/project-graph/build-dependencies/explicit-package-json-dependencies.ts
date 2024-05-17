@@ -101,10 +101,11 @@ function processPackageJson(
         npmResolutionCache
       );
 
-      const externalNodeName = targetProjectLocator.findNpmPackage(
-        d,
-        dirname(fileName)
-      );
+      const externalNodeName =
+        targetProjectLocator.findExternalProjectFromImport(
+          d,
+          dirname(fileName)
+        );
       if (!externalNodeName) {
         continue;
       }

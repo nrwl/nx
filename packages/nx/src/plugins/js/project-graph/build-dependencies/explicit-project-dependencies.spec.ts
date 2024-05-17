@@ -2,15 +2,15 @@ import { TempFs } from '../../../../internal-testing-utils/temp-fs';
 
 const tempFs = new TempFs('explicit-project-deps');
 
+import { CreateDependenciesContext } from '../../../../project-graph/plugins';
+import { loadNxPlugins } from '../../../../project-graph/plugins/internal-api';
 import { ProjectGraphBuilder } from '../../../../project-graph/project-graph-builder';
-import { buildExplicitTypeScriptDependencies } from './explicit-project-dependencies';
 import {
   retrieveProjectConfigurations,
   retrieveWorkspaceFiles,
 } from '../../../../project-graph/utils/retrieve-workspace-files';
-import { CreateDependenciesContext } from '../../../../project-graph/plugins';
 import { setupWorkspaceContext } from '../../../../utils/workspace-context';
-import { loadNxPlugins } from '../../../../project-graph/plugins/internal-api';
+import { buildExplicitTypeScriptDependencies } from './explicit-project-dependencies';
 
 // projectName => tsconfig import path
 const dependencyProjectNamesToImportPaths = {
@@ -24,8 +24,12 @@ describe('explicit project dependencies', () => {
     tempFs.reset();
   });
 
+  afterAll(() => {
+    tempFs.cleanup();
+  });
+
   describe('static imports, dynamic imports, and commonjs requires', () => {
-    xit('should build explicit dependencies for static imports, and top-level dynamic imports and commonjs requires', async () => {
+    it('should build explicit dependencies for static imports, and top-level dynamic imports and commonjs requires', async () => {
       const source = 'proj';
       const ctx = await createContext({
         source,
@@ -72,7 +76,7 @@ describe('explicit project dependencies', () => {
       ]);
     });
 
-    xit('should build prefer external dependencies found in the externalDependenciesCache', async () => {
+    it('should preferentially resolve external projects found in the npmResolutionCache', async () => {
       const source = 'proj';
       const ctx = await createContext({
         source,
@@ -86,11 +90,9 @@ describe('explicit project dependencies', () => {
         ],
       });
 
-      // Set the cache to include a project specific version of the external dependency
-      const externalDependenciesCache = new Map();
-      const cachedDeps = new Set();
-      cachedDeps.add('npm:npm-package@0.5.0');
-      externalDependenciesCache.set(source, cachedDeps);
+      const npmResolutionCache = new Map();
+      // Add an example of a alternate version of npm-package in the workspace within the cache
+      npmResolutionCache.set('npm-package__libs/proj', 'npm:npm-package@0.5.0');
 
       const resWithEmptyCache = buildExplicitTypeScriptDependencies(
         ctx,
@@ -98,7 +100,7 @@ describe('explicit project dependencies', () => {
       );
       const resWithCache = buildExplicitTypeScriptDependencies(
         ctx,
-        externalDependenciesCache
+        npmResolutionCache
       );
 
       expect(resWithEmptyCache).toEqual([
@@ -114,7 +116,7 @@ describe('explicit project dependencies', () => {
         {
           source,
           sourceFile: 'libs/proj/index.ts',
-          // The project specific version is preferred over the root version (which would be 'npm:npm-package')
+          // Preferred the version in the cache instead of going through the full resolution process to find the 1.0.0 version in tempFs node_modules
           target: 'npm:npm-package@0.5.0',
           type: 'static',
         },
@@ -554,6 +556,10 @@ async function createContext(
       }),
       {}
     ),
+    './node_modules/npm-package/package.json': JSON.stringify({
+      name: 'npm-package',
+      version: '1.0.0',
+    }),
   };
   const tsConfig = {
     compilerOptions: {

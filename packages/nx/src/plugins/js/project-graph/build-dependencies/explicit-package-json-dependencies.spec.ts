@@ -154,7 +154,7 @@ describe('explicit package json dependencies', () => {
     };
   });
 
-  afterEach(() => {
+  afterAll(() => {
     tempFs.cleanup();
   });
 
@@ -193,5 +193,43 @@ describe('explicit package json dependencies', () => {
         "lodash__libs/proj3" => "npm:lodash@3.0.0",
       }
     `);
+  });
+
+  it(`should preferentially resolve external projects found in the npmResolutionCache`, async () => {
+    const npmResolutionCache = new Map();
+
+    // Add an alternate version of lodash to the cache
+    npmResolutionCache.set('lodash__libs/proj', 'npm:lodash@999.9.9');
+    npmResolutionCache.set('lodash__libs/proj3', 'npm:lodash@999.9.9');
+
+    const res = buildExplicitPackageJsonDependencies(ctx, npmResolutionCache);
+    expect(res).toEqual([
+      {
+        source: 'proj',
+        target: 'proj3',
+        sourceFile: 'libs/proj/package.json',
+        type: 'static',
+      },
+      {
+        source: 'proj',
+        target: 'proj2',
+        sourceFile: 'libs/proj/package.json',
+        type: 'static',
+      },
+      {
+        sourceFile: 'libs/proj/package.json',
+        source: 'proj',
+        // Preferred the cached version of lodash, instead of 4.0.0 resolved from tempFs node_modules
+        target: 'npm:lodash@999.9.9',
+        type: 'static',
+      },
+      {
+        sourceFile: 'libs/proj3/package.json',
+        source: 'proj3',
+        // Preferred the cached version of lodash, instead of 3.0.0 resolved from tempFs node_modules
+        target: 'npm:lodash@999.9.9',
+        type: 'static',
+      },
+    ]);
   });
 });
