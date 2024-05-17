@@ -1,6 +1,6 @@
-import { readFileSync } from 'fs-extra';
-import { builtinModules } from 'module';
-import { dirname, join, posix, relative } from 'path';
+import { readFileSync } from 'node:fs';
+import { builtinModules } from 'node:module';
+import { dirname, join, posix, relative } from 'node:path';
 import {
   ProjectGraphExternalNode,
   ProjectGraphProjectNode,
@@ -25,10 +25,15 @@ import {
  */
 export type NpmResolutionCache = Map<string, string>;
 
-const builtInModuleSet = new Set<string>([
+export const builtInModuleSet = new Set<string>([
   ...builtinModules,
   ...builtinModules.map((x) => `node:${x}`),
 ]);
+
+export function isBuiltinModuleImport(importExpr: string): boolean {
+  const packageName = parsePackageNameFromImportExpression(importExpr);
+  return builtInModuleSet.has(packageName);
+}
 
 export class TargetProjectLocator {
   private projectRootMappings = createProjectRootMappings(this.nodes);
@@ -41,7 +46,10 @@ export class TargetProjectLocator {
 
   constructor(
     private readonly nodes: Record<string, ProjectGraphProjectNode>,
-    private readonly externalNodes: Record<string, ProjectGraphExternalNode>,
+    private readonly externalNodes: Record<
+      string,
+      ProjectGraphExternalNode
+    > = {},
     private readonly npmResolutionCache: NpmResolutionCache = new Map<
       string,
       string
@@ -61,8 +69,6 @@ export class TargetProjectLocator {
     filePath: string,
     projectRoot: string
   ): string {
-    console.log({ importExpr, filePath, projectRoot });
-
     if (isRelativePath(importExpr)) {
       const resolvedModule = posix.join(dirname(filePath), importExpr);
       return this.findProjectOfResolvedModule(resolvedModule);
@@ -83,7 +89,7 @@ export class TargetProjectLocator {
       }
     }
 
-    if (builtInModuleSet.has(importExpr)) {
+    if (isBuiltinModuleImport(importExpr)) {
       this.npmResolutionCache.set(importExpr, null);
       return null;
     }
@@ -135,7 +141,7 @@ export class TargetProjectLocator {
     importExpr: string,
     projectRoot: string
   ): string | undefined {
-    const packageName = this.parsePackageNameFromImportExpression(importExpr);
+    const packageName = parsePackageNameFromImportExpression(importExpr);
 
     const npmImportForProject = `${packageName}__${projectRoot}`;
     if (this.npmResolutionCache.has(npmImportForProject)) {
@@ -290,16 +296,16 @@ export class TargetProjectLocator {
     const project = findProjectForPath(file, this.projectRootMappings);
     return this.nodes[project];
   }
+}
 
-  private parsePackageNameFromImportExpression(
-    importExpression: string
-  ): string {
-    // Check if the package is scoped
-    if (importExpression.startsWith('@')) {
-      // For scoped packages, the package name is up to the second '/'
-      return importExpression.split('/').slice(0, 2).join('/');
-    }
-    // For unscoped packages, the package name is up to the first '/'
-    return importExpression.split('/')[0];
+function parsePackageNameFromImportExpression(
+  importExpression: string
+): string {
+  // Check if the package is scoped
+  if (importExpression.startsWith('@')) {
+    // For scoped packages, the package name is up to the second '/'
+    return importExpression.split('/').slice(0, 2).join('/');
   }
+  // For unscoped packages, the package name is up to the first '/'
+  return importExpression.split('/')[0];
 }
