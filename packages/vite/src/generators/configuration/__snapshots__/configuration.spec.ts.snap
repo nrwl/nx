@@ -30,6 +30,7 @@ export default defineConfig({
   // See: https://vitejs.dev/guide/build.html#library-mode
   build: {
     outDir: '../../dist/libs/react-lib-nonb-jest',
+    emptyOutDir: true,
     reportCompressedSize: true,
     commonjsOptions: {
       transformMixedEsModules: true,
@@ -82,6 +83,7 @@ export default defineConfig({
   // See: https://vitejs.dev/guide/build.html#library-mode
   build: {
     outDir: '../../dist/libs/react-lib-nonb-jest',
+    emptyOutDir: true,
     reportCompressedSize: true,
     commonjsOptions: {
       transformMixedEsModules: true,
@@ -132,6 +134,7 @@ export default defineConfig({
   cacheDir: '../../node_modules/.vite/libs/react-lib-nonb-vitest',
   build: {
     outDir: '../../dist/libs/react-lib-nonb-vitest',
+    emptyOutDir: true,
     reportCompressedSize: true,
     commonjsOptions: {
       transformMixedEsModules: true,
@@ -203,6 +206,7 @@ export default defineConfig({
 
   build: {
     outDir: '../../dist/apps/my-test-react-app',
+    emptyOutDir: true,
     reportCompressedSize: true,
     commonjsOptions: {
       transformMixedEsModules: true,
@@ -260,6 +264,7 @@ export default defineConfig({
 
   build: {
     outDir: '../../dist/apps/my-test-web-app',
+    emptyOutDir: true,
     reportCompressedSize: true,
     commonjsOptions: {
       transformMixedEsModules: true,
@@ -317,6 +322,7 @@ export default defineConfig({
 
   build: {
     outDir: '../../dist/apps/my-test-react-app',
+    emptyOutDir: true,
     reportCompressedSize: true,
     commonjsOptions: {
       transformMixedEsModules: true,
