@@ -546,6 +546,18 @@ describe('app', () => {
       expect(tree.exists('my-app/.babelrc')).toBeFalsy();
       expect(tree.exists('my-app/.swcrc')).toBeTruthy();
     });
+
+    it('should be strict by default', async () => {
+      await applicationGenerator(tree, {
+        name: 'my-app',
+        compiler: 'swc',
+        projectNameAndRootFormat: 'as-provided',
+        addPlugin: true,
+      } as Schema);
+
+      const tsconfig = readJson(tree, 'my-app/tsconfig.json');
+      expect(tsconfig.compilerOptions.strict).toBeTruthy();
+    });
   });
 
   describe('setup web app with --bundler=vite', () => {
