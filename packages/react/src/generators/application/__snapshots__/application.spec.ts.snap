@@ -119,6 +119,7 @@ nxViteTsPaths()],
         
     build: {
       outDir: '../dist/my-app',
+      emptyOutDir: true,
       reportCompressedSize: true,
       commonjsOptions: {
         transformMixedEsModules: true,
@@ -197,6 +198,7 @@ nxViteTsPaths()],
         
     build: {
       outDir: '../dist/my-app',
+      emptyOutDir: true,
       reportCompressedSize: true,
       commonjsOptions: {
         transformMixedEsModules: true,
@@ -322,6 +324,7 @@ nxViteTsPaths()],
         
     build: {
       outDir: '../dist/my-app',
+      emptyOutDir: true,
       reportCompressedSize: true,
       commonjsOptions: {
         transformMixedEsModules: true,
