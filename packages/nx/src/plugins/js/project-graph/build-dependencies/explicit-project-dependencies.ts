@@ -11,8 +11,10 @@ import {
 } from '../../../../project-graph/project-graph-builder';
 import { normalizePath } from '../../../../utils/path';
 import { workspaceRoot } from '../../../../utils/workspace-root';
-import { ExternalDependenciesCache } from './build-dependencies';
-import { TargetProjectLocator } from './target-project-locator';
+import {
+  NpmResolutionCache,
+  TargetProjectLocator,
+} from './target-project-locator';
 
 function isRoot(
   projects: Record<string, ProjectConfiguration>,
@@ -24,7 +26,6 @@ function isRoot(
 function convertImportToDependency(
   importExpr: string,
   projectRoot: string,
-  externalDependenciesCache: ExternalDependenciesCache,
   sourceFile: string,
   source: string,
   type: RawProjectGraphDependency['type'],
@@ -48,7 +49,7 @@ function convertImportToDependency(
 
 export function buildExplicitTypeScriptDependencies(
   ctx: CreateDependenciesContext,
-  externalDependenciesCache: ExternalDependenciesCache
+  npmResolutionCache: NpmResolutionCache
 ): RawProjectGraphDependency[] {
   // TODO: TargetProjectLocator is a public API, so we can't change the shape of it
   // We should eventually let it accept Record<string, ProjectConfiguration> s.t. we
@@ -65,7 +66,8 @@ export function buildExplicitTypeScriptDependencies(
   );
   const targetProjectLocator = new TargetProjectLocator(
     nodes,
-    ctx.externalNodes
+    ctx.externalNodes,
+    npmResolutionCache
   );
   const res: RawProjectGraphDependency[] = [];
 
@@ -115,7 +117,6 @@ export function buildExplicitTypeScriptDependencies(
       const dependency = convertImportToDependency(
         importExpr,
         sourceProjectRoot,
-        externalDependenciesCache,
         normalizedFilePath,
         sourceProject,
         DependencyType.static,
@@ -137,7 +138,6 @@ export function buildExplicitTypeScriptDependencies(
       const dependency = convertImportToDependency(
         importExpr,
         sourceProjectRoot,
-        externalDependenciesCache,
         normalizedFilePath,
         sourceProject,
         DependencyType.dynamic,

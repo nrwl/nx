@@ -18,6 +18,13 @@ import {
   resolveModuleByImport,
 } from '../../utils/typescript';
 
+/**
+ * The key is a combination of the package name and the project root importing it
+ * e.g. `lodash__packages/my-lib`, the value is the resolved external node name
+ * from the project graph.
+ */
+export type NpmResolutionCache = Map<string, string>;
+
 const builtInModuleSet = new Set<string>([
   ...builtinModules,
   ...builtinModules.map((x) => `node:${x}`),
@@ -31,15 +38,14 @@ export class TargetProjectLocator {
   private tsConfig = this.getRootTsConfig();
   private paths = this.tsConfig.config?.compilerOptions?.paths;
   private typescriptResolutionCache = new Map<string, string | null>();
-  /**
-   * The key is a combination of the package name and the project root importing it,
-   * the value is the resolved external node name from the project graph.
-   */
-  private npmResolutionCache = new Map<string, string>();
 
   constructor(
     private readonly nodes: Record<string, ProjectGraphProjectNode>,
-    private readonly externalNodes: Record<string, ProjectGraphExternalNode>
+    private readonly externalNodes: Record<string, ProjectGraphExternalNode>,
+    private readonly npmResolutionCache: NpmResolutionCache = new Map<
+      string,
+      string
+    >()
   ) {}
 
   /**
@@ -177,10 +183,7 @@ export class TargetProjectLocator {
     );
   }
 
-  private findNpmPackage(
-    importExpr: string,
-    projectRoot: string
-  ): string | undefined {
+  findNpmPackage(importExpr: string, projectRoot: string): string | undefined {
     const packageName = this.parsePackageNameFromImportExpression(importExpr);
 
     const npmImportForProject = `${packageName}__${projectRoot}`;
@@ -195,7 +198,7 @@ export class TargetProjectLocator {
         packageName,
         fullProjectRootPath
       );
-      // The package.json path might be not be resolvable, e.g. if a reference has been added to the package.json, but the install command has not been run yet.
+      // The external package.json path might be not be resolvable, e.g. if a reference has been added to a project package.json, but the install command has not been run yet.
       if (!externalPackageJsonPath) {
         return undefined;
       }

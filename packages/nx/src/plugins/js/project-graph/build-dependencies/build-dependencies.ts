@@ -2,19 +2,7 @@ import { buildExplicitTypeScriptDependencies } from './explicit-project-dependen
 import { buildExplicitPackageJsonDependencies } from './explicit-package-json-dependencies';
 import { CreateDependenciesContext } from '../../../../project-graph/plugins';
 import { RawProjectGraphDependency } from '../../../../project-graph/project-graph-builder';
-
-/**
- * When processing external dependencies, we need to keep track of which version of that dependency
- * is most appropriate for each source project. A workspace may contain multiple copies of a dependency
- * but we should base the graph on the version that is most relevant to the source project, otherwise
- * things like the dependency-check lint rule will not work as expected.
- *
- * We need to track this in this separate cache because the project file map that lives on the ctx will
- * only be updated at the very end.
- *
- * sourceProject => resolved external node names (e.g. 'npm:lodash@4.0.0')
- */
-export type ExternalDependenciesCache = Map<string, Set<string>>;
+import { NpmResolutionCache } from './target-project-locator';
 
 export function buildExplicitDependencies(
   jsPluginConfig: {
@@ -25,7 +13,8 @@ export function buildExplicitDependencies(
 ): RawProjectGraphDependency[] {
   if (totalNumberOfFilesToProcess(ctx) === 0) return [];
 
-  const externalDependenciesCache: ExternalDependenciesCache = new Map();
+  const npmResolutionCache: NpmResolutionCache = new Map();
+
   let dependencies: RawProjectGraphDependency[] = [];
 
   if (
@@ -39,7 +28,7 @@ export function buildExplicitDependencies(
     } catch {}
     if (tsExists) {
       dependencies = dependencies.concat(
-        buildExplicitTypeScriptDependencies(ctx, externalDependenciesCache)
+        buildExplicitTypeScriptDependencies(ctx, npmResolutionCache)
       );
     }
   }
@@ -48,7 +37,7 @@ export function buildExplicitDependencies(
     jsPluginConfig.analyzePackageJson === true
   ) {
     dependencies = dependencies.concat(
-      buildExplicitPackageJsonDependencies(ctx, externalDependenciesCache)
+      buildExplicitPackageJsonDependencies(ctx, npmResolutionCache)
     );
   }
 

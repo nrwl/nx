@@ -132,7 +132,7 @@ describe('explicit package json dependencies', () => {
       name: 'npm:lodash',
       data: {
         version: '4.0.0',
-        packageName: 'external',
+        packageName: 'lodash',
       },
     });
     builder.addExternalNode({
@@ -140,7 +140,7 @@ describe('explicit package json dependencies', () => {
       name: 'npm:lodash@3.0.0',
       data: {
         version: '3.0.0',
-        packageName: 'external',
+        packageName: 'lodash',
       },
     });
 
@@ -159,8 +159,8 @@ describe('explicit package json dependencies', () => {
   });
 
   it(`should add dependencies with mixed versions for projects based on deps in package.json and populate the cache`, async () => {
-    const cache = new Map();
-    const res = buildExplicitPackageJsonDependencies(ctx, cache);
+    const npmResolutionCache = new Map();
+    const res = buildExplicitPackageJsonDependencies(ctx, npmResolutionCache);
     expect(res).toEqual([
       {
         source: 'proj',
@@ -187,14 +187,10 @@ describe('explicit package json dependencies', () => {
         type: 'static',
       },
     ]);
-    expect(cache).toMatchInlineSnapshot(`
+    expect(npmResolutionCache).toMatchInlineSnapshot(`
       Map {
-        "proj" => Set {
-          "npm:lodash",
-        },
-        "proj3" => Set {
-          "npm:lodash@3.0.0",
-        },
+        "lodash__libs/proj" => "npm:lodash",
+        "lodash__libs/proj3" => "npm:lodash@3.0.0",
       }
     `);
   });

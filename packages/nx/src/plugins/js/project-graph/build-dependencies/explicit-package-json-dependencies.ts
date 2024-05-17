@@ -1,4 +1,3 @@
-import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { DependencyType } from '../../../../config/project-graph';
 import {
@@ -14,12 +13,14 @@ import {
 import { parseJson } from '../../../../utils/json';
 import { PackageJson } from '../../../../utils/package-json';
 import { joinPathFragments } from '../../../../utils/path';
-import { findExternalPackageJsonPath } from '../../utils/find-external-package-json-path';
-import { ExternalDependenciesCache } from './build-dependencies';
+import {
+  NpmResolutionCache,
+  TargetProjectLocator,
+} from './target-project-locator';
 
 export function buildExplicitPackageJsonDependencies(
   ctx: CreateDependenciesContext,
-  externalDependenciesCache: ExternalDependenciesCache
+  npmResolutionCache: NpmResolutionCache
 ): RawProjectGraphDependency[] {
   const res: RawProjectGraphDependency[] = [];
   let packageNameMap = undefined;
@@ -33,7 +34,7 @@ export function buildExplicitPackageJsonDependencies(
           source,
           f.file,
           ctx,
-          externalDependenciesCache,
+          npmResolutionCache,
           res,
           packageNameMap
         );
@@ -69,34 +70,16 @@ function isPackageJsonAtProjectRoot(
   );
 }
 
-// package.json path => package.json contents to avoid reading the same file multiple times from disk
-const externalPackageJsonCache = new Map<string, PackageJson>();
-
 function processPackageJson(
   sourceProject: string,
   fileName: string,
   ctx: CreateDependenciesContext,
-  externalDependenciesCache: ExternalDependenciesCache,
+  npmResolutionCache: NpmResolutionCache,
   collectedDeps: RawProjectGraphDependency[],
   packageNameMap: { [packageName: string]: string }
 ) {
   try {
     const deps = readDeps(parseJson(defaultFileRead(fileName)));
-
-    function applyDependencyTarget(target: string) {
-      const dependency: RawProjectGraphDependency = {
-        source: sourceProject,
-        target: target,
-        sourceFile: fileName,
-        type: DependencyType.static,
-      };
-      validateDependency(dependency, ctx);
-      collectedDeps.push(dependency);
-      const depsForSource =
-        externalDependenciesCache.get(sourceProject) || new Set();
-      depsForSource.add(dependency.target);
-      externalDependenciesCache.set(sourceProject, depsForSource);
-    }
 
     for (const d of Object.keys(deps)) {
       // package.json refers to another project in the monorepo
@@ -112,48 +95,28 @@ function processPackageJson(
         continue;
       }
 
-      try {
-        // package.json refers to an external package, we do not match against the version found in there, we instead try and resolve the relevant package how node would
-        let externalPackageVersion: string | undefined;
-        const externalPackageJsonPath = findExternalPackageJsonPath(
-          d,
-          dirname(fileName)
-        );
-        // The package.json path might be not be resolvable, e.g. if a reference has been added to the package.json, but the install command has not been run yet.
-        if (!externalPackageJsonPath) {
-          continue;
-        }
-        if (!externalPackageJsonCache.has(externalPackageJsonPath)) {
-          const externalPackageJson = parseJson(
-            readFileSync(externalPackageJsonPath, 'utf-8')
-          );
-          externalPackageJsonCache.set(
-            externalPackageJsonPath,
-            externalPackageJson
-          );
-          externalPackageVersion = externalPackageJson.version;
-        } else {
-          externalPackageVersion = externalPackageJsonCache.get(
-            externalPackageJsonPath
-          ).version;
-        }
+      const targetProjectLocator = new TargetProjectLocator(
+        {},
+        ctx.externalNodes,
+        npmResolutionCache
+      );
 
-        const externalWithExactVersion = `npm:${d}@${externalPackageVersion}`;
-        if (ctx.externalNodes[externalWithExactVersion]) {
-          applyDependencyTarget(externalWithExactVersion);
-          continue;
-        }
-
-        const externalWithNoVersion = `npm:${d}`;
-        if (ctx.externalNodes[externalWithNoVersion]) {
-          applyDependencyTarget(externalWithNoVersion);
-          continue;
-        }
-      } catch (e) {
-        if (process.env.NX_VERBOSE_LOGGING === 'true') {
-          console.error(e);
-        }
+      const externalNodeName = targetProjectLocator.findNpmPackage(
+        d,
+        dirname(fileName)
+      );
+      if (!externalNodeName) {
+        continue;
       }
+
+      const dependency: RawProjectGraphDependency = {
+        source: sourceProject,
+        target: externalNodeName,
+        sourceFile: fileName,
+        type: DependencyType.static,
+      };
+      validateDependency(dependency, ctx);
+      collectedDeps.push(dependency);
     }
   } catch (e) {
     if (process.env.NX_VERBOSE_LOGGING === 'true') {
