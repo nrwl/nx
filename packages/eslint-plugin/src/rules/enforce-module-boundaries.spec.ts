@@ -23,19 +23,11 @@ jest.mock('nx/src/utils/workspace-root', () => ({
 }));
 
 jest.mock('nx/src/plugins/js/utils/find-external-package-json-path', () => ({
-  findExternalPackageJsonPath: jest.fn().mockImplementation((packageName) => {
-    if (packageName === 'npm-package') {
-      return join('/root', 'node_modules', 'npm-package', 'package.json');
-    }
-    if (packageName === 'npm-awesome-package') {
-      return join(
-        '/root',
-        'node_modules',
-        'npm-awesome-package',
-        'package.json'
-      );
-    }
-  }),
+  findExternalPackageJsonPath: jest
+    .fn()
+    .mockImplementation((packageName) =>
+      join('/root', 'node_modules', packageName, 'package.json')
+    ),
 }));
 
 const tsconfig = {

@@ -5,12 +5,12 @@ import {
   ProjectGraphExternalNode,
   ProjectGraphProjectNode,
 } from '../../../../config/project-graph';
-import { parseJson } from '../../../../devkit-exports';
 import {
   createProjectRootMappings,
   findProjectForPath,
 } from '../../../../project-graph/utils/find-project-for-path';
 import { isRelativePath, readJsonFile } from '../../../../utils/fileutils';
+import { parseJson } from '../../../../utils/json';
 import { workspaceRoot } from '../../../../utils/workspace-root';
 import { findExternalPackageJsonPath } from '../../utils/find-external-package-json-path';
 import {
