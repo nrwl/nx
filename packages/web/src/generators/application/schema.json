@@ -69,11 +69,6 @@
       "enum": ["eslint", "none"],
       "default": "eslint"
     },
-    "strict": {
-      "type": "boolean",
-      "description": "Creates an application with strict mode and strict type checking.",
-      "default": true
-    },
     "skipFormat": {
       "description": "Skip formatting files",
       "type": "boolean",
