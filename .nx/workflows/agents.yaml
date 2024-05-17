@@ -28,7 +28,7 @@ launch-templates:
           sudo apt-get install -y ca-certificates lsof
       - name: Install Pnpm
         script: |
-          npm install -g pnpm@9.0.4
+          npm install -g pnpm@9.1.1
 
       - name: Pnpm Install
         script: |
