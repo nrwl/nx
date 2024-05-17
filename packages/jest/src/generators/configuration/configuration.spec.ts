@@ -262,16 +262,30 @@ describe('jestProject', () => {
     expect(tree.exists('libs/lib1/jest.config.js')).toBeTruthy();
   });
 
-  it('should always use jest.preset.js with --js', async () => {
-    tree.write('jest.preset.ts', '');
+  it('should generate a jest.preset.js when it does not exist', async () => {
     await configurationGenerator(tree, {
       ...defaultOptions,
       project: 'lib1',
       js: true,
     } as JestProjectSchema);
     expect(tree.exists('libs/lib1/jest.config.js')).toBeTruthy();
+    expect(tree.exists('jest.preset.js')).toBeTruthy();
     expect(tree.read('libs/lib1/jest.config.js', 'utf-8')).toContain(
       "preset: '../../jest.preset.js',"
+    );
+  });
+
+  it('should not override existing jest preset file and should point to it in jest.config files', async () => {
+    tree.write('jest.preset.mjs', 'export default {}');
+    await configurationGenerator(tree, {
+      ...defaultOptions,
+      project: 'lib1',
+      js: true,
+    } as JestProjectSchema);
+    expect(tree.exists('libs/lib1/jest.config.js')).toBeTruthy();
+    expect(tree.exists('jest.preset.mjs')).toBeTruthy();
+    expect(tree.read('libs/lib1/jest.config.js', 'utf-8')).toContain(
+      "preset: '../../jest.preset.mjs',"
     );
   });
 
