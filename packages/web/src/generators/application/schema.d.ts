@@ -17,17 +17,5 @@ export interface Schema {
   linter?: Linter;
   standaloneConfig?: boolean;
   setParserOptionsProject?: boolean;
-  strict?: boolean;
   addPlugin?: boolean;
-}
-
-export interface NormalizedSchema extends Schema {
-  projectName: string;
-  appProjectRoot: string;
-  e2eProjectName: string;
-  e2eProjectRoot: string;
-  e2eWebServerAddress: string;
-  e2eWebServerTarget: string;
-  e2ePort: number;
-  parsedTags: string[];
 }
