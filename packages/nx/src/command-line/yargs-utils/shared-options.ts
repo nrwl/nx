@@ -60,8 +60,8 @@ export function withRunOptions<T>(yargs: Argv<T>): Argv<T & RunOptions> {
         value === '' || value === 'true' || value === true
           ? true
           : value === 'false' || value === false
-          ? false
-          : value,
+            ? false
+            : value,
     })
     .option('nxBail', {
       describe: 'Stop command execution after the first failed task',
@@ -259,7 +259,15 @@ export function withOutputStyleOption(
   ]
 ) {
   return yargs.option('output-style', {
-    describe: 'Defines how Nx emits outputs tasks logs',
+    describe: `Defines how Nx emits outputs tasks logs
+
+| option | description |
+| --- | --- |
+| dynamic | use dynamic output life cycle, previous content is overwritten or modified as new outputs are added, display minimal logs by default, always show errors. This output format is recommended on your local development environments. |
+| static | uses static output life cycle, no previous content is rewritten or modified as new outputs are added. This output format is recommened for CI environments. |
+| stream | nx by default logs output to an internal output stream, enable this option to stream logs to stdout / stderr |
+| stream-without-prefixes | nx prefixes the project name the target is running on, use this option remove the project name prefix from output |
+`,
     type: 'string',
     choices,
   });
