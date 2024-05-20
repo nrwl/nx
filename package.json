@@ -320,7 +320,6 @@
     "@widgetbot/react-embed": "^1.9.0",
     "@yarnpkg/lockfile": "^1.1.0",
     "@yarnpkg/parsers": "3.0.0-rc.46",
-    "@zkochan/js-yaml": "0.0.7",
     "axios": "^1.6.0",
     "classnames": "^2.3.1",
     "cliui": "^8.0.1",
