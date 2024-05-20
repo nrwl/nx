@@ -28,7 +28,7 @@ import { hashArray } from '../../../hasher/file-hasher';
 import { CreateDependenciesContext } from '../../../project-graph/plugins';
 
 // we use key => node map to avoid duplicate work when parsing keys
-let keyMap = new Map<string, ProjectGraphExternalNode>();
+let keyMap = new Map<string, Set<ProjectGraphExternalNode>>();
 let currentLockFileHash: string;
 
 let parsedLockFile: Lockfile;
@@ -69,7 +69,6 @@ export function getPnpmLockfileDependencies(
     throw new Error('Nx only supports pnpm lockfile version 5-9');
   }
   const isV5 = isV5Syntax(data);
-
   return getDependencies(data, keyMap, isV5, ctx);
 }
 
@@ -121,7 +120,7 @@ function isAliasVersion(depVersion: string) {
 
 function getNodes(
   data: Lockfile,
-  keyMap: Map<string, ProjectGraphExternalNode>,
+  keyMap: Map<string, Set<ProjectGraphExternalNode>>,
   isV5: boolean
 ): Record<string, ProjectGraphExternalNode> {
   const nodes: Map<string, Map<string, ProjectGraphExternalNode>> = new Map();
@@ -278,7 +277,10 @@ function getNodes(
     if (!nodes.get(packageName).has(version)) {
       const node: ProjectGraphExternalNode = {
         type: 'npm',
-        name: version ? `npm:${packageName}@${version}` : `npm:${packageName}`,
+        name:
+          version && !version.startsWith('npm:')
+            ? `npm:${packageName}@${version}`
+            : `npm:${packageName}`,
         data: {
           version,
           packageName,
@@ -286,9 +288,18 @@ function getNodes(
         },
       };
       nodes.get(packageName).set(version, node);
-      keyMap.set(key, node);
+      if (!keyMap.has(key)) {
+        keyMap.set(key, new Set([node]));
+      } else {
+        keyMap.get(key).add(node);
+      }
     } else {
-      keyMap.set(key, nodes.get(packageName).get(version));
+      const node = nodes.get(packageName).get(version);
+      if (!keyMap.has(key)) {
+        keyMap.set(key, new Set([node]));
+      } else {
+        keyMap.get(key).add(node);
+      }
     }
   }
 
@@ -339,37 +350,39 @@ function getHoistedVersion(
 
 function getDependencies(
   data: Lockfile,
-  keyMap: Map<string, ProjectGraphExternalNode>,
+  keyMap: Map<string, Set<ProjectGraphExternalNode>>,
   isV5: boolean,
   ctx: CreateDependenciesContext
 ): RawProjectGraphDependency[] {
   const results: RawProjectGraphDependency[] = [];
   Object.entries(data.packages).forEach(([key, snapshot]) => {
-    const node = keyMap.get(key);
-    [snapshot.dependencies, snapshot.optionalDependencies].forEach(
-      (section) => {
-        if (section) {
-          Object.entries(section).forEach(([name, versionRange]) => {
-            const version = parseBaseVersion(
-              findVersion(versionRange, name, isV5),
-              isV5
-            );
-            const target =
-              ctx.externalNodes[`npm:${name}@${version}`] ||
-              ctx.externalNodes[`npm:${name}`];
-            if (target) {
-              const dep: RawProjectGraphDependency = {
-                source: node.name,
-                target: target.name,
-                type: DependencyType.static,
-              };
-              validateDependency(dep, ctx);
-              results.push(dep);
-            }
-          });
+    const nodes = keyMap.get(key);
+    nodes.forEach((node) => {
+      [snapshot.dependencies, snapshot.optionalDependencies].forEach(
+        (section) => {
+          if (section) {
+            Object.entries(section).forEach(([name, versionRange]) => {
+              const version = parseBaseVersion(
+                findVersion(versionRange, name, isV5),
+                isV5
+              );
+              const target =
+                ctx.externalNodes[`npm:${name}@${version}`] ||
+                ctx.externalNodes[`npm:${name}`];
+              if (target) {
+                const dep: RawProjectGraphDependency = {
+                  source: node.name,
+                  target: target.name,
+                  type: DependencyType.static,
+                };
+                validateDependency(dep, ctx);
+                results.push(dep);
+              }
+            });
+          }
         }
-      }
-    );
+      );
+    });
   });
 
   return results;

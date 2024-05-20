@@ -1470,4 +1470,76 @@ describe('pnpm LockFile utility', () => {
       expect(result).toEqual(lockFile);
     });
   });
+
+  describe('regression check', () => {
+    let lockFile, lockFileHash, prunedLockFile;
+
+    beforeEach(() => {
+      const fileSys = {
+        'node_modules/.modules.yaml': require(joinPathFragments(
+          __dirname,
+          '__fixtures__/pnpm-regression/.modules.yaml'
+        )).default,
+      };
+      vol.fromJSON(fileSys, '/root');
+    });
+
+    it('should correctly prune the lock file', () => {
+      lockFile = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/pnpm-regression/pnpm-lock.yaml'
+      )).default;
+      prunedLockFile = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/pnpm-regression/pruned-pnpm-lock.yaml'
+      )).default;
+      lockFileHash = '__fixtures__/pnpm-regression/pnpm-lock.yaml';
+
+      const packageJson = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/pnpm-regression/package.json'
+      ));
+
+      const externalNodes = getPnpmLockfileNodes(lockFile, lockFileHash);
+      let graph: ProjectGraph = {
+        nodes: {},
+        dependencies: {},
+        externalNodes,
+      };
+      const ctx: CreateDependenciesContext = {
+        projects: {},
+        externalNodes,
+        fileMap: {
+          nonProjectFiles: [],
+          projectFileMap: {},
+        },
+        filesToProcess: {
+          nonProjectFiles: [],
+          projectFileMap: {},
+        },
+        nxJsonConfiguration: null,
+        workspaceRoot: '/virtual',
+      };
+      const dependencies = getPnpmLockfileDependencies(
+        lockFile,
+        lockFileHash,
+        ctx
+      );
+
+      const builder = new ProjectGraphBuilder(graph);
+      for (const dep of dependencies) {
+        builder.addDependency(
+          dep.source,
+          dep.target,
+          dep.type,
+          'sourceFile' in dep ? dep.sourceFile : null
+        );
+      }
+      graph = builder.getUpdatedProjectGraph();
+
+      const prunedGraph = pruneProjectGraph(graph, packageJson);
+      const result = stringifyPnpmLockfile(prunedGraph, lockFile, packageJson);
+      expect(result).toEqual(prunedLockFile);
+    });
+  });
 });
