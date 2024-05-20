@@ -7,6 +7,7 @@ import {
   uniq,
   updateJson,
 } from '@nx/e2e/utils';
+import { resetWorkspaceContext } from 'nx/src/utils/workspace-context';
 
 expect.addSnapshotSerializer({
   serialize(str: string) {
@@ -41,7 +42,7 @@ expect.addSnapshotSerializer({
 
 const originalVerboseLoggingValue = process.env.NX_VERBOSE_LOGGING;
 
-describe('nx release circular dependencies', () => {
+describe('nx release circular dependencies qqqq', () => {
   let pkg1: string;
   let pkg2: string;
 
@@ -78,6 +79,10 @@ describe('nx release circular dependencies', () => {
 
     // Force verbose logging for release operations to ensure consistent snapshots
     process.env.NX_VERBOSE_LOGGING = 'true';
+
+    // Ensure that the project graph is accurate (NXC-143)
+    runCLI('reset');
+    resetWorkspaceContext();
   }, 60000);
 
   afterAll(() => {
