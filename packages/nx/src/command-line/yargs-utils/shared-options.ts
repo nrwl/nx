@@ -60,8 +60,8 @@ export function withRunOptions<T>(yargs: Argv<T>): Argv<T & RunOptions> {
         value === '' || value === 'true' || value === true
           ? true
           : value === 'false' || value === false
-            ? false
-            : value,
+          ? false
+          : value,
     })
     .option('nxBail', {
       describe: 'Stop command execution after the first failed task',
