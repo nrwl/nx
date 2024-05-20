@@ -149,7 +149,7 @@ By default, the computation hash for say `nx test app1` includes:
 - All the source files of `app1` and `lib`
 - Relevant global configuration
 - Versions of external dependencies
-- [Runtime values provisioned by the user](/concepts/how-caching-works#runtime-hash-inputs)
+- [Runtime values provisioned by the user](/reference/inputs#runtime-inputs)
 - CLI Command flags
 
 ![computation-hashing](/shared/mental-model/computation-hashing.svg)

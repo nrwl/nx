@@ -91,7 +91,7 @@ jobs:
 
 The only reason to modify this file is if you need to change the number of agent machines or there is another type of task that needs to run in CI.
 
-The `linux-medium-js` name in the CI configuration refers to a built-in launch template that Nx provides. If you can not find a template in [the default list](https://github.com/nrwl/nx-cloud-workflows/blob/main/launch-templates/linux.yaml) that meets your needs, you can provide your own. [With a single yaml file](/ci/features/distribute-task-execution#launch-templates), you can set up your agent environment in exactly the way you want with your own launch template.
+The `linux-medium-js` name in the CI configuration refers to a built-in launch template that Nx provides. If you can not find a template in [the default list](https://github.com/nrwl/nx-cloud-workflows/blob/main/launch-templates/linux.yaml) that meets your needs, you can provide your own. [With a single yaml file](/ci/reference/launch-templates), you can set up your agent environment in exactly the way you want with your own launch template.
 
 ## Dynamically Allocate Agents
 

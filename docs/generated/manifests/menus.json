@@ -4749,7 +4749,7 @@
           },
           {
             "name": "nx.json reference: inputs and namedInputs",
-            "path": "/reference/nx-json#inputs-&-namedinputs",
+            "path": "/reference/nx-json#inputs-namedinputs",
             "id": "nxjson-inputs",
             "isExternal": true,
             "children": [],
@@ -4757,7 +4757,7 @@
           },
           {
             "name": "Project Configuration reference: inputs and namedInputs",
-            "path": "/reference/project-configuration#inputs-&-namedinputs",
+            "path": "/reference/project-configuration#inputs-and-namedinputs",
             "id": "project-config-inputs",
             "isExternal": true,
             "children": [],
@@ -4808,7 +4808,7 @@
       },
       {
         "name": "nx.json reference: inputs and namedInputs",
-        "path": "/reference/nx-json#inputs-&-namedinputs",
+        "path": "/reference/nx-json#inputs-namedinputs",
         "id": "nxjson-inputs",
         "isExternal": true,
         "children": [],
@@ -4816,7 +4816,7 @@
       },
       {
         "name": "Project Configuration reference: inputs and namedInputs",
-        "path": "/reference/project-configuration#inputs-&-namedinputs",
+        "path": "/reference/project-configuration#inputs-and-namedinputs",
         "id": "project-config-inputs",
         "isExternal": true,
         "children": [],
