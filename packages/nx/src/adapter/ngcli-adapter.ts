@@ -63,6 +63,7 @@ import {
   Executor,
   ExecutorConfig,
   ExecutorContext,
+  ExecutorJsonEntryConfig,
   ExecutorsJson,
   GeneratorCallback,
   TaskGraphExecutor,
@@ -1174,14 +1175,11 @@ async function getWrappedWorkspaceNodeModulesArchitectHost(
         builderName
       );
       const builderInfo = this.readExecutor(packageName, builderName);
-      const { builders, executors } =
-        readJsonFile<ExecutorsJson>(executorsFilePath);
+
       return {
         name: builderStr,
         builderName,
-        description:
-          builders?.[builderName]?.description ??
-          executors?.[builderName]?.description,
+        description: executorConfig.description,
         optionSchema: builderInfo.schema,
         import: resolveImplementation(
           executorConfig.implementation,
@@ -1190,7 +1188,14 @@ async function getWrappedWorkspaceNodeModulesArchitectHost(
       };
     }
 
-    private readExecutorsJson(nodeModule: string, builder: string) {
+    private readExecutorsJson(
+      nodeModule: string,
+      builder: string
+    ): {
+      executorsFilePath: string;
+      executorConfig: ExecutorJsonEntryConfig;
+      isNgCompat: true;
+    } {
       const { json: packageJson, path: packageJsonPath } =
         readPluginPackageJson(
           nodeModule,
@@ -1209,18 +1214,19 @@ async function getWrappedWorkspaceNodeModulesArchitectHost(
         join(dirname(packageJsonPath), executorsFile)
       );
       const executorsJson = readJsonFile<ExecutorsJson>(executorsFilePath);
-      const executorConfig: {
-        implementation: string;
-        batchImplementation?: string;
-        schema: string;
-        hasher?: string;
-      } =
+      const executorConfig =
         executorsJson.builders?.[builder] ?? executorsJson.executors?.[builder];
       if (!executorConfig) {
         throw new Error(
           `Cannot find builder '${builder}' in ${executorsFilePath}.`
         );
       }
+      if (typeof executorConfig === 'string') {
+        // Angular CLI can have a builder pointing to another package:builder
+        const [packageName, executorName] = executorConfig.split(':');
+        return this.readExecutorsJson(packageName, executorName);
+      }
+
       return { executorsFilePath, executorConfig, isNgCompat: true };
     }
 

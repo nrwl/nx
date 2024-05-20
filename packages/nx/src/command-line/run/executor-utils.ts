@@ -129,16 +129,17 @@ function readExecutorJson(
     join(dirname(packageJsonPath), executorsFile)
   );
   const executorsJson = readJsonFile<ExecutorsJson>(executorsFilePath);
-  const executorConfig: {
-    implementation: string;
-    batchImplementation?: string;
-    schema: string;
-    hasher?: string;
-  } = executorsJson.executors?.[executor] || executorsJson.builders?.[executor];
+  const executorConfig =
+    executorsJson.executors?.[executor] || executorsJson.builders?.[executor];
   if (!executorConfig) {
     throw new Error(
       `Cannot find executor '${executor}' in ${executorsFilePath}.`
     );
+  }
+  if (typeof executorConfig === 'string') {
+    // Angular CLI can have a builder pointing to another package:builder
+    const [packageName, executorName] = executorConfig.split(':');
+    return readExecutorJson(packageName, executorName, root, projects);
   }
   const isNgCompat = !executorsJson.executors?.[executor];
   return { executorsFilePath, executorConfig, isNgCompat };
