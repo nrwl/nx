@@ -6,9 +6,17 @@
   "implicitDependencies": ["webpack"],
   "targets": {
     "e2e-ci--src/webpack.legacy.test.ts": {
+      "dependsOn": [
+        "nx:build-native",
+        "@nx/nx-source:populate-local-registry-storage"
+      ],
       "inputs": ["e2eInputs", "^production"]
     },
     "e2e-ci--src/webpack.test.ts": {
+      "dependsOn": [
+        "nx:build-native",
+        "@nx/nx-source:populate-local-registry-storage"
+      ],
       "inputs": ["e2eInputs", "^production"]
     }
   }

@@ -184,6 +184,15 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "19.0.3": {
+      "version": "19.0.3-beta.0",
+      "packages": {
+        "tailwindcss": {
+          "version": "3.4.3",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }

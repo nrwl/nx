@@ -1,6 +1,6 @@
 # As Provided vs. Derived Generator Path Options
 
-Nx is moving toward a more transparent and predictable way of determining where code will be generated when you run a generator. The new behavior is to take generator options _as provided_ and place the generated code in the exact folder that you specify. Nx will only use the new behavior in Nx version 19. The directory can be specified with a `--directory` flag or use a fully specified path (i.e. `libs/shared/my-lib/src/my-component`). The `--directory` flag will be calculated relative to where you run the command.
+Nx is moving toward a more transparent and predictable way of determining where code will be generated when you run a generator. The new behavior is to take generator options _as provided_ and place the generated code in the exact folder that you specify. Nx will only use the new behavior in Nx version 20. The directory can be specified with a `--directory` flag or use a fully specified path (i.e. `libs/shared/my-lib/src/my-component`). The `--directory` flag will be calculated relative to where you run the command.
 
 In the past, Nx had lots of logic to try and _derive_ the best place to put code for you. This approach worked for some people, but there were always people that wanted to generate their code in a slightly different location. Accounting for these variations lead to either (1) people in repos with a different structure not being able to use these generators or (2) Nx introducing lots of flags to allow people to tweak where code was generated (flags like `--project`, `--flat`, `--pascalCaseFiles`, `--pascalCaseDirectory`, `--fileName`). It also caused some confusion when code was not generated in the expected location or frustration when the user did not know how to get Nx to derive the right thing.
 
@@ -19,7 +19,7 @@ You can use [Nx Console](/getting-started/editor-setup) for an intuitive experie
 
 ## Prompting
 
-To mitigate the impact of this change of direction, Nx will prompt you when running most generators until Nx 19. We know changing these habits may take time so this prompt allows you to choose the previous behavior.
+To mitigate the impact of this change of direction, Nx will prompt you when running most generators until Nx 20. We know changing these habits may take time so this prompt allows you to choose the previous behavior.
 
 ```{% command="nx g lib my-lib --directory=shared/my-lib" path="~/myorg" %}
 ✔ Which generator would you like to use? · @nx/node:library
@@ -44,7 +44,7 @@ Your intent is your intent. However, the commands you write and run are based on
 
 ## Project Generators
 
-As of Nx 16.8.0, generating a project will prompt you to choose how Nx will calculate where the project should be located. For now, you can choose between `as-provided` and `derived` but `as-provided` will be the only option in Nx 19. The CLI flag to choose between the two algorithms for project generators is `--projectNameAndRootFormat`.
+As of Nx 16.8.0, generating a project will prompt you to choose how Nx will calculate where the project should be located. For now, you can choose between `as-provided` and `derived` but `as-provided` will be the only option in Nx 20. The CLI flag to choose between the two algorithms for project generators is `--projectNameAndRootFormat`.
 
 ### Generate Paths and Names `as-provided`
 
@@ -83,7 +83,7 @@ If you accidentally generate a project in the wrong folder, use the [move genera
 
 ## Code Generators
 
-As of Nx 17, code generators such as `component`, `service`, and others will prompt you to choose whether or not Nx will derive the location based on your options or not. In Nx 19, Nx will take the generator options as provided. The following flags are deprecated and will be removed in Nx 19: `--project`, `--flat`, `--pascalCaseFiles`, `--pascalCaseDirectory`, `--fileName`. The CLI flag to choose between the two algorithms for code generators is `--nameAndDirectoryFormat`.
+As of Nx 17, code generators such as `component`, `service`, and others will prompt you to choose whether or not Nx will derive the location based on your options or not. In Nx 20, Nx will take the generator options as provided. The following flags are deprecated and will be removed in Nx 20: `--project`, `--flat`, `--pascalCaseFiles`, `--pascalCaseDirectory`, `--fileName`. The CLI flag to choose between the two algorithms for code generators is `--nameAndDirectoryFormat`.
 
 ### Generate Paths and Names `as-provided`
 
@@ -100,7 +100,7 @@ If the directory specified is not inside a project, an error will be thrown.
 
 ### Use the Old `derived` Paths and Names
 
-Choosing `derived` makes Nx behave the way it did before version 17. Nx will use the deprecated flags (`--project`, `--flat`, `--pascalCaseFiles`, `--pascalCaseDirectory`, `--fileName`) to calculate where to generate the code. This behavior will not be available in Nx 19.
+Choosing `derived` makes Nx behave the way it did before version 17. Nx will use the deprecated flags (`--project`, `--flat`, `--pascalCaseFiles`, `--pascalCaseDirectory`, `--fileName`) to calculate where to generate the code. This behavior will not be available in Nx 20.
 
 This makes generators behave in the following way:
 

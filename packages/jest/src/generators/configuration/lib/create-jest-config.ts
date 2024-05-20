@@ -8,23 +8,34 @@ import {
   type Tree,
 } from '@nx/devkit';
 import { readTargetDefaultsForTarget } from 'nx/src/project-graph/utils/project-configuration-utils';
-import { findRootJestConfig } from '../../../utils/config/find-root-jest-files';
+import {
+  findRootJestConfig,
+  type JestPresetExtension,
+} from '../../../utils/config/config-file';
 import type { NormalizedJestProjectSchema } from '../schema';
 
 export async function createJestConfig(
   tree: Tree,
   options: Partial<NormalizedJestProjectSchema>,
-  presetExt: 'cjs' | 'js'
+  presetExt: JestPresetExtension
 ) {
   if (!tree.exists(`jest.preset.${presetExt}`)) {
-    // preset is always js file.
-    tree.write(
-      `jest.preset.${presetExt}`,
-      `
-      const nxPreset = require('@nx/jest/preset').default;
+    if (presetExt === 'mjs') {
+      tree.write(
+        `jest.preset.${presetExt}`,
+        `import { nxPreset } from '@nx/jest/preset.js';
 
-      module.exports = { ...nxPreset }`
-    );
+export default { ...nxPreset };`
+      );
+    } else {
+      // js or cjs
+      tree.write(
+        `jest.preset.${presetExt}`,
+        `const nxPreset = require('@nx/jest/preset').default;
+  
+module.exports = { ...nxPreset };`
+      );
+    }
   }
   if (options.rootProject) {
     // we don't want any config to be made because the `configurationGenerator` will do it.

@@ -53,10 +53,16 @@ Show affected projects in the workspace, excluding end-to-end projects:
  nx show projects --affected --exclude=*-e2e
 ```
 
-Show detailed information about "my-app" in a json format.:
+If in an interactive terminal, opens the project detail view. If not in an interactive terminal, defaults to JSON.:
 
 ```shell
  nx show project my-app
+```
+
+Show detailed information about "my-app" in a json format.:
+
+```shell
+ nx show project my-app --json
 ```
 
 Show information about "my-app" in a human readable format.:
@@ -205,6 +211,12 @@ Type: `boolean`
 
 Show help
 
+##### open
+
+Type: `boolean`
+
+Set to false to prevent the browser from opening when using --web
+
 ##### projectName
 
 Type: `string`
@@ -227,4 +239,4 @@ Show version number
 
 Type: `boolean`
 
-Show project details in the browser
+Show project details in the browser. (default when interactive)

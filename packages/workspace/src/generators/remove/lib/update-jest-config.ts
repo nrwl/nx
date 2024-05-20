@@ -69,6 +69,7 @@ export function updateJestConfig(
   const rootConfigPath = findRootJestConfig(tree);
 
   if (
+    !rootConfigPath ||
     !tree.exists(rootConfigPath) ||
     !tree.exists(join(projectConfig.root, 'jest.config.ts')) ||
     isUsingUtilityFunction(tree) ||

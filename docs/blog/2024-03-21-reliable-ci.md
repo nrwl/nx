@@ -169,7 +169,7 @@ The spirit of this post is similar to Alan Kay's quote, "A change of perspective
 
 ---
 
-You can learn more about Nx Cloud on [nx.app](https://nx.app) and Nx open source on [nx.dev](https://nx.dev).
+You can learn more about Nx Cloud on [nx.app](https://nx.app) and Nx open source on [nx.dev]().
 
 **Nx Cloud Pro includes a 2-month free trial** that is definitely worth trying out if you're curious what Cloud Pro can do for your CI. You can try out Nx Agents, e2e test splitting, deflaking and more. [Learn more about Nx Cloud Pro.](https://nx.app/campaigns/pro)
 

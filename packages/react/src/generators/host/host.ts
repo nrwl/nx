@@ -21,6 +21,7 @@ import { setupSsrForHost } from './lib/setup-ssr-for-host';
 import { updateModuleFederationE2eProject } from './lib/update-module-federation-e2e-project';
 import { NormalizedSchema, Schema } from './schema';
 import { addMfEnvToTargetDefaultInputs } from '../../utils/add-mf-env-to-inputs';
+import { isValidVariable } from '@nx/js';
 
 export async function hostGenerator(
   host: Tree,
@@ -47,6 +48,19 @@ export async function hostGeneratorInternal(
     // TODO(colum): remove when MF works with Crystal
     addPlugin: false,
   };
+
+  // Check to see if remotes are provided and also check if --dynamic is provided
+  // if both are check that the remotes are valid names else throw an error.
+  if (options.dynamic && options.remotes?.length > 0) {
+    options.remotes.forEach((remote) => {
+      const isValidRemote = isValidVariable(remote);
+      if (!isValidRemote.isValid) {
+        throw new Error(
+          `Invalid remote name provided: ${remote}. ${isValidRemote.message}`
+        );
+      }
+    });
+  }
 
   const initTask = await applicationGenerator(host, {
     ...options,

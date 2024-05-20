@@ -40,10 +40,10 @@ it will ignore it. It does this for two reasons:
 
 For example:
 
-1. `apps/my-app/.env.local` contains `NX_API_URL=http://localhost:3333`
-2. `apps/my-app/.env` contains `NX_API_URL=https://api.example.com`
+1. `apps/my-app/.env.local` contains `NX_PUBLIC_API_URL=http://localhost:3333`
+2. `apps/my-app/.env` contains `NX_PUBLIC_API_URL=https://api.example.com`
 3. Nx will first load the variables from `apps/my-app/.env.local` into the process. When it tries to load the variables
-   from `apps/my-app/.env`, it will notice that `NX_API_URL` already exists, so it will ignore it.
+   from `apps/my-app/.env`, it will notice that `NX_PUBLIC_API_URL` already exists, so it will ignore it.
 
 We recommend nesting your **app** specific `env` files in `apps/your-app`, and creating workspace/root level `env` files
 for workspace-specific settings (like the [Nx Cloud token](/ci/recipes/security/access-tokens)).
@@ -54,7 +54,8 @@ for workspace-specific settings (like the [Nx Cloud token](/ci/recipes/security/
 If you want to load variables from `env` files other than the ones listed above:
 
 1. Use the [env-cmd](https://www.npmjs.com/package/env-cmd) package: `env-cmd -f .qa.env nx serve`
-2. Use the `envFile` option of the [run-commands](/nx-api/nx/executors/run-commands#envfile) builder and execute your command inside of the builder
+2. Use [dotenvx](https://github.com/dotenvx/dotenvx): `dotenvx run --env-file=.qa.env -- nx serve`
+3. Use the `envFile` option of the [run-commands](/nx-api/nx/executors/run-commands#envfile) builder and execute your command inside of the builder
 
 ### Ad-hoc variables
 
@@ -67,17 +68,17 @@ In Unix systems, we need to set the environment variables before calling a comma
 Let's say that we want to define an API URL for the application to use:
 
 ```shell
-NX_API_URL=http://localhost:3333 nx build myapp
+NX_PUBLIC_API_URL=http://localhost:3333 nx build myapp
 ```
 
 **Windows (cmd.exe)**
 
 ```shell
-set "NX_API_URL=http://localhost:3333" && nx build myapp
+set "NX_PUBLIC_API_URL=http://localhost:3333" && nx build myapp
 ```
 
 **Windows (Powershell)**
 
 ```shell
-($env:NX_API_URL = "http://localhost:3333") -and (nx build myapp)
+($env:NX_PUBLIC_API_URL = "http://localhost:3333") -and (nx build myapp)
 ```

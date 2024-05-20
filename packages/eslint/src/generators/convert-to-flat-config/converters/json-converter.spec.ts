@@ -102,7 +102,9 @@ describe('convertEslintJsonToFlatConfig', () => {
                   "**/*.ts",
                   "**/*.tsx"
               ],
-              rules: {}
+              rules: {
+                  ...config.rules
+              }
           })),
           ...compat.config({ env: { jest: true } }).map(config => ({
               ...config,
@@ -112,7 +114,9 @@ describe('convertEslintJsonToFlatConfig', () => {
                   "**/*.spec.js",
                   "**/*.spec.jsx"
               ],
-              rules: {}
+              rules: {
+                  ...config.rules
+              }
           })),
           { ignores: ["src/ignore/to/keep.ts"] },
           { ignores: ["something/else"] }
@@ -221,7 +225,10 @@ describe('convertEslintJsonToFlatConfig', () => {
           ...compat.config({ parser: "jsonc-eslint-parser" }).map(config => ({
               ...config,
               files: ["**/*.json"],
-              rules: { "@nx/dependency-checks": "error" }
+              rules: {
+                  ...config.rules,
+                  "@nx/dependency-checks": "error"
+              }
           })),
           { ignores: [".next/**/*"] },
           { ignores: ["something/else"] }

@@ -29,12 +29,21 @@ impl RustPseudoTerminal {
         tty: Option<bool>,
     ) -> napi::Result<ChildProcess> {
         let pseudo_terminal = create_pseudo_terminal()?;
-        run_command(&pseudo_terminal, command, command_dir, js_env, exec_argv, quiet, tty)
+        run_command(
+            &pseudo_terminal,
+            command,
+            command_dir,
+            js_env,
+            exec_argv,
+            quiet,
+            tty,
+        )
     }
 
     /// This allows us to run a pseudoterminal with a fake node ipc channel
     /// this makes it possible to be backwards compatible with the old implementation
     #[napi]
+    #[allow(clippy::too_many_arguments)]
     pub fn fork(
         &self,
         id: String,
@@ -53,6 +62,13 @@ impl RustPseudoTerminal {
         );
 
         trace!("nx_fork command: {}", &command);
-        self.run_command(command, command_dir, js_env, exec_argv, Some(quiet), Some(true))
+        self.run_command(
+            command,
+            command_dir,
+            js_env,
+            exec_argv,
+            Some(quiet),
+            Some(true),
+        )
     }
 }

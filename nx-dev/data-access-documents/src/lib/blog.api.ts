@@ -60,6 +60,15 @@ export class BlogApi {
     return sortPosts(allPosts);
   }
 
+  getBlogPost(slug: string): BlogPostDataEntry {
+    const blogs = this.getBlogPosts();
+    const blog = blogs.find((b) => b.slug === slug);
+    if (!blog) {
+      throw new Error(`Could not find blog post with slug: ${slug}`);
+    }
+    return blog;
+  }
+
   private calculateSlug(filePath: string, frontmatter: any): string {
     const baseName = basename(filePath, '.md');
     return frontmatter.slug || baseName;

@@ -444,7 +444,7 @@ export async function generateGraph(
       );
       html = html.replace(/src="/g, 'src="static/');
       html = html.replace(/href="styles/g, 'href="static/styles');
-      html = html.replace('<base href="/" />', '');
+      html = html.replace(/<base href="\/".*>/g, '');
       html = html.replace(/type="module"/g, '');
 
       writeFileSync(fullFilePath, html);
@@ -463,20 +463,8 @@ export async function generateGraph(
         args.projects,
         args.targets
       );
-      json.affectedProjects = affectedProjects;
-      json.criticalPath = affectedProjects;
 
       writeJsonFile(fullFilePath, json);
-
-      output.warn({
-        title: 'JSON output contains deprecated fields:',
-        bodyLines: [
-          '- affectedProjects',
-          '- criticalPath',
-          '',
-          'These fields will be removed in Nx 19. If you need to see which projects were affected, use `nx show projects --affected`.',
-        ],
-      });
 
       output.success({
         title: `JSON output created in ${fileFolderPath}`,
@@ -1135,16 +1123,6 @@ interface GraphJsonResponse {
   tasks?: TaskGraph;
   taskPlans?: Record<string, string[]>;
   graph: ProjectGraph;
-
-  /**
-   * @deprecated To see affected projects, use `nx show projects --affected`. This will be removed in Nx 19.
-   */
-  affectedProjects?: string[];
-
-  /**
-   * @deprecated To see affected projects, use `nx show projects --affected`. This will be removed in Nx 19.
-   */
-  criticalPath?: string[];
 }
 
 async function createJsonOutput(

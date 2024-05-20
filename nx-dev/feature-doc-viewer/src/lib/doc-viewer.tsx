@@ -117,7 +117,7 @@ export function DocViewer({
               {!hideTableOfContent && (
                 <div
                   className={cx(
-                    'fixed top-36 right-[max(2rem,calc(50%-55rem))] z-20 hidden w-60 overflow-y-auto bg-white text-sm dark:bg-slate-900 xl:block'
+                    'fixed right-[max(2rem,calc(50%-55rem))] top-48 z-20 hidden w-60 overflow-y-auto bg-white text-sm xl:block dark:bg-slate-900'
                   )}
                 >
                   <TableOfContents
@@ -185,7 +185,7 @@ export function DocViewer({
             </div>
           </div>
           <div
-            className={`flex w-full items-center space-x-2 pt-24 pb-24 sm:px-6 lg:pb-16 ${
+            className={`flex w-full items-center space-x-2 pb-24 pt-24 sm:px-6 lg:pb-16 ${
               hideTableOfContent ? '' : 'xl:hidden'
             }`}
           >

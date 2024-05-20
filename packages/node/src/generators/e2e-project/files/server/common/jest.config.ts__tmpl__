@@ -1,7 +1,7 @@
 /* eslint-disable */
 export default {
   displayName: '<%= e2eProjectName %>',
-  preset: '<%= offsetFromRoot %>jest.preset.js',
+  preset: '<%= offsetFromRoot %><%= jestPreset %>',
   globalSetup: '<rootDir>/src/support/global-setup.ts',
   globalTeardown: '<rootDir>/src/support/global-teardown.ts',
   setupFiles: ['<rootDir>/src/support/test-setup.ts'],

@@ -28,6 +28,7 @@ export default defineConfig({
   // See: https://vitejs.dev/guide/build.html#library-mode
   build: {
     outDir: '../dist/my-lib',
+    emptyOutDir: true,
     reportCompressedSize: true,
     commonjsOptions: {
       transformMixedEsModules: true,
@@ -50,7 +51,7 @@ export default defineConfig({
   test: {
     globals: true,
     cache: {
-      dir: '../node_modules/.vitest',
+      dir: '../node_modules/.vitest/my-lib',
     },
     environment: 'jsdom',
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],

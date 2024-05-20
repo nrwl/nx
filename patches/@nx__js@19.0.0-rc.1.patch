@@ -1,0 +1,37 @@
+diff --git a/src/plugins/jest/start-local-registry.d.ts b/src/plugins/jest/start-local-registry.d.ts
+index 4bd827c50cd20cc103ed42c0d2871d9a09dc2cce..05bfdc4e4ceb0722d0536b0ab29c9348fd436796 100644
+--- a/src/plugins/jest/start-local-registry.d.ts
++++ b/src/plugins/jest/start-local-registry.d.ts
+@@ -3,10 +3,12 @@
+  * @param localRegistryTarget the target to run to start the local registry e.g. workspace:local-registry
+  * @param storage the storage location for the local registry
+  * @param verbose whether to log verbose output
++ * @param clearStorage whether to clear the verdaccio storage before running the registry
+  */
+ export declare function startLocalRegistry({ localRegistryTarget, storage, verbose, }: {
+     localRegistryTarget: string;
+     storage?: string;
+     verbose?: boolean;
++    clearStorage?: boolean;
+ }): Promise<() => void>;
+ export default startLocalRegistry;
+diff --git a/src/plugins/jest/start-local-registry.js b/src/plugins/jest/start-local-registry.js
+index 907fdc6bf0726c18cb88083a9a49d5dff85ded1f..15ffe0bf50740786d6a0ea205a6752f147f11351 100644
+--- a/src/plugins/jest/start-local-registry.js
++++ b/src/plugins/jest/start-local-registry.js
+@@ -8,13 +8,13 @@ const child_process_1 = require("child_process");
+  * @param storage the storage location for the local registry
+  * @param verbose whether to log verbose output
+  */
+-function startLocalRegistry({ localRegistryTarget, storage, verbose, }) {
++function startLocalRegistry({ localRegistryTarget, storage, verbose, clearStorage }) {
+     if (!localRegistryTarget) {
+         throw new Error(`localRegistryTarget is required`);
+     }
+     return new Promise((resolve, reject) => {
+         const childProcess = (0, child_process_1.fork)(require.resolve('nx'), [
+-            ...`run ${localRegistryTarget} --location none --clear true`.split(' '),
++            ...`run ${localRegistryTarget} --location none --clear ${clearStorage ?? true}`.split(' '),
+             ...(storage ? [`--storage`, storage] : []),
+         ], { stdio: 'pipe' });
+         const listener = (data) => {

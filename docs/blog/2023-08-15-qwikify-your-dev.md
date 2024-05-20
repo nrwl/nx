@@ -5,7 +5,7 @@ cover_image: '/blog/images/2023-08-15/featured_img.png'
 tags: [nx, changelog, release]
 ---
 
-In the ever-evolving web development landscape, efficiency and modularity have become paramount. This is where [Nx](https://nx.dev) and [Qwik](https://qwik.dev/) come into play.
+In the ever-evolving web development landscape, efficiency and modularity have become paramount. This is where [Nx]() and [Qwik](https://qwik.dev/) come into play.
 
 Qwik is a modern web framework that focuses on application performance by reducing the amount of JavaScript that needs to be shipped to the browser. You can learn more about how Qwik achieves this with [Resumability in their docs](https://qwik.dev/docs/concepts/resumable/).
 

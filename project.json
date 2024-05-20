@@ -9,6 +9,22 @@
         "config": ".verdaccio/config.yml",
         "storage": "build/local-registry/storage"
       }
+    },
+    "populate-local-registry-storage": {
+      "cache": true,
+      "inputs": [
+        {
+          "input": "production",
+          "projects": [
+            "*",
+            "!nx-dev",
+            "!typedoc-theme",
+            "!tools-documentation-create-embeddings"
+          ]
+        }
+      ],
+      "command": "node ./scripts/local-registry/run-populate-storage.mjs",
+      "outputs": ["{workspaceRoot}/build/local-registry/storage"]
     }
   }
 }

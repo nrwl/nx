@@ -262,111 +262,6 @@
         "disableCollapsible": false
       },
       {
-        "name": "Core Tutorial",
-        "path": "/core-tutorial",
-        "id": "core-tutorial",
-        "isExternal": false,
-        "children": [
-          {
-            "name": "1 - Create Blog",
-            "path": "/core-tutorial/01-create-blog",
-            "id": "01-create-blog",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "2 - Create CLI",
-            "path": "/core-tutorial/02-create-cli",
-            "id": "02-create-cli",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "3 - Share Assets",
-            "path": "/core-tutorial/03-share-assets",
-            "id": "03-share-assets",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "4 - Build Affected Projects",
-            "path": "/core-tutorial/04-build-affected-projects",
-            "id": "04-build-affected-projects",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "5 - Automatically Detect Dependencies",
-            "path": "/core-tutorial/05-auto-detect-dependencies",
-            "id": "05-auto-detect-dependencies",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "6 - Summary",
-            "path": "/core-tutorial/06-summary",
-            "id": "06-summary",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          }
-        ],
-        "disableCollapsible": false
-      },
-      {
-        "name": "1 - Create Blog",
-        "path": "/core-tutorial/01-create-blog",
-        "id": "01-create-blog",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "2 - Create CLI",
-        "path": "/core-tutorial/02-create-cli",
-        "id": "02-create-cli",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "3 - Share Assets",
-        "path": "/core-tutorial/03-share-assets",
-        "id": "03-share-assets",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "4 - Build Affected Projects",
-        "path": "/core-tutorial/04-build-affected-projects",
-        "id": "04-build-affected-projects",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "5 - Automatically Detect Dependencies",
-        "path": "/core-tutorial/05-auto-detect-dependencies",
-        "id": "05-auto-detect-dependencies",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "6 - Summary",
-        "path": "/core-tutorial/06-summary",
-        "id": "06-summary",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
         "name": "Features",
         "path": "/features",
         "id": "features",
@@ -744,6 +639,30 @@
             "disableCollapsible": false
           },
           {
+            "name": "Nx Daemon",
+            "path": "/concepts/nx-daemon",
+            "id": "nx-daemon",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Nx and Turborepo",
+            "path": "/concepts/turbo-and-nx",
+            "id": "turbo-and-nx",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Buildable and Publishable Libraries",
+            "path": "/concepts/buildable-and-publishable-libraries",
+            "id": "buildable-and-publishable-libraries",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Module Federation",
             "path": "/concepts/module-federation",
             "id": "module-federation",
@@ -785,14 +704,22 @@
             "disableCollapsible": false
           },
           {
-            "name": "More Concepts",
-            "path": "/concepts/more-concepts",
-            "id": "more-concepts",
+            "name": "Organizational Decisions",
+            "path": "/concepts/decisions",
+            "id": "decisions",
             "isExternal": false,
             "children": [
               {
+                "name": "Overview",
+                "path": "/concepts/decisions/overview",
+                "id": "overview",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
                 "name": "Monorepos",
-                "path": "/concepts/more-concepts/why-monorepos",
+                "path": "/concepts/decisions/why-monorepos",
                 "id": "why-monorepos",
                 "isExternal": false,
                 "children": [],
@@ -800,72 +727,40 @@
               },
               {
                 "name": "Dependency Management",
-                "path": "/concepts/more-concepts/dependency-management",
+                "path": "/concepts/decisions/dependency-management",
                 "id": "dependency-management",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
               },
               {
-                "name": "Code Sharing",
-                "path": "/concepts/more-concepts/code-sharing",
-                "id": "code-sharing",
+                "name": "Code Ownership",
+                "path": "/concepts/decisions/code-ownership",
+                "id": "code-ownership",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
               },
               {
-                "name": "Nx Daemon",
-                "path": "/concepts/more-concepts/nx-daemon",
-                "id": "nx-daemon",
+                "name": "Project Size",
+                "path": "/concepts/decisions/project-size",
+                "id": "project-size",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
               },
               {
-                "name": "Nx and Turborepo",
-                "path": "/concepts/more-concepts/turbo-and-nx",
-                "id": "turbo-and-nx",
+                "name": "Project Dependency Rules",
+                "path": "/concepts/decisions/project-dependency-rules",
+                "id": "project-dependency-rules",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
               },
               {
-                "name": "Applications and Libraries",
-                "path": "/concepts/more-concepts/applications-and-libraries",
-                "id": "applications-and-libraries",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "When to Create a New Library",
-                "path": "/concepts/more-concepts/creating-libraries",
-                "id": "creating-libraries",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Library Types",
-                "path": "/concepts/more-concepts/library-types",
-                "id": "library-types",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Grouping Libraries",
-                "path": "/concepts/more-concepts/grouping-libraries",
-                "id": "grouping-libraries",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Buildable and Publishable Libraries",
-                "path": "/concepts/more-concepts/buildable-and-publishable-libraries",
-                "id": "buildable-and-publishable-libraries",
+                "name": "Folder Structure",
+                "path": "/concepts/decisions/folder-structure",
+                "id": "folder-structure",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -936,6 +831,30 @@
         "name": "Integrated Repos vs. Package-Based Repos vs. Standalone Apps",
         "path": "/concepts/integrated-vs-package-based",
         "id": "integrated-vs-package-based",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Nx Daemon",
+        "path": "/concepts/nx-daemon",
+        "id": "nx-daemon",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Nx and Turborepo",
+        "path": "/concepts/turbo-and-nx",
+        "id": "turbo-and-nx",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Buildable and Publishable Libraries",
+        "path": "/concepts/buildable-and-publishable-libraries",
+        "id": "buildable-and-publishable-libraries",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -1014,14 +933,22 @@
         "disableCollapsible": false
       },
       {
-        "name": "More Concepts",
-        "path": "/concepts/more-concepts",
-        "id": "more-concepts",
+        "name": "Organizational Decisions",
+        "path": "/concepts/decisions",
+        "id": "decisions",
         "isExternal": false,
         "children": [
           {
+            "name": "Overview",
+            "path": "/concepts/decisions/overview",
+            "id": "overview",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Monorepos",
-            "path": "/concepts/more-concepts/why-monorepos",
+            "path": "/concepts/decisions/why-monorepos",
             "id": "why-monorepos",
             "isExternal": false,
             "children": [],
@@ -1029,72 +956,40 @@
           },
           {
             "name": "Dependency Management",
-            "path": "/concepts/more-concepts/dependency-management",
+            "path": "/concepts/decisions/dependency-management",
             "id": "dependency-management",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
           },
           {
-            "name": "Code Sharing",
-            "path": "/concepts/more-concepts/code-sharing",
-            "id": "code-sharing",
+            "name": "Code Ownership",
+            "path": "/concepts/decisions/code-ownership",
+            "id": "code-ownership",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
           },
           {
-            "name": "Nx Daemon",
-            "path": "/concepts/more-concepts/nx-daemon",
-            "id": "nx-daemon",
+            "name": "Project Size",
+            "path": "/concepts/decisions/project-size",
+            "id": "project-size",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
           },
           {
-            "name": "Nx and Turborepo",
-            "path": "/concepts/more-concepts/turbo-and-nx",
-            "id": "turbo-and-nx",
+            "name": "Project Dependency Rules",
+            "path": "/concepts/decisions/project-dependency-rules",
+            "id": "project-dependency-rules",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
           },
           {
-            "name": "Applications and Libraries",
-            "path": "/concepts/more-concepts/applications-and-libraries",
-            "id": "applications-and-libraries",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "When to Create a New Library",
-            "path": "/concepts/more-concepts/creating-libraries",
-            "id": "creating-libraries",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Library Types",
-            "path": "/concepts/more-concepts/library-types",
-            "id": "library-types",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Grouping Libraries",
-            "path": "/concepts/more-concepts/grouping-libraries",
-            "id": "grouping-libraries",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Buildable and Publishable Libraries",
-            "path": "/concepts/more-concepts/buildable-and-publishable-libraries",
-            "id": "buildable-and-publishable-libraries",
+            "name": "Folder Structure",
+            "path": "/concepts/decisions/folder-structure",
+            "id": "folder-structure",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -1103,8 +998,16 @@
         "disableCollapsible": false
       },
       {
+        "name": "Overview",
+        "path": "/concepts/decisions/overview",
+        "id": "overview",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
         "name": "Monorepos",
-        "path": "/concepts/more-concepts/why-monorepos",
+        "path": "/concepts/decisions/why-monorepos",
         "id": "why-monorepos",
         "isExternal": false,
         "children": [],
@@ -1112,72 +1015,40 @@
       },
       {
         "name": "Dependency Management",
-        "path": "/concepts/more-concepts/dependency-management",
+        "path": "/concepts/decisions/dependency-management",
         "id": "dependency-management",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
       },
       {
-        "name": "Code Sharing",
-        "path": "/concepts/more-concepts/code-sharing",
-        "id": "code-sharing",
+        "name": "Code Ownership",
+        "path": "/concepts/decisions/code-ownership",
+        "id": "code-ownership",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
       },
       {
-        "name": "Nx Daemon",
-        "path": "/concepts/more-concepts/nx-daemon",
-        "id": "nx-daemon",
+        "name": "Project Size",
+        "path": "/concepts/decisions/project-size",
+        "id": "project-size",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
       },
       {
-        "name": "Nx and Turborepo",
-        "path": "/concepts/more-concepts/turbo-and-nx",
-        "id": "turbo-and-nx",
+        "name": "Project Dependency Rules",
+        "path": "/concepts/decisions/project-dependency-rules",
+        "id": "project-dependency-rules",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
       },
       {
-        "name": "Applications and Libraries",
-        "path": "/concepts/more-concepts/applications-and-libraries",
-        "id": "applications-and-libraries",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "When to Create a New Library",
-        "path": "/concepts/more-concepts/creating-libraries",
-        "id": "creating-libraries",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Library Types",
-        "path": "/concepts/more-concepts/library-types",
-        "id": "library-types",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Grouping Libraries",
-        "path": "/concepts/more-concepts/grouping-libraries",
-        "id": "grouping-libraries",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Buildable and Publishable Libraries",
-        "path": "/concepts/more-concepts/buildable-and-publishable-libraries",
-        "id": "buildable-and-publishable-libraries",
+        "name": "Folder Structure",
+        "path": "/concepts/decisions/folder-structure",
+        "id": "folder-structure",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -2111,6 +1982,14 @@
                 "name": "Customize Conventional Commit Types",
                 "path": "/recipes/nx-release/customize-conventional-commit-types",
                 "id": "customize-conventional-commit-types",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Configure Changelog Format",
+                "path": "/recipes/nx-release/configure-changelog-format",
+                "id": "configure-changelog-format",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -3785,6 +3664,14 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
+          },
+          {
+            "name": "Configure Changelog Format",
+            "path": "/recipes/nx-release/configure-changelog-format",
+            "id": "configure-changelog-format",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -3857,6 +3744,14 @@
         "name": "Customize Conventional Commit Types",
         "path": "/recipes/nx-release/customize-conventional-commit-types",
         "id": "customize-conventional-commit-types",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Configure Changelog Format",
+        "path": "/recipes/nx-release/configure-changelog-format",
+        "id": "configure-changelog-format",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -4448,6 +4343,14 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
+          },
+          {
+            "name": "Releases",
+            "path": "/reference/releases",
+            "id": "releases",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -4504,6 +4407,14 @@
         "name": "Glossary",
         "path": "/reference/glossary",
         "id": "glossary",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Releases",
+        "path": "/reference/releases",
+        "id": "releases",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -4604,6 +4515,22 @@
         "isExternal": false,
         "children": [
           {
+            "name": "affected:graph",
+            "path": "/deprecated/affected-graph",
+            "id": "affected-graph",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "print-affected",
+            "path": "/deprecated/print-affected",
+            "id": "print-affected",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "workspace.json",
             "path": "/deprecated/workspace-json",
             "id": "workspace-json",
@@ -4684,6 +4611,22 @@
             "disableCollapsible": false
           }
         ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "affected:graph",
+        "path": "/deprecated/affected-graph",
+        "id": "affected-graph",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "print-affected",
+        "path": "/deprecated/print-affected",
+        "id": "print-affected",
+        "isExternal": false,
+        "children": [],
         "disableCollapsible": false
       },
       {
@@ -6473,6 +6416,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Custom Steps",
+            "path": "/ci/reference/custom-steps",
+            "id": "custom-steps",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Environment Variables",
             "path": "/ci/reference/env-vars",
             "id": "env-vars",
@@ -6511,6 +6462,14 @@
         "name": "Launch Templates",
         "path": "/ci/reference/launch-templates",
         "id": "launch-templates",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Custom Steps",
+        "path": "/ci/reference/custom-steps",
+        "id": "custom-steps",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -8374,22 +8333,6 @@
                 "name": "affected",
                 "path": "/nx-api/nx/documents/affected",
                 "id": "affected",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "affected:graph",
-                "path": "/nx-api/nx/documents/affected-dep-graph",
-                "id": "affected-dep-graph",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "print-affected",
-                "path": "/nx-api/nx/documents/print-affected",
-                "id": "print-affected",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false

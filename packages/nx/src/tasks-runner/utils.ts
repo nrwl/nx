@@ -174,7 +174,7 @@ export function transformLegacyOutputs(
 }
 
 /**
- * @deprecated Pass the target and overrides instead. This will be removed in v19.
+ * @deprecated Pass the target and overrides instead. This will be removed in v20.
  */
 export function getOutputsForTargetAndConfiguration(
   task: Task,

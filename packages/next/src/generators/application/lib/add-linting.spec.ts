@@ -164,7 +164,10 @@ describe('updateEslint', () => {
               "**/*.spec.tsx",
               "**/*.spec.js",
               "**/*.spec.jsx"
-          ]
+          ],
+          rules: {
+              ...config.rules
+          }
       })),
       { ignores: [".next/**/*"] }
       ];

@@ -61,16 +61,18 @@ export function getConfigNode(configFileContents: string): ts.Node | undefined {
   }
   let configNode = tsquery.query(
     configFileContents,
-    `ObjectLiteralExpression`
+    `CallExpression:has(Identifier[name=defineConfig]) > ObjectLiteralExpression`
   )?.[0];
 
-  const arrowFunctionReturnStatement = tsquery.query(
-    configFileContents,
-    `ArrowFunction Block ReturnStatement ObjectLiteralExpression`
-  )?.[0];
+  if (!configNode) {
+    const arrowFunctionReturnStatement = tsquery.query(
+      configFileContents,
+      `ArrowFunction Block ReturnStatement ObjectLiteralExpression`
+    )?.[0];
 
-  if (arrowFunctionReturnStatement) {
-    configNode = arrowFunctionReturnStatement;
+    if (arrowFunctionReturnStatement) {
+      configNode = arrowFunctionReturnStatement;
+    }
   }
 
   return configNode;

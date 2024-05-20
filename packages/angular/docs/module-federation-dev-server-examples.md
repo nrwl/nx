@@ -49,7 +49,13 @@ See an example set up of it below:
     "options": {
       "port": 4200,
       "publicHost": "http://localhost:4200",
-      "devRemotes": ["remote1", "remote2"]
+      "devRemotes": [
+        "remote1",
+        {
+          "remoteName": "remote2",
+          "configuration": "development"
+        }
+      ]
     }
   }
 }

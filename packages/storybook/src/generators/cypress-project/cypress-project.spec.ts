@@ -1,4 +1,16 @@
-import { readJson, readProjectConfiguration, Tree } from '@nx/devkit';
+jest.mock('nx/src/project-graph/plugins/loader', () => ({
+  ...jest.requireActual('nx/src/project-graph/plugins/loader'),
+  loadNxPlugin: jest.fn().mockImplementation(() => {
+    return [Promise.resolve({}), () => {}];
+  }),
+}));
+import {
+  readJson,
+  readNxJson,
+  readProjectConfiguration,
+  Tree,
+  updateNxJson,
+} from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { Linter } from '@nx/eslint';
 import { libraryGenerator } from '@nx/js';
@@ -59,5 +71,27 @@ describe('@nx/storybook:cypress-project', () => {
     expect(
       tree.exists('apps/one/two/test-ui-lib-e2e/cypress.config.ts')
     ).toBeTruthy();
+  });
+
+  it('should generate a correct cypress.config.ts file when using inferred plugins', async () => {
+    // ARRANGE
+    const nxJson = readNxJson(tree);
+    nxJson.plugins ??= [];
+    nxJson.plugins.push('@nx/cypress/plugin');
+    updateNxJson(tree, nxJson);
+
+    // ACT
+    await cypressProjectGenerator(tree, {
+      name: 'test-ui-lib',
+      linter: Linter.EsLint,
+    });
+
+    // ASSERT
+    expect(tree.exists('apps/test-ui-lib-e2e/cypress.config.ts')).toBeTruthy();
+    const cypressConfig = tree.read(
+      'apps/test-ui-lib-e2e/cypress.config.ts',
+      'utf-8'
+    );
+    expect(cypressConfig).toMatchSnapshot();
   });
 });
