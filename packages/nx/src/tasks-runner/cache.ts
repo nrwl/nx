@@ -1,5 +1,5 @@
 import { workspaceRoot } from '../utils/workspace-root';
-import { mkdir, mkdirSync, pathExists, readFile, writeFile, remove } from 'fs-extra';
+import { mkdir, mkdirSync, pathExists, readFile, writeFile, remove as fsRemove } from 'fs-extra';
 import { join } from 'path';
 import { performance } from 'perf_hooks';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
@@ -90,8 +90,8 @@ export class Cache {
       const tdCommit = join(this.cachePath, `${task.hash}.commit`);
 
       // might be left overs from partially-completed cache invocations
-      await remove(tdCommit);
-      await remove(td);
+      await this.remove(tdCommit);
+      await this.remove(td);
 
       await mkdir(td);
       await writeFile(
@@ -145,7 +145,7 @@ export class Cache {
           const cached = join(cachedResult.outputsPath, f);
           if (await pathExists(cached)) {
             const src = join(this.root, f);
-            await remove(src);
+            await this.remove(src);
             await this.copy(cached, src);
           }
         })
@@ -200,6 +200,14 @@ export class Cache {
         rej(e);
       }
     });
+  }
+
+  private async remove(path: string): Promise<void> {
+    try {
+      fsRemove(path);
+    } catch (e) {
+      // It's okay if this fails, the OS will clean it up eventually
+    }
   }
 
   private async getFromLocalDir(task: Task) {
