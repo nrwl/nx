@@ -44,7 +44,7 @@ export function loadPnpmHoistedDepsDefinition() {
 
   if (existsSync(fullPath)) {
     const content = readFileSync(fullPath, 'utf-8');
-    const { load } = require('@zkochan/js-yaml');
+    const { load } = require('js-yaml');
     return load(content)?.hoistedDependencies ?? {};
   } else {
     throw new Error(`Could not find ".modules.yaml" at "${fullPath}"`);
@@ -55,7 +55,7 @@ export function loadPnpmHoistedDepsDefinition() {
  * Parsing and mapping logic from pnpm lockfile `read` function
  */
 export function parseAndNormalizePnpmLockfile(content: string): Lockfile {
-  const { load } = require('@zkochan/js-yaml');
+  const { load } = require('js-yaml');
   return convertToLockfileObject(load(content));
 }
 
@@ -80,7 +80,7 @@ const LOCKFILE_YAML_PRE9_FORMAT = {
  * Mapping and writing logic from pnpm lockfile `write` function
  */
 export function stringifyToPnpmYaml(lockfile: Lockfile): string {
-  const { dump } = require('@zkochan/js-yaml');
+  const { dump } = require('js-yaml');
   const lockfileVersion = +lockfile.lockfileVersion;
   if (lockfileVersion >= 9) {
     const adaptedLockfile = convertToLockfileFile(lockfile, {

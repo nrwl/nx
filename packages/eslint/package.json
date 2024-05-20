@@ -30,7 +30,7 @@
   "generators": "./generators.json",
   "executors": "./executors.json",
   "peerDependencies": {
-    "js-yaml": "4.1.0"
+    "js-yaml": "npm:@zkochan/js-yaml@0.0.7"
   },
   "dependencies": {
     "@nx/devkit": "file:../devkit",

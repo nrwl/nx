@@ -206,7 +206,7 @@
     "jest-runtime": "^29.4.1",
     "jest-util": "^29.4.1",
     "js-tokens": "^4.0.0",
-    "js-yaml": "4.1.0",
+    "js-yaml": "npm:@zkochan/js-yaml@0.0.7",
     "jsonc-eslint-parser": "^2.1.0",
     "jsonc-parser": "3.2.0",
     "kill-port": "^1.6.1",
