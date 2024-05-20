@@ -40,6 +40,7 @@ import {
   resolveLocalPackageDependencies,
 } from './utils/resolve-local-package-dependencies';
 import { updateLockFile } from './utils/update-lock-file';
+import { sortProjectsTopologically } from './utils/sort-projects-topologically';
 
 export async function releaseVersionGenerator(
   tree: Tree,
@@ -83,12 +84,12 @@ Valid values are: ${validReleaseVersionPrefixes
     const updateDependents = options.updateDependents ?? 'never';
     const updateDependentsBump = 'patch';
 
-    // Sort the projects topologically because there are cases where we need to perform updates based on dependent relationships
+    // Sort the projects topologically if update dependents is enabled
     // TODO: maybe move this sorting to the command level?
-    const projects = sortProjectsTopologically(
-      options.projectGraph,
-      options.projects
-    );
+    const projects =
+      updateDependents === 'never'
+        ? options.projects
+        : sortProjectsTopologically(options.projectGraph, options.projects);
     const projectToDependencyBumps = new Map<string, any>();
 
     const resolvePackageRoot = createResolvePackageRoot(options.packageRoot);
@@ -474,8 +475,20 @@ To fix this you will either need to add a package.json file at that location, or
 
       const dependentProjectsInCurrentBatch = [];
       const dependentProjectsOutsideCurrentBatch = [];
+      // Track circular dependencies using value of project1:project2
+      const circularDependencies = new Set<string>();
 
       for (const dependentProject of allDependentProjects) {
+        // Track circular dependencies (add both directions for easy look up)
+        if (dependentProject.target === projectName) {
+          circularDependencies.add(
+            `${dependentProject.source}:${dependentProject.target}`
+          );
+          circularDependencies.add(
+            `${dependentProject.target}:${dependentProject.source}`
+          );
+        }
+
         const isInCurrentBatch = options.projects.some(
           (project) => project.name === dependentProject.source
         );
@@ -546,7 +559,9 @@ To fix this you will either need to add a package.json file at that location, or
         const totalProjectsToUpdate =
           updateDependents === 'auto'
             ? allDependentProjects.length +
-              transitiveLocalPackageDependents.length
+              transitiveLocalPackageDependents.length -
+              // There are two entries per circular dep
+              circularDependencies.size / 2
             : dependentProjectsInCurrentBatch.length;
         if (totalProjectsToUpdate > 0) {
           log(
@@ -659,6 +674,10 @@ To fix this you will either need to add a package.json file at that location, or
         }
       }
       for (const transitiveDependentProject of transitiveLocalPackageDependents) {
+        // Check if the transitive dependent originates from a circular dependency
+        const isFromCircularDependency = circularDependencies.has(
+          `${transitiveDependentProject.source}:${transitiveDependentProject.target}`
+        );
         const dependencyProjectName = transitiveDependentProject.target;
         const dependencyPackageRoot = projectNameToPackageRootMap.get(
           dependencyProjectName
@@ -678,8 +697,14 @@ To fix this you will either need to add a package.json file at that location, or
           dependentProject: transitiveDependentProject,
           dependencyPackageName: dependencyPackageJson.name,
           newDependencyVersion: dependencyPackageJson.version,
-          // For these additional dependents, we need to update their package.json version as well because we know they will not come later in the topologically sorted projects loop
-          forceVersionBump: updateDependentsBump,
+          /**
+           * For these additional dependents, we need to update their package.json version as well because we know they will not come later in the topologically sorted projects loop.
+           * The one exception being if the dependent is part of a circular dependency, in which case we don't want to force a version bump as this would come in addition to the one
+           * already applied.
+           */
+          forceVersionBump: isFromCircularDependency
+            ? false
+            : updateDependentsBump,
         });
       }
     }
@@ -756,59 +781,4 @@ function getColor(projectName: string) {
   const colorIndex = code % colors.length;
 
   return colors[colorIndex];
-}
-
-function sortProjectsTopologically(
-  projectGraph: ProjectGraph,
-  projectNodes: ProjectGraphProjectNode[]
-): ProjectGraphProjectNode[] {
-  const edges = new Map<ProjectGraphProjectNode, number>(
-    projectNodes.map((node) => [node, 0])
-  );
-
-  const filteredDependencies: ProjectGraphDependency[] = [];
-  for (const node of projectNodes) {
-    const deps = projectGraph.dependencies[node.name];
-    if (deps) {
-      filteredDependencies.push(
-        ...deps.filter((dep) => projectNodes.find((n) => n.name === dep.target))
-      );
-    }
-  }
-
-  filteredDependencies.forEach((dep) => {
-    const sourceNode = projectGraph.nodes[dep.source];
-    // dep.source depends on dep.target
-    edges.set(sourceNode, (edges.get(sourceNode) || 0) + 1);
-  });
-
-  // Initialize queue with projects that have no dependencies
-  const processQueue = [...edges]
-    .filter(([_, count]) => count === 0)
-    .map(([node]) => node);
-  const sortedProjects = [];
-
-  while (processQueue.length > 0) {
-    const node = processQueue.shift();
-    sortedProjects.push(node);
-
-    // Process each project that depends on the current node
-    filteredDependencies.forEach((dep) => {
-      const dependentNode = projectGraph.nodes[dep.source];
-      const count = edges.get(dependentNode) - 1;
-      edges.set(dependentNode, count);
-      if (count === 0) {
-        processQueue.push(dependentNode);
-      }
-    });
-  }
-
-  // TODO: should hopefully be impossible by this point?
-  if (sortedProjects.length !== projectNodes.length) {
-    throw new Error(
-      'Cycle detected or a disconnected node exists that was not included in the input set.'
-    );
-  }
-
-  return sortedProjects;
 }

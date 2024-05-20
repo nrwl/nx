@@ -1361,6 +1361,394 @@ Valid values are: "auto", "", "~", "^", "="`,
       `);
     });
   });
+
+  describe('circular dependencies', () => {
+    beforeEach(() => {
+      // package-a <-> package-b
+      projectGraph = createWorkspaceWithPackageDependencies(tree, {
+        'package-a': {
+          projectRoot: 'packages/package-a',
+          packageName: 'package-a',
+          version: '1.0.0',
+          packageJsonPath: 'packages/package-a/package.json',
+          localDependencies: [
+            {
+              projectName: 'package-b',
+              dependencyCollection: 'dependencies',
+              version: '1.0.0',
+            },
+          ],
+        },
+        'package-b': {
+          projectRoot: 'packages/package-b',
+          packageName: 'package-b',
+          version: '1.0.0',
+          packageJsonPath: 'packages/package-b/package.json',
+          localDependencies: [
+            {
+              projectName: 'package-a',
+              dependencyCollection: 'dependencies',
+              version: '1.0.0',
+            },
+          ],
+        },
+      });
+    });
+    afterEach(() => {
+      jest.clearAllMocks();
+    });
+
+    describe("updateDependents: 'never'", () => {
+      it('should allow versioning of circular dependencies when not all projects are included in the current batch', async () => {
+        expect(readJson(tree, 'packages/package-a/package.json'))
+          .toMatchInlineSnapshot(`
+          {
+            "dependencies": {
+              "package-b": "1.0.0",
+            },
+            "name": "package-a",
+            "version": "1.0.0",
+          }
+        `);
+        expect(readJson(tree, 'packages/package-b/package.json'))
+          .toMatchInlineSnapshot(`
+          {
+            "dependencies": {
+              "package-a": "1.0.0",
+            },
+            "name": "package-b",
+            "version": "1.0.0",
+          }
+        `);
+
+        expect(
+          await releaseVersionGenerator(tree, {
+            projects: [projectGraph.nodes['package-a']], // version only package-a
+            projectGraph,
+            specifier: '2.0.0',
+            currentVersionResolver: 'disk',
+            specifierSource: 'prompt',
+            releaseGroup: createReleaseGroup('independent'),
+            updateDependents: 'never',
+          })
+        ).toMatchInlineSnapshot(`
+          {
+            "callback": [Function],
+            "data": {
+              "package-a": {
+                "currentVersion": "1.0.0",
+                "dependentProjects": [],
+                "newVersion": "2.0.0",
+              },
+            },
+          }
+        `);
+
+        expect(readJson(tree, 'packages/package-a/package.json'))
+          .toMatchInlineSnapshot(`
+          {
+            "dependencies": {
+              "package-b": "1.0.0",
+            },
+            "name": "package-a",
+            "version": "2.0.0",
+          }
+        `);
+        // package-b is unchanged
+        expect(readJson(tree, 'packages/package-b/package.json'))
+          .toMatchInlineSnapshot(`
+          {
+            "dependencies": {
+              "package-a": "1.0.0",
+            },
+            "name": "package-b",
+            "version": "1.0.0",
+          }
+        `);
+      });
+
+      it('should allow versioning of circular dependencies when all projects are included in the current batch', async () => {
+        expect(readJson(tree, 'packages/package-a/package.json'))
+          .toMatchInlineSnapshot(`
+          {
+            "dependencies": {
+              "package-b": "1.0.0",
+            },
+            "name": "package-a",
+            "version": "1.0.0",
+          }
+        `);
+        expect(readJson(tree, 'packages/package-b/package.json'))
+          .toMatchInlineSnapshot(`
+          {
+            "dependencies": {
+              "package-a": "1.0.0",
+            },
+            "name": "package-b",
+            "version": "1.0.0",
+          }
+        `);
+
+        expect(
+          await releaseVersionGenerator(tree, {
+            // version both packages
+            projects: [
+              projectGraph.nodes['package-a'],
+              projectGraph.nodes['package-b'],
+            ],
+
+            projectGraph,
+            specifier: '2.0.0',
+            currentVersionResolver: 'disk',
+            specifierSource: 'prompt',
+            releaseGroup: createReleaseGroup('independent'),
+            updateDependents: 'never',
+          })
+        ).toMatchInlineSnapshot(`
+          {
+            "callback": [Function],
+            "data": {
+              "package-a": {
+                "currentVersion": "1.0.0",
+                "dependentProjects": [
+                  {
+                    "dependencyCollection": "dependencies",
+                    "rawVersionSpec": "1.0.0",
+                    "source": "package-b",
+                    "target": "package-a",
+                    "type": "static",
+                  },
+                ],
+                "newVersion": "2.0.0",
+              },
+              "package-b": {
+                "currentVersion": "1.0.0",
+                "dependentProjects": [
+                  {
+                    "dependencyCollection": "dependencies",
+                    "rawVersionSpec": "1.0.0",
+                    "source": "package-a",
+                    "target": "package-b",
+                    "type": "static",
+                  },
+                ],
+                "newVersion": "2.0.0",
+              },
+            },
+          }
+        `);
+
+        // Both the version of package-a, and the dependency on package-b are updated to 2.0.0
+        expect(readJson(tree, 'packages/package-a/package.json'))
+          .toMatchInlineSnapshot(`
+          {
+            "dependencies": {
+              "package-b": "2.0.0",
+            },
+            "name": "package-a",
+            "version": "2.0.0",
+          }
+        `);
+        // Both the version of package-b, and the dependency on package-a are updated to 2.0.0
+        expect(readJson(tree, 'packages/package-b/package.json'))
+          .toMatchInlineSnapshot(`
+          {
+            "dependencies": {
+              "package-a": "2.0.0",
+            },
+            "name": "package-b",
+            "version": "2.0.0",
+          }
+        `);
+      });
+    });
+
+    describe("updateDependents: 'auto'", () => {
+      it('should allow versioning of circular dependencies when not all projects are included in the current batch', async () => {
+        expect(readJson(tree, 'packages/package-a/package.json'))
+          .toMatchInlineSnapshot(`
+          {
+            "dependencies": {
+              "package-b": "1.0.0",
+            },
+            "name": "package-a",
+            "version": "1.0.0",
+          }
+        `);
+        expect(readJson(tree, 'packages/package-b/package.json'))
+          .toMatchInlineSnapshot(`
+          {
+            "dependencies": {
+              "package-a": "1.0.0",
+            },
+            "name": "package-b",
+            "version": "1.0.0",
+          }
+        `);
+
+        expect(
+          await releaseVersionGenerator(tree, {
+            projects: [projectGraph.nodes['package-a']], // version only package-a
+            projectGraph,
+            specifier: '2.0.0',
+            currentVersionResolver: 'disk',
+            specifierSource: 'prompt',
+            releaseGroup: createReleaseGroup('independent'),
+            updateDependents: 'auto',
+          })
+        ).toMatchInlineSnapshot(`
+          {
+            "callback": [Function],
+            "data": {
+              "package-a": {
+                "currentVersion": "1.0.0",
+                "dependentProjects": [
+                  {
+                    "dependencyCollection": "dependencies",
+                    "rawVersionSpec": "1.0.0",
+                    "source": "package-b",
+                    "target": "package-a",
+                    "type": "static",
+                  },
+                ],
+                "newVersion": "2.0.0",
+              },
+              "package-b": {
+                "currentVersion": "1.0.0",
+                "dependentProjects": [
+                  {
+                    "dependencyCollection": "dependencies",
+                    "rawVersionSpec": "1.0.0",
+                    "source": "package-a",
+                    "target": "package-b",
+                    "type": "static",
+                  },
+                ],
+                "newVersion": "1.0.1",
+              },
+            },
+          }
+        `);
+
+        // The version of package-a has been updated to 2.0.0, and the dependency on package-b has been updated to 1.0.1
+        expect(readJson(tree, 'packages/package-a/package.json'))
+          .toMatchInlineSnapshot(`
+          {
+            "dependencies": {
+              "package-b": "1.0.1",
+            },
+            "name": "package-a",
+            "version": "2.0.0",
+          }
+        `);
+        // The version of package-b has been patched to 1.0.1, and the dependency on package-a has been updated to 2.0.0
+        expect(readJson(tree, 'packages/package-b/package.json'))
+          .toMatchInlineSnapshot(`
+          {
+            "dependencies": {
+              "package-a": "2.0.0",
+            },
+            "name": "package-b",
+            "version": "1.0.1",
+          }
+        `);
+      });
+
+      it('should allow versioning of circular dependencies when all projects are included in the current batch', async () => {
+        expect(readJson(tree, 'packages/package-a/package.json'))
+          .toMatchInlineSnapshot(`
+          {
+            "dependencies": {
+              "package-b": "1.0.0",
+            },
+            "name": "package-a",
+            "version": "1.0.0",
+          }
+        `);
+        expect(readJson(tree, 'packages/package-b/package.json'))
+          .toMatchInlineSnapshot(`
+          {
+            "dependencies": {
+              "package-a": "1.0.0",
+            },
+            "name": "package-b",
+            "version": "1.0.0",
+          }
+        `);
+
+        expect(
+          await releaseVersionGenerator(tree, {
+            // version both packages
+            projects: [
+              projectGraph.nodes['package-a'],
+              projectGraph.nodes['package-b'],
+            ],
+            projectGraph,
+            specifier: '2.0.0',
+            currentVersionResolver: 'disk',
+            specifierSource: 'prompt',
+            releaseGroup: createReleaseGroup('independent'),
+            updateDependents: 'auto',
+          })
+        ).toMatchInlineSnapshot(`
+          {
+            "callback": [Function],
+            "data": {
+              "package-a": {
+                "currentVersion": "1.0.0",
+                "dependentProjects": [
+                  {
+                    "dependencyCollection": "dependencies",
+                    "rawVersionSpec": "1.0.0",
+                    "source": "package-b",
+                    "target": "package-a",
+                    "type": "static",
+                  },
+                ],
+                "newVersion": "2.0.0",
+              },
+              "package-b": {
+                "currentVersion": "1.0.0",
+                "dependentProjects": [
+                  {
+                    "dependencyCollection": "dependencies",
+                    "rawVersionSpec": "1.0.0",
+                    "source": "package-a",
+                    "target": "package-b",
+                    "type": "static",
+                  },
+                ],
+                "newVersion": "2.0.0",
+              },
+            },
+          }
+        `);
+
+        // Both the version of package-a, and the dependency on package-b are updated to 2.0.0
+        expect(readJson(tree, 'packages/package-a/package.json'))
+          .toMatchInlineSnapshot(`
+          {
+            "dependencies": {
+              "package-b": "2.0.0",
+            },
+            "name": "package-a",
+            "version": "2.0.0",
+          }
+        `);
+        // Both the version of package-b, and the dependency on package-a are updated to 2.0.0
+        expect(readJson(tree, 'packages/package-b/package.json'))
+          .toMatchInlineSnapshot(`
+          {
+            "dependencies": {
+              "package-a": "2.0.0",
+            },
+            "name": "package-b",
+            "version": "2.0.0",
+          }
+        `);
+      });
+    });
+  });
 });
 
 function createReleaseGroup(
