@@ -222,6 +222,8 @@ async function runPublishOnProjects(
     {
       targets: [requiredTargetName],
       outputStyle: 'static',
+      // It is possible for workspaces to have circular dependencies between packages and still release them to a registry
+      nxIgnoreCycles: true,
       ...(args as any),
     },
     overrides,

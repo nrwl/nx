@@ -114,14 +114,22 @@ export async function getGitDiff(
   from: string | undefined,
   to = 'HEAD'
 ): Promise<RawGitCommit[]> {
+  let range = '';
+  if (!from || from === to) {
+    range = to;
+  } else {
+    range = `${from}..${to}`;
+  }
+
   // https://git-scm.com/docs/pretty-formats
   const r = await execCommand('git', [
     '--no-pager',
     'log',
-    `${from ? `${from}...` : ''}${to}`,
+    range,
     '--pretty="----%n%s|%h|%an|%ae%n%b"',
     '--name-status',
   ]);
+
   return r
     .split('----\n')
     .splice(1)
