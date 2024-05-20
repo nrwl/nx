@@ -29,6 +29,8 @@ expect.addSnapshotSerializer({
         .replaceAll(/Test @[\w\d]+/g, 'Test @{COMMIT_AUTHOR}')
         // Normalize the version title date.
         .replaceAll(/\(\d{4}-\d{2}-\d{2}\)/g, '(YYYY-MM-DD)')
+        // Normalize package manager specific logs
+        .replaceAll(/p?npm workspaces/g, '{PACKAGE_MANAGER_WORKSPACES}')
         // We trim each line to reduce the chances of snapshot flakiness
         .split('\n')
         .map((r) => r.trim())
@@ -42,7 +44,7 @@ expect.addSnapshotSerializer({
 
 const originalVerboseLoggingValue = process.env.NX_VERBOSE_LOGGING;
 
-describe('nx release circular dependencies qqqq', () => {
+describe('nx release circular dependencies', () => {
   let pkg1: string;
   let pkg2: string;
 
@@ -158,7 +160,7 @@ describe('nx release circular dependencies qqqq', () => {
         +
 
 
-        Skipped lock file update because npm workspaces are not enabled.
+        Skipped lock file update because {PACKAGE_MANAGER_WORKSPACES} are not enabled.
 
         NX   Staging changed files with git
 
@@ -343,7 +345,7 @@ describe('nx release circular dependencies qqqq', () => {
         +
 
 
-        Skipped lock file update because npm workspaces are not enabled.
+        Skipped lock file update because {PACKAGE_MANAGER_WORKSPACES} are not enabled.
 
         NX   Staging changed files with git
 
@@ -528,7 +530,7 @@ describe('nx release circular dependencies qqqq', () => {
         +
 
 
-        Skipped lock file update because npm workspaces are not enabled.
+        Skipped lock file update because {PACKAGE_MANAGER_WORKSPACES} are not enabled.
 
         NX   Staging changed files with git
 
@@ -695,7 +697,7 @@ describe('nx release circular dependencies qqqq', () => {
         +
 
 
-        Skipped lock file update because npm workspaces are not enabled.
+        Skipped lock file update because {PACKAGE_MANAGER_WORKSPACES} are not enabled.
 
         NX   Staging changed files with git
 
@@ -851,7 +853,7 @@ describe('nx release circular dependencies qqqq', () => {
         +
 
 
-        Skipped lock file update because npm workspaces are not enabled.
+        Skipped lock file update because {PACKAGE_MANAGER_WORKSPACES} are not enabled.
 
         NX   Staging changed files with git
 
@@ -1033,7 +1035,7 @@ describe('nx release circular dependencies qqqq', () => {
         +
 
 
-        Skipped lock file update because npm workspaces are not enabled.
+        Skipped lock file update because {PACKAGE_MANAGER_WORKSPACES} are not enabled.
 
         NX   Staging changed files with git
 
