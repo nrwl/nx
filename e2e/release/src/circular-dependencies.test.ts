@@ -85,6 +85,7 @@ describe('nx release circular dependencies', () => {
     // Ensure that the project graph is accurate (NXC-143)
     runCLI('reset');
     resetWorkspaceContext();
+    runCLI('reset');
   }, 60000);
 
   afterAll(() => {
