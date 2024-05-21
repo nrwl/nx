@@ -7,7 +7,6 @@ import {
   Tree,
 } from '@nx/devkit';
 import {
-  addRemoteDefinition,
   addRemoteRoute,
   addRemoteToConfig,
 } from '../../../module-federation/ast-utils';
@@ -38,10 +37,6 @@ export function updateHostWithRemote(
     );
   }
 
-  const remoteDefsPath = joinPathFragments(
-    hostConfig.sourceRoot,
-    'remotes.d.ts'
-  );
   const appComponentPath = findAppComponentPath(host, hostConfig.sourceRoot);
 
   if (host.exists(moduleFederationConfigPath)) {
@@ -65,31 +60,14 @@ export function updateHostWithRemote(
     );
   }
 
-  if (host.exists(remoteDefsPath)) {
-    let sourceCode = host.read(remoteDefsPath).toString();
-    const source = tsModule.createSourceFile(
-      moduleFederationConfigPath,
-      sourceCode,
-      tsModule.ScriptTarget.Latest,
-      true
-    );
-    host.write(
-      remoteDefsPath,
-      applyChangesToString(sourceCode, addRemoteDefinition(source, remoteName))
-    );
-  } else {
-    logger.warn(
-      `Could not find remote definitions at ${remoteDefsPath}. Did you generate this project with "@nx/react:host"?`
-    );
-  }
-
   if (host.exists(appComponentPath)) {
     let sourceCode = host.read(appComponentPath).toString();
     const source = tsModule.createSourceFile(
       moduleFederationConfigPath,
       sourceCode,
       tsModule.ScriptTarget.Latest,
-      true
+      true,
+      tsModule.ScriptKind.TSX
     );
     host.write(
       appComponentPath,

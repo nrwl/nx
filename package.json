@@ -206,7 +206,7 @@
     "jest-runtime": "^29.4.1",
     "jest-util": "^29.4.1",
     "js-tokens": "^4.0.0",
-    "js-yaml": "4.1.0",
+    "js-yaml": "npm:@zkochan/js-yaml@0.0.7",
     "jsonc-eslint-parser": "^2.1.0",
     "jsonc-parser": "3.2.0",
     "kill-port": "^1.6.1",
@@ -266,7 +266,6 @@
     "source-map-support": "0.5.19",
     "storybook-dark-mode": "^3.0.0",
     "style-loader": "^3.3.0",
-    "tar-fs": "^2.1.1",
     "tar-stream": "~2.2.0",
     "tcp-port-used": "^1.0.2",
     "terser-webpack-plugin": "^5.3.3",
@@ -321,7 +320,6 @@
     "@widgetbot/react-embed": "^1.9.0",
     "@yarnpkg/lockfile": "^1.1.0",
     "@yarnpkg/parsers": "3.0.0-rc.46",
-    "@zkochan/js-yaml": "0.0.6",
     "axios": "^1.6.0",
     "classnames": "^2.3.1",
     "cliui": "^8.0.1",
@@ -369,6 +367,10 @@
       "documentation"
     ]
   },
-  "packageManager": "pnpm@8.15.7"
+  "packageManager": "pnpm@8.15.7",
+  "pnpm": {
+    "patchedDependencies": {
+      "@nx/js@19.0.0-rc.1": "patches/@nx__js@19.0.0-rc.1.patch"
+    }
+  }
 }
-

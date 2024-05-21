@@ -5,12 +5,13 @@ import {
   Tree,
 } from '@nx/devkit';
 import { join } from 'path';
+import type { JestPresetExtension } from '../../../utils/config/config-file';
 import { NormalizedJestProjectSchema } from '../schema';
 
 export function createFiles(
   tree: Tree,
   options: NormalizedJestProjectSchema,
-  presetExt: 'cjs' | 'js'
+  presetExt: JestPresetExtension
 ) {
   const projectConfig = readProjectConfiguration(tree, options.project);
 

@@ -3,7 +3,7 @@ import {
   parseTargetString,
   readTargetOptions,
 } from '@nx/devkit';
-import { join, resolve } from 'path';
+import { resolve } from 'path';
 
 import {
   NextBuildBuilderOptions,
@@ -54,16 +54,18 @@ export default async function* serveExecutor(
 
   const mode = options.dev ? 'dev' : 'start';
   const turbo = options.turbo && options.dev ? '--turbo' : '';
-  const experimentalHttps =
-    options.experimentalHttps && options.dev ? '--experimental-https' : '';
   const nextBin = require.resolve('next/dist/bin/next');
 
   yield* createAsyncIterable<{ success: boolean; baseUrl: string }>(
     async ({ done, next, error }) => {
-      const server = fork(nextBin, [mode, ...args, turbo, experimentalHttps], {
-        cwd: options.dev ? projectRoot : nextDir,
-        stdio: 'inherit',
-      });
+      const server = fork(
+        nextBin,
+        [mode, ...args, turbo, ...getExperimentalHttpsFlags(options)],
+        {
+          cwd: options.dev ? projectRoot : nextDir,
+          stdio: 'inherit',
+        }
+      );
 
       server.once('exit', (code) => {
         if (code === 0) {
@@ -91,4 +93,17 @@ export default async function* serveExecutor(
       });
     }
   );
+}
+
+function getExperimentalHttpsFlags(options: NextServeBuilderOptions): string[] {
+  if (!options.dev) return [];
+  const flags: string[] = [];
+  if (options.experimentalHttps) flags.push('--experimental-https');
+  if (options.experimentalHttpsKey)
+    flags.push(`--experimental-https-key=${options.experimentalHttpsKey}`);
+  if (options.experimentalHttpsCert)
+    flags.push(`--experimental-https-cert=${options.experimentalHttpsCert}`);
+  if (options.experimentalHttpsCa)
+    flags.push(`--experimental-https-ca=${options.experimentalHttpsCa}`);
+  return flags;
 }

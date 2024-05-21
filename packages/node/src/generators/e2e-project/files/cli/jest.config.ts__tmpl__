@@ -1,7 +1,7 @@
 /* eslint-disable */
 export default {
   displayName: '<%= e2eProjectName %>',
-  preset: '<%= offsetFromRoot %>/jest.preset.js',
+  preset: '<%= offsetFromRoot %><%= jestPreset %>',
   setupFiles: ['<rootDir>/src/test-setup.ts'],
   testEnvironment: 'node',
   transform: {
@@ -10,5 +10,5 @@ export default {
     }],
   },
   moduleFileExtensions: ['ts', 'js', 'html'],
-  coverageDirectory: '<%= offsetFromRoot %>/coverage/<%= e2eProjectName %>',
+  coverageDirectory: '<%= offsetFromRoot %>coverage/<%= e2eProjectName %>',
 };

@@ -160,7 +160,7 @@ function deleteCliPropFromSchemaFile(
   entry: ExecutorsJsonEntry | GeneratorsJsonEntry,
   tree: Tree
 ) {
-  if (!entry.schema) {
+  if (typeof entry === 'string' || !entry.schema) {
     return;
   }
   const schemaPath = joinPathFragments(dirname(collectionPath), entry.schema);

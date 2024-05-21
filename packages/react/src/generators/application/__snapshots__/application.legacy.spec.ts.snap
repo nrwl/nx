@@ -31,6 +31,7 @@ nxViteTsPaths()],
         
     build: {
       outDir: '../dist/my-vite-app',
+      emptyOutDir: true,
       reportCompressedSize: true,
       commonjsOptions: {
         transformMixedEsModules: true,
@@ -38,19 +39,6 @@ nxViteTsPaths()],
     },
     
         
-        test: {
-    globals: true,
-    cache: {
-      dir: '../node_modules/.vitest/my-vite-app'
-    },
-    environment: 'jsdom',
-    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-    
-    reporters: ['default'],
-    coverage: {
-      reportsDirectory: '../coverage/my-vite-app',
-      provider: 'v8',
-    }
-  },
+        
       });"
 `;

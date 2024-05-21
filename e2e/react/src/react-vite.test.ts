@@ -151,4 +151,20 @@ describe('Build React applications and libraries with Vite', () => {
       `dist/libs/${nonBuildableLib}/index.mjs`
     );
   }, 300_000);
+
+  it('should support bundling with Vite and Jest', async () => {
+    const viteApp = uniq('viteapp');
+
+    runCLI(
+      `generate @nx/react:app ${viteApp} --bundler=vite --unitTestRunner=jest --no-interactive`
+    );
+
+    const appTestResults = await runCLIAsync(`test ${viteApp}`);
+    expect(appTestResults.combinedOutput).toContain(
+      'Successfully ran target test'
+    );
+
+    await runCLIAsync(`build ${viteApp}`);
+    checkFilesExist(`dist/apps/${viteApp}/index.html`);
+  }, 300_000);
 });
