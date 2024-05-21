@@ -43,8 +43,8 @@ function extractAllLinks(basePath: string): Record<string, string[]> {
       .concat(cardLinks)
       .filter(isLinkInternal)
       .filter(isNotAsset)
-      .filter(isNotImage)
-      .map(removeAnchors);
+      .filter(isNotImage);
+    // .map(removeAnchors);
     if (links.length) {
       acc[path.replace(basePath, '')] = links;
     }
@@ -96,25 +96,88 @@ function readSiteMapLinks(filePath: string): string[] {
 
 // Main
 const documentLinks = extractAllLinks(join(workspaceRoot, 'docs'));
-const sitemapLinks = readSiteMapIndex(
+const sitemapUrls = readSiteMapIndex(
   join(workspaceRoot, 'dist/nx-dev/nx-dev/public/'),
   'sitemap.xml'
 ).flatMap((path) => readSiteMapLinks(path));
+function headerToAnchor(line: string): string {
+  return line
+    .replace(/[#]+ /, '')
+    .replace(/`.*`/, '')
+    .replace(/[^\w ]/g, '')
+    .trim()
+    .replace(/ +/g, '-')
+    .toLocaleLowerCase();
+}
+
+function readApiJson(manifestFileName: string): string[] {
+  const manifest = JSON.parse(
+    readFileContents(
+      join(
+        workspaceRoot,
+        'dist/nx-dev/nx-dev/public/documentation/generated/manifests',
+        manifestFileName
+      )
+    )
+  );
+  let entries = Object.entries(manifest);
+  return entries
+    .filter(
+      ([url, details]: [string, any]) =>
+        !!details.file &&
+        existsSync(join(workspaceRoot, 'docs', details.file + '.md'))
+    )
+    .flatMap(([url, details]: [string, any]) => {
+      const headers = readFileContents(
+        join(workspaceRoot, 'docs', details.file + '.md')
+      )
+        .split('\n')
+        .filter((line) => line.startsWith('#'))
+        .map(headerToAnchor)
+        .map((line) => url + '#' + line);
+      return headers;
+    });
+}
+
+const anchorUrls = ['nx.json', 'ci.json', 'extending-nx.json'].flatMap(
+  (manifestFileName) => readApiJson(manifestFileName)
+);
+const ignoreAnchorUrls = ['/nx-api', '/blog'];
+
 const errors: Array<{ file: string; link: string }> = [];
 const localLinkErrors: Array<{ file: string; link: string }> = [];
 for (let file in documentLinks) {
   for (let link of documentLinks[file]) {
     if (link.startsWith('https://nx.dev')) {
       localLinkErrors.push({ file, link });
-    } else if (!sitemapLinks.includes(['https://nx.dev', link].join(''))) {
+    } else if (
+      link.includes('#') &&
+      !ignoreAnchorUrls.some((ignoreAnchorUrl) =>
+        link.startsWith(ignoreAnchorUrl)
+      ) &&
+      !anchorUrls.includes(link)
+    ) {
+      errors.push({ file, link });
+    } else if (
+      !link.includes('#') &&
+      !sitemapUrls.includes(['https://nx.dev', link].join(''))
+    ) {
+      errors.push({ file, link });
+    } else if (
+      link.includes('#') &&
+      ignoreAnchorUrls.some((ignoreAnchorUrl) =>
+        link.startsWith(ignoreAnchorUrl)
+      ) &&
+      !sitemapUrls.includes(['https://nx.dev', removeAnchors(link)].join(''))
+    ) {
       errors.push({ file, link });
     }
   }
 }
 
-const imageLinks = extractImageLinks(join(workspaceRoot, 'docs'));
-for (let file in imageLinks) {
-  for (let link of imageLinks[file]) {
+const imageUrls = extractImageLinks(join(workspaceRoot, 'docs'));
+for (let file in imageUrls) {
+  for (let link of imageUrls[file]) {
     if (!existsSync(join(workspaceRoot, 'docs', link))) {
       errors.push({ file, link });
     }

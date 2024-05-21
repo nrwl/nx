@@ -226,14 +226,14 @@
       "file": "",
       "id": "nxjson-inputs",
       "name": "nx.json reference: inputs and namedInputs",
-      "path": "/reference/nx-json#inputs-&-namedinputs"
+      "path": "/reference/nx-json#inputs-namedinputs"
     },
     {
       "description": "",
       "file": "",
       "id": "project-config-inputs",
       "name": "Project Configuration reference: inputs and namedInputs",
-      "path": "/reference/project-configuration#inputs-&-namedinputs"
+      "path": "/reference/project-configuration#inputs-and-namedinputs"
     },
     {
       "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",

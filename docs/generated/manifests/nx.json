@@ -6508,7 +6508,7 @@
         "file": "",
         "itemList": [],
         "isExternal": true,
-        "path": "/reference/nx-json#inputs-&-namedinputs",
+        "path": "/reference/nx-json#inputs-namedinputs",
         "tags": ["cache-task-results"]
       },
       {
@@ -6519,7 +6519,7 @@
         "file": "",
         "itemList": [],
         "isExternal": true,
-        "path": "/reference/project-configuration#inputs-&-namedinputs",
+        "path": "/reference/project-configuration#inputs-and-namedinputs",
         "tags": ["cache-task-results"]
       },
       {
@@ -6582,7 +6582,7 @@
     "path": "/reference/nx-json#tasks-runner-options",
     "tags": ["cache-task-results"]
   },
-  "/reference/nx-json#inputs-&-namedinputs": {
+  "/reference/nx-json#inputs-namedinputs": {
     "id": "nxjson-inputs",
     "name": "nx.json reference: inputs and namedInputs",
     "description": "",
@@ -6590,10 +6590,10 @@
     "file": "",
     "itemList": [],
     "isExternal": true,
-    "path": "/reference/nx-json#inputs-&-namedinputs",
+    "path": "/reference/nx-json#inputs-namedinputs",
     "tags": ["cache-task-results"]
   },
-  "/reference/project-configuration#inputs-&-namedinputs": {
+  "/reference/project-configuration#inputs-and-namedinputs": {
     "id": "project-config-inputs",
     "name": "Project Configuration reference: inputs and namedInputs",
     "description": "",
@@ -6601,7 +6601,7 @@
     "file": "",
     "itemList": [],
     "isExternal": true,
-    "path": "/reference/project-configuration#inputs-&-namedinputs",
+    "path": "/reference/project-configuration#inputs-and-namedinputs",
     "tags": ["cache-task-results"]
   },
   "/reference/nx-json#generators": {

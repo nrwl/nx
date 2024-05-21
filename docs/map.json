@@ -1391,7 +1391,7 @@
               "id": "nxjson-inputs",
               "file": "",
               "tags": ["cache-task-results"],
-              "path": "/reference/nx-json#inputs-&-namedinputs",
+              "path": "/reference/nx-json#inputs-namedinputs",
               "isExternal": true
             },
             {
@@ -1399,7 +1399,7 @@
               "id": "project-config-inputs",
               "file": "",
               "tags": ["cache-task-results"],
-              "path": "/reference/project-configuration#inputs-&-namedinputs",
+              "path": "/reference/project-configuration#inputs-and-namedinputs",
               "isExternal": true
             },
             {

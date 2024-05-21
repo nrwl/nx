@@ -119,7 +119,7 @@ Since each Storybook, in this case, is attached to a project, so is the serving 
 
 #### Publishing
 
-When you are publishing your Storybook, you can follow the same principles described in the [Applications and Libraries Mental Model](/concepts/decisions/project-size#mental-model) documentation page. The general idea is to have one central Storybook container, into which you are going to gather your stories from multiple libraries.
+When you are publishing your Storybook, you can follow the principles described in the [project size](/concepts/decisions/project-size) decision page. The general idea is to have one central Storybook container, into which you are going to gather your stories from multiple libraries.
 
 You can think of the central Storybook container as a grouping of similar-concept or same-scope UI parts of your workspace. In the same way you are scoping libraries, you can group your stories as well.
 
