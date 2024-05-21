@@ -7,10 +7,11 @@ const {
 } = require('nx/src/executors/run-commands/run-commands.impl');
 
 async function populateLocalRegistryStorage() {
+  let registryTeardown;
   try {
     const publishVersion = process.env.PUBLISHED_VERSION ?? 'major';
     const isVerbose = process.env.NX_VERBOSE_LOGGING === 'true';
-    const registryTeardown = await startLocalRegistry({
+    registryTeardown = await startLocalRegistry({
       localRegistryTarget: '@nx/nx-source:local-registry',
       verbose: isVerbose,
       clearStorage: true,
@@ -22,6 +23,11 @@ async function populateLocalRegistryStorage() {
     registryTeardown();
     console.log('Killed local registry process');
   } catch (err) {
+    // Clean up registry if possible after setup related errors
+    if (typeof registryTeardown === 'function') {
+      registryTeardown();
+      console.log('Killed local registry process due to an error during setup');
+    }
     console.error('Error:', err);
     process.exit(1);
   }
