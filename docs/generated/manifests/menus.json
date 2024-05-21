@@ -3580,7 +3580,7 @@
         "disableCollapsible": false
       },
       {
-        "name": "Troubleshooting",
+        "name": "Troubleshooting Nx Console Issues",
         "path": "/recipes/nx-console/console-troubleshooting",
         "id": "console-troubleshooting",
         "isExternal": false,
@@ -4461,6 +4461,14 @@
             "name": "Profiling Build Performance",
             "path": "/troubleshooting/performance-profiling",
             "id": "performance-profiling",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Troubleshooting Nx Console Issues",
+            "path": "/recipes/nx-console/console-troubleshooting",
+            "id": "console-troubleshooting",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
