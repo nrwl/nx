@@ -165,6 +165,7 @@
       - [Configure Changelog Format](/recipes/nx-release/configure-changelog-format)
     - [Other](/recipes/other)
       - [Rescope Packages from @nrwl to @nx](/recipes/other/rescope)
+      - [Troubleshooting Nx Console Issues](/recipes/nx-console/console-troubleshooting)
   - [Showcase](/showcase)
     - [Nx with your favorite tech](/showcase/example-repos)
       - [Express](/showcase/example-repos/add-express)

@@ -1279,6 +1279,12 @@
               "id": "performance-profiling",
               "tags": ["environment-variables"],
               "file": "shared/guides/performance-profiling"
+            },
+            {
+              "name": "Troubleshooting Nx Console Issues",
+              "id": "console-troubleshooting",
+              "path": "/recipes/nx-console/console-troubleshooting",
+              "file": "shared/recipes/console-troubleshooting"
             }
           ]
         },
