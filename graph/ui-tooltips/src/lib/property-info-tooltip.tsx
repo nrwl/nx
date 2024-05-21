@@ -106,13 +106,10 @@ export function PropertyInfoTooltip({ type }: PropertyInfoTooltipProps) {
       {propertyInfo.docsUrl ? (
         <div className="flex py-2">
           <p className="flex items-center pr-4">
-            <ExternalLink
-              text={
-                propertyInfo.docsLinkText ??
-                `Learn more about ${propertyInfo.heading}`
-              }
-              href={propertyInfo.docsUrl}
-            />
+            <ExternalLink href={propertyInfo.docsUrl}>
+              {propertyInfo.docsLinkText ??
+                `Learn more about ${propertyInfo.heading}`}
+            </ExternalLink>
           </p>
         </div>
       ) : null}

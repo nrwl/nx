@@ -167,10 +167,15 @@ export function getTargetInfo(
     ...packageJsonTarget?.options,
     ...projectJsonTarget?.options,
   };
+  const metadata = {
+    ...packageJsonTarget?.metadata,
+    ...projectJsonTarget?.metadata,
+  };
 
   if (projectJsonTarget?.command) {
     return {
       command: projectJsonTarget?.command,
+      metadata,
     };
   }
 
@@ -181,6 +186,7 @@ export function getTargetInfo(
         options: {
           command: targetOptions?.command,
         },
+        metadata,
       };
     } else if (targetOptions?.commands) {
       return {
@@ -188,10 +194,12 @@ export function getTargetInfo(
         options: {
           commands: targetOptions.commands,
         },
+        metadata,
       };
     }
     return {
       executor: 'nx:run-commands',
+      metadata,
     };
   }
 
@@ -201,6 +209,7 @@ export function getTargetInfo(
       options: {
         script: targetOptions?.script ?? target,
       },
+      metadata,
     };
   }
 
