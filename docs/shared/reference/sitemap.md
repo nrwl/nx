@@ -88,7 +88,7 @@
     - [Node](/recipes/node)
       - [Deploying a Node App to Fly.io](/recipes/node/node-server-fly-io)
       - [Add and Deploy Netlify Edge Functions with Node](/recipes/node/node-serverless-functions-netlify)
-      - [Deploying AWS lambda in Node.js](/recipes/node/node-aws-lambda)
+      - [Deploying AWS lambda in Node.js (deprecated)](/recipes/node/node-aws-lambda)
       - [Set Up Application Proxies](/recipes/node/application-proxies)
       - [Wait for Tasks to Finish](/recipes/node/wait-for-tasks)
     - [Storybook](/recipes/storybook)

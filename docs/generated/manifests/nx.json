@@ -1891,7 +1891,7 @@
           },
           {
             "id": "node-aws-lambda",
-            "name": "Deploying AWS lambda in Node.js",
+            "name": "Deploying AWS lambda in Node.js (deprecated)",
             "description": "",
             "mediaImage": "",
             "file": "shared/recipes/deployment/node-aws-lambda",
@@ -3577,7 +3577,7 @@
       },
       {
         "id": "node-aws-lambda",
-        "name": "Deploying AWS lambda in Node.js",
+        "name": "Deploying AWS lambda in Node.js (deprecated)",
         "description": "",
         "mediaImage": "",
         "file": "shared/recipes/deployment/node-aws-lambda",
@@ -3637,7 +3637,7 @@
   },
   "/recipes/node/node-aws-lambda": {
     "id": "node-aws-lambda",
-    "name": "Deploying AWS lambda in Node.js",
+    "name": "Deploying AWS lambda in Node.js (deprecated)",
     "description": "",
     "mediaImage": "",
     "file": "shared/recipes/deployment/node-aws-lambda",

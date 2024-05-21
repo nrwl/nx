@@ -576,7 +576,7 @@
                   "file": "shared/recipes/deployment/node-serverless-functions-netlify"
                 },
                 {
-                  "name": "Deploying AWS lambda in Node.js",
+                  "name": "Deploying AWS lambda in Node.js (deprecated)",
                   "id": "node-aws-lambda",
                   "tags": ["deployment", "node"],
                   "file": "shared/recipes/deployment/node-aws-lambda"
