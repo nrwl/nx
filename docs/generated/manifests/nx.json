@@ -4901,14 +4901,14 @@
   },
   "/recipes/nx-console/console-troubleshooting": {
     "id": "console-troubleshooting",
-    "name": "Troubleshooting",
+    "name": "Troubleshooting Nx Console Issues",
     "description": "",
     "mediaImage": "",
     "file": "shared/recipes/console-troubleshooting",
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/nx-console/console-troubleshooting",
-    "tags": ["editor-setup"]
+    "tags": []
   },
   "/recipes/nx-release": {
     "id": "nx-release",
@@ -6112,6 +6112,17 @@
         "isExternal": false,
         "path": "/troubleshooting/performance-profiling",
         "tags": ["environment-variables"]
+      },
+      {
+        "id": "console-troubleshooting",
+        "name": "Troubleshooting Nx Console Issues",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/console-troubleshooting",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/nx-console/console-troubleshooting",
+        "tags": []
       }
     ],
     "isExternal": false,

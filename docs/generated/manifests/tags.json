@@ -34,13 +34,6 @@
       "id": "console-run-command",
       "name": "Run Command",
       "path": "/recipes/nx-console/console-run-command"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/console-troubleshooting",
-      "id": "console-troubleshooting",
-      "name": "Troubleshooting",
-      "path": "/recipes/nx-console/console-troubleshooting"
     }
   ],
   "run-tasks": [
