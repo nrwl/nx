@@ -1,5 +1,5 @@
 import { ReleaseGroupWithName } from '../config/filter-release-groups';
-import { createCommitMessageValues } from './shared';
+import { createCommitMessageValues, createGitTagValues } from './shared';
 
 describe('shared', () => {
   describe('createCommitMessageValues()', () => {
@@ -130,5 +130,72 @@ describe('shared', () => {
         `);
       });
     });
+  });
+
+  describe(`${createGitTagValues.name}()`, () => {
+    it('should tag and interpolate the {version} if fixed group is bumping', () => {
+      const { releaseGroup, releaseGroupToFilteredProjects } =
+        setUpReleaseGroup();
+
+      const tags = createGitTagValues(
+        [releaseGroup],
+        releaseGroupToFilteredProjects,
+        {
+          a: {
+            currentVersion: '1.0.0',
+            dependentProjects: [],
+            newVersion: '1.1.0',
+          },
+          b: {
+            currentVersion: '1.0.0',
+            dependentProjects: [],
+            newVersion: '1.1.0',
+          },
+        }
+      );
+
+      expect(tags).toEqual(['my-group-1.1.0']);
+    });
+
+    it('should not tag if fixed group is not bumping', () => {
+      const { releaseGroup, releaseGroupToFilteredProjects } =
+        setUpReleaseGroup();
+
+      const tags = createGitTagValues(
+        [releaseGroup],
+        releaseGroupToFilteredProjects,
+        {
+          a: {
+            currentVersion: '1.0.0',
+            dependentProjects: [],
+            newVersion: null,
+          },
+          b: {
+            currentVersion: '1.0.0',
+            dependentProjects: [],
+            newVersion: null,
+          },
+        }
+      );
+
+      expect(tags).toEqual([]);
+    });
+
+    function setUpReleaseGroup() {
+      const projects = ['a', 'b'];
+      const releaseGroup: ReleaseGroupWithName = {
+        name: 'my-group',
+        projects,
+        projectsRelationship: 'fixed',
+        releaseTagPattern: 'my-group-{version}',
+        changelog: undefined,
+        version: undefined,
+      };
+      const releaseGroupToFilteredProjects = new Map().set(
+        releaseGroup,
+        new Set(projects)
+      );
+      return { releaseGroup, releaseGroupToFilteredProjects };
+    }
   });
 });
