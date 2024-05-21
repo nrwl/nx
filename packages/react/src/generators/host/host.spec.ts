@@ -340,4 +340,23 @@ describe('hostGenerator', () => {
       tree.read('foo/host-app/module-federation.config.ts', 'utf-8')
     ).toContain(`'remote1', 'remote2', 'remote3'`);
   });
+
+  it('should throw an error if invalid remotes names are provided and --dynamic is set to true', async () => {
+    const tree = createTreeWithEmptyWorkspace();
+    const remote = 'invalid-remote-name';
+
+    await expect(
+      hostGenerator(tree, {
+        name: 'myhostapp',
+        remotes: [remote],
+        dynamic: true,
+        projectNameAndRootFormat: 'as-provided',
+        e2eTestRunner: 'none',
+        linter: Linter.None,
+        style: 'css',
+        unitTestRunner: 'none',
+        typescriptConfiguration: false,
+      })
+    ).rejects.toThrowError(`Invalid remote name provided: ${remote}.`);
+  });
 });

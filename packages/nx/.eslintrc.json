@@ -100,7 +100,8 @@
               "events", // This is coming from @storybook/builder-manager since it uses the browser polyfill
               "process", // This is coming from @storybook/builder-manager since it uses the browser polyfill
               "prettier", // This is coming from @storybook/builder-manager since it uses the browser polyfill
-              "util" // This is coming from @storybook/builder-manager since it uses the browser polyfill
+              "util", // This is coming from @storybook/builder-manager since it uses the browser polyfill
+              "js-yaml" // The rule is failing with alias dependencies
             ]
           }
         ]

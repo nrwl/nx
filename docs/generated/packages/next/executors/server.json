@@ -60,6 +60,18 @@
         "type": "boolean",
         "description": "Enable HTTPS support for the Next.js development server."
       },
+      "experimentalHttpsKey": {
+        "type": "string",
+        "description": "Path to a HTTPS key file."
+      },
+      "experimentalHttpsCert": {
+        "type": "string",
+        "description": "Path to a HTTPS certificate file."
+      },
+      "experimentalHttpsCa": {
+        "type": "string",
+        "description": "Path to a HTTPS certificate authority file."
+      },
       "customServerHttps:": {
         "type": "boolean",
         "description": "Enable HTTPS support for the custom server."

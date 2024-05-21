@@ -8,7 +8,7 @@ exports[`@nx/vite/plugin with test node root project should create nodes - with 
       "targets": {
         "test": {
           "cache": true,
-          "command": "vitest run",
+          "command": "vitest",
           "inputs": [
             "default",
             "^production",
@@ -20,6 +20,7 @@ exports[`@nx/vite/plugin with test node root project should create nodes - with 
           ],
           "options": {
             "cwd": ".",
+            "watch": false,
           },
           "outputs": [
             "{projectRoot}/coverage",

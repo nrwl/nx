@@ -106,12 +106,18 @@ export function ProjectDetailsWrapper({
 
   useEffect(() => {
     const expandedTargetsParams = searchParams.get('expanded')?.split(',');
-    if (expandedTargetsParams && expandedTargetsParams.length > 0) {
+    if (
+      expandedTargetsParams &&
+      expandedTargetsParams.length > 0 &&
+      setExpandedTargets
+    ) {
       setExpandedTargets(expandedTargetsParams);
     }
 
     return () => {
-      collapseAllTargets();
+      if (collapseAllTargets) {
+        collapseAllTargets();
+      }
       setSearchParams(
         (currentSearchParams) => {
           currentSearchParams.delete('expanded');

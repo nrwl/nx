@@ -20,7 +20,7 @@ if (swcJestConfig.swcrc === undefined) {
 
 <% if(js) {%>module.exports =<% } else { %>export default<% } %> {
   displayName: '<%= project %>',
-  preset: '<%= offsetFromRoot %>jest.preset.js',
+  preset: '<%= offsetFromRoot %><%= jestPreset %>',
   transform: {
     '^.+\\.[tj]s$': ['@swc/jest', swcJestConfig],
   },

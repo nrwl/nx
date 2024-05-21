@@ -12,8 +12,8 @@ import { PropertyInfoTooltip, Tooltip } from '@nx/graph/ui-tooltips';
 import { TooltipTriggerText } from '../target-configuration-details/tooltip-trigger-text';
 import { twMerge } from 'tailwind-merge';
 import { Pill } from '../pill';
-import { TargetConfigurationDetailsList } from '../target-configuration-details-list/target-configuration-details-list';
 import { TargetTechnologies } from '../target-technologies/target-technologies';
+import { TargetConfigurationGroupList } from '../target-configuration-details-group-list/target-configuration-details-group-list';
 
 export interface ProjectDetailsProps {
   project: ProjectGraphProjectNode;
@@ -83,6 +83,7 @@ export const ProjectDetails = ({
             <TargetTechnologies
               technologies={technologies}
               showTooltip={true}
+              className="h-6 w-6"
             />
           </div>
           <span>
@@ -144,7 +145,7 @@ export const ProjectDetails = ({
           </Tooltip>
         </h2>
 
-        <TargetConfigurationDetailsList
+        <TargetConfigurationGroupList
           className="w-full"
           project={project}
           sourceMap={sourceMap}

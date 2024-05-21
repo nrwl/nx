@@ -18,7 +18,8 @@
     "cypress-project": {
       "factory": "./src/generators/cypress-project/cypress-project",
       "schema": "./src/generators/cypress-project/schema.json",
-      "description": "Add cypress e2e app to test a UI library that is set up for Storybook.",
+      "description": "Add cypress E2E app to test a ui library that is set up for Storybook.",
+      "x-deprecated": "Deprecated: Use 'interactionTests' instead when running '@nx/storybook:configuration'. This generator will be removed in v21.",
       "hidden": false
     },
     "migrate-7": {

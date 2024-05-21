@@ -67,4 +67,4 @@ pnpm rm --global nx @nrwl/cli @nrwl/tao
 {% /tab %}
 {% /tabs %}
 
-Finally, to complete your global installation update, simply reinstall it as described [above](#installing-nx-globally).
+Finally, to complete your global installation update, simply reinstall it as described [above](#update-your-global-nx-installation).

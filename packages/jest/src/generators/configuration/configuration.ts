@@ -17,7 +17,7 @@ import {
 } from '@nx/devkit';
 import { initGenerator as jsInitGenerator } from '@nx/js';
 import { JestPluginOptions } from '../../plugins/plugin';
-import { isPresetCjs } from '../../utils/config/is-preset-cjs';
+import { getPresetExt } from '../../utils/config/config-file';
 
 const schemaDefaults = {
   setupFile: 'none',
@@ -90,7 +90,7 @@ export async function configurationGeneratorInternal(
     tasks.push(ensureDependencies(tree, options));
   }
 
-  const presetExt = isPresetCjs(tree) ? 'cjs' : 'js';
+  const presetExt = getPresetExt(tree);
 
   await createJestConfig(tree, options, presetExt);
   checkForTestTarget(tree, options);

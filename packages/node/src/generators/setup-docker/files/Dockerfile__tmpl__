@@ -14,7 +14,7 @@ WORKDIR /app
 RUN addgroup --system <%= project %> && \
           adduser --system -G <%= project %> <%= project %>
 
-COPY <%= buildLocation %> <%= project %>
+COPY <%= buildLocation %> <%= project %>/
 RUN chown -R <%= project %>:<%= project %> .
 
 # You can remove this install step if you build with `--bundle` option.

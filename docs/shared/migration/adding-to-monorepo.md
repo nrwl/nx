@@ -136,7 +136,10 @@ nx show project my-workspace --web
             }
           ],
           "executor": "nx:run-commands",
-          "configurations": {}
+          "configurations": {},
+          "metadata": {
+            "technologies": ["eslint"]
+          }
         },
         "next:build": {
           "options": {
@@ -154,7 +157,10 @@ nx show project my-workspace --web
           ],
           "outputs": ["{projectRoot}/.next", "{projectRoot}/.next/!(cache)"],
           "executor": "nx:run-commands",
-          "configurations": {}
+          "configurations": {},
+          "metadata": {
+            "technologies": ["next"]
+          }
         },
         "dev": {
           "options": {
@@ -162,7 +168,10 @@ nx show project my-workspace --web
             "command": "next dev"
           },
           "executor": "nx:run-commands",
-          "configurations": {}
+          "configurations": {},
+          "metadata": {
+            "technologies": ["next"]
+          }
         },
         "start": {
           "options": {
@@ -171,7 +180,10 @@ nx show project my-workspace --web
           },
           "dependsOn": ["build"],
           "executor": "nx:run-commands",
-          "configurations": {}
+          "configurations": {},
+          "metadata": {
+            "technologies": ["next"]
+          }
         }
       },
       "sourceRoot": ".",
@@ -309,7 +321,7 @@ documentation" url="/concepts/task-pipeline-configuration" /%}
 url="/reference/nxignore" /%}
 
 {% card title="Nx and Turbo" description="Read about how Nx compares to Turborepo" url="
-/concepts/more-concepts/turbo-and-nx" /%}
+/concepts/turbo-and-nx" /%}
 
 {% card title="Integrated Repos vs Package-Based Repos" description="Learn about two styles of monorepos." url="
 /concepts/integrated-vs-package-based" /%}

@@ -96,30 +96,25 @@ function applyNxIndependentConfig(
     ...config.output,
     libraryTarget:
       (config as Configuration).output?.libraryTarget ??
-      options.target === 'node'
-        ? 'commonjs'
-        : undefined,
+      (options.target === 'node' ? 'commonjs' : undefined),
     path:
       config.output?.path ??
       (options.outputPath
         ? path.join(options.root, options.outputPath)
         : undefined),
     filename:
-      config.output?.filename ?? options.outputHashing
-        ? `[name]${hashFormat.script}.js`
-        : '[name].js',
+      config.output?.filename ??
+      (options.outputHashing ? `[name]${hashFormat.script}.js` : '[name].js'),
     chunkFilename:
-      config.output?.chunkFilename ?? options.outputHashing
-        ? `[name]${hashFormat.chunk}.js`
-        : '[name].js',
+      config.output?.chunkFilename ??
+      (options.outputHashing ? `[name]${hashFormat.chunk}.js` : '[name].js'),
     hashFunction: config.output?.hashFunction ?? 'xxhash64',
     // Disabled for performance
     pathinfo: config.output?.pathinfo ?? false,
     // Use CJS for Node since it has the widest support.
     scriptType:
-      config.output?.scriptType ?? options.target === 'node'
-        ? undefined
-        : 'module',
+      config.output?.scriptType ??
+      (options.target === 'node' ? undefined : 'module'),
   };
 
   config.watch = options.watch;
@@ -202,6 +197,20 @@ function applyNxIndependentConfig(
     moduleTrace: !!options.verbose,
     usedExports: !!options.verbose,
   };
+
+  /**
+   * Initialize properties that get set when webpack is used during task execution.
+   * These properties may be used by consumers who expect them to not be undefined.
+   *
+   * When @nx/webpack/plugin resolves the config, it is not during a task, and therefore
+   * these values are not set, which can lead to errors being thrown when reading
+   * the webpack options from the resolved file.
+   */
+  config.entry ??= {};
+  config.resolve ??= {};
+  config.module ??= {};
+  config.plugins ??= [];
+  config.externals ??= [];
 }
 
 function applyNxDependentConfig(

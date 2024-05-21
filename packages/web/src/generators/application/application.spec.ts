@@ -425,7 +425,7 @@ describe('app', () => {
     // Updated this test to match the way we do this for React
     // When user chooses Vite as bundler and they choose to generate unit tests
     // then use vitest
-    it('--bundler=vite --unitTestRunner=jest - still generate with vitest', async () => {
+    it('--bundler=vite --unitTestRunner=jest respects unitTestRunner given', async () => {
       await applicationGenerator(tree, {
         name: 'my-vite-app',
 
@@ -435,10 +435,7 @@ describe('app', () => {
         addPlugin: true,
       });
       expect(tree.exists('my-vite-app/vite.config.ts')).toBeTruthy();
-      expect(tree.read('my-vite-app/vite.config.ts', 'utf-8')).toContain(
-        'test: {'
-      );
-      expect(tree.exists('my-vite-app/jest.config.ts')).toBeFalsy();
+      expect(tree.exists('my-vite-app/jest.config.ts')).toBeTruthy();
     });
 
     it('--bundler=vite --unitTestRunner=none', async () => {
@@ -548,6 +545,18 @@ describe('app', () => {
 
       expect(tree.exists('my-app/.babelrc')).toBeFalsy();
       expect(tree.exists('my-app/.swcrc')).toBeTruthy();
+    });
+
+    it('should be strict by default', async () => {
+      await applicationGenerator(tree, {
+        name: 'my-app',
+        compiler: 'swc',
+        projectNameAndRootFormat: 'as-provided',
+        addPlugin: true,
+      } as Schema);
+
+      const tsconfig = readJson(tree, 'my-app/tsconfig.json');
+      expect(tsconfig.compilerOptions.strict).toBeTruthy();
     });
   });
 

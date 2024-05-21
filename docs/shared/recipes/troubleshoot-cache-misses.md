@@ -17,7 +17,7 @@ Problem: A task is being executed when you expect it to be replayed from the cac
    - To check your input glob patterns file-by-file, you can get a list of all the files associated with each project by running `nx graph --file=output.json` or by clicking on a task in the task graph in the `nx graph` visualization.
 
 1. Use the Nx Cloud troubleshooting tools
-   - Make sure your repo is [connected to Nx Cloud](/features/cache-task-results#remote-computation-caching)
+   - Make sure your repo is [connected to Nx Cloud](/ci/features/remote-cache)
    - Click on the run details link that is printed in the terminal after you run a task
    - Expand a task that had a cache miss
    - Click "Check For Near Misses" to see other similar tasks

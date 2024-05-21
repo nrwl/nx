@@ -2,7 +2,7 @@
   "version": 2,
   "outputCapture": "direct-nodejs",
   "title": "esbuild (experimental)",
-  "description": "Bundle a package for different platforms. Note: declaration (*.d.ts) file are not currently generated.",
+  "description": "Bundle a package for different platforms.",
   "cli": "nx",
   "type": "object",
   "properties": {
@@ -53,6 +53,14 @@
         "enum": ["esm", "cjs"]
       },
       "default": ["esm"]
+    },
+    "declaration": {
+      "type": "boolean",
+      "description": "Generate declaration (*.d.ts) files for every TypeScript or JavaScript file inside your project. Should be used for libraries that are published to an npm repository."
+    },
+    "declarationRootDir": {
+      "type": "string",
+      "description": "Sets the rootDir for the declaration (*.d.ts) files."
     },
     "watch": {
       "type": "boolean",

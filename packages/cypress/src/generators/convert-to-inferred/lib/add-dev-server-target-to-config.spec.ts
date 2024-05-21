@@ -74,6 +74,44 @@ export default defineConfig({
       `);
     });
 
+    it('should add options object if it does not exist', () => {
+      // ARRANGE
+      tree.write(
+        configFilePath,
+        `import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
+import { defineConfig } from 'cypress';
+
+export default defineConfig({
+  e2e: {
+    ...nxE2EPreset(__filename),
+    baseUrl: "http://localhost:4200",
+  },
+});`
+      );
+      // ACT
+      addDevServerTargetToConfig(
+        tree,
+        configFilePath,
+        {
+          default: 'npx nx run myorg:serve',
+        },
+        'npx nx run myorg:serve-static'
+      );
+
+      // ASSERT
+      expect(tree.read(configFilePath, 'utf-8')).toMatchInlineSnapshot(`
+        "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
+        import { defineConfig } from 'cypress';
+
+        export default defineConfig({
+          e2e: {
+            ...nxE2EPreset(__filename,{ciWebServerCommand: "npx nx run myorg:serve-static", webServerCommands: {"default":"npx nx run myorg:serve"},}),
+            baseUrl: "http://localhost:4200",
+          },
+        });"
+      `);
+    });
+
     it('should update the webServerCommands if it does not match', () => {
       // ARRANGE
       tree.write(
@@ -115,7 +153,7 @@ export default defineConfig({
         tree,
         configFilePath,
         { default: 'npx nx run myorg:serve' },
-        'myorg:static-serve'
+        'npx nx run myorg:static-serve'
       );
 
       // ASSERT
@@ -151,7 +189,7 @@ export default defineConfig({
         tree,
         configFilePath,
         { default: 'npx nx run myorg:serve' },
-        'myorg:static-serve'
+        'npx nx run myorg:static-serve'
       );
 
       // ASSERT
@@ -191,7 +229,7 @@ export default defineConfig({
           production: 'npx nx run myorg:serve:production',
           ci: 'npx nx run myorg-static-serve',
         },
-        'myorg:static-serve'
+        'npx nx run myorg:static-serve'
       );
 
       // ASSERT

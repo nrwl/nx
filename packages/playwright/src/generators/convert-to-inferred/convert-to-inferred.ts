@@ -28,7 +28,7 @@ export async function convertToInferred(tree: Tree, options: Schema) {
       options.project
     );
 
-  if (migratedProjects === 0) {
+  if (migratedProjects.size === 0) {
     throw new Error('Could not find any targets to migrate.');
   }
 

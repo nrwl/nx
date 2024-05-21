@@ -1,5 +1,6 @@
 import { minimatch } from 'minimatch';
-import * as path from 'node:path/posix';
+import * as pathPosix from 'node:path/posix';
+import * as path from 'node:path';
 import * as fse from 'fs-extra';
 import ignore from 'ignore';
 import * as fg from 'fast-glob';
@@ -63,8 +64,8 @@ export class CopyAssetsHandler {
 
     // TODO(jack): Should handle nested .gitignore files
     this.ignore = ignore();
-    const gitignore = path.join(opts.rootDir, '.gitignore');
-    const nxignore = path.join(opts.rootDir, '.nxignore');
+    const gitignore = pathPosix.join(opts.rootDir, '.gitignore');
+    const nxignore = pathPosix.join(opts.rootDir, '.nxignore');
     if (fse.existsSync(gitignore))
       this.ignore.add(fse.readFileSync(gitignore).toString());
     if (fse.existsSync(nxignore))
@@ -83,13 +84,14 @@ export class CopyAssetsHandler {
         output = path.relative(opts.rootDir, opts.outputDir);
       } else {
         isGlob = true;
-        pattern = path.join(f.input, f.glob);
+        pattern = pathPosix.join(f.input, f.glob);
         input = f.input;
-        output = path.join(
+        output = pathPosix.join(
           path.relative(opts.rootDir, opts.outputDir),
           f.output
         );
-        if (f.ignore) ignore = f.ignore.map((ig) => path.join(f.input, ig));
+        if (f.ignore)
+          ignore = f.ignore.map((ig) => pathPosix.join(f.input, ig));
       }
       return {
         isGlob,

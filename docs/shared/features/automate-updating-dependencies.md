@@ -46,6 +46,11 @@ This fetches the specified version of the `nx` package, analyzes the dependencie
 - The `package.json` being updated
 - A `migrations.json` being generated if there are pending migrations.
 
+{% callout type="note" title="Dependency Updates" %}
+The migrations will update the `@nx/*` packages to the desired version. Subsequently, these packages _may_ also update other dependencies in your `package.json` to new versions if support has been added for them.
+For example, migrating `@nx/react` to the latest version may also update the `react` version if support has been added for the latest version.
+{% /callout %}
+
 At this point, no packages have been installed, and no other files have been touched.
 
 Now, you can inspect `package.json` to see if the changes make sense. Sometimes the migration can update a package to a version that is either not allowed or conflicts with another package. Feel free to manually apply the desired adjustments.

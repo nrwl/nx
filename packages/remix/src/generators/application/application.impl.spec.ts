@@ -1,13 +1,20 @@
 import 'nx/src/internal-testing-utils/mock-project-graph';
 
-import type { Tree } from '@nx/devkit';
-import { joinPathFragments, readJson } from '@nx/devkit';
+import { joinPathFragments, readJson, type Tree } from '@nx/devkit';
+import * as devkit from '@nx/devkit';
 import { ProjectNameAndRootFormat } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import applicationGenerator from './application.impl';
 import { join } from 'path';
+import { PackageManagerCommands } from 'nx/src/utils/package-manager';
 
 describe('Remix Application', () => {
+  beforeEach(() => {
+    jest
+      .spyOn(devkit, 'getPackageManagerCommand')
+      .mockReturnValue({ exec: 'npx' } as PackageManagerCommands);
+  });
+
   describe('Standalone Project Repo', () => {
     it('should create the application correctly', async () => {
       // ARRANGE

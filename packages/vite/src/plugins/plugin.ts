@@ -127,7 +127,13 @@ async function buildViteTargets(
   const targets: Record<string, TargetConfiguration> = {};
 
   // If file is not vitest.config and buildable, create targets for build, serve, preview and serve-static
-  if (!configFilePath.includes('vitest.config') && isBuildable) {
+  const hasRemixPlugin =
+    viteConfig.plugins && viteConfig.plugins.some((p) => p.name === 'remix');
+  if (
+    !configFilePath.includes('vitest.config') &&
+    !hasRemixPlugin &&
+    isBuildable
+  ) {
     targets[options.buildTargetName] = await buildTarget(
       options.buildTargetName,
       namedInputs,
@@ -209,8 +215,8 @@ async function testTarget(
   projectRoot: string
 ) {
   return {
-    command: `vitest run`,
-    options: { cwd: joinPathFragments(projectRoot) },
+    command: `vitest`,
+    options: { cwd: joinPathFragments(projectRoot), watch: false },
     cache: true,
     inputs: [
       ...('production' in namedInputs

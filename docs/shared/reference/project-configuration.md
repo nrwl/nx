@@ -26,6 +26,9 @@ nx show project myproject --web
           "executor": "nx:run-commands",
           "options": {
             "command": "vite dev"
+          },
+          "metadata": {
+            "technologies": ["vite"]
           }
         },
         "build": {
@@ -34,6 +37,9 @@ nx show project myproject --web
           "outputs": ["{projectRoot}/dist"],
           "options": {
             "command": "vite build"
+          },
+          "metadata": {
+            "technologies": ["vite"]
           }
         }
       }
