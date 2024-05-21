@@ -2,25 +2,48 @@ import { NxJsonConfiguration, TargetDefaults } from '../../config/nx-json';
 import { ProjectGraphExternalNode } from '../../config/project-graph';
 import {
   ProjectConfiguration,
+  ProjectMetadata,
   TargetConfiguration,
+  TargetMetadata,
 } from '../../config/workspace-json-project-json';
 import { NX_PREFIX } from '../../utils/logger';
-import { CreateNodesResult, LoadedNxPlugin } from '../../utils/nx-plugin';
 import { readJsonFile } from '../../utils/fileutils';
 import { workspaceRoot } from '../../utils/workspace-root';
-import { ONLY_MODIFIES_EXISTING_TARGET } from '../../plugins/target-defaults/target-defaults-plugin';
+import {
+  ONLY_MODIFIES_EXISTING_TARGET,
+  OVERRIDE_SOURCE_FILE,
+} from '../../plugins/target-defaults/symbols';
 
 import { minimatch } from 'minimatch';
 import { join } from 'path';
+import { performance } from 'perf_hooks';
+import {
+  CreateNodesResultWithContext,
+  LoadedNxPlugin,
+} from '../plugins/internal-api';
+import {
+  CreateNodesError,
+  MergeNodesError,
+  ProjectConfigurationsError,
+  isAggregateCreateNodesError,
+  ProjectsWithNoNameError,
+  MultipleProjectsWithSameNameError,
+  isMultipleProjectsWithSameNameError,
+  isProjectsWithNoNameError,
+  ProjectWithNoNameError,
+  ProjectWithExistingNameError,
+  isProjectWithExistingNameError,
+  isProjectWithNoNameError,
+} from '../error-types';
 
-export type SourceInformation = [file: string, plugin: string];
+export type SourceInformation = [file: string | null, plugin: string];
 export type ConfigurationSourceMaps = Record<
   string,
   Record<string, SourceInformation>
 >;
 
 export function mergeProjectConfigurationIntoRootMap(
-  projectRootMap: Map<string, ProjectConfiguration>,
+  projectRootMap: Record<string, ProjectConfiguration>,
   project: ProjectConfiguration & {
     targets?: Record<
       string,
@@ -31,20 +54,20 @@ export function mergeProjectConfigurationIntoRootMap(
   sourceInformation?: SourceInformation,
   // This function is used when reading project configuration
   // in generators, where we don't want to do this.
-  skipCommandNormalization?: boolean
+  skipTargetNormalization?: boolean
 ): void {
   if (configurationSourceMaps && !configurationSourceMaps[project.root]) {
     configurationSourceMaps[project.root] = {};
   }
   const sourceMap = configurationSourceMaps?.[project.root];
 
-  let matchingProject = projectRootMap.get(project.root);
+  let matchingProject = projectRootMap[project.root];
 
   if (!matchingProject) {
-    projectRootMap.set(project.root, {
+    projectRootMap[project.root] = {
       root: project.root,
-    });
-    matchingProject = projectRootMap.get(project.root);
+    };
+    matchingProject = projectRootMap[project.root];
     if (sourceMap) {
       sourceMap[`root`] = sourceInformation;
     }
@@ -57,12 +80,23 @@ export function mergeProjectConfigurationIntoRootMap(
   // a project.json in which case it was already updated above.
   const updatedProjectConfiguration = {
     ...matchingProject,
-    ...project,
   };
 
-  if (sourceMap) {
-    for (const property in project) {
-      sourceMap[`${property}`] = sourceInformation;
+  for (const k in project) {
+    if (
+      ![
+        'tags',
+        'implicitDependencies',
+        'generators',
+        'targets',
+        'metadata',
+        'namedInputs',
+      ].includes(k)
+    ) {
+      updatedProjectConfiguration[k] = project[k];
+      if (sourceMap) {
+        sourceMap[`${k}`] = sourceInformation;
+      }
     }
   }
 
@@ -73,6 +107,7 @@ export function mergeProjectConfigurationIntoRootMap(
     );
 
     if (sourceMap) {
+      sourceMap['tags'] ??= sourceInformation;
       project.tags.forEach((tag) => {
         sourceMap[`tags.${tag}`] = sourceInformation;
       });
@@ -85,6 +120,7 @@ export function mergeProjectConfigurationIntoRootMap(
     ).concat(project.implicitDependencies);
 
     if (sourceMap) {
+      sourceMap['implicitDependencies'] ??= sourceInformation;
       project.implicitDependencies.forEach((implicitDependency) => {
         sourceMap[`implicitDependencies.${implicitDependency}`] =
           sourceInformation;
@@ -97,6 +133,7 @@ export function mergeProjectConfigurationIntoRootMap(
     updatedProjectConfiguration.generators = { ...project.generators };
 
     if (sourceMap) {
+      sourceMap['generators'] ??= sourceInformation;
       for (const generator in project.generators) {
         sourceMap[`generators.${generator}`] = sourceInformation;
         for (const property in project.generators[generator]) {
@@ -124,16 +161,30 @@ export function mergeProjectConfigurationIntoRootMap(
     };
 
     if (sourceMap) {
+      sourceMap['namedInputs'] ??= sourceInformation;
       for (const namedInput in project.namedInputs) {
         sourceMap[`namedInputs.${namedInput}`] = sourceInformation;
       }
     }
   }
 
+  if (project.metadata) {
+    updatedProjectConfiguration.metadata = mergeMetadata(
+      sourceMap,
+      sourceInformation,
+      'metadata',
+      project.metadata,
+      matchingProject.metadata
+    );
+  }
+
   if (project.targets) {
     // We merge the targets with special handling, so clear this back to the
     // targets as defined originally before merging.
     updatedProjectConfiguration.targets = matchingProject?.targets ?? {};
+    if (sourceMap) {
+      sourceMap['targets'] ??= sourceInformation;
+    }
 
     // For each target defined in the new config
     for (const targetName in project.targets) {
@@ -155,135 +206,212 @@ export function mergeProjectConfigurationIntoRootMap(
         continue;
       }
 
-      // We don't want the symbol to live on past the merge process
-      if (target?.[ONLY_MODIFIES_EXISTING_TARGET])
-        delete target?.[ONLY_MODIFIES_EXISTING_TARGET];
+      const normalizedTarget = skipTargetNormalization
+        ? target
+        : resolveCommandSyntacticSugar(target, project.root);
 
-      updatedProjectConfiguration.targets[targetName] =
-        mergeTargetConfigurations(
-          skipCommandNormalization
-            ? target
-            : resolveCommandSyntacticSugar(target, project.root),
-          matchingProject.targets?.[targetName],
-          sourceMap,
-          sourceInformation,
-          `targets.${targetName}`
-        );
+      const mergedTarget = mergeTargetConfigurations(
+        normalizedTarget,
+        matchingProject.targets?.[targetName],
+        sourceMap,
+        sourceInformation,
+        `targets.${targetName}`
+      );
+
+      // We don't want the symbol to live on past the merge process
+      if (mergedTarget?.[ONLY_MODIFIES_EXISTING_TARGET])
+        delete mergedTarget?.[ONLY_MODIFIES_EXISTING_TARGET];
+
+      updatedProjectConfiguration.targets[targetName] = mergedTarget;
     }
   }
 
-  projectRootMap.set(
-    updatedProjectConfiguration.root,
-    updatedProjectConfiguration
-  );
+  projectRootMap[updatedProjectConfiguration.root] =
+    updatedProjectConfiguration;
+}
+
+export function mergeMetadata<T = ProjectMetadata | TargetMetadata>(
+  sourceMap: Record<string, [file: string, plugin: string]>,
+  sourceInformation: [file: string, plugin: string],
+  baseSourceMapPath: string,
+  metadata: T,
+  matchingMetadata?: T
+): T {
+  const result: T = {
+    ...(matchingMetadata ?? ({} as T)),
+  };
+  for (const [metadataKey, value] of Object.entries(metadata)) {
+    const existingValue = matchingMetadata?.[metadataKey];
+
+    if (Array.isArray(value) && Array.isArray(existingValue)) {
+      for (const item of [...value]) {
+        const newLength = result[metadataKey].push(item);
+        if (sourceMap) {
+          sourceMap[`${baseSourceMapPath}.${metadataKey}.${newLength - 1}`] =
+            sourceInformation;
+        }
+      }
+    } else if (Array.isArray(value) && existingValue === undefined) {
+      result[metadataKey] ??= value;
+      if (sourceMap) {
+        sourceMap[`${baseSourceMapPath}.${metadataKey}`] = sourceInformation;
+      }
+      for (let i = 0; i < value.length; i++) {
+        if (sourceMap) {
+          sourceMap[`${baseSourceMapPath}.${metadataKey}.${i}`] =
+            sourceInformation;
+        }
+      }
+    } else if (typeof value === 'object' && typeof existingValue === 'object') {
+      for (const key in value) {
+        const existingValue = matchingMetadata?.[metadataKey]?.[key];
+
+        if (Array.isArray(value[key]) && Array.isArray(existingValue)) {
+          for (const item of value[key]) {
+            const i = result[metadataKey][key].push(item);
+            if (sourceMap) {
+              sourceMap[`${baseSourceMapPath}.${metadataKey}.${key}.${i - 1}`] =
+                sourceInformation;
+            }
+          }
+        } else {
+          result[metadataKey] = value;
+          if (sourceMap) {
+            sourceMap[`${baseSourceMapPath}.${metadataKey}`] =
+              sourceInformation;
+          }
+        }
+      }
+    } else {
+      result[metadataKey] = value;
+      if (sourceMap) {
+        sourceMap[`${baseSourceMapPath}.${metadataKey}`] = sourceInformation;
+
+        if (typeof value === 'object') {
+          for (const k in value) {
+            sourceMap[`${baseSourceMapPath}.${metadataKey}.${k}`] =
+              sourceInformation;
+            if (Array.isArray(value[k])) {
+              for (let i = 0; i < value[k].length; i++) {
+                sourceMap[`${baseSourceMapPath}.${metadataKey}.${k}.${i}`] =
+                  sourceInformation;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  return result;
 }
 
 export type ConfigurationResult = {
-  projects: Record<string, ProjectConfiguration>;
+  /**
+   * A map of project configurations, keyed by project root.
+   */
+  projects: {
+    [projectRoot: string]: ProjectConfiguration;
+  };
+
+  /**
+   * Node Name -> Node info
+   */
   externalNodes: Record<string, ProjectGraphExternalNode>;
-  rootMap: Record<string, string>;
+
+  /**
+   * Project Root -> Project Name
+   */
+  projectRootMap: Record<string, string>;
+
   sourceMaps: ConfigurationSourceMaps;
+
+  /**
+   * The list of files that were used to create project configurations
+   */
+  matchingProjectFiles: string[];
 };
 
 /**
  * Transforms a list of project paths into a map of project configurations.
  *
- * @param nxJson The NxJson configuration
- * @param projectFiles A list of files identified as projects
- * @param plugins The plugins that should be used to infer project configuration
  * @param root The workspace root
+ * @param nxJson The NxJson configuration
+ * @param workspaceFiles A list of non-ignored workspace files
+ * @param plugins The plugins that should be used to infer project configuration
  */
-export function buildProjectsConfigurationsFromProjectPathsAndPlugins(
+export async function createProjectConfigurations(
+  root: string = workspaceRoot,
   nxJson: NxJsonConfiguration,
   projectFiles: string[], // making this parameter allows devkit to pick up newly created projects
-  plugins: LoadedNxPlugin[],
-  root: string = workspaceRoot
+  plugins: LoadedNxPlugin[]
 ): Promise<ConfigurationResult> {
-  type CreateNodesResultWithContext = CreateNodesResult & {
-    file: string;
-    pluginName: string;
-  };
+  performance.mark('build-project-configs:start');
 
   const results: Array<Promise<Array<CreateNodesResultWithContext>>> = [];
+  const errors: Array<
+    | CreateNodesError
+    | MergeNodesError
+    | ProjectsWithNoNameError
+    | MultipleProjectsWithSameNameError
+  > = [];
 
   // We iterate over plugins first - this ensures that plugins specified first take precedence.
-  for (const { plugin, options } of plugins) {
-    const [pattern, createNodes] = plugin.createNodes ?? [];
-    const pluginResults: Array<
-      CreateNodesResultWithContext | Promise<CreateNodesResultWithContext>
-    > = [];
+  for (const {
+    name: pluginName,
+    createNodes: createNodesTuple,
+    include,
+    exclude,
+  } of plugins) {
+    const [pattern, createNodes] = createNodesTuple ?? [];
 
-    performance.mark(`${plugin.name}:createNodes - start`);
     if (!pattern) {
       continue;
     }
-    for (const file of projectFiles) {
-      performance.mark(`${plugin.name}:createNodes:${file} - start`);
-      if (minimatch(file, pattern, { dot: true })) {
-        try {
-          let r = createNodes(file, options, {
-            nxJsonConfiguration: nxJson,
-            workspaceRoot: root,
-          });
 
-          if (r instanceof Promise) {
-            pluginResults.push(
-              r
-                .catch((e) => {
-                  performance.mark(`${plugin.name}:createNodes:${file} - end`);
-                  throw new CreateNodesError(
-                    `Unable to create nodes for ${file} using plugin ${plugin.name}.`,
-                    e
-                  );
-                })
-                .then((r) => {
-                  performance.mark(`${plugin.name}:createNodes:${file} - end`);
-                  performance.measure(
-                    `${plugin.name}:createNodes:${file}`,
-                    `${plugin.name}:createNodes:${file} - start`,
-                    `${plugin.name}:createNodes:${file} - end`
-                  );
-                  return { ...r, file, pluginName: plugin.name };
-                })
-            );
-          } else {
-            performance.mark(`${plugin.name}:createNodes:${file} - end`);
-            performance.measure(
-              `${plugin.name}:createNodes:${file}`,
-              `${plugin.name}:createNodes:${file} - start`,
-              `${plugin.name}:createNodes:${file} - end`
-            );
-            pluginResults.push({
-              ...r,
-              file,
-              pluginName: plugin.name,
-            });
-          }
-        } catch (e) {
-          throw new CreateNodesError(
-            `Unable to create nodes for ${file} using plugin ${plugin.name}.`,
-            e
+    const matchingConfigFiles: string[] = [];
+
+    for (const file of projectFiles) {
+      if (minimatch(file, pattern, { dot: true })) {
+        if (include) {
+          const included = include.some((includedPattern) =>
+            minimatch(file, includedPattern, { dot: true })
           );
+          if (!included) {
+            continue;
+          }
         }
+
+        if (exclude) {
+          const excluded = exclude.some((excludedPattern) =>
+            minimatch(file, excludedPattern, { dot: true })
+          );
+          if (excluded) {
+            continue;
+          }
+        }
+
+        matchingConfigFiles.push(file);
       }
     }
-    // If there are no promises (counter undefined) or all promises have resolved (counter === 0)
-    results.push(
-      Promise.all(pluginResults).then((results) => {
-        performance.mark(`${plugin.name}:createNodes - end`);
-        performance.measure(
-          `${plugin.name}:createNodes`,
-          `${plugin.name}:createNodes - start`,
-          `${plugin.name}:createNodes - end`
-        );
-        return results;
-      })
-    );
+    let r = createNodes(matchingConfigFiles, {
+      nxJsonConfiguration: nxJson,
+      workspaceRoot: root,
+      configFiles: matchingConfigFiles,
+    }).catch((e) => {
+      if (isAggregateCreateNodesError(e)) {
+        errors.push(...e.errors);
+        return e.partialResults;
+      } else {
+        throw e;
+      }
+    });
+
+    results.push(r);
   }
 
   return Promise.all(results).then((results) => {
     performance.mark('createNodes:merge - start');
-    const projectRootMap: Map<string, ProjectConfiguration> = new Map();
+    const projectRootMap: Record<string, ProjectConfiguration> = {};
     const externalNodes: Record<string, ProjectGraphExternalNode> = {};
     const configurationSourceMaps: Record<
       string,
@@ -297,6 +425,13 @@ export function buildProjectsConfigurationsFromProjectPathsAndPlugins(
         file,
         pluginName,
       } = result;
+
+      const sourceInfo: SourceInformation = [file, pluginName];
+
+      if (result[OVERRIDE_SOURCE_FILE]) {
+        sourceInfo[0] = result[OVERRIDE_SOURCE_FILE];
+      }
+
       for (const node in projectNodes) {
         const project = {
           root: node,
@@ -307,19 +442,34 @@ export function buildProjectsConfigurationsFromProjectPathsAndPlugins(
             projectRootMap,
             project,
             configurationSourceMaps,
-            [file, pluginName]
+            sourceInfo
           );
-        } catch (e) {
-          throw new CreateNodesError(
-            `Unable to merge project information for "${project.root}" from ${result.file} using plugin ${result.pluginName}.`,
-            e
+        } catch (error) {
+          errors.push(
+            new MergeNodesError({
+              file,
+              pluginName,
+              error,
+            })
           );
         }
       }
       Object.assign(externalNodes, pluginExternalNodes);
     }
 
-    const projects = readProjectConfigurationsFromRootMap(projectRootMap);
+    try {
+      validateAndNormalizeProjectRootMap(projectRootMap);
+    } catch (e) {
+      if (
+        isProjectsWithNoNameError(e) ||
+        isMultipleProjectsWithSameNameError(e)
+      ) {
+        errors.push(e);
+      } else {
+        throw e;
+      }
+    }
+
     const rootMap = createRootMap(projectRootMap);
 
     performance.mark('createNodes:merge - end');
@@ -329,73 +479,154 @@ export function buildProjectsConfigurationsFromProjectPathsAndPlugins(
       'createNodes:merge - end'
     );
 
-    return {
-      projects,
-      externalNodes,
-      rootMap,
-      sourceMaps: configurationSourceMaps,
-    };
+    performance.mark('build-project-configs:end');
+    performance.measure(
+      'build-project-configs',
+      'build-project-configs:start',
+      'build-project-configs:end'
+    );
+
+    if (errors.length === 0) {
+      return {
+        projects: projectRootMap,
+        externalNodes,
+        projectRootMap: rootMap,
+        sourceMaps: configurationSourceMaps,
+        matchingProjectFiles: projectFiles,
+      };
+    } else {
+      throw new ProjectConfigurationsError(errors, {
+        projects: projectRootMap,
+        externalNodes,
+        projectRootMap: rootMap,
+        sourceMaps: configurationSourceMaps,
+        matchingProjectFiles: projectFiles,
+      });
+    }
   });
 }
 
 export function readProjectConfigurationsFromRootMap(
-  projectRootMap: Map<string, ProjectConfiguration>
+  projectRootMap: Record<string, ProjectConfiguration>
 ) {
   const projects: Record<string, ProjectConfiguration> = {};
   // If there are projects that have the same name, that is an error.
   // This object tracks name -> (all roots of projects with that name)
   // to provide better error messaging.
-  const errors: Map<string, string[]> = new Map();
+  const conflicts = new Map<string, string[]>();
+  const projectRootsWithNoName: string[] = [];
 
-  for (const [root, configuration] of projectRootMap.entries()) {
-    if (!configuration.name) {
-      try {
-        const { name } = readJsonFile(join(root, 'package.json'));
-        configuration.name = name;
-      } catch {
-        throw new Error(`Project at ${root} has no name provided.`);
+  for (const root in projectRootMap) {
+    const project = projectRootMap[root];
+    // We're setting `// targets` as a comment `targets` is empty due to Project Crystal.
+    // Strip it before returning configuration for usage.
+    if (project['// targets']) delete project['// targets'];
+
+    try {
+      validateProject(project, projects);
+      projects[project.name] = project;
+    } catch (e) {
+      if (isProjectWithNoNameError(e)) {
+        projectRootsWithNoName.push(e.projectRoot);
+      } else if (isProjectWithExistingNameError(e)) {
+        const rootErrors = conflicts.get(e.projectName) ?? [
+          projects[e.projectName].root,
+        ];
+        rootErrors.push(e.projectRoot);
+        conflicts.set(e.projectName, rootErrors);
+      } else {
+        throw e;
       }
-    }
-    if (configuration.name in projects) {
-      let rootErrors = errors.get(configuration.name) ?? [
-        projects[configuration.name].root,
-      ];
-      rootErrors.push(root);
-      errors.set(configuration.name, rootErrors);
-    } else {
-      projects[configuration.name] = configuration;
     }
   }
 
-  if (errors.size > 0) {
-    throw new Error(
-      [
-        `The following projects are defined in multiple locations:`,
-        ...Array.from(errors.entries()).map(([project, roots]) =>
-          [`- ${project}: `, ...roots.map((r) => `  - ${r}`)].join('\n')
-        ),
-        '',
-        "To fix this, set a unique name for each project in a project.json inside the project's root. If the project does not currently have a project.json, you can create one that contains only a name.",
-      ].join('\n')
-    );
+  if (conflicts.size > 0) {
+    throw new MultipleProjectsWithSameNameError(conflicts, projects);
+  }
+  if (projectRootsWithNoName.length > 0) {
+    throw new ProjectsWithNoNameError(projectRootsWithNoName, projects);
   }
   return projects;
 }
 
-class CreateNodesError extends Error {
-  constructor(msg, cause: Error | unknown) {
-    const message = `${msg} ${
-      !cause
-        ? ''
-        : cause instanceof Error
-        ? `\n\n\t Inner Error: ${cause.stack}`
-        : cause
-    }`;
-    // These errors are thrown during a JS callback which is invoked via rust.
-    // The errors messaging gets lost in the rust -> js -> rust transition, but
-    // logging the error here will ensure that it is visible in the console.
-    console.error(message);
-    super(message, { cause });
+function validateAndNormalizeProjectRootMap(
+  projectRootMap: Record<string, ProjectConfiguration>
+) {
+  // Name -> Project, used to validate that all projects have unique names
+  const projects: Record<string, ProjectConfiguration> = {};
+  // If there are projects that have the same name, that is an error.
+  // This object tracks name -> (all roots of projects with that name)
+  // to provide better error messaging.
+  const conflicts = new Map<string, string[]>();
+  const projectRootsWithNoName: string[] = [];
+
+  for (const root in projectRootMap) {
+    const project = projectRootMap[root];
+    // We're setting `// targets` as a comment `targets` is empty due to Project Crystal.
+    // Strip it before returning configuration for usage.
+    if (project['// targets']) delete project['// targets'];
+
+    try {
+      validateProject(project, projects);
+      projects[project.name] = project;
+    } catch (e) {
+      if (isProjectWithNoNameError(e)) {
+        projectRootsWithNoName.push(e.projectRoot);
+      } else if (isProjectWithExistingNameError(e)) {
+        const rootErrors = conflicts.get(e.projectName) ?? [
+          projects[e.projectName].root,
+        ];
+        rootErrors.push(e.projectRoot);
+        conflicts.set(e.projectName, rootErrors);
+      } else {
+        throw e;
+      }
+    }
+
+    for (const targetName in project.targets) {
+      project.targets[targetName] = normalizeTarget(
+        project.targets[targetName],
+        project
+      );
+
+      if (
+        !project.targets[targetName].executor &&
+        !project.targets[targetName].command
+      ) {
+        delete project.targets[targetName];
+      }
+    }
+  }
+
+  if (conflicts.size > 0) {
+    throw new MultipleProjectsWithSameNameError(conflicts, projects);
+  }
+  if (projectRootsWithNoName.length > 0) {
+    throw new ProjectsWithNoNameError(projectRootsWithNoName, projects);
+  }
+  return projectRootMap;
+}
+
+export function validateProject(
+  project: ProjectConfiguration,
+  // name -> project
+  knownProjects: Record<string, ProjectConfiguration>
+) {
+  if (!project.name) {
+    try {
+      const { name } = readJsonFile(join(project.root, 'package.json'));
+      if (!name) {
+        throw new Error(`Project at ${project.root} has no name provided.`);
+      }
+      project.name = name;
+    } catch {
+      throw new ProjectWithNoNameError(project.root);
+    }
+  } else if (
+    knownProjects[project.name] &&
+    knownProjects[project.name].root !== project.root
+  ) {
+    throw new ProjectWithExistingNameError(project.name, project.root);
   }
 }
 
@@ -427,7 +658,15 @@ export function mergeTargetConfigurations(
 
   // Target is "compatible", e.g. executor is defined only once or is the same
   // in both places. This means that it is likely safe to merge
-  const isCompatible = isCompatibleTarget(baseTargetProperties, target);
+  const isCompatible = isCompatibleTarget(baseTarget ?? {}, target);
+
+  // If the targets are not compatible, we would normally overwrite the old target
+  // with the new one. However, we have a special case for targets that have the
+  // ONLY_MODIFIES_EXISTING_TARGET symbol set. This prevents the merged target
+  // equaling info that should have only been used to modify the existing target.
+  if (!isCompatible && target[ONLY_MODIFIES_EXISTING_TARGET]) {
+    return baseTarget;
+  }
 
   if (!isCompatible && projectConfigSourceMap) {
     // if the target is not compatible, we will simply override the options
@@ -479,6 +718,17 @@ export function mergeTargetConfigurations(
       targetIdentifier
     );
   }
+
+  if (target.metadata) {
+    result.metadata = mergeMetadata(
+      projectConfigSourceMap,
+      sourceInformation,
+      `${targetIdentifier}.metadata`,
+      target.metadata,
+      baseTarget?.metadata
+    );
+  }
+
   return result as TargetConfiguration;
 }
 
@@ -501,8 +751,8 @@ export function isCompatibleTarget(
 
   const isRunCommands = a.executor === 'nx:run-commands';
   if (isRunCommands) {
-    const aCommand = a.options?.command ?? a.options?.commands.join(' && ');
-    const bCommand = b.options?.command ?? b.options?.commands.join(' && ');
+    const aCommand = a.options?.command ?? a.options?.commands?.join(' && ');
+    const bCommand = b.options?.command ?? b.options?.commands?.join(' && ');
 
     const oneHasNoCommand = !aCommand || !bCommand;
     const hasSameCommand = aCommand === bCommand;
@@ -633,9 +883,10 @@ export function readTargetDefaultsForTarget(
   }
 }
 
-function createRootMap(projectRootMap: Map<string, ProjectConfiguration>) {
+function createRootMap(projectRootMap: Record<string, ProjectConfiguration>) {
   const map: Record<string, string> = {};
-  for (const [projectRoot, { name: projectName }] of projectRootMap) {
+  for (const projectRoot in projectRootMap) {
+    const projectName = projectRootMap[projectRoot].name;
     map[projectRoot] = projectName;
   }
   return map;
@@ -665,4 +916,28 @@ function resolveCommandSyntacticSugar(
       },
     };
   }
+}
+
+export function normalizeTarget(
+  target: TargetConfiguration,
+  project: ProjectConfiguration
+) {
+  target = resolveCommandSyntacticSugar(target, project.root);
+
+  target.options = resolveNxTokensInOptions(
+    target.options,
+    project,
+    `${project.root}:${target}`
+  );
+
+  target.configurations ??= {};
+  for (const configuration in target.configurations) {
+    target.configurations[configuration] = resolveNxTokensInOptions(
+      target.configurations[configuration],
+      project,
+      `${project.root}:${target}:${configuration}`
+    );
+  }
+
+  return target;
 }

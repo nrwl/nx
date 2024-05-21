@@ -8,22 +8,34 @@ import {
   type Tree,
 } from '@nx/devkit';
 import { readTargetDefaultsForTarget } from 'nx/src/project-graph/utils/project-configuration-utils';
-import { findRootJestConfig } from '../../../utils/config/find-root-jest-files';
+import {
+  findRootJestConfig,
+  type JestPresetExtension,
+} from '../../../utils/config/config-file';
 import type { NormalizedJestProjectSchema } from '../schema';
 
 export async function createJestConfig(
   tree: Tree,
-  options: Partial<NormalizedJestProjectSchema>
+  options: Partial<NormalizedJestProjectSchema>,
+  presetExt: JestPresetExtension
 ) {
-  if (!tree.exists('jest.preset.js')) {
-    // preset is always js file.
-    tree.write(
-      `jest.preset.js`,
-      `
-      const nxPreset = require('@nx/jest/preset').default;
+  if (!tree.exists(`jest.preset.${presetExt}`)) {
+    if (presetExt === 'mjs') {
+      tree.write(
+        `jest.preset.${presetExt}`,
+        `import { nxPreset } from '@nx/jest/preset.js';
 
-      module.exports = { ...nxPreset }`
-    );
+export default { ...nxPreset };`
+      );
+    } else {
+      // js or cjs
+      tree.write(
+        `jest.preset.${presetExt}`,
+        `const nxPreset = require('@nx/jest/preset').default;
+  
+module.exports = { ...nxPreset };`
+      );
+    }
   }
   if (options.rootProject) {
     // we don't want any config to be made because the `configurationGenerator` will do it.
@@ -69,9 +81,9 @@ export async function createJestConfig(
       );
 
       if (
-        rootProjectConfig.targets['test']?.executor === 'nx:run-commands'
-          ? rootProjectConfig.targets['test']?.command !== 'jest'
-          : rootProjectConfig.targets['test']?.options?.jestConfig !==
+        rootProjectConfig.targets?.['test']?.executor === 'nx:run-commands'
+          ? rootProjectConfig.targets?.['test']?.command !== 'jest'
+          : rootProjectConfig.targets?.['test']?.options?.jestConfig !==
             rootJestPath
       ) {
         // Jest target has already been updated
@@ -128,16 +140,16 @@ export async function createJestConfig(
 function generateGlobalConfig(tree: Tree, isJS: boolean) {
   const contents = isJS
     ? stripIndents`
-    const { getJestProjects } = require('@nx/jest');
+    const { getJestProjectsAsync } = require('@nx/jest');
 
-    module.exports = {
-      projects: getJestProjects()
-    };`
+    module.exports = async () => ({
+      projects: await getJestProjectsAsync()
+    });`
     : stripIndents`
-    import { getJestProjects } from '@nx/jest';
+    import { getJestProjectsAsync } from '@nx/jest';
 
-    export default {
-     projects: getJestProjects()
-    };`;
+    export default async () => ({
+     projects: await getJestProjectsAsync()
+    });`;
   tree.write(`jest.config.${isJS ? 'js' : 'ts'}`, contents);
 }

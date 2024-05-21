@@ -75,7 +75,7 @@ export function AlgoliaSearch({
         <link
           rel="preconnect"
           href="https://PCTGM1JTQL-dsn.algolia.net"
-          crossOrigin="true"
+          crossOrigin="anonymous"
         />
       </Head>
       {!tiny ? (
@@ -86,9 +86,8 @@ export function AlgoliaSearch({
           className="flex w-full items-center rounded-md bg-white py-1.5 px-2 text-sm leading-4 ring-1 ring-slate-300 transition dark:bg-slate-700 dark:ring-slate-900"
         >
           <MagnifyingGlassIcon className="h-4 w-4 flex-none" />
-          <span className="mx-3 text-xs text-slate-300 dark:text-slate-400 md:text-sm lg:inline-flex">
-            Search{' '}
-            <span className="ml-2 hidden md:inline">Documentation ...</span>
+          <span className="mx-3 inline-flex text-xs text-slate-300 dark:text-slate-400 md:text-sm">
+            Search
           </span>
           <span
             style={{ opacity: browserDetected ? '1' : '0' }}
@@ -138,7 +137,7 @@ export function AlgoliaSearch({
               distinct: true,
             }}
             initialQuery={initialQuery}
-            placeholder="Search documentation"
+            placeholder="Search the docs"
             initialScrollY={window.scrollY}
             onClose={handleClose}
             indexName="nx-production"

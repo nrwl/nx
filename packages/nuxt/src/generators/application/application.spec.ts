@@ -1,3 +1,5 @@
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { Tree, readJson, readProjectConfiguration } from '@nx/devkit';
 import { applicationGenerator } from './application';
@@ -8,7 +10,7 @@ describe('app', () => {
 
   describe('generated files content - as-provided', () => {
     describe('general application', () => {
-      beforeAll(async () => {
+      beforeEach(async () => {
         tree = createTreeWithEmptyWorkspace();
         await applicationGenerator(tree, {
           name,
@@ -16,6 +18,16 @@ describe('app', () => {
           unitTestRunner: 'vitest',
         });
       });
+
+      it('should not add targets', async () => {
+        const projectConfig = readProjectConfiguration(tree, name);
+        expect(projectConfig.targets.build).toBeUndefined();
+        expect(projectConfig.targets.serve).toBeUndefined();
+        expect(projectConfig.targets.test).toBeUndefined();
+        expect(projectConfig.targets['build-static']).toBeUndefined();
+        expect(projectConfig.targets['serve-static']).toBeUndefined();
+      });
+
       it('should create all new files in the correct location', async () => {
         const newFiles = tree.listChanges().map((change) => change.path);
         expect(newFiles).toMatchSnapshot();
@@ -40,12 +52,43 @@ describe('app', () => {
         ).toMatchSnapshot();
         expect(tree.read('my-app/tsconfig.json', 'utf-8')).toMatchSnapshot();
         const packageJson = readJson(tree, 'package.json');
-        expect(packageJson.devDependencies['vitest']).toEqual('^1.0.4');
+        expect(packageJson.devDependencies['vitest']).toEqual('^1.3.1');
       });
 
       it('should configure tsconfig and project.json correctly', () => {
         expect(tree.read('my-app/project.json', 'utf-8')).toMatchSnapshot();
         expect(tree.read('my-app/tsconfig.json', 'utf-8')).toMatchSnapshot();
+      });
+
+      it('should add the nuxt and vitest plugins', () => {
+        const nxJson = readJson(tree, 'nx.json');
+        expect(nxJson.plugins).toMatchObject([
+          {
+            plugin: '@nx/eslint/plugin',
+            options: { targetName: 'lint' },
+          },
+          {
+            plugin: '@nx/vite/plugin',
+            options: { testTargetName: 'test' },
+          },
+          {
+            plugin: '@nx/nuxt/plugin',
+            options: { buildTargetName: 'build', serveTargetName: 'serve' },
+          },
+          {
+            plugin: '@nx/playwright/plugin',
+            options: { targetName: 'e2e' },
+          },
+        ]);
+        expect(
+          nxJson.plugins.indexOf(
+            nxJson.plugins.find((p) => p.plugin === '@nx/nuxt/plugin')
+          )
+        ).toBeGreaterThan(
+          nxJson.plugins.indexOf(
+            nxJson.plugins.find((p) => p.plugin === '@nx/vite/plugin')
+          )
+        );
       });
     });
 
@@ -95,36 +138,6 @@ describe('app', () => {
         });
         expect(tree.exists('myapp4/src/assets/css/styles.css')).toBeFalsy();
         expect(tree.read('myapp4/nuxt.config.ts', 'utf-8')).toMatchSnapshot();
-      });
-    });
-
-    describe('pcv3', () => {
-      let originalValue: string | undefined;
-      beforeEach(() => {
-        tree = createTreeWithEmptyWorkspace();
-        originalValue = process.env['NX_PCV3'];
-        process.env['NX_PCV3'] = 'true';
-      });
-
-      afterEach(() => {
-        if (originalValue) {
-          process.env['NX_PCV3'] = originalValue;
-        } else {
-          delete process.env['NX_PCV3'];
-        }
-      });
-
-      it('should not add targets', async () => {
-        await applicationGenerator(tree, {
-          name,
-          projectNameAndRootFormat: 'as-provided',
-          unitTestRunner: 'vitest',
-        });
-
-        const projectConfi = readProjectConfiguration(tree, name);
-        expect(projectConfi.targets.build).toBeUndefined();
-        expect(projectConfi.targets.serve).toBeUndefined();
-        expect(projectConfi.targets.test).toBeUndefined();
       });
     });
   });

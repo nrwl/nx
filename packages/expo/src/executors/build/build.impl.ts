@@ -2,6 +2,8 @@ import { ExecutorContext, names } from '@nx/devkit';
 import { resolve as pathResolve } from 'path';
 import { ChildProcess, fork } from 'child_process';
 
+import { resolveEas } from '../../utils/resolve-eas';
+
 import { ExpoEasBuildOptions } from './schema';
 
 export interface ReactNativeBuildOutput {
@@ -34,7 +36,7 @@ function runCliBuild(
 ) {
   return new Promise((resolve, reject) => {
     childProcess = fork(
-      require.resolve('eas-cli/bin/run'),
+      resolveEas(workspaceRoot),
       ['build', ...createBuildOptions(options)],
       {
         cwd: pathResolve(workspaceRoot, projectRoot),

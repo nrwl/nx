@@ -3,20 +3,22 @@ import {
   cleanupProject,
   killPorts,
   newProject,
+  readJson,
   runCLI,
   uniq,
 } from '@nx/e2e/utils';
 
 describe('Nuxt Plugin', () => {
-  let proj: string;
   const app = uniq('app');
 
   beforeAll(() => {
-    proj = newProject({
-      packages: ['@nx/nuxt', '@nx/storybook'],
+    newProject({
+      packages: ['@nx/nuxt'],
       unsetProjectNameAndRootFormat: false,
     });
-    runCLI(`generate @nx/nuxt:app ${app} --unitTestRunner=vitest`);
+    runCLI(
+      `generate @nx/nuxt:app ${app} --unitTestRunner=vitest --projectNameAndRootFormat=as-provided --e2eTestRunner=cypress`
+    );
     runCLI(
       `generate @nx/nuxt:component --directory=${app}/src/components/one --name=one --nameAndDirectoryFormat=as-provided --unitTestRunner=vitest`
     );
@@ -32,8 +34,8 @@ describe('Nuxt Plugin', () => {
     expect(result).toContain(
       `Successfully ran target build for project ${app}`
     );
-    checkFilesExist(`dist/${app}/.nuxt/nuxt.d.ts`);
-    checkFilesExist(`dist/${app}/.output/nitro.json`);
+    checkFilesExist(`${app}/.nuxt/nuxt.d.ts`);
+    checkFilesExist(`${app}/.output/nitro.json`);
   });
 
   it('should test application', async () => {
@@ -51,6 +53,16 @@ describe('Nuxt Plugin', () => {
       `generate @nx/nuxt:storybook-configuration ${app} --generateStories --no-interactive`
     );
     runCLI(`run ${app}:build-storybook --verbose`);
-    checkFilesExist(`dist/storybook/${app}/index.html`);
+    checkFilesExist(`${app}/storybook-static/index.html`);
   }, 300_000);
+
+  it('should have build, serve, build-static, server-static targets', () => {
+    runCLI(`show project ${app} --json > targets.json`);
+
+    const targets = readJson('targets.json');
+    expect(targets.targets['build']).toBeDefined();
+    expect(targets.targets['serve']).toBeDefined();
+    expect(targets.targets['serve-static']).toBeDefined();
+    expect(targets.targets['build-static']).toBeDefined();
+  });
 });

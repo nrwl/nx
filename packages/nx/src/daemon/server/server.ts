@@ -12,7 +12,7 @@ import { setupWorkspaceContext } from '../../utils/workspace-context';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { writeDaemonJsonProcessCache } from '../cache';
 import {
-  FULL_OS_SOCKET_PATH,
+  getFullOsSocketPath,
   isWindows,
   killSocketOrPath,
 } from '../socket-utils';
@@ -112,10 +112,11 @@ async function handleMessage(socket, data: string) {
   }
 
   if (daemonIsOutdated()) {
-    await respondWithErrorAndExit(socket, `Lock files changed`, {
-      name: '',
-      message: 'LOCK-FILES-CHANGED',
-    });
+    await respondWithErrorAndExit(
+      socket,
+      `Lock files changed`,
+      new Error('LOCK-FILES-CHANGED')
+    );
   }
 
   resetInactivityTimeout(handleInactivityTimeout);
@@ -297,7 +298,7 @@ const handleWorkspaceChanges: FileWatcherCallback = async (
       return;
     }
 
-    if (err || !changeEvents || !changeEvents.length) {
+    if (err) {
       let error = typeof err === 'string' ? new Error(err) : err;
       serverLogger.watcherLog(
         'Unexpected workspace watcher error',
@@ -387,9 +388,9 @@ export async function startServer(): Promise<Server> {
 
   return new Promise(async (resolve, reject) => {
     try {
-      server.listen(FULL_OS_SOCKET_PATH, async () => {
+      server.listen(getFullOsSocketPath(), async () => {
         try {
-          serverLogger.log(`Started listening on: ${FULL_OS_SOCKET_PATH}`);
+          serverLogger.log(`Started listening on: ${getFullOsSocketPath()}`);
           // this triggers the storage of the lock file hash
           daemonIsOutdated();
 

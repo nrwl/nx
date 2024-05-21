@@ -37,13 +37,14 @@ export interface GeneratorsJsonEntry {
 
 export type OutputCaptureMethod = 'direct-nodejs' | 'pipe';
 
-export interface ExecutorsJsonEntry {
+export interface ExecutorJsonEntryConfig {
   schema: string;
   implementation: string;
   batchImplementation?: string;
   description?: string;
   hasher?: string;
 }
+export type ExecutorsJsonEntry = string | ExecutorJsonEntryConfig;
 
 export type Dependencies = 'dependencies' | 'devDependencies';
 

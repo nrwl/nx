@@ -1,42 +1,101 @@
 import {
   addDependenciesToPackageJson,
+  createProjectGraphAsync,
   formatFiles,
   GeneratorCallback,
   readNxJson,
   removeDependenciesFromPackageJson,
   runTasksInSerial,
   Tree,
-  updateNxJson,
 } from '@nx/devkit';
-import { updatePackageScripts } from '@nx/devkit/src/utils/update-package-scripts';
-import { createNodes, ReactNativePluginOptions } from '../../../plugins/plugin';
+import { addPlugin } from '@nx/devkit/src/utils/add-plugin';
+import { createNodes } from '../../../plugins/plugin';
 import {
   nxVersion,
   reactDomVersion,
-  reactNativeCommunityCli,
-  reactNativeCommunityCliAndroid,
-  reactNativeCommunityCliIos,
   reactNativeVersion,
   reactVersion,
 } from '../../utils/versions';
 import { addGitIgnoreEntry } from './lib/add-git-ignore-entry';
 import { Schema } from './schema';
 
-export async function reactNativeInitGenerator(host: Tree, schema: Schema) {
+export function reactNativeInitGenerator(host: Tree, schema: Schema) {
+  return reactNativeInitGeneratorInternal(host, {
+    addPlugin: false,
+    ...schema,
+  });
+}
+
+export async function reactNativeInitGeneratorInternal(
+  host: Tree,
+  schema: Schema
+) {
   addGitIgnoreEntry(host);
 
-  if (process.env.NX_PCV3 === 'true') {
-    addPlugin(host);
+  const nxJson = readNxJson(host);
+  const addPluginDefault =
+    process.env.NX_ADD_PLUGINS !== 'false' &&
+    nxJson.useInferencePlugins !== false;
+  schema.addPlugin ??= addPluginDefault;
+
+  if (schema.addPlugin) {
+    await addPlugin(
+      host,
+      await createProjectGraphAsync(),
+      '@nx/react-native/plugin',
+      createNodes,
+      {
+        startTargetName: ['start', 'react-native:start', 'react-native-start'],
+        upgradeTargetname: [
+          'update',
+          'react-native:update',
+          'react-native-update',
+        ],
+        bundleTargetName: [
+          'bundle',
+          'react-native:bundle',
+          'react-native-bundle',
+        ],
+
+        podInstallTargetName: [
+          'pod-install',
+          'react-native:pod-install',
+          'react-native-pod-install',
+        ],
+        runIosTargetName: [
+          'run-ios',
+          'react-native:run-ios',
+          'react-native-run-ios',
+        ],
+        runAndroidTargetName: [
+          'run-android',
+          'react-native:run-android',
+          'react-native-run-android',
+        ],
+        buildIosTargetName: [
+          'build-ios',
+          'react-native:build-ios',
+          'react-native-build-ios',
+        ],
+        buildAndroidTargetName: [
+          'build-android',
+          'react-native:build-android',
+          'react-native-build-android',
+        ],
+        syncDepsTargetName: [
+          'sync-deps',
+          'react-native:sync-deps',
+          'react-native-sync-deps',
+        ],
+      },
+      schema.updatePackageScripts
+    );
   }
 
   const tasks: GeneratorCallback[] = [];
   if (!schema.skipPackageJson) {
     tasks.push(moveDependency(host));
     tasks.push(updateDependencies(host, schema));
-  }
-
-  if (schema.updatePackageScripts) {
-    await updatePackageScripts(host, createNodes);
   }
 
   if (!schema.skipFormat) {
@@ -56,10 +115,6 @@ export function updateDependencies(host: Tree, schema: Schema) {
     },
     {
       '@nx/react-native': nxVersion,
-      '@react-native-community/cli': reactNativeCommunityCli,
-      '@react-native-community/cli-platform-android':
-        reactNativeCommunityCliAndroid,
-      '@react-native-community/cli-platform-ios': reactNativeCommunityCliIos,
     },
     undefined,
     schema.keepExistingVersions
@@ -68,35 +123,6 @@ export function updateDependencies(host: Tree, schema: Schema) {
 
 function moveDependency(host: Tree) {
   return removeDependenciesFromPackageJson(host, ['@nx/react-native'], []);
-}
-
-function addPlugin(host: Tree) {
-  const nxJson = readNxJson(host);
-  nxJson.plugins ??= [];
-
-  for (const plugin of nxJson.plugins) {
-    if (
-      typeof plugin === 'string'
-        ? plugin === '@nx/react-native/plugin'
-        : plugin.plugin === '@nx/react-native/plugin'
-    ) {
-      return;
-    }
-  }
-
-  nxJson.plugins.push({
-    plugin: '@nx/react-native/plugin',
-    options: {
-      startTargetName: 'start',
-      podInstallTargetName: 'pod-install',
-      bundleTargetName: 'bundle',
-      runIosTargetName: 'run-ios',
-      runAndroidTargetName: 'run-android',
-      buildIosTargetName: 'build-ios',
-      buildAndroidTargetName: 'build-android',
-    } as ReactNativePluginOptions,
-  });
-  updateNxJson(host, nxJson);
 }
 
 export default reactNativeInitGenerator;

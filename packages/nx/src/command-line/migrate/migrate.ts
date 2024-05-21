@@ -10,6 +10,7 @@ import {
   lt,
   lte,
   major,
+  parse,
   satisfies,
   valid,
 } from 'semver';
@@ -647,9 +648,9 @@ async function normalizeVersionWithTagCheck(
   version: string
 ): Promise<string> {
   // This doesn't seem like a valid version, lets check if its a tag on the registry.
-  if (version && !coerce(version)) {
+  if (version && !parse(version)) {
     try {
-      return packageRegistryView(pkg, version, 'version');
+      return resolvePackageVersionUsingRegistry(pkg, version);
     } catch {
       // fall through to old logic
     }
@@ -716,6 +717,7 @@ async function parseTargetPackageAndVersion(
     if (
       args === 'latest' ||
       args === 'next' ||
+      args === 'canary' ||
       valid(args) ||
       args.match(/^\d+(?:\.\d+)?(?:\.\d+)?$/)
     ) {
@@ -724,7 +726,8 @@ async function parseTargetPackageAndVersion(
       // on the registry
       const targetVersion = await normalizeVersionWithTagCheck('nx', args);
       const targetPackage =
-        !['latest', 'next'].includes(args) && lt(targetVersion, '14.0.0-beta.0')
+        !['latest', 'next', 'canary'].includes(args) &&
+        lt(targetVersion, '14.0.0-beta.0')
           ? '@nrwl/workspace'
           : 'nx';
 
@@ -1051,6 +1054,10 @@ async function getPackageMigrationsUsingInstall(
     }
 
     result = { ...migrations, packageGroup, version: packageJson.version };
+  } catch (e) {
+    logger.warn(
+      `Unable to fetch migrations for ${packageName}@${packageVersion}: ${e.message}`
+    );
   } finally {
     await cleanup();
   }
@@ -1177,7 +1184,7 @@ async function updateInstallationDetails(
 
 async function isMigratingToNewMajor(from: string, to: string) {
   from = normalizeVersion(from);
-  to = ['latest', 'next'].includes(to) ? to : normalizeVersion(to);
+  to = ['latest', 'next', 'canary'].includes(to) ? to : normalizeVersion(to);
   if (!valid(from)) {
     from = await resolvePackageVersionUsingRegistry('nx', from);
   }
@@ -1212,23 +1219,6 @@ async function generateMigrationsJsonAndUpdatePackageJson(
     const from =
       originalNxJson.installation?.version ??
       readNxVersion(originalPackageJson);
-
-    try {
-      if (
-        ['nx', '@nrwl/workspace'].includes(opts.targetPackage) &&
-        (await isMigratingToNewMajor(from, opts.targetVersion)) &&
-        !isCI() &&
-        !isNxCloudUsed(originalNxJson)
-      ) {
-        await connectToNxCloudWithPrompt('migrate');
-        originalPackageJson = readJsonFile<PackageJson>(
-          join(root, 'package.json')
-        );
-      }
-    } catch {
-      // The above code is to remind folks when updating to a new major and not currently using Nx cloud.
-      // If for some reason it fails, it shouldn't affect the overall migration process
-    }
 
     logger.info(`Fetching meta data about packages.`);
     logger.info(`It may take a few minutes.`);
@@ -1267,6 +1257,32 @@ async function generateMigrationsJsonAndUpdatePackageJson(
       ],
     });
 
+    try {
+      if (
+        ['nx', '@nrwl/workspace'].includes(opts.targetPackage) &&
+        (await isMigratingToNewMajor(from, opts.targetVersion)) &&
+        !isCI() &&
+        !isNxCloudUsed(originalNxJson)
+      ) {
+        output.success({
+          title: 'Connect to Nx Cloud',
+          bodyLines: [
+            'Nx Cloud is a first-party CI companion for Nx projects. It improves critical aspects of CI:',
+            '- Speed: 30% - 70% faster CI',
+            '- Cost: 40% - 75% reduction in CI costs',
+            '- Reliability: by automatically identifying flaky tasks and re-running them',
+          ],
+        });
+        await connectToNxCloudWithPrompt('migrate');
+        originalPackageJson = readJsonFile<PackageJson>(
+          join(root, 'package.json')
+        );
+      }
+    } catch {
+      // The above code is to remind folks when updating to a new major and not currently using Nx cloud.
+      // If for some reason it fails, it shouldn't affect the overall migration process
+    }
+
     output.log({
       title: 'Next steps:',
       bodyLines: [
@@ -1281,7 +1297,7 @@ async function generateMigrationsJsonAndUpdatePackageJson(
               `- To learn more go to https://nx.dev/recipes/tips-n-tricks/advanced-update`,
             ]
           : [
-              `- To learn more go to https://nx.dev/core-features/automate-updating-dependencies`,
+              `- To learn more go to https://nx.dev/features/automate-updating-dependencies`,
             ]),
         ...(showConnectToCloudMessage()
           ? [
@@ -1364,11 +1380,31 @@ export async function executeMigrations(
   shouldCreateCommits: boolean,
   commitPrefix: string
 ) {
-  const depsBeforeMigrations = getStringifiedPackageJsonDeps(root);
+  let initialDeps = getStringifiedPackageJsonDeps(root);
+  const installDepsIfChanged = () => {
+    const currentDeps = getStringifiedPackageJsonDeps(root);
+    if (initialDeps !== currentDeps) {
+      runInstall();
+    }
+    initialDeps = currentDeps;
+  };
 
   const migrationsWithNoChanges: typeof migrations = [];
+  const sortedMigrations = migrations.sort((a, b) => {
+    // special case for the split configuration migration to run first
+    if (a.name === '15-7-0-split-configuration-into-project-json-files') {
+      return -1;
+    }
+    if (b.name === '15-7-0-split-configuration-into-project-json-files') {
+      return 1;
+    }
 
-  for (const m of migrations) {
+    return lt(normalizeVersion(a.version), normalizeVersion(b.version))
+      ? -1
+      : 1;
+  });
+
+  for (const m of sortedMigrations) {
     try {
       const { collection, collectionPath } = readMigrationCollection(
         m.package,
@@ -1415,6 +1451,8 @@ export async function executeMigrations(
       }
 
       if (shouldCreateCommits) {
+        installDepsIfChanged();
+
         const commitMessage = `${commitPrefix}${m.name}`;
         try {
           const committedSha = commitChanges(commitMessage);
@@ -1443,10 +1481,10 @@ export async function executeMigrations(
     }
   }
 
-  const depsAfterMigrations = getStringifiedPackageJsonDeps(root);
-  if (depsBeforeMigrations !== depsAfterMigrations) {
-    runInstall();
+  if (!shouldCreateCommits) {
+    installDepsIfChanged();
   }
+
   return migrationsWithNoChanges;
 }
 

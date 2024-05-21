@@ -10,9 +10,17 @@ import {
   updateFile,
 } from '@nx/e2e/utils';
 
-describe('nx init (NPM repo)', () => {
+describe('nx init (NPM repo - legacy)', () => {
   const pmc = getPackageManagerCommand({
     packageManager: getSelectedPackageManager(),
+  });
+
+  beforeAll(() => {
+    process.env.NX_ADD_PLUGINS = 'false';
+  });
+
+  afterAll(() => {
+    delete process.env.NX_ADD_PLUGINS;
   });
 
   it('should work in a regular npm repo', () => {
@@ -34,8 +42,7 @@ describe('nx init (NPM repo)', () => {
         pmc.runUninstalledPackage
       } nx@${getPublishedVersion()} init --cacheable=echo --no-interactive`
     );
-    console.log(output);
-    expect(output).toContain('Enabled computation caching');
+    expect(output).toContain('Run it again to replay the cached computation.');
 
     expect(runCLI('echo')).toContain('123');
     renameFile('nx.json', 'nx.json.old');

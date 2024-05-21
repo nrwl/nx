@@ -4,11 +4,6 @@ import { ChildProcess, fork } from 'child_process';
 import { platform } from 'os';
 import { existsSync } from 'fs-extra';
 
-import { ensureNodeModulesSymlink } from '../../utils/ensure-node-modules-symlink';
-import {
-  displayNewlyAddedDepsMessage,
-  syncDeps,
-} from '../sync-deps/sync-deps.impl';
 import { ExpoRunOptions } from './schema';
 import { prebuildAsync } from '../prebuild/prebuild.impl';
 import { podInstall } from '../../utils/pod-install-task';

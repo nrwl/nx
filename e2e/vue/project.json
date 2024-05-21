@@ -3,8 +3,28 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "e2e/vue",
   "projectType": "application",
+  "implicitDependencies": ["vue"],
   "targets": {
-    "e2e": {}
-  },
-  "implicitDependencies": ["vue"]
+    "e2e-ci--src/vue-storybook.test.ts": {
+      "dependsOn": [
+        "nx:build-native",
+        "@nx/nx-source:populate-local-registry-storage"
+      ],
+      "inputs": ["e2eInputs", "^production"]
+    },
+    "e2e-ci--src/vue-tailwind.test.ts": {
+      "dependsOn": [
+        "nx:build-native",
+        "@nx/nx-source:populate-local-registry-storage"
+      ],
+      "inputs": ["e2eInputs", "^production"]
+    },
+    "e2e-ci--src/vue.test.ts": {
+      "dependsOn": [
+        "nx:build-native",
+        "@nx/nx-source:populate-local-registry-storage"
+      ],
+      "inputs": ["e2eInputs", "^production"]
+    }
+  }
 }

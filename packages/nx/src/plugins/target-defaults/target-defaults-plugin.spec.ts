@@ -2,8 +2,8 @@ import * as memfs from 'memfs';
 
 import '../../../src/internal-testing-utils/mock-fs';
 
-import { TargetDefaultsPlugin } from './target-defaults-plugin';
-import { CreateNodesContext } from '../../utils/nx-plugin';
+import { getTargetInfo, TargetDefaultsPlugin } from './target-defaults-plugin';
+import { CreateNodesContext } from '../../project-graph/plugins';
 const {
   createNodes: [, createNodesFn],
 } = TargetDefaultsPlugin;
@@ -20,6 +20,7 @@ describe('target-defaults plugin', () => {
         },
       },
       workspaceRoot: '/root',
+      configFiles: [],
     };
   });
 
@@ -50,14 +51,15 @@ describe('target-defaults plugin', () => {
     expect(createNodesFn('project.json', undefined, context))
       .toMatchInlineSnapshot(`
       {
+        "NX_OVERRIDE_SOURCE_FILE": "nx.json",
         "projects": {
           ".": {
             "targets": {
               "build": {
+                "NX_ONLY_MODIFIES_EXISTING_TARGET": true,
                 "dependsOn": [
                   "^build",
                 ],
-                Symbol(ONLY_MODIFIES_EXISTING_TARGET): true,
               },
             },
           },
@@ -67,6 +69,7 @@ describe('target-defaults plugin', () => {
     expect(createNodesFn('packages/lib-a/project.json', undefined, context))
       .toMatchInlineSnapshot(`
       {
+        "NX_OVERRIDE_SOURCE_FILE": "nx.json",
         "projects": {
           "packages/lib-a": {
             "targets": {
@@ -74,6 +77,7 @@ describe('target-defaults plugin', () => {
                 "dependsOn": [
                   "^build",
                 ],
+                "executor": "nx:run-commands",
               },
             },
           },
@@ -106,14 +110,20 @@ describe('target-defaults plugin', () => {
           },
         },
         workspaceRoot: '/root',
+        configFiles: [],
       })
     ).toMatchInlineSnapshot(`
       {
+        "NX_OVERRIDE_SOURCE_FILE": "nx.json",
         "projects": {
           ".": {
             "targets": {
               "test": {
                 "command": "jest",
+                "executor": "nx:run-script",
+                "options": {
+                  "script": "test",
+                },
               },
             },
           },
@@ -148,14 +158,20 @@ describe('target-defaults plugin', () => {
           },
         },
         workspaceRoot: '/root',
+        configFiles: [],
       })
     ).toMatchInlineSnapshot(`
       {
+        "NX_OVERRIDE_SOURCE_FILE": "nx.json",
         "projects": {
           ".": {
             "targets": {
               "test": {
                 "command": "jest",
+                "executor": "nx:run-script",
+                "options": {
+                  "script": "test",
+                },
               },
             },
           },
@@ -187,11 +203,12 @@ describe('target-defaults plugin', () => {
           },
         },
         workspaceRoot: '/root',
+        configFiles: [],
       })
     ).toMatchInlineSnapshot(`{}`);
   });
 
-  it('should not add target if project does not define target', () => {
+  it('should only modify target if package json has script but its not included', () => {
     memfs.vol.fromJSON(
       {
         'package.json': JSON.stringify({
@@ -217,20 +234,301 @@ describe('target-defaults plugin', () => {
           },
         },
         workspaceRoot: '/root',
+        configFiles: [],
       })
     ).toMatchInlineSnapshot(`
       {
+        "NX_OVERRIDE_SOURCE_FILE": "nx.json",
         "projects": {
           ".": {
             "targets": {
               "test": {
+                "NX_ONLY_MODIFIES_EXISTING_TARGET": true,
                 "command": "jest",
-                Symbol(ONLY_MODIFIES_EXISTING_TARGET): true,
               },
             },
           },
         },
       }
     `);
+  });
+
+  it('should not register target if target default and package.json target if package.json target is not included script', async () => {
+    memfs.vol.fromJSON(
+      {
+        'package.json': JSON.stringify({
+          name: 'lib-a',
+          scripts: {
+            test: 'nx affected:test',
+          },
+          nx: {
+            includedScripts: [],
+            targets: {
+              test: {
+                outputs: ['coverage'],
+              },
+            },
+          },
+        }),
+      },
+      '/root'
+    );
+
+    const result = await createNodesFn('package.json', undefined, {
+      nxJsonConfiguration: {
+        targetDefaults: {
+          test: {
+            cache: true,
+          },
+        },
+      },
+      workspaceRoot: '/root',
+      configFiles: [],
+    });
+
+    const { targets } = result.projects['.'];
+
+    // Info from target defaults will be merged
+    expect(targets.test.cache).toBeTruthy();
+    // Info from package.json will not be merged at this time - it will be merged when processing package json plugin
+    expect(targets.test.outputs).not.toBeDefined();
+  });
+
+  it('should register target if target default and package.json target if package.json target is not included script but has executor', async () => {
+    memfs.vol.fromJSON(
+      {
+        'package.json': JSON.stringify({
+          name: 'lib-a',
+          scripts: {
+            test: 'nx affected:test',
+          },
+          nx: {
+            includedScripts: [],
+            targets: {
+              test: {
+                executor: 'nx:run-commands',
+                options: {
+                  command: 'echo hi',
+                },
+              },
+            },
+          },
+        }),
+      },
+      '/root'
+    );
+
+    const result = await createNodesFn('package.json', undefined, {
+      nxJsonConfiguration: {
+        targetDefaults: {
+          test: {
+            cache: true,
+          },
+        },
+      },
+      workspaceRoot: '/root',
+      configFiles: [],
+    });
+
+    const { targets } = result.projects['.'];
+
+    // Info from target defaults will be merged
+    expect(targets.test.cache).toBeTruthy();
+    // Info from package.json will be merged so that the target default is compatible
+    expect(targets.test.executor).toEqual('nx:run-commands');
+  });
+
+  describe('executor key', () => {
+    it('should support multiple targets with the same executor', () => {
+      memfs.vol.fromJSON(
+        {
+          'project.json': JSON.stringify({
+            name: 'root',
+            targets: {
+              echo: {
+                executor: 'nx:run-commands',
+                options: {
+                  command: 'echo 1',
+                },
+              },
+              echo2: {
+                executor: 'nx:run-commands',
+                options: {
+                  command: 'echo 2',
+                },
+              },
+            },
+          }),
+        },
+        '/root'
+      );
+
+      context.nxJsonConfiguration.targetDefaults = {
+        'nx:run-commands': {
+          options: {
+            cwd: '{projectRoot}',
+          },
+        },
+      };
+
+      expect(createNodesFn('project.json', undefined, context))
+        .toMatchInlineSnapshot(`
+        {
+          "NX_OVERRIDE_SOURCE_FILE": "nx.json",
+          "projects": {
+            ".": {
+              "targets": {
+                "echo": {
+                  "executor": "nx:run-commands",
+                  "options": {
+                    "cwd": "{projectRoot}",
+                  },
+                },
+                "echo2": {
+                  "executor": "nx:run-commands",
+                  "options": {
+                    "cwd": "{projectRoot}",
+                  },
+                },
+                "nx:run-commands": {
+                  "NX_ONLY_MODIFIES_EXISTING_TARGET": true,
+                  "options": {
+                    "cwd": "{projectRoot}",
+                  },
+                },
+              },
+            },
+          },
+        }
+      `);
+    });
+
+    it('should not be overridden by target name based default', () => {
+      memfs.vol.fromJSON(
+        {
+          'project.json': JSON.stringify({
+            name: 'root',
+            targets: {
+              echo: {
+                executor: 'nx:run-commands',
+                options: {
+                  command: 'echo 1',
+                },
+              },
+              echo2: {
+                executor: 'nx:run-commands',
+                options: {
+                  command: 'echo 2',
+                },
+              },
+            },
+          }),
+        },
+        '/root'
+      );
+
+      context.nxJsonConfiguration.targetDefaults = {
+        'nx:run-commands': {
+          options: {
+            cwd: '{projectRoot}',
+          },
+        },
+        echo: {},
+      };
+
+      expect(createNodesFn('project.json', undefined, context))
+        .toMatchInlineSnapshot(`
+        {
+          "NX_OVERRIDE_SOURCE_FILE": "nx.json",
+          "projects": {
+            ".": {
+              "targets": {
+                "echo": {
+                  "executor": "nx:run-commands",
+                  "options": {
+                    "cwd": "{projectRoot}",
+                  },
+                },
+                "echo2": {
+                  "executor": "nx:run-commands",
+                  "options": {
+                    "cwd": "{projectRoot}",
+                  },
+                },
+                "nx:run-commands": {
+                  "NX_ONLY_MODIFIES_EXISTING_TARGET": true,
+                  "options": {
+                    "cwd": "{projectRoot}",
+                  },
+                },
+              },
+            },
+          },
+        }
+      `);
+    });
+  });
+
+  describe('get target info', () => {
+    it('should include command for single command', () => {
+      const result = getTargetInfo(
+        'echo',
+        {
+          echo: {
+            command: 'echo hi',
+          },
+        },
+        null
+      );
+      expect(result).toMatchInlineSnapshot(`
+        {
+          "command": "echo hi",
+        }
+      `);
+    });
+
+    it('should include command for run-commands', () => {
+      const result = getTargetInfo(
+        'echo',
+        {
+          echo: {
+            executor: 'nx:run-commands',
+            options: {
+              command: 'echo hi',
+              cwd: '{projectRoot}',
+            },
+          },
+        },
+        null
+      );
+      expect(result).toMatchInlineSnapshot(`
+        {
+          "executor": "nx:run-commands",
+          "options": {
+            "command": "echo hi",
+          },
+        }
+      `);
+    });
+
+    it('should include script for run-script', () => {
+      expect(
+        getTargetInfo('build', null, {
+          build: {
+            executor: 'nx:run-script',
+            options: {
+              script: 'build',
+            },
+          },
+        })
+      ).toMatchInlineSnapshot(`
+        {
+          "executor": "nx:run-script",
+          "options": {
+            "script": "build",
+          },
+        }
+      `);
+    });
   });
 });

@@ -23,4 +23,5 @@ export interface ConfigurationGeneratorSchema {
    **/
   webServerAddress?: string;
   rootProject?: boolean;
+  addPlugin?: boolean;
 }

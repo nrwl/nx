@@ -6,9 +6,40 @@ exports[`@nx/nuxt/plugin not root project should create nodes 1`] = `
     "my-app": {
       "root": "my-app",
       "targets": {
+        "acme-build-static": {
+          "cache": true,
+          "command": "nuxt build --prerender",
+          "dependsOn": [
+            "^acme-build-static",
+          ],
+          "inputs": [
+            "production",
+            "^production",
+            {
+              "externalDependencies": [
+                "nuxt",
+              ],
+            },
+          ],
+          "options": {
+            "cwd": "my-app",
+          },
+          "outputs": [
+            "{workspaceRoot}/dist/my-app/.nuxt",
+          ],
+        },
+        "acme-serve-static": {
+          "executor": "@nx/web:file-server",
+          "options": {
+            "buildTarget": "acme-build-static",
+            "port": 4200,
+            "spa": false,
+            "staticFilePath": "{projectRoot}/dist",
+          },
+        },
         "build-something": {
           "cache": true,
-          "command": "nuxi build",
+          "command": "nuxt build",
           "dependsOn": [
             "^build-something",
           ],
@@ -17,7 +48,7 @@ exports[`@nx/nuxt/plugin not root project should create nodes 1`] = `
             "^production",
             {
               "externalDependencies": [
-                "nuxi",
+                "nuxt",
               ],
             },
           ],
@@ -25,11 +56,11 @@ exports[`@nx/nuxt/plugin not root project should create nodes 1`] = `
             "cwd": "my-app",
           },
           "outputs": [
-            "{workspaceRoot}/dist/my-app/",
+            "{workspaceRoot}/dist/my-app/.nuxt",
           ],
         },
         "my-serve": {
-          "command": "nuxi dev",
+          "command": "nuxt dev",
           "options": {
             "cwd": "my-app",
           },
@@ -48,7 +79,7 @@ exports[`@nx/nuxt/plugin root project should create nodes 1`] = `
       "targets": {
         "build": {
           "cache": true,
-          "command": "nuxi build",
+          "command": "nuxt build",
           "dependsOn": [
             "^build",
           ],
@@ -57,7 +88,7 @@ exports[`@nx/nuxt/plugin root project should create nodes 1`] = `
             "^production",
             {
               "externalDependencies": [
-                "nuxi",
+                "nuxt",
               ],
             },
           ],
@@ -65,13 +96,44 @@ exports[`@nx/nuxt/plugin root project should create nodes 1`] = `
             "cwd": ".",
           },
           "outputs": [
-            "dist/my-app/",
+            "dist/my-app/.nuxt",
+          ],
+        },
+        "build-static": {
+          "cache": true,
+          "command": "nuxt build --prerender",
+          "dependsOn": [
+            "^build-static",
+          ],
+          "inputs": [
+            "production",
+            "^production",
+            {
+              "externalDependencies": [
+                "nuxt",
+              ],
+            },
+          ],
+          "options": {
+            "cwd": ".",
+          },
+          "outputs": [
+            "dist/my-app/.nuxt",
           ],
         },
         "serve": {
-          "command": "nuxi dev",
+          "command": "nuxt dev",
           "options": {
             "cwd": ".",
+          },
+        },
+        "serve-static": {
+          "executor": "@nx/web:file-server",
+          "options": {
+            "buildTarget": "build-static",
+            "port": 4200,
+            "spa": false,
+            "staticFilePath": "{projectRoot}/dist",
           },
         },
       },

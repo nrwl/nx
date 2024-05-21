@@ -27,13 +27,24 @@ Nx is built in a modular fashion to let you only use the features you need.
 
 ![High-level Nx architecture](/shared/images/nx-architecture.svg)
 
-- The **Nx** package provides fundamental technology-agnostic capabilities such as: [workspace analysis](/core-features/explore-graph), [task running](/core-features/run-tasks), [caching](/core-features/cache-task-results), [distribution](/ci/features/distribute-task-execution), [code generation](/core-features/plugin-features/use-code-generators) and [automated code migrations](/core-features/automate-updating-dependencies).
-- **Plugins** are NPM packages that built on top of the fundamental capabilities provided by the Nx package. Nx plugins contain [code generators](/core-features/plugin-features/use-code-generators), [executors](/core-features/plugin-features/use-task-executors) (to abstract lower-level build tooling) and automated code migrations for keeping your tools up to date. Contrary to the Nx package, which works the same way with any JS or non-JS project, plugins are usually technology specific. For instance, `@nx/react` adds support for building React apps and libs, `@nx/cypress` adds e2e testing capabilities with Cypress. Plugins make developers more productive by removing any friction of integrating different tools with each other and by providing utilities to keep them up to date. The Nx team maintains plugins for React, Next, Remix, Angular, Jest, Cypress, Storybook and more. You can use the `@nx/plugin` package to easily [scaffold a new plugin](/extending-nx/intro/getting-started) or even just [automate your local workspace](/extending-nx/recipes/local-generators). There are also more than 80 [community plugins](/plugin-registry).
+- The **Nx** package provides fundamental technology-agnostic capabilities such as: [workspace analysis](/features/explore-graph), [task running](/features/run-tasks), [caching](/features/cache-task-results), [distribution](/ci/features/distribute-task-execution), [code generation](/features/generate-code) and [automated code migrations](/features/automate-updating-dependencies).
+- **Plugins** are NPM packages that build on top of the fundamental capabilities provided by the Nx package. Nx plugins contain [code generators](/features/generate-code), [executors](/concepts/executors-and-configurations) (to abstract lower-level build tooling) and automated code migrations for keeping your tools up to date. Contrary to the Nx package, which works the same way with any JS or non-JS project, plugins are usually technology specific. For instance, `@nx/react` adds support for building React apps and libs, `@nx/cypress` adds e2e testing capabilities with Cypress. Plugins make developers more productive by removing any friction of integrating different tools with each other and by providing utilities to keep them up to date. The Nx team maintains plugins for React, Next, Remix, Angular, Jest, Cypress, Storybook and more. You can use the `@nx/plugin` package to easily [scaffold a new plugin](/extending-nx/intro/getting-started) or even just [automate your local workspace](/extending-nx/recipes/local-generators). There are also more than 80 [community plugins](/plugin-registry).
 - **Devkit** is a set of utilities for [building Nx plugins](/extending-nx/intro/getting-started).
-- **Nx Cloud** helps scale your project on CI by [adding remote caching](/concepts/how-caching-works) and [distributed task execution](/concepts/more-concepts/illustrated-dte). It also improves developer ergonomics by integrating with GitHub, GitLab and BitBucket and providing searchable structured logs. Learn more at [nx.app](https://nx.app).
-- **Nx Console** is an extension for **VSCode, IntelliJ and VIM**. It provides code autocompletion, interactive generators, workspace visualizations, powerful refactorings and more. You can [install it here](/core-features/integrate-with-editors).
+- **Nx Console** is an extension for **VSCode, IntelliJ and VIM**. It provides code autocompletion, interactive generators, workspace visualizations, powerful refactorings and more. You can [install it here](/getting-started/editor-setup).
 
-## How can I adopt Nx in my existing project?
+## How Can Nx Improve Your CI Pipeline?
+
+The benefits of Nx are not restricted to local development. [Nx Cloud](https://nx.app) helps scale your project on CI by making it simple to create and maintain a pipeline that [eliminates wasted time](/ci/concepts/reduce-waste) and [efficiently parallelizes work](/ci/concepts/parallelization-distribution). Your CI pipeline with Nx can:
+
+- Run only tasks [affected](/ci/features/affected) by that PR
+- [Share the task cache](/ci/features/remote-cache) between CI and local development machines (Nx Replay)
+- [Distribute task execution](/ci/features/distribute-task-execution) across multiple agent machines (Nx Agents)
+- Automatically [split long e2e tasks](/ci/features/split-e2e-tasks) into smaller tasks (Atomizer)
+- Identify and Re-run [Flaky Tasks](/ci/features/flaky-tasks)
+
+Nx Cloud also provides direct integration with GitHub, GitLab, Bitbucket and Azure version control systems. Learn more at [nx.app](https://nx.app).
+
+## How Can I Adopt Nx in My Existing Project?
 
 As shown in the section before, there's a core [nx package](https://www.npmjs.com/package/nx) that can be dropped into an existing project (regardless of whether it is a monorepo or single-project workspace). We made a command to help you with that:
 
@@ -41,6 +52,6 @@ As shown in the section before, there's a core [nx package](https://www.npmjs.co
 npx nx@latest init
 ```
 
-By adding the `nx` package you can use [Nx commands](/core-features/run-tasks) to run your `package.json` scripts and benefit from running tasks in parallel as well as [caching](/core-features/cache-task-results). Over time you can then also add in Nx Plugins to further enhance your experience when working with specific tech stacks.
+By adding the `nx` package you can use [Nx commands](/features/run-tasks) to run your `package.json` scripts and benefit from running tasks in parallel as well as [caching](/features/cache-task-results). Over time you can then also add in Nx Plugins to further enhance your experience when working with specific tech stacks.
 
 Check out our [migration guides](/recipes/adopting-nx) for all the details.

@@ -19,6 +19,9 @@ export interface ImplicitJsonSubsetDependency<T = '*' | string[]> {
   [key: string]: T | ImplicitJsonSubsetDependency<T>;
 }
 
+/**
+ * @deprecated Use {@link NxJsonConfiguration#defaultBase } instead
+ */
 export interface NxAffectedConfig {
   /**
    * Default based branch used by affected commands.
@@ -51,9 +54,6 @@ interface NxInstallationConfiguration {
   plugins?: Record<string, string>;
 }
 
-/**
- * **ALPHA**
- */
 export interface NxReleaseVersionConfiguration {
   generator?: string;
   generatorOptions?: Record<string, unknown>;
@@ -70,9 +70,6 @@ export interface NxReleaseVersionConfiguration {
   conventionalCommits?: boolean;
 }
 
-/**
- * **ALPHA**
- */
 export interface NxReleaseChangelogConfiguration {
   /**
    * Optionally create a release containing all relevant changes on a supported version control system, it
@@ -115,9 +112,6 @@ export interface NxReleaseChangelogConfiguration {
   renderOptions?: ChangelogRenderOptions;
 }
 
-/**
- * **ALPHA**
- */
 export interface NxReleaseGitConfiguration {
   /**
    * Whether or not to automatically commit the changes made by current command
@@ -149,9 +143,36 @@ export interface NxReleaseGitConfiguration {
   tagArgs?: string;
 }
 
-/**
- * **ALPHA**
- */
+export interface NxReleaseConventionalCommitsConfiguration {
+  types?: Record<
+    string,
+    /**
+     * A map of commit types to their configuration.
+     * If a type is set to 'true', then it will be enabled with the default 'semverBump' of 'patch' and will appear in the changelog.
+     * If a type is set to 'false', then it will not trigger a version bump and will be hidden from the changelog.
+     */
+    | {
+        /**
+         * The semver bump to apply when a commit of this type is found.
+         * If set to "none", the commit will be ignored for versioning purposes.
+         */
+        semverBump?: 'patch' | 'minor' | 'major' | 'none';
+        /**
+         * Configuration for the changelog section for commits of this type.
+         * If set to 'true', then commits of this type will be included in the changelog with their default title for the type.
+         * If set to 'false', then commits of this type will not be included in the changelog.
+         */
+        changelog?:
+          | {
+              title?: string;
+              hidden?: boolean;
+            }
+          | boolean;
+      }
+    | boolean
+  >;
+}
+
 interface NxReleaseConfiguration {
   /**
    * Shorthand for amending the projects which will be included in the implicit default release group (all projects by default).
@@ -241,6 +262,12 @@ interface NxReleaseConfiguration {
      * Enable or override configuration for git operations as part of the version subcommand
      */
     git?: NxReleaseGitConfiguration;
+    /**
+     * A command to run after validation of nx release configuration, but before versioning begins.
+     * Used for preparing build artifacts. If --dry-run is passed, the command is still executed, but
+     * with the NX_DRY_RUN environment variable set to 'true'.
+     */
+    preVersionCommand?: string;
   };
   /**
    * Optionally override the git/release tag pattern to use. This field is the source of truth
@@ -257,6 +284,7 @@ interface NxReleaseConfiguration {
    * Enable and configure automatic git operations as part of the release
    */
   git?: NxReleaseGitConfiguration;
+  conventionalCommits?: NxReleaseConventionalCommitsConfiguration;
 }
 
 /**
@@ -284,8 +312,15 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
   targetDefaults?: TargetDefaults;
   /**
    * Default options for `nx affected`
+   * @deprecated use {@link defaultBase} instead. For more information see https://nx.dev/deprecated/affected-config#affected-config
    */
   affected?: NxAffectedConfig;
+
+  /**
+   * Default value for --base used by `nx affected` and `nx format`.
+   */
+  defaultBase?: string;
+
   /**
    * Where new apps + libs should be placed
    */
@@ -359,7 +394,7 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
   installation?: NxInstallationConfiguration;
 
   /**
-   * **ALPHA**: Configuration for `nx release` (versioning and publishing of applications and libraries)
+   * Configuration for `nx release` (versioning and publishing of applications and libraries)
    */
   release?: NxReleaseConfiguration;
 
@@ -394,11 +429,21 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
    * Set this to false to disable the daemon.
    */
   useDaemonProcess?: boolean;
+
+  /**
+   * Set this to false to disable adding inference plugins when generating new projects
+   */
+  useInferencePlugins?: boolean;
 }
 
-export type PluginConfiguration =
-  | string
-  | { plugin: string; options?: unknown };
+export type PluginConfiguration = string | ExpandedPluginConfiguration;
+
+export type ExpandedPluginConfiguration<T = unknown> = {
+  plugin: string;
+  options?: T;
+  include?: string[];
+  exclude?: string[];
+};
 
 export function readNxJson(root: string = workspaceRoot): NxJsonConfiguration {
   const nxJson = join(root, 'nx.json');

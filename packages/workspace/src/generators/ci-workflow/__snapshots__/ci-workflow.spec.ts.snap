@@ -1,5 +1,221 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`CI Workflow generator optional e2e should add e2e to azure CI config 1`] = `
+"name: CI
+
+trigger:
+  - main
+pr:
+  - main
+
+variables:
+  CI: 'true'
+  \${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
+    NX_BRANCH: $(System.PullRequest.PullRequestNumber)
+    TARGET_BRANCH: $[replace(variables['System.PullRequest.TargetBranch'],'refs/heads/','origin/')]
+    BASE_SHA: $(git merge-base $(TARGET_BRANCH) HEAD)
+  \${{ if ne(variables['Build.Reason'], 'PullRequest') }}:
+    NX_BRANCH: $(Build.SourceBranchName)
+    BASE_SHA: $(git rev-parse HEAD~1)
+  HEAD_SHA: $(git rev-parse HEAD)
+
+jobs:
+  - job: main
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+      - checkout: self
+        fetchDepth: 0
+      # Set Azure Devops CLI default settings
+      - bash: az devops configure --defaults organization=$(System.TeamFoundationCollectionUri) project=$(System.TeamProject)
+        displayName: 'Set default Azure DevOps organization and project'
+      # Get last successfull commit from Azure Devops CLI
+      - bash: |
+          LAST_SHA=$(az pipelines build list --branch $(Build.SourceBranchName) --definition-ids $(System.DefinitionId) --result succeeded --top 1 --query "[0].triggerInfo.\\"ci.sourceSha\\"")
+          if [ -z "$LAST_SHA" ]
+          then
+            echo "Last successful commit not found. Using fallback 'HEAD~1': $BASE_SHA"
+          else
+            echo "Last successful commit SHA: $LAST_SHA"
+            echo "##vso[task.setvariable variable=BASE_SHA]$LAST_SHA"
+          fi
+        displayName: 'Get last successful commit SHA'
+        condition: ne(variables['Build.Reason'], 'PullRequest')
+        env:
+          AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)
+
+      # Connect your workspace on nx.app and uncomment this to enable task distribution.
+      # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "e2e-ci" targets have been requested
+      # - script: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="e2e-ci"
+
+      - script: npm ci
+      - script: git branch --track main origin/main
+        condition: eq(variables['Build.Reason'], 'PullRequest')
+
+      # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+      # - script: npx nx-cloud record -- echo Hello World
+      - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) lint test build
+      - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) --parallel 1 e2e-ci
+"
+`;
+
+exports[`CI Workflow generator optional e2e should add e2e to bitbucket pipelines config 1`] = `
+"image: node:20
+
+clone:
+  depth: full
+
+pipelines:
+  pull-requests:
+    '**':
+      - step:
+          name: 'Build and test affected apps on Pull Requests'
+          script:
+            - export NX_BRANCH=$BITBUCKET_PR_ID
+
+            # Connect your workspace on nx.app and uncomment this to enable task distribution.
+            # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "e2e-ci" targets have been requested
+            # - npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="e2e-ci"
+
+            - npm ci
+
+            - npx nx-cloud record -- nx format:check
+            - npx nx affected --base=origin/main -t lint test build
+            - npx nx affected --base=origin/main --parallel 1 -t e2e-ci
+
+  branches:
+    main:
+      - step:
+          name: 'Build and test affected apps on "main" branch changes'
+          script:
+            - export NX_BRANCH=$BITBUCKET_BRANCH
+            # Connect your workspace on nx.app and uncomment this to enable task distribution.
+            # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "e2e-ci" targets have been requested
+            # - npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="e2e-ci"
+
+            - npm ci
+
+            # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+            # - npx nx-cloud record -- echo Hello World
+            - npx nx affected -t lint test build e2e-ci --base=HEAD~1
+"
+`;
+
+exports[`CI Workflow generator optional e2e should add e2e to circleci CI config 1`] = `
+"version: 2.1
+
+orbs:
+  nx: nrwl/nx@1.6.2
+
+jobs:
+  main:
+    docker:
+      - image: cimg/node:lts-browsers
+    steps:
+      - checkout
+
+      # Connect your workspace on nx.app and uncomment this to enable task distribution.
+      # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "e2e-ci" targets have been requested
+      # - run: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="e2e-ci"
+
+      - run: npm ci
+      - nx/set-shas:
+          main-branch-name: 'main'
+
+      # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+      # - run: npx nx-cloud record -- echo Hello World
+      - run: npx nx affected --base=$NX_BASE --head=$NX_HEAD -t lint test build
+      - run: npx nx affected --base=$NX_BASE --head=$NX_HEAD --parallel 1 -t e2e-ci
+
+workflows:
+  version: 2
+
+  ci:
+    jobs:
+      - main
+"
+`;
+
+exports[`CI Workflow generator optional e2e should add e2e to github CI config 1`] = `
+"name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Connect your workspace on nx.app and uncomment this to enable task distribution.
+      # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "e2e-ci" targets have been requested
+      # - run: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="e2e-ci"
+
+      # Cache node_modules
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 20
+          cache: 'npm'
+      - run: npm ci
+      - uses: nrwl/nx-set-shas@v4
+
+      # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+      # - run: npx nx-cloud record -- echo Hello World
+      - run: npx nx affected -t lint test build
+      - run: npx nx affected --parallel 1 -t e2e-ci
+"
+`;
+
+exports[`CI Workflow generator optional e2e should add e2e to github CI config with custom name 1`] = `
+"name: My custom-workflow
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Connect your workspace on nx.app and uncomment this to enable task distribution.
+      # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "e2e-ci" targets have been requested
+      # - run: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="e2e-ci"
+
+      # Cache node_modules
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 20
+          cache: 'npm'
+      - run: npm ci
+      - uses: nrwl/nx-set-shas@v4
+
+      # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+      # - run: npx nx-cloud record -- echo Hello World
+      - run: npx nx affected -t lint test build
+      - run: npx nx affected --parallel 1 -t e2e-ci
+"
+`;
+
 exports[`CI Workflow generator with npm should generate azure CI config 1`] = `
 "name: CI
 
@@ -24,13 +240,37 @@ jobs:
     pool:
       vmImage: 'ubuntu-latest'
     steps:
-      - script: npm ci
+      - checkout: self
+        fetchDepth: 0
+      # Set Azure Devops CLI default settings
+      - bash: az devops configure --defaults organization=$(System.TeamFoundationCollectionUri) project=$(System.TeamProject)
+        displayName: 'Set default Azure DevOps organization and project'
+      # Get last successfull commit from Azure Devops CLI
+      - bash: |
+          LAST_SHA=$(az pipelines build list --branch $(Build.SourceBranchName) --definition-ids $(System.DefinitionId) --result succeeded --top 1 --query "[0].triggerInfo.\\"ci.sourceSha\\"")
+          if [ -z "$LAST_SHA" ]
+          then
+            echo "Last successful commit not found. Using fallback 'HEAD~1': $BASE_SHA"
+          else
+            echo "Last successful commit SHA: $LAST_SHA"
+            echo "##vso[task.setvariable variable=BASE_SHA]$LAST_SHA"
+          fi
+        displayName: 'Get last successful commit SHA'
+        condition: ne(variables['Build.Reason'], 'PullRequest')
+        env:
+          AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)
 
-      # Uncomment to enable task distribution. --stop-agents-after is optional, but allows idle agents to shut down once the "build" targets have been requested
+      # Connect your workspace on nx.app and uncomment this to enable task distribution.
+      # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
       # - script: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
 
-      - script: npx nx-cloud record -- nx format:check --base=$(BASE_SHA) --head=$(HEAD_SHA)
-      - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t=lint,test,build
+      - script: npm ci
+      - script: git branch --track main origin/main
+        condition: eq(variables['Build.Reason'], 'PullRequest')
+
+      # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+      # - script: npx nx-cloud record -- echo Hello World
+      - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) lint test build
 "
 `;
 
@@ -43,19 +283,35 @@ clone:
 pipelines:
   pull-requests:
     '**':
-      - parallel:
-          - step:
-              name: CI
-              script:
-                - export NX_BRANCH=$BITBUCKET_PR_ID
+      - step:
+          name: 'Build and test affected apps on Pull Requests'
+          script:
+            - export NX_BRANCH=$BITBUCKET_PR_ID
 
-                - npm ci
+            # Connect your workspace on nx.app and uncomment this to enable task distribution.
+            # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
+            # - npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
 
-                # Uncomment to enable task distribution. --stop-agents-after is optional, but allows idle agents to shut down once the "build" targets have been requested
-                # - npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+            - npm ci
 
-                - npx nx-cloud record -- nx format:check
-                - npx nx affected -t=lint,test,build
+            - npx nx-cloud record -- nx format:check
+            - npx nx affected --base=origin/main -t lint test build
+
+  branches:
+    main:
+      - step:
+          name: 'Build and test affected apps on "main" branch changes'
+          script:
+            - export NX_BRANCH=$BITBUCKET_BRANCH
+            # Connect your workspace on nx.app and uncomment this to enable task distribution.
+            # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
+            # - npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+
+            - npm ci
+
+            # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+            # - npx nx-cloud record -- echo Hello World
+            - npx nx affected -t lint test build --base=HEAD~1
 "
 `;
 
@@ -71,15 +327,18 @@ jobs:
       - image: cimg/node:lts-browsers
     steps:
       - checkout
+
+      # Connect your workspace on nx.app and uncomment this to enable task distribution.
+      # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
+      # - run: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+
       - run: npm ci
       - nx/set-shas:
           main-branch-name: 'main'
 
-      # Uncomment to enable task distribution. --stop-agents-after is optional, but allows idle agents to shut down once the "build" targets have been requested
-      # - run: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
-
-      - run: npx nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD
-      - run: npx nx affected --base=$NX_BASE --head=$NX_HEAD -t=lint,test,build
+      # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+      # - run: npx nx-cloud record -- echo Hello World
+      - run: npx nx affected --base=$NX_BASE --head=$NX_HEAD -t lint test build
 
 workflows:
   version: 2
@@ -110,6 +369,11 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      # Connect your workspace on nx.app and uncomment this to enable task distribution.
+      # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
+      # - run: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+
       # Cache node_modules
       - uses: actions/setup-node@v3
         with:
@@ -118,11 +382,9 @@ jobs:
       - run: npm ci
       - uses: nrwl/nx-set-shas@v4
 
-      # Uncomment to enable task distribution. --stop-agents-after is optional, but allows idle agents to shut down once the "build" targets have been requested
-      # - run: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
-
-      - run: npx nx-cloud record -- nx format:check
-      - run: npx nx affected -t=lint,test,build
+      # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+      # - run: npx nx-cloud record -- echo Hello World
+      - run: npx nx affected -t lint test build
 "
 `;
 
@@ -146,6 +408,11 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      # Connect your workspace on nx.app and uncomment this to enable task distribution.
+      # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
+      # - run: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+
       # Cache node_modules
       - uses: actions/setup-node@v3
         with:
@@ -154,11 +421,9 @@ jobs:
       - run: npm ci
       - uses: nrwl/nx-set-shas@v4
 
-      # Uncomment to enable task distribution. --stop-agents-after is optional, but allows idle agents to shut down once the "build" targets have been requested
-      # - run: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
-
-      - run: npx nx-cloud record -- nx format:check
-      - run: npx nx affected -t=lint,test,build
+      # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+      # - run: npx nx-cloud record -- echo Hello World
+      - run: npx nx affected -t lint test build
 "
 `;
 
@@ -174,19 +439,19 @@ CI:
     - main
     - merge_requests
   script:
+    # Connect your workspace on nx.app and uncomment this to enable task distribution.
+    # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
+    # - npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+
     - npm ci
     - NX_HEAD=$CI_COMMIT_SHA
     - NX_BASE=\${CI_MERGE_REQUEST_DIFF_BASE_SHA:-$CI_COMMIT_BEFORE_SHA}
 
-    # Uncomment to enable task distribution. --stop-agents-after is optional, but allows idle agents to shut down once the "build" targets have been requested
-    # - npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
-
-    - npx nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD
-    - npx nx affected --base=$NX_BASE --head=$NX_HEAD -t=lint,test,build
+    # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+    # - npx nx-cloud record -- echo Hello World
+    - npx nx affected --base=$NX_BASE --head=$NX_HEAD -t lint test build
 "
 `;
-
-exports[`CI Workflow generator with npm should throw error is nx cloud is not set 1`] = `"This workspace is not connected to Nx Cloud."`;
 
 exports[`CI Workflow generator with pnpm should generate azure CI config 1`] = `
 "name: CI
@@ -212,15 +477,40 @@ jobs:
     pool:
       vmImage: 'ubuntu-latest'
     steps:
+      - checkout: self
+        fetchDepth: 0
+      # Set Azure Devops CLI default settings
+      - bash: az devops configure --defaults organization=$(System.TeamFoundationCollectionUri) project=$(System.TeamProject)
+        displayName: 'Set default Azure DevOps organization and project'
+      # Get last successfull commit from Azure Devops CLI
+      - bash: |
+          LAST_SHA=$(az pipelines build list --branch $(Build.SourceBranchName) --definition-ids $(System.DefinitionId) --result succeeded --top 1 --query "[0].triggerInfo.\\"ci.sourceSha\\"")
+          if [ -z "$LAST_SHA" ]
+          then
+            echo "Last successful commit not found. Using fallback 'HEAD~1': $BASE_SHA"
+          else
+            echo "Last successful commit SHA: $LAST_SHA"
+            echo "##vso[task.setvariable variable=BASE_SHA]$LAST_SHA"
+          fi
+        displayName: 'Get last successful commit SHA'
+        condition: ne(variables['Build.Reason'], 'PullRequest')
+        env:
+          AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)
+
       - script: npm install --prefix=$HOME/.local -g pnpm@8
         displayName: Install PNPM
+
+      # Connect your workspace on nx.app and uncomment this to enable task distribution.
+      # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
+      # - script: pnpm dlx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+
       - script: pnpm install --frozen-lockfile
+      - script: git branch --track main origin/main
+        condition: eq(variables['Build.Reason'], 'PullRequest')
 
-      # Uncomment to enable task distribution. --stop-agents-after is optional, but allows idle agents to shut down once the "build" targets have been requested
-      # - script: pnpm exec nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
-
-      - script: pnpm exec nx-cloud record -- nx format:check --base=$(BASE_SHA) --head=$(HEAD_SHA)
-      - script: pnpm exec nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t=lint,test,build
+      # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+      # - script: pnpm exec nx-cloud record -- echo Hello World
+      - script: pnpm exec nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) lint test build
 "
 `;
 
@@ -233,21 +523,39 @@ clone:
 pipelines:
   pull-requests:
     '**':
-      - parallel:
-          - step:
-              name: CI
-              script:
-                - export NX_BRANCH=$BITBUCKET_PR_ID
+      - step:
+          name: 'Build and test affected apps on Pull Requests'
+          script:
+            - export NX_BRANCH=$BITBUCKET_PR_ID
 
-                - npm install --prefix=$HOME/.local -g pnpm@8
+            - npm install --prefix=$HOME/.local -g pnpm@8
 
-                - pnpm install --frozen-lockfile
+            # Connect your workspace on nx.app and uncomment this to enable task distribution.
+            # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
+            # - pnpm dlx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
 
-                # Uncomment to enable task distribution. --stop-agents-after is optional, but allows idle agents to shut down once the "build" targets have been requested
-                # - pnpm exec nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+            - pnpm install --frozen-lockfile
 
-                - pnpm exec nx-cloud record -- nx format:check
-                - pnpm exec nx affected -t=lint,test,build
+            - pnpm exec nx-cloud record -- nx format:check
+            - pnpm exec nx affected --base=origin/main -t lint test build
+
+  branches:
+    main:
+      - step:
+          name: 'Build and test affected apps on "main" branch changes'
+          script:
+            - export NX_BRANCH=$BITBUCKET_BRANCH
+            # Connect your workspace on nx.app and uncomment this to enable task distribution.
+            # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
+            # - pnpm dlx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+
+            - npm install --prefix=$HOME/.local -g pnpm@8
+
+            - pnpm install --frozen-lockfile
+
+            # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+            # - pnpm exec nx-cloud record -- echo Hello World
+            - pnpm exec nx affected -t lint test build --base=HEAD~1
 "
 `;
 
@@ -267,15 +575,18 @@ jobs:
       - run:
           name: Install PNPM
           command: npm install --prefix=$HOME/.local -g pnpm@8
+
+      # Connect your workspace on nx.app and uncomment this to enable task distribution.
+      # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
+      # - run: pnpm dlx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+
       - run: pnpm install --frozen-lockfile
       - nx/set-shas:
           main-branch-name: 'main'
 
-      # Uncomment to enable task distribution. --stop-agents-after is optional, but allows idle agents to shut down once the "build" targets have been requested
-      # - run: pnpm exec nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
-
-      - run: pnpm exec nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD
-      - run: pnpm exec nx affected --base=$NX_BASE --head=$NX_HEAD -t=lint,test,build
+      # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+      # - run: pnpm exec nx-cloud record -- echo Hello World
+      - run: pnpm exec nx affected --base=$NX_BASE --head=$NX_HEAD -t lint test build
 
 workflows:
   version: 2
@@ -310,6 +621,11 @@ jobs:
       - uses: pnpm/action-setup@v2
         with:
           version: 8
+
+      # Connect your workspace on nx.app and uncomment this to enable task distribution.
+      # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
+      # - run: pnpm dlx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+
       # Cache node_modules
       - uses: actions/setup-node@v3
         with:
@@ -318,11 +634,9 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - uses: nrwl/nx-set-shas@v4
 
-      # Uncomment to enable task distribution. --stop-agents-after is optional, but allows idle agents to shut down once the "build" targets have been requested
-      # - run: pnpm exec nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
-
-      - run: pnpm exec nx-cloud record -- nx format:check
-      - run: pnpm exec nx affected -t=lint,test,build
+      # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+      # - run: pnpm exec nx-cloud record -- echo Hello World
+      - run: pnpm exec nx affected -t lint test build
 "
 `;
 
@@ -350,6 +664,11 @@ jobs:
       - uses: pnpm/action-setup@v2
         with:
           version: 8
+
+      # Connect your workspace on nx.app and uncomment this to enable task distribution.
+      # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
+      # - run: pnpm dlx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+
       # Cache node_modules
       - uses: actions/setup-node@v3
         with:
@@ -358,11 +677,9 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - uses: nrwl/nx-set-shas@v4
 
-      # Uncomment to enable task distribution. --stop-agents-after is optional, but allows idle agents to shut down once the "build" targets have been requested
-      # - run: pnpm exec nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
-
-      - run: pnpm exec nx-cloud record -- nx format:check
-      - run: pnpm exec nx affected -t=lint,test,build
+      # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+      # - run: pnpm exec nx-cloud record -- echo Hello World
+      - run: pnpm exec nx affected -t lint test build
 "
 `;
 
@@ -380,19 +697,19 @@ CI:
   script:
     - npm install --prefix=$HOME/.local -g pnpm@8
 
+    # Connect your workspace on nx.app and uncomment this to enable task distribution.
+    # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
+    # - pnpm dlx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+
     - pnpm install --frozen-lockfile
     - NX_HEAD=$CI_COMMIT_SHA
     - NX_BASE=\${CI_MERGE_REQUEST_DIFF_BASE_SHA:-$CI_COMMIT_BEFORE_SHA}
 
-    # Uncomment to enable task distribution. --stop-agents-after is optional, but allows idle agents to shut down once the "build" targets have been requested
-    # - pnpm exec nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
-
-    - pnpm exec nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD
-    - pnpm exec nx affected --base=$NX_BASE --head=$NX_HEAD -t=lint,test,build
+    # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+    # - pnpm exec nx-cloud record -- echo Hello World
+    - pnpm exec nx affected --base=$NX_BASE --head=$NX_HEAD -t lint test build
 "
 `;
-
-exports[`CI Workflow generator with pnpm should throw error is nx cloud is not set 1`] = `"This workspace is not connected to Nx Cloud."`;
 
 exports[`CI Workflow generator with yarn should generate azure CI config 1`] = `
 "name: CI
@@ -418,13 +735,37 @@ jobs:
     pool:
       vmImage: 'ubuntu-latest'
     steps:
-      - script: yarn install --frozen-lockfile
+      - checkout: self
+        fetchDepth: 0
+      # Set Azure Devops CLI default settings
+      - bash: az devops configure --defaults organization=$(System.TeamFoundationCollectionUri) project=$(System.TeamProject)
+        displayName: 'Set default Azure DevOps organization and project'
+      # Get last successfull commit from Azure Devops CLI
+      - bash: |
+          LAST_SHA=$(az pipelines build list --branch $(Build.SourceBranchName) --definition-ids $(System.DefinitionId) --result succeeded --top 1 --query "[0].triggerInfo.\\"ci.sourceSha\\"")
+          if [ -z "$LAST_SHA" ]
+          then
+            echo "Last successful commit not found. Using fallback 'HEAD~1': $BASE_SHA"
+          else
+            echo "Last successful commit SHA: $LAST_SHA"
+            echo "##vso[task.setvariable variable=BASE_SHA]$LAST_SHA"
+          fi
+        displayName: 'Get last successful commit SHA'
+        condition: ne(variables['Build.Reason'], 'PullRequest')
+        env:
+          AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)
 
-      # Uncomment to enable task distribution. --stop-agents-after is optional, but allows idle agents to shut down once the "build" targets have been requested
+      # Connect your workspace on nx.app and uncomment this to enable task distribution.
+      # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
       # - script: yarn nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
 
-      - script: yarn nx-cloud record -- nx format:check --base=$(BASE_SHA) --head=$(HEAD_SHA)
-      - script: yarn nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t=lint,test,build
+      - script: yarn install --frozen-lockfile
+      - script: git branch --track main origin/main
+        condition: eq(variables['Build.Reason'], 'PullRequest')
+
+      # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+      # - script: yarn nx-cloud record -- echo Hello World
+      - script: yarn nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) lint test build
 "
 `;
 
@@ -437,19 +778,35 @@ clone:
 pipelines:
   pull-requests:
     '**':
-      - parallel:
-          - step:
-              name: CI
-              script:
-                - export NX_BRANCH=$BITBUCKET_PR_ID
+      - step:
+          name: 'Build and test affected apps on Pull Requests'
+          script:
+            - export NX_BRANCH=$BITBUCKET_PR_ID
 
-                - yarn install --frozen-lockfile
+            # Connect your workspace on nx.app and uncomment this to enable task distribution.
+            # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
+            # - yarn nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
 
-                # Uncomment to enable task distribution. --stop-agents-after is optional, but allows idle agents to shut down once the "build" targets have been requested
-                # - yarn nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+            - yarn install --frozen-lockfile
 
-                - yarn nx-cloud record -- nx format:check
-                - yarn nx affected -t=lint,test,build
+            - yarn nx-cloud record -- nx format:check
+            - yarn nx affected --base=origin/main -t lint test build
+
+  branches:
+    main:
+      - step:
+          name: 'Build and test affected apps on "main" branch changes'
+          script:
+            - export NX_BRANCH=$BITBUCKET_BRANCH
+            # Connect your workspace on nx.app and uncomment this to enable task distribution.
+            # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
+            # - yarn nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+
+            - yarn install --frozen-lockfile
+
+            # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+            # - yarn nx-cloud record -- echo Hello World
+            - yarn nx affected -t lint test build --base=HEAD~1
 "
 `;
 
@@ -465,15 +822,18 @@ jobs:
       - image: cimg/node:lts-browsers
     steps:
       - checkout
+
+      # Connect your workspace on nx.app and uncomment this to enable task distribution.
+      # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
+      # - run: yarn nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+
       - run: yarn install --frozen-lockfile
       - nx/set-shas:
           main-branch-name: 'main'
 
-      # Uncomment to enable task distribution. --stop-agents-after is optional, but allows idle agents to shut down once the "build" targets have been requested
-      # - run: yarn nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
-
-      - run: yarn nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD
-      - run: yarn nx affected --base=$NX_BASE --head=$NX_HEAD -t=lint,test,build
+      # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+      # - run: yarn nx-cloud record -- echo Hello World
+      - run: yarn nx affected --base=$NX_BASE --head=$NX_HEAD -t lint test build
 
 workflows:
   version: 2
@@ -504,6 +864,11 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      # Connect your workspace on nx.app and uncomment this to enable task distribution.
+      # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
+      # - run: yarn nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+
       # Cache node_modules
       - uses: actions/setup-node@v3
         with:
@@ -512,11 +877,9 @@ jobs:
       - run: yarn install --frozen-lockfile
       - uses: nrwl/nx-set-shas@v4
 
-      # Uncomment to enable task distribution. --stop-agents-after is optional, but allows idle agents to shut down once the "build" targets have been requested
-      # - run: yarn nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
-
-      - run: yarn nx-cloud record -- nx format:check
-      - run: yarn nx affected -t=lint,test,build
+      # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+      # - run: yarn nx-cloud record -- echo Hello World
+      - run: yarn nx affected -t lint test build
 "
 `;
 
@@ -540,6 +903,11 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      # Connect your workspace on nx.app and uncomment this to enable task distribution.
+      # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
+      # - run: yarn nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+
       # Cache node_modules
       - uses: actions/setup-node@v3
         with:
@@ -548,11 +916,9 @@ jobs:
       - run: yarn install --frozen-lockfile
       - uses: nrwl/nx-set-shas@v4
 
-      # Uncomment to enable task distribution. --stop-agents-after is optional, but allows idle agents to shut down once the "build" targets have been requested
-      # - run: yarn nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
-
-      - run: yarn nx-cloud record -- nx format:check
-      - run: yarn nx affected -t=lint,test,build
+      # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+      # - run: yarn nx-cloud record -- echo Hello World
+      - run: yarn nx affected -t lint test build
 "
 `;
 
@@ -568,16 +934,16 @@ CI:
     - main
     - merge_requests
   script:
+    # Connect your workspace on nx.app and uncomment this to enable task distribution.
+    # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
+    # - yarn nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+
     - yarn install --frozen-lockfile
     - NX_HEAD=$CI_COMMIT_SHA
     - NX_BASE=\${CI_MERGE_REQUEST_DIFF_BASE_SHA:-$CI_COMMIT_BEFORE_SHA}
 
-    # Uncomment to enable task distribution. --stop-agents-after is optional, but allows idle agents to shut down once the "build" targets have been requested
-    # - yarn nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
-
-    - yarn nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD
-    - yarn nx affected --base=$NX_BASE --head=$NX_HEAD -t=lint,test,build
+    # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+    # - yarn nx-cloud record -- echo Hello World
+    - yarn nx affected --base=$NX_BASE --head=$NX_HEAD -t lint test build
 "
 `;
-
-exports[`CI Workflow generator with yarn should throw error is nx cloud is not set 1`] = `"This workspace is not connected to Nx Cloud."`;

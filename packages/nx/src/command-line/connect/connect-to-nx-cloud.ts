@@ -1,5 +1,7 @@
 import { output } from '../../utils/output';
 import { readNxJson } from '../../config/configuration';
+import { FsTree, flushChanges } from '../../generators/tree';
+import { connectToNxCloud } from '../../nx-cloud/generators/connect-to-nx-cloud/connect-to-nx-cloud';
 import { getNxCloudUrl, isNxCloudUsed } from '../../utils/nx-cloud-utils';
 import { runNxSync } from '../../utils/child-process';
 import { NxJsonConfiguration } from '../../config/nx-json';
@@ -11,6 +13,7 @@ import {
   messages,
 } from '../../utils/ab-testing';
 import { nxVersion } from '../../utils/versions';
+import { workspaceRoot } from '../../utils/workspace-root';
 import chalk = require('chalk');
 
 export function onlyDefaultRunnerIsUsed(nxJson: NxJsonConfiguration) {
@@ -50,7 +53,7 @@ export async function connectToNxCloudCommand(): Promise<boolean> {
   const nxJson = readNxJson();
   if (isNxCloudUsed(nxJson)) {
     output.log({
-      title: '✔ This workspace has already Nx Cloud set up',
+      title: '✔ This workspace already has Nx Cloud set up',
       bodyLines: [
         'If you have not done so already, connect your workspace to your Nx Cloud account:',
         `- Login at ${getNxCloudUrl(nxJson)} to connect your repository`,
@@ -59,15 +62,19 @@ export async function connectToNxCloudCommand(): Promise<boolean> {
     return false;
   }
 
-  runNxSync(`g nx:connect-to-nx-cloud --quiet --no-interactive`, {
-    stdio: [0, 1, 2],
-  });
+  const tree = new FsTree(workspaceRoot, false, 'connect-to-nx-cloud');
+  const callback = await connectToNxCloud(tree, {});
+  tree.lock();
+  flushChanges(workspaceRoot, tree.listChanges());
+  callback();
+
   return true;
 }
 
 export async function connectToNxCloudWithPrompt(command: string) {
   const setNxCloud = await nxCloudPrompt('setupNxCloud');
-  const useCloud = setNxCloud ? await connectToNxCloudCommand() : false;
+  const useCloud =
+    setNxCloud === 'yes' ? await connectToNxCloudCommand() : false;
   await recordStat({
     command,
     nxVersion,

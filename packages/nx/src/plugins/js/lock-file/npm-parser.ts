@@ -13,7 +13,7 @@ import {
   ProjectGraphExternalNode,
 } from '../../../config/project-graph';
 import { hashArray } from '../../../hasher/file-hasher';
-import { CreateDependenciesContext } from '../../../utils/nx-plugin';
+import { CreateDependenciesContext } from '../../../project-graph/plugins';
 
 /**
  * NPM
@@ -305,7 +305,19 @@ function findTarget(
 
   if (keyMap.has(searchPath)) {
     const child = keyMap.get(searchPath);
+    // if the version is alias to another package we need to parse the versions to compare
     if (
+      child.data.version.startsWith('npm:') &&
+      versionRange.startsWith('npm:')
+    ) {
+      const nodeVersion = child.data.version.slice(
+        child.data.version.indexOf('@', 5) + 1
+      );
+      const depVersion = versionRange.slice(versionRange.indexOf('@', 5) + 1);
+      if (nodeVersion === depVersion || satisfies(nodeVersion, depVersion)) {
+        return child;
+      }
+    } else if (
       child.data.version === versionRange ||
       satisfies(child.data.version, versionRange)
     ) {

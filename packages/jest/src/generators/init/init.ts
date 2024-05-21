@@ -1,5 +1,6 @@
 import {
   addDependenciesToPackageJson,
+  createProjectGraphAsync,
   formatFiles,
   readNxJson,
   removeDependenciesFromPackageJson,
@@ -8,31 +9,14 @@ import {
   type GeneratorCallback,
   type Tree,
 } from '@nx/devkit';
-import { updatePackageScripts } from '@nx/devkit/src/utils/update-package-scripts';
+import { addPlugin } from '@nx/devkit/src/utils/add-plugin';
 import { createNodes } from '../../plugins/plugin';
+import {
+  getPresetExt,
+  type JestPresetExtension,
+} from '../../utils/config/config-file';
 import { jestVersion, nxVersion } from '../../utils/versions';
 import type { JestInitSchema } from './schema';
-
-function addPlugin(tree: Tree) {
-  const nxJson = readNxJson(tree);
-
-  nxJson.plugins ??= [];
-  if (
-    !nxJson.plugins.some((p) =>
-      typeof p === 'string'
-        ? p === '@nx/jest/plugin'
-        : p.plugin === '@nx/jest/plugin'
-    )
-  ) {
-    nxJson.plugins.push({
-      plugin: '@nx/jest/plugin',
-      options: {
-        targetName: 'test',
-      },
-    });
-  }
-  updateNxJson(tree, nxJson);
-}
 
 function updateProductionFileSet(tree: Tree) {
   const nxJson = readNxJson(tree);
@@ -59,7 +43,7 @@ function updateProductionFileSet(tree: Tree) {
   updateNxJson(tree, nxJson);
 }
 
-function addJestTargetDefaults(tree: Tree) {
+function addJestTargetDefaults(tree: Tree, presetExt: JestPresetExtension) {
   const nxJson = readNxJson(tree);
 
   nxJson.targetDefaults ??= {};
@@ -72,7 +56,7 @@ function addJestTargetDefaults(tree: Tree) {
   nxJson.targetDefaults['@nx/jest:jest'].inputs ??= [
     'default',
     productionFileSet ? '^production' : '^default',
-    '{workspaceRoot}/jest.preset.js',
+    `{workspaceRoot}/jest.preset.${presetExt}`,
   ];
 
   nxJson.targetDefaults['@nx/jest:jest'].options ??= {
@@ -101,16 +85,37 @@ function updateDependencies(tree: Tree, options: JestInitSchema) {
   );
 }
 
-export async function jestInitGenerator(
+export function jestInitGenerator(tree: Tree, options: JestInitSchema) {
+  return jestInitGeneratorInternal(tree, { addPlugin: false, ...options });
+}
+
+export async function jestInitGeneratorInternal(
   tree: Tree,
   options: JestInitSchema
 ): Promise<GeneratorCallback> {
-  if (!tree.exists('jest.preset.js')) {
+  const nxJson = readNxJson(tree);
+  const addPluginDefault =
+    process.env.NX_ADD_PLUGINS !== 'false' &&
+    nxJson.useInferencePlugins !== false;
+  options.addPlugin ??= addPluginDefault;
+
+  const presetExt = getPresetExt(tree);
+
+  if (!tree.exists(`jest.preset.${presetExt}`)) {
     updateProductionFileSet(tree);
-    if (process.env.NX_PCV3 === 'true') {
-      addPlugin(tree);
+    if (options.addPlugin) {
+      await addPlugin(
+        tree,
+        await createProjectGraphAsync(),
+        '@nx/jest/plugin',
+        createNodes,
+        {
+          targetName: ['test', 'jest:test', 'jest-test'],
+        },
+        options.updatePackageScripts
+      );
     } else {
-      addJestTargetDefaults(tree);
+      addJestTargetDefaults(tree, presetExt);
     }
   }
 
@@ -118,10 +123,6 @@ export async function jestInitGenerator(
   if (!options.skipPackageJson) {
     tasks.push(removeDependenciesFromPackageJson(tree, ['@nx/jest'], []));
     tasks.push(updateDependencies(tree, options));
-  }
-
-  if (options.updatePackageScripts) {
-    await updatePackageScripts(tree, createNodes);
   }
 
   if (!options.skipFormat) {

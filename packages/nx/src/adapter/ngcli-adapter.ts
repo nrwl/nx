@@ -23,7 +23,14 @@ import { Stats } from 'fs';
 import { dirname, extname, join, resolve } from 'path';
 
 import { concat, from, Observable, of, zip } from 'rxjs';
-import { catchError, concatMap, map, tap } from 'rxjs/operators';
+import {
+  catchError,
+  concatMap,
+  defaultIfEmpty,
+  last,
+  map,
+  tap,
+} from 'rxjs/operators';
 
 import type { GenerateOptions } from '../command-line/generate/generate';
 import { NxJsonConfiguration } from '../config/nx-json';
@@ -56,10 +63,12 @@ import {
   Executor,
   ExecutorConfig,
   ExecutorContext,
+  ExecutorJsonEntryConfig,
   ExecutorsJson,
+  GeneratorCallback,
   TaskGraphExecutor,
 } from '../config/misc-interfaces';
-import { readPluginPackageJson } from '../utils/nx-plugin';
+import { readPluginPackageJson } from '../project-graph/plugins';
 import {
   getImplementationFactory,
   resolveImplementation,
@@ -967,7 +976,10 @@ export function wrapAngularDevkitSchematic(
   // were written with Nx in mind, and may care about tags.
   require('./compat');
 
-  return async (host: Tree, generatorOptions: { [k: string]: any }) => {
+  return async (
+    host: Tree,
+    generatorOptions: { [k: string]: any }
+  ): Promise<GeneratorCallback> => {
     const graph = await createProjectGraphAsync();
     const { projects } = readProjectsConfigurationFromProjectGraph(graph);
 
@@ -980,16 +992,6 @@ export function wrapAngularDevkitSchematic(
         generatorOptions
       );
     }
-
-    const emptyLogger = {
-      log: (e) => {},
-      info: (e) => {},
-      warn: (e) => {},
-      debug: () => {},
-      error: (e) => {},
-      fatal: (e) => {},
-    } as any;
-    emptyLogger.createChild = () => emptyLogger;
 
     const recorder = (
       event: import('@angular-devkit/schematics').DryRunEvent
@@ -1020,6 +1022,7 @@ export function wrapAngularDevkitSchematic(
 
     const fsHost = new NxScopeHostUsedForWrappedSchematics(host.root, host);
 
+    const logger = getLogger(generatorOptions.verbose);
     const options = {
       generatorOptions,
       dryRun: true,
@@ -1052,7 +1055,7 @@ export function wrapAngularDevkitSchematic(
       fsHost,
       host.root,
       workflow,
-      emptyLogger,
+      logger,
       options,
       schematic,
       false,
@@ -1062,6 +1065,19 @@ export function wrapAngularDevkitSchematic(
     if (res.status !== 0) {
       throw new Error(res.loggingQueue.join('\n'));
     }
+
+    const { lastValueFrom } = require('rxjs');
+    const toPromise = (obs: Observable<any>) =>
+      lastValueFrom ? lastValueFrom(obs) : obs.toPromise();
+
+    return async () => {
+      // https://github.com/angular/angular-cli/blob/344193f79d880177e421cff85dd3e94338d07420/packages/angular_devkit/schematics/src/workflow/base.ts#L194-L200
+      await toPromise(
+        workflow.engine
+          .executePostTasks()
+          .pipe(defaultIfEmpty(undefined), last())
+      );
+    };
   };
 }
 
@@ -1159,14 +1175,11 @@ async function getWrappedWorkspaceNodeModulesArchitectHost(
         builderName
       );
       const builderInfo = this.readExecutor(packageName, builderName);
-      const { builders, executors } =
-        readJsonFile<ExecutorsJson>(executorsFilePath);
+
       return {
         name: builderStr,
         builderName,
-        description:
-          builders?.[builderName]?.description ??
-          executors?.[builderName]?.description,
+        description: executorConfig.description,
         optionSchema: builderInfo.schema,
         import: resolveImplementation(
           executorConfig.implementation,
@@ -1175,7 +1188,14 @@ async function getWrappedWorkspaceNodeModulesArchitectHost(
       };
     }
 
-    private readExecutorsJson(nodeModule: string, builder: string) {
+    private readExecutorsJson(
+      nodeModule: string,
+      builder: string
+    ): {
+      executorsFilePath: string;
+      executorConfig: ExecutorJsonEntryConfig;
+      isNgCompat: true;
+    } {
       const { json: packageJson, path: packageJsonPath } =
         readPluginPackageJson(
           nodeModule,
@@ -1194,18 +1214,19 @@ async function getWrappedWorkspaceNodeModulesArchitectHost(
         join(dirname(packageJsonPath), executorsFile)
       );
       const executorsJson = readJsonFile<ExecutorsJson>(executorsFilePath);
-      const executorConfig: {
-        implementation: string;
-        batchImplementation?: string;
-        schema: string;
-        hasher?: string;
-      } =
+      const executorConfig =
         executorsJson.builders?.[builder] ?? executorsJson.executors?.[builder];
       if (!executorConfig) {
         throw new Error(
           `Cannot find builder '${builder}' in ${executorsFilePath}.`
         );
       }
+      if (typeof executorConfig === 'string') {
+        // Angular CLI can have a builder pointing to another package:builder
+        const [packageName, executorName] = executorConfig.split(':');
+        return this.readExecutorsJson(packageName, executorName);
+      }
+
       return { executorsFilePath, executorConfig, isNgCompat: true };
     }
 

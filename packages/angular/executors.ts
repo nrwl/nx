@@ -7,13 +7,14 @@ export * from './src/executors/ng-packagr-lite/ng-packagr-lite.impl';
 export * from './src/executors/package/package.impl';
 export * from './src/executors/browser-esbuild/browser-esbuild.impl';
 export * from './src/executors/application/application.impl';
+export * from './src/executors/extract-i18n/extract-i18n.impl';
 
 import { executeDevServerBuilder } from './src/builders/dev-server/dev-server.impl';
 
 export {
-  // TODO(v19): remove this alias
+  // TODO(v20): remove this alias
   /**
-   * @deprecated Use executeDevServerBuilder instead. It will be removed in Nx v19.
+   * @deprecated Use executeDevServerBuilder instead. It will be removed in Nx v20.
    */
   executeDevServerBuilder as executeWebpackDevServerBuilder,
   executeDevServerBuilder,

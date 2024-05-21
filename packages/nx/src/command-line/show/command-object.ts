@@ -1,27 +1,36 @@
 import type { ProjectGraphProjectNode } from '../../config/project-graph';
 import { CommandModule, showHelp } from 'yargs';
-import { parseCSV, withAffectedOptions } from '../yargs-utils/shared-options';
+import {
+  parseCSV,
+  withAffectedOptions,
+  withVerbose,
+} from '../yargs-utils/shared-options';
+import { handleErrors } from '../../utils/params';
 
 export interface NxShowArgs {
   json?: boolean;
 }
 
 export type ShowProjectsOptions = NxShowArgs & {
-  exclude: string;
-  files: string;
-  uncommitted: any;
-  untracked: any;
-  base: string;
-  head: string;
-  affected: boolean;
-  type: ProjectGraphProjectNode['type'];
-  projects: string[];
-  withTarget: string[];
+  exclude?: string[];
+  files?: string;
+  uncommitted?: any;
+  untracked?: any;
+  base?: string;
+  head?: string;
+  affected?: boolean;
+  type?: ProjectGraphProjectNode['type'];
+  projects?: string[];
+  withTarget?: string[];
+  verbose?: boolean;
+  sep?: string;
 };
 
 export type ShowProjectOptions = NxShowArgs & {
   projectName: string;
   web?: boolean;
+  open?: boolean;
+  verbose?: boolean;
 };
 
 export const yargsShowCommand: CommandModule<
@@ -61,7 +70,7 @@ const showProjectsCommand: CommandModule<NxShowArgs, ShowProjectsOptions> = {
   command: 'projects',
   describe: 'Show a list of projects in the workspace',
   builder: (yargs) =>
-    withAffectedOptions(yargs)
+    withVerbose(withAffectedOptions(yargs))
       .option('affected', {
         type: 'boolean',
         description: 'Show only affected projects',
@@ -83,11 +92,17 @@ const showProjectsCommand: CommandModule<NxShowArgs, ShowProjectsOptions> = {
         description: 'Select only projects of the given type',
         choices: ['app', 'lib', 'e2e'],
       })
+      .option('sep', {
+        type: 'string',
+        description: 'Outputs projects with the specified seperator',
+      })
       .implies('untracked', 'affected')
       .implies('uncommitted', 'affected')
       .implies('files', 'affected')
       .implies('base', 'affected')
       .implies('head', 'affected')
+      .conflicts('sep', 'json')
+      .conflicts('json', 'sep')
       .example(
         '$0 show projects --projects "apps/*"',
         'Show all projects in the apps directory'
@@ -108,33 +123,68 @@ const showProjectsCommand: CommandModule<NxShowArgs, ShowProjectsOptions> = {
         '$0 show projects --affected --exclude=*-e2e',
         'Show affected projects in the workspace, excluding end-to-end projects'
       ) as any,
-  handler: (args) => import('./show').then((m) => m.showProjectsHandler(args)),
+  handler: (args) => {
+    return handleErrors(
+      args.verbose ?? process.env.NX_VERBOSE_LOGGING === 'true',
+      async () => {
+        const { showProjectsHandler } = await import('./projects');
+        await showProjectsHandler(args);
+        process.exit(0);
+      }
+    );
+  },
 };
 
 const showProjectCommand: CommandModule<NxShowArgs, ShowProjectOptions> = {
   command: 'project <projectName>',
   describe: 'Shows resolved project configuration for a given project.',
   builder: (yargs) =>
-    yargs
+    withVerbose(yargs)
       .positional('projectName', {
         type: 'string',
         alias: 'p',
         description: 'Which project should be viewed?',
       })
-      .default('json', true)
       .option('web', {
         type: 'boolean',
-        description: 'Show project details in the browser',
+        description:
+          'Show project details in the browser. (default when interactive)',
+      })
+      .option('open', {
+        type: 'boolean',
+        description:
+          'Set to false to prevent the browser from opening when using --web',
+        implies: 'web',
       })
       .check((argv) => {
-        if (argv.web) {
-          argv.json = false;
+        // If TTY is enabled, default to web. Otherwise, default to JSON.
+        const alreadySpecified =
+          argv.web !== undefined || argv.json !== undefined;
+        if (!alreadySpecified) {
+          if (process.stdout.isTTY) {
+            argv.web = true;
+          } else {
+            argv.json = true;
+          }
         }
         return true;
       })
       .example(
         '$0 show project my-app',
         'View project information for my-app in JSON format'
+      )
+      .example(
+        '$0 show project my-app --web',
+        'View project information for my-app in the browser'
       ),
-  handler: (args) => import('./show').then((m) => m.showProjectHandler(args)),
+  handler: (args) => {
+    return handleErrors(
+      args.verbose ?? process.env.NX_VERBOSE_LOGGING === 'true',
+      async () => {
+        const { showProjectHandler } = await import('./project');
+        await showProjectHandler(args);
+        process.exit(0);
+      }
+    );
+  },
 };

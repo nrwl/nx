@@ -1,5 +1,12 @@
-import { addProjectConfiguration, writeJson } from '@nx/devkit';
+import {
+  Tree,
+  addProjectConfiguration,
+  readProjectConfiguration,
+  updateProjectConfiguration,
+  writeJson,
+} from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { AngularProjectConfiguration } from '../../utils/types';
 import { componentGenerator } from './component';
 
 describe('component Generator', () => {
@@ -202,7 +209,7 @@ describe('component Generator', () => {
       "import { Component } from '@angular/core';
 
       @Component({
-        selector: 'proj-example',
+        selector: 'example',
         templateUrl: './example.component.html'
       })
       export class ExampleComponent {}
@@ -882,6 +889,108 @@ export class LibModule {}
           skipFormat: true,
         })
       ).rejects.toThrow();
+    });
+  });
+
+  describe('prefix & selector', () => {
+    let tree: Tree;
+
+    beforeEach(() => {
+      tree = createTreeWithEmptyWorkspace();
+      addProjectConfiguration(tree, 'lib1', {
+        projectType: 'library',
+        root: 'lib1',
+      });
+    });
+
+    it('should use the prefix', async () => {
+      await componentGenerator(tree, {
+        name: 'lib1/src/lib/example/example',
+        prefix: 'foo',
+        nameAndDirectoryFormat: 'as-provided',
+      });
+
+      const content = tree.read(
+        'lib1/src/lib/example/example.component.ts',
+        'utf-8'
+      );
+      expect(content).toMatch(/selector: 'foo-example'/);
+    });
+
+    it('should error when name starts with a digit', async () => {
+      await expect(
+        componentGenerator(tree, {
+          name: 'lib1/src/lib/1-one/1-one',
+          prefix: 'foo',
+          nameAndDirectoryFormat: 'as-provided',
+        })
+      ).rejects.toThrow('The selector "foo-1-one" is invalid.');
+    });
+
+    it('should allow dash in selector before a number', async () => {
+      await componentGenerator(tree, {
+        name: 'lib1/src/lib/one-1/one-1',
+        prefix: 'foo',
+        nameAndDirectoryFormat: 'as-provided',
+      });
+
+      const content = tree.read(
+        'lib1/src/lib/one-1/one-1.component.ts',
+        'utf-8'
+      );
+      expect(content).toMatch(/selector: 'foo-one-1'/);
+    });
+
+    it('should allow dash in selector before a number and without a prefix', async () => {
+      await componentGenerator(tree, {
+        name: 'lib1/src/lib/example/example',
+        selector: 'one-1',
+        nameAndDirectoryFormat: 'as-provided',
+      });
+
+      const content = tree.read(
+        'lib1/src/lib/example/example.component.ts',
+        'utf-8'
+      );
+      expect(content).toMatch(/selector: 'one-1'/);
+    });
+
+    it('should use the default project prefix if none is passed', async () => {
+      const projectConfig = readProjectConfiguration(tree, 'lib1');
+      updateProjectConfiguration(tree, 'lib1', {
+        ...projectConfig,
+        prefix: 'bar',
+      } as AngularProjectConfiguration);
+
+      await componentGenerator(tree, {
+        name: 'lib1/src/lib/example/example',
+        nameAndDirectoryFormat: 'as-provided',
+      });
+
+      const content = tree.read(
+        'lib1/src/lib/example/example.component.ts',
+        'utf-8'
+      );
+      expect(content).toMatch(/selector: 'bar-example'/);
+    });
+
+    it('should not use the default project prefix when supplied prefix is ""', async () => {
+      const projectConfig = readProjectConfiguration(tree, 'lib1');
+      updateProjectConfiguration(tree, 'lib1', {
+        ...projectConfig,
+        prefix: '',
+      } as AngularProjectConfiguration);
+
+      await componentGenerator(tree, {
+        name: 'lib1/src/lib/example/example',
+        nameAndDirectoryFormat: 'as-provided',
+      });
+
+      const content = tree.read(
+        'lib1/src/lib/example/example.component.ts',
+        'utf-8'
+      );
+      expect(content).toMatch(/selector: 'example'/);
     });
   });
 

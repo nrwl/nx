@@ -1,3 +1,5 @@
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
 import {
   getProjects,
   NxJsonConfiguration,
@@ -94,6 +96,22 @@ describe('lib', () => {
     expect(devDependencies['codelyzer']).toBeUndefined();
   });
 
+  it('should not touch the package.json when run with `--skipPackageJson`', async () => {
+    let initialPackageJson;
+    updateJson(tree, 'package.json', (json) => {
+      json.dependencies = {};
+      json.devDependencies = {};
+      initialPackageJson = json;
+
+      return json;
+    });
+
+    await runLibraryGeneratorWithOpts({ skipPackageJson: true });
+
+    const packageJson = readJson(tree, 'package.json');
+    expect(packageJson).toEqual(initialPackageJson);
+  });
+
   describe('not nested', () => {
     it('should update ng-package.json', async () => {
       // ACT
@@ -160,6 +178,9 @@ describe('lib', () => {
       expect(packageJson.devDependencies['postcss']).toBeDefined();
       expect(packageJson.devDependencies['autoprefixer']).toBeDefined();
       expect(packageJson.devDependencies['postcss-url']).toBeDefined();
+
+      const libPackageJson = readJson(tree, 'my-lib/package.json');
+      expect(libPackageJson.dependencies?.['tslib']).toBeFalsy();
     });
 
     it('should create project configuration', async () => {
@@ -173,6 +194,7 @@ describe('lib', () => {
       const json = readProjectConfiguration(tree, 'my-lib');
       expect(json.root).toEqual('my-lib');
       expect(json.targets.build).toBeDefined();
+      expect(json.targets.test).toBeDefined();
     });
 
     it('should not generate a module file and index.ts should be empty', async () => {
@@ -651,7 +673,7 @@ describe('lib', () => {
                   "error",
                   {
                     "type": "attribute",
-                    "prefix": "proj",
+                    "prefix": "lib",
                     "style": "camelCase"
                   }
                 ],
@@ -659,7 +681,7 @@ describe('lib', () => {
                   "error",
                   {
                     "type": "element",
-                    "prefix": "proj",
+                    "prefix": "lib",
                     "style": "kebab-case"
                   }
                 ]
@@ -1172,19 +1194,6 @@ describe('lib', () => {
 
   describe('--linter', () => {
     describe('eslint', () => {
-      it('should add a lint target', async () => {
-        // ACT
-        await runLibraryGeneratorWithOpts({ linter: Linter.EsLint });
-
-        // ASSERT
-        expect(readProjectConfiguration(tree, 'my-lib').targets['lint'])
-          .toMatchInlineSnapshot(`
-          {
-            "executor": "@nx/eslint:lint",
-          }
-        `);
-      });
-
       it('should add valid eslint JSON configuration which extends from Nx presets', async () => {
         // ACT
         await runLibraryGeneratorWithOpts({ linter: Linter.EsLint });
@@ -1213,7 +1222,7 @@ describe('lib', () => {
                   "@angular-eslint/component-selector": [
                     "error",
                     {
-                      "prefix": "proj",
+                      "prefix": "lib",
                       "style": "kebab-case",
                       "type": "element",
                     },
@@ -1221,7 +1230,7 @@ describe('lib', () => {
                   "@angular-eslint/directive-selector": [
                     "error",
                     {
-                      "prefix": "proj",
+                      "prefix": "lib",
                       "style": "camelCase",
                       "type": "attribute",
                     },
@@ -1273,7 +1282,7 @@ describe('lib', () => {
                   "@angular-eslint/component-selector": [
                     "error",
                     {
-                      "prefix": "proj",
+                      "prefix": "lib",
                       "style": "kebab-case",
                       "type": "element",
                     },
@@ -1281,7 +1290,7 @@ describe('lib', () => {
                   "@angular-eslint/directive-selector": [
                     "error",
                     {
-                      "prefix": "proj",
+                      "prefix": "lib",
                       "style": "camelCase",
                       "type": "attribute",
                     },

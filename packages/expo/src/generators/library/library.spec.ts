@@ -1,3 +1,5 @@
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
 import {
   getProjects,
   readJson,
@@ -23,6 +25,7 @@ describe('lib', () => {
     strict: true,
     js: false,
     projectNameAndRootFormat: 'as-provided',
+    addPlugin: true,
   };
 
   beforeEach(() => {
@@ -37,12 +40,20 @@ describe('lib', () => {
         tags: 'one,two',
       });
       const projectConfiguration = readProjectConfiguration(appTree, 'my-lib');
-      expect(projectConfiguration.root).toEqual('my-lib');
-      expect(projectConfiguration.targets.build).toBeUndefined();
-      expect(projectConfiguration.targets.lint).toEqual({
-        executor: '@nx/eslint:lint',
-      });
-      expect(projectConfiguration.tags).toEqual(['one', 'two']);
+      expect(projectConfiguration).toMatchInlineSnapshot(`
+        {
+          "$schema": "../node_modules/nx/schemas/project-schema.json",
+          "name": "my-lib",
+          "projectType": "library",
+          "root": "my-lib",
+          "sourceRoot": "my-lib/src",
+          "tags": [
+            "one",
+            "two",
+          ],
+          "targets": {},
+        }
+      `);
     });
 
     it('should update tsconfig.base.json', async () => {
@@ -144,9 +155,17 @@ describe('lib', () => {
         appTree,
         'my-dir-my-lib'
       );
-      expect(projectConfiguration.targets.lint).toEqual({
-        executor: '@nx/eslint:lint',
-      });
+      expect(projectConfiguration).toMatchInlineSnapshot(`
+        {
+          "$schema": "../../node_modules/nx/schemas/project-schema.json",
+          "name": "my-dir-my-lib",
+          "projectType": "library",
+          "root": "my-dir/my-lib",
+          "sourceRoot": "my-dir/my-lib/src",
+          "tags": [],
+          "targets": {},
+        }
+      `);
     });
 
     it('should update tsconfig.base.json', async () => {
@@ -179,7 +198,7 @@ describe('lib', () => {
     });
   });
 
-  describe('--unit-test-runner none', () => {
+  describe('--unit-test-runner', () => {
     it('should not generate test configuration', async () => {
       await expoLibraryGenerator(appTree, {
         ...defaultSchema,
@@ -189,10 +208,75 @@ describe('lib', () => {
       expect(appTree.exists('my-lib/tsconfig.spec.json')).toBeFalsy();
       expect(appTree.exists('my-lib/jest.config.ts')).toBeFalsy();
       const projectConfiguration = readProjectConfiguration(appTree, 'my-lib');
-      expect(projectConfiguration.targets.test).toBeUndefined();
-      expect(projectConfiguration.targets.lint).toMatchObject({
-        executor: '@nx/eslint:lint',
+      expect(projectConfiguration).toMatchInlineSnapshot(`
+        {
+          "$schema": "../node_modules/nx/schemas/project-schema.json",
+          "name": "my-lib",
+          "projectType": "library",
+          "root": "my-lib",
+          "sourceRoot": "my-lib/src",
+          "tags": [],
+          "targets": {},
+        }
+      `);
+    });
+
+    it('should generate test configuration', async () => {
+      await expoLibraryGenerator(appTree, {
+        ...defaultSchema,
+        unitTestRunner: 'jest',
       });
+
+      expect(appTree.read('my-lib/tsconfig.spec.json', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "{
+          "extends": "./tsconfig.json",
+          "compilerOptions": {
+            "outDir": "../dist/out-tsc",
+            "module": "commonjs",
+            "types": ["jest", "node"]
+          },
+          "files": ["src/test-setup.ts"],
+          "include": [
+            "jest.config.ts",
+            "src/**/*.test.ts",
+            "src/**/*.spec.ts",
+            "src/**/*.test.tsx",
+            "src/**/*.spec.tsx",
+            "src/**/*.test.js",
+            "src/**/*.spec.js",
+            "src/**/*.test.jsx",
+            "src/**/*.spec.jsx",
+            "src/**/*.d.ts"
+          ]
+        }
+        "
+      `);
+      expect(appTree.read('my-lib/jest.config.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "module.exports = {
+          displayName: 'my-lib',
+          resolver: '@nx/jest/plugins/resolver',
+          preset: 'jest-expo',
+          moduleFileExtensions: ['ts', 'js', 'html', 'tsx', 'jsx'],
+          setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
+          moduleNameMapper: {
+            '\\\\.svg$': '@nx/expo/plugins/jest/svg-mock',
+          },
+          transform: {
+            '.[jt]sx?$': [
+              'babel-jest',
+              {
+                configFile: __dirname + '/.babelrc.js',
+              },
+            ],
+            '^.+.(bmp|gif|jpg|jpeg|mp4|png|psd|svg|webp|ttf|otf|m4v|mov|mp4|mpeg|mpg|webm|aac|aiff|caf|m4a|mp3|wav|html|pdf|obj)$':
+              require.resolve('jest-expo/src/preset/assetFileTransformer.js'),
+          },
+          coverageDirectory: '../coverage/my-lib',
+        };
+        "
+      `);
     });
   });
 

@@ -102,28 +102,13 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
           ],
           "sharedGlobals": [],
         },
-        "targetDefaults": {
-          "build": {
-            "cache": true,
-            "dependsOn": [
-              "^build",
-            ],
-            "inputs": [
-              "production",
-              "^production",
-            ],
-          },
-          "lint": {
-            "cache": true,
-          },
-        },
       }
     `);
     const validateNxJson = ajv.compile(nxSchema);
     expect(validateNxJson(nxJson)).toEqual(true);
   });
 
-  it('should setup named inputs and target defaults for non-empty presets', async () => {
+  it('should setup named inputs for non-empty presets', async () => {
     await generateWorkspaceFiles(tree, {
       name: 'proj',
       directory: 'proj',
@@ -144,21 +129,6 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
             "default",
           ],
           "sharedGlobals": [],
-        },
-        "targetDefaults": {
-          "build": {
-            "cache": true,
-            "dependsOn": [
-              "^build",
-            ],
-            "inputs": [
-              "production",
-              "^production",
-            ],
-          },
-          "lint": {
-            "cache": true,
-          },
         },
       }
     `);
@@ -211,17 +181,6 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
       {
         "$schema": "./node_modules/nx/schemas/nx-schema.json",
         "extends": "nx/presets/npm.json",
-        "targetDefaults": {
-          "build": {
-            "cache": true,
-            "dependsOn": [
-              "^build",
-            ],
-          },
-          "lint": {
-            "cache": true,
-          },
-        },
       }
     `);
 
@@ -270,5 +229,26 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
     `);
     const pnpm = tree.read('/proj/pnpm-workspace.yaml').toString();
     expect(pnpm).toContain('packages/*');
+  });
+
+  it.each([
+    Preset.ReactStandalone,
+    Preset.VueStandalone,
+    Preset.NuxtStandalone,
+    Preset.AngularStandalone,
+    Preset.NodeStandalone,
+    Preset.NextJsStandalone,
+    Preset.TsStandalone,
+  ])('should create package scripts for %s preset', async (preset) => {
+    await generateWorkspaceFiles(tree, {
+      name: 'proj',
+      directory: 'proj',
+      preset,
+      defaultBase: 'main',
+      appName: 'demo',
+      isCustomPreset: false,
+    });
+
+    expect(readJson(tree, 'proj/package.json').scripts).toMatchSnapshot();
   });
 });

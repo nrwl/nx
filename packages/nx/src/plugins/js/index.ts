@@ -9,7 +9,7 @@ import {
   CreateDependencies,
   CreateDependenciesContext,
   CreateNodes,
-} from '../../utils/nx-plugin';
+} from '../../project-graph/plugins';
 import {
   getLockFileDependencies,
   getLockFileName,
@@ -31,6 +31,7 @@ interface ParsedLockFile {
   externalNodes?: ProjectGraph['externalNodes'];
   dependencies?: RawProjectGraphDependency[];
 }
+
 let parsedLockFile: ParsedLockFile = {};
 
 export const createNodes: CreateNodes = [
@@ -64,7 +65,8 @@ export const createNodes: CreateNodes = [
     const externalNodes = getLockFileNodes(
       packageManager,
       lockFileContents,
-      lockFileHash
+      lockFileHash,
+      context
     );
     parsedLockFile.externalNodes = externalNodes;
     return {
@@ -86,7 +88,7 @@ export const createDependencies: CreateDependencies = (
   if (
     pluginConfig.analyzeLockfile &&
     lockFileExists(packageManager) &&
-    parsedLockFile
+    parsedLockFile.externalNodes
   ) {
     const lockFilePath = join(workspaceRoot, getLockFileName(packageManager));
     const lockFileContents = readFileSync(lockFilePath).toString();

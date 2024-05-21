@@ -255,7 +255,7 @@ export class Cache {
           `The local cache artifact in "${td}" was not generated on this machine.`,
           `As a result, the cache's content integrity cannot be confirmed, which may make cache restoration potentially unsafe.`,
           `If your machine ID has changed since the artifact was cached, run "nx reset" to fix this issue.`,
-          `Read about the error and how to address it here: https://nx.dev/recipes/troubleshooting/unknown-local-cache`,
+          `Read about the error and how to address it here: https://nx.dev/troubleshooting/unknown-local-cache`,
           ``,
         ].join('\n');
         throw new Error(error);
@@ -276,17 +276,20 @@ export class Cache {
 
   private tryAndRetry<T>(fn: () => Promise<T>): Promise<T> {
     let attempts = 0;
-    const baseTimeout = 100;
+    const baseTimeout = 5;
+    // Generate a random number between 2 and 4 to raise to the power of attempts
+    const baseExponent = Math.random() * 2 + 2;
     const _try = async () => {
       try {
         attempts++;
         return await fn();
       } catch (e) {
-        if (attempts === 10) {
+        // Max time is 5 * 4^3 = 20480ms
+        if (attempts === 6) {
           // After enough attempts, throw the error
           throw e;
         }
-        await new Promise((res) => setTimeout(res, baseTimeout * attempts));
+        await new Promise((res) => setTimeout(res, baseExponent ** attempts));
         return await _try();
       }
     };

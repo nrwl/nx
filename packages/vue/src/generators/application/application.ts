@@ -19,11 +19,17 @@ import { extractTsConfigBase } from '../../utils/create-ts-config';
 import { ensureDependencies } from '../../utils/ensure-dependencies';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 
-export async function applicationGenerator(
+export function applicationGenerator(tree: Tree, options: Schema) {
+  return applicationGeneratorInternal(tree, { addPlugin: false, ...options });
+}
+
+export async function applicationGeneratorInternal(
   tree: Tree,
   _options: Schema
 ): Promise<GeneratorCallback> {
   const options = await normalizeOptions(tree, _options);
+  options.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
+
   const tasks: GeneratorCallback[] = [];
 
   addProjectConfiguration(tree, options.name, {
@@ -69,6 +75,7 @@ export async function applicationGenerator(
         skipPackageJson: options.skipPackageJson,
         setParserOptionsProject: options.setParserOptionsProject,
         rootProject: options.rootProject,
+        addPlugin: options.addPlugin,
       },
       'app'
     )

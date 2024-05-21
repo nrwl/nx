@@ -1,3 +1,5 @@
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
 import { Tree, readJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { reactNativeInitGenerator } from './init';
@@ -11,7 +13,9 @@ describe('init', () => {
   });
 
   it('should add react native dependencies', async () => {
-    await reactNativeInitGenerator(tree, {});
+    await reactNativeInitGenerator(tree, {
+      addPlugin: true,
+    });
     const packageJson = readJson(tree, 'package.json');
     expect(packageJson.dependencies['react']).toBeDefined();
     expect(packageJson.dependencies['react-native']).toBeDefined();
@@ -24,7 +28,9 @@ describe('init', () => {
 /node_modules
 `
     );
-    await reactNativeInitGenerator(tree, {});
+    await reactNativeInitGenerator(tree, {
+      addPlugin: true,
+    });
 
     const content = tree.read('/.gitignore').toString();
 

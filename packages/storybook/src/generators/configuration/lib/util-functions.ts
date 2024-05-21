@@ -39,9 +39,6 @@ export function addStorybookTarget(
   uiFramework: UiFramework,
   interactionTests: boolean
 ) {
-  if (uiFramework === '@storybook/react-native') {
-    return;
-  }
   const projectConfig = readProjectConfiguration(tree, projectName);
   projectConfig.targets['storybook'] = {
     executor: '@nx/storybook:storybook',
@@ -138,9 +135,15 @@ export function addAngularStorybookTarget(
   updateProjectConfiguration(tree, projectName, projectConfig);
 }
 
-export function addStaticTarget(tree: Tree, opts: StorybookConfigureSchema) {
-  const nrwlWeb = ensurePackage<typeof import('@nx/web')>('@nx/web', nxVersion);
-  nrwlWeb.webStaticServeGenerator(tree, {
+export async function addStaticTarget(
+  tree: Tree,
+  opts: StorybookConfigureSchema
+) {
+  const { webStaticServeGenerator } = ensurePackage<typeof import('@nx/web')>(
+    '@nx/web',
+    nxVersion
+  );
+  await webStaticServeGenerator(tree, {
     buildTarget: `${opts.project}:build-storybook`,
     outputPath: joinPathFragments('dist/storybook', opts.project),
     targetName: 'static-storybook',
@@ -239,10 +242,6 @@ export function createStorybookTsconfigFile(
     '.storybook/*.ts',
   ];
 
-  if (uiFramework === '@storybook/react-native') {
-    include.push('*.ts', '*.tsx');
-  }
-
   const storybookTsConfig: TsConfig = {
     extends: './tsconfig.json',
     compilerOptions: {
@@ -309,8 +308,7 @@ export function configureTsProjectConfig(
       ...(tsConfigContent.exclude || []),
       '**/*.stories.ts',
       '**/*.stories.js',
-      ...(schema.uiFramework === '@storybook/react-native' ||
-      schema.uiFramework?.startsWith('@storybook/react')
+      ...(schema.uiFramework?.startsWith('@storybook/react')
         ? ['**/*.stories.jsx', '**/*.stories.tsx']
         : []),
     ];
@@ -428,6 +426,11 @@ export function updateLintConfig(tree: Tree, schema: StorybookConfigureSchema) {
         }
       }
 
+      const ignorePatterns = json.ignorePatterns || [];
+      if (!ignorePatterns.includes('storybook-static')) {
+        ignorePatterns.push('storybook-static');
+      }
+
       return json;
     });
   }
@@ -485,11 +488,14 @@ export function addStorybookToNamedInputs(tree: Tree) {
   }
 }
 
-export function addStorybookToTargetDefaults(tree: Tree) {
+export function addStorybookToTargetDefaults(tree: Tree, setCache = true) {
   const nxJson = readNxJson(tree);
 
   nxJson.targetDefaults ??= {};
   nxJson.targetDefaults['build-storybook'] ??= {};
+  if (setCache) {
+    nxJson.targetDefaults['build-storybook'].cache ??= true;
+  }
   nxJson.targetDefaults['build-storybook'].inputs ??= [
     'default',
     nxJson.namedInputs && 'production' in nxJson.namedInputs
@@ -546,7 +552,8 @@ export function createProjectStorybookDir(
   usesVite?: boolean,
   viteConfigFilePath?: string,
   hasPlugin?: boolean,
-  viteConfigFileName?: string
+  viteConfigFileName?: string,
+  useReactNative?: boolean
 ) {
   let projectDirectory =
     projectType === 'application'
@@ -591,6 +598,7 @@ export function createProjectStorybookDir(
     viteConfigFilePath,
     hasPlugin,
     viteConfigFileName,
+    useReactNative,
   });
 
   if (js) {
@@ -625,25 +633,20 @@ export function getTsConfigPath(
 }
 
 export function addBuildStorybookToCacheableOperations(tree: Tree) {
-  updateJson(tree, 'nx.json', (json) => ({
-    ...json,
-    tasksRunnerOptions: {
-      ...(json.tasksRunnerOptions ?? {}),
-      default: {
-        ...(json.tasksRunnerOptions?.default ?? {}),
-        options: {
-          ...(json.tasksRunnerOptions?.default?.options ?? {}),
-          cacheableOperations: Array.from(
-            new Set([
-              ...(json.tasksRunnerOptions?.default?.options
-                ?.cacheableOperations ?? []),
-              'build-storybook',
-            ])
-          ),
-        },
-      },
-    },
-  }));
+  const nxJson = readNxJson(tree);
+
+  if (
+    nxJson.tasksRunnerOptions?.default?.options?.cacheableOperations &&
+    !nxJson.tasksRunnerOptions.default.options.cacheableOperations.includes(
+      'build-storybook'
+    )
+  ) {
+    nxJson.tasksRunnerOptions.default.options.cacheableOperations.push(
+      'build-storybook'
+    );
+
+    updateNxJson(tree, nxJson);
+  }
 }
 
 export function projectIsRootProjectInStandaloneWorkspace(projectRoot: string) {
@@ -739,6 +742,16 @@ export function findNextConfig(
     if (tree.exists(nextConfigPath)) {
       return nextConfigPath;
     }
+  }
+}
+
+export function findMetroConfig(
+  tree: Tree,
+  projectRoot: string
+): string | undefined {
+  const nextConfigPath = joinPathFragments(projectRoot, `metro.config.js`);
+  if (tree.exists(nextConfigPath)) {
+    return nextConfigPath;
   }
 }
 

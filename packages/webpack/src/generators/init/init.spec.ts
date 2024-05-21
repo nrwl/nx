@@ -1,3 +1,5 @@
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
 import { readJson, Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 
@@ -10,8 +12,10 @@ describe('webpackInitGenerator', () => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   });
 
-  it('should install plugin', async () => {
-    await webpackInitGenerator(tree, {});
+  it('should install plugin and webpack-cli', async () => {
+    await webpackInitGenerator(tree, {
+      addPlugin: true,
+    });
 
     const packageJson = readJson(tree, 'package.json');
     expect(packageJson).toEqual({
@@ -20,6 +24,7 @@ describe('webpackInitGenerator', () => {
       devDependencies: {
         '@nx/webpack': expect.any(String),
         '@nx/web': expect.any(String),
+        'webpack-cli': expect.any(String),
       },
     });
   });

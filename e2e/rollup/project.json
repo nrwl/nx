@@ -3,8 +3,14 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "e2e/rollup",
   "projectType": "application",
+  "implicitDependencies": ["rollup", "js"],
   "targets": {
-    "e2e": {}
-  },
-  "implicitDependencies": ["rollup", "js"]
+    "e2e-ci--src/rollup.test.ts": {
+      "dependsOn": [
+        "nx:build-native",
+        "@nx/nx-source:populate-local-registry-storage"
+      ],
+      "inputs": ["e2eInputs", "^production"]
+    }
+  }
 }

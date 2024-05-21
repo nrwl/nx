@@ -10,7 +10,7 @@ export default function AiDocs(): JSX.Element {
   return (
     <>
       <NextSeo
-        title="Nx AI Chat (Beta)"
+        title="Nx AI Chat"
         description="AI chat powered by Nx docs."
         noindex={true}
         robotsProps={{
@@ -40,7 +40,11 @@ export default function AiDocs(): JSX.Element {
           className="flex h-full flex-1 overflow-y-hidden"
         >
           <div className="hidden">
-            <SidebarContainer menu={{ sections: [] }} navIsOpen={navIsOpen} />
+            <SidebarContainer
+              menu={{ sections: [] }}
+              navIsOpen={navIsOpen}
+              toggleNav={toggleNav}
+            />
           </div>
 
           <FeedContainer />

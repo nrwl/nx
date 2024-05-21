@@ -16,7 +16,7 @@ import {
 } from '../../../utils/package-manager';
 import { joinPathFragments } from '../../../utils/path';
 import { nxVersion } from '../../../utils/versions';
-import { readFileSync, writeFileSync } from 'fs';
+import { existsSync, readFileSync, writeFileSync } from 'fs';
 
 export function createNxJsonFile(
   repoRoot: string,
@@ -25,12 +25,13 @@ export function createNxJsonFile(
   scriptOutputs: { [name: string]: string }
 ) {
   const nxJsonPath = joinPathFragments(repoRoot, 'nx.json');
-  let nxJson = {} as Partial<NxJsonConfiguration>;
+  let nxJson = {} as Partial<NxJsonConfiguration> & { $schema: string };
   try {
     nxJson = readJsonFile(nxJsonPath);
     // eslint-disable-next-line no-empty
   } catch {}
 
+  nxJson.$schema = './node_modules/nx/schemas/nx-schema.json';
   nxJson.targetDefaults ??= {};
 
   if (topologicalTargets.length > 0) {
@@ -38,14 +39,14 @@ export function createNxJsonFile(
       nxJson.targetDefaults[scriptName] ??= {};
       nxJson.targetDefaults[scriptName] = { dependsOn: [`^${scriptName}`] };
     }
-    for (const [scriptName, output] of Object.entries(scriptOutputs)) {
-      if (!output) {
-        // eslint-disable-next-line no-continue
-        continue;
-      }
-      nxJson.targetDefaults[scriptName] ??= {};
-      nxJson.targetDefaults[scriptName].outputs = [`{projectRoot}/${output}`];
+  }
+  for (const [scriptName, output] of Object.entries(scriptOutputs)) {
+    if (!output) {
+      // eslint-disable-next-line no-continue
+      continue;
     }
+    nxJson.targetDefaults[scriptName] ??= {};
+    nxJson.targetDefaults[scriptName].outputs = [`{projectRoot}/${output}`];
   }
 
   for (const target of cacheableOperations) {
@@ -57,8 +58,7 @@ export function createNxJsonFile(
     delete nxJson.targetDefaults;
   }
 
-  nxJson.affected ??= {};
-  nxJson.affected.defaultBase ??= deduceDefaultBase();
+  nxJson.defaultBase ??= deduceDefaultBase();
   writeJsonFile(nxJsonPath, nxJson);
 }
 
@@ -168,23 +168,15 @@ export function addVsCodeRecommendedExtensions(
   }
 }
 
-export function markRootPackageJsonAsNxProject(
+export function markRootPackageJsonAsNxProjectLegacy(
   repoRoot: string,
   cacheableScripts: string[],
-  scriptOutputs: { [script: string]: string },
   pmc: PackageManagerCommands
 ) {
   const json = readJsonFile<PackageJson>(
     joinPathFragments(repoRoot, `package.json`)
   );
-  json.nx = { targets: {} };
-  for (let script of Object.keys(scriptOutputs)) {
-    if (scriptOutputs[script]) {
-      json.nx.targets[script] = {
-        outputs: [`{projectRoot}/${scriptOutputs[script]}`],
-      };
-    }
-  }
+  json.nx = {};
   for (let script of cacheableScripts) {
     const scriptDefinition = json.scripts[script];
     if (!scriptDefinition) {
@@ -202,23 +194,40 @@ export function markRootPackageJsonAsNxProject(
   writeJsonFile(`package.json`, json);
 }
 
+export function markPackageJsonAsNxProject(packageJsonPath: string) {
+  const json = readJsonFile<PackageJson>(packageJsonPath);
+  if (!json.scripts) {
+    return;
+  }
+
+  json.nx = {};
+  writeJsonFile(packageJsonPath, json);
+}
+
 export function printFinalMessage({
   learnMoreLink,
-  bodyLines,
 }: {
   learnMoreLink?: string;
-  bodyLines?: string[];
 }): void {
-  const normalizedBodyLines = (bodyLines ?? []).map((l) =>
-    l.startsWith('- ') ? l : `- ${l}`
-  );
+  const pmc = getPackageManagerCommand();
 
   output.success({
     title: '🎉 Done!',
     bodyLines: [
-      '- Enabled computation caching!',
-      ...normalizedBodyLines,
+      `- Run "${pmc.exec} nx run-many -t build" to run the build target for every project in the workspace. Run it again to replay the cached computation. https://nx.dev/features/cache-task-results`,
+      `- Run "${pmc.exec} nx graph" to see the graph of projects and tasks in your workspace. https://nx.dev/core-features/explore-graph`,
       learnMoreLink ? `- Learn more at ${learnMoreLink}.` : undefined,
     ].filter(Boolean),
   });
+}
+
+export function isMonorepo(packageJson: PackageJson) {
+  if (!!packageJson.workspaces) return true;
+
+  if (existsSync('pnpm-workspace.yaml') || existsSync('pnpm-workspace.yml'))
+    return true;
+
+  if (existsSync('lerna.json')) return true;
+
+  return false;
 }

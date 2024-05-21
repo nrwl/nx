@@ -1,3 +1,5 @@
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
 import {
   addProjectConfiguration,
   readJson,
@@ -29,6 +31,7 @@ describe('detox application generator', () => {
         linter: Linter.None,
         framework: 'react-native',
         projectNameAndRootFormat: 'as-provided',
+        addPlugin: true,
       });
     });
 
@@ -100,6 +103,7 @@ describe('detox application generator', () => {
         linter: Linter.None,
         framework: 'react-native',
         projectNameAndRootFormat: 'as-provided',
+        addPlugin: true,
       });
     });
 
@@ -171,6 +175,7 @@ describe('detox application generator', () => {
         linter: Linter.None,
         framework: 'react-native',
         projectNameAndRootFormat: 'as-provided',
+        addPlugin: true,
       });
     });
 
@@ -241,6 +246,7 @@ describe('detox application generator', () => {
         linter: Linter.None,
         framework: 'react-native',
         projectNameAndRootFormat: 'as-provided',
+        addPlugin: true,
       });
     });
 
@@ -310,6 +316,7 @@ describe('detox application generator', () => {
         linter: Linter.None,
         framework: 'expo',
         projectNameAndRootFormat: 'as-provided',
+        addPlugin: true,
       });
     });
 
@@ -391,6 +398,7 @@ describe('detox application generator', () => {
         appProject: 'my-app',
         linter: Linter.None,
         framework: 'react-native',
+        addPlugin: true,
       });
 
       const tsConfig = readJson(tree, 'my-app-e2e/tsconfig.json');
@@ -405,6 +413,7 @@ describe('detox application generator', () => {
         appProject: 'my-app',
         linter: Linter.None,
         framework: 'react-native',
+        addPlugin: true,
       });
 
       const tsConfig = readJson(tree, 'my-app-e2e/tsconfig.json');

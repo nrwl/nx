@@ -102,7 +102,7 @@ platformBrowserDynamic()
 `;
 
 exports[`Host App Generator --ssr should generate the correct files 3`] = `
-"export { AppServerModule } from './app/app.server.module';
+"export { AppServerModule as default } from './app/app.server.module';
 "
 `;
 
@@ -722,7 +722,7 @@ platformBrowserDynamic()
 `;
 
 exports[`Host App Generator --ssr should generate the correct files when --typescript=true 3`] = `
-"export { AppServerModule } from './app/app.server.module';
+"export { AppServerModule as default } from './app/app.server.module';
 "
 `;
 
@@ -954,7 +954,7 @@ import { NxWelcomeComponent } from './nx-welcome.component';
 @Component({
   standalone: true,
   imports: [NxWelcomeComponent, RouterModule],
-  selector: 'proj-root',
+  selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrl: './app.component.css',
 })

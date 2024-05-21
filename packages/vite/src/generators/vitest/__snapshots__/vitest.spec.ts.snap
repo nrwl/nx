@@ -23,7 +23,7 @@ export default defineConfig({
   test: {
     globals: true,
     cache: {
-      dir: '../../node_modules/.vitest',
+      dir: '../../node_modules/.vitest/apps/my-test-react-app',
     },
     environment: 'jsdom',
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
@@ -35,6 +35,11 @@ export default defineConfig({
     },
   },
 });
+"
+`;
+
+exports[`vitest generator tsconfig should add vitest.workspace.ts at the root 1`] = `
+"export default ['**/*/vite.config.ts', '**/*/vitest.config.ts'];
 "
 `;
 
@@ -58,7 +63,7 @@ export default defineConfig({
   test: {
     globals: true,
     cache: {
-      dir: '../../node_modules/.vitest',
+      dir: '../../node_modules/.vitest/apps/my-test-react-app',
     },
     environment: 'jsdom',
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
@@ -93,7 +98,7 @@ export default defineConfig({
   test: {
     globals: true,
     cache: {
-      dir: '../../node_modules/.vitest',
+      dir: '../../node_modules/.vitest/libs/react-lib-nonb-jest',
     },
     environment: 'jsdom',
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],

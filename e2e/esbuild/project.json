@@ -3,8 +3,14 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "e2e/esbuild",
   "projectType": "application",
+  "implicitDependencies": ["esbuild"],
   "targets": {
-    "e2e": {}
-  },
-  "implicitDependencies": ["esbuild"]
+    "e2e-ci--src/esbuild.test.ts": {
+      "dependsOn": [
+        "nx:build-native",
+        "@nx/nx-source:populate-local-registry-storage"
+      ],
+      "inputs": ["e2eInputs", "^production"]
+    }
+  }
 }

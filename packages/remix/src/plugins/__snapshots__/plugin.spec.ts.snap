@@ -8,29 +8,39 @@ exports[`@nx/remix/plugin non-root project should create nodes 1`] = `
       "targets": {
         "build": {
           "cache": true,
+          "command": "remix build",
           "dependsOn": [
             "^build",
           ],
-          "executor": "@nx/remix:build",
           "inputs": [
             "production",
             "^production",
           ],
           "options": {
-            "outputPath": "{workspaceRoot}/dist",
+            "cwd": "my-app",
           },
           "outputs": [
-            "{options.outputPath}",
+            "{workspaceRoot}/my-app/build",
+            "{workspaceRoot}/my-app/public/build",
           ],
         },
-        "serve": {
-          "executor": "@nx/remix:serve",
+        "dev": {
+          "command": "remix dev --manual",
           "options": {
-            "command": "npx remix-serve build/index.js",
+            "cwd": "my-app",
           },
         },
         "start": {
-          "command": "npx remix-serve build/index.js",
+          "command": "remix-serve build/index.js",
+          "dependsOn": [
+            "build",
+          ],
+          "options": {
+            "cwd": "my-app",
+          },
+        },
+        "static-serve": {
+          "command": "remix-serve build/index.js",
           "dependsOn": [
             "build",
           ],
@@ -63,29 +73,39 @@ exports[`@nx/remix/plugin root project should create nodes 1`] = `
       "targets": {
         "build": {
           "cache": true,
+          "command": "remix build",
           "dependsOn": [
             "^build",
           ],
-          "executor": "@nx/remix:build",
           "inputs": [
             "production",
             "^production",
           ],
           "options": {
-            "outputPath": "{workspaceRoot}/dist",
+            "cwd": ".",
           },
           "outputs": [
-            "{options.outputPath}",
+            "{workspaceRoot}/build",
+            "{workspaceRoot}/public/build",
           ],
         },
-        "serve": {
-          "executor": "@nx/remix:serve",
+        "dev": {
+          "command": "remix dev --manual",
           "options": {
-            "command": "npx remix-serve build/index.js",
+            "cwd": ".",
           },
         },
         "start": {
-          "command": "npx remix-serve build/index.js",
+          "command": "remix-serve build/index.js",
+          "dependsOn": [
+            "build",
+          ],
+          "options": {
+            "cwd": ".",
+          },
+        },
+        "static-serve": {
+          "command": "remix-serve build/index.js",
           "dependsOn": [
             "build",
           ],

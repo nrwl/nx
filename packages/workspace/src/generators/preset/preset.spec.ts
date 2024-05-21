@@ -1,3 +1,5 @@
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
 import { readProjectConfiguration, Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { presetGenerator } from './preset';
@@ -38,7 +40,7 @@ describe('preset', () => {
       linter: 'eslint',
     });
     expect(tree.exists('/apps/proj/src/main.tsx')).toBe(true);
-    expect(readProjectConfiguration(tree, 'proj').targets.serve).toBeDefined();
+    expect(tree.read('apps/proj/webpack.config.js', 'utf-8')).toMatchSnapshot();
   });
 
   it(`should create files (preset = ${Preset.VueMonorepo})`, async () => {
@@ -49,7 +51,7 @@ describe('preset', () => {
       linter: 'eslint',
     });
     expect(tree.exists('apps/proj/src/main.ts')).toBe(true);
-    expect(readProjectConfiguration(tree, 'proj').targets.serve).toBeDefined();
+    expect(tree.read('apps/proj/vite.config.ts', 'utf-8')).toMatchSnapshot();
   });
 
   it(`should create files (preset = ${Preset.Nuxt})`, async () => {
@@ -103,9 +105,7 @@ describe('preset', () => {
       bundler: 'webpack',
     });
     expect(tree.exists('webpack.config.js')).toBe(true);
-    expect(
-      readProjectConfiguration(tree, 'proj').targets.serve
-    ).toMatchSnapshot();
+    expect(tree.read('webpack.config.js', 'utf-8')).toMatchSnapshot();
   });
 
   it(`should create files (preset = ${Preset.ReactStandalone} bundler = vite)`, async () => {
@@ -117,9 +117,7 @@ describe('preset', () => {
       bundler: 'vite',
     });
     expect(tree.exists('vite.config.ts')).toBe(true);
-    expect(
-      readProjectConfiguration(tree, 'proj').targets.serve
-    ).toMatchSnapshot();
+    expect(tree.read('vite.config.ts', 'utf-8')).toMatchSnapshot();
   });
 
   it(`should create files (preset = ${Preset.VueStandalone})`, async () => {
@@ -130,9 +128,7 @@ describe('preset', () => {
       e2eTestRunner: 'cypress',
     });
     expect(tree.exists('vite.config.ts')).toBe(true);
-    expect(
-      readProjectConfiguration(tree, 'proj').targets.serve
-    ).toMatchSnapshot();
+    expect(tree.read('vite.config.ts', 'utf-8')).toMatchSnapshot();
   });
 
   it(`should create files (preset = ${Preset.NuxtStandalone})`, async () => {

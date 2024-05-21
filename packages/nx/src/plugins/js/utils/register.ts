@@ -8,6 +8,8 @@ const swcNodeInstalled = packageIsInstalled('@swc-node/register');
 const tsNodeInstalled = packageIsInstalled('ts-node/register');
 let ts: typeof import('typescript');
 
+let isTsEsmLoaderRegistered = false;
+
 /**
  * Optionally, if swc-node and tsconfig-paths are available in the current workspace, apply the require
  * register hooks so that .ts files can be used for writing custom workspace projects.
@@ -43,6 +45,19 @@ export function registerTsProject(
     registerTranspiler(compilerOptions),
   ];
 
+  // Add ESM support for `.ts` files.
+  // NOTE: There is no cleanup function for this, as it's not possible to unregister the loader.
+  //       Based on limited testing, it doesn't seem to matter if we register it multiple times, but just in
+  //       case let's keep a flag to prevent it.
+  if (!isTsEsmLoaderRegistered) {
+    const module = require('node:module');
+    if (module.register && packageIsInstalled('ts-node/esm')) {
+      const url = require('node:url');
+      module.register(url.pathToFileURL(require.resolve('ts-node/esm')));
+    }
+    isTsEsmLoaderRegistered = true;
+  }
+
   return () => {
     for (const fn of cleanupFunctions) {
       fn();
@@ -58,11 +73,6 @@ export function getSwcTranspiler(
   // These are requires to prevent it from registering when it shouldn't
   const register = require('@swc-node/register/register')
     .register as ISwcRegister;
-
-  let rootTsConfig = join(workspaceRoot, 'tsconfig.base.json');
-  if (existsSync(rootTsConfig)) {
-    process.env.SWC_NODE_PROJECT = rootTsConfig;
-  }
 
   const cleanupFn = register(compilerOptions);
 
@@ -102,6 +112,9 @@ export function getTranspiler(compilerOptions: CompilerOptions) {
 
   compilerOptions.lib = ['es2021'];
   compilerOptions.module = ts.ModuleKind.CommonJS;
+  // use NodeJs module resolution until support for TS 4.x is dropped and then
+  // we can switch to Node10
+  compilerOptions.moduleResolution = ts.ModuleResolutionKind.NodeJs;
   compilerOptions.target = ts.ScriptTarget.ES2021;
   compilerOptions.inlineSourceMap = true;
   compilerOptions.skipLibCheck = true;
@@ -171,13 +184,22 @@ function readCompilerOptions(tsConfigPath): CompilerOptions {
   const preferTsNode = process.env.NX_PREFER_TS_NODE === 'true';
 
   if (swcNodeInstalled && !preferTsNode) {
-    const {
-      readDefaultTsConfig,
-    }: typeof import('@swc-node/register/read-default-tsconfig') = require('@swc-node/register/read-default-tsconfig');
-    return readDefaultTsConfig(tsConfigPath);
+    return readCompilerOptionsWithSwc(tsConfigPath);
   } else {
     return readCompilerOptionsWithTypescript(tsConfigPath);
   }
+}
+
+function readCompilerOptionsWithSwc(tsConfigPath) {
+  const {
+    readDefaultTsConfig,
+  }: typeof import('@swc-node/register/read-default-tsconfig') = require('@swc-node/register/read-default-tsconfig');
+  const compilerOptions = readDefaultTsConfig(tsConfigPath);
+  // This is returned in compiler options for some reason, but not part of the typings.
+  // @swc-node/register filters the files to transpile based on it, but it can be limiting when processing
+  // files not part of the received tsconfig included files (e.g. shared helpers, or config files not in source, etc.).
+  delete compilerOptions.files;
+  return compilerOptions;
 }
 
 function readCompilerOptionsWithTypescript(tsConfigPath) {

@@ -3,14 +3,14 @@ import {
   ProjectGraph,
   ProjectGraphProjectNode,
 } from '../../config/project-graph';
-import { output } from '../../devkit-exports';
+import { createProjectFileMapUsingProjectGraph } from '../../project-graph/file-map-utils';
 import { createProjectGraphAsync } from '../../project-graph/project-graph';
 import { runCommand } from '../../tasks-runner/run-command';
 import {
   createOverrides,
   readGraphFileFromGraphArg,
 } from '../../utils/command-line-utils';
-import { logger } from '../../utils/logger';
+import { output } from '../../utils/output';
 import { handleErrors } from '../../utils/params';
 import { projectHasTarget } from '../../utils/project-graph-utils';
 import { generateGraph } from '../graph/graph';
@@ -52,6 +52,7 @@ export async function releasePublish(
   // Apply default configuration to any optional user configuration
   const { error: configError, nxReleaseConfig } = await createNxReleaseConfig(
     projectGraph,
+    await createProjectFileMapUsingProjectGraph(projectGraph),
     nxJson.release
   );
   if (configError) {
@@ -92,8 +93,11 @@ export async function releasePublish(
         projectGraph,
         nxJson,
         Array.from(releaseGroupToFilteredProjects.get(releaseGroup)),
-        shouldExcludeTaskDependencies,
-        isCLI
+        isCLI,
+        {
+          excludeTaskDependencies: shouldExcludeTaskDependencies,
+          loadDotEnvFiles: process.env.NX_LOAD_DOT_ENV_FILES !== 'false',
+        }
       );
       if (status !== 0) {
         overallExitStatus = status || 1;
@@ -112,18 +116,15 @@ export async function releasePublish(
       projectGraph,
       nxJson,
       releaseGroup.projects,
-      shouldExcludeTaskDependencies,
-      isCLI
+      isCLI,
+      {
+        excludeTaskDependencies: shouldExcludeTaskDependencies,
+        loadDotEnvFiles: process.env.NX_LOAD_DOT_ENV_FILES !== 'false',
+      }
     );
     if (status !== 0) {
       overallExitStatus = status || 1;
     }
-  }
-
-  if (_args.dryRun) {
-    logger.warn(
-      `\nNOTE: The "dryRun" flag means no projects were actually published.`
-    );
   }
 
   return overallExitStatus;
@@ -134,8 +135,11 @@ async function runPublishOnProjects(
   projectGraph: ProjectGraph,
   nxJson: NxJsonConfiguration,
   projectNames: string[],
-  shouldExcludeTaskDependencies: boolean,
-  isCLI: boolean
+  isCLI: boolean,
+  extraOptions: {
+    excludeTaskDependencies: boolean;
+    loadDotEnvFiles: boolean;
+  }
 ): Promise<number> {
   const projectsToRun: ProjectGraphProjectNode[] = projectNames.map(
     (projectName) => projectGraph.nodes[projectName]
@@ -169,27 +173,31 @@ async function runPublishOnProjects(
     overrides.firstRelease = args.firstRelease;
   }
 
-  const targets = ['nx-release-publish'];
+  const requiredTargetName = 'nx-release-publish';
 
   if (args.graph) {
     const file = readGraphFileFromGraphArg(args);
-    const projectNames = projectsToRun.map((t) => t.name);
+    const projectNamesWithTarget = projectsToRun
+      .map((t) => t.name)
+      .filter((projectName) =>
+        projectHasTarget(projectGraph.nodes[projectName], requiredTargetName)
+      );
+
     await generateGraph(
       {
-        watch: false,
+        watch: true,
         all: false,
         open: true,
         view: 'tasks',
-        targets,
-        projects: projectNames,
+        targets: [requiredTargetName],
+        projects: projectNamesWithTarget,
         file,
       },
-      projectNames
+      projectNamesWithTarget
     );
     return 0;
   }
 
-  const requiredTargetName = 'nx-release-publish';
   const projectsWithTarget = projectsToRun.filter((project) =>
     projectHasTarget(project, requiredTargetName)
   );
@@ -212,17 +220,14 @@ async function runPublishOnProjects(
     projectGraph,
     { nxJson },
     {
-      targets,
+      targets: [requiredTargetName],
       outputStyle: 'static',
       ...(args as any),
     },
     overrides,
     null,
     {},
-    {
-      excludeTaskDependencies: shouldExcludeTaskDependencies,
-      loadDotEnvFiles: true,
-    }
+    extraOptions
   );
 
   if (status !== 0) {

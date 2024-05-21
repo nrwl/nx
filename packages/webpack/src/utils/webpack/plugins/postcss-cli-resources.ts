@@ -22,6 +22,7 @@ export interface PostcssCliResourcesOptions {
   rebaseRootRelative?: boolean;
   filename: string;
   loader: LoaderContext<unknown>;
+  publicPath: string;
 }
 
 async function resolve(
@@ -46,6 +47,7 @@ export function PostcssCliResources(options: PostcssCliResourcesOptions) {
     rebaseRootRelative = false,
     filename,
     loader,
+    publicPath = '',
   } = options;
   const dedupeSlashes = (url: string) => url.replace(/\/\/+/g, '/');
   const process = async (
@@ -85,7 +87,9 @@ export function PostcssCliResources(options: PostcssCliResourcesOptions) {
           dedupeSlashes(`/${deployUrl}/${inputUrl}`);
       } else {
         // Join together base-href, deploy-url and the original URL.
-        outputUrl = dedupeSlashes(`/${baseHref}/${deployUrl}/${inputUrl}`);
+        outputUrl = dedupeSlashes(
+          `/${baseHref}/${deployUrl}/${publicPath}/${inputUrl}`
+        );
       }
       resourceCache.set(cacheKey, outputUrl);
       return outputUrl;
@@ -152,7 +156,7 @@ export function PostcssCliResources(options: PostcssCliResourcesOptions) {
       return Promise.all(
         urlDeclarations.map(async (decl) => {
           const value = decl.value;
-          const urlRegex = /url\(\s*(?:"([^"]+)"|'([^']+)'|(.+?))\s*\)/g;
+          const urlRegex = /url(?:\(\s*(['"]?))(.*?)(?:\1\s*\))/g;
           const segments: string[] = [];
           let match;
           let lastIndex = 0;
@@ -162,7 +166,7 @@ export function PostcssCliResources(options: PostcssCliResourcesOptions) {
           const context =
             (inputFile && path.dirname(inputFile)) || loader.context;
           while ((match = urlRegex.exec(value))) {
-            const originalUrl = match[1] || match[2] || match[3];
+            const originalUrl = match[2];
             let processedUrl;
             try {
               processedUrl = await process(originalUrl, context, resourceCache);

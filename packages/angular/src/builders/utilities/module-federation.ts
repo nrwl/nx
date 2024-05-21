@@ -155,11 +155,24 @@ export function getStaticRemotes(
 }
 
 export function validateDevRemotes(
-  options: { devRemotes?: string[] },
+  options: {
+    devRemotes?: (
+      | string
+      | {
+          remoteName: string;
+          configuration: string;
+        }
+    )[];
+  },
   workspaceProjects: Record<string, ProjectConfiguration>
 ): void {
   const invalidDevRemotes =
-    options.devRemotes?.filter((remote) => !workspaceProjects[remote]) ?? [];
+    options.devRemotes?.filter(
+      (remote) =>
+        !(typeof remote === 'string'
+          ? workspaceProjects[remote]
+          : workspaceProjects[remote.remoteName])
+    ) ?? [];
 
   if (invalidDevRemotes.length) {
     throw new Error(

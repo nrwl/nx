@@ -1,4 +1,6 @@
-import { readProjectConfiguration, Tree } from '@nx/devkit';
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
+import { Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { Linter } from '@nx/eslint';
 import { libraryGenerator } from '@nx/js';
@@ -22,11 +24,10 @@ describe('Add Linting', () => {
       linter: Linter.EsLint,
       tsConfigPaths: ['my-lib/tsconfig.lib.json'],
       projectRoot: 'my-lib',
+      addPlugin: true,
     });
-    const project = readProjectConfiguration(tree, 'my-lib');
 
-    expect(project.targets.lint).toBeDefined();
-    expect(project.targets.lint.executor).toEqual('@nx/eslint:lint');
+    expect(tree.exists('my-lib/.eslintrc.json')).toBeTruthy();
   });
 
   it('should not add lint target when "none" is passed', async () => {
@@ -35,9 +36,9 @@ describe('Add Linting', () => {
       linter: Linter.None,
       tsConfigPaths: ['my-lib/tsconfig.lib.json'],
       projectRoot: 'my-lib',
+      addPlugin: true,
     });
-    const project = readProjectConfiguration(tree, 'my-lib');
 
-    expect(project.targets.lint).toBeUndefined();
+    expect(tree.exists('my-lib/.eslintrc.json')).toBeFalsy();
   });
 });

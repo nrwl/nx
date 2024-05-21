@@ -7,6 +7,7 @@ import {
   Tree,
 } from '@nx/devkit';
 import { initGenerator as jsInitGenerator } from '@nx/js';
+import { setupTailwindGenerator } from '@nx/react';
 import {
   testingLibraryReactVersion,
   typesReactDomVersion,
@@ -32,6 +33,7 @@ import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-com
 
 export async function applicationGenerator(host: Tree, schema: Schema) {
   return await applicationGeneratorInternal(host, {
+    addPlugin: false,
     projectNameAndRootFormat: 'derived',
     ...schema,
   });
@@ -68,6 +70,14 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
 
   const lintTask = await addLinting(host, options);
   tasks.push(lintTask);
+
+  if (options.style === 'tailwind') {
+    const tailwindTask = await setupTailwindGenerator(host, {
+      project: options.projectName,
+    });
+
+    tasks.push(tailwindTask);
+  }
 
   const styledTask = addStyleDependencies(host, {
     style: options.style,

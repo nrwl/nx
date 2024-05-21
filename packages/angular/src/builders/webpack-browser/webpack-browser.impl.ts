@@ -55,6 +55,7 @@ export function executeWebpackBrowserBuilder(
   const {
     buildLibsFromSource,
     customWebpackConfig,
+    indexHtmlTransformer,
     indexFileTransformer,
     ...delegateBuilderOptions
   } = options;
@@ -71,9 +72,11 @@ export function executeWebpackBrowserBuilder(
     );
   }
 
+  const normalizedIndexHtmlTransformer =
+    indexHtmlTransformer ?? indexFileTransformer;
   const pathToIndexFileTransformer =
-    indexFileTransformer &&
-    joinPathFragments(context.workspaceRoot, indexFileTransformer);
+    normalizedIndexHtmlTransformer &&
+    joinPathFragments(context.workspaceRoot, normalizedIndexHtmlTransformer);
   if (pathToIndexFileTransformer && !existsSync(pathToIndexFileTransformer)) {
     throw new Error(
       `File containing Index File Transformer function Not Found!\n Please ensure the path to the file containing the function is correct: \n${pathToIndexFileTransformer}`

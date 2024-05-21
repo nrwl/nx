@@ -1,11 +1,11 @@
 import { workspaceRoot } from '@nx/devkit';
 import { dirname, join, relative } from 'path';
-import { lstatSync } from 'fs';
+import { existsSync, lstatSync } from 'fs';
 
 import vitePreprocessor from '../src/plugins/preprocessor-vite';
-import { NX_PLUGIN_OPTIONS } from '../src/utils/symbols';
+import { NX_PLUGIN_OPTIONS } from '../src/utils/constants';
 
-import { exec } from 'child_process';
+import { spawn } from 'child_process';
 import { request as httpRequest } from 'http';
 import { request as httpsRequest } from 'https';
 
@@ -29,9 +29,15 @@ export interface NxComponentTestingOptions {
    * @example 'component-test'
    */
   ctTargetName?: string;
+  buildTarget?: string;
   bundler?: 'vite' | 'webpack';
   compiler?: 'swc' | 'babel';
 }
+
+// The bundler is only used while generating the component testing configuration
+// It cannot be changed after the configuration is generated
+export interface NxComponentTestingPresetOptions
+  extends Omit<NxComponentTestingOptions, 'bundler'> {}
 
 export function nxBaseCypressPreset(
   pathToConfig: string,
@@ -64,14 +70,23 @@ export function nxBaseCypressPreset(
 }
 
 function startWebServer(webServerCommand: string) {
-  const serverProcess = exec(webServerCommand, {
+  const serverProcess = spawn(webServerCommand, {
     cwd: workspaceRoot,
+    shell: true,
+    // Detaching the process on unix will create a process group, allowing us to kill it later
+    // Windows is fine so we leave it attached to this process
+    detached: process.platform !== 'win32',
+    stdio: 'inherit',
   });
-  serverProcess.stdout.pipe(process.stdout);
-  serverProcess.stderr.pipe(process.stderr);
 
   return () => {
-    serverProcess.kill();
+    if (process.platform === 'win32') {
+      serverProcess.kill();
+    } else {
+      // child.kill() does not work on linux
+      // process.kill will kill the whole process group on unix
+      process.kill(-serverProcess.pid, 'SIGKILL');
+    }
   };
 }
 
@@ -101,7 +116,7 @@ export function nxE2EPreset(
   }*/ = {
     ...nxBaseCypressPreset(pathToConfig),
     fileServerFolder: '.',
-    supportFile: `${basePath}/support/e2e.ts`,
+    supportFile: `${basePath}/support/e2e.{js,ts}`,
     specPattern: `${basePath}/**/*.cy.{js,jsx,ts,tsx}`,
     fixturesFolder: `${basePath}/fixtures`,
 
@@ -166,7 +181,7 @@ function waitForServer(
     let pollTimeout: NodeJS.Timeout | null;
     const { protocol } = new URL(url);
 
-    const timeoutDuration = webServerConfig?.timeout ?? 10 * 1000;
+    const timeoutDuration = webServerConfig?.timeout ?? 60 * 1000;
     const timeout = setTimeout(() => {
       clearTimeout(pollTimeout);
       reject(

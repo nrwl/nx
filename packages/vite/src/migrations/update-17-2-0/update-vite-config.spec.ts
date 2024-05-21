@@ -7,6 +7,7 @@ import {
 } from '@nx/devkit';
 
 import updateBuildDir from './update-vite-config';
+import { viteConfigFixture } from './lib/vite-config-with-additional-js.fixture';
 
 describe('change-vite-ts-paths-plugin migration', () => {
   let tree: Tree;
@@ -70,6 +71,16 @@ describe('change-vite-ts-paths-plugin migration', () => {
         `Could not migrate your demo5/vite.config.ts file.`
       )
     );
+  });
+
+  it('should correctly migrate the vite config within the file and not other object literals', async () => {
+    // ARRANGE
+    addProject1(tree, 'demo');
+    tree.write(`apps/demo/vite.config.ts`, viteConfigFixture);
+    // ACT
+    await updateBuildDir(tree);
+    // ASSERT
+    expect(tree.read('apps/demo/vite.config.ts', 'utf-8')).toMatchSnapshot();
   });
 });
 

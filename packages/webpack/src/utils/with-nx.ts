@@ -1,12 +1,12 @@
 import { Configuration } from 'webpack';
 import { NxComposableWebpackPlugin, NxWebpackExecutionContext } from './config';
 import { applyBaseConfig } from '../plugins/nx-webpack-plugin/lib/apply-base-config';
-import { NxWebpackPluginOptions } from '../plugins/nx-webpack-plugin/nx-webpack-plugin-options';
+import { NxAppWebpackPluginOptions } from '../plugins/nx-webpack-plugin/nx-app-webpack-plugin-options';
 import { normalizeAssets } from '../plugins/nx-webpack-plugin/lib/normalize-options';
 
 const processed = new Set();
 
-export type WithNxOptions = Partial<NxWebpackPluginOptions>;
+export type WithNxOptions = Partial<NxAppWebpackPluginOptions>;
 
 /**
  * @param {WithNxOptions} pluginOptions
@@ -25,13 +25,15 @@ export function withNx(
       {
         ...options,
         ...pluginOptions,
+        target: options.target ?? 'web',
         assets: options.assets
           ? options.assets
           : pluginOptions.assets
           ? normalizeAssets(
               pluginOptions.assets,
               options.root,
-              options.sourceRoot
+              options.sourceRoot,
+              options.projectRoot
             )
           : [],
         root: context.root,

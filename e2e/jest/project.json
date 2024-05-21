@@ -3,8 +3,28 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "e2e/jest",
   "projectType": "application",
+  "implicitDependencies": ["jest"],
   "targets": {
-    "e2e": {}
-  },
-  "implicitDependencies": ["jest"]
+    "e2e-ci--src/jest.test.ts": {
+      "dependsOn": [
+        "nx:build-native",
+        "@nx/nx-source:populate-local-registry-storage"
+      ],
+      "inputs": ["e2eInputs", "^production"]
+    },
+    "e2e-ci--src/jest-legacy.test.ts": {
+      "dependsOn": [
+        "nx:build-native",
+        "@nx/nx-source:populate-local-registry-storage"
+      ],
+      "inputs": ["e2eInputs", "^production"]
+    },
+    "e2e-ci--src/jest-root.test.ts": {
+      "dependsOn": [
+        "nx:build-native",
+        "@nx/nx-source:populate-local-registry-storage"
+      ],
+      "inputs": ["e2eInputs", "^production"]
+    }
+  }
 }

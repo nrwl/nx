@@ -1,12 +1,19 @@
-import { findRootJestConfig } from '../../../utils/config/find-root-jest-files';
-import { NormalizedJestProjectSchema } from '../schema';
+import { readProjectConfiguration, type Tree } from '@nx/devkit';
+import { findRootJestConfig } from '../../../utils/config/config-file';
 import { addPropertyToJestConfig } from '../../../utils/config/update-config';
-import { readProjectConfiguration, Tree } from '@nx/devkit';
+import type { NormalizedJestProjectSchema } from '../schema';
 
 function isUsingUtilityFunction(host: Tree) {
   const rootConfig = findRootJestConfig(host);
+  if (!rootConfig) {
+    return false;
+  }
+
+  const rootConfigContent = host.read(rootConfig, 'utf-8');
+
   return (
-    rootConfig && host.read(rootConfig).toString().includes('getJestProjects()')
+    rootConfigContent.includes('getJestProjects()') ||
+    rootConfigContent.includes('getJestProjectsAsync()')
   );
 }
 

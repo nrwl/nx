@@ -2,6 +2,7 @@ import {
   checkFilesDoNotExist,
   checkFilesExist,
   cleanupProject,
+  createFile,
   detectPackageManager,
   newProject,
   packageInstall,
@@ -10,12 +11,10 @@ import {
   readJson,
   runCLI,
   runCommand,
-  runCommandUntil,
   tmpProjPath,
   uniq,
   updateFile,
   updateJson,
-  waitUntil,
 } from '@nx/e2e/utils';
 import { join } from 'path';
 
@@ -44,6 +43,7 @@ describe('EsBuild Plugin', () => {
     expect(packageJson).toEqual({
       name: `@proj/${myPkg}`,
       version: '0.0.1',
+      private: true,
       type: 'commonjs',
       main: './index.cjs',
       dependencies: {},
@@ -84,7 +84,9 @@ describe('EsBuild Plugin', () => {
     `
     );
     expect(() => runCLI(`build ${myPkg}`)).toThrow();
-    expect(() => runCLI(`build ${myPkg} --skipTypeCheck`)).not.toThrow();
+    expect(() =>
+      runCLI(`build ${myPkg} --skipTypeCheck --no-declaration`)
+    ).not.toThrow();
     expect(runCommand(`node dist/libs/${myPkg}/index.cjs`)).toMatch(/Bye/);
     // Reset file
     updateFile(
@@ -231,4 +233,68 @@ describe('EsBuild Plugin', () => {
     const output = runCLI(`build ${myPkg}`);
     expect(output).toContain('custom config loaded');
   }, 120_000);
+
+  it('should bundle in non-sensitive NX_ environment variables', () => {
+    const myPkg = uniq('my-pkg');
+    runCLI(`generate @nx/js:lib ${myPkg} --bundler=esbuild`, {});
+
+    updateFile(
+      `libs/${myPkg}/src/index.ts`,
+      `
+      console.log(process.env['NX_CLOUD_ENCRYPTION_KEY']);
+      console.log(process.env['NX_CLOUD_ACCESS_TOKEN']);
+      console.log(process.env['NX_PUBLIC_TEST']);
+      `
+    );
+
+    runCLI(`build ${myPkg} --platform=browser`, {
+      env: {
+        NX_CLOUD_ENCRYPTION_KEY: 'secret',
+        NX_CLOUD_ACCESS_TOKEN: 'secret',
+        NX_PUBLIC_TEST: 'foobar',
+      },
+    });
+
+    const output = runCommand(`node dist/libs/${myPkg}/index.cjs`, {
+      failOnError: true,
+    });
+    expect(output).not.toMatch(/secret/);
+    expect(output).toMatch(/foobar/);
+  });
+
+  it('should support declaration builds', () => {
+    const declarationPkg = uniq('declaration-pkg');
+    runCLI(`generate @nx/js:lib ${declarationPkg} --bundler=esbuild`);
+    createFile(
+      `libs/${declarationPkg}/src/lib/testDir/sub.ts`,
+      `
+        export function sub(): string {
+          return 'sub';
+        }
+      `
+    );
+    updateFile(
+      `libs/${declarationPkg}/src/lib/${declarationPkg}.ts`,
+      `
+        import { sub } from './testDir/sub';
+        
+        console.log('${declarationPkg}-' + sub());
+      `
+    );
+
+    runCLI(
+      `build ${declarationPkg} --declaration=true --declarationRootDir='libs/${declarationPkg}/src'`
+    );
+
+    checkFilesExist(
+      `dist/libs/${declarationPkg}/index.cjs`,
+      `dist/libs/${declarationPkg}/index.d.ts`,
+      `dist/libs/${declarationPkg}/lib/${declarationPkg}.d.ts`,
+      `dist/libs/${declarationPkg}/lib/testDir/sub.d.ts`
+    );
+
+    expect(runCommand(`node dist/libs/${declarationPkg}`)).toMatch(
+      new RegExp(`${declarationPkg}-sub`)
+    );
+  }, 300_000);
 });

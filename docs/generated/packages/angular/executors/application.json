@@ -4,8 +4,8 @@
   "schema": {
     "$schema": "http://json-schema.org/draft-07/schema",
     "title": "Schema for Nx Application Executor",
-    "description": "Builds an application with esbuild with support for incremental builds. _Note: this is only supported in Angular versions >= 17.0.0_.",
-    "examplesFile": "The `@nx/angular:application` executor is very similar to the `@angular-devkit/build-angular:application` builder provided by the Angular CLI. It builds an Angular application using [esbuild](https://esbuild.github.io/) with integrated SSR and prerendering capabilities.\n\nIn addition to the features provided by the Angular CLI builder, the `@nx/angular:application` executor also supports the following:\n\n- Providing esbuild plugins\n- Providing a function to transform the application's `index.html` file\n- Incremental builds\n\n## Examples\n\n{% tabs %}\n{% tab label=\"Providing esbuild plugins\" %}\n\nThe executor accepts a `plugins` option that allows you to provide esbuild plugins that will be used when building your application. It allows providing a path to a plugin file or an object with a `path` and `options` property to provide options to the plugin.\n\n```json {% fileName=\"apps/my-app/project.json\" highlightLines=[\"8-16\"] %}\n{\n  ...\n  \"targets\": {\n    \"build\": {\n      \"executor\": \"@nx/angular:application\",\n      \"options\": {\n        ...\n        \"plugins\": [\n          \"apps/my-app/plugins/plugin1.js\",\n          {\n            \"path\": \"apps/my-app/plugins/plugin2.js\",\n            \"options\": {\n              \"someOption\": \"some value\"\n            }\n          }\n        ]\n      }\n    }\n    ...\n  }\n}\n```\n\n```ts {% fileName=\"apps/my-app/plugins/plugin1.js\" %}\nconst plugin1 = {\n  name: 'plugin1',\n  setup(build) {\n    const options = build.initialOptions;\n    options.define.PLUGIN1_TEXT = '\"Value was provided at build time\"';\n  },\n};\n\nmodule.exports = plugin1;\n```\n\n```ts {% fileName=\"apps/my-app/plugins/plugin2.js\" %}\nfunction plugin2({ someOption }) {\n  return {\n    name: 'plugin2',\n    setup(build) {\n      const options = build.initialOptions;\n      options.define.PLUGIN2_TEXT = JSON.stringify(someOption);\n    },\n  };\n}\n\nmodule.exports = plugin2;\n```\n\n{% /tab %}\n\n{% tab label=\"Transforming the 'index.html' file\" %}\n\nThe executor accepts an `indexHtmlTransformer` option to provide a path to a file with a default export for a function that receives the application's `index.html` file contents and outputs the updated contents.\n\n```json {% fileName=\"apps/my-app/project.json\" highlightLines=[8] %}\n{\n  ...\n  \"targets\": {\n    \"build\": {\n      \"executor\": \"@nx/angular:application\",\n      \"options\": {\n        ...\n        \"indexHtmlTransformer\": \"apps/my-app/index-html.transformer.ts\"\n      }\n    }\n    ...\n  }\n}\n```\n\n```ts {% fileName=\"apps/my-app/index-html.transformer.ts\" %}\nexport default function (indexContent: string) {\n  return indexContent.replace(\n    '<title>my-app</title>',\n    '<title>my-app (transformed)</title>'\n  );\n}\n```\n\n{% /tab %}\n{% /tabs %}\n",
+    "description": "Builds an Angular application using [esbuild](https://esbuild.github.io/) with integrated SSR and prerendering capabilities. _Note: this is only supported in Angular versions >= 17.0.0_.",
+    "examplesFile": "This executor is a drop-in replacement for the `@angular-devkit/build-angular:application` builder provided by the Angular CLI. It builds an Angular application using [esbuild](https://esbuild.github.io/) with integrated SSR and prerendering capabilities.\n\nIn addition to the features provided by the Angular CLI builder, the `@nx/angular:application` executor also supports the following:\n\n- Providing esbuild plugins\n- Providing a function to transform the application's `index.html` file\n- Incremental builds\n\n{% callout type=\"check\" title=\"Dev Server\" %}\nThe [`@nx/angular:dev-server` executor](https://nx.dev/nx-api/angular/executors/dev-server) is required to serve your application when using the `@nx/angular:application` to build it. It is a drop-in replacement for the Angular CLI's `@angular-devkit/build-angular:dev-server` builder and ensures the application is correctly served with Vite when using the `@nx/angular:application` executor.\n{% /callout %}\n\n## Examples\n\n{% tabs %}\n{% tab label=\"Providing esbuild plugins\" %}\n\nThe executor accepts a `plugins` option that allows you to provide esbuild plugins that will be used when building your application. It allows providing a path to a plugin file or an object with a `path` and `options` property to provide options to the plugin.\n\n```json {% fileName=\"apps/my-app/project.json\" highlightLines=[\"8-16\"] %}\n{\n  ...\n  \"targets\": {\n    \"build\": {\n      \"executor\": \"@nx/angular:application\",\n      \"options\": {\n        ...\n        \"plugins\": [\n          \"apps/my-app/plugins/plugin1.js\",\n          {\n            \"path\": \"apps/my-app/plugins/plugin2.js\",\n            \"options\": {\n              \"someOption\": \"some value\"\n            }\n          }\n        ]\n      }\n    }\n    ...\n  }\n}\n```\n\n```ts {% fileName=\"apps/my-app/plugins/plugin1.js\" %}\nconst plugin1 = {\n  name: 'plugin1',\n  setup(build) {\n    const options = build.initialOptions;\n    options.define.PLUGIN1_TEXT = '\"Value was provided at build time\"';\n  },\n};\n\nmodule.exports = plugin1;\n```\n\n```ts {% fileName=\"apps/my-app/plugins/plugin2.js\" %}\nfunction plugin2({ someOption }) {\n  return {\n    name: 'plugin2',\n    setup(build) {\n      const options = build.initialOptions;\n      options.define.PLUGIN2_TEXT = JSON.stringify(someOption);\n    },\n  };\n}\n\nmodule.exports = plugin2;\n```\n\nAdditionally, we need to inform TypeScript of the defined variables to prevent type-checking errors during the build. We can achieve this by creating or updating a type definition file included in the TypeScript build process (e.g. `src/types.d.ts`) with the following content:\n\n```ts {% fileName=\"apps/my-app/src/types.d.ts\" %}\ndeclare const PLUGIN1_TEXT: number;\ndeclare const PLUGIN2_TEXT: string;\n```\n\n{% /tab %}\n\n{% tab label=\"Transforming the 'index.html' file\" %}\n\nThe executor accepts an `indexHtmlTransformer` option to provide a path to a file with a default export for a function that receives the application's `index.html` file contents and outputs the updated contents.\n\n```json {% fileName=\"apps/my-app/project.json\" highlightLines=[8] %}\n{\n  ...\n  \"targets\": {\n    \"build\": {\n      \"executor\": \"@nx/angular:application\",\n      \"options\": {\n        ...\n        \"indexHtmlTransformer\": \"apps/my-app/index-html.transformer.ts\"\n      }\n    }\n    ...\n  }\n}\n```\n\n```ts {% fileName=\"apps/my-app/index-html.transformer.ts\" %}\nexport default function (indexContent: string) {\n  return indexContent.replace(\n    '<title>my-app</title>',\n    '<title>my-app (transformed)</title>'\n  );\n}\n```\n\n{% /tab %}\n{% /tabs %}\n",
     "outputCapture": "direct-nodejs",
     "type": "object",
     "properties": {
@@ -65,6 +65,10 @@
       "tsConfig": {
         "type": "string",
         "description": "The full path for the TypeScript configuration file, relative to the current workspace."
+      },
+      "deployUrl": {
+        "type": "string",
+        "description": "Customize the base path for the URLs of resources in 'index.html' and component stylesheets. This option is only necessary for specific deployment scenarios, such as with Angular Elements or when utilizing different CDN locations. _Note: this is only supported in Angular versions >= 17.3.0_."
       },
       "scripts": {
         "description": "Global scripts to be included in the build.",
@@ -162,6 +166,11 @@
         "items": { "type": "string" },
         "default": []
       },
+      "clearScreen": {
+        "type": "boolean",
+        "default": false,
+        "description": "Automatically clear the terminal screen during rebuilds. _Note: this is only supported in Angular versions >= 17.2.0_."
+      },
       "optimization": {
         "description": "Enables optimization of the build output. Including minification of scripts and styles, tree-shaking, dead-code elimination, inlining of critical CSS and fonts inlining. For more information, see https://angular.io/guide/workspace-config#optimization-configuration.",
         "default": true,
@@ -234,6 +243,11 @@
           "^\\.\\S+$": { "enum": ["text", "binary", "file", "empty"] }
         }
       },
+      "define": {
+        "description": "Defines global identifiers that will be replaced with a specified constant value when found in any JavaScript or TypeScript code including libraries. The value will be used directly. String values must be put in quotes. Identifiers within Angular metadata such as Component Decorators will not be replaced. _Note: this is only supported in Angular versions >= 17.2.0_.",
+        "type": "object",
+        "additionalProperties": { "type": "string" }
+      },
       "fileReplacements": {
         "description": "Replace compilation source files with other compilation source files in the build.",
         "type": "array",
@@ -242,9 +256,9 @@
           "properties": {
             "replace": {
               "type": "string",
-              "pattern": "\\.(([cm]?j|t)sx?|json)$"
+              "pattern": "\\.(([cm]?[jt])sx?|json)$"
             },
-            "with": { "type": "string", "pattern": "\\.(([cm]?j|t)sx?|json)$" }
+            "with": { "type": "string", "pattern": "\\.(([cm]?[jt])sx?|json)$" }
           },
           "additionalProperties": false,
           "required": ["replace", "with"]
@@ -663,9 +677,9 @@
         "properties": {
           "replace": {
             "type": "string",
-            "pattern": "\\.(([cm]?j|t)sx?|json)$"
+            "pattern": "\\.(([cm]?[jt])sx?|json)$"
           },
-          "with": { "type": "string", "pattern": "\\.(([cm]?j|t)sx?|json)$" }
+          "with": { "type": "string", "pattern": "\\.(([cm]?[jt])sx?|json)$" }
         },
         "additionalProperties": false,
         "required": ["replace", "with"]
@@ -725,7 +739,7 @@
     },
     "presets": []
   },
-  "description": "Builds an application with esbuild with support for incremental builds. _Note: this is only supported in Angular versions >= 17.0.0_.",
+  "description": "Builds an Angular application using [esbuild](https://esbuild.github.io/) with integrated SSR and prerendering capabilities. _Note: this is only supported in Angular versions >= 17.0.0_.",
   "aliases": [],
   "hidden": false,
   "path": "/packages/angular/src/executors/application/schema.json",

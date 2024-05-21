@@ -3,7 +3,9 @@ use std::collections::HashMap;
 use std::path::MAIN_SEPARATOR;
 use std::sync::Arc;
 
-use crate::native::watch::types::{EventType, WatchEvent, WatchEventInternal};
+use crate::native::watch::types::{
+    transform_event_to_watch_events, EventType, WatchEvent, WatchEventInternal,
+};
 use crate::native::watch::watch_filterer;
 use napi::bindgen_prelude::*;
 use napi::threadsafe_function::{
@@ -39,7 +41,14 @@ impl Watcher {
         use_ignore: Option<bool>,
     ) -> Watcher {
         // always have these globs come before the additional globs
-        let mut globs = vec![".git/".into(), "node_modules/".into(), ".nx/".into()];
+        let mut globs = vec![
+            ".git/".into(),
+            "node_modules/".into(),
+            ".nx/".into(),
+            "vitest.config.ts.timestamp*.mjs".into(),
+            "vite.config.ts.timestamp*.mjs".into(),
+            ".yarn/cache/".into(),
+        ];
         if let Some(additional_globs) = additional_globs {
             globs.extend(additional_globs);
         }
@@ -111,11 +120,8 @@ impl Watcher {
             let events = action
                 .events
                 .par_iter()
-                .map(|ev| {
-                    let mut watch_event: WatchEventInternal = ev.into();
-                    watch_event.origin = Some(origin_path.clone());
-                    watch_event
-                })
+                .filter_map(|ev| transform_event_to_watch_events(ev, &origin_path).ok())
+                .flatten()
                 .collect::<Vec<WatchEventInternal>>();
 
             let mut group_events: HashMap<String, WatchEventInternal> = HashMap::new();

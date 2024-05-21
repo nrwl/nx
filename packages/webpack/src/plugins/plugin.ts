@@ -8,7 +8,7 @@ import {
   workspaceRoot,
   writeJsonFile,
 } from '@nx/devkit';
-import { dirname, isAbsolute, join, relative } from 'path';
+import { dirname, isAbsolute, join, relative, resolve } from 'path';
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { WebpackExecutorOptions } from '../executors/webpack/schema';
 import { WebDevServerOptions } from '../executors/dev-server/schema';
@@ -108,13 +108,11 @@ async function createWebpackTargets(
 > {
   const namedInputs = getNamedInputs(projectRoot, context);
 
-  global.NX_GRAPH_CREATION = true;
   const webpackConfig = resolveUserDefinedWebpackConfig(
     join(context.workspaceRoot, configFilePath),
     getRootTsConfigPath(),
     true
   );
-  delete global.NX_GRAPH_CREATION;
 
   const webpackOptions = await readWebpackOptions(webpackConfig);
 
@@ -169,6 +167,7 @@ async function createWebpackTargets(
     executor: '@nx/web:file-server',
     options: {
       buildTarget: options.buildTargetName,
+      spa: true,
     },
   };
 
@@ -182,13 +181,20 @@ function normalizeOutputPath(
   if (!outputPath) {
     // If outputPath is undefined, use webpack's default `dist` directory.
     if (projectRoot === '.') {
-      return `{projectRoot}/dist}`;
+      return `{projectRoot}/dist`;
     } else {
       return `{workspaceRoot}/dist/{projectRoot}`;
     }
   } else {
     if (isAbsolute(outputPath)) {
-      return `{workspaceRoot}/${relative(workspaceRoot, outputPath)}`;
+      /**
+       * If outputPath is absolute, we need to resolve it relative to the workspaceRoot first.
+       * After that, we can use the relative path to the workspaceRoot token {workspaceRoot} to generate the output path.
+       */
+      return `{workspaceRoot}/${relative(
+        workspaceRoot,
+        resolve(workspaceRoot, outputPath)
+      )}`;
     } else {
       if (outputPath.startsWith('..')) {
         return join('{workspaceRoot}', join(projectRoot, outputPath));

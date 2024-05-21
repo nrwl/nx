@@ -1,9 +1,7 @@
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import {
-  Tree,
-  readProjectConfiguration,
-  updateProjectConfiguration,
-} from '@nx/devkit';
+import { Tree } from '@nx/devkit';
 
 import generator from './vitest-generator';
 import { VitestGeneratorSchema } from './schema';
@@ -18,56 +16,21 @@ describe('vitest generator', () => {
     project: 'my-test-react-app',
     uiFramework: 'react',
     coverageProvider: 'v8',
+    addPlugin: true,
   };
 
-  beforeEach(() => {
-    appTree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-  });
-
-  it('Should add the test target to existing test target', async () => {
-    mockReactAppGenerator(appTree);
-    await generator(appTree, options);
-    const config = readProjectConfiguration(appTree, 'my-test-react-app');
-    expect(config.targets['test']).toMatchInlineSnapshot(`
-      {
-        "executor": "@nx/vite:test",
-        "options": {
-          "passWithNoTests": true,
-        },
-        "outputs": [
-          "{workspaceRoot}/coverage/{projectRoot}",
-        ],
-      }
-    `);
-  });
-
-  it('should add the test target if its missing', async () => {
-    mockReactAppGenerator(appTree);
-    const projectConfig = readProjectConfiguration(
-      appTree,
-      'my-test-react-app'
-    );
-    delete projectConfig.targets.test;
-    updateProjectConfiguration(appTree, 'my-test-react-app', projectConfig);
-    await generator(appTree, options);
-    const config = readProjectConfiguration(appTree, 'my-test-react-app');
-    expect(config.targets['test']).toMatchInlineSnapshot(`
-      {
-        "executor": "@nx/vite:test",
-        "options": {
-          "reportsDirectory": "../../coverage/apps/my-test-react-app",
-        },
-        "outputs": [
-          "{options.reportsDirectory}",
-        ],
-      }
-    `);
-  });
-
   describe('tsconfig', () => {
-    it('should add a tsconfig.spec.json file', async () => {
+    beforeAll(async () => {
+      appTree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
       mockReactAppGenerator(appTree);
       await generator(appTree, options);
+    });
+
+    it('should add vitest.workspace.ts at the root', async () => {
+      expect(appTree.read('vitest.workspace.ts', 'utf-8')).toMatchSnapshot();
+    });
+
+    it('should add a tsconfig.spec.json file', async () => {
       const tsconfig = JSON.parse(
         appTree.read('apps/my-test-react-app/tsconfig.json')?.toString() ?? '{}'
       );
@@ -117,11 +80,16 @@ describe('vitest generator', () => {
     });
 
     it('should add vitest/importMeta when inSourceTests is true', async () => {
-      mockReactAppGenerator(appTree);
-      await generator(appTree, { ...options, inSourceTests: true });
+      mockReactAppGenerator(appTree, 'my-test-react-app-2');
+      await generator(appTree, {
+        ...options,
+        inSourceTests: true,
+        project: 'my-test-react-app-2',
+      });
       const tsconfig = JSON.parse(
-        appTree.read('apps/my-test-react-app/tsconfig.app.json')?.toString() ??
-          '{}'
+        appTree
+          .read('apps/my-test-react-app-2/tsconfig.app.json')
+          ?.toString() ?? '{}'
       );
       expect(tsconfig.compilerOptions.types).toMatchInlineSnapshot(`
         [
@@ -132,9 +100,12 @@ describe('vitest generator', () => {
   });
 
   describe('vite.config', () => {
-    it('should create correct vite.config.ts file for apps', async () => {
+    beforeAll(async () => {
+      appTree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
       mockReactAppGenerator(appTree);
       await generator(appTree, options);
+    });
+    it('should create correct vite.config.ts file for apps', async () => {
       expect(
         appTree.read('apps/my-test-react-app/vite.config.ts', 'utf-8')
       ).toMatchSnapshot();
@@ -150,9 +121,12 @@ describe('vitest generator', () => {
   });
 
   describe('insourceTests', () => {
-    it('should add the insourceSource option in the vite config', async () => {
+    beforeAll(async () => {
+      appTree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
       mockReactAppGenerator(appTree);
       await generator(appTree, { ...options, inSourceTests: true });
+    });
+    it('should add the insourceSource option in the vite config', async () => {
       expect(
         appTree.read('apps/my-test-react-app/vite.config.ts', 'utf-8')
       ).toMatchSnapshot();

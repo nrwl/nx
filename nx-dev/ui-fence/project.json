@@ -4,17 +4,5 @@
   "sourceRoot": "nx-dev/ui-fence/src",
   "projectType": "library",
   "tags": [],
-  "targets": {
-    "lint": {
-      "executor": "@nx/eslint:lint"
-    },
-    "test": {
-      "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
-      "options": {
-        "jestConfig": "nx-dev/ui-fence/jest.config.ts",
-        "passWithNoTests": true
-      }
-    }
-  }
+  "targets": {}
 }

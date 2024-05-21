@@ -3,14 +3,19 @@
   "version": "0.1",
   "generators": {
     "configuration": {
-      "factory": "./src/generators/configuration/configuration",
+      "factory": "./src/generators/configuration/configuration#configurationGeneratorInternal",
       "schema": "./src/generators/configuration/schema.json",
       "description": "Add Nx Playwright configuration to your project"
     },
     "init": {
-      "factory": "./src/generators/init/init",
+      "factory": "./src/generators/init/init#initGeneratorInternal",
       "schema": "./src/generators/init/schema.json",
       "description": "Initializes a Playwright project in the current workspace"
+    },
+    "convert-to-inferred": {
+      "factory": "./src/generators/convert-to-inferred/convert-to-inferred",
+      "schema": "./src/generators/convert-to-inferred/schema.json",
+      "description": "Convert existing Playwright project(s) using `@nx/playwright:playwright` executor to use `@nx/playwright/plugin`."
     }
   }
 }

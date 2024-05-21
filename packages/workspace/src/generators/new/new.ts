@@ -2,7 +2,6 @@ import {
   getPackageManagerCommand,
   installPackagesTask,
   joinPathFragments,
-  names,
   PackageManager,
   Tree,
 } from '@nx/devkit';
@@ -34,6 +33,7 @@ interface Schema {
   packageManager?: PackageManager;
   e2eTestRunner?: 'cypress' | 'playwright' | 'detox' | 'jest' | 'none';
   ssr?: boolean;
+  prefix?: string;
 }
 
 export interface NormalizedSchema extends Schema {
@@ -130,7 +130,6 @@ function normalizeOptions(options: Schema): NormalizedSchema {
     ...options,
   };
 
-  normalized.name = names(options.name).fileName;
   if (!options.directory) {
     normalized.directory = normalized.name;
   }

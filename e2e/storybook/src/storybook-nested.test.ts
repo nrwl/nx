@@ -54,12 +54,15 @@ describe('Storybook generators and executors for standalone workspaces - using R
   });
 
   describe('serve storybook', () => {
-    afterEach(() => killPorts());
+    afterEach(() => killPorts(4400));
 
     it('should serve a React based Storybook setup that uses Vite', async () => {
-      const p = await runCommandUntil(`run ${appName}:storybook`, (output) => {
-        return /Storybook.*started/gi.test(output);
-      });
+      const p = await runCommandUntil(
+        `run ${appName}:storybook --port 4400`,
+        (output) => {
+          return /Storybook.*started/gi.test(output);
+        }
+      );
       p.kill();
     }, 100_000);
   });
@@ -67,7 +70,7 @@ describe('Storybook generators and executors for standalone workspaces - using R
   describe('build storybook', () => {
     it('should build a React based storybook that uses Vite', () => {
       runCLI(`run ${appName}:build-storybook --verbose`);
-      checkFilesExist(`dist/storybook/${appName}/index.html`);
+      checkFilesExist(`storybook-static/index.html`);
     }, 100_000);
 
     it('should build a React based storybook that references another lib and uses Vite', () => {
@@ -116,7 +119,7 @@ describe('Storybook generators and executors for standalone workspaces - using R
 
       // build React lib
       runCLI(`run ${appName}:build-storybook --verbose`);
-      checkFilesExist(`dist/storybook/${appName}/index.html`);
+      checkFilesExist(`storybook-static/index.html`);
     }, 150_000);
   });
 });

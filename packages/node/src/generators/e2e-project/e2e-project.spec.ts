@@ -1,3 +1,5 @@
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
 import { Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { applicationGenerator } from '../application/application';
@@ -15,10 +17,12 @@ describe('e2eProjectGenerator', () => {
       framework: 'express',
       e2eTestRunner: 'none',
       projectNameAndRootFormat: 'as-provided',
+      addPlugin: true,
     });
     await e2eProjectGenerator(tree, {
       projectType: 'server',
       project: 'api',
+      addPlugin: true,
     });
 
     expect(tree.exists(`api-e2e/src/api/api.spec.ts`)).toBeTruthy();
@@ -31,11 +35,13 @@ describe('e2eProjectGenerator', () => {
       e2eTestRunner: 'none',
       rootProject: true,
       projectNameAndRootFormat: 'as-provided',
+      addPlugin: true,
     });
     await e2eProjectGenerator(tree, {
       projectType: 'server',
       project: 'api',
       rootProject: true,
+      addPlugin: true,
     });
 
     expect(tree.exists(`e2e/src/server/server.spec.ts`)).toBeTruthy();
@@ -47,10 +53,12 @@ describe('e2eProjectGenerator', () => {
       framework: 'none',
       e2eTestRunner: 'none',
       projectNameAndRootFormat: 'as-provided',
+      addPlugin: true,
     });
     await e2eProjectGenerator(tree, {
       projectType: 'cli',
       project: 'api',
+      addPlugin: true,
     });
     expect(tree.read('api-e2e/src/api/api.spec.ts', 'utf-8'))
       .toMatchInlineSnapshot(`

@@ -1,6 +1,9 @@
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import {
   NxJsonConfiguration,
+  ProjectConfiguration,
   Tree,
   addProjectConfiguration,
   readJson,
@@ -17,6 +20,8 @@ import { dump } from 'js-yaml';
 describe('convert-to-flat-config generator', () => {
   let tree: Tree;
   const options: ConvertToFlatConfigGeneratorSchema = { skipFormat: false };
+
+  // TODO(@meeroslav): add plugin in these tests
 
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace();
@@ -174,12 +179,16 @@ describe('convert-to-flat-config generator', () => {
         ...compat.config({ extends: ['plugin:@nx/typescript'] }).map((config) => ({
           ...config,
           files: ['**/*.ts', '**/*.tsx'],
-          rules: {},
+          rules: {
+            ...config.rules,
+          },
         })),
         ...compat.config({ extends: ['plugin:@nx/javascript'] }).map((config) => ({
           ...config,
           files: ['**/*.js', '**/*.jsx'],
-          rules: {},
+          rules: {
+            ...config.rules,
+          },
         })),
       ];
       "
@@ -419,13 +428,146 @@ describe('convert-to-flat-config generator', () => {
         ...compat.config({ extends: ['plugin:@nx/typescript'] }).map((config) => ({
           ...config,
           files: ['**/*.ts', '**/*.tsx'],
-          rules: {},
+          rules: {
+            ...config.rules,
+          },
         })),
         ...compat.config({ extends: ['plugin:@nx/javascript'] }).map((config) => ({
           ...config,
           files: ['**/*.js', '**/*.jsx'],
-          rules: {},
+          rules: {
+            ...config.rules,
+          },
         })),
+      ];
+      "
+    `);
+  });
+
+  it('should convert project if target is defined via plugin as string', async () => {
+    await lintProjectGenerator(tree, {
+      skipFormat: false,
+      linter: Linter.EsLint,
+      project: 'test-lib',
+      setParserOptionsProject: false,
+    });
+    updateJson(tree, 'nx.json', (json: NxJsonConfiguration) => {
+      delete json.targetDefaults;
+      json.plugins = ['@nx/eslint/plugin'];
+      return json;
+    });
+    updateJson(
+      tree,
+      'libs/test-lib/project.json',
+      (json: ProjectConfiguration) => {
+        delete json.targets.lint;
+        return json;
+      }
+    );
+
+    expect(tree.exists('eslint.config.js')).toBeFalsy();
+    expect(tree.exists('libs/test-lib/eslint.config.js')).toBeFalsy();
+    await convertToFlatConfigGenerator(tree, options);
+    expect(tree.exists('eslint.config.js')).toBeTruthy();
+    expect(tree.exists('libs/test-lib/eslint.config.js')).toBeTruthy();
+  });
+
+  it('should convert project if target is defined via plugin as object', async () => {
+    await lintProjectGenerator(tree, {
+      skipFormat: false,
+      linter: Linter.EsLint,
+      project: 'test-lib',
+      setParserOptionsProject: false,
+    });
+    updateJson(tree, 'nx.json', (json: NxJsonConfiguration) => {
+      delete json.targetDefaults;
+      json.plugins = [
+        {
+          plugin: '@nx/eslint/plugin',
+          options: {
+            targetName: 'lint',
+          },
+        },
+      ];
+      return json;
+    });
+    updateJson(
+      tree,
+      'libs/test-lib/project.json',
+      (json: ProjectConfiguration) => {
+        delete json.targets.lint;
+        return json;
+      }
+    );
+
+    expect(tree.exists('eslint.config.js')).toBeFalsy();
+    expect(tree.exists('libs/test-lib/eslint.config.js')).toBeFalsy();
+    await convertToFlatConfigGenerator(tree, options);
+    expect(tree.exists('eslint.config.js')).toBeTruthy();
+    expect(tree.exists('libs/test-lib/eslint.config.js')).toBeTruthy();
+  });
+
+  it('should handle parser options even if parser is extended', async () => {
+    addProjectConfiguration(tree, 'dx-assets-ui', {
+      root: 'apps/dx-assets-ui',
+      targets: {},
+    });
+    await lintProjectGenerator(tree, {
+      skipFormat: false,
+      linter: Linter.EsLint,
+
+      project: 'dx-assets-ui',
+      setParserOptionsProject: false,
+    });
+    updateJson(tree, 'apps/dx-assets-ui/.eslintrc.json', () => {
+      return {
+        extends: ['../../.eslintrc.json'],
+        ignorePatterns: ['!**/*', '__fixtures__/**/*'],
+        overrides: [
+          {
+            files: ['*.ts', '*.tsx', '*.js', '*.jsx'],
+            parserOptions: {
+              project: ['apps/dx-assets-ui/tsconfig.*?.json'],
+            },
+            rules: {},
+          },
+          {
+            files: ['*.ts', '*.tsx'],
+            rules: {},
+          },
+          {
+            files: ['*.js', '*.jsx'],
+            rules: {},
+          },
+        ],
+      };
+    });
+
+    await convertToFlatConfigGenerator(tree, options);
+    expect(tree.exists('apps/dx-assets-ui/eslint.config.js')).toBeTruthy();
+    expect(tree.exists('eslint.config.js')).toBeTruthy();
+    expect(tree.read('apps/dx-assets-ui/eslint.config.js', 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "const baseConfig = require('../../eslint.config.js');
+
+      module.exports = [
+        ...baseConfig,
+        {
+          files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
+          rules: {},
+          languageOptions: {
+            parserOptions: { project: ['apps/dx-assets-ui/tsconfig.*?.json'] },
+          },
+        },
+        {
+          files: ['**/*.ts', '**/*.tsx'],
+          rules: {},
+        },
+        {
+          files: ['**/*.js', '**/*.jsx'],
+          rules: {},
+        },
+        { ignores: ['__fixtures__/**/*'] },
       ];
       "
     `);

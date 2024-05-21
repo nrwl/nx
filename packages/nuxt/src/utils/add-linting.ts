@@ -7,8 +7,8 @@ import {
   runTasksInSerial,
   updateJson,
 } from '@nx/devkit';
-import { extendNuxtEslintJson, extraEslintDependencies } from './lint';
 import { editEslintConfigFiles } from '@nx/vue';
+import { nuxtEslintConfigVersion } from './versions';
 
 export async function addLinting(
   host: Tree,
@@ -29,22 +29,40 @@ export async function addLinting(
       unitTestRunner: options.unitTestRunner,
       skipFormat: true,
       rootProject: options.rootProject,
+      addPlugin: true,
     });
     tasks.push(lintTask);
+
+    editEslintConfigFiles(host, options.projectRoot, options.rootProject);
 
     updateJson(
       host,
       joinPathFragments(options.projectRoot, '.eslintrc.json'),
-      extendNuxtEslintJson
-    );
+      (json) => {
+        const {
+          extends: pluginExtends,
+          ignorePatterns: pluginIgnorePatters,
+          ...config
+        } = json;
 
-    editEslintConfigFiles(host, options.projectRoot, options.rootProject);
+        return {
+          extends: ['@nuxt/eslint-config', ...(pluginExtends || [])],
+          ignorePatterns: [
+            ...(pluginIgnorePatters || []),
+            '.nuxt/**',
+            '.output/**',
+            'node_modules',
+          ],
+          ...config,
+        };
+      }
+    );
 
     const installTask = addDependenciesToPackageJson(
       host,
-      extraEslintDependencies.dependencies,
+      {},
       {
-        ...extraEslintDependencies.devDependencies,
+        '@nuxt/eslint-config': nuxtEslintConfigVersion,
       }
     );
     tasks.push(installTask);

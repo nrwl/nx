@@ -6,8 +6,11 @@ If your Nx plugin versions do not match the version of `nx` in your repository, 
 2. Run `nx report` and identify the minimum and maximum version numbers for all the packages that need to by in sync.
 3. Run `nx migrate --from=[minimumVersion] --to=[maximumVersion]`. Note that all the official Nx plugin migration generators are designed to be idempotent - meaning that running them multiple times is equivalent to running them once. This allows you to run the migrations for all plugins without being concerned about re-running a migration that was already run.
 
-Review the [nx migrate](/core-features/automate-updating-dependencies) documentation for more options.
+Review the [nx migrate](/features/automate-updating-dependencies) documentation for more options.
 
 ## Prevention
 
-To ensure that the Nx plugin versions do not get out of sync, always run `nx migrate` when updating versions instead of manually updating modifying the `package.json` file.
+To ensure that the Nx plugin versions do not get out of sync, make sure to:
+
+- always run `nx add <plugin>` when installing an Nx official plugin instead of using the package manager to install it
+- always run `nx migrate <version>` when updating versions instead of manually updating the `package.json` file

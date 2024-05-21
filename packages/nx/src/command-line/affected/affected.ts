@@ -1,7 +1,6 @@
 import { calculateFileChanges } from '../../project-graph/file-utils';
 import { runCommand } from '../../tasks-runner/run-command';
 import { output } from '../../utils/output';
-import { printAffected } from './print-affected';
 import { connectToNxCloudIfExplicitlyAsked } from '../connect/connect-to-nx-cloud';
 import type { NxArgs } from '../../utils/command-line-utils';
 import {
@@ -24,7 +23,6 @@ import { findMatchingProjects } from '../../utils/find-matching-projects';
 import { generateGraph } from '../graph/graph';
 import { allFileData } from '../../utils/all-file-data';
 import { NX_PREFIX, logger } from '../../utils/logger';
-import { affectedGraphDeprecationMessage } from './command-object';
 
 export async function affected(
   command: 'graph' | 'print-affected' | 'affected',
@@ -32,7 +30,14 @@ export async function affected(
   extraTargetDependencies: Record<
     string,
     (TargetDependencyConfig | string)[]
-  > = {}
+  > = {},
+  extraOptions = {
+    excludeTaskDependencies: false,
+    loadDotEnvFiles: process.env.NX_LOAD_DOT_ENV_FILES !== 'false',
+  } as {
+    excludeTaskDependencies: boolean;
+    loadDotEnvFiles: boolean;
+  }
 ): Promise<void> {
   performance.mark('code-loading:end');
   performance.measure('code-loading', 'init-local', 'code-loading:end');
@@ -60,32 +65,6 @@ export async function affected(
 
   try {
     switch (command) {
-      case 'graph':
-        logger.warn([NX_PREFIX, affectedGraphDeprecationMessage].join(' '));
-        const projectNames = projects.map((p) => p.name);
-        await generateGraph(args as any, projectNames);
-        break;
-
-      case 'print-affected':
-        if (nxArgs.targets && nxArgs.targets.length > 0) {
-          await printAffected(
-            allProjectsWithTarget(projects, nxArgs),
-            projectGraph,
-            { nxJson },
-            nxArgs,
-            overrides
-          );
-        } else {
-          await printAffected(
-            projects,
-            projectGraph,
-            { nxJson },
-            nxArgs,
-            overrides
-          );
-        }
-        break;
-
       case 'affected': {
         const projectsWithTarget = allProjectsWithTarget(projects, nxArgs);
         if (nxArgs.graph) {
@@ -94,7 +73,7 @@ export async function affected(
 
           return await generateGraph(
             {
-              watch: false,
+              watch: true,
               open: true,
               view: 'tasks',
               targets: nxArgs.targets,
@@ -112,7 +91,7 @@ export async function affected(
             overrides,
             null,
             extraTargetDependencies,
-            { excludeTaskDependencies: false, loadDotEnvFiles: true }
+            extraOptions
           );
           process.exit(status);
         }

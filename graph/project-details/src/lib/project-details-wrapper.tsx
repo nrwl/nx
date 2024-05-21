@@ -1,33 +1,41 @@
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-
-import { useNavigate, useSearchParams } from 'react-router-dom';
-
 /* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
-import { ProjectGraphProjectNode } from '@nx/devkit';
+import type { ProjectGraphProjectNode } from '@nx/devkit';
+// nx-ignore-next-line
+import { GraphError } from 'nx/src/command-line/graph/graph';
+/* eslint-enable @nx/enforce-module-boundaries */
+import { useNavigate, useNavigation, useSearchParams } from 'react-router-dom';
 import {
+  ErrorToast,
+  ExpandedTargetsContext,
   getExternalApiService,
   useEnvironmentConfig,
   useRouteConstructor,
 } from '@nx/graph/shared';
-import {
-  ProjectDetails,
-  ProjectDetailsImperativeHandle,
-} from '@nx/graph/ui-project-details';
-import { useCallback, useLayoutEffect, useRef } from 'react';
+import { Spinner } from '@nx/graph/ui-components';
 
-export interface ProjectDetailsProps {
+import { ProjectDetails } from '@nx/graph/ui-project-details';
+import { useCallback, useContext, useEffect } from 'react';
+
+interface ProjectDetailsProps {
   project: ProjectGraphProjectNode;
   sourceMap: Record<string, string[]>;
+  errors?: GraphError[];
 }
 
-export function ProjectDetailsWrapper(props: ProjectDetailsProps) {
-  const projectDetailsRef = useRef<ProjectDetailsImperativeHandle>(null);
+export function ProjectDetailsWrapper({
+  project,
+  sourceMap,
+  errors,
+}: ProjectDetailsProps) {
   const environment = useEnvironmentConfig()?.environment;
   const externalApiService = getExternalApiService();
   const navigate = useNavigate();
+  const { state: navigationState, location } = useNavigation();
   const routeConstructor = useRouteConstructor();
   const [searchParams, setSearchParams] = useSearchParams();
+  const { expandedTargets, setExpandedTargets, collapseAllTargets } =
+    useContext(ExpandedTargetsContext);
 
   const handleViewInProjectGraph = useCallback(
     (data: { projectName: string }) => {
@@ -85,79 +93,82 @@ export function ProjectDetailsWrapper(props: ProjectDetailsProps) {
     [externalApiService]
   );
 
-  const updateSearchParams = (params: URLSearchParams, sections: string[]) => {
-    if (sections.length === 0) {
+  const updateSearchParams = (
+    params: URLSearchParams,
+    targetNames: string[]
+  ) => {
+    if (targetNames.length === 0) {
       params.delete('expanded');
     } else {
-      params.set('expanded', sections.join(','));
+      params.set('expanded', targetNames.join(','));
     }
   };
 
-  const handleTargetCollapse = useCallback(
-    (targetName: string) => {
-      setSearchParams(
-        (currentSearchParams) => {
-          const expandedSections =
-            currentSearchParams.get('expanded')?.split(',') || [];
-          const newExpandedSections = expandedSections.filter(
-            (section) => section !== targetName
-          );
-          updateSearchParams(currentSearchParams, newExpandedSections);
-          return currentSearchParams;
-        },
-        {
-          replace: true,
-          preventScrollReset: true,
-        }
-      );
-    },
-    [setSearchParams]
-  );
+  useEffect(() => {
+    const expandedTargetsParams = searchParams.get('expanded')?.split(',');
+    if (
+      expandedTargetsParams &&
+      expandedTargetsParams.length > 0 &&
+      setExpandedTargets
+    ) {
+      setExpandedTargets(expandedTargetsParams);
+    }
 
-  const handleTargetExpand = useCallback(
-    (targetName: string) => {
+    return () => {
+      if (collapseAllTargets) {
+        collapseAllTargets();
+      }
       setSearchParams(
         (currentSearchParams) => {
-          const expandedSections =
-            currentSearchParams.get('expanded')?.split(',') || [];
-          if (!expandedSections.includes(targetName)) {
-            expandedSections.push(targetName);
-            updateSearchParams(currentSearchParams, expandedSections);
-          }
+          currentSearchParams.delete('expanded');
           return currentSearchParams;
         },
         { replace: true, preventScrollReset: true }
       );
-    },
-    [setSearchParams]
-  );
+    };
+  }, []); // only run on mount
 
-  // On initial render, expand the sections that are included in the URL search params.
-  const isExpandedHandled = useRef(false);
-  useLayoutEffect(() => {
-    if (!props.project.data.targets) return;
-    if (isExpandedHandled.current) return;
-    isExpandedHandled.current = true;
+  useEffect(() => {
+    const expandedTargetsParams =
+      searchParams.get('expanded')?.split(',') || [];
 
-    const expandedSections = searchParams.get('expanded')?.split(',') || [];
-    for (const targetName of Object.keys(props.project.data.targets)) {
-      if (expandedSections.includes(targetName)) {
-        projectDetailsRef.current?.expandTarget(targetName);
-      }
+    if (expandedTargetsParams.join(',') === expandedTargets.join(',')) {
+      return;
     }
-  }, [searchParams, props.project.data.targets, projectDetailsRef]);
+
+    setSearchParams(
+      (currentSearchParams) => {
+        updateSearchParams(currentSearchParams, expandedTargets);
+        return currentSearchParams;
+      },
+      { replace: true, preventScrollReset: true }
+    );
+  }, [expandedTargets, searchParams, setSearchParams]);
+
+  if (
+    navigationState === 'loading' &&
+    !location.pathname.includes('project-details') // do not show spinner when updating search params
+  ) {
+    return (
+      <div className="flex justify-center">
+        <Spinner />
+      </div>
+    );
+  }
 
   return (
-    <ProjectDetails
-      ref={projectDetailsRef}
-      {...props}
-      onTargetCollapse={handleTargetCollapse}
-      onTargetExpand={handleTargetExpand}
-      onViewInProjectGraph={handleViewInProjectGraph}
-      onViewInTaskGraph={handleViewInTaskGraph}
-      onRunTarget={environment === 'nx-console' ? handleRunTarget : undefined}
-    />
+    <>
+      <ProjectDetails
+        project={project}
+        sourceMap={sourceMap}
+        onViewInProjectGraph={handleViewInProjectGraph}
+        onViewInTaskGraph={handleViewInTaskGraph}
+        onRunTarget={environment === 'nx-console' ? handleRunTarget : undefined}
+        viewInProjectGraphPosition={
+          environment === 'nx-console' ? 'bottom' : 'top'
+        }
+      />
+      <ErrorToast errors={errors} />
+    </>
   );
 }
-
-export default ProjectDetailsWrapper;

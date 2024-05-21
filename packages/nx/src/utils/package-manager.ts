@@ -6,8 +6,9 @@ import { gte, lt } from 'semver';
 import { dirSync } from 'tmp';
 import { promisify } from 'util';
 import { readNxJson } from '../config/configuration';
+import { readPackageJson } from '../project-graph/file-utils';
 import { readFileIfExisting, writeJsonFile } from './fileutils';
-import { readModulePackageJson } from './package-json';
+import { PackageJson, readModulePackageJson } from './package-json';
 import { workspaceRoot } from './workspace-root';
 
 const execAsync = promisify(exec);
@@ -26,6 +27,7 @@ export interface PackageManagerCommands {
   dlx: string;
   list: string;
   run: (script: string, args: string) => string;
+  getRegistryUrl: string;
 }
 
 /**
@@ -41,6 +43,24 @@ export function detectPackageManager(dir: string = ''): PackageManager {
       ? 'pnpm'
       : 'npm')
   );
+}
+
+/**
+ * Returns true if the workspace is using npm workspaces, yarn workspaces, or pnpm workspaces.
+ * @param packageManager The package manager to use. If not provided, it will be detected based on the lock file.
+ * @param root The directory the commands will be ran inside of. Defaults to the current workspace's root.
+ */
+export function isWorkspacesEnabled(
+  packageManager: PackageManager = detectPackageManager(),
+  root: string = workspaceRoot
+): boolean {
+  if (packageManager === 'pnpm') {
+    return existsSync(join(root, 'pnpm-workspace.yaml'));
+  }
+
+  // yarn and pnpm both use the same 'workspaces' property in package.json
+  const packageJson: PackageJson = readPackageJson();
+  return !!packageJson?.workspaces;
 }
 
 /**
@@ -82,6 +102,9 @@ export function getPackageManagerCommand(
         dlx: useBerry ? 'yarn dlx' : 'yarn',
         run: (script: string, args: string) => `yarn ${script} ${args}`,
         list: useBerry ? 'yarn info --name-only' : 'yarn list',
+        getRegistryUrl: useBerry
+          ? 'yarn config get npmRegistryServer'
+          : 'yarn config get registry',
       };
     },
     pnpm: () => {
@@ -104,6 +127,7 @@ export function getPackageManagerCommand(
             ? `pnpm run ${script} -- ${args}`
             : `pnpm run ${script} ${args}`,
         list: 'pnpm ls --depth 100',
+        getRegistryUrl: 'pnpm config get registry',
       };
     },
     npm: () => {
@@ -121,6 +145,7 @@ export function getPackageManagerCommand(
         dlx: 'npx',
         run: (script: string, args: string) => `npm run ${script} -- ${args}`,
         list: 'npm ls',
+        getRegistryUrl: 'npm config get registry',
       };
     },
   };
@@ -281,11 +306,21 @@ export async function resolvePackageVersionUsingRegistry(
       throw new Error(`Unable to resolve version ${packageName}@${version}.`);
     }
 
-    // get the last line of the output, strip the package version and quotes
-    const resolvedVersion = result
-      .split('\n')
-      .pop()
-      .split(' ')
+    const lines = result.split('\n');
+    if (lines.length === 1) {
+      return lines[0];
+    }
+
+    /**
+     * The output contains multiple lines ordered by release date, so the last
+     * version might not be the last one in the list. We need to sort it. Each
+     * line looks like:
+     *
+     * <package>@<version> '<version>'
+     */
+    const resolvedVersion = lines
+      .map((line) => line.split(' ')[1])
+      .sort()
       .pop()
       .replace(/'/g, '');
 

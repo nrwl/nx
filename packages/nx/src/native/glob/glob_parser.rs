@@ -198,7 +198,6 @@ pub fn parse_glob(input: &str) -> anyhow::Result<(bool, Vec<Vec<GlobGroup>>)> {
 
 #[cfg(test)]
 mod test {
-
     use crate::native::glob::glob_group::GlobGroup;
     use crate::native::glob::glob_parser::{parse_glob, special_char_with_no_group};
 

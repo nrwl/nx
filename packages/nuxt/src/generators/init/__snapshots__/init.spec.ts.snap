@@ -5,7 +5,8 @@ exports[`init should install required dependencies 1`] = `
   "dependencies": {},
   "devDependencies": {
     "@nx/nuxt": "0.0.1",
-    "nuxi": "^3.8.1",
+    "@nx/vite": "0.0.1",
+    "nuxt": "^3.10.0",
   },
   "name": "@proj/source",
 }

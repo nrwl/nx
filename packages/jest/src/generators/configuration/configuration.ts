@@ -16,6 +16,8 @@ import {
   runTasksInSerial,
 } from '@nx/devkit';
 import { initGenerator as jsInitGenerator } from '@nx/js';
+import { JestPluginOptions } from '../../plugins/plugin';
+import { getPresetExt } from '../../utils/config/config-file';
 
 const schemaDefaults = {
   setupFile: 'none',
@@ -33,6 +35,15 @@ function normalizeOptions(
   if (!options.testEnvironment) {
     options.testEnvironment = 'jsdom';
   }
+
+  const nxJson = readNxJson(tree);
+  const addPlugin =
+    process.env.NX_ADD_PLUGINS !== 'false' &&
+    nxJson.useInferencePlugins !== false;
+
+  options.addPlugin ??= addPlugin;
+
+  options.targetName ??= 'test';
 
   if (!options.hasOwnProperty('supportTsx')) {
     options.supportTsx = false;
@@ -61,7 +72,11 @@ function normalizeOptions(
   };
 }
 
-export async function configurationGenerator(
+export function configurationGenerator(tree: Tree, schema: JestProjectSchema) {
+  return configurationGeneratorInternal(tree, { addPlugin: false, ...schema });
+}
+
+export async function configurationGeneratorInternal(
   tree: Tree,
   schema: JestProjectSchema
 ): Promise<GeneratorCallback> {
@@ -70,24 +85,32 @@ export async function configurationGenerator(
   const tasks: GeneratorCallback[] = [];
 
   tasks.push(await jsInitGenerator(tree, { ...schema, skipFormat: true }));
-  tasks.push(await jestInitGenerator(tree, options));
+  tasks.push(await jestInitGenerator(tree, { ...options, skipFormat: true }));
   if (!schema.skipPackageJson) {
     tasks.push(ensureDependencies(tree, options));
   }
 
-  await createJestConfig(tree, options);
+  const presetExt = getPresetExt(tree);
+
+  await createJestConfig(tree, options, presetExt);
   checkForTestTarget(tree, options);
-  createFiles(tree, options);
+  createFiles(tree, options, presetExt);
   updateTsConfig(tree, options);
   updateVsCodeRecommendedExtensions(tree);
 
   const nxJson = readNxJson(tree);
-  const hasPlugin = nxJson.plugins?.some((p) =>
-    typeof p === 'string'
-      ? p === '@nx/jest/plugin'
-      : p.plugin === '@nx/jest/plugin'
-  );
-  if (!hasPlugin) {
+  const hasPlugin = nxJson.plugins?.some((p) => {
+    if (typeof p === 'string') {
+      return p === '@nx/jest/plugin' && options.targetName === 'test';
+    } else {
+      return (
+        p.plugin === '@nx/jest/plugin' &&
+        ((p.options as JestPluginOptions)?.targetName ?? 'test') ===
+          options.targetName
+      );
+    }
+  });
+  if (!hasPlugin || options.addExplicitTargets) {
     updateWorkspace(tree, options);
   }
 

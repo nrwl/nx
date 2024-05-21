@@ -1,5 +1,5 @@
 import { Argv, CommandModule, showHelp } from 'yargs';
-import { readNxJson } from '../../project-graph/file-utils';
+import { logger } from '../../utils/logger';
 import {
   OutputStyle,
   RunManyOptions,
@@ -9,6 +9,7 @@ import {
   withRunManyOptions,
 } from '../yargs-utils/shared-options';
 import { VersionData } from './utils/shared';
+import { readNxJson } from '../../config/nx-json';
 
 export interface NxReleaseArgs {
   groups?: string[];
@@ -33,6 +34,7 @@ export type VersionOptions = NxReleaseArgs &
     specifier?: string;
     preid?: string;
     stageChanges?: boolean;
+    generatorOptionsOverrides?: Record<string, unknown>;
   };
 
 export type ChangelogOptions = NxReleaseArgs &
@@ -44,6 +46,7 @@ export type ChangelogOptions = NxReleaseArgs &
     from?: string;
     interactive?: string;
     gitRemote?: string;
+    createRelease?: false | 'github';
   };
 
 export type PublishOptions = NxReleaseArgs &
@@ -64,7 +67,7 @@ export const yargsReleaseCommand: CommandModule<
 > = {
   command: 'release',
   describe:
-    '**ALPHA**: Orchestrate versioning and publishing of applications and libraries',
+    'Orchestrate versioning and publishing of applications and libraries',
   builder: (yargs) =>
     yargs
       .command(releaseCommand)
@@ -159,15 +162,18 @@ const releaseCommand: CommandModule<NxReleaseArgs, ReleaseOptions> = {
         }
         return true;
       }),
-  handler: (args) =>
-    import('./release')
-      .then((m) => m.releaseCLIHandler(args))
-      .then((versionDataOrExitCode) => {
-        if (typeof versionDataOrExitCode === 'number') {
-          return process.exit(versionDataOrExitCode);
-        }
-        process.exit(0);
-      }),
+  handler: async (args) => {
+    const release = await import('./release');
+    const result = await release.releaseCLIHandler(args);
+    if (args.dryRun) {
+      logger.warn(`\nNOTE: The "dryRun" flag means no changes were made.`);
+    }
+
+    if (typeof result === 'number') {
+      process.exit(result);
+    }
+    process.exit(0);
+  },
 };
 
 const versionCommand: CommandModule<NxReleaseArgs, VersionOptions> = {
@@ -186,7 +192,7 @@ const versionCommand: CommandModule<NxReleaseArgs, VersionOptions> = {
         .option('preid', {
           type: 'string',
           describe:
-            'The optional prerelease identifier to apply to the version, in the case that specifier has been set to prerelease.',
+            'The optional prerelease identifier to apply to the version, in the case that the specifier argument has been set to `prerelease`.',
           default: '',
         })
         .option('stage-changes', {
@@ -195,15 +201,18 @@ const versionCommand: CommandModule<NxReleaseArgs, VersionOptions> = {
             'Whether or not to stage the changes made by this command. Useful when combining this command with changelog generation.',
         })
     ),
-  handler: (args) =>
-    import('./version')
-      .then((m) => m.releaseVersionCLIHandler(args))
-      .then((versionDataOrExitCode) => {
-        if (typeof versionDataOrExitCode === 'number') {
-          return process.exit(versionDataOrExitCode);
-        }
-        process.exit(0);
-      }),
+  handler: async (args) => {
+    const release = await import('./version');
+    const result = await release.releaseVersionCLIHandler(args);
+    if (args.dryRun) {
+      logger.warn(`\nNOTE: The "dryRun" flag means no changes were made.`);
+    }
+
+    if (typeof result === 'number') {
+      process.exit(result);
+    }
+    process.exit(0);
+  },
 };
 
 const changelogCommand: CommandModule<NxReleaseArgs, ChangelogOptions> = {
@@ -254,10 +263,16 @@ const changelogCommand: CommandModule<NxReleaseArgs, ChangelogOptions> = {
         })
     ),
   handler: async (args) => {
-    const status = await (
-      await import('./changelog')
-    ).releaseChangelogCLIHandler(args);
-    process.exit(status);
+    const release = await import('./changelog');
+    const result = await release.releaseChangelogCLIHandler(args);
+    if (args.dryRun) {
+      logger.warn(`\nNOTE: The "dryRun" flag means no changes were made.`);
+    }
+
+    if (typeof result === 'number') {
+      process.exit(result);
+    }
+    process.exit(0);
   },
 };
 
@@ -284,6 +299,10 @@ const publishCommand: CommandModule<NxReleaseArgs, PublishOptions> = {
     const status = await (
       await import('./publish')
     ).releasePublishCLIHandler(coerceParallelOption(withOverrides(args, 2)));
+    if (args.dryRun) {
+      logger.warn(`\nNOTE: The "dryRun" flag means no changes were made.`);
+    }
+
     process.exit(status);
   },
 };

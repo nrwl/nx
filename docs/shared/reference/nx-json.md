@@ -2,36 +2,41 @@
 
 The `nx.json` file configures the Nx CLI and project defaults. The full [machine readable schema](https://github.com/nrwl/nx/blob/master/packages/nx/schemas/nx-schema.json) is available on GitHub.
 
-The following is an expanded example showing all options. Your `nx.json` will likely be much shorter. For a more intuitive understanding of the roles of each option, you can highlight the options in the excerpt below that relate to different categories.
+The following is an expanded example showing all options. Your `nx.json` will likely be much shorter.
 
-```json {% fileName="nx.json" lineGroups={ Caching:[11,12,13,14,17,23,27], Orchestration:[3,4,5,18], Execution:[19,20,21,22] } %}
+```json {% fileName="nx.json" %}
 {
-  "extends": "nx/presets/npm.json",
-  "affected": {
-    "defaultBase": "main"
-  },
-  "generators": {
-    "@nx/js:library": {
-      "buildable": true
+  "plugins": [
+    {
+      "plugin": "@nx/eslint/plugin",
+      "options": {
+        "targetName": "lint"
+      }
     }
-  },
+  ],
+  "parallel": 4,
+  "cacheDirectory": "tmp/my-nx-cache",
+  "defaultBase": "main",
   "namedInputs": {
     "default": ["{projectRoot}/**/*"],
     "production": ["!{projectRoot}/**/*.spec.tsx"]
   },
   "targetDefaults": {
-    "build": {
+    "@nx/js:tsc": {
       "inputs": ["production", "^production"],
       "dependsOn": ["^build"],
-      "executor": "@nrwl/js:tsc",
       "options": {
         "main": "{projectRoot}/src/index.ts"
       },
       "cache": true
+    },
+    "test": {
+      "cache": true,
+      "inputs": ["default", "^production", "{workspaceRoot}/jest.preset.js"],
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "executor": "@nx/jest:jest"
     }
   },
-  "parallel": 4,
-  "cacheDirectory": "tmp/my-nx-cache",
   "release": {
     "version": {
       "generatorOptions": {
@@ -49,43 +54,133 @@ The following is an expanded example showing all options. Your `nx.json` will li
       },
       "projectChangelogs": true
     }
+  },
+  "generators": {
+    "@nx/js:library": {
+      "buildable": true
+    }
+  },
+  "extends": "nx/presets/npm.json"
+}
+```
+
+## Plugins
+
+Nx plugins improve the experience of using different tools with Nx. One key feature of plugins is that they can [automatically configure the way Nx runs tasks](/concepts/inferred-tasks) for a tool based on that tool's configuration. In order for a plugin to configure tasks for Nx, it needs to be registered in the `plugins` array. If a plugin has no options, it can be listed as a string. Otherwise, it should be listed as an object with a `plugin` property and an `options` property.
+
+Every plugin behaves differently, so consult the plugin's own documentation for information about what it does. You can browse the [plugin registry](/plugin-registry) for available plugins.
+
+To learn about creating your own plugin read about [extending Nx](/extending-nx/intro/getting-started).
+
+```json {% fileName="nx.json" %}
+{
+  "plugins": [
+    "@my-org/graph-plugin",
+    {
+      "plugin": "@nx/eslint/plugin",
+      "options": {
+        "targetName": "lint"
+      }
+    }
+  ]
+}
+```
+
+### Scope Plugins to Specific Projects
+
+Plugins use config files to infer tasks for projects. You can specify which config files are processed by Nx plugins using the `include` and `exclude` properties in the plugin configuration object.
+
+```jsonc {% fileName="nx.json" %}
+{
+  "plugins": [
+    {
+      "plugin": "@nx/jest/plugin",
+      "include": ["packages/**/*"], // include any projects in the packages folder
+      "exclude": ["**/*-e2e/**/*"] // exclude any projects in a *-e2e folder
+    }
+  ]
+}
+```
+
+The `include` and `exclude` properties are each file glob patterns that are used to include or exclude the configuration file that the plugin is interpreting. In the example provided, the `@nx/jest/plugin` plugin will only infer tasks for projects where the `jest.config.ts` file path matches the `packages/**/*` glob but does not match the `**/*-e2e/**/*` glob.
+
+## Task Options
+
+The following properties affect the way Nx runs tasks and can be set at the root of `nx.json`.
+
+| Property                | Description                                                                                                                                                                                                                                                                                                                             |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| parallel                | defines the max number of targets run in parallel                                                                                                                                                                                                                                                                                       |
+| captureStderr           | defines whether the cache captures stderr or just stdout                                                                                                                                                                                                                                                                                |
+| skipNxCache             | defines whether the Nx Cache should be skipped (defaults to `false`)                                                                                                                                                                                                                                                                    |
+| cacheDirectory          | defines where the local cache is stored (defaults to `.nx/cache`)                                                                                                                                                                                                                                                                       |
+| encryptionKey           | (when using `"nx-cloud"` only) defines an encryption key to support end-to-end encryption of your cloud cache. You may also provide an environment variable with the key `NX_CLOUD_ENCRYPTION_KEY` that contains an encryption key as its value. The Nx Cloud task runner normalizes the key length, so any length of key is acceptable |
+| selectivelyHashTsConfig | only hash the path mapping of the active project in the `tsconfig.base.json` (e.g., adding/removing projects doesn't affect the hash of existing projects) (defaults to `false`)                                                                                                                                                        |
+
+You can configure `parallel` in `nx.json`, but you can also set a `--parallel` flag in the terminal `nx run-many -t test --parallel=5`.
+
+### Multiple Tasks Runners
+
+Tasks runners are invoked when you run `nx test`, `nx build`, `nx run-many`, `nx affected`, and so on.
+
+There is a tasks runner created from the task options defined at the root of `nx.json` named `default`. You can register another tasks runner by adding it to `nx.json` like this:
+
+```json {% fileName="nx.json" %}
+{
+  "tasksRunnerOptions": {
+    "another": {
+      "runner": "nx/tasks-runners/default",
+      "options": {}
+    }
   }
 }
 ```
 
-### Extends
+Then you can run a task with the new runner using the `--runner` flag:
 
-Some presets use the `extends` property to hide some default options in a separate json file. The json file specified in the `extends` property is located in your `node_modules` folder. The Nx preset files are specified in [the `nx` package](https://github.com/nrwl/nx/tree/master/packages/nx/presets).
+```shell
+nx run-many -t build --runner=another
+```
 
-### NPM Scope
+The official types of `runner` supported by Nx are `"nx/tasks-runners/default"` and `"nx-cloud"`.
 
-The `npmScope` property of the `nx.json` file is deprecated as of version 16.2.0. `npmScope` was used as a prefix for the names of newly created projects. The new recommended way to define the organization prefix is to set the `name` property in the root `package.json` file to `@my-org/root`. Then `@my-org/` will be used as a prefix for all newly created projects.
+## Default Base
 
-In Nx 16, if the `npmScope` property is present, it will be used as a prefix. If the `npmScope` property is not present, the `name` property of the root `package.json` file will be used to infer the prefix.
+Tells Nx which base branch to use when calculating affected projects.
 
-In Nx 17, the `npmScope` property is ignored.
+- `defaultBase` defines the default base branch, defaults to `main`.
 
-### Affected
+## Target Defaults
 
-Tells Nx which branch and HEAD to use when calculating affected projects.
+Target defaults provide ways to set common options for a particular target in your workspace. When building your project's configuration, we merge it with up to 1 default from this map. For a given target, we look at its name and its executor. We then check target defaults looking for a configuration whose key matches any of the following:
 
-- `defaultBase` defines the default base branch, defaulted to `main`.
+- `` `${executor}` ``
+- `` `${targetName}` `` (if the configuration specifies the executor, this needs to match the target's executor as well)
+
+Target defaults matching the executor takes precedence over those matching the target name. If we find a target default for a given target, we use it as the base for that target's configuration.
+
+{% callout type="warning" title="Beware" %}
+When using a target name as the key of a target default, make sure all the targets with that name use the same executor or that the target defaults you're setting make sense to all targets regardless of the executor they use. Anything set in a target default will also override the configuration of [tasks inferred by plugins](/concepts/inferred-tasks).
+{% /callout %}
+
+Some common scenarios for this follow.
 
 ### inputs & namedInputs
 
-Named inputs defined in `nx.json` are merged with the named inputs defined in each project's project.json. In other words, every project has a set of named inputs, and it's defined as: `{...namedInputsFromNxJson, ...namedInputsFromProjectsProjectJson}`.
+Named inputs defined in `nx.json` are merged with the named inputs defined in [project level configuration](/reference/project-configuration). In other words, every project has a set of named inputs, and it's defined as: `{...namedInputsFromNxJson, ...namedInputsFromProjectsProjectJson}`.
 
 Defining `inputs` for a given target would replace the set of inputs for that target name defined in `nx.json`.
 Using pseudocode `inputs = projectJson.targets.build.inputs || nxJson.targetDefaults.build.inputs`.
 
 You can also define and redefine named inputs. This enables one key use case, where your `nx.json` can define things like this (which applies to every project):
 
-```
-"test": {
-  "inputs": [
-    "default",
-    "^production"
-  ]
+```json {% fileName="nx.json" %}
+{
+  "targetDefaults": {
+    "test": {
+      "inputs": ["default", "^production"]
+    }
+  }
 }
 ```
 
@@ -102,18 +197,11 @@ And projects can define their `production` inputs, without having to redefine th
 In this case Nx will use the right `production` input for each project.
 
 {% cards %}
-{% card title="Project Configuration reference" type="documentation" description="inputs and namedInputs are also described in the project configuration reference" url="/reference/project-configuration#inputs-&-namedinputs" /%}
-{% card title="Customizing inputs and namedInputs" type="documentation" description="This guide walks through a few examples of how to customize inputs and namedInputs" url="/recipes/running-tasks/customizing-inputs" /%}
+{% card title="Inputs and Named Inputs Reference" type="documentation" description="Learn about all the possible settings for `inputs` and `namedInputs`" url="/reference/inputs" /%}
+{% card title="Configure Inputs for Task Caching" type="documentation" description="This recipes walks you through a few examples of how to configure `inputs` and `namedInputs`" url="/recipes/running-tasks/configure-inputs" /%}
 {% /cards %}
 
-### Target Defaults
-
-Target defaults provide ways to set common options for a particular target in your workspace. When building your project's configuration, we merge it with up to 1 default from this map. For a given target, we look at its name and its executor. We then check target defaults for any of the following combinations:
-
-- `` `${executor}` ``
-- `` `${targetName}` ``
-
-Whichever of these we find first, we use as the base for that target's configuration. Some common scenarios for this follow.
+### Task Pipelines
 
 Targets can depend on other targets. A common scenario is having to build dependencies of a project first before
 building the project. The `dependsOn` property in `project.json` can be used to define the list of dependencies of an
@@ -132,12 +220,14 @@ defining `targetDefaults` in `nx.json` is helpful.
 }
 ```
 
-The configuration above is identical to adding `{"dependsOn": ["^build"]}` to every build target of every project.
+The configuration above is identical to adding `{"dependsOn": ["^build"]}` to every `build` target of every project.
 
-For full documentation of the `dependsOn` property, see the [project configuration reference](/reference/project-configuration#dependson).
 {% cards %}
 {% card title="Project Configuration reference" type="documentation" description="For full documentation of the `dependsOn` property, see the project configuration reference" url="/reference/project-configuration#dependson" /%}
+{% card title="What is a Task Pipeline" type="documentation" description="This guide describes how to think about task pipelines" url="/concepts/task-pipeline-configuration" /%}
 {% /cards %}
+
+### Outputs
 
 Another target default you can configure is `outputs`:
 
@@ -151,7 +241,7 @@ Another target default you can configure is `outputs`:
 }
 ```
 
-When defining any options or configurations inside of a target default, you may use the `{workspaceRoot}` and `{projectRoot}` tokens. This is useful for defining things like the outputPath or tsconfig for many build targets.
+When defining any options or configurations inside of a target default, you may use the `{workspaceRoot}` and `{projectRoot}` tokens. This is useful for defining options whose values are paths.
 
 ```json {% fileName="nx.json" %}
 {
@@ -178,10 +268,14 @@ When defining any options or configurations inside of a target default, you may 
 ```
 
 {% callout type="note" title="Target Default Priority" %}
-Note that the inputs and outputs are respecified on the @nx/js:tsc default configuration. This is **required**, as when reading target defaults Nx will only ever look at one key. If there is a default configuration based on the executor used, it will be read first. If not, Nx will fall back to looking at the configuration based on target name. For instance, running `nx build project` will read the options from `targetDefaults[@nx/js:tsc]` if the target configuration for build uses the @nx/js:tsc executor. It **would not** read any of the configuration from the `build` target default configuration unless the executor does not match.
+Note that the inputs and outputs are specified on both the `@nx/js:tsc` and `build` default configurations. This is **required**, as when reading target defaults Nx will only ever look at one key. If there is a default configuration based on the executor used, it will be read first. If not, Nx will fall back to looking at the configuration based on target name. For instance, running `nx build project` will read the options from `targetDefaults[@nx/js:tsc]` if the target configuration for `build` uses the `@nx/js:tsc executor`. It **would not** read any of the configuration from the `build` target default configuration unless the executor does not match.
 {% /callout %}
 
-#### Cache
+{% cards %}
+{% card title="Configure Outputs for Task Caching" type="documentation" description="This recipe walks you through how to set outputs" url="/recipes/running-tasks/configure-outputs" /%}
+{% /cards %}
+
+### Cache
 
 In Nx 17 and higher, caching is configured by specifying `"cache": true` in a target's configuration. This will tell Nx that it's ok to cache the results of a given target. For instance, if you have a target that runs tests, you can specify `"cache": true` in the target default configuration for `test` and Nx will cache the results of running tests.
 
@@ -195,98 +289,58 @@ In Nx 17 and higher, caching is configured by specifying `"cache": true` in a ta
 }
 ```
 
-{% callout type="warning" title="Per Project Caching + DTE" %}
+{% callout type="warning" title="Per Project Caching + Distribution" %}
 
-If you are using distributed task execution and disable caching for a given target, you will not be able to use distributed task execution for that target. This is because distributed task execution requires caching to be enabled. This means that the target you have disabled caching for, and any targets which depend on that target will fail the pipeline if you try to run them with DTE enabled.
+If you are using distributed task execution and disable caching for a given target, you will not be able to use distributed task execution for that target. This is because distributed task execution requires caching to be enabled. This means that the target you have disabled caching for, and any targets which depend on that target will fail the pipeline if you try to run them with Nx Agents enabled.
 
 {% /callout %}
 
-### Plugins
+### Executor/command options
 
-Nx plugins can provide generators, executors, as well as modifying the project graph. Any plugin that modifies the project graph must be listed in the `plugins` array in `nx.json`. Plugins which modify the project graph generally either add nodes or dependencies to the graph.
-
-This can be read about in more detail in the [plugins guide](/extending-nx/recipes/project-graph-plugins).
-
-Inside `nx.json`, these plugins are either listed by their module path, or an object that references the plugin's module path and options that should be passed to it.
+You can configure options specific to a target's executor. As an example, if your repo has projects using the `@nx/js:tsc` executor, you can provide some default options as follows:
 
 ```json {% fileName="nx.json" %}
 {
-  "plugins": [
-    "@my-org/graph-plugin",
-    {
-      "plugin": "@my-org/other-plugin",
+  "targetDefaults": {
+    "@nx/js:tsc": {
       "options": {
-        "someOption": true
+        "generateExportsField": true
       }
     }
-  ]
+  }
 }
 ```
 
-### Generators
-
-Default generator options are configured in `nx.json` as well. For instance, the following tells Nx to always
-pass `--buildable=true` when creating new libraries.
+You can also provide defaults for [inferred targets](/concepts/inferred-tasks) or targets running a command using the `nx:run-commands` executor. As an example, if your repo has projects where **all the `build` targets** run the same `vite build` command, you can provide some default options as follows:
 
 ```json {% fileName="nx.json" %}
 {
-  "generators": {
-    "@nx/js:library": {
-      "buildable": true
+  "targetDefaults": {
+    "build": {
+      "options": {
+        "assetsInlineLimit": 2048,
+        "assetsDir": "static/assets"
+      }
     }
   }
 }
 ```
 
-### Tasks Runner Options
-
-> A task is an invocation of a target.
-
-Tasks runners are invoked when you run `nx test`, `nx build`, `nx run-many`, `nx affected`, and so on. The tasks runner
-named "default" is used by default. Specify a different one like this `nx run-many -t build --runner=another`.
-
-To register a tasks runner, add it to `nx.json` like this:
-
-```json {% fileName="nx.json" %}
-{
-  "tasksRunnerOptions": {
-    "another": {
-      "runner": "nx/tasks-runners/default",
-      "options": {}
-    }
-  }
-}
-```
-
-Tasks runners can accept different options. The following are the options supported
-by `"nx/tasks-runners/default"` and `"nx-cloud"`.
-
-{% callout type="note" title="Define these properties at the root" %}
-As of Nx 17, if you only use one tasks runner, you can specify these properties at the root of `nx.json` instead of inside the `tasksRunnerOptions` property.
+{% callout type="caution" title="Be careful" %}
+If multiple targets with the same name run different commands (or use different executors), do not set options in `targetDefaults`. Different commands would accept different options, and the target defaults will apply to all targets with the same name regardless of the command they run. If you were to provide options in `targetDefaults` for them, the commands that don't expect those options could throw an error.
 {% /callout %}
 
-| Property                | Description                                                                                                                                                                                                                                                                                                                             |
-| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| cacheableOperations     | In Nx < 17, defined the list of targets/operations that were cached by Nx. In Nx 17, use the `cache` property in `targetDefaults` or individual target definitions                                                                                                                                                                      |
-| parallel                | defines the max number of targets ran in parallel (in older versions of Nx you had to pass `--parallel --maxParallel=3` instead of `--parallel=3`)                                                                                                                                                                                      |
-| captureStderr           | defines whether the cache captures stderr or just stdout                                                                                                                                                                                                                                                                                |
-| skipNxCache             | defines whether the Nx Cache should be skipped (defaults to `false`)                                                                                                                                                                                                                                                                    |
-| cacheDirectory          | defines where the local cache is stored (defaults to `node_modules/.cache/nx`)                                                                                                                                                                                                                                                          |
-| encryptionKey           | (when using `"nx-cloud"` only) defines an encryption key to support end-to-end encryption of your cloud cache. You may also provide an environment variable with the key `NX_CLOUD_ENCRYPTION_KEY` that contains an encryption key as its value. The Nx Cloud task runner normalizes the key length, so any length of key is acceptable |
-| selectivelyHashTsConfig | only hash the path mapping of the active project in the `tsconfig.base.json` (e.g., adding/removing projects doesn't affect the hash of existing projects) (defaults to `false`)                                                                                                                                                        |
+For more details on how to pass args to the underlying command see the [Pass Args to Commands recipe](/recipes/running-tasks/pass-args-to-commands).
 
-You can configure `parallel` in `nx.json`, but you can also pass them in the
-terminal `nx run-many -t test --parallel=5`.
-
-### Release
+## Release
 
 The `release` property in `nx.json` configures the `nx release` command. It is an optional property, as `nx release` is capable of working with zero config, but when present it is used to configure the versioning, changelog, and publishing phases of the release process.
 
-For more information on how `nx release` works, see [manage releases](/core-features/manage-releases).
+For more information on how `nx release` works, see [manage releases](/features/manage-releases).
 
 The full list of configuration options available for `"release"` can be found here: [https://github.com/nrwl/nx/blob/master/packages/nx/src/config/nx-json.ts](https://github.com/nrwl/nx/blob/master/packages/nx/src/config/nx-json.ts) under `NxReleaseConfiguration`.
 
-#### Projects
+### Projects
 
 If you want to limit the projects that `nx release` targets, you can use the `projects` property in `nx.json` to do so. This property is either a string, or an array of strings. The strings can be project names, glob patterns, directories, tag references or anything else that is supported by the `--projects` filter you may know from other commands such as `nx run`.
 
@@ -300,7 +354,7 @@ If you want to limit the projects that `nx release` targets, you can use the `pr
 }
 ```
 
-#### Projects Relationship
+### Projects Relationship
 
 The `projectsRelationship` property tells Nx whether to release projects independently or together. By default Nx will release all your projects together in lock step, which is an equivalent of `"projectRelationships": "fixed"`. If you want to release projects independently, you can set `"projectsRelationship": "independent"`.
 
@@ -314,7 +368,7 @@ The `projectsRelationship` property tells Nx whether to release projects indepen
 }
 ```
 
-#### Release Tag Pattern
+### Release Tag Pattern
 
 Optionally override the git/release tag pattern to use. This field is the source of truth for changelog generation and release tagging, as well as for conventional commits parsing.
 
@@ -334,7 +388,7 @@ The default `"releaseTagPattern"` for independent releases at the project level 
 }
 ```
 
-#### Version
+### Version
 
 The `version` property configures the versioning phase of the release process. It is used to determine the next version of your projects, and update any projects that depend on them to use the new version.
 
@@ -362,7 +416,7 @@ It is therefore a common requirement to be able to tweak the options given to th
 
 For a full reference of the available options for the `@nx/js:release-version` generator, see the [release version generator reference](/nx-api/js/generators/release-version).
 
-#### Changelog
+### Changelog
 
 The `changelog` property configures the changelog phase of the release process. It is used to generate a changelog for your projects, and commit it to your repository.
 
@@ -374,7 +428,7 @@ There are two types of possible changelog that can be generated:
 
 The `changelog` property is used to configure both of these changelogs.
 
-##### Workspace Changelog
+#### Workspace Changelog
 
 The `changelog.workspaceChangelog` property configures the workspace changelog. It is used to determine if and how the workspace changelog is generated.
 
@@ -405,7 +459,7 @@ The `changelog.workspaceChangelog` property configures the workspace changelog. 
 }
 ```
 
-##### Project Changelogs
+#### Project Changelogs
 
 The `changelog.projectChangelogs` property configures the project changelogs. It is used to determine if and how the project changelogs are generated.
 
@@ -437,7 +491,7 @@ The `changelog.projectChangelogs` property configures the project changelogs. It
 }
 ```
 
-#### Git
+### Git
 
 The `git` property configures the automated git operations that take place as part of the release process.
 
@@ -455,3 +509,34 @@ The `git` property configures the automated git operations that take place as pa
   }
 }
 ```
+
+## Generators
+
+Default generator options can be configured in `nx.json`. For instance, the following tells Nx to always
+pass `--buildable=true` when creating new libraries with the `@nx/js` plugin.
+
+```json {% fileName="nx.json" %}
+{
+  "generators": {
+    "@nx/js:library": {
+      "buildable": true
+    }
+  }
+}
+```
+
+## Extends
+
+Some presets use the `extends` property to hide some default options in a separate json file. The json file specified in the `extends` property is located in your `node_modules` folder. The Nx preset files are specified in [the `nx` package](https://github.com/nrwl/nx/tree/master/packages/nx/presets).
+
+## Nx Cloud
+
+There are also options for [Nx Cloud](https://nx.app) that are set in the `nx.json` file. For instance, you authenticate with the Nx Cloud service using an `nxCloudAccessToken` like this:
+
+```json {% fileName="nx.json" %}
+{
+  "nxCloudAccessToken": "SOMETOKEN"
+}
+```
+
+For more details on configuring Nx Cloud, see the [Nx Cloud Configuration Options page](/ci/reference/config).

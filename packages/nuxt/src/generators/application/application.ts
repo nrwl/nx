@@ -40,11 +40,6 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
     skipFormat: true,
   });
   tasks.push(jsInitTask);
-  const nuxtInitTask = await nuxtInitGenerator(tree, {
-    ...options,
-    skipFormat: true,
-  });
-  tasks.push(nuxtInitTask);
   tasks.push(ensureDependencies(tree, options));
 
   addProjectConfiguration(tree, options.name, {
@@ -66,10 +61,6 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
       tmpl: '',
       style: options.style,
       projectRoot: options.appProjectRoot,
-      buildDirectory: joinPathFragments(`dist/${options.appProjectRoot}/.nuxt`),
-      nitroOutputDir: joinPathFragments(
-        `dist/${options.appProjectRoot}/.output`
-      ),
       hasVitest: options.unitTestRunner === 'vitest',
     }
   );
@@ -116,6 +107,12 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
 
     tasks.push(await addVitest(tree, options));
   }
+
+  const nuxtInitTask = await nuxtInitGenerator(tree, {
+    ...options,
+    skipFormat: true,
+  });
+  tasks.push(nuxtInitTask);
 
   tasks.push(await addE2e(tree, options));
 

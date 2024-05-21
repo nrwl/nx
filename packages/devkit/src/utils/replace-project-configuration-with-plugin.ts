@@ -1,19 +1,15 @@
-import type {
-  ProjectConfiguration,
-  TargetConfiguration,
-} from 'nx/src/config/workspace-json-project-json';
-import type { Tree } from 'nx/src/generators/tree';
-import type { CreateNodes } from 'nx/src/utils/nx-plugin';
-import { requireNx } from '../../nx';
-const {
-  readNxJson,
-  updateNxJson,
+import {
+  CreateNodes,
   glob,
-  hashObject,
-  findProjectForPath,
+  ProjectConfiguration,
+  readNxJson,
   readProjectConfiguration,
+  TargetConfiguration,
+  Tree,
+  updateNxJson,
   updateProjectConfiguration,
-} = requireNx();
+} from 'nx/src/devkit-exports';
+import { findProjectForPath, hashObject } from 'nx/src/devkit-internals';
 
 export async function replaceProjectConfigurationsWithPlugin<T = unknown>(
   tree: Tree,
@@ -48,6 +44,7 @@ export async function replaceProjectConfigurationsWithPlugin<T = unknown>(
       const nodes = await createNodesFunction(configFile, pluginOptions, {
         workspaceRoot: tree.root,
         nxJsonConfiguration: readNxJson(tree),
+        configFiles,
       });
       const node = nodes.projects[Object.keys(nodes.projects)[0]];
 

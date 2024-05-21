@@ -16,10 +16,9 @@ import { getOutputHashFormat } from '../../../utils/hash-format';
 import { NxTsconfigPathsWebpackPlugin } from '../../nx-typescript-webpack-plugin/nx-tsconfig-paths-webpack-plugin';
 import { getTerserEcmaVersion } from './get-terser-ecma-version';
 import { createLoaderFromCompiler } from './compiler-loaders';
-import { NormalizedNxWebpackPluginOptions } from '../nx-webpack-plugin-options';
+import { NormalizedNxAppWebpackPluginOptions } from '../nx-app-webpack-plugin-options';
 import TerserPlugin = require('terser-webpack-plugin');
 import nodeExternals = require('webpack-node-externals');
-import ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 
 const IGNORED_WEBPACK_WARNINGS = [
   /The comment file/i,
@@ -30,7 +29,7 @@ const extensions = ['.ts', '.tsx', '.mjs', '.js', '.jsx'];
 const mainFields = ['module', 'main'];
 
 export function applyBaseConfig(
-  options: NormalizedNxWebpackPluginOptions,
+  options: NormalizedNxAppWebpackPluginOptions,
   config: Partial<WebpackOptionsNormalized | Configuration> = {},
   {
     useNormalizedEntry,
@@ -58,7 +57,7 @@ export function applyBaseConfig(
 }
 
 function applyNxIndependentConfig(
-  options: NormalizedNxWebpackPluginOptions,
+  options: NormalizedNxAppWebpackPluginOptions,
   config: Partial<WebpackOptionsNormalized | Configuration>
 ): void {
   const hashFormat = getOutputHashFormat(options.outputHashing as string);
@@ -97,30 +96,25 @@ function applyNxIndependentConfig(
     ...config.output,
     libraryTarget:
       (config as Configuration).output?.libraryTarget ??
-      options.target === 'node'
-        ? 'commonjs'
-        : undefined,
+      (options.target === 'node' ? 'commonjs' : undefined),
     path:
       config.output?.path ??
       (options.outputPath
         ? path.join(options.root, options.outputPath)
         : undefined),
     filename:
-      config.output?.filename ?? options.outputHashing
-        ? `[name]${hashFormat.script}.js`
-        : '[name].js',
+      config.output?.filename ??
+      (options.outputHashing ? `[name]${hashFormat.script}.js` : '[name].js'),
     chunkFilename:
-      config.output?.chunkFilename ?? options.outputHashing
-        ? `[name]${hashFormat.chunk}.js`
-        : '[name].js',
+      config.output?.chunkFilename ??
+      (options.outputHashing ? `[name]${hashFormat.chunk}.js` : '[name].js'),
     hashFunction: config.output?.hashFunction ?? 'xxhash64',
     // Disabled for performance
     pathinfo: config.output?.pathinfo ?? false,
     // Use CJS for Node since it has the widest support.
     scriptType:
-      config.output?.scriptType ?? options.target === 'node'
-        ? undefined
-        : 'module',
+      config.output?.scriptType ??
+      (options.target === 'node' ? undefined : 'module'),
   };
 
   config.watch = options.watch;
@@ -203,10 +197,24 @@ function applyNxIndependentConfig(
     moduleTrace: !!options.verbose,
     usedExports: !!options.verbose,
   };
+
+  /**
+   * Initialize properties that get set when webpack is used during task execution.
+   * These properties may be used by consumers who expect them to not be undefined.
+   *
+   * When @nx/webpack/plugin resolves the config, it is not during a task, and therefore
+   * these values are not set, which can lead to errors being thrown when reading
+   * the webpack options from the resolved file.
+   */
+  config.entry ??= {};
+  config.resolve ??= {};
+  config.module ??= {};
+  config.plugins ??= [];
+  config.externals ??= [];
 }
 
 function applyNxDependentConfig(
-  options: NormalizedNxWebpackPluginOptions,
+  options: NormalizedNxAppWebpackPluginOptions,
   config: Partial<WebpackOptionsNormalized | Configuration>,
   { useNormalizedEntry }: { useNormalizedEntry?: boolean } = {}
 ): void {
@@ -223,6 +231,7 @@ function applyNxDependentConfig(
   };
 
   if (!options?.skipTypeChecking) {
+    const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
     plugins.push(
       new ForkTsCheckerWebpackPlugin({
         typescript: {

@@ -1,3 +1,5 @@
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
 import { E2eTestRunner } from '../../utils/test-runners';
 import {
   getProjects,
@@ -275,7 +277,7 @@ describe('MF Remote App Generator', () => {
       "import { Component } from '@angular/core';
 
       @Component({
-        selector: 'proj-root',
+        selector: 'app-root',
         template: '<router-outlet></router-outlet>'
 
       })
@@ -294,11 +296,9 @@ describe('MF Remote App Generator', () => {
     });
 
     // ASSERT
-    expect(tree.read('test/src/index.html', 'utf-8')).not.toContain(
-      'proj-root'
-    );
+    expect(tree.read('test/src/index.html', 'utf-8')).not.toContain('app-root');
     expect(tree.read('test/src/index.html', 'utf-8')).toContain(
-      'proj-test-entry'
+      'app-test-entry'
     );
   });
 
@@ -456,5 +456,28 @@ describe('MF Remote App Generator', () => {
         'apps/shared/test'
       );
     });
+  });
+
+  it('should not touch the package.json when run with `--skipPackageJson`', async () => {
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    let initialPackageJson;
+    updateJson(tree, 'package.json', (json) => {
+      json.dependencies = {};
+      json.devDependencies = {};
+      initialPackageJson = json;
+
+      return json;
+    });
+
+    await generateTestRemoteApplication(tree, {
+      name: 'test',
+      port: 4201,
+      ssr: true,
+      skipFormat: true,
+      skipPackageJson: true,
+    });
+
+    const packageJson = readJson(tree, 'package.json');
+    expect(packageJson).toEqual(initialPackageJson);
   });
 });

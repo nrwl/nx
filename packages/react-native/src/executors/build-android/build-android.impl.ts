@@ -15,7 +15,7 @@ export default async function* buildAndroidExecutor(
 ): AsyncGenerator<ReactNativeBuildOutput> {
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
-  chmodAndroidGradlewFiles(join(projectRoot, 'android'));
+  chmodAndroidGradlewFiles(join(context.root, projectRoot, 'android'));
 
   await runCliBuild(context.root, projectRoot, options);
   yield { success: true };
@@ -27,13 +27,9 @@ function runCliBuild(
   options: ReactNativeBuildAndroidOptions
 ) {
   return new Promise<ChildProcess>((res, reject) => {
-    /**
-     * Call the react native cli with option `--no-packager`
-     * Not passing '--packager' due to cli will launch start command from the project root
-     */
     const childProcess = fork(
       require.resolve('react-native/cli.js'),
-      ['build-android', ...createBuildAndroidOptions(options), '--no-packager'],
+      ['build-android', ...createBuildAndroidOptions(options)],
       {
         stdio: 'inherit',
         cwd: pathResolve(workspaceRoot, projectRoot),

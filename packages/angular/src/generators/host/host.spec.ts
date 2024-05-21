@@ -1,14 +1,17 @@
-import { updateJson } from '@nx/devkit';
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
+import { readJson, updateJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import {
   getProjects,
   readProjectConfiguration,
 } from 'nx/src/generators/utils/project-configuration';
-import { E2eTestRunner } from '../../utils/test-runners';
+import { E2eTestRunner, UnitTestRunner } from '../../utils/test-runners';
 import {
   generateTestHostApplication,
   generateTestRemoteApplication,
 } from '../utils/testing';
+import { Linter } from '@nx/eslint';
 
 describe('Host App Generator', () => {
   it('should generate a host app with no remotes', async () => {
@@ -607,5 +610,46 @@ describe('Host App Generator', () => {
         tree.read('apps/foo/host-app/module-federation.config.ts', 'utf-8')
       ).toContain(`'remote1','foo-remote2','foo-remote3'`);
     });
+  });
+
+  it('should not touch the package.json when run with `--skipPackageJson`', async () => {
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    let initialPackageJson;
+    updateJson(tree, 'package.json', (json) => {
+      json.dependencies = {};
+      json.devDependencies = {};
+      initialPackageJson = json;
+
+      return json;
+    });
+
+    await generateTestHostApplication(tree, {
+      name: 'test',
+      ssr: true,
+      skipFormat: true,
+      skipPackageJson: true,
+    });
+
+    const packageJson = readJson(tree, 'package.json');
+    expect(packageJson).toEqual(initialPackageJson);
+  });
+
+  it('should throw an error if invalid remotes names are provided and --dynamic is set to true', async () => {
+    const tree = createTreeWithEmptyWorkspace();
+    const remote = 'invalid-remote-name';
+
+    await expect(
+      generateTestHostApplication(tree, {
+        name: 'myhostapp',
+        remotes: [remote],
+        dynamic: true,
+        projectNameAndRootFormat: 'as-provided',
+        e2eTestRunner: E2eTestRunner.None,
+        linter: Linter.None,
+        style: 'css',
+        unitTestRunner: UnitTestRunner.None,
+        typescriptConfiguration: false,
+      })
+    ).rejects.toThrowError(`Invalid remote name provided: ${remote}.`);
   });
 });

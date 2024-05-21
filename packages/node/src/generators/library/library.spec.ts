@@ -1,3 +1,5 @@
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
 import {
   getProjects,
   readJson,
@@ -13,6 +15,7 @@ const baseLibraryConfig = {
   name: 'my-lib',
   compiler: 'tsc' as const,
   projectNameAndRootFormat: 'as-provided' as const,
+  addPlugin: true,
 };
 
 describe('lib', () => {
@@ -28,16 +31,7 @@ describe('lib', () => {
       const configuration = readProjectConfiguration(tree, 'my-lib');
       expect(configuration.root).toEqual('my-lib');
       expect(configuration.targets.build).toBeUndefined();
-      expect(configuration.targets.lint).toEqual({
-        executor: '@nx/eslint:lint',
-      });
-      expect(configuration.targets.test).toEqual({
-        executor: '@nx/jest:jest',
-        outputs: ['{workspaceRoot}/coverage/{projectRoot}'],
-        options: {
-          jestConfig: 'my-lib/jest.config.ts',
-        },
-      });
+      expect(tree.read('my-lib/jest.config.ts', 'utf-8')).toMatchSnapshot();
       expect(
         readJson(tree, 'package.json').devDependencies['jest-environment-jsdom']
       ).not.toBeDefined();
@@ -209,17 +203,24 @@ describe('lib', () => {
       expect(tree.exists('my-dir/my-lib/src/index.ts')).toBeTruthy();
     });
 
-    it('should update workspace.json', async () => {
+    it('should update project.json', async () => {
       await libraryGenerator(tree, {
         ...baseLibraryConfig,
         directory: 'my-dir/my-lib',
       });
 
       const project = readProjectConfiguration(tree, 'my-lib');
-      expect(project.root).toEqual('my-dir/my-lib');
-      expect(project.targets.lint).toEqual({
-        executor: '@nx/eslint:lint',
-      });
+      expect(project).toMatchInlineSnapshot(`
+        {
+          "$schema": "../../node_modules/nx/schemas/project-schema.json",
+          "name": "my-lib",
+          "projectType": "library",
+          "root": "my-dir/my-lib",
+          "sourceRoot": "my-dir/my-lib/src",
+          "tags": [],
+          "targets": {},
+        }
+      `);
     });
 
     it('should update tsconfig.json', async () => {

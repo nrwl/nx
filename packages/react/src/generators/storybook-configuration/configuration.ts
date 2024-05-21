@@ -4,6 +4,7 @@ import {
   ensurePackage,
   formatFiles,
   joinPathFragments,
+  readNxJson,
   readProjectConfiguration,
   Tree,
 } from '@nx/devkit';
@@ -33,10 +34,25 @@ async function generateStories(host: Tree, schema: StorybookConfigureSchema) {
   });
 }
 
-export async function storybookConfigurationGenerator(
+export function storybookConfigurationGenerator(
   host: Tree,
   schema: StorybookConfigureSchema
 ) {
+  return storybookConfigurationGeneratorInternal(host, {
+    addPlugin: false,
+    ...schema,
+  });
+}
+
+export async function storybookConfigurationGeneratorInternal(
+  host: Tree,
+  schema: StorybookConfigureSchema
+) {
+  const nxJson = readNxJson(host);
+  const addPluginDefault =
+    process.env.NX_ADD_PLUGINS !== 'false' &&
+    nxJson.useInferencePlugins !== false;
+  schema.addPlugin ??= addPluginDefault;
   const { configurationGenerator } = ensurePackage<
     typeof import('@nx/storybook')
   >('@nx/storybook', nxVersion);
@@ -47,7 +63,8 @@ export async function storybookConfigurationGenerator(
   if (
     findWebpackConfig(host, projectConfig.root) ||
     projectConfig.targets['build']?.executor === '@nx/rollup:rollup' ||
-    projectConfig.targets['build']?.executor === '@nrwl/rollup:rollup'
+    projectConfig.targets['build']?.executor === '@nrwl/rollup:rollup' ||
+    projectConfig.targets['build']?.executor === '@nx/expo:build'
   ) {
     uiFramework = '@storybook/react-webpack5';
   }
@@ -63,6 +80,7 @@ export async function storybookConfigurationGenerator(
     configureStaticServe: schema.configureStaticServe,
     uiFramework: uiFramework as any, // cannot import UiFramework type dynamically
     skipFormat: true,
+    addPlugin: schema.addPlugin,
   });
 
   if (schema.generateStories) {

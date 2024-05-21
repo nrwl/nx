@@ -3,7 +3,7 @@
   "outputCapture": "direct-nodejs",
   "$schema": "http://json-schema.org/draft-07/schema",
   "title": "Schema for Webpack Dev Server",
-  "description": "The dev-server executor is very similar to the standard dev server builder provided by the Angular Devkit. It is usually used in tandem with `@nx/angular:webpack-browser` when your Angular application uses a custom webpack configuration.",
+  "description": "Serves an Angular application using [webpack](https://webpack.js.org/) when the build target is using a webpack-based executor, or [Vite](https://vitejs.dev/) when the build target uses an [esbuild](https://esbuild.github.io/)-based executor.",
   "examplesFile": "../../../docs/dev-server-examples.md",
   "type": "object",
   "presets": [
@@ -17,7 +17,7 @@
       "type": "string",
       "description": "A browser builder target to serve in the format of `project:target[:configuration]`. Ignored if `buildTarget` is set.",
       "pattern": "^[^:\\s]+:[^:\\s]+(:[^\\s]+)?$",
-      "x-deprecated": "Use 'buildTarget' instead. It will be removed in Nx v19."
+      "x-deprecated": "Use 'buildTarget' instead. It will be removed in Nx v20."
     },
     "buildTarget": {
       "type": "string",
@@ -110,6 +110,29 @@
     "poll": {
       "type": "number",
       "description": "Enable and define the file watching poll time period in milliseconds."
+    },
+    "forceEsbuild": {
+      "type": "boolean",
+      "description": "Force the development server to use the 'browser-esbuild' builder when building. This is a developer preview option for the esbuild-based build system. _Note: this is only supported in Angular versions >= 16.1.0_.",
+      "default": false
+    },
+    "prebundle": {
+      "description": "Enable and control the Vite-based development server's prebundling capabilities. To enable prebundling, the Angular CLI cache must also be enabled. This option has no effect when using the 'browser' or other Webpack-based builders. _Note: this is only supported in Angular versions >= 17.2.0_.",
+      "oneOf": [
+        { "type": "boolean" },
+        {
+          "type": "object",
+          "properties": {
+            "exclude": {
+              "description": "List of package imports that should not be prebundled by the development server. The packages will be bundled into the application code itself.",
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          },
+          "additionalProperties": false,
+          "required": ["exclude"]
+        }
+      ]
     },
     "buildLibsFromSource": {
       "type": "boolean",

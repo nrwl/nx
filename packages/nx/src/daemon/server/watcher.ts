@@ -1,6 +1,6 @@
 import { workspaceRoot } from '../../utils/workspace-root';
 import { dirname, relative } from 'path';
-import { FULL_OS_SOCKET_PATH } from '../socket-utils';
+import { getFullOsSocketPath } from '../socket-utils';
 import { handleServerProcessTermination } from './shutdown-utils';
 import { Server } from 'net';
 import { normalizePath } from '../../utils/path';
@@ -13,7 +13,10 @@ import { platform } from 'os';
 import { getDaemonProcessIdSync, serverProcessJsonPath } from '../cache';
 import type { WatchEvent } from '../../native';
 
-const ALWAYS_IGNORE = [...getAlwaysIgnore(workspaceRoot), FULL_OS_SOCKET_PATH];
+const ALWAYS_IGNORE = [
+  ...getAlwaysIgnore(workspaceRoot),
+  getFullOsSocketPath(),
+];
 
 export type FileWatcherCallback = (
   err: Error | string | null,

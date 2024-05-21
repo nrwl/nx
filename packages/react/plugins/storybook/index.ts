@@ -23,7 +23,7 @@ import { existsSync } from 'fs';
 function getClientEnvironment(mode) {
   // Grab NODE_ENV and NX_* and STORYBOOK_* environment variables and prepare them to be
   // injected into the application via DefinePlugin in webpack configuration.
-  const NX_PREFIX = /^NX_/i;
+  const NX_PREFIX = /^NX_PUBLIC_/i;
   const STORYBOOK_PREFIX = /^STORYBOOK_/i;
 
   const raw = Object.keys(process.env)

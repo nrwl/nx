@@ -7,6 +7,7 @@ import {
   joinPathFragments,
   offsetFromRoot,
   parseTargetString,
+  ProjectConfiguration,
   ProjectGraph,
   readNxJson,
   readProjectConfiguration,
@@ -26,7 +27,7 @@ import { addLinterToCyProject } from '../../utils/add-linter';
 import { addDefaultE2EConfig } from '../../utils/config';
 import { installedCypressVersion } from '../../utils/cypress-version';
 import { typesNodeVersion, viteVersion } from '../../utils/versions';
-import cypressInitGenerator from '../init/init';
+import cypressInitGenerator, { addPlugin } from '../init/init';
 import { addBaseCypressSetup } from '../base-setup/base-setup';
 
 export interface CypressE2EConfigSchema {
@@ -46,23 +47,42 @@ export interface CypressE2EConfigSchema {
 
   webServerCommands?: Record<string, string>;
   ciWebServerCommand?: string;
+  addPlugin?: boolean;
 }
 
 type NormalizedSchema = ReturnType<typeof normalizeOptions>;
 
-export async function configurationGenerator(
+export function configurationGenerator(
+  tree: Tree,
+  options: CypressE2EConfigSchema
+) {
+  return configurationGeneratorInternal(tree, {
+    addPlugin: false,
+    ...options,
+  });
+}
+
+export async function configurationGeneratorInternal(
   tree: Tree,
   options: CypressE2EConfigSchema
 ) {
   const opts = normalizeOptions(tree, options);
-
+  opts.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
   const tasks: GeneratorCallback[] = [];
 
+  const projectGraph = await createProjectGraphAsync();
   if (!installedCypressVersion()) {
     tasks.push(await jsInitGenerator(tree, { ...options, skipFormat: true }));
-    tasks.push(await cypressInitGenerator(tree, { ...opts, skipFormat: true }));
+    tasks.push(
+      await cypressInitGenerator(tree, {
+        ...opts,
+        skipFormat: true,
+      })
+    );
+  } else if (opts.addPlugin) {
+    await addPlugin(tree, projectGraph, false);
   }
-  const projectGraph = await createProjectGraphAsync();
+
   const nxJson = readNxJson(tree);
   const hasPlugin = nxJson.plugins?.some((p) =>
     typeof p === 'string'
@@ -105,7 +125,8 @@ function ensureDependencies(tree: Tree, options: NormalizedSchema) {
 }
 
 function normalizeOptions(tree: Tree, options: CypressE2EConfigSchema) {
-  const projectConfig = readProjectConfiguration(tree, options.project);
+  const projectConfig: ProjectConfiguration | undefined =
+    readProjectConfiguration(tree, options.project);
   if (projectConfig?.targets?.e2e) {
     throw new Error(`Project ${options.project} already has an e2e target.
 Rename or remove the existing e2e target.`);
@@ -114,7 +135,7 @@ Rename or remove the existing e2e target.`);
   if (
     !options.baseUrl &&
     !options.devServerTarget &&
-    !projectConfig.targets.serve
+    !projectConfig?.targets?.serve
   ) {
     throw new Error(`The project ${options.project} does not have a 'serve' target.
 In this case you need to provide a devServerTarget,'<projectName>:<targetName>[:<configName>]', or a baseUrl option`);
@@ -124,11 +145,16 @@ In this case you need to provide a devServerTarget,'<projectName>:<targetName>[:
 
   const devServerTarget =
     options.devServerTarget ??
-    (projectConfig.targets.serve ? `${options.project}:serve` : undefined);
+    (projectConfig?.targets?.serve ? `${options.project}:serve` : undefined);
 
   if (!options.baseUrl && !devServerTarget) {
     throw new Error('Either baseUrl or devServerTarget must be provided');
   }
+
+  const nxJson = readNxJson(tree);
+  options.addPlugin ??=
+    process.env.NX_ADD_PLUGINS !== 'false' &&
+    nxJson.useInferencePlugins !== false;
 
   return {
     ...options,
@@ -182,9 +208,13 @@ async function addFiles(
       project: options.project,
       directory: options.directory,
       jsx: options.jsx,
+      js: options.js,
     });
 
-    const cyFile = joinPathFragments(projectConfig.root, 'cypress.config.ts');
+    const cyFile = joinPathFragments(
+      projectConfig.root,
+      options.js ? 'cypress.config.js' : 'cypress.config.ts'
+    );
     let webServerCommands: Record<string, string>;
 
     let ciWebServerCommand: string;
@@ -201,21 +231,18 @@ async function addFiles(
         projectGraph
       );
 
-      const devServerProjectConfig = readProjectConfiguration(
-        tree,
-        parsedTarget.project
-      );
+      const devServerProjectConfig: ProjectConfiguration | undefined =
+        readProjectConfiguration(tree, parsedTarget.project);
       // Add production e2e target if serve target is found
       if (
         parsedTarget.configuration !== 'production' &&
-        devServerProjectConfig.targets[parsedTarget.target]?.configurations?.[
-          'production'
-        ]
+        devServerProjectConfig?.targets?.[parsedTarget.target]
+          ?.configurations?.['production']
       ) {
         webServerCommands.production = `nx run ${parsedTarget.project}:${parsedTarget.target}:production`;
       }
       // Add ci/static e2e target if serve target is found
-      if (devServerProjectConfig.targets?.['serve-static']) {
+      if (devServerProjectConfig?.targets?.['serve-static']) {
         ciWebServerCommand = `nx run ${parsedTarget.project}:serve-static`;
       }
     }
@@ -259,12 +286,15 @@ async function addFiles(
 function addTarget(tree: Tree, opts: NormalizedSchema) {
   const projectConfig = readProjectConfiguration(tree, opts.project);
   const cyVersion = installedCypressVersion();
+  projectConfig.targets ??= {};
   projectConfig.targets.e2e = {
     executor: '@nx/cypress:cypress',
     options: {
       cypressConfig: joinPathFragments(
         projectConfig.root,
-        cyVersion && cyVersion < 10 ? 'cypress.json' : 'cypress.config.ts'
+        cyVersion && cyVersion < 10
+          ? 'cypress.json'
+          : `cypress.config.${opts.js ? 'js' : 'ts'}`
       ),
       testingType: 'e2e',
     },

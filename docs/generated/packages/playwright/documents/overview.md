@@ -1,3 +1,8 @@
+---
+title: Overview of the Nx Playwright Plugin
+description: The Nx Plugin for Playwright contains executors and generators that support e2e testing with Playwright. This page also explains how to configure Playwright on your Nx workspace.
+---
+
 Playwright is a modern web test runner. With included features such as:
 
 - Cross browser support, including mobile browsers
@@ -6,29 +11,71 @@ Playwright is a modern web test runner. With included features such as:
 - Test generation
 - Screenshots and videos
 
-## Setting Up Playwright
+## Setting Up @nx/playwright
 
-If the `@nx/playwright` package is not installed, install the version that matches your `nx` package version.
+### Installation
+
+{% callout type="note" title="Keep Nx Package Versions In Sync" %}
+Make sure to install the `@nx/playwright` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/recipes/tips-n-tricks/keep-nx-versions-in-sync).
+{% /callout %}
+
+In any Nx workspace, you can install `@nx/playwright` by running the following command:
 
 {% tabs %}
-{% tab label="npm" %}
+{% tab label="Nx 18+" %}
 
-```shell
+```shell {% skipRescope=true %}
+nx add @nx/playwright
+```
+
+This will install the correct version of `@nx/playwright`.
+
+### How @nx/playwright Infers Tasks
+
+The `@nx/playwright` plugin will create a task for any project that has a Playwright configuration file present. Any of the following files will be recognized as a Playwright configuration file:
+
+- `playwright.config.js`
+- `playwright.config.ts`
+- `playwright.config.mjs`
+- `playwright.config.mts`
+- `playwright.config.cjs`
+- `playwright.config.cts`
+
+### View Inferred Tasks
+
+To view inferred tasks for a project, open the [project details view](/concepts/inferred-tasks) in Nx Console or run `nx show project my-project --web` in the command line.
+
+### @nx/playwright Configuration
+
+The `@nx/playwright/plugin` is configured in the `plugins` array in `nx.json`.
+
+```json {% fileName="nx.json" %}
+{
+  "plugins": [
+    {
+      "plugin": "@nx/playwright/plugin",
+      "options": {
+        "ciTargetName": "e2e-ci",
+        "targetName": "e2e"
+      }
+    }
+  ]
+}
+```
+
+The `targetName` and `ciTargetName` options control the name of the inferred Playwright tasks. The default names are `e2e` and `e2e-ci`.
+
+### Splitting E2E tasks by file
+
+The `@nx/playwright/plugin` will automatically split your e2e tasks by file. You can read more about this feature [here](/ci/features/split-e2e-tasks).
+
+{% /tab %}
+{% tab label="Nx < 18" %}
+
+Install the `@nx/playwright` package with your package manager.
+
+```shell {% skipRescope=true %}
 npm add -D @nx/playwright
-```
-
-{% /tab %}
-{% tab label="yarn" %}
-
-```shell
-yarn add -D @nx/playwright
-```
-
-{% /tab %}
-{% tab label="pnpm" %}
-
-```shell
-pnpm add -D @nx/playwright
 ```
 
 {% /tab %}

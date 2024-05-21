@@ -1,15 +1,15 @@
-import { ExecutorContext, names } from '@nx/devkit';
-import { resolve as pathResolve } from 'path';
+import { ExecutorContext, names, readJsonFile } from '@nx/devkit';
+import { join, resolve as pathResolve } from 'path';
 import { ChildProcess, fork } from 'child_process';
 
-import { ensureNodeModulesSymlink } from '../../utils/ensure-node-modules-symlink';
-
-import { ExpoEasUpdateOptions } from './schema';
+import { resolveEas } from '../../utils/resolve-eas';
 import {
   displayNewlyAddedDepsMessage,
   syncDeps,
 } from '../sync-deps/sync-deps.impl';
 import { installAsync } from '../install/install.impl';
+
+import { ExpoEasUpdateOptions } from './schema';
 
 export interface ReactNativeUpdateOutput {
   success: boolean;
@@ -23,18 +23,28 @@ export default async function* buildExecutor(
 ): AsyncGenerator<ReactNativeUpdateOutput> {
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
+  const workspacePackageJsonPath = join(context.root, 'package.json');
+  const projectPackageJsonPath = join(
+    context.root,
+    projectRoot,
+    'package.json'
+  );
+
+  const workspacePackageJson = readJsonFile(workspacePackageJsonPath);
+  const projectPackageJson = readJsonFile(projectPackageJsonPath);
+
   await installAsync(context.root, { packages: ['expo-updates'] });
   displayNewlyAddedDepsMessage(
     context.projectName,
     await syncDeps(
       context.projectName,
-      projectRoot,
-      context.root,
+      projectPackageJson,
+      projectPackageJsonPath,
+      workspacePackageJson,
       context.projectGraph,
       ['expo-updates']
     )
   );
-  ensureNodeModulesSymlink(context.root, projectRoot);
 
   try {
     await runCliUpdate(context.root, projectRoot, options);
@@ -53,7 +63,7 @@ function runCliUpdate(
 ) {
   return new Promise((resolve, reject) => {
     childProcess = fork(
-      require.resolve('eas-cli/bin/run'),
+      resolveEas(workspaceRoot),
       ['update', ...createUpdateOptions(options)],
       { cwd: pathResolve(workspaceRoot, projectRoot), env: process.env }
     );

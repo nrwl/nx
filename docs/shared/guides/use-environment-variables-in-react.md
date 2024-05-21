@@ -15,7 +15,7 @@ You can then use these variables in your application code like so: `import.meta.
 
 When using Nx with Vite, you may encounter an issue related to loading environment variables that can lead to unexpected behavior. This issue arises due to the way Nx and Vite handle environment files and configuration settings.
 
-1. **Nx Environment Variable Loading**: Nx loads environment variables from configuration names using the `--configuration` flag. This is the preferred method in Nx, especially when you have a default configuration specified in your `project.json` file for most targets. In our [guide on how to define environment variables](https://nx.dev/recipes/tips-n-tricks/define-environment-variables), you can see that if you're using the `configuration` option, then Nx will load `.env.[configuration-name]` files.
+1. **Nx Environment Variable Loading**: Nx loads environment variables from configuration names using the `--configuration` flag. This is the preferred method in Nx, especially when you have a default configuration specified in your `project.json` file for most targets. In our [guide on how to define environment variables](/recipes/tips-n-tricks/define-environment-variables), you can see that if you're using the `configuration` option, then Nx will load `.env.[configuration-name]` files.
 
 2. **Vite Environment Variable Loading**: Vite loads environment files named `.env.[mode]` using the `--mode` flag.
 
@@ -25,7 +25,7 @@ The root cause of this issue is that Nx has already loaded variables from `.env.
 
 #### Solution
 
-We recommend that developers adapt to the Nx way of handling environment variables and refer to our [documentation on defining environment variables](https://nx.dev/recipes/tips-n-tricks/define-environment-variables). This will help ensure consistent behavior and prevent conflicts when using Nx with Vite.
+We recommend that developers adapt to the Nx way of handling environment variables and refer to our [documentation on defining environment variables](/recipes/tips-n-tricks/define-environment-variables). This will help ensure consistent behavior and prevent conflicts when using Nx with Vite.
 
 However, if you still want to use Vite's `mode`, you still can. To ensure seamless integration between Nx and Vite environment variables, you can establish a clear distinction between `configuration` and `mode` names. By assigning distinct names to both `configuration` and `mode`, you can eliminate any potential conflicts that may arise during environment variable loading. Additionally, consider defining custom configurations in your Nx workspace, each with a corresponding `mode` option. For example, you can create configurations like `development`, `production`, and `staging`, each with its respective `mode` set, like this:
 
@@ -54,18 +54,19 @@ You cannot interpolate environment variables into your `index.html` file for Rea
 
 ## For non-Vite React applications
 
-In React applications (e.g. those using `@nx/web:webpack` or `@nx/next:build` executors for `build` target), Nx
+In React applications (e.g. those using the `@nx/web:webpack` executor or an [inferred task](/concepts/inferred-tasks) that runs the Webpack CLI for building), Nx
 includes the following variables in the build process:
 
 - `NODE_ENV`
-- Variables prefixed with `NX_`, such as `NX_CUSTOM_VAR`
+- Variables prefixed with `NX_`, such as `NX_CUSTOM_VAR` (when using the [NxWebpackPlugin](/recipes/webpack/webpack-plugins#nxwebpackplugin) or the [withNx](/recipes/webpack/webpack-plugins#withnx) plugins)
 
 Defining environment variables can vary between OSes. It's also important to know that this is temporary for the life of
 the shell session.
 
 ### Using environment variables in `index.html`
 
-Nx supports interpolating environment variables into your `index.html` file for React and Web applications.
+Nx supports interpolating environment variables into your `index.html` file for React and Web applications built with Webpack.
+This feature is available when using the [NxWebpackPlugin](/recipes/webpack/webpack-plugins#nxwebpackplugin) or the [withNx](/recipes/webpack/webpack-plugins#withnx) plugins.
 
 To interpolate an environment variable named `NX_DOMAIN_NAME` into your `index.html`, surround it with `%` symbols like so:
 

@@ -10,6 +10,7 @@ import {
   names,
   offsetFromRoot,
   ProjectConfiguration,
+  readNxJson,
   readProjectConfiguration,
   runTasksInSerial,
   TargetConfiguration,
@@ -204,7 +205,7 @@ function addAppFiles(tree: Tree, options: NormalizedSchema) {
             ),
             main: './src/main' + (options.js ? '.js' : '.ts'),
             tsConfig: './tsconfig.app.json',
-            assets: ['./assets'],
+            assets: ['./src/assets'],
           }
         : null,
     }
@@ -296,6 +297,7 @@ export async function addLintingToApplication(
     skipFormat: true,
     setParserOptionsProject: options.setParserOptionsProject,
     rootProject: options.rootProject,
+    addPlugin: options.addPlugin,
   });
 
   return lintTask;
@@ -379,6 +381,7 @@ function updateTsConfigOptions(tree: Tree, options: NormalizedSchema) {
 
 export async function applicationGenerator(tree: Tree, schema: Schema) {
   return await applicationGeneratorInternal(tree, {
+    addPlugin: false,
     projectNameAndRootFormat: 'derived',
     ...schema,
   });
@@ -389,6 +392,7 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
   const tasks: GeneratorCallback[] = [];
 
   if (options.framework === 'nest') {
+    // nx-ignore-next-line
     const { applicationGenerator } = ensurePackage('@nx/nest', nxVersion);
     const nestTasks = await applicationGenerator(tree, {
       ...options,
@@ -426,13 +430,18 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
     const webpackInitTask = await webpackInitGenerator(tree, {
       skipPackageJson: options.skipPackageJson,
       skipFormat: true,
+      addPlugin: options.addPlugin,
     });
     tasks.push(webpackInitTask);
     if (!options.skipPackageJson) {
       const { ensureDependencies } = await import(
         '@nx/webpack/src/utils/ensure-dependencies'
       );
-      tasks.push(ensureDependencies(tree, { uiFramework: 'react' }));
+      tasks.push(
+        ensureDependencies(tree, {
+          uiFramework: options.isNest ? 'none' : 'react',
+        })
+      );
     }
   }
 
@@ -535,7 +544,13 @@ async function normalizeOptions(
     ? options.tags.split(',').map((s) => s.trim())
     : [];
 
+  const nxJson = readNxJson(host);
+  const addPlugin =
+    process.env.NX_ADD_PLUGINS !== 'false' &&
+    nxJson.useInferencePlugins !== false;
+
   return {
+    addPlugin,
     ...options,
     name: appProjectName,
     frontendProject: options.frontendProject

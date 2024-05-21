@@ -34,9 +34,7 @@ import {
 
 export const meta: MetaFunction = () => [
   {
-    charset: 'utf-8',
     title: 'New Remix App',
-    viewport: 'width=device-width,initial-scale=1',
   },
 ];
 
@@ -44,6 +42,8 @@ export default function App() {
   return (
     <html lang="en">
       <head>
+        <meta charSet="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
         <Meta />
         <Links />
       </head>
@@ -106,9 +106,7 @@ import {
 
 export const meta: MetaFunction = () => [
   {
-    charset: 'utf-8',
     title: 'New Remix App',
-    viewport: 'width=device-width,initial-scale=1',
   },
 ];
 
@@ -116,6 +114,8 @@ export default function App() {
   return (
     <html lang="en">
       <head>
+        <meta charSet="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
         <Meta />
         <Links />
       </head>
@@ -144,16 +144,92 @@ export default function Index() {
 "
 `;
 
-exports[`Remix Application Integrated Repo --projectNameAndRootFormat=as-provided --e2eTestRunner should generate an e2e application for the app 1`] = `
+exports[`Remix Application Integrated Repo --projectNameAndRootFormat=as-provided --e2eTestRunner should generate a cypress e2e application for the app 1`] = `
 "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
 
 import { defineConfig } from 'cypress';
 
 export default defineConfig({
   e2e: {
-    ...nxE2EPreset(__filename, { cypressDir: 'src' }),
-    baseUrl: 'http://localhost:4200',
+    ...nxE2EPreset(__filename, {
+      cypressDir: 'src',
+      webServerCommands: { default: 'nx run test:dev:development' },
+    }),
+    baseUrl: 'http://localhost:3000',
   },
+});
+"
+`;
+
+exports[`Remix Application Integrated Repo --projectNameAndRootFormat=as-provided --e2eTestRunner should generate a playwright e2e application for the app 1`] = `
+"import { defineConfig, devices } from '@playwright/test';
+import { nxE2EPreset } from '@nx/playwright/preset';
+
+import { workspaceRoot } from '@nx/devkit';
+
+// For CI, you may want to set BASE_URL to the deployed application.
+const baseURL = process.env['BASE_URL'] || 'http://localhost:3000';
+
+/**
+ * Read environment variables from file.
+ * https://github.com/motdotla/dotenv
+ */
+// require('dotenv').config();
+
+/**
+ * See https://playwright.dev/docs/test-configuration.
+ */
+export default defineConfig({
+  ...nxE2EPreset(__filename, { testDir: './src' }),
+  /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
+  use: {
+    baseURL,
+    /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
+    trace: 'on-first-retry',
+  },
+  /* Run your local dev server before starting the tests */
+  webServer: {
+    command: 'npx nx dev test',
+    url: 'http://localhost:3000',
+    reuseExistingServer: !process.env.CI,
+    cwd: workspaceRoot,
+  },
+  projects: [
+    {
+      name: 'chromium',
+      use: { ...devices['Desktop Chrome'] },
+    },
+
+    {
+      name: 'firefox',
+      use: { ...devices['Desktop Firefox'] },
+    },
+
+    {
+      name: 'webkit',
+      use: { ...devices['Desktop Safari'] },
+    },
+
+    // Uncomment for mobile browsers support
+    /* {
+      name: 'Mobile Chrome',
+      use: { ...devices['Pixel 5'] },
+    },
+    {
+      name: 'Mobile Safari',
+      use: { ...devices['iPhone 12'] },
+    }, */
+
+    // Uncomment for branded browsers
+    /* {
+      name: 'Microsoft Edge',
+      use: { ...devices['Desktop Edge'], channel: 'msedge' },
+    },
+    {
+      name: 'Google Chrome',
+      use: { ...devices['Desktop Chrome'], channel: 'chrome' },
+    } */
+  ],
 });
 "
 `;
@@ -190,15 +266,15 @@ exports[`Remix Application Integrated Repo --projectNameAndRootFormat=as-provide
 } from '@remix-run/react';
 export const meta = () => [
   {
-    charset: 'utf-8',
     title: 'New Remix App',
-    viewport: 'width=device-width,initial-scale=1',
   },
 ];
 export default function App() {
   return (
     <html lang="en">
       <head>
+        <meta charSet="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
         <Meta />
         <Links />
       </head>
@@ -250,9 +326,8 @@ export default {
 exports[`Remix Application Integrated Repo --projectNameAndRootFormat=as-provided --unitTestRunner should generate the correct files for testing using jest 2`] = `
 "/* eslint-disable */
 export default {
-  setupFilesAfterEnv: ['<rootDir>/test-setup.ts'],
   displayName: 'test',
-  preset: '../jest.preset.cjs',
+  preset: '../jest.preset.js',
   transform: {
     '^.+\\\\.[tj]sx?$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.spec.json' }],
   },
@@ -311,7 +386,7 @@ export default defineConfig({
     setupFiles: ['test-setup.ts'],
     globals: true,
     cache: {
-      dir: '../node_modules/.vitest',
+      dir: '../node_modules/.vitest/test',
     },
     environment: 'jsdom',
     include: ['./tests/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
@@ -330,6 +405,39 @@ exports[`Remix Application Integrated Repo --projectNameAndRootFormat=as-provide
 "import { installGlobals } from '@remix-run/node';
 import '@testing-library/jest-dom/matchers';
 installGlobals();
+"
+`;
+
+exports[`Remix Application Integrated Repo --projectNameAndRootFormat=as-provided --unitTestRunner should generate the correct files for testing using vitest 4`] = `
+"{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../dist/out-tsc",
+    "types": [
+      "vitest/globals",
+      "vitest/importMeta",
+      "vite/client",
+      "node",
+      "vitest"
+    ]
+  },
+  "include": [
+    "vite.config.ts",
+    "vitest.config.ts",
+    "app/**/*.ts",
+    "app/**/*.tsx",
+    "app/**/*.js",
+    "app/**/*.jsx",
+    "tests/**/*.spec.ts",
+    "tests/**/*.test.ts",
+    "tests/**/*.spec.tsx",
+    "tests/**/*.test.tsx",
+    "tests/**/*.spec.js",
+    "tests/**/*.test.js",
+    "tests/**/*.spec.jsx",
+    "tests/**/*.test.jsx"
+  ]
+}
 "
 `;
 
@@ -367,9 +475,7 @@ import {
 
 export const meta: MetaFunction = () => [
   {
-    charset: 'utf-8',
     title: 'New Remix App',
-    viewport: 'width=device-width,initial-scale=1',
   },
 ];
 
@@ -377,6 +483,8 @@ export default function App() {
   return (
     <html lang="en">
       <head>
+        <meta charSet="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
         <Meta />
         <Links />
       </head>
@@ -439,9 +547,7 @@ import {
 
 export const meta: MetaFunction = () => [
   {
-    charset: 'utf-8',
     title: 'New Remix App',
-    viewport: 'width=device-width,initial-scale=1',
   },
 ];
 
@@ -449,6 +555,8 @@ export default function App() {
   return (
     <html lang="en">
       <head>
+        <meta charSet="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
         <Meta />
         <Links />
       </head>
@@ -511,9 +619,7 @@ import {
 
 export const meta: MetaFunction = () => [
   {
-    charset: 'utf-8',
     title: 'New Remix App',
-    viewport: 'width=device-width,initial-scale=1',
   },
 ];
 
@@ -521,6 +627,8 @@ export default function App() {
   return (
     <html lang="en">
       <head>
+        <meta charSet="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
         <Meta />
         <Links />
       </head>
@@ -549,16 +657,92 @@ export default function Index() {
 "
 `;
 
-exports[`Remix Application Integrated Repo --projectNameAndRootFormat=derived --e2eTestRunner should generate an e2e application for the app 1`] = `
+exports[`Remix Application Integrated Repo --projectNameAndRootFormat=derived --e2eTestRunner should generate a cypress e2e application for the app 1`] = `
 "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
 
 import { defineConfig } from 'cypress';
 
 export default defineConfig({
   e2e: {
-    ...nxE2EPreset(__filename, { cypressDir: 'src' }),
-    baseUrl: 'http://localhost:4200',
+    ...nxE2EPreset(__filename, {
+      cypressDir: 'src',
+      webServerCommands: { default: 'nx run test:dev:development' },
+    }),
+    baseUrl: 'http://localhost:3000',
   },
+});
+"
+`;
+
+exports[`Remix Application Integrated Repo --projectNameAndRootFormat=derived --e2eTestRunner should generate a playwright e2e application for the app 1`] = `
+"import { defineConfig, devices } from '@playwright/test';
+import { nxE2EPreset } from '@nx/playwright/preset';
+
+import { workspaceRoot } from '@nx/devkit';
+
+// For CI, you may want to set BASE_URL to the deployed application.
+const baseURL = process.env['BASE_URL'] || 'http://localhost:3000';
+
+/**
+ * Read environment variables from file.
+ * https://github.com/motdotla/dotenv
+ */
+// require('dotenv').config();
+
+/**
+ * See https://playwright.dev/docs/test-configuration.
+ */
+export default defineConfig({
+  ...nxE2EPreset(__filename, { testDir: './src' }),
+  /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
+  use: {
+    baseURL,
+    /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
+    trace: 'on-first-retry',
+  },
+  /* Run your local dev server before starting the tests */
+  webServer: {
+    command: 'npx nx dev test',
+    url: 'http://localhost:3000',
+    reuseExistingServer: !process.env.CI,
+    cwd: workspaceRoot,
+  },
+  projects: [
+    {
+      name: 'chromium',
+      use: { ...devices['Desktop Chrome'] },
+    },
+
+    {
+      name: 'firefox',
+      use: { ...devices['Desktop Firefox'] },
+    },
+
+    {
+      name: 'webkit',
+      use: { ...devices['Desktop Safari'] },
+    },
+
+    // Uncomment for mobile browsers support
+    /* {
+      name: 'Mobile Chrome',
+      use: { ...devices['Pixel 5'] },
+    },
+    {
+      name: 'Mobile Safari',
+      use: { ...devices['iPhone 12'] },
+    }, */
+
+    // Uncomment for branded browsers
+    /* {
+      name: 'Microsoft Edge',
+      use: { ...devices['Desktop Edge'], channel: 'msedge' },
+    },
+    {
+      name: 'Google Chrome',
+      use: { ...devices['Desktop Chrome'], channel: 'chrome' },
+    } */
+  ],
 });
 "
 `;
@@ -595,15 +779,15 @@ exports[`Remix Application Integrated Repo --projectNameAndRootFormat=derived --
 } from '@remix-run/react';
 export const meta = () => [
   {
-    charset: 'utf-8',
     title: 'New Remix App',
-    viewport: 'width=device-width,initial-scale=1',
   },
 ];
 export default function App() {
   return (
     <html lang="en">
       <head>
+        <meta charSet="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
         <Meta />
         <Links />
       </head>
@@ -655,9 +839,8 @@ export default {
 exports[`Remix Application Integrated Repo --projectNameAndRootFormat=derived --unitTestRunner should generate the correct files for testing using jest 2`] = `
 "/* eslint-disable */
 export default {
-  setupFilesAfterEnv: ['<rootDir>/test-setup.ts'],
   displayName: 'test',
-  preset: '../../jest.preset.cjs',
+  preset: '../../jest.preset.js',
   transform: {
     '^.+\\\\.[tj]sx?$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.spec.json' }],
   },
@@ -716,7 +899,7 @@ export default defineConfig({
     setupFiles: ['test-setup.ts'],
     globals: true,
     cache: {
-      dir: '../../node_modules/.vitest',
+      dir: '../../node_modules/.vitest/apps/test',
     },
     environment: 'jsdom',
     include: ['./tests/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
@@ -735,6 +918,39 @@ exports[`Remix Application Integrated Repo --projectNameAndRootFormat=derived --
 "import { installGlobals } from '@remix-run/node';
 import '@testing-library/jest-dom/matchers';
 installGlobals();
+"
+`;
+
+exports[`Remix Application Integrated Repo --projectNameAndRootFormat=derived --unitTestRunner should generate the correct files for testing using vitest 4`] = `
+"{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../../dist/out-tsc",
+    "types": [
+      "vitest/globals",
+      "vitest/importMeta",
+      "vite/client",
+      "node",
+      "vitest"
+    ]
+  },
+  "include": [
+    "vite.config.ts",
+    "vitest.config.ts",
+    "app/**/*.ts",
+    "app/**/*.tsx",
+    "app/**/*.js",
+    "app/**/*.jsx",
+    "tests/**/*.spec.ts",
+    "tests/**/*.test.ts",
+    "tests/**/*.spec.tsx",
+    "tests/**/*.test.tsx",
+    "tests/**/*.spec.js",
+    "tests/**/*.test.js",
+    "tests/**/*.spec.jsx",
+    "tests/**/*.test.jsx"
+  ]
+}
 "
 `;
 
@@ -772,9 +988,7 @@ import {
 
 export const meta: MetaFunction = () => [
   {
-    charset: 'utf-8',
     title: 'New Remix App',
-    viewport: 'width=device-width,initial-scale=1',
   },
 ];
 
@@ -782,6 +996,8 @@ export default function App() {
   return (
     <html lang="en">
       <head>
+        <meta charSet="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
         <Meta />
         <Links />
       </head>
@@ -810,15 +1026,18 @@ export default function Index() {
 "
 `;
 
-exports[`Remix Application Standalone Project Repo --e2eTestRunner should generate an e2e application for the app 1`] = `
+exports[`Remix Application Standalone Project Repo --e2eTestRunner should generate a cypress e2e application for the app 1`] = `
 "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
 
 import { defineConfig } from 'cypress';
 
 export default defineConfig({
   e2e: {
-    ...nxE2EPreset(__filename, { cypressDir: 'src' }),
-    baseUrl: 'http://localhost:4200',
+    ...nxE2EPreset(__filename, {
+      cypressDir: 'src',
+      webServerCommands: { default: 'nx run test:dev:development' },
+    }),
+    baseUrl: 'http://localhost:3000',
   },
 });
 "
@@ -856,15 +1075,15 @@ exports[`Remix Application Standalone Project Repo --js should create the applic
 } from '@remix-run/react';
 export const meta = () => [
   {
-    charset: 'utf-8',
     title: 'New Remix App',
-    viewport: 'width=device-width,initial-scale=1',
   },
 ];
 export default function App() {
   return (
     <html lang="en">
       <head>
+        <meta charSet="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
         <Meta />
         <Links />
       </head>
@@ -925,8 +1144,7 @@ export default {
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
   coverageDirectory: './coverage/test',
   testMatch: [
-    '<rootDir>/src/**/__tests__/**/*.[jt]s?(x)',
-    '<rootDir>/src/**/*(*.)@(spec|test).[jt]s?(x)',
+    '<rootDir>/tests/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}',
   ],
 };
 "
@@ -988,7 +1206,7 @@ import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 
 export default defineConfig({
   root: __dirname,
-  cacheDir: './node_modules/.vite/.',
+  cacheDir: './node_modules/.vite/test',
 
   plugins: [react(), nxViteTsPaths()],
 
@@ -1001,7 +1219,7 @@ export default defineConfig({
     setupFiles: ['test-setup.ts'],
     globals: true,
     cache: {
-      dir: './node_modules/.vitest',
+      dir: './node_modules/.vitest/test',
     },
     environment: 'jsdom',
     include: ['./tests/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
@@ -1037,6 +1255,39 @@ test('renders loader data', async () => {
 `;
 
 exports[`Remix Application Standalone Project Repo --unitTestRunner should generate the correct files for testing using vitest 4`] = `
+"{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./dist/out-tsc",
+    "types": [
+      "vitest/globals",
+      "vitest/importMeta",
+      "vite/client",
+      "node",
+      "vitest"
+    ]
+  },
+  "include": [
+    "vite.config.ts",
+    "vitest.config.ts",
+    "app/**/*.ts",
+    "app/**/*.tsx",
+    "app/**/*.js",
+    "app/**/*.jsx",
+    "tests/**/*.spec.ts",
+    "tests/**/*.test.ts",
+    "tests/**/*.spec.tsx",
+    "tests/**/*.test.tsx",
+    "tests/**/*.spec.js",
+    "tests/**/*.test.js",
+    "tests/**/*.spec.jsx",
+    "tests/**/*.test.jsx"
+  ]
+}
+"
+`;
+
+exports[`Remix Application Standalone Project Repo --unitTestRunner should generate the correct files for testing using vitest 5`] = `
 "import { installGlobals } from '@remix-run/node';
 import '@testing-library/jest-dom/matchers';
 installGlobals();
@@ -1077,9 +1328,7 @@ import {
 
 export const meta: MetaFunction = () => [
   {
-    charset: 'utf-8',
     title: 'New Remix App',
-    viewport: 'width=device-width,initial-scale=1',
   },
 ];
 
@@ -1087,6 +1336,8 @@ export default function App() {
   return (
     <html lang="en">
       <head>
+        <meta charSet="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
         <Meta />
         <Links />
       </head>
@@ -1155,5 +1406,78 @@ exports[`Remix Application Standalone Project Repo should create the application
     }
   ]
 }
+"
+`;
+
+exports[`Remix Application Standalone Project Repo should generate a playwright e2e application for the app 1`] = `
+"import { defineConfig, devices } from '@playwright/test';
+import { nxE2EPreset } from '@nx/playwright/preset';
+
+import { workspaceRoot } from '@nx/devkit';
+
+// For CI, you may want to set BASE_URL to the deployed application.
+const baseURL = process.env['BASE_URL'] || 'http://localhost:3000';
+
+/**
+ * Read environment variables from file.
+ * https://github.com/motdotla/dotenv
+ */
+// require('dotenv').config();
+
+/**
+ * See https://playwright.dev/docs/test-configuration.
+ */
+export default defineConfig({
+  ...nxE2EPreset(__filename, { testDir: './src' }),
+  /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
+  use: {
+    baseURL,
+    /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
+    trace: 'on-first-retry',
+  },
+  /* Run your local dev server before starting the tests */
+  webServer: {
+    command: 'npx nx dev test',
+    url: 'http://localhost:3000',
+    reuseExistingServer: !process.env.CI,
+    cwd: workspaceRoot,
+  },
+  projects: [
+    {
+      name: 'chromium',
+      use: { ...devices['Desktop Chrome'] },
+    },
+
+    {
+      name: 'firefox',
+      use: { ...devices['Desktop Firefox'] },
+    },
+
+    {
+      name: 'webkit',
+      use: { ...devices['Desktop Safari'] },
+    },
+
+    // Uncomment for mobile browsers support
+    /* {
+      name: 'Mobile Chrome',
+      use: { ...devices['Pixel 5'] },
+    },
+    {
+      name: 'Mobile Safari',
+      use: { ...devices['iPhone 12'] },
+    }, */
+
+    // Uncomment for branded browsers
+    /* {
+      name: 'Microsoft Edge',
+      use: { ...devices['Desktop Edge'], channel: 'msedge' },
+    },
+    {
+      name: 'Google Chrome',
+      use: { ...devices['Desktop Chrome'], channel: 'chrome' },
+    } */
+  ],
+});
 "
 `;

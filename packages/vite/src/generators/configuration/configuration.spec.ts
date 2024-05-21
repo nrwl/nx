@@ -1,9 +1,6 @@
-import {
-  addDependenciesToPackageJson,
-  addProjectConfiguration,
-  readJson,
-  Tree,
-} from '@nx/devkit';
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
+import { addDependenciesToPackageJson, readJson, Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { nxVersion } from '../../utils/versions';
 
@@ -17,6 +14,9 @@ import {
   mockUnknownAppGenerator,
   mockWebAppGenerator,
 } from '../../utils/test-utils';
+
+import { libraryGenerator as jsLibraryGenerator } from '@nx/js/src/generators/library/library';
+import { LibraryGeneratorSchema } from '@nx/js/src/utils/schema';
 
 describe('@nx/vite:configuration', () => {
   let tree: Tree;
@@ -33,6 +33,7 @@ describe('@nx/vite:configuration', () => {
         { [existing]: existingVersion }
       );
       await viteConfigurationGenerator(tree, {
+        addPlugin: true,
         uiFramework: 'react',
         project: 'my-test-react-app',
       });
@@ -59,7 +60,7 @@ describe('@nx/vite:configuration', () => {
         tree,
         'apps/my-test-react-app/tsconfig.json'
       );
-      expect(tsconfigJson.compilerOptions.types).toMatchObject(['vite/client']);
+      expect(tsconfigJson.compilerOptions.jsx).toBe('react-jsx');
     });
 
     it('should create vite.config file at the root of the app', () => {
@@ -67,10 +68,6 @@ describe('@nx/vite:configuration', () => {
       expect(
         tree.read('apps/my-test-react-app/vite.config.ts', 'utf-8')
       ).toMatchSnapshot();
-    });
-
-    it('should transform workspace.json project config', () => {
-      expect(tree.read('workspace.json', 'utf-8')).toMatchSnapshot();
     });
   });
 
@@ -86,6 +83,7 @@ describe('@nx/vite:configuration', () => {
         { [existing]: existingVersion }
       );
       await viteConfigurationGenerator(tree, {
+        addPlugin: true,
         uiFramework: 'none',
         project: 'my-test-web-app',
       });
@@ -107,7 +105,7 @@ describe('@nx/vite:configuration', () => {
 
     it('should create correct tsconfig compilerOptions', () => {
       const tsconfigJson = readJson(tree, 'apps/my-test-web-app/tsconfig.json');
-      expect(tsconfigJson.compilerOptions.types).toMatchObject(['vite/client']);
+      expect(tsconfigJson.compilerOptions.noImplicitReturns).toBeTruthy();
     });
 
     it('should create vite.config file at the root of the app', () => {
@@ -115,10 +113,6 @@ describe('@nx/vite:configuration', () => {
       expect(
         tree.read('apps/my-test-web-app/vite.config.ts', 'utf-8')
       ).toMatchSnapshot();
-    });
-
-    it('should transform workspace.json project config', () => {
-      expect(tree.read('workspace.json', 'utf-8')).toMatchSnapshot();
     });
   });
 
@@ -132,13 +126,14 @@ describe('@nx/vite:configuration', () => {
 
       try {
         await viteConfigurationGenerator(tree, {
+          addPlugin: true,
           uiFramework: 'none',
           project: 'my-test-angular-app',
         });
       } catch (e) {
         expect(e).toBeDefined();
         expect(e.toString()).toContain(
-          'The project my-test-angular-app cannot be converted to use the @nx/vite executors'
+          'Nx cannot convert your project to use vite.'
         );
       }
     });
@@ -150,25 +145,6 @@ describe('@nx/vite:configuration', () => {
       mockUnknownAppGenerator(tree);
     });
 
-    it('should throw when trying to convert something unknown', async () => {
-      const { Confirm } = require('enquirer');
-      const confirmSpy = jest.spyOn(Confirm.prototype, 'run');
-      confirmSpy.mockResolvedValue(true);
-      expect.assertions(2);
-
-      try {
-        await viteConfigurationGenerator(tree, {
-          uiFramework: 'none',
-          project: 'my-test-random-app',
-        });
-      } catch (e) {
-        expect(e).toBeDefined();
-        expect(e.toString()).toContain(
-          'Error: Cannot find apps/my-test-random-app/tsconfig.json'
-        );
-      }
-    });
-
     it('should throw when trying to convert something unknown and user denies conversion', async () => {
       const { Confirm } = require('enquirer');
       const confirmSpy = jest.spyOn(Confirm.prototype, 'run');
@@ -178,106 +154,16 @@ describe('@nx/vite:configuration', () => {
 
       try {
         await viteConfigurationGenerator(tree, {
+          addPlugin: true,
           uiFramework: 'none',
           project: 'my-test-random-app',
         });
       } catch (e) {
         expect(e).toBeDefined();
         expect(e.toString()).toContain(
-          'Nx could not verify that the executors you are using can be converted to the @nx/vite executors.'
+          'Nx could not verify that your project can be converted to use Vite.'
         );
       }
-    });
-  });
-
-  describe('transform React app to use Vite by providing custom targets', () => {
-    describe('transform React app if supported executor is provided', () => {
-      beforeEach(async () => {
-        tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-        mockReactMixedAppGenerator(tree);
-        const existing = 'existing';
-        const existingVersion = '1.0.0';
-        addDependenciesToPackageJson(
-          tree,
-          { '@nx/vite': nxVersion, [existing]: existingVersion },
-          { [existing]: existingVersion }
-        );
-        await viteConfigurationGenerator(tree, {
-          uiFramework: 'react',
-          project: 'my-test-mixed-react-app',
-          buildTarget: 'valid-build',
-        });
-      });
-      it('should add vite packages and react-related dependencies for vite', async () => {
-        const packageJson = readJson(tree, '/package.json');
-        expect(packageJson.devDependencies).toMatchObject({
-          vite: expect.any(String),
-          '@vitejs/plugin-react': expect.any(String),
-        });
-      });
-
-      it('should create vite.config file at the root of the app', () => {
-        expect(tree.exists('apps/my-test-mixed-react-app/vite.config.ts')).toBe(
-          true
-        );
-      });
-
-      it('should transform workspace.json project config', () => {
-        expect(tree.read('workspace.json', 'utf-8')).toMatchSnapshot();
-      });
-    });
-
-    describe('do NOT transform React app if unsupported executor is provided', () => {
-      beforeEach(async () => {
-        tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-        mockReactMixedAppGenerator(tree);
-        const existing = 'existing';
-        const existingVersion = '1.0.0';
-        addDependenciesToPackageJson(
-          tree,
-          { '@nx/vite': nxVersion, [existing]: existingVersion },
-          { [existing]: existingVersion }
-        );
-      });
-      it('should throw when trying to convert and user denies', async () => {
-        const { Confirm } = require('enquirer');
-        const confirmSpy = jest.spyOn(Confirm.prototype, 'run');
-        confirmSpy.mockResolvedValue(false);
-        expect.assertions(2);
-
-        try {
-          await viteConfigurationGenerator(tree, {
-            uiFramework: 'none',
-            project: 'my-test-mixed-react-app',
-            buildTarget: 'invalid-build',
-          });
-        } catch (e) {
-          expect(e).toBeDefined();
-          expect(e.toString()).toContain(
-            'The build target invalid-build cannot be converted to use the @nx/vite:build executor'
-          );
-        }
-      });
-
-      it('should NOT throw error when trying to convert and user confirms', async () => {
-        const { Confirm } = require('enquirer');
-        const confirmSpy = jest.spyOn(Confirm.prototype, 'run');
-        confirmSpy.mockResolvedValue(true);
-        expect.assertions(1);
-
-        try {
-          await viteConfigurationGenerator(tree, {
-            uiFramework: 'none',
-            project: 'my-test-mixed-react-app',
-            buildTarget: 'invalid-build',
-          });
-          expect(
-            tree.exists('apps/my-test-mixed-react-app/vite.config.ts')
-          ).toBe(true);
-        } catch (e) {
-          throw new Error('Should not throw error');
-        }
-      });
     });
   });
 
@@ -293,6 +179,7 @@ describe('@nx/vite:configuration', () => {
         { [existing]: existingVersion }
       );
       await viteConfigurationGenerator(tree, {
+        addPlugin: true,
         uiFramework: 'react',
         project: 'my-test-react-app',
         includeVitest: true,
@@ -317,6 +204,7 @@ describe('@nx/vite:configuration', () => {
     it('should add config for building library', async () => {
       mockReactLibNonBuildableJestTestRunnerGenerator(tree);
       await viteConfigurationGenerator(tree, {
+        addPlugin: true,
         uiFramework: 'react',
         includeLib: true,
         project: 'react-lib-nonb-jest',
@@ -331,6 +219,7 @@ describe('@nx/vite:configuration', () => {
     it('should set up non buildable library correctly', async () => {
       mockReactLibNonBuildableJestTestRunnerGenerator(tree);
       await viteConfigurationGenerator(tree, {
+        addPlugin: true,
         uiFramework: 'react',
         project: 'react-lib-nonb-jest',
         includeVitest: true,
@@ -338,8 +227,6 @@ describe('@nx/vite:configuration', () => {
       expect(
         tree.read('libs/react-lib-nonb-jest/vite.config.ts', 'utf-8')
       ).toMatchSnapshot();
-
-      expect(tree.read('workspace.json', 'utf-8')).toMatchSnapshot();
     });
 
     it('should set up non buildable library which already has vite.config.ts correctly', async () => {
@@ -351,6 +238,7 @@ describe('@nx/vite:configuration', () => {
 
       try {
         await viteConfigurationGenerator(tree, {
+          addPlugin: true,
           uiFramework: 'react',
           project: 'react-lib-nonb-vitest',
           includeVitest: true,
@@ -358,11 +246,80 @@ describe('@nx/vite:configuration', () => {
         expect(
           tree.read('libs/react-lib-nonb-vitest/vite.config.ts', 'utf-8')
         ).toMatchSnapshot();
-
-        expect(tree.read('workspace.json', 'utf-8')).toMatchSnapshot();
       } catch (e) {
         throw new Error('Should not throw error');
       }
     });
+  });
+
+  describe('js library with --bundler=vite', () => {
+    const defaultOptions: Omit<LibraryGeneratorSchema, 'name'> = {
+      skipTsConfig: false,
+      includeBabelRc: false,
+      unitTestRunner: 'jest',
+      skipFormat: false,
+      linter: 'eslint',
+      testEnvironment: 'jsdom',
+      js: false,
+      pascalCaseFiles: false,
+      strict: true,
+      config: 'project',
+    };
+
+    beforeEach(() => {
+      tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    });
+
+    it('should add build and test targets with vite and vitest', async () => {
+      await jsLibraryGenerator(tree, {
+        ...defaultOptions,
+        name: 'my-lib',
+        bundler: 'vite',
+        unitTestRunner: undefined,
+        projectNameAndRootFormat: 'as-provided',
+      });
+
+      expect(tree.exists('my-lib/vite.config.ts')).toBeTruthy();
+      expect(tree.read('my-lib/vite.config.ts', 'utf-8')).toMatchSnapshot();
+      expect(tree.read('my-lib/README.md', 'utf-8')).toMatchSnapshot();
+      expect(tree.read('my-lib/tsconfig.lib.json', 'utf-8')).toMatchSnapshot();
+      expect(readJson(tree, 'my-lib/.eslintrc.json').overrides).toContainEqual({
+        files: ['*.json'],
+        parser: 'jsonc-eslint-parser',
+        rules: {
+          '@nx/dependency-checks': [
+            'error',
+            {
+              ignoredFiles: ['{projectRoot}/vite.config.{js,ts,mjs,mts}'],
+            },
+          ],
+        },
+      });
+    });
+
+    it.each`
+      unitTestRunner | configPath
+      ${'none'}      | ${undefined}
+      ${'jest'}      | ${'my-lib/jest.config.ts'}
+    `(
+      'should respect unitTestRunner if passed',
+      async ({ unitTestRunner, configPath }) => {
+        await jsLibraryGenerator(tree, {
+          ...defaultOptions,
+          name: 'my-lib',
+          bundler: 'vite',
+          unitTestRunner,
+          projectNameAndRootFormat: 'as-provided',
+        });
+
+        expect(tree.read('my-lib/README.md', 'utf-8')).toMatchSnapshot();
+        expect(
+          tree.read('my-lib/tsconfig.lib.json', 'utf-8')
+        ).toMatchSnapshot();
+        if (configPath) {
+          expect(tree.read(configPath, 'utf-8')).toMatchSnapshot();
+        }
+      }
+    );
   });
 });

@@ -28,15 +28,27 @@ import { nxVersion } from '../../utils/versions';
 import { initGenerator } from '../init/init';
 import { ConfigurationGeneratorSchema } from './schema';
 
-export async function configurationGenerator(
+export function configurationGenerator(
   tree: Tree,
   options: ConfigurationGeneratorSchema
 ) {
+  return configurationGeneratorInternal(tree, { addPlugin: false, ...options });
+}
+
+export async function configurationGeneratorInternal(
+  tree: Tree,
+  options: ConfigurationGeneratorSchema
+) {
+  const nxJson = readNxJson(tree);
+  options.addPlugin ??=
+    process.env.NX_ADD_PLUGINS !== 'false' &&
+    nxJson.useInferencePlugins !== false;
   const tasks: GeneratorCallback[] = [];
   tasks.push(
     await initGenerator(tree, {
       skipFormat: true,
       skipPackageJson: options.skipPackageJson,
+      addPlugin: options.addPlugin,
     })
   );
   const projectConfig = readProjectConfiguration(tree, options.project);
@@ -70,10 +82,12 @@ export async function configurationGenerator(
           include: [
             '**/*.ts',
             '**/*.js',
-            `${offsetFromProjectRoot}playwright.config.ts`,
-            `${offsetFromProjectRoot}**/*.spec.ts`,
-            `${offsetFromProjectRoot}**/*.spec.js`,
-            `${offsetFromProjectRoot}**/*.d.ts`,
+            'playwright.config.ts',
+            'src/**/*.spec.ts',
+            'src/**/*.spec.js',
+            'src/**/*.test.ts',
+            'src/**/*.test.js',
+            'src/**/*.d.ts',
           ],
         },
         null,
@@ -102,6 +116,7 @@ export async function configurationGenerator(
       directory: options.directory,
       setParserOptionsProject: options.setParserOptionsProject,
       rootProject: options.rootProject ?? projectConfig.root === '.',
+      addPlugin: options.addPlugin,
     })
   );
 

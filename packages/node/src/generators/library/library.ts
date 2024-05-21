@@ -6,6 +6,7 @@ import {
   joinPathFragments,
   names,
   offsetFromRoot,
+  readNxJson,
   readProjectConfiguration,
   runTasksInSerial,
   toJS,
@@ -33,6 +34,7 @@ export interface NormalizedSchema extends Schema {
 
 export async function libraryGenerator(tree: Tree, schema: Schema) {
   return await libraryGeneratorInternal(tree, {
+    addPlugin: false,
     projectNameAndRootFormat: 'derived',
     ...schema,
   });
@@ -54,7 +56,7 @@ export async function libraryGeneratorInternal(tree: Tree, schema: Schema) {
   }
 
   const libraryInstall = await jsLibraryGenerator(tree, {
-    ...schema,
+    ...options,
     bundler: schema.buildable ? 'tsc' : 'none',
     includeBabelRc: schema.babelJest,
     importPath: options.importPath,
@@ -100,6 +102,13 @@ async function normalizeOptions(
     callingGenerator: '@nx/node:library',
   });
   options.projectNameAndRootFormat = projectNameAndRootFormat;
+
+  const nxJson = readNxJson(tree);
+  const addPluginDefault =
+    process.env.NX_ADD_PLUGINS !== 'false' &&
+    nxJson.useInferencePlugins !== false;
+
+  options.addPlugin ??= addPluginDefault;
 
   const fileName = getCaseAwareFileName({
     fileName: options.simpleModuleName

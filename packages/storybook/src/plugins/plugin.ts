@@ -15,7 +15,8 @@ import { existsSync, readFileSync, readdirSync } from 'fs';
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { projectGraphCacheDirectory } from 'nx/src/utils/cache-directory';
 import { getLockFileName } from '@nx/js';
-import { tsquery } from '@phenomnomnominal/tsquery';
+import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
+import type { StorybookConfig } from '@storybook/types';
 
 export interface StorybookPluginOptions {
   buildStorybookTargetName?: string;
@@ -52,7 +53,7 @@ export const createDependencies: CreateDependencies = () => {
 
 export const createNodes: CreateNodes<StorybookPluginOptions> = [
   '**/.storybook/main.{js,ts,mjs,mts,cjs,cts}',
-  (configFilePath, options, context) => {
+  async (configFilePath, options, context) => {
     let projectRoot = '';
     if (configFilePath.includes('/.storybook')) {
       projectRoot = dirname(configFilePath).replace('/.storybook', '');
@@ -82,7 +83,7 @@ export const createNodes: CreateNodes<StorybookPluginOptions> = [
 
     const targets = targetsCache[hash]
       ? targetsCache[hash]
-      : buildStorybookTargets(
+      : await buildStorybookTargets(
           configFilePath,
           projectRoot,
           options,
@@ -105,7 +106,7 @@ export const createNodes: CreateNodes<StorybookPluginOptions> = [
   },
 ];
 
-function buildStorybookTargets(
+async function buildStorybookTargets(
   configFilePath: string,
   projectRoot: string,
   options: StorybookPluginOptions,
@@ -116,9 +117,12 @@ function buildStorybookTargets(
 
   const namedInputs = getNamedInputs(projectRoot, context);
 
-  const storybookFramework = getStorybookConfig(configFilePath, context);
+  const storybookFramework = await getStorybookFramework(
+    configFilePath,
+    context
+  );
 
-  const frameworkIsAngular = storybookFramework === "'@storybook/angular'";
+  const frameworkIsAngular = storybookFramework === '@storybook/angular';
 
   if (frameworkIsAngular && !projectName) {
     throw new Error(
@@ -144,7 +148,9 @@ function buildStorybookTargets(
     configFilePath
   );
 
-  targets[options.testStorybookTargetName] = testTarget(projectRoot);
+  if (isStorybookTestRunnerInstalled()) {
+    targets[options.testStorybookTargetName] = testTarget(projectRoot);
+  }
 
   targets[options.staticStorybookTargetName] = serveStaticTarget(
     options,
@@ -173,7 +179,7 @@ function buildTarget(
         configDir: `${dirname(configFilePath)}`,
         browserTarget: `${projectName}:build-storybook`,
         compodoc: false,
-        outputDir: joinPathFragments(projectRoot, 'static-storybook'),
+        outputDir: joinPathFragments(projectRoot, 'storybook-static'),
       },
       cache: true,
       outputs,
@@ -255,69 +261,25 @@ function serveStaticTarget(
     executor: '@nx/web:file-server',
     options: {
       buildTarget: `${options.buildStorybookTargetName}`,
-      staticFilePath: joinPathFragments(projectRoot, 'static-storybook'),
+      staticFilePath: joinPathFragments(projectRoot, 'storybook-static'),
     },
   };
 
   return targetConfig;
 }
 
-function getStorybookConfig(
+async function getStorybookFramework(
   configFilePath: string,
   context: CreateNodesContext
-): string {
+): Promise<string> {
   const resolvedPath = join(context.workspaceRoot, configFilePath);
-  const mainTsJs = readFileSync(resolvedPath, 'utf-8');
-  const importDeclarations = tsquery.query(
-    mainTsJs,
-    'ImportDeclaration:has(ImportSpecifier:has([text="StorybookConfig"]))'
-  )?.[0];
+  const { framework } = await loadConfigFile<StorybookConfig>(resolvedPath);
 
-  const storybookConfigImportPackage = tsquery.query(
-    importDeclarations,
-    'StringLiteral'
-  )?.[0];
-
-  let frameworkName: string | undefined;
-
-  if (storybookConfigImportPackage?.getText() === `'@storybook/core-common'`) {
-    const frameworkPropertyAssignment = tsquery.query(
-      mainTsJs,
-      `PropertyAssignment:has(Identifier:has([text="framework"]))`
-    )?.[0];
-
-    if (!frameworkPropertyAssignment) {
-      return;
-    }
-
-    const propertyAssignments = tsquery.query(
-      frameworkPropertyAssignment,
-      `PropertyAssignment:has(Identifier:has([text="name"]))`
-    );
-
-    const namePropertyAssignment = propertyAssignments?.find((expression) => {
-      return expression.getText().startsWith('name');
-    });
-
-    if (!namePropertyAssignment) {
-      const storybookConfigImportPackage = tsquery.query(
-        frameworkPropertyAssignment,
-        'StringLiteral'
-      )?.[0];
-      frameworkName = storybookConfigImportPackage?.getText();
-    } else {
-      frameworkName = tsquery
-        .query(namePropertyAssignment, `StringLiteral`)?.[0]
-        ?.getText();
-    }
-  } else {
-    frameworkName = storybookConfigImportPackage?.getText();
-  }
-  return frameworkName;
+  return typeof framework === 'string' ? framework : framework.name;
 }
 
-function getOutputs(_projectRoot: string): string[] {
-  const normalizedOutputPath = normalizeOutputPath(undefined, _projectRoot);
+function getOutputs(projectRoot: string): string[] {
+  const normalizedOutputPath = normalizeOutputPath(projectRoot);
 
   const outputs = [
     normalizedOutputPath,
@@ -329,14 +291,11 @@ function getOutputs(_projectRoot: string): string[] {
   return outputs;
 }
 
-function normalizeOutputPath(
-  outputPath: string | undefined,
-  projectRoot: string
-): string | undefined {
+function normalizeOutputPath(projectRoot: string): string | undefined {
   if (projectRoot === '.') {
-    return `{projectRoot}/static-storybook`;
+    return `{projectRoot}/storybook-static`;
   } else {
-    return `{workspaceRoot}/{projectRoot}/static-storybook`;
+    return `{workspaceRoot}/{projectRoot}/storybook-static`;
   }
 }
 
@@ -344,10 +303,10 @@ function normalizeOptions(
   options: StorybookPluginOptions
 ): StorybookPluginOptions {
   options ??= {};
-  options.buildStorybookTargetName = 'build-storybook';
-  options.serveStorybookTargetName = 'storybook';
-  options.testStorybookTargetName = 'test-storybook';
-  options.staticStorybookTargetName = 'static-storybook';
+  options.buildStorybookTargetName ??= 'build-storybook';
+  options.serveStorybookTargetName ??= 'storybook';
+  options.testStorybookTargetName ??= 'test-storybook';
+  options.staticStorybookTargetName ??= 'static-storybook';
   return options;
 }
 
@@ -366,4 +325,13 @@ function buildProjectName(
     name = packageJson.name;
   }
   return name;
+}
+
+function isStorybookTestRunnerInstalled(): boolean {
+  try {
+    require.resolve('@storybook/test-runner');
+    return true;
+  } catch (e) {
+    return false;
+  }
 }

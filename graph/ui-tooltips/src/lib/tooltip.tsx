@@ -1,7 +1,6 @@
 import {
   Attributes,
   cloneElement,
-  Fragment,
   HTMLAttributes,
   ReactElement,
   ReactNode,
@@ -11,7 +10,6 @@ import {
 } from 'react';
 
 import {
-  FloatingPortal,
   useClick,
   arrow,
   autoUpdate,

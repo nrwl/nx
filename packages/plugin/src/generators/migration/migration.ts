@@ -1,23 +1,22 @@
-import {
-  readProjectConfiguration,
-  names,
-  generateFiles,
-  updateProjectConfiguration,
-  updateJson,
-  readJson,
-  writeJson,
-  joinPathFragments,
-  formatFiles,
-  normalizePath,
-} from '@nx/devkit';
 import type { Tree } from '@nx/devkit';
+import {
+  formatFiles,
+  generateFiles,
+  joinPathFragments,
+  names,
+  readJson,
+  readProjectConfiguration,
+  updateJson,
+  updateProjectConfiguration,
+  writeJson,
+} from '@nx/devkit';
 import type { Schema } from './schema';
 import * as path from 'path';
+import { relative } from 'path';
 import { addMigrationJsonChecks } from '../lint-checks/generator';
 import { PackageJson, readNxMigrateConfig } from 'nx/src/utils/package-json';
 import { nxVersion } from '../../utils/versions';
 import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
-import { join, relative } from 'path';
 
 interface NormalizedSchema extends Schema {
   projectRoot: string;

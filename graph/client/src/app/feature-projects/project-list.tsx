@@ -6,7 +6,7 @@ import {
 } from '@heroicons/react/24/outline';
 /* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
-import type { ProjectGraphNode } from '@nx/devkit';
+import type { ProjectGraphProjectNode } from '@nx/devkit';
 /* eslint-enable @nx/enforce-module-boundaries */
 import { useProjectGraphSelector } from './hooks/use-project-graph-selector';
 import {
@@ -23,7 +23,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useRouteConstructor } from '@nx/graph/shared';
 
 interface SidebarProject {
-  projectGraphNode: ProjectGraphNode;
+  projectGraphNode: ProjectGraphProjectNode;
   isSelected: boolean;
 }
 
@@ -36,7 +36,7 @@ interface TracingInfo {
 }
 
 function groupProjectsByDirectory(
-  projects: ProjectGraphNode[],
+  projects: ProjectGraphProjectNode[],
   selectedProjects: string[],
   workspaceLayout: { appsDir: string; libsDir: string }
 ): DirectoryProjectRecord {
@@ -219,7 +219,7 @@ function SubProjectList({
           </span>
         </div>
       ) : null}
-      <ul className="mt-2 -ml-3">
+      <ul className="-ml-3 mt-2">
         {sortedProjects.map((project) => {
           return (
             <ProjectListItem

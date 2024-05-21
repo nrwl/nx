@@ -21,7 +21,13 @@ jobs:
       - uses: pnpm/action-setup@v2
         with:
           version: 8
-      <% } %># Cache node_modules
+      <% } %>
+
+      # Connect your workspace on <%= nxCloudHost %> and uncomment this to enable task distribution.
+      # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "<% if(hasE2E){ %>e2e-ci<% } else { %>build<% } %>" targets have been requested
+      # - run: <%= packageManagerPreInstallPrefix %> nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="<% if(hasE2E){ %>e2e-ci<% } else { %>build<% } %>"
+
+      # Cache node_modules
       - uses: actions/setup-node@v3
         with:
           node-version: 20
@@ -29,8 +35,7 @@ jobs:
       - run: <%= packageManagerInstall %>
       - uses: nrwl/nx-set-shas@v4
 
-      # Uncomment to enable task distribution. --stop-agents-after is optional, but allows idle agents to shut down once the "build" targets have been requested
-      # - run: <%= packageManagerPrefix %> nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
-
-      - run: <%= packageManagerPrefix %> nx-cloud record -- nx format:check
-      - run: <%= packageManagerPrefix %> nx affected -t=lint,test,build
+      # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+      # - run: <%= packageManagerPrefix %> nx-cloud record -- echo Hello World
+      - run: <%= packageManagerPrefix %> nx affected -t lint test build<% if(hasE2E){ %>
+      - run: <%= packageManagerPrefix %> nx affected --parallel 1 -t e2e-ci<% } %>

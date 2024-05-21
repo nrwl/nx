@@ -88,7 +88,7 @@ If you're using `vitest`, make sure your `test` object in your `vite.config.ts` 
   test: {
     globals: true,
     cache: {
-      dir: '../node_modules/.vitest',
+      dir: '../node_modules/.vitest/<project-root>',
     },
     environment: 'jsdom',
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
@@ -124,7 +124,7 @@ export default defineConfig({
       transformMixedEsModules: true,
     },
   },
-  cacheDir: '../../node_modules/.vite/my-app',
+  cacheDir: '../../node_modules/.vite/apps/my-app',
   server: {
     port: 4200,
     host: 'localhost',
@@ -145,7 +145,7 @@ export default defineConfig({
     },
     globals: true,
     cache: {
-      dir: '../../node_modules/.vitest',
+      dir: '../../node_modules/.vitest/apps/my-app',
     },
     environment: 'jsdom',
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
@@ -180,7 +180,7 @@ export default defineConfig({
   // Configuration for building your library.
   // See: https://vitejs.dev/guide/build.html#library-mode
   build: {
-    outDir: '../dist/my-lib',
+    outDir: '../dist/libs/my-lib',
     reportCompressedSize: true,
     commonjsOptions: {
       transformMixedEsModules: true,
@@ -202,13 +202,13 @@ export default defineConfig({
   test: {
     globals: true,
     cache: {
-      dir: '../node_modules/.vitest',
+      dir: '../node_modules/.vitest/libs/my-lib',
     },
     environment: 'jsdom',
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
     reporters: ['default'],
     coverage: {
-      reportsDirectory: '../coverage/my-lib',
+      reportsDirectory: '../coverage/libs/my-lib',
       provider: 'v8',
     },
   },

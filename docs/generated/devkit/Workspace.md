@@ -19,6 +19,7 @@ use ProjectsConfigurations or NxJsonConfiguration
 - [affected](../../devkit/documents/Workspace#affected): NxAffectedConfig
 - [cacheDirectory](../../devkit/documents/Workspace#cachedirectory): string
 - [cli](../../devkit/documents/Workspace#cli): Object
+- [defaultBase](../../devkit/documents/Workspace#defaultbase): string
 - [defaultProject](../../devkit/documents/Workspace#defaultproject): string
 - [extends](../../devkit/documents/Workspace#extends): string
 - [generators](../../devkit/documents/Workspace#generators): Object
@@ -36,6 +37,7 @@ use ProjectsConfigurations or NxJsonConfiguration
 - [targetDefaults](../../devkit/documents/Workspace#targetdefaults): TargetDefaults
 - [tasksRunnerOptions](../../devkit/documents/Workspace#tasksrunneroptions): Object
 - [useDaemonProcess](../../devkit/documents/Workspace#usedaemonprocess): boolean
+- [useInferencePlugins](../../devkit/documents/Workspace#useinferenceplugins): boolean
 - [version](../../devkit/documents/Workspace#version): number
 - [workspaceLayout](../../devkit/documents/Workspace#workspacelayout): Object
 
@@ -46,6 +48,10 @@ use ProjectsConfigurations or NxJsonConfiguration
 • `Optional` **affected**: [`NxAffectedConfig`](../../devkit/documents/NxAffectedConfig)
 
 Default options for `nx affected`
+
+**`Deprecated`**
+
+use [defaultBase](../../devkit/documents/NxJsonConfiguration#defaultbase) instead. For more information see https://nx.dev/deprecated/affected-config#affected-config
 
 #### Inherited from
 
@@ -81,6 +87,18 @@ Default generator collection. It is used when no collection is provided.
 #### Inherited from
 
 [NxJsonConfiguration](../../devkit/documents/NxJsonConfiguration).[cli](../../devkit/documents/NxJsonConfiguration#cli)
+
+---
+
+### defaultBase
+
+• `Optional` **defaultBase**: `string`
+
+Default value for --base used by `nx affected` and `nx format`.
+
+#### Inherited from
+
+[NxJsonConfiguration](../../devkit/documents/NxJsonConfiguration).[defaultBase](../../devkit/documents/NxJsonConfiguration#defaultbase)
 
 ---
 
@@ -275,7 +293,7 @@ Projects' projects
 
 • `Optional` **release**: `NxReleaseConfiguration`
 
-**ALPHA**: Configuration for `nx release` (versioning and publishing of applications and libraries)
+Configuration for `nx release` (versioning and publishing of applications and libraries)
 
 #### Inherited from
 
@@ -320,6 +338,18 @@ Set this to false to disable the daemon.
 #### Inherited from
 
 [NxJsonConfiguration](../../devkit/documents/NxJsonConfiguration).[useDaemonProcess](../../devkit/documents/NxJsonConfiguration#usedaemonprocess)
+
+---
+
+### useInferencePlugins
+
+• `Optional` **useInferencePlugins**: `boolean`
+
+Set this to false to disable adding inference plugins when generating new projects
+
+#### Inherited from
+
+[NxJsonConfiguration](../../devkit/documents/NxJsonConfiguration).[useInferencePlugins](../../devkit/documents/NxJsonConfiguration#useinferenceplugins)
 
 ---
 

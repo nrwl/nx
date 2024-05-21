@@ -15,6 +15,7 @@ import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { existsSync, readdirSync } from 'fs';
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { projectGraphCacheDirectory } from 'nx/src/utils/cache-directory';
+import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
 
 export interface ExpoPluginOptions {
   startTargetName?: string;
@@ -59,7 +60,7 @@ export const createDependencies: CreateDependencies = () => {
 
 export const createNodes: CreateNodes<ExpoPluginOptions> = [
   '**/app.{json,config.js}',
-  (configFilePath, options, context) => {
+  async (configFilePath, options, context) => {
     options = normalizeOptions(options);
     const projectRoot = dirname(configFilePath);
 
@@ -71,7 +72,7 @@ export const createNodes: CreateNodes<ExpoPluginOptions> = [
     ) {
       return {};
     }
-    const appConfig = getAppConfig(configFilePath, context);
+    const appConfig = await getAppConfig(configFilePath, context);
     // if appConfig.expo is not defined
     if (!appConfig.expo) {
       return {};
@@ -106,17 +107,20 @@ function buildExpoTargets(
 
   const targets: Record<string, TargetConfiguration> = {
     [options.startTargetName]: {
-      executor: `@nx/expo:start`,
+      command: `expo start`,
+      options: { cwd: projectRoot },
     },
     [options.serveTargetName]: {
       command: `expo start --web`,
       options: { cwd: projectRoot },
     },
     [options.runIosTargetName]: {
-      executor: `@nx/expo:run-ios`,
+      command: `expo run:ios`,
+      options: { cwd: projectRoot },
     },
     [options.runAndroidTargetName]: {
-      executor: `@nx/expo:run-android`,
+      command: `expo run:android`,
+      options: { cwd: projectRoot },
     },
     [options.exportTargetName]: {
       command: `expo export`,
@@ -134,12 +138,12 @@ function buildExpoTargets(
       executor: `@nx/expo:prebuild`,
     },
     [options.buildTargetName]: {
-      executor: `@nx/expo:build`,
-      dependsOn: [`^${options.buildTargetName}`],
-      inputs: getInputs(namedInputs),
+      command: `eas build`,
+      options: { cwd: projectRoot },
     },
     [options.submitTargetName]: {
-      executor: `@nx/expo:submit`,
+      command: `eas submit`,
+      options: { cwd: projectRoot },
     },
   };
 
@@ -149,11 +153,10 @@ function buildExpoTargets(
 function getAppConfig(
   configFilePath: string,
   context: CreateNodesContext
-): any {
+): Promise<any> {
   const resolvedPath = join(context.workspaceRoot, configFilePath);
 
-  let module = load(resolvedPath);
-  return module.default ?? module;
+  return loadConfigFile(resolvedPath);
 }
 
 function getInputs(
@@ -175,21 +178,6 @@ function getOutputs(projectRoot: string, dir: string) {
   } else {
     return `{workspaceRoot}/${projectRoot}/${dir}`;
   }
-}
-
-/**
- * Load the module after ensuring that the require cache is cleared.
- */
-function load(path: string): any {
-  // Clear cache if the path is in the cache
-  if (require.cache[path]) {
-    for (const k of Object.keys(require.cache)) {
-      delete require.cache[k];
-    }
-  }
-
-  // Then require
-  return require(path);
 }
 
 function normalizeOptions(options: ExpoPluginOptions): ExpoPluginOptions {

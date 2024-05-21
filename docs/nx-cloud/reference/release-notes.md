@@ -1,5 +1,89 @@
 # Enterprise Release Notes
 
+### 2404.05.9
+
+##### DTE Algorithm V2 Experimental Flag
+
+For the past 2 months, we've been re-writing our entire task distribution algorithm. The aim was to allocate tasks more efficiently to agents,
+reduce total time spent by agents downloading artefacts and reduce idle agent time waiting for tasks.
+
+While the features is still in its beta stage, initial tests do show a big improvement in overall CI completion time
+(but this varies on a case by case basis).
+
+If you are already using DTE or Nx Agents, you can enable this experimental feature by adding the following env var to your main job (the job
+where you invoke `npx start-ci-run`):
+
+```yaml
+NX_CLOUD_DTE_V2: 'true'
+```
+
+##### Nx Agents On-Prem Availability
+
+Since the previous release, we've been testing various options for deploying Nx Agents on-premise.
+
+We now have a dedicate Helm chart dedicated to setting up an Nx Agents cluster on your infrastructure:
+
+1. ⚠️ Please reach out to your DPE first so we can start an Nx Agents trial and discuss any limitations and requirements up-front
+2. You can view the example `values.yaml` [here](https://github.com/nrwl/nx-cloud-helm/blob/main/charts/nx-agents/values.yaml)
+3. Once we had a chance to look at your existing CI compute requirements, you deploy the chart via `helm install nx-cloud nx-cloud/nx-agents --values=helm-values.yml`
+
+##### Audit logger
+
+As an Enterprise installation admin, you can now view audit logs over NxCloud workspace events by visiting `https://<NXCLOUD-URL>/audit-log`.
+
+This includes events such as when a workspace was created, when a new VCS integration was set-up and so on.
+
+##### UI improvements
+
+- Organizations can now be created directly from the "Connect a workspace" screen
+- Full screen terminal outputs for your tasks
+
+### 2402.27.3.patch3,4,5,6
+
+- Feat: allows customising the base image for the agent init-container (in case it is self-hosted internally in the company)
+- Feat: adds more logging to debug authorization errors for Github, Gitlab and SAML
+- Fix: fixes an issue with using custom launch templates on GitLab
+
+### 2402.27.3.patch3
+
+- Feat: allows disabling the automated pod watcher which doesn't behave as expected in some k8s engines
+
+### 2402.27.3.patch2
+
+- Feat: allows volume class to be customised for Agents
+
+### 2402.27.3.patch1
+
+- Fixes an issue with the aggregator creating empty organisations during the first migration
+
+### 2402.27.3
+
+With this version you can take advantage of most features announced during our recent [launch week](/launch-nx).
+
+##### Nx Agents
+
+This release contains everything needed to run [Nx Agents](/ci/features/distribute-task-execution) on-prem. While the on-prem configuration is still experimental, we are actively running Nx Agents trials at the moment, and if you'd like to take part please reach out to your DPE.
+
+If you already running DTE, there are a few advantages to upgrading to Agents:
+
+- simplified CI config: you will need to maintain just a single, main CI job config. NxCloud will create needed CI agents for you as needed.
+- [dynamic agent allocation based on PR size](/ci/features/dynamic-agents): instead of always launching all your agents NxCloud will now launch different number of agents dynamically based on your PR size
+- access to [Spot instances](https://aws.amazon.com/ec2/spot/): if you are running your clusters on any of the popular cloud providers (AWS, Google Cloud, Azure etc.), you can now use their Spot instances for running your CI job. This is possible due to NxCloud's distribution model, which allows work on a reclaimed node to be re-distributed to the remaining agents.
+
+We will shortly make available a new Helm chart that will allow you to deploy a separate Agents cluster to launch workflows: [https://github.com/nrwl/nx-cloud-helm](https://github.com/nrwl/nx-cloud-helm).
+
+![agents_screen](/nx-cloud/reference/images/agents.webp)
+
+##### Task Atomizer and task retries
+
+If you combine this release + upgrade to the latest Nx 18, you will have access to both the [task atomizer](/ci/features/split-e2e-tasks) (which allows your e2e to be distributed among agents PER FILE, instead of previously per project) and the [flaky task retry functionality](/ci/features/flaky-tasks).
+
+##### CIPE page improvements
+
+Along with all the UI changes to support agents (following their logs and track how tasks get distributed,details of which you'll find demoed on [this page](/ci/features/distribute-task-execution)) this release also brings all the new improvements to the CI pipeline execution page, including the commit info panel at the top:
+
+![cipe_top_half_screen](/nx-cloud/reference/images/cipe_top.webp)
+
 ### 2312.11.7.patch1
 
 - re-enable path style access for s3 buckets
@@ -64,10 +148,10 @@ To enable the light runner feature, make sure you:
 
 ##### Nx Agents
 
-This release is also the first one to support ["Nx Agents"](https://nx.dev/ci/features/nx-agents#managed-agents-seamless-configuration).
+This release is also the first one to support ["Nx Agents"](/ci/features/distribute-task-execution).
 
 While currently experimental and disabled by default for on-prem users, we are looking for more on-prem workspaces to try it out with
-so please reach out to your DPE contact or to [cloud-suppport@nrwl.io](cloud-support@nrwl.io) if you are interested in helping us shape this according to your needs!
+so please reach out to your DPE contact or to [cloud-suppport@nrwl.io](mailto:cloud-support@nrwl.io) if you are interested in helping us shape this according to your needs!
 
 ##### Breaking changes - MongoDB migration
 

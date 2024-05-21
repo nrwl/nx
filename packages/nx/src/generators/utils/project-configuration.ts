@@ -4,7 +4,7 @@ import { basename, join, relative } from 'path';
 import {
   buildProjectConfigurationFromPackageJson,
   getGlobPatternsFromPackageManagerWorkspaces,
-  getNxPackageJsonWorkspacesPlugin,
+  createNodes as packageJsonWorkspacesCreateNodes,
 } from '../../plugins/package-json-workspaces';
 import {
   buildProjectFromProjectJson,
@@ -28,6 +28,7 @@ import { readJson, writeJson } from './json';
 import { readNxJson } from './nx-json';
 
 import type { Tree } from '../tree';
+import { NxPlugin } from '../../project-graph/plugins';
 
 export { readNxJson, updateNxJson } from './nx-json';
 
@@ -64,6 +65,9 @@ export function addProjectConfiguration(
   }
 
   delete (projectConfiguration as any).$schema;
+
+  handleEmptyTargets(projectName, projectConfiguration);
+
   writeJson(tree, projectConfigFile, {
     name: projectName,
     $schema: getRelativeProjectJsonSchemaPath(tree, projectConfiguration),
@@ -94,6 +98,7 @@ export function updateProjectConfiguration(
       `Cannot update Project ${projectName} at ${projectConfiguration.root}. It either doesn't exist yet, or may not use project.json for configuration. Use \`addProjectConfiguration()\` instead if you want to create a new project.`
     );
   }
+  handleEmptyTargets(projectName, projectConfiguration);
   writeJson(tree, projectConfigFile, {
     name: projectConfiguration.name ?? projectName,
     $schema: getRelativeProjectJsonSchemaPath(tree, projectConfiguration),
@@ -192,21 +197,17 @@ function readAndCombineAllProjectConfigurations(tree: Tree): {
     '**/project.json',
     'project.json',
     ...getGlobPatternsFromPackageManagerWorkspaces(tree.root, (p) =>
-      readJson(tree, p)
+      readJson(tree, p, { expectComments: true })
     ),
   ];
-  const projectGlobPatterns = configurationGlobs([
-    { plugin: ProjectJsonProjectsPlugin },
-    { plugin: getNxPackageJsonWorkspacesPlugin(tree.root) },
-  ]);
-  const globbedFiles = globWithWorkspaceContext(tree.root, projectGlobPatterns);
+  const globbedFiles = globWithWorkspaceContext(tree.root, patterns);
   const createdFiles = findCreatedProjectFiles(tree, patterns);
   const deletedFiles = findDeletedProjectFiles(tree, patterns);
   const projectFiles = [...globbedFiles, ...createdFiles].filter(
     (r) => deletedFiles.indexOf(r) === -1
   );
 
-  const rootMap: Map<string, ProjectConfiguration> = new Map();
+  const rootMap: Record<string, ProjectConfiguration> = {};
   for (const projectFile of projectFiles) {
     if (basename(projectFile) === 'project.json') {
       const json = readJson(tree, projectFile);
@@ -225,7 +226,7 @@ function readAndCombineAllProjectConfigurations(tree: Tree): {
         projectFile,
         readNxJson(tree)
       );
-      if (!rootMap.has(config.root)) {
+      if (!rootMap[config.root]) {
         mergeProjectConfigurationIntoRootMap(
           rootMap,
           // Inferred targets, tags, etc don't show up when running generators
@@ -327,4 +328,23 @@ function toNewFormat(w: any): ProjectsConfigurations {
     w.version = 2;
   }
   return w;
+}
+
+function handleEmptyTargets(
+  projectName: string,
+  projectConfiguration: ProjectConfiguration
+): void {
+  if (
+    projectConfiguration.targets &&
+    !Object.keys(projectConfiguration.targets).length
+  ) {
+    // Re-order `targets` to appear after the `// target` comment.
+    delete projectConfiguration.targets;
+    projectConfiguration[
+      '// targets'
+    ] = `to see all targets run: nx show project ${projectName} --web`;
+    projectConfiguration.targets = {};
+  } else {
+    delete projectConfiguration['// targets'];
+  }
 }

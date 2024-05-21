@@ -53,6 +53,10 @@ export interface NextServeBuilderOptions {
   keepAliveTimeout?: number;
   turbo?: boolean;
   experimentalHttps?: boolean;
+  experimentalHttpsKey?: string;
+  experimentalHttpsCert?: string;
+  experimentalHttpsCa?: string;
+  customServerHttps?: boolean;
 }
 
 export interface NextExportBuilderOptions {

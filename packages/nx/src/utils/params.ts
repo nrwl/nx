@@ -1,10 +1,12 @@
 import { logger } from './logger';
-import { NxJsonConfiguration } from '../config/nx-json';
-import {
+import type { NxJsonConfiguration } from '../config/nx-json';
+import type {
   TargetConfiguration,
   ProjectsConfigurations,
 } from '../config/workspace-json-project-json';
 import { output } from './output';
+import type { ProjectGraphError } from '../project-graph/error-types';
+import { daemonClient } from '../daemon/client/client';
 
 const LIST_CHOICE_DISPLAY_LIMIT = 10;
 
@@ -35,7 +37,7 @@ type PropertyDescription = {
     | { $source: 'projectName' }
     | { $source: 'unparsed' }
     | { $source: 'workingDirectory' };
-  additionalProperties?: boolean;
+  additionalProperties?: boolean | PropertyDescription;
   const?: any;
   'x-prompt'?:
     | string
@@ -72,7 +74,7 @@ export type Schema = {
   oneOf?: Partial<Schema>[];
   description?: string;
   definitions?: Properties;
-  additionalProperties?: boolean;
+  additionalProperties?: boolean | PropertyDescription;
   examples?: { command: string; description?: string }[];
   patternProperties?: {
     [pattern: string]: PropertyDescription;
@@ -96,6 +98,21 @@ export async function handleErrors(isVerbose: boolean, fn: Function) {
     err ||= new Error('Unknown error caught');
     if (err.constructor.name === 'UnsuccessfulWorkflowExecution') {
       logger.error('The generator workflow failed. See above.');
+    } else if (err.name === 'ProjectGraphError') {
+      const projectGraphError = err as ProjectGraphError;
+      let title = projectGraphError.message;
+      if (isVerbose) {
+        title += ' See errors below.';
+      }
+
+      const bodyLines = isVerbose
+        ? [projectGraphError.stack]
+        : ['Pass --verbose to see the stacktraces.'];
+
+      output.error({
+        title,
+        bodyLines: bodyLines,
+      });
     } else {
       const lines = (err.message ? err.message : err.toString()).split('\n');
       const bodyLines = lines.slice(1);
@@ -109,6 +126,9 @@ export async function handleErrors(isVerbose: boolean, fn: Function) {
       if (err.stack && isVerbose) {
         logger.info(err.stack);
       }
+    }
+    if (daemonClient.enabled()) {
+      daemonClient.reset();
     }
     return 1;
   }
@@ -255,26 +275,39 @@ export function validateObject(
     }
   }
   if (schema.oneOf) {
-    for (const s of schema.oneOf) {
-      const errors: Error[] = [];
-      for (const s of schema.oneOf) {
-        try {
-          validateObject(opts, s, definitions);
-        } catch (e) {
-          errors.push(e);
-        }
+    const matches: Array<PropertyDescription> = [];
+    const errors: Array<Error> = [];
+    for (const propertyDescription of schema.oneOf) {
+      try {
+        validateObject(opts, propertyDescription, definitions);
+        matches.push(propertyDescription);
+      } catch (error) {
+        errors.push(error);
       }
-      if (errors.length === schema.oneOf.length) {
-        throw new Error(
-          `Options did not match schema. Please fix 1 of the following errors:\n${errors
-            .map((e) => ' - ' + e.message)
-            .join('\n')}`
-        );
-      }
-      if (errors.length < schema.oneOf.length - 1) {
-        // TODO: This error could be better.
-        throw new Error(`Options did not match schema.`);
-      }
+    }
+    // If the options matched none of the oneOf property descriptions
+    if (matches.length === 0) {
+      throw new Error(
+        `Options did not match schema: ${JSON.stringify(
+          opts,
+          null,
+          2
+        )}.\nPlease fix 1 of the following errors:\n${errors
+          .map((e) => ' - ' + e.message)
+          .join('\n')}`
+      );
+    }
+    // If the options matched none of the oneOf property descriptions
+    if (matches.length > 1) {
+      throw new Error(
+        `Options did not match schema: ${JSON.stringify(
+          opts,
+          null,
+          2
+        )}.\nShould only match one of \n${matches
+          .map((m) => ' - ' + JSON.stringify(m))
+          .join('\n')}`
+      );
     }
   }
 
@@ -284,10 +317,13 @@ export function validateObject(
     }
   });
 
-  if (schema.additionalProperties === false) {
+  if (
+    schema.additionalProperties !== undefined &&
+    schema.additionalProperties !== true
+  ) {
     Object.keys(opts).find((p) => {
       if (
-        Object.keys(schema.properties).indexOf(p) === -1 &&
+        Object.keys(schema.properties ?? {}).indexOf(p) === -1 &&
         (!schema.patternProperties ||
           !Object.keys(schema.patternProperties).some((pattern) =>
             new RegExp(pattern).test(p)
@@ -297,8 +333,15 @@ export function validateObject(
           throw new SchemaError(
             `Schema does not support positional arguments. Argument '${opts[p]}' found`
           );
-        } else {
+        } else if (schema.additionalProperties === false) {
           throw new SchemaError(`'${p}' is not found in schema`);
+        } else if (typeof schema.additionalProperties === 'object') {
+          validateProperty(
+            p,
+            opts[p],
+            schema.additionalProperties,
+            definitions
+          );
         }
       }
     });
@@ -595,7 +638,7 @@ export function applyVerbosity(
   isVerbose: boolean
 ) {
   if (
-    (schema.additionalProperties || 'verbose' in schema.properties) &&
+    (schema.additionalProperties === true || 'verbose' in schema.properties) &&
     isVerbose
   ) {
     options['verbose'] = true;

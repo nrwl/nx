@@ -92,7 +92,11 @@ export default function Packages({
           role="main"
           className="flex h-full flex-1 overflow-y-hidden"
         >
-          <SidebarContainer menu={vm.menu} navIsOpen={navIsOpen} />
+          <SidebarContainer
+            menu={vm.menu}
+            navIsOpen={navIsOpen}
+            toggleNav={toggleNav}
+          />
           <div
             id="wrapper"
             data-testid="wrapper"
@@ -110,9 +114,9 @@ export default function Packages({
                     <p>
                       In version 16, we have rescoped our packages to{' '}
                       <code>@nx/*</code> from <code>@nrwl/*</code>.{' '}
-                      <a href="/recipes/other/rescope" className="underline">
+                      <Link href="/recipes/other/rescope" className="underline">
                         Read more about the rescope ≫
-                      </a>
+                      </Link>
                     </p>
                   </section>
                   <section id="packages-section" className="py-12">

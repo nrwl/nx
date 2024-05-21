@@ -7,6 +7,8 @@ import {
   CreateNodesContext,
   detectPackageManager,
   joinPathFragments,
+  normalizePath,
+  ProjectConfiguration,
   readJsonFile,
   TargetConfiguration,
   writeJsonFile,
@@ -17,9 +19,9 @@ import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash
 import type { PlaywrightTestConfig } from '@playwright/test';
 import { getFilesInDirectoryUsingContext } from 'nx/src/utils/workspace-context';
 import { minimatch } from 'minimatch';
-import { loadPlaywrightConfig } from '../utils/load-config-file';
 import { projectGraphCacheDirectory } from 'nx/src/utils/cache-directory';
 import { getLockFileName } from '@nx/js';
+import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
 
 export interface PlaywrightPluginOptions {
   targetName?: string;
@@ -35,21 +37,15 @@ const cachePath = join(projectGraphCacheDirectory, 'playwright.hash');
 
 const targetsCache = existsSync(cachePath) ? readTargetsCache() : {};
 
-const calculatedTargets: Record<
-  string,
-  Record<string, TargetConfiguration>
-> = {};
+type PlaywrightTargets = Pick<ProjectConfiguration, 'targets' | 'metadata'>;
 
-function readTargetsCache(): Record<
-  string,
-  Record<string, TargetConfiguration>
-> {
+const calculatedTargets: Record<string, PlaywrightTargets> = {};
+
+function readTargetsCache(): Record<string, PlaywrightTargets> {
   return readJsonFile(cachePath);
 }
 
-function writeTargetsToCache(
-  targets: Record<string, Record<string, TargetConfiguration>>
-) {
+function writeTargetsToCache(targets: Record<string, PlaywrightTargets>) {
   writeJsonFile(cachePath, targets);
 }
 
@@ -64,7 +60,7 @@ export const createNodes: CreateNodes<PlaywrightPluginOptions> = [
     const projectRoot = dirname(configFilePath);
 
     // Do not create a project if package.json and project.json isn't there.
-    const siblingFiles = readdirSync(projectRoot);
+    const siblingFiles = readdirSync(join(context.workspaceRoot, projectRoot));
     if (
       !siblingFiles.includes('package.json') &&
       !siblingFiles.includes('project.json')
@@ -78,7 +74,7 @@ export const createNodes: CreateNodes<PlaywrightPluginOptions> = [
       getLockFileName(detectPackageManager(context.workspaceRoot)),
     ]);
 
-    const targets =
+    const { targets, metadata } =
       targetsCache[hash] ??
       (await buildPlaywrightTargets(
         configFilePath,
@@ -87,13 +83,14 @@ export const createNodes: CreateNodes<PlaywrightPluginOptions> = [
         context
       ));
 
-    calculatedTargets[hash] = targets;
+    calculatedTargets[hash] = { targets, metadata };
 
     return {
       projects: {
         [projectRoot]: {
           root: projectRoot,
           targets,
+          metadata,
         },
       },
     };
@@ -105,19 +102,29 @@ async function buildPlaywrightTargets(
   projectRoot: string,
   options: NormalizedOptions,
   context: CreateNodesContext
-) {
-  const playwrightConfig: PlaywrightTestConfig = await loadPlaywrightConfig(
+): Promise<PlaywrightTargets> {
+  // Playwright forbids importing the `@playwright/test` module twice. This would affect running the tests,
+  // but we're just reading the config so let's delete the variable they are using to detect this.
+  // See: https://github.com/microsoft/playwright/pull/11218/files
+  delete (process as any)['__pw_initiator__'];
+
+  const playwrightConfig = await loadConfigFile<PlaywrightTestConfig>(
     join(context.workspaceRoot, configFilePath)
   );
 
   const namedInputs = getNamedInputs(projectRoot, context);
 
-  const targets: Record<string, TargetConfiguration<unknown>> = {};
+  const targets: ProjectConfiguration['targets'] = {};
+  let metadata: ProjectConfiguration['metadata'];
 
   const baseTargetConfig: TargetConfiguration = {
     command: 'playwright test',
     options: {
       cwd: '{projectRoot}',
+    },
+    metadata: {
+      technologies: ['playwright'],
+      description: 'Runs Playwright Tests',
     },
   };
 
@@ -142,6 +149,10 @@ async function buildPlaywrightTargets(
       outputs: getOutputs(projectRoot, playwrightConfig),
     };
 
+    const groupName = 'E2E (CI)';
+    metadata = { targetGroups: { [groupName]: [] } };
+    const ciTargetGroup = metadata.targetGroups[groupName];
+
     const testDir = playwrightConfig.testDir
       ? joinPathFragments(projectRoot, playwrightConfig.testDir)
       : projectRoot;
@@ -152,11 +163,18 @@ async function buildPlaywrightTargets(
     const dependsOn: TargetConfiguration['dependsOn'] = [];
     forEachTestFile(
       (testFile) => {
-        const relativeToProjectRoot = relative(projectRoot, testFile);
-        const targetName = `${options.ciTargetName}--${relativeToProjectRoot}`;
+        const relativeSpecFilePath = normalizePath(
+          relative(projectRoot, testFile)
+        );
+        const targetName = `${options.ciTargetName}--${relativeSpecFilePath}`;
+        ciTargetGroup.push(targetName);
         targets[targetName] = {
           ...ciBaseTargetConfig,
-          command: `${baseTargetConfig.command} ${relativeToProjectRoot}`,
+          command: `${baseTargetConfig.command} ${relativeSpecFilePath}`,
+          metadata: {
+            technologies: ['playwright'],
+            description: `Runs Playwright Tests in ${relativeSpecFilePath} in CI`,
+          },
         };
         dependsOn.push({
           target: targetName,
@@ -179,13 +197,18 @@ async function buildPlaywrightTargets(
       inputs: ciBaseTargetConfig.inputs,
       outputs: ciBaseTargetConfig.outputs,
       dependsOn,
+      metadata: {
+        technologies: ['playwright'],
+        description: 'Runs Playwright Tests in CI',
+      },
     };
+    ciTargetGroup.push(options.ciTargetName);
   }
 
-  return targets;
+  return { targets, metadata };
 }
 
-async function forEachTestFile(
+function forEachTestFile(
   cb: (path: string) => void,
   opts: {
     context: CreateNodesContext;

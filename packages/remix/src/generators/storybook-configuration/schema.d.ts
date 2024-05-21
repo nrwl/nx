@@ -12,4 +12,5 @@ export interface StorybookConfigurationSchema {
   ignorePaths?: string[];
   configureTestRunner?: boolean;
   configureStaticServe?: boolean;
+  addPlugin?: boolean;
 }

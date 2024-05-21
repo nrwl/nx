@@ -14,11 +14,22 @@ import type {
 } from 'typescript';
 import { join } from 'path';
 import { ensureTypescript } from '../../../utilities/typescript';
+import { findRootJestConfig } from '../../utils/jest-config';
 
 let tsModule: typeof import('typescript');
 
 function isUsingUtilityFunction(host: Tree) {
-  return host.read('jest.config.ts').toString().includes('getJestProjects()');
+  const rootConfigPath = findRootJestConfig(host);
+  if (!rootConfigPath) {
+    return false;
+  }
+
+  const rootConfig = host.read(rootConfigPath, 'utf-8');
+
+  return (
+    rootConfig.includes('getJestProjects()') ||
+    rootConfig.includes('getJestProjectsAsync()')
+  );
 }
 
 /**
@@ -27,7 +38,12 @@ function isUsingUtilityFunction(host: Tree) {
  * in that case we do not need to edit it to remove it
  **/
 function isMonorepoConfig(tree: Tree) {
-  return tree.read('jest.config.ts', 'utf-8').includes('projects:');
+  const rootConfigPath = findRootJestConfig(tree);
+  if (!rootConfigPath) {
+    return false;
+  }
+
+  return tree.read(rootConfigPath, 'utf-8').includes('projects:');
 }
 
 /**
@@ -50,8 +66,11 @@ export function updateJestConfig(
   } = tsModule;
   const projectToRemove = schema.projectName;
 
+  const rootConfigPath = findRootJestConfig(tree);
+
   if (
-    !tree.exists('jest.config.ts') ||
+    !rootConfigPath ||
+    !tree.exists(rootConfigPath) ||
     !tree.exists(join(projectConfig.root, 'jest.config.ts')) ||
     isUsingUtilityFunction(tree) ||
     !isMonorepoConfig(tree)
@@ -59,9 +78,9 @@ export function updateJestConfig(
     return;
   }
 
-  const contents = tree.read('jest.config.ts', 'utf-8');
+  const contents = tree.read(rootConfigPath, 'utf-8');
   const sourceFile = createSourceFile(
-    'jest.config.ts',
+    rootConfigPath,
     contents,
     ScriptTarget.Latest
   );
@@ -104,7 +123,7 @@ export function updateJestConfig(
     : project.getStart(sourceFile);
 
   tree.write(
-    'jest.config.ts',
+    rootConfigPath,
     applyChangesToString(contents, [
       {
         type: ChangeType.Delete,

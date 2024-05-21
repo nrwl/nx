@@ -10,7 +10,7 @@ Run the following command with the options listed to create an empty workspace.
 
 ```{% command="npx create-nx-workspace@latest" path="~" %}
 
- >  NX   Let's create a new workspace [https://nx.dev/getting-started/intro]
+NX   Let's create a new workspace [https://nx.dev/getting-started/intro]
 
 ✔ Where would you like to create your workspace? · myorg
 ✔ Which stack do you want to use? · none
@@ -30,7 +30,7 @@ Make sure to install the `@nx/angular` or `@nx/react` versions that matches the 
 
 {% tab label="Angular" %}
 
-```{% command="npm add -D @nx/angular" path="~/myorg" %}
+```{% command="nx add @nx/angular" path="~/myorg" %}
 
 ```
 
@@ -38,7 +38,7 @@ Make sure to install the `@nx/angular` or `@nx/react` versions that matches the 
 
 {% tab label="React" %}
 
-```{% command="npm add -D @nx/react" path="~/myorg" %}
+```{% command="nx add @nx/react" path="~/myorg" %}
 
 ```
 

@@ -27,7 +27,7 @@ const PROPERTY_INFO_TOOLTIP_TYPE_OPTIONS: Record<
   PropertyInfoTooltipTypeOptions
 > = {
   targets: {
-    docsUrl: 'https://nx.dev/core-features/run-tasks#define-tasks',
+    docsUrl: 'https://nx.dev/features/run-tasks',
     docsLinkText: 'Learn more about running tasks',
     heading: 'Target',
     description:
@@ -47,12 +47,12 @@ const PROPERTY_INFO_TOOLTIP_TYPE_OPTIONS: Record<
       'This task will be cached by Nx. When the Inputs have not changed the Outputs will be restored from the cache.',
   },
   inputs: {
-    docsUrl: 'https://nx.dev/recipes/running-tasks/customizing-inputs',
+    docsUrl: 'https://nx.dev/recipes/running-tasks/configure-inputs',
     heading: 'Inputs',
     description: `Inputs are used by the task to produce Outputs. Inputs are used to determine when the Outputs of a task can be restored from the cache.`,
   },
   outputs: {
-    docsUrl: 'https://nx.dev/reference/project-configuration#outputs',
+    docsUrl: 'https://nx.dev/recipes/running-tasks/configure-outputs',
     heading: 'Outputs',
     description:
       'Outputs are the results of a task. Outputs are restored from the cache when the Inputs are the same as a previous run.',
@@ -65,14 +65,12 @@ const PROPERTY_INFO_TOOLTIP_TYPE_OPTIONS: Record<
       'This is a list of other tasks which must be completed before running this task.',
   },
   options: {
-    // TODO(v18): re-enable link once docs are published
-    // docsUrl: 'https://nx.dev/concepts/executors-and-configurations',
+    docsUrl: 'https://nx.dev/concepts/executors-and-configurations',
     heading: 'Options',
     description: 'Options modify the behaviour of the task.',
   },
   configurations: {
-    // TODO(v18): re-enable link once docs are published
-    // docsUrl: 'https://nx.dev/concepts/executors-and-configurations',
+    docsUrl: 'https://nx.dev/concepts/executors-and-configurations',
     heading: 'Configurations',
     description:
       'Configurations are sets of Options to allow a Target to be used in different scenarios.',
@@ -89,13 +87,13 @@ export function PropertyInfoTooltip({ type }: PropertyInfoTooltipProps) {
   const propertyInfo = PROPERTY_INFO_TOOLTIP_TYPE_OPTIONS[type];
 
   return (
-    <div className="text-sm text-slate-700 dark:text-slate-400 max-w-lg">
-      <h4 className="flex justify-between items-center border-b border-slate-200 dark:border-slate-700/60 text-base">
+    <div className="max-w-lg text-sm text-slate-700 dark:text-slate-400">
+      <h4 className="flex items-center justify-between border-b border-slate-200 text-base dark:border-slate-700/60">
         <span className="font-mono">{propertyInfo.heading}</span>
       </h4>
       <div
         className={twMerge(
-          `flex flex-col font-mono py-2`,
+          `flex flex-col py-2 font-mono`,
           propertyInfo.docsUrl
             ? 'border-b border-slate-200 dark:border-slate-700/60'
             : ''
@@ -107,7 +105,7 @@ export function PropertyInfoTooltip({ type }: PropertyInfoTooltipProps) {
       </div>
       {propertyInfo.docsUrl ? (
         <div className="flex py-2">
-          <p className="pr-4 flex items-center">
+          <p className="flex items-center pr-4">
             <ExternalLink
               text={
                 propertyInfo.docsLinkText ??

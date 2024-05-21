@@ -29,6 +29,15 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
     options.outputPath,
     '.next/types/**/*.ts'
   );
+
+  // scope tsconfig to the project directory so that it doesn't include other projects/libs
+  const rootPath = options.rootProject
+    ? options.src
+      ? 'src/'
+      : options.appDir
+      ? 'app/'
+      : 'pages/'
+    : '';
   const templateVariables = {
     ...names(options.name),
     ...options,
@@ -36,6 +45,7 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
     tmpl: '',
     offsetFromRoot,
     layoutTypeSrcPath,
+    rootPath,
     layoutTypeDistPath,
     rootTsConfigPath: getRelativePathToRootTsConfig(
       host,
@@ -46,6 +56,7 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
     pageStyleContent: `.page {}`,
 
     stylesExt: options.style === 'less' ? options.style : 'css',
+    style: options.style === 'tailwind' ? 'css' : options.style,
   };
 
   const generatedAppFilePath = options.src
@@ -67,14 +78,15 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
       templateVariables
     );
 
-    // RSC is not possible to unit test without extra helpers for data fetching. Leaving it to the user to figure out.
-    host.delete(
-      joinPathFragments(
-        options.appProjectRoot,
-        'specs',
-        `index.spec.${options.js ? 'jsx' : 'tsx'}`
-      )
-    );
+    if (options.unitTestRunner === 'none') {
+      host.delete(
+        joinPathFragments(
+          options.appProjectRoot,
+          'specs',
+          `index.spec.${options.js ? 'jsx' : 'tsx'}`
+        )
+      );
+    }
 
     if (options.style === 'styled-components') {
       generateFiles(

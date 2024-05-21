@@ -1,9 +1,10 @@
 import { prompt } from 'enquirer';
 import { readNxJson } from '../../config/nx-json';
-import { output } from '../../devkit-exports';
+import { createProjectFileMapUsingProjectGraph } from '../../project-graph/file-map-utils';
 import { createProjectGraphAsync } from '../../project-graph/project-graph';
+import { output } from '../../utils/output';
 import { handleErrors } from '../../utils/params';
-import { releaseChangelog } from './changelog';
+import { releaseChangelog, shouldCreateGitHubRelease } from './changelog';
 import { ReleaseOptions, VersionOptions } from './command-object';
 import {
   createNxReleaseConfig,
@@ -11,7 +12,8 @@ import {
 } from './config/config';
 import { filterReleaseGroups } from './config/filter-release-groups';
 import { releasePublish } from './publish';
-import { gitCommit, gitTag } from './utils/git';
+import { getCommitHash, gitCommit, gitPush, gitTag } from './utils/git';
+import { createOrUpdateGithubRelease } from './utils/github';
 import { resolveNxJsonConfigErrorMessage } from './utils/resolve-nx-json-error-message';
 import {
   createCommitMessageValues,
@@ -54,6 +56,7 @@ export async function release(
   // Apply default configuration to any optional user configuration
   const { error: configError, nxReleaseConfig } = await createNxReleaseConfig(
     projectGraph,
+    await createProjectFileMapUsingProjectGraph(projectGraph),
     nxJson.release
   );
   if (configError) {
@@ -74,13 +77,14 @@ export async function release(
     gitTag: false,
   });
 
-  await releaseChangelog({
+  const changelogResult = await releaseChangelog({
     ...args,
     versionData: versionResult.projectsVersionData,
     version: versionResult.workspaceVersion,
     stageChanges: shouldStage,
     gitCommit: false,
     gitTag: false,
+    createRelease: false,
   });
 
   const {
@@ -140,8 +144,93 @@ export async function release(
     }
   }
 
-  let shouldPublish = !!args.yes && !args.skipPublish;
-  const shouldPromptPublishing = !args.yes && !args.skipPublish && !args.dryRun;
+  const shouldCreateWorkspaceRelease = shouldCreateGitHubRelease(
+    nxReleaseConfig.changelog.workspaceChangelog
+  );
+
+  let hasPushedChanges = false;
+  let latestCommit: string | undefined;
+
+  if (shouldCreateWorkspaceRelease && changelogResult.workspaceChangelog) {
+    output.logSingleLine(`Pushing to git remote`);
+
+    // Before we can create/update the release we need to ensure the commit exists on the remote
+    await gitPush({
+      dryRun: args.dryRun,
+      verbose: args.verbose,
+    });
+
+    hasPushedChanges = true;
+
+    output.logSingleLine(`Creating GitHub Release`);
+
+    latestCommit = await getCommitHash('HEAD');
+    await createOrUpdateGithubRelease(
+      changelogResult.workspaceChangelog.releaseVersion,
+      changelogResult.workspaceChangelog.contents,
+      latestCommit,
+      { dryRun: args.dryRun }
+    );
+  }
+
+  for (const releaseGroup of releaseGroups) {
+    const shouldCreateProjectReleases = shouldCreateGitHubRelease(
+      releaseGroup.changelog
+    );
+
+    if (shouldCreateProjectReleases && changelogResult.projectChangelogs) {
+      const projects = args.projects?.length
+        ? // If the user has passed a list of projects, we need to use the filtered list of projects within the release group
+          Array.from(releaseGroupToFilteredProjects.get(releaseGroup))
+        : // Otherwise, we use the full list of projects within the release group
+          releaseGroup.projects;
+      const projectNodes = projects.map((name) => projectGraph.nodes[name]);
+
+      for (const project of projectNodes) {
+        const changelog = changelogResult.projectChangelogs[project.name];
+        if (!changelog) {
+          continue;
+        }
+
+        if (!hasPushedChanges) {
+          output.logSingleLine(`Pushing to git remote`);
+
+          // Before we can create/update the release we need to ensure the commit exists on the remote
+          await gitPush({
+            dryRun: args.dryRun,
+            verbose: args.verbose,
+          });
+
+          hasPushedChanges = true;
+        }
+
+        output.logSingleLine(`Creating GitHub Release`);
+
+        if (!latestCommit) {
+          latestCommit = await getCommitHash('HEAD');
+        }
+
+        await createOrUpdateGithubRelease(
+          changelog.releaseVersion,
+          changelog.contents,
+          latestCommit,
+          { dryRun: args.dryRun }
+        );
+      }
+    }
+  }
+
+  let hasNewVersion = false;
+  // null means that all projects are versioned together but there were no changes
+  if (versionResult.workspaceVersion !== null) {
+    hasNewVersion = Object.values(versionResult.projectsVersionData).some(
+      (version) => version.newVersion !== null
+    );
+  }
+
+  let shouldPublish = !!args.yes && !args.skipPublish && hasNewVersion;
+  const shouldPromptPublishing =
+    !args.yes && !args.skipPublish && !args.dryRun && hasNewVersion;
 
   if (shouldPromptPublishing) {
     shouldPublish = await promptForPublish();
@@ -150,15 +239,13 @@ export async function release(
   if (shouldPublish) {
     await releasePublish(args);
   } else {
-    console.log('Skipped publishing packages.');
+    output.logSingleLine('Skipped publishing packages.');
   }
 
   return versionResult;
 }
 
 async function promptForPublish(): Promise<boolean> {
-  console.log('\n');
-
   try {
     const reply = await prompt<{ confirmation: boolean }>([
       {
@@ -169,7 +256,6 @@ async function promptForPublish(): Promise<boolean> {
     ]);
     return reply.confirmation;
   } catch (e) {
-    console.log('\n');
     // Handle the case where the user exits the prompt with ctrl+c
     return false;
   }

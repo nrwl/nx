@@ -4,19 +4,15 @@ import {
   InputDefinition,
   TargetConfiguration,
 } from '../config/workspace-json-project-json';
+import { mergeTargetConfigurations } from '../project-graph/utils/project-configuration-utils';
 import { readJsonFile } from './fileutils';
 import { getNxRequirePaths } from './installation-directory';
-
-export type PackageJsonTargetConfiguration = Omit<
-  TargetConfiguration,
-  'executor'
->;
 
 export interface NxProjectPackageJsonConfiguration {
   implicitDependencies?: string[];
   tags?: string[];
   namedInputs?: { [inputName: string]: (string | InputDefinition)[] };
-  targets?: Record<string, PackageJsonTargetConfiguration>;
+  targets?: Record<string, TargetConfiguration>;
   includedScripts?: string[];
 }
 
@@ -63,6 +59,7 @@ export interface PackageJson {
     | {
         packages: string[];
       };
+  publishConfig?: Record<string, string>;
 
   // Nx Project Configuration
   nx?: NxProjectPackageJsonConfiguration;
@@ -118,37 +115,36 @@ export function readNxMigrateConfig(
   };
 }
 
-export function buildTargetFromScript(
-  script: string,
-  nx: NxProjectPackageJsonConfiguration
-): TargetConfiguration {
-  const nxTargetConfiguration = nx?.targets?.[script] || {};
-
+export function buildTargetFromScript(script: string): TargetConfiguration {
   return {
-    ...nxTargetConfiguration,
     executor: 'nx:run-script',
     options: {
-      ...(nxTargetConfiguration.options || {}),
       script,
     },
   };
 }
 
 export function readTargetsFromPackageJson(packageJson: PackageJson) {
-  const { scripts, nx } = packageJson;
+  const { scripts, nx, private: isPrivate } = packageJson ?? {};
   const res: Record<string, TargetConfiguration> = {};
-  Object.keys(scripts || {}).forEach((script) => {
-    if (!nx?.includedScripts || nx?.includedScripts.includes(script)) {
-      res[script] = buildTargetFromScript(script, nx);
-    }
-  });
+  const includedScripts = nx?.includedScripts || Object.keys(scripts ?? {});
+  //
+  for (const script of includedScripts) {
+    res[script] = buildTargetFromScript(script);
+  }
+  for (const targetName in nx?.targets) {
+    res[targetName] = mergeTargetConfigurations(
+      nx?.targets[targetName],
+      res[targetName]
+    );
+  }
 
   /**
    * Add implicit nx-release-publish target for all package.json files that are
    * not marked as `"private": true` to allow for lightweight configuration for
    * package based repos.
    */
-  if (!packageJson.private && !res['nx-release-publish']) {
+  if (!isPrivate && !res['nx-release-publish']) {
     res['nx-release-publish'] = {
       dependsOn: ['^nx-release-publish'],
       executor: '@nx/js:release-publish',

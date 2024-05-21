@@ -33,6 +33,7 @@ export interface LibraryGeneratorSchema {
   minimal?: boolean;
   rootProject?: boolean;
   simpleName?: boolean;
+  addPlugin?: boolean;
 }
 
 export interface ExecutorOptions {
@@ -50,6 +51,7 @@ export interface ExecutorOptions {
   external?: 'all' | 'none' | string[];
   externalBuildTargets?: string[];
   generateLockfile?: boolean;
+  stripLeadingPaths?: boolean;
 }
 
 export interface NormalizedExecutorOptions extends ExecutorOptions {
@@ -74,6 +76,7 @@ export interface SwcCliOptions {
   destPath: string;
   swcrcPath: string;
   swcCwd: string;
+  stripLeadingPaths: boolean;
 }
 
 export interface NormalizedSwcExecutorOptions
@@ -82,4 +85,8 @@ export interface NormalizedSwcExecutorOptions
   swcExclude: string[];
   skipTypeCheck: boolean;
   swcCliOptions: SwcCliOptions;
+  tmpSwcrcPath: string;
+  sourceRoot?: string;
+  // TODO(v20): remove inline feature
+  inline?: boolean;
 }

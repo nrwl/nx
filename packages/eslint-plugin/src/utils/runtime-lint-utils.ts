@@ -22,6 +22,7 @@ import {
   resolveModuleByImport,
   TargetProjectLocator,
 } from '@nx/js/src/internal';
+import { AST_NODE_TYPES, TSESTree } from '@typescript-eslint/utils';
 
 export type Deps = { [projectName: string]: ProjectGraphDependency[] };
 type SingleSourceTagConstraint = {
@@ -202,17 +203,42 @@ export function findConstraintsFor(
   });
 }
 
-export function onlyLoadChildren(
+export function hasStaticImportOfDynamicResource(
+  node:
+    | TSESTree.ImportDeclaration
+    | TSESTree.ImportExpression
+    | TSESTree.ExportAllDeclaration
+    | TSESTree.ExportNamedDeclaration,
+  graph: ProjectGraph,
+  sourceProjectName: string,
+  targetProjectName: string
+): boolean {
+  if (
+    node.type !== AST_NODE_TYPES.ImportDeclaration ||
+    node.importKind === 'type'
+  ) {
+    return false;
+  }
+  return onlyLoadChildren(graph, sourceProjectName, targetProjectName, []);
+}
+
+function onlyLoadChildren(
   graph: ProjectGraph,
   sourceProjectName: string,
   targetProjectName: string,
   visited: string[]
 ) {
-  if (visited.indexOf(sourceProjectName) > -1) return false;
+  if (visited.indexOf(sourceProjectName) > -1) {
+    return false;
+  }
   return (
     (graph.dependencies[sourceProjectName] || []).filter((d) => {
-      if (d.type !== DependencyType.dynamic) return false;
-      if (d.target === targetProjectName) return true;
+      if (d.type !== DependencyType.dynamic) {
+        return false;
+      }
+      if (d.target === targetProjectName) {
+        return true;
+      }
       return onlyLoadChildren(graph, d.target, targetProjectName, [
         ...visited,
         sourceProjectName,
@@ -416,7 +442,7 @@ export function hasBuildExecutor(
   );
 }
 
-const ESLINT_REGEX = /node_modules.*[\/\\]eslint$/;
+const ESLINT_REGEX = /node_modules.*[\/\\]eslint(?:\.js)?$/;
 const JEST_REGEX = /node_modules\/.bin\/jest$/; // when we run unit tests in jest
 const NRWL_CLI_REGEX = /nx[\/\\]bin[\/\\]run-executor\.js$/;
 

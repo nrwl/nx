@@ -14,6 +14,7 @@ import {
   runTasksInSerial,
   TargetConfiguration,
   Tree,
+  updateJson,
   updateNxJson,
   updateProjectConfiguration,
   writeJson,
@@ -38,12 +39,17 @@ import { getNpmScope } from '@nx/js/src/utils/package-json/get-npm-scope';
 import { hasWebpackPlugin } from '../../utils/has-webpack-plugin';
 import { addBuildTargetDefaults } from '@nx/devkit/src/generators/add-build-target-defaults';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
+import { VitePluginOptions } from '@nx/vite/src/plugins/plugin';
+import { WebpackPluginOptions } from '@nx/webpack/src/plugins/plugin';
 
 interface NormalizedSchema extends Schema {
   projectName: string;
   appProjectRoot: string;
   e2eProjectName: string;
   e2eProjectRoot: string;
+  e2eWebServerAddress: string;
+  e2eWebServerTarget: string;
+  e2ePort: number;
   parsedTags: string[];
 }
 
@@ -80,6 +86,7 @@ function createApplicationFiles(tree: Tree, options: NormalizedSchema) {
         ),
         webpackPluginOptions: hasWebpackPlugin(tree)
           ? {
+              compiler: options.compiler,
               target: 'web',
               outputPath: joinPathFragments(
                 'dist',
@@ -103,6 +110,19 @@ function createApplicationFiles(tree: Tree, options: NormalizedSchema) {
       );
     }
   }
+  updateJson(
+    tree,
+    joinPathFragments(options.appProjectRoot, 'tsconfig.json'),
+    (json) => {
+      return {
+        ...json,
+        compilerOptions: {
+          ...(json.compilerOptions || {}),
+          strict: options.strict,
+        },
+      };
+    }
+  );
 }
 
 async function setupBundler(tree: Tree, options: NormalizedSchema) {
@@ -132,6 +152,7 @@ async function setupBundler(tree: Tree, options: NormalizedSchema) {
         'webpack.config.js'
       ),
       skipFormat: true,
+      addPlugin: options.addPlugin,
     });
     const project = readProjectConfiguration(tree, options.projectName);
     if (project.targets.build) {
@@ -225,6 +246,7 @@ function setDefaults(tree: Tree, options: NormalizedSchema) {
 
 export async function applicationGenerator(host: Tree, schema: Schema) {
   return await applicationGeneratorInternal(host, {
+    addPlugin: false,
     projectNameAndRootFormat: 'derived',
     ...schema,
   });
@@ -274,6 +296,7 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
       includeVitest: options.unitTestRunner === 'vitest',
       inSourceTests: options.inSourceTests,
       skipFormat: true,
+      addPlugin: options.addPlugin,
     });
     tasks.push(viteTask);
     createOrEditViteConfig(
@@ -298,6 +321,7 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
       coverageProvider: 'v8',
       inSourceTests: options.inSourceTests,
       skipFormat: true,
+      addPlugin: options.addPlugin,
     });
     tasks.push(vitestTask);
     createOrEditViteConfig(
@@ -322,7 +346,10 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
   }
 
   if (options.linter === 'eslint') {
-    const { lintProjectGenerator } = ensurePackage('@nx/eslint', nxVersion);
+    const { lintProjectGenerator } = ensurePackage<typeof import('@nx/eslint')>(
+      '@nx/eslint',
+      nxVersion
+    );
     const lintTask = await lintProjectGenerator(host, {
       linter: options.linter,
       project: options.projectName,
@@ -332,6 +359,7 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
       unitTestRunner: options.unitTestRunner,
       skipFormat: true,
       setParserOptionsProject: options.setParserOptionsProject,
+      addPlugin: options.addPlugin,
     });
     tasks.push(lintTask);
   }
@@ -351,8 +379,8 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
     const cypressTask = await configurationGenerator(host, {
       ...options,
       project: options.e2eProjectName,
-      devServerTarget: `${options.projectName}:serve`,
-      baseUrl: 'http://localhost:4200',
+      devServerTarget: `${options.projectName}:${options.e2eWebServerTarget}`,
+      baseUrl: options.e2eWebServerAddress,
       directory: 'src',
       skipFormat: true,
     });
@@ -366,6 +394,7 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
       sourceRoot: joinPathFragments(options.e2eProjectRoot, 'src'),
       projectType: 'application',
       targets: {},
+      tags: [],
       implicitDependencies: [options.projectName],
     });
     const playwrightTask = await playwrightConfigGenerator(host, {
@@ -376,10 +405,11 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
       js: false,
       linter: options.linter,
       setParserOptionsProject: options.setParserOptionsProject,
-      webServerCommand: `${getPackageManagerCommand().exec} nx serve ${
-        options.name
-      }`,
-      webServerAddress: 'http://localhost:4200',
+      webServerCommand: `${getPackageManagerCommand().exec} nx ${
+        options.e2eWebServerTarget
+      } ${options.name}`,
+      webServerAddress: options.e2eWebServerAddress,
+      addPlugin: options.addPlugin,
     });
     tasks.push(playwrightTask);
   }
@@ -394,6 +424,7 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
       setupFile: 'web-components',
       compiler: options.compiler,
       skipFormat: true,
+      addPlugin: options.addPlugin,
     });
     tasks.push(jestTask);
   }
@@ -456,8 +487,48 @@ async function normalizeOptions(
     callingGenerator: '@nx/web:application',
   });
   options.projectNameAndRootFormat = projectNameAndRootFormat;
+  const nxJson = readNxJson(host);
+  const addPluginDefault =
+    process.env.NX_ADD_PLUGINS !== 'false' &&
+    nxJson.useInferencePlugins !== false;
+  options.addPlugin ??= addPluginDefault;
+
+  let e2eWebServerTarget = 'serve';
+  if (options.addPlugin) {
+    if (nxJson.plugins) {
+      for (const plugin of nxJson.plugins) {
+        if (
+          options.bundler === 'vite' &&
+          typeof plugin === 'object' &&
+          plugin.plugin === '@nx/vite/plugin' &&
+          (plugin.options as VitePluginOptions).serveTargetName
+        ) {
+          e2eWebServerTarget = (plugin.options as VitePluginOptions)
+            .serveTargetName;
+        } else if (
+          options.bundler === 'webpack' &&
+          typeof plugin === 'object' &&
+          plugin.plugin === '@nx/webpack/plugin' &&
+          (plugin.options as WebpackPluginOptions).serveTargetName
+        ) {
+          e2eWebServerTarget = (plugin.options as WebpackPluginOptions)
+            .serveTargetName;
+        }
+      }
+    }
+  }
+
+  let e2ePort = 4200;
+  if (
+    nxJson.targetDefaults?.[e2eWebServerTarget] &&
+    nxJson.targetDefaults?.[e2eWebServerTarget].options?.port
+  ) {
+    e2ePort = nxJson.targetDefaults?.[e2eWebServerTarget].options?.port;
+  }
+
   const e2eProjectName = `${appProjectName}-e2e`;
   const e2eProjectRoot = `${appProjectRoot}-e2e`;
+  const e2eWebServerAddress = `http://localhost:${e2ePort}`;
 
   const npmScope = getNpmScope(host);
 
@@ -465,14 +536,10 @@ async function normalizeOptions(
     ? options.tags.split(',').map((s) => s.trim())
     : [];
 
-  if (options.bundler === 'vite' && options.unitTestRunner !== 'none') {
-    options.unitTestRunner = 'vitest';
-  }
-
   options.style = options.style || 'css';
   options.linter = options.linter || ('eslint' as Linter.EsLint);
   options.unitTestRunner = options.unitTestRunner || 'jest';
-  options.e2eTestRunner = options.e2eTestRunner || 'cypress';
+  options.e2eTestRunner = options.e2eTestRunner || 'playwright';
 
   return {
     ...options,
@@ -481,9 +548,13 @@ async function normalizeOptions(
     compiler: options.compiler ?? 'babel',
     bundler: options.bundler ?? 'webpack',
     projectName: appProjectName,
+    strict: options.strict ?? true,
     appProjectRoot,
     e2eProjectRoot,
     e2eProjectName,
+    e2eWebServerAddress,
+    e2eWebServerTarget,
+    e2ePort,
     parsedTags,
   };
 }

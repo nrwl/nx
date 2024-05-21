@@ -5,6 +5,7 @@ import {
   generateFiles,
   joinPathFragments,
   logger,
+  readNxJson,
   Tree,
 } from '@nx/devkit';
 import { camelize } from '@nx/devkit/src/utils/string-utils';
@@ -22,10 +23,16 @@ export async function lintWorkspaceRuleGenerator(
   tree: Tree,
   options: LintWorkspaceRuleGeneratorOptions
 ) {
+  const nxJson = readNxJson(tree);
   // Ensure that the workspace rules project has been created
   const projectGeneratorCallback = await lintWorkspaceRulesProjectGenerator(
     tree,
-    { skipFormat: true }
+    {
+      skipFormat: true,
+      addPlugin:
+        process.env.NX_ADD_PLUGINS !== 'false' &&
+        nxJson.useInferencePlugins !== false,
+    }
   );
 
   const ruleDir = joinPathFragments(

@@ -33,7 +33,7 @@
     },
     "preid": {
       "type": "string",
-      "description": "The optional prerelease identifier to apply to the version, in the case that specifier has been set to prerelease."
+      "description": "The optional prerelease identifier to apply to the version, in the case that the specifier argument has been set to prerelease."
     },
     "packageRoot": {
       "type": "string",
@@ -49,6 +49,18 @@
       "type": "object",
       "description": "Additional metadata to pass to the current version resolver.",
       "default": {}
+    },
+    "skipLockFileUpdate": {
+      "type": "boolean",
+      "description": "Whether to skip updating the lock file after updating the version."
+    },
+    "installArgs": {
+      "type": "string",
+      "description": "Additional arguments to pass to the package manager when updating the lock file with an install command."
+    },
+    "installIgnoreScripts": {
+      "type": "boolean",
+      "description": "Whether to ignore install lifecycle scripts when updating the lock file with an install command."
     }
   },
   "required": ["projects", "projectGraph", "releaseGroup"]

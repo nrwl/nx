@@ -8,6 +8,7 @@ import {
 
 import { Schema } from './schema';
 import { applicationGenerator } from './application';
+import { join } from 'path';
 
 describe('app', () => {
   let tree: Tree;
@@ -103,10 +104,10 @@ describe('app', () => {
 
       const tsConfig = readJson(tree, 'tsconfig.json');
       expect(tsConfig.include).toEqual([
-        '**/*.ts',
-        '**/*.tsx',
-        '**/*.js',
-        '**/*.jsx',
+        'src/**/*.ts',
+        'src/**/*.tsx',
+        'src/**/*.js',
+        'src/**/*.jsx',
         '.next/types/**/*.ts',
         `dist/${name}/.next/types/**/*.ts`,
         'next-env.d.ts',
@@ -339,7 +340,8 @@ describe('app', () => {
     });
   });
 
-  describe('--style @emotion/styled', () => {
+  // Support for emotion is still being worked on disable for now: https://nextjs.org/docs/app/building-your-application/styling/css-in-js
+  xdescribe('--style @emotion/styled', () => {
     it('should generate  @emotion/styled styles', async () => {
       const name = uniq();
 
@@ -501,56 +503,32 @@ describe('app', () => {
       projectNameAndRootFormat: 'as-provided',
     });
 
-    const projectConfiguration = readProjectConfiguration(tree, name);
-    expect(projectConfiguration.targets.build.executor).toEqual(
-      '@nx/next:build'
-    );
-    expect(projectConfiguration.targets.build.options).toEqual({
-      outputPath: `dist/${name}`,
-    });
-  });
+    expect(tree.read(join(name, 'next.config.js'), 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "//@ts-check
 
-  it('should set up the nx next server builder', async () => {
-    const name = uniq();
-    await applicationGenerator(tree, {
-      name,
-      style: 'css',
-      projectNameAndRootFormat: 'as-provided',
-    });
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const { composePlugins, withNx } = require('@nx/next');
 
-    const projectConfiguration = readProjectConfiguration(tree, name);
-    expect(projectConfiguration.targets.serve.executor).toEqual(
-      '@nx/next:server'
-    );
-    expect(projectConfiguration.targets.serve.options).toEqual({
-      buildTarget: `${name}:build`,
-      dev: true,
-    });
-    expect(projectConfiguration.targets.serve.configurations).toEqual({
-      development: {
-        buildTarget: `${name}:build:development`,
-        dev: true,
-      },
-      production: { dev: false, buildTarget: `${name}:build:production` },
-    });
-  });
+      /**
+       * @type {import('@nx/next/plugins/with-nx').WithNxOptions}
+       **/
+      const nextConfig = {
+        nx: {
+          // Set this to true if you would like to use SVGR
+          // See: https://github.com/gregberge/svgr
+          svgr: false,
+        },
+      };
 
-  it('should set up the nx next export builder', async () => {
-    const name = uniq();
+      const plugins = [
+        // Add more Next.js plugins to this list if needed.
+        withNx,
+      ];
 
-    await applicationGenerator(tree, {
-      name,
-      style: 'css',
-      projectNameAndRootFormat: 'as-provided',
-    });
-
-    const projectConfiguration = readProjectConfiguration(tree, name);
-    expect(projectConfiguration.targets.export.executor).toEqual(
-      '@nx/next:export'
-    );
-    expect(projectConfiguration.targets.export.options).toEqual({
-      buildTarget: `${name}:build:production`,
-    });
+      module.exports = composePlugins(...plugins)(nextConfig);
+      "
+    `);
   });
 
   describe('--unit-test-runner none', () => {
@@ -698,6 +676,78 @@ describe('app', () => {
         `
         );
       });
+
+      it('should scope tsconfig to the src/ project directory', async () => {
+        const name = uniq();
+
+        await applicationGenerator(tree, {
+          name,
+          style: 'css',
+          appDir: true,
+          rootProject: true,
+          projectNameAndRootFormat: 'as-provided',
+          src: true,
+        });
+
+        const tsconfigJSON = readJson(tree, `tsconfig.json`);
+
+        expect(tsconfigJSON.include).toEqual([
+          'src/**/*.ts',
+          'src/**/*.tsx',
+          'src/**/*.js',
+          'src/**/*.jsx',
+          '.next/types/**/*.ts',
+          `dist/${name}/.next/types/**/*.ts`,
+          'next-env.d.ts',
+        ]);
+      });
+
+      it('should scope tsconfig to the app/ project directory', async () => {
+        const name = uniq();
+
+        await applicationGenerator(tree, {
+          name,
+          style: 'css',
+          appDir: true,
+          rootProject: true,
+          projectNameAndRootFormat: 'as-provided',
+          src: false,
+        });
+
+        const tsconfigJSON = readJson(tree, `tsconfig.json`);
+
+        expect(tsconfigJSON.include).toEqual([
+          'app/**/*.ts',
+          'app/**/*.tsx',
+          'app/**/*.js',
+          'app/**/*.jsx',
+          '.next/types/**/*.ts',
+          `dist/${name}/.next/types/**/*.ts`,
+          'next-env.d.ts',
+        ]);
+      });
+
+      it('should scope tsconfig to the pages/ project directory', async () => {
+        const name = uniq();
+
+        await applicationGenerator(tree, {
+          name,
+          style: 'css',
+          appDir: false,
+          rootProject: true,
+          projectNameAndRootFormat: 'as-provided',
+          src: false,
+        });
+
+        const tsconfigJSON = readJson(tree, `tsconfig.json`);
+        expect(tsconfigJSON.include).toEqual([
+          'pages/**/*.ts',
+          'pages/**/*.tsx',
+          'pages/**/*.js',
+          'pages/**/*.jsx',
+          'next-env.d.ts',
+        ]);
+      });
     });
   });
 
@@ -726,9 +776,9 @@ describe('app', () => {
   });
 });
 
-describe('app with Project Configuration V3 enabeled', () => {
+describe('app (legacy)', () => {
   let tree: Tree;
-  let originalPVC3;
+  let originalEnv;
 
   const schema: Schema = {
     name: 'app',
@@ -741,19 +791,19 @@ describe('app with Project Configuration V3 enabeled', () => {
 
   beforeAll(() => {
     tree = createTreeWithEmptyWorkspace();
-    originalPVC3 = process.env['NX_PCV3'];
-    process.env['NX_PCV3'] = 'true';
+    originalEnv = process.env['NX_ADD_PLUGINS'];
+    process.env['NX_ADD_PLUGINS'] = 'false';
   });
 
   afterAll(() => {
-    if (originalPVC3) {
-      process.env['NX_PCV3'] = originalPVC3;
+    if (originalEnv) {
+      process.env['NX_ADD_PLUGINS'] = originalEnv;
     } else {
-      delete process.env['NX_PCV3'];
+      delete process.env['NX_ADD_PLUGINS'];
     }
   });
 
-  it('should not generate build serve and export targets', async () => {
+  it('should generate build serve and export targets', async () => {
     const name = uniq();
 
     await applicationGenerator(tree, {
@@ -762,9 +812,9 @@ describe('app with Project Configuration V3 enabeled', () => {
     });
 
     const projectConfiguration = readProjectConfiguration(tree, name);
-    expect(projectConfiguration.targets.build).toBeUndefined();
-    expect(projectConfiguration.targets.serve).toBeUndefined();
-    expect(projectConfiguration.targets.export).toBeUndefined();
+    expect(projectConfiguration.targets.build).toBeDefined();
+    expect(projectConfiguration.targets.serve).toBeDefined();
+    expect(projectConfiguration.targets.export).toBeDefined();
   });
 });
 

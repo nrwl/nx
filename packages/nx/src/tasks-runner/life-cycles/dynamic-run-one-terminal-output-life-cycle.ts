@@ -9,6 +9,10 @@ import { Task } from '../../config/task-graph';
 import { formatFlags, formatTargetsAndProjects } from './formatting-utils';
 import { viewLogsFooterRows } from './view-logs-utils';
 
+const LEFT_PAD = `   `;
+const SPACER = `  `;
+const EXTENDED_LEFT_PAD = `      `;
+
 /**
  * As tasks are completed the overall state moves from:
  * 1. EXECUTING_DEPENDENT_TARGETS (dynamic lines, including a spinner are reprinted, task outputs not shown)
@@ -43,6 +47,10 @@ export async function createRunOneDynamicOutputRenderer({
   overrides: Record<string, unknown>;
 }): Promise<{ lifeCycle: LifeCycle; renderIsDone: Promise<void> }> {
   cliCursor.hide();
+  // Show the cursor again after the process exits
+  process.on('exit', () => {
+    cliCursor.show();
+  });
   let resolveRenderIsDonePromise: (value: void) => void;
   const renderIsDone = new Promise<void>(
     (resolve) => (resolveRenderIsDonePromise = resolve)
@@ -98,8 +106,7 @@ export async function createRunOneDynamicOutputRenderer({
   const renderLines = (
     lines: string[],
     dividerColor = 'cyan',
-    renderDivider = true,
-    skipPadding = false
+    renderDivider = true
   ) => {
     let additionalLines = 0;
     if (renderDivider) {
@@ -111,7 +118,7 @@ export async function createRunOneDynamicOutputRenderer({
       lines.push('');
     }
     for (const line of lines) {
-      output.overwriteLine((skipPadding ? '' : output.X_PADDING) + line);
+      output.overwriteLine(line);
     }
     dependentTargetsNumLines = lines.length + additionalLines;
     // clear any possible text below the cursor's position
@@ -134,9 +141,9 @@ export async function createRunOneDynamicOutputRenderer({
       case 'EXECUTING_DEPENDENT_TARGETS':
         if (totalFailedTasks === 0) {
           linesToRender.push(
-            `   ${output.colors.cyan(
+            `${LEFT_PAD}${output.colors.cyan(
               dots.frames[dependentTargetsCurrentFrame]
-            )}    ${output.dim(
+            )}${SPACER}${output.dim(
               `Nx is waiting on ${remainingDependentTasksNotFromInitiatingProject} dependent project tasks before running tasks from`
             )} ${initiatingProject}${output.dim('...')}`
           );
@@ -150,9 +157,9 @@ export async function createRunOneDynamicOutputRenderer({
     if (totalFailedTasks > 0) {
       linesToRender.push(
         output.colors.red.dim(
-          `   ${output.colors.red(
+          `${LEFT_PAD}${output.colors.red(
             figures.cross
-          )}    ${totalFailedTasks}${`/${totalCompletedTasks}`} dependent project tasks failed (see below)`
+          )}${SPACER}${totalFailedTasks}${`/${totalCompletedTasks}`} dependent project tasks failed (see below)`
         )
       );
     }
@@ -160,9 +167,9 @@ export async function createRunOneDynamicOutputRenderer({
     if (totalSuccessfulTasks > 0) {
       linesToRender.push(
         output.dim(
-          `   ${output.dim(
+          `${LEFT_PAD}${output.dim(
             figures.tick
-          )}    ${totalSuccessfulTasks}${`/${totalCompletedTasks}`} dependent project tasks succeeded ${output.dim(
+          )}${SPACER}${totalSuccessfulTasks}${`/${totalCompletedTasks}`} dependent project tasks succeeded ${output.dim(
             `[${totalCachedTasks} read from cache]`
           )}`
         )
@@ -175,8 +182,7 @@ export async function createRunOneDynamicOutputRenderer({
       renderLines(
         linesToRender,
         'gray',
-        renderDivider && state !== 'EXECUTING_DEPENDENT_TARGETS',
-        true
+        renderDivider && state !== 'EXECUTING_DEPENDENT_TARGETS'
       );
     } else {
       renderLines([]);
@@ -200,7 +206,7 @@ export async function createRunOneDynamicOutputRenderer({
         if (totalDependentTasksNotFromInitiatingProject > 0) {
           output.addNewline();
           process.stdout.write(
-            `   ${output.dim(
+            `${LEFT_PAD}${output.dim(
               'Hint: you can run the command with'
             )} --verbose ${output.dim(
               'to see the full dependent project outputs'
@@ -223,8 +229,7 @@ export async function createRunOneDynamicOutputRenderer({
 
   lifeCycle.printTaskTerminalOutput = (task, cacheStatus, terminalOutput) => {
     if (task.target.project === initiatingProject) {
-      output.logCommand(task.id, cacheStatus);
-      process.stdout.write(terminalOutput);
+      output.logCommandOutput(task.id, cacheStatus, terminalOutput);
     } else {
       tasksToTerminalOutputs[task.id] = terminalOutput;
     }
@@ -254,8 +259,11 @@ export async function createRunOneDynamicOutputRenderer({
             clearRenderInterval();
             renderDependentTargets(false);
             output.addVerticalSeparator('red');
-            output.logCommand(t.task.id, t.status);
-            process.stdout.write(tasksToTerminalOutputs[t.task.id]);
+            output.logCommandOutput(
+              t.task.id,
+              t.status,
+              tasksToTerminalOutputs[t.task.id]
+            );
           }
           break;
       }
@@ -278,14 +286,13 @@ export async function createRunOneDynamicOutputRenderer({
 
       const taskOverridesLines = [];
       if (Object.keys(overrides).length > 0) {
-        const leftPadding = `${output.X_PADDING}       `;
         taskOverridesLines.push('');
         taskOverridesLines.push(
-          `${leftPadding}${output.dim.green('With additional flags:')}`
+          `${EXTENDED_LEFT_PAD}${output.dim.green('With additional flags:')}`
         );
         Object.entries(overrides)
           .map(([flag, value]) =>
-            output.dim.green(formatFlags(leftPadding, flag, value))
+            output.dim.green(formatFlags(EXTENDED_LEFT_PAD, flag, value))
           )
           .forEach((arg) => taskOverridesLines.push(arg));
       }
@@ -300,7 +307,7 @@ export async function createRunOneDynamicOutputRenderer({
       if (totalCachedTasks > 0) {
         pinnedFooterLines.push(
           output.dim(
-            `${EOL}   Nx read the output from the cache instead of running the command for ${totalCachedTasks} out of ${totalTasks} tasks.`
+            `${EOL}Nx read the output from the cache instead of running the command for ${totalCachedTasks} out of ${totalTasks} tasks.`
           )
         );
       }
@@ -319,14 +326,13 @@ export async function createRunOneDynamicOutputRenderer({
 
       const taskOverridesLines = [];
       if (Object.keys(overrides).length > 0) {
-        const leftPadding = `${output.X_PADDING}       `;
         taskOverridesLines.push('');
         taskOverridesLines.push(
-          `${leftPadding}${output.dim.red('With additional flags:')}`
+          `${EXTENDED_LEFT_PAD}${output.dim.red('With additional flags:')}`
         );
         Object.entries(overrides)
           .map(([flag, value]) =>
-            output.dim.red(formatFlags(leftPadding, flag, value))
+            output.dim.red(formatFlags(EXTENDED_LEFT_PAD, flag, value))
           )
           .forEach((arg) => taskOverridesLines.push(arg));
       }
@@ -341,12 +347,12 @@ export async function createRunOneDynamicOutputRenderer({
           ),
           ...taskOverridesLines,
           '',
-          `   ${output.colors.red(
+          `${LEFT_PAD}${output.colors.red(
             figures.cross
-          )}    ${totalFailedTasks}${`/${totalCompletedTasks}`} failed`,
-          `   ${output.dim(
+          )}${SPACER}${totalFailedTasks}${`/${totalCompletedTasks}`} failed`,
+          `${LEFT_PAD}${output.dim(
             figures.tick
-          )}    ${totalSuccessfulTasks}${`/${totalCompletedTasks}`} succeeded ${output.dim(
+          )}${SPACER}${totalSuccessfulTasks}${`/${totalCompletedTasks}`} succeeded ${output.dim(
             `[${totalCachedTasks} read from cache]`
           )}`,
           ...viewLogs,

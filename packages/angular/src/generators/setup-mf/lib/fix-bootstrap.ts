@@ -11,20 +11,20 @@ export function fixBootstrap(tree: Tree, appRoot: string, options: Schema) {
     tree.write(joinPathFragments(appRoot, 'src/bootstrap.ts'), bootstrapCode);
   }
 
-  const bootstrapImportCode = `import('./bootstrap').catch(err => console.error(err));`;
+  const bootstrapImportCode = `import('./bootstrap').catch(err => console.error(err))`;
 
   const fetchMFManifestCode = `import { setRemoteDefinitions } from '@nx/angular/mf';
 
 fetch('/assets/module-federation.manifest.json')
   .then((res) => res.json())
   .then(definitions => setRemoteDefinitions(definitions))
-  .then(() => ${bootstrapImportCode})`;
+  .then(() => ${bootstrapImportCode});`;
 
   tree.write(
     mainFilePath,
     options.mfType === 'host' && options.federationType === 'dynamic'
       ? fetchMFManifestCode
-      : bootstrapImportCode
+      : `${bootstrapImportCode};`
   );
 }
 

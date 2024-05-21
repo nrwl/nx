@@ -1,5 +1,5 @@
 <% if (webpackPluginOptions) { %>
-const { NxWebpackPlugin } = require('@nx/webpack');
+const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
 const { join } = require('path');
 
 module.exports = {
@@ -10,8 +10,9 @@ module.exports = {
     port: 4200
   },
   plugins: [
-    new NxWebpackPlugin({
+    new NxAppWebpackPlugin({
       tsConfig: '<%= webpackPluginOptions.tsConfig %>',
+      compiler: '<%= webpackPluginOptions.compiler %>',
       main: '<%= webpackPluginOptions.main %>',
       index: '<%= webpackPluginOptions.index %>',
       baseHref: '<%= webpackPluginOptions.baseHref %>',

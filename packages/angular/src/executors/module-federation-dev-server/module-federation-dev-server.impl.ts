@@ -7,7 +7,8 @@ import { type Schema } from './schema';
 import {
   buildStaticRemotes,
   normalizeOptions,
-  startDevRemotes,
+  parseStaticRemotesConfig,
+  startRemotes,
   startStaticRemotesFileServer,
 } from './lib';
 import { eachValueFrom } from '@nx/devkit/src/utils/rxjs-for-await';
@@ -107,8 +108,12 @@ export async function* moduleFederationDevServerExecutor(
     'angular'
   );
 
+  const remoteNames = options.devRemotes?.map((r) =>
+    typeof r === 'string' ? r : r.remoteName
+  );
+
   const remotes = getRemotes(
-    options.devRemotes,
+    remoteNames,
     options.skipRemotes,
     moduleFederationConfig,
     {
@@ -121,8 +126,10 @@ export async function* moduleFederationDevServerExecutor(
 
   if (remotes.devRemotes.length > 0 && !schema.staticRemotesPort) {
     options.staticRemotesPort = options.devRemotes.reduce((portToUse, r) => {
+      const remoteName = typeof r === 'string' ? r : r.remoteName;
       const remotePort =
-        context.projectGraph.nodes[r].data.targets['serve'].options.port;
+        context.projectGraph.nodes[remoteName].data.targets['serve'].options
+          .port;
       if (remotePort >= portToUse) {
         return remotePort + 1;
       } else {
@@ -131,18 +138,31 @@ export async function* moduleFederationDevServerExecutor(
     }, options.staticRemotesPort);
   }
 
-  await buildStaticRemotes(remotes, nxBin, context, options);
+  const staticRemotesConfig = parseStaticRemotesConfig(
+    remotes.staticRemotes,
+    context
+  );
+  await buildStaticRemotes(staticRemotesConfig, nxBin, context, options);
 
-  const devRemoteIters = await startDevRemotes(
-    remotes,
+  const devRemoteIters = await startRemotes(
+    remotes.devRemotes,
     workspaceProjects,
     options,
-    context
+    context,
+    'serve'
+  );
+
+  const dynamicRemoteIters = await startRemotes(
+    remotes.dynamicRemotes,
+    workspaceProjects,
+    options,
+    context,
+    'serve-static'
   );
 
   const staticRemotesIter =
     remotes.staticRemotes.length > 0
-      ? startStaticRemotesFileServer(remotes, context, options)
+      ? startStaticRemotesFileServer(staticRemotesConfig, context, options)
       : undefined;
 
   const removeBaseUrlEmission = (iter: AsyncIterable<unknown>) =>
@@ -154,6 +174,7 @@ export async function* moduleFederationDevServerExecutor(
   return yield* combineAsyncIterables(
     removeBaseUrlEmission(currIter),
     ...devRemoteIters.map(removeBaseUrlEmission),
+    ...dynamicRemoteIters.map(removeBaseUrlEmission),
     ...(staticRemotesIter ? [removeBaseUrlEmission(staticRemotesIter)] : []),
     createAsyncIterable<{ success: true; baseUrl: string }>(
       async ({ next, done }) => {
@@ -187,9 +208,12 @@ export async function* moduleFederationDevServerExecutor(
             `NX All remotes started, server ready at http://localhost:${options.port}`
           );
           next({ success: true, baseUrl: `http://localhost:${options.port}` });
-        } catch {
+        } catch (err) {
           throw new Error(
-            `Timed out waiting for remote to start. Check above for any errors.`
+            `Failed to start remotes. Check above for any errors.`,
+            {
+              cause: err,
+            }
           );
         } finally {
           done();

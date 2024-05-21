@@ -3,6 +3,7 @@ import {
   joinPathFragments,
   logger,
   normalizePath,
+  readNxJson,
   Tree,
 } from '@nx/devkit';
 import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
@@ -26,6 +27,12 @@ export async function normalizeOptions(
     projectNameAndRootFormat: options.projectNameAndRootFormat,
     callingGenerator: '@nx/react:library',
   });
+  const nxJson = readNxJson(host);
+  const addPlugin =
+    process.env.NX_ADD_PLUGINS !== 'false' &&
+    nxJson.useInferencePlugins !== false;
+
+  options.addPlugin ??= addPlugin;
 
   const fileName = options.simpleName
     ? projectNames.projectSimpleName
@@ -81,7 +88,7 @@ export async function normalizeOptions(
     }
 
     normalized.appMain =
-      appProjectConfig.targets.build.options.main ??
+      appProjectConfig.targets.build?.options?.main ??
       findMainEntry(host, appProjectConfig.root);
     normalized.appSourceRoot = normalizePath(appProjectConfig.sourceRoot);
 

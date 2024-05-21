@@ -18,7 +18,7 @@ The `runtimeCacheInputs` property was used as a way to add extra inputs to the N
 }
 ```
 
-Instead of specifying the runtime inputs in `tasksRunnerOptions`, you can now include them as runtime inputs in the standard [`inputs` and `namedInputs` area of your project configuration](/reference/project-configuration#inputs-&-namedinputs) or [`nx.json`](/reference/nx-json#inputs-&-namedinputs).
+Instead of specifying the runtime inputs in `tasksRunnerOptions`, in Nx 14.4 you can include them as runtime inputs in the standard [`inputs` and `namedInputs` area of your project configuration](/reference/project-configuration#inputs-and-named-inputs) or [`nx.json`](/reference/nx-json#inputs-namedinputs).
 
 The new style looks like this:
 

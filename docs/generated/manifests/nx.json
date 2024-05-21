@@ -40,6 +40,17 @@
         "tags": []
       },
       {
+        "id": "editor-setup",
+        "name": "Editor Setup",
+        "description": "Learn about Nx Console, an extension for VS Code and WebStorm.",
+        "mediaImage": "",
+        "file": "shared/getting-started/editor-setup",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/getting-started/editor-setup",
+        "tags": ["editor-setup"]
+      },
+      {
         "id": "tutorials",
         "name": "Tutorials",
         "description": "Get started with basic information, concepts and tutorials.",
@@ -47,25 +58,14 @@
         "file": "",
         "itemList": [
           {
-            "id": "package-based-repo-tutorial",
-            "name": "Package-Based Monorepo",
+            "id": "npm-workspaces-tutorial",
+            "name": "NPM Workspaces Monorepo",
             "description": "",
             "mediaImage": "",
-            "file": "shared/npm-tutorial/package-based",
+            "file": "shared/tutorials/npm-workspaces",
             "itemList": [],
             "isExternal": false,
-            "path": "/getting-started/tutorials/package-based-repo-tutorial",
-            "tags": []
-          },
-          {
-            "id": "integrated-repo-tutorial",
-            "name": "Integrated Monorepo",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/npm-tutorial/integrated",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/getting-started/tutorials/integrated-repo-tutorial",
+            "path": "/getting-started/tutorials/npm-workspaces-tutorial",
             "tags": []
           },
           {
@@ -73,7 +73,7 @@
             "name": "React Standalone",
             "description": "",
             "mediaImage": "",
-            "file": "shared/react-standalone-tutorial/react-standalone",
+            "file": "shared/tutorials/react-standalone",
             "itemList": [],
             "isExternal": false,
             "path": "/getting-started/tutorials/react-standalone-tutorial",
@@ -84,7 +84,7 @@
             "name": "React Monorepo",
             "description": "",
             "mediaImage": "",
-            "file": "shared/react-tutorial/react-monorepo",
+            "file": "shared/tutorials/react-monorepo",
             "itemList": [],
             "isExternal": false,
             "path": "/getting-started/tutorials/react-monorepo-tutorial",
@@ -95,7 +95,7 @@
             "name": "Angular Standalone",
             "description": "",
             "mediaImage": "",
-            "file": "shared/angular-standalone-tutorial/angular-standalone",
+            "file": "shared/tutorials/angular-standalone",
             "itemList": [],
             "isExternal": false,
             "path": "/getting-started/tutorials/angular-standalone-tutorial",
@@ -106,7 +106,7 @@
             "name": "Angular Monorepo",
             "description": "",
             "mediaImage": "",
-            "file": "shared/angular-tutorial/angular-monorepo",
+            "file": "shared/tutorials/angular-monorepo",
             "itemList": [],
             "isExternal": false,
             "path": "/getting-started/tutorials/angular-monorepo-tutorial",
@@ -117,21 +117,21 @@
             "name": "Vue Standalone",
             "description": "",
             "mediaImage": "",
-            "file": "shared/vue-standalone-tutorial/vue-standalone",
+            "file": "shared/tutorials/vue-standalone",
             "itemList": [],
             "isExternal": false,
             "path": "/getting-started/tutorials/vue-standalone-tutorial",
             "tags": []
           },
           {
-            "id": "node-server-tutorial",
-            "name": "Node Standalone",
+            "id": "gradle-tutorial",
+            "name": "Gradle Monorepo",
             "description": "",
             "mediaImage": "",
-            "file": "shared/node-server-tutorial/1-code-generation",
+            "file": "shared/tutorials/gradle",
             "itemList": [],
             "isExternal": false,
-            "path": "/getting-started/tutorials/node-server-tutorial",
+            "path": "/getting-started/tutorials/gradle-tutorial",
             "tags": []
           }
         ],
@@ -177,6 +177,17 @@
     "path": "/getting-started/why-nx",
     "tags": []
   },
+  "/getting-started/editor-setup": {
+    "id": "editor-setup",
+    "name": "Editor Setup",
+    "description": "Learn about Nx Console, an extension for VS Code and WebStorm.",
+    "mediaImage": "",
+    "file": "shared/getting-started/editor-setup",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/getting-started/editor-setup",
+    "tags": ["editor-setup"]
+  },
   "/getting-started/tutorials": {
     "id": "tutorials",
     "name": "Tutorials",
@@ -185,25 +196,14 @@
     "file": "",
     "itemList": [
       {
-        "id": "package-based-repo-tutorial",
-        "name": "Package-Based Monorepo",
+        "id": "npm-workspaces-tutorial",
+        "name": "NPM Workspaces Monorepo",
         "description": "",
         "mediaImage": "",
-        "file": "shared/npm-tutorial/package-based",
+        "file": "shared/tutorials/npm-workspaces",
         "itemList": [],
         "isExternal": false,
-        "path": "/getting-started/tutorials/package-based-repo-tutorial",
-        "tags": []
-      },
-      {
-        "id": "integrated-repo-tutorial",
-        "name": "Integrated Monorepo",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/npm-tutorial/integrated",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/getting-started/tutorials/integrated-repo-tutorial",
+        "path": "/getting-started/tutorials/npm-workspaces-tutorial",
         "tags": []
       },
       {
@@ -211,7 +211,7 @@
         "name": "React Standalone",
         "description": "",
         "mediaImage": "",
-        "file": "shared/react-standalone-tutorial/react-standalone",
+        "file": "shared/tutorials/react-standalone",
         "itemList": [],
         "isExternal": false,
         "path": "/getting-started/tutorials/react-standalone-tutorial",
@@ -222,7 +222,7 @@
         "name": "React Monorepo",
         "description": "",
         "mediaImage": "",
-        "file": "shared/react-tutorial/react-monorepo",
+        "file": "shared/tutorials/react-monorepo",
         "itemList": [],
         "isExternal": false,
         "path": "/getting-started/tutorials/react-monorepo-tutorial",
@@ -233,7 +233,7 @@
         "name": "Angular Standalone",
         "description": "",
         "mediaImage": "",
-        "file": "shared/angular-standalone-tutorial/angular-standalone",
+        "file": "shared/tutorials/angular-standalone",
         "itemList": [],
         "isExternal": false,
         "path": "/getting-started/tutorials/angular-standalone-tutorial",
@@ -244,7 +244,7 @@
         "name": "Angular Monorepo",
         "description": "",
         "mediaImage": "",
-        "file": "shared/angular-tutorial/angular-monorepo",
+        "file": "shared/tutorials/angular-monorepo",
         "itemList": [],
         "isExternal": false,
         "path": "/getting-started/tutorials/angular-monorepo-tutorial",
@@ -255,21 +255,21 @@
         "name": "Vue Standalone",
         "description": "",
         "mediaImage": "",
-        "file": "shared/vue-standalone-tutorial/vue-standalone",
+        "file": "shared/tutorials/vue-standalone",
         "itemList": [],
         "isExternal": false,
         "path": "/getting-started/tutorials/vue-standalone-tutorial",
         "tags": []
       },
       {
-        "id": "node-server-tutorial",
-        "name": "Node Standalone",
+        "id": "gradle-tutorial",
+        "name": "Gradle Monorepo",
         "description": "",
         "mediaImage": "",
-        "file": "shared/node-server-tutorial/1-code-generation",
+        "file": "shared/tutorials/gradle",
         "itemList": [],
         "isExternal": false,
-        "path": "/getting-started/tutorials/node-server-tutorial",
+        "path": "/getting-started/tutorials/gradle-tutorial",
         "tags": []
       }
     ],
@@ -277,26 +277,15 @@
     "path": "/getting-started/tutorials",
     "tags": []
   },
-  "/getting-started/tutorials/package-based-repo-tutorial": {
-    "id": "package-based-repo-tutorial",
-    "name": "Package-Based Monorepo",
+  "/getting-started/tutorials/npm-workspaces-tutorial": {
+    "id": "npm-workspaces-tutorial",
+    "name": "NPM Workspaces Monorepo",
     "description": "",
     "mediaImage": "",
-    "file": "shared/npm-tutorial/package-based",
+    "file": "shared/tutorials/npm-workspaces",
     "itemList": [],
     "isExternal": false,
-    "path": "/getting-started/tutorials/package-based-repo-tutorial",
-    "tags": []
-  },
-  "/getting-started/tutorials/integrated-repo-tutorial": {
-    "id": "integrated-repo-tutorial",
-    "name": "Integrated Monorepo",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/npm-tutorial/integrated",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/getting-started/tutorials/integrated-repo-tutorial",
+    "path": "/getting-started/tutorials/npm-workspaces-tutorial",
     "tags": []
   },
   "/getting-started/tutorials/react-standalone-tutorial": {
@@ -304,7 +293,7 @@
     "name": "React Standalone",
     "description": "",
     "mediaImage": "",
-    "file": "shared/react-standalone-tutorial/react-standalone",
+    "file": "shared/tutorials/react-standalone",
     "itemList": [],
     "isExternal": false,
     "path": "/getting-started/tutorials/react-standalone-tutorial",
@@ -315,7 +304,7 @@
     "name": "React Monorepo",
     "description": "",
     "mediaImage": "",
-    "file": "shared/react-tutorial/react-monorepo",
+    "file": "shared/tutorials/react-monorepo",
     "itemList": [],
     "isExternal": false,
     "path": "/getting-started/tutorials/react-monorepo-tutorial",
@@ -326,7 +315,7 @@
     "name": "Angular Standalone",
     "description": "",
     "mediaImage": "",
-    "file": "shared/angular-standalone-tutorial/angular-standalone",
+    "file": "shared/tutorials/angular-standalone",
     "itemList": [],
     "isExternal": false,
     "path": "/getting-started/tutorials/angular-standalone-tutorial",
@@ -337,7 +326,7 @@
     "name": "Angular Monorepo",
     "description": "",
     "mediaImage": "",
-    "file": "shared/angular-tutorial/angular-monorepo",
+    "file": "shared/tutorials/angular-monorepo",
     "itemList": [],
     "isExternal": false,
     "path": "/getting-started/tutorials/angular-monorepo-tutorial",
@@ -348,436 +337,26 @@
     "name": "Vue Standalone",
     "description": "",
     "mediaImage": "",
-    "file": "shared/vue-standalone-tutorial/vue-standalone",
+    "file": "shared/tutorials/vue-standalone",
     "itemList": [],
     "isExternal": false,
     "path": "/getting-started/tutorials/vue-standalone-tutorial",
     "tags": []
   },
-  "/getting-started/tutorials/node-server-tutorial": {
-    "id": "node-server-tutorial",
-    "name": "Node Standalone",
+  "/getting-started/tutorials/gradle-tutorial": {
+    "id": "gradle-tutorial",
+    "name": "Gradle Monorepo",
     "description": "",
     "mediaImage": "",
-    "file": "shared/node-server-tutorial/1-code-generation",
+    "file": "shared/tutorials/gradle",
     "itemList": [],
     "isExternal": false,
-    "path": "/getting-started/tutorials/node-server-tutorial",
+    "path": "/getting-started/tutorials/gradle-tutorial",
     "tags": []
   },
-  "/core-tutorial": {
-    "id": "core-tutorial",
-    "name": "Core Tutorial",
-    "description": "Learn to use Nx with this core tutorial where you will learn about all its main feature with a real project.",
-    "mediaImage": "",
-    "file": "",
-    "itemList": [
-      {
-        "id": "01-create-blog",
-        "name": "1 - Create Blog",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/core-tutorial/01-create-blog",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/core-tutorial/01-create-blog",
-        "tags": []
-      },
-      {
-        "id": "02-create-cli",
-        "name": "2 - Create CLI",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/core-tutorial/02-create-cli",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/core-tutorial/02-create-cli",
-        "tags": []
-      },
-      {
-        "id": "03-share-assets",
-        "name": "3 - Share Assets",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/core-tutorial/03-share-assets",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/core-tutorial/03-share-assets",
-        "tags": []
-      },
-      {
-        "id": "04-build-affected-projects",
-        "name": "4 - Build Affected Projects",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/core-tutorial/04-build-affected-projects",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/core-tutorial/04-build-affected-projects",
-        "tags": []
-      },
-      {
-        "id": "05-auto-detect-dependencies",
-        "name": "5 - Automatically Detect Dependencies",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/core-tutorial/05-auto-detect-dependencies",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/core-tutorial/05-auto-detect-dependencies",
-        "tags": []
-      },
-      {
-        "id": "06-summary",
-        "name": "6 - Summary",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/core-tutorial/06-summary",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/core-tutorial/06-summary",
-        "tags": []
-      }
-    ],
-    "isExternal": false,
-    "path": "/core-tutorial",
-    "tags": []
-  },
-  "/core-tutorial/01-create-blog": {
-    "id": "01-create-blog",
-    "name": "1 - Create Blog",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/core-tutorial/01-create-blog",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/core-tutorial/01-create-blog",
-    "tags": []
-  },
-  "/core-tutorial/02-create-cli": {
-    "id": "02-create-cli",
-    "name": "2 - Create CLI",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/core-tutorial/02-create-cli",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/core-tutorial/02-create-cli",
-    "tags": []
-  },
-  "/core-tutorial/03-share-assets": {
-    "id": "03-share-assets",
-    "name": "3 - Share Assets",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/core-tutorial/03-share-assets",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/core-tutorial/03-share-assets",
-    "tags": []
-  },
-  "/core-tutorial/04-build-affected-projects": {
-    "id": "04-build-affected-projects",
-    "name": "4 - Build Affected Projects",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/core-tutorial/04-build-affected-projects",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/core-tutorial/04-build-affected-projects",
-    "tags": []
-  },
-  "/core-tutorial/05-auto-detect-dependencies": {
-    "id": "05-auto-detect-dependencies",
-    "name": "5 - Automatically Detect Dependencies",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/core-tutorial/05-auto-detect-dependencies",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/core-tutorial/05-auto-detect-dependencies",
-    "tags": []
-  },
-  "/core-tutorial/06-summary": {
-    "id": "06-summary",
-    "name": "6 - Summary",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/core-tutorial/06-summary",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/core-tutorial/06-summary",
-    "tags": []
-  },
-  "/angular-standalone-tutorial": {
-    "id": "angular-standalone-tutorial",
-    "name": "Angular Standalone Tutorial",
-    "description": "Learn to use Nx with this Angular tutorial where you will learn about all its main feature with a real project.",
-    "mediaImage": "",
-    "file": "",
-    "itemList": [
-      {
-        "id": "1-code-generation",
-        "name": "1 - Code Generation",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/angular-standalone-tutorial/1-code-generation",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/angular-standalone-tutorial/1-code-generation",
-        "tags": []
-      },
-      {
-        "id": "2-project-graph",
-        "name": "2 - Project Graph",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/angular-standalone-tutorial/2-project-graph",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/angular-standalone-tutorial/2-project-graph",
-        "tags": []
-      },
-      {
-        "id": "3-task-running",
-        "name": "3 - Task Running",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/angular-standalone-tutorial/3-task-running",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/angular-standalone-tutorial/3-task-running",
-        "tags": []
-      },
-      {
-        "id": "4-task-pipelines",
-        "name": "4 - Task Pipelines",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/angular-standalone-tutorial/4-task-pipelines",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/angular-standalone-tutorial/4-task-pipelines",
-        "tags": []
-      },
-      {
-        "id": "5-summary",
-        "name": "5 - Summary",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/angular-standalone-tutorial/5-summary",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/angular-standalone-tutorial/5-summary",
-        "tags": []
-      }
-    ],
-    "isExternal": false,
-    "path": "/angular-standalone-tutorial",
-    "tags": []
-  },
-  "/angular-standalone-tutorial/1-code-generation": {
-    "id": "1-code-generation",
-    "name": "1 - Code Generation",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/angular-standalone-tutorial/1-code-generation",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/angular-standalone-tutorial/1-code-generation",
-    "tags": []
-  },
-  "/angular-standalone-tutorial/2-project-graph": {
-    "id": "2-project-graph",
-    "name": "2 - Project Graph",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/angular-standalone-tutorial/2-project-graph",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/angular-standalone-tutorial/2-project-graph",
-    "tags": []
-  },
-  "/angular-standalone-tutorial/3-task-running": {
-    "id": "3-task-running",
-    "name": "3 - Task Running",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/angular-standalone-tutorial/3-task-running",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/angular-standalone-tutorial/3-task-running",
-    "tags": []
-  },
-  "/angular-standalone-tutorial/4-task-pipelines": {
-    "id": "4-task-pipelines",
-    "name": "4 - Task Pipelines",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/angular-standalone-tutorial/4-task-pipelines",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/angular-standalone-tutorial/4-task-pipelines",
-    "tags": []
-  },
-  "/angular-standalone-tutorial/5-summary": {
-    "id": "5-summary",
-    "name": "5 - Summary",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/angular-standalone-tutorial/5-summary",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/angular-standalone-tutorial/5-summary",
-    "tags": []
-  },
-  "/node-server-tutorial": {
-    "id": "node-server-tutorial",
-    "name": "Node Server Tutorial",
-    "description": "Learn to use Nx with this Node Server Tutorial where you will learn about all its main feature with a real project.",
-    "mediaImage": "",
-    "file": "",
-    "itemList": [
-      {
-        "id": "1-code-generation",
-        "name": "1 - Code Generation",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/node-server-tutorial/1-code-generation",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/node-server-tutorial/1-code-generation",
-        "tags": []
-      },
-      {
-        "id": "2-project-graph",
-        "name": "2 - Project Graph",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/node-server-tutorial/2-project-graph",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/node-server-tutorial/2-project-graph",
-        "tags": []
-      },
-      {
-        "id": "3-task-running",
-        "name": "3 - Task Running",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/node-server-tutorial/3-task-running",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/node-server-tutorial/3-task-running",
-        "tags": []
-      },
-      {
-        "id": "4-task-pipelines",
-        "name": "4 - Task Pipelines",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/node-server-tutorial/4-task-pipelines",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/node-server-tutorial/4-task-pipelines",
-        "tags": []
-      },
-      {
-        "id": "5-docker-target",
-        "name": "5 - Docker Target",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/node-server-tutorial/5-docker-target",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/node-server-tutorial/5-docker-target",
-        "tags": []
-      },
-      {
-        "id": "6-summary",
-        "name": "6 - Summary",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/node-server-tutorial/6-summary",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/node-server-tutorial/6-summary",
-        "tags": []
-      }
-    ],
-    "isExternal": false,
-    "path": "/node-server-tutorial",
-    "tags": []
-  },
-  "/node-server-tutorial/1-code-generation": {
-    "id": "1-code-generation",
-    "name": "1 - Code Generation",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/node-server-tutorial/1-code-generation",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/node-server-tutorial/1-code-generation",
-    "tags": []
-  },
-  "/node-server-tutorial/2-project-graph": {
-    "id": "2-project-graph",
-    "name": "2 - Project Graph",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/node-server-tutorial/2-project-graph",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/node-server-tutorial/2-project-graph",
-    "tags": []
-  },
-  "/node-server-tutorial/3-task-running": {
-    "id": "3-task-running",
-    "name": "3 - Task Running",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/node-server-tutorial/3-task-running",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/node-server-tutorial/3-task-running",
-    "tags": []
-  },
-  "/node-server-tutorial/4-task-pipelines": {
-    "id": "4-task-pipelines",
-    "name": "4 - Task Pipelines",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/node-server-tutorial/4-task-pipelines",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/node-server-tutorial/4-task-pipelines",
-    "tags": []
-  },
-  "/node-server-tutorial/5-docker-target": {
-    "id": "5-docker-target",
-    "name": "5 - Docker Target",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/node-server-tutorial/5-docker-target",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/node-server-tutorial/5-docker-target",
-    "tags": []
-  },
-  "/node-server-tutorial/6-summary": {
-    "id": "6-summary",
-    "name": "6 - Summary",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/node-server-tutorial/6-summary",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/node-server-tutorial/6-summary",
-    "tags": []
-  },
-  "/core-features": {
-    "id": "core-features",
-    "name": "Core Features",
+  "/features": {
+    "id": "features",
+    "name": "Features",
     "description": "Learn the core features of Nx with in depth guides.",
     "mediaImage": "",
     "file": "",
@@ -787,10 +366,10 @@
         "name": "Run Tasks",
         "description": "Learn about the various ways you can use Nx to run tasks in your workspace.",
         "mediaImage": "",
-        "file": "shared/core-features/run-tasks",
+        "file": "shared/features/run-tasks",
         "itemList": [],
         "isExternal": false,
-        "path": "/core-features/run-tasks",
+        "path": "/features/run-tasks",
         "tags": ["run-tasks", "cache-task-results"]
       },
       {
@@ -798,16 +377,260 @@
         "name": "Cache Task Results",
         "description": "Learn how to define cacheable tasks, how to fine-tune with inputs and outputs, where the cache is stored and much more.",
         "mediaImage": "",
-        "file": "shared/core-features/cache-task-results",
+        "file": "shared/features/cache-task-results",
         "itemList": [],
         "isExternal": false,
-        "path": "/core-features/cache-task-results",
+        "path": "/features/cache-task-results",
         "tags": ["cache-task-results"]
       },
       {
-        "id": "remote-cache",
-        "name": "Use Remote Caching",
+        "id": "explore-graph",
+        "name": "Explore your Workspace",
         "description": "",
+        "mediaImage": "",
+        "file": "shared/features/explore-graph",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/features/explore-graph",
+        "tags": ["explore-graph"]
+      },
+      {
+        "id": "generate-code",
+        "name": "Generate Code",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/features/generate-code",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/features/generate-code",
+        "tags": ["generate-code"]
+      },
+      {
+        "id": "automate-updating-dependencies",
+        "name": "Automate Updating Dependencies",
+        "description": "Learn how Nx provides automated update scripts to help you keep your workspace, tooling and framework dependencies up to date.",
+        "mediaImage": "",
+        "file": "shared/features/automate-updating-dependencies",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/features/automate-updating-dependencies",
+        "tags": ["automate-updating-dependencies"]
+      },
+      {
+        "id": "enforce-module-boundaries",
+        "name": "Enforce Module Boundaries",
+        "description": "Learn how to avoid dependency hell and scale a codebase by imposing constraints on your projects using the module boundary lint rule.",
+        "mediaImage": "",
+        "file": "shared/features/enforce-module-boundaries",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/features/enforce-module-boundaries",
+        "tags": ["enforce-module-boundaries"]
+      },
+      {
+        "id": "manage-releases",
+        "name": "Manage Releases",
+        "description": "Learn how Nx provides tools to help you manage releasing your projects.",
+        "mediaImage": "",
+        "file": "shared/features/manage-releases",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/features/manage-releases",
+        "tags": ["nx-release"]
+      },
+      {
+        "id": "ci-features",
+        "name": "CI Features",
+        "description": "Features of Nx and Nx Cloud that improve CI",
+        "mediaImage": "",
+        "file": "",
+        "itemList": [
+          {
+            "id": "affected",
+            "name": "Run Only Tasks Affected by a PR",
+            "description": "",
+            "mediaImage": "",
+            "file": "",
+            "itemList": [],
+            "isExternal": true,
+            "path": "/ci/features/affected",
+            "tags": []
+          },
+          {
+            "id": "remote-cache",
+            "name": "Use Remote Caching (Nx Replay)",
+            "description": "Learn how to enable remote caching s.t. you don't just benefit locally from it but also in CI.",
+            "mediaImage": "",
+            "file": "",
+            "itemList": [],
+            "isExternal": true,
+            "path": "/ci/features/remote-cache",
+            "tags": []
+          },
+          {
+            "id": "distribute-task-execution",
+            "name": "Distribute Task Execution (Nx Agents)",
+            "description": "Learn how to efficiently distribute tasks across machines to take full advantage of parallelization. Nx Agents make this a trivial task.",
+            "mediaImage": "",
+            "file": "",
+            "itemList": [],
+            "isExternal": true,
+            "path": "/ci/features/distribute-task-execution",
+            "tags": []
+          },
+          {
+            "id": "dynamic-agents",
+            "name": "Dynamically Allocate Agents",
+            "description": "",
+            "mediaImage": "",
+            "file": "",
+            "itemList": [],
+            "isExternal": true,
+            "path": "/ci/features/dynamic-agents",
+            "tags": []
+          },
+          {
+            "id": "split-e2e-tasks",
+            "name": "Automatically Split E2E Tasks",
+            "description": "",
+            "mediaImage": "",
+            "file": "",
+            "itemList": [],
+            "isExternal": true,
+            "path": "/ci/features/split-e2e-tasks",
+            "tags": []
+          },
+          {
+            "id": "flaky-tasks",
+            "name": "Identify and Re-run Flaky Tasks",
+            "description": "",
+            "mediaImage": "",
+            "file": "",
+            "itemList": [],
+            "isExternal": true,
+            "path": "/ci/features/flaky-tasks",
+            "tags": []
+          },
+          {
+            "id": "on-premise",
+            "name": "Set up Nx Cloud On-Premise",
+            "description": "Set up Nx Cloud on machines that you control",
+            "mediaImage": "",
+            "file": "",
+            "itemList": [],
+            "isExternal": true,
+            "path": "/ci/features/on-premise",
+            "tags": []
+          }
+        ],
+        "isExternal": false,
+        "path": "/features/ci-features",
+        "tags": []
+      }
+    ],
+    "isExternal": false,
+    "path": "/features",
+    "tags": []
+  },
+  "/features/run-tasks": {
+    "id": "run-tasks",
+    "name": "Run Tasks",
+    "description": "Learn about the various ways you can use Nx to run tasks in your workspace.",
+    "mediaImage": "",
+    "file": "shared/features/run-tasks",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/features/run-tasks",
+    "tags": ["run-tasks", "cache-task-results"]
+  },
+  "/features/cache-task-results": {
+    "id": "cache-task-results",
+    "name": "Cache Task Results",
+    "description": "Learn how to define cacheable tasks, how to fine-tune with inputs and outputs, where the cache is stored and much more.",
+    "mediaImage": "",
+    "file": "shared/features/cache-task-results",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/features/cache-task-results",
+    "tags": ["cache-task-results"]
+  },
+  "/features/explore-graph": {
+    "id": "explore-graph",
+    "name": "Explore your Workspace",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/features/explore-graph",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/features/explore-graph",
+    "tags": ["explore-graph"]
+  },
+  "/features/generate-code": {
+    "id": "generate-code",
+    "name": "Generate Code",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/features/generate-code",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/features/generate-code",
+    "tags": ["generate-code"]
+  },
+  "/features/automate-updating-dependencies": {
+    "id": "automate-updating-dependencies",
+    "name": "Automate Updating Dependencies",
+    "description": "Learn how Nx provides automated update scripts to help you keep your workspace, tooling and framework dependencies up to date.",
+    "mediaImage": "",
+    "file": "shared/features/automate-updating-dependencies",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/features/automate-updating-dependencies",
+    "tags": ["automate-updating-dependencies"]
+  },
+  "/features/enforce-module-boundaries": {
+    "id": "enforce-module-boundaries",
+    "name": "Enforce Module Boundaries",
+    "description": "Learn how to avoid dependency hell and scale a codebase by imposing constraints on your projects using the module boundary lint rule.",
+    "mediaImage": "",
+    "file": "shared/features/enforce-module-boundaries",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/features/enforce-module-boundaries",
+    "tags": ["enforce-module-boundaries"]
+  },
+  "/features/manage-releases": {
+    "id": "manage-releases",
+    "name": "Manage Releases",
+    "description": "Learn how Nx provides tools to help you manage releasing your projects.",
+    "mediaImage": "",
+    "file": "shared/features/manage-releases",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/features/manage-releases",
+    "tags": ["nx-release"]
+  },
+  "/features/ci-features": {
+    "id": "ci-features",
+    "name": "CI Features",
+    "description": "Features of Nx and Nx Cloud that improve CI",
+    "mediaImage": "",
+    "file": "",
+    "itemList": [
+      {
+        "id": "affected",
+        "name": "Run Only Tasks Affected by a PR",
+        "description": "",
+        "mediaImage": "",
+        "file": "",
+        "itemList": [],
+        "isExternal": true,
+        "path": "/ci/features/affected",
+        "tags": []
+      },
+      {
+        "id": "remote-cache",
+        "name": "Use Remote Caching (Nx Replay)",
+        "description": "Learn how to enable remote caching s.t. you don't just benefit locally from it but also in CI.",
         "mediaImage": "",
         "file": "",
         "itemList": [],
@@ -817,8 +640,8 @@
       },
       {
         "id": "distribute-task-execution",
-        "name": "Distribute Task Execution",
-        "description": "",
+        "name": "Distribute Task Execution (Nx Agents)",
+        "description": "Learn how to efficiently distribute tasks across machines to take full advantage of parallelization. Nx Agents make this a trivial task.",
         "mediaImage": "",
         "file": "",
         "itemList": [],
@@ -827,125 +650,69 @@
         "tags": []
       },
       {
-        "id": "explore-graph",
-        "name": "Explore the Graph",
-        "description": "Nx uses a graph behind the scenes to optimize your operations. You can also visualize and use the graph to better understand your workspace structure. Learn more in this guide.",
-        "mediaImage": "",
-        "file": "shared/core-features/explore-graph",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/core-features/explore-graph",
-        "tags": ["explore-graph"]
-      },
-      {
-        "id": "automate-updating-dependencies",
-        "name": "Automate Updating Dependencies",
-        "description": "Learn how Nx provides automated update scripts to help you keep your workspace, tooling and framework dependencies up to date.",
-        "mediaImage": "",
-        "file": "shared/core-features/automate-updating-dependencies",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/core-features/automate-updating-dependencies",
-        "tags": ["automate-updating-dependencies"]
-      },
-      {
-        "id": "enforce-module-boundaries",
-        "name": "Enforce Module Boundaries",
-        "description": "Learn how to avoid dependency hell and scale a codebase by imposing constraints on your projects using the module boundary lint rule.",
-        "mediaImage": "",
-        "file": "shared/core-features/enforce-module-boundaries",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/core-features/enforce-module-boundaries",
-        "tags": ["enforce-module-boundaries"]
-      },
-      {
-        "id": "integrate-with-editors",
-        "name": "Integrate with Editors",
-        "description": "Learn about Nx Console, an extension for VS Code and WebStorm.",
-        "mediaImage": "",
-        "file": "shared/core-features/integrate-with-editors",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/core-features/integrate-with-editors",
-        "tags": ["integrate-with-editors"]
-      },
-      {
-        "id": "manage-releases",
-        "name": "Manage Releases",
-        "description": "Learn how Nx provides tools to help you manage releasing your projects.",
-        "mediaImage": "",
-        "file": "shared/core-features/manage-releases",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/core-features/manage-releases",
-        "tags": ["manage-releases"]
-      },
-      {
-        "id": "plugin-features",
-        "name": "Plugin Features",
-        "description": "Learn what is a plugin, the different type of plugins and how to create one.",
+        "id": "dynamic-agents",
+        "name": "Dynamically Allocate Agents",
+        "description": "",
         "mediaImage": "",
         "file": "",
-        "itemList": [
-          {
-            "id": "use-task-executors",
-            "name": "Use Task Executors",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/plugin-features/use-task-executors",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/core-features/plugin-features/use-task-executors",
-            "tags": ["use-task-executors"]
-          },
-          {
-            "id": "use-code-generators",
-            "name": "Use Code Generators",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/plugin-features/use-code-generators",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/core-features/plugin-features/use-code-generators",
-            "tags": ["use-code-generators"]
-          }
-        ],
-        "isExternal": false,
-        "path": "/core-features/plugin-features",
+        "itemList": [],
+        "isExternal": true,
+        "path": "/ci/features/dynamic-agents",
+        "tags": []
+      },
+      {
+        "id": "split-e2e-tasks",
+        "name": "Automatically Split E2E Tasks",
+        "description": "",
+        "mediaImage": "",
+        "file": "",
+        "itemList": [],
+        "isExternal": true,
+        "path": "/ci/features/split-e2e-tasks",
+        "tags": []
+      },
+      {
+        "id": "flaky-tasks",
+        "name": "Identify and Re-run Flaky Tasks",
+        "description": "",
+        "mediaImage": "",
+        "file": "",
+        "itemList": [],
+        "isExternal": true,
+        "path": "/ci/features/flaky-tasks",
+        "tags": []
+      },
+      {
+        "id": "on-premise",
+        "name": "Set up Nx Cloud On-Premise",
+        "description": "Set up Nx Cloud on machines that you control",
+        "mediaImage": "",
+        "file": "",
+        "itemList": [],
+        "isExternal": true,
+        "path": "/ci/features/on-premise",
         "tags": []
       }
     ],
     "isExternal": false,
-    "path": "/core-features",
+    "path": "/features/ci-features",
     "tags": []
   },
-  "/core-features/run-tasks": {
-    "id": "run-tasks",
-    "name": "Run Tasks",
-    "description": "Learn about the various ways you can use Nx to run tasks in your workspace.",
+  "/ci/features/affected": {
+    "id": "affected",
+    "name": "Run Only Tasks Affected by a PR",
+    "description": "",
     "mediaImage": "",
-    "file": "shared/core-features/run-tasks",
+    "file": "",
     "itemList": [],
-    "isExternal": false,
-    "path": "/core-features/run-tasks",
-    "tags": ["run-tasks", "cache-task-results"]
-  },
-  "/core-features/cache-task-results": {
-    "id": "cache-task-results",
-    "name": "Cache Task Results",
-    "description": "Learn how to define cacheable tasks, how to fine-tune with inputs and outputs, where the cache is stored and much more.",
-    "mediaImage": "",
-    "file": "shared/core-features/cache-task-results",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/core-features/cache-task-results",
-    "tags": ["cache-task-results"]
+    "isExternal": true,
+    "path": "/ci/features/affected",
+    "tags": []
   },
   "/ci/features/remote-cache": {
     "id": "remote-cache",
-    "name": "Use Remote Caching",
-    "description": "",
+    "name": "Use Remote Caching (Nx Replay)",
+    "description": "Learn how to enable remote caching s.t. you don't just benefit locally from it but also in CI.",
     "mediaImage": "",
     "file": "",
     "itemList": [],
@@ -955,8 +722,8 @@
   },
   "/ci/features/distribute-task-execution": {
     "id": "distribute-task-execution",
-    "name": "Distribute Task Execution",
-    "description": "",
+    "name": "Distribute Task Execution (Nx Agents)",
+    "description": "Learn how to efficiently distribute tasks across machines to take full advantage of parallelization. Nx Agents make this a trivial task.",
     "mediaImage": "",
     "file": "",
     "itemList": [],
@@ -964,116 +731,49 @@
     "path": "/ci/features/distribute-task-execution",
     "tags": []
   },
-  "/core-features/explore-graph": {
-    "id": "explore-graph",
-    "name": "Explore the Graph",
-    "description": "Nx uses a graph behind the scenes to optimize your operations. You can also visualize and use the graph to better understand your workspace structure. Learn more in this guide.",
-    "mediaImage": "",
-    "file": "shared/core-features/explore-graph",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/core-features/explore-graph",
-    "tags": ["explore-graph"]
-  },
-  "/core-features/automate-updating-dependencies": {
-    "id": "automate-updating-dependencies",
-    "name": "Automate Updating Dependencies",
-    "description": "Learn how Nx provides automated update scripts to help you keep your workspace, tooling and framework dependencies up to date.",
-    "mediaImage": "",
-    "file": "shared/core-features/automate-updating-dependencies",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/core-features/automate-updating-dependencies",
-    "tags": ["automate-updating-dependencies"]
-  },
-  "/core-features/enforce-module-boundaries": {
-    "id": "enforce-module-boundaries",
-    "name": "Enforce Module Boundaries",
-    "description": "Learn how to avoid dependency hell and scale a codebase by imposing constraints on your projects using the module boundary lint rule.",
-    "mediaImage": "",
-    "file": "shared/core-features/enforce-module-boundaries",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/core-features/enforce-module-boundaries",
-    "tags": ["enforce-module-boundaries"]
-  },
-  "/core-features/integrate-with-editors": {
-    "id": "integrate-with-editors",
-    "name": "Integrate with Editors",
-    "description": "Learn about Nx Console, an extension for VS Code and WebStorm.",
-    "mediaImage": "",
-    "file": "shared/core-features/integrate-with-editors",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/core-features/integrate-with-editors",
-    "tags": ["integrate-with-editors"]
-  },
-  "/core-features/manage-releases": {
-    "id": "manage-releases",
-    "name": "Manage Releases",
-    "description": "Learn how Nx provides tools to help you manage releasing your projects.",
-    "mediaImage": "",
-    "file": "shared/core-features/manage-releases",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/core-features/manage-releases",
-    "tags": ["manage-releases"]
-  },
-  "/core-features/plugin-features": {
-    "id": "plugin-features",
-    "name": "Plugin Features",
-    "description": "Learn what is a plugin, the different type of plugins and how to create one.",
+  "/ci/features/dynamic-agents": {
+    "id": "dynamic-agents",
+    "name": "Dynamically Allocate Agents",
+    "description": "",
     "mediaImage": "",
     "file": "",
-    "itemList": [
-      {
-        "id": "use-task-executors",
-        "name": "Use Task Executors",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/plugin-features/use-task-executors",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/core-features/plugin-features/use-task-executors",
-        "tags": ["use-task-executors"]
-      },
-      {
-        "id": "use-code-generators",
-        "name": "Use Code Generators",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/plugin-features/use-code-generators",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/core-features/plugin-features/use-code-generators",
-        "tags": ["use-code-generators"]
-      }
-    ],
-    "isExternal": false,
-    "path": "/core-features/plugin-features",
+    "itemList": [],
+    "isExternal": true,
+    "path": "/ci/features/dynamic-agents",
     "tags": []
   },
-  "/core-features/plugin-features/use-task-executors": {
-    "id": "use-task-executors",
-    "name": "Use Task Executors",
+  "/ci/features/split-e2e-tasks": {
+    "id": "split-e2e-tasks",
+    "name": "Automatically Split E2E Tasks",
     "description": "",
     "mediaImage": "",
-    "file": "shared/plugin-features/use-task-executors",
+    "file": "",
     "itemList": [],
-    "isExternal": false,
-    "path": "/core-features/plugin-features/use-task-executors",
-    "tags": ["use-task-executors"]
+    "isExternal": true,
+    "path": "/ci/features/split-e2e-tasks",
+    "tags": []
   },
-  "/core-features/plugin-features/use-code-generators": {
-    "id": "use-code-generators",
-    "name": "Use Code Generators",
+  "/ci/features/flaky-tasks": {
+    "id": "flaky-tasks",
+    "name": "Identify and Re-run Flaky Tasks",
     "description": "",
     "mediaImage": "",
-    "file": "shared/plugin-features/use-code-generators",
+    "file": "",
     "itemList": [],
-    "isExternal": false,
-    "path": "/core-features/plugin-features/use-code-generators",
-    "tags": ["use-code-generators"]
+    "isExternal": true,
+    "path": "/ci/features/flaky-tasks",
+    "tags": []
+  },
+  "/ci/features/on-premise": {
+    "id": "on-premise",
+    "name": "Set up Nx Cloud On-Premise",
+    "description": "Set up Nx Cloud on machines that you control",
+    "mediaImage": "",
+    "file": "",
+    "itemList": [],
+    "isExternal": true,
+    "path": "/ci/features/on-premise",
+    "tags": []
   },
   "/concepts": {
     "id": "concepts",
@@ -1087,11 +787,11 @@
         "name": "Mental Model",
         "description": "",
         "mediaImage": "",
-        "file": "shared/mental-model",
+        "file": "shared/concepts/mental-model",
         "itemList": [],
         "isExternal": false,
         "path": "/concepts/mental-model",
-        "tags": ["intro"]
+        "tags": ["intro", "inferred-tasks"]
       },
       {
         "id": "how-caching-works",
@@ -1105,6 +805,39 @@
         "tags": ["cache-task-results"]
       },
       {
+        "id": "task-pipeline-configuration",
+        "name": "What is a Task Pipeline",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/concepts/task-pipeline-configuration",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/concepts/task-pipeline-configuration",
+        "tags": ["run-tasks"]
+      },
+      {
+        "id": "nx-plugins",
+        "name": "What Are Nx Plugins",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/concepts/nx-plugins",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/concepts/nx-plugins",
+        "tags": ["generate-code", "create-your-own-plugin", "inferred-tasks"]
+      },
+      {
+        "id": "inferred-tasks",
+        "name": "Inferred Tasks",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/concepts/inferred-tasks",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/concepts/inferred-tasks",
+        "tags": ["inferred-tasks"]
+      },
+      {
         "id": "types-of-configuration",
         "name": "Types of Configuration",
         "description": "",
@@ -1116,15 +849,15 @@
         "tags": []
       },
       {
-        "id": "task-pipeline-configuration",
-        "name": "What is a Task Pipeline",
+        "id": "executors-and-configurations",
+        "name": "Executors and Configurations",
         "description": "",
         "mediaImage": "",
-        "file": "shared/concepts/task-pipeline-configuration",
+        "file": "shared/concepts/executors-and-configurations",
         "itemList": [],
         "isExternal": false,
-        "path": "/concepts/task-pipeline-configuration",
-        "tags": ["run-tasks", "use-task-executors"]
+        "path": "/concepts/executors-and-configurations",
+        "tags": ["run-tasks"]
       },
       {
         "id": "integrated-vs-package-based",
@@ -1138,6 +871,39 @@
         "tags": ["intro", "repository-types"]
       },
       {
+        "id": "nx-daemon",
+        "name": "Nx Daemon",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/concepts/daemon",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/concepts/nx-daemon",
+        "tags": []
+      },
+      {
+        "id": "turbo-and-nx",
+        "name": "Nx and Turborepo",
+        "description": "",
+        "mediaImage": "./shared/concepts/nx-media-monorepo.jpg",
+        "file": "shared/concepts/turbo-and-nx",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/concepts/turbo-and-nx",
+        "tags": []
+      },
+      {
+        "id": "buildable-and-publishable-libraries",
+        "name": "Buildable and Publishable Libraries",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/concepts/buildable-and-publishable-libraries",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/concepts/buildable-and-publishable-libraries",
+        "tags": []
+      },
+      {
         "id": "module-federation",
         "name": "Module Federation",
         "description": "Understand more about Module Federation with NX",
@@ -1149,7 +915,7 @@
             "name": "Module Federation and Nx",
             "description": "",
             "mediaImage": "",
-            "file": "shared/guides/module-federation/module-federation-and-nx",
+            "file": "shared/concepts/module-federation/module-federation-and-nx",
             "itemList": [],
             "isExternal": false,
             "path": "/concepts/module-federation/module-federation-and-nx",
@@ -1160,23 +926,18 @@
             "name": "Faster Builds with Module Federation",
             "description": "",
             "mediaImage": "",
-            "file": "shared/guides/module-federation/faster-builds",
+            "file": "shared/concepts/module-federation/faster-builds",
             "itemList": [],
             "isExternal": false,
             "path": "/concepts/module-federation/faster-builds-with-module-federation",
-            "tags": [
-              "use-task-executors",
-              "module-federation",
-              "angular",
-              "react"
-            ]
+            "tags": ["module-federation", "angular", "react"]
           },
           {
             "id": "micro-frontend-architecture",
             "name": "Micro Frontend Architecture",
             "description": "",
             "mediaImage": "",
-            "file": "shared/guides/module-federation/micro-frontend-architecture",
+            "file": "shared/concepts/module-federation/micro-frontend-architecture",
             "itemList": [],
             "isExternal": false,
             "path": "/concepts/module-federation/micro-frontend-architecture",
@@ -1187,7 +948,7 @@
             "name": "Manage Library Versions with Module Federation",
             "description": "",
             "mediaImage": "",
-            "file": "shared/guides/module-federation/manage-library-versions-with-module-federation",
+            "file": "shared/concepts/module-federation/manage-library-versions-with-module-federation",
             "itemList": [],
             "isExternal": false,
             "path": "/concepts/module-federation/manage-library-versions-with-module-federation",
@@ -1199,43 +960,21 @@
         "tags": []
       },
       {
-        "id": "more-concepts",
-        "name": "More Concepts",
-        "description": "Get deeper into how Nx works and its different aspects.",
+        "id": "decisions",
+        "name": "Organizational Decisions",
+        "description": "Topics that need to be considered when structuring your repository",
         "mediaImage": "",
         "file": "",
         "itemList": [
           {
-            "id": "incremental-builds",
-            "name": "Incremental Builds",
+            "id": "overview",
+            "name": "Overview",
             "description": "",
             "mediaImage": "",
-            "file": "shared/incremental-builds",
+            "file": "shared/concepts/decisions/monorepo-polyrepo",
             "itemList": [],
             "isExternal": false,
-            "path": "/concepts/more-concepts/incremental-builds",
-            "tags": ["use-task-executors"]
-          },
-          {
-            "id": "illustrated-dte",
-            "name": "Illustrated Distributed Task Execution",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/concepts/illustrated-dte-guide",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/concepts/more-concepts/illustrated-dte",
-            "tags": ["distribute-task-execution"]
-          },
-          {
-            "id": "turbo-and-nx",
-            "name": "Nx and Turborepo",
-            "description": "",
-            "mediaImage": "./shared/guides/nx-media-monorepo.jpg",
-            "file": "shared/guides/turbo-and-nx",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/concepts/more-concepts/turbo-and-nx",
+            "path": "/concepts/decisions/overview",
             "tags": []
           },
           {
@@ -1243,10 +982,10 @@
             "name": "Monorepos",
             "description": "",
             "mediaImage": "",
-            "file": "shared/guides/why-monorepos",
+            "file": "shared/concepts/decisions/monorepos",
             "itemList": [],
             "isExternal": false,
-            "path": "/concepts/more-concepts/why-monorepos",
+            "path": "/concepts/decisions/why-monorepos",
             "tags": []
           },
           {
@@ -1254,147 +993,59 @@
             "name": "Dependency Management",
             "description": "",
             "mediaImage": "",
-            "file": "shared/concepts/dependency-management",
+            "file": "shared/concepts/decisions/dependency-management",
             "itemList": [],
             "isExternal": false,
-            "path": "/concepts/more-concepts/dependency-management",
+            "path": "/concepts/decisions/dependency-management",
             "tags": []
           },
           {
-            "id": "code-sharing",
-            "name": "Code Sharing",
+            "id": "code-ownership",
+            "name": "Code Ownership",
             "description": "",
             "mediaImage": "",
-            "file": "shared/concepts/code-sharing",
+            "file": "shared/concepts/decisions/code-ownership",
             "itemList": [],
             "isExternal": false,
-            "path": "/concepts/more-concepts/code-sharing",
+            "path": "/concepts/decisions/code-ownership",
             "tags": []
           },
           {
-            "id": "monorepo-nx-enterprise",
-            "name": "Using Nx at Enterprises",
+            "id": "project-size",
+            "name": "Project Size",
             "description": "",
             "mediaImage": "",
-            "file": "shared/monorepo-nx-enterprise",
+            "file": "shared/concepts/decisions/project-size",
             "itemList": [],
             "isExternal": false,
-            "path": "/concepts/more-concepts/monorepo-nx-enterprise",
-            "tags": ["enforce-module-boundaries", "use-code-generators"]
+            "path": "/concepts/decisions/project-size",
+            "tags": ["enforce-module-boundaries"]
           },
           {
-            "id": "nx-daemon",
-            "name": "Nx Daemon",
+            "id": "project-dependency-rules",
+            "name": "Project Dependency Rules",
             "description": "",
             "mediaImage": "",
-            "file": "shared/daemon",
+            "file": "shared/concepts/decisions/project-dependency-rules",
             "itemList": [],
             "isExternal": false,
-            "path": "/concepts/more-concepts/nx-daemon",
-            "tags": []
-          },
-          {
-            "id": "nx-and-angular",
-            "name": "Nx and the Angular CLI",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/guides/nx-and-angular-cli",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/concepts/more-concepts/nx-and-angular",
-            "tags": []
+            "path": "/concepts/decisions/project-dependency-rules",
+            "tags": ["enforce-module-boundaries"]
           },
           {
             "id": "folder-structure",
             "name": "Folder Structure",
             "description": "",
             "mediaImage": "",
-            "file": "shared/guides/integrated-repo-folder-structure",
+            "file": "shared/concepts/decisions/folder-structure",
             "itemList": [],
             "isExternal": false,
-            "path": "/concepts/more-concepts/folder-structure",
-            "tags": []
-          },
-          {
-            "id": "nx-devkit-angular-devkit",
-            "name": "Nx Devkit and Angular Devkit",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/guides/nx-devkit-angular-devkit",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/concepts/more-concepts/nx-devkit-angular-devkit",
-            "tags": ["create-your-own-plugin"]
-          },
-          {
-            "id": "applications-and-libraries",
-            "name": "Applications and Libraries",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/workspace/applications-and-libraries",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/concepts/more-concepts/applications-and-libraries",
+            "path": "/concepts/decisions/folder-structure",
             "tags": ["enforce-module-boundaries"]
-          },
-          {
-            "id": "creating-libraries",
-            "name": "Creating Libraries",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/workspace/creating-libraries",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/concepts/more-concepts/creating-libraries",
-            "tags": ["enforce-module-boundaries"]
-          },
-          {
-            "id": "library-types",
-            "name": "Library Types",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/workspace/library-types",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/concepts/more-concepts/library-types",
-            "tags": ["enforce-module-boundaries"]
-          },
-          {
-            "id": "grouping-libraries",
-            "name": "Grouping Libraries",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/workspace/grouping-libraries",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/concepts/more-concepts/grouping-libraries",
-            "tags": ["enforce-module-boundaries"]
-          },
-          {
-            "id": "buildable-and-publishable-libraries",
-            "name": "Buildable and Publishable Libraries",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/workspace/buildable-and-publishable-libraries",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/concepts/more-concepts/buildable-and-publishable-libraries",
-            "tags": []
-          },
-          {
-            "id": "how-project-graph-is-built",
-            "name": "How the Project Graph is Built",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/concepts/how-project-graph-is-built",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/concepts/more-concepts/how-project-graph-is-built",
-            "tags": ["explore-graph"]
           }
         ],
         "isExternal": false,
-        "path": "/concepts/more-concepts",
+        "path": "/concepts/decisions",
         "tags": []
       }
     ],
@@ -1407,11 +1058,11 @@
     "name": "Mental Model",
     "description": "",
     "mediaImage": "",
-    "file": "shared/mental-model",
+    "file": "shared/concepts/mental-model",
     "itemList": [],
     "isExternal": false,
     "path": "/concepts/mental-model",
-    "tags": ["intro"]
+    "tags": ["intro", "inferred-tasks"]
   },
   "/concepts/how-caching-works": {
     "id": "how-caching-works",
@@ -1424,6 +1075,39 @@
     "path": "/concepts/how-caching-works",
     "tags": ["cache-task-results"]
   },
+  "/concepts/task-pipeline-configuration": {
+    "id": "task-pipeline-configuration",
+    "name": "What is a Task Pipeline",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/concepts/task-pipeline-configuration",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/concepts/task-pipeline-configuration",
+    "tags": ["run-tasks"]
+  },
+  "/concepts/nx-plugins": {
+    "id": "nx-plugins",
+    "name": "What Are Nx Plugins",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/concepts/nx-plugins",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/concepts/nx-plugins",
+    "tags": ["generate-code", "create-your-own-plugin", "inferred-tasks"]
+  },
+  "/concepts/inferred-tasks": {
+    "id": "inferred-tasks",
+    "name": "Inferred Tasks",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/concepts/inferred-tasks",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/concepts/inferred-tasks",
+    "tags": ["inferred-tasks"]
+  },
   "/concepts/types-of-configuration": {
     "id": "types-of-configuration",
     "name": "Types of Configuration",
@@ -1435,16 +1119,16 @@
     "path": "/concepts/types-of-configuration",
     "tags": []
   },
-  "/concepts/task-pipeline-configuration": {
-    "id": "task-pipeline-configuration",
-    "name": "What is a Task Pipeline",
+  "/concepts/executors-and-configurations": {
+    "id": "executors-and-configurations",
+    "name": "Executors and Configurations",
     "description": "",
     "mediaImage": "",
-    "file": "shared/concepts/task-pipeline-configuration",
+    "file": "shared/concepts/executors-and-configurations",
     "itemList": [],
     "isExternal": false,
-    "path": "/concepts/task-pipeline-configuration",
-    "tags": ["run-tasks", "use-task-executors"]
+    "path": "/concepts/executors-and-configurations",
+    "tags": ["run-tasks"]
   },
   "/concepts/integrated-vs-package-based": {
     "id": "integrated-vs-package-based",
@@ -1456,6 +1140,39 @@
     "isExternal": false,
     "path": "/concepts/integrated-vs-package-based",
     "tags": ["intro", "repository-types"]
+  },
+  "/concepts/nx-daemon": {
+    "id": "nx-daemon",
+    "name": "Nx Daemon",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/concepts/daemon",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/concepts/nx-daemon",
+    "tags": []
+  },
+  "/concepts/turbo-and-nx": {
+    "id": "turbo-and-nx",
+    "name": "Nx and Turborepo",
+    "description": "",
+    "mediaImage": "./shared/concepts/nx-media-monorepo.jpg",
+    "file": "shared/concepts/turbo-and-nx",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/concepts/turbo-and-nx",
+    "tags": []
+  },
+  "/concepts/buildable-and-publishable-libraries": {
+    "id": "buildable-and-publishable-libraries",
+    "name": "Buildable and Publishable Libraries",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/concepts/buildable-and-publishable-libraries",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/concepts/buildable-and-publishable-libraries",
+    "tags": []
   },
   "/concepts/module-federation": {
     "id": "module-federation",
@@ -1469,7 +1186,7 @@
         "name": "Module Federation and Nx",
         "description": "",
         "mediaImage": "",
-        "file": "shared/guides/module-federation/module-federation-and-nx",
+        "file": "shared/concepts/module-federation/module-federation-and-nx",
         "itemList": [],
         "isExternal": false,
         "path": "/concepts/module-federation/module-federation-and-nx",
@@ -1480,18 +1197,18 @@
         "name": "Faster Builds with Module Federation",
         "description": "",
         "mediaImage": "",
-        "file": "shared/guides/module-federation/faster-builds",
+        "file": "shared/concepts/module-federation/faster-builds",
         "itemList": [],
         "isExternal": false,
         "path": "/concepts/module-federation/faster-builds-with-module-federation",
-        "tags": ["use-task-executors", "module-federation", "angular", "react"]
+        "tags": ["module-federation", "angular", "react"]
       },
       {
         "id": "micro-frontend-architecture",
         "name": "Micro Frontend Architecture",
         "description": "",
         "mediaImage": "",
-        "file": "shared/guides/module-federation/micro-frontend-architecture",
+        "file": "shared/concepts/module-federation/micro-frontend-architecture",
         "itemList": [],
         "isExternal": false,
         "path": "/concepts/module-federation/micro-frontend-architecture",
@@ -1502,7 +1219,7 @@
         "name": "Manage Library Versions with Module Federation",
         "description": "",
         "mediaImage": "",
-        "file": "shared/guides/module-federation/manage-library-versions-with-module-federation",
+        "file": "shared/concepts/module-federation/manage-library-versions-with-module-federation",
         "itemList": [],
         "isExternal": false,
         "path": "/concepts/module-federation/manage-library-versions-with-module-federation",
@@ -1518,7 +1235,7 @@
     "name": "Module Federation and Nx",
     "description": "",
     "mediaImage": "",
-    "file": "shared/guides/module-federation/module-federation-and-nx",
+    "file": "shared/concepts/module-federation/module-federation-and-nx",
     "itemList": [],
     "isExternal": false,
     "path": "/concepts/module-federation/module-federation-and-nx",
@@ -1529,18 +1246,18 @@
     "name": "Faster Builds with Module Federation",
     "description": "",
     "mediaImage": "",
-    "file": "shared/guides/module-federation/faster-builds",
+    "file": "shared/concepts/module-federation/faster-builds",
     "itemList": [],
     "isExternal": false,
     "path": "/concepts/module-federation/faster-builds-with-module-federation",
-    "tags": ["use-task-executors", "module-federation", "angular", "react"]
+    "tags": ["module-federation", "angular", "react"]
   },
   "/concepts/module-federation/micro-frontend-architecture": {
     "id": "micro-frontend-architecture",
     "name": "Micro Frontend Architecture",
     "description": "",
     "mediaImage": "",
-    "file": "shared/guides/module-federation/micro-frontend-architecture",
+    "file": "shared/concepts/module-federation/micro-frontend-architecture",
     "itemList": [],
     "isExternal": false,
     "path": "/concepts/module-federation/micro-frontend-architecture",
@@ -1551,50 +1268,28 @@
     "name": "Manage Library Versions with Module Federation",
     "description": "",
     "mediaImage": "",
-    "file": "shared/guides/module-federation/manage-library-versions-with-module-federation",
+    "file": "shared/concepts/module-federation/manage-library-versions-with-module-federation",
     "itemList": [],
     "isExternal": false,
     "path": "/concepts/module-federation/manage-library-versions-with-module-federation",
     "tags": []
   },
-  "/concepts/more-concepts": {
-    "id": "more-concepts",
-    "name": "More Concepts",
-    "description": "Get deeper into how Nx works and its different aspects.",
+  "/concepts/decisions": {
+    "id": "decisions",
+    "name": "Organizational Decisions",
+    "description": "Topics that need to be considered when structuring your repository",
     "mediaImage": "",
     "file": "",
     "itemList": [
       {
-        "id": "incremental-builds",
-        "name": "Incremental Builds",
+        "id": "overview",
+        "name": "Overview",
         "description": "",
         "mediaImage": "",
-        "file": "shared/incremental-builds",
+        "file": "shared/concepts/decisions/monorepo-polyrepo",
         "itemList": [],
         "isExternal": false,
-        "path": "/concepts/more-concepts/incremental-builds",
-        "tags": ["use-task-executors"]
-      },
-      {
-        "id": "illustrated-dte",
-        "name": "Illustrated Distributed Task Execution",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/concepts/illustrated-dte-guide",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/concepts/more-concepts/illustrated-dte",
-        "tags": ["distribute-task-execution"]
-      },
-      {
-        "id": "turbo-and-nx",
-        "name": "Nx and Turborepo",
-        "description": "",
-        "mediaImage": "./shared/guides/nx-media-monorepo.jpg",
-        "file": "shared/guides/turbo-and-nx",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/concepts/more-concepts/turbo-and-nx",
+        "path": "/concepts/decisions/overview",
         "tags": []
       },
       {
@@ -1602,10 +1297,10 @@
         "name": "Monorepos",
         "description": "",
         "mediaImage": "",
-        "file": "shared/guides/why-monorepos",
+        "file": "shared/concepts/decisions/monorepos",
         "itemList": [],
         "isExternal": false,
-        "path": "/concepts/more-concepts/why-monorepos",
+        "path": "/concepts/decisions/why-monorepos",
         "tags": []
       },
       {
@@ -1613,335 +1308,137 @@
         "name": "Dependency Management",
         "description": "",
         "mediaImage": "",
-        "file": "shared/concepts/dependency-management",
+        "file": "shared/concepts/decisions/dependency-management",
         "itemList": [],
         "isExternal": false,
-        "path": "/concepts/more-concepts/dependency-management",
+        "path": "/concepts/decisions/dependency-management",
         "tags": []
       },
       {
-        "id": "code-sharing",
-        "name": "Code Sharing",
+        "id": "code-ownership",
+        "name": "Code Ownership",
         "description": "",
         "mediaImage": "",
-        "file": "shared/concepts/code-sharing",
+        "file": "shared/concepts/decisions/code-ownership",
         "itemList": [],
         "isExternal": false,
-        "path": "/concepts/more-concepts/code-sharing",
+        "path": "/concepts/decisions/code-ownership",
         "tags": []
       },
       {
-        "id": "monorepo-nx-enterprise",
-        "name": "Using Nx at Enterprises",
+        "id": "project-size",
+        "name": "Project Size",
         "description": "",
         "mediaImage": "",
-        "file": "shared/monorepo-nx-enterprise",
+        "file": "shared/concepts/decisions/project-size",
         "itemList": [],
         "isExternal": false,
-        "path": "/concepts/more-concepts/monorepo-nx-enterprise",
-        "tags": ["enforce-module-boundaries", "use-code-generators"]
+        "path": "/concepts/decisions/project-size",
+        "tags": ["enforce-module-boundaries"]
       },
       {
-        "id": "nx-daemon",
-        "name": "Nx Daemon",
+        "id": "project-dependency-rules",
+        "name": "Project Dependency Rules",
         "description": "",
         "mediaImage": "",
-        "file": "shared/daemon",
+        "file": "shared/concepts/decisions/project-dependency-rules",
         "itemList": [],
         "isExternal": false,
-        "path": "/concepts/more-concepts/nx-daemon",
-        "tags": []
-      },
-      {
-        "id": "nx-and-angular",
-        "name": "Nx and the Angular CLI",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/guides/nx-and-angular-cli",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/concepts/more-concepts/nx-and-angular",
-        "tags": []
+        "path": "/concepts/decisions/project-dependency-rules",
+        "tags": ["enforce-module-boundaries"]
       },
       {
         "id": "folder-structure",
         "name": "Folder Structure",
         "description": "",
         "mediaImage": "",
-        "file": "shared/guides/integrated-repo-folder-structure",
+        "file": "shared/concepts/decisions/folder-structure",
         "itemList": [],
         "isExternal": false,
-        "path": "/concepts/more-concepts/folder-structure",
-        "tags": []
-      },
-      {
-        "id": "nx-devkit-angular-devkit",
-        "name": "Nx Devkit and Angular Devkit",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/guides/nx-devkit-angular-devkit",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/concepts/more-concepts/nx-devkit-angular-devkit",
-        "tags": ["create-your-own-plugin"]
-      },
-      {
-        "id": "applications-and-libraries",
-        "name": "Applications and Libraries",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/workspace/applications-and-libraries",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/concepts/more-concepts/applications-and-libraries",
+        "path": "/concepts/decisions/folder-structure",
         "tags": ["enforce-module-boundaries"]
-      },
-      {
-        "id": "creating-libraries",
-        "name": "Creating Libraries",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/workspace/creating-libraries",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/concepts/more-concepts/creating-libraries",
-        "tags": ["enforce-module-boundaries"]
-      },
-      {
-        "id": "library-types",
-        "name": "Library Types",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/workspace/library-types",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/concepts/more-concepts/library-types",
-        "tags": ["enforce-module-boundaries"]
-      },
-      {
-        "id": "grouping-libraries",
-        "name": "Grouping Libraries",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/workspace/grouping-libraries",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/concepts/more-concepts/grouping-libraries",
-        "tags": ["enforce-module-boundaries"]
-      },
-      {
-        "id": "buildable-and-publishable-libraries",
-        "name": "Buildable and Publishable Libraries",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/workspace/buildable-and-publishable-libraries",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/concepts/more-concepts/buildable-and-publishable-libraries",
-        "tags": []
-      },
-      {
-        "id": "how-project-graph-is-built",
-        "name": "How the Project Graph is Built",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/concepts/how-project-graph-is-built",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/concepts/more-concepts/how-project-graph-is-built",
-        "tags": ["explore-graph"]
       }
     ],
     "isExternal": false,
-    "path": "/concepts/more-concepts",
+    "path": "/concepts/decisions",
     "tags": []
   },
-  "/concepts/more-concepts/incremental-builds": {
-    "id": "incremental-builds",
-    "name": "Incremental Builds",
+  "/concepts/decisions/overview": {
+    "id": "overview",
+    "name": "Overview",
     "description": "",
     "mediaImage": "",
-    "file": "shared/incremental-builds",
+    "file": "shared/concepts/decisions/monorepo-polyrepo",
     "itemList": [],
     "isExternal": false,
-    "path": "/concepts/more-concepts/incremental-builds",
-    "tags": ["use-task-executors"]
-  },
-  "/concepts/more-concepts/illustrated-dte": {
-    "id": "illustrated-dte",
-    "name": "Illustrated Distributed Task Execution",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/concepts/illustrated-dte-guide",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/concepts/more-concepts/illustrated-dte",
-    "tags": ["distribute-task-execution"]
-  },
-  "/concepts/more-concepts/turbo-and-nx": {
-    "id": "turbo-and-nx",
-    "name": "Nx and Turborepo",
-    "description": "",
-    "mediaImage": "./shared/guides/nx-media-monorepo.jpg",
-    "file": "shared/guides/turbo-and-nx",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/concepts/more-concepts/turbo-and-nx",
+    "path": "/concepts/decisions/overview",
     "tags": []
   },
-  "/concepts/more-concepts/why-monorepos": {
+  "/concepts/decisions/why-monorepos": {
     "id": "why-monorepos",
     "name": "Monorepos",
     "description": "",
     "mediaImage": "",
-    "file": "shared/guides/why-monorepos",
+    "file": "shared/concepts/decisions/monorepos",
     "itemList": [],
     "isExternal": false,
-    "path": "/concepts/more-concepts/why-monorepos",
+    "path": "/concepts/decisions/why-monorepos",
     "tags": []
   },
-  "/concepts/more-concepts/dependency-management": {
+  "/concepts/decisions/dependency-management": {
     "id": "dependency-management",
     "name": "Dependency Management",
     "description": "",
     "mediaImage": "",
-    "file": "shared/concepts/dependency-management",
+    "file": "shared/concepts/decisions/dependency-management",
     "itemList": [],
     "isExternal": false,
-    "path": "/concepts/more-concepts/dependency-management",
+    "path": "/concepts/decisions/dependency-management",
     "tags": []
   },
-  "/concepts/more-concepts/code-sharing": {
-    "id": "code-sharing",
-    "name": "Code Sharing",
+  "/concepts/decisions/code-ownership": {
+    "id": "code-ownership",
+    "name": "Code Ownership",
     "description": "",
     "mediaImage": "",
-    "file": "shared/concepts/code-sharing",
+    "file": "shared/concepts/decisions/code-ownership",
     "itemList": [],
     "isExternal": false,
-    "path": "/concepts/more-concepts/code-sharing",
+    "path": "/concepts/decisions/code-ownership",
     "tags": []
   },
-  "/concepts/more-concepts/monorepo-nx-enterprise": {
-    "id": "monorepo-nx-enterprise",
-    "name": "Using Nx at Enterprises",
+  "/concepts/decisions/project-size": {
+    "id": "project-size",
+    "name": "Project Size",
     "description": "",
     "mediaImage": "",
-    "file": "shared/monorepo-nx-enterprise",
+    "file": "shared/concepts/decisions/project-size",
     "itemList": [],
     "isExternal": false,
-    "path": "/concepts/more-concepts/monorepo-nx-enterprise",
-    "tags": ["enforce-module-boundaries", "use-code-generators"]
+    "path": "/concepts/decisions/project-size",
+    "tags": ["enforce-module-boundaries"]
   },
-  "/concepts/more-concepts/nx-daemon": {
-    "id": "nx-daemon",
-    "name": "Nx Daemon",
+  "/concepts/decisions/project-dependency-rules": {
+    "id": "project-dependency-rules",
+    "name": "Project Dependency Rules",
     "description": "",
     "mediaImage": "",
-    "file": "shared/daemon",
+    "file": "shared/concepts/decisions/project-dependency-rules",
     "itemList": [],
     "isExternal": false,
-    "path": "/concepts/more-concepts/nx-daemon",
-    "tags": []
+    "path": "/concepts/decisions/project-dependency-rules",
+    "tags": ["enforce-module-boundaries"]
   },
-  "/concepts/more-concepts/nx-and-angular": {
-    "id": "nx-and-angular",
-    "name": "Nx and the Angular CLI",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/guides/nx-and-angular-cli",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/concepts/more-concepts/nx-and-angular",
-    "tags": []
-  },
-  "/concepts/more-concepts/folder-structure": {
+  "/concepts/decisions/folder-structure": {
     "id": "folder-structure",
     "name": "Folder Structure",
     "description": "",
     "mediaImage": "",
-    "file": "shared/guides/integrated-repo-folder-structure",
+    "file": "shared/concepts/decisions/folder-structure",
     "itemList": [],
     "isExternal": false,
-    "path": "/concepts/more-concepts/folder-structure",
-    "tags": []
-  },
-  "/concepts/more-concepts/nx-devkit-angular-devkit": {
-    "id": "nx-devkit-angular-devkit",
-    "name": "Nx Devkit and Angular Devkit",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/guides/nx-devkit-angular-devkit",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/concepts/more-concepts/nx-devkit-angular-devkit",
-    "tags": ["create-your-own-plugin"]
-  },
-  "/concepts/more-concepts/applications-and-libraries": {
-    "id": "applications-and-libraries",
-    "name": "Applications and Libraries",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/workspace/applications-and-libraries",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/concepts/more-concepts/applications-and-libraries",
+    "path": "/concepts/decisions/folder-structure",
     "tags": ["enforce-module-boundaries"]
-  },
-  "/concepts/more-concepts/creating-libraries": {
-    "id": "creating-libraries",
-    "name": "Creating Libraries",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/workspace/creating-libraries",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/concepts/more-concepts/creating-libraries",
-    "tags": ["enforce-module-boundaries"]
-  },
-  "/concepts/more-concepts/library-types": {
-    "id": "library-types",
-    "name": "Library Types",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/workspace/library-types",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/concepts/more-concepts/library-types",
-    "tags": ["enforce-module-boundaries"]
-  },
-  "/concepts/more-concepts/grouping-libraries": {
-    "id": "grouping-libraries",
-    "name": "Grouping Libraries",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/workspace/grouping-libraries",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/concepts/more-concepts/grouping-libraries",
-    "tags": ["enforce-module-boundaries"]
-  },
-  "/concepts/more-concepts/buildable-and-publishable-libraries": {
-    "id": "buildable-and-publishable-libraries",
-    "name": "Buildable and Publishable Libraries",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/workspace/buildable-and-publishable-libraries",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/concepts/more-concepts/buildable-and-publishable-libraries",
-    "tags": []
-  },
-  "/concepts/more-concepts/how-project-graph-is-built": {
-    "id": "how-project-graph-is-built",
-    "name": "How the Project Graph is Built",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/concepts/how-project-graph-is-built",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/concepts/more-concepts/how-project-graph-is-built",
-    "tags": ["explore-graph"]
   },
   "/recipes": {
     "id": "recipes",
@@ -1951,6 +1448,40 @@
     "file": "",
     "itemList": [
       {
+        "id": "installation",
+        "name": "Installation",
+        "description": "Installing Nx",
+        "mediaImage": "",
+        "file": "",
+        "itemList": [
+          {
+            "id": "install-non-javascript",
+            "name": "Install Nx in a Non-Javascript Repo",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/recipes/installation/install-non-javascript",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/installation/install-non-javascript",
+            "tags": ["installation"]
+          },
+          {
+            "id": "update-global-installation",
+            "name": "Update Your Global Nx Installation",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/recipes/installation/update-global-installation",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/installation/update-global-installation",
+            "tags": ["installation"]
+          }
+        ],
+        "isExternal": false,
+        "path": "/recipes/installation",
+        "tags": []
+      },
+      {
         "id": "running-tasks",
         "name": "Tasks & Caching",
         "description": "A series of recipes that show how to run tasks efficiently with Nx",
@@ -1958,19 +1489,30 @@
         "file": "",
         "itemList": [
           {
-            "id": "customizing-inputs",
-            "name": "Fine-tuning Caching with Inputs",
+            "id": "configure-inputs",
+            "name": "Configure Inputs for Task Caching",
             "description": "",
             "mediaImage": "",
-            "file": "shared/recipes/running-tasks/customizing-inputs",
+            "file": "shared/recipes/running-tasks/configure-inputs",
             "itemList": [],
             "isExternal": false,
-            "path": "/recipes/running-tasks/customizing-inputs",
+            "path": "/recipes/running-tasks/configure-inputs",
+            "tags": ["run-tasks", "cache-task-results"]
+          },
+          {
+            "id": "configure-outputs",
+            "name": "Configure Outputs for Task Caching",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/recipes/running-tasks/configure-outputs",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/running-tasks/configure-outputs",
             "tags": ["run-tasks", "cache-task-results"]
           },
           {
             "id": "defining-task-pipeline",
-            "name": "Defining a Task Pipeline",
+            "name": "Define a Task Pipeline",
             "description": "",
             "mediaImage": "",
             "file": "shared/recipes/running-tasks/defining-task-pipeline",
@@ -1992,14 +1534,25 @@
           },
           {
             "id": "run-commands-executor",
-            "name": "Running Custom Commands",
+            "name": "Run Custom Commands",
             "description": "",
             "mediaImage": "",
             "file": "shared/recipes/running-tasks/running-custom-commands",
             "itemList": [],
             "isExternal": false,
             "path": "/recipes/running-tasks/run-commands-executor",
-            "tags": ["run-tasks", "use-task-executors"]
+            "tags": ["run-tasks"]
+          },
+          {
+            "id": "pass-args-to-commands",
+            "name": "Pass Args to Commands",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/recipes/running-tasks/pass-args-to-commands",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/running-tasks/pass-args-to-commands",
+            "tags": ["run-tasks"]
           },
           {
             "id": "run-tasks-in-parallel",
@@ -2091,17 +1644,6 @@
             "tags": []
           },
           {
-            "id": "lerna-and-nx",
-            "name": "Nx and Lerna",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/migration/lerna-and-nx",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/adopting-nx/lerna-and-nx",
-            "tags": []
-          },
-          {
             "id": "preserving-git-histories",
             "name": "Preserving Git Histories",
             "description": "",
@@ -2135,28 +1677,6 @@
         "mediaImage": "",
         "file": "",
         "itemList": [
-          {
-            "id": "migration-cra",
-            "name": "Migrating from CRA",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/migration/migration-cra",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/react/migration-cra",
-            "tags": []
-          },
-          {
-            "id": "react-18",
-            "name": "React 18 Migration",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/guides/react-18",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/react/react-18",
-            "tags": []
-          },
           {
             "id": "react-native",
             "name": "React Native with Nx",
@@ -2221,7 +1741,7 @@
             "itemList": [],
             "isExternal": false,
             "path": "/recipes/react/module-federation-with-ssr",
-            "tags": ["use-task-executors", "module-federation", "react"]
+            "tags": ["module-federation", "react"]
           },
           {
             "id": "deploy-nextjs-to-vercel",
@@ -2274,28 +1794,6 @@
                 "isExternal": false,
                 "path": "/recipes/angular/migration/angular-multiple",
                 "tags": []
-              },
-              {
-                "id": "angular-manual",
-                "name": "Migrating Angular Application manually",
-                "description": "",
-                "mediaImage": "",
-                "file": "shared/migration/angular-manual",
-                "itemList": [],
-                "isExternal": false,
-                "path": "/recipes/angular/migration/angular-manual",
-                "tags": []
-              },
-              {
-                "id": "angularjs",
-                "name": "Migrating from AngularJS",
-                "description": "",
-                "mediaImage": "",
-                "file": "shared/migration/migration-angularjs",
-                "itemList": [],
-                "isExternal": false,
-                "path": "/recipes/angular/migration/angularjs",
-                "tags": []
               }
             ],
             "isExternal": false,
@@ -2333,18 +1831,18 @@
             "itemList": [],
             "isExternal": false,
             "path": "/recipes/angular/module-federation-with-ssr",
-            "tags": ["use-task-executors", "module-federation", "angular"]
+            "tags": ["module-federation", "angular"]
           },
           {
             "id": "dynamic-module-federation-with-angular",
             "name": "Advanced Micro Frontends with Angular using Dynamic Federation",
             "description": "",
             "mediaImage": "",
-            "file": "shared/guides/module-federation/dynamic-mfe-angular",
+            "file": "shared/recipes/module-federation/dynamic-mfe-angular",
             "itemList": [],
             "isExternal": false,
             "path": "/recipes/angular/dynamic-module-federation-with-angular",
-            "tags": ["use-task-executors", "module-federation", "angular"]
+            "tags": ["module-federation", "angular"]
           },
           {
             "id": "setup-incremental-builds-angular",
@@ -2536,6 +2034,17 @@
             "tags": ["storybook"]
           },
           {
+            "id": "upgrading-storybook",
+            "name": "Upgrading Storybook using the Storybook CLI",
+            "description": "This guide explains how you can upgrade Storybook using the Storybook CLI upgrade and automigrate commands.",
+            "mediaImage": "",
+            "file": "shared/recipes/storybook/upgrading-storybook",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/storybook/upgrading-storybook",
+            "tags": ["storybook"]
+          },
+          {
             "id": "storybook-composition-setup",
             "name": "Setting up Storybook Composition with Nx",
             "description": "This guide explains how you can set up Storybook composition on your Nx workspace.",
@@ -2592,6 +2101,17 @@
             "tags": []
           },
           {
+            "id": "cypress-setup-node-events",
+            "name": "Using setupNodeEvents with Cypress preset",
+            "description": "A guide on using the setupNodeEvents function with @nx/cypress/plugins/cypress-preset",
+            "mediaImage": "",
+            "file": "shared/packages/cypress/cypress-setup-node-events",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/cypress/cypress-setup-node-events",
+            "tags": []
+          },
+          {
             "id": "cypress-v11-migration",
             "name": "Cypress v11 Migration Guide",
             "description": "Cypress v11 Migration Guide",
@@ -2605,51 +2125,6 @@
         ],
         "isExternal": false,
         "path": "/recipes/cypress",
-        "tags": []
-      },
-      {
-        "id": "deno",
-        "name": "Deno",
-        "description": "Deno related recipes",
-        "mediaImage": "",
-        "file": "",
-        "itemList": [
-          {
-            "id": "add-deno",
-            "name": "Add a Deno Project",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/recipes/add-stack/add-deno",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/deno/add-deno",
-            "tags": ["deno"]
-          },
-          {
-            "id": "deno-deploy",
-            "name": "Serverless deployment with Deno Deploy",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/recipes/deployment/deno-deploy",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/deno/deno-deploy",
-            "tags": ["deployment", "deno"]
-          },
-          {
-            "id": "deno-netlify-functions",
-            "name": "Add and Deploy Netlify Edge Functions with Deno",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/recipes/deployment/deno-netlify-edge-functions",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/deno/deno-netlify-functions",
-            "tags": ["deployment", "deno"]
-          }
-        ],
-        "isExternal": false,
-        "path": "/recipes/deno",
         "tags": []
       },
       {
@@ -2730,7 +2205,7 @@
         "itemList": [
           {
             "id": "webpack-config-setup",
-            "name": "How to configure webpack on your Nx workspace",
+            "name": "How to configure Webpack in your Nx workspace",
             "description": "A guide on how to configure webpack on your Nx workspace, and instructions on how to customize your webpack configuration",
             "mediaImage": "",
             "file": "shared/packages/webpack/webpack-config-setup",
@@ -2854,40 +2329,6 @@
         ],
         "isExternal": false,
         "path": "/recipes/enforce-module-boundaries",
-        "tags": []
-      },
-      {
-        "id": "installation",
-        "name": "Installation",
-        "description": "Installing Nx",
-        "mediaImage": "",
-        "file": "",
-        "itemList": [
-          {
-            "id": "install-non-javascript",
-            "name": "Install Nx in a Non-Javascript Repo",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/recipes/installation/install-non-javascript",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/installation/install-non-javascript",
-            "tags": ["installation"]
-          },
-          {
-            "id": "update-global-installation",
-            "name": "Update Your Global Nx Installation",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/recipes/installation/update-global-installation",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/installation/update-global-installation",
-            "tags": ["installation"]
-          }
-        ],
-        "isExternal": false,
-        "path": "/recipes/installation",
         "tags": []
       },
       {
@@ -3101,73 +2542,6 @@
         "tags": []
       },
       {
-        "id": "troubleshooting",
-        "name": "Troubleshooting",
-        "description": "Learn how to troubleshoot common problems.",
-        "mediaImage": "",
-        "file": "",
-        "itemList": [
-          {
-            "id": "resolve-circular-dependencies",
-            "name": "Resolve Circular Dependencies",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/recipes/resolve-circular-dependencies",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/troubleshooting/resolve-circular-dependencies",
-            "tags": ["explore-graph"]
-          },
-          {
-            "id": "troubleshoot-nx-install-issues",
-            "name": "Troubleshooting Nx Install Issues",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/installation/troubleshoot-installation",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/troubleshooting/troubleshoot-nx-install-issues",
-            "tags": []
-          },
-          {
-            "id": "troubleshoot-cache-misses",
-            "name": "Troubleshoot Cache Misses",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/recipes/troubleshoot-cache-misses",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/troubleshooting/troubleshoot-cache-misses",
-            "tags": ["cache-task-results"]
-          },
-          {
-            "id": "unknown-local-cache",
-            "name": "Unknown Local Cache Error",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/guides/unknown-local-cache",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/troubleshooting/unknown-local-cache",
-            "tags": []
-          },
-          {
-            "id": "performance-profiling",
-            "name": "Profiling Build Performance",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/guides/performance-profiling",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/troubleshooting/performance-profiling",
-            "tags": ["use-task-executors", "environment-variables"]
-          }
-        ],
-        "isExternal": false,
-        "path": "/recipes/troubleshooting",
-        "tags": []
-      },
-      {
         "id": "nx-console",
         "name": "Nx Console",
         "description": "Checkout all the recipes related to Nx Console.",
@@ -3183,7 +2557,18 @@
             "itemList": [],
             "isExternal": false,
             "path": "/recipes/nx-console/console-telemetry",
-            "tags": ["integrate-with-editors"]
+            "tags": ["editor-setup"]
+          },
+          {
+            "id": "console-project-details",
+            "name": "Project Details View",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/recipes/console-project-details",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/nx-console/console-project-details",
+            "tags": ["editor-setup"]
           },
           {
             "id": "console-generate-command",
@@ -3194,7 +2579,7 @@
             "itemList": [],
             "isExternal": false,
             "path": "/recipes/nx-console/console-generate-command",
-            "tags": ["integrate-with-editors"]
+            "tags": ["editor-setup"]
           },
           {
             "id": "console-run-command",
@@ -3205,40 +2590,7 @@
             "itemList": [],
             "isExternal": false,
             "path": "/recipes/nx-console/console-run-command",
-            "tags": ["integrate-with-editors"]
-          },
-          {
-            "id": "console-add-dependency-command",
-            "name": "Add Dependency Command",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/recipes/console-add-dependency-command",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/nx-console/console-add-dependency-command",
-            "tags": ["integrate-with-editors"]
-          },
-          {
-            "id": "console-project-pane",
-            "name": "Project Pane",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/recipes/console-project-pane",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/nx-console/console-project-pane",
-            "tags": ["integrate-with-editors"]
-          },
-          {
-            "id": "console-shortcuts",
-            "name": "Keyboard Shortcuts",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/recipes/console-shortcuts",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/nx-console/console-shortcuts",
-            "tags": ["integrate-with-editors"]
+            "tags": ["editor-setup"]
           },
           {
             "id": "console-troubleshooting",
@@ -3249,7 +2601,7 @@
             "itemList": [],
             "isExternal": false,
             "path": "/recipes/nx-console/console-troubleshooting",
-            "tags": ["integrate-with-editors"]
+            "tags": ["editor-setup"]
           }
         ],
         "isExternal": false,
@@ -3297,6 +2649,17 @@
             "tags": ["nx-release"]
           },
           {
+            "id": "configure-custom-registries",
+            "name": "Configure Custom Registries",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/recipes/nx-release/configure-custom-registries",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/nx-release/configure-custom-registries",
+            "tags": ["nx-release"]
+          },
+          {
             "id": "publish-in-ci-cd",
             "name": "Publish in CI/CD",
             "description": "",
@@ -3305,6 +2668,61 @@
             "itemList": [],
             "isExternal": false,
             "path": "/recipes/nx-release/publish-in-ci-cd",
+            "tags": ["nx-release"]
+          },
+          {
+            "id": "automate-github-releases",
+            "name": "Automate GitHub Releases",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/recipes/nx-release/automate-github-releases",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/nx-release/automate-github-releases",
+            "tags": ["nx-release"]
+          },
+          {
+            "id": "publish-rust-crates",
+            "name": "Publish Rust Crates",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/recipes/nx-release/publish-rust-crates",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/nx-release/publish-rust-crates",
+            "tags": ["nx-release"]
+          },
+          {
+            "id": "update-local-registry-setup",
+            "name": "Update Your Local Registry Setup to use Nx Release",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/recipes/nx-release/update-local-registry-setup",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/nx-release/update-local-registry-setup",
+            "tags": ["nx-release"]
+          },
+          {
+            "id": "customize-conventional-commit-types",
+            "name": "Customize Conventional Commit Types",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/recipes/nx-release/customize-conventional-commit-types",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/nx-release/customize-conventional-commit-types",
+            "tags": ["nx-release"]
+          },
+          {
+            "id": "configure-changelog-format",
+            "name": "Configure Changelog Format",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/recipes/nx-release/configure-changelog-format",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/nx-release/configure-changelog-format",
             "tags": ["nx-release"]
           }
         ],
@@ -3340,6 +2758,62 @@
     "path": "/recipes",
     "tags": []
   },
+  "/recipes/installation": {
+    "id": "installation",
+    "name": "Installation",
+    "description": "Installing Nx",
+    "mediaImage": "",
+    "file": "",
+    "itemList": [
+      {
+        "id": "install-non-javascript",
+        "name": "Install Nx in a Non-Javascript Repo",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/installation/install-non-javascript",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/installation/install-non-javascript",
+        "tags": ["installation"]
+      },
+      {
+        "id": "update-global-installation",
+        "name": "Update Your Global Nx Installation",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/installation/update-global-installation",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/installation/update-global-installation",
+        "tags": ["installation"]
+      }
+    ],
+    "isExternal": false,
+    "path": "/recipes/installation",
+    "tags": []
+  },
+  "/recipes/installation/install-non-javascript": {
+    "id": "install-non-javascript",
+    "name": "Install Nx in a Non-Javascript Repo",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/installation/install-non-javascript",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/installation/install-non-javascript",
+    "tags": ["installation"]
+  },
+  "/recipes/installation/update-global-installation": {
+    "id": "update-global-installation",
+    "name": "Update Your Global Nx Installation",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/installation/update-global-installation",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/installation/update-global-installation",
+    "tags": ["installation"]
+  },
   "/recipes/running-tasks": {
     "id": "running-tasks",
     "name": "Tasks & Caching",
@@ -3348,19 +2822,30 @@
     "file": "",
     "itemList": [
       {
-        "id": "customizing-inputs",
-        "name": "Fine-tuning Caching with Inputs",
+        "id": "configure-inputs",
+        "name": "Configure Inputs for Task Caching",
         "description": "",
         "mediaImage": "",
-        "file": "shared/recipes/running-tasks/customizing-inputs",
+        "file": "shared/recipes/running-tasks/configure-inputs",
         "itemList": [],
         "isExternal": false,
-        "path": "/recipes/running-tasks/customizing-inputs",
+        "path": "/recipes/running-tasks/configure-inputs",
+        "tags": ["run-tasks", "cache-task-results"]
+      },
+      {
+        "id": "configure-outputs",
+        "name": "Configure Outputs for Task Caching",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/running-tasks/configure-outputs",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/running-tasks/configure-outputs",
         "tags": ["run-tasks", "cache-task-results"]
       },
       {
         "id": "defining-task-pipeline",
-        "name": "Defining a Task Pipeline",
+        "name": "Define a Task Pipeline",
         "description": "",
         "mediaImage": "",
         "file": "shared/recipes/running-tasks/defining-task-pipeline",
@@ -3382,14 +2867,25 @@
       },
       {
         "id": "run-commands-executor",
-        "name": "Running Custom Commands",
+        "name": "Run Custom Commands",
         "description": "",
         "mediaImage": "",
         "file": "shared/recipes/running-tasks/running-custom-commands",
         "itemList": [],
         "isExternal": false,
         "path": "/recipes/running-tasks/run-commands-executor",
-        "tags": ["run-tasks", "use-task-executors"]
+        "tags": ["run-tasks"]
+      },
+      {
+        "id": "pass-args-to-commands",
+        "name": "Pass Args to Commands",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/running-tasks/pass-args-to-commands",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/running-tasks/pass-args-to-commands",
+        "tags": ["run-tasks"]
       },
       {
         "id": "run-tasks-in-parallel",
@@ -3440,20 +2936,31 @@
     "path": "/recipes/running-tasks",
     "tags": []
   },
-  "/recipes/running-tasks/customizing-inputs": {
-    "id": "customizing-inputs",
-    "name": "Fine-tuning Caching with Inputs",
+  "/recipes/running-tasks/configure-inputs": {
+    "id": "configure-inputs",
+    "name": "Configure Inputs for Task Caching",
     "description": "",
     "mediaImage": "",
-    "file": "shared/recipes/running-tasks/customizing-inputs",
+    "file": "shared/recipes/running-tasks/configure-inputs",
     "itemList": [],
     "isExternal": false,
-    "path": "/recipes/running-tasks/customizing-inputs",
+    "path": "/recipes/running-tasks/configure-inputs",
+    "tags": ["run-tasks", "cache-task-results"]
+  },
+  "/recipes/running-tasks/configure-outputs": {
+    "id": "configure-outputs",
+    "name": "Configure Outputs for Task Caching",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/running-tasks/configure-outputs",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/running-tasks/configure-outputs",
     "tags": ["run-tasks", "cache-task-results"]
   },
   "/recipes/running-tasks/defining-task-pipeline": {
     "id": "defining-task-pipeline",
-    "name": "Defining a Task Pipeline",
+    "name": "Define a Task Pipeline",
     "description": "",
     "mediaImage": "",
     "file": "shared/recipes/running-tasks/defining-task-pipeline",
@@ -3475,14 +2982,25 @@
   },
   "/recipes/running-tasks/run-commands-executor": {
     "id": "run-commands-executor",
-    "name": "Running Custom Commands",
+    "name": "Run Custom Commands",
     "description": "",
     "mediaImage": "",
     "file": "shared/recipes/running-tasks/running-custom-commands",
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/running-tasks/run-commands-executor",
-    "tags": ["run-tasks", "use-task-executors"]
+    "tags": ["run-tasks"]
+  },
+  "/recipes/running-tasks/pass-args-to-commands": {
+    "id": "pass-args-to-commands",
+    "name": "Pass Args to Commands",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/running-tasks/pass-args-to-commands",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/running-tasks/pass-args-to-commands",
+    "tags": ["run-tasks"]
   },
   "/recipes/running-tasks/run-tasks-in-parallel": {
     "id": "run-tasks-in-parallel",
@@ -3569,17 +3087,6 @@
         "tags": []
       },
       {
-        "id": "lerna-and-nx",
-        "name": "Nx and Lerna",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/migration/lerna-and-nx",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/adopting-nx/lerna-and-nx",
-        "tags": []
-      },
-      {
         "id": "preserving-git-histories",
         "name": "Preserving Git Histories",
         "description": "",
@@ -3639,17 +3146,6 @@
     "path": "/recipes/adopting-nx/adding-to-existing-project",
     "tags": []
   },
-  "/recipes/adopting-nx/lerna-and-nx": {
-    "id": "lerna-and-nx",
-    "name": "Nx and Lerna",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/migration/lerna-and-nx",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/adopting-nx/lerna-and-nx",
-    "tags": []
-  },
   "/recipes/adopting-nx/preserving-git-histories": {
     "id": "preserving-git-histories",
     "name": "Preserving Git Histories",
@@ -3679,28 +3175,6 @@
     "mediaImage": "",
     "file": "",
     "itemList": [
-      {
-        "id": "migration-cra",
-        "name": "Migrating from CRA",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/migration/migration-cra",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/react/migration-cra",
-        "tags": []
-      },
-      {
-        "id": "react-18",
-        "name": "React 18 Migration",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/guides/react-18",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/react/react-18",
-        "tags": []
-      },
       {
         "id": "react-native",
         "name": "React Native with Nx",
@@ -3765,7 +3239,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/recipes/react/module-federation-with-ssr",
-        "tags": ["use-task-executors", "module-federation", "react"]
+        "tags": ["module-federation", "react"]
       },
       {
         "id": "deploy-nextjs-to-vercel",
@@ -3781,28 +3255,6 @@
     ],
     "isExternal": false,
     "path": "/recipes/react",
-    "tags": []
-  },
-  "/recipes/react/migration-cra": {
-    "id": "migration-cra",
-    "name": "Migrating from CRA",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/migration/migration-cra",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/react/migration-cra",
-    "tags": []
-  },
-  "/recipes/react/react-18": {
-    "id": "react-18",
-    "name": "React 18 Migration",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/guides/react-18",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/react/react-18",
     "tags": []
   },
   "/recipes/react/react-native": {
@@ -3869,7 +3321,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/react/module-federation-with-ssr",
-    "tags": ["use-task-executors", "module-federation", "react"]
+    "tags": ["module-federation", "react"]
   },
   "/recipes/react/deploy-nextjs-to-vercel": {
     "id": "deploy-nextjs-to-vercel",
@@ -3917,28 +3369,6 @@
             "isExternal": false,
             "path": "/recipes/angular/migration/angular-multiple",
             "tags": []
-          },
-          {
-            "id": "angular-manual",
-            "name": "Migrating Angular Application manually",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/migration/angular-manual",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/angular/migration/angular-manual",
-            "tags": []
-          },
-          {
-            "id": "angularjs",
-            "name": "Migrating from AngularJS",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/migration/migration-angularjs",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/angular/migration/angularjs",
-            "tags": []
           }
         ],
         "isExternal": false,
@@ -3976,18 +3406,18 @@
         "itemList": [],
         "isExternal": false,
         "path": "/recipes/angular/module-federation-with-ssr",
-        "tags": ["use-task-executors", "module-federation", "angular"]
+        "tags": ["module-federation", "angular"]
       },
       {
         "id": "dynamic-module-federation-with-angular",
         "name": "Advanced Micro Frontends with Angular using Dynamic Federation",
         "description": "",
         "mediaImage": "",
-        "file": "shared/guides/module-federation/dynamic-mfe-angular",
+        "file": "shared/recipes/module-federation/dynamic-mfe-angular",
         "itemList": [],
         "isExternal": false,
         "path": "/recipes/angular/dynamic-module-federation-with-angular",
-        "tags": ["use-task-executors", "module-federation", "angular"]
+        "tags": ["module-federation", "angular"]
       },
       {
         "id": "setup-incremental-builds-angular",
@@ -4033,28 +3463,6 @@
         "isExternal": false,
         "path": "/recipes/angular/migration/angular-multiple",
         "tags": []
-      },
-      {
-        "id": "angular-manual",
-        "name": "Migrating Angular Application manually",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/migration/angular-manual",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/angular/migration/angular-manual",
-        "tags": []
-      },
-      {
-        "id": "angularjs",
-        "name": "Migrating from AngularJS",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/migration/migration-angularjs",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/angular/migration/angularjs",
-        "tags": []
       }
     ],
     "isExternal": false,
@@ -4081,28 +3489,6 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/angular/migration/angular-multiple",
-    "tags": []
-  },
-  "/recipes/angular/migration/angular-manual": {
-    "id": "angular-manual",
-    "name": "Migrating Angular Application manually",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/migration/angular-manual",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/angular/migration/angular-manual",
-    "tags": []
-  },
-  "/recipes/angular/migration/angularjs": {
-    "id": "angularjs",
-    "name": "Migrating from AngularJS",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/migration/migration-angularjs",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/angular/migration/angularjs",
     "tags": []
   },
   "/recipes/angular/use-environment-variables-in-angular": {
@@ -4136,18 +3522,18 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/angular/module-federation-with-ssr",
-    "tags": ["use-task-executors", "module-federation", "angular"]
+    "tags": ["module-federation", "angular"]
   },
   "/recipes/angular/dynamic-module-federation-with-angular": {
     "id": "dynamic-module-federation-with-angular",
     "name": "Advanced Micro Frontends with Angular using Dynamic Federation",
     "description": "",
     "mediaImage": "",
-    "file": "shared/guides/module-federation/dynamic-mfe-angular",
+    "file": "shared/recipes/module-federation/dynamic-mfe-angular",
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/angular/dynamic-module-federation-with-angular",
-    "tags": ["use-task-executors", "module-federation", "angular"]
+    "tags": ["module-federation", "angular"]
   },
   "/recipes/angular/setup-incremental-builds-angular": {
     "id": "setup-incremental-builds-angular",
@@ -4389,6 +3775,17 @@
         "tags": ["storybook"]
       },
       {
+        "id": "upgrading-storybook",
+        "name": "Upgrading Storybook using the Storybook CLI",
+        "description": "This guide explains how you can upgrade Storybook using the Storybook CLI upgrade and automigrate commands.",
+        "mediaImage": "",
+        "file": "shared/recipes/storybook/upgrading-storybook",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/storybook/upgrading-storybook",
+        "tags": ["storybook"]
+      },
+      {
         "id": "storybook-composition-setup",
         "name": "Setting up Storybook Composition with Nx",
         "description": "This guide explains how you can set up Storybook composition on your Nx workspace.",
@@ -4525,6 +3922,17 @@
     "path": "/recipes/storybook/storybook-interaction-tests",
     "tags": ["storybook"]
   },
+  "/recipes/storybook/upgrading-storybook": {
+    "id": "upgrading-storybook",
+    "name": "Upgrading Storybook using the Storybook CLI",
+    "description": "This guide explains how you can upgrade Storybook using the Storybook CLI upgrade and automigrate commands.",
+    "mediaImage": "",
+    "file": "shared/recipes/storybook/upgrading-storybook",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/storybook/upgrading-storybook",
+    "tags": ["storybook"]
+  },
   "/recipes/storybook/storybook-composition-setup": {
     "id": "storybook-composition-setup",
     "name": "Setting up Storybook Composition with Nx",
@@ -4577,6 +3985,17 @@
         "tags": []
       },
       {
+        "id": "cypress-setup-node-events",
+        "name": "Using setupNodeEvents with Cypress preset",
+        "description": "A guide on using the setupNodeEvents function with @nx/cypress/plugins/cypress-preset",
+        "mediaImage": "",
+        "file": "shared/packages/cypress/cypress-setup-node-events",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/cypress/cypress-setup-node-events",
+        "tags": []
+      },
+      {
         "id": "cypress-v11-migration",
         "name": "Cypress v11 Migration Guide",
         "description": "Cypress v11 Migration Guide",
@@ -4603,6 +4022,17 @@
     "path": "/recipes/cypress/cypress-component-testing",
     "tags": []
   },
+  "/recipes/cypress/cypress-setup-node-events": {
+    "id": "cypress-setup-node-events",
+    "name": "Using setupNodeEvents with Cypress preset",
+    "description": "A guide on using the setupNodeEvents function with @nx/cypress/plugins/cypress-preset",
+    "mediaImage": "",
+    "file": "shared/packages/cypress/cypress-setup-node-events",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/cypress/cypress-setup-node-events",
+    "tags": []
+  },
   "/recipes/cypress/cypress-v11-migration": {
     "id": "cypress-v11-migration",
     "name": "Cypress v11 Migration Guide",
@@ -4613,84 +4043,6 @@
     "isExternal": false,
     "path": "/recipes/cypress/cypress-v11-migration",
     "tags": []
-  },
-  "/recipes/deno": {
-    "id": "deno",
-    "name": "Deno",
-    "description": "Deno related recipes",
-    "mediaImage": "",
-    "file": "",
-    "itemList": [
-      {
-        "id": "add-deno",
-        "name": "Add a Deno Project",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/recipes/add-stack/add-deno",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/deno/add-deno",
-        "tags": ["deno"]
-      },
-      {
-        "id": "deno-deploy",
-        "name": "Serverless deployment with Deno Deploy",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/recipes/deployment/deno-deploy",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/deno/deno-deploy",
-        "tags": ["deployment", "deno"]
-      },
-      {
-        "id": "deno-netlify-functions",
-        "name": "Add and Deploy Netlify Edge Functions with Deno",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/recipes/deployment/deno-netlify-edge-functions",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/deno/deno-netlify-functions",
-        "tags": ["deployment", "deno"]
-      }
-    ],
-    "isExternal": false,
-    "path": "/recipes/deno",
-    "tags": []
-  },
-  "/recipes/deno/add-deno": {
-    "id": "add-deno",
-    "name": "Add a Deno Project",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/recipes/add-stack/add-deno",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/deno/add-deno",
-    "tags": ["deno"]
-  },
-  "/recipes/deno/deno-deploy": {
-    "id": "deno-deploy",
-    "name": "Serverless deployment with Deno Deploy",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/recipes/deployment/deno-deploy",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/deno/deno-deploy",
-    "tags": ["deployment", "deno"]
-  },
-  "/recipes/deno/deno-netlify-functions": {
-    "id": "deno-netlify-functions",
-    "name": "Add and Deploy Netlify Edge Functions with Deno",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/recipes/deployment/deno-netlify-edge-functions",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/deno/deno-netlify-functions",
-    "tags": ["deployment", "deno"]
   },
   "/recipes/next": {
     "id": "next",
@@ -4803,7 +4155,7 @@
     "itemList": [
       {
         "id": "webpack-config-setup",
-        "name": "How to configure webpack on your Nx workspace",
+        "name": "How to configure Webpack in your Nx workspace",
         "description": "A guide on how to configure webpack on your Nx workspace, and instructions on how to customize your webpack configuration",
         "mediaImage": "",
         "file": "shared/packages/webpack/webpack-config-setup",
@@ -4830,7 +4182,7 @@
   },
   "/recipes/webpack/webpack-config-setup": {
     "id": "webpack-config-setup",
-    "name": "How to configure webpack on your Nx workspace",
+    "name": "How to configure Webpack in your Nx workspace",
     "description": "A guide on how to configure webpack on your Nx workspace, and instructions on how to customize your webpack configuration",
     "mediaImage": "",
     "file": "shared/packages/webpack/webpack-config-setup",
@@ -5027,62 +4379,6 @@
     "isExternal": false,
     "path": "/recipes/enforce-module-boundaries/tags-allow-list",
     "tags": ["enforce-module-boundaries"]
-  },
-  "/recipes/installation": {
-    "id": "installation",
-    "name": "Installation",
-    "description": "Installing Nx",
-    "mediaImage": "",
-    "file": "",
-    "itemList": [
-      {
-        "id": "install-non-javascript",
-        "name": "Install Nx in a Non-Javascript Repo",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/recipes/installation/install-non-javascript",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/installation/install-non-javascript",
-        "tags": ["installation"]
-      },
-      {
-        "id": "update-global-installation",
-        "name": "Update Your Global Nx Installation",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/recipes/installation/update-global-installation",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/installation/update-global-installation",
-        "tags": ["installation"]
-      }
-    ],
-    "isExternal": false,
-    "path": "/recipes/installation",
-    "tags": []
-  },
-  "/recipes/installation/install-non-javascript": {
-    "id": "install-non-javascript",
-    "name": "Install Nx in a Non-Javascript Repo",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/recipes/installation/install-non-javascript",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/installation/install-non-javascript",
-    "tags": ["installation"]
-  },
-  "/recipes/installation/update-global-installation": {
-    "id": "update-global-installation",
-    "name": "Update Your Global Nx Installation",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/recipes/installation/update-global-installation",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/installation/update-global-installation",
-    "tags": ["installation"]
   },
   "/recipes/tips-n-tricks": {
     "id": "tips-n-tricks",
@@ -5492,128 +4788,6 @@
     "path": "/recipes/tips-n-tricks/flat-config",
     "tags": ["eslint", "flat config"]
   },
-  "/recipes/troubleshooting": {
-    "id": "troubleshooting",
-    "name": "Troubleshooting",
-    "description": "Learn how to troubleshoot common problems.",
-    "mediaImage": "",
-    "file": "",
-    "itemList": [
-      {
-        "id": "resolve-circular-dependencies",
-        "name": "Resolve Circular Dependencies",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/recipes/resolve-circular-dependencies",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/troubleshooting/resolve-circular-dependencies",
-        "tags": ["explore-graph"]
-      },
-      {
-        "id": "troubleshoot-nx-install-issues",
-        "name": "Troubleshooting Nx Install Issues",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/installation/troubleshoot-installation",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/troubleshooting/troubleshoot-nx-install-issues",
-        "tags": []
-      },
-      {
-        "id": "troubleshoot-cache-misses",
-        "name": "Troubleshoot Cache Misses",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/recipes/troubleshoot-cache-misses",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/troubleshooting/troubleshoot-cache-misses",
-        "tags": ["cache-task-results"]
-      },
-      {
-        "id": "unknown-local-cache",
-        "name": "Unknown Local Cache Error",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/guides/unknown-local-cache",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/troubleshooting/unknown-local-cache",
-        "tags": []
-      },
-      {
-        "id": "performance-profiling",
-        "name": "Profiling Build Performance",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/guides/performance-profiling",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/troubleshooting/performance-profiling",
-        "tags": ["use-task-executors", "environment-variables"]
-      }
-    ],
-    "isExternal": false,
-    "path": "/recipes/troubleshooting",
-    "tags": []
-  },
-  "/recipes/troubleshooting/resolve-circular-dependencies": {
-    "id": "resolve-circular-dependencies",
-    "name": "Resolve Circular Dependencies",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/recipes/resolve-circular-dependencies",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/troubleshooting/resolve-circular-dependencies",
-    "tags": ["explore-graph"]
-  },
-  "/recipes/troubleshooting/troubleshoot-nx-install-issues": {
-    "id": "troubleshoot-nx-install-issues",
-    "name": "Troubleshooting Nx Install Issues",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/installation/troubleshoot-installation",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/troubleshooting/troubleshoot-nx-install-issues",
-    "tags": []
-  },
-  "/recipes/troubleshooting/troubleshoot-cache-misses": {
-    "id": "troubleshoot-cache-misses",
-    "name": "Troubleshoot Cache Misses",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/recipes/troubleshoot-cache-misses",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/troubleshooting/troubleshoot-cache-misses",
-    "tags": ["cache-task-results"]
-  },
-  "/recipes/troubleshooting/unknown-local-cache": {
-    "id": "unknown-local-cache",
-    "name": "Unknown Local Cache Error",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/guides/unknown-local-cache",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/troubleshooting/unknown-local-cache",
-    "tags": []
-  },
-  "/recipes/troubleshooting/performance-profiling": {
-    "id": "performance-profiling",
-    "name": "Profiling Build Performance",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/guides/performance-profiling",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/troubleshooting/performance-profiling",
-    "tags": ["use-task-executors", "environment-variables"]
-  },
   "/recipes/nx-console": {
     "id": "nx-console",
     "name": "Nx Console",
@@ -5630,7 +4804,18 @@
         "itemList": [],
         "isExternal": false,
         "path": "/recipes/nx-console/console-telemetry",
-        "tags": ["integrate-with-editors"]
+        "tags": ["editor-setup"]
+      },
+      {
+        "id": "console-project-details",
+        "name": "Project Details View",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/console-project-details",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/nx-console/console-project-details",
+        "tags": ["editor-setup"]
       },
       {
         "id": "console-generate-command",
@@ -5641,7 +4826,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/recipes/nx-console/console-generate-command",
-        "tags": ["integrate-with-editors"]
+        "tags": ["editor-setup"]
       },
       {
         "id": "console-run-command",
@@ -5652,40 +4837,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/recipes/nx-console/console-run-command",
-        "tags": ["integrate-with-editors"]
-      },
-      {
-        "id": "console-add-dependency-command",
-        "name": "Add Dependency Command",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/recipes/console-add-dependency-command",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/nx-console/console-add-dependency-command",
-        "tags": ["integrate-with-editors"]
-      },
-      {
-        "id": "console-project-pane",
-        "name": "Project Pane",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/recipes/console-project-pane",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/nx-console/console-project-pane",
-        "tags": ["integrate-with-editors"]
-      },
-      {
-        "id": "console-shortcuts",
-        "name": "Keyboard Shortcuts",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/recipes/console-shortcuts",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/nx-console/console-shortcuts",
-        "tags": ["integrate-with-editors"]
+        "tags": ["editor-setup"]
       },
       {
         "id": "console-troubleshooting",
@@ -5696,7 +4848,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/recipes/nx-console/console-troubleshooting",
-        "tags": ["integrate-with-editors"]
+        "tags": ["editor-setup"]
       }
     ],
     "isExternal": false,
@@ -5712,7 +4864,18 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/nx-console/console-telemetry",
-    "tags": ["integrate-with-editors"]
+    "tags": ["editor-setup"]
+  },
+  "/recipes/nx-console/console-project-details": {
+    "id": "console-project-details",
+    "name": "Project Details View",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/console-project-details",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/nx-console/console-project-details",
+    "tags": ["editor-setup"]
   },
   "/recipes/nx-console/console-generate-command": {
     "id": "console-generate-command",
@@ -5723,7 +4886,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/nx-console/console-generate-command",
-    "tags": ["integrate-with-editors"]
+    "tags": ["editor-setup"]
   },
   "/recipes/nx-console/console-run-command": {
     "id": "console-run-command",
@@ -5734,40 +4897,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/nx-console/console-run-command",
-    "tags": ["integrate-with-editors"]
-  },
-  "/recipes/nx-console/console-add-dependency-command": {
-    "id": "console-add-dependency-command",
-    "name": "Add Dependency Command",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/recipes/console-add-dependency-command",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/nx-console/console-add-dependency-command",
-    "tags": ["integrate-with-editors"]
-  },
-  "/recipes/nx-console/console-project-pane": {
-    "id": "console-project-pane",
-    "name": "Project Pane",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/recipes/console-project-pane",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/nx-console/console-project-pane",
-    "tags": ["integrate-with-editors"]
-  },
-  "/recipes/nx-console/console-shortcuts": {
-    "id": "console-shortcuts",
-    "name": "Keyboard Shortcuts",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/recipes/console-shortcuts",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/nx-console/console-shortcuts",
-    "tags": ["integrate-with-editors"]
+    "tags": ["editor-setup"]
   },
   "/recipes/nx-console/console-troubleshooting": {
     "id": "console-troubleshooting",
@@ -5778,7 +4908,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/nx-console/console-troubleshooting",
-    "tags": ["integrate-with-editors"]
+    "tags": ["editor-setup"]
   },
   "/recipes/nx-release": {
     "id": "nx-release",
@@ -5821,6 +4951,17 @@
         "tags": ["nx-release"]
       },
       {
+        "id": "configure-custom-registries",
+        "name": "Configure Custom Registries",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/nx-release/configure-custom-registries",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/nx-release/configure-custom-registries",
+        "tags": ["nx-release"]
+      },
+      {
         "id": "publish-in-ci-cd",
         "name": "Publish in CI/CD",
         "description": "",
@@ -5829,6 +4970,61 @@
         "itemList": [],
         "isExternal": false,
         "path": "/recipes/nx-release/publish-in-ci-cd",
+        "tags": ["nx-release"]
+      },
+      {
+        "id": "automate-github-releases",
+        "name": "Automate GitHub Releases",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/nx-release/automate-github-releases",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/nx-release/automate-github-releases",
+        "tags": ["nx-release"]
+      },
+      {
+        "id": "publish-rust-crates",
+        "name": "Publish Rust Crates",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/nx-release/publish-rust-crates",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/nx-release/publish-rust-crates",
+        "tags": ["nx-release"]
+      },
+      {
+        "id": "update-local-registry-setup",
+        "name": "Update Your Local Registry Setup to use Nx Release",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/nx-release/update-local-registry-setup",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/nx-release/update-local-registry-setup",
+        "tags": ["nx-release"]
+      },
+      {
+        "id": "customize-conventional-commit-types",
+        "name": "Customize Conventional Commit Types",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/nx-release/customize-conventional-commit-types",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/nx-release/customize-conventional-commit-types",
+        "tags": ["nx-release"]
+      },
+      {
+        "id": "configure-changelog-format",
+        "name": "Configure Changelog Format",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/nx-release/configure-changelog-format",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/nx-release/configure-changelog-format",
         "tags": ["nx-release"]
       }
     ],
@@ -5869,6 +5065,17 @@
     "path": "/recipes/nx-release/automatically-version-with-conventional-commits",
     "tags": ["nx-release"]
   },
+  "/recipes/nx-release/configure-custom-registries": {
+    "id": "configure-custom-registries",
+    "name": "Configure Custom Registries",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/nx-release/configure-custom-registries",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/nx-release/configure-custom-registries",
+    "tags": ["nx-release"]
+  },
   "/recipes/nx-release/publish-in-ci-cd": {
     "id": "publish-in-ci-cd",
     "name": "Publish in CI/CD",
@@ -5878,6 +5085,61 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/nx-release/publish-in-ci-cd",
+    "tags": ["nx-release"]
+  },
+  "/recipes/nx-release/automate-github-releases": {
+    "id": "automate-github-releases",
+    "name": "Automate GitHub Releases",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/nx-release/automate-github-releases",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/nx-release/automate-github-releases",
+    "tags": ["nx-release"]
+  },
+  "/recipes/nx-release/publish-rust-crates": {
+    "id": "publish-rust-crates",
+    "name": "Publish Rust Crates",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/nx-release/publish-rust-crates",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/nx-release/publish-rust-crates",
+    "tags": ["nx-release"]
+  },
+  "/recipes/nx-release/update-local-registry-setup": {
+    "id": "update-local-registry-setup",
+    "name": "Update Your Local Registry Setup to use Nx Release",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/nx-release/update-local-registry-setup",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/nx-release/update-local-registry-setup",
+    "tags": ["nx-release"]
+  },
+  "/recipes/nx-release/customize-conventional-commit-types": {
+    "id": "customize-conventional-commit-types",
+    "name": "Customize Conventional Commit Types",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/nx-release/customize-conventional-commit-types",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/nx-release/customize-conventional-commit-types",
+    "tags": ["nx-release"]
+  },
+  "/recipes/nx-release/configure-changelog-format": {
+    "id": "configure-changelog-format",
+    "name": "Configure Changelog Format",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/nx-release/configure-changelog-format",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/nx-release/configure-changelog-format",
     "tags": ["nx-release"]
   },
   "/recipes/other": {
@@ -5926,11 +5188,11 @@
         "name": "Nx with your favorite tech",
         "description": "Examples of different ways to use Nx with your favorite tech",
         "mediaImage": "",
-        "file": "",
+        "file": "shared/showcase/example-repos",
         "itemList": [
           {
             "id": "add-express",
-            "name": "Add an Express Project",
+            "name": "Express",
             "description": "Add an Express application to your repo",
             "mediaImage": "",
             "file": "shared/recipes/add-stack/add-express",
@@ -5941,8 +5203,8 @@
           },
           {
             "id": "add-lit",
-            "name": "Add a Lit Project",
-            "description": "Add a Lit project to your repo",
+            "name": "Lit",
+            "description": "Lit to your repo",
             "mediaImage": "",
             "file": "shared/recipes/add-stack/add-lit",
             "itemList": [],
@@ -5952,8 +5214,8 @@
           },
           {
             "id": "add-solid",
-            "name": "Add a Solid Project",
-            "description": "Add a Solid project to your repo",
+            "name": "Solid",
+            "description": "Solid to your repo",
             "mediaImage": "",
             "file": "shared/recipes/add-stack/add-solid",
             "itemList": [],
@@ -5963,8 +5225,8 @@
           },
           {
             "id": "add-qwik",
-            "name": "Add a Qwik Project",
-            "description": "Add a Qwik project to your repo",
+            "name": "Qwik",
+            "description": "Qwik to your repo",
             "mediaImage": "",
             "file": "shared/recipes/add-stack/add-qwik",
             "itemList": [],
@@ -5974,8 +5236,8 @@
           },
           {
             "id": "add-rust",
-            "name": "Add a Rust Project",
-            "description": "Add a Rust project to your repo",
+            "name": "Rust",
+            "description": "Rust to your repo",
             "mediaImage": "",
             "file": "shared/recipes/add-stack/add-rust",
             "itemList": [],
@@ -5985,8 +5247,8 @@
           },
           {
             "id": "add-dotnet",
-            "name": "Add a .NET Project",
-            "description": "Add a .NET project to your repo",
+            "name": ".NET",
+            "description": ".NET to your repo",
             "mediaImage": "",
             "file": "shared/recipes/add-stack/add-dotnet",
             "itemList": [],
@@ -5996,7 +5258,7 @@
           },
           {
             "id": "add-astro",
-            "name": "Add an Astro Project",
+            "name": "Astro",
             "description": "Add Nx to an Astro project",
             "mediaImage": "",
             "file": "shared/recipes/add-stack/add-astro",
@@ -6007,8 +5269,8 @@
           },
           {
             "id": "add-svelte",
-            "name": "Add a Svelte Project",
-            "description": "Add a Svelte project to your repo",
+            "name": "Svelte",
+            "description": "Svelte to your repo",
             "mediaImage": "",
             "file": "shared/recipes/add-stack/add-svelte",
             "itemList": [],
@@ -6018,8 +5280,8 @@
           },
           {
             "id": "add-fastify",
-            "name": "Add a Fastify Project",
-            "description": "Add a Fastify project to your repo",
+            "name": "Fastify",
+            "description": "Fastify to your repo",
             "mediaImage": "",
             "file": "shared/recipes/add-stack/add-fastify",
             "itemList": [],
@@ -6029,7 +5291,7 @@
           },
           {
             "id": "apollo-react",
-            "name": "Using Apollo GraphQL",
+            "name": "Apollo GraphQL",
             "description": "",
             "mediaImage": "",
             "file": "shared/examples/apollo-react",
@@ -6040,7 +5302,7 @@
           },
           {
             "id": "nestjs-prisma",
-            "name": "Using Prisma with NestJS",
+            "name": "Prisma with NestJS",
             "description": "",
             "mediaImage": "",
             "file": "shared/recipes/database/nestjs-prisma",
@@ -6051,7 +5313,7 @@
           },
           {
             "id": "mongo-fastify",
-            "name": "Using Mongo with Fastify",
+            "name": "Mongo with Fastify",
             "description": "",
             "mediaImage": "",
             "file": "shared/recipes/database/mongo-fastify",
@@ -6062,7 +5324,7 @@
           },
           {
             "id": "redis-fastify",
-            "name": "Using Redis with Fastify",
+            "name": "Redis with Fastify",
             "description": "",
             "mediaImage": "",
             "file": "shared/recipes/database/redis-fastify",
@@ -6073,7 +5335,7 @@
           },
           {
             "id": "postgres-fastify",
-            "name": "Using Postgres with Fastify",
+            "name": "Postgres with Fastify",
             "description": "",
             "mediaImage": "",
             "file": "shared/recipes/database/postgres-fastify",
@@ -6084,7 +5346,7 @@
           },
           {
             "id": "serverless-fastify-planetscale",
-            "name": "Using PlanetScale with Serverless Fastify",
+            "name": "PlanetScale with Serverless Fastify",
             "description": "",
             "mediaImage": "",
             "file": "shared/recipes/database/serverless-fastify-planetscale",
@@ -6095,7 +5357,7 @@
           },
           {
             "id": "mfe",
-            "name": "Nx Micro-Frontend Example",
+            "name": "Nx with Micro-frontends",
             "description": "",
             "mediaImage": "",
             "file": "shared/examples/nx-examples",
@@ -6164,11 +5426,11 @@
     "name": "Nx with your favorite tech",
     "description": "Examples of different ways to use Nx with your favorite tech",
     "mediaImage": "",
-    "file": "",
+    "file": "shared/showcase/example-repos",
     "itemList": [
       {
         "id": "add-express",
-        "name": "Add an Express Project",
+        "name": "Express",
         "description": "Add an Express application to your repo",
         "mediaImage": "",
         "file": "shared/recipes/add-stack/add-express",
@@ -6179,8 +5441,8 @@
       },
       {
         "id": "add-lit",
-        "name": "Add a Lit Project",
-        "description": "Add a Lit project to your repo",
+        "name": "Lit",
+        "description": "Lit to your repo",
         "mediaImage": "",
         "file": "shared/recipes/add-stack/add-lit",
         "itemList": [],
@@ -6190,8 +5452,8 @@
       },
       {
         "id": "add-solid",
-        "name": "Add a Solid Project",
-        "description": "Add a Solid project to your repo",
+        "name": "Solid",
+        "description": "Solid to your repo",
         "mediaImage": "",
         "file": "shared/recipes/add-stack/add-solid",
         "itemList": [],
@@ -6201,8 +5463,8 @@
       },
       {
         "id": "add-qwik",
-        "name": "Add a Qwik Project",
-        "description": "Add a Qwik project to your repo",
+        "name": "Qwik",
+        "description": "Qwik to your repo",
         "mediaImage": "",
         "file": "shared/recipes/add-stack/add-qwik",
         "itemList": [],
@@ -6212,8 +5474,8 @@
       },
       {
         "id": "add-rust",
-        "name": "Add a Rust Project",
-        "description": "Add a Rust project to your repo",
+        "name": "Rust",
+        "description": "Rust to your repo",
         "mediaImage": "",
         "file": "shared/recipes/add-stack/add-rust",
         "itemList": [],
@@ -6223,8 +5485,8 @@
       },
       {
         "id": "add-dotnet",
-        "name": "Add a .NET Project",
-        "description": "Add a .NET project to your repo",
+        "name": ".NET",
+        "description": ".NET to your repo",
         "mediaImage": "",
         "file": "shared/recipes/add-stack/add-dotnet",
         "itemList": [],
@@ -6234,7 +5496,7 @@
       },
       {
         "id": "add-astro",
-        "name": "Add an Astro Project",
+        "name": "Astro",
         "description": "Add Nx to an Astro project",
         "mediaImage": "",
         "file": "shared/recipes/add-stack/add-astro",
@@ -6245,8 +5507,8 @@
       },
       {
         "id": "add-svelte",
-        "name": "Add a Svelte Project",
-        "description": "Add a Svelte project to your repo",
+        "name": "Svelte",
+        "description": "Svelte to your repo",
         "mediaImage": "",
         "file": "shared/recipes/add-stack/add-svelte",
         "itemList": [],
@@ -6256,8 +5518,8 @@
       },
       {
         "id": "add-fastify",
-        "name": "Add a Fastify Project",
-        "description": "Add a Fastify project to your repo",
+        "name": "Fastify",
+        "description": "Fastify to your repo",
         "mediaImage": "",
         "file": "shared/recipes/add-stack/add-fastify",
         "itemList": [],
@@ -6267,7 +5529,7 @@
       },
       {
         "id": "apollo-react",
-        "name": "Using Apollo GraphQL",
+        "name": "Apollo GraphQL",
         "description": "",
         "mediaImage": "",
         "file": "shared/examples/apollo-react",
@@ -6278,7 +5540,7 @@
       },
       {
         "id": "nestjs-prisma",
-        "name": "Using Prisma with NestJS",
+        "name": "Prisma with NestJS",
         "description": "",
         "mediaImage": "",
         "file": "shared/recipes/database/nestjs-prisma",
@@ -6289,7 +5551,7 @@
       },
       {
         "id": "mongo-fastify",
-        "name": "Using Mongo with Fastify",
+        "name": "Mongo with Fastify",
         "description": "",
         "mediaImage": "",
         "file": "shared/recipes/database/mongo-fastify",
@@ -6300,7 +5562,7 @@
       },
       {
         "id": "redis-fastify",
-        "name": "Using Redis with Fastify",
+        "name": "Redis with Fastify",
         "description": "",
         "mediaImage": "",
         "file": "shared/recipes/database/redis-fastify",
@@ -6311,7 +5573,7 @@
       },
       {
         "id": "postgres-fastify",
-        "name": "Using Postgres with Fastify",
+        "name": "Postgres with Fastify",
         "description": "",
         "mediaImage": "",
         "file": "shared/recipes/database/postgres-fastify",
@@ -6322,7 +5584,7 @@
       },
       {
         "id": "serverless-fastify-planetscale",
-        "name": "Using PlanetScale with Serverless Fastify",
+        "name": "PlanetScale with Serverless Fastify",
         "description": "",
         "mediaImage": "",
         "file": "shared/recipes/database/serverless-fastify-planetscale",
@@ -6333,7 +5595,7 @@
       },
       {
         "id": "mfe",
-        "name": "Nx Micro-Frontend Example",
+        "name": "Nx with Micro-frontends",
         "description": "",
         "mediaImage": "",
         "file": "shared/examples/nx-examples",
@@ -6349,7 +5611,7 @@
   },
   "/showcase/example-repos/add-express": {
     "id": "add-express",
-    "name": "Add an Express Project",
+    "name": "Express",
     "description": "Add an Express application to your repo",
     "mediaImage": "",
     "file": "shared/recipes/add-stack/add-express",
@@ -6360,8 +5622,8 @@
   },
   "/showcase/example-repos/add-lit": {
     "id": "add-lit",
-    "name": "Add a Lit Project",
-    "description": "Add a Lit project to your repo",
+    "name": "Lit",
+    "description": "Lit to your repo",
     "mediaImage": "",
     "file": "shared/recipes/add-stack/add-lit",
     "itemList": [],
@@ -6371,8 +5633,8 @@
   },
   "/showcase/example-repos/add-solid": {
     "id": "add-solid",
-    "name": "Add a Solid Project",
-    "description": "Add a Solid project to your repo",
+    "name": "Solid",
+    "description": "Solid to your repo",
     "mediaImage": "",
     "file": "shared/recipes/add-stack/add-solid",
     "itemList": [],
@@ -6382,8 +5644,8 @@
   },
   "/showcase/example-repos/add-qwik": {
     "id": "add-qwik",
-    "name": "Add a Qwik Project",
-    "description": "Add a Qwik project to your repo",
+    "name": "Qwik",
+    "description": "Qwik to your repo",
     "mediaImage": "",
     "file": "shared/recipes/add-stack/add-qwik",
     "itemList": [],
@@ -6393,8 +5655,8 @@
   },
   "/showcase/example-repos/add-rust": {
     "id": "add-rust",
-    "name": "Add a Rust Project",
-    "description": "Add a Rust project to your repo",
+    "name": "Rust",
+    "description": "Rust to your repo",
     "mediaImage": "",
     "file": "shared/recipes/add-stack/add-rust",
     "itemList": [],
@@ -6404,8 +5666,8 @@
   },
   "/showcase/example-repos/add-dotnet": {
     "id": "add-dotnet",
-    "name": "Add a .NET Project",
-    "description": "Add a .NET project to your repo",
+    "name": ".NET",
+    "description": ".NET to your repo",
     "mediaImage": "",
     "file": "shared/recipes/add-stack/add-dotnet",
     "itemList": [],
@@ -6415,7 +5677,7 @@
   },
   "/showcase/example-repos/add-astro": {
     "id": "add-astro",
-    "name": "Add an Astro Project",
+    "name": "Astro",
     "description": "Add Nx to an Astro project",
     "mediaImage": "",
     "file": "shared/recipes/add-stack/add-astro",
@@ -6426,8 +5688,8 @@
   },
   "/showcase/example-repos/add-svelte": {
     "id": "add-svelte",
-    "name": "Add a Svelte Project",
-    "description": "Add a Svelte project to your repo",
+    "name": "Svelte",
+    "description": "Svelte to your repo",
     "mediaImage": "",
     "file": "shared/recipes/add-stack/add-svelte",
     "itemList": [],
@@ -6437,8 +5699,8 @@
   },
   "/showcase/example-repos/add-fastify": {
     "id": "add-fastify",
-    "name": "Add a Fastify Project",
-    "description": "Add a Fastify project to your repo",
+    "name": "Fastify",
+    "description": "Fastify to your repo",
     "mediaImage": "",
     "file": "shared/recipes/add-stack/add-fastify",
     "itemList": [],
@@ -6448,7 +5710,7 @@
   },
   "/showcase/example-repos/apollo-react": {
     "id": "apollo-react",
-    "name": "Using Apollo GraphQL",
+    "name": "Apollo GraphQL",
     "description": "",
     "mediaImage": "",
     "file": "shared/examples/apollo-react",
@@ -6459,7 +5721,7 @@
   },
   "/showcase/example-repos/nestjs-prisma": {
     "id": "nestjs-prisma",
-    "name": "Using Prisma with NestJS",
+    "name": "Prisma with NestJS",
     "description": "",
     "mediaImage": "",
     "file": "shared/recipes/database/nestjs-prisma",
@@ -6470,7 +5732,7 @@
   },
   "/showcase/example-repos/mongo-fastify": {
     "id": "mongo-fastify",
-    "name": "Using Mongo with Fastify",
+    "name": "Mongo with Fastify",
     "description": "",
     "mediaImage": "",
     "file": "shared/recipes/database/mongo-fastify",
@@ -6481,7 +5743,7 @@
   },
   "/showcase/example-repos/redis-fastify": {
     "id": "redis-fastify",
-    "name": "Using Redis with Fastify",
+    "name": "Redis with Fastify",
     "description": "",
     "mediaImage": "",
     "file": "shared/recipes/database/redis-fastify",
@@ -6492,7 +5754,7 @@
   },
   "/showcase/example-repos/postgres-fastify": {
     "id": "postgres-fastify",
-    "name": "Using Postgres with Fastify",
+    "name": "Postgres with Fastify",
     "description": "",
     "mediaImage": "",
     "file": "shared/recipes/database/postgres-fastify",
@@ -6503,7 +5765,7 @@
   },
   "/showcase/example-repos/serverless-fastify-planetscale": {
     "id": "serverless-fastify-planetscale",
-    "name": "Using PlanetScale with Serverless Fastify",
+    "name": "PlanetScale with Serverless Fastify",
     "description": "",
     "mediaImage": "",
     "file": "shared/recipes/database/serverless-fastify-planetscale",
@@ -6514,7 +5776,7 @@
   },
   "/showcase/example-repos/mfe": {
     "id": "mfe",
-    "name": "Nx Micro-Frontend Example",
+    "name": "Nx with Micro-frontends",
     "description": "",
     "mediaImage": "",
     "file": "shared/examples/nx-examples",
@@ -6639,7 +5901,18 @@
         "itemList": [],
         "isExternal": false,
         "path": "/reference/project-configuration",
-        "tags": ["use-task-executors"]
+        "tags": []
+      },
+      {
+        "id": "inputs",
+        "name": "Inputs and Named Inputs",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/reference/inputs",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/reference/inputs",
+        "tags": ["cache-task-results"]
       },
       {
         "id": "nxignore",
@@ -6672,6 +5945,17 @@
         "itemList": [],
         "isExternal": false,
         "path": "/reference/glossary",
+        "tags": []
+      },
+      {
+        "id": "releases",
+        "name": "Releases",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/reference/releases",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/reference/releases",
         "tags": []
       }
     ],
@@ -6710,7 +5994,18 @@
     "itemList": [],
     "isExternal": false,
     "path": "/reference/project-configuration",
-    "tags": ["use-task-executors"]
+    "tags": []
+  },
+  "/reference/inputs": {
+    "id": "inputs",
+    "name": "Inputs and Named Inputs",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/reference/inputs",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/reference/inputs",
+    "tags": ["cache-task-results"]
   },
   "/reference/nxignore": {
     "id": "nxignore",
@@ -6745,6 +6040,139 @@
     "path": "/reference/glossary",
     "tags": []
   },
+  "/reference/releases": {
+    "id": "releases",
+    "name": "Releases",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/reference/releases",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/reference/releases",
+    "tags": []
+  },
+  "/troubleshooting": {
+    "id": "troubleshooting",
+    "name": "Troubleshooting",
+    "description": "Learn how to troubleshoot common problems.",
+    "mediaImage": "",
+    "file": "",
+    "itemList": [
+      {
+        "id": "resolve-circular-dependencies",
+        "name": "Resolve Circular Dependencies",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/resolve-circular-dependencies",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/troubleshooting/resolve-circular-dependencies",
+        "tags": ["explore-graph"]
+      },
+      {
+        "id": "troubleshoot-nx-install-issues",
+        "name": "Troubleshooting Nx Install Issues",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/installation/troubleshoot-installation",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/troubleshooting/troubleshoot-nx-install-issues",
+        "tags": []
+      },
+      {
+        "id": "troubleshoot-cache-misses",
+        "name": "Troubleshoot Cache Misses",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/troubleshoot-cache-misses",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/troubleshooting/troubleshoot-cache-misses",
+        "tags": ["cache-task-results"]
+      },
+      {
+        "id": "unknown-local-cache",
+        "name": "Unknown Local Cache Error",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/guides/unknown-local-cache",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/troubleshooting/unknown-local-cache",
+        "tags": []
+      },
+      {
+        "id": "performance-profiling",
+        "name": "Profiling Build Performance",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/guides/performance-profiling",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/troubleshooting/performance-profiling",
+        "tags": ["environment-variables"]
+      }
+    ],
+    "isExternal": false,
+    "path": "/troubleshooting",
+    "tags": []
+  },
+  "/troubleshooting/resolve-circular-dependencies": {
+    "id": "resolve-circular-dependencies",
+    "name": "Resolve Circular Dependencies",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/resolve-circular-dependencies",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/troubleshooting/resolve-circular-dependencies",
+    "tags": ["explore-graph"]
+  },
+  "/troubleshooting/troubleshoot-nx-install-issues": {
+    "id": "troubleshoot-nx-install-issues",
+    "name": "Troubleshooting Nx Install Issues",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/installation/troubleshoot-installation",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/troubleshooting/troubleshoot-nx-install-issues",
+    "tags": []
+  },
+  "/troubleshooting/troubleshoot-cache-misses": {
+    "id": "troubleshoot-cache-misses",
+    "name": "Troubleshoot Cache Misses",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/troubleshoot-cache-misses",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/troubleshooting/troubleshoot-cache-misses",
+    "tags": ["cache-task-results"]
+  },
+  "/troubleshooting/unknown-local-cache": {
+    "id": "unknown-local-cache",
+    "name": "Unknown Local Cache Error",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/guides/unknown-local-cache",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/troubleshooting/unknown-local-cache",
+    "tags": []
+  },
+  "/troubleshooting/performance-profiling": {
+    "id": "performance-profiling",
+    "name": "Profiling Build Performance",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/guides/performance-profiling",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/troubleshooting/performance-profiling",
+    "tags": ["environment-variables"]
+  },
   "/deprecated": {
     "id": "deprecated",
     "name": "Deprecated",
@@ -6752,6 +6180,28 @@
     "mediaImage": "",
     "file": "",
     "itemList": [
+      {
+        "id": "affected-graph",
+        "name": "affected:graph",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/deprecated/affected-graph",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/deprecated/affected-graph",
+        "tags": []
+      },
+      {
+        "id": "print-affected",
+        "name": "print-affected",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/deprecated/print-affected",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/deprecated/print-affected",
+        "tags": []
+      },
       {
         "id": "workspace-json",
         "name": "workspace.json",
@@ -6761,17 +6211,6 @@
         "itemList": [],
         "isExternal": false,
         "path": "/deprecated/workspace-json",
-        "tags": []
-      },
-      {
-        "id": "workspace-lint",
-        "name": "workspace-lint",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/deprecated/workspace-lint",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/deprecated/workspace-lint",
         "tags": []
       },
       {
@@ -6808,17 +6247,6 @@
         "tags": []
       },
       {
-        "id": "default-collection",
-        "name": "defaultCollection",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/deprecated/default-collection",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/deprecated/default-collection",
-        "tags": []
-      },
-      {
         "id": "runtime-cache-inputs",
         "name": "runtimeCacheInputs",
         "description": "",
@@ -6827,6 +6255,28 @@
         "itemList": [],
         "isExternal": false,
         "path": "/deprecated/runtime-cache-inputs",
+        "tags": []
+      },
+      {
+        "id": "cacheable-operations",
+        "name": "cacheableOperations",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/deprecated/cacheable-operations",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/deprecated/cacheable-operations",
+        "tags": []
+      },
+      {
+        "id": "npm-scope",
+        "name": "npmScope",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/deprecated/npm-scope",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/deprecated/npm-scope",
         "tags": []
       },
       {
@@ -6852,84 +6302,6 @@
         "tags": []
       },
       {
-        "id": "storybook",
-        "name": "Storybook deprecated docs",
-        "description": "Deprecated @nx/storybook package documentation and guides.",
-        "mediaImage": "",
-        "file": "",
-        "itemList": [
-          {
-            "id": "angular-storybook-targets",
-            "name": "Angular: Information about the Storybook targets",
-            "description": "This document explains the role of the storybook and build-storybook targets in Angular projects with a Storybook configuration, and specifically which executors are used for them.",
-            "mediaImage": "",
-            "file": "shared/deprecated/storybook/angular-storybook-targets",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/deprecated/storybook/angular-storybook-targets",
-            "tags": []
-          },
-          {
-            "id": "angular-browser-target",
-            "name": "Angular: The browserTarget",
-            "description": "This document explains the role of the browserTarget in Angular projects with a Storybook configuration, and how the Storybook executors use it.",
-            "mediaImage": "",
-            "file": "shared/deprecated/storybook/angular-browser-target",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/deprecated/storybook/angular-browser-target",
-            "tags": []
-          },
-          {
-            "id": "migrate-webpack-final-angular",
-            "name": "Angular: Storybook Migration to webpackFinal",
-            "description": "This guide explains how migrate from older versions of Storybook which used a custom webpack.config.js to the new Storybook 6.3+ which uses the webpackFinal property in the main configuration.",
-            "mediaImage": "",
-            "file": "shared/deprecated/storybook/migrate-webpack-final-angular",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/deprecated/storybook/migrate-webpack-final-angular",
-            "tags": []
-          },
-          {
-            "id": "upgrade-storybook-v6-angular",
-            "name": "Angular: Upgrading to Storybook 6",
-            "description": "This guide explains how you can upgrade your Storybook from versions 5.3 and below to Storybook 6, for Angular projects.",
-            "mediaImage": "",
-            "file": "shared/deprecated/storybook/storybook-v6-angular",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/deprecated/storybook/upgrade-storybook-v6-angular",
-            "tags": []
-          },
-          {
-            "id": "migrate-webpack-final-react",
-            "name": "React: Storybook Migration to webpackFinal and the Nx Addon",
-            "description": "This guide explains how migrate from older versions of Storybook which used a custom webpack.config.js to the new Storybook 6.3+ which uses the webpackFinal property in the main configuration and the Nx React Addon.",
-            "mediaImage": "",
-            "file": "shared/deprecated/storybook/migrate-webpack-final-react",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/deprecated/storybook/migrate-webpack-final-react",
-            "tags": []
-          },
-          {
-            "id": "upgrade-storybook-v6-react",
-            "name": "React: Upgrading to Storybook 6",
-            "description": "This guide explains how you can upgrade your Storybook from versions 5.3 and below to Storybook 6, for React projects.",
-            "mediaImage": "",
-            "file": "shared/deprecated/storybook/storybook-v6-react",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/deprecated/storybook/upgrade-storybook-v6-react",
-            "tags": []
-          }
-        ],
-        "isExternal": false,
-        "path": "/deprecated/storybook",
-        "tags": []
-      },
-      {
         "id": "v1-nx-plugin-api",
         "name": "v1 Nx Plugin API",
         "description": "",
@@ -6945,6 +6317,28 @@
     "path": "/deprecated",
     "tags": []
   },
+  "/deprecated/affected-graph": {
+    "id": "affected-graph",
+    "name": "affected:graph",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/deprecated/affected-graph",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/deprecated/affected-graph",
+    "tags": []
+  },
+  "/deprecated/print-affected": {
+    "id": "print-affected",
+    "name": "print-affected",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/deprecated/print-affected",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/deprecated/print-affected",
+    "tags": []
+  },
   "/deprecated/workspace-json": {
     "id": "workspace-json",
     "name": "workspace.json",
@@ -6954,17 +6348,6 @@
     "itemList": [],
     "isExternal": false,
     "path": "/deprecated/workspace-json",
-    "tags": []
-  },
-  "/deprecated/workspace-lint": {
-    "id": "workspace-lint",
-    "name": "workspace-lint",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/deprecated/workspace-lint",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/deprecated/workspace-lint",
     "tags": []
   },
   "/deprecated/as-provided-vs-derived": {
@@ -7000,17 +6383,6 @@
     "path": "/deprecated/workspace-executors",
     "tags": []
   },
-  "/deprecated/default-collection": {
-    "id": "default-collection",
-    "name": "defaultCollection",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/deprecated/default-collection",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/deprecated/default-collection",
-    "tags": []
-  },
   "/deprecated/runtime-cache-inputs": {
     "id": "runtime-cache-inputs",
     "name": "runtimeCacheInputs",
@@ -7020,6 +6392,28 @@
     "itemList": [],
     "isExternal": false,
     "path": "/deprecated/runtime-cache-inputs",
+    "tags": []
+  },
+  "/deprecated/cacheable-operations": {
+    "id": "cacheable-operations",
+    "name": "cacheableOperations",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/deprecated/cacheable-operations",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/deprecated/cacheable-operations",
+    "tags": []
+  },
+  "/deprecated/npm-scope": {
+    "id": "npm-scope",
+    "name": "npmScope",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/deprecated/npm-scope",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/deprecated/npm-scope",
     "tags": []
   },
   "/deprecated/global-implicit-dependencies": {
@@ -7042,150 +6436,6 @@
     "itemList": [],
     "isExternal": false,
     "path": "/deprecated/angular-schematics-builders",
-    "tags": []
-  },
-  "/deprecated/storybook": {
-    "id": "storybook",
-    "name": "Storybook deprecated docs",
-    "description": "Deprecated @nx/storybook package documentation and guides.",
-    "mediaImage": "",
-    "file": "",
-    "itemList": [
-      {
-        "id": "angular-storybook-targets",
-        "name": "Angular: Information about the Storybook targets",
-        "description": "This document explains the role of the storybook and build-storybook targets in Angular projects with a Storybook configuration, and specifically which executors are used for them.",
-        "mediaImage": "",
-        "file": "shared/deprecated/storybook/angular-storybook-targets",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/deprecated/storybook/angular-storybook-targets",
-        "tags": []
-      },
-      {
-        "id": "angular-browser-target",
-        "name": "Angular: The browserTarget",
-        "description": "This document explains the role of the browserTarget in Angular projects with a Storybook configuration, and how the Storybook executors use it.",
-        "mediaImage": "",
-        "file": "shared/deprecated/storybook/angular-browser-target",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/deprecated/storybook/angular-browser-target",
-        "tags": []
-      },
-      {
-        "id": "migrate-webpack-final-angular",
-        "name": "Angular: Storybook Migration to webpackFinal",
-        "description": "This guide explains how migrate from older versions of Storybook which used a custom webpack.config.js to the new Storybook 6.3+ which uses the webpackFinal property in the main configuration.",
-        "mediaImage": "",
-        "file": "shared/deprecated/storybook/migrate-webpack-final-angular",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/deprecated/storybook/migrate-webpack-final-angular",
-        "tags": []
-      },
-      {
-        "id": "upgrade-storybook-v6-angular",
-        "name": "Angular: Upgrading to Storybook 6",
-        "description": "This guide explains how you can upgrade your Storybook from versions 5.3 and below to Storybook 6, for Angular projects.",
-        "mediaImage": "",
-        "file": "shared/deprecated/storybook/storybook-v6-angular",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/deprecated/storybook/upgrade-storybook-v6-angular",
-        "tags": []
-      },
-      {
-        "id": "migrate-webpack-final-react",
-        "name": "React: Storybook Migration to webpackFinal and the Nx Addon",
-        "description": "This guide explains how migrate from older versions of Storybook which used a custom webpack.config.js to the new Storybook 6.3+ which uses the webpackFinal property in the main configuration and the Nx React Addon.",
-        "mediaImage": "",
-        "file": "shared/deprecated/storybook/migrate-webpack-final-react",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/deprecated/storybook/migrate-webpack-final-react",
-        "tags": []
-      },
-      {
-        "id": "upgrade-storybook-v6-react",
-        "name": "React: Upgrading to Storybook 6",
-        "description": "This guide explains how you can upgrade your Storybook from versions 5.3 and below to Storybook 6, for React projects.",
-        "mediaImage": "",
-        "file": "shared/deprecated/storybook/storybook-v6-react",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/deprecated/storybook/upgrade-storybook-v6-react",
-        "tags": []
-      }
-    ],
-    "isExternal": false,
-    "path": "/deprecated/storybook",
-    "tags": []
-  },
-  "/deprecated/storybook/angular-storybook-targets": {
-    "id": "angular-storybook-targets",
-    "name": "Angular: Information about the Storybook targets",
-    "description": "This document explains the role of the storybook and build-storybook targets in Angular projects with a Storybook configuration, and specifically which executors are used for them.",
-    "mediaImage": "",
-    "file": "shared/deprecated/storybook/angular-storybook-targets",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/deprecated/storybook/angular-storybook-targets",
-    "tags": []
-  },
-  "/deprecated/storybook/angular-browser-target": {
-    "id": "angular-browser-target",
-    "name": "Angular: The browserTarget",
-    "description": "This document explains the role of the browserTarget in Angular projects with a Storybook configuration, and how the Storybook executors use it.",
-    "mediaImage": "",
-    "file": "shared/deprecated/storybook/angular-browser-target",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/deprecated/storybook/angular-browser-target",
-    "tags": []
-  },
-  "/deprecated/storybook/migrate-webpack-final-angular": {
-    "id": "migrate-webpack-final-angular",
-    "name": "Angular: Storybook Migration to webpackFinal",
-    "description": "This guide explains how migrate from older versions of Storybook which used a custom webpack.config.js to the new Storybook 6.3+ which uses the webpackFinal property in the main configuration.",
-    "mediaImage": "",
-    "file": "shared/deprecated/storybook/migrate-webpack-final-angular",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/deprecated/storybook/migrate-webpack-final-angular",
-    "tags": []
-  },
-  "/deprecated/storybook/upgrade-storybook-v6-angular": {
-    "id": "upgrade-storybook-v6-angular",
-    "name": "Angular: Upgrading to Storybook 6",
-    "description": "This guide explains how you can upgrade your Storybook from versions 5.3 and below to Storybook 6, for Angular projects.",
-    "mediaImage": "",
-    "file": "shared/deprecated/storybook/storybook-v6-angular",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/deprecated/storybook/upgrade-storybook-v6-angular",
-    "tags": []
-  },
-  "/deprecated/storybook/migrate-webpack-final-react": {
-    "id": "migrate-webpack-final-react",
-    "name": "React: Storybook Migration to webpackFinal and the Nx Addon",
-    "description": "This guide explains how migrate from older versions of Storybook which used a custom webpack.config.js to the new Storybook 6.3+ which uses the webpackFinal property in the main configuration and the Nx React Addon.",
-    "mediaImage": "",
-    "file": "shared/deprecated/storybook/migrate-webpack-final-react",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/deprecated/storybook/migrate-webpack-final-react",
-    "tags": []
-  },
-  "/deprecated/storybook/upgrade-storybook-v6-react": {
-    "id": "upgrade-storybook-v6-react",
-    "name": "React: Upgrading to Storybook 6",
-    "description": "This guide explains how you can upgrade your Storybook from versions 5.3 and below to Storybook 6, for React projects.",
-    "mediaImage": "",
-    "file": "shared/deprecated/storybook/storybook-v6-react",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/deprecated/storybook/upgrade-storybook-v6-react",
     "tags": []
   },
   "/deprecated/v1-nx-plugin-api": {
@@ -7258,7 +6508,7 @@
         "file": "",
         "itemList": [],
         "isExternal": true,
-        "path": "/reference/nx-json#inputs-&-namedinputs",
+        "path": "/reference/nx-json#inputs-namedinputs",
         "tags": ["cache-task-results"]
       },
       {
@@ -7269,7 +6519,7 @@
         "file": "",
         "itemList": [],
         "isExternal": true,
-        "path": "/reference/project-configuration#inputs-&-namedinputs",
+        "path": "/reference/project-configuration#inputs-and-namedinputs",
         "tags": ["cache-task-results"]
       },
       {
@@ -7281,7 +6531,7 @@
         "itemList": [],
         "isExternal": true,
         "path": "/reference/nx-json#generators",
-        "tags": ["use-code-generators"]
+        "tags": ["generate-code"]
       },
       {
         "id": "sitemap",
@@ -7332,7 +6582,7 @@
     "path": "/reference/nx-json#tasks-runner-options",
     "tags": ["cache-task-results"]
   },
-  "/reference/nx-json#inputs-&-namedinputs": {
+  "/reference/nx-json#inputs-namedinputs": {
     "id": "nxjson-inputs",
     "name": "nx.json reference: inputs and namedInputs",
     "description": "",
@@ -7340,10 +6590,10 @@
     "file": "",
     "itemList": [],
     "isExternal": true,
-    "path": "/reference/nx-json#inputs-&-namedinputs",
+    "path": "/reference/nx-json#inputs-namedinputs",
     "tags": ["cache-task-results"]
   },
-  "/reference/project-configuration#inputs-&-namedinputs": {
+  "/reference/project-configuration#inputs-and-namedinputs": {
     "id": "project-config-inputs",
     "name": "Project Configuration reference: inputs and namedInputs",
     "description": "",
@@ -7351,7 +6601,7 @@
     "file": "",
     "itemList": [],
     "isExternal": true,
-    "path": "/reference/project-configuration#inputs-&-namedinputs",
+    "path": "/reference/project-configuration#inputs-and-namedinputs",
     "tags": ["cache-task-results"]
   },
   "/reference/nx-json#generators": {
@@ -7363,7 +6613,7 @@
     "itemList": [],
     "isExternal": true,
     "path": "/reference/nx-json#generators",
-    "tags": ["use-code-generators"]
+    "tags": ["generate-code"]
   },
   "/see-also/sitemap": {
     "id": "sitemap",

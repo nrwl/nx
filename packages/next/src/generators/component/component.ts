@@ -15,7 +15,7 @@ import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/src/generat
 interface Schema {
   name: string;
   /**
-   * @deprecated Provide the `directory` option instead and use the `as-provided` format. The project will be determined from the directory provided. It will be removed in Nx v19.
+   * @deprecated Provide the `directory` option instead and use the `as-provided` format. The project will be determined from the directory provided. It will be removed in Nx v20.
    */
   project?: string;
   style: SupportedStyles;
@@ -36,7 +36,7 @@ interface Schema {
   skipFormat?: boolean;
 }
 
-// TODO(v19): Remove this logic once we no longer derive directory.
+// TODO(v20): Remove this logic once we no longer derive directory.
 function maybeGetDerivedDirectory(host: Tree, options: Schema): string {
   if (!options.project) return options.directory;
   const workspace = getProjects(host);

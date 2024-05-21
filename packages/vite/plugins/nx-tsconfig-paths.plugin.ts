@@ -1,4 +1,4 @@
-import { stripIndents, workspaceRoot } from '@nx/devkit';
+import { joinPathFragments, stripIndents, workspaceRoot } from '@nx/devkit';
 import { existsSync } from 'node:fs';
 import { relative, join, resolve } from 'node:path';
 import {
@@ -56,6 +56,7 @@ export function nxViteTsPaths(options: nxViteTsPathsOptions = {}) {
           workspaceRoot,
           'tmp',
           projectRootFromWorkspaceRoot,
+          process.env.NX_TASK_TARGET_TARGET ?? 'build',
           'tsconfig.generated.json'
         )
       );
@@ -153,8 +154,14 @@ There should at least be a tsconfig.base.json or tsconfig.json in the root of th
       const normalizedImport = alias.replace(/\/\*$/, '');
 
       if (importPath.startsWith(normalizedImport)) {
-        const path = (tsconfig.absoluteBaseUrl, paths[0].replace(/\/\*$/, ''));
-        resolvedFile = findFile(importPath.replace(normalizedImport, path));
+        const joinedPath = joinPathFragments(
+          tsconfig.absoluteBaseUrl,
+          paths[0].replace(/\/\*$/, '')
+        );
+
+        resolvedFile = findFile(
+          importPath.replace(normalizedImport, joinedPath)
+        );
       }
     }
 

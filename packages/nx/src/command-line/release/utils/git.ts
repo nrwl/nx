@@ -46,14 +46,31 @@ export async function getLatestGitTagForPattern(
   additionalInterpolationData = {}
 ): Promise<{ tag: string; extractedVersion: string } | null> {
   try {
-    const tags = await execCommand('git', ['tag', '--sort', '-v:refname']).then(
-      (r) =>
-        r
-          .trim()
-          .split('\n')
-          .map((t) => t.trim())
-          .filter(Boolean)
+    let tags: string[];
+    tags = await execCommand('git', [
+      'tag',
+      '--sort',
+      '-v:refname',
+      '--merged',
+    ]).then((r) =>
+      r
+        .trim()
+        .split('\n')
+        .map((t) => t.trim())
+        .filter(Boolean)
     );
+    if (!tags.length) {
+      // try again, but include all tags on the repo instead of just --merged ones
+      tags = await execCommand('git', ['tag', '--sort', '-v:refname']).then(
+        (r) =>
+          r
+            .trim()
+            .split('\n')
+            .map((t) => t.trim())
+            .filter(Boolean)
+      );
+    }
+
     if (!tags.length) {
       return null;
     }
@@ -134,7 +151,29 @@ export async function gitAdd({
   logFn?: (...messages: string[]) => void;
 }): Promise<string> {
   logFn = logFn || console.log;
-  const commandArgs = ['add', ...changedFiles];
+
+  let ignoredFiles: string[] = [];
+  let filesToAdd: string[] = [];
+  for (const f of changedFiles) {
+    const isFileIgnored = await isIgnored(f);
+    if (isFileIgnored) {
+      ignoredFiles.push(f);
+    } else {
+      filesToAdd.push(f);
+    }
+  }
+
+  if (verbose && ignoredFiles.length) {
+    logFn(`Will not add the following files because they are ignored by git:`);
+    ignoredFiles.forEach((f) => logFn(f));
+  }
+
+  if (!filesToAdd.length) {
+    logFn('\nNo files to stage. Skipping git add.');
+    return;
+  }
+
+  const commandArgs = ['add', ...filesToAdd];
   const message = dryRun
     ? `Would stage files in git with the following command, but --dry-run was set:`
     : `Staging files in git with the following command:`;
@@ -146,6 +185,16 @@ export async function gitAdd({
     return;
   }
   return execCommand('git', commandArgs);
+}
+
+async function isIgnored(filePath: string): Promise<boolean> {
+  try {
+    // This command will error if the file is not ignored
+    await execCommand('git', ['check-ignore', filePath]);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export async function gitCommit({
@@ -249,17 +298,40 @@ export async function gitTag({
   }
 }
 
-export async function gitPush(gitRemote?: string) {
+export async function gitPush({
+  gitRemote,
+  dryRun,
+  verbose,
+}: {
+  gitRemote?: string;
+  dryRun?: boolean;
+  verbose?: boolean;
+}) {
+  const commandArgs = [
+    'push',
+    // NOTE: It's important we use --follow-tags, and not --tags, so that we are precise about what we are pushing
+    '--follow-tags',
+    '--no-verify',
+    '--atomic',
+    // Set custom git remote if provided
+    ...(gitRemote ? [gitRemote] : []),
+  ];
+
+  if (verbose) {
+    console.log(
+      dryRun
+        ? `Would push the current branch to the remote with the following command, but --dry-run was set:`
+        : `Pushing the current branch to the remote with the following command:`
+    );
+    console.log(`git ${commandArgs.join(' ')}`);
+  }
+
+  if (dryRun) {
+    return;
+  }
+
   try {
-    await execCommand('git', [
-      'push',
-      // NOTE: It's important we use --follow-tags, and not --tags, so that we are precise about what we are pushing
-      '--follow-tags',
-      '--no-verify',
-      '--atomic',
-      // Set custom git remote if provided
-      ...(gitRemote ? [gitRemote] : []),
-    ]);
+    await execCommand('git', commandArgs);
   } catch (err) {
     throw new Error(`Unexpected git push error: ${err}`);
   }
@@ -331,10 +403,7 @@ export function parseGitCommit(commit: RawGitCommit): GitCommit | null {
   const affectedFiles = Array.from(
     commit.body.matchAll(ChangedFileRegex)
   ).reduce(
-    (
-      prev,
-      [fullLine, changeType, file1, file2]: [string, string, string, string?]
-    ) =>
+    (prev, [fullLine, changeType, file1, file2]: RegExpExecArray) =>
       // file2 only exists for some change types, such as renames
       file2 ? [...prev, file1, file2] : [...prev, file1],
     [] as string[]
@@ -364,7 +433,12 @@ export async function getCommitHash(ref: string) {
 export async function getFirstGitCommit() {
   try {
     return (
-      await execCommand('git', ['rev-list', '--max-parents=0', 'HEAD'])
+      await execCommand('git', [
+        'rev-list',
+        '--max-parents=0',
+        'HEAD',
+        '--first-parent',
+      ])
     ).trim();
   } catch (e) {
     throw new Error(`Unable to find first commit in git history`);

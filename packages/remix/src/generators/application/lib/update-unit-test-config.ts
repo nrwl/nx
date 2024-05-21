@@ -21,7 +21,8 @@ import {
 export function updateUnitTestConfig(
   tree: Tree,
   pathToRoot: string,
-  unitTestRunner: 'vitest' | 'jest'
+  unitTestRunner: 'vitest' | 'jest',
+  rootProject: boolean
 ) {
   const pathToTestSetup = joinPathFragments(pathToRoot, `test-setup.ts`);
   tree.write(
@@ -45,9 +46,9 @@ export function updateUnitTestConfig(
       './tests/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'
     );
     updateVitestTestSetup(tree, pathToViteConfig, 'test-setup.ts');
-  } else if (unitTestRunner === 'jest') {
+  } else if (unitTestRunner === 'jest' && rootProject) {
     const pathToJestConfig = joinPathFragments(pathToRoot, 'jest.config.ts');
-    tree.rename('jest.preset.js', 'jest.preset.cjs');
+    tree.write('jest.preset.cjs', tree.read('jest.preset.js', 'utf-8'));
     updateJestTestSetup(tree, pathToJestConfig, `<rootDir>/test-setup.ts`);
     tree.write(
       pathToJestConfig,
@@ -63,7 +64,7 @@ export function updateUnitTestConfig(
   );
 
   updateJson(tree, pathToTsConfigSpec, (json) => {
-    json.includes = [
+    json.include = [
       'vite.config.ts',
       'vitest.config.ts',
       'app/**/*.ts',

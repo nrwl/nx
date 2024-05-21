@@ -10,7 +10,7 @@ In order to share a module, it must be _federated_. This means that the module m
 
 {% callout type="info" title="Assumption" %}
 With this recipe we assume that you have already created a workspace with at least one React or Angular Module Federation host application.
-If you haven't, you can follow the [Create a Host Recipe](https://nx.dev/recipes/module-federation/create-a-host).
+If you haven't, you can follow the [Create a Host Recipe](/recipes/module-federation/create-a-host).
 {% /callout %}
 
 ## Step 1: Create the module
@@ -161,4 +161,4 @@ Just run the application as usual.
 nx serve host
 ```
 
-To start the application, use the following address: [http://localhost:4200](http://localhost:4200). Once opened, you'll see the message **"Hello from Nx."** This message is loaded from the greeting remote, which runs on port 4201.
+To start the application, use the following address: [http://localhost:4200](http://localhost:4200). Once opened, you'll see the message **"Hello from Nx"**. This message is loaded from the greeting remote, which runs on port 4201.

@@ -9,7 +9,24 @@
     "devRemotes": {
       "type": "array",
       "items": {
-        "type": "string"
+        "oneOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "remoteName": {
+                "type": "string"
+              },
+              "configuration": {
+                "type": "string"
+              }
+            },
+            "required": ["remoteName"],
+            "additionalProperties": false
+          }
+        ]
       },
       "description": "List of remote applications to run in development mode (i.e. using serve target).",
       "x-priority": "important"
@@ -19,7 +36,7 @@
       "items": {
         "type": "string"
       },
-      "description": "List of remote applications to not automatically serve, either statically or in development mode.",
+      "description": "List of remote applications to not automatically serve, either statically or in development mode. This will not remove the remotes from the `module-federation.config` file, and therefore the application may still try to fetch these remotes.\nThis option is useful for when the `host` application is using a `remote` that does not live in the same workspace as the `host`.",
       "x-priority": "important"
     },
     "buildTarget": {
@@ -109,6 +126,11 @@
     "staticRemotesPort": {
       "type": "number",
       "description": "The port at which to serve the file-server for the static remotes."
+    },
+    "pathToManifestFile": {
+      "type": "string",
+      "description": "Path to a Module Federation manifest file (e.g. `my/path/to/module-federation.manifest.json`) containing the dynamic remote applications relative to the workspace root."
     }
-  }
+  },
+  "examplesFile": "../../../docs/module-federation-dev-server-examples.md"
 }

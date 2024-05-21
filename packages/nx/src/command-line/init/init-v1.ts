@@ -12,6 +12,7 @@ import { runNxSync } from '../../utils/child-process';
 import { directoryExists, readJsonFile } from '../../utils/fileutils';
 import { PackageJson } from '../../utils/package-json';
 import { nxVersion } from '../../utils/versions';
+import { isMonorepo, printFinalMessage } from './implementation/utils';
 
 export interface InitArgs {
   addE2e: boolean;
@@ -39,14 +40,37 @@ export async function initHandler(options: InitArgs) {
     const packageJson: PackageJson = readJsonFile('package.json');
     if (existsSync('angular.json')) {
       await addNxToAngularCliRepo(options);
+
+      printFinalMessage({
+        learnMoreLink: 'https://nx.dev/recipes/angular/migration/angular',
+      });
+      return;
     } else if (isCRA(packageJson)) {
       await addNxToCraRepo(options);
+
+      printFinalMessage({
+        learnMoreLink: options.integrated
+          ? 'https://nx.dev/getting-started/tutorials/react-monorepo-tutorial'
+          : 'https://nx.dev/getting-started/tutorials/react-standalone-tutorial',
+      });
+      return;
     } else if (isNestCLI(packageJson)) {
       await addNxToNest(options, packageJson);
+      printFinalMessage({
+        learnMoreLink: 'https://nx.dev/recipes/adopting-nx/adding-to-monorepo',
+      });
+      return;
     } else if (isMonorepo(packageJson)) {
-      await addNxToMonorepo(options);
+      await addNxToMonorepo({ ...options, legacy: true });
+      printFinalMessage({
+        learnMoreLink: 'https://nx.dev/recipes/adopting-nx/adding-to-monorepo',
+      });
     } else {
-      await addNxToNpmRepo(options);
+      await addNxToNpmRepo({ ...options, legacy: true });
+      printFinalMessage({
+        learnMoreLink:
+          'https://nx.dev/recipes/adopting-nx/adding-to-existing-project',
+      });
     }
   } else {
     const useDotNxFolder = await prompt<{ useDotNxFolder: string }>([
@@ -106,17 +130,6 @@ function isNestCLI(packageJson: PackageJson) {
   );
 }
 
-function isMonorepo(packageJson: PackageJson) {
-  if (!!packageJson.workspaces) return true;
-
-  if (existsSync('pnpm-workspace.yaml') || existsSync('pnpm-workspace.yml'))
-    return true;
-
-  if (existsSync('lerna.json')) return true;
-
-  return false;
-}
-
 function setupDotNxInstallation(version: string) {
   if (process.platform !== 'win32') {
     console.log(
@@ -129,5 +142,5 @@ function setupDotNxInstallation(version: string) {
   }
   generateDotNxSetup(version);
   // invokes the wrapper, thus invoking the initial installation process
-  runNxSync('');
+  runNxSync('--version');
 }

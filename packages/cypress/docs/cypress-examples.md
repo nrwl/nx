@@ -63,7 +63,7 @@ The same can be done for backend node apps with [`@nx/js:node` executor](/packag
 {% /callout %}
 
 ```bash
-nx e2e my-app-e2e --configuration=ci
+nx e2e my-app-e2e
 ```
 
 {% /tab %}
@@ -99,7 +99,7 @@ Instead, Nx needs to know what build target to create the correct configuration 
 
 ### Environment Variables
 
-Using [executor configurations](recipes/executors/use-executor-configurations#use-executor-configurations) offers flexibility to set environment variables
+Using [executor configurations](/concepts/executors-and-configurations#executors-and-configurations) offers flexibility to set environment variables
 
 ```json
 "targets": {

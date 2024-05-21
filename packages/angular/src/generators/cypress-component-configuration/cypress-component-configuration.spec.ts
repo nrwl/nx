@@ -3,24 +3,27 @@ import {
   DependencyType,
   joinPathFragments,
   ProjectGraph,
+  readJson,
   readProjectConfiguration,
   Tree,
   updateProjectConfiguration,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { componentGenerator } from '../component/component';
-import { librarySecondaryEntryPointGenerator } from '../library-secondary-entry-point/library-secondary-entry-point';
-import { generateTestApplication, generateTestLibrary } from '../utils/testing';
-import { cypressComponentConfiguration } from './cypress-component-configuration';
 
 let projectGraph: ProjectGraph = { nodes: {}, dependencies: {} };
-jest.mock('@nx/cypress/src/utils/cypress-version');
 jest.mock('@nx/devkit', () => ({
   ...jest.requireActual<any>('@nx/devkit'),
   createProjectGraphAsync: jest
     .fn()
     .mockImplementation(async () => projectGraph),
 }));
+
+import { componentGenerator } from '../component/component';
+import { librarySecondaryEntryPointGenerator } from '../library-secondary-entry-point/library-secondary-entry-point';
+import { generateTestApplication, generateTestLibrary } from '../utils/testing';
+import { cypressComponentConfiguration } from './cypress-component-configuration';
+
+jest.mock('@nx/cypress/src/utils/cypress-version');
 // nested code imports graph from the repo, which might have innacurate graph version
 jest.mock('nx/src/project-graph/project-graph', () => ({
   ...jest.requireActual<any>('nx/src/project-graph/project-graph'),
@@ -32,6 +35,7 @@ describe('Cypress Component Testing Configuration', () => {
   let mockedInstalledCypressVersion: jest.Mock<
     ReturnType<typeof installedCypressVersion>
   > = installedCypressVersion as never;
+  // TODO(@leosvelperez): Turn this to adding the plugin
 
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
@@ -410,6 +414,50 @@ describe('Cypress Component Testing Configuration', () => {
     expect(
       tree.read('my-lib/cypress/support/component.ts', 'utf-8')
     ).toMatchSnapshot('component.ts');
+  });
+
+  it('should exclude Cypress-related files from tsconfig.editor.json for applications', async () => {
+    await generateTestApplication(tree, {
+      name: 'fancy-app',
+      bundler: 'webpack',
+      skipFormat: true,
+    });
+    await componentGenerator(tree, {
+      name: 'fancy-cmp',
+      project: 'fancy-app',
+      export: true,
+      skipFormat: true,
+    });
+    projectGraph = {
+      nodes: {
+        'fancy-app': {
+          name: 'fancy-app',
+          type: 'app',
+          data: {
+            ...readProjectConfiguration(tree, 'fancy-app'),
+          } as any,
+        },
+      },
+      dependencies: {},
+    };
+
+    await cypressComponentConfiguration(tree, {
+      project: 'fancy-app',
+      generateTests: false,
+      skipFormat: true,
+    });
+
+    const tsConfig = readJson(tree, 'fancy-app/tsconfig.editor.json');
+    expect(tsConfig.exclude).toStrictEqual(
+      expect.arrayContaining([
+        'cypress/**/*',
+        'cypress.config.ts',
+        '**/*.cy.ts',
+        '**/*.cy.js',
+        '**/*.cy.tsx',
+        '**/*.cy.jsx',
+      ])
+    );
   });
 
   it('should work with simple components', async () => {

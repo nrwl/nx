@@ -235,7 +235,7 @@
       "type": "boolean",
       "description": "Do not apply Nx webpack plugins automatically. Plugins need to be applied in the project's webpack.config.js file (e.g. withNx, withReact, etc.).",
       "default": true,
-      "x-deprecated": "Automatic configuration of Webpack is deprecated in favor of an explicit 'webpack.config.js' file. This option will be removed in Nx 19. See https://nx.dev/recipes/webpack/webpack-config-setup."
+      "x-deprecated": "Automatic configuration of Webpack is deprecated in favor of an explicit 'webpack.config.js' file. This option will be removed in Nx 20. See https://nx.dev/recipes/webpack/webpack-config-setup."
     },
     "standardWebpackConfigFunction": {
       "type": "boolean",
@@ -299,6 +299,14 @@
       "type": "string",
       "description": "Path to the babel configuration file of your project. If not provided, Nx will default to the .babelrc file at the root of your project. See https://babeljs.io/docs/en/config-files",
       "x-completion-type": "file"
+    },
+    "publicPath": {
+      "type": "string",
+      "description": "Set a public path for assets resources with absolute paths."
+    },
+    "rebaseRootRelative": {
+      "type": "boolean",
+      "description": "Whether to rebase absolute path for assets in postcss cli resources."
     }
   },
   "required": [],

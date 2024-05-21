@@ -1,3 +1,5 @@
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
 import {
   getProjects,
   readJson,
@@ -33,16 +35,6 @@ describe('lib', () => {
         '@nx/vite': nxVersion,
       };
       return json;
-    });
-  });
-
-  it('should update project configuration', async () => {
-    await libraryGenerator(tree, defaultSchema);
-    const project = readProjectConfiguration(tree, 'my-lib');
-    expect(project.root).toEqual('my-lib');
-    expect(project.targets.build).toBeUndefined();
-    expect(project.targets.lint).toEqual({
-      executor: '@nx/eslint:lint',
     });
   });
 
@@ -239,13 +231,7 @@ describe('lib', () => {
       });
 
       expect(tree.exists('my-lib/tsconfig.spec.json')).toBeFalsy();
-      const config = readProjectConfiguration(tree, 'my-lib');
-      expect(config.targets.test).toBeUndefined();
-      expect(config.targets.lint).toMatchInlineSnapshot(`
-        {
-          "executor": "@nx/eslint:lint",
-        }
-      `);
+      expect(tree.read('my-lib/vite.config.ts', 'utf-8')).toMatchSnapshot();
     });
   });
 
@@ -257,15 +243,7 @@ describe('lib', () => {
         importPath: '@proj/my-lib',
       });
 
-      const projectsConfigurations = getProjects(tree);
-
-      expect(projectsConfigurations.get('my-lib').targets.build).toMatchObject({
-        executor: '@nx/vite:build',
-        outputs: ['{options.outputPath}'],
-        options: {
-          outputPath: 'dist/my-lib',
-        },
-      });
+      expect(tree.read('my-lib/vite.config.ts', 'utf-8')).toMatchSnapshot();
     });
 
     it('should fail if no importPath is provided with publishable', async () => {

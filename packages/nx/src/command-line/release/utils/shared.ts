@@ -1,3 +1,4 @@
+import * as chalk from 'chalk';
 import { prerelease } from 'semver';
 import { ProjectGraph } from '../../../config/project-graph';
 import { Tree } from '../../../generators/tree';
@@ -6,6 +7,10 @@ import { interpolate } from '../../../tasks-runner/utils';
 import { output } from '../../../utils/output';
 import type { ReleaseGroupWithName } from '../config/filter-release-groups';
 import { GitCommit, gitAdd, gitCommit } from './git';
+
+export const noDiffInChangelogMessage = chalk.yellow(
+  `NOTE: There was no diff detected for the changelog entry. Maybe you intended to pass alternative git references via --from and --to?`
+);
 
 export type ReleaseVersionGeneratorResult = {
   data: VersionData;
@@ -22,7 +27,11 @@ export type ReleaseVersionGeneratorResult = {
 export type VersionData = Record<
   string,
   {
-    newVersion: string;
+    /**
+     * newVersion will be null in the case that no changes are detected for the project,
+     * e.g. when using conventional commits
+     */
+    newVersion: string | null;
     currentVersion: string;
     dependentProjects: any[]; // TODO: investigate generic type for this once more ecosystems are explored
   }

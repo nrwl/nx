@@ -248,7 +248,7 @@ impl<'a> State<'a> {
                                     self.lexer
                                         .set_next_regexp(Some(self.current_token.span_lo()));
 
-                                    if let Some(_) = self.next() {
+                                    if self.next().is_some() {
                                         self.lexer.set_next_regexp(None);
                                     }
                                 }
@@ -326,6 +326,26 @@ fn find_specifier_in_import(state: &mut State) -> Option<(String, ImportType)> {
                         Token::Str { value, .. } => {
                             maybe_literal = Some(value.to_string());
                         }
+                        Token::BackQuote => {
+                            let mut set = false;
+                            while let Some(current) = state.next() {
+                                match &current.token {
+                                    // If we match a string, then it might be a literal import
+                                    Token::BackQuote => {
+                                        break;
+                                    }
+                                    Token::Template { raw, .. } => {
+                                        if !set {
+                                            set = true;
+                                            maybe_literal = Some(raw.to_string());
+                                        } else {
+                                            return None;
+                                        }
+                                    }
+                                    _ => return None,
+                                };
+                            }
+                        }
                         Token::RParen => {
                             // When the function call is closed, add the import if it exists
                             if let Some(import) = maybe_literal {
@@ -358,7 +378,7 @@ fn find_specifier_in_import(state: &mut State) -> Option<(String, ImportType)> {
                             // Matches import type * from 'a';
                             Token::BinOp(op) if *op == BinOpToken::Mul => {}
                             // Matches import type Cat from 'a';
-                            Token::Word(word) if matches!(word, Ident(_)) => {}
+                            Token::Word(Ident(_)) => {}
                             _ => {
                                 return None;
                             }
@@ -440,6 +460,7 @@ fn find_specifier_in_export(state: &mut State) -> Option<(String, ImportType)> {
 
 fn find_specifier_in_require(state: &mut State) -> Option<(String, ImportType)> {
     let mut import = None;
+    let mut set = false;
     while let Some(current) = state.next() {
         match &current.token {
             // This opens the require call
@@ -454,8 +475,33 @@ fn find_specifier_in_require(state: &mut State) -> Option<(String, ImportType)> 
             Token::Colon |
             Token::Word(Ident(_)) => {}
             // This could be a string literal
-            Token::Str { value, .. } if import.is_none() => {
-                import = Some(value.to_string());
+            Token::Str { value, .. }=> {
+                if !set {
+                    set = true;
+                    import = Some(value.to_string());
+                } else {
+                    import = None
+                }
+            }
+            Token::BackQuote => {
+                let mut set = false;
+                while let Some(current) = state.next() {
+                    match &current.token {
+                        // If we match a string, then it might be a literal import
+                        Token::BackQuote => {
+                            break;
+                        }
+                        Token::Template { raw, .. } => {
+                            if !set {
+                                set = true;
+                                import = Some(raw.to_string());
+                            } else {
+                                return None;
+                            }
+                        }
+                        _ => return None,
+                    };
+                }
             }
 
             // When the require call ends, add the require
@@ -871,7 +917,12 @@ import 'a4'; import 'a5';
         .unwrap();
 
         let result = results.get(0).unwrap();
-        let ast_results: ImportResult = find_imports_with_ast(test_file_path).unwrap();
+        let mut ast_results: ImportResult = find_imports_with_ast(test_file_path).unwrap();
+
+        // SWC does not find imports with backticks
+        ast_results
+            .static_import_expressions
+            .insert(12, "require-in-backticks".to_string());
 
         assert_eq!(
             result.static_import_expressions,
@@ -1137,6 +1188,9 @@ import('./dynamic-import.vue')
      require('./b');
      const c = require('./c');
 
+     const d = require(`./d`);
+     const d = require('dynamic-portion' + 'dynamic-portion');
+
      const a = 1;
      export class App {}
                 "#,
@@ -1152,7 +1206,12 @@ import('./dynamic-import.vue')
         .unwrap();
 
         let result = results.get(0).unwrap();
-        let ast_results: ImportResult = find_imports_with_ast(test_file_path).unwrap();
+        let mut ast_results: ImportResult = find_imports_with_ast(test_file_path).unwrap();
+
+        // SWC does not find imports with backticks
+        ast_results
+            .static_import_expressions
+            .push("./d".to_string());
 
         assert_eq!(
             result.static_import_expressions,
@@ -1343,6 +1402,66 @@ import('./dynamic-import.vue')
             result.static_import_expressions,
             ast_results.static_import_expressions
         );
+        assert_eq!(
+            result.dynamic_import_expressions,
+            ast_results.dynamic_import_expressions
+        );
+    }
+
+    #[test]
+    fn should_find_imports_in_imports_with_template_literals() {
+        let temp_dir = TempDir::new().unwrap();
+        temp_dir
+            .child("test.ts")
+            .write_str(
+                r#"
+// Basic static import
+import { Component } from 'react';
+
+// Import with template literal
+import(`react`);
+const moduleName = 'react';
+import(`${moduleName}`);
+
+// Import with template literal and string concatenation
+const modulePart1 = 're';
+const modulePart2 = 'act';
+import(`${modulePart1}${modulePart2}`);
+
+// Import with template literal and expression
+const version = 17;
+import(`react@${version}`);
+
+// Import with template literal and multi-line string
+import(`react
+@${version}`);
+
+// Import with template literal and tagged template
+function myTag(strings, ...values) {
+  return strings[0] + values[0];
+}
+import(myTag`react@${version}`);
+                "#,
+            )
+            .unwrap();
+
+        let test_file_path = temp_dir.display().to_string() + "/test.ts";
+
+        let results = find_imports(HashMap::from([(
+            String::from("a"),
+            vec![test_file_path.clone()],
+        )]))
+        .unwrap();
+
+        let result = results.get(0).unwrap();
+        let mut ast_results: ImportResult = find_imports_with_ast(test_file_path).unwrap();
+
+        assert_eq!(
+            result.static_import_expressions,
+            ast_results.static_import_expressions
+        );
+        // SWC does not find the template literal import
+        ast_results.dynamic_import_expressions.push("react".into());
         assert_eq!(
             result.dynamic_import_expressions,
             ast_results.dynamic_import_expressions

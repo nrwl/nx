@@ -1,19 +1,27 @@
-import type { GeneratorCallback, Tree } from '@nx/devkit';
-import { addDependenciesToPackageJson } from '@nx/devkit';
+import {
+  addDependenciesToPackageJson,
+  type GeneratorCallback,
+  type Tree,
+} from '@nx/devkit';
 import { versions } from '../../utils/version-utils';
+import { isBuildableLibraryProject } from './buildable-project';
 
-export function addAngularEsLintDependencies(tree: Tree): GeneratorCallback {
+export function addAngularEsLintDependencies(
+  tree: Tree,
+  projectName: string
+): GeneratorCallback {
   const angularEslintVersionToInstall = versions(tree).angularEslintVersion;
-  const jsoncEslintParserVersionToInstall =
-    versions(tree).jsoncEslintParserVersion;
-  return addDependenciesToPackageJson(
-    tree,
-    {},
-    {
-      '@angular-eslint/eslint-plugin': angularEslintVersionToInstall,
-      '@angular-eslint/eslint-plugin-template': angularEslintVersionToInstall,
-      '@angular-eslint/template-parser': angularEslintVersionToInstall,
-      'jsonc-eslint-parser': jsoncEslintParserVersionToInstall,
-    }
-  );
+  const devDependencies = {
+    '@angular-eslint/eslint-plugin': angularEslintVersionToInstall,
+    '@angular-eslint/eslint-plugin-template': angularEslintVersionToInstall,
+    '@angular-eslint/template-parser': angularEslintVersionToInstall,
+  };
+
+  if (isBuildableLibraryProject(tree, projectName)) {
+    const jsoncEslintParserVersionToInstall =
+      versions(tree).jsoncEslintParserVersion;
+    devDependencies['jsonc-eslint-parser'] = jsoncEslintParserVersionToInstall;
+  }
+
+  return addDependenciesToPackageJson(tree, {}, devDependencies);
 }

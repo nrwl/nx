@@ -169,6 +169,73 @@ describe('findNpmDependencies', () => {
     });
   });
 
+  it('should handle missing ts/swc helper packages from externalNodes', () => {
+    vol.fromJSON(
+      {
+        './nx.json': JSON.stringify(nxJson),
+        './libs/my-lib/tsconfig.json': JSON.stringify({
+          compilerOptions: {
+            importHelpers: true,
+          },
+        }),
+        './libs/my-lib/.swcrc': JSON.stringify({
+          jsc: {
+            externalHelpers: true,
+          },
+        }),
+      },
+      '/root'
+    );
+    const libWithHelpers = {
+      name: 'my-lib',
+      type: 'lib' as const,
+      data: {
+        root: 'libs/my-lib',
+        targets: {
+          build1: {
+            executor: '@nx/js:tsc',
+            options: {
+              tsConfig: 'libs/my-lib/tsconfig.json',
+            },
+          },
+          build2: {
+            executor: '@nx/js:swc',
+            options: {},
+          },
+        },
+      },
+    };
+    const projectGraph = {
+      nodes: {
+        'my-lib': libWithHelpers,
+      },
+      externalNodes: {},
+      dependencies: {},
+    };
+    const projectFileMap = {
+      'my-lib': [],
+    };
+
+    expect(
+      findNpmDependencies(
+        '/root',
+        libWithHelpers,
+        projectGraph,
+        projectFileMap,
+        'build1'
+      )
+    ).toEqual({});
+    expect(
+      findNpmDependencies(
+        '/root',
+        libWithHelpers,
+        projectGraph,
+        projectFileMap,
+        'build2'
+      )
+    ).toEqual({});
+  });
+
   it('should not pick up helper npm dependencies if not required', () => {
     vol.fromJSON(
       {
@@ -389,12 +456,78 @@ describe('findNpmDependencies', () => {
     expect(
       findNpmDependencies('/root', lib1, projectGraph, projectFileMap, 'build')
     ).toEqual({
-      '@acme/lib3': '*',
+      '@acme/lib3': '0.0.1',
     });
     expect(
       findNpmDependencies('/root', lib2, projectGraph, projectFileMap, 'build')
     ).toEqual({
-      '@acme/lib3': '*',
+      '@acme/lib3': '0.0.1',
+    });
+  });
+
+  it('should support local path for workspace dependencies', () => {
+    vol.fromJSON(
+      {
+        './libs/c/package.json': JSON.stringify({
+          name: '@acme/c',
+          version: '0.0.1',
+        }),
+        './nx.json': JSON.stringify(nxJson),
+      },
+      '/root'
+    );
+    const a = {
+      name: 'a',
+      type: 'lib' as const,
+      data: {
+        root: 'libs/a',
+        targets: { build: {} },
+      },
+    };
+    const b = {
+      name: 'b',
+      type: 'lib' as const,
+      data: {
+        root: 'libs/b',
+        targets: { build: {} },
+      },
+    };
+    const c = {
+      name: 'c',
+      type: 'lib' as const,
+      data: {
+        root: 'libs/c',
+        targets: { build: {} },
+      },
+    };
+    const projectGraph = {
+      nodes: {
+        a: a,
+        b: b,
+        c: c,
+      },
+      externalNodes: {},
+      dependencies: {},
+    };
+    const projectFileMap = {
+      a: [{ file: 'libs/a/index.ts', hash: '123', deps: ['c'] }],
+      b: [{ file: 'libs/a/index.ts', hash: '123', deps: ['c'] }],
+      c: [],
+    };
+
+    expect(
+      findNpmDependencies('/root', a, projectGraph, projectFileMap, 'build', {
+        useLocalPathsForWorkspaceDependencies: true,
+      })
+    ).toEqual({
+      '@acme/c': 'file:../c',
+    });
+    expect(
+      findNpmDependencies('/root', b, projectGraph, projectFileMap, 'build', {
+        useLocalPathsForWorkspaceDependencies: true,
+      })
+    ).toEqual({
+      '@acme/c': 'file:../c',
     });
   });
 

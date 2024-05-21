@@ -21,6 +21,9 @@ describe('updateEslint', () => {
       unitTestRunner: 'jest',
       e2eProjectName: 'my-app-e2e',
       e2eProjectRoot: 'my-app-e2e',
+      e2ePort: 3000,
+      e2eWebServerTarget: 'start',
+      e2eWebServerAddress: 'http://localhost:4200',
       outputPath: 'dist/my-app',
       name: 'my-app',
       parsedTags: [],
@@ -161,7 +164,10 @@ describe('updateEslint', () => {
               "**/*.spec.tsx",
               "**/*.spec.js",
               "**/*.spec.jsx"
-          ]
+          ],
+          rules: {
+              ...config.rules
+          }
       })),
       { ignores: [".next/**/*"] }
       ];

@@ -1,6 +1,6 @@
 # Run Only Tasks Affected by a PR
 
-As your workspace grows, re-testing, re-building an re-linting all projects becomes too slow. To address this Nx implements code change analysis to determine the minimum set of projects that were affected by the change. How does this work?
+As your workspace grows, re-testing, re-building and re-linting all projects becomes too slow. To address this Nx implements code change analysis to determine the minimum set of projects that were affected by the change. How does this work?
 
 ```shell
 nx affected -t <task>
@@ -205,7 +205,7 @@ For instance, if my PR changes `lib10`, and we then run `nx affected -t test`, N
 
 ## Visualize Affected Projects
 
-You can also visualize the affected projects using the [Nx graph](/core-features/explore-graph). Simply run:
+You can also visualize the affected projects using the [Nx graph](/features/explore-graph). Simply run:
 
 ```shell
 nx affected:graph
@@ -213,7 +213,7 @@ nx affected:graph
 
 ## Specify Which SHAs to Use to Calculate Affected Code
 
-To understand which projects are affected, Nx uses the Git history and the [project graph](/core-features/explore-graph). Git knows which files changed, and the Nx project graph knows which projects those files belong to.
+To understand which projects are affected, Nx uses the Git history and the [project graph](/features/explore-graph). Git knows which files changed, and the Nx project graph knows which projects those files belong to.
 
 The affected command takes a `base` and `head` commit. The default `base` is your `main` branch and the default `head` is your current file system. This is generally what you want when developing locally, but in CI, you need to customize these values.
 
@@ -234,7 +234,7 @@ Typically, you want to set the base SHA not the most recent commit on the `main`
 - [Get last successful commit for Azure Pipelines](/ci/recipes/set-up/monorepo-ci-azure#get-the-commit-of-the-last-successful-build)
 - [Get last successful commit for GitHub Actions](/ci/recipes/set-up/monorepo-ci-github-actions#get-the-commit-of-the-last-successful-build)
 - [Get last successful commit for CircleCI](/ci/recipes/set-up/monorepo-ci-circle-ci#get-the-commit-of-the-last-successful-build)
-- [Get last successful commit for GitLab](/ci/recipes/set-up/monorepo-ci-gitlab#process-only-affected-projects-with-one-job-on-gitlab)
+- [Get last successful commit for GitLab](/ci/recipes/set-up/monorepo-ci-gitlab)
 - [Get last successful commit for Jenkins](/ci/recipes/set-up/monorepo-ci-jenkins#get-the-commit-of-the-last-successful-build)
 
 ## Ignoring Files from Affected Commands

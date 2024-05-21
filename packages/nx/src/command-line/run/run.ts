@@ -1,3 +1,4 @@
+import { env as appendLocalEnv } from 'npm-run-path';
 import {
   combineOptionsForExecutor,
   handleErrors,
@@ -16,13 +17,16 @@ import {
 } from '../../project-graph/project-graph';
 import { ProjectGraph } from '../../config/project-graph';
 import { readNxJson } from '../../config/configuration';
-import { runCommand } from '../../native';
 import {
   getLastValueFromAsyncIterableIterator,
   isAsyncIterator,
 } from '../../utils/async-iterator';
 import { getExecutorInformation } from './executor-utils';
-import { PseudoTtyProcess } from '../../utils/child-process';
+import {
+  getPseudoTerminal,
+  PseudoTerminal,
+} from '../../tasks-runner/pseudo-terminal';
+import { exec } from 'child_process';
 
 export interface Target {
   project: string;
@@ -127,12 +131,28 @@ async function printTargetRunHelpInternal(
     targetConfig.options.command
   ) {
     const command = targetConfig.options.command.split(' ')[0];
-    await new Promise(() => {
-      const cp = new PseudoTtyProcess(runCommand(`${command} --help`));
-      cp.onExit((code) => {
+    const helpCommand = `${command} --help`;
+    const localEnv = appendLocalEnv();
+    const env = {
+      ...process.env,
+      ...localEnv,
+    };
+    if (PseudoTerminal.isSupported()) {
+      const terminal = getPseudoTerminal();
+      await new Promise(() => {
+        const cp = terminal.runCommand(helpCommand, { jsEnv: env });
+        cp.onExit((code) => {
+          process.exit(code);
+        });
+      });
+    } else {
+      const cp = exec(helpCommand, {
+        env,
+      });
+      cp.on('exit', (code) => {
         process.exit(code);
       });
-    });
+    }
   } else {
     process.exit(0);
   }

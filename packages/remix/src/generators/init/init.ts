@@ -3,43 +3,23 @@ import {
   formatFiles,
   GeneratorCallback,
   readNxJson,
-  updateNxJson,
   addDependenciesToPackageJson,
   runTasksInSerial,
+  createProjectGraphAsync,
 } from '@nx/devkit';
-import { updatePackageScripts } from '@nx/devkit/src/utils/update-package-scripts';
+import {
+  addPlugin,
+  generateCombinations,
+} from '@nx/devkit/src/utils/add-plugin';
 import { createNodes } from '../../plugins/plugin';
 import { nxVersion, remixVersion } from '../../utils/versions';
 import { type Schema } from './schema';
 
-function addPlugin(tree) {
-  const nxJson = readNxJson(tree);
-  nxJson.plugins ??= [];
-
-  for (const plugin of nxJson.plugins) {
-    if (
-      typeof plugin === 'string'
-        ? plugin === '@nx/remix/plugin'
-        : plugin.plugin === '@nx/remix/plugin'
-    ) {
-      return;
-    }
-  }
-
-  nxJson.plugins.push({
-    plugin: '@nx/remix/plugin',
-    options: {
-      buildTargetName: 'build',
-      serveTargetName: 'serve',
-      startTargetName: 'start',
-      typecheckTargetName: 'typecheck',
-    },
-  });
-
-  updateNxJson(tree, nxJson);
+export function remixInitGenerator(tree: Tree, options: Schema) {
+  return remixInitGeneratorInternal(tree, { addPlugin: false, ...options });
 }
 
-export async function remixInitGenerator(tree: Tree, options: Schema) {
+export async function remixInitGeneratorInternal(tree: Tree, options: Schema) {
   const tasks: GeneratorCallback[] = [];
 
   if (!options.skipPackageJson) {
@@ -58,12 +38,29 @@ export async function remixInitGenerator(tree: Tree, options: Schema) {
     tasks.push(installTask);
   }
 
-  if (process.env.NX_PCV3 === 'true') {
-    addPlugin(tree);
-  }
-
-  if (options.updatePackageScripts) {
-    await updatePackageScripts(tree, createNodes);
+  const nxJson = readNxJson(tree);
+  const addPluginDefault =
+    process.env.NX_ADD_PLUGINS !== 'false' &&
+    nxJson.useInferencePlugins !== false;
+  options.addPlugin ??= addPluginDefault;
+  if (options.addPlugin) {
+    await addPlugin(
+      tree,
+      await createProjectGraphAsync(),
+      '@nx/remix/plugin',
+      createNodes,
+      {
+        startTargetName: ['start', 'remix:start', 'remix-start'],
+        buildTargetName: ['build', 'remix:build', 'remix-build'],
+        devTargetName: ['dev', 'remix:dev', 'remix-dev'],
+        typecheckTargetName: [
+          'typecheck',
+          'remix:typecheck',
+          'remix-typecheck',
+        ],
+      },
+      options.updatePackageScripts
+    );
   }
 
   if (!options.skipFormat) {

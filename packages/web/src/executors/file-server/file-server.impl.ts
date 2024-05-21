@@ -149,6 +149,12 @@ export default async function* fileServerExecutor(
     const run = () => {
       if (!running) {
         running = true;
+        /**
+         * Expose a variable to the build target to know if it's being run by the serve-static executor
+         * This is useful because a config might need to change if it's being run by serve-static without the user's input
+         * or if being ran by another executor (eg. E2E tests)
+         * */
+        process.env.NX_SERVE_STATIC_BUILD_RUNNING = 'true';
         try {
           const args = getBuildTargetCommand(options, context);
           execFileSync(pmCmd, args, {
@@ -159,6 +165,7 @@ export default async function* fileServerExecutor(
             `Build target failed: ${chalk.bold(options.buildTarget)}`
           );
         } finally {
+          process.env.NX_SERVE_STATIC_BUILD_RUNNING = undefined;
           running = false;
         }
       }
@@ -174,6 +181,7 @@ export default async function* fileServerExecutor(
     run();
   }
 
+  const port = await detectPort(options.port || 8080);
   const outputPath = getBuildTargetOutputPath(options, context);
 
   if (options.spa) {
@@ -182,6 +190,10 @@ export default async function* fileServerExecutor(
 
     // See: https://github.com/http-party/http-server#magic-files
     copyFileSync(src, dst);
+
+    // We also need to ensure the proxyUrl is set, otherwise the browser will continue to throw a 404 error
+    // This can cause unexpected behaviors and failures especially in automated test suites
+    options.proxyUrl ??= `http${options.ssl ? 's' : ''}://localhost:${port}?`;
   }
 
   const args = getHttpServerArgs(options);
@@ -198,7 +210,6 @@ export default async function* fileServerExecutor(
 
   // detect port as close to when used to prevent port being used by another process
   // when running in  parallel
-  const port = await detectPort(options.port || 8080);
   args.push(`-p=${port}`);
 
   const serve = fork(pathToHttpServer, [outputPath, ...args], {

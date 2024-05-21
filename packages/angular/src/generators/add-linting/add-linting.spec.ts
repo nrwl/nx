@@ -1,8 +1,11 @@
-import type { ProjectConfiguration, Tree } from '@nx/devkit';
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
 import {
+  ProjectConfiguration,
+  Tree,
   addProjectConfiguration,
   readJson,
-  readProjectConfiguration,
+  updateJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import * as linter from '@nx/eslint';
@@ -65,17 +68,25 @@ describe('addLinting generator', () => {
     expect(eslintConfig).toMatchSnapshot();
   });
 
-  it('should update the project with the right lint target configuration', async () => {
+  it('should not touch the package.json when run with `--skipPackageJson`', async () => {
+    let initialPackageJson;
+    updateJson(tree, 'package.json', (json) => {
+      json.dependencies = {};
+      json.devDependencies = {};
+      initialPackageJson = json;
+
+      return json;
+    });
+
     await addLintingGenerator(tree, {
       prefix: 'myOrg',
       projectName: appProjectName,
       projectRoot: appProjectRoot,
       skipFormat: true,
+      skipPackageJson: true,
     });
 
-    const project = readProjectConfiguration(tree, appProjectName);
-    expect(project.targets.lint).toEqual({
-      executor: '@nx/eslint:lint',
-    });
+    const packageJson = readJson(tree, 'package.json');
+    expect(packageJson).toEqual(initialPackageJson);
   });
 });

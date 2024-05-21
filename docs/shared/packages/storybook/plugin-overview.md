@@ -9,31 +9,67 @@ This guide will briefly walk you through using Storybook within an Nx workspace.
 
 ## Setting Up Storybook
 
-### Add the Storybook plugin
+### Installation
 
 {% callout type="note" title="Keep Nx Package Versions In Sync" %}
 Make sure to install the `@nx/storybook` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/recipes/tips-n-tricks/keep-nx-versions-in-sync).
 {% /callout %}
 
+In any Nx workspace, you can install `@nx/storybook` by running the following command:
+
 {% tabs %}
-{% tab label="npm" %}
+{% tab label="Nx 18+" %}
+
+```shell {% skipRescope=true %}
+nx add @nx/storybook
+```
+
+This will install the correct version of `@nx/storybook`.
+
+### How @nx/storybook Infers Tasks
+
+The `@nx/storybook` plugin will create a task for any project that has a Storybook configuration file present. Any of the following files will be recognized as a Storybook configuration file:
+
+- `.storybook/main.js`
+- `.storybook/main.ts`
+- `.storybook/main.cjs`
+- `.storybook/main.cts`
+- `.storybook/main.mjs`
+- `.storybook/main.mts`
+
+### View Inferred Tasks
+
+To view inferred tasks for a project, open the [project details view](/concepts/inferred-tasks) in Nx Console or run `nx show project my-project --web` in the command line.
+
+### @nx/storybook Configuration
+
+The `@nx/storybook/plugin` is configured in the `plugins` array in `nx.json`.
+
+```json {% fileName="nx.json" %}
+{
+  "plugins": [
+    {
+      "plugin": "@nx/storybook/plugin",
+      "options": {
+        "buildStorybookTargetName": "build-storybook",
+        "serveStorybookTargetName": "storybook",
+        "testStorybookTargetName": "test-storybook",
+        "staticStorybookTargetName": "static-storybook"
+      }
+    }
+  ]
+}
+```
+
+The `builtStorybookTargetName`, `serveStorybookTargetName`, `testStorybookTargetName` and `staticStorybookTargetName` options control the names of the inferred Storybook tasks. The default names are `build-storybook`, `storybook`, `test-storybook` and `static-storybook`.
+
+{% /tab %}
+{% tab label="Nx < 18" %}
+
+Install the `@nx/storybook` package with your package manager.
 
 ```shell
 npm add -D @nx/storybook
-```
-
-{% /tab %}
-{% tab label="yarn" %}
-
-```shell
-yarn add -D @nx/storybook
-```
-
-{% /tab %}
-{% tab label="pnpm" %}
-
-```shell
-pnpm add -D @nx/storybook
 ```
 
 {% /tab %}
@@ -220,11 +256,5 @@ For more on using Storybook, see the [official Storybook documentation](https://
 
 Here's more information on common migration scenarios for Storybook with Nx. For Storybook specific migrations that are not automatically handled by Nx please refer to the [official Storybook page](https://storybook.js.org/)
 
-- [Upgrading to Storybook 6](/deprecated/storybook/upgrade-storybook-v6-react)
-- [Migrate to the Nx React Storybook Addon](/deprecated/storybook/migrate-webpack-final-react)
 - [Storybook 7 migration generator](/nx-api/storybook/generators/migrate-7)
 - [Storybook 7 setup guide](/nx-api/storybook/documents/storybook-7-setup)
-
-## Older documentation
-
-You can find older documentation for the `@nx/storybook` package in our [deprecated section](/deprecated/storybook).

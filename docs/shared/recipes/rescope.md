@@ -39,7 +39,6 @@ All other packages keep the same name, but change scope from `@nrwl` to `@nx`.
 | @nrwl/angular      | @nx/angular      |
 | @nrwl/aws-lambda   | @nx/aws-lambda   |
 | @nrwl/cypress      | @nx/cypress      |
-| @nrwl/deno         | @nx/deno         |
 | @nrwl/detox        | @nx/detox        |
 | @nrwl/devkit       | @nx/devkit       |
 | @nrwl/esbuild      | @nx/esbuild      |
@@ -65,4 +64,4 @@ All other packages keep the same name, but change scope from `@nrwl` to `@nx`.
 
 ## @nrwl Scope End of Life
 
-Starting in version 19, the `@nrwl` scoped packages will no longer be published to npm. Only the `@nx` scoped packages will be available on the npm registry.
+Starting in version 20, the `@nrwl` scoped packages will no longer be published to npm. Only the `@nx` scoped packages will be available on the npm registry.

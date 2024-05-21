@@ -356,6 +356,36 @@
       },
       "description": "Add 'autoprefixer' as dev dependency when '@nx/angular:ng-packagr-lite' or '@nx/angular:package` is used.",
       "factory": "./src/migrations/update-17-3-0/add-autoprefixer-dependency"
+    },
+    "add-module-federation-env-var-to-target-defaults": {
+      "cli": "nx",
+      "version": "18.0.0-beta.0",
+      "description": "Add NX_MF_DEV_SERVER_STATIC_REMOTES to inputs for task hashing when '@nx/angular:webpack-browser' is used for Module Federation.",
+      "factory": "./src/migrations/update-18-0-0/add-mf-env-var-to-target-defaults"
+    },
+    "update-angular-cli-version-17-2-0": {
+      "cli": "nx",
+      "version": "18.1.0-beta.1",
+      "requires": {
+        "@angular/core": ">=17.2.0"
+      },
+      "description": "Update the @angular/cli package version to ~17.2.0.",
+      "factory": "./src/migrations/update-18-1-0/update-angular-cli"
+    },
+    "fix-target-defaults-for-webpack-browser": {
+      "cli": "nx",
+      "version": "18.1.1-beta.0",
+      "description": "Ensure targetDefaults inputs for task hashing when '@nx/angular:webpack-browser' is used are correct for Module Federation.",
+      "factory": "./src/migrations/update-18-1-1/fix-target-defaults-inputs"
+    },
+    "update-angular-cli-version-17-3-0": {
+      "cli": "nx",
+      "version": "18.2.0-beta.0",
+      "requires": {
+        "@angular/core": ">=17.3.0"
+      },
+      "description": "Update the @angular/cli package version to ~17.3.0.",
+      "factory": "./src/migrations/update-18-2-0/update-angular-cli"
     }
   },
   "packageJsonUpdates": {
@@ -1621,6 +1651,157 @@
         },
         "zone.js": {
           "version": "~0.14.3",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "18.1.0-jest": {
+      "version": "18.1.0-beta.2",
+      "requires": {
+        "@angular-devkit/build-angular": ">=15.0.0 <18.0.0",
+        "@angular/compiler-cli": ">=15.0.0 <18.0.0",
+        "@angular/core": ">=15.0.0 <18.0.0",
+        "@angular/platform-browser-dynamic": ">=15.0.0 <18.0.0",
+        "jest": "^29.0.0"
+      },
+      "packages": {
+        "jest-preset-angular": {
+          "version": "~14.0.3",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "18.1.0": {
+      "version": "18.1.0-beta.1",
+      "x-prompt": "Do you want to update the Angular version to v17.2?",
+      "requires": {
+        "@angular/core": ">=17.1.0 <17.2.0"
+      },
+      "packages": {
+        "@angular-devkit/build-angular": {
+          "version": "~17.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/core": {
+          "version": "~17.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/schematics": {
+          "version": "~17.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/pwa": {
+          "version": "~17.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/ssr": {
+          "version": "~17.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@schematics/angular": {
+          "version": "~17.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/architect": {
+          "version": "~0.1702.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/build-webpack": {
+          "version": "~0.1702.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/core": {
+          "version": "~17.2.0",
+          "alwaysAddToPackageJson": true
+        },
+        "@angular/material": {
+          "version": "~17.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/cdk": {
+          "version": "~17.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "ng-packagr": {
+          "version": "~17.2.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "18.2.0": {
+      "version": "18.2.0-beta.0",
+      "x-prompt": "Do you want to update the Angular version to v17.3?",
+      "requires": {
+        "@angular/core": ">=17.2.0 <17.3.0"
+      },
+      "packages": {
+        "@angular-devkit/build-angular": {
+          "version": "~17.3.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/core": {
+          "version": "~17.3.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/schematics": {
+          "version": "~17.3.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/pwa": {
+          "version": "~17.3.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/ssr": {
+          "version": "~17.3.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@schematics/angular": {
+          "version": "~17.3.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/architect": {
+          "version": "~0.1703.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/build-webpack": {
+          "version": "~0.1703.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/core": {
+          "version": "~17.3.0",
+          "alwaysAddToPackageJson": true
+        },
+        "@angular/material": {
+          "version": "~17.3.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/cdk": {
+          "version": "~17.3.0",
+          "alwaysAddToPackageJson": false
+        },
+        "ng-packagr": {
+          "version": "~17.3.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "18.2.0-angular-eslint": {
+      "version": "18.2.0-beta.0",
+      "requires": {
+        "eslint": "^7.20.0 || ^8.0.0",
+        "@angular/core": ">= 17.0.0 < 18.0.0"
+      },
+      "packages": {
+        "@angular-eslint/eslint-plugin": {
+          "version": "~17.3.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/eslint-plugin-template": {
+          "version": "~17.3.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/template-parser": {
+          "version": "~17.3.0",
           "alwaysAddToPackageJson": false
         }
       }
