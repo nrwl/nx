@@ -26,7 +26,7 @@ export interface PackageManagerCommands {
   exec: string;
   dlx: string;
   list: string;
-  run: (script: string, args: string) => string;
+  run: (script: string, args?: string) => string;
   getRegistryUrl: string;
 }
 
@@ -100,7 +100,8 @@ export function getPackageManagerCommand(
         rm: 'yarn remove',
         exec: 'yarn',
         dlx: useBerry ? 'yarn dlx' : 'yarn',
-        run: (script: string, args: string) => `yarn ${script} ${args}`,
+        run: (script: string, args?: string) =>
+          `yarn ${script}${args ? ` ${args}` : ''}`,
         list: useBerry ? 'yarn info --name-only' : 'yarn list',
         getRegistryUrl: useBerry
           ? 'yarn config get npmRegistryServer'
@@ -122,10 +123,14 @@ export function getPackageManagerCommand(
         rm: 'pnpm rm',
         exec: modernPnpm ? 'pnpm exec' : 'pnpx',
         dlx: modernPnpm ? 'pnpm dlx' : 'pnpx',
-        run: (script: string, args: string) =>
-          includeDoubleDashBeforeArgs
-            ? `pnpm run ${script} -- ${args}`
-            : `pnpm run ${script} ${args}`,
+        run: (script: string, args?: string) =>
+          `pnpm run ${script}${
+            args
+              ? includeDoubleDashBeforeArgs
+                ? ' -- ' + args
+                : ` ${args}`
+              : ''
+          }`,
         list: 'pnpm ls --depth 100',
         getRegistryUrl: 'pnpm config get registry',
       };
@@ -143,7 +148,8 @@ export function getPackageManagerCommand(
         rm: 'npm rm',
         exec: 'npx',
         dlx: 'npx',
-        run: (script: string, args: string) => `npm run ${script} -- ${args}`,
+        run: (script: string, args?: string) =>
+          `npm run ${script}${args ? ' -- ' + args : ''}`,
         list: 'npm ls',
         getRegistryUrl: 'npm config get registry',
       };
