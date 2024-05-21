@@ -6,6 +6,7 @@ import { parseRegistryOptions } from '../../utils/npm-config';
 import { logTar } from './log-tar';
 import { PublishExecutorSchema } from './schema';
 import chalk = require('chalk');
+import { extractJsonDataFromString } from './extract-json-data-from-string';
 
 const LARGE_BUFFER = 1024 * 1000000;
 
@@ -220,11 +221,39 @@ export default async function runExecutor(
       stdio: ['ignore', 'pipe', 'pipe'],
     });
 
-    const stdoutData = JSON.parse(output.toString());
+    /**
+     * We cannot JSON.parse the output directly because if the user is using lifecycle scripts, npm will mix its publish output with the JSON output all on stdout.
+     * Additionally, we want to capture and show the lifecycle script outputs as beforeJsonData and afterJsonData and print them accordingly below.
+     */
+    const extractJsonData = extractJsonDataFromString(output.toString());
 
     // If npm workspaces are in use, the publish output will nest the data under the package name, so we normalize it first
-    const normalizedStdoutData = stdoutData[packageName] ?? stdoutData;
+    const normalizedStdoutData =
+      extractJsonData.jsonData[packageName] ?? extractJsonData.jsonData;
+
+    // If in dry-run mode, the version on disk will not represent the version that would be published, so we scrub it from the output to avoid confusion.
+    const dryRunVersionPlaceholder = 'X.X.X-dry-run';
+    if (isDryRun) {
+      for (const [key, val] of Object.entries(normalizedStdoutData)) {
+        if (typeof val !== 'string') {
+          continue;
+        }
+        normalizedStdoutData[key] = val.replace(
+          new RegExp(packageJson.version, 'g'),
+          dryRunVersionPlaceholder
+        );
+      }
+    }
+
+    if (extractJsonData.beforeJsonData) {
+      console.log(extractJsonData.beforeJsonData);
+    }
+
     logTar(normalizedStdoutData);
+
+    if (extractJsonData.afterJsonData) {
+      console.log(extractJsonData.afterJsonData);
+    }
 
     if (isDryRun) {
       console.log(
