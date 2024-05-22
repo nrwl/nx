@@ -7,10 +7,15 @@ import {
   readModulePackageJson,
   readTargetsFromPackageJson,
 } from './package-json';
+import { getPackageManagerCommand } from './package-manager';
 
 describe('buildTargetFromScript', () => {
   it('should use nx:run-script', () => {
-    const target = buildTargetFromScript('build');
+    const target = buildTargetFromScript(
+      'build',
+      {},
+      getPackageManagerCommand()
+    );
     expect(target.executor).toEqual('nx:run-script');
   });
 });
