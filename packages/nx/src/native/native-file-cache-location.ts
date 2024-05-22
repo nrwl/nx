@@ -15,6 +15,10 @@ function getNativeFileCacheBaseFolder() {
   if (process.env.NX_NATIVE_FILE_CACHE_DIRECTORY) {
     return process.env.NX_NATIVE_FILE_CACHE_DIRECTORY;
   } else {
-    return join(tmpdir(), 'nx-native-file-cache');
+    const shortUserHash = createHash('sha256')
+      .update(userInfo().username)
+      .digest('hex')
+      .substring(0, 7);
+    return join(tmpdir(), `nx-native-file-cache-${shortUserHash}`);
   }
 }
