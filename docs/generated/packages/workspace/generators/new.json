@@ -53,7 +53,7 @@
       "packageManager": {
         "description": "The package manager used to install dependencies.",
         "type": "string",
-        "enum": ["npm", "yarn", "pnpm"]
+        "enum": ["npm", "yarn", "pnpm", "bun"]
       },
       "framework": {
         "description": "The framework which the application is using",
