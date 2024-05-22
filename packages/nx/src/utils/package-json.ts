@@ -7,6 +7,7 @@ import {
 import { mergeTargetConfigurations } from '../project-graph/utils/project-configuration-utils';
 import { readJsonFile } from './fileutils';
 import { getNxRequirePaths } from './installation-directory';
+import { getPackageManagerCommand } from './package-manager';
 
 export interface NxProjectPackageJsonConfiguration {
   implicitDependencies?: string[];
@@ -115,11 +116,19 @@ export function readNxMigrateConfig(
   };
 }
 
-export function buildTargetFromScript(script: string): TargetConfiguration {
+export function buildTargetFromScript(
+  script: string,
+  scripts: Record<string, string> = {}
+): TargetConfiguration {
+  const packageManagerCommand = getPackageManagerCommand();
   return {
     executor: 'nx:run-script',
     options: {
       script,
+    },
+    metadata: {
+      scriptContent: scripts[script],
+      runCommand: packageManagerCommand.run(script),
     },
   };
 }
@@ -130,7 +139,7 @@ export function readTargetsFromPackageJson(packageJson: PackageJson) {
   const includedScripts = nx?.includedScripts || Object.keys(scripts ?? {});
   //
   for (const script of includedScripts) {
-    res[script] = buildTargetFromScript(script);
+    res[script] = buildTargetFromScript(script, scripts);
   }
   for (const targetName in nx?.targets) {
     res[targetName] = mergeTargetConfigurations(

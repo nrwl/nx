@@ -14,6 +14,8 @@ import { Pill } from '../pill';
 import { TargetTechnologies } from '../target-technologies/target-technologies';
 import { SourceInfo } from '../source-info/source-info';
 import { CopyToClipboard } from '../copy-to-clipboard/copy-to-clipboard';
+import { getDisplayHeaderFromTargetConfiguration } from '../utils/get-display-header-from-target-configuration';
+import { TargetExecutor } from '../target-executor/target-executor';
 
 export interface TargetConfigurationDetailsHeaderProps {
   isCollasped: boolean;
@@ -52,10 +54,8 @@ export const TargetConfigurationDetailsHeader = ({
     isCollasped = false;
   }
 
-  const singleCommand =
-    targetConfiguration.executor === 'nx:run-commands'
-      ? targetConfiguration.command ?? targetConfiguration.options?.command
-      : null;
+  const { command, commands, script, executor } =
+    getDisplayHeaderFromTargetConfiguration(targetConfiguration);
 
   return (
     <header
@@ -86,7 +86,13 @@ export const TargetConfigurationDetailsHeader = ({
           {isCollasped &&
             targetConfiguration?.executor !== '@nx/js:release-publish' && (
               <p className="min-w-0 flex-1 truncate text-sm text-slate-400">
-                {singleCommand ? singleCommand : targetConfiguration.executor}
+                <TargetExecutor
+                  command={command}
+                  commands={commands}
+                  script={script}
+                  executor={executor}
+                  isCompact={true}
+                />
               </p>
             )}
           {targetName === 'nx-release-publish' && (

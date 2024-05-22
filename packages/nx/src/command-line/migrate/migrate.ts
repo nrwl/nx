@@ -1380,7 +1380,14 @@ export async function executeMigrations(
   shouldCreateCommits: boolean,
   commitPrefix: string
 ) {
-  const depsBeforeMigrations = getStringifiedPackageJsonDeps(root);
+  let initialDeps = getStringifiedPackageJsonDeps(root);
+  const installDepsIfChanged = () => {
+    const currentDeps = getStringifiedPackageJsonDeps(root);
+    if (initialDeps !== currentDeps) {
+      runInstall();
+    }
+    initialDeps = currentDeps;
+  };
 
   const migrationsWithNoChanges: typeof migrations = [];
   const sortedMigrations = migrations.sort((a, b) => {
@@ -1444,6 +1451,8 @@ export async function executeMigrations(
       }
 
       if (shouldCreateCommits) {
+        installDepsIfChanged();
+
         const commitMessage = `${commitPrefix}${m.name}`;
         try {
           const committedSha = commitChanges(commitMessage);
@@ -1472,10 +1481,10 @@ export async function executeMigrations(
     }
   }
 
-  const depsAfterMigrations = getStringifiedPackageJsonDeps(root);
-  if (depsBeforeMigrations !== depsAfterMigrations) {
-    runInstall();
+  if (!shouldCreateCommits) {
+    installDepsIfChanged();
   }
+
   return migrationsWithNoChanges;
 }
 

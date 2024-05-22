@@ -246,11 +246,13 @@ export function createGitTagValues(
     }
     // For fixed groups we want one tag for the overall group
     const projectVersionData = versionData[releaseGroupProjectNames[0]]; // all at the same version, so we can just pick the first one
-    tags.push(
-      interpolate(releaseGroup.releaseTagPattern, {
-        version: projectVersionData.newVersion,
-      })
-    );
+    if (projectVersionData.newVersion !== null) {
+      tags.push(
+        interpolate(releaseGroup.releaseTagPattern, {
+          version: projectVersionData.newVersion,
+        })
+      );
+    }
   }
 
   return tags;

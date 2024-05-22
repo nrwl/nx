@@ -27,7 +27,7 @@ npm create astro@latest
 
 ## Add Nx
 
-We can leverage [`nx init`](/recipes/adopting-nx/adding-to-existing-project#installing-nx-on-a-non-monorepo-project) to add Nx to the Astro application.
+We can leverage [`nx init`](/recipes/adopting-nx/adding-to-existing-project#install-nx-on-a-nonmonorepo-project) to add Nx to the Astro application.
 
 ```{% command="npx nx@latest init" path="~/astro-app"%}
 NX   🐳 Nx initialization

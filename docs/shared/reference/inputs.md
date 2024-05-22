@@ -240,7 +240,7 @@ nx test myreactapp
 ```
 
 {% cards %}
-{% card title="nx.json reference" type="documentation" description="namedInputs can be defined in nx.json" url="/reference/nx-json#inputs-&-namedinputs" /%}
-{% card title="Project configuration reference" type="documentation" description="inputs and namedInputs can be defined in project configuration" url="/reference/nx-json#inputs-&-namedinputs" /%}
+{% card title="nx.json reference" type="documentation" description="namedInputs can be defined in nx.json" url="/reference/nx-json#inputs-namedinputs" /%}
+{% card title="Project configuration reference" type="documentation" description="inputs and namedInputs can be defined in project configuration" url="/reference/project-configuration#inputs-and-named-inputs" /%}
 {% card title="Configure Inputs for Task Caching" type="documentation" description="This recipes walks you through a few examples of how to configure inputs and namedInputs" url="/recipes/running-tasks/configure-inputs" /%}
 {% /cards %}
