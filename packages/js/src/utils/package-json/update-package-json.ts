@@ -11,6 +11,7 @@ import {
   ExecutorContext,
   getOutputsForTargetAndConfiguration,
   joinPathFragments,
+  logger,
   ProjectFileMap,
   ProjectGraph,
   ProjectGraphExternalNode,
@@ -103,18 +104,24 @@ export function updatePackageJson(
 
   if (options.generateLockfile) {
     const packageManager = detectPackageManager(context.root);
-    const lockFile = createLockFile(
-      packageJson,
-      context.projectGraph,
-      packageManager
-    );
-    writeFileSync(
-      `${options.outputPath}/${getLockFileName(packageManager)}`,
-      lockFile,
-      {
-        encoding: 'utf-8',
-      }
-    );
+    if (packageManager === 'bun') {
+      logger.warn(
+        `Bun lockfile generation is unsupported. Remove "generateLockfile" option or set it to false.`
+      );
+    } else {
+      const lockFile = createLockFile(
+        packageJson,
+        context.projectGraph,
+        packageManager
+      );
+      writeFileSync(
+        `${options.outputPath}/${getLockFileName(packageManager)}`,
+        lockFile,
+        {
+          encoding: 'utf-8',
+        }
+      );
+    }
   }
 }
 
