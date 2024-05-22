@@ -108,6 +108,9 @@ describe('@nx/eslint/plugin', () => {
                   ],
                   "options": {
                     "cwd": ".",
+                    "env": {
+                      "ESLINT_USE_FLAT_CONFIG": "false",
+                    },
                   },
                   "outputs": [
                     "{options.outputFile}",
@@ -180,6 +183,9 @@ describe('@nx/eslint/plugin', () => {
                   ],
                   "options": {
                     "cwd": "apps/my-app",
+                    "env": {
+                      "ESLINT_USE_FLAT_CONFIG": "false",
+                    },
                   },
                   "outputs": [
                     "{options.outputFile}",
@@ -221,6 +227,9 @@ describe('@nx/eslint/plugin', () => {
                   ],
                   "options": {
                     "cwd": "apps/my-app",
+                    "env": {
+                      "ESLINT_USE_FLAT_CONFIG": "false",
+                    },
                   },
                   "outputs": [
                     "{options.outputFile}",
@@ -334,6 +343,9 @@ describe('@nx/eslint/plugin', () => {
                   ],
                   "options": {
                     "cwd": "apps/my-app",
+                    "env": {
+                      "ESLINT_USE_FLAT_CONFIG": "false",
+                    },
                   },
                   "outputs": [
                     "{options.outputFile}",
@@ -359,6 +371,9 @@ describe('@nx/eslint/plugin', () => {
                   ],
                   "options": {
                     "cwd": "libs/my-lib",
+                    "env": {
+                      "ESLINT_USE_FLAT_CONFIG": "false",
+                    },
                   },
                   "outputs": [
                     "{options.outputFile}",
@@ -444,6 +459,9 @@ describe('@nx/eslint/plugin', () => {
                   ],
                   "options": {
                     "cwd": "apps/my-app",
+                    "env": {
+                      "ESLINT_USE_FLAT_CONFIG": "false",
+                    },
                   },
                   "outputs": [
                     "{options.outputFile}",
@@ -470,6 +488,9 @@ describe('@nx/eslint/plugin', () => {
                   ],
                   "options": {
                     "cwd": "libs/my-lib",
+                    "env": {
+                      "ESLINT_USE_FLAT_CONFIG": "false",
+                    },
                   },
                   "outputs": [
                     "{options.outputFile}",
@@ -513,6 +534,9 @@ describe('@nx/eslint/plugin', () => {
                   ],
                   "options": {
                     "cwd": "apps/myapp",
+                    "env": {
+                      "ESLINT_USE_FLAT_CONFIG": "false",
+                    },
                   },
                   "outputs": [
                     "{options.outputFile}",
@@ -561,6 +585,9 @@ describe('@nx/eslint/plugin', () => {
                   ],
                   "options": {
                     "cwd": "apps/myapp/nested/mylib",
+                    "env": {
+                      "ESLINT_USE_FLAT_CONFIG": "false",
+                    },
                   },
                   "outputs": [
                     "{options.outputFile}",

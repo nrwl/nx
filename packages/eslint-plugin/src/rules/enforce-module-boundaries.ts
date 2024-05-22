@@ -215,7 +215,7 @@ export default ESLintUtils.RuleCreator(
     const projectPath = normalizePath(
       (global as any).projectPath || workspaceRoot
     );
-    const fileName = normalizePath(context.getFilename());
+    const fileName = normalizePath(context.filename ?? context.getFilename());
 
     const {
       projectGraph,

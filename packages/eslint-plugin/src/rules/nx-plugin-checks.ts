@@ -1,19 +1,23 @@
-import type { AST } from 'jsonc-eslint-parser';
 import type { TSESLint } from '@typescript-eslint/utils';
 import { ESLintUtils } from '@typescript-eslint/utils';
+import type { AST } from 'jsonc-eslint-parser';
 
 import {
   ProjectGraphProjectNode,
   readJsonFile,
   workspaceRoot,
 } from '@nx/devkit';
-import { findProject, getSourceFilePath } from '../utils/runtime-lint-utils';
-import { existsSync } from 'fs';
-import { registerTsProject } from '@nx/js/src/internal';
-import * as path from 'path';
-import { readProjectGraph } from '../utils/project-graph-utils';
-import { valid } from 'semver';
 import { getRootTsConfigPath } from '@nx/js';
+import { registerTsProject } from '@nx/js/src/internal';
+import { existsSync } from 'fs';
+import * as path from 'path';
+import { valid } from 'semver';
+import { readProjectGraph } from '../utils/project-graph-utils';
+import {
+  findProject,
+  getParserServices,
+  getSourceFilePath,
+} from '../utils/runtime-lint-utils';
 
 type Options = [
   {
@@ -113,14 +117,14 @@ export default ESLintUtils.RuleCreator(() => ``)<Options, MessageIds>({
   defaultOptions: [DEFAULT_OPTIONS],
   create(context) {
     // jsonc-eslint-parser adds this property to parserServices where appropriate
-    if (!(context.parserServices as any).isJSON) {
+    if (!getParserServices(context).isJSON) {
       return {};
     }
 
     const { projectGraph, projectRootMappings } = readProjectGraph(RULE_NAME);
 
     const sourceFilePath = getSourceFilePath(
-      context.getFilename(),
+      context.filename ?? context.getFilename(),
       workspaceRoot
     );
 
@@ -301,7 +305,7 @@ export function validateEntry(
       });
     } else {
       const schemaFilePath = path.join(
-        path.dirname(context.getFilename()),
+        path.dirname(context.filename ?? context.getFilename()),
         schemaNode.value.value
       );
       if (!existsSync(schemaFilePath)) {
@@ -399,7 +403,7 @@ export function validateImplemenationNode(
     let resolvedPath: string;
 
     const modulePath = path.join(
-      path.dirname(context.getFilename()),
+      path.dirname(context.filename ?? context.getFilename()),
       implementationPath
     );
 

@@ -405,8 +405,8 @@ devDependencies:
     specifier: 3.1.2
     version: 3.1.2
   '@types/eslint':
-    specifier: ~8.44.2
-    version: 8.44.2
+    specifier: ~8.56.10
+    version: 8.56.10
   '@types/express':
     specifier: 4.17.14
     version: 4.17.14
@@ -12803,13 +12803,13 @@ packages:
   /@types/eslint-scope@3.7.4:
     resolution: {integrity: sha512-9K4zoImiZc3HlIp6AVUDE4CWYx22a+lhSZMYNpbjW04+YF0KWj4pJXnEMjdnFTiQibFFmElcsasJXDbdI/EPhA==}
     dependencies:
-      '@types/eslint': 8.44.2
+      '@types/eslint': 8.56.10
       '@types/estree': 1.0.5
 
-  /@types/eslint@8.44.2:
-    resolution: {integrity: sha512-sdPRb9K6iL5XZOmBubg8yiFp5yS/JdUDQsq5e6h95km91MCYMuvp7mh1fjPEYUhvHepKpZOjnEaMBR4PxjWDzg==}
+  /@types/eslint@8.56.10:
+    resolution: {integrity: sha512-Shavhk87gCtY2fhXDctcfS3e6FdxWkCx1iUZ9eEUbh7rTqlZT0/IzOkCOVt0fCjcFuZ9FPYfuezTBImfHCDBGQ==}
     dependencies:
-      '@types/estree': 1.0.1
+      '@types/estree': 1.0.5
       '@types/json-schema': 7.0.12
 
   /@types/estree-jsx@1.0.3:
