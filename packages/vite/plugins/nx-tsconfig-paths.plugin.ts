@@ -17,6 +17,7 @@ import {
   createTmpTsConfig,
 } from '@nx/js/src/utils/buildable-libs-utils';
 import { Plugin } from 'vite';
+import { nxViteBuildCoordinationPlugin } from './nx-vite-build-coordination.plugin';
 
 export interface nxViteTsPathsOptions {
   /**
@@ -107,6 +108,15 @@ There should at least be a tsconfig.base.json or tsconfig.json in the root of th
           relative(workspaceRoot, projectRoot),
           dependencies
         );
+
+        if (config.command === 'serve') {
+          const buildableLibraryDependencies = dependencies
+            .filter((dep) => dep.node.type === 'lib')
+            .map((dep) => dep.node.name)
+            .join(',');
+          const buildCommand = `npx nx run-many --target=${process.env.NX_TASK_TARGET_TARGET} --projects=${buildableLibraryDependencies}`;
+          config.plugins.push(nxViteBuildCoordinationPlugin({ buildCommand }));
+        }
       }
 
       const parsed = loadConfig(foundTsConfigPath);
