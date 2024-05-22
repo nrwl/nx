@@ -1,32 +1,32 @@
-import { execSync } from 'child_process';
-import * as path from 'path';
+import { exec, execSync } from 'node:child_process';
+import * as path from 'node:path';
+import * as yargs from 'yargs';
+import { FileData, calculateFileChanges } from '../../project-graph/file-utils';
 import {
-  getProjectRoots,
   NxArgs,
+  getProjectRoots,
   parseFiles,
   splitArgsIntoNxArgsAndOverrides,
 } from '../../utils/command-line-utils';
-import { getIgnoreObject } from '../../utils/ignore';
 import { fileExists, readJsonFile, writeJsonFile } from '../../utils/fileutils';
-import { calculateFileChanges, FileData } from '../../project-graph/file-utils';
-import * as yargs from 'yargs';
+import { getIgnoreObject } from '../../utils/ignore';
 
-import * as prettier from 'prettier';
 import type { SupportInfo } from 'prettier';
-import { sortObjectByKeys } from '../../utils/object-sort';
-import { readModulePackageJson } from '../../utils/package-json';
+import * as prettier from 'prettier';
+import { readNxJson } from '../../config/configuration';
+import { ProjectGraph } from '../../config/project-graph';
 import {
   getRootTsConfigFileName,
   getRootTsConfigPath,
 } from '../../plugins/js/utils/typescript';
-import { createProjectGraphAsync } from '../../project-graph/project-graph';
 import { filterAffected } from '../../project-graph/affected/affected-project-graph';
-import { readNxJson } from '../../config/configuration';
-import { ProjectGraph } from '../../config/project-graph';
-import { chunkify } from '../../utils/chunkify';
+import { createProjectGraphAsync } from '../../project-graph/project-graph';
 import { allFileData } from '../../utils/all-file-data';
-import { workspaceRoot } from '../../utils/workspace-root';
+import { chunkify } from '../../utils/chunkify';
+import { sortObjectByKeys } from '../../utils/object-sort';
 import { output } from '../../utils/output';
+import { readModulePackageJson } from '../../utils/package-json';
+import { workspaceRoot } from '../../utils/workspace-root';
 
 const PRETTIER_PATH = getPrettierPath();
 
@@ -55,15 +55,31 @@ export async function format(
       addRootConfigFiles(chunkList, nxArgs);
       chunkList.forEach((chunk) => write(chunk));
       break;
-    case 'check':
-      const pass = chunkList.reduce(
-        (pass, chunk) => check(chunk) && pass,
-        true
-      );
-      if (!pass) {
+    case 'check': {
+      const filesWithDifferentFormatting = [];
+      for (const chunk of chunkList) {
+        const files = await check(chunk);
+        filesWithDifferentFormatting.push(...files);
+      }
+      if (filesWithDifferentFormatting.length > 0) {
+        if (nxArgs.verbose) {
+          output.error({
+            title:
+              'The following files are not formatted correctly based on your Prettier configuration',
+            bodyLines: [
+              '- Run "nx format:write" and commit the resulting diff to fix these files.',
+              '- Please note, Prettier does not support a native way to diff the output of its check logic (https://github.com/prettier/prettier/issues/6885).',
+              '',
+              ...filesWithDifferentFormatting,
+            ],
+          });
+        } else {
+          console.log(filesWithDifferentFormatting.join('\n'));
+        }
         process.exit(1);
       }
       break;
+    }
   }
 }
 
@@ -199,18 +215,25 @@ function write(patterns: string[]) {
   }
 }
 
-function check(patterns: string[]): boolean {
+async function check(patterns: string[]): Promise<string[]> {
   if (patterns.length === 0) {
-    return true;
+    return [];
   }
-  try {
-    execSync(`node "${PRETTIER_PATH}" --list-different ${patterns.join(' ')}`, {
-      stdio: [0, 1, 2],
-    });
-    return true;
-  } catch {
-    return false;
-  }
+  return new Promise((resolve) => {
+    exec(
+      `node "${PRETTIER_PATH}" --list-different ${patterns.join(' ')}`,
+      { encoding: 'utf-8' },
+      (error, stdout) => {
+        if (error) {
+          // The command failed so there are files with different formatting. Prettier writes them to stdout, newline separated.
+          resolve(stdout.trim().split('\n'));
+        } else {
+          // The command succeeded so there are no files with different formatting
+          resolve([]);
+        }
+      }
+    );
+  });
 }
 
 function sortTsConfig() {
