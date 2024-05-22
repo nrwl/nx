@@ -7,7 +7,7 @@ launch-templates:
       GIT_AUTHOR_NAME: Test
       GIT_COMMITTER_EMAIL: test@test.com
       GIT_COMMITTER_NAME: Test
-      SELECTED_PM: 'pnpm'
+      SELECTED_PM: 'bun'
       NPM_CONFIG_PREFIX: '/home/workflows/.npm-global'
     init-steps:
       - name: Checkout
@@ -26,6 +26,11 @@ launch-templates:
         script: |
           sudo apt-get update
           sudo apt-get install -y ca-certificates lsof
+      - name: Install Bun
+        script: |
+          npm install -g bun
+          bun upgrade
+          bun --version
       - name: Install Pnpm
         script: |
           npm install -g pnpm@8.15.5
