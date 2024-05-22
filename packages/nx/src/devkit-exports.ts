@@ -51,6 +51,8 @@ export type {
   CreateMetadata,
   CreateMetadataContext,
   ProjectsMetadata,
+  OnLoad,
+  OnComplete,
 } from './project-graph/plugins';
 
 export type {

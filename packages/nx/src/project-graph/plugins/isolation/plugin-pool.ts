@@ -167,6 +167,17 @@ function createWorkerHandler(
                   });
                 }
               : undefined,
+            onComplete: result.hasOnComplete
+              ? () => {
+                  const tx = pluginName + ':onComplete:' + performance.now();
+                  return registerPendingPromise(tx, pending, () => {
+                    worker.send({
+                      type: 'onComplete',
+                      payload: { tx },
+                    });
+                  });
+                }
+              : undefined,
           });
         } else if (result.success === false) {
           onloadError(result.error);
@@ -200,6 +211,14 @@ function createWorkerHandler(
         const { resolver, rejector } = pending.get(tx);
         if (result.success) {
           resolver(result.metadata);
+        } else if (result.success === false) {
+          rejector(result.error);
+        }
+      },
+      onCompleteResult: ({ tx, ...result }) => {
+        const { resolver, rejector } = pending.get(tx);
+        if (result.success) {
+          resolver(null);
         } else if (result.success === false) {
           rejector(result.error);
         }

@@ -114,6 +114,14 @@ export type CreateMetadata<T = unknown> = (
   context: CreateMetadataContext
 ) => ProjectsMetadata | Promise<ProjectsMetadata>;
 
+export type OnLoad<T = unknown> = (
+  options: T | undefined
+) => void | Promise<void>;
+
+export type OnComplete<T = unknown> = (
+  options: T | undefined
+) => void | Promise<void>;
+
 /**
  * A plugin for Nx which creates nodes and dependencies for the {@link ProjectGraph}
  */
@@ -135,6 +143,16 @@ export type NxPluginV2<TOptions = unknown> = {
    * Provides a function to create metadata for the {@link ProjectGraph}
    */
   createMetadata?: CreateMetadata<TOptions>;
+
+  /**
+   * Called when the plugin is loaded.
+   */
+  onLoad?: OnLoad<TOptions>;
+
+  /**
+   * Called after the project graph is constructed
+   */
+  onComplete?: OnComplete<TOptions>;
 };
 
 /**

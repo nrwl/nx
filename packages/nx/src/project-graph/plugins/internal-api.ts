@@ -43,6 +43,8 @@ export class LoadedNxPlugin {
     graph: ProjectGraph,
     context: CreateMetadataContext
   ) => ReturnType<CreateMetadata>;
+  readonly onComplete?: () => Promise<void> | void;
+
   readonly processProjectGraph?: ProjectGraphProcessor;
 
   readonly options?: unknown;
@@ -73,6 +75,10 @@ export class LoadedNxPlugin {
     if (plugin.createMetadata) {
       this.createMetadata = (graph, context) =>
         plugin.createMetadata(graph, this.options, context);
+    }
+
+    if (plugin.onComplete) {
+      this.onComplete = () => plugin.onComplete(this.options);
     }
 
     this.processProjectGraph = plugin.processProjectGraph;

@@ -39,6 +39,7 @@ import {
   CreateMetadataError,
   isAggregateProjectGraphError,
   isWorkspaceValidityError,
+  OnCompleteError,
   ProcessDependenciesError,
   ProcessProjectGraphError,
   WorkspaceValidityError,
@@ -100,6 +101,7 @@ export async function buildProjectGraphUsingProjectFileMap(
 
   const errors: Array<
     | CreateMetadataError
+    | OnCompleteError
     | ProcessDependenciesError
     | ProcessProjectGraphError
     | WorkspaceValidityError
@@ -411,6 +413,9 @@ async function updateProjectGraphWithPlugins(
 
   errors.push(...metadataErrors);
 
+  const onCompleteErrors = await runOnGraphComplete(plugins);
+  errors.push(...onCompleteErrors);
+
   if (errors.length > 0) {
     throw new AggregateProjectGraphError(errors, updatedGraph);
   }
@@ -427,6 +432,32 @@ function readRootTsConfig() {
   } catch (e) {
     return {};
   }
+}
+
+/**
+ *
+ * @param plugins
+ * @returns Errors, if any
+ */
+export async function runOnGraphComplete(plugins: LoadedNxPlugin[]) {
+  const errors: OnCompleteError[] = [];
+  const promises = plugins.map(async (plugin) => {
+    try {
+      performance.mark(`${plugin.name}:onComplete - start`);
+      await plugin.onComplete();
+    } catch (e) {
+      errors.push(new OnCompleteError(e, plugin.name));
+    } finally {
+      performance.mark(`${plugin.name}:onComplete - end`);
+      performance.measure(
+        `${plugin.name}:onComplete`,
+        `${plugin.name}:onComplete - start`,
+        `${plugin.name}:onComplete - end`
+      );
+    }
+  });
+  await Promise.all(promises);
+  return errors;
 }
 
 export async function applyProjectMetadata(

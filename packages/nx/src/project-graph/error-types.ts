@@ -11,6 +11,7 @@ export class ProjectGraphError extends Error {
     | CreateNodesError
     | MergeNodesError
     | CreateMetadataError
+    | OnCompleteError
     | ProjectsWithNoNameError
     | MultipleProjectsWithSameNameError
     | ProcessDependenciesError
@@ -29,6 +30,7 @@ export class ProjectGraphError extends Error {
       | ProcessDependenciesError
       | ProcessProjectGraphError
       | CreateMetadataError
+      | OnCompleteError
       | WorkspaceValidityError
     >,
     partialProjectGraph: ProjectGraph,
@@ -247,6 +249,15 @@ export class MergeNodesError extends Error {
   }
 }
 
+export class OnCompleteError extends Error {
+  constructor(public readonly error: Error, public readonly plugin: string) {
+    super(`The "${plugin}" plugin threw an error in the onComplete hook:`, {
+      cause: error,
+    });
+    this.name = this.constructor.name;
+  }
+}
+
 export class CreateMetadataError extends Error {
   constructor(public readonly error: Error, public readonly plugin: string) {
     super(`The "${plugin}" plugin threw an error while creating metadata:`, {
@@ -304,6 +315,7 @@ export class AggregateProjectGraphError extends Error {
   constructor(
     public readonly errors: Array<
       | CreateMetadataError
+      | OnCompleteError
       | ProcessDependenciesError
       | ProcessProjectGraphError
       | WorkspaceValidityError

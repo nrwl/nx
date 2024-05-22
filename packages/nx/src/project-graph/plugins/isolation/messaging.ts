@@ -30,6 +30,7 @@ export interface PluginWorkerLoadResult {
         hasCreateDependencies: boolean;
         hasProcessProjectGraph: boolean;
         hasCreateMetadata: boolean;
+        hasOnComplete: boolean;
         success: true;
       }
     | {
@@ -133,19 +134,43 @@ export interface PluginWorkerProcessProjectGraphResult {
       };
 }
 
+export interface PluginWorkerOnCompleteMessage {
+  type: 'onComplete';
+  payload: {
+    graph: ProjectGraph;
+    tx: string;
+  };
+}
+
+export interface PluginWorkerOnCompleteResult {
+  type: 'onCompleteResult';
+  payload:
+    | {
+        success: true;
+        tx: string;
+      }
+    | {
+        success: false;
+        error: Error;
+        tx: string;
+      };
+}
+
 export type PluginWorkerMessage =
   | PluginWorkerLoadMessage
   | PluginWorkerCreateNodesMessage
   | PluginCreateDependenciesMessage
   | PluginWorkerProcessProjectGraphMessage
-  | PluginCreateMetadataMessage;
+  | PluginCreateMetadataMessage
+  | PluginWorkerOnCompleteMessage;
 
 export type PluginWorkerResult =
   | PluginWorkerLoadResult
   | PluginWorkerCreateNodesResult
   | PluginCreateDependenciesResult
   | PluginWorkerProcessProjectGraphResult
-  | PluginCreateMetadataResult;
+  | PluginCreateMetadataResult
+  | PluginWorkerOnCompleteResult;
 
 export function isPluginWorkerMessage(
   message: Serializable
