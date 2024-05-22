@@ -10,7 +10,7 @@ If you don't already have a local plugin, use Nx to generate one:
 
 ```shell {% skipRescope=true %}
 nx add @nx/plugin
-nx g @nx/plugin:plugin my-plugin
+nx g @nx/plugin:plugin libs/my-plugin
 ```
 
 Use the Nx CLI to generate the initial files needed for your executor.
