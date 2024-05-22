@@ -15,6 +15,7 @@ import {
   isFlatConfig,
 } from '../utils/config-file';
 import { resolveESLintClass } from '../utils/resolve-eslint-class';
+import { gte } from 'semver';
 
 export interface EslintPluginOptions {
   targetName?: string;
@@ -67,6 +68,7 @@ export const createNodes: CreateNodes<EslintPluginOptions> = [
     const excludePatterns = dedupedProjectRoots.map((root) => `${root}/**/*`);
 
     const ESLint = await resolveESLintClass(isFlatConfig(configFilePath));
+    const eslintVersion = ESLint.version;
     const childProjectRoots = new Set<string>();
 
     await Promise.all(
@@ -101,6 +103,7 @@ export const createNodes: CreateNodes<EslintPluginOptions> = [
       projects: getProjectsUsingESLintConfig(
         configFilePath,
         uniqueChildProjectRoots,
+        eslintVersion,
         options,
         context
       ),
@@ -111,6 +114,7 @@ export const createNodes: CreateNodes<EslintPluginOptions> = [
 function getProjectsUsingESLintConfig(
   configFilePath: string,
   childProjectRoots: string[],
+  eslintVersion: string,
   options: EslintPluginOptions,
   context: CreateNodesContext
 ): CreateNodesResult['projects'] {
@@ -142,6 +146,7 @@ function getProjectsUsingESLintConfig(
     projects[projectRoot] = {
       targets: buildEslintTargets(
         eslintConfigs,
+        eslintVersion,
         projectRoot,
         context.workspaceRoot,
         options,
@@ -155,6 +160,7 @@ function getProjectsUsingESLintConfig(
 
 function buildEslintTargets(
   eslintConfigs: string[],
+  eslintVersion: string,
   projectRoot: string,
   workspaceRoot: string,
   options: EslintPluginOptions,
@@ -191,9 +197,13 @@ function buildEslintTargets(
 
   // Always set the environment variable to ensure that the ESLint CLI can run on eslint v8 and v9
   const useFlatConfig = eslintConfigs.some((config) => isFlatConfig(config));
-  targetConfig.options.env = {
-    ESLINT_USE_FLAT_CONFIG: useFlatConfig ? 'true' : 'false',
-  };
+  // Flat config is default for 9.0.0+
+  const defaultSetting = gte(eslintVersion, '9.0.0');
+  if (useFlatConfig !== defaultSetting) {
+    targetConfig.options.env = {
+      ESLINT_USE_FLAT_CONFIG: useFlatConfig ? 'true' : 'false',
+    };
+  }
 
   targets[options.targetName] = targetConfig;
 
