@@ -7,7 +7,6 @@ import {
   runCommandUntil,
   uniq,
   updateFile,
-  updateJson,
 } from '@nx/e2e/utils';
 import { ChildProcess } from 'child_process';
 import { names } from '@nx/devkit';
