@@ -24,7 +24,7 @@ export const rule = ESLintUtils.RuleCreator(() => __filename)({
   defaultOptions: [],
   create(context) {
     // jsonc-eslint-parser adds this property to parserServices where appropriate
-    if (!(context.parserServices as any).isJSON) {
+    if (!(context.sourceCode.parserServices as any).isJSON) {
       return {};
     }
     return {

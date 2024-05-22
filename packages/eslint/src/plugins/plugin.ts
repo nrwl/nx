@@ -4,7 +4,6 @@ import {
   CreateNodesResult,
   TargetConfiguration,
 } from '@nx/devkit';
-import type { ESLint } from 'eslint';
 import { existsSync } from 'node:fs';
 import { dirname, join, normalize, sep } from 'node:path';
 import { combineGlobPatterns } from 'nx/src/utils/globs';
@@ -15,6 +14,7 @@ import {
   baseEsLintFlatConfigFile,
   isFlatConfig,
 } from '../utils/config-file';
+import { resolveESLintClass } from '../utils/resolve-eslint-class';
 
 export interface EslintPluginOptions {
   targetName?: string;
@@ -66,7 +66,7 @@ export const createNodes: CreateNodes<EslintPluginOptions> = [
     ).sort((a, b) => (a !== b && isSubDir(a, b) ? -1 : 1));
     const excludePatterns = dedupedProjectRoots.map((root) => `${root}/**/*`);
 
-    const ESLint = resolveESLintClass(isFlatConfig(configFilePath));
+    const ESLint = await resolveESLintClass(isFlatConfig(configFilePath));
     const childProjectRoots = new Set<string>();
 
     await Promise.all(
@@ -188,11 +188,12 @@ function buildEslintTargets(
     ],
     outputs: ['{options.outputFile}'],
   };
-  if (eslintConfigs.some((config) => isFlatConfig(config))) {
-    targetConfig.options.env = {
-      ESLINT_USE_FLAT_CONFIG: 'true',
-    };
-  }
+
+  // Always set the environment variable to ensure that the ESLint CLI can run on eslint v8 and v9
+  const useFlatConfig = eslintConfigs.some((config) => isFlatConfig(config));
+  targetConfig.options.env = {
+    ESLINT_USE_FLAT_CONFIG: useFlatConfig ? 'true' : 'false',
+  };
 
   targets[options.targetName] = targetConfig;
 
@@ -211,18 +212,6 @@ function normalizeOptions(options: EslintPluginOptions): EslintPluginOptions {
   }
 
   return options;
-}
-
-function resolveESLintClass(useFlatConfig = false): typeof ESLint {
-  try {
-    if (!useFlatConfig) {
-      return require('eslint').ESLint;
-    }
-
-    return require('eslint/use-at-your-own-risk').FlatESLint;
-  } catch {
-    throw new Error('Unable to find ESLint. Ensure ESLint is installed.');
-  }
 }
 
 /**
