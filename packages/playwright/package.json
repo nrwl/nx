@@ -17,7 +17,9 @@
     "Nest",
     "Jest",
     "Playwright",
-    "CLI"
+    "CLI",
+    "Testing",
+    "Front-end"
   ],
   "main": "./index.js",
   "typings": "./index.d.ts",

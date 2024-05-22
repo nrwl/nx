@@ -14,7 +14,8 @@
     "Web",
     "Jest",
     "Cypress",
-    "CLI"
+    "CLI",
+    "Front-end"
   ],
   "main": "./index",
   "typings": "./index.d.ts",
