@@ -177,6 +177,10 @@ export function createPackageJson(
     packageJson.peerDependenciesMeta
   );
 
+  if (rootPackageJson.packageManager) {
+    packageJson.packageManager = rootPackageJson.packageManager;
+  }
+
   return packageJson;
 }
 
