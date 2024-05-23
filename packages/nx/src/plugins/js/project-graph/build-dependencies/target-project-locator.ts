@@ -1,4 +1,3 @@
-import { readFileSync } from 'node:fs';
 import { builtinModules } from 'node:module';
 import { dirname, join, posix, relative } from 'node:path';
 import {
@@ -10,7 +9,6 @@ import {
   findProjectForPath,
 } from '../../../../project-graph/utils/find-project-for-path';
 import { isRelativePath, readJsonFile } from '../../../../utils/fileutils';
-import { parseJson } from '../../../../utils/json';
 import { workspaceRoot } from '../../../../utils/workspace-root';
 import { findExternalPackageJsonPath } from '../../utils/find-external-package-json-path';
 import {
@@ -23,9 +21,14 @@ import {
  * e.g. `lodash__packages/my-lib`, the value is the resolved external node name
  * from the project graph.
  */
-export type NpmResolutionCache = Map<string, string>;
+type NpmResolutionCache = Map<string, string>;
 
-export const builtInModuleSet = new Set<string>([
+/**
+ * Use a shared cache to avoid repeated npm package resolution work within the TargetProjectLocator.
+ */
+const defaultNpmResolutionCache: NpmResolutionCache = new Map();
+
+const builtInModuleSet = new Set<string>([
   ...builtinModules,
   ...builtinModules.map((x) => `node:${x}`),
 ]);
@@ -37,24 +40,31 @@ export function isBuiltinModuleImport(importExpr: string): boolean {
 
 export class TargetProjectLocator {
   private projectRootMappings = createProjectRootMappings(this.nodes);
-  private npmProjects = Object.keys(this.externalNodes)
-    .filter((k) => k.startsWith('npm:'))
-    .map((k) => this.externalNodes[k]);
+  private npmProjects: Record<string, ProjectGraphExternalNode>;
   private tsConfig = this.getRootTsConfig();
   private paths = this.tsConfig.config?.compilerOptions?.paths;
   private typescriptResolutionCache = new Map<string, string | null>();
 
   constructor(
     private readonly nodes: Record<string, ProjectGraphProjectNode>,
-    private readonly externalNodes: Record<
-      string,
-      ProjectGraphExternalNode
-    > = {},
-    private readonly npmResolutionCache: NpmResolutionCache = new Map<
-      string,
-      string
-    >()
-  ) {}
+    readonly externalNodes: Record<string, ProjectGraphExternalNode> = {},
+    private readonly npmResolutionCache: NpmResolutionCache = defaultNpmResolutionCache
+  ) {
+    this.npmProjects = externalNodes;
+    /**
+     * Only the npm external nodes should be included.
+     *
+     * Unlike the raw externalNodes, ensure that the version is always set in the key
+     * for optimal lookup.
+     */
+    this.npmProjects = Object.values(externalNodes).reduce((acc, node) => {
+      if (node.type === 'npm') {
+        const key = `npm:${node.data.packageName}@${node.data.version}`;
+        acc[key] = node;
+      }
+      return acc;
+    }, {} as Record<string, ProjectGraphExternalNode>);
+  }
 
   /**
    * Resolve any workspace or external project that matches the given import expression,
@@ -95,7 +105,7 @@ export class TargetProjectLocator {
     }
 
     // try to find npm package before using expensive typescript resolution
-    const externalProject = this.findExternalProjectFromImport(
+    const externalProject = this.findNpmProjectFromImport(
       importExpr,
       projectRoot
     );
@@ -137,7 +147,7 @@ export class TargetProjectLocator {
    * @param importExpr
    * @param projectRoot
    */
-  findExternalProjectFromImport(
+  findNpmProjectFromImport(
     importExpr: string,
     projectRoot: string
   ): string | undefined {
@@ -160,20 +170,14 @@ export class TargetProjectLocator {
         return undefined;
       }
 
-      const externalPackageJson = parseJson(
-        readFileSync(externalPackageJsonPath, 'utf-8')
-      );
+      const externalPackageJson = readJsonFile(externalPackageJsonPath);
 
-      // Find the matching external node based on the name and version
-      const matchingExternalNode = this.npmProjects.find((pkg) => {
-        return (
-          pkg.data.packageName === externalPackageJson.name &&
-          pkg.data.version === externalPackageJson.version
-        );
-      });
-      if (!matchingExternalNode) {
+      const npmProjectKey = `npm:${externalPackageJson.name}@${externalPackageJson.version}`;
+      if (!this.npmProjects[npmProjectKey]) {
         return undefined;
       }
+
+      const matchingExternalNode = this.npmProjects[npmProjectKey];
       this.npmResolutionCache.set(
         npmImportForProject,
         matchingExternalNode.name

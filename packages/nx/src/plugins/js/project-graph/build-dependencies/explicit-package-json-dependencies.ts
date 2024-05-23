@@ -13,14 +13,11 @@ import {
 import { parseJson } from '../../../../utils/json';
 import { PackageJson } from '../../../../utils/package-json';
 import { joinPathFragments } from '../../../../utils/path';
-import {
-  NpmResolutionCache,
-  TargetProjectLocator,
-} from './target-project-locator';
+import { TargetProjectLocator } from './target-project-locator';
 
 export function buildExplicitPackageJsonDependencies(
   ctx: CreateDependenciesContext,
-  npmResolutionCache: NpmResolutionCache
+  targetProjectLocator: TargetProjectLocator
 ): RawProjectGraphDependency[] {
   const res: RawProjectGraphDependency[] = [];
   let packageNameMap = undefined;
@@ -34,7 +31,7 @@ export function buildExplicitPackageJsonDependencies(
           source,
           f.file,
           ctx,
-          npmResolutionCache,
+          targetProjectLocator,
           res,
           packageNameMap
         );
@@ -74,7 +71,7 @@ function processPackageJson(
   sourceProject: string,
   fileName: string,
   ctx: CreateDependenciesContext,
-  npmResolutionCache: NpmResolutionCache,
+  targetProjectLocator: TargetProjectLocator,
   collectedDeps: RawProjectGraphDependency[],
   packageNameMap: { [packageName: string]: string }
 ) {
@@ -95,14 +92,8 @@ function processPackageJson(
         continue;
       }
 
-      const targetProjectLocator = new TargetProjectLocator(
-        {},
-        ctx.externalNodes,
-        npmResolutionCache
-      );
-
       const externalNodeName =
-        targetProjectLocator.findExternalProjectFromImport(
+        targetProjectLocator.findNpmProjectFromImport(
           d,
           dirname(fileName)
         );

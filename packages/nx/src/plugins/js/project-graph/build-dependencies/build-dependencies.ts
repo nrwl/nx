@@ -1,8 +1,9 @@
-import { buildExplicitTypeScriptDependencies } from './explicit-project-dependencies';
-import { buildExplicitPackageJsonDependencies } from './explicit-package-json-dependencies';
+import { ProjectGraphProjectNode } from '../../../../config/project-graph';
 import { CreateDependenciesContext } from '../../../../project-graph/plugins';
 import { RawProjectGraphDependency } from '../../../../project-graph/project-graph-builder';
-import { NpmResolutionCache } from './target-project-locator';
+import { buildExplicitPackageJsonDependencies } from './explicit-package-json-dependencies';
+import { buildExplicitTypeScriptDependencies } from './explicit-project-dependencies';
+import { TargetProjectLocator } from './target-project-locator';
 
 export function buildExplicitDependencies(
   jsPluginConfig: {
@@ -13,13 +14,25 @@ export function buildExplicitDependencies(
 ): RawProjectGraphDependency[] {
   if (totalNumberOfFilesToProcess(ctx) === 0) return [];
 
-  /**
-   * If both analyzeSourceFiles and analyzePackageJson are enabled there would be some repeated work in terms of resolving
-   * external nodes from disk, so we use a shared cache to avoid that.
-   */
-  const npmResolutionCache: NpmResolutionCache = new Map();
-
   let dependencies: RawProjectGraphDependency[] = [];
+
+  // TODO: TargetProjectLocator is a public API, so we can't change the shape of it
+  // We should eventually let it accept Record<string, ProjectConfiguration> s.t. we
+  // don't have to reshape the CreateDependenciesContext here.
+  const nodes: Record<string, ProjectGraphProjectNode> = Object.fromEntries(
+    Object.entries(ctx.projects).map(([key, config]) => [
+      key,
+      {
+        name: key,
+        type: null,
+        data: config,
+      },
+    ])
+  );
+  const targetProjectLocator = new TargetProjectLocator(
+    nodes,
+    ctx.externalNodes
+  );
 
   if (
     jsPluginConfig.analyzeSourceFiles === undefined ||
@@ -32,7 +45,7 @@ export function buildExplicitDependencies(
     } catch {}
     if (tsExists) {
       dependencies = dependencies.concat(
-        buildExplicitTypeScriptDependencies(ctx, npmResolutionCache)
+        buildExplicitTypeScriptDependencies(ctx, targetProjectLocator)
       );
     }
   }
@@ -41,7 +54,7 @@ export function buildExplicitDependencies(
     jsPluginConfig.analyzePackageJson === true
   ) {
     dependencies = dependencies.concat(
-      buildExplicitPackageJsonDependencies(ctx, npmResolutionCache)
+      buildExplicitPackageJsonDependencies(ctx, targetProjectLocator)
     );
   }
 

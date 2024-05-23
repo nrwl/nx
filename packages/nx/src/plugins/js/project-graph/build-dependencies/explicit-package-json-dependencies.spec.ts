@@ -8,6 +8,7 @@ import { ProjectGraphBuilder } from '../../../../project-graph/project-graph-bui
 import { getAllFileDataInContext } from '../../../../utils/workspace-context';
 
 import { buildExplicitPackageJsonDependencies } from './explicit-package-json-dependencies';
+import { TargetProjectLocator } from './target-project-locator';
 
 describe('explicit package json dependencies', () => {
   let ctx: CreateDependenciesContext;
@@ -128,7 +129,13 @@ describe('explicit package json dependencies', () => {
 
   it(`should add dependencies with mixed versions for projects based on deps in package.json and populate the cache`, async () => {
     const npmResolutionCache = new Map();
-    const res = buildExplicitPackageJsonDependencies(ctx, npmResolutionCache);
+    const targetProjectLocator = new TargetProjectLocator(
+      {},
+      ctx.externalNodes,
+      npmResolutionCache
+    );
+
+    const res = buildExplicitPackageJsonDependencies(ctx, targetProjectLocator);
     expect(res).toEqual([
       {
         source: 'proj',
@@ -165,12 +172,17 @@ describe('explicit package json dependencies', () => {
 
   it(`should preferentially resolve external projects found in the npmResolutionCache`, async () => {
     const npmResolutionCache = new Map();
+    const targetProjectLocator = new TargetProjectLocator(
+      {},
+      ctx.externalNodes,
+      npmResolutionCache
+    );
 
     // Add an alternate version of lodash to the cache
     npmResolutionCache.set('lodash__libs/proj', 'npm:lodash@999.9.9');
     npmResolutionCache.set('lodash__libs/proj3', 'npm:lodash@999.9.9');
 
-    const res = buildExplicitPackageJsonDependencies(ctx, npmResolutionCache);
+    const res = buildExplicitPackageJsonDependencies(ctx, targetProjectLocator);
     expect(res).toEqual([
       {
         source: 'proj',

@@ -2,6 +2,8 @@ import { TempFs } from '../../../../internal-testing-utils/temp-fs';
 
 const tempFs = new TempFs('explicit-project-deps');
 
+import { ProjectGraphProjectNode } from '../../../../config/project-graph';
+import { ProjectConfiguration } from '../../../../config/workspace-json-project-json';
 import { CreateDependenciesContext } from '../../../../project-graph/plugins';
 import { loadNxPlugins } from '../../../../project-graph/plugins/internal-api';
 import { ProjectGraphBuilder } from '../../../../project-graph/project-graph-builder';
@@ -11,6 +13,7 @@ import {
 } from '../../../../project-graph/utils/retrieve-workspace-files';
 import { setupWorkspaceContext } from '../../../../utils/workspace-context';
 import { buildExplicitTypeScriptDependencies } from './explicit-project-dependencies';
+import { TargetProjectLocator } from './target-project-locator';
 
 // projectName => tsconfig import path
 const dependencyProjectNamesToImportPaths = {
@@ -20,7 +23,7 @@ const dependencyProjectNamesToImportPaths = {
 };
 
 describe('explicit project dependencies', () => {
-  beforeEach(() => {
+  afterEach(() => {
     tempFs.reset();
   });
 
@@ -45,8 +48,16 @@ describe('explicit project dependencies', () => {
           },
         ],
       });
+      const targetProjectLocator = new TargetProjectLocator(
+        convertProjectsForTargetProjectLocator(ctx.projects),
+        ctx.externalNodes,
+        new Map()
+      );
 
-      const res = buildExplicitTypeScriptDependencies(ctx, new Map());
+      const res = buildExplicitTypeScriptDependencies(
+        ctx,
+        targetProjectLocator
+      );
 
       expect(res).toEqual([
         {
@@ -94,13 +105,24 @@ describe('explicit project dependencies', () => {
       // Add an example of a alternate version of npm-package in the workspace within the cache
       npmResolutionCache.set('npm-package__libs/proj', 'npm:npm-package@0.5.0');
 
+      const targetProjectLocatorWithEmptyCache = new TargetProjectLocator(
+        convertProjectsForTargetProjectLocator(ctx.projects),
+        ctx.externalNodes,
+        new Map()
+      );
+      const targetProjectLocatorWithCache = new TargetProjectLocator(
+        convertProjectsForTargetProjectLocator(ctx.projects),
+        ctx.externalNodes,
+        npmResolutionCache
+      );
+
       const resWithEmptyCache = buildExplicitTypeScriptDependencies(
         ctx,
-        new Map()
+        targetProjectLocatorWithEmptyCache
       );
       const resWithCache = buildExplicitTypeScriptDependencies(
         ctx,
-        npmResolutionCache
+        targetProjectLocatorWithCache
       );
 
       expect(resWithEmptyCache).toEqual([
@@ -138,8 +160,16 @@ describe('explicit project dependencies', () => {
           },
         ],
       });
+      const targetProjectLocator = new TargetProjectLocator(
+        convertProjectsForTargetProjectLocator(ctx.projects),
+        ctx.externalNodes,
+        new Map()
+      );
 
-      const res = buildExplicitTypeScriptDependencies(ctx, new Map());
+      const res = buildExplicitTypeScriptDependencies(
+        ctx,
+        targetProjectLocator
+      );
 
       expect(res).toEqual([
         {
@@ -178,8 +208,16 @@ describe('explicit project dependencies', () => {
           },
         ],
       });
+      const targetProjectLocator = new TargetProjectLocator(
+        convertProjectsForTargetProjectLocator(ctx.projects),
+        ctx.externalNodes,
+        new Map()
+      );
 
-      const res = buildExplicitTypeScriptDependencies(ctx, new Map());
+      const res = buildExplicitTypeScriptDependencies(
+        ctx,
+        targetProjectLocator
+      );
       expect(res).toEqual([
         {
           source,
@@ -217,8 +255,16 @@ describe('explicit project dependencies', () => {
           },
         ],
       });
+      const targetProjectLocator = new TargetProjectLocator(
+        convertProjectsForTargetProjectLocator(ctx.projects),
+        ctx.externalNodes,
+        new Map()
+      );
 
-      const res = buildExplicitTypeScriptDependencies(ctx, new Map());
+      const res = buildExplicitTypeScriptDependencies(
+        ctx,
+        targetProjectLocator
+      );
 
       expect(res).toEqual([
         {
@@ -278,8 +324,16 @@ describe('explicit project dependencies', () => {
           },
         ],
       });
+      const targetProjectLocator = new TargetProjectLocator(
+        convertProjectsForTargetProjectLocator(ctx.projects),
+        ctx.externalNodes,
+        new Map()
+      );
 
-      const res = buildExplicitTypeScriptDependencies(ctx, new Map());
+      const res = buildExplicitTypeScriptDependencies(
+        ctx,
+        targetProjectLocator
+      );
 
       expect(res).toEqual([
         {
@@ -322,8 +376,16 @@ describe('explicit project dependencies', () => {
           },
         ],
       });
+      const targetProjectLocator = new TargetProjectLocator(
+        convertProjectsForTargetProjectLocator(ctx.projects),
+        ctx.externalNodes,
+        new Map()
+      );
 
-      const res = buildExplicitTypeScriptDependencies(ctx, new Map());
+      const res = buildExplicitTypeScriptDependencies(
+        ctx,
+        targetProjectLocator
+      );
 
       expect(res).toEqual([
         {
@@ -437,8 +499,16 @@ describe('explicit project dependencies', () => {
           },
         ],
       });
+      const targetProjectLocator = new TargetProjectLocator(
+        convertProjectsForTargetProjectLocator(ctx.projects),
+        ctx.externalNodes,
+        new Map()
+      );
 
-      const res = buildExplicitTypeScriptDependencies(ctx, new Map());
+      const res = buildExplicitTypeScriptDependencies(
+        ctx,
+        targetProjectLocator
+      );
 
       expect(res).toEqual([]);
     });
@@ -509,8 +579,16 @@ describe('explicit project dependencies', () => {
           // },
         ],
       });
+      const targetProjectLocator = new TargetProjectLocator(
+        convertProjectsForTargetProjectLocator(ctx.projects),
+        ctx.externalNodes,
+        new Map()
+      );
 
-      const res = buildExplicitTypeScriptDependencies(ctx, new Map());
+      const res = buildExplicitTypeScriptDependencies(
+        ctx,
+        targetProjectLocator
+      );
 
       expect(res).toEqual([]);
     });
@@ -643,4 +721,19 @@ async function createContext(
     fileMap: fileMap,
     workspaceRoot: tempFs.tempDir,
   };
+}
+
+function convertProjectsForTargetProjectLocator(
+  projects: Record<string, ProjectConfiguration>
+): Record<string, ProjectGraphProjectNode> {
+  return Object.fromEntries(
+    Object.entries(projects).map(([key, config]) => [
+      key,
+      {
+        name: key,
+        type: null,
+        data: config,
+      },
+    ])
+  );
 }
