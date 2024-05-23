@@ -433,6 +433,10 @@ export async function createProjectConfigurations(
       }
 
       for (const node in projectNodes) {
+        // Handles `{projects: {'libs/foo': undefined}}`.
+        if (!projectNodes[node]) {
+          continue;
+        }
         const project = {
           root: node,
           ...projectNodes[node],

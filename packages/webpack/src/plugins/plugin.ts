@@ -27,28 +27,25 @@ export interface WebpackPluginOptions {
 }
 
 const cachePath = join(projectGraphCacheDirectory, 'webpack.hash');
-const targetsCache = existsSync(cachePath) ? readTargetsCache() : {};
-
-const calculatedTargets: Record<
-  string,
-  Record<string, TargetConfiguration>
-> = {};
+const targetsCache = readTargetsCache();
 
 function readTargetsCache(): Record<
   string,
   Record<string, TargetConfiguration>
 > {
-  return readJsonFile(cachePath);
+  return existsSync(cachePath) ? readJsonFile(cachePath) : {};
 }
 
-function writeTargetsToCache(
-  targets: Record<string, Record<string, TargetConfiguration>>
-) {
-  writeJsonFile(cachePath, targets);
+function writeTargetsToCache() {
+  const oldCache = readTargetsCache();
+  writeJsonFile(cachePath, {
+    ...oldCache,
+    ...targetsCache,
+  });
 }
 
 export const createDependencies: CreateDependencies = () => {
-  writeTargetsToCache(calculatedTargets);
+  writeTargetsToCache();
   return [];
 };
 
