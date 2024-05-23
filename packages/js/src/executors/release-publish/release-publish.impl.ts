@@ -6,7 +6,7 @@ import { parseRegistryOptions } from '../../utils/npm-config';
 import { logTar } from './log-tar';
 import { PublishExecutorSchema } from './schema';
 import chalk = require('chalk');
-import { extractJsonDataFromString } from './extract-json-data-from-string';
+import { extractNpmPublishJsonData } from './extract-npm-publish-json-data';
 
 const LARGE_BUFFER = 1024 * 1000000;
 
@@ -225,7 +225,15 @@ export default async function runExecutor(
      * We cannot JSON.parse the output directly because if the user is using lifecycle scripts, npm will mix its publish output with the JSON output all on stdout.
      * Additionally, we want to capture and show the lifecycle script outputs as beforeJsonData and afterJsonData and print them accordingly below.
      */
-    const extractJsonData = extractJsonDataFromString(output.toString());
+    const extractJsonData = extractNpmPublishJsonData(output.toString());
+    if (!extractJsonData.jsonData) {
+      console.error(
+        'The npm publish output data could not be extracted. Please report this issue on https://github.com/nrwl/nx'
+      );
+      return {
+        success: false,
+      };
+    }
 
     // If npm workspaces are in use, the publish output will nest the data under the package name, so we normalize it first
     const normalizedStdoutData =
