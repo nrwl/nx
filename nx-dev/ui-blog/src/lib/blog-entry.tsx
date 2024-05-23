@@ -11,7 +11,7 @@ export function BlogEntry({ post }: BlogEntryProps) {
   return (
     <div className="relative flex h-full transform-gpu flex-col overflow-hidden rounded-2xl border border-slate-200 shadow transition-all duration-300 ease-in-out hover:scale-[1.02] hover:shadow-lg dark:border-slate-800">
       {post.cover_image && (
-        <div className="aspect-[1.9] w-full">
+        <div className="aspect-[1.7] w-full">
           <Image
             quality={100}
             className="h-full w-full object-cover"
