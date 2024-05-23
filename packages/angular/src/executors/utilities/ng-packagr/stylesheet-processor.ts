@@ -95,8 +95,7 @@ export class StylesheetProcessor {
       getInstalledPackageVersionInfo('ng-packagr');
     let tailwindConfigPath: string | undefined;
     let postcssConfiguration: PostcssConfiguration | undefined;
-    // TODO(leo): change to a stable version when it's released
-    if (gte(ngPackagrVersion, '18.0.0-next.3')) {
+    if (gte(ngPackagrVersion, '18.0.0')) {
       const {
         findTailwindConfiguration,
         generateSearchDirectories,
