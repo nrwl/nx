@@ -8,7 +8,7 @@ export async function getNgPackagrInstance(
   const { major: angularMajorVersion } = getInstalledAngularVersionInfo();
   if (angularMajorVersion >= 17) {
     const { STYLESHEET_PROCESSOR } = await import(
-      '../../utilities/ng-packagr/stylesheet-processor.di'
+      '../../utilities/ng-packagr/stylesheet-processor.di.js'
     );
 
     const packagr = ngPackagr();
@@ -17,11 +17,11 @@ export async function getNgPackagrInstance(
   }
 
   const { NX_ENTRY_POINT_PROVIDERS } = await import(
-    './ng-package/entry-point/entry-point.di'
+    './ng-package/entry-point/entry-point.di.js'
   );
-  const { nxProvideOptions } = await import('./ng-package/options.di');
+  const { nxProvideOptions } = await import('./ng-package/options.di.js');
   const { NX_PACKAGE_PROVIDERS, NX_PACKAGE_TRANSFORM } = await import(
-    './ng-package/package.di'
+    './ng-package/package.di.js'
   );
 
   const packagr = new NgPackagr([

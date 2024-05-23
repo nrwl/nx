@@ -48,7 +48,9 @@ describe('setupSSR', () => {
         import { AppModule } from './app/app.module';
 
         platformBrowserDynamic()
-          .bootstrapModule(AppModule)
+          .bootstrapModule(AppModule, {
+            ngZoneEventCoalescing: true,
+          })
           .catch((err) => console.error(err));
         "
       `);
@@ -214,7 +216,9 @@ describe('setupSSR', () => {
         import { AppModule } from './app/app.module';
 
         platformBrowserDynamic()
-          .bootstrapModule(AppModule)
+          .bootstrapModule(AppModule, {
+            ngZoneEventCoalescing: true
+          })
           .catch((err) => console.error(err));
         "
       `);
@@ -464,13 +468,13 @@ describe('setupSSR', () => {
     // ASSERT
     expect(tree.read('app1/src/app/app.config.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
-      "import { ApplicationConfig } from '@angular/core';
+      "import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
       import { provideRouter } from '@angular/router';
       import { appRoutes } from './app.routes';
       import { provideClientHydration } from '@angular/platform-browser';
 
       export const appConfig: ApplicationConfig = {
-        providers: [provideClientHydration(),provideRouter(appRoutes) ]
+        providers: [provideClientHydration(),provideZoneChangeDetection({ eventCoalescing: true }), provideRouter(appRoutes) ]
       };
       "
     `);
@@ -542,12 +546,12 @@ describe('setupSSR', () => {
 
     expect(tree.read('app1/src/app/app.config.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
-      "import { ApplicationConfig } from '@angular/core';
+      "import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
       import { provideRouter, withEnabledBlockingInitialNavigation } from '@angular/router';
       import { appRoutes } from './app.routes';
 
       export const appConfig: ApplicationConfig = {
-        providers: [provideRouter(appRoutes, withEnabledBlockingInitialNavigation()) ]
+        providers: [provideZoneChangeDetection({ eventCoalescing: true }), provideRouter(appRoutes, withEnabledBlockingInitialNavigation()) ]
       };
       "
     `);
@@ -567,7 +571,7 @@ describe('setupSSR', () => {
       updateJson(tree, 'package.json', (json) => ({
         ...json,
         dependencies: {
-          '@angular/core': '15.2.0',
+          '@angular/core': '16.2.0',
         },
       }));
 
@@ -578,55 +582,14 @@ describe('setupSSR', () => {
       const pkgJson = readJson(tree, 'package.json');
       expect(pkgJson.dependencies['@angular/ssr']).toBeUndefined();
       expect(pkgJson.dependencies['@angular/platform-server']).toEqual(
-        backwardCompatibleVersions.angularV15.angularVersion
+        backwardCompatibleVersions.angularV16.angularVersion
       );
       expect(pkgJson.dependencies['@nguniversal/express-engine']).toEqual(
-        backwardCompatibleVersions.angularV15.ngUniversalVersion
+        backwardCompatibleVersions.angularV16.ngUniversalVersion
       );
       expect(pkgJson.devDependencies['@nguniversal/builders']).toEqual(
-        backwardCompatibleVersions.angularV15.ngUniversalVersion
+        backwardCompatibleVersions.angularV16.ngUniversalVersion
       );
-    });
-
-    it('should add "withServerTransition" call to app module for angular versions lower than 16', async () => {
-      // ARRANGE
-      const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-      updateJson(tree, 'package.json', (json) => ({
-        ...json,
-        dependencies: { ...json.dependencies, '@angular/core': '^15.2.0' },
-      }));
-
-      await generateTestApplication(tree, {
-        name: 'app1',
-        standalone: false,
-        skipFormat: true,
-      });
-
-      // ACT
-      await setupSsr(tree, { project: 'app1', skipFormat: true });
-
-      // ASSERT
-      expect(tree.read('app1/src/app/app.module.ts', 'utf-8'))
-        .toMatchInlineSnapshot(`
-        "import { NgModule } from '@angular/core';
-        import { BrowserModule } from '@angular/platform-browser';
-        import { RouterModule } from '@angular/router';
-        import { AppComponent } from './app.component';
-        import { appRoutes } from './app.routes';
-        import { NxWelcomeComponent } from './nx-welcome.component';
-
-        @NgModule({
-          declarations: [AppComponent, NxWelcomeComponent],
-          imports: [
-            BrowserModule.withServerTransition({ appId: 'serverApp' }),
-            RouterModule.forRoot(appRoutes, { initialNavigation: 'enabledBlocking' }),
-          ],
-          providers: [],
-          bootstrap: [AppComponent],
-        })
-        export class AppModule {}
-        "
-      `);
     });
 
     it('should set "initialNavigation: enabledBlocking" in "RouterModule.forRoot" options', async () => {
@@ -634,7 +597,7 @@ describe('setupSSR', () => {
       const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
       updateJson(tree, 'package.json', (json) => ({
         ...json,
-        dependencies: { ...json.dependencies, '@angular/core': '^15.2.0' },
+        dependencies: { ...json.dependencies, '@angular/core': '^16.2.0' },
       }));
 
       await generateTestApplication(tree, {
@@ -659,7 +622,7 @@ describe('setupSSR', () => {
         @NgModule({
           declarations: [AppComponent, NxWelcomeComponent],
           imports: [
-            BrowserModule.withServerTransition({ appId: 'serverApp' }),
+            BrowserModule,
             RouterModule.forRoot(appRoutes, { initialNavigation: 'enabledBlocking' }),
           ],
           providers: [],
@@ -675,7 +638,7 @@ describe('setupSSR', () => {
       const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
       updateJson(tree, 'package.json', (json) => ({
         ...json,
-        dependencies: { ...json.dependencies, '@angular/core': '^15.2.0' },
+        dependencies: { ...json.dependencies, '@angular/core': '^16.2.0' },
       }));
 
       await generateTestApplication(tree, { name: 'app1', skipFormat: true });
@@ -686,7 +649,7 @@ describe('setupSSR', () => {
       // ASSERT
       expect(tree.read('app1/src/app/app.config.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
-        "import { ApplicationConfig } from '@angular/platform-browser';
+        "import { ApplicationConfig } from '@angular/core';
         import { provideRouter, withEnabledBlockingInitialNavigation } from '@angular/router';
         import { appRoutes } from './app.routes';
 
@@ -697,48 +660,12 @@ describe('setupSSR', () => {
       `);
     });
 
-    it('should wrap bootstrap call for Angular versions lower than 15.2', async () => {
-      // ARRANGE
-      const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-      await generateTestApplication(tree, {
-        name: 'app1',
-        standalone: false,
-        skipFormat: true,
-      });
-      updateJson(tree, 'package.json', (json) => ({
-        ...json,
-        dependencies: { '@angular/core': '15.1.0' },
-      }));
-
-      // ACT
-      await setupSsr(tree, { project: 'app1', skipFormat: true });
-
-      // ASSERT
-      expect(tree.read('app1/src/main.ts', 'utf-8')).toMatchInlineSnapshot(`
-              "import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
-              import { AppModule } from './app/app.module';
-
-              function bootstrap() {
-                platformBrowserDynamic()
-                  .bootstrapModule(AppModule)
-                  .catch((err) => console.error(err));
-              }
-
-              if (document.readyState !== 'loading') {
-                bootstrap();
-              } else {
-                document.addEventListener('DOMContentLoaded', bootstrap);
-              }
-              "
-          `);
-    });
-
     it('should generate a correct server.ts', async () => {
       const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
       updateJson(tree, 'package.json', (json) => ({
         ...json,
         dependencies: {
-          '@angular/core': '15.2.0',
+          '@angular/core': '16.2.0',
         },
       }));
       await generateTestApplication(tree, {
@@ -757,7 +684,7 @@ describe('setupSSR', () => {
       updateJson(tree, 'package.json', (json) => ({
         ...json,
         dependencies: {
-          '@angular/core': '15.2.0',
+          '@angular/core': '16.2.0',
         },
       }));
       await generateTestApplication(tree, { name: 'app1', skipFormat: true });
@@ -766,7 +693,7 @@ describe('setupSSR', () => {
 
       expect(tree.read('app1/src/app/app.config.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
-        "import { ApplicationConfig } from '@angular/platform-browser';
+        "import { ApplicationConfig } from '@angular/core';
         import { provideRouter, withEnabledBlockingInitialNavigation } from '@angular/router';
         import { appRoutes } from './app.routes';
 

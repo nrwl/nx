@@ -74,7 +74,9 @@ async function addFiles(
     'support',
     'component.ts'
   );
-  const { addMountDefinition } = await import('@nx/cypress/src/utils/config');
+  const { addMountDefinition } = <
+    typeof import('@nx/cypress/src/utils/config')
+  >require('@nx/cypress/src/utils/config');
   const updatedCmpContents = await addMountDefinition(
     tree.read(componentFile, 'utf-8')
   );
@@ -126,9 +128,9 @@ async function configureCypressCT(
   let found: FoundTarget = { target: options.buildTarget, config: undefined };
 
   if (!options.buildTarget) {
-    const { findBuildConfig } = await import(
-      '@nx/cypress/src/utils/find-target-options'
-    );
+    const { findBuildConfig } = <
+      typeof import('@nx/cypress/src/utils/find-target-options')
+    >require('@nx/cypress/src/utils/find-target-options');
     found = await findBuildConfig(tree, {
       project: options.project,
       buildTarget: options.buildTarget,
@@ -158,9 +160,9 @@ async function configureCypressCT(
     ctConfigOptions.buildTarget = found.target;
   }
 
-  const { addDefaultCTConfig, getProjectCypressConfigPath } = await import(
-    '@nx/cypress/src/utils/config'
-  );
+  const { addDefaultCTConfig, getProjectCypressConfigPath } = <
+    typeof import('@nx/cypress/src/utils/config')
+  >require('@nx/cypress/src/utils/config');
   const cypressConfigPath = getProjectCypressConfigPath(
     tree,
     projectConfig.root

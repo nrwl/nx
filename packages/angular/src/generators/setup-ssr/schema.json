@@ -19,8 +19,9 @@
     "appId": {
       "type": "string",
       "format": "html-selector",
-      "description": "The `appId` to use with `withServerTransition`. _Note: This is only used in Angular versions <16.0.0. It's deprecated since Angular 16 and not supported since Angular 17._",
-      "default": "serverApp"
+      "description": "The `appId` to use with `withServerTransition`.",
+      "default": "serverApp",
+      "x-deprecated": "This is deprecated and ignored since Angular 16 and not supported since Angular 17."
     },
     "main": {
       "type": "string",
@@ -55,7 +56,7 @@
     },
     "hydration": {
       "type": "boolean",
-      "description": "Set up Hydration for the SSR application. It defaults to `true` for Angular versions >= 17.0.0. Otherwise, it defaults to `false`. _Note: This is only supported in Angular versions >= 16.0.0_."
+      "description": "Set up Hydration for the SSR application. It defaults to `true` for Angular versions >= 17.0.0. Otherwise, it defaults to `false`."
     },
     "skipFormat": {
       "type": "boolean",

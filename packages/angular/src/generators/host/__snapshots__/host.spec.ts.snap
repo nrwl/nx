@@ -96,7 +96,9 @@ exports[`Host App Generator --ssr should generate the correct files 2`] = `
 import { AppModule } from './app/app.module';
 
 platformBrowserDynamic()
-  .bootstrapModule(AppModule)
+  .bootstrapModule(AppModule, {
+    ngZoneEventCoalescing: true,
+  })
   .catch((err) => console.error(err));
 "
 `;
@@ -408,13 +410,17 @@ export const appRoutes: Route[] = [
 `;
 
 exports[`Host App Generator --ssr should generate the correct files for standalone 8`] = `
-"import { ApplicationConfig } from '@angular/core';
+"import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { appRoutes } from './app.routes';
 import { provideClientHydration } from '@angular/platform-browser';
 
 export const appConfig: ApplicationConfig = {
-  providers: [provideClientHydration(), provideRouter(appRoutes)],
+  providers: [
+    provideClientHydration(),
+    provideZoneChangeDetection({ eventCoalescing: true }),
+    provideRouter(appRoutes),
+  ],
 };
 "
 `;
@@ -619,13 +625,17 @@ export const appRoutes: Route[] = [
 `;
 
 exports[`Host App Generator --ssr should generate the correct files for standalone when --typescript=true 8`] = `
-"import { ApplicationConfig } from '@angular/core';
+"import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { appRoutes } from './app.routes';
 import { provideClientHydration } from '@angular/platform-browser';
 
 export const appConfig: ApplicationConfig = {
-  providers: [provideClientHydration(), provideRouter(appRoutes)],
+  providers: [
+    provideClientHydration(),
+    provideZoneChangeDetection({ eventCoalescing: true }),
+    provideRouter(appRoutes),
+  ],
 };
 "
 `;
@@ -716,7 +726,9 @@ exports[`Host App Generator --ssr should generate the correct files when --types
 import { AppModule } from './app/app.module';
 
 platformBrowserDynamic()
-  .bootstrapModule(AppModule)
+  .bootstrapModule(AppModule, {
+    ngZoneEventCoalescing: true,
+  })
   .catch((err) => console.error(err));
 "
 `;

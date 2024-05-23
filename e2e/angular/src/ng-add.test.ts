@@ -185,10 +185,7 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
         browser: `apps/${project}/src/main.ts`,
         polyfills: [`zone.js`],
         tsConfig: `apps/${project}/tsconfig.app.json`,
-        assets: [
-          `apps/${project}/src/favicon.ico`,
-          `apps/${project}/src/assets`,
-        ],
+        assets: [{ glob: '**/*', input: `apps/${project}/public` }],
         styles: [`apps/${project}/src/styles.css`],
         scripts: [`apps/${project}/src/scripts.js`],
       },
@@ -197,13 +194,13 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
           budgets: [
             {
               type: 'initial',
-              maximumWarning: '500kb',
-              maximumError: '1mb',
+              maximumWarning: '500kB',
+              maximumError: '1MB',
             },
             {
               type: 'anyComponentStyle',
-              maximumWarning: '2kb',
-              maximumError: '4kb',
+              maximumWarning: '2kB',
+              maximumError: '4kB',
             },
           ],
           outputHashing: 'all',
@@ -229,10 +226,7 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
       options: {
         polyfills: [`zone.js`, `zone.js/testing`],
         tsConfig: `apps/${project}/tsconfig.spec.json`,
-        assets: [
-          `apps/${project}/src/favicon.ico`,
-          `apps/${project}/src/assets`,
-        ],
+        assets: [{ glob: '**/*', input: `apps/${project}/public` }],
         styles: [`apps/${project}/src/styles.css`],
         scripts: [`apps/${project}/src/scripts.js`],
       },
