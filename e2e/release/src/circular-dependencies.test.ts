@@ -44,7 +44,6 @@ expect.addSnapshotSerializer({
 
 const originalVerboseLoggingValue = process.env.NX_VERBOSE_LOGGING;
 
-// noop
 describe('nx release circular dependencies', () => {
   let pkg1: string;
   let pkg2: string;
