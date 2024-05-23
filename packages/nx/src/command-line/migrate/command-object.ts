@@ -9,6 +9,9 @@ import {
 } from '../../utils/package-manager';
 import { writeJsonFile } from '../../utils/fileutils';
 import { workspaceRoot } from '../../utils/workspace-root';
+import { readModulePackageJson } from '../../devkit-internals';
+import { findWorkspaceRoot } from '../../utils/find-workspace-root';
+import { getNxRequirePaths } from '../../utils/installation-directory';
 
 export const yargsMigrateCommand: CommandModule = {
   command: 'migrate [packageAndVersion]',
@@ -134,7 +137,8 @@ function runMigration() {
 }
 
 function nxCliPath() {
-  const version = process.env.NX_MIGRATE_CLI_VERSION || 'latest';
+  const version =
+    process.env.NX_MIGRATE_CLI_VERSION || getLocalNxVersion() || 'latest';
   try {
     const packageManager = detectPackageManager();
     const pmc = getPackageManagerCommand(packageManager);
@@ -181,6 +185,17 @@ function nxCliPath() {
     }
     return null;
   }
+}
+
+function getLocalNxVersion(): string | null {
+  const workspace = findWorkspaceRoot(process.cwd());
+  try {
+    const { packageJson } = readModulePackageJson(
+      'nx',
+      getNxRequirePaths(workspace.dir)
+    );
+    return packageJson.version;
+  } catch {}
 }
 
 function addToNodePath(dir: string) {
