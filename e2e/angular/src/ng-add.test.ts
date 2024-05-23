@@ -2,7 +2,6 @@ import {
   checkFilesDoNotExist,
   checkFilesExist,
   cleanupProject,
-  getPackageManagerCommand,
   getSelectedPackageManager,
   packageInstall,
   readJson,
@@ -421,13 +420,8 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
     // add other projects
     const app1 = uniq('app1');
     const lib1 = uniq('lib1');
-    const pmc = getPackageManagerCommand();
-    runCommand(
-      `${pmc.exec} ng g @schematics/angular:application ${app1} --no-interactive`
-    );
-    runCommand(
-      `${pmc.exec} ng g @schematics/angular:library ${lib1} --no-interactive`
-    );
+    runCommand(`ng g @schematics/angular:application ${app1} --no-interactive`);
+    runCommand(`ng g @schematics/angular:library ${lib1} --no-interactive`);
 
     runCLI('g @nx/angular:ng-add');
 
