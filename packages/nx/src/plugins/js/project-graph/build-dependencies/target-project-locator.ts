@@ -17,9 +17,9 @@ import {
 } from '../../utils/typescript';
 
 /**
- * The key is a combination of the package name and the project root importing it
- * e.g. `lodash__packages/my-lib`, the value is the resolved external node name
- * from the project graph.
+ * The key is a combination of the package name and the workspace relative directory
+ * containing the file importing it e.g. `lodash__packages/my-lib`, the value is the
+ * resolved external node name from the project graph.
  */
 type NpmResolutionCache = Map<string, string>;
 
@@ -105,10 +105,7 @@ export class TargetProjectLocator {
     }
 
     // try to find npm package before using expensive typescript resolution
-    const externalProject = this.findNpmProjectFromImport(
-      importExpr,
-      projectRoot
-    );
+    const externalProject = this.findNpmProjectFromImport(importExpr, filePath);
     if (externalProject) {
       return externalProject;
     }
@@ -142,28 +139,38 @@ export class TargetProjectLocator {
 
   /**
    * Resolve any external project that matches the given import expression,
-   * relative to the given project root.
+   * relative to the given file path.
    *
    * @param importExpr
    * @param projectRoot
    */
   findNpmProjectFromImport(
     importExpr: string,
-    projectRoot: string
+    fromFilePath: string
   ): string | undefined {
     const packageName = parsePackageNameFromImportExpression(importExpr);
 
-    const npmImportForProject = `${packageName}__${projectRoot}`;
+    let fullFilePath = fromFilePath;
+    let workspaceRelativeFilePath = fromFilePath;
+    if (fromFilePath.startsWith(workspaceRoot)) {
+      workspaceRelativeFilePath = fromFilePath.replace(workspaceRoot, '');
+    } else {
+      fullFilePath = join(workspaceRoot, fromFilePath);
+    }
+
+    const fullDirPath = dirname(fullFilePath);
+    const workspaceRelativeDirPath = dirname(workspaceRelativeFilePath);
+
+    const npmImportForProject = `${packageName}__${workspaceRelativeDirPath}`;
     if (this.npmResolutionCache.has(npmImportForProject)) {
       return this.npmResolutionCache.get(npmImportForProject);
     }
 
     try {
-      const fullProjectRootPath = join(workspaceRoot, projectRoot);
       // package.json refers to an external package, we do not match against the version found in there, we instead try and resolve the relevant package how node would
       const externalPackageJsonPath = findExternalPackageJsonPath(
         packageName,
-        fullProjectRootPath
+        fullDirPath
       );
       // The external package.json path might be not be resolvable, e.g. if a reference has been added to a project package.json, but the install command has not been run yet.
       if (!externalPackageJsonPath) {

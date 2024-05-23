@@ -94,7 +94,7 @@ function processPackageJson(
 
       const externalNodeName = targetProjectLocator.findNpmProjectFromImport(
         d,
-        dirname(fileName)
+        fileName
       );
       if (!externalNodeName) {
         continue;
