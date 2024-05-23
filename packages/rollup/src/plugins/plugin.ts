@@ -21,27 +21,25 @@ import { type RollupOptions } from 'rollup';
 import { loadConfigFile } from 'rollup/loadConfigFile';
 
 const cachePath = join(projectGraphCacheDirectory, 'rollup.hash');
-const targetsCache = existsSync(cachePath) ? readTargetsCache() : {};
-const calculatedTargets: Record<
-  string,
-  Record<string, TargetConfiguration>
-> = {};
+const targetsCache = readTargetsCache();
 
 function readTargetsCache(): Record<
   string,
   Record<string, TargetConfiguration>
 > {
-  return readJsonFile(cachePath);
+  return existsSync(cachePath) ? readJsonFile(cachePath) : {};
 }
 
-function writeTargetsToCache(
-  targets: Record<string, Record<string, TargetConfiguration>>
-) {
-  writeJsonFile(cachePath, targets);
+function writeTargetsToCache() {
+  const oldCache = readTargetsCache();
+  writeJsonFile(cachePath, {
+    ...oldCache,
+    ...targetsCache,
+  });
 }
 
 export const createDependencies: CreateDependencies = () => {
-  writeTargetsToCache(calculatedTargets);
+  writeTargetsToCache();
   return [];
 };
 
@@ -69,16 +67,18 @@ export const createNodes: CreateNodes<RollupPluginOptions> = [
       getLockFileName(detectPackageManager(context.workspaceRoot)),
     ]);
 
-    const targets = targetsCache[hash]
-      ? targetsCache[hash]
-      : await buildRollupTarget(configFilePath, projectRoot, options, context);
+    targetsCache[hash] ??= await buildRollupTarget(
+      configFilePath,
+      projectRoot,
+      options,
+      context
+    );
 
-    calculatedTargets[hash] = targets;
     return {
       projects: {
         [projectRoot]: {
           root: projectRoot,
-          targets,
+          targets: targetsCache[hash],
         },
       },
     };

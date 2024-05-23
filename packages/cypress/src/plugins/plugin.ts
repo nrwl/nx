@@ -31,20 +31,22 @@ export interface CypressPluginOptions {
 }
 
 const cachePath = join(projectGraphCacheDirectory, 'cypress.hash');
-const targetsCache = existsSync(cachePath) ? readTargetsCache() : {};
-
-const calculatedTargets: Record<string, CypressTargets> = {};
+const targetsCache = readTargetsCache();
 
 function readTargetsCache(): Record<string, CypressTargets> {
-  return readJsonFile(cachePath);
+  return existsSync(cachePath) ? readJsonFile(cachePath) : {};
 }
 
-function writeTargetsToCache(targets: Record<string, CypressTargets>) {
-  writeJsonFile(cachePath, targets);
+function writeTargetsToCache() {
+  const oldCache = readTargetsCache();
+  writeJsonFile(cachePath, {
+    ...oldCache,
+    targetsCache,
+  });
 }
 
 export const createDependencies: CreateDependencies = () => {
-  writeTargetsToCache(calculatedTargets);
+  writeTargetsToCache();
   return [];
 };
 
@@ -67,16 +69,13 @@ export const createNodes: CreateNodes<CypressPluginOptions> = [
       getLockFileName(detectPackageManager(context.workspaceRoot)),
     ]);
 
-    const { targets, metadata } = targetsCache[hash]
-      ? targetsCache[hash]
-      : await buildCypressTargets(
-          configFilePath,
-          projectRoot,
-          options,
-          context
-        );
-
-    calculatedTargets[hash] = { targets, metadata };
+    targetsCache[hash] ??= await buildCypressTargets(
+      configFilePath,
+      projectRoot,
+      options,
+      context
+    );
+    const { targets, metadata } = targetsCache[hash];
 
     const project: Omit<ProjectConfiguration, 'root'> = {
       projectType: 'application',
