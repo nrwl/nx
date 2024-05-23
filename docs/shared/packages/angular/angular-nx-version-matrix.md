@@ -1,6 +1,6 @@
 # Nx and Angular Versions
 
-The latest version of Nx supports the [actively supported versions of Angular (current and LTS versions)](https://angular.io/guide/releases#actively-supported-versions). Workspaces in any of those versions are recommended to use the latest version of Nx to benefit from all the new features and fixes.
+The latest version of Nx supports the [actively supported versions of Angular (current and LTS versions)](https://angular.dev/reference/releases#actively-supported-versions). Workspaces in any of those versions are recommended to use the latest version of Nx to benefit from all the new features and fixes.
 
 {% callout type="note" title="Older Nx and Angular versions" %}
 The support for multiple versions of Angular in the latest version of Nx was added in **v15.7.0** and started by supporting Angular v14 and v15. If your workspace is in an older version of Angular or you can't update to the latest version of Nx for some reason, please have a look at the next section to know which version of Nx to use.
@@ -34,4 +34,4 @@ We provide a recommended version, and it is usually the latest minor version of 
 | ^9.0.0          | **9.6.0**                      | 8.12.4 <= 9.6.0                        |
 | ^8.0.0          | **8.12.2**                     | 8.7.0 <= 8.12.2                        |
 
-Additionally, you can check the supported versions of Node and Typescript for the version of Angular you are using in the [Angular docs](https://angular.io/guide/versions#actively-supported-versions).
+Additionally, you can check the supported versions of Node and Typescript for the version of Angular you are using in the [Angular docs](https://angular.dev/reference/versions#actively-supported-versions).
