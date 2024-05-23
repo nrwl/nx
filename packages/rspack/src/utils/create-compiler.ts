@@ -15,7 +15,12 @@ export async function createCompiler(
     userDefinedConfig = await userDefinedConfig;
   }
 
-  const config = await userDefinedConfig({}, { options, context });
+  let config = {};
+  if(typeof userDefinedConfig === 'function') {
+    config = await userDefinedConfig({}, { options, context });
+  } else {
+    config = userDefinedConfig;
+  }
 
   return rspack(config);
 }
