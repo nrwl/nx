@@ -284,7 +284,7 @@ export async function remixApplicationGeneratorInternal(
     if (options.unitTestRunner === 'jest') {
       tree.write(
         'jest.preset.js',
-        `import { nxPreset } from '@nx/jest/preset/jest-preset.js';
+        `import { nxPreset } from '@nx/jest/preset.js';
 export default {...nxPreset};
 `
       );
