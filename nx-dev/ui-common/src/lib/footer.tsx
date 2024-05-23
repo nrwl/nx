@@ -10,14 +10,14 @@ export function Footer(): JSX.Element {
       { name: 'Nx Cloud', href: 'https://nx.app/?utm_source=nx.dev' },
     ],
     resources: [
-      { name: 'Blog', href: 'https://blog.nrwl.io/?utm_source=nx.dev' },
-      {
-        name: 'Youtube Channel',
-        href: 'https://youtube.com/@NxDevtools?utm_source=nx.dev',
-      },
+      { name: 'Blog', href: '/blog' },
       {
         name: 'Nx Playbook',
         href: 'https://nxplaybook.com/?utm_source=nx.dev',
+      },
+      {
+        name: 'Privacy Policy',
+        href: 'https://nx.app/privacy?utm_source=nx.dev',
       },
       {
         name: 'Brands & Guidelines',
