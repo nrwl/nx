@@ -92,11 +92,10 @@ function processPackageJson(
         continue;
       }
 
-      const externalNodeName =
-        targetProjectLocator.findNpmProjectFromImport(
-          d,
-          dirname(fileName)
-        );
+      const externalNodeName = targetProjectLocator.findNpmProjectFromImport(
+        d,
+        dirname(fileName)
+      );
       if (!externalNodeName) {
         continue;
       }
