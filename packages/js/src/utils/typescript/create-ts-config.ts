@@ -24,10 +24,12 @@ export function extractTsConfigBase(host: Tree) {
   const tsconfig = readJson(host, 'tsconfig.json');
   const baseCompilerOptions = {} as any;
 
-  for (let compilerOption of Object.keys(tsConfigBaseOptions)) {
-    baseCompilerOptions[compilerOption] =
-      tsconfig.compilerOptions[compilerOption];
-    delete tsconfig.compilerOptions[compilerOption];
+  if (tsconfig.compilerOptions) {
+    for (let compilerOption of Object.keys(tsConfigBaseOptions)) {
+      baseCompilerOptions[compilerOption] =
+        tsconfig.compilerOptions[compilerOption];
+      delete tsconfig.compilerOptions[compilerOption];
+    }
   }
   writeJson(host, 'tsconfig.base.json', {
     compileOnSave: false,
