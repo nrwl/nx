@@ -253,13 +253,19 @@ export default async function runExecutor(
       }
     }
 
-    if (extractJsonData.beforeJsonData) {
+    if (
+      typeof extractJsonData.beforeJsonData === 'string' &&
+      extractJsonData.beforeJsonData.trim().length > 0
+    ) {
       console.log(extractJsonData.beforeJsonData);
     }
 
     logTar(normalizedStdoutData);
 
-    if (extractJsonData.afterJsonData) {
+    if (
+      typeof extractJsonData.afterJsonData === 'string' &&
+      extractJsonData.afterJsonData.trim().length > 0
+    ) {
       console.log(extractJsonData.afterJsonData);
     }
 
