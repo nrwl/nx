@@ -1,7 +1,7 @@
 # Using Tailwind CSS with Angular projects
 
 The purpose of this page is to cover how to use and configure [Tailwind CSS](https://tailwindcss.com/)
-with [Angular](https://angular.io/) projects. It shows the different options available to set it up in existing projects
+with [Angular](https://angular.dev/) projects. It shows the different options available to set it up in existing projects
 or new projects, and it also contains a set of our recommended setups for using Tailwind CSS in different scenarios that
 can be found on an Nx workspace.
 

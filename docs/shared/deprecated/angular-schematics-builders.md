@@ -1,6 +1,6 @@
 # Angular Schematics and Builders
 
-As of Nx 17, official Nx plugins no longer export [schematics](https://angular.io/guide/schematics) and [builders](https://angular.io/guide/cli-builder) that can be directly consumed by the Angular CLI. Since Angular CLI users are not a large portion of Nx's user base, it made sense to stop maintaining that code.
+As of Nx 17, official Nx plugins no longer export [schematics](https://angular.dev/tools/cli/schematics) and [builders](https://angular.dev/tools/cli/cli-builder) that can be directly consumed by the Angular CLI. Since Angular CLI users are not a large portion of Nx's user base, it made sense to stop maintaining that code.
 
 Currently, the Angular CLI can only run its own schematics and builders. The Nx CLI is still able to directly run any schematics or builders created for the Angular CLI as well as Nx's own generators and executors. The only thing that has changed is that Nx is no longer taking the extra step of converting our own code into a format that the Angular CLI recognizes.
 

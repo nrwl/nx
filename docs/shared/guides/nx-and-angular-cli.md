@@ -52,7 +52,7 @@ Here's a quick side-by-side overview comparing the features between the Angular 
 
 \* You can setup a monorepo with the Angular CLI creating buildable Angular ng-packagr projects, but the DX is not as optimized compared to what you'd get with Nx.
 
-\*\* The Angular CLI has a [caching mechanism](https://angular.io/cli/cache) which persists the Webpack/ESBuild/"TS incremental build info" cache to disk. Nx leverages that cache as well but in addition adds a more powerful process-level caching on top that is framework agnostic.
+\*\* The Angular CLI has a [caching mechanism](https://angular.dev/cli/cache) which persists the Webpack/ESBuild/"TS incremental build info" cache to disk. Nx leverages that cache as well but in addition adds a more powerful process-level caching on top that is framework agnostic.
 
 {% /callout %}
 
