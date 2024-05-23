@@ -201,7 +201,7 @@ export default async function runExecutor(
   }
 
   const npmPublishCommandSegments = [
-    `npm publish ${packageRoot} --json --"${registryConfigKey}=${registry}" --tag=${tag}`,
+    `npm publish "${packageRoot}" --json --"${registryConfigKey}=${registry}" --tag=${tag}`,
   ];
 
   if (options.otp) {
