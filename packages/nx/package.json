@@ -20,7 +20,11 @@
     "Nest",
     "Jest",
     "Cypress",
-    "CLI"
+    "CLI",
+    "Testing",
+    "Front-end",
+    "Backend",
+    "Mobile"
   ],
   "bin": {
     "nx": "./bin/nx.js",

@@ -9,7 +9,9 @@
     "Web",
     "Native",
     "CLI",
-    "Detox"
+    "Detox",
+    "Testing",
+    "Mobile"
   ],
   "homepage": "https://nx.dev",
   "bugs": {

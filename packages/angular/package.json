@@ -13,7 +13,8 @@
     "Angular",
     "Jest",
     "Cypress",
-    "CLI"
+    "CLI",
+    "Front-end"
   ],
   "exports": {
     "./migrations.json": "./migrations.json",

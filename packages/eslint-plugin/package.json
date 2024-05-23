@@ -13,7 +13,8 @@
     "Web",
     "Lint",
     "ESLint",
-    "CLI"
+    "CLI",
+    "Testing"
   ],
   "main": "./src/index.js",
   "typings": "./src/index.d.ts",

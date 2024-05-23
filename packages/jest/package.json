@@ -17,7 +17,8 @@
     "Nest",
     "Jest",
     "Unit Testing",
-    "CLI"
+    "CLI",
+    "Testing"
   ],
   "main": "./index",
   "typings": "./index.d.ts",
