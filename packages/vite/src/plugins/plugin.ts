@@ -216,7 +216,7 @@ async function testTarget(
 ) {
   return {
     command: `vitest`,
-    options: { cwd: joinPathFragments(projectRoot), watch: false },
+    options: { cwd: joinPathFragments(projectRoot) },
     cache: true,
     inputs: [
       ...('production' in namedInputs
@@ -225,6 +225,7 @@ async function testTarget(
       {
         externalDependencies: ['vitest'],
       },
+      { env: 'CI' },
     ],
     outputs,
   };
