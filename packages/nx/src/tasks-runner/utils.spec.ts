@@ -5,8 +5,14 @@ import {
   validateOutputs,
 } from './utils';
 import { ProjectGraphProjectNode } from '../config/project-graph';
+import { join } from 'path';
+import { workspaceRoot } from '../utils/workspace-root';
 
 describe('utils', () => {
+  function setMockedCwd(cwd: string = '') {
+    jest.spyOn(process, 'cwd').mockReturnValue(join(workspaceRoot, cwd));
+  }
+
   function getNode(build): ProjectGraphProjectNode {
     return {
       name: 'myapp',
@@ -19,6 +25,14 @@ describe('utils', () => {
       },
     };
   }
+
+  beforeEach(() => {
+    setMockedCwd();
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
 
   describe('getOutputsForTargetAndConfiguration', () => {
     const task = {
@@ -103,6 +117,156 @@ describe('utils', () => {
           data as any
         )
       ).toEqual(['dist']);
+    });
+
+    it('should append the cwd to output when it is not the workspaceRoot', () => {
+      setMockedCwd('apps/myapp');
+
+      const data = {
+        name: 'myapp',
+        type: 'app',
+        data: {
+          root: 'apps/myapp',
+          targets: {
+            build: {
+              outputs: ['{options.outputPath}'],
+              options: {
+                outputPath: 'dist',
+              },
+            },
+          },
+          files: [],
+        },
+      };
+      expect(
+        getOutputsForTargetAndConfiguration(
+          task.target,
+          task.overrides,
+          data as any
+        )
+      ).toEqual(['apps/myapp/dist']);
+    });
+
+    it('should append the cwd to overrides when it is not the workspaceRoot', () => {
+      setMockedCwd('apps/myapp');
+
+      const data = {
+        name: 'myapp',
+        type: 'app',
+        data: {
+          root: 'apps/myapp',
+          targets: {
+            build: {
+              outputs: ['{options.outputPath}'],
+            },
+          },
+          files: [],
+        },
+      };
+      expect(
+        getOutputsForTargetAndConfiguration(
+          task.target,
+          {
+            outputPath: 'dist',
+          },
+          data as any
+        )
+      ).toEqual(['apps/myapp/dist']);
+    });
+
+    it('should not append the node root to output when the option value contains the project root', () => {
+      const data = {
+        name: 'myapp',
+        type: 'app',
+        data: {
+          root: 'apps/myapp',
+          targets: {
+            build: {
+              outputs: ['{options.outputPath}'],
+              options: {
+                outputPath: 'apps/myapp/dist',
+              },
+            },
+          },
+          files: [],
+        },
+      };
+      expect(
+        getOutputsForTargetAndConfiguration(
+          task.target,
+          task.overrides,
+          data as any
+        )
+      ).toEqual(['apps/myapp/dist']);
+    });
+
+    it('should not append the node root to output when it is a path with {workspaceRoot}', () => {
+      const data = {
+        name: 'myapp',
+        type: 'app',
+        data: {
+          root: 'apps/myapp',
+          targets: {
+            build: {
+              outputs: ['{workspaceRoot}/dist'],
+            },
+          },
+          files: [],
+        },
+      };
+      expect(
+        getOutputsForTargetAndConfiguration(
+          task.target,
+          task.overrides,
+          data as any
+        )
+      ).toEqual(['dist']);
+    });
+
+    it('should not append the node root to output when it is a path with {projectRoot}', () => {
+      const data = {
+        name: 'myapp',
+        type: 'app',
+        data: {
+          root: 'apps/myapp',
+          targets: {
+            build: {
+              outputs: ['{projectRoot}/dist'],
+            },
+          },
+          files: [],
+        },
+      };
+      expect(
+        getOutputsForTargetAndConfiguration(
+          task.target,
+          task.overrides,
+          data as any
+        )
+      ).toEqual(['apps/myapp/dist']);
+    });
+
+    it('should not append the node root to output when it is a path with option.*', () => {
+      const data = {
+        name: 'myapp',
+        type: 'app',
+        data: {
+          root: 'apps/myapp',
+          targets: {
+            build: {
+              outputs: ['{options.outputDir}'],
+            },
+          },
+          files: [],
+        },
+      };
+      expect(
+        getOutputsForTargetAndConfiguration(
+          task.target,
+          task.overrides,
+          data as any
+        )
+      ).toEqual([]);
     });
 
     it('should interpolate {workspaceRoot} when {projectRoot} = . by removing the slash after it', () => {

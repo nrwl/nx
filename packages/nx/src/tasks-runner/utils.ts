@@ -1,5 +1,6 @@
 import { output } from '../utils/output';
-import { relative } from 'path';
+import { join, relative } from 'path';
+import { join as posixJoin, relative as posixRelative } from 'path/posix';
 import { Task, TaskGraph } from '../config/task-graph';
 import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
 import {
@@ -214,12 +215,25 @@ export function getOutputsForTargetAndConfiguration(
 
     return targetConfiguration.outputs
       .map((output: string) => {
-        return interpolate(output, {
-          projectRoot: node.data.root,
-          projectName: node.name,
-          project: { ...node.data, name: node.name }, // this is legacy
-          options,
-        });
+        const cwdForInvokedTask =
+          targetConfiguration.executor === 'nx:run-commands'
+            ? targetConfiguration.options?.cwd ?? process.cwd()
+            : process.cwd();
+        const relativeCwdFromWorkspaceRoot = posixRelative(
+          workspaceRoot,
+          cwdForInvokedTask
+        );
+        return interpolate(
+          output,
+          {
+            projectRoot: node.data.root,
+            projectName: node.name,
+            project: { ...node.data, name: node.name }, // this is legacy
+            options,
+          },
+          true,
+          relativeCwdFromWorkspaceRoot
+        );
       })
       .filter(
         (output) =>
@@ -244,7 +258,12 @@ export function getOutputsForTargetAndConfiguration(
   }
 }
 
-export function interpolate(template: string, data: any): string {
+export function interpolate(
+  template: string,
+  data: any,
+  interpolatingOutputs = false,
+  relativeCwd: string = relative(workspaceRoot, process.cwd())
+): string {
   if (template.includes('{workspaceRoot}', 1)) {
     throw new Error(
       `Output '${template}' is invalid. {workspaceRoot} can only be used at the beginning of the expression.`
@@ -271,6 +290,15 @@ export function interpolate(template: string, data: any): string {
         return match;
       }
       value = value[path[idx]];
+    }
+    if (
+      interpolatingOutputs &&
+      !template.match(/{(workspaceRoot|projectRoot|projectName)}/)
+    ) {
+      value =
+        !value.startsWith('/') && !value.startsWith(relativeCwd)
+          ? posixJoin(relativeCwd, value)
+          : value;
     }
     return value;
   });
