@@ -19,7 +19,6 @@ function isRoot(
 
 function convertImportToDependency(
   importExpr: string,
-  projectRoot: string,
   sourceFile: string,
   source: string,
   type: RawProjectGraphDependency['type'],
@@ -27,8 +26,7 @@ function convertImportToDependency(
 ): RawProjectGraphDependency | undefined {
   const target = targetProjectLocator.findProjectFromImport(
     importExpr,
-    sourceFile,
-    projectRoot
+    sourceFile
   );
   if (!target) {
     return;
@@ -87,12 +85,10 @@ export function buildExplicitTypeScriptDependencies(
     dynamicImportExpressions,
   } of imports) {
     const normalizedFilePath = normalizePath(relative(workspaceRoot, file));
-    const sourceProjectRoot = ctx.projects[sourceProject].root;
 
     for (const importExpr of staticImportExpressions) {
       const dependency = convertImportToDependency(
         importExpr,
-        sourceProjectRoot,
         normalizedFilePath,
         sourceProject,
         DependencyType.static,
@@ -113,7 +109,6 @@ export function buildExplicitTypeScriptDependencies(
     for (const importExpr of dynamicImportExpressions) {
       const dependency = convertImportToDependency(
         importExpr,
-        sourceProjectRoot,
         normalizedFilePath,
         sourceProject,
         DependencyType.dynamic,

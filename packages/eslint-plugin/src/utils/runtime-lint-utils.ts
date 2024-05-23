@@ -182,16 +182,11 @@ export function isAbsoluteImportIntoAnotherProject(
 
 export function findProjectUsingImport(
   projectGraph: ProjectGraph,
-  projectRoot: string,
   targetProjectLocator: TargetProjectLocator,
   filePath: string,
   imp: string
 ): ProjectGraphProjectNode | ProjectGraphExternalNode {
-  const target = targetProjectLocator.findProjectFromImport(
-    imp,
-    filePath,
-    projectRoot
-  );
+  const target = targetProjectLocator.findProjectFromImport(imp, filePath);
   return projectGraph.nodes[target] || projectGraph.externalNodes?.[target];
 }
 

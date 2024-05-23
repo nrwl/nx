@@ -68,17 +68,12 @@ export class TargetProjectLocator {
 
   /**
    * Resolve any workspace or external project that matches the given import expression,
-   * originating from the given filePath, relative to the given project root.
+   * originating from the given filePath.
    *
    * @param importExpr
    * @param filePath
-   * @param projectRoot
    */
-  findProjectFromImport(
-    importExpr: string,
-    filePath: string,
-    projectRoot: string
-  ): string {
+  findProjectFromImport(importExpr: string, filePath: string): string {
     if (isRelativePath(importExpr)) {
       const resolvedModule = posix.join(dirname(filePath), importExpr);
       return this.findProjectOfResolvedModule(resolvedModule);

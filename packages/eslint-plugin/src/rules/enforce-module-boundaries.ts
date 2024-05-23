@@ -350,7 +350,6 @@ export default ESLintUtils.RuleCreator(
         targetProject ||
         findProjectUsingImport(
           projectGraph,
-          sourceProject.data.root,
           targetProjectLocator,
           sourceFilePath,
           imp
