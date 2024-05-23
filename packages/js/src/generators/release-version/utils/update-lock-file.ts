@@ -125,8 +125,10 @@ function execLockFileUpdate(
   env: object = {}
 ): void {
   try {
+    const LARGE_BUFFER = 1024 * 1000000;
     execSync(command, {
       cwd,
+      maxBuffer: LARGE_BUFFER,
       env: {
         ...process.env,
         ...env,

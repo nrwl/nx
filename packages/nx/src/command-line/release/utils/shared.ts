@@ -33,7 +33,11 @@ export type VersionData = Record<
      */
     newVersion: string | null;
     currentVersion: string;
-    dependentProjects: any[]; // TODO: investigate generic type for this once more ecosystems are explored
+    /**
+     * The list of projects which depend upon the current project.
+     * TODO: investigate generic type for this once more ecosystems are explored
+     */
+    dependentProjects: any[];
   }
 >;
 

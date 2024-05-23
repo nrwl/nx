@@ -73,6 +73,11 @@ export interface ReleaseVersionGeneratorSchema {
   installArgs?: string;
   installIgnoreScripts?: boolean;
   conventionalCommitsConfig?: NxReleaseConfig['conventionalCommits'];
+  /**
+   * 'auto' allows users to opt into dependents being updated (a patch version bump) when a dependency is versioned.
+   * This is only applicable to independently released projects.
+   */
+  updateDependents?: 'never' | 'auto';
 }
 
 export interface NxReleaseVersionResult {
@@ -165,8 +170,13 @@ export async function releaseVersion(
   const versionData: VersionData = {};
   const commitMessage: string | undefined =
     args.gitCommitMessage || nxReleaseConfig.version.git.commitMessage;
-  const additionalChangedFiles = new Set<string>();
   const generatorCallbacks: (() => Promise<void>)[] = [];
+
+  /**
+   * additionalChangedFiles are files which need to be updated as a side-effect of versioning (such as package manager lock files),
+   * and need to get staged and committed as part of the existing commit, if applicable.
+   */
+  const additionalChangedFiles = new Set<string>();
 
   if (args.projects?.length) {
     /**
@@ -453,7 +463,7 @@ function appendVersionData(
   for (const [key, value] of Object.entries(newVersionData)) {
     if (existingVersionData[key]) {
       throw new Error(
-        `Version data key "${key}" already exists in version data. This is likely a bug.`
+        `Version data key "${key}" already exists in version data. This is likely a bug, please report your use-case on https://github.com/nrwl/nx`
       );
     }
     existingVersionData[key] = value;

@@ -19,6 +19,16 @@ const axios = _axios as any as typeof _axios['default'];
 export type ChangelogRenderOptions = Record<string, unknown>;
 
 /**
+ * When versioning projects independently and enabling `"updateDependents": "always"`, there could
+ * be additional dependency bump information that is not captured in the commit data, but that nevertheless
+ * should be included in the rendered changelog.
+ */
+export type DependencyBump = {
+  dependencyName: string;
+  newVersion: string;
+};
+
+/**
  * A ChangelogRenderer function takes in the extracted commits and other relevant metadata
  * and returns a string, or a Promise of a string of changelog contents (usually markdown).
  *
@@ -29,6 +39,7 @@ export type ChangelogRenderOptions = Record<string, unknown>;
  * @param {string | null} config.project The name of specific project to generate a changelog for, or `null` if the overall workspace changelog
  * @param {string | false} config.entryWhenNoChanges The (already interpolated) string to use as the changelog entry when there are no changes, or `false` if no entry should be generated
  * @param {ChangelogRenderOptions} config.changelogRenderOptions The options specific to the ChangelogRenderer implementation
+ * @param {DependencyBump[]} config.dependencyBumps Optional list of additional dependency bumps that occurred as part of the release, outside of the commit data
  */
 export type ChangelogRenderer = (config: {
   projectGraph: ProjectGraph;
@@ -37,6 +48,7 @@ export type ChangelogRenderer = (config: {
   project: string | null;
   entryWhenNoChanges: string | false;
   changelogRenderOptions: DefaultChangelogRenderOptions;
+  dependencyBumps?: DependencyBump[];
   repoSlug?: RepoSlug;
   conventionalCommitsConfig: NxReleaseConfig['conventionalCommits'];
 }) => Promise<string> | string;
@@ -74,6 +86,7 @@ const defaultChangelogRenderer: ChangelogRenderer = async ({
   project,
   entryWhenNoChanges,
   changelogRenderOptions,
+  dependencyBumps,
   repoSlug,
   conventionalCommitsConfig,
 }): Promise<string> => {
@@ -100,7 +113,14 @@ const defaultChangelogRenderer: ChangelogRenderer = async ({
   if (project === null) {
     // No changes for the workspace
     if (commits.length === 0) {
-      if (entryWhenNoChanges) {
+      if (dependencyBumps?.length) {
+        applyAdditionalDependencyBumps({
+          markdownLines,
+          dependencyBumps,
+          releaseVersion,
+          changelogRenderOptions,
+        });
+      } else if (entryWhenNoChanges) {
         markdownLines.push(
           '',
           `${createVersionTitle(
@@ -173,7 +193,14 @@ const defaultChangelogRenderer: ChangelogRenderer = async ({
 
     // Generating for a named project, but that project has no relevant changes in the current set of commits, exit early
     if (relevantCommits.length === 0) {
-      if (entryWhenNoChanges) {
+      if (dependencyBumps?.length) {
+        applyAdditionalDependencyBumps({
+          markdownLines,
+          dependencyBumps,
+          releaseVersion,
+          changelogRenderOptions,
+        });
+      } else if (entryWhenNoChanges) {
         markdownLines.push(
           '',
           `${createVersionTitle(
@@ -227,6 +254,15 @@ const defaultChangelogRenderer: ChangelogRenderer = async ({
 
   if (breakingChanges.length > 0) {
     markdownLines.push('', '#### ⚠️  Breaking Changes', '', ...breakingChanges);
+  }
+
+  if (dependencyBumps?.length) {
+    applyAdditionalDependencyBumps({
+      markdownLines,
+      dependencyBumps,
+      releaseVersion,
+      changelogRenderOptions,
+    });
   }
 
   if (changelogRenderOptions.authors) {
@@ -305,6 +341,33 @@ const defaultChangelogRenderer: ChangelogRenderer = async ({
 };
 
 export default defaultChangelogRenderer;
+
+function applyAdditionalDependencyBumps({
+  markdownLines,
+  dependencyBumps,
+  releaseVersion,
+  changelogRenderOptions,
+}: {
+  markdownLines: string[];
+  dependencyBumps: DependencyBump[];
+  releaseVersion: string;
+  changelogRenderOptions: DefaultChangelogRenderOptions;
+}) {
+  if (markdownLines.length === 0) {
+    markdownLines.push(
+      '',
+      `${createVersionTitle(releaseVersion, changelogRenderOptions)}\n`,
+      ''
+    );
+  } else {
+    markdownLines.push('');
+  }
+  markdownLines.push('### 🧱 Updated Dependencies\n');
+  dependencyBumps.forEach(({ dependencyName, newVersion }) => {
+    markdownLines.push(`- Updated ${dependencyName} to ${newVersion}`);
+  });
+  markdownLines.push('');
+}
 
 function formatName(name = '') {
   return name
