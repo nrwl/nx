@@ -50,7 +50,10 @@ And the following [final configuration](/reference/project-configuration):
           ],
           "outputs": ["{workspaceRoot}/dist/apps/my-app"],
           "executor": "nx:run-commands",
-          "configurations": {}
+          "configurations": {},
+          "metadata": {
+            "technologies": ["vite"]
+          }
         },
         "serve": {
           "options": {
@@ -58,7 +61,10 @@ And the following [final configuration](/reference/project-configuration):
             "command": "vite serve"
           },
           "executor": "nx:run-commands",
-          "configurations": {}
+          "configurations": {},
+          "metadata": {
+            "technologies": ["vite"]
+          }
         },
         "preview": {
           "options": {
@@ -66,7 +72,10 @@ And the following [final configuration](/reference/project-configuration):
             "command": "vite preview"
           },
           "executor": "nx:run-commands",
-          "configurations": {}
+          "configurations": {},
+          "metadata": {
+            "technologies": ["vite"]
+          }
         },
         "test": {
           "options": {
@@ -83,7 +92,10 @@ And the following [final configuration](/reference/project-configuration):
           ],
           "outputs": ["{workspaceRoot}/coverage/apps/my-app"],
           "executor": "nx:run-commands",
-          "configurations": {}
+          "configurations": {},
+          "metadata": {
+            "technologies": ["vite"]
+          }
         }
       },
       "tags": [],

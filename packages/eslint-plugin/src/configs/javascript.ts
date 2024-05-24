@@ -55,10 +55,8 @@ export default {
      * previously defined v5 of `@typescript-eslint`. v6 of `@typescript-eslint`
      * changed how configurations are defined.
      *
-     * TODO(v19): re-evalute these deviations from @typescript-eslint/recommended in v19 of Nx
+     * TODO(v20): re-evalute these deviations from @typescript-eslint/recommended in v20 of Nx
      */
-    'no-extra-semi': 'off',
-    '@typescript-eslint/no-extra-semi': 'error',
     '@typescript-eslint/no-non-null-assertion': 'warn',
     '@typescript-eslint/adjacent-overload-signatures': 'error',
     '@typescript-eslint/prefer-namespace-keyword': 'error',

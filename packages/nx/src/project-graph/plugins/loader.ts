@@ -11,14 +11,12 @@ import {
 import { readJsonFile } from '../../utils/fileutils';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { existsSync } from 'node:fs';
-import { readTsConfig } from '../../utils/typescript';
 import {
   registerTranspiler,
   registerTsConfigPaths,
 } from '../../plugins/js/utils/register';
 import {
   ProjectRootMappings,
-  createProjectRootMappingsFromProjectConfigurations,
   findProjectForPath,
 } from '../utils/find-project-for-path';
 import { normalizePath } from '../../utils/path';
@@ -33,6 +31,7 @@ import { normalizeNxPlugin } from './utils';
 import { LoadedNxPlugin } from './internal-api';
 import { LoadPluginError } from '../error-types';
 import path = require('node:path/posix');
+import { readTsConfig } from '../../plugins/js/utils/typescript';
 
 export function readPluginPackageJson(
   pluginName: string,

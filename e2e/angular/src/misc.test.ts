@@ -42,7 +42,7 @@ describe('Move Angular Project', () => {
     expect(moveOutput).toContain(`CREATE ${newPath}/tsconfig.json`);
     expect(moveOutput).toContain(`CREATE ${newPath}/tsconfig.spec.json`);
     expect(moveOutput).toContain(`CREATE ${newPath}/.eslintrc.json`);
-    expect(moveOutput).toContain(`CREATE ${newPath}/src/favicon.ico`);
+    expect(moveOutput).toContain(`CREATE ${newPath}/public/favicon.ico`);
     expect(moveOutput).toContain(`CREATE ${newPath}/src/index.html`);
     expect(moveOutput).toContain(`CREATE ${newPath}/src/main.ts`);
     expect(moveOutput).toContain(`CREATE ${newPath}/src/styles.css`);
@@ -52,7 +52,6 @@ describe('Move Angular Project', () => {
     );
     expect(moveOutput).toContain(`CREATE ${newPath}/src/app/app.component.ts`);
     expect(moveOutput).toContain(`CREATE ${newPath}/src/app/app.config.ts`);
-    expect(moveOutput).toContain(`CREATE ${newPath}/src/assets/.gitkeep`);
   });
 
   /**

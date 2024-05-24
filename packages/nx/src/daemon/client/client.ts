@@ -7,7 +7,7 @@ import { connect } from 'net';
 import { join } from 'path';
 import { performance } from 'perf_hooks';
 import { output } from '../../utils/output';
-import { FULL_OS_SOCKET_PATH, killSocketOrPath } from '../socket-utils';
+import { getFullOsSocketPath, killSocketOrPath } from '../socket-utils';
 import {
   DAEMON_DIR_FOR_CURRENT_WORKSPACE,
   DAEMON_OUTPUT_LOG_FILE,
@@ -30,6 +30,7 @@ import {
   ProjectGraphError,
 } from '../../project-graph/error-types';
 import { isWasm } from '../../native';
+import { loadRootEnvFiles } from '../../utils/dotenv';
 
 const DAEMON_ENV_SETTINGS = {
   NX_PROJECT_GLOB_CACHE: 'false',
@@ -52,6 +53,8 @@ export class DaemonClient {
   private readonly nxJson: NxJsonConfiguration | null;
 
   constructor() {
+    loadRootEnvFiles(workspaceRoot);
+
     try {
       this.nxJson = readNxJson();
     } catch (e) {
@@ -182,6 +185,7 @@ export class DaemonClient {
       watchProjects: string[] | 'all';
       includeGlobalWorkspaceFiles?: boolean;
       includeDependentProjects?: boolean;
+      allowPartialGraph?: boolean;
     },
     callback: (
       error: Error | null | 'closed',
@@ -191,12 +195,20 @@ export class DaemonClient {
       } | null
     ) => void
   ): Promise<UnregisterCallback> {
-    await this.getProjectGraphAndSourceMaps();
+    try {
+      await this.getProjectGraphAndSourceMaps();
+    } catch (e) {
+      if (config.allowPartialGraph && e instanceof ProjectGraphError) {
+        // we are fine with partial graph
+      } else {
+        throw e;
+      }
+    }
     let messenger: DaemonSocketMessenger | undefined;
 
     await this.queue.sendToQueue(() => {
       messenger = new DaemonSocketMessenger(
-        connect(FULL_OS_SOCKET_PATH)
+        connect(getFullOsSocketPath())
       ).listen(
         (message) => {
           try {
@@ -250,7 +262,7 @@ export class DaemonClient {
   async isServerAvailable(): Promise<boolean> {
     return new Promise((resolve) => {
       try {
-        const socket = connect(FULL_OS_SOCKET_PATH, () => {
+        const socket = connect(getFullOsSocketPath(), () => {
           socket.destroy();
           resolve(true);
         });
@@ -271,7 +283,7 @@ export class DaemonClient {
 
   private setUpConnection() {
     this.socketMessenger = new DaemonSocketMessenger(
-      connect(FULL_OS_SOCKET_PATH)
+      connect(getFullOsSocketPath())
     ).listen(
       (message) => this.handleMessage(message),
       () => {

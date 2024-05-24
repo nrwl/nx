@@ -107,7 +107,32 @@ class InvalidOutputsError extends Error {
   }
 }
 
+function assertOutputsAreValidType(outputs: unknown) {
+  if (!Array.isArray(outputs)) {
+    throw new Error("The 'outputs' field must be an array");
+  }
+
+  const typesArray = [];
+  let hasInvalidType = false;
+  for (const output of outputs) {
+    if (typeof output !== 'string') {
+      hasInvalidType = true;
+    }
+    typesArray.push(typeof output);
+  }
+
+  if (hasInvalidType) {
+    throw new Error(
+      `The 'outputs' field must contain only strings, but received types: [${typesArray.join(
+        ', '
+      )}]`
+    );
+  }
+}
+
 export function validateOutputs(outputs: string[]) {
+  assertOutputsAreValidType(outputs);
+
   const invalidOutputs = new Set<string>();
 
   for (const output of outputs) {
@@ -149,7 +174,7 @@ export function transformLegacyOutputs(
 }
 
 /**
- * @deprecated Pass the target and overrides instead. This will be removed in v19.
+ * @deprecated Pass the target and overrides instead. This will be removed in v20.
  */
 export function getOutputsForTargetAndConfiguration(
   task: Task,

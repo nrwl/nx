@@ -164,22 +164,18 @@ describe('Webpack Plugin', () => {
     expect(output).toMatch(/Hello/);
   }, 500_000);
 
-  it('should bundle in non-sensitive NX_ environment variables', () => {
+  it('should bundle in NX_PUBLIC_ environment variables', () => {
     const appName = uniq('app');
     runCLI(`generate @nx/web:app ${appName} --bundler webpack`);
     updateFile(
       `apps/${appName}/src/main.ts`,
       `
-      console.log(process.env['NX_CLOUD_ENCRYPTION_KEY']);
-      console.log(process.env['NX_CLOUD_ACCESS_TOKEN']);
       console.log(process.env['NX_PUBLIC_TEST']);
       `
     );
 
     runCLI(`build ${appName}`, {
       env: {
-        NX_CLOUD_ENCRYPTION_KEY: 'secret',
-        NX_CLOUD_ACCESS_TOKEN: 'secret',
         NX_PUBLIC_TEST: 'foobar',
       },
     });
@@ -188,7 +184,6 @@ describe('Webpack Plugin', () => {
       f.startsWith('main.')
     );
     const content = readFile(`dist/apps/${appName}/${mainFile}`);
-    expect(content).not.toMatch(/secret/);
     expect(content).toMatch(/foobar/);
   });
 

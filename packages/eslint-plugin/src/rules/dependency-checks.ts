@@ -1,17 +1,21 @@
-import { join } from 'path';
-import { satisfies } from 'semver';
+import { NX_VERSION, normalizePath, workspaceRoot } from '@nx/devkit';
+import { findNpmDependencies } from '@nx/js/src/utils/find-npm-dependencies';
+import { ESLintUtils } from '@typescript-eslint/utils';
 import { AST } from 'jsonc-eslint-parser';
 import { type JSONLiteral } from 'jsonc-eslint-parser/lib/parser/ast';
-import { normalizePath, workspaceRoot, NX_VERSION } from '@nx/devkit';
-import { findNpmDependencies } from '@nx/js/src/utils/find-npm-dependencies';
-import { readProjectGraph } from '../utils/project-graph-utils';
-import { findProject, getSourceFilePath } from '../utils/runtime-lint-utils';
+import { join } from 'path';
+import { satisfies } from 'semver';
 import {
   getAllDependencies,
   getPackageJson,
   getProductionDependencies,
 } from '../utils/package-json-utils';
-import { ESLintUtils } from '@typescript-eslint/utils';
+import { readProjectGraph } from '../utils/project-graph-utils';
+import {
+  findProject,
+  getParserServices,
+  getSourceFilePath,
+} from '../utils/runtime-lint-utils';
 
 export type Options = [
   {
@@ -96,10 +100,10 @@ export default ESLintUtils.RuleCreator(
       },
     ]
   ) {
-    if (!(context.parserServices as any).isJSON) {
+    if (!getParserServices(context).isJSON) {
       return {};
     }
-    const fileName = normalizePath(context.getFilename());
+    const fileName = normalizePath(context.filename ?? context.getFilename());
     // support only package.json
     if (!fileName.endsWith('/package.json')) {
       return {};

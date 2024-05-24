@@ -27,7 +27,10 @@ export async function runOne(
     string,
     (TargetDependencyConfig | string)[]
   > = {},
-  extraOptions = { excludeTaskDependencies: false, loadDotEnvFiles: true } as {
+  extraOptions = {
+    excludeTaskDependencies: false,
+    loadDotEnvFiles: process.env.NX_LOAD_DOT_ENV_FILES !== 'false',
+  } as {
     excludeTaskDependencies: boolean;
     loadDotEnvFiles: boolean;
   }
@@ -70,7 +73,7 @@ export async function runOne(
 
     return await generateGraph(
       {
-        watch: false,
+        watch: true,
         open: true,
         view: 'tasks',
         targets: nxArgs.targets,

@@ -19,7 +19,6 @@ It only uses language primitives and immutable objects
 ### Classes
 
 - [ProjectGraphBuilder](../../devkit/documents/ProjectGraphBuilder)
-- [Workspaces](../../devkit/documents/Workspaces)
 
 ### Interfaces
 

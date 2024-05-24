@@ -1,6 +1,6 @@
 import { dirname } from 'node:path';
 
-import { toProjectName } from '../../config/workspaces';
+import { toProjectName } from '../../config/to-project-name';
 import { combineGlobPatterns } from '../../utils/globs';
 
 import type { NxPluginV1 } from '../../utils/nx-plugin.deprecated';
@@ -16,6 +16,7 @@ import {
   type NxPluginV2,
 } from './public-api';
 import { AggregateCreateNodesError, CreateNodesError } from '../error-types';
+import { performance } from 'perf_hooks';
 
 export function isNxPluginV2(plugin: NxPlugin): plugin is NxPluginV2 {
   return 'createNodes' in plugin || 'createDependencies' in plugin;

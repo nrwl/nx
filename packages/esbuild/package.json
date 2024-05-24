@@ -12,7 +12,9 @@
     "Monorepo",
     "EsBuild",
     "Web",
-    "CLI"
+    "CLI",
+    "Front-end",
+    "Backend"
   ],
   "main": "./index",
   "typings": "./index.d.ts",

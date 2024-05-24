@@ -4,7 +4,7 @@ import {
   DocumentIcon,
   PlayCircleIcon,
 } from '@heroicons/react/24/outline';
-import { frameworkIcons } from '../icons';
+import { Framework, frameworkIcons } from '@nx/graph/ui-icons';
 
 import { cx } from '@nx/nx-dev/ui-primitives';
 import { ReactNode } from 'react';
@@ -127,7 +127,7 @@ export function LinkCard({
             }
           )}
         >
-          {icon && frameworkIcons[icon]?.image}
+          {icon && frameworkIcons[icon as Framework]?.image}
         </div>
       )}
       <div className={cx('pt-4', { 'pt-2': appearance === 'small' })}>
@@ -198,7 +198,7 @@ export function Card({
         ) : null}
 
         {/*HOVER ICON*/}
-        <span className="absolute right-2 top-1/2 -translate-y-2.5 -translate-x-2 opacity-0 transition-all group-hover:translate-x-0 group-hover:opacity-100">
+        <span className="absolute right-2 top-1/2 -translate-x-2 -translate-y-2.5 opacity-0 transition-all group-hover:translate-x-0 group-hover:opacity-100">
           <ArrowRightCircleIcon className="h-5 w-5" />
         </span>
       </div>

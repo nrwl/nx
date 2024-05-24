@@ -4,33 +4,6 @@ export interface Example {
 }
 
 export const examples: Record<string, Example[]> = {
-  'print-affected': [
-    {
-      command: 'print-affected',
-      description:
-        'Print information about affected projects and the project graph',
-    },
-    {
-      command: 'print-affected --base=main --head=HEAD',
-      description:
-        'Print information about the projects affected by the changes between main and HEAD (e.g,. PR)',
-    },
-    {
-      command: 'print-affected -t test',
-      description:
-        'Prints information about the affected projects and a list of tasks to test them',
-    },
-    {
-      command: 'print-affected -t build --select=projects',
-      description:
-        'Prints the projects property from the print-affected output',
-    },
-    {
-      command: 'print-affected -t build --select=tasks.target.project',
-      description:
-        'Prints the tasks.target.project property from the print-affected output',
-    },
-  ],
   affected: [
     {
       command: 'affected -t custom-target',
@@ -193,38 +166,6 @@ export const examples: Record<string, Example[]> = {
       description: 'Watch for changes to project graph and update in-browser',
     },
   ],
-  'affected:graph': [
-    {
-      command: 'affected:graph --files=libs/mylib/src/index.ts',
-      description:
-        'Open the project graph of the workspace in the browser, and highlight the projects affected by changing the index.ts file',
-    },
-    {
-      command: 'affected:graph --base=main --head=HEAD',
-      description:
-        'Open the project graph of the workspace in the browser, and highlight the projects affected by the changes between main and HEAD (e.g., PR)',
-    },
-    {
-      command: 'affected:graph --base=main --head=HEAD --file=output.json',
-      description:
-        'Save the project graph of the workspace in a json file, and highlight the projects affected by the changes between main and HEAD (e.g., PR)',
-    },
-    {
-      command: 'affected:graph --base=main --head=HEAD --file=output.html',
-      description:
-        'Generate a static website with project graph data in an html file, highlighting the projects affected by the changes between main and HEAD (e.g., PR)',
-    },
-    {
-      command: 'affected:graph --base=main~1 --head=main',
-      description:
-        'Open the project graph of the workspace in the browser, and highlight the projects affected by the last commit on main',
-    },
-    {
-      command: 'affected:graph --exclude=project-one,project-two',
-      description:
-        'Open the project graph of the workspace in the browser, highlight the projects affected, but exclude project-one and project-two',
-    },
-  ],
   list: [
     {
       command: 'list',
@@ -361,6 +302,12 @@ export const examples: Record<string, Example[]> = {
 
     {
       command: 'show project my-app',
+      description:
+        'If in an interactive terminal, opens the project detail view. If not in an interactive terminal, defaults to JSON.',
+    },
+
+    {
+      command: 'show project my-app --json',
       description: 'Show detailed information about "my-app" in a json format.',
     },
 

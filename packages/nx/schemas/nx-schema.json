@@ -19,7 +19,7 @@
         }
       },
       "additionalProperties": false,
-      "deprecated": "Use `defaultBase` instead. Support for setting `defaultBase` in `affected` will be removed in Nx 19."
+      "deprecated": "Use `defaultBase` instead. Support for setting `defaultBase` in `affected` will be removed in Nx 20."
     },
     "defaultBase": {
       "type": "string",
@@ -366,7 +366,7 @@
         "packageManager": {
           "type": "string",
           "description": "The default package manager to use.",
-          "enum": ["yarn", "pnpm", "npm"]
+          "enum": ["yarn", "pnpm", "npm", "bun"]
         }
       }
     },

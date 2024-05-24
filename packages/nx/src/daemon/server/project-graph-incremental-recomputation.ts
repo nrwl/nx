@@ -261,7 +261,7 @@ async function processFilesAndCreateAndSerializeProjectGraph(
     const errors = [...(projectConfigurationsError?.errors ?? [])];
 
     if (g.error) {
-      if (isAggregateProjectGraphError(g.error)) {
+      if (isAggregateProjectGraphError(g.error) && g.error.errors?.length) {
         errors.push(...g.error.errors);
       } else {
         return {

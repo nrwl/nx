@@ -93,6 +93,13 @@ export async function remixApplicationGeneratorInternal(
               cwd: options.projectRoot,
             },
           },
+          ['static-serve']: {
+            dependsOn: ['build'],
+            command: `remix-serve build/index.js`,
+            options: {
+              cwd: options.projectRoot,
+            },
+          },
           typecheck: {
             command: `tsc --project tsconfig.app.json`,
             options: {
@@ -277,7 +284,7 @@ export async function remixApplicationGeneratorInternal(
     if (options.unitTestRunner === 'jest') {
       tree.write(
         'jest.preset.js',
-        `import { nxPreset } from '@nx/jest/preset/jest-preset.js';
+        `import { nxPreset } from '@nx/jest/preset.js';
 export default {...nxPreset};
 `
       );

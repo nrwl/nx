@@ -1,6 +1,11 @@
 # Editor Setup
 
-Nx Console is the UI for Nx. It works for any installed generators or any targets defined in your workspace. Nx Console does not have a specific UI for, say, generating a component. Instead, Nx Console does what the command-line version of Nx does - it analyzes the same meta information to create the needed UI. This means that anything you can do with Nx, you can do with Nx Console.
+Nx Console editor extensions make your developer experience richer. The extensions
+
+- show [inferred tasks](/concepts/inferred-tasks) and help you invoke them
+- show what is cached and how the cache is configured
+- provide a visual UI for invoking generators
+- show dependencies between projects and tasks
 
 ## Download
 

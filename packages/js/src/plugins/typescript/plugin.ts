@@ -50,28 +50,25 @@ interface NormalizedPluginOptions {
 }
 
 const cachePath = join(projectGraphCacheDirectory, 'tsc.hash');
-const targetsCache = existsSync(cachePath) ? readTargetsCache() : {};
-
-const calculatedTargets: Record<
-  string,
-  Record<string, TargetConfiguration>
-> = {};
+const targetsCache = readTargetsCache();
 
 function readTargetsCache(): Record<
   string,
   Record<string, TargetConfiguration<unknown>>
 > {
-  return readJsonFile(cachePath);
+  return existsSync(cachePath) ? readJsonFile(cachePath) : {};
 }
 
-function writeTargetsToCache(
-  targets: Record<string, Record<string, TargetConfiguration<unknown>>>
-) {
-  writeJsonFile(cachePath, targets);
+function writeTargetsToCache() {
+  const oldCache = readTargetsCache();
+  writeJsonFile(cachePath, {
+    ...oldCache,
+    ...targetsCache,
+  });
 }
 
 export const createDependencies: CreateDependencies = () => {
-  writeTargetsToCache(calculatedTargets);
+  writeTargetsToCache();
   return [];
 };
 
@@ -104,24 +101,27 @@ export const createNodes: CreateNodes<TscPluginOptions> = [
       return {};
     }
 
-    const hash = calculateHashForCreateNodes(
+    const nodeHash = calculateHashForCreateNodes(
       projectRoot,
       pluginOptions,
       context,
       [getLockFileName(detectPackageManager(context.workspaceRoot))]
     );
+    // The hash is calculated at the node/project level, so we add the config file path to avoid conflicts when caching
+    const cacheKey = `${nodeHash}_${configFilePath}`;
 
-    const targets = targetsCache[hash]
-      ? targetsCache[hash]
-      : buildTscTargets(fullConfigPath, projectRoot, pluginOptions, context);
-
-    calculatedTargets[hash] = targets;
+    targetsCache[cacheKey] ??= buildTscTargets(
+      fullConfigPath,
+      projectRoot,
+      pluginOptions,
+      context
+    );
 
     return {
       projects: {
         [projectRoot]: {
           projectType: 'library',
-          targets,
+          targets: targetsCache[cacheKey],
         },
       },
     };

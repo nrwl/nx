@@ -9,7 +9,24 @@
     "devRemotes": {
       "type": "array",
       "items": {
-        "type": "string"
+        "oneOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "remoteName": {
+                "type": "string"
+              },
+              "configuration": {
+                "type": "string"
+              }
+            },
+            "required": ["remoteName"],
+            "additionalProperties": false
+          }
+        ]
       },
       "description": "List of remote applications to run in development mode (i.e. using serve target).",
       "x-priority": "important"
@@ -114,5 +131,6 @@
       "type": "string",
       "description": "Path to a Module Federation manifest file (e.g. `my/path/to/module-federation.manifest.json`) containing the dynamic remote applications relative to the workspace root."
     }
-  }
+  },
+  "examplesFile": "../../../docs/module-federation-dev-server-examples.md"
 }

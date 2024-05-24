@@ -6,7 +6,7 @@ import {
   execFileSync,
 } from 'node:child_process';
 import { existsSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, relative } from 'node:path';
 
 export function execGradle(
   args: string[],
@@ -27,6 +27,10 @@ export function getGradleBinaryPath(): string {
   }
 
   return gradleBinaryPath;
+}
+
+export function getGradleExecFile(): string {
+  return process.platform.startsWith('win') ? '.\\gradlew.bat' : './gradlew';
 }
 
 export function execGradleAsync(

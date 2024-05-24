@@ -4,15 +4,14 @@ import {
   ProjectConfiguration,
   TargetConfiguration,
   readJsonFile,
-  workspaceRoot,
   writeJsonFile,
 } from '@nx/devkit';
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { existsSync } from 'node:fs';
-import { dirname, join, relative } from 'node:path';
+import { dirname, join } from 'node:path';
 import { projectGraphCacheDirectory } from 'nx/src/utils/cache-directory';
 
-import { getGradleBinaryPath } from '../utils/exec-gradle';
+import { getGradleExecFile } from '../utils/exec-gradle';
 import { getGradleReport } from '../utils/get-gradle-report';
 
 const cacheableTaskType = new Set(['Build', 'Verification']);
@@ -35,39 +34,26 @@ export interface GradlePluginOptions {
 }
 
 const cachePath = join(projectGraphCacheDirectory, 'gradle.hash');
-const targetsCache = existsSync(cachePath) ? readTargetsCache() : {};
-
-export const calculatedTargets: Record<
+const targetsCache = readTargetsCache();
+type GradleTargets = Record<
   string,
   {
     name: string;
     targets: Record<string, TargetConfiguration>;
-    targetGroups: Record<string, string[]>;
+    metadata: ProjectConfiguration['metadata'];
   }
-> = {};
+>;
 
-function readTargetsCache(): Record<
-  string,
-  {
-    name: string;
-    targets: Record<string, TargetConfiguration>;
-    targetGroups: Record<string, string[]>;
-  }
-> {
-  return readJsonFile(cachePath);
+function readTargetsCache(): GradleTargets {
+  return existsSync(cachePath) ? readJsonFile(cachePath) : {};
 }
 
-export function writeTargetsToCache(
-  targets: Record<
-    string,
-    {
-      name: string;
-      targets: Record<string, TargetConfiguration>;
-      targetGroups: Record<string, string[]>;
-    }
-  >
-) {
-  writeJsonFile(cachePath, targets);
+export function writeTargetsToCache() {
+  const oldCache = readTargetsCache();
+  writeJsonFile(cachePath, {
+    ...oldCache,
+    ...targetsCache,
+  });
 }
 
 export const createNodes: CreateNodes<GradlePluginOptions> = [
@@ -84,91 +70,90 @@ export const createNodes: CreateNodes<GradlePluginOptions> = [
       options ?? {},
       context
     );
-    if (targetsCache[hash]) {
-      calculatedTargets[hash] = targetsCache[hash];
-      return {
-        projects: {
-          [projectRoot]: {
-            ...targetsCache[hash],
-            metadata: {
-              technologies: ['gradle'],
-            },
-          },
-        },
-      };
-    }
-
-    try {
-      const {
-        gradleProjectToTasksTypeMap,
-        gradleFileToOutputDirsMap,
-        gradleFileToGradleProjectMap,
-        gradleProjectToProjectName,
-      } = getGradleReport();
-
-      const gradleProject = gradleFileToGradleProjectMap.get(
-        gradleFilePath
-      ) as string;
-      const projectName = gradleProjectToProjectName.get(gradleProject);
-      if (!projectName) {
-        return;
-      }
-
-      const tasksTypeMap = gradleProjectToTasksTypeMap.get(
-        gradleProject
-      ) as Map<string, string>;
-      let tasks: GradleTask[] = [];
-      for (let [taskName, taskType] of tasksTypeMap.entries()) {
-        tasks.push({
-          type: taskType,
-          name: taskName,
-        });
-      }
-
-      const outputDirs = gradleFileToOutputDirsMap.get(gradleFilePath) as Map<
-        string,
-        string
-      >;
-
-      const { targets, targetGroups } = createGradleTargets(
-        tasks,
-        projectRoot,
-        options,
-        context,
-        outputDirs
-      );
-      calculatedTargets[hash] = {
-        name: projectName,
-        targets,
-        targetGroups,
-      };
-
-      const project: Omit<ProjectConfiguration, 'root'> = {
-        name: projectName,
-        targets,
-        metadata: {
-          technologies: ['gradle'],
-        },
-      };
-
-      return {
-        projects: {
-          [projectRoot]: project,
-        },
-      };
-    } catch (e) {
-      console.error(e);
+    targetsCache[hash] ??= createGradleProject(
+      gradleFilePath,
+      options,
+      context
+    );
+    const project = targetsCache[hash];
+    if (!project) {
       return {};
     }
+    return {
+      projects: {
+        [projectRoot]: project,
+      },
+    };
   },
 ];
 
+function createGradleProject(
+  gradleFilePath: string,
+  options: GradlePluginOptions | undefined,
+  context: CreateNodesContext
+) {
+  try {
+    const {
+      gradleProjectToTasksTypeMap,
+      gradleFileToOutputDirsMap,
+      gradleFileToGradleProjectMap,
+      gradleProjectToProjectName,
+    } = getGradleReport();
+
+    const gradleProject = gradleFileToGradleProjectMap.get(
+      gradleFilePath
+    ) as string;
+    const projectName = gradleProjectToProjectName.get(gradleProject);
+    if (!projectName) {
+      return;
+    }
+
+    const tasksTypeMap = gradleProjectToTasksTypeMap.get(gradleProject) as Map<
+      string,
+      string
+    >;
+    let tasks: GradleTask[] = [];
+    for (let [taskName, taskType] of tasksTypeMap.entries()) {
+      tasks.push({
+        type: taskType,
+        name: taskName,
+      });
+    }
+
+    const outputDirs = gradleFileToOutputDirsMap.get(gradleFilePath) as Map<
+      string,
+      string
+    >;
+
+    const { targets, targetGroups } = createGradleTargets(
+      tasks,
+      options,
+      context,
+      outputDirs,
+      gradleProject
+    );
+    const project = {
+      name: projectName,
+      targets,
+      metadata: {
+        targetGroups,
+        technologies: ['gradle'],
+      },
+    };
+
+    return project;
+  } catch (e) {
+    console.error(e);
+    return undefined;
+  }
+}
+
 function createGradleTargets(
   tasks: GradleTask[],
-  projectRoot: string,
   options: GradlePluginOptions | undefined,
   context: CreateNodesContext,
-  outputDirs: Map<string, string>
+  outputDirs: Map<string, string>,
+  gradleProject: string
 ): {
   targetGroups: Record<string, string[]>;
   targets: Record<string, TargetConfiguration>;
@@ -181,19 +166,17 @@ function createGradleTargets(
     const targetName = options?.[`${task.name}TargetName`] ?? task.name;
 
     const outputs = outputDirs.get(task.name);
-    const path = relative(
-      join(context.workspaceRoot, projectRoot),
-      getGradleBinaryPath()
-    );
     targets[targetName] = {
-      command: `${path} ${task.name}`,
-      options: {
-        cwd: projectRoot,
-      },
+      command: `${getGradleExecFile()} ${
+        gradleProject ? gradleProject + ':' : ''
+      }${task.name}`,
       cache: cacheableTaskType.has(task.type),
       inputs: inputsMap[task.name],
       outputs: outputs ? [outputs] : undefined,
       dependsOn: dependsOnMap[task.name],
+      metadata: {
+        technologies: ['gradle'],
+      },
     };
     if (!targetGroups[task.type]) {
       targetGroups[task.type] = [];
@@ -212,6 +195,8 @@ function createInputsMap(
       ? ['production', '^production']
       : ['default', '^default'],
     test: ['default', namedInputs?.production ? '^production' : '^default'],
-    classes: ['default', '^default'],
+    classes: namedInputs?.production
+      ? ['production', '^production']
+      : ['default', '^default'],
   };
 }

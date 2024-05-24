@@ -1,8 +1,8 @@
 const { join } = require('node:path');
 // nx-ignore-next-line
-const { NxWebpackPlugin } = require('@nx/webpack');
+const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
 // nx-ignore-next-line
-const { NxReactWebpackPlugin } = require('@nx/react');
+const { NxReactWebpackPlugin } = require('@nx/react/webpack-plugin');
 
 module.exports = {
   output: {
@@ -23,7 +23,7 @@ module.exports = {
     },
   },
   plugins: [
-    new NxWebpackPlugin({
+    new NxAppWebpackPlugin({
       index: './src/index.html',
       compiler: 'babel',
       main: './src/main.tsx',

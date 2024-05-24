@@ -200,11 +200,7 @@ function readAndCombineAllProjectConfigurations(tree: Tree): {
       readJson(tree, p, { expectComments: true })
     ),
   ];
-  const projectGlobPatterns = configurationGlobs([
-    ProjectJsonProjectsPlugin,
-    { createNodes: packageJsonWorkspacesCreateNodes },
-  ]);
-  const globbedFiles = globWithWorkspaceContext(tree.root, projectGlobPatterns);
+  const globbedFiles = globWithWorkspaceContext(tree.root, patterns);
   const createdFiles = findCreatedProjectFiles(tree, patterns);
   const deletedFiles = findDeletedProjectFiles(tree, patterns);
   const projectFiles = [...globbedFiles, ...createdFiles].filter(

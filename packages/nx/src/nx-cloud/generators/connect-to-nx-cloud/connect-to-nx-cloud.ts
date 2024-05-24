@@ -89,8 +89,8 @@ function printSuccessMessage(url: string) {
 }
 
 interface ConnectToNxCloudOptions {
-  analytics: boolean;
-  installationSource: string;
+  analytics?: boolean;
+  installationSource?: string;
   hideFormatLogs?: boolean;
 }
 
@@ -114,6 +114,8 @@ export async function connectToNxCloud(
   tree: Tree,
   schema: ConnectToNxCloudOptions
 ) {
+  schema.installationSource ??= 'user';
+
   const nxJson = readNxJson(tree) as
     | null
     | (NxJsonConfiguration & { neverConnectToCloud: boolean });

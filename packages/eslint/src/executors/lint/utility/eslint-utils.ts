@@ -1,20 +1,6 @@
 import type { ESLint } from 'eslint';
+import { resolveESLintClass } from '../../../utils/resolve-eslint-class';
 import type { Schema } from '../schema';
-
-async function resolveESLintClass(
-  useFlatConfig = false
-): Promise<typeof ESLint> {
-  try {
-    if (!useFlatConfig) {
-      return (await import('eslint')).ESLint;
-    }
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const { FlatESLint } = require('eslint/use-at-your-own-risk');
-    return FlatESLint;
-  } catch {
-    throw new Error('Unable to find ESLint. Ensure ESLint is installed.');
-  }
-}
 
 export async function resolveAndInstantiateESLint(
   eslintConfigPath: string | undefined,

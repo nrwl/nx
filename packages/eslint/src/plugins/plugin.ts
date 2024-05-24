@@ -4,7 +4,6 @@ import {
   CreateNodesResult,
   TargetConfiguration,
 } from '@nx/devkit';
-import type { ESLint } from 'eslint';
 import { existsSync } from 'node:fs';
 import { dirname, join, normalize, sep } from 'node:path';
 import { combineGlobPatterns } from 'nx/src/utils/globs';
@@ -15,6 +14,8 @@ import {
   baseEsLintFlatConfigFile,
   isFlatConfig,
 } from '../utils/config-file';
+import { resolveESLintClass } from '../utils/resolve-eslint-class';
+import { gte } from 'semver';
 
 export interface EslintPluginOptions {
   targetName?: string;
@@ -66,7 +67,8 @@ export const createNodes: CreateNodes<EslintPluginOptions> = [
     ).sort((a, b) => (a !== b && isSubDir(a, b) ? -1 : 1));
     const excludePatterns = dedupedProjectRoots.map((root) => `${root}/**/*`);
 
-    const ESLint = resolveESLintClass(isFlatConfig(configFilePath));
+    const ESLint = await resolveESLintClass(isFlatConfig(configFilePath));
+    const eslintVersion = ESLint.version;
     const childProjectRoots = new Set<string>();
 
     await Promise.all(
@@ -101,6 +103,7 @@ export const createNodes: CreateNodes<EslintPluginOptions> = [
       projects: getProjectsUsingESLintConfig(
         configFilePath,
         uniqueChildProjectRoots,
+        eslintVersion,
         options,
         context
       ),
@@ -111,17 +114,17 @@ export const createNodes: CreateNodes<EslintPluginOptions> = [
 function getProjectsUsingESLintConfig(
   configFilePath: string,
   childProjectRoots: string[],
+  eslintVersion: string,
   options: EslintPluginOptions,
   context: CreateNodesContext
 ): CreateNodesResult['projects'] {
   const projects: CreateNodesResult['projects'] = {};
 
-  const rootEslintConfig = context.configFiles.find(
-    (f) =>
-      f === baseEsLintConfigFile ||
-      f === baseEsLintFlatConfigFile ||
-      ESLINT_CONFIG_FILENAMES.includes(f)
-  );
+  const rootEslintConfig = [
+    baseEsLintConfigFile,
+    baseEsLintFlatConfigFile,
+    ...ESLINT_CONFIG_FILENAMES,
+  ].find((f) => existsSync(join(context.workspaceRoot, f)));
 
   // Add a lint target for each child project without an eslint config, with the root level config as an input
   for (const projectRoot of childProjectRoots) {
@@ -143,6 +146,7 @@ function getProjectsUsingESLintConfig(
     projects[projectRoot] = {
       targets: buildEslintTargets(
         eslintConfigs,
+        eslintVersion,
         projectRoot,
         context.workspaceRoot,
         options,
@@ -156,6 +160,7 @@ function getProjectsUsingESLintConfig(
 
 function buildEslintTargets(
   eslintConfigs: string[],
+  eslintVersion: string,
   projectRoot: string,
   workspaceRoot: string,
   options: EslintPluginOptions,
@@ -187,10 +192,16 @@ function buildEslintTargets(
       '{workspaceRoot}/tools/eslint-rules/**/*',
       { externalDependencies: ['eslint'] },
     ],
+    outputs: ['{options.outputFile}'],
   };
-  if (eslintConfigs.some((config) => isFlatConfig(config))) {
+
+  // Always set the environment variable to ensure that the ESLint CLI can run on eslint v8 and v9
+  const useFlatConfig = eslintConfigs.some((config) => isFlatConfig(config));
+  // Flat config is default for 9.0.0+
+  const defaultSetting = gte(eslintVersion, '9.0.0');
+  if (useFlatConfig !== defaultSetting) {
     targetConfig.options.env = {
-      ESLINT_USE_FLAT_CONFIG: 'true',
+      ESLINT_USE_FLAT_CONFIG: useFlatConfig ? 'true' : 'false',
     };
   }
 
@@ -211,18 +222,6 @@ function normalizeOptions(options: EslintPluginOptions): EslintPluginOptions {
   }
 
   return options;
-}
-
-function resolveESLintClass(useFlatConfig = false): typeof ESLint {
-  try {
-    if (!useFlatConfig) {
-      return require('eslint').ESLint;
-    }
-
-    return require('eslint/use-at-your-own-risk').FlatESLint;
-  } catch {
-    throw new Error('Unable to find ESLint. Ensure ESLint is installed.');
-  }
 }
 
 /**

@@ -73,9 +73,11 @@ More details about how to override task configuration is available in these reci
 
 ## Existing Nx Workspaces
 
-If you have an existing Nx Workspace and upgrade to Nx 18, the migration generator will automatically add `NX_ADD_PLUGINS=false` to your `.env` file. This environment variable allows you to continue to use Nx without inferred tasks. We are working on creating migrations for existing workspaces to start switching to inferred tasks, where desired.
+If you have an existing Nx Workspace and upgrade to Nx 18, the migration generator will automatically add `NX_ADD_PLUGINS=false` to your `.env` file. This environment variable allows you to continue to use Nx without inferred tasks. Alternatively, you can set the `useInferencePlugins` property to `false` in `nx.json`.
 
-When `NX_ADD_PLUGINS` is `false`:
+We are working on creating migrations for existing workspaces to start switching to inferred tasks, where desired.
+
+When `NX_ADD_PLUGINS` or `useInferencePlugins` is `false`:
 
 1. A newly generated project will have all targets defined with executors - not with inferred tasks.
 2. Running `nx add @nx/some-plugin` will not create a plugin entry for `@nx/some-plugin` in the `nx.json` file. (So that plugin will not create inferred tasks.)

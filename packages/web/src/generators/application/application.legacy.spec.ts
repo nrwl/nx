@@ -202,12 +202,12 @@ describe('web app generator (legacy)', () => {
             },
           },
           "test": {
-            "executor": "@nx/vite:test",
+            "executor": "@nx/jest:jest",
             "options": {
-              "reportsDirectory": "../coverage/my-vite-app",
+              "jestConfig": "my-vite-app/jest.config.ts",
             },
             "outputs": [
-              "{options.reportsDirectory}",
+              "{workspaceRoot}/coverage/{projectRoot}",
             ],
           },
         },

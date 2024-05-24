@@ -1,12 +1,5 @@
 export enum Preset {
   Apps = 'apps',
-  // TODO(v19): Remove Empty and Core presets
-  /** @deprecated Use Apps instead
-   */
-  Empty = 'empty',
-  /** @deprecated Use NPM instead
-   */
-  Core = 'core',
   NPM = 'npm',
   TS = 'ts',
   WebComponents = 'web-components',

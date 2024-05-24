@@ -7,6 +7,8 @@ export interface EsBuildExecutorOptions {
   additionalEntryPoints?: string[];
   assets: (AssetGlob | string)[];
   bundle?: boolean;
+  declaration?: boolean;
+  declarationRootDir?: string;
   deleteOutputPath?: boolean;
   esbuildOptions?: Record<string, any>;
   esbuildConfig?: string;

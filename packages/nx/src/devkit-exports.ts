@@ -37,12 +37,6 @@ export type {
   HasherContext,
 } from './config/misc-interfaces';
 
-// TODO(v19): Remove this export
-/**
- * @category Workspace
- */
-export { Workspaces } from './config/workspaces';
-
 export { workspaceLayout } from './config/configuration';
 
 export type {

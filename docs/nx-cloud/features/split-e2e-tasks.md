@@ -11,7 +11,7 @@ You could manually address these problems by splitting your e2e tests into small
 
 ## Set up
 
-To enable automatically split e2e tasks, you need to turn on [inferred tasks](/concepts/inferred-tasks#existing-nx-workspaces) for the [@nx/cypress](/nx-api/cypress), [@nx/playwright](/nx-api/playwright), or [@nx/playwright](/nx-api/jest) plugins. Run this command to set up inferred tasks:
+To enable automatically split e2e tasks, you need to turn on [inferred tasks](/concepts/inferred-tasks#existing-nx-workspaces) for the [@nx/cypress](/nx-api/cypress), [@nx/playwright](/nx-api/playwright), or [@nx/jest](/nx-api/jest) plugins. Run this command to set up inferred tasks:
 
 {% tabs %}
 {% tab label="Cypress" %}
@@ -62,6 +62,15 @@ nx show project myproject-e2e --web
   "project": {
     "name": "admin-e2e",
     "data": {
+      "metadata": {
+        "targetGroups": {
+          "E2E (CI)": [
+            "e2e-ci--src/e2e/app.cy.ts",
+            "e2e-ci--src/e2e/login.cy.ts",
+            "e2e-ci"
+          ]
+        }
+      },
       "root": "apps/admin-e2e",
       "projectType": "application",
       "targets": {
@@ -82,6 +91,9 @@ nx show project myproject-e2e --web
             "production": {
               "command": "cypress run --env webServerCommand=\"nx run admin:preview\""
             }
+          },
+          "metadata": {
+            "technologies": ["cypress"]
           }
         },
         "e2e-ci--src/e2e/app.cy.ts": {
@@ -102,7 +114,10 @@ nx show project myproject-e2e --web
             "command": "cypress run --env webServerCommand=\"nx run admin:serve-static\" --spec src/e2e/app.cy.ts"
           },
           "executor": "nx:run-commands",
-          "configurations": {}
+          "configurations": {},
+          "metadata": {
+            "technologies": ["cypress"]
+          }
         },
         "e2e-ci--src/e2e/login.cy.ts": {
           "outputs": [
@@ -122,7 +137,10 @@ nx show project myproject-e2e --web
             "command": "cypress run --env webServerCommand=\"nx run admin:serve-static\" --spec src/e2e/login.cy.ts"
           },
           "executor": "nx:run-commands",
-          "configurations": {}
+          "configurations": {},
+          "metadata": {
+            "technologies": ["cypress"]
+          }
         },
         "e2e-ci": {
           "executor": "nx:noop",
@@ -151,7 +169,10 @@ nx show project myproject-e2e --web
             }
           ],
           "options": {},
-          "configurations": {}
+          "configurations": {},
+          "metadata": {
+            "technologies": ["cypress"]
+          }
         },
         "lint": {
           "executor": "@nx/eslint:lint",
@@ -159,7 +180,10 @@ nx show project myproject-e2e --web
           "cache": true,
           "outputs": ["{options.outputFile}"],
           "options": {},
-          "configurations": {}
+          "configurations": {},
+          "metadata": {
+            "technologies": ["eslint"]
+          }
         }
       },
       "name": "admin-e2e",

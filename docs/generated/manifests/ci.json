@@ -1800,6 +1800,17 @@
         "tags": []
       },
       {
+        "id": "custom-steps",
+        "name": "Custom Steps",
+        "description": "",
+        "mediaImage": "",
+        "file": "nx-cloud/reference/custom-steps",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/reference/custom-steps",
+        "tags": []
+      },
+      {
         "id": "env-vars",
         "name": "Environment Variables",
         "description": "",
@@ -1857,6 +1868,17 @@
     "itemList": [],
     "isExternal": false,
     "path": "/ci/reference/launch-templates",
+    "tags": []
+  },
+  "/ci/reference/custom-steps": {
+    "id": "custom-steps",
+    "name": "Custom Steps",
+    "description": "",
+    "mediaImage": "",
+    "file": "nx-cloud/reference/custom-steps",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/reference/custom-steps",
     "tags": []
   },
   "/ci/reference/env-vars": {

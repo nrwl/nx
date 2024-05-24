@@ -12,9 +12,15 @@ import {
   type Target,
 } from '@nx/devkit';
 
+export interface SvgrOptions {
+  svgo?: boolean;
+  titleProp?: boolean;
+  ref?: boolean;
+}
+
 export interface WithNxOptions extends NextConfig {
   nx?: {
-    svgr?: boolean;
+    svgr?: boolean | SvgrOptions;
     babelUpwardRootMode?: boolean;
   };
 }
@@ -327,16 +333,19 @@ export function getNextConfig(
       }
 
       /**
-       * 5. Add env variables prefixed with NX_
-       */
-      addNxEnvVariables(config);
-
-      /**
-       * 6. Add SVGR support if option is on.
+       * 5. Add SVGR support if option is on.
        */
 
       // Default SVGR support to be on for projects.
-      if (nx?.svgr !== false) {
+      if (nx?.svgr !== false || typeof nx?.svgr === 'object') {
+        const defaultSvgrOptions = {
+          svgo: false,
+          titleProp: true,
+          ref: true,
+        };
+
+        const svgrOptions =
+          typeof nx?.svgr === 'object' ? nx.svgr : defaultSvgrOptions;
         // TODO(v20): Remove file-loader and use `?react` querystring to differentiate between asset and SVGR.
         // It should be:
         // use: [{
@@ -370,11 +379,7 @@ export function getNextConfig(
           use: [
             {
               loader: require.resolve('@svgr/webpack'),
-              options: {
-                svgo: false,
-                titleProp: true,
-                ref: true,
-              },
+              options: svgrOptions,
             },
             {
               loader: require.resolve('file-loader'),
@@ -391,40 +396,6 @@ export function getNextConfig(
       return userWebpack(config, options);
     },
   };
-}
-
-// Prevent sensitive keys from being bundled when source code uses entire `process.env` object rather than individual keys (e.g. `process.env.NX_FOO`).
-// TODO(v19): BREAKING: Only support NEXT_PUBLIC_ env vars and ignore NX_ vars since this is a standard Next.js feature.
-const excludedKeys = ['NX_CLOUD_ACCESS_TOKEN', 'NX_CLOUD_ENCRYPTION_KEY'];
-
-function getNxEnvironmentVariables() {
-  return Object.keys(process.env)
-    .filter((env) => !excludedKeys.includes(env) && /^NX_/i.test(env))
-    .reduce((env, key) => {
-      env[key] = process.env[key];
-      return env;
-    }, {});
-}
-
-/**
- * TODO(v19)
- * @deprecated Use Next.js 9.4+ built-in support for environment variables. Reference https://nextjs.org/docs/pages/api-reference/next-config-js/env
- */
-function addNxEnvVariables(config: any) {
-  const maybeDefinePlugin = config.plugins?.find((plugin) => {
-    return plugin.definitions?.['process.env.NODE_ENV'];
-  });
-
-  if (maybeDefinePlugin) {
-    const env = getNxEnvironmentVariables();
-
-    Object.entries(env)
-      .map(([name, value]) => [`process.env.${name}`, `"${value}"`])
-      .filter(([name]) => !maybeDefinePlugin.definitions[name])
-      .forEach(
-        ([name, value]) => (maybeDefinePlugin.definitions[name] = value)
-      );
-  }
 }
 
 export function getAliasForProject(

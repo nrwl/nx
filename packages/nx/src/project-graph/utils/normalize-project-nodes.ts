@@ -99,21 +99,6 @@ export function normalizeProjectTargets(
       delete targets[target];
       continue;
     }
-
-    targets[target].options = resolveNxTokensInOptions(
-      targets[target].options,
-      project,
-      `${projectName}:${target}`
-    );
-
-    targets[target].configurations ??= {};
-    for (const configuration in targets[target].configurations) {
-      targets[target].configurations[configuration] = resolveNxTokensInOptions(
-        targets[target].configurations[configuration],
-        project,
-        `${projectName}:${target}:${configuration}`
-      );
-    }
   }
   return targets;
 }

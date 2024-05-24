@@ -138,8 +138,9 @@ export async function* rollupExecutor(
       return { success: true, outfile };
     } catch (e) {
       if (e.formatted) {
-        // Formattted message is provided by Rollup and contains codeframes for where the error occurred.
         logger.info(e.formatted);
+      } else if (e.message) {
+        logger.info(e.message);
       }
       logger.error(e);
       logger.error(`Bundle failed: ${context.projectName}`);

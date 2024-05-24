@@ -171,7 +171,7 @@ export async function buildProjectGraphAndSourceMapsWithoutDaemon() {
   }
 }
 
-function handleProjectGraphError(opts: { exitOnError: boolean }, e) {
+export function handleProjectGraphError(opts: { exitOnError: boolean }, e) {
   if (opts.exitOnError) {
     const isVerbose = process.env.NX_VERBOSE_LOGGING === 'true';
     if (e instanceof ProjectGraphError) {

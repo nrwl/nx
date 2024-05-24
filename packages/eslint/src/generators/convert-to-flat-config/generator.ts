@@ -16,7 +16,6 @@ import { join } from 'path';
 import { eslintrcVersion, eslintVersion } from '../../utils/versions';
 import { ESLint } from 'eslint';
 import { convertEslintJsonToFlatConfig } from './converters/json-converter';
-import { load } from 'js-yaml';
 
 export async function convertToFlatConfigGenerator(
   tree: Tree,
@@ -182,6 +181,7 @@ function convertConfigToFlatConfig(
   }
   if (source.endsWith('.yaml') || source.endsWith('.yml')) {
     const originalContent = tree.read(`${root}/${source}`, 'utf-8');
+    const { load } = require('@zkochan/js-yaml');
     const config = load(originalContent, {
       json: true,
       filename: source,

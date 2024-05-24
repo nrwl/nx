@@ -16,8 +16,8 @@ env:
 
 permissions: { }
 jobs:
-  if: ${{ github.repository_owner == 'nrwl' }}
   preinstall:
+    if: ${{ github.repository_owner == 'nrwl' }}
     runs-on: windows-latest
     strategy:
       matrix:
@@ -303,7 +303,7 @@ jobs:
           sudo: false # disable sudo for windows debugging
 
   process-result:
-    if: ${{ always() }}
+    if: ${{ always() && github.repository_owner == 'nrwl' }}
     runs-on: ubuntu-latest
     needs: e2e
     outputs:

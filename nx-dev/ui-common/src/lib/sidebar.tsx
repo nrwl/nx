@@ -1,9 +1,12 @@
 import { Dialog, Transition } from '@headlessui/react';
+import { XMarkIcon } from '@heroicons/react/24/outline';
+import { AlgoliaSearch } from '@nx/nx-dev/feature-search';
 import { Menu, MenuItem, MenuSection } from '@nx/nx-dev/models-menu';
 import cx from 'classnames';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { createRef, Fragment, useCallback, useEffect, useState } from 'react';
+import { NxIcon } from './nx-icon';
 
 export interface SidebarProps {
   menu: Menu;
@@ -11,6 +14,7 @@ export interface SidebarProps {
 export interface FloatingSidebarProps {
   menu: Menu;
   navIsOpen: boolean;
+  toggleNav: (open: boolean) => void;
 }
 
 export function Sidebar({ menu }: SidebarProps): JSX.Element {
@@ -92,7 +96,7 @@ function SidebarSectionItems({ item }: { item: MenuItem }): JSX.Element {
         data-testid={`section-h5:${item.id}`}
         className={cx(
           'flex py-2',
-          'text-sm font-semibold uppercase tracking-wide text-slate-800 dark:text-slate-200 lg:text-xs',
+          'text-sm font-semibold uppercase tracking-wide text-slate-800 lg:text-xs dark:text-slate-200',
           item.disableCollapsible ? 'cursor-text' : 'cursor-pointer'
         )}
         onClick={handleCollapseToggle}
@@ -109,7 +113,9 @@ function SidebarSectionItems({ item }: { item: MenuItem }): JSX.Element {
       </h5>
       <ul className={cx('mb-6 ml-3', collapsed ? 'hidden' : '')}>
         {(item.children as MenuItem[]).map((subItem, index) => {
-          const isActiveLink = subItem.path === withoutAnchors(router.asPath);
+          const isActiveLink = withoutAnchors(router.asPath).startsWith(
+            subItem.path
+          );
           if (isActiveLink && collapsed) {
             handleCollapseToggle();
           }
@@ -175,6 +181,7 @@ function CollapsibleIcon({
 export function SidebarMobile({
   menu,
   navIsOpen,
+  toggleNav,
 }: FloatingSidebarProps): JSX.Element {
   const router = useRouter();
   const isCI: boolean = router.asPath.startsWith('/ci');
@@ -193,12 +200,12 @@ export function SidebarMobile({
       { name: 'Launch Nx', href: '/launch-nx', current: false },
       {
         name: 'Contact',
-        href: 'https://nx.app/enterprise?utm_source=nx.dev&utm_medium=header-menu',
+        href: '/contact',
         current: false,
       },
       {
         name: 'Go to app',
-        href: 'https://nx.app/?utm_source=nx.dev&utm_medium=header-menu',
+        href: 'https://cloud.nx.app',
         current: false,
       },
     ],
@@ -235,7 +242,7 @@ export function SidebarMobile({
   return (
     <Transition.Root show={navIsOpen} as={Fragment}>
       <Dialog as="div" className="relative z-40" onClose={() => void 0}>
-        <div className="fixed inset-0 top-[57px] z-40 flex">
+        <div className="fixed inset-0 z-40 flex">
           <Transition.Child
             as={Fragment}
             enter="transition ease-in-out duration-300 transform"
@@ -245,58 +252,87 @@ export function SidebarMobile({
             leaveFrom="translate-x-0"
             leaveTo="-translate-x-full"
           >
-            <Dialog.Panel className="relative flex w-full flex-col overflow-y-auto bg-white p-4 dark:bg-slate-900">
-              {/*SECTIONS*/}
-              <div className="divide-y divide-slate-200">
-                <div className="grid w-full shrink-0 grid-cols-3 items-center justify-between">
-                  {sections.general.map((section) => (
-                    <Link
-                      key={section.name}
-                      href={section.href}
-                      className={cx(
-                        section.current
-                          ? 'text-blue-600 dark:text-sky-500'
-                          : 'hover:text-slate-900 dark:hover:text-sky-400',
-                        'whitespace-nowrap p-4 text-center text-sm font-medium'
-                      )}
-                      aria-current={section.current ? 'page' : undefined}
-                    >
-                      {section.name}
-                    </Link>
-                  ))}
+            <Dialog.Panel className="relative flex w-full flex-col overflow-y-auto bg-white dark:bg-slate-900">
+              {/*HEADER*/}
+              <div className="flex w-full items-center border-b border-slate-200 bg-slate-50 p-4 lg:hidden dark:border-slate-700 dark:bg-slate-800/60">
+                {/*CLOSE BUTTON*/}
+                <button
+                  type="button"
+                  className="flex focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500"
+                  onClick={() => toggleNav(!navIsOpen)}
+                >
+                  <span className="sr-only">Close sidebar</span>
+                  <XMarkIcon className="mr-3 h-6 w-6" />
+                </button>
+
+                {/*SEARCH*/}
+                <div className="mx-4 w-auto">
+                  <AlgoliaSearch />
                 </div>
-                <div className="grid w-full shrink-0 grid-cols-3 items-center justify-between">
-                  {sections.documentation.map((section) => (
-                    <Link
-                      key={section.name}
-                      href={section.href}
-                      className={cx(
-                        section.current
-                          ? 'text-blue-600 dark:text-sky-500'
-                          : 'hover:text-slate-900 dark:hover:text-sky-400',
-                        'whitespace-nowrap p-4 text-center text-sm font-medium'
-                      )}
-                      aria-current={section.current ? 'page' : undefined}
-                    >
-                      {section.name}
-                    </Link>
-                  ))}
+                {/*LOGO*/}
+                <div className="ml-auto flex items-center">
+                  <Link
+                    href="/"
+                    className="flex flex-grow items-center px-4 text-slate-900 lg:px-0 dark:text-white"
+                  >
+                    <span className="sr-only">Nx</span>
+                    <NxIcon aria-hidden="true" className="h-8 w-8" />
+                  </Link>
                 </div>
               </div>
-              {/*SIDEBAR*/}
-              <div data-testid="mobile-navigation-wrapper" className="mt-8">
-                <nav
-                  id="mobile-nav"
-                  data-testid="mobile-navigation"
-                  className="text-base lg:text-sm"
-                >
-                  {menu.sections.map((section, index) => (
-                    <SidebarSection
-                      key={section.id + '-' + index}
-                      section={section}
-                    />
-                  ))}
-                </nav>
+              <div className="p-4">
+                {/*SECTIONS*/}
+                <div className="mt-5 divide-y divide-slate-200">
+                  <div className="grid w-full shrink-0 grid-cols-3 items-center justify-between">
+                    {sections.general.map((section) => (
+                      <Link
+                        key={section.name}
+                        href={section.href}
+                        className={cx(
+                          section.current
+                            ? 'text-blue-600 dark:text-sky-500'
+                            : 'hover:text-slate-900 dark:hover:text-sky-400',
+                          'whitespace-nowrap p-4 text-center text-sm font-medium'
+                        )}
+                        aria-current={section.current ? 'page' : undefined}
+                      >
+                        {section.name}
+                      </Link>
+                    ))}
+                  </div>
+                  <div className="grid w-full shrink-0 grid-cols-3 items-center justify-between">
+                    {sections.documentation.map((section) => (
+                      <Link
+                        key={section.name}
+                        href={section.href}
+                        className={cx(
+                          section.current
+                            ? 'text-blue-600 dark:text-sky-500'
+                            : 'hover:text-slate-900 dark:hover:text-sky-400',
+                          'whitespace-nowrap p-4 text-center text-sm font-medium'
+                        )}
+                        aria-current={section.current ? 'page' : undefined}
+                      >
+                        {section.name}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+                {/*SIDEBAR*/}
+                <div data-testid="mobile-navigation-wrapper" className="mt-8">
+                  <nav
+                    id="mobile-nav"
+                    data-testid="mobile-navigation"
+                    className="text-base lg:text-sm"
+                  >
+                    {menu.sections.map((section, index) => (
+                      <SidebarSection
+                        key={section.id + '-' + index}
+                        section={section}
+                      />
+                    ))}
+                  </nav>
+                </div>
               </div>
             </Dialog.Panel>
           </Transition.Child>

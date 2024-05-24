@@ -124,6 +124,7 @@ export interface ProjectMetadata {
 }
 
 export interface TargetMetadata {
+  [k: string]: any;
   description?: string;
   technologies?: string[];
 }

@@ -38,8 +38,10 @@ import {
   AggregateProjectGraphError,
   CreateMetadataError,
   isAggregateProjectGraphError,
+  isWorkspaceValidityError,
   ProcessDependenciesError,
   ProcessProjectGraphError,
+  WorkspaceValidityError,
 } from './error-types';
 import {
   ConfigurationSourceMaps,
@@ -96,9 +98,22 @@ export async function buildProjectGraphUsingProjectFileMap(
     projects[project.name] = project;
   }
 
+  const errors: Array<
+    | CreateMetadataError
+    | ProcessDependenciesError
+    | ProcessProjectGraphError
+    | WorkspaceValidityError
+  > = [];
+
   const nxJson = readNxJson();
   const projectGraphVersion = '6.0';
-  assertWorkspaceValidity(projects, nxJson);
+  try {
+    assertWorkspaceValidity(projects, nxJson);
+  } catch (e) {
+    if (isWorkspaceValidityError(e)) {
+      errors.push(e);
+    }
+  }
   const packageJsonDeps = readCombinedDeps();
   const rootTsConfig = readRootTsConfig();
 
@@ -125,27 +140,44 @@ export async function buildProjectGraphUsingProjectFileMap(
     };
   }
 
-  const context = createContext(
-    projects,
-    nxJson,
-    externalNodes,
-    fileMap,
-    filesToProcess
-  );
-  let projectGraph = await buildProjectGraphUsingContext(
-    externalNodes,
-    context,
-    cachedFileData,
-    projectGraphVersion,
-    plugins,
-    sourceMap
-  );
-  const projectFileMapCache = createProjectFileMapCache(
-    nxJson,
-    packageJsonDeps,
-    fileMap,
-    rootTsConfig
-  );
+  let projectGraph: ProjectGraph;
+  let projectFileMapCache: FileMapCache;
+  try {
+    const context = createContext(
+      projects,
+      nxJson,
+      externalNodes,
+      fileMap,
+      filesToProcess
+    );
+    projectGraph = await buildProjectGraphUsingContext(
+      externalNodes,
+      context,
+      cachedFileData,
+      projectGraphVersion,
+      plugins,
+      sourceMap
+    );
+    projectFileMapCache = createProjectFileMapCache(
+      nxJson,
+      packageJsonDeps,
+      fileMap,
+      rootTsConfig
+    );
+  } catch (e) {
+    // we need to include the workspace validity errors in the final error
+    if (isAggregateProjectGraphError(e)) {
+      errors.push(...e.errors);
+      throw new AggregateProjectGraphError(errors, e.partialProjectGraph);
+    } else {
+      throw e;
+    }
+  }
+
+  if (errors.length > 0) {
+    throw new AggregateProjectGraphError(errors, projectGraph);
+  }
+
   return {
     projectGraph,
     projectFileMapCache,

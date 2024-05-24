@@ -603,10 +603,12 @@ function replaceJestConfig(tree: Tree, options: NormalizedSchema) {
   if (tree.exists(existingJestConfig)) {
     tree.delete(existingJestConfig);
   }
+  const jestPreset = findRootJestPreset(tree) ?? 'jest.presets.js';
 
   // replace with JS:SWC specific jest config
   generateFiles(tree, filesDir, options.projectRoot, {
     ext: options.js ? 'js' : 'ts',
+    jestPreset,
     js: !!options.js,
     project: options.name,
     offsetFromRoot: offsetFromRoot(options.projectRoot),
@@ -1011,6 +1013,14 @@ function logNxReleaseDocsInfo() {
   output.log({
     title: `📦 To learn how to publish this library, see https://nx.dev/core-features/manage-releases.`,
   });
+}
+
+function findRootJestPreset(tree: Tree): string | null {
+  const ext = ['js', 'cjs', 'mjs'].find((ext) =>
+    tree.exists(`jest.preset.${ext}`)
+  );
+
+  return ext ? `jest.preset.${ext}` : null;
 }
 
 export default libraryGenerator;

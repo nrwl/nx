@@ -69,6 +69,11 @@ describe('@nx/gradle/plugin', () => {
     expect(nodes.projects.proj).toMatchInlineSnapshot(`
       {
         "metadata": {
+          "targetGroups": {
+            "Test": [
+              "test",
+            ],
+          },
           "technologies": [
             "gradle",
           ],
@@ -77,7 +82,7 @@ describe('@nx/gradle/plugin', () => {
         "targets": {
           "test": {
             "cache": false,
-            "command": "../gradlew test",
+            "command": "./gradlew proj:test",
             "dependsOn": [
               "classes",
             ],
@@ -85,8 +90,10 @@ describe('@nx/gradle/plugin', () => {
               "default",
               "^production",
             ],
-            "options": {
-              "cwd": "proj",
+            "metadata": {
+              "technologies": [
+                "gradle",
+              ],
             },
             "outputs": undefined,
           },
@@ -124,6 +131,11 @@ describe('@nx/gradle/plugin', () => {
     expect(nodes.projects['nested/nested/proj']).toMatchInlineSnapshot(`
       {
         "metadata": {
+          "targetGroups": {
+            "Test": [
+              "test",
+            ],
+          },
           "technologies": [
             "gradle",
           ],
@@ -132,7 +144,7 @@ describe('@nx/gradle/plugin', () => {
         "targets": {
           "test": {
             "cache": false,
-            "command": "../../../gradlew test",
+            "command": "./gradlew proj:test",
             "dependsOn": [
               "classes",
             ],
@@ -140,8 +152,10 @@ describe('@nx/gradle/plugin', () => {
               "default",
               "^production",
             ],
-            "options": {
-              "cwd": "nested/nested/proj",
+            "metadata": {
+              "technologies": [
+                "gradle",
+              ],
             },
             "outputs": undefined,
           },

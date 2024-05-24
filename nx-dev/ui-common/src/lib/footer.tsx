@@ -5,18 +5,19 @@ import Link from 'next/link';
 export function Footer(): JSX.Element {
   const navigation = {
     solutions: [
+      { name: 'Nx Enterprise', href: '/enterprise' },
       { name: 'Nx', href: 'https://nx.dev' },
       { name: 'Nx Cloud', href: 'https://nx.app/?utm_source=nx.dev' },
     ],
     resources: [
-      { name: 'Blog', href: 'https://blog.nrwl.io/?utm_source=nx.dev' },
-      {
-        name: 'Youtube Channel',
-        href: 'https://youtube.com/@NxDevtools?utm_source=nx.dev',
-      },
+      { name: 'Blog', href: '/blog' },
       {
         name: 'Nx Playbook',
         href: 'https://nxplaybook.com/?utm_source=nx.dev',
+      },
+      {
+        name: 'Privacy Policy',
+        href: 'https://nx.app/privacy?utm_source=nx.dev',
       },
       {
         name: 'Brands & Guidelines',
@@ -155,7 +156,7 @@ export function Footer(): JSX.Element {
       </h2>
       <div className="mx-auto max-w-7xl px-4 pt-12 opacity-50 transition-opacity hover:opacity-100 sm:px-6 lg:px-8 lg:pt-16">
         <div className="xl:grid xl:grid-cols-3 xl:gap-8">
-          <div className="space-y-4 text-slate-700 dark:text-slate-300 xl:col-span-1">
+          <div className="space-y-4 text-slate-700 xl:col-span-1 dark:text-slate-300">
             <svg
               className="h-14 subpixel-antialiased"
               role="img"

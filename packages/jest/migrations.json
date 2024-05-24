@@ -1,23 +1,5 @@
 {
   "generators": {
-    "add-jest-inputs": {
-      "version": "15.0.0-beta.0",
-      "cli": "nx",
-      "description": "Stop hashing jest spec files and config files for build targets and dependent tasks",
-      "factory": "./src/migrations/update-15-0-0/add-jest-inputs"
-    },
-    "update-configs-jest-29": {
-      "version": "15.8.0-beta.0",
-      "cli": "nx",
-      "description": "Update jest configs to support jest 29 changes (https://jestjs.io/docs/upgrading-to-jest29)",
-      "factory": "./src/migrations/update-15-8-0/update-configs-jest-29"
-    },
-    "update-tests-jest-29": {
-      "version": "15.8.0-beta.0",
-      "cli": "nx",
-      "description": "Update jest test files to support jest 29 changes (https://jestjs.io/docs/upgrading-to-jest29)",
-      "factory": "./src/migrations/update-15-8-0/update-tests-jest-29"
-    },
     "update-16-0-0-add-nx-packages": {
       "cli": "nx",
       "version": "16.0.0-beta.1",
@@ -37,52 +19,6 @@
     }
   },
   "packageJsonUpdates": {
-    "15.0.1-beta.3": {
-      "version": "15.0.1-beta.3",
-      "packages": {
-        "jest-environment-jsdom": {
-          "version": "~28.1.1",
-          "addToPackageJson": "devDependencies"
-        }
-      }
-    },
-    "15.8.0": {
-      "version": "15.8.0-beta.0",
-      "packages": {
-        "jest": {
-          "version": "~29.4.1",
-          "alwaysAddToPackageJson": false
-        },
-        "@types/jest": {
-          "version": "~29.4.0",
-          "alwaysAddToPackageJson": false
-        },
-        "expect": {
-          "version": "~29.4.1",
-          "alwaysAddToPackageJson": false
-        },
-        "@jest/globals": {
-          "version": "~29.4.1",
-          "alwaysAddToPackageJson": false
-        },
-        "jest-jasmine2": {
-          "version": "~29.4.1",
-          "alwaysAddToPackageJson": false
-        },
-        "jest-environment-jsdom": {
-          "version": "~29.4.1",
-          "alwaysAddToPackageJson": false
-        },
-        "ts-jest": {
-          "version": "~29.0.5",
-          "alwaysAddToPackageJson": false
-        },
-        "babel-jest": {
-          "version": "~29.4.1",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
     "16.0.0": {
       "version": "16.0.0-beta.4",
       "packages": {

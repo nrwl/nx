@@ -4,7 +4,6 @@ import { Preset } from '../utils/presets';
 import { join } from 'path';
 
 export async function presetGenerator(tree: Tree, options: Schema) {
-  options = normalizeOptions(options);
   const presetTask = await createPreset(tree, options);
   return async () => {
     installPackagesTask(tree);
@@ -313,9 +312,4 @@ async function createPreset(tree: Tree, options: Schema) {
   } else {
     throw new Error(`Invalid preset ${options.preset}`);
   }
-}
-
-function normalizeOptions(options: Schema): Schema {
-  options.name = names(options.name).fileName;
-  return options;
 }

@@ -22,14 +22,6 @@ export async function ciWorkflowGenerator(tree: Tree, schema: Schema) {
   const ci = schema.ci;
 
   const nxJson: NxJsonConfiguration = readJson(tree, 'nx.json');
-  const nxCloudUsed =
-    nxJson.nxCloudAccessToken ??
-    Object.values(nxJson.tasksRunnerOptions ?? {}).find(
-      (r) => r.runner == '@nrwl/nx-cloud' || r.runner == 'nx-cloud'
-    );
-  if (!nxCloudUsed) {
-    throw new Error('This workspace is not connected to Nx Cloud.');
-  }
   if (ci === 'bitbucket-pipelines' && defaultBranchNeedsOriginPrefix(nxJson)) {
     writeJson(tree, 'nx.json', appendOriginPrefix(nxJson));
   }
@@ -46,6 +38,7 @@ interface Substitutes {
   packageManager: string;
   packageManagerInstall: string;
   packageManagerPrefix: string;
+  packageManagerPreInstallPrefix: string;
   nxCloudHost: string;
   hasE2E: boolean;
   tmpl: '';
@@ -56,11 +49,17 @@ function normalizeOptions(options: Schema, tree: Tree): Substitutes {
     options.name
   );
   const packageManager = detectPackageManager();
-  const { exec: packageManagerPrefix, ciInstall: packageManagerInstall } =
-    getPackageManagerCommand(packageManager);
+  const {
+    exec: packageManagerPrefix,
+    ciInstall: packageManagerInstall,
+    dlx: packageManagerPreInstallPrefix,
+  } = getPackageManagerCommand(packageManager);
 
-  const nxCloudUrl = getNxCloudUrl(readJson(tree, 'nx.json'));
-  const nxCloudHost = new URL(nxCloudUrl).host;
+  let nxCloudHost: string = 'nx.app';
+  try {
+    const nxCloudUrl = getNxCloudUrl(readJson(tree, 'nx.json'));
+    nxCloudHost = new URL(nxCloudUrl).host;
+  } catch {}
 
   const packageJson = readJson(tree, 'package.json');
   const allDependencies = {
@@ -77,6 +76,7 @@ function normalizeOptions(options: Schema, tree: Tree): Substitutes {
     packageManager,
     packageManagerInstall,
     packageManagerPrefix,
+    packageManagerPreInstallPrefix,
     mainBranch: deduceDefaultBase(),
     hasE2E,
     nxCloudHost,

@@ -106,7 +106,9 @@ export default async function (
   terminalOutput: string;
 }> {
   registerProcessListener();
-  await loadEnvVars(options.envFile);
+  if (process.env.NX_LOAD_DOT_ENV_FILES !== 'false') {
+    await loadEnvVars(options.envFile);
+  }
   const normalized = normalizeOptions(options);
 
   if (options.readyWhen && !options.parallel) {

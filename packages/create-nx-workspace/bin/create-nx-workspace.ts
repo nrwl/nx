@@ -196,14 +196,7 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
         throw error;
       });
     },
-    [
-      normalizeArgsMiddleware,
-      normalizeAndWarnOnDeprecatedPreset({
-        // TODO(v19): Remove Empty and Core presets
-        [Preset.Core]: Preset.NPM,
-        [Preset.Empty]: Preset.Apps,
-      }),
-    ] as yargs.MiddlewareFunction<{}>[]
+    [normalizeArgsMiddleware] as yargs.MiddlewareFunction<{}>[]
   )
   .help('help', chalk.dim`Show help`)
   .updateLocale(yargsDecorator)
@@ -246,28 +239,6 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
       title: `Successfully applied preset: ${parsedArgs.preset}`,
     });
   }
-}
-
-function normalizeAndWarnOnDeprecatedPreset(
-  deprecatedPresets: Partial<Record<Preset, Preset>>
-): (argv: yargs.Arguments<Arguments>) => Promise<void> {
-  return async (args: yargs.Arguments<Arguments>): Promise<void> => {
-    if (!args.preset) return;
-    if (deprecatedPresets[args.preset]) {
-      output.addVerticalSeparator();
-      output.note({
-        title: `The "${args.preset}" preset is deprecated.`,
-        bodyLines: [
-          `The "${
-            args.preset
-          }" preset will be removed in a future Nx release. Use the "${
-            deprecatedPresets[args.preset]
-          }" preset instead.`,
-        ],
-      });
-      args.preset = deprecatedPresets[args.preset] as Preset;
-    }
-  };
 }
 
 /**
