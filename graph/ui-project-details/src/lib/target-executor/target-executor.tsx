@@ -17,6 +17,10 @@ export function TargetExecutor({
   isCompact,
   link,
 }: TargetExecutorProps) {
+  if (script) {
+    return link ? <ExternalLink href={link}>{script}</ExternalLink> : script;
+  }
+
   if (commands) {
     if (isCompact) {
       return link ? (
@@ -40,7 +44,7 @@ export function TargetExecutor({
     );
   }
 
-  const displayText = command ?? script ?? executor ?? '';
+  const displayText = command ?? executor ?? '';
   return link ? (
     <ExternalLink href={link}>{displayText}</ExternalLink>
   ) : (
