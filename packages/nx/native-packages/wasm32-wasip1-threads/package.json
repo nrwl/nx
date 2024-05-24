@@ -1,5 +1,5 @@
 {
-  "name": "@nx/wasm32-wasi-preview1-threads",
+  "name": "@nx/wasm32-wasip1-threads",
   "version": "0.0.0",
   "license": "MIT",
   "repository": {

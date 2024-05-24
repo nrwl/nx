@@ -1,4 +1,4 @@
 {
-  "name": "wasm32-wasi-preview1-threads",
+  "name": "wasm32-wasip1-threads",
   "$schema": "../../../../node_modules/nx/schemas/project-schema.json"
 }
