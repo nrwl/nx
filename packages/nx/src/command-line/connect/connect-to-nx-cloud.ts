@@ -3,7 +3,7 @@ import { readNxJson } from '../../config/configuration';
 import { FsTree, flushChanges } from '../../generators/tree';
 import { connectToNxCloud } from '../../nx-cloud/generators/connect-to-nx-cloud/connect-to-nx-cloud';
 import { getGithubSlugOrNull } from '../../nx-cloud/utilities/git-info';
-import { isNxCloudUsed } from '../../utils/nx-cloud-utils';
+import { getNxCloudUrl, isNxCloudUsed } from '../../utils/nx-cloud-utils';
 import { runNxSync } from '../../utils/child-process';
 import { NxJsonConfiguration } from '../../config/nx-json';
 import { NxArgs } from '../../utils/command-line-utils';
@@ -53,40 +53,49 @@ export async function connectToNxCloudIfExplicitlyAsked(
 export async function connectToNxCloudCommand(): Promise<boolean> {
   const nxJson = readNxJson();
 
-  const githubSlug = getGithubSlugOrNull();
-
   if (isNxCloudUsed(nxJson)) {
-    const apiUrl =
-      process.env.NX_CLOUD_API ||
-      process.env.NRWL_API ||
-      `https://cloud.nx.app`;
-    let connectCloudUrl;
-    if (githubSlug) {
-      connectCloudUrl = `${apiUrl}/setup/connect-workspace/vcs?provider=GITHUB&selectedRepositoryName=${encodeURIComponent(
-        githubSlug
-      )}`;
-    } else if (
-      process.env.NX_CLOUD_ACCESS_TOKEN ||
-      !!nxJson.nxCloudAccessToken
-    ) {
-      const token =
-        process.env.NX_CLOUD_ACCESS_TOKEN || nxJson.nxCloudAccessToken;
-      connectCloudUrl = `https://cloud.nx.app/setup/connect-workspace/manual?accessToken=${token}`;
+    if (process.env.NX_NEW_CLOUD_ONBOARDING !== 'true') {
+      output.log({
+        title: '✔ This workspace already has Nx Cloud set up',
+        bodyLines: [
+          'If you have not done so already, connect your workspace to your Nx Cloud account:',
+          `- Login at ${getNxCloudUrl(nxJson)} to connect your repository`,
+        ],
+      });
     } else {
-      throw new Error(
-        `Unable to authenticate. Either define accessToken in nx.json or set the NX_CLOUD_ACCESS_TOKEN env variable.`
-      );
-    }
+      const githubSlug = getGithubSlugOrNull();
+      const apiUrl =
+        process.env.NX_CLOUD_API ||
+        process.env.NRWL_API ||
+        `https://cloud.nx.app`;
+      let connectCloudUrl;
+      if (githubSlug) {
+        connectCloudUrl = `${apiUrl}/setup/connect-workspace/vcs?provider=GITHUB&selectedRepositoryName=${encodeURIComponent(
+          githubSlug
+        )}`;
+      } else if (
+        process.env.NX_CLOUD_ACCESS_TOKEN ||
+        !!nxJson.nxCloudAccessToken
+      ) {
+        const token =
+          process.env.NX_CLOUD_ACCESS_TOKEN || nxJson.nxCloudAccessToken;
+        connectCloudUrl = `https://cloud.nx.app/setup/connect-workspace/manual?accessToken=${token}`;
+      } else {
+        throw new Error(
+          `Unable to authenticate. Either define accessToken in nx.json or set the NX_CLOUD_ACCESS_TOKEN env variable.`
+        );
+      }
 
-    output.log({
-      title: '✔ This workspace already has Nx Cloud set up',
-      bodyLines: [
-        'If you have not done so already, connect your workspace to your Nx Cloud account:',
-        `- Do so by going to the following URL: 
+      output.log({
+        title: '✔ This workspace already has Nx Cloud set up',
+        bodyLines: [
+          'If you have not done so already, connect your workspace to your Nx Cloud account:',
+          `- Connect with Nx Cloud at: 
       
         ${connectCloudUrl}`,
-      ],
-    });
+        ],
+      });
+    }
     return false;
   }
 
