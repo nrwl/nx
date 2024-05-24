@@ -136,11 +136,13 @@ export function buildTargetFromScript(
   };
 }
 
+let packageManagerCommand: PackageManagerCommands | undefined;
+
 export function readTargetsFromPackageJson(packageJson: PackageJson) {
   const { scripts, nx, private: isPrivate } = packageJson ?? {};
   const res: Record<string, TargetConfiguration> = {};
   const includedScripts = nx?.includedScripts || Object.keys(scripts ?? {});
-  const packageManagerCommand = getPackageManagerCommand();
+  packageManagerCommand ??= getPackageManagerCommand();
   for (const script of includedScripts) {
     res[script] = buildTargetFromScript(script, scripts, packageManagerCommand);
   }
