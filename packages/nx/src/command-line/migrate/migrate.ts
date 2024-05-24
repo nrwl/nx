@@ -1573,7 +1573,7 @@ function getStringifiedPackageJsonDeps(root: string): string {
   }
 }
 
-function commitChanges(commitMessage: string): string | null {
+export function commitChanges(commitMessage: string): string | null {
   try {
     execSync('git add -A', { encoding: 'utf8', stdio: 'pipe' });
     execSync('git commit --no-verify -F -', {
@@ -1588,7 +1588,7 @@ function commitChanges(commitMessage: string): string | null {
   return getLatestCommitSha();
 }
 
-function getLatestCommitSha(): string | null {
+export function getLatestCommitSha(): string | null {
   try {
     return execSync('git rev-parse HEAD', {
       encoding: 'utf8',
