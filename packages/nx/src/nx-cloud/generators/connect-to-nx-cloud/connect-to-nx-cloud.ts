@@ -7,6 +7,7 @@ import { NxJsonConfiguration } from '../../../config/nx-json';
 import { readNxJson, updateNxJson } from '../../../generators/utils/nx-json';
 import { formatChangedFilesWithPrettierIfAvailable } from '../../../generators/internal-utils/format-changed-files-with-prettier-if-available';
 import { getGithubSlugOrNull } from '../../utilities/git-info';
+import { commitNxConnectUpdates } from '../../utilities/git-commit';
 
 function printCloudConnectionDisabledMessage() {
   output.error({
@@ -73,7 +74,11 @@ async function createNxCloudWorkspace(
   return response.data;
 }
 
-function printSuccessMessage(url: string, token: string) {
+function printSuccessMessage(
+  url: string,
+  token: string,
+  installationSource: string
+) {
   let origin = 'https://nx.app';
   try {
     origin = new URL(url).origin;
@@ -91,14 +96,18 @@ function printSuccessMessage(url: string, token: string) {
   } else {
     connectCloudUrl = `https://cloud.nx.app/setup/connect-workspace/manual?accessToken=${token}`;
   }
+
+  commitNxConnectUpdates(connectCloudUrl, !!githubSlug, installationSource);
+
   output.note({
     title: `Your Nx Cloud workspace is public`,
     bodyLines: [
       `To restrict access, connect it to your Nx Cloud account:`,
       `- Push your changes`,
-      `- Go to the following URL to connect your workspace: 
-      
-      ${connectCloudUrl}`,
+      `- Create a pull request for the changes`,
+      `- Go to the following URL to connect your workspace (you can also find this URL in the body of your PR): 
+        
+        ${connectCloudUrl}`,
     ],
   });
 }
@@ -153,7 +162,7 @@ export async function connectToNxCloud(
       silent: schema.hideFormatLogs,
     });
 
-    return () => printSuccessMessage(r.url, r.token);
+    return () => printSuccessMessage(r.url, r.token, schema.installationSource);
   }
 }
 
