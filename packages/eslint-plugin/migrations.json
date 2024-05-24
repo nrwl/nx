@@ -11,6 +11,12 @@
       "version": "17.2.6-beta.1",
       "description": "Rename workspace rules from @nx/workspace/name to @nx/workspace-name",
       "implementation": "./src/migrations/update-17-2-6-rename-workspace-rules/rename-workspace-rules"
+    },
+    "update-19-1-0-rename-no-extra-semi": {
+      "cli": "nx",
+      "version": "19.1.0-beta.6",
+      "description": "Migrate no-extra-semi rules into user config, out of nx extendable configs",
+      "implementation": "./src/migrations/update-19-1-0-migrate-no-extra-semi/migrate-no-extra-semi"
     }
   },
   "packageJsonUpdates": {},

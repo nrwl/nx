@@ -40,8 +40,6 @@ export default {
      *
      * TODO(v20): re-evalute these deviations from @typescript-eslint/recommended in v20 of Nx
      */
-    'no-extra-semi': 'off',
-    '@typescript-eslint/no-extra-semi': 'error',
     '@typescript-eslint/no-non-null-assertion': 'warn',
     '@typescript-eslint/adjacent-overload-signatures': 'error',
     '@typescript-eslint/prefer-namespace-keyword': 'error',
