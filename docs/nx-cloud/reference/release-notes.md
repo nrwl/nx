@@ -17,7 +17,7 @@ After testing the improved task distribution algorithm (DTE v2) for the past few
 If you are using Nx Agents, this release will contain a breaking change to the workflow controller.
 Before upgrading to this version, you'll need to follow the new [Agents Guide](https://github.com/nrwl/nx-cloud-helm/blob/main/AGENTS-GUIDE.md) and deploy an instance of Valkey that your controller can connect to.
 
-The reason we need Valkey is that the workflow controller now persistently stores information about your workflows for up to 8 hours, and these changes will be persisted regardless of the availability of the workflow controller pod, making your in-progress workflows lot more resilient to rolling kubernetes updates, and will fix some previous issues with agent statuses not syncing to the UI. 
+The reason we need Valkey is that the workflow controller now persistently stores information about your workflows for up to 8 hours, and these changes will be persisted regardless of the availability of the workflow controller pod, making your in-progress workflows lot more resilient to rolling kubernetes updates, and will fix some previous issues with agent statuses not syncing to the UI.
 
 If you are not using Nx Agents, this does not affect you and you do not need to make any changes to your set-up.
 
