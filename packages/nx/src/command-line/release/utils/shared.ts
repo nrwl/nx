@@ -33,7 +33,11 @@ export type VersionData = Record<
      */
     newVersion: string | null;
     currentVersion: string;
-    dependentProjects: any[]; // TODO: investigate generic type for this once more ecosystems are explored
+    /**
+     * The list of projects which depend upon the current project.
+     * TODO: investigate generic type for this once more ecosystems are explored
+     */
+    dependentProjects: any[];
   }
 >;
 
@@ -246,11 +250,13 @@ export function createGitTagValues(
     }
     // For fixed groups we want one tag for the overall group
     const projectVersionData = versionData[releaseGroupProjectNames[0]]; // all at the same version, so we can just pick the first one
-    tags.push(
-      interpolate(releaseGroup.releaseTagPattern, {
-        version: projectVersionData.newVersion,
-      })
-    );
+    if (projectVersionData.newVersion !== null) {
+      tags.push(
+        interpolate(releaseGroup.releaseTagPattern, {
+          version: projectVersionData.newVersion,
+        })
+      );
+    }
   }
 
   return tags;

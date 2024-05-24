@@ -21,7 +21,9 @@ jest.mock('fs', () => {
   return {
     ...jest.requireActual<any>('fs'),
     existsSync: (p) =>
-      p.endsWith('yarn.lock') || p.endsWith('pnpm-lock.yaml')
+      p.endsWith('yarn.lock') ||
+      p.endsWith('pnpm-lock.yaml') ||
+      p.endsWith('bun.lockb')
         ? memFs.existsSync(p)
         : actualFs.existsSync(p),
   };
@@ -38,11 +40,13 @@ describe('CI Workflow generator', () => {
     vol.reset();
   });
 
-  ['npm', 'yarn', 'pnpm'].forEach((packageManager: PackageManager) => {
+  ['npm', 'yarn', 'pnpm', 'bun'].forEach((packageManager: PackageManager) => {
     describe(`with ${packageManager}`, () => {
       beforeEach(() => {
         let fileSys;
-        if (packageManager === 'yarn') {
+        if (packageManager === 'bun') {
+          fileSys = { 'bun.lockb': '' };
+        } else if (packageManager === 'yarn') {
           fileSys = { 'yarn.lock': '' };
         } else if (packageManager === 'pnpm') {
           fileSys = { 'pnpm-lock.yaml': '' };

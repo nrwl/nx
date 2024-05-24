@@ -44,7 +44,7 @@ export function loadPnpmHoistedDepsDefinition() {
 
   if (existsSync(fullPath)) {
     const content = readFileSync(fullPath, 'utf-8');
-    const { load } = require('js-yaml');
+    const { load } = require('@zkochan/js-yaml');
     return load(content)?.hoistedDependencies ?? {};
   } else {
     throw new Error(`Could not find ".modules.yaml" at "${fullPath}"`);
@@ -55,7 +55,7 @@ export function loadPnpmHoistedDepsDefinition() {
  * Parsing and mapping logic from pnpm lockfile `read` function
  */
 export function parseAndNormalizePnpmLockfile(content: string): Lockfile {
-  const { load } = require('js-yaml');
+  const { load } = require('@zkochan/js-yaml');
   return convertToLockfileObject(load(content));
 }
 
@@ -69,18 +69,15 @@ const LOCKFILE_YAML_FORMAT = {
 };
 
 const LOCKFILE_YAML_PRE9_FORMAT = {
-  blankLines: true,
+  ...LOCKFILE_YAML_FORMAT,
   lineWidth: 1000,
-  noCompatMode: true,
-  noRefs: true,
-  sortKeys: false,
 };
 
 /**
  * Mapping and writing logic from pnpm lockfile `write` function
  */
 export function stringifyToPnpmYaml(lockfile: Lockfile): string {
-  const { dump } = require('js-yaml');
+  const { dump } = require('@zkochan/js-yaml');
   const lockfileVersion = +lockfile.lockfileVersion;
   if (lockfileVersion >= 9) {
     const adaptedLockfile = convertToLockfileFile(lockfile, {
@@ -214,8 +211,8 @@ function convertProjectSnapshotToInlineSpecifiersFormat(
   const convertBlock = (block?: ResolvedDependencies) =>
     block != null
       ? convertResolvedDependenciesToInlineSpecifiersFormat(block, {
-          specifiers,
-        })
+        specifiers,
+      })
       : block;
   return {
     ...rest,
@@ -954,8 +951,8 @@ function dpParse(dependencyPath) {
   if (typeof dependencyPath !== 'string') {
     throw new TypeError(
       `Expected \`dependencyPath\` to be of type \`string\`, got \`${
-        // eslint-disable-next-line: strict-type-predicates
-        dependencyPath === null ? 'null' : typeof dependencyPath
+      // eslint-disable-next-line: strict-type-predicates
+      dependencyPath === null ? 'null' : typeof dependencyPath
       }\``
     );
   }

@@ -26,28 +26,25 @@ export interface StorybookPluginOptions {
 }
 
 const cachePath = join(projectGraphCacheDirectory, 'storybook.hash');
-const targetsCache = existsSync(cachePath) ? readTargetsCache() : {};
-
-const calculatedTargets: Record<
-  string,
-  Record<string, TargetConfiguration>
-> = {};
+const targetsCache = readTargetsCache();
 
 function readTargetsCache(): Record<
   string,
   Record<string, TargetConfiguration>
 > {
-  return readJsonFile(cachePath);
+  return existsSync(cachePath) ? readJsonFile(cachePath) : {};
 }
 
-function writeTargetsToCache(
-  targets: Record<string, Record<string, TargetConfiguration>>
-) {
-  writeJsonFile(cachePath, targets);
+function writeTargetsToCache() {
+  const oldCache = readTargetsCache();
+  writeJsonFile(cachePath, {
+    ...oldCache,
+    ...targetsCache,
+  });
 }
 
 export const createDependencies: CreateDependencies = () => {
-  writeTargetsToCache(calculatedTargets);
+  writeTargetsToCache();
   return [];
 };
 
@@ -81,23 +78,19 @@ export const createNodes: CreateNodes<StorybookPluginOptions> = [
 
     const projectName = buildProjectName(projectRoot, context.workspaceRoot);
 
-    const targets = targetsCache[hash]
-      ? targetsCache[hash]
-      : await buildStorybookTargets(
-          configFilePath,
-          projectRoot,
-          options,
-          context,
-          projectName
-        );
-
-    calculatedTargets[hash] = targets;
+    targetsCache[hash] ??= await buildStorybookTargets(
+      configFilePath,
+      projectRoot,
+      options,
+      context,
+      projectName
+    );
 
     const result = {
       projects: {
         [projectRoot]: {
           root: projectRoot,
-          targets,
+          targets: targetsCache[hash],
         },
       },
     };

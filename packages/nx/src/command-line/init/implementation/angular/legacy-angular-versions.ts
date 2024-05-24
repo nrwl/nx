@@ -19,9 +19,10 @@ import { connectExistingRepoToNxCloudPrompt } from '../../../connect/connect-to-
 // key is major Angular version and value is Nx version to use
 const nxAngularLegacyVersionMap: Record<number, string> = {
   14: '~17.0.0',
+  15: '~19.0.0',
 };
 // min major angular version supported in latest Nx
-const minMajorAngularVersionSupported = 15;
+const minMajorAngularVersionSupported = 16;
 // version when the Nx CLI changed from @nrwl/tao & @nrwl/cli to nx
 const versionWithConsolidatedPackages = '13.9.0';
 // version when packages were rescoped from @nrwl/* to @nx/*

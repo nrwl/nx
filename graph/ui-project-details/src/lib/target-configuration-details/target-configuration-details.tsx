@@ -3,21 +3,20 @@
 import type { TargetConfiguration } from '@nx/devkit';
 
 import { JsonCodeBlock } from '@nx/graph/ui-code-block';
-import { useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { useCallback, useContext, useEffect, useState } from 'react';
 import { SourceInfo } from '../source-info/source-info';
 import { FadingCollapsible } from './fading-collapsible';
 import { TargetConfigurationProperty } from './target-configuration-property';
 import { selectSourceInfo } from './target-configuration-details.util';
 import { CopyToClipboard } from '../copy-to-clipboard/copy-to-clipboard';
-import {
-  ExternalLink,
-  PropertyInfoTooltip,
-  Tooltip,
-} from '@nx/graph/ui-tooltips';
+import { PropertyInfoTooltip, Tooltip } from '@nx/graph/ui-tooltips';
 import { TooltipTriggerText } from './tooltip-trigger-text';
 import { Pill } from '../pill';
 import { TargetConfigurationDetailsHeader } from '../target-configuration-details-header/target-configuration-details-header';
 import { ExpandedTargetsContext } from '@nx/graph/shared';
+import { getDisplayHeaderFromTargetConfiguration } from '../utils/get-display-header-from-target-configuration';
+import { TargetExecutor } from '../target-executor/target-executor';
+import { TargetExecutorTitle } from '../target-executor/target-executor-title';
 
 interface TargetConfigurationDetailsProps {
   projectName: string;
@@ -71,36 +70,8 @@ export default function TargetConfigurationDetails({
     }
   }, [expandedTargets, targetName, collapsable]);
 
-  let executorLink: string | null = null;
-
-  // TODO: Handle this better because this will not work with labs
-  if (targetConfiguration.executor?.startsWith('@nx/')) {
-    const packageName = targetConfiguration.executor
-      .split('/')[1]
-      .split(':')[0];
-    const executorName = targetConfiguration.executor
-      .split('/')[1]
-      .split(':')[1];
-    executorLink = `https://nx.dev/nx-api/${packageName}/executors/${executorName}`;
-  } else if (targetConfiguration.executor === 'nx:run-commands') {
-    executorLink = `https://nx.dev/nx-api/nx/executors/run-commands`;
-  } else if (targetConfiguration.executor === 'nx:run-script') {
-    executorLink = `https://nx.dev/nx-api/nx/executors/run-script`;
-  }
-
-  const singleCommand =
-    targetConfiguration.executor === 'nx:run-commands'
-      ? targetConfiguration.command ?? targetConfiguration.options?.command
-      : null;
-  const options = useMemo(() => {
-    if (singleCommand) {
-      const { command, ...rest } = targetConfiguration.options;
-      return rest;
-    } else {
-      return targetConfiguration.options;
-    }
-  }, [targetConfiguration.options, singleCommand]);
-
+  const { link, options, script, ...displayHeader } =
+    getDisplayHeaderFromTargetConfiguration(targetConfiguration);
   const configurations = targetConfiguration.configurations;
 
   const shouldRenderOptions =
@@ -132,47 +103,29 @@ export default function TargetConfigurationDetails({
         <div className="p-4 text-base">
           <div className="group mb-4">
             <h4 className="mb-4">
-              {singleCommand ? (
-                <span className="font-medium">
-                  Command
-                  <span className="mb-1 ml-2 hidden group-hover:inline">
-                    <CopyToClipboard
-                      onCopy={() =>
-                        handleCopyClick(`"command": "${singleCommand}"`)
-                      }
-                    />
-                  </span>
-                </span>
-              ) : (
-                <Tooltip
-                  openAction="hover"
-                  content={(<PropertyInfoTooltip type="executors" />) as any}
-                >
-                  <span className="font-medium">
-                    <TooltipTriggerText>Executor</TooltipTriggerText>
-                  </span>
-                </Tooltip>
-              )}
+              <TargetExecutorTitle
+                {...displayHeader}
+                handleCopyClick={handleCopyClick}
+              />
             </h4>
             <p className="pl-5 font-mono">
-              {executorLink ? (
-                <span>
-                  <ExternalLink
-                    href={executorLink ?? 'https://nx.dev/nx-api'}
-                    text={
-                      singleCommand
-                        ? singleCommand
-                        : targetConfiguration.executor
-                    }
-                  />
-                </span>
-              ) : singleCommand ? (
-                singleCommand
-              ) : (
-                targetConfiguration.executor
-              )}
+              <TargetExecutor {...displayHeader} link={link} />
             </p>
           </div>
+
+          {script && (
+            <div className="group mb-4">
+              <h4 className="mb-4">
+                <TargetExecutorTitle
+                  script={script}
+                  handleCopyClick={handleCopyClick}
+                />
+              </h4>
+              <p className="pl-5 font-mono">
+                <TargetExecutor script={script} link={link} />
+              </p>
+            </div>
+          )}
 
           {targetConfiguration.inputs && (
             <div className="group">

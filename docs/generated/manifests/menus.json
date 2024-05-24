@@ -1384,7 +1384,7 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Deploying AWS lambda in Node.js",
+                "name": "Deploying AWS lambda in Node.js (deprecated)",
                 "path": "/recipes/node/node-aws-lambda",
                 "id": "node-aws-lambda",
                 "isExternal": false,
@@ -2615,7 +2615,7 @@
             "disableCollapsible": false
           },
           {
-            "name": "Deploying AWS lambda in Node.js",
+            "name": "Deploying AWS lambda in Node.js (deprecated)",
             "path": "/recipes/node/node-aws-lambda",
             "id": "node-aws-lambda",
             "isExternal": false,
@@ -2658,7 +2658,7 @@
         "disableCollapsible": false
       },
       {
-        "name": "Deploying AWS lambda in Node.js",
+        "name": "Deploying AWS lambda in Node.js (deprecated)",
         "path": "/recipes/node/node-aws-lambda",
         "id": "node-aws-lambda",
         "isExternal": false,
@@ -3580,7 +3580,7 @@
         "disableCollapsible": false
       },
       {
-        "name": "Troubleshooting",
+        "name": "Troubleshooting Nx Console Issues",
         "path": "/recipes/nx-console/console-troubleshooting",
         "id": "console-troubleshooting",
         "isExternal": false,
@@ -4464,6 +4464,14 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
+          },
+          {
+            "name": "Troubleshooting Nx Console Issues",
+            "path": "/recipes/nx-console/console-troubleshooting",
+            "id": "console-troubleshooting",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -4749,7 +4757,7 @@
           },
           {
             "name": "nx.json reference: inputs and namedInputs",
-            "path": "/reference/nx-json#inputs-&-namedinputs",
+            "path": "/reference/nx-json#inputs-namedinputs",
             "id": "nxjson-inputs",
             "isExternal": true,
             "children": [],
@@ -4757,7 +4765,7 @@
           },
           {
             "name": "Project Configuration reference: inputs and namedInputs",
-            "path": "/reference/project-configuration#inputs-&-namedinputs",
+            "path": "/reference/project-configuration#inputs-and-namedinputs",
             "id": "project-config-inputs",
             "isExternal": true,
             "children": [],
@@ -4808,7 +4816,7 @@
       },
       {
         "name": "nx.json reference: inputs and namedInputs",
-        "path": "/reference/nx-json#inputs-&-namedinputs",
+        "path": "/reference/nx-json#inputs-namedinputs",
         "id": "nxjson-inputs",
         "isExternal": true,
         "children": [],
@@ -4816,7 +4824,7 @@
       },
       {
         "name": "Project Configuration reference: inputs and namedInputs",
-        "path": "/reference/project-configuration#inputs-&-namedinputs",
+        "path": "/reference/project-configuration#inputs-and-namedinputs",
         "id": "project-config-inputs",
         "isExternal": true,
         "children": [],

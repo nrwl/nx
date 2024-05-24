@@ -24,12 +24,14 @@ export default function AuthorDetail({ author }: AuthorDetailProps) {
       <span className="text-balance">{author.name}</span>
       <a
         href={`https://twitter.com/${author.twitter}`}
+        target="_blank"
         aria-label={`Follow ${author.name} on X`}
       >
         <TwitterIcon aria-hidden="true" className="h-5 w-5" />
       </a>
       <a
         href={`https://github.com/${author.github}`}
+        target="_blank"
         aria-label={`View ${author.name}'s GitHub profile`}
       >
         <GithubIcon aria-hidden="true" className="h-5 w-5" />

@@ -48,6 +48,10 @@ describe('nx package.json workspaces plugin', () => {
             "targets": {
               "echo": {
                 "executor": "nx:run-script",
+                "metadata": {
+                  "runCommand": "npm run echo",
+                  "scriptContent": "echo root project",
+                },
                 "options": {
                   "script": "echo",
                 },
@@ -83,6 +87,10 @@ describe('nx package.json workspaces plugin', () => {
               },
               "test": {
                 "executor": "nx:run-script",
+                "metadata": {
+                  "runCommand": "npm run test",
+                  "scriptContent": "jest",
+                },
                 "options": {
                   "script": "test",
                 },
@@ -111,6 +119,10 @@ describe('nx package.json workspaces plugin', () => {
             "targets": {
               "build": {
                 "executor": "nx:run-script",
+                "metadata": {
+                  "runCommand": "npm run build",
+                  "scriptContent": "tsc",
+                },
                 "options": {
                   "script": "build",
                 },
@@ -127,6 +139,10 @@ describe('nx package.json workspaces plugin', () => {
               },
               "test": {
                 "executor": "nx:run-script",
+                "metadata": {
+                  "runCommand": "npm run test",
+                  "scriptContent": "jest",
+                },
                 "options": {
                   "script": "test",
                 },

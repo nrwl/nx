@@ -14,7 +14,9 @@
     "Node",
     "Swc",
     "Tsc",
-    "CLI"
+    "CLI",
+    "Front-end",
+    "Backend"
   ],
   "main": "src/index.js",
   "typings": "src/index.d.ts",

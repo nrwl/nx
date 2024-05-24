@@ -58,6 +58,10 @@ describe('nx project.json plugin', () => {
               },
               "test": {
                 "executor": "nx:run-script",
+                "metadata": {
+                  "runCommand": "npm run test",
+                  "scriptContent": "jest",
+                },
                 "options": {
                   "script": "test",
                 },
