@@ -1,3 +1,3 @@
-# `nx-win32-x64-msvc`
+# `@nx/wasm32-wasi-preview1-threads`
 
-This is the **x86_64-pc-windows-msvc** binary for `@nx/nx`
+This is the **wasm32-wasi-preview1-threads** binary for `@nx/nx`
