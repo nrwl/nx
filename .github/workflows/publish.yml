@@ -97,7 +97,8 @@ jobs:
             target: wasm32-wasi-preview1-threads
             build: |-
               set -e &&
-              pnpm --version &&
+              pnpm --version && 
+              rustup override set nightly-2024-04-18 &&
               pnpm exec napi build --release --platform -c packages/nx/package.json --manifest-path packages/nx/Cargo.toml --js ./index.js -o packages/nx/src/native --target wasm32-wasi-preview1-threads
               #              pnpm nx run-many --target=build-native -- --target=wasm32-wasi-preview1-threads
           - host: windows-latest
