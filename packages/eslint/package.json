@@ -31,7 +31,7 @@
   "generators": "./generators.json",
   "executors": "./executors.json",
   "peerDependencies": {
-    "js-yaml": "npm:@zkochan/js-yaml@0.0.7"
+    "@zkochan/js-yaml": "0.0.7"
   },
   "dependencies": {
     "@nx/devkit": "file:../devkit",
@@ -42,7 +42,7 @@
     "typescript": "~5.4.2"
   },
   "peerDependenciesMeta": {
-    "js-yaml": {
+    "@zkochan/js-yaml": {
       "optional": true
     }
   },
