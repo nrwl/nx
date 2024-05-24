@@ -443,9 +443,7 @@ function mapSnapshots(
         result[key] = snapshot;
       } else {
         snapshot['dev'] = false; // all dependencies are prod
-        if (lockfileVersion < 9) {
-          remapDependencies(snapshot);
-        }
+        remapDependencies(snapshot);
         if (snapshot.resolution?.['tarball']) {
           // tarballs are not prefixed with /
           result[key] = snapshot;

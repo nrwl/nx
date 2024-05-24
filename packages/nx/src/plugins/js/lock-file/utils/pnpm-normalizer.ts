@@ -211,8 +211,8 @@ function convertProjectSnapshotToInlineSpecifiersFormat(
   const convertBlock = (block?: ResolvedDependencies) =>
     block != null
       ? convertResolvedDependenciesToInlineSpecifiersFormat(block, {
-        specifiers,
-      })
+          specifiers,
+        })
       : block;
   return {
     ...rest,
@@ -951,8 +951,8 @@ function dpParse(dependencyPath) {
   if (typeof dependencyPath !== 'string') {
     throw new TypeError(
       `Expected \`dependencyPath\` to be of type \`string\`, got \`${
-      // eslint-disable-next-line: strict-type-predicates
-      dependencyPath === null ? 'null' : typeof dependencyPath
+        // eslint-disable-next-line: strict-type-predicates
+        dependencyPath === null ? 'null' : typeof dependencyPath
       }\``
     );
   }
