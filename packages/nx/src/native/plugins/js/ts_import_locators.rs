@@ -248,7 +248,7 @@ impl<'a> State<'a> {
                                     self.lexer
                                         .set_next_regexp(Some(self.current_token.span_lo()));
 
-                                    if let Some(_) = self.next() {
+                                    if self.next().is_some() {
                                         self.lexer.set_next_regexp(None);
                                     }
                                 }
@@ -378,7 +378,7 @@ fn find_specifier_in_import(state: &mut State) -> Option<(String, ImportType)> {
                             // Matches import type * from 'a';
                             Token::BinOp(op) if *op == BinOpToken::Mul => {}
                             // Matches import type Cat from 'a';
-                            Token::Word(word) if matches!(word, Ident(_)) => {}
+                            Token::Word(Ident(_)) => {}
                             _ => {
                                 return None;
                             }

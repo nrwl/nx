@@ -55,6 +55,11 @@ jobs:
           path: '**/node_modules'
           key: ${{ runner.os }}-modules-${{ matrix.node_version }}-${{ github.run_id }}
 
+      - name: Ensure Python setuptools Installed on Macos
+        if: ${{ matrix.os == 'macos-latest' }}
+        id: brew-install-python-setuptools
+        run: brew install python-setuptools
+
       - name: Install packages
         if: steps.cache-modules.outputs.cache-hit != 'true'
         run: pnpm install --frozen-lockfile
@@ -403,7 +408,7 @@ jobs:
         timeout-minutes: 15
 
   process-result:
-    if: ${{ always() }}
+    if: ${{ always() && github.repository_owner == 'nrwl' }}
     runs-on: ubuntu-latest
     needs: e2e
     outputs:

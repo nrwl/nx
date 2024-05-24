@@ -84,6 +84,8 @@ export interface WebpackExecutorOptions {
   stylePreprocessorOptions?: any;
   styles?: Array<ExtraEntryPointClass | string>;
   subresourceIntegrity?: boolean;
+  publicPath?: string;
+  rebaseRootRelative?: boolean;
 }
 
 export interface NormalizedWebpackExecutorOptions

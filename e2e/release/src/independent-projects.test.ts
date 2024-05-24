@@ -191,20 +191,16 @@ describe('nx release - independent projects', () => {
         {project-name} 🔍 Reading data for package "@proj/{project-name}" from {project-name}/package.json
         {project-name} 📄 Resolved the current version as 0.0.0 from {project-name}/package.json
         {project-name} 📄 Using the provided version specifier "999.9.9-package.3".
+        {project-name} ⚠️  Warning, the following packages depend on "{project-name}" but have been filtered out via --projects, and therefore will not be updated:
+        - {project-name}
+        => You can adjust this behavior by setting \`version.generatorOptions.updateDependents\` to "auto"
         {project-name} ✍️  New version 999.9.9-package.3 written to {project-name}/package.json
-        {project-name} ✍️  Applying new version 999.9.9-package.3 to 1 package which depends on {project-name}
 
 
         "name": "@proj/{project-name}",
         -   "version": "0.0.0",
         +   "version": "999.9.9-package.3",
         "scripts": {
-
-
-        "dependencies": {
-        -     "@proj/{project-name}": "0.0.0"
-        +     "@proj/{project-name}": "999.9.9-package.3"
-        }
 
 
         NX   Staging changed files with git

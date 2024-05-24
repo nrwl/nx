@@ -1,4 +1,4 @@
-import { Tree } from '@nx/devkit';
+import { Tree, offsetFromRoot } from '@nx/devkit';
 import { configurationGenerator } from '@nx/jest';
 
 export async function addJest(
@@ -19,7 +19,7 @@ export async function addJest(
     project: projectName,
     supportTsx: true,
     skipSerializers: true,
-    setupFile: 'none',
+    setupFile: 'react-native',
     compiler: 'babel',
     skipPackageJson,
     skipFormat: true,
@@ -34,7 +34,7 @@ export async function addJest(
     resolver: '@nx/jest/plugins/resolver',
     preset: 'jest-expo',
     moduleFileExtensions: ['ts', 'js', 'html', 'tsx', 'jsx'],
-    setupFilesAfterEnv: ['<rootDir>/test-setup.${js ? 'js' : 'ts'}'],
+    setupFilesAfterEnv: ['<rootDir>/src/test-setup.${js ? 'js' : 'ts'}'],
     moduleNameMapper: {
       '\\\\.svg$': '@nx/expo/plugins/jest/svg-mock'
     },
@@ -49,6 +49,9 @@ export async function addJest(
         'jest-expo/src/preset/assetFileTransformer.js'
       ),
     },
+    coverageDirectory: '${offsetFromRoot(
+      appProjectRoot
+    )}coverage/${appProjectRoot}'
   };`;
   host.write(configPath, content);
 

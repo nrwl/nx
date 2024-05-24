@@ -30,6 +30,11 @@
     "url": "https://nx-plugins.netlify.app/"
   },
   {
+    "name": "nx-serverless-cdk",
+    "description": "Create CDK applications and construct libraries. Test and debug infrastructure code and AWS Lambda functions locally.",
+    "url": "https://github.com/castleadmin/nx-plugins/tree/main/nx-serverless-cdk/plugin"
+  },
+  {
     "name": "@ago-dev/nx-aws-cdk-v2",
     "description": "An nx plugin for the aws-cdk v2.",
     "url": "https://github.com/adrian-goe/nx-aws-cdk-v2"
@@ -473,5 +478,10 @@
     "name": "@getlarge/nx-heroku",
     "description": "Plugin to deploy and promote Nx apps on Heroku",
     "url": "https://github.com/getlarge/nx-heroku"
+  },
+  {
+    "name": "@huge-nx/conventions",
+    "description": "Plugin to generate and manage Nx workspaces by adhering to established workspace conventions.",
+    "url": "https://github.com/jogelin/huge-nx"
   }
 ]

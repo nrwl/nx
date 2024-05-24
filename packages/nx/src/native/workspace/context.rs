@@ -194,7 +194,7 @@ impl WorkspaceContext {
         exclude: Option<Vec<String>>,
     ) -> napi::Result<String> {
         let files = &self.all_file_data();
-        let globbed_files = config_files::glob_files(&files, globs, exclude)?;
+        let globbed_files = config_files::glob_files(files, globs, exclude)?;
         Ok(hash(
             &globbed_files
                 .map(|file| file.hash.as_bytes())
@@ -302,6 +302,6 @@ impl WorkspaceContext {
 
     #[napi]
     pub fn get_files_in_directory(&self, directory: String) -> Vec<String> {
-        get_child_files(&directory, self.files_worker.get_files())
+        get_child_files(directory, self.files_worker.get_files())
     }
 }

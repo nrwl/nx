@@ -15,7 +15,7 @@ import { ConvertToFlatConfigGeneratorSchema } from './schema';
 import { lintProjectGenerator } from '../lint-project/lint-project';
 import { Linter } from '../utils/linter';
 import { eslintrcVersion } from '../../utils/versions';
-import { dump } from 'js-yaml';
+import { dump } from '@zkochan/js-yaml';
 
 describe('convert-to-flat-config generator', () => {
   let tree: Tree;
@@ -179,12 +179,16 @@ describe('convert-to-flat-config generator', () => {
         ...compat.config({ extends: ['plugin:@nx/typescript'] }).map((config) => ({
           ...config,
           files: ['**/*.ts', '**/*.tsx'],
-          rules: {},
+          rules: {
+            ...config.rules,
+          },
         })),
         ...compat.config({ extends: ['plugin:@nx/javascript'] }).map((config) => ({
           ...config,
           files: ['**/*.js', '**/*.jsx'],
-          rules: {},
+          rules: {
+            ...config.rules,
+          },
         })),
       ];
       "
@@ -424,12 +428,16 @@ describe('convert-to-flat-config generator', () => {
         ...compat.config({ extends: ['plugin:@nx/typescript'] }).map((config) => ({
           ...config,
           files: ['**/*.ts', '**/*.tsx'],
-          rules: {},
+          rules: {
+            ...config.rules,
+          },
         })),
         ...compat.config({ extends: ['plugin:@nx/javascript'] }).map((config) => ({
           ...config,
           files: ['**/*.js', '**/*.jsx'],
-          rules: {},
+          rules: {
+            ...config.rules,
+          },
         })),
       ];
       "
@@ -547,7 +555,7 @@ describe('convert-to-flat-config generator', () => {
         {
           files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
           rules: {},
-          languageSettings: {
+          languageOptions: {
             parserOptions: { project: ['apps/dx-assets-ui/tsconfig.*?.json'] },
           },
         },

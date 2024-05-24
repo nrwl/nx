@@ -19,13 +19,21 @@ pub(super) fn get_inputs<'a>(
     let project_node = project_graph
         .nodes
         .get(&task.target.project)
-        .expect("Task target should always have a project");
-    let named_inputs = get_named_inputs(nx_json, project_node);
+        .ok_or(anyhow::format_err!(
+            "Project {} not found in the project graph",
+            task.target.project
+        ))?;
+
     let target_data = project_node
         .targets
         .get(&task.target.target)
-        .expect("Task target should always have a target");
+        .ok_or(anyhow::format_err!(
+            "Project \"{}\" does not have a target \"{}\"",
+            task.target.project,
+            task.target.target
+        ))?;
 
+    let named_inputs = get_named_inputs(nx_json, project_node);
     let inputs: Option<Vec<Input>> = target_data
         .inputs
         .as_ref()

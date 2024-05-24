@@ -93,8 +93,11 @@ export async function releasePublish(
         projectGraph,
         nxJson,
         Array.from(releaseGroupToFilteredProjects.get(releaseGroup)),
-        shouldExcludeTaskDependencies,
-        isCLI
+        isCLI,
+        {
+          excludeTaskDependencies: shouldExcludeTaskDependencies,
+          loadDotEnvFiles: process.env.NX_LOAD_DOT_ENV_FILES !== 'false',
+        }
       );
       if (status !== 0) {
         overallExitStatus = status || 1;
@@ -113,8 +116,11 @@ export async function releasePublish(
       projectGraph,
       nxJson,
       releaseGroup.projects,
-      shouldExcludeTaskDependencies,
-      isCLI
+      isCLI,
+      {
+        excludeTaskDependencies: shouldExcludeTaskDependencies,
+        loadDotEnvFiles: process.env.NX_LOAD_DOT_ENV_FILES !== 'false',
+      }
     );
     if (status !== 0) {
       overallExitStatus = status || 1;
@@ -129,8 +135,11 @@ async function runPublishOnProjects(
   projectGraph: ProjectGraph,
   nxJson: NxJsonConfiguration,
   projectNames: string[],
-  shouldExcludeTaskDependencies: boolean,
-  isCLI: boolean
+  isCLI: boolean,
+  extraOptions: {
+    excludeTaskDependencies: boolean;
+    loadDotEnvFiles: boolean;
+  }
 ): Promise<number> {
   const projectsToRun: ProjectGraphProjectNode[] = projectNames.map(
     (projectName) => projectGraph.nodes[projectName]
@@ -214,14 +223,13 @@ async function runPublishOnProjects(
       targets: [requiredTargetName],
       outputStyle: 'static',
       ...(args as any),
+      // It is possible for workspaces to have circular dependencies between packages and still release them to a registry
+      nxIgnoreCycles: true,
     },
     overrides,
     null,
     {},
-    {
-      excludeTaskDependencies: shouldExcludeTaskDependencies,
-      loadDotEnvFiles: true,
-    }
+    extraOptions
   );
 
   if (status !== 0) {

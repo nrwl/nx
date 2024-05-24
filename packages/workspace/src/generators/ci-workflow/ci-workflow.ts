@@ -38,6 +38,7 @@ interface Substitutes {
   packageManager: string;
   packageManagerInstall: string;
   packageManagerPrefix: string;
+  packageManagerPreInstallPrefix: string;
   nxCloudHost: string;
   hasE2E: boolean;
   tmpl: '';
@@ -48,8 +49,11 @@ function normalizeOptions(options: Schema, tree: Tree): Substitutes {
     options.name
   );
   const packageManager = detectPackageManager();
-  const { exec: packageManagerPrefix, ciInstall: packageManagerInstall } =
-    getPackageManagerCommand(packageManager);
+  const {
+    exec: packageManagerPrefix,
+    ciInstall: packageManagerInstall,
+    dlx: packageManagerPreInstallPrefix,
+  } = getPackageManagerCommand(packageManager);
 
   let nxCloudHost: string = 'nx.app';
   try {
@@ -72,6 +76,7 @@ function normalizeOptions(options: Schema, tree: Tree): Substitutes {
     packageManager,
     packageManagerInstall,
     packageManagerPrefix,
+    packageManagerPreInstallPrefix,
     mainBranch: deduceDefaultBase(),
     hasE2E,
     nxCloudHost,

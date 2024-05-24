@@ -48,9 +48,14 @@ describe('React:CypressComponentTestConfiguration', () => {
   });
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace();
+
+    projectGraph = {
+      nodes: {},
+      dependencies: {},
+    };
   });
 
-  afterEach(() => {
+  afterAll(() => {
     jest.clearAllMocks();
   });
 
@@ -422,7 +427,7 @@ describe('React:CypressComponentTestConfiguration', () => {
     ).toBeFalsy();
   });
 
-  it('should not throw error when an invalid --build-target is provided', async () => {
+  it('should throw error when an invalid --build-target is provided', async () => {
     mockedAssertCypressVersion.mockReturnValue();
     await applicationGenerator(tree, {
       e2eTestRunner: 'none',
@@ -446,6 +451,7 @@ describe('React:CypressComponentTestConfiguration', () => {
     const appConfig = readProjectConfiguration(tree, 'my-app');
     appConfig.targets['build'].executor = 'something/else';
     updateProjectConfiguration(tree, 'my-app', appConfig);
+    jest.clearAllMocks();
     projectGraph = {
       nodes: {
         'my-app': {
@@ -465,13 +471,14 @@ describe('React:CypressComponentTestConfiguration', () => {
       },
       dependencies: {},
     };
-    await expect(async () => {
-      await cypressComponentConfigGenerator(tree, {
+
+    await expect(
+      cypressComponentConfigGenerator(tree, {
         project: 'some-lib',
         generateTests: true,
         buildTarget: 'my-app:build',
-      });
-    }).resolves;
+      })
+    ).rejects.toThrow();
     expect(require('@nx/devkit').createProjectGraphAsync).toHaveBeenCalledTimes(
       1
     );

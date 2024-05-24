@@ -386,7 +386,7 @@ export default defineConfig({
     setupFiles: ['test-setup.ts'],
     globals: true,
     cache: {
-      dir: '../node_modules/.vitest',
+      dir: '../node_modules/.vitest/test',
     },
     environment: 'jsdom',
     include: ['./tests/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
@@ -899,7 +899,7 @@ export default defineConfig({
     setupFiles: ['test-setup.ts'],
     globals: true,
     cache: {
-      dir: '../../node_modules/.vitest',
+      dir: '../../node_modules/.vitest/apps/test',
     },
     environment: 'jsdom',
     include: ['./tests/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
@@ -1206,7 +1206,7 @@ import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 
 export default defineConfig({
   root: __dirname,
-  cacheDir: './node_modules/.vite/.',
+  cacheDir: './node_modules/.vite/test',
 
   plugins: [react(), nxViteTsPaths()],
 
@@ -1219,7 +1219,7 @@ export default defineConfig({
     setupFiles: ['test-setup.ts'],
     globals: true,
     cache: {
-      dir: './node_modules/.vitest',
+      dir: './node_modules/.vitest/test',
     },
     environment: 'jsdom',
     include: ['./tests/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],

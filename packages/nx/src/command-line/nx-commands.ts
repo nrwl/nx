@@ -36,6 +36,10 @@ import { yargsWatchCommand } from './watch/command-object';
 import { yargsResetCommand } from './reset/command-object';
 import { yargsReleaseCommand } from './release/command-object';
 import { yargsAddCommand } from './add/command-object';
+import {
+  yargsPrintAffectedCommand,
+  yargsAffectedGraphCommand,
+} from './deprecated/command-objects';
 
 // Ensure that the output takes up the available width of the terminal.
 yargs.wrap(yargs.terminalWidth());
@@ -61,6 +65,7 @@ export const commandsObject = yargs
   .command(yargsAffectedE2ECommand)
   .command(yargsAffectedLintCommand)
   .command(yargsAffectedTestCommand)
+  .command(yargsAffectedGraphCommand)
   .command(yargsConnectCommand)
   .command(yargsDaemonCommand)
   .command(yargsDepGraphCommand)
@@ -73,6 +78,7 @@ export const commandsObject = yargs
   .command(yargsListCommand)
   .command(yargsMigrateCommand)
   .command(yargsNewCommand)
+  .command(yargsPrintAffectedCommand)
   .command(yargsReleaseCommand)
   .command(yargsRepairCommand)
   .command(yargsReportCommand)

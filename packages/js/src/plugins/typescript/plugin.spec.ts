@@ -2,6 +2,7 @@ import { type CreateNodesContext } from '@nx/devkit';
 import { minimatch } from 'minimatch';
 import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
 import { PLUGIN_NAME, TscPluginOptions, createNodes } from './plugin';
+import { setupWorkspaceContext } from 'nx/src/utils/workspace-context';
 
 describe(`Plugin: ${PLUGIN_NAME}`, () => {
   let context: CreateNodesContext;
@@ -30,7 +31,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
   });
 
   it('should create nodes for root tsconfig.json files', async () => {
-    applyFilesToTempFsAndContext(tempFs, context, {
+    await applyFilesToTempFsAndContext(tempFs, context, {
       'package.json': `{}`,
       'project.json': `{}`,
       'tsconfig.json': `{}`,
@@ -85,7 +86,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
   });
 
   it('should not create nodes when it is not a tsconfig.json file and there is no sibling tsconfig.json file', async () => {
-    applyFilesToTempFsAndContext(tempFs, context, {
+    await applyFilesToTempFsAndContext(tempFs, context, {
       'package.json': `{}`,
       'project.json': `{}`,
       'tsconfig.base.json': `{}`,
@@ -102,7 +103,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
   describe('typecheck target', () => {
     it('should create a node with a typecheck target for a project level tsconfig.json file by default (when there is a sibling package.json or project.json)', async () => {
       // Sibling package.json
-      applyFilesToTempFsAndContext(tempFs, context, {
+      await applyFilesToTempFsAndContext(tempFs, context, {
         'libs/my-lib/tsconfig.json': `{}`,
         'libs/my-lib/package.json': `{}`,
       });
@@ -140,7 +141,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       `);
 
       // Sibling project.json
-      applyFilesToTempFsAndContext(tempFs, context, {
+      await applyFilesToTempFsAndContext(tempFs, context, {
         'libs/my-lib/tsconfig.json': `{}`,
         'libs/my-lib/project.json': `{}`,
       });
@@ -178,7 +179,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       `);
 
       // Other tsconfigs present
-      applyFilesToTempFsAndContext(tempFs, context, {
+      await applyFilesToTempFsAndContext(tempFs, context, {
         'libs/my-lib/tsconfig.json': `{}`,
         'libs/my-lib/tsconfig.lib.json': `{}`,
         'libs/my-lib/tsconfig.build.json': `{}`,
@@ -221,7 +222,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
 
     it('should not create typecheck target for a project level tsconfig.json file if set to false in plugin options', async () => {
       // Sibling package.json
-      applyFilesToTempFsAndContext(tempFs, context, {
+      await applyFilesToTempFsAndContext(tempFs, context, {
         'libs/my-lib/tsconfig.json': `{}`,
         'libs/my-lib/package.json': `{}`,
       });
@@ -241,7 +242,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       `);
 
       // Sibling project.json
-      applyFilesToTempFsAndContext(tempFs, context, {
+      await applyFilesToTempFsAndContext(tempFs, context, {
         'libs/my-lib/tsconfig.json': `{}`,
         'libs/my-lib/project.json': `{}`,
       });
@@ -263,7 +264,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
 
     it('should not invoke tsc with `--emitDeclarationOnly` when `noEmit` is set in the tsconfig.json file', async () => {
       // set directly in tsconfig.json file
-      applyFilesToTempFsAndContext(tempFs, context, {
+      await applyFilesToTempFsAndContext(tempFs, context, {
         'libs/my-lib/tsconfig.json': JSON.stringify({
           compilerOptions: { noEmit: true },
         }),
@@ -303,7 +304,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       `);
 
       // set in extended tsconfig file
-      applyFilesToTempFsAndContext(tempFs, context, {
+      await applyFilesToTempFsAndContext(tempFs, context, {
         'tsconfig.base.json': JSON.stringify({
           compilerOptions: { noEmit: true },
         }),
@@ -347,7 +348,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
     });
 
     it('should not invoke tsc with `--emitDeclarationOnly` when `noEmit` is set in any of the referenced tsconfig.json files', async () => {
-      applyFilesToTempFsAndContext(tempFs, context, {
+      await applyFilesToTempFsAndContext(tempFs, context, {
         'libs/my-lib/tsconfig.json': JSON.stringify({
           files: [],
           references: [{ path: './tsconfig.lib.json' }],
@@ -393,7 +394,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
 
     describe('inputs', () => {
       it('should add the config file and the `include` and `exclude` patterns', async () => {
-        applyFilesToTempFsAndContext(tempFs, context, {
+        await applyFilesToTempFsAndContext(tempFs, context, {
           'libs/my-lib/tsconfig.json': JSON.stringify({
             include: ['src/**/*.ts'],
             exclude: ['src/**/foo.ts'],
@@ -437,7 +438,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       });
 
       it('should add extended config files', async () => {
-        applyFilesToTempFsAndContext(tempFs, context, {
+        await applyFilesToTempFsAndContext(tempFs, context, {
           'libs/my-lib/tsconfig.json': JSON.stringify({
             extends: '../../tsconfig.foo.json',
             include: ['src/**/*.ts'],
@@ -486,7 +487,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       });
 
       it('should add files from internal project references', async () => {
-        applyFilesToTempFsAndContext(tempFs, context, {
+        await applyFilesToTempFsAndContext(tempFs, context, {
           'libs/my-lib/tsconfig.json': JSON.stringify({
             include: ['src/**/*.ts'],
             exclude: ['src/**/*.spec.ts'], // should be ignored because a referenced internal project includes this same pattern
@@ -551,7 +552,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
 
       it('should only add exclude paths that are not part of other tsconfig files include paths', async () => {
         // exact match
-        applyFilesToTempFsAndContext(tempFs, context, {
+        await applyFilesToTempFsAndContext(tempFs, context, {
           'libs/my-lib/tsconfig.json': JSON.stringify({
             references: [
               { path: './tsconfig.lib.json' },
@@ -588,7 +589,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         `);
 
         // other file include pattern is a subset of exclude pattern
-        applyFilesToTempFsAndContext(tempFs, context, {
+        await applyFilesToTempFsAndContext(tempFs, context, {
           'libs/my-lib/tsconfig.json': JSON.stringify({
             references: [
               { path: './tsconfig.lib.json' },
@@ -624,7 +625,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         `);
 
         // exclude pattern is a subset of other file include pattern
-        applyFilesToTempFsAndContext(tempFs, context, {
+        await applyFilesToTempFsAndContext(tempFs, context, {
           'libs/my-lib/tsconfig.json': JSON.stringify({
             references: [
               { path: './tsconfig.lib.json' },
@@ -660,7 +661,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         `);
 
         // handles mismatches with leading `./`
-        applyFilesToTempFsAndContext(tempFs, context, {
+        await applyFilesToTempFsAndContext(tempFs, context, {
           'libs/my-lib/tsconfig.json': JSON.stringify({
             references: [
               { path: './tsconfig.lib.json' },
@@ -696,7 +697,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         `);
 
         // no matching pattern in the exclude list
-        applyFilesToTempFsAndContext(tempFs, context, {
+        await applyFilesToTempFsAndContext(tempFs, context, {
           'libs/my-lib/tsconfig.json': JSON.stringify({
             references: [
               { path: './tsconfig.lib.json' },
@@ -737,7 +738,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       });
 
       it('should fall back to named inputs when not using include', async () => {
-        applyFilesToTempFsAndContext(tempFs, context, {
+        await applyFilesToTempFsAndContext(tempFs, context, {
           'libs/my-lib/tsconfig.json': JSON.stringify({ files: ['main.ts'] }),
           'libs/my-lib/package.json': `{}`,
         });
@@ -792,7 +793,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
 
     describe('outputs', () => {
       it('should add the `outFile`', async () => {
-        applyFilesToTempFsAndContext(tempFs, context, {
+        await applyFilesToTempFsAndContext(tempFs, context, {
           'libs/my-lib/tsconfig.json': JSON.stringify({
             compilerOptions: { outFile: '../../dist/libs/my-lib/index.js' },
             files: ['main.ts'],
@@ -840,7 +841,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       });
 
       it('should add the `outDir`', async () => {
-        applyFilesToTempFsAndContext(tempFs, context, {
+        await applyFilesToTempFsAndContext(tempFs, context, {
           'libs/my-lib/tsconfig.json': JSON.stringify({
             compilerOptions: { outDir: '../../dist/libs/my-lib' },
             files: ['main.ts'],
@@ -884,7 +885,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       });
 
       it('should add the inline output files when `outDir` is not defined', async () => {
-        applyFilesToTempFsAndContext(tempFs, context, {
+        await applyFilesToTempFsAndContext(tempFs, context, {
           'libs/my-lib/tsconfig.json': JSON.stringify({
             files: ['main.ts'],
           }),
@@ -939,7 +940,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       });
 
       it('should collect outputs from all internal project references', async () => {
-        applyFilesToTempFsAndContext(tempFs, context, {
+        await applyFilesToTempFsAndContext(tempFs, context, {
           'libs/my-lib/tsconfig.json': JSON.stringify({
             files: [],
             references: [
@@ -1004,7 +1005,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
 
       it('should respect the "tsBuildInfoFile" option', async () => {
         // outFile
-        applyFilesToTempFsAndContext(tempFs, context, {
+        await applyFilesToTempFsAndContext(tempFs, context, {
           'libs/my-lib/tsconfig.json': JSON.stringify({
             compilerOptions: {
               outFile: '../../dist/libs/my-lib/index.js',
@@ -1054,7 +1055,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         `);
 
         // no outFile & no outDir
-        applyFilesToTempFsAndContext(tempFs, context, {
+        await applyFilesToTempFsAndContext(tempFs, context, {
           'libs/my-lib/tsconfig.json': JSON.stringify({
             compilerOptions: {
               tsBuildInfoFile: '../../dist/libs/my-lib/my-lib.tsbuildinfo',
@@ -1116,7 +1117,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
   describe('build target', () => {
     it('should not create a node with a build target for a project level tsconfig files by default', async () => {
       // Sibling package.json
-      applyFilesToTempFsAndContext(tempFs, context, {
+      await applyFilesToTempFsAndContext(tempFs, context, {
         'libs/my-lib/tsconfig.json': `{}`,
         'libs/my-lib/tsconfig.lib.json': `{}`,
         'libs/my-lib/tsconfig.build.json': `{}`,
@@ -1139,7 +1140,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       `);
 
       // Sibling project.json
-      applyFilesToTempFsAndContext(tempFs, context, {
+      await applyFilesToTempFsAndContext(tempFs, context, {
         'libs/my-lib/tsconfig.json': `{}`,
         'libs/my-lib/tsconfig.lib.json': `{}`,
         'libs/my-lib/tsconfig.build.json': `{}`,
@@ -1164,7 +1165,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
 
     it('should not create build target for a project level tsconfig.json file if set to false in plugin options', async () => {
       // Sibling package.json
-      applyFilesToTempFsAndContext(tempFs, context, {
+      await applyFilesToTempFsAndContext(tempFs, context, {
         'libs/my-lib/tsconfig.json': `{}`,
         'libs/my-lib/tsconfig.lib.json': `{}`,
         'libs/my-lib/tsconfig.build.json': `{}`,
@@ -1188,7 +1189,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       `);
 
       // Sibling project.json
-      applyFilesToTempFsAndContext(tempFs, context, {
+      await applyFilesToTempFsAndContext(tempFs, context, {
         'libs/my-lib/tsconfig.json': `{}`,
         'libs/my-lib/tsconfig.lib.json': `{}`,
         'libs/my-lib/tsconfig.build.json': `{}`,
@@ -1214,7 +1215,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
 
     it('should create a node with a build target when enabled, for a project level tsconfig.lib.json build file by default', async () => {
       // Sibling package.json
-      applyFilesToTempFsAndContext(tempFs, context, {
+      await applyFilesToTempFsAndContext(tempFs, context, {
         'libs/my-lib/tsconfig.json': `{}`,
         'libs/my-lib/tsconfig.lib.json': `{}`,
         'libs/my-lib/tsconfig.build.json': `{}`,
@@ -1259,7 +1260,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       `);
 
       // Sibling project.json
-      applyFilesToTempFsAndContext(tempFs, context, {
+      await applyFilesToTempFsAndContext(tempFs, context, {
         'libs/my-lib/tsconfig.json': `{}`,
         'libs/my-lib/tsconfig.lib.json': `{}`,
         'libs/my-lib/tsconfig.build.json': `{}`,
@@ -1306,7 +1307,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
 
     it('should create a node with a build target when enabled, using a custom configured target name', async () => {
       // Sibling package.json
-      applyFilesToTempFsAndContext(tempFs, context, {
+      await applyFilesToTempFsAndContext(tempFs, context, {
         'libs/my-lib/tsconfig.json': `{}`,
         'libs/my-lib/tsconfig.lib.json': `{}`,
         'libs/my-lib/tsconfig.build.json': `{}`,
@@ -1355,7 +1356,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
 
     it('should create a node with a build target when enabled, using a custom configured tsconfig file', async () => {
       // Sibling project.json
-      applyFilesToTempFsAndContext(tempFs, context, {
+      await applyFilesToTempFsAndContext(tempFs, context, {
         'libs/my-lib/tsconfig.json': `{}`,
         'libs/my-lib/tsconfig.lib.json': `{}`,
         'libs/my-lib/tsconfig.build.json': `{}`,
@@ -1404,7 +1405,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
 
     describe('inputs', () => {
       it('should add the config file and the `include` and `exclude` patterns', async () => {
-        applyFilesToTempFsAndContext(tempFs, context, {
+        await applyFilesToTempFsAndContext(tempFs, context, {
           'libs/my-lib/tsconfig.lib.json': JSON.stringify({
             include: ['src/**/*.ts'],
             exclude: ['src/**/*.spec.ts'],
@@ -1453,7 +1454,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       });
 
       it('should add extended config files', async () => {
-        applyFilesToTempFsAndContext(tempFs, context, {
+        await applyFilesToTempFsAndContext(tempFs, context, {
           'libs/my-lib/tsconfig.json': '{}',
           'libs/my-lib/tsconfig.lib.json': JSON.stringify({
             extends: '../../tsconfig.foo.json',
@@ -1507,7 +1508,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       });
 
       it('should add files from internal project references', async () => {
-        applyFilesToTempFsAndContext(tempFs, context, {
+        await applyFilesToTempFsAndContext(tempFs, context, {
           'libs/my-lib/tsconfig.json': '{}',
           'libs/my-lib/tsconfig.lib.json': JSON.stringify({
             include: ['src/**/*.ts'],
@@ -1571,7 +1572,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
 
       it('should only add exclude paths that are not part of other tsconfig files include paths', async () => {
         // exact match
-        applyFilesToTempFsAndContext(tempFs, context, {
+        await applyFilesToTempFsAndContext(tempFs, context, {
           'libs/my-lib/tsconfig.json': '{}',
           'libs/my-lib/tsconfig.lib.json': JSON.stringify({
             include: ['src/**/*.ts'],
@@ -1606,7 +1607,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         `);
 
         // other file include pattern is a subset of exclude pattern
-        applyFilesToTempFsAndContext(tempFs, context, {
+        await applyFilesToTempFsAndContext(tempFs, context, {
           'libs/my-lib/tsconfig.json': '{}',
           'libs/my-lib/tsconfig.lib.json': JSON.stringify({
             include: ['**/*.ts'],
@@ -1640,7 +1641,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         `);
 
         // exclude pattern is a subset of other file include pattern
-        applyFilesToTempFsAndContext(tempFs, context, {
+        await applyFilesToTempFsAndContext(tempFs, context, {
           'libs/my-lib/tsconfig.json': '{}',
           'libs/my-lib/tsconfig.lib.json': JSON.stringify({
             include: ['src/**/*.ts'],
@@ -1674,7 +1675,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         `);
 
         // handles mismatches with leading `./`
-        applyFilesToTempFsAndContext(tempFs, context, {
+        await applyFilesToTempFsAndContext(tempFs, context, {
           'libs/my-lib/tsconfig.json': '{}',
           'libs/my-lib/tsconfig.lib.json': JSON.stringify({
             include: ['src/**/*.ts'],
@@ -1708,7 +1709,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         `);
 
         // no matching pattern in the exclude list
-        applyFilesToTempFsAndContext(tempFs, context, {
+        await applyFilesToTempFsAndContext(tempFs, context, {
           'libs/my-lib/tsconfig.json': '{}',
           'libs/my-lib/tsconfig.lib.json': JSON.stringify({
             include: ['src/**/*.ts'],
@@ -1747,7 +1748,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       });
 
       it('should fall back to named inputs when not using include', async () => {
-        applyFilesToTempFsAndContext(tempFs, context, {
+        await applyFilesToTempFsAndContext(tempFs, context, {
           'libs/my-lib/tsconfig.lib.json': JSON.stringify({
             files: ['main.ts'],
           }),
@@ -1809,7 +1810,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
 
     describe('outputs', () => {
       it('should add the `outFile`', async () => {
-        applyFilesToTempFsAndContext(tempFs, context, {
+        await applyFilesToTempFsAndContext(tempFs, context, {
           'libs/my-lib/tsconfig.lib.json': JSON.stringify({
             compilerOptions: { outFile: '../../dist/libs/my-lib/index.js' },
             files: ['main.ts'],
@@ -1862,7 +1863,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       });
 
       it('should add the `outDir`', async () => {
-        applyFilesToTempFsAndContext(tempFs, context, {
+        await applyFilesToTempFsAndContext(tempFs, context, {
           'libs/my-lib/tsconfig.lib.json': JSON.stringify({
             compilerOptions: { outDir: '../../dist/libs/my-lib' },
             files: ['main.ts'],
@@ -1911,7 +1912,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       });
 
       it('should add the inline output files when `outDir` is not defined', async () => {
-        applyFilesToTempFsAndContext(tempFs, context, {
+        await applyFilesToTempFsAndContext(tempFs, context, {
           'libs/my-lib/tsconfig.lib.json': JSON.stringify({
             files: ['main.ts'],
           }),
@@ -1971,7 +1972,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       });
 
       it('should collect outputs from all internal project references', async () => {
-        applyFilesToTempFsAndContext(tempFs, context, {
+        await applyFilesToTempFsAndContext(tempFs, context, {
           'libs/my-lib/tsconfig.json': '{}',
           'libs/my-lib/tsconfig.lib.json': JSON.stringify({
             compilerOptions: { outFile: '../../dist/libs/my-lib/lib.js' },
@@ -2033,7 +2034,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
 
       it('should respect the "tsBuildInfoFile" option', async () => {
         // outFile
-        applyFilesToTempFsAndContext(tempFs, context, {
+        await applyFilesToTempFsAndContext(tempFs, context, {
           'libs/my-lib/tsconfig.json': '{}',
           'libs/my-lib/tsconfig.lib.json': JSON.stringify({
             compilerOptions: {
@@ -2088,7 +2089,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         `);
 
         // no outFile & no outDir
-        applyFilesToTempFsAndContext(tempFs, context, {
+        await applyFilesToTempFsAndContext(tempFs, context, {
           'libs/my-lib/tsconfig.json': '{}',
           'libs/my-lib/tsconfig.lib.json': JSON.stringify({
             compilerOptions: {
@@ -2153,16 +2154,17 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
   });
 });
 
-function applyFilesToTempFsAndContext(
+async function applyFilesToTempFsAndContext(
   tempFs: TempFs,
   context: CreateNodesContext,
   fileSys: Record<string, string>
 ) {
-  tempFs.createFilesSync(fileSys);
+  await tempFs.createFiles(fileSys);
   // @ts-expect-error update otherwise readonly property for testing
   context.configFiles = Object.keys(fileSys).filter((file) =>
     minimatch(file, createNodes[0], { dot: true })
   );
+  setupWorkspaceContext(tempFs.tempDir);
 }
 
 async function invokeCreateNodesOnMatchingFiles(

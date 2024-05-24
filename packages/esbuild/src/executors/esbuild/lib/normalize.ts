@@ -7,11 +7,14 @@ import {
 import { ExecutorContext, joinPathFragments, logger } from '@nx/devkit';
 import chalk = require('chalk');
 import * as esbuild from 'esbuild';
+import { readTsConfig } from '@nx/js';
 
 export function normalizeOptions(
   options: EsBuildExecutorOptions,
   context: ExecutorContext
 ): NormalizedEsBuildExecutorOptions {
+  const tsConfig = readTsConfig(options.tsConfig);
+
   // If we're not generating package.json file, then copy it as-is as an asset.
   const assets = options.generatePackageJson
     ? options.assets
@@ -38,6 +41,33 @@ export function normalizeOptions(
   }
 
   const thirdParty = !options.bundle ? false : options.thirdParty;
+
+  const { root: projectRoot } =
+    context.projectsConfigurations.projects[context.projectName];
+  const declarationRootDir = options.declarationRootDir
+    ? path.join(context.root, options.declarationRootDir)
+    : undefined;
+
+  // if option declaration is defined, then it takes precedence over the tsconfig option
+  const declaration =
+    options.declaration ??
+    (tsConfig.options.declaration || tsConfig.options.composite);
+
+  if (options.skipTypeCheck && declaration) {
+    logger.info(
+      chalk.yellow(
+        `Your build has conflicting options, ${chalk.bold(
+          'skipTypeCheck:true'
+        )} and ${chalk.bold(
+          'declaration:true'
+        )}. Your declarations won't be generated so we added an update ${chalk.bold(
+          'skipTypeCheck:false'
+        )}`
+      )
+    );
+  }
+
+  const skipTypeCheck = declaration ? false : options.skipTypeCheck;
 
   let userDefinedBuildOptions: esbuild.BuildOptions;
   if (options.esbuildConfig) {
@@ -67,6 +97,9 @@ export function normalizeOptions(
       ...rest,
       thirdParty,
       assets,
+      declaration,
+      declarationRootDir,
+      skipTypeCheck,
       userDefinedBuildOptions,
       external: options.external ?? [],
       singleEntry: false,
@@ -80,6 +113,9 @@ export function normalizeOptions(
       ...options,
       thirdParty,
       assets,
+      declaration,
+      declarationRootDir,
+      skipTypeCheck,
       userDefinedBuildOptions,
       external: options.external ?? [],
       singleEntry: true,

@@ -10,6 +10,7 @@ import {
   lt,
   lte,
   major,
+  parse,
   satisfies,
   valid,
 } from 'semver';
@@ -647,9 +648,9 @@ async function normalizeVersionWithTagCheck(
   version: string
 ): Promise<string> {
   // This doesn't seem like a valid version, lets check if its a tag on the registry.
-  if (version && !coerce(version)) {
+  if (version && !parse(version)) {
     try {
-      return packageRegistryView(pkg, version, 'version');
+      return resolvePackageVersionUsingRegistry(pkg, version);
     } catch {
       // fall through to old logic
     }
@@ -1053,6 +1054,10 @@ async function getPackageMigrationsUsingInstall(
     }
 
     result = { ...migrations, packageGroup, version: packageJson.version };
+  } catch (e) {
+    logger.warn(
+      `Unable to fetch migrations for ${packageName}@${packageVersion}: ${e.message}`
+    );
   } finally {
     await cleanup();
   }
@@ -1375,7 +1380,14 @@ export async function executeMigrations(
   shouldCreateCommits: boolean,
   commitPrefix: string
 ) {
-  const depsBeforeMigrations = getStringifiedPackageJsonDeps(root);
+  let initialDeps = getStringifiedPackageJsonDeps(root);
+  const installDepsIfChanged = () => {
+    const currentDeps = getStringifiedPackageJsonDeps(root);
+    if (initialDeps !== currentDeps) {
+      runInstall();
+    }
+    initialDeps = currentDeps;
+  };
 
   const migrationsWithNoChanges: typeof migrations = [];
   const sortedMigrations = migrations.sort((a, b) => {
@@ -1439,6 +1451,8 @@ export async function executeMigrations(
       }
 
       if (shouldCreateCommits) {
+        installDepsIfChanged();
+
         const commitMessage = `${commitPrefix}${m.name}`;
         try {
           const committedSha = commitChanges(commitMessage);
@@ -1467,10 +1481,10 @@ export async function executeMigrations(
     }
   }
 
-  const depsAfterMigrations = getStringifiedPackageJsonDeps(root);
-  if (depsBeforeMigrations !== depsAfterMigrations) {
-    runInstall();
+  if (!shouldCreateCommits) {
+    installDepsIfChanged();
   }
+
   return migrationsWithNoChanges;
 }
 

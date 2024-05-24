@@ -15,9 +15,11 @@ import {
   GeneratorCallback,
   joinPathFragments,
   logger,
+  readNxJson,
   runTasksInSerial,
   stripIndents,
   Tree,
+  updateNxJson,
 } from '@nx/devkit';
 
 import reactInitGenerator from '../init/init';
@@ -108,6 +110,20 @@ export async function applicationGeneratorInternal(
     skipFormat: true,
   });
   tasks.push(initTask);
+
+  if (!options.addPlugin) {
+    const nxJson = readNxJson(host);
+    nxJson.targetDefaults ??= {};
+    if (!Object.keys(nxJson.targetDefaults).includes('build')) {
+      nxJson.targetDefaults.build = {
+        cache: true,
+        dependsOn: ['^build'],
+      };
+    } else if (!nxJson.targetDefaults.build.dependsOn) {
+      nxJson.targetDefaults.build.dependsOn = ['^build'];
+    }
+    updateNxJson(host, nxJson);
+  }
 
   if (options.bundler === 'webpack') {
     const { webpackInitGenerator } = ensurePackage<

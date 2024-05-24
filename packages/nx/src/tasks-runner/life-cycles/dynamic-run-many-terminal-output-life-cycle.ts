@@ -490,7 +490,7 @@ function writeCompletedTaskResultLine(line: string) {
 function writeCommandOutputBlock(commandOutput: string) {
   commandOutput = commandOutput || '';
   commandOutput = commandOutput.trimStart();
-  const lines = commandOutput.split(EOL);
+  const lines = commandOutput.split(/\r?\n/);
   let totalTrailingEmptyLines = 0;
   for (let i = lines.length - 1; i >= 0; i--) {
     if (lines[i] !== '') {

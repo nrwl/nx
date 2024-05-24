@@ -2,7 +2,7 @@
 
 If you have an existing monorepo that uses Turborepo, switching to use Nx is a straight-forward process. After switching, you'll have cleaner CLI output, a better graph view and IDE support with the option to incorporate Nx plugins and take advantage of the features of an integrated repository. All this without increasing the complexity of your configuration files.
 
-For more details, read our [comparison of Nx and Turborepo](/concepts/more-concepts/turbo-and-nx)
+For more details, read our [comparison of Nx and Turborepo](/concepts/turbo-and-nx)
 
 ## Initialize Nx
 
@@ -100,23 +100,23 @@ Creating the equivalent configuration with Nx yields the following files:
 
 For each `turbo.json` configuration property, the equivalent Nx property is listed.
 
-| **Global Configuration:** |                                                                                                                                                        |
-| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `globalDependencies`      | add to the [`sharedGlobals` `namedInput`](/recipes/running-tasks/configure-inputs)                                                                     |
-| `globalEnv`               | add to the [`sharedGlobals` `namedInput`](/recipes/running-tasks/configure-inputs) as an [`env` input](/reference/project-configuration#env-variables) |
-| `globalPassThroughEnv`    | N/A. See [Defining Environment Variables](/recipes/tips-n-tricks/define-environment-variables)                                                         |
-| `globalDotEnv`            | add to the [`sharedGlobals` `namedInput`](/recipes/running-tasks/configure-inputs)                                                                     |
+| **Global Configuration:** |                                                                                                                                                 |
+| ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `globalDependencies`      | add to the [`sharedGlobals` `namedInput`](/recipes/running-tasks/configure-inputs)                                                              |
+| `globalEnv`               | add to the [`sharedGlobals` `namedInput`](/recipes/running-tasks/configure-inputs) as an [`env` input](/reference/inputs#environment-variables) |
+| `globalPassThroughEnv`    | N/A. See [Defining Environment Variables](/recipes/tips-n-tricks/define-environment-variables)                                                  |
+| `globalDotEnv`            | add to the [`sharedGlobals` `namedInput`](/recipes/running-tasks/configure-inputs)                                                              |
 
 | **Task Configuration:**         |                                                                                                |
 | ------------------------------- | ---------------------------------------------------------------------------------------------- |
 | `extends`                       | N/A. The project configurations will always extend the `targetDefaults` defined in `nx.json`.  |
 | `pipeline[task].dependsOn`      | [Same syntax](/reference/project-configuration#dependson).                                     |
-| `pipeline[task].dotEnv`         | Define [file `inputs`](/reference/project-configuration#filesets)                              |
-| `pipeline[task].env`            | Define [env `inputs`](/reference/project-configuration#env-variables)                          |
+| `pipeline[task].dotEnv`         | Define [file `inputs`](/reference/inputs#source-files)                                         |
+| `pipeline[task].env`            | Define [env `inputs`](/reference/inputs#environment-variables)                                 |
 | `pipeline[task].passThroughEnv` | N/A. See [Defining Environment Variables](/recipes/tips-n-tricks/define-environment-variables) |
 | `pipeline[task].outputs`        | [Same syntax](/reference/project-configuration#outputs).                                       |
 | `pipeline[task].cache`          | [Same syntax](/reference/project-configuration#cache)                                          |
-| `pipeline[task].inputs`         | [Same syntax](/reference/project-configuration#filesets).                                      |
+| `pipeline[task].inputs`         | [Same syntax](/reference/inputs#source-files).                                                 |
 | `pipeline[task].outputMode`     | Use the [`--output-style` command line flag](/nx-api/nx/documents/run-many#output-style)       |
 | `pipeline[task].persistent`     | N/A.                                                                                           |
 
@@ -125,7 +125,7 @@ For each `turbo.json` configuration property, the equivalent Nx property is list
 |                             |                                                                                                                                                                                       |
 | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `turbo run test lint build` | [`nx run-many -t test lint build`](/nx-api/nx/documents/run-many)                                                                                                                     |
-| `--cache-dir`               | Set in [`nx.json` under `cacheDirectory`](/reference/nx-json#cache-directory)                                                                                                         |
+| `--cache-dir`               | Set in [`nx.json` under `cacheDirectory`](/reference/nx-json#task-options)                                                                                                            |
 | `--concurrency`             | [`--parallel`](/nx-api/nx/documents/run-many#parallel)                                                                                                                                |
 | `--continue`                | [Use `--nx-bail`](/nx-api/nx/documents/run-many#nx-bail) with the inverse value                                                                                                       |
 | `--cwd`                     | Available when using the [`run-commands` executor](/nx-api/nx/executors/run-commands#cwd)                                                                                             |
@@ -139,11 +139,11 @@ For each `turbo.json` configuration property, the equivalent Nx property is list
 | `--ignore`                  | Use an [`.nxignore` file](/reference/nxignore) (or `.gitignore`)                                                                                                                      |
 | `--log-order`               | Use [`--output-style`](/nx-api/nx/documents/run-many#output-style)                                                                                                                    |
 | `--no-cache`                | Use [`--skip-nx-cache`](/nx-api/nx/documents/run-many#skip-nx-cache)                                                                                                                  |
-| `--no-daemon`               | Use [`NX_DAEMON=false` or set `useDaemonProcess: false`](/concepts/more-concepts/nx-daemon#turning-it-off) in `nx.json`                                                               |
+| `--no-daemon`               | Use [`NX_DAEMON=false` or set `useDaemonProcess: false`](/concepts/nx-daemon#turning-it-off) in `nx.json`                                                                             |
 | `--output-logs`             | Use [`--output-style`](/nx-api/nx/documents/run-many#output-style)                                                                                                                    |
 | `--only`                    | N/A                                                                                                                                                                                   |
 | `--parallel`                | N/A                                                                                                                                                                                   |
-| `--remote-only`             | N/A. Can [ignore the remote cache](/ci/features/remote-cache#skipping-cloud) with `--no-cloud`.                                                                                       |
+| `--remote-only`             | N/A. Can [ignore the remote cache](/ci/features/remote-cache#skipping-cloud-cache) with `--no-cloud`.                                                                                 |
 | `--summarize`               | N/A                                                                                                                                                                                   |
 | `--token`                   | Set the [Nx Cloud token in `nx.json`](/ci/recipes/security/access-tokens#setting-access-tokens) or as an environment variable (`NX_CLOUD_ACCESS_TOKEN`)                               |
 | `--team`                    | See `--token` for choosing a different Nx Cloud workspace. You can [use `--runner`](/nx-api/nx/documents/run-many#runner) to choose a different runner defined in the `nx.json` file. |

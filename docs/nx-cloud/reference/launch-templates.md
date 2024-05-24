@@ -5,7 +5,7 @@ Nx Cloud provides several pre-built launch templates for common use-cases. You c
 
 {% github-repository url="https://github.com/nrwl/nx-cloud-workflows/tree/main/launch-templates" title="Pre-Built Launch Templates" /%}
 
-## Getting Started
+## Getting Started with Custom Launch Templates
 
 The easiest way to create a new custom launch template is to modify one of the pre-built ones. To do that, create a file in the
 `.nx/workflows` folder and copy one of the [pre-built templates](https://github.com/nrwl/nx-cloud-workflows/blob/main/launch-templates/linux.yaml). You can name the file any way you want (e.g., `agents.yaml`) and customize the steps as needed.
@@ -125,7 +125,7 @@ launch-templates:
 
 When defined, specifies an existing step file to be used. **Cannot be used when `script` is also defined**
 
-You can find the [list of Nx Cloud reusable steps here](https://github.com/nrwl/nx-cloud-workflows/tree/main/workflow-steps).
+You can find the [list of Nx Cloud reusable steps here](https://github.com/nrwl/nx-cloud-workflows/tree/main/workflow-steps). If you cannot find a reusable step that suits your needs, [you can create your own custom steps](/ci/reference/custom-steps).
 
 ```yaml {% fileName=".nx/workflows/agents.yaml" %}
 launch-templates:
@@ -310,9 +310,23 @@ nx-cloud start-ci-run --distribute-on="4 my-linux-large-js"
 nx-cloud start-ci-run --distribute-on="4 my-linux-large-rust"
 ```
 
+## Validating Launch Templates
+
+{% callout type="note" title="Commit before Validation" %}
+Before Nx Cloud can validate your custom templates, you must first commit any changes to these templates to your source control repository. Running the validation command from a CI is the recommended approach.
+{% /callout %}
+After creating your custom launch template, it's recommended to validate it. This ensures that all necessary fields
+within the launch template and all respective inputs within each step are appropriately defined.
+
+To do this, run the `nx-cloud validate` command, with the path to the launch template:
+
+```shell
+nx-cloud validate --workflow-file=./.nx/workflows/agents.yaml
+```
+
 ## Pass Environment Variables to Agents
 
-If you need to send environment variables to agents, you can use the [--with-env-vars](/ci/reference/nx-cloud-cli#withenvvars) flag on the `nx-cloud start-ci-run` command. You can pass a specific list of environment variables like this:
+If you need to send environment variables to agents, you can use the [--with-env-vars](/ci/reference/nx-cloud-cli#withenvvars-nx-agents-only) flag on the `nx-cloud start-ci-run` command. You can pass a specific list of environment variables like this:
 
 ```
 nx-cloud start-ci-run --distribute-on="8 linux-medium-js" --with-env-vars="VAR1,VAR2"

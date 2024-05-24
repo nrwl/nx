@@ -6,9 +6,17 @@
   "implicitDependencies": ["cypress", "react"],
   "targets": {
     "e2e-ci--src/cypress.test.ts": {
+      "dependsOn": [
+        "nx:build-native",
+        "@nx/nx-source:populate-local-registry-storage"
+      ],
       "inputs": ["e2eInputs", "^production"]
     },
     "e2e-ci--src/cypress-legacy.test.ts": {
+      "dependsOn": [
+        "nx:build-native",
+        "@nx/nx-source:populate-local-registry-storage"
+      ],
       "inputs": ["e2eInputs", "^production"]
     }
   }

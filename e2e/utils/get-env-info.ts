@@ -23,7 +23,9 @@ export function getPublishedVersion(): string {
 }
 
 export function detectPackageManager(dir: string = ''): PackageManager {
-  return existsSync(join(dir, 'yarn.lock'))
+  return existsSync(join(dir, 'bun.lockb'))
+    ? 'bun'
+    : existsSync(join(dir, 'yarn.lock'))
     ? 'yarn'
     : existsSync(join(dir, 'pnpm-lock.yaml')) ||
       existsSync(join(dir, 'pnpm-workspace.yaml'))
@@ -64,8 +66,8 @@ export function isVerboseE2ERun() {
 
 export const e2eCwd = `${e2eRoot}/nx`;
 
-export function getSelectedPackageManager(): 'npm' | 'yarn' | 'pnpm' {
-  return (process.env.SELECTED_PM as 'npm' | 'yarn' | 'pnpm') || 'npm';
+export function getSelectedPackageManager(): 'npm' | 'yarn' | 'pnpm' | 'bun' {
+  return (process.env.SELECTED_PM as 'npm' | 'yarn' | 'pnpm' | 'bun') || 'npm';
 }
 
 export function getNpmMajorVersion(): string | undefined {
@@ -108,6 +110,7 @@ export const packageManagerLockFile = {
   npm: 'package-lock.json',
   yarn: 'yarn.lock',
   pnpm: 'pnpm-lock.yaml',
+  bun: 'bun.lockb',
 };
 
 export function ensureCypressInstallation() {

@@ -12,9 +12,12 @@ variables:
     <% if(packageManager == 'pnpm'){ %>
     - npm install --prefix=$HOME/.local -g pnpm@8
     <% } %>
+    <% if(packageManager == 'bun'){ %>
+    - npm install --prefix=$HOME/.local -g bun
+    <% } %>
     # Connect your workspace on <%= nxCloudHost %> and uncomment this to enable task distribution.
     # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "<% if(hasE2E){ %>e2e-ci<% } else { %>build<% } %>" targets have been requested
-    # - <%= packageManagerPrefix %> nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="<% if(hasE2E){ %>e2e-ci<% } else { %>build<% } %>"
+    # - <%= packageManagerPreInstallPrefix %> nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="<% if(hasE2E){ %>e2e-ci<% } else { %>build<% } %>"
 
     - <%= packageManagerInstall %>
     - NX_HEAD=$CI_COMMIT_SHA
@@ -22,4 +25,5 @@ variables:
 
     # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
     # - <%= packageManagerPrefix %> nx-cloud record -- echo Hello World
-    - <%= packageManagerPrefix %> nx affected --base=$NX_BASE --head=$NX_HEAD -t lint test build<% if(hasE2E){ %> e2e-ci<% } %>
+    - <%= packageManagerPrefix %> nx affected --base=$NX_BASE --head=$NX_HEAD -t lint test build<% if(hasE2E){ %>
+    - <%= packageManagerPrefix %> nx affected --base=$NX_BASE --head=$NX_HEAD --parallel 1 -t e2e-ci<% } %>

@@ -153,7 +153,7 @@ impl HashPlanner {
                                 anyhow::bail!("The externalDependency '{dep}' for '{project_name}:{target_name}' could not be found")
                             };
 
-                            external_deps.push(&external_node_name);
+                            external_deps.push(external_node_name);
                             external_deps.extend(&external_deps_map[&external_node_name]);
                         }
                     }

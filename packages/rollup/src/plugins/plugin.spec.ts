@@ -38,16 +38,7 @@ describe('@nx/rollup/plugin', () => {
         workspaceRoot: tempFs.tempDir,
         configFiles: [],
       };
-
-      tempFs.createFileSync('package.json', JSON.stringify({ name: 'mylib' }));
-      tempFs.createFileSync(
-        'src/index.js',
-        `export function main() { 
-      console.log("hello world");
-      }`
-      );
-
-      loadConfigFile.mockReturnValue({
+      const rollupConfigOptions = {
         options: [
           {
             output: {
@@ -57,7 +48,24 @@ describe('@nx/rollup/plugin', () => {
             },
           },
         ],
-      });
+      };
+
+      // This isn't JS, but all that really matters here
+      // is that the hash is different after updating the
+      // config file. The actual config read is mocked below.
+      tempFs.createFileSync(
+        'rollup.config.js',
+        JSON.stringify(rollupConfigOptions)
+      );
+      tempFs.createFileSync('package.json', JSON.stringify({ name: 'mylib' }));
+      tempFs.createFileSync(
+        'src/index.js',
+        `export function main() { 
+      console.log("hello world");
+      }`
+      );
+
+      loadConfigFile.mockReturnValue(rollupConfigOptions);
 
       process.chdir(tempFs.tempDir);
     });
@@ -97,18 +105,7 @@ describe('@nx/rollup/plugin', () => {
         workspaceRoot: tempFs.tempDir,
         configFiles: [],
       };
-
-      tempFs.createFileSync(
-        'mylib/package.json',
-        JSON.stringify({ name: 'mylib' })
-      );
-      tempFs.createFileSync(
-        'mylib/src/index.js',
-        `export function main() { 
-      console.log("hello world");
-      }`
-      );
-      loadConfigFile.mockReturnValue({
+      const rollupConfigOptions = {
         options: [
           {
             output: {
@@ -125,7 +122,25 @@ describe('@nx/rollup/plugin', () => {
             },
           },
         ],
-      });
+      };
+      // This isn't JS, but all that really matters here
+      // is that the hash is different after updating the
+      // config file. The actual config read is mocked below.
+      tempFs.createFileSync(
+        'mylib/rollup.config.js',
+        JSON.stringify(rollupConfigOptions)
+      );
+      tempFs.createFileSync(
+        'mylib/package.json',
+        JSON.stringify({ name: 'mylib' })
+      );
+      tempFs.createFileSync(
+        'mylib/src/index.js',
+        `export function main() { 
+      console.log("hello world");
+      }`
+      );
+      loadConfigFile.mockReturnValue(rollupConfigOptions);
 
       process.chdir(tempFs.tempDir);
     });

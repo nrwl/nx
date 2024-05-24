@@ -15,14 +15,19 @@ pipelines:
             - npm install --prefix=$HOME/.local -g pnpm@8
 
             <% } %>
+            <% if(packageManager == 'bun'){ %>
+            - npm install --prefix=$HOME/.local -g bun
+
+            <% } %>
             # Connect your workspace on <%= nxCloudHost %> and uncomment this to enable task distribution.
             # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "<% if(hasE2E){ %>e2e-ci<% } else { %>build<% } %>" targets have been requested
-            # - <%= packageManagerPrefix %> nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="<% if(hasE2E){ %>e2e-ci<% } else { %>build<% } %>"
+            # - <%= packageManagerPreInstallPrefix %> nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="<% if(hasE2E){ %>e2e-ci<% } else { %>build<% } %>"
 
             - <%= packageManagerInstall %>
 
             - <%= packageManagerPrefix %> nx-cloud record -- nx format:check
-            - <%= packageManagerPrefix %> nx affected -t lint test build<% if(hasE2E){ %> e2e-ci<% } %> --base=origin/<%= mainBranch %>
+            - <%= packageManagerPrefix %> nx affected --base=origin/<%= mainBranch %> -t lint test build<% if(hasE2E){ %>
+            - <%= packageManagerPrefix %> nx affected --base=origin/<%= mainBranch %> --parallel 1 -t e2e-ci<% } %>
 
   branches:
     main:
@@ -32,10 +37,13 @@ pipelines:
             - export NX_BRANCH=$BITBUCKET_BRANCH
             # Connect your workspace on <%= nxCloudHost %> and uncomment this to enable task distribution.
             # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "<% if(hasE2E){ %>e2e-ci<% } else { %>build<% } %>" targets have been requested
-            # - <%= packageManagerPrefix %> nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="<% if(hasE2E){ %>e2e-ci<% } else { %>build<% } %>"
+            # - <%= packageManagerPreInstallPrefix %> nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="<% if(hasE2E){ %>e2e-ci<% } else { %>build<% } %>"
 
             <% if(packageManager == 'pnpm'){ %>
             - npm install --prefix=$HOME/.local -g pnpm@8
+            <% } %>
+            <% if(packageManager == 'bun'){ %>
+            - npm install --prefix=$HOME/.local -g bun
             <% } %>
             - <%= packageManagerInstall %>
 

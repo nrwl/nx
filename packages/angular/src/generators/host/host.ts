@@ -13,6 +13,7 @@ import { setupMf } from '../setup-mf/setup-mf';
 import { updateSsrSetup } from './lib';
 import type { Schema } from './schema';
 import { addMfEnvToTargetDefaultInputs } from '../utils/add-mf-env-to-inputs';
+import { isValidVariable } from '@nx/js';
 
 export async function host(tree: Tree, options: Schema) {
   return await hostInternal(tree, {
@@ -29,6 +30,19 @@ export async function hostInternal(tree: Tree, schema: Schema) {
 
   const remotesToGenerate: string[] = [];
   const remotesToIntegrate: string[] = [];
+
+  // Check to see if remotes are provided and also check if --dynamic is provided
+  // if both are check that the remotes are valid names else throw an error.
+  if (options.dynamic && options.remotes?.length > 0) {
+    options.remotes.forEach((remote) => {
+      const isValidRemote = isValidVariable(remote);
+      if (!isValidRemote.isValid) {
+        throw new Error(
+          `Invalid remote name provided: ${remote}. ${isValidRemote.message}`
+        );
+      }
+    });
+  }
 
   if (options.remotes && options.remotes.length > 0) {
     options.remotes.forEach((remote) => {

@@ -1,3 +1,4 @@
+import { logger } from '../../utils/logger';
 import { Tree } from '../../generators/tree';
 import { getProjects } from '../../generators/utils/project-configuration';
 
@@ -59,13 +60,23 @@ function parseEnvFile(tree: Tree, envFilePath: string) {
   if (!tree.exists(envFilePath)) {
     return;
   }
+
   let envFileContent = tree.read(envFilePath, 'utf-8');
+  if (!envFileContent) {
+    // envFileContent is null if we fail to read the file for any reason
+    // e.g. the file is not utf-8 encoded
+    logger.info(
+      `Unable to update ${envFilePath}. Nx interpolates environment variables in the form of $VAR_NAME. To escape the dollar sign, use \\$VAR_NAME.`
+    );
+    return;
+  }
+
   envFileContent = envFileContent
     .split('\n')
     .map((line) => {
       line = line.trim();
 
-      if (!line.includes('$')) {
+      if (!line || !line.includes('$')) {
         return line;
       }
 

@@ -71,7 +71,7 @@ pub fn create_pseudo_terminal() -> napi::Result<PseudoTerminal> {
         let mut stdout = std::io::stdout();
         let mut buf = [0; 8 * 1024];
 
-        loop {
+        'read_loop: loop {
             if let Ok(len) = reader.read(&mut buf) {
                 if len == 0 {
                     break;
@@ -87,17 +87,32 @@ pub fn create_pseudo_terminal() -> napi::Result<PseudoTerminal> {
                         trace!("Prevented terminal escape sequence ESC[6n from being printed.");
                         content = content.replace("\x1B[6n", "");
                     }
-                    if stdout.write_all(content.as_bytes()).is_err() {
-                        break;
-                    } else {
-                        let _ = stdout.flush();
+                    let mut logged_interrupted_error = false;
+                    while let Err(e) = stdout.write_all(content.as_bytes()) {
+                        match e.kind() {
+                            std::io::ErrorKind::Interrupted => {
+                                if !logged_interrupted_error {
+                                    trace!("Interrupted error writing to stdout: {:?}", e);
+                                    logged_interrupted_error = true;
+                                }
+                                continue;
+                            }
+                            _ => {
+                                // We should figure out what to do for more error types as they appear.
+                                trace!("Error writing to stdout: {:?}", e);
+                                trace!("Error kind: {:?}", e.kind());
+                                break 'read_loop;
+                            }
+                        }
                     }
+                    let _ = stdout.flush();
                 }
             }
             if !running_clone.load(Ordering::SeqCst) {
                 printing_tx.send(()).ok();
             }
         }
+
         printing_tx.send(()).ok();
     });
     if std::io::stdout().is_tty() {
@@ -173,7 +188,7 @@ pub fn run_command(
                 let timeout = 500;
                 let a = Instant::now();
                 loop {
-                    if let Ok(_) = printing_rx.try_recv() {
+                    if printing_rx.try_recv().is_ok() {
                         break;
                     }
                     if a.elapsed().as_millis() > timeout {

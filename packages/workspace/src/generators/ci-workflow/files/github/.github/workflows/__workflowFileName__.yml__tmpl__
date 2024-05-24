@@ -22,19 +22,27 @@ jobs:
         with:
           version: 8
       <% } %>
+      <% if(packageManager == 'bun'){ %>
+      - uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+      <% } %>
 
       # Connect your workspace on <%= nxCloudHost %> and uncomment this to enable task distribution.
       # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "<% if(hasE2E){ %>e2e-ci<% } else { %>build<% } %>" targets have been requested
-      # - run: <%= packageManagerPrefix %> nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="<% if(hasE2E){ %>e2e-ci<% } else { %>build<% } %>"
+      # - run: <%= packageManagerPreInstallPrefix %> nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="<% if(hasE2E){ %>e2e-ci<% } else { %>build<% } %>"
 
+      <% if(packageManager != 'bun'){ %>
       # Cache node_modules
       - uses: actions/setup-node@v3
         with:
           node-version: 20
           cache: '<%= packageManager %>'
+       <% } %>
       - run: <%= packageManagerInstall %>
       - uses: nrwl/nx-set-shas@v4
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - run: <%= packageManagerPrefix %> nx-cloud record -- echo Hello World
-      - run: <%= packageManagerPrefix %> nx affected -t lint test build<% if(hasE2E){ %> e2e-ci<% } %>
+      - run: <%= packageManagerPrefix %> nx affected -t lint test build<% if(hasE2E){ %>
+      - run: <%= packageManagerPrefix %> nx affected --parallel 1 -t e2e-ci<% } %>

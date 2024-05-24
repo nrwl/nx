@@ -234,7 +234,7 @@ Typically, you want to set the base SHA not the most recent commit on the `main`
 - [Get last successful commit for Azure Pipelines](/ci/recipes/set-up/monorepo-ci-azure#get-the-commit-of-the-last-successful-build)
 - [Get last successful commit for GitHub Actions](/ci/recipes/set-up/monorepo-ci-github-actions#get-the-commit-of-the-last-successful-build)
 - [Get last successful commit for CircleCI](/ci/recipes/set-up/monorepo-ci-circle-ci#get-the-commit-of-the-last-successful-build)
-- [Get last successful commit for GitLab](/ci/recipes/set-up/monorepo-ci-gitlab#process-only-affected-projects-with-one-job-on-gitlab)
+- [Get last successful commit for GitLab](/ci/recipes/set-up/monorepo-ci-gitlab)
 - [Get last successful commit for Jenkins](/ci/recipes/set-up/monorepo-ci-jenkins#get-the-commit-of-the-last-successful-build)
 
 ## Ignoring Files from Affected Commands

@@ -54,7 +54,7 @@ module.exports = function (api: any, options: NxWebBabelPresetOptions = {}) {
         // All other options will fail in Jest since Node does not support some ES features
         // such as import syntax.
         isTest || process.env.NODE_ENV === 'test' || process.env.JEST_WORKER_ID
-          ? { targets: { node: 'current' }, loose: true }
+          ? { targets: { node: 'current' }, loose }
           : createBabelPresetEnvOptions(options.useBuiltIns, isModern, loose),
       ],
       [

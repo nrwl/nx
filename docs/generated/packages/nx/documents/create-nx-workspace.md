@@ -129,7 +129,7 @@ Do you want Nx Cloud to make your CI fast?
 
 Type: `string`
 
-Choices: [npm, pnpm, yarn]
+Choices: [bun, npm, pnpm, yarn]
 
 Default: `npm`
 

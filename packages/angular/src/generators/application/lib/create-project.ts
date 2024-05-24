@@ -1,4 +1,4 @@
-import { addProjectConfiguration, Tree } from '@nx/devkit';
+import { addProjectConfiguration, joinPathFragments, Tree } from '@nx/devkit';
 import type { AngularProjectConfiguration } from '../../../utils/types';
 import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
 import type { NormalizedSchema } from './normalized-schema';
@@ -64,12 +64,23 @@ export function createProject(tree: Tree, options: NormalizedSchema) {
           index: `${options.appProjectSourceRoot}/index.html`,
           [buildMainOptionName]: `${options.appProjectSourceRoot}/main.ts`,
           polyfills: ['zone.js'],
-          tsConfig: `${options.appProjectRoot}/tsconfig.app.json`,
+          tsConfig: joinPathFragments(
+            options.appProjectRoot,
+            'tsconfig.app.json'
+          ),
           inlineStyleLanguage,
-          assets: [
-            `${options.appProjectSourceRoot}/favicon.ico`,
-            `${options.appProjectSourceRoot}/assets`,
-          ],
+          assets:
+            angularMajorVersion >= 18
+              ? [
+                  {
+                    glob: '**/*',
+                    input: joinPathFragments(options.appProjectRoot, 'public'),
+                  },
+                ]
+              : [
+                  `${options.appProjectSourceRoot}/favicon.ico`,
+                  `${options.appProjectSourceRoot}/assets`,
+                ],
           styles: [`${options.appProjectSourceRoot}/styles.${options.style}`],
           scripts: [],
         },

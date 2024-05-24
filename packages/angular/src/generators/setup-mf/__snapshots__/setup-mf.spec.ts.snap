@@ -3,7 +3,7 @@
 exports[`Init MF --federationType=dynamic should create a host with the correct configurations 1`] = `
 "import { setRemoteDefinitions } from '@nx/angular/mf';
 
-fetch('/assets/module-federation.manifest.json')
+fetch('/module-federation.manifest.json')
   .then((res) => res.json())
   .then(definitions => setRemoteDefinitions(definitions))
   .then(() => import('./bootstrap').catch(err => console.error(err)));"
@@ -12,7 +12,7 @@ fetch('/assets/module-federation.manifest.json')
 exports[`Init MF --federationType=dynamic should create a host with the correct configurations when --typescriptConfiguration=true 1`] = `
 "import { setRemoteDefinitions } from '@nx/angular/mf';
 
-fetch('/assets/module-federation.manifest.json')
+fetch('/module-federation.manifest.json')
   .then((res) => res.json())
   .then(definitions => setRemoteDefinitions(definitions))
   .then(() => import('./bootstrap').catch(err => console.error(err)));"

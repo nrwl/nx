@@ -6,8 +6,10 @@ import {
   runCLI,
   runCommandUntil,
   uniq,
+  updateFile,
 } from '@nx/e2e/utils';
 import { ChildProcess } from 'child_process';
+import { names } from '@nx/devkit';
 
 const myApp = uniq('my-app');
 const myVueApp = uniq('my-vue-app');
@@ -47,7 +49,7 @@ describe('@nx/vite/plugin', () => {
       }, 200_000);
 
       it('should test application', () => {
-        const result = runCLI(`test ${myApp}`);
+        const result = runCLI(`test ${myApp} --watch=false`);
         expect(result).toContain('Successfully ran target test');
       }, 200_000);
     });
@@ -58,9 +60,82 @@ describe('@nx/vite/plugin', () => {
       }, 200_000);
 
       it('should test application', () => {
-        const result = runCLI(`test ${myVueApp}`);
+        const result = runCLI(`test ${myVueApp} --watch=false`);
         expect(result).toContain('Successfully ran target test');
       }, 200_000);
+    });
+
+    describe('should support buildable libraries', () => {
+      it('should build the library and application successfully', () => {
+        const myApp = uniq('myapp');
+        runCLI(
+          `generate @nx/react:app ${myApp} --bundler=vite --unitTestRunner=vitest`
+        );
+
+        const myBuildableLib = uniq('mybuildablelib');
+        runCLI(
+          `generate @nx/react:library ${myBuildableLib} --bundler=vite --unitTestRunner=vitest --buildable`
+        );
+
+        const exportedLibraryComponent = names(myBuildableLib).className;
+
+        updateFile(
+          `apps/${myApp}/src/app/App.tsx`,
+          `import NxWelcome from './nx-welcome';
+          import { ${exportedLibraryComponent} } from '@proj/${myBuildableLib}';
+          export function App() {
+            return (
+              <div>
+                <${exportedLibraryComponent} />
+                <NxWelcome title="viteib" />
+              </div>
+            );
+          }
+          export default App;`
+        );
+
+        updateFile(
+          `apps/${myApp}/vite.config.ts`,
+          `/// <reference types='vitest' />
+          import { defineConfig } from 'vite';
+          import react from '@vitejs/plugin-react';
+          import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+
+          export default defineConfig({
+            root: __dirname,
+            cacheDir: '../../node_modules/.vite/${myApp}',
+          
+            server: {
+              port: 4200,
+              host: 'localhost',
+            },
+          
+            preview: {
+              port: 4300,
+              host: 'localhost',
+            },
+          
+            plugins: [react(), nxViteTsPaths({buildLibsFromSource: false})],
+          
+            build: {
+              outDir: '../../dist/${myApp}',
+              emptyOutDir: true,
+              reportCompressedSize: true,
+              commonjsOptions: {
+                transformMixedEsModules: true,
+              },
+            },
+          });`
+        );
+
+        const result = runCLI(`build ${myApp}`);
+        expect(result).toContain(
+          `Running target build for project ${myApp} and 1 task it depends on`
+        );
+        expect(result).toContain(
+          `Successfully ran target build for project ${myApp} and 1 task it depends on`
+        );
+      });
     });
 
     it('should run serve-static', async () => {

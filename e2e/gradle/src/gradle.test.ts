@@ -97,7 +97,7 @@ function createGradleProject(
   projectName: string,
   type: 'kotlin' | 'groovy' = 'kotlin'
 ) {
-  e2eConsoleLogger(`Using java version: ${execSync('java --version')}`);
+  e2eConsoleLogger(`Using java version: ${execSync('java -version')}`);
   const gradleCommand = isWindows()
     ? resolve(`${__dirname}/../gradlew.bat`)
     : resolve(`${__dirname}/../gradlew`);
