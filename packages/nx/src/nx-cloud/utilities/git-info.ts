@@ -5,9 +5,11 @@ export function getGithubSlugOrNull(): string | null {
   return extractUserAndRepoFromGitHubUrl(gitRemote);
 }
 
-function extractUserAndRepoFromGitHubUrl(gitRemotes: string): string | null {
+export function extractUserAndRepoFromGitHubUrl(
+  gitRemotes: string
+): string | null {
   const regex =
-    /^(\w+)\s+(git@github\.com:|https:\/\/github\.com\/)([A-Za-z0-9_.-]+)\/([A-Za-z0-9_.-]+)\.git/gm;
+    /^\s*(\w+)\s+(git@github\.com:|https:\/\/github\.com\/)([A-Za-z0-9_.-]+)\/([A-Za-z0-9_.-]+)\.git/gm;
   let firstGitHubUrl: string | null = null;
   let match;
 
