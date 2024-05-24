@@ -1,5 +1,36 @@
 # Enterprise Release Notes
 
+### 2405.02.15
+
+##### Easy membership management via GitHub
+
+A few months ago, we introduced a new feature to our managed SASS NxCloud product: easy membership management via GitHub. If you create a new workspace on [https://cloud.nx.app/](https://cloud.nx.app/) right now you will be guided through how to connect it to your GitHub repository. Now everyone that has access to your GitHub repository will also get access to your NxCloud workspace. If anyone loses access to GitHub (maybe they leave the company), they will also lose access to NxCloud. This makes membership management easy and straightforward, as you don't have to manually invite users anymore. Of course, setting up this connection also gives you NxCloud run status updates directly on your PRs - a feature we've had for a long time.
+
+This feature has now been release for on-prem set-ups as well. To benefit from it, you'll need to create your own Github App with permissions to access your repository. Your on-prem NxCloud instance will then use this app to pull membership info from Github and check users permissions. You can find the full setup instructions here.
+
+##### DTE v2 enabled by default
+
+After testing the improved task distribution algorithm (DTE v2) for the past few months, we are now enabling it by default for all customers. Expect quicker CI run times when using DTE, and better utilization of your agents with less idle time.
+
+##### Nx Agents and breaking changes
+
+If you are using Nx Agents, this release will contain a breaking change to the workflow controller.
+Before upgrading to this version, you'll need to follow the new [Agents Guide](https://github.com/nrwl/nx-cloud-helm/blob/main/AGENTS-GUIDE.md) and deploy an instance of Valkey that your controller can connect to.
+
+The reason we need Valkey is that the workflow controller now persistently stores information about your workflows for up to 8 hours, and these changes will be persisted regardless of the availability of the workflow controller pod, making your in-progress workflows lot more resilient to rolling kubernetes updates, and will fix some previous issues with agent statuses not syncing to the UI. 
+
+If you are not using Nx Agents, this does not affect you and you do not need to make any changes to your set-up.
+
+##### UI improvements
+
+- If you are using the new Crystal plugins in Nx 18, we've now added a "technologies label" to each task, so you can quickly see which tasks are Playwright based, Cypress, React etc.
+- We've added toast notifications in the app. You'll see them confirming some of your actions, such as saving workspace changes.
+
+##### Misc fixes
+
+- We've fixed various bugs around the task distribution algorithm and Nx Agents. CIPEs using distribution should feel more stable and faster.
+- We fixed a few issues relating to the GitLab and BitBucket integrations.
+
 ### 2404.05.9
 
 ##### DTE Algorithm V2 Experimental Flag
