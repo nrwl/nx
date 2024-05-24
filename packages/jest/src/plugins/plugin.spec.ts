@@ -8,9 +8,11 @@ describe('@nx/jest/plugin', () => {
   let createNodesFunction = createNodes[1];
   let context: CreateNodesContext;
   let tempFs: TempFs;
+  let cwd: string;
 
   beforeEach(async () => {
     tempFs = new TempFs('test');
+    cwd = process.cwd();
     process.chdir(tempFs.tempDir);
     context = {
       nxJsonConfiguration: {
@@ -31,8 +33,11 @@ describe('@nx/jest/plugin', () => {
     });
   });
 
+  test('foo', () => {});
+
   afterEach(() => {
     jest.resetModules();
+    process.chdir(cwd);
   });
 
   it('should create nodes based on jest.config.ts', async () => {

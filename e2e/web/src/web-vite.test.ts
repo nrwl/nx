@@ -36,7 +36,7 @@ describe('Web Components Applications with bundler set as vite', () => {
 
     if (isNotWindows() && runE2ETests()) {
       const e2eResults = runCLI(`e2e ${appName}-e2e`);
-      expect(e2eResults).toContain('All specs passed!');
+      expect(e2eResults).toContain('Successfully ran target e2e for project');
       await killPorts();
     }
   }, 500000);

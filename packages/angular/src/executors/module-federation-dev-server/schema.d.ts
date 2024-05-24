@@ -16,7 +16,13 @@ interface BaseSchema {
   hmr?: boolean;
   watch?: boolean;
   poll?: number;
-  devRemotes?: string[];
+  devRemotes?: (
+    | string
+    | {
+        remoteName: string;
+        configuration: string;
+      }
+  )[];
   skipRemotes?: string[];
   pathToManifestFile?: string;
   static?: boolean;

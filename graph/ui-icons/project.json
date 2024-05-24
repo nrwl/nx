@@ -1,0 +1,54 @@
+{
+  "name": "graph-ui-icons",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "graph/ui-icons/src",
+  "projectType": "library",
+  "tags": [],
+  "// targets": "to see all targets run: nx show project ui-icons --web",
+  "targets": {
+    "lint": {},
+    "storybook": {
+      "executor": "@nx/storybook:storybook",
+      "options": {
+        "port": 4400,
+        "configDir": "graph/ui-icons/.storybook"
+      },
+      "configurations": {
+        "ci": {
+          "quiet": true
+        }
+      }
+    },
+    "build-storybook": {
+      "executor": "@nx/storybook:build",
+      "outputs": ["{options.outputDir}"],
+      "options": {
+        "outputDir": "dist/storybook/graph-ui-icons",
+        "configDir": "graph/ui-icons/.storybook"
+      },
+      "configurations": {
+        "ci": {
+          "quiet": true
+        }
+      }
+    },
+    "test-storybook": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "test-storybook -c graph/ui-icons/.storybook --url=http://localhost:4400"
+      }
+    },
+    "static-storybook": {
+      "executor": "@nx/web:file-server",
+      "options": {
+        "buildTarget": "graph-ui-icons:build-storybook",
+        "staticFilePath": "dist/storybook/graph-ui-icons"
+      },
+      "configurations": {
+        "ci": {
+          "buildTarget": "graph-ui-icons:build-storybook:ci"
+        }
+      }
+    }
+  }
+}

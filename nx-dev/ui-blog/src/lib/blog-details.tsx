@@ -1,0 +1,69 @@
+import Link from 'next/link';
+import { BlogPostDataEntry } from '@nx/nx-dev/data-access-documents/node-only';
+import Image from 'next/image';
+import { BlogAuthors } from './authors';
+import { ChevronLeftIcon } from '@heroicons/react/24/outline';
+import { renderMarkdown } from '@nx/nx-dev/ui-markdoc';
+
+export interface BlogDetailsProps {
+  post: BlogPostDataEntry;
+}
+export function BlogDetails({ post }: BlogDetailsProps) {
+  const { node } = renderMarkdown(post.content, {
+    filePath: post.filePath ?? '',
+  });
+
+  const formattedDate = new Date(post.date).toLocaleDateString('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  });
+
+  return (
+    <main id="main" role="main" className="w-full py-8">
+      <div className="mx-auto mb-8 flex max-w-screen-xl justify-between px-4 lg:px-8">
+        <Link
+          href="/blog"
+          className="flex w-20 shrink-0 items-center gap-2 text-slate-400 hover:text-slate-800 dark:text-slate-600 dark:hover:text-slate-200"
+        >
+          <ChevronLeftIcon className="h-3 w-3" />
+          Blog
+        </Link>
+        <div className="flex max-w-sm flex-1 grow items-center justify-end gap-2">
+          <BlogAuthors authors={post.authors} />
+          <span className="text-sm text-slate-400 dark:text-slate-600">
+            {formattedDate}
+          </span>
+        </div>
+      </div>
+      <div id="content-wrapper">
+        <header className="mx-auto mb-16 mt-8 max-w-3xl px-4 lg:px-0">
+          <h1 className="text-center text-4xl font-semibold text-slate-900 dark:text-white">
+            {post.title}
+          </h1>
+        </header>
+        {post.cover_image && (
+          <div className="mx-auto mb-16 aspect-[1.9] w-full max-w-screen-md">
+            <Image
+              className="h-full w-full object-cover md:rounded-md"
+              src={post.cover_image}
+              alt={post.title}
+              width={1400}
+              height={735}
+            />
+          </div>
+        )}
+        <div className="mx-auto min-w-0 max-w-3xl flex-auto px-4 pb-24 lg:px-0 lg:pb-16">
+          <div className="relative">
+            <div
+              data-document="main"
+              className="prose prose-lg prose-slate dark:prose-invert w-full max-w-none 2xl:max-w-4xl"
+            >
+              {node}
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  );
+}

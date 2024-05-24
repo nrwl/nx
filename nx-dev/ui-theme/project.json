@@ -4,8 +4,5 @@
   "sourceRoot": "nx-dev/ui-theme/src",
   "projectType": "library",
   "tags": [],
-  "targets": {
-    "lint": {},
-    "test": {}
-  }
+  "targets": {}
 }

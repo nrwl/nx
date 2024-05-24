@@ -3,6 +3,7 @@ import {
   CreateNodes,
   CreateNodesContext,
   joinPathFragments,
+  normalizePath,
   NxJsonConfiguration,
   ProjectConfiguration,
   readJsonFile,
@@ -16,6 +17,7 @@ import { existsSync, readdirSync, readFileSync } from 'fs';
 import { readConfig } from 'jest-config';
 import { projectGraphCacheDirectory } from 'nx/src/utils/cache-directory';
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
+import { clearRequireCache } from '@nx/devkit/src/utils/config-utils';
 import { getGlobPatternsFromPackageManagerWorkspaces } from 'nx/src/plugins/package-json-workspaces';
 import { combineGlobPatterns } from 'nx/src/utils/globs';
 import { minimatch } from 'minimatch';
@@ -115,12 +117,18 @@ async function buildJestTargets(
   options: JestPluginOptions,
   context: CreateNodesContext
 ): Promise<Pick<ProjectConfiguration, 'targets' | 'metadata'>> {
+  const absConfigFilePath = resolve(context.workspaceRoot, configFilePath);
+
+  if (require.cache[absConfigFilePath]) {
+    clearRequireCache();
+  }
+
   const config = await readConfig(
     {
       _: [],
       $0: undefined,
     },
-    resolve(context.workspaceRoot, configFilePath)
+    absConfigFilePath
   );
 
   const namedInputs = getNamedInputs(projectRoot, context);
@@ -153,12 +161,12 @@ async function buildJestTargets(
       // nx-ignore-next-line
     })) as typeof import('jest-runtime');
 
-    const context = await Runtime.createContext(config.projectConfig, {
+    const jestContext = await Runtime.createContext(config.projectConfig, {
       maxWorkers: 1,
       watchman: false,
     });
 
-    const source = new jest.SearchSource(context);
+    const source = new jest.SearchSource(jestContext);
 
     const specs = await source.getTestPaths(config.globalConfig);
 
@@ -188,7 +196,9 @@ async function buildJestTargets(
       targetGroup.push(options.ciTargetName);
 
       for (const testPath of testPaths) {
-        const relativePath = normalize(relative(projectRoot, testPath));
+        const relativePath = normalizePath(
+          relative(join(context.workspaceRoot, projectRoot), testPath)
+        );
         const targetName = `${options.ciTargetName}--${relativePath}`;
         dependsOn.push(targetName);
         targets[targetName] = {

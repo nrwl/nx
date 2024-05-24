@@ -10,7 +10,7 @@ import {
 } from 'webpack';
 
 import { WriteIndexHtmlPlugin } from '../../write-index-html-plugin';
-import { NormalizedNxWebpackPluginOptions } from '../nx-webpack-plugin-options';
+import { NormalizedNxAppWebpackPluginOptions } from '../nx-app-webpack-plugin-options';
 import { getOutputHashFormat } from '../../../utils/hash-format';
 import { getClientEnvironment } from '../../../utils/get-client-environment';
 import { normalizeExtraEntryPoints } from '../../../utils/webpack/normalize-entry';
@@ -24,7 +24,7 @@ import CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
 import MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
 export function applyWebConfig(
-  options: NormalizedNxWebpackPluginOptions,
+  options: NormalizedNxAppWebpackPluginOptions,
   config: Partial<WebpackOptionsNormalized | Configuration> = {},
   {
     useNormalizedEntry,

@@ -29,7 +29,7 @@
         "type": "string",
         "description": "The name of the project.",
         "pattern": "^[a-zA-Z].*$",
-        "x-deprecated": "Provide the `path` option instead and use the `as-provided` format. The project will be determined from the path provided. It will be removed in Nx v19."
+        "x-deprecated": "Provide the `path` option instead and use the `as-provided` format. The project will be determined from the path provided. It will be removed in Nx v20."
       },
       "style": {
         "type": "string",

@@ -38,7 +38,7 @@ Each target has different options which determine how Nx runs the task.
 
 Nx understands the projects in your workspace as a graph and uses this understanding to behave intelligently.
 Exploring this graph visually is vital to understanding how your code is structured and how Nx behaves.
-It always stays up to date without having to actively maintain a document as it is [calculated by analyzing your source code](/concepts/more-concepts/how-project-graph-is-built#how-the-project-graph-is-built)
+It always stays up to date without having to actively maintain a document as it is calculated by analyzing your source code.
 
 ### Launching the Project Graph
 
@@ -202,7 +202,7 @@ Nx uses the project graph of your workspace to determine the order in which to [
 
 ```shell
 nx build myreactapp --graph # View the graph for building myreactapp
-nx run-many -targets build --graph # View the graph for building all projects
+nx run-many --targets build --graph # View the graph for building all projects
 nx affected --targets build --graph # View the graph for building the affected projects
 ```
 

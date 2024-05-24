@@ -1,0 +1,49 @@
+> Task :dependencyReport
+See the report at: file:///tmp/build/reports/project/dependencies.txt
+
+> Task :htmlDependencyReport
+See the report at: file:///tmp/build/reports/project/dependencies/index.html
+
+> Task :propertyReport
+See the report at: file:///tmp/build/reports/project/properties.txt
+
+> Task :taskReport
+See the report at: file:///tmp/build/reports/project/tasks.txt
+
+> Task :app:dependencyReport
+See the report at: file:///tmp/app/build/reports/project/dependencies.txt
+
+> Task :app:htmlDependencyReport
+See the report at: file:///tmp/app/build/reports/project/dependencies/index.html
+
+> Task :app:propertyReport
+See the report at: file:///tmp/app/build/reports/project/properties.txt
+
+> Task :app:taskReport
+REGISTER TASK1: This is executed during the configuration phase
+NAMED TASK1: This is executed during the configuration phase
+See the report at: file:///tmp/app/build/reports/project/tasks.txt
+
+> Task :list:dependencyReport
+See the report at: file:///tmp/list/build/reports/project/dependencies.txt
+
+> Task :list:htmlDependencyReport
+See the report at: file:///tmp/list/build/reports/project/dependencies/index.html
+
+> Task :list:propertyReport
+See the report at: file:///tmp/list/build/reports/project/properties.txt
+
+> Task :list:taskReport
+See the report at: file:///tmp/list/build/reports/project/tasks.txt
+
+> Task :utilities:dependencyReport
+See the report at: file:///tmp/utilities/build/reports/project/dependencies.txt
+
+> Task :utilities:htmlDependencyReport
+See the report at: file:///tmp/utilities/build/reports/project/dependencies/index.html
+
+> Task :utilities:propertyReport
+See the report at: file:///tmp/utilities/build/reports/project/properties.txt
+
+> Task :utilities:taskReport
+See the report at: file:///tmp/utilities/build/reports/project/tasks.txt

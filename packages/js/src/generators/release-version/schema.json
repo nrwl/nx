@@ -33,7 +33,7 @@
     },
     "preid": {
       "type": "string",
-      "description": "The optional prerelease identifier to apply to the version, in the case that specifier has been set to prerelease."
+      "description": "The optional prerelease identifier to apply to the version, in the case that the specifier argument has been set to prerelease."
     },
     "packageRoot": {
       "type": "string",

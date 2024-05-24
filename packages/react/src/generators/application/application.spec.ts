@@ -1,9 +1,10 @@
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
 import { installedCypressVersion } from '@nx/cypress/src/utils/cypress-version';
 import {
   getProjects,
   readJson,
   readNxJson,
-  readProjectConfiguration,
   Tree,
   updateNxJson,
 } from '@nx/devkit';

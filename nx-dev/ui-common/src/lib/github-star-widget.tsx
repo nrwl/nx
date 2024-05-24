@@ -33,7 +33,7 @@ export function GitHubStarWidget({ starsCount }: { starsCount: number }) {
   };
 
   return (
-    <div className="flex items-center justify-between pl-2 pr-2 space-x-2 border rounded-md border-slate-200 hover:border-slate-400 dark:border-slate-700 print:hidden">
+    <div className="flex items-center justify-between space-x-2 rounded-md border border-slate-200 pl-2 pr-2 hover:border-slate-400 dark:border-slate-700 print:hidden">
       <a
         href="https://github.com/nrwl/nx"
         target="_blank"
@@ -41,14 +41,14 @@ export function GitHubStarWidget({ starsCount }: { starsCount: number }) {
         className="flex items-center justify-between space-x-2"
         onClick={() => handleClick('githubstars_iconclick')}
       >
-        <GithubIcon className="w-6 h-6" />
-        <span className="font-semibold text-md">{formatStars(starsCount)}</span>
+        <GithubIcon className="h-6 w-6" />
+        <span className="text-md font-semibold">{formatStars(starsCount)}</span>
       </a>
       <a
         href="https://github.com/nrwl/nx"
         target="_blank"
         rel="noreferrer noopener"
-        className="px-4 py-2 border-transparent hover:text-slate-900 dark:hover:text-sky-400 whitespace-nowrap font-bold"
+        className="whitespace-nowrap border-transparent px-4 py-2 font-bold hover:text-slate-900 dark:hover:text-sky-400"
         onClick={() => handleClick('githubstars_buttonclick')}
       >
         Give us a Star!

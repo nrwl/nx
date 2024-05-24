@@ -1,12 +1,16 @@
-import { redirect, RouteObject } from 'react-router-dom';
+import { redirect, RouteObject, json } from 'react-router-dom';
 import { ProjectsSidebar } from './feature-projects/projects-sidebar';
 import { TasksSidebar } from './feature-tasks/tasks-sidebar';
 import { Shell } from './shell';
 /* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
-import { ProjectGraphClientResponse } from 'nx/src/command-line/graph/graph';
+import type {
+  GraphError,
+  ProjectGraphClientResponse,
+} from 'nx/src/command-line/graph/graph';
 // nx-ignore-next-line
 import type { ProjectGraphProjectNode } from 'nx/src/config/project-graph';
+/* eslint-enable @nx/enforce-module-boundaries */
 import {
   getEnvironmentConfig,
   getProjectGraphDataService,
@@ -78,6 +82,7 @@ const projectDetailsLoader = async (
   hash: string;
   project: ProjectGraphProjectNode;
   sourceMap: Record<string, string[]>;
+  errors?: GraphError[];
 }> => {
   const workspaceData = await workspaceDataLoader(selectedWorkspaceId);
   const sourceMaps = await sourceMapsLoader(selectedWorkspaceId);
@@ -85,10 +90,18 @@ const projectDetailsLoader = async (
   const project = workspaceData.projects.find(
     (project) => project.name === projectName
   );
+  if (!project) {
+    throw json({
+      id: 'project-not-found',
+      projectName,
+      errors: workspaceData.errors,
+    });
+  }
   return {
     hash: workspaceData.hash,
     project,
     sourceMap: sourceMaps[project.data.root],
+    errors: workspaceData.errors,
   };
 };
 

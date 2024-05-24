@@ -4,7 +4,6 @@
   "sourceRoot": "packages/angular",
   "projectType": "library",
   "targets": {
-    "test": {},
     "build-ng": {
       "dependsOn": ["build-base"],
       "executor": "@nx/angular:package",
@@ -69,8 +68,7 @@
     },
     "add-extra-dependencies": {
       "command": "node ./scripts/add-dependency-to-build.js angular @nrwl/angular"
-    },
-    "lint": {}
+    }
   },
   "implicitDependencies": []
 }

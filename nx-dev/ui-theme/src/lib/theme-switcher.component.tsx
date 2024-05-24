@@ -5,10 +5,10 @@ import {
   SunIcon,
 } from '@heroicons/react/24/outline';
 import cx from 'classnames';
-import { Fragment } from 'react';
-import { useTheme } from './theme.provider';
+import { ElementType, Fragment } from 'react';
+import { Theme, useTheme } from './theme.provider';
 
-export function ThemeSwitcher() {
+export function ThemeSwitcher(): JSX.Element {
   const [theme, setTheme] = useTheme();
   const themeMap = {
     dark: {
@@ -24,23 +24,24 @@ export function ThemeSwitcher() {
       icon: <ComputerDesktopIcon className="h-4 w-4" />,
     },
   };
-  const availableThemes = [
-    {
-      label: 'Light',
-      value: 'light',
-      icon: <SunIcon className="mr-4 h-4 w-4" />,
-    },
-    {
-      label: 'Dark',
-      value: 'dark',
-      icon: <MoonIcon className="mr-4 h-4 w-4" />,
-    },
-    {
-      label: 'System',
-      value: 'system',
-      icon: <ComputerDesktopIcon className="mr-4 h-4 w-4" />,
-    },
-  ];
+  const availableThemes: { label: string; value: Theme; icon: ElementType }[] =
+    [
+      {
+        label: 'Light',
+        value: 'light',
+        icon: SunIcon,
+      },
+      {
+        label: 'Dark',
+        value: 'dark',
+        icon: MoonIcon,
+      },
+      {
+        label: 'System',
+        value: 'system',
+        icon: ComputerDesktopIcon,
+      },
+    ];
 
   return (
     <div className="inline-block">
@@ -66,13 +67,13 @@ export function ThemeSwitcher() {
             leaveFrom="transform opacity-100 scale-100"
             leaveTo="transform opacity-0 scale-95"
           >
-            <Listbox.Options className="absolute top-full right-0 z-50  mt-2 w-36 origin-top-right divide-y divide-slate-100 rounded-md bg-white shadow-lg ring-1 ring-black/5 focus:outline-none dark:divide-slate-800 dark:bg-slate-900 dark:ring-white/5">
-              {availableThemes.map(({ value, label, icon }) => (
-                <Listbox.Option key={value} value={value} as={Fragment}>
+            <Listbox.Options className="absolute top-full -right-10 z-50 mt-2 w-36 origin-top-right divide-y divide-slate-100 rounded-md bg-white shadow-lg ring-1 ring-black/5 focus:outline-none dark:divide-slate-800 dark:bg-slate-900 dark:ring-white/5">
+              {availableThemes.map((t) => (
+                <Listbox.Option key={t.value} value={t.value} as={Fragment}>
                   {({ active, selected }) => (
                     <li
                       className={cx(
-                        'flex cursor-pointer items-center px-4 py-2 text-sm',
+                        'flex cursor-pointer items-center gap-2 px-4 py-2 text-sm',
                         {
                           'bg-slate-100 dark:bg-slate-800/60': active,
                           'text-blue-500 dark:text-sky-500': active || selected,
@@ -80,8 +81,8 @@ export function ThemeSwitcher() {
                         }
                       )}
                     >
-                      {icon}
-                      {label}
+                      <t.icon aria-hidden="true" className="h-4 w-4 shrink-0" />
+                      {t.label}
                     </li>
                   )}
                 </Listbox.Option>

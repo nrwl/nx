@@ -26,7 +26,9 @@ export const getImplicitlyTouchedProjects: TouchedProjectLocator = (
   projectGraphNodes,
   nxJson
 ): string[] => {
-  const implicits = {};
+  const implicits = {
+    'nx.json': '*',
+  };
 
   Object.values(projectGraphNodes || {}).forEach((node) => {
     const namedInputs = {

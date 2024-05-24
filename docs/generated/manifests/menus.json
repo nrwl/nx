@@ -93,6 +93,14 @@
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
+              },
+              {
+                "name": "Gradle Monorepo",
+                "path": "/getting-started/tutorials/gradle-tutorial",
+                "id": "gradle-tutorial",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
               }
             ],
             "disableCollapsible": false
@@ -185,6 +193,14 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
+          },
+          {
+            "name": "Gradle Monorepo",
+            "path": "/getting-started/tutorials/gradle-tutorial",
+            "id": "gradle-tutorial",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -233,6 +249,14 @@
         "name": "Vue Standalone",
         "path": "/getting-started/tutorials/vue-standalone-tutorial",
         "id": "vue-standalone-tutorial",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Gradle Monorepo",
+        "path": "/getting-started/tutorials/gradle-tutorial",
+        "id": "gradle-tutorial",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -767,22 +791,6 @@
             "isExternal": false,
             "children": [
               {
-                "name": "Incremental Builds",
-                "path": "/concepts/more-concepts/incremental-builds",
-                "id": "incremental-builds",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Nx and Turborepo",
-                "path": "/concepts/more-concepts/turbo-and-nx",
-                "id": "turbo-and-nx",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
                 "name": "Monorepos",
                 "path": "/concepts/more-concepts/why-monorepos",
                 "id": "why-monorepos",
@@ -807,14 +815,6 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Using Nx at Enterprises",
-                "path": "/concepts/more-concepts/monorepo-nx-enterprise",
-                "id": "monorepo-nx-enterprise",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
                 "name": "Nx Daemon",
                 "path": "/concepts/more-concepts/nx-daemon",
                 "id": "nx-daemon",
@@ -823,25 +823,9 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Nx and the Angular CLI",
-                "path": "/concepts/more-concepts/nx-and-angular",
-                "id": "nx-and-angular",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Folder Structure",
-                "path": "/concepts/more-concepts/folder-structure",
-                "id": "folder-structure",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Nx Devkit and Angular Devkit",
-                "path": "/concepts/more-concepts/nx-devkit-angular-devkit",
-                "id": "nx-devkit-angular-devkit",
+                "name": "Nx and Turborepo",
+                "path": "/concepts/more-concepts/turbo-and-nx",
+                "id": "turbo-and-nx",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -855,7 +839,7 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Creating Libraries",
+                "name": "When to Create a New Library",
                 "path": "/concepts/more-concepts/creating-libraries",
                 "id": "creating-libraries",
                 "isExternal": false,
@@ -882,14 +866,6 @@
                 "name": "Buildable and Publishable Libraries",
                 "path": "/concepts/more-concepts/buildable-and-publishable-libraries",
                 "id": "buildable-and-publishable-libraries",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "How the Project Graph is Built",
-                "path": "/concepts/more-concepts/how-project-graph-is-built",
-                "id": "how-project-graph-is-built",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -1044,22 +1020,6 @@
         "isExternal": false,
         "children": [
           {
-            "name": "Incremental Builds",
-            "path": "/concepts/more-concepts/incremental-builds",
-            "id": "incremental-builds",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Nx and Turborepo",
-            "path": "/concepts/more-concepts/turbo-and-nx",
-            "id": "turbo-and-nx",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
             "name": "Monorepos",
             "path": "/concepts/more-concepts/why-monorepos",
             "id": "why-monorepos",
@@ -1084,14 +1044,6 @@
             "disableCollapsible": false
           },
           {
-            "name": "Using Nx at Enterprises",
-            "path": "/concepts/more-concepts/monorepo-nx-enterprise",
-            "id": "monorepo-nx-enterprise",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
             "name": "Nx Daemon",
             "path": "/concepts/more-concepts/nx-daemon",
             "id": "nx-daemon",
@@ -1100,25 +1052,9 @@
             "disableCollapsible": false
           },
           {
-            "name": "Nx and the Angular CLI",
-            "path": "/concepts/more-concepts/nx-and-angular",
-            "id": "nx-and-angular",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Folder Structure",
-            "path": "/concepts/more-concepts/folder-structure",
-            "id": "folder-structure",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Nx Devkit and Angular Devkit",
-            "path": "/concepts/more-concepts/nx-devkit-angular-devkit",
-            "id": "nx-devkit-angular-devkit",
+            "name": "Nx and Turborepo",
+            "path": "/concepts/more-concepts/turbo-and-nx",
+            "id": "turbo-and-nx",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -1132,7 +1068,7 @@
             "disableCollapsible": false
           },
           {
-            "name": "Creating Libraries",
+            "name": "When to Create a New Library",
             "path": "/concepts/more-concepts/creating-libraries",
             "id": "creating-libraries",
             "isExternal": false,
@@ -1162,32 +1098,8 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
-          },
-          {
-            "name": "How the Project Graph is Built",
-            "path": "/concepts/more-concepts/how-project-graph-is-built",
-            "id": "how-project-graph-is-built",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
           }
         ],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Incremental Builds",
-        "path": "/concepts/more-concepts/incremental-builds",
-        "id": "incremental-builds",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Nx and Turborepo",
-        "path": "/concepts/more-concepts/turbo-and-nx",
-        "id": "turbo-and-nx",
-        "isExternal": false,
-        "children": [],
         "disableCollapsible": false
       },
       {
@@ -1215,14 +1127,6 @@
         "disableCollapsible": false
       },
       {
-        "name": "Using Nx at Enterprises",
-        "path": "/concepts/more-concepts/monorepo-nx-enterprise",
-        "id": "monorepo-nx-enterprise",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
         "name": "Nx Daemon",
         "path": "/concepts/more-concepts/nx-daemon",
         "id": "nx-daemon",
@@ -1231,25 +1135,9 @@
         "disableCollapsible": false
       },
       {
-        "name": "Nx and the Angular CLI",
-        "path": "/concepts/more-concepts/nx-and-angular",
-        "id": "nx-and-angular",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Folder Structure",
-        "path": "/concepts/more-concepts/folder-structure",
-        "id": "folder-structure",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Nx Devkit and Angular Devkit",
-        "path": "/concepts/more-concepts/nx-devkit-angular-devkit",
-        "id": "nx-devkit-angular-devkit",
+        "name": "Nx and Turborepo",
+        "path": "/concepts/more-concepts/turbo-and-nx",
+        "id": "turbo-and-nx",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -1263,7 +1151,7 @@
         "disableCollapsible": false
       },
       {
-        "name": "Creating Libraries",
+        "name": "When to Create a New Library",
         "path": "/concepts/more-concepts/creating-libraries",
         "id": "creating-libraries",
         "isExternal": false,
@@ -1290,14 +1178,6 @@
         "name": "Buildable and Publishable Libraries",
         "path": "/concepts/more-concepts/buildable-and-publishable-libraries",
         "id": "buildable-and-publishable-libraries",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "How the Project Graph is Built",
-        "path": "/concepts/more-concepts/how-project-graph-is-built",
-        "id": "how-project-graph-is-built",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -4724,17 +4604,25 @@
         "isExternal": false,
         "children": [
           {
-            "name": "workspace.json",
-            "path": "/deprecated/workspace-json",
-            "id": "workspace-json",
+            "name": "affected:graph",
+            "path": "/deprecated/affected-graph",
+            "id": "affected-graph",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
           },
           {
-            "name": "workspace-lint",
-            "path": "/deprecated/workspace-lint",
-            "id": "workspace-lint",
+            "name": "print-affected",
+            "path": "/deprecated/print-affected",
+            "id": "print-affected",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "workspace.json",
+            "path": "/deprecated/workspace-json",
+            "id": "workspace-json",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -4759,14 +4647,6 @@
             "name": "Workspace Executors",
             "path": "/deprecated/workspace-executors",
             "id": "workspace-executors",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "defaultCollection",
-            "path": "/deprecated/default-collection",
-            "id": "default-collection",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -4812,63 +4692,6 @@
             "disableCollapsible": false
           },
           {
-            "name": "Storybook deprecated docs",
-            "path": "/deprecated/storybook",
-            "id": "storybook",
-            "isExternal": false,
-            "children": [
-              {
-                "name": "Angular: Information about the Storybook targets",
-                "path": "/deprecated/storybook/angular-storybook-targets",
-                "id": "angular-storybook-targets",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Angular - The projectBuildConfig",
-                "path": "/deprecated/storybook/angular-project-build-config",
-                "id": "angular-project-build-config",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Angular: Storybook Migration to webpackFinal",
-                "path": "/deprecated/storybook/migrate-webpack-final-angular",
-                "id": "migrate-webpack-final-angular",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Angular: Upgrading to Storybook 6",
-                "path": "/deprecated/storybook/upgrade-storybook-v6-angular",
-                "id": "upgrade-storybook-v6-angular",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "React: Storybook Migration to webpackFinal and the Nx Addon",
-                "path": "/deprecated/storybook/migrate-webpack-final-react",
-                "id": "migrate-webpack-final-react",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "React: Upgrading to Storybook 6",
-                "path": "/deprecated/storybook/upgrade-storybook-v6-react",
-                "id": "upgrade-storybook-v6-react",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              }
-            ],
-            "disableCollapsible": false
-          },
-          {
             "name": "v1 Nx Plugin API",
             "path": "/deprecated/v1-nx-plugin-api",
             "id": "v1-nx-plugin-api",
@@ -4880,17 +4703,25 @@
         "disableCollapsible": false
       },
       {
-        "name": "workspace.json",
-        "path": "/deprecated/workspace-json",
-        "id": "workspace-json",
+        "name": "affected:graph",
+        "path": "/deprecated/affected-graph",
+        "id": "affected-graph",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
       },
       {
-        "name": "workspace-lint",
-        "path": "/deprecated/workspace-lint",
-        "id": "workspace-lint",
+        "name": "print-affected",
+        "path": "/deprecated/print-affected",
+        "id": "print-affected",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "workspace.json",
+        "path": "/deprecated/workspace-json",
+        "id": "workspace-json",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -4915,14 +4746,6 @@
         "name": "Workspace Executors",
         "path": "/deprecated/workspace-executors",
         "id": "workspace-executors",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "defaultCollection",
-        "path": "/deprecated/default-collection",
-        "id": "default-collection",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -4963,111 +4786,6 @@
         "name": "Angular Schematics and Builders",
         "path": "/deprecated/angular-schematics-builders",
         "id": "angular-schematics-builders",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Storybook deprecated docs",
-        "path": "/deprecated/storybook",
-        "id": "storybook",
-        "isExternal": false,
-        "children": [
-          {
-            "name": "Angular: Information about the Storybook targets",
-            "path": "/deprecated/storybook/angular-storybook-targets",
-            "id": "angular-storybook-targets",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Angular - The projectBuildConfig",
-            "path": "/deprecated/storybook/angular-project-build-config",
-            "id": "angular-project-build-config",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Angular: Storybook Migration to webpackFinal",
-            "path": "/deprecated/storybook/migrate-webpack-final-angular",
-            "id": "migrate-webpack-final-angular",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Angular: Upgrading to Storybook 6",
-            "path": "/deprecated/storybook/upgrade-storybook-v6-angular",
-            "id": "upgrade-storybook-v6-angular",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "React: Storybook Migration to webpackFinal and the Nx Addon",
-            "path": "/deprecated/storybook/migrate-webpack-final-react",
-            "id": "migrate-webpack-final-react",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "React: Upgrading to Storybook 6",
-            "path": "/deprecated/storybook/upgrade-storybook-v6-react",
-            "id": "upgrade-storybook-v6-react",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          }
-        ],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Angular: Information about the Storybook targets",
-        "path": "/deprecated/storybook/angular-storybook-targets",
-        "id": "angular-storybook-targets",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Angular - The projectBuildConfig",
-        "path": "/deprecated/storybook/angular-project-build-config",
-        "id": "angular-project-build-config",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Angular: Storybook Migration to webpackFinal",
-        "path": "/deprecated/storybook/migrate-webpack-final-angular",
-        "id": "migrate-webpack-final-angular",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Angular: Upgrading to Storybook 6",
-        "path": "/deprecated/storybook/upgrade-storybook-v6-angular",
-        "id": "upgrade-storybook-v6-angular",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "React: Storybook Migration to webpackFinal and the Nx Addon",
-        "path": "/deprecated/storybook/migrate-webpack-final-react",
-        "id": "migrate-webpack-final-react",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "React: Upgrading to Storybook 6",
-        "path": "/deprecated/storybook/upgrade-storybook-v6-react",
-        "id": "upgrade-storybook-v6-react",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -6894,6 +6612,22 @@
                 "disableCollapsible": false
               },
               {
+                "name": "Nx and the Angular CLI",
+                "path": "/nx-api/angular/documents/nx-and-angular",
+                "id": "nx-and-angular",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Nx Devkit and Angular Devkit",
+                "path": "/nx-api/angular/documents/nx-devkit-angular-devkit",
+                "id": "nx-devkit-angular-devkit",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
                 "name": "Angular and Nx Version Matrix",
                 "path": "/nx-api/angular/documents/angular-nx-version-matrix",
                 "id": "angular-nx-version-matrix",
@@ -7340,14 +7074,6 @@
                 "disableCollapsible": false
               },
               {
-                "id": "cypress-project",
-                "path": "/nx-api/cypress/generators/cypress-project",
-                "name": "cypress-project",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
                 "id": "configuration",
                 "path": "/nx-api/cypress/generators/configuration",
                 "name": "configuration",
@@ -7367,6 +7093,14 @@
                 "id": "migrate-to-cypress-11",
                 "path": "/nx-api/cypress/generators/migrate-to-cypress-11",
                 "name": "migrate-to-cypress-11",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "convert-to-inferred",
+                "path": "/nx-api/cypress/generators/convert-to-inferred",
+                "name": "convert-to-inferred",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
@@ -7629,6 +7363,14 @@
                 "id": "convert-to-flat-config",
                 "path": "/nx-api/eslint/generators/convert-to-flat-config",
                 "name": "convert-to-flat-config",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "convert-to-inferred",
+                "path": "/nx-api/eslint/generators/convert-to-inferred",
+                "name": "convert-to-inferred",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
@@ -7940,6 +7682,14 @@
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
+              },
+              {
+                "id": "ci-workflow",
+                "path": "/nx-api/gradle/generators/ci-workflow",
+                "name": "ci-workflow",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
               }
             ],
             "isExternal": false,
@@ -8137,6 +7887,14 @@
                 "id": "setup-build",
                 "path": "/nx-api/js/generators/setup-build",
                 "name": "setup-build",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "sync",
+                "path": "/nx-api/js/generators/sync",
+                "name": "sync",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
@@ -8653,22 +8411,6 @@
                 "disableCollapsible": false
               },
               {
-                "name": "affected:graph",
-                "path": "/nx-api/nx/documents/affected-dep-graph",
-                "id": "affected-dep-graph",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "print-affected",
-                "path": "/nx-api/nx/documents/print-affected",
-                "id": "print-affected",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
                 "name": "format:check",
                 "path": "/nx-api/nx/documents/format-check",
                 "id": "format-check",
@@ -8897,6 +8639,14 @@
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
+              },
+              {
+                "id": "convert-to-inferred",
+                "path": "/nx-api/playwright/generators/convert-to-inferred",
+                "name": "convert-to-inferred",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
               }
             ],
             "isExternal": false,
@@ -8922,23 +8672,6 @@
                 "id": "overview",
                 "isExternal": false,
                 "children": [],
-                "disableCollapsible": false
-              }
-            ],
-            "isExternal": false,
-            "disableCollapsible": false
-          },
-          {
-            "id": "executors",
-            "path": "/nx-api/plugin/executors",
-            "name": "executors",
-            "children": [
-              {
-                "id": "e2e",
-                "path": "/nx-api/plugin/executors/e2e",
-                "name": "e2e",
-                "children": [],
-                "isExternal": false,
                 "disableCollapsible": false
               }
             ],

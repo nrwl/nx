@@ -1,5 +1,5 @@
 import { minimatch } from 'minimatch';
-import * as path from 'path';
+import * as path from 'node:path/posix';
 import * as fse from 'fs-extra';
 import ignore from 'ignore';
 import * as fg from 'fast-glob';

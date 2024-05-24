@@ -78,28 +78,4 @@ describe('workspace-projects', () => {
       ).toEqual(['b', 'b-1', 'b-2']);
     });
   });
-
-  describe('normalizeTargets', () => {
-    it('should support {projectRoot}, {workspaceRoot}, and {projectName} tokens', () => {
-      expect(
-        normalizeProjectTargets(
-          {
-            name: 'project',
-            root: 'my/project',
-            targets: {
-              build: {
-                executor: 'target',
-                options: {
-                  a: '{projectRoot}',
-                  b: '{workspaceRoot}',
-                  c: '{projectName}',
-                },
-              },
-            },
-          },
-          'build'
-        ).build.options
-      ).toEqual({ a: 'my/project', b: '', c: 'project' });
-    });
-  });
 });

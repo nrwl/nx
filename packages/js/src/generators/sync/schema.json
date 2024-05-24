@@ -1,0 +1,8 @@
+{
+  "$schema": "https://json-schema.org/schema",
+  "$id": "action",
+  "type": "object",
+  "description": "Synchronize TypeScript project references based on the project graph.",
+  "properties": {},
+  "required": []
+}

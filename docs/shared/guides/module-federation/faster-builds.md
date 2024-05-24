@@ -298,11 +298,7 @@ our [community page](https://nx.dev/community) for links to our Discord and Twit
 ## Remote computation caching with Nx Cloud
 
 To use Module Federation well, we recommend that you enable [Nx Cloud](https://nx.app). If you haven't enabled it yet
-when using `create-nx-workspace`, you can do the following.
-
-```shell
-nx connect
-```
+when using `create-nx-workspace`, create an account at [https://cloud.nx.app](https://cloud.nx.app) and connect to your repository.
 
 With Nx Cloud enabled, a large set of builds can be skipped entirely when running the application locally (and in
 CI/CD). When you run builds through Nx + Nx Cloud, the artifacts are stored in the remote cache, so as long as the

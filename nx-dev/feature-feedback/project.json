@@ -4,8 +4,5 @@
   "sourceRoot": "nx-dev/feature-feedback/src",
   "projectType": "library",
   "tags": ["scope:nx-dev", "type:feature"],
-  "targets": {
-    "lint": {},
-    "test": {}
-  }
+  "targets": {}
 }

@@ -4,7 +4,7 @@ import {
   DocumentIcon,
   PlayCircleIcon,
 } from '@heroicons/react/24/outline';
-import { frameworkIcons } from '../icons';
+import { Framework, frameworkIcons } from '@nx/graph/ui-icons';
 
 import { cx } from '@nx/nx-dev/ui-primitives';
 import { ReactNode } from 'react';
@@ -79,9 +79,9 @@ export function Cards({
     >
       {children}
       {moreLink && (
-        <div className="flex justify-end mt-2 col-span-full">
+        <div className="col-span-full mt-2 flex justify-end">
           <Link
-            className="transition-all duration-200 ease-in-out flex items-center no-underline text-sm px-4 py-0 border-transparent hover:text-slate-900 dark:hover:text-sky-400 whitespace-nowrap font-semibold group"
+            className="group flex items-center whitespace-nowrap border-transparent px-4 py-0 text-sm font-semibold no-underline transition-all duration-200 ease-in-out hover:text-slate-900 dark:hover:text-sky-400"
             href={moreLink}
           >
             Browse more
@@ -121,24 +121,24 @@ export function LinkCard({
       {icon && (
         <div
           className={cx(
-            'flex items-center justify-center w-24 h-24 rounded-lg mb-2',
+            'mb-2 flex h-24 w-24 items-center justify-center rounded-lg',
             {
               'h-12 w-12': appearance === 'small',
             }
           )}
         >
-          {icon && frameworkIcons[icon]?.image}
+          {icon && frameworkIcons[icon as Framework]?.image}
         </div>
       )}
       <div className={cx('pt-4', { 'pt-2': appearance === 'small' })}>
         {appearance === 'small' && type ? null : (
-          <div className="text-xs font-medium text-slate-600 dark:text-slate-300 uppercase mb-1">
+          <div className="mb-1 text-xs font-medium uppercase text-slate-600 dark:text-slate-300">
             {type}
           </div>
         )}
         <h3
           className={cx(
-            'text-lg font-semibold text-slate-900 dark:text-white m-0',
+            'm-0 text-lg font-semibold text-slate-900 dark:text-white',
             { 'text-sm font-normal': appearance === 'small' }
           )}
         >
@@ -176,12 +176,12 @@ export function Card({
       key={title}
       href={url}
       title={title}
-      className="group no-underline flex flex-col items-stretch rounded-md border border-slate-200 bg-slate-50/40 text-sm shadow-sm transition focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 hover:bg-slate-50 dark:border-slate-800/40 dark:bg-slate-800/60 dark:hover:bg-slate-800"
+      className="group flex flex-col items-stretch rounded-md border border-slate-200 bg-slate-50/40 text-sm no-underline shadow-sm transition focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 hover:bg-slate-50 dark:border-slate-800/40 dark:bg-slate-800/60 dark:hover:bg-slate-800"
     >
       {!!hasYoutubeId && (
         <div className="max-h-24">
           <img
-            className="!m-0 rounded-t-md bg-black object-contain !w-full h-full"
+            className="!m-0 h-full !w-full rounded-t-md bg-black object-contain"
             alt="Youtube Link"
             src={`https://img.youtube.com/vi/${hasYoutubeId}/default.jpg`}
           />
@@ -198,7 +198,7 @@ export function Card({
         ) : null}
 
         {/*HOVER ICON*/}
-        <span className="absolute right-2 top-1/2 -translate-y-2.5 -translate-x-2 opacity-0 transition-all group-hover:translate-x-0 group-hover:opacity-100">
+        <span className="absolute right-2 top-1/2 -translate-x-2 -translate-y-2.5 opacity-0 transition-all group-hover:translate-x-0 group-hover:opacity-100">
           <ArrowRightCircleIcon className="h-5 w-5" />
         </span>
       </div>

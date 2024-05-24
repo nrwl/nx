@@ -46,7 +46,7 @@ describe('Normalize Options', () => {
       e2eProjectRoot: 'my-app-e2e',
       e2ePort: 4200,
       e2eWebServerAddress: 'http://localhost:4200',
-      e2eWebServerTarget: 'start',
+      e2eWebServerTarget: 'serve',
     });
   });
 
@@ -85,7 +85,7 @@ describe('Normalize Options', () => {
       e2eProjectRoot: 'myApp-e2e',
       e2ePort: 4200,
       e2eWebServerAddress: 'http://localhost:4200',
-      e2eWebServerTarget: 'start',
+      e2eWebServerTarget: 'serve',
     });
   });
 
@@ -126,7 +126,7 @@ describe('Normalize Options', () => {
       e2eProjectRoot: 'directory/my-app-e2e',
       e2ePort: 4200,
       e2eWebServerAddress: 'http://localhost:4200',
-      e2eWebServerTarget: 'start',
+      e2eWebServerTarget: 'serve',
     });
   });
 
@@ -165,7 +165,7 @@ describe('Normalize Options', () => {
       e2eProjectRoot: 'directory/my-app-e2e',
       e2ePort: 4200,
       e2eWebServerAddress: 'http://localhost:4200',
-      e2eWebServerTarget: 'start',
+      e2eWebServerTarget: 'serve',
     });
   });
 
@@ -205,7 +205,7 @@ describe('Normalize Options', () => {
       e2eProjectRoot: 'my-app-e2e',
       e2ePort: 4200,
       e2eWebServerAddress: 'http://localhost:4200',
-      e2eWebServerTarget: 'start',
+      e2eWebServerTarget: 'serve',
     });
   });
 });

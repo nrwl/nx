@@ -9,16 +9,16 @@ const rule2Name = 'my-rule';
 describe('update-17-2-6-rename-workspace-rules', () => {
   let tree: Tree;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     tree = createTreeWithEmptyWorkspace();
 
     const { lintWorkspaceRuleGenerator } = require('@nx/' +
       'eslint/src/generators/workspace-rule/workspace-rule');
 
-    lintWorkspaceRuleGenerator(tree, {
+    await lintWorkspaceRuleGenerator(tree, {
       name: rule1Name,
     });
-    lintWorkspaceRuleGenerator(tree, {
+    await lintWorkspaceRuleGenerator(tree, {
       name: rule2Name,
     });
 
@@ -39,7 +39,7 @@ describe('update-17-2-6-rename-workspace-rules', () => {
       },
     });
 
-    update(tree);
+    await update(tree);
 
     expect(Object.keys(readJson(tree, '.eslintrc.json').rules)).toEqual([
       '@nx/workspace-test-rule',
@@ -61,7 +61,7 @@ describe('update-17-2-6-rename-workspace-rules', () => {
     `
     );
 
-    update(tree);
+    await update(tree);
 
     expect(tree.read('custom.js', 'utf-8')).toContain(
       `@nx/workspace-test-rule`
@@ -89,7 +89,7 @@ describe('update-17-2-6-rename-workspace-rules', () => {
     `
     );
 
-    update(tree);
+    await update(tree);
 
     expect(tree.read('custom.js', 'utf-8')).toMatchInlineSnapshot(`
       "import { getSourceNodes } from '@nx/workspace/src/utilities/typescript';
@@ -117,7 +117,7 @@ describe('update-17-2-6-rename-workspace-rules', () => {
     `
     );
 
-    update(tree);
+    await update(tree);
 
     expect(tree.read('custom.js', 'utf-8')).not.toContain(
       `@nx/workspace-random-rule`

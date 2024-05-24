@@ -1,7 +1,7 @@
 # Extending the Project Graph of Nx (v1 API)
 
 {% callout type="caution" title="Experimental" %}
-This API has been superceded by the [v2 API](/extending-nx/recipes/project-graph-plugins) and will be removed in Nx 19. If targeting Nx version 16.7 or higher, please use the v2 API instead.
+This API has been superceded by the [v2 API](/extending-nx/recipes/project-graph-plugins) and will be removed in Nx 20. If targeting Nx version 16.7 or higher, please use the v2 API instead.
 {% /callout %}
 
 The v1 plugin API for modifying the project graph was split into two parts:
@@ -95,6 +95,8 @@ export function registerProjectTargets(
   };
 }
 ```
+
+For guidance on implementing a similar function in the v2 API, see the documentation on [createNodes](/extending-nx/recipes/project-graph-plugins#example-extending-projects-adding-targets).
 
 ### Multiple Matches
 

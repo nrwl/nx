@@ -145,6 +145,12 @@ Type: `string`
 
 Show only projects that match a given pattern.
 
+##### sep
+
+Type: `string`
+
+Outputs projects with the specified seperator
+
 ##### type
 
 Type: `string`
@@ -198,6 +204,12 @@ nx show project <projectName>
 Type: `boolean`
 
 Show help
+
+##### open
+
+Type: `boolean`
+
+Set to false to prevent the browser from opening when using --web
 
 ##### projectName
 

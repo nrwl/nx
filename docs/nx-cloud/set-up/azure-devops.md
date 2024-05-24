@@ -36,6 +36,8 @@ Once this token is created paste the value and then click "Connect".
 
 This will verify that Nx Cloud can connect to your repo. Upon a successful test, your configuration is saved, and setup is complete.
 
+Please note that Azure DevOps will impose rate limits which can degrade the performance of the integration leading to missing data or functionality. To mitigate the impact, we recommend you assign the [Basic + Test plan](https://learn.microsoft.com/en-us/azure/devops/organizations/billing/buy-basic-access-add-users?view=azure-devops#assign-basic-or-basic--test-plans) to the user whose token you utilise for this integration.
+
 ### Advanced Configuration
 
 If your company runs a self-hosted Azure DevOps installation, you may need to override the default URL that Nx Cloud uses to connect to the Azure Devops API. To do so, check the box labeled "Override Azure DevOps API URL" and enter the correct URL for your organization.

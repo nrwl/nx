@@ -6,8 +6,8 @@ import {
 } from '../../adapter/angular-json';
 import { NxJsonConfiguration, readNxJson } from '../../config/nx-json';
 import {
-  createProjectConfigurations,
   ConfigurationResult,
+  createProjectConfigurations,
 } from './project-configuration-utils';
 import { LoadedNxPlugin, loadNxPlugins } from '../plugins/internal-api';
 import {
@@ -16,7 +16,6 @@ import {
 } from '../../utils/workspace-context';
 import { buildAllWorkspaceFiles } from './build-all-workspace-files';
 import { join } from 'path';
-import { NxPlugin } from '../plugins';
 
 /**
  * Walks the workspace directory to create the `projectFileMap`, `ProjectConfigurations` and `allWorkspaceFiles`
@@ -60,17 +59,21 @@ export async function retrieveWorkspaceFiles(
 /**
  * Walk through the workspace and return `ProjectConfigurations`. Only use this if the projectFileMap is not needed.
  */
-export async function retrieveProjectConfigurations(
+
+export function retrieveProjectConfigurations(
   plugins: LoadedNxPlugin[],
   workspaceRoot: string,
   nxJson: NxJsonConfiguration
 ): Promise<ConfigurationResult> {
-  const projects = await _retrieveProjectConfigurations(
+  const globPatterns = configurationGlobs(plugins);
+  const workspaceFiles = globWithWorkspaceContext(workspaceRoot, globPatterns);
+
+  return createProjectConfigurations(
     workspaceRoot,
     nxJson,
+    workspaceFiles,
     plugins
   );
-  return projects;
 }
 
 export async function retrieveProjectConfigurationsWithAngularProjects(
@@ -95,25 +98,9 @@ export async function retrieveProjectConfigurationsWithAngularProjects(
     workspaceRoot
   );
 
-  const res = _retrieveProjectConfigurations(workspaceRoot, nxJson, plugins);
+  const res = retrieveProjectConfigurations(plugins, workspaceRoot, nxJson);
   cleanup();
   return res;
-}
-
-function _retrieveProjectConfigurations(
-  workspaceRoot: string,
-  nxJson: NxJsonConfiguration,
-  plugins: LoadedNxPlugin[]
-): Promise<ConfigurationResult> {
-  const globPatterns = configurationGlobs(plugins);
-  const workspaceFiles = globWithWorkspaceContext(workspaceRoot, globPatterns);
-
-  return createProjectConfigurations(
-    workspaceRoot,
-    nxJson,
-    workspaceFiles,
-    plugins
-  );
 }
 
 export function retrieveProjectConfigurationPaths(

@@ -1,4 +1,5 @@
-import * as devkit from '@nx/devkit';
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
 import { ProjectGraph, readJson, readNxJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { Linter } from '@nx/eslint';

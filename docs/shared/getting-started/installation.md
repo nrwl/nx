@@ -115,7 +115,7 @@ npx nx migrate --run-migrations
 ```
 
 {% callout title="Update One Major Version at a Time" %}
-To avoid potential issues, it is recommended to update one major version of Nx at a time.
+To avoid potential issues, it is [recommended to update one major version of Nx at a time](/recipes/tips-n-tricks/advanced-update#one-major-version-at-a-time-small-steps).
 {% /callout %}
 
 ## Tutorials

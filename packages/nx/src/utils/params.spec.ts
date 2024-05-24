@@ -826,7 +826,8 @@ describe('params', () => {
           }
         )
       ).toThrowErrorMatchingInlineSnapshot(`
-        "Options did not match schema. Please fix 1 of the following errors:
+        "Options did not match schema: {}.
+        Please fix 1 of the following errors:
          - Required property 'a' is missing
          - Required property 'b' is missing"
       `);
@@ -862,7 +863,15 @@ describe('params', () => {
             ],
           }
         )
-      ).toThrowErrorMatchingInlineSnapshot(`"Options did not match schema."`);
+      ).toThrowErrorMatchingInlineSnapshot(`
+        "Options did not match schema: {
+          "a": true,
+          "b": false
+        }.
+        Should only match one of 
+         - {"required":["a"]}
+         - {"required":["b"]}"
+      `);
     });
 
     it('should throw if none of the anyOf conditions are met', () => {

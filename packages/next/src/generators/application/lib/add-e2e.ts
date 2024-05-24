@@ -68,6 +68,7 @@ export async function addE2e(host: Tree, options: NormalizedSchema) {
       root: options.e2eProjectRoot,
       sourceRoot: joinPathFragments(options.e2eProjectRoot, 'src'),
       targets: {},
+      tags: [],
       implicitDependencies: [options.projectName],
     });
     return configurationGenerator(host, {

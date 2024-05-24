@@ -20,7 +20,7 @@
         "description": "The name of the project.",
         "alias": "p",
         "$default": { "$source": "projectName" },
-        "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. The project will be determined from the directory provided. It will be removed in Nx v19."
+        "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. The project will be determined from the directory provided. It will be removed in Nx v20."
       },
       "name": {
         "type": "string",
@@ -55,7 +55,7 @@
         "type": "boolean",
         "description": "Create component at the source root rather than its own directory.",
         "default": false,
-        "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. It will be removed in Nx v19."
+        "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. It will be removed in Nx v20."
       },
       "export": {
         "type": "boolean",
@@ -69,14 +69,14 @@
         "description": "Use pascal case component file name (e.g. `App.tsx`).",
         "alias": "P",
         "default": false,
-        "x-deprecated": "Provide the desired `name` option instead and use the `as-provided` format. It will be removed in Nx v19."
+        "x-deprecated": "Provide the desired `name` option instead and use the `as-provided` format. It will be removed in Nx v20."
       },
       "pascalCaseDirectory": {
         "type": "boolean",
         "description": "Use pascal case directory name (e.g. `App/App.tsx`).",
         "alias": "R",
         "default": false,
-        "x-deprecated": "Provide the desired `directory` option instead and use the `as-provided` format. It will be removed in Nx v19."
+        "x-deprecated": "Provide the desired `directory` option instead and use the `as-provided` format. It will be removed in Nx v20."
       },
       "routing": {
         "type": "boolean",

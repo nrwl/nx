@@ -67,13 +67,13 @@ function FeedbackDialog({
         >
           {/* This is the backdrop */}
           <div
-            className="fixed inset-0 bg-black/10 dark:bg-white/10 backdrop-blur-sm"
+            className="fixed inset-0 bg-black/10 backdrop-blur-sm dark:bg-white/10"
             aria-hidden="true"
           />
         </Transition.Child>
 
         {/* This is the modal */}
-        <div className="fixed inset-0 overflow-y-auto w-full">
+        <div className="fixed inset-0 w-full overflow-y-auto">
           <div className="flex min-h-full items-center justify-center p-4">
             <Transition.Child
               as={Fragment}
@@ -84,10 +84,10 @@ function FeedbackDialog({
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              <Dialog.Panel className="w-full max-w-2xl transform overflow-hidden rounded-2xl bg-white dark:bg-slate-900 p-6 text-left align-middle shadow-xl transition-all relative">
+              <Dialog.Panel className="relative w-full max-w-2xl transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all dark:bg-slate-900">
                 <Dialog.Title
                   as="h3"
-                  className="text-lg p-4 font-medium leading-6 text-center bg-white text-slate-700 dark:bg-slate-900 dark:text-slate-400"
+                  className="bg-white p-4 text-center text-lg font-medium leading-6 text-slate-700 dark:bg-slate-900 dark:text-slate-400"
                 >
                   What is on your mind?
                   <button className={styles.closebutton} onClick={closeDialog}>
@@ -106,7 +106,7 @@ function FeedbackDialog({
             - The Idea feedback opens up a textarea and a submit/done button
             - The Github feedback opens up a new tab to the Github issues page
          */}
-                <ul className="grid w-full gap-6 md:grid-cols-2 pb-10">
+                <ul className="grid w-full gap-6 pb-10 md:grid-cols-2">
                   <li>
                     <a
                       id="github"
@@ -119,7 +119,7 @@ function FeedbackDialog({
                     >
                       <label
                         htmlFor="github"
-                        className="inline-flex items-center justify-between w-full p-5 text-gray-500 bg-white border border-gray-200 rounded-lg cursor-pointer dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-blue-500 peer-checked:border-blue-600 peer-checked:text-blue-600 hover:text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700"
+                        className="inline-flex w-full cursor-pointer items-center justify-between rounded-lg border border-gray-200 bg-white p-5 text-gray-500 hover:bg-gray-100 hover:text-gray-600 peer-checked:border-blue-600 peer-checked:text-blue-600 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-300 dark:peer-checked:text-blue-500"
                       >
                         <div className="block">
                           <div className="w-full text-lg font-semibold">
@@ -127,7 +127,7 @@ function FeedbackDialog({
                           </div>
                           <div className="w-full">Found an issue?</div>
                         </div>
-                        <GithubIcon className="w-14 h-14" />
+                        <GithubIcon className="h-14 w-14" />
                       </label>
                     </a>
                   </li>
@@ -137,7 +137,7 @@ function FeedbackDialog({
                       id="idea"
                       name="feedback_selection"
                       value="idea"
-                      className="hidden peer"
+                      className="peer hidden"
                       checked={isIdea !== null && isIdea}
                       onChange={handleFeedbackSelectionChange}
                     />
@@ -145,7 +145,7 @@ function FeedbackDialog({
                       htmlFor="idea"
                       tabIndex={0}
                       onKeyDown={(e) => keydownHandler(e)}
-                      className="inline-flex items-center justify-between w-full p-5 text-gray-500 bg-white border border-gray-200 rounded-lg cursor-pointer dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-sky-500 peer-checked:border-sky-500 focus:outline-none focus:ring-1 peer-checked:text-sky-500 hover:bg-slate-50 dark:text-slate-400 dark:bg-gray-800 dark:hover:bg-slate-800 dark:focus-within:ring-sky-500"
+                      className="inline-flex w-full cursor-pointer items-center justify-between rounded-lg border border-gray-200 bg-white p-5 text-gray-500 hover:bg-slate-50 focus:outline-none focus:ring-1 peer-checked:border-sky-500 peer-checked:text-sky-500 dark:border-gray-700 dark:bg-gray-800 dark:text-slate-400 dark:focus-within:ring-sky-500 dark:hover:bg-slate-800 dark:hover:text-gray-300 dark:peer-checked:text-sky-500"
                     >
                       <div className="block">
                         <div className="w-full text-lg font-semibold">Idea</div>
@@ -154,7 +154,7 @@ function FeedbackDialog({
                       <svg
                         width="14px"
                         height="14px"
-                        className="w-14 h-full"
+                        className="h-full w-14"
                         viewBox="0 0 14 14"
                         version="1.1"
                       >
@@ -227,10 +227,10 @@ function FeedbackDialog({
                         onChange={updateFeedback}
                       ></textarea>
                     </Dialog.Description>
-                    <Dialog.Description className="mt-4 relative flex justify-end rounded-l-md">
+                    <Dialog.Description className="relative mt-4 flex justify-end rounded-l-md">
                       <button
                         onClick={submitFeedback}
-                        className="border border-slate-200 rounded-md bg-white px-4 py-2 text-base font-medium text-slate-600 focus-within:ring-blue-500 hover:bg-slate-50 focus:z-10 focus:outline-none focus:ring-1 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-400 dark:focus-within:ring-sky-500 dark:hover:bg-slate-800border border-slate-200 bg-white px-4 py-2 text-xs font-medium text-slate-600 focus-within:ring-blue-500 hover:bg-slate-50 focus:z-10 focus:outline-none focus:ring-1 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-400 dark:focus-within:ring-sky-500 dark:hover:bg-slate-800"
+                        className="dark:hover:bg-slate-800border rounded-md border border-slate-200 border-slate-200 bg-white bg-white px-4 px-4 py-2 py-2 text-base text-xs font-medium font-medium text-slate-600 text-slate-600 focus-within:ring-blue-500 focus-within:ring-blue-500 hover:bg-slate-50 hover:bg-slate-50 focus:z-10 focus:z-10 focus:outline-none focus:outline-none focus:ring-1 focus:ring-1 dark:border-slate-700 dark:border-slate-700 dark:bg-slate-800/60 dark:bg-slate-800/60 dark:text-slate-400 dark:text-slate-400 dark:focus-within:ring-sky-500 dark:focus-within:ring-sky-500 dark:hover:bg-slate-800"
                       >
                         Done
                       </button>

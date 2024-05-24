@@ -1,29 +1,5 @@
 {
   "generators": {
-    "15.0.0-migrate-to-inputs": {
-      "cli": "nx",
-      "version": "15.0.0-beta.1",
-      "description": "Replace implicitDependencies with namedInputs + target inputs",
-      "implementation": "./src/migrations/update-15-0-0/migrate-to-inputs"
-    },
-    "15.0.0-prefix-outputs": {
-      "cli": "nx",
-      "version": "15.0.0-beta.1",
-      "description": "Prefix outputs with {workspaceRoot}/{projectRoot} if needed",
-      "implementation": "./src/migrations/update-15-0-0/prefix-outputs"
-    },
-    "15.1.0-set-project-names": {
-      "cli": "nx",
-      "version": "15.0.12-beta.1",
-      "description": "Set project names in project.json files",
-      "implementation": "./src/migrations/update-15-1-0/set-project-names"
-    },
-    "15.8.2-update-nx-wrapper": {
-      "cli": "nx",
-      "version": "15.8.2-beta.0",
-      "description": "Updates the nx wrapper.",
-      "implementation": "./src/migrations/update-15-8-2/update-nxw"
-    },
     "16.0.0-remove-nrwl-cli": {
       "cli": "nx",
       "version": "16.0.0-beta.0",
@@ -58,7 +34,8 @@
       "cli": "nx",
       "version": "16.8.0-beta.3",
       "description": "Escape $ in env variables",
-      "implementation": "./src/migrations/update-16-8-0/escape-dollar-sign-env-variables"
+      "implementation": "./src/migrations/update-16-8-0/escape-dollar-sign-env-variables",
+      "x-repair-skip": true
     },
     "17.0.0-move-cache-directory": {
       "cli": "nx",

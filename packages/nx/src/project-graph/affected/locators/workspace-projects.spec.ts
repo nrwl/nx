@@ -171,6 +171,26 @@ describe('getImplicitlyTouchedProjects', () => {
       []
     );
   });
+
+  it('should return every project when nx.json is touched', () => {
+    const graph = buildProjectGraphNodes({
+      a: {
+        root: 'a',
+        namedInputs: {
+          files: ['{workspaceRoot}/a.txt'],
+        },
+        targets: {},
+      },
+      b: {
+        root: 'b',
+      },
+    });
+    let fileChanges = getFileChanges(['nx.json']);
+    expect(getImplicitlyTouchedProjects(fileChanges, graph, nxJson)).toEqual([
+      'a',
+      'b',
+    ]);
+  });
 });
 
 function buildProjectGraphNodes(

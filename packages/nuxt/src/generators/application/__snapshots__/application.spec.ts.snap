@@ -198,14 +198,11 @@ exports[`app generated files content - as-provided general application should cr
   "vitest.workspace.ts",
   "my-app/vitest.config.ts",
   "my-app-e2e/project.json",
-  "my-app-e2e/src/e2e/app.cy.ts",
-  "my-app-e2e/src/support/app.po.ts",
-  "my-app-e2e/src/support/e2e.ts",
-  "my-app-e2e/src/fixtures/example.json",
-  "my-app-e2e/src/support/commands.ts",
-  "my-app-e2e/cypress.config.ts",
+  "my-app-e2e/src/example.spec.ts",
+  "my-app-e2e/playwright.config.ts",
   "my-app-e2e/tsconfig.json",
   "my-app-e2e/.eslintrc.json",
+  ".vscode/extensions.json",
 ]
 `;
 

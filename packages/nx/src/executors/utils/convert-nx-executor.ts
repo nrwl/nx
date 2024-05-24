@@ -6,6 +6,7 @@ import type { Observable } from 'rxjs';
 import { readNxJson } from '../../config/nx-json';
 import { Executor, ExecutorContext } from '../../config/misc-interfaces';
 import { retrieveProjectConfigurations } from '../../project-graph/utils/retrieve-workspace-files';
+import { readProjectConfigurationsFromRootMap } from '../../project-graph/utils/project-configuration-utils';
 import { ProjectsConfigurations } from '../../config/workspace-json-project-json';
 import { loadNxPlugins } from '../../project-graph/plugins/internal-api';
 
@@ -25,13 +26,15 @@ export function convertNxExecutor(executor: Executor) {
       );
       const projectsConfigurations: ProjectsConfigurations = {
         version: 2,
-        projects: (
-          await retrieveProjectConfigurations(
-            plugins,
-            builderContext.workspaceRoot,
-            nxJsonConfiguration
-          )
-        ).projects,
+        projects: readProjectConfigurationsFromRootMap(
+          (
+            await retrieveProjectConfigurations(
+              plugins,
+              builderContext.workspaceRoot,
+              nxJsonConfiguration
+            )
+          ).projects
+        ),
       };
       cleanup();
       const context: ExecutorContext = {

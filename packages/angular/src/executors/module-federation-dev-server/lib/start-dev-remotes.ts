@@ -28,12 +28,21 @@ export async function startRemotes(
       'module-federation-dev-server'
     );
 
+    const configurationOverride = options.devRemotes.find(
+      (
+        r
+      ): r is {
+        remoteName: string;
+        configuration: string;
+      } => typeof r !== 'string' && r.remoteName === app
+    )?.configuration;
+
     remoteIters.push(
       await runExecutor(
         {
           project: app,
           target,
-          configuration: context.configurationName,
+          configuration: configurationOverride ?? context.configurationName,
         },
         {
           ...(target === 'serve' ? { verbose: options.verbose ?? false } : {}),

@@ -4,10 +4,10 @@ import { WebpackPluginInstance } from 'webpack';
 import { getOutputHashFormat } from '../../../utils/hash-format';
 import { ScriptsWebpackPlugin } from '../../../utils/webpack/plugins/scripts-webpack-plugin';
 import { normalizeExtraEntryPoints } from '../../../utils/webpack/normalize-entry';
-import { NormalizedNxWebpackPluginOptions } from '../nx-webpack-plugin-options';
+import { NormalizedNxAppWebpackPluginOptions } from '../nx-app-webpack-plugin-options';
 
 export function instantiateScriptPlugins(
-  options: NormalizedNxWebpackPluginOptions
+  options: NormalizedNxAppWebpackPluginOptions
 ): WebpackPluginInstance[] {
   // process global scripts
   const globalScriptsByBundleName = normalizeExtraEntryPoints(

@@ -74,16 +74,17 @@ export const champions1: Champion[] = [
     location: 'Argentina',
   },
   {
-    name: 'Dmitriy Stepanenko',
-    expertise: 'Angular, Qwik, Plugins, Community, Blogs',
-    imageUrl: '/images/champions/dmitriy-stepanenko.webp',
+    name: 'Michael Hladky',
+    expertise:
+      'We support big companies to achieve their goals by writing plugins, designing enterprise architecture and auditing their web performance',
+    imageUrl: '/images/champions/michael-hladky.webp',
     contact: [
       {
-        label: 'stepanenkodmitri@gmail.com',
-        link: 'mailto:stepanenkodmitri@gmail.com',
+        label: 'office@push-based.io',
+        link: 'mailto:office@push-based.io',
       },
     ],
-    location: 'Ukraine',
+    location: 'Austria',
   },
   {
     name: 'Daniel Glejzner',
@@ -97,6 +98,19 @@ export const champions1: Champion[] = [
       },
     ],
     location: 'Poland',
+  },
+  {
+    name: 'Nicolas Beaussart-Hatchuel',
+    expertise:
+      'Writing Plugins, React, Mentoring, Repository Structure, Talks, Onboarding New Devs',
+    imageUrl: '/images/champions/nicolas-beaussart-hatchuel.webp',
+    contact: [
+      {
+        label: '@beaussan',
+        link: 'https://twitter.com/beaussan',
+      },
+    ],
+    location: 'France',
   },
 ];
 export const champions2: Champion[] = [
@@ -177,18 +191,6 @@ export const champions2: Champion[] = [
     location: 'Luxembourg',
   },
   {
-    name: 'Edouard Bozon',
-    expertise: 'Angular, Architecture, Automation, Testing, Devtools',
-    imageUrl: '/images/champions/edouard-bozon.webp',
-    contact: [
-      {
-        label: '@edbzn',
-        link: 'https://twitter.com/edbzn',
-      },
-    ],
-    location: 'France',
-  },
-  {
     name: 'Stefan Haas',
     expertise:
       'Angular, Repository Structure, Onboarding New Devs, Architecture, Blogging',
@@ -201,6 +203,32 @@ export const champions2: Champion[] = [
       // https://github.com/HaasStefan/, https://twitter.com/StefanvHaas,  stefan.haas.privat@gmail.com
     ],
     location: 'Austria',
+  },
+  {
+    name: 'Nacho Vazquez',
+    expertise:
+      'Angular, Qwik, SolidJS, enterprise workspaces, open source, architecture, repository structure, plugins, documentation',
+    imageUrl: '/images/champions/nacho-vazquez.webp',
+    contact: [
+      {
+        label: '@naxodev',
+        link: 'https://twitter.com/naxodev',
+      },
+    ],
+    location: 'Uruguay',
+  },
+  {
+    name: 'Nathan Walker',
+    expertise:
+      'Open source project efficiencies, diverse ecosystem collaboration within workspaces and cross platform targeting for small to large enterprises.',
+    imageUrl: '/images/champions/nathan-walker.webp',
+    contact: [
+      {
+        label: '@wwwalkerrun',
+        link: 'https://twitter.com/wwwalkerrun',
+      },
+    ],
+    location: 'USA',
   },
 ];
 export const champions3: Champion[] = [
@@ -279,40 +307,50 @@ export const champions3: Champion[] = [
     location: 'Utah, USA',
   },
   {
-    name: 'Michael Hladky',
-    expertise:
-      'We support big companies to achieve their goals by writing plugins, designing enterprise architecture and auditing their web performance',
-    imageUrl: '/images/champions/michael-hladky.webp',
+    name: 'Dmitriy Stepanenko',
+    expertise: 'Angular, Qwik, Plugins, Community, Blogs',
+    imageUrl: '/images/champions/dmitriy-stepanenko.webp',
     contact: [
       {
-        label: 'office@push-based.io',
-        link: 'mailto:office@push-based.io',
+        label: 'stepanenkodmitri@gmail.com',
+        link: 'mailto:stepanenkodmitri@gmail.com',
       },
     ],
-    location: 'Austria',
+    location: 'Ukraine',
   },
   {
-    name: 'Nacho Vazquez',
-    expertise:
-      'Angular, Qwik, SolidJS, enterprise workspaces, open source, architecture, repository structure, plugins, documentation',
-    imageUrl: '/images/champions/nacho-vazquez.webp',
+    name: 'Edouard Bozon',
+    expertise: 'Angular, Architecture, Automation, Testing, Devtools',
+    imageUrl: '/images/champions/edouard-bozon.webp',
     contact: [
       {
-        label: '@naxodev',
-        link: 'https://twitter.com/naxodev',
+        label: '@edbzn',
+        link: 'https://twitter.com/edbzn',
       },
     ],
-    location: 'Uruguay',
+    location: 'France',
   },
   {
-    name: 'Nathan Walker',
+    name: 'Bram Borggreve',
     expertise:
-      'Open source project efficiencies, diverse ecosystem collaboration within workspaces and cross platform targeting for small to large enterprises.',
-    imageUrl: '/images/champions/nathan-walker.webp',
+      'Writing full-stack starter kits based on Nx. Writing Plugins. Helping teams move to Nx.',
+    imageUrl: '/images/champions/bram-borggreve.webp',
     contact: [
       {
-        label: '@wwwalkerrun',
-        link: 'https://twitter.com/wwwalkerrun',
+        label: '@beeman_nl',
+        link: 'https://twitter.com/beeman_nl',
+      },
+    ],
+    location: 'Spain',
+  },
+  {
+    name: 'Adrian Baran',
+    expertise: 'Angular, CI/CD, Dev Tools, Plugins and Executors',
+    imageUrl: '/images/champions/adrian-baran.webp',
+    contact: [
+      {
+        label: '@AdrianBaran_',
+        link: 'https://twitter.com/AdrianBaran_',
       },
     ],
     location: 'USA',

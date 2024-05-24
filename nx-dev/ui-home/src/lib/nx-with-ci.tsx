@@ -3,69 +3,67 @@ import { SectionHeading } from '@nx/nx-dev/ui-common';
 import {
   animate,
   motion,
-  MotionValue,
-  useAnimation,
   useMotionValue,
   useTransform,
+  Variants,
 } from 'framer-motion';
 import Link from 'next/link';
-import { useEffect, useRef } from 'react';
-import { useInView } from 'react-intersection-observer';
+import { useEffect } from 'react';
 
 function Counter({
-  from = 0,
-  to = 10,
-  round = 0,
-  progress,
+  value,
+  duration = 2,
 }: {
-  from: number;
-  to: number;
-  round: number;
-  progress: MotionValue<number>;
-}): JSX.Element {
-  const ref = useRef<any>();
-  const value = useTransform(progress, [0, 1000], [from, to], {
-    clamp: false,
-  });
-
-  const { format: formatNumber } = new Intl.NumberFormat('en-US', {
-    minimumFractionDigits: round,
-    maximumFractionDigits: round,
-  });
+  value: number;
+  duration?: number;
+}) {
+  const count = useMotionValue(0);
+  const rounded = useTransform(count, Math.round);
 
   useEffect(() => {
-    return value.onChange((v) => {
-      if (ref !== undefined && ref.current !== undefined)
-        ref.current.firstChild.data = formatNumber(
-          round === 0 ? Math.round(v) : Number(v.toFixed(round))
-        );
+    const animation = animate(count, value, {
+      type: 'tween',
+      ease: 'easeOut',
+      duration,
     });
-  }, [formatNumber, round, value]);
 
-  return <span ref={ref}>{formatNumber(value.get())}</span>;
+    return animation.stop;
+  }, []);
+
+  return <motion.span>{rounded}</motion.span>;
 }
 
 export function NxWithCi(): JSX.Element {
-  const progress: MotionValue<number> = useMotionValue(0);
-  const controls = useAnimation();
-  const [ref, inView] = useInView({ triggerOnce: true });
-
-  useEffect(() => {
-    if (!inView) return;
-    controls.start('visible');
-    animate(progress, 1000, {
-      type: 'spring',
-      damping: 100,
-    });
-  }, [controls, inView, progress]);
+  const ciBar: Variants = {
+    start: {
+      width: 0,
+    },
+    end: {
+      width: '100%',
+      transition: {
+        type: 'tween',
+        ease: 'easeOut',
+        duration: 1.2,
+      },
+    },
+  };
+  const nxBar: Variants = {
+    start: {
+      width: 0,
+    },
+    end: {
+      width: '50%',
+      transition: {
+        type: 'tween',
+        ease: 'easeOut',
+        duration: 1.2,
+      },
+    },
+  };
 
   return (
     <article id="nx-is-fast" className="relative pt-12 sm:pt-28">
-      <motion.div
-        ref={ref}
-        animate={controls}
-        className="mx-auto max-w-7xl px-4 pb-12 sm:grid sm:grid-cols-2 sm:gap-8 sm:px-6 lg:px-8 lg:pb-16"
-      >
+      <div className="mx-auto max-w-7xl px-4 pb-12 sm:grid sm:grid-cols-2 sm:gap-8 sm:px-6 lg:px-8 lg:pb-16">
         <div>
           <header>
             <SectionHeading as="h1" variant="title" id="nx-is-fast">
@@ -92,34 +90,36 @@ export function NxWithCi(): JSX.Element {
         <div className="flex items-end">
           <div className="w-full">
             <div className="flex">
-              <div className="shrink-0 w-28 border-r border-slate-200 dark:border-slate-500 py-3 text-slate-700 dark:text-slate-400">
+              <div className="w-28 shrink-0 border-r border-slate-200 py-3 text-slate-700 dark:border-slate-500 dark:text-slate-400">
                 CI without Nx
               </div>
               <div className="flex-grow py-1">
                 <motion.div
-                  initial={{ display: 'none', width: 0 }}
-                  variants={{ visible: { display: 'flex', width: '90%' } }}
-                  transition={{ type: 'tween', duration: 1 }}
-                  className="flex-grow items-center justify-end text-slate-600 dark:text-slate-400 bg-slate-200 dark:bg-slate-700 py-2 px-4 rounded-r-lg"
+                  initial="start"
+                  whileInView="end"
+                  variants={ciBar}
+                  viewport={{ once: true }}
+                  className="flex-grow items-center justify-end rounded-r-lg bg-slate-200 py-2 px-4 text-slate-600 dark:bg-slate-700 dark:text-slate-400"
                 >
-                  <Counter from={0} to={90} round={0} progress={progress} />
+                  <Counter value={90}></Counter>
                   <span className="ml-1">minutes</span>
                 </motion.div>
               </div>
             </div>
             <div className="flex">
-              <div className="shrink-0 font-medium w-28 border-r border-slate-200 dark:border-slate-500 py-3 text-slate-700 dark:text-slate-400">
+              <div className="w-28 shrink-0 border-r border-slate-200 py-3 font-medium text-slate-700 dark:border-slate-500 dark:text-slate-400">
                 CI with Nx
               </div>
-              <div className="flex-grow flex gap-4 py-1 font-medium">
+              <div className="flex flex-grow gap-4 py-1 font-medium">
                 <motion.div
-                  initial={{ display: 'none', width: 0 }}
-                  variants={{ visible: { display: 'flex', width: '10%' } }}
-                  transition={{ type: 'tween', duration: 1 }}
-                  className="bg-blue-500 dark:bg-sky-500 rounded-r-lg"
+                  initial="start"
+                  whileInView="end"
+                  variants={nxBar}
+                  viewport={{ once: true }}
+                  className="rounded-r-lg bg-blue-500 dark:bg-sky-500"
                 />
                 <div className="flex items-center text-slate-700 dark:text-slate-400">
-                  <Counter from={0} to={10} round={0} progress={progress} />
+                  <Counter value={10}></Counter>
                   <span className="ml-1">minutes</span>
                 </div>
               </div>
@@ -128,7 +128,7 @@ export function NxWithCi(): JSX.Element {
               <a
                 href="https://www.youtube.com/watch?v=KPCMg_Dn0Eo"
                 target="_blank"
-                className="hover:underline text-sm font-medium"
+                className="text-sm font-medium hover:underline"
                 title="Find out how to reduce CI time with Nx"
                 rel="noreferrer"
               >
@@ -137,14 +137,14 @@ export function NxWithCi(): JSX.Element {
             </div>
           </div>
         </div>
-      </motion.div>
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pb-8 lg:pb-16">
+      </div>
+      <div className="mx-auto max-w-7xl px-4 pb-8 sm:px-6 lg:px-8 lg:pb-16">
         <dl className="grid grid-cols-1 gap-x-8 gap-y-16 sm:grid-cols-3">
           <div className="relative">
             <dt className="text-base font-semibold leading-7 text-slate-900 dark:text-slate-100">
-              <div className="relative group">
-                <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-lg blur-sm opacity-25 group-hover:opacity-90 transition duration-1000 group-hover:duration-200"></div>
-                <div className="relative flex gap-4 items-center rounded-lg border border-slate-200 bg-white p-4 text-lg shadow-sm transition focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 dark:border-slate-800/40 dark:bg-slate-800">
+              <div className="group relative">
+                <div className="absolute -inset-1 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-500 opacity-25 blur-sm transition duration-1000 group-hover:opacity-90 group-hover:duration-200"></div>
+                <div className="relative flex items-center gap-4 rounded-lg border border-slate-200 bg-white p-4 text-lg shadow-sm transition focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 dark:border-slate-800/40 dark:bg-slate-800">
                   <NxCacheIcon className="h-8 w-8" aria-hidden="true" />
                   <Link
                     href="/ci/features/remote-cache"
@@ -162,9 +162,9 @@ export function NxWithCi(): JSX.Element {
           </div>
           <div className="relative">
             <dt className="text-base font-semibold leading-7 text-slate-900 dark:text-slate-100">
-              <div className="relative group">
-                <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500 to-green-500 rounded-lg blur-sm opacity-25 group-hover:opacity-90 transition duration-1000 group-hover:duration-200"></div>
-                <div className="relative flex gap-4 items-center rounded-lg border border-slate-200 bg-white p-4 text-lg shadow-sm transition focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 dark:border-slate-800/40 dark:bg-slate-800">
+              <div className="group relative">
+                <div className="absolute -inset-1 rounded-lg bg-gradient-to-r from-emerald-500 to-green-500 opacity-25 blur-sm transition duration-1000 group-hover:opacity-90 group-hover:duration-200"></div>
+                <div className="relative flex items-center gap-4 rounded-lg border border-slate-200 bg-white p-4 text-lg shadow-sm transition focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 dark:border-slate-800/40 dark:bg-slate-800">
                   <NxAgentsIcon className="h-8 w-8" aria-hidden="true" />
                   <a
                     href="/ci/features/distribute-task-execution"
@@ -183,9 +183,9 @@ export function NxWithCi(): JSX.Element {
           </div>
           <div className="relative">
             <dt className="text-base font-semibold leading-7 text-slate-900 dark:text-slate-100">
-              <div className="relative group opacity-70">
-                <div className="absolute -inset-1 bg-slate-500 rounded-lg blur-sm opacity-25"></div>
-                <div className="relative flex gap-4 items-center rounded-lg border border-slate-200 bg-white p-4 text-lg shadow-sm transition focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 dark:border-slate-800/40 dark:bg-slate-800">
+              <div className="group relative opacity-70">
+                <div className="absolute -inset-1 rounded-lg bg-slate-500 opacity-25 blur-sm"></div>
+                <div className="relative flex items-center gap-4 rounded-lg border border-slate-200 bg-white p-4 text-lg shadow-sm transition focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 dark:border-slate-800/40 dark:bg-slate-800">
                   <SparklesIcon
                     className="block h-8 w-8 sm:hidden md:block"
                     aria-hidden="true"
@@ -194,7 +194,7 @@ export function NxWithCi(): JSX.Element {
                   <span className="absolute inset-0"></span>Tusky
                   {/*</a>*/}
                   <div className="flex-grow" />
-                  <span className="dark:bg-slate-400/10 dark:text-slate-400 dark:ring-slate-400/20 inline-flex items-center rounded-md bg-slate-50 px-2 py-1 text-xs font-medium text-slate-600 ring-1 ring-inset ring-slate-500/10">
+                  <span className="inline-flex items-center rounded-md bg-slate-50 px-2 py-1 text-xs font-medium text-slate-600 ring-1 ring-inset ring-slate-500/10 dark:bg-slate-400/10 dark:text-slate-400 dark:ring-slate-400/20">
                     Coming soon
                   </span>
                 </div>

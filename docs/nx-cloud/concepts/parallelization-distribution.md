@@ -100,4 +100,4 @@ In the same way that Nx efficiently assigns tasks to parallel processes on a sin
 
 If your repo is starting to grow large enough that CI times are suffering, or if your parallelization strategy is growing too complex to manage effectively, try [setting up Nx Agents](/ci/features/distribute-task-execution). You can [generate a simple workflow](/nx-api/workspace/generators/ci-workflow) for common CI providers with a `nx g ci-workflow` or follow one of the [CI setup recipes](/ci/recipes/set-up).
 
-Organizations that want extra help setting up Nx Cloud or getting the most out of Nx can [sign up for Nx Enterprise](https://nx.app/enterprise/). This package comes with extra support from the Nx team and the option to host Nx Cloud on your own servers.
+Organizations that want extra help setting up Nx Cloud or getting the most out of Nx can [sign up for Nx Enterprise](/enterprise). This package comes with extra support from the Nx team and the option to host Nx Cloud on your own servers.

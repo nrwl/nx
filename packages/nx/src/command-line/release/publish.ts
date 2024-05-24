@@ -173,9 +173,10 @@ async function runPublishOnProjects(
       .filter((projectName) =>
         projectHasTarget(projectGraph.nodes[projectName], requiredTargetName)
       );
+
     await generateGraph(
       {
-        watch: false,
+        watch: true,
         all: false,
         open: true,
         view: 'tasks',

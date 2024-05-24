@@ -5,40 +5,39 @@ import ProjectJsonProjectsPlugin from '../plugins/project-json/build-nodes/proje
 import TargetDefaultsPlugin from '../plugins/target-defaults/target-defaults-plugin';
 import * as PackageJsonWorkspacesPlugin from '../plugins/package-json-workspaces';
 import { NxPluginV2 } from '../project-graph/plugins';
-import { LoadedNxPlugin } from '../project-graph/plugins/internal-api';
 
 /**
- * @deprecated Add targets to the projects in a {@link CreateNodes} function instead. This will be removed in Nx 19
+ * @deprecated Add targets to the projects in a {@link CreateNodes} function instead. This will be removed in Nx 20
  */
 export type ProjectTargetConfigurator = (
   file: string
 ) => Record<string, TargetConfiguration>;
 
 /**
- * @deprecated Use {@link NxPluginV2} instead. This will be removed in Nx 19
+ * @deprecated Use {@link NxPluginV2} instead. This will be removed in Nx 20
  */
 export type NxPluginV1 = {
   name: string;
   /**
-   * @deprecated Use {@link CreateNodes} and {@link CreateDependencies} instead. This will be removed in Nx 19
+   * @deprecated Use {@link CreateNodes} and {@link CreateDependencies} instead. This will be removed in Nx 20
    */
   processProjectGraph?: ProjectGraphProcessor;
 
   /**
-   * @deprecated Add targets to the projects inside of {@link CreateNodes} instead. This will be removed in Nx 19
+   * @deprecated Add targets to the projects inside of {@link CreateNodes} instead. This will be removed in Nx 20
    */
   registerProjectTargets?: ProjectTargetConfigurator;
 
   /**
    * A glob pattern to search for non-standard project files.
    * @example: ["*.csproj", "pom.xml"]
-   * @deprecated Use {@link CreateNodes} instead. This will be removed in Nx 19
+   * @deprecated Use {@link CreateNodes} instead. This will be removed in Nx 20
    */
   projectFilePatterns?: string[];
 };
 
 /**
- * @todo(@agentender) v19: Remove this fn when we remove readWorkspaceConfig
+ * @todo(@agentender) v20: Remove this fn when we remove readWorkspaceConfig
  */
 export function getDefaultPluginsSync(root: string): NxPluginV2[] {
   const plugins: NxPluginV2[] = [

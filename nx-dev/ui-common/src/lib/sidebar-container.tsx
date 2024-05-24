@@ -105,9 +105,11 @@ const rspackSection = {
 export function SidebarContainer({
   menu,
   navIsOpen,
+  toggleNav,
 }: {
   menu: Menu;
   navIsOpen: boolean;
+  toggleNav: (value: boolean) => void;
 }): JSX.Element {
   // TODO(jack): Remove this rspack modification once we move rspack into main repo (when stable).
   const menuWithRspack = useMemo(() => {
@@ -128,8 +130,12 @@ export function SidebarContainer({
 
   return (
     <div id="sidebar" data-testid="sidebar">
-      <SidebarMobile menu={menuWithRspack} navIsOpen={navIsOpen} />
-      <div className="hidden h-full w-72 flex-col border-r border-slate-200 dark:border-slate-700 dark:bg-slate-900 md:flex">
+      <SidebarMobile
+        menu={menuWithRspack}
+        toggleNav={toggleNav}
+        navIsOpen={navIsOpen}
+      />
+      <div className="hidden h-full w-72 flex-col border-r border-slate-200 md:flex dark:border-slate-700 dark:bg-slate-900">
         <div className="relative flex flex-grow overflow-y-scroll p-4">
           <Sidebar menu={menuWithRspack} />
         </div>

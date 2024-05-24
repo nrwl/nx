@@ -1,9 +1,11 @@
 import { CommandModule } from 'yargs';
+import { withOverrides } from '../yargs-utils/shared-options';
 
 export interface AddOptions {
   packageSpecifier: string;
   updatePackageScripts?: boolean;
   verbose?: boolean;
+  __overrides_unparsed__: string[];
 }
 
 export const yargsAddCommand: CommandModule<
@@ -14,6 +16,10 @@ export const yargsAddCommand: CommandModule<
   describe: 'Install a plugin and initialize it.',
   builder: (yargs) =>
     yargs
+      .parserConfiguration({
+        'strip-dashed': true,
+        'unknown-options-as-args': true,
+      })
       .positional('packageSpecifier', {
         type: 'string',
         description:
@@ -41,5 +47,6 @@ export const yargsAddCommand: CommandModule<
         '$0 add @nx/react@17.0.0',
         'Install version `17.0.0` of the `@nx/react` package and run its `@nx/react:init` generator'
       ) as any,
-  handler: (args) => import('./add').then((m) => m.addHandler(args)),
+  handler: (args) =>
+    import('./add').then((m) => m.addHandler(withOverrides(args))),
 };

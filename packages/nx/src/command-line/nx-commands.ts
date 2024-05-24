@@ -5,10 +5,8 @@ import {
   yargsAffectedBuildCommand,
   yargsAffectedCommand,
   yargsAffectedE2ECommand,
-  yargsAffectedGraphCommand,
   yargsAffectedLintCommand,
   yargsAffectedTestCommand,
-  yargsPrintAffectedCommand,
 } from './affected/command-object';
 import {
   yargsConnectCommand,
@@ -61,7 +59,6 @@ export const commandsObject = yargs
   .command(yargsAffectedBuildCommand)
   .command(yargsAffectedCommand)
   .command(yargsAffectedE2ECommand)
-  .command(yargsAffectedGraphCommand)
   .command(yargsAffectedLintCommand)
   .command(yargsAffectedTestCommand)
   .command(yargsConnectCommand)
@@ -76,7 +73,6 @@ export const commandsObject = yargs
   .command(yargsListCommand)
   .command(yargsMigrateCommand)
   .command(yargsNewCommand)
-  .command(yargsPrintAffectedCommand)
   .command(yargsReleaseCommand)
   .command(yargsRepairCommand)
   .command(yargsReportCommand)

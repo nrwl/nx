@@ -1,4 +1,5 @@
 import { joinPathFragments, names, readNxJson, Tree } from '@nx/devkit';
+import { VitePluginOptions } from '@nx/vite/src/plugins/plugin';
 import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { Schema } from '../schema';
 import { ReactNativePluginOptions } from '../../../../plugins/plugin';
@@ -49,15 +50,15 @@ export async function normalizeOptions(
   const androidProjectRoot = joinPathFragments(appProjectRoot, 'android');
   const rootProject = appProjectRoot === '.';
 
-  let e2eWebServerTarget = 'start';
+  let e2eWebServerTarget = 'serve';
   if (options.addPlugin) {
     if (nxJson.plugins) {
       for (const plugin of nxJson.plugins) {
         if (
           options.bundler === 'vite' &&
           typeof plugin === 'object' &&
-          plugin.plugin === '@nx/react-native/plugin' &&
-          (plugin.options as ReactNativePluginOptions).startTargetName
+          plugin.plugin === '@nx/vite/plugin' &&
+          (plugin.options as VitePluginOptions).serveTargetName
         ) {
           e2eWebServerTarget = (plugin.options as ReactNativePluginOptions)
             .startTargetName;

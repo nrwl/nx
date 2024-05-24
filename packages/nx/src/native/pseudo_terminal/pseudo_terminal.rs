@@ -55,6 +55,7 @@ pub fn create_pseudo_terminal() -> napi::Result<PseudoTerminal> {
             }
         });
     }
+    // Why do we do this here when it's already done when running a command?
     if std::io::stdout().is_tty() {
         trace!("Enabling raw mode");
         enable_raw_mode().expect("Failed to enter raw terminal mode");
@@ -81,7 +82,12 @@ pub fn create_pseudo_terminal() -> napi::Result<PseudoTerminal> {
                 let quiet = quiet_clone.load(Ordering::Relaxed);
                 trace!("Quiet: {}", quiet);
                 if !quiet {
-                    if stdout.write_all(&buf[0..len]).is_err() {
+                    let mut content = String::from_utf8_lossy(&buf[0..len]).to_string();
+                    if content.contains("\x1B[6n") {
+                        trace!("Prevented terminal escape sequence ESC[6n from being printed.");
+                        content = content.replace("\x1B[6n", "");
+                    }
+                    if stdout.write_all(content.as_bytes()).is_err() {
                         break;
                     } else {
                         let _ = stdout.flush();
@@ -95,7 +101,8 @@ pub fn create_pseudo_terminal() -> napi::Result<PseudoTerminal> {
         printing_tx.send(()).ok();
     });
     if std::io::stdout().is_tty() {
-        disable_raw_mode().expect("Failed to enter raw terminal mode");
+        trace!("Disabling raw mode");
+        disable_raw_mode().expect("Failed to exit raw terminal mode");
     }
     Ok(PseudoTerminal {
         quiet,
@@ -110,7 +117,9 @@ pub fn run_command(
     command: String,
     command_dir: Option<String>,
     js_env: Option<HashMap<String, String>>,
+    exec_argv: Option<Vec<String>>,
     quiet: Option<bool>,
+    tty: Option<bool>,
 ) -> napi::Result<ChildProcess> {
     let command_dir = get_directory(command_dir)?;
 
@@ -130,19 +139,27 @@ pub fn run_command(
         }
     }
 
+    if let Some(exec_argv) = exec_argv {
+        cmd.env("NX_PSEUDO_TERMINAL_EXEC_ARGV", exec_argv.join("|"));
+    }
+
     let (exit_to_process_tx, exit_to_process_rx) = bounded(1);
     let mut child = pair.slave.spawn_command(cmd)?;
     pseudo_terminal.running.store(true, Ordering::SeqCst);
     trace!("Running {}", command);
-    let is_tty = std::io::stdout().is_tty();
+    let is_tty = tty.unwrap_or_else(|| std::io::stdout().is_tty());
     if is_tty {
         trace!("Enabling raw mode");
         enable_raw_mode().expect("Failed to enter raw terminal mode");
     }
     let process_killer = child.clone_killer();
 
+    trace!("Getting running clone");
     let running_clone = pseudo_terminal.running.clone();
+    trace!("Getting printing_rx clone");
     let printing_rx = pseudo_terminal.printing_rx.clone();
+
+    trace!("spawning thread to wait for command");
     std::thread::spawn(move || {
         trace!("Waiting for {}", command);
 
@@ -151,10 +168,10 @@ pub fn run_command(
             trace!("{} Exited", command);
             // This mitigates the issues with ConPTY on windows and makes it work.
             running_clone.store(false, Ordering::SeqCst);
-            trace!("Waiting for printing to finish");
-            let timeout = 500;
-            let a = Instant::now();
             if cfg!(windows) {
+                trace!("Waiting for printing to finish");
+                let timeout = 500;
+                let a = Instant::now();
                 loop {
                     if let Ok(_) = printing_rx.try_recv() {
                         break;
@@ -163,14 +180,19 @@ pub fn run_command(
                         break;
                     }
                 }
+                trace!("Printing finished");
             }
             if is_tty {
+                trace!("Disabling raw mode");
                 disable_raw_mode().expect("Failed to restore non-raw terminal");
             }
             exit_to_process_tx.send(exit.to_string()).ok();
+        } else {
+            trace!("Error waiting for {}", command);
         };
     });
 
+    trace!("Returning ChildProcess");
     Ok(ChildProcess::new(
         process_killer,
         pseudo_terminal.message_rx.clone(),

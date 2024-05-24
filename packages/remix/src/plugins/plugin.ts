@@ -47,6 +47,7 @@ export interface RemixPluginOptions {
   devTargetName?: string;
   startTargetName?: string;
   typecheckTargetName?: string;
+  staticServeTargetName?: string;
 }
 
 export const createNodes: CreateNodes<RemixPluginOptions> = [
@@ -114,6 +115,11 @@ async function buildRemixTargets(
   );
   targets[options.devTargetName] = devTarget(serverBuildPath, projectRoot);
   targets[options.startTargetName] = startTarget(
+    projectRoot,
+    serverBuildPath,
+    options.buildTargetName
+  );
+  targets[options.staticServeTargetName] = startTarget(
     projectRoot,
     serverBuildPath,
     options.buildTargetName
@@ -228,6 +234,7 @@ function normalizeOptions(options: RemixPluginOptions) {
   options.devTargetName ??= 'dev';
   options.startTargetName ??= 'start';
   options.typecheckTargetName ??= 'typecheck';
+  options.staticServeTargetName ??= 'static-serve';
 
   return options;
 }

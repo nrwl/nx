@@ -6,7 +6,7 @@ Context for [CreateNodesFunction](../../devkit/documents/CreateNodesFunction)
 
 ### Properties
 
-- [configFiles](../../devkit/documents/CreateNodesContext#configfiles): string[]
+- [configFiles](../../devkit/documents/CreateNodesContext#configfiles): readonly string[]
 - [nxJsonConfiguration](../../devkit/documents/CreateNodesContext#nxjsonconfiguration): NxJsonConfiguration<string[] | "\*">
 - [workspaceRoot](../../devkit/documents/CreateNodesContext#workspaceroot): string
 
@@ -14,7 +14,7 @@ Context for [CreateNodesFunction](../../devkit/documents/CreateNodesFunction)
 
 ### configFiles
 
-• `Readonly` **configFiles**: `string`[]
+• `Readonly` **configFiles**: readonly `string`[]
 
 The subset of configuration files which match the createNodes pattern
 

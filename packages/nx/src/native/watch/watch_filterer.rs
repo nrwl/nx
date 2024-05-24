@@ -78,6 +78,9 @@ impl Filterer for WatchFilterer {
                     FileEventKind::Create(CreateKind::File) => continue,
                     FileEventKind::Remove(RemoveKind::File) => continue,
 
+                    #[cfg(target_os = "linux")]
+                    FileEventKind::Create(CreateKind::Folder) => continue,
+
                     #[cfg(windows)]
                     FileEventKind::Modify(ModifyKind::Any) => continue,
                     #[cfg(windows)]
@@ -92,6 +95,13 @@ impl Filterer for WatchFilterer {
                     path,
                     file_type: Some(FileType::File) | None,
                 } if !path.display().to_string().ends_with('~') => continue,
+
+                #[cfg(target_os = "linux")]
+                Tag::Path {
+                    path: _,
+                    file_type: Some(FileType::Dir),
+                } => continue,
+
                 Tag::Source(Source::Filesystem) => continue,
                 _ => return Ok(false),
             }

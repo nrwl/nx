@@ -53,8 +53,8 @@ nx add @nx/gradle
 
 The `@nx/gradle` plugin will create an Nx project for each Gradle configuration file present. Any of the following files will be recognized as a Gradle configuration file:
 
-- `gradle.build`
-- `gradle.build.kts`
+- `build.gradle`
+- `build.gradle.kts`
 
 ### @nx/gradle Configuration
 

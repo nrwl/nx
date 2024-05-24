@@ -61,7 +61,7 @@ export async function normalizeOptions(
     skipTests: options.unitTestRunner === UnitTestRunner.None,
     skipFormat: false,
     unitTestRunner: UnitTestRunner.Jest,
-    e2eTestRunner: E2eTestRunner.Cypress,
+    e2eTestRunner: E2eTestRunner.Playwright,
     linter: Linter.EsLint,
     strict: true,
     standalone: true,

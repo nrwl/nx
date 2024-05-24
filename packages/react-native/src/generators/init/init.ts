@@ -1,15 +1,15 @@
 import {
   addDependenciesToPackageJson,
+  createProjectGraphAsync,
   formatFiles,
   GeneratorCallback,
   readNxJson,
   removeDependenciesFromPackageJson,
   runTasksInSerial,
   Tree,
-  updateNxJson,
 } from '@nx/devkit';
-import { updatePackageScripts } from '@nx/devkit/src/utils/update-package-scripts';
-import { createNodes, ReactNativePluginOptions } from '../../../plugins/plugin';
+import { addPlugin } from '@nx/devkit/src/utils/add-plugin';
+import { createNodes } from '../../../plugins/plugin';
 import {
   nxVersion,
   reactDomVersion,
@@ -39,17 +39,63 @@ export async function reactNativeInitGeneratorInternal(
   schema.addPlugin ??= addPluginDefault;
 
   if (schema.addPlugin) {
-    addPlugin(host);
+    await addPlugin(
+      host,
+      await createProjectGraphAsync(),
+      '@nx/react-native/plugin',
+      createNodes,
+      {
+        startTargetName: ['start', 'react-native:start', 'react-native-start'],
+        upgradeTargetname: [
+          'update',
+          'react-native:update',
+          'react-native-update',
+        ],
+        bundleTargetName: [
+          'bundle',
+          'react-native:bundle',
+          'react-native-bundle',
+        ],
+
+        podInstallTargetName: [
+          'pod-install',
+          'react-native:pod-install',
+          'react-native-pod-install',
+        ],
+        runIosTargetName: [
+          'run-ios',
+          'react-native:run-ios',
+          'react-native-run-ios',
+        ],
+        runAndroidTargetName: [
+          'run-android',
+          'react-native:run-android',
+          'react-native-run-android',
+        ],
+        buildIosTargetName: [
+          'build-ios',
+          'react-native:build-ios',
+          'react-native-build-ios',
+        ],
+        buildAndroidTargetName: [
+          'build-android',
+          'react-native:build-android',
+          'react-native-build-android',
+        ],
+        syncDepsTargetName: [
+          'sync-deps',
+          'react-native:sync-deps',
+          'react-native-sync-deps',
+        ],
+      },
+      schema.updatePackageScripts
+    );
   }
 
   const tasks: GeneratorCallback[] = [];
   if (!schema.skipPackageJson) {
     tasks.push(moveDependency(host));
     tasks.push(updateDependencies(host, schema));
-  }
-
-  if (schema.updatePackageScripts) {
-    await updatePackageScripts(host, createNodes);
   }
 
   if (!schema.skipFormat) {
@@ -77,37 +123,6 @@ export function updateDependencies(host: Tree, schema: Schema) {
 
 function moveDependency(host: Tree) {
   return removeDependenciesFromPackageJson(host, ['@nx/react-native'], []);
-}
-
-function addPlugin(host: Tree) {
-  const nxJson = readNxJson(host);
-  nxJson.plugins ??= [];
-
-  for (const plugin of nxJson.plugins) {
-    if (
-      typeof plugin === 'string'
-        ? plugin === '@nx/react-native/plugin'
-        : plugin.plugin === '@nx/react-native/plugin'
-    ) {
-      return;
-    }
-  }
-
-  nxJson.plugins.push({
-    plugin: '@nx/react-native/plugin',
-    options: {
-      startTargetName: 'start',
-      podInstallTargetName: 'pod-install',
-      bundleTargetName: 'bundle',
-      runIosTargetName: 'run-ios',
-      runAndroidTargetName: 'run-android',
-      buildIosTargetName: 'build-ios',
-      buildAndroidTargetName: 'build-android',
-      syncDepsTargetName: 'sync-deps',
-      upgradeTargetname: 'upgrade',
-    } as ReactNativePluginOptions,
-  });
-  updateNxJson(host, nxJson);
 }
 
 export default reactNativeInitGenerator;

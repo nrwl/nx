@@ -15,7 +15,7 @@ import { colors } from 'ng-packagr/lib/utils/color';
 import { getTailwindConfigPath } from './tailwindcss';
 import { workspaceRoot } from '@nx/devkit';
 import type { PostcssConfiguration } from 'ng-packagr/lib/styles/postcss-configuration';
-import { gte } from 'semver';
+import { gt } from 'semver';
 import { getInstalledPackageVersionInfo } from '../angular-version-utils';
 
 const maxWorkersVariable = process.env['NG_BUILD_MAX_WORKERS'];
@@ -94,7 +94,7 @@ export class StylesheetProcessor {
     const { version: ngPackagrVersion } =
       getInstalledPackageVersionInfo('ng-packagr');
     let postcssConfiguration: PostcssConfiguration | undefined;
-    if (gte(ngPackagrVersion, '17.3.0')) {
+    if (gt(ngPackagrVersion, '17.2.0')) {
       const {
         loadPostcssConfiguration,
       } = require('ng-packagr/lib/styles/postcss-configuration');

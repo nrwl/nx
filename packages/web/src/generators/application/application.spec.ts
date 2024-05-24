@@ -1,3 +1,5 @@
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
 import { installedCypressVersion } from '@nx/cypress/src/utils/cypress-version';
 import { readProjectConfiguration, Tree } from '@nx/devkit';
 import { getProjects, readJson } from '@nx/devkit';
@@ -83,7 +85,7 @@ describe('app', () => {
       expect(tsconfigApp.compilerOptions.outDir).toEqual('../dist/out-tsc');
       expect(tsconfigApp.extends).toEqual('./tsconfig.json');
 
-      expect(tree.exists('my-app-e2e/cypress.config.ts')).toBeTruthy();
+      expect(tree.exists('my-app-e2e/playwright.config.ts')).toBeTruthy();
       const tsconfigE2E = readJson(tree, 'my-app-e2e/tsconfig.json');
       expect(tsconfigE2E).toMatchInlineSnapshot(`
         {
@@ -92,19 +94,17 @@ describe('app', () => {
             "module": "commonjs",
             "outDir": "../dist/out-tsc",
             "sourceMap": false,
-            "types": [
-              "cypress",
-              "node",
-            ],
           },
           "extends": "../tsconfig.base.json",
           "include": [
             "**/*.ts",
             "**/*.js",
-            "cypress.config.ts",
-            "**/*.cy.ts",
-            "**/*.cy.js",
-            "**/*.d.ts",
+            "playwright.config.ts",
+            "src/**/*.spec.ts",
+            "src/**/*.spec.js",
+            "src/**/*.test.ts",
+            "src/**/*.test.js",
+            "src/**/*.d.ts",
           ],
         }
       `);
@@ -179,7 +179,7 @@ describe('app', () => {
           path: './tsconfig.spec.json',
         },
       ]);
-      expect(tree.exists('my-app-e2e/cypress.config.ts')).toBeTruthy();
+      expect(tree.exists('my-app-e2e/playwright.config.ts')).toBeTruthy();
       expect(tree.exists('my-app/index.html')).toBeTruthy();
       expect(tree.exists('my-app/vite.config.ts')).toBeTruthy();
       expect(tree.exists(`my-app/environments/environment.ts`)).toBeFalsy();

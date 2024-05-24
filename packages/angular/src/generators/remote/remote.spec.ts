@@ -1,3 +1,5 @@
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
 import { E2eTestRunner } from '../../utils/test-runners';
 import {
   getProjects,

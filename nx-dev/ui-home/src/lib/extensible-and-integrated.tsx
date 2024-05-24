@@ -1,6 +1,5 @@
 import { Tab } from '@headlessui/react';
 import { Button, SectionHeading } from '@nx/nx-dev/ui-common';
-import { AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { Fragment } from 'react';
 import { tabs } from './extensible-and-integrated/tabs';

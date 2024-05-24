@@ -489,4 +489,24 @@ describe('utils', () => {
       });
     });
   });
+
+  describe('validateOutputs', () => {
+    it('returns undefined if there are no errors', () => {
+      expect(validateOutputs(['{projectRoot}/dist'])).toBeUndefined();
+    });
+
+    it('throws an error if the output is not an array', () => {
+      expect(() => validateOutputs('output' as unknown as string[])).toThrow(
+        "The 'outputs' field must be an array"
+      );
+    });
+
+    it("throws an error if the output has entries that aren't strings", () => {
+      expect(() =>
+        validateOutputs(['foo', 1, null, true, {}, []] as unknown as string[])
+      ).toThrow(
+        "The 'outputs' field must contain only strings, but received types: [string, number, object, boolean, object, object]"
+      );
+    });
+  });
 });

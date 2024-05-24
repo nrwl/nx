@@ -112,6 +112,13 @@ export default function CustomApp({
         strategy="afterInteractive"
         src="https://js.hs-scripts.com/2757427.js"
       />
+      {/* HubSpot FORMS Embed Code */}
+      <Script
+        type="text/javascript"
+        id="hs-forms-script-loader"
+        strategy="afterInteractive"
+        src="//js.hsforms.net/forms/v2.js"
+      />
       {/* Hotjar Analytics */}
       <Script
         id="hotjar-script-loader"

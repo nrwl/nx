@@ -412,7 +412,7 @@ function getFileToRun(
 function fileToRunCorrectPath(fileToRun: string): string {
   if (fileExists(fileToRun)) return fileToRun;
 
-  const extensionsToTry = ['.cjs', '.mjs', 'cjs.js', '.esm.js'];
+  const extensionsToTry = ['.cjs', '.mjs', '.cjs.js', '.esm.js'];
 
   for (const ext of extensionsToTry) {
     const file = fileToRun.replace(/\.js$/, ext);

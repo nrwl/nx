@@ -71,6 +71,9 @@ describe('file-server', () => {
       config.targets['build'] = {
         command: `node copy-index.js`,
         outputs: [`{workspaceRoot}/dist/foobar`],
+        options: {
+          cwd: '{projectRoot}',
+        },
       };
       config.targets['serve'] = {
         executor: '@nx/web:file-server',

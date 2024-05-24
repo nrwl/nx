@@ -1,0 +1,42 @@
+{
+  "name": "ci-workflow",
+  "factory": "./src/generators/ci-workflow/generator",
+  "schema": {
+    "$schema": "https://json-schema.org/schema",
+    "$id": "NxGradleCiWorkflowSchema",
+    "title": "Gradle CI Workflow Generator",
+    "description": "Setup a CI Workflow to run Nx in CI.",
+    "type": "object",
+    "properties": {
+      "ci": {
+        "type": "string",
+        "description": "CI provider.",
+        "enum": ["github", "circleci"],
+        "x-prompt": {
+          "message": "What is your target CI provider?",
+          "type": "list",
+          "items": [
+            { "value": "github", "label": "GitHub Actions" },
+            { "value": "circleci", "label": "Circle CI" }
+          ]
+        }
+      },
+      "name": {
+        "type": "string",
+        "description": "Workflow name.",
+        "$default": { "$source": "argv", "index": 0 },
+        "default": "CI",
+        "x-prompt": "How should we name your workflow?",
+        "pattern": "^[a-zA-Z].*$"
+      }
+    },
+    "required": ["ci", "name"],
+    "presets": []
+  },
+  "description": "Setup a CI Workflow to run Nx in CI",
+  "implementation": "/packages/gradle/src/generators/ci-workflow/generator.ts",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/gradle/src/generators/ci-workflow/schema.json",
+  "type": "generator"
+}

@@ -10,6 +10,7 @@ on:
 env:
   DEBUG: napi:*
   NX_RUN_GROUP: ${{ github.run_id }}-${{ github.run_attempt }}
+  CYPRESS_INSTALL_BINARY: 0
 
 jobs:
   build:
@@ -18,7 +19,7 @@ jobs:
       fail-fast: false
       matrix:
         settings:
-          - host: macos-latest
+          - host: macos-13
             target: x86_64-apple-darwin
             build: |
               pnpm nx run-many --target=build-native -- --target=x86_64-apple-darwin
@@ -35,13 +36,20 @@ jobs:
             docker: ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-debian
             build: |-
               set -e &&
+              npm i -g pnpm@8.15.7 --force &&
               pnpm --version &&
-              pnpm nx run-many --target=build-native -- --target=x86_64-unknown-linux-gnu
+              pnpm install --frozen-lockfile &&
+              pnpm nx run-many --verbose --target=build-native -- --target=x86_64-unknown-linux-gnu
           - host: ubuntu-latest
             target: x86_64-unknown-linux-musl
             docker: ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-alpine
-            build: set -e && pnpm nx run-many --target=build-native -- --target=x86_64-unknown-linux-musl
-          - host: macos-latest
+            build: |-
+              set -e &&
+              npm i -g pnpm@8.15.7 --force &&
+              pnpm --version &&
+              pnpm install --frozen-lockfile &&
+              pnpm nx run-many --verbose --target=build-native -- --target=x86_64-unknown-linux-musl
+          - host: macos-13
             target: aarch64-apple-darwin
             build: |
               sudo rm -Rf /Library/Developer/CommandLineTools/SDKs/*;
@@ -55,8 +63,10 @@ jobs:
             docker: ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-debian-aarch64
             build: |-
               set -e &&
+              npm i -g pnpm@8.15.7 --force &&
               pnpm --version &&
-              pnpm nx run-many --target=build-native -- --target=aarch64-unknown-linux-gnu
+              pnpm install --frozen-lockfile &&
+              pnpm nx run-many --verbose --target=build-native -- --target=aarch64-unknown-linux-gnu
           - host: ubuntu-latest
             target: armv7-unknown-linux-gnueabihf
             setup: |
@@ -79,7 +89,10 @@ jobs:
             build: |-
               set -e &&
               rustup target add aarch64-unknown-linux-musl &&
-              pnpm nx run-many --target=build-native -- --target=aarch64-unknown-linux-musl
+              npm i -g pnpm@8.15.7 --force &&
+              pnpm --version &&
+              pnpm install --frozen-lockfile &&
+              pnpm nx run-many --verbose --target=build-native -- --target=aarch64-unknown-linux-musl
           - host: windows-latest
             target: aarch64-pc-windows-msvc
             build: pnpm nx run-many --target=build-native -- --target=aarch64-pc-windows-msvc
@@ -129,6 +142,7 @@ jobs:
         run: yarn config set supportedArchitectures.cpu "ia32"
         shell: bash
       - name: Install dependencies
+        if: ${{ !matrix.settings.docker }}
         run: pnpm install --frozen-lockfile
         timeout-minutes: 30
       - name: Setup node x86
@@ -184,7 +198,7 @@ jobs:
             env
             whoami
             sudo pkg install -y -f node libnghttp2 npm git
-            sudo npm install --location=global --ignore-scripts pnpm
+            sudo npm install --location=global --ignore-scripts pnpm@8.15.7
             curl https://sh.rustup.rs -sSf --output rustup.sh
             sh rustup.sh -y --profile minimal --default-toolchain stable
             source "$HOME/.cargo/env"
@@ -202,7 +216,7 @@ jobs:
             mkdir -p /Users/runner/work/_temp/_github_workflow
             echo "{}" > /Users/runner/work/_temp/_github_workflow/event.json
             pnpm install --frozen-lockfile --ignore-scripts
-            pnpm nx run-many --outputStyle stream --target=build-native -- --target=x86_64-unknown-freebsd
+            pnpm nx run-many --verbose --outputStyle stream --target=build-native -- --target=x86_64-unknown-freebsd
             pnpm nx reset
             rm -rf node_modules
             rm -rf dist

@@ -23,6 +23,7 @@ exports[`@nx/next/plugin integrated projects should create nodes 1`] = `
           ],
           "options": {
             "cwd": "my-app",
+            "tty": false,
           },
           "outputs": [
             "{workspaceRoot}/my-app/.next",
@@ -82,6 +83,7 @@ exports[`@nx/next/plugin root projects should create nodes 1`] = `
           ],
           "options": {
             "cwd": ".",
+            "tty": false,
           },
           "outputs": [
             "{projectRoot}/.next",

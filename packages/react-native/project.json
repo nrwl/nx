@@ -4,8 +4,6 @@
   "sourceRoot": "packages/react-native/src",
   "projectType": "library",
   "targets": {
-    "lint": {},
-    "test": {},
     "build-base": {
       "executor": "@nx/js:tsc",
       "options": {
