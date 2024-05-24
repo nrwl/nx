@@ -201,6 +201,11 @@ export default async function runExecutor(
     console.log('Skipped npm view because --first-release was set');
   }
 
+  /**
+   * NOTE: If this is ever changed away from running the command at the workspace root and pointing at the package root (e.g. back
+   * to running from the package root directly), then special attention should be paid to the fact that npm publish will nest its
+   * JSON output under the name of the package in that case (and it would need to be handled below).
+   */
   const npmPublishCommandSegments = [
     `npm publish ${packageRoot} --json --"${registryConfigKey}=${registry}" --tag=${tag}`,
   ];
@@ -225,8 +230,9 @@ export default async function runExecutor(
      * We cannot JSON.parse the output directly because if the user is using lifecycle scripts, npm will mix its publish output with the JSON output all on stdout.
      * Additionally, we want to capture and show the lifecycle script outputs as beforeJsonData and afterJsonData and print them accordingly below.
      */
-    const extractJsonData = extractNpmPublishJsonData(output.toString());
-    if (!extractJsonData.jsonData) {
+    const { beforeJsonData, jsonData, afterJsonData } =
+      extractNpmPublishJsonData(output.toString());
+    if (!jsonData) {
       console.error(
         'The npm publish output data could not be extracted. Please report this issue on https://github.com/nrwl/nx'
       );
@@ -235,18 +241,14 @@ export default async function runExecutor(
       };
     }
 
-    // If npm workspaces are in use, the publish output will nest the data under the package name, so we normalize it first
-    const normalizedStdoutData =
-      extractJsonData.jsonData[packageName] ?? extractJsonData.jsonData;
-
     // If in dry-run mode, the version on disk will not represent the version that would be published, so we scrub it from the output to avoid confusion.
     const dryRunVersionPlaceholder = 'X.X.X-dry-run';
     if (isDryRun) {
-      for (const [key, val] of Object.entries(normalizedStdoutData)) {
+      for (const [key, val] of Object.entries(jsonData)) {
         if (typeof val !== 'string') {
           continue;
         }
-        normalizedStdoutData[key] = val.replace(
+        jsonData[key] = val.replace(
           new RegExp(packageJson.version, 'g'),
           dryRunVersionPlaceholder
         );
@@ -254,19 +256,16 @@ export default async function runExecutor(
     }
 
     if (
-      typeof extractJsonData.beforeJsonData === 'string' &&
-      extractJsonData.beforeJsonData.trim().length > 0
+      typeof beforeJsonData === 'string' &&
+      beforeJsonData.trim().length > 0
     ) {
-      console.log(extractJsonData.beforeJsonData);
+      console.log(beforeJsonData);
     }
 
-    logTar(normalizedStdoutData);
+    logTar(jsonData);
 
-    if (
-      typeof extractJsonData.afterJsonData === 'string' &&
-      extractJsonData.afterJsonData.trim().length > 0
-    ) {
-      console.log(extractJsonData.afterJsonData);
+    if (typeof afterJsonData === 'string' && afterJsonData.trim().length > 0) {
+      console.log(afterJsonData);
     }
 
     if (isDryRun) {
