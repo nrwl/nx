@@ -5,7 +5,7 @@ import { output } from '../../utils/output';
 import { getPackageManagerCommand } from '../../utils/package-manager';
 import { generateDotNxSetup } from './implementation/dot-nx/add-nx-scripts';
 import { runNxSync } from '../../utils/child-process';
-import { readJsonFile, writeJsonFile } from '../../utils/fileutils';
+import { readJsonFile } from '../../utils/fileutils';
 import { nxVersion } from '../../utils/versions';
 import {
   addDepsToPackageJson,
@@ -22,7 +22,6 @@ import { globWithWorkspaceContext } from '../../utils/workspace-context';
 import { connectExistingRepoToNxCloudPrompt } from '../connect/connect-to-nx-cloud';
 import { addNxToNpmRepo } from './implementation/add-nx-to-npm-repo';
 import { addNxToMonorepo } from './implementation/add-nx-to-monorepo';
-import { join } from 'path';
 
 export interface InitArgs {
   interactive: boolean;
