@@ -97,7 +97,9 @@ jobs:
             target: wasm32-wasip1-threads
             build: |-
               set -e &&
-              pnpm --version && 
+              pnpm --version &&
+              rustup override set nightly-2024-04-18 &&
+              rustup target add wasm32-wasip1-threads &&
               pnpm exec napi build --release --platform -c packages/nx/package.json --manifest-path packages/nx/Cargo.toml --js ./index.js -o packages/nx/src/native --target wasm32-wasip1-threads
               #              pnpm nx run-many --target=build-native -- --target=wasm32-wasip1-threads
           - host: windows-latest
@@ -129,7 +131,7 @@ jobs:
         uses: dtolnay/rust-toolchain@master
         if: ${{ matrix.settings.target == 'wasm32-wasip1-threads' }}
         with:
-          toolchain: nightly-2024-05-24
+          toolchain: nightly-2024-04-18
           targets: ${{ matrix.settings.target }}
 
       - name: Cache cargo
@@ -181,7 +183,9 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: bindings-${{ matrix.settings.target }}
-          path: packages/**/*.node
+          path: |
+            packages/**/*.node
+            packages/**/*.wasm
           if-no-files-found: error
 
   build-freebsd:
