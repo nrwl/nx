@@ -5,7 +5,7 @@ import {
   projectGraphCacheDirectory,
 } from '../../utils/cache-directory';
 import { output } from '../../utils/output';
-import { nativeFileCacheLocation } from '../../native/native-file-cache-location';
+import { getNativeFileCacheLocation } from '../../native/native-file-cache-location';
 
 export async function resetHandler() {
   output.note({
@@ -15,7 +15,7 @@ export async function resetHandler() {
   await daemonClient.stop();
   output.log({ title: 'Daemon Server - Stopped' });
   try {
-    rmSync(nativeFileCacheLocation, { recursive: true, force: true });
+    rmSync(getNativeFileCacheLocation(), { recursive: true, force: true });
   } catch (e) {
     // ignore, deleting the native file cache is not critical and can fail if another process is locking the file
   }
