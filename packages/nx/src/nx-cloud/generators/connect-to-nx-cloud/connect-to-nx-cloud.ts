@@ -79,37 +79,48 @@ function printSuccessMessage(
   token: string,
   installationSource: string
 ) {
-  let origin = 'https://nx.app';
-  try {
-    origin = new URL(url).origin;
-  } catch (e) {}
+  if (process.env.NX_NEW_CLOUD_ONBOARDING !== 'true') {
+    let origin = 'https://nx.app';
+    try {
+      origin = new URL(url).origin;
+    } catch (e) {}
 
-  const githubSlug = getGithubSlugOrNull();
-  const apiUrl = removeTrailingSlash(
-    process.env.NX_CLOUD_API || process.env.NRWL_API || `https://cloud.nx.app`
-  );
-  let connectCloudUrl;
-  if (githubSlug) {
-    connectCloudUrl = `${apiUrl}/setup/connect-workspace/vcs?provider=GITHUB&selectedRepositoryName=${encodeURIComponent(
-      githubSlug
-    )}`;
+    output.note({
+      title: `Your Nx Cloud workspace is public`,
+      bodyLines: [
+        `To restrict access, connect it to your Nx Cloud account:`,
+        `- Push your changes`,
+        `- Login at ${origin} to connect your repository`,
+      ],
+    });
   } else {
-    connectCloudUrl = `https://cloud.nx.app/setup/connect-workspace/manual?accessToken=${token}`;
-  }
+    const githubSlug = getGithubSlugOrNull();
+    const apiUrl = removeTrailingSlash(
+      process.env.NX_CLOUD_API || process.env.NRWL_API || `https://cloud.nx.app`
+    );
+    let connectCloudUrl;
+    if (githubSlug) {
+      connectCloudUrl = `${apiUrl}/setup/connect-workspace/vcs?provider=GITHUB&selectedRepositoryName=${encodeURIComponent(
+        githubSlug
+      )}`;
+    } else {
+      connectCloudUrl = `https://cloud.nx.app/setup/connect-workspace/manual?accessToken=${token}`;
+    }
 
-  commitNxConnectUpdates(connectCloudUrl, !!githubSlug, installationSource);
+    commitNxConnectUpdates(connectCloudUrl, !!githubSlug, installationSource);
 
-  output.note({
-    title: `Your Nx Cloud workspace is public`,
-    bodyLines: [
-      `To restrict access, connect it to your Nx Cloud account:`,
-      `- Push your changes`,
-      `- Create a pull request for the changes`,
-      `- Go to the following URL to connect your workspace (you can also find this URL in the body of your PR): 
+    output.note({
+      title: `Your Nx Cloud workspace is ready.`,
+      bodyLines: [
+        `To claim it, connect it to your Nx Cloud account:`,
+        `- Push your changes.`,
+        `- Create a pull request for the changes.`,
+        `- Go to the following URL to connect your workspace (you can also find this URL in the body of your PR): 
         
         ${connectCloudUrl}`,
-    ],
-  });
+      ],
+    });
+  }
 }
 
 interface ConnectToNxCloudOptions {
