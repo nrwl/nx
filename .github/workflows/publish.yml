@@ -72,9 +72,8 @@ jobs:
             setup: |
               sudo apt-get update
               sudo apt-get install gcc-arm-linux-gnueabihf -y
-              export CARGO_TARGET_ARMV7_UNKNOWN_LINUX_GNUEABIHF_LINKER=/usr/bin/arm-linux-gnueabihf-gcc
             build: |
-              pnpm nx run-many --target=build-native -- --target=armv7-unknown-linux-gnueabihf
+              CARGO_TARGET_ARMV7_UNKNOWN_LINUX_GNUEABIHF_LINKER=/usr/bin/arm-linux-gnueabihf-gcc pnpm nx run-many --target=build-native -- --target=armv7-unknown-linux-gnueabihf
           # Android (not needed)
           # - host: ubuntu-latest
           #   target: aarch64-linux-android
@@ -94,14 +93,14 @@ jobs:
               pnpm --version &&
               pnpm install --frozen-lockfile &&
               pnpm nx run-many --verbose --target=build-native -- --target=aarch64-unknown-linux-musl
-          - host: ubuntu-latest
-            target: wasm32-wasip1-threads
-            build: |-
-              set -e &&
-              pnpm --version &&
-              rustup override set nightly-2024-04-18 &&
-              rustup target add wasm32-wasip1-threads &&
-              pnpm exec napi build --release --platform -c packages/nx/package.json --manifest-path packages/nx/Cargo.toml --js ./index.js -o packages/nx/src/native --target wasm32-wasip1-threads
+#          - host: ubuntu-latest
+#            target: wasm32-wasip1-threads
+#            build: |-
+#              set -e &&
+#              pnpm --version &&
+#              rustup override set nightly-2024-04-18 &&
+#              rustup target add wasm32-wasip1-threads &&
+#              pnpm exec napi build --release --platform -c packages/nx/package.json --manifest-path packages/nx/Cargo.toml --js ./index.js -o packages/nx/src/native --target wasm32-wasip1-threads
               #              pnpm nx run-many --target=build-native -- --target=wasm32-wasip1-threads
           - host: windows-latest
             target: aarch64-pc-windows-msvc
@@ -286,6 +285,12 @@ jobs:
       - name: List artifacts
         run: ls -R artifacts
         shell: bash
+      - name: Build Wasm
+        run: |
+          rustup override set nightly-2024-04-18
+          rustup target add wasm32-wasip1-threads
+          pnpm exec napi build --release --platform -c packages/nx/package.json --manifest-path packages/nx/Cargo.toml --js ./native-bindings.js -o packages/nx/src/native --target wasm32-wasip1-threads
+          rustup override unset
       - name: Publish
         run: |
           git checkout -b publish/$GITHUB_REF_NAME

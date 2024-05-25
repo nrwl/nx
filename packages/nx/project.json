@@ -8,7 +8,9 @@
     "build-native": {
       "outputs": [
         "{projectRoot}/src/native/*.node",
-        "{projectRoot}/src/native/*.wasm"
+        "{projectRoot}/src/native/*.wasm",
+        "{projectRoot}/src/native/native-bindings.js",
+        "{projectRoot}/src/native/index.d.ts"
       ],
       "command": "napi build --release --platform --package-json-path packages/nx/package.json --manifest-path packages/nx/Cargo.toml --js ./native-bindings.js -o packages/nx/src/native",
       "configurations": {
@@ -22,7 +24,7 @@
     },
     "artifacts": {
       "dependsOn": ["copy-native-package-directories"],
-      "command": "pnpm napi artifacts -c build/packages/nx/package.json -d ./artifacts --npm-dir build/packages --build-output-dir build/packages/nx/src/native"
+      "command": "pnpm napi artifacts --package-json-path build/packages/nx/package.json -d ./artifacts --npm-dir build/packages"
     },
     "build-base": {
       "executor": "@nx/js:tsc",
@@ -56,7 +58,7 @@
           },
           {
             "input": "packages/nx",
-            "glob": "**/*.{js,css,html,svg}",
+            "glob": "**/*.{cjs,js,css,html,svg,wasm}",
             "ignore": ["**/jest.config.js"],
             "output": "/"
           },
