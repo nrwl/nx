@@ -289,7 +289,7 @@ jobs:
         run: |
           rustup override set nightly-2024-04-18
           rustup target add wasm32-wasip1-threads
-          pnpm exec napi build --release --platform -c packages/nx/package.json --manifest-path packages/nx/Cargo.toml --js ./index.js -o packages/nx/src/native --target wasm32-wasip1-threads
+          pnpm exec napi build --release --platform -c packages/nx/package.json --manifest-path packages/nx/Cargo.toml --js ./native-bindings.js -o packages/nx/src/native --target wasm32-wasip1-threads
           rustup override unset
       - name: Publish
         run: |
