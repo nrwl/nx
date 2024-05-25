@@ -8,7 +8,9 @@
     "build-native": {
       "outputs": [
         "{projectRoot}/src/native/*.node",
-        "{projectRoot}/src/native/*.wasm"
+        "{projectRoot}/src/native/*.wasm",
+        "{projectRoot}/src/native/native-bindings.js",
+        "{projectRoot}/src/native/index.d.ts"
       ],
       "command": "napi build --release --platform --package-json-path packages/nx/package.json --manifest-path packages/nx/Cargo.toml --js ./native-bindings.js -o packages/nx/src/native",
       "configurations": {
