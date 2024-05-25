@@ -58,7 +58,7 @@
           },
           {
             "input": "packages/nx",
-            "glob": "**/*.{cjs,js,css,html,svg}",
+            "glob": "**/*.{cjs,js,css,html,svg,wasm}",
             "ignore": ["**/jest.config.js"],
             "output": "/"
           },
