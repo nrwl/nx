@@ -72,9 +72,8 @@ jobs:
             setup: |
               sudo apt-get update
               sudo apt-get install gcc-arm-linux-gnueabihf -y
-              export CARGO_TARGET_ARMV7_UNKNOWN_LINUX_GNUEABIHF_LINKER=/usr/bin/arm-linux-gnueabihf-gcc
             build: |
-              pnpm nx run-many --target=build-native -- --target=armv7-unknown-linux-gnueabihf
+              CARGO_TARGET_ARMV7_UNKNOWN_LINUX_GNUEABIHF_LINKER=/usr/bin/arm-linux-gnueabihf-gcc pnpm nx run-many --target=build-native -- --target=armv7-unknown-linux-gnueabihf
           # Android (not needed)
           # - host: ubuntu-latest
           #   target: aarch64-linux-android
