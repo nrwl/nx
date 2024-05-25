@@ -22,7 +22,7 @@
     },
     "artifacts": {
       "dependsOn": ["copy-native-package-directories"],
-      "command": "pnpm napi artifacts -c build/packages/nx/package.json -d ./artifacts --dist build/packages"
+      "command": "pnpm napi artifacts -c build/packages/nx/package.json -d ./artifacts --npm-dir build/packages --build-output-dir build/packages/nx/src/native"
     },
     "build-base": {
       "executor": "@nx/js:tsc",
