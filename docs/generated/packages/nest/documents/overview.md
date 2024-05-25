@@ -150,6 +150,26 @@ You can lint a library with the following command:
 nx lint my-nest-lib
 ```
 
+## Deployment
+
+Ensuring a smooth and reliable deployment of a Nest.js application in a production environment requires careful planning and the right strategy. Depending on your specific needs and infrastructure, you can choose from several deployment approaches. Below are four commonly used methods:
+
+- **Using Docker:**  
+  Create a Dockerfile that specifies the application's environment and dependencies. Build a Docker image and optionally push it to a container registry. Deploy and run the Docker container on the server. Utilize the `@nx/node:setup-docker` generator to streamline the Docker setup process.
+
+- **Installing Dependencies on the Server:**  
+  Transfer the build artifacts to the server, install all dependencies using the package manager of your choice, and start the application. Ensure that [NxWebpackPlugin](/recipes/webpack/webpack-plugins#nxwebpackplugin) is configured with `generatePackageJson: true` so that the build artifacts directory includes `package.json` and `package-lock.json` (or the equivalent files for other package managers).
+
+- **Transferring Pre-installed Dependencies:**  
+  Install dependencies during the build process, and transfer the build artifacts along with the `node_modules` directory to the server. Typically, the artifacts are archived for faster transfer and then unarchived on the server.
+
+- **Bundling Dependencies:**  
+   By default, Nx/Nest creates a setup that externalizes all dependencies, meaning they are not included in the bundle. This behavior can be adjusted using the `externalDependencies` parameter in the webpack configuration with [NxWebpackPlugin](/recipes/webpack/webpack-plugins#nxwebpackplugin). After bundling, transfer the package to the server and start the application.
+
+  {% callout type="warning" title="Bundling Dependencies" %}
+  Bundling dependencies is typically not recommended for Node applications.
+  {% /callout %}
+
 ### Unit Test
 
 You can run unit test for an application with the following command:
