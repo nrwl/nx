@@ -17,7 +17,7 @@ export function findAllNpmDependencies(
   graph: ProjectGraph,
   projectName: string,
   options: Options = { excludeImplicit: false },
-  seen: Set<string> = new Set<string>(),
+  seen: Set<string> = new Set<string>()
 ): string[] {
   // Guard Case: In case of bad circular dependencies
   if (seen.has(projectName)) return [];

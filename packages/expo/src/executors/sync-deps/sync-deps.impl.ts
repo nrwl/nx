@@ -48,7 +48,7 @@ export default async function* syncDepsExecutor(
         ? options.exclude.split(',')
         : options.exclude,
       options.all,
-      options.excludeImplicit,
+      options.excludeImplicit
     )
   );
 

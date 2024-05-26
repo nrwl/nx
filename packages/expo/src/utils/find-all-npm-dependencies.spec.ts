@@ -114,7 +114,6 @@ const graphFixture: ProjectGraph = {
 };
 
 describe('findAllNpmDependencies', () => {
-
   it('should return all npm dependencies of a project', () => {
     const result = findAllNpmDependencies(graphFixture, 'myapp');
 
