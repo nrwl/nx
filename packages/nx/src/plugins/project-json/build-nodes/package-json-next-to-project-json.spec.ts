@@ -46,6 +46,13 @@ describe('nx project.json plugin', () => {
       {
         "projects": {
           "lib-a": {
+            "metadata": {
+              "targetGroups": {
+                "NPM Scripts": [
+                  "test",
+                ],
+              },
+            },
             "name": "lib-a",
             "root": "packages/lib-a",
             "targets": {
