@@ -11,6 +11,7 @@ import { NX_PREFIX } from '../../utils/logger';
 import { output } from '../../utils/output';
 import {
   PackageJson,
+  getMetadataFromPackageJson,
   readTargetsFromPackageJson,
 } from '../../utils/package-json';
 import { joinPathFragments } from '../../utils/path';
@@ -101,6 +102,7 @@ export function buildProjectConfigurationFromPackageJson(
     projectType,
     ...packageJson.nx,
     targets: readTargetsFromPackageJson(packageJson),
+    metadata: getMetadataFromPackageJson(packageJson),
   };
 }
 
