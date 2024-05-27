@@ -55,7 +55,7 @@ Generate a buildable library using [Rollup](https://rollupjs.org) as the bundler
 npx nx g @nx/js:lib mylib --bundler=rollup
 ```
 
-If you do not want to use `swc` as the compiler, and want to use the default `babel` compiler, you can do so in your `project.json` under the `build` target options, using the [`compiler` property](https://nx.dev/packages/rollup/executors/rollup#compiler):
+If you do not want to use `swc` as the compiler, and want to use the default `babel` compiler, you can do so in your `project.json` under the `build` target options, using the [`compiler` property](/nx-api/rollup/executors/rollup#compiler):
 
 ```jsonc {% fileName="libs/mylib/project.json" %}
 "build": {

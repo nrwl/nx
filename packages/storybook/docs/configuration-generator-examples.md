@@ -10,7 +10,7 @@ nx g @nx/storybook:configuration
 ```
 
 {% callout type="info" title="Nx uses Storybook 7" %}
-Nx does not support Storybook v6 any more. So, Nx will configure your project to use Storybook v7. If you are not on Storybook 7 yet, please migrate. Please follow our [Storybook 7 migration generator](/packages/storybook/generators/migrate-7) guide.
+Nx does not support Storybook v6 any more. So, Nx will configure your project to use Storybook v7. If you are not on Storybook 7 yet, please migrate. Please follow our [Storybook 7 migration generator](/nx-api/storybook/generators/migrate-7) guide.
 {% /callout %}
 
 If you are using Angular, React, Next.js, Vue or React Native in your project, it's best to use the framework specific Storybook configuration generator:
@@ -47,7 +47,7 @@ If you are not using one of the framework-specific generators mentioned above, w
 
 You must provide a `name` and a `uiFramework` for the generator to work.
 
-You can read more about how this generator works, in the [Storybook package overview page](/packages/storybook#generating-storybook-configuration).
+You can read more about how this generator works, in the [Storybook package overview page](/nx-api/storybook#generating-storybook-configuration).
 
 ## Examples
 

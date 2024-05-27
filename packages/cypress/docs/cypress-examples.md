@@ -1,4 +1,4 @@
-Depending on your testing type, the Cypress executor is configured in different ways. The following are sample configurations that are created via the [configuration](/packages/cypress/generators/configuration) and [cypress-component-configuration](/packages/cypress/generators/cypress-component-configuration) generators.
+Depending on your testing type, the Cypress executor is configured in different ways. The following are sample configurations that are created via the [configuration](/nx-api/cypress/generators/configuration) and [component-configuration](/nx-api/cypress/generators/component-configuration) generators.
 
 {% tabs %}
 {% tab label="E2E Testing" %}
@@ -32,7 +32,7 @@ The `baseUrl` defined in the Cypress config file is the last value used if no ur
 
 When running in CI it doesn't make sense to start up a dev server since there aren't changes to watch for.
 
-You can use [`@nx/web:file-server`](/packages/web/executors/file-server) to serve the pre-built static files of your frontend project.
+You can use [`@nx/web:file-server`](/nx-api/web/executors/file-server) to serve the pre-built static files of your frontend project.
 
 In some _frontend_ application, add a 'static-serve' target.
 
@@ -59,7 +59,7 @@ In the _e2e_ application add a configuration to change `devServerTarget` to poin
 ```
 
 {% callout type="note" title="What about Node projects?" %}
-The same can be done for backend node apps with [`@nx/js:node` executor](/packages/js/executors/node)
+The same can be done for backend node apps with [`@nx/js:node` executor](/nx-api/js/executors/node)
 {% /callout %}
 
 ```bash
@@ -72,8 +72,8 @@ nx e2e my-app-e2e
 {% callout type="note" title="Cypress Component Testing" %}
 When adding component testing to a project, it's best to use the framework specific generator, instead `cypress-component-project` directly.
 
-- [React component testing](/packages/react/generators/cypress-component-configuration)
-- [Angular component testing](/packages/angular/generators/cypress-component-configuration)
+- [React component testing](/nx-api/react/generators/cypress-component-configuration)
+- [Angular component testing](/nx-api/angular/generators/cypress-component-configuration)
 
 {% /callout %}
 
@@ -126,4 +126,4 @@ Using [executor configurations](/concepts/executors-and-configurations#executors
 }
 ```
 
-Read more on different ways to use [environment variables for cypress executor](/packages/cypress#environment-variables)
+Read more on different ways to use [environment variables for cypress executor](/nx-api/cypress#environment-variables)

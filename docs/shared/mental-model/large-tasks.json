@@ -10529,10 +10529,6 @@
             "hash": "095268b213f109e89f2c5681c9039e70ef144552"
           },
           {
-            "file": "packages/cypress/docs/cypress-project-examples.md",
-            "hash": "3eee4b9890863e77ce86617424f154b4532ad96b"
-          },
-          {
             "file": "packages/cypress/executors.json",
             "hash": "f04e75ca738d26fcf1d4524f2fa5e3af81ee7c93"
           },
