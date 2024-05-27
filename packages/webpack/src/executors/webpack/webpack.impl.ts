@@ -143,24 +143,6 @@ export async function* webpackExecutor(
     }
   }
 
-  if (!options.buildLibsFromSource && context.targetName) {
-    const { dependencies } = calculateProjectBuildableDependencies(
-      context.taskGraph,
-      context.projectGraph,
-      context.root,
-      context.projectName,
-      context.targetName,
-      context.configurationName
-    );
-    options.tsConfig = createTmpTsConfig(
-      options.tsConfig,
-      context.root,
-      metadata.root,
-      dependencies
-    );
-    process.env.NX_TSCONFIG_PATH = options.tsConfig;
-  }
-
   // Delete output path before bundling
   if (options.deleteOutputPath && options.outputPath) {
     deleteOutputDir(context.root, options.outputPath);
