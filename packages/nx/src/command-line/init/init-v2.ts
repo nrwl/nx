@@ -220,7 +220,11 @@ async function detectPlugins(): Promise<{
       type: 'multiselect',
       message: `Which plugins would you like to add? Press <Space> to select and <Enter> to submit.`,
       choices: plugins.map((p) => ({ name: p, value: p })),
-    },
+      /**
+       * limit is missing from the interface but it limits the amount of options shown
+       */
+      limit: process.stdout.rows - 4, // 4 leaves room for the header above, the prompt and some whitespace
+    } as any,
   ]).then((r) => r.plugins);
 
   if (pluginsToInstall?.length === 0)

@@ -219,9 +219,8 @@ function applyNxDependentConfig(
   { useNormalizedEntry }: { useNormalizedEntry?: boolean } = {}
 ): void {
   const tsConfig = options.tsConfig ?? getRootTsConfigPath();
-  const plugins: WebpackPluginInstance[] = [
-    new NxTsconfigPathsWebpackPlugin({ tsConfig }),
-  ];
+  const plugins: WebpackPluginInstance[] = [];
+
   const executorContext: Partial<ExecutorContext> = {
     projectName: options.projectName,
     targetName: options.targetName,
@@ -229,6 +228,8 @@ function applyNxDependentConfig(
     configurationName: options.configurationName,
     root: options.root,
   };
+
+  plugins.push(new NxTsconfigPathsWebpackPlugin({ ...options, tsConfig }));
 
   if (!options?.skipTypeChecking) {
     const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');

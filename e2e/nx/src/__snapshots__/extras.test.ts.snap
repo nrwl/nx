@@ -1,0 +1,54 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Extra Nx Misc Tests task graph inputs should correctly expand default task inputs 1`] = `
+{
+  "general": [
+    ".gitignore",
+    "nx.json",
+  ],
+  "lib-base-123": [
+    "libs/lib-base-123/README.md",
+    "libs/lib-base-123/package.json",
+    "libs/lib-base-123/project.json",
+    "libs/lib-base-123/src/index.ts",
+    "libs/lib-base-123/src/lib/lib-base-123.ts",
+    "libs/lib-base-123/tsconfig.json",
+    "libs/lib-base-123/tsconfig.lib.json",
+  ],
+}
+`;
+
+exports[`Extra Nx Misc Tests task graph inputs should correctly expand dependent task inputs 1`] = `
+{
+  "general": [
+    ".gitignore",
+    "nx.json",
+  ],
+  "lib-base-123": [
+    "libs/lib-base-123/.eslintrc.json",
+    "libs/lib-base-123/README.md",
+    "libs/lib-base-123/jest.config.ts",
+    "libs/lib-base-123/package.json",
+    "libs/lib-base-123/project.json",
+    "libs/lib-base-123/src/index.ts",
+    "libs/lib-base-123/src/lib/lib-base-123.spec.ts",
+    "libs/lib-base-123/src/lib/lib-base-123.ts",
+    "libs/lib-base-123/tsconfig.json",
+    "libs/lib-base-123/tsconfig.lib.json",
+    "libs/lib-base-123/tsconfig.spec.json",
+  ],
+  "lib-dependent-123": [
+    "libs/lib-dependent-123/.eslintrc.json",
+    "libs/lib-dependent-123/README.md",
+    "libs/lib-dependent-123/jest.config.ts",
+    "libs/lib-dependent-123/package.json",
+    "libs/lib-dependent-123/project.json",
+    "libs/lib-dependent-123/src/index.ts",
+    "libs/lib-dependent-123/src/lib/lib-dependent-123.spec.ts",
+    "libs/lib-dependent-123/src/lib/lib-dependent-123.ts",
+    "libs/lib-dependent-123/tsconfig.json",
+    "libs/lib-dependent-123/tsconfig.lib.json",
+    "libs/lib-dependent-123/tsconfig.spec.json",
+  ],
+}
+`;

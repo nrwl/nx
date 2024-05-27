@@ -55,7 +55,9 @@ export const createNodes: CreateNodes = [
     const lockFileContents =
       packageManager !== 'bun'
         ? readFileSync(lockFilePath).toString()
-        : execSync(`bun ${lockFilePath}`).toString();
+        : execSync(`bun ${lockFilePath}`, {
+            maxBuffer: 1024 * 1024 * 10,
+          }).toString();
     const lockFileHash = getLockFileHash(lockFileContents);
 
     if (!lockFileNeedsReprocessing(lockFileHash)) {
@@ -98,7 +100,9 @@ export const createDependencies: CreateDependencies = (
     const lockFileContents =
       packageManager !== 'bun'
         ? readFileSync(lockFilePath).toString()
-        : execSync(`bun ${lockFilePath}`).toString();
+        : execSync(`bun ${lockFilePath}`, {
+            maxBuffer: 1024 * 1024 * 10,
+          }).toString();
     const lockFileHash = getLockFileHash(lockFileContents);
 
     if (!lockFileNeedsReprocessing(lockFileHash)) {

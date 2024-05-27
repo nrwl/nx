@@ -637,7 +637,7 @@ describe('nx release - independent projects', () => {
         > nx run {project-name}:nx-release-publish
 
 
-        📦  @proj/{project-name}@999.9.9-version-git-operations-test.3
+        📦  @proj/{project-name}@X.X.X-dry-run
         === Tarball Contents ===
 
         XXXB CHANGELOG.md
@@ -646,8 +646,8 @@ describe('nx release - independent projects', () => {
         XXB  project.json
         === Tarball Details ===
         name:          @proj/{project-name}
-        version:       999.9.9-version-git-operations-test.3
-        filename:      proj-{project-name}-999.9.9-version-git-operations-test.3.tgz
+        version:       X.X.X-dry-run
+        filename:      proj-{project-name}-X.X.X-dry-run.tgz
         package size: XXXB
         unpacked size: XXXB
         shasum:        {SHASUM}
@@ -686,7 +686,7 @@ describe('nx release - independent projects', () => {
         > nx run {project-name}:nx-release-publish
 
 
-        📦  @proj/{project-name}@999.9.9-version-git-operations-test.3
+        📦  @proj/{project-name}@X.X.X-dry-run
         === Tarball Contents ===
 
         XXXB CHANGELOG.md
@@ -695,8 +695,8 @@ describe('nx release - independent projects', () => {
         XXB  project.json
         === Tarball Details ===
         name:          @proj/{project-name}
-        version:       999.9.9-version-git-operations-test.3
-        filename:      proj-{project-name}-999.9.9-version-git-operations-test.3.tgz
+        version:       X.X.X-dry-run
+        filename:      proj-{project-name}-X.X.X-dry-run.tgz
         package size: XXXB
         unpacked size: XXXB
         shasum:        {SHASUM}
@@ -723,7 +723,7 @@ describe('nx release - independent projects', () => {
         > nx run {project-name}:nx-release-publish
 
 
-        📦  @proj/{project-name}@999.9.9-version-git-operations-test.3
+        📦  @proj/{project-name}@X.X.X-dry-run
         === Tarball Contents ===
 
         XXXB CHANGELOG.md
@@ -732,8 +732,8 @@ describe('nx release - independent projects', () => {
         XXB  project.json
         === Tarball Details ===
         name:          @proj/{project-name}
-        version:       999.9.9-version-git-operations-test.3
-        filename:      proj-{project-name}-999.9.9-version-git-operations-test.3.tgz
+        version:       X.X.X-dry-run
+        filename:      proj-{project-name}-X.X.X-dry-run.tgz
         package size: XXXB
         unpacked size: XXXB
         shasum:        {SHASUM}
@@ -768,7 +768,7 @@ describe('nx release - independent projects', () => {
         > nx run {project-name}:nx-release-publish
 
 
-        📦  @proj/{project-name}@999.9.9-version-git-operations-test.3
+        📦  @proj/{project-name}@X.X.X-dry-run
         === Tarball Contents ===
 
         XXXB CHANGELOG.md
@@ -777,8 +777,8 @@ describe('nx release - independent projects', () => {
         XXB  project.json
         === Tarball Details ===
         name:          @proj/{project-name}
-        version:       999.9.9-version-git-operations-test.3
-        filename:      proj-{project-name}-999.9.9-version-git-operations-test.3.tgz
+        version:       X.X.X-dry-run
+        filename:      proj-{project-name}-X.X.X-dry-run.tgz
         package size: XXXB
         unpacked size: XXXB
         shasum:        {SHASUM}
@@ -790,7 +790,7 @@ describe('nx release - independent projects', () => {
         > nx run {project-name}:nx-release-publish
 
 
-        📦  @proj/{project-name}@999.9.9-version-git-operations-test.3
+        📦  @proj/{project-name}@X.X.X-dry-run
         === Tarball Contents ===
 
         XXXB CHANGELOG.md
@@ -799,8 +799,8 @@ describe('nx release - independent projects', () => {
         XXB  project.json
         === Tarball Details ===
         name:          @proj/{project-name}
-        version:       999.9.9-version-git-operations-test.3
-        filename:      proj-{project-name}-999.9.9-version-git-operations-test.3.tgz
+        version:       X.X.X-dry-run
+        filename:      proj-{project-name}-X.X.X-dry-run.tgz
         package size: XXXB
         unpacked size: XXXB
         shasum:        {SHASUM}
@@ -832,7 +832,7 @@ describe('nx release - independent projects', () => {
           > nx run {project-name}:nx-release-publish
 
 
-          📦  @proj/{project-name}@999.9.9-version-git-operations-test.3
+          📦  @proj/{project-name}@X.X.X-dry-run
           === Tarball Contents ===
 
           XXXB CHANGELOG.md
@@ -841,8 +841,8 @@ describe('nx release - independent projects', () => {
           XXB  project.json
           === Tarball Details ===
           name:          @proj/{project-name}
-          version:       999.9.9-version-git-operations-test.3
-          filename:      proj-{project-name}-999.9.9-version-git-operations-test.3.tgz
+          version:       X.X.X-dry-run
+          filename:      proj-{project-name}-X.X.X-dry-run.tgz
           package size: XXXB
           unpacked size: XXXB
           shasum:        {SHASUM}
