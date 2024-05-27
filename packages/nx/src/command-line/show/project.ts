@@ -47,10 +47,17 @@ export async function showProjectHandler(
     if (targets.length > 0) {
       console.log(`${chalk.bold('Targets')}: `);
       for (const [target, targetConfig] of targets) {
+        const executorCommandText =
+          targetConfig.metadata?.scriptContent ??
+          targetConfig?.options?.command ??
+          (targetConfig?.options?.commands?.length === 1
+            ? targetConfig.options.commands[0]
+            : targetConfig?.executor) ??
+          '';
         console.log(
-          `- ${chalk.bold((target + ':').padEnd(maxTargetNameLength + 2))} ${(
-            targetConfig?.executor ?? ''
-          ).padEnd(maxExecutorNameLength + 2)} ${(() => {
+          `- ${chalk.bold(
+            (target + ':').padEnd(maxTargetNameLength + 2)
+          )} ${executorCommandText.padEnd(maxExecutorNameLength + 2)} ${(() => {
             const configurations = Object.keys(
               targetConfig.configurations ?? {}
             );
