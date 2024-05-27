@@ -90,7 +90,7 @@ async function getTerminalOutputLifeCycle(
 
 function createTaskGraphAndValidateCycles(
   projectGraph: ProjectGraph,
-  defaultDependencyConfigs: TargetDependencies,
+  extraTargetDependencies: TargetDependencies,
   projectNames: string[],
   nxArgs: NxArgs,
   overrides: any,
@@ -101,7 +101,7 @@ function createTaskGraphAndValidateCycles(
 ) {
   const taskGraph = createTaskGraph(
     projectGraph,
-    defaultDependencyConfigs,
+    extraTargetDependencies,
     projectNames,
     nxArgs.targets,
     nxArgs.configuration,
@@ -142,15 +142,11 @@ export async function runCommand(
   const status = await handleErrors(
     process.env.NX_VERBOSE_LOGGING === 'true',
     async () => {
-      const defaultDependencyConfigs = mergeTargetDependencies(
-        nxJson.targetDefaults,
-        extraTargetDependencies
-      );
       const projectNames = projectsToRun.map((t) => t.name);
 
       const taskGraph = createTaskGraphAndValidateCycles(
         projectGraph,
-        defaultDependencyConfigs,
+        extraTargetDependencies ?? {},
         projectNames,
         nxArgs,
         overrides,
