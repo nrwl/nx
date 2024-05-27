@@ -53,7 +53,9 @@ export function getPnpmLockfileNodes(
 ): Record<string, ProjectGraphExternalNode> {
   const data = parsePnpmLockFile(lockFileContent, lockFileHash);
   if (+data.lockfileVersion.toString() >= 10) {
-    throw new Error('Nx only supports pnpm lockfile version 5-9');
+    console.warn(
+      'Nx was tested only with pnpm lockfile version 5-9. If you encounter any issues, please report them and downgrade to older version of pnpm.'
+    );
   }
   const isV5 = isV5Syntax(data);
   return getNodes(data, keyMap, isV5);
@@ -66,7 +68,9 @@ export function getPnpmLockfileDependencies(
 ) {
   const data = parsePnpmLockFile(lockFileContent, lockFileHash);
   if (+data.lockfileVersion.toString() >= 10) {
-    throw new Error('Nx only supports pnpm lockfile version 5-9');
+    console.warn(
+      'Nx was tested only with pnpm lockfile version 5-9. If you encounter any issues, please report them and downgrade to older version of pnpm.'
+    );
   }
   const isV5 = isV5Syntax(data);
   return getDependencies(data, keyMap, isV5, ctx);
