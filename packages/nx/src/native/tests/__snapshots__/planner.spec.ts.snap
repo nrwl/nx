@@ -65,6 +65,22 @@ exports[`task planner should build plans where the project graph has circular de
 }
 `;
 
+exports[`task planner should hash executors 1`] = `
+{
+  "proj:lint": [
+    "npm:@nx/devkit",
+    "npm:@nx/eslint",
+    "proj:ProjectConfiguration",
+    "proj:TsConfig",
+    "proj:{projectRoot}/**/*",
+    "{workspaceRoot}/.gitignore",
+    "{workspaceRoot}/.nxignore",
+    "{workspaceRoot}/global1",
+    "{workspaceRoot}/nx.json",
+  ],
+}
+`;
+
 exports[`task planner should include npm projects 1`] = `
 {
   "app:build": [
