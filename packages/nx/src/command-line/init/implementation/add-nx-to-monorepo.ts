@@ -38,27 +38,35 @@ export async function addNxToMonorepo(options: Options) {
     });
 
     targetDefaults = (
-      (await prompt([
+      await prompt<{ targetDefaults: string[] }>([
         {
           type: 'multiselect',
           name: 'targetDefaults',
           message:
             'Which scripts need to be run in order? (e.g. before building a project, dependent projects must be built)',
           choices: scripts,
-        },
-      ])) as any
+          /**
+           * limit is missing from the interface but it limits the amount of options shown
+           */
+          limit: process.stdout.rows - 4, // 4 leaves room for the header above, the prompt and some whitespace
+        } as any,
+      ])
     ).targetDefaults;
 
     cacheableOperations = (
-      (await prompt([
+      await prompt<{ cacheableOperations: string[] }>([
         {
           type: 'multiselect',
           name: 'cacheableOperations',
           message:
             'Which scripts are cacheable? (Produce the same output given the same input, e.g. build, test and lint usually are, serve and start are not)',
           choices: scripts,
-        },
-      ])) as any
+          /**
+           * limit is missing from the interface but it limits the amount of options shown
+           */
+          limit: process.stdout.rows - 4, // 4 leaves room for the header above, the prompt and some whitespace
+        } as any,
+      ])
     ).cacheableOperations;
 
     for (const scriptName of cacheableOperations) {
