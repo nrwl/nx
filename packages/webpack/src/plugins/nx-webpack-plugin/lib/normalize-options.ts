@@ -93,6 +93,8 @@ export function normalizeOptions(
         )
       : [],
     baseHref: combinedPluginAndMaybeExecutorOptions.baseHref ?? '/',
+    buildLibsFromSource:
+      combinedPluginAndMaybeExecutorOptions.buildLibsFromSource ?? true,
     commonChunk: combinedPluginAndMaybeExecutorOptions.commonChunk ?? true,
     compiler: combinedPluginAndMaybeExecutorOptions.compiler ?? 'babel',
     configurationName,
