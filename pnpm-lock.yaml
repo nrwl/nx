@@ -321,8 +321,8 @@ devDependencies:
     specifier: ^0.5.7
     version: 0.5.8(react-refresh@0.10.0)(webpack-dev-server@4.11.1)(webpack@5.88.0)
   '@pnpm/lockfile-types':
-    specifier: ^5.0.0
-    version: 5.0.0
+    specifier: ^6.0.0
+    version: 6.0.0
   '@reduxjs/toolkit':
     specifier: 1.9.0
     version: 1.9.0(react-redux@8.0.5)(react@18.3.1)
@@ -11410,16 +11410,16 @@ packages:
       webpack-dev-server: 4.11.1(webpack-cli@5.1.4)(webpack@5.88.0)
     dev: true
 
-  /@pnpm/lockfile-types@5.0.0:
-    resolution: {integrity: sha512-2M82hciNNIczVtWmQF3eSXPFVWvGWBvq+vssBkSIP0tZW/izYyvkUf2NN8ktNrB/w0jDCVEzujC6RXiRR9b1bg==}
-    engines: {node: '>=16.14'}
+  /@pnpm/lockfile-types@6.0.0:
+    resolution: {integrity: sha512-a4/ULIPLZIIq8Qmi2HEoFgRTtEouGU5RNhuGDxnSmkxu1BjlNMNjLJeEI5jzMZCGOjBoML+AirY/XOO3bcEQ/w==}
+    engines: {node: '>=18.12'}
     dependencies:
-      '@pnpm/types': 9.0.0
+      '@pnpm/types': 10.0.0
     dev: true
 
-  /@pnpm/types@9.0.0:
-    resolution: {integrity: sha512-+nNqpNvqb1u3WW/cHDo7tGjqJBWWe4GAHEdELrz4QMQwGAtG/1GF6NMc0cewdwgU2k67CI3JHGu4quZJnMEUJg==}
-    engines: {node: '>=16.14'}
+  /@pnpm/types@10.0.0:
+    resolution: {integrity: sha512-P608MRTOExt5BkIN2hsrb/ycEchwaPW/x80ujJUAqxKZSXNVAOrlEu3KJ+2+jTCunyWmo/EcE01ZdwCw8jgVrQ==}
+    engines: {node: '>=18.12'}
     dev: true
 
   /@polka/url@1.0.0-next.24:
