@@ -258,7 +258,7 @@ async function normalizeArgsMiddleware(
 
   try {
     argv.name = await determineFolder(argv);
-    if (isKnownPreset(argv.preset)) {
+    if (!argv.preset || isKnownPreset(argv.preset)) {
       argv.stack = await determineStack(argv);
       const presetOptions = await determinePresetOptions(argv);
       Object.assign(argv, presetOptions);
