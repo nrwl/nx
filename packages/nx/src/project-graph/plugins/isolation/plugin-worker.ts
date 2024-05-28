@@ -35,7 +35,10 @@ process.on('message', async (message: Serializable) => {
               'processProjectGraph' in plugin && !!plugin.processProjectGraph,
             hasCreateMetadata:
               'createMetadata' in plugin && !!plugin.createMetadata,
-            hasOnComplete: 'onComplete' in plugin && !!plugin.onComplete,
+            hasAfterCreateNodes:
+              'afterCreateNodes' in plugin && !!plugin.afterCreateNodes,
+            hasBeforeCreateNodes:
+              'beforeCreateNodes' in plugin && !!plugin.beforeCreateNodes,
             success: true,
           },
         };
@@ -103,6 +106,22 @@ process.on('message', async (message: Serializable) => {
         };
       }
     },
+    beforeCreateNodes: async ({ tx, context }) => {
+      try {
+        if (plugin.beforeCreateNodes) {
+          await plugin.beforeCreateNodes(context);
+        }
+        return {
+          type: 'beforeCreateNodesResult',
+          payload: { success: true, tx },
+        };
+      } catch (e) {
+        return {
+          type: 'beforeCreateNodesResult',
+          payload: { success: false, error: createSerializableError(e), tx },
+        };
+      }
+    },
     createMetadata: async ({ graph, context, tx }) => {
       try {
         const result = await plugin.createMetadata(graph, context);
@@ -117,18 +136,18 @@ process.on('message', async (message: Serializable) => {
         };
       }
     },
-    onComplete: async ({ tx }) => {
+    afterCreateNodes: async ({ tx, context }) => {
       try {
-        if (plugin.onComplete) {
-          await plugin.onComplete();
+        if (plugin.afterCreateNodes) {
+          await plugin.afterCreateNodes(context);
         }
         return {
-          type: 'onCompleteResult',
+          type: 'afterCreateNodesResult',
           payload: { success: true, tx },
         };
       } catch (e) {
         return {
-          type: 'onCompleteResult',
+          type: 'afterCreateNodesResult',
           payload: { success: false, error: createSerializableError(e), tx },
         };
       }

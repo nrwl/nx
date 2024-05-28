@@ -34,7 +34,10 @@ import {
   ProjectWithExistingNameError,
   isProjectWithExistingNameError,
   isProjectWithNoNameError,
+  AfterCreateNodesError,
+  BeforeCreateNodesError,
 } from '../error-types';
+import { AfterCreateNodesContext, BeforeCreateNodesContext } from '../plugins';
 
 export type SourceInformation = [file: string | null, plugin: string];
 export type ConfigurationSourceMaps = Record<
@@ -345,169 +348,257 @@ export async function createProjectConfigurations(
   projectFiles: string[], // making this parameter allows devkit to pick up newly created projects
   plugins: LoadedNxPlugin[]
 ): Promise<ConfigurationResult> {
-  performance.mark('build-project-configs:start');
-
-  const results: Array<Promise<Array<CreateNodesResultWithContext>>> = [];
   const errors: Array<
     | CreateNodesError
     | MergeNodesError
     | ProjectsWithNoNameError
     | MultipleProjectsWithSameNameError
+    | AfterCreateNodesError
   > = [];
 
+  performance.mark('build-project-configs - start');
+
   // We iterate over plugins first - this ensures that plugins specified first take precedence.
-  for (const {
-    name: pluginName,
-    createNodes: createNodesTuple,
-    include,
-    exclude,
-  } of plugins) {
-    const [pattern, createNodes] = createNodesTuple ?? [];
+  const createNodesPromises: Array<
+    Promise<Array<CreateNodesResultWithContext>>
+  > = plugins.map(async (plugin) => {
+    const pattern = plugin.createNodes?.[0];
 
     if (!pattern) {
-      continue;
+      return [];
     }
 
-    const matchingConfigFiles: string[] = [];
+    const matchingConfigFiles: string[] = getMatchingConfigFiles(
+      projectFiles,
+      pattern,
+      plugin
+    );
 
-    for (const file of projectFiles) {
-      if (minimatch(file, pattern, { dot: true })) {
-        if (include) {
-          const included = include.some((includedPattern) =>
-            minimatch(file, includedPattern, { dot: true })
-          );
-          if (!included) {
-            continue;
-          }
-        }
+    return runCreateNodes(plugin, nxJson, root, errors, matchingConfigFiles);
+  });
 
-        if (exclude) {
-          const excluded = exclude.some((excludedPattern) =>
-            minimatch(file, excludedPattern, { dot: true })
-          );
-          if (excluded) {
-            continue;
-          }
-        }
+  const results = await Promise.all(createNodesPromises);
 
-        matchingConfigFiles.push(file);
+  performance.mark('createNodes:merge - start');
+  const projectRootMap: Record<string, ProjectConfiguration> = {};
+  const externalNodes: Record<string, ProjectGraphExternalNode> = {};
+  const configurationSourceMaps: Record<
+    string,
+    Record<string, SourceInformation>
+  > = {};
+
+  for (const result of results.flat()) {
+    const {
+      projects: projectNodes,
+      externalNodes: pluginExternalNodes,
+      file,
+      pluginName,
+    } = result;
+
+    const sourceInfo: SourceInformation = [file, pluginName];
+
+    if (result[OVERRIDE_SOURCE_FILE]) {
+      sourceInfo[0] = result[OVERRIDE_SOURCE_FILE];
+    }
+
+    for (const node in projectNodes) {
+      // Handles `{projects: {'libs/foo': undefined}}`.
+      if (!projectNodes[node]) {
+        continue;
+      }
+      const project = {
+        root: node,
+        ...projectNodes[node],
+      };
+      try {
+        mergeProjectConfigurationIntoRootMap(
+          projectRootMap,
+          project,
+          configurationSourceMaps,
+          sourceInfo
+        );
+      } catch (error) {
+        errors.push(
+          new MergeNodesError({
+            file,
+            pluginName,
+            error,
+          })
+        );
       }
     }
-    let r = createNodes(matchingConfigFiles, {
-      nxJsonConfiguration: nxJson,
-      workspaceRoot: root,
-      configFiles: matchingConfigFiles,
-    }).catch((e) => {
-      if (isAggregateCreateNodesError(e)) {
-        errors.push(...e.errors);
-        return e.partialResults;
-      } else {
-        throw e;
-      }
-    });
-
-    results.push(r);
+    Object.assign(externalNodes, pluginExternalNodes);
   }
 
-  return Promise.all(results).then((results) => {
-    performance.mark('createNodes:merge - start');
-    const projectRootMap: Record<string, ProjectConfiguration> = {};
-    const externalNodes: Record<string, ProjectGraphExternalNode> = {};
-    const configurationSourceMaps: Record<
-      string,
-      Record<string, SourceInformation>
-    > = {};
+  try {
+    validateAndNormalizeProjectRootMap(projectRootMap);
+  } catch (e) {
+    if (
+      isProjectsWithNoNameError(e) ||
+      isMultipleProjectsWithSameNameError(e)
+    ) {
+      errors.push(e);
+    } else {
+      throw e;
+    }
+  }
 
-    for (const result of results.flat()) {
-      const {
-        projects: projectNodes,
-        externalNodes: pluginExternalNodes,
-        file,
-        pluginName,
-      } = result;
+  const rootMap = createRootMap(projectRootMap);
 
-      const sourceInfo: SourceInformation = [file, pluginName];
+  performance.mark('createNodes:merge - end');
+  performance.measure(
+    'createNodes:merge',
+    'createNodes:merge - start',
+    'createNodes:merge - end'
+  );
 
-      if (result[OVERRIDE_SOURCE_FILE]) {
-        sourceInfo[0] = result[OVERRIDE_SOURCE_FILE];
-      }
+  performance.mark('build-project-configs:end');
+  performance.measure(
+    'build-project-configs',
+    'build-project-configs:start',
+    'build-project-configs:end'
+  );
 
-      for (const node in projectNodes) {
-        // Handles `{projects: {'libs/foo': undefined}}`.
-        if (!projectNodes[node]) {
+  if (errors.length === 0) {
+    return {
+      projects: projectRootMap,
+      externalNodes,
+      projectRootMap: rootMap,
+      sourceMaps: configurationSourceMaps,
+      matchingProjectFiles: projectFiles,
+    };
+  } else {
+    throw new ProjectConfigurationsError(errors, {
+      projects: projectRootMap,
+      externalNodes,
+      projectRootMap: rootMap,
+      sourceMaps: configurationSourceMaps,
+      matchingProjectFiles: projectFiles,
+    });
+  }
+}
+
+async function runCreateNodes(
+  plugin: LoadedNxPlugin,
+  nxJsonConfiguration: NxJsonConfiguration<string[] | '*'>,
+  workspaceRoot: string,
+  errors: (
+    | CreateNodesError
+    | MergeNodesError
+    | ProjectsWithNoNameError
+    | MultipleProjectsWithSameNameError
+    | AfterCreateNodesError
+  )[],
+  configFiles: string[]
+): Promise<CreateNodesResultWithContext[]> {
+  const context = {
+    nxJsonConfiguration,
+    workspaceRoot,
+    configFiles,
+  };
+
+  try {
+    await runBeforeCreateNodes(plugin, context);
+  } catch (e) {
+    errors.push(e);
+    return [];
+  }
+  let results: CreateNodesResultWithContext[];
+  try {
+    results = await plugin.createNodes[1](configFiles, context);
+  } catch (e) {
+    if (isAggregateCreateNodesError(e)) {
+      errors.push(...e.errors);
+      results = e.partialResults;
+    } else {
+      throw e;
+    }
+  }
+
+  try {
+    await runAfterCreateNodes(plugin, context);
+  } catch (e) {
+    errors.push(e);
+  }
+  return results;
+}
+
+function getMatchingConfigFiles(
+  projectFiles: string[],
+  pattern: string,
+  plugin: LoadedNxPlugin
+) {
+  const matchingConfigFiles: string[] = [];
+
+  for (const file of projectFiles) {
+    if (minimatch(file, pattern, { dot: true })) {
+      if (plugin.include) {
+        const included = plugin.include.some((includedPattern) =>
+          minimatch(file, includedPattern, { dot: true })
+        );
+        if (!included) {
           continue;
         }
-        const project = {
-          root: node,
-          ...projectNodes[node],
-        };
-        try {
-          mergeProjectConfigurationIntoRootMap(
-            projectRootMap,
-            project,
-            configurationSourceMaps,
-            sourceInfo
-          );
-        } catch (error) {
-          errors.push(
-            new MergeNodesError({
-              file,
-              pluginName,
-              error,
-            })
-          );
+      }
+
+      if (plugin.exclude) {
+        const excluded = plugin.exclude.some((excludedPattern) =>
+          minimatch(file, excludedPattern, { dot: true })
+        );
+        if (excluded) {
+          continue;
         }
       }
-      Object.assign(externalNodes, pluginExternalNodes);
-    }
 
+      matchingConfigFiles.push(file);
+    }
+  }
+  return matchingConfigFiles;
+}
+
+export async function runBeforeCreateNodes(
+  plugin: LoadedNxPlugin,
+  context: BeforeCreateNodesContext
+) {
+  if (plugin.beforeCreateNodes) {
+    performance.mark(`${plugin.name}:beforeCreateNodes - start`);
     try {
-      validateAndNormalizeProjectRootMap(projectRootMap);
+      await plugin.beforeCreateNodes(context);
     } catch (e) {
-      if (
-        isProjectsWithNoNameError(e) ||
-        isMultipleProjectsWithSameNameError(e)
-      ) {
-        errors.push(e);
-      } else {
-        throw e;
-      }
+      throw new BeforeCreateNodesError(e, plugin.name);
+    } finally {
+      performance.mark(`${plugin.name}:beforeCreateNodes - end`);
+      performance.measure(
+        `${plugin.name}:beforeCreateNodes`,
+        `${plugin.name}:beforeCreateNodes - start`,
+        `${plugin.name}:beforeCreateNodes - end`
+      );
     }
+  }
+}
 
-    const rootMap = createRootMap(projectRootMap);
-
-    performance.mark('createNodes:merge - end');
+/**
+ *
+ * @param plugins
+ * @returns Errors, if any
+ */
+export async function runAfterCreateNodes(
+  plugin: LoadedNxPlugin,
+  context: AfterCreateNodesContext
+) {
+  try {
+    performance.mark(`${plugin.name}:afterCreateNodes - start`);
+    await plugin.afterCreateNodes(context);
+  } catch (e) {
+    throw new AfterCreateNodesError(e, plugin.name);
+  } finally {
+    performance.mark(`${plugin.name}:afterCreateNodes - end`);
     performance.measure(
-      'createNodes:merge',
-      'createNodes:merge - start',
-      'createNodes:merge - end'
+      `${plugin.name}:afterCreateNodes`,
+      `${plugin.name}:afterCreateNodes - start`,
+      `${plugin.name}:afterCreateNodes - end`
     );
-
-    performance.mark('build-project-configs:end');
-    performance.measure(
-      'build-project-configs',
-      'build-project-configs:start',
-      'build-project-configs:end'
-    );
-
-    if (errors.length === 0) {
-      return {
-        projects: projectRootMap,
-        externalNodes,
-        projectRootMap: rootMap,
-        sourceMaps: configurationSourceMaps,
-        matchingProjectFiles: projectFiles,
-      };
-    } else {
-      throw new ProjectConfigurationsError(errors, {
-        projects: projectRootMap,
-        externalNodes,
-        projectRootMap: rootMap,
-        sourceMaps: configurationSourceMaps,
-        matchingProjectFiles: projectFiles,
-      });
-    }
-  });
+  }
 }
 
 export function readProjectConfigurationsFromRootMap(

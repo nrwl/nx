@@ -11,7 +11,7 @@ export class ProjectGraphError extends Error {
     | CreateNodesError
     | MergeNodesError
     | CreateMetadataError
-    | OnCompleteError
+    | AfterCreateNodesError
     | ProjectsWithNoNameError
     | MultipleProjectsWithSameNameError
     | ProcessDependenciesError
@@ -30,7 +30,7 @@ export class ProjectGraphError extends Error {
       | ProcessDependenciesError
       | ProcessProjectGraphError
       | CreateMetadataError
-      | OnCompleteError
+      | AfterCreateNodesError
       | WorkspaceValidityError
     >,
     partialProjectGraph: ProjectGraph,
@@ -173,6 +173,7 @@ export class ProjectConfigurationsError extends Error {
       | CreateNodesError
       | ProjectsWithNoNameError
       | MultipleProjectsWithSameNameError
+      | AfterCreateNodesError
     >,
     public readonly partialProjectConfigurationsResult: ConfigurationResult
   ) {
@@ -249,11 +250,26 @@ export class MergeNodesError extends Error {
   }
 }
 
-export class OnCompleteError extends Error {
+export class BeforeCreateNodesError extends Error {
   constructor(public readonly error: Error, public readonly plugin: string) {
-    super(`The "${plugin}" plugin threw an error in the onComplete hook:`, {
-      cause: error,
-    });
+    super(
+      `The "${plugin}" plugin threw an error in the beforeCreateNodes hook:`,
+      {
+        cause: error,
+      }
+    );
+    this.name = this.constructor.name;
+  }
+}
+
+export class AfterCreateNodesError extends Error {
+  constructor(public readonly error: Error, public readonly plugin: string) {
+    super(
+      `The "${plugin}" plugin threw an error in the afterCreateNodes hook:`,
+      {
+        cause: error,
+      }
+    );
     this.name = this.constructor.name;
   }
 }
@@ -315,7 +331,7 @@ export class AggregateProjectGraphError extends Error {
   constructor(
     public readonly errors: Array<
       | CreateMetadataError
-      | OnCompleteError
+      | AfterCreateNodesError
       | ProcessDependenciesError
       | ProcessProjectGraphError
       | WorkspaceValidityError

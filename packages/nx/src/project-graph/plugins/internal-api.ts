@@ -9,6 +9,8 @@ import { NxPluginV1 } from '../../utils/nx-plugin.deprecated';
 import { shouldMergeAngularProjects } from '../../adapter/angular-json';
 
 import {
+  AfterCreateNodesContext,
+  BeforeCreateNodesContext,
   CreateDependencies,
   CreateDependenciesContext,
   CreateMetadata,
@@ -27,6 +29,7 @@ import { loadNxPlugin, unregisterPluginTSTranspiler } from './loader';
 
 export class LoadedNxPlugin {
   readonly name: string;
+
   readonly createNodes?: [
     filePattern: string,
     // The create nodes function takes all matched files instead of just one, and includes
@@ -36,14 +39,22 @@ export class LoadedNxPlugin {
       context: CreateNodesContext
     ) => Promise<CreateNodesResultWithContext[]>
   ];
+
   readonly createDependencies?: (
     context: CreateDependenciesContext
   ) => ReturnType<CreateDependencies>;
+
   readonly createMetadata?: (
     graph: ProjectGraph,
     context: CreateMetadataContext
   ) => ReturnType<CreateMetadata>;
-  readonly onComplete?: () => Promise<void> | void;
+
+  readonly beforeCreateNodes?: (
+    ctx: BeforeCreateNodesContext
+  ) => Promise<void> | void;
+  readonly afterCreateNodes?: (
+    ctx: AfterCreateNodesContext
+  ) => Promise<void> | void;
 
   readonly processProjectGraph?: ProjectGraphProcessor;
 
@@ -77,8 +88,14 @@ export class LoadedNxPlugin {
         plugin.createMetadata(graph, this.options, context);
     }
 
-    if (plugin.onComplete) {
-      this.onComplete = () => plugin.onComplete(this.options);
+    if (plugin.beforeCreateNodes) {
+      this.beforeCreateNodes = (ctx) =>
+        plugin.beforeCreateNodes(this.options, ctx);
+    }
+
+    if (plugin.afterCreateNodes) {
+      this.afterCreateNodes = (ctx) =>
+        plugin.afterCreateNodes(this.options, ctx);
     }
 
     this.processProjectGraph = plugin.processProjectGraph;

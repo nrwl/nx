@@ -2,7 +2,6 @@ import { PageEvent, Reflection, ReflectionKind, RenderTemplate } from 'typedoc';
 import { MarkdownTheme } from 'typedoc-plugin-markdown/dist/theme';
 import comment from './comment';
 import toc from './toc';
-import { template } from 'handlebars';
 
 /**
  * The MarkdownTheme is based on TypeDoc's DefaultTheme @see https://github.com/TypeStrong/typedoc/blob/master/src/lib/output/themes/DefaultTheme.ts.
@@ -59,12 +58,6 @@ export default class NxMarkdownTheme extends MarkdownTheme {
         directory: '.',
         template: this.getReflectionTemplate(),
       },
-      {
-        kind: [ReflectionKind.Namespace],
-        isLeaf: false,
-        directory: '.',
-        template: this.getReflectionTemplate(),
-      },
       ...(this.allReflectionsHaveOwnDocument
         ? [
             {
@@ -81,12 +74,6 @@ export default class NxMarkdownTheme extends MarkdownTheme {
             },
             {
               kind: [ReflectionKind.Function],
-              isLeaf: true,
-              directory: '.',
-              template: this.getReflectionMemberTemplate(),
-            },
-            {
-              kind: [ReflectionKind.Namespace],
               isLeaf: true,
               directory: '.',
               template: this.getReflectionMemberTemplate(),

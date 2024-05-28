@@ -114,12 +114,26 @@ export type CreateMetadata<T = unknown> = (
   context: CreateMetadataContext
 ) => ProjectsMetadata | Promise<ProjectsMetadata>;
 
-export type OnLoad<T = unknown> = (
-  options: T | undefined
+export type BeforeCreateNodesContext = CreateNodesContext;
+
+export type AfterCreateNodesContext = CreateNodesContext;
+
+/**
+ * A function which is called before the create nodes function is called.
+ * Useful for reading from cache or other setup.
+ */
+export type BeforeCreateNodes<T = unknown> = (
+  options: T | undefined,
+  context: BeforeCreateNodesContext
 ) => void | Promise<void>;
 
-export type OnComplete<T = unknown> = (
-  options: T | undefined
+/**
+ * A function which is called after the create nodes function is called.
+ * Useful for writing to cache or other cleanup.
+ */
+export type AfterCreateNodes<T = unknown> = (
+  options: T | undefined,
+  context: AfterCreateNodesContext
 ) => void | Promise<void>;
 
 /**
@@ -145,14 +159,16 @@ export type NxPluginV2<TOptions = unknown> = {
   createMetadata?: CreateMetadata<TOptions>;
 
   /**
-   * Called when the plugin is loaded.
+   * A function which is called before the create nodes function is called.
+   * Useful for reading from cache or other setup.
    */
-  onLoad?: OnLoad<TOptions>;
+  beforeCreateNodes?: BeforeCreateNodes<TOptions>;
 
   /**
-   * Called after the project graph is constructed
+   * A function which is called after the create nodes function is called.
+   * Useful for writing to cache or other cleanup.
    */
-  onComplete?: OnComplete<TOptions>;
+  afterCreateNodes?: AfterCreateNodes<TOptions>;
 };
 
 /**

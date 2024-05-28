@@ -167,13 +167,26 @@ function createWorkerHandler(
                   });
                 }
               : undefined,
-            onComplete: result.hasOnComplete
-              ? () => {
-                  const tx = pluginName + ':onComplete:' + performance.now();
+            beforeCreateNodes: result.hasBeforeCreateNodes
+              ? (context) => {
+                  const tx =
+                    pluginName + ':beforeCreateNodes:' + performance.now();
                   return registerPendingPromise(tx, pending, () => {
                     worker.send({
-                      type: 'onComplete',
-                      payload: { tx },
+                      type: 'beforeCreateNodes',
+                      payload: { tx, context },
+                    });
+                  });
+                }
+              : undefined,
+            afterCreateNodes: result.hasAfterCreateNodes
+              ? (context) => {
+                  const tx =
+                    pluginName + ':afterCreateNodes:' + performance.now();
+                  return registerPendingPromise(tx, pending, () => {
+                    worker.send({
+                      type: 'afterCreateNodes',
+                      payload: { tx, context },
                     });
                   });
                 }
@@ -215,7 +228,15 @@ function createWorkerHandler(
           rejector(result.error);
         }
       },
-      onCompleteResult: ({ tx, ...result }) => {
+      afterCreateNodesResult: ({ tx, ...result }) => {
+        const { resolver, rejector } = pending.get(tx);
+        if (result.success) {
+          resolver(null);
+        } else if (result.success === false) {
+          rejector(result.error);
+        }
+      },
+      beforeCreateNodesResult: ({ tx, ...result }) => {
         const { resolver, rejector } = pending.get(tx);
         if (result.success) {
           resolver(null);

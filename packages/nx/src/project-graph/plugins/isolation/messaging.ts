@@ -4,6 +4,8 @@ import {
 } from '../../../config/project-graph';
 import { PluginConfiguration } from '../../../config/nx-json';
 import {
+  AfterCreateNodesContext,
+  BeforeCreateNodesContext,
   CreateDependenciesContext,
   CreateMetadataContext,
   CreateNodesContext,
@@ -30,7 +32,8 @@ export interface PluginWorkerLoadResult {
         hasCreateDependencies: boolean;
         hasProcessProjectGraph: boolean;
         hasCreateMetadata: boolean;
-        hasOnComplete: boolean;
+        hasAfterCreateNodes: boolean;
+        hasBeforeCreateNodes: boolean;
         success: true;
       }
     | {
@@ -134,16 +137,38 @@ export interface PluginWorkerProcessProjectGraphResult {
       };
 }
 
-export interface PluginWorkerOnCompleteMessage {
-  type: 'onComplete';
+export interface PluginWorkerAfterCreateNodesMessage {
+  type: 'afterCreateNodes';
   payload: {
-    graph: ProjectGraph;
     tx: string;
+    context: AfterCreateNodesContext;
   };
 }
 
-export interface PluginWorkerOnCompleteResult {
-  type: 'onCompleteResult';
+export interface PluginWorkerAfterCreateNodesResult {
+  type: 'afterCreateNodesResult';
+  payload:
+    | {
+        success: true;
+        tx: string;
+      }
+    | {
+        success: false;
+        error: Error;
+        tx: string;
+      };
+}
+
+export interface PluginWorkerOnStartMessage {
+  type: 'beforeCreateNodes';
+  payload: {
+    tx: string;
+    context: BeforeCreateNodesContext;
+  };
+}
+
+export interface PluginWorkerOnStartResult {
+  type: 'beforeCreateNodesResult';
   payload:
     | {
         success: true;
@@ -162,7 +187,8 @@ export type PluginWorkerMessage =
   | PluginCreateDependenciesMessage
   | PluginWorkerProcessProjectGraphMessage
   | PluginCreateMetadataMessage
-  | PluginWorkerOnCompleteMessage;
+  | PluginWorkerOnStartMessage
+  | PluginWorkerAfterCreateNodesMessage;
 
 export type PluginWorkerResult =
   | PluginWorkerLoadResult
@@ -170,7 +196,8 @@ export type PluginWorkerResult =
   | PluginCreateDependenciesResult
   | PluginWorkerProcessProjectGraphResult
   | PluginCreateMetadataResult
-  | PluginWorkerOnCompleteResult;
+  | PluginWorkerOnStartResult
+  | PluginWorkerAfterCreateNodesResult;
 
 export function isPluginWorkerMessage(
   message: Serializable

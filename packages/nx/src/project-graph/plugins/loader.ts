@@ -280,13 +280,6 @@ export async function loadNxPluginAsync(
       `Load Nx Plugin: ${moduleName} - start`,
       `Load Nx Plugin: ${moduleName} - end`
     );
-    if (plugin.onLoad) {
-      await plugin.onLoad(
-        typeof pluginConfiguration === 'string'
-          ? undefined
-          : pluginConfiguration.options
-      );
-    }
     return new LoadedNxPlugin(plugin, pluginConfiguration);
   } catch (e) {
     throw new LoadPluginError(moduleName, e);
