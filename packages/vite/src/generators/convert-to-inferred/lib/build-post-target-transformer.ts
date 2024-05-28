@@ -12,54 +12,125 @@ export function buildPostTargetTransformer(
   tree: Tree,
   projectDetails: { projectName: string; root: string }
 ) {
-  let viteConfigPath = ['.ts', '.js'].find((ext) =>
-    tree.exists(joinPathFragments(projectDetails.root, `vite.config${ext}`))
-  );
+  let viteConfigPath = [
+    joinPathFragments(projectDetails.root, `vite.config.ts`),
+    joinPathFragments(projectDetails.root, `vite.config.js`),
+  ].find((f) => tree.exists(f));
 
   if (target.options) {
     if (target.options.configFile) {
       viteConfigPath = target.options.configFile;
-      target.options.config = target.options.configFile;
-      delete target.options.configFile;
     }
 
-    if (target.options.outputPath) {
-      let relativeOutputPath = relative(
-        projectDetails.root,
-        join(workspaceRoot, target.options.outputPath)
-      );
-      if (tree.isFile(relativeOutputPath)) {
-        relativeOutputPath = dirname(relativeOutputPath);
-      }
-      moveOutputPathToViteConfig(tree, relativeOutputPath, viteConfigPath);
+    removePropertiesFromTargetOptions(
+      tree,
+      target.options,
+      viteConfigPath,
+      projectDetails.root,
+      true
+    );
+  }
 
-      delete target.options.outputPath;
-    }
-
-    if ('buildLibsFromSource' in target.options) {
-      moveBuildLibsFromSourceToViteConfig(
+  if (target.configurations) {
+    for (const configurationName in target.configurations) {
+      const configuration = target.configurations[configurationName];
+      removePropertiesFromTargetOptions(
         tree,
-        target.options.buildLibsFromSource,
-        viteConfigPath
+        configuration,
+        viteConfigPath,
+        projectDetails.root
       );
-      delete target.options.buildLibsFromSource;
+
+      if (Object.keys(configuration).length === 0) {
+        delete target.configurations[configurationName];
+      }
     }
 
-    if ('skipTypeCheck' in target.options) {
-      delete target.options.skipTypeCheck;
+    if (Object.keys(target.configurations).length === 0) {
+      if ('defaultConfiguration' in target) {
+        delete target.defaultConfiguration;
+      }
+      delete target.configurations;
     }
-    if ('generatePackageJson' in target.options) {
-      delete target.options.generatePackageJson;
-    }
-    if ('includeDevDependenciesInPackageJson' in target.options) {
-      delete target.options.includeDevDependenciesInPackageJson;
-    }
-    if ('tsConfig' in target.options) {
-      delete target.options.tsConfig;
+
+    if (
+      'defaultConfiguration' in target &&
+      !target.configurations[target.defaultConfiguration]
+    ) {
+      delete target.defaultConfiguration;
     }
   }
 
+  if (
+    target.outputs &&
+    target.outputs.length === 1 &&
+    target.outputs[0] === '{options.outputTarget}'
+  ) {
+    delete target.outputs;
+  }
+
+  if (
+    target.inputs &&
+    target.inputs.every((i) => i === 'production' || i === '^production')
+  ) {
+    delete target.inputs;
+  }
+
   return target;
+}
+
+function removePropertiesFromTargetOptions(
+  tree: Tree,
+  targetOptions: any,
+  viteConfigPath: string,
+  projectRoot: string,
+  defaultOptions = false
+) {
+  if ('configFile' in targetOptions) {
+    targetOptions.config = targetOptions.configFile;
+    delete targetOptions.configFile;
+  }
+  if (targetOptions.outputPath) {
+    let relativeOutputPath = relative(
+      projectRoot,
+      join(workspaceRoot, targetOptions.outputPath)
+    );
+    if (tree.isFile(relativeOutputPath)) {
+      relativeOutputPath = dirname(relativeOutputPath);
+    }
+    if (defaultOptions) {
+      moveOutputPathToViteConfig(tree, relativeOutputPath, viteConfigPath);
+    } else {
+      targetOptions.outDir = relativeOutputPath;
+    }
+
+    delete targetOptions.outputPath;
+  }
+  if ('buildLibsFromSource' in targetOptions) {
+    delete targetOptions.buildLibsFromSource;
+  }
+  if ('skipTypeCheck' in targetOptions) {
+    delete targetOptions.skipTypeCheck;
+  }
+  if ('generatePackageJson' in targetOptions) {
+    delete targetOptions.generatePackageJson;
+  }
+  if ('includeDevDependenciesInPackageJson' in targetOptions) {
+    if (defaultOptions) {
+      moveBuildLibsFromSourceToViteConfig(
+        tree,
+        targetOptions.buildLibsFromSource,
+        viteConfigPath
+      );
+    }
+    delete targetOptions.includeDevDependenciesInPackageJson;
+  }
+  if ('tsConfig' in targetOptions) {
+    delete targetOptions.tsConfig;
+  }
+  if ('mode' in targetOptions) {
+    delete targetOptions.mode;
+  }
 }
 
 export function moveOutputPathToViteConfig(

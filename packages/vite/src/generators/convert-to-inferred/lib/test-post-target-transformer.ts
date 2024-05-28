@@ -9,29 +9,68 @@ export function testPostTargetTransformer(
   tree: Tree,
   projectDetails: { projectName: string; root: string }
 ) {
-  let viteConfigPath = ['.ts', '.js'].find((ext) =>
-    tree.exists(joinPathFragments(projectDetails.root, `vite.config${ext}`))
-  );
-
   if (target.options) {
-    if ('configFile' in target.options) {
-      target.options.config = target.options.configFile;
-      delete target.options.configFile;
+    removePropertiesFromTargetOptions(target.options);
+  }
+
+  if (target.configurations) {
+    for (const configurationName in target.configurations) {
+      const configuration = target.configurations[configurationName];
+      removePropertiesFromTargetOptions(configuration);
+
+      if (Object.keys(configuration).length === 0) {
+        delete target.configurations[configurationName];
+      }
     }
 
-    if ('reportsDirectory' in target.options) {
-      target.options['coverage.reportsDirectory'] =
-        target.options.reportsDirectory;
-      delete target.options.reportsDirectory;
+    if (Object.keys(target.configurations).length === 0) {
+      if ('defaultConfiguration' in target) {
+        delete target.defaultConfiguration;
+      }
+      delete target.configurations;
     }
 
-    if ('testFiles' in target.options) {
-      target.options.testNamePattern = `/(${target.options.testFiles
-        .map((f) => f.replace('.', '\\.'))
-        .join('|')})/`;
-      delete target.options.testFiles;
+    if (
+      'defaultConfiguration' in target &&
+      !target.configurations[target.defaultConfiguration]
+    ) {
+      delete target.defaultConfiguration;
     }
   }
 
+  if (
+    target.outputs &&
+    target.outputs.length === 1 &&
+    target.outputs[0] === '{options.reportsDirectory}'
+  ) {
+    delete target.outputs;
+  }
+
+  if (
+    target.inputs &&
+    target.inputs.every((i) => i === 'default' || i === '^production')
+  ) {
+    delete target.inputs;
+  }
+
   return target;
+}
+
+function removePropertiesFromTargetOptions(targetOptions: any) {
+  if ('configFile' in targetOptions) {
+    targetOptions.config = targetOptions.configFile;
+    delete targetOptions.configFile;
+  }
+
+  if ('reportsDirectory' in targetOptions) {
+    targetOptions['coverage.reportsDirectory'] = targetOptions.reportsDirectory;
+    delete targetOptions.reportsDirectory;
+  }
+
+  if ('testFiles' in targetOptions) {
+    targetOptions.testNamePattern = `/(${targetOptions.testFiles
+      .map((f) => f.replace('.', '\\.'))
+      .join('|')})/`;
+    delete targetOptions.testFiles;
+  }
 }
