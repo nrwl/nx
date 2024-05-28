@@ -6,7 +6,7 @@ In addition to the features provided by the Angular CLI builder, the `@nx/angula
 - Incremental builds
 
 {% callout type="check" title="Dev Server" %}
-The [`@nx/angular:dev-server` executor](https://nx.dev/nx-api/angular/executors/dev-server) is required to serve your application when using the `@nx/angular:browser-esbuild` to build it. It is a drop-in replacement for the Angular CLI's `@angular-devkit/build-angular:dev-server` builder and ensures the application is correctly served with Vite when using the `@nx/angular:browser-esbuild` executor.
+The [`@nx/angular:dev-server` executor](/nx-api/angular/executors/dev-server) is required to serve your application when using the `@nx/angular:browser-esbuild` to build it. It is a drop-in replacement for the Angular CLI's `@angular-devkit/build-angular:dev-server` builder and ensures the application is correctly served with Vite when using the `@nx/angular:browser-esbuild` executor.
 {% /callout %}
 
 ## Examples

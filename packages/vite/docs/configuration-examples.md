@@ -63,7 +63,7 @@ The list of executors for building, testing and serving that can be converted to
 
 We **cannot** guarantee that projects using unsupported executors - _or any executor that is NOT listed in the list of "supported executors"_ - for either building, testing or serving will work correctly when converted to use Vite.
 
-You can read more in the [Vite package overview page](/packages/vite).
+You can read more in the [Vite package overview page](/nx-api/vite).
 
 ## Examples
 

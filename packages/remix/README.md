@@ -8,6 +8,6 @@
 
 Nx is a build system with built-in tooling and advanced CI capabilities. It helps you maintain and scale monorepos, both locally and on CI.
 
-This package is a [Remix plugin for Nx](https://nx.dev/packages/remix).
+This package is a [Remix plugin for Nx](https://nx.dev/nx-api/remix).
 
 {{content}}
