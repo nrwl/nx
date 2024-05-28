@@ -84,7 +84,7 @@ export async function* rollupExecutor(
 
   if (options.watch) {
     // region Watch build
-    return createAsyncIterable(({ next }) => {
+    return yield* createAsyncIterable(({ next }) => {
       const watcher = rollup.watch(rollupOptions);
       watcher.on('event', (data) => {
         if (data.code === 'START') {
