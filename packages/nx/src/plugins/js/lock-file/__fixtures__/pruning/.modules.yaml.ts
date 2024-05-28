@@ -249,7 +249,7 @@ hoistedDependencies:
     to-regex-range: private
   /tsconfig-paths/4.1.2:
     tsconfig-paths: private
-  /tslib/2.4.1:
+  /tslib/2.5.0:
     tslib: private
   /universalify/2.0.0:
     universalify: private
