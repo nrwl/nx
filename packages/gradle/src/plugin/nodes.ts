@@ -1,8 +1,11 @@
 import {
+  AfterCreateNodes,
+  BeforeCreateNodes,
   CreateNodes,
   CreateNodesContext,
   ProjectConfiguration,
   TargetConfiguration,
+  hashArray,
   readJsonFile,
   writeJsonFile,
 } from '@nx/devkit';
@@ -12,7 +15,13 @@ import { dirname, join } from 'node:path';
 import { projectGraphCacheDirectory } from 'nx/src/utils/cache-directory';
 
 import { getGradleExecFile } from '../utils/exec-gradle';
-import { getGradleReport } from '../utils/get-gradle-report';
+import {
+  GradleReport,
+  populateGradleReport,
+  gradleConfigGlob,
+  getCurrentGradleReport,
+} from '../utils/get-gradle-report';
+import { hashObject } from 'nx/src/hasher/file-hasher';
 
 const cacheableTaskType = new Set(['Build', 'Verification']);
 const dependsOnMap = {
@@ -33,8 +42,8 @@ export interface GradlePluginOptions {
   [taskTargetName: string]: string | undefined;
 }
 
-const cachePath = join(projectGraphCacheDirectory, 'gradle.hash');
-const targetsCache = readTargetsCache();
+let cachePath;
+let targetsCache;
 type GradleTargets = Record<
   string,
   {
@@ -44,20 +53,29 @@ type GradleTargets = Record<
   }
 >;
 
-function readTargetsCache(): GradleTargets {
+function readTargetsCache(cachePath: string): GradleTargets {
   return existsSync(cachePath) ? readJsonFile(cachePath) : {};
 }
 
-export function writeTargetsToCache() {
-  const oldCache = readTargetsCache();
+export function writeTargetsToCache(cachePath: string) {
+  const oldCache = readTargetsCache(cachePath);
   writeJsonFile(cachePath, {
     ...oldCache,
     ...targetsCache,
   });
 }
+export const beforeCreateNodes: BeforeCreateNodes<GradlePluginOptions> = (
+  opts,
+  ctx
+) => {
+  const optionsHash = hashObject(opts);
+  cachePath = join(projectGraphCacheDirectory, `gradle-${optionsHash}.hash`);
+  targetsCache = readTargetsCache(cachePath);
+  populateGradleReport(ctx.workspaceRoot);
+};
 
 export const createNodes: CreateNodes<GradlePluginOptions> = [
-  '**/build.{gradle.kts,gradle}',
+  gradleConfigGlob,
   (
     gradleFilePath,
     options: GradlePluginOptions | undefined,
@@ -87,6 +105,12 @@ export const createNodes: CreateNodes<GradlePluginOptions> = [
   },
 ];
 
+export const afterCreateNodes: AfterCreateNodes<GradlePluginOptions> = (
+  opts
+) => {
+  writeTargetsToCache(cachePath);
+};
+
 function createGradleProject(
   gradleFilePath: string,
   options: GradlePluginOptions | undefined,
@@ -98,8 +122,7 @@ function createGradleProject(
       gradleFileToOutputDirsMap,
       gradleFileToGradleProjectMap,
       gradleProjectToProjectName,
-    } = getGradleReport();
-
+    } = getCurrentGradleReport();
     const gradleProject = gradleFileToGradleProjectMap.get(
       gradleFilePath
     ) as string;

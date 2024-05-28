@@ -10,10 +10,9 @@ import { readFileSync } from 'node:fs';
 import { basename } from 'node:path';
 
 import {
-  getGradleReport,
   invalidateGradleReportCache,
+  getCurrentGradleReport,
 } from '../utils/get-gradle-report';
-import { writeTargetsToCache } from './nodes';
 
 export const createDependencies: CreateDependencies = async (
   _,
@@ -30,7 +29,7 @@ export const createDependencies: CreateDependencies = async (
     gradleFileToGradleProjectMap,
     gradleProjectToProjectName,
     buildFileToDepsMap,
-  } = getGradleReport();
+  } = getCurrentGradleReport();
 
   for (const gradleFile of gradleFiles) {
     const gradleProject = gradleFileToGradleProjectMap.get(gradleFile);
@@ -58,10 +57,6 @@ export const createDependencies: CreateDependencies = async (
     gradleDependenciesEnd.name
   );
 
-  writeTargetsToCache();
-  if (dependencies.length) {
-    invalidateGradleReportCache();
-  }
   return dependencies;
 };
 
