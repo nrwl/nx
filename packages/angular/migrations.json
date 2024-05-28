@@ -1887,6 +1887,24 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "19.1.1": {
+      "version": "19.1.1-beta.0",
+      "requires": {},
+      "packages": {
+        "@angular-eslint/eslint-plugin": {
+          "version": "18.0.0-alpha.16",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/eslint-plugin-template": {
+          "version": "18.0.0-alpha.16",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/template-parser": {
+          "version": "18.0.0-alpha.16",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }
