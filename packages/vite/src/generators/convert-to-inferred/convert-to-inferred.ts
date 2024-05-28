@@ -1,13 +1,10 @@
-import {
-  createProjectGraphAsync,
-  formatFiles,
-  names,
-  type TargetConfiguration,
-  type Tree,
-} from '@nx/devkit';
+import { createProjectGraphAsync, formatFiles, type Tree } from '@nx/devkit';
 import { createNodes, VitePluginOptions } from '../../plugins/plugin';
 import { migrateExecutorToPlugin } from '@nx/devkit/src/generators/plugin-migrations/executor-to-plugin-migrator';
 import { buildPostTargetTransformer } from './lib/build-post-target-transformer';
+import { servePostTargetTransformer } from './lib/serve-post-target-transformer';
+import { previewPostTargetTransformer } from './lib/preview-post-target-transformer';
+import { testPostTargetTransformer } from './lib/test-post-target-transformer';
 
 interface Schema {
   project?: string;
@@ -47,7 +44,7 @@ export async function convertToInferred(tree: Tree, options: Schema) {
         testTargetName: 'test',
         serveStaticTargetName: 'serve-static',
       }),
-      postTargetTransformer,
+      servePostTargetTransformer,
       createNodes,
       options.project
     );
@@ -64,7 +61,7 @@ export async function convertToInferred(tree: Tree, options: Schema) {
         testTargetName: 'test',
         serveStaticTargetName: 'serve-static',
       }),
-      postTargetTransformer,
+      previewPostTargetTransformer,
       createNodes,
       options.project
     );
@@ -80,7 +77,7 @@ export async function convertToInferred(tree: Tree, options: Schema) {
       testTargetName: targetName,
       serveStaticTargetName: 'serve-static',
     }),
-    postTargetTransformer,
+    testPostTargetTransformer,
     createNodes,
     options.project
   );
@@ -98,24 +95,6 @@ export async function convertToInferred(tree: Tree, options: Schema) {
   if (!options.skipFormat) {
     await formatFiles(tree);
   }
-}
-
-function postTargetTransformer(
-  target: TargetConfiguration
-): TargetConfiguration {
-  if (target.options) {
-    if (target.options?.config) {
-      delete target.options.config;
-    }
-
-    for (const [key, value] of Object.entries(target.options)) {
-      const newKeyName = names(key).fileName;
-      delete target.options[key];
-      target.options[newKeyName] = value;
-    }
-  }
-
-  return target;
 }
 
 export default convertToInferred;

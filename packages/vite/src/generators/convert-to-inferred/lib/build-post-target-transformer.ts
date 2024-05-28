@@ -118,6 +118,8 @@ export function moveBuildLibsFromSourceToViteConfig(
     'PropertyAssignment:has(Identifier[name=plugins])';
   const PLUGINS_NX_VITE_TS_PATHS_SELECTOR =
     'PropertyAssignment:has(Identifier[name=plugins]) CallExpression:has(Identifier[name=nxViteTsPaths])';
+  const BUILD_LIBS_FROM_SOURCE_SELECTOR =
+    'PropertyAssignment:has(Identifier[name=plugins]) CallExpression:has(Identifier[name=nxViteTsPaths]) ObjectLiteralExpression > PropertyAssignment:has(Identifier[name=buildLibsFromSource])';
 
   const nxViteTsPathsImport =
     extname(configPath) === 'js'
@@ -129,6 +131,15 @@ export function moveBuildLibsFromSourceToViteConfig(
   let newViteConfigContents = viteConfigContents;
 
   const ast = tsquery.ast(viteConfigContents);
+  const buildLibsFromSourceNodes = tsquery(
+    ast,
+    BUILD_LIBS_FROM_SOURCE_SELECTOR,
+    { visitAllChildren: true }
+  );
+  if (buildLibsFromSourceNodes.length > 0) {
+    return;
+  }
+
   const nxViteTsPathsNodes = tsquery(ast, PLUGINS_NX_VITE_TS_PATHS_SELECTOR, {
     visitAllChildren: true,
   });
