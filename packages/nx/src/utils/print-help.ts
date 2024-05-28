@@ -343,7 +343,7 @@ function generateLinkOutput({
     return '';
   }
 
-  const link = `https://nx.dev/packages/${pluginName.substring(
+  const link = `https://nx.dev/nx-api/${pluginName.substring(
     pluginName.startsWith(nxPackagePrefix)
       ? nxPackagePrefix.length
       : nrwlPackagePrefix.length
