@@ -286,10 +286,10 @@ export default async function runExecutor(
       const stdoutData = JSON.parse(err.stdout?.toString() || '{}');
 
       console.error('npm publish error:');
-      if (stdoutData.error.summary) {
+      iif (stdoutData.error?.summary) {
         console.error(stdoutData.error.summary);
       }
-      if (stdoutData.error.detail) {
+      if (stdoutData.error?.detail) {
         console.error(stdoutData.error.detail);
       }
 
@@ -297,6 +297,11 @@ export default async function runExecutor(
         console.error('npm publish stdout:');
         console.error(JSON.stringify(stdoutData, null, 2));
       }
+
+      if (!stdoutData.error) {
+        throw err;
+      }
+      
       return {
         success: false,
       };
