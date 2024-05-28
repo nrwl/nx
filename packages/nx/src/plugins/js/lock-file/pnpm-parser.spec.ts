@@ -654,7 +654,6 @@ describe('pnpm LockFile utility', () => {
         'node_modules/cliui/package.json': '{"version": "7.0.4"}',
         'node_modules/js-yaml/package.json': '{"version": "4.1.0"}',
         'node_modules/minimatch/package.json': '{"version": "3.0.5"}',
-        'node_modules/tslib/package.json': '{"version": "2.4.1"}',
         'node_modules/.modules.yaml': require(joinPathFragments(
           __dirname,
           '__fixtures__/pruning/.modules.yaml'
@@ -707,6 +706,20 @@ describe('pnpm LockFile utility', () => {
           );
         }
         graph = builder.getUpdatedProjectGraph();
+      });
+
+      it('should parse hoisted versions', () => {
+        expect(graph.externalNodes['npm:tslib']).toMatchInlineSnapshot(`
+          {
+            "data": {
+              "hash": "sha512-336iVw3rtn2BUK7ORdIAHTyxHGRIHVReokCR3XjbckJMK7ms8FysBfhLR8IXnAgy7T0PTPNBWKiH514FOW/WSg==",
+              "packageName": "tslib",
+              "version": "2.5.0",
+            },
+            "name": "npm:tslib",
+            "type": "npm",
+          }
+        `);
       });
 
       it('should prune single package', () => {
@@ -794,6 +807,20 @@ describe('pnpm LockFile utility', () => {
         graph = builder.getUpdatedProjectGraph();
       });
 
+      it('should parse hoisted versions', () => {
+        expect(graph.externalNodes['npm:tslib']).toMatchInlineSnapshot(`
+          {
+            "data": {
+              "hash": "sha512-336iVw3rtn2BUK7ORdIAHTyxHGRIHVReokCR3XjbckJMK7ms8FysBfhLR8IXnAgy7T0PTPNBWKiH514FOW/WSg==",
+              "packageName": "tslib",
+              "version": "2.5.0",
+            },
+            "name": "npm:tslib",
+            "type": "npm",
+          }
+        `);
+      });
+
       it('should prune single package', () => {
         const typescriptPackageJson = require(joinPathFragments(
           __dirname,
@@ -877,6 +904,20 @@ describe('pnpm LockFile utility', () => {
           );
         }
         graph = builder.getUpdatedProjectGraph();
+      });
+
+      it('should parse hoisted versions', () => {
+        expect(graph.externalNodes['npm:tslib']).toMatchInlineSnapshot(`
+          {
+            "data": {
+              "hash": "sha512-336iVw3rtn2BUK7ORdIAHTyxHGRIHVReokCR3XjbckJMK7ms8FysBfhLR8IXnAgy7T0PTPNBWKiH514FOW/WSg==",
+              "packageName": "tslib",
+              "version": "2.5.0",
+            },
+            "name": "npm:tslib",
+            "type": "npm",
+          }
+        `);
       });
 
       it('should prune single package', () => {
