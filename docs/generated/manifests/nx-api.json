@@ -2976,6 +2976,15 @@
         "originalFilePath": "/packages/vite/src/generators/vitest/schema.json",
         "path": "/nx-api/vite/generators/vitest",
         "type": "generator"
+      },
+      "/nx-api/vite/generators/convert-to-inferred": {
+        "description": "Convert existing Vite project(s) using `@nx/vite:*` executors to use `@nx/vite/plugin`.",
+        "file": "generated/packages/vite/generators/convert-to-inferred.json",
+        "hidden": false,
+        "name": "convert-to-inferred",
+        "originalFilePath": "/packages/vite/src/generators/convert-to-inferred/schema.json",
+        "path": "/nx-api/vite/generators/convert-to-inferred",
+        "type": "generator"
       }
     },
     "path": "/nx-api/vite"

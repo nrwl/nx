@@ -677,6 +677,7 @@
       - [configuration](/nx-api/vite/generators/configuration)
       - [setup-paths-plugin](/nx-api/vite/generators/setup-paths-plugin)
       - [vitest](/nx-api/vite/generators/vitest)
+      - [convert-to-inferred](/nx-api/vite/generators/convert-to-inferred)
   - [vue](/nx-api/vue)
     - [documents](/nx-api/vue/documents)
       - [Overview](/nx-api/vue/documents/overview)
