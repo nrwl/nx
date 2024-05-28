@@ -7,6 +7,7 @@ import {
 } from '@nx/devkit';
 import { createNodes, VitePluginOptions } from '../../plugins/plugin';
 import { migrateExecutorToPlugin } from '@nx/devkit/src/generators/plugin-migrations/executor-to-plugin-migrator';
+import { buildPostTargetTransformer } from './lib/build-post-target-transformer';
 
 interface Schema {
   project?: string;
@@ -29,7 +30,7 @@ export async function convertToInferred(tree: Tree, options: Schema) {
         testTargetName: 'test',
         serveStaticTargetName: 'serve-static',
       }),
-      postTargetTransformer,
+      buildPostTargetTransformer,
       createNodes,
       options.project
     );
