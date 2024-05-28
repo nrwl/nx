@@ -14,11 +14,11 @@ Then "Developer settings" from the left-hand menu:
 
 Then "GitHub Apps":
 
-![Step 3](/nx-cloud/enterprise/on-premise/images/github_custom_app_step_3.png)
+![Step 3](/nx-cloud/enterprise/on-premise/images/github_custom_app_step_3.avif)
 
 And create a new GitHub app:
 
-![Step 4](/nx-cloud/enterprise/on-premise/images/github_custom_app_step_5.png)
+![Step 4](/nx-cloud/enterprise/on-premise/images/github_custom_app_step_5.avif)
 
 Give it a name, and a homepage URL. The callback URL is the important bit. It needs to be in this form:
 
@@ -29,11 +29,11 @@ Give it a name, and a homepage URL. The callback URL is the important bit. It ne
 https://my.nx-enterprise.url:8080/callbacks/github-user
 ```
 
-Once you create, keep a note of the Client ID and App ID:
+Once you create the app, keep a note of the Client ID and App ID:
 
-![Step 6](/nx-cloud/enterprise/on-premise/images/github_custom_app_step_6.png)
+![Step 6](/nx-cloud/enterprise/on-premise/images/github_custom_app_step_6.avif)
 
-And then generate a new client secret, and save it somewhere secure (we'll use it in a bit):
+Then generate a new client secret, and save it somewhere secure (we'll use it in a bit):
 
 ![Step 7](/nx-cloud/enterprise/on-premise/images/github_auth_step_7.png)
 
