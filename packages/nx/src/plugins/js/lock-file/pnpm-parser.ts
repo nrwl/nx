@@ -338,7 +338,7 @@ function getHoistedVersion(
 
   if (!version) {
     const key = Object.keys(hoistedDependencies).find((k) =>
-      k.startsWith(isV5 ? `/${packageName}/` : `/${packageName}@`)
+      k.startsWith(`/${packageName}/`)
     );
     if (key) {
       version = parseBaseVersion(getVersion(key.slice(1), packageName), isV5);
