@@ -15,7 +15,7 @@ export async function setupNxCloud(
   try {
     const pmc = getPackageManagerCommand(packageManager);
     const res = await execAndWait(
-      `${pmc.exec} nx g nx:connect-to-nx-cloud --no-interactive --quiet`,
+      `${pmc.exec} nx g nx:connect-to-nx-cloud --installationSource=create-nx-workspace --no-interactive --quiet`,
       directory
     );
     if (nxCloud !== 'yes') {
