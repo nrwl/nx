@@ -582,11 +582,11 @@ describe('defaultChangelogRenderer()', () => {
   });
 
   describe('dependency bumps', () => {
-    it('should render the dependency bumps in addition to the commits', async () => {
+    it('should render the dependency bumps in addition to the changes', async () => {
       expect(
         await defaultChangelogRenderer({
           projectGraph,
-          commits,
+          changes,
           releaseVersion: 'v1.1.0',
           entryWhenNoChanges: false as const,
           changelogRenderOptions: {
@@ -628,11 +628,11 @@ describe('defaultChangelogRenderer()', () => {
       `);
     });
 
-    it('should render the dependency bumps and release version title even when there are no commits', async () => {
+    it('should render the dependency bumps and release version title even when there are no changes', async () => {
       expect(
         await defaultChangelogRenderer({
           projectGraph,
-          commits: [],
+          changes: [],
           releaseVersion: 'v3.1.0',
           entryWhenNoChanges:
             'should not be printed because we have dependency bumps',
