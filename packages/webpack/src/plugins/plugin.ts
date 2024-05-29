@@ -69,9 +69,12 @@ export const createNodes: CreateNodes<WebpackPluginOptions> = [
       return {};
     }
 
-    const hash = calculateHashForCreateNodes(projectRoot, options, context, [
-      getLockFileName(detectPackageManager(context.workspaceRoot)),
-    ]);
+    const hash = await calculateHashForCreateNodes(
+      projectRoot,
+      options,
+      context,
+      [getLockFileName(detectPackageManager(context.workspaceRoot))]
+    );
     const targets = targetsCache[hash]
       ? targetsCache[hash]
       : await createWebpackTargets(

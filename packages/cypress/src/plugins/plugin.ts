@@ -17,11 +17,12 @@ import { getLockFileName } from '@nx/js';
 
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { existsSync, readdirSync } from 'fs';
-import { globAsync } from 'nx/src/utils/globs';
+
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { projectGraphCacheDirectory } from 'nx/src/utils/cache-directory';
 import { NX_PLUGIN_OPTIONS } from '../utils/constants';
 import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
+import { globWithWorkspaceContext } from 'nx/src/utils/workspace-context';
 
 export interface CypressPluginOptions {
   ciTargetName?: string;
@@ -65,9 +66,12 @@ export const createNodes: CreateNodes<CypressPluginOptions> = [
       return {};
     }
 
-    const hash = calculateHashForCreateNodes(projectRoot, options, context, [
-      getLockFileName(detectPackageManager(context.workspaceRoot)),
-    ]);
+    const hash = await calculateHashForCreateNodes(
+      projectRoot,
+      options,
+      context,
+      [getLockFileName(detectPackageManager(context.workspaceRoot))]
+    );
 
     targetsCache[hash] ??= await buildCypressTargets(
       configFilePath,
@@ -205,7 +209,10 @@ async function buildCypressTargets(
         : Array.isArray(cypressConfig.e2e.excludeSpecPattern)
         ? cypressConfig.e2e.excludeSpecPattern.map((p) => join(projectRoot, p))
         : [join(projectRoot, cypressConfig.e2e.excludeSpecPattern)];
-      const specFiles = await globAsync(specPatterns, excludeSpecPatterns);
+      const specFiles = await globWithWorkspaceContext(
+        specPatterns,
+        excludeSpecPatterns
+      );
 
       const dependsOn: TargetConfiguration['dependsOn'] = [];
       const outputs = getOutputs(projectRoot, cypressConfig, 'e2e');

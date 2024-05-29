@@ -58,14 +58,14 @@ export function writeTargetsToCache() {
 
 export const createNodes: CreateNodes<GradlePluginOptions> = [
   '**/build.{gradle.kts,gradle}',
-  (
+  async (
     gradleFilePath,
     options: GradlePluginOptions | undefined,
     context: CreateNodesContext
   ) => {
     const projectRoot = dirname(gradleFilePath);
 
-    const hash = calculateHashForCreateNodes(
+    const hash = await calculateHashForCreateNodes(
       projectRoot,
       options ?? {},
       context
