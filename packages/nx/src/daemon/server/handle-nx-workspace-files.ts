@@ -5,7 +5,10 @@ import { HandlerResult } from './server';
 export async function handleNxWorkspaceFiles(
   projectRootMap: Record<string, string>
 ): Promise<HandlerResult> {
-  const files = await getNxWorkspaceFilesFromContext(workspaceRoot, projectRootMap);
+  const files = await getNxWorkspaceFilesFromContext(
+    workspaceRoot,
+    projectRootMap
+  );
   return {
     response: JSON.stringify(files),
     description: 'handleNxWorkspaceFiles',

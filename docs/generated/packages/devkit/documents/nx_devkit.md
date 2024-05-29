@@ -129,6 +129,7 @@ It only uses language primitives and immutable objects
 - [getProjects](../../devkit/documents/getProjects)
 - [getWorkspaceLayout](../../devkit/documents/getWorkspaceLayout)
 - [glob](../../devkit/documents/glob)
+- [globAsync](../../devkit/documents/globAsync)
 - [hashArray](../../devkit/documents/hashArray)
 - [installPackagesTask](../../devkit/documents/installPackagesTask)
 - [isWorkspacesEnabled](../../devkit/documents/isWorkspacesEnabled)
