@@ -2,7 +2,7 @@ import { output } from '../../utils/output';
 import { readNxJson } from '../../config/configuration';
 import { FsTree, flushChanges } from '../../generators/tree';
 import { connectToNxCloud } from '../../nx-cloud/generators/connect-to-nx-cloud/connect-to-nx-cloud';
-import { getGithubSlugOrNull } from '../../nx-cloud/utilities/git-info';
+import { getGithubSlugOrNull } from '../../utils/git-utils';
 import { getNxCloudUrl, isNxCloudUsed } from '../../utils/nx-cloud-utils';
 import { runNxSync } from '../../utils/child-process';
 import { NxJsonConfiguration } from '../../config/nx-json';

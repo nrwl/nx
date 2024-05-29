@@ -32,6 +32,7 @@ import {
   writeJsonFile,
 } from '../../utils/fileutils';
 import { logger } from '../../utils/logger';
+import { commitChanges } from '../../utils/git-utils';
 import {
   ArrayPackageGroup,
   NxMigrationsConfiguration,
@@ -1570,32 +1571,6 @@ function getStringifiedPackageJsonDeps(root: string): string {
     // We don't really care if the .nx/installation property changes,
     // whenever nxw is invoked it will handle the dep updates.
     return '';
-  }
-}
-
-export function commitChanges(commitMessage: string): string | null {
-  try {
-    execSync('git add -A', { encoding: 'utf8', stdio: 'pipe' });
-    execSync('git commit --no-verify -F -', {
-      encoding: 'utf8',
-      stdio: 'pipe',
-      input: commitMessage,
-    });
-  } catch (err) {
-    throw new Error(`Error committing changes:\n${err.stderr}`);
-  }
-
-  return getLatestCommitSha();
-}
-
-export function getLatestCommitSha(): string | null {
-  try {
-    return execSync('git rev-parse HEAD', {
-      encoding: 'utf8',
-      stdio: 'pipe',
-    }).trim();
-  } catch {
-    return null;
   }
 }
 

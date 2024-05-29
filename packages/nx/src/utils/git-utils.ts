@@ -41,3 +41,29 @@ function parseGitHubUrl(url: string): string | null {
   }
   return null;
 }
+
+export function commitChanges(commitMessage: string): string | null {
+  try {
+    execSync('git add -A', { encoding: 'utf8', stdio: 'pipe' });
+    execSync('git commit --no-verify -F -', {
+      encoding: 'utf8',
+      stdio: 'pipe',
+      input: commitMessage,
+    });
+  } catch (err) {
+    throw new Error(`Error committing changes:\n${err.stderr}`);
+  }
+
+  return getLatestCommitSha();
+}
+
+export function getLatestCommitSha(): string | null {
+  try {
+    return execSync('git rev-parse HEAD', {
+      encoding: 'utf8',
+      stdio: 'pipe',
+    }).trim();
+  } catch {
+    return null;
+  }
+}

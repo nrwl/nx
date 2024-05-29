@@ -1,6 +1,6 @@
 import * as chalk from 'chalk';
 import { logger } from '../../utils/logger';
-import { commitChanges } from '../../command-line/migrate/migrate';
+import { commitChanges } from '../../utils/git-utils';
 
 export function commitNxConnectUpdates(
   connectUrl: string,
