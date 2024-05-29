@@ -2,8 +2,7 @@ export const GET_NX_WORKSPACE_FILES = 'GET_NX_WORKSPACE_FILES' as const;
 
 export type HandleNxWorkspaceFilesMessage = {
   type: typeof GET_NX_WORKSPACE_FILES;
-  workspaceRoot: string,
-  projectRootMap: Record<string, string>
+  projectRootMap: Record<string, string>;
 };
 
 export function isHandleNxWorkspaceFilesMessage(

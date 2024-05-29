@@ -2,8 +2,8 @@ export const GLOB = 'GLOB' as const;
 
 export type HandleUpdateContextMessage = {
   type: typeof GLOB;
-  updatedFiles: string[],
-  deletedFiles: string[]
+  updatedFiles: string[];
+  deletedFiles: string[];
 };
 
 export function isHandleUpdateContextMessage(

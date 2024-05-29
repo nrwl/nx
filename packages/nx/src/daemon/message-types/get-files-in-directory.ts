@@ -2,8 +2,7 @@ export const GET_FILES_IN_DIRECTORY = 'GET_FILES_IN_DIRECTORY' as const;
 
 export type HandleGetFilesInDirectoryMessage = {
   type: typeof GET_FILES_IN_DIRECTORY;
-  globs: string[];
-  exclude?: string[];
+  dir: string;
 };
 
 export function isHandleGetFilesInDirectoryMessage(
