@@ -43,7 +43,7 @@ export function createPackageJson(
   const projectNode = graph.nodes[projectName];
   const isLibrary = projectNode.type === 'lib';
 
-  const rootPackageJson = readJsonFile(
+  const rootPackageJson: PackageJson = readJsonFile(
     `${options.root || workspaceRoot}/package.json`
   );
 
