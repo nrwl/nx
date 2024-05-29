@@ -124,7 +124,7 @@ export {
 /**
  * @category Generators
  */
-export { glob } from './generators/utils/glob';
+export { glob, globAsync } from './generators/utils/glob';
 
 /**
  * @category Generators

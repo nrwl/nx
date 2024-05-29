@@ -5,9 +5,7 @@ import {
   buildProjectConfigurationFromPackageJson,
   getGlobPatternsFromPackageManagerWorkspaces,
 } from '../../plugins/package-json-workspaces';
-import {
-  buildProjectFromProjectJson,
-} from '../../plugins/project-json/build-nodes/project-json';
+import { buildProjectFromProjectJson } from '../../plugins/project-json/build-nodes/project-json';
 import { renamePropertyWithStableKeys } from '../../adapter/angular-json';
 import {
   ProjectConfiguration,

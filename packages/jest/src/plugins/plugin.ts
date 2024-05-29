@@ -94,7 +94,11 @@ export const createNodes: CreateNodes<JestPluginOptions> = [
 
     options = normalizeOptions(options);
 
-    const hash = await calculateHashForCreateNodes(projectRoot, options, context);
+    const hash = await calculateHashForCreateNodes(
+      projectRoot,
+      options,
+      context
+    );
     targetsCache[hash] ??= await buildJestTargets(
       configFilePath,
       projectRoot,
