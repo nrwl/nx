@@ -193,6 +193,7 @@ describe('shared', () => {
         releaseTagPattern: 'my-group-{version}',
         changelog: undefined,
         version: undefined,
+        versionPlans: false,
       };
       const releaseGroupToFilteredProjects = new Map().set(
         releaseGroup,
