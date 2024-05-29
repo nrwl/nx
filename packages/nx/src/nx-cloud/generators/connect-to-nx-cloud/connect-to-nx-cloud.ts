@@ -6,8 +6,8 @@ import { readJson } from '../../../generators/utils/json';
 import { NxJsonConfiguration } from '../../../config/nx-json';
 import { readNxJson, updateNxJson } from '../../../generators/utils/nx-json';
 import { formatChangedFilesWithPrettierIfAvailable } from '../../../generators/internal-utils/format-changed-files-with-prettier-if-available';
-import { getGithubSlugOrNull } from '../../utilities/git-info';
-import { commitNxConnectUpdates } from '../../utilities/git-commit';
+import { getGithubSlugOrNull } from '../../../utils/git-utils';
+import { commitNxConnectUpdates } from '../../utilities/git-updates';
 
 function printCloudConnectionDisabledMessage() {
   output.error({
