@@ -94,7 +94,9 @@ async function buildRollupTarget(
   const namedInputs = getNamedInputs(projectRoot, context);
   const rollupConfig = (
     (await loadConfigFile(
-      joinPathFragments(context.workspaceRoot, configFilePath)
+      joinPathFragments(context.workspaceRoot, configFilePath),
+      {},
+      true // Enable watch mode so that rollup properly reloads config files without reusing a cached version
     )) as { options: RollupOptions[] }
   ).options;
   const outputs = getOutputs(rollupConfig, projectRoot);
