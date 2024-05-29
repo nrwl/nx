@@ -1,7 +1,7 @@
 import type { NxWorkspaceFilesExternals, WorkspaceContext } from '../native';
 import { performance } from 'perf_hooks';
 import { cacheDirectoryForWorkspace } from './cache-directory';
-import { isOnDaemon } from './is-on-daemon';
+import { isOnDaemon } from '../daemon/is-on-daemon';
 import { daemonClient } from '../daemon/client/client';
 
 let workspaceContext: WorkspaceContext | undefined;
@@ -22,12 +22,15 @@ export function setupWorkspaceContext(workspaceRoot: string) {
   );
 }
 
-export function getNxWorkspaceFilesFromContext(
+export async function getNxWorkspaceFilesFromContext(
   workspaceRoot: string,
   projectRootMap: Record<string, string>
 ) {
-  ensureContextAvailable(workspaceRoot);
-  return workspaceContext.getWorkspaceFiles(projectRootMap);
+  if (isOnDaemon() || !daemonClient.enabled()) {
+    ensureContextAvailable(workspaceRoot);
+    return workspaceContext.getWorkspaceFiles(projectRootMap);
+  }
+  return daemonClient.getWorkspaceFiles(projectRootMap);
 }
 
 export async function globWithWorkspaceContext(
@@ -43,13 +46,16 @@ export async function globWithWorkspaceContext(
   }
 }
 
-export function hashWithWorkspaceContext(
+export async function hashWithWorkspaceContext(
   workspaceRoot: string,
   globs: string[],
   exclude?: string[]
 ) {
-  ensureContextAvailable(workspaceRoot);
-  return workspaceContext.hashFilesMatchingGlob(globs, exclude);
+  if (isOnDaemon() || !daemonClient.enabled()) {
+    ensureContextAvailable(workspaceRoot);
+    return workspaceContext.hashFilesMatchingGlob(globs, exclude);
+  }
+  return daemonClient.hashGlob(globs, exclude);
 }
 
 export function updateFilesInContext(
@@ -60,16 +66,22 @@ export function updateFilesInContext(
 }
 
 export function getAllFileDataInContext(workspaceRoot: string) {
-  ensureContextAvailable(workspaceRoot);
-  return workspaceContext.allFileData();
+  if (isOnDaemon() || !daemonClient.enabled()) {
+    ensureContextAvailable(workspaceRoot);
+    return workspaceContext.allFileData();
+  }
+  return daemonClient.getAllFileData();
 }
 
 export function getFilesInDirectoryUsingContext(
   workspaceRoot: string,
   dir: string
 ) {
-  ensureContextAvailable(workspaceRoot);
-  return workspaceContext.getFilesInDirectory(dir);
+  if (isOnDaemon() || !daemonClient.enabled()) {
+    ensureContextAvailable(workspaceRoot);
+    return workspaceContext.getFilesInDirectory(dir);
+  }
+  return daemonClient.getFilesInDirectory(dir);
 }
 
 export function updateProjectFiles(

@@ -31,8 +31,20 @@ import {
 } from '../../project-graph/error-types';
 import { loadRootEnvFiles } from '../../utils/dotenv';
 import { HandleGlobMessage } from '../message-types/glob';
-import { HandleNxWorkspaceFilesMessage } from '../message-types/get-nx-workspace-files';
-import { GET_CONTEXT_FILE_DATA, HandleContextFileDataMessage } from '../message-types/get-context-file-data';
+import {
+  GET_NX_WORKSPACE_FILES,
+  HandleNxWorkspaceFilesMessage,
+} from '../message-types/get-nx-workspace-files';
+import {
+  GET_CONTEXT_FILE_DATA,
+  HandleContextFileDataMessage,
+} from '../message-types/get-context-file-data';
+import {
+  GET_FILES_IN_DIRECTORY,
+  HandleGetFilesInDirectoryMessage,
+} from '../message-types/get-files-in-directory';
+import { HASH_GLOB, HandleHashGlobMessage } from '../message-types/hash-glob';
+import { NxWorkspaceFiles } from '../../native';
 
 const DAEMON_ENV_SETTINGS = {
   NX_PROJECT_GLOB_CACHE: 'false',
@@ -271,12 +283,42 @@ export class DaemonClient {
     return this.sendToDaemonViaQueue(message);
   }
 
-  getWorkspaceContextFileData(globs: string[], exclude?: string[]): Promise<FileData[]> {
+  getWorkspaceContextFileData(
+    globs: string[],
+    exclude?: string[]
+  ): Promise<FileData[]> {
     const message: HandleContextFileDataMessage = {
       type: GET_CONTEXT_FILE_DATA,
-      globs: ['**/*'],
-      exclude: ['node_modules', '.git'],
-    }
+      globs,
+      exclude,
+    };
+    return this.sendToDaemonViaQueue(message);
+  }
+
+  getWorkspaceFiles(
+    projectRootMap: Record<string, string>
+  ): Promise<NxWorkspaceFiles> {
+    const message: HandleNxWorkspaceFilesMessage = {
+      type: GET_NX_WORKSPACE_FILES,
+      projectRootMap,
+    };
+    return this.sendToDaemonViaQueue(message);
+  }
+
+  getFilesInDirectory(dir: string): Promise<FileData[]> {
+    const message: HandleGetFilesInDirectoryMessage = {
+      type: GET_FILES_IN_DIRECTORY,
+      dir,
+    };
+    return this.sendToDaemonViaQueue(message);
+  }
+
+  hashGlob(globs: string[], exclude?: string[]): Promise<string> {
+    const message: HandleHashGlobMessage = {
+      type: HASH_GLOB,
+      globs,
+      exclude,
+    };
     return this.sendToDaemonViaQueue(message);
   }
 

@@ -54,10 +54,29 @@ import {
 } from './watcher';
 import { handleGlob } from './handle-glob';
 import { GLOB, isHandleGlobMessage } from '../message-types/glob';
+import {
+  GET_NX_WORKSPACE_FILES,
+  isHandleNxWorkspaceFilesMessage,
+} from '../message-types/get-nx-workspace-files';
+import { handleNxWorkspaceFiles } from './handle-nx-workspace-files';
+import {
+  GET_CONTEXT_FILE_DATA,
+  isHandleContextFileDataMessage,
+} from '../message-types/get-context-file-data';
+import { handleContextFileData } from './handle-context-file-data';
+import {
+  GET_FILES_IN_DIRECTORY,
+  isHandleGetFilesInDirectoryMessage,
+} from '../message-types/get-files-in-directory';
+import { handleGetFilesInDirectory } from './handle-get-files-in-directory';
+import { HASH_GLOB, isHandleHashGlobMessage } from '../message-types/hash-glob';
+import { handleHashGlob } from './handle-hash-glob';
 
 let performanceObserver: PerformanceObserver | undefined;
 let workspaceWatcherError: Error | undefined;
 let outputsWatcherError: Error | undefined;
+
+global.NX_DAEMON = true;
 
 export type HandlerResult = {
   description: string;
@@ -170,6 +189,22 @@ async function handleMessage(socket, data: string) {
   } else if (isHandleGlobMessage(payload)) {
     await handleResult(socket, GLOB, () =>
       handleGlob(payload.globs, payload.exclude)
+    );
+  } else if (isHandleNxWorkspaceFilesMessage(payload)) {
+    await handleResult(socket, GET_NX_WORKSPACE_FILES, () =>
+      handleNxWorkspaceFiles(payload.projectRootMap)
+    );
+  } else if (isHandleGetFilesInDirectoryMessage(payload)) {
+    await handleResult(socket, GET_FILES_IN_DIRECTORY, () =>
+      handleGetFilesInDirectory(payload.dir)
+    );
+  } else if (isHandleContextFileDataMessage(payload)) {
+    await handleResult(socket, GET_CONTEXT_FILE_DATA, () =>
+      handleContextFileData()
+    );
+  } else if (isHandleHashGlobMessage(payload)) {
+    await handleResult(socket, HASH_GLOB, () =>
+      handleHashGlob(payload.globs, payload.exclude)
     );
   } else {
     await respondWithErrorAndExit(
