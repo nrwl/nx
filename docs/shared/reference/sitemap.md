@@ -649,6 +649,7 @@
     - [generators](/nx-api/rollup/generators)
       - [init](/nx-api/rollup/generators/init)
       - [configuration](/nx-api/rollup/generators/configuration)
+      - [convert-to-inferred](/nx-api/rollup/generators/convert-to-inferred)
   - [storybook](/nx-api/storybook)
     - [documents](/nx-api/storybook/documents)
       - [Overview](/nx-api/storybook/documents/overview)

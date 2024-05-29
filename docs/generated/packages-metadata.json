@@ -2726,6 +2726,15 @@
         "originalFilePath": "/packages/rollup/src/generators/configuration/schema.json",
         "path": "rollup/generators/configuration",
         "type": "generator"
+      },
+      {
+        "description": "Convert existing Rollup project(s) using `@nx/rollup:*` executors to use `@nx/rollup/plugin`.",
+        "file": "generated/packages/rollup/generators/convert-to-inferred.json",
+        "hidden": false,
+        "name": "convert-to-inferred",
+        "originalFilePath": "/packages/rollup/src/generators/convert-to-inferred/schema.json",
+        "path": "rollup/generators/convert-to-inferred",
+        "type": "generator"
       }
     ],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
