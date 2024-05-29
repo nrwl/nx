@@ -1,10 +1,10 @@
-import { CreateNodesResultWithContext } from './plugins/internal-api';
 import {
   ConfigurationResult,
   ConfigurationSourceMaps,
 } from './utils/project-configuration-utils';
 import { ProjectConfiguration } from '../config/workspace-json-project-json';
 import { ProjectGraph } from '../config/project-graph';
+import { CreateNodesFunctionV2 } from './plugins';
 
 export class ProjectGraphError extends Error {
   readonly #errors: Array<
@@ -167,7 +167,7 @@ export function isProjectWithNoNameError(
 export class ProjectConfigurationsError extends Error {
   constructor(
     public readonly errors: Array<
-      | MergeNodesError
+      | AggregateCreateNodesError
       | CreateNodesError
       | ProjectsWithNoNameError
       | MultipleProjectsWithSameNameError
@@ -191,7 +191,7 @@ export function isProjectConfigurationsError(
 }
 
 export class CreateNodesError extends Error {
-  file: string;
+  file?: string;
   pluginName: string;
 
   constructor({
@@ -199,11 +199,13 @@ export class CreateNodesError extends Error {
     pluginName,
     error,
   }: {
-    file: string;
+    file?: string;
     pluginName: string;
     error: Error;
   }) {
-    const msg = `The "${pluginName}" plugin threw an error while creating nodes from ${file}:`;
+    const msg = file
+      ? `The "${pluginName}" plugin threw an error while creating nodes from ${file}:`
+      : `The "${pluginName}" plugin threw an error while creating nodes:`;
 
     super(msg, { cause: error });
     this.name = this.constructor.name;
@@ -215,9 +217,8 @@ export class CreateNodesError extends Error {
 
 export class AggregateCreateNodesError extends Error {
   constructor(
-    public readonly pluginName: string,
-    public readonly errors: Array<CreateNodesError>,
-    public readonly partialResults: Array<CreateNodesResultWithContext>
+    public readonly errors: Array<[file: string | null, error: Error]>,
+    public readonly partialResults: Awaited<ReturnType<CreateNodesFunctionV2>>
   ) {
     super('Failed to create nodes');
     this.name = this.constructor.name;

@@ -46,12 +46,18 @@ export type {
   CreateNodesFunction,
   CreateNodesResult,
   CreateNodesContext,
+  CreateNodesContextV2,
+  CreateNodesFunctionV2,
+  CreateNodesResultV2,
+  CreateNodesV2,
   CreateDependencies,
   CreateDependenciesContext,
   CreateMetadata,
   CreateMetadataContext,
   ProjectsMetadata,
 } from './project-graph/plugins';
+
+export { createNodesFromFiles } from './project-graph/plugins';
 
 export type {
   NxPluginV1,
