@@ -72,9 +72,12 @@ export const createNodes: CreateNodes<StorybookPluginOptions> = [
     }
 
     options = normalizeOptions(options);
-    const hash = calculateHashForCreateNodes(projectRoot, options, context, [
-      getLockFileName(detectPackageManager(context.workspaceRoot)),
-    ]);
+    const hash = await calculateHashForCreateNodes(
+      projectRoot,
+      options,
+      context,
+      [getLockFileName(detectPackageManager(context.workspaceRoot))]
+    );
 
     const projectName = buildProjectName(projectRoot, context.workspaceRoot);
 

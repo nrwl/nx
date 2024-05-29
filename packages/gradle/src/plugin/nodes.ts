@@ -93,14 +93,14 @@ export const makeCreateNodes =
     gradleReport: GradleReport,
     targetsCache: GradleTargets
   ): CreateNodesFunction =>
-  (
+  async (
     gradleFilePath,
     options: GradlePluginOptions | undefined,
     context: CreateNodesContext
   ) => {
     const projectRoot = dirname(gradleFilePath);
 
-    const hash = calculateHashForCreateNodes(
+    const hash = await calculateHashForCreateNodes(
       projectRoot,
       options ?? {},
       context
@@ -128,14 +128,14 @@ export const makeCreateNodes =
  */
 export const createNodes: CreateNodes<GradlePluginOptions> = [
   gradleConfigGlob,
-  (configFile, options, context) => {
+  async (configFile, options, context) => {
     logger.warn(
       '`createNodes` is deprecated. Update your plugin to utilize createNodesV2 instead. In Nx 20, this will change to the createNodesV2 API.'
     );
     populateGradleReport(context.workspaceRoot);
     const gradleReport = getCurrentGradleReport();
     const internalCreateNodes = makeCreateNodes(gradleReport, {});
-    return internalCreateNodes(configFile, options, context);
+    return await internalCreateNodes(configFile, options, context);
   },
 ];
 

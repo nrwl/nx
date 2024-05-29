@@ -66,7 +66,7 @@ export const createNodes: CreateNodes<RemixPluginOptions> = [
 
     options = normalizeOptions(options);
 
-    const hash = calculateHashForCreateNodes(projectRoot, options, context, [
+    const hash = await calculateHashForCreateNodes(projectRoot, options, context, [
       getLockFileName(detectPackageManager(context.workspaceRoot)),
     ]);
     targetsCache[hash] ??= await buildRemixTargets(

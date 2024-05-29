@@ -76,7 +76,7 @@ export const PLUGIN_NAME = '@nx/js/typescript';
 
 export const createNodes: CreateNodes<TscPluginOptions> = [
   '**/tsconfig*.json',
-  (configFilePath, options, context) => {
+  async (configFilePath, options, context) => {
     const pluginOptions = normalizePluginOptions(options);
     const projectRoot = dirname(configFilePath);
     const fullConfigPath = joinPathFragments(
@@ -101,7 +101,7 @@ export const createNodes: CreateNodes<TscPluginOptions> = [
       return {};
     }
 
-    const nodeHash = calculateHashForCreateNodes(
+    const nodeHash = await calculateHashForCreateNodes(
       projectRoot,
       pluginOptions,
       context,
