@@ -21,6 +21,7 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
     defaultBase = 'main',
     commit,
     cliName,
+    useGitHub,
   } = options;
 
   if (cliName) {
@@ -52,7 +53,12 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
 
   let nxCloudInstallRes;
   if (nxCloud !== 'skip') {
-    nxCloudInstallRes = await setupNxCloud(directory, packageManager, nxCloud);
+    nxCloudInstallRes = await setupNxCloud(
+      directory,
+      packageManager,
+      nxCloud,
+      useGitHub
+    );
 
     if (nxCloud !== 'yes') {
       await setupCI(
