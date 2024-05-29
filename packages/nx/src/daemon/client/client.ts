@@ -305,7 +305,7 @@ export class DaemonClient {
     return this.sendToDaemonViaQueue(message);
   }
 
-  getFilesInDirectory(dir: string): Promise<FileData[]> {
+  getFilesInDirectory(dir: string): Promise<string[]> {
     const message: HandleGetFilesInDirectoryMessage = {
       type: GET_FILES_IN_DIRECTORY,
       dir,

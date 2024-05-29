@@ -33,6 +33,22 @@ export async function getNxWorkspaceFilesFromContext(
   return daemonClient.getWorkspaceFiles(projectRootMap);
 }
 
+/**
+ * Sync method to get files matching globs from workspace context.
+ * NOTE: This method will create the workspace context if it doesn't exist.
+ * It should only be used within Nx internal in code paths that **must** be sync.
+ * If used in an isolated plugin thread this will cause the workspace context
+ * to be recreated which is slow.
+ */
+export function globWithWorkspaceContextSync(
+  workspaceRoot: string,
+  globs: string[],
+  exclude?: string[]
+) {
+  ensureContextAvailable(workspaceRoot);
+  return workspaceContext.glob(globs, exclude);
+}
+
 export async function globWithWorkspaceContext(
   workspaceRoot: string,
   globs: string[],

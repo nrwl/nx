@@ -168,7 +168,7 @@ async function detectPlugins(): Promise<{
   updatePackageScripts: boolean;
 }> {
   let files = ['package.json'].concat(
-    globWithWorkspaceContext(process.cwd(), ['**/*/package.json'])
+    await globWithWorkspaceContext(process.cwd(), ['**/*/package.json'])
   );
 
   const detectedPlugins = new Set<string>();
