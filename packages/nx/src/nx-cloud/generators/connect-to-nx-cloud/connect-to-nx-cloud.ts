@@ -7,7 +7,6 @@ import { NxJsonConfiguration } from '../../../config/nx-json';
 import { readNxJson, updateNxJson } from '../../../generators/utils/nx-json';
 import { formatChangedFilesWithPrettierIfAvailable } from '../../../generators/internal-utils/format-changed-files-with-prettier-if-available';
 import { getGithubSlugOrNull } from '../../../utils/git-utils';
-import { commitNxConnectUpdates } from '../../utilities/git-updates';
 
 function printCloudConnectionDisabledMessage() {
   output.error({
@@ -107,15 +106,13 @@ function printSuccessMessage(
       connectCloudUrl = `https://cloud.nx.app/setup/connect-workspace/manual?accessToken=${token}`;
     }
 
-    commitNxConnectUpdates(connectCloudUrl, !!githubSlug, installationSource);
-
     output.note({
       title: `Your Nx Cloud workspace is ready.`,
       bodyLines: [
         `To claim it, connect it to your Nx Cloud account:`,
-        `- Push your changes.`,
+        `- Commit and push your changes.`,
         `- Create a pull request for the changes.`,
-        `- Go to the following URL to connect your workspace (you can also find this URL in the body of your PR): 
+        `- Go to the following URL to connect your workspace to Nx Cloud: 
         
         ${connectCloudUrl}`,
       ],
