@@ -1,7 +1,7 @@
 {% callout type="caution" title="Can I use component testing?" %}
 React component testing with Nx requires **Cypress version 10.7.0** and up.
 
-You can migrate with to v11 via the [migrate-to-cypress-11 generator](/packages/cypress/generators/migrate-to-cypress-11).
+You can migrate with to v11 via the [migrate-to-cypress-11 generator](/nx-api/cypress/generators/migrate-to-cypress-11).
 
 This generator is for Cypress based component testing.
 
@@ -122,4 +122,4 @@ Here is an example of the project configuration that is generated. The `--build-
 }
 ```
 
-Nx also supports [Angular component testing](/packages/angular/generators/cypress-component-configuration).
+Nx also supports [Angular component testing](/nx-api/angular/generators/cypress-component-configuration).

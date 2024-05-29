@@ -56,8 +56,6 @@ export async function setupMf(tree: Tree, rawOptions: Schema) {
   updateTsConfig(tree, options);
   setupServeTarget(tree, options);
 
-  fixBootstrap(tree, projectConfig.root, options);
-
   if (options.mfType === 'host') {
     setupHostIfDynamic(tree, options);
     updateHostAppRoutes(tree, options);
@@ -77,6 +75,8 @@ export async function setupMf(tree: Tree, rawOptions: Schema) {
       );
     }
   }
+
+  fixBootstrap(tree, projectConfig.root, options);
 
   if (!options.skipE2E) {
     addCypressOnErrorWorkaround(tree, options);

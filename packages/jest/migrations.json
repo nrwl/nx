@@ -36,6 +36,15 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "19.2.0": {
+      "version": "19.2.0-beta.0",
+      "packages": {
+        "@swc/jest": {
+          "version": "~0.2.36",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }

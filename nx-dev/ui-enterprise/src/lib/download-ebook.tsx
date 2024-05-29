@@ -25,9 +25,7 @@ export function DownloadEbook(): JSX.Element {
         </svg>
         <div className="mx-auto max-w-md text-center lg:mx-0 lg:flex-auto lg:py-12 lg:text-left">
           <h2 className="text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl dark:text-slate-50">
-            Download
-            <br />
-            Fast CI for monorepos
+            Download our ebook
           </h2>
           <p className="mt-6 text-lg leading-8">
             Discover how to scale your organization without feeling the pain of

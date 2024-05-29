@@ -12,7 +12,8 @@
     "Monorepo",
     "Java",
     "Gradle",
-    "CLI"
+    "CLI",
+    "Backend"
   ],
   "main": "./index",
   "typings": "./index.d.ts",

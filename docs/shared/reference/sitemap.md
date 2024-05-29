@@ -287,6 +287,7 @@
         - [Authenticate via SAML](/ci/recipes/enterprise/on-premise/auth-saml)
         - [Authenticate via SAML on Managed Version](/ci/recipes/enterprise/on-premise/auth-saml-managed)
         - [Advanced Configuration](/ci/recipes/enterprise/on-premise/advanced-config)
+        - [Custom GitHub App](/ci/recipes/enterprise/on-premise/custom-github-app)
       - [Custom Distributed Task Execution](/ci/recipes/enterprise/dte)
         - [GitHub Actions Custom DTE](/ci/recipes/enterprise/dte/github-dte)
         - [Circle CI Custom DTE](/ci/recipes/enterprise/dte/circle-ci-dte)

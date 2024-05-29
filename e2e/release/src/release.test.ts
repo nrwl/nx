@@ -407,7 +407,7 @@ ${JSON.stringify(
       > nx run {project-name}:nx-release-publish
 
 
-      📦  @proj/{project-name}@1000.0.0-next.0
+      📦  @proj/{project-name}@X.X.X-dry-run
       === Tarball Contents ===
 
       XXB  index.js
@@ -415,8 +415,8 @@ ${JSON.stringify(
       XXB  project.json
       === Tarball Details ===
       name:          @proj/{project-name}
-      version:       1000.0.0-next.0
-      filename:      proj-{project-name}-1000.0.0-next.0.tgz
+      version:       X.X.X-dry-run
+      filename:      proj-{project-name}-X.X.X-dry-run.tgz
       package size: XXXB
       unpacked size: XXXB
       shasum:        {SHASUM}
@@ -428,7 +428,7 @@ ${JSON.stringify(
       > nx run {project-name}:nx-release-publish
 
 
-      📦  @proj/{project-name}@1000.0.0-next.0
+      📦  @proj/{project-name}@X.X.X-dry-run
       === Tarball Contents ===
 
       XXB  index.js
@@ -436,8 +436,8 @@ ${JSON.stringify(
       XXB  project.json
       === Tarball Details ===
       name:          @proj/{project-name}
-      version:       1000.0.0-next.0
-      filename:      proj-{project-name}-1000.0.0-next.0.tgz
+      version:       X.X.X-dry-run
+      filename:      proj-{project-name}-X.X.X-dry-run.tgz
       package size: XXXB
       unpacked size: XXXB
       shasum:        {SHASUM}
@@ -449,7 +449,7 @@ ${JSON.stringify(
       > nx run {project-name}:nx-release-publish
 
 
-      📦  @proj/{project-name}@1000.0.0-next.0
+      📦  @proj/{project-name}@X.X.X-dry-run
       === Tarball Contents ===
 
       XXB  index.js
@@ -457,8 +457,8 @@ ${JSON.stringify(
       XXB  project.json
       === Tarball Details ===
       name:          @proj/{project-name}
-      version:       1000.0.0-next.0
-      filename:      proj-{project-name}-1000.0.0-next.0.tgz
+      version:       X.X.X-dry-run
+      filename:      proj-{project-name}-X.X.X-dry-run.tgz
       package size: XXXB
       unpacked size: XXXB
       shasum:        {SHASUM}

@@ -16,7 +16,7 @@ export class ProcessTasks {
   readonly dependencies: { [k: string]: string[] } = {};
 
   constructor(
-    private readonly defaultDependencyConfigs: TargetDependencies,
+    private readonly extraTargetDependencies: TargetDependencies,
     private readonly projectGraph: ProjectGraph
   ) {}
 
@@ -99,7 +99,7 @@ export class ProcessTasks {
 
     const dependencyConfigs = getDependencyConfigs(
       { project: task.target.project, target: task.target.target },
-      this.defaultDependencyConfigs,
+      this.extraTargetDependencies,
       this.projectGraph
     );
     for (const dependencyConfig of dependencyConfigs) {
@@ -377,14 +377,14 @@ export class ProcessTasks {
 
 export function createTaskGraph(
   projectGraph: ProjectGraph,
-  defaultDependencyConfigs: TargetDependencies,
+  extraTargetDependencies: TargetDependencies,
   projectNames: string[],
   targets: string[],
   configuration: string | undefined,
   overrides: Object,
   excludeTaskDependencies: boolean = false
 ): TaskGraph {
-  const p = new ProcessTasks(defaultDependencyConfigs, projectGraph);
+  const p = new ProcessTasks(extraTargetDependencies, projectGraph);
   const roots = p.processTasks(
     projectNames,
     targets,

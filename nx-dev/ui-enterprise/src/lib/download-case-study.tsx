@@ -19,6 +19,7 @@ export function DownloadCaseStudy(): JSX.Element {
               href="https://go.nx.dev/bank-case-study"
               title="Download the case study"
               variant="primary"
+              target="_blank"
               size="small"
             >
               Download (pdf)

@@ -13,7 +13,7 @@ import {
   getGradleReport,
   invalidateGradleReportCache,
 } from '../utils/get-gradle-report';
-import { calculatedTargets, writeTargetsToCache } from './nodes';
+import { writeTargetsToCache } from './nodes';
 
 export const createDependencies: CreateDependencies = async (
   _,
@@ -58,7 +58,7 @@ export const createDependencies: CreateDependencies = async (
     gradleDependenciesEnd.name
   );
 
-  writeTargetsToCache(calculatedTargets);
+  writeTargetsToCache();
   if (dependencies.length) {
     invalidateGradleReportCache();
   }

@@ -11,7 +11,7 @@
     "properties": {
       "assets": {
         "type": "array",
-        "description": "List of static application assets. _Note: only supported in Angular versions >= 15.1.0_",
+        "description": "List of static application assets.",
         "default": [],
         "items": {
           "oneOf": [
@@ -38,11 +38,12 @@
                 },
                 "output": {
                   "type": "string",
+                  "default": "",
                   "description": "Absolute path within the output."
                 }
               },
               "additionalProperties": false,
-              "required": ["glob", "input", "output"]
+              "required": ["glob", "input"]
             },
             { "type": "string" }
           ]
@@ -77,7 +78,7 @@
         "additionalProperties": false
       },
       "optimization": {
-        "description": "Enables optimization of the build output. Including minification of scripts and styles, tree-shaking and dead-code elimination. For more information, see https://angular.io/guide/workspace-config#optimization-configuration.",
+        "description": "Enables optimization of the build output. Including minification of scripts and styles, tree-shaking and dead-code elimination. For more information, see https://angular.dev/reference/configs/workspace-config#optimization-configuration.",
         "default": true,
         "x-user-analytics": "ep.ng_optimization",
         "oneOf": [
@@ -148,7 +149,7 @@
         "description": "The path where style resources will be placed, relative to outputPath."
       },
       "sourceMap": {
-        "description": "Output source maps for scripts and styles. For more information, see https://angular.io/guide/workspace-config#source-map-configuration.",
+        "description": "Output source maps for scripts and styles. For more information, see https://angular.dev/reference/configs/workspace-config#source-map-configuration.",
         "default": false,
         "oneOf": [
           {
@@ -186,7 +187,7 @@
       },
       "vendorChunk": {
         "type": "boolean",
-        "description": "Generate a separate bundle containing only vendor libraries. This option should only be used for development to reduce the incremental compilation time. _Note: supported in Angular versions >= 15.1.0_",
+        "description": "Generate a separate bundle containing only vendor libraries. This option should only be used for development to reduce the incremental compilation time.",
         "default": false
       },
       "verbose": {
@@ -248,7 +249,7 @@
       },
       "buildOptimizer": {
         "type": "boolean",
-        "description": "Enables advanced build optimizations. _Note: only supported in Angular versions >= 16.0.0_.",
+        "description": "Enables advanced build optimizations.",
         "default": true
       },
       "namedChunks": {
@@ -323,11 +324,12 @@
               },
               "output": {
                 "type": "string",
+                "default": "",
                 "description": "Absolute path within the output."
               }
             },
             "additionalProperties": false,
-            "required": ["glob", "input", "output"]
+            "required": ["glob", "input"]
           },
           { "type": "string" }
         ]

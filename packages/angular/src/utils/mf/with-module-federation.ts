@@ -1,6 +1,6 @@
 import { ModuleFederationConfig } from '@nx/webpack/src/utils/module-federation';
 import { getModuleFederationConfig } from './utils';
-import ModuleFederationPlugin = require('webpack/lib/container/ModuleFederationPlugin');
+import ModuleFederationPlugin from 'webpack/lib/container/ModuleFederationPlugin';
 
 export async function withModuleFederation(options: ModuleFederationConfig) {
   if (global.NX_GRAPH_CREATION) {

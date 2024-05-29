@@ -49,7 +49,7 @@ describe('@nx/vite/plugin', () => {
       }, 200_000);
 
       it('should test application', () => {
-        const result = runCLI(`test ${myApp}`);
+        const result = runCLI(`test ${myApp} --watch=false`);
         expect(result).toContain('Successfully ran target test');
       }, 200_000);
     });
@@ -60,7 +60,7 @@ describe('@nx/vite/plugin', () => {
       }, 200_000);
 
       it('should test application', () => {
-        const result = runCLI(`test ${myVueApp}`);
+        const result = runCLI(`test ${myVueApp} --watch=false`);
         expect(result).toContain('Successfully ran target test');
       }, 200_000);
     });

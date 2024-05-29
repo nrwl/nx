@@ -158,6 +158,23 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "19.2.0": {
+      "version": "19.2.0-beta.0",
+      "packages": {
+        "@swc/core": {
+          "version": "~1.5.7",
+          "alwaysAddToPackageJson": false
+        },
+        "@swc/helpers": {
+          "version": "~0.5.11",
+          "alwaysAddToPackageJson": false
+        },
+        "@swc-node/register": {
+          "version": "~1.9.1",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }

@@ -71,7 +71,7 @@ export function readYamlFile<T extends object = any>(
   options?: YamlReadOptions
 ): T {
   const content = readFileSync(path, 'utf-8');
-  const { load } = require('js-yaml');
+  const { load } = require('@zkochan/js-yaml');
   return load(content, { ...options, filename: path }) as T;
 }
 

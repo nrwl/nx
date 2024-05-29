@@ -8,7 +8,7 @@
     "ng-packagr-lite": {
       "implementation": "./src/executors/ng-packagr-lite/ng-packagr-lite.impl",
       "schema": "./src/executors/ng-packagr-lite/schema.json",
-      "description": "Builds an Angular library with support for incremental builds.\n\nThis executor is meant to be used with buildable libraries in an incremental build scenario. It is similar to the `@nx/angular:package` executor but with some key differences:\n- For supported Angular versions lower than v16, it doesn't run `ngcc` automatically (`ngcc` is no longer available from Angular v16 onwards, for lower versions, it needs to be run separately beforehand if needed, this can be done in a `postinstall` hook on `package.json`).\n- It only produces ESM2022 bundles (ESM2020 for supported Angular versions lower than v16)."
+      "description": "Builds an Angular library with support for incremental builds.\n\nThis executor is meant to be used with buildable libraries in an incremental build scenario. It is similar to the `@nx/angular:package` executor but it only produces ESM2022 bundles."
     },
     "package": {
       "implementation": "./src/executors/package/package.impl",

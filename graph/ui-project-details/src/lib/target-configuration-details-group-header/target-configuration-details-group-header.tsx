@@ -12,7 +12,7 @@ export const TargetConfigurationGroupHeader = ({
   className = '',
 }: TargetConfigurationGroupHeaderProps) => {
   return (
-    <header className={`px-4 py-2 text-lg ${className}`}>
+    <header className={`px-4 py-2 text-lg capitalize ${className}`}>
       {targetGroupName}{' '}
       <Pill
         text={
