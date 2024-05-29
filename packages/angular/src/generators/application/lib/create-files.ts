@@ -36,6 +36,7 @@ export async function createFiles(
     angularMajorVersion,
     rootOffset,
     isUsingApplicationBuilder,
+    useEventCoalescing: angularMajorVersion >= 18,
     tpl: '',
   };
 
@@ -45,6 +46,22 @@ export async function createFiles(
     options.appProjectRoot,
     substitutions
   );
+
+  if (angularMajorVersion >= 18) {
+    generateFiles(
+      tree,
+      joinPathFragments(__dirname, '../files/base-18+'),
+      options.appProjectRoot,
+      substitutions
+    );
+  } else {
+    generateFiles(
+      tree,
+      joinPathFragments(__dirname, '../files/base-pre18'),
+      options.appProjectRoot,
+      substitutions
+    );
+  }
 
   if (options.standalone) {
     generateFiles(

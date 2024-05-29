@@ -330,6 +330,6 @@ With Nx, you do not need to explicitly install any testing library, so you can d
 - [Add Cypress, Playwright, and Storybook to Nx Expo Apps](https://medium.com/@emilyxiong/add-cypress-playwright-and-storybook-to-nx-expo-apps-1d3e409ce834)
 - 🧠 [Nx Docs](/getting-started/intro)
 - 👩‍💻 [Nx GitHub](https://github.com/nrwl/nx)
-- 💬 [Nx Community Discord](/community)
+- 💬 [Nx Community Discord](https://go.nx.dev/community)
 - 📹 [Nx Youtube Channel](https://www.youtube.com/@nxdevtools)
 - 🚀 [Speed up your CI](https://nx.app/)

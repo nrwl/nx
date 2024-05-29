@@ -127,19 +127,23 @@ async function startRemotes(
       } => typeof r !== 'string' && r.remoteName === app
     )?.configuration;
 
+    const defaultOverrides = {
+      ...(options.host ? { host: options.host } : {}),
+      ...(options.ssl ? { ssl: options.ssl } : {}),
+      ...(options.sslCert ? { sslCert: options.sslCert } : {}),
+      ...(options.sslKey ? { sslKey: options.sslKey } : {}),
+    };
     const overrides =
       target === 'serve'
         ? {
             watch: true,
-            ...(options.host ? { host: options.host } : {}),
-            ...(options.ssl ? { ssl: options.ssl } : {}),
-            ...(options.sslCert ? { sslCert: options.sslCert } : {}),
-            ...(options.sslKey ? { sslKey: options.sslKey } : {}),
             ...(isUsingModuleFederationDevServerExecutor
               ? { isInitialHost: false }
               : {}),
+            ...defaultOverrides,
           }
-        : {};
+        : { ...defaultOverrides };
+
     remoteIters.push(
       await runExecutor(
         {

@@ -5628,6 +5628,14 @@
                     "isExternal": false,
                     "children": [],
                     "disableCollapsible": false
+                  },
+                  {
+                    "name": "Custom GitHub App",
+                    "path": "/ci/recipes/enterprise/on-premise/custom-github-app",
+                    "id": "custom-github-app",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
                   }
                 ],
                 "disableCollapsible": false
@@ -6046,6 +6054,14 @@
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
+              },
+              {
+                "name": "Custom GitHub App",
+                "path": "/ci/recipes/enterprise/on-premise/custom-github-app",
+                "id": "custom-github-app",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
               }
             ],
             "disableCollapsible": false
@@ -6179,6 +6195,14 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
+          },
+          {
+            "name": "Custom GitHub App",
+            "path": "/ci/recipes/enterprise/on-premise/custom-github-app",
+            "id": "custom-github-app",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -6243,6 +6267,14 @@
         "name": "Advanced Configuration",
         "path": "/ci/recipes/enterprise/on-premise/advanced-config",
         "id": "advanced-config",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Custom GitHub App",
+        "path": "/ci/recipes/enterprise/on-premise/custom-github-app",
+        "id": "custom-github-app",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false

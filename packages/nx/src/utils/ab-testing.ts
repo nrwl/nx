@@ -101,6 +101,11 @@ export async function recordStat(opts: {
 
 function shouldRecordStats(): boolean {
   const pmc = getPackageManagerCommand();
+  if (!pmc.getRegistryUrl) {
+    // Fallback on true as Package management doesn't support reading config for registry.
+    // currently Bun doesn't support fetching config settings https://github.com/oven-sh/bun/issues/7140
+    return true;
+  }
   try {
     const stdout = execSync(pmc.getRegistryUrl, { encoding: 'utf-8' });
     const url = new URL(stdout.trim());

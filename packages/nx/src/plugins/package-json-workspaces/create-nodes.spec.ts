@@ -41,6 +41,13 @@ describe('nx package.json workspaces plugin', () => {
       {
         "projects": {
           ".": {
+            "metadata": {
+              "targetGroups": {
+                "NPM Scripts": [
+                  "echo",
+                ],
+              },
+            },
             "name": "root",
             "projectType": "library",
             "root": ".",
@@ -73,6 +80,13 @@ describe('nx package.json workspaces plugin', () => {
       {
         "projects": {
           "packages/lib-a": {
+            "metadata": {
+              "targetGroups": {
+                "NPM Scripts": [
+                  "test",
+                ],
+              },
+            },
             "name": "lib-a",
             "projectType": "library",
             "root": "packages/lib-a",
@@ -112,6 +126,14 @@ describe('nx package.json workspaces plugin', () => {
               "build",
               "test",
             ],
+            "metadata": {
+              "targetGroups": {
+                "NPM Scripts": [
+                  "build",
+                  "test",
+                ],
+              },
+            },
             "name": "lib-b",
             "projectType": "library",
             "root": "packages/lib-b",

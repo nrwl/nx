@@ -111,7 +111,9 @@ exports[`MF Remote App Generator --ssr should generate the correct files 2`] = `
 import { AppModule } from './app/app.module';
 
 platformBrowserDynamic()
-  .bootstrapModule(AppModule)
+  .bootstrapModule(AppModule, {
+    ngZoneEventCoalescing: true,
+  })
   .catch((err) => console.error(err));
 "
 `;
@@ -333,7 +335,9 @@ exports[`MF Remote App Generator --ssr should generate the correct files when --
 import { AppModule } from './app/app.module';
 
 platformBrowserDynamic()
-  .bootstrapModule(AppModule)
+  .bootstrapModule(AppModule, {
+    ngZoneEventCoalescing: true,
+  })
   .catch((err) => console.error(err));
 "
 `;

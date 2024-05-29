@@ -5,7 +5,7 @@
     "$schema": "http://json-schema.org/draft-07/schema",
     "title": "Schema for Nx Application Executor",
     "description": "Builds an Angular application using [esbuild](https://esbuild.github.io/) with integrated SSR and prerendering capabilities. _Note: this is only supported in Angular versions >= 17.0.0_.",
-    "examplesFile": "This executor is a drop-in replacement for the `@angular-devkit/build-angular:application` builder provided by the Angular CLI. It builds an Angular application using [esbuild](https://esbuild.github.io/) with integrated SSR and prerendering capabilities.\n\nIn addition to the features provided by the Angular CLI builder, the `@nx/angular:application` executor also supports the following:\n\n- Providing esbuild plugins\n- Providing a function to transform the application's `index.html` file\n- Incremental builds\n\n{% callout type=\"check\" title=\"Dev Server\" %}\nThe [`@nx/angular:dev-server` executor](https://nx.dev/nx-api/angular/executors/dev-server) is required to serve your application when using the `@nx/angular:application` to build it. It is a drop-in replacement for the Angular CLI's `@angular-devkit/build-angular:dev-server` builder and ensures the application is correctly served with Vite when using the `@nx/angular:application` executor.\n{% /callout %}\n\n## Examples\n\n{% tabs %}\n{% tab label=\"Providing esbuild plugins\" %}\n\nThe executor accepts a `plugins` option that allows you to provide esbuild plugins that will be used when building your application. It allows providing a path to a plugin file or an object with a `path` and `options` property to provide options to the plugin.\n\n```json {% fileName=\"apps/my-app/project.json\" highlightLines=[\"8-16\"] %}\n{\n  ...\n  \"targets\": {\n    \"build\": {\n      \"executor\": \"@nx/angular:application\",\n      \"options\": {\n        ...\n        \"plugins\": [\n          \"apps/my-app/plugins/plugin1.js\",\n          {\n            \"path\": \"apps/my-app/plugins/plugin2.js\",\n            \"options\": {\n              \"someOption\": \"some value\"\n            }\n          }\n        ]\n      }\n    }\n    ...\n  }\n}\n```\n\n```ts {% fileName=\"apps/my-app/plugins/plugin1.js\" %}\nconst plugin1 = {\n  name: 'plugin1',\n  setup(build) {\n    const options = build.initialOptions;\n    options.define.PLUGIN1_TEXT = '\"Value was provided at build time\"';\n  },\n};\n\nmodule.exports = plugin1;\n```\n\n```ts {% fileName=\"apps/my-app/plugins/plugin2.js\" %}\nfunction plugin2({ someOption }) {\n  return {\n    name: 'plugin2',\n    setup(build) {\n      const options = build.initialOptions;\n      options.define.PLUGIN2_TEXT = JSON.stringify(someOption);\n    },\n  };\n}\n\nmodule.exports = plugin2;\n```\n\nAdditionally, we need to inform TypeScript of the defined variables to prevent type-checking errors during the build. We can achieve this by creating or updating a type definition file included in the TypeScript build process (e.g. `src/types.d.ts`) with the following content:\n\n```ts {% fileName=\"apps/my-app/src/types.d.ts\" %}\ndeclare const PLUGIN1_TEXT: number;\ndeclare const PLUGIN2_TEXT: string;\n```\n\n{% /tab %}\n\n{% tab label=\"Transforming the 'index.html' file\" %}\n\nThe executor accepts an `indexHtmlTransformer` option to provide a path to a file with a default export for a function that receives the application's `index.html` file contents and outputs the updated contents.\n\n```json {% fileName=\"apps/my-app/project.json\" highlightLines=[8] %}\n{\n  ...\n  \"targets\": {\n    \"build\": {\n      \"executor\": \"@nx/angular:application\",\n      \"options\": {\n        ...\n        \"indexHtmlTransformer\": \"apps/my-app/index-html.transformer.ts\"\n      }\n    }\n    ...\n  }\n}\n```\n\n```ts {% fileName=\"apps/my-app/index-html.transformer.ts\" %}\nexport default function (indexContent: string) {\n  return indexContent.replace(\n    '<title>my-app</title>',\n    '<title>my-app (transformed)</title>'\n  );\n}\n```\n\n{% /tab %}\n{% /tabs %}\n",
+    "examplesFile": "This executor is a drop-in replacement for the `@angular-devkit/build-angular:application` builder provided by the Angular CLI. It builds an Angular application using [esbuild](https://esbuild.github.io/) with integrated SSR and prerendering capabilities.\n\nIn addition to the features provided by the Angular CLI builder, the `@nx/angular:application` executor also supports the following:\n\n- Providing esbuild plugins\n- Providing a function to transform the application's `index.html` file\n- Incremental builds\n\n{% callout type=\"check\" title=\"Dev Server\" %}\nThe [`@nx/angular:dev-server` executor](/nx-api/angular/executors/dev-server) is required to serve your application when using the `@nx/angular:application` to build it. It is a drop-in replacement for the Angular CLI's `@angular-devkit/build-angular:dev-server` builder and ensures the application is correctly served with Vite when using the `@nx/angular:application` executor.\n{% /callout %}\n\n## Examples\n\n{% tabs %}\n{% tab label=\"Providing esbuild plugins\" %}\n\nThe executor accepts a `plugins` option that allows you to provide esbuild plugins that will be used when building your application. It allows providing a path to a plugin file or an object with a `path` and `options` property to provide options to the plugin.\n\n```json {% fileName=\"apps/my-app/project.json\" highlightLines=[\"8-16\"] %}\n{\n  ...\n  \"targets\": {\n    \"build\": {\n      \"executor\": \"@nx/angular:application\",\n      \"options\": {\n        ...\n        \"plugins\": [\n          \"apps/my-app/plugins/plugin1.js\",\n          {\n            \"path\": \"apps/my-app/plugins/plugin2.js\",\n            \"options\": {\n              \"someOption\": \"some value\"\n            }\n          }\n        ]\n      }\n    }\n    ...\n  }\n}\n```\n\n```ts {% fileName=\"apps/my-app/plugins/plugin1.js\" %}\nconst plugin1 = {\n  name: 'plugin1',\n  setup(build) {\n    const options = build.initialOptions;\n    options.define.PLUGIN1_TEXT = '\"Value was provided at build time\"';\n  },\n};\n\nmodule.exports = plugin1;\n```\n\n```ts {% fileName=\"apps/my-app/plugins/plugin2.js\" %}\nfunction plugin2({ someOption }) {\n  return {\n    name: 'plugin2',\n    setup(build) {\n      const options = build.initialOptions;\n      options.define.PLUGIN2_TEXT = JSON.stringify(someOption);\n    },\n  };\n}\n\nmodule.exports = plugin2;\n```\n\nAdditionally, we need to inform TypeScript of the defined variables to prevent type-checking errors during the build. We can achieve this by creating or updating a type definition file included in the TypeScript build process (e.g. `src/types.d.ts`) with the following content:\n\n```ts {% fileName=\"apps/my-app/src/types.d.ts\" %}\ndeclare const PLUGIN1_TEXT: number;\ndeclare const PLUGIN2_TEXT: string;\n```\n\n{% /tab %}\n\n{% tab label=\"Transforming the 'index.html' file\" %}\n\nThe executor accepts an `indexHtmlTransformer` option to provide a path to a file with a default export for a function that receives the application's `index.html` file contents and outputs the updated contents.\n\n```json {% fileName=\"apps/my-app/project.json\" highlightLines=[8] %}\n{\n  ...\n  \"targets\": {\n    \"build\": {\n      \"executor\": \"@nx/angular:application\",\n      \"options\": {\n        ...\n        \"indexHtmlTransformer\": \"apps/my-app/index-html.transformer.ts\"\n      }\n    }\n    ...\n  }\n}\n```\n\n```ts {% fileName=\"apps/my-app/index-html.transformer.ts\" %}\nexport default function (indexContent: string) {\n  return indexContent.replace(\n    '<title>my-app</title>',\n    '<title>my-app (transformed)</title>'\n  );\n}\n```\n\n{% /tab %}\n{% /tabs %}\n",
     "outputCapture": "direct-nodejs",
     "type": "object",
     "properties": {
@@ -38,11 +38,12 @@
                 },
                 "output": {
                   "type": "string",
+                  "default": "",
                   "description": "Absolute path within the output."
                 }
               },
               "additionalProperties": false,
-              "required": ["glob", "input", "output"]
+              "required": ["glob", "input"]
             },
             { "type": "string" }
           ]
@@ -172,7 +173,7 @@
         "description": "Automatically clear the terminal screen during rebuilds. _Note: this is only supported in Angular versions >= 17.2.0_."
       },
       "optimization": {
-        "description": "Enables optimization of the build output. Including minification of scripts and styles, tree-shaking, dead-code elimination, inlining of critical CSS and fonts inlining. For more information, see https://angular.io/guide/workspace-config#optimization-configuration.",
+        "description": "Enables optimization of the build output. Including minification of scripts and styles, tree-shaking, dead-code elimination, inlining of critical CSS and fonts inlining. For more information, see https://angular.dev/reference/configs/workspace-config#optimization-configuration.",
         "default": true,
         "x-user-analytics": "ep.ng_optimization",
         "oneOf": [
@@ -307,7 +308,7 @@
         "default": true
       },
       "sourceMap": {
-        "description": "Output source maps for scripts and styles. For more information, see https://angular.io/guide/workspace-config#source-map-configuration.",
+        "description": "Output source maps for scripts and styles. For more information, see https://angular.dev/reference/configs/workspace-config#source-map-configuration.",
         "default": false,
         "oneOf": [
           {
@@ -663,11 +664,12 @@
               },
               "output": {
                 "type": "string",
+                "default": "",
                 "description": "Absolute path within the output."
               }
             },
             "additionalProperties": false,
-            "required": ["glob", "input", "output"]
+            "required": ["glob", "input"]
           },
           { "type": "string" }
         ]

@@ -6,7 +6,7 @@
  * config at the root of the workspace.
  */
 
-import * as browserslist from 'browserslist';
+import browserslist from 'browserslist';
 import { existsSync } from 'fs';
 import { dirname, join } from 'path';
 const Piscina = require('piscina');
@@ -15,7 +15,7 @@ import { colors } from 'ng-packagr/lib/utils/color';
 import { getTailwindConfigPath } from './tailwindcss';
 import { workspaceRoot } from '@nx/devkit';
 import type { PostcssConfiguration } from 'ng-packagr/lib/styles/postcss-configuration';
-import { gt } from 'semver';
+import { gt, gte } from 'semver';
 import { getInstalledPackageVersionInfo } from '../angular-version-utils';
 
 const maxWorkersVariable = process.env['NG_BUILD_MAX_WORKERS'];
@@ -93,12 +93,31 @@ export class StylesheetProcessor {
 
     const { version: ngPackagrVersion } =
       getInstalledPackageVersionInfo('ng-packagr');
+    let tailwindConfigPath: string | undefined;
     let postcssConfiguration: PostcssConfiguration | undefined;
-    if (gt(ngPackagrVersion, '17.2.0')) {
+    if (gte(ngPackagrVersion, '18.0.0')) {
+      const {
+        findTailwindConfiguration,
+        generateSearchDirectories,
+        loadPostcssConfiguration,
+      } = require('ng-packagr/lib/styles/postcss-configuration');
+      let searchDirs = generateSearchDirectories([this.projectBasePath]);
+      postcssConfiguration = loadPostcssConfiguration(searchDirs);
+      // (nx-specific): we support loading the TailwindCSS config from the root of the workspace
+      searchDirs = generateSearchDirectories([
+        this.projectBasePath,
+        workspaceRoot,
+      ]);
+      tailwindConfigPath = findTailwindConfiguration(searchDirs);
+    } else if (gt(ngPackagrVersion, '17.2.0')) {
       const {
         loadPostcssConfiguration,
       } = require('ng-packagr/lib/styles/postcss-configuration');
       postcssConfiguration = loadPostcssConfiguration(this.projectBasePath);
+      tailwindConfigPath = getTailwindConfigPath(
+        this.projectBasePath,
+        workspaceRoot
+      );
     }
 
     this.renderWorker = new Piscina({
@@ -113,10 +132,7 @@ export class StylesheetProcessor {
       },
       workerData: {
         postcssConfiguration,
-        tailwindConfigPath: getTailwindConfigPath(
-          this.projectBasePath,
-          workspaceRoot
-        ),
+        tailwindConfigPath,
         projectBasePath: this.projectBasePath,
         browserslistData,
         targets: transformSupportedBrowsersToTargets(browserslistData),
@@ -200,9 +216,9 @@ export class AsyncStylesheetProcessor {
       getInstalledPackageVersionInfo('ng-packagr');
     let postcssConfiguration: PostcssConfiguration | undefined;
     if (ngPackagrVersion === '17.2.0') {
-      const { loadPostcssConfiguration } = await import(
-        'ng-packagr/lib/styles/postcss-configuration'
-      );
+      const {
+        loadPostcssConfiguration,
+      } = require('ng-packagr/lib/styles/postcss-configuration');
       postcssConfiguration = await loadPostcssConfiguration(
         this.projectBasePath
       );

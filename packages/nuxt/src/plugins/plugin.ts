@@ -18,28 +18,25 @@ import { getLockFileName } from '@nx/js';
 import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
 
 const cachePath = join(projectGraphCacheDirectory, 'nuxt.hash');
-const targetsCache = existsSync(cachePath) ? readTargetsCache() : {};
-
-const calculatedTargets: Record<
-  string,
-  Record<string, TargetConfiguration>
-> = {};
+const targetsCache = readTargetsCache();
 
 function readTargetsCache(): Record<
   string,
   Record<string, TargetConfiguration>
 > {
-  return readJsonFile(cachePath);
+  return existsSync(cachePath) ? readJsonFile(cachePath) : {};
 }
 
-function writeTargetsToCache(
-  targets: Record<string, Record<string, TargetConfiguration>>
-) {
-  writeJsonFile(cachePath, targets);
+function writeTargetsToCache() {
+  const oldCache = readTargetsCache();
+  writeJsonFile(cachePath, {
+    ...oldCache,
+    ...targetsCache,
+  });
 }
 
 export const createDependencies: CreateDependencies = () => {
-  writeTargetsToCache(calculatedTargets);
+  writeTargetsToCache();
   return [];
 };
 
@@ -68,17 +65,18 @@ export const createNodes: CreateNodes<NuxtPluginOptions> = [
     const hash = calculateHashForCreateNodes(projectRoot, options, context, [
       getLockFileName(detectPackageManager(context.workspaceRoot)),
     ]);
-    const targets = targetsCache[hash]
-      ? targetsCache[hash]
-      : await buildNuxtTargets(configFilePath, projectRoot, options, context);
-
-    calculatedTargets[hash] = targets;
+    targetsCache[hash] ??= await buildNuxtTargets(
+      configFilePath,
+      projectRoot,
+      options,
+      context
+    );
 
     return {
       projects: {
         [projectRoot]: {
           root: projectRoot,
-          targets,
+          targets: targetsCache[hash],
         },
       },
     };

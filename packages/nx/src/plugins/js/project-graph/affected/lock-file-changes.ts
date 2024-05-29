@@ -10,6 +10,7 @@ export const getTouchedProjectsFromLockFile: TouchedProjectLocator<
     'yarn.lock',
     'pnpm-lock.yaml',
     'pnpm-lock.yml',
+    'bun.lockb',
   ];
 
   if (fileChanges.some((f) => lockFiles.includes(f.file))) {

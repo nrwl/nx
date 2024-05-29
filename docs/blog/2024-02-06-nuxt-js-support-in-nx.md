@@ -184,6 +184,6 @@ Whether you're starting a new Nuxt project or looking to enhance an existing one
 - [Nx Docs](/getting-started/intro)
 - [X / Twitter](https://twitter.com/nxdevtools) - [LinkedIn](https://www.linkedin.com/company/nrwl)
 - [Nx GitHub](https://github.com/nrwl/nx)
-- [Nx Community Discord](/community)
+- [Nx Community Discord](https://go.nx.dev/community)
 - [Nx Youtube Channel](https://www.youtube.com/@nxdevtools)
 - [Speed up your CI](https://nx.app)

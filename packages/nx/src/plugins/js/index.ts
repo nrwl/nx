@@ -24,6 +24,7 @@ import { hashArray } from '../../hasher/file-hasher';
 import { detectPackageManager } from '../../utils/package-manager';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { nxVersion } from '../../utils/versions';
+import { execSync } from 'child_process';
 
 export const name = 'nx/js/dependencies-and-lockfile';
 
@@ -51,7 +52,12 @@ export const createNodes: CreateNodes = [
     }
 
     const lockFilePath = join(workspaceRoot, lockFile);
-    const lockFileContents = readFileSync(lockFilePath).toString();
+    const lockFileContents =
+      packageManager !== 'bun'
+        ? readFileSync(lockFilePath).toString()
+        : execSync(`bun ${lockFilePath}`, {
+            maxBuffer: 1024 * 1024 * 10,
+          }).toString();
     const lockFileHash = getLockFileHash(lockFileContents);
 
     if (!lockFileNeedsReprocessing(lockFileHash)) {
@@ -91,7 +97,12 @@ export const createDependencies: CreateDependencies = (
     parsedLockFile.externalNodes
   ) {
     const lockFilePath = join(workspaceRoot, getLockFileName(packageManager));
-    const lockFileContents = readFileSync(lockFilePath).toString();
+    const lockFileContents =
+      packageManager !== 'bun'
+        ? readFileSync(lockFilePath).toString()
+        : execSync(`bun ${lockFilePath}`, {
+            maxBuffer: 1024 * 1024 * 10,
+          }).toString();
     const lockFileHash = getLockFileHash(lockFileContents);
 
     if (!lockFileNeedsReprocessing(lockFileHash)) {

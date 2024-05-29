@@ -2,12 +2,16 @@ import { existsSync } from 'fs';
 import { dirname, join } from 'path';
 import {
   InputDefinition,
+  ProjectMetadata,
   TargetConfiguration,
 } from '../config/workspace-json-project-json';
 import { mergeTargetConfigurations } from '../project-graph/utils/project-configuration-utils';
 import { readJsonFile } from './fileutils';
 import { getNxRequirePaths } from './installation-directory';
-import { getPackageManagerCommand } from './package-manager';
+import {
+  PackageManagerCommands,
+  getPackageManagerCommand,
+} from './package-manager';
 
 export interface NxProjectPackageJsonConfiguration {
   implicitDependencies?: string[];
@@ -118,9 +122,9 @@ export function readNxMigrateConfig(
 
 export function buildTargetFromScript(
   script: string,
-  scripts: Record<string, string> = {}
+  scripts: Record<string, string> = {},
+  packageManagerCommand: PackageManagerCommands
 ): TargetConfiguration {
-  const packageManagerCommand = getPackageManagerCommand();
   return {
     executor: 'nx:run-script',
     options: {
@@ -133,13 +137,27 @@ export function buildTargetFromScript(
   };
 }
 
+let packageManagerCommand: PackageManagerCommands | undefined;
+
+export function getMetadataFromPackageJson(
+  packageJson: PackageJson
+): ProjectMetadata {
+  const { scripts, nx } = packageJson ?? {};
+  const includedScripts = nx?.includedScripts || Object.keys(scripts ?? {});
+  return {
+    targetGroups: {
+      'NPM Scripts': includedScripts,
+    },
+  };
+}
+
 export function readTargetsFromPackageJson(packageJson: PackageJson) {
   const { scripts, nx, private: isPrivate } = packageJson ?? {};
   const res: Record<string, TargetConfiguration> = {};
   const includedScripts = nx?.includedScripts || Object.keys(scripts ?? {});
-  //
+  packageManagerCommand ??= getPackageManagerCommand();
   for (const script of includedScripts) {
-    res[script] = buildTargetFromScript(script, scripts);
+    res[script] = buildTargetFromScript(script, scripts, packageManagerCommand);
   }
   for (const targetName in nx?.targets) {
     res[targetName] = mergeTargetConfigurations(

@@ -4,6 +4,7 @@ import { removeSync } from 'fs-extra';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { valid } from 'semver';
 import { dirSync } from 'tmp';
+import type { DependencyBump } from '../../../release/changelog-renderer';
 import {
   NxReleaseChangelogConfiguration,
   readNxJson,
@@ -376,6 +377,36 @@ export async function releaseChangelog(
     });
   }
 
+  /**
+   * Compute any additional dependency bumps up front because there could be cases of circular dependencies,
+   * and figuring them out during the main iteration would be too late.
+   */
+  const projectToAdditionalDependencyBumps = new Map<
+    string,
+    DependencyBump[]
+  >();
+  for (const releaseGroup of releaseGroups) {
+    if (releaseGroup.projectsRelationship !== 'independent') {
+      continue;
+    }
+    for (const project of releaseGroup.projects) {
+      if (projectToAdditionalDependencyBumps.has(project)) {
+        continue;
+      }
+      const dependentProjects = (
+        projectsVersionData[project]?.dependentProjects || []
+      )
+        .map((dep) => {
+          return {
+            dependencyName: dep.source,
+            newVersion: projectsVersionData[dep.source].newVersion,
+          };
+        })
+        .filter((b) => b.newVersion !== null);
+      projectToAdditionalDependencyBumps.set(project, dependentProjects);
+    }
+  }
+
   const allProjectChangelogs: NxReleaseChangelogResult['projectChangelogs'] =
     {};
 
@@ -387,8 +418,17 @@ export async function releaseChangelog(
     }
 
     const projects = args.projects?.length
-      ? // If the user has passed a list of projects, we need to use the filtered list of projects within the release group
-        Array.from(releaseGroupToFilteredProjects.get(releaseGroup))
+      ? // If the user has passed a list of projects, we need to use the filtered list of projects within the release group, plus any dependents
+        Array.from(releaseGroupToFilteredProjects.get(releaseGroup)).flatMap(
+          (project) => {
+            return [
+              project,
+              ...(projectToAdditionalDependencyBumps.get(project) || []).map(
+                (d) => d.dependencyName
+              ),
+            ];
+          }
+        )
       : // Otherwise, we use the full list of projects within the release group
         releaseGroup.projects;
     const projectNodes = projects.map((name) => projectGraph.nodes[name]);
@@ -496,7 +536,8 @@ export async function releaseChangelog(
           projectsVersionData,
           releaseGroup,
           [project],
-          nxReleaseConfig
+          nxReleaseConfig,
+          projectToAdditionalDependencyBumps
         );
 
         let hasPushed = false;
@@ -563,14 +604,23 @@ export async function releaseChangelog(
           nxReleaseConfig.conventionalCommits
         );
       } else {
-        const fromRef =
+        let fromRef =
           args.from ||
           (await getLatestGitTagForPattern(releaseGroup.releaseTagPattern))
             ?.tag;
         if (!fromRef) {
-          throw new Error(
-            `Unable to determine the previous git tag, please provide an explicit git reference using --from`
-          );
+          if (useAutomaticFromRef) {
+            fromRef = await getFirstGitCommit();
+            if (args.verbose) {
+              console.log(
+                `Determined release group --from ref from the first commit in the workspace: ${fromRef}`
+              );
+            }
+          } else {
+            throw new Error(
+              `Unable to determine the previous git tag. If this is the first release of your release group, use the --first-release option or set the "release.changelog.automaticFromRef" config property in nx.json to generate a changelog from the first commit. Otherwise, be sure to configure the "release.releaseTagPattern" property in nx.json to match the structure of your repository's git tags.`
+            );
+          }
         }
 
         // Make sure that the fromRef is actually resolvable
@@ -610,7 +660,8 @@ export async function releaseChangelog(
         projectsVersionData,
         releaseGroup,
         projectNodes,
-        nxReleaseConfig
+        nxReleaseConfig,
+        projectToAdditionalDependencyBumps
       );
 
       let hasPushed = false;
@@ -875,7 +926,7 @@ async function generateChangelogForWorkspace(
     output.warn({
       title: `Workspace changelog is enabled, but you have multiple release groups configured. This is not supported, so workspace changelog will be disabled.`,
       bodyLines: [
-        `A single workspace version cannot be determined when defining multiple release groups because versions differ between each group.`,
+        `A single workspace version cannot be determined when defining multiple release groups because versions can differ between each group.`,
         `Project level changelogs can be enabled with the "release.changelog.projectChangelogs" property.`,
       ],
     });
@@ -889,7 +940,7 @@ async function generateChangelogForWorkspace(
     output.warn({
       title: `Workspace changelog is enabled, but you have configured an independent projects relationship. This is not supported, so workspace changelog will be disabled.`,
       bodyLines: [
-        `A single workspace version cannot be determined when using independent projects because versions differ between each project.`,
+        `A single workspace version cannot be determined when using independent projects because versions can differ between each project.`,
         `Project level changelogs can be enabled with the "release.changelog.projectChangelogs" property.`,
       ],
     });
@@ -1002,7 +1053,8 @@ async function generateChangelogForProjects(
   projectsVersionData: VersionData,
   releaseGroup: ReleaseGroupWithName,
   projects: ProjectGraphProjectNode[],
-  nxReleaseConfig: NxReleaseConfig
+  nxReleaseConfig: NxReleaseConfig,
+  projectToAdditionalDependencyBumps: Map<string, DependencyBump[]>
 ): Promise<NxReleaseChangelogResult['projectChangelogs']> {
   const config = releaseGroup.changelog;
   // The entire feature is disabled at the release group level, exit early
@@ -1074,6 +1126,7 @@ async function generateChangelogForProjects(
           : false,
       changelogRenderOptions: config.renderOptions,
       conventionalCommitsConfig: nxReleaseConfig.conventionalCommits,
+      dependencyBumps: projectToAdditionalDependencyBumps.get(project.name),
     });
 
     /**

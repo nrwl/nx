@@ -1,4 +1,4 @@
-import { basename, dirname, join } from 'path';
+import { join } from 'path';
 import { existsSync, readFileSync } from 'fs';
 import { logger, ProjectConfiguration } from '@nx/devkit';
 import { registerTsProject } from '@nx/js/src/internal';
@@ -8,17 +8,18 @@ export function getDynamicRemotes(
   context: import('@angular-devkit/architect').BuilderContext,
   workspaceProjects: Record<string, ProjectConfiguration>,
   remotesToSkip: Set<string>,
-  pathToManifestFile = join(
-    context.workspaceRoot,
-    project.sourceRoot,
-    'assets/module-federation.manifest.json'
-  )
+  pathToManifestFile: string | undefined
 ): string[] {
+  pathToManifestFile ??= getDynamicMfManifestFile(
+    project,
+    context.workspaceRoot
+  );
+
   // check for dynamic remotes
   // we should only check for dynamic based on what we generate
   // and fallback to empty array
 
-  if (!existsSync(pathToManifestFile)) {
+  if (!pathToManifestFile || !existsSync(pathToManifestFile)) {
     return [];
   }
 
@@ -181,4 +182,24 @@ export function validateDevRemotes(
         : `Invalid dev remotes provided: ${invalidDevRemotes.join(', ')}.`
     );
   }
+}
+
+export function getDynamicMfManifestFile(
+  project: ProjectConfiguration,
+  workspaceRoot: string
+): string | undefined {
+  // {sourceRoot}/assets/module-federation.manifest.json was the generated
+  // path for the manifest file in the past. We now generate the manifest
+  // file at {root}/public/module-federation.manifest.json. This check
+  // ensures that we can still support the old path for backwards
+  // compatibility since old projects may still have the manifest file
+  // at the old path.
+  return [
+    join(workspaceRoot, project.root, 'public/module-federation.manifest.json'),
+    join(
+      workspaceRoot,
+      project.sourceRoot,
+      'assets/module-federation.manifest.json'
+    ),
+  ].find((path) => existsSync(path));
 }
