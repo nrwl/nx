@@ -76,7 +76,8 @@ async function createNxCloudWorkspace(
 function printSuccessMessage(
   url: string,
   token: string,
-  installationSource: string
+  installationSource: string,
+  github: boolean
 ) {
   if (process.env.NX_NEW_CLOUD_ONBOARDING !== 'true') {
     let origin = 'https://nx.app';
@@ -97,15 +98,20 @@ function printSuccessMessage(
     const apiUrl = removeTrailingSlash(
       process.env.NX_CLOUD_API || process.env.NRWL_API || `https://cloud.nx.app`
     );
-    let connectCloudUrl;
+
+    let connectCloudUrl: string;
 
     if (
-      githubSlug &&
-      (apiUrl.includes('cloud.nx.app') || apiUrl.includes('eu.nx.app'))
+      ((githubSlug || github) && apiUrl.includes('cloud.nx.app')) ||
+      apiUrl.includes('eu.nx.app')
     ) {
-      connectCloudUrl = `${apiUrl}/setup/connect-workspace/vcs?provider=GITHUB&selectedRepositoryName=${encodeURIComponent(
-        githubSlug
-      )}`;
+      if (githubSlug) {
+        connectCloudUrl = `${apiUrl}/setup/connect-workspace/vcs?provider=GITHUB&selectedRepositoryName=${encodeURIComponent(
+          githubSlug
+        )}`;
+      } else {
+        connectCloudUrl = `${apiUrl}/setup/connect-workspace/vcs?provider=GITHUB`;
+      }
     } else {
       connectCloudUrl = `https://cloud.nx.app/setup/connect-workspace/manual?accessToken=${token}`;
     }
@@ -128,6 +134,7 @@ interface ConnectToNxCloudOptions {
   analytics?: boolean;
   installationSource?: string;
   hideFormatLogs?: boolean;
+  github?: boolean;
 }
 
 function addNxCloudOptionsToNxJson(
@@ -174,7 +181,13 @@ export async function connectToNxCloud(
       silent: schema.hideFormatLogs,
     });
 
-    return () => printSuccessMessage(r.url, r.token, schema.installationSource);
+    return () =>
+      printSuccessMessage(
+        r.url,
+        r.token,
+        schema.installationSource,
+        schema.github
+      );
   }
 }
 

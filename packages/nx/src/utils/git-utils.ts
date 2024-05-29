@@ -1,8 +1,13 @@
 import { execSync } from 'child_process';
 
 export function getGithubSlugOrNull(): string | null {
-  const gitRemote = execSync('git remote -v').toString();
-  return extractUserAndRepoFromGitHubUrl(gitRemote);
+  try {
+    const gitRemote = execSync('git remote -v').toString();
+    return extractUserAndRepoFromGitHubUrl(gitRemote);
+  } catch (e) {
+    console.error(e);
+    return null;
+  }
 }
 
 export function extractUserAndRepoFromGitHubUrl(
