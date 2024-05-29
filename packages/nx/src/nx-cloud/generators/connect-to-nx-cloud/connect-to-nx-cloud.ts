@@ -98,7 +98,11 @@ function printSuccessMessage(
       process.env.NX_CLOUD_API || process.env.NRWL_API || `https://cloud.nx.app`
     );
     let connectCloudUrl;
-    if (githubSlug) {
+
+    if (
+      githubSlug &&
+      (apiUrl.includes('cloud.nx.app') || apiUrl.includes('eu.nx.app'))
+    ) {
       connectCloudUrl = `${apiUrl}/setup/connect-workspace/vcs?provider=GITHUB&selectedRepositoryName=${encodeURIComponent(
         githubSlug
       )}`;
@@ -114,7 +118,7 @@ function printSuccessMessage(
         `- Create a pull request for the changes.`,
         `- Go to the following URL to connect your workspace to Nx Cloud: 
         
-        ${connectCloudUrl}`,
+        ${connectCloudUrl}&source=${installationSource}`,
       ],
     });
   }

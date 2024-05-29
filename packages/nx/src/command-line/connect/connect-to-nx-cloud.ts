@@ -69,7 +69,10 @@ export async function connectToNxCloudCommand(): Promise<boolean> {
         process.env.NRWL_API ||
         `https://cloud.nx.app`;
       let connectCloudUrl;
-      if (githubSlug) {
+      if (
+        githubSlug &&
+        (apiUrl.includes('cloud.nx.app') || apiUrl.includes('eu.nx.app'))
+      ) {
         connectCloudUrl = `${apiUrl}/setup/connect-workspace/vcs?provider=GITHUB&selectedRepositoryName=${encodeURIComponent(
           githubSlug
         )}`;
@@ -92,7 +95,7 @@ export async function connectToNxCloudCommand(): Promise<boolean> {
           'If you have not done so already, connect your workspace to your Nx Cloud account:',
           `- Connect with Nx Cloud at: 
       
-        ${connectCloudUrl}`,
+        ${connectCloudUrl}&source=connect`,
         ],
       });
     }
