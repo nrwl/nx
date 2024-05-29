@@ -2,7 +2,6 @@ import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import {
   buildPostTargetTransformer,
   moveBuildLibsFromSourceToViteConfig,
-  moveOutputPathToViteConfig,
 } from './build-post-target-transformer';
 
 describe('buildPostTargetTransformer', () => {
@@ -37,41 +36,12 @@ describe('buildPostTargetTransformer', () => {
     expect(target).toMatchInlineSnapshot(`
       {
         "options": {
-          "config": "vite.config.ts",
+          "config": "../../vite.config.ts",
+          "outDir": "../../build/apps/myapp",
           "watch": true,
         },
       }
     `);
-  });
-
-  describe('moveOutputPathToViteConfig', () => {
-    it('should add outputPath to config file replacing existing value', () => {
-      // ARRANGE
-      const tree = createTreeWithEmptyWorkspace();
-      tree.write('vite.config.ts', viteConfigFileV17);
-
-      // ACT
-      moveOutputPathToViteConfig(tree, 'build/apps/myapp', 'vite.config.ts');
-
-      // ASSERT
-      const newContents = tree.read('vite.config.ts', 'utf-8');
-      expect(newContents).toContain("outDir: 'build/apps/myapp'");
-      expect(newContents).toMatchSnapshot();
-    });
-
-    it('should add outputPath to config file adding outDir when it does not exist', () => {
-      // ARRANGE
-      const tree = createTreeWithEmptyWorkspace();
-      tree.write('vite.config.ts', viteConfigFileV17NoOutDir);
-
-      // ACT
-      moveOutputPathToViteConfig(tree, 'build/apps/myapp', 'vite.config.ts');
-
-      // ASSERT
-      const newContents = tree.read('vite.config.ts', 'utf-8');
-      expect(newContents).toContain("outDir: 'build/apps/myapp'");
-      expect(newContents).toMatchSnapshot();
-    });
   });
 
   describe('moveBuildLibsFromSourceToViteConfig', () => {

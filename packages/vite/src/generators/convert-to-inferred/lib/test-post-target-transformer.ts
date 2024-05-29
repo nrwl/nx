@@ -1,8 +1,5 @@
-import {
-  joinPathFragments,
-  type TargetConfiguration,
-  type Tree,
-} from '@nx/devkit';
+import { type TargetConfiguration, type Tree } from '@nx/devkit';
+import { toProjectRelativePath } from './utils';
 
 export function testPostTargetTransformer(
   target: TargetConfiguration,
@@ -10,13 +7,13 @@ export function testPostTargetTransformer(
   projectDetails: { projectName: string; root: string }
 ) {
   if (target.options) {
-    removePropertiesFromTargetOptions(target.options);
+    removePropertiesFromTargetOptions(target.options, projectDetails.root);
   }
 
   if (target.configurations) {
     for (const configurationName in target.configurations) {
       const configuration = target.configurations[configurationName];
-      removePropertiesFromTargetOptions(configuration);
+      removePropertiesFromTargetOptions(configuration, projectDetails.root);
 
       if (Object.keys(configuration).length === 0) {
         delete target.configurations[configurationName];
@@ -39,14 +36,6 @@ export function testPostTargetTransformer(
   }
 
   if (
-    target.outputs &&
-    target.outputs.length === 1 &&
-    target.outputs[0] === '{options.reportsDirectory}'
-  ) {
-    delete target.outputs;
-  }
-
-  if (
     target.inputs &&
     target.inputs.every((i) => i === 'default' || i === '^production')
   ) {
@@ -56,14 +45,23 @@ export function testPostTargetTransformer(
   return target;
 }
 
-function removePropertiesFromTargetOptions(targetOptions: any) {
+function removePropertiesFromTargetOptions(
+  targetOptions: any,
+  projectRoot: string
+) {
   if ('configFile' in targetOptions) {
-    targetOptions.config = targetOptions.configFile;
+    targetOptions.config = toProjectRelativePath(
+      targetOptions.configFile,
+      projectRoot
+    );
     delete targetOptions.configFile;
   }
 
   if ('reportsDirectory' in targetOptions) {
-    targetOptions['coverage.reportsDirectory'] = targetOptions.reportsDirectory;
+    targetOptions['coverage.reportsDirectory'] = toProjectRelativePath(
+      targetOptions.reportsDirectory,
+      projectRoot
+    );
     delete targetOptions.reportsDirectory;
   }
 

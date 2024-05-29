@@ -85,10 +85,6 @@ function removePropertiesFromTargetOptions(
     delete targetOptions.hmr;
   }
 
-  if ('mode' in targetOptions) {
-    delete targetOptions.mode;
-  }
-
   if ('proxyConfig' in targetOptions) {
     logger.warn(
       `Encountered 'proxyConfig' in project.json when migrating '@nx/vite:dev-server'. You will need to copy the contents of this file to your ${viteConfigPath} 'server.proxy' property.`

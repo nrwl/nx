@@ -22,6 +22,32 @@ import { join } from 'node:path';
 let fs: TempFs;
 
 let projectGraph: ProjectGraph;
+
+let mockedConfigs = {};
+const getMockedConfig = (
+  opts: { configFile: string; mode: 'development' },
+  target: string
+) => {
+  const relativeConfigFile = opts.configFile.replace(`${fs.tempDir}/`, '');
+  return Promise.resolve({
+    path: opts.configFile,
+    config: mockedConfigs[relativeConfigFile],
+    build: mockedConfigs[relativeConfigFile]['build'],
+    test: mockedConfigs[relativeConfigFile]['test'],
+    dependencies: [],
+  });
+};
+
+jest.mock('vite', () => ({
+  resolveConfig: jest.fn().mockImplementation(getMockedConfig),
+}));
+
+jest.mock('../../utils/executor-utils', () => ({
+  loadViteDynamicImport: jest.fn().mockImplementation(() => ({
+    resolveConfig: jest.fn().mockImplementation(getMockedConfig),
+  })),
+}));
+
 jest.mock('@nx/devkit', () => ({
   ...jest.requireActual<any>('@nx/devkit'),
   createProjectGraphAsync: jest.fn().mockImplementation(async () => {
@@ -121,44 +147,130 @@ function createTestProject(
         executor: '@nx/vite:build',
         outputs: [projectOpts.outputPath],
         options: {
-          config: `${projectOpts.appRoot}/vite.config.ts`,
+          configFile: `${projectOpts.appRoot}/vite.config.ts`,
         },
       },
       [projectOpts.serveTargetName]: {
         executor: '@nx/vite:dev-server',
-        outputs: [projectOpts.outputPath],
         options: {
-          config: `${projectOpts.appRoot}/vite.config.ts`,
+          buildTarget: `${projectOpts.appName}:${projectOpts.buildTargetName}`,
         },
       },
       [projectOpts.previewTargetName]: {
         executor: '@nx/vite:preview-server',
-        outputs: [projectOpts.outputPath],
         options: {
-          config: `${projectOpts.appRoot}/vite.config.ts`,
+          buildTarget: `${projectOpts.appName}:${projectOpts.buildTargetName}`,
         },
       },
       [projectOpts.testTargetName]: {
         executor: '@nx/vite:test',
-        outputs: [projectOpts.outputPath],
         options: {
-          config: `${projectOpts.appRoot}/vite.config.ts`,
+          configFile: `${projectOpts.appRoot}/vite.config.ts`,
         },
       },
     },
   };
 
-  const viteConfigContents = ``;
+  const viteConfigContents = `/// <reference types='vitest' />
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+
+export default defineConfig({
+  root: __dirname,
+  cacheDir: '../../node_modules/.vite/apps/myapp',
+
+  server: {
+    port: 4200,
+    host: 'localhost',
+  },
+
+  preview: {
+    port: 4300,
+    host: 'localhost',
+  },
+
+  plugins: [react(), nxViteTsPaths()],
+
+  // Uncomment this if you are using workers.
+  // worker: {
+  //  plugins: [ nxViteTsPaths() ],
+  // },
+
+  build: {
+    outDir: '../../dist/apps/myapp',
+    reportCompressedSize: true,
+    commonjsOptions: {
+      transformMixedEsModules: true,
+    },
+  },
+
+  test: {
+    globals: true,
+    cache: {
+      dir: '../../node_modules/.vitest',
+    },
+    environment: 'jsdom',
+    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+
+    reporters: ['default'],
+    coverage: {
+      reportsDirectory: '../../coverage/apps/myapp',
+      provider: 'v8',
+    },
+  },
+});`;
 
   tree.write(`${projectOpts.appRoot}/vite.config.ts`, viteConfigContents);
   fs.createFileSync(
     `${projectOpts.appRoot}/vite.config.ts`,
     viteConfigContents
   );
+  tree.write(`${projectOpts.appRoot}/index.html`, `<html></html>`);
+  fs.createFileSync(`${projectOpts.appRoot}/index.html`, `<html></html>`);
+
+  mockedConfigs[`${projectOpts.appRoot}/vite.config.ts`] = {
+    root: `${projectOpts.appRoot}`,
+    cacheDir: `../../node_modules/.vite/${projectOpts.appName}`,
+
+    server: {
+      port: 4200,
+      host: 'localhost',
+    },
+
+    preview: {
+      port: 4300,
+      host: 'localhost',
+    },
+
+    build: {
+      outDir: `../../dist/${projectOpts.appRoot}`,
+      reportCompressedSize: true,
+      commonjsOptions: {
+        transformMixedEsModules: true,
+      },
+    },
+
+    test: {
+      globals: true,
+      cache: {
+        dir: '../../node_modules/.vitest',
+      },
+      environment: 'jsdom',
+      include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+
+      reporters: ['default'],
+      coverage: {
+        reportsDirectory: `../../coverage/${projectOpts.appRoot}`,
+        provider: 'v8',
+      },
+    },
+  };
+
   jest.doMock(
     join(fs.tempDir, `${projectOpts.appRoot}/vite.config.ts`),
     () => ({
-      default: {},
+      default: mockedConfigs[`${projectOpts.appRoot}/vite.config.ts`],
     }),
     {
       virtual: true,
@@ -180,6 +292,7 @@ describe('Vite - Convert Executors To Plugin', () => {
     fs = new TempFs('vite');
     tree = createTreeWithEmptyWorkspace();
     tree.root = fs.tempDir;
+    mockedConfigs = {};
 
     projectGraph = {
       nodes: {},
@@ -198,28 +311,30 @@ describe('Vite - Convert Executors To Plugin', () => {
       const existingProject = createTestProject(tree, {
         appRoot: 'existing',
         appName: 'existing',
-        e2eTargetName: 'e2e',
+        buildTargetName: 'build',
       });
       const project = createTestProject(tree, {
-        e2eTargetName: 'test',
+        buildTargetName: 'build-base',
       });
       const secondProject = createTestProject(tree, {
         appRoot: 'second',
         appName: 'second',
-        e2eTargetName: 'test',
+        buildTargetName: 'build-base',
       });
       const thirdProject = createTestProject(tree, {
         appRoot: 'third',
         appName: 'third',
-        e2eTargetName: 'integration',
+        buildTargetName: 'package',
       });
       const nxJson = readNxJson(tree);
       nxJson.plugins ??= [];
       nxJson.plugins.push({
         plugin: '@nx/vite/plugin',
         options: {
-          targetName: 'e2e',
-          ciTargetName: 'e2e-ci',
+          buildTargetName: 'build',
+          testTargetName: 'test',
+          previewTargetName: 'preview',
+          serveTargetName: 'serve',
         },
       });
       updateNxJson(tree, nxJson);
@@ -230,8 +345,23 @@ describe('Vite - Convert Executors To Plugin', () => {
       // ASSERT
       // project.json modifications
       const updatedProject = readProjectConfiguration(tree, project.name);
-      const targetKeys = Object.keys(updatedProject.targets);
-      ['test'].forEach((key) => expect(targetKeys).not.toContain(key));
+      expect(updatedProject.targets).toMatchInlineSnapshot(`
+        {
+          "build-base": {
+            "options": {
+              "config": "./vite.config.ts",
+            },
+            "outputs": [
+              "{workspaceRoot}/dist/myapp",
+            ],
+          },
+          "test": {
+            "options": {
+              "config": "./vite.config.ts",
+            },
+          },
+        }
+      `);
 
       // nx.json modifications
       const nxJsonPlugins = readNxJson(tree).plugins;
@@ -248,122 +378,6 @@ describe('Vite - Convert Executors To Plugin', () => {
       expect(
         (addedTestVitePlugin as ExpandedPluginConfiguration).include
       ).toEqual(['myapp/**/*']);
-    });
-
-    it('should add project to existing plugins includes', async () => {
-      // ARRANGE
-      const existingProject = createTestProject(tree, {
-        appRoot: 'existing',
-        appName: 'existing',
-        e2eTargetName: 'e2e',
-      });
-      const project = createTestProject(tree, {
-        e2eTargetName: 'e2e',
-      });
-      const secondProject = createTestProject(tree, {
-        appRoot: 'second',
-        appName: 'second',
-        e2eTargetName: 'e2e',
-      });
-      const thirdProject = createTestProject(tree, {
-        appRoot: 'third',
-        appName: 'third',
-        e2eTargetName: 'e2e',
-      });
-      const nxJson = readNxJson(tree);
-      nxJson.plugins ??= [];
-      nxJson.plugins.push({
-        plugin: '@nx/vite/plugin',
-        include: ['existing/**/*'],
-        options: {
-          targetName: 'e2e',
-          ciTargetName: 'e2e-ci',
-        },
-      });
-      updateNxJson(tree, nxJson);
-
-      // ACT
-      await convertToInferred(tree, { project: 'myapp', skipFormat: true });
-
-      // ASSERT
-      // project.json modifications
-      const updatedProject = readProjectConfiguration(tree, project.name);
-      const targetKeys = Object.keys(updatedProject.targets);
-      ['test'].forEach((key) => expect(targetKeys).not.toContain(key));
-
-      // nx.json modifications
-      const nxJsonPlugins = readNxJson(tree).plugins;
-      const addedTestVitePlugin = nxJsonPlugins.find((plugin) => {
-        if (
-          typeof plugin !== 'string' &&
-          plugin.plugin === '@nx/vite/plugin' &&
-          plugin.include?.length === 2
-        ) {
-          return true;
-        }
-      });
-      expect(addedTestVitePlugin).toBeTruthy();
-      expect(
-        (addedTestVitePlugin as ExpandedPluginConfiguration).include
-      ).toEqual(['existing/**/*', 'myapp/**/*']);
-    });
-
-    it('should remove include when all projects are included', async () => {
-      // ARRANGE
-      const existingProject = createTestProject(tree, {
-        appRoot: 'existing',
-        appName: 'existing',
-        e2eTargetName: 'e2e',
-      });
-      const project = createTestProject(tree, {
-        e2eTargetName: 'e2e',
-      });
-      const secondProject = createTestProject(tree, {
-        appRoot: 'second',
-        appName: 'second',
-        e2eTargetName: 'e2e',
-      });
-      const thirdProject = createTestProject(tree, {
-        appRoot: 'third',
-        appName: 'third',
-        e2eTargetName: 'e2e',
-      });
-      const nxJson = readNxJson(tree);
-      nxJson.plugins ??= [];
-      nxJson.plugins.push({
-        plugin: '@nx/vite/plugin',
-        include: ['existing/**/*', 'second/**/*', 'third/**/*'],
-        options: {
-          targetName: 'e2e',
-          ciTargetName: 'e2e-ci',
-        },
-      });
-      updateNxJson(tree, nxJson);
-
-      // ACT
-      await convertToInferred(tree, { project: 'myapp', skipFormat: true });
-
-      // ASSERT
-      // project.json modifications
-      const updatedProject = readProjectConfiguration(tree, project.name);
-      const targetKeys = Object.keys(updatedProject.targets);
-      ['test'].forEach((key) => expect(targetKeys).not.toContain(key));
-
-      // nx.json modifications
-      const nxJsonPlugins = readNxJson(tree).plugins;
-      const addedTestVitePlugin = nxJsonPlugins.find((plugin) => {
-        if (
-          typeof plugin !== 'string' &&
-          plugin.plugin === '@nx/vite/plugin' &&
-          !plugin.include
-        ) {
-          return true;
-        }
-      });
-      expect(addedTestVitePlugin).toBeTruthy();
-      expect(
-        (addedTestVitePlugin as ExpandedPluginConfiguration).include
-      ).not.toBeDefined();
     });
   });
 
@@ -390,8 +404,10 @@ describe('Vite - Convert Executors To Plugin', () => {
       expect(hasVitePlugin).toBeTruthy();
       if (typeof hasVitePlugin !== 'string') {
         [
-          ['targetName', 'e2e'],
-          ['ciTargetName', 'e2e-ci'],
+          ['buildTargetName', 'build'],
+          ['serveTargetName', 'serve'],
+          ['previewTargetName', 'preview'],
+          ['testTargetName', 'test'],
         ].forEach(([targetOptionName, targetName]) => {
           expect(hasVitePlugin.options[targetOptionName]).toEqual(targetName);
         });
@@ -401,7 +417,7 @@ describe('Vite - Convert Executors To Plugin', () => {
     it('should setup Vite plugin to match projects', async () => {
       // ARRANGE
       const project = createTestProject(tree, {
-        e2eTargetName: 'test',
+        buildTargetName: 'bundle',
       });
 
       // ACT
@@ -410,8 +426,23 @@ describe('Vite - Convert Executors To Plugin', () => {
       // ASSERT
       // project.json modifications
       const updatedProject = readProjectConfiguration(tree, project.name);
-      const targetKeys = Object.keys(updatedProject.targets);
-      ['test'].forEach((key) => expect(targetKeys).not.toContain(key));
+      expect(updatedProject.targets).toMatchInlineSnapshot(`
+        {
+          "bundle": {
+            "options": {
+              "config": "./vite.config.ts",
+            },
+            "outputs": [
+              "{workspaceRoot}/dist/myapp",
+            ],
+          },
+          "test": {
+            "options": {
+              "config": "./vite.config.ts",
+            },
+          },
+        }
+      `);
 
       // nx.json modifications
       const nxJsonPlugins = readNxJson(tree).plugins;
@@ -423,8 +454,10 @@ describe('Vite - Convert Executors To Plugin', () => {
       expect(hasVitePlugin).toBeTruthy();
       if (typeof hasVitePlugin !== 'string') {
         [
-          ['targetName', 'test'],
-          ['ciTargetName', 'e2e-ci'],
+          ['buildTargetName', 'bundle'],
+          ['serveTargetName', 'serve'],
+          ['previewTargetName', 'preview'],
+          ['testTargetName', 'test'],
         ].forEach(([targetOptionName, targetName]) => {
           expect(hasVitePlugin.options[targetOptionName]).toEqual(targetName);
         });
@@ -436,28 +469,30 @@ describe('Vite - Convert Executors To Plugin', () => {
       const existingProject = createTestProject(tree, {
         appRoot: 'existing',
         appName: 'existing',
-        e2eTargetName: 'e2e',
+        buildTargetName: 'build',
       });
       const project = createTestProject(tree, {
-        e2eTargetName: 'test',
+        buildTargetName: 'bundle',
       });
       const secondProject = createTestProject(tree, {
         appRoot: 'second',
         appName: 'second',
-        e2eTargetName: 'test',
+        buildTargetName: 'bundle',
       });
       const thirdProject = createTestProject(tree, {
         appRoot: 'third',
         appName: 'third',
-        e2eTargetName: 'integration',
+        buildTargetName: 'build-base',
       });
       const nxJson = readNxJson(tree);
       nxJson.plugins ??= [];
       nxJson.plugins.push({
         plugin: '@nx/vite/plugin',
         options: {
-          targetName: 'e2e',
-          ciTargetName: 'e2e-ci',
+          buildTargetName: 'build',
+          serveTargetName: 'serve',
+          previewTargetName: 'preview',
+          testTargetName: 'test',
         },
       });
       updateNxJson(tree, nxJson);
@@ -468,8 +503,23 @@ describe('Vite - Convert Executors To Plugin', () => {
       // ASSERT
       // project.json modifications
       const updatedProject = readProjectConfiguration(tree, project.name);
-      const targetKeys = Object.keys(updatedProject.targets);
-      ['test'].forEach((key) => expect(targetKeys).not.toContain(key));
+      expect(updatedProject.targets).toMatchInlineSnapshot(`
+        {
+          "bundle": {
+            "options": {
+              "config": "./vite.config.ts",
+            },
+            "outputs": [
+              "{workspaceRoot}/dist/myapp",
+            ],
+          },
+          "test": {
+            "options": {
+              "config": "./vite.config.ts",
+            },
+          },
+        }
+      `);
 
       // nx.json modifications
       const nxJsonPlugins = readNxJson(tree).plugins;
@@ -505,7 +555,7 @@ describe('Vite - Convert Executors To Plugin', () => {
     it('should keep Vite options in project.json', async () => {
       // ARRANGE
       const project = createTestProject(tree);
-      project.targets.e2e.options.globalTimeout = 100000;
+      project.targets.build.options.mode = 'development';
       updateProjectConfiguration(tree, project.name, project);
 
       // ACT
@@ -514,13 +564,17 @@ describe('Vite - Convert Executors To Plugin', () => {
       // ASSERT
       // project.json modifications
       const updatedProject = readProjectConfiguration(tree, project.name);
-      expect(updatedProject.targets.e2e).toMatchInlineSnapshot(`
-      {
-        "options": {
-          "global-timeout": 100000,
-        },
-      }
-    `);
+      expect(updatedProject.targets.build).toMatchInlineSnapshot(`
+        {
+          "options": {
+            "config": "./vite.config.ts",
+            "mode": "development",
+          },
+          "outputs": [
+            "{workspaceRoot}/dist/myapp",
+          ],
+        }
+      `);
 
       // nx.json modifications
       const nxJsonPlugins = readNxJson(tree).plugins;
@@ -532,8 +586,10 @@ describe('Vite - Convert Executors To Plugin', () => {
       expect(hasVitePlugin).toBeTruthy();
       if (typeof hasVitePlugin !== 'string') {
         [
-          ['targetName', 'e2e'],
-          ['ciTargetName', 'e2e-ci'],
+          ['buildTargetName', 'build'],
+          ['serveTargetName', 'serve'],
+          ['previewTargetName', 'preview'],
+          ['testTargetName', 'test'],
         ].forEach(([targetOptionName, targetName]) => {
           expect(hasVitePlugin.options[targetOptionName]).toEqual(targetName);
         });
@@ -546,7 +602,7 @@ describe('Vite - Convert Executors To Plugin', () => {
       nxJson.targetDefaults ??= {};
       nxJson.targetDefaults['@nx/vite:build'] = {
         options: {
-          globalTimeout: 100000,
+          mode: 'production',
         },
       };
       updateNxJson(tree, nxJson);
@@ -558,13 +614,17 @@ describe('Vite - Convert Executors To Plugin', () => {
       // ASSERT
       // project.json modifications
       const updatedProject = readProjectConfiguration(tree, project.name);
-      expect(updatedProject.targets.e2e).toMatchInlineSnapshot(`
-      {
-        "options": {
-          "global-timeout": 100000,
-        },
-      }
-    `);
+      expect(updatedProject.targets.build).toMatchInlineSnapshot(`
+        {
+          "options": {
+            "config": "./vite.config.ts",
+            "mode": "production",
+          },
+          "outputs": [
+            "{workspaceRoot}/dist/myapp",
+          ],
+        }
+      `);
 
       // nx.json modifications
       const nxJsonPlugins = readNxJson(tree).plugins;
@@ -576,8 +636,10 @@ describe('Vite - Convert Executors To Plugin', () => {
       expect(hasVitePlugin).toBeTruthy();
       if (typeof hasVitePlugin !== 'string') {
         [
-          ['targetName', 'e2e'],
-          ['ciTargetName', 'e2e-ci'],
+          ['buildTargetName', 'build'],
+          ['serveTargetName', 'serve'],
+          ['previewTargetName', 'preview'],
+          ['testTargetName', 'test'],
         ].forEach(([targetOptionName, targetName]) => {
           expect(hasVitePlugin.options[targetOptionName]).toEqual(targetName);
         });

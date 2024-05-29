@@ -2,10 +2,10 @@ import {
   joinPathFragments,
   type TargetConfiguration,
   type Tree,
-  workspaceRoot,
 } from '@nx/devkit';
 import { tsquery } from '@phenomnomnominal/tsquery';
-import { relative, join, dirname, extname } from 'path/posix';
+import { extname } from 'path/posix';
+import { toProjectRelativePath } from './utils';
 
 export function buildPostTargetTransformer(
   target: TargetConfiguration,
@@ -62,14 +62,6 @@ export function buildPostTargetTransformer(
   }
 
   if (
-    target.outputs &&
-    target.outputs.length === 1 &&
-    target.outputs[0] === '{options.outputTarget}'
-  ) {
-    delete target.outputs;
-  }
-
-  if (
     target.inputs &&
     target.inputs.every((i) => i === 'production' || i === '^production')
   ) {
@@ -87,26 +79,28 @@ function removePropertiesFromTargetOptions(
   defaultOptions = false
 ) {
   if ('configFile' in targetOptions) {
-    targetOptions.config = targetOptions.configFile;
+    targetOptions.config = toProjectRelativePath(
+      targetOptions.configFile,
+      projectRoot
+    );
     delete targetOptions.configFile;
   }
   if (targetOptions.outputPath) {
-    let relativeOutputPath = relative(
-      projectRoot,
-      join(workspaceRoot, targetOptions.outputPath)
+    targetOptions.outDir = toProjectRelativePath(
+      targetOptions.outputPath,
+      projectRoot
     );
-    if (tree.isFile(relativeOutputPath)) {
-      relativeOutputPath = dirname(relativeOutputPath);
-    }
-    if (defaultOptions) {
-      moveOutputPathToViteConfig(tree, relativeOutputPath, viteConfigPath);
-    } else {
-      targetOptions.outDir = relativeOutputPath;
-    }
 
     delete targetOptions.outputPath;
   }
   if ('buildLibsFromSource' in targetOptions) {
+    if (defaultOptions) {
+      moveBuildLibsFromSourceToViteConfig(
+        tree,
+        targetOptions.buildLibsFromSource,
+        viteConfigPath
+      );
+    }
     delete targetOptions.buildLibsFromSource;
   }
   if ('skipTypeCheck' in targetOptions) {
@@ -116,68 +110,11 @@ function removePropertiesFromTargetOptions(
     delete targetOptions.generatePackageJson;
   }
   if ('includeDevDependenciesInPackageJson' in targetOptions) {
-    if (defaultOptions) {
-      moveBuildLibsFromSourceToViteConfig(
-        tree,
-        targetOptions.buildLibsFromSource,
-        viteConfigPath
-      );
-    }
     delete targetOptions.includeDevDependenciesInPackageJson;
   }
   if ('tsConfig' in targetOptions) {
     delete targetOptions.tsConfig;
   }
-  if ('mode' in targetOptions) {
-    delete targetOptions.mode;
-  }
-}
-
-export function moveOutputPathToViteConfig(
-  tree: Tree,
-  outputPath: string,
-  configPath: string
-) {
-  const OUT_DIR_PROPERTY_SELECTOR =
-    'PropertyAssignment:has(Identifier[name=build]) ObjectLiteralExpression > PropertyAssignment:has(Identifier[name=outDir])';
-  const BUILD_PROPERTY_SELECTOR =
-    'PropertyAssignment:has(Identifier[name=build]) > ObjectLiteralExpression';
-
-  const viteConfigContents = tree.read(configPath, 'utf-8');
-  let newViteConfigContents = viteConfigContents;
-
-  const ast = tsquery.ast(viteConfigContents);
-  const outDirNodes = tsquery(ast, OUT_DIR_PROPERTY_SELECTOR, {
-    visitAllChildren: true,
-  });
-  if (outDirNodes.length === 0) {
-    // Add outDir to build
-    const buildPropertyNodes = tsquery(ast, BUILD_PROPERTY_SELECTOR, {
-      visitAllChildren: true,
-    });
-    if (buildPropertyNodes.length === 0) {
-      return;
-    }
-
-    newViteConfigContents = `${viteConfigContents.slice(
-      0,
-      buildPropertyNodes[0].getStart() + 1
-    )}outDir: '${outputPath}',${viteConfigContents.slice(
-      buildPropertyNodes[0].getStart() + 1
-    )}`;
-  } else {
-    const outDirValueNodes = tsquery(outDirNodes[0], 'StringLiteral');
-    if (outDirValueNodes.length === 0) {
-      return;
-    }
-
-    newViteConfigContents = `${viteConfigContents.slice(
-      0,
-      outDirValueNodes[0].getStart()
-    )}'${outputPath}'${viteConfigContents.slice(outDirValueNodes[0].getEnd())}`;
-  }
-
-  tree.write(configPath, newViteConfigContents);
 }
 
 export function moveBuildLibsFromSourceToViteConfig(
