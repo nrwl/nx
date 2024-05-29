@@ -1,4 +1,4 @@
-import { extractUserAndRepoFromGitHubUrl } from './git-info';
+import { extractUserAndRepoFromGitHubUrl } from './git-utils';
 
 describe('extractUserAndRepoFromGitHubUrl', () => {
   it('should return the github user + repo info for origin', () => {
