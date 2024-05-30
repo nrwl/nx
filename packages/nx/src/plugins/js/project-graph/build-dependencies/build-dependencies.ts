@@ -1,7 +1,9 @@
-import { buildExplicitTypeScriptDependencies } from './explicit-project-dependencies';
-import { buildExplicitPackageJsonDependencies } from './explicit-package-json-dependencies';
+import { ProjectGraphProjectNode } from '../../../../config/project-graph';
 import { CreateDependenciesContext } from '../../../../project-graph/plugins';
 import { RawProjectGraphDependency } from '../../../../project-graph/project-graph-builder';
+import { buildExplicitPackageJsonDependencies } from './explicit-package-json-dependencies';
+import { buildExplicitTypeScriptDependencies } from './explicit-project-dependencies';
+import { TargetProjectLocator } from './target-project-locator';
 
 export function buildExplicitDependencies(
   jsPluginConfig: {
@@ -14,6 +16,24 @@ export function buildExplicitDependencies(
 
   let dependencies: RawProjectGraphDependency[] = [];
 
+  // TODO: TargetProjectLocator is a public API, so we can't change the shape of it
+  // We should eventually let it accept Record<string, ProjectConfiguration> s.t. we
+  // don't have to reshape the CreateDependenciesContext here.
+  const nodes: Record<string, ProjectGraphProjectNode> = Object.fromEntries(
+    Object.entries(ctx.projects).map(([key, config]) => [
+      key,
+      {
+        name: key,
+        type: null,
+        data: config,
+      },
+    ])
+  );
+  const targetProjectLocator = new TargetProjectLocator(
+    nodes,
+    ctx.externalNodes
+  );
+
   if (
     jsPluginConfig.analyzeSourceFiles === undefined ||
     jsPluginConfig.analyzeSourceFiles === true
@@ -25,7 +45,7 @@ export function buildExplicitDependencies(
     } catch {}
     if (tsExists) {
       dependencies = dependencies.concat(
-        buildExplicitTypeScriptDependencies(ctx)
+        buildExplicitTypeScriptDependencies(ctx, targetProjectLocator)
       );
     }
   }
@@ -34,7 +54,7 @@ export function buildExplicitDependencies(
     jsPluginConfig.analyzePackageJson === true
   ) {
     dependencies = dependencies.concat(
-      buildExplicitPackageJsonDependencies(ctx)
+      buildExplicitPackageJsonDependencies(ctx, targetProjectLocator)
     );
   }
 
