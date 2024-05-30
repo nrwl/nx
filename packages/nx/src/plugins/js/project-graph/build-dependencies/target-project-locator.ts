@@ -345,16 +345,17 @@ export class TargetProjectLocator {
 
       while (dir !== parse(dir).root) {
         const packageJsonPath = join(dir, 'package.json');
-        if (existsSync(packageJsonPath)) {
+        try {
           const parsedPackageJson = readJsonFile(packageJsonPath);
           // Ensure the package.json contains the "name" and "version" fields
           if (parsedPackageJson.name && parsedPackageJson.version) {
             return parsedPackageJson;
           }
+        } catch {
+          // Package.json doesn't exist, keep traversing
         }
         dir = dirname(dir);
       }
-
       return null;
     } catch {
       return null;
