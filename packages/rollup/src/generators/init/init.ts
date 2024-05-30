@@ -7,7 +7,7 @@ import {
 } from '@nx/devkit';
 import { nxVersion } from '../../utils/versions';
 import { Schema } from './schema';
-import { addPlugin } from '@nx/devkit/src/utils/add-plugin';
+import { addPluginV1 } from '@nx/devkit/src/utils/add-plugin';
 import { createNodes } from '../../plugins/plugin';
 
 export async function rollupInitGenerator(tree: Tree, schema: Schema) {
@@ -25,7 +25,7 @@ export async function rollupInitGenerator(tree: Tree, schema: Schema) {
 
   schema.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
   if (schema.addPlugin) {
-    await addPlugin(
+    await addPluginV1(
       tree,
       await createProjectGraphAsync(),
       '@nx/rollup/plugin',
