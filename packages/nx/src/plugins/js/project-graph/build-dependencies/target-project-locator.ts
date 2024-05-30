@@ -1,45 +1,79 @@
-import {
-  getRootTsConfigFileName,
-  resolveModuleByImport,
-} from '../../utils/typescript';
-import { isRelativePath, readJsonFile } from '../../../../utils/fileutils';
-import { dirname, join, posix, relative, resolve } from 'path';
-import { workspaceRoot } from '../../../../utils/workspace-root';
+import { builtinModules } from 'node:module';
+import { dirname, join, posix, relative } from 'node:path';
 import {
   ProjectGraphExternalNode,
   ProjectGraphProjectNode,
 } from '../../../../config/project-graph';
-import { builtinModules } from 'module';
 import {
   createProjectRootMappings,
   findProjectForPath,
 } from '../../../../project-graph/utils/find-project-for-path';
+import { isRelativePath, readJsonFile } from '../../../../utils/fileutils';
+import { workspaceRoot } from '../../../../utils/workspace-root';
+import { findExternalPackageJsonPath } from '../../utils/find-external-package-json-path';
+import {
+  getRootTsConfigFileName,
+  resolveModuleByImport,
+} from '../../utils/typescript';
+
+/**
+ * The key is a combination of the package name and the workspace relative directory
+ * containing the file importing it e.g. `lodash__packages/my-lib`, the value is the
+ * resolved external node name from the project graph.
+ */
+type NpmResolutionCache = Map<string, string>;
+
+/**
+ * Use a shared cache to avoid repeated npm package resolution work within the TargetProjectLocator.
+ */
+const defaultNpmResolutionCache: NpmResolutionCache = new Map();
 
 const builtInModuleSet = new Set<string>([
   ...builtinModules,
   ...builtinModules.map((x) => `node:${x}`),
 ]);
 
+export function isBuiltinModuleImport(importExpr: string): boolean {
+  const packageName = parsePackageNameFromImportExpression(importExpr);
+  return builtInModuleSet.has(packageName);
+}
+
 export class TargetProjectLocator {
   private projectRootMappings = createProjectRootMappings(this.nodes);
-  private npmProjects = filterRootExternalDependencies(this.externalNodes);
+  private npmProjects: Record<string, ProjectGraphExternalNode>;
   private tsConfig = this.getRootTsConfig();
   private paths = this.tsConfig.config?.compilerOptions?.paths;
   private typescriptResolutionCache = new Map<string, string | null>();
-  private npmResolutionCache = new Map<string, string | null>();
 
   constructor(
     private readonly nodes: Record<string, ProjectGraphProjectNode>,
-    private readonly externalNodes: Record<string, ProjectGraphExternalNode>
-  ) {}
+    readonly externalNodes: Record<string, ProjectGraphExternalNode> = {},
+    private readonly npmResolutionCache: NpmResolutionCache = defaultNpmResolutionCache
+  ) {
+    this.npmProjects = externalNodes;
+    /**
+     * Only the npm external nodes should be included.
+     *
+     * Unlike the raw externalNodes, ensure that the version is always set in the key
+     * for optimal lookup.
+     */
+    this.npmProjects = Object.values(externalNodes).reduce((acc, node) => {
+      if (node.type === 'npm') {
+        const key = `npm:${node.data.packageName}@${node.data.version}`;
+        acc[key] = node;
+      }
+      return acc;
+    }, {} as Record<string, ProjectGraphExternalNode>);
+  }
 
   /**
-   * Find a project based on its import
+   * Resolve any workspace or external project that matches the given import expression,
+   * originating from the given filePath.
    *
    * @param importExpr
    * @param filePath
    */
-  findProjectWithImport(importExpr: string, filePath: string): string {
+  findProjectFromImport(importExpr: string, filePath: string): string {
     if (isRelativePath(importExpr)) {
       const resolvedModule = posix.join(dirname(filePath), importExpr);
       return this.findProjectOfResolvedModule(resolvedModule);
@@ -60,15 +94,15 @@ export class TargetProjectLocator {
       }
     }
 
-    if (builtInModuleSet.has(importExpr)) {
+    if (isBuiltinModuleImport(importExpr)) {
       this.npmResolutionCache.set(importExpr, null);
       return null;
     }
 
     // try to find npm package before using expensive typescript resolution
-    const npmProject = this.findNpmPackage(importExpr);
-    if (npmProject) {
-      return npmProject;
+    const externalProject = this.findNpmProjectFromImport(importExpr, filePath);
+    if (externalProject) {
+      return externalProject;
     }
 
     if (this.tsConfig.config) {
@@ -96,6 +130,67 @@ export class TargetProjectLocator {
     // nothing found, cache for later
     this.npmResolutionCache.set(importExpr, null);
     return null;
+  }
+
+  /**
+   * Resolve any external project that matches the given import expression,
+   * relative to the given file path.
+   *
+   * @param importExpr
+   * @param projectRoot
+   */
+  findNpmProjectFromImport(
+    importExpr: string,
+    fromFilePath: string
+  ): string | undefined {
+    const packageName = parsePackageNameFromImportExpression(importExpr);
+
+    let fullFilePath = fromFilePath;
+    let workspaceRelativeFilePath = fromFilePath;
+    if (fromFilePath.startsWith(workspaceRoot)) {
+      workspaceRelativeFilePath = fromFilePath.replace(workspaceRoot, '');
+    } else {
+      fullFilePath = join(workspaceRoot, fromFilePath);
+    }
+
+    const fullDirPath = dirname(fullFilePath);
+    const workspaceRelativeDirPath = dirname(workspaceRelativeFilePath);
+
+    const npmImportForProject = `${packageName}__${workspaceRelativeDirPath}`;
+    if (this.npmResolutionCache.has(npmImportForProject)) {
+      return this.npmResolutionCache.get(npmImportForProject);
+    }
+
+    try {
+      // package.json refers to an external package, we do not match against the version found in there, we instead try and resolve the relevant package how node would
+      const externalPackageJsonPath = findExternalPackageJsonPath(
+        packageName,
+        fullDirPath
+      );
+      // The external package.json path might be not be resolvable, e.g. if a reference has been added to a project package.json, but the install command has not been run yet.
+      if (!externalPackageJsonPath) {
+        return undefined;
+      }
+
+      const externalPackageJson = readJsonFile(externalPackageJsonPath);
+
+      const npmProjectKey = `npm:${externalPackageJson.name}@${externalPackageJson.version}`;
+      if (!this.npmProjects[npmProjectKey]) {
+        return undefined;
+      }
+
+      const matchingExternalNode = this.npmProjects[npmProjectKey];
+      this.npmResolutionCache.set(
+        npmImportForProject,
+        matchingExternalNode.name
+      );
+      return matchingExternalNode.name;
+    } catch (e) {
+      if (process.env.NX_VERBOSE_LOGGING === 'true') {
+        console.error(e);
+      }
+      return undefined;
+    }
   }
 
   /**
@@ -162,21 +257,6 @@ export class TargetProjectLocator {
       })
     );
   }
-  private findNpmPackage(npmImport: string): string | undefined {
-    if (this.npmResolutionCache.has(npmImport)) {
-      return this.npmResolutionCache.get(npmImport);
-    } else {
-      const pkg = this.npmProjects.find(
-        (pkg) =>
-          npmImport === pkg.data.packageName ||
-          npmImport.startsWith(`${pkg.data.packageName}/`)
-      );
-      if (pkg) {
-        this.npmResolutionCache.set(npmImport, pkg.name);
-        return pkg.name;
-      }
-    }
-  }
 
   private findProjectOfResolvedModule(
     resolvedModule: string
@@ -224,21 +304,14 @@ export class TargetProjectLocator {
   }
 }
 
-// matches `npm:@scope/name`, `npm:name` but not `npm:@scope/name@version` and `npm:name@version`
-const ROOT_VERSION_PACKAGE_NAME_REGEX = /^npm:(?!.+@.+)/;
-
-function filterRootExternalDependencies(
-  externalNodes: Record<string, ProjectGraphExternalNode>
-): ProjectGraphExternalNode[] {
-  if (!externalNodes) {
-    return [];
+function parsePackageNameFromImportExpression(
+  importExpression: string
+): string {
+  // Check if the package is scoped
+  if (importExpression.startsWith('@')) {
+    // For scoped packages, the package name is up to the second '/'
+    return importExpression.split('/').slice(0, 2).join('/');
   }
-  const keys = Object.keys(externalNodes);
-  const nodes = [];
-  for (let i = 0; i < keys.length; i++) {
-    if (keys[i].match(ROOT_VERSION_PACKAGE_NAME_REGEX)) {
-      nodes.push(externalNodes[keys[i]]);
-    }
-  }
-  return nodes;
+  // For unscoped packages, the package name is up to the first '/'
+  return importExpression.split('/')[0];
 }
