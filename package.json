@@ -121,7 +121,7 @@
     "@types/jest": "29.4.0",
     "@types/js-yaml": "^4.0.5",
     "@types/marked": "^2.0.0",
-    "@types/node": "18.19.8",
+    "@types/node": "^20.12.13",
     "@types/npm-package-arg": "6.1.1",
     "@types/react": "18.3.1",
     "@types/react-dom": "18.3.0",

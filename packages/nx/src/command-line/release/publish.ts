@@ -235,7 +235,7 @@ async function runPublishOnProjects(
   if (status !== 0) {
     // In order to not add noise to the overall CLI output, do not throw an additional error
     if (isCLI) {
-      return status;
+      return Number(status);
     }
     // Throw an additional error for programmatic API usage
     throw new Error(
