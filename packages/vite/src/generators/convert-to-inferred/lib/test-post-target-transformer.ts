@@ -1,10 +1,12 @@
 import { type TargetConfiguration, type Tree } from '@nx/devkit';
 import { toProjectRelativePath } from './utils';
+import { processTargetOutputs } from '@nx/devkit/src/generators/plugin-migrations/plugin-migration-utils';
 
 export function testPostTargetTransformer(
   target: TargetConfiguration,
   tree: Tree,
-  projectDetails: { projectName: string; root: string }
+  projectDetails: { projectName: string; root: string },
+  inferredTargetConfiguration: TargetConfiguration
 ) {
   if (target.options) {
     removePropertiesFromTargetOptions(target.options, projectDetails.root);
@@ -35,6 +37,18 @@ export function testPostTargetTransformer(
     }
   }
 
+  if (target.outputs) {
+    processTargetOutputs(
+      target,
+      [{ newName: 'coverage.reportsDirectory', oldName: 'reportsDirectory' }],
+      inferredTargetConfiguration,
+      {
+        projectName: projectDetails.projectName,
+        projectRoot: projectDetails.root,
+      }
+    );
+  }
+
   if (
     target.inputs &&
     target.inputs.every((i) => i === 'default' || i === '^production')
@@ -58,6 +72,12 @@ function removePropertiesFromTargetOptions(
   }
 
   if ('reportsDirectory' in targetOptions) {
+    if (targetOptions.reportsDirectory.startsWith('../')) {
+      targetOptions.reportsDirectory = targetOptions.reportsDirectory.replace(
+        /(\.\.\/)+/,
+        ''
+      );
+    }
     targetOptions['coverage.reportsDirectory'] = toProjectRelativePath(
       targetOptions.reportsDirectory,
       projectRoot

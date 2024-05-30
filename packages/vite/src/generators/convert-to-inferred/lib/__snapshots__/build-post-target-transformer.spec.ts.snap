@@ -206,7 +206,7 @@ export default defineConfig({plugins: [nxViteTsPaths({ buildLibsFromSource: true
 });"
 `;
 
-exports[`buildPostTargetTransformer should remove the correct options and move the AST options to the vite config file correctly 1`] = `
+exports[`buildPostTargetTransformer should remove the correct options and move the AST options to the vite config file correctly and remove outputs when they match inferred 1`] = `
 "/// <reference types='vitest' />
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';

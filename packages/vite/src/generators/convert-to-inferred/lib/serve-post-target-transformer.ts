@@ -9,7 +9,8 @@ import { moveBuildLibsFromSourceToViteConfig } from './build-post-target-transfo
 export function servePostTargetTransformer(
   target: TargetConfiguration,
   tree: Tree,
-  projectDetails: { projectName: string; root: string }
+  projectDetails: { projectName: string; root: string },
+  inferredTargetConfiguration: TargetConfiguration
 ) {
   const viteConfigPath = [
     joinPathFragments(projectDetails.root, `vite.config.ts`),

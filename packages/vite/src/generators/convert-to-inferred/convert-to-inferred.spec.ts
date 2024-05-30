@@ -351,9 +351,6 @@ describe('Vite - Convert Executors To Plugin', () => {
             "options": {
               "config": "./vite.config.ts",
             },
-            "outputs": [
-              "{workspaceRoot}/dist/myapp",
-            ],
           },
           "test": {
             "options": {
@@ -432,9 +429,6 @@ describe('Vite - Convert Executors To Plugin', () => {
             "options": {
               "config": "./vite.config.ts",
             },
-            "outputs": [
-              "{workspaceRoot}/dist/myapp",
-            ],
           },
           "test": {
             "options": {
@@ -509,9 +503,6 @@ describe('Vite - Convert Executors To Plugin', () => {
             "options": {
               "config": "./vite.config.ts",
             },
-            "outputs": [
-              "{workspaceRoot}/dist/myapp",
-            ],
           },
           "test": {
             "options": {
@@ -570,9 +561,6 @@ describe('Vite - Convert Executors To Plugin', () => {
             "config": "./vite.config.ts",
             "mode": "development",
           },
-          "outputs": [
-            "{workspaceRoot}/dist/myapp",
-          ],
         }
       `);
 
@@ -620,9 +608,6 @@ describe('Vite - Convert Executors To Plugin', () => {
             "config": "./vite.config.ts",
             "mode": "production",
           },
-          "outputs": [
-            "{workspaceRoot}/dist/myapp",
-          ],
         }
       `);
 

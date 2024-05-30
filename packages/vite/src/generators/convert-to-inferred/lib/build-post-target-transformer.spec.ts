@@ -5,11 +5,12 @@ import {
 } from './build-post-target-transformer';
 
 describe('buildPostTargetTransformer', () => {
-  it('should remove the correct options and move the AST options to the vite config file correctly', () => {
+  it('should remove the correct options and move the AST options to the vite config file correctly and remove outputs when they match inferred', () => {
     // ARRANGE
     const tree = createTreeWithEmptyWorkspace();
 
     const targetConfiguration = {
+      outputs: ['{options.outputPath}'],
       options: {
         outputPath: 'build/apps/myapp',
         configFile: 'vite.config.ts',
@@ -22,13 +23,22 @@ describe('buildPostTargetTransformer', () => {
       },
     };
 
+    const inferredTargetConfiguration = {
+      outputs: ['{projectRoot}/{options.outDir}'],
+    };
+
     tree.write('vite.config.ts', viteConfigFileV17);
 
     // ACT
-    const target = buildPostTargetTransformer(targetConfiguration, tree, {
-      projectName: 'myapp',
-      root: 'apps/myapp',
-    });
+    const target = buildPostTargetTransformer(
+      targetConfiguration,
+      tree,
+      {
+        projectName: 'myapp',
+        root: 'apps/myapp',
+      },
+      inferredTargetConfiguration
+    );
 
     // ASSERT
     const configFile = tree.read('vite.config.ts', 'utf-8');
@@ -40,6 +50,57 @@ describe('buildPostTargetTransformer', () => {
           "outDir": "../../build/apps/myapp",
           "watch": true,
         },
+      }
+    `);
+  });
+
+  it('should add inferred outputs when a custom output exists', () => {
+    // ARRANGE
+    const tree = createTreeWithEmptyWorkspace();
+
+    const targetConfiguration = {
+      outputs: ['{options.outputPath}', '{workspaceRoot}/my/custom/path'],
+      options: {
+        outputPath: 'build/apps/myapp',
+        configFile: 'vite.config.ts',
+        buildLibsFromSource: true,
+        skipTypeCheck: false,
+        watch: true,
+        generatePackageJson: true,
+        includeDevDependenciesInPackageJson: false,
+        tsConfig: 'apps/myapp/tsconfig.json',
+      },
+    };
+
+    const inferredTargetConfiguration = {
+      outputs: ['{projectRoot}/{options.outDir}'],
+    };
+
+    tree.write('vite.config.ts', viteConfigFileV17);
+
+    // ACT
+    const target = buildPostTargetTransformer(
+      targetConfiguration,
+      tree,
+      {
+        projectName: 'myapp',
+        root: 'apps/myapp',
+      },
+      inferredTargetConfiguration
+    );
+
+    // ASSERT
+    expect(target).toMatchInlineSnapshot(`
+      {
+        "options": {
+          "config": "../../vite.config.ts",
+          "outDir": "../../build/apps/myapp",
+          "watch": true,
+        },
+        "outputs": [
+          "{projectRoot}/{options.outDir}",
+          "{workspaceRoot}/my/custom/path",
+        ],
       }
     `);
   });

@@ -8,7 +8,6 @@ import { testPostTargetTransformer } from './lib/test-post-target-transformer';
 
 interface Schema {
   project?: string;
-  all?: boolean;
   skipFormat?: boolean;
 }
 

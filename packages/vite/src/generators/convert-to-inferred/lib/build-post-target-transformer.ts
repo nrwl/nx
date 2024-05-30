@@ -6,11 +6,13 @@ import {
 import { tsquery } from '@phenomnomnominal/tsquery';
 import { extname } from 'path/posix';
 import { toProjectRelativePath } from './utils';
+import { processTargetOutputs } from '@nx/devkit/src/generators/plugin-migrations/plugin-migration-utils';
 
 export function buildPostTargetTransformer(
   target: TargetConfiguration,
   tree: Tree,
-  projectDetails: { projectName: string; root: string }
+  projectDetails: { projectName: string; root: string },
+  inferredTargetConfiguration: TargetConfiguration
 ) {
   let viteConfigPath = [
     joinPathFragments(projectDetails.root, `vite.config.ts`),
@@ -59,6 +61,18 @@ export function buildPostTargetTransformer(
     ) {
       delete target.defaultConfiguration;
     }
+  }
+
+  if (target.outputs) {
+    processTargetOutputs(
+      target,
+      [{ newName: 'outDir', oldName: 'outputPath' }],
+      inferredTargetConfiguration,
+      {
+        projectName: projectDetails.projectName,
+        projectRoot: projectDetails.root,
+      }
+    );
   }
 
   if (
