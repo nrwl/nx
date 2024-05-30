@@ -7,7 +7,6 @@ import {
 import { existsSync } from 'node:fs';
 import { dirname, join, normalize, sep } from 'node:path';
 import { combineGlobPatterns } from 'nx/src/utils/globs';
-import { globAsync } from 'nx/src/utils/globs';
 import {
   ESLINT_CONFIG_FILENAMES,
   baseEsLintConfigFile,
@@ -16,6 +15,7 @@ import {
 } from '../utils/config-file';
 import { resolveESLintClass } from '../utils/resolve-eslint-class';
 import { gte } from 'semver';
+import { globWithWorkspaceContext } from 'nx/src/utils/workspace-context';
 
 export interface EslintPluginOptions {
   targetName?: string;
@@ -51,7 +51,8 @@ export const createNodes: CreateNodes<EslintPluginOptions> = [
       }
     }
 
-    const projectFiles = await globAsync(
+    const projectFiles = await globWithWorkspaceContext(
+      context.workspaceRoot,
       [
         'project.json',
         'package.json',
@@ -76,7 +77,8 @@ export const createNodes: CreateNodes<EslintPluginOptions> = [
         const nestedProjectRootPatterns = excludePatterns.slice(index + 1);
 
         // Ignore project roots where the project does not contain any lintable files
-        const lintableFiles = await globAsync(
+        const lintableFiles = await globWithWorkspaceContext(
+          context.workspaceRoot,
           [join(childProjectRoot, `**/*.{${options.extensions.join(',')}}`)],
           // exclude nested eslint roots and nested project roots
           [...nestedEslintRootPatterns, ...nestedProjectRootPatterns]

@@ -3,12 +3,12 @@ import 'nx/src/internal-testing-utils/mock-fs';
 let fsRoot: string = '';
 
 jest.mock(
-  'nx/src/utils/globs',
-  (): Partial<typeof import('nx/src/utils/globs')> => {
+  'nx/src/utils/workspace-context',
+  (): Partial<typeof import('nx/src/utils/workspace-context')> => {
     const glob: typeof import('fast-glob') = require('fast-glob');
     return {
       ...jest.requireActual('nx/src/utils/globs'),
-      globAsync(patterns: string[]) {
+      globWithWorkspaceContext(root: string, patterns: string[]) {
         // This glob will operate on memfs thanks to 'nx/src/internal-testing-utils/mock-fs'
         return glob(patterns, { cwd: fsRoot });
       },
