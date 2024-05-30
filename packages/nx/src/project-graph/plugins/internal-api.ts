@@ -26,7 +26,6 @@ import { loadNxPlugin, unregisterPluginTSTranspiler } from './loader';
 import { createNodesFromFiles } from './utils';
 import {
   AggregateCreateNodesError,
-  CreateNodesError,
   isAggregateCreateNodesError,
 } from '../error-types';
 

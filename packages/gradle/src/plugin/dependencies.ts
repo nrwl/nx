@@ -11,10 +11,8 @@ import { basename } from 'node:path';
 
 import {
   getCurrentGradleReport,
-  invalidateGradleReportCache,
   newLineSeparator,
 } from '../utils/get-gradle-report';
-import { writeTargetsToCache } from './nodes';
 
 export const createDependencies: CreateDependencies = async (
   _,

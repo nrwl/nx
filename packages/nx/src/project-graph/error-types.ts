@@ -8,7 +8,7 @@ import { CreateNodesFunctionV2 } from './plugins';
 
 export class ProjectGraphError extends Error {
   readonly #errors: Array<
-    | CreateNodesError
+    | AggregateCreateNodesError
     | MergeNodesError
     | CreateMetadataError
     | ProjectsWithNoNameError
@@ -22,7 +22,7 @@ export class ProjectGraphError extends Error {
 
   constructor(
     errors: Array<
-      | CreateNodesError
+      | AggregateCreateNodesError
       | MergeNodesError
       | ProjectsWithNoNameError
       | MultipleProjectsWithSameNameError
@@ -167,8 +167,8 @@ export function isProjectWithNoNameError(
 export class ProjectConfigurationsError extends Error {
   constructor(
     public readonly errors: Array<
+      | MergeNodesError
       | AggregateCreateNodesError
-      | CreateNodesError
       | ProjectsWithNoNameError
       | MultipleProjectsWithSameNameError
     >,
@@ -190,32 +190,36 @@ export function isProjectConfigurationsError(
   );
 }
 
-export class CreateNodesError extends Error {
-  file?: string;
-  pluginName: string;
-
-  constructor({
-    file,
-    pluginName,
-    error,
-  }: {
-    file?: string;
-    pluginName: string;
-    error: Error;
-  }) {
-    const msg = file
-      ? `The "${pluginName}" plugin threw an error while creating nodes from ${file}:`
-      : `The "${pluginName}" plugin threw an error while creating nodes:`;
-
-    super(msg, { cause: error });
-    this.name = this.constructor.name;
-    this.file = file;
-    this.pluginName = pluginName;
-    this.stack = `${this.message}\n  ${error.stack.split('\n').join('\n  ')}`;
-  }
-}
-
+/**
+ * This error should be thrown when a `createNodesV2` function hits a recoverable error.
+ * It allows Nx to recieve partial results and continue processing for better UX.
+ */
 export class AggregateCreateNodesError extends Error {
+  /**
+   * Throwing this error from a `createNodesV2` function will allow Nx to continue processing and recieve partial results from your plugin.
+   * @example
+   * export async function createNodesV2(
+   *  files: string[],
+   * ) {
+   *   const partialResults = [];
+   *   const errors = [];
+   *   await Promise.all(files.map(async (file) => {
+   *     try {
+   *        const result = await createNodes(file);
+   *        partialResults.push(result);
+   *     } catch (e) {
+   *        errors.push([file, e]);
+   *     }
+   *   }));
+   *  if (errors.length > 0) {
+   *     throw new AggregateCreateNodesError(errors, partialResults);
+   *   }
+   *   return partialResults;
+   * }
+   *
+   * @param errors An array of tuples that represent errors encountered when processing a given file. An example entry might look like ['path/to/project.json', [Error: 'Invalid JSON. Unexpected token 'a' in JSON at position 0]]
+   * @param partialResults The partial results of the `createNodesV2` function. This should be the results for each file that didn't encounter an issue.
+   */
   constructor(
     public readonly errors: Array<[file: string | null, error: Error]>,
     public readonly partialResults: Awaited<ReturnType<CreateNodesFunctionV2>>
@@ -333,13 +337,6 @@ export function isCreateMetadataError(e: unknown): e is CreateMetadataError {
     (typeof e === 'object' &&
       'name' in e &&
       e?.name === CreateMetadataError.name)
-  );
-}
-
-export function isCreateNodesError(e: unknown): e is CreateNodesError {
-  return (
-    e instanceof CreateNodesError ||
-    (typeof e === 'object' && 'name' in e && e?.name === CreateNodesError.name)
   );
 }
 

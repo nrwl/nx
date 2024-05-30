@@ -18,6 +18,7 @@ It only uses language primitives and immutable objects
 
 ### Classes
 
+- [AggregateCreateNodesError](../../devkit/documents/AggregateCreateNodesError)
 - [ProjectGraphBuilder](../../devkit/documents/ProjectGraphBuilder)
 
 ### Interfaces

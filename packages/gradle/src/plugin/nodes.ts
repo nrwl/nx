@@ -122,10 +122,15 @@ export const makeCreateNodes =
     };
   };
 
+/**
+ * @deprecated `{@link createNodesV2} is replacing this. Update your plugin to export its own `createNodesV2` function that wraps this one instead.`
+ */
 export const createNodes: CreateNodes<GradlePluginOptions> = [
   gradleConfigGlob,
   (configFile, options, context) => {
-    logger.warn('Hey, this is going away');
+    logger.warn(
+      '`createNodes` is deprecated. Update your plugin to utilize createNodesV2 instead. In Nx 20, this will error.'
+    );
     populateGradleReport(context.workspaceRoot);
     const gradleReport = getCurrentGradleReport();
     const internalCreateNodes = makeCreateNodes(gradleReport, {});

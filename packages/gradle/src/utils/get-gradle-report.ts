@@ -23,10 +23,7 @@ export interface GradleReport {
 }
 
 let gradleReportCache: GradleReport;
-
-export function invalidateGradleReportCache() {
-  gradleReportCache = undefined;
-}
+let gradleCurrentConfigHash: string;
 
 export const gradleConfigGlob = '**/build.{gradle.kts,gradle}';
 
@@ -38,8 +35,6 @@ export function getCurrentGradleReport() {
   }
   return gradleReportCache;
 }
-
-let gradleCurrentConfigHash: string;
 
 export function populateGradleReport(workspaceRoot: string): void {
   const gradleConfigHash = hashWithWorkspaceContext(workspaceRoot, [

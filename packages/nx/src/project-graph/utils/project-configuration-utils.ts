@@ -19,7 +19,6 @@ import { join } from 'path';
 import { performance } from 'perf_hooks';
 import { LoadedNxPlugin } from '../plugins/internal-api';
 import {
-  CreateNodesError,
   MergeNodesError,
   ProjectConfigurationsError,
   ProjectsWithNoNameError,
@@ -377,15 +376,26 @@ export async function createProjectConfigurations(
     let r = createNodes(matchingConfigFiles, {
       nxJsonConfiguration: nxJson,
       workspaceRoot: root,
-    }).catch((e) => {
-      if (isAggregateCreateNodesError(e)) {
-        errors.push(e);
-        return e.partialResults.map((r) => [pluginName, r[0], r[1]] as const);
-      }
+    }).catch((e: Error) => {
+      const errorBodyLines = [
+        `An error occurred while processing files for the ${pluginName} plugin.`,
+      ];
+      const error: AggregateCreateNodesError = isAggregateCreateNodesError(e)
+        ? // This is an expected error if something goes wrong while processing files.
+          e
+        : // This represents a single plugin erroring out with a hard error.
+          new AggregateCreateNodesError([[null, e]], []);
+
+      errorBodyLines.push(
+        ...error.errors.map(([file, e]) => `  - ${file}: ${e.message}`)
+      );
+
+      error.message = errorBodyLines.join('\n');
+
       // This represents a single plugin erroring out with a hard error.
-      errors.push(new AggregateCreateNodesError([[null, e]], []));
+      errors.push(error);
       // The plugin didn't return partial results, so we return an empty array.
-      return [];
+      return error.partialResults.map((r) => [pluginName, r[0], r[1]] as const);
     });
 
     results.push(r);
