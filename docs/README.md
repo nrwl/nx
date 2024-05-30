@@ -424,6 +424,6 @@ When a commit that contains documentation is merged into `master`, it will be im
 If you have a documentation change that should be published immediately, you'll need to create 2 PRs.
 
 1. First, create a PR against `master` in the normal manner.
-2. Your second PR needs to be made against the website branch with the latest minor version of Nx. So your second PR can be created against `website-19.1` if the latest version of Nx is `19.1.0`. Once `website-19.1` is updated with your changes, the main `nx.dev` site will be updated.
+2. Your second PR needs to be made against the website branch with the latest major version of Nx. So your second PR can be created against `website-19` if the latest version of Nx is `19.1.0`. Once `website-19` is updated with your changes, the main `nx.dev` site will be updated.
 
-Later, when Nx `19.1.1` is released, `website-19.1` will be overwritten with whatever is on `master` and the first PR you created will take effect.
+Later, when Nx `19.1.1` is released, `website-19` will be overwritten with whatever is on `master` and the first PR you created will take effect.

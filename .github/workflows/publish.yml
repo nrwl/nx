@@ -291,8 +291,21 @@ jobs:
         run: |
           # The GITHUB_REF_NAME is a full version (i.e. 17.3.2). The branchName will strip the patch version number.
           # We will publish docs to the website branch based on the current tag (i.e. website-17.3)
-          branchName=website-${GITHUB_REF_NAME%.*}
+          echo Comparing $GITHUB_REF_NAME to npm versions
+
+          MAJOR_VERSION=${GITHUB_REF_NAME%.*.*}
+          MINOR_VERSION=${GITHUB_REF_NAME%.*}
+          RELEASED_VERSIONS=`npm show nx@^$MAJOR_VERSION version`
+          VERSION_IS_RELEASED=`echo $RELEASED_VERSIONS | grep $MINOR_VERSION`
+          VERSION_IS_LATEST=`echo $RELEASED_VERSIONS | tail -n1 | grep $MINOR_VERSION`
+
+          echo Found npm versions:'\n'$RELEASED_VERSIONS
+
+          # Publish if the minor version is not released yet, or the minor version matches the latest version
+          if [ ! $VERSION_IS_RELEASED ] || [ $VERSION_IS_LATEST ]; then
+          branchName=website-$MAJOR_VERSION
           echo Publishing docs site for $GITHUB_REF_NAME to $branchName
           # We force recreate the branch in order to always be up to date and avoid merge conflicts within the automated workflow
           git branch -f $branchName
           git push -f origin $branchName
+          fi
