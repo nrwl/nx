@@ -22,12 +22,15 @@ jest.mock('nx/src/utils/workspace-root', () => ({
   workspaceRoot: '/root',
 }));
 
-jest.mock('nx/src/plugins/js/utils/find-external-package-json-path', () => ({
-  findExternalPackageJsonPath: jest
-    .fn()
-    .mockImplementation((packageName) =>
-      join('/root', 'node_modules', packageName, 'package.json')
-    ),
+jest.mock('nx/src/plugins/js/utils/resolve-relative-to-dir', () => ({
+  resolveRelativeToDir: jest.fn().mockImplementation((pathOrPackage) => {
+    return join(
+      '/root',
+      'node_modules',
+      pathOrPackage,
+      pathOrPackage.endsWith('package.json') ? '' : 'package.json'
+    );
+  }),
 }));
 
 const tsconfig = {
