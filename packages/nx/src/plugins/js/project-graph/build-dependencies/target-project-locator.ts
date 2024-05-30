@@ -23,7 +23,7 @@ import {
  * containing the file importing it e.g. `lodash__packages/my-lib`, the value is the
  * resolved external node name from the project graph.
  */
-type NpmResolutionCache = Map<string, string>;
+type NpmResolutionCache = Map<string, string | null>;
 
 /**
  * Use a shared cache to avoid repeated npm package resolution work within the TargetProjectLocator.
@@ -42,7 +42,7 @@ export function isBuiltinModuleImport(importExpr: string): boolean {
 
 export class TargetProjectLocator {
   private projectRootMappings = createProjectRootMappings(this.nodes);
-  private npmProjects: Record<string, ProjectGraphExternalNode>;
+  private npmProjects: Record<string, ProjectGraphExternalNode | null>;
   private tsConfig = this.getRootTsConfig();
   private paths = this.tsConfig.config?.compilerOptions?.paths;
   private typescriptResolutionCache = new Map<string, string | null>();
@@ -152,7 +152,7 @@ export class TargetProjectLocator {
   findNpmProjectFromImport(
     importExpr: string,
     fromFilePath: string
-  ): string | undefined {
+  ): string | null {
     const packageName = parsePackageNameFromImportExpression(importExpr);
 
     let fullFilePath = fromFilePath;
@@ -173,7 +173,7 @@ export class TargetProjectLocator {
 
     try {
       // package.json refers to an external package, we do not match against the version found in there, we instead try and resolve the relevant package how node would
-      const externalPackageJson = this.findExternalPackageJson(
+      const externalPackageJson = this.readPackageJson(
         packageName,
         fullDirPath
       );
@@ -181,17 +181,15 @@ export class TargetProjectLocator {
       if (!externalPackageJson) {
         // Try and fall back to resolving an external node from the graph by name
         const externalNode = this.npmProjects[`npm:${packageName}`];
-        if (externalNode) {
-          this.npmResolutionCache.set(npmImportForProject, externalNode.name);
-          return externalNode.name;
-        }
-        return undefined;
+        const externalNodeName = externalNode?.name || null;
+        this.npmResolutionCache.set(npmImportForProject, externalNodeName);
+        return externalNodeName;
       }
 
       const npmProjectKey = `npm:${externalPackageJson.name}@${externalPackageJson.version}`;
       const matchingExternalNode = this.npmProjects[npmProjectKey];
       if (!matchingExternalNode) {
-        return undefined;
+        return null;
       }
 
       this.npmResolutionCache.set(
@@ -203,7 +201,7 @@ export class TargetProjectLocator {
       if (process.env.NX_VERBOSE_LOGGING === 'true') {
         console.error(e);
       }
-      return undefined;
+      return null;
     }
   }
 
@@ -327,7 +325,7 @@ export class TargetProjectLocator {
    * might only contain the "type" field - no "name" or "version", so in such cases we keep traversing
    * until we find a package.json that contains the "name" and "version" fields.
    */
-  private findExternalPackageJson(
+  private readPackageJson(
     packageName: string,
     relativeToDir: string
   ): PackageJson | null {
@@ -357,7 +355,7 @@ export class TargetProjectLocator {
         dir = dirname(dir);
       }
 
-      throw new Error(`Could not find package.json for ${packageName}`);
+      return null;
     } catch {
       return null;
     }
