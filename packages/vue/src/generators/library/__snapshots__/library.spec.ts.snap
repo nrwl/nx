@@ -51,6 +51,7 @@ export default defineConfig({
   },
 
   test: {
+    watch: false,
     globals: true,
     cache: {
       dir: '../node_modules/.vitest/my-lib',
@@ -147,6 +148,7 @@ export default defineConfig({
   },
 
   test: {
+    watch: false,
     globals: true,
     cache: {
       dir: '../node_modules/.vitest/my-lib',
