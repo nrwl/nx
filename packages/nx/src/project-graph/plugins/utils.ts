@@ -58,7 +58,7 @@ export type AsyncFn<T extends Function> = T extends (
   : never;
 
 export async function createNodesFromFiles<T = unknown>(
-  createNodes: CreateNodesFunction,
+  createNodes: CreateNodesFunction<T>,
   configFiles: readonly string[],
   options: T,
   context: CreateNodesContextV2
