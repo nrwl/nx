@@ -1807,6 +1807,11 @@
                       "name": "Advanced Configuration",
                       "id": "advanced-config",
                       "file": "nx-cloud/enterprise/on-premise/advanced-config"
+                    },
+                    {
+                      "name": "Custom GitHub App",
+                      "id": "custom-github-app",
+                      "file": "nx-cloud/enterprise/on-premise/custom-github-app"
                     }
                   ]
                 },
