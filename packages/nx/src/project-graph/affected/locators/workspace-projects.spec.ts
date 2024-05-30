@@ -84,6 +84,8 @@ describe('getImplicitlyTouchedProjects', () => {
     nxJson = {
       npmScope: 'nrwl',
       namedInputs: {
+        default: ['sharedGlobals'],
+        sharedGlobals: ['{workspaceRoot}/shared.txt'],
         files: ['{workspaceRoot}/a.txt'],
       },
       projects: {},
@@ -152,6 +154,24 @@ describe('getImplicitlyTouchedProjects', () => {
       'a',
     ]);
     fileChanges = getFileChanges(['b.txt']);
+    expect(getImplicitlyTouchedProjects(fileChanges, graph, nxJson)).toEqual([
+      'a',
+    ]);
+  });
+
+  it('should return projects which have touched files from default named input when no inputs given to target', () => {
+    const graph = buildProjectGraphNodes({
+      a: {
+        root: 'a',
+        targets: {
+          build: {},
+        },
+      },
+      b: {
+        root: 'b',
+      },
+    });
+    let fileChanges = getFileChanges(['shared.txt']);
     expect(getImplicitlyTouchedProjects(fileChanges, graph, nxJson)).toEqual([
       'a',
     ]);

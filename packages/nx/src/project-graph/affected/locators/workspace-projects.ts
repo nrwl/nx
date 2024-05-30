@@ -77,6 +77,8 @@ function extractFilesFromTargetInputs(
       globalFiles.push(
         ...extractFilesFromInputs((target as any).inputs, namedInputs)
       );
+    } else {
+      globalFiles.push(...extractFilesFromInputs(['default'], namedInputs));
     }
   }
   return globalFiles;
