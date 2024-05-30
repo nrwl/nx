@@ -34,12 +34,13 @@ export function loadRemoteNxPlugin(
     ...(isWorkerTypescript
       ? {
           // Ensures that the worker uses the same tsconfig as the main process
-          TS_NODE_PROJECT: path.join(__dirname, '../../../tsconfig.lib.json'),
+          TS_NODE_PROJECT: path.join(
+            __dirname,
+            '../../../../tsconfig.lib.json'
+          ),
         }
       : {}),
   };
-
-  delete env.NX_ON_DAEMON_PROCESS;
 
   const worker = fork(workerPath, [], {
     stdio: ['ignore', 'inherit', 'inherit', 'ipc'],

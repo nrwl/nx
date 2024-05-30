@@ -2,8 +2,6 @@ export const GET_CONTEXT_FILE_DATA = 'GET_CONTEXT_FILE_DATA' as const;
 
 export type HandleContextFileDataMessage = {
   type: typeof GET_CONTEXT_FILE_DATA;
-  globs: string[];
-  exclude?: string[];
 };
 
 export function isHandleContextFileDataMessage(

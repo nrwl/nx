@@ -5,7 +5,7 @@ import { HandlerResult } from './server';
 export async function handleGetFilesInDirectory(
   dir: string
 ): Promise<HandlerResult> {
-  const files = getFilesInDirectoryUsingContext(workspaceRoot, dir);
+  const files = await getFilesInDirectoryUsingContext(workspaceRoot, dir);
   return {
     response: JSON.stringify(files),
     description: 'handleNxWorkspaceFiles',

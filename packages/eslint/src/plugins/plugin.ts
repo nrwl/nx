@@ -7,6 +7,7 @@ import {
 import { existsSync } from 'node:fs';
 import { dirname, join, normalize, sep } from 'node:path';
 import { combineGlobPatterns } from 'nx/src/utils/globs';
+import { globWithWorkspaceContext } from 'nx/src/utils/workspace-context';
 import {
   ESLINT_CONFIG_FILENAMES,
   baseEsLintConfigFile,
@@ -15,7 +16,6 @@ import {
 } from '../utils/config-file';
 import { resolveESLintClass } from '../utils/resolve-eslint-class';
 import { gte } from 'semver';
-import { globWithWorkspaceContext } from 'nx/src/utils/workspace-context';
 
 export interface EslintPluginOptions {
   targetName?: string;

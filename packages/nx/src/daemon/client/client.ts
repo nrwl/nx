@@ -4,7 +4,7 @@ import { readFileSync, statSync } from 'fs';
 import { FileHandle, open } from 'fs/promises';
 import { ensureDirSync, ensureFileSync } from 'fs-extra';
 import { connect } from 'net';
-import { join } from 'path';
+import { extname, join } from 'path';
 import { performance } from 'perf_hooks';
 import { output } from '../../utils/output';
 import { getFullOsSocketPath, killSocketOrPath } from '../socket-utils';
@@ -49,9 +49,6 @@ import { NxWorkspaceFiles } from '../../native';
 const DAEMON_ENV_SETTINGS = {
   NX_PROJECT_GLOB_CACHE: 'false',
   NX_CACHE_PROJECTS_CONFIG: 'false',
-
-  // Used to identify that the code is running in the daemon process.
-  NX_ON_DAEMON_PROCESS: 'true',
 };
 
 export type UnregisterCallback = () => void;
@@ -283,14 +280,9 @@ export class DaemonClient {
     return this.sendToDaemonViaQueue(message);
   }
 
-  getWorkspaceContextFileData(
-    globs: string[],
-    exclude?: string[]
-  ): Promise<FileData[]> {
+  getWorkspaceContextFileData(): Promise<FileData[]> {
     const message: HandleContextFileDataMessage = {
       type: GET_CONTEXT_FILE_DATA,
-      globs,
-      exclude,
     };
     return this.sendToDaemonViaQueue(message);
   }
@@ -480,14 +472,17 @@ export class DaemonClient {
 
     const backgroundProcess = spawn(
       process.execPath,
-      [join(__dirname, '../server/start.js')],
+      [join(__dirname, `../server/start.js`)],
       {
         cwd: workspaceRoot,
         stdio: ['ignore', this._out.fd, this._err.fd],
         detached: true,
         windowsHide: true,
         shell: false,
-        env: { ...process.env, ...DAEMON_ENV_SETTINGS },
+        env: {
+          ...process.env,
+          ...DAEMON_ENV_SETTINGS,
+        },
       }
     );
     backgroundProcess.unref();

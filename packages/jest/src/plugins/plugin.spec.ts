@@ -3,6 +3,7 @@ import { join } from 'path';
 
 import { createNodesV2 } from './plugin';
 import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
+import { setWorkspaceRoot } from 'nx/src/utils/workspace-root';
 
 describe('@nx/jest/plugin', () => {
   let createNodesFunction = createNodesV2[1];
@@ -24,6 +25,8 @@ describe('@nx/jest/plugin', () => {
       workspaceRoot: tempFs.tempDir,
       configFiles: [],
     };
+
+    setWorkspaceRoot(tempFs.tempDir);
 
     await tempFs.createFiles({
       'proj/jest.config.js': `module.exports = {}`,

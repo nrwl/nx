@@ -81,15 +81,15 @@ export function updateFilesInContext(
   return workspaceContext?.incrementalUpdate(updatedFiles, deletedFiles);
 }
 
-export function getAllFileDataInContext(workspaceRoot: string) {
+export async function getAllFileDataInContext(workspaceRoot: string) {
   if (isOnDaemon() || !daemonClient.enabled()) {
     ensureContextAvailable(workspaceRoot);
     return workspaceContext.allFileData();
   }
-  return daemonClient.getAllFileData();
+  return daemonClient.getWorkspaceContextFileData();
 }
 
-export function getFilesInDirectoryUsingContext(
+export async function getFilesInDirectoryUsingContext(
   workspaceRoot: string,
   dir: string
 ) {

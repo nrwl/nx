@@ -14,10 +14,10 @@ describe('filter generator', () => {
 
   beforeEach(() => {
     tree = createTreeWithNestApplication(project);
-    jest.clearAllMocks();
   });
 
   it('should run successfully', async () => {
-    await expect(filterGenerator(tree, options)).resolves.not.toThrowError();
+    await filterGenerator(tree, options);
+    expect(true).toBe(true);
   });
 });

@@ -1,6 +1,7 @@
 import { CreateNodesContext } from '@nx/devkit';
 import { createNodes } from './plugin';
 import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
+import { setWorkspaceRoot } from 'nx/src/utils/workspace-root';
 
 jest.mock('vite', () => ({
   resolveConfig: jest.fn().mockImplementation(() => {
@@ -44,9 +45,11 @@ describe('@nx/vite/plugin', () => {
             production: ['!{projectRoot}/**/*.spec.ts'],
           },
         },
-        workspaceRoot: '',
+        workspaceRoot: tempFs.tempDir,
       };
+      setWorkspaceRoot(tempFs.tempDir);
       tempFs.createFileSync('index.html', '');
+      tempFs.createFileSync('package.json', '');
     });
 
     afterEach(() => {

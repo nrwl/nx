@@ -26,7 +26,6 @@ import {
   handleRecordOutputsHash,
 } from './handle-outputs-tracking';
 import { handleProcessInBackground } from './handle-process-in-background';
-import { handleRequestFileData } from './handle-request-file-data';
 import { handleRequestProjectGraph } from './handle-request-project-graph';
 import { handleRequestShutdown } from './handle-request-shutdown';
 import { serverLogger } from './logger';
@@ -132,11 +131,12 @@ async function handleMessage(socket, data: string) {
     );
   }
 
-  if (daemonIsOutdated()) {
+  const outdated = daemonIsOutdated();
+  if (outdated) {
     await respondWithErrorAndExit(
       socket,
-      `Lock files changed`,
-      new Error('LOCK-FILES-CHANGED')
+      `Daemon outdated`,
+      new Error(outdated)
     );
   }
 
@@ -164,10 +164,6 @@ async function handleMessage(socket, data: string) {
     );
   } else if (payload.type === 'HASH_TASKS') {
     await handleResult(socket, 'HASH_TASKS', () => handleHashTasks(payload));
-  } else if (payload.type === 'REQUEST_FILE_DATA') {
-    await handleResult(socket, 'REQUEST_FILE_DATA', () =>
-      handleRequestFileData()
-    );
   } else if (payload.type === 'PROCESS_IN_BACKGROUND') {
     await handleResult(socket, 'PROCESS_IN_BACKGROUND', () =>
       handleProcessInBackground(payload)
@@ -274,8 +270,13 @@ function registerProcessTerminationListeners() {
 
 let existingLockHash: string | undefined;
 
-function daemonIsOutdated(): boolean {
-  return nxVersionChanged() || lockFileHashChanged();
+function daemonIsOutdated(): string | null {
+  if (nxVersionChanged()) {
+    return 'NX_VERSION_CHANGED';
+  } else if (lockFileHashChanged()) {
+    return 'LOCK_FILES_CHANGED';
+  }
+  return null;
 }
 
 function nxVersionChanged(): boolean {
@@ -332,10 +333,11 @@ const handleWorkspaceChanges: FileWatcherCallback = async (
   try {
     resetInactivityTimeout(handleInactivityTimeout);
 
-    if (daemonIsOutdated()) {
+    const outdatedReason = daemonIsOutdated();
+    if (outdatedReason) {
       await handleServerProcessTermination({
         server,
-        reason: 'Lock file changed',
+        reason: outdatedReason,
       });
       return;
     }
