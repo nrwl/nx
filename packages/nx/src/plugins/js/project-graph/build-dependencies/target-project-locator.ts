@@ -1,5 +1,6 @@
+import { existsSync } from 'node:fs';
 import { builtinModules } from 'node:module';
-import { dirname, join, posix, relative } from 'node:path';
+import { dirname, join, parse, posix, relative } from 'node:path';
 import {
   ProjectGraphExternalNode,
   ProjectGraphProjectNode,
@@ -9,8 +10,9 @@ import {
   findProjectForPath,
 } from '../../../../project-graph/utils/find-project-for-path';
 import { isRelativePath, readJsonFile } from '../../../../utils/fileutils';
+import { PackageJson } from '../../../../utils/package-json';
 import { workspaceRoot } from '../../../../utils/workspace-root';
-import { findExternalPackageJsonPath } from '../../utils/find-external-package-json-path';
+import { resolveRelativeToDir } from '../../utils/resolve-relative-to-dir';
 import {
   getRootTsConfigFileName,
   resolveModuleByImport,
@@ -47,20 +49,28 @@ export class TargetProjectLocator {
 
   constructor(
     private readonly nodes: Record<string, ProjectGraphProjectNode>,
-    readonly externalNodes: Record<string, ProjectGraphExternalNode> = {},
+    private readonly externalNodes: Record<
+      string,
+      ProjectGraphExternalNode
+    > = {},
     private readonly npmResolutionCache: NpmResolutionCache = defaultNpmResolutionCache
   ) {
-    this.npmProjects = externalNodes;
     /**
      * Only the npm external nodes should be included.
      *
-     * Unlike the raw externalNodes, ensure that the version is always set in the key
-     * for optimal lookup.
+     * Unlike the raw externalNodes, ensure that there is always copy of the node where the version
+     * is set in the key for optimal lookup.
      */
-    this.npmProjects = Object.values(externalNodes).reduce((acc, node) => {
+    this.npmProjects = Object.values(this.externalNodes).reduce((acc, node) => {
       if (node.type === 'npm') {
-        const key = `npm:${node.data.packageName}@${node.data.version}`;
-        acc[key] = node;
+        const keyWithVersion = `npm:${node.data.packageName}@${node.data.version}`;
+        if (!acc[node.name]) {
+          acc[node.name] = node;
+        }
+        // The node.name may have already contained the version
+        if (!acc[keyWithVersion]) {
+          acc[keyWithVersion] = node;
+        }
       }
       return acc;
     }, {} as Record<string, ProjectGraphExternalNode>);
@@ -163,23 +173,27 @@ export class TargetProjectLocator {
 
     try {
       // package.json refers to an external package, we do not match against the version found in there, we instead try and resolve the relevant package how node would
-      const externalPackageJsonPath = findExternalPackageJsonPath(
+      const externalPackageJson = this.findExternalPackageJson(
         packageName,
         fullDirPath
       );
       // The external package.json path might be not be resolvable, e.g. if a reference has been added to a project package.json, but the install command has not been run yet.
-      if (!externalPackageJsonPath) {
+      if (!externalPackageJson) {
+        // Try and fall back to resolving an external node from the graph by name
+        const externalNode = this.npmProjects[`npm:${packageName}`];
+        if (externalNode) {
+          this.npmResolutionCache.set(npmImportForProject, externalNode.name);
+          return externalNode.name;
+        }
         return undefined;
       }
-
-      const externalPackageJson = readJsonFile(externalPackageJsonPath);
 
       const npmProjectKey = `npm:${externalPackageJson.name}@${externalPackageJson.version}`;
-      if (!this.npmProjects[npmProjectKey]) {
+      const matchingExternalNode = this.npmProjects[npmProjectKey];
+      if (!matchingExternalNode) {
         return undefined;
       }
 
-      const matchingExternalNode = this.npmProjects[npmProjectKey];
       this.npmResolutionCache.set(
         npmImportForProject,
         matchingExternalNode.name
@@ -301,6 +315,52 @@ export class TargetProjectLocator {
   private findMatchingProjectFiles(file: string) {
     const project = findProjectForPath(file, this.projectRootMappings);
     return this.nodes[project];
+  }
+
+  /**
+   * In many cases the package.json will be directly resolvable, so we try that first.
+   * If, however, package exports are used and the package.json is not defined, we will
+   * need to resolve the main entry point of the package and traverse upwards to find the
+   * package.json.
+   *
+   * In some cases, such as when multiple module formats are published, the resolved package.json
+   * might only contain the "type" field - no "name" or "version", so in such cases we keep traversing
+   * until we find a package.json that contains the "name" and "version" fields.
+   */
+  private findExternalPackageJson(
+    packageName: string,
+    relativeToDir: string
+  ): PackageJson | null {
+    // The package.json is directly resolvable
+    const packageJsonPath = resolveRelativeToDir(
+      join(packageName, 'package.json'),
+      relativeToDir
+    );
+    if (packageJsonPath) {
+      return readJsonFile(packageJsonPath);
+    }
+
+    try {
+      // Resolve the main entry point of the package
+      const mainPath = resolveRelativeToDir(packageName, relativeToDir);
+      let dir = dirname(mainPath);
+
+      while (dir !== parse(dir).root) {
+        const packageJsonPath = join(dir, 'package.json');
+        if (existsSync(packageJsonPath)) {
+          const parsedPackageJson = readJsonFile(packageJsonPath);
+          // Ensure the package.json contains the "name" and "version" fields
+          if (parsedPackageJson.name && parsedPackageJson.version) {
+            return parsedPackageJson;
+          }
+        }
+        dir = dirname(dir);
+      }
+
+      throw new Error(`Could not find package.json for ${packageName}`);
+    } catch {
+      return null;
+    }
   }
 }
 
