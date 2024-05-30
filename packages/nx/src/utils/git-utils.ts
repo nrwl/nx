@@ -5,7 +5,6 @@ export function getGithubSlugOrNull(): string | null {
     const gitRemote = execSync('git remote -v').toString();
     return extractUserAndRepoFromGitHubUrl(gitRemote);
   } catch (e) {
-    console.error(e);
     return null;
   }
 }

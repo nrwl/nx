@@ -21,10 +21,18 @@ export async function setupNxCloud(
             pmc.exec
           } nx g nx:connect-to-nx-cloud --installationSource=create-nx-workspace ${
             useGitHub ? '--github' : ''
-          } --no-interactive --quiet`
+          } --no-interactive`
         : `${pmc.exec} nx g nx:connect-to-nx-cloud --no-interactive --quiet`,
       directory
     );
+
+    if (process.env.NX_NEW_CLOUD_ONBOARDING === 'true') {
+      output.log({
+        title: 'Nx Cloud setup',
+        bodyLines: [res.stdout],
+      });
+    }
+
     if (nxCloud !== 'yes') {
       nxCloudSpinner.succeed(
         'CI workflow with Nx Cloud has been generated successfully'

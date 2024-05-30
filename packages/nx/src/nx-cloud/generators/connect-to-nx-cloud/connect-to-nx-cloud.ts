@@ -6,7 +6,7 @@ import { readJson } from '../../../generators/utils/json';
 import { NxJsonConfiguration } from '../../../config/nx-json';
 import { readNxJson, updateNxJson } from '../../../generators/utils/nx-json';
 import { formatChangedFilesWithPrettierIfAvailable } from '../../../generators/internal-utils/format-changed-files-with-prettier-if-available';
-import { getGithubSlugOrNull } from '../../../utils/git-utils';
+import { shortenedCloudUrl } from '../../utilities/url-shorten';
 
 function printCloudConnectionDisabledMessage() {
   output.error({
@@ -73,7 +73,7 @@ async function createNxCloudWorkspace(
   return response.data;
 }
 
-function printSuccessMessage(
+async function printSuccessMessage(
   url: string,
   token: string,
   installationSource: string,
@@ -94,27 +94,11 @@ function printSuccessMessage(
       ],
     });
   } else {
-    const githubSlug = getGithubSlugOrNull();
-    const apiUrl = removeTrailingSlash(
-      process.env.NX_CLOUD_API || process.env.NRWL_API || `https://cloud.nx.app`
+    const connectCloudUrl = await shortenedCloudUrl(
+      installationSource,
+      token,
+      github
     );
-
-    let connectCloudUrl: string;
-
-    if (
-      ((githubSlug || github) && apiUrl.includes('cloud.nx.app')) ||
-      apiUrl.includes('eu.nx.app')
-    ) {
-      if (githubSlug) {
-        connectCloudUrl = `${apiUrl}/setup/connect-workspace/vcs?provider=GITHUB&selectedRepositoryName=${encodeURIComponent(
-          githubSlug
-        )}`;
-      } else {
-        connectCloudUrl = `${apiUrl}/setup/connect-workspace/vcs?provider=GITHUB`;
-      }
-    } else {
-      connectCloudUrl = `https://cloud.nx.app/setup/connect-workspace/manual?accessToken=${token}`;
-    }
 
     output.note({
       title: `Your Nx Cloud workspace is ready.`,
@@ -124,7 +108,7 @@ function printSuccessMessage(
         `- Create a pull request for the changes.`,
         `- Go to the following URL to connect your workspace to Nx Cloud: 
         
-        ${connectCloudUrl}&source=${installationSource}`,
+        ${connectCloudUrl}`,
       ],
     });
   }
@@ -181,8 +165,8 @@ export async function connectToNxCloud(
       silent: schema.hideFormatLogs,
     });
 
-    return () =>
-      printSuccessMessage(
+    return async () =>
+      await printSuccessMessage(
         r.url,
         r.token,
         schema.installationSource,
