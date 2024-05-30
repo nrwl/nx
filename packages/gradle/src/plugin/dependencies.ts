@@ -12,6 +12,7 @@ import { basename } from 'node:path';
 import {
   getGradleReport,
   invalidateGradleReportCache,
+  newLineSeparator,
 } from '../utils/get-gradle-report';
 import { writeTargetsToCache } from './nodes';
 
@@ -89,7 +90,7 @@ function processGradleDependencies(
   context: CreateDependenciesContext
 ): Set<RawProjectGraphDependency> {
   const dependencies: Set<RawProjectGraphDependency> = new Set();
-  const lines = readFileSync(depsFile).toString().split('\n');
+  const lines = readFileSync(depsFile).toString().split(newLineSeparator);
   let inDeps = false;
   for (const line of lines) {
     if (
