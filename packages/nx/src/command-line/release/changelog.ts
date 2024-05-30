@@ -296,7 +296,7 @@ export async function releaseChangelog(
         workspaceChangelogFromRef = await getFirstGitCommit();
         if (args.verbose) {
           console.log(
-            `Determined workspace --from ref from the first commit in workspace: ${workspaceChangelogFromRef}`
+            `Determined workspace --from ref from the first commit in the workspace: ${workspaceChangelogFromRef}`
           );
         }
       } else {
