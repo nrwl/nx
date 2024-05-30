@@ -1,10 +1,16 @@
 import {
   CreateNodes,
+  CreateNodesV2,
   CreateNodesContext,
+  CreateNodesContextV2,
   ProjectConfiguration,
   TargetConfiguration,
+  createNodesFromFiles,
   readJsonFile,
   writeJsonFile,
+  CreateNodesResultV2,
+  CreateNodesFunction,
+  logger,
 } from '@nx/devkit';
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { existsSync } from 'node:fs';
@@ -12,7 +18,13 @@ import { dirname, join } from 'node:path';
 import { projectGraphCacheDirectory } from 'nx/src/utils/cache-directory';
 
 import { getGradleExecFile } from '../utils/exec-gradle';
-import { getGradleReport } from '../utils/get-gradle-report';
+import {
+  populateGradleReport,
+  getCurrentGradleReport,
+  GradleReport,
+  gradleConfigGlob,
+} from '../utils/get-gradle-report';
+import { hashObject } from 'nx/src/hasher/file-hasher';
 
 const cacheableTaskType = new Set(['Build', 'Verification']);
 const dependsOnMap = {
@@ -33,8 +45,6 @@ export interface GradlePluginOptions {
   [taskTargetName: string]: string | undefined;
 }
 
-const cachePath = join(projectGraphCacheDirectory, 'gradle.hash');
-const targetsCache = readTargetsCache();
 type GradleTargets = Record<
   string,
   {
@@ -44,20 +54,45 @@ type GradleTargets = Record<
   }
 >;
 
-function readTargetsCache(): GradleTargets {
+function readTargetsCache(cachePath: string): GradleTargets {
   return existsSync(cachePath) ? readJsonFile(cachePath) : {};
 }
 
-export function writeTargetsToCache() {
-  const oldCache = readTargetsCache();
-  writeJsonFile(cachePath, {
-    ...oldCache,
-    ...targetsCache,
-  });
+export function writeTargetsToCache(cachePath: string, results: GradleTargets) {
+  writeJsonFile(cachePath, results);
 }
 
-export const createNodes: CreateNodes<GradlePluginOptions> = [
-  '**/build.{gradle.kts,gradle}',
+export const createNodesV2: CreateNodesV2<GradlePluginOptions> = [
+  gradleConfigGlob,
+  async (configFiles, options, context) => {
+    const optionsHash = hashObject(options);
+    const cachePath = join(
+      projectGraphCacheDirectory,
+      `gradle-${optionsHash}.hash`
+    );
+    const targetsCache = readTargetsCache(cachePath);
+
+    populateGradleReport(context.workspaceRoot);
+    const gradleReport = getCurrentGradleReport();
+
+    try {
+      return await createNodesFromFiles(
+        makeCreateNodes(gradleReport, targetsCache),
+        configFiles,
+        options,
+        context
+      );
+    } finally {
+      writeTargetsToCache(cachePath, targetsCache);
+    }
+  },
+];
+
+export const makeCreateNodes =
+  (
+    gradleReport: GradleReport,
+    targetsCache: GradleTargets
+  ): CreateNodesFunction =>
   (
     gradleFilePath,
     options: GradlePluginOptions | undefined,
@@ -71,6 +106,7 @@ export const createNodes: CreateNodes<GradlePluginOptions> = [
       context
     );
     targetsCache[hash] ??= createGradleProject(
+      gradleReport,
       gradleFilePath,
       options,
       context
@@ -84,10 +120,26 @@ export const createNodes: CreateNodes<GradlePluginOptions> = [
         [projectRoot]: project,
       },
     };
+  };
+
+/**
+ * @deprecated `{@link createNodesV2} is replacing this. Update your plugin to export its own `createNodesV2` function that wraps this one instead.`
+ */
+export const createNodes: CreateNodes<GradlePluginOptions> = [
+  gradleConfigGlob,
+  (configFile, options, context) => {
+    logger.warn(
+      '`createNodes` is deprecated. Update your plugin to utilize createNodesV2 instead. In Nx 20, this will error.'
+    );
+    populateGradleReport(context.workspaceRoot);
+    const gradleReport = getCurrentGradleReport();
+    const internalCreateNodes = makeCreateNodes(gradleReport, {});
+    return internalCreateNodes(configFile, options, context);
   },
 ];
 
 function createGradleProject(
+  gradleReport: GradleReport,
   gradleFilePath: string,
   options: GradlePluginOptions | undefined,
   context: CreateNodesContext
@@ -98,7 +150,7 @@ function createGradleProject(
       gradleFileToOutputDirsMap,
       gradleFileToGradleProjectMap,
       gradleProjectToProjectName,
-    } = getGradleReport();
+    } = gradleReport;
 
     const gradleProject = gradleFileToGradleProjectMap.get(
       gradleFilePath

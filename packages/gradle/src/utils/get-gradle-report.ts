@@ -4,6 +4,7 @@ import { join, relative } from 'node:path';
 import { normalizePath, workspaceRoot } from '@nx/devkit';
 
 import { execGradle } from './exec-gradle';
+import { hashWithWorkspaceContext } from 'nx/src/utils/workspace-context';
 
 export const fileSeparator = process.platform.startsWith('win')
   ? 'file:///'
@@ -22,14 +23,25 @@ export interface GradleReport {
 }
 
 let gradleReportCache: GradleReport;
+let gradleCurrentConfigHash: string;
 
-export function invalidateGradleReportCache() {
-  gradleReportCache = undefined;
+export const gradleConfigGlob = '**/build.{gradle.kts,gradle}';
+
+export function getCurrentGradleReport() {
+  if (!gradleReportCache) {
+    throw new Error(
+      'Expected cached gradle report. Please open an issue at https://github.com/nrwl/nx/issues/new/choose'
+    );
+  }
+  return gradleReportCache;
 }
 
-export function getGradleReport(): GradleReport {
-  if (gradleReportCache) {
-    return gradleReportCache;
+export function populateGradleReport(workspaceRoot: string): void {
+  const gradleConfigHash = hashWithWorkspaceContext(workspaceRoot, [
+    gradleConfigGlob,
+  ]);
+  if (gradleReportCache && gradleConfigHash === gradleCurrentConfigHash) {
+    return;
   }
 
   const gradleProjectReportStart = performance.mark(
@@ -47,7 +59,6 @@ export function getGradleReport(): GradleReport {
     gradleProjectReportEnd.name
   );
   gradleReportCache = processProjectReports(projectReportLines);
-  return gradleReportCache;
 }
 
 export function processProjectReports(

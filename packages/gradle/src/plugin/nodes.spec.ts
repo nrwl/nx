@@ -1,12 +1,13 @@
 import { CreateNodesContext } from '@nx/devkit';
 
 import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
-import type { GradleReport } from '../utils/get-gradle-report';
+import { type GradleReport } from '../utils/get-gradle-report';
 
 let gradleReport: GradleReport;
 jest.mock('../utils/get-gradle-report.ts', () => {
   return {
-    getGradleReport: jest.fn().mockImplementation(() => gradleReport),
+    populateGradleReport: jest.fn().mockImplementation(() => void 0),
+    getCurrentGradleReport: jest.fn().mockImplementation(() => gradleReport),
   };
 });
 
