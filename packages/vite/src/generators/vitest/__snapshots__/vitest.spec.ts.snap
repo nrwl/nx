@@ -21,6 +21,7 @@ export default defineConfig({
     'import.meta.vitest': undefined,
   },
   test: {
+    watch: false,
     globals: true,
     cache: {
       dir: '../../node_modules/.vitest/apps/my-test-react-app',
@@ -61,6 +62,7 @@ export default defineConfig({
   // },
 
   test: {
+    watch: false,
     globals: true,
     cache: {
       dir: '../../node_modules/.vitest/apps/my-test-react-app',
@@ -96,6 +98,7 @@ export default defineConfig({
   // },
 
   test: {
+    watch: false,
     globals: true,
     cache: {
       dir: '../../node_modules/.vitest/libs/react-lib-nonb-jest',
