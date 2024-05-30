@@ -1896,15 +1896,19 @@
       },
       "packages": {
         "@angular-eslint/eslint-plugin": {
-          "version": "18.0.0",
+          "version": "^18.0.1",
           "alwaysAddToPackageJson": false
         },
         "@angular-eslint/eslint-plugin-template": {
-          "version": "18.0.0",
+          "version": "^18.0.1",
           "alwaysAddToPackageJson": false
         },
         "@angular-eslint/template-parser": {
-          "version": "18.0.0",
+          "version": "^18.0.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/utils": {
+          "version": "^18.0.1",
           "alwaysAddToPackageJson": false
         }
       }
