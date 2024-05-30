@@ -269,40 +269,44 @@ This tutorial walked you through how Nx can improve the local development experi
 - Nx Agents [efficiently distribute tasks across machines](/ci/concepts/parallelization-distribution) ensuring constant CI time regardless of the repository size. The right number of machines is allocated for each PR to ensure good performance without wasting compute.
 - Nx Atomizer [automatically splits](/ci/features/split-e2e-tasks) large e2e tests to distribute them across machines. Nx can also automatically [identify and rerun flaky e2e tests](/ci/features/flaky-tasks).
 
-### Generating a CI Workflow
+### Generate a CI Workflow
 
 If you are starting a new project, you can use the following command to generate a CI workflow file.
 
 ```shell
-./nx generate @nx/gradle:ci-workflow --ci=github
+npx nx generate ci-workflow --ci=github
 ```
 
-This generator creates a `.github/workflows/ci.yml` file that contains a CI pipeline that will run the `test` and `build` tasks for projects that are affected by any given PR.
+{% callout type="note" title="Choose your CI provider" %}
+You can choose `github`, `circleci`, `azure`, `bitbucket-pipelines`, or `gitlab` for the `ci` flag.
+{% /callout %}
+
+This generator creates a `.github/workflows/ci.yml` file that contains a CI pipeline that will run the `lint`, `test`, `build` and `e2e` tasks for projects that are affected by any given PR.
 
 The key line in the CI pipeline is:
 
-```
-./nx affected -t test build
+```yml
+- run: npx nx affected -t lint test build e2e-ci
 ```
 
-### Connecting to Nx Cloud
+### Connect to Nx Cloud
 
 Nx Cloud is a companion app for your CI system that provides remote caching, task distribution, e2e tests deflaking, better DX and more.
 
 To connect to Nx Cloud:
 
-- Commit and push your changes to GitHub
+- Commit and push your changes
 - Go to [https://cloud.nx.app](https://cloud.nx.app), create an account, and connect your repository
 
-![Connect to your repository](/shared/tutorials/connect-to-repository.webp)
+#### Connect to Nx Cloud Manually
 
-`cloud.nx.app` will send a PR to your repository enabling Nx Cloud, after which caching, distribution and more will start working.
+If you are not able to connect via the automated process at [https://cloud.nx.app](https://cloud.nx.app), you can connect your workspace manually by running:
 
-![Add an Nx Cloud access token to your repository dialog](/shared/tutorials/send-cloud-pr.webp)
+```shell
+npx nx connect
+```
 
-Once you merge that PR, you'll be able to see CI pipeline runs appearing in the Nx Cloud dashboard:
-
-![CI Pipeline Executiosn](/shared/tutorials/ci-pipeline-executions.webp)
+You will then need to merge your changes and connect to your workspace on [https://cloud.nx.app](https://cloud.nx.app).
 
 ### Enable a Distributed CI Pipeline
 

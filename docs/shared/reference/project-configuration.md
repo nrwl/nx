@@ -348,7 +348,7 @@ You can also express task dependencies with an object syntax:
 ```json
 {
   "targets": {
-    "build": {
+    "test": {
       "dependsOn": [
         {
           "target": "build", // target name

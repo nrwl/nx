@@ -29,8 +29,9 @@ import type { ConfigurationResult } from 'nx/src/project-graph/utils/project-con
 type PluginOptionsBuilder<T> = (targetName: string) => T;
 type PostTargetTransformer = (
   targetConfiguration: TargetConfiguration,
-  tree?: Tree,
-  projectDetails?: { projectName: string; root: string }
+  tree: Tree,
+  projectDetails: { projectName: string; root: string },
+  inferredTargetConfiguration: TargetConfiguration
 ) => TargetConfiguration;
 type SkipTargetFilter = (
   targetConfiguration: TargetConfiguration
@@ -130,10 +131,12 @@ class ExecutorToPluginMigrator<T> {
     delete projectTarget.executor;
 
     deleteMatchingProperties(projectTarget, createdTarget);
-    projectTarget = this.#postTargetTransformer(projectTarget, this.tree, {
-      projectName,
-      root: projectFromGraph.data.root,
-    });
+    projectTarget = this.#postTargetTransformer(
+      projectTarget,
+      this.tree,
+      { projectName, root: projectFromGraph.data.root },
+      createdTarget
+    );
 
     if (
       projectTarget.options &&

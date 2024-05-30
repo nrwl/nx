@@ -1,5 +1,6 @@
 import { output } from '../utils/output';
 import { relative } from 'path';
+import { join } from 'path/posix';
 import { Task, TaskGraph } from '../config/task-graph';
 import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
 import {
@@ -15,19 +16,15 @@ import { getExecutorInformation } from '../command-line/run/executor-utils';
 import { CustomHasher, ExecutorConfig } from '../config/misc-interfaces';
 import { readProjectsConfigurationFromProjectGraph } from '../project-graph/project-graph';
 
-export function getCommandAsString(execCommand: string, task: Task) {
-  const args = getPrintableCommandArgsForTask(task);
-  return [execCommand, 'nx', ...args].join(' ').trim();
-}
-
 export function getDependencyConfigs(
   { project, target }: { project: string; target: string },
-  defaultDependencyConfigs: Record<string, (TargetDependencyConfig | string)[]>,
+  extraTargetDependencies: Record<string, (TargetDependencyConfig | string)[]>,
   projectGraph: ProjectGraph
 ): TargetDependencyConfig[] | undefined {
   const dependencyConfigs = (
     projectGraph.nodes[project].data?.targets[target]?.dependsOn ??
-    defaultDependencyConfigs[target] ??
+    // This is passed into `run-command` from programmatic invocations
+    extraTargetDependencies[target] ??
     []
   ).map((config) =>
     typeof config === 'string'
@@ -244,7 +241,18 @@ export function getOutputsForTargetAndConfiguration(
   }
 }
 
+/**
+ * Matches portions of a string which need to be interpolated.
+ * Matches anything within curly braces, excluding the braces.
+ */
+const replacementRegex = /{([\s\S]+?)}/g;
+
 export function interpolate(template: string, data: any): string {
+  // Path is absolute or doesn't need interpolation
+  if (template.startsWith('/') || !replacementRegex.test(template)) {
+    return template;
+  }
+
   if (template.includes('{workspaceRoot}', 1)) {
     throw new Error(
       `Output '${template}' is invalid. {workspaceRoot} can only be used at the beginning of the expression.`
@@ -257,13 +265,19 @@ export function interpolate(template: string, data: any): string {
     );
   }
 
-  let res = template.replace('{workspaceRoot}/', '');
+  const parts = template.split('/').map((s) => _interpolate(s, data));
+
+  return join(...parts).replace('{workspaceRoot}/', '');
+}
+
+function _interpolate(template: string, data: any): string {
+  let res = template;
 
   if (data.projectRoot == '.') {
-    res = res.replace('{projectRoot}/', '');
+    res = res.replace('{projectRoot}', '');
   }
 
-  return res.replace(/{([\s\S]+?)}/g, (match: string) => {
+  return res.replace(replacementRegex, (match: string) => {
     let value = data;
     let path = match.slice(1, -1).trim().split('.');
     for (let idx = 0; idx < path.length; idx++) {

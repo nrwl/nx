@@ -4,7 +4,7 @@ description: This page contains examples for the @nx/storybook:migrate-7 generat
 ---
 
 {% callout type="info" title="Setting up Storybook 7 in a new workspace" %}
-For setting up Storybook version 7 in a new Nx workspace, or a workspace that does NOT already have Storybook configured already, please refer to our [Storybook 7 setup guide](/packages/storybook/documents/storybook-7-setup).
+For setting up Storybook version 7 in a new Nx workspace, or a workspace that does NOT already have Storybook configured already, please refer to our [Storybook 7 setup guide](/nx-api/storybook/documents/storybook-7-setup).
 {% /callout %}
 
 Storybook 7 is a major release that brings a lot of new features and improvements. You can read more about it in the [Storybook 7.0.0 release article](https://storybook.js.org/blog/storybook-7-0/). Apart from the new features and improvements it introduces, it also brings some breaking changes. You can read more about them in the [Storybook 7 migration docs](https://github.com/storybookjs/storybook/blob/next/MIGRATION.md#from-version-65x-to-700) and the [Storybook 7.0.0 migration guide](https://storybook.js.org/docs/react/migration-guide).

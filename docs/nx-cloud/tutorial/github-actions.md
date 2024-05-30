@@ -403,7 +403,7 @@ The Nx Agents feature
 Let's enable Nx Agents
 
 ```shell
-pnpm exec nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
+pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
 ```
 
 We recommend you add this line right after you check out the repo, before installing node modules.
@@ -442,7 +442,7 @@ jobs:
         with:
           version: 8
       - run: |
-          pnpm exec nx-cloud start-ci-run \
+          pnpm dlx nx-cloud start-ci-run \
             --distribute-on="3 linux-medium-js" \
             --stop-agents-after="e2e-ci"
       - name: Restore cached npm dependencies
