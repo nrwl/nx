@@ -152,6 +152,10 @@
       "runnerUi": {
         "type": "boolean",
         "description": "Displays the Cypress Runner UI. Useful for when Test Replay is enabled and you would still like the Cypress Runner UI to be displayed for screenshots and video."
+      },
+      "autoCancelAfterFailures": {
+        "oneOf": [{ "type": "number" }, { "type": "boolean" }],
+        "description": "Specify the number of failures to cancel a run being recorded to the Cloud or `false` to disable auto-cancellation."
       }
     },
     "additionalProperties": true,

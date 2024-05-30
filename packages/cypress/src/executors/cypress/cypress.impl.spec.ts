@@ -333,6 +333,22 @@ A generator to migrate from v8 to v10 is provided. See https://nx.dev/cypress/v1
     );
   });
 
+  it('should call `Cypress.run` with auto cancellation option', async () => {
+    const { success } = await cypressExecutor(
+      {
+        ...cypressOptions,
+        autoCancelAfterFailures: false,
+      },
+      mockContext
+    );
+    expect(success).toEqual(true);
+    expect(cypressRun).toHaveBeenCalledWith(
+      expect.objectContaining({
+        autoCancelAfterFailures: false,
+      })
+    );
+  });
+
   it('when devServerTarget AND baseUrl options are both present, baseUrl should take precedence', async () => {
     const { success } = await cypressExecutor(
       {
