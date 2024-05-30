@@ -26,3 +26,4 @@ export { retrieveProjectConfigurations } from './project-graph/utils/retrieve-wo
 export { LoadedNxPlugin } from './project-graph/plugins/internal-api';
 export * from './project-graph/error-types';
 export { registerTsProject } from './plugins/js/utils/register';
+export { interpolate } from './tasks-runner/utils';

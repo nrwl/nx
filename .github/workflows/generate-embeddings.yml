@@ -11,7 +11,7 @@ jobs:
     strategy:
       matrix:
         node-version: [18]
-        
+
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -25,7 +25,7 @@ jobs:
         uses: pnpm/action-setup@v2
         id: pnpm-install
         with:
-          version: 7
+          version: 8
           run_install: false
 
       - name: Get pnpm store directory
@@ -46,7 +46,7 @@ jobs:
         run: pnpm install --no-frozen-lockfile
 
       - name: Run embeddings script
-        run: pnpm exec nx run tools-documentation-create-embeddings:run-node 
+        run: pnpm exec nx run tools-documentation-create-embeddings:run-node
         env:
             NX_NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NX_NEXT_PUBLIC_SUPABASE_URL }}
             NX_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.NX_SUPABASE_SERVICE_ROLE_KEY }}

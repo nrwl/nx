@@ -4,6 +4,6 @@ export const babelJestVersion = '^29.4.1';
 export const jestTypesVersion = '^29.4.0';
 export const tsJestVersion = '^29.1.0';
 export const tslibVersion = '^2.3.0';
-export const swcJestVersion = '0.2.20';
+export const swcJestVersion = '~0.2.36';
 export const typesNodeVersion = '18.16.9';
 export const tsNodeVersion = '10.9.1';

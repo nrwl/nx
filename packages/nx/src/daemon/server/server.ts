@@ -258,6 +258,7 @@ function lockFileHashChanged(): boolean {
     join(workspaceRoot, 'package-lock.json'),
     join(workspaceRoot, 'yarn.lock'),
     join(workspaceRoot, 'pnpm-lock.yaml'),
+    join(workspaceRoot, 'bun.lockb'),
   ]
     .filter((file) => existsSync(file))
     .map((file) => hashFile(file));
