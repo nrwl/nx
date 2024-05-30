@@ -15,6 +15,11 @@
       "schema": "./src/generators/configuration/schema.json",
       "description": "Add webpack configuration to a project.",
       "hidden": true
+    },
+    "convert-to-inferred": {
+      "factory": "./src/generators/convert-to-inferred/convert-to-inferred",
+      "schema": "./src/generators/convert-to-inferred/schema.json",
+      "description": "Convert existing project(s) to use inferred webpack configuration."
     }
   }
 }

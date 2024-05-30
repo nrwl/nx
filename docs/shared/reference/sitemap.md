@@ -704,6 +704,7 @@
     - [generators](/nx-api/webpack/generators)
       - [init](/nx-api/webpack/generators/init)
       - [configuration](/nx-api/webpack/generators/configuration)
+      - [convert-to-inferred](/nx-api/webpack/generators/convert-to-inferred)
   - [workspace](/nx-api/workspace)
     - [documents](/nx-api/workspace/documents)
       - [Overview](/nx-api/workspace/documents/overview)

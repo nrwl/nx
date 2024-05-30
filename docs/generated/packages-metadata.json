@@ -3144,6 +3144,15 @@
         "originalFilePath": "/packages/webpack/src/generators/configuration/schema.json",
         "path": "webpack/generators/configuration",
         "type": "generator"
+      },
+      {
+        "description": "Convert existing project(s) to use inferred webpack configuration.",
+        "file": "generated/packages/webpack/generators/convert-to-inferred.json",
+        "hidden": false,
+        "name": "convert-to-inferred",
+        "originalFilePath": "/packages/webpack/src/generators/convert-to-inferred/schema.json",
+        "path": "webpack/generators/convert-to-inferred",
+        "type": "generator"
       }
     ],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",

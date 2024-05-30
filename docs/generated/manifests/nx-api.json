@@ -3179,6 +3179,15 @@
         "originalFilePath": "/packages/webpack/src/generators/configuration/schema.json",
         "path": "/nx-api/webpack/generators/configuration",
         "type": "generator"
+      },
+      "/nx-api/webpack/generators/convert-to-inferred": {
+        "description": "Convert existing project(s) to use inferred webpack configuration.",
+        "file": "generated/packages/webpack/generators/convert-to-inferred.json",
+        "hidden": false,
+        "name": "convert-to-inferred",
+        "originalFilePath": "/packages/webpack/src/generators/convert-to-inferred/schema.json",
+        "path": "/nx-api/webpack/generators/convert-to-inferred",
+        "type": "generator"
       }
     },
     "path": "/nx-api/webpack"
