@@ -20,12 +20,27 @@ jest.mock('nx/src/utils/workspace-root', () => ({
   workspaceRoot: '/root',
 }));
 
-jest.mock('nx/src/plugins/js/utils/find-external-package-json-path', () => ({
-  findExternalPackageJsonPath: jest
-    .fn()
-    .mockImplementation((packageName) =>
-      join('/root', 'node_modules', packageName, 'package.json')
-    ),
+jest.mock('nx/src/plugins/js/utils/resolve-relative-to-dir', () => ({
+  resolveRelativeToDir: jest.fn().mockImplementation((pathOrPackage) => {
+    // We intentionally don't want to find this package on disk to test fallback behavior
+    if (pathOrPackage.startsWith('@nx/nx-win32-x64-msvc')) {
+      return null;
+    }
+    // We intentionally don't allow access to the package.json (emulating package exports)
+    // return the dist/cjs/package.json file to emulate node's behavior for multi module format packages
+    if (pathOrPackage === 'minimatch/package.json') {
+      return null;
+    }
+    if (pathOrPackage === 'minimatch') {
+      return '/root/node_modules/minimatch/dist/cjs/package.json';
+    }
+    return join(
+      '/root',
+      'node_modules',
+      pathOrPackage,
+      pathOrPackage.endsWith('package.json') ? '' : 'package.json'
+    );
+  }),
 }));
 
 describe('TargetProjectLocator', () => {
@@ -482,6 +497,17 @@ describe('TargetProjectLocator', () => {
           name: 'npm-package',
           version: '1',
         }),
+        // minimatch is a real world example of a multi module format package with nested package.json files.
+        // node will resolve the dist/cjs/package.json file when using require.resolve('minimatch') in commonjs
+        // but we need to traverse up to find the parent package.json containing the name and version.
+        './node_modules/minimatch/package.json': JSON.stringify({
+          name: 'minimatch',
+          description: 'a glob matcher in javascript',
+          version: '9.0.3',
+        }),
+        './node_modules/minimatch/dist/cjs/package.json': JSON.stringify({
+          type: 'commonjs',
+        }),
       };
       vol.fromJSON(fsJson, '/root');
 
@@ -629,6 +655,42 @@ describe('TargetProjectLocator', () => {
             packageName: '@proj/proj123-base',
           },
         },
+        /**
+         * These @nx/nx-win32-x64-msvc external nodes have intentionally not had their locations on disk
+         * mocked so that we can evaluate the fallback behavior of the target project locator.
+         *
+         * We want to preferentially match the unversioned node out of these two, as it is the root dependency.
+         */
+        'npm:@nx/nx-win32-x64-msvc@17.1.2': {
+          type: 'npm',
+          name: 'npm:@nx/nx-win32-x64-msvc@17.1.2',
+          data: {
+            version: '17.1.2',
+            packageName: '@nx/nx-win32-x64-msvc',
+            hash: 'sha512-oxKCKunuo4wRusMlNu7PlhBijhtNy7eBZPAWyqUsdfnb+CjY2QncjCguW3fnsG9gHQFCa+y0b1WkSkvJ5G1DiQ==',
+          },
+        },
+        'npm:@nx/nx-win32-x64-msvc': {
+          type: 'npm',
+          name: 'npm:@nx/nx-win32-x64-msvc',
+          data: {
+            version: '19.2.0-beta.2',
+            packageName: '@nx/nx-win32-x64-msvc',
+            hash: 'sha512-ggewenDQWc5azOEM/HI7AREuIHXSPO0STL+ehAG2PvoQPHglCdfLQy904D85ttm9wS7AKdK+d3wqMzSQaj7FsA==',
+          },
+        },
+        /**
+         * We use minimatch as an example of a multiple module format package.
+         */
+        'npm:minimatch': {
+          type: 'npm',
+          name: 'npm:minimatch',
+          data: {
+            version: '9.0.3',
+            packageName: 'minimatch',
+            hash: 'sha512-RHiac9mvaRw0x3AYRgDC1CxAP7HTcNrrECeA8YYJeWnpo+2Q5CegtZjaotWTWxDG3UeGA1coE05iH1mPjT/2mg==',
+          },
+        },
       };
 
       targetProjectLocator = new TargetProjectLocator(projects, npmProjects);
@@ -726,6 +788,24 @@ describe('TargetProjectLocator', () => {
         'libs/proj/index.ts'
       );
       expect(result).toEqual(null);
+    });
+
+    it('should fall back to matching external nodes from the graph if they could not be resolved on disk', () => {
+      const result = targetProjectLocator.findProjectFromImport(
+        '@nx/nx-win32-x64-msvc',
+        'libs/proj/index.ts'
+      );
+      // We don't want to match npm:@nx/nx-win32-x64-msvc@17.1.2 in this fallback case even though it came first
+      // in the external nodes list
+      expect(result).toEqual('npm:@nx/nx-win32-x64-msvc');
+    });
+
+    it('should handle resolving multi module build packages such as minimatch', () => {
+      const result = targetProjectLocator.findProjectFromImport(
+        'minimatch',
+        'libs/proj/index.ts'
+      );
+      expect(result).toEqual('npm:minimatch');
     });
   });
 });
