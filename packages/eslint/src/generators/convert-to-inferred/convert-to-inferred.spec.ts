@@ -453,6 +453,123 @@ describe('Eslint - Convert Executors To Plugin', () => {
         (addedTestEslintPlugin as ExpandedPluginConfiguration).include
       ).not.toBeDefined();
     });
+
+    it('should remove inputs when they are inferred', async () => {
+      const project = createTestProject(tree);
+      project.targets.lint.options.cacheLocation = 'cache-dir';
+      updateProjectConfiguration(tree, project.name, project);
+      createTestProject(tree, { appRoot: 'second', appName: 'second' });
+      const nxJson = readNxJson(tree);
+      nxJson.targetDefaults ??= {};
+      nxJson.targetDefaults['@nx/eslint:lint'] = {
+        inputs: ['default', '^default', '{projectRoot}/.eslintrc.json'],
+      };
+      updateNxJson(tree, nxJson);
+
+      await convertToInferred(tree, {
+        project: project.name,
+        skipFormat: true,
+      });
+
+      // project.json modifications
+      const updatedProject = readProjectConfiguration(tree, project.name);
+      expect(updatedProject.targets.lint.inputs).toBeUndefined();
+    });
+
+    it('should add external dependencies input from inferred task', async () => {
+      const project = createTestProject(tree);
+      createTestProject(tree, { appRoot: 'second', appName: 'second' });
+      const nxJson = readNxJson(tree);
+      nxJson.targetDefaults ??= {};
+      nxJson.targetDefaults['@nx/eslint:lint'] = {
+        inputs: [
+          'default',
+          '{projectRoot}/.eslintrc.json',
+          '{projectRoot}/.eslintignore',
+          '{projectRoot}/eslint.config.js',
+        ],
+      };
+      updateNxJson(tree, nxJson);
+
+      await convertToInferred(tree, {
+        project: project.name,
+        skipFormat: true,
+      });
+
+      // project.json modifications
+      const updatedProject = readProjectConfiguration(tree, project.name);
+      expect(updatedProject.targets.lint.inputs).toStrictEqual([
+        'default',
+        '{projectRoot}/.eslintrc.json',
+        '{projectRoot}/.eslintignore',
+        '{projectRoot}/eslint.config.js',
+        { externalDependencies: ['eslint'] },
+      ]);
+    });
+
+    it('should merge external dependencies input from inferred task', async () => {
+      const project = createTestProject(tree);
+      createTestProject(tree, { appRoot: 'second', appName: 'second' });
+      const nxJson = readNxJson(tree);
+      nxJson.targetDefaults ??= {};
+      nxJson.targetDefaults['@nx/eslint:lint'] = {
+        inputs: [
+          'default',
+          '{projectRoot}/.eslintrc.json',
+          '{projectRoot}/.eslintignore',
+          '{projectRoot}/eslint.config.js',
+          { externalDependencies: ['eslint-plugin-react'] },
+        ],
+      };
+      updateNxJson(tree, nxJson);
+
+      await convertToInferred(tree, {
+        project: project.name,
+        skipFormat: true,
+      });
+
+      // project.json modifications
+      const updatedProject = readProjectConfiguration(tree, project.name);
+      expect(updatedProject.targets.lint.inputs).toStrictEqual([
+        'default',
+        '{projectRoot}/.eslintrc.json',
+        '{projectRoot}/.eslintignore',
+        '{projectRoot}/eslint.config.js',
+        { externalDependencies: ['eslint-plugin-react', 'eslint'] },
+      ]);
+    });
+
+    it('should not duplicate already existing external dependencies input', async () => {
+      const project = createTestProject(tree);
+      createTestProject(tree, { appRoot: 'second', appName: 'second' });
+      const nxJson = readNxJson(tree);
+      nxJson.targetDefaults ??= {};
+      nxJson.targetDefaults['@nx/eslint:lint'] = {
+        inputs: [
+          'default',
+          '{projectRoot}/.eslintrc.json',
+          '{projectRoot}/.eslintignore',
+          '{projectRoot}/eslint.config.js',
+          { externalDependencies: ['eslint', 'eslint-plugin-react'] },
+        ],
+      };
+      updateNxJson(tree, nxJson);
+
+      await convertToInferred(tree, {
+        project: project.name,
+        skipFormat: true,
+      });
+
+      // project.json modifications
+      const updatedProject = readProjectConfiguration(tree, project.name);
+      expect(updatedProject.targets.lint.inputs).toStrictEqual([
+        'default',
+        '{projectRoot}/.eslintrc.json',
+        '{projectRoot}/.eslintignore',
+        '{projectRoot}/eslint.config.js',
+        { externalDependencies: ['eslint', 'eslint-plugin-react'] },
+      ]);
+    });
   });
 
   describe('--all', () => {
