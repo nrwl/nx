@@ -5,8 +5,8 @@ import {
   type TargetConfiguration,
   type Tree,
 } from '@nx/devkit';
-import { createNodes, EslintPluginOptions } from '../../plugins/plugin';
-import { migrateExecutorToPluginV1 } from '@nx/devkit/src/generators/plugin-migrations/executor-to-plugin-migrator';
+import { createNodesV2, EslintPluginOptions } from '../../plugins/plugin';
+import { migrateExecutorToPlugin } from '@nx/devkit/src/generators/plugin-migrations/executor-to-plugin-migrator';
 import { targetOptionsToCliMap } from './lib/target-options-map';
 import { interpolate } from 'nx/src/tasks-runner/utils';
 
@@ -19,26 +19,26 @@ export async function convertToInferred(tree: Tree, options: Schema) {
   const projectGraph = await createProjectGraphAsync();
 
   const migratedProjectsModern =
-    await migrateExecutorToPluginV1<EslintPluginOptions>(
+    await migrateExecutorToPlugin<EslintPluginOptions>(
       tree,
       projectGraph,
       '@nx/eslint:lint',
       '@nx/eslint/plugin',
       (targetName) => ({ targetName }),
       postTargetTransformer,
-      createNodes,
+      createNodesV2,
       options.project
     );
 
   const migratedProjectsLegacy =
-    await migrateExecutorToPluginV1<EslintPluginOptions>(
+    await migrateExecutorToPlugin<EslintPluginOptions>(
       tree,
       projectGraph,
       '@nrwl/linter:eslint',
       '@nx/eslint/plugin',
       (targetName) => ({ targetName }),
       postTargetTransformer,
-      createNodes,
+      createNodesV2,
       options.project
     );
 

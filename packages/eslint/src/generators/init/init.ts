@@ -8,10 +8,10 @@ import {
   Tree,
   updateNxJson,
 } from '@nx/devkit';
-import { addPluginV1 } from '@nx/devkit/src/utils/add-plugin';
+import { addPlugin } from '@nx/devkit/src/utils/add-plugin';
 import { eslintVersion, nxVersion } from '../../utils/versions';
 import { findEslintFile } from '../utils/eslint-file';
-import { createNodes } from '../../plugins/plugin';
+import { createNodesV2 } from '../../plugins/plugin';
 import { hasEslintPlugin } from '../utils/plugin';
 
 export interface LinterInitOptions {
@@ -73,11 +73,11 @@ export async function initEsLint(
   ];
 
   if (rootEslintFile && options.addPlugin && !hasPlugin) {
-    await addPluginV1(
+    await addPlugin(
       tree,
       graph,
       '@nx/eslint/plugin',
-      createNodes,
+      createNodesV2,
       {
         targetName: lintTargetNames,
       },
@@ -94,11 +94,11 @@ export async function initEsLint(
   updateProductionFileset(tree);
 
   if (options.addPlugin) {
-    await addPluginV1(
+    await addPlugin(
       tree,
       graph,
       '@nx/eslint/plugin',
-      createNodes,
+      createNodesV2,
       {
         targetName: lintTargetNames,
       },
