@@ -17,6 +17,7 @@ import {
   TargetConfiguration,
   Tree,
   CreateNodes,
+  CreateNodesV2,
 } from 'nx/src/devkit-exports';
 
 import {
@@ -52,8 +53,8 @@ class ExecutorToPluginMigrator<T> {
   #targetDefaultsForExecutor: Partial<TargetConfiguration>;
   #targetAndProjectsToMigrate: Map<string, Set<string>>;
   #pluginToAddForTarget: Map<string, ExpandedPluginConfiguration<T>>;
-  #createNodes: CreateNodes<T>;
-  #configFiles: string[];
+  #createNodes?: CreateNodes<T>;
+  #createNodesV2?: CreateNodesV2<T>;
   #createNodesResultsForTargets: Map<string, ConfigurationResult>;
 
   constructor(
@@ -63,7 +64,8 @@ class ExecutorToPluginMigrator<T> {
     pluginPath: string,
     pluginOptionsBuilder: PluginOptionsBuilder<T>,
     postTargetTransformer: PostTargetTransformer,
-    createNodes: CreateNodes<T>,
+    createNodes?: CreateNodes<T>,
+    createNodesV2?: CreateNodesV2<T>,
     specificProjectToMigrate?: string,
     skipTargetFilter?: SkipTargetFilter
   ) {
@@ -74,6 +76,7 @@ class ExecutorToPluginMigrator<T> {
     this.#pluginOptionsBuilder = pluginOptionsBuilder;
     this.#postTargetTransformer = postTargetTransformer;
     this.#createNodes = createNodes;
+    this.#createNodesV2 = createNodesV2;
     this.#specificProjectToMigrate = specificProjectToMigrate;
     this.#skipTargetFilter = skipTargetFilter ?? ((...args) => [false, '']);
   }
@@ -224,6 +227,7 @@ class ExecutorToPluginMigrator<T> {
   ) {
     const loadedPlugin = new LoadedNxPlugin(
       {
+        createNodesV2: this.#createNodesV2,
         createNodes: this.#createNodes,
         name: this.#pluginPath,
       },
@@ -373,6 +377,7 @@ class ExecutorToPluginMigrator<T> {
     for (const targetName of this.#targetAndProjectsToMigrate.keys()) {
       const loadedPlugin = new LoadedNxPlugin(
         {
+          createNodesV2: this.#createNodesV2,
           createNodes: this.#createNodes,
           name: this.#pluginPath,
         },
@@ -396,13 +401,38 @@ class ExecutorToPluginMigrator<T> {
         }
       }
 
-      this.#configFiles = Array.from(projectConfigs.matchingProjectFiles);
       this.#createNodesResultsForTargets.set(targetName, projectConfigs);
     }
   }
 }
 
 export async function migrateExecutorToPlugin<T>(
+  tree: Tree,
+  projectGraph: ProjectGraph,
+  executor: string,
+  pluginPath: string,
+  pluginOptionsBuilder: PluginOptionsBuilder<T>,
+  postTargetTransformer: PostTargetTransformer,
+  createNodes: CreateNodesV2<T>,
+  specificProjectToMigrate?: string,
+  skipTargetFilter?: SkipTargetFilter
+): Promise<Map<string, Set<string>>> {
+  const migrator = new ExecutorToPluginMigrator<T>(
+    tree,
+    projectGraph,
+    executor,
+    pluginPath,
+    pluginOptionsBuilder,
+    postTargetTransformer,
+    undefined,
+    createNodes,
+    specificProjectToMigrate,
+    skipTargetFilter
+  );
+  return await migrator.run();
+}
+
+export async function migrateExecutorToPluginV1<T>(
   tree: Tree,
   projectGraph: ProjectGraph,
   executor: string,
@@ -421,6 +451,7 @@ export async function migrateExecutorToPlugin<T>(
     pluginOptionsBuilder,
     postTargetTransformer,
     createNodes,
+    undefined,
     specificProjectToMigrate,
     skipTargetFilter
   );
