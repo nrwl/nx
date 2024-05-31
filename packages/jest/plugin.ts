@@ -1,5 +1,5 @@
 export {
   createNodes,
-  createDependencies,
+  createNodesV2,
   JestPluginOptions,
 } from './src/plugins/plugin';
