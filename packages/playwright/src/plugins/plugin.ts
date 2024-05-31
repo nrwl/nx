@@ -2,11 +2,13 @@ import { existsSync, readdirSync } from 'fs';
 import { dirname, join, relative } from 'path';
 
 import {
-  CreateDependencies,
   CreateNodes,
   CreateNodesContext,
+  createNodesFromFiles,
+  CreateNodesV2,
   detectPackageManager,
   joinPathFragments,
+  logger,
   normalizePath,
   ProjectConfiguration,
   readJsonFile,
@@ -22,6 +24,7 @@ import { minimatch } from 'minimatch';
 import { projectGraphCacheDirectory } from 'nx/src/utils/cache-directory';
 import { getLockFileName } from '@nx/js';
 import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
+import { hashObject } from 'nx/src/hasher/file-hasher';
 
 export interface PlaywrightPluginOptions {
   targetName?: string;
@@ -33,68 +36,100 @@ interface NormalizedOptions {
   ciTargetName?: string;
 }
 
-const cachePath = join(projectGraphCacheDirectory, 'playwright.hash');
-
-const targetsCache = readTargetsCache();
-
 type PlaywrightTargets = Pick<ProjectConfiguration, 'targets' | 'metadata'>;
 
-function readTargetsCache(): Record<string, PlaywrightTargets> {
+function readTargetsCache(
+  cachePath: string
+): Record<string, PlaywrightTargets> {
   return existsSync(cachePath) ? readJsonFile(cachePath) : {};
 }
 
-function writeTargetsToCache() {
-  const oldCache = readTargetsCache();
-  writeJsonFile(cachePath, {
-    ...readTargetsCache,
-    targetsCache,
-  });
+function writeTargetsToCache(
+  cachePath: string,
+  results: Record<string, PlaywrightTargets>
+) {
+  writeJsonFile(cachePath, results);
 }
 
-export const createDependencies: CreateDependencies = () => {
-  writeTargetsToCache();
-  return [];
-};
-
-export const createNodes: CreateNodes<PlaywrightPluginOptions> = [
-  '**/playwright.config.{js,ts,cjs,cts,mjs,mts}',
-  async (configFilePath, options, context) => {
-    const projectRoot = dirname(configFilePath);
-
-    // Do not create a project if package.json and project.json isn't there.
-    const siblingFiles = readdirSync(join(context.workspaceRoot, projectRoot));
-    if (
-      !siblingFiles.includes('package.json') &&
-      !siblingFiles.includes('project.json')
-    ) {
-      return {};
-    }
-
-    const normalizedOptions = normalizeOptions(options);
-
-    const hash = calculateHashForCreateNodes(projectRoot, options, context, [
-      getLockFileName(detectPackageManager(context.workspaceRoot)),
-    ]);
-
-    targetsCache[hash] ??= await buildPlaywrightTargets(
-      configFilePath,
-      projectRoot,
-      normalizedOptions,
-      context
+const playwrightConfigGlob = '**/playwright.config.{js,ts,cjs,cts,mjs,mts}';
+export const createNodesV2: CreateNodesV2<PlaywrightPluginOptions> = [
+  playwrightConfigGlob,
+  async (configFilePaths, options, context) => {
+    const optionsHash = hashObject(options);
+    const cachePath = join(
+      projectGraphCacheDirectory,
+      `playwright-${optionsHash}.hash`
     );
-    const { targets, metadata } = targetsCache[hash];
-
-    return {
-      projects: {
-        [projectRoot]: {
-          root: projectRoot,
-          targets,
-          metadata,
-        },
-      },
-    };
+    const targetsCache = readTargetsCache(cachePath);
+    try {
+      return await createNodesFromFiles(
+        (configFile, options, context) =>
+          createNodesInternal(configFile, options, context, targetsCache),
+        configFilePaths,
+        options,
+        context
+      );
+    } finally {
+      writeTargetsToCache(cachePath, targetsCache);
+    }
   },
 ];
+
+/**
+ * @deprecated This is replaced with {@link createNodesV2}. Update your plugin to export its own `createNodesV2` function that wraps this one instead.
+ * This function will change to the v2 function in Nx 20.
+ */
+export const createNodes: CreateNodes<PlaywrightPluginOptions> = [
+  playwrightConfigGlob,
+  async (configFile, options, context) => {
+    logger.warn(
+      '`createNodes` is deprecated. Update your plugin to utilize createNodesV2 instead. In Nx 20, this will change to the createNodesV2 API.'
+    );
+    return createNodesInternal(configFile, options, context, {});
+  },
+];
+
+async function createNodesInternal(
+  configFilePath: string,
+  options: PlaywrightPluginOptions,
+  context: CreateNodesContext,
+  targetsCache: Record<string, PlaywrightTargets>
+) {
+  const projectRoot = dirname(configFilePath);
+
+  // Do not create a project if package.json and project.json isn't there.
+  const siblingFiles = readdirSync(join(context.workspaceRoot, projectRoot));
+  if (
+    !siblingFiles.includes('package.json') &&
+    !siblingFiles.includes('project.json')
+  ) {
+    return {};
+  }
+
+  const normalizedOptions = normalizeOptions(options);
+
+  const hash = calculateHashForCreateNodes(projectRoot, options, context, [
+    getLockFileName(detectPackageManager(context.workspaceRoot)),
+  ]);
+
+  targetsCache[hash] ??= await buildPlaywrightTargets(
+    configFilePath,
+    projectRoot,
+    normalizedOptions,
+    context
+  );
+  const { targets, metadata } = targetsCache[hash];
+
+  return {
+    projects: {
+      [projectRoot]: {
+        root: projectRoot,
+        targets,
+        metadata,
+      },
+    },
+  };
+}
 
 async function buildPlaywrightTargets(
   configFilePath: string,

@@ -1,9 +1,11 @@
 import {
-  CreateDependencies,
   CreateNodes,
   CreateNodesContext,
+  createNodesFromFiles,
+  CreateNodesV2,
   detectPackageManager,
   joinPathFragments,
+  logger,
   normalizePath,
   NxJsonConfiguration,
   ProjectConfiguration,
@@ -22,6 +24,7 @@ import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash
 import { projectGraphCacheDirectory } from 'nx/src/utils/cache-directory';
 import { NX_PLUGIN_OPTIONS } from '../utils/constants';
 import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
+import { hashObject } from 'nx/src/devkit-internals';
 
 export interface CypressPluginOptions {
   ciTargetName?: string;
@@ -30,66 +33,95 @@ export interface CypressPluginOptions {
   componentTestingTargetName?: string;
 }
 
-const cachePath = join(projectGraphCacheDirectory, 'cypress.hash');
-const targetsCache = readTargetsCache();
-
-function readTargetsCache(): Record<string, CypressTargets> {
+function readTargetsCache(cachePath: string): Record<string, CypressTargets> {
   return existsSync(cachePath) ? readJsonFile(cachePath) : {};
 }
 
-function writeTargetsToCache() {
-  const oldCache = readTargetsCache();
-  writeJsonFile(cachePath, {
-    ...oldCache,
-    targetsCache,
-  });
+function writeTargetsToCache(cachePath: string, results: CypressTargets) {
+  writeJsonFile(cachePath, results);
 }
 
-export const createDependencies: CreateDependencies = () => {
-  writeTargetsToCache();
-  return [];
-};
+const cypressConfigGlob = '**/cypress.config.{js,ts,mjs,cjs}';
 
-export const createNodes: CreateNodes<CypressPluginOptions> = [
-  '**/cypress.config.{js,ts,mjs,cjs}',
-  async (configFilePath, options, context) => {
-    options = normalizeOptions(options);
-    const projectRoot = dirname(configFilePath);
-
-    // Do not create a project if package.json and project.json isn't there.
-    const siblingFiles = readdirSync(join(context.workspaceRoot, projectRoot));
-    if (
-      !siblingFiles.includes('package.json') &&
-      !siblingFiles.includes('project.json')
-    ) {
-      return {};
-    }
-
-    const hash = calculateHashForCreateNodes(projectRoot, options, context, [
-      getLockFileName(detectPackageManager(context.workspaceRoot)),
-    ]);
-
-    targetsCache[hash] ??= await buildCypressTargets(
-      configFilePath,
-      projectRoot,
-      options,
-      context
+export const createNodesV2: CreateNodesV2<CypressPluginOptions> = [
+  cypressConfigGlob,
+  async (configFiles, options, context) => {
+    const optionsHash = hashObject(options);
+    const cachePath = join(
+      projectGraphCacheDirectory,
+      `cypress-${optionsHash}.hash`
     );
-    const { targets, metadata } = targetsCache[hash];
-
-    const project: Omit<ProjectConfiguration, 'root'> = {
-      projectType: 'application',
-      targets,
-      metadata,
-    };
-
-    return {
-      projects: {
-        [projectRoot]: project,
-      },
-    };
+    const targetsCache = readTargetsCache(cachePath);
+    try {
+      return await createNodesFromFiles(
+        (configFile, options, context) =>
+          createNodesInternal(configFile, options, context, targetsCache),
+        configFiles,
+        options,
+        context
+      );
+    } finally {
+      writeTargetsToCache(cachePath, targetsCache);
+    }
   },
 ];
+
+/**
+ * @deprecated This is replaced with {@link createNodesV2}. Update your plugin to export its own `createNodesV2` function that wraps this one instead.
+ * This function will change to the v2 function in Nx 20.
+ */
+export const createNodes: CreateNodes<CypressPluginOptions> = [
+  cypressConfigGlob,
+  (configFile, options, context) => {
+    logger.warn(
+      '`createNodes` is deprecated. Update your plugin to utilize createNodesV2 instead. In Nx 20, this will change to the createNodesV2 API.'
+    );
+    return createNodesInternal(configFile, options, context, {});
+  },
+];
+
+async function createNodesInternal(
+  configFilePath: string,
+  options: CypressPluginOptions,
+  context: CreateNodesContext,
+  targetsCache: CypressTargets
+) {
+  options = normalizeOptions(options);
+  const projectRoot = dirname(configFilePath);
+
+  // Do not create a project if package.json and project.json isn't there.
+  const siblingFiles = readdirSync(join(context.workspaceRoot, projectRoot));
+  if (
+    !siblingFiles.includes('package.json') &&
+    !siblingFiles.includes('project.json')
+  ) {
+    return {};
+  }
+
+  const hash = calculateHashForCreateNodes(projectRoot, options, context, [
+    getLockFileName(detectPackageManager(context.workspaceRoot)),
+  ]);
+
+  targetsCache[hash] ??= await buildCypressTargets(
+    configFilePath,
+    projectRoot,
+    options,
+    context
+  );
+  const { targets, metadata } = targetsCache[hash];
+
+  const project: Omit<ProjectConfiguration, 'root'> = {
+    projectType: 'application',
+    targets,
+    metadata,
+  };
+
+  return {
+    projects: {
+      [projectRoot]: project,
+    },
+  };
+}
 
 function getOutputs(
   projectRoot: string,
