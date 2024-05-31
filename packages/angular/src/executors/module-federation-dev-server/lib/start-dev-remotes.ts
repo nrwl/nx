@@ -28,7 +28,7 @@ export async function startRemotes(
       'module-federation-dev-server'
     );
 
-    const configurationOverride = options.devRemotes.find(
+    const configurationOverride = options.devRemotes?.find(
       (
         r
       ): r is {
