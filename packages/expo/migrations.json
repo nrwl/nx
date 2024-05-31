@@ -71,6 +71,12 @@
       "cli": "nx",
       "description": "Change webpack to metro in expo projects",
       "factory": "./src/migrations/update-19-0-0/change-webpack-to-metro"
+    },
+    "update-19-2-0-remove-webpack-config": {
+      "version": "19.2.0-beta.2",
+      "cli": "nx",
+      "description": "Remove deprecated webpack.config.js",
+      "factory": "./src/migrations/update-19-2-0/remove-deprecated-webpack-config"
     }
   },
   "packageJsonUpdates": {
