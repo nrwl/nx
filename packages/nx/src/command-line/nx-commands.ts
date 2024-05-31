@@ -13,7 +13,7 @@ import {
   yargsViewLogsCommand,
 } from './connect/command-object';
 import { yargsDaemonCommand } from './daemon/command-object';
-import { yargsDepGraphCommand } from './graph/command-object';
+import { yargsGraphCommand } from './graph/command-object';
 import { yargsExecCommand } from './exec/command-object';
 import {
   yargsFormatCheckCommand,
@@ -68,7 +68,7 @@ export const commandsObject = yargs
   .command(yargsAffectedGraphCommand)
   .command(yargsConnectCommand)
   .command(yargsDaemonCommand)
-  .command(yargsDepGraphCommand)
+  .command(yargsGraphCommand)
   .command(yargsExecCommand)
   .command(yargsFormatCheckCommand)
   .command(yargsFormatWriteCommand)
