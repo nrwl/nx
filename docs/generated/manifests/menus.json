@@ -9594,17 +9594,17 @@
                 "disableCollapsible": false
               },
               {
-                "id": "vitest",
-                "path": "/nx-api/vite/generators/vitest",
-                "name": "vitest",
+                "id": "convert-to-inferred",
+                "path": "/nx-api/vite/generators/convert-to-inferred",
+                "name": "convert-to-inferred",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
               },
               {
-                "id": "convert-to-inferred",
-                "path": "/nx-api/vite/generators/convert-to-inferred",
-                "name": "convert-to-inferred",
+                "id": "vitest",
+                "path": "/nx-api/vite/generators/vitest",
+                "name": "vitest",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false

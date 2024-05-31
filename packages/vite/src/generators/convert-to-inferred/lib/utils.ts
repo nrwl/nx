@@ -1,5 +1,5 @@
 import { relative, resolve } from 'path/posix';
-import { workspaceRoot } from '@nx/devkit';
+import { workspaceRoot, type Tree, joinPathFragments } from '@nx/devkit';
 
 export function toProjectRelativePath(
   path: string,
@@ -17,4 +17,15 @@ export function toProjectRelativePath(
   );
 
   return relativePath.startsWith('.') ? relativePath : `./${relativePath}`;
+}
+
+export function getViteConfigPath(tree: Tree, root: string) {
+  return [
+    joinPathFragments(root, `vite.config.ts`),
+    joinPathFragments(root, `vite.config.cts`),
+    joinPathFragments(root, `vite.config.mts`),
+    joinPathFragments(root, `vite.config.js`),
+    joinPathFragments(root, `vite.config.cjs`),
+    joinPathFragments(root, `vite.config.mjs`),
+  ].find((f) => tree.exists(f));
 }

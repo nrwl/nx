@@ -1,11 +1,7 @@
-import {
-  joinPathFragments,
-  type TargetConfiguration,
-  type Tree,
-} from '@nx/devkit';
+import { type TargetConfiguration, type Tree } from '@nx/devkit';
 import { tsquery } from '@phenomnomnominal/tsquery';
 import { extname } from 'path/posix';
-import { toProjectRelativePath } from './utils';
+import { getViteConfigPath, toProjectRelativePath } from './utils';
 import { processTargetOutputs } from '@nx/devkit/src/generators/plugin-migrations/plugin-migration-utils';
 
 export function buildPostTargetTransformer(
@@ -14,10 +10,7 @@ export function buildPostTargetTransformer(
   projectDetails: { projectName: string; root: string },
   inferredTargetConfiguration: TargetConfiguration
 ) {
-  let viteConfigPath = [
-    joinPathFragments(projectDetails.root, `vite.config.ts`),
-    joinPathFragments(projectDetails.root, `vite.config.js`),
-  ].find((f) => tree.exists(f));
+  let viteConfigPath = getViteConfigPath(tree, projectDetails.root);
 
   if (target.options) {
     if (target.options.configFile) {

@@ -21,7 +21,7 @@
     },
     "presets": []
   },
-  "description": "Convert existing Vite project(s) using `@nx/vite:*` executors to use `@nx/vite/plugin`.",
+  "description": "Convert existing Vite project(s) using `@nx/vite:*` executors to use `@nx/vite/plugin`. Defaults to migrating all projects. Pass '--project' to migrate only one target.",
   "implementation": "/packages/vite/src/generators/convert-to-inferred/convert-to-inferred.ts",
   "aliases": [],
   "hidden": false,

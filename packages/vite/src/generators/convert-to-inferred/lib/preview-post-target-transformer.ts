@@ -1,9 +1,6 @@
-import {
-  joinPathFragments,
-  logger,
-  type TargetConfiguration,
-  type Tree,
-} from '@nx/devkit';
+import { type TargetConfiguration, type Tree } from '@nx/devkit';
+import { getViteConfigPath } from './utils';
+import { aggregateLog } from '@nx/devkit/src/generators/plugin-migrations/aggregate-log-util';
 
 export function previewPostTargetTransformer(
   target: TargetConfiguration,
@@ -11,19 +8,22 @@ export function previewPostTargetTransformer(
   projectDetails: { projectName: string; root: string },
   inferredTargetConfiguration: TargetConfiguration
 ) {
-  const viteConfigPath = [
-    joinPathFragments(projectDetails.root, `vite.config.ts`),
-    joinPathFragments(projectDetails.root, `vite.config.js`),
-  ].find((f) => tree.exists(f));
+  const viteConfigPath = getViteConfigPath(tree, projectDetails.root);
 
   if (target.options) {
-    removePropertiesFromTargetOptions(target.options, viteConfigPath);
+    removePropertiesFromTargetOptions(
+      target.options,
+      projectDetails.projectName
+    );
   }
 
   if (target.configurations) {
     for (const configurationName in target.configurations) {
       const configuration = target.configurations[configurationName];
-      removePropertiesFromTargetOptions(configuration, viteConfigPath);
+      removePropertiesFromTargetOptions(
+        configuration,
+        projectDetails.projectName
+      );
 
       if (Object.keys(configuration).length === 0) {
         delete target.configurations[configurationName];
@@ -50,7 +50,7 @@ export function previewPostTargetTransformer(
 
 function removePropertiesFromTargetOptions(
   targetOptions: any,
-  viteConfigPath: string
+  projectName: string
 ) {
   if ('buildTarget' in targetOptions) {
     delete targetOptions.buildTarget;
@@ -61,9 +61,11 @@ function removePropertiesFromTargetOptions(
   }
 
   if ('proxyConfig' in targetOptions) {
-    logger.warn(
-      `Encountered 'proxyConfig' in project.json when migrating '@nx/vite:preview-server'. You will need to copy the contents of this file to your ${viteConfigPath} 'server.proxy' property.`
-    );
+    aggregateLog({
+      executorName: '@nx/vite:preview-server',
+      project: projectName,
+      log: `Encountered 'proxyConfig' in project.json. You will need to copy the contents of this file to the 'server.proxy' property in your Vite config file.`,
+    });
     delete targetOptions.proxyConfig;
   }
 }

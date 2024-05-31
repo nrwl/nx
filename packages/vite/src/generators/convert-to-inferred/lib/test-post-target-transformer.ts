@@ -85,6 +85,7 @@ function removePropertiesFromTargetOptions(
     delete targetOptions.reportsDirectory;
   }
 
+  // TODO: handle the regex escaping of paths
   if ('testFiles' in targetOptions) {
     targetOptions.testNamePattern = `/(${targetOptions.testFiles
       .map((f) => f.replace('.', '\\.'))
