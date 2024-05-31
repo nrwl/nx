@@ -106,12 +106,6 @@ function buildReactNativeTargets(
       command: `pod install`,
       options: { cwd: joinPathFragments(projectRoot, 'ios') },
       dependsOn: [`${options.syncDepsTargetName}`],
-      cache: true,
-      inputs: getInputs(namedInputs),
-      outputs: [
-        getOutputs(projectRoot, 'ios/Pods'),
-        getOutputs(projectRoot, 'ios/Podfile.lock'),
-      ],
     },
     [options.runIosTargetName]: {
       command: `react-native run-ios`,
