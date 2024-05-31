@@ -244,6 +244,113 @@ describe('Cypress - Convert Executors To Plugin', () => {
         (addedTestCypressPlugin as ExpandedPluginConfiguration).include
       ).toEqual(['myapp-e2e/**/*']);
     });
+
+    it('should remove inputs when they are inferred', async () => {
+      const project = createTestProject(tree);
+      project.targets.e2e.options.exit = false;
+      updateProjectConfiguration(tree, project.name, project);
+      createTestProject(tree, { appRoot: 'second', appName: 'second' });
+      const nxJson = readNxJson(tree);
+      nxJson.targetDefaults ??= {};
+      nxJson.targetDefaults['@nx/cypress:cypress'] = {
+        inputs: ['default', '^default'],
+      };
+      updateNxJson(tree, nxJson);
+
+      await convertToInferred(tree, {
+        project: project.name,
+        skipFormat: true,
+      });
+
+      // project.json modifications
+      const updatedProject = readProjectConfiguration(tree, project.name);
+      expect(updatedProject.targets.e2e.inputs).toBeUndefined();
+    });
+
+    it('should add external dependencies input from inferred task', async () => {
+      const project = createTestProject(tree);
+      createTestProject(tree, { appRoot: 'second', appName: 'second' });
+      const nxJson = readNxJson(tree);
+      nxJson.targetDefaults ??= {};
+      nxJson.targetDefaults['@nx/cypress:cypress'] = {
+        inputs: ['default', '^default', '{workspaceRoot}/some-file.ts'],
+      };
+      updateNxJson(tree, nxJson);
+
+      await convertToInferred(tree, {
+        project: project.name,
+        skipFormat: true,
+      });
+
+      // project.json modifications
+      const updatedProject = readProjectConfiguration(tree, project.name);
+      expect(updatedProject.targets.e2e.inputs).toStrictEqual([
+        'default',
+        '^default',
+        '{workspaceRoot}/some-file.ts',
+        { externalDependencies: ['cypress'] },
+      ]);
+    });
+
+    it('should merge external dependencies input from inferred task', async () => {
+      const project = createTestProject(tree);
+      createTestProject(tree, { appRoot: 'second', appName: 'second' });
+      const nxJson = readNxJson(tree);
+      nxJson.targetDefaults ??= {};
+      nxJson.targetDefaults['@nx/cypress:cypress'] = {
+        inputs: [
+          'default',
+          '^default',
+          '{workspaceRoot}/some-file.ts',
+          { externalDependencies: ['some-external-dep'] },
+        ],
+      };
+      updateNxJson(tree, nxJson);
+
+      await convertToInferred(tree, {
+        project: project.name,
+        skipFormat: true,
+      });
+
+      // project.json modifications
+      const updatedProject = readProjectConfiguration(tree, project.name);
+      expect(updatedProject.targets.e2e.inputs).toStrictEqual([
+        'default',
+        '^default',
+        '{workspaceRoot}/some-file.ts',
+        { externalDependencies: ['some-external-dep', 'cypress'] },
+      ]);
+    });
+
+    it('should not duplicate already existing external dependencies input', async () => {
+      const project = createTestProject(tree);
+      createTestProject(tree, { appRoot: 'second', appName: 'second' });
+      const nxJson = readNxJson(tree);
+      nxJson.targetDefaults ??= {};
+      nxJson.targetDefaults['@nx/cypress:cypress'] = {
+        inputs: [
+          'default',
+          '^default',
+          '{workspaceRoot}/some-file.ts',
+          { externalDependencies: ['cypress', 'some-external-dep'] },
+        ],
+      };
+      updateNxJson(tree, nxJson);
+
+      await convertToInferred(tree, {
+        project: project.name,
+        skipFormat: true,
+      });
+
+      // project.json modifications
+      const updatedProject = readProjectConfiguration(tree, project.name);
+      expect(updatedProject.targets.e2e.inputs).toStrictEqual([
+        'default',
+        '^default',
+        '{workspaceRoot}/some-file.ts',
+        { externalDependencies: ['cypress', 'some-external-dep'] },
+      ]);
+    });
   });
 
   describe('--all', () => {

@@ -59,7 +59,7 @@ function postTargetTransformer(
   projectDetails: { projectName: string; root: string }
 ): TargetConfiguration {
   if (target.inputs) {
-    target.inputs = target.inputs.filter(
+    const inputs = target.inputs.filter(
       (input) =>
         typeof input === 'string' &&
         ![
@@ -69,7 +69,7 @@ function postTargetTransformer(
           '{workspaceRoot}/eslint.config.js',
         ].includes(input)
     );
-    if (target.inputs.length === 0) {
+    if (inputs.length === 0) {
       delete target.inputs;
     }
   }
