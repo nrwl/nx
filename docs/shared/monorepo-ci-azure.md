@@ -56,7 +56,7 @@ jobs:
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - script: yarn nx-cloud record -- echo Hello World
-      - script: yarn nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) lint test build
+      - script: yarn nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) --targets lint test build
       - script: yarn nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) --parallel 1 e2e-ci
 ```
 
