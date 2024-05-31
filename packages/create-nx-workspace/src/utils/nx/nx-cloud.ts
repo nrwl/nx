@@ -26,13 +26,6 @@ export async function setupNxCloud(
       directory
     );
 
-    if (process.env.NX_NEW_CLOUD_ONBOARDING === 'true') {
-      output.log({
-        title: 'Nx Cloud setup',
-        bodyLines: [res.stdout],
-      });
-    }
-
     if (nxCloud !== 'yes') {
       nxCloudSpinner.succeed(
         'CI workflow with Nx Cloud has been generated successfully'

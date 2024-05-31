@@ -20,8 +20,6 @@ export async function shortenedCloudUrl(
     (githubSlug || github) &&
     (apiUrl.includes('cloud.nx.app') ||
       apiUrl.includes('eu.nx.app') ||
-      apiUrl.includes('snapshot.nx.app') ||
-      apiUrl.includes('staging.nx.app') ||
       installationSupportsGitHub);
 
   const source = getSource(installationSource);
