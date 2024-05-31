@@ -61,6 +61,11 @@ describe('@nx/playwright/plugin', () => {
               "inputs": [
                 "default",
                 "^production",
+                {
+                  "externalDependencies": [
+                    "@playwright/test",
+                  ],
+                },
               ],
               "metadata": {
                 "description": "Runs Playwright Tests",
@@ -82,6 +87,11 @@ describe('@nx/playwright/plugin', () => {
               "inputs": [
                 "default",
                 "^production",
+                {
+                  "externalDependencies": [
+                    "@playwright/test",
+                  ],
+                },
               ],
               "metadata": {
                 "description": "Runs Playwright Tests in CI",
@@ -133,6 +143,11 @@ describe('@nx/playwright/plugin', () => {
               "inputs": [
                 "default",
                 "^production",
+                {
+                  "externalDependencies": [
+                    "@playwright/test",
+                  ],
+                },
               ],
               "metadata": {
                 "description": "Runs Playwright Tests",
@@ -157,6 +172,11 @@ describe('@nx/playwright/plugin', () => {
               "inputs": [
                 "default",
                 "^production",
+                {
+                  "externalDependencies": [
+                    "@playwright/test",
+                  ],
+                },
               ],
               "metadata": {
                 "description": "Runs Playwright Tests in CI",
@@ -230,6 +250,11 @@ describe('@nx/playwright/plugin', () => {
         "inputs": [
           "default",
           "^production",
+          {
+            "externalDependencies": [
+              "@playwright/test",
+            ],
+          },
         ],
         "metadata": {
           "description": "Runs Playwright Tests in CI",
@@ -249,6 +274,11 @@ describe('@nx/playwright/plugin', () => {
         "inputs": [
           "default",
           "^production",
+          {
+            "externalDependencies": [
+              "@playwright/test",
+            ],
+          },
         ],
         "metadata": {
           "description": "Runs Playwright Tests in tests/run-me.spec.ts in CI",
@@ -271,6 +301,11 @@ describe('@nx/playwright/plugin', () => {
         "inputs": [
           "default",
           "^production",
+          {
+            "externalDependencies": [
+              "@playwright/test",
+            ],
+          },
         ],
         "metadata": {
           "description": "Runs Playwright Tests in tests/run-me-2.spec.ts in CI",

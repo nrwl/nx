@@ -111,6 +111,7 @@ async function buildRollupTarget(
       ...('production' in namedInputs
         ? ['production', '^production']
         : ['default', '^default']),
+      { externalDependencies: ['rollup'] },
     ],
     outputs,
   };
