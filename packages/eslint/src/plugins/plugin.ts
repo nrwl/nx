@@ -51,7 +51,7 @@ export const createNodes: CreateNodes<EslintPluginOptions> = [
       }
     }
 
-    const projectFiles = globWithWorkspaceContext(
+    const projectFiles = await globWithWorkspaceContext(
       context.workspaceRoot,
       [
         'project.json',
@@ -77,7 +77,7 @@ export const createNodes: CreateNodes<EslintPluginOptions> = [
         const nestedProjectRootPatterns = excludePatterns.slice(index + 1);
 
         // Ignore project roots where the project does not contain any lintable files
-        const lintableFiles = globWithWorkspaceContext(
+        const lintableFiles = await globWithWorkspaceContext(
           context.workspaceRoot,
           [join(childProjectRoot, `**/*.{${options.extensions.join(',')}}`)],
           // exclude nested eslint roots and nested project roots

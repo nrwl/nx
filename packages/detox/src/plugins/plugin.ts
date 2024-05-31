@@ -42,7 +42,7 @@ export const createDependencies: CreateDependencies = () => {
 
 export const createNodes: CreateNodes<DetoxPluginOptions> = [
   '**/{detox.config,.detoxrc}.{json,js}',
-  (configFilePath, options, context) => {
+  async (configFilePath, options, context) => {
     options = normalizeOptions(options);
     const projectRoot = dirname(configFilePath);
 
@@ -52,9 +52,12 @@ export const createNodes: CreateNodes<DetoxPluginOptions> = [
       return {};
     }
 
-    const hash = calculateHashForCreateNodes(projectRoot, options, context, [
-      getLockFileName(detectPackageManager(context.workspaceRoot)),
-    ]);
+    const hash = await calculateHashForCreateNodes(
+      projectRoot,
+      options,
+      context,
+      [getLockFileName(detectPackageManager(context.workspaceRoot))]
+    );
 
     targetsCache[hash] ??= buildDetoxTargets(projectRoot, options, context);
 

@@ -290,7 +290,7 @@ async function addBundler(options: NormalizedOptions) {
       options.isStandalone,
       options.appIsJs
     );
-    renameJsToJsx(options.reactAppName, options.isStandalone);
+    await renameJsToJsx(options.reactAppName, options.isStandalone);
   } else {
     output.log({ title: '🧑‍🔧  Setting up craco + Webpack' });
     const { addCracoCommandsToPackageScripts } = await import(

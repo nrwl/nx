@@ -127,7 +127,7 @@ async function createNodesInternal(
 
   options = normalizeOptions(options);
 
-  const hash = calculateHashForCreateNodes(projectRoot, options, context);
+  const hash = await calculateHashForCreateNodes(projectRoot, options, context);
   targetsCache[hash] ??= await buildJestTargets(
     configFilePath,
     projectRoot,

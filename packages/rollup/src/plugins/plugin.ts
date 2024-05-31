@@ -63,9 +63,12 @@ export const createNodes: CreateNodes<RollupPluginOptions> = [
 
     options = normalizeOptions(options);
 
-    const hash = calculateHashForCreateNodes(projectRoot, options, context, [
-      getLockFileName(detectPackageManager(context.workspaceRoot)),
-    ]);
+    const hash = await calculateHashForCreateNodes(
+      projectRoot,
+      options,
+      context,
+      [getLockFileName(detectPackageManager(context.workspaceRoot))]
+    );
 
     targetsCache[hash] ??= await buildRollupTarget(
       configFilePath,

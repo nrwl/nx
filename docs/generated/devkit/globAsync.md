@@ -1,6 +1,6 @@
-# Function: glob
+# Function: globAsync
 
-▸ **glob**(`tree`, `patterns`): `string`[]
+▸ **globAsync**(`tree`, `patterns`): `Promise`\<`string`[]\>
 
 Performs a tree-aware glob search on the files in a workspace. Able to find newly
 created files and hides deleted files before the updates are committed to disk.
@@ -15,10 +15,6 @@ Paths should be unix-style with forward slashes.
 
 #### Returns
 
-`string`[]
+`Promise`\<`string`[]\>
 
 Normalized paths in the workspace that match the provided glob patterns.
-
-**`Deprecated`**
-
-Use [globAsync](../../devkit/documents/globAsync) instead.

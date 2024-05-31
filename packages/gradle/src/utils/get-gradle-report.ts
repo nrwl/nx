@@ -36,8 +36,10 @@ export function getCurrentGradleReport() {
   return gradleReportCache;
 }
 
-export function populateGradleReport(workspaceRoot: string): void {
-  const gradleConfigHash = hashWithWorkspaceContext(workspaceRoot, [
+export async function populateGradleReport(
+  workspaceRoot: string
+): Promise<void> {
+  const gradleConfigHash = await hashWithWorkspaceContext(workspaceRoot, [
     gradleConfigGlob,
   ]);
   if (gradleReportCache && gradleConfigHash === gradleCurrentConfigHash) {
