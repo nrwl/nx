@@ -424,6 +424,7 @@ describe('Playwright - Convert Executors To Plugin', () => {
         'default',
         '^default',
         '{workspaceRoot}/some-file.ts',
+        { externalDependencies: ['@playwright/test'] },
       ]);
     });
   });
