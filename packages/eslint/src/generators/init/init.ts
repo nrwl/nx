@@ -8,7 +8,7 @@ import {
   Tree,
   updateNxJson,
 } from '@nx/devkit';
-import { addPlugin } from '@nx/devkit/src/utils/add-plugin';
+import { addPluginV1 } from '@nx/devkit/src/utils/add-plugin';
 import { eslintVersion, nxVersion } from '../../utils/versions';
 import { findEslintFile } from '../utils/eslint-file';
 import { createNodes } from '../../plugins/plugin';
@@ -73,7 +73,7 @@ export async function initEsLint(
   ];
 
   if (rootEslintFile && options.addPlugin && !hasPlugin) {
-    await addPlugin(
+    await addPluginV1(
       tree,
       graph,
       '@nx/eslint/plugin',
@@ -94,7 +94,7 @@ export async function initEsLint(
   updateProductionFileset(tree);
 
   if (options.addPlugin) {
-    await addPlugin(
+    await addPluginV1(
       tree,
       graph,
       '@nx/eslint/plugin',

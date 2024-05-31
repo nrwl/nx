@@ -11,7 +11,7 @@ import {
   updateNxJson,
 } from '@nx/devkit';
 import {
-  addPlugin as _addPlugin,
+  addPluginV1 as _addPlugin,
   generateCombinations,
 } from '@nx/devkit/src/utils/add-plugin';
 import { createNodes } from '../../plugins/plugin';

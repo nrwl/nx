@@ -9,7 +9,7 @@ import {
   type GeneratorCallback,
   type Tree,
 } from '@nx/devkit';
-import { addPlugin } from '@nx/devkit/src/utils/add-plugin';
+import { addPluginV1 } from '@nx/devkit/src/utils/add-plugin';
 import { createNodes } from '../../plugins/plugin';
 import {
   getPresetExt,
@@ -104,7 +104,7 @@ export async function jestInitGeneratorInternal(
   if (!tree.exists(`jest.preset.${presetExt}`)) {
     updateProductionFileSet(tree);
     if (options.addPlugin) {
-      await addPlugin(
+      await addPluginV1(
         tree,
         await createProjectGraphAsync(),
         '@nx/jest/plugin',
