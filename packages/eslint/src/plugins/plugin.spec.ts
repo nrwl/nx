@@ -120,6 +120,47 @@ describe('@nx/eslint/plugin', () => {
       `);
     });
 
+    it('should create a node for just a package.json and root level eslint config if accompanied by a lib directory', async () => {
+      createFiles({
+        '.eslintrc.json': `{}`,
+        'package.json': `{}`,
+        'lib/index.ts': `console.log('hello world')`,
+      });
+      // NOTE: The command is specifically targeting the src directory in the case of a standalone Nx workspace
+      expect(await invokeCreateNodesOnMatchingFiles(context, 'lint'))
+        .toMatchInlineSnapshot(`
+        {
+          "projects": {
+            ".": {
+              "targets": {
+                "lint": {
+                  "cache": true,
+                  "command": "eslint ./lib",
+                  "inputs": [
+                    "default",
+                    "^default",
+                    "{projectRoot}/eslintrc.json",
+                    "{workspaceRoot}/tools/eslint-rules/**/*",
+                    {
+                      "externalDependencies": [
+                        "eslint",
+                      ],
+                    },
+                  ],
+                  "options": {
+                    "cwd": ".",
+                  },
+                  "outputs": [
+                    "{options.outputFile}",
+                  ],
+                },
+              },
+            },
+          },
+        }
+      `);
+    });
+
     it('should not create a node for just a package.json and root level eslint config if accompanied by a src directory when all files are ignored (.eslintignore)', async () => {
       createFiles({
         '.eslintrc.json': `{}`,
