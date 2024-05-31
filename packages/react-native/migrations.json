@@ -381,6 +381,43 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "19.2.0": {
+      "version": "19.2.0-beta.2",
+      "packages": {
+        "react-native": {
+          "version": "0.74.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@react-native-community/cli-platform-android": {
+          "version": "~13.6.6",
+          "alwaysAddToPackageJson": false
+        },
+        "@react-native/babel-preset": {
+          "version": "^0.74.83",
+          "alwaysAddToPackageJson": false
+        },
+        "@react-native/metro-config": {
+          "version": "^0.74.83",
+          "alwaysAddToPackageJson": false
+        },
+        "react-native-web": {
+          "version": "^0.19.11",
+          "alwaysAddToPackageJson": false
+        },
+        "@testing-library/react-native": {
+          "version": "~12.5.0",
+          "alwaysAddToPackageJson": false
+        },
+        "react-native-svg": {
+          "version": "15.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@babel/runtime": {
+          "version": "7.24.5",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }
