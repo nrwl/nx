@@ -130,10 +130,12 @@ async function buildPlaywrightTargets(
   targets[options.targetName] = {
     ...baseTargetConfig,
     cache: true,
-    inputs:
-      'production' in namedInputs
+    inputs: [
+      ...('production' in namedInputs
         ? ['default', '^production']
-        : ['default', '^default'],
+        : ['default', '^default']),
+      { externalDependencies: ['@playwright/test'] },
+    ],
     outputs: getOutputs(projectRoot, playwrightConfig),
   };
 
@@ -141,10 +143,12 @@ async function buildPlaywrightTargets(
     const ciBaseTargetConfig: TargetConfiguration = {
       ...baseTargetConfig,
       cache: true,
-      inputs:
-        'production' in namedInputs
+      inputs: [
+        ...('production' in namedInputs
           ? ['default', '^production']
-          : ['default', '^default'],
+          : ['default', '^default']),
+        { externalDependencies: ['@playwright/test'] },
+      ],
       outputs: getOutputs(projectRoot, playwrightConfig),
     };
 
