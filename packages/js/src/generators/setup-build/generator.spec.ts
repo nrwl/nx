@@ -138,19 +138,7 @@ describe('setup-build generator', () => {
       bundler: 'rollup',
     });
 
-    const config = readProjectConfiguration(tree, 'mypkg');
-    expect(config).toMatchObject({
-      targets: {
-        build: {
-          executor: '@nx/rollup:rollup',
-          options: {
-            outputPath: 'dist/packages/mypkg',
-            main: 'packages/mypkg/src/main.ts',
-            tsConfig: 'packages/mypkg/tsconfig.lib.json',
-          },
-        },
-      },
-    });
+    expect(tree.exists('packages/mypkg/rollup.config.js')).toBe(true);
   });
 
   it('should support --bundler=esbuild', async () => {

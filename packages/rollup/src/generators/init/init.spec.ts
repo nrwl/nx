@@ -2,7 +2,7 @@ import 'nx/src/internal-testing-utils/mock-project-graph';
 
 import { Tree, readJson, ProjectGraph } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { nxVersion } from '../../utils/versions';
+import { nxVersion, rollupVersion } from '../../utils/versions';
 
 import { rollupInitGenerator } from './init';
 
@@ -32,7 +32,7 @@ describe('rollupInitGenerator', () => {
     expect(packageJson).toEqual({
       name: expect.any(String),
       dependencies: {},
-      devDependencies: { '@nx/rollup': nxVersion },
+      devDependencies: { '@nx/rollup': nxVersion, rollup: rollupVersion },
     });
   });
 });
