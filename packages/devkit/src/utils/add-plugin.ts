@@ -5,6 +5,7 @@ import * as yargs from 'yargs-parser';
 
 import {
   CreateNodes,
+  CreateNodesV2,
   ProjectConfiguration,
   ProjectGraph,
   readJson,
@@ -27,12 +28,77 @@ export async function addPlugin<PluginOptions>(
   tree: Tree,
   graph: ProjectGraph,
   pluginName: string,
+  createNodesTuple: CreateNodesV2<PluginOptions>,
+  options: Partial<
+    Record<keyof PluginOptions, PluginOptions[keyof PluginOptions][]>
+  >,
+  shouldUpdatePackageJsonScripts: boolean
+): Promise<void> {
+  return _addPluginInternal(
+    tree,
+    graph,
+    pluginName,
+    (pluginOptions) =>
+      new LoadedNxPlugin(
+        {
+          name: pluginName,
+          createNodesV2: createNodesTuple,
+        },
+        {
+          plugin: pluginName,
+          options: pluginOptions,
+        }
+      ),
+    options,
+    shouldUpdatePackageJsonScripts
+  );
+}
+
+/**
+ * @deprecated Use `addPlugin` instead
+ * Iterates through various forms of plugin options to find the one which does not conflict with the current graph
+
+ */
+export async function addPluginV1<PluginOptions>(
+  tree: Tree,
+  graph: ProjectGraph,
+  pluginName: string,
   createNodesTuple: CreateNodes<PluginOptions>,
   options: Partial<
     Record<keyof PluginOptions, PluginOptions[keyof PluginOptions][]>
   >,
   shouldUpdatePackageJsonScripts: boolean
 ): Promise<void> {
+  return _addPluginInternal(
+    tree,
+    graph,
+    pluginName,
+    (pluginOptions) =>
+      new LoadedNxPlugin(
+        {
+          name: pluginName,
+          createNodes: createNodesTuple,
+        },
+        {
+          plugin: pluginName,
+          options: pluginOptions,
+        }
+      ),
+    options,
+    shouldUpdatePackageJsonScripts
+  );
+}
+
+async function _addPluginInternal<PluginOptions>(
+  tree: Tree,
+  graph: ProjectGraph,
+  pluginName: string,
+  pluginFactory: (pluginOptions: PluginOptions) => LoadedNxPlugin,
+  options: Partial<
+    Record<keyof PluginOptions, PluginOptions[keyof PluginOptions][]>
+  >,
+  shouldUpdatePackageJsonScripts: boolean
+) {
   const graphNodes = Object.values(graph.nodes);
   const nxJson = readNxJson(tree);
 
@@ -56,18 +122,7 @@ export async function addPlugin<PluginOptions>(
     global.NX_GRAPH_CREATION = true;
     try {
       projConfigs = await retrieveProjectConfigurations(
-        [
-          new LoadedNxPlugin(
-            {
-              name: pluginName,
-              createNodes: createNodesTuple,
-            },
-            {
-              plugin: pluginName,
-              options: pluginOptions,
-            }
-          ),
-        ],
+        [pluginFactory(pluginOptions)],
         tree.root,
         nxJson
       );

@@ -151,6 +151,7 @@ function buildTarget(
       ...('production' in namedInputs
         ? ['production', '^production']
         : ['default', '^default']),
+      { externalDependencies: ['@remix-run/dev'] },
     ],
     outputs: [serverBuildOutputPath, assetsBuildOutputPath],
     command: 'remix build',
@@ -198,6 +199,7 @@ function typecheckTarget(
       ...('production' in namedInputs
         ? ['production', '^production']
         : ['default', '^default']),
+      { externalDependencies: ['typescript'] },
     ],
     options: {
       cwd: projectRoot,

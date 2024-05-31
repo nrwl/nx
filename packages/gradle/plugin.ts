@@ -1,2 +1,2 @@
 export { createDependencies } from './src/plugin/dependencies';
-export { createNodes } from './src/plugin/nodes';
+export { createNodes, createNodesV2 } from './src/plugin/nodes';

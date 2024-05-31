@@ -1,6 +1,7 @@
 import type { RunCommandsOptions } from 'nx/src/executors/run-commands/run-commands.impl';
 
 import { minimatch } from 'minimatch';
+import { deepStrictEqual } from 'node:assert';
 
 import { forEachExecutorOptions } from '../executor-options-utils';
 import { deleteMatchingProperties } from './plugin-migration-utils';
@@ -25,6 +26,7 @@ import {
   ProjectConfigurationsError,
 } from 'nx/src/devkit-internals';
 import type { ConfigurationResult } from 'nx/src/project-graph/utils/project-configuration-utils';
+import type { InputDefinition } from 'nx/src/config/workspace-json-project-json';
 
 type PluginOptionsBuilder<T> = (targetName: string) => T;
 type PostTargetTransformer = (
@@ -131,6 +133,11 @@ class ExecutorToPluginMigrator<T> {
     delete projectTarget.executor;
 
     deleteMatchingProperties(projectTarget, createdTarget);
+
+    if (projectTarget.inputs && createdTarget.inputs) {
+      this.#mergeInputs(projectTarget, createdTarget);
+    }
+
     projectTarget = this.#postTargetTransformer(
       projectTarget,
       this.tree,
@@ -160,6 +167,55 @@ class ExecutorToPluginMigrator<T> {
     updateProjectConfiguration(this.tree, projectName, projectConfig);
 
     return `${projectFromGraph.data.root}/**/*`;
+  }
+
+  #mergeInputs(
+    target: TargetConfiguration,
+    inferredTarget: TargetConfiguration
+  ) {
+    const isInputInferred = (input: string | InputDefinition) => {
+      return inferredTarget.inputs.some((inferredInput) => {
+        try {
+          deepStrictEqual(input, inferredInput);
+          return true;
+        } catch {
+          return false;
+        }
+      });
+    };
+
+    if (target.inputs.every(isInputInferred)) {
+      delete target.inputs;
+      return;
+    }
+
+    const inferredTargetExternalDependencyInput = inferredTarget.inputs.find(
+      (i): i is { externalDependencies: string[] } =>
+        typeof i !== 'string' && 'externalDependencies' in i
+    );
+    if (!inferredTargetExternalDependencyInput) {
+      // plugins should normally have an externalDependencies input, but if it
+      // doesn't, there's nothing to merge
+      return;
+    }
+
+    const targetExternalDependencyInput = target.inputs.find(
+      (i): i is { externalDependencies: string[] } =>
+        typeof i !== 'string' && 'externalDependencies' in i
+    );
+    if (!targetExternalDependencyInput) {
+      // the target doesn't have an externalDependencies input, so we can just
+      // add the inferred one
+      target.inputs.push(inferredTargetExternalDependencyInput);
+    } else {
+      // the target has an externalDependencies input, so we need to merge them
+      targetExternalDependencyInput.externalDependencies = Array.from(
+        new Set([
+          ...targetExternalDependencyInput.externalDependencies,
+          ...inferredTargetExternalDependencyInput.externalDependencies,
+        ])
+      );
+    }
   }
 
   async #pluginRequiresIncludes(

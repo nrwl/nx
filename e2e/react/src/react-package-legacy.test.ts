@@ -1,12 +1,16 @@
 import {
+  checkFilesDoNotExist,
   checkFilesExist,
   cleanupProject,
+  getSize,
   killPorts,
   newProject,
   readFile,
+  readJson,
   rmDist,
   runCLI,
   runCLIAsync,
+  tmpProjPath,
   uniq,
   updateFile,
   updateJson,
@@ -33,6 +37,7 @@ describe('Build React libraries and apps', () => {
   let proj: string;
 
   beforeEach(async () => {
+    process.env.NX_ADD_PLUGINS = 'false';
     app = uniq('app');
     parentLib = uniq('parentlib');
     childLib = uniq('childlib');
@@ -95,28 +100,17 @@ describe('Build React libraries and apps', () => {
     );
 
     // Add assets to child lib
-    updateFile(
-      join('libs', childLib, 'rollup.config.js'),
-      `const { withNx } = require('@nx/rollup/with-nx');
-module.exports = withNx(
-  {
-    main: './src/index.ts',
-    outputPath: '../../dist/libs/${childLib}',
-    tsConfig: './tsconfig.lib.json',
-    compiler: 'babel',
-    external: ['react', 'react-dom', 'react/jsx-runtime'],
-    format: ['esm'],
-    assets: ['./src/assets'],
-  }
-);
-`
-    );
+    updateJson(join('libs', childLib, 'project.json'), (json) => {
+      json.targets.build.options.assets = [`libs/${childLib}/src/assets`];
+      return json;
+    });
     updateFile(`libs/${childLib}/src/assets/hello.txt`, 'Hello World!');
   });
 
   afterEach(() => {
     killPorts();
     cleanupProject();
+    delete process.env.NX_ADD_PLUGINS;
   });
 
   describe('Buildable libraries', () => {
@@ -153,56 +147,39 @@ module.exports = withNx(
       );
     });
 
-    it('should preserve the tsconfig target set by user', () => {
-      // Setup
-      const myLib = uniq('my-lib');
-      runCLI(
-        `generate @nx/react:library ${myLib} --bundler=rollup --publishable --importPath="@mproj/${myLib}" --no-interactive --unitTestRunner=jest`
+    it('should support --format option', () => {
+      updateFile(
+        `libs/${childLib}/src/index.ts`,
+        (s) => `${s}
+export async function f() { return 'a'; }
+export async function g() { return 'b'; }
+export async function h() { return 'c'; }
+`
       );
 
-      /**
-       *
-       * Here I update my library file
-       * I am just adding this in the end:
-       *
-       * export const TestFunction = async () => {
-       *     return await Promise.resolve('Done!')
-       * }
-       *
-       * So that I can see the change in the Promise.
-       *
-       */
+      runCLI(`build ${childLib} --format cjs,esm`);
 
-      updateFile(`libs/${myLib}/src/lib/${myLib}.tsx`, (content) => {
-        return `
-        ${content} \n
-          export const TestFunction = async () => {
-               return await Promise.resolve('Done!')
-          }
-        `;
-      });
+      checkFilesExist(`dist/libs/${childLib}/index.cjs.js`);
+      checkFilesExist(`dist/libs/${childLib}/index.esm.js`);
 
-      updateFile(`libs/${myLib}/tsconfig.json`, (content) => {
-        const json = JSON.parse(content);
+      const cjsPackageSize = getSize(
+        tmpProjPath(`dist/libs/${childLib}/index.cjs.js`)
+      );
+      const esmPackageSize = getSize(
+        tmpProjPath(`dist/libs/${childLib}/index.esm.js`)
+      );
 
-        /**
-         * Set target as es5!!
-         */
-
-        json.compilerOptions.target = 'es5';
-        return JSON.stringify(json, null, 2);
-      });
-      // What we're testing
-      runCLI(`build ${myLib}`);
-      // Assertion
-      const content = readFile(`dist/libs/${myLib}/index.esm.js`);
-
-      /**
-       * Then check if the result contains this "promise" polyfill?
-       */
-
-      expect(content).toContain('function __generator(thisArg, body) {');
+      // This is a loose requirement that ESM should be smaller than CJS output.
+      expect(esmPackageSize).toBeLessThanOrEqual(cjsPackageSize);
     });
+
+    it('should build an app composed out of buildable libs', () => {
+      const buildFromSource = runCLI(
+        `build ${app} --buildLibsFromSource=false`
+      );
+      expect(buildFromSource).toContain('Successfully ran target build');
+      checkFilesDoNotExist(`apps/${app}/tsconfig/tsconfig.nx-tmp`);
+    }, 1000000);
 
     it('should not create a dist folder if there is an error', async () => {
       const libName = uniq('lib');
@@ -215,7 +192,7 @@ module.exports = withNx(
       updateFile(mainPath, `${readFile(mainPath)}\n console.log(a);`); // should error - "a" will be undefined
 
       await expect(runCLIAsync(`build ${libName}`)).rejects.toThrow(
-        /Command failed/
+        /Bundle failed/
       );
       expect(() => {
         checkFilesExist(`dist/libs/${libName}/package.json`);

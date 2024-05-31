@@ -2,7 +2,7 @@ import { createTreeWithEmptyWorkspace } from 'nx/src/generators/testing-utils/cr
 import type { Tree } from 'nx/src/generators/tree';
 import { readJson, writeJson } from 'nx/src/generators/utils/json';
 import type { PackageJson } from 'nx/src/utils/package-json';
-import { CreateNodes } from 'nx/src/project-graph/plugins';
+import { CreateNodesV2 } from 'nx/src/project-graph/plugins';
 import { ProjectGraph } from 'nx/src/devkit-exports';
 import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
 
@@ -10,7 +10,7 @@ import { addPlugin, generateCombinations } from './add-plugin';
 
 describe('addPlugin', () => {
   let tree: Tree;
-  let createNodes: CreateNodes<{ targetName: string }>;
+  let createNodes: CreateNodesV2<{ targetName: string }>;
   let graph: ProjectGraph;
   let fs: TempFs;
 
@@ -55,22 +55,34 @@ describe('addPlugin', () => {
     };
     createNodes = [
       '**/next.config.{js,cjs,mjs}',
-      (_, { targetName }) => ({
-        projects: {
-          app1: {
-            name: 'app1',
-            targets: {
-              [targetName]: { command: 'next build' },
+      (_, { targetName }) => [
+        [
+          'app1/next.config.js',
+          {
+            projects: {
+              app1: {
+                name: 'app1',
+                targets: {
+                  [targetName]: { command: 'next build' },
+                },
+              },
             },
           },
-          app2: {
-            name: 'app2',
-            targets: {
-              [targetName]: { command: 'next build' },
+        ],
+        [
+          'app2/next.config.js',
+          {
+            projects: {
+              app2: {
+                name: 'app2',
+                targets: {
+                  [targetName]: { command: 'next build' },
+                },
+              },
             },
           },
-        },
-      }),
+        ],
+      ],
     ];
 
     await fs.createFiles({
@@ -217,19 +229,24 @@ describe('addPlugin', () => {
 
         createNodes = [
           '**/cypress.config.{js,ts,mjs,mts,cjs,cts}',
-          () => ({
-            projects: {
-              app1: {
-                name: 'app1',
-                targets: {
-                  e2e: {
-                    command:
-                      'cypress run --config-file cypress.config.ts --e2e',
+          () => [
+            [
+              'app1/cypress.config.ts',
+              {
+                projects: {
+                  app1: {
+                    name: 'app1',
+                    targets: {
+                      e2e: {
+                        command:
+                          'cypress run --config-file cypress.config.ts --e2e',
+                      },
+                    },
                   },
                 },
               },
-            },
-          }),
+            ],
+          ],
         ];
 
         await addPlugin(
@@ -284,18 +301,23 @@ describe('addPlugin', () => {
 
       createNodes = [
         '**/next.config.{js,cjs,mjs}',
-        () => ({
-          projects: {
-            app1: {
-              name: 'app1',
-              targets: {
-                build: { command: 'next build' },
-                dev: { command: 'next dev' },
-                start: { command: 'next start' },
+        () => [
+          [
+            'app1/next.config.js',
+            {
+              projects: {
+                app1: {
+                  name: 'app1',
+                  targets: {
+                    build: { command: 'next build' },
+                    dev: { command: 'next dev' },
+                    start: { command: 'next start' },
+                  },
+                },
               },
             },
-          },
-        }),
+          ],
+        ],
       ];
 
       await addPlugin(
@@ -328,16 +350,21 @@ describe('addPlugin', () => {
 
       createNodes = [
         '**/tsconfig.json',
-        () => ({
-          projects: {
-            app1: {
-              name: 'app1',
-              targets: {
-                build: { command: 'tsc' },
+        () => [
+          [
+            'app1/tsconfig.json',
+            {
+              projects: {
+                app1: {
+                  name: 'app1',
+                  targets: {
+                    build: { command: 'tsc' },
+                  },
+                },
               },
             },
-          },
-        }),
+          ],
+        ],
       ];
 
       await addPlugin(
@@ -370,16 +397,21 @@ describe('addPlugin', () => {
 
       createNodes = [
         '**/tsconfig.json',
-        () => ({
-          projects: {
-            app1: {
-              name: 'app1',
-              targets: {
-                build: { command: 'tsc' },
+        () => [
+          [
+            'app1/tsconfig.json',
+            {
+              projects: {
+                app1: {
+                  name: 'app1',
+                  targets: {
+                    build: { command: 'tsc' },
+                  },
+                },
               },
             },
-          },
-        }),
+          ],
+        ],
       ];
 
       await addPlugin(

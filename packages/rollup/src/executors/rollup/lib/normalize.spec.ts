@@ -4,7 +4,6 @@ import { RollupExecutorOptions } from '../schema';
 describe('normalizeRollupExecutorOptions', () => {
   let testOptions: RollupExecutorOptions;
   let root: string;
-  let sourceRoot: string;
 
   beforeEach(() => {
     testOptions = {
@@ -16,15 +15,16 @@ describe('normalizeRollupExecutorOptions', () => {
       format: ['esm'],
     };
     root = '/root';
-    sourceRoot = 'apps/nodeapp/src';
   });
 
   it('should resolve both node modules and relative path for rollupConfig', () => {
-    let result = normalizeRollupExecutorOptions(
-      testOptions,
-      { root } as any,
-      sourceRoot
-    );
+    let result = normalizeRollupExecutorOptions(testOptions, {
+      root,
+      projectGraph: {
+        nodes: { nodeapp: { data: { root: 'apps/nodeapp' } } },
+      },
+      projectName: 'nodeapp',
+    } as any);
     expect(result.rollupConfig).toEqual(['/root/apps/nodeapp/rollup.config']);
 
     result = normalizeRollupExecutorOptions(
@@ -33,8 +33,13 @@ describe('normalizeRollupExecutorOptions', () => {
         // something that exists in node_modules
         rollupConfig: 'react',
       },
-      { root } as any,
-      sourceRoot
+      {
+        root,
+        projectGraph: {
+          nodes: { nodeapp: { data: { root: 'apps/nodeapp' } } },
+        },
+        projectName: 'nodeapp',
+      } as any
     );
     expect(result.rollupConfig).toHaveLength(1);
     expect(result.rollupConfig[0]).toMatch('react');
@@ -45,11 +50,13 @@ describe('normalizeRollupExecutorOptions', () => {
   it('should handle rollupConfig being undefined', () => {
     delete testOptions.rollupConfig;
 
-    const result = normalizeRollupExecutorOptions(
-      testOptions,
-      { root } as any,
-      sourceRoot
-    );
+    const result = normalizeRollupExecutorOptions(testOptions, {
+      root,
+      projectGraph: {
+        nodes: { nodeapp: { data: { root: 'apps/nodeapp' } } },
+      },
+      projectName: 'nodeapp',
+    } as any);
     expect(result.rollupConfig).toEqual([]);
   });
 });

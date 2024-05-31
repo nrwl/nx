@@ -7,7 +7,7 @@ import {
   runTasksInSerial,
   Tree,
 } from '@nx/devkit';
-import { addPlugin } from '@nx/devkit/src/utils/add-plugin';
+import { addPluginV1 } from '@nx/devkit/src/utils/add-plugin';
 import { createNodes } from '../../plugins/plugin';
 import { nxVersion, playwrightVersion } from '../../utils/versions';
 import { InitGeneratorSchema } from './schema';
@@ -45,7 +45,7 @@ export async function initGeneratorInternal(
   }
 
   if (options.addPlugin) {
-    await addPlugin(
+    await addPluginV1(
       tree,
       await createProjectGraphAsync(),
       '@nx/playwright/plugin',

@@ -5,7 +5,6 @@ import {
   readJson,
   readProjectConfiguration,
   Tree,
-  updateProjectConfiguration,
   writeJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
@@ -31,16 +30,7 @@ describe('configurationGenerator', () => {
 
     const project = readProjectConfiguration(tree, 'mypkg');
 
-    expect(project.targets).toMatchObject({
-      build: {
-        executor: '@nx/rollup:rollup',
-        outputs: ['{options.outputPath}'],
-        defaultConfiguration: 'production',
-        options: {
-          main: 'libs/mypkg/src/main.ts',
-        },
-      },
-    });
+    expect(project.targets?.build).toBeUndefined();
 
     expect(readJson(tree, 'libs/mypkg/package.json')).toEqual({
       name: '@proj/mypkg',
@@ -66,82 +56,58 @@ describe('configurationGenerator', () => {
   it('should support --main option', async () => {
     await configurationGenerator(tree, {
       project: 'mypkg',
-      main: 'libs/mypkg/index.ts',
+      main: './src/index.ts',
     });
 
-    const project = readProjectConfiguration(tree, 'mypkg');
+    const rollupConfig = tree.read('libs/mypkg/rollup.config.js', 'utf-8');
 
-    expect(project.targets).toMatchObject({
-      build: {
-        executor: '@nx/rollup:rollup',
-        outputs: ['{options.outputPath}'],
-        defaultConfiguration: 'production',
-        options: {
-          main: 'libs/mypkg/index.ts',
-        },
-      },
-    });
+    expect(rollupConfig)
+      .toEqual(`const { withNx } = require('@nx/rollup/with-nx');
+
+module.exports = withNx(
+  {
+    main: './src/index.ts',
+    outputPath: '../../dist/libs/mypkg',
+    tsConfig: './tsconfig.lib.json',
+    compiler: 'babel',
+    format: ['esm'],
+    assets: [{ input: '.', output: '.', glob: '*.md' }],
+  },
+  {
+    // Provide additional rollup configuration here. See: https://rollupjs.org/configuration-options
+    // e.g.
+    // output: { sourcemap: true },
+  }
+);
+`);
   });
 
   it('should support --tsConfig option', async () => {
     await configurationGenerator(tree, {
       project: 'mypkg',
-      tsConfig: 'libs/mypkg/tsconfig.custom.json',
+      tsConfig: './tsconfig.custom.json',
     });
 
-    const project = readProjectConfiguration(tree, 'mypkg');
+    const rollupConfig = tree.read('libs/mypkg/rollup.config.js', 'utf-8');
 
-    expect(project.targets).toMatchObject({
-      build: {
-        executor: '@nx/rollup:rollup',
-        outputs: ['{options.outputPath}'],
-        defaultConfiguration: 'production',
-        options: {
-          tsConfig: 'libs/mypkg/tsconfig.custom.json',
-        },
-      },
-    });
-  });
+    expect(rollupConfig)
+      .toEqual(`const { withNx } = require('@nx/rollup/with-nx');
 
-  it('should carry over known executor options from existing build target', async () => {
-    updateProjectConfiguration(tree, 'mypkg', {
-      root: 'libs/mypkg',
-      sourceRoot: 'libs/mypkg/src',
-      targets: {
-        build: {
-          executor: '@nx/js:tsc',
-          options: {
-            main: 'libs/mypkg/src/custom.ts',
-            outputPath: 'dist/custom',
-            tsConfig: 'libs/mypkg/src/tsconfig.custom.json',
-            additionalEntryPoints: ['libs/mypkg/src/extra.ts'],
-            generateExportsField: true,
-          },
-        },
-      },
-    });
-
-    await configurationGenerator(tree, {
-      project: 'mypkg',
-      buildTarget: 'build',
-      skipValidation: true,
-    });
-
-    const project = readProjectConfiguration(tree, 'mypkg');
-
-    expect(project.targets).toMatchObject({
-      build: {
-        executor: '@nx/rollup:rollup',
-        outputs: ['{options.outputPath}'],
-        defaultConfiguration: 'production',
-        options: {
-          main: 'libs/mypkg/src/custom.ts',
-          outputPath: 'dist/custom',
-          tsConfig: 'libs/mypkg/src/tsconfig.custom.json',
-          additionalEntryPoints: ['libs/mypkg/src/extra.ts'],
-          generateExportsField: true,
-        },
-      },
-    });
+module.exports = withNx(
+  {
+    main: './src/index.ts',
+    outputPath: '../../dist/libs/mypkg',
+    tsConfig: './tsconfig.custom.json',
+    compiler: 'babel',
+    format: ['esm'],
+    assets: [{ input: '.', output: '.', glob: '*.md' }],
+  },
+  {
+    // Provide additional rollup configuration here. See: https://rollupjs.org/configuration-options
+    // e.g.
+    // output: { sourcemap: true },
+  }
+);
+`);
   });
 });

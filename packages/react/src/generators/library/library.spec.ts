@@ -496,21 +496,89 @@ describe('lib', () => {
   });
 
   describe('--buildable', () => {
-    it('should have a builder defined', async () => {
+    it('should default to rollup bundler', async () => {
       await libraryGenerator(tree, {
         ...defaultSchema,
         buildable: true,
       });
 
-      const projectsConfigurations = getProjects(tree);
-      expect(projectsConfigurations.get('my-lib').targets.build).toBeDefined();
+      expect(tree.exists('my-lib/rollup.config.js')).toBeTruthy();
     });
   });
 
   describe('--publishable', () => {
-    it('should add build targets', async () => {
+    it('should fail if no importPath is provided with publishable', async () => {
+      expect.assertions(1);
+
+      try {
+        await libraryGenerator(tree, {
+          ...defaultSchema,
+          directory: 'myDir',
+          publishable: true,
+        });
+      } catch (e) {
+        expect(e.message).toContain(
+          'For publishable libs you have to provide a proper "--importPath" which needs to be a valid npm package name (e.g. my-awesome-lib or @myorg/my-lib)'
+        );
+      }
+    });
+
+    it('should add package.json and .babelrc', async () => {
       await libraryGenerator(tree, {
         ...defaultSchema,
+        publishable: true,
+        importPath: '@proj/my-lib',
+      });
+
+      const packageJson = readJson(tree, '/my-lib/package.json');
+      expect(packageJson.name).toEqual('@proj/my-lib');
+      expect(tree.exists('/my-lib/.babelrc'));
+    });
+
+    it('should add rollup config file', async () => {
+      await libraryGenerator(tree, {
+        ...defaultSchema,
+        skipFormat: false,
+        publishable: true,
+        importPath: '@proj/my-lib',
+      });
+
+      expect(tree.read('my-lib/rollup.config.js', 'utf-8'))
+        .toEqual(`const { withNx } = require('@nx/rollup/with-nx');
+const url = require('@rollup/plugin-url');
+const svg = require('@svgr/rollup');
+
+module.exports = withNx(
+  {
+    main: './src/index.ts',
+    outputPath: '../dist/my-lib',
+    tsConfig: './tsconfig.lib.json',
+    compiler: 'babel',
+    external: ['react', 'react-dom', 'react/jsx-runtime'],
+    format: ['esm'],
+    assets: [{ input: '.', output: '.', glob: 'README.md' }],
+  },
+  {
+    // Provide additional rollup configuration here. See: https://rollupjs.org/configuration-options
+    plugins: [
+      svg({
+        svgo: false,
+        titleProp: true,
+        ref: true,
+      }),
+      url({
+        limit: 10000, // 10kB
+      }),
+    ],
+  }
+);
+`);
+    });
+
+    it('should add build targets (legacy)', async () => {
+      await libraryGenerator(tree, {
+        ...defaultSchema,
+        addPlugin: false,
         publishable: true,
         importPath: '@proj/my-lib',
       });
@@ -531,25 +599,10 @@ describe('lib', () => {
       });
     });
 
-    it('should fail if no importPath is provided with publishable', async () => {
-      expect.assertions(1);
-
-      try {
-        await libraryGenerator(tree, {
-          ...defaultSchema,
-          directory: 'myDir',
-          publishable: true,
-        });
-      } catch (e) {
-        expect(e.message).toContain(
-          'For publishable libs you have to provide a proper "--importPath" which needs to be a valid npm package name (e.g. my-awesome-lib or @myorg/my-lib)'
-        );
-      }
-    });
-
-    it('should support styled-components', async () => {
+    it('should support styled-components (legacy)', async () => {
       await libraryGenerator(tree, {
         ...defaultSchema,
+        addPlugin: false,
         publishable: true,
         importPath: '@proj/my-lib',
         style: 'styled-components',
@@ -568,9 +621,10 @@ describe('lib', () => {
       ]);
     });
 
-    it('should support @emotion/styled', async () => {
+    it('should support @emotion/styled (legacy)', async () => {
       await libraryGenerator(tree, {
         ...defaultSchema,
+        addPlugin: false,
         publishable: true,
         importPath: '@proj/my-lib',
         style: '@emotion/styled',
@@ -591,9 +645,10 @@ describe('lib', () => {
       );
     });
 
-    it('should support styled-jsx', async () => {
+    it('should support styled-jsx (legacy)', async () => {
       await libraryGenerator(tree, {
         ...defaultSchema,
+        addPlugin: false,
         publishable: true,
         importPath: '@proj/my-lib',
         style: 'styled-jsx',
@@ -610,9 +665,10 @@ describe('lib', () => {
       expect(babelrc.plugins).toEqual(['styled-jsx/babel']);
     });
 
-    it('should support style none', async () => {
+    it('should support style none (legacy)', async () => {
       await libraryGenerator(tree, {
         ...defaultSchema,
+        addPlugin: false,
         publishable: true,
         importPath: '@proj/my-lib',
         style: 'none',
@@ -625,18 +681,6 @@ describe('lib', () => {
           external: ['react', 'react-dom', 'react/jsx-runtime'],
         },
       });
-    });
-
-    it('should add package.json and .babelrc', async () => {
-      await libraryGenerator(tree, {
-        ...defaultSchema,
-        publishable: true,
-        importPath: '@proj/my-lib',
-      });
-
-      const packageJson = readJson(tree, '/my-lib/package.json');
-      expect(packageJson.name).toEqual('@proj/my-lib');
-      expect(tree.exists('/my-lib/.babelrc'));
     });
   });
 

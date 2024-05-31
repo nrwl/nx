@@ -218,18 +218,23 @@ function createGradleTargets(
     const targetName = options?.[`${task.name}TargetName`] ?? task.name;
 
     const outputs = outputDirs.get(task.name);
+
     targets[targetName] = {
       command: `${getGradleExecFile()} ${
         gradleProject ? gradleProject + ':' : ''
       }${task.name}`,
       cache: cacheableTaskType.has(task.type),
       inputs: inputsMap[task.name],
-      outputs: outputs ? [outputs] : undefined,
       dependsOn: dependsOnMap[task.name],
       metadata: {
         technologies: ['gradle'],
       },
     };
+
+    if (outputs) {
+      targets[targetName].outputs = [outputs];
+    }
+
     if (!targetGroups[task.type]) {
       targetGroups[task.type] = [];
     }
