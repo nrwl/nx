@@ -347,8 +347,9 @@ class ExecutorToPluginMigrator<T> {
   }
 
   #getTargetDefaultsForExecutor() {
-    this.#targetDefaultsForExecutor =
-      this.#nxJson.targetDefaults?.[this.#executor];
+    this.#targetDefaultsForExecutor = structuredClone(
+      this.#nxJson.targetDefaults?.[this.#executor]
+    );
   }
 
   #getCreatedTargetForProjectRoot(targetName: string, projectRoot: string) {
