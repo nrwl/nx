@@ -26,6 +26,7 @@ import { resolveESLintClass } from '../utils/resolve-eslint-class';
 import { gte } from 'semver';
 import { projectGraphCacheDirectory } from 'nx/src/utils/cache-directory';
 import { hashObject } from 'nx/src/hasher/file-hasher';
+import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 
 export interface EslintPluginOptions {
   targetName?: string;
@@ -58,24 +59,6 @@ const internalCreateNodes = async (
   context: CreateNodesContext,
   projectsCache: Record<string, CreateNodesResult['projects']>
 ): Promise<CreateNodesResult> => {
-  // This isn't technically correct, but should be good enough for
-  // consistent results. We'll rebuild project config anytime a project.json,
-  // package.json, or eslint config changes. This would only be incorrect if
-  // using flat config and changing imported files or similar.
-  const hash = await hashWithWorkspaceContext(context.workspaceRoot, [
-    ...ESLINT_CONFIG_FILENAMES.map((f) => `**/${f}`),
-    baseEsLintConfigFile,
-    baseEsLintFlatConfigFile,
-    '**/project.json',
-    '**/package.json',
-    'project.json',
-    'package.json',
-  ]);
-
-  if (projectsCache[hash]) {
-    return { projects: projectsCache[hash] };
-  }
-
   options = normalizeOptions(options);
   const configDir = dirname(configFilePath);
 
@@ -113,6 +96,7 @@ const internalCreateNodes = async (
   const eslintVersion = ESLint.version;
   const childProjectRoots = new Set<string>();
 
+  const projects: CreateNodesResult['projects'] = {};
   await Promise.all(
     dedupedProjectRoots.map(async (childProjectRoot, index) => {
       // anything after is either a nested project or a sibling project, can be excluded
@@ -125,6 +109,22 @@ const internalCreateNodes = async (
         // exclude nested eslint roots and nested project roots
         [...nestedEslintRootPatterns, ...nestedProjectRootPatterns]
       );
+
+      const parentConfigs = context.configFiles.filter((eslintConfig) =>
+        isSubDir(childProjectRoot, dirname(eslintConfig))
+      );
+      const hash = await calculateHashForCreateNodes(
+        childProjectRoot,
+        options,
+        context,
+        [...parentConfigs, join(childProjectRoot, '.eslintignore')]
+      );
+
+      if (projectsCache[hash]) {
+        // We can reuse the projects in the cache.
+        Object.assign(projects, projectsCache[hash]);
+        return;
+      }
       const eslint = new ESLint({
         cwd: join(context.workspaceRoot, childProjectRoot),
       });
@@ -134,21 +134,27 @@ const internalCreateNodes = async (
           break;
         }
       }
+
+      const uniqueChildProjectRoots = Array.from(childProjectRoots);
+
+      const projectsForRoot = getProjectsUsingESLintConfig(
+        configFilePath,
+        uniqueChildProjectRoots,
+        eslintVersion,
+        options,
+        context
+      );
+
+      if (Object.keys(projectsForRoot).length > 0) {
+        Object.assign(projects, projectsForRoot);
+        // Store those projects into the cache;
+        projectsCache[hash] = projectsForRoot;
+      }
     })
   );
 
-  const uniqueChildProjectRoots = Array.from(childProjectRoots);
-
-  projectsCache[hash] = getProjectsUsingESLintConfig(
-    configFilePath,
-    uniqueChildProjectRoots,
-    eslintVersion,
-    options,
-    context
-  );
-
   return {
-    projects: projectsCache[hash],
+    projects,
   };
 };
 
