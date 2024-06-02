@@ -1,23 +1,24 @@
 import { SectionHeading } from '@nx/nx-dev/ui-common';
 import { HubspotForm } from './hubspot-form';
 
-export function TalkToOurSalesTeam(): JSX.Element {
+export function TalkToOurEngineeringTeam(): JSX.Element {
   return (
     <section id="contact-sales">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="mx-auto max-w-3xl text-center">
           <SectionHeading as="h1" variant="display" id="how-can-we-help">
-            Talk to our sales team
+            Talk to our engineering team
           </SectionHeading>
         </div>
         <div className="mx-auto mt-16 grid max-w-5xl grid-cols-1 gap-12 md:grid-cols-2 lg:gap-8">
           <section className="mt-4">
             <p className="text-lg leading-relaxed">
-              We’re here to help you find the right plan and pricing for your
-              needs and discuss{' '}
+              Contact our Developer Productivity Engineers for demos, onboarding
+              assistance, and technical support. Share your requirements and
+              challenges with us, and{' '}
               <span className="font-medium">
-                how Nx Cloud Enterprise can drive better business outcomes for
-                your organization
+                we will help you utilize Nx Enterprise to enhance your
+                organization's product development
               </span>
               .
             </p>
@@ -142,7 +143,7 @@ export function TalkToOurSalesTeam(): JSX.Element {
             <HubspotForm
               region="na1"
               portalId="2757427"
-              formId="2e492124-843c-4a6d-87fe-93db27ab4323"
+              formId="c88140bc-0b93-4238-b838-77dd4047bb32"
               noScript={true}
               loading={<div>Loading...</div>}
             />
