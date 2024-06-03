@@ -54,7 +54,13 @@ export function executeModuleFederationDevSSRBuilder(
     );
   }
 
-  validateDevRemotes(options, workspaceProjects);
+  const devServeRemotes = !options.devRemotes
+    ? []
+    : Array.isArray(options.devRemotes)
+    ? options.devRemotes
+    : [options.devRemotes];
+
+  validateDevRemotes({ devRemotes: devServeRemotes }, workspaceProjects);
 
   const remotesToSkip = new Set(options.skipRemotes ?? []);
   const staticRemotes = getStaticRemotes(
@@ -71,12 +77,6 @@ export function executeModuleFederationDevSSRBuilder(
     pathToManifestFile
   );
   const remotes = [...staticRemotes, ...dynamicRemotes];
-
-  const devServeRemotes = !options.devRemotes
-    ? []
-    : Array.isArray(options.devRemotes)
-    ? options.devRemotes
-    : [options.devRemotes];
 
   const remoteProcessPromises = [];
   for (const remote of remotes) {
