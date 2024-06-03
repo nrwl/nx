@@ -59,11 +59,13 @@ function addNoExtraSemiExplicitly(json: Record<string, any>): boolean {
   ) {
     return wasUpdated;
   }
-  if (!json.rules['@typescript-eslint/no-extra-semi']) {
+  if (!json.rules?.['@typescript-eslint/no-extra-semi']) {
+    json.rules ??= {};
     json.rules['@typescript-eslint/no-extra-semi'] = 'error';
     wasUpdated = true;
   }
-  if (!json.rules['no-extra-semi']) {
+  if (!json.rules?.['no-extra-semi']) {
+    json.rules ??= {};
     json.rules['no-extra-semi'] = 'off';
     wasUpdated = true;
   }
