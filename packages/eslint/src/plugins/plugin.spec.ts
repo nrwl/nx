@@ -47,7 +47,7 @@ describe('@nx/eslint/plugin', () => {
       'package.json': `{}`,
       'project.json': `{}`,
     });
-    expect(await invokeCreateNodesV2OnMatchingFiles(context, 'lint'))
+    expect(await invokeCreateNodesOnMatchingFiles(context, 'lint'))
       .toMatchInlineSnapshot(`
       {
         "projects": {},
@@ -61,7 +61,7 @@ describe('@nx/eslint/plugin', () => {
         '.eslintrc.json': `{}`,
         'package.json': `{}`,
       });
-      expect(await invokeCreateNodesV2OnMatchingFiles(context, 'lint'))
+      expect(await invokeCreateNodesOnMatchingFiles(context, 'lint'))
         .toMatchInlineSnapshot(`
         {
           "projects": {},
@@ -78,7 +78,7 @@ describe('@nx/eslint/plugin', () => {
         'project.json': `{}`,
       });
       // NOTE: It should set ESLINT_USE_FLAT_CONFIG to true because of the use of eslint.config.js
-      expect(await invokeCreateNodesV2OnMatchingFiles(context, 'lint'))
+      expect(await invokeCreateNodesOnMatchingFiles(context, 'lint'))
         .toMatchInlineSnapshot(`
         {
           "projects": {},
@@ -94,7 +94,7 @@ describe('@nx/eslint/plugin', () => {
         'src/index.ts': `console.log('hello world')`,
       });
       // NOTE: The command is specifically targeting the src directory in the case of a standalone Nx workspace
-      expect(await invokeCreateNodesV2OnMatchingFiles(context, 'lint'))
+      expect(await invokeCreateNodesOnMatchingFiles(context, 'lint'))
         .toMatchInlineSnapshot(`
         {
           "projects": {
@@ -135,7 +135,7 @@ describe('@nx/eslint/plugin', () => {
         'lib/index.ts': `console.log('hello world')`,
       });
       // NOTE: The command is specifically targeting the src directory in the case of a standalone Nx workspace
-      expect(await invokeCreateNodesV2OnMatchingFiles(context, 'lint'))
+      expect(await invokeCreateNodesOnMatchingFiles(context, 'lint'))
         .toMatchInlineSnapshot(`
         {
           "projects": {
@@ -177,7 +177,7 @@ describe('@nx/eslint/plugin', () => {
         'src/index.ts': `console.log('hello world')`,
       });
       // NOTE: The command is specifically targeting the src directory in the case of a standalone Nx workspace
-      expect(await invokeCreateNodesV2OnMatchingFiles(context, 'lint'))
+      expect(await invokeCreateNodesOnMatchingFiles(context, 'lint'))
         .toMatchInlineSnapshot(`
         {
           "projects": {},
@@ -192,7 +192,7 @@ describe('@nx/eslint/plugin', () => {
         'src/index.ts': `console.log('hello world')`,
       });
       // NOTE: The command is specifically targeting the src directory in the case of a standalone Nx workspace
-      expect(await invokeCreateNodesV2OnMatchingFiles(context, 'lint'))
+      expect(await invokeCreateNodesOnMatchingFiles(context, 'lint'))
         .toMatchInlineSnapshot(`
         {
           "projects": {},
@@ -207,7 +207,7 @@ describe('@nx/eslint/plugin', () => {
         // This file is lintable so create the target
         'apps/my-app/index.ts': `console.log('hello world')`,
       });
-      expect(await invokeCreateNodesV2OnMatchingFiles(context, 'lint'))
+      expect(await invokeCreateNodesOnMatchingFiles(context, 'lint'))
         .toMatchInlineSnapshot(`
         {
           "projects": {
@@ -248,7 +248,7 @@ describe('@nx/eslint/plugin', () => {
         // This file is lintable so create the target
         'apps/my-app/index.ts': `console.log('hello world')`,
       });
-      expect(await invokeCreateNodesV2OnMatchingFiles(context, 'lint'))
+      expect(await invokeCreateNodesOnMatchingFiles(context, 'lint'))
         .toMatchInlineSnapshot(`
         {
           "projects": {
@@ -293,7 +293,7 @@ describe('@nx/eslint/plugin', () => {
         'apps/my-app/config-one.yaml': `...`,
         'apps/my-app/config-two.yml': `...`,
       });
-      expect(await invokeCreateNodesV2OnMatchingFiles(context, 'lint'))
+      expect(await invokeCreateNodesOnMatchingFiles(context, 'lint'))
         .toMatchInlineSnapshot(`
         {
           "projects": {},
@@ -312,7 +312,7 @@ describe('@nx/eslint/plugin', () => {
         'apps/my-app/config-one.yaml': `...`,
         'apps/my-app/config-two.yml': `...`,
       });
-      expect(await invokeCreateNodesV2OnMatchingFiles(context, 'lint'))
+      expect(await invokeCreateNodesOnMatchingFiles(context, 'lint'))
         .toMatchInlineSnapshot(`
         {
           "projects": {},
@@ -327,7 +327,7 @@ describe('@nx/eslint/plugin', () => {
         // This file is lintable so create the target
         'apps/my-app/index.ts': `console.log('hello world')`,
       });
-      expect(await invokeCreateNodesV2OnMatchingFiles(context, 'lint'))
+      expect(await invokeCreateNodesOnMatchingFiles(context, 'lint'))
         .toMatchInlineSnapshot(`
         {
           "projects": {},
@@ -342,7 +342,7 @@ describe('@nx/eslint/plugin', () => {
         // This file is lintable so create the target
         'apps/my-app/index.ts': `console.log('hello world')`,
       });
-      expect(await invokeCreateNodesV2OnMatchingFiles(context, 'lint'))
+      expect(await invokeCreateNodesOnMatchingFiles(context, 'lint'))
         .toMatchInlineSnapshot(`
         {
           "projects": {},
@@ -361,7 +361,7 @@ describe('@nx/eslint/plugin', () => {
         'libs/my-lib/project.json': `{}`,
         'libs/my-lib/index.ts': `console.log('hello world')`,
       });
-      expect(await invokeCreateNodesV2OnMatchingFiles(context, 'lint'))
+      expect(await invokeCreateNodesOnMatchingFiles(context, 'lint'))
         .toMatchInlineSnapshot(`
         {
           "projects": {
@@ -431,7 +431,7 @@ describe('@nx/eslint/plugin', () => {
         'libs/my-lib/project.json': `{}`,
         'libs/my-lib/index.ts': `console.log('hello world')`,
       });
-      expect(await invokeCreateNodesV2OnMatchingFiles(context, 'lint'))
+      expect(await invokeCreateNodesOnMatchingFiles(context, 'lint'))
         .toMatchInlineSnapshot(`
         {
           "projects": {},
@@ -448,7 +448,7 @@ describe('@nx/eslint/plugin', () => {
         'libs/my-lib/project.json': `{}`,
         'libs/my-lib/index.ts': `console.log('hello world')`,
       });
-      expect(await invokeCreateNodesV2OnMatchingFiles(context, 'lint'))
+      expect(await invokeCreateNodesOnMatchingFiles(context, 'lint'))
         .toMatchInlineSnapshot(`
         {
           "projects": {},
@@ -470,7 +470,7 @@ describe('@nx/eslint/plugin', () => {
         'libs/my-lib/index.ts': `console.log('hello world')`,
       });
       // NOTE: The nested projects have the root level config as an input to their lint targets
-      expect(await invokeCreateNodesV2OnMatchingFiles(context, 'lint'))
+      expect(await invokeCreateNodesOnMatchingFiles(context, 'lint'))
         .toMatchInlineSnapshot(`
         {
           "projects": {
@@ -539,7 +539,7 @@ describe('@nx/eslint/plugin', () => {
         'apps/myapp/index.ts': 'console.log("hello world")',
       });
       // NOTE: The nested projects have the root level config as an input to their lint targets
-      expect(await invokeCreateNodesV2OnMatchingFiles(context, 'lint'))
+      expect(await invokeCreateNodesOnMatchingFiles(context, 'lint'))
         .toMatchInlineSnapshot(`
         {
           "projects": {
@@ -587,7 +587,7 @@ describe('@nx/eslint/plugin', () => {
         'apps/myapp/nested/mylib/project.json': '{}',
         'apps/myapp/nested/mylib/index.ts': 'console.log("hello world")',
       });
-      expect(await invokeCreateNodesV2OnMatchingFiles(context, 'lint'))
+      expect(await invokeCreateNodesOnMatchingFiles(context, 'lint'))
         .toMatchInlineSnapshot(`
         {
           "projects": {
@@ -634,7 +634,7 @@ describe('@nx/eslint/plugin', () => {
     );
   }
 
-  async function invokeCreateNodesV2OnMatchingFiles(
+  async function invokeCreateNodesOnMatchingFiles(
     context: CreateNodesContextV2,
     targetName: string
   ) {

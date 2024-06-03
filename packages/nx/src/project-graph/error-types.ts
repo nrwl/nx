@@ -224,12 +224,7 @@ export class AggregateCreateNodesError extends Error {
     public readonly errors: Array<[file: string | null, error: Error]>,
     public readonly partialResults: Awaited<ReturnType<CreateNodesFunctionV2>>
   ) {
-    super(
-      [
-        'Failed to create nodes',
-        ...errors.map(([file, e]) => `  - ${file}: ${e.message}`),
-      ].join()
-    );
+    super('Failed to create nodes');
     this.name = this.constructor.name;
   }
 }

@@ -34,7 +34,7 @@ export interface EslintPluginOptions {
 }
 
 const DEFAULT_EXTENSIONS = ['ts', 'tsx', 'js', 'jsx', 'html', 'vue'];
-const ESLING_CONFIG_GLOB = combineGlobPatterns([
+const ESLINT_CONFIG_GLOB = combineGlobPatterns([
   ...ESLINT_CONFIG_FILENAMES.map((f) => `**/${f}`),
   baseEsLintConfigFile,
   baseEsLintFlatConfigFile,
@@ -159,7 +159,7 @@ const internalCreateNodes = async (
 };
 
 export const createNodesV2: CreateNodesV2<EslintPluginOptions> = [
-  ESLING_CONFIG_GLOB,
+  ESLINT_CONFIG_GLOB,
   async (configFiles, options, context) => {
     const optionsHash = hashObject(options);
     const cachePath = join(
@@ -182,7 +182,7 @@ export const createNodesV2: CreateNodesV2<EslintPluginOptions> = [
 ];
 
 export const createNodes: CreateNodes<EslintPluginOptions> = [
-  ESLING_CONFIG_GLOB,
+  ESLINT_CONFIG_GLOB,
   (configFilePath, options, context) => {
     logger.warn(
       '`createNodes` is deprecated. Update your plugin to utilize createNodesV2 instead. In Nx 20, this will change to the createNodesV2 API.'
