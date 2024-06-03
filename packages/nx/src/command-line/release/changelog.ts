@@ -833,8 +833,9 @@ async function applyChangesAndExit(
     return;
   }
 
-  let changedFiles: string[] = [];
+  const changedFiles: string[] = changes.map((f) => f.path);
 
+  let deletedFiles: string[] = [];
   if (args.deleteVersionPlans && !args.dryRun) {
     const planFiles = new Set<string>();
     releaseGroups.forEach((group) => {
@@ -845,20 +846,20 @@ async function applyChangesAndExit(
         });
       }
     });
-    changedFiles = Array.from(planFiles);
+    deletedFiles = Array.from(planFiles);
   }
-
-  changedFiles.push(...changes.map((f) => f.path));
 
   // Generate a new commit for the changes, if configured to do so
   if (args.gitCommit ?? nxReleaseConfig.changelog.git.commit) {
-    await commitChanges(
+    await commitChanges({
       changedFiles,
-      !!args.dryRun,
-      !!args.verbose,
-      commitMessageValues,
-      args.gitCommitArgs || nxReleaseConfig.changelog.git.commitArgs
-    );
+      deletedFiles,
+      isDryRun: !!args.dryRun,
+      isVerbose: !!args.verbose,
+      gitCommitMessages: commitMessageValues,
+      gitCommitArgs:
+        args.gitCommitArgs || nxReleaseConfig.changelog.git.commitArgs,
+    });
     // Resolve the commit we just made
     latestCommit = await getCommitHash('HEAD');
   } else if (
@@ -867,7 +868,8 @@ async function applyChangesAndExit(
   ) {
     output.logSingleLine(`Staging changed files with git`);
     await gitAdd({
-      changedFiles: changedFiles,
+      changedFiles,
+      deletedFiles,
       dryRun: args.dryRun,
       verbose: args.verbose,
     });

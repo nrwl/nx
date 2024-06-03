@@ -2,10 +2,7 @@
  * Special thanks to changelogen for the original inspiration for many of these utilities:
  * https://github.com/unjs/changelogen
  */
-import { existsSync } from 'fs-extra';
-import { join } from 'path';
 import { interpolate } from '../../../tasks-runner/utils';
-import { workspaceRoot } from '../../../utils/workspace-root';
 import { execCommand } from './exec-command';
 
 export interface GitCommitAuthor {
@@ -158,31 +155,40 @@ export async function getChangedTrackedFiles(): Promise<Set<string>> {
 
 export async function gitAdd({
   changedFiles,
+  deletedFiles,
   dryRun,
   verbose,
   logFn,
 }: {
-  changedFiles: string[];
+  changedFiles?: string[];
+  deletedFiles?: string[];
   dryRun?: boolean;
   verbose?: boolean;
   logFn?: (...messages: string[]) => void;
 }): Promise<string> {
   logFn = logFn || console.log;
 
-  const changedTrackedFiles = await getChangedTrackedFiles();
-
   let ignoredFiles: string[] = [];
   let filesToAdd: string[] = [];
-  for (const f of changedFiles) {
+  for (const f of changedFiles ?? []) {
     const isFileIgnored = await isIgnored(f);
     if (isFileIgnored) {
       ignoredFiles.push(f);
-    } else if (
-      // git add will fail if trying to add an untracked file that doesn't exist
-      changedTrackedFiles.has(f) ||
-      existsSync(join(workspaceRoot, f))
-    ) {
+    } else {
       filesToAdd.push(f);
+    }
+  }
+
+  if (deletedFiles?.length > 0) {
+    const changedTrackedFiles = await getChangedTrackedFiles();
+    for (const f of deletedFiles ?? []) {
+      const isFileIgnored = await isIgnored(f);
+      if (isFileIgnored) {
+        ignoredFiles.push(f);
+        // git add will fail if trying to add an untracked file that doesn't exist
+      } else if (changedTrackedFiles.has(f)) {
+        filesToAdd.push(f);
+      }
     }
   }
 

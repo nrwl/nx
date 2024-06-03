@@ -193,6 +193,7 @@ export async function releaseVersion(
    * and need to get staged and committed as part of the existing commit, if applicable.
    */
   const additionalChangedFiles = new Set<string>();
+  const additionalDeletedFiles = new Set<string>();
 
   if (args.projects?.length) {
     /**
@@ -243,7 +244,7 @@ export async function releaseVersion(
         );
         // Capture the callback so that we can run it after flushing the changes to disk
         generatorCallbacks.push(async () => {
-          const changedFiles = await generatorCallback(tree, {
+          const result = await generatorCallback(tree, {
             dryRun: !!args.dryRun,
             verbose: !!args.verbose,
             generatorOptions: {
@@ -251,7 +252,10 @@ export async function releaseVersion(
               ...args.generatorOptionsOverrides,
             },
           });
+          const { changedFiles, deletedFiles } =
+            parseGeneratorCallbackResult(result);
           changedFiles.forEach((f) => additionalChangedFiles.add(f));
+          deletedFiles.forEach((f) => additionalDeletedFiles.add(f));
         });
       }
     }
@@ -288,18 +292,20 @@ export async function releaseVersion(
     }
 
     if (args.gitCommit ?? nxReleaseConfig.version.git.commit) {
-      await commitChanges(
+      await commitChanges({
         changedFiles,
-        !!args.dryRun,
-        !!args.verbose,
-        createCommitMessageValues(
+        deletedFiles: Array.from(additionalDeletedFiles),
+        isDryRun: !!args.dryRun,
+        isVerbose: !!args.verbose,
+        gitCommitMessages: createCommitMessageValues(
           releaseGroups,
           releaseGroupToFilteredProjects,
           versionData,
           commitMessage
         ),
-        args.gitCommitArgs || nxReleaseConfig.version.git.commitArgs
-      );
+        gitCommitArgs:
+          args.gitCommitArgs || nxReleaseConfig.version.git.commitArgs,
+      });
     } else if (args.stageChanges ?? nxReleaseConfig.version.git.stageChanges) {
       output.logSingleLine(`Staging changed files with git`);
       await gitAdd({
@@ -375,7 +381,7 @@ export async function releaseVersion(
       );
       // Capture the callback so that we can run it after flushing the changes to disk
       generatorCallbacks.push(async () => {
-        const changedFiles = await generatorCallback(tree, {
+        const result = await generatorCallback(tree, {
           dryRun: !!args.dryRun,
           verbose: !!args.verbose,
           generatorOptions: {
@@ -383,7 +389,10 @@ export async function releaseVersion(
             ...args.generatorOptionsOverrides,
           },
         });
+        const { changedFiles, deletedFiles } =
+          parseGeneratorCallbackResult(result);
         changedFiles.forEach((f) => additionalChangedFiles.add(f));
+        deletedFiles.forEach((f) => additionalDeletedFiles.add(f));
       });
     }
   }
@@ -431,18 +440,20 @@ export async function releaseVersion(
   }
 
   if (args.gitCommit ?? nxReleaseConfig.version.git.commit) {
-    await commitChanges(
+    await commitChanges({
       changedFiles,
-      !!args.dryRun,
-      !!args.verbose,
-      createCommitMessageValues(
+      deletedFiles: Array.from(additionalDeletedFiles),
+      isDryRun: !!args.dryRun,
+      isVerbose: !!args.verbose,
+      gitCommitMessages: createCommitMessageValues(
         releaseGroups,
         releaseGroupToFilteredProjects,
         versionData,
         commitMessage
       ),
-      args.gitCommitArgs || nxReleaseConfig.version.git.commitArgs
-    );
+      gitCommitArgs:
+        args.gitCommitArgs || nxReleaseConfig.version.git.commitArgs,
+    });
   } else if (args.stageChanges ?? nxReleaseConfig.version.git.stageChanges) {
     output.logSingleLine(`Staging changed files with git`);
     await gitAdd({
@@ -701,5 +712,18 @@ function runPreVersionCommand(
       bodyLines: [preVersionCommand, e],
     });
     process.exit(1);
+  }
+}
+
+function parseGeneratorCallbackResult(
+  result: string[] | { changedFiles: string[]; deletedFiles: string[] }
+): { changedFiles: string[]; deletedFiles: string[] } {
+  if (Array.isArray(result)) {
+    return {
+      changedFiles: result,
+      deletedFiles: [],
+    };
+  } else {
+    return result;
   }
 }

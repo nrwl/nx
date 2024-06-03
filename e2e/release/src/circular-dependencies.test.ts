@@ -76,12 +76,6 @@ describe('nx release circular dependencies', () => {
       return json;
     });
 
-    // Generate changelog files for each package to avoid a quirk with gitAdd(...)
-    // not specifying that new changelog files would be added when in dry-run mode
-    await runCommandAsync(`touch CHANGELOG.md`);
-    await runCommandAsync(`touch ${pkg1}/CHANGELOG.md`);
-    await runCommandAsync(`touch ${pkg2}/CHANGELOG.md`);
-
     await runCommandAsync(`git add .`);
     await runCommandAsync(`git commit -m "chore: initial commit"`);
 
@@ -238,7 +232,6 @@ describe('nx release circular dependencies', () => {
         📦  @proj/{project-name}@X.X.X-dry-run
         === Tarball Contents ===
 
-        0B   CHANGELOG.md
         XXB  index.js
         XXXB package.json
         XXB  project.json
@@ -250,7 +243,7 @@ describe('nx release circular dependencies', () => {
         unpacked size: XXXB
         shasum:        {SHASUM}
         integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-        total files:   4
+        total files:   3
 
         Would publish to http://localhost:4873 with tag "latest", but [dry-run] was set
 
@@ -261,7 +254,6 @@ describe('nx release circular dependencies', () => {
         📦  @proj/{project-name}@X.X.X-dry-run
         === Tarball Contents ===
 
-        0B   CHANGELOG.md
         XXB  index.js
         XXXB package.json
         XXB  project.json
@@ -273,7 +265,7 @@ describe('nx release circular dependencies', () => {
         unpacked size: XXXB
         shasum:        {SHASUM}
         integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-        total files:   4
+        total files:   3
 
         Would publish to http://localhost:4873 with tag "latest", but [dry-run] was set
 
@@ -425,7 +417,6 @@ describe('nx release circular dependencies', () => {
         📦  @proj/{project-name}@X.X.X-dry-run
         === Tarball Contents ===
 
-        0B   CHANGELOG.md
         XXB  index.js
         XXXB package.json
         XXB  project.json
@@ -437,7 +428,7 @@ describe('nx release circular dependencies', () => {
         unpacked size: XXXB
         shasum:        {SHASUM}
         integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-        total files:   4
+        total files:   3
 
         Would publish to http://localhost:4873 with tag "latest", but [dry-run] was set
 
@@ -448,7 +439,6 @@ describe('nx release circular dependencies', () => {
         📦  @proj/{project-name}@X.X.X-dry-run
         === Tarball Contents ===
 
-        0B   CHANGELOG.md
         XXB  index.js
         XXXB package.json
         XXB  project.json
@@ -460,7 +450,7 @@ describe('nx release circular dependencies', () => {
         unpacked size: XXXB
         shasum:        {SHASUM}
         integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-        total files:   4
+        total files:   3
 
         Would publish to http://localhost:4873 with tag "latest", but [dry-run] was set
 
@@ -613,7 +603,6 @@ describe('nx release circular dependencies', () => {
         📦  @proj/{project-name}@X.X.X-dry-run
         === Tarball Contents ===
 
-        0B   CHANGELOG.md
         XXB  index.js
         XXXB package.json
         XXB  project.json
@@ -625,7 +614,7 @@ describe('nx release circular dependencies', () => {
         unpacked size: XXXB
         shasum:        {SHASUM}
         integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-        total files:   4
+        total files:   3
 
         Would publish to http://localhost:4873 with tag "latest", but [dry-run] was set
 
@@ -636,7 +625,6 @@ describe('nx release circular dependencies', () => {
         📦  @proj/{project-name}@X.X.X-dry-run
         === Tarball Contents ===
 
-        0B   CHANGELOG.md
         XXB  index.js
         XXXB package.json
         XXB  project.json
@@ -648,7 +636,7 @@ describe('nx release circular dependencies', () => {
         unpacked size: XXXB
         shasum:        {SHASUM}
         integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-        total files:   4
+        total files:   3
 
         Would publish to http://localhost:4873 with tag "latest", but [dry-run] was set
 
@@ -774,7 +762,6 @@ describe('nx release circular dependencies', () => {
         📦  @proj/{project-name}@X.X.X-dry-run
         === Tarball Contents ===
 
-        0B   CHANGELOG.md
         XXB  index.js
         XXXB package.json
         XXB  project.json
@@ -786,7 +773,7 @@ describe('nx release circular dependencies', () => {
         unpacked size: XXXB
         shasum:        {SHASUM}
         integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-        total files:   4
+        total files:   3
 
         Would publish to http://localhost:4873 with tag "latest", but [dry-run] was set
 
@@ -939,7 +926,6 @@ describe('nx release circular dependencies', () => {
         📦  @proj/{project-name}@X.X.X-dry-run
         === Tarball Contents ===
 
-        0B   CHANGELOG.md
         XXB  index.js
         XXXB package.json
         XXB  project.json
@@ -951,7 +937,7 @@ describe('nx release circular dependencies', () => {
         unpacked size: XXXB
         shasum:        {SHASUM}
         integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-        total files:   4
+        total files:   3
 
         Would publish to http://localhost:4873 with tag "latest", but [dry-run] was set
 
@@ -962,7 +948,6 @@ describe('nx release circular dependencies', () => {
         📦  @proj/{project-name}@X.X.X-dry-run
         === Tarball Contents ===
 
-        0B   CHANGELOG.md
         XXB  index.js
         XXXB package.json
         XXB  project.json
@@ -974,7 +959,7 @@ describe('nx release circular dependencies', () => {
         unpacked size: XXXB
         shasum:        {SHASUM}
         integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-        total files:   4
+        total files:   3
 
         Would publish to http://localhost:4873 with tag "latest", but [dry-run] was set
 
@@ -1130,7 +1115,6 @@ describe('nx release circular dependencies', () => {
         📦  @proj/{project-name}@X.X.X-dry-run
         === Tarball Contents ===
 
-        0B   CHANGELOG.md
         XXB  index.js
         XXXB package.json
         XXB  project.json
@@ -1142,7 +1126,7 @@ describe('nx release circular dependencies', () => {
         unpacked size: XXXB
         shasum:        {SHASUM}
         integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-        total files:   4
+        total files:   3
 
         Would publish to http://localhost:4873 with tag "latest", but [dry-run] was set
 

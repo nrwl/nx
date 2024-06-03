@@ -8,6 +8,7 @@ import { handleErrors } from '../../utils/params';
 import { releaseChangelog, shouldCreateGitHubRelease } from './changelog';
 import { ReleaseOptions, VersionOptions } from './command-object';
 import {
+  IMPLICIT_DEFAULT_RELEASE_GROUP,
   createNxReleaseConfig,
   handleNxReleaseConfigError,
 } from './config/config';
@@ -118,18 +119,35 @@ export async function release(
   const planFiles = new Set<string>();
   releaseGroups.forEach((group) => {
     if (group.versionPlans) {
+      if (group.name === IMPLICIT_DEFAULT_RELEASE_GROUP) {
+        output.logSingleLine(`Removing version plan files`);
+      } else {
+        output.logSingleLine(
+          `Removing version plan files for group ${group.name}`
+        );
+      }
       group.versionPlans.forEach((plan) => {
         if (!args.dryRun) {
           removeSync(plan.absolutePath);
+          if (args.verbose) {
+            console.log(`Removing ${plan.relativePath}`);
+          }
+        } else {
+          if (args.verbose) {
+            console.log(
+              `Would remove ${plan.relativePath}, but --dry-run was set`
+            );
+          }
         }
         planFiles.add(plan.relativePath);
       });
     }
   });
-  const changedFiles = Array.from(planFiles);
-  if (changedFiles.length > 0) {
+  const deletedFiles = Array.from(planFiles);
+  if (deletedFiles.length > 0) {
     await gitAdd({
-      changedFiles,
+      changedFiles: [],
+      deletedFiles,
       dryRun: args.dryRun,
       verbose: args.verbose,
     });

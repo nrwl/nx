@@ -1,6 +1,4 @@
 import {
-  ProjectGraph,
-  ProjectGraphDependency,
   ProjectGraphProjectNode,
   Tree,
   formatFiles,
@@ -44,8 +42,8 @@ import {
   LocalPackageDependency,
   resolveLocalPackageDependencies,
 } from './utils/resolve-local-package-dependencies';
-import { updateLockFile } from './utils/update-lock-file';
 import { sortProjectsTopologically } from './utils/sort-projects-topologically';
+import { updateLockFile } from './utils/update-lock-file';
 
 export async function releaseVersionGenerator(
   tree: Tree,
@@ -124,7 +122,9 @@ Valid values are: ${validReleaseVersionPrefixes
       ? options.specifier
       : undefined;
 
-    const additionalCallbacks: ((dryRun?: boolean) => Promise<string[]>)[] = [];
+    const deleteVersionPlanCallbacks: ((
+      dryRun?: boolean
+    ) => Promise<string[]>)[] = [];
 
     for (const project of projects) {
       const projectName = project.name;
@@ -505,7 +505,7 @@ To fix this you will either need to add a package.json file at that location, or
 
             if (options.deleteVersionPlans) {
               options.releaseGroup.versionPlans.forEach((p) => {
-                additionalCallbacks.push(async (dryRun?: boolean) => {
+                deleteVersionPlanCallbacks.push(async (dryRun?: boolean) => {
                   if (!dryRun) {
                     await remove(p.absolutePath);
                     // the relative path is easier to digest, so use that for
@@ -805,15 +805,16 @@ To fix this you will either need to add a package.json file at that location, or
     return {
       data: versionData,
       callback: async (tree, opts) => {
-        const updatedFiles: string[] = [];
+        const changedFiles: string[] = [];
+        const deletedFiles: string[] = [];
 
-        for (const cb of additionalCallbacks) {
-          updatedFiles.push(...(await cb(opts.dryRun)));
+        for (const cb of deleteVersionPlanCallbacks) {
+          deletedFiles.push(...(await cb(opts.dryRun)));
         }
 
         const cwd = tree.root;
-        updatedFiles.push(...(await updateLockFile(cwd, opts)));
-        return updatedFiles;
+        changedFiles.push(...(await updateLockFile(cwd, opts)));
+        return { changedFiles, deletedFiles };
       },
     };
   } catch (e: any) {
