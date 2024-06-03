@@ -9,9 +9,11 @@ import { getCloudOptions } from '../src/nx-cloud/utilities/get-cloud-options';
 import { isNxCloudUsed } from '../src/utils/nx-cloud-utils';
 import { readNxJson } from '../src/config/nx-json';
 import { setupWorkspaceContext } from '../src/utils/workspace-context';
+import { logger } from '../src/utils/logger';
 
 (async () => {
   const start = new Date();
+  let errored = false;
   try {
     setupWorkspaceContext(workspaceRoot);
     if (isMainNxPackage() && fileExists(join(workspaceRoot, 'nx.json'))) {
@@ -28,7 +30,7 @@ import { setupWorkspaceContext } from '../src/utils/workspace-context';
       }
       await Promise.all(
         tasks.map((promise) => {
-          promise.catch((e) => {
+          return promise.catch((e) => {
             if (process.env.NX_VERBOSE_LOGGING === 'true') {
               console.warn(e);
             }
@@ -37,16 +39,15 @@ import { setupWorkspaceContext } from '../src/utils/workspace-context';
       );
     }
   } catch (e) {
-    if (process.env.NX_VERBOSE_LOGGING === 'true') {
-      console.log(e);
-    }
+    errored = true;
+    logger.verbose(e);
   } finally {
-    if (process.env.NX_VERBOSE_LOGGING === 'true') {
-      const end = new Date();
-      console.log(
-        `Nx postinstall steps took ${end.getTime() - start.getTime()}ms`
-      );
-    }
+    const end = new Date();
+    logger.verbose(
+      `Nx postinstall steps took ${end.getTime() - start.getTime()}ms`
+    );
+
+    process.exit(errored ? 1 : 0);
   }
 })();
 
