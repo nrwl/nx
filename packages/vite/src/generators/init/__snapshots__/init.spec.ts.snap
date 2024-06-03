@@ -10,7 +10,7 @@ exports[`@nx/vite:init dependencies for package.json should add required package
     "@nx/web": "0.0.1",
     "@vitest/ui": "^1.3.1",
     "existing": "1.0.0",
-    "vite": "~5.0.0",
+    "vite": "^5.0.0",
     "vitest": "^1.3.1",
   },
   "name": "@proj/source",
