@@ -1,6 +1,7 @@
 import { major } from 'semver';
 import { ChangelogChange } from '../../src/command-line/release/changelog';
 import { NxReleaseConfig } from '../../src/command-line/release/config/config';
+import { GitCommit } from '../../src/command-line/release/utils/git';
 import {
   RepoSlug,
   formatReferences,
@@ -33,6 +34,7 @@ export type DependencyBump = {
  *
  * @param {Object} config The configuration object for the ChangelogRenderer
  * @param {ProjectGraph} config.projectGraph The project graph for the workspace
+ * @param {GitCommit[]} config.commits DEPRECATED [Use 'config.changes' instead] - The collection of extracted commits to generate a changelog for
  * @param {ChangelogChange[]} config.changes The collection of changes to show in the changelog
  * @param {string} config.releaseVersion The version that is being released
  * @param {string | null} config.project The name of specific project to generate a changelog for, or `null` if the overall workspace changelog
@@ -42,7 +44,9 @@ export type DependencyBump = {
  */
 export type ChangelogRenderer = (config: {
   projectGraph: ProjectGraph;
-  changes: ChangelogChange[];
+  // TODO: remove 'commits' and make 'changes' whenever we make the next breaking change to this API
+  commits?: GitCommit[];
+  changes?: ChangelogChange[];
   releaseVersion: string;
   project: string | null;
   entryWhenNoChanges: string | false;

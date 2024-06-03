@@ -254,6 +254,8 @@ export async function releaseChangelog(
   const postGitTasks: PostGitTask[] = [];
 
   let workspaceChangelogChanges: ChangelogChange[] = [];
+  // TODO: remove this after the changelog renderer is refactored to remove coupling with git commits
+  let workspaceChangelogCommits: GitCommit[] = [];
 
   // If there are multiple release groups, we'll just skip the workspace changelog anyway.
   const versionPlansEnabledForWorkspaceChangelog =
@@ -311,7 +313,7 @@ export async function releaseChangelog(
       workspaceChangelogFromRef
     );
 
-    const workspaceChangelogCommits = await getCommits(
+    workspaceChangelogCommits = await getCommits(
       workspaceChangelogFromSHA,
       toSHA
     );
@@ -335,14 +337,19 @@ export async function releaseChangelog(
     );
   }
 
-  const workspaceChangelog = await generateChangelogForWorkspace(
+  const workspaceChangelog = await generateChangelogForWorkspace({
     tree,
     args,
     projectGraph,
     nxReleaseConfig,
     workspaceChangelogVersion,
-    workspaceChangelogChanges
-  );
+    changes: workspaceChangelogChanges,
+    // TODO: remove this after the changelog renderer is refactored to remove coupling with git commits
+    commits: filterHiddenCommits(
+      workspaceChangelogCommits,
+      nxReleaseConfig.conventionalCommits
+    ),
+  });
 
   if (
     workspaceChangelog &&
@@ -436,6 +443,8 @@ export async function releaseChangelog(
     if (releaseGroup.projectsRelationship === 'independent') {
       for (const project of projectNodes) {
         let changes: ChangelogChange[] | null = null;
+        // TODO: remove this after the changelog renderer is refactored to remove coupling with git commits
+        let commits: GitCommit[];
 
         if (releaseGroup.versionPlans) {
           changes = filterHiddenChanges(
@@ -464,7 +473,6 @@ export async function releaseChangelog(
             nxReleaseConfig.conventionalCommits
           );
         } else {
-          let commits: GitCommit[];
           let fromRef =
             args.from ||
             (
@@ -528,17 +536,22 @@ export async function releaseChangelog(
           );
         }
 
-        const projectChangelogs = await generateChangelogForProjects(
+        const projectChangelogs = await generateChangelogForProjects({
           tree,
           args,
           projectGraph,
           changes,
           projectsVersionData,
           releaseGroup,
-          [project],
+          projects: [project],
           nxReleaseConfig,
-          projectToAdditionalDependencyBumps
-        );
+          projectToAdditionalDependencyBumps,
+          // TODO: remove this after the changelog renderer is refactored to remove coupling with git commits
+          commits: filterHiddenCommits(
+            commits,
+            nxReleaseConfig.conventionalCommits
+          ),
+        });
 
         let hasPushed = false;
         for (const [projectName, projectChangelog] of Object.entries(
@@ -579,6 +592,8 @@ export async function releaseChangelog(
       }
     } else {
       let changes: ChangelogChange[] = [];
+      // TODO: remove this after the changelog renderer is refactored to remove coupling with git commits
+      let commits: GitCommit[] = [];
       if (releaseGroup.versionPlans) {
         changes = filterHiddenChanges(
           (releaseGroup.versionPlans as GroupVersionPlan[])
@@ -629,7 +644,7 @@ export async function releaseChangelog(
         const { fileMap } = await createFileMapUsingProjectGraph(projectGraph);
         const fileToProjectMap = createFileToProjectMap(fileMap.projectFileMap);
 
-        const commits = await getCommits(fromSHA, toSHA);
+        commits = await getCommits(fromSHA, toSHA);
         changes = filterHiddenChanges(
           commits.map((c) => ({
             type: c.type,
@@ -652,17 +667,22 @@ export async function releaseChangelog(
         );
       }
 
-      const projectChangelogs = await generateChangelogForProjects(
+      const projectChangelogs = await generateChangelogForProjects({
         tree,
         args,
         projectGraph,
         changes,
         projectsVersionData,
         releaseGroup,
-        projectNodes,
+        projects: projectNodes,
         nxReleaseConfig,
-        projectToAdditionalDependencyBumps
-      );
+        projectToAdditionalDependencyBumps,
+        // TODO: remove this after the changelog renderer is refactored to remove coupling with git commits
+        commits: filterHiddenCommits(
+          commits,
+          nxReleaseConfig.conventionalCommits
+        ),
+      });
 
       let hasPushed = false;
       for (const [projectName, projectChangelog] of Object.entries(
@@ -898,14 +918,23 @@ async function applyChangesAndExit(
   return;
 }
 
-async function generateChangelogForWorkspace(
-  tree: Tree,
-  args: ChangelogOptions,
-  projectGraph: ProjectGraph,
-  nxReleaseConfig: NxReleaseConfig,
-  workspaceChangelogVersion: (string | null) | undefined,
-  changes: ChangelogChange[]
-): Promise<NxReleaseChangelogResult['workspaceChangelog']> {
+async function generateChangelogForWorkspace({
+  tree,
+  args,
+  projectGraph,
+  nxReleaseConfig,
+  workspaceChangelogVersion,
+  changes,
+  commits,
+}: {
+  tree: Tree;
+  args: ChangelogOptions;
+  projectGraph: ProjectGraph;
+  nxReleaseConfig: NxReleaseConfig;
+  workspaceChangelogVersion: (string | null) | undefined;
+  changes: ChangelogChange[];
+  commits: GitCommit[];
+}): Promise<NxReleaseChangelogResult['workspaceChangelog']> {
   const config = nxReleaseConfig.changelog.workspaceChangelog;
   // The entire feature is disabled at the workspace level, exit early
   if (config === false) {
@@ -985,6 +1014,7 @@ async function generateChangelogForWorkspace(
   let contents = await changelogRenderer({
     projectGraph,
     changes,
+    commits,
     releaseVersion: releaseVersion.rawVersion,
     project: null,
     repoSlug: githubRepoSlug,
@@ -1047,17 +1077,29 @@ async function generateChangelogForWorkspace(
   };
 }
 
-async function generateChangelogForProjects(
-  tree: Tree,
-  args: ChangelogOptions,
-  projectGraph: ProjectGraph,
-  changes: ChangelogChange[],
-  projectsVersionData: VersionData,
-  releaseGroup: ReleaseGroupWithName,
-  projects: ProjectGraphProjectNode[],
-  nxReleaseConfig: NxReleaseConfig,
-  projectToAdditionalDependencyBumps: Map<string, DependencyBump[]>
-): Promise<NxReleaseChangelogResult['projectChangelogs']> {
+async function generateChangelogForProjects({
+  tree,
+  args,
+  projectGraph,
+  changes,
+  commits,
+  projectsVersionData,
+  releaseGroup,
+  projects,
+  nxReleaseConfig,
+  projectToAdditionalDependencyBumps,
+}: {
+  tree: Tree;
+  args: ChangelogOptions;
+  projectGraph: ProjectGraph;
+  changes: ChangelogChange[];
+  commits: GitCommit[];
+  projectsVersionData: VersionData;
+  releaseGroup: ReleaseGroupWithName;
+  projects: ProjectGraphProjectNode[];
+  nxReleaseConfig: NxReleaseConfig;
+  projectToAdditionalDependencyBumps: Map<string, DependencyBump[]>;
+}): Promise<NxReleaseChangelogResult['projectChangelogs']> {
   const config = releaseGroup.changelog;
   // The entire feature is disabled at the release group level, exit early
   if (config === false) {
@@ -1115,6 +1157,7 @@ async function generateChangelogForProjects(
     let contents = await changelogRenderer({
       projectGraph,
       changes,
+      commits,
       releaseVersion: releaseVersion.rawVersion,
       project: project.name,
       repoSlug: githubRepoSlug,
@@ -1229,6 +1272,23 @@ function filterHiddenChanges(
     const typeConfig = conventionalCommitsConfig.types[type];
     if (!typeConfig) {
       // don't include changes with unknown types
+      return false;
+    }
+    return !typeConfig.changelog.hidden;
+  });
+}
+
+// TODO: remove this after the changelog renderer is refactored to remove coupling with git commits
+function filterHiddenCommits(
+  commits: GitCommit[],
+  conventionalCommitsConfig: NxReleaseConfig['conventionalCommits']
+): GitCommit[] {
+  return commits.filter((commit) => {
+    const type = commit.type;
+
+    const typeConfig = conventionalCommitsConfig.types[type];
+    if (!typeConfig) {
+      // don't include commits with unknown types
       return false;
     }
     return !typeConfig.changelog.hidden;
