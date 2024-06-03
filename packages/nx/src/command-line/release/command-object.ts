@@ -329,8 +329,9 @@ const publishCommand: CommandModule<NxReleaseArgs, PublishOptions> = {
 const planCommand: CommandModule<NxReleaseArgs, PlanOptions> = {
   command: 'plan [bump]',
   aliases: ['pl'],
-  describe:
-    'Create a plan to pick a new version and generate a changelog entry.',
+  // Create a plan to pick a new version and generate a changelog entry.
+  // Hidden for now until the feature is more stable
+  describe: false,
   builder: (yargs) =>
     yargs
       .positional('bump', {
