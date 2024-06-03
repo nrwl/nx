@@ -19,10 +19,12 @@ export const yargsAffectedGraphCommand: CommandModule = {
   describe: false,
   aliases: ['affected:dep-graph'],
   builder: (yargs) => withAffectedOptions(withGraphOptions(yargs)),
-  handler: (args) =>
-    handleErrors(false, () => {
+  handler: async (args) => {
+    const exitCode = await handleErrors(false, () => {
       throw new Error(affectedGraphDeprecationMessage);
-    }),
+    });
+    process.exit(exitCode);
+  },
   deprecated: affectedGraphDeprecationMessage,
 };
 
@@ -45,9 +47,11 @@ export const yargsPrintAffectedCommand: CommandModule = {
         describe:
           'Select the type of projects to be returned (e.g., --type=app)',
       }),
-  handler: (args) =>
-    handleErrors(false, () => {
+  handler: async (args) => {
+    const exitCode = await handleErrors(false, () => {
       throw new Error(printAffectedDeprecationMessage);
-    }),
+    });
+    process.exit(exitCode);
+  },
   deprecated: printAffectedDeprecationMessage,
 };
