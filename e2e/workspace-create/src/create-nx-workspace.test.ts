@@ -522,8 +522,7 @@ describe('create-nx-workspace parent folder', () => {
   });
 });
 
-// TODO(FrozenPandaz): Re-enable when https://github.com/swc-project/swc/issues/8988 is fixed
-xdescribe('create-nx-workspace yarn berry', () => {
+describe('create-nx-workspace yarn berry', () => {
   const tmpDir = `${e2eCwd}/${uniq('yarn-berry')}`;
   let wsName: string;
   let yarnVersion: string;

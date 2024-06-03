@@ -10,7 +10,7 @@ import {
   type Tree,
 } from '@nx/devkit';
 import { addPlugin } from '@nx/devkit/src/utils/add-plugin';
-import { createNodes } from '../../plugins/plugin';
+import { createNodesV2 } from '../../plugins/plugin';
 import {
   getPresetExt,
   type JestPresetExtension,
@@ -108,7 +108,7 @@ export async function jestInitGeneratorInternal(
         tree,
         await createProjectGraphAsync(),
         '@nx/jest/plugin',
-        createNodes,
+        createNodesV2,
         {
           targetName: ['test', 'jest:test', 'jest-test'],
         },

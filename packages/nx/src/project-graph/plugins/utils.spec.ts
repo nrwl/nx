@@ -1,123 +1,186 @@
-import { runCreateNodesInParallel } from './utils';
+import { isAggregateCreateNodesError } from '../error-types';
+import { createNodesFromFiles } from './utils';
 
 const configFiles = ['file1', 'file2'] as const;
 
 const context = {
-  file: 'file1',
   nxJsonConfiguration: {},
   workspaceRoot: '',
-  configFiles,
 } as const;
 
-describe('createNodesInParallel', () => {
+describe('createNodesFromFiles', () => {
   it('should return results with context', async () => {
-    const plugin = {
-      name: 'test',
-      createNodes: [
-        '*/**/*',
-        async (file: string) => {
-          return {
-            projects: {
-              [file]: {
-                root: file,
-              },
+    const createNodes = [
+      '*/**/*',
+      async (file: string) => {
+        return {
+          projects: {
+            [file]: {
+              root: file,
             },
-          };
-        },
-      ],
-    } as const;
+          },
+        };
+      },
+    ] as const;
     const options = {};
 
-    const results = await runCreateNodesInParallel(
+    const results = await createNodesFromFiles(
+      createNodes[1],
       configFiles,
-      plugin,
       options,
       context
     );
 
     expect(results).toMatchInlineSnapshot(`
       [
-        {
-          "file": "file1",
-          "pluginName": "test",
-          "projects": {
-            "file1": {
-              "root": "file1",
+        [
+          "file1",
+          {
+            "projects": {
+              "file1": {
+                "root": "file1",
+              },
             },
           },
-        },
-        {
-          "file": "file2",
-          "pluginName": "test",
-          "projects": {
-            "file2": {
-              "root": "file2",
+        ],
+        [
+          "file2",
+          {
+            "projects": {
+              "file2": {
+                "root": "file2",
+              },
             },
           },
-        },
+        ],
       ]
     `);
   });
 
   it('should handle async errors', async () => {
-    const plugin = {
-      name: 'test',
-      createNodes: [
-        '*/**/*',
-        async () => {
-          throw new Error('Async Error');
-        },
-      ],
-    } as const;
+    const createNodes = [
+      '*/**/*',
+      async () => {
+        throw new Error('Async Error');
+      },
+    ] as const;
     const options = {};
 
-    const error = await runCreateNodesInParallel(
+    let error;
+    await createNodesFromFiles(
+      createNodes[1],
       configFiles,
-      plugin,
       options,
       context
-    ).catch((e) => e);
+    ).catch((e) => (error = e));
 
-    expect(error).toMatchInlineSnapshot(
-      `[AggregateCreateNodesError: Failed to create nodes]`
-    );
+    const isAggregateError = isAggregateCreateNodesError(error);
+    expect(isAggregateError).toBe(true);
 
-    expect(error.errors).toMatchInlineSnapshot(`
-      [
-        [CreateNodesError: The "test" plugin threw an error while creating nodes from file1:],
-        [CreateNodesError: The "test" plugin threw an error while creating nodes from file2:],
-      ]
-    `);
+    if (isAggregateCreateNodesError(error)) {
+      expect(error.errors).toMatchInlineSnapshot(`
+        [
+          [
+            "file1",
+            [Error: Async Error],
+          ],
+          [
+            "file2",
+            [Error: Async Error],
+          ],
+        ]
+      `);
+    }
   });
 
   it('should handle sync errors', async () => {
-    const plugin = {
-      name: 'test',
-      createNodes: [
-        '*/**/*',
-        () => {
-          throw new Error('Sync Error');
-        },
-      ],
-    } as const;
+    const createNodes = [
+      '*/**/*',
+      () => {
+        throw new Error('Sync Error');
+      },
+    ] as const;
     const options = {};
 
-    const error = await runCreateNodesInParallel(
+    let error;
+    await createNodesFromFiles(
+      createNodes[1],
       configFiles,
-      plugin,
       options,
       context
-    ).catch((e) => e);
+    ).catch((e) => (error = e));
 
-    expect(error).toMatchInlineSnapshot(
-      `[AggregateCreateNodesError: Failed to create nodes]`
-    );
+    const isAggregateError = isAggregateCreateNodesError(error);
+    expect(isAggregateError).toBe(true);
 
-    expect(error.errors).toMatchInlineSnapshot(`
-      [
-        [CreateNodesError: The "test" plugin threw an error while creating nodes from file1:],
-        [CreateNodesError: The "test" plugin threw an error while creating nodes from file2:],
-      ]
-    `);
+    if (isAggregateCreateNodesError(error)) {
+      expect(error.errors).toMatchInlineSnapshot(`
+        [
+          [
+            "file1",
+            [Error: Sync Error],
+          ],
+          [
+            "file2",
+            [Error: Sync Error],
+          ],
+        ]
+      `);
+    }
+  });
+
+  it('should handle partial errors', async () => {
+    const createNodes = [
+      '*/**/*',
+      async (file: string) => {
+        if (file === 'file1') {
+          throw new Error('Error');
+        }
+        return {
+          projects: {
+            [file]: {
+              root: file,
+            },
+          },
+        };
+      },
+    ] as const;
+    const options = {};
+
+    let error;
+    await createNodesFromFiles(
+      createNodes[1],
+      configFiles,
+      options,
+      context
+    ).catch((e) => (error = e));
+
+    const isAggregateError = isAggregateCreateNodesError(error);
+    expect(isAggregateError).toBe(true);
+
+    if (isAggregateCreateNodesError(error)) {
+      expect(error.errors).toMatchInlineSnapshot(`
+        [
+          [
+            "file1",
+            [Error: Error],
+          ],
+        ]
+      `);
+      expect(error.partialResults).toMatchInlineSnapshot(`
+        [
+          [
+            "file2",
+            {
+              "projects": {
+                "file2": {
+                  "root": "file2",
+                },
+              },
+            },
+          ],
+        ]
+      `);
+    }
   });
 });

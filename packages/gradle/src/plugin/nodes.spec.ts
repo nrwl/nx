@@ -1,19 +1,20 @@
 import { CreateNodesContext } from '@nx/devkit';
 
 import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
-import type { GradleReport } from '../utils/get-gradle-report';
+import { type GradleReport } from '../utils/get-gradle-report';
 
 let gradleReport: GradleReport;
 jest.mock('../utils/get-gradle-report.ts', () => {
   return {
-    getGradleReport: jest.fn().mockImplementation(() => gradleReport),
+    populateGradleReport: jest.fn().mockImplementation(() => void 0),
+    getCurrentGradleReport: jest.fn().mockImplementation(() => gradleReport),
   };
 });
 
-import { createNodes } from './nodes';
+import { createNodesV2 } from './nodes';
 
 describe('@nx/gradle/plugin', () => {
-  let createNodesFunction = createNodes[1];
+  let createNodesFunction = createNodesV2[1];
   let context: CreateNodesContext;
   let tempFs: TempFs;
   let cwd: string;
@@ -58,47 +59,55 @@ describe('@nx/gradle/plugin', () => {
   });
 
   it('should create nodes based on gradle', async () => {
-    const nodes = await createNodesFunction(
-      'proj/gradle.build',
+    const results = await createNodesFunction(
+      ['proj/gradle.build'],
       {
         buildTargetName: 'build',
       },
       context
     );
 
-    expect(nodes.projects.proj).toMatchInlineSnapshot(`
-      {
-        "metadata": {
-          "targetGroups": {
-            "Test": [
-              "test",
-            ],
-          },
-          "technologies": [
-            "gradle",
-          ],
-        },
-        "name": "proj",
-        "targets": {
-          "test": {
-            "cache": false,
-            "command": "./gradlew proj:test",
-            "dependsOn": [
-              "classes",
-            ],
-            "inputs": [
-              "default",
-              "^production",
-            ],
-            "metadata": {
-              "technologies": [
-                "gradle",
-              ],
+    expect(results).toMatchInlineSnapshot(`
+      [
+        [
+          "proj/gradle.build",
+          {
+            "projects": {
+              "proj": {
+                "metadata": {
+                  "targetGroups": {
+                    "Test": [
+                      "test",
+                    ],
+                  },
+                  "technologies": [
+                    "gradle",
+                  ],
+                },
+                "name": "proj",
+                "targets": {
+                  "test": {
+                    "cache": false,
+                    "command": "./gradlew proj:test",
+                    "dependsOn": [
+                      "classes",
+                    ],
+                    "inputs": [
+                      "default",
+                      "^production",
+                    ],
+                    "metadata": {
+                      "technologies": [
+                        "gradle",
+                      ],
+                    },
+                  },
+                },
+              },
             },
-            "outputs": undefined,
           },
-        },
-      }
+        ],
+      ]
     `);
   });
 
@@ -120,47 +129,55 @@ describe('@nx/gradle/plugin', () => {
       'nested/nested/proj/gradle.build': ``,
     });
 
-    const nodes = await createNodesFunction(
-      'nested/nested/proj/gradle.build',
+    const results = await createNodesFunction(
+      ['nested/nested/proj/gradle.build'],
       {
         buildTargetName: 'build',
       },
       context
     );
 
-    expect(nodes.projects['nested/nested/proj']).toMatchInlineSnapshot(`
-      {
-        "metadata": {
-          "targetGroups": {
-            "Test": [
-              "test",
-            ],
-          },
-          "technologies": [
-            "gradle",
-          ],
-        },
-        "name": "proj",
-        "targets": {
-          "test": {
-            "cache": false,
-            "command": "./gradlew proj:test",
-            "dependsOn": [
-              "classes",
-            ],
-            "inputs": [
-              "default",
-              "^production",
-            ],
-            "metadata": {
-              "technologies": [
-                "gradle",
-              ],
+    expect(results).toMatchInlineSnapshot(`
+      [
+        [
+          "nested/nested/proj/gradle.build",
+          {
+            "projects": {
+              "nested/nested/proj": {
+                "metadata": {
+                  "targetGroups": {
+                    "Test": [
+                      "test",
+                    ],
+                  },
+                  "technologies": [
+                    "gradle",
+                  ],
+                },
+                "name": "proj",
+                "targets": {
+                  "test": {
+                    "cache": false,
+                    "command": "./gradlew proj:test",
+                    "dependsOn": [
+                      "classes",
+                    ],
+                    "inputs": [
+                      "default",
+                      "^production",
+                    ],
+                    "metadata": {
+                      "technologies": [
+                        "gradle",
+                      ],
+                    },
+                  },
+                },
+              },
             },
-            "outputs": undefined,
           },
-        },
-      }
+        ],
+      ]
     `);
   });
 });

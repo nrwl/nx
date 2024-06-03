@@ -1,17 +1,14 @@
-import { TargetProjectLocator } from './target-project-locator';
-import {
-  DependencyType,
-  ProjectGraphProjectNode,
-} from '../../../../config/project-graph';
 import { join, relative } from 'path';
-import { workspaceRoot } from '../../../../utils/workspace-root';
-import { normalizePath } from '../../../../utils/path';
+import { DependencyType } from '../../../../config/project-graph';
+import { ProjectConfiguration } from '../../../../config/workspace-json-project-json';
 import { CreateDependenciesContext } from '../../../../project-graph/plugins';
 import {
   RawProjectGraphDependency,
   validateDependency,
 } from '../../../../project-graph/project-graph-builder';
-import { ProjectConfiguration } from '../../../../config/workspace-json-project-json';
+import { normalizePath } from '../../../../utils/path';
+import { workspaceRoot } from '../../../../utils/workspace-root';
+import { TargetProjectLocator } from './target-project-locator';
 
 function isRoot(
   projects: Record<string, ProjectConfiguration>,
@@ -26,11 +23,14 @@ function convertImportToDependency(
   source: string,
   type: RawProjectGraphDependency['type'],
   targetProjectLocator: TargetProjectLocator
-): RawProjectGraphDependency {
-  const target =
-    targetProjectLocator.findProjectWithImport(importExpr, sourceFile) ??
-    `npm:${importExpr}`;
-
+): RawProjectGraphDependency | undefined {
+  const target = targetProjectLocator.findProjectFromImport(
+    importExpr,
+    sourceFile
+  );
+  if (!target) {
+    return;
+  }
   return {
     source,
     target,
@@ -40,25 +40,9 @@ function convertImportToDependency(
 }
 
 export function buildExplicitTypeScriptDependencies(
-  ctx: CreateDependenciesContext
+  ctx: CreateDependenciesContext,
+  targetProjectLocator: TargetProjectLocator
 ): RawProjectGraphDependency[] {
-  // TODO: TargetProjectLocator is a public API, so we can't change the shape of it
-  // We should eventually let it accept Record<string, ProjectConfiguration> s.t. we
-  // don't have to reshape the CreateDependenciesContext here.
-  const nodes: Record<string, ProjectGraphProjectNode> = Object.fromEntries(
-    Object.entries(ctx.projects).map(([key, config]) => [
-      key,
-      {
-        name: key,
-        type: null,
-        data: config,
-      },
-    ])
-  );
-  const targetProjectLocator = new TargetProjectLocator(
-    nodes,
-    ctx.externalNodes
-  );
   const res: RawProjectGraphDependency[] = [];
 
   const filesToProcess: Record<string, string[]> = {};
@@ -101,6 +85,7 @@ export function buildExplicitTypeScriptDependencies(
     dynamicImportExpressions,
   } of imports) {
     const normalizedFilePath = normalizePath(relative(workspaceRoot, file));
+
     for (const importExpr of staticImportExpressions) {
       const dependency = convertImportToDependency(
         importExpr,
@@ -109,6 +94,10 @@ export function buildExplicitTypeScriptDependencies(
         DependencyType.static,
         targetProjectLocator
       );
+      if (!dependency) {
+        continue;
+      }
+
       // TODO: These edges technically should be allowed but we need to figure out how to separate config files out from root
       if (
         isRoot(ctx.projects, dependency.source) ||
@@ -125,6 +114,10 @@ export function buildExplicitTypeScriptDependencies(
         DependencyType.dynamic,
         targetProjectLocator
       );
+      if (!dependency) {
+        continue;
+      }
+
       // TODO: These edges technically should be allowed but we need to figure out how to separate config files out from root
       if (
         isRoot(ctx.projects, dependency.source) ||

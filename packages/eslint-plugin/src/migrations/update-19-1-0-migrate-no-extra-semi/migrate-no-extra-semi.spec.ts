@@ -76,6 +76,52 @@ describe('update-19-1-0-migrate-no-extra-semi', () => {
       `);
     });
 
+    it('should update top level config that extends @nx/typescript and "rules" is not defined', async () => {
+      writeJson(tree, '.eslintrc.json', {
+        plugins: ['@nx'],
+        extends: ['@nx/typescript'],
+      });
+
+      await migrate(tree);
+
+      expect(readJson(tree, '.eslintrc.json')).toMatchInlineSnapshot(`
+        {
+          "extends": [
+            "@nx/typescript",
+          ],
+          "plugins": [
+            "@nx",
+          ],
+          "rules": {
+            "@typescript-eslint/no-extra-semi": "error",
+            "no-extra-semi": "off",
+          },
+        }
+      `);
+
+      writeJson(tree, '.eslintrc.json', {
+        plugins: ['@nx'],
+        extends: ['plugin:@nx/typescript'], // alt syntax
+      });
+
+      await migrate(tree);
+
+      expect(readJson(tree, '.eslintrc.json')).toMatchInlineSnapshot(`
+        {
+          "extends": [
+            "plugin:@nx/typescript",
+          ],
+          "plugins": [
+            "@nx",
+          ],
+          "rules": {
+            "@typescript-eslint/no-extra-semi": "error",
+            "no-extra-semi": "off",
+          },
+        }
+      `);
+    });
+
     it('should update top level config that extends @nx/javascript', async () => {
       writeJson(tree, '.eslintrc.json', {
         plugins: ['@nx'],
@@ -104,6 +150,52 @@ describe('update-19-1-0-migrate-no-extra-semi', () => {
         plugins: ['@nx'],
         extends: ['plugin:@nx/javascript'], // alt syntax
         rules: {},
+      });
+
+      await migrate(tree);
+
+      expect(readJson(tree, '.eslintrc.json')).toMatchInlineSnapshot(`
+        {
+          "extends": [
+            "plugin:@nx/javascript",
+          ],
+          "plugins": [
+            "@nx",
+          ],
+          "rules": {
+            "@typescript-eslint/no-extra-semi": "error",
+            "no-extra-semi": "off",
+          },
+        }
+      `);
+    });
+
+    it('should update top level config that extends @nx/javascript and "rules" is not defined', async () => {
+      writeJson(tree, '.eslintrc.json', {
+        plugins: ['@nx'],
+        extends: ['@nx/javascript'],
+      });
+
+      await migrate(tree);
+
+      expect(readJson(tree, '.eslintrc.json')).toMatchInlineSnapshot(`
+        {
+          "extends": [
+            "@nx/javascript",
+          ],
+          "plugins": [
+            "@nx",
+          ],
+          "rules": {
+            "@typescript-eslint/no-extra-semi": "error",
+            "no-extra-semi": "off",
+          },
+        }
+      `);
+
+      writeJson(tree, '.eslintrc.json', {
+        plugins: ['@nx'],
+        extends: ['plugin:@nx/javascript'], // alt syntax
       });
 
       await migrate(tree);
@@ -263,6 +355,69 @@ describe('update-19-1-0-migrate-no-extra-semi', () => {
       `);
     });
 
+    it('should update overrides config that extends @nx/typescript and "rules" is not defined', async () => {
+      writeJson(tree, 'path/to/.eslintrc.json', {
+        overrides: [
+          {
+            files: ['*.ts'],
+            extends: ['@nx/typescript'],
+          },
+          {
+            files: ['*.tsx'],
+            extends: ['plugin:@nx/typescript'], // alt syntax
+          },
+          {
+            // Should be untouched
+            files: ['*.js'],
+            plugins: ['@nx'],
+            rules: {},
+          },
+        ],
+      });
+
+      await migrate(tree);
+
+      expect(readJson(tree, 'path/to/.eslintrc.json')).toMatchInlineSnapshot(`
+        {
+          "overrides": [
+            {
+              "extends": [
+                "@nx/typescript",
+              ],
+              "files": [
+                "*.ts",
+              ],
+              "rules": {
+                "@typescript-eslint/no-extra-semi": "error",
+                "no-extra-semi": "off",
+              },
+            },
+            {
+              "extends": [
+                "plugin:@nx/typescript",
+              ],
+              "files": [
+                "*.tsx",
+              ],
+              "rules": {
+                "@typescript-eslint/no-extra-semi": "error",
+                "no-extra-semi": "off",
+              },
+            },
+            {
+              "files": [
+                "*.js",
+              ],
+              "plugins": [
+                "@nx",
+              ],
+              "rules": {},
+            },
+          ],
+        }
+      `);
+    });
+
     it('should update overrides config that extends @nx/javascript', async () => {
       writeJson(tree, '.eslintrc.json', {
         overrides: [
@@ -275,6 +430,69 @@ describe('update-19-1-0-migrate-no-extra-semi', () => {
             files: ['*.jsx'],
             extends: ['plugin:@nx/javascript'], // alt syntax
             rules: {},
+          },
+          {
+            // Should be untouched
+            files: ['*.js'],
+            plugins: ['@nx'],
+            rules: {},
+          },
+        ],
+      });
+
+      await migrate(tree);
+
+      expect(readJson(tree, '.eslintrc.json')).toMatchInlineSnapshot(`
+        {
+          "overrides": [
+            {
+              "extends": [
+                "@nx/javascript",
+              ],
+              "files": [
+                "*.js",
+              ],
+              "rules": {
+                "@typescript-eslint/no-extra-semi": "error",
+                "no-extra-semi": "off",
+              },
+            },
+            {
+              "extends": [
+                "plugin:@nx/javascript",
+              ],
+              "files": [
+                "*.jsx",
+              ],
+              "rules": {
+                "@typescript-eslint/no-extra-semi": "error",
+                "no-extra-semi": "off",
+              },
+            },
+            {
+              "files": [
+                "*.js",
+              ],
+              "plugins": [
+                "@nx",
+              ],
+              "rules": {},
+            },
+          ],
+        }
+      `);
+    });
+
+    it('should update overrides config that extends @nx/javascript and "rules" is not defined', async () => {
+      writeJson(tree, '.eslintrc.json', {
+        overrides: [
+          {
+            files: ['*.js'],
+            extends: ['@nx/javascript'],
+          },
+          {
+            files: ['*.jsx'],
+            extends: ['plugin:@nx/javascript'], // alt syntax
           },
           {
             // Should be untouched

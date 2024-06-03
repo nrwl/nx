@@ -3,6 +3,8 @@ import { createTreeWithEmptyWorkspace } from 'nx/src/devkit-testing-exports';
 import { WORKSPACE_PLUGIN_DIR } from '../../constants';
 import update from './rename-workspace-rules';
 
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
 const rule1Name = 'test-rule';
 const rule2Name = 'my-rule';
 

@@ -26,6 +26,14 @@ export function Hero(): JSX.Element {
             >
               Contact sales
             </ButtonLink>
+            <ButtonLink
+              href="/contact/engineering"
+              title="Contact sales"
+              variant="primary"
+              size="default"
+            >
+              Contact engineers
+            </ButtonLink>
 
             {/*<Link*/}
             {/*  className="group text-sm font-semibold leading-6 text-slate-950 dark:text-white"*/}

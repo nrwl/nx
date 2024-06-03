@@ -1,13 +1,11 @@
 import {
-  CreateNodesContext,
   createProjectGraphAsync,
   formatFiles,
-  joinPathFragments,
   type TargetConfiguration,
   type Tree,
 } from '@nx/devkit';
 import { migrateExecutorToPlugin } from '@nx/devkit/src/generators/plugin-migrations/executor-to-plugin-migrator';
-import { createNodes } from '../../plugins/plugin';
+import { createNodesV2 } from '../../plugins/plugin';
 import { targetOptionsToCliMap } from './lib/target-options-map';
 import { upsertBaseUrl } from './lib/upsert-baseUrl';
 import { addDevServerTargetToConfig } from './lib/add-dev-server-target-to-config';
@@ -31,7 +29,7 @@ export async function convertToInferred(tree: Tree, options: Schema) {
       ciTargetName: 'e2e-ci',
     }),
     postTargetTransformer,
-    createNodes,
+    createNodesV2,
     options.project
   );
 
@@ -45,7 +43,7 @@ export async function convertToInferred(tree: Tree, options: Schema) {
       ciTargetName: 'e2e-ci',
     }),
     postTargetTransformer,
-    createNodes,
+    createNodesV2,
     options.project
   );
 

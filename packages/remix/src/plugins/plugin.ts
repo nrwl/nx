@@ -66,9 +66,12 @@ export const createNodes: CreateNodes<RemixPluginOptions> = [
 
     options = normalizeOptions(options);
 
-    const hash = calculateHashForCreateNodes(projectRoot, options, context, [
-      getLockFileName(detectPackageManager(context.workspaceRoot)),
-    ]);
+    const hash = await calculateHashForCreateNodes(
+      projectRoot,
+      options,
+      context,
+      [getLockFileName(detectPackageManager(context.workspaceRoot))]
+    );
     targetsCache[hash] ??= await buildRemixTargets(
       configFilePath,
       projectRoot,
@@ -151,6 +154,7 @@ function buildTarget(
       ...('production' in namedInputs
         ? ['production', '^production']
         : ['default', '^default']),
+      { externalDependencies: ['@remix-run/dev'] },
     ],
     outputs: [serverBuildOutputPath, assetsBuildOutputPath],
     command: 'remix build',
@@ -198,6 +202,7 @@ function typecheckTarget(
       ...('production' in namedInputs
         ? ['production', '^production']
         : ['default', '^default']),
+      { externalDependencies: ['typescript'] },
     ],
     options: {
       cwd: projectRoot,

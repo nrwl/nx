@@ -6,7 +6,6 @@ import {
   joinPathFragments,
   readJsonFile,
   TargetConfiguration,
-  workspaceRoot,
   writeJsonFile,
 } from '@nx/devkit';
 import { dirname, isAbsolute, join, relative } from 'path';
@@ -118,7 +117,8 @@ async function buildViteTargets(
 
   const { buildOutputs, testOutputs, hasTest, isBuildable } = getOutputs(
     viteConfig,
-    projectRoot
+    projectRoot,
+    context.workspaceRoot
   );
 
   const namedInputs = getNamedInputs(projectRoot, context);
@@ -244,7 +244,8 @@ function serveStaticTarget(options: VitePluginOptions) {
 
 function getOutputs(
   viteConfig: Record<string, any> | undefined,
-  projectRoot: string
+  projectRoot: string,
+  workspaceRoot: string
 ): {
   buildOutputs: string[];
   testOutputs: string[];
@@ -256,6 +257,7 @@ function getOutputs(
   const buildOutputPath = normalizeOutputPath(
     build?.outDir,
     projectRoot,
+    workspaceRoot,
     'dist'
   );
 
@@ -267,6 +269,7 @@ function getOutputs(
   const reportsDirectoryPath = normalizeOutputPath(
     test?.coverage?.reportsDirectory,
     projectRoot,
+    workspaceRoot,
     'coverage'
   );
 
@@ -281,6 +284,7 @@ function getOutputs(
 function normalizeOutputPath(
   outputPath: string | undefined,
   projectRoot: string,
+  workspaceRoot: string,
   path: 'coverage' | 'dist'
 ): string | undefined {
   if (!outputPath) {

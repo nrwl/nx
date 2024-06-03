@@ -70,9 +70,12 @@ export const createNodes: CreateNodes<ReactNativePluginOptions> = [
       return {};
     }
 
-    const hash = calculateHashForCreateNodes(projectRoot, options, context, [
-      getLockFileName(detectPackageManager(context.workspaceRoot)),
-    ]);
+    const hash = await calculateHashForCreateNodes(
+      projectRoot,
+      options,
+      context,
+      [getLockFileName(detectPackageManager(context.workspaceRoot))]
+    );
 
     targetsCache[hash] ??= buildReactNativeTargets(
       projectRoot,
@@ -106,12 +109,6 @@ function buildReactNativeTargets(
       command: `pod install`,
       options: { cwd: joinPathFragments(projectRoot, 'ios') },
       dependsOn: [`${options.syncDepsTargetName}`],
-      cache: true,
-      inputs: getInputs(namedInputs),
-      outputs: [
-        getOutputs(projectRoot, 'ios/Pods'),
-        getOutputs(projectRoot, 'ios/Podfile.lock'),
-      ],
     },
     [options.runIosTargetName]: {
       command: `react-native run-ios`,
