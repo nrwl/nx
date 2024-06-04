@@ -15,6 +15,7 @@ It only uses language primitives and immutable objects
 
 - [ChangeType](../../devkit/documents/ChangeType)
 - [DependencyType](../../devkit/documents/DependencyType)
+- [OverwriteStrategy](../../devkit/documents/OverwriteStrategy)
 
 ### Classes
 
