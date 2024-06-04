@@ -32,6 +32,10 @@ The following environment variables are ones that you can set to change the beha
 | NX_LOAD_DOT_ENV_FILES            | boolean | If set to 'false', Nx will not load any environment files (e.g. `.local.env`, `.env.local`)                                                                                                                                    |
 | NX_NATIVE_FILE_CACHE_DIRECTORY   | string  | The cache for native `.node` files is stored under a global temp directory by default. Set this variable to use a different directory. This is interpreted as an absolute path.                                                |
 
+{% callout type="warning" title="Deprecated for Nx version >= 19" %}
+Following the breaking change of the release of Nx 19, all the environment variables below won't be accessible. For more details, please go to this [link](https://nx.dev/blog/2024-05-08-nx-19-release#breaking-change-updating-bundled-environment-variables-to).
+{% /callout %}
+
 Nx will set the following environment variables so they can be accessible within the process even outside of executors and generators.
 
 | Property                     | Type    | Description                                                                                                           |
