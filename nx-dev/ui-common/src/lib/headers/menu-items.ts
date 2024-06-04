@@ -9,10 +9,12 @@ import {
   PlayCircleIcon,
   ShareIcon,
   Squares2X2Icon,
+  ChatBubbleBottomCenterTextIcon,
 } from '@heroicons/react/24/outline';
 import { FC, SVGProps } from 'react';
 import { NxAgentsIcon } from '../nx-agents-icon';
 import { NxReplayIcon } from '../nx-replay-icon';
+import { DiscordIcon } from '../discord-icon';
 
 export interface MenuItem {
   name: string;
@@ -180,6 +182,22 @@ export const learnItems: MenuItem[] = [
     description: null,
     href: 'https://go.nrwl.io/nx-newsletter',
     icon: NewspaperIcon,
+    isNew: false,
+    isHighlight: false,
+  },
+  {
+    name: 'Community',
+    description: null,
+    href: '/community',
+    icon: ChatBubbleBottomCenterTextIcon,
+    isNew: false,
+    isHighlight: false,
+  },
+  {
+    name: 'Discord',
+    description: null,
+    href: 'https://go.nx.dev/community',
+    icon: DiscordIcon,
     isNew: false,
     isHighlight: false,
   },
