@@ -324,6 +324,8 @@ To fix this you will either need to add a package.json file at that location, or
 
       if (options.specifier) {
         log(`📄 Using the provided version specifier "${options.specifier}".`);
+        // The user is forcibly overriding whatever specifierSource they had otherwise set by imperatively providing a specifier
+        options.specifierSource = 'prompt';
       }
 
       /**
@@ -495,8 +497,19 @@ To fix this you will either need to add a package.json file at that location, or
             }
 
             if (!specifier) {
-              specifier = null;
-              log(`🚫 No changes were detected within version plans.`);
+              if (
+                updateDependents !== 'never' &&
+                projectToDependencyBumps.has(projectName)
+              ) {
+                // No applicable changes to the project directly by the user, but one or more dependencies have been bumped and updateDependents is enabled
+                specifier = updateDependentsBump;
+                log(
+                  `📄 Resolved the specifier as "${specifier}" because "release.version.generatorOptions.updateDependents" is enabled`
+                );
+              } else {
+                specifier = null;
+                log(`🚫 No changes were detected within version plans.`);
+              }
             } else {
               log(
                 `📄 Resolved the specifier as "${specifier}" using version plans.`
@@ -522,7 +535,7 @@ To fix this you will either need to add a package.json file at that location, or
           }
           default:
             throw new Error(
-              `Invalid specifierSource "${specifierSource}" provided. Must be one of "prompt" or "conventional-commits"`
+              `Invalid specifierSource "${specifierSource}" provided. Must be one of "prompt", "conventional-commits" or "version-plans".`
             );
         }
       }
@@ -575,9 +588,22 @@ To fix this you will either need to add a package.json file at that location, or
           );
         }
 
-        const isInCurrentBatch = options.projects.some(
+        let isInCurrentBatch = options.projects.some(
           (project) => project.name === dependentProject.source
         );
+
+        // For version-plans, we don't just need to consider the current batch of projects, but also the ones that are actually being updated as part of the plan file(s)
+        if (isInCurrentBatch && options.specifierSource === 'version-plans') {
+          isInCurrentBatch = (options.releaseGroup.versionPlans || []).some(
+            (plan) => {
+              if ('projectVersionBumps' in plan) {
+                return plan.projectVersionBumps[dependentProject.source];
+              }
+              return true;
+            }
+          );
+        }
+
         if (!isInCurrentBatch) {
           dependentProjectsOutsideCurrentBatch.push(dependentProject);
         } else {
@@ -589,10 +615,14 @@ To fix this you will either need to add a package.json file at that location, or
       if (updateDependents === 'never') {
         if (dependentProjectsOutsideCurrentBatch.length > 0) {
           let logMsg = `⚠️  Warning, the following packages depend on "${project.name}"`;
+          const reason =
+            options.specifierSource === 'version-plans'
+              ? 'because they are not referenced in any version plans'
+              : 'via --projects';
           if (options.releaseGroup.name === IMPLICIT_DEFAULT_RELEASE_GROUP) {
-            logMsg += ` but have been filtered out via --projects, and therefore will not be updated:`;
+            logMsg += ` but have been filtered out ${reason}, and therefore will not be updated:`;
           } else {
-            logMsg += ` but are either not part of the current release group "${options.releaseGroup.name}", or have been filtered out via --projects, and therefore will not be updated:`;
+            logMsg += ` but are either not part of the current release group "${options.releaseGroup.name}", or have been filtered out ${reason}, and therefore will not be updated:`;
           }
           const indent = Array.from(new Array(projectName.length + 4))
             .map(() => ' ')
@@ -750,12 +780,27 @@ To fix this you will either need to add a package.json file at that location, or
 
       if (updateDependents === 'auto') {
         for (const dependentProject of dependentProjectsOutsideCurrentBatch) {
+          if (
+            options.specifierSource === 'version-plans' &&
+            !projectToDependencyBumps.has(dependentProject.source)
+          ) {
+            projectToDependencyBumps.set(
+              dependentProject.source,
+              new Set([projectName])
+            );
+          }
+
           updateDependentProjectAndAddToVersionData({
             dependentProject,
             dependencyPackageName: packageName,
             newDependencyVersion: newVersion,
             // For these additional dependents, we need to update their package.json version as well because we know they will not come later in the topologically sorted projects loop
-            forceVersionBump: updateDependentsBump,
+            // (Unless using version plans and the dependent is not filtered out by --projects)
+            forceVersionBump:
+              options.specifierSource === 'version-plans' &&
+              projects.find((p) => p.name === dependentProject.source)
+                ? false
+                : updateDependentsBump,
           });
         }
       }

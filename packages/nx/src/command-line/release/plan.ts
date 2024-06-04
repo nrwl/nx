@@ -159,9 +159,7 @@ export async function releasePlan(args: PlanOptions): Promise<string | number> {
     );
   }
 
-  output.logSingleLine(`Done!`);
-
-  return versionPlanFileName;
+  return 0;
 }
 
 async function promptForVersion(message: string): Promise<string> {

@@ -238,6 +238,10 @@
         "version": {
           "$ref": "#/definitions/NxReleaseVersionConfiguration"
         },
+        "versionPlans": {
+          "type": "boolean",
+          "description": "Enables using version plans as a specifier source for versioning and to determine changes for changelog generation."
+        },
         "releaseTagPattern": {
           "type": "string"
         }

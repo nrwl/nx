@@ -397,9 +397,6 @@ export async function releaseChangelog(
       continue;
     }
     for (const project of releaseGroup.projects) {
-      if (projectToAdditionalDependencyBumps.has(project)) {
-        continue;
-      }
       const dependentProjects = (
         projectsVersionData[project]?.dependentProjects || []
       )
@@ -410,7 +407,21 @@ export async function releaseChangelog(
           };
         })
         .filter((b) => b.newVersion !== null);
-      projectToAdditionalDependencyBumps.set(project, dependentProjects);
+
+      for (const dependent of dependentProjects) {
+        const additionalDependencyBumpsForProject =
+          projectToAdditionalDependencyBumps.has(dependent.dependencyName)
+            ? projectToAdditionalDependencyBumps.get(dependent.dependencyName)
+            : [];
+        additionalDependencyBumpsForProject.push({
+          dependencyName: project,
+          newVersion: projectsVersionData[project].newVersion,
+        });
+        projectToAdditionalDependencyBumps.set(
+          dependent.dependencyName,
+          additionalDependencyBumpsForProject
+        );
+      }
     }
   }
 
@@ -430,9 +441,9 @@ export async function releaseChangelog(
           (project) => {
             return [
               project,
-              ...(projectToAdditionalDependencyBumps.get(project) || []).map(
-                (d) => d.dependencyName
-              ),
+              ...(projectsVersionData[project]?.dependentProjects.map(
+                (dep) => dep.source
+              ) || []),
             ];
           }
         )

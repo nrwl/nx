@@ -2,14 +2,14 @@ import { ProjectGraph } from '../../../config/project-graph';
 import { findMatchingProjects } from '../../../utils/find-matching-projects';
 import { output } from '../../../utils/output';
 import { IMPLICIT_DEFAULT_RELEASE_GROUP, NxReleaseConfig } from './config';
-import { VersionPlan } from './version-plans';
+import { GroupVersionPlan, ProjectsVersionPlan } from './version-plans';
 
 export type ReleaseGroupWithName = Omit<
   NxReleaseConfig['groups'][string],
   'versionPlans'
 > & {
   name: string;
-  versionPlans: VersionPlan[] | false;
+  versionPlans: (ProjectsVersionPlan | GroupVersionPlan)[] | false;
 };
 
 export function filterReleaseGroups(
