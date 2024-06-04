@@ -54,6 +54,7 @@ import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-com
 export interface NormalizedSchema extends Schema {
   appProjectRoot: string;
   parsedTags: string[];
+  outputPath: string;
 }
 
 function getWebpackBuildConfig(
@@ -67,10 +68,7 @@ function getWebpackBuildConfig(
     options: {
       target: 'node',
       compiler: 'tsc',
-      outputPath: joinPathFragments(
-        'dist',
-        options.rootProject ? options.name : options.appProjectRoot
-      ),
+      outputPath: options.outputPath,
       main: joinPathFragments(
         project.sourceRoot,
         'main' + (options.js ? '.js' : '.ts')
@@ -101,10 +99,7 @@ function getEsBuildConfig(
     defaultConfiguration: 'production',
     options: {
       platform: 'node',
-      outputPath: joinPathFragments(
-        'dist',
-        options.rootProject ? options.name : options.appProjectRoot
-      ),
+      outputPath: options.outputPath,
       // Use CJS for Node apps for widest compatibility.
       format: ['cjs'],
       bundle: false,
@@ -199,10 +194,7 @@ function addAppFiles(tree: Tree, options: NormalizedSchema) {
       ),
       webpackPluginOptions: hasWebpackPlugin(tree)
         ? {
-            outputPath: joinPathFragments(
-              'dist',
-              options.rootProject ? options.name : options.appProjectRoot
-            ),
+            outputPath: options.outputPath,
             main: './src/main' + (options.js ? '.js' : '.ts'),
             tsConfig: './tsconfig.app.json',
             assets: ['./src/assets'],
@@ -562,6 +554,10 @@ async function normalizeOptions(
     unitTestRunner: options.unitTestRunner ?? 'jest',
     rootProject: options.rootProject ?? false,
     port: options.port ?? 3000,
+    outputPath: joinPathFragments(
+      'dist',
+      options.rootProject ? options.name : appProjectRoot
+    ),
   };
 }
 
