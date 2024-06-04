@@ -220,7 +220,7 @@ interface NxReleaseConfiguration {
       releaseTagPattern?: string;
       /**
        * Enables using version plans as a specifier source for versioning and
-       * to determine changes for the changelog generation.
+       * to determine changes for changelog generation.
        */
       versionPlans?: boolean;
     }
@@ -292,7 +292,7 @@ interface NxReleaseConfiguration {
   conventionalCommits?: NxReleaseConventionalCommitsConfiguration;
   /**
    * Enables using version plans as a specifier source for versioning and
-   * to determine changes for the changelog generation.
+   * to determine changes for changelog generation.
    */
   versionPlans?: boolean;
 }

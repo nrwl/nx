@@ -1,5 +1,5 @@
 import { prompt } from 'enquirer';
-import { writeFile } from 'fs-extra';
+import { ensureDir, writeFile } from 'fs-extra';
 import { join } from 'path';
 import { RELEASE_TYPES } from 'semver';
 import { readNxJson } from '../../config/nx-json';
@@ -147,8 +147,10 @@ export async function releasePlan(args: PlanOptions): Promise<string | number> {
     );
   } else {
     output.logSingleLine(`Creating version plan file "${versionPlanFileName}"`);
+    const versionPlansAbsolutePath = getVersionPlansAbsolutePath();
+    await ensureDir(versionPlansAbsolutePath);
     await writeFile(
-      join(getVersionPlansAbsolutePath(), versionPlanFileName),
+      join(versionPlansAbsolutePath, versionPlanFileName),
       versionPlanFileContent
     );
   }
