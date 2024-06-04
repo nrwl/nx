@@ -216,7 +216,7 @@ export const eventItems: MenuItem[] = [
     name: 'Webinars',
     description:
       'Virtual courses to get a deeper understanding on monorepos animated by the Nx team.',
-    href: 'https://go.nx.dev/april-webinar',
+    href: 'https://go.nx.dev/webinar',
     icon: null,
     isNew: false,
     isHighlight: false,
