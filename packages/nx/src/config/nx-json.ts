@@ -40,6 +40,7 @@ export interface NrwlJsPluginConfig {
   analyzeSourceFiles?: boolean;
   analyzePackageJson?: boolean;
   analyzeLockfile?: boolean;
+  projectsAffectedByDependencyUpdates?: 'all' | 'auto' | string[];
 }
 
 interface NxInstallationConfiguration {
