@@ -1283,6 +1283,9 @@ function filterHiddenCommits(
   commits: GitCommit[],
   conventionalCommitsConfig: NxReleaseConfig['conventionalCommits']
 ): GitCommit[] {
+  if (!commits) {
+    return [];
+  }
   return commits.filter((commit) => {
     const type = commit.type;
 
