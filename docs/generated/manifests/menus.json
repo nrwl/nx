@@ -1993,6 +1993,14 @@
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
+              },
+              {
+                "name": "Publish a Custom Dist Directory",
+                "path": "/recipes/nx-release/publish-custom-dist-directory",
+                "id": "publish-custom-dist-directory",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
               }
             ],
             "disableCollapsible": false
@@ -3672,6 +3680,14 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
+          },
+          {
+            "name": "Publish a Custom Dist Directory",
+            "path": "/recipes/nx-release/publish-custom-dist-directory",
+            "id": "publish-custom-dist-directory",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -3752,6 +3768,14 @@
         "name": "Configure Changelog Format",
         "path": "/recipes/nx-release/configure-changelog-format",
         "id": "configure-changelog-format",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Publish a Custom Dist Directory",
+        "path": "/recipes/nx-release/publish-custom-dist-directory",
+        "id": "publish-custom-dist-directory",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
