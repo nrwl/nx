@@ -147,13 +147,21 @@ export async function getGitDiff(
     });
 }
 
+export async function getChangedTrackedFiles(): Promise<Set<string>> {
+  const result = await execCommand('git', ['status', '--porcelain']);
+  const lines = result.split('\n').filter((l) => l.trim().length > 0);
+  return new Set(lines.map((l) => l.substring(3)));
+}
+
 export async function gitAdd({
   changedFiles,
+  deletedFiles,
   dryRun,
   verbose,
   logFn,
 }: {
-  changedFiles: string[];
+  changedFiles?: string[];
+  deletedFiles?: string[];
   dryRun?: boolean;
   verbose?: boolean;
   logFn?: (...messages: string[]) => void;
@@ -162,12 +170,25 @@ export async function gitAdd({
 
   let ignoredFiles: string[] = [];
   let filesToAdd: string[] = [];
-  for (const f of changedFiles) {
+  for (const f of changedFiles ?? []) {
     const isFileIgnored = await isIgnored(f);
     if (isFileIgnored) {
       ignoredFiles.push(f);
     } else {
       filesToAdd.push(f);
+    }
+  }
+
+  if (deletedFiles?.length > 0) {
+    const changedTrackedFiles = await getChangedTrackedFiles();
+    for (const f of deletedFiles ?? []) {
+      const isFileIgnored = await isIgnored(f);
+      if (isFileIgnored) {
+        ignoredFiles.push(f);
+        // git add will fail if trying to add an untracked file that doesn't exist
+      } else if (changedTrackedFiles.has(f)) {
+        filesToAdd.push(f);
+      }
     }
   }
 
@@ -177,7 +198,10 @@ export async function gitAdd({
   }
 
   if (!filesToAdd.length) {
-    logFn('\nNo files to stage. Skipping git add.');
+    if (!dryRun) {
+      logFn('\nNo files to stage. Skipping git add.');
+    }
+    // if this is a dry run, it's possible that there would have been actual files to add, so it's deceptive to say "No files to stage".
     return;
   }
 
@@ -349,6 +373,25 @@ export function parseCommits(commits: RawGitCommit[]): GitCommit[] {
   return commits.map((commit) => parseGitCommit(commit)).filter(Boolean);
 }
 
+export function parseConventionalCommitsMessage(message: string): {
+  type: string;
+  scope: string;
+  description: string;
+  breaking: boolean;
+} | null {
+  const match = message.match(ConventionalCommitRegex);
+  if (!match) {
+    return null;
+  }
+
+  return {
+    type: match.groups.type || '',
+    scope: match.groups.scope || '',
+    description: match.groups.description || '',
+    breaking: Boolean(match.groups.breaking),
+  };
+}
+
 // https://www.conventionalcommits.org/en/v1.0.0/
 // https://regex101.com/r/FSfNvA/1
 const ConventionalCommitRegex =
@@ -360,16 +403,15 @@ const ChangedFileRegex = /(A|M|D|R\d*|C\d*)\t([^\t\n]*)\t?(.*)?/gm;
 const RevertHashRE = /This reverts commit (?<hash>[\da-f]{40})./gm;
 
 export function parseGitCommit(commit: RawGitCommit): GitCommit | null {
-  const match = commit.message.match(ConventionalCommitRegex);
-  if (!match) {
+  const parsedMessage = parseConventionalCommitsMessage(commit.message);
+  if (!parsedMessage) {
     return null;
   }
 
-  const scope = match.groups.scope || '';
-
+  const scope = parsedMessage.scope;
   const isBreaking =
-    Boolean(match.groups.breaking) || commit.body.includes('BREAKING CHANGE:');
-  let description = match.groups.description;
+    parsedMessage.breaking || commit.body.includes('BREAKING CHANGE:');
+  let description = parsedMessage.description;
 
   // Extract references from message
   const references: Reference[] = [];
@@ -386,7 +428,7 @@ export function parseGitCommit(commit: RawGitCommit): GitCommit | null {
   // Remove references and normalize
   description = description.replace(PullRequestRE, '').trim();
 
-  let type = match.groups.type;
+  let type = parsedMessage.type;
   // Extract any reverted hashes, if applicable
   const revertedHashes = [];
   const matchedHashes = commit.body.matchAll(RevertHashRE);

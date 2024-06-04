@@ -1,7 +1,7 @@
+import { join } from 'path';
 import { ProjectFileMap, ProjectGraph } from '../../../config/project-graph';
 import { TempFs } from '../../../internal-testing-utils/temp-fs';
 import { createNxReleaseConfig } from './config';
-import { join } from 'path';
 
 expect.addSnapshotSerializer({
   serialize: (str: string) => {
@@ -273,6 +273,7 @@ describe('createNxReleaseConfig()', () => {
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
                 },
+                "versionPlans": false,
               },
             },
             "projectsRelationship": "fixed",
@@ -292,6 +293,7 @@ describe('createNxReleaseConfig()', () => {
               },
               "preVersionCommand": "",
             },
+            "versionPlans": false,
           },
         }
       `);
@@ -445,6 +447,7 @@ describe('createNxReleaseConfig()', () => {
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
                 },
+                "versionPlans": false,
               },
             },
             "projectsRelationship": "fixed",
@@ -464,6 +467,7 @@ describe('createNxReleaseConfig()', () => {
               },
               "preVersionCommand": "",
             },
+            "versionPlans": false,
           },
         }
       `);
@@ -620,6 +624,7 @@ describe('createNxReleaseConfig()', () => {
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
                 },
+                "versionPlans": false,
               },
             },
             "projectsRelationship": "fixed",
@@ -639,6 +644,7 @@ describe('createNxReleaseConfig()', () => {
               },
               "preVersionCommand": "",
             },
+            "versionPlans": false,
           },
         }
       `);
@@ -826,6 +832,7 @@ describe('createNxReleaseConfig()', () => {
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
                 },
+                "versionPlans": false,
               },
             },
             "projectsRelationship": "fixed",
@@ -845,6 +852,7 @@ describe('createNxReleaseConfig()', () => {
               },
               "preVersionCommand": "",
             },
+            "versionPlans": false,
           },
         }
       `);
@@ -1016,6 +1024,7 @@ describe('createNxReleaseConfig()', () => {
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
                 },
+                "versionPlans": false,
               },
             },
             "projectsRelationship": "fixed",
@@ -1035,6 +1044,7 @@ describe('createNxReleaseConfig()', () => {
               },
               "preVersionCommand": "",
             },
+            "versionPlans": false,
           },
         }
       `);
@@ -1214,6 +1224,7 @@ describe('createNxReleaseConfig()', () => {
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
                 },
+                "versionPlans": false,
               },
             },
             "projectsRelationship": "fixed",
@@ -1233,6 +1244,7 @@ describe('createNxReleaseConfig()', () => {
               },
               "preVersionCommand": "",
             },
+            "versionPlans": false,
           },
         }
       `);
@@ -1413,6 +1425,7 @@ describe('createNxReleaseConfig()', () => {
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
                 },
+                "versionPlans": false,
               },
             },
             "projectsRelationship": "fixed",
@@ -1432,6 +1445,7 @@ describe('createNxReleaseConfig()', () => {
               },
               "preVersionCommand": "",
             },
+            "versionPlans": false,
           },
         }
       `);
@@ -1592,6 +1606,7 @@ describe('createNxReleaseConfig()', () => {
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
                 },
+                "versionPlans": false,
               },
             },
             "projectsRelationship": "fixed",
@@ -1611,6 +1626,7 @@ describe('createNxReleaseConfig()', () => {
               },
               "preVersionCommand": "",
             },
+            "versionPlans": false,
           },
         }
       `);
@@ -1770,6 +1786,7 @@ describe('createNxReleaseConfig()', () => {
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
                 },
+                "versionPlans": false,
               },
             },
             "projectsRelationship": "fixed",
@@ -1789,6 +1806,7 @@ describe('createNxReleaseConfig()', () => {
               },
               "preVersionCommand": "",
             },
+            "versionPlans": false,
           },
         }
       `);
@@ -1951,6 +1969,7 @@ describe('createNxReleaseConfig()', () => {
                     "optionsOverride": "something",
                   },
                 },
+                "versionPlans": false,
               },
               "group-2": {
                 "changelog": false,
@@ -1964,6 +1983,7 @@ describe('createNxReleaseConfig()', () => {
                   "generator": "@custom/generator-alternative",
                   "generatorOptions": {},
                 },
+                "versionPlans": false,
               },
             },
             "projectsRelationship": "fixed",
@@ -1983,6 +2003,7 @@ describe('createNxReleaseConfig()', () => {
               },
               "preVersionCommand": "",
             },
+            "versionPlans": false,
           },
         }
       `);
@@ -2152,6 +2173,7 @@ describe('createNxReleaseConfig()', () => {
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
                 },
+                "versionPlans": false,
               },
             },
             "projectsRelationship": "fixed",
@@ -2171,6 +2193,7 @@ describe('createNxReleaseConfig()', () => {
               },
               "preVersionCommand": "",
             },
+            "versionPlans": false,
           },
         }
       `);
@@ -2335,6 +2358,7 @@ describe('createNxReleaseConfig()', () => {
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
                 },
+                "versionPlans": false,
               },
               "group-2": {
                 "changelog": {
@@ -2358,6 +2382,7 @@ describe('createNxReleaseConfig()', () => {
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
                 },
+                "versionPlans": false,
               },
             },
             "projectsRelationship": "fixed",
@@ -2377,6 +2402,7 @@ describe('createNxReleaseConfig()', () => {
               },
               "preVersionCommand": "",
             },
+            "versionPlans": false,
           },
         }
       `);
@@ -2539,6 +2565,7 @@ describe('createNxReleaseConfig()', () => {
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
                 },
+                "versionPlans": false,
               },
             },
             "projectsRelationship": "fixed",
@@ -2558,6 +2585,7 @@ describe('createNxReleaseConfig()', () => {
               },
               "preVersionCommand": "",
             },
+            "versionPlans": false,
           },
         }
       `);
@@ -2723,6 +2751,7 @@ describe('createNxReleaseConfig()', () => {
                     "foo": "bar",
                   },
                 },
+                "versionPlans": false,
               },
             },
             "projectsRelationship": "fixed",
@@ -2744,6 +2773,7 @@ describe('createNxReleaseConfig()', () => {
               },
               "preVersionCommand": "",
             },
+            "versionPlans": false,
           },
         }
       `);
@@ -2903,6 +2933,7 @@ describe('createNxReleaseConfig()', () => {
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
                 },
+                "versionPlans": false,
               },
             },
             "projectsRelationship": "fixed",
@@ -2922,6 +2953,7 @@ describe('createNxReleaseConfig()', () => {
               },
               "preVersionCommand": "",
             },
+            "versionPlans": false,
           },
         }
       `);
@@ -3084,6 +3116,7 @@ describe('createNxReleaseConfig()', () => {
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
                 },
+                "versionPlans": false,
               },
             },
             "projectsRelationship": "fixed",
@@ -3103,6 +3136,7 @@ describe('createNxReleaseConfig()', () => {
               },
               "preVersionCommand": "",
             },
+            "versionPlans": false,
           },
         }
       `);
@@ -3261,6 +3295,7 @@ describe('createNxReleaseConfig()', () => {
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
                 },
+                "versionPlans": false,
               },
             },
             "projectsRelationship": "fixed",
@@ -3280,6 +3315,7 @@ describe('createNxReleaseConfig()', () => {
               },
               "preVersionCommand": "nx run-many -t build",
             },
+            "versionPlans": false,
           },
         }
       `);
@@ -3456,6 +3492,7 @@ describe('createNxReleaseConfig()', () => {
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
                 },
+                "versionPlans": false,
               },
             },
             "projectsRelationship": "fixed",
@@ -3475,6 +3512,7 @@ describe('createNxReleaseConfig()', () => {
               },
               "preVersionCommand": "",
             },
+            "versionPlans": false,
           },
         }
       `);
@@ -3633,6 +3671,7 @@ describe('createNxReleaseConfig()', () => {
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
                 },
+                "versionPlans": false,
               },
             },
             "projectsRelationship": "fixed",
@@ -3652,6 +3691,7 @@ describe('createNxReleaseConfig()', () => {
               },
               "preVersionCommand": "",
             },
+            "versionPlans": false,
           },
         }
       `);
@@ -3831,6 +3871,7 @@ describe('createNxReleaseConfig()', () => {
                     "specifierSource": "conventional-commits",
                   },
                 },
+                "versionPlans": false,
               },
             },
             "projectsRelationship": "fixed",
@@ -3850,6 +3891,7 @@ describe('createNxReleaseConfig()', () => {
               },
               "preVersionCommand": "",
             },
+            "versionPlans": false,
           },
         }
       `);
@@ -4001,6 +4043,7 @@ describe('createNxReleaseConfig()', () => {
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
                 },
+                "versionPlans": false,
               },
             },
             "projectsRelationship": "fixed",
@@ -4020,6 +4063,7 @@ describe('createNxReleaseConfig()', () => {
               },
               "preVersionCommand": "",
             },
+            "versionPlans": false,
           },
         }
       `);
@@ -4209,6 +4253,7 @@ describe('createNxReleaseConfig()', () => {
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
                 },
+                "versionPlans": false,
               },
             },
             "projectsRelationship": "fixed",
@@ -4228,6 +4273,7 @@ describe('createNxReleaseConfig()', () => {
               },
               "preVersionCommand": "",
             },
+            "versionPlans": false,
           },
         }
       `);
@@ -4407,6 +4453,7 @@ describe('createNxReleaseConfig()', () => {
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
                 },
+                "versionPlans": false,
               },
             },
             "projectsRelationship": "fixed",
@@ -4426,6 +4473,7 @@ describe('createNxReleaseConfig()', () => {
               },
               "preVersionCommand": "",
             },
+            "versionPlans": false,
           },
         }
       `);
@@ -4585,6 +4633,7 @@ describe('createNxReleaseConfig()', () => {
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
                 },
+                "versionPlans": false,
               },
             },
             "projectsRelationship": "fixed",
@@ -4604,6 +4653,7 @@ describe('createNxReleaseConfig()', () => {
               },
               "preVersionCommand": "",
             },
+            "versionPlans": false,
           },
         }
       `);
@@ -4763,6 +4813,7 @@ describe('createNxReleaseConfig()', () => {
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
                 },
+                "versionPlans": false,
               },
             },
             "projectsRelationship": "fixed",
@@ -4782,6 +4833,7 @@ describe('createNxReleaseConfig()', () => {
               },
               "preVersionCommand": "",
             },
+            "versionPlans": false,
           },
         }
       `);
@@ -4939,6 +4991,7 @@ describe('createNxReleaseConfig()', () => {
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
                 },
+                "versionPlans": false,
               },
             },
             "projectsRelationship": "fixed",
@@ -4958,6 +5011,7 @@ describe('createNxReleaseConfig()', () => {
               },
               "preVersionCommand": "",
             },
+            "versionPlans": false,
           },
         }
       `);
@@ -5151,6 +5205,7 @@ describe('createNxReleaseConfig()', () => {
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
                 },
+                "versionPlans": false,
               },
             },
             "projectsRelationship": "fixed",
@@ -5170,6 +5225,7 @@ describe('createNxReleaseConfig()', () => {
               },
               "preVersionCommand": "",
             },
+            "versionPlans": false,
           },
         }
       `);
@@ -5339,6 +5395,7 @@ describe('createNxReleaseConfig()', () => {
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
                 },
+                "versionPlans": false,
               },
             },
             "projectsRelationship": "fixed",
@@ -5358,6 +5415,7 @@ describe('createNxReleaseConfig()', () => {
               },
               "preVersionCommand": "",
             },
+            "versionPlans": false,
           },
         }
       `);
@@ -5377,181 +5435,183 @@ describe('createNxReleaseConfig()', () => {
       });
 
       expect(res).toMatchInlineSnapshot(`
-      {
-        "error": null,
-        "nxReleaseConfig": {
-          "changelog": {
-            "automaticFromRef": false,
-            "git": {
-              "commit": true,
-              "commitArgs": "",
-              "commitMessage": "chore(release): publish {version}",
-              "stageChanges": false,
-              "tag": true,
-              "tagArgs": "",
-              "tagMessage": "",
+        {
+          "error": null,
+          "nxReleaseConfig": {
+            "changelog": {
+              "automaticFromRef": false,
+              "git": {
+                "commit": true,
+                "commitArgs": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": false,
+                "tag": true,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+              "projectChangelogs": false,
+              "workspaceChangelog": {
+                "createRelease": false,
+                "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
+                "file": "{workspaceRoot}/CHANGELOG.md",
+                "renderOptions": {
+                  "authors": true,
+                  "commitReferences": true,
+                  "versionTitleDate": true,
+                },
+                "renderer": "<dirname>/release/changelog-renderer",
+              },
             },
-            "projectChangelogs": false,
-            "workspaceChangelog": {
-              "createRelease": false,
-              "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
-              "file": "{workspaceRoot}/CHANGELOG.md",
-              "renderOptions": {
-                "authors": true,
-                "commitReferences": true,
-                "versionTitleDate": true,
-              },
-              "renderer": "<dirname>/release/changelog-renderer",
-            },
-          },
-          "conventionalCommits": {
-            "types": {
-              "build": {
-                "changelog": {
-                  "hidden": true,
-                  "title": "📦 Build",
-                },
-                "semverBump": "none",
-              },
-              "chore": {
-                "changelog": {
-                  "hidden": true,
-                  "title": "🏡 Chore",
-                },
-                "semverBump": "none",
-              },
-              "ci": {
-                "changelog": {
-                  "hidden": true,
-                  "title": "🤖 CI",
-                },
-                "semverBump": "none",
-              },
-              "customType": {
-                "changelog": {
-                  "hidden": false,
-                  "title": "customType",
-                },
-                "semverBump": "patch",
-              },
-              "docs": {
-                "changelog": {
-                  "hidden": false,
-                  "title": "📖 Documentation",
-                },
-                "semverBump": "patch",
-              },
-              "examples": {
-                "changelog": {
-                  "hidden": true,
-                  "title": "🏀 Examples",
-                },
-                "semverBump": "none",
-              },
-              "feat": {
-                "changelog": {
-                  "hidden": false,
-                  "title": "🚀 Features",
-                },
-                "semverBump": "minor",
-              },
-              "fix": {
-                "changelog": {
-                  "hidden": false,
-                  "title": "🩹 Fixes",
-                },
-                "semverBump": "patch",
-              },
-              "perf": {
-                "changelog": {
-                  "hidden": false,
-                  "title": "🔥 Performance",
-                },
-                "semverBump": "patch",
-              },
-              "refactor": {
-                "changelog": {
-                  "hidden": true,
-                  "title": "💅 Refactors",
-                },
-                "semverBump": "none",
-              },
-              "revert": {
-                "changelog": {
-                  "hidden": true,
-                  "title": "⏪ Revert",
-                },
-                "semverBump": "none",
-              },
-              "style": {
-                "changelog": {
-                  "hidden": true,
-                  "title": "🎨 Styles",
-                },
-                "semverBump": "none",
-              },
-              "test": {
-                "changelog": {
-                  "hidden": true,
-                  "title": "✅ Tests",
-                },
-                "semverBump": "none",
-              },
+            "conventionalCommits": {
               "types": {
-                "changelog": {
-                  "hidden": true,
-                  "title": "🌊 Types",
+                "build": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "📦 Build",
+                  },
+                  "semverBump": "none",
                 },
-                "semverBump": "none",
+                "chore": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🏡 Chore",
+                  },
+                  "semverBump": "none",
+                },
+                "ci": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🤖 CI",
+                  },
+                  "semverBump": "none",
+                },
+                "customType": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "customType",
+                  },
+                  "semverBump": "patch",
+                },
+                "docs": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "📖 Documentation",
+                  },
+                  "semverBump": "patch",
+                },
+                "examples": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🏀 Examples",
+                  },
+                  "semverBump": "none",
+                },
+                "feat": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🚀 Features",
+                  },
+                  "semverBump": "minor",
+                },
+                "fix": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🩹 Fixes",
+                  },
+                  "semverBump": "patch",
+                },
+                "perf": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🔥 Performance",
+                  },
+                  "semverBump": "patch",
+                },
+                "refactor": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "💅 Refactors",
+                  },
+                  "semverBump": "none",
+                },
+                "revert": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "⏪ Revert",
+                  },
+                  "semverBump": "none",
+                },
+                "style": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🎨 Styles",
+                  },
+                  "semverBump": "none",
+                },
+                "test": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "✅ Tests",
+                  },
+                  "semverBump": "none",
+                },
+                "types": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🌊 Types",
+                  },
+                  "semverBump": "none",
+                },
               },
             },
-          },
-          "git": {
-            "commit": false,
-            "commitArgs": "",
-            "commitMessage": "chore(release): publish {version}",
-            "stageChanges": false,
-            "tag": false,
-            "tagArgs": "",
-            "tagMessage": "",
-          },
-          "groups": {
-            "__default__": {
-              "changelog": false,
-              "projects": [
-                "lib-a",
-                "lib-b",
-                "nx",
-              ],
-              "projectsRelationship": "fixed",
-              "releaseTagPattern": "v{version}",
-              "version": {
-                "conventionalCommits": false,
-                "generator": "@nx/js:release-version",
-                "generatorOptions": {},
-              },
-            },
-          },
-          "projectsRelationship": "fixed",
-          "releaseTagPattern": "v{version}",
-          "version": {
-            "conventionalCommits": false,
-            "generator": "@nx/js:release-version",
-            "generatorOptions": {},
             "git": {
               "commit": false,
               "commitArgs": "",
               "commitMessage": "chore(release): publish {version}",
-              "stageChanges": true,
+              "stageChanges": false,
               "tag": false,
               "tagArgs": "",
               "tagMessage": "",
             },
-            "preVersionCommand": "",
+            "groups": {
+              "__default__": {
+                "changelog": false,
+                "projects": [
+                  "lib-a",
+                  "lib-b",
+                  "nx",
+                ],
+                "projectsRelationship": "fixed",
+                "releaseTagPattern": "v{version}",
+                "version": {
+                  "conventionalCommits": false,
+                  "generator": "@nx/js:release-version",
+                  "generatorOptions": {},
+                },
+                "versionPlans": false,
+              },
+            },
+            "projectsRelationship": "fixed",
+            "releaseTagPattern": "v{version}",
+            "version": {
+              "conventionalCommits": false,
+              "generator": "@nx/js:release-version",
+              "generatorOptions": {},
+              "git": {
+                "commit": false,
+                "commitArgs": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": true,
+                "tag": false,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+              "preVersionCommand": "",
+            },
+            "versionPlans": false,
           },
-        },
-      }
-    `);
+        }
+      `);
     });
 
     it('should parse shorthand for disabling changelog appearance for a commit type', async () => {
@@ -5722,6 +5782,7 @@ describe('createNxReleaseConfig()', () => {
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
                 },
+                "versionPlans": false,
               },
             },
             "projectsRelationship": "fixed",
@@ -5741,6 +5802,7 @@ describe('createNxReleaseConfig()', () => {
               },
               "preVersionCommand": "",
             },
+            "versionPlans": false,
           },
         }
       `);
@@ -5764,180 +5826,182 @@ describe('createNxReleaseConfig()', () => {
       });
 
       expect(res).toMatchInlineSnapshot(`
-      {
-        "error": null,
-        "nxReleaseConfig": {
-          "changelog": {
-            "automaticFromRef": false,
-            "git": {
-              "commit": true,
-              "commitArgs": "",
-              "commitMessage": "chore(release): publish {version}",
-              "stageChanges": false,
-              "tag": true,
-              "tagArgs": "",
-              "tagMessage": "",
+        {
+          "error": null,
+          "nxReleaseConfig": {
+            "changelog": {
+              "automaticFromRef": false,
+              "git": {
+                "commit": true,
+                "commitArgs": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": false,
+                "tag": true,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+              "projectChangelogs": false,
+              "workspaceChangelog": {
+                "createRelease": false,
+                "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
+                "file": "{workspaceRoot}/CHANGELOG.md",
+                "renderOptions": {
+                  "authors": true,
+                  "commitReferences": true,
+                  "versionTitleDate": true,
+                },
+                "renderer": "<dirname>/release/changelog-renderer",
+              },
             },
-            "projectChangelogs": false,
-            "workspaceChangelog": {
-              "createRelease": false,
-              "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
-              "file": "{workspaceRoot}/CHANGELOG.md",
-              "renderOptions": {
-                "authors": true,
-                "commitReferences": true,
-                "versionTitleDate": true,
-              },
-              "renderer": "<dirname>/release/changelog-renderer",
-            },
-          },
-          "conventionalCommits": {
-            "types": {
-              "build": {
-                "changelog": {
-                  "hidden": true,
-                  "title": "📦 Build",
-                },
-                "semverBump": "none",
-              },
-              "chore": {
-                "changelog": {
-                  "hidden": true,
-                  "title": "🏡 Chore",
-                },
-                "semverBump": "none",
-              },
-              "ci": {
-                "changelog": {
-                  "hidden": true,
-                  "title": "🤖 CI",
-                },
-                "semverBump": "none",
-              },
-              "customType": {
-                "changelog": {
-                  "hidden": false,
-                  "title": "customType",
-                },
-                "semverBump": "patch",
-              },
-              "docs": {
-                "changelog": {
-                  "hidden": false,
-                  "title": "📖 Documentation",
-                },
-                "semverBump": "patch",
-              },
-              "examples": {
-                "changelog": {
-                  "hidden": true,
-                  "title": "🏀 Examples",
-                },
-                "semverBump": "none",
-              },
-              "feat": {
-                "changelog": {
-                  "hidden": false,
-                  "title": "🚀 Features",
-                },
-                "semverBump": "minor",
-              },
-              "fix": {
-                "changelog": {
-                  "hidden": false,
-                  "title": "🩹 Fixes",
-                },
-                "semverBump": "patch",
-              },
-              "perf": {
-                "changelog": {
-                  "hidden": false,
-                  "title": "🔥 Performance",
-                },
-                "semverBump": "none",
-              },
-              "refactor": {
-                "changelog": {
-                  "hidden": true,
-                  "title": "💅 Refactors",
-                },
-                "semverBump": "none",
-              },
-              "revert": {
-                "changelog": {
-                  "hidden": true,
-                  "title": "⏪ Revert",
-                },
-                "semverBump": "none",
-              },
-              "style": {
-                "changelog": {
-                  "hidden": true,
-                  "title": "🎨 Styles",
-                },
-                "semverBump": "none",
-              },
-              "test": {
-                "changelog": {
-                  "hidden": true,
-                  "title": "✅ Tests",
-                },
-                "semverBump": "none",
-              },
+            "conventionalCommits": {
               "types": {
-                "changelog": {
-                  "hidden": true,
-                  "title": "🌊 Types",
+                "build": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "📦 Build",
+                  },
+                  "semverBump": "none",
                 },
-                "semverBump": "none",
+                "chore": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🏡 Chore",
+                  },
+                  "semverBump": "none",
+                },
+                "ci": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🤖 CI",
+                  },
+                  "semverBump": "none",
+                },
+                "customType": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "customType",
+                  },
+                  "semverBump": "patch",
+                },
+                "docs": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "📖 Documentation",
+                  },
+                  "semverBump": "patch",
+                },
+                "examples": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🏀 Examples",
+                  },
+                  "semverBump": "none",
+                },
+                "feat": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🚀 Features",
+                  },
+                  "semverBump": "minor",
+                },
+                "fix": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🩹 Fixes",
+                  },
+                  "semverBump": "patch",
+                },
+                "perf": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🔥 Performance",
+                  },
+                  "semverBump": "none",
+                },
+                "refactor": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "💅 Refactors",
+                  },
+                  "semverBump": "none",
+                },
+                "revert": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "⏪ Revert",
+                  },
+                  "semverBump": "none",
+                },
+                "style": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🎨 Styles",
+                  },
+                  "semverBump": "none",
+                },
+                "test": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "✅ Tests",
+                  },
+                  "semverBump": "none",
+                },
+                "types": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🌊 Types",
+                  },
+                  "semverBump": "none",
+                },
               },
             },
-          },
-          "git": {
-            "commit": false,
-            "commitArgs": "",
-            "commitMessage": "chore(release): publish {version}",
-            "stageChanges": false,
-            "tag": false,
-            "tagArgs": "",
-            "tagMessage": "",
-          },
-          "groups": {
-            "__default__": {
-              "changelog": false,
-              "projects": [
-                "lib-a",
-                "lib-b",
-                "nx",
-              ],
-              "projectsRelationship": "fixed",
-              "releaseTagPattern": "v{version}",
-              "version": {
-                "conventionalCommits": false,
-                "generator": "@nx/js:release-version",
-                "generatorOptions": {},
-              },
-            },
-          },
-          "projectsRelationship": "fixed",
-          "releaseTagPattern": "v{version}",
-          "version": {
-            "conventionalCommits": false,
-            "generator": "@nx/js:release-version",
-            "generatorOptions": {},
             "git": {
               "commit": false,
               "commitArgs": "",
               "commitMessage": "chore(release): publish {version}",
-              "stageChanges": true,
+              "stageChanges": false,
               "tag": false,
               "tagArgs": "",
               "tagMessage": "",
             },
-            "preVersionCommand": "",
+            "groups": {
+              "__default__": {
+                "changelog": false,
+                "projects": [
+                  "lib-a",
+                  "lib-b",
+                  "nx",
+                ],
+                "projectsRelationship": "fixed",
+                "releaseTagPattern": "v{version}",
+                "version": {
+                  "conventionalCommits": false,
+                  "generator": "@nx/js:release-version",
+                  "generatorOptions": {},
+                },
+                "versionPlans": false,
+              },
+            },
+            "projectsRelationship": "fixed",
+            "releaseTagPattern": "v{version}",
+            "version": {
+              "conventionalCommits": false,
+              "generator": "@nx/js:release-version",
+              "generatorOptions": {},
+              "git": {
+                "commit": false,
+                "commitArgs": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": true,
+                "tag": false,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+              "preVersionCommand": "",
+            },
+            "versionPlans": false,
           },
-        },
-      }
+        }
       `);
     });
   });
@@ -6131,6 +6195,7 @@ describe('createNxReleaseConfig()', () => {
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
                 },
+                "versionPlans": false,
               },
               "group-2": {
                 "changelog": false,
@@ -6144,6 +6209,7 @@ describe('createNxReleaseConfig()', () => {
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
                 },
+                "versionPlans": false,
               },
               "group-3": {
                 "changelog": {
@@ -6167,6 +6233,7 @@ describe('createNxReleaseConfig()', () => {
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
                 },
+                "versionPlans": false,
               },
             },
             "projectsRelationship": "fixed",
@@ -6186,6 +6253,7 @@ describe('createNxReleaseConfig()', () => {
               },
               "preVersionCommand": "",
             },
+            "versionPlans": false,
           },
         }
       `);
@@ -6375,6 +6443,7 @@ describe('createNxReleaseConfig()', () => {
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
                 },
+                "versionPlans": false,
               },
             },
             "projectsRelationship": "fixed",
@@ -6394,6 +6463,7 @@ describe('createNxReleaseConfig()', () => {
               },
               "preVersionCommand": "",
             },
+            "versionPlans": false,
           },
         }
       `);
@@ -6745,6 +6815,7 @@ describe('createNxReleaseConfig()', () => {
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
                 },
+                "versionPlans": false,
               },
               "group-2": {
                 "changelog": false,
@@ -6759,6 +6830,7 @@ describe('createNxReleaseConfig()', () => {
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
                 },
+                "versionPlans": false,
               },
             },
             "projectsRelationship": "independent",
@@ -6778,6 +6850,7 @@ describe('createNxReleaseConfig()', () => {
               },
               "preVersionCommand": "",
             },
+            "versionPlans": false,
           },
         }
       `);
@@ -6925,6 +6998,7 @@ describe('createNxReleaseConfig()', () => {
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
                 },
+                "versionPlans": false,
               },
             },
             "projectsRelationship": "independent",
@@ -6944,6 +7018,7 @@ describe('createNxReleaseConfig()', () => {
               },
               "preVersionCommand": "",
             },
+            "versionPlans": false,
           },
         }
       `);
@@ -7110,6 +7185,7 @@ describe('createNxReleaseConfig()', () => {
                     "specifierSource": "conventional-commits",
                   },
                 },
+                "versionPlans": false,
               },
             },
             "projectsRelationship": "fixed",
@@ -7132,6 +7208,7 @@ describe('createNxReleaseConfig()', () => {
               },
               "preVersionCommand": "",
             },
+            "versionPlans": false,
           },
         }
       `);
@@ -7294,6 +7371,7 @@ describe('createNxReleaseConfig()', () => {
                     "specifierSource": "prompt",
                   },
                 },
+                "versionPlans": false,
               },
             },
             "projectsRelationship": "fixed",
@@ -7316,6 +7394,7 @@ describe('createNxReleaseConfig()', () => {
               },
               "preVersionCommand": "",
             },
+            "versionPlans": false,
           },
         }
       `);
@@ -7477,6 +7556,7 @@ describe('createNxReleaseConfig()', () => {
                     "specifierSource": "conventional-commits",
                   },
                 },
+                "versionPlans": false,
               },
             },
             "projectsRelationship": "fixed",
@@ -7499,6 +7579,7 @@ describe('createNxReleaseConfig()', () => {
               },
               "preVersionCommand": "",
             },
+            "versionPlans": false,
           },
         }
       `);
@@ -7663,6 +7744,7 @@ describe('createNxReleaseConfig()', () => {
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
                 },
+                "versionPlans": false,
               },
             },
             "projectsRelationship": "fixed",
@@ -7685,6 +7767,7 @@ describe('createNxReleaseConfig()', () => {
               },
               "preVersionCommand": "",
             },
+            "versionPlans": false,
           },
         }
       `);
@@ -7850,6 +7933,7 @@ describe('createNxReleaseConfig()', () => {
                     "specifierSource": "conventional-commits",
                   },
                 },
+                "versionPlans": false,
               },
             },
             "projectsRelationship": "fixed",
@@ -7873,6 +7957,7 @@ describe('createNxReleaseConfig()', () => {
               },
               "preVersionCommand": "",
             },
+            "versionPlans": false,
           },
         }
       `);
@@ -7912,6 +7997,574 @@ describe('createNxReleaseConfig()', () => {
             "data": {},
           },
           "nxReleaseConfig": null,
+        }
+      `);
+    });
+  });
+
+  describe('versionPlans shorthand', () => {
+    it('should respect user "versionPlans" set at root level', async () => {
+      const res = await createNxReleaseConfig(projectGraph, projectFileMap, {
+        versionPlans: true,
+      });
+
+      expect(res).toMatchInlineSnapshot(`
+        {
+          "error": null,
+          "nxReleaseConfig": {
+            "changelog": {
+              "automaticFromRef": false,
+              "git": {
+                "commit": true,
+                "commitArgs": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": false,
+                "tag": true,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+              "projectChangelogs": false,
+              "workspaceChangelog": {
+                "createRelease": false,
+                "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
+                "file": "{workspaceRoot}/CHANGELOG.md",
+                "renderOptions": {
+                  "authors": true,
+                  "commitReferences": true,
+                  "versionTitleDate": true,
+                },
+                "renderer": "<dirname>/release/changelog-renderer",
+              },
+            },
+            "conventionalCommits": {
+              "types": {
+                "build": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "📦 Build",
+                  },
+                  "semverBump": "none",
+                },
+                "chore": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🏡 Chore",
+                  },
+                  "semverBump": "none",
+                },
+                "ci": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🤖 CI",
+                  },
+                  "semverBump": "none",
+                },
+                "docs": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "📖 Documentation",
+                  },
+                  "semverBump": "none",
+                },
+                "examples": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🏀 Examples",
+                  },
+                  "semverBump": "none",
+                },
+                "feat": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🚀 Features",
+                  },
+                  "semverBump": "minor",
+                },
+                "fix": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🩹 Fixes",
+                  },
+                  "semverBump": "patch",
+                },
+                "perf": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🔥 Performance",
+                  },
+                  "semverBump": "none",
+                },
+                "refactor": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "💅 Refactors",
+                  },
+                  "semverBump": "none",
+                },
+                "revert": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "⏪ Revert",
+                  },
+                  "semverBump": "none",
+                },
+                "style": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🎨 Styles",
+                  },
+                  "semverBump": "none",
+                },
+                "test": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "✅ Tests",
+                  },
+                  "semverBump": "none",
+                },
+                "types": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🌊 Types",
+                  },
+                  "semverBump": "none",
+                },
+              },
+            },
+            "git": {
+              "commit": false,
+              "commitArgs": "",
+              "commitMessage": "chore(release): publish {version}",
+              "stageChanges": false,
+              "tag": false,
+              "tagArgs": "",
+              "tagMessage": "",
+            },
+            "groups": {
+              "__default__": {
+                "changelog": false,
+                "projects": [
+                  "lib-a",
+                  "lib-b",
+                  "nx",
+                ],
+                "projectsRelationship": "fixed",
+                "releaseTagPattern": "v{version}",
+                "version": {
+                  "conventionalCommits": false,
+                  "generator": "@nx/js:release-version",
+                  "generatorOptions": {
+                    "specifierSource": "version-plans",
+                  },
+                },
+                "versionPlans": true,
+              },
+            },
+            "projectsRelationship": "fixed",
+            "releaseTagPattern": "v{version}",
+            "version": {
+              "conventionalCommits": false,
+              "generator": "@nx/js:release-version",
+              "generatorOptions": {
+                "specifierSource": "version-plans",
+              },
+              "git": {
+                "commit": false,
+                "commitArgs": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": true,
+                "tag": false,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+              "preVersionCommand": "",
+            },
+            "versionPlans": true,
+          },
+        }
+      `);
+    });
+
+    it('should respect user "versionPlans" set at group level', async () => {
+      const res = await createNxReleaseConfig(projectGraph, projectFileMap, {
+        groups: {
+          'group-1': {
+            projects: 'nx',
+            versionPlans: true,
+          },
+          'group-2': {
+            projects: 'lib-a',
+            versionPlans: false,
+          },
+        },
+      });
+
+      expect(res).toMatchInlineSnapshot(`
+        {
+          "error": null,
+          "nxReleaseConfig": {
+            "changelog": {
+              "automaticFromRef": false,
+              "git": {
+                "commit": true,
+                "commitArgs": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": false,
+                "tag": true,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+              "projectChangelogs": false,
+              "workspaceChangelog": false,
+            },
+            "conventionalCommits": {
+              "types": {
+                "build": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "📦 Build",
+                  },
+                  "semverBump": "none",
+                },
+                "chore": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🏡 Chore",
+                  },
+                  "semverBump": "none",
+                },
+                "ci": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🤖 CI",
+                  },
+                  "semverBump": "none",
+                },
+                "docs": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "📖 Documentation",
+                  },
+                  "semverBump": "none",
+                },
+                "examples": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🏀 Examples",
+                  },
+                  "semverBump": "none",
+                },
+                "feat": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🚀 Features",
+                  },
+                  "semverBump": "minor",
+                },
+                "fix": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🩹 Fixes",
+                  },
+                  "semverBump": "patch",
+                },
+                "perf": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🔥 Performance",
+                  },
+                  "semverBump": "none",
+                },
+                "refactor": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "💅 Refactors",
+                  },
+                  "semverBump": "none",
+                },
+                "revert": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "⏪ Revert",
+                  },
+                  "semverBump": "none",
+                },
+                "style": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🎨 Styles",
+                  },
+                  "semverBump": "none",
+                },
+                "test": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "✅ Tests",
+                  },
+                  "semverBump": "none",
+                },
+                "types": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🌊 Types",
+                  },
+                  "semverBump": "none",
+                },
+              },
+            },
+            "git": {
+              "commit": false,
+              "commitArgs": "",
+              "commitMessage": "chore(release): publish {version}",
+              "stageChanges": false,
+              "tag": false,
+              "tagArgs": "",
+              "tagMessage": "",
+            },
+            "groups": {
+              "group-1": {
+                "changelog": false,
+                "projects": [
+                  "nx",
+                ],
+                "projectsRelationship": "fixed",
+                "releaseTagPattern": "v{version}",
+                "version": {
+                  "conventionalCommits": false,
+                  "generator": "@nx/js:release-version",
+                  "generatorOptions": {
+                    "specifierSource": "version-plans",
+                  },
+                },
+                "versionPlans": true,
+              },
+              "group-2": {
+                "changelog": false,
+                "projects": [
+                  "lib-a",
+                ],
+                "projectsRelationship": "fixed",
+                "releaseTagPattern": "v{version}",
+                "version": {
+                  "conventionalCommits": false,
+                  "generator": "@nx/js:release-version",
+                  "generatorOptions": {},
+                },
+                "versionPlans": false,
+              },
+            },
+            "projectsRelationship": "fixed",
+            "releaseTagPattern": "v{version}",
+            "version": {
+              "conventionalCommits": false,
+              "generator": "@nx/js:release-version",
+              "generatorOptions": {},
+              "git": {
+                "commit": false,
+                "commitArgs": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": true,
+                "tag": false,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+              "preVersionCommand": "",
+            },
+            "versionPlans": false,
+          },
+        }
+      `);
+    });
+
+    it('should override "versionPlans" with false when set at the group level', async () => {
+      const res = await createNxReleaseConfig(projectGraph, projectFileMap, {
+        versionPlans: true,
+        groups: {
+          'group-1': {
+            projects: 'nx',
+            versionPlans: false,
+          },
+          'group-2': {
+            projects: 'lib-a',
+          },
+        },
+      });
+
+      expect(res).toMatchInlineSnapshot(`
+        {
+          "error": null,
+          "nxReleaseConfig": {
+            "changelog": {
+              "automaticFromRef": false,
+              "git": {
+                "commit": true,
+                "commitArgs": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": false,
+                "tag": true,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+              "projectChangelogs": false,
+              "workspaceChangelog": false,
+            },
+            "conventionalCommits": {
+              "types": {
+                "build": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "📦 Build",
+                  },
+                  "semverBump": "none",
+                },
+                "chore": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🏡 Chore",
+                  },
+                  "semverBump": "none",
+                },
+                "ci": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🤖 CI",
+                  },
+                  "semverBump": "none",
+                },
+                "docs": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "📖 Documentation",
+                  },
+                  "semverBump": "none",
+                },
+                "examples": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🏀 Examples",
+                  },
+                  "semverBump": "none",
+                },
+                "feat": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🚀 Features",
+                  },
+                  "semverBump": "minor",
+                },
+                "fix": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🩹 Fixes",
+                  },
+                  "semverBump": "patch",
+                },
+                "perf": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🔥 Performance",
+                  },
+                  "semverBump": "none",
+                },
+                "refactor": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "💅 Refactors",
+                  },
+                  "semverBump": "none",
+                },
+                "revert": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "⏪ Revert",
+                  },
+                  "semverBump": "none",
+                },
+                "style": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🎨 Styles",
+                  },
+                  "semverBump": "none",
+                },
+                "test": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "✅ Tests",
+                  },
+                  "semverBump": "none",
+                },
+                "types": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🌊 Types",
+                  },
+                  "semverBump": "none",
+                },
+              },
+            },
+            "git": {
+              "commit": false,
+              "commitArgs": "",
+              "commitMessage": "chore(release): publish {version}",
+              "stageChanges": false,
+              "tag": false,
+              "tagArgs": "",
+              "tagMessage": "",
+            },
+            "groups": {
+              "group-1": {
+                "changelog": false,
+                "projects": [
+                  "nx",
+                ],
+                "projectsRelationship": "fixed",
+                "releaseTagPattern": "v{version}",
+                "version": {
+                  "conventionalCommits": false,
+                  "generator": "@nx/js:release-version",
+                  "generatorOptions": {},
+                },
+                "versionPlans": false,
+              },
+              "group-2": {
+                "changelog": false,
+                "projects": [
+                  "lib-a",
+                ],
+                "projectsRelationship": "fixed",
+                "releaseTagPattern": "v{version}",
+                "version": {
+                  "conventionalCommits": false,
+                  "generator": "@nx/js:release-version",
+                  "generatorOptions": {
+                    "specifierSource": "version-plans",
+                  },
+                },
+                "versionPlans": true,
+              },
+            },
+            "projectsRelationship": "fixed",
+            "releaseTagPattern": "v{version}",
+            "version": {
+              "conventionalCommits": false,
+              "generator": "@nx/js:release-version",
+              "generatorOptions": {
+                "specifierSource": "version-plans",
+              },
+              "git": {
+                "commit": false,
+                "commitArgs": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": true,
+                "tag": false,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+              "preVersionCommand": "",
+            },
+            "versionPlans": true,
+          },
         }
       `);
     });

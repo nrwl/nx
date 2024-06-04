@@ -105,7 +105,10 @@ description: "${command.description}"
         (name) =>
           !sharedCommands.includes(name) &&
           !hiddenCommands.includes(name) &&
-          nxCommands[name].description
+          // These are all supported yargs fields for description
+          (nxCommands[name].description ||
+            nxCommands[name].describe ||
+            nxCommands[name].desc)
       )
       .map((name) => parseCommand(name, nxCommands[name]))
       .map(async (command) => generateMarkdown(await command))
