@@ -43,7 +43,7 @@ export async function shortenedCloudUrl(
 
     return `${apiUrl}/connect/${response.data}`;
   } catch (e) {
-    logger.warn(`Failed to shorten Nx Cloud URL.
+    logger.verbose(`Failed to shorten Nx Cloud URL.
     ${e}`);
     return getURLifShortenFailed(
       usesGithub,
