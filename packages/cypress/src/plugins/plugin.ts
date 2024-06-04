@@ -21,7 +21,7 @@ import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { existsSync, readdirSync } from 'fs';
 
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
-import { projectGraphCacheDirectory } from 'nx/src/utils/cache-directory';
+import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { NX_PLUGIN_OPTIONS } from '../utils/constants';
 import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
 import { hashObject } from 'nx/src/devkit-internals';
@@ -49,7 +49,7 @@ export const createNodesV2: CreateNodesV2<CypressPluginOptions> = [
   async (configFiles, options, context) => {
     const optionsHash = hashObject(options);
     const cachePath = join(
-      projectGraphCacheDirectory,
+      workspaceDataDirectory,
       `cypress-${optionsHash}.hash`
     );
     const targetsCache = readTargetsCache(cachePath);

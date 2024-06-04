@@ -13,7 +13,7 @@ import { getLockFileName } from '@nx/js';
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { existsSync, readdirSync } from 'fs';
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
-import { projectGraphCacheDirectory } from 'nx/src/utils/cache-directory';
+import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 
 export interface DetoxPluginOptions {
   buildTargetName?: string;
@@ -21,7 +21,7 @@ export interface DetoxPluginOptions {
   testTargetName?: string;
 }
 
-const cachePath = join(projectGraphCacheDirectory, 'detox.hash');
+const cachePath = join(workspaceDataDirectory, 'detox.hash');
 const targetsCache = readTargetsCache();
 
 function readTargetsCache(): Record<

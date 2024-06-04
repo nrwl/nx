@@ -3,21 +3,20 @@ import {
   CreateNodes,
   CreateNodesContext,
   detectPackageManager,
-  joinPathFragments,
   readJsonFile,
   TargetConfiguration,
   workspaceRoot,
   writeJsonFile,
 } from '@nx/devkit';
-import { basename, dirname, isAbsolute, join, relative } from 'path';
-import { projectGraphCacheDirectory } from 'nx/src/utils/cache-directory';
+import { dirname, isAbsolute, join, relative } from 'path';
+import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { existsSync, readdirSync } from 'fs';
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { getLockFileName } from '@nx/js';
 import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
 
-const cachePath = join(projectGraphCacheDirectory, 'nuxt.hash');
+const cachePath = join(workspaceDataDirectory, 'nuxt.hash');
 const targetsCache = readTargetsCache();
 
 function readTargetsCache(): Record<

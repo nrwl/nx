@@ -124,6 +124,7 @@ export async function initGenerator(
         /dist
         /coverage
         /.nx/cache
+        /.nx/workspace-data
       `
     );
   }
