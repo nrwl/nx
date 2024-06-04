@@ -106,17 +106,31 @@ export interface ExecutorConfig {
 }
 
 /**
- * Implementation of a target of a project
+ * An executor implementation that returns a promise
  */
-export type Executor<T = any> = (
+export type PromiseExecutor<T = any> = (
   /**
    * Options that users configure or pass via the command line
    */
   options: T,
   context: ExecutorContext
-) =>
-  | Promise<{ success: boolean }>
-  | AsyncIterableIterator<{ success: boolean }>;
+) => Promise<{ success: boolean }>;
+
+/**
+ * An executor implementation that returns an async iterator
+ */
+export type AsyncIteratorExecutor<T = any> = (
+  /**
+   * Options that users configure or pass via the command line
+   */
+  options: T,
+  context: ExecutorContext
+) => AsyncIterableIterator<{ success: boolean }>;
+
+/**
+ * Implementation of a target of a project
+ */
+export type Executor<T = any> = PromiseExecutor<T> | AsyncIteratorExecutor<T>;
 
 export interface HasherContext {
   hasher: TaskHasher;

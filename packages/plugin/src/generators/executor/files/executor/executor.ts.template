@@ -1,7 +1,7 @@
-import { Executor } from "@nx/devkit";
+import { PromiseExecutor } from "@nx/devkit";
 import { <%= className %>ExecutorSchema } from './schema';
 
-const runExecutor: Executor<<%= className %>ExecutorSchema> = async (options) => {
+const runExecutor: PromiseExecutor<<%= className %>ExecutorSchema> = async (options) => {
   console.log('Executor ran for <%= className %>', options);
   return {
     success: true

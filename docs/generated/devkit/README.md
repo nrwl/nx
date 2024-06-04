@@ -64,6 +64,7 @@ It only uses language primitives and immutable objects
 
 ### Type Aliases
 
+- [AsyncIteratorExecutor](../../devkit/documents/AsyncIteratorExecutor)
 - [CreateDependencies](../../devkit/documents/CreateDependencies)
 - [CreateMetadata](../../devkit/documents/CreateMetadata)
 - [CreateMetadataContext](../../devkit/documents/CreateMetadataContext)
@@ -90,6 +91,7 @@ It only uses language primitives and immutable objects
 - [ProjectTargetConfigurator](../../devkit/documents/ProjectTargetConfigurator)
 - [ProjectType](../../devkit/documents/ProjectType)
 - [ProjectsMetadata](../../devkit/documents/ProjectsMetadata)
+- [PromiseExecutor](../../devkit/documents/PromiseExecutor)
 - [RawProjectGraphDependency](../../devkit/documents/RawProjectGraphDependency)
 - [StaticDependency](../../devkit/documents/StaticDependency)
 - [StringChange](../../devkit/documents/StringChange)

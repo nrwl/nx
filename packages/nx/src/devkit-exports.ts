@@ -27,6 +27,8 @@ export type {
 export type {
   Generator,
   GeneratorCallback,
+  PromiseExecutor,
+  AsyncIteratorExecutor,
   Executor,
   ExecutorContext,
   TaskGraphExecutor,
