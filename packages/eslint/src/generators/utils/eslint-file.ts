@@ -291,7 +291,7 @@ export function replaceOverridesInLintConfig(
     content = removeOverridesFromLintConfig(content);
     overrides.forEach((override) => {
       const flatOverride = generateFlatOverride(override);
-      addBlockToFlatConfigExport(content, flatOverride);
+      content = addBlockToFlatConfigExport(content, flatOverride);
     });
 
     tree.write(fileName, content);
@@ -315,7 +315,12 @@ export function addExtendsToLintConfig(
     const pluginExtends = generatePluginExtendsElement(plugins);
     let content = tree.read(fileName, 'utf8');
     content = addCompatToFlatConfig(content);
-    tree.write(fileName, addBlockToFlatConfigExport(content, pluginExtends));
+    tree.write(
+      fileName,
+      addBlockToFlatConfigExport(content, pluginExtends, {
+        insertAtTheEnd: false,
+      })
+    );
   } else {
     const fileName = joinPathFragments(root, '.eslintrc.json');
     updateJson(tree, fileName, (json) => {

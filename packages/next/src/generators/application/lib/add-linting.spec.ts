@@ -116,7 +116,7 @@ describe('updateEslint', () => {
 
     expect(tree.read(`${schema.appProjectRoot}/eslint.config.js`, 'utf-8'))
       .toMatchInlineSnapshot(`
-      "const FlatCompat = require("@eslint/eslintrc");
+      "const { FlatCompat } = require("@eslint/eslintrc");
       const js = require("@eslint/js");
       const baseConfig = require("../eslint.config.js");
 
@@ -127,6 +127,7 @@ describe('updateEslint', () => {
         
 
       module.exports = [
+      ...compat.extends("plugin:@nx/react-typescript", "next", "next/core-web-vitals"),
           ...baseConfig,
           {
         "files": [
@@ -156,7 +157,6 @@ describe('updateEslint', () => {
               ],
               rules: {}
           },
-      ...compat.extends("plugin:@nx/react-typescript", "next", "next/core-web-vitals"),
       ...compat.config({ env: { jest: true } }).map(config => ({
           ...config,
           files: [

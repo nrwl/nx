@@ -602,7 +602,7 @@ export function addCompatToFlatConfig(content: string) {
   if (result.includes('const compat = new FlatCompat')) {
     return result;
   }
-  result = addImportToFlatConfig(result, 'FlatCompat', '@eslint/eslintrc');
+  result = addImportToFlatConfig(result, ['FlatCompat'], '@eslint/eslintrc');
   const index = result.indexOf('module.exports');
   return applyChangesToString(result, [
     {
