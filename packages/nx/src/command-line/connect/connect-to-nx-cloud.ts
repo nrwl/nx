@@ -16,6 +16,7 @@ import {
 import { nxVersion } from '../../utils/versions';
 import { workspaceRoot } from '../../utils/workspace-root';
 import chalk = require('chalk');
+import open = require('open');
 
 export function onlyDefaultRunnerIsUsed(nxJson: NxJsonConfiguration) {
   const defaultRunner = nxJson.tasksRunnerOptions?.default?.runner;
@@ -80,6 +81,7 @@ export async function connectToNxCloudCommand(): Promise<boolean> {
         ${connectCloudUrl}`,
         ],
       });
+      await open(connectCloudUrl);
     }
     return false;
   }
