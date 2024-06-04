@@ -150,6 +150,44 @@ export class ProcessTasks {
       typeof dependencyConfig.projects === 'string'
         ? [dependencyConfig.projects]
         : dependencyConfig.projects;
+
+    /**
+     * If true, the patterns specified in projects will be combined into one overall set of patterns
+     * to pass to findMatchingProjects, instead of being processed separately.
+     */
+    let combineProjectsPatterns = false;
+    if (typeof dependencyConfig.projects !== 'string') {
+      if (
+        dependencyConfig.combineProjectsPatterns &&
+        dependencyConfig.dependencies
+      ) {
+        throw new Error(
+          '"combineProjectsPatterns" cannot be used with "dependencies" in "dependsOn"'
+        );
+      }
+      combineProjectsPatterns =
+        dependencyConfig.combineProjectsPatterns ?? false;
+    }
+
+    if (combineProjectsPatterns) {
+      const matchingProjects = findMatchingProjects(
+        targetProjectSpecifiers,
+        this.projectGraph.nodes
+      );
+
+      for (const projectName of matchingProjects) {
+        this.processTasksForSingleProject(
+          task,
+          projectName,
+          dependencyConfig,
+          configuration,
+          taskOverrides,
+          overrides
+        );
+      }
+      return;
+    }
+
     for (const projectSpecifier of targetProjectSpecifiers) {
       // Lerna uses `dependencies` in `prepNxOptions`, so we need to maintain
       // support for it until lerna can be updated to use the syntax.

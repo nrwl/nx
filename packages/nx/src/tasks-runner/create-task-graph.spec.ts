@@ -1553,4 +1553,63 @@ describe('createTaskGraph', () => {
       'lib2:build',
     ]);
   });
+
+  it('should allow treating the dependsOn projects as an AND relationship when combineProjectsPatterns is set to true', () => {
+    const graph: ProjectGraph = {
+      nodes: {
+        app1: {
+          name: 'app1',
+          type: 'app',
+          data: {
+            root: 'app1-root',
+            targets: {
+              build: {
+                executor: 'nx:run-commands',
+                dependsOn: [
+                  {
+                    target: 'build',
+                    // should be treated as one overall AND relationship. i.e. "All projects except lib1"
+                    projects: ['*', '!lib1'],
+                    combineProjectsPatterns: true,
+                  },
+                ],
+              },
+            },
+          },
+        },
+        lib1: {
+          name: 'lib1',
+          type: 'lib',
+          data: {
+            root: 'lib1-root',
+            targets: {
+              build: {
+                executor: 'nx:run-commands',
+              },
+            },
+          },
+        },
+        lib2: {
+          name: 'lib2',
+          type: 'lib',
+          data: {
+            root: 'lib2-root',
+            targets: {
+              build: {
+                executor: 'nx:run-commands',
+              },
+            },
+          },
+        },
+      },
+      dependencies: {
+        app1: [],
+      },
+    };
+    const taskGraph = createTaskGraph(graph, {}, ['app1'], ['build'], null, {});
+    expect(taskGraph.tasks).toHaveProperty('app1:build');
+    expect(taskGraph.tasks).not.toHaveProperty('lib1:build');
+    expect(taskGraph.tasks).toHaveProperty('lib2:build');
+    expect(taskGraph.dependencies['app1:build']).toEqual(['lib2:build']);
+  });
 });

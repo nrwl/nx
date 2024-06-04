@@ -137,6 +137,12 @@ export interface TargetDependencyConfig {
   projects?: string[] | string;
 
   /**
+   * If true, the patterns specified in projects will be combined into one overall set of patterns
+   * to pass to findMatchingProjects, instead of being processed separately.
+   */
+  combineProjectsPatterns?: boolean;
+
+  /**
    * If true, the target will be executed for each project that this project depends on.
    * Should not be specified together with `projects`.
    */
