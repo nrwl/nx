@@ -1,21 +1,7 @@
 import { workspaceRoot } from '@nx/devkit';
-import { ExecFileOptions } from 'child_process';
-import {
-  ExecFileSyncOptionsWithBufferEncoding,
-  execFile,
-  execFileSync,
-} from 'node:child_process';
+import { ExecFileOptions, execFile } from 'node:child_process';
 import { existsSync } from 'node:fs';
-import { join, relative } from 'node:path';
-
-export function execGradle(
-  args: string[],
-  execOptions?: ExecFileSyncOptionsWithBufferEncoding
-) {
-  const gradleBinaryPath = getGradleBinaryPath();
-
-  return execFileSync(gradleBinaryPath, args, execOptions);
-}
+import { join } from 'node:path';
 
 export function getGradleBinaryPath(): string {
   const gradleFile = process.platform.startsWith('win')
@@ -35,12 +21,16 @@ export function getGradleExecFile(): string {
 
 export function execGradleAsync(
   args: ReadonlyArray<string>,
-  execOptions?: ExecFileOptions
-) {
+  execOptions: ExecFileOptions = {}
+): Promise<Buffer> {
   const gradleBinaryPath = getGradleBinaryPath();
 
   return new Promise<Buffer>((res, rej) => {
-    const cp = execFile(gradleBinaryPath, args, execOptions);
+    const cp = execFile(gradleBinaryPath, args, {
+      ...execOptions,
+      shell: true,
+      windowsHide: true,
+    });
 
     let stdout = Buffer.from('');
     cp.stdout?.on('data', (data) => {
