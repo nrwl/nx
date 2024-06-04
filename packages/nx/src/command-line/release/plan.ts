@@ -16,6 +16,7 @@ import {
 import { filterReleaseGroups } from './config/filter-release-groups';
 import { getVersionPlansAbsolutePath } from './config/version-plans';
 import { parseConventionalCommitsMessage } from './utils/git';
+import { printDiff } from './utils/print-changes';
 
 export const releasePlanCLIHandler = (args: PlanOptions) =>
   handleErrors(args.verbose, () => releasePlan(args));
@@ -145,8 +146,11 @@ export async function releasePlan(args: PlanOptions): Promise<string | number> {
     output.logSingleLine(
       `Would create version plan file "${versionPlanFileName}", but --dry-run was set.`
     );
+    printDiff('', versionPlanFileContent, 1);
   } else {
     output.logSingleLine(`Creating version plan file "${versionPlanFileName}"`);
+    printDiff('', versionPlanFileContent, 1);
+
     const versionPlansAbsolutePath = getVersionPlansAbsolutePath();
     await ensureDir(versionPlansAbsolutePath);
     await writeFile(
