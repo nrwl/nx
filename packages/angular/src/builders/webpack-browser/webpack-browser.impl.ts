@@ -25,10 +25,19 @@ function shouldSkipInitialTargetRun(
   project: string,
   target: string
 ): boolean {
+  const allTargetNames = new Set<string>();
+  for (const projectName in projectGraph.nodes) {
+    const project = projectGraph.nodes[projectName];
+    for (const targetName in project.data.targets ?? {}) {
+      allTargetNames.add(targetName);
+    }
+  }
+
   const projectDependencyConfigs = getDependencyConfigs(
     { project, target },
     {},
-    projectGraph
+    projectGraph,
+    Array.from(allTargetNames)
   );
 
   // if the task runner already ran the target, skip the initial run

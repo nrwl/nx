@@ -15,41 +15,81 @@ import { splitByColons } from '../utils/split-target';
 import { getExecutorInformation } from '../command-line/run/executor-utils';
 import { CustomHasher, ExecutorConfig } from '../config/misc-interfaces';
 import { readProjectsConfigurationFromProjectGraph } from '../project-graph/project-graph';
+import {
+  GLOB_CHARACTERS,
+  findMatchingProjects,
+} from '../utils/find-matching-projects';
+import { minimatch } from 'minimatch';
+
+export type NormalizedTargetDependencyConfig = TargetDependencyConfig & {
+  projects: string[];
+};
 
 export function getDependencyConfigs(
   { project, target }: { project: string; target: string },
   extraTargetDependencies: Record<string, (TargetDependencyConfig | string)[]>,
-  projectGraph: ProjectGraph
-): TargetDependencyConfig[] | undefined {
+  projectGraph: ProjectGraph,
+  allTargetNames: string[]
+): NormalizedTargetDependencyConfig[] | undefined {
   const dependencyConfigs = (
     projectGraph.nodes[project].data?.targets[target]?.dependsOn ??
     // This is passed into `run-command` from programmatic invocations
     extraTargetDependencies[target] ??
     []
   ).flatMap((config) =>
-    typeof config === 'string'
-      ? expandDependencyConfigSyntaxSugar(config, project, projectGraph)
-      : [config]
+    normalizeDependencyConfigDefinition(
+      config,
+      project,
+      projectGraph,
+      allTargetNames
+    )
   );
-  for (const dependencyConfig of dependencyConfigs) {
-    if (dependencyConfig.projects && dependencyConfig.dependencies) {
-      output.error({
-        title: `dependsOn is improperly configured for ${project}:${target}`,
-        bodyLines: [
-          `dependsOn.projects and dependsOn.dependencies cannot be used together.`,
-        ],
-      });
-      process.exit(1);
-    }
-  }
   return dependencyConfigs;
 }
 
-export function expandDependencyConfigSyntaxSugar(
-  dependencyConfigString: string,
+export function normalizeDependencyConfigDefinition(
+  definition: string | TargetDependencyConfig,
+  currentProject: string,
+  graph: ProjectGraph,
+  allTargetNames: string[]
+): NormalizedTargetDependencyConfig[] {
+  return expandWildcardTargetConfiguration(
+    normalizeDependencyConfigProjects(
+      expandDependencyConfigSyntaxSugar(definition, graph),
+      currentProject,
+      graph
+    ),
+    allTargetNames
+  );
+}
+
+export function normalizeDependencyConfigProjects(
+  dependencyConfig: TargetDependencyConfig,
   currentProject: string,
   graph: ProjectGraph
-): TargetDependencyConfig[] {
+): NormalizedTargetDependencyConfig {
+  const noStringConfig =
+    normalizeTargetDependencyWithStringProjects(dependencyConfig);
+
+  if (noStringConfig.projects) {
+    dependencyConfig.projects = findMatchingProjects(
+      noStringConfig.projects,
+      graph.nodes
+    );
+  } else if (!noStringConfig.dependencies) {
+    dependencyConfig.projects = [currentProject];
+  }
+  return dependencyConfig as NormalizedTargetDependencyConfig;
+}
+
+export function expandDependencyConfigSyntaxSugar(
+  dependencyConfigString: string | TargetDependencyConfig,
+  graph: ProjectGraph
+): TargetDependencyConfig {
+  if (typeof dependencyConfigString !== 'string') {
+    return dependencyConfigString;
+  }
+
   const [dependencies, targetString] = dependencyConfigString.startsWith('^')
     ? [true, dependencyConfigString.substring(1)]
     : [false, dependencyConfigString];
@@ -57,56 +97,75 @@ export function expandDependencyConfigSyntaxSugar(
   // Support for `project:target` syntax doesn't make sense for
   // dependencies, so we only support `target` syntax for dependencies.
   if (dependencies) {
-    return [
-      {
-        target: targetString,
-        dependencies: true,
-      },
-    ];
+    return {
+      target: targetString,
+      dependencies: true,
+    };
   }
 
+  const { projects, target } = readProjectAndTargetFromTargetString(
+    targetString,
+    graph.nodes
+  );
+
+  return projects ? { projects, target } : { target };
+}
+
+// Weakmap let's the cache get cleared by garbage collector if allTargetNames is no longer used
+const patternResultCache = new WeakMap<
+  string[],
+  // Map< Pattern, Dependency Configs >
+  Map<string, NormalizedTargetDependencyConfig[]>
+>();
+
+export function expandWildcardTargetConfiguration(
+  dependencyConfig: NormalizedTargetDependencyConfig,
+  allTargetNames: string[]
+): NormalizedTargetDependencyConfig[] {
+  if (!GLOB_CHARACTERS.some((char) => dependencyConfig.target.includes(char))) {
+    return [dependencyConfig];
+  }
+  let cache = patternResultCache.get(allTargetNames);
+  if (!cache) {
+    cache = new Map();
+    patternResultCache.set(allTargetNames, cache);
+  }
+  const cachedResult = cache.get(dependencyConfig.target);
+  if (cachedResult) {
+    return cachedResult;
+  }
+
+  const matcher = minimatch.filter(dependencyConfig.target);
+
+  const matchingTargets = allTargetNames.filter((t) => matcher(t));
+
+  const result = matchingTargets.map((t) => ({
+    ...dependencyConfig,
+    target: t,
+  }));
+  cache.set(dependencyConfig.target, result);
+  return result;
+}
+
+export function readProjectAndTargetFromTargetString(
+  targetString: string,
+  projects: Record<string, ProjectGraphProjectNode>
+): { projects?: string[]; target: string } {
   // Support for both `project:target` and `target:with:colons` syntax
   const [maybeProject, ...segments] = splitByColons(targetString);
 
-  let target, projects;
   if (!segments.length) {
     // if no additional segments are provided, then the string references
     // a target of the same project
-    target = maybeProject;
-  } else if (maybeProject in graph.nodes) {
+    return { target: maybeProject };
+  } else if (maybeProject in projects) {
     // Only the first segment could be a project. If it is, the rest is a target.
     // If its not, then the whole targetString was a target with colons in its name.
-    target = segments.join(':');
-    projects = [maybeProject];
+    return { projects: [maybeProject], target: segments.join(':') };
   } else {
     // If the first segment is a project, then we have a specific project. Otherwise, we don't.
-    target = targetString;
+    return { target: targetString };
   }
-
-  // handle target wildcards
-  if (target.indexOf('*') >= 0) {
-    const matches: TargetDependencyConfig[] = [];
-    const targetMatch = new RegExp('^' + target.replaceAll('*', '.*') + '$');
-    const projectsToCheck = projects ? projects : [currentProject];
-    for (const project of projectsToCheck) {
-      const projectTargets = graph.nodes[project].data?.targets;
-      if (projectTargets) {
-        for (const target in projectTargets) {
-          if (target.match(targetMatch)) {
-            matches.push({ target, projects: [project] });
-          }
-        }
-      }
-    }
-    return matches;
-  }
-
-  return [
-    {
-      target,
-      projects,
-    },
-  ];
 }
 
 export function getOutputs(
@@ -119,6 +178,34 @@ export function getOutputs(
     overrides,
     p[target.project]
   );
+}
+
+export function normalizeTargetDependencyWithStringProjects(
+  dependencyConfig: TargetDependencyConfig
+): Omit<TargetDependencyConfig, 'projects'> & { projects: string[] } {
+  if (typeof dependencyConfig.projects === 'string') {
+    /** LERNA SUPPORT START - Remove in v20 */
+    // Lerna uses `dependencies` in `prepNxOptions`, so we need to maintain
+    // support for it until lerna can be updated to use the syntax.
+    //
+    // This should have been removed in v17, but the updates to lerna had not
+    // been made yet.
+    //
+    // TODO(@agentender): Remove this part in v20
+    if (dependencyConfig.projects === 'self') {
+      delete dependencyConfig.projects;
+    } else if (dependencyConfig.projects === 'dependencies') {
+      dependencyConfig.dependencies = true;
+      delete dependencyConfig.projects;
+      return;
+      /** LERNA SUPPORT END - Remove in v20 */
+    } else {
+      dependencyConfig.projects = [dependencyConfig.projects];
+    }
+  }
+  return dependencyConfig as Omit<TargetDependencyConfig, 'projects'> & {
+    projects: string[];
+  };
 }
 
 class InvalidOutputsError extends Error {
