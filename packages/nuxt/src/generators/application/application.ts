@@ -26,6 +26,7 @@ import { addVitest } from './lib/add-vitest';
 import { vueTestUtilsVersion, vitePluginVueVersion } from '@nx/vue';
 import { ensureDependencies } from './lib/ensure-dependencies';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
+import { execSync } from 'node:child_process';
 
 export async function applicationGenerator(tree: Tree, schema: Schema) {
   const tasks: GeneratorCallback[] = [];
@@ -119,6 +120,16 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
   if (options.js) toJS(tree);
 
   if (!options.skipFormat) await formatFiles(tree);
+
+  tasks.push(() => {
+    try {
+      execSync(`npx -y nuxi prepare`, { cwd: options.appProjectRoot });
+    } catch (e) {
+      console.error(
+        `Failed to run \`nuxi prepare\` in "${options.appProjectRoot}". Please run the command manually.`
+      );
+    }
+  });
 
   tasks.push(() => {
     logShowProjectCommand(options.projectName);
