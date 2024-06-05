@@ -1,4 +1,4 @@
-import { type CreateNodesContext, joinPathFragments } from '@nx/devkit';
+import { type CreateNodesContext } from '@nx/devkit';
 import { createNodes } from './plugin';
 import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
 
@@ -9,9 +9,6 @@ jest.mock('rollup/loadConfigFile', () => {
     loadConfigFile: jest.fn(),
   };
 });
-
-// @ts-ignore
-import { loadConfigFile } from 'rollup/loadConfigFile';
 
 describe('@nx/rollup/plugin', () => {
   let createNodesFunction = createNodes[1];
@@ -65,6 +62,7 @@ describe('@nx/rollup/plugin', () => {
       }`
       );
 
+      const { loadConfigFile } = require('rollup/loadConfigFile');
       loadConfigFile.mockReturnValue(rollupConfigOptions);
 
       process.chdir(tempFs.tempDir);
@@ -140,6 +138,8 @@ describe('@nx/rollup/plugin', () => {
       console.log("hello world");
       }`
       );
+
+      const { loadConfigFile } = require('rollup/loadConfigFile');
       loadConfigFile.mockReturnValue(rollupConfigOptions);
 
       process.chdir(tempFs.tempDir);
