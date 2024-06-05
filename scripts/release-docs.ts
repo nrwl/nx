@@ -1,28 +1,24 @@
 import { execSync } from 'child_process';
+import { gt, major, maxSatisfying } from 'semver';
 
 // The GITHUB_REF_NAME is a full version (i.e. 17.3.2). The branchName will strip the patch version number.
 // We will publish docs to the website branch based on the current tag (i.e. website-17)
-console.log(`Comparing ${process.env.GITHUB_REF_NAME} to npm versions`);
+const currentVersion = process.env.GITHUB_REF_NAME || '';
+console.log(`Comparing ${currentVersion} to npm versions`);
 
-const majorVersion = process.env.GITHUB_REF_NAME?.split('.')[0];
-const minorVersion = process.env.GITHUB_REF_NAME?.split('.')
-  .slice(0, 2)
-  .join('.');
+const majorVersion = major(currentVersion);
 const releasedVersions: string[] = JSON.parse(
   execSync(`npm show nx@^${majorVersion} version --json`).toString()
 );
-const versionIsReleased =
-  minorVersion &&
-  releasedVersions.some((version) => version.includes(minorVersion));
-const latestVersion = releasedVersions.slice().sort().pop();
-const versionIsLatest = minorVersion && latestVersion?.includes(minorVersion);
+
+const latestVersion = maxSatisfying(releasedVersions, `^${majorVersion}`);
 
 console.log(`Found npm versions:\n${releasedVersions.join('\n')}`);
 
-// Publish if the minor version is not released yet, or the minor version matches the latest version
+// Publish if the current version is greater than the latest released version
 
 const branchName = `website-${majorVersion}`;
-if (!versionIsReleased || versionIsLatest) {
+if (currentVersion && latestVersion && gt(currentVersion, latestVersion)) {
   console.log(
     `Publishing docs site for ${process.env.GITHUB_REF_NAME} to ${branchName}`
   );
