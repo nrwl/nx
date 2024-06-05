@@ -77,6 +77,7 @@ describe('Playwright E2E Test Runner - legacy', () => {
     newProject({
       name: uniq('playwright'),
       unsetProjectNameAndRootFormat: false,
+      packages: ['@nx/playwright', '@nx/web'],
     });
     process.env.NX_ADD_PLUGINS = 'false';
   });

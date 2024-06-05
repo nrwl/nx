@@ -49,9 +49,8 @@ export function isAndroid() {
   );
 }
 
-export const e2eRoot = isCI
-  ? dirSync({ prefix: 'nx-e2e-' }).name
-  : '/tmp/nx-e2e';
+export const e2eRoot =
+  isCI && process.env.NX_TASK_TARGET_PROJECT ? `/tmp/nx-e2e` : '/tmp/nx-e2e';
 
 export function isVerbose() {
   return (
