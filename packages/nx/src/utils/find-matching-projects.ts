@@ -18,7 +18,10 @@ interface ProjectPattern {
   value: string;
 }
 
-const globCharacters = ['*', '|', '{', '}', '(', ')'];
+/**
+ * The presence of these characters in a string indicates that it might be a glob pattern.
+ */
+export const GLOB_CHARACTERS = ['*', '|', '{', '}', '(', ')'];
 
 /**
  * Find matching project names given a list of potential project names or globs.
@@ -166,7 +169,7 @@ function addMatchingProjectsByName(
     return;
   }
 
-  if (!globCharacters.some((c) => pattern.value.includes(c))) {
+  if (!GLOB_CHARACTERS.some((c) => pattern.value.includes(c))) {
     return;
   }
 
@@ -201,7 +204,7 @@ function addMatchingProjectsByTag(
       continue;
     }
 
-    if (!globCharacters.some((c) => pattern.value.includes(c))) {
+    if (!GLOB_CHARACTERS.some((c) => pattern.value.includes(c))) {
       continue;
     }
 
