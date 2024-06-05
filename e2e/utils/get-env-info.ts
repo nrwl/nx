@@ -46,7 +46,6 @@ export function isAndroid() {
     process.env.ANDROID_SDK_ROOT
   );
 }
-
 export const e2eRoot = isCI
   ? dirSync({ prefix: 'nx-e2e-' }).name
   : '/tmp/nx-e2e';

@@ -351,25 +351,35 @@ export function runCLI(
     const commandToRun = `${pm.runNxSilent} ${command} ${
       opts.verbose ?? isVerboseE2ERun() ? ' --verbose' : ''
     }${opts.redirectStderr ? ' 2>&1' : ''}`;
+    performance.mark(`[command] ${commandToRun} - start`);
     const logs = execSync(commandToRun, {
       cwd: opts.cwd || tmpProjPath(),
       env: {
         CI: 'true',
         ...getStrippedEnvironmentVariables(),
         ...opts.env,
+        NX_PERF_LOGGING: 'true',
+        NX_ISOLATE_PLUGINS: 'true',
       },
       encoding: 'utf-8',
       stdio: 'pipe',
       maxBuffer: 50 * 1024 * 1024,
     });
+    performance.mark(`[command] ${commandToRun} - end`);
+    const measure = performance.measure(
+      `[command] ${commandToRun}`,
+      `[command] ${commandToRun} - start`,
+      `[command] ${commandToRun} - end`
+    );
 
-    if (opts.verbose ?? isVerboseE2ERun()) {
-      output.log({
-        title: `Original command: ${command}`,
-        bodyLines: [logs as string],
-        color: 'green',
-      });
-    }
+    output.log({
+      title: `Original command: ${command}`,
+      bodyLines: [
+        ...(isVerboseE2ERun() ? [logs] : [logs]),
+        `${measure.name}: ${measure.duration}ms`,
+      ],
+      color: 'green',
+    });
 
     const r = stripConsoleColors(logs);
 
