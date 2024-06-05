@@ -89,9 +89,16 @@ export type Options = {
   [k: string]: string | number | boolean | string[] | Unmatched[] | undefined;
 };
 
-export async function handleErrors(isVerbose: boolean, fn: Function) {
+export async function handleErrors(
+  isVerbose: boolean,
+  fn: Function
+): Promise<number> {
   try {
-    return await fn();
+    const result = await fn();
+    if (typeof result === 'number') {
+      return result;
+    }
+    return 0;
   } catch (err) {
     err ||= new Error('Unknown error caught');
     if (err.constructor.name === 'UnsuccessfulWorkflowExecution') {

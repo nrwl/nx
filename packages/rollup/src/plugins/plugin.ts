@@ -1,4 +1,4 @@
-import { projectGraphCacheDirectory } from 'nx/src/utils/cache-directory';
+import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { basename, dirname, join } from 'path';
 import { existsSync, readdirSync } from 'fs';
 import {
@@ -20,7 +20,7 @@ import { type RollupOptions } from 'rollup';
 // @ts-ignore
 import { loadConfigFile } from 'rollup/loadConfigFile';
 
-const cachePath = join(projectGraphCacheDirectory, 'rollup.hash');
+const cachePath = join(workspaceDataDirectory, 'rollup.hash');
 const targetsCache = readTargetsCache();
 
 function readTargetsCache(): Record<

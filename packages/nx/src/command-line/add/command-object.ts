@@ -47,6 +47,9 @@ export const yargsAddCommand: CommandModule<
         '$0 add @nx/react@17.0.0',
         'Install version `17.0.0` of the `@nx/react` package and run its `@nx/react:init` generator'
       ) as any,
-  handler: (args) =>
-    import('./add').then((m) => m.addHandler(withOverrides(args))),
+  handler: async (args) => {
+    process.exit(
+      await import('./add').then((m) => m.addHandler(withOverrides(args)))
+    );
+  },
 };
