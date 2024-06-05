@@ -10,5 +10,5 @@ export default {
   globalTeardown: '../utils/global-teardown.ts',
   displayName: 'e2e-expo',
   testTimeout: 600000,
-  preset: '../../jest.preset.js',
+  preset: '../jest.preset.e2e.js',
 };
