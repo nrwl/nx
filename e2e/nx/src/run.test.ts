@@ -60,6 +60,32 @@ describe('Nx Running Tests', () => {
         const output = runCLI(`echo ${proj} ${args}`);
         expect(output).toContain(`ECHO: ${args.replace(/^.*-- /, '')}`);
       });
+
+      it.each([
+        {
+          args: '--test="hello world" "abc def"',
+          result: '--test="hello world" "abc def"',
+        },
+        {
+          args: `--test="hello world" 'abc def'`,
+          result: '--test="hello world" "abc def"',
+        },
+        {
+          args: `--test="hello world" 'abcdef'`,
+          result: '--test="hello world" abcdef',
+        },
+        {
+          args: `--test='hello world' 'abcdef'`,
+          result: '--test="hello world" abcdef',
+        },
+        {
+          args: `"--test='hello world' 'abcdef'"`,
+          result: `--test='hello world' 'abcdef'`,
+        },
+      ])('should forward %args properly with quotes', ({ args, result }) => {
+        const output = runCLI(`echo ${proj} ${args}`);
+        expect(output).toContain(`ECHO: ${result}`);
+      });
     });
 
     it('should execute long running tasks', () => {

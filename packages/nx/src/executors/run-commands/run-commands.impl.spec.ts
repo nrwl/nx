@@ -323,6 +323,56 @@ describe('Run Commands', () => {
         )
       ).toEqual('echo "hello world"');
     });
+
+    it('should interpolate provided values with spaces', () => {
+      expect(
+        interpolateArgsIntoCommand(
+          'echo',
+          {
+            unknownOptions: { hello: 'test 123' },
+            parsedArgs: { hello: 'test 123' },
+          } as any,
+          true
+        )
+      ).toEqual('echo --hello="test 123"'); // should wrap in quotes
+
+      expect(
+        interpolateArgsIntoCommand(
+          'echo',
+          {
+            unknownOptions: { hello: '"test 123"' },
+            parsedArgs: { hello: '"test 123"' },
+          } as any,
+          true
+        )
+      ).toEqual('echo --hello="test 123"'); // should leave double quotes
+
+      expect(
+        interpolateArgsIntoCommand(
+          'echo',
+          {
+            unknownOptions: { hello: "'test 123'" },
+            parsedArgs: { hello: "'test 123'" },
+          } as any,
+          true
+        )
+      ).toEqual("echo --hello='test 123'"); // should leave single quote
+
+      expect(
+        interpolateArgsIntoCommand(
+          'echo',
+          {
+            __unparsed__: [
+              '--hello=test 123',
+              'hello world',
+              '"random config"',
+              '456',
+            ],
+          } as any,
+          true
+        )
+      ).toEqual(`echo --hello="test 123" "hello world" "random config" 456`); // should wrap aroound __unparsed__ args with key value
+    });
   });
 
   describe('--color', () => {
