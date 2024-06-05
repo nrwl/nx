@@ -90,6 +90,8 @@ You can optionally enable authentication using your preferred SSO provider:
 - Bitbucket
 - GitLab
 - SAML (Okta, Azure AD etc.)
+- And even [Nx Agents](https://nx.dev/ci/features/distribute-task-execution#distribute-task-execution-nx-agents)
+  - Follow [the guide here](https://github.com/nrwl/nx-cloud-helm/blob/main/agents-guide/AGENTS-GUIDE.md) for setting up an Nx Agents cluster
 
 ```yaml
 # This is all you need to get the baseline of your nx-cloud instance configured!
@@ -120,6 +122,11 @@ nxCloudAppURL: 'https://nx-cloud.on.my-domain.ca' # make sure no backslash is at
 #saml:
 #  auth:
 #    enabled: false
+
+# for enabling Nx Agents
+#nxCloudWorkflows:
+#  enabled: true
+#  externalName: your-agents-cluster-address.com
 
 # Provide plaintext values for your application to use. We will extract them,
 # store them within the application runtime, and scrub the plaintext ones from
