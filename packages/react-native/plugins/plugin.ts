@@ -14,7 +14,7 @@ import { getLockFileName } from '@nx/js';
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { existsSync, readdirSync } from 'fs';
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
-import { projectGraphCacheDirectory } from 'nx/src/utils/cache-directory';
+import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
 
 export interface ReactNativePluginOptions {
@@ -29,7 +29,7 @@ export interface ReactNativePluginOptions {
   upgradeTargetname?: string;
 }
 
-const cachePath = join(projectGraphCacheDirectory, 'react-native.hash');
+const cachePath = join(workspaceDataDirectory, 'react-native.hash');
 const targetsCache = readTargetsCache();
 function readTargetsCache(): Record<
   string,
@@ -70,9 +70,12 @@ export const createNodes: CreateNodes<ReactNativePluginOptions> = [
       return {};
     }
 
-    const hash = calculateHashForCreateNodes(projectRoot, options, context, [
-      getLockFileName(detectPackageManager(context.workspaceRoot)),
-    ]);
+    const hash = await calculateHashForCreateNodes(
+      projectRoot,
+      options,
+      context,
+      [getLockFileName(detectPackageManager(context.workspaceRoot))]
+    );
 
     targetsCache[hash] ??= buildReactNativeTargets(
       projectRoot,
@@ -106,12 +109,6 @@ function buildReactNativeTargets(
       command: `pod install`,
       options: { cwd: joinPathFragments(projectRoot, 'ios') },
       dependsOn: [`${options.syncDepsTargetName}`],
-      cache: true,
-      inputs: getInputs(namedInputs),
-      outputs: [
-        getOutputs(projectRoot, 'ios/Pods'),
-        getOutputs(projectRoot, 'ios/Podfile.lock'),
-      ],
     },
     [options.runIosTargetName]: {
       command: `react-native run-ios`,

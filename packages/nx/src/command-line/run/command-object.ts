@@ -16,13 +16,17 @@ export const yargsRunCommand: CommandModule = {
 
     You can skip the use of Nx cache by using the --skip-nx-cache option.`,
   builder: (yargs) => withRunOneOptions(withBatch(yargs)),
-  handler: async (args) =>
-    await handleErrors(
+  handler: async (args) => {
+    const exitCode = await handleErrors(
       (args.verbose as boolean) ?? process.env.NX_VERBOSE_LOGGING === 'true',
       async () => {
-        (await import('./run-one')).runOne(process.cwd(), withOverrides(args));
+        await import('./run-one').then((m) =>
+          m.runOne(process.cwd(), withOverrides(args))
+        );
       }
-    ),
+    );
+    process.exit(exitCode);
+  },
 };
 
 /**

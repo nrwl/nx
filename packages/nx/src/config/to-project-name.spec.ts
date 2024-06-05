@@ -42,7 +42,7 @@ describe('Workspaces', () => {
             readNxJson(fs.tempDir).plugins,
             fs.tempDir
           );
-          const res = retrieveProjectConfigurations(
+          const res = await retrieveProjectConfigurations(
             plugins,
             fs.tempDir,
             readNxJson(fs.tempDir)

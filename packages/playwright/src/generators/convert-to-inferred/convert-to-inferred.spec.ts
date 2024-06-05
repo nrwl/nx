@@ -378,6 +378,55 @@ describe('Playwright - Convert Executors To Plugin', () => {
         (addedTestPlaywrightPlugin as ExpandedPluginConfiguration).include
       ).not.toBeDefined();
     });
+
+    it('should remove inputs when they are inferred', async () => {
+      const project = createTestProject(tree);
+      project.targets.e2e.options.runnerUi = true;
+      updateProjectConfiguration(tree, project.name, project);
+      createTestProject(tree, { appRoot: 'second', appName: 'second' });
+      const nxJson = readNxJson(tree);
+      nxJson.targetDefaults ??= {};
+      nxJson.targetDefaults['@nx/playwright:playwright'] = {
+        inputs: ['default', '^default'],
+      };
+      updateNxJson(tree, nxJson);
+
+      await convertToInferred(tree, {
+        project: project.name,
+        skipFormat: true,
+      });
+
+      // project.json modifications
+      const updatedProject = readProjectConfiguration(tree, project.name);
+      expect(updatedProject.targets.e2e.inputs).toBeUndefined();
+    });
+
+    it('should keep inputs when any of them are not inferred', async () => {
+      const project = createTestProject(tree);
+      project.targets.e2e.options.runnerUi = true;
+      updateProjectConfiguration(tree, project.name, project);
+      createTestProject(tree, { appRoot: 'second', appName: 'second' });
+      const nxJson = readNxJson(tree);
+      nxJson.targetDefaults ??= {};
+      nxJson.targetDefaults['@nx/playwright:playwright'] = {
+        inputs: ['default', '^default', '{workspaceRoot}/some-file.ts'],
+      };
+      updateNxJson(tree, nxJson);
+
+      await convertToInferred(tree, {
+        project: project.name,
+        skipFormat: true,
+      });
+
+      // project.json modifications
+      const updatedProject = readProjectConfiguration(tree, project.name);
+      expect(updatedProject.targets.e2e.inputs).toStrictEqual([
+        'default',
+        '^default',
+        '{workspaceRoot}/some-file.ts',
+        { externalDependencies: ['@playwright/test'] },
+      ]);
+    });
   });
 
   describe('--all', () => {

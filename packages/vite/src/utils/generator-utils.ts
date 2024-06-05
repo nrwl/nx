@@ -432,6 +432,7 @@ export function createOrEditViteConfig(
 
   const testOption = options.includeVitest
     ? `test: {
+    watch: false,
     globals: true,
     cache: {
       dir: '${normalizedJoinPaths(

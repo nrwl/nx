@@ -1,4 +1,4 @@
-import { projectGraphCacheDirectory } from 'nx/src/utils/cache-directory';
+import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { basename, dirname, join } from 'path';
 import { existsSync, readdirSync } from 'fs';
 import {
@@ -20,7 +20,7 @@ import { type RollupOptions } from 'rollup';
 // @ts-ignore
 import { loadConfigFile } from 'rollup/loadConfigFile';
 
-const cachePath = join(projectGraphCacheDirectory, 'rollup.hash');
+const cachePath = join(workspaceDataDirectory, 'rollup.hash');
 const targetsCache = readTargetsCache();
 
 function readTargetsCache(): Record<
@@ -63,9 +63,12 @@ export const createNodes: CreateNodes<RollupPluginOptions> = [
 
     options = normalizeOptions(options);
 
-    const hash = calculateHashForCreateNodes(projectRoot, options, context, [
-      getLockFileName(detectPackageManager(context.workspaceRoot)),
-    ]);
+    const hash = await calculateHashForCreateNodes(
+      projectRoot,
+      options,
+      context,
+      [getLockFileName(detectPackageManager(context.workspaceRoot))]
+    );
 
     targetsCache[hash] ??= await buildRollupTarget(
       configFilePath,
@@ -111,6 +114,7 @@ async function buildRollupTarget(
       ...('production' in namedInputs
         ? ['production', '^production']
         : ['default', '^default']),
+      { externalDependencies: ['rollup'] },
     ],
     outputs,
   };

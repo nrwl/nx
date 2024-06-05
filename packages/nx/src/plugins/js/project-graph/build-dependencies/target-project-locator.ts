@@ -1,5 +1,6 @@
+import { existsSync } from 'node:fs';
 import { builtinModules } from 'node:module';
-import { dirname, join, posix, relative } from 'node:path';
+import { dirname, join, parse, posix, relative } from 'node:path';
 import {
   ProjectGraphExternalNode,
   ProjectGraphProjectNode,
@@ -9,19 +10,20 @@ import {
   findProjectForPath,
 } from '../../../../project-graph/utils/find-project-for-path';
 import { isRelativePath, readJsonFile } from '../../../../utils/fileutils';
+import { PackageJson } from '../../../../utils/package-json';
 import { workspaceRoot } from '../../../../utils/workspace-root';
-import { findExternalPackageJsonPath } from '../../utils/find-external-package-json-path';
+import { resolveRelativeToDir } from '../../utils/resolve-relative-to-dir';
 import {
   getRootTsConfigFileName,
   resolveModuleByImport,
 } from '../../utils/typescript';
-
+import { getPackageNameFromImportPath } from '../../../../utils/get-package-name-from-import-path';
 /**
  * The key is a combination of the package name and the workspace relative directory
  * containing the file importing it e.g. `lodash__packages/my-lib`, the value is the
  * resolved external node name from the project graph.
  */
-type NpmResolutionCache = Map<string, string>;
+type NpmResolutionCache = Map<string, string | null>;
 
 /**
  * Use a shared cache to avoid repeated npm package resolution work within the TargetProjectLocator.
@@ -34,33 +36,41 @@ const builtInModuleSet = new Set<string>([
 ]);
 
 export function isBuiltinModuleImport(importExpr: string): boolean {
-  const packageName = parsePackageNameFromImportExpression(importExpr);
+  const packageName = getPackageNameFromImportPath(importExpr);
   return builtInModuleSet.has(packageName);
 }
 
 export class TargetProjectLocator {
   private projectRootMappings = createProjectRootMappings(this.nodes);
-  private npmProjects: Record<string, ProjectGraphExternalNode>;
+  private npmProjects: Record<string, ProjectGraphExternalNode | null>;
   private tsConfig = this.getRootTsConfig();
   private paths = this.tsConfig.config?.compilerOptions?.paths;
   private typescriptResolutionCache = new Map<string, string | null>();
 
   constructor(
     private readonly nodes: Record<string, ProjectGraphProjectNode>,
-    readonly externalNodes: Record<string, ProjectGraphExternalNode> = {},
+    private readonly externalNodes: Record<
+      string,
+      ProjectGraphExternalNode
+    > = {},
     private readonly npmResolutionCache: NpmResolutionCache = defaultNpmResolutionCache
   ) {
-    this.npmProjects = externalNodes;
     /**
      * Only the npm external nodes should be included.
      *
-     * Unlike the raw externalNodes, ensure that the version is always set in the key
-     * for optimal lookup.
+     * Unlike the raw externalNodes, ensure that there is always copy of the node where the version
+     * is set in the key for optimal lookup.
      */
-    this.npmProjects = Object.values(externalNodes).reduce((acc, node) => {
+    this.npmProjects = Object.values(this.externalNodes).reduce((acc, node) => {
       if (node.type === 'npm') {
-        const key = `npm:${node.data.packageName}@${node.data.version}`;
-        acc[key] = node;
+        const keyWithVersion = `npm:${node.data.packageName}@${node.data.version}`;
+        if (!acc[node.name]) {
+          acc[node.name] = node;
+        }
+        // The node.name may have already contained the version
+        if (!acc[keyWithVersion]) {
+          acc[keyWithVersion] = node;
+        }
       }
       return acc;
     }, {} as Record<string, ProjectGraphExternalNode>);
@@ -142,8 +152,8 @@ export class TargetProjectLocator {
   findNpmProjectFromImport(
     importExpr: string,
     fromFilePath: string
-  ): string | undefined {
-    const packageName = parsePackageNameFromImportExpression(importExpr);
+  ): string | null {
+    const packageName = getPackageNameFromImportPath(importExpr);
 
     let fullFilePath = fromFilePath;
     let workspaceRelativeFilePath = fromFilePath;
@@ -163,23 +173,25 @@ export class TargetProjectLocator {
 
     try {
       // package.json refers to an external package, we do not match against the version found in there, we instead try and resolve the relevant package how node would
-      const externalPackageJsonPath = findExternalPackageJsonPath(
+      const externalPackageJson = this.readPackageJson(
         packageName,
         fullDirPath
       );
       // The external package.json path might be not be resolvable, e.g. if a reference has been added to a project package.json, but the install command has not been run yet.
-      if (!externalPackageJsonPath) {
-        return undefined;
+      if (!externalPackageJson) {
+        // Try and fall back to resolving an external node from the graph by name
+        const externalNode = this.npmProjects[`npm:${packageName}`];
+        const externalNodeName = externalNode?.name || null;
+        this.npmResolutionCache.set(npmImportForProject, externalNodeName);
+        return externalNodeName;
       }
-
-      const externalPackageJson = readJsonFile(externalPackageJsonPath);
 
       const npmProjectKey = `npm:${externalPackageJson.name}@${externalPackageJson.version}`;
-      if (!this.npmProjects[npmProjectKey]) {
-        return undefined;
+      const matchingExternalNode = this.npmProjects[npmProjectKey];
+      if (!matchingExternalNode) {
+        return null;
       }
 
-      const matchingExternalNode = this.npmProjects[npmProjectKey];
       this.npmResolutionCache.set(
         npmImportForProject,
         matchingExternalNode.name
@@ -189,7 +201,7 @@ export class TargetProjectLocator {
       if (process.env.NX_VERBOSE_LOGGING === 'true') {
         console.error(e);
       }
-      return undefined;
+      return null;
     }
   }
 
@@ -302,16 +314,51 @@ export class TargetProjectLocator {
     const project = findProjectForPath(file, this.projectRootMappings);
     return this.nodes[project];
   }
-}
 
-function parsePackageNameFromImportExpression(
-  importExpression: string
-): string {
-  // Check if the package is scoped
-  if (importExpression.startsWith('@')) {
-    // For scoped packages, the package name is up to the second '/'
-    return importExpression.split('/').slice(0, 2).join('/');
+  /**
+   * In many cases the package.json will be directly resolvable, so we try that first.
+   * If, however, package exports are used and the package.json is not defined, we will
+   * need to resolve the main entry point of the package and traverse upwards to find the
+   * package.json.
+   *
+   * In some cases, such as when multiple module formats are published, the resolved package.json
+   * might only contain the "type" field - no "name" or "version", so in such cases we keep traversing
+   * until we find a package.json that contains the "name" and "version" fields.
+   */
+  private readPackageJson(
+    packageName: string,
+    relativeToDir: string
+  ): PackageJson | null {
+    // The package.json is directly resolvable
+    const packageJsonPath = resolveRelativeToDir(
+      join(packageName, 'package.json'),
+      relativeToDir
+    );
+    if (packageJsonPath) {
+      return readJsonFile(packageJsonPath);
+    }
+
+    try {
+      // Resolve the main entry point of the package
+      const mainPath = resolveRelativeToDir(packageName, relativeToDir);
+      let dir = dirname(mainPath);
+
+      while (dir !== parse(dir).root) {
+        const packageJsonPath = join(dir, 'package.json');
+        try {
+          const parsedPackageJson = readJsonFile(packageJsonPath);
+          // Ensure the package.json contains the "name" and "version" fields
+          if (parsedPackageJson.name && parsedPackageJson.version) {
+            return parsedPackageJson;
+          }
+        } catch {
+          // Package.json doesn't exist, keep traversing
+        }
+        dir = dirname(dir);
+      }
+      return null;
+    } catch {
+      return null;
+    }
   }
-  // For unscoped packages, the package name is up to the first '/'
-  return importExpression.split('/')[0];
 }

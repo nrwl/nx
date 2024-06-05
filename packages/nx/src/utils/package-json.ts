@@ -76,6 +76,7 @@ export interface PackageJson {
   executors?: string;
   'nx-migrations'?: string | NxMigrationsConfiguration;
   'ng-update'?: string | NxMigrationsConfiguration;
+  packageManager?: string;
 }
 
 export function normalizePackageGroup(

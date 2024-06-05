@@ -75,6 +75,11 @@ describe('Cypress builder', () => {
         configuration,
       };
     };
+    (devkit as any).logger = {
+      warn: jest.fn(),
+      log: jest.fn(),
+      info: jest.fn(),
+    };
     cypressRun = jest
       .spyOn(Cypress, 'run')
       .mockReturnValue(Promise.resolve({}));

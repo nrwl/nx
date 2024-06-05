@@ -1,7 +1,9 @@
 import {
   addDependenciesToPackageJson,
   formatFiles,
+  GeneratorCallback,
   getProjects,
+  installPackagesTask,
   NxJsonConfiguration,
   ProjectConfiguration,
   readJson,
@@ -17,10 +19,12 @@ import { eslintrcVersion, eslintVersion } from '../../utils/versions';
 import { ESLint } from 'eslint';
 import { convertEslintJsonToFlatConfig } from './converters/json-converter';
 
+let shouldInstallDeps = false;
+
 export async function convertToFlatConfigGenerator(
   tree: Tree,
   options: ConvertToFlatConfigGeneratorSchema
-) {
+): Promise<void | GeneratorCallback> {
   const eslintFile = findEslintFile(tree);
   if (!eslintFile) {
     throw new Error('Could not find root eslint file');
@@ -59,6 +63,10 @@ export async function convertToFlatConfigGenerator(
 
   if (!options.skipFormat) {
     await formatFiles(tree);
+  }
+
+  if (shouldInstallDeps) {
+    return () => installPackagesTask(tree);
   }
 }
 
@@ -215,6 +223,7 @@ function processConvertedConfig(
 
   // add missing packages
   if (addESLintRC) {
+    shouldInstallDeps = true;
     addDependenciesToPackageJson(
       tree,
       {},
@@ -224,6 +233,7 @@ function processConvertedConfig(
     );
   }
   if (addESLintJS) {
+    shouldInstallDeps = true;
     addDependenciesToPackageJson(
       tree,
       {},

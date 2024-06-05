@@ -1,10 +1,13 @@
 import {
   formatFiles,
-  joinPathFragments,
-  readProjectConfiguration,
-  Tree,
   GeneratorCallback,
+  joinPathFragments,
+  offsetFromRoot,
+  readNxJson,
+  readProjectConfiguration,
   runTasksInSerial,
+  stripIndents,
+  Tree,
   updateProjectConfiguration,
   writeJson,
 } from '@nx/devkit';
@@ -15,26 +18,74 @@ import { RollupExecutorOptions } from '../../executors/rollup/schema';
 import { RollupProjectSchema } from './schema';
 import { addBuildTargetDefaults } from '@nx/devkit/src/generators/add-build-target-defaults';
 import { ensureDependencies } from '../../utils/ensure-dependencies';
+import { hasPlugin } from '../../utils/has-plugin';
+import { RollupWithNxPluginOptions } from '../../plugins/with-nx/with-nx-options';
 
 export async function configurationGenerator(
   tree: Tree,
   options: RollupProjectSchema
 ) {
   const tasks: GeneratorCallback[] = [];
+  const nxJson = readNxJson(tree);
+  const addPluginDefault =
+    process.env.NX_ADD_PLUGINS !== 'false' &&
+    nxJson.useInferencePlugins !== false;
+  options.addPlugin ??= addPluginDefault;
+
   tasks.push(await rollupInitGenerator(tree, { ...options, skipFormat: true }));
+
   if (!options.skipPackageJson) {
     tasks.push(ensureDependencies(tree, options));
   }
 
-  options.buildTarget ??= 'build';
-  checkForTargetConflicts(tree, options);
-  addBuildTarget(tree, options);
+  if (hasPlugin(tree)) {
+    createRollupConfig(tree, options);
+  } else {
+    options.buildTarget ??= 'build';
+    checkForTargetConflicts(tree, options);
+    addBuildTarget(tree, options);
+  }
+
+  addPackageJson(tree, options);
 
   if (!options.skipFormat) {
     await formatFiles(tree);
   }
 
   return runTasksInSerial(...tasks);
+}
+
+function createRollupConfig(tree: Tree, options: RollupProjectSchema) {
+  const project = readProjectConfiguration(tree, options.project);
+  const buildOptions: RollupWithNxPluginOptions = {
+    outputPath: joinPathFragments(
+      offsetFromRoot(project.root),
+      'dist',
+      project.root === '.' ? project.name : project.root
+    ),
+    compiler: options.compiler ?? 'babel',
+    main: options.main ?? './src/index.ts',
+    tsConfig: options.tsConfig ?? './tsconfig.lib.json',
+  };
+
+  tree.write(
+    joinPathFragments(project.root, 'rollup.config.js'),
+    stripIndents`
+      const { withNx } = require('@nx/rollup/with-nx');
+      
+      module.exports = withNx({
+        main: '${buildOptions.main}',
+        outputPath: '${buildOptions.outputPath}',
+        tsConfig: '${buildOptions.tsConfig}',
+        compiler: '${buildOptions.compiler}',
+        format: ${JSON.stringify(options.format ?? ['esm'])},
+        assets:[{ input: '.', output: '.', glob:'*.md'}],
+      }, {
+        // Provide additional rollup configuration here. See: https://rollupjs.org/configuration-options
+        // e.g. 
+        // output: { sourcemap: true },
+      });`
+  );
 }
 
 function checkForTargetConflicts(tree: Tree, options: RollupProjectSchema) {
@@ -47,8 +98,7 @@ function checkForTargetConflicts(tree: Tree, options: RollupProjectSchema) {
   }
 }
 
-function addBuildTarget(tree: Tree, options: RollupProjectSchema) {
-  addBuildTargetDefaults(tree, '@nx/rollup:rollup', options.buildTarget);
+function addPackageJson(tree: Tree, options: RollupProjectSchema) {
   const project = readProjectConfiguration(tree, options.project);
   const packageJsonPath = joinPathFragments(project.root, 'package.json');
 
@@ -60,14 +110,18 @@ function addBuildTarget(tree: Tree, options: RollupProjectSchema) {
       version: '0.0.1',
     });
   }
+}
 
+function addBuildTarget(tree: Tree, options: RollupProjectSchema) {
+  addBuildTargetDefaults(tree, '@nx/rollup:rollup', options.buildTarget);
+  const project = readProjectConfiguration(tree, options.project);
   const prevBuildOptions = project.targets?.[options.buildTarget]?.options;
 
   const buildOptions: RollupExecutorOptions = {
     main:
       options.main ??
       prevBuildOptions?.main ??
-      joinPathFragments(project.root, 'src/main.ts'),
+      joinPathFragments(project.root, 'src/index.ts'),
     outputPath:
       prevBuildOptions?.outputPath ??
       joinPathFragments(
@@ -107,17 +161,7 @@ function addBuildTarget(tree: Tree, options: RollupProjectSchema) {
       [options.buildTarget]: {
         executor: '@nx/rollup:rollup',
         outputs: ['{options.outputPath}'],
-        defaultConfiguration: 'production',
         options: buildOptions,
-        configurations: {
-          production: {
-            optimization: true,
-            sourceMap: false,
-            namedChunks: false,
-            extractLicenses: true,
-            vendorChunk: false,
-          },
-        },
       },
     },
   });

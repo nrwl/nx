@@ -15,6 +15,14 @@ export function withNxCloud<T = unknown>(argv: yargs.Argv<T>) {
   return result;
 }
 
+export function withUseGitHub<T = unknown>(argv: yargs.Argv<T>) {
+  return argv.option('useGitHub', {
+    describe: chalk.dim`Will you be using GitHub as your git hosting provider?`,
+    type: 'boolean',
+    default: false,
+  });
+}
+
 export function withAllPrompts<T = unknown>(argv: yargs.Argv<T>) {
   return argv.option('allPrompts', {
     alias: 'a',

@@ -5,7 +5,7 @@ import {
   type TargetConfiguration,
   type Tree,
 } from '@nx/devkit';
-import { createNodes, EslintPluginOptions } from '../../plugins/plugin';
+import { createNodesV2, EslintPluginOptions } from '../../plugins/plugin';
 import { migrateExecutorToPlugin } from '@nx/devkit/src/generators/plugin-migrations/executor-to-plugin-migrator';
 import { targetOptionsToCliMap } from './lib/target-options-map';
 import { interpolate } from 'nx/src/tasks-runner/utils';
@@ -26,7 +26,7 @@ export async function convertToInferred(tree: Tree, options: Schema) {
       '@nx/eslint/plugin',
       (targetName) => ({ targetName }),
       postTargetTransformer,
-      createNodes,
+      createNodesV2,
       options.project
     );
 
@@ -38,7 +38,7 @@ export async function convertToInferred(tree: Tree, options: Schema) {
       '@nx/eslint/plugin',
       (targetName) => ({ targetName }),
       postTargetTransformer,
-      createNodes,
+      createNodesV2,
       options.project
     );
 
@@ -59,7 +59,7 @@ function postTargetTransformer(
   projectDetails: { projectName: string; root: string }
 ): TargetConfiguration {
   if (target.inputs) {
-    target.inputs = target.inputs.filter(
+    const inputs = target.inputs.filter(
       (input) =>
         typeof input === 'string' &&
         ![
@@ -69,7 +69,7 @@ function postTargetTransformer(
           '{workspaceRoot}/eslint.config.js',
         ].includes(input)
     );
-    if (target.inputs.length === 0) {
+    if (inputs.length === 0) {
       delete target.inputs;
     }
   }

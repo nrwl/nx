@@ -16,7 +16,7 @@ import {
 import * as log from 'ng-packagr/lib/utils/log';
 import { dirname, extname, join } from 'path';
 import autoprefixer from 'autoprefixer';
-import * as postcssUrl from 'postcss-url';
+import postcssUrl from 'postcss-url';
 import { pathToFileURL } from 'node:url';
 import {
   getTailwindPostCssPlugin,

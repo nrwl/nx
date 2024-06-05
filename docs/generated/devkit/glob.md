@@ -18,3 +18,7 @@ Paths should be unix-style with forward slashes.
 `string`[]
 
 Normalized paths in the workspace that match the provided glob patterns.
+
+**`Deprecated`**
+
+Use [globAsync](../../devkit/documents/globAsync) instead.

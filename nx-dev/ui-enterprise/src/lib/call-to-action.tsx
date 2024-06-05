@@ -62,21 +62,14 @@ export function CallToAction(): JSX.Element {
             href="/contact/sales"
             className="rounded-md bg-slate-950 px-3.5 py-2.5 text-sm font-semibold text-slate-100 shadow-sm hover:bg-slate-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
           >
-            Contact us
+            Contact sales
           </Link>
-          {/*<Link*/}
-          {/*  href="/enterprise#talk"*/}
-          {/*  title="Get in touch"*/}
-          {/*  className="group text-sm font-semibold leading-6 text-slate-950 dark:text-white"*/}
-          {/*>*/}
-          {/*  Contact us{' '}*/}
-          {/*  <span*/}
-          {/*    aria-hidden="true"*/}
-          {/*    className="inline-block transition group-hover:translate-x-1"*/}
-          {/*  >*/}
-          {/*    →*/}
-          {/*  </span>*/}
-          {/*</Link>*/}
+          <Link
+            href="/contact/engineering"
+            className="rounded-md bg-slate-950 px-3.5 py-2.5 text-sm font-semibold text-slate-100 shadow-sm hover:bg-slate-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
+          >
+            Contact engineers
+          </Link>
         </div>
       </div>
     </section>

@@ -89,7 +89,7 @@ describe('explicit package json dependencies', () => {
 
     const fileMap = createFileMap(
       projectsConfigurations as any,
-      getAllFileDataInContext(tempFs.tempDir)
+      await getAllFileDataInContext(tempFs.tempDir)
     ).fileMap;
 
     const builder = new ProjectGraphBuilder(undefined, fileMap.projectFileMap);

@@ -3,14 +3,14 @@ import { CreateNodesContext, hashArray } from 'nx/src/devkit-exports';
 
 import { hashObject, hashWithWorkspaceContext } from 'nx/src/devkit-internals';
 
-export function calculateHashForCreateNodes(
+export async function calculateHashForCreateNodes(
   projectRoot: string,
   options: object,
   context: CreateNodesContext,
   additionalGlobs: string[] = []
-): string {
+): Promise<string> {
   return hashArray([
-    hashWithWorkspaceContext(context.workspaceRoot, [
+    await hashWithWorkspaceContext(context.workspaceRoot, [
       join(projectRoot, '**/*'),
       ...additionalGlobs,
     ]),

@@ -183,6 +183,14 @@ Type: `string`
 
 Stylesheet type to be used with certain stacks
 
+### useGitHub
+
+Type: `boolean`
+
+Default: `false`
+
+Will you be using GitHub as your git hosting provider?
+
 ### version
 
 Type: `boolean`
