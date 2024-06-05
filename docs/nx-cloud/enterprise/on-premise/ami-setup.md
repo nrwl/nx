@@ -161,7 +161,7 @@ To upgrade to a newer version, add the below line to your `myconfiguration.yml` 
 
 ```yaml
 global:
-  imageTag: '2306.01.2' 
+  imageTag: '2306.01.2'
 global:
   imageTag: '2405.02.15' # set the version of nx-cloud you'd like
 helmVersion: '0.15.3' # helm version
