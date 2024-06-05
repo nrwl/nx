@@ -33,7 +33,7 @@ We'll be able to discuss specific requirements such as:
 - Custom storage replication / redundancy requirements
 - Custom Node types for Nx agents
 - Static IPs (if you need to open up connections in your corporate network)
-- VPC peering on GCloud or AWS Private Link 
+- VPC peering on GCloud or AWS Private Link
 
 This would be a "best of both worlds" option, as it would free you up from managing the instance yourself, but you will get to define specific parameters of how it should it run.
 Your data and the Nx Cloud will run in complete isolation and will only serve your company. There will be no external API calls to any services outside of the clusters we set-up for you.
