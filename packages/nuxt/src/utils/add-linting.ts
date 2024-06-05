@@ -33,7 +33,7 @@ export async function addLinting(
     });
     tasks.push(lintTask);
 
-    editEslintConfigFiles(host, options.projectRoot, options.rootProject);
+    editEslintConfigFiles(host, options.projectRoot);
 
     updateJson(
       host,
