@@ -13,12 +13,14 @@ import { yargsDecorator } from './decorator';
 import { getPackageNameFromThirdPartyPreset } from '../src/utils/preset/get-third-party-preset';
 import {
   determineDefaultBase,
+  determineIfGitHubWillBeUsed,
   determineNxCloud,
   determinePackageManager,
 } from '../src/internal-utils/prompts';
 import {
   withAllPrompts,
   withGitOptions,
+  withUseGitHub,
   withNxCloud,
   withOptions,
   withPackageManager,
@@ -183,6 +185,7 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
             type: 'string',
           }),
         withNxCloud,
+        withUseGitHub,
         withAllPrompts,
         withPackageManager,
         withGitOptions
@@ -280,13 +283,28 @@ async function normalizeArgsMiddleware(
 
     const packageManager = await determinePackageManager(argv);
     const defaultBase = await determineDefaultBase(argv);
-    const nxCloud = await determineNxCloud(argv);
-
-    Object.assign(argv, {
-      nxCloud,
-      packageManager,
-      defaultBase,
-    });
+    if (process.env.NX_NEW_CLOUD_ONBOARDING === 'true') {
+      const nxCloud =
+        argv.skipGit === true ? 'skip' : await determineNxCloud(argv);
+      const useGitHub =
+        nxCloud === 'skip'
+          ? undefined
+          : nxCloud === 'github' ||
+            (await determineIfGitHubWillBeUsed(nxCloud));
+      Object.assign(argv, {
+        nxCloud,
+        useGitHub,
+        packageManager,
+        defaultBase,
+      });
+    } else {
+      const nxCloud = await determineNxCloud(argv);
+      Object.assign(argv, {
+        nxCloud,
+        packageManager,
+        defaultBase,
+      });
+    }
   } catch (e) {
     console.error(e);
     process.exit(1);
