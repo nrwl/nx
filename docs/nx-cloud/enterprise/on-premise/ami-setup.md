@@ -90,7 +90,7 @@ You can optionally enable authentication using your preferred SSO provider:
 - Bitbucket
 - GitLab
 - SAML (Okta, Azure AD etc.)
-- And even [Nx Agents](https://nx.dev/ci/features/distribute-task-execution#distribute-task-execution-nx-agents)
+- And even [Nx Agents](/ci/features/distribute-task-execution#distribute-task-execution-nx-agents)
   - Follow [the guide here](https://github.com/nrwl/nx-cloud-helm/blob/main/agents-guide/AGENTS-GUIDE.md) for setting up an Nx Agents cluster
 
 ```yaml
