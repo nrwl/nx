@@ -17,7 +17,7 @@ There are two ways to identify assets to be copied into the output bundle:
       "path-to-my-project/*.md",
       {
         "input": "./path-to-my-project/src", // look in the src folder
-        "glob": "**/*.!(ts)", // for any file (in any folder) that is not a typescript file
+        "glob": "**/!(*.ts)", // for any file (in any folder) that is not a typescript file
         "output": "./src" // put those files in the src folder of the output bundle
       },
       {

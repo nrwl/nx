@@ -7,11 +7,17 @@ export function getNativeFileCacheLocation() {
   if (process.env.NX_NATIVE_FILE_CACHE_DIRECTORY) {
     return process.env.NX_NATIVE_FILE_CACHE_DIRECTORY;
   } else {
-    const shortHash = createHash('sha256')
-      .update(userInfo().username)
-      .update(workspaceRoot)
-      .digest('hex')
-      .substring(0, 7);
-    return join(tmpdir(), `nx-native-file-cache-${shortHash}`);
+    const hash = createHash('sha256').update(workspaceRoot);
+
+    try {
+      hash.update(userInfo().username);
+    } catch (e) {
+      // if there's no user, we only use the workspace root for the hash and move on
+    }
+
+    return join(
+      tmpdir(),
+      `nx-native-file-cache-${hash.digest('hex').substring(0, 7)}`
+    );
   }
 }

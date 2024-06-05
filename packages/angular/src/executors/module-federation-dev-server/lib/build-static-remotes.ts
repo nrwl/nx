@@ -1,7 +1,7 @@
 import { type Schema } from '../schema';
 import { type ExecutorContext, logger } from '@nx/devkit';
 import type { StaticRemotesConfig } from './parse-static-remotes-config';
-import { projectGraphCacheDirectory } from 'nx/src/utils/cache-directory';
+import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { fork } from 'node:child_process';
 import { join } from 'node:path';
 import { createWriteStream } from 'node:fs';
@@ -49,7 +49,7 @@ export async function buildStaticRemotes(
     );
     // File to debug build failures e.g. 2024-01-01T00_00_0_0Z-build.log'
     const remoteBuildLogFile = join(
-      projectGraphCacheDirectory,
+      workspaceDataDirectory,
       `${new Date().toISOString().replace(/[:\.]/g, '_')}-build.log`
     );
     const stdoutStream = createWriteStream(remoteBuildLogFile);

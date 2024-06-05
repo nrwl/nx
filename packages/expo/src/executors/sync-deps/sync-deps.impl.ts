@@ -47,7 +47,8 @@ export default async function* syncDepsExecutor(
       typeof options.exclude === 'string'
         ? options.exclude.split(',')
         : options.exclude,
-      options.all
+      options.all,
+      options.excludeImplicit
     )
   );
 
@@ -62,11 +63,12 @@ export async function syncDeps(
   projectGraph: ProjectGraph = readCachedProjectGraph(),
   include: string[] = [],
   exclude: string[] = [],
-  all: boolean = false
+  all: boolean = false,
+  excludeImplicit: boolean = false
 ): Promise<string[]> {
   let npmDeps = all
     ? Object.keys(workspacePackageJson.dependencies || {})
-    : findAllNpmDependencies(projectGraph, projectName);
+    : findAllNpmDependencies(projectGraph, projectName, { excludeImplicit });
   let npmDevdeps = all
     ? Object.keys(workspacePackageJson.devDependencies || {})
     : [];

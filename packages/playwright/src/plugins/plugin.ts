@@ -21,7 +21,7 @@ import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash
 import type { PlaywrightTestConfig } from '@playwright/test';
 import { getFilesInDirectoryUsingContext } from 'nx/src/utils/workspace-context';
 import { minimatch } from 'minimatch';
-import { projectGraphCacheDirectory } from 'nx/src/utils/cache-directory';
+import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { getLockFileName } from '@nx/js';
 import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
 import { hashObject } from 'nx/src/hasher/file-hasher';
@@ -57,7 +57,7 @@ export const createNodesV2: CreateNodesV2<PlaywrightPluginOptions> = [
   async (configFilePaths, options, context) => {
     const optionsHash = hashObject(options);
     const cachePath = join(
-      projectGraphCacheDirectory,
+      workspaceDataDirectory,
       `playwright-${optionsHash}.hash`
     );
     const targetsCache = readTargetsCache(cachePath);

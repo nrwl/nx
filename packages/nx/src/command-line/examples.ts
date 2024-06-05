@@ -336,6 +336,28 @@ export const examples: Record<string, Example[]> = {
         'Create a dedicated commit for each successfully completed migration. You can customize the prefix used for each commit by additionally setting --commit-prefix="PREFIX_HERE "',
     },
   ],
+  reset: [
+    {
+      command: 'reset',
+      description:
+        'Clears the internal state of the daemon and metadata that Nx is tracking. Helpful if you are getting strange errors and want to start fresh',
+    },
+    {
+      command: 'reset --only-cache',
+      description:
+        'Clears the Nx Cache directory. This will remove all local cache entries for tasks, but will not affect the remote cache',
+    },
+    {
+      command: 'reset --only-daemon',
+      description:
+        'Stops the Nx Daemon, it will be restarted fresh when the next Nx command is run.',
+    },
+    {
+      command: 'reset --only-workspace-data',
+      description:
+        'Clears the workspace data directory. Used by Nx to store cached data about the current workspace (e.g. partial results, incremental data, etc)',
+    },
+  ],
   show: [
     {
       command: 'show projects',
