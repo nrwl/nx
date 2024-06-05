@@ -185,10 +185,11 @@
           "type": "number"
         },
         {
-          "type": "boolean"
+          "type": "boolean",
+          "const": false
         }
       ],
-      "description": "Specify the number of failures to cancel a run being recorded to the Cloud or `false` to disable auto-cancellation."
+      "description": "Specify the number of failures to cancel a run being recorded to the Cypress Cloud or `false` to disable auto-cancellation."
     }
   },
   "additionalProperties": true,
