@@ -48,6 +48,7 @@ export async function addVitest(tree: Tree, options: NormalizedSchema) {
   updateJson(tree, `${options.appProjectRoot}/tsconfig.spec.json`, (json) => {
     json.compilerOptions ??= {};
     json.compilerOptions.composite = true;
+    json.include = ['.nuxt/nuxt.d.ts', ...(json.include ?? [])];
     return json;
   });
 
