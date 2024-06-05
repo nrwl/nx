@@ -4,10 +4,8 @@ import type { TargetConfiguration } from '@nx/devkit';
 
 import { JsonCodeBlock } from '@nx/graph/ui-code-block';
 import { useCallback, useContext, useEffect, useState } from 'react';
-import { SourceInfo } from '../source-info/source-info';
 import { FadingCollapsible } from './fading-collapsible';
 import { TargetConfigurationProperty } from './target-configuration-property';
-import { selectSourceInfo } from './target-configuration-details.util';
 import { CopyToClipboard } from '../copy-to-clipboard/copy-to-clipboard';
 import { PropertyInfoTooltip, Tooltip } from '@nx/graph/ui-tooltips';
 import { TooltipTriggerText } from './tooltip-trigger-text';
@@ -17,6 +15,8 @@ import { ExpandedTargetsContext } from '@nx/graph/shared';
 import { getDisplayHeaderFromTargetConfiguration } from '../utils/get-display-header-from-target-configuration';
 import { TargetExecutor } from '../target-executor/target-executor';
 import { TargetExecutorTitle } from '../target-executor/target-executor-title';
+import { TargetSourceInfo } from '../target-source-info/target-source-info';
+import { getTargetExecutorSourceMapKey } from '../target-source-info/get-target-executor-source-map-key';
 
 interface TargetConfigurationDetailsProps {
   projectName: string;
@@ -109,7 +109,15 @@ export default function TargetConfigurationDetails({
               />
             </h4>
             <p className="pl-5 font-mono">
-              <TargetExecutor {...displayHeader} link={link} />
+              <TargetExecutor {...displayHeader} link={link}>
+                <TargetSourceInfo
+                  className="pl-4 opacity-0 transition-opacity duration-150 ease-in-out group-hover/line:opacity-100"
+                  propertyKey={`targets.${targetName}.${getTargetExecutorSourceMapKey(
+                    targetConfiguration
+                  )}`}
+                  sourceMap={sourceMap}
+                />
+              </TargetExecutor>
             </p>
           </div>
 
@@ -122,7 +130,13 @@ export default function TargetConfigurationDetails({
                 />
               </h4>
               <p className="pl-5 font-mono">
-                <TargetExecutor script={script} link={link} />
+                <TargetExecutor script={script} link={link}>
+                  <TargetSourceInfo
+                    className="pl-4 opacity-0 transition-opacity duration-150 ease-in-out group-hover/line:opacity-100"
+                    propertyKey={`targets.${targetName}.options.script`}
+                    sourceMap={sourceMap}
+                  />
+                </TargetExecutor>
               </p>
             </div>
           )}
@@ -151,29 +165,20 @@ export default function TargetConfigurationDetails({
                 </span>
               </h4>
               <ul className="mb-4 list-disc pl-5">
-                {targetConfiguration.inputs.map((input, idx) => {
-                  const sourceInfo = selectSourceInfo(
-                    sourceMap,
-                    `targets.${targetName}.inputs`
-                  );
-                  return (
-                    <li
-                      className="group/line overflow-hidden whitespace-nowrap"
-                      key={`input-${idx}`}
-                    >
-                      <TargetConfigurationProperty data={input}>
-                        {sourceInfo && (
-                          <span className="inline flex min-w-0 pl-4 opacity-0 transition-opacity duration-150 ease-in-out group-hover/line:opacity-100">
-                            <SourceInfo
-                              data={sourceInfo}
-                              propertyKey={`targets.${targetName}.inputs`}
-                            />
-                          </span>
-                        )}
-                      </TargetConfigurationProperty>
-                    </li>
-                  );
-                })}
+                {targetConfiguration.inputs.map((input, idx) => (
+                  <li
+                    className="group/line overflow-hidden whitespace-nowrap"
+                    key={`input-${idx}`}
+                  >
+                    <TargetConfigurationProperty data={input}>
+                      <TargetSourceInfo
+                        className="min-w-0 flex-1 pl-4 opacity-0 transition-opacity duration-150 ease-in-out group-hover/line:opacity-100"
+                        propertyKey={`targets.${targetName}.inputs`}
+                        sourceMap={sourceMap}
+                      />
+                    </TargetConfigurationProperty>
+                  </li>
+                ))}
               </ul>
             </div>
           )}
@@ -201,29 +206,20 @@ export default function TargetConfigurationDetails({
                 </span>
               </h4>
               <ul className="mb-4 list-disc pl-5">
-                {targetConfiguration.outputs?.map((output, idx) => {
-                  const sourceInfo = selectSourceInfo(
-                    sourceMap,
-                    `targets.${targetName}.outputs`
-                  );
-                  return (
-                    <li
-                      className="group/line overflow-hidden whitespace-nowrap"
-                      key={`output-${idx}`}
-                    >
-                      <TargetConfigurationProperty data={output}>
-                        {sourceInfo && (
-                          <span className="inline flex min-w-0 pl-4 opacity-0 transition-opacity duration-150 ease-in-out group-hover/line:opacity-100">
-                            <SourceInfo
-                              data={sourceInfo}
-                              propertyKey={`targets.${targetName}.outputs`}
-                            />
-                          </span>
-                        )}
-                      </TargetConfigurationProperty>
-                    </li>
-                  );
-                }) ?? <span>no outputs</span>}
+                {targetConfiguration.outputs?.map((output, idx) => (
+                  <li
+                    className="group/line overflow-hidden whitespace-nowrap"
+                    key={`output-${idx}`}
+                  >
+                    <TargetConfigurationProperty data={output}>
+                      <TargetSourceInfo
+                        className="min-w-0 flex-1 pl-4 opacity-0 transition-opacity duration-150 ease-in-out group-hover/line:opacity-100"
+                        propertyKey={`targets.${targetName}.outputs`}
+                        sourceMap={sourceMap}
+                      />
+                    </TargetConfigurationProperty>
+                  </li>
+                )) ?? <span>no outputs</span>}
               </ul>
             </div>
           )}
@@ -251,30 +247,20 @@ export default function TargetConfigurationDetails({
                 </span>
               </h4>
               <ul className="mb-4 list-disc pl-5">
-                {targetConfiguration.dependsOn.map((dep, idx) => {
-                  const sourceInfo = selectSourceInfo(
-                    sourceMap,
-                    `targets.${targetName}.dependsOn`
-                  );
-
-                  return (
-                    <li
-                      className="group/line overflow-hidden whitespace-nowrap"
-                      key={`dependsOn-${idx}`}
-                    >
-                      <TargetConfigurationProperty data={dep}>
-                        <span className="inline flex min-w-0 pl-4 opacity-0 transition-opacity duration-150 ease-in-out group-hover/line:opacity-100">
-                          {sourceInfo && (
-                            <SourceInfo
-                              data={sourceInfo}
-                              propertyKey={`targets.${targetName}.dependsOn`}
-                            />
-                          )}
-                        </span>
-                      </TargetConfigurationProperty>
-                    </li>
-                  );
-                })}
+                {targetConfiguration.dependsOn.map((dep, idx) => (
+                  <li
+                    className="group/line overflow-hidden whitespace-nowrap"
+                    key={`dependsOn-${idx}`}
+                  >
+                    <TargetConfigurationProperty data={dep}>
+                      <TargetSourceInfo
+                        className="min-w-0 flex-1 pl-4 opacity-0 transition-opacity duration-150 ease-in-out group-hover/line:opacity-100"
+                        propertyKey={`targets.${targetName}.dependsOn`}
+                        sourceMap={sourceMap}
+                      />
+                    </TargetConfigurationProperty>
+                  </li>
+                ))}
               </ul>
             </div>
           )}
@@ -295,20 +281,13 @@ export default function TargetConfigurationDetails({
                 <FadingCollapsible>
                   <JsonCodeBlock
                     data={options}
-                    renderSource={(propertyName: string) => {
-                      const sourceInfo = selectSourceInfo(
-                        sourceMap,
-                        `targets.${targetName}.options.${propertyName}`
-                      );
-                      return sourceInfo ? (
-                        <span className="flex min-w-0 pl-4">
-                          <SourceInfo
-                            data={sourceInfo}
-                            propertyKey={`targets.${targetName}.options.${propertyName}`}
-                          />
-                        </span>
-                      ) : null;
-                    }}
+                    renderSource={(propertyName: string) => (
+                      <TargetSourceInfo
+                        className="flex min-w-0 pl-4"
+                        propertyKey={`targets.${targetName}.options.${propertyName}`}
+                        sourceMap={sourceMap}
+                      />
+                    )}
                   />
                 </FadingCollapsible>
               </div>
@@ -343,20 +322,13 @@ export default function TargetConfigurationDetails({
               <FadingCollapsible>
                 <JsonCodeBlock
                   data={targetConfiguration.configurations}
-                  renderSource={(propertyName: string) => {
-                    const sourceInfo = selectSourceInfo(
-                      sourceMap,
-                      `targets.${targetName}.configurations.${propertyName}`
-                    );
-                    return sourceInfo ? (
-                      <span className="flex min-w-0 pl-4">
-                        <SourceInfo
-                          data={sourceInfo}
-                          propertyKey={`targets.${targetName}.configurations.${propertyName}`}
-                        />{' '}
-                      </span>
-                    ) : null;
-                  }}
+                  renderSource={(propertyName: string) => (
+                    <TargetSourceInfo
+                      className="flex min-w-0 pl-4"
+                      propertyKey={`targets.${targetName}.configurations.${propertyName}`}
+                      sourceMap={sourceMap}
+                    />
+                  )}
                 />
               </FadingCollapsible>
             </>

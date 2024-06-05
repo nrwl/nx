@@ -7,6 +7,7 @@ export interface TargetExecutorProps {
   executor?: string;
   isCompact?: boolean;
   link?: string;
+  children?: React.ReactNode;
 }
 
 export function TargetExecutor({
@@ -16,9 +17,16 @@ export function TargetExecutor({
   executor,
   isCompact,
   link,
+  children,
 }: TargetExecutorProps) {
   if (script) {
-    return link ? <ExternalLink href={link}>{script}</ExternalLink> : script;
+    return link ? (
+      <div className="group/line">
+        <ExternalLink href={link}>{script}</ExternalLink> {children}
+      </div>
+    ) : (
+      script
+    );
   }
 
   if (commands) {
@@ -34,19 +42,22 @@ export function TargetExecutor({
       );
     }
     return (
-      <ul>
-        {commands?.map((c) =>
-          c ? (
+      <div className="group/line">
+        <ul>
+          {commands?.filter(Boolean).map((c) => (
             <li>{link ? <ExternalLink href={link}>{c}</ExternalLink> : c}</li>
-          ) : null
-        )}
-      </ul>
+          ))}
+        </ul>
+        {children}
+      </div>
     );
   }
 
   const displayText = command ?? executor ?? '';
   return link ? (
-    <ExternalLink href={link}>{displayText}</ExternalLink>
+    <div className="group/line">
+      <ExternalLink href={link}>{displayText}</ExternalLink> {children}
+    </div>
   ) : (
     displayText
   );
