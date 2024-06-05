@@ -13,7 +13,7 @@ import {
 } from '@typescript-eslint/utils';
 import { isBuiltinModuleImport } from '@nx/js/src/internal';
 import { isRelativePath } from 'nx/src/utils/fileutils';
-import { basename, dirname, relative } from 'path';
+import { basename, dirname, join, relative } from 'path';
 import {
   getBarrelEntryPointByImportScope,
   getBarrelEntryPointProjectNode,
@@ -318,7 +318,7 @@ export default ESLintUtils.RuleCreator(
                   for (const importMember of imports) {
                     const importPath = getRelativeImportPath(
                       importMember,
-                      joinPathFragments(workspaceRoot, entryPointPath.path),
+                      join(workspaceRoot, entryPointPath.path),
                       sourceProject.data.sourceRoot
                     );
                     // we cannot remap, so leave it as is
@@ -419,7 +419,7 @@ export default ESLintUtils.RuleCreator(
                   for (const importMember of imports) {
                     const importPath = getRelativeImportPath(
                       importMember,
-                      joinPathFragments(workspaceRoot, entryPointPath),
+                      join(workspaceRoot, entryPointPath),
                       sourceProject.data.sourceRoot
                     );
                     if (importPath) {
