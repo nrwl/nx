@@ -80,6 +80,12 @@ export async function connectToNxCloudCommand(): Promise<boolean> {
         ${connectCloudUrl}`,
         ],
       });
+      const open = require('open');
+      await open(connectCloudUrl)
+        .then(() => {
+          console.info(`Follow up in the browser to complete the setup.`);
+        })
+        .catch(() => {});
     }
     return false;
   }
