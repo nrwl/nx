@@ -114,10 +114,23 @@ export function updateGitIgnore(root: string) {
   const ignorePath = join(root, '.gitignore');
   try {
     let contents = readFileSync(ignorePath, 'utf-8');
+    const lines = contents.split('\n');
+    let sepIncluded = false;
     if (!contents.includes('.nx/cache')) {
-      contents = [contents, '', '.nx/cache'].join('\n');
-      writeFileSync(ignorePath, contents, 'utf-8');
+      if (!sepIncluded) {
+        lines.push('\n');
+        sepIncluded = true;
+      }
+      lines.push('.nx/cache');
     }
+    if (!contents.includes('.nx/workspace-data')) {
+      if (!sepIncluded) {
+        lines.push('\n');
+        sepIncluded = true;
+      }
+      lines.push('.nx/workspace-data');
+    }
+    writeFileSync(ignorePath, lines.join('\n'), 'utf-8');
   } catch {}
 }
 
