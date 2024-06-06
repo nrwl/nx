@@ -36,8 +36,6 @@ export interface EslintPluginOptions {
 const DEFAULT_EXTENSIONS = ['ts', 'tsx', 'js', 'jsx', 'html', 'vue'];
 const ESLINT_CONFIG_GLOB = combineGlobPatterns([
   ...ESLINT_CONFIG_FILENAMES.map((f) => `**/${f}`),
-  baseEsLintConfigFile,
-  baseEsLintFlatConfigFile,
 ]);
 
 type EslintProjects = Awaited<ReturnType<typeof getProjectsUsingESLintConfig>>;
