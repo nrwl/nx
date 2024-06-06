@@ -12,10 +12,7 @@ import {
 import { existsSync } from 'node:fs';
 import { dirname, join, normalize, sep } from 'node:path';
 import { combineGlobPatterns } from 'nx/src/utils/globs';
-import {
-  globWithWorkspaceContext,
-  hashWithWorkspaceContext,
-} from 'nx/src/utils/workspace-context';
+import { globWithWorkspaceContext } from 'nx/src/utils/workspace-context';
 import {
   ESLINT_CONFIG_FILENAMES,
   baseEsLintConfigFile,
@@ -34,19 +31,19 @@ export interface EslintPluginOptions {
 }
 
 const DEFAULT_EXTENSIONS = ['ts', 'tsx', 'js', 'jsx', 'html', 'vue'];
-const ESLINT_CONFIG_GLOB = combineGlobPatterns([
-  ...ESLINT_CONFIG_FILENAMES.map((f) => `**/${f}`),
-]);
+const ESLINT_CONFIG_GLOB = combineGlobPatterns(
+  ESLINT_CONFIG_FILENAMES.map((f) => `**/${f}`)
+);
 
-type EslintProjects = Awaited<ReturnType<typeof getProjectsUsingESLintConfig>>;
-
-function readTargetsCache(cachePath: string): Record<string, EslintProjects> {
+function readTargetsCache(
+  cachePath: string
+): Record<string, CreateNodesResult['projects']> {
   return existsSync(cachePath) ? readJsonFile(cachePath) : {};
 }
 
 function writeTargetsToCache(
   cachePath: string,
-  results: Record<string, EslintProjects>
+  results: Record<string, CreateNodesResult['projects']>
 ) {
   writeJsonFile(cachePath, results);
 }
@@ -66,11 +63,9 @@ const internalCreateNodes = async (
 
   // Create a Set of all the directories containing eslint configs, and a
   // list of globs to exclude from child projects
-  const eslintRoots = new Set();
   const nestedEslintRootPatterns: string[] = [];
   for (const configFile of context.configFiles) {
     const eslintRootDir = dirname(configFile);
-    eslintRoots.add(eslintRootDir);
 
     if (eslintRootDir !== configDir && isSubDir(configDir, eslintRootDir)) {
       nestedEslintRootPatterns.push(`${eslintRootDir}/**/*`);
@@ -92,7 +87,6 @@ const internalCreateNodes = async (
 
   const ESLint = await resolveESLintClass(isFlatConfig(configFilePath));
   const eslintVersion = ESLint.version;
-  const childProjectRoots = new Set<string>();
 
   const projects: CreateNodesResult['projects'] = {};
   await Promise.all(
@@ -118,7 +112,10 @@ const internalCreateNodes = async (
         [...parentConfigs, join(childProjectRoot, '.eslintignore')]
       );
 
-      if (projectsCache[hash]) {
+      if (
+        process.env.NX_CACHE_PROJECT_GRAPH !== 'false' &&
+        projectsCache[hash]
+      ) {
         // We can reuse the projects in the cache.
         Object.assign(projects, projectsCache[hash]);
         return;
@@ -126,27 +123,38 @@ const internalCreateNodes = async (
       const eslint = new ESLint({
         cwd: join(context.workspaceRoot, childProjectRoot),
       });
+      let hasLintableFiles = false;
       for (const file of lintableFiles) {
         if (!(await eslint.isPathIgnored(join(context.workspaceRoot, file)))) {
-          childProjectRoots.add(childProjectRoot);
+          hasLintableFiles = true;
           break;
         }
       }
 
-      const uniqueChildProjectRoots = Array.from(childProjectRoots);
+      if (!hasLintableFiles) {
+        // No lintable files in the project, store in the cache and skip further processing
+        projectsCache[hash] = {};
+        return;
+      }
 
-      const projectsForRoot = getProjectsUsingESLintConfig(
+      const project = getProjectUsingESLintConfig(
         configFilePath,
-        uniqueChildProjectRoots,
+        childProjectRoot,
         eslintVersion,
         options,
         context
       );
 
-      if (Object.keys(projectsForRoot).length > 0) {
-        Object.assign(projects, projectsForRoot);
-        // Store those projects into the cache;
-        projectsCache[hash] = projectsForRoot;
+      if (project) {
+        projects[childProjectRoot] = project;
+        // Store project into the cache
+        projectsCache[hash] = {
+          ...projectsCache[hash],
+          [childProjectRoot]: project,
+        };
+      } else {
+        // No project found, store in the cache
+        projectsCache[hash] = {};
       }
     })
   );
@@ -189,15 +197,13 @@ export const createNodes: CreateNodes<EslintPluginOptions> = [
   },
 ];
 
-function getProjectsUsingESLintConfig(
+function getProjectUsingESLintConfig(
   configFilePath: string,
-  childProjectRoots: string[],
+  projectRoot: string,
   eslintVersion: string,
   options: EslintPluginOptions,
   context: CreateNodesContext
-): CreateNodesResult['projects'] {
-  const projects: CreateNodesResult['projects'] = {};
-
+): CreateNodesResult['projects'][string] | null {
   const rootEslintConfig = [
     baseEsLintConfigFile,
     baseEsLintFlatConfigFile,
@@ -205,41 +211,37 @@ function getProjectsUsingESLintConfig(
   ].find((f) => existsSync(join(context.workspaceRoot, f)));
 
   // Add a lint target for each child project without an eslint config, with the root level config as an input
-  for (const projectRoot of childProjectRoots) {
-    let standaloneSrcPath: string | undefined;
-    if (
-      projectRoot === '.' &&
-      existsSync(join(context.workspaceRoot, projectRoot, 'package.json'))
-    ) {
-      if (existsSync(join(context.workspaceRoot, projectRoot, 'src'))) {
-        standaloneSrcPath = 'src';
-      } else if (existsSync(join(context.workspaceRoot, projectRoot, 'lib'))) {
-        standaloneSrcPath = 'lib';
-      }
+  let standaloneSrcPath: string | undefined;
+  if (
+    projectRoot === '.' &&
+    existsSync(join(context.workspaceRoot, projectRoot, 'package.json'))
+  ) {
+    if (existsSync(join(context.workspaceRoot, projectRoot, 'src'))) {
+      standaloneSrcPath = 'src';
+    } else if (existsSync(join(context.workspaceRoot, projectRoot, 'lib'))) {
+      standaloneSrcPath = 'lib';
     }
-    if (projectRoot === '.' && !standaloneSrcPath) {
-      continue;
-    }
-
-    const eslintConfigs = [configFilePath];
-
-    if (rootEslintConfig && !eslintConfigs.includes(rootEslintConfig)) {
-      eslintConfigs.unshift(rootEslintConfig);
-    }
-
-    projects[projectRoot] = {
-      targets: buildEslintTargets(
-        eslintConfigs,
-        eslintVersion,
-        projectRoot,
-        context.workspaceRoot,
-        options,
-        standaloneSrcPath
-      ),
-    };
+  }
+  if (projectRoot === '.' && !standaloneSrcPath) {
+    return null;
   }
 
-  return projects;
+  const eslintConfigs = [configFilePath];
+
+  if (rootEslintConfig && !eslintConfigs.includes(rootEslintConfig)) {
+    eslintConfigs.unshift(rootEslintConfig);
+  }
+
+  return {
+    targets: buildEslintTargets(
+      eslintConfigs,
+      eslintVersion,
+      projectRoot,
+      context.workspaceRoot,
+      options,
+      standaloneSrcPath
+    ),
+  };
 }
 
 function buildEslintTargets(
