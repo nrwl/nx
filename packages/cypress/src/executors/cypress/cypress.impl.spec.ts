@@ -75,6 +75,11 @@ describe('Cypress builder', () => {
         configuration,
       };
     };
+    (devkit as any).logger = {
+      warn: jest.fn(),
+      log: jest.fn(),
+      info: jest.fn(),
+    };
     cypressRun = jest
       .spyOn(Cypress, 'run')
       .mockReturnValue(Promise.resolve({}));
@@ -329,6 +334,22 @@ A generator to migrate from v8 to v10 is provided. See https://nx.dev/cypress/v1
       expect.objectContaining({
         project: 'some/project',
         configFile: 'my-cypress.json',
+      })
+    );
+  });
+
+  it('should call `Cypress.run` with auto cancellation option', async () => {
+    const { success } = await cypressExecutor(
+      {
+        ...cypressOptions,
+        autoCancelAfterFailures: false,
+      },
+      mockContext
+    );
+    expect(success).toEqual(true);
+    expect(cypressRun).toHaveBeenCalledWith(
+      expect.objectContaining({
+        autoCancelAfterFailures: false,
       })
     );
   });

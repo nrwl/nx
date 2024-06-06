@@ -70,6 +70,7 @@ More details about how to override task configuration is available in these reci
 - [Configure Inputs for Task Caching](/recipes/running-tasks/configure-inputs)
 - [Configure Outputs for Task Caching](/recipes/running-tasks/configure-outputs)
 - [Defining a Task Pipeline](/recipes/running-tasks/defining-task-pipeline)
+- [Pass Arguments to Commands](/recipes/running-tasks/pass-args-to-commands)
 
 ## Existing Nx Workspaces
 

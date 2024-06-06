@@ -8,12 +8,12 @@ import {
   TargetConfiguration,
   writeJsonFile,
 } from '@nx/devkit';
-import { dirname, extname, join } from 'path';
+import { dirname, join } from 'path';
 
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { existsSync, readdirSync } from 'fs';
 
-import { projectGraphCacheDirectory } from 'nx/src/utils/cache-directory';
+import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { getLockFileName } from '@nx/js';
 import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
@@ -25,7 +25,7 @@ export interface NextPluginOptions {
   serveStaticTargetName?: string;
 }
 
-const cachePath = join(projectGraphCacheDirectory, 'next.hash');
+const cachePath = join(workspaceDataDirectory, 'next.hash');
 const targetsCache = readTargetsCache();
 
 function readTargetsCache(): Record<
@@ -63,9 +63,12 @@ export const createNodes: CreateNodes<NextPluginOptions> = [
     }
     options = normalizeOptions(options);
 
-    const hash = calculateHashForCreateNodes(projectRoot, options, context, [
-      getLockFileName(detectPackageManager(context.workspaceRoot)),
-    ]);
+    const hash = await calculateHashForCreateNodes(
+      projectRoot,
+      options,
+      context,
+      [getLockFileName(detectPackageManager(context.workspaceRoot))]
+    );
 
     targetsCache[hash] ??= await buildNextTargets(
       configFilePath,

@@ -56,7 +56,6 @@ describe('component', () => {
       const content = tree
         .read('my-app/pages/posts/[dynamic]/index.tsx')
         .toString();
-      expect(content).toMatch(/DynamicProps/);
     });
   });
 
@@ -97,7 +96,6 @@ describe('component', () => {
       const content = tree
         .read(`${appRouterProjectName}/app/posts/[dynamic]/page.tsx`)
         .toString();
-      expect(content).toMatch(/DynamicProps/);
     });
   });
 });

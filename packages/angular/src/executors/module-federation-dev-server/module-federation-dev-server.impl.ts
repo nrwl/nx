@@ -107,7 +107,7 @@ export async function* moduleFederationDevServerExecutor(
     'angular'
   );
 
-  const remoteNames = options.devRemotes?.map((r) =>
+  const remoteNames = options.devRemotes.map((r) =>
     typeof r === 'string' ? r : r.remoteName
   );
 

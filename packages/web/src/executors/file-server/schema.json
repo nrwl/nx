@@ -2,7 +2,7 @@
   "version": 2,
   "outputCapture": "direct-nodejs",
   "title": "File Server",
-  "description": "Serve a web application from a folder.",
+  "description": "Serve a web application from a folder. This executor is a wrapper around the [http-server](https://www.npmjs.com/package/http-server) package.",
   "type": "object",
   "cli": "nx",
   "properties": {
@@ -94,5 +94,6 @@
       "default": -1
     }
   },
-  "additionalProperties": false
+  "additionalProperties": true,
+  "examplesFile": "../../../docs/file-server-examples.md"
 }

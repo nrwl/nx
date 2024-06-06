@@ -1,4 +1,4 @@
-import { projectGraphCacheDirectory } from 'nx/src/utils/cache-directory';
+import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import {
   type CreateDependencies,
   type CreateNodes,
@@ -17,7 +17,7 @@ import { dirname, join } from 'path';
 import { existsSync, readdirSync } from 'fs';
 import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
 
-const cachePath = join(projectGraphCacheDirectory, 'remix.hash');
+const cachePath = join(workspaceDataDirectory, 'remix.hash');
 const targetsCache = readTargetsCache();
 
 function readTargetsCache(): Record<
@@ -66,9 +66,12 @@ export const createNodes: CreateNodes<RemixPluginOptions> = [
 
     options = normalizeOptions(options);
 
-    const hash = calculateHashForCreateNodes(projectRoot, options, context, [
-      getLockFileName(detectPackageManager(context.workspaceRoot)),
-    ]);
+    const hash = await calculateHashForCreateNodes(
+      projectRoot,
+      options,
+      context,
+      [getLockFileName(detectPackageManager(context.workspaceRoot))]
+    );
     targetsCache[hash] ??= await buildRemixTargets(
       configFilePath,
       projectRoot,
@@ -151,6 +154,7 @@ function buildTarget(
       ...('production' in namedInputs
         ? ['production', '^production']
         : ['default', '^default']),
+      { externalDependencies: ['@remix-run/dev'] },
     ],
     outputs: [serverBuildOutputPath, assetsBuildOutputPath],
     command: 'remix build',
@@ -198,6 +202,7 @@ function typecheckTarget(
       ...('production' in namedInputs
         ? ['production', '^production']
         : ['default', '^default']),
+      { externalDependencies: ['typescript'] },
     ],
     options: {
       cwd: projectRoot,

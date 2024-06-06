@@ -4,19 +4,16 @@ import { toProjectName } from '../../config/to-project-name';
 import { combineGlobPatterns } from '../../utils/globs';
 
 import type { NxPluginV1 } from '../../utils/nx-plugin.deprecated';
-import type {
-  CreateNodesResultWithContext,
-  LoadedNxPlugin,
-  NormalizedPlugin,
-} from './internal-api';
+import type { LoadedNxPlugin, NormalizedPlugin } from './internal-api';
 import {
+  CreateNodesContextV2,
+  CreateNodesFunction,
+  CreateNodesFunctionV2,
   CreateNodesResult,
-  type CreateNodesContext,
   type NxPlugin,
   type NxPluginV2,
 } from './public-api';
-import { AggregateCreateNodesError, CreateNodesError } from '../error-types';
-import { performance } from 'perf_hooks';
+import { AggregateCreateNodesError } from '../error-types';
 
 export function isNxPluginV2(plugin: NxPlugin): plugin is NxPluginV2 {
   return 'createNodes' in plugin || 'createDependencies' in plugin;
@@ -54,49 +51,37 @@ export function normalizeNxPlugin(plugin: NxPlugin): NormalizedPlugin {
   return plugin;
 }
 
-export async function runCreateNodesInParallel(
+export type AsyncFn<T extends Function> = T extends (
+  ...args: infer A
+) => infer R
+  ? (...args: A) => Promise<Awaited<R>>
+  : never;
+
+export async function createNodesFromFiles<T = unknown>(
+  createNodes: CreateNodesFunction<T>,
   configFiles: readonly string[],
-  plugin: NormalizedPlugin,
-  options: unknown,
-  context: CreateNodesContext
-): Promise<CreateNodesResultWithContext[]> {
-  performance.mark(`${plugin.name}:createNodes - start`);
+  options: T,
+  context: CreateNodesContextV2
+) {
+  const results: Array<[file: string, value: CreateNodesResult]> = [];
+  const errors: Array<[file: string, error: Error]> = [];
 
-  const errors: CreateNodesError[] = [];
-  const results: CreateNodesResultWithContext[] = [];
-
-  const promises: Array<Promise<void>> = configFiles.map(async (file) => {
-    try {
-      const value = await plugin.createNodes[1](file, options, context);
-      if (value) {
-        results.push({
-          ...value,
-          file,
-          pluginName: plugin.name,
+  await Promise.all(
+    configFiles.map(async (file) => {
+      try {
+        const value = await createNodes(file, options, {
+          ...context,
+          configFiles,
         });
+        results.push([file, value] as const);
+      } catch (e) {
+        errors.push([file, e] as const);
       }
-    } catch (e) {
-      errors.push(
-        new CreateNodesError({
-          error: e,
-          pluginName: plugin.name,
-          file,
-        })
-      );
-    }
-  });
-
-  await Promise.all(promises).then(() => {
-    performance.mark(`${plugin.name}:createNodes - end`);
-    performance.measure(
-      `${plugin.name}:createNodes`,
-      `${plugin.name}:createNodes - start`,
-      `${plugin.name}:createNodes - end`
-    );
-  });
+    })
+  );
 
   if (errors.length > 0) {
-    throw new AggregateCreateNodesError(plugin.name, errors, results);
+    throw new AggregateCreateNodesError(errors, results);
   }
   return results;
 }

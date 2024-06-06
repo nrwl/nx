@@ -5,7 +5,7 @@ import {
   type TargetConfiguration,
   type Tree,
 } from '@nx/devkit';
-import { createNodes, PlaywrightPluginOptions } from '../../plugins/plugin';
+import { createNodesV2, PlaywrightPluginOptions } from '../../plugins/plugin';
 import { migrateExecutorToPlugin } from '@nx/devkit/src/generators/plugin-migrations/executor-to-plugin-migrator';
 
 interface Schema {
@@ -24,7 +24,7 @@ export async function convertToInferred(tree: Tree, options: Schema) {
       '@nx/playwright/plugin',
       (targetName) => ({ targetName, ciTargetName: 'e2e-ci' }),
       postTargetTransformer,
-      createNodes,
+      createNodesV2,
       options.project
     );
 

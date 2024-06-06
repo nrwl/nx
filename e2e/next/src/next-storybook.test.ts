@@ -6,21 +6,19 @@ import {
   uniq,
 } from '@nx/e2e/utils';
 
-// TODO(katerina): Enable some time?
-// This test fails because of sharp. In this PR I have included all related links to the issue.
-xdescribe('Next.js Storybook', () => {
+describe('Next.js Storybook', () => {
   const appName = uniq('app');
   beforeAll(() => {
     newProject({
       name: 'proj',
       packageManager: 'npm',
-      packages: ['@nx/next'],
+      packages: ['@nx/next', '@nx/react'],
     });
     runCLI(
       `generate @nx/next:app ${appName} --e2eTestRunner=none --project-name-and-root-format=as-provided --no-interactive`
     );
     runCLI(
-      `generate @nx/next:component Foo --directory=${appName}/components/foo/Foo.tsx --no-interactive`
+      `generate @nx/next:component foo --directory=${appName}/components/foo --nameAndDirectoryFormat=as-provided --no-interactive`
     );
   });
 
@@ -28,7 +26,7 @@ xdescribe('Next.js Storybook', () => {
 
   it('should run a Next.js based Storybook setup', async () => {
     runCLI(
-      `generate @nx/next:storybook-configuration ${appName} --generateStories --no-interactive`
+      `generate @nx/react:storybook-configuration ${appName} --no-interactive`
     );
     runCLI(`build-storybook ${appName}`);
     checkFilesExist(`${appName}/storybook-static/index.html`);

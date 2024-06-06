@@ -1,8 +1,10 @@
 import {
-  CreateDependencies,
   CreateNodes,
   CreateNodesContext,
+  createNodesFromFiles,
+  CreateNodesV2,
   joinPathFragments,
+  logger,
   normalizePath,
   NxJsonConfiguration,
   ProjectConfiguration,
@@ -10,111 +12,138 @@ import {
   TargetConfiguration,
   writeJsonFile,
 } from '@nx/devkit';
-import { dirname, join, normalize, relative, resolve } from 'path';
+import { dirname, join, relative, resolve } from 'path';
 
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { existsSync, readdirSync, readFileSync } from 'fs';
 import { readConfig } from 'jest-config';
-import { projectGraphCacheDirectory } from 'nx/src/utils/cache-directory';
+import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { clearRequireCache } from '@nx/devkit/src/utils/config-utils';
 import { getGlobPatternsFromPackageManagerWorkspaces } from 'nx/src/plugins/package-json-workspaces';
 import { combineGlobPatterns } from 'nx/src/utils/globs';
 import { minimatch } from 'minimatch';
+import { hashObject } from 'nx/src/devkit-internals';
 
 export interface JestPluginOptions {
   targetName?: string;
   ciTargetName?: string;
 }
 
-const cachePath = join(projectGraphCacheDirectory, 'jest.hash');
-const targetsCache = readTargetsCache();
-
 type JestTargets = Awaited<ReturnType<typeof buildJestTargets>>;
 
-function readTargetsCache(): Record<string, JestTargets> {
+function readTargetsCache(cachePath: string): Record<string, JestTargets> {
   return existsSync(cachePath) ? readJsonFile(cachePath) : {};
 }
 
-function writeTargetsToCache() {
-  const cache = readTargetsCache();
-  writeJsonFile(cachePath, {
-    ...cache,
-    ...targetsCache,
-  });
+function writeTargetsToCache(
+  cachePath: string,
+  results: Record<string, JestTargets>
+) {
+  writeJsonFile(cachePath, results);
 }
 
-export const createDependencies: CreateDependencies = () => {
-  writeTargetsToCache();
-  return [];
-};
+const jestConfigGlob = '**/jest.config.{cjs,mjs,js,cts,mts,ts}';
 
-export const createNodes: CreateNodes<JestPluginOptions> = [
-  '**/jest.config.{cjs,mjs,js,cts,mts,ts}',
-  async (configFilePath, options, context) => {
-    const projectRoot = dirname(configFilePath);
-
-    const packageManagerWorkspacesGlob = combineGlobPatterns(
-      getGlobPatternsFromPackageManagerWorkspaces(context.workspaceRoot)
-    );
-
-    // Do not create a project if package.json and project.json isn't there.
-    const siblingFiles = readdirSync(join(context.workspaceRoot, projectRoot));
-    if (
-      !siblingFiles.includes('package.json') &&
-      !siblingFiles.includes('project.json')
-    ) {
-      return {};
-    } else if (
-      !siblingFiles.includes('project.json') &&
-      siblingFiles.includes('package.json')
-    ) {
-      const path = joinPathFragments(projectRoot, 'package.json');
-
-      const isPackageJsonProject = minimatch(
-        path,
-        packageManagerWorkspacesGlob
+export const createNodesV2: CreateNodesV2<JestPluginOptions> = [
+  jestConfigGlob,
+  async (configFiles, options, context) => {
+    const optionsHash = hashObject(options);
+    const cachePath = join(workspaceDataDirectory, `jest-${optionsHash}.hash`);
+    const targetsCache = readTargetsCache(cachePath);
+    try {
+      return await createNodesFromFiles(
+        (configFile, options, context) =>
+          createNodesInternal(configFile, options, context, targetsCache),
+        configFiles,
+        options,
+        context
       );
-
-      if (!isPackageJsonProject) {
-        return {};
-      }
+    } finally {
+      writeTargetsToCache(cachePath, targetsCache);
     }
-
-    const jestConfigContent = readFileSync(
-      resolve(context.workspaceRoot, configFilePath),
-      'utf-8'
-    );
-    if (jestConfigContent.includes('getJestProjectsAsync()')) {
-      // The `getJestProjectsAsync` function uses the project graph, which leads to a
-      // circular dependency. We can skip this since it's no intended to be used for
-      // an Nx project.
-      return {};
-    }
-
-    options = normalizeOptions(options);
-
-    const hash = calculateHashForCreateNodes(projectRoot, options, context);
-    targetsCache[hash] ??= await buildJestTargets(
-      configFilePath,
-      projectRoot,
-      options,
-      context
-    );
-
-    const { targets, metadata } = targetsCache[hash];
-
-    return {
-      projects: {
-        [projectRoot]: {
-          root: projectRoot,
-          targets,
-          metadata,
-        },
-      },
-    };
   },
 ];
+
+/**
+ * @deprecated This is replaced with {@link createNodesV2}. Update your plugin to export its own `createNodesV2` function that wraps this one instead.
+ * This function will change to the v2 function in Nx 20.
+ */
+export const createNodes: CreateNodes<JestPluginOptions> = [
+  jestConfigGlob,
+  (...args) => {
+    logger.warn(
+      '`createNodes` is deprecated. Update your plugin to utilize createNodesV2 instead. In Nx 20, this will change to the createNodesV2 API.'
+    );
+    return createNodesInternal(...args, {});
+  },
+];
+
+async function createNodesInternal(
+  configFilePath,
+  options,
+  context,
+  targetsCache: Record<string, JestTargets>
+) {
+  const projectRoot = dirname(configFilePath);
+
+  const packageManagerWorkspacesGlob = combineGlobPatterns(
+    getGlobPatternsFromPackageManagerWorkspaces(context.workspaceRoot)
+  );
+
+  // Do not create a project if package.json and project.json isn't there.
+  const siblingFiles = readdirSync(join(context.workspaceRoot, projectRoot));
+  if (
+    !siblingFiles.includes('package.json') &&
+    !siblingFiles.includes('project.json')
+  ) {
+    return {};
+  } else if (
+    !siblingFiles.includes('project.json') &&
+    siblingFiles.includes('package.json')
+  ) {
+    const path = joinPathFragments(projectRoot, 'package.json');
+
+    const isPackageJsonProject = minimatch(path, packageManagerWorkspacesGlob);
+
+    if (!isPackageJsonProject) {
+      return {};
+    }
+  }
+
+  const jestConfigContent = readFileSync(
+    resolve(context.workspaceRoot, configFilePath),
+    'utf-8'
+  );
+  if (jestConfigContent.includes('getJestProjectsAsync()')) {
+    // The `getJestProjectsAsync` function uses the project graph, which leads to a
+    // circular dependency. We can skip this since it's no intended to be used for
+    // an Nx project.
+    return {};
+  }
+
+  options = normalizeOptions(options);
+
+  const hash = await calculateHashForCreateNodes(projectRoot, options, context);
+  targetsCache[hash] ??= await buildJestTargets(
+    configFilePath,
+    projectRoot,
+    options,
+    context
+  );
+
+  const { targets, metadata } = targetsCache[hash];
+
+  return {
+    projects: {
+      [projectRoot]: {
+        root: projectRoot,
+        targets,
+        metadata,
+      },
+    },
+  };
+}
 
 async function buildJestTargets(
   configFilePath: string,

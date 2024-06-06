@@ -2,9 +2,9 @@ import { CommandModule } from 'yargs';
 import { handleErrors } from '../../utils/params';
 import {
   withAffectedOptions,
-  withDepGraphOptions,
   withTargetAndConfigurationOption,
 } from '../yargs-utils/shared-options';
+import { withGraphOptions } from '../graph/command-object';
 
 const affectedGraphDeprecationMessage =
   'Use `nx graph --affected`, or `nx affected --graph` instead depending on which best suits your use case. The `affected:graph` command has been removed in Nx 19.';
@@ -18,11 +18,13 @@ export const yargsAffectedGraphCommand: CommandModule = {
   command: 'affected:graph',
   describe: false,
   aliases: ['affected:dep-graph'],
-  builder: (yargs) => withAffectedOptions(withDepGraphOptions(yargs)),
-  handler: (args) =>
-    handleErrors(false, () => {
+  builder: (yargs) => withAffectedOptions(withGraphOptions(yargs)),
+  handler: async (args) => {
+    const exitCode = await handleErrors(false, () => {
       throw new Error(affectedGraphDeprecationMessage);
-    }),
+    });
+    process.exit(exitCode);
+  },
   deprecated: affectedGraphDeprecationMessage,
 };
 
@@ -45,9 +47,11 @@ export const yargsPrintAffectedCommand: CommandModule = {
         describe:
           'Select the type of projects to be returned (e.g., --type=app)',
       }),
-  handler: (args) =>
-    handleErrors(false, () => {
+  handler: async (args) => {
+    const exitCode = await handleErrors(false, () => {
       throw new Error(printAffectedDeprecationMessage);
-    }),
+    });
+    process.exit(exitCode);
+  },
   deprecated: printAffectedDeprecationMessage,
 };

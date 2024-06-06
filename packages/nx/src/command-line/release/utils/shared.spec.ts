@@ -17,6 +17,7 @@ describe('shared', () => {
             },
             changelog: false,
             releaseTagPattern: '{projectName}-{version}',
+            versionPlans: false,
           },
           {
             name: 'two',
@@ -29,6 +30,7 @@ describe('shared', () => {
             },
             changelog: false,
             releaseTagPattern: '{projectName}-{version}',
+            versionPlans: false,
           },
         ];
         const releaseGroupToFilteredProjects = new Map()
@@ -101,6 +103,7 @@ describe('shared', () => {
             },
             releaseTagPattern: '{projectName}-{version}',
             name: '__default__',
+            versionPlans: false,
           },
         ];
 
@@ -190,6 +193,7 @@ describe('shared', () => {
         releaseTagPattern: 'my-group-{version}',
         changelog: undefined,
         version: undefined,
+        versionPlans: false,
       };
       const releaseGroupToFilteredProjects = new Map().set(
         releaseGroup,

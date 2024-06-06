@@ -6,7 +6,7 @@ import {
   readNxJson,
   Tree,
 } from '@nx/devkit';
-import { addPlugin } from '@nx/devkit/src/utils/add-plugin';
+import { addPluginV1 } from '@nx/devkit/src/utils/add-plugin';
 import { createNodes } from '../../plugins/plugin';
 import { nxVersion, webpackCliVersion } from '../../utils/versions';
 import { Schema } from './schema';
@@ -23,7 +23,7 @@ export async function webpackInitGeneratorInternal(tree: Tree, schema: Schema) {
   schema.addPlugin ??= addPluginDefault;
 
   if (schema.addPlugin) {
-    await addPlugin(
+    await addPluginV1(
       tree,
       await createProjectGraphAsync(),
       '@nx/webpack/plugin',

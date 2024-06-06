@@ -2,15 +2,16 @@ import 'nx/src/internal-testing-utils/mock-fs';
 
 import type { FileData, ProjectFileMap, ProjectGraph } from '@nx/devkit';
 import { DependencyType } from '@nx/devkit';
+import { TargetProjectLocator } from '@nx/js/src/internal';
 import * as parser from '@typescript-eslint/parser';
 import { TSESLint } from '@typescript-eslint/utils';
 import { vol } from 'memfs';
-import { TargetProjectLocator } from '@nx/js/src/internal';
+import { join } from 'node:path';
+import { FileDataDependency } from 'nx/src/config/project-graph';
+import { createProjectRootMappings } from 'nx/src/project-graph/utils/find-project-for-path';
 import enforceModuleBoundaries, {
   RULE_NAME as enforceModuleBoundariesRuleName,
 } from '../../src/rules/enforce-module-boundaries';
-import { createProjectRootMappings } from 'nx/src/project-graph/utils/find-project-for-path';
-import { FileDataDependency } from 'nx/src/config/project-graph';
 
 jest.mock('@nx/devkit', () => ({
   ...jest.requireActual<any>('@nx/devkit'),
@@ -19,6 +20,17 @@ jest.mock('@nx/devkit', () => ({
 
 jest.mock('nx/src/utils/workspace-root', () => ({
   workspaceRoot: '/root',
+}));
+
+jest.mock('nx/src/plugins/js/utils/resolve-relative-to-dir', () => ({
+  resolveRelativeToDir: jest.fn().mockImplementation((pathOrPackage) => {
+    return join(
+      '/root',
+      'node_modules',
+      pathOrPackage,
+      pathOrPackage.endsWith('package.json') ? '' : 'package.json'
+    );
+  }),
 }));
 
 const tsconfig = {
@@ -98,6 +110,22 @@ const fileSys = {
   './tsconfig.base.json': JSON.stringify(tsconfig),
   './package.json': JSON.stringify(packageJson),
   './nx.json': JSON.stringify({ npmScope: 'happyorg' }),
+  './node_modules/npm-package/package.json': JSON.stringify({
+    name: 'npm-package',
+    version: '2.3.4',
+  }),
+  './node_modules/npm-awesome-package/package.json': JSON.stringify({
+    name: 'npm-awesome-package',
+    version: '1.2.3',
+  }),
+  './node_modules/1npm-package/package.json': JSON.stringify({
+    name: '1npm-package',
+    version: '0.0.0',
+  }),
+  './node_modules/npm-package2/package.json': JSON.stringify({
+    name: 'npm-package2',
+    version: '0.0.0',
+  }),
 };
 
 describe('Enforce Module Boundaries (eslint)', () => {
@@ -635,6 +663,8 @@ describe('Enforce Module Boundaries (eslint)', () => {
         },
         `${process.cwd()}/proj/libs/api/src/index.ts`,
         `
+          import { existsSync } from 'node:fs';
+          import { join } from 'path';
           import 'npm-package2';
           import('npm-package2');
         `,
@@ -643,7 +673,8 @@ describe('Enforce Module Boundaries (eslint)', () => {
       );
 
       const message =
-        'Transitive dependencies are not allowed. Only packages defined in the "package.json" can be imported';
+        'Only packages defined in the "package.json" can be imported. Transitive or unresolvable dependencies are not allowed.';
+      // NOTE: only 2 failures, the node:fs and path imports are node built ins and therefore should not trigger lint errors
       expect(failures.length).toEqual(2);
       expect(failures[0].message).toEqual(message);
       expect(failures[1].message).toEqual(message);

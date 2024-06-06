@@ -15,6 +15,11 @@ exports[`@nx/remix/plugin non-root project should create nodes 1`] = `
           "inputs": [
             "production",
             "^production",
+            {
+              "externalDependencies": [
+                "@remix-run/dev",
+              ],
+            },
           ],
           "options": {
             "cwd": "my-app",
@@ -54,6 +59,11 @@ exports[`@nx/remix/plugin non-root project should create nodes 1`] = `
           "inputs": [
             "production",
             "^production",
+            {
+              "externalDependencies": [
+                "typescript",
+              ],
+            },
           ],
           "options": {
             "cwd": "my-app",
@@ -80,6 +90,11 @@ exports[`@nx/remix/plugin root project should create nodes 1`] = `
           "inputs": [
             "production",
             "^production",
+            {
+              "externalDependencies": [
+                "@remix-run/dev",
+              ],
+            },
           ],
           "options": {
             "cwd": ".",
@@ -119,6 +134,11 @@ exports[`@nx/remix/plugin root project should create nodes 1`] = `
           "inputs": [
             "production",
             "^production",
+            {
+              "externalDependencies": [
+                "typescript",
+              ],
+            },
           ],
           "options": {
             "cwd": ".",

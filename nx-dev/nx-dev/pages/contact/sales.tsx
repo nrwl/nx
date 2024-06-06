@@ -10,12 +10,12 @@ export function ContactSales(): JSX.Element {
     <>
       <NextSeo
         title="Talk to our Sales team"
-        description="We’re here to help you find the right plan and pricing for your requirements. We can talk about how Nx Cloud Enterprise helps you drive better business outcomes."
+        description="We’re here to help you find the right plan and pricing for your needs and discuss how Nx Cloud Enterprise can drive better business outcomes for your organization."
         openGraph={{
           url: 'https://nx.dev' + router.asPath,
           title: 'Talk to our Sales team',
           description:
-            'We’re here to help you find the right plan and pricing for your requirements. We can talk about how Nx Cloud Enterprise helps you drive better business outcomes.',
+            'We’re here to help you find the right plan and pricing for your needs and discuss how Nx Cloud Enterprise can drive better business outcomes for your organization.',
           images: [
             {
               url: 'https://nx.dev/socials/nx-media.png',

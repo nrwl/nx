@@ -106,6 +106,7 @@ export default defineConfig({
   },
 
   test: {
+    watch: false,
     globals: true,
     cache: {
       dir: './node_modules/.vitest/proj',
@@ -194,6 +195,7 @@ export default defineConfig({
   },
 
   test: {
+    watch: false,
     globals: true,
     cache: {
       dir: '../../node_modules/.vitest/apps/proj',
@@ -248,6 +250,7 @@ export default defineConfig({
   },
 
   test: {
+    watch: false,
     globals: true,
     cache: {
       dir: './node_modules/.vitest/proj',

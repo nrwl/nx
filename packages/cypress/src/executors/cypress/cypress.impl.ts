@@ -41,6 +41,7 @@ export interface CypressExecutorOptions extends Json {
   port?: number | 'cypress-auto';
   quiet?: boolean;
   runnerUi?: boolean;
+  autoCancelAfterFailures?: boolean | number;
 }
 
 interface NormalizedCypressExecutorOptions extends CypressExecutorOptions {
@@ -213,6 +214,10 @@ async function runCypress(
   }
   if (opts.quiet) {
     options.quiet = opts.quiet;
+  }
+
+  if (opts.autoCancelAfterFailures !== undefined) {
+    options.autoCancelAfterFailures = opts.autoCancelAfterFailures;
   }
 
   options.testingType = opts.testingType;

@@ -2,15 +2,18 @@ import { TempFs } from '../../../../internal-testing-utils/temp-fs';
 
 const tempFs = new TempFs('explicit-project-deps');
 
+import { ProjectGraphProjectNode } from '../../../../config/project-graph';
+import { ProjectConfiguration } from '../../../../config/workspace-json-project-json';
+import { CreateDependenciesContext } from '../../../../project-graph/plugins';
+import { loadNxPlugins } from '../../../../project-graph/plugins/internal-api';
 import { ProjectGraphBuilder } from '../../../../project-graph/project-graph-builder';
-import { buildExplicitTypeScriptDependencies } from './explicit-project-dependencies';
 import {
   retrieveProjectConfigurations,
   retrieveWorkspaceFiles,
 } from '../../../../project-graph/utils/retrieve-workspace-files';
-import { CreateDependenciesContext } from '../../../../project-graph/plugins';
 import { setupWorkspaceContext } from '../../../../utils/workspace-context';
-import { loadNxPlugins } from '../../../../project-graph/plugins/internal-api';
+import { buildExplicitTypeScriptDependencies } from './explicit-project-dependencies';
+import { TargetProjectLocator } from './target-project-locator';
 
 // projectName => tsconfig import path
 const dependencyProjectNamesToImportPaths = {
@@ -20,8 +23,12 @@ const dependencyProjectNamesToImportPaths = {
 };
 
 describe('explicit project dependencies', () => {
-  beforeEach(() => {
+  afterEach(() => {
     tempFs.reset();
+  });
+
+  afterAll(() => {
+    tempFs.cleanup();
   });
 
   describe('static imports, dynamic imports, and commonjs requires', () => {
@@ -41,8 +48,16 @@ describe('explicit project dependencies', () => {
           },
         ],
       });
+      const targetProjectLocator = new TargetProjectLocator(
+        convertProjectsForTargetProjectLocator(ctx.projects),
+        ctx.externalNodes,
+        new Map()
+      );
 
-      const res = buildExplicitTypeScriptDependencies(ctx);
+      const res = buildExplicitTypeScriptDependencies(
+        ctx,
+        targetProjectLocator
+      );
 
       expect(res).toEqual([
         {
@@ -72,6 +87,64 @@ describe('explicit project dependencies', () => {
       ]);
     });
 
+    it('should preferentially resolve external projects found in the npmResolutionCache', async () => {
+      const source = 'proj';
+      const ctx = await createContext({
+        source,
+        sourceProjectFiles: [
+          {
+            path: 'libs/proj/index.ts',
+            content: `
+              import * as npmPackage from 'npm-package';
+            `,
+          },
+        ],
+      });
+
+      const npmResolutionCache = new Map();
+      // Add an example of a alternate version of npm-package in the workspace within the cache
+      npmResolutionCache.set('npm-package__libs/proj', 'npm:npm-package@0.5.0');
+
+      const targetProjectLocatorWithEmptyCache = new TargetProjectLocator(
+        convertProjectsForTargetProjectLocator(ctx.projects),
+        ctx.externalNodes,
+        new Map()
+      );
+      const targetProjectLocatorWithCache = new TargetProjectLocator(
+        convertProjectsForTargetProjectLocator(ctx.projects),
+        ctx.externalNodes,
+        npmResolutionCache
+      );
+
+      const resWithEmptyCache = buildExplicitTypeScriptDependencies(
+        ctx,
+        targetProjectLocatorWithEmptyCache
+      );
+      const resWithCache = buildExplicitTypeScriptDependencies(
+        ctx,
+        targetProjectLocatorWithCache
+      );
+
+      expect(resWithEmptyCache).toEqual([
+        {
+          source,
+          sourceFile: 'libs/proj/index.ts',
+          target: 'npm:npm-package',
+          type: 'static',
+        },
+      ]);
+
+      expect(resWithCache).toEqual([
+        {
+          source,
+          sourceFile: 'libs/proj/index.ts',
+          // Preferred the version in the cache instead of going through the full resolution process to find the 1.0.0 version in tempFs node_modules
+          target: 'npm:npm-package@0.5.0',
+          type: 'static',
+        },
+      ]);
+    });
+
     it('should build explicit dependencies for static exports', async () => {
       const source = 'proj';
       const ctx = await createContext({
@@ -87,8 +160,16 @@ describe('explicit project dependencies', () => {
           },
         ],
       });
+      const targetProjectLocator = new TargetProjectLocator(
+        convertProjectsForTargetProjectLocator(ctx.projects),
+        ctx.externalNodes,
+        new Map()
+      );
 
-      const res = buildExplicitTypeScriptDependencies(ctx);
+      const res = buildExplicitTypeScriptDependencies(
+        ctx,
+        targetProjectLocator
+      );
 
       expect(res).toEqual([
         {
@@ -127,8 +208,16 @@ describe('explicit project dependencies', () => {
           },
         ],
       });
+      const targetProjectLocator = new TargetProjectLocator(
+        convertProjectsForTargetProjectLocator(ctx.projects),
+        ctx.externalNodes,
+        new Map()
+      );
 
-      const res = buildExplicitTypeScriptDependencies(ctx);
+      const res = buildExplicitTypeScriptDependencies(
+        ctx,
+        targetProjectLocator
+      );
       expect(res).toEqual([
         {
           source,
@@ -166,8 +255,16 @@ describe('explicit project dependencies', () => {
           },
         ],
       });
+      const targetProjectLocator = new TargetProjectLocator(
+        convertProjectsForTargetProjectLocator(ctx.projects),
+        ctx.externalNodes,
+        new Map()
+      );
 
-      const res = buildExplicitTypeScriptDependencies(ctx);
+      const res = buildExplicitTypeScriptDependencies(
+        ctx,
+        targetProjectLocator
+      );
 
       expect(res).toEqual([
         {
@@ -227,8 +324,16 @@ describe('explicit project dependencies', () => {
           },
         ],
       });
+      const targetProjectLocator = new TargetProjectLocator(
+        convertProjectsForTargetProjectLocator(ctx.projects),
+        ctx.externalNodes,
+        new Map()
+      );
 
-      const res = buildExplicitTypeScriptDependencies(ctx);
+      const res = buildExplicitTypeScriptDependencies(
+        ctx,
+        targetProjectLocator
+      );
 
       expect(res).toEqual([
         {
@@ -271,8 +376,16 @@ describe('explicit project dependencies', () => {
           },
         ],
       });
+      const targetProjectLocator = new TargetProjectLocator(
+        convertProjectsForTargetProjectLocator(ctx.projects),
+        ctx.externalNodes,
+        new Map()
+      );
 
-      const res = buildExplicitTypeScriptDependencies(ctx);
+      const res = buildExplicitTypeScriptDependencies(
+        ctx,
+        targetProjectLocator
+      );
 
       expect(res).toEqual([
         {
@@ -386,8 +499,16 @@ describe('explicit project dependencies', () => {
           },
         ],
       });
+      const targetProjectLocator = new TargetProjectLocator(
+        convertProjectsForTargetProjectLocator(ctx.projects),
+        ctx.externalNodes,
+        new Map()
+      );
 
-      const res = buildExplicitTypeScriptDependencies(ctx);
+      const res = buildExplicitTypeScriptDependencies(
+        ctx,
+        targetProjectLocator
+      );
 
       expect(res).toEqual([]);
     });
@@ -458,8 +579,16 @@ describe('explicit project dependencies', () => {
           // },
         ],
       });
+      const targetProjectLocator = new TargetProjectLocator(
+        convertProjectsForTargetProjectLocator(ctx.projects),
+        ctx.externalNodes,
+        new Map()
+      );
 
-      const res = buildExplicitTypeScriptDependencies(ctx);
+      const res = buildExplicitTypeScriptDependencies(
+        ctx,
+        targetProjectLocator
+      );
 
       expect(res).toEqual([]);
     });
@@ -505,6 +634,10 @@ async function createContext(
       }),
       {}
     ),
+    './node_modules/npm-package/package.json': JSON.stringify({
+      name: 'npm-package',
+      version: '1.0.0',
+    }),
   };
   const tsConfig = {
     compilerOptions: {
@@ -588,4 +721,19 @@ async function createContext(
     fileMap: fileMap,
     workspaceRoot: tempFs.tempDir,
   };
+}
+
+function convertProjectsForTargetProjectLocator(
+  projects: Record<string, ProjectConfiguration>
+): Record<string, ProjectGraphProjectNode> {
+  return Object.fromEntries(
+    Object.entries(projects).map(([key, config]) => [
+      key,
+      {
+        name: key,
+        type: null,
+        data: config,
+      },
+    ])
+  );
 }
