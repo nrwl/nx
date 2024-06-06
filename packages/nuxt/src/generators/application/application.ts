@@ -43,7 +43,7 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
   tasks.push(jsInitTask);
   tasks.push(ensureDependencies(tree, options));
 
-  addProjectConfiguration(tree, options.name, {
+  addProjectConfiguration(tree, options.projectName, {
     root: options.appProjectRoot,
     projectType: 'application',
     sourceRoot: `${options.appProjectRoot}/src`,

@@ -19,7 +19,7 @@ export async function addVitest(tree: Tree, options: NormalizedSchema) {
   const vitestTask = await vitestGenerator(
     tree,
     {
-      project: options.name,
+      project: options.projectName,
       uiFramework: 'none',
       coverageProvider: 'v8',
       skipFormat: true,
@@ -33,7 +33,7 @@ export async function addVitest(tree: Tree, options: NormalizedSchema) {
   createOrEditViteConfig(
     tree,
     {
-      project: options.name,
+      project: options.projectName,
       includeLib: false,
       includeVitest: true,
       testEnvironment: 'jsdom',
