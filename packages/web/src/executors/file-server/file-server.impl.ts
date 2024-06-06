@@ -170,6 +170,8 @@ export default async function* fileServerExecutor(
           const args = getBuildTargetCommand(options, context);
           execFileSync(pmCmd, args, {
             stdio: [0, 1, 2],
+            shell: true,
+            windowsHide: true,
           });
         } catch {
           throw new Error(
