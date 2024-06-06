@@ -61,7 +61,7 @@ export function loadRemoteNxPlugin(
 
   const cleanupFunction = () => {
     worker.off('exit', exitHandler);
-    shutdownPluginWorker(worker, pendingPromises);
+    shutdownPluginWorker(worker);
   };
 
   cleanupFunctions.add(cleanupFunction);
@@ -75,20 +75,11 @@ export function loadRemoteNxPlugin(
   });
 }
 
-async function shutdownPluginWorker(
-  worker: ChildProcess,
-  pendingPromises: Map<string, PendingPromise>
-) {
+function shutdownPluginWorker(worker: ChildProcess) {
   // Clears the plugin cache so no refs to the workers are held
   nxPluginCache.clear();
 
   // logger.verbose(`[plugin-pool] starting worker shutdown`);
-
-  // Other things may be interacting with the worker.
-  // Wait for all pending promises to be done before killing the worker
-  await Promise.all(
-    Array.from(pendingPromises.values()).map(({ promise }) => promise)
-  );
 
   worker.kill('SIGINT');
 }

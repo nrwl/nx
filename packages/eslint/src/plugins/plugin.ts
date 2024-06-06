@@ -24,7 +24,7 @@ import {
 } from '../utils/config-file';
 import { resolveESLintClass } from '../utils/resolve-eslint-class';
 import { gte } from 'semver';
-import { projectGraphCacheDirectory } from 'nx/src/utils/cache-directory';
+import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { hashObject } from 'nx/src/hasher/file-hasher';
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 
@@ -36,8 +36,6 @@ export interface EslintPluginOptions {
 const DEFAULT_EXTENSIONS = ['ts', 'tsx', 'js', 'jsx', 'html', 'vue'];
 const ESLINT_CONFIG_GLOB = combineGlobPatterns([
   ...ESLINT_CONFIG_FILENAMES.map((f) => `**/${f}`),
-  baseEsLintConfigFile,
-  baseEsLintFlatConfigFile,
 ]);
 
 type EslintProjects = Awaited<ReturnType<typeof getProjectsUsingESLintConfig>>;
@@ -163,7 +161,7 @@ export const createNodesV2: CreateNodesV2<EslintPluginOptions> = [
   async (configFiles, options, context) => {
     const optionsHash = hashObject(options);
     const cachePath = join(
-      projectGraphCacheDirectory,
+      workspaceDataDirectory,
       `eslint-${optionsHash}.hash`
     );
     const targetsCache = readTargetsCache(cachePath);

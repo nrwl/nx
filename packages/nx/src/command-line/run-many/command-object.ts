@@ -21,11 +21,13 @@ export const yargsRunManyCommand: CommandModule = {
       ),
       'run-many'
     ),
-  handler: async (args) =>
-    await handleErrors(
+  handler: async (args) => {
+    const exitCode = await handleErrors(
       (args.verbose as boolean) ?? process.env.NX_VERBOSE_LOGGING === 'true',
       async () => {
-        (await import('./run-many')).runMany(withOverrides(args));
+        await import('./run-many').then((m) => m.runMany(withOverrides(args)));
       }
-    ),
+    );
+    process.exit(exitCode);
+  },
 };

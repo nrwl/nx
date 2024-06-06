@@ -13,12 +13,16 @@ import {
   ProjectGraphExternalNode,
   ProjectGraphProjectNode,
 } from '../../../../config/project-graph';
+import { NxJsonConfiguration } from '../../../../config/nx-json';
+import { getPackageNameFromImportPath } from '../../../../utils/get-package-name-from-import-path';
 
 export const getTouchedNpmPackages: TouchedProjectLocator<
   WholeFileChange | JsonChange
 > = (touchedFiles, _, nxJson, packageJson, projectGraph): string[] => {
   const packageJsonChange = touchedFiles.find((f) => f.file === 'package.json');
   if (!packageJsonChange) return [];
+
+  const globalPackages = new Set(getGlobalPackages(nxJson.plugins));
 
   let touched = [];
   const changes = packageJsonChange.getChanges();
@@ -59,6 +63,12 @@ export const getTouchedNpmPackages: TouchedProjectLocator<
             touched.push(implementationNpmPackage.name);
           }
         }
+
+        if ('packageName' in npmPackage.data) {
+          if (globalPackages.has(npmPackage.data.packageName)) {
+            return Object.keys(projectGraph.nodes);
+          }
+        }
       }
     } else if (isWholeFileChange(c)) {
       // Whole file was touched, so all npm packages are touched.
@@ -76,3 +86,11 @@ export const getTouchedNpmPackages: TouchedProjectLocator<
   }
   return touched;
 };
+
+function getGlobalPackages(plugins: NxJsonConfiguration['plugins']) {
+  return (plugins ?? [])
+    .map((p) =>
+      getPackageNameFromImportPath(typeof p === 'string' ? p : p.plugin)
+    )
+    .concat('nx');
+}

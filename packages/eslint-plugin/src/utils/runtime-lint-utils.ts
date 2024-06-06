@@ -521,7 +521,7 @@ function getAngularEntryPoint(file: string, projectRoot: string): string {
     // we need to find closest existing ng-package.json
     // in order to determine if the file matches the secondary entry point
     const ngPackageContent = readFileIfExisting(
-      joinPathFragments(workspaceRoot, parent, 'ng-package.json')
+      path.join(workspaceRoot, parent, 'ng-package.json')
     );
     if (ngPackageContent) {
       // https://github.com/ng-packagr/ng-packagr/blob/23c718d04eea85e015b4c261310b7bd0c39e5311/src/ng-package.schema.json#L54
@@ -539,18 +539,10 @@ function getAngularEntryPoint(file: string, projectRoot: string): string {
 export function appIsMFERemote(project: ProjectGraphProjectNode): boolean {
   const mfeConfig =
     readFileIfExisting(
-      joinPathFragments(
-        workspaceRoot,
-        project.data.root,
-        'module-federation.config.js'
-      )
+      path.join(workspaceRoot, project.data.root, 'module-federation.config.js')
     ) ||
     readFileIfExisting(
-      joinPathFragments(
-        workspaceRoot,
-        project.data.root,
-        'module-federation.config.ts'
-      )
+      path.join(workspaceRoot, project.data.root, 'module-federation.config.ts')
     );
 
   if (mfeConfig) {

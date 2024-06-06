@@ -3,7 +3,7 @@ import { join, relative } from 'node:path';
 
 import { normalizePath, workspaceRoot } from '@nx/devkit';
 
-import { execGradle } from './exec-gradle';
+import { execGradleAsync } from './exec-gradle';
 import { hashWithWorkspaceContext } from 'nx/src/utils/workspace-context';
 
 export const fileSeparator = process.platform.startsWith('win')
@@ -49,9 +49,11 @@ export async function populateGradleReport(
   const gradleProjectReportStart = performance.mark(
     'gradleProjectReport:start'
   );
-  const projectReportLines = execGradle(['projectReport'], {
-    cwd: workspaceRoot,
-  })
+  const projectReportLines = (
+    await execGradleAsync(['projectReport'], {
+      cwd: workspaceRoot,
+    })
+  )
     .toString()
     .split(newLineSeparator);
   const gradleProjectReportEnd = performance.mark('gradleProjectReport:end');

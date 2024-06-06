@@ -3,8 +3,6 @@ import {
   generateFiles,
   GeneratorCallback,
   joinPathFragments,
-  logger,
-  ProjectConfiguration,
   readNxJson,
   readProjectConfiguration,
   runTasksInSerial,
@@ -14,8 +12,6 @@ import {
 
 import { SetUpDockerOptions } from './schema';
 import { join } from 'path';
-import { interpolate } from 'nx/src/tasks-runner/utils';
-import { readCachedProjectConfiguration } from 'nx/src/project-graph/project-graph';
 
 function normalizeOptions(
   tree: Tree,
@@ -30,47 +26,15 @@ function normalizeOptions(
 }
 
 function addDocker(tree: Tree, options: SetUpDockerOptions) {
-  // Inferred targets are only available in the project graph
-  const projectConfig = readCachedProjectConfiguration(options.project);
-
-  if (
-    !projectConfig ||
-    !projectConfig.targets ||
-    !projectConfig.targets[options.buildTarget]
-  ) {
-    return;
+  const projectConfig = readProjectConfiguration(tree, options.project);
+  if (!projectConfig) {
+    throw new Error(`Cannot find project configuration for ${options.project}`);
   }
-
-  // Returns an string like {workspaceRoot}/dist/apps/{projectName}
-  // Non crystalized projects would return {options.outputPath}
-  const tokenizedOutputPath =
-    projectConfig.targets[`${options.buildTarget}`]?.outputs?.[0];
-  const maybeBuildOptions =
-    projectConfig.targets[`${options.buildTarget}`]?.options;
-
-  if (tree.exists(joinPathFragments(projectConfig.root, 'DockerFile'))) {
-    logger.info(
-      `Skipping setup since a Dockerfile already exists inside ${projectConfig.root}`
-    );
-  } else if (!tokenizedOutputPath) {
-    logger.error(
-      `Skipping setup since the output path for the build target ${options.buildTarget} is not defined.`
-    );
-  } else {
-    const outputPath = interpolate(tokenizedOutputPath, {
-      projectName: projectConfig.name,
-      projectRoot: projectConfig.root,
-      workspaceRoot: '',
-      options: maybeBuildOptions || '',
-    });
-
-    generateFiles(tree, join(__dirname, './files'), projectConfig.root, {
-      tmpl: '',
-      app: projectConfig.sourceRoot,
-      buildLocation: outputPath,
-      project: options.project,
-    });
-  }
+  generateFiles(tree, join(__dirname, './files'), projectConfig.root, {
+    tmpl: '',
+    buildLocation: options.outputPath,
+    project: options.project,
+  });
 }
 
 export function updateProjectConfig(tree: Tree, options: SetUpDockerOptions) {

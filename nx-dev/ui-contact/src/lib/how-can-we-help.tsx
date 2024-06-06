@@ -26,9 +26,8 @@ export function HowCanWeHelp(): JSX.Element {
               </h3>
             </div>
             <p className="mt-4">
-              Contact our sales team to discuss plans, expected usage,
-              certifications, organization constraints, and get the best pricing
-              for your team.
+              Contact our sales team to discuss pricing, terms, certifications,
+              and your unique constraints.
             </p>
             <ButtonLink
               href="/contact/sales"
@@ -51,8 +50,8 @@ export function HowCanWeHelp(): JSX.Element {
               </h3>
             </div>
             <p className="mt-4">
-              Contact our developer productivity engineers team for demos,
-              onboarding assistance, and technical product questions.
+              Contact our developer productivity engineers for demos, onboarding
+              assistance, and technical product questions.
             </p>
             <ButtonLink
               href="/contact/engineering"
@@ -64,7 +63,7 @@ export function HowCanWeHelp(): JSX.Element {
               Reach out to engineers
             </ButtonLink>
           </section>
-          <section className="col-span-2 rounded-xl border border-slate-200 bg-slate-50/20 p-8 dark:border-slate-800/40 dark:bg-slate-800/60">
+          <section className="rounded-xl border border-slate-200 bg-slate-50/20 p-8 md:col-span-2 dark:border-slate-800/40 dark:bg-slate-800/60">
             <div className="flex items-center gap-2">
               <ChatBubbleLeftRightIcon
                 aria-hidden="true"

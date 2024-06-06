@@ -3031,7 +3031,7 @@
                 },
                 {
                   "input": "packages/react-native/src",
-                  "glob": "**/*.!(ts)",
+                  "glob": "**/!(*.ts)",
                   "output": "/src"
                 },
                 {

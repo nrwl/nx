@@ -14,7 +14,7 @@ import { getLockFileName } from '@nx/js';
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { existsSync, readdirSync } from 'fs';
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
-import { projectGraphCacheDirectory } from 'nx/src/utils/cache-directory';
+import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
 
 export interface ExpoPluginOptions {
@@ -29,7 +29,7 @@ export interface ExpoPluginOptions {
   submitTargetName?: string;
 }
 
-const cachePath = join(projectGraphCacheDirectory, 'expo.hash');
+const cachePath = join(workspaceDataDirectory, 'expo.hash');
 const targetsCache = readTargetsCache();
 
 function readTargetsCache(): Record<

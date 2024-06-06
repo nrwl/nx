@@ -182,10 +182,7 @@ const releaseCommand: CommandModule<NxReleaseArgs, ReleaseOptions> = {
       logger.warn(`\nNOTE: The "dryRun" flag means no changes were made.`);
     }
 
-    if (typeof result === 'number') {
-      process.exit(result);
-    }
-    process.exit(0);
+    process.exit(result);
   },
 };
 
@@ -223,10 +220,7 @@ const versionCommand: CommandModule<NxReleaseArgs, VersionOptions> = {
       logger.warn(`\nNOTE: The "dryRun" flag means no changes were made.`);
     }
 
-    if (typeof result === 'number') {
-      process.exit(result);
-    }
-    process.exit(0);
+    process.exit(result);
   },
 };
 
@@ -286,10 +280,7 @@ const changelogCommand: CommandModule<NxReleaseArgs, ChangelogOptions> = {
       logger.warn(`\nNOTE: The "dryRun" flag means no changes were made.`);
     }
 
-    if (typeof result === 'number') {
-      process.exit(result);
-    }
-    process.exit(0);
+    process.exit(result);
   },
 };
 
@@ -359,10 +350,7 @@ const planCommand: CommandModule<NxReleaseArgs, PlanOptions> = {
       logger.warn(`\nNOTE: The "dryRun" flag means no changes were made.`);
     }
 
-    if (typeof result === 'number') {
-      process.exit(result);
-    }
-    process.exit(0);
+    process.exit(result);
   },
 };
 

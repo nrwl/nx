@@ -17,7 +17,7 @@ import { dirname, join, relative, resolve } from 'path';
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { existsSync, readdirSync, readFileSync } from 'fs';
 import { readConfig } from 'jest-config';
-import { projectGraphCacheDirectory } from 'nx/src/utils/cache-directory';
+import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { clearRequireCache } from '@nx/devkit/src/utils/config-utils';
 import { getGlobPatternsFromPackageManagerWorkspaces } from 'nx/src/plugins/package-json-workspaces';
@@ -49,10 +49,7 @@ export const createNodesV2: CreateNodesV2<JestPluginOptions> = [
   jestConfigGlob,
   async (configFiles, options, context) => {
     const optionsHash = hashObject(options);
-    const cachePath = join(
-      projectGraphCacheDirectory,
-      `jest-${optionsHash}.hash`
-    );
+    const cachePath = join(workspaceDataDirectory, `jest-${optionsHash}.hash`);
     const targetsCache = readTargetsCache(cachePath);
     try {
       return await createNodesFromFiles(
