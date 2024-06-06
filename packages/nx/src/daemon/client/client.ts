@@ -66,8 +66,6 @@ enum DaemonStatus {
 export class DaemonClient {
   private readonly nxJson: NxJsonConfiguration | null;
   constructor() {
-    loadRootEnvFiles(workspaceRoot);
-
     try {
       this.nxJson = readNxJson();
     } catch (e) {
