@@ -1,6 +1,6 @@
 # Publish a Custom Dist Directory
 
-This recipe guides you through configuring Nx Release to version and publish packages that are built to a custom `dist` directory instead their source project root. This is often the case when using Nx generators or custom builders that output to a root `dist` directory.
+This recipe guides you through configuring Nx Release to version and publish packages that are built to a custom `dist` directory instead of their source project root. This is often the case when using Nx generators or custom builders that output to a centralized `dist` directory at the workspace root.
 
 ## The Package Root
 
