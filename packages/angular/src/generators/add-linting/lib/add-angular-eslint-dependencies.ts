@@ -10,12 +10,18 @@ export function addAngularEsLintDependencies(
   tree: Tree,
   projectName: string
 ): GeneratorCallback {
-  const angularEslintVersionToInstall = versions(tree).angularEslintVersion;
+  const compatVersions = versions(tree);
+  const angularEslintVersionToInstall = compatVersions.angularEslintVersion;
   const devDependencies = {
     '@angular-eslint/eslint-plugin': angularEslintVersionToInstall,
     '@angular-eslint/eslint-plugin-template': angularEslintVersionToInstall,
     '@angular-eslint/template-parser': angularEslintVersionToInstall,
   };
+
+  if ('typescriptEslintVersion' in compatVersions) {
+    devDependencies['@typescript-eslint/utils'] =
+      compatVersions.typescriptEslintVersion;
+  }
 
   if (isBuildableLibraryProject(tree, projectName)) {
     const jsoncEslintParserVersionToInstall =
