@@ -27,16 +27,16 @@ Keep all version numbers in the source package.json file and use semantic versio
 
 Nx Release will read the current version (0.1.1) from the source package.json file, update it to the new version, and update all dependencies in this package.json file. Changes to the package.json file will be staged and committed unless git operations are disabled. In this case, the `packageRoot` is the same as the Nx project root.
 
-### Use File References and Do Not Track Versions in Source Control
+### Use File or Workspace References and Do Not Track Versions in Source Control
 
-Keep all version numbers in the dist package.json file and use file references for specifying dependencies. This is done by specifying an alternate `packageRoot` for the version and publish commands. In this case, the source package.json file looks like this:
+Keep all version numbers in the dist package.json file and use file or workspace references for specifying dependencies. This is done by specifying an alternate `packageRoot` for the version and publish commands. In this case, the source package.json file looks like this:
 
 ```json
 {
   "name": "my-package",
   "dependencies": {
     "my-other-package": "file:../my-other-package",
-    "my-other-package-2": "file:../my-other-package-2"
+    "my-other-package-2": "workspace:*"
   }
 }
 ```
@@ -54,17 +54,17 @@ and the dist package.json file, which will actually be published in the publish 
 }
 ```
 
-Note that the version number is not present in the source package.json file. This is because the source package.json file is never updated in the versioning process; its data is instead written to the dist package.json file. To ensure the correct version number is used in the dist package.json file, `"release.version.generatorOptions.currentVersionResolver": "git-tag"` should be used.
+Note that the version number is not present in the source package.json file. This is because the source package.json file is never updated in the versioning process; its data is instead written to the dist package.json file. To ensure the correct version number is used in the dist package.json file, `"release.version.generatorOptions.currentVersionResolver"` should be set to something other than the default value of `"disk"`. To pick the current version from git tags, set it to `"git-tag"`. To look up the current version from the remote registry, set it to `"registry"`.
 
-To configure this behavior, add the following configuration to the `nx.json` file, or the `project.json` file of relevant projects:
+Configure this behavior by adding the following configuration to the `nx.json` file, or the `project.json` file of relevant projects:
 
-```json {% fileName="nx.json" %}
+```jsonc {% fileName="nx.json" %}
 {
   "release": {
     "version": {
       "generatorOptions": {
         "packageRoot": "dist/packages/{projectName}", // path structure for your dist directory
-        "currentVersionResolver": "git-tag"
+        "currentVersionResolver": "git-tag" // or "registry"
       }
     }
   },
