@@ -27,6 +27,7 @@ describe('@nx/vite/plugin', () => {
   describe('root project', () => {
     beforeEach(async () => {
       context = {
+        configFiles: [],
         nxJsonConfiguration: {
           targetDefaults: {},
           namedInputs: {
@@ -35,7 +36,6 @@ describe('@nx/vite/plugin', () => {
           },
         },
         workspaceRoot: '',
-        configFiles: [],
       };
     });
 
