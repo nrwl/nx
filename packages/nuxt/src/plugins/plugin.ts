@@ -233,7 +233,7 @@ function getOutputs(
   );
 
   return {
-    buildOutputs: [buildOutputPath],
+    buildOutputs: [buildOutputPath, '{projectRoot}/.output'],
   };
 }
 

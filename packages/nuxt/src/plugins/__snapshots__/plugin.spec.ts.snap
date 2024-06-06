@@ -26,6 +26,7 @@ exports[`@nx/nuxt/plugin not root project should create nodes 1`] = `
           },
           "outputs": [
             "{workspaceRoot}/dist/my-app/.nuxt",
+            "{projectRoot}/.output",
           ],
         },
         "acme-serve-static": {
@@ -57,6 +58,7 @@ exports[`@nx/nuxt/plugin not root project should create nodes 1`] = `
           },
           "outputs": [
             "{workspaceRoot}/dist/my-app/.nuxt",
+            "{projectRoot}/.output",
           ],
         },
         "my-serve": {
@@ -97,6 +99,7 @@ exports[`@nx/nuxt/plugin root project should create nodes 1`] = `
           },
           "outputs": [
             "dist/my-app/.nuxt",
+            "{projectRoot}/.output",
           ],
         },
         "build-static": {
@@ -119,6 +122,7 @@ exports[`@nx/nuxt/plugin root project should create nodes 1`] = `
           },
           "outputs": [
             "dist/my-app/.nuxt",
+            "{projectRoot}/.output",
           ],
         },
         "serve": {
