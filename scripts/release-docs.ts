@@ -1,5 +1,5 @@
 import { execSync } from 'child_process';
-import { gt, major, maxSatisfying } from 'semver';
+import { gte, major, maxSatisfying } from 'semver';
 
 // The GITHUB_REF_NAME is a full version (i.e. 17.3.2). The branchName will strip the patch version number.
 // We will publish docs to the website branch based on the current tag (i.e. website-17)
@@ -15,10 +15,10 @@ const latestVersion = maxSatisfying(releasedVersions, `^${majorVersion}`);
 
 console.log(`Found npm versions:\n${releasedVersions.join('\n')}`);
 
-// Publish if the current version is greater than the latest released version
+// Publish if the current version is greater than or equal to the latest released version
 
 const branchName = `website-${majorVersion}`;
-if (currentVersion && latestVersion && gt(currentVersion, latestVersion)) {
+if (currentVersion && latestVersion && gte(currentVersion, latestVersion)) {
   console.log(
     `Publishing docs site for ${process.env.GITHUB_REF_NAME} to ${branchName}`
   );
