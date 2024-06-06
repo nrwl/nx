@@ -3,7 +3,7 @@ import type { ESLint } from 'eslint';
 import { mkdirSync, writeFileSync } from 'fs';
 import { interpolate } from 'nx/src/tasks-runner/utils';
 import { dirname, posix, resolve } from 'path';
-import { findFlatConfigFile } from '../../utils/config-file';
+import { findFlatConfigFile, findOldConfigFile } from '../../utils/config-file';
 import type { Schema } from './schema';
 import { resolveAndInstantiateESLint } from './utility/eslint-utils';
 
@@ -110,20 +110,34 @@ export default async function run(
       )
     ) {
       const ruleName = err.message.match(/rule '([^']+)':/)?.[1];
-      let eslintConfigPathForError = `for ${projectName}`;
-      if (context.projectsConfigurations?.projects?.[projectName]?.root) {
-        const { root } = context.projectsConfigurations.projects[projectName];
-        eslintConfigPathForError = `\`${root}/.eslintrc.json\``;
+      const reportedFile = err.message.match(
+        /Occurred while linting (.+)$/
+      )?.[1];
+      let eslintConfigPathForError = `for the project "${projectName}"`;
+      if (eslintConfigPath) {
+        eslintConfigPathForError = `"${posix.relative(
+          context.root,
+          eslintConfigPath
+        )}"`;
+      } else {
+        const configPathForfile = hasFlatConfig
+          ? findFlatConfigFile(projectRoot, context.root)
+          : findOldConfigFile(reportedFile ?? projectRoot, context.root);
+        if (configPathForfile) {
+          eslintConfigPathForError = `"${posix.relative(
+            context.root,
+            configPathForfile
+          )}"`;
+        }
       }
 
       console.error(`
 Error: You have attempted to use ${
-        ruleName ? `the lint rule ${ruleName}` : 'a lint rule'
-      } which requires the full TypeScript type-checker to be available, but you do not have \`parserOptions.project\` configured to point at your project tsconfig.json files in the relevant TypeScript file "overrides" block of your project ESLint config ${
-        eslintConfigPath || eslintConfigPathForError
-      }
+        ruleName ? `the lint rule "${ruleName}"` : 'a lint rule'
+      } which requires the full TypeScript type-checker to be available, but you do not have "parserOptions.project" configured to point at your project tsconfig.json files in the relevant TypeScript file "overrides" block of your ESLint config ${eslintConfigPathForError}
+${reportedFile ? `Occurred while linting ${reportedFile}` : ''}
 
-Please see https://nx.dev/guides/eslint for full guidance on how to resolve this issue.
+Please see https://nx.dev/recipes/tips-n-tricks/eslint for full guidance on how to resolve this issue.
 `);
 
       return {

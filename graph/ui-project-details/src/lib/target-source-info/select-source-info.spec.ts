@@ -1,4 +1,4 @@
-import { selectSourceInfo } from './target-configuration-details.util';
+import { selectSourceInfo } from './select-source-info';
 
 test('selectSourceInfo', () => {
   const map = {

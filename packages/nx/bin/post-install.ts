@@ -13,7 +13,6 @@ import { logger } from '../src/utils/logger';
 
 (async () => {
   const start = new Date();
-  let errored = false;
   try {
     setupWorkspaceContext(workspaceRoot);
     if (isMainNxPackage() && fileExists(join(workspaceRoot, 'nx.json'))) {
@@ -39,7 +38,6 @@ import { logger } from '../src/utils/logger';
       );
     }
   } catch (e) {
-    errored = true;
     logger.verbose(e);
   } finally {
     const end = new Date();
@@ -47,7 +45,7 @@ import { logger } from '../src/utils/logger';
       `Nx postinstall steps took ${end.getTime() - start.getTime()}ms`
     );
 
-    process.exit(errored ? 1 : 0);
+    process.exit(0);
   }
 })();
 

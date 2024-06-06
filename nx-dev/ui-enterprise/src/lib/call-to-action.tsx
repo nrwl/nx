@@ -57,19 +57,25 @@ export function CallToAction(): JSX.Element {
           <br />
           starts now
         </h2>
-        <div className="mt-10 flex items-center justify-center gap-x-6">
-          <Link
-            href="/contact/sales"
-            className="rounded-md bg-slate-950 px-3.5 py-2.5 text-sm font-semibold text-slate-100 shadow-sm hover:bg-slate-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
-          >
-            Contact sales
-          </Link>
+        <div className="mt-10">
           <Link
             href="/contact/engineering"
+            title="Talk to the engineering team"
             className="rounded-md bg-slate-950 px-3.5 py-2.5 text-sm font-semibold text-slate-100 shadow-sm hover:bg-slate-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
           >
-            Contact engineers
+            Talk to engineering
           </Link>
+          <p className="mt-6 italic">
+            Ready to talk terms?{' '}
+            <Link
+              href="/contact/sales"
+              title="Talk to the sales team"
+              className="font-semibold underline"
+            >
+              Speak directly to sales
+            </Link>
+            .
+          </p>
         </div>
       </div>
     </section>

@@ -1,5 +1,6 @@
 import { SectionHeading } from './temp/typography';
 import { ButtonLink } from '@nx/nx-dev/ui-common';
+import Link from 'next/link';
 
 export function Hero(): JSX.Element {
   return (
@@ -17,37 +18,26 @@ export function Hero(): JSX.Element {
             Accelerate your organization's journey to tighter collaboration,
             better developer experience, and speed…lots of speed.
           </SectionHeading>
-          <div className="mt-10 flex items-center justify-center gap-x-6">
-            <ButtonLink
-              href="/contact/sales"
-              title="Contact sales"
-              variant="primary"
-              size="default"
-            >
-              Contact sales
-            </ButtonLink>
+          <div className="mt-10">
             <ButtonLink
               href="/contact/engineering"
-              title="Contact sales"
+              title="Talk to the engineering team"
               variant="primary"
               size="default"
             >
-              Contact engineers
+              Talk to engineering
             </ButtonLink>
-
-            {/*<Link*/}
-            {/*  className="group text-sm font-semibold leading-6 text-slate-950 dark:text-white"*/}
-            {/*  href="/contact/sales"*/}
-            {/*  rel="nofollow"*/}
-            {/*>*/}
-            {/*  Book a demo{' '}*/}
-            {/*  <span*/}
-            {/*    aria-hidden="true"*/}
-            {/*    className="inline-block transition group-hover:translate-x-1"*/}
-            {/*  >*/}
-            {/*    →*/}
-            {/*  </span>*/}
-            {/*</Link>*/}
+            <p className="mt-6 italic">
+              Ready to talk terms?{' '}
+              <Link
+                href="/contact/sales"
+                title="Talk to the sales team"
+                className="font-semibold underline"
+              >
+                Speak directly to sales
+              </Link>
+              .
+            </p>
           </div>
         </div>
       </div>
