@@ -56,7 +56,16 @@ export function buildPackageJsonWorkspacesMatcher(
 
   return (p: string) =>
     positivePatterns.some((positive) => minimatch(p, positive)) &&
-    !negativePatterns.some((negative) => minimatch(p, negative));
+    /**
+     * minimatch will return true if the given p is NOT excluded by the negative pattern.
+     *
+     * For example if the negative pattern is "!packages/vite", then the given p "packages/vite" will return false,
+     * the given p "packages/something-else/package.json" will return true.
+     *
+     * Therefore, we need to ensure that every negative pattern returns true to validate that the given p is not
+     * excluded by any of the negative patterns.
+     */
+    negativePatterns.every((negative) => minimatch(p, negative));
 }
 
 export function createNodeFromPackageJson(pkgJsonPath: string, root: string) {
