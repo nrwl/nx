@@ -100,7 +100,18 @@
               "events", // This is coming from @storybook/builder-manager since it uses the browser polyfill
               "process", // This is coming from @storybook/builder-manager since it uses the browser polyfill
               "prettier", // This is coming from @storybook/builder-manager since it uses the browser polyfill
-              "util" // This is coming from @storybook/builder-manager since it uses the browser polyfill
+              "util", // This is coming from @storybook/builder-manager since it uses the browser polyfill
+              // The native modules are optional and only one of them will ever be installed on a given machine
+              "@nx/nx-darwin-x64",
+              "@nx/nx-darwin-arm64",
+              "@nx/nx-linux-x64-gnu",
+              "@nx/nx-linux-x64-musl",
+              "@nx/nx-win32-x64-msvc",
+              "@nx/nx-linux-arm64-gnu",
+              "@nx/nx-linux-arm64-musl",
+              "@nx/nx-linux-arm-gnueabihf",
+              "@nx/nx-win32-arm64-msvc",
+              "@nx/nx-freebsd-x64"
             ]
           }
         ]
