@@ -7,7 +7,7 @@ export function MonorepoStyles(): JSX.Element {
       id="monorepo-styles"
       className="relative overflow-hidden bg-slate-50 pt-28 dark:bg-slate-800/40"
     >
-      <div className="mx-auto max-w-7xl py-12 px-4 sm:grid sm:grid-cols-2 sm:gap-8 sm:px-6 lg:py-16 lg:px-8">
+      <div className="mx-auto max-w-7xl px-4 py-12 sm:grid sm:grid-cols-2 sm:gap-8 sm:px-6 lg:px-8 lg:py-16">
         <div>
           <header>
             <SectionHeading as="h1" variant="title" id="monorepo-styles">

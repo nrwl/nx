@@ -10,7 +10,7 @@ export function ExtensibleAndIntegrated(): JSX.Element {
       id="extensible-and-integrated"
       className="overflow-hidden bg-slate-50 pt-28 dark:bg-slate-800/40"
     >
-      <div className="mx-auto max-w-7xl py-12 px-4 sm:px-6 lg:py-16 lg:px-8">
+      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
         <header className="max-w-2xl">
           <SectionHeading
             as="h1"
@@ -80,7 +80,7 @@ export function ExtensibleAndIntegrated(): JSX.Element {
           </p>
         </div>
       </div>
-      <div className="relative mx-auto max-w-7xl px-4 pt-6 pb-12 sm:px-6 lg:px-8 lg:pb-4 lg:pt-6">
+      <div className="relative mx-auto max-w-7xl px-4 pb-12 pt-6 sm:px-6 lg:px-8 lg:pb-4 lg:pt-6">
         <Tab.Group>
           <Tab.List>
             <div className="flex justify-between space-x-4 md:justify-start">
