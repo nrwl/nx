@@ -1,4 +1,12 @@
-import { cleanupProject, newProject, runCLI, uniq } from '@nx/e2e/utils';
+import {
+  checkFilesDoNotExist,
+  checkFilesExist,
+  cleanupProject,
+  newProject,
+  runCLI,
+  uniq,
+  readFile,
+} from '@nx/e2e/utils';
 import { checkApp } from './utils';
 
 describe('Next.js Styles', () => {
@@ -73,4 +81,56 @@ describe('Next.js Styles', () => {
       checkExport: false,
     });
   }, 600_000);
+
+  describe('tailwind', () => {
+    it('should support --style=tailwind (pages router)', async () => {
+      const tailwindApp = uniq('app');
+
+      runCLI(
+        `generate @nx/next:app ${tailwindApp} --no-interactive --style=tailwind --appDir=false --src=false`
+      );
+
+      await checkApp(tailwindApp, {
+        checkUnitTest: true,
+        checkLint: false,
+        checkE2E: false,
+        checkExport: false,
+      });
+
+      checkFilesExist(`apps/${tailwindApp}/tailwind.config.js`);
+      checkFilesExist(`apps/${tailwindApp}/postcss.config.js`);
+
+      checkFilesDoNotExist(`apps/${tailwindApp}/pages/index.module.css`);
+      const appPage = readFile(`apps/${tailwindApp}/pages/index.tsx`);
+      const globalCss = readFile(`apps/${tailwindApp}/pages/styles.css`);
+
+      expect(appPage).not.toContain(`import styles from './index.module.css';`);
+      expect(globalCss).toContain(`@tailwind base;`);
+    }, 500_000);
+
+    it('should support --style=tailwind (app router)', async () => {
+      const tailwindApp = uniq('app');
+
+      runCLI(
+        `generate @nx/next:app ${tailwindApp} --no-interactive --style=tailwind --appDir=true --src=false`
+      );
+
+      await checkApp(tailwindApp, {
+        checkUnitTest: true,
+        checkLint: false,
+        checkE2E: false,
+        checkExport: false,
+      });
+
+      checkFilesExist(`apps/${tailwindApp}/tailwind.config.js`);
+      checkFilesExist(`apps/${tailwindApp}/postcss.config.js`);
+
+      checkFilesDoNotExist(`apps/${tailwindApp}/app/page.module.css`);
+      const appPage = readFile(`apps/${tailwindApp}/app/page.tsx`);
+      const globalCss = readFile(`apps/${tailwindApp}/app/global.css`);
+
+      expect(appPage).not.toContain(`import styles from './page.module.css';`);
+      expect(globalCss).toContain(`@tailwind base;`);
+    }, 500_000);
+  });
 });
