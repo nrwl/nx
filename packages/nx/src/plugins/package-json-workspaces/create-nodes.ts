@@ -68,12 +68,16 @@ export function buildPackageJsonWorkspacesMatcher(
     negativePatterns.every((negative) => minimatch(p, negative));
 }
 
-export function createNodeFromPackageJson(pkgJsonPath: string, root: string) {
-  const json: PackageJson = readJsonFile(join(root, pkgJsonPath));
+export function createNodeFromPackageJson(
+  pkgJsonPath: string,
+  workspaceRoot: string
+) {
+  const json: PackageJson = readJsonFile(join(workspaceRoot, pkgJsonPath));
   const project = buildProjectConfigurationFromPackageJson(
     json,
+    workspaceRoot,
     pkgJsonPath,
-    readNxJson(root)
+    readNxJson(workspaceRoot)
   );
   return {
     projects: {
@@ -84,14 +88,15 @@ export function createNodeFromPackageJson(pkgJsonPath: string, root: string) {
 
 export function buildProjectConfigurationFromPackageJson(
   packageJson: PackageJson,
-  path: string,
+  workspaceRoot: string,
+  packageJsonPath: string,
   nxJson: NxJsonConfiguration
 ): ProjectConfiguration & { name: string } {
-  const normalizedPath = path.split('\\').join('/');
-  const directory = dirname(normalizedPath);
+  const normalizedPath = packageJsonPath.split('\\').join('/');
+  const projectRoot = dirname(normalizedPath);
 
   const siblingProjectJson = tryReadJson<ProjectConfiguration>(
-    join(directory, 'project.json')
+    join(workspaceRoot, projectRoot, 'project.json')
   );
 
   if (siblingProjectJson) {
@@ -100,7 +105,7 @@ export function buildProjectConfigurationFromPackageJson(
     }
   }
 
-  if (!packageJson.name && directory === '.') {
+  if (!packageJson.name && projectRoot === '.') {
     throw new Error(
       'Nx requires the root package.json to specify a name if it is being used as an Nx project.'
     );
@@ -110,13 +115,13 @@ export function buildProjectConfigurationFromPackageJson(
   const projectType =
     nxJson?.workspaceLayout?.appsDir != nxJson?.workspaceLayout?.libsDir &&
     nxJson?.workspaceLayout?.appsDir &&
-    directory.startsWith(nxJson.workspaceLayout.appsDir)
+    projectRoot.startsWith(nxJson.workspaceLayout.appsDir)
       ? 'application'
       : 'library';
 
   return {
-    root: directory,
-    sourceRoot: directory,
+    root: projectRoot,
+    sourceRoot: projectRoot,
     name,
     projectType,
     ...packageJson.nx,
