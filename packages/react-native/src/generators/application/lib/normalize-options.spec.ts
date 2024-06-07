@@ -78,7 +78,7 @@ describe('Normalize Options', () => {
       bundler: 'vite',
       linter: Linter.None,
       rootProject: false,
-      e2eProjectName: 'my-app-e2e',
+      e2eProjectName: 'myApp-e2e',
       e2eProjectRoot: 'myApp-e2e',
     });
   });
@@ -152,7 +152,7 @@ describe('Normalize Options', () => {
       bundler: 'vite',
       linter: Linter.None,
       rootProject: false,
-      e2eProjectName: 'directory/my-app-e2e',
+      e2eProjectName: 'my-app-e2e',
       e2eProjectRoot: 'directory/my-app-e2e',
     });
   });
