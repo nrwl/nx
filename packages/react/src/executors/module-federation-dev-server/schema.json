@@ -36,7 +36,7 @@
       "items": {
         "type": "string"
       },
-      "description": "List of remote applications to not automatically serve, either statically or in development mode. This will not remove the remotes from the `module-federation.config` file, and therefore the application may still try to fetch these remotes.\nThis option is useful for when the `host` application is using a `remote` that does not live in the same workspace as the `host`.",
+      "description": "List of remote applications to not automatically serve, either statically or in development mode. This will not remove the remotes from the `module-federation.config` file, and therefore the application may still try to fetch these remotes.\nThis option is useful if you have other means for serving the `remote` application(s).\n**NOTE:** Remotes that are not in the workspace will be skipped automatically.",
       "x-priority": "important"
     },
     "buildTarget": {
