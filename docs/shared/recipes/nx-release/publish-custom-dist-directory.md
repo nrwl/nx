@@ -4,7 +4,7 @@ This recipe guides you through configuring Nx Release to version and publish pac
 
 ## The Package Root
 
-Nx Release has the concept of a "package root", which is different than the project root. The package root is the directory from which the package is versioned and published. By default, the package root is the project root detected by Nx. Due to the modular nature of Nx Release, the package root is configured independently for the version and publish steps.
+Nx Release has the concept of a "package root", which is different than the project root. The package root is the directory from which the package is versioned and published. By default, the package root is the project root detected by Nx. Due to the modular nature of Nx Release, the package root can be configured independently for the version and publish steps.
 
 ## Strategies for Tracking Dependencies
 
