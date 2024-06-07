@@ -83,15 +83,15 @@ describe('TargetProjectLocator', () => {
         './tsconfig.base.json': JSON.stringify(tsConfig),
         './node_modules/@ng/core/package.json': JSON.stringify({
           name: '@ng/core',
-          version: '1',
+          version: '1.0.0',
         }),
         './node_modules/npm-package/package.json': JSON.stringify({
           name: 'npm-package',
-          version: '1',
+          version: '1.0.0',
         }),
         './node_modules/@proj/proj123-base/package.json': JSON.stringify({
           name: '@proj/proj123-base',
-          version: '1',
+          version: '1.0.0',
         }),
       };
       vol.fromJSON(fsJson, '/root');
@@ -200,7 +200,7 @@ describe('TargetProjectLocator', () => {
           name: 'npm:@ng/core',
           type: 'npm',
           data: {
-            version: '1',
+            version: '1.0.0',
             packageName: '@ng/core',
           },
         },
@@ -208,7 +208,7 @@ describe('TargetProjectLocator', () => {
           name: 'npm:@ng/common',
           type: 'npm',
           data: {
-            version: '1',
+            version: '1.0.0',
             packageName: '@ng/common',
           },
         },
@@ -216,7 +216,7 @@ describe('TargetProjectLocator', () => {
           name: 'npm:npm-package',
           type: 'npm',
           data: {
-            version: '1',
+            version: '1.0.0',
             packageName: 'npm-package',
           },
         },
@@ -224,7 +224,7 @@ describe('TargetProjectLocator', () => {
           name: 'npm:@proj/my-second-proj',
           type: 'npm',
           data: {
-            version: '1',
+            version: '1.0.0',
             packageName: '@proj/my-second-proj',
           },
         },
@@ -232,7 +232,7 @@ describe('TargetProjectLocator', () => {
           name: 'npm:@proj/proj5',
           type: 'npm',
           data: {
-            version: '1',
+            version: '1.0.0',
             packageName: '@proj/proj5',
           },
         },
@@ -240,7 +240,7 @@ describe('TargetProjectLocator', () => {
           name: 'npm:@proj/proj6',
           type: 'npm',
           data: {
-            version: '1',
+            version: '1.0.0',
             packageName: '@proj/proj6',
           },
         },
@@ -248,7 +248,7 @@ describe('TargetProjectLocator', () => {
           name: 'npm:@proj/proj7',
           type: 'npm',
           data: {
-            version: '1',
+            version: '1.0.0',
             packageName: '@proj/proj7',
           },
         },
@@ -256,7 +256,7 @@ describe('TargetProjectLocator', () => {
           name: 'npm:@proj/proj123-base',
           type: 'npm',
           data: {
-            version: '1',
+            version: '1.0.0',
             packageName: '@proj/proj123-base',
           },
         },
@@ -487,15 +487,19 @@ describe('TargetProjectLocator', () => {
         './libs/proj1234-child/index.ts': 'export const a = 12345',
         './node_modules/@proj/proj123-base/package.json': JSON.stringify({
           name: '@proj/proj123-base',
-          version: '1',
+          version: '1.0.0',
         }),
         './node_modules/@ng/core/package.json': JSON.stringify({
           name: '@ng/core',
-          version: '1',
+          version: '1.0.0',
         }),
         './node_modules/npm-package/package.json': JSON.stringify({
           name: 'npm-package',
-          version: '1',
+          version: '1.0.0',
+        }),
+        './node_modules/@trpc/server/package.json': JSON.stringify({
+          name: '@trpc/server',
+          version: '1.0.0-rc.0+abc123',
         }),
         // minimatch is a real world example of a multi module format package with nested package.json files.
         // node will resolve the dist/cjs/package.json file when using require.resolve('minimatch') in commonjs
@@ -595,7 +599,7 @@ describe('TargetProjectLocator', () => {
           name: 'npm:@ng/core',
           type: 'npm',
           data: {
-            version: '1',
+            version: '1.0.0',
             packageName: '@ng/core',
           },
         },
@@ -603,7 +607,7 @@ describe('TargetProjectLocator', () => {
           name: 'npm:@ng/common',
           type: 'npm',
           data: {
-            version: '1',
+            version: '1.0.0',
             packageName: '@ng/common',
           },
         },
@@ -611,7 +615,7 @@ describe('TargetProjectLocator', () => {
           name: 'npm:npm-package',
           type: 'npm',
           data: {
-            version: '1',
+            version: '1.0.0',
             packageName: 'npm-package',
           },
         },
@@ -619,7 +623,7 @@ describe('TargetProjectLocator', () => {
           name: 'npm:@proj/my-second-proj',
           type: 'npm',
           data: {
-            version: '1',
+            version: '1.0.0',
             packageName: '@proj/my-second-proj',
           },
         },
@@ -627,7 +631,7 @@ describe('TargetProjectLocator', () => {
           name: 'npm:@proj/proj5',
           type: 'npm',
           data: {
-            version: '1',
+            version: '1.0.0',
             packageName: '@proj/proj5',
           },
         },
@@ -635,7 +639,7 @@ describe('TargetProjectLocator', () => {
           name: 'npm:@proj/proj6',
           type: 'npm',
           data: {
-            version: '1',
+            version: '1.0.0',
             packageName: '@proj/proj6',
           },
         },
@@ -643,7 +647,7 @@ describe('TargetProjectLocator', () => {
           name: 'npm:@proj/proj7',
           type: 'npm',
           data: {
-            version: '1',
+            version: '1.0.0',
             packageName: '@proj/proj7',
           },
         },
@@ -651,7 +655,7 @@ describe('TargetProjectLocator', () => {
           name: 'npm:@proj/proj123-base',
           type: 'npm',
           data: {
-            version: '1',
+            version: '1.0.0',
             packageName: '@proj/proj123-base',
           },
         },
@@ -676,6 +680,15 @@ describe('TargetProjectLocator', () => {
           data: {
             version: '19.2.0-beta.2',
             packageName: '@nx/nx-win32-x64-msvc',
+            hash: 'sha512-ggewenDQWc5azOEM/HI7AREuIHXSPO0STL+ehAG2PvoQPHglCdfLQy904D85ttm9wS7AKdK+d3wqMzSQaj7FsA==',
+          },
+        },
+        'npm:@trpc/server': {
+          type: 'npm',
+          name: 'npm:@trpc/server',
+          data: {
+            version: '1.0.0-rc.0',
+            packageName: '@trpc/server',
             hash: 'sha512-ggewenDQWc5azOEM/HI7AREuIHXSPO0STL+ehAG2PvoQPHglCdfLQy904D85ttm9wS7AKdK+d3wqMzSQaj7FsA==',
           },
         },
@@ -772,6 +785,14 @@ describe('TargetProjectLocator', () => {
           'libs/proj/index.ts'
         );
       expect(similarDeepImportFromNpm).toEqual('npm:@proj/proj123-base');
+    });
+
+    it('should be able to resolve npm projects with unclean versions', () => {
+      const trpcProject = targetProjectLocator.findProjectFromImport(
+        '@trpc/server',
+        'libs/proj/index.ts'
+      );
+      expect(trpcProject).toEqual('npm:@trpc/server');
     });
 
     it('should return null for native modules', () => {
