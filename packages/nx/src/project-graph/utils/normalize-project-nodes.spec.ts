@@ -1,8 +1,5 @@
 import { ProjectGraphProjectNode } from '../../config/project-graph';
-import {
-  normalizeImplicitDependencies,
-  normalizeProjectTargets,
-} from './normalize-project-nodes';
+import { normalizeImplicitDependencies } from './normalize-project-nodes';
 
 describe('workspace-projects', () => {
   let projectGraph: Record<string, ProjectGraphProjectNode> = {
@@ -73,9 +70,41 @@ describe('workspace-projects', () => {
           },
         },
       };
-      expect(
-        normalizeImplicitDependencies('test-project', ['b*'], projectGraphMod)
-      ).toEqual(['b', 'b-1', 'b-2']);
+      const results = normalizeImplicitDependencies(
+        'test-project',
+        ['b*'],
+        projectGraphMod
+      );
+      expect(results).toEqual(expect.arrayContaining(['b', 'b-1', 'b-2']));
+      expect(results).not.toContain('a');
+    });
+
+    it('should handle negative projects correctly', () => {
+      const results = normalizeImplicitDependencies(
+        'test-project',
+        ['*', '!a'],
+        projectGraph
+      );
+      // a is excluded
+      expect(results).not.toContain('a');
+      // b and c are included by wildcard
+      expect(results).toEqual(expect.arrayContaining(['b', 'c']));
+      // !a should remain in the list, to remove deps on a if they exist
+      expect(results).toContain('!a');
+    });
+
+    it('should handle negative patterns', () => {
+      const results = normalizeImplicitDependencies(
+        'test-project',
+        ['!tag:api'],
+        projectGraph
+      );
+      // No projects are included by provided patterns
+      expect(results.filter((x) => !x.startsWith('!'))).toHaveLength(0);
+      // tag:api was expanded, and results included for later processing.
+      expect(results).toEqual(
+        expect.arrayContaining(['!a', '!c', '!test-project'])
+      );
     });
   });
 });
