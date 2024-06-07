@@ -77,6 +77,12 @@
       "version": "19.2.0-beta.2",
       "description": "Updates the default workspace data directory to .nx/workspace-data",
       "implementation": "./src/migrations/update-19-2-0/move-workspace-data-directory"
+    },
+    "19-2-2-update-nx-wrapper": {
+      "cli": "nx",
+      "version": "19.2.2-beta.0",
+      "description": "Updates the nx wrapper.",
+      "implementation": "./src/migrations/update-17-3-0/update-nxw"
     }
   }
 }
