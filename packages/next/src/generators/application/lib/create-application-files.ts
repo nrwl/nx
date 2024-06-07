@@ -56,7 +56,6 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
     pageStyleContent: `.page {}`,
 
     stylesExt: options.style === 'less' ? options.style : 'css',
-    style: options.style === 'tailwind' ? 'css' : options.style,
   };
 
   const generatedAppFilePath = options.src
@@ -165,7 +164,7 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
     host.delete(`${options.appProjectRoot}/.babelrc`);
   }
 
-  if (options.styledModule) {
+  if (options.styledModule || options.style === 'tailwind') {
     if (options.appDir) {
       host.delete(`${generatedAppFilePath}/app/page.module.${options.style}`);
     } else {
