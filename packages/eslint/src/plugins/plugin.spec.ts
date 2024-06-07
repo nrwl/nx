@@ -55,6 +55,12 @@ describe('@nx/eslint/plugin', () => {
     `);
   });
 
+  it('should not throw if no options are provided', async () => {
+    await expect(
+      createNodesV2[1](configFiles, undefined, context)
+    ).resolves.not.toThrow();
+  });
+
   describe('root eslint config only', () => {
     it('should not create any nodes for just a package.json and root level eslint config', async () => {
       createFiles({

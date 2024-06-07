@@ -159,7 +159,7 @@ const internalCreateNodes = async (
 export const createNodesV2: CreateNodesV2<EslintPluginOptions> = [
   ESLINT_CONFIG_GLOB,
   async (configFiles, options, context) => {
-    const optionsHash = hashObject(options);
+    const optionsHash = hashObject(options ?? {});
     const cachePath = join(
       workspaceDataDirectory,
       `eslint-${optionsHash}.hash`
