@@ -64,11 +64,14 @@ export function writeMinimalNxJson(host: Tree, version: string) {
 }
 
 export function updateGitIgnore(host: Tree) {
-  const contents = host.read('.gitignore', 'utf-8') ?? '';
-  host.write(
-    '.gitignore',
-    [contents, '.nx/installation', '.nx/cache'].join('\n')
-  );
+  let contents = host.read('.gitignore', 'utf-8') ?? '';
+  if (!contents.includes('.nx/installation')) {
+    contents = [contents, '.nx/installation'].join('\n');
+  }
+  if (!contents.includes('.nx/cache')) {
+    contents = [contents, '.nx/cache'].join('\n');
+  }
+  host.write('.gitignore', contents);
 }
 
 // Gets the sanitized contents for nxw.js
