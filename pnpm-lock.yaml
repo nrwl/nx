@@ -861,8 +861,8 @@ devDependencies:
     specifier: 0.7.3
     version: 0.7.3
   source-map-loader:
-    specifier: ^3.0.0
-    version: 3.0.2(webpack@5.88.0)
+    specifier: ^5.0.0
+    version: 5.0.0(webpack@5.88.0)
   source-map-support:
     specifier: 0.5.19
     version: 0.5.19
@@ -32030,6 +32030,17 @@ packages:
       webpack: 5.88.0(@swc/core@1.5.7)(esbuild@0.19.5)(webpack-cli@5.1.4)
     dev: true
 
+  /source-map-loader@5.0.0(webpack@5.88.0):
+    resolution: {integrity: sha512-k2Dur7CbSLcAH73sBcIkV5xjPV4SzqO1NJ7+XaQl8if3VODDUj3FNchNGpqgJSKbvUfJuhVdv8K2Eu8/TNl2eA==}
+    engines: {node: '>= 18.12.0'}
+    peerDependencies:
+      webpack: ^5.72.1
+    dependencies:
+      iconv-lite: 0.6.3
+      source-map-js: 1.2.0
+      webpack: 5.88.0(@swc/core@1.5.7)(esbuild@0.19.5)(webpack-cli@5.1.4)
+    dev: true
+
   /source-map-loader@5.0.0(webpack@5.91.0):
     resolution: {integrity: sha512-k2Dur7CbSLcAH73sBcIkV5xjPV4SzqO1NJ7+XaQl8if3VODDUj3FNchNGpqgJSKbvUfJuhVdv8K2Eu8/TNl2eA==}
     engines: {node: '>= 18.12.0'}
@@ -32037,7 +32048,7 @@ packages:
       webpack: ^5.72.1
     dependencies:
       iconv-lite: 0.6.3
-      source-map-js: 1.0.2
+      source-map-js: 1.2.0
       webpack: 5.91.0(@swc/core@1.5.7)(esbuild@0.21.3)(webpack-cli@5.1.4)
     dev: true
 
