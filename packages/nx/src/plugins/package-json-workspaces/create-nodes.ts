@@ -90,6 +90,16 @@ export function buildProjectConfigurationFromPackageJson(
   const normalizedPath = path.split('\\').join('/');
   const directory = dirname(normalizedPath);
 
+  const siblingProjectJson = tryReadJson<ProjectConfiguration>(
+    join(directory, 'project.json')
+  );
+
+  if (siblingProjectJson) {
+    for (const target of Object.keys(siblingProjectJson?.targets ?? {})) {
+      delete packageJson.scripts?.[target];
+    }
+  }
+
   if (!packageJson.name && directory === '.') {
     throw new Error(
       'Nx requires the root package.json to specify a name if it is being used as an Nx project.'
@@ -184,4 +194,12 @@ function normalizePatterns(patterns: string[]): string[] {
 
 function removeRelativePath(pattern: string): string {
   return pattern.startsWith('./') ? pattern.substring(2) : pattern;
+}
+
+function tryReadJson<T extends Object = any>(path: string): T | null {
+  try {
+    return readJsonFile<T>(path);
+  } catch {
+    return null;
+  }
 }
