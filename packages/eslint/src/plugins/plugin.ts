@@ -506,17 +506,20 @@ function buildEslintTargets(
 }
 
 function normalizeOptions(options: EslintPluginOptions): EslintPluginOptions {
-  options ??= {};
-  options.targetName ??= 'lint';
+  const normalizedOptions: EslintPluginOptions = {
+    targetName: options.targetName ?? 'lint',
+  };
 
   // Normalize user input for extensions (strip leading . characters)
   if (Array.isArray(options.extensions)) {
-    options.extensions = options.extensions.map((f) => f.replace(/^\.+/, ''));
+    normalizedOptions.extensions = options.extensions.map((f) =>
+      f.replace(/^\.+/, '')
+    );
   } else {
-    options.extensions = DEFAULT_EXTENSIONS;
+    normalizedOptions.extensions = DEFAULT_EXTENSIONS;
   }
 
-  return options;
+  return normalizedOptions;
 }
 
 /**
