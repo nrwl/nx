@@ -4,6 +4,8 @@ import {
   CreateNodesContext,
   detectPackageManager,
   joinPathFragments,
+  logger,
+  ProjectConfiguration,
   readJsonFile,
   TargetConfiguration,
   writeJsonFile,
@@ -23,14 +25,12 @@ export interface VitePluginOptions {
   previewTargetName?: string;
   serveStaticTargetName?: string;
 }
+type ViteTargets = Pick<ProjectConfiguration, 'targets' | 'metadata'>;
 
 const cachePath = join(workspaceDataDirectory, 'vite.hash');
 const targetsCache = readTargetsCache();
 
-function readTargetsCache(): Record<
-  string,
-  Record<string, TargetConfiguration>
-> {
+function readTargetsCache(): Record<string, ViteTargets> {
   return existsSync(cachePath) ? readJsonFile(cachePath) : {};
 }
 
@@ -47,52 +47,72 @@ export const createDependencies: CreateDependencies = () => {
   return [];
 };
 
+const viteVitestConfigGlob = '**/{vite,vitest}.config.{js,ts,mjs,mts,cjs,cts}';
+
 export const createNodes: CreateNodes<VitePluginOptions> = [
-  '**/{vite,vitest}.config.{js,ts,mjs,mts,cjs,cts}',
+  viteVitestConfigGlob,
   async (configFilePath, options, context) => {
-    const projectRoot = dirname(configFilePath);
-    // Do not create a project if package.json and project.json isn't there.
-    const siblingFiles = readdirSync(join(context.workspaceRoot, projectRoot));
-    if (
-      !siblingFiles.includes('package.json') &&
-      !siblingFiles.includes('project.json')
-    ) {
-      return {};
-    }
-
-    options = normalizeOptions(options);
-
-    // We do not want to alter how the hash is calculated, so appending the config file path to the hash
-    // to prevent vite/vitest files overwriting the target cache created by the other
-    const hash =
-      (await calculateHashForCreateNodes(projectRoot, options, context, [
-        getLockFileName(detectPackageManager(context.workspaceRoot)),
-      ])) + configFilePath;
-
-    targetsCache[hash] ??= await buildViteTargets(
-      configFilePath,
-      projectRoot,
-      options,
-      context
+    logger.warn(
+      '`createNodes` is deprecated. Update your plugin to utilize createNodesV2 instead. In Nx 20, this will change to the createNodesV2 API.'
     );
-
-    return {
-      projects: {
-        [projectRoot]: {
-          root: projectRoot,
-          targets: targetsCache[hash],
-        },
-      },
-    };
+    return createNodesInternal(configFilePath, options, context, targetsCache);
   },
 ];
+
+async function createNodesInternal(
+  configFilePath: string,
+  options: VitePluginOptions,
+  context: CreateNodesContext,
+  targetsCache: Record<string, ViteTargets>
+) {
+  const projectRoot = dirname(configFilePath);
+  // Do not create a project if package.json and project.json isn't there.
+  const siblingFiles = readdirSync(join(context.workspaceRoot, projectRoot));
+  if (
+    !siblingFiles.includes('package.json') &&
+    !siblingFiles.includes('project.json')
+  ) {
+    return {};
+  }
+
+  const normalizedOptions = normalizeOptions(options);
+
+  // We do not want to alter how the hash is calculated, so appending the config file path to the hash
+  // to prevent vite/vitest files overwriting the target cache created by the other
+  const hash =
+    (await calculateHashForCreateNodes(
+      projectRoot,
+      normalizedOptions,
+      context,
+      [getLockFileName(detectPackageManager(context.workspaceRoot))]
+    )) + configFilePath;
+
+  targetsCache[hash] ??= await buildViteTargets(
+    configFilePath,
+    projectRoot,
+    normalizedOptions,
+    context
+  );
+
+  const { targets, metadata } = targetsCache[hash];
+
+  return {
+    projects: {
+      [projectRoot]: {
+        root: projectRoot,
+        targets,
+        metadata,
+      },
+    },
+  };
+}
 
 async function buildViteTargets(
   configFilePath: string,
   projectRoot: string,
   options: VitePluginOptions,
   context: CreateNodesContext
-) {
+): Promise<ViteTargets> {
   const absoluteConfigFilePath = joinPathFragments(
     context.workspaceRoot,
     configFilePath
@@ -156,7 +176,8 @@ async function buildViteTargets(
     );
   }
 
-  return targets;
+  const metadata = {};
+  return { targets, metadata };
 }
 
 async function buildTarget(

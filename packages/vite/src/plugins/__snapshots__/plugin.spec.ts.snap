@@ -4,6 +4,7 @@ exports[`@nx/vite/plugin not root project should create nodes 1`] = `
 {
   "projects": {
     "my-app": {
+      "metadata": {},
       "root": "my-app",
       "targets": {
         "build-something": {
@@ -57,6 +58,7 @@ exports[`@nx/vite/plugin root project should create nodes 1`] = `
 {
   "projects": {
     ".": {
+      "metadata": {},
       "root": ".",
       "targets": {
         "build": {
