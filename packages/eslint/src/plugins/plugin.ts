@@ -44,7 +44,9 @@ const ESLINT_CONFIG_GLOB_V2 = combineGlobPatterns([
 function readTargetsCache(
   cachePath: string
 ): Record<string, CreateNodesResult['projects']> {
-  return existsSync(cachePath) ? readJsonFile(cachePath) : {};
+  return process.env.NX_CACHE_PROJECT_GRAPH !== 'false' && existsSync(cachePath)
+    ? readJsonFile(cachePath)
+    : {};
 }
 
 function writeTargetsToCache(
@@ -118,10 +120,7 @@ const internalCreateNodes = async (
         [...parentConfigs, join(childProjectRoot, '.eslintignore')]
       );
 
-      if (
-        process.env.NX_CACHE_PROJECT_GRAPH !== 'false' &&
-        projectsCache[hash]
-      ) {
+      if (projectsCache[hash]) {
         // We can reuse the projects in the cache.
         Object.assign(projects, projectsCache[hash]);
         return;
@@ -200,10 +199,7 @@ const internalCreateNodesV2 = async (
         [...parentConfigs, join(projectRoot, '.eslintignore')]
       );
 
-      if (
-        process.env.NX_CACHE_PROJECT_GRAPH !== 'false' &&
-        projectsCache[hash]
-      ) {
+      if (projectsCache[hash]) {
         // We can reuse the projects in the cache.
         Object.assign(projects, projectsCache[hash]);
         return;
