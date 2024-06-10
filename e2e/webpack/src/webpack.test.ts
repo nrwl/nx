@@ -338,7 +338,6 @@ describe('Webpack Plugin', () => {
   });
 
   it('should be able to support webpack config with nx enhanced and babel', () => {
-    // Setup
     const appName = uniq('app');
 
     runCLI(
