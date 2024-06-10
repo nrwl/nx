@@ -29,7 +29,7 @@
       "type": "string",
       "default": "prompt",
       "description": "Which approach to use to determine the semver specifier used to bump the version of the project.",
-      "enum": ["prompt", "conventional-commits"]
+      "enum": ["prompt", "conventional-commits", "version-plans"]
     },
     "preid": {
       "type": "string",

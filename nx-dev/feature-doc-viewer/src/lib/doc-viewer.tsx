@@ -29,7 +29,8 @@ export function DocViewer({
     router.asPath.includes('/ci/intro/ci-with-nx') ||
     router.asPath.includes('/extending-nx/intro/getting-started') ||
     router.asPath.includes('/nx-api/devkit') ||
-    router.asPath.includes('/reference/glossary');
+    router.asPath.includes('/reference/glossary') ||
+    router.asPath.includes('/ci/reference/release-notes');
   const ref = useRef<HTMLDivElement | null>(null);
 
   const { metadata, node, treeNode } = renderMarkdown(

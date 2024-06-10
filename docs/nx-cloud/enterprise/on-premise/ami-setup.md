@@ -90,6 +90,8 @@ You can optionally enable authentication using your preferred SSO provider:
 - Bitbucket
 - GitLab
 - SAML (Okta, Azure AD etc.)
+- And even [Nx Agents](/ci/features/distribute-task-execution#distribute-task-execution-nx-agents)
+  - Follow [the guide here](https://github.com/nrwl/nx-cloud-helm/blob/main/agents-guide/AGENTS-GUIDE.md) for setting up an Nx Agents cluster
 
 ```yaml
 # This is all you need to get the baseline of your nx-cloud instance configured!
@@ -120,6 +122,11 @@ nxCloudAppURL: 'https://nx-cloud.on.my-domain.ca' # make sure no backslash is at
 #saml:
 #  auth:
 #    enabled: false
+
+# for enabling Nx Agents
+#nxCloudWorkflows:
+#  enabled: true
+#  externalName: your-agents-cluster-address.com
 
 # Provide plaintext values for your application to use. We will extract them,
 # store them within the application runtime, and scrub the plaintext ones from
@@ -161,7 +168,10 @@ To upgrade to a newer version, add the below line to your `myconfiguration.yml` 
 
 ```yaml
 global:
-  imageTag: '2306.01.2' # set the version of nx-cloud you'd like
+  imageTag: '2306.01.2'
+global:
+  imageTag: '2405.02.15' # set the version of nx-cloud you'd like
+helmVersion: '0.15.3' # helm version
 ```
 
 And apply the changes:

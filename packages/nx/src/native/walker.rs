@@ -35,6 +35,7 @@ where
         "**/node_modules".into(),
         "**/.git".into(),
         "**/.nx/cache".into(),
+        "**/.nx/workspace-data".into(),
         "**/.yarn/cache".into(),
     ];
 
@@ -65,8 +66,14 @@ where
 {
     let directory = directory.as_ref();
 
-    let ignore_glob_set = build_glob_set(&["**/node_modules", "**/.git", "**/.nx/cache"])
-        .expect("These static ignores always build");
+    let ignore_glob_set = build_glob_set(&[
+        "**/node_modules",
+        "**/.git",
+        "**/.nx/cache",
+        "**/.nx/workspace-data",
+        "**/.yarn/cache",
+    ])
+    .expect("These static ignores always build");
 
     let mut walker = WalkBuilder::new(directory);
     walker.hidden(false);

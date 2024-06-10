@@ -1,26 +1,22 @@
-import { projectGraphCacheDirectory } from 'nx/src/utils/cache-directory';
+import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { basename, dirname, join } from 'path';
 import { existsSync, readdirSync } from 'fs';
 import {
-  type TargetConfiguration,
   type CreateDependencies,
   type CreateNodes,
-  readJsonFile,
-  writeJsonFile,
-  detectPackageManager,
   CreateNodesContext,
+  detectPackageManager,
   joinPathFragments,
+  readJsonFile,
+  type TargetConfiguration,
+  writeJsonFile,
 } from '@nx/devkit';
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { getLockFileName } from '@nx/js';
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { type RollupOptions } from 'rollup';
 
-// This import causes an error due to the module resolution used. If we switch to bundler or nodenext in the future we remove this ignore.
-// @ts-ignore
-import { loadConfigFile } from 'rollup/loadConfigFile';
-
-const cachePath = join(projectGraphCacheDirectory, 'rollup.hash');
+const cachePath = join(workspaceDataDirectory, 'rollup.hash');
 const targetsCache = readTargetsCache();
 
 function readTargetsCache(): Record<
@@ -63,9 +59,12 @@ export const createNodes: CreateNodes<RollupPluginOptions> = [
 
     options = normalizeOptions(options);
 
-    const hash = calculateHashForCreateNodes(projectRoot, options, context, [
-      getLockFileName(detectPackageManager(context.workspaceRoot)),
-    ]);
+    const hash = await calculateHashForCreateNodes(
+      projectRoot,
+      options,
+      context,
+      [getLockFileName(detectPackageManager(context.workspaceRoot))]
+    );
 
     targetsCache[hash] ??= await buildRollupTarget(
       configFilePath,
@@ -91,10 +90,33 @@ async function buildRollupTarget(
   options: RollupPluginOptions,
   context: CreateNodesContext
 ): Promise<Record<string, TargetConfiguration>> {
+  let loadConfigFile: (
+    path: string,
+    commandOptions: unknown,
+    watchMode: boolean
+  ) => Promise<{ options: RollupOptions[] }>;
+
+  try {
+    // Try to load the workspace version of rollup first (it should already exist).
+    // Using the workspace rollup ensures that the config file is compatible with the `loadConfigFile` function.
+    // e.g. rollup@2 supports having `require` calls in rollup config, but rollup@4 does not.
+    const m = require(require.resolve('rollup/loadConfigFile', {
+      paths: [dirname(configFilePath)],
+    }));
+    // Rollup 2 has this has default export, but it is named in 3 and 4.
+    // See: https://www.unpkg.com/browse/rollup@2.79.1/dist/loadConfigFile.js
+    loadConfigFile = typeof m === 'function' ? m : m.loadConfigFile;
+  } catch {
+    // Fallback to our own if needed.
+    loadConfigFile = require('rollup/loadConfigFile').loadConfigFile;
+  }
+
   const namedInputs = getNamedInputs(projectRoot, context);
   const rollupConfig = (
     (await loadConfigFile(
-      joinPathFragments(context.workspaceRoot, configFilePath)
+      joinPathFragments(context.workspaceRoot, configFilePath),
+      {},
+      true // Enable watch mode so that rollup properly reloads config files without reusing a cached version
     )) as { options: RollupOptions[] }
   ).options;
   const outputs = getOutputs(rollupConfig, projectRoot);
@@ -109,6 +131,7 @@ async function buildRollupTarget(
       ...('production' in namedInputs
         ? ['production', '^production']
         : ['default', '^default']),
+      { externalDependencies: ['rollup'] },
     ],
     outputs,
   };

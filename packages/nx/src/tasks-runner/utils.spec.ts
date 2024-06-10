@@ -1,6 +1,7 @@
 import {
   expandDependencyConfigSyntaxSugar,
   getOutputsForTargetAndConfiguration,
+  interpolate,
   transformLegacyOutputs,
   validateOutputs,
 } from './utils';
@@ -19,6 +20,14 @@ describe('utils', () => {
       },
     };
   }
+
+  describe('interpolate', () => {
+    it('should not mangle URLs', () => {
+      expect(interpolate('https://npm-registry.example.com/', {})).toEqual(
+        'https://npm-registry.example.com/'
+      );
+    });
+  });
 
   describe('getOutputsForTargetAndConfiguration', () => {
     const task = {
@@ -56,6 +65,18 @@ describe('utils', () => {
           })
         )
       ).toEqual(['one', 'myapp/two', 'myapp/three']);
+    });
+
+    it('should handle relative paths after {projectRoot}', () => {
+      expect(
+        getOutputsForTargetAndConfiguration(
+          task.target,
+          task.overrides,
+          getNode({
+            outputs: ['{projectRoot}/../relative/path'],
+          })
+        )
+      ).toEqual(['relative/path']);
     });
 
     it('should interpolate {projectRoot} when it is not at the beginning', () => {

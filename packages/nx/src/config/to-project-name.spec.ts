@@ -42,7 +42,7 @@ describe('Workspaces', () => {
             readNxJson(fs.tempDir).plugins,
             fs.tempDir
           );
-          const res = retrieveProjectConfigurations(
+          const res = await retrieveProjectConfigurations(
             plugins,
             fs.tempDir,
             readNxJson(fs.tempDir)
@@ -51,20 +51,29 @@ describe('Workspaces', () => {
           return res;
         }
       );
-      expect(projects['packages/my-package']).toEqual({
-        name: 'my-package',
-        root: 'packages/my-package',
-        sourceRoot: 'packages/my-package',
-        projectType: 'library',
-        targets: {
-          'nx-release-publish': {
-            configurations: {},
-            dependsOn: ['^nx-release-publish'],
-            executor: '@nx/js:release-publish',
-            options: {},
+      expect(projects['packages/my-package']).toMatchInlineSnapshot(`
+        {
+          "metadata": {
+            "targetGroups": {
+              "NPM Scripts": [],
+            },
           },
-        },
-      });
+          "name": "my-package",
+          "projectType": "library",
+          "root": "packages/my-package",
+          "sourceRoot": "packages/my-package",
+          "targets": {
+            "nx-release-publish": {
+              "configurations": {},
+              "dependsOn": [
+                "^nx-release-publish",
+              ],
+              "executor": "@nx/js:release-publish",
+              "options": {},
+            },
+          },
+        }
+      `);
     });
   });
 });

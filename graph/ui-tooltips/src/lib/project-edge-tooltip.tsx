@@ -39,7 +39,7 @@ export function ProjectEdgeNodeTooltip({
                 key={fileDep.fileName}
                 className={`whitespace-nowrap px-4 py-2 text-sm font-medium text-slate-800 dark:text-slate-300 ${
                   fileClickCallback !== undefined
-                    ? 'hover:underline hover:cursor-pointer'
+                    ? 'hover:cursor-pointer hover:underline'
                     : ''
                 }`}
                 onClick={

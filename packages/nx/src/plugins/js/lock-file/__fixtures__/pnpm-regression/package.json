@@ -1,0 +1,23 @@
+{
+  "name": "@teve/task4s-firebase",
+  "version": "0.0.1",
+  "engines": {
+    "node": "20"
+  },
+  "type": "module",
+  "main": "index.js",
+  "module": "./index.js",
+  "private": true,
+  "dependencies": {
+    "@azure/msal-node": "2.8.1",
+    "@google-cloud/functions-framework": "*",
+    "@microsoft/microsoft-graph-client": "3.0.7",
+    "date-fns": "3.6.0",
+    "firebase-admin": "12.1.0",
+    "firebase-functions": "5.0.1",
+    "gaxios": "6.6.0",
+    "google-auth-library": "9.10.0",
+    "googleapis": "137.1.0",
+    "lru-cache": "10.2.2"
+  }
+}

@@ -58,7 +58,7 @@ In React applications (e.g. those using the `@nx/web:webpack` executor or an [in
 includes the following variables in the build process:
 
 - `NODE_ENV`
-- Variables prefixed with `NX_`, such as `NX_CUSTOM_VAR` (when using the [NxWebpackPlugin](/recipes/webpack/webpack-plugins#nxwebpackplugin) or the [withNx](/recipes/webpack/webpack-plugins#withnx) plugins)
+- Variables prefixed with `NX_PUBLIC`, such as `NX_PUBLIC_CUSTOM_VAR` (when using the [NxWebpackPlugin](/recipes/webpack/webpack-plugins#nxwebpackplugin) or the [withNx](/recipes/webpack/webpack-plugins#withnx) plugins)
 
 Defining environment variables can vary between OSes. It's also important to know that this is temporary for the life of
 the shell session.
@@ -68,12 +68,16 @@ the shell session.
 Nx supports interpolating environment variables into your `index.html` file for React and Web applications built with Webpack.
 This feature is available when using the [NxWebpackPlugin](/recipes/webpack/webpack-plugins#nxwebpackplugin) or the [withNx](/recipes/webpack/webpack-plugins#withnx) plugins.
 
-To interpolate an environment variable named `NX_DOMAIN_NAME` into your `index.html`, surround it with `%` symbols like so:
+{% callout type="note" title="Predefined Nx variable" %}
+Note that with the release of Nx 19, you won't be able to use predefined Nx variable on this [link](/reference/environment-variables).
+{% /callout %}
+
+To interpolate an environment variable named `NX_PUBLIC_DOMAIN_NAME` into your `index.html`, surround it with `%` symbols like so:
 
 ```html {% fileName="index.html" %}
 <html>
   <body>
-    <p>The domain name is %NX_DOMAIN_NAME%.</p>
+    <p>The domain name is %NX_PUBLIC_DOMAIN_NAME%.</p>
   </body>
 </html>
 ```

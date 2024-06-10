@@ -1042,6 +1042,12 @@
                   "id": "configure-changelog-format",
                   "tags": ["nx-release"],
                   "file": "shared/recipes/nx-release/configure-changelog-format"
+                },
+                {
+                  "name": "Publish a Custom Dist Directory",
+                  "id": "publish-custom-dist-directory",
+                  "tags": ["nx-release"],
+                  "file": "shared/recipes/nx-release/publish-custom-dist-directory"
                 }
               ]
             },
@@ -1807,6 +1813,11 @@
                       "name": "Advanced Configuration",
                       "id": "advanced-config",
                       "file": "nx-cloud/enterprise/on-premise/advanced-config"
+                    },
+                    {
+                      "name": "Custom GitHub App",
+                      "id": "custom-github-app",
+                      "file": "nx-cloud/enterprise/on-premise/custom-github-app"
                     }
                   ]
                 },

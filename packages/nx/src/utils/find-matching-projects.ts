@@ -7,7 +7,7 @@ const validPatternTypes = [
   'directory', // Pattern is based on the project's root directory
   'unlabeled', // Pattern was passed without specifying a type
 ] as const;
-type ProjectPatternType = typeof validPatternTypes[number];
+type ProjectPatternType = (typeof validPatternTypes)[number];
 
 interface ProjectPattern {
   // If true, the pattern is an exclude pattern
@@ -38,6 +38,16 @@ export function findMatchingProjects(
   const projectNames = Object.keys(projects);
 
   const matchedProjects: Set<string> = new Set();
+
+  // If the first pattern is an exclude pattern,
+  // we add a wildcard pattern at the first to select
+  // all projects, except the ones that match the exclude pattern.
+  // e.g. ['!tag:someTag', 'project2'] will match all projects except
+  // the ones with the tag 'someTag', and also match the project 'project2',
+  // regardless of its tags.
+  if (isExcludePattern(patterns[0])) {
+    patterns.unshift('*');
+  }
 
   for (const stringPattern of patterns) {
     if (!stringPattern.length) {
@@ -205,11 +215,15 @@ function addMatchingProjectsByTag(
   }
 }
 
+function isExcludePattern(pattern: string): boolean {
+  return pattern.startsWith('!');
+}
+
 function parseStringPattern(
   pattern: string,
   projects: Record<string, ProjectGraphProjectNode>
 ): ProjectPattern {
-  const isExclude = pattern.startsWith('!');
+  const isExclude = isExcludePattern(pattern);
 
   // Support for things like: `!{type}:value`
   if (isExclude) {

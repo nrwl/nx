@@ -16,7 +16,7 @@ export class ProcessTasks {
   readonly dependencies: { [k: string]: string[] } = {};
 
   constructor(
-    private readonly defaultDependencyConfigs: TargetDependencies,
+    private readonly extraTargetDependencies: TargetDependencies,
     private readonly projectGraph: ProjectGraph
   ) {}
 
@@ -99,7 +99,7 @@ export class ProcessTasks {
 
     const dependencyConfigs = getDependencyConfigs(
       { project: task.target.project, target: task.target.target },
-      this.defaultDependencyConfigs,
+      this.extraTargetDependencies,
       this.projectGraph
     );
     for (const dependencyConfig of dependencyConfigs) {
@@ -108,9 +108,41 @@ export class ProcessTasks {
           ? overrides
           : { __overrides_unparsed__: [] };
       if (dependencyConfig.projects) {
+        /** LERNA SUPPORT START - Remove in v20 */
+        // Lerna uses `dependencies` in `prepNxOptions`, so we need to maintain
+        // support for it until lerna can be updated to use the syntax.
+        //
+        // This should have been removed in v17, but the updates to lerna had not
+        // been made yet.
+        //
+        // TODO(@agentender): Remove this part in v20
+        if (typeof dependencyConfig.projects === 'string') {
+          if (dependencyConfig.projects === 'self') {
+            this.processTasksForSingleProject(
+              task,
+              task.target.project,
+              dependencyConfig,
+              configuration,
+              taskOverrides,
+              overrides
+            );
+            continue;
+          } else if (dependencyConfig.projects === 'dependencies') {
+            this.processTasksForDependencies(
+              projectUsedToDeriveDependencies,
+              dependencyConfig,
+              configuration,
+              task,
+              taskOverrides,
+              overrides
+            );
+            continue;
+          }
+        }
+        /** LERNA SUPPORT END - Remove in v17 */
+
         this.processTasksForMatchingProjects(
           dependencyConfig,
-          projectUsedToDeriveDependencies,
           configuration,
           task,
           taskOverrides,
@@ -140,7 +172,6 @@ export class ProcessTasks {
 
   private processTasksForMatchingProjects(
     dependencyConfig: TargetDependencyConfig,
-    projectUsedToDeriveDependencies: string,
     configuration: string,
     task: Task,
     taskOverrides: Object | { __overrides_unparsed__: any[] },
@@ -150,54 +181,28 @@ export class ProcessTasks {
       typeof dependencyConfig.projects === 'string'
         ? [dependencyConfig.projects]
         : dependencyConfig.projects;
-    for (const projectSpecifier of targetProjectSpecifiers) {
-      // Lerna uses `dependencies` in `prepNxOptions`, so we need to maintain
-      // support for it until lerna can be updated to use the syntax.
-      // TODO(@agentender): Remove this part in v17
-      if (
-        projectSpecifier === 'dependencies' &&
-        !this.projectGraph.nodes[projectSpecifier]
-      ) {
-        this.processTasksForDependencies(
-          projectUsedToDeriveDependencies,
-          dependencyConfig,
-          configuration,
-          task,
-          taskOverrides,
-          overrides
-        );
-      } else {
-        // Since we need to maintain support for dependencies, it is more coherent
-        // that we also support self.
-        // TODO(@agentender): Remove this part in v17
-        const matchingProjects =
-          /** LERNA SUPPORT START - Remove in v17 */
-          projectSpecifier === 'self' &&
-          !this.projectGraph.nodes[projectSpecifier]
-            ? [task.target.project]
-            : /** LERNA SUPPORT END */
-              findMatchingProjects([projectSpecifier], this.projectGraph.nodes);
+    const matchingProjects = findMatchingProjects(
+      targetProjectSpecifiers,
+      this.projectGraph.nodes
+    );
 
-        if (matchingProjects.length === 0) {
-          output.warn({
-            title: `\`dependsOn\` is misconfigured for ${task.target.project}:${task.target.target}`,
-            bodyLines: [
-              `Project pattern "${projectSpecifier}" does not match any projects.`,
-            ],
-          });
-        }
-
-        for (const projectName of matchingProjects) {
-          this.processTasksForSingleProject(
-            task,
-            projectName,
-            dependencyConfig,
-            configuration,
-            taskOverrides,
-            overrides
-          );
-        }
-      }
+    if (matchingProjects.length === 0) {
+      output.warn({
+        title: `\`dependsOn\` is misconfigured for ${task.target.project}:${task.target.target}`,
+        bodyLines: [
+          `Project patterns "${targetProjectSpecifiers}" does not match any projects.`,
+        ],
+      });
+    }
+    for (const projectName of matchingProjects) {
+      this.processTasksForSingleProject(
+        task,
+        projectName,
+        dependencyConfig,
+        configuration,
+        taskOverrides,
+        overrides
+      );
     }
   }
 
@@ -377,14 +382,14 @@ export class ProcessTasks {
 
 export function createTaskGraph(
   projectGraph: ProjectGraph,
-  defaultDependencyConfigs: TargetDependencies,
+  extraTargetDependencies: TargetDependencies,
   projectNames: string[],
   targets: string[],
   configuration: string | undefined,
   overrides: Object,
   excludeTaskDependencies: boolean = false
 ): TaskGraph {
-  const p = new ProcessTasks(defaultDependencyConfigs, projectGraph);
+  const p = new ProcessTasks(extraTargetDependencies, projectGraph);
   const roots = p.processTasks(
     projectNames,
     targets,

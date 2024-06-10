@@ -10,7 +10,7 @@ import {
   updateJson,
   updateNxJson,
 } from '@nx/devkit';
-import { addPlugin } from '@nx/devkit/src/utils/add-plugin';
+import { addPluginV1 } from '@nx/devkit/src/utils/add-plugin';
 import { gte } from 'semver';
 import { createNodes } from '../../plugins/plugin';
 import {
@@ -102,7 +102,7 @@ export async function initGeneratorInternal(tree: Tree, schema: Schema) {
   schema.addPlugin ??= addPluginDefault;
 
   if (schema.addPlugin) {
-    await addPlugin(
+    await addPluginV1(
       tree,
       await createProjectGraphAsync(),
       '@nx/storybook/plugin',

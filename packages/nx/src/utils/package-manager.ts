@@ -7,7 +7,7 @@ import { dirSync } from 'tmp';
 import { promisify } from 'util';
 import { readNxJson } from '../config/configuration';
 import { readPackageJson } from '../project-graph/file-utils';
-import { readFileIfExisting, writeJsonFile } from './fileutils';
+import { readFileIfExisting, readJsonFile, writeJsonFile } from './fileutils';
 import { PackageJson, readModulePackageJson } from './package-json';
 import { workspaceRoot } from './workspace-root';
 
@@ -86,8 +86,14 @@ export function getPackageManagerCommand(
 ): PackageManagerCommands {
   const commands: { [pm in PackageManager]: () => PackageManagerCommands } = {
     yarn: () => {
-      const yarnVersion = getPackageManagerVersion('yarn', root);
-      const useBerry = gte(yarnVersion, '2.0.0');
+      let yarnVersion: string, useBerry: boolean;
+      try {
+        yarnVersion = getPackageManagerVersion('yarn', root);
+        useBerry = gte(yarnVersion, '2.0.0');
+      } catch {
+        yarnVersion = 'latest';
+        useBerry = true;
+      }
 
       return {
         preInstall: `yarn set version ${yarnVersion}`,
@@ -112,11 +118,17 @@ export function getPackageManagerCommand(
       };
     },
     pnpm: () => {
-      const pnpmVersion = getPackageManagerVersion('pnpm', root);
-      const modernPnpm = gte(pnpmVersion, '6.13.0');
-      const includeDoubleDashBeforeArgs = lt(pnpmVersion, '7.0.0');
-      const isPnpmWorkspace = existsSync(join(root, 'pnpm-workspace.yaml'));
+      let modernPnpm: boolean, includeDoubleDashBeforeArgs: boolean;
+      try {
+        const pnpmVersion = getPackageManagerVersion('pnpm', root);
+        modernPnpm = gte(pnpmVersion, '6.13.0');
+        includeDoubleDashBeforeArgs = lt(pnpmVersion, '7.0.0');
+      } catch {
+        modernPnpm = true;
+        includeDoubleDashBeforeArgs = true;
+      }
 
+      const isPnpmWorkspace = existsSync(join(root, 'pnpm-workspace.yaml'));
       return {
         install: 'pnpm install --no-frozen-lockfile', // explicitly disable in case of CI
         ciInstall: 'pnpm install --frozen-lockfile',
@@ -186,10 +198,33 @@ export function getPackageManagerVersion(
   packageManager: PackageManager = detectPackageManager(),
   cwd = process.cwd()
 ): string {
-  return execSync(`${packageManager} --version`, {
-    cwd,
-    encoding: 'utf-8',
-  }).trim();
+  let version;
+  try {
+    version = execSync(`${packageManager} --version`, {
+      cwd,
+      encoding: 'utf-8',
+    }).trim();
+  } catch {
+    if (existsSync(join(cwd, 'package.json'))) {
+      const packageVersion = readJsonFile<PackageJson>(
+        join(cwd, 'package.json')
+      )?.packageManager;
+      if (packageVersion) {
+        const [packageManagerFromPackageJson, versionFromPackageJson] =
+          packageVersion.split('@');
+        if (
+          packageManagerFromPackageJson === packageManager &&
+          versionFromPackageJson
+        ) {
+          version = versionFromPackageJson;
+        }
+      }
+    }
+  }
+  if (!version) {
+    throw new Error(`Cannot determine the version of ${packageManager}.`);
+  }
+  return version;
 }
 
 /**

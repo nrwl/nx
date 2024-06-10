@@ -1,7 +1,7 @@
 {% callout type="caution" title="Can I use component testing?" %}
 Angular component testing with Nx requires **Cypress version 10.7.0** and up.
 
-You can migrate with to v11 via the [migrate-to-cypress-11 generator](/packages/cypress/generators/migrate-to-cypress-11).
+You can migrate with to v11 via the [migrate-to-cypress-11 generator](/nx-api/cypress/generators/migrate-to-cypress-11).
 
 This generator is for Cypress based component testing.
 
@@ -102,4 +102,4 @@ Here is an example of the project configuration that is generated. The `--build-
 
 When the project being tested is a dependent of the specified `--build-target`, then **assets, scripts, and styles** are applied to the component being tested. You can determine if the project is dependent by using the [project graph](/features/explore-graph). If there is no link between the two projects, then the **assets, scripts, and styles** won't be included in the build; therefore, they will not be applied to the component. To have a link between projects, you can import from the project being tested into the specified `--build-target` project, or set the `--build-target` project to [implicitly depend](/reference/project-configuration#implicitdependencies) on the project being tested.
 
-Nx also supports [React component testing](/packages/angular/generators/cypress-component-configuration).
+Nx also supports [React component testing](/nx-api/react/generators/cypress-component-configuration).

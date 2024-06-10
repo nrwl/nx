@@ -1,16 +1,16 @@
 import { Tree } from 'nx/src/generators/tree';
 import { Linter, lintProjectGenerator } from '@nx/eslint';
 import { joinPathFragments } from 'nx/src/utils/path';
-import {
-  addDependenciesToPackageJson,
-  runTasksInSerial,
-  updateJson,
-} from '@nx/devkit';
+import { addDependenciesToPackageJson, runTasksInSerial } from '@nx/devkit';
 import { extraEslintDependencies } from './lint';
 import {
   addExtendsToLintConfig,
   isEslintConfigSupported,
+  lintConfigHasOverride,
+  replaceOverridesInLintConfig,
+  updateOverrideInLintConfig,
 } from '@nx/eslint/src/generators/utils/eslint-file';
+import type { Linter as EsLintLinter } from 'eslint';
 
 export async function addLinting(
   host: Tree,
@@ -40,16 +40,13 @@ export async function addLinting(
       addPlugin: options.addPlugin,
     });
 
-    if (isEslintConfigSupported(host)) {
-      addExtendsToLintConfig(host, options.projectRoot, [
-        'plugin:vue/vue3-essential',
-        'eslint:recommended',
-        '@vue/eslint-config-typescript',
-        '@vue/eslint-config-prettier/skip-formatting',
-      ]);
-    }
-
-    editEslintConfigFiles(host, options.projectRoot, options.rootProject);
+    addExtendsToLintConfig(host, options.projectRoot, [
+      'plugin:vue/vue3-essential',
+      'eslint:recommended',
+      '@vue/eslint-config-typescript',
+      '@vue/eslint-config-prettier/skip-formatting',
+    ]);
+    editEslintConfigFiles(host, options.projectRoot);
 
     let installTask = () => {};
     if (!options.skipPackageJson) {
@@ -66,85 +63,75 @@ export async function addLinting(
   }
 }
 
-export function editEslintConfigFiles(
-  tree: Tree,
-  projectRoot: string,
-  rootProject?: boolean
-) {
-  if (tree.exists(joinPathFragments(projectRoot, 'eslint.config.js'))) {
-    const fileName = joinPathFragments(projectRoot, 'eslint.config.js');
-    updateJson(tree, fileName, (json) => {
-      let updated = false;
-      for (let override of json.overrides) {
-        if (override.parserOptions) {
-          if (!override.files.includes('*.vue')) {
-            override.files.push('*.vue');
-          }
-          updated = true;
+export function editEslintConfigFiles(tree: Tree, projectRoot: string) {
+  const hasVueFiles = (
+    o: EsLintLinter.ConfigOverride<EsLintLinter.RulesRecord>
+  ) =>
+    o.files &&
+    (Array.isArray(o.files)
+      ? o.files.some((f) => f.endsWith('*.vue'))
+      : o.files.endsWith('*.vue'));
+  const addVueFiles = (
+    o: EsLintLinter.ConfigOverride<EsLintLinter.RulesRecord>
+  ) => {
+    if (!o.files) {
+      o.files = ['*.vue'];
+    } else if (Array.isArray(o.files)) {
+      o.files.push('*.vue');
+    } else {
+      o.files = [o.files, '*.vue'];
+    }
+  };
+
+  if (isEslintConfigSupported(tree, projectRoot)) {
+    if (
+      lintConfigHasOverride(
+        tree,
+        projectRoot,
+        (o) => o.parserOptions && !hasVueFiles(o),
+        true
+      )
+    ) {
+      updateOverrideInLintConfig(
+        tree,
+        projectRoot,
+        (o) => !!o.parserOptions,
+        (o) => {
+          addVueFiles(o);
+          return o;
         }
-      }
-      if (!updated) {
-        json.overrides = [
-          {
-            files: ['*.ts', '*.tsx', '*.js', '*.jsx', '*.vue'],
-            rules: { 'vue/multi-word-component-names': 'off' },
-          },
-        ];
-      }
-      return json;
-    });
-  } else {
-    const fileName = joinPathFragments(projectRoot, '.eslintrc.json');
-    updateJson(tree, fileName, (json) => {
-      let updated = false;
-      for (let override of json.overrides) {
-        if (override.parserOptions) {
-          if (!override.files.includes('*.vue')) {
-            override.files.push('*.vue');
-          }
-          updated = true;
-        }
-      }
-      if (!updated) {
-        json.overrides = [
-          {
-            files: ['*.ts', '*.tsx', '*.js', '*.jsx', '*.vue'],
-            rules: { 'vue/multi-word-component-names': 'off' },
-          },
-        ];
-      }
-      return json;
-    });
+      );
+    } else {
+      replaceOverridesInLintConfig(tree, projectRoot, [
+        {
+          files: ['*.ts', '*.tsx', '*.js', '*.jsx', '*.vue'],
+          rules: { 'vue/multi-word-component-names': 'off' },
+        },
+      ]);
+    }
   }
 
   // Edit root config too
-  if (tree.exists('.eslintrc.base.json')) {
-    updateJson(tree, '.eslintrc.base.json', (json) => {
-      for (let override of json.overrides) {
-        if (
-          override.rules &&
-          '@nx/enforce-module-boundaries' in override.rules
-        ) {
-          if (!override.files.includes('*.vue')) {
-            override.files.push('*.vue');
-          }
-        }
+  if (!isEslintConfigSupported(tree)) {
+    return;
+  }
+
+  if (
+    lintConfigHasOverride(
+      tree,
+      '',
+      (o) => o.rules?.['@nx/enforce-module-boundaries'] && !hasVueFiles(o),
+      true
+    )
+  ) {
+    updateOverrideInLintConfig(
+      tree,
+      '',
+      (o) => !!o.rules?.['@nx/enforce-module-boundaries'],
+      (o) => {
+        addVueFiles(o);
+        return o;
       }
-      return json;
-    });
-  } else if (tree.exists('.eslintrc.json') && !rootProject) {
-    updateJson(tree, '.eslintrc.json', (json) => {
-      for (let override of json.overrides) {
-        if (
-          override.rules &&
-          '@nx/enforce-module-boundaries' in override.rules
-        ) {
-          if (!override.files.includes('*.vue')) {
-            override.files.push('*.vue');
-          }
-        }
-      }
-      return json;
-    });
+    );
   }
 }

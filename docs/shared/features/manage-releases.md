@@ -57,6 +57,40 @@ The configuration lives in your `nx.json` file under the `"release"` section.
 }
 ```
 
+### Customize changelog output
+
+Changelog render options can be passed as [an object](https://github.com/nrwl/nx/blob/master/packages/nx/release/changelog-renderer/index.ts) under `release.changelog.projectChangelogs.renderOptions` and `release.changelog.workspaceChangelog.renderOptions` in your `nx.json` file. Below are all options with their default values for the built-in changelog renderer.
+
+```jsonc {% fileName="nx.json" %}
+{
+  // ... more nx.json config
+  "release": {
+    "changelog": {
+      "projectChangelogs": {
+        "renderOptions": {
+          // Whether or not the commit authors should be added to the bottom of the changelog in a "Thank You" section.
+          "authors": true,
+          // Whether or not the commit references (such as commit and/or PR links) should be included in the changelog.
+          "commitReferences": true,
+          // Whether or not to include the date in the version title. It can be set to false to disable it, or true to enable with the default of (YYYY-MM-DD).
+          "versionTitleDate": true
+        }
+      },
+      "workspaceChangelog": {
+        "renderOptions": {
+          // Whether or not the commit authors should be added to the bottom of the changelog in a "Thank You" section.
+          "authors": true,
+          // Whether or not the commit references (such as commit and/or PR links) should be included in the changelog.
+          "commitReferences": true,
+          // Whether or not to include the date in the version title. It can be set to false to disable it, or true to enable with the default of (YYYY-MM-DD).
+          "versionTitleDate": true
+        }
+      }
+    }
+  }
+}
+```
+
 ## Using nx release subcommands independently
 
 As explained above, `nx release` is a wrapper around the three main phases of a release.

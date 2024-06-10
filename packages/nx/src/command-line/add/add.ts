@@ -16,7 +16,7 @@ import { workspaceRoot } from '../../utils/workspace-root';
 import type { AddOptions } from './command-object';
 import { normalizeVersionForNxJson } from '../init/implementation/dot-nx/add-nx-scripts';
 
-export function addHandler(options: AddOptions): Promise<void> {
+export function addHandler(options: AddOptions): Promise<number> {
   if (options.verbose) {
     process.env.NX_VERBOSE_LOGGING = 'true';
   }

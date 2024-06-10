@@ -45,3 +45,5 @@ CODEOWNERS
 /.nx/cache
 
 .pnpm-store
+
+/.nx/workspace-data

@@ -3,6 +3,10 @@ import { existsSync, readFileSync } from 'fs';
 import { logger, ProjectConfiguration } from '@nx/devkit';
 import { registerTsProject } from '@nx/js/src/internal';
 
+export type DevRemoteDefinition =
+  | string
+  | { remoteName: string; configuration: string };
+
 export function getDynamicRemotes(
   project: ProjectConfiguration,
   context: import('@angular-devkit/architect').BuilderContext,
@@ -157,18 +161,12 @@ export function getStaticRemotes(
 
 export function validateDevRemotes(
   options: {
-    devRemotes?: (
-      | string
-      | {
-          remoteName: string;
-          configuration: string;
-        }
-    )[];
+    devRemotes: DevRemoteDefinition[];
   },
   workspaceProjects: Record<string, ProjectConfiguration>
 ): void {
   const invalidDevRemotes =
-    options.devRemotes?.filter(
+    options.devRemotes.filter(
       (remote) =>
         !(typeof remote === 'string'
           ? workspaceProjects[remote]

@@ -13,7 +13,7 @@ import { dirname, join } from 'path';
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { existsSync, readFileSync, readdirSync } from 'fs';
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
-import { projectGraphCacheDirectory } from 'nx/src/utils/cache-directory';
+import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { getLockFileName } from '@nx/js';
 import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
 import type { StorybookConfig } from '@storybook/types';
@@ -25,7 +25,7 @@ export interface StorybookPluginOptions {
   testStorybookTargetName?: string;
 }
 
-const cachePath = join(projectGraphCacheDirectory, 'storybook.hash');
+const cachePath = join(workspaceDataDirectory, 'storybook.hash');
 const targetsCache = readTargetsCache();
 
 function readTargetsCache(): Record<
@@ -72,9 +72,12 @@ export const createNodes: CreateNodes<StorybookPluginOptions> = [
     }
 
     options = normalizeOptions(options);
-    const hash = calculateHashForCreateNodes(projectRoot, options, context, [
-      getLockFileName(detectPackageManager(context.workspaceRoot)),
-    ]);
+    const hash = await calculateHashForCreateNodes(
+      projectRoot,
+      options,
+      context,
+      [getLockFileName(detectPackageManager(context.workspaceRoot))]
+    );
 
     const projectName = buildProjectName(projectRoot, context.workspaceRoot);
 

@@ -9,7 +9,7 @@ import {
   Tree,
 } from '@nx/devkit';
 import {
-  addPlugin,
+  addPluginV1,
   generateCombinations,
 } from '@nx/devkit/src/utils/add-plugin';
 import { createNodes, DetoxPluginOptions } from '../../plugins/plugin';
@@ -36,7 +36,7 @@ export async function detoxInitGeneratorInternal(host: Tree, schema: Schema) {
   }
 
   if (schema.addPlugin) {
-    await addPlugin(
+    await addPluginV1(
       host,
       await createProjectGraphAsync(),
       '@nx/detox/plugin',

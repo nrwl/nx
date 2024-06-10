@@ -2,12 +2,18 @@ import { basename, join, parse } from 'path';
 import { writeJsonFile } from 'nx/src/utils/fileutils';
 import { writeFileSync } from 'fs';
 import { PackageJson } from 'nx/src/utils/package-json';
-import { NormalizedRollupExecutorOptions } from './normalize';
-import { stripIndents } from '@nx/devkit';
+import { stripIndents, workspaceRoot } from '@nx/devkit';
 
-// TODO(jack): Use updatePackageJson from @nx/js instead.
 export function updatePackageJson(
-  options: NormalizedRollupExecutorOptions,
+  options: {
+    outputPath: string;
+    main: string;
+    format: string[];
+    generateExportsField?: boolean;
+    skipTypeField?: boolean;
+    outputFileName?: string;
+    additionalEntryPoints?: string[];
+  },
   packageJson: PackageJson
 ) {
   const hasEsmFormat = options.format.includes('esm');
@@ -72,13 +78,14 @@ export function updatePackageJson(
           // default import in Node will not work.
           writeFileSync(
             join(
+              workspaceRoot,
               options.outputPath,
               filePath.replace(/\.cjs\.js$/, '.cjs.default.js')
             ),
             `exports._default = require('./${parse(filePath).base}').default;`
           );
           writeFileSync(
-            join(options.outputPath, fauxEsmFilePath),
+            join(workspaceRoot, options.outputPath, fauxEsmFilePath),
             // Re-export from relative CJS file, and Node will synthetically export it as ESM.
             stripIndents`
             export * from './${relativeFile}';
@@ -95,29 +102,31 @@ export function updatePackageJson(
     }
   }
 
-  writeJsonFile(`${options.outputPath}/package.json`, packageJson);
+  writeJsonFile(
+    join(workspaceRoot, options.outputPath, 'package.json'),
+    packageJson
+  );
 }
 
 interface Exports {
-  '.': string;
-
   [name: string]: string;
 }
 
-function getExports(
-  options: Pick<
-    NormalizedRollupExecutorOptions,
-    'main' | 'projectRoot' | 'outputFileName' | 'additionalEntryPoints'
-  > & {
-    fileExt: string;
+function getExports(options: {
+  main?: string;
+  fileExt: string;
+  outputFileName?: string;
+  additionalEntryPoints?: string[];
+}): Exports {
+  const exports: Exports = {};
+
+  // Users may provide custom input option and skip the main field.
+  if (options.main) {
+    const mainFile = options.outputFileName
+      ? options.outputFileName.replace(/\.[tj]s$/, '')
+      : basename(options.main).replace(/\.[tj]s$/, '');
+    exports['.'] = './' + mainFile + options.fileExt;
   }
-): Exports {
-  const mainFile = options.outputFileName
-    ? options.outputFileName.replace(/\.[tj]s$/, '')
-    : basename(options.main).replace(/\.[tj]s$/, '');
-  const exports: Exports = {
-    '.': './' + mainFile + options.fileExt,
-  };
 
   if (options.additionalEntryPoints) {
     for (const file of options.additionalEntryPoints) {

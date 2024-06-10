@@ -7,18 +7,23 @@ export function TalkToOurSalesTeam(): JSX.Element {
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="mx-auto max-w-3xl text-center">
           <SectionHeading as="h1" variant="display" id="how-can-we-help">
-            Talk to our Sales team
+            Talk to our sales team
           </SectionHeading>
         </div>
         <div className="mx-auto mt-16 grid max-w-5xl grid-cols-1 gap-12 md:grid-cols-2 lg:gap-8">
           <section className="mt-4">
             <p className="text-lg leading-relaxed">
               We’re here to help you find the right plan and pricing for your
-              requirements. We can talk about{' '}
+              needs and discuss{' '}
               <span className="font-medium">
-                how Nx Cloud Enterprise helps you drive better business outcomes
+                how Nx Cloud Enterprise can drive better business outcomes for
+                your organization
               </span>
               .
+            </p>
+            <p className="mt-4 text-lg leading-relaxed">
+              Fill out the form, and we’ll get back to you to schedule a call or
+              start the discussion on a shared Slack.
             </p>
             <div className="mx-auto mt-6 grid w-full grid-cols-4 gap-2 md:grid-cols-2 lg:mt-12">
               <div className="col-span-1 flex h-14 items-center justify-center lg:h-28">

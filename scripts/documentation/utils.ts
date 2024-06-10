@@ -3,6 +3,7 @@ import { bold, h, lines as mdLines, strikethrough } from 'markdown-factory';
 import { join } from 'path';
 import { format, resolveConfig } from 'prettier';
 import { MenuItem } from '@nx/nx-dev/models-menu';
+import yargs, { CommandModule } from 'yargs';
 
 const stripAnsi = require('strip-ansi');
 const importFresh = require('import-fresh');
@@ -198,10 +199,16 @@ export async function parseCommand(
     return acc;
   }, {});
   const subcommands = await Promise.all(
-    Object.entries(getCommands(builder)).map(
-      ([subCommandName, subCommandConfig]) =>
+    Object.entries(getCommands(builder))
+      .filter(([, subCommandConfig]) => {
+        const c = subCommandConfig as CommandModule;
+        // These are all supported yargs fields for description, even though the types don't reflect that
+        // @ts-ignore
+        return c.description || c.describe || c.desc;
+      })
+      .map(([subCommandName, subCommandConfig]) =>
         parseCommand(subCommandName, subCommandConfig)
-    )
+      )
   );
 
   return {

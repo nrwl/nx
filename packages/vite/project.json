@@ -5,6 +5,7 @@
   "projectType": "library",
   "targets": {
     "build-base": {
+      "dependsOn": ["^build-base"],
       "executor": "@nx/js:swc",
       "options": {
         "outputPath": "build/packages/vite",

@@ -21,7 +21,7 @@ export function Speakers(speakers: Array<Member>) {
               {row.map((speaker) => (
                 <div
                   key={speaker.name}
-                  className="border-slate-200 py-8 odd:border-b dark:border-slate-700 md:odd:border-r md:odd:border-b-0 md:odd:pr-12 md:even:pl-12"
+                  className="border-slate-200 py-8 odd:border-b md:odd:border-b-0 md:odd:border-r md:odd:pr-12 md:even:pl-12 dark:border-slate-700"
                 >
                   <div className="px-5">
                     <MemberCard

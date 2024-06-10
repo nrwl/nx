@@ -3,7 +3,7 @@ import { ensureDirSync } from 'fs-extra';
 import { dirname, join } from 'path';
 import { performance } from 'perf_hooks';
 import { ProjectGraph } from '../../config/project-graph';
-import { projectGraphCacheDirectory } from '../../utils/cache-directory';
+import { workspaceDataDirectory } from '../../utils/cache-directory';
 import { combineGlobPatterns } from '../../utils/globs';
 import {
   CreateDependencies,
@@ -55,7 +55,9 @@ export const createNodes: CreateNodes = [
     const lockFileContents =
       packageManager !== 'bun'
         ? readFileSync(lockFilePath).toString()
-        : execSync(`bun ${lockFilePath}`).toString();
+        : execSync(`bun ${lockFilePath}`, {
+            maxBuffer: 1024 * 1024 * 10,
+          }).toString();
     const lockFileHash = getLockFileHash(lockFileContents);
 
     if (!lockFileNeedsReprocessing(lockFileHash)) {
@@ -98,7 +100,9 @@ export const createDependencies: CreateDependencies = (
     const lockFileContents =
       packageManager !== 'bun'
         ? readFileSync(lockFilePath).toString()
-        : execSync(`bun ${lockFilePath}`).toString();
+        : execSync(`bun ${lockFilePath}`, {
+            maxBuffer: 1024 * 1024 * 10,
+          }).toString();
     const lockFileHash = getLockFileHash(lockFileContents);
 
     if (!lockFileNeedsReprocessing(lockFileHash)) {
@@ -156,8 +160,8 @@ function readCachedParsedLockFile(): ParsedLockFile {
   return JSON.parse(readFileSync(cachedParsedLockFile).toString());
 }
 
-const lockFileHashFile = join(projectGraphCacheDirectory, 'lockfile.hash');
+const lockFileHashFile = join(workspaceDataDirectory, 'lockfile.hash');
 const cachedParsedLockFile = join(
-  projectGraphCacheDirectory,
+  workspaceDataDirectory,
   'parsed-lock-file.json'
 );

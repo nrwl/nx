@@ -17,7 +17,7 @@ import { basename, dirname, join, relative } from 'node:path';
 import { minimatch } from 'minimatch';
 // eslint-disable-next-line @typescript-eslint/no-restricted-imports
 import { getLockFileName } from 'nx/src/plugins/js/lock-file/lock-file';
-import { projectGraphCacheDirectory } from 'nx/src/utils/cache-directory';
+import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import type { ParsedCommandLine } from 'typescript';
 import { readTsConfig } from '../../utils/typescript/ts-config';
 
@@ -49,7 +49,7 @@ interface NormalizedPluginOptions {
       };
 }
 
-const cachePath = join(projectGraphCacheDirectory, 'tsc.hash');
+const cachePath = join(workspaceDataDirectory, 'tsc.hash');
 const targetsCache = readTargetsCache();
 
 function readTargetsCache(): Record<
@@ -76,7 +76,7 @@ export const PLUGIN_NAME = '@nx/js/typescript';
 
 export const createNodes: CreateNodes<TscPluginOptions> = [
   '**/tsconfig*.json',
-  (configFilePath, options, context) => {
+  async (configFilePath, options, context) => {
     const pluginOptions = normalizePluginOptions(options);
     const projectRoot = dirname(configFilePath);
     const fullConfigPath = joinPathFragments(
@@ -101,7 +101,7 @@ export const createNodes: CreateNodes<TscPluginOptions> = [
       return {};
     }
 
-    const nodeHash = calculateHashForCreateNodes(
+    const nodeHash = await calculateHashForCreateNodes(
       projectRoot,
       pluginOptions,
       context,

@@ -9,15 +9,23 @@ export type NxCloud = 'yes' | 'github' | 'circleci' | 'skip';
 export async function setupNxCloud(
   directory: string,
   packageManager: PackageManager,
-  nxCloud: NxCloud
+  nxCloud: NxCloud,
+  useGitHub?: boolean
 ) {
   const nxCloudSpinner = ora(`Setting up Nx Cloud`).start();
   try {
     const pmc = getPackageManagerCommand(packageManager);
     const res = await execAndWait(
-      `${pmc.exec} nx g nx:connect-to-nx-cloud --no-interactive --quiet`,
+      process.env.NX_NEW_CLOUD_ONBOARDING === 'true'
+        ? `${
+            pmc.exec
+          } nx g nx:connect-to-nx-cloud --installationSource=create-nx-workspace ${
+            useGitHub ? '--github' : ''
+          } --no-interactive`
+        : `${pmc.exec} nx g nx:connect-to-nx-cloud --no-interactive --quiet`,
       directory
     );
+
     if (nxCloud !== 'yes') {
       nxCloudSpinner.succeed(
         'CI workflow with Nx Cloud has been generated successfully'

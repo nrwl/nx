@@ -24,6 +24,13 @@ npx create-nx-workspace --pm pnpm
 ```
 
 {% /tab %}
+{% tab label="Bun" %}
+
+```shell
+bunx create-nx-workspace --pm bun
+```
+
+{% /tab %}
 {% /tabs %}
 
 This will guide you through the setup, asking whether you want a monorepo or a standalone app and whether you want to start with a blank or a preconfigured setup.
@@ -83,6 +90,13 @@ yarn global add nx@latest
 
 ```shell
 pnpm add --global nx@latest
+```
+
+{% /tab %}
+{% tab label="Bun" %}
+
+```shell
+bun install --global nx@latest
 ```
 
 {% /tab %}

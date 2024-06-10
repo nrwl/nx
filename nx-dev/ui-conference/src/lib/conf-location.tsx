@@ -1,6 +1,6 @@
 export function ConfLocation(): JSX.Element {
   return (
-    <div className="border-t border-b border-slate-200 dark:border-slate-700">
+    <div className="border-b border-t border-slate-200 dark:border-slate-700">
       <div className="mx-auto max-w-screen-lg xl:max-w-screen-xl">
         <article className="grid grid-cols-1 md:grid-cols-2 md:divide-x md:divide-slate-200 md:dark:divide-slate-700">
           <div className="px-5 py-12 md:pr-12">

@@ -16,9 +16,15 @@ export type PackageVersionNames =
   | CompatPackageVersionNames;
 
 export type VersionMap = {
-  angularV16: Record<CompatPackageVersionNames, string>;
+  angularV16: Record<
+    Exclude<CompatPackageVersionNames, 'typescriptEslintVersion'>,
+    string
+  >;
   angularV17: Record<
-    Exclude<CompatPackageVersionNames, 'ngUniversalVersion'>,
+    Exclude<
+      CompatPackageVersionNames,
+      'ngUniversalVersion' | 'typescriptEslintVersion'
+    >,
     string
   >;
 };

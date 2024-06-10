@@ -2,6 +2,7 @@ import { existsSync } from 'fs';
 import { dirname, join } from 'path';
 import {
   InputDefinition,
+  ProjectMetadata,
   TargetConfiguration,
 } from '../config/workspace-json-project-json';
 import { mergeTargetConfigurations } from '../project-graph/utils/project-configuration-utils';
@@ -75,6 +76,7 @@ export interface PackageJson {
   executors?: string;
   'nx-migrations'?: string | NxMigrationsConfiguration;
   'ng-update'?: string | NxMigrationsConfiguration;
+  packageManager?: string;
 }
 
 export function normalizePackageGroup(
@@ -137,6 +139,18 @@ export function buildTargetFromScript(
 }
 
 let packageManagerCommand: PackageManagerCommands | undefined;
+
+export function getMetadataFromPackageJson(
+  packageJson: PackageJson
+): ProjectMetadata {
+  const { scripts, nx } = packageJson ?? {};
+  const includedScripts = nx?.includedScripts || Object.keys(scripts ?? {});
+  return {
+    targetGroups: {
+      'NPM Scripts': includedScripts,
+    },
+  };
+}
 
 export function readTargetsFromPackageJson(packageJson: PackageJson) {
   const { scripts, nx, private: isPrivate } = packageJson ?? {};

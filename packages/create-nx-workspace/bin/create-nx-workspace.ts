@@ -10,15 +10,17 @@ import { nxVersion } from '../src/utils/nx/nx-version';
 import { pointToTutorialAndCourse } from '../src/utils/preset/point-to-tutorial-and-course';
 
 import { yargsDecorator } from './decorator';
-import { getThirdPartyPreset } from '../src/utils/preset/get-third-party-preset';
+import { getPackageNameFromThirdPartyPreset } from '../src/utils/preset/get-third-party-preset';
 import {
   determineDefaultBase,
+  determineIfGitHubWillBeUsed,
   determineNxCloud,
   determinePackageManager,
 } from '../src/internal-utils/prompts';
 import {
   withAllPrompts,
   withGitOptions,
+  withUseGitHub,
   withNxCloud,
   withOptions,
   withPackageManager,
@@ -26,6 +28,7 @@ import {
 import { showNxWarning } from '../src/utils/nx/show-nx-warning';
 import { printNxCloudSuccessMessage } from '../src/utils/nx/nx-cloud';
 import { messages, recordStat } from '../src/utils/nx/ab-testing';
+import { mapErrorToBodyLines } from '../src/utils/error-utils';
 import { existsSync } from 'fs';
 
 interface BaseArguments extends CreateWorkspaceOptions {
@@ -182,6 +185,7 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
             type: 'string',
           }),
         withNxCloud,
+        withUseGitHub,
         withAllPrompts,
         withPackageManager,
         withGitOptions
@@ -256,40 +260,51 @@ async function normalizeArgsMiddleware(
   });
 
   try {
-    let thirdPartyPreset: string | null;
-
-    try {
-      thirdPartyPreset = await getThirdPartyPreset(argv.preset);
-    } catch (e) {
-      output.error({
-        title: `Could not find preset "${argv.preset}"`,
-      });
-      process.exit(1);
-    }
-
     argv.name = await determineFolder(argv);
-
-    if (thirdPartyPreset) {
-      Object.assign(argv, {
-        preset: thirdPartyPreset,
-        appName: '',
-        style: '',
-      });
-    } else {
+    if (!argv.preset || isKnownPreset(argv.preset)) {
       argv.stack = await determineStack(argv);
       const presetOptions = await determinePresetOptions(argv);
       Object.assign(argv, presetOptions);
+    } else {
+      try {
+        getPackageNameFromThirdPartyPreset(argv.preset);
+      } catch (e) {
+        if (e instanceof Error) {
+          output.error({
+            title: `Could not find preset "${argv.preset}"`,
+            bodyLines: mapErrorToBodyLines(e),
+          });
+        } else {
+          console.error(e);
+        }
+        process.exit(1);
+      }
     }
 
     const packageManager = await determinePackageManager(argv);
     const defaultBase = await determineDefaultBase(argv);
-    const nxCloud = await determineNxCloud(argv);
-
-    Object.assign(argv, {
-      nxCloud,
-      packageManager,
-      defaultBase,
-    });
+    if (process.env.NX_NEW_CLOUD_ONBOARDING === 'true') {
+      const nxCloud =
+        argv.skipGit === true ? 'skip' : await determineNxCloud(argv);
+      const useGitHub =
+        nxCloud === 'skip'
+          ? undefined
+          : nxCloud === 'github' ||
+            (await determineIfGitHubWillBeUsed(nxCloud));
+      Object.assign(argv, {
+        nxCloud,
+        useGitHub,
+        packageManager,
+        defaultBase,
+      });
+    } else {
+      const nxCloud = await determineNxCloud(argv);
+      Object.assign(argv, {
+        nxCloud,
+        packageManager,
+        defaultBase,
+      });
+    }
   } catch (e) {
     console.error(e);
     process.exit(1);

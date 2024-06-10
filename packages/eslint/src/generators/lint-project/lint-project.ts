@@ -58,6 +58,7 @@ interface LintProjectOptions {
    * @internal
    */
   addExplicitTargets?: boolean;
+  addPackageJsonDependencyChecks?: boolean;
 }
 
 export function lintProjectGenerator(tree: Tree, options: LintProjectOptions) {
@@ -158,6 +159,7 @@ export async function lintProjectGeneratorInternal(
   if (!options.rootProject || projectConfig.root !== '.') {
     createEsLintConfiguration(
       tree,
+      options,
       projectConfig,
       options.setParserOptionsProject,
       options.rootProject
@@ -188,6 +190,7 @@ export async function lintProjectGeneratorInternal(
 
 function createEsLintConfiguration(
   tree: Tree,
+  options: LintProjectOptions,
   projectConfig: ProjectConfiguration,
   setParserOptionsProject: boolean,
   rootProject: boolean
@@ -236,7 +239,10 @@ function createEsLintConfiguration(
     },
   ];
 
-  if (isBuildableLibraryProject(projectConfig)) {
+  if (
+    options.addPackageJsonDependencyChecks ||
+    isBuildableLibraryProject(projectConfig)
+  ) {
     overrides.push({
       files: ['*.json'],
       parser: 'jsonc-eslint-parser',

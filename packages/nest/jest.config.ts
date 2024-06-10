@@ -7,4 +7,5 @@ export default {
   globals: {},
   displayName: 'nest',
   preset: '../../jest.preset.js',
+  setupFilesAfterEnv: ['<rootDir>/test-setup.ts'],
 };
