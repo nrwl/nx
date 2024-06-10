@@ -32,7 +32,7 @@ Source file inputs are defined like this:
 }
 ```
 
-Source file inputs must be prefixed with either `{projectRoot}` or `{workspaceRoot}` to distinguish where the paths should be resolved from.
+Source file inputs must be prefixed with either `{projectRoot}` or `{workspaceRoot}` to distinguish where the paths should be resolved from. `{workspaceRoot}` should only appear in the beginning of an input but `{projectRoot}` and `{projectName}` can be specified later in the input to interpolate the root or name of the project into the input location.
 
 Prefixing a source file input with `!` will exclude the files matching the pattern from the set of files used to calculate the hash.
 Prefixing a source file input with `^` means this entry applies to the project dependencies of the project, not the project itself.
