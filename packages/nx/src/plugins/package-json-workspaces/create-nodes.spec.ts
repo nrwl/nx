@@ -4,6 +4,12 @@ import { vol } from 'memfs';
 import { createNodeFromPackageJson, createNodes } from './create-nodes';
 
 describe('nx package.json workspaces plugin', () => {
+  const context = {
+    workspaceRoot: '/root',
+    configFiles: [],
+    nxJsonConfiguration: {},
+  };
+
   afterEach(() => {
     vol.reset();
   });
@@ -382,12 +388,6 @@ describe('nx package.json workspaces plugin', () => {
         '/root'
       );
 
-      const context = {
-        workspaceRoot: '/root',
-        configFiles: [],
-        nxJsonConfiguration: {},
-      };
-
       // No matching project based on the lerna.json "packages" config
       expect(
         createNodes[1]('package.json', undefined, context)
@@ -444,6 +444,184 @@ describe('nx package.json workspaces plugin', () => {
           context
         )
       ).toMatchInlineSnapshot(`{}`);
+    });
+  });
+
+  describe('sibling project.json files', () => {
+    it('should add a script target if the sibling project.json file does not exist', () => {
+      vol.fromJSON(
+        {
+          'package.json': JSON.stringify({
+            name: 'root',
+            workspaces: ['packages/*'],
+          }),
+          'packages/a/package.json': JSON.stringify({
+            name: 'root',
+            scripts: {
+              build: 'echo build',
+            },
+          }),
+        },
+        '/root'
+      );
+
+      expect(createNodes[1]('packages/a/package.json', undefined, context))
+        .toMatchInlineSnapshot(`
+        {
+          "projects": {
+            "packages/a": {
+              "metadata": {
+                "targetGroups": {
+                  "NPM Scripts": [
+                    "build",
+                  ],
+                },
+              },
+              "name": "root",
+              "projectType": "library",
+              "root": "packages/a",
+              "sourceRoot": "packages/a",
+              "targets": {
+                "build": {
+                  "executor": "nx:run-script",
+                  "metadata": {
+                    "runCommand": "npm run build",
+                    "scriptContent": "echo build",
+                  },
+                  "options": {
+                    "script": "build",
+                  },
+                },
+                "nx-release-publish": {
+                  "dependsOn": [
+                    "^nx-release-publish",
+                  ],
+                  "executor": "@nx/js:release-publish",
+                  "options": {},
+                },
+              },
+            },
+          },
+        }
+      `);
+    });
+
+    it('should add a script target if the sibling project.json exists but does not have a conflicting target', () => {
+      vol.fromJSON(
+        {
+          'package.json': JSON.stringify({
+            name: 'root',
+            workspaces: ['packages/*'],
+          }),
+          'packages/a/package.json': JSON.stringify({
+            name: 'root',
+            scripts: {
+              build: 'echo build',
+            },
+          }),
+          'packages/a/project.json': JSON.stringify({
+            targets: {
+              'something-other-than-build': {
+                command: 'echo something-other-than-build',
+              },
+            },
+          }),
+        },
+        '/root'
+      );
+
+      expect(createNodes[1]('packages/a/package.json', undefined, context))
+        .toMatchInlineSnapshot(`
+        {
+          "projects": {
+            "packages/a": {
+              "metadata": {
+                "targetGroups": {
+                  "NPM Scripts": [
+                    "build",
+                  ],
+                },
+              },
+              "name": "root",
+              "projectType": "library",
+              "root": "packages/a",
+              "sourceRoot": "packages/a",
+              "targets": {
+                "build": {
+                  "executor": "nx:run-script",
+                  "metadata": {
+                    "runCommand": "npm run build",
+                    "scriptContent": "echo build",
+                  },
+                  "options": {
+                    "script": "build",
+                  },
+                },
+                "nx-release-publish": {
+                  "dependsOn": [
+                    "^nx-release-publish",
+                  ],
+                  "executor": "@nx/js:release-publish",
+                  "options": {},
+                },
+              },
+            },
+          },
+        }
+      `);
+    });
+
+    it('should not add a script target if the sibling project.json exists and has a conflicting target', () => {
+      vol.fromJSON(
+        {
+          'package.json': JSON.stringify({
+            name: 'root',
+            workspaces: ['packages/*'],
+          }),
+          'packages/a/package.json': JSON.stringify({
+            name: 'root',
+            scripts: {
+              build: 'echo "build from package.json"',
+            },
+          }),
+          'packages/a/project.json': JSON.stringify({
+            targets: {
+              build: {
+                command: 'echo "build from project.json"',
+              },
+            },
+          }),
+        },
+        '/root'
+      );
+
+      expect(createNodes[1]('packages/a/package.json', undefined, context))
+        .toMatchInlineSnapshot(`
+        {
+          "projects": {
+            "packages/a": {
+              "metadata": {
+                "targetGroups": {
+                  "NPM Scripts": [],
+                },
+              },
+              "name": "root",
+              "projectType": "library",
+              "root": "packages/a",
+              "sourceRoot": "packages/a",
+              "targets": {
+                "nx-release-publish": {
+                  "dependsOn": [
+                    "^nx-release-publish",
+                  ],
+                  "executor": "@nx/js:release-publish",
+                  "options": {},
+                },
+              },
+            },
+          },
+        }
+      `);
     });
   });
 });
