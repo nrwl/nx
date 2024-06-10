@@ -82,11 +82,11 @@ function getURLifShortenFailed(
 ) {
   if (usesGithub) {
     if (githubSlug) {
-      return `${apiUrl}/setup/connect-workspace/vcs?provider=GITHUB&selectedRepositoryName=${encodeURIComponent(
+      return `${apiUrl}/setup/connect-workspace/github/connect?name=${encodeURIComponent(
         githubSlug
       )}&source=${source}`;
     } else {
-      return `${apiUrl}/setup/connect-workspace/vcs?provider=GITHUB&source=${source}`;
+      return `${apiUrl}/setup/connect-workspace/github/select&source=${source}`;
     }
   }
   return `${apiUrl}/setup/connect-workspace/manual?accessToken=${accessToken}&source=${source}`;
