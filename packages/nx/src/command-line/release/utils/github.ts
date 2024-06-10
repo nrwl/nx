@@ -49,20 +49,19 @@ export function getGitHubRepoData(
   remoteName = 'origin',
   createReleaseConfig: NxReleaseChangelogConfiguration['createRelease']
 ): GithubRepoData | null {
-  if (!createReleaseConfig) {
-    return null;
-  }
-
   try {
     const remoteUrl = execSync(`git remote get-url ${remoteName}`, {
       encoding: 'utf8',
       stdio: 'pipe',
     }).trim();
 
-    // Customize the hostname to match against based on createRelease configuration
+    // Use the default provider (github.com) if custom one is not specified or releases are disabled
     let hostname = defaultCreateReleaseProvider.hostname;
     let apiBaseUrl = defaultCreateReleaseProvider.apiBaseUrl;
-    if (typeof createReleaseConfig !== 'string') {
+    if (
+      createReleaseConfig !== false &&
+      typeof createReleaseConfig !== 'string'
+    ) {
       hostname = createReleaseConfig.hostname;
       apiBaseUrl = createReleaseConfig.apiBaseUrl;
     }
