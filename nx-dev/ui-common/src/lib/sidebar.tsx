@@ -1,3 +1,4 @@
+'use client';
 import { Dialog, Transition } from '@headlessui/react';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import { AlgoliaSearch } from '@nx/nx-dev/feature-search';
