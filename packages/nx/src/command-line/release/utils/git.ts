@@ -3,6 +3,7 @@
  * https://github.com/unjs/changelogen
  */
 import { interpolate } from '../../../tasks-runner/utils';
+import { workspaceRoot } from '../../../utils/app-root';
 import { execCommand } from './exec-command';
 
 export interface GitCommitAuthor {
@@ -147,8 +148,10 @@ export async function getGitDiff(
     });
 }
 
-export async function getChangedTrackedFiles(): Promise<Set<string>> {
-  const result = await execCommand('git', ['status', '--porcelain']);
+async function getChangedTrackedFiles(cwd: string): Promise<Set<string>> {
+  const result = await execCommand('git', ['status', '--porcelain'], {
+    cwd,
+  });
   const lines = result.split('\n').filter((l) => l.trim().length > 0);
   return new Set(lines.map((l) => l.substring(3)));
 }
@@ -159,19 +162,23 @@ export async function gitAdd({
   dryRun,
   verbose,
   logFn,
+  cwd,
 }: {
   changedFiles?: string[];
   deletedFiles?: string[];
   dryRun?: boolean;
   verbose?: boolean;
+  cwd?: string;
   logFn?: (...messages: string[]) => void;
 }): Promise<string> {
   logFn = logFn || console.log;
+  // Default to running git add related commands from the workspace root
+  cwd = cwd || workspaceRoot;
 
   let ignoredFiles: string[] = [];
   let filesToAdd: string[] = [];
   for (const f of changedFiles ?? []) {
-    const isFileIgnored = await isIgnored(f);
+    const isFileIgnored = await isIgnored(f, cwd);
     if (isFileIgnored) {
       ignoredFiles.push(f);
     } else {
@@ -180,9 +187,9 @@ export async function gitAdd({
   }
 
   if (deletedFiles?.length > 0) {
-    const changedTrackedFiles = await getChangedTrackedFiles();
+    const changedTrackedFiles = await getChangedTrackedFiles(cwd);
     for (const f of deletedFiles ?? []) {
-      const isFileIgnored = await isIgnored(f);
+      const isFileIgnored = await isIgnored(f, cwd);
       if (isFileIgnored) {
         ignoredFiles.push(f);
         // git add will fail if trying to add an untracked file that doesn't exist
@@ -216,13 +223,17 @@ export async function gitAdd({
   if (dryRun) {
     return;
   }
-  return execCommand('git', commandArgs);
+  return execCommand('git', commandArgs, {
+    cwd,
+  });
 }
 
-async function isIgnored(filePath: string): Promise<boolean> {
+async function isIgnored(filePath: string, cwd: string): Promise<boolean> {
   try {
     // This command will error if the file is not ignored
-    await execCommand('git', ['check-ignore', filePath]);
+    await execCommand('git', ['check-ignore', filePath], {
+      cwd,
+    });
     return true;
   } catch {
     return false;
