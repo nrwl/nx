@@ -2,6 +2,8 @@ import {
   CreateDependencies,
   CreateNodes,
   CreateNodesContext,
+  createNodesFromFiles,
+  CreateNodesV2,
   detectPackageManager,
   joinPathFragments,
   logger,
@@ -17,6 +19,7 @@ import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { getLockFileName } from '@nx/js';
 import { loadViteDynamicImport } from '../utils/executor-utils';
+import { hashObject } from 'nx/src/hasher/file-hasher';
 
 export interface VitePluginOptions {
   buildTargetName?: string;
@@ -27,27 +30,39 @@ export interface VitePluginOptions {
 }
 type ViteTargets = Pick<ProjectConfiguration, 'targets' | 'metadata'>;
 
-const cachePath = join(workspaceDataDirectory, 'vite.hash');
-const targetsCache = readTargetsCache();
-
-function readTargetsCache(): Record<string, ViteTargets> {
+function readTargetsCache(cachePath: string): Record<string, ViteTargets> {
   return existsSync(cachePath) ? readJsonFile(cachePath) : {};
 }
 
-function writeTargetsToCache() {
-  const oldCache = readTargetsCache();
-  writeJsonFile(cachePath, {
-    ...oldCache,
-    ...targetsCache,
-  });
+function writeTargetsToCache(cachePath, results?: Record<string, ViteTargets>) {
+  writeJsonFile(cachePath, results);
 }
 
 export const createDependencies: CreateDependencies = () => {
-  writeTargetsToCache();
   return [];
 };
 
 const viteVitestConfigGlob = '**/{vite,vitest}.config.{js,ts,mjs,mts,cjs,cts}';
+
+export const createNodesV2: CreateNodesV2<VitePluginOptions> = [
+  viteVitestConfigGlob,
+  async (configFilePaths, options, context) => {
+    const optionsHash = hashObject(options);
+    const cachePath = join(workspaceDataDirectory, `vite-${optionsHash}.hash`);
+    const targetsCache = readTargetsCache(cachePath);
+    try {
+      return await createNodesFromFiles(
+        (configFile, options, context) =>
+          createNodesInternal(configFile, options, context, targetsCache),
+        configFilePaths,
+        options,
+        context
+      );
+    } finally {
+      writeTargetsToCache(cachePath, targetsCache);
+    }
+  },
+];
 
 export const createNodes: CreateNodes<VitePluginOptions> = [
   viteVitestConfigGlob,
@@ -55,7 +70,7 @@ export const createNodes: CreateNodes<VitePluginOptions> = [
     logger.warn(
       '`createNodes` is deprecated. Update your plugin to utilize createNodesV2 instead. In Nx 20, this will change to the createNodesV2 API.'
     );
-    return createNodesInternal(configFilePath, options, context, targetsCache);
+    return createNodesInternal(configFilePath, options, context, {});
   },
 ];
 
