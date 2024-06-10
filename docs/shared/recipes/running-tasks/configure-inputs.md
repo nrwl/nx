@@ -62,8 +62,6 @@ This will show the task graph executed by Nx when running the command.
 
 Clicking the task will open a tooltip which lists out all of the inputs of the task. A button within the tooltip will also reveal more details about the configuration for the project which the task belongs to.
 
-[//]: # 'TODO: add gif here'
-
 Doing so will show a view such as the one below:
 
 {% project-details  jsonFile="shared/concepts/myreactapp.json"%}
