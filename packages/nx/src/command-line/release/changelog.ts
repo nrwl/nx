@@ -31,6 +31,7 @@ import { ChangelogOptions } from './command-object';
 import {
   NxReleaseConfig,
   createNxReleaseConfig,
+  defaultCreateReleaseProvider,
   handleNxReleaseConfigError,
 } from './config/config';
 import {
@@ -56,7 +57,7 @@ import {
   parseCommits,
   parseConventionalCommitsMessage,
 } from './utils/git';
-import { createOrUpdateGithubRelease, getGitHubRepoSlug } from './utils/github';
+import { createOrUpdateGithubRelease, getGitHubRepoData } from './utils/github';
 import { launchEditor } from './utils/launch-editor';
 import { parseChangelogMarkdown } from './utils/markdown';
 import { printAndFlushChanges } from './utils/print-changes';
@@ -376,6 +377,9 @@ export async function releaseChangelog(
       output.logSingleLine(`Creating GitHub Release`);
 
       await createOrUpdateGithubRelease(
+        nxReleaseConfig.changelog.workspaceChangelog
+          ? nxReleaseConfig.changelog.workspaceChangelog.createRelease
+          : defaultCreateReleaseProvider,
         workspaceChangelog.releaseVersion,
         workspaceChangelog.contents,
         latestCommit,
@@ -600,6 +604,9 @@ export async function releaseChangelog(
               output.logSingleLine(`Creating GitHub Release`);
 
               await createOrUpdateGithubRelease(
+                releaseGroup.changelog
+                  ? releaseGroup.changelog.createRelease
+                  : defaultCreateReleaseProvider,
                 projectChangelog.releaseVersion,
                 projectChangelog.contents,
                 latestCommit,
@@ -728,6 +735,9 @@ export async function releaseChangelog(
             output.logSingleLine(`Creating GitHub Release`);
 
             await createOrUpdateGithubRelease(
+              releaseGroup.changelog
+                ? releaseGroup.changelog.createRelease
+                : defaultCreateReleaseProvider,
               projectChangelog.releaseVersion,
               projectChangelog.contents,
               latestCommit,
@@ -1029,7 +1039,7 @@ async function generateChangelogForWorkspace({
     });
   }
 
-  const githubRepoSlug = getGitHubRepoSlug(gitRemote);
+  const githubRepoData = getGitHubRepoData(gitRemote, config.createRelease);
 
   let contents = await changelogRenderer({
     projectGraph,
@@ -1037,7 +1047,8 @@ async function generateChangelogForWorkspace({
     commits,
     releaseVersion: releaseVersion.rawVersion,
     project: null,
-    repoSlug: githubRepoSlug,
+    repoSlug: githubRepoData.slug,
+    repoData: githubRepoData,
     entryWhenNoChanges: config.entryWhenNoChanges,
     changelogRenderOptions: config.renderOptions,
     conventionalCommitsConfig: nxReleaseConfig.conventionalCommits,
@@ -1169,10 +1180,7 @@ async function generateChangelogForProjects({
       });
     }
 
-    const githubRepoSlug =
-      config.createRelease === 'github'
-        ? getGitHubRepoSlug(gitRemote)
-        : undefined;
+    const githubRepoData = getGitHubRepoData(gitRemote, config.createRelease);
 
     let contents = await changelogRenderer({
       projectGraph,
@@ -1180,7 +1188,8 @@ async function generateChangelogForProjects({
       commits,
       releaseVersion: releaseVersion.rawVersion,
       project: project.name,
-      repoSlug: githubRepoSlug,
+      repoSlug: githubRepoData.slug,
+      repoData: githubRepoData,
       entryWhenNoChanges:
         typeof config.entryWhenNoChanges === 'string'
           ? interpolate(config.entryWhenNoChanges, {
@@ -1326,7 +1335,7 @@ export function shouldCreateGitHubRelease(
     return createReleaseArg === 'github';
   }
 
-  return (changelogConfig || {}).createRelease === 'github';
+  return (changelogConfig || {}).createRelease !== false;
 }
 
 async function promptForGitHubRelease(): Promise<boolean> {
