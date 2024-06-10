@@ -28,7 +28,7 @@ export const TracingPanel = memo(
     return (
       <div className="mt-10 px-4">
         <div className="transition duration-200 ease-in-out group-hover:opacity-60">
-          <h3 className="cursor-text pb-2 text-sm font-semibold uppercase tracking-wide text-slate-800 dark:text-slate-200 lg:text-xs">
+          <h3 className="cursor-text pb-2 text-sm font-semibold uppercase tracking-wide text-slate-800 lg:text-xs dark:text-slate-200">
             Tracing Path
           </h3>
           <div className="mb-3 flex cursor-pointer flex-row rounded-md border text-center text-xs dark:border-slate-600">
@@ -38,7 +38,7 @@ export const TracingPanel = memo(
                 algorithm === 'shortest'
                   ? 'border-blue-500 dark:border-sky-500'
                   : 'border-slate-300 dark:border-slate-600'
-              } flex-1 rounded-l-md border bg-slate-50 py-2 px-4 text-slate-500 hover:bg-slate-100 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:dark:bg-slate-700`}
+              } flex-1 rounded-l-md border bg-slate-50 px-4 py-2 text-slate-500 hover:bg-slate-100 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:dark:bg-slate-700`}
             >
               <span>Shortest</span>
             </button>
@@ -48,7 +48,7 @@ export const TracingPanel = memo(
                 algorithm === 'all'
                   ? 'border-blue-500 dark:border-sky-500'
                   : 'border-slate-300 dark:border-slate-600'
-              } flex-1 rounded-r-md border bg-slate-50 py-2 px-4 text-slate-500 hover:bg-slate-100 dark:bg-slate-800 dark:text-slate-300 hover:dark:bg-slate-700`}
+              } flex-1 rounded-r-md border bg-slate-50 px-4 py-2 text-slate-500 hover:bg-slate-100 dark:bg-slate-800 dark:text-slate-300 hover:dark:bg-slate-700`}
             >
               <span>All</span>
             </button>
@@ -66,7 +66,7 @@ export const TracingPanel = memo(
                   <span>{start}</span>
                 </div>
 
-                <div className="absolute top-2 right-2 flex translate-x-32 items-center rounded-md bg-white pl-2 text-sm font-medium text-slate-700 shadow-sm ring-1 ring-slate-500 transition-all transition duration-200 ease-in-out group-hover:translate-x-0 dark:bg-slate-800 dark:text-slate-300 dark:ring-slate-700">
+                <div className="absolute right-2 top-2 flex translate-x-32 items-center rounded-md bg-white pl-2 text-sm font-medium text-slate-700 shadow-sm ring-1 ring-slate-500 transition transition-all duration-200 ease-in-out group-hover:translate-x-0 dark:bg-slate-800 dark:text-slate-300 dark:ring-slate-700">
                   Reset
                   <span className="rounded-md p-1">
                     <XCircleIcon className="h-5 w-5"></XCircleIcon>
@@ -95,7 +95,7 @@ export const TracingPanel = memo(
                   <span>{end}</span>
                 </div>
 
-                <div className="absolute top-2 right-2 flex translate-x-32 items-center rounded-md bg-white pl-2 text-sm font-medium text-slate-700 shadow-sm ring-1 ring-slate-500 transition-all transition duration-200 ease-in-out group-hover:translate-x-0 dark:bg-slate-800 dark:text-slate-300 dark:ring-slate-700">
+                <div className="absolute right-2 top-2 flex translate-x-32 items-center rounded-md bg-white pl-2 text-sm font-medium text-slate-700 shadow-sm ring-1 ring-slate-500 transition transition-all duration-200 ease-in-out group-hover:translate-x-0 dark:bg-slate-800 dark:text-slate-300 dark:ring-slate-700">
                   Reset
                   <span className="rounded-md p-1">
                     <XCircleIcon className="h-5 w-5" />

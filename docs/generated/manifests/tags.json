@@ -533,6 +533,13 @@
       "path": "/recipes/nx-release/configure-changelog-format"
     },
     {
+      "description": "",
+      "file": "shared/recipes/nx-release/publish-custom-dist-directory",
+      "id": "publish-custom-dist-directory",
+      "name": "Publish a Custom Dist Directory",
+      "path": "/recipes/nx-release/publish-custom-dist-directory"
+    },
+    {
       "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
       "file": "generated/packages/generated/packages/nx/documents/release",
       "id": "release",

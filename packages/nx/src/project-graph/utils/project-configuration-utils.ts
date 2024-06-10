@@ -386,9 +386,14 @@ export async function createProjectConfigurations(
         : // This represents a single plugin erroring out with a hard error.
           new AggregateCreateNodesError([[null, e]], []);
 
-      errorBodyLines.push(
-        ...error.errors.map(([file, e]) => `  - ${file}: ${e.message}`)
-      );
+      const innerErrors = error.errors;
+      for (const [file, e] of innerErrors) {
+        if (file) {
+          errorBodyLines.push(`  - ${file}: ${e.message}`);
+        } else {
+          errorBodyLines.push(`  - ${e.message}`);
+        }
+      }
 
       error.message = errorBodyLines.join('\n');
 

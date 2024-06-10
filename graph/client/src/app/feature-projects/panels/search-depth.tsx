@@ -50,7 +50,7 @@ export const SearchDepth = memo(
             <button
               data-cy="decrement-depth-filter"
               title="Remove ancestor level"
-              className="inline-flex items-center rounded-l-md border border-slate-300 bg-slate-50 py-2 px-4 text-slate-500 hover:bg-slate-100 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:dark:bg-slate-700"
+              className="inline-flex items-center rounded-l-md border border-slate-300 bg-slate-50 px-4 py-2 text-slate-500 hover:bg-slate-100 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:dark:bg-slate-700"
               onClick={decrementDepthFilter}
             >
               <MinusIcon className="h-4 w-4"></MinusIcon>
@@ -58,14 +58,14 @@ export const SearchDepth = memo(
             <span
               id="depthFilterValue"
               data-cy="depth-value"
-              className="block w-full flex-1 rounded-none border-t border-b border-slate-300 bg-white p-1.5 text-center font-mono dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:dark:bg-slate-700"
+              className="block w-full flex-1 rounded-none border-b border-t border-slate-300 bg-white p-1.5 text-center font-mono dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:dark:bg-slate-700"
             >
               {searchDepth}
             </span>
             <button
               data-cy="increment-depth-filter"
               title="Add ancestor level"
-              className="inline-flex items-center rounded-r-md border border-slate-300 bg-slate-50 py-2 px-4 text-slate-500 hover:bg-slate-100 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:dark:bg-slate-700"
+              className="inline-flex items-center rounded-r-md border border-slate-300 bg-slate-50 px-4 py-2 text-slate-500 hover:bg-slate-100 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:dark:bg-slate-700"
               onClick={incrementDepthFilter}
             >
               <PlusIcon className="h-4 w-4"></PlusIcon>

@@ -22,7 +22,7 @@ export function Heading({
     >
       {children}
       <Link aria-hidden="true" href={`#${id}`}>
-        <LinkIcon className="ml-2 mb-1 inline h-5 w-5 opacity-0 group-hover:opacity-100" />
+        <LinkIcon className="mb-1 ml-2 inline h-5 w-5 opacity-0 group-hover:opacity-100" />
       </Link>
     </Component>
   );

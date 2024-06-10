@@ -3,13 +3,13 @@ import { LogoCloud } from './logo-cloud';
 
 export function NxStatistics(): JSX.Element {
   return (
-    <div className="bg-white pt-12 dark:bg-slate-900 sm:pt-28">
+    <div className="bg-white pt-12 sm:pt-28 dark:bg-slate-900">
       <div className="mx-auto max-w-7xl px-4 pt-12 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-4xl text-center">
           <SectionHeading as="h2" variant="display" id="trusted-by-all">
             Trusted by developers, enterprises and open-source projects.
           </SectionHeading>
-          <p className="sr-only mt-3 text-lg text-slate-700 dark:text-slate-400 sm:mt-4">
+          <p className="sr-only mt-3 text-lg text-slate-700 sm:mt-4 dark:text-slate-400">
             Whether your workspace{' '}
             <span className="font-semibold">
               has a single project or a thousand
@@ -21,13 +21,13 @@ export function NxStatistics(): JSX.Element {
       {/*LOGO CLOUD*/}
       <LogoCloud />
       {/*STATISTICS*/}
-      <div className="mt-10 bg-slate-50 pb-12 dark:bg-slate-800/40 sm:pb-16">
+      <div className="mt-10 bg-slate-50 pb-12 sm:pb-16 dark:bg-slate-800/40">
         <div className="relative">
           <div className="absolute inset-0 h-1/2 border-b border-slate-200 bg-white dark:border-black dark:bg-slate-900"></div>
           <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="mx-auto max-w-4xl">
-              <dl className="overflow-hidden rounded-lg bg-white shadow dark:bg-slate-900 sm:grid sm:grid-cols-3">
-                <div className="flex flex-col border-b border-slate-50 p-6 text-center dark:border-slate-800/40 sm:border-0 sm:border-r">
+              <dl className="overflow-hidden rounded-lg bg-white shadow sm:grid sm:grid-cols-3 dark:bg-slate-900">
+                <div className="flex flex-col border-b border-slate-50 p-6 text-center sm:border-0 sm:border-r dark:border-slate-800/40">
                   <dt className="order-2 mt-2 text-base font-medium leading-6">
                     developers use it every day
                   </dt>
@@ -35,7 +35,7 @@ export function NxStatistics(): JSX.Element {
                     2M+
                   </dd>
                 </div>
-                <div className="flex flex-col border-t border-b border-slate-50 p-6 text-center dark:border-slate-800/40 sm:border-0 sm:border-l sm:border-r">
+                <div className="flex flex-col border-b border-t border-slate-50 p-6 text-center sm:border-0 sm:border-l sm:border-r dark:border-slate-800/40">
                   <dt className="order-2 mt-2 text-base font-medium leading-6">
                     of Fortune 500 companies use Nx for key projects
                   </dt>
@@ -43,7 +43,7 @@ export function NxStatistics(): JSX.Element {
                     50%
                   </dd>
                 </div>
-                <div className="flex flex-col border-t border-slate-50 p-6 text-center dark:border-slate-800/40 sm:border-0 sm:border-l">
+                <div className="flex flex-col border-t border-slate-50 p-6 text-center sm:border-0 sm:border-l dark:border-slate-800/40">
                   <dt className="order-2 mt-2 text-base font-medium leading-6">
                     monthly npm downloads
                   </dt>

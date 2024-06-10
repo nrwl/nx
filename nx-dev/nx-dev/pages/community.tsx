@@ -46,7 +46,7 @@ export default function Community(): JSX.Element {
             <ConnectWithUs />
           </div>
           <article id="nx-champions" className="relative">
-            <div className="mx-auto max-w-7xl items-stretch py-12 px-4 sm:grid sm:grid-cols-1 sm:gap-8 sm:px-6 md:grid-cols-3 lg:py-16 lg:px-8">
+            <div className="mx-auto max-w-7xl items-stretch px-4 py-12 sm:grid sm:grid-cols-1 sm:gap-8 sm:px-6 md:grid-cols-3 lg:px-8 lg:py-16">
               <div className="md:col-span-2">
                 <header>
                   <SectionHeading as="h1" variant="title" id="champions">

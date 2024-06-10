@@ -1042,6 +1042,12 @@
                   "id": "configure-changelog-format",
                   "tags": ["nx-release"],
                   "file": "shared/recipes/nx-release/configure-changelog-format"
+                },
+                {
+                  "name": "Publish a Custom Dist Directory",
+                  "id": "publish-custom-dist-directory",
+                  "tags": ["nx-release"],
+                  "file": "shared/recipes/nx-release/publish-custom-dist-directory"
                 }
               ]
             },

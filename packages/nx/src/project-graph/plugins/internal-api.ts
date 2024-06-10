@@ -101,7 +101,7 @@ export class LoadedNxPlugin {
             throw e;
           }
           // The underlying plugin errored out. We can't know any partial results.
-          throw new AggregateCreateNodesError([null, e], []);
+          throw new AggregateCreateNodesError([[null, e]], []);
         } finally {
           performance.mark(`${plugin.name}:createNodes - end`);
           performance.measure(

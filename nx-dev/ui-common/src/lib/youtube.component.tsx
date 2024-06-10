@@ -62,10 +62,10 @@ export function YouTube(props: {
         width={props.width || '100%'}
         allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen"
         loading="lazy"
-        className="rounded-lg shadow-lg mb-1"
+        className="mb-1 rounded-lg shadow-lg"
       />
       {props.caption && (
-        <p className="md:w-1/2 mx-auto pt-0 text-slate-500 dark:text-slate-400">
+        <p className="mx-auto pt-0 text-slate-500 md:w-1/2 dark:text-slate-400">
           {props.caption}
         </p>
       )}
