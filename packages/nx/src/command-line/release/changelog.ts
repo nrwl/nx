@@ -1047,7 +1047,7 @@ async function generateChangelogForWorkspace({
     commits,
     releaseVersion: releaseVersion.rawVersion,
     project: null,
-    repoSlug: githubRepoData.slug,
+    repoSlug: githubRepoData?.slug,
     repoData: githubRepoData,
     entryWhenNoChanges: config.entryWhenNoChanges,
     changelogRenderOptions: config.renderOptions,
@@ -1188,7 +1188,7 @@ async function generateChangelogForProjects({
       commits,
       releaseVersion: releaseVersion.rawVersion,
       project: project.name,
-      repoSlug: githubRepoData.slug,
+      repoSlug: githubRepoData?.slug,
       repoData: githubRepoData,
       entryWhenNoChanges:
         typeof config.entryWhenNoChanges === 'string'
