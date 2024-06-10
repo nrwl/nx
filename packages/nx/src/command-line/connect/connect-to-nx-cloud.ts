@@ -54,33 +54,24 @@ export async function connectToNxCloudCommand(): Promise<boolean> {
   const nxJson = readNxJson();
 
   if (isNxCloudUsed(nxJson)) {
-    if (process.env.NX_NEW_CLOUD_ONBOARDING !== 'true') {
-      output.log({
-        title: '✔ This workspace already has Nx Cloud set up',
-        bodyLines: [
-          'If you have not done so already, connect your workspace to your Nx Cloud account:',
-          `- Login at ${getNxCloudUrl(nxJson)} to connect your repository`,
-        ],
-      });
-    } else {
-      const token =
-        process.env.NX_CLOUD_ACCESS_TOKEN || nxJson.nxCloudAccessToken;
-      if (!token) {
-        throw new Error(
-          `Unable to authenticate. Either define accessToken in nx.json or set the NX_CLOUD_ACCESS_TOKEN env variable.`
-        );
-      }
-      const connectCloudUrl = await shortenedCloudUrl('nx-connect', token);
-      output.log({
-        title: '✔ This workspace already has Nx Cloud set up',
-        bodyLines: [
-          'If you have not done so already, connect your workspace to your Nx Cloud account:',
-          `- Connect with Nx Cloud at: 
+    const token =
+      process.env.NX_CLOUD_ACCESS_TOKEN || nxJson.nxCloudAccessToken;
+    if (!token) {
+      throw new Error(
+        `Unable to authenticate. Either define accessToken in nx.json or set the NX_CLOUD_ACCESS_TOKEN env variable.`
+      );
+    }
+    const connectCloudUrl = await shortenedCloudUrl('nx-connect', token);
+    output.log({
+      title: '✔ This workspace already has Nx Cloud set up',
+      bodyLines: [
+        'If you have not done so already, connect your workspace to your Nx Cloud account:',
+        `- Connect with Nx Cloud at: 
       
         ${connectCloudUrl}`,
-        ],
-      });
-    }
+      ],
+    });
+
     return false;
   }
 

@@ -79,39 +79,23 @@ async function printSuccessMessage(
   installationSource: string,
   github: boolean
 ) {
-  if (process.env.NX_NEW_CLOUD_ONBOARDING !== 'true') {
-    let origin = 'https://nx.app';
-    try {
-      origin = new URL(url).origin;
-    } catch (e) {}
+  const connectCloudUrl = await shortenedCloudUrl(
+    installationSource,
+    token,
+    github
+  );
 
-    output.note({
-      title: `Your Nx Cloud workspace is public`,
-      bodyLines: [
-        `To restrict access, connect it to your Nx Cloud account:`,
-        `- Push your changes`,
-        `- Login at ${origin} to connect your repository`,
-      ],
-    });
-  } else {
-    const connectCloudUrl = await shortenedCloudUrl(
-      installationSource,
-      token,
-      github
-    );
-
-    output.note({
-      title: `Your Nx Cloud workspace is ready.`,
-      bodyLines: [
-        `To claim it, connect it to your Nx Cloud account:`,
-        `- Commit and push your changes.`,
-        `- Create a pull request for the changes.`,
-        `- Go to the following URL to connect your workspace to Nx Cloud: 
+  output.note({
+    title: `Your Nx Cloud workspace is ready.`,
+    bodyLines: [
+      `To claim it, connect it to your Nx Cloud account:`,
+      `- Commit and push your changes.`,
+      `- Create a pull request for the changes.`,
+      `- Go to the following URL to connect your workspace to Nx Cloud: 
         
         ${connectCloudUrl}`,
-      ],
-    });
-  }
+    ],
+  });
 }
 
 interface ConnectToNxCloudOptions {
