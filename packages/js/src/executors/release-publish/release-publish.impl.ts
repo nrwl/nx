@@ -110,12 +110,7 @@ export default async function runExecutor(
         };
       }
 
-      // If only one version of a package exists in the registry, versions will be a string instead of an array.
-      const versions = Array.isArray(resultJson.versions)
-        ? resultJson.versions
-        : [resultJson.versions];
-
-      if (versions.includes(currentVersion)) {
+      if (resultJson.versions.includes(currentVersion)) {
         try {
           if (!isDryRun) {
             execSync(npmDistTagAddCommandSegments.join(' '), {
