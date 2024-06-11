@@ -68,6 +68,7 @@ export default defineConfig({
 
   build: {
     outDir: '../dist/test',
+    emptyOutDir: true,
     reportCompressedSize: true,
     commonjsOptions: {
       transformMixedEsModules: true,
@@ -75,9 +76,10 @@ export default defineConfig({
   },
 
   test: {
+    watch: false,
     globals: true,
     cache: {
-      dir: '../node_modules/.vitest',
+      dir: '../node_modules/.vitest/test',
     },
     environment: 'jsdom',
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
@@ -121,8 +123,9 @@ import { mount } from '@vue/test-utils';
 import App from './App.vue';
 
 describe('App', () => {
-  it('renders properly', () => {
+  it('renders properly', async () => {
     const wrapper = mount(App, {});
+
     expect(wrapper.text()).toContain('Welcome test 👋');
   });
 });

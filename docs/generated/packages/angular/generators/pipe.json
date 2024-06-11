@@ -32,13 +32,13 @@
         "description": "The name of the project.",
         "$default": { "$source": "projectName" },
         "x-dropdown": "projects",
-        "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. The project will be determined from the directory provided. It will be removed in Nx v19."
+        "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. The project will be determined from the directory provided. It will be removed in Nx v20."
       },
       "flat": {
         "type": "boolean",
         "default": true,
         "description": "When true (the default) creates files at the top level of the project.",
-        "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. It will be removed in Nx v19."
+        "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. It will be removed in Nx v20."
       },
       "skipTests": {
         "type": "boolean",

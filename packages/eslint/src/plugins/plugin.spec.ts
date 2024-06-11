@@ -1,13 +1,21 @@
-import { CreateNodesContext } from '@nx/devkit';
+import { CreateNodesContextV2 } from '@nx/devkit';
 import { minimatch } from 'minimatch';
 import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
-import { createNodes } from './plugin';
+import { createNodesV2 } from './plugin';
+import { mkdirSync, rmdirSync } from 'fs';
+
+jest.mock('nx/src/utils/cache-directory', () => ({
+  ...jest.requireActual('nx/src/utils/cache-directory'),
+  workspaceDataDirectory: 'tmp/project-graph-cache',
+}));
 
 describe('@nx/eslint/plugin', () => {
-  let context: CreateNodesContext;
+  let context: CreateNodesContextV2;
   let tempFs: TempFs;
+  let configFiles: string[] = [];
 
   beforeEach(async () => {
+    mkdirSync('tmp/project-graph-cache', { recursive: true });
     tempFs = new TempFs('eslint-plugin');
     context = {
       nxJsonConfiguration: {
@@ -24,7 +32,6 @@ describe('@nx/eslint/plugin', () => {
         },
       },
       workspaceRoot: tempFs.tempDir,
-      configFiles: [],
     };
   });
 
@@ -32,6 +39,7 @@ describe('@nx/eslint/plugin', () => {
     jest.resetModules();
     tempFs.cleanup();
     tempFs = null;
+    rmdirSync('tmp/project-graph-cache', { recursive: true });
   });
 
   it('should not create any nodes when there are no eslint configs', async () => {
@@ -109,6 +117,50 @@ describe('@nx/eslint/plugin', () => {
                   "options": {
                     "cwd": ".",
                   },
+                  "outputs": [
+                    "{options.outputFile}",
+                  ],
+                },
+              },
+            },
+          },
+        }
+      `);
+    });
+
+    it('should create a node for just a package.json and root level eslint config if accompanied by a lib directory', async () => {
+      createFiles({
+        '.eslintrc.json': `{}`,
+        'package.json': `{}`,
+        'lib/index.ts': `console.log('hello world')`,
+      });
+      // NOTE: The command is specifically targeting the src directory in the case of a standalone Nx workspace
+      expect(await invokeCreateNodesOnMatchingFiles(context, 'lint'))
+        .toMatchInlineSnapshot(`
+        {
+          "projects": {
+            ".": {
+              "targets": {
+                "lint": {
+                  "cache": true,
+                  "command": "eslint ./lib",
+                  "inputs": [
+                    "default",
+                    "^default",
+                    "{projectRoot}/eslintrc.json",
+                    "{workspaceRoot}/tools/eslint-rules/**/*",
+                    {
+                      "externalDependencies": [
+                        "eslint",
+                      ],
+                    },
+                  ],
+                  "options": {
+                    "cwd": ".",
+                  },
+                  "outputs": [
+                    "{options.outputFile}",
+                  ],
                 },
               },
             },
@@ -178,6 +230,9 @@ describe('@nx/eslint/plugin', () => {
                   "options": {
                     "cwd": "apps/my-app",
                   },
+                  "outputs": [
+                    "{options.outputFile}",
+                  ],
                 },
               },
             },
@@ -216,6 +271,9 @@ describe('@nx/eslint/plugin', () => {
                   "options": {
                     "cwd": "apps/my-app",
                   },
+                  "outputs": [
+                    "{options.outputFile}",
+                  ],
                 },
               },
             },
@@ -326,6 +384,9 @@ describe('@nx/eslint/plugin', () => {
                   "options": {
                     "cwd": "apps/my-app",
                   },
+                  "outputs": [
+                    "{options.outputFile}",
+                  ],
                 },
               },
             },
@@ -348,6 +409,9 @@ describe('@nx/eslint/plugin', () => {
                   "options": {
                     "cwd": "libs/my-lib",
                   },
+                  "outputs": [
+                    "{options.outputFile}",
+                  ],
                 },
               },
             },
@@ -430,6 +494,9 @@ describe('@nx/eslint/plugin', () => {
                   "options": {
                     "cwd": "apps/my-app",
                   },
+                  "outputs": [
+                    "{options.outputFile}",
+                  ],
                 },
               },
             },
@@ -453,6 +520,9 @@ describe('@nx/eslint/plugin', () => {
                   "options": {
                     "cwd": "libs/my-lib",
                   },
+                  "outputs": [
+                    "{options.outputFile}",
+                  ],
                 },
               },
             },
@@ -493,6 +563,9 @@ describe('@nx/eslint/plugin', () => {
                   "options": {
                     "cwd": "apps/myapp",
                   },
+                  "outputs": [
+                    "{options.outputFile}",
+                  ],
                 },
               },
             },
@@ -538,6 +611,9 @@ describe('@nx/eslint/plugin', () => {
                   "options": {
                     "cwd": "apps/myapp/nested/mylib",
                   },
+                  "outputs": [
+                    "{options.outputFile}",
+                  ],
                 },
               },
             },
@@ -549,27 +625,30 @@ describe('@nx/eslint/plugin', () => {
 
   function createFiles(fileSys: Record<string, string>) {
     tempFs.createFilesSync(fileSys);
-    // @ts-expect-error update otherwise readonly property for testing
-    context.configFiles = getMatchingFiles(Object.keys(fileSys));
+    configFiles = getMatchingFiles(Object.keys(fileSys));
+  }
+
+  function getMatchingFiles(allConfigFiles: string[]): string[] {
+    return allConfigFiles.filter((file) =>
+      minimatch(file, createNodesV2[0], { dot: true })
+    );
+  }
+
+  async function invokeCreateNodesOnMatchingFiles(
+    context: CreateNodesContextV2,
+    targetName: string
+  ) {
+    const aggregateProjects: Record<string, any> = {};
+    const results = await createNodesV2[1](
+      configFiles,
+      { targetName },
+      context
+    );
+    for (const [, nodes] of results) {
+      Object.assign(aggregateProjects, nodes.projects);
+    }
+    return {
+      projects: aggregateProjects,
+    };
   }
 });
-
-function getMatchingFiles(allConfigFiles: string[]): string[] {
-  return allConfigFiles.filter((file) =>
-    minimatch(file, createNodes[0], { dot: true })
-  );
-}
-
-async function invokeCreateNodesOnMatchingFiles(
-  context: CreateNodesContext,
-  targetName: string
-) {
-  const aggregateProjects: Record<string, any> = {};
-  for (const file of context.configFiles) {
-    const nodes = await createNodes[1](file, { targetName }, context);
-    Object.assign(aggregateProjects, nodes.projects);
-  }
-  return {
-    projects: aggregateProjects,
-  };
-}

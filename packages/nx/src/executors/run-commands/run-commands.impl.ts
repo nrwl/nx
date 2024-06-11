@@ -67,7 +67,9 @@ const propKeys = [
   'command',
   'commands',
   'color',
+  'no-color',
   'parallel',
+  'no-parallel',
   'readyWhen',
   'cwd',
   'args',
@@ -93,7 +95,7 @@ export interface NormalizedRunCommandsOptions extends RunCommandsOptions {
     [k: string]: any;
   };
   unparsedCommandArgs?: {
-    [k: string]: string;
+    [k: string]: string | string[];
   };
   args?: string;
 }
@@ -106,7 +108,9 @@ export default async function (
   terminalOutput: string;
 }> {
   registerProcessListener();
-  await loadEnvVars(options.envFile);
+  if (process.env.NX_LOAD_DOT_ENV_FILES !== 'false') {
+    await loadEnvVars(options.envFile);
+  }
   const normalized = normalizeOptions(options);
 
   if (options.readyWhen && !options.parallel) {
@@ -230,6 +234,7 @@ function normalizeOptions(
       'parse-numbers': false,
       'parse-positional-numbers': false,
       'dot-notation': false,
+      'camel-case-expansion': false,
     },
   });
   options.unknownOptions = Object.keys(options)
@@ -483,16 +488,18 @@ export function interpolateArgsIntoCommand(
   } else if (forwardAllArgs) {
     let args = '';
     if (Object.keys(opts.unknownOptions ?? {}).length > 0) {
-      args +=
-        ' ' +
-        Object.keys(opts.unknownOptions)
-          .filter(
-            (k) =>
-              typeof opts.unknownOptions[k] !== 'object' &&
-              opts.parsedArgs[k] === opts.unknownOptions[k]
-          )
-          .map((k) => `--${k}=${opts.unknownOptions[k]}`)
-          .join(' ');
+      const unknownOptionsArgs = Object.keys(opts.unknownOptions)
+        .filter(
+          (k) =>
+            typeof opts.unknownOptions[k] !== 'object' &&
+            opts.parsedArgs[k] === opts.unknownOptions[k]
+        )
+        .map((k) => `--${k}=${opts.unknownOptions[k]}`)
+        .map(wrapArgIntoQuotesIfNeeded)
+        .join(' ');
+      if (unknownOptionsArgs) {
+        args += ` ${unknownOptionsArgs}`;
+      }
     }
     if (opts.args) {
       args += ` ${opts.args}`;
@@ -500,10 +507,12 @@ export function interpolateArgsIntoCommand(
     if (opts.__unparsed__?.length > 0) {
       const filterdParsedOptions = filterPropKeysFromUnParsedOptions(
         opts.__unparsed__,
-        opts.unparsedCommandArgs
+        opts.parsedArgs
       );
       if (filterdParsedOptions.length > 0) {
-        args += ` ${filterdParsedOptions.join(' ')}`;
+        args += ` ${filterdParsedOptions
+          .map(wrapArgIntoQuotesIfNeeded)
+          .join(' ')}`;
       }
     }
     return `${command}${args}`;
@@ -533,8 +542,8 @@ function parseArgs(
  */
 function filterPropKeysFromUnParsedOptions(
   __unparsed__: string[],
-  unparsedCommandArgs: {
-    [k: string]: string;
+  parseArgs: {
+    [k: string]: string | string[];
   } = {}
 ): string[] {
   const parsedOptions = [];
@@ -543,6 +552,7 @@ function filterPropKeysFromUnParsedOptions(
     if (element.startsWith('--')) {
       const key = element.replace('--', '');
       if (element.includes('=')) {
+        // key can be in the format of --key=value or --key.subkey=value (e.g. env.foo=bar)
         if (!propKeys.includes(key.split('=')[0].split('.')[0])) {
           // check if the key is part of the propKeys array
           parsedOptions.push(element);
@@ -552,7 +562,8 @@ function filterPropKeysFromUnParsedOptions(
         if (propKeys.includes(key)) {
           if (
             index + 1 < __unparsed__.length &&
-            __unparsed__[index + 1] === unparsedCommandArgs[key]
+            parseArgs[key] &&
+            __unparsed__[index + 1].toString() === parseArgs[key].toString()
           ) {
             index++; // skip the next element
           }
@@ -624,4 +635,22 @@ function registerProcessListener() {
     // no exit here because we expect child processes to terminate which
     // will store results to the cache and will terminate this process
   });
+}
+
+function wrapArgIntoQuotesIfNeeded(arg: string): string {
+  if (arg.includes('=')) {
+    const [key, value] = arg.split('=');
+    if (
+      key.startsWith('--') &&
+      value.includes(' ') &&
+      !(value[0] === "'" || value[0] === '"')
+    ) {
+      return `${key}="${value}"`;
+    }
+    return arg;
+  } else if (arg.includes(' ') && !(arg[0] === "'" || arg[0] === '"')) {
+    return `"${arg}"`;
+  } else {
+    return arg;
+  }
 }

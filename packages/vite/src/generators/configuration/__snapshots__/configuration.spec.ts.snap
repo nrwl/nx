@@ -1,5 +1,169 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`@nx/vite:configuration js library with --bundler=vite should add build and test targets with vite and vitest 1`] = `
+"/// <reference types='vitest' />
+import { defineConfig } from 'vite';
+import dts from 'vite-plugin-dts';
+import * as path from 'path';
+import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+
+export default defineConfig({
+  root: __dirname,
+  cacheDir: '../node_modules/.vite/my-lib',
+
+  plugins: [
+    nxViteTsPaths(),
+    dts({
+      entryRoot: 'src',
+      tsconfigPath: path.join(__dirname, 'tsconfig.lib.json'),
+    }),
+  ],
+
+  // Uncomment this if you are using workers.
+  // worker: {
+  //  plugins: [ nxViteTsPaths() ],
+  // },
+
+  // Configuration for building your library.
+  // See: https://vitejs.dev/guide/build.html#library-mode
+  build: {
+    outDir: '../dist/my-lib',
+    emptyOutDir: true,
+    reportCompressedSize: true,
+    commonjsOptions: {
+      transformMixedEsModules: true,
+    },
+    lib: {
+      // Could also be a dictionary or array of multiple entry points.
+      entry: 'src/index.ts',
+      name: 'my-lib',
+      fileName: 'index',
+      // Change this to the formats you want to support.
+      // Don't forget to update your package.json as well.
+      formats: ['es', 'cjs'],
+    },
+    rollupOptions: {
+      // External packages that should not be bundled into your library.
+      external: [],
+    },
+  },
+
+  test: {
+    watch: false,
+    globals: true,
+    cache: {
+      dir: '../node_modules/.vitest/my-lib',
+    },
+    environment: 'jsdom',
+    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+
+    reporters: ['default'],
+    coverage: {
+      reportsDirectory: '../coverage/my-lib',
+      provider: 'v8',
+    },
+  },
+});
+"
+`;
+
+exports[`@nx/vite:configuration js library with --bundler=vite should add build and test targets with vite and vitest 2`] = `
+"# my-lib
+
+This library was generated with [Nx](https://nx.dev).
+
+## Building
+
+Run \`nx build my-lib\` to build the library.
+
+## Running unit tests
+
+Run \`nx test my-lib\` to execute the unit tests via [Vitest](https://vitest.dev/).
+"
+`;
+
+exports[`@nx/vite:configuration js library with --bundler=vite should add build and test targets with vite and vitest 3`] = `
+"{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../dist/out-tsc",
+    "declaration": true,
+    "types": ["node", "vite/client"]
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["vite.config.ts", "src/**/*.spec.ts", "src/**/*.test.ts"]
+}
+"
+`;
+
+exports[`@nx/vite:configuration js library with --bundler=vite should respect unitTestRunner if passed 1`] = `
+"# my-lib
+
+This library was generated with [Nx](https://nx.dev).
+
+## Building
+
+Run \`nx build my-lib\` to build the library.
+"
+`;
+
+exports[`@nx/vite:configuration js library with --bundler=vite should respect unitTestRunner if passed 2`] = `
+"{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../dist/out-tsc",
+    "declaration": true,
+    "types": ["node", "vite/client"]
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["src/**/*.spec.ts", "src/**/*.test.ts"]
+}
+"
+`;
+
+exports[`@nx/vite:configuration js library with --bundler=vite should respect unitTestRunner if passed 3`] = `
+"# my-lib
+
+This library was generated with [Nx](https://nx.dev).
+
+## Building
+
+Run \`nx build my-lib\` to build the library.
+
+## Running unit tests
+
+Run \`nx test my-lib\` to execute the unit tests via [Jest](https://jestjs.io).
+"
+`;
+
+exports[`@nx/vite:configuration js library with --bundler=vite should respect unitTestRunner if passed 4`] = `
+"{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../dist/out-tsc",
+    "declaration": true,
+    "types": ["node", "vite/client"]
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["jest.config.ts", "src/**/*.spec.ts", "src/**/*.test.ts"]
+}
+"
+`;
+
+exports[`@nx/vite:configuration js library with --bundler=vite should respect unitTestRunner if passed 5`] = `
+"/* eslint-disable */
+export default {
+  displayName: 'my-lib',
+  preset: '../jest.preset.js',
+  transform: {
+    '^.+\\\\.[tj]s$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.spec.json' }],
+  },
+  moduleFileExtensions: ['ts', 'js', 'html'],
+  coverageDirectory: '../coverage/my-lib',
+};
+"
+`;
+
 exports[`@nx/vite:configuration library mode should add config for building library 1`] = `
 "/// <reference types='vitest' />
 import { defineConfig } from 'vite';
@@ -30,6 +194,7 @@ export default defineConfig({
   // See: https://vitejs.dev/guide/build.html#library-mode
   build: {
     outDir: '../../dist/libs/react-lib-nonb-jest',
+    emptyOutDir: true,
     reportCompressedSize: true,
     commonjsOptions: {
       transformMixedEsModules: true,
@@ -82,6 +247,7 @@ export default defineConfig({
   // See: https://vitejs.dev/guide/build.html#library-mode
   build: {
     outDir: '../../dist/libs/react-lib-nonb-jest',
+    emptyOutDir: true,
     reportCompressedSize: true,
     commonjsOptions: {
       transformMixedEsModules: true,
@@ -102,9 +268,10 @@ export default defineConfig({
   },
 
   test: {
+    watch: false,
     globals: true,
     cache: {
-      dir: '../../node_modules/.vitest',
+      dir: '../../node_modules/.vitest/libs/react-lib-nonb-jest',
     },
     environment: 'jsdom',
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
@@ -132,6 +299,7 @@ export default defineConfig({
   cacheDir: '../../node_modules/.vite/libs/react-lib-nonb-vitest',
   build: {
     outDir: '../../dist/libs/react-lib-nonb-vitest',
+    emptyOutDir: true,
     reportCompressedSize: true,
     commonjsOptions: {
       transformMixedEsModules: true,
@@ -161,7 +329,7 @@ export default defineConfig({
 
   test: {
     globals: true,
-    cache: { dir: '../../node_modules/.vitest' },
+    cache: { dir: '../../node_modules/.vitest/libs/react-lib-nonb-vitest' },
     environment: 'jsdom',
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
     reporters: ['default'],
@@ -203,6 +371,7 @@ export default defineConfig({
 
   build: {
     outDir: '../../dist/apps/my-test-react-app',
+    emptyOutDir: true,
     reportCompressedSize: true,
     commonjsOptions: {
       transformMixedEsModules: true,
@@ -260,6 +429,7 @@ export default defineConfig({
 
   build: {
     outDir: '../../dist/apps/my-test-web-app',
+    emptyOutDir: true,
     reportCompressedSize: true,
     commonjsOptions: {
       transformMixedEsModules: true,
@@ -317,6 +487,7 @@ export default defineConfig({
 
   build: {
     outDir: '../../dist/apps/my-test-react-app',
+    emptyOutDir: true,
     reportCompressedSize: true,
     commonjsOptions: {
       transformMixedEsModules: true,
@@ -324,9 +495,10 @@ export default defineConfig({
   },
 
   test: {
+    watch: false,
     globals: true,
     cache: {
-      dir: '../../node_modules/.vitest',
+      dir: '../../node_modules/.vitest/apps/my-test-react-app',
     },
     environment: 'jsdom',
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],

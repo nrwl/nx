@@ -15,6 +15,11 @@ exports[`@nx/remix/plugin non-root project should create nodes 1`] = `
           "inputs": [
             "production",
             "^production",
+            {
+              "externalDependencies": [
+                "@remix-run/dev",
+              ],
+            },
           ],
           "options": {
             "cwd": "my-app",
@@ -39,12 +44,26 @@ exports[`@nx/remix/plugin non-root project should create nodes 1`] = `
             "cwd": "my-app",
           },
         },
+        "static-serve": {
+          "command": "remix-serve build/index.js",
+          "dependsOn": [
+            "build",
+          ],
+          "options": {
+            "cwd": "my-app",
+          },
+        },
         "tsc": {
           "cache": true,
           "command": "tsc",
           "inputs": [
             "production",
             "^production",
+            {
+              "externalDependencies": [
+                "typescript",
+              ],
+            },
           ],
           "options": {
             "cwd": "my-app",
@@ -71,6 +90,11 @@ exports[`@nx/remix/plugin root project should create nodes 1`] = `
           "inputs": [
             "production",
             "^production",
+            {
+              "externalDependencies": [
+                "@remix-run/dev",
+              ],
+            },
           ],
           "options": {
             "cwd": ".",
@@ -95,12 +119,26 @@ exports[`@nx/remix/plugin root project should create nodes 1`] = `
             "cwd": ".",
           },
         },
+        "static-serve": {
+          "command": "remix-serve build/index.js",
+          "dependsOn": [
+            "build",
+          ],
+          "options": {
+            "cwd": ".",
+          },
+        },
         "typecheck": {
           "cache": true,
           "command": "tsc",
           "inputs": [
             "production",
             "^production",
+            {
+              "externalDependencies": [
+                "typescript",
+              ],
+            },
           ],
           "options": {
             "cwd": ".",

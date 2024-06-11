@@ -65,7 +65,7 @@ const nxPackages = [
   `@nx/expo`,
 ] as const;
 
-type NxPackage = typeof nxPackages[number];
+type NxPackage = (typeof nxPackages)[number];
 
 /**
  * Sets up a new project in the temporary project path
@@ -78,7 +78,7 @@ export function newProject({
   packages,
 }: {
   name?: string;
-  packageManager?: 'npm' | 'yarn' | 'pnpm';
+  packageManager?: 'npm' | 'yarn' | 'pnpm' | 'bun';
   unsetProjectNameAndRootFormat?: boolean;
   readonly packages?: Array<NxPackage>;
 } = {}): string {
@@ -240,7 +240,7 @@ export function runCreateWorkspace(
     appName?: string;
     style?: string;
     base?: string;
-    packageManager?: 'npm' | 'yarn' | 'pnpm';
+    packageManager?: 'npm' | 'yarn' | 'pnpm' | 'bun';
     extraArgs?: string;
     useDetectedPm?: boolean;
     cwd?: string;
@@ -358,7 +358,7 @@ export function runCreatePlugin(
     extraArgs,
     useDetectedPm = false,
   }: {
-    packageManager?: 'npm' | 'yarn' | 'pnpm';
+    packageManager?: 'npm' | 'yarn' | 'pnpm' | 'bun';
     extraArgs?: string;
     useDetectedPm?: boolean;
   }
@@ -540,6 +540,11 @@ export function newLernaWorkspace({
         };
       } else if (packageManager === 'yarn') {
         json.resolutions = {
+          ...json.resolutions,
+          ...overrides,
+        };
+      } else if (packageManager === 'bun') {
+        json.overrides = {
           ...json.resolutions,
           ...overrides,
         };

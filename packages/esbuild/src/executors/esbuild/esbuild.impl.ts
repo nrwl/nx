@@ -76,7 +76,7 @@ export async function* esbuildExecutor(
     if (context.projectGraph.nodes[context.projectName].type !== 'app') {
       logger.warn(
         stripIndents`The project ${context.projectName} is using the 'generatePackageJson' option which is deprecated for library projects. It should only be used for applications.
-        For libraries, configure the project to use the '@nx/dependency-checks' ESLint rule instead (https://nx.dev/packages/eslint-plugin/documents/dependency-checks).`
+        For libraries, configure the project to use the '@nx/dependency-checks' ESLint rule instead (https://nx.dev/nx-api/eslint-plugin/documents/dependency-checks).`
       );
     }
 
@@ -212,12 +212,17 @@ function getTypeCheckOptions(
   const { watch, tsConfig, outputPath } = options;
 
   const typeCheckOptions: TypeCheckOptions = {
-    // TODO(jack): Add support for d.ts declaration files -- once the `@nx/js:tsc` changes are in we can use the same logic.
-    mode: 'noEmit',
+    ...(options.declaration
+      ? {
+          mode: 'emitDeclarationOnly',
+          outDir: outputPath,
+        }
+      : {
+          mode: 'noEmit',
+        }),
     tsConfigPath: tsConfig,
-    // outDir: outputPath,
     workspaceRoot: context.root,
-    rootDir: context.root,
+    rootDir: options.declarationRootDir ?? context.root,
   };
 
   if (watch) {

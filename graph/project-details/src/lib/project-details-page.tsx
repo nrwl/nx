@@ -10,8 +10,9 @@ import {
   useParams,
   useRouteLoaderData,
 } from 'react-router-dom';
-import ProjectDetailsWrapper from './project-details-wrapper';
+import { ProjectDetailsWrapper } from './project-details-wrapper';
 import {
+  ExpandedTargetsProvider,
   fetchProjectGraph,
   getProjectGraphDataService,
   useEnvironmentConfig,
@@ -50,20 +51,22 @@ export function ProjectDetailsPage() {
   );
 
   return (
-    <div className="flex w-full flex-col justify-center text-slate-700 dark:text-slate-400">
-      <ScrollRestoration />
-      {environment !== 'nx-console' ? (
-        <ProjectDetailsHeader />
-      ) : (
-        <div className="py-2"></div>
-      )}
-      <div className="mx-auto mb-8 w-full max-w-6xl flex-grow px-8">
-        <ProjectDetailsWrapper
-          project={project}
-          sourceMap={sourceMap}
-          errors={errors}
-        ></ProjectDetailsWrapper>
+    <ExpandedTargetsProvider>
+      <div className="flex w-full flex-col justify-center text-slate-700 dark:text-slate-400">
+        <ScrollRestoration />
+        {environment !== 'nx-console' ? (
+          <ProjectDetailsHeader />
+        ) : (
+          <div className="py-2"></div>
+        )}
+        <div className="mx-auto mb-8 w-full max-w-6xl flex-grow px-8">
+          <ProjectDetailsWrapper
+            project={project}
+            sourceMap={sourceMap}
+            errors={errors}
+          ></ProjectDetailsWrapper>
+        </div>
       </div>
-    </div>
+    </ExpandedTargetsProvider>
   );
 }

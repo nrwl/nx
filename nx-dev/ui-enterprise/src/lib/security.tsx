@@ -9,19 +9,19 @@ export function Security(): JSX.Element {
             <SectionHeading as="h2" variant="title">
               Security
             </SectionHeading>
-            <SectionHeading as="h2" variant="subtitle" className="mt-6">
+            <p className="mt-6 text-lg">
               Nx Cloud is certified to the industry standards, is constantly
               monitored and{' '}
               <a
                 href="https://security.nx.app/"
                 target="_blank"
-                rel="nofollow"
+                rel="nofollow noreferrer"
                 className="underline"
               >
                 issue security Trust Reports powered by Vanta
               </a>
               .
-            </SectionHeading>
+            </p>
 
             <div className="mt-16 flex flex-wrap items-center gap-4">
               <div className="flex w-52 shrink-0 items-center gap-2 rounded-xl px-2 py-1 text-xs text-slate-950 ring-1 ring-slate-200 dark:text-slate-50 dark:ring-slate-700">

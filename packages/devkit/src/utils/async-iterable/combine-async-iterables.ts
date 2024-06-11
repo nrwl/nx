@@ -24,12 +24,10 @@ export async function* combineAsyncIterables<T = any>(
   }
 
   const getNextAsyncIteratorValue = getNextAsyncIteratorFactory(options);
-
+  const asyncIteratorsValues = new Map(
+    iterators.map((it, idx) => [idx, getNextAsyncIteratorValue(it, idx)])
+  );
   try {
-    const asyncIteratorsValues = new Map(
-      iterators.map((it, idx) => [idx, getNextAsyncIteratorValue(it, idx)])
-    );
-
     do {
       const { iterator, index } = await Promise.race(
         asyncIteratorsValues.values()
@@ -45,7 +43,8 @@ export async function* combineAsyncIterables<T = any>(
       }
     } while (asyncIteratorsValues.size > 0);
   } finally {
-    await Promise.allSettled(iterators.map((it) => it['return']?.()));
+    for (const [index, iterator] of asyncIteratorsValues.entries())
+      if (iterator?.['return'] !== null) iterator['return']?.();
   }
 }
 

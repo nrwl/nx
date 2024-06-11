@@ -30,6 +30,7 @@ export default defineConfig({
   // See: https://vitejs.dev/guide/build.html#library-mode
   build: {
     outDir: '../dist/my-lib',
+    emptyOutDir: true,
     reportCompressedSize: true,
     commonjsOptions: {
       transformMixedEsModules: true,
@@ -50,9 +51,10 @@ export default defineConfig({
   },
 
   test: {
+    watch: false,
     globals: true,
     cache: {
-      dir: '../node_modules/.vitest',
+      dir: '../node_modules/.vitest/my-lib',
     },
     environment: 'jsdom',
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
@@ -125,6 +127,7 @@ export default defineConfig({
   // See: https://vitejs.dev/guide/build.html#library-mode
   build: {
     outDir: '../dist/my-lib',
+    emptyOutDir: true,
     reportCompressedSize: true,
     commonjsOptions: {
       transformMixedEsModules: true,
@@ -145,9 +148,10 @@ export default defineConfig({
   },
 
   test: {
+    watch: false,
     globals: true,
     cache: {
-      dir: '../node_modules/.vitest',
+      dir: '../node_modules/.vitest/my-lib',
     },
     environment: 'jsdom',
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
@@ -176,9 +180,9 @@ exports[`lib should add vue, vite and vitest to package.json 1`] = `
     "@nx/vite": "0.0.1",
     "@nx/vue": "0.0.1",
     "@nx/web": "0.0.1",
-    "@swc-node/register": "~1.8.0",
-    "@swc/core": "~1.3.85",
-    "@swc/helpers": "~0.5.2",
+    "@swc-node/register": "~1.9.1",
+    "@swc/core": "~1.5.7",
+    "@swc/helpers": "~0.5.11",
     "@typescript-eslint/eslint-plugin": "^7.3.0",
     "@typescript-eslint/parser": "^7.3.0",
     "@vitejs/plugin-vue": "^4.5.0",
@@ -193,7 +197,7 @@ exports[`lib should add vue, vite and vitest to package.json 1`] = `
     "jsdom": "~22.1.0",
     "prettier": "^2.6.2",
     "typescript": "~5.4.2",
-    "vite": "~5.0.0",
+    "vite": "^5.0.0",
     "vitest": "^1.3.1",
     "vue-tsc": "^1.8.8",
   },
@@ -275,4 +279,30 @@ exports[`lib should ignore test files in tsconfig.lib.json 1`] = `
   "src/**/*.spec.vue",
   "src/**/*.test.vue",
 ]
+`;
+
+exports[`lib should support eslint flat config 1`] = `
+"const { FlatCompat } = require('@eslint/eslintrc');
+const js = require('@eslint/js');
+const baseConfig = require('../eslint.config.js');
+
+const compat = new FlatCompat({
+  baseDirectory: __dirname,
+  recommendedConfig: js.configs.recommended,
+});
+
+module.exports = [
+  ...compat.extends(
+    'plugin:vue/vue3-essential',
+    'eslint:recommended',
+    '@vue/eslint-config-typescript',
+    '@vue/eslint-config-prettier/skip-formatting'
+  ),
+  ...baseConfig,
+  {
+    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx', '**/*.vue'],
+    rules: { 'vue/multi-word-component-names': 'off' },
+  },
+];
+"
 `;

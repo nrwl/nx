@@ -29,6 +29,7 @@ export function jsPluginConfig(
       analyzePackageJson: true,
       analyzeSourceFiles: true,
       analyzeLockfile,
+      projectsAffectedByDependencyUpdates: 'all',
       ...nxJsonConfig,
     };
   }
@@ -38,6 +39,7 @@ export function jsPluginConfig(
       analyzeLockfile: false,
       analyzePackageJson: false,
       analyzeSourceFiles: false,
+      projectsAffectedByDependencyUpdates: 'all',
     };
   }
 
@@ -69,12 +71,14 @@ export function jsPluginConfig(
       analyzePackageJson: true,
       analyzeLockfile,
       analyzeSourceFiles: true,
+      projectsAffectedByDependencyUpdates: 'all',
     };
   } else {
     return {
       analyzePackageJson: true,
       analyzeLockfile,
       analyzeSourceFiles: false,
+      projectsAffectedByDependencyUpdates: 'all',
     };
   }
 }

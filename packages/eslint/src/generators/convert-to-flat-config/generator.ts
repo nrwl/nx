@@ -1,7 +1,9 @@
 import {
   addDependenciesToPackageJson,
   formatFiles,
+  GeneratorCallback,
   getProjects,
+  installPackagesTask,
   NxJsonConfiguration,
   ProjectConfiguration,
   readJson,
@@ -16,12 +18,13 @@ import { join } from 'path';
 import { eslintrcVersion, eslintVersion } from '../../utils/versions';
 import { ESLint } from 'eslint';
 import { convertEslintJsonToFlatConfig } from './converters/json-converter';
-import { load } from 'js-yaml';
+
+let shouldInstallDeps = false;
 
 export async function convertToFlatConfigGenerator(
   tree: Tree,
   options: ConvertToFlatConfigGeneratorSchema
-) {
+): Promise<void | GeneratorCallback> {
   const eslintFile = findEslintFile(tree);
   if (!eslintFile) {
     throw new Error('Could not find root eslint file');
@@ -60,6 +63,10 @@ export async function convertToFlatConfigGenerator(
 
   if (!options.skipFormat) {
     await formatFiles(tree);
+  }
+
+  if (shouldInstallDeps) {
+    return () => installPackagesTask(tree);
   }
 }
 
@@ -182,6 +189,7 @@ function convertConfigToFlatConfig(
   }
   if (source.endsWith('.yaml') || source.endsWith('.yml')) {
     const originalContent = tree.read(`${root}/${source}`, 'utf-8');
+    const { load } = require('@zkochan/js-yaml');
     const config = load(originalContent, {
       json: true,
       filename: source,
@@ -215,6 +223,7 @@ function processConvertedConfig(
 
   // add missing packages
   if (addESLintRC) {
+    shouldInstallDeps = true;
     addDependenciesToPackageJson(
       tree,
       {},
@@ -224,6 +233,7 @@ function processConvertedConfig(
     );
   }
   if (addESLintJS) {
+    shouldInstallDeps = true;
     addDependenciesToPackageJson(
       tree,
       {},

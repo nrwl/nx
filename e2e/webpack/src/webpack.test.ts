@@ -164,22 +164,18 @@ describe('Webpack Plugin', () => {
     expect(output).toMatch(/Hello/);
   }, 500_000);
 
-  it('should bundle in non-sensitive NX_ environment variables', () => {
+  it('should bundle in NX_PUBLIC_ environment variables', () => {
     const appName = uniq('app');
     runCLI(`generate @nx/web:app ${appName} --bundler webpack`);
     updateFile(
       `apps/${appName}/src/main.ts`,
       `
-      console.log(process.env['NX_CLOUD_ENCRYPTION_KEY']);
-      console.log(process.env['NX_CLOUD_ACCESS_TOKEN']);
       console.log(process.env['NX_PUBLIC_TEST']);
       `
     );
 
     runCLI(`build ${appName}`, {
       env: {
-        NX_CLOUD_ENCRYPTION_KEY: 'secret',
-        NX_CLOUD_ACCESS_TOKEN: 'secret',
         NX_PUBLIC_TEST: 'foobar',
       },
     });
@@ -188,7 +184,6 @@ describe('Webpack Plugin', () => {
       f.startsWith('main.')
     );
     const content = readFile(`dist/apps/${appName}/${mainFile}`);
-    expect(content).not.toMatch(/secret/);
     expect(content).toMatch(/foobar/);
   });
 
@@ -290,6 +285,56 @@ describe('Webpack Plugin', () => {
     runCLI(`build ${appName}`);
 
     checkFilesExist(`dist/apps/${appName}/TEST.md`);
+  });
+
+  it('it should support building libraries and apps when buildLibsFromSource is false', () => {
+    const appName = uniq('app');
+    const myPkg = uniq('my-pkg');
+
+    runCLI(`generate @nx/web:application ${appName}`);
+
+    runCLI(`generate @nx/js:lib ${myPkg} --importPath=@${appName}/${myPkg}`);
+
+    updateFile(`libs/${myPkg}/src/index.ts`, `export const foo = 'bar';\n`);
+
+    updateFile(
+      `apps/${appName}/src/main.ts`,
+      `import { foo } from '@${appName}/${myPkg}';\nconsole.log(foo);\n`
+    );
+
+    updateFile(
+      `apps/${appName}/webpack.config.js`,
+      `
+      const path  = require('path');
+      const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
+
+      module.exports = {
+        target: 'node',
+        output: {
+          path: path.join(__dirname, '../../dist/${appName}')
+        },
+        plugins: [
+          new NxAppWebpackPlugin({
+            compiler: 'tsc',
+            main: 'apps/${appName}/src/main.ts',
+            tsConfig: 'apps/${appName}/tsconfig.app.json',
+            outputHashing: 'none',
+            optimization: false,
+            buildLibsFromSource: false,
+          })
+        ]
+      };`
+    );
+
+    const result = runCLI(`build ${appName}`);
+
+    expect(result).toContain(
+      `Running target build for project ${appName} and 1 task it depends on`
+    );
+    expect(result).toContain(`nx run ${myPkg}:build`);
+    expect(result).toContain(
+      `Successfully ran target build for project ${appName} and 1 task it depends on`
+    );
   });
 });
 

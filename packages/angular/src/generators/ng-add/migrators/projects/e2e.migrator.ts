@@ -343,7 +343,9 @@ export class E2eMigrator extends ProjectMigrator<SupportedTargets> {
     const addPlugin =
       process.env.NX_ADD_PLUGINS !== 'false' &&
       nxJson.useInferencePlugins !== false;
-    const { configurationGenerator } = await import('@nx/cypress');
+    const { configurationGenerator } = <typeof import('@nx/cypress')>(
+      require('@nx/cypress')
+    );
     await configurationGenerator(this.tree, {
       project: this.project.name,
       linter: this.isProjectUsingEsLint ? Linter.EsLint : Linter.None,

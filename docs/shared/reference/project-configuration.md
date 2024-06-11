@@ -6,7 +6,7 @@ A project's configuration is constructed by Nx from three sources:
 2. [Workspace `targetDefaults`](/reference/nx-json#target-defaults) defined in the `nx.json` file
 3. Individual project level configuration files (`package.json` and `project.json`)
 
-Each source will overwrite the previous source. That means `targetDefaults` will overwrite inferred tasks and project level configuration will overwrite both `targetDefaults` and inferred tasks. The combined project configuration can be viewed in the project details view by using [Nx Console](/getting-started/editor-setup) in your IDE or by running:
+Each source will [overwrite the previous source](/recipes/running-tasks/pass-args-to-commands). That means `targetDefaults` will overwrite inferred tasks and project level configuration will overwrite both `targetDefaults` and inferred tasks. The combined project configuration can be viewed in the project details view by using [Nx Console](/getting-started/editor-setup) in your IDE or by running:
 
 ```shell
 nx show project myproject --web
@@ -26,6 +26,9 @@ nx show project myproject --web
           "executor": "nx:run-commands",
           "options": {
             "command": "vite dev"
+          },
+          "metadata": {
+            "technologies": ["vite"]
           }
         },
         "build": {
@@ -34,6 +37,9 @@ nx show project myproject --web
           "outputs": ["{projectRoot}/dist"],
           "options": {
             "command": "vite build"
+          },
+          "metadata": {
+            "technologies": ["vite"]
           }
         }
       }
@@ -342,7 +348,7 @@ You can also express task dependencies with an object syntax:
 ```json
 {
   "targets": {
-    "build": {
+    "test": {
       "dependsOn": [
         {
           "target": "build", // target name

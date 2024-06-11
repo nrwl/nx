@@ -223,19 +223,27 @@ export default function Changelog(props: ChangeLogProps): JSX.Element {
       </div>
 
       <main id="main" role="main">
-        <div className="mx-auto flex max-w-7xl flex-col py-8 px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto flex max-w-7xl flex-col px-4 py-8 sm:px-6 lg:px-8">
           <div className="mb-6">
             <Breadcrumbs path={router.asPath} />
           </div>
           <div className="hidden">
-            <SidebarContainer menu={menu} navIsOpen={navIsOpen} />
+            <SidebarContainer
+              menu={menu}
+              toggleNav={toggleNav}
+              navIsOpen={navIsOpen}
+            />
           </div>
           <header className="mt-0">
-            <h1 className="text-3xl font-semibold tracking-tight text-slate-900 dark:text-slate-100 sm:text-5xl">
+            <h1 className="text-3xl font-semibold tracking-tight text-slate-900 sm:text-5xl dark:text-slate-100">
               Nx Changelog
             </h1>
             <p className="mt-4">
-              All the Nx goodies in one page, sorted by release.
+              All the Nx goodies in one page, sorted by release. See our{' '}
+              <Link className="underline" href="/reference/releases">
+                release page
+              </Link>{' '}
+              for information about the release cycle and LTS policy.
             </p>
           </header>
           <ul className="m-0 space-y-6 py-6">
@@ -271,7 +279,7 @@ export default function Changelog(props: ChangeLogProps): JSX.Element {
                       v{changelog.version.split('.').slice(0, 2).join('.')}
                     </a>
                     <Link aria-hidden="true" href={`#${changelog.version}`}>
-                      <LinkIcon className="ml-2 mb-1 inline h-5 w-5 opacity-0 group-hover:opacity-100" />
+                      <LinkIcon className="mb-1 ml-2 inline h-5 w-5 opacity-0 group-hover:opacity-100" />
                     </Link>
                   </p>
                   <p className="py-0.5 text-xs leading-5 text-slate-400 dark:text-slate-500">

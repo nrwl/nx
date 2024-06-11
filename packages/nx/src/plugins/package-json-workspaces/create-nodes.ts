@@ -4,54 +4,80 @@ import { dirname, join } from 'node:path';
 
 import { NxJsonConfiguration, readNxJson } from '../../config/nx-json';
 import { ProjectConfiguration } from '../../config/workspace-json-project-json';
-import { toProjectName } from '../../config/workspaces';
+import { toProjectName } from '../../config/to-project-name';
 import { readJsonFile, readYamlFile } from '../../utils/fileutils';
 import { combineGlobPatterns } from '../../utils/globs';
 import { NX_PREFIX } from '../../utils/logger';
 import { output } from '../../utils/output';
 import {
   PackageJson,
+  getMetadataFromPackageJson,
   readTargetsFromPackageJson,
 } from '../../utils/package-json';
 import { joinPathFragments } from '../../utils/path';
-import { workspaceRoot } from '../../utils/workspace-root';
 import { CreateNodes } from '../../project-graph/plugins';
 
-const readJson = (f) => readJsonFile(join(workspaceRoot, f));
-const patterns = getGlobPatternsFromPackageManagerWorkspaces(
-  workspaceRoot,
-  readJson
-);
-
-const negativePatterns = patterns.filter((p) => p.startsWith('!'));
-const positivePatterns = patterns.filter((p) => !p.startsWith('!'));
-if (
-  // There are some negative patterns
-  negativePatterns.length > 0 &&
-  // No positive patterns
-  (positivePatterns.length === 0 ||
-    // Or only a single positive pattern that is the default coming from root package
-    (positivePatterns.length === 1 && positivePatterns[0] === 'package.json'))
-) {
-  positivePatterns.push('**/package.json');
-}
 export const createNodes: CreateNodes = [
-  combineGlobPatterns(positivePatterns),
+  combineGlobPatterns('package.json', '**/package.json'),
   (p, _, { workspaceRoot }) => {
-    if (!negativePatterns.some((negative) => minimatch(p, negative))) {
+    const readJson = (f) => readJsonFile(join(workspaceRoot, f));
+    const matcher = buildPackageJsonWorkspacesMatcher(workspaceRoot, readJson);
+
+    if (matcher(p)) {
       return createNodeFromPackageJson(p, workspaceRoot);
     }
-    // A negative pattern matched, so we should not create a node for this package.json
+    // The given package.json is not part of the workspaces configuration.
     return {};
   },
 ];
 
-export function createNodeFromPackageJson(pkgJsonPath: string, root: string) {
-  const json: PackageJson = readJsonFile(join(root, pkgJsonPath));
+export function buildPackageJsonWorkspacesMatcher(
+  workspaceRoot: string,
+  readJson: (string) => any
+) {
+  const patterns = getGlobPatternsFromPackageManagerWorkspaces(
+    workspaceRoot,
+    readJson
+  );
+
+  const negativePatterns = patterns.filter((p) => p.startsWith('!'));
+  const positivePatterns = patterns.filter((p) => !p.startsWith('!'));
+
+  if (
+    // There are some negative patterns
+    negativePatterns.length > 0 &&
+    // No positive patterns
+    (positivePatterns.length === 0 ||
+      // Or only a single positive pattern that is the default coming from root package
+      (positivePatterns.length === 1 && positivePatterns[0] === 'package.json'))
+  ) {
+    positivePatterns.push('**/package.json');
+  }
+
+  return (p: string) =>
+    positivePatterns.some((positive) => minimatch(p, positive)) &&
+    /**
+     * minimatch will return true if the given p is NOT excluded by the negative pattern.
+     *
+     * For example if the negative pattern is "!packages/vite", then the given p "packages/vite" will return false,
+     * the given p "packages/something-else/package.json" will return true.
+     *
+     * Therefore, we need to ensure that every negative pattern returns true to validate that the given p is not
+     * excluded by any of the negative patterns.
+     */
+    negativePatterns.every((negative) => minimatch(p, negative));
+}
+
+export function createNodeFromPackageJson(
+  pkgJsonPath: string,
+  workspaceRoot: string
+) {
+  const json: PackageJson = readJsonFile(join(workspaceRoot, pkgJsonPath));
   const project = buildProjectConfigurationFromPackageJson(
     json,
+    workspaceRoot,
     pkgJsonPath,
-    readNxJson(root)
+    readNxJson(workspaceRoot)
   );
   return {
     projects: {
@@ -62,13 +88,24 @@ export function createNodeFromPackageJson(pkgJsonPath: string, root: string) {
 
 export function buildProjectConfigurationFromPackageJson(
   packageJson: PackageJson,
-  path: string,
+  workspaceRoot: string,
+  packageJsonPath: string,
   nxJson: NxJsonConfiguration
 ): ProjectConfiguration & { name: string } {
-  const normalizedPath = path.split('\\').join('/');
-  const directory = dirname(normalizedPath);
+  const normalizedPath = packageJsonPath.split('\\').join('/');
+  const projectRoot = dirname(normalizedPath);
 
-  if (!packageJson.name && directory === '.') {
+  const siblingProjectJson = tryReadJson<ProjectConfiguration>(
+    join(workspaceRoot, projectRoot, 'project.json')
+  );
+
+  if (siblingProjectJson) {
+    for (const target of Object.keys(siblingProjectJson?.targets ?? {})) {
+      delete packageJson.scripts?.[target];
+    }
+  }
+
+  if (!packageJson.name && projectRoot === '.') {
     throw new Error(
       'Nx requires the root package.json to specify a name if it is being used as an Nx project.'
     );
@@ -78,17 +115,18 @@ export function buildProjectConfigurationFromPackageJson(
   const projectType =
     nxJson?.workspaceLayout?.appsDir != nxJson?.workspaceLayout?.libsDir &&
     nxJson?.workspaceLayout?.appsDir &&
-    directory.startsWith(nxJson.workspaceLayout.appsDir)
+    projectRoot.startsWith(nxJson.workspaceLayout.appsDir)
       ? 'application'
       : 'library';
 
   return {
-    root: directory,
-    sourceRoot: directory,
+    root: projectRoot,
+    sourceRoot: projectRoot,
     name,
     projectType,
     ...packageJson.nx,
     targets: readTargetsFromPackageJson(packageJson),
+    metadata: getMetadataFromPackageJson(packageJson),
   };
 }
 
@@ -161,4 +199,12 @@ function normalizePatterns(patterns: string[]): string[] {
 
 function removeRelativePath(pattern: string): string {
   return pattern.startsWith('./') ? pattern.substring(2) : pattern;
+}
+
+function tryReadJson<T extends Object = any>(path: string): T | null {
+  try {
+    return readJsonFile<T>(path);
+  } catch {
+    return null;
+  }
 }

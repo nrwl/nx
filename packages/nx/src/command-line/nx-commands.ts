@@ -5,17 +5,15 @@ import {
   yargsAffectedBuildCommand,
   yargsAffectedCommand,
   yargsAffectedE2ECommand,
-  yargsAffectedGraphCommand,
   yargsAffectedLintCommand,
   yargsAffectedTestCommand,
-  yargsPrintAffectedCommand,
 } from './affected/command-object';
 import {
   yargsConnectCommand,
   yargsViewLogsCommand,
 } from './connect/command-object';
 import { yargsDaemonCommand } from './daemon/command-object';
-import { yargsDepGraphCommand } from './graph/command-object';
+import { yargsGraphCommand } from './graph/command-object';
 import { yargsExecCommand } from './exec/command-object';
 import {
   yargsFormatCheckCommand,
@@ -38,6 +36,10 @@ import { yargsWatchCommand } from './watch/command-object';
 import { yargsResetCommand } from './reset/command-object';
 import { yargsReleaseCommand } from './release/command-object';
 import { yargsAddCommand } from './add/command-object';
+import {
+  yargsPrintAffectedCommand,
+  yargsAffectedGraphCommand,
+} from './deprecated/command-objects';
 
 // Ensure that the output takes up the available width of the terminal.
 yargs.wrap(yargs.terminalWidth());
@@ -61,12 +63,12 @@ export const commandsObject = yargs
   .command(yargsAffectedBuildCommand)
   .command(yargsAffectedCommand)
   .command(yargsAffectedE2ECommand)
-  .command(yargsAffectedGraphCommand)
   .command(yargsAffectedLintCommand)
   .command(yargsAffectedTestCommand)
+  .command(yargsAffectedGraphCommand)
   .command(yargsConnectCommand)
   .command(yargsDaemonCommand)
-  .command(yargsDepGraphCommand)
+  .command(yargsGraphCommand)
   .command(yargsExecCommand)
   .command(yargsFormatCheckCommand)
   .command(yargsFormatWriteCommand)

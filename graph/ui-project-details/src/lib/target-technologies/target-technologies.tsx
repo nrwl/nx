@@ -1,6 +1,7 @@
 import { TechnologyIcon } from '@nx/graph/ui-icons';
+import { HTMLProps } from 'react';
 
-export interface TargetTechnologiesProps {
+export interface TargetTechnologiesProps extends HTMLProps<HTMLDivElement> {
   technologies?: string[];
   showTooltip?: boolean;
 }
@@ -8,6 +9,7 @@ export interface TargetTechnologiesProps {
 export function TargetTechnologies({
   technologies,
   showTooltip,
+  ...props
 }: TargetTechnologiesProps) {
   if (!technologies || technologies.length === 0) {
     return null;
@@ -19,6 +21,8 @@ export function TargetTechnologies({
           key={index}
           technology={technology}
           showTooltip={showTooltip}
+          monochromatic={true}
+          {...props}
         />
       ))}
     </div>

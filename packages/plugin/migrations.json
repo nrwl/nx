@@ -1,23 +1,5 @@
 {
   "generators": {
-    "update-15-0-0": {
-      "cli": "nx",
-      "version": "15.0.0-beta.0",
-      "description": "Migrates executor schema files to v2",
-      "factory": "./src/migrations/update-15-0-0/specify-output-capture"
-    },
-    "update-configs-jest-29": {
-      "version": "15.9.0-beta.0",
-      "cli": "nx",
-      "description": "Update nx plugin jest configs to support jest 29 changes (https://jestjs.io/docs/upgrading-to-jest29)",
-      "factory": "./src/migrations/update-15-9-0/jest-29-configs"
-    },
-    "update-tests-jest-29": {
-      "version": "15.9.0-beta.0",
-      "cli": "nx",
-      "description": "Update nx plugin jest test files to support jest 29 changes (https://jestjs.io/docs/upgrading-to-jest29)",
-      "factory": "./src/migrations/update-15-9-0/jest-29-tests"
-    },
     "update-remove-cli-prop": {
       "version": "16.0.0-beta.1",
       "cli": "nx",

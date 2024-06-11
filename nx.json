@@ -29,6 +29,8 @@
       "default",
       "{workspaceRoot}/jest.preset.js",
       "{workspaceRoot}/.verdaccio/config.yml",
+      "{workspaceRoot}/scripts/local-registry/**/*",
+      "{workspaceRoot}/scripts/nx-release.ts",
       {
         "env": "SELECTED_CLI"
       },

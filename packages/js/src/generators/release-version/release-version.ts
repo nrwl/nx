@@ -2,6 +2,7 @@ import {
   ProjectGraphProjectNode,
   Tree,
   formatFiles,
+  joinPathFragments,
   output,
   readJson,
   updateJson,
@@ -9,9 +10,14 @@ import {
   writeJson,
 } from '@nx/devkit';
 import * as chalk from 'chalk';
+import { remove } from 'fs-extra';
 import { exec } from 'node:child_process';
 import { join } from 'node:path';
 import { IMPLICIT_DEFAULT_RELEASE_GROUP } from 'nx/src/command-line/release/config/config';
+import {
+  GroupVersionPlan,
+  ProjectsVersionPlan,
+} from 'nx/src/command-line/release/config/version-plans';
 import {
   getFirstGitCommit,
   getLatestGitTagForPattern,
@@ -29,10 +35,14 @@ import {
 } from 'nx/src/command-line/release/version';
 import { interpolate } from 'nx/src/tasks-runner/utils';
 import * as ora from 'ora';
-import { prerelease } from 'semver';
+import { ReleaseType, gt, inc, prerelease } from 'semver';
 import { parseRegistryOptions } from '../../utils/npm-config';
 import { ReleaseVersionGeneratorSchema } from './schema';
-import { resolveLocalPackageDependencies } from './utils/resolve-local-package-dependencies';
+import {
+  LocalPackageDependency,
+  resolveLocalPackageDependencies,
+} from './utils/resolve-local-package-dependencies';
+import { sortProjectsTopologically } from './utils/sort-projects-topologically';
 import { updateLockFile } from './utils/update-lock-file';
 
 export async function releaseVersionGenerator(
@@ -73,7 +83,17 @@ Valid values are: ${validReleaseVersionPrefixes
       options.fallbackCurrentVersionResolver = 'disk';
     }
 
-    const projects = options.projects;
+    // Set default for updateDependents
+    const updateDependents = options.updateDependents ?? 'never';
+    const updateDependentsBump = 'patch';
+
+    // Sort the projects topologically if update dependents is enabled
+    // TODO: maybe move this sorting to the command level?
+    const projects =
+      updateDependents === 'never'
+        ? options.projects
+        : sortProjectsTopologically(options.projectGraph, options.projects);
+    const projectToDependencyBumps = new Map<string, any>();
 
     const resolvePackageRoot = createResolvePackageRoot(options.packageRoot);
 
@@ -101,6 +121,10 @@ Valid values are: ${validReleaseVersionPrefixes
     let specifier: string | null | undefined = options.specifier
       ? options.specifier
       : undefined;
+
+    const deleteVersionPlanCallbacks: ((
+      dryRun?: boolean
+    ) => Promise<string[]>)[] = [];
 
     for (const project of projects) {
       const projectName = project.name;
@@ -181,7 +205,7 @@ To fix this you will either need to add a package.json file at that location, or
               )}Resolving the current version for tag "${tag}" on ${registry}`
             );
             spinner.color =
-              color.spinnerColor as typeof colors[number]['spinnerColor'];
+              color.spinnerColor as (typeof colors)[number]['spinnerColor'];
             spinner.start();
 
             try {
@@ -236,6 +260,11 @@ To fix this you will either need to add a package.json file at that location, or
         }
         case 'disk':
           currentVersion = currentVersionFromDisk;
+          if (!currentVersion) {
+            throw new Error(
+              `Unable to determine the current version for project "${project.name}" from ${packageJsonPath}`
+            );
+          }
           log(
             `📄 Resolved the current version as ${currentVersion} from ${packageJsonPath}`
           );
@@ -295,6 +324,8 @@ To fix this you will either need to add a package.json file at that location, or
 
       if (options.specifier) {
         log(`📄 Using the provided version specifier "${options.specifier}".`);
+        // The user is forcibly overriding whatever specifierSource they had otherwise set by imperatively providing a specifier
+        options.specifierSource = 'prompt';
       }
 
       /**
@@ -351,13 +382,21 @@ To fix this you will either need to add a package.json file at that location, or
             );
 
             if (!specifier) {
+              if (projectToDependencyBumps.has(projectName)) {
+                // No applicable changes to the project directly by the user, but one or more dependencies have been bumped and updateDependents is enabled
+                specifier = updateDependentsBump;
+                log(
+                  `📄 Resolved the specifier as "${specifier}" because "release.version.generatorOptions.updateDependents" is enabled`
+                );
+                break;
+              }
               log(
                 `🚫 No changes were detected using git history and the conventional commits standard.`
               );
               break;
             }
 
-            // TODO: reevaluate this logic/workflow for independent projects
+            // TODO: reevaluate this prerelease logic/workflow for independent projects
             //
             // Always assume that if the current version is a prerelease, then the next version should be a prerelease.
             // Users must manually graduate from a prerelease to a release by providing an explicit specifier.
@@ -404,9 +443,99 @@ To fix this you will either need to add a package.json file at that location, or
             }
             break;
           }
+          case 'version-plans': {
+            if (!options.releaseGroup.versionPlans) {
+              if (
+                options.releaseGroup.name === IMPLICIT_DEFAULT_RELEASE_GROUP
+              ) {
+                throw new Error(
+                  `Invalid specifierSource "version-plans" provided. To enable version plans, set the "release.versionPlans" configuration option to "true" in nx.json.`
+                );
+              } else {
+                throw new Error(
+                  `Invalid specifierSource "version-plans" provided. To enable version plans for release group "${options.releaseGroup.name}", set the "versionPlans" configuration option to "true" within the release group configuration in nx.json.`
+                );
+              }
+            }
+
+            if (options.releaseGroup.projectsRelationship === 'independent') {
+              specifier = (
+                options.releaseGroup.versionPlans as ProjectsVersionPlan[]
+              ).reduce((spec: ReleaseType, plan: ProjectsVersionPlan) => {
+                if (!spec) {
+                  return plan.projectVersionBumps[projectName];
+                }
+                if (plan.projectVersionBumps[projectName]) {
+                  const prevNewVersion = inc(currentVersion, spec);
+                  const nextNewVersion = inc(
+                    currentVersion,
+                    plan.projectVersionBumps[projectName]
+                  );
+                  return gt(nextNewVersion, prevNewVersion)
+                    ? plan.projectVersionBumps[projectName]
+                    : spec;
+                }
+                return spec;
+              }, null);
+            } else {
+              specifier = (
+                options.releaseGroup.versionPlans as GroupVersionPlan[]
+              ).reduce((spec: ReleaseType, plan: GroupVersionPlan) => {
+                if (!spec) {
+                  return plan.groupVersionBump;
+                }
+
+                const prevNewVersion = inc(currentVersion, spec);
+                const nextNewVersion = inc(
+                  currentVersion,
+                  plan.groupVersionBump
+                );
+                return gt(nextNewVersion, prevNewVersion)
+                  ? plan.groupVersionBump
+                  : spec;
+              }, null);
+            }
+
+            if (!specifier) {
+              if (
+                updateDependents !== 'never' &&
+                projectToDependencyBumps.has(projectName)
+              ) {
+                // No applicable changes to the project directly by the user, but one or more dependencies have been bumped and updateDependents is enabled
+                specifier = updateDependentsBump;
+                log(
+                  `📄 Resolved the specifier as "${specifier}" because "release.version.generatorOptions.updateDependents" is enabled`
+                );
+              } else {
+                specifier = null;
+                log(`🚫 No changes were detected within version plans.`);
+              }
+            } else {
+              log(
+                `📄 Resolved the specifier as "${specifier}" using version plans.`
+              );
+            }
+
+            if (options.deleteVersionPlans) {
+              options.releaseGroup.versionPlans.forEach((p) => {
+                deleteVersionPlanCallbacks.push(async (dryRun?: boolean) => {
+                  if (!dryRun) {
+                    await remove(p.absolutePath);
+                    // the relative path is easier to digest, so use that for
+                    // git operations and logging
+                    return [p.relativePath];
+                  } else {
+                    return [];
+                  }
+                });
+              });
+            }
+
+            break;
+          }
           default:
             throw new Error(
-              `Invalid specifierSource "${specifierSource}" provided. Must be one of "prompt" or "conventional-commits"`
+              `Invalid specifierSource "${specifierSource}" provided. Must be one of "prompt", "conventional-commits" or "version-plans".`
             );
         }
       }
@@ -422,11 +551,89 @@ To fix this you will either need to add a package.json file at that location, or
         options.releaseGroup.projectsRelationship === 'independent'
       );
 
-      const dependentProjects = Object.values(localPackageDependencies)
+      const allDependentProjects = Object.values(localPackageDependencies)
         .flat()
         .filter((localPackageDependency) => {
           return localPackageDependency.target === project.name;
         });
+
+      const includeTransitiveDependents = updateDependents === 'auto';
+      const transitiveLocalPackageDependents: LocalPackageDependency[] = [];
+      if (includeTransitiveDependents) {
+        for (const directDependent of allDependentProjects) {
+          // Look through localPackageDependencies to find any which have a target on the current dependent
+          for (const localPackageDependency of Object.values(
+            localPackageDependencies
+          ).flat()) {
+            if (localPackageDependency.target === directDependent.source) {
+              transitiveLocalPackageDependents.push(localPackageDependency);
+            }
+          }
+        }
+      }
+
+      const dependentProjectsInCurrentBatch = [];
+      const dependentProjectsOutsideCurrentBatch = [];
+      // Track circular dependencies using value of project1:project2
+      const circularDependencies = new Set<string>();
+
+      for (const dependentProject of allDependentProjects) {
+        // Track circular dependencies (add both directions for easy look up)
+        if (dependentProject.target === projectName) {
+          circularDependencies.add(
+            `${dependentProject.source}:${dependentProject.target}`
+          );
+          circularDependencies.add(
+            `${dependentProject.target}:${dependentProject.source}`
+          );
+        }
+
+        let isInCurrentBatch = options.projects.some(
+          (project) => project.name === dependentProject.source
+        );
+
+        // For version-plans, we don't just need to consider the current batch of projects, but also the ones that are actually being updated as part of the plan file(s)
+        if (isInCurrentBatch && options.specifierSource === 'version-plans') {
+          isInCurrentBatch = (options.releaseGroup.versionPlans || []).some(
+            (plan) => {
+              if ('projectVersionBumps' in plan) {
+                return plan.projectVersionBumps[dependentProject.source];
+              }
+              return true;
+            }
+          );
+        }
+
+        if (!isInCurrentBatch) {
+          dependentProjectsOutsideCurrentBatch.push(dependentProject);
+        } else {
+          dependentProjectsInCurrentBatch.push(dependentProject);
+        }
+      }
+
+      // If not always updating dependents (when they don't already appear in the batch itself), print a warning to the user about what is being skipped and how to change it
+      if (updateDependents === 'never') {
+        if (dependentProjectsOutsideCurrentBatch.length > 0) {
+          let logMsg = `⚠️  Warning, the following packages depend on "${project.name}"`;
+          const reason =
+            options.specifierSource === 'version-plans'
+              ? 'because they are not referenced in any version plans'
+              : 'via --projects';
+          if (options.releaseGroup.name === IMPLICIT_DEFAULT_RELEASE_GROUP) {
+            logMsg += ` but have been filtered out ${reason}, and therefore will not be updated:`;
+          } else {
+            logMsg += ` but are either not part of the current release group "${options.releaseGroup.name}", or have been filtered out ${reason}, and therefore will not be updated:`;
+          }
+          const indent = Array.from(new Array(projectName.length + 4))
+            .map(() => ' ')
+            .join('');
+          logMsg += `\n${dependentProjectsOutsideCurrentBatch
+            .map((dependentProject) => `${indent}- ${dependentProject.source}`)
+            .join('\n')}`;
+          logMsg += `\n${indent}=> You can adjust this behavior by setting \`version.generatorOptions.updateDependents\` to "auto"`;
+          log(logMsg);
+        }
+      }
 
       if (!currentVersion) {
         throw new Error(
@@ -436,9 +643,11 @@ To fix this you will either need to add a package.json file at that location, or
 
       versionData[projectName] = {
         currentVersion,
-        dependentProjects,
-        // @ts-ignore: The types will be updated in a future version of Nx
         newVersion: null, // will stay as null in the final result in the case that no changes are detected
+        dependentProjects:
+          updateDependents === 'auto'
+            ? allDependentProjects
+            : dependentProjectsInCurrentBatch,
       };
 
       if (!specifier) {
@@ -462,39 +671,51 @@ To fix this you will either need to add a package.json file at that location, or
 
       log(`✍️  New version ${newVersion} written to ${packageJsonPath}`);
 
-      if (dependentProjects.length > 0) {
-        log(
-          `✍️  Applying new version ${newVersion} to ${
-            dependentProjects.length
-          } ${
-            dependentProjects.length > 1
-              ? 'packages which depend'
-              : 'package which depends'
-          } on ${project.name}`
-        );
-      }
-
-      for (const dependentProject of dependentProjects) {
-        const dependentPackageRoot = projectNameToPackageRootMap.get(
-          dependentProject.source
-        );
-        if (!dependentPackageRoot) {
-          throw new Error(
-            `The dependent project "${dependentProject.source}" does not have a packageRoot available. Please report this issue on https://github.com/nrwl/nx`
+      if (allDependentProjects.length > 0) {
+        const totalProjectsToUpdate =
+          updateDependents === 'auto'
+            ? allDependentProjects.length +
+              transitiveLocalPackageDependents.length -
+              // There are two entries per circular dep
+              circularDependencies.size / 2
+            : dependentProjectsInCurrentBatch.length;
+        if (totalProjectsToUpdate > 0) {
+          log(
+            `✍️  Applying new version ${newVersion} to ${totalProjectsToUpdate} ${
+              totalProjectsToUpdate > 1
+                ? 'packages which depend'
+                : 'package which depends'
+            } on ${project.name}`
           );
         }
-        updateJson(tree, join(dependentPackageRoot, 'package.json'), (json) => {
+      }
+
+      const updateDependentProjectAndAddToVersionData = ({
+        dependentProject,
+        dependencyPackageName,
+        newDependencyVersion,
+        forceVersionBump,
+      }: {
+        dependentProject: LocalPackageDependency;
+        dependencyPackageName: string;
+        newDependencyVersion: string;
+        forceVersionBump: 'major' | 'minor' | 'patch' | false;
+      }) => {
+        const updatedFilePath = joinPathFragments(
+          projectNameToPackageRootMap.get(dependentProject.source),
+          'package.json'
+        );
+        updateJson(tree, updatedFilePath, (json) => {
           // Auto (i.e.infer existing) by default
           let versionPrefix = options.versionPrefix ?? 'auto';
+          const currentDependencyVersion =
+            json[dependentProject.dependencyCollection][dependencyPackageName];
 
           // For auto, we infer the prefix based on the current version of the dependent
           if (versionPrefix === 'auto') {
             versionPrefix = ''; // we don't want to end up printing auto
-
-            const current =
-              json[dependentProject.dependencyCollection][packageName];
-            if (current) {
-              const prefixMatch = current.match(/^[~^]/);
+            if (currentDependencyVersion) {
+              const prefixMatch = currentDependencyVersion.match(/^[~^]/);
               if (prefixMatch) {
                 versionPrefix = prefixMatch[0];
               } else {
@@ -502,10 +723,119 @@ To fix this you will either need to add a package.json file at that location, or
               }
             }
           }
-          json[dependentProject.dependencyCollection][
-            packageName
-          ] = `${versionPrefix}${newVersion}`;
+
+          // Apply the new version of the dependency to the dependent
+          const newDepVersion = `${versionPrefix}${newDependencyVersion}`;
+          json[dependentProject.dependencyCollection][dependencyPackageName] =
+            newDepVersion;
+
+          // Bump the dependent's version if applicable and record it in the version data
+          if (forceVersionBump) {
+            const currentPackageVersion = json.version;
+            const newPackageVersion = deriveNewSemverVersion(
+              currentPackageVersion,
+              forceVersionBump,
+              options.preid
+            );
+            json.version = newPackageVersion;
+
+            // Look up any dependent projects from the transitiveLocalPackageDependents list
+            const transitiveDependentProjects =
+              transitiveLocalPackageDependents.filter(
+                (localPackageDependency) =>
+                  localPackageDependency.target === dependentProject.source
+              );
+
+            versionData[dependentProject.source] = {
+              currentVersion: currentPackageVersion,
+              newVersion: newPackageVersion,
+              dependentProjects: transitiveDependentProjects,
+            };
+          }
+
           return json;
+        });
+      };
+
+      for (const dependentProject of dependentProjectsInCurrentBatch) {
+        if (projectToDependencyBumps.has(dependentProject.source)) {
+          const dependencyBumps = projectToDependencyBumps.get(
+            dependentProject.source
+          );
+          dependencyBumps.add(projectName);
+        } else {
+          projectToDependencyBumps.set(
+            dependentProject.source,
+            new Set([projectName])
+          );
+        }
+        updateDependentProjectAndAddToVersionData({
+          dependentProject,
+          dependencyPackageName: packageName,
+          newDependencyVersion: newVersion,
+          // We don't force bump because we know they will come later in the topologically sorted projects loop and may have their own version update logic to take into account
+          forceVersionBump: false,
+        });
+      }
+
+      if (updateDependents === 'auto') {
+        for (const dependentProject of dependentProjectsOutsideCurrentBatch) {
+          if (
+            options.specifierSource === 'version-plans' &&
+            !projectToDependencyBumps.has(dependentProject.source)
+          ) {
+            projectToDependencyBumps.set(
+              dependentProject.source,
+              new Set([projectName])
+            );
+          }
+
+          updateDependentProjectAndAddToVersionData({
+            dependentProject,
+            dependencyPackageName: packageName,
+            newDependencyVersion: newVersion,
+            // For these additional dependents, we need to update their package.json version as well because we know they will not come later in the topologically sorted projects loop
+            // (Unless using version plans and the dependent is not filtered out by --projects)
+            forceVersionBump:
+              options.specifierSource === 'version-plans' &&
+              projects.find((p) => p.name === dependentProject.source)
+                ? false
+                : updateDependentsBump,
+          });
+        }
+      }
+      for (const transitiveDependentProject of transitiveLocalPackageDependents) {
+        // Check if the transitive dependent originates from a circular dependency
+        const isFromCircularDependency = circularDependencies.has(
+          `${transitiveDependentProject.source}:${transitiveDependentProject.target}`
+        );
+        const dependencyProjectName = transitiveDependentProject.target;
+        const dependencyPackageRoot = projectNameToPackageRootMap.get(
+          dependencyProjectName
+        );
+        if (!dependencyPackageRoot) {
+          throw new Error(
+            `The project "${dependencyProjectName}" does not have a packageRoot available. Please report this issue on https://github.com/nrwl/nx`
+          );
+        }
+        const dependencyPackageJsonPath = join(
+          dependencyPackageRoot,
+          'package.json'
+        );
+        const dependencyPackageJson = readJson(tree, dependencyPackageJsonPath);
+
+        updateDependentProjectAndAddToVersionData({
+          dependentProject: transitiveDependentProject,
+          dependencyPackageName: dependencyPackageJson.name,
+          newDependencyVersion: dependencyPackageJson.version,
+          /**
+           * For these additional dependents, we need to update their package.json version as well because we know they will not come later in the topologically sorted projects loop.
+           * The one exception being if the dependent is part of a circular dependency, in which case we don't want to force a version bump as this would come in addition to the one
+           * already applied.
+           */
+          forceVersionBump: isFromCircularDependency
+            ? false
+            : updateDependentsBump,
         });
       }
     }
@@ -520,9 +850,16 @@ To fix this you will either need to add a package.json file at that location, or
     return {
       data: versionData,
       callback: async (tree, opts) => {
+        const changedFiles: string[] = [];
+        const deletedFiles: string[] = [];
+
+        for (const cb of deleteVersionPlanCallbacks) {
+          deletedFiles.push(...(await cb(opts.dryRun)));
+        }
+
         const cwd = tree.root;
-        const updatedFiles = await updateLockFile(cwd, opts);
-        return updatedFiles;
+        changedFiles.push(...(await updateLockFile(cwd, opts)));
+        return { changedFiles, deletedFiles };
       },
     };
   } catch (e: any) {

@@ -300,9 +300,6 @@ export async function generateGraph(
     sourceMaps = projectGraphAndSourceMaps.sourceMaps;
   } catch (e) {
     if (e instanceof ProjectGraphError) {
-      output.warn({
-        title: 'Failed to process project graph. Showing partial graph.',
-      });
       rawGraph = e.getPartialProjectGraph();
       sourceMaps = e.getPartialSourcemaps();
 
@@ -310,6 +307,21 @@ export async function generateGraph(
     }
     if (!rawGraph) {
       handleProjectGraphError({ exitOnError: true }, e);
+    } else {
+      const errors = e.getErrors();
+      if (errors?.length > 0) {
+        errors.forEach((e) => {
+          output.error({
+            title: e.message,
+            bodyLines: [e.stack],
+          });
+        });
+      }
+      output.warn({
+        title: `${
+          errors?.length > 1 ? `${errors.length} errors` : `An error`
+        } occured while processing the project graph. Showing partial graph.`,
+      });
     }
   }
   let prunedGraph = pruneExternalNodes(rawGraph);
@@ -337,7 +349,7 @@ export async function generateGraph(
         splitArgsIntoNxArgsAndOverrides(
           args,
           'affected',
-          { printWarnings: true },
+          { printWarnings: args.file !== 'stdout' },
           readNxJson()
         ).nxArgs,
         rawGraph
@@ -389,6 +401,7 @@ export async function generateGraph(
           2
         )
       );
+      await output.drain();
       process.exit(0);
     }
 
@@ -432,7 +445,7 @@ export async function generateGraph(
       );
       html = html.replace(/src="/g, 'src="static/');
       html = html.replace(/href="styles/g, 'href="static/styles');
-      html = html.replace('<base href="/" />', '');
+      html = html.replace(/<base href="\/".*>/g, '');
       html = html.replace(/type="module"/g, '');
 
       writeFileSync(fullFilePath, html);
@@ -451,20 +464,8 @@ export async function generateGraph(
         args.projects,
         args.targets
       );
-      json.affectedProjects = affectedProjects;
-      json.criticalPath = affectedProjects;
 
       writeJsonFile(fullFilePath, json);
-
-      output.warn({
-        title: 'JSON output contains deprecated fields:',
-        bodyLines: [
-          '- affectedProjects',
-          '- criticalPath',
-          '',
-          'These fields will be removed in Nx 19. If you need to see which projects were affected, use `nx show projects --affected`.',
-        ],
-      });
 
       output.success({
         title: `JSON output created in ${fileFolderPath}`,
@@ -708,6 +709,21 @@ function createFileWatcher() {
             currentProjectGraphClientResponse.hash &&
           sourceMapResponse
         ) {
+          if (projectGraphClientResponse.errors?.length > 0) {
+            projectGraphClientResponse.errors.forEach((e) => {
+              output.error({
+                title: e.message,
+                bodyLines: [e.stack],
+              });
+            });
+            output.warn({
+              title: `${
+                projectGraphClientResponse.errors.length > 1
+                  ? `${projectGraphClientResponse.errors.length} errors`
+                  : `An error`
+              } occured while processing the project graph. Showing partial graph.`,
+            });
+          }
           output.note({ title: 'Graph changes updated.' });
 
           currentProjectGraphClientResponse = projectGraphClientResponse;
@@ -1108,16 +1124,6 @@ interface GraphJsonResponse {
   tasks?: TaskGraph;
   taskPlans?: Record<string, string[]>;
   graph: ProjectGraph;
-
-  /**
-   * @deprecated To see affected projects, use `nx show projects --affected`. This will be removed in Nx 19.
-   */
-  affectedProjects?: string[];
-
-  /**
-   * @deprecated To see affected projects, use `nx show projects --affected`. This will be removed in Nx 19.
-   */
-  criticalPath?: string[];
 }
 
 async function createJsonOutput(

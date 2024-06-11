@@ -39,7 +39,7 @@ jobs:
 
       - name: Install PNPM
         run: |
-          npm install -g @pnpm/exe@8.14
+          npm install -g @pnpm/exe@8
 
       - name: Set node
         uses: actions/setup-node@v3
@@ -54,6 +54,11 @@ jobs:
           lookup-only: true
           path: '**/node_modules'
           key: ${{ runner.os }}-modules-${{ matrix.node_version }}-${{ github.run_id }}
+
+      - name: Ensure Python setuptools Installed on Macos
+        if: ${{ matrix.os == 'macos-latest' }}
+        id: brew-install-python-setuptools
+        run: brew install python-setuptools
 
       - name: Install packages
         if: steps.cache-modules.outputs.cache-hit != 'true'
@@ -280,7 +285,7 @@ jobs:
 
       - name: Install PNPM
         run: |
-          npm install -g @pnpm/exe@8.7.4
+          npm install -g @pnpm/exe@8
 
       - name: Use Node.js ${{ matrix.node_version }}
         uses: actions/setup-node@v3
@@ -403,7 +408,7 @@ jobs:
         timeout-minutes: 15
 
   process-result:
-    if: ${{ always() }}
+    if: ${{ always() && github.repository_owner == 'nrwl' }}
     runs-on: ubuntu-latest
     needs: e2e
     outputs:

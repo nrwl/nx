@@ -23,6 +23,7 @@ import { setupTspathForRemote } from './lib/setup-tspath-for-remote';
 import { addRemoteToDynamicHost } from './lib/add-remote-to-dynamic-host';
 import { addMfEnvToTargetDefaultInputs } from '../../utils/add-mf-env-to-inputs';
 import { maybeJs } from '../../utils/maybe-js';
+import { isValidVariable } from '@nx/js';
 
 export function addModuleFederationFiles(
   host: Tree,
@@ -90,6 +91,18 @@ export async function remoteGeneratorInternal(host: Tree, schema: Schema) {
     // TODO(colum): remove when MF works with Crystal
     addPlugin: false,
   };
+
+  if (options.dynamic) {
+    // Dynamic remotes generate with library { type: 'var' } by default.
+    // We need to ensure that the remote name is a valid variable name.
+    const isValidRemote = isValidVariable(options.name);
+    if (!isValidRemote.isValid) {
+      throw new Error(
+        `Invalid remote name provided: ${options.name}. ${isValidRemote.message}`
+      );
+    }
+  }
+
   const initAppTask = await applicationGenerator(host, {
     ...options,
     // Only webpack works with module federation for now.

@@ -258,6 +258,38 @@ describe('updateImports', () => {
     expect(tree.read(importerFilePath, 'utf-8')).toMatchSnapshot();
   });
 
+  it('should not throw error on export list', async () => {
+    await libraryGenerator(tree, {
+      name: 'my-destination',
+      config: 'project',
+      projectNameAndRootFormat: 'as-provided',
+    });
+    await libraryGenerator(tree, {
+      name: 'my-source',
+      projectNameAndRootFormat: 'as-provided',
+    });
+    await libraryGenerator(tree, {
+      name: 'my-importer',
+      projectNameAndRootFormat: 'as-provided',
+    });
+    const importerFilePath = 'my-importer/src/importer.ts';
+    tree.write(
+      importerFilePath,
+      `
+        import { MyClass } from '@proj/my-source';
+
+        export { MyClass };
+      `
+    );
+    const projectConfig = readProjectConfiguration(tree, 'my-source');
+
+    const normalizedSchema = await normalizeSchema(tree, schema, projectConfig);
+
+    expect(() =>
+      updateImports(tree, normalizedSchema, projectConfig)
+    ).not.toThrow();
+  });
+
   it('should update require imports', async () => {
     await libraryGenerator(tree, {
       name: 'table',
@@ -491,6 +523,43 @@ export MyExtendedClass extends MyClass {};`
     const tsConfig = readJson(tree, '/tsconfig.base.json');
     expect(tsConfig.compilerOptions.paths).toEqual({
       '@proj/my-source': ['my-destination/src/index.ts'],
+    });
+  });
+
+  it("should update project ref in the root tsconfig file if it contains a secondary entry point for Next.js's server", async () => {
+    await libraryGenerator(tree, {
+      name: 'my-source',
+      projectNameAndRootFormat: 'as-provided',
+    });
+
+    tree.write('my-source/src/server.ts', '');
+
+    updateJson(tree, '/tsconfig.base.json', (json) => {
+      json.compilerOptions.paths['@proj/my-source/server'] = [
+        'my-source/src/server.ts',
+      ];
+      return json;
+    });
+
+    const projectConfig = readProjectConfiguration(tree, 'my-source');
+    updateImports(
+      tree,
+      await normalizeSchema(
+        tree,
+        {
+          ...schema,
+          updateImportPath: false,
+        },
+        projectConfig
+      ),
+
+      projectConfig
+    );
+
+    const tsConfig = readJson(tree, '/tsconfig.base.json');
+    expect(tsConfig.compilerOptions.paths).toEqual({
+      '@proj/my-source': ['my-destination/src/index.ts'],
+      '@proj/my-source/server': ['my-destination/src/server.ts'],
     });
   });
 });

@@ -1,5 +1,36 @@
 # Enterprise Release Notes
 
+### 2405.02.15
+
+##### Easy membership management via GitHub
+
+A few months ago, we introduced a new feature to our managed SASS NxCloud product: easy membership management via GitHub. If you create a new workspace on [https://cloud.nx.app/](https://cloud.nx.app/) right now you will be guided through how to connect it to your GitHub repository. Now everyone that has access to your GitHub repository will also get access to your NxCloud workspace. If anyone loses access to GitHub (maybe they leave the company), they will also lose access to NxCloud. This makes membership management easy and straightforward, as you don't have to manually invite users anymore. Of course, setting up this connection also gives you NxCloud run status updates directly on your PRs - a feature we've had for a long time.
+
+This feature has now been release for on-prem set-ups as well. To benefit from it, you'll need to create your own Github App with permissions to access your repository. Your on-prem NxCloud instance will then use this app to pull membership info from Github and check user permissions. You can find [the full setup instructions here](/ci/recipes/enterprise/on-premise/custom-github-app).
+
+##### DTE v2 enabled by default
+
+After testing the improved task distribution algorithm (DTE v2) for the past few months, we are now enabling it by default for all customers. Expect quicker CI run times when using DTE, and better utilization of your agents with less idle time.
+
+##### Nx Agents and breaking changes
+
+If you are using Nx Agents, this release will contain a breaking change to the workflow controller.
+Before upgrading to this version, you'll need to follow the new [Agents Guide](https://github.com/nrwl/nx-cloud-helm/blob/main/agents-guide/AGENTS-GUIDE.md) and deploy an instance of Valkey that your controller can connect to.
+
+The reason we need Valkey is that the workflow controller now persistently stores information about your workflows for up to 8 hours, and these changes will be persisted regardless of the availability of the workflow controller pod, making your in-progress workflows more resilient to rolling kubernetes updates, and will fix some previous issues with agent statuses not syncing to the UI.
+
+If you are not using Nx Agents, this does not affect you and you can upgrade to this version straight away.
+
+##### UI improvements
+
+- If you are using the new Crystal plugins in Nx 18, we've now added a "technologies label" to each task, so you can quickly see which tasks are Playwright based, Cypress, React etc.
+- We've added toast notifications in the app. You'll see them confirming some of your actions, such as saving workspace changes.
+
+##### Misc fixes
+
+- We've fixed various bugs around the task distribution algorithm and Nx Agents. CIPEs using distribution should feel more stable and faster.
+- We fixed a few issues relating to the GitLab and BitBucket integrations.
+
 ### 2404.05.9
 
 ##### DTE Algorithm V2 Experimental Flag
@@ -58,16 +89,16 @@ This includes events such as when a workspace was created, when a new VCS integr
 
 ### 2402.27.3
 
-With this version you can take advantage of most features announced during our recent [launch week](https://nx.dev/launch-nx).
+With this version you can take advantage of most features announced during our recent [launch week](/launch-nx).
 
 ##### Nx Agents
 
-This release contains everything needed to run [Nx Agents](https://nx.dev/ci/features/distribute-task-execution) on-prem. While the on-prem configuration is still experimental, we are actively running Nx Agents trials at the moment, and if you'd like to take part please reach out to your DPE.
+This release contains everything needed to run [Nx Agents](/ci/features/distribute-task-execution) on-prem. While the on-prem configuration is still experimental, we are actively running Nx Agents trials at the moment, and if you'd like to take part please reach out to your DPE.
 
 If you already running DTE, there are a few advantages to upgrading to Agents:
 
 - simplified CI config: you will need to maintain just a single, main CI job config. NxCloud will create needed CI agents for you as needed.
-- [dynamic agent allocation based on PR size](https://nx.dev/ci/features/dynamic-agents): instead of always launching all your agents NxCloud will now launch different number of agents dynamically based on your PR size
+- [dynamic agent allocation based on PR size](/ci/features/dynamic-agents): instead of always launching all your agents NxCloud will now launch different number of agents dynamically based on your PR size
 - access to [Spot instances](https://aws.amazon.com/ec2/spot/): if you are running your clusters on any of the popular cloud providers (AWS, Google Cloud, Azure etc.), you can now use their Spot instances for running your CI job. This is possible due to NxCloud's distribution model, which allows work on a reclaimed node to be re-distributed to the remaining agents.
 
 We will shortly make available a new Helm chart that will allow you to deploy a separate Agents cluster to launch workflows: [https://github.com/nrwl/nx-cloud-helm](https://github.com/nrwl/nx-cloud-helm).
@@ -76,11 +107,11 @@ We will shortly make available a new Helm chart that will allow you to deploy a 
 
 ##### Task Atomizer and task retries
 
-If you combine this release + upgrade to the latest Nx 18, you will have access to both the [task atomizer](https://nx.dev/ci/features/split-e2e-tasks) (which allows your e2e to be distributed among agents PER FILE, instead of previously per project) and the [flaky task retry functionality](https://nx.dev/ci/features/flaky-tasks).
+If you combine this release + upgrade to the latest Nx 18, you will have access to both the [task atomizer](/ci/features/split-e2e-tasks) (which allows your e2e to be distributed among agents PER FILE, instead of previously per project) and the [flaky task retry functionality](/ci/features/flaky-tasks).
 
 ##### CIPE page improvements
 
-Along with all the UI changes to support agents (following their logs and track how tasks get distributed,details of which you'll find demoed on [this page](https://nx.dev/ci/features/distribute-task-execution)) this release also brings all the new improvements to the CI pipeline execution page, including the commit info panel at the top:
+Along with all the UI changes to support agents (following their logs and track how tasks get distributed,details of which you'll find demoed on [this page](/ci/features/distribute-task-execution)) this release also brings all the new improvements to the CI pipeline execution page, including the commit info panel at the top:
 
 ![cipe_top_half_screen](/nx-cloud/reference/images/cipe_top.webp)
 
@@ -148,7 +179,7 @@ To enable the light runner feature, make sure you:
 
 ##### Nx Agents
 
-This release is also the first one to support ["Nx Agents"](https://nx.dev/ci/features/distribute-task-execution#managed-agents-seamless-configuration).
+This release is also the first one to support ["Nx Agents"](/ci/features/distribute-task-execution).
 
 While currently experimental and disabled by default for on-prem users, we are looking for more on-prem workspaces to try it out with
 so please reach out to your DPE contact or to [cloud-suppport@nrwl.io](mailto:cloud-support@nrwl.io) if you are interested in helping us shape this according to your needs!

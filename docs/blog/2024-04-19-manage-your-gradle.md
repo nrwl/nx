@@ -25,7 +25,7 @@ This blog will show you:
 
 Before we start, let’s answer this question: what is Nx and why should we use it?
 
-From [nx.dev](https://nx.dev): “Nx is a build system with built-in tooling and advanced CI capabilities. It helps you maintain and scale monorepos, both locally and on CI.” It sounds good, what benefits does it bring?
+From [nx.dev](): “Nx is a build system with built-in tooling and advanced CI capabilities. It helps you maintain and scale monorepos, both locally and on CI.” It sounds good, what benefits does it bring?
 
 Nx adds the following features to your workspace:
 
@@ -212,6 +212,6 @@ Here is how to set up Nx with the Gradle workspace. Hopefully, this gives you a 
 - [Nx Docs](/getting-started/intro)
 - [X/Twitter](https://twitter.com/nxdevtools) -- [LinkedIn](https://www.linkedin.com/company/nrwl/)
 - [Nx GitHub](https://github.com/nrwl/nx)
-- [Nx Official Discord Server](/community)
+- [Nx Official Discord Server](https://go.nx.dev/community)
 - [Nx Youtube Channel](https://www.youtube.com/@nxdevtools)
 - [Speed up your CI](https://nx.app/)

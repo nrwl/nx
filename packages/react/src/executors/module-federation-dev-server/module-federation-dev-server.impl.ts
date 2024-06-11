@@ -18,7 +18,7 @@ import {
   createAsyncIterable,
 } from '@nx/devkit/src/utils/async-iterable';
 import { waitForPortOpen } from '@nx/web/src/utils/wait-for-port-open';
-import { projectGraphCacheDirectory } from 'nx/src/utils/cache-directory';
+import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { fork } from 'node:child_process';
 import { basename, dirname, join } from 'node:path';
 import { createWriteStream, cpSync } from 'node:fs';
@@ -26,7 +26,13 @@ import { existsSync } from 'fs';
 import { extname } from 'path';
 
 type ModuleFederationDevServerOptions = WebDevServerOptions & {
-  devRemotes?: string[];
+  devRemotes?: (
+    | string
+    | {
+        remoteName: string;
+        configuration: string;
+      }
+  )[];
   skipRemotes?: string[];
   static?: boolean;
   isInitialHost?: boolean;
@@ -112,25 +118,38 @@ async function startRemotes(
         'module-federation-dev-server'
       );
 
+    const configurationOverride = options.devRemotes?.find(
+      (
+        r
+      ): r is {
+        remoteName: string;
+        configuration: string;
+      } => typeof r !== 'string' && r.remoteName === app
+    )?.configuration;
+
+    const defaultOverrides = {
+      ...(options.host ? { host: options.host } : {}),
+      ...(options.ssl ? { ssl: options.ssl } : {}),
+      ...(options.sslCert ? { sslCert: options.sslCert } : {}),
+      ...(options.sslKey ? { sslKey: options.sslKey } : {}),
+    };
     const overrides =
       target === 'serve'
         ? {
             watch: true,
-            ...(options.host ? { host: options.host } : {}),
-            ...(options.ssl ? { ssl: options.ssl } : {}),
-            ...(options.sslCert ? { sslCert: options.sslCert } : {}),
-            ...(options.sslKey ? { sslKey: options.sslKey } : {}),
             ...(isUsingModuleFederationDevServerExecutor
               ? { isInitialHost: false }
               : {}),
+            ...defaultOverrides,
           }
-        : {};
+        : { ...defaultOverrides };
+
     remoteIters.push(
       await runExecutor(
         {
           project: app,
           target,
-          configuration: context.configurationName,
+          configuration: configurationOverride ?? context.configurationName,
         },
         overrides,
         context
@@ -186,7 +205,7 @@ async function buildStaticRemotes(
 
     // File to debug build failures e.g. 2024-01-01T00_00_0_0Z-build.log'
     const remoteBuildLogFile = join(
-      projectGraphCacheDirectory,
+      workspaceDataDirectory,
       `${new Date().toISOString().replace(/[:\.]/g, '_')}-build.log`
     );
     const stdoutStream = createWriteStream(remoteBuildLogFile);
@@ -307,8 +326,12 @@ export default async function* moduleFederationDevServer(
     'react'
   );
 
+  const remoteNames = options.devRemotes?.map((r) =>
+    typeof r === 'string' ? r : r.remoteName
+  );
+
   const remotes = getRemotes(
-    options.devRemotes,
+    remoteNames,
     options.skipRemotes,
     moduleFederationConfig,
     {
@@ -321,8 +344,10 @@ export default async function* moduleFederationDevServer(
 
   if (remotes.devRemotes.length > 0 && !initialStaticRemotesPorts) {
     options.staticRemotesPort = options.devRemotes.reduce((portToUse, r) => {
+      const remoteName = typeof r === 'string' ? r : r.remoteName;
       const remotePort =
-        context.projectGraph.nodes[r].data.targets['serve'].options.port;
+        context.projectGraph.nodes[remoteName].data.targets['serve'].options
+          .port;
       if (remotePort >= portToUse) {
         return remotePort + 1;
       } else {

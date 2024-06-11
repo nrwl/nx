@@ -66,6 +66,11 @@ export interface NxAppWebpackPluginOptions {
    * Set <base href> for the resulting index.html.
    */
   baseHref?: string;
+  /**
+   * Build the libraries from source. Default is `true`.
+   */
+  buildLibsFromSource?: boolean;
+
   commonChunk?: boolean;
   /**
    * The compiler to use. Default is `babel` and requires a `.babelrc` file.
@@ -210,6 +215,14 @@ export interface NxAppWebpackPluginOptions {
    * Watch for file changes.
    */
   watch?: boolean;
+  /**
+   * Set a public path for assets resources with absolute paths.
+   */
+  publicPath?: string;
+  /**
+   * Whether to rebase absolute path for assets in postcss cli resources.
+   */
+  rebaseRootRelative?: boolean;
 }
 
 export interface NormalizedNxAppWebpackPluginOptions

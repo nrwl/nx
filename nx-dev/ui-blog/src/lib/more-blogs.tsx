@@ -40,7 +40,7 @@ export function MoreBlogs({ blogs }: MoreBlogsProps) {
               <span className="hidden w-2/12 flex-none sm:inline-block">
                 {formattedDate}
               </span>
-              <span className="hidden w-2/12 flex-none sm:inline-block">
+              <span className="hidden flex-1 overflow-hidden sm:inline-block">
                 <BlogAuthors authors={post.authors} />
               </span>
             </Link>

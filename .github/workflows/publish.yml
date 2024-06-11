@@ -95,6 +95,7 @@ jobs:
             docker: ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-debian
             build: |-
               set -e &&
+              npm i -g pnpm@8.15.7 --force &&
               pnpm --version &&
               pnpm install --frozen-lockfile &&
               pnpm nx run-many --verbose --target=build-native -- --target=x86_64-unknown-linux-gnu
@@ -103,6 +104,8 @@ jobs:
             docker: ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-alpine
             build: |-
               set -e &&
+              npm i -g pnpm@8.15.7 --force &&
+              pnpm --version &&
               pnpm install --frozen-lockfile &&
               pnpm nx run-many --verbose --target=build-native -- --target=x86_64-unknown-linux-musl
           - host: macos-13
@@ -119,6 +122,7 @@ jobs:
             docker: ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-debian-aarch64
             build: |-
               set -e &&
+              npm i -g pnpm@8.15.7 --force &&
               pnpm --version &&
               pnpm install --frozen-lockfile &&
               pnpm nx run-many --verbose --target=build-native -- --target=aarch64-unknown-linux-gnu
@@ -144,6 +148,8 @@ jobs:
             build: |-
               set -e &&
               rustup target add aarch64-unknown-linux-musl &&
+              npm i -g pnpm@8.15.7 --force &&
+              pnpm --version &&
               pnpm install --frozen-lockfile &&
               pnpm nx run-many --verbose --target=build-native -- --target=aarch64-unknown-linux-musl
           - host: windows-latest

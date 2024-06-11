@@ -4,7 +4,7 @@
 export interface Schema {
   name: string;
   /**
-   * @deprecated Provide the `directory` option instead and use the `as-provided` format. The project will be determined from the directory provided. It will be removed in Nx v19.
+   * @deprecated Provide the `directory` option instead and use the `as-provided` format. The project will be determined from the directory provided. It will be removed in Nx v20.
    */
   project: string;
   directory?: string;

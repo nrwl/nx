@@ -10,7 +10,7 @@ import {
   ProjectGraph,
 } from '../config/project-graph';
 import { ProjectConfiguration } from '../config/workspace-json-project-json';
-import { projectGraphCacheDirectory } from '../utils/cache-directory';
+import { workspaceDataDirectory } from '../utils/cache-directory';
 import {
   directoryExists,
   fileExists,
@@ -31,15 +31,15 @@ export interface FileMapCache {
 }
 
 export const nxProjectGraph = join(
-  projectGraphCacheDirectory,
+  workspaceDataDirectory,
   'project-graph.json'
 );
-export const nxFileMap = join(projectGraphCacheDirectory, 'file-map.json');
+export const nxFileMap = join(workspaceDataDirectory, 'file-map.json');
 
 export function ensureCacheDirectory(): void {
   try {
-    if (!existsSync(projectGraphCacheDirectory)) {
-      ensureDirSync(projectGraphCacheDirectory);
+    if (!existsSync(workspaceDataDirectory)) {
+      ensureDirSync(workspaceDataDirectory);
     }
   } catch (e) {
     /*
@@ -52,10 +52,8 @@ export function ensureCacheDirectory(): void {
      * In this case, we're creating the directory. If the operation failed, we ensure that the directory
      * exists before continuing (or raise an exception).
      */
-    if (!directoryExists(projectGraphCacheDirectory)) {
-      throw new Error(
-        `Failed to create directory: ${projectGraphCacheDirectory}`
-      );
+    if (!directoryExists(workspaceDataDirectory)) {
+      throw new Error(`Failed to create directory: ${workspaceDataDirectory}`);
     }
   }
 }

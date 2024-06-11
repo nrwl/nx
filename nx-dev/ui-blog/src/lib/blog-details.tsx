@@ -43,7 +43,7 @@ export function BlogDetails({ post }: BlogDetailsProps) {
           </h1>
         </header>
         {post.cover_image && (
-          <div className="mx-auto mb-16 aspect-[1.9] w-full max-w-screen-md">
+          <div className="mx-auto mb-16 aspect-[1.7] w-full max-w-screen-md">
             <Image
               className="h-full w-full object-cover md:rounded-md"
               src={post.cover_image}

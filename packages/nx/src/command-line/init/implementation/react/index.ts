@@ -243,6 +243,7 @@ function moveFilesToTempWorkspace(options: NormalizedOptions) {
     options.packageManager === 'yarn' ? 'yarn.lock' : null,
     options.packageManager === 'pnpm' ? 'pnpm-lock.yaml' : null,
     options.packageManager === 'npm' ? 'package-lock.json' : null,
+    options.packageManager === 'bun' ? 'bun.lockb' : null,
   ];
 
   const optionalCraFiles = ['README.md'];
@@ -289,7 +290,7 @@ async function addBundler(options: NormalizedOptions) {
       options.isStandalone,
       options.appIsJs
     );
-    renameJsToJsx(options.reactAppName, options.isStandalone);
+    await renameJsToJsx(options.reactAppName, options.isStandalone);
   } else {
     output.log({ title: '🧑‍🔧  Setting up craco + Webpack' });
     const { addCracoCommandsToPackageScripts } = await import(

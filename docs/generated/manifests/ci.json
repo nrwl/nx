@@ -709,6 +709,17 @@
                 "isExternal": false,
                 "path": "/ci/recipes/enterprise/on-premise/advanced-config",
                 "tags": []
+              },
+              {
+                "id": "custom-github-app",
+                "name": "Custom GitHub App",
+                "description": "",
+                "mediaImage": "",
+                "file": "nx-cloud/enterprise/on-premise/custom-github-app",
+                "itemList": [],
+                "isExternal": false,
+                "path": "/ci/recipes/enterprise/on-premise/custom-github-app",
+                "tags": []
               }
             ],
             "isExternal": false,
@@ -1282,6 +1293,17 @@
             "isExternal": false,
             "path": "/ci/recipes/enterprise/on-premise/advanced-config",
             "tags": []
+          },
+          {
+            "id": "custom-github-app",
+            "name": "Custom GitHub App",
+            "description": "",
+            "mediaImage": "",
+            "file": "nx-cloud/enterprise/on-premise/custom-github-app",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/ci/recipes/enterprise/on-premise/custom-github-app",
+            "tags": []
           }
         ],
         "isExternal": false,
@@ -1465,6 +1487,17 @@
         "isExternal": false,
         "path": "/ci/recipes/enterprise/on-premise/advanced-config",
         "tags": []
+      },
+      {
+        "id": "custom-github-app",
+        "name": "Custom GitHub App",
+        "description": "",
+        "mediaImage": "",
+        "file": "nx-cloud/enterprise/on-premise/custom-github-app",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/recipes/enterprise/on-premise/custom-github-app",
+        "tags": []
       }
     ],
     "isExternal": false,
@@ -1557,6 +1590,17 @@
     "itemList": [],
     "isExternal": false,
     "path": "/ci/recipes/enterprise/on-premise/advanced-config",
+    "tags": []
+  },
+  "/ci/recipes/enterprise/on-premise/custom-github-app": {
+    "id": "custom-github-app",
+    "name": "Custom GitHub App",
+    "description": "",
+    "mediaImage": "",
+    "file": "nx-cloud/enterprise/on-premise/custom-github-app",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/recipes/enterprise/on-premise/custom-github-app",
     "tags": []
   },
   "/ci/recipes/enterprise/dte": {
@@ -1800,6 +1844,17 @@
         "tags": []
       },
       {
+        "id": "custom-steps",
+        "name": "Custom Steps",
+        "description": "",
+        "mediaImage": "",
+        "file": "nx-cloud/reference/custom-steps",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/reference/custom-steps",
+        "tags": []
+      },
+      {
         "id": "env-vars",
         "name": "Environment Variables",
         "description": "",
@@ -1857,6 +1912,17 @@
     "itemList": [],
     "isExternal": false,
     "path": "/ci/reference/launch-templates",
+    "tags": []
+  },
+  "/ci/reference/custom-steps": {
+    "id": "custom-steps",
+    "name": "Custom Steps",
+    "description": "",
+    "mediaImage": "",
+    "file": "nx-cloud/reference/custom-steps",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/reference/custom-steps",
     "tags": []
   },
   "/ci/reference/env-vars": {

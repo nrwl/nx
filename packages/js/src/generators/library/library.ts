@@ -89,6 +89,15 @@ export async function libraryGeneratorInternal(
     tasks.push(await setupVerdaccio(tree, { ...options, skipFormat: true }));
   }
 
+  if (options.bundler === 'rollup') {
+    const { configurationGenerator } = ensurePackage('@nx/rollup', nxVersion);
+    await configurationGenerator(tree, {
+      project: options.name,
+      compiler: 'swc',
+      format: ['cjs', 'esm'],
+    });
+  }
+
   if (options.bundler === 'vite') {
     const { viteConfigurationGenerator, createOrEditViteConfig } =
       ensurePackage('@nx/vite', nxVersion);
@@ -207,47 +216,38 @@ async function addProject(tree: Tree, options: NormalizedSchema) {
     options.bundler !== 'none' &&
     options.config !== 'npm-scripts'
   ) {
-    const outputPath = getOutputPath(options);
+    if (options.bundler !== 'rollup') {
+      const outputPath = getOutputPath(options);
+      const executor = getBuildExecutor(options.bundler);
+      addBuildTargetDefaults(tree, executor);
 
-    const executor = getBuildExecutor(options.bundler);
+      projectConfiguration.targets.build = {
+        executor,
+        outputs: ['{options.outputPath}'],
+        options: {
+          outputPath,
+          main:
+            `${options.projectRoot}/src/index` + (options.js ? '.js' : '.ts'),
+          tsConfig: `${options.projectRoot}/tsconfig.lib.json`,
+          assets: [],
+        },
+      };
 
-    addBuildTargetDefaults(tree, executor);
+      if (options.bundler === 'esbuild') {
+        projectConfiguration.targets.build.options.generatePackageJson = true;
+        projectConfiguration.targets.build.options.format = ['cjs'];
+      }
 
-    projectConfiguration.targets.build = {
-      executor,
-      outputs: ['{options.outputPath}'],
-      options: {
-        outputPath,
-        main: `${options.projectRoot}/src/index` + (options.js ? '.js' : '.ts'),
-        tsConfig: `${options.projectRoot}/tsconfig.lib.json`,
-        assets: [],
-      },
-    };
+      if (options.bundler === 'swc' && options.skipTypeCheck) {
+        projectConfiguration.targets.build.options.skipTypeCheck = true;
+      }
 
-    if (options.bundler === 'esbuild') {
-      projectConfiguration.targets.build.options.generatePackageJson = true;
-      projectConfiguration.targets.build.options.format = ['cjs'];
-    }
-
-    if (options.bundler === 'rollup') {
-      projectConfiguration.targets.build.options.project = `${options.projectRoot}/package.json`;
-      projectConfiguration.targets.build.options.compiler = 'swc';
-      projectConfiguration.targets.build.options.format = ['cjs', 'esm'];
-    }
-
-    if (options.bundler === 'swc' && options.skipTypeCheck) {
-      projectConfiguration.targets.build.options.skipTypeCheck = true;
-    }
-
-    if (
-      !options.minimal &&
-      // TODO(jack): assets for rollup have validation that we need to fix (assets must be under <project-root>/src)
-      options.bundler !== 'rollup'
-    ) {
-      projectConfiguration.targets.build.options.assets ??= [];
-      projectConfiguration.targets.build.options.assets.push(
-        joinPathFragments(options.projectRoot, '*.md')
-      );
+      if (!options.minimal) {
+        projectConfiguration.targets.build.options.assets ??= [];
+        projectConfiguration.targets.build.options.assets.push(
+          joinPathFragments(options.projectRoot, '*.md')
+        );
+      }
     }
 
     if (options.publishable) {
@@ -321,6 +321,8 @@ export async function addLint(
     setParserOptionsProject: options.setParserOptionsProject,
     rootProject: options.rootProject,
     addPlugin: options.addPlugin,
+    // Since the build target is inferred now, we need to let the generator know to add @nx/dependency-checks regardless.
+    addPackageJsonDependencyChecks: options.bundler !== 'none',
   });
   const {
     addOverrideToLintConfig,
@@ -603,10 +605,12 @@ function replaceJestConfig(tree: Tree, options: NormalizedSchema) {
   if (tree.exists(existingJestConfig)) {
     tree.delete(existingJestConfig);
   }
+  const jestPreset = findRootJestPreset(tree) ?? 'jest.presets.js';
 
   // replace with JS:SWC specific jest config
   generateFiles(tree, filesDir, options.projectRoot, {
     ext: options.js ? 'js' : 'ts',
+    jestPreset,
     js: !!options.js,
     project: options.name,
     offsetFromRoot: offsetFromRoot(options.projectRoot),
@@ -1011,6 +1015,14 @@ function logNxReleaseDocsInfo() {
   output.log({
     title: `📦 To learn how to publish this library, see https://nx.dev/core-features/manage-releases.`,
   });
+}
+
+function findRootJestPreset(tree: Tree): string | null {
+  const ext = ['js', 'cjs', 'mjs'].find((ext) =>
+    tree.exists(`jest.preset.${ext}`)
+  );
+
+  return ext ? `jest.preset.${ext}` : null;
 }
 
 export default libraryGenerator;

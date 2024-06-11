@@ -974,11 +974,6 @@ describe('lib', () => {
           projectNameAndRootFormat: 'as-provided',
         });
 
-        const config = readProjectConfiguration(tree, 'my-lib');
-        expect(config.targets.build.options.project).toEqual(
-          `my-lib/package.json`
-        );
-
         const pkgJson = readJson(tree, 'my-lib/package.json');
         expect(pkgJson.type).not.toBeDefined();
       });
@@ -990,9 +985,6 @@ describe('lib', () => {
           bundler: 'rollup',
           projectNameAndRootFormat: 'as-provided',
         });
-
-        const config = readProjectConfiguration(tree, 'my-lib');
-        expect(config.targets.build.options.compiler).toEqual('swc');
       });
     });
 
@@ -1470,60 +1462,6 @@ describe('lib', () => {
     });
   });
 
-  describe('--bundler=vite', () => {
-    it('should add build and test targets with vite and vitest', async () => {
-      await libraryGenerator(tree, {
-        ...defaultOptions,
-        name: 'my-lib',
-        bundler: 'vite',
-        unitTestRunner: undefined,
-        projectNameAndRootFormat: 'as-provided',
-      });
-
-      expect(tree.exists('my-lib/vite.config.ts')).toBeTruthy();
-      expect(tree.read('my-lib/vite.config.ts', 'utf-8')).toMatchSnapshot();
-      expect(tree.read('my-lib/README.md', 'utf-8')).toMatchSnapshot();
-      expect(tree.read('my-lib/tsconfig.lib.json', 'utf-8')).toMatchSnapshot();
-      expect(readJson(tree, 'my-lib/.eslintrc.json').overrides).toContainEqual({
-        files: ['*.json'],
-        parser: 'jsonc-eslint-parser',
-        rules: {
-          '@nx/dependency-checks': [
-            'error',
-            {
-              ignoredFiles: ['{projectRoot}/vite.config.{js,ts,mjs,mts}'],
-            },
-          ],
-        },
-      });
-    });
-
-    it.each`
-      unitTestRunner | configPath
-      ${'none'}      | ${undefined}
-      ${'jest'}      | ${'my-lib/jest.config.ts'}
-    `(
-      'should respect unitTestRunner if passed',
-      async ({ unitTestRunner, configPath }) => {
-        await libraryGenerator(tree, {
-          ...defaultOptions,
-          name: 'my-lib',
-          bundler: 'vite',
-          unitTestRunner,
-          projectNameAndRootFormat: 'as-provided',
-        });
-
-        expect(tree.read('my-lib/README.md', 'utf-8')).toMatchSnapshot();
-        expect(
-          tree.read('my-lib/tsconfig.lib.json', 'utf-8')
-        ).toMatchSnapshot();
-        if (configPath) {
-          expect(tree.read(configPath, 'utf-8')).toMatchSnapshot();
-        }
-      }
-    );
-  });
-
   describe('--bundler=esbuild', () => {
     it('should add build with esbuild', async () => {
       await libraryGenerator(tree, {
@@ -1563,10 +1501,6 @@ describe('lib', () => {
         projectNameAndRootFormat: 'as-provided',
       });
 
-      const project = readProjectConfiguration(tree, 'my-lib');
-      expect(project.targets.build).toMatchObject({
-        executor: '@nx/rollup:rollup',
-      });
       expect(readJson(tree, 'my-lib/.eslintrc.json').overrides).toContainEqual({
         files: ['*.json'],
         parser: 'jsonc-eslint-parser',

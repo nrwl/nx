@@ -25,12 +25,6 @@ Default: `false`
 
 Preview the changes without updating files/creating releases
 
-### first-release
-
-Type: `boolean`
-
-Indicates that this is the first release for the selected release group. If the current version cannot be determined as usual, the version on disk will be used as a fallback. This is useful when using git or the registry to determine the current version of packages, since those sources are only available after the first release. Also indicates that changelog generation should not assume a previous git tag exists and that publishing should not check for the existence of the package before running.
-
 ### groups
 
 Type: `string`
@@ -73,6 +67,12 @@ nx release [specifier]
 
 #### Options
 
+##### first-release
+
+Type: `boolean`
+
+Indicates that this is the first release for the selected release group. If the current version cannot be determined as usual, the version on disk will be used as a fallback. This is useful when using git or the registry to determine the current version of packages, since those sources are only available after the first release. Also indicates that changelog generation should not assume a previous git tag exists and that publishing should not check for the existence of the package before running.
+
 ##### help
 
 Type: `boolean`
@@ -112,6 +112,12 @@ nx release version [specifier]
 ```
 
 #### Options
+
+##### first-release
+
+Type: `boolean`
+
+Indicates that this is the first release for the selected release group. If the current version cannot be determined as usual, the version on disk will be used as a fallback. This is useful when using git or the registry to determine the current version of packages, since those sources are only available after the first release. Also indicates that changelog generation should not assume a previous git tag exists and that publishing should not check for the existence of the package before running.
 
 ##### git-commit
 
@@ -188,6 +194,12 @@ nx release changelog [version]
 ```
 
 #### Options
+
+##### first-release
+
+Type: `boolean`
+
+Indicates that this is the first release for the selected release group. If the current version cannot be determined as usual, the version on disk will be used as a fallback. This is useful when using git or the registry to determine the current version of packages, since those sources are only available after the first release. Also indicates that changelog generation should not assume a previous git tag exists and that publishing should not check for the existence of the package before running.
 
 ##### from
 
@@ -297,11 +309,17 @@ Type: `string`
 
 Exclude certain projects from being processed
 
+##### first-release
+
+Type: `boolean`
+
+Indicates that this is the first release for the selected release group. If the current version cannot be determined as usual, the version on disk will be used as a fallback. This is useful when using git or the registry to determine the current version of packages, since those sources are only available after the first release. Also indicates that changelog generation should not assume a previous git tag exists and that publishing should not check for the existence of the package before running.
+
 ##### graph
 
 Type: `string`
 
-Show the task graph of the command. Pass a file path to save the graph data instead of viewing it in the browser.
+Show the task graph of the command. Pass a file path to save the graph data instead of viewing it in the browser. Pass "stdout" to print the results to the terminal.
 
 ##### help
 
@@ -338,6 +356,13 @@ Type: `string`
 Choices: [dynamic, static, stream, stream-without-prefixes]
 
 Defines how Nx emits outputs tasks logs
+
+| option                  | description                                                                                                                                                                                                                         |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| dynamic                 | use dynamic output life cycle, previous content is overwritten or modified as new outputs are added, display minimal logs by default, always show errors. This output format is recommended on your local development environments. |
+| static                  | uses static output life cycle, no previous content is rewritten or modified as new outputs are added. This output format is recommened for CI environments.                                                                         |
+| stream                  | nx by default logs output to an internal output stream, enable this option to stream logs to stdout / stderr                                                                                                                        |
+| stream-without-prefixes | nx prefixes the project name the target is running on, use this option remove the project name prefix from output                                                                                                                   |
 
 ##### parallel
 

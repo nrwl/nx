@@ -47,6 +47,7 @@ export function updateImports(
   let tsConfig: any;
   let mainEntryPointImportPath: string;
   let secondaryEntryPointImportPaths: string[];
+  let serverEntryPointImportPath: string;
   if (tree.exists(tsConfigPath)) {
     tsConfig = readJson(tree, tsConfigPath);
     const sourceRoot =
@@ -66,6 +67,19 @@ export function updateImports(
         (x) =>
           x.startsWith(ensureTrailingSlash(project.root)) &&
           !x.startsWith(ensureTrailingSlash(sourceRoot))
+      )
+    );
+
+    // Next.js libs have a custom path for the server we need to update that as well
+    // example "paths": { @acme/lib/server : ['libs/lib/src/server.ts'] }
+    serverEntryPointImportPath = Object.keys(
+      tsConfig.compilerOptions?.paths ?? {}
+    ).find((path) =>
+      tsConfig.compilerOptions.paths[path].some(
+        (x) =>
+          x.startsWith(ensureTrailingSlash(sourceRoot)) &&
+          x.includes('server') &&
+          path.endsWith('server')
       )
     );
   }
@@ -93,6 +107,20 @@ export function updateImports(
           : null,
     })),
   ];
+
+  if (
+    serverEntryPointImportPath &&
+    schema.importPath &&
+    serverEntryPointImportPath.startsWith(mainEntryPointImportPath)
+  ) {
+    projectRefs.push({
+      from: serverEntryPointImportPath,
+      to: serverEntryPointImportPath.replace(
+        mainEntryPointImportPath,
+        schema.importPath
+      ),
+    });
+  }
 
   for (const projectRef of projectRefs) {
     if (schema.updateImportPath && projectRef.to) {

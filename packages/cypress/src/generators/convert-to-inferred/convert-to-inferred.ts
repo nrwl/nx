@@ -1,13 +1,11 @@
 import {
-  CreateNodesContext,
   createProjectGraphAsync,
   formatFiles,
-  joinPathFragments,
   type TargetConfiguration,
   type Tree,
 } from '@nx/devkit';
 import { migrateExecutorToPlugin } from '@nx/devkit/src/generators/plugin-migrations/executor-to-plugin-migrator';
-import { createNodes } from '../../plugins/plugin';
+import { createNodesV2 } from '../../plugins/plugin';
 import { targetOptionsToCliMap } from './lib/target-options-map';
 import { upsertBaseUrl } from './lib/upsert-baseUrl';
 import { addDevServerTargetToConfig } from './lib/add-dev-server-target-to-config';
@@ -21,7 +19,7 @@ interface Schema {
 
 export async function convertToInferred(tree: Tree, options: Schema) {
   const projectGraph = await createProjectGraphAsync();
-  await migrateExecutorToPlugin(
+  const migratedProjectsModern = await migrateExecutorToPlugin(
     tree,
     projectGraph,
     '@nx/cypress:cypress',
@@ -31,9 +29,30 @@ export async function convertToInferred(tree: Tree, options: Schema) {
       ciTargetName: 'e2e-ci',
     }),
     postTargetTransformer,
-    createNodes,
+    createNodesV2,
     options.project
   );
+
+  const migratedProjectsLegacy = await migrateExecutorToPlugin(
+    tree,
+    projectGraph,
+    '@nrwl/cypress:cypress',
+    '@nx/cypress/plugin',
+    (targetName) => ({
+      targetName,
+      ciTargetName: 'e2e-ci',
+    }),
+    postTargetTransformer,
+    createNodesV2,
+    options.project
+  );
+
+  const migratedProjects =
+    migratedProjectsModern.size + migratedProjectsLegacy.size;
+
+  if (migratedProjects === 0) {
+    throw new Error('Could not find any targets to migrate.');
+  }
 
   if (!options.skipFormat) {
     await formatFiles(tree);
@@ -99,7 +118,7 @@ function postTargetTransformer(
         tree,
         configFilePath,
         webServerCommands,
-        target.configurations?.ci?.devServerTarget
+        webServerCommands?.['ci']
       );
     }
 

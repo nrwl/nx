@@ -9,5 +9,5 @@ export default {
   globalSetup: '../utils/global-setup.ts',
   globalTeardown: '../utils/global-teardown.ts',
   displayName: 'e2e-js',
-  preset: '../../jest.preset.js',
+  preset: '../jest.preset.e2e.js',
 };

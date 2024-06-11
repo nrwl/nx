@@ -6,7 +6,7 @@ import {
   Tokenizer,
   transform,
 } from '@markdoc/markdoc';
-import { load as yamlLoad } from 'js-yaml';
+import { load as yamlLoad } from '@zkochan/js-yaml';
 import React, { ReactNode } from 'react';
 import { Heading } from './lib/nodes/heading.component';
 import { heading } from './lib/nodes/heading.schema';

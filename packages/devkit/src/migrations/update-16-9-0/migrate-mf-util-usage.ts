@@ -1,16 +1,13 @@
-import type { Tree } from 'nx/src/generators/tree';
-import type { GeneratorCallback } from 'nx/src/config/misc-interfaces';
 import type { Node, SyntaxKind } from 'typescript';
 import { visitNotIgnoredFiles } from '../../generators/visit-not-ignored-files';
 import { formatFiles } from '../../generators/format-files';
-import { requireNx } from '../../../nx';
 import {
   addDependenciesToPackageJson,
   ensurePackage,
 } from '../../utils/package-json';
 import { typescriptVersion } from '../../utils/versions';
 
-const { readJson } = requireNx();
+import { GeneratorCallback, readJson, Tree } from 'nx/src/devkit-exports';
 
 let tsModule: typeof import('typescript');
 

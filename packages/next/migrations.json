@@ -1,11 +1,5 @@
 {
   "generators": {
-    "add-style-packages": {
-      "cli": "nx",
-      "version": "15.8.8-beta.0",
-      "description": "Add less and stylus packages if used.",
-      "factory": "./src/migrations/update-15-8-8/add-style-packages"
-    },
     "update-16-0-0-add-nx-packages": {
       "cli": "nx",
       "version": "16.0.0-beta.1",
@@ -32,40 +26,6 @@
     }
   },
   "packageJsonUpdates": {
-    "15.0.4": {
-      "version": "15.0.4-beta.0",
-      "packages": {
-        "next": {
-          "version": "13.0.0",
-          "alwaysAddToPackageJson": false
-        },
-        "eslint-config-next": {
-          "version": "13.0.0",
-          "alwaysAddToPackageJson": false
-        },
-        "less-loader": {
-          "version": "11.1.0",
-          "alwaysAddToPackageJson": false
-        },
-        "stylus-loader": {
-          "version": "7.1.0",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
-    "15.4.5": {
-      "version": "15.4.5-beta.0",
-      "packages": {
-        "next": {
-          "version": "13.1.1",
-          "alwaysAddToPackageJson": false
-        },
-        "eslint-config-next": {
-          "version": "13.1.1",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
     "16.0.0": {
       "version": "16.0.0-beta.0",
       "packages": {
@@ -98,6 +58,19 @@
       "packages": {
         "@swc-node/register": {
           "version": "~1.8.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "19.0.3": {
+      "version": "19.0.3-beta.0",
+      "packages": {
+        "next": {
+          "version": "14.2.3",
+          "alwaysAddToPackageJson": false
+        },
+        "eslint-config-next": {
+          "version": "14.2.3",
           "alwaysAddToPackageJson": false
         }
       }

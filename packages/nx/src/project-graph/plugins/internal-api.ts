@@ -13,7 +13,7 @@ import {
   CreateDependenciesContext,
   CreateMetadata,
   CreateMetadataContext,
-  CreateNodesContext,
+  CreateNodesContextV2,
   CreateNodesResult,
   NxPluginV2,
 } from './public-api';
@@ -21,9 +21,13 @@ import {
   ProjectGraph,
   ProjectGraphProcessor,
 } from '../../config/project-graph';
-import { runCreateNodesInParallel } from './utils';
 import { loadNxPluginInIsolation } from './isolation';
 import { loadNxPlugin, unregisterPluginTSTranspiler } from './loader';
+import { createNodesFromFiles } from './utils';
+import {
+  AggregateCreateNodesError,
+  isAggregateCreateNodesError,
+} from '../error-types';
 
 export class LoadedNxPlugin {
   readonly name: string;
@@ -33,8 +37,10 @@ export class LoadedNxPlugin {
     // the result's context.
     fn: (
       matchedFiles: string[],
-      context: CreateNodesContext
-    ) => Promise<CreateNodesResultWithContext[]>
+      context: CreateNodesContextV2
+    ) => Promise<
+      Array<readonly [plugin: string, file: string, result: CreateNodesResult]>
+    >
   ];
   readonly createDependencies?: (
     context: CreateDependenciesContext
@@ -57,12 +63,54 @@ export class LoadedNxPlugin {
       this.exclude = pluginDefinition.exclude;
     }
 
-    if (plugin.createNodes) {
+    if (plugin.createNodes && !plugin.createNodesV2) {
       this.createNodes = [
         plugin.createNodes[0],
-        (files, context) =>
-          runCreateNodesInParallel(files, plugin, this.options, context),
+        (configFiles, context) =>
+          createNodesFromFiles(
+            plugin.createNodes[1],
+            configFiles,
+            this.options,
+            context
+          ).then((results) => results.map((r) => [this.name, r[0], r[1]])),
       ];
+    }
+
+    if (plugin.createNodesV2) {
+      this.createNodes = [
+        plugin.createNodesV2[0],
+        async (configFiles, context) => {
+          const result = await plugin.createNodesV2[1](
+            configFiles,
+            this.options,
+            context
+          );
+          return result.map((r) => [this.name, r[0], r[1]]);
+        },
+      ];
+    }
+
+    if (this.createNodes) {
+      const inner = this.createNodes[1];
+      this.createNodes[1] = async (...args) => {
+        performance.mark(`${plugin.name}:createNodes - start`);
+        try {
+          return await inner(...args);
+        } catch (e) {
+          if (isAggregateCreateNodesError(e)) {
+            throw e;
+          }
+          // The underlying plugin errored out. We can't know any partial results.
+          throw new AggregateCreateNodesError([[null, e]], []);
+        } finally {
+          performance.mark(`${plugin.name}:createNodes - end`);
+          performance.measure(
+            `${plugin.name}:createNodes`,
+            `${plugin.name}:createNodes - start`,
+            `${plugin.name}:createNodes - end`
+          );
+        }
+      };
     }
 
     if (plugin.createDependencies) {

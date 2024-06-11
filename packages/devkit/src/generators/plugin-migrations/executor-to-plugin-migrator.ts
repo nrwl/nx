@@ -1,39 +1,40 @@
-import type { TargetConfiguration } from 'nx/src/config/workspace-json-project-json';
-import type {
-  ExpandedPluginConfiguration,
-  NxJsonConfiguration,
-} from 'nx/src/config/nx-json';
-import type { Tree } from 'nx/src/generators/tree';
-import type {
-  CreateNodes,
-  CreateNodesContext,
-} from 'nx/src/project-graph/plugins';
-import type { ProjectGraph } from 'nx/src/config/project-graph';
 import type { RunCommandsOptions } from 'nx/src/executors/run-commands/run-commands.impl';
-import type { ConfigurationResult } from 'nx/src/project-graph/utils/project-configuration-utils';
 
 import { minimatch } from 'minimatch';
+import { deepStrictEqual } from 'node:assert';
 
 import { forEachExecutorOptions } from '../executor-options-utils';
 import { deleteMatchingProperties } from './plugin-migration-utils';
-import { requireNx } from '../../../nx';
 
-const {
-  glob,
+import {
   readNxJson,
   updateNxJson,
-  mergeTargetConfigurations,
   updateProjectConfiguration,
   readProjectConfiguration,
+  ProjectGraph,
+  ExpandedPluginConfiguration,
+  NxJsonConfiguration,
+  TargetConfiguration,
+  Tree,
+  CreateNodes,
+  CreateNodesV2,
+} from 'nx/src/devkit-exports';
+
+import {
+  mergeTargetConfigurations,
   retrieveProjectConfigurations,
   LoadedNxPlugin,
   ProjectConfigurationsError,
-} = requireNx();
+} from 'nx/src/devkit-internals';
+import type { ConfigurationResult } from 'nx/src/project-graph/utils/project-configuration-utils';
+import type { InputDefinition } from 'nx/src/config/workspace-json-project-json';
 
 type PluginOptionsBuilder<T> = (targetName: string) => T;
 type PostTargetTransformer = (
   targetConfiguration: TargetConfiguration,
-  tree?: Tree
+  tree: Tree,
+  projectDetails: { projectName: string; root: string },
+  inferredTargetConfiguration: TargetConfiguration
 ) => TargetConfiguration;
 type SkipTargetFilter = (
   targetConfiguration: TargetConfiguration
@@ -52,8 +53,8 @@ class ExecutorToPluginMigrator<T> {
   #targetDefaultsForExecutor: Partial<TargetConfiguration>;
   #targetAndProjectsToMigrate: Map<string, Set<string>>;
   #pluginToAddForTarget: Map<string, ExpandedPluginConfiguration<T>>;
-  #createNodes: CreateNodes<T>;
-  #configFiles: string[];
+  #createNodes?: CreateNodes<T>;
+  #createNodesV2?: CreateNodesV2<T>;
   #createNodesResultsForTargets: Map<string, ConfigurationResult>;
 
   constructor(
@@ -63,7 +64,8 @@ class ExecutorToPluginMigrator<T> {
     pluginPath: string,
     pluginOptionsBuilder: PluginOptionsBuilder<T>,
     postTargetTransformer: PostTargetTransformer,
-    createNodes: CreateNodes<T>,
+    createNodes?: CreateNodes<T>,
+    createNodesV2?: CreateNodesV2<T>,
     specificProjectToMigrate?: string,
     skipTargetFilter?: SkipTargetFilter
   ) {
@@ -74,16 +76,20 @@ class ExecutorToPluginMigrator<T> {
     this.#pluginOptionsBuilder = pluginOptionsBuilder;
     this.#postTargetTransformer = postTargetTransformer;
     this.#createNodes = createNodes;
+    this.#createNodesV2 = createNodesV2;
     this.#specificProjectToMigrate = specificProjectToMigrate;
     this.#skipTargetFilter = skipTargetFilter ?? ((...args) => [false, '']);
   }
 
-  async run(): Promise<void> {
+  async run(): Promise<Map<string, Set<string>>> {
     await this.#init();
-    for (const targetName of this.#targetAndProjectsToMigrate.keys()) {
-      this.#migrateTarget(targetName);
+    if (this.#targetAndProjectsToMigrate.size > 0) {
+      for (const targetName of this.#targetAndProjectsToMigrate.keys()) {
+        this.#migrateTarget(targetName);
+      }
+      await this.#addPlugins();
     }
-    this.#addPlugins();
+    return this.#targetAndProjectsToMigrate;
   }
 
   async #init() {
@@ -130,7 +136,17 @@ class ExecutorToPluginMigrator<T> {
     delete projectTarget.executor;
 
     deleteMatchingProperties(projectTarget, createdTarget);
-    projectTarget = this.#postTargetTransformer(projectTarget, this.tree);
+
+    if (projectTarget.inputs && createdTarget.inputs) {
+      this.#mergeInputs(projectTarget, createdTarget);
+    }
+
+    projectTarget = this.#postTargetTransformer(
+      projectTarget,
+      this.tree,
+      { projectName, root: projectFromGraph.data.root },
+      createdTarget
+    );
 
     if (
       projectTarget.options &&
@@ -144,12 +160,101 @@ class ExecutorToPluginMigrator<T> {
     } else {
       delete projectConfig.targets[targetName];
     }
+
+    if (!projectConfig['// targets']) {
+      projectConfig[
+        '// targets'
+      ] = `to see all targets run: nx show project ${projectName} --web`;
+    }
+
     updateProjectConfiguration(this.tree, projectName, projectConfig);
 
     return `${projectFromGraph.data.root}/**/*`;
   }
 
-  #addPlugins() {
+  #mergeInputs(
+    target: TargetConfiguration,
+    inferredTarget: TargetConfiguration
+  ) {
+    const isInputInferred = (input: string | InputDefinition) => {
+      return inferredTarget.inputs.some((inferredInput) => {
+        try {
+          deepStrictEqual(input, inferredInput);
+          return true;
+        } catch {
+          return false;
+        }
+      });
+    };
+
+    if (target.inputs.every(isInputInferred)) {
+      delete target.inputs;
+      return;
+    }
+
+    const inferredTargetExternalDependencyInput = inferredTarget.inputs.find(
+      (i): i is { externalDependencies: string[] } =>
+        typeof i !== 'string' && 'externalDependencies' in i
+    );
+    if (!inferredTargetExternalDependencyInput) {
+      // plugins should normally have an externalDependencies input, but if it
+      // doesn't, there's nothing to merge
+      return;
+    }
+
+    const targetExternalDependencyInput = target.inputs.find(
+      (i): i is { externalDependencies: string[] } =>
+        typeof i !== 'string' && 'externalDependencies' in i
+    );
+    if (!targetExternalDependencyInput) {
+      // the target doesn't have an externalDependencies input, so we can just
+      // add the inferred one
+      target.inputs.push(inferredTargetExternalDependencyInput);
+    } else {
+      // the target has an externalDependencies input, so we need to merge them
+      targetExternalDependencyInput.externalDependencies = Array.from(
+        new Set([
+          ...targetExternalDependencyInput.externalDependencies,
+          ...inferredTargetExternalDependencyInput.externalDependencies,
+        ])
+      );
+    }
+  }
+
+  async #pluginRequiresIncludes(
+    targetName: string,
+    plugin: ExpandedPluginConfiguration<T>
+  ) {
+    const loadedPlugin = new LoadedNxPlugin(
+      {
+        createNodesV2: this.#createNodesV2,
+        createNodes: this.#createNodes,
+        name: this.#pluginPath,
+      },
+      plugin
+    );
+
+    const originalResults = this.#createNodesResultsForTargets.get(targetName);
+
+    let resultsWithIncludes: ConfigurationResult;
+    try {
+      resultsWithIncludes = await retrieveProjectConfigurations(
+        [loadedPlugin],
+        this.tree.root,
+        this.#nxJson
+      );
+    } catch (e) {
+      if (e instanceof ProjectConfigurationsError) {
+        resultsWithIncludes = e.partialProjectConfigurationsResult;
+      } else {
+        throw e;
+      }
+    }
+
+    return !deepEqual(originalResults, resultsWithIncludes);
+  }
+
+  async #addPlugins() {
     for (const [targetName, plugin] of this.#pluginToAddForTarget.entries()) {
       const pluginOptions = this.#pluginOptionsBuilder(targetName);
 
@@ -173,31 +278,27 @@ class ExecutorToPluginMigrator<T> {
       ) as ExpandedPluginConfiguration<T>;
 
       if (existingPlugin?.include) {
-        for (const pluginIncludes of existingPlugin.include) {
-          for (const projectPath of plugin.include) {
-            if (!minimatch(projectPath, pluginIncludes, { dot: true })) {
-              existingPlugin.include.push(projectPath);
-            }
-          }
-        }
-
-        const allConfigFilesAreIncluded = this.#configFiles.every(
-          (configFile) => {
-            for (const includePattern of existingPlugin.include) {
-              if (minimatch(configFile, includePattern, { dot: true })) {
-                return true;
-              }
-            }
-            return false;
-          }
+        // Add to the existing plugin includes
+        existingPlugin.include = existingPlugin.include.concat(
+          // Any include that is in the new plugin's include list
+          plugin.include.filter(
+            (projectPath) =>
+              // And is not already covered by the existing plugin's include list
+              !existingPlugin.include.some((pluginIncludes) =>
+                minimatch(projectPath, pluginIncludes, { dot: true })
+              )
+          )
         );
 
-        if (allConfigFilesAreIncluded) {
-          existingPlugin.include = undefined;
+        if (!(await this.#pluginRequiresIncludes(targetName, existingPlugin))) {
+          delete existingPlugin.include;
         }
       }
 
       if (!existingPlugin) {
+        if (!(await this.#pluginRequiresIncludes(targetName, plugin))) {
+          plugin.include = undefined;
+        }
         this.#nxJson.plugins.push(plugin);
       }
     }
@@ -243,30 +344,26 @@ class ExecutorToPluginMigrator<T> {
         }
       }
     );
-
-    if (this.#targetAndProjectsToMigrate.size === 0) {
-      const errorMsg = this.#specificProjectToMigrate
-        ? `Project "${
-            this.#specificProjectToMigrate
-          }" does not contain any targets using the "${
-            this.#executor
-          }" executor. Please select a project that does.`
-        : `Could not find any targets using the "${this.#executor}" executor.`;
-      throw new Error(errorMsg);
-    }
   }
 
   #getTargetDefaultsForExecutor() {
-    this.#targetDefaultsForExecutor =
-      this.#nxJson.targetDefaults?.[this.#executor];
+    this.#targetDefaultsForExecutor = structuredClone(
+      this.#nxJson.targetDefaults?.[this.#executor]
+    );
   }
 
   #getCreatedTargetForProjectRoot(targetName: string, projectRoot: string) {
-    const createdProject = Object.entries(
+    const entry = Object.entries(
       this.#createNodesResultsForTargets.get(targetName)?.projects ?? {}
-    ).find(([root]) => root === projectRoot)[1];
+    ).find(([root]) => root === projectRoot);
+    if (!entry) {
+      throw new Error(
+        `The nx plugin did not find a project inside ${projectRoot}. File an issue at https://github.com/nrwl/nx with information about your project structure.`
+      );
+    }
+    const createdProject = entry[1];
     const createdTarget: TargetConfiguration<RunCommandsOptions> =
-      createdProject.targets[targetName];
+      structuredClone(createdProject.targets[targetName]);
     delete createdTarget.command;
     delete createdTarget.options?.cwd;
 
@@ -274,9 +371,14 @@ class ExecutorToPluginMigrator<T> {
   }
 
   async #getCreateNodesResults() {
+    if (this.#targetAndProjectsToMigrate.size === 0) {
+      return;
+    }
+
     for (const targetName of this.#targetAndProjectsToMigrate.keys()) {
       const loadedPlugin = new LoadedNxPlugin(
         {
+          createNodesV2: this.#createNodesV2,
           createNodes: this.#createNodes,
           name: this.#pluginPath,
         },
@@ -300,7 +402,6 @@ class ExecutorToPluginMigrator<T> {
         }
       }
 
-      this.#configFiles = Array.from(projectConfigs.matchingProjectFiles);
       this.#createNodesResultsForTargets.set(targetName, projectConfigs);
     }
   }
@@ -313,10 +414,36 @@ export async function migrateExecutorToPlugin<T>(
   pluginPath: string,
   pluginOptionsBuilder: PluginOptionsBuilder<T>,
   postTargetTransformer: PostTargetTransformer,
+  createNodes: CreateNodesV2<T>,
+  specificProjectToMigrate?: string,
+  skipTargetFilter?: SkipTargetFilter
+): Promise<Map<string, Set<string>>> {
+  const migrator = new ExecutorToPluginMigrator<T>(
+    tree,
+    projectGraph,
+    executor,
+    pluginPath,
+    pluginOptionsBuilder,
+    postTargetTransformer,
+    undefined,
+    createNodes,
+    specificProjectToMigrate,
+    skipTargetFilter
+  );
+  return await migrator.run();
+}
+
+export async function migrateExecutorToPluginV1<T>(
+  tree: Tree,
+  projectGraph: ProjectGraph,
+  executor: string,
+  pluginPath: string,
+  pluginOptionsBuilder: PluginOptionsBuilder<T>,
+  postTargetTransformer: PostTargetTransformer,
   createNodes: CreateNodes<T>,
   specificProjectToMigrate?: string,
   skipTargetFilter?: SkipTargetFilter
-): Promise<void> {
+): Promise<Map<string, Set<string>>> {
   const migrator = new ExecutorToPluginMigrator<T>(
     tree,
     projectGraph,
@@ -325,8 +452,36 @@ export async function migrateExecutorToPlugin<T>(
     pluginOptionsBuilder,
     postTargetTransformer,
     createNodes,
+    undefined,
     specificProjectToMigrate,
     skipTargetFilter
   );
-  await migrator.run();
+  return await migrator.run();
+}
+
+// Checks if two objects are structurely equal, without caring
+// about the order of the keys.
+function deepEqual<T extends Object>(a: T, b: T, logKey = ''): boolean {
+  const aKeys = Object.keys(a);
+  const bKeys = new Set(Object.keys(b));
+
+  if (aKeys.length !== bKeys.size) {
+    return false;
+  }
+
+  for (const key of aKeys) {
+    if (!bKeys.has(key)) {
+      return false;
+    }
+
+    if (typeof a[key] === 'object' && typeof b[key] === 'object') {
+      if (!deepEqual(a[key], b[key], logKey + '.' + key)) {
+        return false;
+      }
+    } else if (a[key] !== b[key]) {
+      return false;
+    }
+  }
+
+  return true;
 }

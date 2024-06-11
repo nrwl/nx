@@ -20,6 +20,8 @@ import {
 } from './menu-items';
 import { SectionsMenu } from './sections-menu';
 import { NxCloudIcon } from '../nx-cloud-icon';
+import { AnnouncementBanner } from '../announcement-banner';
+import { DiscordIcon } from '../discord-icon';
 
 function Menu({ tabs }: { tabs: any[] }): JSX.Element {
   return (
@@ -111,18 +113,7 @@ export function DocumentationHeader({
       name: 'Discord',
       label: 'Community channel',
       href: 'https://go.nx.dev/community',
-      icon: (props: any) => (
-        <svg
-          fill="currentColor"
-          role="img"
-          viewBox="0 0 24 24"
-          xmlns="http://www.w3.org/2000/svg"
-          {...props}
-        >
-          {/*<title>Discord</title>*/}
-          <path d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.4189-2.1568 2.4189Z" />
-        </svg>
-      ),
+      icon: (props: any) => <DiscordIcon {...props} />,
     },
     {
       name: 'X',
@@ -179,7 +170,10 @@ export function DocumentationHeader({
 
   return (
     <div className="border-b border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800/60 print:hidden">
-      <div className="mx-auto flex w-full items-center gap-6 lg:py-4 lg:px-8">
+      <div className="hidden w-full md:block">
+        <AnnouncementBanner />
+      </div>
+      <div className="mx-auto flex w-full items-center gap-6 lg:px-8 lg:py-4">
         {/*MOBILE MENU*/}
         <div className="flex w-full items-center lg:hidden">
           <button
@@ -207,14 +201,14 @@ export function DocumentationHeader({
         <div className="flex items-center">
           <Link
             href="/"
-            className="flex flex-grow items-center px-4 text-slate-900 dark:text-white lg:px-0"
+            className="flex flex-grow items-center px-4 text-slate-900 lg:px-0 dark:text-white"
           >
             <span className="sr-only">Nx</span>
             <NxIcon aria-hidden="true" className="h-8 w-8" />
           </Link>
           <Link
             href="/getting-started/intro"
-            className="ml-2 hidden items-center px-4 text-slate-900 dark:text-white lg:flex lg:px-0"
+            className="ml-2 hidden items-center px-4 text-slate-900 lg:flex lg:px-0 dark:text-white"
           >
             <span className="text-xl font-bold uppercase tracking-wide">
               Docs
@@ -324,14 +318,14 @@ export function DocumentationHeader({
             <Link
               href="/getting-started/intro"
               title="Documentation"
-              className="hidden px-3 py-2 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500 md:inline-flex"
+              className="hidden px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-slate-200 dark:hover:text-sky-500"
             >
               Documentation
             </Link>
             <Link
               href="/blog"
               title="Blog"
-              className="hidden px-3 py-2 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500 md:inline-flex"
+              className="hidden px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-slate-200 dark:hover:text-sky-500"
             >
               Blog
             </Link>
@@ -339,7 +333,7 @@ export function DocumentationHeader({
               href="https://nx.app/pricing"
               title="Nx Cloud"
               target="_blank"
-              className="hidden gap-2 px-3 py-2 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500 md:inline-flex"
+              className="hidden gap-2 px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-slate-200 dark:hover:text-sky-500"
             >
               CI Pricing
               <ArrowUpRightIcon className="h-2 w-2 align-super" />
@@ -387,16 +381,13 @@ export function DocumentationHeader({
           </nav>
         </div>
         <div className="hidden flex-grow lg:flex">{/* SPACER */}</div>
-        {/*<div className="hidden w-full xl:flex">*/}
-        {/*  <AnnouncementBanner />*/}
-        {/*</div>*/}
         <div className="hidden flex-shrink-0 lg:flex">
           <nav
             role="menu"
             className="items-justified hidden justify-center space-x-4 lg:flex"
           >
             <Link
-              className="hidden cursor-pointer px-3 py-2 text-sm font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500 md:inline-flex"
+              className="hidden cursor-pointer px-3 py-2 text-sm font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-slate-200 dark:hover:text-sky-500"
               title="Contact Us"
               href="/contact"
             >
@@ -417,7 +408,10 @@ export function DocumentationHeader({
       <div className="mx-auto hidden w-full items-center px-4 sm:space-x-10 sm:px-6 lg:flex lg:px-8">
         <Menu tabs={sections} />
         <div className="flex-grow"></div>
-        <nav aria-labelledby="community-links" className="space-x-2">
+        <nav
+          aria-labelledby="community-links"
+          className="block min-w-36 space-x-2 text-right"
+        >
           {communityLinks.map((item) => (
             <a
               key={item.name}

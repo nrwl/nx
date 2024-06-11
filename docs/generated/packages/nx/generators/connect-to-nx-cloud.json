@@ -23,6 +23,11 @@
         "type": "boolean",
         "description": "Hide formatting logs",
         "x-priority": "internal"
+      },
+      "github": {
+        "type": "boolean",
+        "description": "If the user will be using GitHub as their git hosting provider",
+        "default": false
       }
     },
     "additionalProperties": false,

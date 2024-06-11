@@ -1,5 +1,6 @@
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
 import {
-  getProjects,
   readJson,
   readProjectConfiguration,
   Tree,
@@ -145,6 +146,74 @@ describe('lib', () => {
     expect(tree.exists('my-lib/src/lib/my-lib.spec.ts')).toBeTruthy();
     const eslintJson = readJson(tree, 'my-lib/.eslintrc.json');
     expect(eslintJson).toMatchSnapshot();
+  });
+
+  it('should support eslint flat config', async () => {
+    tree.write(
+      'eslint.config.js',
+      `const { FlatCompat } = require('@eslint/eslintrc');
+const nxEslintPlugin = require('@nx/eslint-plugin');
+const js = require('@eslint/js');
+
+const compat = new FlatCompat({
+  baseDirectory: __dirname,
+  recommendedConfig: js.configs.recommended,
+});
+
+module.exports = [
+  { plugins: { '@nx': nxEslintPlugin } },
+  {
+    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
+    rules: {
+      '@nx/enforce-module-boundaries': [
+        'error',
+        {
+          enforceBuildableLibDependency: true,
+          allow: [],
+          depConstraints: [
+            {
+              sourceTag: '*',
+              onlyDependOnLibsWithTags: ['*'],
+            },
+          ],
+        },
+      ],
+    },
+  },
+  ...compat.config({ extends: ['plugin:@nx/typescript'] }).map((config) => ({
+    ...config,
+    files: ['**/*.ts', '**/*.tsx'],
+    rules: {
+      ...config.rules,
+    },
+  })),
+  ...compat.config({ extends: ['plugin:@nx/javascript'] }).map((config) => ({
+    ...config,
+    files: ['**/*.js', '**/*.jsx'],
+    rules: {
+      ...config.rules,
+    },
+  })),
+  ...compat.config({ env: { jest: true } }).map((config) => ({
+    ...config,
+    files: ['**/*.spec.ts', '**/*.spec.tsx', '**/*.spec.js', '**/*.spec.jsx'],
+    rules: {
+      ...config.rules,
+    },
+  })),
+];
+`
+    );
+
+    await libraryGenerator(tree, defaultSchema);
+
+    const eslintJson = tree.read('my-lib/eslint.config.js', 'utf-8');
+    expect(eslintJson).toMatchSnapshot();
+    // assert **/*.vue was added to override in base eslint config
+    const eslintBaseJson = tree.read('eslint.config.js', 'utf-8');
+    expect(eslintBaseJson).toContain(
+      `files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx', '**/*.vue'],`
+    );
   });
 
   describe('nested', () => {

@@ -1,4 +1,5 @@
 import { prompt } from 'enquirer';
+import { removeSync } from 'fs-extra';
 import { readNxJson } from '../../config/nx-json';
 import { createProjectFileMapUsingProjectGraph } from '../../project-graph/file-map-utils';
 import { createProjectGraphAsync } from '../../project-graph/project-graph';
@@ -7,12 +8,17 @@ import { handleErrors } from '../../utils/params';
 import { releaseChangelog, shouldCreateGitHubRelease } from './changelog';
 import { ReleaseOptions, VersionOptions } from './command-object';
 import {
+  IMPLICIT_DEFAULT_RELEASE_GROUP,
   createNxReleaseConfig,
   handleNxReleaseConfigError,
 } from './config/config';
 import { filterReleaseGroups } from './config/filter-release-groups';
+import {
+  readRawVersionPlans,
+  setVersionPlansOnGroups,
+} from './config/version-plans';
 import { releasePublish } from './publish';
-import { getCommitHash, gitCommit, gitPush, gitTag } from './utils/git';
+import { getCommitHash, gitAdd, gitCommit, gitPush, gitTag } from './utils/git';
 import { createOrUpdateGithubRelease } from './utils/github';
 import { resolveNxJsonConfigErrorMessage } from './utils/resolve-nx-json-error-message';
 import {
@@ -75,6 +81,7 @@ export async function release(
     stageChanges: shouldStage,
     gitCommit: false,
     gitTag: false,
+    deleteVersionPlans: false,
   });
 
   const changelogResult = await releaseChangelog({
@@ -85,6 +92,7 @@ export async function release(
     gitCommit: false,
     gitTag: false,
     createRelease: false,
+    deleteVersionPlans: false,
   });
 
   const {
@@ -100,6 +108,49 @@ export async function release(
   if (filterError) {
     output.error(filterError);
     process.exit(1);
+  }
+  const rawVersionPlans = await readRawVersionPlans();
+  setVersionPlansOnGroups(
+    rawVersionPlans,
+    releaseGroups,
+    Object.keys(projectGraph.nodes)
+  );
+
+  const planFiles = new Set<string>();
+  releaseGroups.forEach((group) => {
+    if (group.versionPlans) {
+      if (group.name === IMPLICIT_DEFAULT_RELEASE_GROUP) {
+        output.logSingleLine(`Removing version plan files`);
+      } else {
+        output.logSingleLine(
+          `Removing version plan files for group ${group.name}`
+        );
+      }
+      group.versionPlans.forEach((plan) => {
+        if (!args.dryRun) {
+          removeSync(plan.absolutePath);
+          if (args.verbose) {
+            console.log(`Removing ${plan.relativePath}`);
+          }
+        } else {
+          if (args.verbose) {
+            console.log(
+              `Would remove ${plan.relativePath}, but --dry-run was set`
+            );
+          }
+        }
+        planFiles.add(plan.relativePath);
+      });
+    }
+  });
+  const deletedFiles = Array.from(planFiles);
+  if (deletedFiles.length > 0) {
+    await gitAdd({
+      changedFiles: [],
+      deletedFiles,
+      dryRun: args.dryRun,
+      verbose: args.verbose,
+    });
   }
 
   if (shouldCommit) {

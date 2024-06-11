@@ -41,7 +41,7 @@ export function LaunchWeekAnnouncements(): JSX.Element {
                     This is what Nx Project Crystal is all about.
                   </p>
                 </div>
-                <div className="action flex flex-col space-y-2 pt-4 sm:flex-row sm:space-y-0 sm:space-x-2">
+                <div className="action flex flex-col space-y-2 pt-4 sm:flex-row sm:space-x-2 sm:space-y-0">
                   <ButtonLink
                     variant="primary"
                     size="default"
@@ -110,7 +110,7 @@ export function LaunchWeekAnnouncements(): JSX.Element {
                     powerful monorepo capabilities.
                   </p>
                 </div>
-                <div className="action flex flex-col space-y-2 pt-4 sm:flex-row sm:space-y-0 sm:space-x-2">
+                <div className="action flex flex-col space-y-2 pt-4 sm:flex-row sm:space-x-2 sm:space-y-0">
                   <ButtonLink
                     variant="primary"
                     size="default"
@@ -175,7 +175,7 @@ export function LaunchWeekAnnouncements(): JSX.Element {
                     maintaining CI/CD infrastructure.
                   </p>
                 </div>
-                <div className="action flex flex-col space-y-2 pt-4 sm:flex-row sm:space-y-0 sm:space-x-2">
+                <div className="action flex flex-col space-y-2 pt-4 sm:flex-row sm:space-x-2 sm:space-y-0">
                   <ButtonLink
                     variant="primary"
                     size="default"
@@ -237,7 +237,7 @@ export function LaunchWeekAnnouncements(): JSX.Element {
                     and optimize your codebase and pipelines.
                   </p>
                 </div>
-                <div className="action flex flex-col space-y-2 pt-4 sm:flex-row sm:space-y-0 sm:space-x-2">
+                <div className="action flex flex-col space-y-2 pt-4 sm:flex-row sm:space-x-2 sm:space-y-0">
                   <ButtonLink
                     variant="primary"
                     size="default"
@@ -295,7 +295,7 @@ export function LaunchWeekAnnouncements(): JSX.Element {
                     chime in for our live-stream!
                   </p>
                 </div>
-                <div className="action flex flex-col space-y-2 pt-4 sm:flex-row sm:space-y-0 sm:space-x-2">
+                <div className="action flex flex-col space-y-2 pt-4 sm:flex-row sm:space-x-2 sm:space-y-0">
                   <ButtonLink
                     variant="primary"
                     size="default"

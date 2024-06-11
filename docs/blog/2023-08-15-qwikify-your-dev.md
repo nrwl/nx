@@ -5,7 +5,7 @@ cover_image: '/blog/images/2023-08-15/featured_img.png'
 tags: [nx, changelog, release]
 ---
 
-In the ever-evolving web development landscape, efficiency and modularity have become paramount. This is where [Nx](https://nx.dev) and [Qwik](https://qwik.dev/) come into play.
+In the ever-evolving web development landscape, efficiency and modularity have become paramount. This is where [Nx]() and [Qwik](https://qwik.dev/) come into play.
 
 Qwik is a modern web framework that focuses on application performance by reducing the amount of JavaScript that needs to be shipped to the browser. You can learn more about how Qwik achieves this with [Resumability in their docs](https://qwik.dev/docs/concepts/resumable/).
 
@@ -13,7 +13,7 @@ Nx is a powerful tool that helps you build extensible and maintainable codebases
 
 In this blog post, we’ll explore how to combine the strengths of Nx and Qwik to create a todo app. To do this, we’ll take advantage of an Nx Plugin that was created by the Qwikifiers team to maximise the integration between Qwik and Nx, called [`qwik-nx`](https://github.com/qwikifiers/qwik-nx).
 
-> You do not necessarily need to use an Nx Plugin for Qwik. Instead, you could use the [Qwik CLI](https://qwik.dev/docs/getting-started/#create-an-app-using-the-cli) to create your application and [add Nx later](/recipes/adopting-nx/adding-to-existing-project#installing-nx-on-a-non-monorepo-project).
+> You do not necessarily need to use an Nx Plugin for Qwik. Instead, you could use the [Qwik CLI](https://qwik.dev/docs/getting-started/#create-an-app-using-the-cli) to create your application and [add Nx later](/recipes/adopting-nx/adding-to-existing-project#install-nx-on-a-nonmonorepo-project).
 > In this blog post we use the `qwik-nx` plugin to leverage better DX provided by the generators offered by the Plugin.
 
 **Table of Contents**
@@ -25,11 +25,12 @@ In this blog post, we’ll explore how to combine the strengths of Nx and Qwik t
 - [Generate a Library](#generate-a-library)
 - [Add a Qwik Context](#add-a-qwik-context)
 - [Using the Context](#using-the-context)
-- [Adding a routeLoader$ to load data on Navigation](#adding-a-to-load-data-on-navigation)
+- [Adding a `routeLoader$` to load data on Navigation](#adding-a-routeloader-to-load-data-on-navigation)
 - [Handle the Form Action to add todos](#handle-the-form-action-to-add-todos)
 - [Improve the Architecture](#improve-the-architecture)
 - [Conclusion](#conclusion)
 - [Further Reading](#further-reading)
+- [Learn more](#learn-more)
 
 You can learn more about this integration in the video below:
 

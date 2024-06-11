@@ -1,15 +1,25 @@
 import { Configuration, WebpackOptionsNormalized } from 'webpack';
+import { SvgrOptions } from '../../with-react';
 
 export function applyReactConfig(
-  options: { svgr?: boolean },
+  options: { svgr?: boolean | SvgrOptions },
   config: Partial<WebpackOptionsNormalized | Configuration> = {}
 ): void {
   if (!process.env['NX_TASK_TARGET_PROJECT']) return;
 
   addHotReload(config);
 
-  if (options.svgr !== false) {
+  if (options.svgr !== false || typeof options.svgr === 'object') {
     removeSvgLoaderIfPresent(config);
+
+    const defaultSvgrOptions = {
+      svgo: false,
+      titleProp: true,
+      ref: true,
+    };
+
+    const svgrOptions =
+      typeof options.svgr === 'object' ? options.svgr : defaultSvgrOptions;
 
     // TODO(v20): Remove file-loader and use `?react` querystring to differentiate between asset and SVGR.
     // It should be:
@@ -37,11 +47,7 @@ export function applyReactConfig(
       use: [
         {
           loader: require.resolve('@svgr/webpack'),
-          options: {
-            svgo: false,
-            titleProp: true,
-            ref: true,
-          },
+          options: svgrOptions,
         },
         {
           loader: require.resolve('file-loader'),
@@ -85,7 +91,7 @@ function addHotReload(
     }
 
     const ReactRefreshPlugin = require('@pmmmwh/react-refresh-webpack-plugin');
-    config.plugins.push(new ReactRefreshPlugin());
+    config.plugins.push(new ReactRefreshPlugin({ overlay: false }));
   }
 }
 

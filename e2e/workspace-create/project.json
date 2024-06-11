@@ -6,12 +6,24 @@
   "implicitDependencies": ["create-nx-workspace"],
   "targets": {
     "e2e-ci--src/create-nx-plugin.test.ts": {
+      "dependsOn": [
+        "nx:build-native",
+        "@nx/nx-source:populate-local-registry-storage"
+      ],
       "inputs": ["e2eInputs", "^production"]
     },
     "e2e-ci--src/create-nx-workspace-npm.test.ts": {
+      "dependsOn": [
+        "nx:build-native",
+        "@nx/nx-source:populate-local-registry-storage"
+      ],
       "inputs": ["e2eInputs", "^production"]
     },
     "e2e-ci--src/create-nx-workspace.test.ts": {
+      "dependsOn": [
+        "nx:build-native",
+        "@nx/nx-source:populate-local-registry-storage"
+      ],
       "inputs": ["e2eInputs", "^production"]
     }
   }

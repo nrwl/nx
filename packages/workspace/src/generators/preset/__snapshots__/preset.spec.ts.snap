@@ -7,6 +7,7 @@ exports[`preset should create files (preset = angular-monorepo) 1`] = `
   "tsconfig.app.json",
   "tsconfig.editor.json",
   "tsconfig.json",
+  "public",
   ".eslintrc.json",
   "jest.config.ts",
   "tsconfig.spec.json",
@@ -15,8 +16,6 @@ exports[`preset should create files (preset = angular-monorepo) 1`] = `
 
 exports[`preset should create files (preset = angular-monorepo) 2`] = `
 [
-  "assets",
-  "favicon.ico",
   "index.html",
   "styles.css",
   "app",
@@ -78,7 +77,7 @@ import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 
 export default defineConfig({
   root: __dirname,
-  cacheDir: './node_modules/.vite/.',
+  cacheDir: './node_modules/.vite/proj',
 
   server: {
     port: 4200,
@@ -99,6 +98,7 @@ export default defineConfig({
 
   build: {
     outDir: './dist/proj',
+    emptyOutDir: true,
     reportCompressedSize: true,
     commonjsOptions: {
       transformMixedEsModules: true,
@@ -106,9 +106,10 @@ export default defineConfig({
   },
 
   test: {
+    watch: false,
     globals: true,
     cache: {
-      dir: './node_modules/.vitest',
+      dir: './node_modules/.vitest/proj',
     },
     environment: 'jsdom',
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
@@ -186,6 +187,7 @@ export default defineConfig({
 
   build: {
     outDir: '../../dist/apps/proj',
+    emptyOutDir: true,
     reportCompressedSize: true,
     commonjsOptions: {
       transformMixedEsModules: true,
@@ -193,9 +195,10 @@ export default defineConfig({
   },
 
   test: {
+    watch: false,
     globals: true,
     cache: {
-      dir: '../../node_modules/.vitest',
+      dir: '../../node_modules/.vitest/apps/proj',
     },
     environment: 'jsdom',
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
@@ -218,7 +221,7 @@ import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 
 export default defineConfig({
   root: __dirname,
-  cacheDir: './node_modules/.vite/.',
+  cacheDir: './node_modules/.vite/proj',
 
   server: {
     port: 4200,
@@ -239,6 +242,7 @@ export default defineConfig({
 
   build: {
     outDir: './dist/proj',
+    emptyOutDir: true,
     reportCompressedSize: true,
     commonjsOptions: {
       transformMixedEsModules: true,
@@ -246,9 +250,10 @@ export default defineConfig({
   },
 
   test: {
+    watch: false,
     globals: true,
     cache: {
-      dir: './node_modules/.vitest',
+      dir: './node_modules/.vitest/proj',
     },
     environment: 'jsdom',
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],

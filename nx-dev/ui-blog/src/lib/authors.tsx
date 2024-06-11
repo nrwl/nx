@@ -1,20 +1,28 @@
 import Image from 'next/image';
+import AuthorDetail from './author-detail';
+import type { BlogAuthor } from '@nx/nx-dev/data-access-documents/node-only';
 
-export function BlogAuthors({ authors }: { authors: string[] }): JSX.Element {
+export function BlogAuthors({
+  authors,
+}: {
+  authors: BlogAuthor[];
+}): JSX.Element {
   return (
-    <div className="isolate flex items-center -space-x-2 overflow-hidden">
+    <div className="relative isolate flex items-center -space-x-2">
       {authors.map((author, index) => (
-        <Image
-          key={index}
-          alt={author}
-          title={author}
-          loading="lazy"
-          width="48"
-          height="48"
-          decoding="async"
-          src={`/documentation/blog/images/authors/${author}.jpeg`}
-          className="relative inline-block h-6 w-6 rounded-full ring-1 ring-white grayscale dark:ring-slate-900"
-        />
+        <div key={index} className="group">
+          <Image
+            alt={author.name}
+            title={author.name}
+            loading="lazy"
+            width="48"
+            height="48"
+            decoding="async"
+            src={`/documentation/blog/images/authors/${author.name}.jpeg`}
+            className="relative inline-block h-6 w-6 rounded-full ring-1 ring-white grayscale dark:ring-slate-900"
+          />
+          <AuthorDetail author={author} />
+        </div>
       ))}
     </div>
   );

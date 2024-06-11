@@ -1870,22 +1870,16 @@ describe('params', () => {
         }
       );
 
-      expect(prompts).toMatchInlineSnapshot(`
-        [
-          {
-            "choices": [
-              "cat",
-              "dog",
-              "fish",
-            ],
-            "limit": 10,
-            "message": "What kind of pets do you have?",
-            "name": "pets",
-            "type": "multiselect",
-            "validate": [Function],
-          },
-        ]
-      `);
+      expect(prompts).toEqual([
+        {
+          message: 'What kind of pets do you have?',
+          name: 'pets',
+          type: 'multiselect',
+          choices: ['cat', 'dog', 'fish'],
+          limit: expect.any(Number),
+          validate: expect.any(Function),
+        },
+      ]);
     });
 
     describe('Project prompts', () => {

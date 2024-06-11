@@ -1,5 +1,5 @@
 import { ChevronRightIcon } from '@heroicons/react/24/outline';
-import { frameworkIcons } from '@nx/graph/ui-icons';
+import { Framework, frameworkIcons } from '@nx/graph/ui-icons';
 
 export function CallToAction({
   url,
@@ -18,7 +18,9 @@ export function CallToAction({
       <div className="w-2 bg-blue-500 dark:bg-sky-500"></div>
 
       <div className="z-10 flex flex-grow items-center py-3">
-        <div className="h-10 w-10">{icon && frameworkIcons[icon]?.image}</div>
+        <div className="h-10 w-10">
+          {icon && frameworkIcons[icon as Framework]?.image}
+        </div>
 
         <div className="mx-3">
           <p>

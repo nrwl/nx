@@ -23,8 +23,9 @@ nxViteTsPaths(),
         
         
         test: {
-          'globals': true,
-'cache': {"dir":"../node_modules/.vitest"},
+          'watch': false,
+'globals': true,
+'cache': {"dir":"../node_modules/.vitest/my-lib"},
 'environment': "jsdom",
 'include': ["src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"],
 'reporters': ["default"],
@@ -62,6 +63,7 @@ dts({ entryRoot: 'src', tsconfigPath: path.join(__dirname, 'tsconfig.lib.json') 
       // See: https://vitejs.dev/guide/build.html#library-mode
       build: {
         outDir: '../dist/my-lib',
+        emptyOutDir: true,
         reportCompressedSize: true,
         commonjsOptions: {
           transformMixedEsModules: true,
@@ -82,9 +84,10 @@ dts({ entryRoot: 'src', tsconfigPath: path.join(__dirname, 'tsconfig.lib.json') 
       },
         
         test: {
+    watch: false,
     globals: true,
     cache: {
-      dir: '../node_modules/.vitest'
+      dir: '../node_modules/.vitest/my-lib'
     },
     environment: 'jsdom',
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],

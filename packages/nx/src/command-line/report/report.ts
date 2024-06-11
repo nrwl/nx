@@ -43,6 +43,7 @@ export const patternsWeIgnoreInCommunityReport: Array<string | RegExp> = [
 ];
 
 const LINE_SEPARATOR = '---------------------------------------';
+
 /**
  * Reports relevant version numbers for adding to an Nx issue report
  *
@@ -294,7 +295,7 @@ export function findRegisteredPluginsBeingUsed(nxJson: NxJsonConfiguration) {
 
 export function findInstalledPackagesWeCareAbout() {
   const packagesWeMayCareAbout: Record<string, string> = {};
-  // TODO (v19): Remove workaround for hiding @nrwl packages when matching @nx package is found.
+  // TODO (v20): Remove workaround for hiding @nrwl packages when matching @nx package is found.
   const packageChangeMap: Record<string, string> = {
     '@nrwl/nx-plugin': '@nx/plugin',
     '@nx/plugin': '@nrwl/nx-plugin',

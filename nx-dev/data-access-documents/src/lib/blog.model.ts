@@ -2,7 +2,7 @@ export type BlogPostDataEntry = {
   title: string;
   content: string;
   description: string;
-  authors: string[];
+  authors: BlogAuthor[];
   date: string;
   cover_image: string | null;
   tags: string[];
@@ -11,4 +11,11 @@ export type BlogPostDataEntry = {
   pinned?: boolean;
   filePath: string;
   slug: string;
+};
+
+export type BlogAuthor = {
+  name: string;
+  image: string;
+  twitter: string;
+  github: string;
 };

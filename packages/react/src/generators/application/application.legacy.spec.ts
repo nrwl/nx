@@ -137,6 +137,8 @@ describe('react app generator (legacy)', () => {
       bundler: 'vite',
       skipFormat: true,
     });
-    expect(appTree.read('my-vite-app/vite.config.ts')).toMatchSnapshot();
+    expect(
+      appTree.read('my-vite-app/vite.config.ts', 'utf-8')
+    ).toMatchSnapshot();
   });
 });

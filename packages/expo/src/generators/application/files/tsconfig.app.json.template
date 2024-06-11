@@ -5,6 +5,6 @@
     "types": ["node"]
   },
   "files": ["<%= offsetFromRoot %>node_modules/@nx/expo/typings/svg.d.ts"],
-  "exclude": ["jest.config.ts", "**/*.spec.ts", "**/*.spec.tsx", "test-setup.ts"],
+  "exclude": ["jest.config.ts", "**/*.spec.ts", "**/*.spec.tsx", "src/test-setup.ts"],
   "include": ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx"]
 }

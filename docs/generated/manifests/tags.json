@@ -34,13 +34,6 @@
       "id": "console-run-command",
       "name": "Run Command",
       "path": "/recipes/nx-console/console-run-command"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/console-troubleshooting",
-      "id": "console-troubleshooting",
-      "name": "Troubleshooting",
-      "path": "/recipes/nx-console/console-troubleshooting"
     }
   ],
   "run-tasks": [
@@ -60,7 +53,7 @@
     },
     {
       "description": "",
-      "file": "shared/recipes/running-tasks/executors-and-configurations",
+      "file": "shared/concepts/executors-and-configurations",
       "id": "executors-and-configurations",
       "name": "Executors and Configurations",
       "path": "/concepts/executors-and-configurations"
@@ -226,14 +219,14 @@
       "file": "",
       "id": "nxjson-inputs",
       "name": "nx.json reference: inputs and namedInputs",
-      "path": "/reference/nx-json#inputs-&-namedinputs"
+      "path": "/reference/nx-json#inputs-namedinputs"
     },
     {
       "description": "",
       "file": "",
       "id": "project-config-inputs",
       "name": "Project Configuration reference: inputs and namedInputs",
-      "path": "/reference/project-configuration#inputs-&-namedinputs"
+      "path": "/reference/project-configuration#inputs-and-namedinputs"
     },
     {
       "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
@@ -392,31 +385,24 @@
     },
     {
       "description": "",
-      "file": "shared/workspace/applications-and-libraries",
-      "id": "applications-and-libraries",
-      "name": "Applications and Libraries",
-      "path": "/concepts/more-concepts/applications-and-libraries"
+      "file": "shared/concepts/decisions/project-size",
+      "id": "project-size",
+      "name": "Project Size",
+      "path": "/concepts/decisions/project-size"
     },
     {
       "description": "",
-      "file": "shared/workspace/creating-libraries",
-      "id": "creating-libraries",
-      "name": "When to Create a New Library",
-      "path": "/concepts/more-concepts/creating-libraries"
+      "file": "shared/concepts/decisions/project-dependency-rules",
+      "id": "project-dependency-rules",
+      "name": "Project Dependency Rules",
+      "path": "/concepts/decisions/project-dependency-rules"
     },
     {
       "description": "",
-      "file": "shared/workspace/library-types",
-      "id": "library-types",
-      "name": "Library Types",
-      "path": "/concepts/more-concepts/library-types"
-    },
-    {
-      "description": "",
-      "file": "shared/workspace/grouping-libraries",
-      "id": "grouping-libraries",
-      "name": "Grouping Libraries",
-      "path": "/concepts/more-concepts/grouping-libraries"
+      "file": "shared/concepts/decisions/folder-structure",
+      "id": "folder-structure",
+      "name": "Folder Structure",
+      "path": "/concepts/decisions/folder-structure"
     },
     {
       "description": "",
@@ -540,6 +526,20 @@
       "path": "/recipes/nx-release/customize-conventional-commit-types"
     },
     {
+      "description": "",
+      "file": "shared/recipes/nx-release/configure-changelog-format",
+      "id": "configure-changelog-format",
+      "name": "Configure Changelog Format",
+      "path": "/recipes/nx-release/configure-changelog-format"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/nx-release/publish-custom-dist-directory",
+      "id": "publish-custom-dist-directory",
+      "name": "Publish a Custom Dist Directory",
+      "path": "/recipes/nx-release/publish-custom-dist-directory"
+    },
+    {
       "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
       "file": "generated/packages/generated/packages/nx/documents/release",
       "id": "release",
@@ -550,7 +550,7 @@
   "intro": [
     {
       "description": "",
-      "file": "shared/mental-model",
+      "file": "shared/concepts/mental-model",
       "id": "mental-model",
       "name": "Mental Model",
       "path": "/concepts/mental-model"
@@ -566,7 +566,7 @@
   "inferred-tasks": [
     {
       "description": "",
-      "file": "shared/mental-model",
+      "file": "shared/concepts/mental-model",
       "id": "mental-model",
       "name": "Mental Model",
       "path": "/concepts/mental-model"
@@ -670,14 +670,14 @@
   "module-federation": [
     {
       "description": "",
-      "file": "shared/guides/module-federation/module-federation-and-nx",
+      "file": "shared/concepts/module-federation/module-federation-and-nx",
       "id": "module-federation-and-nx",
       "name": "Module Federation and Nx",
       "path": "/concepts/module-federation/module-federation-and-nx"
     },
     {
       "description": "",
-      "file": "shared/guides/module-federation/faster-builds",
+      "file": "shared/concepts/module-federation/faster-builds",
       "id": "faster-builds-with-module-federation",
       "name": "Faster Builds with Module Federation",
       "path": "/concepts/module-federation/faster-builds-with-module-federation"
@@ -698,7 +698,7 @@
     },
     {
       "description": "",
-      "file": "shared/guides/module-federation/dynamic-mfe-angular",
+      "file": "shared/recipes/module-federation/dynamic-mfe-angular",
       "id": "dynamic-module-federation-with-angular",
       "name": "Advanced Micro Frontends with Angular using Dynamic Federation",
       "path": "/recipes/angular/dynamic-module-federation-with-angular"
@@ -707,14 +707,14 @@
   "angular": [
     {
       "description": "",
-      "file": "shared/guides/module-federation/module-federation-and-nx",
+      "file": "shared/concepts/module-federation/module-federation-and-nx",
       "id": "module-federation-and-nx",
       "name": "Module Federation and Nx",
       "path": "/concepts/module-federation/module-federation-and-nx"
     },
     {
       "description": "",
-      "file": "shared/guides/module-federation/faster-builds",
+      "file": "shared/concepts/module-federation/faster-builds",
       "id": "faster-builds-with-module-federation",
       "name": "Faster Builds with Module Federation",
       "path": "/concepts/module-federation/faster-builds-with-module-federation"
@@ -728,7 +728,7 @@
     },
     {
       "description": "",
-      "file": "shared/guides/module-federation/dynamic-mfe-angular",
+      "file": "shared/recipes/module-federation/dynamic-mfe-angular",
       "id": "dynamic-module-federation-with-angular",
       "name": "Advanced Micro Frontends with Angular using Dynamic Federation",
       "path": "/recipes/angular/dynamic-module-federation-with-angular"
@@ -737,14 +737,14 @@
   "react": [
     {
       "description": "",
-      "file": "shared/guides/module-federation/module-federation-and-nx",
+      "file": "shared/concepts/module-federation/module-federation-and-nx",
       "id": "module-federation-and-nx",
       "name": "Module Federation and Nx",
       "path": "/concepts/module-federation/module-federation-and-nx"
     },
     {
       "description": "",
-      "file": "shared/guides/module-federation/faster-builds",
+      "file": "shared/concepts/module-federation/faster-builds",
       "id": "faster-builds-with-module-federation",
       "name": "Faster Builds with Module Federation",
       "path": "/concepts/module-federation/faster-builds-with-module-federation"
@@ -845,7 +845,7 @@
       "description": "",
       "file": "shared/recipes/deployment/node-aws-lambda",
       "id": "node-aws-lambda",
-      "name": "Deploying AWS lambda in Node.js",
+      "name": "Deploying AWS lambda in Node.js (deprecated)",
       "path": "/recipes/node/node-aws-lambda"
     }
   ],
@@ -868,7 +868,7 @@
       "description": "",
       "file": "shared/recipes/deployment/node-aws-lambda",
       "id": "node-aws-lambda",
-      "name": "Deploying AWS lambda in Node.js",
+      "name": "Deploying AWS lambda in Node.js (deprecated)",
       "path": "/recipes/node/node-aws-lambda"
     },
     {

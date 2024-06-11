@@ -167,6 +167,13 @@ describe('AssetInputOutputHandler', () => {
         dest: path.join(rootDir, 'dist/mylib/docs/test2.md'),
       },
     ]);
+    expect(callback).not.toHaveBeenCalledWith([
+      {
+        type: 'create',
+        src: path.join(rootDir, 'mylib/docs/a/b/nested-ignore.md'),
+        dest: path.join(rootDir, 'dist/mylib/docs/a/b/nested-ignore.md'),
+      },
+    ]);
 
     dispose();
   });

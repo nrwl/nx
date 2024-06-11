@@ -5,7 +5,7 @@ import {
   type TargetConfiguration,
   type Tree,
 } from '@nx/devkit';
-import { createNodes, PlaywrightPluginOptions } from '../../plugins/plugin';
+import { createNodesV2, PlaywrightPluginOptions } from '../../plugins/plugin';
 import { migrateExecutorToPlugin } from '@nx/devkit/src/generators/plugin-migrations/executor-to-plugin-migrator';
 
 interface Schema {
@@ -16,16 +16,21 @@ interface Schema {
 
 export async function convertToInferred(tree: Tree, options: Schema) {
   const projectGraph = await createProjectGraphAsync();
-  await migrateExecutorToPlugin<PlaywrightPluginOptions>(
-    tree,
-    projectGraph,
-    '@nx/playwright:playwright',
-    '@nx/playwright/plugin',
-    (targetName) => ({ targetName, ciTargetName: 'e2e-ci' }),
-    postTargetTransformer,
-    createNodes,
-    options.project
-  );
+  const migratedProjects =
+    await migrateExecutorToPlugin<PlaywrightPluginOptions>(
+      tree,
+      projectGraph,
+      '@nx/playwright:playwright',
+      '@nx/playwright/plugin',
+      (targetName) => ({ targetName, ciTargetName: 'e2e-ci' }),
+      postTargetTransformer,
+      createNodesV2,
+      options.project
+    );
+
+  if (migratedProjects.size === 0) {
+    throw new Error('Could not find any targets to migrate.');
+  }
 
   if (!options.skipFormat) {
     await formatFiles(tree);

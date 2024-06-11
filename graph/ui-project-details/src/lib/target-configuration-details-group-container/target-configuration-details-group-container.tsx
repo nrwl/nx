@@ -1,4 +1,3 @@
-import { forwardRef } from 'react';
 import { TargetConfigurationGroupHeader } from '../target-configuration-details-group-header/target-configuration-details-group-header';
 
 export interface TargetConfigurationGroupContainerProps {
@@ -7,27 +6,21 @@ export interface TargetConfigurationGroupContainerProps {
   children: React.ReactNode;
 }
 
-export const TargetConfigurationGroupContainer = forwardRef(
-  (
-    {
-      targetGroupName,
-      targetsNumber,
-      children,
-    }: TargetConfigurationGroupContainerProps,
-    ref: React.Ref<any>
-  ) => {
-    return (
-      <div>
-        <div ref={ref} className="mb-4 w-full">
-          <TargetConfigurationGroupHeader
-            targetGroupName={targetGroupName}
-            targetsNumber={targetsNumber}
-          />
-          <div className="rounded-md border border-slate-200 p-2 dark:border-slate-700">
-            {children}
-          </div>
-        </div>
+export function TargetConfigurationGroupContainer({
+  targetGroupName,
+  targetsNumber,
+  children,
+}: TargetConfigurationGroupContainerProps) {
+  return (
+    <div className="mb-4 w-full">
+      <TargetConfigurationGroupHeader
+        targetGroupName={targetGroupName}
+        targetsNumber={targetsNumber}
+        className="sticky top-0 z-10 bg-white dark:bg-slate-900"
+      />
+      <div className="rounded-md border border-slate-200 p-2 dark:border-slate-700">
+        {children}
       </div>
-    );
-  }
-);
+    </div>
+  );
+}

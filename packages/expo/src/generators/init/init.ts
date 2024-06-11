@@ -8,7 +8,7 @@ import {
   runTasksInSerial,
   Tree,
 } from '@nx/devkit';
-import { addPlugin } from '@nx/devkit/src/utils/add-plugin';
+import { addPluginV1 } from '@nx/devkit/src/utils/add-plugin';
 import { createNodes } from '../../../plugins/plugin';
 import {
   expoCliVersion,
@@ -36,7 +36,7 @@ export async function expoInitGeneratorInternal(host: Tree, schema: Schema) {
   addGitIgnoreEntry(host);
 
   if (schema.addPlugin) {
-    await addPlugin(
+    await addPluginV1(
       host,
       await createProjectGraphAsync(),
       '@nx/expo/plugin',

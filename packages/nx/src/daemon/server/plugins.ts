@@ -5,7 +5,7 @@ import {
 } from '../../project-graph/plugins/internal-api';
 import { workspaceRoot } from '../../utils/workspace-root';
 
-let loadedPlugins: Promise<LoadedNxPlugin[]>;
+let loadedPlugins: LoadedNxPlugin[];
 let cleanup: () => void;
 
 export async function getPlugins() {
@@ -18,6 +18,7 @@ export async function getPlugins() {
     workspaceRoot
   );
   cleanup = cleanupFn;
+  loadedPlugins = result;
   return result;
 }
 

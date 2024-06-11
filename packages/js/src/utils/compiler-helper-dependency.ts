@@ -16,6 +16,12 @@ export enum HelperDependency {
   swc = 'npm:@swc/helpers',
 }
 
+type IJSExecutors = {
+  [K: string]: {
+    helperDependency: HelperDependency;
+    getConfigPath: (...args: unknown[]) => string;
+  };
+};
 const jsExecutors = {
   '@nx/js:tsc': {
     helperDependency: HelperDependency.tsc,
@@ -28,9 +34,9 @@ const jsExecutors = {
       options: SwcExecutorOptions,
       contextRoot: string,
       projectRoot: string
-    ) => getSwcrcPath(options, contextRoot, projectRoot),
+    ) => getSwcrcPath(options, contextRoot, projectRoot).swcrcPath,
   } as const,
-} as const;
+} as const satisfies IJSExecutors;
 
 /**
  * Check and return a DependencyNode for the compiler's external helpers npm package. Return "null"

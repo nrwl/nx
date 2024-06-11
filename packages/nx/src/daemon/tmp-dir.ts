@@ -6,13 +6,13 @@
 import { statSync, writeFileSync } from 'fs';
 import { ensureDirSync, rmSync } from 'fs-extra';
 import { join } from 'path';
-import { projectGraphCacheDirectory } from '../utils/cache-directory';
+import { workspaceDataDirectory } from '../utils/cache-directory';
 import { createHash } from 'crypto';
 import { tmpdir } from 'tmp';
 import { workspaceRoot } from '../utils/workspace-root';
 
 export const DAEMON_DIR_FOR_CURRENT_WORKSPACE = join(
-  projectGraphCacheDirectory,
+  workspaceDataDirectory,
   'd'
 );
 
@@ -21,13 +21,12 @@ export const DAEMON_OUTPUT_LOG_FILE = join(
   'daemon.log'
 );
 
-export const socketDir = createSocketDir();
-
-export const DAEMON_SOCKET_PATH = join(
-  socketDir,
-  // As per notes above on socket/named pipe length limitations, we keep this intentionally short
-  'd.sock'
-);
+export const getDaemonSocketDir = () =>
+  join(
+    getSocketDir(),
+    // As per notes above on socket/named pipe length limitations, we keep this intentionally short
+    'd.sock'
+  );
 
 export function writeDaemonLogs(error?: string) {
   const file = join(DAEMON_DIR_FOR_CURRENT_WORKSPACE, 'daemon-error.log');
@@ -59,7 +58,7 @@ function socketDirName() {
  * We try to create a socket file in a tmp dir, but if it doesn't work because
  * for instance we don't have permissions, we create it in DAEMON_DIR_FOR_CURRENT_WORKSPACE
  */
-function createSocketDir() {
+export function getSocketDir() {
   try {
     const dir = process.env.NX_DAEMON_SOCKET_DIR ?? socketDirName();
     ensureDirSync(dir);
@@ -71,6 +70,6 @@ function createSocketDir() {
 
 export function removeSocketDir() {
   try {
-    rmSync(socketDir, { recursive: true, force: true });
+    rmSync(getSocketDir(), { recursive: true, force: true });
   } catch (e) {}
 }

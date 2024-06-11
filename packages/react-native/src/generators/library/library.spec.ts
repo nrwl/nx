@@ -199,7 +199,7 @@ describe('lib', () => {
     });
   });
 
-  describe('--unit-test-runner none', () => {
+  describe('--unit-test-runner', () => {
     it('should not generate test configuration', async () => {
       await libraryGenerator(appTree, {
         ...defaultSchema,
@@ -225,6 +225,7 @@ describe('lib', () => {
             "module": "commonjs",
             "types": ["jest", "node"]
           },
+          "files": ["src/test-setup.ts"],
           "include": [
             "jest.config.ts",
             "src/**/*.test.ts",
@@ -247,7 +248,7 @@ describe('lib', () => {
           preset: 'react-native',
           resolver: '@nx/jest/plugins/resolver',
           moduleFileExtensions: ['ts', 'js', 'html', 'tsx', 'jsx'],
-          setupFilesAfterEnv: ['<rootDir>/test-setup.ts'],
+          setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
           moduleNameMapper: {
             '\\\\.svg$': '@nx/react-native/plugins/jest/svg-mock',
           },

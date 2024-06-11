@@ -1,3 +1,4 @@
+import type { buildEsbuildBrowser as buildEsbuildBrowserFn } from '@angular-devkit/build-angular/src/builders/browser-esbuild';
 import { stripIndents, type ExecutorContext } from '@nx/devkit';
 import type { DependentBuildableProjectNode } from '@nx/js/src/utils/buildable-libs-utils';
 import { createBuilderContext } from 'nx/src/adapter/ngcli-adapter';
@@ -9,7 +10,7 @@ import type { EsBuildSchema } from './schema';
 export default async function* esbuildExecutor(
   options: EsBuildSchema,
   context: ExecutorContext
-) {
+): ReturnType<typeof buildEsbuildBrowserFn> {
   if (options.plugins) {
     const { major: angularMajorVersion, version: angularVersion } =
       getInstalledAngularVersionInfo();
@@ -41,17 +42,15 @@ export default async function* esbuildExecutor(
 
   const plugins = await loadPlugins(pluginPaths, options.tsConfig);
 
-  const { buildEsbuildBrowser } = await import(
-    '@angular-devkit/build-angular/src/builders/browser-esbuild/index'
-  );
+  const { buildEsbuildBrowser } = <
+    typeof import('@angular-devkit/build-angular/src/builders/browser-esbuild')
+  >require('@angular-devkit/build-angular/src/builders/browser-esbuild');
 
   const builderContext = await createBuilderContext(
     {
       builderName: 'browser-esbuild',
       description: 'Build a browser application',
-      optionSchema: await import(
-        '@angular-devkit/build-angular/src/builders/browser-esbuild/schema.json'
-      ),
+      optionSchema: require('@angular-devkit/build-angular/src/builders/browser-esbuild/schema.json'),
     },
     context
   );

@@ -119,6 +119,7 @@ nxViteTsPaths()],
         
     build: {
       outDir: '../dist/my-app',
+      emptyOutDir: true,
       reportCompressedSize: true,
       commonjsOptions: {
         transformMixedEsModules: true,
@@ -126,20 +127,7 @@ nxViteTsPaths()],
     },
     
         
-        test: {
-    globals: true,
-    cache: {
-      dir: '../node_modules/.vitest'
-    },
-    environment: 'jsdom',
-    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-    
-    reporters: ['default'],
-    coverage: {
-      reportsDirectory: '../coverage/my-app',
-      provider: 'v8',
-    }
-  },
+        
       });"
 `;
 
@@ -210,6 +198,7 @@ nxViteTsPaths()],
         
     build: {
       outDir: '../dist/my-app',
+      emptyOutDir: true,
       reportCompressedSize: true,
       commonjsOptions: {
         transformMixedEsModules: true,
@@ -217,20 +206,7 @@ nxViteTsPaths()],
     },
     
         
-        test: {
-    globals: true,
-    cache: {
-      dir: '../node_modules/.vitest'
-    },
-    environment: 'jsdom',
-    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-    
-    reporters: ['default'],
-    coverage: {
-      reportsDirectory: '../coverage/my-app',
-      provider: 'v8',
-    }
-  },
+        
       });"
 `;
 
@@ -348,6 +324,7 @@ nxViteTsPaths()],
         
     build: {
       outDir: '../dist/my-app',
+      emptyOutDir: true,
       reportCompressedSize: true,
       commonjsOptions: {
         transformMixedEsModules: true,
@@ -355,20 +332,7 @@ nxViteTsPaths()],
     },
     
         
-        test: {
-    globals: true,
-    cache: {
-      dir: '../node_modules/.vitest'
-    },
-    environment: 'jsdom',
-    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-    
-    reporters: ['default'],
-    coverage: {
-      reportsDirectory: '../coverage/my-app',
-      provider: 'v8',
-    }
-  },
+        
       });"
 `;
 

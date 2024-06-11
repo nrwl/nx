@@ -17,9 +17,9 @@ export function Pill({
         color === 'grey' &&
           'bg-slate-400/10 text-slate-600 ring-slate-400/40 dark:text-slate-400 dark:ring-slate-400/30',
         color === 'green' &&
-          'dark:bg-green-500/10 bg-green-400/10 dark:text-green-400 text-green-500 dark:ring-green-500/20 ring-green-500/40',
+          'bg-green-400/10 text-green-500 ring-green-500/40 dark:bg-green-500/10 dark:text-green-400 dark:ring-green-500/20',
         color === 'yellow' &&
-          'bg-yellow-50 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400 dark:ring-yellow-500/20 ring-yellow-500/40'
+          'bg-yellow-50 text-yellow-600 ring-yellow-500/40 dark:bg-yellow-900/30 dark:text-yellow-400 dark:ring-yellow-500/20'
       )}
     >
       {text}

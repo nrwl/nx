@@ -2,7 +2,7 @@ const { join, basename } = require('path');
 const { copyFileSync, existsSync, mkdirSync } = require('fs');
 const Module = require('module');
 const { nxVersion } = require('../utils/versions');
-const { cacheDir } = require('../utils/cache-directory');
+const { getNativeFileCacheLocation } = require('./native-file-cache-location');
 
 const nxPackages = new Set([
   '@nx/nx-android-arm64',
@@ -52,13 +52,15 @@ Module._load = function (request, parent, isMain) {
   ) {
     const nativeLocation = require.resolve(modulePath);
     const fileName = basename(nativeLocation);
-    // we copy the file to the cache directory (.nx/cache by default) and prefix with nxVersion to avoid stale files being loaded
-    const tmpFile = join(cacheDir, nxVersion + '-' + fileName);
+
+    // we copy the file to a workspace-scoped tmp directory and prefix with nxVersion to avoid stale files being loaded
+    const nativeFileCacheLocation = getNativeFileCacheLocation();
+    const tmpFile = join(nativeFileCacheLocation, nxVersion + '-' + fileName);
     if (existsSync(tmpFile)) {
       return originalLoad.apply(this, [tmpFile, parent, isMain]);
     }
-    if (!existsSync(cacheDir)) {
-      mkdirSync(cacheDir, { recursive: true });
+    if (!existsSync(nativeFileCacheLocation)) {
+      mkdirSync(nativeFileCacheLocation, { recursive: true });
     }
     copyFileSync(nativeLocation, tmpFile);
     return originalLoad.apply(this, [tmpFile, parent, isMain]);

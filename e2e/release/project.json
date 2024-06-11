@@ -6,36 +6,94 @@
   "implicitDependencies": ["nx", "js"],
   "targets": {
     "e2e-ci--src/conventional-commits-config.test.ts": {
+      "dependsOn": [
+        "nx:build-native",
+        "@nx/nx-source:populate-local-registry-storage"
+      ],
       "inputs": ["e2eInputs", "^production"]
     },
     "e2e-ci--src/create-github-release.test.ts": {
+      "dependsOn": [
+        "nx:build-native",
+        "@nx/nx-source:populate-local-registry-storage"
+      ],
       "inputs": ["e2eInputs", "^production"]
     },
     "e2e-ci--src/custom-registries.test.ts": {
+      "dependsOn": [
+        "nx:build-native",
+        "@nx/nx-source:populate-local-registry-storage"
+      ],
       "inputs": ["e2eInputs", "^production"]
     },
     "e2e-ci--src/first-release.test.ts": {
+      "dependsOn": [
+        "nx:build-native",
+        "@nx/nx-source:populate-local-registry-storage"
+      ],
       "inputs": ["e2eInputs", "^production"]
     },
     "e2e-ci--src/independent-projects.test.ts": {
+      "dependsOn": [
+        "nx:build-native",
+        "@nx/nx-source:populate-local-registry-storage"
+      ],
       "inputs": ["e2eInputs", "^production"]
     },
     "e2e-ci--src/lock-file-updates.test.ts": {
+      "dependsOn": [
+        "nx:build-native",
+        "@nx/nx-source:populate-local-registry-storage"
+      ],
       "inputs": ["e2eInputs", "^production"]
     },
     "e2e-ci--src/multiple-release-branches.test.ts": {
+      "dependsOn": [
+        "nx:build-native",
+        "@nx/nx-source:populate-local-registry-storage"
+      ],
       "inputs": ["e2eInputs", "^production"]
     },
     "e2e-ci--src/nx-release-git-operations.test.ts": {
+      "dependsOn": [
+        "nx:build-native",
+        "@nx/nx-source:populate-local-registry-storage"
+      ],
       "inputs": ["e2eInputs", "^production"]
     },
     "e2e-ci--src/pre-version-command.test.ts": {
+      "dependsOn": [
+        "nx:build-native",
+        "@nx/nx-source:populate-local-registry-storage"
+      ],
       "inputs": ["e2eInputs", "^production"]
     },
     "e2e-ci--src/private-js-packages.test.ts": {
+      "dependsOn": [
+        "nx:build-native",
+        "@nx/nx-source:populate-local-registry-storage"
+      ],
       "inputs": ["e2eInputs", "^production"]
     },
     "e2e-ci--src/release.test.ts": {
+      "dependsOn": [
+        "nx:build-native",
+        "@nx/nx-source:populate-local-registry-storage"
+      ],
+      "inputs": ["e2eInputs", "^production"]
+    },
+    "e2e-ci--src/circular-dependencies.test.ts": {
+      "dependsOn": [
+        "nx:build-native",
+        "@nx/nx-source:populate-local-registry-storage"
+      ],
+      "inputs": ["e2eInputs", "^production"]
+    },
+    "e2e-ci--src/version-plans.test.ts": {
+      "dependsOn": [
+        "nx:build-native",
+        "@nx/nx-source:populate-local-registry-storage"
+      ],
       "inputs": ["e2eInputs", "^production"]
     }
   }

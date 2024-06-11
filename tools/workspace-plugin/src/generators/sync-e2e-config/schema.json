@@ -1,0 +1,9 @@
+{
+  "$schema": "https://json-schema.org/schema",
+  "$id": "SyncE2eConfigs",
+  "title": "",
+  "description": "Generator to sync configuration for our e2e targets.",
+  "type": "object",
+  "properties": {},
+  "required": []
+}

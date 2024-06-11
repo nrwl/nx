@@ -103,9 +103,11 @@ export async function initGenerator(
     '.prettierrc.json5',
     '.prettierrc.js',
     '.prettierrc.cjs',
+    '.prettierrc.mjs',
+    '.prettierrc.toml',
     'prettier.config.js',
     'prettier.config.cjs',
-    '.prettierrc.toml',
+    'prettier.config.mjs',
   ];
 
   if (prettierrcNameOptions.every((name) => !tree.exists(name))) {
@@ -122,6 +124,7 @@ export async function initGenerator(
         /dist
         /coverage
         /.nx/cache
+        /.nx/workspace-data
       `
     );
   }

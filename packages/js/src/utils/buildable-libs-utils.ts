@@ -9,13 +9,14 @@ import {
   parseTargetString,
   readJsonFile,
   stripIndents,
+  workspaceRoot,
   writeJsonFile,
 } from '@nx/devkit';
 import { unlinkSync } from 'fs';
 import { isNpmProject } from 'nx/src/project-graph/operators';
 import { directoryExists, fileExists } from 'nx/src/utils/fileutils';
 import { output } from 'nx/src/utils/output';
-import { dirname, join, relative } from 'path';
+import { dirname, join, relative, isAbsolute } from 'path';
 import type * as ts from 'typescript';
 import { readTsConfigPaths } from './typescript/ts-config';
 
@@ -198,10 +199,11 @@ function readTsConfigWithRemappedPaths(
   dependencies: DependentBuildableProjectNode[]
 ) {
   const generatedTsConfig: any = { compilerOptions: {} };
-  generatedTsConfig.extends = relative(
-    dirname(generatedTsConfigPath),
-    tsConfig
-  );
+  const dirnameTsConfig = dirname(generatedTsConfigPath);
+  const relativeTsconfig = isAbsolute(dirnameTsConfig)
+    ? relative(workspaceRoot, dirnameTsConfig)
+    : dirnameTsConfig;
+  generatedTsConfig.extends = relative(relativeTsconfig, tsConfig);
   generatedTsConfig.compilerOptions.paths = computeCompilerOptionsPaths(
     tsConfig,
     dependencies

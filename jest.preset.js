@@ -12,4 +12,5 @@ module.exports = {
   coverageReporters: ['html'],
   maxWorkers: 1,
   testEnvironment: 'node',
+  setupFiles: ['../../scripts/unit-test-setup.js'],
 };

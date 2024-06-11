@@ -15,8 +15,6 @@ Cypress is a test runner built for the modern web. It has a lot of great feature
 ## Setting Up @nx/cypress
 
 > Info about [Cypress Component Testing can be found here](/recipes/cypress/cypress-component-testing)
->
-> Info about [using Cypress and Storybook can be found here](/recipes/storybook/overview-react#cypress-tests-for-storiesbook)
 
 ### Installation
 
@@ -238,7 +236,7 @@ For adding more dynamic configurations to your Cypress configuration, you can lo
 
 If you need to pass a variable to Cypress that you don't want to commit to your repository (i.e. API keys, dynamic values based on configurations, API URLs), you can use [Cypress environment variables](https://docs.cypress.io/guides/guides/environment-variables).
 
-There are a handful of ways to pass environment variables to Cypress, but the most common is going to be via the [`cypress.env.json` file](https://docs.cypress.io/guides/guides/environment-variables#Option-1-configuration-file), the `-e` Cypress arg or the `env` option from the `@nx/cypress:cypress` executor in the [project configuration](/reference/project-configuration#targets) or the command line.
+There are a handful of ways to pass environment variables to Cypress, but the most common is going to be via the [`cypress.env.json` file](https://docs.cypress.io/guides/guides/environment-variables#Option-1-configuration-file), the `-e` Cypress arg or the `env` option from the `@nx/cypress:cypress` executor in the [project configuration](/reference/project-configuration#task-definitions-targets) or the command line.
 
 Create a `cypress.env.json` file in the projects root (i.e. `apps/my-cool-app-e2e/cypress.env.json`). Cypress will automatically pick up this file. This method is helpful for configurations that you don't want to commit. Just don't forget to add the file to the `.gitignore` and add documentation so people in your repo know what values to populate in their local copy of the `cypress.env.json` file.
 

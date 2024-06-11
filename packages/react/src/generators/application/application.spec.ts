@@ -973,4 +973,32 @@ describe('app', () => {
       }
     );
   });
+
+  it('should add targetDefaults to nxJson when addPlugin=false', async () => {
+    // ARRANGE
+    const tree = createTreeWithEmptyWorkspace();
+    let nxJson = readNxJson(tree);
+    delete nxJson.targetDefaults;
+    updateNxJson(tree, nxJson);
+
+    // ACT
+    await applicationGenerator(tree, {
+      name: 'myapp',
+      addPlugin: false,
+      linter: Linter.None,
+      style: 'none',
+      e2eTestRunner: 'none',
+    });
+
+    // ASSERT
+    nxJson = readNxJson(tree);
+    expect(nxJson.targetDefaults.build).toMatchInlineSnapshot(`
+      {
+        "cache": true,
+        "dependsOn": [
+          "^build",
+        ],
+      }
+    `);
+  });
 });

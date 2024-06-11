@@ -110,7 +110,7 @@ impl FilesWorker {
         &self,
         workspace_root_path: &Path,
         updated_files: Vec<&str>,
-        deleted_files: Vec<&str>,
+        deleted_files_and_directories: Vec<&str>,
     ) -> HashMap<String, String> {
         let Some(files_sync) = &self.0 else {
             trace!("there were no files because the workspace root did not exist");
@@ -121,8 +121,17 @@ impl FilesWorker {
         let mut files = files_lock.lock();
         let mut map: HashMap<PathBuf, String> = files.drain(..).collect();
 
-        for deleted_file in deleted_files {
-            map.remove(&PathBuf::from(deleted_file));
+        for deleted_path in deleted_files_and_directories {
+            // If the path is a file, this removes it.
+            let removal = map.remove(&PathBuf::from(deleted_path));
+            if removal.is_none() {
+                // If the path is a directory, this retains only files not in the directory.
+                map.retain(|path, _| {
+                    let owned_deleted_path = deleted_path.to_owned();
+                    !path.starts_with(owned_deleted_path + "/")
+                });
+
+            };
         }
 
         let updated_files_hashes: HashMap<String, String> = updated_files
@@ -194,7 +203,7 @@ impl WorkspaceContext {
         exclude: Option<Vec<String>>,
     ) -> napi::Result<String> {
         let files = &self.all_file_data();
-        let globbed_files = config_files::glob_files(&files, globs, exclude)?;
+        let globbed_files = config_files::glob_files(files, globs, exclude)?;
         Ok(hash(
             &globbed_files
                 .map(|file| file.hash.as_bytes())
@@ -302,6 +311,6 @@ impl WorkspaceContext {
 
     #[napi]
     pub fn get_files_in_directory(&self, directory: String) -> Vec<String> {
-        get_child_files(&directory, self.files_worker.get_files())
+        get_child_files(directory, self.files_worker.get_files())
     }
 }

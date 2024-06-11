@@ -1,14 +1,12 @@
 import { logger } from './logger';
 import type { NxJsonConfiguration } from '../config/nx-json';
 import type {
-  TargetConfiguration,
   ProjectsConfigurations,
+  TargetConfiguration,
 } from '../config/workspace-json-project-json';
 import { output } from './output';
 import type { ProjectGraphError } from '../project-graph/error-types';
 import { daemonClient } from '../daemon/client/client';
-
-const LIST_CHOICE_DISPLAY_LIMIT = 10;
 
 type PropertyDescription = {
   type?: string | string[];
@@ -91,9 +89,16 @@ export type Options = {
   [k: string]: string | number | boolean | string[] | Unmatched[] | undefined;
 };
 
-export async function handleErrors(isVerbose: boolean, fn: Function) {
+export async function handleErrors(
+  isVerbose: boolean,
+  fn: Function
+): Promise<number> {
   try {
-    return await fn();
+    const result = await fn();
+    if (typeof result === 'number') {
+      return result;
+    }
+    return 0;
   } catch (err) {
     err ||= new Error('Unknown error caught');
     if (err.constructor.name === 'UnsuccessfulWorkflowExecution') {
@@ -892,10 +897,14 @@ export function getPromptsForSchema(
         }
       };
 
+      // Limit the number of choices displayed so that the prompt fits on the screen
+      const limitForChoicesDisplayed =
+        process.stdout.rows - question.message.split('\n').length;
+
       if (v.type === 'string' && v.enum && Array.isArray(v.enum)) {
         question.type = 'autocomplete';
         question.choices = [...v.enum];
-        question.limit = LIST_CHOICE_DISPLAY_LIMIT;
+        question.limit = limitForChoicesDisplayed;
       } else if (
         v.type === 'string' &&
         (v.$default?.$source === 'projectName' ||
@@ -906,7 +915,7 @@ export function getPromptsForSchema(
       ) {
         question.type = 'autocomplete';
         question.choices = Object.keys(projectsConfigurations.projects);
-        question.limit = LIST_CHOICE_DISPLAY_LIMIT;
+        question.limit = limitForChoicesDisplayed;
       } else if (v.type === 'number' || v['x-prompt'].type == 'number') {
         question.type = 'numeral';
       } else if (
@@ -931,7 +940,7 @@ export function getPromptsForSchema(
               };
             }
           });
-        question.limit = LIST_CHOICE_DISPLAY_LIMIT;
+        question.limit = limitForChoicesDisplayed;
       } else if (v.type === 'boolean') {
         question.type = 'confirm';
       } else {
