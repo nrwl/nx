@@ -15,6 +15,11 @@
       "schema": "./src/generators/configuration/schema.json",
       "description": "Add webpack configuration to a project.",
       "hidden": true
+    },
+    "convert-config-to-webpack-plugin": {
+      "factory": "./src/generators/convert-config-to-webpack-plugin/convert-config-to-webpack-plugin",
+      "schema": "./src/generators/convert-config-to-webpack-plugin/schema.json",
+      "description": "Convert the project to use the `NxAppWebpackPlugin` and `NxReactWebpackPlugin`."
     }
   }
 }

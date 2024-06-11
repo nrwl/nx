@@ -709,6 +709,7 @@
     - [generators](/nx-api/webpack/generators)
       - [init](/nx-api/webpack/generators/init)
       - [configuration](/nx-api/webpack/generators/configuration)
+      - [convert-config-to-webpack-plugin](/nx-api/webpack/generators/convert-config-to-webpack-plugin)
   - [workspace](/nx-api/workspace)
     - [documents](/nx-api/workspace/documents)
       - [Overview](/nx-api/workspace/documents/overview)

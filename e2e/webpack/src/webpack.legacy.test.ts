@@ -3,6 +3,7 @@ import {
   cleanupProject,
   killProcessAndPorts,
   newProject,
+  readFile,
   runCLI,
   runCommandUntil,
   runE2ETests,
@@ -118,21 +119,21 @@ describe('Webpack Plugin (legacy)', () => {
     updateFile(
       `${appName}/webpack.config.js`,
       `
-const { join } = require('path');
-const {NxWebpackPlugin} = require('@nx/webpack');
-module.exports = {
-  output: {
-    path: join(__dirname, '../dist/app9524918'),
-  },
-  plugins: [
-    new NxAppWebpackPlugin({
-      main: './src/main.ts',
-      compiler: 'tsc',
-      index: './src/index.html',
-      tsConfig: './tsconfig.app.json',
-    })
-  ]
-};
+      const { join } = require('path');
+        const {NxWebpackPlugin} = require('@nx/webpack');
+        module.exports = {
+          output: {
+            path: join(__dirname, '../dist/app9524918'),
+          },
+          plugins: [
+            new NxAppWebpackPlugin({
+              main: './src/main.ts',
+              compiler: 'tsc',
+              index: './src/index.html',
+              tsConfig: './tsconfig.app.json',
+            })
+          ]
+        };
       `
     );
 
@@ -145,5 +146,46 @@ module.exports = {
         runCLI(`e2e ${appName}-e2e`);
       }).not.toThrow();
     }
+  });
+
+  describe('ConvertConfigToWebpackPlugin,', () => {
+    it('should convert withNx webpack config to a standard config using NxWebpackPlugin', () => {
+      const appName = 'app3224373'; // Needs to be reserved so that the snapshot projectName matches
+      runCLI(
+        `generate @nx/web:app ${appName} --bundler webpack --e2eTestRunner=playwright --projectNameAndRootFormat=as-provided`
+      );
+      updateFile(
+        `${appName}/src/main.ts`,
+        `
+      const root = document.querySelector('proj-root');
+      if(root) {
+        root.innerHTML = '<h1>Welcome</h1>'
+      }
+    `
+      );
+
+      runCLI(
+        `generate @nx/webpack:convert-config-to-webpack-plugin --project ${appName}`
+      );
+
+      const webpackConfig = readFile(`${appName}/webpack.config.js`);
+      const oldWebpackConfig = readFile(`${appName}/webpack.config.old.js`);
+      const projectJSON = readFile(`${appName}/project.json`);
+
+      expect(webpackConfig).toMatchSnapshot();
+      expect(projectJSON).toMatchSnapshot(); // This file should be updated adding standardWebpackConfigFunction: true
+
+      expect(oldWebpackConfig).toMatchSnapshot(); // This file should be renamed and updated to not include `withNx`, `withReact`, and `withWeb`.
+
+      expect(() => {
+        runCLI(`build ${appName}`);
+      }).not.toThrow();
+
+      if (runE2ETests()) {
+        expect(() => {
+          runCLI(`e2e ${appName}-e2e`);
+        }).not.toThrow();
+      }
+    }, 600_000);
   });
 });

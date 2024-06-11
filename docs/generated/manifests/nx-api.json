@@ -3215,6 +3215,15 @@
         "originalFilePath": "/packages/webpack/src/generators/configuration/schema.json",
         "path": "/nx-api/webpack/generators/configuration",
         "type": "generator"
+      },
+      "/nx-api/webpack/generators/convert-config-to-webpack-plugin": {
+        "description": "Convert the project to use the `NxAppWebpackPlugin` and `NxReactWebpackPlugin`.",
+        "file": "generated/packages/webpack/generators/convert-config-to-webpack-plugin.json",
+        "hidden": false,
+        "name": "convert-config-to-webpack-plugin",
+        "originalFilePath": "/packages/webpack/src/generators/convert-config-to-webpack-plugin/schema.json",
+        "path": "/nx-api/webpack/generators/convert-config-to-webpack-plugin",
+        "type": "generator"
       }
     },
     "path": "/nx-api/webpack"
