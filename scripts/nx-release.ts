@@ -9,6 +9,8 @@ import { isRelativeVersionKeyword } from 'nx/src/command-line/release/utils/semv
 import { ReleaseType, inc, major, parse } from 'semver';
 import * as yargs from 'yargs';
 
+// test change to nx-release.ts
+
 const LARGE_BUFFER = 1024 * 1000000;
 
 // DO NOT MODIFY, even for testing. This only gates releases to latest.
