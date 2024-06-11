@@ -404,6 +404,15 @@
       },
       "description": "Installs the '@typescript-eslint/utils' package when having installed '@angular-eslint/eslint-plugin' or '@angular-eslint/eslint-plugin-template' with version >=18.0.0.",
       "factory": "./src/migrations/update-19-2-1/add-typescript-eslint-utils"
+    },
+    "update-angular-cli-version-18-1-0-next-1": {
+      "cli": "nx",
+      "version": "19.5.0-beta.1",
+      "requires": {
+        "@angular/core": ">=18.1.0-next.1"
+      },
+      "description": "Update the @angular/cli package version to ~18.1.0-next.1.",
+      "factory": "./src/migrations/update-19-5-0/update-angular-cli"
     }
   },
   "packageJsonUpdates": {
@@ -1939,6 +1948,67 @@
       "packages": {
         "@module-federation/node": {
           "version": "^2.3.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "19.5.0": {
+      "version": "19.5.0-beta.1",
+      "x-prompt": "Do you want to update the Angular version to v18.1?",
+      "requires": {
+        "@angular/core": ">=18.0.0 <18.1.0-next.1"
+      },
+      "packages": {
+        "@angular-devkit/build-angular": {
+          "version": "~18.1.0-next.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/core": {
+          "version": "~18.1.0-next.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/schematics": {
+          "version": "~18.1.0-next.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/build": {
+          "version": "~18.1.0-next.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/pwa": {
+          "version": "~18.1.0-next.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/ssr": {
+          "version": "~18.1.0-next.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@schematics/angular": {
+          "version": "~18.1.0-next.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/architect": {
+          "version": "~0.1801.0-next.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/build-webpack": {
+          "version": "~0.1801.0-next.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/core": {
+          "version": "~18.1.0-next.1",
+          "alwaysAddToPackageJson": true
+        },
+        "@angular/material": {
+          "version": "~18.1.0-next.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/cdk": {
+          "version": "~18.1.0-next.1",
+          "alwaysAddToPackageJson": false
+        },
+        "ng-packagr": {
+          "version": "~18.0.0",
           "alwaysAddToPackageJson": false
         }
       }
