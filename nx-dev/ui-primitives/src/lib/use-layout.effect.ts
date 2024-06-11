@@ -1,3 +1,4 @@
+'use client';
 import { useLayoutEffect as ReactUseLayoutEffect } from 'react';
 
 /**
