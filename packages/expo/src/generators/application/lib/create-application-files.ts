@@ -14,6 +14,7 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
     npm: 'package-lock.json',
     yarn: 'yarn.lock',
     pnpm: 'pnpm-lock.yaml',
+    bun: 'bun.lockb',
   };
   const packageManager = detectPackageManager(host.root);
   const packageLockFile = packageManagerLockFile[packageManager];

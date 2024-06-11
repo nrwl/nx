@@ -39,12 +39,7 @@ export async function createFileMapUsingProjectGraph(
 ): Promise<WorkspaceFileMap> {
   const configs = readProjectsConfigurationFromProjectGraph(graph);
 
-  let files: FileData[];
-  if (daemonClient.enabled()) {
-    files = await daemonClient.getAllFileData();
-  } else {
-    files = getAllFileDataInContext(workspaceRoot);
-  }
+  let files: FileData[] = await getAllFileDataInContext(workspaceRoot);
 
   return createFileMap(configs, files);
 }

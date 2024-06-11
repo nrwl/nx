@@ -44,9 +44,10 @@ describe('@nx/vite/plugin', () => {
             production: ['!{projectRoot}/**/*.spec.ts'],
           },
         },
-        workspaceRoot: '',
+        workspaceRoot: tempFs.tempDir,
       };
       tempFs.createFileSync('index.html', '');
+      tempFs.createFileSync('package.json', '');
     });
 
     afterEach(() => {

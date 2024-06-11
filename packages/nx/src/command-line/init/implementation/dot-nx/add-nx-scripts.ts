@@ -19,18 +19,37 @@ const NODE_MISSING_ERR =
 const NPM_MISSING_ERR =
   'Nx requires npm to be available. To install NodeJS and NPM, see: https://nodejs.org/en/download/ .';
 
-const BATCH_SCRIPT_CONTENTS = `set path_to_root=%~dp0
-WHERE node >nul 2>nul
-IF %ERRORLEVEL% NEQ 0 (ECHO ${NODE_MISSING_ERR}; EXIT 1)
-WHERE npm >nul 2>nul
-IF %ERRORLEVEL% NEQ 0 (ECHO ${NPM_MISSING_ERR}; EXIT 1)
-node ${path.win32.join('%path_to_root%', nxWrapperPath(path.win32))} %*`;
+const BATCH_SCRIPT_CONTENTS = [
+  // don't log command to console
+  `@ECHO OFF`,
+  // Prevents path_to_root from being inherited by child processes
+  `SETLOCAL`,
+  `SET path_to_root=%~dp0`,
+  // Checks if node is available
+  `WHERE node >nul 2>nul`,
+  `IF %ERRORLEVEL% NEQ 0 (ECHO ${NODE_MISSING_ERR} & GOTO exit)`,
+  // Checks if npm is available
+  `WHERE npm >nul 2>nul`,
+  `IF %ERRORLEVEL% NEQ 0 (ECHO ${NPM_MISSING_ERR} & GOTO exit)`,
+  // Executes the nx wrapper script
+  `node ${path.win32.join('%path_to_root%', nxWrapperPath(path.win32))} %*`,
+  // Exits with the same error code as the previous command
+  `:exit`,
+  `  cmd /c exit /b %ERRORLEVEL%`,
+].join('\r\n');
 
-const SHELL_SCRIPT_CONTENTS = `#!/bin/bash
-command -v node >/dev/null 2>&1 || { echo >&2 "${NODE_MISSING_ERR}"; exit 1; }
-command -v npm >/dev/null 2>&1 || { echo >&2 "${NPM_MISSING_ERR}"; exit 1; }
-path_to_root=$(dirname $BASH_SOURCE)
-node ${path.posix.join('$path_to_root', nxWrapperPath(path.posix))} $@`;
+const SHELL_SCRIPT_CONTENTS = [
+  // Execute in bash
+  `#!/bin/bash`,
+  // Checks if node is available
+  `command -v node >/dev/null 2>&1 || { echo >&2 "${NODE_MISSING_ERR}"; exit 1; }`,
+  // Checks if npm is available
+  `command -v npm >/dev/null 2>&1 || { echo >&2 "${NPM_MISSING_ERR}"; exit 1; }`,
+  // Gets the path to the root of the project
+  `path_to_root=$(dirname $BASH_SOURCE)`,
+  // Executes the nx wrapper script
+  `node ${path.posix.join('$path_to_root', nxWrapperPath(path.posix))} $@`,
+].join('\n');
 
 export function generateDotNxSetup(version?: string) {
   const host = new FsTree(process.cwd(), false, '.nx setup');
@@ -64,11 +83,14 @@ export function writeMinimalNxJson(host: Tree, version: string) {
 }
 
 export function updateGitIgnore(host: Tree) {
-  const contents = host.read('.gitignore', 'utf-8') ?? '';
-  host.write(
-    '.gitignore',
-    [contents, '.nx/installation', '.nx/cache'].join('\n')
-  );
+  let contents = host.read('.gitignore', 'utf-8') ?? '';
+  if (!contents.includes('.nx/installation')) {
+    contents = [contents, '.nx/installation'].join('\n');
+  }
+  if (!contents.includes('.nx/cache')) {
+    contents = [contents, '.nx/cache'].join('\n');
+  }
+  host.write('.gitignore', contents);
 }
 
 // Gets the sanitized contents for nxw.js

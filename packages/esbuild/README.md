@@ -13,6 +13,6 @@
 
 Nx is a build system with built-in tooling and advanced CI capabilities. It helps you maintain and scale monorepos, both locally and on CI.
 
-This package is a [EsBuild plugin for Nx](https://nx.dev/packages/esbuild).
+This package is a [EsBuild plugin for Nx](https://nx.dev/nx-api/esbuild).
 
 {{content}}

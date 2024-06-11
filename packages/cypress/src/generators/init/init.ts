@@ -10,14 +10,10 @@ import {
   Tree,
   updateNxJson,
 } from '@nx/devkit';
-import {
-  addPlugin as _addPlugin,
-  generateCombinations,
-} from '@nx/devkit/src/utils/add-plugin';
-import { createNodes } from '../../plugins/plugin';
+import { addPlugin as _addPlugin } from '@nx/devkit/src/utils/add-plugin';
+import { createNodesV2 } from '../../plugins/plugin';
 import { cypressVersion, nxVersion } from '../../utils/versions';
 import { Schema } from './schema';
-import { CypressPluginOptions } from '../../plugins/plugin';
 
 function setupE2ETargetDefaults(tree: Tree) {
   const nxJson = readNxJson(tree);
@@ -69,7 +65,7 @@ export function addPlugin(
     tree,
     graph,
     '@nx/cypress/plugin',
-    createNodes,
+    createNodesV2,
     {
       targetName: ['e2e', 'cypress:e2e', 'cypress-e2e'],
       openTargetName: ['open-cypress', 'cypress-open'],

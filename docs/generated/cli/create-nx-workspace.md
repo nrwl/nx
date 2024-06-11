@@ -129,7 +129,7 @@ Do you want Nx Cloud to make your CI fast?
 
 Type: `string`
 
-Choices: [npm, pnpm, yarn]
+Choices: [bun, npm, pnpm, yarn]
 
 Default: `npm`
 
@@ -182,6 +182,14 @@ Use Standalone Components if generating an Angular app
 Type: `string`
 
 Stylesheet type to be used with certain stacks
+
+### useGitHub
+
+Type: `boolean`
+
+Default: `false`
+
+Will you be using GitHub as your git hosting provider?
 
 ### version
 

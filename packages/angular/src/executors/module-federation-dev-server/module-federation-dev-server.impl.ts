@@ -25,7 +25,10 @@ import { waitForPortOpen } from '@nx/web/src/utils/wait-for-port-open';
 import fileServerExecutor from '@nx/web/src/executors/file-server/file-server.impl';
 import { createBuilderContext } from 'nx/src/adapter/ngcli-adapter';
 import { executeDevServerBuilder } from '../../builders/dev-server/dev-server.impl';
-import { validateDevRemotes } from '../../builders/utilities/module-federation';
+import {
+  getDynamicMfManifestFile,
+  validateDevRemotes,
+} from '../../builders/utilities/module-federation';
 import { extname, join } from 'path';
 import { existsSync } from 'fs';
 
@@ -63,9 +66,7 @@ export async function* moduleFederationDevServerExecutor(
             {
               builderName: '@nx/angular:webpack-browser',
               description: 'Build a browser application',
-              optionSchema: await import(
-                '../../builders/webpack-browser/schema.json'
-              ),
+              optionSchema: require('../../builders/webpack-browser/schema.json'),
             },
             context
           )
@@ -76,12 +77,10 @@ export async function* moduleFederationDevServerExecutor(
     return yield* currIter;
   }
 
-  let pathToManifestFile = join(
-    context.root,
-    project.sourceRoot,
-    'assets/module-federation.manifest.json'
-  );
-  if (options.pathToManifestFile) {
+  let pathToManifestFile: string;
+  if (!options.pathToManifestFile) {
+    pathToManifestFile = getDynamicMfManifestFile(project, context.root);
+  } else {
     const userPathToManifestFile = join(
       context.root,
       options.pathToManifestFile
@@ -108,7 +107,7 @@ export async function* moduleFederationDevServerExecutor(
     'angular'
   );
 
-  const remoteNames = options.devRemotes?.map((r) =>
+  const remoteNames = options.devRemotes.map((r) =>
     typeof r === 'string' ? r : r.remoteName
   );
 

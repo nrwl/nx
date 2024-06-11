@@ -88,56 +88,56 @@ export function PluginDirectory({
               type="search"
             />
           </div>
-          <div className="text-xs my-2 flex whitespace-nowrap">
-            <div className="py-1 mr-1">Order by:</div>
+          <div className="my-2 flex whitespace-nowrap text-xs">
+            <div className="mr-1 py-1">Order by:</div>
             <div className="flex flex-wrap gap-1">
               <button
-                className="rounded-sm border border-slate-200 bg-white py-1 px-1 font-semibold transition hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700"
+                className="rounded-sm border border-slate-200 bg-white px-1 py-1 font-semibold transition hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700"
                 onClick={() => setOrderBy('lastPublishDate')}
               >
-                <ClockIcon className="h-4 w-4 inline-block mr-0.5 align-bottom"></ClockIcon>
+                <ClockIcon className="mr-0.5 inline-block h-4 w-4 align-bottom"></ClockIcon>
                 Release Date
                 {modifiers.orderBy === 'lastPublishDate' &&
                 modifiers.orderDirection === 'ASC' ? (
-                  <ArrowLongUpIcon className="h-4 w-4 inline-block ml-0.5 align-bottom"></ArrowLongUpIcon>
+                  <ArrowLongUpIcon className="ml-0.5 inline-block h-4 w-4 align-bottom"></ArrowLongUpIcon>
                 ) : null}
                 {modifiers.orderBy === 'lastPublishDate' &&
                 modifiers.orderDirection === 'DESC' ? (
-                  <ArrowLongDownIcon className="h-4 w-4 inline-block ml-0.5 align-bottom"></ArrowLongDownIcon>
+                  <ArrowLongDownIcon className="ml-0.5 inline-block h-4 w-4 align-bottom"></ArrowLongDownIcon>
                 ) : null}
               </button>
               <button
-                className="rounded-sm border border-slate-200 bg-white py-1 px-1 font-semibold transition hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700"
+                className="rounded-sm border border-slate-200 bg-white px-1 py-1 font-semibold transition hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700"
                 onClick={() => setOrderBy('npmDownloads')}
               >
-                <ArrowDownTrayIcon className="h-4 w-4 inline-block mr-0.5 align-bottom"></ArrowDownTrayIcon>
+                <ArrowDownTrayIcon className="mr-0.5 inline-block h-4 w-4 align-bottom"></ArrowDownTrayIcon>
                 Downloads
                 {modifiers.orderBy === 'npmDownloads' &&
                 modifiers.orderDirection === 'ASC' ? (
-                  <ArrowLongUpIcon className="h-4 w-4 inline-block ml-0.5 align-bottom"></ArrowLongUpIcon>
+                  <ArrowLongUpIcon className="ml-0.5 inline-block h-4 w-4 align-bottom"></ArrowLongUpIcon>
                 ) : null}
                 {modifiers.orderBy === 'npmDownloads' &&
                 modifiers.orderDirection === 'DESC' ? (
-                  <ArrowLongDownIcon className="h-4 w-4 inline-block ml-0.5 align-bottom"></ArrowLongDownIcon>
+                  <ArrowLongDownIcon className="ml-0.5 inline-block h-4 w-4 align-bottom"></ArrowLongDownIcon>
                 ) : null}
               </button>
               <button
-                className="rounded-sm border border-slate-200 bg-white py-1 px-1 font-semibold transition hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700"
+                className="rounded-sm border border-slate-200 bg-white px-1 py-1 font-semibold transition hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700"
                 onClick={() => setOrderBy('githubStars')}
               >
-                <StarIcon className="h-4 w-4 inline-block mr-0.5 align-bottom"></StarIcon>
+                <StarIcon className="mr-0.5 inline-block h-4 w-4 align-bottom"></StarIcon>
                 GH Stars
                 {modifiers.orderBy === 'githubStars' &&
                 modifiers.orderDirection === 'ASC' ? (
-                  <ArrowLongUpIcon className="h-4 w-4 inline-block ml-0.5 align-bottom"></ArrowLongUpIcon>
+                  <ArrowLongUpIcon className="ml-0.5 inline-block h-4 w-4 align-bottom"></ArrowLongUpIcon>
                 ) : null}
                 {modifiers.orderBy === 'githubStars' &&
                 modifiers.orderDirection === 'DESC' ? (
-                  <ArrowLongDownIcon className="h-4 w-4 inline-block ml-0.5 align-bottom"></ArrowLongDownIcon>
+                  <ArrowLongDownIcon className="ml-0.5 inline-block h-4 w-4 align-bottom"></ArrowLongDownIcon>
                 ) : null}
               </button>
               <button
-                className="rounded-sm border border-slate-200 bg-white py-1 px-1 font-semibold transition hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700"
+                className="rounded-sm border border-slate-200 bg-white px-1 py-1 font-semibold transition hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700"
                 onClick={() => setOrderBy('nxVersion')}
               >
                 {/* Nx Logo */}
@@ -145,7 +145,7 @@ export function PluginDirectory({
                   role="img"
                   viewBox="0 0 24 24"
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-4 w-4 inline-block mx-0.5 align-bottom"
+                  className="mx-0.5 inline-block h-4 w-4 align-bottom"
                   fill="currentColor"
                 >
                   <title>Nx</title>
@@ -154,11 +154,11 @@ export function PluginDirectory({
                 Nx Version
                 {modifiers.orderBy === 'nxVersion' &&
                 modifiers.orderDirection === 'DESC' ? (
-                  <ArrowLongUpIcon className="h-4 w-4 inline-block ml-0.5 align-bottom"></ArrowLongUpIcon>
+                  <ArrowLongUpIcon className="ml-0.5 inline-block h-4 w-4 align-bottom"></ArrowLongUpIcon>
                 ) : null}
                 {modifiers.orderBy === 'nxVersion' &&
                 modifiers.orderDirection === 'ASC' ? (
-                  <ArrowLongDownIcon className="h-4 w-4 inline-block ml-0.5 align-bottom"></ArrowLongDownIcon>
+                  <ArrowLongDownIcon className="ml-0.5 inline-block h-4 w-4 align-bottom"></ArrowLongDownIcon>
                 ) : null}
               </button>
             </div>

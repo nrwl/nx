@@ -27,6 +27,8 @@ export type {
 export type {
   Generator,
   GeneratorCallback,
+  PromiseExecutor,
+  AsyncIteratorExecutor,
   Executor,
   ExecutorContext,
   TaskGraphExecutor,
@@ -46,12 +48,20 @@ export type {
   CreateNodesFunction,
   CreateNodesResult,
   CreateNodesContext,
+  CreateNodesContextV2,
+  CreateNodesFunctionV2,
+  CreateNodesResultV2,
+  CreateNodesV2,
   CreateDependencies,
   CreateDependenciesContext,
   CreateMetadata,
   CreateMetadataContext,
   ProjectsMetadata,
 } from './project-graph/plugins';
+
+export { AggregateCreateNodesError } from './project-graph/error-types';
+
+export { createNodesFromFiles } from './project-graph/plugins';
 
 export type {
   NxPluginV1,
@@ -124,7 +134,7 @@ export {
 /**
  * @category Generators
  */
-export { glob } from './generators/utils/glob';
+export { glob, globAsync } from './generators/utils/glob';
 
 /**
  * @category Generators

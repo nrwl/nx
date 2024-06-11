@@ -13,7 +13,7 @@ import { getLockFileName } from '@nx/js';
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { existsSync, readdirSync } from 'fs';
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
-import { projectGraphCacheDirectory } from 'nx/src/utils/cache-directory';
+import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 
 export interface DetoxPluginOptions {
   buildTargetName?: string;
@@ -21,38 +21,28 @@ export interface DetoxPluginOptions {
   testTargetName?: string;
 }
 
-const cachePath = join(projectGraphCacheDirectory, 'detox.hash');
-const targetsCache = existsSync(cachePath) ? readTargetsCache() : {};
-
-const calculatedTargets: Record<
-  string,
-  Record<string, TargetConfiguration>
-> = {};
+const cachePath = join(workspaceDataDirectory, 'detox.hash');
+const targetsCache = readTargetsCache();
 
 function readTargetsCache(): Record<
   string,
   Record<string, TargetConfiguration<DetoxPluginOptions>>
 > {
-  return readJsonFile(cachePath);
+  return existsSync(cachePath) ? readJsonFile(cachePath) : {};
 }
 
-function writeTargetsToCache(
-  targets: Record<
-    string,
-    Record<string, TargetConfiguration<DetoxPluginOptions>>
-  >
-) {
-  writeJsonFile(cachePath, targets);
+function writeTargetsToCache() {
+  writeJsonFile(cachePath, targetsCache);
 }
 
 export const createDependencies: CreateDependencies = () => {
-  writeTargetsToCache(calculatedTargets);
+  writeTargetsToCache();
   return [];
 };
 
 export const createNodes: CreateNodes<DetoxPluginOptions> = [
   '**/{detox.config,.detoxrc}.{json,js}',
-  (configFilePath, options, context) => {
+  async (configFilePath, options, context) => {
     options = normalizeOptions(options);
     const projectRoot = dirname(configFilePath);
 
@@ -62,20 +52,19 @@ export const createNodes: CreateNodes<DetoxPluginOptions> = [
       return {};
     }
 
-    const hash = calculateHashForCreateNodes(projectRoot, options, context, [
-      getLockFileName(detectPackageManager(context.workspaceRoot)),
-    ]);
+    const hash = await calculateHashForCreateNodes(
+      projectRoot,
+      options,
+      context,
+      [getLockFileName(detectPackageManager(context.workspaceRoot))]
+    );
 
-    const targets = targetsCache[hash]
-      ? targetsCache[hash]
-      : buildDetoxTargets(projectRoot, options, context);
-
-    calculatedTargets[hash] = targets;
+    targetsCache[hash] ??= buildDetoxTargets(projectRoot, options, context);
 
     return {
       projects: {
         [projectRoot]: {
-          targets,
+          targets: targetsCache[hash],
         },
       },
     };

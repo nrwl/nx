@@ -6,9 +6,8 @@
  * - Added PostCSS plugin needed to support TailwindCSS.
  */
 
-import * as browserslist from 'browserslist';
+import browserslist from 'browserslist';
 import { existsSync } from 'fs';
-import { EsbuildExecutor } from 'ng-packagr/lib/esbuild/esbuild-executor';
 import {
   generateKey,
   readCacheEntry,
@@ -16,8 +15,8 @@ import {
 } from 'ng-packagr/lib/utils/cache';
 import * as log from 'ng-packagr/lib/utils/log';
 import { dirname, extname, join } from 'path';
-import * as autoprefixer from 'autoprefixer';
-import * as postcssUrl from 'postcss-url';
+import autoprefixer from 'autoprefixer';
+import postcssUrl from 'postcss-url';
 import { pathToFileURL } from 'node:url';
 import {
   getTailwindPostCssPlugin,
@@ -42,7 +41,8 @@ export class StylesheetProcessor {
   private browserslistData: string[];
   private targets: string[];
   private postCssProcessor: ReturnType<typeof postcss>;
-  private esbuild = new EsbuildExecutor();
+  private esbuild =
+    new (require('ng-packagr/lib/esbuild/esbuild-executor').EsbuildExecutor)();
   private styleIncludePaths: string[];
 
   constructor(

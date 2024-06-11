@@ -7,13 +7,13 @@ import { dirSync } from 'tmp';
 import { promisify } from 'util';
 import { readNxJson } from '../config/configuration';
 import { readPackageJson } from '../project-graph/file-utils';
-import { readFileIfExisting, writeJsonFile } from './fileutils';
+import { readFileIfExisting, readJsonFile, writeJsonFile } from './fileutils';
 import { PackageJson, readModulePackageJson } from './package-json';
 import { workspaceRoot } from './workspace-root';
 
 const execAsync = promisify(exec);
 
-export type PackageManager = 'yarn' | 'pnpm' | 'npm';
+export type PackageManager = 'yarn' | 'pnpm' | 'npm' | 'bun';
 
 export interface PackageManagerCommands {
   preInstall?: string;
@@ -26,8 +26,9 @@ export interface PackageManagerCommands {
   exec: string;
   dlx: string;
   list: string;
-  run: (script: string, args: string) => string;
-  getRegistryUrl: string;
+  run: (script: string, args?: string) => string;
+  // Make this required once bun adds programatically support for reading config https://github.com/oven-sh/bun/issues/7140
+  getRegistryUrl?: string;
 }
 
 /**
@@ -37,7 +38,9 @@ export function detectPackageManager(dir: string = ''): PackageManager {
   const nxJson = readNxJson();
   return (
     nxJson.cli?.packageManager ??
-    (existsSync(join(dir, 'yarn.lock'))
+    (existsSync(join(dir, 'bun.lockb'))
+      ? 'bun'
+      : existsSync(join(dir, 'yarn.lock'))
       ? 'yarn'
       : existsSync(join(dir, 'pnpm-lock.yaml'))
       ? 'pnpm'
@@ -83,8 +86,14 @@ export function getPackageManagerCommand(
 ): PackageManagerCommands {
   const commands: { [pm in PackageManager]: () => PackageManagerCommands } = {
     yarn: () => {
-      const yarnVersion = getPackageManagerVersion('yarn', root);
-      const useBerry = gte(yarnVersion, '2.0.0');
+      let yarnVersion: string, useBerry: boolean;
+      try {
+        yarnVersion = getPackageManagerVersion('yarn', root);
+        useBerry = gte(yarnVersion, '2.0.0');
+      } catch {
+        yarnVersion = 'latest';
+        useBerry = true;
+      }
 
       return {
         preInstall: `yarn set version ${yarnVersion}`,
@@ -100,7 +109,8 @@ export function getPackageManagerCommand(
         rm: 'yarn remove',
         exec: 'yarn',
         dlx: useBerry ? 'yarn dlx' : 'yarn',
-        run: (script: string, args: string) => `yarn ${script} ${args}`,
+        run: (script: string, args?: string) =>
+          `yarn ${script}${args ? ` ${args}` : ''}`,
         list: useBerry ? 'yarn info --name-only' : 'yarn list',
         getRegistryUrl: useBerry
           ? 'yarn config get npmRegistryServer'
@@ -108,11 +118,17 @@ export function getPackageManagerCommand(
       };
     },
     pnpm: () => {
-      const pnpmVersion = getPackageManagerVersion('pnpm', root);
-      const modernPnpm = gte(pnpmVersion, '6.13.0');
-      const includeDoubleDashBeforeArgs = lt(pnpmVersion, '7.0.0');
-      const isPnpmWorkspace = existsSync(join(root, 'pnpm-workspace.yaml'));
+      let modernPnpm: boolean, includeDoubleDashBeforeArgs: boolean;
+      try {
+        const pnpmVersion = getPackageManagerVersion('pnpm', root);
+        modernPnpm = gte(pnpmVersion, '6.13.0');
+        includeDoubleDashBeforeArgs = lt(pnpmVersion, '7.0.0');
+      } catch {
+        modernPnpm = true;
+        includeDoubleDashBeforeArgs = true;
+      }
 
+      const isPnpmWorkspace = existsSync(join(root, 'pnpm-workspace.yaml'));
       return {
         install: 'pnpm install --no-frozen-lockfile', // explicitly disable in case of CI
         ciInstall: 'pnpm install --frozen-lockfile',
@@ -122,10 +138,14 @@ export function getPackageManagerCommand(
         rm: 'pnpm rm',
         exec: modernPnpm ? 'pnpm exec' : 'pnpx',
         dlx: modernPnpm ? 'pnpm dlx' : 'pnpx',
-        run: (script: string, args: string) =>
-          includeDoubleDashBeforeArgs
-            ? `pnpm run ${script} -- ${args}`
-            : `pnpm run ${script} ${args}`,
+        run: (script: string, args?: string) =>
+          `pnpm run ${script}${
+            args
+              ? includeDoubleDashBeforeArgs
+                ? ' -- ' + args
+                : ` ${args}`
+              : ''
+          }`,
         list: 'pnpm ls --depth 100',
         getRegistryUrl: 'pnpm config get registry',
       };
@@ -143,9 +163,25 @@ export function getPackageManagerCommand(
         rm: 'npm rm',
         exec: 'npx',
         dlx: 'npx',
-        run: (script: string, args: string) => `npm run ${script} -- ${args}`,
+        run: (script: string, args?: string) =>
+          `npm run ${script}${args ? ' -- ' + args : ''}`,
         list: 'npm ls',
         getRegistryUrl: 'npm config get registry',
+      };
+    },
+    bun: () => {
+      // bun doesn't current support programatically reading config https://github.com/oven-sh/bun/issues/7140
+      return {
+        install: 'bun install',
+        ciInstall: 'bun install --no-cache',
+        updateLockFile: 'bun install --frozen-lockfile',
+        add: 'bun install',
+        addDev: 'bun install -D',
+        rm: 'bun rm',
+        exec: 'bun',
+        dlx: 'bunx',
+        run: (script: string, args: string) => `bun run ${script} -- ${args}`,
+        list: 'bun pm ls',
       };
     },
   };
@@ -162,10 +198,33 @@ export function getPackageManagerVersion(
   packageManager: PackageManager = detectPackageManager(),
   cwd = process.cwd()
 ): string {
-  return execSync(`${packageManager} --version`, {
-    cwd,
-    encoding: 'utf-8',
-  }).trim();
+  let version;
+  try {
+    version = execSync(`${packageManager} --version`, {
+      cwd,
+      encoding: 'utf-8',
+    }).trim();
+  } catch {
+    if (existsSync(join(cwd, 'package.json'))) {
+      const packageVersion = readJsonFile<PackageJson>(
+        join(cwd, 'package.json')
+      )?.packageManager;
+      if (packageVersion) {
+        const [packageManagerFromPackageJson, versionFromPackageJson] =
+          packageVersion.split('@');
+        if (
+          packageManagerFromPackageJson === packageManager &&
+          versionFromPackageJson
+        ) {
+          version = versionFromPackageJson;
+        }
+      }
+    }
+  }
+  if (!version) {
+    throw new Error(`Cannot determine the version of ${packageManager}.`);
+  }
+  return version;
 }
 
 /**
@@ -236,7 +295,12 @@ export function copyPackageManagerConfigurationFiles(
   root: string,
   destination: string
 ) {
-  for (const packageManagerConfigFile of ['.npmrc', '.yarnrc', '.yarnrc.yml']) {
+  for (const packageManagerConfigFile of [
+    '.npmrc',
+    '.yarnrc',
+    '.yarnrc.yml',
+    'bunfig.toml',
+  ]) {
     // f is an absolute path, including the {workspaceRoot}.
     const f = findFileInPackageJsonDirectory(packageManagerConfigFile, root);
     if (f) {
@@ -259,6 +323,10 @@ export function copyPackageManagerConfigurationFiles(
             readFileIfExisting(f)
           );
           writeFileSync(destinationPath, updated);
+          break;
+        }
+        case 'bunfig.toml': {
+          copyFileSync(f, destinationPath);
           break;
         }
       }
@@ -306,11 +374,21 @@ export async function resolvePackageVersionUsingRegistry(
       throw new Error(`Unable to resolve version ${packageName}@${version}.`);
     }
 
-    // get the last line of the output, strip the package version and quotes
-    const resolvedVersion = result
-      .split('\n')
-      .pop()
-      .split(' ')
+    const lines = result.split('\n');
+    if (lines.length === 1) {
+      return lines[0];
+    }
+
+    /**
+     * The output contains multiple lines ordered by release date, so the last
+     * version might not be the last one in the list. We need to sort it. Each
+     * line looks like:
+     *
+     * <package>@<version> '<version>'
+     */
+    const resolvedVersion = lines
+      .map((line) => line.split(' ')[1])
+      .sort()
       .pop()
       .replace(/'/g, '');
 
@@ -349,12 +427,16 @@ export async function packageRegistryView(
   args: string
 ): Promise<string> {
   let pm = detectPackageManager();
-  if (pm === 'yarn') {
+  if (pm === 'yarn' || pm === 'bun') {
     /**
      * yarn has `yarn info` but it behaves differently than (p)npm,
      * which makes it's usage unreliable
      *
      * @see https://github.com/nrwl/nx/pull/9667#discussion_r842553994
+     *
+     * Bun has a pm ls function but it only relates to its lockfile
+     * and acts differently from all other package managers
+     * from Jarred: "it probably would be bun pm view <package-name>"
      */
     pm = 'npm';
   }
@@ -369,13 +451,15 @@ export async function packageRegistryPack(
   version: string
 ): Promise<{ tarballPath: string }> {
   let pm = detectPackageManager();
-  if (pm === 'yarn') {
+  if (pm === 'yarn' || pm === 'bun') {
     /**
      * `(p)npm pack` will download a tarball of the specified version,
      * whereas `yarn` pack creates a tarball of the active workspace, so it
      * does not work for getting the content of a library.
      *
      * @see https://github.com/nrwl/nx/pull/9667#discussion_r842553994
+     *
+     * bun doesn't currently support pack
      */
     pm = 'npm';
   }

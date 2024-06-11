@@ -1,16 +1,12 @@
 import {
-  checkFilesDoNotExist,
   checkFilesExist,
   cleanupProject,
-  getSize,
   killPorts,
   newProject,
   readFile,
-  readJson,
   rmDist,
   runCLI,
   runCLIAsync,
-  tmpProjPath,
   uniq,
   updateFile,
   updateJson,
@@ -37,7 +33,6 @@ describe('Build React libraries and apps', () => {
   let proj: string;
 
   beforeEach(async () => {
-    process.env.NX_ADD_PLUGINS = 'false';
     app = uniq('app');
     parentLib = uniq('parentlib');
     childLib = uniq('childlib');
@@ -100,17 +95,28 @@ describe('Build React libraries and apps', () => {
     );
 
     // Add assets to child lib
-    updateJson(join('libs', childLib, 'project.json'), (json) => {
-      json.targets.build.options.assets = [`libs/${childLib}/src/assets`];
-      return json;
-    });
+    updateFile(
+      join('libs', childLib, 'rollup.config.js'),
+      `const { withNx } = require('@nx/rollup/with-nx');
+module.exports = withNx(
+  {
+    main: './src/index.ts',
+    outputPath: '../../dist/libs/${childLib}',
+    tsConfig: './tsconfig.lib.json',
+    compiler: 'babel',
+    external: ['react', 'react-dom', 'react/jsx-runtime'],
+    format: ['esm'],
+    assets: ['./src/assets'],
+  }
+);
+`
+    );
     updateFile(`libs/${childLib}/src/assets/hello.txt`, 'Hello World!');
   });
 
   afterEach(() => {
     killPorts();
     cleanupProject();
-    delete process.env.NX_ADD_PLUGINS;
   });
 
   describe('Buildable libraries', () => {
@@ -145,32 +151,6 @@ describe('Build React libraries and apps', () => {
       expect(readFile(`dist/libs/${childLib}/index.esm.js`)).toContain(
         'react/jsx-runtime'
       );
-    });
-
-    it('should support --format option', () => {
-      updateFile(
-        `libs/${childLib}/src/index.ts`,
-        (s) => `${s}
-export async function f() { return 'a'; }
-export async function g() { return 'b'; }
-export async function h() { return 'c'; }
-`
-      );
-
-      runCLI(`build ${childLib} --format cjs,esm`);
-
-      checkFilesExist(`dist/libs/${childLib}/index.cjs.js`);
-      checkFilesExist(`dist/libs/${childLib}/index.esm.js`);
-
-      const cjsPackageSize = getSize(
-        tmpProjPath(`dist/libs/${childLib}/index.cjs.js`)
-      );
-      const esmPackageSize = getSize(
-        tmpProjPath(`dist/libs/${childLib}/index.esm.js`)
-      );
-
-      // This is a loose requirement that ESM should be smaller than CJS output.
-      expect(esmPackageSize).toBeLessThanOrEqual(cjsPackageSize);
     });
 
     it('should preserve the tsconfig target set by user', () => {
@@ -224,14 +204,6 @@ export async function h() { return 'c'; }
       expect(content).toContain('function __generator(thisArg, body) {');
     });
 
-    it('should build an app composed out of buildable libs', () => {
-      const buildFromSource = runCLI(
-        `build ${app} --buildLibsFromSource=false`
-      );
-      expect(buildFromSource).toContain('Successfully ran target build');
-      checkFilesDoNotExist(`apps/${app}/tsconfig/tsconfig.nx-tmp`);
-    }, 1000000);
-
     it('should not create a dist folder if there is an error', async () => {
       const libName = uniq('lib');
 
@@ -243,7 +215,7 @@ export async function h() { return 'c'; }
       updateFile(mainPath, `${readFile(mainPath)}\n console.log(a);`); // should error - "a" will be undefined
 
       await expect(runCLIAsync(`build ${libName}`)).rejects.toThrow(
-        /Bundle failed/
+        /Command failed/
       );
       expect(() => {
         checkFilesExist(`dist/libs/${libName}/package.json`);

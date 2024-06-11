@@ -1512,6 +1512,9 @@ describe('Migration', () => {
 
   describe('parseMigrationsOptions', () => {
     it('should work for generating migrations', async () => {
+      jest
+        .spyOn(packageMgrUtils, 'resolvePackageVersionUsingRegistry')
+        .mockResolvedValue('12.3.0');
       const r = await parseMigrationsOptions({
         packageAndVersion: '8.12.0',
         from: '@myscope/a@12.3,@myscope/b@1.1.1',
@@ -1544,8 +1547,8 @@ describe('Migration', () => {
     });
 
     it('should handle different variations of the target package', async () => {
-      jest
-        .spyOn(packageMgrUtils, 'packageRegistryView')
+      const packageRegistryViewSpy = jest
+        .spyOn(packageMgrUtils, 'resolvePackageVersionUsingRegistry')
         .mockImplementation((pkg, version) => {
           return Promise.resolve(version);
         });
@@ -1555,23 +1558,25 @@ describe('Migration', () => {
         targetPackage: '@angular/core',
         targetVersion: 'latest',
       });
+      packageRegistryViewSpy.mockResolvedValue('8.12.5');
       expect(
         await parseMigrationsOptions({ packageAndVersion: '8.12' })
       ).toMatchObject({
         targetPackage: '@nrwl/workspace',
-        targetVersion: '8.12.0',
+        targetVersion: '8.12.5',
       });
       expect(
         await parseMigrationsOptions({ packageAndVersion: '8' })
       ).toMatchObject({
         targetPackage: '@nrwl/workspace',
-        targetVersion: '8.0.0',
+        targetVersion: '8.12.5',
       });
+      packageRegistryViewSpy.mockResolvedValue('12.6.3');
       expect(
         await parseMigrationsOptions({ packageAndVersion: '12' })
       ).toMatchObject({
         targetPackage: '@nrwl/workspace',
-        targetVersion: '12.0.0',
+        targetVersion: '12.6.3',
       });
       expect(
         await parseMigrationsOptions({ packageAndVersion: '8.12.0-beta.0' })
@@ -1579,6 +1584,9 @@ describe('Migration', () => {
         targetPackage: '@nrwl/workspace',
         targetVersion: '8.12.0-beta.0',
       });
+      packageRegistryViewSpy.mockImplementation((pkg, version) =>
+        Promise.resolve(version)
+      );
       expect(
         await parseMigrationsOptions({ packageAndVersion: 'next' })
       ).toMatchObject({
@@ -1597,6 +1605,7 @@ describe('Migration', () => {
         targetPackage: '@nrwl/workspace',
         targetVersion: '13.10.0',
       });
+      packageRegistryViewSpy.mockResolvedValue('8.12.0');
       expect(
         await parseMigrationsOptions({
           packageAndVersion: '@nx/workspace@8.12',
@@ -1611,6 +1620,9 @@ describe('Migration', () => {
         targetPackage: 'mypackage',
         targetVersion: '8.12.0',
       });
+      packageRegistryViewSpy.mockImplementation((pkg, version) =>
+        Promise.resolve(version)
+      );
       expect(
         await parseMigrationsOptions({ packageAndVersion: 'mypackage' })
       ).toMatchObject({
@@ -1690,6 +1702,11 @@ describe('Migration', () => {
     });
 
     it('should handle backslashes in package names', async () => {
+      jest
+        .spyOn(packageMgrUtils, 'resolvePackageVersionUsingRegistry')
+        .mockImplementation((pkg, version) => {
+          return Promise.resolve('12.3.0');
+        });
       const r = await parseMigrationsOptions({
         packageAndVersion: '@nx\\workspace@8.12.0',
         from: '@myscope\\a@12.3,@myscope\\b@1.1.1',

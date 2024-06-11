@@ -10,10 +10,9 @@ import { readFileSync } from 'node:fs';
 import { basename } from 'node:path';
 
 import {
-  getGradleReport,
-  invalidateGradleReportCache,
+  getCurrentGradleReport,
+  newLineSeparator,
 } from '../utils/get-gradle-report';
-import { calculatedTargets, writeTargetsToCache } from './nodes';
 
 export const createDependencies: CreateDependencies = async (
   _,
@@ -30,7 +29,7 @@ export const createDependencies: CreateDependencies = async (
     gradleFileToGradleProjectMap,
     gradleProjectToProjectName,
     buildFileToDepsMap,
-  } = getGradleReport();
+  } = getCurrentGradleReport();
 
   for (const gradleFile of gradleFiles) {
     const gradleProject = gradleFileToGradleProjectMap.get(gradleFile);
@@ -58,10 +57,6 @@ export const createDependencies: CreateDependencies = async (
     gradleDependenciesEnd.name
   );
 
-  writeTargetsToCache(calculatedTargets);
-  if (dependencies.length) {
-    invalidateGradleReportCache();
-  }
   return dependencies;
 };
 
@@ -89,7 +84,7 @@ function processGradleDependencies(
   context: CreateDependenciesContext
 ): Set<RawProjectGraphDependency> {
   const dependencies: Set<RawProjectGraphDependency> = new Set();
-  const lines = readFileSync(depsFile).toString().split('\n');
+  const lines = readFileSync(depsFile).toString().split(newLineSeparator);
   let inDeps = false;
   for (const line of lines) {
     if (

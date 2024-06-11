@@ -13,7 +13,7 @@ import { dirname, join } from 'path';
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { existsSync, readFileSync, readdirSync } from 'fs';
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
-import { projectGraphCacheDirectory } from 'nx/src/utils/cache-directory';
+import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { getLockFileName } from '@nx/js';
 import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
 import type { StorybookConfig } from '@storybook/types';
@@ -25,29 +25,26 @@ export interface StorybookPluginOptions {
   testStorybookTargetName?: string;
 }
 
-const cachePath = join(projectGraphCacheDirectory, 'storybook.hash');
-const targetsCache = existsSync(cachePath) ? readTargetsCache() : {};
-
-const calculatedTargets: Record<
-  string,
-  Record<string, TargetConfiguration>
-> = {};
+const cachePath = join(workspaceDataDirectory, 'storybook.hash');
+const targetsCache = readTargetsCache();
 
 function readTargetsCache(): Record<
   string,
   Record<string, TargetConfiguration>
 > {
-  return readJsonFile(cachePath);
+  return existsSync(cachePath) ? readJsonFile(cachePath) : {};
 }
 
-function writeTargetsToCache(
-  targets: Record<string, Record<string, TargetConfiguration>>
-) {
-  writeJsonFile(cachePath, targets);
+function writeTargetsToCache() {
+  const oldCache = readTargetsCache();
+  writeJsonFile(cachePath, {
+    ...oldCache,
+    ...targetsCache,
+  });
 }
 
 export const createDependencies: CreateDependencies = () => {
-  writeTargetsToCache(calculatedTargets);
+  writeTargetsToCache();
   return [];
 };
 
@@ -75,29 +72,28 @@ export const createNodes: CreateNodes<StorybookPluginOptions> = [
     }
 
     options = normalizeOptions(options);
-    const hash = calculateHashForCreateNodes(projectRoot, options, context, [
-      getLockFileName(detectPackageManager(context.workspaceRoot)),
-    ]);
+    const hash = await calculateHashForCreateNodes(
+      projectRoot,
+      options,
+      context,
+      [getLockFileName(detectPackageManager(context.workspaceRoot))]
+    );
 
     const projectName = buildProjectName(projectRoot, context.workspaceRoot);
 
-    const targets = targetsCache[hash]
-      ? targetsCache[hash]
-      : await buildStorybookTargets(
-          configFilePath,
-          projectRoot,
-          options,
-          context,
-          projectName
-        );
-
-    calculatedTargets[hash] = targets;
+    targetsCache[hash] ??= await buildStorybookTargets(
+      configFilePath,
+      projectRoot,
+      options,
+      context,
+      projectName
+    );
 
     const result = {
       projects: {
         [projectRoot]: {
           root: projectRoot,
-          targets,
+          targets: targetsCache[hash],
         },
       },
     };

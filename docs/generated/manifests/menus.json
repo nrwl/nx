@@ -1384,7 +1384,7 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Deploying AWS lambda in Node.js",
+                "name": "Deploying AWS lambda in Node.js (deprecated)",
                 "path": "/recipes/node/node-aws-lambda",
                 "id": "node-aws-lambda",
                 "isExternal": false,
@@ -1990,6 +1990,14 @@
                 "name": "Configure Changelog Format",
                 "path": "/recipes/nx-release/configure-changelog-format",
                 "id": "configure-changelog-format",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Publish a Custom Dist Directory",
+                "path": "/recipes/nx-release/publish-custom-dist-directory",
+                "id": "publish-custom-dist-directory",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -2615,7 +2623,7 @@
             "disableCollapsible": false
           },
           {
-            "name": "Deploying AWS lambda in Node.js",
+            "name": "Deploying AWS lambda in Node.js (deprecated)",
             "path": "/recipes/node/node-aws-lambda",
             "id": "node-aws-lambda",
             "isExternal": false,
@@ -2658,7 +2666,7 @@
         "disableCollapsible": false
       },
       {
-        "name": "Deploying AWS lambda in Node.js",
+        "name": "Deploying AWS lambda in Node.js (deprecated)",
         "path": "/recipes/node/node-aws-lambda",
         "id": "node-aws-lambda",
         "isExternal": false,
@@ -3580,7 +3588,7 @@
         "disableCollapsible": false
       },
       {
-        "name": "Troubleshooting",
+        "name": "Troubleshooting Nx Console Issues",
         "path": "/recipes/nx-console/console-troubleshooting",
         "id": "console-troubleshooting",
         "isExternal": false,
@@ -3672,6 +3680,14 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
+          },
+          {
+            "name": "Publish a Custom Dist Directory",
+            "path": "/recipes/nx-release/publish-custom-dist-directory",
+            "id": "publish-custom-dist-directory",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -3752,6 +3768,14 @@
         "name": "Configure Changelog Format",
         "path": "/recipes/nx-release/configure-changelog-format",
         "id": "configure-changelog-format",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Publish a Custom Dist Directory",
+        "path": "/recipes/nx-release/publish-custom-dist-directory",
+        "id": "publish-custom-dist-directory",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -4343,6 +4367,14 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
+          },
+          {
+            "name": "Releases",
+            "path": "/reference/releases",
+            "id": "releases",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -4404,6 +4436,14 @@
         "disableCollapsible": false
       },
       {
+        "name": "Releases",
+        "path": "/reference/releases",
+        "id": "releases",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
         "name": "Troubleshooting",
         "path": "/troubleshooting",
         "id": "troubleshooting",
@@ -4445,6 +4485,14 @@
             "name": "Profiling Build Performance",
             "path": "/troubleshooting/performance-profiling",
             "id": "performance-profiling",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Troubleshooting Nx Console Issues",
+            "path": "/recipes/nx-console/console-troubleshooting",
+            "id": "console-troubleshooting",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -4733,7 +4781,7 @@
           },
           {
             "name": "nx.json reference: inputs and namedInputs",
-            "path": "/reference/nx-json#inputs-&-namedinputs",
+            "path": "/reference/nx-json#inputs-namedinputs",
             "id": "nxjson-inputs",
             "isExternal": true,
             "children": [],
@@ -4741,7 +4789,7 @@
           },
           {
             "name": "Project Configuration reference: inputs and namedInputs",
-            "path": "/reference/project-configuration#inputs-&-namedinputs",
+            "path": "/reference/project-configuration#inputs-and-namedinputs",
             "id": "project-config-inputs",
             "isExternal": true,
             "children": [],
@@ -4792,7 +4840,7 @@
       },
       {
         "name": "nx.json reference: inputs and namedInputs",
-        "path": "/reference/nx-json#inputs-&-namedinputs",
+        "path": "/reference/nx-json#inputs-namedinputs",
         "id": "nxjson-inputs",
         "isExternal": true,
         "children": [],
@@ -4800,7 +4848,7 @@
       },
       {
         "name": "Project Configuration reference: inputs and namedInputs",
-        "path": "/reference/project-configuration#inputs-&-namedinputs",
+        "path": "/reference/project-configuration#inputs-and-namedinputs",
         "id": "project-config-inputs",
         "isExternal": true,
         "children": [],
@@ -5604,6 +5652,14 @@
                     "isExternal": false,
                     "children": [],
                     "disableCollapsible": false
+                  },
+                  {
+                    "name": "Custom GitHub App",
+                    "path": "/ci/recipes/enterprise/on-premise/custom-github-app",
+                    "id": "custom-github-app",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
                   }
                 ],
                 "disableCollapsible": false
@@ -6022,6 +6078,14 @@
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
+              },
+              {
+                "name": "Custom GitHub App",
+                "path": "/ci/recipes/enterprise/on-premise/custom-github-app",
+                "id": "custom-github-app",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
               }
             ],
             "disableCollapsible": false
@@ -6155,6 +6219,14 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
+          },
+          {
+            "name": "Custom GitHub App",
+            "path": "/ci/recipes/enterprise/on-premise/custom-github-app",
+            "id": "custom-github-app",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -6219,6 +6291,14 @@
         "name": "Advanced Configuration",
         "path": "/ci/recipes/enterprise/on-premise/advanced-config",
         "id": "advanced-config",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Custom GitHub App",
+        "path": "/ci/recipes/enterprise/on-premise/custom-github-app",
+        "id": "custom-github-app",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false

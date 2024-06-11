@@ -20,7 +20,11 @@
     "Nest",
     "Jest",
     "Cypress",
-    "CLI"
+    "CLI",
+    "Testing",
+    "Front-end",
+    "Backend",
+    "Mobile"
   ],
   "bin": {
     "nx": "./bin/nx.js",
@@ -35,7 +39,7 @@
   "dependencies": {
     "@yarnpkg/lockfile": "^1.1.0",
     "@yarnpkg/parsers": "3.0.0-rc.46",
-    "@zkochan/js-yaml": "0.0.6",
+    "@zkochan/js-yaml": "0.0.7",
     "axios": "^1.6.0",
     "chalk": "^4.1.0",
     "cli-cursor": "3.1.0",
@@ -46,10 +50,10 @@
     "enquirer": "~2.3.6",
     "figures": "3.2.0",
     "flat": "^5.0.2",
+    "front-matter": "^4.0.2",
     "fs-extra": "^11.1.0",
     "ignore": "^5.0.4",
     "jest-diff": "^29.4.1",
-    "js-yaml": "4.1.0",
     "jsonc-parser": "3.2.0",
     "lines-and-columns": "~2.0.3",
     "minimatch": "9.0.3",

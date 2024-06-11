@@ -15,6 +15,11 @@ exports[`@nx/rollup/plugin non-root project should create nodes 1`] = `
           "inputs": [
             "production",
             "^production",
+            {
+              "externalDependencies": [
+                "rollup",
+              ],
+            },
           ],
           "options": {
             "cwd": "mylib",
@@ -45,6 +50,11 @@ exports[`@nx/rollup/plugin root project should create nodes 1`] = `
           "inputs": [
             "production",
             "^production",
+            {
+              "externalDependencies": [
+                "rollup",
+              ],
+            },
           ],
           "options": {
             "cwd": ".",

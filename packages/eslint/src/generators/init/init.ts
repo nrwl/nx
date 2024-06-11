@@ -11,7 +11,7 @@ import {
 import { addPlugin } from '@nx/devkit/src/utils/add-plugin';
 import { eslintVersion, nxVersion } from '../../utils/versions';
 import { findEslintFile } from '../utils/eslint-file';
-import { createNodes } from '../../plugins/plugin';
+import { createNodesV2 } from '../../plugins/plugin';
 import { hasEslintPlugin } from '../utils/plugin';
 
 export interface LinterInitOptions {
@@ -77,7 +77,7 @@ export async function initEsLint(
       tree,
       graph,
       '@nx/eslint/plugin',
-      createNodes,
+      createNodesV2,
       {
         targetName: lintTargetNames,
       },
@@ -98,7 +98,7 @@ export async function initEsLint(
       tree,
       graph,
       '@nx/eslint/plugin',
-      createNodes,
+      createNodesV2,
       {
         targetName: lintTargetNames,
       },

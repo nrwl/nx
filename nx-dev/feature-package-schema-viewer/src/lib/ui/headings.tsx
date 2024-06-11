@@ -11,7 +11,7 @@ export const Heading1 = ({ title }: { title: string }) => (
     <Link aria-hidden="true" tabIndex={-1} href={'#' + slugify(title)}>
       <LinkIcon
         role="img"
-        className="ml-2 mb-1 inline h-5 w-5 opacity-0 group-hover:opacity-100"
+        className="mb-1 ml-2 inline h-5 w-5 opacity-0 group-hover:opacity-100"
       />
     </Link>
   </h1>
@@ -26,7 +26,7 @@ export const Heading2 = ({ title }: { title: string }) => (
     <Link aria-hidden="true" tabIndex={-1} href={'#' + slugify(title)}>
       <LinkIcon
         role="img"
-        className="ml-2 mb-1 inline h-5 w-5 opacity-0 group-hover:opacity-100"
+        className="mb-1 ml-2 inline h-5 w-5 opacity-0 group-hover:opacity-100"
       />
     </Link>
   </h2>
@@ -41,7 +41,7 @@ export const Heading3 = ({ title }: { title: string }) => (
     <Link aria-hidden="true" tabIndex={-1} href={'#' + slugify(title)}>
       <LinkIcon
         role="img"
-        className="ml-2 mb-1 inline h-5 w-5 opacity-0 group-hover:opacity-100"
+        className="mb-1 ml-2 inline h-5 w-5 opacity-0 group-hover:opacity-100"
       />
     </Link>
   </h3>

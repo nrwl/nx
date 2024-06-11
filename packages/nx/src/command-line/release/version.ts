@@ -30,6 +30,10 @@ import {
   ReleaseGroupWithName,
   filterReleaseGroups,
 } from './config/filter-release-groups';
+import {
+  readRawVersionPlans,
+  setVersionPlansOnGroups,
+} from './config/version-plans';
 import { batchProjectsByGeneratorConfig } from './utils/batch-projects-by-generator-config';
 import { gitAdd, gitTag } from './utils/git';
 import { printDiff } from './utils/print-changes';
@@ -60,7 +64,7 @@ export interface ReleaseVersionGeneratorSchema {
   releaseGroup: ReleaseGroupWithName;
   projectGraph: ProjectGraph;
   specifier?: string;
-  specifierSource?: 'prompt' | 'conventional-commits';
+  specifierSource?: 'prompt' | 'conventional-commits' | 'version-plans';
   preid?: string;
   packageRoot?: string;
   currentVersionResolver?: 'registry' | 'disk' | 'git-tag';
@@ -68,11 +72,17 @@ export interface ReleaseVersionGeneratorSchema {
   fallbackCurrentVersionResolver?: 'disk';
   firstRelease?: boolean;
   // auto means the existing prefix will be preserved, and is the default behavior
-  versionPrefix?: typeof validReleaseVersionPrefixes[number];
+  versionPrefix?: (typeof validReleaseVersionPrefixes)[number];
   skipLockFileUpdate?: boolean;
   installArgs?: string;
   installIgnoreScripts?: boolean;
   conventionalCommitsConfig?: NxReleaseConfig['conventionalCommits'];
+  deleteVersionPlans?: boolean;
+  /**
+   * 'auto' allows users to opt into dependents being updated (a patch version bump) when a dependency is versioned.
+   * This is only applicable to independently released projects.
+   */
+  updateDependents?: 'never' | 'auto';
 }
 
 export interface NxReleaseVersionResult {
@@ -154,6 +164,17 @@ export async function releaseVersion(
     output.error(filterError);
     process.exit(1);
   }
+  const rawVersionPlans = await readRawVersionPlans();
+  setVersionPlansOnGroups(
+    rawVersionPlans,
+    releaseGroups,
+    Object.keys(projectGraph.nodes)
+  );
+
+  if (args.deleteVersionPlans === undefined) {
+    // default to not delete version plans after versioning as they may be needed for changelog generation
+    args.deleteVersionPlans = false;
+  }
 
   runPreVersionCommand(nxReleaseConfig.version.preVersionCommand, {
     dryRun: args.dryRun,
@@ -165,8 +186,14 @@ export async function releaseVersion(
   const versionData: VersionData = {};
   const commitMessage: string | undefined =
     args.gitCommitMessage || nxReleaseConfig.version.git.commitMessage;
-  const additionalChangedFiles = new Set<string>();
   const generatorCallbacks: (() => Promise<void>)[] = [];
+
+  /**
+   * additionalChangedFiles are files which need to be updated as a side-effect of versioning (such as package manager lock files),
+   * and need to get staged and committed as part of the existing commit, if applicable.
+   */
+  const additionalChangedFiles = new Set<string>();
+  const additionalDeletedFiles = new Set<string>();
 
   if (args.projects?.length) {
     /**
@@ -217,7 +244,7 @@ export async function releaseVersion(
         );
         // Capture the callback so that we can run it after flushing the changes to disk
         generatorCallbacks.push(async () => {
-          const changedFiles = await generatorCallback(tree, {
+          const result = await generatorCallback(tree, {
             dryRun: !!args.dryRun,
             verbose: !!args.verbose,
             generatorOptions: {
@@ -225,7 +252,10 @@ export async function releaseVersion(
               ...args.generatorOptionsOverrides,
             },
           });
+          const { changedFiles, deletedFiles } =
+            parseGeneratorCallbackResult(result);
           changedFiles.forEach((f) => additionalChangedFiles.add(f));
+          deletedFiles.forEach((f) => additionalDeletedFiles.add(f));
         });
       }
     }
@@ -262,18 +292,20 @@ export async function releaseVersion(
     }
 
     if (args.gitCommit ?? nxReleaseConfig.version.git.commit) {
-      await commitChanges(
+      await commitChanges({
         changedFiles,
-        !!args.dryRun,
-        !!args.verbose,
-        createCommitMessageValues(
+        deletedFiles: Array.from(additionalDeletedFiles),
+        isDryRun: !!args.dryRun,
+        isVerbose: !!args.verbose,
+        gitCommitMessages: createCommitMessageValues(
           releaseGroups,
           releaseGroupToFilteredProjects,
           versionData,
           commitMessage
         ),
-        args.gitCommitArgs || nxReleaseConfig.version.git.commitArgs
-      );
+        gitCommitArgs:
+          args.gitCommitArgs || nxReleaseConfig.version.git.commitArgs,
+      });
     } else if (args.stageChanges ?? nxReleaseConfig.version.git.stageChanges) {
       output.logSingleLine(`Staging changed files with git`);
       await gitAdd({
@@ -349,7 +381,7 @@ export async function releaseVersion(
       );
       // Capture the callback so that we can run it after flushing the changes to disk
       generatorCallbacks.push(async () => {
-        const changedFiles = await generatorCallback(tree, {
+        const result = await generatorCallback(tree, {
           dryRun: !!args.dryRun,
           verbose: !!args.verbose,
           generatorOptions: {
@@ -357,7 +389,10 @@ export async function releaseVersion(
             ...args.generatorOptionsOverrides,
           },
         });
+        const { changedFiles, deletedFiles } =
+          parseGeneratorCallbackResult(result);
         changedFiles.forEach((f) => additionalChangedFiles.add(f));
+        deletedFiles.forEach((f) => additionalDeletedFiles.add(f));
       });
     }
   }
@@ -405,18 +440,20 @@ export async function releaseVersion(
   }
 
   if (args.gitCommit ?? nxReleaseConfig.version.git.commit) {
-    await commitChanges(
+    await commitChanges({
       changedFiles,
-      !!args.dryRun,
-      !!args.verbose,
-      createCommitMessageValues(
+      deletedFiles: Array.from(additionalDeletedFiles),
+      isDryRun: !!args.dryRun,
+      isVerbose: !!args.verbose,
+      gitCommitMessages: createCommitMessageValues(
         releaseGroups,
         releaseGroupToFilteredProjects,
         versionData,
         commitMessage
       ),
-      args.gitCommitArgs || nxReleaseConfig.version.git.commitArgs
-    );
+      gitCommitArgs:
+        args.gitCommitArgs || nxReleaseConfig.version.git.commitArgs,
+    });
   } else if (args.stageChanges ?? nxReleaseConfig.version.git.stageChanges) {
     output.logSingleLine(`Staging changed files with git`);
     await gitAdd({
@@ -453,7 +490,7 @@ function appendVersionData(
   for (const [key, value] of Object.entries(newVersionData)) {
     if (existingVersionData[key]) {
       throw new Error(
-        `Version data key "${key}" already exists in version data. This is likely a bug.`
+        `Version data key "${key}" already exists in version data. This is likely a bug, please report your use-case on https://github.com/nrwl/nx`
       );
     }
     existingVersionData[key] = value;
@@ -485,6 +522,7 @@ async function runVersionOnProjects(
     releaseGroup,
     firstRelease: args.firstRelease ?? false,
     conventionalCommitsConfig,
+    deleteVersionPlans: args.deleteVersionPlans,
   };
 
   // Apply generator defaults from schema.json file etc
@@ -545,7 +583,7 @@ function printAndFlushChanges(tree: Tree, isDryRun: boolean) {
         joinPathFragments(tree.root, f.path)
       ).toString();
       printDiff(currentContentsOnDisk, f.content?.toString() || '');
-    } else if (f.type === 'DELETE') {
+    } else if (f.type === 'DELETE' && !f.path.includes('.nx')) {
       throw new Error(
         'Unexpected DELETE change, please report this as an issue'
       );
@@ -624,7 +662,7 @@ function resolveGeneratorData({
          */
         if (collectionName === '@nx/js') {
           throw new Error(
-            'The @nx/js plugin is required in order to version your JavaScript packages. Please install it and try again.'
+            'The @nx/js plugin is required in order to version your JavaScript packages. Run "nx add @nx/js" to add it to your workspace.'
           );
         }
         throw new Error(
@@ -674,5 +712,18 @@ function runPreVersionCommand(
       bodyLines: [preVersionCommand, e],
     });
     process.exit(1);
+  }
+}
+
+function parseGeneratorCallbackResult(
+  result: string[] | { changedFiles: string[]; deletedFiles: string[] }
+): { changedFiles: string[]; deletedFiles: string[] } {
+  if (Array.isArray(result)) {
+    return {
+      changedFiles: result,
+      deletedFiles: [],
+    };
+  } else {
+    return result;
   }
 }

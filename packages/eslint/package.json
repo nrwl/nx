@@ -13,7 +13,8 @@
     "Web",
     "Lint",
     "ESLint",
-    "CLI"
+    "CLI",
+    "Testing"
   ],
   "main": "./index",
   "typings": "./index.d.ts",
@@ -30,17 +31,18 @@
   "generators": "./generators.json",
   "executors": "./executors.json",
   "peerDependencies": {
-    "js-yaml": "4.1.0"
+    "@zkochan/js-yaml": "0.0.7",
+    "eslint": "^8.0.0 || ^9.0.0"
   },
   "dependencies": {
     "@nx/devkit": "file:../devkit",
     "@nx/js": "file:../js",
-    "eslint": "^8.0.0",
+    "semver": "^7.5.3",
     "tslib": "^2.3.0",
     "typescript": "~5.4.2"
   },
   "peerDependenciesMeta": {
-    "js-yaml": {
+    "@zkochan/js-yaml": {
       "optional": true
     }
   },

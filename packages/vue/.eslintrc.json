@@ -34,7 +34,8 @@
               "typescript",
               "@nx/cypress",
               "@nx/playwright",
-              "@nx/storybook"
+              "@nx/storybook",
+              "eslint"
             ]
           }
         ]

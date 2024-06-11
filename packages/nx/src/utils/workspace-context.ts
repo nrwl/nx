@@ -1,6 +1,8 @@
 import type { NxWorkspaceFilesExternals, WorkspaceContext } from '../native';
 import { performance } from 'perf_hooks';
 import { cacheDirectoryForWorkspace } from './cache-directory';
+import { isOnDaemon } from '../daemon/is-on-daemon';
+import { daemonClient } from '../daemon/client/client';
 
 let workspaceContext: WorkspaceContext | undefined;
 
@@ -20,15 +22,25 @@ export function setupWorkspaceContext(workspaceRoot: string) {
   );
 }
 
-export function getNxWorkspaceFilesFromContext(
+export async function getNxWorkspaceFilesFromContext(
   workspaceRoot: string,
   projectRootMap: Record<string, string>
 ) {
-  ensureContextAvailable(workspaceRoot);
-  return workspaceContext.getWorkspaceFiles(projectRootMap);
+  if (isOnDaemon() || !daemonClient.enabled()) {
+    ensureContextAvailable(workspaceRoot);
+    return workspaceContext.getWorkspaceFiles(projectRootMap);
+  }
+  return daemonClient.getWorkspaceFiles(projectRootMap);
 }
 
-export function globWithWorkspaceContext(
+/**
+ * Sync method to get files matching globs from workspace context.
+ * NOTE: This method will create the workspace context if it doesn't exist.
+ * It should only be used within Nx internal in code paths that **must** be sync.
+ * If used in an isolated plugin thread this will cause the workspace context
+ * to be recreated which is slow.
+ */
+export function globWithWorkspaceContextSync(
   workspaceRoot: string,
   globs: string[],
   exclude?: string[]
@@ -37,13 +49,29 @@ export function globWithWorkspaceContext(
   return workspaceContext.glob(globs, exclude);
 }
 
-export function hashWithWorkspaceContext(
+export async function globWithWorkspaceContext(
   workspaceRoot: string,
   globs: string[],
   exclude?: string[]
 ) {
-  ensureContextAvailable(workspaceRoot);
-  return workspaceContext.hashFilesMatchingGlob(globs, exclude);
+  if (isOnDaemon() || !daemonClient.enabled()) {
+    ensureContextAvailable(workspaceRoot);
+    return workspaceContext.glob(globs, exclude);
+  } else {
+    return daemonClient.glob(globs, exclude);
+  }
+}
+
+export async function hashWithWorkspaceContext(
+  workspaceRoot: string,
+  globs: string[],
+  exclude?: string[]
+) {
+  if (isOnDaemon() || !daemonClient.enabled()) {
+    ensureContextAvailable(workspaceRoot);
+    return workspaceContext.hashFilesMatchingGlob(globs, exclude);
+  }
+  return daemonClient.hashGlob(globs, exclude);
 }
 
 export function updateFilesInContext(
@@ -53,17 +81,23 @@ export function updateFilesInContext(
   return workspaceContext?.incrementalUpdate(updatedFiles, deletedFiles);
 }
 
-export function getAllFileDataInContext(workspaceRoot: string) {
-  ensureContextAvailable(workspaceRoot);
-  return workspaceContext.allFileData();
+export async function getAllFileDataInContext(workspaceRoot: string) {
+  if (isOnDaemon() || !daemonClient.enabled()) {
+    ensureContextAvailable(workspaceRoot);
+    return workspaceContext.allFileData();
+  }
+  return daemonClient.getWorkspaceContextFileData();
 }
 
-export function getFilesInDirectoryUsingContext(
+export async function getFilesInDirectoryUsingContext(
   workspaceRoot: string,
   dir: string
 ) {
-  ensureContextAvailable(workspaceRoot);
-  return workspaceContext.getFilesInDirectory(dir);
+  if (isOnDaemon() || !daemonClient.enabled()) {
+    ensureContextAvailable(workspaceRoot);
+    return workspaceContext.getFilesInDirectory(dir);
+  }
+  return daemonClient.getFilesInDirectory(dir);
 }
 
 export function updateProjectFiles(

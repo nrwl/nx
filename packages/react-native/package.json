@@ -9,7 +9,8 @@
     "Web",
     "Jest",
     "Native",
-    "CLI"
+    "CLI",
+    "Mobile"
   ],
   "homepage": "https://nx.dev",
   "bugs": {

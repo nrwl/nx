@@ -1891,7 +1891,7 @@
           },
           {
             "id": "node-aws-lambda",
-            "name": "Deploying AWS lambda in Node.js",
+            "name": "Deploying AWS lambda in Node.js (deprecated)",
             "description": "",
             "mediaImage": "",
             "file": "shared/recipes/deployment/node-aws-lambda",
@@ -2723,6 +2723,17 @@
             "itemList": [],
             "isExternal": false,
             "path": "/recipes/nx-release/configure-changelog-format",
+            "tags": ["nx-release"]
+          },
+          {
+            "id": "publish-custom-dist-directory",
+            "name": "Publish a Custom Dist Directory",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/recipes/nx-release/publish-custom-dist-directory",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/nx-release/publish-custom-dist-directory",
             "tags": ["nx-release"]
           }
         ],
@@ -3577,7 +3588,7 @@
       },
       {
         "id": "node-aws-lambda",
-        "name": "Deploying AWS lambda in Node.js",
+        "name": "Deploying AWS lambda in Node.js (deprecated)",
         "description": "",
         "mediaImage": "",
         "file": "shared/recipes/deployment/node-aws-lambda",
@@ -3637,7 +3648,7 @@
   },
   "/recipes/node/node-aws-lambda": {
     "id": "node-aws-lambda",
-    "name": "Deploying AWS lambda in Node.js",
+    "name": "Deploying AWS lambda in Node.js (deprecated)",
     "description": "",
     "mediaImage": "",
     "file": "shared/recipes/deployment/node-aws-lambda",
@@ -4901,14 +4912,14 @@
   },
   "/recipes/nx-console/console-troubleshooting": {
     "id": "console-troubleshooting",
-    "name": "Troubleshooting",
+    "name": "Troubleshooting Nx Console Issues",
     "description": "",
     "mediaImage": "",
     "file": "shared/recipes/console-troubleshooting",
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/nx-console/console-troubleshooting",
-    "tags": ["editor-setup"]
+    "tags": []
   },
   "/recipes/nx-release": {
     "id": "nx-release",
@@ -5026,6 +5037,17 @@
         "isExternal": false,
         "path": "/recipes/nx-release/configure-changelog-format",
         "tags": ["nx-release"]
+      },
+      {
+        "id": "publish-custom-dist-directory",
+        "name": "Publish a Custom Dist Directory",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/nx-release/publish-custom-dist-directory",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/nx-release/publish-custom-dist-directory",
+        "tags": ["nx-release"]
       }
     ],
     "isExternal": false,
@@ -5140,6 +5162,17 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/nx-release/configure-changelog-format",
+    "tags": ["nx-release"]
+  },
+  "/recipes/nx-release/publish-custom-dist-directory": {
+    "id": "publish-custom-dist-directory",
+    "name": "Publish a Custom Dist Directory",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/nx-release/publish-custom-dist-directory",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/nx-release/publish-custom-dist-directory",
     "tags": ["nx-release"]
   },
   "/recipes/other": {
@@ -5946,6 +5979,17 @@
         "isExternal": false,
         "path": "/reference/glossary",
         "tags": []
+      },
+      {
+        "id": "releases",
+        "name": "Releases",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/reference/releases",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/reference/releases",
+        "tags": []
       }
     ],
     "isExternal": false,
@@ -6029,6 +6073,17 @@
     "path": "/reference/glossary",
     "tags": []
   },
+  "/reference/releases": {
+    "id": "releases",
+    "name": "Releases",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/reference/releases",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/reference/releases",
+    "tags": []
+  },
   "/troubleshooting": {
     "id": "troubleshooting",
     "name": "Troubleshooting",
@@ -6090,6 +6145,17 @@
         "isExternal": false,
         "path": "/troubleshooting/performance-profiling",
         "tags": ["environment-variables"]
+      },
+      {
+        "id": "console-troubleshooting",
+        "name": "Troubleshooting Nx Console Issues",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/console-troubleshooting",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/nx-console/console-troubleshooting",
+        "tags": []
       }
     ],
     "isExternal": false,
@@ -6486,7 +6552,7 @@
         "file": "",
         "itemList": [],
         "isExternal": true,
-        "path": "/reference/nx-json#inputs-&-namedinputs",
+        "path": "/reference/nx-json#inputs-namedinputs",
         "tags": ["cache-task-results"]
       },
       {
@@ -6497,7 +6563,7 @@
         "file": "",
         "itemList": [],
         "isExternal": true,
-        "path": "/reference/project-configuration#inputs-&-namedinputs",
+        "path": "/reference/project-configuration#inputs-and-namedinputs",
         "tags": ["cache-task-results"]
       },
       {
@@ -6560,7 +6626,7 @@
     "path": "/reference/nx-json#tasks-runner-options",
     "tags": ["cache-task-results"]
   },
-  "/reference/nx-json#inputs-&-namedinputs": {
+  "/reference/nx-json#inputs-namedinputs": {
     "id": "nxjson-inputs",
     "name": "nx.json reference: inputs and namedInputs",
     "description": "",
@@ -6568,10 +6634,10 @@
     "file": "",
     "itemList": [],
     "isExternal": true,
-    "path": "/reference/nx-json#inputs-&-namedinputs",
+    "path": "/reference/nx-json#inputs-namedinputs",
     "tags": ["cache-task-results"]
   },
-  "/reference/project-configuration#inputs-&-namedinputs": {
+  "/reference/project-configuration#inputs-and-namedinputs": {
     "id": "project-config-inputs",
     "name": "Project Configuration reference: inputs and namedInputs",
     "description": "",
@@ -6579,7 +6645,7 @@
     "file": "",
     "itemList": [],
     "isExternal": true,
-    "path": "/reference/project-configuration#inputs-&-namedinputs",
+    "path": "/reference/project-configuration#inputs-and-namedinputs",
     "tags": ["cache-task-results"]
   },
   "/reference/nx-json#generators": {

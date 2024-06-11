@@ -2,6 +2,7 @@ import {
   addExtendsToLintConfig,
   findEslintFile,
   lintConfigHasOverride,
+  replaceOverridesInLintConfig,
 } from './eslint-file';
 
 import { Tree, readJson } from '@nx/devkit';
@@ -118,6 +119,126 @@ describe('@nx/eslint:lint-file', () => {
         'plugin:playwright/recommend',
         '../../.eslintrc',
       ]);
+    });
+  });
+
+  describe('replaceOverridesInLintConfig', () => {
+    it('should replace overrides when using flat config', () => {
+      tree.write('eslint.config.js', 'module.exports = {};');
+      tree.write(
+        'apps/demo/eslint.config.js',
+        `const baseConfig = require("../../eslint.config.js");
+
+module.exports = [
+  ...baseConfig,
+  {
+    files: [
+      "**/*.ts",
+      "**/*.tsx",
+      "**/*.js",
+      "**/*.jsx"
+    ],
+    rules: {}
+  },
+  {
+    files: [
+      "**/*.ts",
+      "**/*.tsx"
+    ],
+    rules: {}
+  },
+  {
+    files: [
+      "**/*.js",
+      "**/*.jsx"
+    ],
+    rules: {}
+  }
+];`
+      );
+
+      replaceOverridesInLintConfig(tree, 'apps/demo', [
+        {
+          files: ['*.ts'],
+          extends: [
+            'plugin:@nx/angular',
+            'plugin:@angular-eslint/template/process-inline-templates',
+          ],
+          rules: {
+            '@angular-eslint/directive-selector': [
+              'error',
+              {
+                type: 'attribute',
+                prefix: 'myOrg',
+                style: 'camelCase',
+              },
+            ],
+            '@angular-eslint/component-selector': [
+              'error',
+              {
+                type: 'element',
+                prefix: 'my-org',
+                style: 'kebab-case',
+              },
+            ],
+          },
+        },
+        {
+          files: ['*.html'],
+          extends: ['plugin:@nx/angular-template'],
+          rules: {},
+        },
+      ]);
+
+      expect(tree.read('apps/demo/eslint.config.js', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "const { FlatCompat } = require("@eslint/eslintrc");
+        const js = require("@eslint/js");
+        const baseConfig = require("../../eslint.config.js");
+
+        const compat = new FlatCompat({
+              baseDirectory: __dirname,
+              recommendedConfig: js.configs.recommended,
+            });
+          
+
+        module.exports = [
+          ...baseConfig,
+        ...compat.config({ extends: [
+                "plugin:@nx/angular",
+                "plugin:@angular-eslint/template/process-inline-templates"
+            ] }).map(config => ({
+            ...config,
+            files: ["**/*.ts"],
+            rules: {
+                ...config.rules,
+                "@angular-eslint/directive-selector": [
+                    "error",
+                    {
+                        type: "attribute",
+                        prefix: "myOrg",
+                        style: "camelCase"
+                    }
+                ],
+                "@angular-eslint/component-selector": [
+                    "error",
+                    {
+                        type: "element",
+                        prefix: "my-org",
+                        style: "kebab-case"
+                    }
+                ]
+            }
+        })),
+        ...compat.config({ extends: ["plugin:@nx/angular-template"] }).map(config => ({
+            ...config,
+            files: ["**/*.html"],
+            rules: {
+                ...config.rules
+            }
+        })),
+        ];"
+      `);
     });
   });
 });

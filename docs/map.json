@@ -576,7 +576,7 @@
                   "file": "shared/recipes/deployment/node-serverless-functions-netlify"
                 },
                 {
-                  "name": "Deploying AWS lambda in Node.js",
+                  "name": "Deploying AWS lambda in Node.js (deprecated)",
                   "id": "node-aws-lambda",
                   "tags": ["deployment", "node"],
                   "file": "shared/recipes/deployment/node-aws-lambda"
@@ -1042,6 +1042,12 @@
                   "id": "configure-changelog-format",
                   "tags": ["nx-release"],
                   "file": "shared/recipes/nx-release/configure-changelog-format"
+                },
+                {
+                  "name": "Publish a Custom Dist Directory",
+                  "id": "publish-custom-dist-directory",
+                  "tags": ["nx-release"],
+                  "file": "shared/recipes/nx-release/publish-custom-dist-directory"
                 }
               ]
             },
@@ -1237,6 +1243,12 @@
               "id": "glossary",
               "tags": [],
               "file": "shared/reference/glossary"
+            },
+            {
+              "name": "Releases",
+              "id": "releases",
+              "tags": [],
+              "file": "shared/reference/releases"
             }
           ]
         },
@@ -1273,6 +1285,12 @@
               "id": "performance-profiling",
               "tags": ["environment-variables"],
               "file": "shared/guides/performance-profiling"
+            },
+            {
+              "name": "Troubleshooting Nx Console Issues",
+              "id": "console-troubleshooting",
+              "path": "/recipes/nx-console/console-troubleshooting",
+              "file": "shared/recipes/console-troubleshooting"
             }
           ]
         },
@@ -1385,7 +1403,7 @@
               "id": "nxjson-inputs",
               "file": "",
               "tags": ["cache-task-results"],
-              "path": "/reference/nx-json#inputs-&-namedinputs",
+              "path": "/reference/nx-json#inputs-namedinputs",
               "isExternal": true
             },
             {
@@ -1393,7 +1411,7 @@
               "id": "project-config-inputs",
               "file": "",
               "tags": ["cache-task-results"],
-              "path": "/reference/project-configuration#inputs-&-namedinputs",
+              "path": "/reference/project-configuration#inputs-and-namedinputs",
               "isExternal": true
             },
             {
@@ -1795,6 +1813,11 @@
                       "name": "Advanced Configuration",
                       "id": "advanced-config",
                       "file": "nx-cloud/enterprise/on-premise/advanced-config"
+                    },
+                    {
+                      "name": "Custom GitHub App",
+                      "id": "custom-github-app",
+                      "file": "nx-cloud/enterprise/on-premise/custom-github-app"
                     }
                   ]
                 },

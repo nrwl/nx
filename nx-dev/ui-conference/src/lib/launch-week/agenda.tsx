@@ -70,7 +70,7 @@ export function LaunchWeekAgenda(): JSX.Element {
 
   return (
     <div className="border-t border-slate-200 dark:border-slate-700">
-      <section className="w-full divide-y divide-slate-200 border-t border-b border-slate-200 dark:divide-slate-700 dark:border-slate-700">
+      <section className="w-full divide-y divide-slate-200 border-b border-t border-slate-200 dark:divide-slate-700 dark:border-slate-700">
         <div className="mx-auto max-w-screen-lg xl:max-w-screen-xl">
           <article className="md:divide-x md:divide-slate-200 md:dark:divide-slate-700">
             <div className="px-5 py-12 md:pr-12">
@@ -82,7 +82,7 @@ export function LaunchWeekAgenda(): JSX.Element {
                 rel="noreferrer"
                 target="_blank"
                 href="https://youtu.be/fy0K2Smyj5A"
-                className="font-input-mono group flex w-full items-center text-blue-500 dark:text-sky-500 sm:text-xl"
+                className="font-input-mono group flex w-full items-center text-blue-500 sm:text-xl dark:text-sky-500"
               >
                 <span className="group-hover:underline">
                   Watch the conference recording
@@ -128,7 +128,7 @@ const launchWeekScheduleRow = (item: ScheduleItem): JSX.Element => (
       <article className="grid w-full grid-cols-1 md:grid-cols-5 md:divide-x md:divide-slate-200 md:dark:divide-slate-700">
         <div className="font-input-mono flex items-center px-5 py-6">
           <span className="hidden md:block">{item.time}</span>
-          <span className="mb-4 rounded-md py-4 px-6 md:hidden">
+          <span className="mb-4 rounded-md px-6 py-4 md:hidden">
             {item.time}
           </span>
         </div>

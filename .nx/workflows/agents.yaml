@@ -25,10 +25,10 @@ launch-templates:
       - name: Install e2e deps
         script: |
           sudo apt-get update
-          sudo apt-get install -y ca-certificates lsof
+          sudo apt-get install -y ca-certificates lsof libvips-dev libglib2.0-dev libgirepository1.0-dev
       - name: Install Pnpm
         script: |
-          npm install -g pnpm@8.15.5
+          npm install -g pnpm@8
 
       - name: Pnpm Install
         script: |

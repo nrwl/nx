@@ -412,7 +412,7 @@ describe('pnpm LockFile utility', () => {
           "data": {
             "hash": "https://codeload.github.com/charsleysa/postgres/tar.gz/3b1a01b2da3e2fafb1a79006f838eff11a8de3cb",
             "packageName": "postgres",
-            "version": "github.com/charsleysa/postgres/3b1a01b2da3e2fafb1a79006f838eff11a8de3cb",
+            "version": "https://codeload.github.com/charsleysa/postgres/tar.gz/3b1a01b2da3e2fafb1a79006f838eff11a8de3cb",
           },
           "name": "npm:postgres",
           "type": "npm",
@@ -452,7 +452,7 @@ describe('pnpm LockFile utility', () => {
           'eslint-plugin-disable-autofix':
             'npm:@mattlewis92/eslint-plugin-disable-autofix@3.0.0',
           postgres:
-            'github.com/charsleysa/postgres/3b1a01b2da3e2fafb1a79006f838eff11a8de3cb',
+            'https://codeload.github.com/charsleysa/postgres/tar.gz/3b1a01b2da3e2fafb1a79006f838eff11a8de3cb',
           yargs: '17.6.2',
         },
         devDependencies: {
@@ -573,7 +573,6 @@ describe('pnpm LockFile utility', () => {
         );
       }
       graph = builder.getUpdatedProjectGraph();
-
       expect(Object.keys(graph.externalNodes).length).toEqual(370);
       expect(Object.keys(graph.dependencies).length).toEqual(213);
       expect(graph.dependencies['npm:@nrwl/devkit'].length).toEqual(6);
@@ -655,7 +654,6 @@ describe('pnpm LockFile utility', () => {
         'node_modules/cliui/package.json': '{"version": "7.0.4"}',
         'node_modules/js-yaml/package.json': '{"version": "4.1.0"}',
         'node_modules/minimatch/package.json': '{"version": "3.0.5"}',
-        'node_modules/tslib/package.json': '{"version": "2.4.1"}',
         'node_modules/.modules.yaml': require(joinPathFragments(
           __dirname,
           '__fixtures__/pruning/.modules.yaml'
@@ -708,6 +706,20 @@ describe('pnpm LockFile utility', () => {
           );
         }
         graph = builder.getUpdatedProjectGraph();
+      });
+
+      it('should parse hoisted versions', () => {
+        expect(graph.externalNodes['npm:tslib']).toMatchInlineSnapshot(`
+          {
+            "data": {
+              "hash": "sha512-336iVw3rtn2BUK7ORdIAHTyxHGRIHVReokCR3XjbckJMK7ms8FysBfhLR8IXnAgy7T0PTPNBWKiH514FOW/WSg==",
+              "packageName": "tslib",
+              "version": "2.5.0",
+            },
+            "name": "npm:tslib",
+            "type": "npm",
+          }
+        `);
       });
 
       it('should prune single package', () => {
@@ -795,6 +807,20 @@ describe('pnpm LockFile utility', () => {
         graph = builder.getUpdatedProjectGraph();
       });
 
+      it('should parse hoisted versions', () => {
+        expect(graph.externalNodes['npm:tslib']).toMatchInlineSnapshot(`
+          {
+            "data": {
+              "hash": "sha512-336iVw3rtn2BUK7ORdIAHTyxHGRIHVReokCR3XjbckJMK7ms8FysBfhLR8IXnAgy7T0PTPNBWKiH514FOW/WSg==",
+              "packageName": "tslib",
+              "version": "2.5.0",
+            },
+            "name": "npm:tslib",
+            "type": "npm",
+          }
+        `);
+      });
+
       it('should prune single package', () => {
         const typescriptPackageJson = require(joinPathFragments(
           __dirname,
@@ -829,6 +855,105 @@ describe('pnpm LockFile utility', () => {
           require(joinPathFragments(
             __dirname,
             '__fixtures__/pruning/devkit-yargs/pnpm-lock-v6.yaml'
+          )).default
+        );
+      });
+    });
+
+    describe('v9.0', () => {
+      beforeEach(() => {
+        lockFile = require(joinPathFragments(
+          __dirname,
+          '__fixtures__/pruning/pnpm-lock-v9.yaml'
+        )).default;
+        lockFileHash = '__fixtures__/pruning/pnpm-lock-v9.yaml';
+
+        const externalNodes = getPnpmLockfileNodes(lockFile, lockFileHash);
+        graph = {
+          nodes: {},
+          dependencies: {},
+          externalNodes,
+        };
+        const ctx: CreateDependenciesContext = {
+          projects: {},
+          externalNodes,
+          fileMap: {
+            nonProjectFiles: [],
+            projectFileMap: {},
+          },
+          filesToProcess: {
+            nonProjectFiles: [],
+            projectFileMap: {},
+          },
+          nxJsonConfiguration: null,
+          workspaceRoot: '/virtual',
+        };
+        const dependencies = getPnpmLockfileDependencies(
+          lockFile,
+          lockFileHash,
+          ctx
+        );
+
+        const builder = new ProjectGraphBuilder(graph);
+        for (const dep of dependencies) {
+          builder.addDependency(
+            dep.source,
+            dep.target,
+            dep.type,
+            'sourceFile' in dep ? dep.sourceFile : null
+          );
+        }
+        graph = builder.getUpdatedProjectGraph();
+      });
+
+      it('should parse hoisted versions', () => {
+        expect(graph.externalNodes['npm:tslib']).toMatchInlineSnapshot(`
+          {
+            "data": {
+              "hash": "sha512-336iVw3rtn2BUK7ORdIAHTyxHGRIHVReokCR3XjbckJMK7ms8FysBfhLR8IXnAgy7T0PTPNBWKiH514FOW/WSg==",
+              "packageName": "tslib",
+              "version": "2.5.0",
+            },
+            "name": "npm:tslib",
+            "type": "npm",
+          }
+        `);
+      });
+
+      it('should prune single package', () => {
+        const typescriptPackageJson = require(joinPathFragments(
+          __dirname,
+          '__fixtures__/pruning/typescript/package.json'
+        ));
+        const prunedGraph = pruneProjectGraph(graph, typescriptPackageJson);
+        const result = stringifyPnpmLockfile(
+          prunedGraph,
+          lockFile,
+          typescriptPackageJson
+        );
+        expect(result).toEqual(
+          require(joinPathFragments(
+            __dirname,
+            '__fixtures__/pruning/typescript/pnpm-lock-v9.yaml'
+          )).default
+        );
+      });
+
+      it('should prune multi packages', () => {
+        const multiPackageJson = require(joinPathFragments(
+          __dirname,
+          '__fixtures__/pruning/devkit-yargs/package.json'
+        ));
+        const prunedGraph = pruneProjectGraph(graph, multiPackageJson);
+        const result = stringifyPnpmLockfile(
+          prunedGraph,
+          lockFile,
+          multiPackageJson
+        );
+        expect(result).toEqual(
+          require(joinPathFragments(
+            __dirname,
+            '__fixtures__/pruning/devkit-yargs/pnpm-lock-v9.yaml'
           )).default
         );
       });
@@ -878,7 +1003,7 @@ describe('pnpm LockFile utility', () => {
           '{"version": "3.0.0"}',
         'node_modules/string-width/package.json': '{"version": "5.1.2"}',
         'node_modules/string-width-cjs/package.json': '{"version": "4.2.3"}',
-        'node_modules/strip-ansi/package.json': '{"version": "7.0.1"}',
+        'node_modules/strip-ansi/package.json': '{"version": "7.1.0"}',
         'node_modules/strip-ansi-cjs/package.json': '{"version": "6.0.1"}',
         'node_modules/wrap-ansi/package.json': '{"version": "8.1.0"}',
         'node_modules/wrap-ansi-cjs/package.json': '{"version": "7.0.0"}',
@@ -888,15 +1013,15 @@ describe('pnpm LockFile utility', () => {
         )).default,
       };
       vol.fromJSON(fileSys, '/root');
+    });
 
+    it('should parse classic and prune packages with mixed keys (v6)', () => {
       lockFile = require(joinPathFragments(
         __dirname,
         '__fixtures__/mixed-keys/pnpm-lock.yaml'
       )).default;
       lockFileHash = '__fixtures__/mixed-keys/pnpm-lock.yaml';
-    });
 
-    it('should parse classic and prune packages with mixed keys', () => {
       const packageJson = require(joinPathFragments(
         __dirname,
         '__fixtures__/mixed-keys/package.json'
@@ -1076,6 +1201,15 @@ describe('pnpm LockFile utility', () => {
             "name": "npm:string-width@4.2.3",
             "type": "npm",
           },
+          "npm:strip-ansi": {
+            "data": {
+              "hash": "sha512-iq6eVVI64nQQTRYq2KtEg2d2uU7LElhTJwsH4YzIHZshxlgZms/wIc4VoDQTlG/IvVIrBKG06CrZnp0qv7hkcQ==",
+              "packageName": "strip-ansi",
+              "version": "7.1.0",
+            },
+            "name": "npm:strip-ansi",
+            "type": "npm",
+          },
           "npm:strip-ansi-cjs": {
             "data": {
               "hash": "sha512-Y38VPSHcqkFrCpFnQ9vuSXmquuv5oXOKpGeT6aGrr3o3Gc9AlVa6JBfUSOCnbxGGZF+/0ooI7KrPuUSztUdU5A==",
@@ -1092,15 +1226,6 @@ describe('pnpm LockFile utility', () => {
               "version": "6.0.1",
             },
             "name": "npm:strip-ansi@6.0.1",
-            "type": "npm",
-          },
-          "npm:strip-ansi@7.1.0": {
-            "data": {
-              "hash": "sha512-iq6eVVI64nQQTRYq2KtEg2d2uU7LElhTJwsH4YzIHZshxlgZms/wIc4VoDQTlG/IvVIrBKG06CrZnp0qv7hkcQ==",
-              "packageName": "strip-ansi",
-              "version": "7.1.0",
-            },
-            "name": "npm:strip-ansi@7.1.0",
             "type": "npm",
           },
           "npm:wrap-ansi": {
@@ -1136,6 +1261,326 @@ describe('pnpm LockFile utility', () => {
       const prunedGraph = pruneProjectGraph(graph, packageJson);
       const result = stringifyPnpmLockfile(prunedGraph, lockFile, packageJson);
       expect(result).toEqual(lockFile);
+    });
+
+    it('should parse classic and prune packages with mixed keys (v9)', () => {
+      lockFile = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/mixed-keys/pnpm-lock-v9.yaml'
+      )).default;
+      lockFileHash = '__fixtures__/mixed-keys/pnpm-lock-v9.yaml';
+
+      const packageJson = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/mixed-keys/package.json'
+      ));
+
+      const externalNodes = getPnpmLockfileNodes(lockFile, lockFileHash);
+      let graph: ProjectGraph = {
+        nodes: {},
+        dependencies: {},
+        externalNodes,
+      };
+      const ctx: CreateDependenciesContext = {
+        projects: {},
+        externalNodes,
+        fileMap: {
+          nonProjectFiles: [],
+          projectFileMap: {},
+        },
+        filesToProcess: {
+          nonProjectFiles: [],
+          projectFileMap: {},
+        },
+        nxJsonConfiguration: null,
+        workspaceRoot: '/virtual',
+      };
+      const dependencies = getPnpmLockfileDependencies(
+        lockFile,
+        lockFileHash,
+        ctx
+      );
+
+      const builder = new ProjectGraphBuilder(graph);
+      for (const dep of dependencies) {
+        builder.addDependency(
+          dep.source,
+          dep.target,
+          dep.type,
+          'sourceFile' in dep ? dep.sourceFile : null
+        );
+      }
+      graph = builder.getUpdatedProjectGraph();
+
+      expect(graph.externalNodes).toMatchInlineSnapshot(`
+        {
+          "npm:@isaacs/cliui": {
+            "data": {
+              "hash": "sha512-O8jcjabXaleOG9DQ0+ARXWZBTfnP4WNAqzuiJK7ll44AmxGKv/J2M4TPjxjY3znBCfvBXFzucm1twdyFybFqEA==",
+              "packageName": "@isaacs/cliui",
+              "version": "8.0.2",
+            },
+            "name": "npm:@isaacs/cliui",
+            "type": "npm",
+          },
+          "npm:ansi-regex": {
+            "data": {
+              "hash": "sha512-quJQXlTSUGL2LH9SUXo8VwsY4soanhgo6LNSm84E1LBcE8s3O0wpdiRzyR9z/ZZJMlMWv37qOOb9pdJlMUEKFQ==",
+              "packageName": "ansi-regex",
+              "version": "5.0.1",
+            },
+            "name": "npm:ansi-regex",
+            "type": "npm",
+          },
+          "npm:ansi-regex@6.0.1": {
+            "data": {
+              "hash": "sha512-n5M855fKb2SsfMIiFFoVrABHJC8QtHwVx+mHWP3QcEqBHYienj5dHSgjbxtC0WEZXYt4wcD6zrQElDPhFuZgfA==",
+              "packageName": "ansi-regex",
+              "version": "6.0.1",
+            },
+            "name": "npm:ansi-regex@6.0.1",
+            "type": "npm",
+          },
+          "npm:ansi-styles": {
+            "data": {
+              "hash": "sha512-zbB9rCJAT1rbjiVDb2hqKFHNYLxgtk8NURxZ3IZwD3F6NtxbXZQCnnSi1Lkx+IDohdPlFp222wVALIheZJQSEg==",
+              "packageName": "ansi-styles",
+              "version": "4.3.0",
+            },
+            "name": "npm:ansi-styles",
+            "type": "npm",
+          },
+          "npm:ansi-styles@6.2.1": {
+            "data": {
+              "hash": "sha512-bN798gFfQX+viw3R7yrGWRqnrN2oRkEkUjjl4JNn4E8GxxbjtG3FbrEIIY3l8/hrwUwIeCZvi4QuOTP4MErVug==",
+              "packageName": "ansi-styles",
+              "version": "6.2.1",
+            },
+            "name": "npm:ansi-styles@6.2.1",
+            "type": "npm",
+          },
+          "npm:cliui": {
+            "data": {
+              "hash": "sha512-BSeNnyus75C4//NQ9gQt1/csTXyo/8Sb+afLAkzAptFuMsod9HFokGNudZpi/oQV73hnVK+sR+5PVRMd+Dr7YQ==",
+              "packageName": "cliui",
+              "version": "8.0.1",
+            },
+            "name": "npm:cliui",
+            "type": "npm",
+          },
+          "npm:color-convert": {
+            "data": {
+              "hash": "sha512-RRECPsj7iu/xb5oKYcsFHSppFNnsj/52OVTRKb4zP5onXwVF3zVmmToNcOfGC+CRDpfK/U584fMg38ZHCaElKQ==",
+              "packageName": "color-convert",
+              "version": "2.0.1",
+            },
+            "name": "npm:color-convert",
+            "type": "npm",
+          },
+          "npm:color-name": {
+            "data": {
+              "hash": "sha512-dOy+3AuW3a2wNbZHIuMZpTcgjGuLU/uBL/ubcZF9OXbDo8ff4O8yVp5Bf0efS8uEoYo5q4Fx7dY9OgQGXgAsQA==",
+              "packageName": "color-name",
+              "version": "1.1.4",
+            },
+            "name": "npm:color-name",
+            "type": "npm",
+          },
+          "npm:eastasianwidth": {
+            "data": {
+              "hash": "sha512-I88TYZWc9XiYHRQ4/3c5rjjfgkjhLyW2luGIheGERbNQ6OY7yTybanSpDXZa8y7VUP9YmDcYa+eyq4ca7iLqWA==",
+              "packageName": "eastasianwidth",
+              "version": "0.2.0",
+            },
+            "name": "npm:eastasianwidth",
+            "type": "npm",
+          },
+          "npm:emoji-regex": {
+            "data": {
+              "hash": "sha512-MSjYzcWNOA0ewAHpz0MxpYFvwg6yjy1NG3xteoqz644VCo/RPgnr1/GGt+ic3iJTzQ8Eu3TdM14SawnVUmGE6A==",
+              "packageName": "emoji-regex",
+              "version": "8.0.0",
+            },
+            "name": "npm:emoji-regex",
+            "type": "npm",
+          },
+          "npm:emoji-regex@9.2.2": {
+            "data": {
+              "hash": "sha512-L18DaJsXSUk2+42pv8mLs5jJT2hqFkFE4j21wOmgbUqsZ2hL72NsUU785g9RXgo3s0ZNgVl42TiHp3ZtOv/Vyg==",
+              "packageName": "emoji-regex",
+              "version": "9.2.2",
+            },
+            "name": "npm:emoji-regex@9.2.2",
+            "type": "npm",
+          },
+          "npm:is-fullwidth-code-point": {
+            "data": {
+              "hash": "sha512-zymm5+u+sCsSWyD9qNaejV3DFvhCKclKdizYaJUuHA83RLjb7nSuGnddCHGv0hk+KY7BMAlsWeK4Ueg6EV6XQg==",
+              "packageName": "is-fullwidth-code-point",
+              "version": "3.0.0",
+            },
+            "name": "npm:is-fullwidth-code-point",
+            "type": "npm",
+          },
+          "npm:string-width": {
+            "data": {
+              "hash": "sha512-HnLOCR3vjcY8beoNLtcjZ5/nxn2afmME6lhrDrebokqMap+XbeW8n9TXpPDOqdGK5qcI3oT0GKTW6wC7EMiVqA==",
+              "packageName": "string-width",
+              "version": "5.1.2",
+            },
+            "name": "npm:string-width",
+            "type": "npm",
+          },
+          "npm:string-width-cjs": {
+            "data": {
+              "hash": "sha512-wKyQRQpjJ0sIp62ErSZdGsjMJWsap5oRNihHhu6G7JVO/9jIB6UyevL+tXuOqrng8j/cxKTWyWUwvSTriiZz/g==",
+              "packageName": "string-width-cjs",
+              "version": "npm:string-width@4.2.3",
+            },
+            "name": "npm:string-width-cjs",
+            "type": "npm",
+          },
+          "npm:string-width@4.2.3": {
+            "data": {
+              "hash": "sha512-wKyQRQpjJ0sIp62ErSZdGsjMJWsap5oRNihHhu6G7JVO/9jIB6UyevL+tXuOqrng8j/cxKTWyWUwvSTriiZz/g==",
+              "packageName": "string-width",
+              "version": "4.2.3",
+            },
+            "name": "npm:string-width@4.2.3",
+            "type": "npm",
+          },
+          "npm:strip-ansi": {
+            "data": {
+              "hash": "sha512-iq6eVVI64nQQTRYq2KtEg2d2uU7LElhTJwsH4YzIHZshxlgZms/wIc4VoDQTlG/IvVIrBKG06CrZnp0qv7hkcQ==",
+              "packageName": "strip-ansi",
+              "version": "7.1.0",
+            },
+            "name": "npm:strip-ansi",
+            "type": "npm",
+          },
+          "npm:strip-ansi-cjs": {
+            "data": {
+              "hash": "sha512-Y38VPSHcqkFrCpFnQ9vuSXmquuv5oXOKpGeT6aGrr3o3Gc9AlVa6JBfUSOCnbxGGZF+/0ooI7KrPuUSztUdU5A==",
+              "packageName": "strip-ansi-cjs",
+              "version": "npm:strip-ansi@6.0.1",
+            },
+            "name": "npm:strip-ansi-cjs",
+            "type": "npm",
+          },
+          "npm:strip-ansi@6.0.1": {
+            "data": {
+              "hash": "sha512-Y38VPSHcqkFrCpFnQ9vuSXmquuv5oXOKpGeT6aGrr3o3Gc9AlVa6JBfUSOCnbxGGZF+/0ooI7KrPuUSztUdU5A==",
+              "packageName": "strip-ansi",
+              "version": "6.0.1",
+            },
+            "name": "npm:strip-ansi@6.0.1",
+            "type": "npm",
+          },
+          "npm:wrap-ansi": {
+            "data": {
+              "hash": "sha512-si7QWI6zUMq56bESFvagtmzMdGOtoxfR+Sez11Mobfc7tm+VkUckk9bW2UeffTGVUbOksxmSw0AA2gs8g71NCQ==",
+              "packageName": "wrap-ansi",
+              "version": "8.1.0",
+            },
+            "name": "npm:wrap-ansi",
+            "type": "npm",
+          },
+          "npm:wrap-ansi-cjs": {
+            "data": {
+              "hash": "sha512-YVGIj2kamLSTxw6NsZjoBxfSwsn0ycdesmc4p+Q21c5zPuZ1pl+NfxVdxPtdHvmNVOQ6XSYG4AUtyt/Fi7D16Q==",
+              "packageName": "wrap-ansi-cjs",
+              "version": "npm:wrap-ansi@7.0.0",
+            },
+            "name": "npm:wrap-ansi-cjs",
+            "type": "npm",
+          },
+          "npm:wrap-ansi@7.0.0": {
+            "data": {
+              "hash": "sha512-YVGIj2kamLSTxw6NsZjoBxfSwsn0ycdesmc4p+Q21c5zPuZ1pl+NfxVdxPtdHvmNVOQ6XSYG4AUtyt/Fi7D16Q==",
+              "packageName": "wrap-ansi",
+              "version": "7.0.0",
+            },
+            "name": "npm:wrap-ansi@7.0.0",
+            "type": "npm",
+          },
+        }
+      `);
+
+      const prunedGraph = pruneProjectGraph(graph, packageJson);
+      const result = stringifyPnpmLockfile(prunedGraph, lockFile, packageJson);
+      expect(result).toEqual(lockFile);
+    });
+  });
+
+  describe('regression check', () => {
+    let lockFile, lockFileHash, prunedLockFile;
+
+    beforeEach(() => {
+      const fileSys = {
+        'node_modules/.modules.yaml': require(joinPathFragments(
+          __dirname,
+          '__fixtures__/pnpm-regression/.modules.yaml'
+        )).default,
+      };
+      vol.fromJSON(fileSys, '/root');
+    });
+
+    it('should correctly prune the lock file', () => {
+      lockFile = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/pnpm-regression/pnpm-lock.yaml'
+      )).default;
+      prunedLockFile = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/pnpm-regression/pruned-pnpm-lock.yaml'
+      )).default;
+      lockFileHash = '__fixtures__/pnpm-regression/pnpm-lock.yaml';
+
+      const packageJson = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/pnpm-regression/package.json'
+      ));
+
+      const externalNodes = getPnpmLockfileNodes(lockFile, lockFileHash);
+      let graph: ProjectGraph = {
+        nodes: {},
+        dependencies: {},
+        externalNodes,
+      };
+      const ctx: CreateDependenciesContext = {
+        projects: {},
+        externalNodes,
+        fileMap: {
+          nonProjectFiles: [],
+          projectFileMap: {},
+        },
+        filesToProcess: {
+          nonProjectFiles: [],
+          projectFileMap: {},
+        },
+        nxJsonConfiguration: null,
+        workspaceRoot: '/virtual',
+      };
+      const dependencies = getPnpmLockfileDependencies(
+        lockFile,
+        lockFileHash,
+        ctx
+      );
+
+      const builder = new ProjectGraphBuilder(graph);
+      for (const dep of dependencies) {
+        builder.addDependency(
+          dep.source,
+          dep.target,
+          dep.type,
+          'sourceFile' in dep ? dep.sourceFile : null
+        );
+      }
+      graph = builder.getUpdatedProjectGraph();
+
+      const prunedGraph = pruneProjectGraph(graph, packageJson);
+      const result = stringifyPnpmLockfile(prunedGraph, lockFile, packageJson);
+      expect(result).toEqual(prunedLockFile);
     });
   });
 });

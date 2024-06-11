@@ -1,22 +1,29 @@
 import { ArrowTopRightOnSquareIcon } from '@heroicons/react/24/outline';
+import { twMerge } from 'tailwind-merge';
 
 export function ExternalLink({
-  text,
+  children,
   href,
   title,
+  className,
 }: {
-  text: string;
+  children?: React.ReactNode;
   href: string;
+  className?: string;
   title?: string;
 }) {
   return (
     <a
       href={href}
       title={title}
-      className="text-slate-500 dark:text-slate-400 hover:underline inline-flex items-center gap-2"
+      className={twMerge(
+        'gap-2 text-slate-500 hover:underline dark:text-slate-400',
+        className
+      )}
       target="_blank"
+      rel="noreferrer"
     >
-      {text} <ArrowTopRightOnSquareIcon className="w-4 h-4 inline" />
+      {children} <ArrowTopRightOnSquareIcon className="inline h-4 w-4" />
     </a>
   );
 }

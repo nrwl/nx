@@ -223,7 +223,7 @@ describe('ast-utils', () => {
     ];`;
       const result = addCompatToFlatConfig(content);
       expect(result).toMatchInlineSnapshot(`
-        "const FlatCompat = require("@eslint/eslintrc");
+        "const { FlatCompat } = require("@eslint/eslintrc");
         const js = require("@eslint/js");
         const baseConfig = require("../../eslint.config.js");
            
@@ -262,7 +262,7 @@ describe('ast-utils', () => {
     ];`;
       const result = addCompatToFlatConfig(content);
       expect(result).toMatchInlineSnapshot(`
-        "const FlatCompat = require("@eslint/eslintrc");
+        "const { FlatCompat } = require("@eslint/eslintrc");
         const baseConfig = require("../../eslint.config.js");
             const js = require("@eslint/js");
            

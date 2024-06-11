@@ -17,7 +17,7 @@ import { basename, dirname, join, relative } from 'node:path';
 import { minimatch } from 'minimatch';
 // eslint-disable-next-line @typescript-eslint/no-restricted-imports
 import { getLockFileName } from 'nx/src/plugins/js/lock-file/lock-file';
-import { projectGraphCacheDirectory } from 'nx/src/utils/cache-directory';
+import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import type { ParsedCommandLine } from 'typescript';
 import { readTsConfig } from '../../utils/typescript/ts-config';
 
@@ -49,29 +49,26 @@ interface NormalizedPluginOptions {
       };
 }
 
-const cachePath = join(projectGraphCacheDirectory, 'tsc.hash');
-const targetsCache = existsSync(cachePath) ? readTargetsCache() : {};
-
-const calculatedTargets: Record<
-  string,
-  Record<string, TargetConfiguration>
-> = {};
+const cachePath = join(workspaceDataDirectory, 'tsc.hash');
+const targetsCache = readTargetsCache();
 
 function readTargetsCache(): Record<
   string,
   Record<string, TargetConfiguration<unknown>>
 > {
-  return readJsonFile(cachePath);
+  return existsSync(cachePath) ? readJsonFile(cachePath) : {};
 }
 
-function writeTargetsToCache(
-  targets: Record<string, Record<string, TargetConfiguration<unknown>>>
-) {
-  writeJsonFile(cachePath, targets);
+function writeTargetsToCache() {
+  const oldCache = readTargetsCache();
+  writeJsonFile(cachePath, {
+    ...oldCache,
+    ...targetsCache,
+  });
 }
 
 export const createDependencies: CreateDependencies = () => {
-  writeTargetsToCache(calculatedTargets);
+  writeTargetsToCache();
   return [];
 };
 
@@ -79,7 +76,7 @@ export const PLUGIN_NAME = '@nx/js/typescript';
 
 export const createNodes: CreateNodes<TscPluginOptions> = [
   '**/tsconfig*.json',
-  (configFilePath, options, context) => {
+  async (configFilePath, options, context) => {
     const pluginOptions = normalizePluginOptions(options);
     const projectRoot = dirname(configFilePath);
     const fullConfigPath = joinPathFragments(
@@ -104,7 +101,7 @@ export const createNodes: CreateNodes<TscPluginOptions> = [
       return {};
     }
 
-    const nodeHash = calculateHashForCreateNodes(
+    const nodeHash = await calculateHashForCreateNodes(
       projectRoot,
       pluginOptions,
       context,
@@ -113,17 +110,18 @@ export const createNodes: CreateNodes<TscPluginOptions> = [
     // The hash is calculated at the node/project level, so we add the config file path to avoid conflicts when caching
     const cacheKey = `${nodeHash}_${configFilePath}`;
 
-    const targets = targetsCache[cacheKey]
-      ? targetsCache[cacheKey]
-      : buildTscTargets(fullConfigPath, projectRoot, pluginOptions, context);
-
-    calculatedTargets[cacheKey] = targets;
+    targetsCache[cacheKey] ??= buildTscTargets(
+      fullConfigPath,
+      projectRoot,
+      pluginOptions,
+      context
+    );
 
     return {
       projects: {
         [projectRoot]: {
           projectType: 'library',
-          targets,
+          targets: targetsCache[cacheKey],
         },
       },
     };

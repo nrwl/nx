@@ -9,10 +9,12 @@ import {
   PlayCircleIcon,
   ShareIcon,
   Squares2X2Icon,
+  ChatBubbleBottomCenterTextIcon,
 } from '@heroicons/react/24/outline';
 import { FC, SVGProps } from 'react';
 import { NxAgentsIcon } from '../nx-agents-icon';
 import { NxReplayIcon } from '../nx-replay-icon';
+import { DiscordIcon } from '../discord-icon';
 
 export interface MenuItem {
   name: string;
@@ -183,6 +185,22 @@ export const learnItems: MenuItem[] = [
     isNew: false,
     isHighlight: false,
   },
+  {
+    name: 'Community',
+    description: null,
+    href: '/community',
+    icon: ChatBubbleBottomCenterTextIcon,
+    isNew: false,
+    isHighlight: false,
+  },
+  {
+    name: 'Discord',
+    description: null,
+    href: 'https://go.nx.dev/community',
+    icon: DiscordIcon,
+    isNew: false,
+    isHighlight: false,
+  },
 ];
 export const eventItems: MenuItem[] = [
   {
@@ -198,7 +216,7 @@ export const eventItems: MenuItem[] = [
     name: 'Webinars',
     description:
       'Virtual courses to get a deeper understanding on monorepos animated by the Nx team.',
-    href: 'https://go.nx.dev/april-webinar',
+    href: 'https://go.nx.dev/webinar',
     icon: null,
     isNew: false,
     isHighlight: false,

@@ -13,6 +13,7 @@ import { from } from 'rxjs';
 import { switchMap, tap } from 'rxjs/operators';
 import { getInstalledAngularVersionInfo } from '../../executors/utilities/angular-version-utils';
 import {
+  getDynamicMfManifestFile,
   getDynamicRemotes,
   getStaticRemotes,
   validateDevRemotes,
@@ -29,11 +30,7 @@ export function executeModuleFederationDevSSRBuilder(
     readProjectsConfigurationFromProjectGraph(projectGraph);
   const project = workspaceProjects[context.target.project];
 
-  let pathToManifestFile = join(
-    context.workspaceRoot,
-    project.sourceRoot,
-    'assets/module-federation.manifest.json'
-  );
+  let pathToManifestFile: string;
   if (options.pathToManifestFile) {
     const userPathToManifestFile = join(
       context.workspaceRoot,
@@ -50,9 +47,20 @@ export function executeModuleFederationDevSSRBuilder(
     }
 
     pathToManifestFile = userPathToManifestFile;
+  } else {
+    pathToManifestFile = getDynamicMfManifestFile(
+      project,
+      context.workspaceRoot
+    );
   }
 
-  validateDevRemotes(options, workspaceProjects);
+  const devServeRemotes = !options.devRemotes
+    ? []
+    : Array.isArray(options.devRemotes)
+    ? options.devRemotes
+    : [options.devRemotes];
+
+  validateDevRemotes({ devRemotes: devServeRemotes }, workspaceProjects);
 
   const remotesToSkip = new Set(options.skipRemotes ?? []);
   const staticRemotes = getStaticRemotes(
@@ -69,12 +77,6 @@ export function executeModuleFederationDevSSRBuilder(
     pathToManifestFile
   );
   const remotes = [...staticRemotes, ...dynamicRemotes];
-
-  const devServeRemotes = !options.devRemotes
-    ? []
-    : Array.isArray(options.devRemotes)
-    ? options.devRemotes
-    : [options.devRemotes];
 
   const remoteProcessPromises = [];
   for (const remote of remotes) {

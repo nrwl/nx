@@ -178,12 +178,18 @@ export async function createNxReleaseConfig(
   const workspaceProjectsRelationship =
     userConfig.projectsRelationship || 'fixed';
 
-  const defaultGeneratorOptions = userConfig.version?.conventionalCommits
-    ? {
-        currentVersionResolver: 'git-tag',
-        specifierSource: 'conventional-commits',
-      }
-    : {};
+  const defaultGeneratorOptions: {
+    currentVersionResolver?: string;
+    specifierSource?: string;
+  } = {};
+
+  if (userConfig.version?.conventionalCommits) {
+    defaultGeneratorOptions.currentVersionResolver = 'git-tag';
+    defaultGeneratorOptions.specifierSource = 'conventional-commits';
+  }
+  if (userConfig.versionPlans) {
+    defaultGeneratorOptions.specifierSource = 'version-plans';
+  }
 
   const userGroups = Object.values(userConfig.groups ?? {});
   const disableWorkspaceChangelog =
@@ -248,6 +254,7 @@ export async function createNxReleaseConfig(
         ? defaultIndependentReleaseTagPattern
         : defaultFixedReleaseTagPattern),
     conventionalCommits: DEFAULT_CONVENTIONAL_COMMITS_CONFIG,
+    versionPlans: false,
   };
 
   const groupProjectsRelationship =
@@ -277,6 +284,7 @@ export async function createNxReleaseConfig(
       groupProjectsRelationship === 'independent'
         ? defaultIndependentReleaseTagPattern
         : WORKSPACE_DEFAULTS.releaseTagPattern,
+    versionPlans: false,
   };
 
   /**
@@ -324,6 +332,9 @@ export async function createNxReleaseConfig(
     >
   );
 
+  const rootVersionPlansConfig: NxReleaseConfig['versionPlans'] =
+    userConfig.versionPlans ?? WORKSPACE_DEFAULTS.versionPlans;
+
   const rootConventionalCommitsConfig: NxReleaseConfig['conventionalCommits'] =
     deepMergeDefaults(
       [WORKSPACE_DEFAULTS.conventionalCommits],
@@ -353,6 +364,17 @@ export async function createNxReleaseConfig(
     delete rootVersionWithoutGlobalOptions.generatorOptions.specifierSource;
   }
 
+  // Apply versionPlans shorthand to the final group defaults if explicitly configured in the original user config
+  if (userConfig.versionPlans) {
+    rootVersionWithoutGlobalOptions.generatorOptions = {
+      ...rootVersionWithoutGlobalOptions.generatorOptions,
+      specifierSource: 'version-plans',
+    };
+  }
+  if (userConfig.versionPlans === false) {
+    delete rootVersionWithoutGlobalOptions.generatorOptions.specifierSource;
+  }
+
   const groups: NxReleaseConfig['groups'] =
     userConfig.groups && Object.keys(userConfig.groups).length
       ? ensureProjectsConfigIsArray(userConfig.groups)
@@ -361,7 +383,7 @@ export async function createNxReleaseConfig(
          * as being in one release group together in which the projects are released in lock step.
          */
         {
-          [IMPLICIT_DEFAULT_RELEASE_GROUP]: {
+          [IMPLICIT_DEFAULT_RELEASE_GROUP]: <NxReleaseConfig['groups'][string]>{
             projectsRelationship: GROUP_DEFAULTS.projectsRelationship,
             projects: userConfig.projects
               ? // user-defined top level "projects" config takes priority if set
@@ -385,6 +407,7 @@ export async function createNxReleaseConfig(
               userConfig.releaseTagPattern || GROUP_DEFAULTS.releaseTagPattern,
             // Directly inherit the root level config for projectChangelogs, if set
             changelog: rootChangelogConfig.projectChangelogs || false,
+            versionPlans: rootVersionPlansConfig || GROUP_DEFAULTS.versionPlans,
           },
         };
 
@@ -482,6 +505,7 @@ export async function createNxReleaseConfig(
         (projectsRelationship === 'independent'
           ? defaultIndependentReleaseTagPattern
           : userConfig.releaseTagPattern || defaultFixedReleaseTagPattern),
+      versionPlans: releaseGroup.versionPlans ?? rootVersionPlansConfig,
     };
 
     const finalReleaseGroup = deepMergeDefaults([groupDefaults], {
@@ -506,6 +530,23 @@ export async function createNxReleaseConfig(
       delete finalReleaseGroup.version.generatorOptions.specifierSource;
     }
 
+    // Apply versionPlans shorthand to the final group if explicitly configured in the original group
+    if (releaseGroup.versionPlans) {
+      finalReleaseGroup.version = {
+        ...finalReleaseGroup.version,
+        generatorOptions: {
+          ...finalReleaseGroup.version?.generatorOptions,
+          specifierSource: 'version-plans',
+        },
+      };
+    }
+    if (
+      releaseGroup.versionPlans === false &&
+      releaseGroupName !== IMPLICIT_DEFAULT_RELEASE_GROUP
+    ) {
+      delete finalReleaseGroup.version.generatorOptions.specifierSource;
+    }
+
     releaseGroups[releaseGroupName] = finalReleaseGroup;
   }
 
@@ -521,6 +562,7 @@ export async function createNxReleaseConfig(
       changelog: rootChangelogConfig,
       groups: releaseGroups,
       conventionalCommits: rootConventionalCommitsConfig,
+      versionPlans: rootVersionPlansConfig,
     },
   };
 }

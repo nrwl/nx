@@ -5,7 +5,7 @@
     "version": 2,
     "outputCapture": "direct-nodejs",
     "title": "File Server",
-    "description": "Serve a web application from a folder.",
+    "description": "Serve a web application from a folder. This executor is a wrapper around the [http-server](https://www.npmjs.com/package/http-server) package.",
     "type": "object",
     "cli": "nx",
     "properties": {
@@ -92,7 +92,8 @@
         "default": -1
       }
     },
-    "additionalProperties": false,
+    "additionalProperties": true,
+    "examplesFile": "---\ntitle: Examples for the Web file-server executor\ndescription: This page contains examples for the Vite @nx/web:file-server executor.\n---\n\n`project.json`:\n\n```json5\n\"myapp\": {\n  \"targets\": {\n    \"serve\": {\n      \"executor\": \"@nx/web:file-server\",\n      \"options\": {\n        \"buildTarget\": \"build\",\n        \"port\": 3000,\n      },\n    },\n    \"build\": {\n      \"outputs\": [\"{workspaceRoot}/dist/myapp\"],\n      \"command\": \"echo 'Generating index.html' && mkdir -p dist && echo '<h1>Works</h1>' > dist/myapp/index.html\"\n    },\n  }\n}\n```\n\n```shell\nnx serve myapp\n```\n\n## Examples\n\n{% tabs %}\n{% tab label=\"Additional http-server options\" %}\n\nThere are additional options from `http-server` that can be passed as CLI args. For example, to enable directory listing, pass `-d` as follows:\n\n```shell\nnx serve myapp -d\n```\n\nRefer to the [`http-server`](https://www.npmjs.com/package/http-server) package for all available options.\n\n{% /tab %}\n{% /tabs %}\n",
     "presets": []
   },
   "description": "Serve a web application from a folder.",

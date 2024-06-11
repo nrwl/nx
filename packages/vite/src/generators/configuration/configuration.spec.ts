@@ -15,6 +15,9 @@ import {
   mockWebAppGenerator,
 } from '../../utils/test-utils';
 
+import { libraryGenerator as jsLibraryGenerator } from '@nx/js/src/generators/library/library';
+import { LibraryGeneratorSchema } from '@nx/js/src/utils/schema';
+
 describe('@nx/vite:configuration', () => {
   let tree: Tree;
 
@@ -247,5 +250,76 @@ describe('@nx/vite:configuration', () => {
         throw new Error('Should not throw error');
       }
     });
+  });
+
+  describe('js library with --bundler=vite', () => {
+    const defaultOptions: Omit<LibraryGeneratorSchema, 'name'> = {
+      skipTsConfig: false,
+      includeBabelRc: false,
+      unitTestRunner: 'jest',
+      skipFormat: false,
+      linter: 'eslint',
+      testEnvironment: 'jsdom',
+      js: false,
+      pascalCaseFiles: false,
+      strict: true,
+      config: 'project',
+    };
+
+    beforeEach(() => {
+      tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    });
+
+    it('should add build and test targets with vite and vitest', async () => {
+      await jsLibraryGenerator(tree, {
+        ...defaultOptions,
+        name: 'my-lib',
+        bundler: 'vite',
+        unitTestRunner: undefined,
+        projectNameAndRootFormat: 'as-provided',
+      });
+
+      expect(tree.exists('my-lib/vite.config.ts')).toBeTruthy();
+      expect(tree.read('my-lib/vite.config.ts', 'utf-8')).toMatchSnapshot();
+      expect(tree.read('my-lib/README.md', 'utf-8')).toMatchSnapshot();
+      expect(tree.read('my-lib/tsconfig.lib.json', 'utf-8')).toMatchSnapshot();
+      expect(readJson(tree, 'my-lib/.eslintrc.json').overrides).toContainEqual({
+        files: ['*.json'],
+        parser: 'jsonc-eslint-parser',
+        rules: {
+          '@nx/dependency-checks': [
+            'error',
+            {
+              ignoredFiles: ['{projectRoot}/vite.config.{js,ts,mjs,mts}'],
+            },
+          ],
+        },
+      });
+    });
+
+    it.each`
+      unitTestRunner | configPath
+      ${'none'}      | ${undefined}
+      ${'jest'}      | ${'my-lib/jest.config.ts'}
+    `(
+      'should respect unitTestRunner if passed',
+      async ({ unitTestRunner, configPath }) => {
+        await jsLibraryGenerator(tree, {
+          ...defaultOptions,
+          name: 'my-lib',
+          bundler: 'vite',
+          unitTestRunner,
+          projectNameAndRootFormat: 'as-provided',
+        });
+
+        expect(tree.read('my-lib/README.md', 'utf-8')).toMatchSnapshot();
+        expect(
+          tree.read('my-lib/tsconfig.lib.json', 'utf-8')
+        ).toMatchSnapshot();
+        if (configPath) {
+          expect(tree.read(configPath, 'utf-8')).toMatchSnapshot();
+        }
+      }
+    );
   });
 });

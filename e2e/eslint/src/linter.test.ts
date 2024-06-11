@@ -1,5 +1,6 @@
 import * as path from 'path';
 import {
+  checkFilesDoNotExist,
   checkFilesExist,
   cleanupProject,
   createFile,
@@ -518,6 +519,43 @@ describe('Linter', () => {
         out = runCLI(`lint ${mylib} --fix`, { silenceError: true });
         expect(out).toContain(
           `Successfully ran target lint for project ${mylib}`
+        );
+      });
+    });
+
+    describe('flat config', () => {
+      beforeAll(() => {
+        runCLI(`generate @nx/eslint:convert-to-flat-config`);
+      });
+
+      it('should generate new projects using flat config', () => {
+        const reactLib = uniq('react-lib');
+        const jsLib = uniq('js-lib');
+
+        runCLI(
+          `generate @nx/react:lib ${reactLib} --directory=${reactLib} --projectNameAndRootFormat=as-provided`
+        );
+        runCLI(
+          `generate @nx/js:lib ${jsLib} --directory=${jsLib} --projectNameAndRootFormat=as-provided`
+        );
+
+        checkFilesExist(
+          `${reactLib}/eslint.config.js`,
+          `${jsLib}/eslint.config.js`
+        );
+        checkFilesDoNotExist(
+          `${reactLib}/.eslintrc.json`,
+          `${jsLib}/.eslintrc.json`
+        );
+
+        // validate that the new projects are linted successfully
+        let output = runCLI(`lint ${reactLib}`);
+        expect(output).toContain(
+          `Successfully ran target lint for project ${reactLib}`
+        );
+        output = runCLI(`lint ${jsLib}`);
+        expect(output).toContain(
+          `Successfully ran target lint for project ${jsLib}`
         );
       });
     });

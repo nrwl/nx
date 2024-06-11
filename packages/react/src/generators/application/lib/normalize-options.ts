@@ -95,10 +95,6 @@ export async function normalizeOptions<T extends Schema = Schema>(
 
   assertValidStyle(options.style);
 
-  if (options.bundler === 'vite' && options.unitTestRunner !== 'none') {
-    options.unitTestRunner = 'vitest';
-  }
-
   const normalized = {
     ...options,
     name: names(options.name).fileName,

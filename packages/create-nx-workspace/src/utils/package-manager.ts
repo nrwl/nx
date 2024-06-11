@@ -7,12 +7,14 @@ import { join } from 'path';
  * we duplicate the helper functions from @nx/workspace in this file.
  */
 
-export const packageManagerList = ['pnpm', 'yarn', 'npm'] as const;
+export const packageManagerList = ['pnpm', 'yarn', 'npm', 'bun'] as const;
 
-export type PackageManager = typeof packageManagerList[number];
+export type PackageManager = (typeof packageManagerList)[number];
 
 export function detectPackageManager(dir: string = ''): PackageManager {
-  return existsSync(join(dir, 'yarn.lock'))
+  return existsSync(join(dir, 'bun.lockb'))
+    ? 'bun'
+    : existsSync(join(dir, 'yarn.lock'))
     ? 'yarn'
     : existsSync(join(dir, 'pnpm-lock.yaml'))
     ? 'pnpm'
@@ -38,7 +40,8 @@ export function getPackageManagerCommand(
   exec: string;
   preInstall?: string;
   globalAdd: string;
-  getRegistryUrl: string;
+  // Make this required once bun adds programatically support for reading config https://github.com/oven-sh/bun/issues/7140
+  getRegistryUrl?: string;
 } {
   const pmVersion = getPackageManagerVersion(packageManager);
   const [pmMajor, pmMinor] = pmVersion.split('.');
@@ -78,6 +81,13 @@ export function getPackageManagerCommand(
         exec: 'npx',
         globalAdd: 'npm i -g',
         getRegistryUrl: 'npm config get registry',
+      };
+    case 'bun':
+      // bun doesn't current support programatically reading config https://github.com/oven-sh/bun/issues/7140
+      return {
+        install: 'bun install --silent --ignore-scripts',
+        exec: 'bunx',
+        globalAdd: 'bun install -g',
       };
   }
 }

@@ -41,7 +41,7 @@ export function getSchemaViewModel(
   return {
     schemaMetadata: schema,
     packageName: pkg.packageName,
-    packageUrl: `/packages/${pkg.name}`,
+    packageUrl: `/nx-api/${pkg.name}`,
     schemaGithubUrl: pkg.githubRoot + schema.path,
     rootReference: '#',
     subReference:

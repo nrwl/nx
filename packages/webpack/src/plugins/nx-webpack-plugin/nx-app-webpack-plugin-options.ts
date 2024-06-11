@@ -66,6 +66,11 @@ export interface NxAppWebpackPluginOptions {
    * Set <base href> for the resulting index.html.
    */
   baseHref?: string;
+  /**
+   * Build the libraries from source. Default is `true`.
+   */
+  buildLibsFromSource?: boolean;
+
   commonChunk?: boolean;
   /**
    * The compiler to use. Default is `babel` and requires a `.babelrc` file.

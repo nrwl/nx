@@ -18,7 +18,7 @@ import {
   createAsyncIterable,
 } from '@nx/devkit/src/utils/async-iterable';
 import { waitForPortOpen } from '@nx/web/src/utils/wait-for-port-open';
-import { projectGraphCacheDirectory } from 'nx/src/utils/cache-directory';
+import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { fork } from 'node:child_process';
 import { basename, dirname, join } from 'node:path';
 import { createWriteStream, cpSync } from 'node:fs';
@@ -127,19 +127,23 @@ async function startRemotes(
       } => typeof r !== 'string' && r.remoteName === app
     )?.configuration;
 
+    const defaultOverrides = {
+      ...(options.host ? { host: options.host } : {}),
+      ...(options.ssl ? { ssl: options.ssl } : {}),
+      ...(options.sslCert ? { sslCert: options.sslCert } : {}),
+      ...(options.sslKey ? { sslKey: options.sslKey } : {}),
+    };
     const overrides =
       target === 'serve'
         ? {
             watch: true,
-            ...(options.host ? { host: options.host } : {}),
-            ...(options.ssl ? { ssl: options.ssl } : {}),
-            ...(options.sslCert ? { sslCert: options.sslCert } : {}),
-            ...(options.sslKey ? { sslKey: options.sslKey } : {}),
             ...(isUsingModuleFederationDevServerExecutor
               ? { isInitialHost: false }
               : {}),
+            ...defaultOverrides,
           }
-        : {};
+        : { ...defaultOverrides };
+
     remoteIters.push(
       await runExecutor(
         {
@@ -201,7 +205,7 @@ async function buildStaticRemotes(
 
     // File to debug build failures e.g. 2024-01-01T00_00_0_0Z-build.log'
     const remoteBuildLogFile = join(
-      projectGraphCacheDirectory,
+      workspaceDataDirectory,
       `${new Date().toISOString().replace(/[:\.]/g, '_')}-build.log`
     );
     const stdoutStream = createWriteStream(remoteBuildLogFile);

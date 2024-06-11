@@ -40,15 +40,19 @@ export async function addNxToNpmRepo(options: Options) {
     });
 
     cacheableOperations = (
-      (await enquirer.prompt([
+      await enquirer.prompt<{ cacheableOperations: string[] }>([
         {
           type: 'multiselect',
           name: 'cacheableOperations',
           message:
             'Which of the following scripts are cacheable? (Produce the same output given the same input, e.g. build, test and lint usually are, serve and start are not). You can use spacebar to select one or more scripts.',
           choices: scripts,
-        },
-      ])) as any
+          /**
+           * limit is missing from the interface but it limits the amount of options shown
+           */
+          limit: process.stdout.rows - 4, // 4 leaves room for the header above, the prompt and some whitespace
+        } as any,
+      ])
     ).cacheableOperations;
 
     for (const scriptName of cacheableOperations) {

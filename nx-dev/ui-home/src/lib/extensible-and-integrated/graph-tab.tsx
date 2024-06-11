@@ -39,17 +39,17 @@ export function GraphTab(): JSX.Element {
         </div>
       </div>
       <div className="relative -top-5 mr-0.5 hidden grow items-center lg:flex">
-        <span className="absolute top-0 left-0 -mt-1 -ml-1 flex h-2 w-2">
+        <span className="absolute left-0 top-0 -ml-1 -mt-1 flex h-2 w-2">
           <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-500 opacity-75 dark:bg-sky-500" />
           <span className="relative inline-flex h-2 w-2 rounded-full bg-slate-200 dark:bg-slate-700" />
         </span>
-        <span className="absolute top-0 right-0 -mt-1 -mr-1 flex h-2 w-2">
+        <span className="absolute right-0 top-0 -mr-1 -mt-1 flex h-2 w-2">
           <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-500 opacity-75 dark:bg-sky-500" />
           <span className="relative inline-flex h-2 w-2 rounded-full bg-slate-200 dark:bg-slate-700" />
         </span>
         <div className="-m-0.5 h-0.5 w-full bg-slate-200 dark:bg-slate-700" />
       </div>
-      <div className="z-10 h-auto overflow-hidden rounded-lg border border-slate-200 shadow dark:border-slate-700 lg:min-h-[485px] lg:w-[690px]">
+      <div className="z-10 h-auto overflow-hidden rounded-lg border border-slate-200 shadow lg:min-h-[485px] lg:w-[690px] dark:border-slate-700">
         <div className="flex h-7 w-full items-center justify-start space-x-1.5 bg-slate-200 px-3 dark:bg-slate-700">
           <span className="h-2 w-2 rounded-full bg-red-400"></span>
           <span className="h-2 w-2 rounded-full bg-yellow-400"></span>

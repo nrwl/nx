@@ -1,3 +1,4 @@
+use crate::native::logger::enable_logger;
 use crate::native::tasks::{
     dep_outputs::get_dep_output,
     types::{HashInstruction, TaskGraph},
@@ -11,6 +12,7 @@ use napi::bindgen_prelude::External;
 use napi::{Env, JsExternal};
 use rayon::prelude::*;
 use std::collections::HashMap;
+use tracing::trace;
 
 use crate::native::tasks::inputs::{
     expand_single_project_inputs, get_inputs, get_inputs_for_dependency, get_named_inputs,
@@ -28,6 +30,7 @@ pub struct HashPlanner {
 impl HashPlanner {
     #[napi(constructor)]
     pub fn new(nx_json: NxJson, project_graph: External<ProjectGraph>) -> Self {
+        enable_logger();
         Self {
             nx_json,
             project_graph,
@@ -138,9 +141,23 @@ impl HashPlanner {
                 // todo)) @Cammisuli: we need to gather the project's inputs and its dep inputs similar to how we do it in `self_and_deps_inputs`
                 return Ok(None);
             };
-            Ok(Some(vec![HashInstruction::External(
-                existing_package.to_owned(),
-            )]))
+            let mut external_deps: Vec<&'a String> = vec![];
+            trace!(
+                "Add External Instruction for executor {existing_package}: {}",
+                target.executor.as_ref().unwrap()
+            );
+            trace!(
+                "Add External Instructions for dependencies of executor {existing_package}: {:?}",
+                &external_deps_map[&existing_package]
+            );
+            external_deps.push(existing_package);
+            external_deps.extend(&external_deps_map[&existing_package]);
+            Ok(Some(
+                external_deps
+                    .iter()
+                    .map(|s| HashInstruction::External(s.to_string()))
+                    .collect(),
+            ))
         } else {
             let mut external_deps: Vec<&'a String> = vec![];
             for input in self_inputs {
@@ -152,8 +169,15 @@ impl HashPlanner {
                             let Some(external_node_name) = external_node_name else {
                                 anyhow::bail!("The externalDependency '{dep}' for '{project_name}:{target_name}' could not be found")
                             };
-
-                            external_deps.push(&external_node_name);
+                            trace!(
+                                "Add External Instruction for External Input {external_node_name}: {}",
+                                target.executor.as_ref().unwrap()
+                            );
+                            trace!(
+                                "Add External Instructions for dependencies of External Input {external_node_name}: {:?}",
+                                &external_deps_map[&external_node_name]
+                            );
+                            external_deps.push(external_node_name);
                             external_deps.extend(&external_deps_map[&external_node_name]);
                         }
                     }

@@ -13,6 +13,7 @@ import { workspaceRoot } from '../workspace-root';
 import { hasElements } from './shared';
 
 import type { PluginCapabilities } from './models';
+import type { ExecutorsJsonEntry } from '../../config/misc-interfaces';
 
 function tryGetCollection<T extends object>(
   packageJsonPath: string,
@@ -179,7 +180,11 @@ export async function listPluginCapabilities(
     bodyLines.push('');
     bodyLines.push(
       ...Object.keys(plugin.executors).map(
-        (name) => `${chalk.bold(name)} : ${plugin.executors[name].description}`
+        (name) =>
+          `${chalk.bold(name)} : ${resolveExecutorDescription(
+            plugin.executors[name],
+            projects
+          )}`
       )
     );
   }
@@ -196,4 +201,46 @@ export async function listPluginCapabilities(
     title: `Capabilities in ${plugin.name}:`,
     bodyLines,
   });
+}
+
+function resolveExecutorDescription(
+  executorJsonEntry: ExecutorsJsonEntry,
+  projects: Record<string, ProjectConfiguration>
+) {
+  try {
+    if (typeof executorJsonEntry === 'string') {
+      // it points to another executor, resolve it
+      const [pkgName, executor] = executorJsonEntry.split(':');
+      const collection = loadExecutorsCollection(
+        workspaceRoot,
+        pkgName,
+        projects
+      );
+
+      return resolveExecutorDescription(collection[executor], projects);
+    }
+
+    return executorJsonEntry.description;
+  } catch {
+    return 'No description available';
+  }
+}
+
+function loadExecutorsCollection(
+  workspaceRoot: string,
+  pluginName: string,
+  projects: Record<string, ProjectConfiguration>
+): { [name: string]: ExecutorsJsonEntry } {
+  const { json: packageJson, path: packageJsonPath } = readPluginPackageJson(
+    pluginName,
+    projects,
+    getNxRequirePaths(workspaceRoot)
+  );
+
+  return {
+    ...tryGetCollection(packageJsonPath, packageJson.builders, 'builders'),
+    ...tryGetCollection(packageJsonPath, packageJson.executors, 'builders'),
+    ...tryGetCollection(packageJsonPath, packageJson.builders, 'executors'),
+    ...tryGetCollection(packageJsonPath, packageJson.executors, 'executors'),
+  };
 }

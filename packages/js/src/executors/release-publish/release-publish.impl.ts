@@ -6,6 +6,7 @@ import { parseRegistryOptions } from '../../utils/npm-config';
 import { logTar } from './log-tar';
 import { PublishExecutorSchema } from './schema';
 import chalk = require('chalk');
+import { extractNpmPublishJsonData } from './extract-npm-publish-json-data';
 
 const LARGE_BUFFER = 1024 * 1000000;
 
@@ -109,7 +110,12 @@ export default async function runExecutor(
         };
       }
 
-      if (resultJson.versions.includes(currentVersion)) {
+      // If only one version of a package exists in the registry, versions will be a string instead of an array.
+      const versions = Array.isArray(resultJson.versions)
+        ? resultJson.versions
+        : [resultJson.versions];
+
+      if (versions.includes(currentVersion)) {
         try {
           if (!isDryRun) {
             execSync(npmDistTagAddCommandSegments.join(' '), {
@@ -200,8 +206,13 @@ export default async function runExecutor(
     console.log('Skipped npm view because --first-release was set');
   }
 
+  /**
+   * NOTE: If this is ever changed away from running the command at the workspace root and pointing at the package root (e.g. back
+   * to running from the package root directly), then special attention should be paid to the fact that npm publish will nest its
+   * JSON output under the name of the package in that case (and it would need to be handled below).
+   */
   const npmPublishCommandSegments = [
-    `npm publish ${packageRoot} --json --"${registryConfigKey}=${registry}" --tag=${tag}`,
+    `npm publish "${packageRoot}" --json --"${registryConfigKey}=${registry}" --tag=${tag}`,
   ];
 
   if (options.otp) {
@@ -220,11 +231,47 @@ export default async function runExecutor(
       stdio: ['ignore', 'pipe', 'pipe'],
     });
 
-    const stdoutData = JSON.parse(output.toString());
+    /**
+     * We cannot JSON.parse the output directly because if the user is using lifecycle scripts, npm will mix its publish output with the JSON output all on stdout.
+     * Additionally, we want to capture and show the lifecycle script outputs as beforeJsonData and afterJsonData and print them accordingly below.
+     */
+    const { beforeJsonData, jsonData, afterJsonData } =
+      extractNpmPublishJsonData(output.toString());
+    if (!jsonData) {
+      console.error(
+        'The npm publish output data could not be extracted. Please report this issue on https://github.com/nrwl/nx'
+      );
+      return {
+        success: false,
+      };
+    }
 
-    // If npm workspaces are in use, the publish output will nest the data under the package name, so we normalize it first
-    const normalizedStdoutData = stdoutData[packageName] ?? stdoutData;
-    logTar(normalizedStdoutData);
+    // If in dry-run mode, the version on disk will not represent the version that would be published, so we scrub it from the output to avoid confusion.
+    const dryRunVersionPlaceholder = 'X.X.X-dry-run';
+    if (isDryRun) {
+      for (const [key, val] of Object.entries(jsonData)) {
+        if (typeof val !== 'string') {
+          continue;
+        }
+        jsonData[key] = val.replace(
+          new RegExp(packageJson.version, 'g'),
+          dryRunVersionPlaceholder
+        );
+      }
+    }
+
+    if (
+      typeof beforeJsonData === 'string' &&
+      beforeJsonData.trim().length > 0
+    ) {
+      console.log(beforeJsonData);
+    }
+
+    logTar(jsonData);
+
+    if (typeof afterJsonData === 'string' && afterJsonData.trim().length > 0) {
+      console.log(afterJsonData);
+    }
 
     if (isDryRun) {
       console.log(
@@ -244,10 +291,10 @@ export default async function runExecutor(
       const stdoutData = JSON.parse(err.stdout?.toString() || '{}');
 
       console.error('npm publish error:');
-      if (stdoutData.error.summary) {
+      if (stdoutData.error?.summary) {
         console.error(stdoutData.error.summary);
       }
-      if (stdoutData.error.detail) {
+      if (stdoutData.error?.detail) {
         console.error(stdoutData.error.detail);
       }
 
@@ -255,6 +302,11 @@ export default async function runExecutor(
         console.error('npm publish stdout:');
         console.error(JSON.stringify(stdoutData, null, 2));
       }
+
+      if (!stdoutData.error) {
+        throw err;
+      }
+
       return {
         success: false,
       };

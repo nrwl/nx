@@ -123,15 +123,15 @@ const showProjectsCommand: CommandModule<NxShowArgs, ShowProjectsOptions> = {
         '$0 show projects --affected --exclude=*-e2e',
         'Show affected projects in the workspace, excluding end-to-end projects'
       ) as any,
-  handler: (args) => {
-    return handleErrors(
+  handler: async (args) => {
+    const exitCode = await handleErrors(
       args.verbose ?? process.env.NX_VERBOSE_LOGGING === 'true',
       async () => {
         const { showProjectsHandler } = await import('./projects');
         await showProjectsHandler(args);
-        process.exit(0);
       }
     );
+    process.exit(exitCode);
   },
 };
 
@@ -177,14 +177,14 @@ const showProjectCommand: CommandModule<NxShowArgs, ShowProjectOptions> = {
         '$0 show project my-app --web',
         'View project information for my-app in the browser'
       ),
-  handler: (args) => {
-    return handleErrors(
+  handler: async (args) => {
+    const exitCode = await handleErrors(
       args.verbose ?? process.env.NX_VERBOSE_LOGGING === 'true',
       async () => {
         const { showProjectHandler } = await import('./project');
         await showProjectHandler(args);
-        process.exit(0);
       }
     );
+    process.exit(exitCode);
   },
 };

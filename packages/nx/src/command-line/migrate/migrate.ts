@@ -10,6 +10,7 @@ import {
   lt,
   lte,
   major,
+  parse,
   satisfies,
   valid,
 } from 'semver';
@@ -31,6 +32,7 @@ import {
   writeJsonFile,
 } from '../../utils/fileutils';
 import { logger } from '../../utils/logger';
+import { commitChanges } from '../../utils/git-utils';
 import {
   ArrayPackageGroup,
   NxMigrationsConfiguration,
@@ -647,9 +649,9 @@ async function normalizeVersionWithTagCheck(
   version: string
 ): Promise<string> {
   // This doesn't seem like a valid version, lets check if its a tag on the registry.
-  if (version && !coerce(version)) {
+  if (version && !parse(version)) {
     try {
-      return packageRegistryView(pkg, version, 'version');
+      return resolvePackageVersionUsingRegistry(pkg, version);
     } catch {
       // fall through to old logic
     }
@@ -1053,6 +1055,10 @@ async function getPackageMigrationsUsingInstall(
     }
 
     result = { ...migrations, packageGroup, version: packageJson.version };
+  } catch (e) {
+    logger.warn(
+      `Unable to fetch migrations for ${packageName}@${packageVersion}: ${e.message}`
+    );
   } finally {
     await cleanup();
   }
@@ -1375,7 +1381,14 @@ export async function executeMigrations(
   shouldCreateCommits: boolean,
   commitPrefix: string
 ) {
-  const depsBeforeMigrations = getStringifiedPackageJsonDeps(root);
+  let initialDeps = getStringifiedPackageJsonDeps(root);
+  const installDepsIfChanged = () => {
+    const currentDeps = getStringifiedPackageJsonDeps(root);
+    if (initialDeps !== currentDeps) {
+      runInstall();
+    }
+    initialDeps = currentDeps;
+  };
 
   const migrationsWithNoChanges: typeof migrations = [];
   const sortedMigrations = migrations.sort((a, b) => {
@@ -1439,6 +1452,8 @@ export async function executeMigrations(
       }
 
       if (shouldCreateCommits) {
+        installDepsIfChanged();
+
         const commitMessage = `${commitPrefix}${m.name}`;
         try {
           const committedSha = commitChanges(commitMessage);
@@ -1467,10 +1482,10 @@ export async function executeMigrations(
     }
   }
 
-  const depsAfterMigrations = getStringifiedPackageJsonDeps(root);
-  if (depsBeforeMigrations !== depsAfterMigrations) {
-    runInstall();
+  if (!shouldCreateCommits) {
+    installDepsIfChanged();
   }
+
   return migrationsWithNoChanges;
 }
 
@@ -1556,32 +1571,6 @@ function getStringifiedPackageJsonDeps(root: string): string {
     // We don't really care if the .nx/installation property changes,
     // whenever nxw is invoked it will handle the dep updates.
     return '';
-  }
-}
-
-function commitChanges(commitMessage: string): string | null {
-  try {
-    execSync('git add -A', { encoding: 'utf8', stdio: 'pipe' });
-    execSync('git commit --no-verify -F -', {
-      encoding: 'utf8',
-      stdio: 'pipe',
-      input: commitMessage,
-    });
-  } catch (err) {
-    throw new Error(`Error committing changes:\n${err.stderr}`);
-  }
-
-  return getLatestCommitSha();
-}
-
-function getLatestCommitSha(): string | null {
-  try {
-    return execSync('git rev-parse HEAD', {
-      encoding: 'utf8',
-      stdio: 'pipe',
-    }).trim();
-  } catch {
-    return null;
   }
 }
 

@@ -46,5 +46,11 @@
     "image": "/blog/images/Zack DeRose.jpeg",
     "twitter": "zackderose",
     "github": "ZackDeRose"
+  },
+  {
+    "name": "Jeff Cross",
+    "image": "/blog/images/Jeff Cross.jpeg",
+    "twitter": "jeffbcross",
+    "github": "jeffbcross"
   }
 ]

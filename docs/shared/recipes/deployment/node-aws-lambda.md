@@ -1,5 +1,10 @@
 # Deploying AWS Lambda Functions in Node.js
 
+{% callout type="warning"  title="deprecated" %}
+The @nx/aws-lambda plugin is deprecated and unmaintained.
+We are committed to providing high-quality tooling to community, and we no longer have the capacity to keep this plugin updated.
+{% /callout %}
+
 This recipe guides you through setting up AWS Lambda functions with Nx.
 
 ## Getting set up

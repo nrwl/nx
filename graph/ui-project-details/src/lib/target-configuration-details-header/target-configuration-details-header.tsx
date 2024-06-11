@@ -14,6 +14,8 @@ import { Pill } from '../pill';
 import { TargetTechnologies } from '../target-technologies/target-technologies';
 import { SourceInfo } from '../source-info/source-info';
 import { CopyToClipboard } from '../copy-to-clipboard/copy-to-clipboard';
+import { getDisplayHeaderFromTargetConfiguration } from '../utils/get-display-header-from-target-configuration';
+import { TargetExecutor } from '../target-executor/target-executor';
 
 export interface TargetConfigurationDetailsHeaderProps {
   isCollasped: boolean;
@@ -52,10 +54,8 @@ export const TargetConfigurationDetailsHeader = ({
     isCollasped = false;
   }
 
-  const singleCommand =
-    targetConfiguration.executor === 'nx:run-commands'
-      ? targetConfiguration.command ?? targetConfiguration.options?.command
-      : null;
+  const { command, commands, script, executor } =
+    getDisplayHeaderFromTargetConfiguration(targetConfiguration);
 
   return (
     <header
@@ -69,48 +69,58 @@ export const TargetConfigurationDetailsHeader = ({
       )}
       onClick={collapsable ? toggleCollapse : undefined}
     >
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex min-w-0 flex-1 items-center gap-2">
-          {collapsable &&
-            (isCollasped ? (
-              <ChevronDownIcon className="h-3 w-3" />
-            ) : (
-              <ChevronUpIcon className="h-3 w-3" />
-            ))}
-          <h3 className="font-medium dark:text-slate-300">{targetName}</h3>
-          <TargetTechnologies
-            technologies={targetConfiguration.metadata?.technologies}
-            showTooltip={!isCollasped}
-            className="h-4 w-4"
-          />
-          {isCollasped &&
-            targetConfiguration?.executor !== '@nx/js:release-publish' && (
-              <p className="min-w-0 flex-1 truncate text-sm text-slate-400">
-                {singleCommand ? singleCommand : targetConfiguration.executor}
-              </p>
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex min-w-0 flex-1 items-center justify-between">
+          <div className="flex min-w-0 flex-1 items-center gap-2">
+            {collapsable &&
+              (isCollasped ? (
+                <ChevronDownIcon className="h-3 w-3" />
+              ) : (
+                <ChevronUpIcon className="h-3 w-3" />
+              ))}
+            <h3 className="font-medium dark:text-slate-300">{targetName}</h3>
+            <TargetTechnologies
+              technologies={targetConfiguration.metadata?.technologies}
+              showTooltip={!isCollasped}
+              className="h-4 w-4"
+            />
+            {isCollasped &&
+              targetConfiguration?.executor !== '@nx/js:release-publish' && (
+                <p className="min-w-0 flex-1 truncate text-sm text-slate-400">
+                  <TargetExecutor
+                    command={command}
+                    commands={commands}
+                    script={script}
+                    executor={executor}
+                    isCompact={true}
+                  />
+                </p>
+              )}
+          </div>
+          <div>
+            {targetName === 'nx-release-publish' && (
+              <Tooltip
+                openAction="hover"
+                strategy="fixed"
+                content={(<PropertyInfoTooltip type="release" />) as any}
+              >
+                <span className="inline-flex">
+                  <Pill text="nx release" color="grey" />
+                </span>
+              </Tooltip>
             )}
-          {targetName === 'nx-release-publish' && (
-            <Tooltip
-              openAction="hover"
-              strategy="fixed"
-              content={(<PropertyInfoTooltip type="release" />) as any}
-            >
-              <span className="inline-flex">
-                <Pill text="nx release" color="grey" />
-              </span>
-            </Tooltip>
-          )}
-          {targetConfiguration.cache && (
-            <Tooltip
-              openAction="hover"
-              strategy="fixed"
-              content={(<PropertyInfoTooltip type="cacheable" />) as any}
-            >
-              <span className="inline-flex">
-                <Pill text="Cacheable" color="green" />
-              </span>
-            </Tooltip>
-          )}
+            {targetConfiguration.cache && (
+              <Tooltip
+                openAction="hover"
+                strategy="fixed"
+                content={(<PropertyInfoTooltip type="cacheable" />) as any}
+              >
+                <span className="inline-flex">
+                  <Pill text="Cacheable" color="green" />
+                </span>
+              </Tooltip>
+            )}
+          </div>
         </div>
         <div className="flex items-center gap-2">
           {onViewInTaskGraph && (

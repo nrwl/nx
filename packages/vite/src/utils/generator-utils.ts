@@ -374,6 +374,7 @@ export function createOrEditViteConfig(
       // See: https://vitejs.dev/guide/build.html#library-mode
       build: {
         outDir: '${buildOutDir}',
+        emptyOutDir: true,
         reportCompressedSize: true,
         commonjsOptions: {
           transformMixedEsModules: true,
@@ -395,6 +396,7 @@ export function createOrEditViteConfig(
     : `
     build: {
       outDir: '${buildOutDir}',
+      emptyOutDir: true,
       reportCompressedSize: true,
       commonjsOptions: {
         transformMixedEsModules: true,
@@ -430,6 +432,7 @@ export function createOrEditViteConfig(
 
   const testOption = options.includeVitest
     ? `test: {
+    watch: false,
     globals: true,
     cache: {
       dir: '${normalizedJoinPaths(

@@ -49,6 +49,7 @@ function createAppTsConfig(host: Tree, options: { projectRoot: string }) {
     compilerOptions: {
       composite: true,
     },
+    include: ['.nuxt/nuxt.d.ts', 'src/**/*'],
     exclude: [],
   };
 

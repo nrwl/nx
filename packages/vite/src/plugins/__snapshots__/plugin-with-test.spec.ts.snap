@@ -17,10 +17,12 @@ exports[`@nx/vite/plugin with test node root project should create nodes - with 
                 "vitest",
               ],
             },
+            {
+              "env": "CI",
+            },
           ],
           "options": {
             "cwd": ".",
-            "watch": false,
           },
           "outputs": [
             "{projectRoot}/coverage",

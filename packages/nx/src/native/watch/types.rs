@@ -1,9 +1,6 @@
-use napi::bindgen_prelude::*;
-
-use crate::native::walker::nx_walker_sync;
-use ignore::gitignore::GitignoreBuilder;
-use ignore::Match;
 use std::path::{Path, PathBuf};
+
+use napi::bindgen_prelude::*;
 use tracing::trace;
 use watchexec_events::filekind::CreateKind;
 use watchexec_events::filekind::FileEventKind;
@@ -70,6 +67,8 @@ pub fn transform_event_to_watch_events(
         anyhow::bail!(error_msg)
     };
 
+    #[allow(unused_variables)]
+    // this is used in linux and windows blocks, and will show it as being unused in macos
     let Some(event_kind) = value.tags.iter().find_map(|t| match t {
         Tag::FileEventKind(event_kind) => Some(event_kind),
         _ => None,
@@ -125,6 +124,10 @@ pub fn transform_event_to_watch_events(
 
         #[cfg(all(not(target_os = "macos"), not(target_os = "windows")))]
         {
+            use crate::native::walker::nx_walker_sync;
+            use ignore::gitignore::GitignoreBuilder;
+            use ignore::Match;
+            
             if matches!(event_kind, FileEventKind::Create(CreateKind::Folder)) {
                 let mut result = vec![];
 
@@ -158,10 +161,10 @@ pub fn transform_event_to_watch_events(
             }
         }
     }
-
-
 }
 
+#[allow(dead_code)]
+// this is used in linux and windows blocks, and will show as "dead code" in macos
 fn create_watch_event_internal(
     origin: &str,
     event_kind: &FileEventKind,

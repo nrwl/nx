@@ -96,5 +96,5 @@ export function serializeJson<T extends object = object>(
   input: T,
   options?: JsonSerializeOptions
 ): string {
-  return JSON.stringify(input, null, options?.spaces ?? 2) + '\n';
+  return JSON.stringify(input, null, options?.spaces ?? 2);
 }
