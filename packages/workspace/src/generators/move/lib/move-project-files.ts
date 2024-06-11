@@ -18,10 +18,7 @@ export function moveProjectFiles(
   const knownRootProjectFiles = [
     // Config files
     'project.json',
-    'tsconfig.json',
-    'tsconfig.app.json',
-    'tsconfig.lib.json',
-    'tsconfig.spec.json',
+    /^tsconfig(?!\.base\.json$)((\..+)?\.json$|json$)/,
     '.babelrc',
     '.eslintrc.json',
     'eslint.config.js',

@@ -1,6 +1,6 @@
 import 'nx/src/internal-testing-utils/mock-project-graph';
 
-import { readJson, readProjectConfiguration, Tree } from '@nx/devkit';
+import { readProjectConfiguration, Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { monorepoGenerator } from './convert-to-monorepo';
 
