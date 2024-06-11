@@ -1,6 +1,6 @@
 export interface InitGeneratorSchema {
   skipFormat?: boolean;
-  setupPathsPlugin?: boolean;
+  addTsPathsPlugin?: boolean;
   skipPackageJson?: boolean;
   keepExistingVersions?: boolean;
   updatePackageScripts?: boolean;

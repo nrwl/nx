@@ -2919,7 +2919,16 @@
         "type": "generator"
       },
       {
-        "description": "Generate a vitest configuration",
+        "description": "Sets up the nxViteTsPaths plugin to enable support for workspace libraries.",
+        "file": "generated/packages/vite/generators/setup-paths-plugin.json",
+        "hidden": false,
+        "name": "setup-paths-plugin",
+        "originalFilePath": "/packages/vite/src/generators/setup-paths-plugin/schema.json",
+        "path": "vite/generators/setup-paths-plugin",
+        "type": "generator"
+      },
+      {
+        "description": "Generate a vitest configuration.",
         "file": "generated/packages/vite/generators/vitest.json",
         "hidden": false,
         "name": "vitest",
