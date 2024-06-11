@@ -4,7 +4,7 @@ const glob = require('fast-glob');
 
 const p = process.argv[2];
 
-const nativeFiles = glob.sync(`packages/${p}/**/*.{node,wasm}`);
+const nativeFiles = glob.sync(`packages/${p}/**/*.{node,wasm,js,mjs,cjs}`);
 
 console.log({ nativeFiles });
 

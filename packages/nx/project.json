@@ -5,11 +5,21 @@
   "projectType": "library",
   "implicitDependencies": ["graph-client"],
   "targets": {
+    "build-native-wasm": {
+      "cache": true,
+      "outputs": [
+        "{projectRoot}/src/native/*.wasm",
+        "{projectRoot}/src/native/*.js",
+        "{projectRoot}/src/native/*.cjs",
+        "{projectRoot}/src/native/*.mjs",
+        "{projectRoot}/src/native/index.d.ts"
+      ],
+      "command": "pnpm exec napi build --release --platform -c packages/nx/package.json --manifest-path packages/nx/Cargo.toml --js ./native-bindings.js -o packages/nx/src/native --target wasm32-wasip1-threads"
+    },
     "build-native": {
       "outputs": [
         "{projectRoot}/src/native/*.node",
-        "{projectRoot}/src/native/*.wasm",
-        "{projectRoot}/src/native/native-bindings.js",
+        "{projectRoot}/src/native/*.js",
         "{projectRoot}/src/native/index.d.ts"
       ],
       "command": "napi build --release --platform --package-json-path packages/nx/package.json --manifest-path packages/nx/Cargo.toml --js ./native-bindings.js -o packages/nx/src/native",
@@ -58,7 +68,7 @@
           },
           {
             "input": "packages/nx",
-            "glob": "**/*.{cjs,js,css,html,svg,wasm}",
+            "glob": "**/*.{mjs,cjs,js,css,html,svg,wasm}",
             "ignore": ["**/jest.config.js"],
             "output": "/"
           },

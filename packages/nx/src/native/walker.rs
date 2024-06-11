@@ -3,7 +3,8 @@ use std::thread;
 use std::thread::available_parallelism;
 
 use crossbeam_channel::unbounded;
-use ignore::WalkBuilder;
+use ignore::{Match, WalkBuilder};
+use ignore::gitignore::GitignoreBuilder;
 use tracing::trace;
 
 use crate::native::glob::build_glob_set;
@@ -56,6 +57,76 @@ where
             entry
                 .ok()
                 .and_then(|e| e.path().strip_prefix(&base_dir).ok().map(|p| p.to_owned()))
+        })
+}
+
+/// Walks the directory in a single thread and does not ignore any files
+/// This should only be used in wasm environments
+pub fn nx_walker_sync_with_ignore<'a, P>(
+    directory: P
+) -> impl Iterator<Item = NxFile>
+    where
+        P: AsRef<Path> + 'a,
+{
+    let base_dir: PathBuf = directory.as_ref().into();
+
+    let base_ignores: Vec<String> = vec![
+        "**/node_modules".into(),
+        "**/.git".into(),
+        "**/.nx/cache".into(),
+        "**/.nx/workspace-data".into(),
+        "**/.yarn/cache".into(),
+    ];
+
+    let ignore_glob_set = build_glob_set(&base_ignores).expect("Should be valid globs");
+
+
+    let mut ignore_builder = GitignoreBuilder::new(dbg!(&base_dir));
+
+
+    ignore_builder.add(base_dir.join(".gitignore"));
+    ignore_builder.add(base_dir.join(".nxignore"));
+    let ignore = ignore_builder.build().unwrap();
+
+
+    let base_dir_clone = base_dir.clone();
+    // Use WalkDir instead of ignore::WalkBuilder because it's faster
+    WalkDir::new(&base_dir)
+        .into_iter()
+        .filter_entry(move |entry| {
+            let path = entry.path();
+
+            let is_dir = path.is_dir();
+
+            !matches!(
+                            ignore.matched_path_or_any_parents(&path.strip_prefix(&base_dir_clone).unwrap(), is_dir),
+                            Match::Ignore(_)
+                        ) && !ignore_glob_set.is_match(path)
+        })
+        .filter_map(move |entry| {
+            entry
+                .ok()
+                .and_then(|e| {
+                    let path = e.path();
+                    let is_dir = path.is_dir();
+
+                    if is_dir {
+                        return None;
+                    }
+
+                    let Ok(relative_path) = e.path().strip_prefix(&base_dir) else {
+                        return None;
+                    };
+                    let Ok(metadata) = e.metadata() else {
+                        return None;
+                    };
+
+                    Some(NxFile {
+                        full_path: String::from(e.path().to_string_lossy()),
+                        normalized_path: relative_path.to_normalized_string(),
+                        mod_time: get_mod_time(&metadata),
+                    })
+                })
         })
 }
 

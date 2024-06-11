@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import { createRequire } from "node:module";
+import { parse } from "node:path";
 import { WASI } from "node:wasi";
 import { parentPort, Worker } from "node:worker_threads";
 
@@ -27,7 +28,9 @@ Object.assign(globalThis, {
   },
 });
 
-const emnapiContext = getDefaultContext()
+const emnapiContext = getDefaultContext();
+
+const __rootDir = parse(process.cwd()).root;
 
 const handler = new MessageHandler({
   onLoad({ wasmModule, wasmMemory }) {
@@ -35,7 +38,7 @@ const handler = new MessageHandler({
       version: 'preview1',
       env: process.env,
       preopens: {
-        '/': '/',
+        [__rootDir]: __rootDir,
       },
     });
 
