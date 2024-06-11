@@ -4,7 +4,7 @@
 <!-- Please make sure that your commit message follows our format -->
 <!-- Example: `fix(nx): must begin with lowercase` -->
 
-<!-- To request a new release for this pull request, mention someone from the Nx team or the `@nrwl/nx-pipelines-reviewers`. -->
+<!-- If this is a particularly complex change or feature addition, you can request a dedicated Nx release for this pull request branch. Mention someone from the Nx team or the `@nrwl/nx-pipelines-reviewers` and they will confirm if the PR warrants its own release for testing purposes, and generate it for you if appropriate. -->
 
 ## Current Behavior
 <!-- This is the behavior we have today -->

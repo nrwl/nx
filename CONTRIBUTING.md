@@ -358,4 +358,4 @@ execute `pnpm commit`.
 
 #### PR releases
 
-You can request a release for your PR by mentioning someone from the Nx team or the `@nrwl/nx-pipelines-reviewers`. Depending on the nature of the PR, the team will decide if a release for testing purposes is necessary.
+If you are working on a particularly complex change or feature addition, you can request a dedicated Nx release for the associated pull request branch. Mention someone from the Nx team or the `@nrwl/nx-pipelines-reviewers` and they will confirm if the PR warrants its own release for testing purposes, and generate it for you if appropriate.
