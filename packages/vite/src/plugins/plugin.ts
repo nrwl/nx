@@ -38,6 +38,9 @@ function writeTargetsToCache(cachePath, results?: Record<string, ViteTargets>) {
   writeJsonFile(cachePath, results);
 }
 
+/**
+ * @deprecated The 'createDependencies' function is now a no-op. This functionality is included in 'createNodesV2'.
+ */
 export const createDependencies: CreateDependencies = () => {
   return [];
 };
