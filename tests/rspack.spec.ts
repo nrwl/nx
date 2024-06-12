@@ -129,7 +129,7 @@ describe('rspack e2e', () => {
     // Generate a Nest app and verify build output
     const app3 = uniq('app3');
     await runNxCommandAsync(
-      `generate @nx/rspack:app ${app3} --framework=nest --unitTestRunner=jest`
+      `generate @nx/rspack:app ${app3} --framework=nest --unitTestRunner=jest --no-interactive`
     );
     checkFilesExist(`${app3}/project.json`);
 
