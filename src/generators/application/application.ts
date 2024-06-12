@@ -10,7 +10,12 @@ export default async function (
   _options: ApplicationGeneratorSchema
 ) {
   const tasks = [];
-  const initTask = await rspackInitGenerator(tree, _options);
+  const initTask = await rspackInitGenerator(tree, {
+    ..._options,
+    // TODO: Crystalize the default rspack.config.js file.
+    // The default setup isn't crystalized so don't add plugin.
+    addPlugin: false,
+  });
   tasks.push(initTask);
 
   const options = normalizeOptions(tree, _options);
@@ -26,6 +31,7 @@ export default async function (
       ...options,
       skipFormat: true,
       tags: options.tags ?? '',
+      addPlugin: false,
     });
 
     const convertAppTask = await configurationGenerator(tree, {
@@ -52,6 +58,7 @@ export default async function (
       e2eTestRunner: options.e2eTestRunner,
       rootProject: options.rootProject,
       skipFormat: true,
+      addPlugin: false,
     });
     const convertAppTask = await configurationGenerator(tree, {
       project: options.name,
@@ -60,6 +67,7 @@ export default async function (
       buildTarget: 'build',
       serveTarget: 'serve',
       framework: 'web',
+      addPlugin: false,
     });
     tasks.push(createAppTask, convertAppTask);
   } else {
@@ -78,6 +86,7 @@ export default async function (
       e2eTestRunner: options.e2eTestRunner,
       rootProject: options.rootProject,
       skipFormat: true,
+      addPlugin: false,
     });
     const convertAppTask = await configurationGenerator(tree, {
       project: options.name,
