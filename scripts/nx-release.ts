@@ -158,41 +158,41 @@ const VALID_AUTHORS_FOR_LATEST = [
         } catch {}
       }
     }
+  }
 
-    if (!options.local && (!distTag || distTag === 'latest')) {
-      // We are only expecting non-local latest releases to be performed within publish.yml on GitHub
-      const author = process.env.GITHUB_ACTOR ?? '';
-      if (!VALID_AUTHORS_FOR_LATEST.includes(author)) {
-        throw new Error(
-          `The GitHub user "${author}" is not allowed to publish to "latest". Please request one of the following users to carry out the release: ${VALID_AUTHORS_FOR_LATEST.join(
-            ', '
-          )}`
-        );
-      }
+  if (!options.local && (!distTag || distTag === 'latest')) {
+    // We are only expecting non-local latest releases to be performed within publish.yml on GitHub
+    const author = process.env.GITHUB_ACTOR ?? '';
+    if (!VALID_AUTHORS_FOR_LATEST.includes(author)) {
+      throw new Error(
+        `The GitHub user "${author}" is not allowed to publish to "latest". Please request one of the following users to carry out the release: ${VALID_AUTHORS_FOR_LATEST.join(
+          ', '
+        )}`
+      );
+    }
+  }
+
+  // Run with dynamic output-style so that we have more minimal logs by default but still always see errors
+  let publishCommand = `pnpm nx release publish --registry=${getRegistry()} --tag=${distTag} --output-style=dynamic --parallel=8`;
+  if (options.dryRun) {
+    publishCommand += ' --dry-run';
+  }
+  console.log(`\n> ${publishCommand}`);
+  execSync(publishCommand, {
+    stdio: [0, 1, 2],
+    maxBuffer: LARGE_BUFFER,
+  });
+
+  if (!options.dryRun) {
+    let version;
+    if (['minor', 'major', 'patch'].includes(options.version)) {
+      version = execSync(`npm view nx@${distTag} version`).toString().trim();
+    } else {
+      version = options.version;
     }
 
-    // Run with dynamic output-style so that we have more minimal logs by default but still always see errors
-    let publishCommand = `pnpm nx release publish --registry=${getRegistry()} --tag=${distTag} --output-style=dynamic --parallel=8`;
-    if (options.dryRun) {
-      publishCommand += ' --dry-run';
-    }
-    console.log(`\n> ${publishCommand}`);
-    execSync(publishCommand, {
-      stdio: [0, 1, 2],
-      maxBuffer: LARGE_BUFFER,
-    });
-
-    if (!options.dryRun) {
-      let version;
-      if (['minor', 'major', 'patch'].includes(options.version)) {
-        version = execSync(`npm view nx@${distTag} version`).toString().trim();
-      } else {
-        version = options.version;
-      }
-
-      console.log(chalk.green` > Published version: ` + version);
-      console.log(chalk.dim`   Use: npx create-nx-workspace@${version}\n`);
-    }
+    console.log(chalk.green` > Published version: ` + version);
+    console.log(chalk.dim`   Use: npx create-nx-workspace@${version}\n`);
   }
 
   process.exit(0);
