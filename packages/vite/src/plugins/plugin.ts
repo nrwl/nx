@@ -65,9 +65,9 @@ export const createNodes: CreateNodes<VitePluginOptions> = [
     // We do not want to alter how the hash is calculated, so appending the config file path to the hash
     // to prevent vite/vitest files overwriting the target cache created by the other
     const hash =
-      calculateHashForCreateNodes(projectRoot, options, context, [
+      (await calculateHashForCreateNodes(projectRoot, options, context, [
         getLockFileName(detectPackageManager(context.workspaceRoot)),
-      ]) + configFilePath;
+      ])) + configFilePath;
 
     targetsCache[hash] ??= await buildViteTargets(
       configFilePath,

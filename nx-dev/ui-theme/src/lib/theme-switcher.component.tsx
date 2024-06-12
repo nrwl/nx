@@ -1,3 +1,4 @@
+'use client';
 import { Listbox, Transition } from '@headlessui/react';
 import {
   ComputerDesktopIcon,

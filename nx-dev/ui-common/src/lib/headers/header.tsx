@@ -1,3 +1,4 @@
+'use client';
 import { Dialog, Disclosure, Popover, Transition } from '@headlessui/react';
 import {
   ArrowUpRightIcon,
@@ -7,7 +8,6 @@ import {
 } from '@heroicons/react/24/outline';
 import cx from 'classnames';
 import Link from 'next/link';
-import { useRouter } from 'next/router';
 import { Fragment, useEffect, useState } from 'react';
 import { ButtonLink } from '../button';
 import {
@@ -28,7 +28,6 @@ import { NxCloudIcon } from '../nx-cloud-icon';
 
 export function Header(): JSX.Element {
   let [isOpen, setIsOpen] = useState(false);
-  const router = useRouter();
 
   // We need to close the popover if the route changes or the window is resized to prevent the popover from being stuck open.
   const checkSizeAndClosePopover = () => {

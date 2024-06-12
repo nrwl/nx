@@ -8,6 +8,27 @@ import { renderMarkdown } from '@nx/nx-dev/ui-markdoc';
 export interface BlogDetailsProps {
   post: BlogPostDataEntry;
 }
+
+export async function generateMetadata({ post }: BlogDetailsProps) {
+  return {
+    title: post.title,
+    description: post.description,
+    openGraph: {
+      images: [
+        {
+          url: post.cover_image
+            ? `https://nx.dev${post.cover_image}`
+            : 'https://nx.dev/socials/nx-media.png',
+          width: 800,
+          height: 421,
+          alt: 'Nx: Smart, Fast and Extensible Build System',
+          type: 'image/jpeg',
+        },
+      ],
+    },
+  };
+}
+
 export function BlogDetails({ post }: BlogDetailsProps) {
   const { node } = renderMarkdown(post.content, {
     filePath: post.filePath ?? '',

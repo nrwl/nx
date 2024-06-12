@@ -16,7 +16,9 @@ export async function validateTypes(opts: {
 }): Promise<void> {
   const result = await runTypeCheck({
     workspaceRoot: opts.workspaceRoot,
-    tsConfigPath: join(opts.workspaceRoot, opts.tsconfig),
+    tsConfigPath: opts.tsconfig.startsWith(opts.workspaceRoot)
+      ? opts.tsconfig
+      : join(opts.workspaceRoot, opts.tsconfig),
     mode: 'noEmit',
   });
 
@@ -29,10 +31,10 @@ export async function validateTypes(opts: {
 
 export function createBuildableTsConfig(
   projectRoot: string,
-  options: ViteBuildExecutorOptions | ViteDevServerExecutorOptions,
+  options: { tsConfig?: string; buildLibsFromSource?: boolean },
   context: ExecutorContext
 ) {
-  const tsConfig = getProjectTsConfigPath(projectRoot);
+  const tsConfig = options.tsConfig ?? getProjectTsConfigPath(projectRoot);
   options['buildLibsFromSource'] ??= true;
 
   if (!options['buildLibsFromSource']) {
@@ -55,7 +57,9 @@ export function createBuildableTsConfig(
       dependencies
     );
     process.env.NX_TSCONFIG_PATH = tmpTsConfigPath;
+    return tmpTsConfigPath;
   }
+  return tsConfig;
 }
 
 export function loadViteDynamicImport() {

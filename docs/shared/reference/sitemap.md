@@ -674,6 +674,7 @@
     - [generators](/nx-api/vite/generators)
       - [init](/nx-api/vite/generators/init)
       - [configuration](/nx-api/vite/generators/configuration)
+      - [setup-paths-plugin](/nx-api/vite/generators/setup-paths-plugin)
       - [vitest](/nx-api/vite/generators/vitest)
   - [vue](/nx-api/vue)
     - [documents](/nx-api/vue/documents)

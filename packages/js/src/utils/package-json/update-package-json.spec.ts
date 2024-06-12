@@ -497,9 +497,6 @@ describe('updatePackageJson', () => {
           "external2": "^4.0.0",
           "lib2": "^0.0.1",
         },
-        "devDependencies": {
-          "jest": "27",
-        },
         "main": "./main.js",
         "name": "@org/lib1",
         "type": "commonjs",
