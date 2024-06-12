@@ -1,17 +1,22 @@
 import {
   addDependenciesToPackageJson,
   convertNxGenerator,
+  createProjectGraphAsync,
   GeneratorCallback,
+  readNxJson,
   runTasksInSerial,
   Tree,
 } from '@nx/devkit';
+import { addPlugin } from '@nx/devkit/src/utils/add-plugin';
 import { initGenerator } from '@nx/js';
+import { createNodesV2 } from '../../../plugin';
 import {
-  lessLoaderVersion, reactRefreshVersion,
+  lessLoaderVersion,
+  reactRefreshVersion,
   rspackCoreVersion,
   rspackDevServerVersion,
   rspackPluginMinifyVersion,
-  rspackPluginReactRefreshVersion
+  rspackPluginReactRefreshVersion,
 } from '../../utils/versions';
 import { InitGeneratorSchema } from './schema';
 
@@ -20,6 +25,46 @@ export async function rspackInitGenerator(
   schema: InitGeneratorSchema
 ) {
   const tasks: GeneratorCallback[] = [];
+
+  const nxJson = readNxJson(tree);
+  const addPluginDefault =
+    process.env.NX_ADD_PLUGINS !== 'false' &&
+    nxJson.useInferencePlugins !== false;
+  schema.addPlugin ??= addPluginDefault;
+
+  if (schema.addPlugin) {
+    await addPlugin(
+      tree,
+      await createProjectGraphAsync(),
+      '@nx/rspack/plugin',
+      createNodesV2,
+      {
+        buildTargetName: [
+          'build',
+          'rspack:build',
+          'build:rspack',
+          'rspack-build',
+          'build-rspack',
+        ],
+        serveTargetName: [
+          'serve',
+          'rspack:serve',
+          'serve:rspack',
+          'rspack-serve',
+          'serve-rspack',
+        ],
+        previewTargetName: [
+          'preview',
+          'rspack:preview',
+          'preview:rspack',
+          'rspack-preview',
+          'preview-rspack',
+        ],
+      },
+      schema.updatePackageScripts
+    );
+  }
+
   const jsInitTask = await initGenerator(tree, {
     ...schema,
     tsConfigName: schema.rootProject ? 'tsconfig.json' : 'tsconfig.base.json',
@@ -30,9 +75,10 @@ export async function rspackInitGenerator(
 
   const devDependencies = {
     '@rspack/core': rspackCoreVersion,
+    '@rspack/cli': rspackCoreVersion,
     '@rspack/plugin-minify': rspackPluginMinifyVersion,
     '@rspack/plugin-react-refresh': rspackPluginReactRefreshVersion,
-    'react-refresh': reactRefreshVersion
+    'react-refresh': reactRefreshVersion,
   };
 
   // eslint-disable-next-line @typescript-eslint/no-var-requires

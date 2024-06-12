@@ -1,9 +1,11 @@
 export type Framework = 'none' | 'react' | 'web' | 'nest';
 
 export interface InitGeneratorSchema {
-  framework?: Framework;
-  style?: 'none' | 'css' | 'scss' | 'less' | 'styl';
+  addPlugin?: boolean;
   devServer?: boolean;
-  rootProject?: boolean;
+  framework?: Framework;
   keepExistingVersions?: boolean;
+  rootProject?: boolean;
+  style?: 'none' | 'css' | 'scss' | 'less' | 'styl';
+  updatePackageScripts?: boolean;
 }
