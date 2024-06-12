@@ -51,6 +51,7 @@ Next, we'll add [the Nx default cache directory](/features/cache-task-results#wh
 ```text {% fileName=".gitignore" %}
 ...
 .nx/cache
+.nx/workspace-data
 ```
 
 ## Set Up Caching For a Task
