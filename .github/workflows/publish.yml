@@ -376,11 +376,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          # TODO: revert these after testing is complete
-          repository: nrwl/nx
-          ref: pr-release-jh
-          # repository: ${{ needs.resolve-required-data.outputs.repo }}
-          # ref: ${{ needs.resolve-required-data.outputs.ref }}
+          repository: ${{ needs.resolve-required-data.outputs.repo }}
+          ref: ${{ needs.resolve-required-data.outputs.ref }}
 
       - uses: pnpm/action-setup@v4
         with:
