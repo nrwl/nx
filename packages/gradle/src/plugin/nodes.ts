@@ -2,7 +2,6 @@ import {
   CreateNodes,
   CreateNodesV2,
   CreateNodesContext,
-  CreateNodesContextV2,
   ProjectConfiguration,
   TargetConfiguration,
   createNodesFromFiles,
@@ -24,6 +23,7 @@ import {
   gradleConfigGlob,
 } from '../utils/get-gradle-report';
 import { hashObject } from 'nx/src/hasher/file-hasher';
+import { getTestsForProject } from '../utils/get-tests-for-project';
 
 const cacheableTaskType = new Set(['Build', 'Verification']);
 const dependsOnMap = {
@@ -104,7 +104,7 @@ export const makeCreateNodes =
       options ?? {},
       context
     );
-    targetsCache[hash] ??= createGradleProject(
+    targetsCache[hash] ??= await createGradleProject(
       gradleReport,
       gradleFilePath,
       options,
@@ -138,7 +138,7 @@ export const createNodes: CreateNodes<GradlePluginOptions> = [
   },
 ];
 
-function createGradleProject(
+async function createGradleProject(
   gradleReport: GradleReport,
   gradleFilePath: string,
   options: GradlePluginOptions | undefined,
@@ -177,7 +177,7 @@ function createGradleProject(
       string
     >;
 
-    const { targets, targetGroups } = createGradleTargets(
+    const { targets, targetGroups } = await createGradleTargets(
       tasks,
       options,
       context,
@@ -200,25 +200,39 @@ function createGradleProject(
   }
 }
 
-function createGradleTargets(
+async function createGradleTargets(
   tasks: GradleTask[],
   options: GradlePluginOptions | undefined,
   context: CreateNodesContext,
   outputDirs: Map<string, string>,
   gradleProject: string
-): {
+): Promise<{
   targetGroups: Record<string, string[]>;
   targets: Record<string, TargetConfiguration>;
-} {
+}> {
   const inputsMap = createInputsMap(context);
 
-  const targets: Record<string, TargetConfiguration> = {};
+  let targets: Record<string, TargetConfiguration> = {};
   const targetGroups: Record<string, string[]> = {};
   for (const task of tasks) {
     const targetName = options?.[`${task.name}TargetName`] ?? task.name;
 
-    const outputs = outputDirs.get(task.name);
+    if (task.name === 'test') {
+      const testTargets = await getTestTargets(
+        gradleProject,
+        targetName,
+        targetGroups,
+        inputsMap,
+        outputDirs,
+        task.type
+      );
+      if (testTargets) {
+        targets = { ...targets, ...testTargets };
+        continue;
+      }
+    }
 
+    const outputs = outputDirs.get(task.name);
     targets[targetName] = {
       command: `${getGradleExecFile()} ${
         gradleProject ? gradleProject + ':' : ''
@@ -229,11 +243,8 @@ function createGradleTargets(
       metadata: {
         technologies: ['gradle'],
       },
+      ...(outputs ? { outputs: [outputs] } : {}),
     };
-
-    if (outputs) {
-      targets[targetName].outputs = [outputs];
-    }
 
     if (!targetGroups[task.type]) {
       targetGroups[task.type] = [];
@@ -241,6 +252,62 @@ function createGradleTargets(
     targetGroups[task.type].push(task.name);
   }
   return { targetGroups, targets };
+}
+
+async function getTestTargets(
+  gradleProject: string,
+  testTargetName: string,
+  targetGroups: Record<string, string[]>,
+  inputsMap: Record<string, TargetConfiguration['inputs']>,
+  outputDirs: Map<string, string>,
+  taskType: string
+): Promise<Record<string, TargetConfiguration>> {
+  const tests: string[] | undefined = await getTestsForProject(gradleProject);
+  const taskCommandToRun = `${gradleProject ? gradleProject + ':' : ''}test`;
+  const outputs = [
+    outputDirs.get('testReport'),
+    outputDirs.get('testResults'),
+  ].filter(Boolean);
+
+  const targets: Record<string, TargetConfiguration> = {
+    [testTargetName]: {
+      command: `${getGradleExecFile()} ${taskCommandToRun}`,
+      cache: true,
+      inputs: inputsMap['test'],
+      dependsOn: dependsOnMap['test'],
+      metadata: {
+        technologies: ['gradle'],
+      },
+      ...(outputs.length > 0 ? { outputs } : {}),
+    },
+  };
+
+  if (!tests || tests.length === 0) {
+    if (!targetGroups[taskType]) {
+      targetGroups[taskType] = [];
+    }
+    targetGroups[taskType].push(testTargetName);
+    return targets;
+  }
+
+  const targetGroupName = 'Tests';
+  targetGroups[targetGroupName] = [];
+  tests?.forEach((test) => {
+    const targetName = testTargetName + '--' + test;
+    targetGroups[targetGroupName].push(targetName);
+    targets[targetName] = {
+      command: `${getGradleExecFile()} ${taskCommandToRun} --tests ${test}`,
+      cache: true,
+      inputs: inputsMap['test'],
+      dependsOn: dependsOnMap['test'],
+      metadata: {
+        technologies: ['gradle'],
+      },
+      ...(outputs.length > 0 ? { outputs } : {}),
+    };
+    targetGroups;
+  });
+  return targets;
 }
 
 function createInputsMap(

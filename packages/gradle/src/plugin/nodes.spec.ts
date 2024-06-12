@@ -1,13 +1,19 @@
 import { CreateNodesContext } from '@nx/devkit';
 
 import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
-import { type GradleReport } from '../utils/get-gradle-report';
+import type { GradleReport } from '../utils/get-gradle-report';
 
 let gradleReport: GradleReport;
-jest.mock('../utils/get-gradle-report.ts', () => {
+jest.mock('../utils/get-gradle-report', () => {
   return {
     populateGradleReport: jest.fn().mockImplementation(() => void 0),
     getCurrentGradleReport: jest.fn().mockImplementation(() => gradleReport),
+  };
+});
+
+jest.mock('../utils/get-tests-for-project', () => {
+  return {
+    getTestsForProject: jest.fn().mockImplementation(() => ['test1', 'test2']),
   };
 });
 
@@ -30,7 +36,7 @@ describe('@nx/gradle/plugin', () => {
         ['proj/gradle.build', new Map([['build', 'build']])],
       ]),
       gradleProjectToTasksTypeMap: new Map<string, Map<string, string>>([
-        ['proj', new Map([['test', 'Test']])],
+        ['proj', new Map([['test', 'Verfication']])],
       ]),
       gradleProjectToProjectName: new Map<string, string>([['proj', 'proj']]),
     };
@@ -54,6 +60,7 @@ describe('@nx/gradle/plugin', () => {
   });
 
   afterEach(() => {
+    jest.resetAllMocks();
     jest.resetModules();
     process.chdir(cwd);
   });
@@ -76,8 +83,9 @@ describe('@nx/gradle/plugin', () => {
               "proj": {
                 "metadata": {
                   "targetGroups": {
-                    "Test": [
-                      "test",
+                    "Tests": [
+                      "test--test1",
+                      "test--test2",
                     ],
                   },
                   "technologies": [
@@ -87,8 +95,40 @@ describe('@nx/gradle/plugin', () => {
                 "name": "proj",
                 "targets": {
                   "test": {
-                    "cache": false,
+                    "cache": true,
                     "command": "./gradlew proj:test",
+                    "dependsOn": [
+                      "classes",
+                    ],
+                    "inputs": [
+                      "default",
+                      "^production",
+                    ],
+                    "metadata": {
+                      "technologies": [
+                        "gradle",
+                      ],
+                    },
+                  },
+                  "test--test1": {
+                    "cache": true,
+                    "command": "./gradlew proj:test --tests test1",
+                    "dependsOn": [
+                      "classes",
+                    ],
+                    "inputs": [
+                      "default",
+                      "^production",
+                    ],
+                    "metadata": {
+                      "technologies": [
+                        "gradle",
+                      ],
+                    },
+                  },
+                  "test--test2": {
+                    "cache": true,
+                    "command": "./gradlew proj:test --tests test2",
                     "dependsOn": [
                       "classes",
                     ],
@@ -121,7 +161,7 @@ describe('@nx/gradle/plugin', () => {
         ['nested/nested/proj/gradle.build', new Map([['build', 'build']])],
       ]),
       gradleProjectToTasksTypeMap: new Map<string, Map<string, string>>([
-        ['proj', new Map([['test', 'Test']])],
+        ['proj', new Map([['test', 'Verfication']])],
       ]),
       gradleProjectToProjectName: new Map<string, string>([['proj', 'proj']]),
     };
@@ -146,8 +186,9 @@ describe('@nx/gradle/plugin', () => {
               "nested/nested/proj": {
                 "metadata": {
                   "targetGroups": {
-                    "Test": [
-                      "test",
+                    "Tests": [
+                      "test--test1",
+                      "test--test2",
                     ],
                   },
                   "technologies": [
@@ -157,8 +198,40 @@ describe('@nx/gradle/plugin', () => {
                 "name": "proj",
                 "targets": {
                   "test": {
-                    "cache": false,
+                    "cache": true,
                     "command": "./gradlew proj:test",
+                    "dependsOn": [
+                      "classes",
+                    ],
+                    "inputs": [
+                      "default",
+                      "^production",
+                    ],
+                    "metadata": {
+                      "technologies": [
+                        "gradle",
+                      ],
+                    },
+                  },
+                  "test--test1": {
+                    "cache": true,
+                    "command": "./gradlew proj:test --tests test1",
+                    "dependsOn": [
+                      "classes",
+                    ],
+                    "inputs": [
+                      "default",
+                      "^production",
+                    ],
+                    "metadata": {
+                      "technologies": [
+                        "gradle",
+                      ],
+                    },
+                  },
+                  "test--test2": {
+                    "cache": true,
+                    "command": "./gradlew proj:test --tests test2",
                     "dependsOn": [
                       "classes",
                     ],
