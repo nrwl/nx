@@ -417,18 +417,21 @@ jobs:
           echo "Version set to: $VERSION"
           echo "DRY_RUN set to: $DRY_RUN"
           echo ""
-          pnpm nx-release --local=false $VERSION --dry-run
+          pnpm nx-release --local=false $VERSION $DRY_RUN
 
       - name: Trigger Docs Release
-        # Publish docs only when a stable release is created (not prereleases or PR releases)
         if: ${{ !github.event.release.prerelease && !github.event.inputs.pr }}
         run: |
           # The GITHUB_REF_NAME is a full version (i.e. 17.3.2). The branchName will only use the major version number.
           # We will publish docs to the website branch based on the current tag (i.e. website-17)
           branchName=website-${GITHUB_REF_NAME%.*.*}
-          # We force recreate the branch in order to always be up to date and avoid merge conflicts within the automated workflow
-          git branch -f $branchName
-          git push -f origin $branchName
+          if [ -n "${{ needs.resolve-required-data.outputs.dry_run_flag }}" ]; then
+            # We force recreate the branch in order to always be up to date and avoid merge conflicts within the automated workflow
+            git branch -f $branchName
+            git push -f origin $branchName
+          else
+            echo "Dry-run is set, so skipping git actions, but the docs branch name would be: $branchName"
+          fi
 
       - name: (PR Release Only) Create comment for successful PR release
         if: success() && github.event.inputs.pr
