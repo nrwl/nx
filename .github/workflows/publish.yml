@@ -376,8 +376,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          repository: ${{ needs.resolve-required-data.outputs.repo }}
-          ref: ${{ needs.resolve-required-data.outputs.ref }}
+          # TODO: revert these after testing is complete
+          repository: nrwl/nx
+          ref: pr-release-jh
+          # repository: ${{ needs.resolve-required-data.outputs.repo }}
+          # ref: ${{ needs.resolve-required-data.outputs.ref }}
 
       - uses: pnpm/action-setup@v4
         with:
@@ -409,6 +412,7 @@ jobs:
           VERSION: ${{ needs.resolve-required-data.outputs.version }}
           DRY_RUN: ${{ needs.resolve-required-data.outputs.dry_run_flag }}
           PUBLISH_BRANCH: ${{ needs.resolve-required-data.outputs.publish_branch }}
+          NX_VERBOSE_LOGGING: true
         run: |
           echo ""
           # Create and check out the publish branch
