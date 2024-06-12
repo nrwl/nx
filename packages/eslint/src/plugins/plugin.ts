@@ -386,18 +386,15 @@ function getRootForDirectory(
   roots: Map<string, string[]>
 ): string {
   let currentPath = normalize(directory);
-  if (roots.has(currentPath)) {
-    return currentPath;
-  }
 
   while (currentPath !== dirname(currentPath)) {
-    currentPath = dirname(currentPath);
     if (roots.has(currentPath)) {
       return currentPath;
     }
+    currentPath = dirname(currentPath);
   }
 
-  return null;
+  return roots.has(currentPath) ? currentPath : null;
 }
 
 function getProjectUsingESLintConfig(
