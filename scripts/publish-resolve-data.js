@@ -38,7 +38,7 @@ module.exports = async ({ github, context }) => {
   const DEFAULT_PUBLISH_BRANCH = `publish/${github.ref_name}`;
 
   /** @type {DryRunFlag} */
-  const DRY_RUN_DISABLED = '--dry-run'; // TODO: revert to empty string after testing
+  const DRY_RUN_DISABLED = '';
   /** @type {DryRunFlag} */
   const DRY_RUN_ENABLED = '--dry-run';
 
