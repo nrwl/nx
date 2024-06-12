@@ -130,36 +130,32 @@ const VALID_AUTHORS_FOR_LATEST = [
 
   const distTag = determineDistTag(options.version);
 
-  if (options.dryRun) {
-    console.warn('Not Publishing because --dryRun was passed');
-  } else {
-    // If publishing locally, force all projects to not be private first
-    if (options.local) {
-      console.log(
-        chalk.dim`\n  Publishing locally, so setting all packages with existing nx-release-publish targets to not be private. If you have created a new private package and you want it to be published, you will need to manually configure the "nx-release-publish" target using executor "@nx/js:release-publish"`
-      );
-      const projectGraph = await createProjectGraphAsync();
-      for (const proj of Object.values(projectGraph.nodes)) {
-        if (proj.data.targets?.['nx-release-publish']) {
-          const packageJsonPath = join(
-            workspaceRoot,
-            proj.data.targets?.['nx-release-publish']?.options.packageRoot,
-            'package.json'
-          );
-          try {
-            const packageJson = require(packageJsonPath);
-            if (packageJson.private) {
-              console.log(
-                '- Publishing private package locally:',
-                packageJson.name
-              );
-              writeFileSync(
-                packageJsonPath,
-                JSON.stringify({ ...packageJson, private: false })
-              );
-            }
-          } catch {}
-        }
+  // If publishing locally, force all projects to not be private first
+  if (options.local) {
+    console.log(
+      chalk.dim`\n  Publishing locally, so setting all packages with existing nx-release-publish targets to not be private. If you have created a new private package and you want it to be published, you will need to manually configure the "nx-release-publish" target using executor "@nx/js:release-publish"`
+    );
+    const projectGraph = await createProjectGraphAsync();
+    for (const proj of Object.values(projectGraph.nodes)) {
+      if (proj.data.targets?.['nx-release-publish']) {
+        const packageJsonPath = join(
+          workspaceRoot,
+          proj.data.targets?.['nx-release-publish']?.options.packageRoot,
+          'package.json'
+        );
+        try {
+          const packageJson = require(packageJsonPath);
+          if (packageJson.private) {
+            console.log(
+              '- Publishing private package locally:',
+              packageJson.name
+            );
+            writeFileSync(
+              packageJsonPath,
+              JSON.stringify({ ...packageJson, private: false })
+            );
+          }
+        } catch {}
       }
     }
 
@@ -186,15 +182,17 @@ const VALID_AUTHORS_FOR_LATEST = [
       maxBuffer: LARGE_BUFFER,
     });
 
-    let version;
-    if (['minor', 'major', 'patch'].includes(options.version)) {
-      version = execSync(`npm view nx@${distTag} version`).toString().trim();
-    } else {
-      version = options.version;
-    }
+    if (!options.dryRun) {
+      let version;
+      if (['minor', 'major', 'patch'].includes(options.version)) {
+        version = execSync(`npm view nx@${distTag} version`).toString().trim();
+      } else {
+        version = options.version;
+      }
 
-    console.log(chalk.green` > Published version: ` + version);
-    console.log(chalk.dim`   Use: npx create-nx-workspace@${version}\n`);
+      console.log(chalk.green` > Published version: ` + version);
+      console.log(chalk.dim`   Use: npx create-nx-workspace@${version}\n`);
+    }
   }
 
   process.exit(0);
