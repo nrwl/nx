@@ -39,14 +39,16 @@ export function sortProjectsTopologically(
     sortedProjects.push(node);
 
     // Process each project that depends on the current node
-    filteredDependencies.forEach((dep) => {
-      const dependentNode = projectGraph.nodes[dep.source];
-      const count = edges.get(dependentNode) - 1;
-      edges.set(dependentNode, count);
-      if (count === 0) {
-        processQueue.push(dependentNode);
-      }
-    });
+    filteredDependencies
+      .filter((dep) => dep.target === node.name)
+      .forEach((dep) => {
+        const dependentNode = projectGraph.nodes[dep.source];
+        const count = edges.get(dependentNode) - 1;
+        edges.set(dependentNode, count);
+        if (count === 0) {
+          processQueue.push(dependentNode);
+        }
+      });
   }
 
   /**

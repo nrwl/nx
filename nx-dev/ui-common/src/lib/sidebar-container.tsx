@@ -1,3 +1,4 @@
+'use client';
 import { Menu, MenuItem, MenuSection } from '@nx/nx-dev/models-menu';
 import { Sidebar, SidebarMobile } from './sidebar';
 import { useMemo } from 'react';

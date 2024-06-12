@@ -217,6 +217,7 @@ function readAndCombineAllProjectConfigurations(tree: Tree): {
       const packageJson = readJson<PackageJson>(tree, projectFile);
       const config = buildProjectConfigurationFromPackageJson(
         packageJson,
+        tree.root,
         projectFile,
         readNxJson(tree)
       );

@@ -165,7 +165,7 @@ Show help
 
 Type: `string`
 
-The optional prerelease identifier to apply to the version, in the case that the specifier argument has been set to `prerelease`.
+The optional prerelease identifier to apply to the version. This will only be applied in the case that the specifier argument has been set to `prerelease` OR when conventional commits are enabled, in which case it will modify the resolved specifier from conventional commits to be its prerelease equivalent. E.g. minor -> preminor
 
 ##### specifier
 
