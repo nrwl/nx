@@ -1,5 +1,5 @@
 import { CreateNodesContext } from '@nx/devkit';
-import { createNodes } from './plugin';
+import { createNodes, createNodesV2 } from './plugin';
 
 // This will only create test targets since no build targets are defined in vite.config.ts
 
@@ -28,7 +28,7 @@ jest.mock('../utils/executor-utils', () => ({
 }));
 
 describe('@nx/vite/plugin with test node', () => {
-  let createNodesFunction = createNodes[1];
+  let createNodesFunction = createNodesV2[1];
   let context: CreateNodesContext;
   describe('root project', () => {
     beforeEach(async () => {
@@ -47,6 +47,7 @@ describe('@nx/vite/plugin with test node', () => {
           },
         },
         workspaceRoot: '',
+        configFiles: [],
       };
     });
 
@@ -56,7 +57,7 @@ describe('@nx/vite/plugin with test node', () => {
 
     it('should create nodes - with test too', async () => {
       const nodes = await createNodesFunction(
-        'vite.config.ts',
+        ['vite.config.ts'],
         {
           buildTargetName: 'build',
           serveTargetName: 'serve',

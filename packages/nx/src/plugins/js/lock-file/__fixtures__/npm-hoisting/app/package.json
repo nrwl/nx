@@ -1,0 +1,16 @@
+{
+  "name": "app1",
+  "version": "0.0.1",
+  "dependencies": {
+    "@apollo/server": "4.10.1",
+    "@nestjs/apollo": "12.1.0",
+    "@nestjs/common": "10.3.3",
+    "@nestjs/core": "10.3.3",
+    "@nestjs/platform-express": "10.3.3",
+    "jsonwebtoken": "9.0.2",
+    "mongoose": "8.2.2",
+    "reflect-metadata": "0.1.14",
+    "rxjs": "7.8.1",
+    "tslib": "2.6.3"
+  }
+}

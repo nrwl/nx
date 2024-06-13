@@ -2,8 +2,12 @@ import {
   CreateDependencies,
   CreateNodes,
   CreateNodesContext,
+  createNodesFromFiles,
+  CreateNodesV2,
   detectPackageManager,
   joinPathFragments,
+  logger,
+  ProjectConfiguration,
   readJsonFile,
   TargetConfiguration,
   writeJsonFile,
@@ -15,6 +19,7 @@ import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { getLockFileName } from '@nx/js';
 import { loadViteDynamicImport } from '../utils/executor-utils';
+import { hashObject } from 'nx/src/hasher/file-hasher';
 
 export interface VitePluginOptions {
   buildTargetName?: string;
@@ -23,76 +28,109 @@ export interface VitePluginOptions {
   previewTargetName?: string;
   serveStaticTargetName?: string;
 }
+type ViteTargets = Pick<ProjectConfiguration, 'targets' | 'metadata'>;
 
-const cachePath = join(workspaceDataDirectory, 'vite.hash');
-const targetsCache = readTargetsCache();
-
-function readTargetsCache(): Record<
-  string,
-  Record<string, TargetConfiguration>
-> {
+function readTargetsCache(cachePath: string): Record<string, ViteTargets> {
   return existsSync(cachePath) ? readJsonFile(cachePath) : {};
 }
 
-function writeTargetsToCache() {
-  const oldCache = readTargetsCache();
-  writeJsonFile(cachePath, {
-    ...oldCache,
-    ...targetsCache,
-  });
+function writeTargetsToCache(cachePath, results?: Record<string, ViteTargets>) {
+  writeJsonFile(cachePath, results);
 }
 
+/**
+ * @deprecated The 'createDependencies' function is now a no-op. This functionality is included in 'createNodesV2'.
+ */
 export const createDependencies: CreateDependencies = () => {
-  writeTargetsToCache();
   return [];
 };
 
-export const createNodes: CreateNodes<VitePluginOptions> = [
-  '**/{vite,vitest}.config.{js,ts,mjs,mts,cjs,cts}',
-  async (configFilePath, options, context) => {
-    const projectRoot = dirname(configFilePath);
-    // Do not create a project if package.json and project.json isn't there.
-    const siblingFiles = readdirSync(join(context.workspaceRoot, projectRoot));
-    if (
-      !siblingFiles.includes('package.json') &&
-      !siblingFiles.includes('project.json')
-    ) {
-      return {};
+const viteVitestConfigGlob = '**/{vite,vitest}.config.{js,ts,mjs,mts,cjs,cts}';
+
+export const createNodesV2: CreateNodesV2<VitePluginOptions> = [
+  viteVitestConfigGlob,
+  async (configFilePaths, options, context) => {
+    const optionsHash = hashObject(options);
+    const cachePath = join(workspaceDataDirectory, `vite-${optionsHash}.hash`);
+    const targetsCache = readTargetsCache(cachePath);
+    try {
+      return await createNodesFromFiles(
+        (configFile, options, context) =>
+          createNodesInternal(configFile, options, context, targetsCache),
+        configFilePaths,
+        options,
+        context
+      );
+    } finally {
+      writeTargetsToCache(cachePath, targetsCache);
     }
-
-    options = normalizeOptions(options);
-
-    // We do not want to alter how the hash is calculated, so appending the config file path to the hash
-    // to prevent vite/vitest files overwriting the target cache created by the other
-    const hash =
-      (await calculateHashForCreateNodes(projectRoot, options, context, [
-        getLockFileName(detectPackageManager(context.workspaceRoot)),
-      ])) + configFilePath;
-
-    targetsCache[hash] ??= await buildViteTargets(
-      configFilePath,
-      projectRoot,
-      options,
-      context
-    );
-
-    return {
-      projects: {
-        [projectRoot]: {
-          root: projectRoot,
-          targets: targetsCache[hash],
-        },
-      },
-    };
   },
 ];
+
+export const createNodes: CreateNodes<VitePluginOptions> = [
+  viteVitestConfigGlob,
+  async (configFilePath, options, context) => {
+    logger.warn(
+      '`createNodes` is deprecated. Update your plugin to utilize createNodesV2 instead. In Nx 20, this will change to the createNodesV2 API.'
+    );
+    return createNodesInternal(configFilePath, options, context, {});
+  },
+];
+
+async function createNodesInternal(
+  configFilePath: string,
+  options: VitePluginOptions,
+  context: CreateNodesContext,
+  targetsCache: Record<string, ViteTargets>
+) {
+  const projectRoot = dirname(configFilePath);
+  // Do not create a project if package.json and project.json isn't there.
+  const siblingFiles = readdirSync(join(context.workspaceRoot, projectRoot));
+  if (
+    !siblingFiles.includes('package.json') &&
+    !siblingFiles.includes('project.json')
+  ) {
+    return {};
+  }
+
+  const normalizedOptions = normalizeOptions(options);
+
+  // We do not want to alter how the hash is calculated, so appending the config file path to the hash
+  // to prevent vite/vitest files overwriting the target cache created by the other
+  const hash =
+    (await calculateHashForCreateNodes(
+      projectRoot,
+      normalizedOptions,
+      context,
+      [getLockFileName(detectPackageManager(context.workspaceRoot))]
+    )) + configFilePath;
+
+  targetsCache[hash] ??= await buildViteTargets(
+    configFilePath,
+    projectRoot,
+    normalizedOptions,
+    context
+  );
+
+  const { targets, metadata } = targetsCache[hash];
+
+  return {
+    projects: {
+      [projectRoot]: {
+        root: projectRoot,
+        targets,
+        metadata,
+      },
+    },
+  };
+}
 
 async function buildViteTargets(
   configFilePath: string,
   projectRoot: string,
   options: VitePluginOptions,
   context: CreateNodesContext
-) {
+): Promise<ViteTargets> {
   const absoluteConfigFilePath = joinPathFragments(
     context.workspaceRoot,
     configFilePath
@@ -156,7 +194,8 @@ async function buildViteTargets(
     );
   }
 
-  return targets;
+  const metadata = {};
+  return { targets, metadata };
 }
 
 async function buildTarget(

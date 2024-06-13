@@ -1,5 +1,5 @@
 import { CreateNodesContext } from '@nx/devkit';
-import { createNodes } from './plugin';
+import { createNodesV2 } from './plugin';
 
 jest.mock('vite', () => ({
   resolveConfig: jest.fn().mockImplementation(() => {
@@ -22,7 +22,7 @@ jest.mock('../utils/executor-utils', () => ({
 }));
 
 describe('@nx/vite/plugin', () => {
-  let createNodesFunction = createNodes[1];
+  let createNodesFunction = createNodesV2[1];
   let context: CreateNodesContext;
   describe('root project', () => {
     beforeEach(async () => {
@@ -35,6 +35,7 @@ describe('@nx/vite/plugin', () => {
           },
         },
         workspaceRoot: '',
+        configFiles: [],
       };
     });
 
@@ -44,7 +45,7 @@ describe('@nx/vite/plugin', () => {
 
     it('should create nodes', async () => {
       const nodes = await createNodesFunction(
-        'vitest.config.ts',
+        ['vitest.config.ts'],
         {
           testTargetName: 'test',
         },

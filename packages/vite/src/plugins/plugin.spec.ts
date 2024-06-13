@@ -1,5 +1,5 @@
 import { CreateNodesContext } from '@nx/devkit';
-import { createNodes } from './plugin';
+import { createNodes, createNodesV2 } from './plugin';
 import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
 
 jest.mock('vite', () => ({
@@ -24,7 +24,7 @@ jest.mock('../utils/executor-utils', () => ({
 }));
 
 describe('@nx/vite/plugin', () => {
-  let createNodesFunction = createNodes[1];
+  let createNodesFunction = createNodesV2[1];
   let context: CreateNodesContext;
   describe('root project', () => {
     let tempFs;
@@ -45,7 +45,9 @@ describe('@nx/vite/plugin', () => {
           },
         },
         workspaceRoot: tempFs.tempDir,
+        configFiles: [],
       };
+      tempFs.createFileSync('vite.config.ts', '');
       tempFs.createFileSync('index.html', '');
       tempFs.createFileSync('package.json', '');
     });
@@ -56,7 +58,7 @@ describe('@nx/vite/plugin', () => {
 
     it('should create nodes', async () => {
       const nodes = await createNodesFunction(
-        'vite.config.ts',
+        ['vite.config.ts'],
         {
           buildTargetName: 'build',
           serveTargetName: 'serve',
@@ -83,6 +85,7 @@ describe('@nx/vite/plugin', () => {
           },
         },
         workspaceRoot: tempFs.tempDir,
+        configFiles: [],
       };
 
       tempFs.createFileSync(
@@ -99,7 +102,7 @@ describe('@nx/vite/plugin', () => {
 
     it('should create nodes', async () => {
       const nodes = await createNodesFunction(
-        'my-app/vite.config.ts',
+        ['my-app/vite.config.ts'],
         {
           buildTargetName: 'build-something',
           serveTargetName: 'my-serve',
