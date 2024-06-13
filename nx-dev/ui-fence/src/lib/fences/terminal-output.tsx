@@ -1,20 +1,22 @@
-import { ReactNode } from 'react';
+import type { JSX, ReactNode } from 'react';
 import { TerminalShellWrapper } from './terminal-shell';
 
 export function TerminalOutput({
   content,
   command,
   path,
+  actionElement,
 }: {
-  content: ReactNode | null;
+  content: ReactNode;
   command: string;
   path: string;
+  actionElement?: ReactNode;
 }): JSX.Element {
   const commandLines = command.split('\n').filter(Boolean);
   return (
     <TerminalShellWrapper>
       <div className="overflow-x-auto p-4 pt-2">
-        <div className="items-left flex flex-col">
+        <div className="items-left relative flex flex-col">
           {commandLines.map((line, index) => {
             return (
               <div key={index} className="flex">
@@ -29,6 +31,9 @@ export function TerminalOutput({
                   </span>
                 </p>
                 <p className="typing mt-0.5 flex-1 pl-2">{line}</p>
+                {actionElement ? (
+                  <div className="pl-2 sticky top-0">{actionElement}</div>
+                ) : null}
               </div>
             );
           })}

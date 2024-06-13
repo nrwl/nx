@@ -17,6 +17,7 @@ import { TargetExecutor } from '../target-executor/target-executor';
 import { TargetExecutorTitle } from '../target-executor/target-executor-title';
 import { TargetSourceInfo } from '../target-source-info/target-source-info';
 import { getTargetExecutorSourceMapKey } from '../target-source-info/get-target-executor-source-map-key';
+import { ShowAllOptions } from '../show-all-options/show-all-options';
 
 interface TargetConfigurationDetailsProps {
   projectName: string;
@@ -85,7 +86,7 @@ export default function TargetConfigurationDetails({
       : true);
 
   return (
-    <div className="relative overflow-hidden rounded-md border border-slate-200 dark:border-slate-700/60">
+    <div className="relative rounded-md border border-slate-200 dark:border-slate-700/60">
       <TargetConfigurationDetailsHeader
         isCollasped={collapsed}
         toggleCollapse={handleCollapseToggle}
@@ -139,6 +140,44 @@ export default function TargetConfigurationDetails({
                 </TargetExecutor>
               </p>
             </div>
+          )}
+
+          {shouldRenderOptions ? (
+            <>
+              <h4 className="mb-4">
+                <Tooltip
+                  openAction="hover"
+                  content={(<PropertyInfoTooltip type="options" />) as any}
+                >
+                  <span className="font-medium">
+                    <TooltipTriggerText>Options</TooltipTriggerText>
+                  </span>
+                </Tooltip>
+              </h4>
+              <div className="mb-4">
+                <FadingCollapsible>
+                  <JsonCodeBlock
+                    data={options}
+                    renderSource={(propertyName: string) => (
+                      <TargetSourceInfo
+                        className="flex min-w-0 pl-4"
+                        propertyKey={`targets.${targetName}.options.${propertyName}`}
+                        sourceMap={sourceMap}
+                      />
+                    )}
+                  />
+                </FadingCollapsible>
+              </div>
+              <div className="mb-4">
+                <ShowAllOptions
+                  targetConfiguration={targetConfiguration}
+                  projectName={projectName}
+                  targetName={targetName}
+                />
+              </div>
+            </>
+          ) : (
+            ''
           )}
 
           {targetConfiguration.inputs && (
@@ -263,37 +302,6 @@ export default function TargetConfigurationDetails({
                 ))}
               </ul>
             </div>
-          )}
-
-          {shouldRenderOptions ? (
-            <>
-              <h4 className="mb-4">
-                <Tooltip
-                  openAction="hover"
-                  content={(<PropertyInfoTooltip type="options" />) as any}
-                >
-                  <span className="font-medium">
-                    <TooltipTriggerText>Options</TooltipTriggerText>
-                  </span>
-                </Tooltip>
-              </h4>
-              <div className="mb-4">
-                <FadingCollapsible>
-                  <JsonCodeBlock
-                    data={options}
-                    renderSource={(propertyName: string) => (
-                      <TargetSourceInfo
-                        className="flex min-w-0 pl-4"
-                        propertyKey={`targets.${targetName}.options.${propertyName}`}
-                        sourceMap={sourceMap}
-                      />
-                    )}
-                  />
-                </FadingCollapsible>
-              </div>
-            </>
-          ) : (
-            ''
           )}
 
           {shouldRenderConfigurations ? (
