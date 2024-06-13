@@ -118,21 +118,21 @@ describe('Webpack Plugin (legacy)', () => {
     updateFile(
       `${appName}/webpack.config.js`,
       `
-        const { join } = require('path');
-        const {NxWebpackPlugin} = require('@nx/webpack');
-        module.exports = {
-          output: {
-            path: join(__dirname, '../dist/app9524918'),
-          },
-          plugins: [
-            new NxAppWebpackPlugin({
-              main: './src/main.ts',
-              compiler: 'tsc',
-              index: './src/index.html',
-              tsConfig: './tsconfig.app.json',
-            })
-          ]
-        };
+const { join } = require('path');
+const {NxWebpackPlugin} = require('@nx/webpack');
+module.exports = {
+  output: {
+    path: join(__dirname, '../dist/app9524918'),
+  },
+  plugins: [
+    new NxAppWebpackPlugin({
+      main: './src/main.ts',
+      compiler: 'tsc',
+      index: './src/index.html',
+      tsConfig: './tsconfig.app.json',
+    })
+  ]
+};
       `
     );
 
