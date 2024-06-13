@@ -26,11 +26,30 @@
  * @param {{
  *  github: import('octokit/dist-types').Octokit & { ref_name: string };
  *  context: GitHubContext;
+ *  core: import('@actions/core');
+ * }} param
+ */
+module.exports = async ({ github, context, core }) => {
+  const data = await getPublishResolveData({ github, context });
+
+  // Set the outputs to be consumed in later steps
+  core.setOutput('version', data.version);
+  core.setOutput('dry_run_flag', data.dry_run_flag);
+  core.setOutput('success_comment', JSON.stringify(data.success_comment)); // Escape the multi-line string
+  core.setOutput('publish_branch', data.publish_branch);
+  core.setOutput('ref', data.ref);
+  core.setOutput('repo', data.repo);
+};
+
+/**
+ * @param {{
+ *  github: import('octokit/dist-types').Octokit & { ref_name: string };
+ *  context: GitHubContext;
  * }} param
  *
  * @returns {Promise<PublishResolveData>}
  */
-module.exports = async ({ github, context }) => {
+async function getPublishResolveData({ github, context }) {
   // We use empty strings as default values so that we can let the `actions/checkout` action apply its default resolution
   const DEFAULT_REF = '';
   const DEFAULT_REPO = '';
@@ -144,7 +163,7 @@ module.exports = async ({ github, context }) => {
         `The publish.yml workflow was triggered by an unexpected event: "${process.env.GITHUB_EVENT_NAME}"`
       );
   }
-};
+}
 
 function getSuccessCommentForPR({
   context,
