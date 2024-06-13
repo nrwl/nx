@@ -43,7 +43,7 @@ export async function normalizeProjectNodes(
       partialProjectGraphNodes
     );
 
-    p.targets = normalizeProjectTargets(p, key);
+    p.targets ??= {};
 
     // TODO: remove in v16
     const projectType =
@@ -78,25 +78,6 @@ export async function normalizeProjectNodes(
       data: n.data,
     });
   });
-}
-
-/**
- * Apply target defaults and normalization
- */
-export function normalizeProjectTargets(
-  project: ProjectConfiguration,
-  projectName: string
-): Record<string, TargetConfiguration> {
-  // Any node on the graph will have a targets object, it just may be empty
-  const targets = project.targets ?? {};
-
-  for (const target in targets) {
-    if (!targets[target].command && !targets[target].executor) {
-      delete targets[target];
-      continue;
-    }
-  }
-  return targets;
 }
 
 export function normalizeImplicitDependencies(
