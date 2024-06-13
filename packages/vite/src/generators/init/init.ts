@@ -9,6 +9,7 @@ import {
 } from '@nx/devkit';
 import { addPluginV1 } from '@nx/devkit/src/utils/add-plugin';
 
+import { setupPathsPlugin } from '../setup-paths-plugin/setup-paths-plugin';
 import { createNodes } from '../../plugins/plugin';
 import { InitGeneratorSchema } from './schema';
 import { checkDependenciesInstalled, moveToDevDependencies } from './lib/utils';
@@ -81,6 +82,10 @@ export async function initGeneratorInternal(
   }
 
   updateNxJsonSettings(tree);
+
+  if (schema.setupPathsPlugin) {
+    await setupPathsPlugin(tree, { skipFormat: true });
+  }
 
   const tasks: GeneratorCallback[] = [];
   if (!schema.skipPackageJson) {
