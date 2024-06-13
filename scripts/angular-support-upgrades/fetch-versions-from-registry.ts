@@ -9,6 +9,7 @@ const packagesToUpdate: PackageSpec[] = [
       '@angular-devkit/build-angular',
       '@angular-devkit/core',
       '@angular-devkit/schematics',
+      '@angular/build',
       '@angular/pwa',
       '@angular/ssr',
       '@schematics/angular',
