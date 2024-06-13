@@ -3,26 +3,12 @@ import { createNodes, createNodesV2 } from './plugin';
 
 // This will only create test targets since no build targets are defined in vite.config.ts
 
-jest.mock('vite', () => ({
-  resolveConfig: jest.fn().mockImplementation(() => {
-    return Promise.resolve({
-      path: 'vite.config.ts',
-      test: {
-        some: 'option',
-      },
-      dependencies: [],
-    });
-  }),
-}));
-
 jest.mock('../utils/executor-utils', () => ({
   loadViteDynamicImport: jest.fn().mockResolvedValue({
     resolveConfig: jest.fn().mockResolvedValue({
-      path: 'vite.config.ts',
       test: {
         some: 'option',
       },
-      dependencies: [],
     }),
   }),
 }));
@@ -33,6 +19,7 @@ describe('@nx/vite/plugin with test node', () => {
   describe('root project', () => {
     beforeEach(async () => {
       context = {
+        configFiles: [],
         nxJsonConfiguration: {
           // These defaults should be overridden by plugin
           targetDefaults: {
@@ -47,7 +34,6 @@ describe('@nx/vite/plugin with test node', () => {
           },
         },
         workspaceRoot: '',
-        configFiles: [],
       };
     });
 
