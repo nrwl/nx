@@ -15,7 +15,7 @@ on:
     types: [ published ]
 
 # Dynamically generate the display name for the GitHub UI based on the event type and inputs
-run-name: ${{ github.event.inputs.pr && format('PR Release for {0}', github.event.inputs.pr) || github.event_name == 'schedule' && 'Canary Release' || github.event_name == 'workflow_dispatch' && !github.event.inputs.pr && 'Release Dry-Run' || 'Release' }}
+run-name: ${{ github.event.inputs.pr && format('PR Release for {0}', github.event.inputs.pr) || github.event_name == 'schedule' && 'Canary Release' || github.event_name == 'workflow_dispatch' && !github.event.inputs.pr && 'Release Dry-Run' || github.ref_name }}
 
 env:
   DEBUG: napi:*
@@ -74,7 +74,7 @@ jobs:
       - name: Check NPM Credentials
         run: npm whoami && echo "NPM credentials are valid" || (echo "NPM credentials are invalid or have expired." && exit 1)
 
-      - name: Resolve checkout and version data to use for release
+      - name: Resolve and set checkout and version data to use for release
         id: script
         uses: actions/github-script@v7
         env:
@@ -83,13 +83,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const script = require('${{ github.workspace }}/scripts/publish-resolve-data.js');
-            const result = await script({ github, context, core });
-            core.setOutput('version', result.version);
-            core.setOutput('dry_run_flag', result.dry_run_flag);
-            core.setOutput('success_comment', JSON.stringify(result.success_comment)); // Escape the multi-line string
-            core.setOutput('publish_branch', result.publish_branch);
-            core.setOutput('ref', result.ref);
-            core.setOutput('repo', result.repo);
+            await script({ github, context, core });
 
       - name: (PR Release Only) Check out latest master
         if: ${{ steps.script.outputs.ref != '' }}
