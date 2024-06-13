@@ -835,3 +835,64 @@ export const Cart = {
     },
   },
 };
+
+// We're normalizing `type` from `projectType`, so if projectType is missing we'll fallback to `type`.
+// See: packages/nx/src/project-graph/utils/normalize-project-nodes.ts
+export const FallbackType = {
+  args: {
+    project: {
+      name: 'mypkg',
+      type: 'lib',
+      data: {
+        root: '.',
+        name: 'mypkg',
+        targets: {
+          echo: {
+            executor: 'nx:run-script',
+            metadata: {
+              scriptContent: 'echo 1',
+              runCommand: 'npm run echo',
+            },
+            options: {
+              script: 'echo',
+            },
+            configurations: {},
+          },
+        },
+        sourceRoot: '.',
+        implicitDependencies: [],
+        tags: [],
+      },
+    },
+    sourceMap: {
+      root: ['nx/core/project-json', 'project.json'],
+      name: ['nx/core/project-json', 'project.json'],
+      targets: ['nx/core/package-json', 'project.json'],
+      'targets.echo': ['nx/core/package-json-workspaces', 'package.json'],
+      'targets.echo.executor': [
+        'nx/core/package-json-workspaces',
+        'package.json',
+      ],
+      'targets.echo.options': [
+        'nx/core/package-json-workspaces',
+        'package.json',
+      ],
+      'targets.echo.metadata': [
+        'nx/core/package-json-workspaces',
+        'package.json',
+      ],
+      'targets.echo.options.script': [
+        'nx/core/package-json-workspaces',
+        'package.json',
+      ],
+      'targets.echo.metadata.scriptContent': [
+        'nx/core/package-json-workspaces',
+        'package.json',
+      ],
+      'targets.echo.metadata.runCommand': [
+        'nx/core/package-json-workspaces',
+        'package.json',
+      ],
+    },
+  },
+};

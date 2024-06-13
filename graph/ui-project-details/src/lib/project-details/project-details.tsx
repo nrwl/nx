@@ -6,7 +6,6 @@ import type { ProjectGraphProjectNode } from '@nx/devkit';
 // nx-ignore-next-line
 import { GraphError } from 'nx/src/command-line/graph/graph';
 /* eslint-enable @nx/enforce-module-boundaries */
-
 import { EyeIcon } from '@heroicons/react/24/outline';
 import { PropertyInfoTooltip, Tooltip } from '@nx/graph/ui-tooltips';
 import { TooltipTriggerText } from '../target-configuration-details/tooltip-trigger-text';
@@ -29,6 +28,24 @@ export interface ProjectDetailsProps {
   viewInProjectGraphPosition?: 'top' | 'bottom';
 }
 
+const typeToProjectType = {
+  app: 'Application',
+  lib: 'Library',
+  e2e: 'E2E',
+};
+
+function getDisplayType(project: ProjectGraphProjectNode) {
+  if (project.data.projectType) {
+    return (
+      project.data.projectType &&
+      project.data.projectType?.charAt(0)?.toUpperCase() +
+        project.data.projectType?.slice(1)
+    );
+  } else {
+    return typeToProjectType[project.type] ?? 'Library';
+  }
+}
+
 export const ProjectDetails = ({
   project,
   sourceMap,
@@ -41,10 +58,7 @@ export const ProjectDetails = ({
   const projectData = project.data;
   const isCompact = variant === 'compact';
 
-  const displayType =
-    projectData.projectType &&
-    projectData.projectType?.charAt(0)?.toUpperCase() +
-      projectData.projectType?.slice(1);
+  const displayType = getDisplayType(project);
 
   const technologies = [
     ...new Set(
