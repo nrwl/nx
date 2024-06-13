@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
     inputs:
       pr:
-        description: "PR Number\nIf set, a real release will be created for the branch associated with the given PR number. If blank, a dry-run of the currently selected branch will be performed."
+        description: "PR Number - If set, a real release will be created for the branch associated with the given PR number. If blank, a dry-run of the currently selected branch will be performed."
         required: false
         type: number
   release:
