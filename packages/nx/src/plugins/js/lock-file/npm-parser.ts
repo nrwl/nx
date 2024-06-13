@@ -585,10 +585,7 @@ function nestMappedPackages(
     }
 
     invertedGraph.dependencies[node.name].forEach(({ target }) => {
-      if (
-        visitedNodes.has(node) &&
-        !visitedNodes.get(node).unresolvedParents.has(target)
-      ) {
+      if (!visitedNodes.get(node).unresolvedParents.has(target)) {
         return;
       }
 
