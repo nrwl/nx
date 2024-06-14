@@ -268,6 +268,9 @@ export function withNx(
 function createInput(
   options: RollupWithNxPluginOptions
 ): Record<string, string> {
+  // During graph creation, these input entries don't affect target configuration, so we can skip them.
+  // If convert-to-inferred generator is used, and project uses configurations, some options like main might be missing from default options.
+  if (global.NX_GRAPH_CREATION) return {};
   const mainEntryFileName = options.outputFileName || options.main;
   const input: Record<string, string> = {};
   input[parse(mainEntryFileName).name] = join(workspaceRoot, options.main);

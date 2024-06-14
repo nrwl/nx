@@ -336,13 +336,18 @@ export class TargetProjectLocator {
       relativeToDir
     );
     if (packageJsonPath) {
-      return readJsonFile(packageJsonPath);
+      const parsedPackageJson = readJsonFile(packageJsonPath);
+
+      if (parsedPackageJson.name && parsedPackageJson.version) {
+        return parsedPackageJson;
+      }
     }
 
     try {
       // Resolve the main entry point of the package
-      const mainPath = resolveRelativeToDir(packageName, relativeToDir);
-      let dir = dirname(mainPath);
+      const pathOfFileInPackage =
+        packageJsonPath ?? resolveRelativeToDir(packageName, relativeToDir);
+      let dir = dirname(pathOfFileInPackage);
 
       while (dir !== parse(dir).root) {
         const packageJsonPath = join(dir, 'package.json');

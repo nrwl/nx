@@ -120,11 +120,13 @@ function createVerdaccioOptions(
   workspaceRoot: string
 ) {
   const verdaccioArgs: string[] = [];
-  if (options.port) {
-    verdaccioArgs.push('--listen', options.port.toString());
-  }
   if (options.config) {
     verdaccioArgs.push('--config', join(workspaceRoot, options.config));
+  } else {
+    options.port ??= 4873; // set default port if config is not provided
+  }
+  if (options.port) {
+    verdaccioArgs.push('--listen', options.port.toString());
   }
   return verdaccioArgs;
 }
