@@ -59,7 +59,6 @@ describe('Workspaces', () => {
             },
           },
           "name": "my-package",
-          "projectType": "library",
           "root": "packages/my-package",
           "sourceRoot": "packages/my-package",
           "targets": {

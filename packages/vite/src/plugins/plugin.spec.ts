@@ -1,36 +1,25 @@
 import { CreateNodesContext } from '@nx/devkit';
 import { createNodes, createNodesV2 } from './plugin';
 import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
-
-jest.mock('vite', () => ({
-  resolveConfig: jest.fn().mockImplementation(() => {
-    return Promise.resolve({
-      path: 'vite.config.ts',
-      config: {},
-      build: {},
-      dependencies: [],
-    });
-  }),
-}));
+import { loadViteDynamicImport } from '../utils/executor-utils';
 
 jest.mock('../utils/executor-utils', () => ({
   loadViteDynamicImport: jest.fn().mockResolvedValue({
-    resolveConfig: jest.fn().mockResolvedValue({
-      path: 'vite.config.ts',
-      config: {},
-      dependencies: [],
-    }),
+    resolveConfig: jest.fn().mockResolvedValue({}),
   }),
 }));
 
 describe('@nx/vite/plugin', () => {
   let createNodesFunction = createNodesV2[1];
   let context: CreateNodesContext;
+
   describe('root project', () => {
     let tempFs;
+
     beforeEach(async () => {
       tempFs = new TempFs('vite-plugin-tests');
       context = {
+        configFiles: [],
         nxJsonConfiguration: {
           // These defaults should be overridden by plugin
           targetDefaults: {
@@ -45,7 +34,6 @@ describe('@nx/vite/plugin', () => {
           },
         },
         workspaceRoot: tempFs.tempDir,
-        configFiles: [],
       };
       tempFs.createFileSync('vite.config.ts', '');
       tempFs.createFileSync('index.html', '');
@@ -75,9 +63,11 @@ describe('@nx/vite/plugin', () => {
 
   describe('not root project', () => {
     let tempFs;
+
     beforeEach(() => {
       tempFs = new TempFs('test');
       context = {
+        configFiles: [],
         nxJsonConfiguration: {
           namedInputs: {
             default: ['{projectRoot}/**/*'],
@@ -85,7 +75,6 @@ describe('@nx/vite/plugin', () => {
           },
         },
         workspaceRoot: tempFs.tempDir,
-        configFiles: [],
       };
 
       tempFs.createFileSync(
@@ -114,6 +103,50 @@ describe('@nx/vite/plugin', () => {
       );
 
       expect(nodes).toMatchSnapshot();
+    });
+  });
+
+  describe('Library mode', () => {
+    it('should exclude serve and preview targets when vite.config.ts is in library mode', async () => {
+      const tempFs = new TempFs('test');
+      (loadViteDynamicImport as jest.Mock).mockResolvedValue({
+        resolveConfig: jest.fn().mockResolvedValue({
+          build: {
+            lib: {
+              entry: 'index.ts',
+              name: 'my-lib',
+            },
+          },
+        }),
+      }),
+        (context = {
+          configFiles: [],
+          nxJsonConfiguration: {
+            namedInputs: {
+              default: ['{projectRoot}/**/*'],
+              production: ['!{projectRoot}/**/*.spec.ts'],
+            },
+          },
+          workspaceRoot: tempFs.tempDir,
+        });
+      tempFs.createFileSync(
+        'my-lib/project.json',
+        JSON.stringify({ name: 'my-lib' })
+      );
+      tempFs.createFileSync('my-lib/vite.config.ts', '');
+
+      const nodes = await createNodesFunction(
+        ['my-lib/vite.config.ts'],
+        {
+          buildTargetName: 'build',
+          serveTargetName: 'serve',
+        },
+        context
+      );
+
+      expect(nodes).toMatchSnapshot();
+
+      jest.resetModules();
     });
   });
 });

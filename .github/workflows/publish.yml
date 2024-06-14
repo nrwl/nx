@@ -436,6 +436,7 @@ jobs:
           pnpm nx-release --local=false $VERSION $DRY_RUN
 
       - name: (Stable Release Only) Trigger Docs Release
+        # Publish docs only on a full release
         if: ${{ !github.event.release.prerelease && github.event_name == 'release' }}
         run: npx ts-node ./scripts/release-docs.ts
 

@@ -24,13 +24,21 @@
  * }} GitHubContext
  *
  * @param {{
- *  github: import('octokit/dist-types').Octokit & { ref_name: string };
+ *  github: import('octokit/dist-types').Octokit;
  *  context: GitHubContext;
  *  core: import('@actions/core');
  * }} param
  */
 module.exports = async ({ github, context, core }) => {
   const data = await getPublishResolveData({ github, context });
+
+  // Ensure that certain outputs are always set
+  if (!data.version) {
+    throw new Error('The "version" to release could not be determined');
+  }
+  if (!data.publish_branch) {
+    throw new Error('The "publish_branch" could not be determined');
+  }
 
   // Set the outputs to be consumed in later steps
   core.setOutput('version', data.version);
@@ -43,7 +51,7 @@ module.exports = async ({ github, context, core }) => {
 
 /**
  * @param {{
- *  github: import('octokit/dist-types').Octokit & { ref_name: string };
+ *  github: import('octokit/dist-types').Octokit;
  *  context: GitHubContext;
  * }} param
  *
@@ -54,7 +62,18 @@ async function getPublishResolveData({ github, context }) {
   const DEFAULT_REF = '';
   const DEFAULT_REPO = '';
 
-  const DEFAULT_PUBLISH_BRANCH = `publish/${github.ref_name}`;
+  /**
+   * "The short ref name of the branch or tag that triggered the workflow run. This value matches the branch or tag name shown
+   * on GitHub. For example, feature-branch-1."
+   *
+   * Source: https://docs.github.com/en/actions/learn-github-actions/variables#default-environment-variables
+   */
+  const refName = process.env.GITHUB_REF_NAME;
+  if (!refName) {
+    throw new Error('The github ref name could not be determined');
+  }
+
+  const DEFAULT_PUBLISH_BRANCH = `publish/${refName}`;
 
   /** @type {DryRunFlag} */
   const DRY_RUN_DISABLED = '';
@@ -78,7 +97,7 @@ async function getPublishResolveData({ github, context }) {
 
     case 'release': {
       const data = {
-        version: github.ref_name,
+        version: refName,
         dry_run_flag: DRY_RUN_DISABLED,
         success_comment: '',
         publish_branch: DEFAULT_PUBLISH_BRANCH,
