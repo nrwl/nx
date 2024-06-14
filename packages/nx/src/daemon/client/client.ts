@@ -65,16 +65,6 @@ export class DaemonClient {
   private readonly nxJson: NxJsonConfiguration | null;
 
   constructor() {
-    if (isWasm()) {
-      this._enabled = false;
-      output.warn({
-        title:
-          'Nx Daemon is unsupported in WebAssembly environments. Some things be slower than or not function as expected.',
-      });
-
-      return;
-    }
-
     try {
       this.nxJson = readNxJson();
     } catch (e) {
