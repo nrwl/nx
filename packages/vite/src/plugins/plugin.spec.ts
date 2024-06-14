@@ -14,8 +14,7 @@ describe('@nx/vite/plugin', () => {
   let context: CreateNodesContext;
 
   describe('root project', () => {
-    let tempFs;
-
+    let tempFs: TempFs;
     beforeEach(async () => {
       tempFs = new TempFs('vite-plugin-tests');
       context = {
@@ -62,8 +61,7 @@ describe('@nx/vite/plugin', () => {
   });
 
   describe('not root project', () => {
-    let tempFs;
-
+    let tempFs: TempFs;
     beforeEach(() => {
       tempFs = new TempFs('test');
       context = {

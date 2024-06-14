@@ -2937,6 +2937,15 @@
         "type": "generator"
       },
       {
+        "description": "Convert existing Vite project(s) using `@nx/vite:*` executors to use `@nx/vite/plugin`. Defaults to migrating all projects. Pass '--project' to migrate only one target.",
+        "file": "generated/packages/vite/generators/convert-to-inferred.json",
+        "hidden": false,
+        "name": "convert-to-inferred",
+        "originalFilePath": "/packages/vite/src/generators/convert-to-inferred/schema.json",
+        "path": "vite/generators/convert-to-inferred",
+        "type": "generator"
+      },
+      {
         "description": "Generate a vitest configuration.",
         "file": "generated/packages/vite/generators/vitest.json",
         "hidden": false,
