@@ -302,7 +302,7 @@ First, let's delete the `outputs` array from `nx.json` so that we don't override
 Now let's add the `@nx/vite` plugin:
 
 ```{% command="npx nx add @nx/vite" path="~/tuskydesign" %}
-✔ Installing @nx/vite@18.1.0...
+✔ Installing @nx/vite...
 ✔ Initializing @nx/vite...
 
  NX   Package @nx/vite added successfully.
@@ -311,13 +311,13 @@ Now let's add the `@nx/vite` plugin:
 The `nx add` command installs the version of the plugin that matches your repo's Nx version and runs that plugin's initialization script. For `@nx/vite`, the initialization script registers the plugin in the `plugins` array of `nx.json` and updates any `package.json` scripts that execute Vite related tasks. Open the project details view for the `demo` app and look at the `build` task.
 
 ```shell {% path="~/tuskydesigns" %}
-npx nx show project @tuskdesign/demo --web
+npx nx show project @tuskdesign/demo
 ```
 
 {% project-details title="Project Details View" jsonFile="shared/tutorials/npm-workspaces-pdv.json" %}
 {% /project-details %}
 
-If you hover over the settings for the `build` task, you can see where those settings come from. The `inputs` and `outputs` are defined by the `@nx/vite` plugin from the `vite.config.ts` file where as the `dependsOn` property we set earlier in the tutorial in the `targetDefaults` in the `nx.json` file.
+If you hover over the settings for the `vite:build` task, you can see where those settings come from. The `inputs` and `outputs` are defined by the `@nx/vite` plugin from the `vite.config.ts` file where as the `dependsOn` property we set earlier in the tutorial in the `targetDefaults` in the `nx.json` file.
 
 Now let's change where the `build` results are output to in the `vite.config.ts` file.
 
@@ -403,7 +403,7 @@ This generator creates a `.github/workflows/ci.yml` file that contains a CI pipe
 The key line in the CI pipeline is:
 
 ```yml
-- run: npx nx affected -t lint test build e2e-ci
+- run: npx nx affected -t lint test build
 ```
 
 ### Connect to Nx Cloud
