@@ -1,5 +1,3 @@
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-
 /* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
 import type { ProjectGraphProjectNode } from '@nx/devkit';
@@ -8,11 +6,13 @@ import { GraphError } from 'nx/src/command-line/graph/graph';
 /* eslint-enable @nx/enforce-module-boundaries */
 import { EyeIcon } from '@heroicons/react/24/outline';
 import { PropertyInfoTooltip, Tooltip } from '@nx/graph/ui-tooltips';
+import { CopyToClipboardButton } from '@nx/graph/ui-components';
 import { TooltipTriggerText } from '../target-configuration-details/tooltip-trigger-text';
 import { twMerge } from 'tailwind-merge';
 import { Pill } from '../pill';
 import { TargetTechnologies } from '../target-technologies/target-technologies';
 import { TargetConfigurationGroupList } from '../target-configuration-details-group-list/target-configuration-details-group-list';
+import { getProjectJsonDataFromProjectNodeData } from '../utils/get-project-json-data';
 
 export interface ProjectDetailsProps {
   project: ProjectGraphProjectNode;
@@ -48,6 +48,7 @@ export const ProjectDetails = ({
   connectedToCloud,
 }: ProjectDetailsProps) => {
   const projectData = project.data;
+  const projectDataToCopy = getProjectJsonDataFromProjectNodeData(projectData);
   const isCompact = variant === 'compact';
 
   const technologies = [
@@ -71,7 +72,7 @@ export const ProjectDetails = ({
       >
         <div
           className={twMerge(
-            `flex items-center justify-between`,
+            `flex flex-wrap items-center justify-between`,
             isCompact ? `gap-1` : `mb-4 gap-2`
           )}
         >
@@ -90,17 +91,23 @@ export const ProjectDetails = ({
               className="h-6 w-6"
             />
           </div>
-          <span>
-            {onViewInProjectGraph && viewInProjectGraphPosition === 'top' && (
+          {onViewInProjectGraph && viewInProjectGraphPosition === 'top' && (
+            <div className="flex flex-wrap gap-2">
+              <CopyToClipboardButton
+                text={JSON.stringify(projectDataToCopy, null, 2)}
+                className="inline-flex cursor-pointer items-center gap-2 rounded-md px-2 py-1 text-base text-slate-600 ring-2 ring-inset ring-slate-400/40 hover:bg-slate-50 dark:text-slate-300 dark:ring-slate-400/30 dark:hover:bg-slate-800/60"
+              >
+                Copy Project
+              </CopyToClipboardButton>
               <ViewInProjectGraphButton
                 callback={() =>
                   onViewInProjectGraph({ projectName: project.name })
                 }
               />
-            )}{' '}
-          </span>
+            </div>
+          )}
         </div>
-        <div className="flex justify-between py-2">
+        <div className="flex flex-wrap justify-between py-2">
           <div>
             {projectData.metadata?.description ? (
               <p className="mb-2 text-sm capitalize text-gray-500 dark:text-slate-400">
@@ -133,16 +140,22 @@ export const ProjectDetails = ({
             ) : null}
           </div>
           <div className="self-end">
-            <span>
-              {onViewInProjectGraph &&
-                viewInProjectGraphPosition === 'bottom' && (
+            {onViewInProjectGraph &&
+              viewInProjectGraphPosition === 'bottom' && (
+                <div className="flex flex-wrap gap-2">
+                  <CopyToClipboardButton
+                    text={JSON.stringify(project, null, 2)}
+                    className="inline-flex cursor-pointer items-center gap-2 rounded-md px-2 py-1 text-base text-slate-600 ring-2 ring-inset ring-slate-400/40 hover:bg-slate-50 dark:text-slate-300 dark:ring-slate-400/30 dark:hover:bg-slate-800/60"
+                  >
+                    Copy Project
+                  </CopyToClipboardButton>
                   <ViewInProjectGraphButton
                     callback={() =>
                       onViewInProjectGraph({ projectName: project.name })
                     }
                   />
-                )}{' '}
-            </span>
+                </div>
+              )}
           </div>
         </div>
       </header>

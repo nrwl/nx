@@ -1,29 +1,26 @@
 import { PropertyInfoTooltip, Tooltip } from '@nx/graph/ui-tooltips';
-import { CopyToClipboard } from '../copy-to-clipboard/copy-to-clipboard';
+import { CopyToClipboardButton } from '@nx/graph/ui-components';
 import { TooltipTriggerText } from '../target-configuration-details/tooltip-trigger-text';
 
 export function TargetExecutorTitle({
   commands,
   command,
   script,
-  handleCopyClick,
+  executor,
 }: {
-  handleCopyClick: (copyText: string) => void;
   commands?: string[];
   command?: string;
   script?: string;
+  executor?: string;
 }) {
   if (commands && commands.length) {
     return (
       <span className="font-medium">
         Commands
         <span className="mb-1 ml-2 hidden group-hover:inline">
-          <CopyToClipboard
-            onCopy={() =>
-              handleCopyClick(
-                `"commands": [${commands.map((c) => `"${c}"`).join(', ')}]`
-              )
-            }
+          <CopyToClipboardButton
+            text={`"commands": [${commands.map((c) => `"${c}"`).join(', ')}]`}
+            tooltipText="Copy Commands"
           />
         </span>
       </span>
@@ -34,8 +31,9 @@ export function TargetExecutorTitle({
       <span className="font-medium">
         Command
         <span className="mb-1 ml-2 hidden group-hover:inline">
-          <CopyToClipboard
-            onCopy={() => handleCopyClick(`"command": "${command}"`)}
+          <CopyToClipboardButton
+            text={`"command": "${command}"`}
+            tooltipText="Copy Command"
           />
         </span>
       </span>
@@ -46,7 +44,7 @@ export function TargetExecutorTitle({
       <span className="font-medium">
         Script
         <span className="mb-1 ml-2 hidden group-hover:inline">
-          <CopyToClipboard onCopy={() => handleCopyClick(script)} />
+          <CopyToClipboardButton text={script} tooltipText="Copy Script" />
         </span>
       </span>
     );
@@ -58,6 +56,12 @@ export function TargetExecutorTitle({
     >
       <span className="font-medium">
         <TooltipTriggerText>Executor</TooltipTriggerText>
+        <span className="mb-1 ml-2 hidden group-hover:inline">
+          <CopyToClipboardButton
+            text={executor ?? ''}
+            tooltipText="Copy Executor"
+          />
+        </span>
       </span>
     </Tooltip>
   );

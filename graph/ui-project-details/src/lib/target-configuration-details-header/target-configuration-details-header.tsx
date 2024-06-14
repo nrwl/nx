@@ -1,6 +1,7 @@
 /* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
 import type { TargetConfiguration } from '@nx/devkit';
+import { CopyToClipboardButton } from '@nx/graph/ui-components';
 import {
   ChevronDownIcon,
   ChevronUpIcon,
@@ -17,7 +18,6 @@ import { twMerge } from 'tailwind-merge';
 import { Pill } from '../pill';
 import { TargetTechnologies } from '../target-technologies/target-technologies';
 import { SourceInfo } from '../source-info/source-info';
-import { CopyToClipboard } from '../copy-to-clipboard/copy-to-clipboard';
 import { getDisplayHeaderFromTargetConfiguration } from '../utils/get-display-header-from-target-configuration';
 import { TargetExecutor } from '../target-executor/target-executor';
 
@@ -53,10 +53,6 @@ export const TargetConfigurationDetailsHeader = ({
   onViewInTaskGraph,
   onNxConnect,
 }: TargetConfigurationDetailsHeaderProps) => {
-  const handleCopyClick = async (copyText: string) => {
-    await window.navigator.clipboard.writeText(copyText);
-  };
-
   if (!collapsable) {
     // when collapsable is false, isCollasped should be false
     isCollasped = false;
@@ -156,6 +152,12 @@ export const TargetConfigurationDetailsHeader = ({
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <CopyToClipboardButton
+            text={JSON.stringify(targetConfiguration, null, 2)}
+            tooltipText={!isCollasped ? 'Copy Target' : undefined}
+            tooltipAlignment="right"
+            className="rounded-md bg-inherit p-1 text-sm text-slate-600 ring-1 ring-inset ring-slate-400/40 hover:bg-slate-200 dark:text-slate-300 dark:ring-slate-400/30 dark:hover:bg-slate-700/60"
+          />
           {onViewInTaskGraph && (
             <button
               className="rounded-md bg-inherit p-1 text-sm text-slate-600 ring-1 ring-inset ring-slate-400/40 hover:bg-slate-200 dark:text-slate-300 dark:ring-slate-400/30 dark:hover:bg-slate-700/60"
@@ -205,10 +207,9 @@ export const TargetConfigurationDetailsHeader = ({
                 nx run {projectName}:{targetName}
               </code>
               <span>
-                <CopyToClipboard
-                  onCopy={() =>
-                    handleCopyClick(`nx run ${projectName}:${targetName}`)
-                  }
+                <CopyToClipboardButton
+                  text={`nx run ${projectName}:${targetName}`}
+                  tooltipText="Copy Command"
                   tooltipAlignment="right"
                 />
               </span>
