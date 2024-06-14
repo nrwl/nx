@@ -251,15 +251,12 @@ devDependencies:
   '@nestjs/testing':
     specifier: ^9.0.0
     version: 9.1.6(@nestjs/common@9.1.6)(@nestjs/core@9.1.6)(@nestjs/platform-express@9.1.6)
-  '@ngrx/effects':
-    specifier: 17.0.1
-    version: 17.0.1(@angular/core@18.0.0)(@ngrx/store@17.0.1)(rxjs@7.8.1)
   '@ngrx/router-store':
-    specifier: 17.0.1
-    version: 17.0.1(@angular/common@18.0.0)(@angular/core@18.0.0)(@angular/router@18.0.0)(@ngrx/store@17.0.1)(rxjs@7.8.1)
+    specifier: ^18.0.0
+    version: 18.0.0(@angular/common@18.0.0)(@angular/core@18.0.0)(@angular/router@18.0.0)(@ngrx/store@18.0.0)(rxjs@7.8.1)
   '@ngrx/store':
-    specifier: 17.0.1
-    version: 17.0.1(@angular/core@18.0.0)(rxjs@7.8.1)
+    specifier: ^18.0.0
+    version: 18.0.0(@angular/core@18.0.0)(rxjs@7.8.1)
   '@nuxt/kit':
     specifier: ^3.10.0
     version: 3.10.0(rollup@4.14.3)
@@ -9155,50 +9152,27 @@ packages:
     requiresBuild: true
     optional: true
 
-  /@ngrx/effects@17.0.1(@angular/core@18.0.0)(@ngrx/store@17.0.1)(rxjs@7.8.1):
-    resolution: {integrity: sha512-U7ewZpUoJlLrWyZVyzAMU6Qfxmte7Noi9n/pJb5BR3pWmdHnU+VPs08xnSIQUa0US7K6dJJRTGtcEpEvv/IT4A==}
+  /@ngrx/router-store@18.0.0(@angular/common@18.0.0)(@angular/core@18.0.0)(@angular/router@18.0.0)(@ngrx/store@18.0.0)(rxjs@7.8.1):
+    resolution: {integrity: sha512-Kiyh7qjs5PdNjYCip+BA0hx/tpjP/pDr0gUlz3X+9qTMC1vjzPmuzposZbTT2wZE+Z81TOoqdaZ5ZgRxAxhIMw==}
     peerDependencies:
-      '@angular/core': ^17.0.0
-      '@ngrx/store': 17.0.1
-      rxjs: ^6.5.3 || ^7.5.0
-    dependencies:
-      '@angular/core': 18.0.0(rxjs@7.8.1)(zone.js@0.14.3)
-      '@ngrx/operators': 17.0.0-beta.0(rxjs@7.8.1)
-      '@ngrx/store': 17.0.1(@angular/core@18.0.0)(rxjs@7.8.1)
-      rxjs: 7.8.1
-      tslib: 2.6.2
-    dev: true
-
-  /@ngrx/operators@17.0.0-beta.0(rxjs@7.8.1):
-    resolution: {integrity: sha512-EbO8AONuQ6zo2v/mPyBOi4y0CTAp1x4Z+bx7ZF+Pd8BL5ma53BTCL1TmzaeK5zPUe0yApudLk9/ZbHXPnVox5A==}
-    peerDependencies:
-      rxjs: ^6.5.3 || ^7.4.0
-    dependencies:
-      rxjs: 7.8.1
-      tslib: 2.6.2
-    dev: true
-
-  /@ngrx/router-store@17.0.1(@angular/common@18.0.0)(@angular/core@18.0.0)(@angular/router@18.0.0)(@ngrx/store@17.0.1)(rxjs@7.8.1):
-    resolution: {integrity: sha512-O4kz/yvIaAfG0Hzloj24RqL17E1oddQ7wpxjU6UrTr/oZkX1/lIehaSxSJIVzq02vQWShIq0RFo/t8ac5mzqZQ==}
-    peerDependencies:
-      '@angular/common': ^17.0.0
-      '@angular/core': ^17.0.0
-      '@angular/router': ^17.0.0
-      '@ngrx/store': 17.0.1
+      '@angular/common': ^18.0.0
+      '@angular/core': ^18.0.0
+      '@angular/router': ^18.0.0
+      '@ngrx/store': 18.0.0
       rxjs: ^6.5.3 || ^7.5.0
     dependencies:
       '@angular/common': 18.0.0(@angular/core@18.0.0)(rxjs@7.8.1)
       '@angular/core': 18.0.0(rxjs@7.8.1)(zone.js@0.14.3)
       '@angular/router': 18.0.0(@angular/common@18.0.0)(@angular/core@18.0.0)(@angular/platform-browser@18.0.0)(rxjs@7.8.1)
-      '@ngrx/store': 17.0.1(@angular/core@18.0.0)(rxjs@7.8.1)
+      '@ngrx/store': 18.0.0(@angular/core@18.0.0)(rxjs@7.8.1)
       rxjs: 7.8.1
       tslib: 2.6.2
     dev: true
 
-  /@ngrx/store@17.0.1(@angular/core@18.0.0)(rxjs@7.8.1):
-    resolution: {integrity: sha512-BmVzN+fqyz0ZrVEmJ+jrNwePMKcpNL49vb8sbQ3yDDftxgZz2HqRKFMexqlXpz5ixwK5LqTOblHNQOgi9irsTw==}
+  /@ngrx/store@18.0.0(@angular/core@18.0.0)(rxjs@7.8.1):
+    resolution: {integrity: sha512-U/0cX7cQ7kkQrleNq5PQ1gD84lSI+ox2SIiDNAAxm8li7/S63QuRATFJIkMcVavR8yoa7gZ0WpyEKTlYGxEE2g==}
     peerDependencies:
-      '@angular/core': ^17.0.0
+      '@angular/core': ^18.0.0
       rxjs: ^6.5.3 || ^7.5.0
     dependencies:
       '@angular/core': 18.0.0(rxjs@7.8.1)(zone.js@0.14.3)
