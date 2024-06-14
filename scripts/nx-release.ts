@@ -239,7 +239,16 @@ function parseArgs() {
       description:
         'The version to publish. This does not need to be passed and can be inferred.',
       default: 'minor',
-      coerce: (version) => {
+      coerce: (version: string) => {
+        const isGithubActions = !!process.env.GITHUB_ACTIONS;
+        if (isGithubActions && isRelativeVersionKeyword(version)) {
+          // Print error rather than throw to avoid yargs noise in this specifically handled case
+          console.error(
+            'Error: The release script was triggered in a GitHub Actions workflow, but a relative version keyword was provided. This is an unexpected combination.'
+          );
+          process.exit(1);
+        }
+
         if (version !== 'canary') {
           return version;
         }
