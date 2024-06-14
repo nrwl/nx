@@ -7,7 +7,16 @@ import { PluginConfiguration } from '../../../config/nx-json';
 // import { logger } from '../../utils/logger';
 
 import { LoadedNxPlugin, nxPluginCache } from '../internal-api';
-import { consumeMessage, isPluginWorkerResult } from './messaging';
+import { getPluginOsSocketPath } from '../../../daemon/socket-utils';
+import { consumeMessagesFromSocket } from '../../../utils/consume-messages-from-socket';
+
+import {
+  consumeMessage,
+  isPluginWorkerResult,
+  sendMessageOverSocket,
+} from './messaging';
+import { Socket, connect } from 'net';
+import { unlinkSync } from 'fs';
 
 const cleanupFunctions = new Set<() => void>();
 
@@ -19,41 +28,18 @@ interface PendingPromise {
   rejector: (err: any) => void;
 }
 
-export function loadRemoteNxPlugin(
+export async function loadRemoteNxPlugin(
   plugin: PluginConfiguration,
   root: string
-): [Promise<LoadedNxPlugin>, () => void] {
-  // this should only really be true when running unit tests within
-  // the Nx repo. We still need to start the worker in this case,
-  // but its typescript.
-  const isWorkerTypescript = path.extname(__filename) === '.ts';
-  const workerPath = path.join(__dirname, 'plugin-worker');
+): Promise<[Promise<LoadedNxPlugin>, () => void]> {
+  const { ipcPath, worker } = await startPluginWorker(plugin);
 
-  const env: Record<string, string> = {
-    ...process.env,
-    ...(isWorkerTypescript
-      ? {
-          // Ensures that the worker uses the same tsconfig as the main process
-          TS_NODE_PROJECT: path.join(
-            __dirname,
-            '../../../../tsconfig.lib.json'
-          ),
-        }
-      : {}),
-  };
-
-  const worker = fork(workerPath, [], {
-    stdio: ['ignore', 'inherit', 'inherit', 'ipc'],
-    env,
-    execArgv: [
-      ...process.execArgv,
-      // If the worker is typescript, we need to register ts-node
-      ...(isWorkerTypescript ? ['-r', 'ts-node/register'] : []),
-    ],
+  const socket = await new Promise<Socket>((res, rej) => {
+    const socket = connect(ipcPath, () => {
+      res(socket);
+    });
+    socket.on('error', rej);
   });
-  worker.send({ type: 'load', payload: { plugin, root } });
-
-  // logger.verbose(`[plugin-worker] started worker: ${worker.pid}`);
 
   const pendingPromises = new Map<string, PendingPromise>();
 
@@ -61,6 +47,7 @@ export function loadRemoteNxPlugin(
 
   const cleanupFunction = () => {
     worker.off('exit', exitHandler);
+    socket.destroy();
     shutdownPluginWorker(worker);
   };
 
@@ -68,16 +55,21 @@ export function loadRemoteNxPlugin(
 
   return [
     new Promise<LoadedNxPlugin>((res, rej) => {
-      worker.on(
-        'message',
-        createWorkerHandler(worker, pendingPromises, res, rej)
+      sendMessageOverSocket(socket, {
+        type: 'load',
+        payload: { plugin, root },
+      });
+      // logger.verbose(`[plugin-worker] started worker: ${worker.pid}`);
+
+      socket.on(
+        'data',
+        consumeMessagesFromSocket(
+          createWorkerHandler(worker, pendingPromises, res, rej, socket)
+        )
       );
       worker.on('exit', exitHandler);
     }),
-    () => {
-      cleanupFunction();
-      cleanupFunctions.delete(cleanupFunction);
-    },
+    cleanupFunction,
   ];
 }
 
@@ -102,15 +94,18 @@ function createWorkerHandler(
   worker: ChildProcess,
   pending: Map<string, PendingPromise>,
   onload: (plugin: LoadedNxPlugin) => void,
-  onloadError: (err?: unknown) => void
+  onloadError: (err?: unknown) => void,
+  socket: Socket
 ) {
   let pluginName: string;
 
-  return function (message: Serializable) {
+  return function (raw: string) {
+    const message = JSON.parse(raw);
+
     if (!isPluginWorkerResult(message)) {
       return;
     }
-    return consumeMessage(message, {
+    return consumeMessage(socket, message, {
       'load-result': (result) => {
         if (result.success) {
           const { name, createNodesPattern, include, exclude } = result;
@@ -124,9 +119,13 @@ function createWorkerHandler(
               ? [
                   createNodesPattern,
                   (configFiles, ctx) => {
-                    const tx = pluginName + ':createNodes:' + performance.now();
+                    const tx =
+                      pluginName +
+                      worker.pid +
+                      ':createNodes:' +
+                      performance.now();
                     return registerPendingPromise(tx, pending, () => {
-                      worker.send({
+                      sendMessageOverSocket(socket, {
                         type: 'createNodes',
                         payload: { configFiles, context: ctx, tx },
                       });
@@ -137,9 +136,12 @@ function createWorkerHandler(
             createDependencies: result.hasCreateDependencies
               ? (ctx) => {
                   const tx =
-                    pluginName + ':createDependencies:' + performance.now();
+                    pluginName +
+                    worker.pid +
+                    ':createDependencies:' +
+                    performance.now();
                   return registerPendingPromise(tx, pending, () => {
-                    worker.send({
+                    sendMessageOverSocket(socket, {
                       type: 'createDependencies',
                       payload: { context: ctx, tx },
                     });
@@ -149,9 +151,12 @@ function createWorkerHandler(
             processProjectGraph: result.hasProcessProjectGraph
               ? (graph, ctx) => {
                   const tx =
-                    pluginName + ':processProjectGraph:' + performance.now();
+                    pluginName +
+                    worker.pid +
+                    ':processProjectGraph:' +
+                    performance.now();
                   return registerPendingPromise(tx, pending, () => {
-                    worker.send({
+                    sendMessageOverSocket(socket, {
                       type: 'processProjectGraph',
                       payload: { graph, ctx, tx },
                     });
@@ -161,9 +166,12 @@ function createWorkerHandler(
             createMetadata: result.hasCreateMetadata
               ? (graph, ctx) => {
                   const tx =
-                    pluginName + ':createMetadata:' + performance.now();
+                    pluginName +
+                    worker.pid +
+                    ':createMetadata:' +
+                    performance.now();
                   return registerPendingPromise(tx, pending, () => {
-                    worker.send({
+                    sendMessageOverSocket(socket, {
                       type: 'createMetadata',
                       payload: { graph, context: ctx, tx },
                     });
@@ -228,11 +236,18 @@ function createWorkerExitHandler(
   };
 }
 
-process.on('exit', () => {
+let cleanedUp = false;
+const exitHandler = () => {
+  if (cleanedUp) return;
   for (const fn of cleanupFunctions) {
     fn();
   }
-});
+  cleanedUp = true;
+};
+
+process.on('exit', exitHandler);
+process.on('SIGINT', exitHandler);
+process.on('SIGTERM', exitHandler);
 
 function registerPendingPromise(
   tx: string,
@@ -257,4 +272,79 @@ function registerPendingPromise(
   });
 
   return promise;
+}
+
+let workerCount = 0;
+async function startPluginWorker(plugin: PluginConfiguration) {
+  // this should only really be true when running unit tests within
+  // the Nx repo. We still need to start the worker in this case,
+  // but its typescript.
+  const isWorkerTypescript = path.extname(__filename) === '.ts';
+  const workerPath = path.join(__dirname, 'plugin-worker');
+
+  const env: Record<string, string> = {
+    ...process.env,
+    ...(isWorkerTypescript
+      ? {
+          // Ensures that the worker uses the same tsconfig as the main process
+          TS_NODE_PROJECT: path.join(
+            __dirname,
+            '../../../../tsconfig.lib.json'
+          ),
+        }
+      : {}),
+  };
+
+  const ipcPath = getPluginOsSocketPath([process.pid, workerCount++].join('-'));
+
+  const worker = fork(workerPath, [ipcPath], {
+    stdio: process.stdout.isTTY ? 'inherit' : 'ignore',
+    env,
+    execArgv: [
+      ...process.execArgv,
+      // If the worker is typescript, we need to register ts-node
+      ...(isWorkerTypescript ? ['-r', 'ts-node/register'] : []),
+    ],
+    detached: true,
+  });
+  worker.disconnect();
+  worker.unref();
+
+  let attempts = 0;
+  return new Promise<{
+    worker: ChildProcess;
+    ipcPath: string;
+  }>((resolve, reject) => {
+    const id = setInterval(async () => {
+      if (await isServerAvailable(ipcPath)) {
+        clearInterval(id);
+        resolve({
+          worker,
+          ipcPath,
+        });
+      } else if (attempts > 1000) {
+        // daemon fails to start, the process probably exited
+        // we print the logs and exit the client
+        reject('Failed to start plugin worker.');
+      } else {
+        attempts++;
+      }
+    }, 10);
+  });
+}
+
+function isServerAvailable(ipcPath: string): Promise<boolean> {
+  return new Promise((resolve) => {
+    try {
+      const socket = connect(ipcPath, () => {
+        socket.destroy();
+        resolve(true);
+      });
+      socket.once('error', () => {
+        resolve(false);
+      });
+    } catch (err) {
+      resolve(false);
+    }
+  });
 }
