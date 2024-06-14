@@ -62,6 +62,8 @@ jobs:
         with:
           version: ${{ env.PNPM_VERSION }}
 
+      - run: pnpm store path
+
       - name: Setup node
         uses: actions/setup-node@v4
         with:
