@@ -86,9 +86,9 @@ function removePropertiesFromTargetOptions(
   }
 
   if ('testFiles' in targetOptions) {
-    targetOptions.testNamePattern = `/(${targetOptions.testFiles
+    targetOptions.testNamePattern = `"/(${targetOptions.testFiles
       .map((f) => f.replace('.', '\\.'))
-      .join('|')})/`;
+      .join('|')})/"`;
     delete targetOptions.testFiles;
   }
 }
