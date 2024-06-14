@@ -1,11 +1,11 @@
 import { createProjectGraphAsync, formatFiles, type Tree } from '@nx/devkit';
-import { migrateExecutorToPluginV1 } from '@nx/devkit/src/generators/plugin-migrations/executor-to-plugin-migrator';
-import { flushLogs } from '@nx/devkit/src/generators/plugin-migrations/aggregate-log-util';
-import { createNodes, VitePluginOptions } from '../../plugins/plugin';
+import { migrateExecutorToPlugin } from '@nx/devkit/src/generators/plugin-migrations/executor-to-plugin-migrator';
+import { createNodesV2, VitePluginOptions } from '../../plugins/plugin';
 import { buildPostTargetTransformer } from './lib/build-post-target-transformer';
 import { servePostTargetTransformer } from './lib/serve-post-target-transformer';
 import { previewPostTargetTransformer } from './lib/preview-post-target-transformer';
 import { testPostTargetTransformer } from './lib/test-post-target-transformer';
+import { AggregatedLog } from '@nx/devkit/src/generators/plugin-migrations/aggregate-log-util';
 
 interface Schema {
   project?: string;
@@ -14,8 +14,9 @@ interface Schema {
 
 export async function convertToInferred(tree: Tree, options: Schema) {
   const projectGraph = await createProjectGraphAsync();
+  const migrationLogs = new AggregatedLog();
   const migratedBuildProjects =
-    await migrateExecutorToPluginV1<VitePluginOptions>(
+    await migrateExecutorToPlugin<VitePluginOptions>(
       tree,
       projectGraph,
       '@nx/vite:build',
@@ -28,11 +29,11 @@ export async function convertToInferred(tree: Tree, options: Schema) {
         serveStaticTargetName: 'serve-static',
       }),
       buildPostTargetTransformer,
-      createNodes,
+      createNodesV2,
       options.project
     );
   const migratedServeProjects =
-    await migrateExecutorToPluginV1<VitePluginOptions>(
+    await migrateExecutorToPlugin<VitePluginOptions>(
       tree,
       projectGraph,
       '@nx/vite:dev-server',
@@ -44,12 +45,12 @@ export async function convertToInferred(tree: Tree, options: Schema) {
         testTargetName: 'test',
         serveStaticTargetName: 'serve-static',
       }),
-      servePostTargetTransformer,
-      createNodes,
+      servePostTargetTransformer(migrationLogs),
+      createNodesV2,
       options.project
     );
   const migratedPreviewProjects =
-    await migrateExecutorToPluginV1<VitePluginOptions>(
+    await migrateExecutorToPlugin<VitePluginOptions>(
       tree,
       projectGraph,
       '@nx/vite:preview-server',
@@ -61,27 +62,26 @@ export async function convertToInferred(tree: Tree, options: Schema) {
         testTargetName: 'test',
         serveStaticTargetName: 'serve-static',
       }),
-      previewPostTargetTransformer,
-      createNodes,
+      previewPostTargetTransformer(migrationLogs),
+      createNodesV2,
       options.project
     );
-  const migratedTestProjects =
-    await migrateExecutorToPluginV1<VitePluginOptions>(
-      tree,
-      projectGraph,
-      '@nx/vite:test',
-      '@nx/vite/plugin',
-      (targetName) => ({
-        buildTargetName: 'build',
-        serveTargetName: 'serve',
-        previewTargetName: 'preview',
-        testTargetName: targetName,
-        serveStaticTargetName: 'serve-static',
-      }),
-      testPostTargetTransformer,
-      createNodes,
-      options.project
-    );
+  const migratedTestProjects = await migrateExecutorToPlugin<VitePluginOptions>(
+    tree,
+    projectGraph,
+    '@nx/vite:test',
+    '@nx/vite/plugin',
+    (targetName) => ({
+      buildTargetName: 'build',
+      serveTargetName: 'serve',
+      previewTargetName: 'preview',
+      testTargetName: targetName,
+      serveStaticTargetName: 'serve-static',
+    }),
+    testPostTargetTransformer,
+    createNodesV2,
+    options.project
+  );
 
   const migratedProjects =
     migratedBuildProjects.size +
@@ -98,7 +98,7 @@ export async function convertToInferred(tree: Tree, options: Schema) {
   }
 
   return () => {
-    flushLogs();
+    migrationLogs.flushLogs();
   };
 }
 

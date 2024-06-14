@@ -112,12 +112,12 @@ describe('buildPostTargetTransformer', () => {
       tree.write('vite.config.ts', viteConfigFileV17);
 
       // ACT
-      moveBuildLibsFromSourceToViteConfig(tree, true, 'vite.config.ts');
+      moveBuildLibsFromSourceToViteConfig(tree, 'vite.config.ts');
 
       // ASSERT
       const newContents = tree.read('vite.config.ts', 'utf-8');
       expect(newContents).toContain(
-        'nxViteTsPaths({ buildLibsFromSource: true })'
+        'nxViteTsPaths({ buildLibsFromSource: options.buildLibsFromSource })'
       );
       expect(newContents).toMatchSnapshot();
     });
@@ -128,12 +128,12 @@ describe('buildPostTargetTransformer', () => {
       tree.write('vite.config.ts', viteConfigFileV17NxViteTsPathsOpts);
 
       // ACT
-      moveBuildLibsFromSourceToViteConfig(tree, false, 'vite.config.ts');
+      moveBuildLibsFromSourceToViteConfig(tree, 'vite.config.ts');
 
       // ASSERT
       const newContents = tree.read('vite.config.ts', 'utf-8');
       expect(newContents).toContain(
-        'nxViteTsPaths({buildLibsFromSource: false,  debug: true })'
+        'nxViteTsPaths({buildLibsFromSource: options.buildLibsFromSource,  debug: true })'
       );
       expect(newContents).toMatchSnapshot();
     });
@@ -144,12 +144,12 @@ describe('buildPostTargetTransformer', () => {
       tree.write('vite.config.ts', viteConfigFileV17NoNxViteTsPaths);
 
       // ACT
-      moveBuildLibsFromSourceToViteConfig(tree, true, 'vite.config.ts');
+      moveBuildLibsFromSourceToViteConfig(tree, 'vite.config.ts');
 
       // ASSERT
       const newContents = tree.read('vite.config.ts', 'utf-8');
       expect(newContents).toContain(
-        'nxViteTsPaths({ buildLibsFromSource: true })'
+        'nxViteTsPaths({ buildLibsFromSource: options.buildLibsFromSource })'
       );
       expect(newContents).toMatchSnapshot();
     });
@@ -160,12 +160,12 @@ describe('buildPostTargetTransformer', () => {
       tree.write('vite.config.ts', viteConfigFileV17NoPlugins);
 
       // ACT
-      moveBuildLibsFromSourceToViteConfig(tree, true, 'vite.config.ts');
+      moveBuildLibsFromSourceToViteConfig(tree, 'vite.config.ts');
 
       // ASSERT
       const newContents = tree.read('vite.config.ts', 'utf-8');
       expect(newContents).toContain(
-        'nxViteTsPaths({ buildLibsFromSource: true })'
+        'nxViteTsPaths({ buildLibsFromSource: options.buildLibsFromSource })'
       );
       expect(newContents).toMatchSnapshot();
     });
