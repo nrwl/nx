@@ -70,7 +70,6 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           registry-url: 'https://registry.npmjs.org'
           check-latest: true
-          cache: 'pnpm'
 
       # Ensure that the NPM_TOKEN secret is still valid before wasting any time deriving data or building projects
       - name: Check NPM Credentials
