@@ -4,7 +4,7 @@ import { readFileSync, statSync } from 'fs';
 import { FileHandle, open } from 'fs/promises';
 import { ensureDirSync, ensureFileSync } from 'fs-extra';
 import { connect } from 'net';
-import { extname, join } from 'path';
+import { join } from 'path';
 import { performance } from 'perf_hooks';
 import { output } from '../../utils/output';
 import { getFullOsSocketPath, killSocketOrPath } from '../socket-utils';
@@ -16,11 +16,10 @@ import {
 } from '../tmp-dir';
 import { FileData, ProjectGraph } from '../../config/project-graph';
 import { isCI } from '../../utils/is-ci';
-import { NxJsonConfiguration } from '../../config/nx-json';
+import { hasNxJson, NxJsonConfiguration } from '../../config/nx-json';
 import { readNxJson } from '../../config/configuration';
 import { PromisedBasedQueue } from '../../utils/promised-based-queue';
-import { hasNxJson } from '../../config/nx-json';
-import { Message, DaemonSocketMessenger } from './daemon-socket-messenger';
+import { DaemonSocketMessenger, Message } from './daemon-socket-messenger';
 import { safelyCleanUpExistingProcess } from '../cache';
 import { Hash } from '../../hasher/task-hasher';
 import { Task, TaskGraph } from '../../config/task-graph';
@@ -29,8 +28,7 @@ import {
   DaemonProjectGraphError,
   ProjectGraphError,
 } from '../../project-graph/error-types';
-import { isWasm } from '../../native';
-import { loadRootEnvFiles } from '../../utils/dotenv';
+import { isWasm, NxWorkspaceFiles } from '../../native';
 import { HandleGlobMessage } from '../message-types/glob';
 import {
   GET_NX_WORKSPACE_FILES,
@@ -44,8 +42,7 @@ import {
   GET_FILES_IN_DIRECTORY,
   HandleGetFilesInDirectoryMessage,
 } from '../message-types/get-files-in-directory';
-import { HASH_GLOB, HandleHashGlobMessage } from '../message-types/hash-glob';
-import { NxWorkspaceFiles } from '../../native';
+import { HandleHashGlobMessage, HASH_GLOB } from '../message-types/hash-glob';
 
 const DAEMON_ENV_SETTINGS = {
   NX_PROJECT_GLOB_CACHE: 'false',
@@ -68,6 +65,16 @@ export class DaemonClient {
   private readonly nxJson: NxJsonConfiguration | null;
 
   constructor() {
+    if (isWasm()) {
+      this._enabled = false;
+      output.warn({
+        title:
+          'Nx Daemon is unsupported in WebAssembly environments. Some things be slower than or not function as expected.',
+      });
+
+      return;
+    }
+
     try {
       this.nxJson = readNxJson();
     } catch (e) {
@@ -528,6 +535,10 @@ export class DaemonClient {
 }
 
 export const daemonClient = new DaemonClient();
+
+export function isDaemonEnabled() {
+  return daemonClient.enabled();
+}
 
 function isDocker() {
   try {
