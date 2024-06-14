@@ -14,6 +14,7 @@ import {
 } from './package-manager';
 
 export interface NxProjectPackageJsonConfiguration {
+  name?: string;
   implicitDependencies?: string[];
   tags?: string[];
   namedInputs?: { [inputName: string]: (string | InputDefinition)[] };

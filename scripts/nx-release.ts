@@ -130,62 +130,60 @@ const VALID_AUTHORS_FOR_LATEST = [
 
   const distTag = determineDistTag(options.version);
 
-  if (options.dryRun) {
-    console.warn('Not Publishing because --dryRun was passed');
-  } else {
-    // If publishing locally, force all projects to not be private first
-    if (options.local) {
-      console.log(
-        chalk.dim`\n  Publishing locally, so setting all packages with existing nx-release-publish targets to not be private. If you have created a new private package and you want it to be published, you will need to manually configure the "nx-release-publish" target using executor "@nx/js:release-publish"`
-      );
-      const projectGraph = await createProjectGraphAsync();
-      for (const proj of Object.values(projectGraph.nodes)) {
-        if (proj.data.targets?.['nx-release-publish']) {
-          const packageJsonPath = join(
-            workspaceRoot,
-            proj.data.targets?.['nx-release-publish']?.options.packageRoot,
-            'package.json'
-          );
-          try {
-            const packageJson = require(packageJsonPath);
-            if (packageJson.private) {
-              console.log(
-                '- Publishing private package locally:',
-                packageJson.name
-              );
-              writeFileSync(
-                packageJsonPath,
-                JSON.stringify({ ...packageJson, private: false })
-              );
-            }
-          } catch {}
-        }
-      }
-    }
-
-    if (!options.local && (!distTag || distTag === 'latest')) {
-      // We are only expecting non-local latest releases to be performed within publish.yml on GitHub
-      const author = process.env.GITHUB_ACTOR ?? '';
-      if (!VALID_AUTHORS_FOR_LATEST.includes(author)) {
-        throw new Error(
-          `The GitHub user "${author}" is not allowed to publish to "latest". Please request one of the following users to carry out the release: ${VALID_AUTHORS_FOR_LATEST.join(
-            ', '
-          )}`
+  // If publishing locally, force all projects to not be private first
+  if (options.local) {
+    console.log(
+      chalk.dim`\n  Publishing locally, so setting all packages with existing nx-release-publish targets to not be private. If you have created a new private package and you want it to be published, you will need to manually configure the "nx-release-publish" target using executor "@nx/js:release-publish"`
+    );
+    const projectGraph = await createProjectGraphAsync();
+    for (const proj of Object.values(projectGraph.nodes)) {
+      if (proj.data.targets?.['nx-release-publish']) {
+        const packageJsonPath = join(
+          workspaceRoot,
+          proj.data.targets?.['nx-release-publish']?.options.packageRoot,
+          'package.json'
         );
+        try {
+          const packageJson = require(packageJsonPath);
+          if (packageJson.private) {
+            console.log(
+              '- Publishing private package locally:',
+              packageJson.name
+            );
+            writeFileSync(
+              packageJsonPath,
+              JSON.stringify({ ...packageJson, private: false })
+            );
+          }
+        } catch {}
       }
     }
+  }
 
-    // Run with dynamic output-style so that we have more minimal logs by default but still always see errors
-    let publishCommand = `pnpm nx release publish --registry=${getRegistry()} --tag=${distTag} --output-style=dynamic --parallel=8`;
-    if (options.dryRun) {
-      publishCommand += ' --dry-run';
+  if (!options.local && (!distTag || distTag === 'latest')) {
+    // We are only expecting non-local latest releases to be performed within publish.yml on GitHub
+    const author = process.env.GITHUB_ACTOR ?? '';
+    if (!VALID_AUTHORS_FOR_LATEST.includes(author)) {
+      throw new Error(
+        `The GitHub user "${author}" is not allowed to publish to "latest". Please request one of the following users to carry out the release: ${VALID_AUTHORS_FOR_LATEST.join(
+          ', '
+        )}`
+      );
     }
-    console.log(`\n> ${publishCommand}`);
-    execSync(publishCommand, {
-      stdio: [0, 1, 2],
-      maxBuffer: LARGE_BUFFER,
-    });
+  }
 
+  // Run with dynamic output-style so that we have more minimal logs by default but still always see errors
+  let publishCommand = `pnpm nx release publish --registry=${getRegistry()} --tag=${distTag} --output-style=dynamic --parallel=8`;
+  if (options.dryRun) {
+    publishCommand += ' --dry-run';
+  }
+  console.log(`\n> ${publishCommand}`);
+  execSync(publishCommand, {
+    stdio: [0, 1, 2],
+    maxBuffer: LARGE_BUFFER,
+  });
+
+  if (!options.dryRun) {
     let version;
     if (['minor', 'major', 'patch'].includes(options.version)) {
       version = execSync(`npm view nx@${distTag} version`).toString().trim();
@@ -241,7 +239,16 @@ function parseArgs() {
       description:
         'The version to publish. This does not need to be passed and can be inferred.',
       default: 'minor',
-      coerce: (version) => {
+      coerce: (version: string) => {
+        const isGithubActions = !!process.env.GITHUB_ACTIONS;
+        if (isGithubActions && isRelativeVersionKeyword(version)) {
+          // Print error rather than throw to avoid yargs noise in this specifically handled case
+          console.error(
+            'Error: The release script was triggered in a GitHub Actions workflow, but a relative version keyword was provided. This is an unexpected combination.'
+          );
+          process.exit(1);
+        }
+
         if (version !== 'canary') {
           return version;
         }
@@ -358,10 +365,15 @@ function getRegistry() {
 
 function determineDistTag(
   newVersion: string
-): 'latest' | 'next' | 'previous' | 'canary' {
+): 'latest' | 'next' | 'previous' | 'canary' | 'pull-request' {
   // Special case of canary
   if (newVersion.includes('canary')) {
     return 'canary';
+  }
+
+  // Special case of PR release
+  if (newVersion.startsWith('0.0.0-pr-')) {
+    return 'pull-request';
   }
 
   // For a relative version keyword, it cannot be previous

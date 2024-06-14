@@ -9368,6 +9368,14 @@
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
+              },
+              {
+                "id": "convert-to-inferred",
+                "path": "/nx-api/rollup/generators/convert-to-inferred",
+                "name": "convert-to-inferred",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
               }
             ],
             "isExternal": false,
@@ -9573,6 +9581,14 @@
                 "id": "configuration",
                 "path": "/nx-api/vite/generators/configuration",
                 "name": "configuration",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "setup-paths-plugin",
+                "path": "/nx-api/vite/generators/setup-paths-plugin",
+                "name": "setup-paths-plugin",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false

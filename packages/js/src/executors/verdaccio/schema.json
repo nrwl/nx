@@ -18,8 +18,7 @@
     },
     "port": {
       "type": "number",
-      "description": "Port of local registry that Verdaccio should listen to",
-      "default": 4873
+      "description": "Port of local registry that Verdaccio should listen to"
     },
     "config": {
       "type": "string",

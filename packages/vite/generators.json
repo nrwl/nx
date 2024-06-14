@@ -16,10 +16,15 @@
       "aliases": ["config"],
       "hidden": false
     },
+    "setup-paths-plugin": {
+      "factory": "./src/generators/setup-paths-plugin/setup-paths-plugin",
+      "schema": "./src/generators/setup-paths-plugin/schema.json",
+      "description": "Sets up the nxViteTsPaths plugin to enable support for workspace libraries."
+    },
     "vitest": {
       "factory": "./src/generators/vitest/vitest-generator#vitestGeneratorInternal",
       "schema": "./src/generators/vitest/schema.json",
-      "description": "Generate a vitest configuration"
+      "description": "Generate a vitest configuration."
     }
   }
 }

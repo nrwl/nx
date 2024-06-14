@@ -34,6 +34,9 @@ jest.mock('nx/src/plugins/js/utils/resolve-relative-to-dir', () => ({
     if (pathOrPackage === 'minimatch') {
       return '/root/node_modules/minimatch/dist/cjs/package.json';
     }
+    if (pathOrPackage === '@json2csv/plainjs/package.json') {
+      return '/root/node_modules/@json2csv/plainjs/dist/cjs/package.json';
+    }
     return join(
       '/root',
       'node_modules',
@@ -512,6 +515,15 @@ describe('TargetProjectLocator', () => {
         './node_modules/minimatch/dist/cjs/package.json': JSON.stringify({
           type: 'commonjs',
         }),
+        './node_modules/@json2csv/plainjs/package.json': JSON.stringify({
+          name: '@json2csv/plainjs',
+          description: 'something json to csv',
+          version: '7.0.6',
+        }),
+        './node_modules/@json2csv/plainjs/dist/cjs/package.json':
+          JSON.stringify({
+            type: 'commonjs',
+          }),
       };
       vol.fromJSON(fsJson, '/root');
 
@@ -704,6 +716,18 @@ describe('TargetProjectLocator', () => {
             hash: 'sha512-RHiac9mvaRw0x3AYRgDC1CxAP7HTcNrrECeA8YYJeWnpo+2Q5CegtZjaotWTWxDG3UeGA1coE05iH1mPjT/2mg==',
           },
         },
+        /**
+         * We use @json2csv/plainjs as an example of a package where package.json is rerouted to an improper package.json.
+         */
+        'npm:@json2csv/plainjs': {
+          type: 'npm',
+          name: 'npm:@json2csv/plainjs',
+          data: {
+            version: '7.0.6',
+            packageName: '@json2csv/plainjs',
+            hash: 'sha512-4Md7RPDCSYpmW1HWIpWBOqCd4vWfIqm53S3e/uzQ62iGi7L3r34fK/8nhOMEe+/eVfCx8+gdSCt1d74SlacQHw==',
+          },
+        },
       };
 
       targetProjectLocator = new TargetProjectLocator(projects, npmProjects);
@@ -827,6 +851,14 @@ describe('TargetProjectLocator', () => {
         'libs/proj/index.ts'
       );
       expect(result).toEqual('npm:minimatch');
+    });
+
+    it('should handle resolving packages which reroutes package.json', () => {
+      const result = targetProjectLocator.findProjectFromImport(
+        '@json2csv/plainjs',
+        'libs/proj/index.ts'
+      );
+      expect(result).toEqual('npm:@json2csv/plainjs');
     });
   });
 });
