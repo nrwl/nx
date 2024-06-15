@@ -1,5 +1,6 @@
 ---
 title: What if Nx Plugins Were More Like VSCode Extensions
+slug: 'what-if-nx-plugins-were-more-like-vscode-extensions'
 authors: [Juri Strumpflohner]
 cover_image: '/blog/images/2024-02-05/featured_img.png'
 tags: [nx, releases]

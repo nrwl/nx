@@ -1,5 +1,6 @@
 ---
 title: Launch Nx Week Recap
+slug: 'launch-nx-week-recap'
 authors: [Zack DeRose]
 cover_image: '/blog/images/2024-02-15/featured_img.png'
 tags: [nx, nx-cloud, releases, changelog]
@@ -36,7 +37,7 @@ Juri announced launched Project Crystal with this video:
 
 The short version is: Nx project crystal means Nx plugins make your codebases work more seemlessly with less config.
 
-For the long version, checkout this blog post by Juri where he describes [how Nx plugins are now more like VsCode Extentions](/blog/2024-02-05-nx-18-project-crystal)!
+For the long version, checkout this blog post by Juri where he describes [how Nx plugins are now more like VsCode Extentions](/blog/what-if-nx-plugins-were-more-like-vscode-extensions)!
 
 And don’t miss our two conference talks on this subject:
 
@@ -80,7 +81,7 @@ We’re very excited about Nx Agents because we think that in its current state,
 
 {% youtube src="https://www.youtube.com/embed/_FSHQIwITic?si=jDpwTVXLYFXiHEm0" title="Nx Agents" /%}
 
-Be sure to also checkout the [blog post from Isaac on Nx Agents](/blog/2024-02-07-fast-effortless-ci), including explanations of exclusive features like auto-detection and retrying for flaky tasks and automatically splitting lengthy end-to-end tests!
+Be sure to also checkout the [blog post from Isaac on Nx Agents](/blog/fast-effortless-ci), including explanations of exclusive features like auto-detection and retrying for flaky tasks and automatically splitting lengthy end-to-end tests!
 
 You can [signup for Nx Agents NOW](https://nx.app/products/agents#content), and find out [more of the details in our docs](/ci/features/distribute-task-execution)!
 
@@ -120,7 +121,7 @@ For a long time, Nx has been purposefully versioning and publishing agnostic, bu
 
 Therefore, we’ve been working on a new command to the Nx CLI: [nx release](/recipes/nx-release/get-started-with-nx-release#get-started-with-nx-release). We launched this on Friday of our Launch Nx week!
 
-Juri goes into [full details in this blog post](/blog/2024-02-09-versioning-and-releasing-packages), and James Henry — our Director of Engineering and the primary engineer responsible for both maintaining Lerna and creating Nx Release — expands further in his conference talk:
+Juri goes into [full details in this blog post](/blog/versioning-and-releasing-packages-in-a-monorepo), and James Henry — our Director of Engineering and the primary engineer responsible for both maintaining Lerna and creating Nx Release — expands further in his conference talk:
 
 ### Conference Talk: Releasing Nx Release
 
