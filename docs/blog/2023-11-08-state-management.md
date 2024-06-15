@@ -1,5 +1,6 @@
 ---
 title: State Management Nx React Native/Expo Apps with TanStack Query and Redux
+slug: 'state-management-nx-react-native-expo-apps-with-tanstack-query-and-redux'
 authors: [Emily Xiong]
 image: '/blog/images/2023-11-08/featured_img.webp'
 tags: [nx, React Native]

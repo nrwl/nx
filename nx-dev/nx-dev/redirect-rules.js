@@ -1081,6 +1081,34 @@ const decisionsSection = {
 // Blog post redirects
 const blogPosts = {
   '/blog/2024-05-07-nx-19-release': '/blog/2024-05-08-nx-19-release',
+  '/blog/2024-05-08-nx-19-release': '/blog/nx-19-release',
+  '/blog/2024-04-19-manage-your-gradle':
+    '/blog/manage-your-gradle-project-using-nx',
+  '/blog/2024-03-21-reliable-ci':
+    '/blog/reliable-ci-a-new-execution-model-fixing-both-flakiness-and-slowness',
+  '/blog/2024-03-20-why-speed-matters': '/blog/monorepos-why-speed-matters',
+  '/blog/2024-02-15-launch-week-recap': '/blog/launch-nx-week-recap',
+  '/blog/2024-02-09-versioning-and-releasing-packages':
+    '/blog/versioning-and-releasing-packages-in-a-monorepo',
+  '/blog/2024-02-07-fast-effortless-ci': '/blog/fast-effortless-ci',
+  '/blog/2024-02-06-nuxt-js-support-in-nx':
+    '/blog/introducing-nx-nuxt-enhanced-nuxt-js-support-in-nx',
+  '/blog/2024-02-05-nx-18-project-crystal':
+    '/blog/what-if-nx-plugins-were-more-like-vscode-extensions',
+  '/blog/2023-12-28-highlights-2023': '/blog/nx-highlights-of-2023',
+  '/blog/2023-12-20-nx-17-2-release': '/blog/nx-17-2-release',
+  '/blog/2023-11-22-unit-testing-expo':
+    '/blog/unit-testing-expo-apps-with-jest',
+  '/blog/2023-11-21-ai-assistant': '/blog/nx-docs-ai-assistant',
+  '/blog/2023-11-08-state-management':
+    '/blog/state-management-nx-react-native-expo-apps-with-tanstack-query-and-redux',
+  '/blog/2023-10-20-nx-17-release': '/blog/nx-17-release',
+  '/blog/2023-10-13-nx-conf-2023-recap': '/blog/nx-conf-2023-recap',
+  '/blog/2023-09-25-nx-raises': '/blog/nx-raises-16m-series-a',
+  '/blog/2023-08-15-qwikify-your-dev': '/blog/qwikify-your-development-with-nx',
+  '/blog/2023-06-29-nx-console-gets-lit': '/blog/nx-console-gets-lit',
+  '/blog/2023-04-19-nx-cloud-3':
+    '/blog/nx-cloud-3-0-faster-more-efficient-modernized',
 };
 
 /**

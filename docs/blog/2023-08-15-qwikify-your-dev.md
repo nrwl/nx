@@ -1,5 +1,6 @@
 ---
 title: Qwikify your Development with Nx
+slug: 'qwikify-your-development-with-nx'
 authors: ['Colum Ferry']
 cover_image: '/blog/images/2023-08-15/featured_img.png'
 tags: [nx, changelog, release]
