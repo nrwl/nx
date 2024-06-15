@@ -1,5 +1,6 @@
 ---
 title: Versioning and Releasing Packages in a Monorepo
+slug: 'versioning-and-releasing-packages-in-a-monorepo'
 authors: [Juri Strumpflohner]
 cover_image: '/blog/images/2024-02-09/featured_img.png'
 tags: [nx, nx-cloud, releases, changelog]
@@ -48,11 +49,11 @@ pnpm dlx nx@latest init
 
 (use `npx nx@latest init` in a NPM workspace)
 
-This brings up a couple of questions including whether to install [Project Crystal plugins](/blog/2024-02-05-nx-18-project-crystal).
+This brings up a couple of questions including whether to install [Project Crystal plugins](/blog/what-if-nx-plugins-were-more-like-vscode-extensions).
 
 ![](/blog/images/2024-02-09/bodyimg2.webp)
 
-It gives you some additional benefits ([you can read more here](/blog/2024-02-05-nx-18-project-crystal)), but you don’t have to as it is not required for Nx Release.
+It gives you some additional benefits ([you can read more here](/blog/what-if-nx-plugins-were-more-like-vscode-extensions)), but you don’t have to as it is not required for Nx Release.
 
 ## Installing the JavaScript/TypeScript versioning Package
 
