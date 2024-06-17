@@ -64,7 +64,7 @@ describe('Run Commands', () => {
     }
   );
 
-  it('should overwrite options with args', async () => {
+  it('should overwrite matching options with args', async () => {
     let result = (
       await runCommands(
         {
@@ -115,6 +115,21 @@ describe('Run Commands', () => {
     ).terminalOutput.trim();
     expect(result).not.toContain('--key=123');
     expect(result).toContain('--key=789'); // should take args over unknown options
+
+    result = (
+      await runCommands(
+        {
+          command: 'echo',
+          __unparsed__: [],
+          key1: 'from options',
+          key2: 'from options',
+          args: '--key1="from args"',
+        },
+        context
+      )
+    ).terminalOutput.trim();
+    expect(result).not.toContain('--key1="from options"');
+    expect(result).toContain('echo --key2="from options" --key1="from args"'); // take args over options with the same name while keeping the rest
   });
 
   it('should not foward any args to underlying command if forwardAllArgs is false', async () => {
