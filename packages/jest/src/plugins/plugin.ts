@@ -331,7 +331,10 @@ function resolvePresetInput(
     return { externalDependencies: [presetValue] };
   }
 
-  const relativePath = relative(join(workspaceRoot, projectRoot), presetModule);
+  const relativePath = relative(
+    join(workspaceRoot, projectRoot),
+    presetModule
+  );
   return relativePath.startsWith('..')
     ? join('{workspaceRoot}', join(projectRoot, relativePath))
     : join('{projectRoot}', relativePath);
