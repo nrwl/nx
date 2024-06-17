@@ -300,6 +300,11 @@
     "url": "https://github.com/tripss/nx-extend/tree/master/packages/shadcn-ui"
   },
   {
+    "name": "@nx-extend/docusaurus",
+    "description": "Nx plugin adding first class support for Docusaurus in your Nx workspace.",
+    "url": "https://github.com/tripss/nx-extend/tree/master/packages/docusaurus"
+  },
+  {
     "name": "@nativescript/nx",
     "description": "Nx Plugin adding first class support for NativeScript in your Nx workspace",
     "url": "https://github.com/nativescript/nx"
