@@ -2755,6 +2755,15 @@
         "originalFilePath": "/packages/rollup/src/generators/configuration/schema.json",
         "path": "/nx-api/rollup/generators/configuration",
         "type": "generator"
+      },
+      "/nx-api/rollup/generators/convert-to-inferred": {
+        "description": "Convert existing Rollup project(s) using `@nx/rollup:*` executors to use `@nx/rollup/plugin`.",
+        "file": "generated/packages/rollup/generators/convert-to-inferred.json",
+        "hidden": false,
+        "name": "convert-to-inferred",
+        "originalFilePath": "/packages/rollup/src/generators/convert-to-inferred/schema.json",
+        "path": "/nx-api/rollup/generators/convert-to-inferred",
+        "type": "generator"
       }
     },
     "path": "/nx-api/rollup"
@@ -2957,6 +2966,15 @@
         "name": "setup-paths-plugin",
         "originalFilePath": "/packages/vite/src/generators/setup-paths-plugin/schema.json",
         "path": "/nx-api/vite/generators/setup-paths-plugin",
+        "type": "generator"
+      },
+      "/nx-api/vite/generators/convert-to-inferred": {
+        "description": "Convert existing Vite project(s) using `@nx/vite:*` executors to use `@nx/vite/plugin`. Defaults to migrating all projects. Pass '--project' to migrate only one target.",
+        "file": "generated/packages/vite/generators/convert-to-inferred.json",
+        "hidden": false,
+        "name": "convert-to-inferred",
+        "originalFilePath": "/packages/vite/src/generators/convert-to-inferred/schema.json",
+        "path": "/nx-api/vite/generators/convert-to-inferred",
         "type": "generator"
       },
       "/nx-api/vite/generators/vitest": {

@@ -1,8 +1,12 @@
 import { CreateNodesContext } from '@nx/devkit';
-import { join } from 'path';
-
-import { createNodesV2 } from './plugin';
 import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
+import { join } from 'path';
+import { createNodesV2 } from './plugin';
+
+jest.mock('nx/src/utils/cache-directory', () => ({
+  ...jest.requireActual('nx/src/utils/cache-directory'),
+  workspaceDataDirectory: 'tmp/project-graph-cache',
+}));
 
 describe('@nx/jest/plugin', () => {
   let createNodesFunction = createNodesV2[1];
@@ -35,6 +39,7 @@ describe('@nx/jest/plugin', () => {
 
   afterEach(() => {
     jest.resetModules();
+    tempFs.cleanup();
     process.chdir(cwd);
   });
 
@@ -215,6 +220,134 @@ describe('@nx/jest/plugin', () => {
       ]
     `);
   });
+
+  it('should add preset to the inputs', async () => {
+    mockJestConfig(
+      { coverageDirectory: '../coverage', preset: '../jest.preset.js' },
+      context
+    );
+    tempFs.createFileSync('jest.preset.js', 'module.exports = {};');
+
+    const results = await createNodesFunction(
+      ['proj/jest.config.js'],
+      { targetName: 'test' },
+      context
+    );
+
+    expect(results).toMatchInlineSnapshot(`
+      [
+        [
+          "proj/jest.config.js",
+          {
+            "projects": {
+              "proj": {
+                "metadata": undefined,
+                "root": "proj",
+                "targets": {
+                  "test": {
+                    "cache": true,
+                    "command": "jest",
+                    "inputs": [
+                      "default",
+                      "^production",
+                      "{workspaceRoot}/jest.preset.js",
+                      {
+                        "externalDependencies": [
+                          "jest",
+                        ],
+                      },
+                    ],
+                    "metadata": {
+                      "description": "Run Jest Tests",
+                      "technologies": [
+                        "jest",
+                      ],
+                    },
+                    "options": {
+                      "cwd": "proj",
+                    },
+                    "outputs": [
+                      "{workspaceRoot}/coverage",
+                    ],
+                  },
+                },
+              },
+            },
+          },
+        ],
+      ]
+    `);
+  });
+
+  it.each`
+    presetFileName        | content
+    ${'jest-preset.json'} | ${'{}'}
+    ${'jest-preset.js'}   | ${'module.exports = {};'}
+    ${'jest-preset.cjs'}  | ${'module.exports = {};'}
+  `(
+    'should add package as externalDependencies to the inputs when specified as preset and containing a $presetFileName file',
+    async ({ presetFileName, content }) => {
+      mockJestConfig(
+        { coverageDirectory: '../coverage', preset: 'some-package' },
+        context
+      );
+      await tempFs.createFiles({
+        [`node_modules/some-package/${presetFileName}`]: content,
+        'node_modules/some-package/package.json':
+          '{ "name": "some-package", "version": "1.0.0" }',
+      });
+
+      const results = await createNodesFunction(
+        ['proj/jest.config.js'],
+        { targetName: 'test' },
+        context
+      );
+
+      expect(results).toMatchInlineSnapshot(`
+      [
+        [
+          "proj/jest.config.js",
+          {
+            "projects": {
+              "proj": {
+                "metadata": undefined,
+                "root": "proj",
+                "targets": {
+                  "test": {
+                    "cache": true,
+                    "command": "jest",
+                    "inputs": [
+                      "default",
+                      "^production",
+                      {
+                        "externalDependencies": [
+                          "jest",
+                          "some-package",
+                        ],
+                      },
+                    ],
+                    "metadata": {
+                      "description": "Run Jest Tests",
+                      "technologies": [
+                        "jest",
+                      ],
+                    },
+                    "options": {
+                      "cwd": "proj",
+                    },
+                    "outputs": [
+                      "{workspaceRoot}/coverage",
+                    ],
+                  },
+                },
+              },
+            },
+          },
+        ],
+      ]
+    `);
+    }
+  );
 });
 
 function mockJestConfig(config: any, context: CreateNodesContext) {

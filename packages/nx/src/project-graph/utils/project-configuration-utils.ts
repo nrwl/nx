@@ -641,10 +641,21 @@ function validateAndNormalizeProjectRootMap(
       );
 
       if (
+        // If the target has no executor or command, it doesn't do anything
         !project.targets[targetName].executor &&
         !project.targets[targetName].command
       ) {
-        delete project.targets[targetName];
+        // But it may have dependencies that do something
+        if (
+          project.targets[targetName].dependsOn &&
+          project.targets[targetName].dependsOn.length > 0
+        ) {
+          project.targets[targetName].executor = 'nx:noop';
+        } else {
+          // If it does nothing, and has no depenencies,
+          // we can remove it.
+          delete project.targets[targetName];
+        }
       }
     }
   }

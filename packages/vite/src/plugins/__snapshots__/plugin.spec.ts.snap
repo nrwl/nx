@@ -1,107 +1,162 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`@nx/vite/plugin not root project should create nodes 1`] = `
-{
-  "projects": {
-    "my-app": {
-      "root": "my-app",
-      "targets": {
-        "build-something": {
-          "cache": true,
-          "command": "vite build",
-          "dependsOn": [
-            "^build-something",
-          ],
-          "inputs": [
-            "production",
-            "^production",
-            {
-              "externalDependencies": [
-                "vite",
+exports[`@nx/vite/plugin Library mode should exclude serve and preview targets when vite.config.ts is in library mode 1`] = `
+[
+  [
+    "my-lib/vite.config.ts",
+    {
+      "projects": {
+        "my-lib": {
+          "metadata": {},
+          "projectType": "library",
+          "root": "my-lib",
+          "targets": {
+            "build": {
+              "cache": true,
+              "command": "vite build",
+              "dependsOn": [
+                "^build",
+              ],
+              "inputs": [
+                "production",
+                "^production",
+                {
+                  "externalDependencies": [
+                    "vite",
+                  ],
+                },
+              ],
+              "options": {
+                "cwd": "my-lib",
+              },
+              "outputs": [
+                "{workspaceRoot}/dist/{projectRoot}",
               ],
             },
-          ],
-          "options": {
-            "cwd": "my-app",
-          },
-          "outputs": [
-            "{workspaceRoot}/dist/{projectRoot}",
-          ],
-        },
-        "my-serve": {
-          "command": "vite serve",
-          "options": {
-            "cwd": "my-app",
-          },
-        },
-        "preview-site": {
-          "command": "vite preview",
-          "options": {
-            "cwd": "my-app",
-          },
-        },
-        "serve-static": {
-          "executor": "@nx/web:file-server",
-          "options": {
-            "buildTarget": "build-something",
-            "spa": true,
           },
         },
       },
     },
-  },
-}
+  ],
+]
+`;
+
+exports[`@nx/vite/plugin not root project should create nodes 1`] = `
+[
+  [
+    "my-app/vite.config.ts",
+    {
+      "projects": {
+        "my-app": {
+          "metadata": {},
+          "projectType": "application",
+          "root": "my-app",
+          "targets": {
+            "build-something": {
+              "cache": true,
+              "command": "vite build",
+              "dependsOn": [
+                "^build-something",
+              ],
+              "inputs": [
+                "production",
+                "^production",
+                {
+                  "externalDependencies": [
+                    "vite",
+                  ],
+                },
+              ],
+              "options": {
+                "cwd": "my-app",
+              },
+              "outputs": [
+                "{workspaceRoot}/dist/{projectRoot}",
+              ],
+            },
+            "my-serve": {
+              "command": "vite serve",
+              "options": {
+                "cwd": "my-app",
+              },
+            },
+            "preview-site": {
+              "command": "vite preview",
+              "options": {
+                "cwd": "my-app",
+              },
+            },
+            "serve-static": {
+              "executor": "@nx/web:file-server",
+              "options": {
+                "buildTarget": "build-something",
+                "spa": true,
+              },
+            },
+          },
+        },
+      },
+    },
+  ],
+]
 `;
 
 exports[`@nx/vite/plugin root project should create nodes 1`] = `
-{
-  "projects": {
-    ".": {
-      "root": ".",
-      "targets": {
-        "build": {
-          "cache": true,
-          "command": "vite build",
-          "dependsOn": [
-            "^build",
-          ],
-          "inputs": [
-            "production",
-            "^production",
-            {
-              "externalDependencies": [
-                "vite",
+[
+  [
+    "vite.config.ts",
+    {
+      "projects": {
+        ".": {
+          "metadata": {},
+          "projectType": "application",
+          "root": ".",
+          "targets": {
+            "build": {
+              "cache": true,
+              "command": "vite build",
+              "dependsOn": [
+                "^build",
+              ],
+              "inputs": [
+                "production",
+                "^production",
+                {
+                  "externalDependencies": [
+                    "vite",
+                  ],
+                },
+              ],
+              "options": {
+                "cwd": ".",
+              },
+              "outputs": [
+                "{projectRoot}/dist",
               ],
             },
-          ],
-          "options": {
-            "cwd": ".",
-          },
-          "outputs": [
-            "{projectRoot}/dist",
-          ],
-        },
-        "preview": {
-          "command": "vite preview",
-          "options": {
-            "cwd": ".",
-          },
-        },
-        "serve": {
-          "command": "vite serve",
-          "options": {
-            "cwd": ".",
-          },
-        },
-        "serve-static": {
-          "executor": "@nx/web:file-server",
-          "options": {
-            "buildTarget": "build",
-            "spa": true,
+            "preview": {
+              "command": "vite preview",
+              "options": {
+                "cwd": ".",
+              },
+            },
+            "serve": {
+              "command": "vite serve",
+              "options": {
+                "cwd": ".",
+              },
+            },
+            "serve-static": {
+              "executor": "@nx/web:file-server",
+              "options": {
+                "buildTarget": "build",
+                "spa": true,
+              },
+            },
           },
         },
       },
     },
-  },
-}
+  ],
+]
 `;

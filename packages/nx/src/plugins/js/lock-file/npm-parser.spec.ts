@@ -824,6 +824,83 @@ describe('NPM lock file utility', () => {
     });
   });
 
+  describe('pruning handling npm hoisting', () => {
+    let rootLockFile;
+
+    beforeAll(() => {
+      rootLockFile = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/npm-hoisting/package-lock.json'
+      ));
+    });
+
+    it('should prune correctly', () => {
+      const appPackageJson = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/npm-hoisting/app/package.json'
+      ));
+
+      const hash = uniq('mock-hash');
+      const externalNodes = getNpmLockfileNodes(
+        JSON.stringify(rootLockFile),
+        hash
+      );
+      const pg = {
+        nodes: {},
+        dependencies: {},
+        externalNodes,
+      };
+      const ctx: CreateDependenciesContext = {
+        projects: {},
+        externalNodes,
+        fileMap: {
+          nonProjectFiles: [],
+          projectFileMap: {},
+        },
+        filesToProcess: {
+          nonProjectFiles: [],
+          projectFileMap: {},
+        },
+        nxJsonConfiguration: null,
+        workspaceRoot: '/virtual',
+      };
+      const dependencies = getNpmLockfileDependencies(
+        JSON.stringify(rootLockFile),
+        hash,
+        ctx
+      );
+
+      const builder = new ProjectGraphBuilder(pg);
+      for (const dep of dependencies) {
+        builder.addDependency(
+          dep.source,
+          dep.target,
+          dep.type,
+          'sourceFile' in dep ? dep.sourceFile : null
+        );
+      }
+      const graph = builder.getUpdatedProjectGraph();
+
+      const prunedGraph = pruneProjectGraph(graph, appPackageJson);
+      const result = stringifyNpmLockfile(
+        prunedGraph,
+        JSON.stringify(rootLockFile),
+        appPackageJson
+      );
+
+      expect(result).toEqual(
+        JSON.stringify(
+          require(joinPathFragments(
+            __dirname,
+            '__fixtures__/npm-hoisting/app/package-lock.json'
+          )),
+          null,
+          2
+        )
+      );
+    });
+  });
+
   describe('workspaces', () => {
     let lockFile;
 

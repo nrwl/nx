@@ -406,8 +406,13 @@ To fix this you will either need to add a package.json file at that location, or
                 `📄 Resolved the specifier as "${specifier}" since the current version is a prerelease.`
               );
             } else {
+              let extraText = '';
+              if (options.preid && !specifier.startsWith('pre')) {
+                specifier = `pre${specifier}`;
+                extraText = `, combined with your given preid "${options.preid}"`;
+              }
               log(
-                `📄 Resolved the specifier as "${specifier}" using git history and the conventional commits standard.`
+                `📄 Resolved the specifier as "${specifier}" using git history and the conventional commits standard${extraText}.`
               );
             }
             break;

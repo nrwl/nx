@@ -23,10 +23,12 @@ describe('nx package.json workspaces plugin', () => {
         }),
         'packages/lib-a/package.json': JSON.stringify({
           name: 'lib-a',
+          description: 'lib-a description',
           scripts: { test: 'jest' },
         }),
         'packages/lib-b/package.json': JSON.stringify({
           name: 'lib-b',
+          description: 'lib-b description',
           scripts: {
             build: 'tsc',
             test: 'jest',
@@ -52,6 +54,7 @@ describe('nx package.json workspaces plugin', () => {
         "projects": {
           ".": {
             "metadata": {
+              "description": undefined,
               "targetGroups": {
                 "NPM Scripts": [
                   "echo",
@@ -59,9 +62,11 @@ describe('nx package.json workspaces plugin', () => {
               },
             },
             "name": "root",
-            "projectType": "library",
             "root": ".",
             "sourceRoot": ".",
+            "tags": [
+              "npm:public",
+            ],
             "targets": {
               "echo": {
                 "executor": "nx:run-script",
@@ -91,6 +96,7 @@ describe('nx package.json workspaces plugin', () => {
         "projects": {
           "packages/lib-a": {
             "metadata": {
+              "description": "lib-a description",
               "targetGroups": {
                 "NPM Scripts": [
                   "test",
@@ -98,9 +104,11 @@ describe('nx package.json workspaces plugin', () => {
               },
             },
             "name": "lib-a",
-            "projectType": "library",
             "root": "packages/lib-a",
             "sourceRoot": "packages/lib-a",
+            "tags": [
+              "npm:public",
+            ],
             "targets": {
               "nx-release-publish": {
                 "dependsOn": [
@@ -137,6 +145,7 @@ describe('nx package.json workspaces plugin', () => {
               "test",
             ],
             "metadata": {
+              "description": "lib-b description",
               "targetGroups": {
                 "NPM Scripts": [
                   "build",
@@ -145,9 +154,11 @@ describe('nx package.json workspaces plugin', () => {
               },
             },
             "name": "lib-b",
-            "projectType": "library",
             "root": "packages/lib-b",
             "sourceRoot": "packages/lib-b",
+            "tags": [
+              "npm:public",
+            ],
             "targets": {
               "build": {
                 "executor": "nx:run-script",
@@ -230,14 +241,15 @@ describe('nx package.json workspaces plugin', () => {
           "projects": {
             "packages/vite": {
               "metadata": {
-                "targetGroups": {
-                  "NPM Scripts": [],
-                },
+                "description": undefined,
+                "targetGroups": {},
               },
               "name": "vite",
-              "projectType": "library",
               "root": "packages/vite",
               "sourceRoot": "packages/vite",
+              "tags": [
+                "npm:public",
+              ],
               "targets": {
                 "nx-release-publish": {
                   "dependsOn": [
@@ -317,14 +329,15 @@ describe('nx package.json workspaces plugin', () => {
           "projects": {
             "packages/vite": {
               "metadata": {
-                "targetGroups": {
-                  "NPM Scripts": [],
-                },
+                "description": undefined,
+                "targetGroups": {},
               },
               "name": "vite",
-              "projectType": "library",
               "root": "packages/vite",
               "sourceRoot": "packages/vite",
+              "tags": [
+                "npm:public",
+              ],
               "targets": {
                 "nx-release-publish": {
                   "dependsOn": [
@@ -400,14 +413,15 @@ describe('nx package.json workspaces plugin', () => {
           "projects": {
             "packages/vite": {
               "metadata": {
-                "targetGroups": {
-                  "NPM Scripts": [],
-                },
+                "description": undefined,
+                "targetGroups": {},
               },
               "name": "vite",
-              "projectType": "library",
               "root": "packages/vite",
               "sourceRoot": "packages/vite",
+              "tags": [
+                "npm:public",
+              ],
               "targets": {
                 "nx-release-publish": {
                   "dependsOn": [
@@ -471,6 +485,7 @@ describe('nx package.json workspaces plugin', () => {
           "projects": {
             "packages/a": {
               "metadata": {
+                "description": undefined,
                 "targetGroups": {
                   "NPM Scripts": [
                     "build",
@@ -478,9 +493,11 @@ describe('nx package.json workspaces plugin', () => {
                 },
               },
               "name": "root",
-              "projectType": "library",
               "root": "packages/a",
               "sourceRoot": "packages/a",
+              "tags": [
+                "npm:public",
+              ],
               "targets": {
                 "build": {
                   "executor": "nx:run-script",
@@ -536,6 +553,7 @@ describe('nx package.json workspaces plugin', () => {
           "projects": {
             "packages/a": {
               "metadata": {
+                "description": undefined,
                 "targetGroups": {
                   "NPM Scripts": [
                     "build",
@@ -543,9 +561,11 @@ describe('nx package.json workspaces plugin', () => {
                 },
               },
               "name": "root",
-              "projectType": "library",
               "root": "packages/a",
               "sourceRoot": "packages/a",
+              "tags": [
+                "npm:public",
+              ],
               "targets": {
                 "build": {
                   "executor": "nx:run-script",
@@ -601,14 +621,15 @@ describe('nx package.json workspaces plugin', () => {
           "projects": {
             "packages/a": {
               "metadata": {
-                "targetGroups": {
-                  "NPM Scripts": [],
-                },
+                "description": undefined,
+                "targetGroups": {},
               },
               "name": "root",
-              "projectType": "library",
               "root": "packages/a",
               "sourceRoot": "packages/a",
+              "tags": [
+                "npm:public",
+              ],
               "targets": {
                 "nx-release-publish": {
                   "dependsOn": [
@@ -623,5 +644,92 @@ describe('nx package.json workspaces plugin', () => {
         }
       `);
     });
+  });
+
+  it('should infer library and application project types from appsDir and libsDir', () => {
+    vol.fromJSON(
+      {
+        'nx.json': JSON.stringify({
+          workspaceLayout: {
+            appsDir: 'apps',
+            libsDir: 'packages',
+          },
+        }),
+        'apps/myapp/package.json': JSON.stringify({
+          name: 'myapp',
+          scripts: { test: 'jest' },
+        }),
+        'packages/mylib/package.json': JSON.stringify({
+          name: 'mylib',
+          scripts: { test: 'jest' },
+        }),
+      },
+      '/root'
+    );
+
+    expect(
+      createNodeFromPackageJson('apps/myapp/package.json', '/root').projects[
+        'apps/myapp'
+      ].projectType
+    ).toEqual('application');
+
+    expect(
+      createNodeFromPackageJson('packages/mylib/package.json', '/root')
+        .projects['packages/mylib'].projectType
+    ).toEqual('library');
+  });
+
+  it('should infer library types for root library project if both appsDir and libsDir are set to empty string', () => {
+    vol.fromJSON(
+      {
+        'nx.json': JSON.stringify({
+          workspaceLayout: {
+            appsDir: '',
+            libsDir: '',
+          },
+        }),
+        'package.json': JSON.stringify({
+          name: 'mylib',
+          scripts: { test: 'jest' },
+        }),
+      },
+      '/root'
+    );
+
+    expect(
+      createNodeFromPackageJson('package.json', '/root').projects['.']
+        .projectType
+    ).toEqual('library');
+  });
+
+  it('should infer library project type if only libsDir is set', () => {
+    vol.fromJSON(
+      {
+        'nx.json': JSON.stringify({
+          workspaceLayout: {
+            libsDir: 'packages',
+          },
+        }),
+        'example/package.json': JSON.stringify({
+          name: 'example',
+          scripts: { test: 'jest' },
+        }),
+        'packages/mylib/package.json': JSON.stringify({
+          name: 'mylib',
+          scripts: { test: 'jest' },
+        }),
+      },
+      '/root'
+    );
+
+    expect(
+      createNodeFromPackageJson('packages/mylib/package.json', '/root')
+        .projects['packages/mylib'].projectType
+    ).toEqual('library');
+    expect(
+      createNodeFromPackageJson('example/package.json', '/root').projects[
+        'example'
+      ].projectType
+    ).toBeUndefined();
   });
 });
