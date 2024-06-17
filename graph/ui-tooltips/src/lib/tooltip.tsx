@@ -138,7 +138,7 @@ export function Tooltip({
             width: 'max-content',
             ...animationStyles,
           }}
-          className="z-10 min-w-[250px] rounded-md border border-slate-500"
+          className="z-10 min-w-[250px] max-w-prose rounded-md border border-slate-500"
           {...getFloatingProps()}
         >
           {showTooltipArrow && (

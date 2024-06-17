@@ -119,6 +119,7 @@ export interface ProjectConfiguration {
 }
 
 export interface ProjectMetadata {
+  description?: string;
   technologies?: string[];
   targetGroups?: Record<string, string[]>;
 }

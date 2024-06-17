@@ -34,18 +34,6 @@ const typeToProjectType = {
   e2e: 'E2E',
 };
 
-function getDisplayType(project: ProjectGraphProjectNode) {
-  if (project.data.projectType) {
-    return (
-      project.data.projectType &&
-      project.data.projectType?.charAt(0)?.toUpperCase() +
-        project.data.projectType?.slice(1)
-    );
-  } else {
-    return typeToProjectType[project.type] ?? 'Library';
-  }
-}
-
 export const ProjectDetails = ({
   project,
   sourceMap,
@@ -57,8 +45,6 @@ export const ProjectDetails = ({
 }: ProjectDetailsProps) => {
   const projectData = project.data;
   const isCompact = variant === 'compact';
-
-  const displayType = getDisplayType(project);
 
   const technologies = [
     ...new Set(
@@ -112,24 +98,33 @@ export const ProjectDetails = ({
         </div>
         <div className="flex justify-between py-2">
           <div>
+            {projectData.metadata?.description ? (
+              <p className="mb-2 text-sm capitalize text-gray-500 dark:text-slate-400">
+                {projectData.metadata?.description}
+              </p>
+            ) : null}
             {projectData.tags && projectData.tags.length ? (
               <p>
-                <span className="inline-block w-10 font-medium">Tags:</span>
+                <span className="font-medium">Tags:</span>
                 {projectData.tags?.map((tag) => (
-                  <span className="ml-2 font-mono">
+                  <span className="ml-2 font-mono lowercase">
                     <Pill text={tag} />
                   </span>
                 ))}
               </p>
             ) : null}
-            <p>
-              <span className="inline-block w-10 font-medium">Root:</span>
-              <span className="font-mono"> {projectData.root}</span>
-            </p>
-            {displayType ? (
+            {projectData.root ? (
               <p>
-                <span className="inline-block w-10 font-medium">Type:</span>
-                <span className="font-mono"> {displayType}</span>
+                <span className="font-medium">Root:</span>
+                <span className="font-mono"> {projectData.root.trim()}</span>
+              </p>
+            ) : null}
+            {projectData.projectType ?? typeToProjectType[project.type] ? (
+              <p>
+                <span className="font-medium">Type:</span>
+                <span className="ml-2 font-mono capitalize">
+                  {projectData.projectType ?? typeToProjectType[project.type]}
+                </span>
               </p>
             ) : null}
           </div>

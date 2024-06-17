@@ -6,6 +6,7 @@ import { ProjectConfiguration } from '../../../config/workspace-json-project-jso
 import {
   PackageJson,
   getMetadataFromPackageJson,
+  getTagsFromPackageJson,
   readTargetsFromPackageJson,
 } from '../../../utils/package-json';
 
@@ -56,6 +57,7 @@ function createProjectFromPackageJsonNextToProjectJson(
       root,
       targets: readTargetsFromPackageJson(packageJson),
       metadata: getMetadataFromPackageJson(packageJson),
+      tags: getTagsFromPackageJson(packageJson),
     } as ProjectConfiguration;
   } catch (e) {
     console.log(e);
