@@ -452,6 +452,7 @@
     - [generators](/nx-api/jest/generators)
       - [init](/nx-api/jest/generators/init)
       - [configuration](/nx-api/jest/generators/configuration)
+      - [convert-to-inferred](/nx-api/jest/generators/convert-to-inferred)
   - [js](/nx-api/js)
     - [documents](/nx-api/js/documents)
       - [Overview](/nx-api/js/documents/overview)
