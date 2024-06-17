@@ -995,7 +995,7 @@ async function generateChangelogForWorkspace({
   const dryRun = !!args.dryRun;
   const gitRemote = args.gitRemote;
 
-  const changelogRenderer = resolveChangelogRenderer(config.renderer);
+  const changelogRenderer = await resolveChangelogRenderer(config.renderer);
 
   let interpolatedTreePath = config.file || '';
   if (interpolatedTreePath) {
@@ -1123,7 +1123,7 @@ async function generateChangelogForProjects({
   const dryRun = !!args.dryRun;
   const gitRemote = args.gitRemote;
 
-  const changelogRenderer = resolveChangelogRenderer(config.renderer);
+  const changelogRenderer = await resolveChangelogRenderer(config.renderer);
 
   const projectChangelogs: NxReleaseChangelogResult['projectChangelogs'] = {};
 

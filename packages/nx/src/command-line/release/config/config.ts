@@ -550,7 +550,10 @@ export async function createNxReleaseConfig(
     releaseGroups[releaseGroupName] = finalReleaseGroup;
   }
 
-  ensureChangelogRenderersAreResolvable(releaseGroups, rootChangelogConfig);
+  await ensureChangelogRenderersAreResolvable(
+    releaseGroups,
+    rootChangelogConfig
+  );
 
   return {
     error: null,
@@ -930,10 +933,10 @@ function isProjectPublic(
   }
 }
 
-function ensureChangelogRenderersAreResolvable(
+async function ensureChangelogRenderersAreResolvable(
   releaseGroups: NxReleaseConfig['groups'],
   rootChangelogConfig: NxReleaseConfig['changelog']
-) {
+): Promise<void> {
   /**
    * If any form of changelog config is enabled, ensure that any provided changelog renderers are resolvable
    * up front so that we do not end up erroring only after the versioning step has been completed.
@@ -971,7 +974,7 @@ function ensureChangelogRenderersAreResolvable(
 
   for (const rendererPath of uniqueRendererPaths) {
     try {
-      resolveChangelogRenderer(rendererPath);
+      await resolveChangelogRenderer(rendererPath);
     } catch (e) {
       const workspaceRelativePath = relative(workspaceRoot, rendererPath);
       output.error({
