@@ -24,7 +24,7 @@ export async function convertToInferred(tree: Tree, options: Schema) {
       staticStorybookTargetName: 'static-storybook',
       testStorybookTargetName: 'test-storybook',
     }),
-    buildPostTargetTransformer,
+    buildPostTargetTransformer(migrationLogs),
     createNodes,
     options.project
   );
@@ -40,7 +40,7 @@ export async function convertToInferred(tree: Tree, options: Schema) {
       staticStorybookTargetName: 'static-storybook',
       testStorybookTargetName: 'test-storybook',
     }),
-    servePostTargetTransformer,
+    servePostTargetTransformer(migrationLogs),
     createNodes,
     options.project
   );
