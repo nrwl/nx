@@ -59,3 +59,5 @@ export async function convertToInferred(tree: Tree, options: Schema) {
     migrationLogs.flushLogs();
   };
 }
+
+export default convertToInferred;

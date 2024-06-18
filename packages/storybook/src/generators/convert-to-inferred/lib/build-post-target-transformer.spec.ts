@@ -68,8 +68,8 @@ describe('buildPostTargetTransformer', () => {
     expect(target).toMatchInlineSnapshot(`
       {
         "options": {
-          "configDir": ".storybook",
-          "outputDir": "../../dist/storybook/myapp",
+          "config-dir": ".storybook",
+          "output-dir": "../../dist/storybook/myapp",
         },
       }
     `);
@@ -150,13 +150,13 @@ describe('buildPostTargetTransformer', () => {
       {
         "configurations": {
           "dev": {
-            "configDir": "./dev/.storybook",
-            "outputDir": "../../dist/storybook/myapp/dev",
+            "config-dir": "./dev/.storybook",
+            "output-dir": "../../dist/storybook/myapp/dev",
           },
         },
         "options": {
-          "configDir": ".storybook",
-          "outputDir": "../../dist/storybook/myapp",
+          "config-dir": ".storybook",
+          "output-dir": "../../dist/storybook/myapp",
         },
       }
     `);
@@ -166,18 +166,6 @@ describe('buildPostTargetTransformer', () => {
     );
     expect(devConfigFile).toMatchInlineSnapshot(`
       "import type { StorybookConfig } from '@storybook/react-vite';
-        
-        // These options were migrated by @nx/storybook:convert-to-inferred from the project.json file.
-        const configValues = {"default":{"docsMode":true,"staticDir":["assets"]},"dev":{"docsMode":false,"staticDir":["dev/assets"]}};
-        
-        // Determine the correct configValue to use based on the configuration
-        const nxConfiguration = process.env.NX_TASK_TARGET_CONFIGURATION ?? 'default';
-        
-        const options = {
-          ...configValues.default,
-          ...(configValues[nxConfiguration] ?? {})
-        }
-        
 
       const config: StorybookConfig = {staticDirs: options.staticDir,docs: { docsMode: options.docsMode },
         stories: ['../src/app/**/*.stories.@(js|jsx|ts|tsx|mdx)'],

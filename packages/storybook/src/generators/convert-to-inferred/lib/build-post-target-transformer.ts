@@ -5,7 +5,11 @@ import {
 } from '@nx/devkit/src/generators/plugin-migrations/plugin-migration-utils';
 import { tsquery } from '@phenomnomnominal/tsquery';
 import { AggregatedLog } from '@nx/devkit/src/generators/plugin-migrations/aggregate-log-util';
-import { addConfigValuesToConfigFile } from './utils';
+import {
+  addConfigValuesToConfigFile,
+  getConfigFilePath,
+  STORYBOOK_PROP_MAPPINGS,
+} from './utils';
 
 type StorybookConfigValues = { docsMode?: boolean; staticDir?: string };
 
@@ -66,10 +70,9 @@ export function buildPostTargetTransformer(migrationLogs: AggregatedLog) {
         ) {
           addConfigValuesToConfigFile(
             tree,
-            joinPathFragments(
-              projectDetails.root,
-              configuration.configDir,
-              'main.ts'
+            getConfigFilePath(
+              tree,
+              joinPathFragments(projectDetails.root, configuration.configDir)
             ),
             configValues
           );
@@ -105,7 +108,7 @@ export function buildPostTargetTransformer(migrationLogs: AggregatedLog) {
 
     addConfigValuesToConfigFile(
       tree,
-      joinPathFragments(defaultConfigDir, 'main.ts'),
+      getConfigFilePath(tree, defaultConfigDir),
       configValues
     );
 
@@ -164,6 +167,15 @@ function handlePropertiesFromTargetOptions(
     );
     delete options.staticDir;
   }
+
+  for (const [prevKey, newKey] of Object.entries(STORYBOOK_PROP_MAPPINGS)) {
+    if (prevKey in options) {
+      options[newKey] = options[prevKey];
+      delete options[prevKey];
+    }
+  }
+
+  // AST CONFIG PATH FOR VITE CONFIG FILES
 }
 
 function moveDocsModeToConfigFile(
@@ -173,7 +185,7 @@ function moveDocsModeToConfigFile(
   migrationLogs: AggregatedLog,
   useConfigValues = true
 ) {
-  const configFilePath = joinPathFragments(configDir, 'main.ts');
+  const configFilePath = getConfigFilePath(tree, configDir);
   const configFileContents = tree.read(configFilePath, 'utf-8');
 
   const ast = tsquery.ast(configFileContents);
@@ -236,7 +248,7 @@ function moveStaticDirToConfigFile(
   migrationLogs: AggregatedLog,
   useConfigValues = true
 ) {
-  const configFilePath = joinPathFragments(configDir, 'main.ts');
+  const configFilePath = getConfigFilePath(tree, configDir);
   const configFileContents = tree.read(configFilePath, 'utf-8');
 
   const ast = tsquery.ast(configFileContents);

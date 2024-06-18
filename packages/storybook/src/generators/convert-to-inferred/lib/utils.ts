@@ -1,5 +1,17 @@
 import type { Tree } from 'nx/src/generators/tree';
 import { tsquery } from '@phenomnomnominal/tsquery';
+import { joinPathFragments } from 'nx/src/utils/path';
+
+export function getConfigFilePath(tree: Tree, configDir: string) {
+  return [
+    joinPathFragments(configDir, `main.ts`),
+    joinPathFragments(configDir, `main.cts`),
+    joinPathFragments(configDir, `main.mts`),
+    joinPathFragments(configDir, `main.js`),
+    joinPathFragments(configDir, `main.cjs`),
+    joinPathFragments(configDir, `main.mjs`),
+  ].find((f) => tree.exists(f));
+}
 
 export function addConfigValuesToConfigFile(
   tree: Tree,
@@ -38,3 +50,23 @@ export function addConfigValuesToConfigFile(
   ${configFileContents.slice(lastImportNode.getEnd())}`
   );
 }
+
+export const STORYBOOK_PROP_MAPPINGS = {
+  port: 'port',
+  previewUrl: 'preview-url',
+  host: 'host',
+  docs: 'docs',
+  configDir: 'config-dir',
+  logLevel: 'loglevel',
+  quiet: 'quiet',
+  webpackStatsJson: 'stats-json',
+  debugWebpack: 'debug-webpack',
+  disableTelemetry: 'disable-telemetry',
+  https: 'https',
+  sslCa: 'ssl-ca',
+  sslCert: 'ssl-cert',
+  sslKey: 'ssl-key',
+  smokeTest: 'smoke-test',
+  noOpen: 'no-open',
+  outputDir: 'output-dir',
+};

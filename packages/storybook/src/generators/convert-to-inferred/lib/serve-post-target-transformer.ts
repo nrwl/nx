@@ -1,6 +1,7 @@
 import { TargetConfiguration, Tree } from '@nx/devkit';
 import { AggregatedLog } from '@nx/devkit/src/generators/plugin-migrations/aggregate-log-util';
 import { toProjectRelativePath } from '@nx/devkit/src/generators/plugin-migrations/plugin-migration-utils';
+import { STORYBOOK_PROP_MAPPINGS } from './utils';
 export function servePostTargetTransformer(migrationLogs: AggregatedLog) {
   return (
     target: TargetConfiguration,
@@ -91,22 +92,3 @@ function handlePropertiesFromTargetOptions(
     }
   }
 }
-
-const STORYBOOK_PROP_MAPPINGS = {
-  port: 'port',
-  previewUrl: 'preview-url',
-  host: 'host',
-  docs: 'docs',
-  configDir: 'config-dir',
-  logLevel: 'loglevel',
-  quiet: 'quiet',
-  webpackStatsJson: 'stats-json',
-  debugWebpack: 'debug-webpack',
-  disableTelemetry: 'disable-telemetry',
-  https: 'https',
-  sslCa: 'ssl-ca',
-  sslCert: 'ssl-cert',
-  sslKey: 'ssl-key',
-  smokeTest: 'smoke-test',
-  noOpen: 'no-open',
-};
