@@ -516,12 +516,12 @@ export function interpolateArgsIntoCommand(
       args += ` ${opts.args}`;
     }
     if (opts.__unparsed__?.length > 0) {
-      const filterdParsedOptions = filterPropKeysFromUnParsedOptions(
+      const filteredParsedOptions = filterPropKeysFromUnParsedOptions(
         opts.__unparsed__,
         opts.parsedArgs
       );
-      if (filterdParsedOptions.length > 0) {
-        args += ` ${filterdParsedOptions
+      if (filteredParsedOptions.length > 0) {
+        args += ` ${filteredParsedOptions
           .map(wrapArgIntoQuotesIfNeeded)
           .join(' ')}`;
       }
@@ -540,9 +540,14 @@ function parseArgs(
   if (!args) {
     return { ...unknownOptions, ...unparsedCommandArgs };
   }
-  return yargsParser(args.replace(/(^"|"$)/g, ''), {
-    configuration: { 'camel-case-expansion': false },
-  });
+
+  return {
+    ...unknownOptions,
+    ...yargsParser(args.replace(/(^"|"$)/g, ''), {
+      configuration: { 'camel-case-expansion': true },
+    }),
+    ...unparsedCommandArgs,
+  };
 }
 
 /**

@@ -1130,6 +1130,15 @@
         "originalFilePath": "/packages/jest/src/generators/configuration/schema.json",
         "path": "/nx-api/jest/generators/configuration",
         "type": "generator"
+      },
+      "/nx-api/jest/generators/convert-to-inferred": {
+        "description": "Convert existing Jest project(s) using `@nx/jest:jest` executor to use `@nx/jest/plugin`.",
+        "file": "generated/packages/jest/generators/convert-to-inferred.json",
+        "hidden": false,
+        "name": "convert-to-inferred",
+        "originalFilePath": "/packages/jest/src/generators/convert-to-inferred/schema.json",
+        "path": "/nx-api/jest/generators/convert-to-inferred",
+        "type": "generator"
       }
     },
     "path": "/nx-api/jest"

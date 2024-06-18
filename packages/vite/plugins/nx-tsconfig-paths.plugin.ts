@@ -83,7 +83,11 @@ export function nxViteTsPaths(options: nxViteTsPathsOptions = {}) {
 There should at least be a tsconfig.base.json or tsconfig.json in the root of the workspace ${workspaceRoot}`);
       }
 
-      if (!options.buildLibsFromSource && !global.NX_GRAPH_CREATION) {
+      if (
+        !options.buildLibsFromSource &&
+        !global.NX_GRAPH_CREATION &&
+        config.mode !== 'test'
+      ) {
         const projectGraph = await createProjectGraphAsync({
           exitOnError: false,
           resetDaemonClient: true,
@@ -123,7 +127,7 @@ There should at least be a tsconfig.base.json or tsconfig.json in the root of th
 
       logIt('first parsed tsconfig: ', parsed);
       if (parsed.resultType === 'failed') {
-        throw new Error(`Failed loading tsonfig at ${foundTsConfigPath}`);
+        throw new Error(`Failed loading tsconfig at ${foundTsConfigPath}`);
       }
       tsConfigPathsEsm = parsed;
 
