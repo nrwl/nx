@@ -100,20 +100,19 @@ const defaultTestProjectOptions: TestProjectOptions = {
 function writeJestConfig(
   tree: Tree,
   projectRoot: string,
-  jestConfig: any | undefined
+  jestConfig: any | undefined,
+  configFileName = 'jest.config.js'
 ) {
   jestConfig ??= {
     coverageDirectory: `../../coverage/${projectRoot}`,
   };
   const jestConfigContents = `module.exports = ${JSON.stringify(jestConfig)};`;
 
-  tree.write(`${projectRoot}/jest.config.js`, jestConfigContents);
-  fs.createFileSync(`${projectRoot}/jest.config.js`, jestConfigContents);
-  jest.doMock(
-    join(fs.tempDir, projectRoot, 'jest.config.js'),
-    () => jestConfig,
-    { virtual: true }
-  );
+  tree.write(`${projectRoot}/${configFileName}`, jestConfigContents);
+  fs.createFileSync(`${projectRoot}/${configFileName}`, jestConfigContents);
+  jest.doMock(join(fs.tempDir, projectRoot, configFileName), () => jestConfig, {
+    virtual: true,
+  });
 }
 
 function createTestProject(
@@ -1009,6 +1008,43 @@ describe('Jest - Convert Executors To Plugin', () => {
         `{projectRoot}/{options.outputFile}`, // updated to be relative to the project root
         `{workspaceRoot}/coverage/${project.root}`, // added from the inferred outputs
       ]);
+      // assert other projects were not modified
+      const updatedProject2 = readProjectConfiguration(tree, project2.name);
+      expect(updatedProject2.targets.test).toStrictEqual(project2TestTarget);
+    });
+
+    it('should keep the "jestConfig" and set it to "config" when present in configurations', async () => {
+      const project = createTestProject(tree);
+      project.targets.test.configurations = {
+        production: {
+          jestConfig: `${defaultTestProjectOptions.appRoot}/jest.config.prod.js`,
+        },
+      };
+      updateProjectConfiguration(tree, project.name, project);
+      writeJestConfig(
+        tree,
+        defaultTestProjectOptions.appRoot,
+        undefined,
+        'jest.config.prod.js'
+      );
+      const project2 = createTestProject(tree, {
+        appRoot: 'apps/project2',
+        appName: 'project2',
+      });
+      const project2TestTarget = project2.targets.test;
+
+      await convertToInferred(tree, {
+        project: project.name,
+        skipFormat: true,
+      });
+
+      // assert updated project configuration
+      const updatedProject = readProjectConfiguration(tree, project.name);
+      expect(
+        updatedProject.targets.test.configurations.production
+      ).toStrictEqual({
+        config: `./jest.config.prod.js`,
+      });
       // assert other projects were not modified
       const updatedProject2 = readProjectConfiguration(tree, project2.name);
       expect(updatedProject2.targets.test).toStrictEqual(project2TestTarget);
