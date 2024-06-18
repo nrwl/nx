@@ -70,6 +70,12 @@ import {
 import { handleGetFilesInDirectory } from './handle-get-files-in-directory';
 import { HASH_GLOB, isHandleHashGlobMessage } from '../message-types/hash-glob';
 import { handleHashGlob } from './handle-hash-glob';
+import {
+  isHandleGetTaskHistoryForHashesMessage,
+  isHandleWriteTaskRunsToHistoryMessage,
+} from '../message-types/task-history';
+import { handleGetTaskHistoryForHashes } from './handle-get-task-history';
+import { handleWriteTaskRunsToHistory } from './handle-write-task-runs-to-history';
 
 let performanceObserver: PerformanceObserver | undefined;
 let workspaceWatcherError: Error | undefined;
@@ -201,6 +207,14 @@ async function handleMessage(socket, data: string) {
   } else if (isHandleHashGlobMessage(payload)) {
     await handleResult(socket, HASH_GLOB, () =>
       handleHashGlob(payload.globs, payload.exclude)
+    );
+  } else if (isHandleGetTaskHistoryForHashesMessage(payload)) {
+    await handleResult(socket, 'GET_TASK_HISTORY_FOR_HASHES', () =>
+      handleGetTaskHistoryForHashes(payload.hashes)
+    );
+  } else if (isHandleWriteTaskRunsToHistoryMessage(payload)) {
+    await handleResult(socket, 'WRITE_TASK_RUNS_TO_HISTORY', () =>
+      handleWriteTaskRunsToHistory(payload.taskRuns)
     );
   } else {
     await respondWithErrorAndExit(

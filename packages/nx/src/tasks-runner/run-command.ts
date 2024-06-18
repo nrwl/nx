@@ -28,6 +28,7 @@ import { hashTasksThatDoNotDependOnOutputsOfOtherTasks } from '../hasher/hash-ta
 import { daemonClient } from '../daemon/client/client';
 import { StoreRunInformationLifeCycle } from './life-cycles/store-run-information-life-cycle';
 import { createTaskHasher } from '../hasher/create-task-hasher';
+import { TaskHistoryLifeCycle } from './life-cycles/task-history-life-cycle';
 
 async function getTerminalOutputLifeCycle(
   initiatingProject: string,
@@ -325,6 +326,7 @@ function constructLifeCycles(lifeCycle: LifeCycle) {
   if (process.env.NX_PROFILE) {
     lifeCycles.push(new TaskProfilingLifeCycle(process.env.NX_PROFILE));
   }
+  lifeCycles.push(new TaskHistoryLifeCycle());
   return lifeCycles;
 }
 
