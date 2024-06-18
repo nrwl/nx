@@ -408,7 +408,7 @@ export async function createProjectConfigurations(
 
   return Promise.all(results).then((results) => {
     const { projectRootMap, externalNodes, rootMap, configurationSourceMaps } =
-      mergeCreateNodesResults(results, errors);
+      mergeCreateNodesResults(results, nxJson, errors);
 
     performance.mark('build-project-configs:end');
     performance.measure(
@@ -443,6 +443,7 @@ function mergeCreateNodesResults(
     file: string,
     result: CreateNodesResult
   ])[][],
+  nxJsonConfiguration: NxJsonConfiguration,
   errors: (
     | AggregateCreateNodesError
     | MergeNodesError
@@ -500,7 +501,11 @@ function mergeCreateNodesResults(
   }
 
   try {
-    validateAndNormalizeProjectRootMap(projectRootMap);
+    validateAndNormalizeProjectRootMap(
+      projectRootMap,
+      nxJsonConfiguration,
+      configurationSourceMaps
+    );
   } catch (e) {
     if (
       isProjectsWithNoNameError(e) ||
@@ -601,7 +606,9 @@ export function readProjectConfigurationsFromRootMap(
 }
 
 function validateAndNormalizeProjectRootMap(
-  projectRootMap: Record<string, ProjectConfiguration>
+  projectRootMap: Record<string, ProjectConfiguration>,
+  nxJsonConfiguration: NxJsonConfiguration,
+  sourceMaps: ConfigurationSourceMaps = {}
 ) {
   // Name -> Project, used to validate that all projects have unique names
   const projects: Record<string, ProjectConfiguration> = {};
@@ -660,6 +667,8 @@ function validateAndNormalizeProjectRootMap(
     }
   }
 
+  applyTargetDefaults(projects, sourceMaps, nxJsonConfiguration);
+
   if (conflicts.size > 0) {
     throw new MultipleProjectsWithSameNameError(conflicts, projects);
   }
@@ -667,6 +676,36 @@ function validateAndNormalizeProjectRootMap(
     throw new ProjectsWithNoNameError(projectRootsWithNoName, projects);
   }
   return projectRootMap;
+}
+
+export function applyTargetDefaults(
+  projects: Record<string, ProjectConfiguration>,
+  allSourceMaps: ConfigurationSourceMaps,
+  nxJson: NxJsonConfiguration
+) {
+  for (const name in projects) {
+    const project = projects[name];
+    const sourceMaps = allSourceMaps[name];
+
+    for (const target in project.targets) {
+      const targetConfig = project.targets[target];
+      const targetDefaults = readTargetDefaultsForTarget(
+        target,
+        nxJson.targetDefaults,
+        targetConfig.executor
+      );
+
+      // We only apply defaults if they exist
+      if (targetDefaults && isCompatibleTarget(targetConfig, targetDefaults)) {
+        projects[name].targets[target] = mergeTargetDefaultWithTargetDefinition(
+          target,
+          projects[name],
+          targetDefaults,
+          sourceMaps
+        );
+      }
+    }
+  }
 }
 
 export function validateProject(
@@ -690,6 +729,101 @@ export function validateProject(
   ) {
     throw new ProjectWithExistingNameError(project.name, project.root);
   }
+}
+
+function targetDefaultShouldBeApplied(
+  key: string,
+  sourceMap: Record<string, SourceInformation>
+) {
+  const sourceInfo = sourceMap[key];
+  if (!sourceInfo) {
+    return true;
+  }
+  // The defined value of the target is from a plugin that
+  // isn't part of Nx's core plugins, so target defaults are
+  // applied on top of it.
+  const [, plugin] = sourceInfo;
+  return !plugin?.startsWith('nx/');
+}
+
+export function mergeTargetDefaultWithTargetDefinition(
+  targetName: string,
+  project: ProjectConfiguration,
+  targetDefault: Partial<TargetConfiguration>,
+  sourceMap: Record<string, SourceInformation>
+): TargetConfiguration {
+  const result = JSON.parse(JSON.stringify(targetDefault));
+  const targetDefinition = project.targets[targetName] ?? {};
+
+  for (const key in targetDefault) {
+    switch (key) {
+      case 'options': {
+        const normalizedDefaults = resolveNxTokensInOptions(
+          targetDefault.options,
+          project,
+          targetName
+        );
+        for (const optionKey in normalizedDefaults) {
+          const sourceMapKey = `targets.${targetName}.options.${optionKey}`;
+          if (
+            targetDefinition.options[optionKey] === undefined ||
+            targetDefaultShouldBeApplied(sourceMapKey, sourceMap)
+          ) {
+            result.options[optionKey] = targetDefault.options[optionKey];
+            sourceMap[sourceMapKey] = ['nx.json', 'nx/target-defaults'];
+          }
+        }
+        break;
+      }
+      case 'configurations': {
+        if (!result.configurations) {
+          result.configurations = {};
+          sourceMap[`targets.${targetName}.configurations`] = [
+            'nx.json',
+            'nx/target-defaults',
+          ];
+        }
+        for (const configuration in targetDefault.configurations) {
+          if (!result.configurations[configuration]) {
+            result.configurations[configuration] = {};
+            sourceMap[`targets.${targetName}.configurations.${configuration}`] =
+              ['nx.json', 'nx/target-defaults'];
+          }
+          const normalizedConfigurationDefaults = resolveNxTokensInOptions(
+            targetDefault.configurations[configuration],
+            project,
+            targetName
+          );
+          for (const configurationKey in normalizedConfigurationDefaults) {
+            const sourceMapKey = `targets.${targetName}.configurations.${configuration}.${configurationKey}`;
+            if (
+              targetDefinition.configurations?.[configuration]?.[
+                configurationKey
+              ] === undefined ||
+              targetDefaultShouldBeApplied(sourceMapKey, sourceMap)
+            ) {
+              result.configurations[configuration][configurationKey] =
+                targetDefault.configurations[configuration][configurationKey];
+              sourceMap[sourceMapKey] = ['nx.json', 'nx/target-defaults'];
+            }
+          }
+        }
+        break;
+      }
+      default: {
+        const sourceMapKey = `targets.${targetName}.${key}`;
+        if (
+          targetDefinition[key] === undefined ||
+          targetDefaultShouldBeApplied(sourceMapKey, sourceMap)
+        ) {
+          result[key] = targetDefault[key];
+          sourceMap[sourceMapKey] = ['nx.json', 'nx/target-defaults'];
+        }
+        break;
+      }
+    }
+  }
+  return result;
 }
 
 /**
@@ -721,14 +855,6 @@ export function mergeTargetConfigurations(
   // Target is "compatible", e.g. executor is defined only once or is the same
   // in both places. This means that it is likely safe to merge
   const isCompatible = isCompatibleTarget(baseTarget ?? {}, target);
-
-  // If the targets are not compatible, we would normally overwrite the old target
-  // with the new one. However, we have a special case for targets that have the
-  // ONLY_MODIFIES_EXISTING_TARGET symbol set. This prevents the merged target
-  // equaling info that should have only been used to modify the existing target.
-  if (!isCompatible && target[ONLY_MODIFIES_EXISTING_TARGET]) {
-    return baseTarget;
-  }
 
   if (!isCompatible && projectConfigSourceMap) {
     // if the target is not compatible, we will simply override the options
