@@ -1,4 +1,3 @@
-import { ONLY_MODIFIES_EXISTING_TARGET } from '../../plugins/target-defaults/symbols';
 import {
   ProjectConfiguration,
   TargetConfiguration,
@@ -6,7 +5,6 @@ import {
 import {
   ConfigurationSourceMaps,
   SourceInformation,
-  applyTargetDefaults,
   createProjectConfigurations,
   isCompatibleTarget,
   mergeProjectConfigurationIntoRootMap,
@@ -76,32 +74,6 @@ describe('project-configuration-utils', () => {
           }
         )
       ).toEqual({ executor: 'target2', outputs: ['output1'] });
-    });
-
-    it('should not overwrite target with information from defaults', () => {
-      const result = mergeTargetConfigurations(
-        {
-          executor: 'foo',
-          options: {
-            baz: true,
-          },
-          [ONLY_MODIFIES_EXISTING_TARGET]: true,
-        } as any,
-        {
-          executor: 'bar',
-          options: {
-            bang: true,
-          },
-        }
-      );
-      expect(result).toMatchInlineSnapshot(`
-        {
-          "executor": "bar",
-          "options": {
-            "bang": true,
-          },
-        }
-      `);
     });
 
     describe('options', () => {
@@ -695,47 +667,6 @@ describe('project-configuration-utils', () => {
         shouldntMergeConfigurationB
       );
       expect(merged.targets['newTarget']).toEqual(newTargetConfiguration);
-    });
-
-    it('should not create new targets if ONLY_MODIFIES_EXISTING_TARGET is true', () => {
-      const rootMap = new RootMapBuilder()
-        .addProject({
-          root: 'libs/lib-a',
-          name: 'lib-a',
-          targets: {
-            echo: {
-              command: 'echo lib-a',
-            },
-          },
-        })
-        .getRootMap();
-      mergeProjectConfigurationIntoRootMap(rootMap, {
-        root: 'libs/lib-a',
-        name: 'lib-a',
-        targets: {
-          build: {
-            command: 'tsc',
-            [ONLY_MODIFIES_EXISTING_TARGET]: true,
-          } as any,
-          echo: {
-            options: {
-              cwd: '{projectRoot}',
-            },
-            [ONLY_MODIFIES_EXISTING_TARGET]: true,
-          } as any,
-        },
-      });
-      const { targets } = rootMap['libs/lib-a'];
-      expect(targets.build).toBeUndefined();
-      // cwd was merged in, and ONLY_MODIFIES_EXISTING_TARGET was removed
-      expect(targets.echo).toMatchInlineSnapshot(`
-        {
-          "command": "echo lib-a",
-          "options": {
-            "cwd": "{projectRoot}",
-          },
-        }
-      `);
     });
 
     it('should concatenate tags and implicitDependencies', () => {

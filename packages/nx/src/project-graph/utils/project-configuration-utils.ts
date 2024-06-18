@@ -9,10 +9,6 @@ import {
 import { NX_PREFIX } from '../../utils/logger';
 import { readJsonFile } from '../../utils/fileutils';
 import { workspaceRoot } from '../../utils/workspace-root';
-import {
-  ONLY_MODIFIES_EXISTING_TARGET,
-  OVERRIDE_SOURCE_FILE,
-} from '../../plugins/target-defaults/symbols';
 
 import { minimatch } from 'minimatch';
 import { join } from 'path';
@@ -42,12 +38,7 @@ export type ConfigurationSourceMaps = Record<
 
 export function mergeProjectConfigurationIntoRootMap(
   projectRootMap: Record<string, ProjectConfiguration>,
-  project: ProjectConfiguration & {
-    targets?: Record<
-      string,
-      TargetConfiguration & { [ONLY_MODIFIES_EXISTING_TARGET]?: boolean }
-    >;
-  },
+  project: ProjectConfiguration,
   configurationSourceMaps?: ConfigurationSourceMaps,
   sourceInformation?: SourceInformation,
   // This function is used when reading project configuration
@@ -191,17 +182,8 @@ export function mergeProjectConfigurationIntoRootMap(
 
       const target = project.targets?.[targetName];
 
-      if (sourceMap && !target?.[ONLY_MODIFIES_EXISTING_TARGET]) {
+      if (sourceMap) {
         sourceMap[`targets.${targetName}`] = sourceInformation;
-      }
-
-      // If ONLY_MODIFIES_EXISTING_TARGET is true, and its not on the matching project
-      // we shouldn't merge its info into the graph
-      if (
-        target?.[ONLY_MODIFIES_EXISTING_TARGET] &&
-        !matchingProject.targets?.[targetName]
-      ) {
-        continue;
       }
 
       const normalizedTarget = skipTargetNormalization
@@ -215,10 +197,6 @@ export function mergeProjectConfigurationIntoRootMap(
         sourceInformation,
         `targets.${targetName}`
       );
-
-      // We don't want the symbol to live on past the merge process
-      if (mergedTarget?.[ONLY_MODIFIES_EXISTING_TARGET])
-        delete mergedTarget?.[ONLY_MODIFIES_EXISTING_TARGET];
 
       updatedProjectConfiguration.targets[targetName] = mergedTarget;
     }
@@ -467,10 +445,6 @@ function mergeCreateNodesResults(
 
     const sourceInfo: SourceInformation = [file, pluginName];
 
-    if (result[OVERRIDE_SOURCE_FILE]) {
-      sourceInfo[0] = result[OVERRIDE_SOURCE_FILE];
-    }
-
     for (const node in projectNodes) {
       // Handles `{projects: {'libs/foo': undefined}}`.
       if (!projectNodes[node]) {
@@ -641,33 +615,8 @@ function validateAndNormalizeProjectRootMap(
       }
     }
 
-    for (const targetName in project.targets) {
-      project.targets[targetName] = normalizeTarget(
-        project.targets[targetName],
-        project
-      );
-
-      if (
-        // If the target has no executor or command, it doesn't do anything
-        !project.targets[targetName].executor &&
-        !project.targets[targetName].command
-      ) {
-        // But it may have dependencies that do something
-        if (
-          project.targets[targetName].dependsOn &&
-          project.targets[targetName].dependsOn.length > 0
-        ) {
-          project.targets[targetName].executor = 'nx:noop';
-        } else {
-          // If it does nothing, and has no depenencies,
-          // we can remove it.
-          delete project.targets[targetName];
-        }
-      }
-    }
+    normalizeTargets(project, sourceMaps, nxJsonConfiguration);
   }
-
-  applyTargetDefaults(projects, sourceMaps, nxJsonConfiguration);
 
   if (conflicts.size > 0) {
     throw new MultipleProjectsWithSameNameError(conflicts, projects);
@@ -678,31 +627,51 @@ function validateAndNormalizeProjectRootMap(
   return projectRootMap;
 }
 
-export function applyTargetDefaults(
-  projects: Record<string, ProjectConfiguration>,
-  allSourceMaps: ConfigurationSourceMaps,
-  nxJson: NxJsonConfiguration
+function normalizeTargets(
+  project: ProjectConfiguration,
+  sourceMaps: ConfigurationSourceMaps,
+  nxJsonConfiguration: NxJsonConfiguration<'*' | string[]>
 ) {
-  for (const name in projects) {
-    const project = projects[name];
-    const sourceMaps = allSourceMaps[name];
+  for (const targetName in project.targets) {
+    project.targets[targetName] = normalizeTarget(
+      project.targets[targetName],
+      project
+    );
 
-    for (const target in project.targets) {
-      const targetConfig = project.targets[target];
-      const targetDefaults = readTargetDefaultsForTarget(
-        target,
-        nxJson.targetDefaults,
-        targetConfig.executor
+    const projectSourceMaps = sourceMaps[project.root];
+
+    const targetConfig = project.targets[targetName];
+    const targetDefaults = readTargetDefaultsForTarget(
+      targetName,
+      nxJsonConfiguration.targetDefaults,
+      targetConfig.executor
+    );
+
+    // We only apply defaults if they exist
+    if (targetDefaults && isCompatibleTarget(targetConfig, targetDefaults)) {
+      project.targets[targetName] = mergeTargetDefaultWithTargetDefinition(
+        targetName,
+        project,
+        normalizeTarget(targetDefaults, project),
+        projectSourceMaps
       );
+    }
 
-      // We only apply defaults if they exist
-      if (targetDefaults && isCompatibleTarget(targetConfig, targetDefaults)) {
-        projects[name].targets[target] = mergeTargetDefaultWithTargetDefinition(
-          target,
-          projects[name],
-          targetDefaults,
-          sourceMaps
-        );
+    if (
+      // If the target has no executor or command, it doesn't do anything
+      !project.targets[targetName].executor &&
+      !project.targets[targetName].command
+    ) {
+      // But it may have dependencies that do something
+      if (
+        project.targets[targetName].dependsOn &&
+        project.targets[targetName].dependsOn.length > 0
+      ) {
+        project.targets[targetName].executor = 'nx:noop';
+      } else {
+        // If it does nothing, and has no depenencies,
+        // we can remove it.
+        delete project.targets[targetName];
       }
     }
   }
@@ -752,8 +721,8 @@ export function mergeTargetDefaultWithTargetDefinition(
   targetDefault: Partial<TargetConfiguration>,
   sourceMap: Record<string, SourceInformation>
 ): TargetConfiguration {
-  const result = JSON.parse(JSON.stringify(targetDefault));
   const targetDefinition = project.targets[targetName] ?? {};
+  const result = JSON.parse(JSON.stringify(targetDefinition));
 
   for (const key in targetDefault) {
     switch (key) {
@@ -1106,6 +1075,12 @@ function resolveCommandSyntacticSugar(
   }
 }
 
+/**
+ * Expand's `command` syntactic sugar and replaces tokens in options.
+ * @param target The target to normalize
+ * @param project The project that the target belongs to
+ * @returns The normalized target configuration
+ */
 export function normalizeTarget(
   target: TargetConfiguration,
   project: ProjectConfiguration
