@@ -1,9 +1,16 @@
-import { createProjectGraphAsync, formatFiles, type Tree } from '@nx/devkit';
+import {
+  addDependenciesToPackageJson,
+  createProjectGraphAsync,
+  formatFiles,
+  runTasksInSerial,
+  type Tree,
+} from '@nx/devkit';
 import { AggregatedLog } from '@nx/devkit/src/generators/plugin-migrations/aggregate-log-util';
 import { migrateExecutorToPluginV1 } from '@nx/devkit/src/generators/plugin-migrations/executor-to-plugin-migrator';
 import { buildPostTargetTransformer } from './lib/build-post-target-transformer';
 import { servePostTargetTransformer } from './lib/serve-post-target-transformer';
 import { createNodes } from '../../plugins/plugin';
+import { storybookVersion } from '../../utils/versions';
 
 interface Schema {
   project?: string;
@@ -55,9 +62,15 @@ export async function convertToInferred(tree: Tree, options: Schema) {
     await formatFiles(tree);
   }
 
-  return () => {
+  const installTask = addDependenciesToPackageJson(
+    tree,
+    {},
+    { storybook: storybookVersion }
+  );
+
+  return runTasksInSerial(installTask, () => {
     migrationLogs.flushLogs();
-  };
+  });
 }
 
 export default convertToInferred;

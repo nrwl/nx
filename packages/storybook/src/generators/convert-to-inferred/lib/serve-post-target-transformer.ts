@@ -1,7 +1,12 @@
-import { TargetConfiguration, Tree } from '@nx/devkit';
+import { joinPathFragments, TargetConfiguration, Tree } from '@nx/devkit';
 import { AggregatedLog } from '@nx/devkit/src/generators/plugin-migrations/aggregate-log-util';
 import { toProjectRelativePath } from '@nx/devkit/src/generators/plugin-migrations/plugin-migration-utils';
-import { STORYBOOK_PROP_MAPPINGS } from './utils';
+import {
+  ensureViteConfigPathIsRelative,
+  getConfigFilePath,
+  getInstalledPackageVersionInfo,
+  STORYBOOK_PROP_MAPPINGS,
+} from './utils';
 export function servePostTargetTransformer(migrationLogs: AggregatedLog) {
   return (
     target: TargetConfiguration,
@@ -9,7 +14,16 @@ export function servePostTargetTransformer(migrationLogs: AggregatedLog) {
     projectDetails: { projectName: string; root: string },
     inferredTargetConfiguration: TargetConfiguration
   ) => {
+    let defaultConfigDir = getConfigFilePath(
+      tree,
+      joinPathFragments(projectDetails.root, '.storybook')
+    );
+
     if (target.options) {
+      if (target.options.configDir) {
+        defaultConfigDir = target.options.configDir;
+      }
+
       handlePropertiesFromTargetOptions(
         tree,
         target.options,
@@ -22,6 +36,20 @@ export function servePostTargetTransformer(migrationLogs: AggregatedLog) {
     if (target.configurations) {
       for (const configurationName in target.configurations) {
         const configuration = target.configurations[configurationName];
+        if (
+          configuration.configDir &&
+          configuration.configDir !== defaultConfigDir
+        ) {
+          ensureViteConfigPathIsRelative(
+            tree,
+            getConfigFilePath(tree, configuration.configDir),
+            projectDetails.projectName,
+            projectDetails.root,
+            '@nx/storybook:storybook',
+            migrationLogs
+          );
+        }
+
         handlePropertiesFromTargetOptions(
           tree,
           configuration,
@@ -49,6 +77,15 @@ export function servePostTargetTransformer(migrationLogs: AggregatedLog) {
         delete target.defaultConfiguration;
       }
     }
+
+    ensureViteConfigPathIsRelative(
+      tree,
+      getConfigFilePath(tree, defaultConfigDir),
+      projectDetails.projectName,
+      projectDetails.root,
+      '@nx/storybook:storybook',
+      migrationLogs
+    );
 
     return target;
   };
@@ -85,7 +122,16 @@ function handlePropertiesFromTargetOptions(
     delete options.open;
   }
 
-  for (const [prevKey, newKey] of Object.entries(STORYBOOK_PROP_MAPPINGS)) {
+  if ('docsMode' in options) {
+    options.docs = options.docsMode;
+    delete options.docsMode;
+  }
+
+  const storybookPropMappings =
+    getInstalledPackageVersionInfo(tree, 'storybook')?.major === 8
+      ? STORYBOOK_PROP_MAPPINGS.v8
+      : STORYBOOK_PROP_MAPPINGS.v7;
+  for (const [prevKey, newKey] of Object.entries(storybookPropMappings)) {
     if (prevKey in options) {
       options[newKey] = options[prevKey];
       delete options[prevKey];

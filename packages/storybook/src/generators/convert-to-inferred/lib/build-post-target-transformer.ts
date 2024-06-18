@@ -7,9 +7,11 @@ import { tsquery } from '@phenomnomnominal/tsquery';
 import { AggregatedLog } from '@nx/devkit/src/generators/plugin-migrations/aggregate-log-util';
 import {
   addConfigValuesToConfigFile,
+  ensureViteConfigPathIsRelative,
   getConfigFilePath,
   STORYBOOK_PROP_MAPPINGS,
 } from './utils';
+import { getInstalledPackageVersionInfo } from './utils';
 
 type StorybookConfigValues = { docsMode?: boolean; staticDir?: string };
 
@@ -68,13 +70,18 @@ export function buildPostTargetTransformer(migrationLogs: AggregatedLog) {
           configuration.configDir !==
             toProjectRelativePath(defaultConfigDir, projectDetails.root)
         ) {
-          addConfigValuesToConfigFile(
+          const configFilePath = getConfigFilePath(
             tree,
-            getConfigFilePath(
-              tree,
-              joinPathFragments(projectDetails.root, configuration.configDir)
-            ),
-            configValues
+            joinPathFragments(projectDetails.root, configuration.configDir)
+          );
+          addConfigValuesToConfigFile(tree, configFilePath, configValues);
+          ensureViteConfigPathIsRelative(
+            tree,
+            configFilePath,
+            projectDetails.projectName,
+            projectDetails.root,
+            '@nx/storybook:build',
+            migrationLogs
           );
         }
       }
@@ -110,6 +117,14 @@ export function buildPostTargetTransformer(migrationLogs: AggregatedLog) {
       tree,
       getConfigFilePath(tree, defaultConfigDir),
       configValues
+    );
+    ensureViteConfigPathIsRelative(
+      tree,
+      getConfigFilePath(tree, defaultConfigDir),
+      projectDetails.projectName,
+      projectDetails.root,
+      '@nx/storybook:build',
+      migrationLogs
     );
 
     return target;
@@ -168,14 +183,16 @@ function handlePropertiesFromTargetOptions(
     delete options.staticDir;
   }
 
-  for (const [prevKey, newKey] of Object.entries(STORYBOOK_PROP_MAPPINGS)) {
+  const storybookPropMappings =
+    getInstalledPackageVersionInfo(tree, 'storybook')?.major === 8
+      ? STORYBOOK_PROP_MAPPINGS.v8
+      : STORYBOOK_PROP_MAPPINGS.v7;
+  for (const [prevKey, newKey] of Object.entries(storybookPropMappings)) {
     if (prevKey in options) {
       options[newKey] = options[prevKey];
       delete options[prevKey];
     }
   }
-
-  // AST CONFIG PATH FOR VITE CONFIG FILES
 }
 
 function moveDocsModeToConfigFile(
