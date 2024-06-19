@@ -80,7 +80,7 @@ export function newProject({
   name?: string;
   packageManager?: 'npm' | 'yarn' | 'pnpm' | 'bun';
   unsetProjectNameAndRootFormat?: boolean;
-  readonly packages?: Array<NxPackage>;
+  readonly packages?: Array<NxPackage | string>;
 } = {}): string {
   const newProjectStart = performance.mark('new-project:start');
   try {
