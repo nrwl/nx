@@ -2695,6 +2695,15 @@
         "originalFilePath": "/packages/remix/src/generators/error-boundary/schema.json",
         "path": "remix/generators/error-boundary",
         "type": "generator"
+      },
+      {
+        "description": "Convert existing Remix project(s) using `@nx/remix:*` executors to use `@nx/remix/plugin`. Defaults to migrating all projects. Pass '--project' to migrate only one target.",
+        "file": "generated/packages/remix/generators/convert-to-inferred.json",
+        "hidden": false,
+        "name": "convert-to-inferred",
+        "originalFilePath": "/packages/remix/src/generators/convert-to-inferred/schema.json",
+        "path": "remix/generators/convert-to-inferred",
+        "type": "generator"
       }
     ],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",

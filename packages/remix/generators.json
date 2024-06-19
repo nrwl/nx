@@ -85,6 +85,11 @@
       "implementation": "./src/generators/error-boundary/error-boundary.impl",
       "schema": "./src/generators/error-boundary/schema.json",
       "description": "Add an ErrorBoundary to an existing route"
+    },
+    "convert-to-inferred": {
+      "factory": "./src/generators/convert-to-inferred/convert-to-inferred",
+      "schema": "./src/generators/convert-to-inferred/schema.json",
+      "description": "Convert existing Remix project(s) using `@nx/remix:*` executors to use `@nx/remix/plugin`. Defaults to migrating all projects. Pass '--project' to migrate only one target."
     }
   }
 }
