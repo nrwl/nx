@@ -1,13 +1,9 @@
-import { ExecutorContext, names, readJsonFile } from '@nx/devkit';
-import { join, resolve as pathResolve } from 'path';
+import { ExecutorContext, names } from '@nx/devkit';
+import { resolve as pathResolve } from 'path';
 import { ChildProcess, fork } from 'child_process';
 
 import { resolveEas } from '../../utils/resolve-eas';
-import {
-  displayNewlyAddedDepsMessage,
-  syncDeps,
-} from '../sync-deps/sync-deps.impl';
-import { installAsync } from '../install/install.impl';
+import { installAndUpdatePackageJson } from '../install/install.impl';
 
 import { ExpoEasUpdateOptions } from './schema';
 
@@ -23,30 +19,11 @@ export default async function* buildExecutor(
 ): AsyncGenerator<ReactNativeUpdateOutput> {
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
-  const workspacePackageJsonPath = join(context.root, 'package.json');
-  const projectPackageJsonPath = join(
-    context.root,
-    projectRoot,
-    'package.json'
-  );
-
-  const workspacePackageJson = readJsonFile(workspacePackageJsonPath);
-  const projectPackageJson = readJsonFile(projectPackageJsonPath);
-
-  await installAsync(context.root, { packages: ['expo-updates'] });
-  displayNewlyAddedDepsMessage(
-    context.projectName,
-    await syncDeps(
-      context.projectName,
-      projectPackageJson,
-      projectPackageJsonPath,
-      workspacePackageJson,
-      context.projectGraph,
-      ['expo-updates']
-    )
-  );
 
   try {
+    await installAndUpdatePackageJson(context, {
+      packages: ['expo-updates'],
+    });
     await runCliUpdate(context.root, projectRoot, options);
     yield { success: true };
   } finally {
