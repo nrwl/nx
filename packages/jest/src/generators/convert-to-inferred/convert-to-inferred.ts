@@ -71,7 +71,7 @@ async function postTargetTransformer(
     );
 
   if (target.options) {
-    await updateOptions(
+    await updateOptionsObject(
       target.options,
       projectDetails.root,
       tree.root,
@@ -81,7 +81,7 @@ async function postTargetTransformer(
 
   if (target.configurations) {
     for (const [configName, config] of Object.entries(target.configurations)) {
-      await updateOptions(
+      await updateConfigurationObject(
         config,
         projectDetails.root,
         tree.root,
@@ -118,7 +118,7 @@ async function postTargetTransformer(
 
 export default convertToInferred;
 
-async function updateOptions(
+async function updateOptionsObject(
   targetOptions: any,
   projectRoot: string,
   workspaceRoot: string,
@@ -130,6 +130,49 @@ async function updateOptions(
   delete targetOptions.jestConfig;
   delete targetOptions.config;
 
+  await updateOptions(
+    targetOptions,
+    projectRoot,
+    workspaceRoot,
+    jestConfigPath
+  );
+}
+
+async function updateConfigurationObject(
+  targetOptions: any,
+  projectRoot: string,
+  workspaceRoot: string,
+  defaultJestConfigPath: string | undefined
+) {
+  const jestConfigPath = targetOptions.jestConfig ?? defaultJestConfigPath;
+
+  if (targetOptions.jestConfig) {
+    targetOptions.config = toProjectRelativePath(
+      targetOptions.jestConfig,
+      projectRoot
+    );
+    delete targetOptions.jestConfig;
+  } else if (targetOptions.config) {
+    targetOptions.config = toProjectRelativePath(
+      targetOptions.config,
+      projectRoot
+    );
+  }
+
+  await updateOptions(
+    targetOptions,
+    projectRoot,
+    workspaceRoot,
+    jestConfigPath
+  );
+}
+
+async function updateOptions(
+  targetOptions: any,
+  projectRoot: string,
+  workspaceRoot: string,
+  jestConfigPath: string | undefined
+) {
   // deprecated and unused
   delete targetOptions.tsConfig;
 
