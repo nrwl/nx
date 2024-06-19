@@ -100,8 +100,7 @@ function buildExpoTargets(
 
   const targets: Record<string, TargetConfiguration> = {
     [options.startTargetName]: {
-      command: `expo start`,
-      options: { cwd: projectRoot },
+      executor: `@nx/expo:start`,
     },
     [options.serveTargetName]: {
       command: `expo start --web`,
