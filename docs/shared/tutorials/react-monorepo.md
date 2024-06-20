@@ -427,35 +427,12 @@ All libraries that we generate automatically have aliases created in the root-le
 }
 ```
 
-Hence we can easily import them into other libraries and our React application. As an example, let's create and expose a `ProductList` component from our `libs/products` library. Either create it by hand or run
+Hence we can easily import them into other libraries and our Angular application. As an example, let's use the pre-generated `ProductsComponent` component from our `libs/products` library.
 
-```shell
-nx g @nx/react:component product-list --project=products --directory="libs/products/src/lib/product-list"
-```
-
-We don't need to implement anything fancy as we just want to learn how to import it into our main React application.
-
-```tsx {% fileName="libs/products/src/lib/product-list/product-list.tsx" %}
-import styles from './product-list.module.css';
-
-/* eslint-disable-next-line */
-export interface ProductListProps {}
-
-export function ProductList(props: ProductListProps) {
-  return (
-    <div className={styles['container']}>
-      <h1>Welcome to ProductList!</h1>
-    </div>
-  );
-}
-
-export default ProductList;
-```
-
-Make sure the `ProductList` is exported via the `index.ts` file of our `products` library. This is our public API with the rest of the workspace. Only export what's really necessary to be usable outside the library itself.
+You can see that the `Products` component is exported via the `index.ts` file of our `products` library so that other projects in the repository can use it. This is our public API with the rest of the workspace. Only export what's really necessary to be usable outside the library itself.
 
 ```ts {% fileName="libs/products/src/index.ts" %}
-export * from './lib/product-list/product-list';
+export * from './lib/products';
 ```
 
 We're ready to import it into our main application now. First (if you haven't already), let's set up React Router.
@@ -536,8 +513,7 @@ Serving your app (`nx serve react-store`) and then navigating to `/products` sho
 
 Let's apply the same for our `orders` library.
 
-- generate a new component `OrderList` in `libs/orders` and export it in the corresponding `index.ts` file
-- import it into the `app.tsx` and render it via the routing mechanism whenever a user hits the `/orders` route
+- import the `Orders` component from `libs/orders` into the `app.tsx` and render it via the routing mechanism whenever a user hits the `/orders` route
 
 In the end, your `app.tsx` should look similar to this:
 
@@ -995,7 +971,7 @@ To enforce the rules, Nx ships with a custom ESLint rule. Open the `.eslintrc.ba
 }
 ```
 
-To test it, go to your `libs/products/src/lib/product-list/product-list.tsx` file and import the `OrderList` from the `orders` project:
+To test it, go to your `libs/products/src/lib/products.tsx` file and import the `Orders` component from the `orders` project:
 
 ```tsx {% fileName="libs/products/src/lib/products.tsx" %}
 import styles from './products.module.css';
