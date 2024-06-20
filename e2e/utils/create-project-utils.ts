@@ -111,6 +111,7 @@ export function newProject({
           'prefer-frozen-lockfile=false\nstrict-peer-dependencies=false\nauto-install-peers=true'
         );
       }
+
       // stop the daemon
       execSync(`${getPackageManagerCommand().runNx} reset`, {
         cwd: `${e2eCwd}/proj`,
