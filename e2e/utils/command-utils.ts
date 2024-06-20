@@ -371,6 +371,8 @@ export function runCLI(
         CI: 'true',
         ...getStrippedEnvironmentVariables(),
         ...opts.env,
+        NX_PERF_LOGGING: 'true',
+        NX_ISOLATE_PLUGINS: 'true',
       },
       encoding: 'utf-8',
       stdio: 'pipe',
@@ -386,7 +388,7 @@ export function runCLI(
     output.log({
       title: `Original command: ${command}`,
       bodyLines: [
-        ...(isVerboseE2ERun() ? [logs] : []),
+        ...(isVerboseE2ERun() ? [logs] : [logs]),
         `${measure.name}: ${measure.duration}ms`,
       ],
       color: 'green',
