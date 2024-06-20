@@ -243,8 +243,14 @@ describe('Storybook - Convert To Inferred', () => {
             ],
           },
           "storybook": {
+            "configurations": {
+              "ci": {
+                "quiet": true,
+              },
+            },
             "options": {
               "config-dir": ".storybook",
+              "port": 4400,
             },
           },
         }
@@ -311,8 +317,14 @@ describe('Storybook - Convert To Inferred', () => {
             ],
           },
           "storybook": {
+            "configurations": {
+              "ci": {
+                "quiet": true,
+              },
+            },
             "options": {
               "config-dir": ".storybook",
+              "port": 4400,
             },
           },
         }
@@ -378,8 +390,14 @@ describe('Storybook - Convert To Inferred', () => {
             ],
           },
           "storybook": {
+            "configurations": {
+              "ci": {
+                "quiet": true,
+              },
+            },
             "options": {
               "config-dir": ".storybook",
+              "port": 4400,
             },
           },
         }
@@ -430,10 +448,16 @@ describe('Storybook - Convert To Inferred', () => {
           },
           "storybook": {
             "configurations": {
-              "dev": {},
+              "ci": {
+                "quiet": true,
+              },
+              "dev": {
+                "docs": true,
+              },
             },
             "options": {
               "config-dir": ".storybook",
+              "port": 4400,
             },
           },
         }
@@ -540,8 +564,14 @@ describe('Storybook - Convert To Inferred', () => {
             ],
           },
           "storybook": {
+            "configurations": {
+              "ci": {
+                "quiet": true,
+              },
+            },
             "options": {
               "config-dir": ".storybook",
+              "port": 4400,
             },
           },
         }
@@ -564,8 +594,14 @@ describe('Storybook - Convert To Inferred', () => {
             ],
           },
           "storybook": {
+            "configurations": {
+              "ci": {
+                "quiet": true,
+              },
+            },
             "options": {
               "config-dir": ".storybook",
+              "port": 4400,
             },
           },
         }

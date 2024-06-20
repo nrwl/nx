@@ -57,13 +57,6 @@ export function servePostTargetTransformer(migrationLogs: AggregatedLog) {
           projectDetails.root,
           migrationLogs
         );
-
-        if (
-          configurationName === 'ci' &&
-          Object.keys(configuration).length === 0
-        ) {
-          delete target.configurations[configurationName];
-        }
       }
 
       if (Object.keys(target.configurations).length === 0) {
@@ -136,8 +129,9 @@ function handlePropertiesFromTargetOptions(
       : STORYBOOK_PROP_MAPPINGS.v7;
   for (const [prevKey, newKey] of Object.entries(storybookPropMappings)) {
     if (prevKey in options) {
-      options[newKey] = options[prevKey];
+      let prevValue = options[prevKey];
       delete options[prevKey];
+      options[newKey] = prevValue;
     }
   }
 }

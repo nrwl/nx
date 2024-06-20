@@ -192,8 +192,9 @@ function handlePropertiesFromTargetOptions(
       : STORYBOOK_PROP_MAPPINGS.v7;
   for (const [prevKey, newKey] of Object.entries(storybookPropMappings)) {
     if (prevKey in options) {
-      options[newKey] = options[prevKey];
+      let prevValue = options[prevKey];
       delete options[prevKey];
+      options[newKey] = prevValue;
     }
   }
 }
