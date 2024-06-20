@@ -14,6 +14,7 @@ pub fn full_files_hash(workspace_root: &Path) -> NxFileHashes {
     let files = crate::native::walker::nx_walker(workspace_root).collect::<Vec<_>>();
     #[cfg(target_arch = "wasm32")]
     let files = crate::native::walker::nx_walker_sync_with_ignore(workspace_root).collect::<Vec<_>>();
+    trace!("Found {} files", files.len());
     hash_files(files).into_iter().collect()
 }
 
@@ -54,6 +55,8 @@ pub fn selective_files_hash(
 fn hash_files(files: Vec<NxFile>) -> Vec<(String, NxFileHashed)> {
     let num_parallelism = cmp::max(available_parallelism().map_or(2, |n| n.get()) / 3, 2);
     let chunks = files.len() / num_parallelism;
+
+    trace!("hashing workspace files in {} chunks of {}", num_parallelism, chunks);
 
     let now = std::time::Instant::now();
     let files = if chunks < num_parallelism {

@@ -81,7 +81,7 @@ pub fn nx_walker_sync_with_ignore<'a, P>(
     let ignore_glob_set = build_glob_set(&base_ignores).expect("Should be valid globs");
 
 
-    let mut ignore_builder = GitignoreBuilder::new(dbg!(&base_dir));
+    let mut ignore_builder = GitignoreBuilder::new(&base_dir);
 
 
     ignore_builder.add(base_dir.join(".gitignore"));
@@ -121,10 +121,14 @@ pub fn nx_walker_sync_with_ignore<'a, P>(
                         return None;
                     };
 
+                    let normalized_path = relative_path.to_normalized_string();
+                    let mod_time = get_mod_time(&metadata);
+                    trace!("Walked {}", &normalized_path);
+
                     Some(NxFile {
                         full_path: String::from(e.path().to_string_lossy()),
-                        normalized_path: relative_path.to_normalized_string(),
-                        mod_time: get_mod_time(&metadata),
+                        normalized_path,
+                        mod_time,
                     })
                 })
         })
