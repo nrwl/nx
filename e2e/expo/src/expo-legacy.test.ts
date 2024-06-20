@@ -146,12 +146,26 @@ describe('@nx/expo (legacy)', () => {
 
   it('should install', async () => {
     // run install command
-    const installResults = await runCLIAsync(
+    let installResults = await runCLIAsync(
       `install ${appName} --no-interactive`
     );
     expect(installResults.combinedOutput).toContain(
       'Successfully ran target install'
     );
+
+    installResults = await runCLIAsync(
+      `install ${appName} --packages=@react-native-async-storage/async-storage,react-native-image-picker --no-interactive`
+    );
+    expect(installResults.combinedOutput).toContain(
+      'Successfully ran target install'
+    );
+    const packageJson = readJson(join('apps', appName, 'package.json'));
+    expect(packageJson).toMatchObject({
+      dependencies: {
+        '@react-native-async-storage/async-storage': '*',
+        'react-native-image-picker': '*',
+      },
+    });
   });
 
   it('should start', async () => {

@@ -1,5 +1,6 @@
 ---
 title: Unit Testing Expo Apps With Jest
+slug: 'unit-testing-expo-apps-with-jest'
 authors: [Emily Xiong]
 cover_image: '/blog/images/2023-11-22/featured_img.webp'
 tags: [nx, unit testing]

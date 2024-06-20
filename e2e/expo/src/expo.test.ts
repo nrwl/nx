@@ -112,6 +112,30 @@ describe('@nx/expo', () => {
     );
   });
 
+  it('should install', async () => {
+    // run install command
+    let installResults = await runCLIAsync(
+      `install ${appName} --no-interactive`
+    );
+    expect(installResults.combinedOutput).toContain(
+      'Successfully ran target install'
+    );
+
+    installResults = await runCLIAsync(
+      `install ${appName} --packages=@react-native-async-storage/async-storage,react-native-image-picker --no-interactive`
+    );
+    expect(installResults.combinedOutput).toContain(
+      'Successfully ran target install'
+    );
+    const packageJson = readJson(join(appName, 'package.json'));
+    expect(packageJson).toMatchObject({
+      dependencies: {
+        '@react-native-async-storage/async-storage': '*',
+        'react-native-image-picker': '*',
+      },
+    });
+  });
+
   it('should run e2e for cypress', async () => {
     if (runE2ETests()) {
       const results = runCLI(`e2e ${appName}-e2e`);

@@ -100,8 +100,7 @@ function buildExpoTargets(
 
   const targets: Record<string, TargetConfiguration> = {
     [options.startTargetName]: {
-      command: `expo start`,
-      options: { cwd: projectRoot },
+      executor: `@nx/expo:start`,
     },
     [options.serveTargetName]: {
       command: `expo start --web`,
@@ -124,8 +123,7 @@ function buildExpoTargets(
       outputs: [getOutputs(projectRoot, 'dist')],
     },
     [options.installTargetName]: {
-      command: `expo install`,
-      options: { cwd: workspaceRoot }, // install at workspace root
+      executor: '@nx/expo:install',
     },
     [options.prebuildTargetName]: {
       executor: `@nx/expo:prebuild`,

@@ -50,7 +50,7 @@ export function ProjectNodeToolTip({
         )}
       </h4>
       {tags.length > 0 ? (
-        <p className="my-2">
+        <p className="my-2 lowercase">
           <strong>tags</strong>
           <br></br>
           {tags.join(', ')}

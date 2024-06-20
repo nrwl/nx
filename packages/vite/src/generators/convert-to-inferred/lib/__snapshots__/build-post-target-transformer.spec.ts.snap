@@ -1,0 +1,271 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`buildPostTargetTransformer moveBuildLibsFromSourceToViteConfig should add buildLibsFromSource to existing nxViteTsPaths plugin with existing options 1`] = `
+"/// <reference types='vitest' />
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+
+export default defineConfig({
+  root: __dirname,
+  cacheDir: '../../node_modules/.vite/apps/myapp',
+
+  server: {
+    port: 4200,
+    host: 'localhost',
+  },
+
+  preview: {
+    port: 4300,
+    host: 'localhost',
+  },
+
+  plugins: [react(), nxViteTsPaths({buildLibsFromSource: options.buildLibsFromSource,  debug: true })],
+
+  // Uncomment this if you are using workers.
+  // worker: {
+  //  plugins: [ nxViteTsPaths() ],
+  // },
+
+  build: {
+    outDir: '../../dist/apps/myapp',
+    reportCompressedSize: true,
+    commonjsOptions: {
+      transformMixedEsModules: true,
+    },
+  },
+
+  test: {
+    globals: true,
+    cache: {
+      dir: '../../node_modules/.vitest',
+    },
+    environment: 'jsdom',
+    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+
+    reporters: ['default'],
+    coverage: {
+      reportsDirectory: '../../coverage/apps/myapp',
+      provider: 'v8',
+    },
+  },
+});"
+`;
+
+exports[`buildPostTargetTransformer moveBuildLibsFromSourceToViteConfig should add buildLibsFromSource to existing nxViteTsPaths plugin with no existing options 1`] = `
+"/// <reference types='vitest' />
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+
+export default defineConfig({
+  root: __dirname,
+  cacheDir: '../../node_modules/.vite/apps/myapp',
+
+  server: {
+    port: 4200,
+    host: 'localhost',
+  },
+
+  preview: {
+    port: 4300,
+    host: 'localhost',
+  },
+
+  plugins: [react(), nxViteTsPaths({ buildLibsFromSource: options.buildLibsFromSource }),],
+
+  // Uncomment this if you are using workers.
+  // worker: {
+  //  plugins: [ nxViteTsPaths() ],
+  // },
+
+  build: {
+    outDir: '../../dist/apps/myapp',
+    reportCompressedSize: true,
+    commonjsOptions: {
+      transformMixedEsModules: true,
+    },
+  },
+
+  test: {
+    globals: true,
+    cache: {
+      dir: '../../node_modules/.vitest',
+    },
+    environment: 'jsdom',
+    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+
+    reporters: ['default'],
+    coverage: {
+      reportsDirectory: '../../coverage/apps/myapp',
+      provider: 'v8',
+    },
+  },
+});"
+`;
+
+exports[`buildPostTargetTransformer moveBuildLibsFromSourceToViteConfig should add buildLibsFromSource to new nxViteTsPaths plugin when the plugin is not added 1`] = `
+"import { nxViteTsPaths } from "@nx/vite/plugins/nx-tsconfig-paths.plugin";
+/// <reference types='vitest' />
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+
+export default defineConfig({
+  root: __dirname,
+  cacheDir: '../../node_modules/.vite/apps/myapp',
+
+  server: {
+    port: 4200,
+    host: 'localhost',
+  },
+
+  preview: {
+    port: 4300,
+    host: 'localhost',
+  },
+
+  plugins: [nxViteTsPaths({ buildLibsFromSource: options.buildLibsFromSource }),react()],
+
+  // Uncomment this if you are using workers.
+  // worker: {
+  //  plugins: [ nxViteTsPaths() ],
+  // },
+
+  build: {
+    outDir: '../../dist/apps/myapp',
+    reportCompressedSize: true,
+    commonjsOptions: {
+      transformMixedEsModules: true,
+    },
+  },
+
+  test: {
+    globals: true,
+    cache: {
+      dir: '../../node_modules/.vitest',
+    },
+    environment: 'jsdom',
+    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+
+    reporters: ['default'],
+    coverage: {
+      reportsDirectory: '../../coverage/apps/myapp',
+      provider: 'v8',
+    },
+  },
+});"
+`;
+
+exports[`buildPostTargetTransformer moveBuildLibsFromSourceToViteConfig should add buildLibsFromSource to new nxViteTsPaths plugin when the plugins property does not exist 1`] = `
+"import { nxViteTsPaths } from "@nx/vite/plugins/nx-tsconfig-paths.plugin";
+/// <reference types='vitest' />
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+
+export default defineConfig({plugins: [nxViteTsPaths({ buildLibsFromSource: options.buildLibsFromSource }),],
+  root: __dirname,
+  cacheDir: '../../node_modules/.vite/apps/myapp',
+
+  server: {
+    port: 4200,
+    host: 'localhost',
+  },
+
+  preview: {
+    port: 4300,
+    host: 'localhost',
+  },
+
+  // Uncomment this if you are using workers.
+  // worker: {
+  //  plugins: [ nxViteTsPaths() ],
+  // },
+
+  build: {
+    outDir: '../../dist/apps/myapp',
+    reportCompressedSize: true,
+    commonjsOptions: {
+      transformMixedEsModules: true,
+    },
+  },
+
+  test: {
+    globals: true,
+    cache: {
+      dir: '../../node_modules/.vitest',
+    },
+    environment: 'jsdom',
+    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+
+    reporters: ['default'],
+    coverage: {
+      reportsDirectory: '../../coverage/apps/myapp',
+      provider: 'v8',
+    },
+  },
+});"
+`;
+
+exports[`buildPostTargetTransformer should remove the correct options and move the AST options to the vite config file correctly and remove outputs when they match inferred 1`] = `
+"/// <reference types='vitest' />
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+  
+  // These options were migrated by @nx/vite:convert-to-inferred from the project.json file.
+  const configValues = {"default":{"buildLibsFromSource":true}};
+  
+  // Determine the correct configValue to use based on the configuration
+  const nxConfiguration = process.env.NX_TASK_TARGET_CONFIGURATION ?? 'default';
+  
+  const options = {
+    ...configValues.default,
+    ...(configValues[nxConfiguration] ?? {})
+  }
+  
+
+export default defineConfig({
+  root: __dirname,
+  cacheDir: '../../node_modules/.vite/apps/myapp',
+
+  server: {
+    port: 4200,
+    host: 'localhost',
+  },
+
+  preview: {
+    port: 4300,
+    host: 'localhost',
+  },
+
+  plugins: [react(), nxViteTsPaths({ buildLibsFromSource: options.buildLibsFromSource }),],
+
+  // Uncomment this if you are using workers.
+  // worker: {
+  //  plugins: [ nxViteTsPaths() ],
+  // },
+
+  build: {
+    outDir: '../../dist/apps/myapp',
+    reportCompressedSize: true,
+    commonjsOptions: {
+      transformMixedEsModules: true,
+    },
+  },
+
+  test: {
+    globals: true,
+    cache: {
+      dir: '../../node_modules/.vitest',
+    },
+    environment: 'jsdom',
+    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+
+    reporters: ['default'],
+    coverage: {
+      reportsDirectory: '../../coverage/apps/myapp',
+      provider: 'v8',
+    },
+  },
+});"
+`;

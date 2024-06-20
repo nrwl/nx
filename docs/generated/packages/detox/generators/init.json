@@ -35,7 +35,7 @@
     "required": [],
     "presets": []
   },
-  "description": "Initialize the `@nrwl/detox` plugin.",
+  "description": "Initialize the `@nx/detox` plugin.",
   "hidden": true,
   "implementation": "/packages/detox/src/generators/init/init#detoxInitGeneratorInternal.ts",
   "aliases": [],
