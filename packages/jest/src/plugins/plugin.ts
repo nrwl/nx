@@ -3,6 +3,7 @@ import {
   CreateNodesContext,
   createNodesFromFiles,
   CreateNodesV2,
+  getPackageManagerCommand,
   joinPathFragments,
   logger,
   normalizePath,
@@ -155,6 +156,7 @@ async function buildJestTargets(
   options: JestPluginOptions,
   context: CreateNodesContext
 ): Promise<Pick<ProjectConfiguration, 'targets' | 'metadata'>> {
+  const pmc = getPackageManagerCommand();
   const absConfigFilePath = resolve(context.workspaceRoot, configFilePath);
 
   if (require.cache[absConfigFilePath]) {
@@ -184,6 +186,9 @@ async function buildJestTargets(
     metadata: {
       technologies: ['jest'],
       description: 'Run Jest Tests',
+      help: {
+        command: `${pmc.exec} jest --help`,
+      },
     },
   });
 
@@ -238,6 +243,9 @@ async function buildJestTargets(
           technologies: ['jest'],
           description: 'Run Jest Tests in CI',
           nonAtomizedTarget: options.targetName,
+          help: {
+            command: `${pmc.exec} jest --help`,
+          },
         },
       };
       targetGroup.push(options.ciTargetName);
@@ -260,6 +268,9 @@ async function buildJestTargets(
             technologies: ['jest'],
             description: `Run Jest Tests in ${relativePath}`,
             nonAtomizedTarget: options.targetName,
+            help: {
+              command: `${pmc.exec} jest --help`,
+            },
           },
         };
         targetGroup.push(targetName);

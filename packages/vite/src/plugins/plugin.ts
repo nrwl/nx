@@ -5,6 +5,7 @@ import {
   createNodesFromFiles,
   CreateNodesV2,
   detectPackageManager,
+  getPackageManagerCommand,
   joinPathFragments,
   logger,
   ProjectConfiguration,
@@ -28,6 +29,7 @@ export interface VitePluginOptions {
   previewTargetName?: string;
   serveStaticTargetName?: string;
 }
+
 type ViteTargets = Pick<ProjectConfiguration, 'targets' | 'metadata'>;
 
 function readTargetsCache(cachePath: string): Record<string, ViteTargets> {
@@ -215,6 +217,7 @@ async function buildTarget(
   outputs: string[],
   projectRoot: string
 ) {
+  const pmc = getPackageManagerCommand();
   return {
     command: `vite build`,
     options: { cwd: joinPathFragments(projectRoot) },
@@ -229,14 +232,25 @@ async function buildTarget(
       },
     ],
     outputs,
+    metadata: {
+      technologies: ['vite'],
+      description: `Run Vite build`,
+      help: { command: `${pmc.exec} vite build --help` },
+    },
   };
 }
 
 function serveTarget(projectRoot: string) {
+  const pmc = getPackageManagerCommand();
   const targetConfig: TargetConfiguration = {
     command: `vite serve`,
     options: {
       cwd: joinPathFragments(projectRoot),
+    },
+    metadata: {
+      technologies: ['vite'],
+      description: `Start Vite dev server`,
+      help: { command: `${pmc.exec} vite --help` },
     },
   };
 
@@ -244,10 +258,16 @@ function serveTarget(projectRoot: string) {
 }
 
 function previewTarget(projectRoot: string) {
+  const pmc = getPackageManagerCommand();
   const targetConfig: TargetConfiguration = {
     command: `vite preview`,
     options: {
       cwd: joinPathFragments(projectRoot),
+    },
+    metadata: {
+      technologies: ['vite'],
+      description: `Locally preview Vite production build`,
+      help: { command: `${pmc.exec} vite preview --help` },
     },
   };
 
@@ -261,6 +281,7 @@ async function testTarget(
   outputs: string[],
   projectRoot: string
 ) {
+  const pmc = getPackageManagerCommand();
   return {
     command: `vitest`,
     options: { cwd: joinPathFragments(projectRoot) },
@@ -275,6 +296,11 @@ async function testTarget(
       { env: 'CI' },
     ],
     outputs,
+    metadata: {
+      technologies: ['vite'],
+      description: `Run Vite tests`,
+      help: { command: `${pmc.exec} vitest --help` },
+    },
   };
 }
 

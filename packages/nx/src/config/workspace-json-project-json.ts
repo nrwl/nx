@@ -129,6 +129,9 @@ export interface TargetMetadata {
   description?: string;
   technologies?: string[];
   nonAtomizedTarget?: string;
+  help?: {
+    command: string;
+  };
 }
 
 export interface TargetDependencyConfig {
