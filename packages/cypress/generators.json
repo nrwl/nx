@@ -5,7 +5,7 @@
     "init": {
       "factory": "./src/generators/init/init#cypressInitGeneratorInternal",
       "schema": "./src/generators/init/schema.json",
-      "description": "Initialize the `@nrwl/cypress` plugin.",
+      "description": "Initialize the `@nx/cypress` plugin.",
       "aliases": ["ng-add"],
       "hidden": true
     },

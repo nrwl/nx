@@ -35,7 +35,7 @@
     "required": [],
     "presets": []
   },
-  "description": "Initialize the `@nrwl/rollup` plugin.",
+  "description": "Initialize the `@nx/rollup` plugin.",
   "aliases": ["ng-add"],
   "hidden": true,
   "implementation": "/packages/rollup/src/generators/init/init#rollupInitGenerator.ts",

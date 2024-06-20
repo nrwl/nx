@@ -29,7 +29,7 @@
     "required": [],
     "presets": []
   },
-  "description": "Initialize the `@nrwl/express` plugin.",
+  "description": "Initialize the `@nx/express` plugin.",
   "aliases": ["ng-add"],
   "hidden": true,
   "implementation": "/packages/express/src/generators/init/init#initGenerator.ts",
