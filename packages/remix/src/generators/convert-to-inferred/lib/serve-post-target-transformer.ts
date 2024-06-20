@@ -28,10 +28,6 @@ export function servePostTargetTransformer(migrationLogs: AggregatedLog) {
           projectDetails.projectName,
           projectDetails.root
         );
-
-        if (Object.keys(configuration).length === 0) {
-          delete target.configurations[configurationName];
-        }
       }
 
       if (Object.keys(target.configurations).length === 0) {
@@ -64,14 +60,16 @@ function handlePropertiesFromTargetOptions(
   }
 
   if ('port' in options) {
-    options.env.PORT = options.port;
+    options.env ??= {};
+    options.env.PORT = `${options.port}`;
     delete options.port;
   }
 
   for (const [prevKey, newKey] of Object.entries(REMIX_PROPERTY_MAPPINGS)) {
     if (prevKey in options) {
-      options[newKey] = options[prevKey];
+      let prevValue = options[prevKey];
       delete options[prevKey];
+      options[newKey] = prevValue;
     }
   }
 }

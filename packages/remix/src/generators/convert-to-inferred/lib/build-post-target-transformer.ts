@@ -1,13 +1,7 @@
 import { type Tree, type TargetConfiguration } from '@nx/devkit';
 import { AggregatedLog } from '@nx/devkit/src/generators/plugin-migrations/aggregate-log-util';
-import { addConfigValuesToConfigFile, getConfigFilePath } from './utils';
-import {
-  processTargetOutputs,
-  toProjectRelativePath,
-} from '@nx/devkit/src/generators/plugin-migrations/plugin-migration-utils';
-import { tsquery } from '@phenomnomnominal/tsquery';
-
-type RemixConfigValues = { outputPath?: string };
+import { getConfigFilePath } from './utils';
+import { processTargetOutputs } from '@nx/devkit/src/generators/plugin-migrations/plugin-migration-utils';
 
 export function buildPostTargetTransformer(migrationLogs: AggregatedLog) {
   return (
@@ -17,9 +11,6 @@ export function buildPostTargetTransformer(migrationLogs: AggregatedLog) {
     inferredTargetConfiguration: TargetConfiguration
   ) => {
     const remixConfigPath = getConfigFilePath(tree, projectDetails.root);
-    const configValues: Record<string, RemixConfigValues> = {
-      default: {},
-    };
 
     if (target.options) {
       handlePropertiesFromTargetOptions(
@@ -27,7 +18,6 @@ export function buildPostTargetTransformer(migrationLogs: AggregatedLog) {
         target.options,
         projectDetails.projectName,
         projectDetails.root,
-        configValues['default'],
         migrationLogs
       );
     }
@@ -35,19 +25,13 @@ export function buildPostTargetTransformer(migrationLogs: AggregatedLog) {
     if (target.configurations) {
       for (const configurationName in target.configurations) {
         const configuration = target.configurations[configurationName];
-
         handlePropertiesFromTargetOptions(
           tree,
           configuration,
           projectDetails.projectName,
           projectDetails.root,
-          configValues[configurationName],
           migrationLogs
         );
-
-        if (Object.keys(configuration).length === 0) {
-          delete target.configurations[configurationName];
-        }
       }
 
       if (Object.keys(target.configurations).length === 0) {
@@ -75,14 +59,6 @@ export function buildPostTargetTransformer(migrationLogs: AggregatedLog) {
       });
     }
 
-    setRemixConfigToUseConfigValueForOutput(
-      tree,
-      remixConfigPath,
-      projectDetails.projectName,
-      migrationLogs
-    );
-    addConfigValuesToConfigFile(tree, remixConfigPath, configValues);
-
     return target;
   };
 }
@@ -92,14 +68,14 @@ function handlePropertiesFromTargetOptions(
   options: any,
   projectName: string,
   projectRoot: string,
-  configValues: RemixConfigValues,
   migrationLogs: AggregatedLog
 ) {
   if ('outputPath' in options) {
-    configValues.outputPath = toProjectRelativePath(
-      options.outputPath,
-      projectRoot
-    );
+    migrationLogs.addLog({
+      project: projectName,
+      executorName: '@nx/remix:build',
+      log: "Unable to migrate 'outputPath'. The Remix Config will contain the locations the build artifact will be output to.",
+    });
     delete options.outputPath;
   }
 
@@ -127,56 +103,9 @@ function handlePropertiesFromTargetOptions(
     migrationLogs.addLog({
       project: projectName,
       executorName: '@nx/remix:build',
-      log: "Unable to migrate `generateLockfile` to Remix Config. Use the `@nx/dependency-checks` ESLint rule to update your project's package.json.",
+      log: 'Unable to migrate `generateLockfile` to Remix Config. This option is not supported.',
     });
 
     delete options.generateLockfile;
   }
-}
-
-function setRemixConfigToUseConfigValueForOutput(
-  tree: Tree,
-  configFilePath: string,
-  projectName: string,
-  migrationLogs: AggregatedLog
-) {
-  const configFileContents = tree.read(configFilePath, 'utf-8');
-  const ast = tsquery.ast(configFileContents);
-
-  let startPosition = 0;
-  let endPosition = 0;
-
-  const OUTPUT_PATH_SELECTOR =
-    'ExportAssignment ObjectLiteralExpression PropertyAssignment:has(Identifier[name=serverBuildPath]) > StringLiteral';
-  const outputPathNodes = tsquery(ast, OUTPUT_PATH_SELECTOR, {
-    visitAllChildren: true,
-  });
-  if (outputPathNodes.length !== 0) {
-    startPosition = outputPathNodes[0].getStart();
-    endPosition = outputPathNodes[0].getEnd();
-  } else {
-    const EXPORT_CONFIG_SELECTOR = 'ExportAssignment ObjectLiteralExpression';
-    const configNodes = tsquery(ast, EXPORT_CONFIG_SELECTOR, {
-      visitAllChildren: true,
-    });
-    if (configNodes.length === 0) {
-      migrationLogs.addLog({
-        project: projectName,
-        executorName: '@nx/remix:build',
-        log: 'Unable to update Remix Config to set `serverBuildPath` to custom `outputPath` found in project.json. Please update this manually.',
-      });
-      return;
-    } else {
-      startPosition = configNodes[1].getStart();
-      endPosition = startPosition;
-    }
-  }
-
-  tree.write(
-    configFilePath,
-    `${configFileContents.slice(
-      0,
-      startPosition
-    )}options.outputPath${configFileContents.slice(endPosition)}`
-  );
 }
