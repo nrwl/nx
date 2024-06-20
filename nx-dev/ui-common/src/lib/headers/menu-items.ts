@@ -207,7 +207,7 @@ export const eventItems: MenuItem[] = [
     name: 'Monorepo World',
     description:
       'In person & virtual conference about the latest monorepo advancements.',
-    href: 'https://monorepo.tools/conf',
+    href: 'https://monorepo.world',
     icon: null,
     isNew: false,
     isHighlight: false,
