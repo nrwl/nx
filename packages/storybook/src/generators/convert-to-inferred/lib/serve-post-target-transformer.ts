@@ -58,7 +58,10 @@ export function servePostTargetTransformer(migrationLogs: AggregatedLog) {
           migrationLogs
         );
 
-        if (Object.keys(configuration).length === 0) {
+        if (
+          configurationName === 'ci' &&
+          Object.keys(configuration).length === 0
+        ) {
           delete target.configurations[configurationName];
         }
       }

@@ -413,6 +413,9 @@ describe('Storybook - Convert To Inferred', () => {
       expect(updatedProject.targets).toMatchInlineSnapshot(`
         {
           "build-storybook": {
+            "configurations": {
+              "dev": {},
+            },
             "options": {
               "config-dir": ".storybook",
               "output-dir": "../../dist/storybook/apps/app1",
@@ -426,6 +429,9 @@ describe('Storybook - Convert To Inferred', () => {
             ],
           },
           "storybook": {
+            "configurations": {
+              "dev": {},
+            },
             "options": {
               "config-dir": ".storybook",
             },

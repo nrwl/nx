@@ -57,10 +57,6 @@ export function buildPostTargetTransformer(migrationLogs: AggregatedLog) {
           configValues[configurationName],
           migrationLogs
         );
-
-        if (Object.keys(configuration).length === 0) {
-          delete target.configurations[configurationName];
-        }
       }
 
       for (const configurationName in target.configurations) {
@@ -83,6 +79,13 @@ export function buildPostTargetTransformer(migrationLogs: AggregatedLog) {
             '@nx/storybook:build',
             migrationLogs
           );
+        }
+
+        if (
+          configurationName === 'ci' &&
+          Object.keys(configuration).length === 0
+        ) {
+          delete target.configurations[configurationName];
         }
       }
 
