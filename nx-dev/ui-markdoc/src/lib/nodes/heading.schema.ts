@@ -7,8 +7,31 @@ export function generateID(
   if (attributes['id'] && typeof attributes['id'] === 'string') {
     return attributes['id'];
   }
-  return children
-    .filter((child) => typeof child === 'string')
+
+  const validChildrenNodes: RenderableTreeNode[] = [];
+
+  for (const child of children) {
+    if (!child) {
+      continue;
+    }
+
+    if (typeof child === 'string') {
+      validChildrenNodes.push(child);
+    } else if (
+      // allow rendering titles that are wrapped in `code` tags
+      typeof child === 'object' &&
+      'children' in child &&
+      child.name === 'code' &&
+      Array.isArray(child.children)
+    ) {
+      const validNestedChild = child.children.filter(
+        (c) => typeof c === 'string'
+      );
+      validChildrenNodes.push(...validNestedChild);
+    }
+  }
+
+  return validChildrenNodes
     .join(' ')
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
