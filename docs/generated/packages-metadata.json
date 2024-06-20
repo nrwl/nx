@@ -494,7 +494,7 @@
     ],
     "generators": [
       {
-        "description": "Initialize the `@nrwl/cypress` plugin.",
+        "description": "Initialize the `@nx/cypress` plugin.",
         "file": "generated/packages/cypress/generators/init.json",
         "hidden": true,
         "name": "init",
@@ -582,7 +582,7 @@
     ],
     "generators": [
       {
-        "description": "Initialize the `@nrwl/detox` plugin.",
+        "description": "Initialize the `@nx/detox` plugin.",
         "file": "generated/packages/detox/generators/init.json",
         "hidden": true,
         "name": "init",
@@ -668,7 +668,7 @@
     ],
     "generators": [
       {
-        "description": "Initialize the `@nrwl/esbuild` plugin.",
+        "description": "Initialize the `@nx/esbuild` plugin.",
         "file": "generated/packages/esbuild/generators/init.json",
         "hidden": true,
         "name": "init",
@@ -1003,7 +1003,7 @@
     "executors": [],
     "generators": [
       {
-        "description": "Initialize the `@nrwl/express` plugin.",
+        "description": "Initialize the `@nx/express` plugin.",
         "file": "generated/packages/express/generators/init.json",
         "hidden": true,
         "name": "init",
@@ -1097,7 +1097,7 @@
     ],
     "generators": [
       {
-        "description": "Initialize the `@nrwl/jest` plugin.",
+        "description": "Initialize the `@nx/jest` plugin.",
         "file": "generated/packages/jest/generators/init.json",
         "hidden": true,
         "name": "init",
@@ -1281,7 +1281,7 @@
         "type": "generator"
       },
       {
-        "description": "Initialize the `@nrwl/nest` plugin.",
+        "description": "Initialize the `@nx/nest` plugin.",
         "file": "generated/packages/nest/generators/init.json",
         "hidden": true,
         "name": "init",
@@ -1486,7 +1486,7 @@
     ],
     "generators": [
       {
-        "description": "Initialize the `@nrwl/next` plugin.",
+        "description": "Initialize the `@nx/next` plugin.",
         "file": "generated/packages/next/generators/init.json",
         "hidden": true,
         "name": "init",
@@ -1573,7 +1573,7 @@
     "executors": [],
     "generators": [
       {
-        "description": "Initialize the `@nrwl/node` plugin.",
+        "description": "Initialize the `@nx/node` plugin.",
         "file": "generated/packages/node/generators/init.json",
         "hidden": true,
         "name": "init",
@@ -2152,7 +2152,7 @@
     ],
     "generators": [
       {
-        "description": "Initialize the `@nrwl/react` plugin.",
+        "description": "Initialize the `@nx/react` plugin.",
         "file": "generated/packages/react/generators/init.json",
         "hidden": true,
         "name": "init",
@@ -2710,7 +2710,7 @@
     ],
     "generators": [
       {
-        "description": "Initialize the `@nrwl/rollup` plugin.",
+        "description": "Initialize the `@nx/rollup` plugin.",
         "file": "generated/packages/rollup/generators/init.json",
         "hidden": true,
         "name": "init",
@@ -3137,7 +3137,7 @@
     ],
     "generators": [
       {
-        "description": "Initialize the `@nrwl/webpack` plugin.",
+        "description": "Initialize the `@nx/webpack` plugin.",
         "file": "generated/packages/webpack/generators/init.json",
         "hidden": true,
         "name": "init",

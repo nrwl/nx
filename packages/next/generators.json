@@ -6,7 +6,7 @@
     "init": {
       "factory": "./src/generators/init/init#nextInitGeneratorInternal",
       "schema": "./src/generators/init/schema.json",
-      "description": "Initialize the `@nrwl/next` plugin.",
+      "description": "Initialize the `@nx/next` plugin.",
       "hidden": true
     },
     "application": {

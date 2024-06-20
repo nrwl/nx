@@ -36,7 +36,7 @@
     },
     "presets": []
   },
-  "description": "Initialize the `@nrwl/cypress` plugin.",
+  "description": "Initialize the `@nx/cypress` plugin.",
   "aliases": ["ng-add"],
   "hidden": true,
   "implementation": "/packages/cypress/src/generators/init/init#cypressInitGeneratorInternal.ts",
