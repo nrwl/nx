@@ -38,13 +38,13 @@ export function buildPostTargetTransformer(
   if (target.configurations) {
     for (const configurationName in target.configurations) {
       const configuration = target.configurations[configurationName];
-      configValues[configuration] = {};
+      configValues[configurationName] = {};
       removePropertiesFromTargetOptions(
         tree,
         configuration,
         viteConfigPath,
         projectDetails.root,
-        configValues[configuration]
+        configValues[configurationName]
       );
 
       if (Object.keys(configuration).length === 0) {

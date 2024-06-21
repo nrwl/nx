@@ -2867,6 +2867,15 @@
         "path": "/nx-api/storybook/generators/cypress-project",
         "type": "generator"
       },
+      "/nx-api/storybook/generators/convert-to-inferred": {
+        "description": "Convert existing Storybook project(s) using `@nx/storybook:*` executors to use `@nx/storybook/plugin`. Defaults to migrating all projects. Pass '--project' to migrate only one target.",
+        "file": "generated/packages/storybook/generators/convert-to-inferred.json",
+        "hidden": false,
+        "name": "convert-to-inferred",
+        "originalFilePath": "/packages/storybook/src/generators/convert-to-inferred/schema.json",
+        "path": "/nx-api/storybook/generators/convert-to-inferred",
+        "type": "generator"
+      },
       "/nx-api/storybook/generators/migrate-7": {
         "description": "Migrate to Storybook version 7.",
         "file": "generated/packages/storybook/generators/migrate-7.json",

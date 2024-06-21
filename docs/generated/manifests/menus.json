@@ -9486,6 +9486,14 @@
                 "disableCollapsible": false
               },
               {
+                "id": "convert-to-inferred",
+                "path": "/nx-api/storybook/generators/convert-to-inferred",
+                "name": "convert-to-inferred",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
                 "id": "migrate-7",
                 "path": "/nx-api/storybook/generators/migrate-7",
                 "name": "migrate-7",

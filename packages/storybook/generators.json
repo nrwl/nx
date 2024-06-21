@@ -22,6 +22,11 @@
       "x-deprecated": "Deprecated: Use 'interactionTests' instead when running '@nx/storybook:configuration'. This generator will be removed in v21.",
       "hidden": false
     },
+    "convert-to-inferred": {
+      "factory": "./src/generators/convert-to-inferred/convert-to-inferred",
+      "schema": "./src/generators/convert-to-inferred/schema.json",
+      "description": "Convert existing Storybook project(s) using `@nx/storybook:*` executors to use `@nx/storybook/plugin`. Defaults to migrating all projects. Pass '--project' to migrate only one target."
+    },
     "migrate-7": {
       "factory": "./src/generators/migrate-7/migrate-7",
       "schema": "./src/generators/migrate-7/schema.json",
