@@ -119,31 +119,6 @@ The following properties affect the way Nx runs tasks and can be set at the root
 
 You can configure `parallel` in `nx.json`, but you can also set a `--parallel` flag in the terminal `nx run-many -t test --parallel=5`.
 
-### Multiple Tasks Runners
-
-Tasks runners are invoked when you run `nx test`, `nx build`, `nx run-many`, `nx affected`, and so on.
-
-There is a tasks runner created from the task options defined at the root of `nx.json` named `default`. You can register another tasks runner by adding it to `nx.json` like this:
-
-```json {% fileName="nx.json" %}
-{
-  "tasksRunnerOptions": {
-    "another": {
-      "runner": "nx/tasks-runners/default",
-      "options": {}
-    }
-  }
-}
-```
-
-Then you can run a task with the new runner using the `--runner` flag:
-
-```shell
-nx run-many -t build --runner=another
-```
-
-The official types of `runner` supported by Nx are `"nx/tasks-runners/default"` and `"nx-cloud"`.
-
 ## Default Base
 
 Tells Nx which base branch to use when calculating affected projects.
