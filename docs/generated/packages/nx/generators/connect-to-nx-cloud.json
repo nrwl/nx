@@ -28,6 +28,11 @@
         "type": "boolean",
         "description": "If the user will be using GitHub as their git hosting provider",
         "default": false
+      },
+      "directory": {
+        "type": "string",
+        "description": "The directory where the workspace is located",
+        "x-priority": "internal"
       }
     },
     "additionalProperties": false,

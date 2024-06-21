@@ -19,7 +19,7 @@ export async function setupNxCloud(
       process.env.NX_NEW_CLOUD_ONBOARDING === 'true'
         ? `${
             pmc.exec
-          } nx g nx:connect-to-nx-cloud --installationSource=create-nx-workspace ${
+          } nx g nx:connect-to-nx-cloud --installationSource=create-nx-workspace --directory=${directory} ${
             useGitHub ? '--github' : ''
           } --no-interactive`
         : `${pmc.exec} nx g nx:connect-to-nx-cloud --no-interactive --quiet`,
