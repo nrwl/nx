@@ -6,6 +6,7 @@ import {
   CreateNodesV2,
   TargetConfiguration,
   createNodesFromFiles,
+  getPackageManagerCommand,
   logger,
   readJsonFile,
   writeJsonFile,
@@ -452,8 +453,8 @@ function buildEslintTargets(
   options: EslintPluginOptions,
   standaloneSrcPath?: string
 ) {
+  const pmc = getPackageManagerCommand();
   const isRootProject = projectRoot === '.';
-
   const targets: Record<string, TargetConfiguration> = {};
 
   const targetConfig: TargetConfiguration = {
@@ -481,6 +482,13 @@ function buildEslintTargets(
       { externalDependencies: ['eslint'] },
     ],
     outputs: ['{options.outputFile}'],
+    metadata: {
+      technologies: ['eslint'],
+      description: 'Runs ESLint on project',
+      help: {
+        command: `${pmc.exec} eslint --help`,
+      },
+    },
   };
 
   // Always set the environment variable to ensure that the ESLint CLI can run on eslint v8 and v9
