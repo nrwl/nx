@@ -19,6 +19,7 @@ export interface ProjectDetailsProps {
   sourceMap: Record<string, string[]>;
   errors?: GraphError[];
   variant?: 'default' | 'compact';
+  connectedToCloud?: boolean;
   onViewInProjectGraph?: (data: { projectName: string }) => void;
   onViewInTaskGraph?: (data: {
     projectName: string;
@@ -42,6 +43,7 @@ export const ProjectDetails = ({
   onViewInTaskGraph,
   onRunTarget,
   viewInProjectGraphPosition = 'top',
+  connectedToCloud,
 }: ProjectDetailsProps) => {
   const projectData = project.data;
   const isCompact = variant === 'compact';
@@ -161,6 +163,7 @@ export const ProjectDetails = ({
           variant={variant}
           onRunTarget={onRunTarget}
           onViewInTaskGraph={onViewInTaskGraph}
+          connectedToCloud={connectedToCloud}
         />
       </div>
     </>

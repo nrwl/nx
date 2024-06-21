@@ -21,12 +21,14 @@ interface ProjectDetailsProps {
   project: ProjectGraphProjectNode;
   sourceMap: Record<string, string[]>;
   errors?: GraphError[];
+  connectedToCloud?: boolean;
 }
 
 export function ProjectDetailsWrapper({
   project,
   sourceMap,
   errors,
+  connectedToCloud,
 }: ProjectDetailsProps) {
   const environment = useEnvironmentConfig()?.environment;
   const externalApiService = getExternalApiService();
@@ -167,6 +169,7 @@ export function ProjectDetailsWrapper({
         viewInProjectGraphPosition={
           environment === 'nx-console' ? 'bottom' : 'top'
         }
+        connectedToCloud={connectedToCloud}
       />
       <ErrorToast errors={errors} />
     </>

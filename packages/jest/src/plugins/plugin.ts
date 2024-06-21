@@ -237,6 +237,7 @@ async function buildJestTargets(
         metadata: {
           technologies: ['jest'],
           description: 'Run Jest Tests in CI',
+          atomizer: true,
         },
       };
       targetGroup.push(options.ciTargetName);
@@ -258,6 +259,7 @@ async function buildJestTargets(
           metadata: {
             technologies: ['jest'],
             description: `Run Jest Tests in ${relativePath}`,
+            atomized: true,
           },
         };
         targetGroup.push(targetName);

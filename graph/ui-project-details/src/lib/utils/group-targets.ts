@@ -33,3 +33,14 @@ function sortNxReleasePublishLast(a: string, b: string) {
   if (b === 'nx-release-publish') return -1;
   return a.localeCompare(b);
 }
+
+export function targetGroupIsUsingAtomizer(
+  project: ProjectGraphProjectNode,
+  targetGroupName: string
+) {
+  return (
+    project.data.metadata?.targetGroups?.[targetGroupName]?.some(
+      (target) => project.data.targets?.[target]?.metadata?.atomizer
+    ) || false
+  );
+}

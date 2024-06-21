@@ -4,7 +4,10 @@ import type { ProjectGraphProjectNode } from '@nx/devkit';
 
 import { TargetConfigurationDetailsListItem } from '../target-configuration-details-list-item/target-configuration-details-list-item';
 import { TargetConfigurationGroupContainer } from '../target-configuration-details-group-container/target-configuration-details-group-container';
-import { groupTargets } from '../utils/group-targets';
+import {
+  groupTargets,
+  targetGroupIsUsingAtomizer,
+} from '../utils/group-targets';
 import { useMemo } from 'react';
 
 export interface TargetConfigurationGroupListProps {
@@ -16,6 +19,7 @@ export interface TargetConfigurationGroupListProps {
     projectName: string;
     targetName: string;
   }) => void;
+  connectedToCloud?: boolean;
   className?: string;
 }
 
@@ -26,6 +30,7 @@ export function TargetConfigurationGroupList({
   onRunTarget,
   onViewInTaskGraph,
   className = '',
+  connectedToCloud,
 }: TargetConfigurationGroupListProps) {
   const targetsGroup = useMemo(() => groupTargets(project), [project]);
   const hasGroups = useMemo(() => {
@@ -47,6 +52,8 @@ export function TargetConfigurationGroupList({
               <TargetConfigurationGroupContainer
                 targetGroupName={targetGroupName}
                 targetsNumber={targets.length}
+                atomizer={targetGroupIsUsingAtomizer(project, targetGroupName)}
+                connectedToCloud={connectedToCloud}
                 key={targetGroupName}
               >
                 <ul className={className}>
