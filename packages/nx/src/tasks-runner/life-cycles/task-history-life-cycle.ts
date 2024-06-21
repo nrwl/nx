@@ -1,3 +1,4 @@
+import { serializeTarget } from '../../utils/serialize-target';
 import { Task } from '../../config/task-graph';
 import { output } from '../../utils/output';
 import {
@@ -23,10 +24,12 @@ export class TaskHistoryLifeCycle implements LifeCycle {
       target: taskResult.task.target.target,
       configuration: taskResult.task.target.configuration,
       hash: taskResult.task.hash,
-      code: taskResult.code,
+      code: taskResult.code.toString(),
       status: taskResult.status,
-      start: taskResult.task.startTime ?? this.startTimings[taskResult.task.id],
-      end: taskResult.task.endTime ?? new Date().getTime(),
+      start: (
+        taskResult.task.startTime ?? this.startTimings[taskResult.task.id]
+      ).toString(),
+      end: (taskResult.task.endTime ?? new Date().getTime()).toString(),
     }));
     this.taskRuns.push(...taskRuns);
   }
@@ -43,13 +46,22 @@ export class TaskHistoryLifeCycle implements LifeCycle {
         history[hash].some((run) => run.code !== history[hash][0].code)
       ) {
         flakyTasks.push(
-          `${history[hash][0].project}:${history[hash][0].target}`
+          serializeTarget(
+            history[hash][0].project,
+            history[hash][0].target,
+            history[hash][0].configuration
+          )
         );
       }
     }
     if (flakyTasks.length > 0) {
       output.warn({
-        title: `Flaky tasks detected: ${flakyTasks.join(', ')}`,
+        title: 'Flaky Tasks:',
+        bodyLines: [
+          `The following targets produce inconsistent results based on the hash:`,
+          ...flakyTasks.map((t) => `  ${t}`),
+          `Nx Agents can automatically retry flaky tasks in CI. Learn more at https://nx.dev/ci/features/flaky-tasks`,
+        ],
       });
     }
   }

@@ -4,16 +4,18 @@ import { daemonClient } from '../daemon/client/client';
 import { isOnDaemon } from '../daemon/is-on-daemon';
 import { workspaceDataDirectory } from './cache-directory';
 
-export interface TaskRun {
-  project: string;
-  target: string;
-  configuration: string;
-  hash: string;
-  code: number;
-  status: string;
-  start: number;
-  end: number;
-}
+const taskRunKeys = [
+  'project',
+  'target',
+  'configuration',
+  'hash',
+  'code',
+  'status',
+  'start',
+  'end',
+] as const;
+
+export type TaskRun = Record<(typeof taskRunKeys)[number], string>;
 
 let taskHistory: TaskRun[] | undefined = undefined;
 let taskHashToIndicesMap: Map<string, number[]> = new Map();
@@ -52,26 +54,13 @@ export async function writeTaskRunsToHistory(
 
     const serializedLines: string[] = [];
     for (let taskRun of taskRuns) {
-      serializedLines.push(
-        [
-          taskRun.project,
-          taskRun.target,
-          taskRun.configuration,
-          taskRun.hash,
-          taskRun.code,
-          taskRun.status,
-          taskRun.start,
-          taskRun.end,
-        ].join(',')
-      );
+      const serializedLine = taskRunKeys.map((key) => taskRun[key]).join(',');
+      serializedLines.push(serializedLine);
       recordTaskRunInMemory(taskRun);
     }
 
     if (!existsSync(taskHistoryFile)) {
-      writeFileSync(
-        taskHistoryFile,
-        'project,target,configuration,hash,code,status,start,end\n'
-      );
+      writeFileSync(taskHistoryFile, `${taskRunKeys.join(',')}\n`);
     }
     appendFileSync(taskHistoryFile, serializedLines.join('\n') + '\n');
   } else {
@@ -100,15 +89,14 @@ function loadTaskHistoryFromDisk() {
     return;
   }
 
-  const headers = lines[0].trim().split(',');
   const contentLines = lines.slice(1).filter((l) => l.trim() !== '');
 
   // read the values from csv format where each header is a key and the value is the value
   for (let line of contentLines) {
     const values = line.trim().split(',');
 
-    const run: any = {};
-    headers.forEach((header, index) => {
+    const run: Partial<TaskRun> = {};
+    taskRunKeys.forEach((header, index) => {
       run[header] = values[index];
     });
 

@@ -16,6 +16,7 @@ import { createRunOneDynamicOutputRenderer } from './life-cycles/dynamic-run-one
 import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
 import {
   NxJsonConfiguration,
+  readNxJson,
   TargetDefaults,
   TargetDependencies,
 } from '../config/nx-json';
@@ -29,6 +30,7 @@ import { daemonClient } from '../daemon/client/client';
 import { StoreRunInformationLifeCycle } from './life-cycles/store-run-information-life-cycle';
 import { createTaskHasher } from '../hasher/create-task-hasher';
 import { TaskHistoryLifeCycle } from './life-cycles/task-history-life-cycle';
+import { isNxCloudUsed } from '../utils/nx-cloud-utils';
 
 async function getTerminalOutputLifeCycle(
   initiatingProject: string,
@@ -326,7 +328,9 @@ function constructLifeCycles(lifeCycle: LifeCycle) {
   if (process.env.NX_PROFILE) {
     lifeCycles.push(new TaskProfilingLifeCycle(process.env.NX_PROFILE));
   }
-  lifeCycles.push(new TaskHistoryLifeCycle());
+  if (!isNxCloudUsed(readNxJson())) {
+    lifeCycles.push(new TaskHistoryLifeCycle());
+  }
   return lifeCycles;
 }
 
