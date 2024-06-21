@@ -76,7 +76,7 @@ export function normalizeOptions(
 
   const sourceRoot = projectNode.data.sourceRoot ?? projectNode.data.root;
 
-  if (!options.main) {
+  if (!combinedPluginAndMaybeExecutorOptions.main) {
     throw new Error(
       `Missing "main" option for the entry file. Set this option in your Nx webpack plugin.`
     );

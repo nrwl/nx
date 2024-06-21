@@ -3180,6 +3180,15 @@
         "originalFilePath": "/packages/webpack/src/generators/configuration/schema.json",
         "path": "webpack/generators/configuration",
         "type": "generator"
+      },
+      {
+        "description": "Convert the project to use the `NxAppWebpackPlugin` and `NxReactWebpackPlugin`.",
+        "file": "generated/packages/webpack/generators/convert-config-to-webpack-plugin.json",
+        "hidden": false,
+        "name": "convert-config-to-webpack-plugin",
+        "originalFilePath": "/packages/webpack/src/generators/convert-config-to-webpack-plugin/schema.json",
+        "path": "webpack/generators/convert-config-to-webpack-plugin",
+        "type": "generator"
       }
     ],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
