@@ -50,7 +50,9 @@ export async function connectToNxCloudIfExplicitlyAsked(
   }
 }
 
-export async function connectToNxCloudCommand(): Promise<boolean> {
+export async function connectToNxCloudCommand(
+  command?: string
+): Promise<boolean> {
   const nxJson = readNxJson();
 
   if (isNxCloudUsed(nxJson)) {
@@ -85,7 +87,9 @@ export async function connectToNxCloudCommand(): Promise<boolean> {
   }
 
   const tree = new FsTree(workspaceRoot, false, 'connect-to-nx-cloud');
-  const callback = await connectToNxCloud(tree, {});
+  const callback = await connectToNxCloud(tree, {
+    installationSource: command ?? 'nx-connect',
+  });
   tree.lock();
   flushChanges(workspaceRoot, tree.listChanges());
   await callback();
@@ -96,7 +100,7 @@ export async function connectToNxCloudCommand(): Promise<boolean> {
 export async function connectToNxCloudWithPrompt(command: string) {
   const setNxCloud = await nxCloudPrompt('setupNxCloud');
   const useCloud =
-    setNxCloud === 'yes' ? await connectToNxCloudCommand() : false;
+    setNxCloud === 'yes' ? await connectToNxCloudCommand(command) : false;
   await recordStat({
     command,
     nxVersion,
