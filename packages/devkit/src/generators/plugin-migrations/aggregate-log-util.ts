@@ -44,6 +44,10 @@ export class AggregatedLog {
   }
 
   flushLogs(): void {
+    if (this.logs.size === 0) {
+      return;
+    }
+
     let fullLog = '';
     for (const executorName of this.logs.keys()) {
       fullLog = `${fullLog}${output.bold(
