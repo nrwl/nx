@@ -240,9 +240,9 @@ function normalizeOptions(
   options: WebpackPluginOptions
 ): Required<WebpackPluginOptions> {
   return {
-    buildTargetName: options.buildTargetName ?? 'build',
-    serveTargetName: options.serveTargetName ?? 'serve',
-    serveStaticTargetName: options.serveStaticTargetName ?? 'serve-static',
-    previewTargetName: options.previewTargetName ?? 'preview',
+    buildTargetName: options?.buildTargetName ?? 'build',
+    serveTargetName: options?.serveTargetName ?? 'serve',
+    serveStaticTargetName: options?.serveStaticTargetName ?? 'serve-static',
+    previewTargetName: options?.previewTargetName ?? 'preview',
   };
 }
