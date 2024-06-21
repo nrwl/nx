@@ -36,6 +36,9 @@ export async function useLegacyNxPlugin(
   ) => Promise<Configuration>,
   executorOptions: NxAppWebpackPluginOptions
 ) {
+  if (global.NX_GRAPH_CREATION) {
+    return;
+  }
   const options = normalizeOptions(executorOptions);
 
   const projectGraph = readCachedProjectGraph();
