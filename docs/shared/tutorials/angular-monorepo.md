@@ -385,24 +385,12 @@ All libraries that we generate automatically have aliases created in the root-le
 }
 ```
 
-Hence we can easily import them into other libraries and our Angular application. As an example, let's create and expose a `ProductListComponent` component from our `libs/products` library. Either create it by hand or run
+Hence we can easily import them into other libraries and our Angular application. As an example, let's use the pre-generated `ProductsComponent` component from our `libs/products` library.
 
-```shell
-nx g @nx/angular:component product-list --directory=libs/products/src/lib/product-list --standalone --export
-```
-
-We don't need to implement anything fancy as we just want to learn how to import it into our main Angular application.
-
-```html {% fileName="libs/products/src/lib/product-list/product-list.component.html" %}
-<p>product-list works!</p>
-```
-
-Make sure the `ProductListComponent` is exported via the `index.ts` file of our `products` library and is listed in the `exports` of the `ProductsModule`. This is our public API with the rest of the workspace. Only export what's really necessary to be usable outside the library itself.
+You can see that the `ProductsComponent` is exported via the `index.ts` file of our `products` library so that other projects in the repository can use it. This is our public API with the rest of the workspace. Only export what's really necessary to be usable outside the library itself.
 
 ```ts {% fileName="libs/products/src/index.ts" %}
 export * from './lib/products/products.component';
-
-export * from './lib/product-list/product-list.component';
 ```
 
 We're ready to import it into our main application now. First (if you haven't already), let's set up the Angular router. Configure it in the `app.config.ts`.
@@ -426,7 +414,7 @@ And in `app.component.html`:
 <router-outlet></router-outlet>
 ```
 
-Then we can add the `ProductListComponent` component to our `app.routes.ts` and render it via the routing mechanism whenever a user hits the `/products` route.
+Then we can add the `ProductsComponent` component to our `app.routes.ts` and render it via the routing mechanism whenever a user hits the `/products` route.
 
 ```ts {% fileName="apps/angular-store/src/app/app.routes.ts" highlightLines=[10,11,12,13,14] %}
 import { Route } from '@angular/router';
@@ -441,7 +429,7 @@ export const appRoutes: Route[] = [
   {
     path: 'products',
     loadComponent: () =>
-      import('@angular-monorepo/products').then((m) => m.ProductListComponent),
+      import('@angular-monorepo/products').then((m) => m.ProductsComponent),
   },
 ];
 ```
@@ -452,8 +440,7 @@ Serving your app (`nx serve angular-store`) and then navigating to `/products` s
 
 Let's apply the same for our `orders` library.
 
-- generate a new component `OrderListComponent` in `libs/orders` and export it in the corresponding `index.ts` file
-- import it into the `app.routes.ts` and render it via the routing mechanism whenever a user hits the `/orders` route
+- import the `OrdersComponent` from `libs/orders` into the `app.routes.ts` and render it via the routing mechanism whenever a user hits the `/orders` route
 
 In the end, your `app.routes.ts` should look similar to this:
 
@@ -470,12 +457,12 @@ export const appRoutes: Route[] = [
   {
     path: 'products',
     loadComponent: () =>
-      import('@angular-monorepo/products').then((m) => m.ProductListComponent),
+      import('@angular-monorepo/products').then((m) => m.ProductsComponent),
   },
   {
     path: 'orders',
     loadComponent: () =>
-      import('@angular-monorepo/orders').then((m) => m.OrderListComponent),
+      import('@angular-monorepo/orders').then((m) => m.OrdersComponent),
   },
 ];
 ```
@@ -484,12 +471,12 @@ Let's also show products in the `inventory` app.
 
 ```ts {% fileName="apps/inventory/src/app/app.component.ts" highlightLines=[2,6] %}
 import { Component } from '@angular/core';
-import { ProductListComponent } from '@angular-monorepo/products';
+import { ProductsComponent } from '@angular-monorepo/products';
 
 @Component({
   standalone: true,
-  imports: [ProductListComponent],
-  selector: 'angular-monorepo-root',
+  imports: [ProductsComponent],
+  selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css'],
 })
@@ -499,7 +486,7 @@ export class AppComponent {
 ```
 
 ```ts {% fileName="apps/inventory/src/app/app.component.html" %}
-<angular-monorepo-product-list></angular-monorepo-product-list>
+<lib-products></lib-products>
 ```
 
 ## Visualizing your Project Structure
@@ -1185,14 +1172,14 @@ To enforce the rules, Nx ships with a custom ESLint rule. Open the `.eslintrc.ba
 }
 ```
 
-To test it, go to your `libs/products/src/lib/product-list/product-list.component.ts` file and import the `OrderListComponent` from the `orders` project:
+To test it, go to your `libs/products/src/lib/product-list/product-list.component.ts` file and import the `OrdersComponent` from the `orders` project:
 
 ```ts {% fileName="libs/products/src/lib/product-list/product-list.component.ts" highlightLines=[4,5] %}
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 // This import is not allowed 👇
-import { OrderListComponent } from '@angular-monorepo/orders';
+import { OrdersComponent } from '@angular-monorepo/orders';
 
 @Component({
   selector: 'angular-monorepo-product-list',
@@ -1201,7 +1188,7 @@ import { OrderListComponent } from '@angular-monorepo/orders';
   templateUrl: './product-list.component.html',
   styleUrls: ['./product-list.component.css'],
 })
-export class ProductListComponent {}
+export class ProductsComponent {}
 ```
 
 If you lint your workspace you'll get an error now:
@@ -1213,7 +1200,7 @@ NX   Running target lint for 7 projects
 
    /Users/isaac/Documents/code/nx-recipes/angular-monorepo/libs/products/src/lib/product-list/product-list.component.ts
      5:1   error    A project tagged with "scope:products" can only depend on libs tagged with "scope:products", "scope:shared"  @nx/enforce-module-boundaries
-     5:10  warning  'OrderListComponent' is defined but never used                                                               @typescript-eslint/no-unused-vars
+     5:10  warning  'OrdersComponent' is defined but never used                                                               @typescript-eslint/no-unused-vars
 
    ✖ 2 problems (1 error, 1 warning)
 
