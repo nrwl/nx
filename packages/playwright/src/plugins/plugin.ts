@@ -7,6 +7,7 @@ import {
   createNodesFromFiles,
   CreateNodesV2,
   detectPackageManager,
+  getPackageManagerCommand,
   joinPathFragments,
   logger,
   normalizePath,
@@ -140,6 +141,8 @@ async function buildPlaywrightTargets(
   options: NormalizedOptions,
   context: CreateNodesContext
 ): Promise<PlaywrightTargets> {
+  const pmc = getPackageManagerCommand();
+
   // Playwright forbids importing the `@playwright/test` module twice. This would affect running the tests,
   // but we're just reading the config so let's delete the variable they are using to detect this.
   // See: https://github.com/microsoft/playwright/pull/11218/files
@@ -162,6 +165,9 @@ async function buildPlaywrightTargets(
     metadata: {
       technologies: ['playwright'],
       description: 'Runs Playwright Tests',
+      help: {
+        command: `${pmc.exec} playwright test --help`,
+      },
     },
   };
 
@@ -216,6 +222,9 @@ async function buildPlaywrightTargets(
             technologies: ['playwright'],
             description: `Runs Playwright Tests in ${relativeSpecFilePath} in CI`,
             nonAtomizedTarget: options.targetName,
+            help: {
+              command: `${pmc.exec} playwright test --help`,
+            },
           },
         };
         dependsOn.push({
@@ -243,6 +252,9 @@ async function buildPlaywrightTargets(
         technologies: ['playwright'],
         description: 'Runs Playwright Tests in CI',
         nonAtomizedTarget: options.targetName,
+        help: {
+          command: `${pmc.exec} playwright test --help`,
+        },
       },
     };
     ciTargetGroup.push(options.ciTargetName);
