@@ -87,15 +87,13 @@ const PROPERTY_INFO_TOOLTIP_TYPE_OPTIONS: Record<
     heading: 'Atomizer',
     description:
       'This target has been automatically split into multiple targets by file.',
-    docsUrl:
-      'https://nx.dev/ci/features/split-e2e-tasks#automatically-split-e2e-tasks-by-file-atomizer',
+    docsUrl: 'https://nx.dev/ci/features/split-e2e-tasks',
   },
   'atomizer-no-cloud': {
     heading: 'Atomizer',
     description:
       'This target has been automatically split into multiple targets by file. We recommend running this only with distribution enabled via Nx Cloud to avoid potential performance overheads.',
-    docsUrl:
-      'https://nx.dev/ci/features/split-e2e-tasks#automatically-split-e2e-tasks-by-file-atomizer',
+    docsUrl: 'https://nx.dev/ci/features/split-e2e-tasks',
   },
 };
 
@@ -115,7 +113,7 @@ export function PropertyInfoTooltip({ type }: PropertyInfoTooltipProps) {
             : ''
         )}
       >
-        <p className="flex grow items-center gap-2 whitespace-pre-wrap">
+        <p className="flex grow items-center gap-2 whitespace-pre-wrap normal-case">
           {propertyInfo.description}
         </p>
       </div>
