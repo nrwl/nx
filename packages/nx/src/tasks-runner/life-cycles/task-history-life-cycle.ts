@@ -56,11 +56,14 @@ export class TaskHistoryLifeCycle implements LifeCycle {
     }
     if (flakyTasks.length > 0) {
       output.warn({
-        title: 'Flaky Tasks:',
+        title: `Nx detected ${
+          flakyTasks.length === 1 ? 'a flaky task' : ' flaky tasks'
+        }`,
         bodyLines: [
-          `The following targets produce inconsistent results based on the hash:`,
+          ,
           ...flakyTasks.map((t) => `  ${t}`),
-          `Nx Agents can automatically retry flaky tasks in CI. Learn more at https://nx.dev/ci/features/flaky-tasks`,
+          '',
+          `Flaky tasks can disrupt your CI pipeline. Automatically retry them with Nx Cloud. Learn more at https://nx.dev/ci/features/flaky-tasks`,
         ],
       });
     }
