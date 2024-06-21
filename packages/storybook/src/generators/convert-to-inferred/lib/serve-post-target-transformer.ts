@@ -114,8 +114,27 @@ function handlePropertiesFromTargetOptions(
     delete options.staticDir;
   }
   if ('open' in options) {
-    options['no-open'] = !options.open;
+    if (!options.open) {
+      options['args'] ??= [];
+      options['args'].push('--no-open');
+    }
     delete options.open;
+  }
+
+  if ('no-open' in options) {
+    if (options['no-open']) {
+      options['args'] ??= [];
+      options['args'].push('--no-open');
+    }
+    delete options['no-open'];
+  }
+
+  if ('quiet' in options) {
+    if (options['quiet']) {
+      options['args'] ??= [];
+      options['args'].push('--quiet');
+    }
+    delete options.quiet;
   }
 
   if ('docsMode' in options) {

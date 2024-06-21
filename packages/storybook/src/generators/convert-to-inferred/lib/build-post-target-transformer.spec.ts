@@ -61,7 +61,7 @@ describe('buildPostTargetTransformer', () => {
             name: '@storybook/react-vite',
             options: {
               builder: {
-                viteConfigPath: '../vite.config.ts',
+                viteConfigPath: './vite.config.ts',
               },
             },
           },
@@ -148,7 +148,7 @@ describe('buildPostTargetTransformer', () => {
             name: '@storybook/react-vite',
             options: {
               builder: {
-                viteConfigPath: '../vite.config.ts',
+                viteConfigPath: './vite.config.ts',
               },
             },
           },
@@ -253,7 +253,7 @@ describe('buildPostTargetTransformer', () => {
             name: '@storybook/vue3-vite',
             options: {
               builder: {
-                viteConfigPath: '../vite.config.ts',
+                viteConfigPath: './vite.config.ts',
               },
             },
           },
@@ -340,7 +340,7 @@ describe('buildPostTargetTransformer', () => {
             name: '@storybook/vue3-vite',
             options: {
               builder: {
-                viteConfigPath: '../vite.config.ts',
+                viteConfigPath: './vite.config.ts',
               },
             },
           },

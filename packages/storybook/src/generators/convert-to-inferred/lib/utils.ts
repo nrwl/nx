@@ -106,7 +106,7 @@ export function ensureViteConfigPathIsRelative(
 ) {
   const configFileContents = tree.read(configPath, 'utf-8');
 
-  if (configFileContents.includes('viteFinal')) {
+  if (configFileContents.includes('viteFinal:')) {
     return;
   }
 
@@ -169,7 +169,7 @@ export function ensureViteConfigPathIsRelative(
   }
   const relativePathToViteConfig = toProjectRelativePath(
     pathToViteConfig,
-    dirname(configPath)
+    projectRoot
   );
 
   tree.write(

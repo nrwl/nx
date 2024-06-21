@@ -245,7 +245,9 @@ describe('Storybook - Convert To Inferred', () => {
           "storybook": {
             "configurations": {
               "ci": {
-                "quiet": true,
+                "args": [
+                  "--quiet",
+                ],
               },
             },
             "options": {
@@ -319,7 +321,9 @@ describe('Storybook - Convert To Inferred', () => {
           "storybook": {
             "configurations": {
               "ci": {
-                "quiet": true,
+                "args": [
+                  "--quiet",
+                ],
               },
             },
             "options": {
@@ -392,7 +396,9 @@ describe('Storybook - Convert To Inferred', () => {
           "storybook": {
             "configurations": {
               "ci": {
-                "quiet": true,
+                "args": [
+                  "--quiet",
+                ],
               },
             },
             "options": {
@@ -449,7 +455,9 @@ describe('Storybook - Convert To Inferred', () => {
           "storybook": {
             "configurations": {
               "ci": {
-                "quiet": true,
+                "args": [
+                  "--quiet",
+                ],
               },
               "dev": {
                 "docs": true,
@@ -527,7 +535,7 @@ describe('Storybook - Convert To Inferred', () => {
             ...configValues.default,
             ...(configValues[nxConfiguration] ?? {})
           }
-          const config = {"stories":["../src/app/**/*.stories.@(js|jsx|ts|tsx|mdx)"],"addons":["@storybook/addon-essentials","@storybook/addon-interactions"],"framework":{"name":"@storybook/react-vite","options":{"builder":{"viteConfigPath":"../vite.config.ts"}}}};
+          const config = {"stories":["../src/app/**/*.stories.@(js|jsx|ts|tsx|mdx)"],"addons":["@storybook/addon-essentials","@storybook/addon-interactions"],"framework":{"name":"@storybook/react-vite","options":{"builder":{"viteConfigPath":"./vite.config.ts"}}}};
         export default config;"
       `);
     });
@@ -566,7 +574,9 @@ describe('Storybook - Convert To Inferred', () => {
           "storybook": {
             "configurations": {
               "ci": {
-                "quiet": true,
+                "args": [
+                  "--quiet",
+                ],
               },
             },
             "options": {
@@ -596,7 +606,9 @@ describe('Storybook - Convert To Inferred', () => {
           "storybook": {
             "configurations": {
               "ci": {
-                "quiet": true,
+                "args": [
+                  "--quiet",
+                ],
               },
             },
             "options": {
