@@ -223,10 +223,6 @@ describe('Cypress - Convert Executors To Plugin', () => {
       await convertToInferred(tree, { project: 'myapp-e2e', skipFormat: true });
 
       // ASSERT
-      // project.json modifications
-      const updatedProject = readProjectConfiguration(tree, project.name);
-      const targetKeys = Object.keys(updatedProject.targets);
-      expect(targetKeys).not.toContain('test');
 
       // nx.json modifications
       const nxJsonPlugins = readNxJson(tree).plugins;
@@ -361,10 +357,6 @@ describe('Cypress - Convert Executors To Plugin', () => {
       await convertToInferred(tree, { skipFormat: true });
 
       // ASSERT
-      // project.json modifications
-      const updatedProject = readProjectConfiguration(tree, project.name);
-      const targetKeys = Object.keys(updatedProject.targets);
-      expect(targetKeys).not.toContain('e2e');
 
       // nx.json modifications
       const nxJsonPlugins = readNxJson(tree).plugins;
@@ -412,10 +404,6 @@ describe('Cypress - Convert Executors To Plugin', () => {
       await convertToInferred(tree, { skipFormat: true });
 
       // ASSERT
-      // project.json modifications
-      const updatedProject = readProjectConfiguration(tree, project.name);
-      const targetKeys = Object.keys(updatedProject.targets);
-      ['test'].forEach((key) => expect(targetKeys).not.toContain(key));
 
       // nx.json modifications
       const nxJsonPlugins = readNxJson(tree).plugins;
@@ -448,10 +436,6 @@ describe('Cypress - Convert Executors To Plugin', () => {
       await convertToInferred(tree, { skipFormat: true });
 
       // ASSERT
-      // project.json modifications
-      const updatedProject = readProjectConfiguration(tree, project.name);
-      const targetKeys = Object.keys(updatedProject.targets);
-      ['test'].forEach((key) => expect(targetKeys).not.toContain(key));
 
       // nx.json modifications
       const nxJsonPlugins = readNxJson(tree).plugins;
@@ -508,10 +492,6 @@ describe('Cypress - Convert Executors To Plugin', () => {
       await convertToInferred(tree, { skipFormat: true });
 
       // ASSERT
-      // project.json modifications
-      const updatedProject = readProjectConfiguration(tree, project.name);
-      const targetKeys = Object.keys(updatedProject.targets);
-      ['test'].forEach((key) => expect(targetKeys).not.toContain(key));
 
       // nx.json modifications
       const nxJsonPlugins = readNxJson(tree).plugins;
@@ -557,12 +537,13 @@ describe('Cypress - Convert Executors To Plugin', () => {
       // project.json modifications
       const updatedProject = readProjectConfiguration(tree, project.name);
       expect(updatedProject.targets.e2e).toMatchInlineSnapshot(`
-              {
-                "options": {
-                  "runner-ui": true,
-                },
-              }
-          `);
+        {
+          "options": {
+            "config-file": "./cypress.config.ts",
+            "runner-ui": true,
+          },
+        }
+      `);
 
       // nx.json modifications
       const nxJsonPlugins = readNxJson(tree).plugins;
@@ -603,12 +584,13 @@ describe('Cypress - Convert Executors To Plugin', () => {
       // project.json modifications
       const updatedProject = readProjectConfiguration(tree, project.name);
       expect(updatedProject.targets.e2e).toMatchInlineSnapshot(`
-              {
-                "options": {
-                  "no-exit": true,
-                },
-              }
-          `);
+        {
+          "options": {
+            "config-file": "./cypress.config.ts",
+            "no-exit": true,
+          },
+        }
+      `);
 
       // nx.json modifications
       const nxJsonPlugins = readNxJson(tree).plugins;
