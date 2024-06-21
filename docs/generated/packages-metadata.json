@@ -2695,6 +2695,15 @@
         "originalFilePath": "/packages/remix/src/generators/error-boundary/schema.json",
         "path": "remix/generators/error-boundary",
         "type": "generator"
+      },
+      {
+        "description": "Convert existing Remix project(s) using `@nx/remix:*` executors to use `@nx/remix/plugin`. Defaults to migrating all projects. Pass '--project' to migrate only one target.",
+        "file": "generated/packages/remix/generators/convert-to-inferred.json",
+        "hidden": false,
+        "name": "convert-to-inferred",
+        "originalFilePath": "/packages/remix/src/generators/convert-to-inferred/schema.json",
+        "path": "remix/generators/convert-to-inferred",
+        "type": "generator"
       }
     ],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
@@ -2835,6 +2844,15 @@
         "name": "cypress-project",
         "originalFilePath": "/packages/storybook/src/generators/cypress-project/schema.json",
         "path": "storybook/generators/cypress-project",
+        "type": "generator"
+      },
+      {
+        "description": "Convert existing Storybook project(s) using `@nx/storybook:*` executors to use `@nx/storybook/plugin`. Defaults to migrating all projects. Pass '--project' to migrate only one target.",
+        "file": "generated/packages/storybook/generators/convert-to-inferred.json",
+        "hidden": false,
+        "name": "convert-to-inferred",
+        "originalFilePath": "/packages/storybook/src/generators/convert-to-inferred/schema.json",
+        "path": "storybook/generators/convert-to-inferred",
         "type": "generator"
       },
       {
@@ -3179,6 +3197,15 @@
         "name": "configuration",
         "originalFilePath": "/packages/webpack/src/generators/configuration/schema.json",
         "path": "webpack/generators/configuration",
+        "type": "generator"
+      },
+      {
+        "description": "Convert the project to use the `NxAppWebpackPlugin` and `NxReactWebpackPlugin`.",
+        "file": "generated/packages/webpack/generators/convert-config-to-webpack-plugin.json",
+        "hidden": false,
+        "name": "convert-config-to-webpack-plugin",
+        "originalFilePath": "/packages/webpack/src/generators/convert-config-to-webpack-plugin/schema.json",
+        "path": "webpack/generators/convert-config-to-webpack-plugin",
         "type": "generator"
       }
     ],

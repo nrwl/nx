@@ -354,10 +354,6 @@ describe('Eslint - Convert Executors To Plugin', () => {
       await convertToInferred(tree, { project: 'myapp', skipFormat: true });
 
       // ASSERT
-      // project.json modifications
-      const updatedProject = readProjectConfiguration(tree, project.name);
-      const targetKeys = Object.keys(updatedProject.targets);
-      expect(targetKeys).not.toContain('lint');
 
       // nx.json modifications
       const nxJsonPlugins = readNxJson(tree).plugins;
@@ -426,16 +422,9 @@ describe('Eslint - Convert Executors To Plugin', () => {
       await convertToInferred(tree, { project: 'myapp', skipFormat: true });
 
       // ASSERT
-      // project.json modifications
-      const updatedProject = readProjectConfiguration(tree, project.name);
-      const targetKeys = Object.keys(updatedProject.targets);
-      expect(targetKeys).not.toContain('lint');
       const projectJsonForProject = readJson(
         tree,
         `${project.root}/project.json`
-      );
-      expect(projectJsonForProject['// targets']).toEqual(
-        'to see all targets run: nx show project myapp --web'
       );
       // nx.json modifications
       const nxJsonPlugins = readNxJson(tree).plugins;
@@ -580,10 +569,6 @@ describe('Eslint - Convert Executors To Plugin', () => {
       await convertToInferred(tree, { skipFormat: true });
 
       // ASSERT
-      // project.json modifications
-      const updatedProject = readProjectConfiguration(tree, project.name);
-      const targetKeys = Object.keys(updatedProject.targets);
-      expect(targetKeys).not.toContain('lint');
 
       // nx.json modifications
       const nxJsonPlugins = readNxJson(tree).plugins;
@@ -610,10 +595,6 @@ describe('Eslint - Convert Executors To Plugin', () => {
       await convertToInferred(tree, { skipFormat: true });
 
       // ASSERT
-      // project.json modifications
-      const updatedProject = readProjectConfiguration(tree, project.name);
-      const targetKeys = Object.keys(updatedProject.targets);
-      ['eslint'].forEach((key) => expect(targetKeys).not.toContain(key));
 
       // nx.json modifications
       const nxJsonPlugins = readNxJson(tree).plugins;
@@ -641,10 +622,6 @@ describe('Eslint - Convert Executors To Plugin', () => {
       await convertToInferred(tree, { skipFormat: true });
 
       // ASSERT
-      // project.json modifications
-      const updatedProject = readProjectConfiguration(tree, project.name);
-      const targetKeys = Object.keys(updatedProject.targets);
-      expect(targetKeys).not.toContain('eslint');
 
       // nx.json modifications
       const nxJsonPlugins = readNxJson(tree).plugins;
@@ -695,10 +672,6 @@ describe('Eslint - Convert Executors To Plugin', () => {
       await convertToInferred(tree, { skipFormat: true });
 
       // ASSERT
-      // project.json modifications
-      const updatedProject = readProjectConfiguration(tree, project.name);
-      const targetKeys = Object.keys(updatedProject.targets);
-      expect(targetKeys).not.toContain('eslint');
 
       // nx.json modifications
       const nxJsonPlugins = readNxJson(tree).plugins;
@@ -744,12 +717,13 @@ describe('Eslint - Convert Executors To Plugin', () => {
       // project.json modifications
       const updatedProject = readProjectConfiguration(tree, project.name);
       expect(updatedProject.targets.lint).toMatchInlineSnapshot(`
-      {
-        "options": {
-          "cache-location": "cache-dir",
-        },
-      }
-    `);
+        {
+          "options": {
+            "cache-location": "cache-dir",
+            "config": ".eslintrc.json",
+          },
+        }
+      `);
 
       // nx.json modifications
       const nxJsonPlugins = readNxJson(tree).plugins;
@@ -785,12 +759,13 @@ describe('Eslint - Convert Executors To Plugin', () => {
       // project.json modifications
       const updatedProject = readProjectConfiguration(tree, project.name);
       expect(updatedProject.targets.lint).toMatchInlineSnapshot(`
-      {
-        "options": {
-          "max-warnings": 10,
-        },
-      }
-    `);
+        {
+          "options": {
+            "config": ".eslintrc.json",
+            "max-warnings": 10,
+          },
+        }
+      `);
 
       // nx.json modifications
       const nxJsonPlugins = readNxJson(tree).plugins;

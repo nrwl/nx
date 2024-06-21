@@ -27,10 +27,6 @@ export function previewPostTargetTransformer(migrationLogs: AggregatedLog) {
           projectDetails.projectName,
           migrationLogs
         );
-
-        if (Object.keys(configuration).length === 0) {
-          delete target.configurations[configurationName];
-        }
       }
 
       if (Object.keys(target.configurations).length === 0) {

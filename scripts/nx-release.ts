@@ -199,6 +199,9 @@ const VALID_AUTHORS_FOR_LATEST = [
 })();
 
 function parseArgs() {
+  const registry = getRegistry();
+  const registryIsLocalhost = registry.hostname === 'localhost';
+
   const parsedArgs = yargs
     .scriptName('pnpm nx-release')
     .wrap(144)
@@ -241,10 +244,14 @@ function parseArgs() {
       default: 'minor',
       coerce: (version: string) => {
         const isGithubActions = !!process.env.GITHUB_ACTIONS;
-        if (isGithubActions && isRelativeVersionKeyword(version)) {
+        if (
+          isGithubActions &&
+          !registryIsLocalhost &&
+          isRelativeVersionKeyword(version)
+        ) {
           // Print error rather than throw to avoid yargs noise in this specifically handled case
           console.error(
-            'Error: The release script was triggered in a GitHub Actions workflow, but a relative version keyword was provided. This is an unexpected combination.'
+            'Error: The release script was triggered in a GitHub Actions workflow, to a non-local registry, but a relative version keyword was provided. This is an unexpected combination.'
           );
           process.exit(1);
         }
@@ -335,8 +342,6 @@ function parseArgs() {
     )
     .demandOption('version')
     .check((args) => {
-      const registry = getRegistry();
-      const registryIsLocalhost = registry.hostname === 'localhost';
       if (!args.local) {
         if (!process.env.GH_TOKEN) {
           throw new Error('process.env.GH_TOKEN is not set');

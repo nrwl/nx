@@ -16,10 +16,6 @@ export function testPostTargetTransformer(
     for (const configurationName in target.configurations) {
       const configuration = target.configurations[configurationName];
       removePropertiesFromTargetOptions(configuration, projectDetails.root);
-
-      if (Object.keys(configuration).length === 0) {
-        delete target.configurations[configurationName];
-      }
     }
 
     if (Object.keys(target.configurations).length === 0) {
