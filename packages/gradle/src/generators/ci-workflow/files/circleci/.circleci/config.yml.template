@@ -16,7 +16,7 @@ jobs:
 
       # Connect your workspace on <%= nxCloudHost %> and uncomment this to enable task distribution.
       # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
-      # - run: <%= packageManagerPrefix %> nx-cloud start-ci-run --distribute-on="5 linux-medium-jvm" --stop-agents-after="build"
+      - run: <%= packageManagerPrefix %> nx-cloud start-ci-run --distribute-on="5 linux-medium-jvm" --stop-agents-after="build"
 
       - nx/set-shas:
           main-branch-name: '<%= mainBranch %>'
