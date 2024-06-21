@@ -84,3 +84,19 @@ export async function initializeGitRepo(
     await execute(['commit', `-m "${message}"`]);
   }
 }
+
+export function commitChanges(directory: string, message: string) {
+  try {
+    execSync('git add -A', { encoding: 'utf8', stdio: 'pipe', cwd: directory });
+    execSync('git commit --no-verify -F -', {
+      encoding: 'utf8',
+      stdio: 'pipe',
+      input: message,
+      cwd: directory,
+    });
+  } catch (e) {
+    console.error(`There was an error committing your Nx Cloud token.\n 
+      Please commit the changes manually and push to your new repository.\n  
+      \n${e}`);
+  }
+}

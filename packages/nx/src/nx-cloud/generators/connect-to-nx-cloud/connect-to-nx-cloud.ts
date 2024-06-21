@@ -6,7 +6,10 @@ import { readJson } from '../../../generators/utils/json';
 import { NxJsonConfiguration } from '../../../config/nx-json';
 import { readNxJson, updateNxJson } from '../../../generators/utils/nx-json';
 import { formatChangedFilesWithPrettierIfAvailable } from '../../../generators/internal-utils/format-changed-files-with-prettier-if-available';
-import { shortenedCloudUrl } from '../../utilities/url-shorten';
+import { repoUsesGithub, shortenedCloudUrl } from '../../utilities/url-shorten';
+import { commitChanges } from '../../../utils/git-utils';
+import * as ora from 'ora';
+import * as open from 'open';
 
 function printCloudConnectionDisabledMessage() {
   output.error({
@@ -75,9 +78,10 @@ async function createNxCloudWorkspace(
 
 async function printSuccessMessage(
   url: string,
-  token: string,
+  token: string | undefined,
   installationSource: string,
-  github: boolean
+  usesGithub?: boolean,
+  directory?: string
 ) {
   if (process.env.NX_NEW_CLOUD_ONBOARDING !== 'true') {
     let origin = 'https://nx.app';
@@ -97,20 +101,63 @@ async function printSuccessMessage(
     const connectCloudUrl = await shortenedCloudUrl(
       installationSource,
       token,
-      github
+      usesGithub
     );
 
-    output.note({
-      title: `Your Nx Cloud workspace is ready.`,
-      bodyLines: [
-        `To claim it, connect it to your Nx Cloud account:`,
-        `- Commit and push your changes.`,
-        `- Create a pull request for the changes.`,
-        `- Go to the following URL to connect your workspace to Nx Cloud: 
-        
-        ${connectCloudUrl}`,
-      ],
-    });
+    if (installationSource === 'nx-connect' && usesGithub) {
+      try {
+        const cloudConnectSpinner = ora(
+          `Opening Nx Cloud ${connectCloudUrl} in your browser to connect your workspace.`
+        ).start();
+        await sleep(2000);
+        open(connectCloudUrl);
+        cloudConnectSpinner.succeed();
+      } catch (e) {
+        output.note({
+          title: `Your Nx Cloud workspace is ready.`,
+          bodyLines: [
+            `To claim it, connect it to your Nx Cloud account:`,
+            `- Go to the following URL to connect your workspace to Nx Cloud:`,
+            '',
+            `${connectCloudUrl}`,
+          ],
+        });
+      }
+    } else {
+      if (installationSource === 'create-nx-workspace') {
+        output.note({
+          title: `Your Nx Cloud workspace is ready.`,
+          bodyLines: [
+            `To claim it, connect it to your Nx Cloud account:`,
+            `- Push your repository to your git hosting provider.`,
+            `- Go to the following URL to connect your workspace to Nx Cloud:`,
+            '',
+            `${connectCloudUrl}`,
+          ],
+        });
+        commitChanges(
+          `feat(nx): Added Nx Cloud token to your nx.json
+          
+          To connect your workspace to Nx Cloud, push your repository 
+          to your git hosting provider and go to the following URL:   
+          
+          ${connectCloudUrl}`,
+          directory
+        );
+      } else {
+        output.note({
+          title: `Your Nx Cloud workspace is ready.`,
+          bodyLines: [
+            `To claim it, connect it to your Nx Cloud account:`,
+            `- Commit and push your changes.`,
+            `- Create a pull request for the changes.`,
+            `- Go to the following URL to connect your workspace to Nx Cloud:`,
+            '',
+            `${connectCloudUrl}`,
+          ],
+        });
+      }
+    }
   }
 }
 
@@ -119,6 +166,7 @@ interface ConnectToNxCloudOptions {
   installationSource?: string;
   hideFormatLogs?: boolean;
   github?: boolean;
+  directory?: string;
 }
 
 function addNxCloudOptionsToNxJson(
@@ -152,27 +200,70 @@ export async function connectToNxCloud(
       printCloudConnectionDisabledMessage();
     };
   } else {
-    // TODO: Change to using loading light client when that is enabled by default
-    const r = await createNxCloudWorkspace(
-      getRootPackageName(tree),
-      schema.installationSource,
-      getNxInitDate()
-    );
-
-    addNxCloudOptionsToNxJson(tree, nxJson, r.token);
-
-    await formatChangedFilesWithPrettierIfAvailable(tree, {
-      silent: schema.hideFormatLogs,
-    });
-
-    return async () =>
-      await printSuccessMessage(
-        r.url,
-        r.token,
+    if (process.env.NX_NEW_CLOUD_ONBOARDING !== 'true') {
+      // TODO: Change to using loading light client when that is enabled by default
+      const r = await createNxCloudWorkspace(
+        getRootPackageName(tree),
         schema.installationSource,
-        schema.github
+        getNxInitDate()
       );
+
+      addNxCloudOptionsToNxJson(tree, nxJson, r.token);
+
+      await formatChangedFilesWithPrettierIfAvailable(tree, {
+        silent: schema.hideFormatLogs,
+      });
+
+      return async () =>
+        await printSuccessMessage(r.url, r.token, schema.installationSource);
+    } else {
+      const usesGithub = await repoUsesGithub(schema.github);
+
+      let responseFromCreateNxCloudWorkspace:
+        | {
+            token: string;
+            url: string;
+          }
+        | undefined;
+
+      // do NOT create Nx Cloud token (createNxCloudWorkspace)
+      // if user is using github and is running nx-connect
+      if (!(usesGithub && schema.installationSource === 'nx-connect')) {
+        responseFromCreateNxCloudWorkspace = await createNxCloudWorkspace(
+          getRootPackageName(tree),
+          schema.installationSource,
+          getNxInitDate()
+        );
+
+        addNxCloudOptionsToNxJson(
+          tree,
+          nxJson,
+          responseFromCreateNxCloudWorkspace?.token
+        );
+
+        await formatChangedFilesWithPrettierIfAvailable(tree, {
+          silent: schema.hideFormatLogs,
+        });
+      }
+      const apiUrl = removeTrailingSlash(
+        process.env.NX_CLOUD_API ||
+          process.env.NRWL_API ||
+          `https://cloud.nx.app`
+      );
+      return async () =>
+        await printSuccessMessage(
+          responseFromCreateNxCloudWorkspace?.url ?? apiUrl,
+          responseFromCreateNxCloudWorkspace?.token,
+          schema.installationSource,
+          usesGithub,
+          schema.directory
+        );
+    }
   }
+}
+
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 export default connectToNxCloud;
