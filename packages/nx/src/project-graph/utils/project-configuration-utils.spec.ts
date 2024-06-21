@@ -1772,6 +1772,60 @@ describe('project-configuration-utils', () => {
         `);
       }
     });
+
+    it('should correctly set source maps', async () => {
+      const { sourceMaps } = await createProjectConfigurations(
+        undefined,
+        {},
+        ['libs/a/project.json'],
+        [
+          new LoadedNxPlugin(fakeTargetsPlugin, 'fake-targets-plugin'),
+          new LoadedNxPlugin(fakeTagPlugin, 'fake-tag-plugin'),
+        ]
+      );
+      expect(sourceMaps).toMatchInlineSnapshot(`
+        {
+          "libs/a": {
+            "name": [
+              "libs/a/project.json",
+              "fake-tag-plugin",
+            ],
+            "root": [
+              "libs/a/project.json",
+              "fake-tag-plugin",
+            ],
+            "tags": [
+              "libs/a/project.json",
+              "fake-tag-plugin",
+            ],
+            "tags.fake-lib": [
+              "libs/a/project.json",
+              "fake-tag-plugin",
+            ],
+            "targets": [
+              "libs/a/project.json",
+              "fake-targets-plugin",
+            ],
+            "targets.build": [
+              "libs/a/project.json",
+              "fake-targets-plugin",
+            ],
+            "targets.build.executor": [
+              "libs/a/project.json",
+              "fake-targets-plugin",
+            ],
+            "targets.build.options": [
+              "libs/a/project.json",
+              "fake-targets-plugin",
+            ],
+            "targets.build.options.command": [
+              "libs/a/project.json",
+              "fake-targets-plugin",
+            ],
+          },
+        }
+      `);
+    });
   });
 });
 
