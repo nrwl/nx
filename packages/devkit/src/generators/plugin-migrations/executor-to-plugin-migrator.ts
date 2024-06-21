@@ -402,6 +402,7 @@ class ExecutorToPluginMigrator<T> {
       return;
     }
 
+    global.NX_GRAPH_CREATION = true;
     for (const targetName of this.#targetAndProjectsToMigrate.keys()) {
       const loadedPlugin = new LoadedNxPlugin(
         {
@@ -425,12 +426,14 @@ class ExecutorToPluginMigrator<T> {
         if (e instanceof ProjectConfigurationsError) {
           projectConfigs = e.partialProjectConfigurationsResult;
         } else {
+          global.NX_GRAPH_CREATION = false;
           throw e;
         }
       }
 
       this.#createNodesResultsForTargets.set(targetName, projectConfigs);
     }
+    global.NX_GRAPH_CREATION = false;
   }
 }
 
