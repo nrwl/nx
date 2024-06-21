@@ -42,7 +42,7 @@ function writeTargetsToCache(cachePath: string, results: CypressTargets) {
   writeJsonFile(cachePath, results);
 }
 
-const cypressConfigGlob = '**/cypress.config.{js,ts,mjs,cjs}';
+const cypressConfigGlob = '**/cypress.config.{js,ts,mjs,cjs,mts,cts}';
 
 export const createNodesV2: CreateNodesV2<CypressPluginOptions> = [
   cypressConfigGlob,
