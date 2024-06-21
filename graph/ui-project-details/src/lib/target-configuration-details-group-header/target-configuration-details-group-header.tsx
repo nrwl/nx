@@ -1,3 +1,4 @@
+import { PropertyInfoTooltip, Tooltip } from '@nx/graph/ui-tooltips';
 import { Pill } from '../pill';
 
 export interface TargetConfigurationGroupHeaderProps {
@@ -27,7 +28,24 @@ export const TargetConfigurationGroupHeader = ({
         }
       />
       {atomizer && (
-        <Pill color={connectedToCloud ? 'grey' : 'yellow'} text={'atomizer'} />
+        <Tooltip
+          openAction="hover"
+          strategy="fixed"
+          content={
+            (
+              <PropertyInfoTooltip
+                type={connectedToCloud ? 'atomizer-cloud' : 'atomizer-no-cloud'}
+              />
+            ) as any
+          }
+        >
+          <span className="inline-flex">
+            <Pill
+              color={connectedToCloud ? 'grey' : 'yellow'}
+              text={'Atomizer'}
+            />
+          </span>
+        </Tooltip>
       )}
     </header>
   );

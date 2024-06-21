@@ -289,7 +289,7 @@ async function buildCypressTargets(
         metadata: {
           technologies: ['cypress'],
           description: 'Runs Cypress Tests in CI',
-          atomized: true,
+          atomizer: true,
         },
       };
       ciTargetGroup.push(options.ciTargetName);

@@ -178,6 +178,7 @@ describe('@nx/jest/plugin', () => {
                       },
                     ],
                     "metadata": {
+                      "atomizer": true,
                       "description": "Run Jest Tests in CI",
                       "technologies": [
                         "jest",
@@ -200,6 +201,7 @@ describe('@nx/jest/plugin', () => {
                       },
                     ],
                     "metadata": {
+                      "atomizer": true,
                       "description": "Run Jest Tests in src/unit.spec.ts",
                       "technologies": [
                         "jest",
@@ -304,48 +306,48 @@ describe('@nx/jest/plugin', () => {
       );
 
       expect(results).toMatchInlineSnapshot(`
-      [
-        [
-          "proj/jest.config.js",
-          {
-            "projects": {
-              "proj": {
-                "metadata": undefined,
-                "root": "proj",
-                "targets": {
-                  "test": {
-                    "cache": true,
-                    "command": "jest",
-                    "inputs": [
-                      "default",
-                      "^production",
-                      {
-                        "externalDependencies": [
-                          "jest",
-                          "some-package",
-                        ],
+              [
+                [
+                  "proj/jest.config.js",
+                  {
+                    "projects": {
+                      "proj": {
+                        "metadata": undefined,
+                        "root": "proj",
+                        "targets": {
+                          "test": {
+                            "cache": true,
+                            "command": "jest",
+                            "inputs": [
+                              "default",
+                              "^production",
+                              {
+                                "externalDependencies": [
+                                  "jest",
+                                  "some-package",
+                                ],
+                              },
+                            ],
+                            "metadata": {
+                              "description": "Run Jest Tests",
+                              "technologies": [
+                                "jest",
+                              ],
+                            },
+                            "options": {
+                              "cwd": "proj",
+                            },
+                            "outputs": [
+                              "{workspaceRoot}/coverage",
+                            ],
+                          },
+                        },
                       },
-                    ],
-                    "metadata": {
-                      "description": "Run Jest Tests",
-                      "technologies": [
-                        "jest",
-                      ],
                     },
-                    "options": {
-                      "cwd": "proj",
-                    },
-                    "outputs": [
-                      "{workspaceRoot}/coverage",
-                    ],
                   },
-                },
-              },
-            },
-          },
-        ],
-      ]
-    `);
+                ],
+              ]
+          `);
     }
   );
 });

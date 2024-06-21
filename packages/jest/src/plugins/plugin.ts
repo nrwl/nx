@@ -259,7 +259,7 @@ async function buildJestTargets(
           metadata: {
             technologies: ['jest'],
             description: `Run Jest Tests in ${relativePath}`,
-            atomized: true,
+            atomizer: true,
           },
         };
         targetGroup.push(targetName);

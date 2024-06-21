@@ -15,3 +15,21 @@ export const Simple: Story = {
     targetsNumber: 5,
   },
 };
+
+export const AtomizerCloud: Story = {
+  args: {
+    targetGroupName: 'Target Group Name',
+    targetsNumber: 5,
+    atomizer: true,
+    connectedToCloud: true,
+  },
+};
+
+export const AtomizerNoCloud: Story = {
+  args: {
+    targetGroupName: 'Target Group Name',
+    targetsNumber: 5,
+    atomizer: true,
+    connectedToCloud: false,
+  },
+};

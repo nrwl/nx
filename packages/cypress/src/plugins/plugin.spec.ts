@@ -305,6 +305,7 @@ describe('@nx/cypress/plugin', () => {
                       },
                     ],
                     "metadata": {
+                      "atomizer": true,
                       "description": "Runs Cypress Tests in CI",
                       "technologies": [
                         "cypress",
@@ -328,6 +329,7 @@ describe('@nx/cypress/plugin', () => {
                       },
                     ],
                     "metadata": {
+                      "atomizer": true,
                       "description": "Runs Cypress Tests in src/test.cy.ts in CI",
                       "technologies": [
                         "cypress",

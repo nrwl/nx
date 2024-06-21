@@ -242,7 +242,7 @@ async function buildPlaywrightTargets(
       metadata: {
         technologies: ['playwright'],
         description: 'Runs Playwright Tests in CI',
-        atomized: true,
+        atomizer: true,
       },
     };
     ciTargetGroup.push(options.ciTargetName);

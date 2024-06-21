@@ -98,6 +98,7 @@ describe('@nx/playwright/plugin', () => {
                       },
                     ],
                     "metadata": {
+                      "atomizer": true,
                       "description": "Runs Playwright Tests in CI",
                       "technologies": [
                         "playwright",
@@ -190,6 +191,7 @@ describe('@nx/playwright/plugin', () => {
                       },
                     ],
                     "metadata": {
+                      "atomizer": true,
                       "description": "Runs Playwright Tests in CI",
                       "technologies": [
                         "playwright",
@@ -272,6 +274,7 @@ describe('@nx/playwright/plugin', () => {
           },
         ],
         "metadata": {
+          "atomizer": true,
           "description": "Runs Playwright Tests in CI",
           "technologies": [
             "playwright",
@@ -296,6 +299,7 @@ describe('@nx/playwright/plugin', () => {
           },
         ],
         "metadata": {
+          "atomizer": true,
           "description": "Runs Playwright Tests in tests/run-me.spec.ts in CI",
           "technologies": [
             "playwright",
@@ -323,6 +327,7 @@ describe('@nx/playwright/plugin', () => {
           },
         ],
         "metadata": {
+          "atomizer": true,
           "description": "Runs Playwright Tests in tests/run-me-2.spec.ts in CI",
           "technologies": [
             "playwright",
