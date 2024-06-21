@@ -56,10 +56,9 @@ fn hash_files(files: Vec<NxFile>) -> Vec<(String, NxFileHashed)> {
     let num_parallelism = cmp::max(available_parallelism().map_or(2, |n| n.get()) / 3, 2);
     let chunks = files.len() / num_parallelism;
 
-    trace!("hashing workspace files in {} chunks of {}", num_parallelism, chunks);
-
     let now = std::time::Instant::now();
     let files = if chunks < num_parallelism {
+        trace!("hashing workspace files synchronously");
         files
             .into_iter()
             .filter_map(|file| {
@@ -68,6 +67,7 @@ fn hash_files(files: Vec<NxFile>) -> Vec<(String, NxFileHashed)> {
             })
             .collect::<Vec<_>>()
     } else {
+        trace!("hashing workspace files in {} chunks of {}", num_parallelism, chunks);
         files
             .par_chunks(chunks)
             .flat_map_iter(|chunks| {
