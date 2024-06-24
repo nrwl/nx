@@ -86,8 +86,6 @@ jobs:
       NX_E2E_RUN_E2E: 'true'
       NX_CI_EXECUTION_ENV: 'linux'
       NX_CLOUD_DTE_V2: 'true'
-      NX_VERBOSE_LOGGING: 'true'
-      NX_E2E_VERBOSE_LOGGING: 'true'
     steps:
       - checkout
       - nx/set-shas:
@@ -108,7 +106,21 @@ jobs:
           name: Run Checks/Lint/Test/Build
           no_output_timeout: 60m
           command: |
-            pnpm nx e2e-ci e2e-react
+            pids=()
+
+            pnpm nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD &
+            pids+=($!)
+
+            pnpm nx run-many -t check-imports check-commit check-lock-files check-codeowners documentation --parallel=1 --no-dte &
+            pids+=($!)
+
+            (pnpm nx affected --targets=lint,test,build --base=$NX_BASE --head=$NX_HEAD --parallel=3 &&
+            pnpm nx affected --targets=e2e,e2e-ci --base=$NX_BASE --head=$NX_HEAD --parallel=1) &
+            pids+=($!)
+
+            for pid in "${pids[@]}"; do
+              wait "$pid"
+            done
   # -------------------------
   #     JOBS: Main-MacOS
   # -------------------------
