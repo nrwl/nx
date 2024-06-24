@@ -173,6 +173,7 @@
     "binaryName": "nx",
     "packageName": "@nx/nx",
     "wasm": {
+      "initialMemory": 16384,
       "maximumMemory": 32768
     },
     "targets": [
