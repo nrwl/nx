@@ -162,6 +162,7 @@ async function buildPlaywrightTargets(
     metadata: {
       technologies: ['playwright'],
       description: 'Runs Playwright Tests',
+      atomizedTarget: options.ciTargetName,
     },
   };
 
@@ -215,7 +216,7 @@ async function buildPlaywrightTargets(
           metadata: {
             technologies: ['playwright'],
             description: `Runs Playwright Tests in ${relativeSpecFilePath} in CI`,
-            atomizer: true,
+            nonAtomizedTarget: options.targetName,
           },
         };
         dependsOn.push({
@@ -242,7 +243,7 @@ async function buildPlaywrightTargets(
       metadata: {
         technologies: ['playwright'],
         description: 'Runs Playwright Tests in CI',
-        atomizer: true,
+        nonAtomizedTarget: options.targetName,
       },
     };
     ciTargetGroup.push(options.ciTargetName);

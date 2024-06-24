@@ -1,19 +1,25 @@
-import { PropertyInfoTooltip, Tooltip } from '@nx/graph/ui-tooltips';
+import {
+  AtomizerTooltip,
+  PropertyInfoTooltip,
+  Tooltip,
+} from '@nx/graph/ui-tooltips';
 import { Pill } from '../pill';
 
 export interface TargetConfigurationGroupHeaderProps {
   targetGroupName: string;
   targetsNumber: number;
   className?: string;
-  atomizer?: boolean;
+  nonAtomizedTarget?: string;
   connectedToCloud?: boolean;
+  nxConnectCallback?: () => void;
 }
 
 export const TargetConfigurationGroupHeader = ({
   targetGroupName,
   targetsNumber,
-  atomizer,
+  nonAtomizedTarget,
   connectedToCloud = true,
+  nxConnectCallback,
   className = '',
 }: TargetConfigurationGroupHeaderProps) => {
   return (
@@ -27,14 +33,16 @@ export const TargetConfigurationGroupHeader = ({
           (targetsNumber === 1 ? ' target' : ' targets')
         }
       />
-      {atomizer && (
+      {nonAtomizedTarget && (
         <Tooltip
           openAction="hover"
           strategy="fixed"
           content={
             (
-              <PropertyInfoTooltip
-                type={connectedToCloud ? 'atomizer-cloud' : 'atomizer-no-cloud'}
+              <AtomizerTooltip
+                connectedToCloud={connectedToCloud}
+                nonAtomizedTarget={nonAtomizedTarget}
+                nxConnectCallback={nxConnectCallback}
               />
             ) as any
           }

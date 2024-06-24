@@ -128,7 +128,8 @@ export interface TargetMetadata {
   [k: string]: any;
   description?: string;
   technologies?: string[];
-  atomizer?: boolean;
+  nonAtomizedTarget?: string;
+  atomizedTarget?: string;
 }
 
 export interface TargetDependencyConfig {

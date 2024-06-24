@@ -95,6 +95,14 @@ export function ProjectDetailsWrapper({
     [externalApiService]
   );
 
+  const handleNxConnect = useCallback(
+    () =>
+      externalApiService.postEvent({
+        type: 'nx-connect',
+      }),
+    [externalApiService]
+  );
+
   const updateSearchParams = (
     params: URLSearchParams,
     targetNames: string[]
@@ -170,6 +178,9 @@ export function ProjectDetailsWrapper({
           environment === 'nx-console' ? 'bottom' : 'top'
         }
         connectedToCloud={connectedToCloud}
+        nxConnectCallback={
+          environment === 'nx-console' ? handleNxConnect : undefined
+        }
       />
       <ErrorToast errors={errors} />
     </>

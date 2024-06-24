@@ -26,6 +26,7 @@ export interface ProjectDetailsProps {
     targetName: string;
   }) => void;
   onRunTarget?: (data: { projectName: string; targetName: string }) => void;
+  nxConnectCallback?: () => void;
   viewInProjectGraphPosition?: 'top' | 'bottom';
 }
 
@@ -42,6 +43,7 @@ export const ProjectDetails = ({
   onViewInProjectGraph,
   onViewInTaskGraph,
   onRunTarget,
+  nxConnectCallback,
   viewInProjectGraphPosition = 'top',
   connectedToCloud,
 }: ProjectDetailsProps) => {
@@ -144,7 +146,7 @@ export const ProjectDetails = ({
           </div>
         </div>
       </header>
-      <div>
+      <div className="z-0">
         <h2 className={isCompact ? `mb-3 text-lg` : `mb-4 text-xl`}>
           <Tooltip
             openAction="hover"
@@ -164,6 +166,7 @@ export const ProjectDetails = ({
           onRunTarget={onRunTarget}
           onViewInTaskGraph={onViewInTaskGraph}
           connectedToCloud={connectedToCloud}
+          nxConnectCallback={nxConnectCallback}
         />
       </div>
     </>

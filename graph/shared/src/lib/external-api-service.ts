@@ -9,10 +9,10 @@ export function getExternalApiService() {
 }
 
 export class ExternalApiService {
-  private subscribers: Set<(event: { type: string; payload: any }) => void> =
+  private subscribers: Set<(event: { type: string; payload?: any }) => void> =
     new Set();
 
-  postEvent(event: { type: string; payload: any }) {
+  postEvent(event: { type: string; payload?: any }) {
     this.subscribers.forEach((subscriber) => {
       subscriber(event);
     });

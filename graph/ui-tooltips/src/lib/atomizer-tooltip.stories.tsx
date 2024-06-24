@@ -12,7 +12,7 @@ type Story = StoryObj<typeof AtomizerTooltip>;
 
 export const Primary: Story = {
   args: {
-    isUsingCloud: true,
+    connectedToCloud: true,
     nonAtomizedTarget: 'e2e',
   } as AtomizerTooltipProps,
   render: (args) => {

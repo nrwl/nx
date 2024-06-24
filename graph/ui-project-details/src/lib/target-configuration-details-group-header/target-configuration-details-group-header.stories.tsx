@@ -20,7 +20,7 @@ export const AtomizerCloud: Story = {
   args: {
     targetGroupName: 'Target Group Name',
     targetsNumber: 5,
-    atomizer: true,
+    nonAtomizedTarget: 'e2e',
     connectedToCloud: true,
   },
 };
@@ -29,7 +29,7 @@ export const AtomizerNoCloud: Story = {
   args: {
     targetGroupName: 'Target Group Name',
     targetsNumber: 5,
-    atomizer: true,
+    nonAtomizedTarget: 'e2e',
     connectedToCloud: false,
   },
 };
