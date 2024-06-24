@@ -16,7 +16,6 @@ import {
   sendMessageOverSocket,
 } from './messaging';
 import { Socket, connect } from 'net';
-import { unlinkSync } from 'fs';
 
 const cleanupFunctions = new Set<() => void>();
 
@@ -99,6 +98,8 @@ function createWorkerHandler(
 ) {
   let pluginName: string;
 
+  let txId = 0;
+
   return function (raw: string) {
     const message = JSON.parse(raw);
 
@@ -120,10 +121,7 @@ function createWorkerHandler(
                   createNodesPattern,
                   (configFiles, ctx) => {
                     const tx =
-                      pluginName +
-                      worker.pid +
-                      ':createNodes:' +
-                      performance.now();
+                      pluginName + worker.pid + ':createNodes:' + txId++;
                     return registerPendingPromise(tx, pending, () => {
                       sendMessageOverSocket(socket, {
                         type: 'createNodes',
@@ -136,10 +134,7 @@ function createWorkerHandler(
             createDependencies: result.hasCreateDependencies
               ? (ctx) => {
                   const tx =
-                    pluginName +
-                    worker.pid +
-                    ':createDependencies:' +
-                    performance.now();
+                    pluginName + worker.pid + ':createDependencies:' + txId++;
                   return registerPendingPromise(tx, pending, () => {
                     sendMessageOverSocket(socket, {
                       type: 'createDependencies',
@@ -151,10 +146,7 @@ function createWorkerHandler(
             processProjectGraph: result.hasProcessProjectGraph
               ? (graph, ctx) => {
                   const tx =
-                    pluginName +
-                    worker.pid +
-                    ':processProjectGraph:' +
-                    performance.now();
+                    pluginName + worker.pid + ':processProjectGraph:' + txId++;
                   return registerPendingPromise(tx, pending, () => {
                     sendMessageOverSocket(socket, {
                       type: 'processProjectGraph',
@@ -166,10 +158,7 @@ function createWorkerHandler(
             createMetadata: result.hasCreateMetadata
               ? (graph, ctx) => {
                   const tx =
-                    pluginName +
-                    worker.pid +
-                    ':createMetadata:' +
-                    performance.now();
+                    pluginName + worker.pid + ':createMetadata:' + txId++;
                   return registerPendingPromise(tx, pending, () => {
                     sendMessageOverSocket(socket, {
                       type: 'createMetadata',
@@ -262,7 +251,7 @@ function registerPendingPromise(
 
     callback();
   }).finally(() => {
-    pending.delete(tx);
+    // pending.delete(tx);
   });
 
   pending.set(tx, {
