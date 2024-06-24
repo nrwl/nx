@@ -40,7 +40,7 @@ function createProject(tree: Tree, opts: Partial<CreateProjectOptions> = {}) {
     projectOpts.targetOptions.outputPath ??= `dist/${projectOpts.root}`;
     projectOpts.targetOptions.tsConfig ??= `${projectOpts.root}/tsconfig.lib.json`;
     projectOpts.targetOptions.compiler ??= 'babel';
-    projectOpts.targetOptions.format ??= ['esm'];
+    projectOpts.targetOptions.format ??= projectOpts.targetOptions.f ?? ['esm'];
     projectOpts.targetOptions.external ??= [];
     projectOpts.targetOptions.assets ??= [];
   }
@@ -515,6 +515,57 @@ describe('Rollup - Convert Executors To Plugin', () => {
         module.exports = config;
         "
       `);
+    });
+
+    it('should rename aliases to the original option name', async () => {
+      const project = createProject(tree, {
+        name: 'mypkg',
+        root: 'mypkg',
+        targetOptions: {
+          entryFile: 'mypkg/src/foo.ts',
+          f: ['cjs'],
+          exports: true,
+        },
+      });
+
+      await convertToInferred(tree, { project: project.name });
+
+      expect(readNxJson(tree).plugins).toEqual([
+        {
+          options: {
+            targetName: 'build',
+          },
+          plugin: '@nx/rollup/plugin',
+        },
+      ]);
+      expect(tree.read('mypkg/rollup.config.js', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "const { withNx } = require('@nx/rollup/with-nx');
+
+        // These options were migrated by @nx/rollup:convert-to-inferred from project.json
+        const options = {
+          main: './src/index.ts',
+          format: ['cjs'],
+          generateExportsField: true,
+          outputPath: '../dist/mypkg',
+          tsConfig: './tsconfig.lib.json',
+          compiler: 'babel',
+          external: [],
+          assets: [],
+        };
+
+        const config = withNx(options, {
+          // Provide additional rollup configuration here. See: https://rollupjs.org/configuration-options
+          // e.g.
+          // output: { sourcemap: true },
+        });
+
+        module.exports = config;
+        "
+      `);
+      expect(tree.exists('otherpkg1/rollup.config.js')).toBe(false);
+      expect(tree.exists('otherpkg2/rollup.config.js')).toBe(false);
+      expect(readProjectConfiguration(tree, project.name).targets).toEqual({});
     });
   });
 
