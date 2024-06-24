@@ -42,7 +42,7 @@ export async function loadRemoteNxPlugin(
     return [nxPluginWorkerCache.get(cacheKey), () => {}];
   }
 
-  const { ipcPath, worker } = await startPluginWorker(plugin);
+  const { ipcPath, worker } = await startPluginWorker();
 
   const socket = await new Promise<Socket>((res, rej) => {
     const socket = connect(ipcPath, () => {
@@ -277,7 +277,7 @@ function registerPendingPromise(
 }
 
 global.nxPluginWorkerCount ??= 0;
-async function startPluginWorker(plugin: PluginConfiguration) {
+async function startPluginWorker() {
   // this should only really be true when running unit tests within
   // the Nx repo. We still need to start the worker in this case,
   // but its typescript.
