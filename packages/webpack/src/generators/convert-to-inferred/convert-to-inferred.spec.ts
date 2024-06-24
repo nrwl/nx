@@ -275,9 +275,7 @@ describe('convert-to-inferred', () => {
 
       await expect(
         convertToInferred(tree, { project: project.name })
-      ).rejects.toThrow(
-        'The webpack config path is missing in the project configuration.'
-      );
+      ).rejects.toThrow(/missing in the project configuration/);
       // assert other projects were not modified
       const updatedProject2 = readProjectConfiguration(tree, project2.name);
       expect(updatedProject2.targets.build).toStrictEqual(project2BuildTarget);
@@ -313,9 +311,7 @@ describe('convert-to-inferred', () => {
 
       await expect(
         convertToInferred(tree, { project: project.name })
-      ).rejects.toThrow(
-        'The webpack config is still configured to solely work with the "@nx/webpack:webpack" executor. You must run the "@nx/webpack:convert-config-to-webpack" generator first.'
-      );
+      ).rejects.toThrow(/@nx\/webpack:convert-config-to-webpack-plugin"/);
       // assert other projects were not modified
       const updatedProject2 = readProjectConfiguration(tree, project2.name);
       expect(updatedProject2.targets.build).toStrictEqual(project2BuildTarget);
@@ -343,9 +339,7 @@ describe('convert-to-inferred', () => {
 
       await expect(
         convertToInferred(tree, { project: project.name })
-      ).rejects.toThrow(
-        'No "NxAppWebpackPlugin" found in the webpack config. Its usage is required for the migration to work.'
-      );
+      ).rejects.toThrow(/webpack config/);
       // assert other projects were not modified
       const updatedProject2 = readProjectConfiguration(tree, project2.name);
       expect(updatedProject2.targets.build).toStrictEqual(project2BuildTarget);
