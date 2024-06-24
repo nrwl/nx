@@ -72,6 +72,7 @@ describe('@nx/playwright/plugin', () => {
                       },
                     ],
                     "metadata": {
+                      "atomizedTarget": "e2e-ci",
                       "description": "Runs Playwright Tests",
                       "technologies": [
                         "playwright",
@@ -98,8 +99,8 @@ describe('@nx/playwright/plugin', () => {
                       },
                     ],
                     "metadata": {
-                      "atomizer": true,
                       "description": "Runs Playwright Tests in CI",
+                      "nonAtomizedTarget": "e2e",
                       "technologies": [
                         "playwright",
                       ],
@@ -162,6 +163,7 @@ describe('@nx/playwright/plugin', () => {
                       },
                     ],
                     "metadata": {
+                      "atomizedTarget": "e2e-ci",
                       "description": "Runs Playwright Tests",
                       "technologies": [
                         "playwright",
@@ -191,8 +193,8 @@ describe('@nx/playwright/plugin', () => {
                       },
                     ],
                     "metadata": {
-                      "atomizer": true,
                       "description": "Runs Playwright Tests in CI",
+                      "nonAtomizedTarget": "e2e",
                       "technologies": [
                         "playwright",
                       ],
@@ -274,8 +276,8 @@ describe('@nx/playwright/plugin', () => {
           },
         ],
         "metadata": {
-          "atomizer": true,
           "description": "Runs Playwright Tests in CI",
+          "nonAtomizedTarget": "e2e",
           "technologies": [
             "playwright",
           ],
@@ -299,8 +301,8 @@ describe('@nx/playwright/plugin', () => {
           },
         ],
         "metadata": {
-          "atomizer": true,
           "description": "Runs Playwright Tests in tests/run-me.spec.ts in CI",
+          "nonAtomizedTarget": "e2e",
           "technologies": [
             "playwright",
           ],
@@ -327,8 +329,8 @@ describe('@nx/playwright/plugin', () => {
           },
         ],
         "metadata": {
-          "atomizer": true,
           "description": "Runs Playwright Tests in tests/run-me-2.spec.ts in CI",
+          "nonAtomizedTarget": "e2e",
           "technologies": [
             "playwright",
           ],

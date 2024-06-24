@@ -100,6 +100,7 @@ describe('@nx/cypress/plugin', () => {
                       },
                     ],
                     "metadata": {
+                      "atomizedTarget": "e2e-ci",
                       "description": "Runs Cypress Tests",
                       "technologies": [
                         "cypress",
@@ -272,6 +273,7 @@ describe('@nx/cypress/plugin', () => {
                       },
                     ],
                     "metadata": {
+                      "atomizedTarget": "e2e-ci",
                       "description": "Runs Cypress Tests",
                       "technologies": [
                         "cypress",
@@ -305,8 +307,8 @@ describe('@nx/cypress/plugin', () => {
                       },
                     ],
                     "metadata": {
-                      "atomizer": true,
                       "description": "Runs Cypress Tests in CI",
+                      "nonAtomizedTarget": "e2e",
                       "technologies": [
                         "cypress",
                       ],
@@ -329,8 +331,8 @@ describe('@nx/cypress/plugin', () => {
                       },
                     ],
                     "metadata": {
-                      "atomizer": true,
                       "description": "Runs Cypress Tests in src/test.cy.ts in CI",
+                      "nonAtomizedTarget": "e2e",
                       "technologies": [
                         "cypress",
                       ],

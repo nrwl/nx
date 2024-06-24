@@ -81,6 +81,7 @@ describe('@nx/jest/plugin', () => {
                       },
                     ],
                     "metadata": {
+                      "atomizedTarget": undefined,
                       "description": "Run Jest Tests",
                       "technologies": [
                         "jest",
@@ -150,6 +151,7 @@ describe('@nx/jest/plugin', () => {
                       },
                     ],
                     "metadata": {
+                      "atomizedTarget": "test-ci",
                       "description": "Run Jest Tests",
                       "technologies": [
                         "jest",
@@ -178,8 +180,8 @@ describe('@nx/jest/plugin', () => {
                       },
                     ],
                     "metadata": {
-                      "atomizer": true,
                       "description": "Run Jest Tests in CI",
+                      "nonAtomizedTarget": "test",
                       "technologies": [
                         "jest",
                       ],
@@ -201,8 +203,8 @@ describe('@nx/jest/plugin', () => {
                       },
                     ],
                     "metadata": {
-                      "atomizer": true,
                       "description": "Run Jest Tests in src/unit.spec.ts",
+                      "nonAtomizedTarget": "test",
                       "technologies": [
                         "jest",
                       ],
@@ -260,6 +262,7 @@ describe('@nx/jest/plugin', () => {
                       },
                     ],
                     "metadata": {
+                      "atomizedTarget": undefined,
                       "description": "Run Jest Tests",
                       "technologies": [
                         "jest",
@@ -329,6 +332,7 @@ describe('@nx/jest/plugin', () => {
                               },
                             ],
                             "metadata": {
+                              "atomizedTarget": undefined,
                               "description": "Run Jest Tests",
                               "technologies": [
                                 "jest",

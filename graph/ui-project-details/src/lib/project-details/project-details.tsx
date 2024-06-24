@@ -146,7 +146,7 @@ export const ProjectDetails = ({
           </div>
         </div>
       </header>
-      <div className="z-0">
+      <div>
         <h2 className={isCompact ? `mb-3 text-lg` : `mb-4 text-xl`}>
           <Tooltip
             openAction="hover"
