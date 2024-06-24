@@ -32,7 +32,7 @@ export function TerminalOutput({
                 </p>
                 <p className="typing mt-0.5 flex-1 pl-2">{line}</p>
                 {actionElement ? (
-                  <div className="pl-2 sticky top-0">{actionElement}</div>
+                  <div className="sticky top-0 pl-2">{actionElement}</div>
                 ) : null}
               </div>
             );

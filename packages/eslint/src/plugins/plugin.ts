@@ -2,13 +2,13 @@ import {
   CreateNodes,
   CreateNodesContext,
   CreateNodesContextV2,
+  createNodesFromFiles,
   CreateNodesResult,
   CreateNodesV2,
-  TargetConfiguration,
-  createNodesFromFiles,
   getPackageManagerCommand,
   logger,
   readJsonFile,
+  TargetConfiguration,
   writeJsonFile,
 } from '@nx/devkit';
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
@@ -20,9 +20,9 @@ import { combineGlobPatterns } from 'nx/src/utils/globs';
 import { globWithWorkspaceContext } from 'nx/src/utils/workspace-context';
 import { gte } from 'semver';
 import {
-  ESLINT_CONFIG_FILENAMES,
   baseEsLintConfigFile,
   baseEsLintFlatConfigFile,
+  ESLINT_CONFIG_FILENAMES,
   isFlatConfig,
 } from '../utils/config-file';
 import { resolveESLintClass } from '../utils/resolve-eslint-class';
@@ -487,6 +487,11 @@ function buildEslintTargets(
       description: 'Runs ESLint on project',
       help: {
         command: `${pmc.exec} eslint --help`,
+        example: {
+          options: {
+            'max-warnings': 0,
+          },
+        },
       },
     },
   };

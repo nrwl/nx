@@ -1,46 +1,44 @@
-import { Fragment, useState } from 'react';
+import { Fragment, useMemo, useState } from 'react';
 import { PlayIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { Transition } from '@headlessui/react';
 import { getExternalApiService, useEnvironmentConfig } from '@nx/graph/shared';
+/* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
 import type { TargetConfiguration } from '@nx/devkit';
 import { TerminalOutput } from '@nx/nx-dev/ui-fence';
 import { Tooltip } from '@nx/graph/ui-tooltips';
 import { TooltipTriggerText } from '../target-configuration-details/tooltip-trigger-text';
 
-interface ShowAllOptionsProps {
+interface ShowOptionsHelpProps {
   projectName: string;
   targetName: string;
   targetConfiguration: TargetConfiguration;
 }
 
-const projectJsonViteHelpText = `{
-  "targets": {
-    "serve": {
-      "options": {
-        "open": "true",
-        "port": 5000
-      }
-    },
-    "test": {
-      "options": {
-        "args": ["run"]
-      }
-    }
-  }
-}`;
+const fallbackHelpExample = {
+  options: {
+    silent: true,
+  },
+  args: ['foo'],
+};
 
-export function ShowAllOptions({
+export function ShowOptionsHelp({
   projectName,
   targetName,
   targetConfiguration,
-}: ShowAllOptionsProps) {
+}: ShowOptionsHelpProps) {
   const environment = useEnvironmentConfig()?.environment;
-  const [result, setResult] = useState<string | null>(null);
+  const [result, setResult] = useState<{
+    text: string;
+    success: boolean;
+  } | null>(null);
   const [isPending, setPending] = useState(false);
   const externalApiService = getExternalApiService();
 
-  const helpCommand = targetConfiguration.metadata?.help?.command;
+  const helpData = targetConfiguration.metadata?.help;
+  const helpCommand = helpData?.command;
+  const helpExampleOptions = helpData?.example?.options;
+  const helpExampleArgs = helpData?.example?.args;
 
   const runHelpCommand =
     environment === 'nx-console'
@@ -56,7 +54,7 @@ export function ShowAllOptions({
         }
       : async () => {
           setPending(true);
-          const { result } = await fetch(
+          const result = await fetch(
             `/help?project=${encodeURIComponent(
               projectName
             )}&target=${encodeURIComponent(targetName)}`
@@ -65,18 +63,24 @@ export function ShowAllOptions({
           setPending(false);
         };
 
-  const openProjectConfig =
-    environment === 'nx-console'
-      ? () => {
-          externalApiService.postEvent({
-            type: 'open-project-config',
-            payload: {
-              projectName,
-              targetName,
-            },
-          });
-        }
-      : null;
+  const helpExampleTest = useMemo(() => {
+    const targetExampleJson =
+      helpExampleOptions || helpExampleArgs
+        ? {
+            options: helpExampleOptions,
+            args: helpExampleArgs,
+          }
+        : fallbackHelpExample;
+    return JSON.stringify(
+      {
+        targets: {
+          [targetName]: targetExampleJson,
+        },
+      },
+      null,
+      2
+    );
+  }, [helpExampleOptions, helpExampleArgs]);
 
   return (
     helpCommand && (
@@ -98,24 +102,30 @@ export function ShowAllOptions({
               (
                 <div className="w-fit max-w-md">
                   <p className="mb-2">
-                    For example, when using <code>@nx/vite/plugin</code>, the
-                    following are options and args passed to <code>serve</code>{' '}
-                    and <code>test</code> targets, which are then passed to the{' '}
-                    <code className="font-semibold">vite</code> and{' '}
-                    <code className="font-semibold">vitest</code> CLI
-                    respectively.
+                    For example, you can use the following configuration for the{' '}
+                    <code>{targetName}</code> target in the{' '}
+                    <code>project.json</code> file for{' '}
+                    <span className="font-semibold">{projectName}</span>.
                   </p>
                   <pre className="mb-2 border border-slate-200 bg-slate-100/50 p-2 p-2 text-slate-400 dark:border-slate-700 dark:bg-slate-700/50 dark:text-slate-500">
-                    {projectJsonViteHelpText}
+                    {helpExampleTest}
                   </pre>
-                  <p>
-                    This configuration means <code>serve</code> runs{' '}
-                    <code className="font-semibold">
-                      vite --port=5000 --open
-                    </code>
-                    , and <code>test</code> runs{' '}
-                    <code className="font-semibold">vitest run</code>.
-                  </p>
+                  {helpExampleOptions && (
+                    <p className="mb-2">
+                      The <code>options</code> are CLI options prefixed by{' '}
+                      <code>--</code>, such as <code>ls --color=never</code>,
+                      where you would use <code>{'"color": "never"'}</code> to
+                      set it in the target configuration.
+                    </p>
+                  )}
+                  {helpExampleArgs && (
+                    <p className="mb-2">
+                      The <code>args</code> are CLI positional arguments, such
+                      as <code>ls somedir</code>, where you would use{' '}
+                      <code>{'"args": ["somedir"]'}</code> to set it in the
+                      target configuration.
+                    </p>
+                  )}
                 </div>
               ) as any
             }
@@ -161,21 +171,15 @@ export function ShowAllOptions({
                 leaveFrom="opacity-100 translate-y-0"
                 leaveTo="opacity-0 translate-y-1"
               >
-                <pre className="">{result}</pre>
+                <pre
+                  className={result && !result.success ? 'text-red-500' : ''}
+                >
+                  {result?.text}
+                </pre>
               </Transition>
             </div>
           }
         />
-        {openProjectConfig && (
-          <p className="mt-4">
-            <button
-              className="text-blue-500 hover:underline"
-              onClick={openProjectConfig}
-            >
-              Edit in project.json
-            </button>
-          </p>
-        )}
       </>
     )
   );

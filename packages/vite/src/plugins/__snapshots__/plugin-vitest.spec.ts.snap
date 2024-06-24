@@ -25,6 +25,21 @@ exports[`@nx/vite/plugin root project should create nodes 1`] = `
                   "env": "CI",
                 },
               ],
+              "metadata": {
+                "description": "Run Vite tests",
+                "help": {
+                  "command": "npx vitest --help",
+                  "example": {
+                    "options": {
+                      "bail": 1,
+                      "coverage": true,
+                    },
+                  },
+                },
+                "technologies": [
+                  "vite",
+                ],
+              },
               "options": {
                 "cwd": ".",
               },

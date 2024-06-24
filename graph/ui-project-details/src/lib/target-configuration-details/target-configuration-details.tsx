@@ -17,7 +17,7 @@ import { TargetExecutor } from '../target-executor/target-executor';
 import { TargetExecutorTitle } from '../target-executor/target-executor-title';
 import { TargetSourceInfo } from '../target-source-info/target-source-info';
 import { getTargetExecutorSourceMapKey } from '../target-source-info/get-target-executor-source-map-key';
-import { ShowAllOptions } from '../show-all-options/show-all-options';
+import { ShowOptionsHelp } from '../show-all-options/show-options-help';
 
 interface TargetConfigurationDetailsProps {
   projectName: string;
@@ -169,7 +169,7 @@ export default function TargetConfigurationDetails({
                 </FadingCollapsible>
               </div>
               <div className="mb-4">
-                <ShowAllOptions
+                <ShowOptionsHelp
                   targetConfiguration={targetConfiguration}
                   projectName={projectName}
                   targetName={targetName}

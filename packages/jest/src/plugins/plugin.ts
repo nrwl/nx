@@ -188,6 +188,11 @@ async function buildJestTargets(
       description: 'Run Jest Tests',
       help: {
         command: `${pmc.exec} jest --help`,
+        example: {
+          options: {
+            coverage: true,
+          },
+        },
       },
     },
   });
@@ -245,6 +250,11 @@ async function buildJestTargets(
           nonAtomizedTarget: options.targetName,
           help: {
             command: `${pmc.exec} jest --help`,
+            example: {
+              options: {
+                coverage: true,
+              },
+            },
           },
         },
       };
@@ -270,6 +280,11 @@ async function buildJestTargets(
             nonAtomizedTarget: options.targetName,
             help: {
               command: `${pmc.exec} jest --help`,
+              example: {
+                options: {
+                  coverage: true,
+                },
+              },
             },
           },
         };

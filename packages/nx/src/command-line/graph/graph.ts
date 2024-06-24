@@ -584,11 +584,6 @@ async function startServer(
       return;
     }
 
-    if (sanitizePath === 'help.json') {
-      res.end(JSON.stringify({ response: '' }));
-      return;
-    }
-
     if (sanitizePath === 'task-inputs.json') {
       performance.mark('task input generation:start');
 
@@ -630,12 +625,12 @@ async function startServer(
       const target = parsedUrl.searchParams.get('target');
 
       try {
-        const result = getHelpResultFromTarget(project, target);
+        const text = getHelpTextFromTarget(project, target);
         res.writeHead(200, { 'Content-Type': 'application/javascript' });
-        res.end(JSON.stringify({ result }));
+        res.end(JSON.stringify({ text, success: true }));
       } catch (err) {
-        res.writeHead(400, { 'Content-Type': 'application/javascript' });
-        res.end(JSON.stringify({ error: err.message }));
+        res.writeHead(200, { 'Content-Type': 'application/javascript' });
+        res.end(JSON.stringify({ text: err.message, success: false }));
       }
       return;
     }
@@ -1197,7 +1192,7 @@ async function createJsonOutput(
   return response;
 }
 
-function getHelpResultFromTarget(
+function getHelpTextFromTarget(
   projectName: string,
   targetName: string
 ): string {

@@ -82,6 +82,14 @@ describe('@nx/jest/plugin', () => {
                     ],
                     "metadata": {
                       "description": "Run Jest Tests",
+                      "help": {
+                        "command": "npx jest --help",
+                        "example": {
+                          "options": {
+                            "coverage": true,
+                          },
+                        },
+                      },
                       "technologies": [
                         "jest",
                       ],
@@ -151,6 +159,14 @@ describe('@nx/jest/plugin', () => {
                     ],
                     "metadata": {
                       "description": "Run Jest Tests",
+                      "help": {
+                        "command": "npx jest --help",
+                        "example": {
+                          "options": {
+                            "coverage": true,
+                          },
+                        },
+                      },
                       "technologies": [
                         "jest",
                       ],
@@ -180,6 +196,14 @@ describe('@nx/jest/plugin', () => {
                     "metadata": {
                       "description": "Run Jest Tests in CI",
                       "nonAtomizedTarget": "test",
+                      "help": {
+                        "command": "npx jest --help",
+                        "example": {
+                          "options": {
+                            "coverage": true,
+                          },
+                        },
+                      },
                       "technologies": [
                         "jest",
                       ],
@@ -202,7 +226,18 @@ describe('@nx/jest/plugin', () => {
                     ],
                     "metadata": {
                       "description": "Run Jest Tests in src/unit.spec.ts",
+<<<<<<< HEAD
                       "nonAtomizedTarget": "test",
+=======
+                      "help": {
+                        "command": "npx jest --help",
+                        "example": {
+                          "options": {
+                            "coverage": true,
+                          },
+                        },
+                      },
+>>>>>>> 4fd467d377 (feat(misc): add option examples to inferred targets)
                       "technologies": [
                         "jest",
                       ],
@@ -261,6 +296,14 @@ describe('@nx/jest/plugin', () => {
                     ],
                     "metadata": {
                       "description": "Run Jest Tests",
+                      "help": {
+                        "command": "npx jest --help",
+                        "example": {
+                          "options": {
+                            "coverage": true,
+                          },
+                        },
+                      },
                       "technologies": [
                         "jest",
                       ],
@@ -305,6 +348,7 @@ describe('@nx/jest/plugin', () => {
         context
       );
 
+<<<<<<< HEAD
       expect(results).toMatchInlineSnapshot(`
               [
                 [
@@ -348,6 +392,9 @@ describe('@nx/jest/plugin', () => {
                 ],
               ]
           `);
+=======
+      expect(results).toMatchSnapshot();
+>>>>>>> 4fd467d377 (feat(misc): add option examples to inferred targets)
     }
   );
 });

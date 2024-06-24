@@ -235,7 +235,15 @@ async function buildTarget(
     metadata: {
       technologies: ['vite'],
       description: `Run Vite build`,
-      help: { command: `${pmc.exec} vite build --help` },
+      help: {
+        command: `${pmc.exec} vite build --help`,
+        example: {
+          options: {
+            sourcemap: true,
+            manifest: 'manifest.json',
+          },
+        },
+      },
     },
   };
 }
@@ -249,8 +257,15 @@ function serveTarget(projectRoot: string) {
     },
     metadata: {
       technologies: ['vite'],
-      description: `Start Vite dev server`,
-      help: { command: `${pmc.exec} vite --help` },
+      description: `Starts Vite dev server`,
+      help: {
+        command: `${pmc.exec} vite --help`,
+        example: {
+          options: {
+            port: 3000,
+          },
+        },
+      },
     },
   };
 
@@ -267,7 +282,14 @@ function previewTarget(projectRoot: string) {
     metadata: {
       technologies: ['vite'],
       description: `Locally preview Vite production build`,
-      help: { command: `${pmc.exec} vite preview --help` },
+      help: {
+        command: `${pmc.exec} vite preview --help`,
+        example: {
+          options: {
+            port: 3000,
+          },
+        },
+      },
     },
   };
 
@@ -299,7 +321,15 @@ async function testTarget(
     metadata: {
       technologies: ['vite'],
       description: `Run Vite tests`,
-      help: { command: `${pmc.exec} vitest --help` },
+      help: {
+        command: `${pmc.exec} vitest --help`,
+        example: {
+          options: {
+            bail: 1,
+            coverage: true,
+          },
+        },
+      },
     },
   };
 }

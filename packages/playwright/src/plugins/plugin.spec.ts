@@ -73,6 +73,14 @@ describe('@nx/playwright/plugin', () => {
                     ],
                     "metadata": {
                       "description": "Runs Playwright Tests",
+                      "help": {
+                        "command": "npx playwright test --help",
+                        "example": {
+                          "options": {
+                            "workers": 1,
+                          },
+                        },
+                      },
                       "technologies": [
                         "playwright",
                       ],
@@ -100,6 +108,14 @@ describe('@nx/playwright/plugin', () => {
                     "metadata": {
                       "description": "Runs Playwright Tests in CI",
                       "nonAtomizedTarget": "e2e",
+                      "help": {
+                        "command": "npx playwright test --help",
+                        "example": {
+                          "options": {
+                            "workers": 1,
+                          },
+                        },
+                      },
                       "technologies": [
                         "playwright",
                       ],
@@ -163,6 +179,14 @@ describe('@nx/playwright/plugin', () => {
                     ],
                     "metadata": {
                       "description": "Runs Playwright Tests",
+                      "help": {
+                        "command": "npx playwright test --help",
+                        "example": {
+                          "options": {
+                            "workers": 1,
+                          },
+                        },
+                      },
                       "technologies": [
                         "playwright",
                       ],
@@ -192,7 +216,18 @@ describe('@nx/playwright/plugin', () => {
                     ],
                     "metadata": {
                       "description": "Runs Playwright Tests in CI",
+<<<<<<< HEAD
                       "nonAtomizedTarget": "e2e",
+=======
+                      "help": {
+                        "command": "npx playwright test --help",
+                        "example": {
+                          "options": {
+                            "workers": 1,
+                          },
+                        },
+                      },
+>>>>>>> 4fd467d377 (feat(misc): add option examples to inferred targets)
                       "technologies": [
                         "playwright",
                       ],
@@ -275,7 +310,18 @@ describe('@nx/playwright/plugin', () => {
         ],
         "metadata": {
           "description": "Runs Playwright Tests in CI",
+<<<<<<< HEAD
           "nonAtomizedTarget": "e2e",
+=======
+          "help": {
+            "command": "npx playwright test --help",
+            "example": {
+              "options": {
+                "workers": 1,
+              },
+            },
+          },
+>>>>>>> 4fd467d377 (feat(misc): add option examples to inferred targets)
           "technologies": [
             "playwright",
           ],
@@ -300,7 +346,18 @@ describe('@nx/playwright/plugin', () => {
         ],
         "metadata": {
           "description": "Runs Playwright Tests in tests/run-me.spec.ts in CI",
+<<<<<<< HEAD
           "nonAtomizedTarget": "e2e",
+=======
+          "help": {
+            "command": "npx playwright test --help",
+            "example": {
+              "options": {
+                "workers": 1,
+              },
+            },
+          },
+>>>>>>> 4fd467d377 (feat(misc): add option examples to inferred targets)
           "technologies": [
             "playwright",
           ],
@@ -328,7 +385,18 @@ describe('@nx/playwright/plugin', () => {
         ],
         "metadata": {
           "description": "Runs Playwright Tests in tests/run-me-2.spec.ts in CI",
+<<<<<<< HEAD
           "nonAtomizedTarget": "e2e",
+=======
+          "help": {
+            "command": "npx playwright test --help",
+            "example": {
+              "options": {
+                "workers": 1,
+              },
+            },
+          },
+>>>>>>> 4fd467d377 (feat(misc): add option examples to inferred targets)
           "technologies": [
             "playwright",
           ],
