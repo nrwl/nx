@@ -235,7 +235,7 @@ describe('Storybook - Convert To Inferred', () => {
               "output-dir": "../../dist/storybook/apps/app1",
             },
             "outputs": [
-              "{projectRoot}/{options.outputDir}",
+              "{projectRoot}/{options.output-dir}",
               "{workspaceRoot}/{projectRoot}/storybook-static",
               "{options.output-dir}",
               "{options.outputDir}",
@@ -311,7 +311,7 @@ describe('Storybook - Convert To Inferred', () => {
               "output-dir": "../../dist/storybook/apps/app1",
             },
             "outputs": [
-              "{projectRoot}/{options.outputDir}",
+              "{projectRoot}/{options.output-dir}",
               "{workspaceRoot}/{projectRoot}/storybook-static",
               "{options.output-dir}",
               "{options.outputDir}",
@@ -386,7 +386,7 @@ describe('Storybook - Convert To Inferred', () => {
               "webpack-stats-json": true,
             },
             "outputs": [
-              "{projectRoot}/{options.outputDir}",
+              "{projectRoot}/{options.output-dir}",
               "{workspaceRoot}/{projectRoot}/storybook-static",
               "{options.output-dir}",
               "{options.outputDir}",
@@ -445,7 +445,7 @@ describe('Storybook - Convert To Inferred', () => {
               "output-dir": "../../dist/storybook/apps/app1",
             },
             "outputs": [
-              "{projectRoot}/{options.outputDir}",
+              "{projectRoot}/{options.output-dir}",
               "{workspaceRoot}/{projectRoot}/storybook-static",
               "{options.output-dir}",
               "{options.outputDir}",
@@ -564,7 +564,7 @@ describe('Storybook - Convert To Inferred', () => {
               "output-dir": "../../dist/storybook/apps/app1",
             },
             "outputs": [
-              "{projectRoot}/{options.outputDir}",
+              "{projectRoot}/{options.output-dir}",
               "{workspaceRoot}/{projectRoot}/storybook-static",
               "{options.output-dir}",
               "{options.outputDir}",
@@ -596,7 +596,7 @@ describe('Storybook - Convert To Inferred', () => {
               "output-dir": "../../dist/storybook/apps/project2",
             },
             "outputs": [
-              "{projectRoot}/{options.outputDir}",
+              "{projectRoot}/{options.output-dir}",
               "{workspaceRoot}/{projectRoot}/storybook-static",
               "{options.output-dir}",
               "{options.outputDir}",
