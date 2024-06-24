@@ -459,7 +459,7 @@ function mergeCreateNodesResults(
   > = {};
 
   for (const result of results.flat()) {
-    const [file, pluginName, nodes] = result;
+    const [pluginName, file, nodes] = result;
 
     const { projects: projectNodes, externalNodes: pluginExternalNodes } =
       nodes;
