@@ -17,6 +17,9 @@ export function TargetConfigurationGroupContainer({
   nxConnectCallback,
   children,
 }: TargetConfigurationGroupContainerProps) {
+  if (targetsNumber === 0) {
+    return null;
+  }
   return (
     <div className="mb-4 w-full">
       <TargetConfigurationGroupHeader
