@@ -2,8 +2,8 @@ import {
   addDependenciesToPackageJson,
   createProjectGraphAsync,
   formatFiles,
-  runTasksInSerial,
   type ProjectConfiguration,
+  runTasksInSerial,
   type Tree,
 } from '@nx/devkit';
 import { AggregatedLog } from '@nx/devkit/src/generators/plugin-migrations/aggregate-log-util';
@@ -14,8 +14,8 @@ import { createNodesV2, type WebpackPluginOptions } from '../../plugins/plugin';
 import { webpackCliVersion } from '../../utils/versions';
 import {
   buildPostTargetTransformerFactory,
-  servePostTargetTransformerFactory,
   type MigrationContext,
+  servePostTargetTransformerFactory,
 } from './utils';
 
 interface Schema {
@@ -142,7 +142,7 @@ function skipProjectFilterFactory(tree: Tree) {
     // the projects for which this is called are guaranteed to have a build target
     const webpackConfigPath = buildTarget.options.webpackConfig;
     if (!webpackConfigPath) {
-      return 'The webpack config path is missing in the project configuration.';
+      return `The webpack config path is missing in the project configuration (${projectConfiguration.root}).`;
     }
 
     const sourceFile = tsquery.ast(tree.read(webpackConfigPath, 'utf-8'));
@@ -155,7 +155,7 @@ function skipProjectFilterFactory(tree: Tree) {
     )[0];
 
     if (composePlugins) {
-      return 'The webpack config is still configured to solely work with the "@nx/webpack:webpack" executor. You must run the "@nx/webpack:convert-config-to-webpack" generator first.';
+      return `The webpack config (${webpackConfigPath}) can only work with the  "@nx/webpack:webpack" executor. Run the "@nx/webpack:convert-config-to-webpack-plugin" generator first.`;
     }
 
     const nxAppWebpackPluginSelector =
@@ -166,7 +166,7 @@ function skipProjectFilterFactory(tree: Tree) {
     )[0];
 
     if (!nxAppWebpackPlugin) {
-      return 'No "NxAppWebpackPlugin" found in the webpack config. Its usage is required for the migration to work.';
+      return `No "NxAppWebpackPlugin" found in the webpack config (${webpackConfigPath}). Its usage is required for the migration to work.`;
     }
 
     return false;
