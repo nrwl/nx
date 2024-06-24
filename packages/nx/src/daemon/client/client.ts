@@ -45,6 +45,11 @@ import {
 } from '../message-types/get-files-in-directory';
 import { HASH_GLOB, HandleHashGlobMessage } from '../message-types/hash-glob';
 import { NxWorkspaceFiles } from '../../native';
+import { TaskRun } from '../../utils/task-history';
+import {
+  HandleGetTaskHistoryForHashesMessage,
+  HandleWriteTaskRunsToHistoryMessage,
+} from '../message-types/task-history';
 
 const DAEMON_ENV_SETTINGS = {
   NX_PROJECT_GLOB_CACHE: 'false',
@@ -310,6 +315,25 @@ export class DaemonClient {
       exclude,
     };
     return this.sendToDaemonViaQueue(message);
+  }
+
+  getTaskHistoryForHashes(hashes: string[]): Promise<{
+    [hash: string]: TaskRun[];
+  }> {
+    const message: HandleGetTaskHistoryForHashesMessage = {
+      type: 'GET_TASK_HISTORY_FOR_HASHES',
+      hashes,
+    };
+
+    return this.sendToDaemonViaQueue(message);
+  }
+
+  writeTaskRunsToHistory(taskRuns: TaskRun[]): Promise<void> {
+    const message: HandleWriteTaskRunsToHistoryMessage = {
+      type: 'WRITE_TASK_RUNS_TO_HISTORY',
+      taskRuns,
+    };
+    return this.sendMessageToDaemon(message);
   }
 
   async isServerAvailable(): Promise<boolean> {
