@@ -5301,6 +5301,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Nx Cloud AI (Tusky)",
+            "path": "/ci/features/nx-cloud-ai",
+            "id": "nx-cloud-ai",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Dynamically Allocate Agents",
             "path": "/ci/features/dynamic-agents",
             "id": "dynamic-agents",
@@ -5347,6 +5355,14 @@
         "name": "Distribute Task Execution (Nx Agents)",
         "path": "/ci/features/distribute-task-execution",
         "id": "distribute-task-execution",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Nx Cloud AI (Tusky)",
+        "path": "/ci/features/nx-cloud-ai",
+        "id": "nx-cloud-ai",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -6623,6 +6639,14 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
+          },
+          {
+            "name": "Explain With AI",
+            "path": "/ci/troubleshooting/explain-with-ai",
+            "id": "explain-with-ai",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -6631,6 +6655,14 @@
         "name": "CI Execution Failed",
         "path": "/ci/troubleshooting/ci-execution-failed",
         "id": "ci-execution-failed",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Explain With AI",
+        "path": "/ci/troubleshooting/explain-with-ai",
+        "id": "explain-with-ai",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
