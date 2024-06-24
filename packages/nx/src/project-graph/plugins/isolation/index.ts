@@ -11,17 +11,17 @@ const remotePluginCache = new Map<
   readonly [Promise<LoadedNxPlugin>, () => void]
 >();
 
-export function loadNxPluginInIsolation(
+export async function loadNxPluginInIsolation(
   plugin: PluginConfiguration,
   root = workspaceRoot
-): readonly [Promise<LoadedNxPlugin>, () => void] {
+): Promise<readonly [Promise<LoadedNxPlugin>, () => void]> {
   const cacheKey = JSON.stringify(plugin);
 
   if (remotePluginCache.has(cacheKey)) {
     return remotePluginCache.get(cacheKey);
   }
 
-  const [loadingPlugin, cleanup] = loadRemoteNxPlugin(plugin, root);
+  const [loadingPlugin, cleanup] = await loadRemoteNxPlugin(plugin, root);
   // We clean up plugin workers when Nx process completes.
   const val = [
     loadingPlugin,

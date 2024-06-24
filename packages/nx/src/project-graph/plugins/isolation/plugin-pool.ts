@@ -27,10 +27,21 @@ interface PendingPromise {
   rejector: (err: any) => void;
 }
 
+type NxPluginWorkerCache = Map<string, Promise<LoadedNxPlugin>>;
+
+const nxPluginWorkerCache: NxPluginWorkerCache = (global[
+  'nxPluginWorkerCache'
+] ??= new Map());
+
 export async function loadRemoteNxPlugin(
   plugin: PluginConfiguration,
   root: string
 ): Promise<[Promise<LoadedNxPlugin>, () => void]> {
+  const cacheKey = JSON.stringify(plugin);
+  if (nxPluginWorkerCache.has(cacheKey)) {
+    return [nxPluginWorkerCache.get(cacheKey), () => {}];
+  }
+
   const { ipcPath, worker } = await startPluginWorker(plugin);
 
   const socket = await new Promise<Socket>((res, rej) => {
@@ -48,28 +59,30 @@ export async function loadRemoteNxPlugin(
     worker.off('exit', exitHandler);
     socket.destroy();
     shutdownPluginWorker(worker);
+    nxPluginWorkerCache.delete(cacheKey);
   };
 
   cleanupFunctions.add(cleanupFunction);
 
-  return [
-    new Promise<LoadedNxPlugin>((res, rej) => {
-      sendMessageOverSocket(socket, {
-        type: 'load',
-        payload: { plugin, root },
-      });
-      // logger.verbose(`[plugin-worker] started worker: ${worker.pid}`);
+  const pluginPromise = new Promise<LoadedNxPlugin>((res, rej) => {
+    sendMessageOverSocket(socket, {
+      type: 'load',
+      payload: { plugin, root },
+    });
+    // logger.verbose(`[plugin-worker] started worker: ${worker.pid}`);
 
-      socket.on(
-        'data',
-        consumeMessagesFromSocket(
-          createWorkerHandler(worker, pendingPromises, res, rej, socket)
-        )
-      );
-      worker.on('exit', exitHandler);
-    }),
-    cleanupFunction,
-  ];
+    socket.on(
+      'data',
+      consumeMessagesFromSocket(
+        createWorkerHandler(worker, pendingPromises, res, rej, socket)
+      )
+    );
+    worker.on('exit', exitHandler);
+  });
+
+  nxPluginWorkerCache.set(cacheKey, pluginPromise);
+
+  return [pluginPromise, cleanupFunction];
 }
 
 function shutdownPluginWorker(worker: ChildProcess) {
@@ -251,7 +264,7 @@ function registerPendingPromise(
 
     callback();
   }).finally(() => {
-    // pending.delete(tx);
+    pending.delete(tx);
   });
 
   pending.set(tx, {
@@ -263,7 +276,7 @@ function registerPendingPromise(
   return promise;
 }
 
-let workerCount = 0;
+global.nxPluginWorkerCount ??= 0;
 async function startPluginWorker(plugin: PluginConfiguration) {
   // this should only really be true when running unit tests within
   // the Nx repo. We still need to start the worker in this case,
@@ -284,7 +297,9 @@ async function startPluginWorker(plugin: PluginConfiguration) {
       : {}),
   };
 
-  const ipcPath = getPluginOsSocketPath([process.pid, workerCount++].join('-'));
+  const ipcPath = getPluginOsSocketPath(
+    [process.pid, global.nxPluginWorkerCount++].join('-')
+  );
 
   const worker = fork(workerPath, [ipcPath], {
     stdio: process.stdout.isTTY ? 'inherit' : 'ignore',
