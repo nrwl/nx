@@ -206,6 +206,134 @@ export default defineConfig({plugins: [nxViteTsPaths({ buildLibsFromSource: opti
 });"
 `;
 
+exports[`buildPostTargetTransformer should move the AST options to each vite config file correctly for configurations 1`] = `
+"/// <reference types='vitest' />
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+  
+  // These options were migrated by @nx/vite:convert-to-inferred from the project.json file.
+  const configValues = {"default":{"buildLibsFromSource":true},"dev":{"buildLibsFromSource":true}};
+  
+  // Determine the correct configValue to use based on the configuration
+  const nxConfiguration = process.env.NX_TASK_TARGET_CONFIGURATION ?? 'default';
+  
+  const options = {
+    ...configValues.default,
+    ...(configValues[nxConfiguration] ?? {})
+  }
+  
+
+export default defineConfig({
+  root: __dirname,
+  cacheDir: '../../node_modules/.vite/apps/myapp',
+
+  server: {
+    port: 4200,
+    host: 'localhost',
+  },
+
+  preview: {
+    port: 4300,
+    host: 'localhost',
+  },
+
+  plugins: [react(), nxViteTsPaths({ buildLibsFromSource: options.buildLibsFromSource }),],
+
+  // Uncomment this if you are using workers.
+  // worker: {
+  //  plugins: [ nxViteTsPaths() ],
+  // },
+
+  build: {
+    outDir: '../../dist/apps/myapp',
+    reportCompressedSize: true,
+    commonjsOptions: {
+      transformMixedEsModules: true,
+    },
+  },
+
+  test: {
+    globals: true,
+    cache: {
+      dir: '../../node_modules/.vitest',
+    },
+    environment: 'jsdom',
+    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+
+    reporters: ['default'],
+    coverage: {
+      reportsDirectory: '../../coverage/apps/myapp',
+      provider: 'v8',
+    },
+  },
+});"
+`;
+
+exports[`buildPostTargetTransformer should move the AST options to each vite config file correctly for configurations 2`] = `
+"/// <reference types='vitest' />
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+  
+  // These options were migrated by @nx/vite:convert-to-inferred from the project.json file.
+  const configValues = {"default":{},"dev":{"buildLibsFromSource":true}};
+  
+  // Determine the correct configValue to use based on the configuration
+  const nxConfiguration = process.env.NX_TASK_TARGET_CONFIGURATION ?? 'default';
+  
+  const options = {
+    ...configValues.default,
+    ...(configValues[nxConfiguration] ?? {})
+  }
+  
+
+export default defineConfig({
+  root: __dirname,
+  cacheDir: '../../node_modules/.vite/apps/myapp',
+
+  server: {
+    port: 4200,
+    host: 'localhost',
+  },
+
+  preview: {
+    port: 4300,
+    host: 'localhost',
+  },
+
+  plugins: [react(), nxViteTsPaths({ buildLibsFromSource: options.buildLibsFromSource }),],
+
+  // Uncomment this if you are using workers.
+  // worker: {
+  //  plugins: [ nxViteTsPaths() ],
+  // },
+
+  build: {
+    outDir: '../../dist/apps/myapp',
+    reportCompressedSize: true,
+    commonjsOptions: {
+      transformMixedEsModules: true,
+    },
+  },
+
+  test: {
+    globals: true,
+    cache: {
+      dir: '../../node_modules/.vitest',
+    },
+    environment: 'jsdom',
+    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+
+    reporters: ['default'],
+    coverage: {
+      reportsDirectory: '../../coverage/apps/myapp',
+      provider: 'v8',
+    },
+  },
+});"
+`;
+
 exports[`buildPostTargetTransformer should remove the correct options and move the AST options to the vite config file correctly and remove outputs when they match inferred 1`] = `
 "/// <reference types='vitest' />
 import { defineConfig } from 'vite';

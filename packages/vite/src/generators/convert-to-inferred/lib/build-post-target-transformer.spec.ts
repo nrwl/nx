@@ -13,7 +13,7 @@ describe('buildPostTargetTransformer', () => {
       outputs: ['{options.outputPath}'],
       options: {
         outputPath: 'build/apps/myapp',
-        configFile: 'vite.config.ts',
+        configFile: 'apps/myapp/vite.config.ts',
         buildLibsFromSource: true,
         skipTypeCheck: false,
         watch: true,
@@ -27,7 +27,7 @@ describe('buildPostTargetTransformer', () => {
       outputs: ['{projectRoot}/{options.outDir}'],
     };
 
-    tree.write('vite.config.ts', viteConfigFileV17);
+    tree.write('apps/myapp/vite.config.ts', viteConfigFileV17);
 
     // ACT
     const target = buildPostTargetTransformer(
@@ -41,12 +41,74 @@ describe('buildPostTargetTransformer', () => {
     );
 
     // ASSERT
-    const configFile = tree.read('vite.config.ts', 'utf-8');
+    const configFile = tree.read('apps/myapp/vite.config.ts', 'utf-8');
     expect(configFile).toMatchSnapshot();
     expect(target).toMatchInlineSnapshot(`
       {
         "options": {
-          "config": "../../vite.config.ts",
+          "config": "./vite.config.ts",
+          "outDir": "../../build/apps/myapp",
+          "watch": true,
+        },
+      }
+    `);
+  });
+
+  it('should move the AST options to each vite config file correctly for configurations', () => {
+    // ARRANGE
+    const tree = createTreeWithEmptyWorkspace();
+
+    const targetConfiguration = {
+      outputs: ['{options.outputPath}'],
+      options: {
+        outputPath: 'build/apps/myapp',
+        configFile: 'apps/myapp/vite.config.ts',
+        buildLibsFromSource: true,
+        skipTypeCheck: false,
+        watch: true,
+        generatePackageJson: true,
+        includeDevDependenciesInPackageJson: false,
+        tsConfig: 'apps/myapp/tsconfig.json',
+      },
+      configurations: {
+        dev: {
+          configFile: 'apps/myapp/vite.dev.config.ts',
+        },
+      },
+    };
+
+    const inferredTargetConfiguration = {
+      outputs: ['{projectRoot}/{options.outDir}'],
+    };
+
+    tree.write('apps/myapp/vite.config.ts', viteConfigFileV17);
+    tree.write('apps/myapp/vite.dev.config.ts', viteConfigFileV17);
+
+    // ACT
+    const target = buildPostTargetTransformer(
+      targetConfiguration,
+      tree,
+      {
+        projectName: 'myapp',
+        root: 'apps/myapp',
+      },
+      inferredTargetConfiguration
+    );
+
+    // ASSERT
+    const configFile = tree.read('apps/myapp/vite.config.ts', 'utf-8');
+    expect(configFile).toMatchSnapshot();
+    const devConfigFile = tree.read('apps/myapp/vite.dev.config.ts', 'utf-8');
+    expect(devConfigFile).toMatchSnapshot();
+    expect(target).toMatchInlineSnapshot(`
+      {
+        "configurations": {
+          "dev": {
+            "config": "./vite.dev.config.ts",
+          },
+        },
+        "options": {
+          "config": "./vite.config.ts",
           "outDir": "../../build/apps/myapp",
           "watch": true,
         },

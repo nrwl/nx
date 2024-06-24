@@ -22,6 +22,8 @@ import {
 import { instantiateScriptPlugins } from './instantiate-script-plugins';
 import CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
 import MiniCssExtractPlugin = require('mini-css-extract-plugin');
+import { getDevServerOptions } from '../../../executors/dev-server/lib/get-dev-server-config';
+import { NormalizedWebpackExecutorOptions } from '../../../executors/webpack/schema';
 
 export function applyWebConfig(
   options: NormalizedNxAppWebpackPluginOptions,

@@ -1,4 +1,8 @@
-import { type TargetConfiguration, type Tree } from '@nx/devkit';
+import {
+  joinPathFragments,
+  type TargetConfiguration,
+  type Tree,
+} from '@nx/devkit';
 import { tsquery } from '@phenomnomnominal/tsquery';
 import { extname } from 'path/posix';
 import {
@@ -20,35 +24,42 @@ export function buildPostTargetTransformer(
     default: {},
   };
 
-  if (target.options) {
-    if (target.options.configFile) {
-      viteConfigPath = target.options.configFile;
-    }
-
-    removePropertiesFromTargetOptions(
-      tree,
-      target.options,
-      viteConfigPath,
-      projectDetails.root,
-      configValues['default'],
-      true
-    );
-  }
-
   if (target.configurations) {
     for (const configurationName in target.configurations) {
       const configuration = target.configurations[configurationName];
-      configValues[configuration] = {};
+      configValues[configurationName] = {};
+      let configurationConfigFile = viteConfigPath;
+      if (configuration.configFile) {
+        if ('buildLibsFromSource' in target.options) {
+          configuration.buildLibsFromSource =
+            target.options.buildLibsFromSource;
+        }
+
+        configurationConfigFile = configuration.configFile;
+      }
+
       removePropertiesFromTargetOptions(
         tree,
         configuration,
-        viteConfigPath,
+        configurationConfigFile,
         projectDetails.root,
-        configValues[configuration]
+        configValues[configurationName],
+        configuration.configFile && configuration.configFile !== viteConfigPath
       );
+    }
 
-      if (Object.keys(configuration).length === 0) {
-        delete target.configurations[configurationName];
+    for (const configurationName in target.configurations) {
+      const configuration = target.configurations[configurationName];
+      if (
+        configuration.config &&
+        configuration.config !==
+          toProjectRelativePath(viteConfigPath, projectDetails.root)
+      ) {
+        const configFilePath = joinPathFragments(
+          projectDetails.root,
+          configuration.config
+        );
+        addConfigValuesToViteConfig(tree, configFilePath, configValues);
       }
     }
 
@@ -65,6 +76,21 @@ export function buildPostTargetTransformer(
     ) {
       delete target.defaultConfiguration;
     }
+  }
+
+  if (target.options) {
+    if (target.options.configFile) {
+      viteConfigPath = target.options.configFile;
+    }
+
+    removePropertiesFromTargetOptions(
+      tree,
+      target.options,
+      viteConfigPath,
+      projectDetails.root,
+      configValues['default'],
+      true
+    );
   }
 
   if (target.outputs) {
@@ -97,7 +123,7 @@ function removePropertiesFromTargetOptions(
   viteConfigPath: string,
   projectRoot: string,
   configValues: Record<string, unknown>,
-  defaultOptions = false
+  needsAstTransform = false
 ) {
   if ('configFile' in targetOptions) {
     targetOptions.config = toProjectRelativePath(
@@ -117,7 +143,7 @@ function removePropertiesFromTargetOptions(
   if ('buildLibsFromSource' in targetOptions) {
     configValues['buildLibsFromSource'] = targetOptions.buildLibsFromSource;
 
-    if (defaultOptions) {
+    if (needsAstTransform) {
       moveBuildLibsFromSourceToViteConfig(tree, viteConfigPath);
     }
     delete targetOptions.buildLibsFromSource;

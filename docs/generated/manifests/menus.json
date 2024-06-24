@@ -9325,6 +9325,14 @@
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
+              },
+              {
+                "id": "convert-to-inferred",
+                "path": "/nx-api/remix/generators/convert-to-inferred",
+                "name": "convert-to-inferred",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
               }
             ],
             "isExternal": false,
@@ -9481,6 +9489,14 @@
                 "id": "cypress-project",
                 "path": "/nx-api/storybook/generators/cypress-project",
                 "name": "cypress-project",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "convert-to-inferred",
+                "path": "/nx-api/storybook/generators/convert-to-inferred",
+                "name": "convert-to-inferred",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
@@ -9864,6 +9880,14 @@
                 "id": "configuration",
                 "path": "/nx-api/webpack/generators/configuration",
                 "name": "configuration",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "convert-config-to-webpack-plugin",
+                "path": "/nx-api/webpack/generators/convert-config-to-webpack-plugin",
+                "name": "convert-config-to-webpack-plugin",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false

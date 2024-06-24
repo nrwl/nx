@@ -45,14 +45,25 @@ function postTargetTransformer(
       delete target.options.config;
     }
 
-    for (const [key, value] of Object.entries(target.options)) {
-      const newKeyName = names(key).fileName;
-      delete target.options[key];
-      target.options[newKeyName] = value;
+    handleRenameOfProperties(target.options);
+  }
+
+  if (target.configurations) {
+    for (const configurationName in target.configurations) {
+      const configuration = target.configurations[configurationName];
+      handleRenameOfProperties(configuration);
     }
   }
 
   return target;
+}
+
+function handleRenameOfProperties(options: Record<string, unknown>) {
+  for (const [key, value] of Object.entries(options)) {
+    const newKeyName = names(key).fileName;
+    delete options[key];
+    options[newKeyName] = value;
+  }
 }
 
 export default convertToInferred;
