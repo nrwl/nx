@@ -2,7 +2,6 @@ import {
   CreateNodes,
   CreateNodesV2,
   CreateNodesContext,
-  CreateNodesContextV2,
   ProjectConfiguration,
   TargetConfiguration,
   createNodesFromFiles,
@@ -13,8 +12,9 @@ import {
 } from '@nx/devkit';
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { existsSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { basename, dirname, join } from 'node:path';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
+import { findProjectForPath } from 'nx/src/devkit-internals';
 
 import { getGradleExecFile } from '../utils/exec-gradle';
 import {
@@ -22,6 +22,8 @@ import {
   getCurrentGradleReport,
   GradleReport,
   gradleConfigGlob,
+  GRADLE_BUILD_FILES,
+  gradleConfigAndTestGlob,
 } from '../utils/get-gradle-report';
 import { hashObject } from 'nx/src/hasher/file-hasher';
 
@@ -38,10 +40,19 @@ interface GradleTask {
 }
 
 export interface GradlePluginOptions {
+  ciTargetName?: string;
   testTargetName?: string;
   classesTargetName?: string;
   buildTargetName?: string;
   [taskTargetName: string]: string | undefined;
+}
+
+function normalizeOptions(options: GradlePluginOptions): GradlePluginOptions {
+  options ??= {};
+  options.testTargetName ??= 'test';
+  options.classesTargetName ??= 'classes';
+  options.buildTargetName ??= 'build';
+  return options;
 }
 
 type GradleTargets = Record<
@@ -62,8 +73,9 @@ export function writeTargetsToCache(cachePath: string, results: GradleTargets) {
 }
 
 export const createNodesV2: CreateNodesV2<GradlePluginOptions> = [
-  gradleConfigGlob,
-  async (configFiles, options, context) => {
+  gradleConfigAndTestGlob,
+  async (files, options, context) => {
+    const { configFiles, projectRoots, testFiles } = splitConfigFiles(files);
     const optionsHash = hashObject(options);
     const cachePath = join(
       workspaceDataDirectory,
@@ -73,10 +85,18 @@ export const createNodesV2: CreateNodesV2<GradlePluginOptions> = [
 
     await populateGradleReport(context.workspaceRoot);
     const gradleReport = getCurrentGradleReport();
+    const gradleProjectRootToTestFilesMap = getGradleProjectRootToTestFilesMap(
+      testFiles,
+      projectRoots
+    );
 
     try {
-      return await createNodesFromFiles(
-        makeCreateNodes(gradleReport, targetsCache),
+      return createNodesFromFiles(
+        makeCreateNodesForGradleConfigFile(
+          gradleReport,
+          targetsCache,
+          gradleProjectRootToTestFilesMap
+        ),
         configFiles,
         options,
         context
@@ -87,10 +107,11 @@ export const createNodesV2: CreateNodesV2<GradlePluginOptions> = [
   },
 ];
 
-export const makeCreateNodes =
+export const makeCreateNodesForGradleConfigFile =
   (
     gradleReport: GradleReport,
-    targetsCache: GradleTargets
+    targetsCache: GradleTargets = {},
+    gradleProjectRootToTestFilesMap: Record<string, string[]> = {}
   ): CreateNodesFunction =>
   async (
     gradleFilePath,
@@ -98,17 +119,19 @@ export const makeCreateNodes =
     context: CreateNodesContext
   ) => {
     const projectRoot = dirname(gradleFilePath);
+    options = normalizeOptions(options);
 
     const hash = await calculateHashForCreateNodes(
       projectRoot,
       options ?? {},
       context
     );
-    targetsCache[hash] ??= createGradleProject(
+    targetsCache[hash] ??= await createGradleProject(
       gradleReport,
       gradleFilePath,
       options,
-      context
+      context,
+      gradleProjectRootToTestFilesMap[projectRoot]
     );
     const project = targetsCache[hash];
     if (!project) {
@@ -133,16 +156,18 @@ export const createNodes: CreateNodes<GradlePluginOptions> = [
     );
     await populateGradleReport(context.workspaceRoot);
     const gradleReport = getCurrentGradleReport();
-    const internalCreateNodes = makeCreateNodes(gradleReport, {});
+    const internalCreateNodes =
+      makeCreateNodesForGradleConfigFile(gradleReport);
     return await internalCreateNodes(configFile, options, context);
   },
 ];
 
-function createGradleProject(
+async function createGradleProject(
   gradleReport: GradleReport,
   gradleFilePath: string,
   options: GradlePluginOptions | undefined,
-  context: CreateNodesContext
+  context: CreateNodesContext,
+  testFiles = []
 ) {
   try {
     const {
@@ -177,12 +202,14 @@ function createGradleProject(
       string
     >;
 
-    const { targets, targetGroups } = createGradleTargets(
+    const { targets, targetGroups } = await createGradleTargets(
       tasks,
       options,
       context,
       outputDirs,
-      gradleProject
+      gradleProject,
+      gradleFilePath,
+      testFiles
     );
     const project = {
       name: projectName,
@@ -200,16 +227,18 @@ function createGradleProject(
   }
 }
 
-function createGradleTargets(
+async function createGradleTargets(
   tasks: GradleTask[],
   options: GradlePluginOptions | undefined,
   context: CreateNodesContext,
   outputDirs: Map<string, string>,
-  gradleProject: string
-): {
+  gradleProject: string,
+  gradleFilePath: string,
+  testFiles: string[] = []
+): Promise<{
   targetGroups: Record<string, string[]>;
   targets: Record<string, TargetConfiguration>;
-} {
+}> {
   const inputsMap = createInputsMap(context);
 
   const targets: Record<string, TargetConfiguration> = {};
@@ -217,28 +246,43 @@ function createGradleTargets(
   for (const task of tasks) {
     const targetName = options?.[`${task.name}TargetName`] ?? task.name;
 
-    const outputs = outputDirs.get(task.name);
+    let outputs = [outputDirs.get(task.name)].filter(Boolean);
+    if (task.name === 'test') {
+      outputs = [
+        outputDirs.get('testReport'),
+        outputDirs.get('testResults'),
+      ].filter(Boolean);
+      getTestCiTargets(
+        testFiles,
+        gradleProject,
+        targetName,
+        options.ciTargetName,
+        inputsMap['test'],
+        outputs,
+        task.type,
+        targets,
+        targetGroups
+      );
+    }
 
+    const taskCommandToRun = `${gradleProject ? gradleProject + ':' : ''}${
+      task.name
+    }`;
     targets[targetName] = {
-      command: `${getGradleExecFile()} ${
-        gradleProject ? gradleProject + ':' : ''
-      }${task.name}`,
+      command: `${getGradleExecFile()} ${taskCommandToRun}`,
       cache: cacheableTaskType.has(task.type),
       inputs: inputsMap[task.name],
       dependsOn: dependsOnMap[task.name],
       metadata: {
         technologies: ['gradle'],
       },
+      ...(outputs && outputs.length ? { outputs } : {}),
     };
-
-    if (outputs) {
-      targets[targetName].outputs = [outputs];
-    }
 
     if (!targetGroups[task.type]) {
       targetGroups[task.type] = [];
     }
-    targetGroups[task.type].push(task.name);
+    targetGroups[task.type].push(targetName);
   }
   return { targetGroups, targets };
 }
@@ -256,4 +300,104 @@ function createInputsMap(
       ? ['production', '^production']
       : ['default', '^default'],
   };
+}
+
+function getTestCiTargets(
+  testFiles: string[],
+  gradleProject: string,
+  testTargetName: string,
+  ciTargetName: string,
+  inputs: TargetConfiguration['inputs'],
+  outputs: string[],
+  targetGroupName: string,
+  targets: Record<string, TargetConfiguration>,
+  targetGroups: Record<string, string[]>
+): void {
+  if (!testFiles || testFiles.length === 0 || !ciTargetName) {
+    return;
+  }
+  const taskCommandToRun = `${gradleProject ? gradleProject + ':' : ''}test`;
+
+  if (!targetGroups[targetGroupName]) {
+    targetGroups[targetGroupName] = [];
+  }
+
+  const dependsOn: TargetConfiguration['dependsOn'] = [];
+  testFiles.forEach((testFile) => {
+    const testName = basename(testFile).split('.')[0];
+    const targetName = ciTargetName + '--' + testName;
+
+    targets[targetName] = {
+      command: `${getGradleExecFile()} ${taskCommandToRun} --tests ${testName}`,
+      cache: true,
+      inputs,
+      dependsOn: dependsOnMap['test'],
+      metadata: {
+        technologies: ['gradle'],
+        description: `Runs Gradle test ${testFile} in CI`,
+      },
+      ...(outputs && outputs.length > 0 ? { outputs } : {}),
+    };
+    targetGroups[targetGroupName].push(targetName);
+    dependsOn.push({
+      target: targetName,
+      projects: 'self',
+      params: 'forward',
+    });
+  });
+
+  targets[ciTargetName] = {
+    executor: 'nx:noop',
+    cache: true,
+    inputs,
+    dependsOn: dependsOn,
+    ...(outputs && outputs.length > 0 ? { outputs } : {}),
+    metadata: {
+      technologies: ['gradle'],
+      description: 'Runs Gradle Tests in CI',
+      nonAtomizedTarget: testTargetName,
+    },
+  };
+  targetGroups[targetGroupName].push(ciTargetName);
+}
+
+function splitConfigFiles(files: readonly string[]): {
+  configFiles: string[];
+  testFiles: string[];
+  projectRoots: string[];
+} {
+  const configFiles = [];
+  const testFiles = [];
+  const projectRoots = new Set<string>();
+  files.forEach((file) => {
+    if (GRADLE_BUILD_FILES.has(basename(file))) {
+      configFiles.push(file);
+      projectRoots.add(dirname(file));
+    } else {
+      testFiles.push(file);
+    }
+  });
+
+  return { configFiles, testFiles, projectRoots: Array.from(projectRoots) };
+}
+
+function getGradleProjectRootToTestFilesMap(
+  testFiles: string[],
+  projectRoots: string[]
+): Record<string, string[]> | undefined {
+  if (testFiles.length === 0 || projectRoots.length === 0) {
+    return;
+  }
+  const roots = new Map(projectRoots.map((root) => [root, root]));
+  const testFilesToGradleProjectMap: Record<string, string[]> = {};
+  testFiles.forEach((testFile) => {
+    const projectRoot = findProjectForPath(testFile, roots);
+    if (projectRoot) {
+      if (!testFilesToGradleProjectMap[projectRoot]) {
+        testFilesToGradleProjectMap[projectRoot] = [];
+      }
+      testFilesToGradleProjectMap[projectRoot].push(testFile);
+    }
+  });
+  return testFilesToGradleProjectMap;
 }
