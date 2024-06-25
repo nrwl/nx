@@ -37,19 +37,12 @@ export async function loadRemoteNxPlugin(
   plugin: PluginConfiguration,
   root: string
 ): Promise<[Promise<LoadedNxPlugin>, () => void]> {
-  const cacheKey = JSON.stringify(plugin);
+  const cacheKey = JSON.stringify({ plugin, root });
   if (nxPluginWorkerCache.has(cacheKey)) {
     return [nxPluginWorkerCache.get(cacheKey), () => {}];
   }
 
-  const { ipcPath, worker } = await startPluginWorker();
-
-  const socket = await new Promise<Socket>((res, rej) => {
-    const socket = connect(ipcPath, () => {
-      res(socket);
-    });
-    socket.on('error', rej);
-  });
+  const { worker, socket } = await startPluginWorker();
 
   const pendingPromises = new Map<string, PendingPromise>();
 
@@ -317,14 +310,16 @@ async function startPluginWorker() {
   let attempts = 0;
   return new Promise<{
     worker: ChildProcess;
-    ipcPath: string;
+    socket: Socket;
   }>((resolve, reject) => {
     const id = setInterval(async () => {
-      if (await isServerAvailable(ipcPath)) {
+      const socket = await isServerAvailable(ipcPath);
+      if (socket) {
+        // socket.unref();
         clearInterval(id);
         resolve({
           worker,
-          ipcPath,
+          socket,
         });
       } else if (attempts > 1000) {
         // daemon fails to start, the process probably exited
@@ -337,12 +332,11 @@ async function startPluginWorker() {
   });
 }
 
-function isServerAvailable(ipcPath: string): Promise<boolean> {
+function isServerAvailable(ipcPath: string): Promise<Socket | false> {
   return new Promise((resolve) => {
     try {
       const socket = connect(ipcPath, () => {
-        socket.destroy();
-        resolve(true);
+        resolve(socket);
       });
       socket.once('error', () => {
         resolve(false);

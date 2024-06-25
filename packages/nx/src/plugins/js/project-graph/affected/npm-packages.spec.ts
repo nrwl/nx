@@ -296,7 +296,7 @@ describe('getTouchedNpmPackages', () => {
   });
 
   it('should handle and log workspace package.json changes when the changes are not in `npmPackages` (projectGraph.externalNodes)', () => {
-    jest.spyOn(logger, 'warn');
+    jest.spyOn(logger, 'warn').mockImplementation(() => {});
     expect(() => {
       getTouchedNpmPackages(
         [
