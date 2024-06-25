@@ -4,18 +4,12 @@
   "sourceRoot": "packages/nx",
   "projectType": "library",
   "implicitDependencies": ["graph-client"],
+  "release": {
+    "version": {
+      "generator": "@nx/js:release-version"
+    }
+  },
   "targets": {
-    "build-native-wasm2": {
-      "cache": true,
-      "outputs": [
-        "{projectRoot}/src/native/*.wasm",
-        "{projectRoot}/src/native/*.js",
-        "{projectRoot}/src/native/*.cjs",
-        "{projectRoot}/src/native/*.mjs",
-        "{projectRoot}/src/native/index.d.ts"
-      ],
-      "command": "pnpm exec napi build --release --platform -c packages/nx/package.json --manifest-path packages/nx/Cargo.toml --js ./native-bindings.js -o packages/nx/src/native --target wasm32-wasip1-threads"
-    },
     "build-native-wasm": {
       "cache": true,
       "outputs": [
