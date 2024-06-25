@@ -477,7 +477,7 @@ npx nx g @nx/react:library products --unitTestRunner=vitest --bundler=none --dir
 
 Note how we use the `--directory` flag to place the library into a subfolder. You can choose whatever folder structure you like to organize your libraries.
 
-Nx sets up your workspace to work with the modular library architecture, but depending on your existing configuration, you may need to tweak some settings. In this repo, you'll need to do a few things in order to prepare for future steps.
+Nx sets up your workspace to work with the modular library architecture, but depending on your existing configuration, you may need to tweak some settings. In this repo, you'll need to make a small change in order to prepare for future steps.
 
 #### Build Settings
 
@@ -817,7 +817,7 @@ Install the `@nx/eslint-plugin` package. This is an ESLint plugin that can be us
 npx nx add @nx/eslint-plugin
 ```
 
-Now we need to update the `.eslintrc.cjs` file to use the `@nx/eslint-plugin` and define the `depConstraints` in the `@nx/enforce-module-boundaries` rule:
+We need to update the `.eslintrc.cjs` file to extend the `.eslintrc.base.json` file and undo the `ignorePattern` from that config that ignores every file. The `.eslintrc.base.json` file serves as a common set of lint rules for every project in the repository.
 
 ```js {% fileName=".eslintrc.cjs" highlightLines=[11,"17-53"] %}
 module.exports = {
@@ -827,54 +827,70 @@ module.exports = {
     'eslint:recommended',
     'plugin:@typescript-eslint/recommended',
     'plugin:react-hooks/recommended',
+    './.eslintrc.base.json',
   ],
-  ignorePatterns: ['dist', '.eslintrc.cjs'],
+  ignorePatterns: ['!**/*', 'dist', '.eslintrc.cjs'],
   parser: '@typescript-eslint/parser',
-  plugins: ['react-refresh', '@nx'],
+  plugins: ['react-refresh'],
   rules: {
     'react-refresh/only-export-components': [
       'warn',
       { allowConstantExport: true },
     ],
-    '@nx/enforce-module-boundaries': [
-      'error',
-      {
-        enforceBuildableLibDependency: true,
-        allow: [],
-        depConstraints: [
-          {
-            sourceTag: '*',
-            onlyDependOnLibsWithTags: ['*'],
-          },
-          {
-            sourceTag: 'type:feature',
-            onlyDependOnLibsWithTags: ['type:feature', 'type:ui'],
-          },
-          {
-            sourceTag: 'type:ui',
-            onlyDependOnLibsWithTags: ['type:ui'],
-          },
-          {
-            sourceTag: 'scope:orders',
-            onlyDependOnLibsWithTags: [
-              'scope:orders',
-              'scope:products',
-              'scope:shared',
-            ],
-          },
-          {
-            sourceTag: 'scope:products',
-            onlyDependOnLibsWithTags: ['scope:products', 'scope:shared'],
-          },
-          {
-            sourceTag: 'scope:shared',
-            onlyDependOnLibsWithTags: ['scope:shared'],
-          },
-        ],
-      },
-    ],
   },
 };
+```
+
+Now we need to update the `.eslintrc.base.json` file and define the `depConstraints` in the `@nx/enforce-module-boundaries` rule:
+
+```json {% fileName=".eslintrc.base.json" highlightLines=["16-39"] %}
+{
+  "overrides": [
+    {
+      "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
+      "rules": {
+        "@nx/enforce-module-boundaries": [
+          "error",
+          {
+            "enforceBuildableLibDependency": true,
+            "allow": [],
+            "depConstraints": [
+              {
+                "sourceTag": "*",
+                "onlyDependOnLibsWithTags": ["*"]
+              },
+              {
+                "sourceTag": "type:feature",
+                "onlyDependOnLibsWithTags": ["type:feature", "type:ui"]
+              },
+              {
+                "sourceTag": "type:ui",
+                "onlyDependOnLibsWithTags": ["type:ui"]
+              },
+              {
+                "sourceTag": "scope:orders",
+                "onlyDependOnLibsWithTags": [
+                  "scope:orders",
+                  "scope:products",
+                  "scope:shared"
+                ]
+              },
+              {
+                "sourceTag": "scope:products",
+                "onlyDependOnLibsWithTags": ["scope:products", "scope:shared"]
+              },
+              {
+                "sourceTag": "scope:shared",
+                "onlyDependOnLibsWithTags": ["scope:shared"]
+              }
+            ]
+          }
+        ]
+      }
+    }
+    ...
+  ]
+}
 ```
 
 When Nx set up the `@nx/eslint` plugin, it chose a task name that would not conflict with the pre-existing `lint` script. Let's overwrite that name so that all the linting tasks use the same `lint` name. Update the setting in the `nx.json` file:
