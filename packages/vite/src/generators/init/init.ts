@@ -9,7 +9,8 @@ import {
 } from '@nx/devkit';
 import { addPlugin } from '@nx/devkit/src/utils/add-plugin';
 
-import { createNodes } from '../../plugins/plugin';
+import { setupPathsPlugin } from '../setup-paths-plugin/setup-paths-plugin';
+import { createNodesV2 } from '../../plugins/plugin';
 import { InitGeneratorSchema } from './schema';
 import { checkDependenciesInstalled, moveToDevDependencies } from './lib/utils';
 
@@ -64,7 +65,7 @@ export async function initGeneratorInternal(
       tree,
       await createProjectGraphAsync(),
       '@nx/vite/plugin',
-      createNodes,
+      createNodesV2,
       {
         buildTargetName: ['build', 'vite:build', 'vite-build'],
         testTargetName: ['test', 'vite:test', 'vite-test'],
@@ -81,6 +82,10 @@ export async function initGeneratorInternal(
   }
 
   updateNxJsonSettings(tree);
+
+  if (schema.setupPathsPlugin) {
+    await setupPathsPlugin(tree, { skipFormat: true });
+  }
 
   const tasks: GeneratorCallback[] = [];
   if (!schema.skipPackageJson) {

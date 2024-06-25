@@ -6,7 +6,7 @@
     "init": {
       "factory": "./src/generators/init/init#detoxInitGeneratorInternal",
       "schema": "./src/generators/init/schema.json",
-      "description": "Initialize the `@nrwl/detox` plugin.",
+      "description": "Initialize the `@nx/detox` plugin.",
       "hidden": true
     },
     "application": {

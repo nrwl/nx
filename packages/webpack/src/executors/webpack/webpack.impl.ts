@@ -75,6 +75,11 @@ async function getWebpackConfigs(
       configuration: context.configurationName, // backwards compat
     });
   } else if (userDefinedWebpackConfig) {
+    if (typeof userDefinedWebpackConfig === 'function') {
+      // assume it's an async standard webpack config function
+      // https://webpack.js.org/configuration/configuration-types/#exporting-a-promise
+      return await userDefinedWebpackConfig(process.env.NODE_ENV, {});
+    }
     // New behavior, we want the webpack config to export object
     return userDefinedWebpackConfig;
   } else {

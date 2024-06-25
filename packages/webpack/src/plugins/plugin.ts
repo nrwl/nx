@@ -2,22 +2,26 @@ import {
   CreateDependencies,
   CreateNodes,
   CreateNodesContext,
+  createNodesFromFiles,
+  CreateNodesResult,
+  CreateNodesV2,
   detectPackageManager,
+  logger,
+  ProjectConfiguration,
   readJsonFile,
   TargetConfiguration,
   workspaceRoot,
   writeJsonFile,
 } from '@nx/devkit';
-import { dirname, isAbsolute, join, relative, resolve } from 'path';
+import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
-import { WebpackExecutorOptions } from '../executors/webpack/schema';
-import { WebDevServerOptions } from '../executors/dev-server/schema';
+import { getLockFileName, getRootTsConfigPath } from '@nx/js';
 import { existsSync, readdirSync } from 'fs';
+import { hashObject } from 'nx/src/hasher/file-hasher';
+import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
+import { dirname, isAbsolute, join, relative, resolve } from 'path';
 import { readWebpackOptions } from '../utils/webpack/read-webpack-options';
 import { resolveUserDefinedWebpackConfig } from '../utils/webpack/resolve-user-defined-webpack-config';
-import { getLockFileName, getRootTsConfigPath } from '@nx/js';
-import { projectGraphCacheDirectory } from 'nx/src/utils/cache-directory';
-import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 
 export interface WebpackPluginOptions {
   buildTargetName?: string;
@@ -26,83 +30,113 @@ export interface WebpackPluginOptions {
   previewTargetName?: string;
 }
 
-const cachePath = join(projectGraphCacheDirectory, 'webpack.hash');
-const targetsCache = readTargetsCache();
+type WebpackTargets = Pick<ProjectConfiguration, 'targets' | 'metadata'>;
 
-function readTargetsCache(): Record<
-  string,
-  Record<string, TargetConfiguration>
-> {
+function readTargetsCache(cachePath: string): Record<string, WebpackTargets> {
   return existsSync(cachePath) ? readJsonFile(cachePath) : {};
 }
 
-function writeTargetsToCache() {
-  const oldCache = readTargetsCache();
-  writeJsonFile(cachePath, {
-    ...oldCache,
-    ...targetsCache,
-  });
+function writeTargetsToCache(
+  cachePath: string,
+  results?: Record<string, WebpackTargets>
+) {
+  writeJsonFile(cachePath, results);
 }
 
+/**
+ * @deprecated The 'createDependencies' function is now a no-op. This functionality is included in 'createNodesV2'.
+ */
 export const createDependencies: CreateDependencies = () => {
-  writeTargetsToCache();
   return [];
 };
 
-export const createNodes: CreateNodes<WebpackPluginOptions> = [
-  '**/webpack.config.{js,ts,mjs,cjs}',
-  async (configFilePath, options, context) => {
-    options ??= {};
-    options.buildTargetName ??= 'build';
-    options.serveTargetName ??= 'serve';
-    options.serveStaticTargetName ??= 'serve-static';
-    options.previewTargetName ??= 'preview';
+const webpackConfigGlob = '**/webpack.config.{js,ts,mjs,cjs}';
 
-    const projectRoot = dirname(configFilePath);
-
-    // Do not create a project if package.json and project.json isn't there.
-    const siblingFiles = readdirSync(join(context.workspaceRoot, projectRoot));
-    if (
-      !siblingFiles.includes('package.json') &&
-      !siblingFiles.includes('project.json')
-    ) {
-      return {};
+export const createNodesV2: CreateNodesV2<WebpackPluginOptions> = [
+  webpackConfigGlob,
+  async (configFilePaths, options, context) => {
+    const optionsHash = hashObject(options);
+    const cachePath = join(
+      workspaceDataDirectory,
+      `webpack-${optionsHash}.hash`
+    );
+    const targetsCache = readTargetsCache(cachePath);
+    const normalizedOptions = normalizeOptions(options);
+    try {
+      return await createNodesFromFiles(
+        (configFile, options, context) =>
+          createNodesInternal(configFile, options, context, targetsCache),
+        configFilePaths,
+        normalizedOptions,
+        context
+      );
+    } finally {
+      writeTargetsToCache(cachePath, targetsCache);
     }
-
-    const hash = calculateHashForCreateNodes(projectRoot, options, context, [
-      getLockFileName(detectPackageManager(context.workspaceRoot)),
-    ]);
-    const targets = targetsCache[hash]
-      ? targetsCache[hash]
-      : await createWebpackTargets(
-          configFilePath,
-          projectRoot,
-          options,
-          context
-        );
-
-    return {
-      projects: {
-        [projectRoot]: {
-          projectType: 'application',
-          targets,
-        },
-      },
-    };
   },
 ];
+
+export const createNodes: CreateNodes<WebpackPluginOptions> = [
+  webpackConfigGlob,
+  async (configFilePath, options, context) => {
+    logger.warn(
+      '`createNodes` is deprecated. Update your plugin to utilize createNodesV2 instead. In Nx 20, this will change to the createNodesV2 API.'
+    );
+    const normalizedOptions = normalizeOptions(options);
+    return createNodesInternal(configFilePath, normalizedOptions, context, {});
+  },
+];
+
+async function createNodesInternal(
+  configFilePath: string,
+  options: Required<WebpackPluginOptions>,
+  context: CreateNodesContext,
+  targetsCache: Record<string, WebpackTargets>
+): Promise<CreateNodesResult> {
+  const projectRoot = dirname(configFilePath);
+
+  // Do not create a project if package.json and project.json isn't there.
+  const siblingFiles = readdirSync(join(context.workspaceRoot, projectRoot));
+  if (
+    !siblingFiles.includes('package.json') &&
+    !siblingFiles.includes('project.json')
+  ) {
+    return {};
+  }
+
+  const hash = await calculateHashForCreateNodes(
+    projectRoot,
+    options,
+    context,
+    [getLockFileName(detectPackageManager(context.workspaceRoot))]
+  );
+
+  targetsCache[hash] ??= await createWebpackTargets(
+    configFilePath,
+    projectRoot,
+    options,
+    context
+  );
+
+  const { targets, metadata } = targetsCache[hash];
+
+  return {
+    projects: {
+      [projectRoot]: {
+        projectType: 'application',
+        targets,
+        metadata,
+      },
+    },
+  };
+}
 
 async function createWebpackTargets(
   configFilePath: string,
   projectRoot: string,
-  options: WebpackPluginOptions,
+  options: Required<WebpackPluginOptions>,
   context: CreateNodesContext
-): Promise<
-  Record<
-    string,
-    TargetConfiguration<WebpackExecutorOptions | WebDevServerOptions>
-  >
-> {
+): Promise<WebpackTargets> {
   const namedInputs = getNamedInputs(projectRoot, context);
 
   const webpackConfig = resolveUserDefinedWebpackConfig(
@@ -118,7 +152,7 @@ async function createWebpackTargets(
     projectRoot
   );
 
-  const targets = {};
+  const targets: Record<string, TargetConfiguration> = {};
 
   targets[options.buildTargetName] = {
     command: `webpack-cli build`,
@@ -168,7 +202,7 @@ async function createWebpackTargets(
     },
   };
 
-  return targets;
+  return { targets, metadata: {} };
 }
 
 function normalizeOutputPath(
@@ -200,4 +234,15 @@ function normalizeOutputPath(
       }
     }
   }
+}
+
+function normalizeOptions(
+  options: WebpackPluginOptions
+): Required<WebpackPluginOptions> {
+  return {
+    buildTargetName: options?.buildTargetName ?? 'build',
+    serveTargetName: options?.serveTargetName ?? 'serve',
+    serveStaticTargetName: options?.serveStaticTargetName ?? 'serve-static',
+    previewTargetName: options?.previewTargetName ?? 'preview',
+  };
 }

@@ -1,4 +1,5 @@
 import { Argv, CommandModule, showHelp } from 'yargs';
+import { readNxJson } from '../../config/nx-json';
 import { logger } from '../../utils/logger';
 import {
   OutputStyle,
@@ -9,14 +10,12 @@ import {
   withRunManyOptions,
 } from '../yargs-utils/shared-options';
 import { VersionData } from './utils/shared';
-import { readNxJson } from '../../config/nx-json';
 
 export interface NxReleaseArgs {
   groups?: string[];
   projects?: string[];
   dryRun?: boolean;
   verbose?: boolean;
-  firstRelease?: boolean;
 }
 
 interface GitCommitAndTagOptions {
@@ -30,7 +29,9 @@ interface GitCommitAndTagOptions {
 }
 
 export type VersionOptions = NxReleaseArgs &
-  GitCommitAndTagOptions & {
+  GitCommitAndTagOptions &
+  VersionPlanArgs &
+  FirstReleaseArgs & {
     specifier?: string;
     preid?: string;
     stageChanges?: boolean;
@@ -38,7 +39,9 @@ export type VersionOptions = NxReleaseArgs &
   };
 
 export type ChangelogOptions = NxReleaseArgs &
-  GitCommitAndTagOptions & {
+  GitCommitAndTagOptions &
+  VersionPlanArgs &
+  FirstReleaseArgs & {
     // version and/or versionData must be set
     version?: string | null;
     versionData?: VersionData;
@@ -50,15 +53,29 @@ export type ChangelogOptions = NxReleaseArgs &
   };
 
 export type PublishOptions = NxReleaseArgs &
-  Partial<RunManyOptions> & { outputStyle?: OutputStyle } & {
+  Partial<RunManyOptions> & { outputStyle?: OutputStyle } & FirstReleaseArgs & {
     registry?: string;
     tag?: string;
     otp?: number;
   };
 
-export type ReleaseOptions = NxReleaseArgs & {
-  yes?: boolean;
-  skipPublish?: boolean;
+export type PlanOptions = NxReleaseArgs & {
+  bump?: string;
+  message?: string;
+};
+
+export type ReleaseOptions = NxReleaseArgs &
+  FirstReleaseArgs & {
+    yes?: boolean;
+    skipPublish?: boolean;
+  };
+
+export type VersionPlanArgs = {
+  deleteVersionPlans?: boolean;
+};
+
+export type FirstReleaseArgs = {
+  firstRelease?: boolean;
 };
 
 export const yargsReleaseCommand: CommandModule<
@@ -74,6 +91,7 @@ export const yargsReleaseCommand: CommandModule<
       .command(versionCommand)
       .command(changelogCommand)
       .command(publishCommand)
+      .command(planCommand)
       .demandCommand()
       // Error on typos/mistyped CLI args, there is no reason to support arbitrary unknown args for these commands
       .strictOptions()
@@ -102,11 +120,6 @@ export const yargsReleaseCommand: CommandModule<
         type: 'boolean',
         describe:
           'Prints additional information about the commands (e.g., stack traces)',
-      })
-      .option('first-release', {
-        type: 'boolean',
-        description:
-          'Indicates that this is the first release for the selected release group. If the current version cannot be determined as usual, the version on disk will be used as a fallback. This is useful when using git or the registry to determine the current version of packages, since those sources are only available after the first release. Also indicates that changelog generation should not assume a previous git tag exists and that publishing should not check for the existence of the package before running.',
       })
       .check((argv) => {
         if (argv.groups && argv.projects) {
@@ -137,7 +150,7 @@ const releaseCommand: CommandModule<NxReleaseArgs, ReleaseOptions> = {
   describe:
     'Create a version and release for the workspace, generate a changelog, and optionally publish the packages',
   builder: (yargs) =>
-    yargs
+    withFirstReleaseOptions(yargs)
       .positional('specifier', {
         type: 'string',
         describe:
@@ -169,10 +182,7 @@ const releaseCommand: CommandModule<NxReleaseArgs, ReleaseOptions> = {
       logger.warn(`\nNOTE: The "dryRun" flag means no changes were made.`);
     }
 
-    if (typeof result === 'number') {
-      process.exit(result);
-    }
-    process.exit(0);
+    process.exit(result);
   },
 };
 
@@ -182,24 +192,26 @@ const versionCommand: CommandModule<NxReleaseArgs, VersionOptions> = {
   describe:
     'Create a version and release for one or more applications and libraries',
   builder: (yargs) =>
-    withGitCommitAndGitTagOptions(
-      yargs
-        .positional('specifier', {
-          type: 'string',
-          describe:
-            'Exact version or semver keyword to apply to the selected release group.',
-        })
-        .option('preid', {
-          type: 'string',
-          describe:
-            'The optional prerelease identifier to apply to the version, in the case that the specifier argument has been set to `prerelease`.',
-          default: '',
-        })
-        .option('stage-changes', {
-          type: 'boolean',
-          describe:
-            'Whether or not to stage the changes made by this command. Useful when combining this command with changelog generation.',
-        })
+    withFirstReleaseOptions(
+      withGitCommitAndGitTagOptions(
+        yargs
+          .positional('specifier', {
+            type: 'string',
+            describe:
+              'Exact version or semver keyword to apply to the selected release group.',
+          })
+          .option('preid', {
+            type: 'string',
+            describe:
+              'The optional prerelease identifier to apply to the version. This will only be applied in the case that the specifier argument has been set to `prerelease` OR when conventional commits are enabled, in which case it will modify the resolved specifier from conventional commits to be its prerelease equivalent. E.g. minor -> preminor',
+            default: '',
+          })
+          .option('stage-changes', {
+            type: 'boolean',
+            describe:
+              'Whether or not to stage the changes made by this command. Useful when combining this command with changelog generation.',
+          })
+      )
     ),
   handler: async (args) => {
     const release = await import('./version');
@@ -208,10 +220,7 @@ const versionCommand: CommandModule<NxReleaseArgs, VersionOptions> = {
       logger.warn(`\nNOTE: The "dryRun" flag means no changes were made.`);
     }
 
-    if (typeof result === 'number') {
-      process.exit(result);
-    }
-    process.exit(0);
+    process.exit(result);
   },
 };
 
@@ -221,46 +230,48 @@ const changelogCommand: CommandModule<NxReleaseArgs, ChangelogOptions> = {
   describe:
     'Generate a changelog for one or more projects, and optionally push to Github',
   builder: (yargs) =>
-    withGitCommitAndGitTagOptions(
-      yargs
-        // Disable default meaning of yargs version for this command
-        .version(false)
-        .positional('version', {
-          type: 'string',
-          description:
-            'The version to create a Github release and changelog for',
-        })
-        .option('from', {
-          type: 'string',
-          description:
-            'The git reference to use as the start of the changelog. If not set it will attempt to resolve the latest tag and use that',
-        })
-        .option('to', {
-          type: 'string',
-          description: 'The git reference to use as the end of the changelog',
-          default: 'HEAD',
-        })
-        .option('interactive', {
-          alias: 'i',
-          type: 'string',
-          description:
-            'Interactively modify changelog markdown contents in your code editor before applying the changes. You can set it to be interactive for all changelogs, or only the workspace level, or only the project level',
-          choices: ['all', 'workspace', 'projects'],
-        })
-        .option('git-remote', {
-          type: 'string',
-          description:
-            'Alternate git remote in the form {user}/{repo} on which to create the Github release (useful for testing)',
-          default: 'origin',
-        })
-        .check((argv) => {
-          if (!argv.version) {
-            throw new Error(
-              'An explicit target version must be specified when using the changelog command directly'
-            );
-          }
-          return true;
-        })
+    withFirstReleaseOptions(
+      withGitCommitAndGitTagOptions(
+        yargs
+          // Disable default meaning of yargs version for this command
+          .version(false)
+          .positional('version', {
+            type: 'string',
+            description:
+              'The version to create a Github release and changelog for',
+          })
+          .option('from', {
+            type: 'string',
+            description:
+              'The git reference to use as the start of the changelog. If not set it will attempt to resolve the latest tag and use that',
+          })
+          .option('to', {
+            type: 'string',
+            description: 'The git reference to use as the end of the changelog',
+            default: 'HEAD',
+          })
+          .option('interactive', {
+            alias: 'i',
+            type: 'string',
+            description:
+              'Interactively modify changelog markdown contents in your code editor before applying the changes. You can set it to be interactive for all changelogs, or only the workspace level, or only the project level',
+            choices: ['all', 'workspace', 'projects'],
+          })
+          .option('git-remote', {
+            type: 'string',
+            description:
+              'Alternate git remote in the form {user}/{repo} on which to create the Github release (useful for testing)',
+            default: 'origin',
+          })
+          .check((argv) => {
+            if (!argv.version) {
+              throw new Error(
+                'An explicit target version must be specified when using the changelog command directly'
+              );
+            }
+            return true;
+          })
+      )
     ),
   handler: async (args) => {
     const release = await import('./changelog');
@@ -269,10 +280,7 @@ const changelogCommand: CommandModule<NxReleaseArgs, ChangelogOptions> = {
       logger.warn(`\nNOTE: The "dryRun" flag means no changes were made.`);
     }
 
-    if (typeof result === 'number') {
-      process.exit(result);
-    }
-    process.exit(0);
+    process.exit(result);
   },
 };
 
@@ -281,20 +289,22 @@ const publishCommand: CommandModule<NxReleaseArgs, PublishOptions> = {
   aliases: ['p'],
   describe: 'Publish a versioned project to a registry',
   builder: (yargs) =>
-    withRunManyOptions(withOutputStyleOption(yargs))
-      .option('registry', {
-        type: 'string',
-        description: 'The registry to publish to',
-      })
-      .option('tag', {
-        type: 'string',
-        description: 'The distribution tag to apply to the published package',
-      })
-      .option('otp', {
-        type: 'number',
-        description:
-          'A one-time password for publishing to a registry that requires 2FA',
-      }),
+    withFirstReleaseOptions(
+      withRunManyOptions(withOutputStyleOption(yargs))
+        .option('registry', {
+          type: 'string',
+          description: 'The registry to publish to',
+        })
+        .option('tag', {
+          type: 'string',
+          description: 'The distribution tag to apply to the published package',
+        })
+        .option('otp', {
+          type: 'number',
+          description:
+            'A one-time password for publishing to a registry that requires 2FA',
+        })
+    ),
   handler: async (args) => {
     const status = await (
       await import('./publish')
@@ -304,6 +314,43 @@ const publishCommand: CommandModule<NxReleaseArgs, PublishOptions> = {
     }
 
     process.exit(status);
+  },
+};
+
+const planCommand: CommandModule<NxReleaseArgs, PlanOptions> = {
+  command: 'plan [bump]',
+  aliases: ['pl'],
+  // Create a plan to pick a new version and generate a changelog entry.
+  // Hidden for now until the feature is more stable
+  describe: false,
+  builder: (yargs) =>
+    yargs
+      .positional('bump', {
+        type: 'string',
+        describe: 'Semver keyword to use for the selected release group.',
+        choices: [
+          'major',
+          'premajor',
+          'minor',
+          'preminor',
+          'patch',
+          'prepatch',
+          'prerelease',
+        ],
+      })
+      .option('message', {
+        type: 'string',
+        alias: 'm',
+        describe: 'Custom message to use for the changelog entry',
+      }),
+  handler: async (args) => {
+    const release = await import('./plan');
+    const result = await release.releasePlanCLIHandler(args);
+    if (args.dryRun) {
+      logger.warn(`\nNOTE: The "dryRun" flag means no changes were made.`);
+    }
+
+    process.exit(result);
   },
 };
 
@@ -370,4 +417,14 @@ function withGitCommitAndGitTagOptions<T>(
         'Whether or not to stage the changes made by this command. Always treated as true if git-commit is true.',
       type: 'boolean',
     });
+}
+
+function withFirstReleaseOptions<T>(
+  yargs: Argv<T>
+): Argv<T & FirstReleaseArgs> {
+  return yargs.option('first-release', {
+    type: 'boolean',
+    description:
+      'Indicates that this is the first release for the selected release group. If the current version cannot be determined as usual, the version on disk will be used as a fallback. This is useful when using git or the registry to determine the current version of packages, since those sources are only available after the first release. Also indicates that changelog generation should not assume a previous git tag exists and that publishing should not check for the existence of the package before running.',
+  });
 }

@@ -1,8 +1,11 @@
 import * as fs from 'fs';
+import * as childProcess from 'child_process';
 import * as configModule from '../config/configuration';
 import * as projectGraphFileUtils from '../project-graph/file-utils';
+import * as fileUtils from '../utils/fileutils';
 import {
   detectPackageManager,
+  getPackageManagerVersion,
   isWorkspacesEnabled,
   modifyYarnRcToFitNewDirectory,
   modifyYarnRcYmlToFitNewDirectory,
@@ -105,6 +108,78 @@ describe('package-manager', () => {
       const packageManager = detectPackageManager();
       expect(packageManager).toEqual('npm');
       expect(fs.existsSync).toHaveBeenCalledTimes(3);
+    });
+  });
+
+  describe('getPackageManagerVersion', () => {
+    afterEach(() => {
+      jest.restoreAllMocks();
+    });
+
+    it('should detect package manager from --version', () => {
+      jest.spyOn(childProcess, 'execSync').mockImplementation((p) => {
+        switch (p) {
+          case 'yarn --version':
+            return '1.22.10';
+          case 'pnpm --version':
+            return '5.17.5';
+          case 'npm --version':
+            return '7.20.3';
+          default:
+            return jest.requireActual('child_process').execSync(p);
+        }
+      });
+      expect(getPackageManagerVersion('yarn')).toEqual('1.22.10');
+      expect(getPackageManagerVersion('pnpm')).toEqual('5.17.5');
+      expect(getPackageManagerVersion('npm')).toEqual('7.20.3');
+    });
+
+    it('should detect pnpm package manager version from package.json packageManager', () => {
+      jest.spyOn(childProcess, 'execSync').mockImplementation(() => {
+        throw new Error('Command failed');
+      });
+      jest
+        .spyOn(fileUtils, 'readJsonFile')
+        .mockReturnValueOnce({ packageManager: 'pnpm@6.32.4' });
+      expect(getPackageManagerVersion('pnpm')).toEqual('6.32.4');
+    });
+
+    it('should detect yarn package manager from package.json packageManager', () => {
+      jest.spyOn(childProcess, 'execSync').mockImplementation(() => {
+        throw new Error('Command failed');
+      });
+      jest
+        .spyOn(fileUtils, 'readJsonFile')
+        .mockReturnValueOnce({ packageManager: 'yarn@6.32.4' });
+      expect(getPackageManagerVersion('yarn')).toEqual('6.32.4');
+    });
+
+    it('should detect npm package manager from package.json packageManager', () => {
+      jest.spyOn(childProcess, 'execSync').mockImplementation(() => {
+        throw new Error('Command failed');
+      });
+      jest
+        .spyOn(fileUtils, 'readJsonFile')
+        .mockReturnValueOnce({ packageManager: 'npm@6.32.4' });
+      expect(getPackageManagerVersion('npm')).toEqual('6.32.4');
+    });
+
+    it('should throw an error if packageManager does not exist in package.json', () => {
+      jest.spyOn(childProcess, 'execSync').mockImplementation(() => {
+        throw new Error('Command failed');
+      });
+      jest.spyOn(fileUtils, 'readJsonFile').mockReturnValueOnce({});
+      expect(() => getPackageManagerVersion('npm')).toThrowError();
+    });
+
+    it('should throw an error if packageManager in package.json does not match detected pacakge manager', () => {
+      jest.spyOn(childProcess, 'execSync').mockImplementation(() => {
+        throw new Error('Command failed');
+      });
+      jest
+        .spyOn(fileUtils, 'readJsonFile')
+        .mockReturnValueOnce({ packageManager: 'npm@6.32.4' });
+      expect(() => getPackageManagerVersion('yarn')).toThrowError();
     });
   });
 

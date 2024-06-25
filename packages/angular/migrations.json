@@ -395,6 +395,15 @@
       },
       "description": "Update the @angular/cli package version to ~18.0.0.",
       "factory": "./src/migrations/update-19-1-0/update-angular-cli"
+    },
+    "add-typescript-eslint-utils": {
+      "cli": "nx",
+      "version": "19.2.1-beta.0",
+      "requires": {
+        "@angular-eslint/eslint-plugin": ">=18.0.0"
+      },
+      "description": "Installs the '@typescript-eslint/utils' package when having installed '@angular-eslint/eslint-plugin' or '@angular-eslint/eslint-plugin-template' with version >=18.0.0.",
+      "factory": "./src/migrations/update-19-2-1/add-typescript-eslint-utils"
     }
   },
   "packageJsonUpdates": {
@@ -1884,6 +1893,43 @@
       "packages": {
         "jest-preset-angular": {
           "version": "~14.1.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "19.1.2": {
+      "version": "19.1.2-beta.1",
+      "requires": {
+        "eslint": "^8.57.0 || ^9.0.0",
+        "@angular/core": ">= 18.0.0 < 19.0.0"
+      },
+      "packages": {
+        "@angular-eslint/eslint-plugin": {
+          "version": "^18.0.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/eslint-plugin-template": {
+          "version": "^18.0.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/template-parser": {
+          "version": "^18.0.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/utils": {
+          "version": "^18.0.1",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "19.4.0-ngrx": {
+      "version": "19.4.0-beta.1",
+      "requires": {
+        "@angular/core": "^18.0.0"
+      },
+      "packages": {
+        "@ngrx/store": {
+          "version": "^18.0.0",
           "alwaysAddToPackageJson": false
         }
       }

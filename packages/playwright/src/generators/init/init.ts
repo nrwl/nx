@@ -8,7 +8,7 @@ import {
   Tree,
 } from '@nx/devkit';
 import { addPlugin } from '@nx/devkit/src/utils/add-plugin';
-import { createNodes } from '../../plugins/plugin';
+import { createNodesV2 } from '../../plugins/plugin';
 import { nxVersion, playwrightVersion } from '../../utils/versions';
 import { InitGeneratorSchema } from './schema';
 
@@ -49,7 +49,7 @@ export async function initGeneratorInternal(
       tree,
       await createProjectGraphAsync(),
       '@nx/playwright/plugin',
-      createNodes,
+      createNodesV2,
       { targetName: ['e2e', 'playwright:e2e', 'playwright-e2e'] },
       options.updatePackageScripts
     );

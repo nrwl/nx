@@ -1,3 +1,7 @@
+import { relative, resolve } from 'node:path/posix';
+import { workspaceRoot, type TargetConfiguration } from 'nx/src/devkit-exports';
+import { interpolate } from 'nx/src/devkit-internals';
+
 /**
  * Iterate through the current target in the project.json and its options comparing it to the target created by the Plugin itself
  * Delete matching properties from current target.
@@ -78,4 +82,127 @@ export function deleteMatchingProperties(
       delete targetToMigrate[key];
     }
   }
+}
+
+export function processTargetOutputs(
+  target: TargetConfiguration,
+  renamedOutputOptions: Array<{ newName: string; oldName: string }>,
+  inferredTarget: TargetConfiguration,
+  projectDetails: { projectName: string; projectRoot: string }
+): void {
+  const interpolatedInferredOutputs = (inferredTarget.outputs ?? []).map(
+    (output) =>
+      interpolate(output, {
+        workspaceRoot: '',
+        projectRoot: projectDetails.projectRoot,
+        projectName: projectDetails.projectName,
+      })
+  );
+  const targetOutputs = (target.outputs ?? []).map((output) =>
+    updateOutput(output, renamedOutputOptions)
+  );
+  const interpolatedOutputs = targetOutputs.map((output) =>
+    interpolate(output, {
+      workspaceRoot: '',
+      projectRoot: projectDetails.projectRoot,
+      projectName: projectDetails.projectName,
+    })
+  );
+
+  const shouldDelete = interpolatedOutputs.every((output) =>
+    interpolatedInferredOutputs.includes(output)
+  );
+  if (shouldDelete) {
+    // all existing outputs are already inferred
+    delete target.outputs;
+    return;
+  }
+
+  // move extra inferred outputs to the target outputs
+  for (let i = 0; i < interpolatedInferredOutputs.length; i++) {
+    if (!interpolatedOutputs.includes(interpolatedInferredOutputs[i])) {
+      targetOutputs.push(inferredTarget.outputs[i]);
+      interpolatedOutputs.push(interpolatedInferredOutputs[i]);
+    }
+  }
+
+  target.outputs = targetOutputs;
+}
+
+export function toProjectRelativePath(
+  path: string,
+  projectRoot: string
+): string {
+  if (projectRoot === '.') {
+    // workspace and project root are the same, we add a leading './' which is
+    // required by some tools (e.g. Jest)
+    return path.startsWith('.') ? path : `./${path}`;
+  }
+
+  const relativePath = relative(
+    resolve(workspaceRoot, projectRoot),
+    resolve(workspaceRoot, path)
+  );
+
+  return relativePath.startsWith('.') ? relativePath : `./${relativePath}`;
+}
+
+function updateOutputRenamingOption(
+  output: string,
+  option: string,
+  previousName: string
+): string {
+  const newOptionToken = `{options.${option}}`;
+  const oldOptionToken = `{options.${previousName}}`;
+
+  if (
+    !output.startsWith('{workspaceRoot}') &&
+    !output.startsWith('{projectRoot}')
+  ) {
+    return `{projectRoot}/${output.replace(oldOptionToken, newOptionToken)}`;
+  }
+
+  if (
+    output.startsWith('{workspaceRoot}') &&
+    !output.startsWith('{workspaceRoot}/{projectRoot}')
+  ) {
+    return output
+      .replace('{workspaceRoot}', '{projectRoot}')
+      .replace(oldOptionToken, newOptionToken);
+  }
+
+  return output.replace(oldOptionToken, newOptionToken);
+}
+
+function updateOutput(
+  output: string,
+  renamedOutputOptions: Array<{ newName: string; oldName: string }>
+): string {
+  if (!/{options\..*}/.test(output)) {
+    // output does not contain any option tokens
+    return output;
+  }
+
+  for (const { newName, oldName } of renamedOutputOptions) {
+    const optionToken = `{options.${oldName}}`;
+    if (output.includes(optionToken)) {
+      return updateOutputRenamingOption(output, newName, oldName);
+    }
+  }
+
+  if (
+    !output.startsWith('{workspaceRoot}') &&
+    !output.startsWith('{projectRoot}')
+  ) {
+    return `{projectRoot}/${output}`;
+  }
+
+  if (
+    output.startsWith('{workspaceRoot}') &&
+    !output.startsWith('{workspaceRoot}/{projectRoot}')
+  ) {
+    return output.replace('{workspaceRoot}', '{projectRoot}');
+  }
+
+  return output;
 }

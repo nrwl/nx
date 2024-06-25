@@ -354,10 +354,6 @@ describe('Eslint - Convert Executors To Plugin', () => {
       await convertToInferred(tree, { project: 'myapp', skipFormat: true });
 
       // ASSERT
-      // project.json modifications
-      const updatedProject = readProjectConfiguration(tree, project.name);
-      const targetKeys = Object.keys(updatedProject.targets);
-      expect(targetKeys).not.toContain('lint');
 
       // nx.json modifications
       const nxJsonPlugins = readNxJson(tree).plugins;
@@ -426,16 +422,9 @@ describe('Eslint - Convert Executors To Plugin', () => {
       await convertToInferred(tree, { project: 'myapp', skipFormat: true });
 
       // ASSERT
-      // project.json modifications
-      const updatedProject = readProjectConfiguration(tree, project.name);
-      const targetKeys = Object.keys(updatedProject.targets);
-      expect(targetKeys).not.toContain('lint');
       const projectJsonForProject = readJson(
         tree,
         `${project.root}/project.json`
-      );
-      expect(projectJsonForProject['// targets']).toEqual(
-        'to see all targets run: nx show project myapp --web'
       );
       // nx.json modifications
       const nxJsonPlugins = readNxJson(tree).plugins;
@@ -453,6 +442,123 @@ describe('Eslint - Convert Executors To Plugin', () => {
         (addedTestEslintPlugin as ExpandedPluginConfiguration).include
       ).not.toBeDefined();
     });
+
+    it('should remove inputs when they are inferred', async () => {
+      const project = createTestProject(tree);
+      project.targets.lint.options.cacheLocation = 'cache-dir';
+      updateProjectConfiguration(tree, project.name, project);
+      createTestProject(tree, { appRoot: 'second', appName: 'second' });
+      const nxJson = readNxJson(tree);
+      nxJson.targetDefaults ??= {};
+      nxJson.targetDefaults['@nx/eslint:lint'] = {
+        inputs: ['default', '^default', '{projectRoot}/.eslintrc.json'],
+      };
+      updateNxJson(tree, nxJson);
+
+      await convertToInferred(tree, {
+        project: project.name,
+        skipFormat: true,
+      });
+
+      // project.json modifications
+      const updatedProject = readProjectConfiguration(tree, project.name);
+      expect(updatedProject.targets.lint.inputs).toBeUndefined();
+    });
+
+    it('should add external dependencies input from inferred task', async () => {
+      const project = createTestProject(tree);
+      createTestProject(tree, { appRoot: 'second', appName: 'second' });
+      const nxJson = readNxJson(tree);
+      nxJson.targetDefaults ??= {};
+      nxJson.targetDefaults['@nx/eslint:lint'] = {
+        inputs: [
+          'default',
+          '{projectRoot}/.eslintrc.json',
+          '{projectRoot}/.eslintignore',
+          '{projectRoot}/eslint.config.js',
+        ],
+      };
+      updateNxJson(tree, nxJson);
+
+      await convertToInferred(tree, {
+        project: project.name,
+        skipFormat: true,
+      });
+
+      // project.json modifications
+      const updatedProject = readProjectConfiguration(tree, project.name);
+      expect(updatedProject.targets.lint.inputs).toStrictEqual([
+        'default',
+        '{projectRoot}/.eslintrc.json',
+        '{projectRoot}/.eslintignore',
+        '{projectRoot}/eslint.config.js',
+        { externalDependencies: ['eslint'] },
+      ]);
+    });
+
+    it('should merge external dependencies input from inferred task', async () => {
+      const project = createTestProject(tree);
+      createTestProject(tree, { appRoot: 'second', appName: 'second' });
+      const nxJson = readNxJson(tree);
+      nxJson.targetDefaults ??= {};
+      nxJson.targetDefaults['@nx/eslint:lint'] = {
+        inputs: [
+          'default',
+          '{projectRoot}/.eslintrc.json',
+          '{projectRoot}/.eslintignore',
+          '{projectRoot}/eslint.config.js',
+          { externalDependencies: ['eslint-plugin-react'] },
+        ],
+      };
+      updateNxJson(tree, nxJson);
+
+      await convertToInferred(tree, {
+        project: project.name,
+        skipFormat: true,
+      });
+
+      // project.json modifications
+      const updatedProject = readProjectConfiguration(tree, project.name);
+      expect(updatedProject.targets.lint.inputs).toStrictEqual([
+        'default',
+        '{projectRoot}/.eslintrc.json',
+        '{projectRoot}/.eslintignore',
+        '{projectRoot}/eslint.config.js',
+        { externalDependencies: ['eslint-plugin-react', 'eslint'] },
+      ]);
+    });
+
+    it('should not duplicate already existing external dependencies input', async () => {
+      const project = createTestProject(tree);
+      createTestProject(tree, { appRoot: 'second', appName: 'second' });
+      const nxJson = readNxJson(tree);
+      nxJson.targetDefaults ??= {};
+      nxJson.targetDefaults['@nx/eslint:lint'] = {
+        inputs: [
+          'default',
+          '{projectRoot}/.eslintrc.json',
+          '{projectRoot}/.eslintignore',
+          '{projectRoot}/eslint.config.js',
+          { externalDependencies: ['eslint', 'eslint-plugin-react'] },
+        ],
+      };
+      updateNxJson(tree, nxJson);
+
+      await convertToInferred(tree, {
+        project: project.name,
+        skipFormat: true,
+      });
+
+      // project.json modifications
+      const updatedProject = readProjectConfiguration(tree, project.name);
+      expect(updatedProject.targets.lint.inputs).toStrictEqual([
+        'default',
+        '{projectRoot}/.eslintrc.json',
+        '{projectRoot}/.eslintignore',
+        '{projectRoot}/eslint.config.js',
+        { externalDependencies: ['eslint', 'eslint-plugin-react'] },
+      ]);
+    });
   });
 
   describe('--all', () => {
@@ -463,10 +569,6 @@ describe('Eslint - Convert Executors To Plugin', () => {
       await convertToInferred(tree, { skipFormat: true });
 
       // ASSERT
-      // project.json modifications
-      const updatedProject = readProjectConfiguration(tree, project.name);
-      const targetKeys = Object.keys(updatedProject.targets);
-      expect(targetKeys).not.toContain('lint');
 
       // nx.json modifications
       const nxJsonPlugins = readNxJson(tree).plugins;
@@ -493,10 +595,6 @@ describe('Eslint - Convert Executors To Plugin', () => {
       await convertToInferred(tree, { skipFormat: true });
 
       // ASSERT
-      // project.json modifications
-      const updatedProject = readProjectConfiguration(tree, project.name);
-      const targetKeys = Object.keys(updatedProject.targets);
-      ['eslint'].forEach((key) => expect(targetKeys).not.toContain(key));
 
       // nx.json modifications
       const nxJsonPlugins = readNxJson(tree).plugins;
@@ -524,10 +622,6 @@ describe('Eslint - Convert Executors To Plugin', () => {
       await convertToInferred(tree, { skipFormat: true });
 
       // ASSERT
-      // project.json modifications
-      const updatedProject = readProjectConfiguration(tree, project.name);
-      const targetKeys = Object.keys(updatedProject.targets);
-      expect(targetKeys).not.toContain('eslint');
 
       // nx.json modifications
       const nxJsonPlugins = readNxJson(tree).plugins;
@@ -578,10 +672,6 @@ describe('Eslint - Convert Executors To Plugin', () => {
       await convertToInferred(tree, { skipFormat: true });
 
       // ASSERT
-      // project.json modifications
-      const updatedProject = readProjectConfiguration(tree, project.name);
-      const targetKeys = Object.keys(updatedProject.targets);
-      expect(targetKeys).not.toContain('eslint');
 
       // nx.json modifications
       const nxJsonPlugins = readNxJson(tree).plugins;
@@ -627,12 +717,13 @@ describe('Eslint - Convert Executors To Plugin', () => {
       // project.json modifications
       const updatedProject = readProjectConfiguration(tree, project.name);
       expect(updatedProject.targets.lint).toMatchInlineSnapshot(`
-      {
-        "options": {
-          "cache-location": "cache-dir",
-        },
-      }
-    `);
+        {
+          "options": {
+            "cache-location": "cache-dir",
+            "config": ".eslintrc.json",
+          },
+        }
+      `);
 
       // nx.json modifications
       const nxJsonPlugins = readNxJson(tree).plugins;
@@ -668,12 +759,13 @@ describe('Eslint - Convert Executors To Plugin', () => {
       // project.json modifications
       const updatedProject = readProjectConfiguration(tree, project.name);
       expect(updatedProject.targets.lint).toMatchInlineSnapshot(`
-      {
-        "options": {
-          "max-warnings": 10,
-        },
-      }
-    `);
+        {
+          "options": {
+            "config": ".eslintrc.json",
+            "max-warnings": 10,
+          },
+        }
+      `);
 
       // nx.json modifications
       const nxJsonPlugins = readNxJson(tree).plugins;

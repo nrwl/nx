@@ -14,7 +14,7 @@ import { getLockFileName } from '@nx/js';
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { existsSync, readdirSync } from 'fs';
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
-import { projectGraphCacheDirectory } from 'nx/src/utils/cache-directory';
+import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
 
 export interface ExpoPluginOptions {
@@ -29,7 +29,7 @@ export interface ExpoPluginOptions {
   submitTargetName?: string;
 }
 
-const cachePath = join(projectGraphCacheDirectory, 'expo.hash');
+const cachePath = join(workspaceDataDirectory, 'expo.hash');
 const targetsCache = readTargetsCache();
 
 function readTargetsCache(): Record<
@@ -72,9 +72,12 @@ export const createNodes: CreateNodes<ExpoPluginOptions> = [
       return {};
     }
 
-    const hash = calculateHashForCreateNodes(projectRoot, options, context, [
-      getLockFileName(detectPackageManager(context.workspaceRoot)),
-    ]);
+    const hash = await calculateHashForCreateNodes(
+      projectRoot,
+      options,
+      context,
+      [getLockFileName(detectPackageManager(context.workspaceRoot))]
+    );
 
     targetsCache[hash] ??= buildExpoTargets(projectRoot, options, context);
 
@@ -97,8 +100,7 @@ function buildExpoTargets(
 
   const targets: Record<string, TargetConfiguration> = {
     [options.startTargetName]: {
-      command: `expo start`,
-      options: { cwd: projectRoot },
+      executor: `@nx/expo:start`,
     },
     [options.serveTargetName]: {
       command: `expo start --web`,
@@ -121,8 +123,7 @@ function buildExpoTargets(
       outputs: [getOutputs(projectRoot, 'dist')],
     },
     [options.installTargetName]: {
-      command: `expo install`,
-      options: { cwd: workspaceRoot }, // install at workspace root
+      executor: '@nx/expo:install',
     },
     [options.prebuildTargetName]: {
       executor: `@nx/expo:prebuild`,

@@ -1,6 +1,7 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
+    "lib": ["dom", "dom.iterable", "esnext"],
     "jsx": "preserve",
     "allowJs": true,
     "esModuleInterop": true,
@@ -10,18 +11,34 @@
     "noEmit": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "strictNullChecks": true,
-    "incremental": true
+    "incremental": true,
+    "strictNullChecks": false,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ]
   },
-  "files": [],
-  "include": [],
+  "types": ["node", "jest"],
+  "include": [
+    "**/*.js",
+    "**/*.ts",
+    "**/*.tsx",
+    "next-env.d.ts",
+    ".next/types/**/*.ts",
+    "../../dist/nx-dev/nx-dev/.next/types/**/*.ts"
+  ],
   "references": [
-    {
-      "path": "./tsconfig.app.json"
-    },
     {
       "path": "./tsconfig.spec.json"
     }
   ],
-  "exclude": ["node_modules"]
+  "exclude": [
+    "**/*.spec.ts",
+    "**/*.test.ts",
+    "**/*.spec.tsx",
+    "**/*.test.tsx",
+    "jest.config.ts",
+    "node_modules"
+  ]
 }

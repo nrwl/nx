@@ -1,6 +1,6 @@
 import { execSync } from 'child_process';
 import { existsSync, readFileSync } from 'fs';
-import { extname, join, relative, sep } from 'path';
+import { basename, extname, join, relative, sep } from 'path';
 import { readNxJson } from '../config/configuration';
 import { FileData } from '../config/project-graph';
 import {
@@ -17,16 +17,18 @@ import {
 } from './project-graph';
 import { toOldFormat } from '../adapter/angular-json';
 import { getIgnoreObject } from '../utils/ignore';
-import { retrieveProjectConfigurationPaths } from './utils/retrieve-workspace-files';
 import {
   mergeProjectConfigurationIntoRootMap,
   readProjectConfigurationsFromRootMap,
 } from './utils/project-configuration-utils';
-import { NxJsonConfiguration } from '../config/nx-json';
-import { getDefaultPluginsSync } from '../utils/nx-plugin.deprecated';
-import { minimatch } from 'minimatch';
-import { CreateNodesResult } from '../devkit-exports';
-import { PackageJsonProjectsNextToProjectJsonPlugin } from '../plugins/project-json/build-nodes/package-json-next-to-project-json';
+import {
+  buildProjectConfigurationFromPackageJson,
+  getGlobPatternsFromPackageManagerWorkspaces,
+} from '../plugins/package-json-workspaces';
+import { globWithWorkspaceContextSync } from '../utils/workspace-context';
+import { buildProjectFromProjectJson } from '../plugins/project-json/build-nodes/project-json';
+import { PackageJson } from '../utils/package-json';
+import { NxJsonConfiguration } from '../devkit-exports';
 
 export interface Change {
   type: string;
@@ -151,7 +153,7 @@ export function readWorkspaceConfig(opts: {
   } catch {
     configuration = {
       version: 2,
-      projects: getProjectsSyncNoInference(root, nxJson).projects,
+      projects: getProjectsSync(root, nxJson),
     };
   }
   if (opts.format === 'angularCli') {
@@ -179,50 +181,60 @@ export { FileData };
 /**
  * TODO(v20): Remove this function.
  */
-function getProjectsSyncNoInference(root: string, nxJson: NxJsonConfiguration) {
-  const allConfigFiles = retrieveProjectConfigurationPaths(
-    root,
-    getDefaultPluginsSync(root)
-  );
-  const plugins = [
-    PackageJsonProjectsNextToProjectJsonPlugin,
-    ...getDefaultPluginsSync(root),
+function getProjectsSync(
+  root: string,
+  nxJson: NxJsonConfiguration
+): {
+  [name: string]: ProjectConfiguration;
+} {
+  /**
+   * We can't update projects that come from plugins anyways, so we are going
+   * to ignore them for now. Plugins should add their own add/create/update methods
+   * if they would like to use devkit to update inferred projects.
+   */
+  const patterns = [
+    '**/project.json',
+    'project.json',
+    ...getGlobPatternsFromPackageManagerWorkspaces(root, readJsonFile),
   ];
+  const projectFiles = globWithWorkspaceContextSync(root, patterns);
 
-  const projectRootMap: Record<string, ProjectConfiguration> = {};
-
-  // We iterate over plugins first - this ensures that plugins specified first take precedence.
-  for (const plugin of plugins) {
-    const [pattern, createNodes] = plugin.createNodes ?? [];
-    if (!pattern) {
-      continue;
-    }
-    const matchingConfigFiles = allConfigFiles.filter((file) =>
-      minimatch(file, pattern, { dot: true })
-    );
-    for (const file of matchingConfigFiles) {
-      if (minimatch(file, pattern, { dot: true })) {
-        let r = createNodes(
-          file,
-          {},
+  const rootMap: Record<string, ProjectConfiguration> = {};
+  for (const projectFile of projectFiles) {
+    if (basename(projectFile) === 'project.json') {
+      const json = readJsonFile(projectFile);
+      const config = buildProjectFromProjectJson(json, projectFile);
+      mergeProjectConfigurationIntoRootMap(
+        rootMap,
+        config,
+        undefined,
+        undefined,
+        true
+      );
+    } else if (basename(projectFile) === 'package.json') {
+      const packageJson = readJsonFile<PackageJson>(projectFile);
+      const config = buildProjectConfigurationFromPackageJson(
+        packageJson,
+        root,
+        projectFile,
+        nxJson
+      );
+      if (!rootMap[config.root]) {
+        mergeProjectConfigurationIntoRootMap(
+          rootMap,
+          // Inferred targets, tags, etc don't show up when running generators
+          // This is to help avoid running into issues when trying to update the workspace
           {
-            nxJsonConfiguration: nxJson,
-            workspaceRoot: root,
-            configFiles: matchingConfigFiles,
-          }
-        ) as CreateNodesResult;
-        for (const node in r.projects) {
-          const project = {
-            root: node,
-            ...r.projects[node],
-          };
-          mergeProjectConfigurationIntoRootMap(projectRootMap, project);
-        }
+            name: config.name,
+            root: config.root,
+          },
+          undefined,
+          undefined,
+          true
+        );
       }
     }
   }
 
-  return {
-    projects: readProjectConfigurationsFromRootMap(projectRootMap),
-  };
+  return readProjectConfigurationsFromRootMap(rootMap);
 }

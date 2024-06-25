@@ -1553,4 +1553,86 @@ describe('createTaskGraph', () => {
       'lib2:build',
     ]);
   });
+
+  it('should handle negative patterns in dependsOn', () => {
+    const graph: ProjectGraph = {
+      nodes: {
+        app1: {
+          name: 'app1',
+          type: 'app',
+          data: {
+            root: 'app1-root',
+            targets: {
+              build: {
+                executor: 'nx:run-commands',
+                dependsOn: [{ target: 'build', projects: '!lib1' }],
+              },
+            },
+          },
+        },
+        lib1: {
+          name: 'lib1',
+          type: 'lib',
+          data: {
+            root: 'lib1-root',
+            targets: {
+              build: {
+                executor: 'nx:run-commands',
+              },
+            },
+          },
+        },
+        lib2: {
+          name: 'lib2',
+          type: 'lib',
+          data: {
+            root: 'lib2-root',
+            targets: {
+              build: {
+                executor: 'nx:run-commands',
+              },
+              foo: {
+                executor: 'nx:noop',
+                dependsOn: [
+                  {
+                    target: 'build',
+                    projects: ['lib*', '!lib1'],
+                  },
+                ],
+              },
+            },
+          },
+        },
+        lib3: {
+          name: 'lib3',
+          type: 'lib',
+          data: {
+            root: 'lib3-root',
+            targets: {
+              build: {
+                executor: 'nx:run-commands',
+              },
+            },
+          },
+        },
+      },
+      dependencies: {
+        app1: [],
+      },
+    };
+    const taskGraph = createTaskGraph(graph, {}, ['app1'], ['build'], null, {});
+    expect(taskGraph.tasks).toHaveProperty('app1:build');
+    expect(taskGraph.tasks).not.toHaveProperty('lib1:build');
+    expect(taskGraph.tasks).toHaveProperty('lib2:build');
+    expect(taskGraph.dependencies['app1:build']).toEqual([
+      'lib2:build',
+      'lib3:build',
+    ]);
+    const taskGraph2 = createTaskGraph(graph, {}, ['lib2'], ['foo'], null, {});
+    expect(taskGraph2.tasks).toHaveProperty('lib2:foo');
+    expect(taskGraph2.dependencies['lib2:foo']).toEqual([
+      'lib2:build',
+      'lib3:build',
+    ]);
+  });
 });

@@ -1,19 +1,121 @@
 name: publish
 
 on:
+  # Automated schedule - canary releases from master
   schedule:
     - cron: "0 3 * * 2-6" # Tuesdays - Saturdays, at 3am UTC
+  # Manual trigger - PR releases or dry-runs (based on workflow inputs)
   workflow_dispatch:
+    inputs:
+      pr:
+        description: "PR Number - If set, a real release will be created for the branch associated with the given PR number. If blank, a dry-run of the currently selected branch will be performed."
+        required: false
+        type: number
   release:
     types: [ published ]
+
+# Dynamically generate the display name for the GitHub UI based on the event type and inputs
+run-name: ${{ github.event.inputs.pr && format('PR Release for {0}', github.event.inputs.pr) || github.event_name == 'schedule' && 'Canary Release' || github.event_name == 'workflow_dispatch' && !github.event.inputs.pr && 'Release Dry-Run' || github.ref_name }}
 
 env:
   DEBUG: napi:*
   NX_RUN_GROUP: ${{ github.run_id }}-${{ github.run_attempt }}
   CYPRESS_INSTALL_BINARY: 0
+  NODE_VERSION: 18
+  PNPM_VERSION: 8.15.7 # Aligned with root package.json (pnpm/action-setup will helpfully error if out of sync)
 
 jobs:
+  # We first need to determine the version we are releasing, and if we need a custom repo or ref to use for the git checkout in subsequent steps.
+  # These values depend upon the event type that triggered the workflow:
+  #
+  # - schedule:
+  #   - We are running a canary release which always comes from the master branch, we can use default ref resolution
+  #     in actions/checkout. The exact version will be generated within scripts/nx-release.ts.
+  #
+  # - release:
+  #   - We are running a full release which is based on the tag that triggered the release event, we can use default
+  #     ref resolution in actions/checkout. The exact version will be generated within scripts/nx-release.ts.
+  #
+  # - workflow_dispatch:
+  #   - We are either running a dry-run on the current branch, in which case the version will be statica and we can use
+  #     default ref resolution in actions/checkout, or we are creating a PR release for the given PR number, in which case
+  #     we should generate an applicable version number within publish-resolve-data.js and use a custom ref of the PR branch name.
+  resolve-required-data:
+    name: Resolve Required Data
+    if: ${{ github.repository_owner == 'nrwl' }}
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.script.outputs.version }}
+      dry_run_flag: ${{ steps.script.outputs.dry_run_flag }}
+      success_comment: ${{ steps.script.outputs.success_comment }}
+      publish_branch: ${{ steps.script.outputs.publish_branch }}
+      ref: ${{ steps.script.outputs.ref }}
+      repo: ${{ steps.script.outputs.repo }}
+    env:
+      NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+    steps:
+      # Default checkout on the triggering branch so that the latest publish-resolve-data.js script is available
+      - uses: actions/checkout@v4
+
+      # Set up pnpm and node so that we can verify our setup and that the NPM_TOKEN secret will work later
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          registry-url: 'https://registry.npmjs.org'
+          check-latest: true
+
+      # Ensure that the NPM_TOKEN secret is still valid before wasting any time deriving data or building projects
+      - name: Check NPM Credentials
+        run: npm whoami && echo "NPM credentials are valid" || (echo "NPM credentials are invalid or have expired." && exit 1)
+
+      - name: Resolve and set checkout and version data to use for release
+        id: script
+        uses: actions/github-script@v7
+        env:
+          PR_NUMBER: ${{ github.event.inputs.pr }}
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const script = require('${{ github.workspace }}/scripts/publish-resolve-data.js');
+            await script({ github, context, core });
+
+      - name: (PR Release Only) Check out latest master
+        if: ${{ steps.script.outputs.ref != '' }}
+        uses: actions/checkout@v4
+        with:
+          # Check out the latest master branch to get its copy of nx-release.ts
+          repository: nrwl/nx
+          ref: master
+          path: latest-master-checkout
+
+      - name: (PR Release Only) Check out PR branch
+        if: ${{ steps.script.outputs.ref != '' }}
+        uses: actions/checkout@v4
+        with:
+          # Check out the PR branch to get its copy of nx-release.ts
+          repository: ${{ steps.script.outputs.repo }}
+          ref: ${{ steps.script.outputs.ref }}
+          path: pr-branch-checkout
+
+      - name: (PR Release Only) Ensure that nx-release.ts has not changed in the PR being released
+        if: ${{ steps.script.outputs.ref != '' }}
+        env:
+          FILE_TO_COMPARE: "scripts/nx-release.ts"
+        run: |
+          if ! cmp -s "latest-master-checkout/${{ env.FILE_TO_COMPARE }}" "pr-branch-checkout/${{ env.FILE_TO_COMPARE }}"; then
+            echo "🛑 Error: The file ${{ env.FILE_TO_COMPARE }} is different on the ${{ steps.script.outputs.ref }} branch on ${{ steps.script.outputs.repo }} vs latest master on nrwl/nx, cancelling workflow. If you did not modify the file, then you likely just need to rebase/merge latest master."
+            exit 1
+          else
+            echo "✅ The file ${{ env.FILE_TO_COMPARE }} is identical between the ${{ steps.script.outputs.ref }} branch on ${{ steps.script.outputs.repo }} and latest master on nrwl/nx."
+          fi
+
   build:
+    needs: [resolve-required-data]
     if: ${{ github.repository_owner == 'nrwl' }}
     strategy:
       fail-fast: false
@@ -100,16 +202,19 @@ jobs:
     runs-on: ${{ matrix.settings.host }}
     steps:
       - uses: actions/checkout@v4
-
-      - uses: pnpm/action-setup@v2
         with:
-          version: 8
+          repository: ${{ needs.resolve-required-data.outputs.repo }} 
+          ref: ${{ needs.resolve-required-data.outputs.ref }}
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
 
       - name: Setup node
         uses: actions/setup-node@v4
         if: ${{ !matrix.settings.docker }}
         with:
-          node-version: 18
+          node-version: ${{ env.NODE_VERSION }}
           check-latest: true
           cache: 'pnpm'
 
@@ -120,7 +225,7 @@ jobs:
           targets: ${{ matrix.settings.target }}
 
       - name: Cache cargo
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~/.cargo/registry/index/
@@ -129,30 +234,36 @@ jobs:
             .cargo-cache
             target/
           key: ${{ matrix.settings.target }}-cargo-registry
+
       - uses: goto-bus-stop/setup-zig@v2
         if: ${{ matrix.settings.target == 'armv7-unknown-linux-gnueabihf' }}
         with:
           version: 0.10.0
+
       - name: Setup toolchain
         run: ${{ matrix.settings.setup }}
         if: ${{ matrix.settings.setup }}
         shell: bash
+
       - name: Setup node x86
         if: matrix.settings.target == 'i686-pc-windows-msvc'
         run: yarn config set supportedArchitectures.cpu "ia32"
         shell: bash
+
       - name: Install dependencies
         if: ${{ !matrix.settings.docker }}
         run: pnpm install --frozen-lockfile
         timeout-minutes: 30
+
       - name: Setup node x86
         uses: actions/setup-node@v4
         if: matrix.settings.target == 'i686-pc-windows-msvc'
         with:
-          node-version: 18
+          node-version: ${{ env.NODE_VERSION }}
           check-latest: true
           cache: pnpm
           architecture: x86
+
       - name: Build in docker
         uses: addnab/docker-run-action@v3
         if: ${{ matrix.settings.docker }}
@@ -160,28 +271,35 @@ jobs:
           image: ${{ matrix.settings.docker }}
           options: --user 0:0 -v ${{ github.workspace }}/.cargo-cache/git/db:/usr/local/cargo/git/db -v ${{ github.workspace }}/.cargo/registry/cache:/usr/local/cargo/registry/cache -v ${{ github.workspace }}/.cargo/registry/index:/usr/local/cargo/registry/index -v ${{ github.workspace }}:/build -w /build
           run: ${{ matrix.settings.build }}
+
       - name: Build
         run: ${{ matrix.settings.build }}
         if: ${{ !matrix.settings.docker }}
         shell: bash
+
       - name: Upload artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: bindings-${{ matrix.settings.target }}
           path: packages/**/*.node
           if-no-files-found: error
 
   build-freebsd:
+    needs: [resolve-required-data]
     if: ${{ github.repository_owner == 'nrwl' }}
     runs-on: macos-13-large
     name: Build FreeBSD
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
-        if: ${{ github.event_name != 'schedule' }}
+        if: ${{ github.event_name != 'schedule' && !github.event.inputs.pr }}
+        with:
+          repository: ${{ needs.resolve-required-data.outputs.repo }} 
+          ref: ${{ needs.resolve-required-data.outputs.ref }}
+
       - name: Build
         id: build
-        if: ${{ github.event_name != 'schedule' }}
+        if: ${{ github.event_name != 'schedule' && !github.event.inputs.pr }}
         uses: cross-platform-actions/action@v0.22.0
         env:
           DEBUG: napi:*
@@ -223,9 +341,10 @@ jobs:
             echo "KILL ALL NODE PROCESSES"
             killall node || true
             echo "COMPLETE"
+
       - name: Upload artifact
-        if: ${{ github.event_name != 'schedule' }}
-        uses: actions/upload-artifact@v3
+        if: ${{ github.event_name != 'schedule' && !github.event.inputs.pr }}
+        uses: actions/upload-artifact@v4
         with:
           name: bindings-freebsd
           path: packages/**/*.node
@@ -238,7 +357,9 @@ jobs:
     permissions:
       id-token: write
       contents: write
+      pull-requests: write
     needs:
+      - resolve-required-data
       - build-freebsd
       - build
     env:
@@ -247,51 +368,92 @@ jobs:
       NPM_CONFIG_PROVENANCE: true
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v2
         with:
-          version: 8
+          repository: ${{ needs.resolve-required-data.outputs.repo }}
+          ref: ${{ needs.resolve-required-data.outputs.ref }}
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
       - name: Setup node
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: ${{ env.NODE_VERSION }}
           registry-url: 'https://registry.npmjs.org'
           check-latest: true
           cache: 'pnpm'
-      - name: Check NPM Credentials
-        run: npm whoami && echo "NPM credentials are valid" || (echo "NPM credentials are invalid or have expired." && exit 1)
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
       - name: Download all artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           path: artifacts
+
+      # This command will appropriately fail if no artifacts are available
       - name: List artifacts
         run: ls -R artifacts
         shell: bash
+
       - name: Publish
+        env:
+          VERSION: ${{ needs.resolve-required-data.outputs.version }}
+          DRY_RUN: ${{ needs.resolve-required-data.outputs.dry_run_flag }}
+          PUBLISH_BRANCH: ${{ needs.resolve-required-data.outputs.publish_branch }}
         run: |
-          git checkout -b publish/$GITHUB_REF_NAME
-          # If triggered by the cron, create a canary release
-          if [ "${{ github.event_name }}" = "schedule" ]; then
-            VERSION="canary"
-          else
-            # Otherwise, use the tag name (if triggered via release), or explicit version (if triggered via workflow_dispatch)
-            VERSION="${GITHUB_REF_NAME}"
-          fi
-          # If triggered via workflow_dispatch, perform a dry-run
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            DRY_RUN="--dry-run"
-          else
-            DRY_RUN=""
-          fi
+          echo ""
+          # Create and check out the publish branch
+          git checkout -b $PUBLISH_BRANCH
+          echo ""
+          echo "Version set to: $VERSION"
+          echo "DRY_RUN set to: $DRY_RUN"
+          echo ""
           pnpm nx-release --local=false $VERSION $DRY_RUN
-      - name: Trigger Docs Release
+
+      - name: (Stable Release Only) Trigger Docs Release
         # Publish docs only on a full release
-        if: ${{ !github.event.release.prerelease }}
-        run: |
-          # The GITHUB_REF_NAME is a full version (i.e. 17.3.2). The branchName will only use the major version number.
-          # We will publish docs to the website branch based on the current tag (i.e. website-17)
-          branchName=website-${GITHUB_REF_NAME%.*.*}
-          # We force recreate the branch in order to always be up to date and avoid merge conflicts within the automated workflow
-          git branch -f $branchName
-          git push -f origin $branchName
+        if: ${{ !github.event.release.prerelease && github.event_name == 'release' }}
+        run: npx ts-node ./scripts/release-docs.ts
+
+      - name: (PR Release Only) Create comment for successful PR release
+        if: success() && github.event.inputs.pr
+        uses: actions/github-script@v7
+        env:
+          SUCCESS_COMMENT: ${{ needs.resolve-required-data.outputs.success_comment }}
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const successComment = JSON.parse(process.env.SUCCESS_COMMENT);
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: ${{ github.event.inputs.pr }},
+              body: successComment
+            });
+
+  pr_failure_comment:
+    # Run this job if it is a PR release, running on the nrwl origin, and any of the required jobs failed
+    if: ${{ github.repository_owner == 'nrwl' && github.event.inputs.pr && always() && contains(needs.*.result, 'failure') }}
+    needs: [resolve-required-data, build, build-freebsd, publish]
+    name: (PR Release Failure Only) Create comment for failed PR release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create comment for failed PR release
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          # This script is intentionally kept inline (and e.g. not generated in publish-resolve-data.js)
+          # to ensure that an error within the data generation itself is not missed.
+          script: |
+            const message = `
+              Failed to publish a PR release of this pull request, triggered by @${{ github.triggering_actor }}. 
+              See the failed workflow run at: https://github.com/nrwl/nx/actions/runs/${{ github.run_id }}
+            `;
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: ${{ github.event.inputs.pr }},
+              body: message
+            });

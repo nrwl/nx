@@ -31,6 +31,10 @@ export function extractTsConfigBase(host: Tree) {
       delete tsconfig.compilerOptions[compilerOption];
     }
   }
+  // If we don't set baseDir then builds will fail when more than one projects exist.
+  if (typeof baseCompilerOptions.baseUrl === 'undefined') {
+    baseCompilerOptions.baseUrl = '.';
+  }
   writeJson(host, 'tsconfig.base.json', {
     compileOnSave: false,
     compilerOptions: baseCompilerOptions,

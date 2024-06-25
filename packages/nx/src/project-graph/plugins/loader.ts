@@ -98,11 +98,14 @@ export function registerPluginTSTranspiler() {
     : {};
   const cleanupFns = [
     registerTsConfigPaths(tsConfigName),
-    registerTranspiler({
-      experimentalDecorators: true,
-      emitDecoratorMetadata: true,
-      ...tsConfig.options,
-    }),
+    registerTranspiler(
+      {
+        experimentalDecorators: true,
+        emitDecoratorMetadata: true,
+        ...tsConfig.options,
+      },
+      tsConfig.raw
+    ),
   ];
   unregisterPluginTSTranspiler = () => {
     cleanupFns.forEach((fn) => fn?.());

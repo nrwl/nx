@@ -1,9 +1,9 @@
+'use client';
 import { Fence, FenceProps } from '@nx/nx-dev/ui-fence';
-import { useRouter } from 'next/router';
+import { useRouter, usePathname, useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 const useUrlHash = (initialValue: string) => {
-  const router = useRouter();
   const [hash, setHash] = useState(initialValue);
 
   const updateHash = (str: string) => {
@@ -11,34 +11,28 @@ const useUrlHash = (initialValue: string) => {
     setHash(str.split('#')[1]);
   };
 
-  useEffect(() => {
-    const onWindowHashChange = () => updateHash(window.location.hash);
-    const onNextJSHashChange = (url: string) => updateHash(url);
+  const params = useParams();
 
-    router.events.on('hashChangeStart', onNextJSHashChange);
-    window.addEventListener('hashchange', onWindowHashChange);
-    window.addEventListener('load', onWindowHashChange);
-    return () => {
-      router.events.off('hashChangeStart', onNextJSHashChange);
-      window.removeEventListener('load', onWindowHashChange);
-      window.removeEventListener('hashchange', onWindowHashChange);
-    };
-  }, [router.asPath, router.events]);
+  useEffect(() => {
+    updateHash(window.location.hash);
+  }, [params]);
 
   return hash;
 };
 
 export function FenceWrapper(props: FenceProps) {
-  const { push, asPath } = useRouter();
+  const { push } = useRouter();
+  const pathName = usePathname();
   const hash = decodeURIComponent(useUrlHash(''));
 
   const modifiedProps: FenceProps = {
     ...props,
     selectedLineGroup: hash,
     onLineGroupSelectionChange: (selection: string) => {
-      push(asPath.split('#')[0] + '#' + selection);
+      push(pathName.split('#')[0] + '#' + selection);
     },
   };
+
   return (
     <div className="my-8 w-full">
       <Fence {...modifiedProps} />

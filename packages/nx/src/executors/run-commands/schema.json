@@ -95,8 +95,11 @@
       "x-priority": "important"
     },
     "readyWhen": {
-      "type": "string",
-      "description": "String to appear in `stdout` or `stderr` that indicates that the task is done. When running multiple commands, this option can only be used when `parallel` is set to `true`. If not specified, the task is done when all the child processes complete."
+      "description": "String or array of strings to appear in `stdout` or `stderr` that indicate that the task is done. When running multiple commands, this option can only be used when `parallel` is set to `true`. If not specified, the task is done when all the child processes complete.",
+      "oneOf": [
+        { "type": "string" },
+        { "type": "array", "items": { "type": "string" } }
+      ]
     },
     "args": {
       "oneOf": [

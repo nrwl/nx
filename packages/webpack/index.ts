@@ -1,8 +1,14 @@
 import { configurationGenerator } from './src/generators/configuration/configuration';
 import { NxAppWebpackPlugin } from './src/plugins/nx-webpack-plugin/nx-app-webpack-plugin';
 import { NxTsconfigPathsWebpackPlugin as _NxTsconfigPathsWebpackPlugin } from './src/plugins/nx-typescript-webpack-plugin/nx-tsconfig-paths-webpack-plugin';
+import { convertConfigToWebpackPluginGenerator } from './src/generators/convert-config-to-webpack-plugin/convert-config-to-webpack-plugin';
+import { useLegacyNxPlugin } from './src/plugins/use-legacy-nx-plugin/use-legacy-nx-plugin';
 
-export { configurationGenerator };
+export {
+  configurationGenerator,
+  convertConfigToWebpackPluginGenerator,
+  useLegacyNxPlugin,
+};
 
 // Exported for backwards compatibility in case a plugin is using the old name.
 /** @deprecated Use `configurationGenerator` instead. */

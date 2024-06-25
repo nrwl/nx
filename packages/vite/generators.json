@@ -16,10 +16,20 @@
       "aliases": ["config"],
       "hidden": false
     },
+    "setup-paths-plugin": {
+      "factory": "./src/generators/setup-paths-plugin/setup-paths-plugin",
+      "schema": "./src/generators/setup-paths-plugin/schema.json",
+      "description": "Sets up the nxViteTsPaths plugin to enable support for workspace libraries."
+    },
+    "convert-to-inferred": {
+      "factory": "./src/generators/convert-to-inferred/convert-to-inferred",
+      "schema": "./src/generators/convert-to-inferred/schema.json",
+      "description": "Convert existing Vite project(s) using `@nx/vite:*` executors to use `@nx/vite/plugin`. Defaults to migrating all projects. Pass '--project' to migrate only one target."
+    },
     "vitest": {
       "factory": "./src/generators/vitest/vitest-generator#vitestGeneratorInternal",
       "schema": "./src/generators/vitest/schema.json",
-      "description": "Generate a vitest configuration"
+      "description": "Generate a vitest configuration."
     }
   }
 }

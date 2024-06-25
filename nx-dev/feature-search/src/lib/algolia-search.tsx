@@ -6,7 +6,7 @@ import {
 import { MagnifyingGlassIcon } from '@heroicons/react/24/solid';
 import Head from 'next/head';
 import Link from 'next/link';
-import { useRouter } from 'next/router';
+import { useRouter } from 'next/navigation';
 import { ReactNode, useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 

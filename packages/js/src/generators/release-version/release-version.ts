@@ -1,6 +1,4 @@
 import {
-  ProjectGraph,
-  ProjectGraphDependency,
   ProjectGraphProjectNode,
   Tree,
   formatFiles,
@@ -12,9 +10,14 @@ import {
   writeJson,
 } from '@nx/devkit';
 import * as chalk from 'chalk';
+import { remove } from 'fs-extra';
 import { exec } from 'node:child_process';
 import { join } from 'node:path';
 import { IMPLICIT_DEFAULT_RELEASE_GROUP } from 'nx/src/command-line/release/config/config';
+import {
+  GroupVersionPlan,
+  ProjectsVersionPlan,
+} from 'nx/src/command-line/release/config/version-plans';
 import {
   getFirstGitCommit,
   getLatestGitTagForPattern,
@@ -32,15 +35,15 @@ import {
 } from 'nx/src/command-line/release/version';
 import { interpolate } from 'nx/src/tasks-runner/utils';
 import * as ora from 'ora';
-import { prerelease } from 'semver';
+import { ReleaseType, gt, inc, prerelease } from 'semver';
 import { parseRegistryOptions } from '../../utils/npm-config';
 import { ReleaseVersionGeneratorSchema } from './schema';
 import {
   LocalPackageDependency,
   resolveLocalPackageDependencies,
 } from './utils/resolve-local-package-dependencies';
-import { updateLockFile } from './utils/update-lock-file';
 import { sortProjectsTopologically } from './utils/sort-projects-topologically';
+import { updateLockFile } from './utils/update-lock-file';
 
 export async function releaseVersionGenerator(
   tree: Tree,
@@ -118,6 +121,10 @@ Valid values are: ${validReleaseVersionPrefixes
     let specifier: string | null | undefined = options.specifier
       ? options.specifier
       : undefined;
+
+    const deleteVersionPlanCallbacks: ((
+      dryRun?: boolean
+    ) => Promise<string[]>)[] = [];
 
     for (const project of projects) {
       const projectName = project.name;
@@ -198,7 +205,7 @@ To fix this you will either need to add a package.json file at that location, or
               )}Resolving the current version for tag "${tag}" on ${registry}`
             );
             spinner.color =
-              color.spinnerColor as typeof colors[number]['spinnerColor'];
+              color.spinnerColor as (typeof colors)[number]['spinnerColor'];
             spinner.start();
 
             try {
@@ -317,6 +324,8 @@ To fix this you will either need to add a package.json file at that location, or
 
       if (options.specifier) {
         log(`📄 Using the provided version specifier "${options.specifier}".`);
+        // The user is forcibly overriding whatever specifierSource they had otherwise set by imperatively providing a specifier
+        options.specifierSource = 'prompt';
       }
 
       /**
@@ -397,8 +406,13 @@ To fix this you will either need to add a package.json file at that location, or
                 `📄 Resolved the specifier as "${specifier}" since the current version is a prerelease.`
               );
             } else {
+              let extraText = '';
+              if (options.preid && !specifier.startsWith('pre')) {
+                specifier = `pre${specifier}`;
+                extraText = `, combined with your given preid "${options.preid}"`;
+              }
               log(
-                `📄 Resolved the specifier as "${specifier}" using git history and the conventional commits standard.`
+                `📄 Resolved the specifier as "${specifier}" using git history and the conventional commits standard${extraText}.`
               );
             }
             break;
@@ -434,9 +448,99 @@ To fix this you will either need to add a package.json file at that location, or
             }
             break;
           }
+          case 'version-plans': {
+            if (!options.releaseGroup.versionPlans) {
+              if (
+                options.releaseGroup.name === IMPLICIT_DEFAULT_RELEASE_GROUP
+              ) {
+                throw new Error(
+                  `Invalid specifierSource "version-plans" provided. To enable version plans, set the "release.versionPlans" configuration option to "true" in nx.json.`
+                );
+              } else {
+                throw new Error(
+                  `Invalid specifierSource "version-plans" provided. To enable version plans for release group "${options.releaseGroup.name}", set the "versionPlans" configuration option to "true" within the release group configuration in nx.json.`
+                );
+              }
+            }
+
+            if (options.releaseGroup.projectsRelationship === 'independent') {
+              specifier = (
+                options.releaseGroup.versionPlans as ProjectsVersionPlan[]
+              ).reduce((spec: ReleaseType, plan: ProjectsVersionPlan) => {
+                if (!spec) {
+                  return plan.projectVersionBumps[projectName];
+                }
+                if (plan.projectVersionBumps[projectName]) {
+                  const prevNewVersion = inc(currentVersion, spec);
+                  const nextNewVersion = inc(
+                    currentVersion,
+                    plan.projectVersionBumps[projectName]
+                  );
+                  return gt(nextNewVersion, prevNewVersion)
+                    ? plan.projectVersionBumps[projectName]
+                    : spec;
+                }
+                return spec;
+              }, null);
+            } else {
+              specifier = (
+                options.releaseGroup.versionPlans as GroupVersionPlan[]
+              ).reduce((spec: ReleaseType, plan: GroupVersionPlan) => {
+                if (!spec) {
+                  return plan.groupVersionBump;
+                }
+
+                const prevNewVersion = inc(currentVersion, spec);
+                const nextNewVersion = inc(
+                  currentVersion,
+                  plan.groupVersionBump
+                );
+                return gt(nextNewVersion, prevNewVersion)
+                  ? plan.groupVersionBump
+                  : spec;
+              }, null);
+            }
+
+            if (!specifier) {
+              if (
+                updateDependents !== 'never' &&
+                projectToDependencyBumps.has(projectName)
+              ) {
+                // No applicable changes to the project directly by the user, but one or more dependencies have been bumped and updateDependents is enabled
+                specifier = updateDependentsBump;
+                log(
+                  `📄 Resolved the specifier as "${specifier}" because "release.version.generatorOptions.updateDependents" is enabled`
+                );
+              } else {
+                specifier = null;
+                log(`🚫 No changes were detected within version plans.`);
+              }
+            } else {
+              log(
+                `📄 Resolved the specifier as "${specifier}" using version plans.`
+              );
+            }
+
+            if (options.deleteVersionPlans) {
+              options.releaseGroup.versionPlans.forEach((p) => {
+                deleteVersionPlanCallbacks.push(async (dryRun?: boolean) => {
+                  if (!dryRun) {
+                    await remove(p.absolutePath);
+                    // the relative path is easier to digest, so use that for
+                    // git operations and logging
+                    return [p.relativePath];
+                  } else {
+                    return [];
+                  }
+                });
+              });
+            }
+
+            break;
+          }
           default:
             throw new Error(
-              `Invalid specifierSource "${specifierSource}" provided. Must be one of "prompt" or "conventional-commits"`
+              `Invalid specifierSource "${specifierSource}" provided. Must be one of "prompt", "conventional-commits" or "version-plans".`
             );
         }
       }
@@ -489,9 +593,22 @@ To fix this you will either need to add a package.json file at that location, or
           );
         }
 
-        const isInCurrentBatch = options.projects.some(
+        let isInCurrentBatch = options.projects.some(
           (project) => project.name === dependentProject.source
         );
+
+        // For version-plans, we don't just need to consider the current batch of projects, but also the ones that are actually being updated as part of the plan file(s)
+        if (isInCurrentBatch && options.specifierSource === 'version-plans') {
+          isInCurrentBatch = (options.releaseGroup.versionPlans || []).some(
+            (plan) => {
+              if ('projectVersionBumps' in plan) {
+                return plan.projectVersionBumps[dependentProject.source];
+              }
+              return true;
+            }
+          );
+        }
+
         if (!isInCurrentBatch) {
           dependentProjectsOutsideCurrentBatch.push(dependentProject);
         } else {
@@ -503,10 +620,14 @@ To fix this you will either need to add a package.json file at that location, or
       if (updateDependents === 'never') {
         if (dependentProjectsOutsideCurrentBatch.length > 0) {
           let logMsg = `⚠️  Warning, the following packages depend on "${project.name}"`;
+          const reason =
+            options.specifierSource === 'version-plans'
+              ? 'because they are not referenced in any version plans'
+              : 'via --projects';
           if (options.releaseGroup.name === IMPLICIT_DEFAULT_RELEASE_GROUP) {
-            logMsg += ` but have been filtered out via --projects, and therefore will not be updated:`;
+            logMsg += ` but have been filtered out ${reason}, and therefore will not be updated:`;
           } else {
-            logMsg += ` but are either not part of the current release group "${options.releaseGroup.name}", or have been filtered out via --projects, and therefore will not be updated:`;
+            logMsg += ` but are either not part of the current release group "${options.releaseGroup.name}", or have been filtered out ${reason}, and therefore will not be updated:`;
           }
           const indent = Array.from(new Array(projectName.length + 4))
             .map(() => ' ')
@@ -664,12 +785,27 @@ To fix this you will either need to add a package.json file at that location, or
 
       if (updateDependents === 'auto') {
         for (const dependentProject of dependentProjectsOutsideCurrentBatch) {
+          if (
+            options.specifierSource === 'version-plans' &&
+            !projectToDependencyBumps.has(dependentProject.source)
+          ) {
+            projectToDependencyBumps.set(
+              dependentProject.source,
+              new Set([projectName])
+            );
+          }
+
           updateDependentProjectAndAddToVersionData({
             dependentProject,
             dependencyPackageName: packageName,
             newDependencyVersion: newVersion,
             // For these additional dependents, we need to update their package.json version as well because we know they will not come later in the topologically sorted projects loop
-            forceVersionBump: updateDependentsBump,
+            // (Unless using version plans and the dependent is not filtered out by --projects)
+            forceVersionBump:
+              options.specifierSource === 'version-plans' &&
+              projects.find((p) => p.name === dependentProject.source)
+                ? false
+                : updateDependentsBump,
           });
         }
       }
@@ -719,9 +855,16 @@ To fix this you will either need to add a package.json file at that location, or
     return {
       data: versionData,
       callback: async (tree, opts) => {
+        const changedFiles: string[] = [];
+        const deletedFiles: string[] = [];
+
+        for (const cb of deleteVersionPlanCallbacks) {
+          deletedFiles.push(...(await cb(opts.dryRun)));
+        }
+
         const cwd = tree.root;
-        const updatedFiles = await updateLockFile(cwd, opts);
-        return updatedFiles;
+        changedFiles.push(...(await updateLockFile(cwd, opts)));
+        return { changedFiles, deletedFiles };
       },
     };
   } catch (e: any) {

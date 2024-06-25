@@ -69,54 +69,58 @@ export const TargetConfigurationDetailsHeader = ({
       )}
       onClick={collapsable ? toggleCollapse : undefined}
     >
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex min-w-0 flex-1 items-center gap-2">
-          {collapsable &&
-            (isCollasped ? (
-              <ChevronDownIcon className="h-3 w-3" />
-            ) : (
-              <ChevronUpIcon className="h-3 w-3" />
-            ))}
-          <h3 className="font-medium dark:text-slate-300">{targetName}</h3>
-          <TargetTechnologies
-            technologies={targetConfiguration.metadata?.technologies}
-            showTooltip={!isCollasped}
-            className="h-4 w-4"
-          />
-          {isCollasped &&
-            targetConfiguration?.executor !== '@nx/js:release-publish' && (
-              <p className="min-w-0 flex-1 truncate text-sm text-slate-400">
-                <TargetExecutor
-                  command={command}
-                  commands={commands}
-                  script={script}
-                  executor={executor}
-                  isCompact={true}
-                />
-              </p>
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex min-w-0 flex-1 items-center justify-between">
+          <div className="flex min-w-0 flex-1 items-center gap-2">
+            {collapsable &&
+              (isCollasped ? (
+                <ChevronDownIcon className="h-3 w-3" />
+              ) : (
+                <ChevronUpIcon className="h-3 w-3" />
+              ))}
+            <h3 className="font-medium dark:text-slate-300">{targetName}</h3>
+            <TargetTechnologies
+              technologies={targetConfiguration.metadata?.technologies}
+              showTooltip={!isCollasped}
+              className="h-4 w-4"
+            />
+            {isCollasped &&
+              targetConfiguration?.executor !== '@nx/js:release-publish' && (
+                <p className="min-w-0 flex-1 truncate text-sm text-slate-400">
+                  <TargetExecutor
+                    command={command}
+                    commands={commands}
+                    script={script}
+                    executor={executor}
+                    isCompact={true}
+                  />
+                </p>
+              )}
+          </div>
+          <div>
+            {targetName === 'nx-release-publish' && (
+              <Tooltip
+                openAction="hover"
+                strategy="fixed"
+                content={(<PropertyInfoTooltip type="release" />) as any}
+              >
+                <span className="inline-flex">
+                  <Pill text="nx release" color="grey" />
+                </span>
+              </Tooltip>
             )}
-          {targetName === 'nx-release-publish' && (
-            <Tooltip
-              openAction="hover"
-              strategy="fixed"
-              content={(<PropertyInfoTooltip type="release" />) as any}
-            >
-              <span className="inline-flex">
-                <Pill text="nx release" color="grey" />
-              </span>
-            </Tooltip>
-          )}
-          {targetConfiguration.cache && (
-            <Tooltip
-              openAction="hover"
-              strategy="fixed"
-              content={(<PropertyInfoTooltip type="cacheable" />) as any}
-            >
-              <span className="inline-flex">
-                <Pill text="Cacheable" color="green" />
-              </span>
-            </Tooltip>
-          )}
+            {targetConfiguration.cache && (
+              <Tooltip
+                openAction="hover"
+                strategy="fixed"
+                content={(<PropertyInfoTooltip type="cacheable" />) as any}
+              >
+                <span className="inline-flex">
+                  <Pill text="Cacheable" color="green" />
+                </span>
+              </Tooltip>
+            )}
+          </div>
         </div>
         <div className="flex items-center gap-2">
           {onViewInTaskGraph && (
@@ -125,14 +129,15 @@ export const TargetConfigurationDetailsHeader = ({
               // TODO: fix tooltip overflow in collapsed state
               data-tooltip={isCollasped ? false : 'View in Task Graph'}
               data-tooltip-align-right
+              onClick={(e) => {
+                if (isCollasped) {
+                  return;
+                }
+                e.stopPropagation();
+                onViewInTaskGraph({ projectName, targetName });
+              }}
             >
-              <EyeIcon
-                className={`h-5 w-5 !cursor-pointer`}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onViewInTaskGraph({ projectName, targetName });
-                }}
-              />
+              <EyeIcon className={`h-5 w-5 !cursor-pointer`} />
             </button>
           )}
 

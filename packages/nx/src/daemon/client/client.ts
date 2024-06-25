@@ -4,7 +4,7 @@ import { readFileSync, statSync } from 'fs';
 import { FileHandle, open } from 'fs/promises';
 import { ensureDirSync, ensureFileSync } from 'fs-extra';
 import { connect } from 'net';
-import { join } from 'path';
+import { extname, join } from 'path';
 import { performance } from 'perf_hooks';
 import { output } from '../../utils/output';
 import { getFullOsSocketPath, killSocketOrPath } from '../socket-utils';
@@ -30,6 +30,26 @@ import {
   ProjectGraphError,
 } from '../../project-graph/error-types';
 import { loadRootEnvFiles } from '../../utils/dotenv';
+import { HandleGlobMessage } from '../message-types/glob';
+import {
+  GET_NX_WORKSPACE_FILES,
+  HandleNxWorkspaceFilesMessage,
+} from '../message-types/get-nx-workspace-files';
+import {
+  GET_CONTEXT_FILE_DATA,
+  HandleContextFileDataMessage,
+} from '../message-types/get-context-file-data';
+import {
+  GET_FILES_IN_DIRECTORY,
+  HandleGetFilesInDirectoryMessage,
+} from '../message-types/get-files-in-directory';
+import { HASH_GLOB, HandleHashGlobMessage } from '../message-types/hash-glob';
+import { NxWorkspaceFiles } from '../../native';
+import { TaskRun } from '../../utils/task-history';
+import {
+  HandleGetTaskHistoryForHashesMessage,
+  HandleWriteTaskRunsToHistoryMessage,
+} from '../message-types/task-history';
 
 const DAEMON_ENV_SETTINGS = {
   NX_PROJECT_GLOB_CACHE: 'false',
@@ -51,8 +71,6 @@ enum DaemonStatus {
 export class DaemonClient {
   private readonly nxJson: NxJsonConfiguration | null;
   constructor() {
-    loadRootEnvFiles(workspaceRoot);
-
     try {
       this.nxJson = readNxJson();
     } catch (e) {
@@ -256,6 +274,68 @@ export class DaemonClient {
     });
   }
 
+  glob(globs: string[], exclude?: string[]): Promise<string[]> {
+    const message: HandleGlobMessage = {
+      type: 'GLOB',
+      globs,
+      exclude,
+    };
+    return this.sendToDaemonViaQueue(message);
+  }
+
+  getWorkspaceContextFileData(): Promise<FileData[]> {
+    const message: HandleContextFileDataMessage = {
+      type: GET_CONTEXT_FILE_DATA,
+    };
+    return this.sendToDaemonViaQueue(message);
+  }
+
+  getWorkspaceFiles(
+    projectRootMap: Record<string, string>
+  ): Promise<NxWorkspaceFiles> {
+    const message: HandleNxWorkspaceFilesMessage = {
+      type: GET_NX_WORKSPACE_FILES,
+      projectRootMap,
+    };
+    return this.sendToDaemonViaQueue(message);
+  }
+
+  getFilesInDirectory(dir: string): Promise<string[]> {
+    const message: HandleGetFilesInDirectoryMessage = {
+      type: GET_FILES_IN_DIRECTORY,
+      dir,
+    };
+    return this.sendToDaemonViaQueue(message);
+  }
+
+  hashGlob(globs: string[], exclude?: string[]): Promise<string> {
+    const message: HandleHashGlobMessage = {
+      type: HASH_GLOB,
+      globs,
+      exclude,
+    };
+    return this.sendToDaemonViaQueue(message);
+  }
+
+  getTaskHistoryForHashes(hashes: string[]): Promise<{
+    [hash: string]: TaskRun[];
+  }> {
+    const message: HandleGetTaskHistoryForHashesMessage = {
+      type: 'GET_TASK_HISTORY_FOR_HASHES',
+      hashes,
+    };
+
+    return this.sendToDaemonViaQueue(message);
+  }
+
+  writeTaskRunsToHistory(taskRuns: TaskRun[]): Promise<void> {
+    const message: HandleWriteTaskRunsToHistoryMessage = {
+      type: 'WRITE_TASK_RUNS_TO_HISTORY',
+      taskRuns,
+    };
+    return this.sendMessageToDaemon(message);
+  }
+
   async isServerAvailable(): Promise<boolean> {
     return new Promise((resolve) => {
       try {
@@ -414,14 +494,17 @@ export class DaemonClient {
 
     const backgroundProcess = spawn(
       process.execPath,
-      [join(__dirname, '../server/start.js')],
+      [join(__dirname, `../server/start.js`)],
       {
         cwd: workspaceRoot,
         stdio: ['ignore', this._out.fd, this._err.fd],
         detached: true,
         windowsHide: true,
         shell: false,
-        env: { ...process.env, ...DAEMON_ENV_SETTINGS },
+        env: {
+          ...process.env,
+          ...DAEMON_ENV_SETTINGS,
+        },
       }
     );
     backgroundProcess.unref();

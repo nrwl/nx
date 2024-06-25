@@ -1,4 +1,4 @@
-import * as chalk from 'chalk';
+import chalk = require('chalk');
 import type { ValidationError } from './types';
 
 export function arrayToString(array: string[]): string {

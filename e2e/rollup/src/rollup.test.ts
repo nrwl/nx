@@ -9,9 +9,7 @@ import {
   runCommand,
   uniq,
   updateFile,
-  updateJson,
 } from '@nx/e2e/utils';
-import { join } from 'path';
 
 describe('Rollup Plugin', () => {
   beforeAll(() => newProject({ packages: ['@nx/rollup', '@nx/js'] }));
@@ -19,15 +17,30 @@ describe('Rollup Plugin', () => {
 
   it('should be able to setup project to build node programs with rollup and different compilers', async () => {
     const myPkg = uniq('my-pkg');
-    runCLI(`generate @nx/js:lib ${myPkg} --bundler=none`);
+    runCLI(`generate @nx/js:lib ${myPkg} --bundler=rollup`);
     updateFile(`libs/${myPkg}/src/index.ts`, `console.log('Hello');\n`);
 
     // babel (default)
     runCLI(
-      `generate @nx/rollup:configuration ${myPkg} --target=node --tsConfig=libs/${myPkg}/tsconfig.lib.json --main=libs/${myPkg}/src/index.ts`
+      `generate @nx/rollup:configuration ${myPkg} --tsConfig=./tsconfig.lib.json --main=./src/index.ts`
+    );
+    updateFile(
+      `libs/${myPkg}/rollup.config.js`,
+      `
+      const { withNx } = require('@nx/rollup/with-nx');
+      module.exports =  withNx({
+        outputPath: '../../dist/libs/${myPkg}',
+        main: './src/index.ts',
+        tsConfig: './tsconfig.lib.json',
+        compiler: 'babel',
+        generateExportsField: true,
+        additionalEntryPoints: ['./src/{foo,bar}.ts'],
+        format: ['cjs', 'esm']
+      });
+    `
     );
     rmDist();
-    runCLI(`build ${myPkg} --format=cjs,esm --generateExportsField`);
+    runCLI(`build ${myPkg}`);
     checkFilesExist(`dist/libs/${myPkg}/index.cjs.d.ts`);
     expect(readJson(`dist/libs/${myPkg}/package.json`).exports).toEqual({
       '.': {
@@ -40,31 +53,51 @@ describe('Rollup Plugin', () => {
     let output = runCommand(`node dist/libs/${myPkg}/index.cjs.js`);
     expect(output).toMatch(/Hello/);
 
-    updateJson(join('libs', myPkg, 'project.json'), (config) => {
-      delete config.targets.build;
-      return config;
-    });
-
     // swc
     runCLI(
-      `generate @nx/rollup:configuration ${myPkg} --target=node --tsConfig=libs/${myPkg}/tsconfig.lib.json --main=libs/${myPkg}/src/index.ts --compiler=swc`
+      `generate @nx/rollup:configuration ${myPkg} --tsConfig=./tsconfig.lib.json --main=./src/index.ts --compiler=swc`
+    );
+    updateFile(
+      `libs/${myPkg}/rollup.config.js`,
+      `
+      const { withNx } = require('@nx/rollup/with-nx');
+      module.exports =  withNx({
+        outputPath: '../../dist/libs/${myPkg}',
+        main: './src/index.ts',
+        tsConfig: './tsconfig.lib.json',
+        compiler: 'swc',
+        generateExportsField: true,
+        additionalEntryPoints: ['./src/{foo,bar}.ts'],
+        format: ['cjs', 'esm']
+      });
+    `
     );
     rmDist();
-    runCLI(`build ${myPkg} --format=cjs,esm --generateExportsField`);
+    runCLI(`build ${myPkg}`);
     output = runCommand(`node dist/libs/${myPkg}/index.cjs.js`);
     expect(output).toMatch(/Hello/);
 
-    updateJson(join('libs', myPkg, 'project.json'), (config) => {
-      delete config.targets.build;
-      return config;
-    });
-
     // tsc
     runCLI(
-      `generate @nx/rollup:configuration ${myPkg} --target=node --tsConfig=libs/${myPkg}/tsconfig.lib.json --main=libs/${myPkg}/src/index.ts --compiler=tsc`
+      `generate @nx/rollup:configuration ${myPkg} --tsConfig=./tsconfig.lib.json --main=./src/index.ts --compiler=tsc`
+    );
+    updateFile(
+      `libs/${myPkg}/rollup.config.js`,
+      `
+      const { withNx } = require('@nx/rollup/with-nx');
+      module.exports =  withNx({
+        outputPath: '../../dist/libs/${myPkg}',
+        main: './src/index.ts',
+        tsConfig: './tsconfig.lib.json',
+        compiler: 'tsc',
+        generateExportsField: true,
+        additionalEntryPoints: ['./src/{foo,bar}.ts'],
+        format: ['cjs', 'esm']
+      });
+    `
     );
     rmDist();
-    runCLI(`build ${myPkg} --format=cjs,esm --generateExportsField`);
+    runCLI(`build ${myPkg}`);
     output = runCommand(`node dist/libs/${myPkg}/index.cjs.js`);
     expect(output).toMatch(/Hello/);
   }, 500000);
@@ -73,16 +106,24 @@ describe('Rollup Plugin', () => {
     const myPkg = uniq('my-pkg');
     runCLI(`generate @nx/js:lib ${myPkg} --bundler=none`);
     runCLI(
-      `generate @nx/rollup:configuration ${myPkg} --target=node --tsConfig=libs/${myPkg}/tsconfig.lib.json --main=libs/${myPkg}/src/index.ts --compiler=tsc`
+      `generate @nx/rollup:configuration ${myPkg} --tsConfig=./tsconfig.lib.json --main=./src/index.ts --compiler=tsc`
     );
-    updateJson(join('libs', myPkg, 'project.json'), (config) => {
-      config.targets.build.options.format = ['cjs', 'esm'];
-      config.targets.build.options.generateExportsField = true;
-      config.targets.build.options.additionalEntryPoints = [
-        `libs/${myPkg}/src/{foo,bar}.ts`,
-      ];
-      return config;
-    });
+    updateFile(
+      `libs/${myPkg}/rollup.config.js`,
+      `
+      const { withNx } = require('@nx/rollup/with-nx');
+      module.exports =  withNx({
+        outputPath: '../../dist/libs/${myPkg}',
+        main: './src/index.ts',
+        tsConfig: './tsconfig.lib.json',
+        compiler: 'tsc',
+        generateExportsField: true,
+        additionalEntryPoints: ['./src/{foo,bar}.ts'],
+        format: ['cjs', 'esm']
+      });
+    `
+    );
+
     updateFile(`libs/${myPkg}/src/foo.ts`, `export const foo = 'foo';`);
     updateFile(`libs/${myPkg}/src/bar.ts`, `export const bar = 'bar';`);
 
@@ -121,49 +162,7 @@ describe('Rollup Plugin', () => {
     expect(() => runCLI(`build ${jsLib}`)).not.toThrow();
   });
 
-  it('should be able to build libs generated with @nx/js:lib --bundler rollup with a custom rollup.config.{cjs|mjs}', () => {
-    const jsLib = uniq('jslib');
-    runCLI(`generate @nx/js:lib ${jsLib} --bundler rollup`);
-    updateFile(
-      `libs/${jsLib}/rollup.config.cjs`,
-      `module.exports = {
-        output: {
-          format: "cjs",
-          dir: "dist/test",
-          name: "Mylib",
-          entryFileNames: "[name].cjs.js",
-          chunkFileNames: "[name].cjs.js"
-        }
-      }`
-    );
-    updateJson(join('libs', jsLib, 'project.json'), (config) => {
-      config.targets.build.options.rollupConfig = `libs/${jsLib}/rollup.config.cjs`;
-      return config;
-    });
-    expect(() => runCLI(`build ${jsLib}`)).not.toThrow();
-    checkFilesExist(`dist/test/index.cjs.js`);
-
-    updateFile(
-      `libs/${jsLib}/rollup.config.mjs`,
-      `export default {
-        output: {
-          format: "es",
-          dir: "dist/test",
-          name: "Mylib",
-          entryFileNames: "[name].mjs.js",
-          chunkFileNames: "[name].mjs.js"
-        }
-      }`
-    );
-    updateJson(join('libs', jsLib, 'project.json'), (config) => {
-      config.targets.build.options.rollupConfig = `libs/${jsLib}/rollup.config.mjs`;
-      return config;
-    });
-    expect(() => runCLI(`build ${jsLib}`)).not.toThrow();
-    checkFilesExist(`dist/test/index.mjs.js`);
-  });
-
-  it('should build correctly with crystal', () => {
+  it('should work correctly with custom, non-Nx rollup config', () => {
     // ARRANGE
     packageInstall('@rollup/plugin-babel', undefined, '5.3.0', 'prod');
     packageInstall('@rollup/plugin-commonjs', undefined, '25.0.7', 'prod');
@@ -215,31 +214,5 @@ export default config;
     expect(output).toContain('Successfully ran target build for project test');
     checkFilesExist(`libs/test/dist/bundle.js`);
     checkFilesExist(`libs/test/dist/bundle.es.js`);
-  });
-
-  it('should support array config from rollup.config.js', () => {
-    const jsLib = uniq('jslib');
-    runCLI(`generate @nx/js:lib ${jsLib} --bundler rollup --verbose`);
-    updateFile(
-      `libs/${jsLib}/rollup.config.js`,
-      `module.exports = (config) => [{
-        ...config,
-        output: {
-          format: "esm",
-          dir: "dist/test",
-          name: "Mylib",
-          entryFileNames: "[name].js",
-          chunkFileNames: "[name].js"
-        }
-      }]`
-    );
-    updateJson(join('libs', jsLib, 'project.json'), (config) => {
-      config.targets.build.options.rollupConfig = `libs/${jsLib}/rollup.config.js`;
-      return config;
-    });
-
-    expect(() => runCLI(`build ${jsLib} --format=esm`)).not.toThrow();
-
-    checkFilesExist(`dist/test/index.js`);
   });
 });

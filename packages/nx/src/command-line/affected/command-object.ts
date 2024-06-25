@@ -37,7 +37,7 @@ export const yargsAffectedCommand: CommandModule = {
       'affected'
     ),
   handler: async (args) => {
-    return handleErrors(
+    const exitCode = await handleErrors(
       (args.verbose as boolean) ?? process.env.NX_VERBOSE_LOGGING === 'true',
       async () => {
         return (await import('./affected')).affected(
@@ -46,6 +46,7 @@ export const yargsAffectedCommand: CommandModule = {
         );
       }
     );
+    process.exit(exitCode);
   },
 };
 
@@ -60,7 +61,7 @@ export const yargsAffectedTestCommand: CommandModule = {
       'affected'
     ),
   handler: async (args) => {
-    return handleErrors(
+    const exitCode = await handleErrors(
       (args.verbose as boolean) ?? process.env.NX_VERBOSE_LOGGING === 'true',
       async () => {
         return (await import('./affected')).affected('affected', {
@@ -69,6 +70,7 @@ export const yargsAffectedTestCommand: CommandModule = {
         });
       }
     );
+    process.exit(exitCode);
   },
 };
 
@@ -83,7 +85,7 @@ export const yargsAffectedBuildCommand: CommandModule = {
       'affected'
     ),
   handler: async (args) => {
-    return handleErrors(
+    const exitCode = await handleErrors(
       (args.verbose as boolean) ?? process.env.NX_VERBOSE_LOGGING === 'true',
       async () => {
         return (await import('./affected')).affected('affected', {
@@ -92,6 +94,7 @@ export const yargsAffectedBuildCommand: CommandModule = {
         });
       }
     );
+    process.exit(exitCode);
   },
 };
 
@@ -106,7 +109,7 @@ export const yargsAffectedLintCommand: CommandModule = {
       'affected'
     ),
   handler: async (args) => {
-    return handleErrors(
+    const exitCode = await handleErrors(
       (args.verbose as boolean) ?? process.env.NX_VERBOSE_LOGGING === 'true',
       async () => {
         return (await import('./affected')).affected('affected', {
@@ -115,6 +118,7 @@ export const yargsAffectedLintCommand: CommandModule = {
         });
       }
     );
+    process.exit(exitCode);
   },
 };
 
@@ -129,7 +133,7 @@ export const yargsAffectedE2ECommand: CommandModule = {
       'affected'
     ),
   handler: async (args) => {
-    return handleErrors(
+    const exitCode = await handleErrors(
       (args.verbose as boolean) ?? process.env.NX_VERBOSE_LOGGING === 'true',
       async () => {
         return (await import('./affected')).affected('affected', {
@@ -138,5 +142,6 @@ export const yargsAffectedE2ECommand: CommandModule = {
         });
       }
     );
+    process.exit(exitCode);
   },
 };

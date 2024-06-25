@@ -22,23 +22,29 @@ interface PendingPromise {
 export function loadRemoteNxPlugin(
   plugin: PluginConfiguration,
   root: string
-): Promise<LoadedNxPlugin> {
+): [Promise<LoadedNxPlugin>, () => void] {
   // this should only really be true when running unit tests within
   // the Nx repo. We still need to start the worker in this case,
   // but its typescript.
   const isWorkerTypescript = path.extname(__filename) === '.ts';
   const workerPath = path.join(__dirname, 'plugin-worker');
+
+  const env: Record<string, string> = {
+    ...process.env,
+    ...(isWorkerTypescript
+      ? {
+          // Ensures that the worker uses the same tsconfig as the main process
+          TS_NODE_PROJECT: path.join(
+            __dirname,
+            '../../../../tsconfig.lib.json'
+          ),
+        }
+      : {}),
+  };
+
   const worker = fork(workerPath, [], {
     stdio: ['ignore', 'inherit', 'inherit', 'ipc'],
-    env: {
-      ...process.env,
-      ...(isWorkerTypescript
-        ? {
-            // Ensures that the worker uses the same tsconfig as the main process
-            TS_NODE_PROJECT: path.join(__dirname, '../../../tsconfig.lib.json'),
-          }
-        : {}),
-    },
+    env,
     execArgv: [
       ...process.execArgv,
       // If the worker is typescript, we need to register ts-node
@@ -55,34 +61,31 @@ export function loadRemoteNxPlugin(
 
   const cleanupFunction = () => {
     worker.off('exit', exitHandler);
-    shutdownPluginWorker(worker, pendingPromises);
+    shutdownPluginWorker(worker);
   };
 
   cleanupFunctions.add(cleanupFunction);
 
-  return new Promise<LoadedNxPlugin>((res, rej) => {
-    worker.on(
-      'message',
-      createWorkerHandler(worker, pendingPromises, res, rej)
-    );
-    worker.on('exit', exitHandler);
-  });
+  return [
+    new Promise<LoadedNxPlugin>((res, rej) => {
+      worker.on(
+        'message',
+        createWorkerHandler(worker, pendingPromises, res, rej)
+      );
+      worker.on('exit', exitHandler);
+    }),
+    () => {
+      cleanupFunction();
+      cleanupFunctions.delete(cleanupFunction);
+    },
+  ];
 }
 
-async function shutdownPluginWorker(
-  worker: ChildProcess,
-  pendingPromises: Map<string, PendingPromise>
-) {
+function shutdownPluginWorker(worker: ChildProcess) {
   // Clears the plugin cache so no refs to the workers are held
   nxPluginCache.clear();
 
   // logger.verbose(`[plugin-pool] starting worker shutdown`);
-
-  // Other things may be interacting with the worker.
-  // Wait for all pending promises to be done before killing the worker
-  await Promise.all(
-    Array.from(pendingPromises.values()).map(({ promise }) => promise)
-  );
 
   worker.kill('SIGINT');
 }

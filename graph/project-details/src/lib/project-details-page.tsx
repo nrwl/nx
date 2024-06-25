@@ -16,7 +16,7 @@ import {
   fetchProjectGraph,
   getProjectGraphDataService,
   useEnvironmentConfig,
-  useIntervalWhen,
+  usePoll,
 } from '@nx/graph/shared';
 import { ProjectDetailsHeader } from './project-details-header';
 
@@ -35,16 +35,16 @@ export function ProjectDetailsPage() {
   const projectGraphDataService = getProjectGraphDataService();
   const params = useParams();
 
-  useIntervalWhen(
+  usePoll(
     async () => {
-      fetchProjectGraph(projectGraphDataService, params, appConfig).then(
-        (data) => {
-          if (data?.hash !== hash) {
-            window.location.reload();
-          }
-          return;
-        }
+      const data = await fetchProjectGraph(
+        projectGraphDataService,
+        params,
+        appConfig
       );
+      if (data?.hash !== hash) {
+        window.location.reload();
+      }
     },
     1000,
     watch

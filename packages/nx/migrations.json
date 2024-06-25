@@ -71,6 +71,24 @@
       "version": "18.1.0-beta.3",
       "description": "Moves affected.defaultBase to defaultBase in `nx.json`",
       "implementation": "./src/migrations/update-17-2-0/move-default-base"
+    },
+    "19-2-0-move-graph-cache-directory": {
+      "cli": "nx",
+      "version": "19.2.0-beta.2",
+      "description": "Updates the default workspace data directory to .nx/workspace-data",
+      "implementation": "./src/migrations/update-19-2-0/move-workspace-data-directory"
+    },
+    "19-2-2-update-nx-wrapper": {
+      "cli": "nx",
+      "version": "19.2.2-beta.0",
+      "description": "Updates the nx wrapper.",
+      "implementation": "./src/migrations/update-17-3-0/update-nxw"
+    },
+    "19-2-4-set-project-name": {
+      "version": "19.2.4-beta.0",
+      "description": "Set project name in nx.json explicitly",
+      "implementation": "./src/migrations/update-19-2-4/set-project-name",
+      "x-repair-skip": true
     }
   }
 }

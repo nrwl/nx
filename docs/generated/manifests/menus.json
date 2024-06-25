@@ -1993,6 +1993,14 @@
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
+              },
+              {
+                "name": "Publish a Custom Dist Directory",
+                "path": "/recipes/nx-release/publish-custom-dist-directory",
+                "id": "publish-custom-dist-directory",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
               }
             ],
             "disableCollapsible": false
@@ -3672,6 +3680,14 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
+          },
+          {
+            "name": "Publish a Custom Dist Directory",
+            "path": "/recipes/nx-release/publish-custom-dist-directory",
+            "id": "publish-custom-dist-directory",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -3752,6 +3768,14 @@
         "name": "Configure Changelog Format",
         "path": "/recipes/nx-release/configure-changelog-format",
         "id": "configure-changelog-format",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Publish a Custom Dist Directory",
+        "path": "/recipes/nx-release/publish-custom-dist-directory",
+        "id": "publish-custom-dist-directory",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -7725,6 +7749,14 @@
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
+              },
+              {
+                "id": "convert-to-inferred",
+                "path": "/nx-api/jest/generators/convert-to-inferred",
+                "name": "convert-to-inferred",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
               }
             ],
             "isExternal": false,
@@ -9293,6 +9325,14 @@
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
+              },
+              {
+                "id": "convert-to-inferred",
+                "path": "/nx-api/remix/generators/convert-to-inferred",
+                "name": "convert-to-inferred",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
               }
             ],
             "isExternal": false,
@@ -9341,6 +9381,14 @@
                 "id": "configuration",
                 "path": "/nx-api/rollup/generators/configuration",
                 "name": "configuration",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "convert-to-inferred",
+                "path": "/nx-api/rollup/generators/convert-to-inferred",
+                "name": "convert-to-inferred",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
@@ -9441,6 +9489,14 @@
                 "id": "cypress-project",
                 "path": "/nx-api/storybook/generators/cypress-project",
                 "name": "cypress-project",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "convert-to-inferred",
+                "path": "/nx-api/storybook/generators/convert-to-inferred",
+                "name": "convert-to-inferred",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
@@ -9549,6 +9605,22 @@
                 "id": "configuration",
                 "path": "/nx-api/vite/generators/configuration",
                 "name": "configuration",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "setup-paths-plugin",
+                "path": "/nx-api/vite/generators/setup-paths-plugin",
+                "name": "setup-paths-plugin",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "convert-to-inferred",
+                "path": "/nx-api/vite/generators/convert-to-inferred",
+                "name": "convert-to-inferred",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
@@ -9808,6 +9880,22 @@
                 "id": "configuration",
                 "path": "/nx-api/webpack/generators/configuration",
                 "name": "configuration",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "convert-config-to-webpack-plugin",
+                "path": "/nx-api/webpack/generators/convert-config-to-webpack-plugin",
+                "name": "convert-config-to-webpack-plugin",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "convert-to-inferred",
+                "path": "/nx-api/webpack/generators/convert-to-inferred",
+                "name": "convert-to-inferred",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false

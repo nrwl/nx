@@ -115,7 +115,7 @@ export function Content({
   };
 
   return (
-    <div data-document="main" className="min-w-0 flex-auto pt-8 pb-24 lg:pb-16">
+    <div data-document="main" className="min-w-0 flex-auto pb-24 pt-8 lg:pb-16">
       <div className="mb-8 flex w-full items-center space-x-2">
         <div className="w-full flex-grow space-x-4">
           <div

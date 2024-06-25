@@ -15,15 +15,18 @@ It only uses language primitives and immutable objects
 
 - [ChangeType](../../devkit/documents/ChangeType)
 - [DependencyType](../../devkit/documents/DependencyType)
+- [OverwriteStrategy](../../devkit/documents/OverwriteStrategy)
 
 ### Classes
 
+- [AggregateCreateNodesError](../../devkit/documents/AggregateCreateNodesError)
 - [ProjectGraphBuilder](../../devkit/documents/ProjectGraphBuilder)
 
 ### Interfaces
 
 - [CreateDependenciesContext](../../devkit/documents/CreateDependenciesContext)
 - [CreateNodesContext](../../devkit/documents/CreateNodesContext)
+- [CreateNodesContextV2](../../devkit/documents/CreateNodesContextV2)
 - [CreateNodesResult](../../devkit/documents/CreateNodesResult)
 - [DefaultTasksRunnerOptions](../../devkit/documents/DefaultTasksRunnerOptions)
 - [ExecutorContext](../../devkit/documents/ExecutorContext)
@@ -62,11 +65,15 @@ It only uses language primitives and immutable objects
 
 ### Type Aliases
 
+- [AsyncIteratorExecutor](../../devkit/documents/AsyncIteratorExecutor)
 - [CreateDependencies](../../devkit/documents/CreateDependencies)
 - [CreateMetadata](../../devkit/documents/CreateMetadata)
 - [CreateMetadataContext](../../devkit/documents/CreateMetadataContext)
 - [CreateNodes](../../devkit/documents/CreateNodes)
 - [CreateNodesFunction](../../devkit/documents/CreateNodesFunction)
+- [CreateNodesFunctionV2](../../devkit/documents/CreateNodesFunctionV2)
+- [CreateNodesResultV2](../../devkit/documents/CreateNodesResultV2)
+- [CreateNodesV2](../../devkit/documents/CreateNodesV2)
 - [CustomHasher](../../devkit/documents/CustomHasher)
 - [DynamicDependency](../../devkit/documents/DynamicDependency)
 - [Executor](../../devkit/documents/Executor)
@@ -85,6 +92,7 @@ It only uses language primitives and immutable objects
 - [ProjectTargetConfigurator](../../devkit/documents/ProjectTargetConfigurator)
 - [ProjectType](../../devkit/documents/ProjectType)
 - [ProjectsMetadata](../../devkit/documents/ProjectsMetadata)
+- [PromiseExecutor](../../devkit/documents/PromiseExecutor)
 - [RawProjectGraphDependency](../../devkit/documents/RawProjectGraphDependency)
 - [StaticDependency](../../devkit/documents/StaticDependency)
 - [StringChange](../../devkit/documents/StringChange)
@@ -109,6 +117,7 @@ It only uses language primitives and immutable objects
 - [applyChangesToString](../../devkit/documents/applyChangesToString)
 - [convertNxExecutor](../../devkit/documents/convertNxExecutor)
 - [convertNxGenerator](../../devkit/documents/convertNxGenerator)
+- [createNodesFromFiles](../../devkit/documents/createNodesFromFiles)
 - [createProjectFileMapUsingProjectGraph](../../devkit/documents/createProjectFileMapUsingProjectGraph)
 - [createProjectGraphAsync](../../devkit/documents/createProjectGraphAsync)
 - [defaultTasksRunner](../../devkit/documents/defaultTasksRunner)
@@ -123,6 +132,7 @@ It only uses language primitives and immutable objects
 - [getProjects](../../devkit/documents/getProjects)
 - [getWorkspaceLayout](../../devkit/documents/getWorkspaceLayout)
 - [glob](../../devkit/documents/glob)
+- [globAsync](../../devkit/documents/globAsync)
 - [hashArray](../../devkit/documents/hashArray)
 - [installPackagesTask](../../devkit/documents/installPackagesTask)
 - [isWorkspacesEnabled](../../devkit/documents/isWorkspacesEnabled)

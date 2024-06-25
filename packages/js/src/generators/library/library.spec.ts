@@ -974,11 +974,6 @@ describe('lib', () => {
           projectNameAndRootFormat: 'as-provided',
         });
 
-        const config = readProjectConfiguration(tree, 'my-lib');
-        expect(config.targets.build.options.project).toEqual(
-          `my-lib/package.json`
-        );
-
         const pkgJson = readJson(tree, 'my-lib/package.json');
         expect(pkgJson.type).not.toBeDefined();
       });
@@ -990,9 +985,6 @@ describe('lib', () => {
           bundler: 'rollup',
           projectNameAndRootFormat: 'as-provided',
         });
-
-        const config = readProjectConfiguration(tree, 'my-lib');
-        expect(config.targets.build.options.compiler).toEqual('swc');
       });
     });
 
@@ -1509,10 +1501,6 @@ describe('lib', () => {
         projectNameAndRootFormat: 'as-provided',
       });
 
-      const project = readProjectConfiguration(tree, 'my-lib');
-      expect(project.targets.build).toMatchObject({
-        executor: '@nx/rollup:rollup',
-      });
       expect(readJson(tree, 'my-lib/.eslintrc.json').overrides).toContainEqual({
         files: ['*.json'],
         parser: 'jsonc-eslint-parser',

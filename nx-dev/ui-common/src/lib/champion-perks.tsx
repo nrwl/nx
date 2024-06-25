@@ -63,7 +63,7 @@ export function ChampionPerks(): JSX.Element {
                   aria-hidden="true"
                 />
                 <HeartIcon
-                  className="absolute inset-0 h-8 w-8 text-purple-500 opacity-0 transition-all group-hover:translate-x-8 group-hover:-translate-y-1 group-hover:opacity-100 dark:text-fuchsia-500"
+                  className="absolute inset-0 h-8 w-8 text-purple-500 opacity-0 transition-all group-hover:-translate-y-1 group-hover:translate-x-8 group-hover:opacity-100 dark:text-fuchsia-500"
                   aria-hidden="true"
                 />
                 <GiftIcon
@@ -89,7 +89,7 @@ export function ChampionPerks(): JSX.Element {
                   aria-hidden="true"
                 />
                 <VideoCameraIcon
-                  className="absolute inset-0 h-8 w-8 text-purple-500 opacity-0 transition-all group-hover:translate-x-8 group-hover:-translate-y-1 group-hover:opacity-100 dark:text-fuchsia-500"
+                  className="absolute inset-0 h-8 w-8 text-purple-500 opacity-0 transition-all group-hover:-translate-y-1 group-hover:translate-x-8 group-hover:opacity-100 dark:text-fuchsia-500"
                   aria-hidden="true"
                 />
                 <MicrophoneIcon
@@ -116,7 +116,7 @@ export function ChampionPerks(): JSX.Element {
                   aria-hidden="true"
                 />
                 <LightBulbIcon
-                  className="absolute inset-0 h-8 w-8 text-purple-500 opacity-0 transition-all group-hover:translate-x-8 group-hover:-translate-y-1 group-hover:opacity-100 dark:text-fuchsia-500"
+                  className="absolute inset-0 h-8 w-8 text-purple-500 opacity-0 transition-all group-hover:-translate-y-1 group-hover:translate-x-8 group-hover:opacity-100 dark:text-fuchsia-500"
                   aria-hidden="true"
                 />
                 <ChatBubbleBottomCenterTextIcon
@@ -143,7 +143,7 @@ export function ChampionPerks(): JSX.Element {
                   aria-hidden="true"
                 />
                 <UsersIcon
-                  className="absolute inset-0 h-8 w-8 text-purple-500 opacity-0 transition-all group-hover:translate-x-8 group-hover:-translate-y-1 group-hover:opacity-100 dark:text-fuchsia-500"
+                  className="absolute inset-0 h-8 w-8 text-purple-500 opacity-0 transition-all group-hover:-translate-y-1 group-hover:translate-x-8 group-hover:opacity-100 dark:text-fuchsia-500"
                   aria-hidden="true"
                 />
                 <UserPlusIcon
@@ -159,7 +159,7 @@ export function ChampionPerks(): JSX.Element {
             <dd className="mt-2 text-base text-slate-500 dark:text-slate-400">
               When you're ready to join, fill out the{' '}
               <a
-                className="underline text-slate-900 dark:text-slate-100"
+                className="text-slate-900 underline dark:text-slate-100"
                 href="https://forms.gle/wYd9mC3ka64ki96G7"
               >
                 application form

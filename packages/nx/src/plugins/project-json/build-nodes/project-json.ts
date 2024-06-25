@@ -4,7 +4,7 @@ import { ProjectConfiguration } from '../../../config/workspace-json-project-jso
 import { toProjectName } from '../../../config/to-project-name';
 import { readJsonFile } from '../../../utils/fileutils';
 import { NxPluginV2 } from '../../../project-graph/plugins';
-import { CreateNodesError } from '../../../project-graph/error-types';
+import { PackageJson } from '../../../utils/package-json';
 
 export const ProjectJsonProjectsPlugin: NxPluginV2 = {
   name: 'nx/core/project-json',
@@ -16,6 +16,7 @@ export const ProjectJsonProjectsPlugin: NxPluginV2 = {
       );
 
       const project = buildProjectFromProjectJson(json, file);
+
       return {
         projects: {
           [project.root]: project,
@@ -31,9 +32,21 @@ export function buildProjectFromProjectJson(
   json: Partial<ProjectConfiguration>,
   path: string
 ): ProjectConfiguration {
+  const packageJsonPath = join(dirname(path), 'package.json');
+  const { name, root, ...rest } = json;
   return {
-    name: toProjectName(path),
-    root: dirname(path),
-    ...json,
+    name:
+      name ?? readNameFromPackageJson(packageJsonPath) ?? toProjectName(path),
+    root: root ?? dirname(path),
+    ...rest,
   };
+}
+
+export function readNameFromPackageJson(path: string): string {
+  try {
+    const json = readJsonFile<PackageJson>(path);
+    return json.nx?.name ?? json.name;
+  } catch {
+    return undefined;
+  }
 }

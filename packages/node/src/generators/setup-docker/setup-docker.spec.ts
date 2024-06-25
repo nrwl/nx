@@ -1,11 +1,6 @@
-import 'nx/src/internal-testing-utils/mock-project-graph';
-
-import {
-  ProjectConfiguration,
-  readProjectConfiguration,
-  Tree,
-} from '@nx/devkit';
+import { readProjectConfiguration, Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { applicationGenerator } from '../application/application';
 
 describe('setupDockerGenerator', () => {
   let tree: Tree;
@@ -18,15 +13,6 @@ describe('setupDockerGenerator', () => {
   describe('integrated', () => {
     it('should create docker assets when --docker is passed', async () => {
       const projectName = 'integreated-api';
-      // Since we mock the project graph, we need to mock the project configuration as well
-      mockReadCachedProjectConfiguration({
-        name: projectName,
-        root: projectName,
-      });
-
-      const { applicationGenerator } = await import(
-        '../application/application'
-      );
 
       await applicationGenerator(tree, {
         name: projectName,
@@ -56,11 +42,7 @@ describe('setupDockerGenerator', () => {
   describe('standalone', () => {
     it('should create docker assets when --docker is passed', async () => {
       const projectName = 'standalone-api';
-      mockReadCachedProjectConfiguration({ name: projectName, root: '' });
 
-      const { applicationGenerator } = await import(
-        '../application/application'
-      );
       await applicationGenerator(tree, {
         name: projectName,
         framework: 'fastify',
@@ -86,23 +68,3 @@ describe('setupDockerGenerator', () => {
     });
   });
 });
-
-const mockReadCachedProjectConfiguration = (
-  projectConfig: ProjectConfiguration
-) => {
-  jest.mock('nx/src/project-graph/project-graph', () => {
-    return {
-      ...jest.requireActual('nx/src/project-graph/project-graph'),
-      readCachedProjectConfiguration: jest.fn(() => {
-        return {
-          root: projectConfig.root,
-          targets: {
-            build: {
-              outputs: [`dist/${projectConfig.name}`],
-            },
-          },
-        };
-      }),
-    };
-  });
-};

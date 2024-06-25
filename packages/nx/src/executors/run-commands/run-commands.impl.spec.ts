@@ -36,16 +36,100 @@ describe('Run Commands', () => {
     expect(readFile(f)).toEqual('123');
   });
 
-  it('should not pass --args into underlying command', async () => {
-    const result = await runCommands(
-      {
-        command: `echo`,
-        __unparsed__: ['--args=--key=123'],
-        args: '--key=123',
-      },
-      context
-    );
-    expect(result.terminalOutput.trim()).not.toContain('--args=--key=123');
+  it.each([
+    {
+      unparsed: ['test1', '--args=--key=123', '--test2=1', '--test2=2'],
+      expected: 'test1 --test2=1 --test2=2',
+    },
+    {
+      unparsed: ['test', '--args=--key=123', '--test.a=1', '--test.b=2'],
+      expected: 'test --test.a=1 --test.b=2',
+    },
+    { unparsed: ['one', '-a=b', `--args=--key=123`], expected: 'one -a=b' },
+  ])(
+    'should pass command line args $unparsed to the command and ignore --args',
+    async ({ unparsed: unparsedOptions, expected }) => {
+      let result = (
+        await runCommands(
+          {
+            command: `echo`,
+            __unparsed__: unparsedOptions,
+            args: '--key=123',
+          },
+          context
+        )
+      ).terminalOutput.trim();
+      expect(result).not.toContain('--args=--key=123');
+      expect(result).toContain(`echo --key=123 ${expected}`);
+    }
+  );
+
+  it('should overwrite matching options with args', async () => {
+    let result = (
+      await runCommands(
+        {
+          command: `echo`,
+          __unparsed__: [],
+          key: 789,
+        },
+        context
+      )
+    ).terminalOutput.trim();
+    expect(result).toContain('echo --key=789'); // unknown options
+
+    result = (
+      await runCommands(
+        {
+          command: `echo`,
+          __unparsed__: ['--a.b=234'],
+          a: { b: 123 },
+        },
+        context
+      )
+    ).terminalOutput.trim();
+    expect(result).toContain('echo --a.b=234');
+
+    result = (
+      await runCommands(
+        {
+          command: `echo`,
+          __unparsed__: ['--key=456'],
+          key: 123,
+        },
+        context
+      )
+    ).terminalOutput.trim();
+    expect(result).not.toContain('--key=123');
+    expect(result).toContain('echo --key=456'); // should take unparsed over unknown options
+
+    result = (
+      await runCommands(
+        {
+          command: `echo`,
+          __unparsed__: ['--key=456'],
+          key: 123,
+          args: '--key=789',
+        },
+        context
+      )
+    ).terminalOutput.trim();
+    expect(result).not.toContain('--key=123');
+    expect(result).toContain('--key=789'); // should take args over unknown options
+
+    result = (
+      await runCommands(
+        {
+          command: 'echo',
+          __unparsed__: [],
+          key1: 'from options',
+          key2: 'from options',
+          args: '--key1="from args"',
+        },
+        context
+      )
+    ).terminalOutput.trim();
+    expect(result).not.toContain('--key1="from options"');
+    expect(result).toContain('echo --key2="from options" --key1="from args"'); // take args over options with the same name while keeping the rest
   });
 
   it('should not foward any args to underlying command if forwardAllArgs is false', async () => {
@@ -128,7 +212,7 @@ describe('Run Commands', () => {
 
   it('should run commands serially', async () => {
     const f = fileSync().name;
-    const result = await runCommands(
+    let result = await runCommands(
       {
         commands: [`sleep 0.2 && echo 1 >> ${f}`, `echo 2 >> ${f}`],
         parallel: false,
@@ -138,6 +222,16 @@ describe('Run Commands', () => {
     );
     expect(result).toEqual(expect.objectContaining({ success: true }));
     expect(readFile(f)).toEqual('12');
+
+    result = await runCommands(
+      {
+        commands: [`sleep 0.2 && echo 1 >> ${f}`, `echo 2 >> ${f}`],
+        __unparsed__: ['--no-parallel'],
+      },
+      context
+    );
+    expect(result).toEqual(expect.objectContaining({ success: true }));
+    expect(readFile(f)).toEqual('1212');
   });
 
   it('should run commands in parallel', async () => {
@@ -164,43 +258,93 @@ describe('Run Commands', () => {
   });
 
   describe('readyWhen', () => {
-    it('should error when parallel = false', async () => {
-      try {
-        await runCommands(
+    describe('single string', () => {
+      it('should error when parallel = false', async () => {
+        try {
+          await runCommands(
+            {
+              commands: [{ command: 'echo foo' }, { command: 'echo bar' }],
+              parallel: false,
+              readyWhen: 'READY',
+              __unparsed__: [],
+            },
+            context
+          );
+          fail('should throw');
+        } catch (e) {
+          expect(e.message).toEqual(
+            `ERROR: Bad executor config for run-commands - "readyWhen" can only be used when "parallel=true".`
+          );
+        }
+      });
+
+      it('should return success true when the string specified as ready condition is found', async () => {
+        const f = fileSync().name;
+        const result = await runCommands(
           {
-            commands: [{ command: 'echo foo' }, { command: 'echo bar' }],
-            parallel: false,
+            commands: [`echo READY && sleep 0.1 && echo 1 >> ${f}`, `echo foo`],
+            parallel: true,
             readyWhen: 'READY',
             __unparsed__: [],
           },
+
           context
         );
-        fail('should throw');
-      } catch (e) {
-        expect(e.message).toEqual(
-          `ERROR: Bad executor config for run-commands - "readyWhen" can only be used when "parallel=true".`
-        );
-      }
+        expect(result).toEqual(expect.objectContaining({ success: true }));
+        expect(readFile(f)).toEqual('');
+
+        setTimeout(() => {
+          expect(readFile(f)).toEqual('1');
+        }, 150);
+      });
     });
 
-    it('should return success true when the string specified as ready condition is found', async () => {
-      const f = fileSync().name;
-      const result = await runCommands(
-        {
-          commands: [`echo READY && sleep 0.1 && echo 1 >> ${f}`, `echo foo`],
-          parallel: true,
-          readyWhen: 'READY',
-          __unparsed__: [],
-        },
+    describe('array of strings', () => {
+      it('should return success true when all strings specified as ready condition were found', async () => {
+        const f = fileSync().name;
+        const result = await runCommands(
+          {
+            commands: [`echo READY && sleep 0.1 && echo 1 >> ${f}`, `echo foo`],
+            parallel: true,
+            readyWhen: ['READY', 'foo'],
+            __unparsed__: [],
+          },
 
-        context
-      );
-      expect(result).toEqual(expect.objectContaining({ success: true }));
-      expect(readFile(f)).toEqual('');
+          context
+        );
+        expect(result).toEqual(expect.objectContaining({ success: true }));
+        expect(readFile(f)).toEqual('');
 
-      setTimeout(() => {
-        expect(readFile(f)).toEqual('1');
-      }, 150);
+        setTimeout(() => {
+          expect(readFile(f)).toEqual('1');
+        }, 150);
+      });
+
+      it('should keep waiting when not all strings specified as ready condition were found', (done) => {
+        const f = fileSync().name;
+        let result: { success: boolean } | null = null;
+
+        runCommands(
+          {
+            commands: [`echo 1 >> ${f} && echo READY`, `echo foo`],
+            parallel: true,
+            readyWhen: ['READY', 'bar'],
+            __unparsed__: [],
+          },
+
+          context
+        ).then((res) => {
+          result = res;
+        });
+
+        expect(readFile(f)).toEqual('');
+
+        setTimeout(() => {
+          expect(readFile(f)).toEqual('1');
+          expect(result).toBeNull();
+          done();
+        }, 150);
+      });
     });
   });
 
@@ -238,11 +382,11 @@ describe('Run Commands', () => {
           'echo',
           {
             __unparsed__: ['--args', 'test', 'hello'],
-            unparsedCommandArgs: { args: 'test' },
+            parsedArgs: { args: 'test' },
           } as any,
           true
         )
-      ).toEqual('echo hello');
+      ).toEqual('echo hello'); // should not pass --args test to underlying command
 
       expect(
         interpolateArgsIntoCommand(
@@ -323,6 +467,56 @@ describe('Run Commands', () => {
         )
       ).toEqual('echo "hello world"');
     });
+
+    it('should interpolate provided values with spaces', () => {
+      expect(
+        interpolateArgsIntoCommand(
+          'echo',
+          {
+            unknownOptions: { hello: 'test 123' },
+            parsedArgs: { hello: 'test 123' },
+          } as any,
+          true
+        )
+      ).toEqual('echo --hello="test 123"'); // should wrap in quotes
+
+      expect(
+        interpolateArgsIntoCommand(
+          'echo',
+          {
+            unknownOptions: { hello: '"test 123"' },
+            parsedArgs: { hello: '"test 123"' },
+          } as any,
+          true
+        )
+      ).toEqual('echo --hello="test 123"'); // should leave double quotes
+
+      expect(
+        interpolateArgsIntoCommand(
+          'echo',
+          {
+            unknownOptions: { hello: "'test 123'" },
+            parsedArgs: { hello: "'test 123'" },
+          } as any,
+          true
+        )
+      ).toEqual("echo --hello='test 123'"); // should leave single quote
+
+      expect(
+        interpolateArgsIntoCommand(
+          'echo',
+          {
+            __unparsed__: [
+              '--hello=test 123',
+              'hello world',
+              '"random config"',
+              '456',
+            ],
+          } as any,
+          true
+        )
+      ).toEqual(`echo --hello="test 123" "hello world" "random config" 456`); // should wrap aroound __unparsed__ args with key value
+    });
   });
 
   describe('--color', () => {
@@ -333,6 +527,35 @@ describe('Run Commands', () => {
           commands: [`echo 'Hello World'`, `echo 'Hello Universe'`],
           parallel: true,
           __unparsed__: [],
+        },
+        context
+      );
+
+      expect(exec).toHaveBeenCalledTimes(2);
+      expect(exec).toHaveBeenNthCalledWith(1, `echo 'Hello World'`, {
+        maxBuffer: LARGE_BUFFER,
+        env: {
+          ...process.env,
+          ...env(),
+        },
+      });
+      expect(exec).toHaveBeenNthCalledWith(2, `echo 'Hello Universe'`, {
+        maxBuffer: LARGE_BUFFER,
+        env: {
+          ...process.env,
+          ...env(),
+        },
+      });
+    });
+
+    it('should not set FORCE_COLOR=true when --no-color is passed', async () => {
+      const exec = jest.spyOn(require('child_process'), 'exec');
+      await runCommands(
+        {
+          commands: [`echo 'Hello World'`, `echo 'Hello Universe'`],
+          parallel: true,
+          __unparsed__: [],
+          color: false,
         },
         context
       );

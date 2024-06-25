@@ -349,7 +349,7 @@ export async function generateGraph(
         splitArgsIntoNxArgsAndOverrides(
           args,
           'affected',
-          { printWarnings: true },
+          { printWarnings: args.file !== 'stdout' },
           readNxJson()
         ).nxArgs,
         rawGraph
@@ -401,6 +401,7 @@ export async function generateGraph(
           2
         )
       );
+      await output.drain();
       process.exit(0);
     }
 
