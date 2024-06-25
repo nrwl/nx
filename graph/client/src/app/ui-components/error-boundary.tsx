@@ -3,7 +3,7 @@ import {
   fetchProjectGraph,
   getProjectGraphDataService,
   useEnvironmentConfig,
-  useIntervalWhen,
+  usePoll,
 } from '@nx/graph/shared';
 import { ErrorRenderer } from '@nx/graph/ui-components';
 import {
@@ -23,20 +23,20 @@ export function ErrorBoundary() {
   const hasErrorData =
     isRouteErrorResponse(error) && error.data.errors?.length > 0;
 
-  useIntervalWhen(
+  usePoll(
     async () => {
-      fetchProjectGraph(projectGraphDataService, params, appConfig).then(
-        (data) => {
-          if (
-            isRouteErrorResponse(error) &&
-            error.data.id === 'project-not-found' &&
-            data.projects.find((p) => p.name === error.data.projectName)
-          ) {
-            window.location.reload();
-          }
-          return;
-        }
+      const data = await fetchProjectGraph(
+        projectGraphDataService,
+        params,
+        appConfig
       );
+      if (
+        isRouteErrorResponse(error) &&
+        error.data.id === 'project-not-found' &&
+        data.projects.find((p) => p.name === error.data.projectName)
+      ) {
+        window.location.reload();
+      }
     },
     1000,
     watch

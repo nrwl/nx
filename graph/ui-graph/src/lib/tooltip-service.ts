@@ -37,8 +37,8 @@ export class GraphTooltipService {
           if (graph.getTaskInputs) {
             graph.getTaskInputs(event.data.id).then((inputs) => {
               if (
-                this.currentTooltip.type === 'taskNode' &&
-                this.currentTooltip.props.id === event.data.id
+                this.currentTooltip?.type === 'taskNode' &&
+                this.currentTooltip?.props.id === event.data.id
               ) {
                 this.openTaskNodeTooltip(event.ref, {
                   ...event.data,
