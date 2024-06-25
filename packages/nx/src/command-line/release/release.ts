@@ -217,6 +217,9 @@ export async function release(
 
     latestCommit = await getCommitHash('HEAD');
     await createOrUpdateGithubRelease(
+      nxReleaseConfig.changelog.workspaceChangelog
+        ? nxReleaseConfig.changelog.workspaceChangelog.createRelease
+        : false,
       changelogResult.workspaceChangelog.releaseVersion,
       changelogResult.workspaceChangelog.contents,
       latestCommit,
@@ -262,6 +265,7 @@ export async function release(
         }
 
         await createOrUpdateGithubRelease(
+          releaseGroup.changelog ? releaseGroup.changelog.createRelease : false,
           changelog.releaseVersion,
           changelog.contents,
           latestCommit,

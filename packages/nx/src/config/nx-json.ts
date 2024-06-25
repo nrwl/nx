@@ -79,7 +79,17 @@ export interface NxReleaseChangelogConfiguration {
    * NOTE: if createRelease is set on a group of projects, it will cause the default releaseTagPattern of
    * "{projectName}@{version}" to be used for those projects, even when versioning everything together.
    */
-  createRelease?: 'github' | false;
+  createRelease?:
+    | false
+    | 'github'
+    | {
+        provider: 'github-enterprise-server';
+        hostname: string;
+        /**
+         * If not set, this will default to `https://${hostname}/api/v3`
+         */
+        apiBaseUrl?: string;
+      };
   /**
    * This can either be set to a string value that will be written to the changelog file(s)
    * at the workspace root and/or within project directories, or set to `false` to specify

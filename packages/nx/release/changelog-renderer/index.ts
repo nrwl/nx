@@ -3,6 +3,7 @@ import { ChangelogChange } from '../../src/command-line/release/changelog';
 import { NxReleaseConfig } from '../../src/command-line/release/config/config';
 import { GitCommit } from '../../src/command-line/release/utils/git';
 import {
+  GithubRepoData,
   RepoSlug,
   formatReferences,
 } from '../../src/command-line/release/utils/github';
@@ -41,6 +42,7 @@ export type DependencyBump = {
  * @param {string | false} config.entryWhenNoChanges The (already interpolated) string to use as the changelog entry when there are no changes, or `false` if no entry should be generated
  * @param {ChangelogRenderOptions} config.changelogRenderOptions The options specific to the ChangelogRenderer implementation
  * @param {DependencyBump[]} config.dependencyBumps Optional list of additional dependency bumps that occurred as part of the release, outside of the commit data
+ * @param {GithubRepoData} config.repoData Resolved data for the current GitHub repository
  */
 export type ChangelogRenderer = (config: {
   projectGraph: ProjectGraph;
@@ -54,6 +56,7 @@ export type ChangelogRenderer = (config: {
   dependencyBumps?: DependencyBump[];
   repoSlug?: RepoSlug;
   conventionalCommitsConfig: NxReleaseConfig['conventionalCommits'];
+  repoData?: GithubRepoData;
 }) => Promise<string> | string;
 
 /**
@@ -92,6 +95,7 @@ const defaultChangelogRenderer: ChangelogRenderer = async ({
   dependencyBumps,
   repoSlug,
   conventionalCommitsConfig,
+  repoData,
 }): Promise<string> => {
   const changeTypes = conventionalCommitsConfig.types;
   const markdownLines: string[] = [];
@@ -172,7 +176,7 @@ const defaultChangelogRenderer: ChangelogRenderer = async ({
       for (const scope of scopesSortedAlphabetically) {
         const changes = changesGroupedByScope[scope];
         for (const change of changes) {
-          const line = formatChange(change, changelogRenderOptions, repoSlug);
+          const line = formatChange(change, changelogRenderOptions, repoData);
           markdownLines.push(line);
           if (change.isBreaking) {
             const breakingChangeExplanation = extractBreakingChangeExplanation(
@@ -240,7 +244,7 @@ const defaultChangelogRenderer: ChangelogRenderer = async ({
 
       const changesInChronologicalOrder = group.reverse();
       for (const change of changesInChronologicalOrder) {
-        const line = formatChange(change, changelogRenderOptions, repoSlug);
+        const line = formatChange(change, changelogRenderOptions, repoData);
         markdownLines.push(line + '\n');
         if (change.isBreaking) {
           const breakingChangeExplanation = extractBreakingChangeExplanation(
@@ -290,7 +294,7 @@ const defaultChangelogRenderer: ChangelogRenderer = async ({
     }
 
     // Try to map authors to github usernames
-    if (repoSlug) {
+    if (repoData) {
       await Promise.all(
         [..._authors.keys()].map(async (authorName) => {
           const meta = _authors.get(authorName);
@@ -394,15 +398,15 @@ function groupBy(items: any[], key: string) {
 function formatChange(
   change: ChangelogChange,
   changelogRenderOptions: DefaultChangelogRenderOptions,
-  repoSlug?: RepoSlug
+  repoData?: GithubRepoData
 ): string {
   let changeLine =
     '- ' +
     (change.isBreaking ? '⚠️  ' : '') +
     (change.scope ? `**${change.scope.trim()}:** ` : '') +
     change.description;
-  if (repoSlug && changelogRenderOptions.commitReferences) {
-    changeLine += formatReferences(change.githubReferences, repoSlug);
+  if (repoData && changelogRenderOptions.commitReferences) {
+    changeLine += formatReferences(change.githubReferences, repoData);
   }
   return changeLine;
 }
