@@ -29,7 +29,7 @@ import {
   fetchProjectGraph,
   getProjectGraphDataService,
   useEnvironmentConfig,
-  useIntervalWhen,
+  usePoll,
   useRouteConstructor,
 } from '@nx/graph/shared';
 import {
@@ -295,24 +295,23 @@ export function ProjectsSidebar(): JSX.Element {
     }
   }, [searchParams]);
 
-  useIntervalWhen(
-    () => {
-      fetchProjectGraph(
+  usePoll(
+    async () => {
+      const response: ProjectGraphClientResponse = await fetchProjectGraph(
         projectGraphDataService,
         params,
         environmentConfig.appConfig
-      ).then((response: ProjectGraphClientResponse) => {
-        if (response.hash === lastHash) {
-          return;
-        }
-        projectGraphService.send({
-          type: 'updateGraph',
-          projects: response.projects,
-          dependencies: response.dependencies,
-          fileMap: response.fileMap,
-        });
-        setLastHash(response.hash);
+      );
+      if (response.hash === lastHash) {
+        return;
+      }
+      projectGraphService.send({
+        type: 'updateGraph',
+        projects: response.projects,
+        dependencies: response.dependencies,
+        fileMap: response.fileMap,
       });
+      setLastHash(response.hash);
     },
     5000,
     environmentConfig.watch
