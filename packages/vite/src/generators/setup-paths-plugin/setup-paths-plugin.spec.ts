@@ -76,4 +76,62 @@ describe('@nx/vite:init', () => {
       "
     `);
   });
+
+  it('should not add nxViteTsPaths plugin to vite config files when it exists', async () => {
+    tree.write(
+      'proj1/vite.config.ts',
+      stripIndents`
+      import { defineConfig } from 'vite';
+      import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+      export default defineConfig({});`
+    );
+    tree.write(
+      'proj2/vite.config.ts',
+      stripIndents`
+    import { defineConfig } from 'vite'
+    import react from '@vitejs/plugin-react'
+    export default defineConfig({
+      plugins: [react()],
+    })`
+    );
+    tree.write(
+      'proj3/vite.config.cts',
+      stripIndents`
+      const { defineConfig } = require('vite');
+      const react = require('@vitejs/plugin-react');
+      const { nxViteTsPaths } = require('@nx/vite/plugins/nx-tsconfig-paths.plugin');
+      module.exports = defineConfig({
+        plugins: [react()],
+      });
+      `
+    );
+
+    await setupPathsPlugin(tree, {});
+
+    expect(tree.read('proj1/vite.config.ts').toString()).toMatchInlineSnapshot(`
+      "import { defineConfig } from 'vite';
+      import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+      export default defineConfig({ plugins: [nxViteTsPaths()] });
+      "
+    `);
+    expect(tree.read('proj2/vite.config.ts').toString()).toMatchInlineSnapshot(`
+      "import { defineConfig } from 'vite';
+      import react from '@vitejs/plugin-react';
+      import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+      export default defineConfig({
+        plugins: [react(), nxViteTsPaths()],
+      });
+      "
+    `);
+    expect(tree.read('proj3/vite.config.cts').toString())
+      .toMatchInlineSnapshot(`
+      "const { defineConfig } = require('vite');
+      const react = require('@vitejs/plugin-react');
+      const { nxViteTsPaths } = require('@nx/vite/plugins/nx-tsconfig-paths.plugin');
+      module.exports = defineConfig({
+        plugins: [react(), nxViteTsPaths()],
+      });
+      "
+    `);
+  });
 });
