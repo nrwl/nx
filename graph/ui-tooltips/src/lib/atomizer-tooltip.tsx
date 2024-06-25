@@ -14,9 +14,9 @@ export function AtomizerTooltip(props: AtomizerTooltipProps) {
       </h4>
       <div
         className={twMerge(
-          'flex flex-col',
+          'flex flex-col py-2 font-mono',
           !props.connectedToCloud
-            ? ' border-b border-slate-200 py-2 font-mono dark:border-slate-700/60'
+            ? 'border-b border-slate-200 dark:border-slate-700/60'
             : ''
         )}
       >
@@ -77,13 +77,13 @@ export function AtomizerTooltip(props: AtomizerTooltipProps) {
                 <span>Connect to Nx Cloud</span>
               </button>
             ) : (
-              <>
+              <span className="font-mono">
                 {'Run'}
                 <code className="mx-2 inline rounded bg-gray-100 px-1 font-mono text-gray-800 dark:bg-gray-700 dark:text-gray-300">
                   nx connect
                 </code>
                 {'to connect to Nx Cloud'}
-              </>
+              </span>
             )}
           </p>
         </div>

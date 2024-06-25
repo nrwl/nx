@@ -10,9 +10,7 @@ type PropertyInfoTooltipType =
   | 'dependsOn'
   | 'options'
   | 'configurations'
-  | 'release'
-  | 'atomizer-cloud'
-  | 'atomizer-no-cloud';
+  | 'release';
 
 type PropertyInfoTooltipTypeOptions = {
   docsUrl?: string;
@@ -82,18 +80,6 @@ const PROPERTY_INFO_TOOLTIP_TYPE_OPTIONS: Record<
     description:
       "The nx-release-publish target is used to publish your project with nxrelease. Don't invoke this directly - use nx release publish instead.",
     docsUrl: 'https://nx.dev/nx-api/nx/documents/release',
-  },
-  'atomizer-cloud': {
-    heading: 'Atomizer',
-    description:
-      'This target has been automatically split into multiple targets by file.',
-    docsUrl: 'https://nx.dev/ci/features/split-e2e-tasks',
-  },
-  'atomizer-no-cloud': {
-    heading: 'Atomizer',
-    description:
-      'This target has been automatically split into multiple targets by file. We recommend running this only with distribution enabled via Nx Cloud to avoid potential performance overheads.',
-    docsUrl: 'https://nx.dev/ci/features/split-e2e-tasks',
   },
 };
 
