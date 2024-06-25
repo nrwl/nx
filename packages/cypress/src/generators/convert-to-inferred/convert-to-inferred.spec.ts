@@ -495,33 +495,46 @@ describe('Cypress - Convert Executors To Plugin', () => {
 
       // nx.json modifications
       const nxJsonPlugins = readNxJson(tree).plugins;
-      const addedTestCypressPlugin = nxJsonPlugins.find((plugin) => {
-        if (
-          typeof plugin !== 'string' &&
-          plugin.plugin === '@nx/cypress/plugin' &&
-          plugin.include?.length === 2
-        ) {
-          return true;
-        }
-      });
-      expect(addedTestCypressPlugin).toBeTruthy();
-      expect(
-        (addedTestCypressPlugin as ExpandedPluginConfiguration).include
-      ).toEqual(['myapp-e2e/**/*', 'second/**/*']);
-
-      const addedIntegrationCypressPlugin = nxJsonPlugins.find((plugin) => {
-        if (
-          typeof plugin !== 'string' &&
-          plugin.plugin === '@nx/cypress/plugin' &&
-          plugin.include?.length === 1
-        ) {
-          return true;
-        }
-      });
-      expect(addedIntegrationCypressPlugin).toBeTruthy();
-      expect(
-        (addedIntegrationCypressPlugin as ExpandedPluginConfiguration).include
-      ).toEqual(['third/**/*']);
+      const addedCypressPlugins = nxJsonPlugins.filter(
+        (plugin) =>
+          typeof plugin !== 'string' && plugin.plugin === '@nx/cypress/plugin'
+      );
+      expect(addedCypressPlugins).toMatchInlineSnapshot(`
+        [
+          {
+            "options": {
+              "ciTargetName": "e2e-ci",
+              "targetName": "e2e",
+            },
+            "plugin": "@nx/cypress/plugin",
+          },
+          {
+            "include": [
+              "myapp-e2e/**/*",
+              "second/**/*",
+            ],
+            "options": {
+              "ciTargetName": "e2e-ci",
+              "componentTestingTargetName": "component-test",
+              "openTargetName": "open-cypress",
+              "targetName": "test",
+            },
+            "plugin": "@nx/cypress/plugin",
+          },
+          {
+            "include": [
+              "third/**/*",
+            ],
+            "options": {
+              "ciTargetName": "e2e-ci",
+              "componentTestingTargetName": "component-test",
+              "openTargetName": "open-cypress",
+              "targetName": "integration",
+            },
+            "plugin": "@nx/cypress/plugin",
+          },
+        ]
+      `);
     });
 
     it('should keep Cypress options in project.json', async () => {

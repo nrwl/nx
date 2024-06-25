@@ -3,6 +3,7 @@ import {
   joinPathFragments,
   readNxJson,
   readProjectConfiguration,
+  updateNxJson,
   updateProjectConfiguration,
   writeJson,
   type ExpandedPluginConfiguration,
@@ -14,6 +15,7 @@ import { TempFs } from '@nx/devkit/internal-testing-utils';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { join } from 'node:path';
 import { getRelativeProjectJsonSchemaPath } from 'nx/src/generators/utils/project-configuration';
+import type { WebpackPluginOptions } from '../../plugins/plugin';
 import { convertToInferred } from './convert-to-inferred';
 
 let fs: TempFs;
@@ -375,6 +377,78 @@ describe('convert-to-inferred', () => {
       // assert other projects were not modified
       const updatedProject2 = readProjectConfiguration(tree, project2.name);
       expect(updatedProject2.targets.build).toStrictEqual(project2BuildTarget);
+    });
+
+    it('should remove "includes" from the plugin registration when all projects are included', async () => {
+      const project1 = createProject(tree);
+      writeWebpackConfig(tree, project1.root);
+      const nxJson = readNxJson(tree);
+      nxJson.plugins ??= [];
+      nxJson.plugins.push({
+        plugin: '@nx/webpack/plugin',
+        options: {
+          buildTargetName: 'build',
+          previewTargetName: 'preview',
+          serveStaticTargetName: 'serve-static',
+          serveTargetName: 'serve',
+        },
+        include: [`${project1.root}/**/*`],
+      });
+      updateNxJson(tree, nxJson);
+      const project2 = createProject(tree, {
+        appName: 'app2',
+        appRoot: 'apps/app2',
+      });
+      writeWebpackConfig(tree, project2.root);
+
+      await convertToInferred(tree, { project: project2.name });
+
+      // nx.json modifications
+      const nxJsonPlugins = readNxJson(tree).plugins;
+      const webpackPluginRegistrations = nxJsonPlugins.filter(
+        (plugin): plugin is ExpandedPluginConfiguration<WebpackPluginOptions> =>
+          typeof plugin !== 'string' && plugin.plugin === '@nx/webpack/plugin'
+      );
+      expect(webpackPluginRegistrations.length).toBe(1);
+      expect(webpackPluginRegistrations[0].include).toBeUndefined();
+    });
+
+    it('should not add to "includes" when existing matching registration does not have it set', async () => {
+      const project1 = createProject(tree);
+      writeWebpackConfig(tree, project1.root);
+      const nxJson = readNxJson(tree);
+      nxJson.plugins ??= [];
+      nxJson.plugins.push({
+        plugin: '@nx/webpack/plugin',
+        options: {
+          buildTargetName: 'build',
+          previewTargetName: 'preview',
+          serveStaticTargetName: 'serve-static',
+          serveTargetName: 'serve',
+        },
+      });
+      updateNxJson(tree, nxJson);
+      const project2 = createProject(tree, {
+        appName: 'app2',
+        appRoot: 'apps/app2',
+      });
+      writeWebpackConfig(tree, project2.root);
+      const project3 = createProject(tree, {
+        appName: 'app3',
+        appRoot: 'apps/app3',
+      });
+      writeWebpackConfig(tree, project3.root);
+
+      await convertToInferred(tree, { project: project2.name });
+
+      // nx.json modifications
+      const nxJsonPlugins = readNxJson(tree).plugins;
+      const webpackPluginRegistrations = nxJsonPlugins.filter(
+        (plugin): plugin is ExpandedPluginConfiguration<WebpackPluginOptions> =>
+          typeof plugin !== 'string' && plugin.plugin === '@nx/webpack/plugin'
+      );
+      expect(webpackPluginRegistrations.length).toBe(1);
+      expect(webpackPluginRegistrations[0].include).toBeUndefined();
     });
 
     it('should move options to the webpack config file', async () => {
@@ -753,11 +827,26 @@ describe('convert-to-inferred', () => {
         appName: 'app3',
         appRoot: 'apps/app3',
         buildTargetName: 'build-webpack',
+        serveTargetName: 'serve-webpack',
       });
       writeWebpackConfig(tree, project3.root);
-      const projectWithComposePlugins = createProject(tree, {
+      const project4 = createProject(tree, {
         appName: 'app4',
         appRoot: 'apps/app4',
+        buildTargetName: 'build',
+        serveTargetName: 'serve-webpack',
+      });
+      writeWebpackConfig(tree, project4.root);
+      const project5 = createProject(tree, {
+        appName: 'app5',
+        appRoot: 'apps/app5',
+        buildTargetName: 'build-webpack',
+        serveTargetName: 'serve',
+      });
+      writeWebpackConfig(tree, project5.root);
+      const projectWithComposePlugins = createProject(tree, {
+        appName: 'app6',
+        appRoot: 'apps/app6',
       });
       const projectWithComposePluginsInitialTargets =
         projectWithComposePlugins.targets;
@@ -783,8 +872,8 @@ module.exports = composePlugins(
         initialProjectWithComposePluginsWebpackConfig
       );
       const projectWithNoNxAppWebpackPlugin = createProject(tree, {
-        appName: 'app5',
-        appRoot: 'apps/app5',
+        appName: 'app7',
+        appRoot: 'apps/app7',
       });
       const projectWithNoNxAppWebpackPluginInitialTargets =
         projectWithNoNxAppWebpackPlugin.targets;
@@ -829,6 +918,28 @@ module.exports = composePlugins(
       });
       const updatedProject3 = readProjectConfiguration(tree, project3.name);
       expect(updatedProject3.targets).toStrictEqual({
+        'build-webpack': {
+          configurations: { development: {}, production: {} },
+          defaultConfiguration: 'production',
+        },
+        'serve-webpack': {
+          configurations: { development: {}, production: {} },
+          defaultConfiguration: 'development',
+        },
+      });
+      const updatedProject4 = readProjectConfiguration(tree, project4.name);
+      expect(updatedProject4.targets).toStrictEqual({
+        build: {
+          configurations: { development: {}, production: {} },
+          defaultConfiguration: 'production',
+        },
+        'serve-webpack': {
+          configurations: { development: {}, production: {} },
+          defaultConfiguration: 'development',
+        },
+      });
+      const updatedProject5 = readProjectConfiguration(tree, project5.name);
+      expect(updatedProject5.targets).toStrictEqual({
         'build-webpack': {
           configurations: { development: {}, production: {} },
           defaultConfiguration: 'production',
@@ -882,6 +993,73 @@ module.exports = composePlugins(
       expect(updatedProjectWithNoNxAppWebpackPluginWebpackConfig).toBe(
         initialProjectWithNoNxAppWebpackPluginWebpackConfig
       );
+      // nx.json modifications
+      const nxJsonPlugins = readNxJson(tree).plugins;
+      const webpackPluginRegistrations = nxJsonPlugins.filter(
+        (plugin): plugin is ExpandedPluginConfiguration<WebpackPluginOptions> =>
+          typeof plugin !== 'string' && plugin.plugin === '@nx/webpack/plugin'
+      );
+      expect(webpackPluginRegistrations.length).toBe(4);
+      expect(webpackPluginRegistrations[0].options.buildTargetName).toBe(
+        'build'
+      );
+      expect(webpackPluginRegistrations[0].options.serveTargetName).toBe(
+        'serve'
+      );
+      expect(webpackPluginRegistrations[0].include).toEqual([
+        `${project1.root}/**/*`,
+        `${project2.root}/**/*`,
+      ]);
+      expect(webpackPluginRegistrations[1].options.buildTargetName).toBe(
+        'build'
+      );
+      expect(webpackPluginRegistrations[1].options.serveTargetName).toBe(
+        'serve-webpack'
+      );
+      expect(webpackPluginRegistrations[1].include).toEqual([
+        `${project4.root}/**/*`,
+      ]);
+      expect(webpackPluginRegistrations[2].options.buildTargetName).toBe(
+        'build-webpack'
+      );
+      expect(webpackPluginRegistrations[2].options.serveTargetName).toBe(
+        'serve-webpack'
+      );
+      expect(webpackPluginRegistrations[2].include).toEqual([
+        `${project3.root}/**/*`,
+      ]);
+      expect(webpackPluginRegistrations[3].options.buildTargetName).toBe(
+        'build-webpack'
+      );
+      expect(webpackPluginRegistrations[3].options.serveTargetName).toBe(
+        'serve'
+      );
+      expect(webpackPluginRegistrations[3].include).toEqual([
+        `${project5.root}/**/*`,
+      ]);
+    });
+
+    it('should remove "includes" from the plugin registration when all projects are included', async () => {
+      const project1 = createProject(tree);
+      writeWebpackConfig(tree, project1.root);
+      const project2 = createProject(tree, {
+        appName: 'app2',
+        appRoot: 'apps/app2',
+        buildExecutor: '@nrwl/webpack:webpack',
+        serveExecutor: '@nrwl/webpack:dev-server',
+      });
+      writeWebpackConfig(tree, project2.root);
+
+      await convertToInferred(tree, {});
+
+      // nx.json modifications
+      const nxJsonPlugins = readNxJson(tree).plugins;
+      const webpackPluginRegistrations = nxJsonPlugins.filter(
+        (plugin): plugin is ExpandedPluginConfiguration<WebpackPluginOptions> =>
+          typeof plugin !== 'string' && plugin.plugin === '@nx/webpack/plugin'
+      );
+      expect(webpackPluginRegistrations.length).toBe(1);
+      expect(webpackPluginRegistrations[0].include).toBeUndefined();
     });
 
     it('should keep the higher "memoryLimit" value in the build configuration', async () => {
