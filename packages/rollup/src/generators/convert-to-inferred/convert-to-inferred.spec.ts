@@ -1,12 +1,15 @@
-import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import {
   addProjectConfiguration,
-  type ProjectConfiguration,
   readNxJson,
   readProjectConfiguration,
-  type Tree,
   updateNxJson,
+  updateProjectConfiguration,
+  type ExpandedPluginConfiguration,
+  type ProjectConfiguration,
+  type Tree,
 } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import type { RollupPluginOptions } from '../../plugins/plugin';
 import convertToInferred from './convert-to-inferred';
 
 interface CreateProjectOptions {
@@ -91,9 +94,10 @@ describe('Rollup - Convert Executors To Plugin', () => {
       expect(readNxJson(tree).plugins).toEqual([
         {
           options: {
-            targetName: 'build',
+            buildTargetName: 'build',
           },
           plugin: '@nx/rollup/plugin',
+          include: [`${project.root}/**/*`],
         },
       ]);
       expect(tree.read('mypkg/rollup.config.js', 'utf-8'))
@@ -123,6 +127,38 @@ describe('Rollup - Convert Executors To Plugin', () => {
       expect(tree.exists('otherpkg1/rollup.config.js')).toBe(false);
       expect(tree.exists('otherpkg2/rollup.config.js')).toBe(false);
       expect(readProjectConfiguration(tree, project.name).targets).toEqual({});
+    });
+
+    it('should remove "includes" from the plugin registration when all projects are included', async () => {
+      const project = createProject(tree, {
+        name: 'mypkg',
+        root: 'mypkg',
+      });
+      const project2 = createProject(tree, {
+        name: 'otherpkg1',
+        root: 'otherpkg1',
+      });
+      project2.targets = {};
+      updateProjectConfiguration(tree, project2.name, project2);
+      const nxJson = readNxJson(tree);
+      nxJson.plugins ??= [];
+      nxJson.plugins.push({
+        plugin: '@nx/rollup/plugin',
+        options: { buildTargetName: 'build' },
+        include: [`${project2.root}/**/*`],
+      });
+      updateNxJson(tree, nxJson);
+
+      await convertToInferred(tree, { project: project.name });
+
+      // nx.json modifications
+      const nxJsonPlugins = readNxJson(tree).plugins;
+      const rollupPluginRegistrations = nxJsonPlugins.filter(
+        (plugin): plugin is ExpandedPluginConfiguration<RollupPluginOptions> =>
+          typeof plugin !== 'string' && plugin.plugin === '@nx/rollup/plugin'
+      );
+      expect(rollupPluginRegistrations.length).toBe(1);
+      expect(rollupPluginRegistrations[0].include).toBeUndefined();
     });
 
     it('should support existing rollupConfig files', async () => {
@@ -533,7 +569,7 @@ describe('Rollup - Convert Executors To Plugin', () => {
       expect(readNxJson(tree).plugins).toEqual([
         {
           options: {
-            targetName: 'build',
+            buildTargetName: 'build',
           },
           plugin: '@nx/rollup/plugin',
         },
@@ -578,6 +614,11 @@ describe('Rollup - Convert Executors To Plugin', () => {
       createProject(tree, {
         name: 'pkg2',
         root: 'pkg2',
+      });
+      createProject(tree, {
+        name: 'pkg3',
+        root: 'pkg3',
+        targetName: 'build-rollup',
       });
 
       await convertToInferred(tree, {});
@@ -632,6 +673,24 @@ describe('Rollup - Convert Executors To Plugin', () => {
       `);
       expect(readProjectConfiguration(tree, 'pkg1').targets).toEqual({});
       expect(readProjectConfiguration(tree, 'pkg2').targets).toEqual({});
+      // nx.json modifications
+      const nxJsonPlugins = readNxJson(tree).plugins;
+      const rollupPluginRegistrations = nxJsonPlugins.filter(
+        (plugin): plugin is ExpandedPluginConfiguration<RollupPluginOptions> =>
+          typeof plugin !== 'string' && plugin.plugin === '@nx/rollup/plugin'
+      );
+      expect(rollupPluginRegistrations.length).toBe(2);
+      expect(rollupPluginRegistrations[0].options.buildTargetName).toBe(
+        'build'
+      );
+      expect(rollupPluginRegistrations[0].include).toStrictEqual([
+        `pkg1/**/*`,
+        `pkg2/**/*`,
+      ]);
+      expect(rollupPluginRegistrations[1].options.buildTargetName).toBe(
+        'build-rollup'
+      );
+      expect(rollupPluginRegistrations[1].include).toStrictEqual([`pkg3/**/*`]);
     });
   });
 });
