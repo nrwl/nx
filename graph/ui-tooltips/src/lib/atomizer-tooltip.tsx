@@ -1,4 +1,5 @@
 import { NxCloudIcon } from '@nx/graph/ui-icons';
+import { twMerge } from 'tailwind-merge';
 
 export interface AtomizerTooltipProps {
   connectedToCloud: boolean;
@@ -11,7 +12,14 @@ export function AtomizerTooltip(props: AtomizerTooltipProps) {
       <h4 className="flex items-center justify-between border-b border-slate-200 text-base dark:border-slate-700/60">
         <span className="font-mono">Atomizer</span>
       </h4>
-      <div className="flex flex-col border-b border-slate-200 py-2 font-mono dark:border-slate-700/60">
+      <div
+        className={twMerge(
+          'flex flex-col',
+          !props.connectedToCloud
+            ? ' border-b border-slate-200 py-2 font-mono dark:border-slate-700/60'
+            : ''
+        )}
+      >
         <p className="whitespace-pre-wrap normal-case">
           {'Nx '}
           <Link
