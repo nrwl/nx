@@ -37,6 +37,7 @@
     "autoprefixer": "^10.4.9",
     "babel-plugin-transform-async-to-promises": "^0.8.15",
     "chalk": "^4.1.0",
+    "minimatch": "9.0.3",
     "postcss": "^8.4.38",
     "rollup": "^4.14.0",
     "rollup-plugin-copy": "^3.5.0",

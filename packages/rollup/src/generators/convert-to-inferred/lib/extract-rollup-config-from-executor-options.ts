@@ -2,6 +2,12 @@ import { joinPathFragments, stripIndents, Tree } from '@nx/devkit';
 import { RollupExecutorOptions } from '../../../executors/rollup/schema';
 import { normalizePathOptions } from './normalize-path-options';
 
+const aliases = {
+  entryFile: 'main',
+  exports: 'generateExportsField',
+  f: 'format',
+};
+
 export function extractRollupConfigFromExecutorOptions(
   tree: Tree,
   options: RollupExecutorOptions,
@@ -36,7 +42,11 @@ export function extractRollupConfigFromExecutorOptions(
   for (const [key, value] of Object.entries(options)) {
     if (key === 'watch') continue;
     delete options[key];
-    defaultOptions[key] = value;
+    if (aliases[key]) {
+      defaultOptions[aliases[key]] = value;
+    } else {
+      defaultOptions[key] = value;
+    }
   }
   let configurationOptions: Record<string, Record<string, unknown>>;
   if (hasConfigurations) {
