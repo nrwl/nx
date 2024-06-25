@@ -6,7 +6,7 @@ import {
   type Tree,
 } from '@nx/devkit';
 import { createNodesV2, EslintPluginOptions } from '../../plugins/plugin';
-import { migrateExecutorToPlugin } from '@nx/devkit/src/generators/plugin-migrations/executor-to-plugin-migrator';
+import { migrateProjectExecutorsToPlugin } from '@nx/devkit/src/generators/plugin-migrations/executor-to-plugin-migrator';
 import { targetOptionsToCliMap } from './lib/target-options-map';
 import { interpolate } from 'nx/src/tasks-runner/utils';
 import {
@@ -22,33 +22,24 @@ interface Schema {
 export async function convertToInferred(tree: Tree, options: Schema) {
   const projectGraph = await createProjectGraphAsync();
 
-  const migratedProjectsModern =
-    await migrateExecutorToPlugin<EslintPluginOptions>(
-      tree,
-      projectGraph,
-      '@nx/eslint:lint',
-      '@nx/eslint/plugin',
-      (targetName) => ({ targetName }),
-      postTargetTransformer,
-      createNodesV2,
-      options.project
-    );
-
-  const migratedProjectsLegacy =
-    await migrateExecutorToPlugin<EslintPluginOptions>(
-      tree,
-      projectGraph,
-      '@nrwl/linter:eslint',
-      '@nx/eslint/plugin',
-      (targetName) => ({ targetName }),
-      postTargetTransformer,
-      createNodesV2,
-      options.project
-    );
-
   const migratedProjects =
-    migratedProjectsModern.size + migratedProjectsLegacy.size;
-  if (migratedProjects === 0) {
+    await migrateProjectExecutorsToPlugin<EslintPluginOptions>(
+      tree,
+      projectGraph,
+      '@nx/eslint/plugin',
+      createNodesV2,
+      { targetName: 'lint' },
+      [
+        {
+          executors: ['@nx/eslint:lint', '@nrwl/linter:eslint'],
+          postTargetTransformer,
+          targetPluginOptionMapper: (targetName) => ({ targetName }),
+        },
+      ],
+      options.project
+    );
+
+  if (migratedProjects.size === 0) {
     throw new Error('Could not find any targets to migrate.');
   }
 

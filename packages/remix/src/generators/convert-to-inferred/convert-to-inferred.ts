@@ -1,15 +1,9 @@
-import {
-  addDependenciesToPackageJson,
-  createProjectGraphAsync,
-  formatFiles,
-  runTasksInSerial,
-  type Tree,
-} from '@nx/devkit';
+import { createProjectGraphAsync, formatFiles, type Tree } from '@nx/devkit';
 import { AggregatedLog } from '@nx/devkit/src/generators/plugin-migrations/aggregate-log-util';
-import { migrateExecutorToPluginV1 } from '@nx/devkit/src/generators/plugin-migrations/executor-to-plugin-migrator';
+import { migrateProjectExecutorsToPluginV1 } from '@nx/devkit/src/generators/plugin-migrations/executor-to-plugin-migrator';
+import { createNodes } from '../../plugins/plugin';
 import { buildPostTargetTransformer } from './lib/build-post-target-transformer';
 import { servePostTargetTransformer } from './lib/serve-post-target-transformer';
-import { createNodes } from '../../plugins/plugin';
 
 interface Schema {
   project?: string;
@@ -19,43 +13,38 @@ interface Schema {
 export async function convertToInferred(tree: Tree, options: Schema) {
   const projectGraph = await createProjectGraphAsync();
   const migrationLogs = new AggregatedLog();
-  const migratedBuildProjects = await migrateExecutorToPluginV1(
+  const migratedProjects = await migrateProjectExecutorsToPluginV1(
     tree,
     projectGraph,
-    '@nx/remix:build',
     '@nx/remix/plugin',
-    (targetName) => ({
-      buildTargetName: targetName,
+    createNodes,
+    {
+      buildTargetName: 'build',
       devTargetName: 'dev',
       startTargetName: 'start',
-      typecheckTargetName: 'typecheck',
       staticServeTargetName: 'static-serve',
-    }),
-    buildPostTargetTransformer(migrationLogs),
-    createNodes,
+      typecheckTargetName: 'typecheck',
+    },
+    [
+      {
+        executors: ['@nx/remix:build'],
+        postTargetTransformer: buildPostTargetTransformer(migrationLogs),
+        targetPluginOptionMapper: (targetName) => ({
+          buildTargetName: targetName,
+        }),
+      },
+      {
+        executors: ['@nx/remix:serve'],
+        postTargetTransformer: servePostTargetTransformer(migrationLogs),
+        targetPluginOptionMapper: (targetName) => ({
+          devTargetName: targetName,
+        }),
+      },
+    ],
     options.project
   );
 
-  const migratedServeProjects = await migrateExecutorToPluginV1(
-    tree,
-    projectGraph,
-    '@nx/remix:serve',
-    '@nx/remix/plugin',
-    (targetName) => ({
-      buildTargetName: 'build',
-      devTargetName: targetName,
-      startTargetName: 'start',
-      typecheckTargetName: 'typecheck',
-      staticServeTargetName: 'static-serve',
-    }),
-    servePostTargetTransformer(migrationLogs),
-    createNodes,
-    options.project
-  );
-
-  const migratedProjects =
-    migratedBuildProjects.size + migratedServeProjects.size;
-  if (migratedProjects === 0) {
+  if (migratedProjects.size === 0) {
     throw new Error('Could not find any targets to migrate.');
   }
 

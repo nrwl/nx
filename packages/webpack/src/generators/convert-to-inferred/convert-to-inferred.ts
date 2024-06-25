@@ -2,20 +2,20 @@ import {
   addDependenciesToPackageJson,
   createProjectGraphAsync,
   formatFiles,
-  type ProjectConfiguration,
   runTasksInSerial,
+  type ProjectConfiguration,
   type Tree,
 } from '@nx/devkit';
 import { AggregatedLog } from '@nx/devkit/src/generators/plugin-migrations/aggregate-log-util';
-import { migrateExecutorToPlugin } from '@nx/devkit/src/generators/plugin-migrations/executor-to-plugin-migrator';
+import { migrateProjectExecutorsToPlugin } from '@nx/devkit/src/generators/plugin-migrations/executor-to-plugin-migrator';
 import { tsquery } from '@phenomnomnominal/tsquery';
 import * as ts from 'typescript';
 import { createNodesV2, type WebpackPluginOptions } from '../../plugins/plugin';
 import { webpackCliVersion } from '../../utils/versions';
 import {
   buildPostTargetTransformerFactory,
-  type MigrationContext,
   servePostTargetTransformerFactory,
+  type MigrationContext,
 } from './utils';
 
 interface Schema {
@@ -31,85 +31,38 @@ export async function convertToInferred(tree: Tree, options: Schema) {
     workspaceRoot: tree.root,
   };
 
-  // build
-  const migratedBuildProjects =
-    await migrateExecutorToPlugin<WebpackPluginOptions>(
-      tree,
-      projectGraph,
-      '@nx/webpack:webpack',
-      '@nx/webpack/plugin',
-      (targetName) => ({
-        buildTargetName: targetName,
-        previewTargetName: 'preview',
-        serveStaticTargetName: 'serve-static',
-        serveTargetName: 'serve',
-      }),
-      buildPostTargetTransformerFactory(migrationContext),
-      createNodesV2,
-      options.project,
-      { skipProjectFilter: skipProjectFilterFactory(tree) }
-    );
-  const migratedBuildProjectsLegacy =
-    await migrateExecutorToPlugin<WebpackPluginOptions>(
-      tree,
-      projectGraph,
-      '@nrwl/webpack:webpack',
-      '@nx/webpack/plugin',
-      (targetName) => ({
-        buildTargetName: targetName,
-        previewTargetName: 'preview',
-        serveStaticTargetName: 'serve-static',
-        serveTargetName: 'serve',
-      }),
-      buildPostTargetTransformerFactory(migrationContext),
-      createNodesV2,
-      options.project,
-      { skipProjectFilter: skipProjectFilterFactory(tree) }
-    );
-
-  // serve
-  const migratedServeProjects =
-    await migrateExecutorToPlugin<WebpackPluginOptions>(
-      tree,
-      projectGraph,
-      '@nx/webpack:dev-server',
-      '@nx/webpack/plugin',
-      (targetName) => ({
-        buildTargetName: 'build',
-        previewTargetName: 'preview',
-        serveStaticTargetName: 'serve-static',
-        serveTargetName: targetName,
-      }),
-      servePostTargetTransformerFactory(migrationContext),
-      createNodesV2,
-      options.project,
-      { skipProjectFilter: skipProjectFilterFactory(tree) }
-    );
-  const migratedServeProjectsLegacy =
-    await migrateExecutorToPlugin<WebpackPluginOptions>(
-      tree,
-      projectGraph,
-      '@nrwl/webpack:dev-server',
-      '@nx/webpack/plugin',
-      (targetName) => ({
-        buildTargetName: 'build',
-        previewTargetName: 'preview',
-        serveStaticTargetName: 'serve-static',
-        serveTargetName: targetName,
-      }),
-      servePostTargetTransformerFactory(migrationContext),
-      createNodesV2,
-      options.project,
-      { skipProjectFilter: skipProjectFilterFactory(tree) }
-    );
-
   const migratedProjects =
-    migratedBuildProjects.size +
-    migratedBuildProjectsLegacy.size +
-    migratedServeProjects.size +
-    migratedServeProjectsLegacy.size;
+    await migrateProjectExecutorsToPlugin<WebpackPluginOptions>(
+      tree,
+      projectGraph,
+      '@nx/webpack/plugin',
+      createNodesV2,
+      {
+        buildTargetName: 'build',
+        previewTargetName: 'preview',
+        serveStaticTargetName: 'serve-static',
+        serveTargetName: 'serve',
+      },
+      [
+        {
+          executors: ['@nx/webpack:webpack', '@nrwl/webpack:webpack'],
+          postTargetTransformer:
+            buildPostTargetTransformerFactory(migrationContext),
+          targetPluginOptionMapper: (target) => ({ buildTargetName: target }),
+          skipProjectFilter: skipProjectFilterFactory(tree),
+        },
+        {
+          executors: ['@nx/webpack:dev-server', '@nrwl/webpack:dev-server'],
+          postTargetTransformer:
+            servePostTargetTransformerFactory(migrationContext),
+          targetPluginOptionMapper: (target) => ({ serveTargetName: target }),
+          skipProjectFilter: skipProjectFilterFactory(tree),
+        },
+      ],
+      options.project
+    );
 
-  if (migratedProjects === 0) {
+  if (migratedProjects.size === 0) {
     throw new Error('Could not find any targets to migrate.');
   }
 

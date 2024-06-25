@@ -18,6 +18,7 @@ import {
 } from '@nx/devkit';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
 import { join } from 'node:path';
+import type { VitePluginOptions } from '../../plugins/plugin';
 
 let fs: TempFs;
 
@@ -514,33 +515,116 @@ describe('Vite - Convert Executors To Plugin', () => {
 
       // nx.json modifications
       const nxJsonPlugins = readNxJson(tree).plugins;
-      const addedTestVitePlugin = nxJsonPlugins.find((plugin) => {
-        if (
-          typeof plugin !== 'string' &&
-          plugin.plugin === '@nx/vite/plugin' &&
-          plugin.include?.length === 2
-        ) {
+      const addedVitePlugins = nxJsonPlugins.filter((plugin) => {
+        if (typeof plugin !== 'string' && plugin.plugin === '@nx/vite/plugin') {
           return true;
         }
       });
-      expect(addedTestVitePlugin).toBeTruthy();
-      expect(
-        (addedTestVitePlugin as ExpandedPluginConfiguration).include
-      ).toEqual(['myapp/**/*', 'second/**/*']);
+      expect(addedVitePlugins).toMatchInlineSnapshot(`
+        [
+          {
+            "options": {
+              "buildTargetName": "build",
+              "previewTargetName": "preview",
+              "serveTargetName": "serve",
+              "testTargetName": "test",
+            },
+            "plugin": "@nx/vite/plugin",
+          },
+          {
+            "include": [
+              "myapp/**/*",
+              "second/**/*",
+            ],
+            "options": {
+              "buildTargetName": "bundle",
+              "previewTargetName": "preview",
+              "serveStaticTargetName": "serve-static",
+              "serveTargetName": "serve",
+              "testTargetName": "test",
+            },
+            "plugin": "@nx/vite/plugin",
+          },
+          {
+            "include": [
+              "third/**/*",
+            ],
+            "options": {
+              "buildTargetName": "build-base",
+              "previewTargetName": "preview",
+              "serveStaticTargetName": "serve-static",
+              "serveTargetName": "serve",
+              "testTargetName": "test",
+            },
+            "plugin": "@nx/vite/plugin",
+          },
+        ]
+      `);
+    });
 
-      const addedIntegrationVitePlugin = nxJsonPlugins.find((plugin) => {
-        if (
-          typeof plugin !== 'string' &&
-          plugin.plugin === '@nx/vite/plugin' &&
-          plugin.include?.length === 1
-        ) {
-          return true;
-        }
+    it('should handle multiple different target names for the same project', async () => {
+      const project1 = createTestProject(tree);
+      const project2 = createTestProject(tree, {
+        appRoot: 'project2',
+        appName: 'project2',
       });
-      expect(addedIntegrationVitePlugin).toBeTruthy();
-      expect(
-        (addedIntegrationVitePlugin as ExpandedPluginConfiguration).include
-      ).toEqual(['third/**/*']);
+      const project3 = createTestProject(tree, {
+        appRoot: 'project3',
+        appName: 'project3',
+        buildTargetName: 'vite-build',
+        serveTargetName: 'vite-serve',
+      });
+      const project4 = createTestProject(tree, {
+        appRoot: 'project4',
+        appName: 'project4',
+        buildTargetName: 'build',
+        serveTargetName: 'vite-serve',
+      });
+      const project5 = createTestProject(tree, {
+        appRoot: 'project5',
+        appName: 'project5',
+        buildTargetName: 'vite-build',
+        serveTargetName: 'serve',
+      });
+
+      await convertToInferred(tree, { skipFormat: true });
+
+      // nx.json modifications
+      const nxJsonPlugins = readNxJson(tree).plugins;
+      const vitePluginRegistrations = nxJsonPlugins.filter(
+        (plugin): plugin is ExpandedPluginConfiguration<VitePluginOptions> =>
+          typeof plugin !== 'string' && plugin.plugin === '@nx/vite/plugin'
+      );
+      expect(vitePluginRegistrations.length).toBe(4);
+      expect(vitePluginRegistrations[0].options.buildTargetName).toBe('build');
+      expect(vitePluginRegistrations[0].options.serveTargetName).toBe('serve');
+      expect(vitePluginRegistrations[0].include).toEqual([
+        `${project1.root}/**/*`,
+        `${project2.root}/**/*`,
+      ]);
+      expect(vitePluginRegistrations[1].options.buildTargetName).toBe('build');
+      expect(vitePluginRegistrations[1].options.serveTargetName).toBe(
+        'vite-serve'
+      );
+      expect(vitePluginRegistrations[1].include).toEqual([
+        `${project4.root}/**/*`,
+      ]);
+      expect(vitePluginRegistrations[2].options.buildTargetName).toBe(
+        'vite-build'
+      );
+      expect(vitePluginRegistrations[2].options.serveTargetName).toBe(
+        'vite-serve'
+      );
+      expect(vitePluginRegistrations[2].include).toEqual([
+        `${project3.root}/**/*`,
+      ]);
+      expect(vitePluginRegistrations[3].options.buildTargetName).toBe(
+        'vite-build'
+      );
+      expect(vitePluginRegistrations[3].options.serveTargetName).toBe('serve');
+      expect(vitePluginRegistrations[3].include).toEqual([
+        `${project5.root}/**/*`,
+      ]);
     });
 
     it('should keep Vite options in project.json', async () => {
