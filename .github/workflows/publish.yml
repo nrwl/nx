@@ -200,7 +200,7 @@ jobs:
 #            build: |-
 #              set -e &&
 #              pnpm --version &&
-#              rustup override set nightly-2024-04-18 &&
+#              rustup override set nightly-2024-06-24 &&
 #              rustup target add wasm32-wasip1-threads &&
 #              pnpm exec napi build --release --platform -c packages/nx/package.json --manifest-path packages/nx/Cargo.toml --js ./index.js -o packages/nx/src/native --target wasm32-wasip1-threads
               #              pnpm nx run-many --target=build-native -- --target=wasm32-wasip1-threads
@@ -236,7 +236,7 @@ jobs:
         uses: dtolnay/rust-toolchain@master
         if: ${{ matrix.settings.target == 'wasm32-wasip1-threads' }}
         with:
-          toolchain: nightly-2024-04-18
+          toolchain: nightly-2024-06-24
           targets: ${{ matrix.settings.target }}
 
       - name: Cache cargo
@@ -415,7 +415,7 @@ jobs:
         shell: bash
       - name: Build Wasm
         run: |
-          rustup override set nightly-2024-04-18
+          rustup override set nightly-2024-06-24
           rustup target add wasm32-wasip1-threads
           pnpm exec napi build --release --platform -c packages/nx/package.json --manifest-path packages/nx/Cargo.toml --js ./native-bindings.js -o packages/nx/src/native --target wasm32-wasip1-threads
           rustup override unset

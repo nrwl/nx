@@ -3,6 +3,14 @@ name = 'nx'
 version = '0.1.0'
 edition = '2021'
 
+[profile.release-wasi]
+codegen-units = 16
+debug         = 'full'
+inherits      = "release"
+lto           = "thin"
+opt-level     = "z"
+strip         = "none"
+
 [dependencies]
 anyhow = "1.0.71"
 colored = "2"
