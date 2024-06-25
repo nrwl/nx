@@ -19,7 +19,7 @@
               "externalDependencies": ["vite"]
             }
           ],
-          "outputs": ["{projectRoot}/dist/react-app"],
+          "outputs": ["{projectRoot}/dist"],
           "executor": "nx:run-commands",
           "configurations": {}
         },

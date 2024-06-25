@@ -9,7 +9,7 @@ In this tutorial you'll learn how to use React with Nx in a ["standalone" (non-m
 
 What are you going to learn?
 
-- how to create a new React application
+- how to add Nx to a React and Vite project
 - how to run a single task (i.e. serve your app) or run multiple tasks in parallel
 - how to leverage code generators to scaffold components
 - how to modularize your codebase and impose architectural constraints for better maintainability
@@ -87,7 +87,12 @@ npm run build
 
 ## Add Nx
 
-Nx offers many features, but at its core, it is a task runner. Out of the box, it can cache your tasks and ensure those tasks are run in the correct order. After the initial set up, you can incrementally add on other features that would be helpful in your organization.
+Nx offers many features, but at its core, it is a task runner. Out of the box, it can:
+
+- [cache your tasks](/features/cache-task-results)
+- ensure those tasks are [run in the correct order](/features/run-tasks)
+
+After the initial set up, you can incrementally add on other features that would be helpful in your organization.
 
 To enable Nx in your repository, run a single command:
 
@@ -108,29 +113,7 @@ Second, the script asks a series of questions to help set up caching for you.
 - `Does the "lint" script create any outputs?` - Enter nothing
 - `Would you like remote caching to make your build faster?` - Choose `Skip for now`
 
-```text {% command="npx nx@latest init" path="~/react-app" %}
- NX   Recommended Plugins:
-
-Add these Nx plugins to integrate with the tools used in your workspace.
-
-✔ Which plugins would you like to add? Press <Space> to select and <Enter> to submit. · No items were selected
-
- NX   🐳 Nx initialization
-
-
- NX   🧑‍🔧 Please answer the following questions about the scripts found in your package.json in order to generate task runner configuration
-
-✔ Which of the following scripts are cacheable? (Produce the same output given the same input, e.g. build, test and lint usually are, serve and start are not). You can use spacebar to select one or more scripts. · build
-
-✔ Does the "build" script create any outputs? If not, leave blank, otherwise provide a path (e.g. dist, lib, build, coverage) · dist
-✔ Does the "lint" script create any outputs? If not, leave blank, otherwise provide a path relative to a project root (e.g. dist, lib, build, coverage) ·
-
-...
-
-- Run "npx nx run-many -t build" to run the build target for every project in the workspace. Run it again to replay the cached computation. https://nx.dev/features/cache-task-results
-- Run "npx nx graph" to see the graph of projects and tasks in your workspace. https://nx.dev/core-features/explore-graph
-- Learn more at https://nx.dev/recipes/adopting-nx/adding-to-existing-project.
-```
+We'll enable Nx Cloud and set up remote caching and distributed task execution later in the tutorial.
 
 ## Caching Pre-configured
 
@@ -147,7 +130,6 @@ During the `init` script, Nx also configured caching for these tasks. You can se
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
   "targetDefaults": {
     "build": {
-      "dependsOn": ["^build"],
       "outputs": ["{projectRoot}/dist"],
       "cache": true
     },
@@ -196,23 +178,28 @@ Let's split this into two separate tasks, so we can run `typecheck` without runn
 }
 ```
 
-But we also want to make sure that `typecheck` is always run when you run the `build` task. Nx can take care of this for you with a task pipeline. The `dependsOn` property can be used to ensure that all task dependencies are run first.
+But we also want to make sure that `typecheck` is always run when you run the `build` task. Nx can take care of this for you with a [task pipeline](/concepts/task-pipeline-configuration). The `dependsOn` property in `nx.json` can be used to ensure that all task dependencies are run first.
 
-```json {% fileName="package.json" %}
+```json {% fileName="nx.json" highlightLines=[6] %}
 {
-  "scripts": {
-    "typecheck": "tsc",
-    "build": "vite build"
-  },
-  "nx": {
-    "targets": {
-      "build": {
-        "dependsOn": ["typecheck"]
-      }
+  "targetDefaults": {
+    "build": {
+      "outputs": ["{projectRoot}/dist"],
+      "cache": true,
+      "dependsOn": ["typecheck"]
+    },
+    "lint": {
+      "cache": true
     }
   }
 }
 ```
+
+{% callout type="info" title="Project-Specific Settings" %}
+
+The `targetDefaults` in the `nx.json` file will apply to all the projects in your repository. If you want to specify these options for a specific project, you can set them under `nx.targets.build` in that project's `package.json` file.
+
+{% /callout %}
 
 Now if you run `nx build`, Nx will run `typecheck` first.
 
@@ -245,7 +232,7 @@ dist/assets/index-DVoHNO1Y.js   143.36 kB │ gzip: 46.09 kB
 
 We can also cache the `typecheck` task by updating the `nx.json` file.
 
-```json {% fileName="nx.json" %}
+```json {% fileName="nx.json" highlightLines=["4-6"] %}
 {
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
   "targetDefaults": {
@@ -254,7 +241,8 @@ We can also cache the `typecheck` task by updating the `nx.json` file.
     },
     "build": {
       "outputs": ["{projectRoot}/dist"],
-      "cache": true
+      "cache": true,
+      "dependsOn": ["typecheck"]
     },
     "lint": {
       "cache": true
@@ -268,12 +256,12 @@ Now, running `npx nx build` twice will once again complete instantly.
 
 ## Use Nx Plugins to Enhance Vite Tasks with Caching
 
-You may remember that we defined the `outputs` property in `nx.json` when we were answering questions in the `nx init` script. The value is currently hard-coded so that if you change the output path in your `vite.config.ts`, you have to remember to also change the `outputs` array in the `build` task configuration. This is where plugins can help. They directly infer information from the actual tooling configuration files (`vite.config.ts` in this case).
+You may remember that we defined the `outputs` property in `nx.json` when we were answering questions in the `nx init` script. The value is currently hard-coded so that if you change the output path in your `vite.config.ts`, you have to remember to also change the `outputs` array in the `build` task configuration. This is where plugins can help. Plugins enable better integration with specific tools. The `@nx/vite` plugin can understand the `vite.config.ts` file and automatically create and configure tasks based on the settings in that file.
 
 Nx plugins can:
 
 - automatically configure caching for you, including inputs and outputs based on the underlying tooling configuration
-- infer tasks that can be run on a project because of the tooling present
+- create tasks for a project using the tooling configuration files
 - provide code generators to help scaffold out projects
 - automatically keep the tooling versions and configuration files up to date
 
@@ -289,7 +277,8 @@ First, let's delete the `outputs` array from `nx.json` so that we don't override
       "cache": true
     },
     "build": {
-      "cache": true
+      "cache": true,
+      "dependsOn": ["typecheck"]
     },
     "lint": {
       "cache": true
@@ -302,16 +291,18 @@ First, let's delete the `outputs` array from `nx.json` so that we don't override
 Now let's add the `@nx/vite` plugin:
 
 ```{% command="npx nx add @nx/vite" path="~/react-app" %}
-✔ Installing @nx/vite@18.1.0...
+✔ Installing @nx/vite...
 ✔ Initializing @nx/vite...
 
  NX   Package @nx/vite added successfully.
 ```
 
-The `nx add` command installs the version of the plugin that matches your repo's Nx version and runs that plugin's initialization script. For `@nx/vite`, the initialization script registers the plugin in the `plugins` array of `nx.json` and updates any `package.json` scripts that execute Vite related tasks. Open the project details view for the `demo` app and look at the `build` task.
+The `nx add` command installs the version of the plugin that matches your repo's Nx version and runs that plugin's initialization script. For `@nx/vite`, the initialization script registers the plugin in the `plugins` array of `nx.json` and updates any `package.json` scripts that execute Vite related tasks to run those tasks through Nx. Running the tasks through Nx is necessary for caching and task pipelines to work.
+
+Open the project details view for the `demo` app and look at the `build` task. You can view the project details using [Nx Console](/getting-started/editor-setup) or by running the following command in the terminal:
 
 ```shell {% path="~/react-app" %}
-npx nx show project react-app --web
+npx nx show project react-app
 ```
 
 {% project-details title="Project Details View" jsonFile="shared/tutorials/react-standalone-pdv.json" %}
@@ -336,17 +327,11 @@ export default defineConfig({
 
 Now if you look at project details view again, you'll see that the `outputs` property for Nx's caching has been updated to stay in sync with the setting in the `vite.config.ts` file.
 
-You can also add the `@nx/eslint` plugin to see how it infers `lint` tasks based on the ESLint configuration files.
-
-```text
-npx nx add @nx/eslint
-```
-
 ## Creating New Components
 
 You can just create new React components as you normally would. However, Nx plugins also ship [generators](/features/generate-code). They allow you to easily scaffold code, configuration or entire projects. Let's add the `@nx/react` plugin to take advantage of the generators it provides.
 
-```text
+```shell
 npx nx add @nx/react
 ```
 
@@ -357,7 +342,7 @@ To see what capabilities the `@nx/react` plugin ships, run the following command
 
 GENERATORS
 
-init : Initialize the `@nrwl/react` plugin.
+init : Initialize the `@nx/react` plugin.
 application : Create a React application.
 library : Create a React library.
 component : Create a React component.
@@ -381,9 +366,9 @@ module-federation-dev-server : Serve a host or remote application.
 module-federation-ssr-dev-server : Serve a host application along with it's known remotes.
 ```
 
-{% callout type="info" title="Prefer a more visual UI?" %}
+{% callout type="info" title="Integrate with Your Editor" %}
 
-If you prefer a more integrated experience, you can install the "Nx Console" extension for your code editor. It has support for VSCode, IntelliJ and ships a LSP for Vim. Nx Console provides autocompletion support in Nx configuration files and has UIs for browsing and running generators.
+For a more integrated experience, install the "Nx Console" extension for your code editor. It has support for VSCode, IntelliJ and ships a LSP for Vim. Nx Console provides autocompletion support in Nx configuration files and has UIs for browsing and running generators.
 
 More info can be found in [the integrate with editors article](/getting-started/editor-setup).
 
@@ -405,13 +390,10 @@ NOTE: The "dryRun" flag means no changes were made.
 
 As you can see it generates a new component in the `src/app/hello-world/` folder. If you want to actually run the generator, remove the `--dry-run` flag.
 
-Note that since the `tsconfig.json` configuration is set to `strict: true`, you'll need to delete the unused `props: HelloWorldProps` argument in order for the `build` task to work again. The final version of the `hello-world` component will look like this:
+The `hello-world` component will look like this:
 
 ```tsx {% fileName="src/app/hello-world/hello-world.tsx" highlightLines=[6] %}
 import styles from './hello-world.module.css';
-
-/* eslint-disable-next-line */
-export interface HelloWorldProps {}
 
 export function HelloWorld() {
   return (
@@ -439,6 +421,12 @@ function App() {
 }
 
 export default App;
+```
+
+You can view your app with the `nx serve` command:
+
+```shell
+npx nx serve
 ```
 
 ## You're ready to go!
@@ -484,83 +472,24 @@ Nx allows you to separate this logic into "local libraries". The main benefits i
 Let's assume our domain areas include `products`, `orders` and some more generic design system components, called `ui`. We can generate a new library for these areas using the React library generator:
 
 ```
-nx g @nx/react:library products --unitTestRunner=vitest --bundler=none --directory=modules/products
+npx nx g @nx/react:library products --unitTestRunner=vitest --bundler=none --directory=modules/products
 ```
 
 Note how we use the `--directory` flag to place the library into a subfolder. You can choose whatever folder structure you like to organize your libraries.
 
-Nx tries to set up your workspace to work with the modular library architecture, but depending on your existing configuration, you may need to tweak some settings. In this repo, you'll need to do a few things in order to prepare for future steps.
-
-#### Lint Settings
-
-Install the `@nx/eslint-plugin` package:
-
-```
-npx nx add @nx/eslint-plugin
-```
-
-We want the `lint` task for the root `react-app` project to only lint the files for that project, so we'll change the `lint` command in `package.json`:
-
-```json {% fileName="package.json" %}
-{
-  "scripts": {
-    "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0"
-  }
-}
-```
-
-Now we need to update the `.eslintrc.cjs` file to extend the `.eslintrc.base.json` file:
-
-```js {% fileName=".eslintrc.cjs" highlightLines=[8,10] %}
-module.exports = {
-  root: true,
-  env: { browser: true, es2020: true },
-  extends: [
-    'eslint:recommended',
-    'plugin:@typescript-eslint/recommended',
-    'plugin:react-hooks/recommended',
-    './.eslintrc.base.json',
-  ],
-  ignorePatterns: ['!**/*', 'dist', '.eslintrc.cjs'],
-  parser: '@typescript-eslint/parser',
-  plugins: ['react-refresh'],
-  rules: {
-    'react-refresh/only-export-components': [
-      'warn',
-      { allowConstantExport: true },
-    ],
-  },
-};
-```
-
-We'll also set `enforceBuildableLibDependency` to `false` in `.eslintrc.base.json`.
-
-```{% fileName=".eslintrc.base.json" %}
-  "enforceBuildableLibDependency": false,
-```
+Nx sets up your workspace to work with the modular library architecture, but depending on your existing configuration, you may need to tweak some settings. In this repo, you'll need to do a few things in order to prepare for future steps.
 
 #### Build Settings
 
-To make sure that the build can correctly pull in code from libraries, we'll update `tsconfig.base.json` and `vite.config.ts`.
+To make sure that the build can correctly pull in code from libraries, we'll update `vite.config.ts` to account for typescript aliases. Run the following generator to automatically update your configuration file.
 
-```json {% fileName="tsconfig.base.json" highlightLines=[9] %}
-{
-  "compileOnSave": false,
-  "compilerOptions": {
-    "moduleResolution": "bundler",
-    "target": "ES2020",
-    "module": "ESNext",
-    "lib": ["ES2020", "DOM", "DOM.Iterable"],
-    "skipLibCheck": true,
-    "baseUrl": ".",
-    "paths": {
-      "products": ["modules/products/src/index.ts"]
-    }
-  }
-}
+```shell
+npx nx g @nx/vite:setup-paths-plugin
 ```
 
-```js {% fileName="vite.config.ts" highlightLines=[3,7] %}
+This will update the `vite.config.ts` file to include the `nxViteTsPaths` plugin in the `plugins` array.
+
+```{% fileName="vite.config.ts" highlightLines=[3,7] %}
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
@@ -574,28 +503,9 @@ export default defineConfig({
 });
 ```
 
-In order to make the `strict` type check happy, we'll need to remove the unused `props` argument from the `Products` component.
-
-```js {% fileName="modules/products/src/lib/products.tsx" highlightLines=[6] %}
-import styles from './products.module.css';
-
-/* eslint-disable-next-line */
-export interface ProductsProps {}
-
-export function Products() {
-  return (
-    <div className={styles['container']}>
-      <h1>Welcome to Products!</h1>
-    </div>
-  );
-}
-
-export default Products;
-```
-
 ### Create More Libraries
 
-Now that the repository is set up, let's generate the `orders` and `ui` libraries.
+Now that the build system is set up, let's generate the `orders` and `ui` libraries.
 
 ```
 nx g @nx/react:library orders --unitTestRunner=vitest --bundler=none --directory=modules/orders
@@ -743,7 +653,7 @@ export default App;
 
 Serving your app (`nx serve`) and then navigating to `/products` should give you the following result:
 
-![products route](/shared/images/tutorial-react-standalone/react-tutorial-products-route.png)
+![products route](/shared/tutorials/react-standalone-products-route.png)
 
 Let's apply the same steps for our `orders` library. Import the `Orders` component into the `App.tsx` file and render it via the routing mechanism whenever a user hits the `/orders` route
 
@@ -887,60 +797,105 @@ Next, let's come up with a set of rules based on these tags:
 - `scope:orders` should be able to import from `scope:orders`, `scope:shared` and `scope:products`
 - `scope:products` should be able to import from `scope:products` and `scope:shared`
 
-To enforce the rules, Nx ships with a custom ESLint rule. Open the `.eslintrc.base.json` at the root of the workspace and add the following `depConstraints` in the `@nx/enforce-module-boundaries` rule configuration:
+To enforce the rules, Nx ships with a custom ESLint rule.
 
-```json {% fileName=".eslintrc.base.json" %}
+### Lint Settings
+
+We want the `lint` task for the root `react-app` project to only lint the files for that project (in the `src` folder), so we'll change the `lint` command in `package.json`:
+
+```json {% fileName="package.json" %}
+{
+  "scripts": {
+    "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0"
+  }
+}
+```
+
+Install the `@nx/eslint-plugin` package. This is an ESLint plugin that can be used in the `plugins` property of your ESLint configuration. There is also an Nx plugin named `@nx/eslint` that was automatically installed with the `@nx/react` plugin that was added earlier in the tutorial.
+
+```
+npx nx add @nx/eslint-plugin
+```
+
+Now we need to update the `.eslintrc.cjs` file to use the `@nx/eslint-plugin` and define the `depConstraints` in the `@nx/enforce-module-boundaries` rule:
+
+```js {% fileName=".eslintrc.cjs" highlightLines=[11,"17-53"] %}
+module.exports = {
+  root: true,
+  env: { browser: true, es2020: true },
+  extends: [
+    'eslint:recommended',
+    'plugin:@typescript-eslint/recommended',
+    'plugin:react-hooks/recommended',
+  ],
+  ignorePatterns: ['dist', '.eslintrc.cjs'],
+  parser: '@typescript-eslint/parser',
+  plugins: ['react-refresh', '@nx'],
+  rules: {
+    'react-refresh/only-export-components': [
+      'warn',
+      { allowConstantExport: true },
+    ],
+    '@nx/enforce-module-boundaries': [
+      'error',
+      {
+        enforceBuildableLibDependency: true,
+        allow: [],
+        depConstraints: [
+          {
+            sourceTag: '*',
+            onlyDependOnLibsWithTags: ['*'],
+          },
+          {
+            sourceTag: 'type:feature',
+            onlyDependOnLibsWithTags: ['type:feature', 'type:ui'],
+          },
+          {
+            sourceTag: 'type:ui',
+            onlyDependOnLibsWithTags: ['type:ui'],
+          },
+          {
+            sourceTag: 'scope:orders',
+            onlyDependOnLibsWithTags: [
+              'scope:orders',
+              'scope:products',
+              'scope:shared',
+            ],
+          },
+          {
+            sourceTag: 'scope:products',
+            onlyDependOnLibsWithTags: ['scope:products', 'scope:shared'],
+          },
+          {
+            sourceTag: 'scope:shared',
+            onlyDependOnLibsWithTags: ['scope:shared'],
+          },
+        ],
+      },
+    ],
+  },
+};
+```
+
+When Nx set up the `@nx/eslint` plugin, it chose a task name that would not conflict with the pre-existing `lint` script. Let's overwrite that name so that all the linting tasks use the same `lint` name. Update the setting in the `nx.json` file:
+
+```json {% fileName="nx.json" highlightLines=[7] %}
 {
   ...
-  "overrides": [
+  "plugins": [
     {
-      ...
-      "rules": {
-        "@nx/enforce-module-boundaries": [
-          "error",
-          {
-            "enforceBuildableLibDependency": true,
-            "allow": [],
-            "depConstraints": [
-              {
-                "sourceTag": "*",
-                "onlyDependOnLibsWithTags": ["*"]
-              },
-              {
-                "sourceTag": "type:feature",
-                "onlyDependOnLibsWithTags": ["type:feature", "type:ui"]
-              },
-              {
-                "sourceTag": "type:ui",
-                "onlyDependOnLibsWithTags": ["type:ui"]
-              },
-              {
-                "sourceTag": "scope:orders",
-                "onlyDependOnLibsWithTags": [
-                  "scope:orders",
-                  "scope:products",
-                  "scope:shared"
-                ]
-              },
-              {
-                "sourceTag": "scope:products",
-                "onlyDependOnLibsWithTags": ["scope:products", "scope:shared"]
-              },
-              {
-                "sourceTag": "scope:shared",
-                "onlyDependOnLibsWithTags": ["scope:shared"]
-              }
-            ]
-          }
-        ]
+      "plugin": "@nx/eslint/plugin",
+      "options": {
+        "targetName": "lint"
       }
-    },
-    ...
+    }
   ]
 }
 ```
 
-To test it, go to your `modules/products/src/lib/products.tsx` file and import the `Orders` from the `orders` project:
+### Test Boundary Rules
+
+To test the boundary rules, go to your `modules/products/src/lib/products.tsx` file and import the `Orders` from the `orders` project:
 
 ```tsx {% fileName="modules/products/src/lib/products.tsx" %}
 import styles from './products.module.css';
@@ -964,9 +919,8 @@ export default Products;
 
 If you lint your workspace you'll get an error now:
 
-```{% command="nx run-many -t lint,eslint:lint" %}
-✔  nx run react-app:lint  [existing outputs match the cache, left as is]
-✔  nx run e2e:lint  [existing outputs match the cache, left as is]
+```{% command="nx run-many -t lint" %}
+✔  nx run orders:lint  [existing outputs match the cache, left as is]
 ✔  nx run ui:lint (1s)
 
 ✖  nx run products:lint
@@ -979,15 +933,15 @@ If you lint your workspace you'll get an error now:
 
    Lint errors found in the listed files.
 
-✔  nx run orders:lint (1s)
+✔  nx run react-app:lint (1s)
 
 ————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
-NX   Ran target lint for 5 projects (1s)
+NX   Ran target lint for 4 projects (1s)
 
-✔    4/5 succeeded [2 read from cache]
+✔    3/4 succeeded [1 read from cache]
 
-✖    1/5 targets failed, including the following:
+✖    1/4 targets failed, including the following:
      - nx run products:lint
 ```
 
