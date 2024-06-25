@@ -5,7 +5,7 @@
   "projectType": "library",
   "implicitDependencies": ["graph-client"],
   "targets": {
-    "build-native-wasm": {
+    "build-native-wasm2": {
       "cache": true,
       "outputs": [
         "{projectRoot}/src/native/*.wasm",
@@ -16,13 +16,35 @@
       ],
       "command": "pnpm exec napi build --release --platform -c packages/nx/package.json --manifest-path packages/nx/Cargo.toml --js ./native-bindings.js -o packages/nx/src/native --target wasm32-wasip1-threads"
     },
+    "build-native-wasm": {
+      "cache": true,
+      "outputs": [
+        "{projectRoot}/src/native/*.wasm",
+        "{projectRoot}/src/native/*.js",
+        "{projectRoot}/src/native/*.cjs",
+        "{projectRoot}/src/native/*.mjs",
+        "{projectRoot}/src/native/index.d.ts"
+      ],
+      "executor": "@monodon/rust:napi",
+      "options": {
+        "target": "wasm32-wasip1-threads",
+        "dist": "packages/nx/src/native",
+        "jsFile": "native-bindings.js",
+        "release": true
+      }
+    },
     "build-native": {
       "outputs": [
         "{projectRoot}/src/native/*.node",
         "{projectRoot}/src/native/*.js",
         "{projectRoot}/src/native/index.d.ts"
       ],
-      "command": "napi build --release --platform --package-json-path packages/nx/package.json --manifest-path packages/nx/Cargo.toml --js ./native-bindings.js -o packages/nx/src/native",
+      "executor": "@monodon/rust:napi",
+      "options": {
+        "dist": "packages/nx/src/native",
+        "jsFile": "native-bindings.js",
+        "release": true
+      },
       "configurations": {
         "local": {
           "release": false
