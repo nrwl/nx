@@ -213,18 +213,21 @@ function applyDefaults(
   options: WebpackConfigDevServerOptions,
   buildOptions: any
 ) {
-  if (options.port === undefined) {
-    options.port = 4200;
+  if (options) {
+    if (options.port === undefined) {
+      options.port = 4200;
+    }
+
+    options.headers = { 'Access-Control-Allow-Origin': '*' };
+
+    const servePath = buildServePath(buildOptions);
+    options.historyApiFallback = {
+      index:
+        buildOptions.index && `${servePath}${basename(buildOptions.index)}`,
+      disableDotRule: true,
+      htmlAcceptHeaders: ['text/html', 'application/xhtml+xml'],
+    };
   }
-
-  options.headers = { 'Access-Control-Allow-Origin': '*' };
-
-  const servePath = buildServePath(buildOptions);
-  options.historyApiFallback = {
-    index: buildOptions.index && `${servePath}${basename(buildOptions.index)}`,
-    disableDotRule: true,
-    htmlAcceptHeaders: ['text/html', 'application/xhtml+xml'],
-  };
 }
 
 function getProxyConfig(root: string, proxyConfig: string) {
