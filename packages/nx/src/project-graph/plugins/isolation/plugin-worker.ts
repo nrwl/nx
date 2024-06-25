@@ -132,9 +132,16 @@ const server = createServer((socket) => {
 
 server.listen(socketPath);
 
-process.on('exit', () => {
+const exitHandler = (exitCode: number) => () => {
   server.close();
   try {
     unlinkSync(socketPath);
   } catch (e) {}
-});
+  process.exit(exitCode);
+};
+
+const events = ['SIGINT', 'SIGTERM', 'SIGQUIT', 'exit'];
+
+events.forEach((event) => process.once(event, exitHandler(0)));
+process.once('uncaughtException', exitHandler(1));
+process.once('unhandledRejection', exitHandler(1));
