@@ -24,8 +24,8 @@ export const TargetConfigurationGroupHeader = ({
     <header
       className={`flex items-center gap-2 px-4 py-2 text-lg capitalize ${className}`}
     >
-      {nonAtomizedTarget && <Square3Stack3DIcon className="h-5 w-5" />}
       {targetGroupName}{' '}
+      {nonAtomizedTarget && <Square3Stack3DIcon className="h-5 w-5" />}
       <Pill
         text={
           targetsNumber.toString() +
