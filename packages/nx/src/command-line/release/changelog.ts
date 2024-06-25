@@ -397,6 +397,11 @@ export async function releaseChangelog(
       continue;
     }
     for (const project of releaseGroup.projects) {
+      // If the project does not have any changes, do not process its dependents
+      if (projectsVersionData[project].newVersion === null) {
+        continue;
+      }
+
       const dependentProjects = (
         projectsVersionData[project]?.dependentProjects || []
       )
