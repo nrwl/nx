@@ -18,7 +18,7 @@ The default changelog renderer for `nx release` generates a changelog entry for 
 
 ## Include All Metadata
 
-There are a few options available to modify the default changelog renderer output. They can be applied to both `workspaceChangelog` and `projectChangelogs` in exactly the same way. All three options are true by default:
+There are a few options available to modify the default changelog renderer output. They can be applied to both `workspaceChangelog` and `projectChangelogs` in exactly the same way. All four options are true by default:
 
 ```json
 {
@@ -27,6 +27,7 @@ There are a few options available to modify the default changelog renderer outpu
       "projectChangelogs": {
         "renderOptions": {
           "authors": true,
+          "mapAuthorsToGitHubUsernames": true,
           "commitReferences": true,
           "versionTitleDate": true
         }
@@ -39,6 +40,12 @@ There are a few options available to modify the default changelog renderer outpu
 #### `authors`
 
 Whether the commit authors should be added to the bottom of the changelog in a "Thank You" section. Defaults to `true`.
+
+#### `mapAuthorsToGitHubUsernames`
+
+If authors is enabled, controls whether or not to try to map the authors to their GitHub usernames using https://ungh.cc (from https://github.com/unjs/ungh) and the email addresses found in the commits. Defaults to `true`.
+
+You should disable this option if you don't want to make any external requests to https://ungh.cc
 
 #### `commitReferences`
 
@@ -59,6 +66,7 @@ If you prefer a more minimalist changelog, you can set all the options to false,
       "projectChangelogs": {
         "renderOptions": {
           "authors": false,
+          "mapAuthorsToGitHubUsernames": false,
           "commitReferences": false,
           "versionTitleDate": false
         }
