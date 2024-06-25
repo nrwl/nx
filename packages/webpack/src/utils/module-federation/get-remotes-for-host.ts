@@ -86,24 +86,24 @@ export function getRemotes(
     pathToManifestFile
   );
   remotes.forEach((r) => collectRemoteProjects(r, collectedRemotes, context));
-  const remotesToSkip = new Set(
+  const workspaceRemotesToSkip = new Set(
     findMatchingProjects(skipRemotes, context.projectGraph.nodes) ?? []
   );
 
-  if (remotesToSkip.size > 0) {
+  if (workspaceRemotesToSkip.size > 0) {
     logger.info(
-      `Remotes not served automatically: ${[...remotesToSkip.values()].join(
-        ', '
-      )}`
+      `Remotes not served automatically: ${[
+        ...workspaceRemotesToSkip.values(),
+      ].join(', ')}`
     );
   }
 
   const knownRemotes = Array.from(collectedRemotes).filter(
-    (r) => !remotesToSkip.has(r)
+    (r) => !workspaceRemotesToSkip.has(r)
   );
 
   const knownDynamicRemotes = dynamicRemotes.filter(
-    (r) => !remotesToSkip.has(r)
+    (r) => !workspaceRemotesToSkip.has(r)
   );
 
   logger.info(
@@ -120,12 +120,14 @@ export function getRemotes(
       : findMatchingProjects([devRemotes], context.projectGraph.nodes)
   );
 
+  const skipRemotesSet = new Set(skipRemotes);
+
   const staticRemotes = knownRemotes.filter((r) => !devServeApps.has(r));
-  const devServeRemotes = [...knownRemotes, ...dynamicRemotes].filter((r) =>
-    devServeApps.has(r)
+  const devServeRemotes = [...knownRemotes, ...dynamicRemotes].filter(
+    (r) => devServeApps.has(r) && !skipRemotesSet.has(r)
   );
   const staticDynamicRemotes = knownDynamicRemotes.filter(
-    (r) => !devServeApps.has(r)
+    (r) => !devServeApps.has(r) && !skipRemotesSet.has(r)
   );
   const remotePorts = [...devServeRemotes, ...staticDynamicRemotes].map(
     (r) => context.projectGraph.nodes[r].data.targets['serve'].options.port
