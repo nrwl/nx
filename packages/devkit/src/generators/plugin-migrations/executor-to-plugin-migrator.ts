@@ -27,7 +27,10 @@ import {
   ProjectConfigurationsError,
 } from 'nx/src/devkit-internals';
 import type { ConfigurationResult } from 'nx/src/project-graph/utils/project-configuration-utils';
-import type { InputDefinition } from 'nx/src/config/workspace-json-project-json';
+import type {
+  InputDefinition,
+  ProjectConfiguration,
+} from 'nx/src/config/workspace-json-project-json';
 
 type PluginOptionsBuilder<T> = (targetName: string) => T;
 type PostTargetTransformer = (
@@ -38,7 +41,10 @@ type PostTargetTransformer = (
 ) => TargetConfiguration | Promise<TargetConfiguration>;
 type SkipTargetFilter = (
   targetConfiguration: TargetConfiguration
-) => [boolean, string];
+) => false | string;
+type SkipProjectFilter = (
+  projectConfiguration: ProjectConfiguration
+) => false | string;
 
 class ExecutorToPluginMigrator<T> {
   readonly tree: Tree;
@@ -48,6 +54,7 @@ class ExecutorToPluginMigrator<T> {
   readonly #pluginOptionsBuilder: PluginOptionsBuilder<T>;
   readonly #postTargetTransformer: PostTargetTransformer;
   readonly #skipTargetFilter: SkipTargetFilter;
+  readonly #skipProjectFilter: SkipProjectFilter;
   readonly #specificProjectToMigrate: string;
   #nxJson: NxJsonConfiguration;
   #targetDefaultsForExecutor: Partial<TargetConfiguration>;
@@ -56,6 +63,7 @@ class ExecutorToPluginMigrator<T> {
   #createNodes?: CreateNodes<T>;
   #createNodesV2?: CreateNodesV2<T>;
   #createNodesResultsForTargets: Map<string, ConfigurationResult>;
+  #skippedProjects: Set<string>;
 
   constructor(
     tree: Tree,
@@ -67,7 +75,10 @@ class ExecutorToPluginMigrator<T> {
     createNodes?: CreateNodes<T>,
     createNodesV2?: CreateNodesV2<T>,
     specificProjectToMigrate?: string,
-    skipTargetFilter?: SkipTargetFilter
+    filters?: {
+      skipProjectFilter?: SkipProjectFilter;
+      skipTargetFilter?: SkipTargetFilter;
+    }
   ) {
     this.tree = tree;
     this.#projectGraph = projectGraph;
@@ -78,7 +89,9 @@ class ExecutorToPluginMigrator<T> {
     this.#createNodes = createNodes;
     this.#createNodesV2 = createNodesV2;
     this.#specificProjectToMigrate = specificProjectToMigrate;
-    this.#skipTargetFilter = skipTargetFilter ?? ((...args) => [false, '']);
+    this.#skipProjectFilter =
+      filters?.skipProjectFilter ?? ((...args) => false);
+    this.#skipTargetFilter = filters?.skipTargetFilter ?? ((...args) => false);
   }
 
   async run(): Promise<Map<string, Set<string>>> {
@@ -99,6 +112,7 @@ class ExecutorToPluginMigrator<T> {
     this.#targetAndProjectsToMigrate = new Map();
     this.#pluginToAddForTarget = new Map();
     this.#createNodesResultsForTargets = new Map();
+    this.#skippedProjects = new Set();
 
     this.#getTargetDefaultsForExecutor();
     this.#getTargetAndProjectsToMigrate();
@@ -311,7 +325,7 @@ class ExecutorToPluginMigrator<T> {
       this.tree,
       this.#executor,
       (targetConfiguration, projectName, targetName, configurationName) => {
-        if (configurationName) {
+        if (this.#skippedProjects.has(projectName) || configurationName) {
           return;
         }
 
@@ -322,10 +336,23 @@ class ExecutorToPluginMigrator<T> {
           return;
         }
 
-        const [skipTarget, reasonTargetWasSkipped] =
-          this.#skipTargetFilter(targetConfiguration);
-        if (skipTarget) {
-          const errorMsg = `${targetName} target on project "${projectName}" cannot be migrated. ${reasonTargetWasSkipped}`;
+        const skipProjectReason = this.#skipProjectFilter(
+          this.#projectGraph.nodes[projectName].data
+        );
+        if (skipProjectReason) {
+          this.#skippedProjects.add(projectName);
+          const errorMsg = `The "${projectName}" project cannot be migrated. ${skipProjectReason}`;
+          if (this.#specificProjectToMigrate) {
+            throw new Error(errorMsg);
+          }
+
+          console.warn(errorMsg);
+          return;
+        }
+
+        const skipTargetReason = this.#skipTargetFilter(targetConfiguration);
+        if (skipTargetReason) {
+          const errorMsg = `${targetName} target on project "${projectName}" cannot be migrated. ${skipTargetReason}`;
           if (this.#specificProjectToMigrate) {
             throw new Error(errorMsg);
           } else {
@@ -375,6 +402,7 @@ class ExecutorToPluginMigrator<T> {
       return;
     }
 
+    global.NX_GRAPH_CREATION = true;
     for (const targetName of this.#targetAndProjectsToMigrate.keys()) {
       const loadedPlugin = new LoadedNxPlugin(
         {
@@ -398,12 +426,14 @@ class ExecutorToPluginMigrator<T> {
         if (e instanceof ProjectConfigurationsError) {
           projectConfigs = e.partialProjectConfigurationsResult;
         } else {
+          global.NX_GRAPH_CREATION = false;
           throw e;
         }
       }
 
       this.#createNodesResultsForTargets.set(targetName, projectConfigs);
     }
+    global.NX_GRAPH_CREATION = false;
   }
 }
 
@@ -416,7 +446,10 @@ export async function migrateExecutorToPlugin<T>(
   postTargetTransformer: PostTargetTransformer,
   createNodes: CreateNodesV2<T>,
   specificProjectToMigrate?: string,
-  skipTargetFilter?: SkipTargetFilter
+  filters?: {
+    skipProjectFilter?: SkipProjectFilter;
+    skipTargetFilter?: SkipTargetFilter;
+  }
 ): Promise<Map<string, Set<string>>> {
   const migrator = new ExecutorToPluginMigrator<T>(
     tree,
@@ -428,7 +461,7 @@ export async function migrateExecutorToPlugin<T>(
     undefined,
     createNodes,
     specificProjectToMigrate,
-    skipTargetFilter
+    filters
   );
   return await migrator.run();
 }
@@ -442,7 +475,10 @@ export async function migrateExecutorToPluginV1<T>(
   postTargetTransformer: PostTargetTransformer,
   createNodes: CreateNodes<T>,
   specificProjectToMigrate?: string,
-  skipTargetFilter?: SkipTargetFilter
+  filters?: {
+    skipProjectFilter?: SkipProjectFilter;
+    skipTargetFilter?: SkipTargetFilter;
+  }
 ): Promise<Map<string, Set<string>>> {
   const migrator = new ExecutorToPluginMigrator<T>(
     tree,
@@ -454,7 +490,7 @@ export async function migrateExecutorToPluginV1<T>(
     createNodes,
     undefined,
     specificProjectToMigrate,
-    skipTargetFilter
+    filters
   );
   return await migrator.run();
 }
