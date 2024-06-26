@@ -29,6 +29,7 @@ import { getGlobPatternsFromPackageManagerWorkspaces } from 'nx/src/plugins/pack
 import { combineGlobPatterns } from 'nx/src/utils/globs';
 import { minimatch } from 'minimatch';
 import { hashObject } from 'nx/src/devkit-internals';
+import type { PackageManagerCommands } from 'nx/src/utils/package-manager';
 
 export interface JestPluginOptions {
   targetName?: string;
@@ -56,10 +57,12 @@ export const createNodesV2: CreateNodesV2<JestPluginOptions> = [
     const optionsHash = hashObject(options);
     const cachePath = join(workspaceDataDirectory, `jest-${optionsHash}.hash`);
     const targetsCache = readTargetsCache(cachePath);
+
+    const pmc = getPackageManagerCommand();
     try {
       return await createNodesFromFiles(
         (configFile, options, context) =>
-          createNodesInternal(configFile, options, context, targetsCache),
+          createNodesInternal(configFile, options, context, targetsCache, pmc),
         configFiles,
         options,
         context
@@ -80,7 +83,9 @@ export const createNodes: CreateNodes<JestPluginOptions> = [
     logger.warn(
       '`createNodes` is deprecated. Update your plugin to utilize createNodesV2 instead. In Nx 20, this will change to the createNodesV2 API.'
     );
-    return createNodesInternal(...args, {});
+
+    const pmc = getPackageManagerCommand();
+    return createNodesInternal(...args, {}, pmc);
   },
 ];
 
@@ -88,7 +93,8 @@ async function createNodesInternal(
   configFilePath,
   options,
   context,
-  targetsCache: Record<string, JestTargets>
+  targetsCache: Record<string, JestTargets>,
+  pmc: PackageManagerCommands
 ) {
   const projectRoot = dirname(configFilePath);
 
@@ -134,7 +140,8 @@ async function createNodesInternal(
     configFilePath,
     projectRoot,
     options,
-    context
+    context,
+    pmc
   );
 
   const { targets, metadata } = targetsCache[hash];
@@ -154,9 +161,9 @@ async function buildJestTargets(
   configFilePath: string,
   projectRoot: string,
   options: JestPluginOptions,
-  context: CreateNodesContext
+  context: CreateNodesContext,
+  pmc: PackageManagerCommands
 ): Promise<Pick<ProjectConfiguration, 'targets' | 'metadata'>> {
-  const pmc = getPackageManagerCommand();
   const absConfigFilePath = resolve(context.workspaceRoot, configFilePath);
 
   if (require.cache[absConfigFilePath]) {

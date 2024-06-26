@@ -195,7 +195,6 @@ describe('@nx/jest/plugin', () => {
                     ],
                     "metadata": {
                       "description": "Run Jest Tests in CI",
-                      "nonAtomizedTarget": "test",
                       "help": {
                         "command": "npx jest --help",
                         "example": {
@@ -204,6 +203,7 @@ describe('@nx/jest/plugin', () => {
                           },
                         },
                       },
+                      "nonAtomizedTarget": "test",
                       "technologies": [
                         "jest",
                       ],
@@ -226,9 +226,6 @@ describe('@nx/jest/plugin', () => {
                     ],
                     "metadata": {
                       "description": "Run Jest Tests in src/unit.spec.ts",
-<<<<<<< HEAD
-                      "nonAtomizedTarget": "test",
-=======
                       "help": {
                         "command": "npx jest --help",
                         "example": {
@@ -237,7 +234,7 @@ describe('@nx/jest/plugin', () => {
                           },
                         },
                       },
->>>>>>> 4fd467d377 (feat(misc): add option examples to inferred targets)
+                      "nonAtomizedTarget": "test",
                       "technologies": [
                         "jest",
                       ],
@@ -348,53 +345,7 @@ describe('@nx/jest/plugin', () => {
         context
       );
 
-<<<<<<< HEAD
-      expect(results).toMatchInlineSnapshot(`
-              [
-                [
-                  "proj/jest.config.js",
-                  {
-                    "projects": {
-                      "proj": {
-                        "metadata": undefined,
-                        "root": "proj",
-                        "targets": {
-                          "test": {
-                            "cache": true,
-                            "command": "jest",
-                            "inputs": [
-                              "default",
-                              "^production",
-                              {
-                                "externalDependencies": [
-                                  "jest",
-                                  "some-package",
-                                ],
-                              },
-                            ],
-                            "metadata": {
-                              "description": "Run Jest Tests",
-                              "technologies": [
-                                "jest",
-                              ],
-                            },
-                            "options": {
-                              "cwd": "proj",
-                            },
-                            "outputs": [
-                              "{workspaceRoot}/coverage",
-                            ],
-                          },
-                        },
-                      },
-                    },
-                  },
-                ],
-              ]
-          `);
-=======
       expect(results).toMatchSnapshot();
->>>>>>> 4fd467d377 (feat(misc): add option examples to inferred targets)
     }
   );
 });

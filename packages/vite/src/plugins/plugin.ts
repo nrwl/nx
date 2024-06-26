@@ -56,10 +56,11 @@ export const createNodesV2: CreateNodesV2<VitePluginOptions> = [
     const optionsHash = hashObject(options);
     const cachePath = join(workspaceDataDirectory, `vite-${optionsHash}.hash`);
     const targetsCache = readTargetsCache(cachePath);
+    const pmc = getPackageManagerCommand();
     try {
       return await createNodesFromFiles(
         (configFile, options, context) =>
-          createNodesInternal(configFile, options, context, targetsCache),
+          createNodesInternal(configFile, options, context, targetsCache, pmc),
         configFilePaths,
         options,
         context
@@ -76,7 +77,8 @@ export const createNodes: CreateNodes<VitePluginOptions> = [
     logger.warn(
       '`createNodes` is deprecated. Update your plugin to utilize createNodesV2 instead. In Nx 20, this will change to the createNodesV2 API.'
     );
-    return createNodesInternal(configFilePath, options, context, {});
+    const pmc = getPackageManagerCommand();
+    return createNodesInternal(configFilePath, options, context, {}, pmc);
   },
 ];
 
@@ -84,7 +86,8 @@ async function createNodesInternal(
   configFilePath: string,
   options: VitePluginOptions,
   context: CreateNodesContext,
-  targetsCache: Record<string, ViteTargets>
+  targetsCache: Record<string, ViteTargets>,
+  pmc: PackageManagerCommands
 ) {
   const projectRoot = dirname(configFilePath);
   // Do not create a project if package.json and project.json isn't there.
@@ -112,7 +115,8 @@ async function createNodesInternal(
     configFilePath,
     projectRoot,
     normalizedOptions,
-    context
+    context,
+    pmc
   );
 
   const { targets, metadata } = targetsCache[hash];
@@ -141,10 +145,9 @@ async function buildViteTargets(
   configFilePath: string,
   projectRoot: string,
   options: VitePluginOptions,
-  context: CreateNodesContext
+  context: CreateNodesContext,
+  pmc: PackageManagerCommands
 ): Promise<ViteTargets> {
-  const pmc = getPackageManagerCommand();
-
   const absoluteConfigFilePath = joinPathFragments(
     context.workspaceRoot,
     configFilePath

@@ -27,6 +27,7 @@ import { NX_PLUGIN_OPTIONS } from '../utils/constants';
 import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
 import { hashObject } from 'nx/src/devkit-internals';
 import { globWithWorkspaceContext } from 'nx/src/utils/workspace-context';
+import type { PackageManagerCommands } from 'nx/src/utils/package-manager';
 
 export interface CypressPluginOptions {
   ciTargetName?: string;
@@ -54,10 +55,11 @@ export const createNodesV2: CreateNodesV2<CypressPluginOptions> = [
       `cypress-${optionsHash}.hash`
     );
     const targetsCache = readTargetsCache(cachePath);
+    const pmc = getPackageManagerCommand();
     try {
       return await createNodesFromFiles(
         (configFile, options, context) =>
-          createNodesInternal(configFile, options, context, targetsCache),
+          createNodesInternal(configFile, options, context, targetsCache, pmc),
         configFiles,
         options,
         context
@@ -78,7 +80,8 @@ export const createNodes: CreateNodes<CypressPluginOptions> = [
     logger.warn(
       '`createNodes` is deprecated. Update your plugin to utilize createNodesV2 instead. In Nx 20, this will change to the createNodesV2 API.'
     );
-    return createNodesInternal(configFile, options, context, {});
+    const pmc = getPackageManagerCommand();
+    return createNodesInternal(configFile, options, context, {}, pmc);
   },
 ];
 
@@ -86,7 +89,8 @@ async function createNodesInternal(
   configFilePath: string,
   options: CypressPluginOptions,
   context: CreateNodesContext,
-  targetsCache: CypressTargets
+  targetsCache: CypressTargets,
+  pmc: PackageManagerCommands
 ) {
   options = normalizeOptions(options);
   const projectRoot = dirname(configFilePath);
@@ -111,7 +115,8 @@ async function createNodesInternal(
     configFilePath,
     projectRoot,
     options,
-    context
+    context,
+    pmc
   );
   const { targets, metadata } = targetsCache[hash];
 
@@ -182,9 +187,9 @@ async function buildCypressTargets(
   configFilePath: string,
   projectRoot: string,
   options: CypressPluginOptions,
-  context: CreateNodesContext
+  context: CreateNodesContext,
+  pmc: PackageManagerCommands
 ): Promise<CypressTargets> {
-  const pmc = getPackageManagerCommand();
   const cypressConfig = await loadConfigFile(
     join(context.workspaceRoot, configFilePath)
   );

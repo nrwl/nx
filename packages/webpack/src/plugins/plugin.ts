@@ -23,6 +23,7 @@ import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { dirname, isAbsolute, join, relative, resolve } from 'path';
 import { readWebpackOptions } from '../utils/webpack/read-webpack-options';
 import { resolveUserDefinedWebpackConfig } from '../utils/webpack/resolve-user-defined-webpack-config';
+import type { PackageManagerCommands } from 'nx/src/utils/package-manager';
 
 export interface WebpackPluginOptions {
   buildTargetName?: string;
@@ -63,10 +64,11 @@ export const createNodesV2: CreateNodesV2<WebpackPluginOptions> = [
     );
     const targetsCache = readTargetsCache(cachePath);
     const normalizedOptions = normalizeOptions(options);
+    const pmc = getPackageManagerCommand();
     try {
       return await createNodesFromFiles(
         (configFile, options, context) =>
-          createNodesInternal(configFile, options, context, targetsCache),
+          createNodesInternal(configFile, options, context, targetsCache, pmc),
         configFilePaths,
         normalizedOptions,
         context
@@ -84,7 +86,14 @@ export const createNodes: CreateNodes<WebpackPluginOptions> = [
       '`createNodes` is deprecated. Update your plugin to utilize createNodesV2 instead. In Nx 20, this will change to the createNodesV2 API.'
     );
     const normalizedOptions = normalizeOptions(options);
-    return createNodesInternal(configFilePath, normalizedOptions, context, {});
+    const pmc = getPackageManagerCommand();
+    return createNodesInternal(
+      configFilePath,
+      normalizedOptions,
+      context,
+      {},
+      pmc
+    );
   },
 ];
 
@@ -92,7 +101,8 @@ async function createNodesInternal(
   configFilePath: string,
   options: Required<WebpackPluginOptions>,
   context: CreateNodesContext,
-  targetsCache: Record<string, WebpackTargets>
+  targetsCache: Record<string, WebpackTargets>,
+  pmc: PackageManagerCommands
 ): Promise<CreateNodesResult> {
   const projectRoot = dirname(configFilePath);
 
@@ -116,7 +126,8 @@ async function createNodesInternal(
     configFilePath,
     projectRoot,
     options,
-    context
+    context,
+    pmc
   );
 
   const { targets, metadata } = targetsCache[hash];
@@ -136,9 +147,9 @@ async function createWebpackTargets(
   configFilePath: string,
   projectRoot: string,
   options: Required<WebpackPluginOptions>,
-  context: CreateNodesContext
+  context: CreateNodesContext,
+  pmc: PackageManagerCommands
 ): Promise<WebpackTargets> {
-  const pmc = getPackageManagerCommand();
   const namedInputs = getNamedInputs(projectRoot, context);
 
   const webpackConfig = resolveUserDefinedWebpackConfig(

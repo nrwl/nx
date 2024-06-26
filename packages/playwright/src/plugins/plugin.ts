@@ -26,6 +26,7 @@ import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { getLockFileName } from '@nx/js';
 import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
 import { hashObject } from 'nx/src/hasher/file-hasher';
+import type { PackageManagerCommands } from 'nx/src/utils/package-manager';
 
 export interface PlaywrightPluginOptions {
   targetName?: string;
@@ -62,10 +63,11 @@ export const createNodesV2: CreateNodesV2<PlaywrightPluginOptions> = [
       `playwright-${optionsHash}.hash`
     );
     const targetsCache = readTargetsCache(cachePath);
+    const pmc = getPackageManagerCommand();
     try {
       return await createNodesFromFiles(
         (configFile, options, context) =>
-          createNodesInternal(configFile, options, context, targetsCache),
+          createNodesInternal(configFile, options, context, targetsCache, pmc),
         configFilePaths,
         options,
         context
@@ -86,7 +88,8 @@ export const createNodes: CreateNodes<PlaywrightPluginOptions> = [
     logger.warn(
       '`createNodes` is deprecated. Update your plugin to utilize createNodesV2 instead. In Nx 20, this will change to the createNodesV2 API.'
     );
-    return createNodesInternal(configFile, options, context, {});
+    const pmc = getPackageManagerCommand();
+    return createNodesInternal(configFile, options, context, {}, pmc);
   },
 ];
 
@@ -94,7 +97,8 @@ async function createNodesInternal(
   configFilePath: string,
   options: PlaywrightPluginOptions,
   context: CreateNodesContext,
-  targetsCache: Record<string, PlaywrightTargets>
+  targetsCache: Record<string, PlaywrightTargets>,
+  pmc: PackageManagerCommands
 ) {
   const projectRoot = dirname(configFilePath);
 
@@ -120,7 +124,8 @@ async function createNodesInternal(
     configFilePath,
     projectRoot,
     normalizedOptions,
-    context
+    context,
+    pmc
   );
   const { targets, metadata } = targetsCache[hash];
 
@@ -139,10 +144,9 @@ async function buildPlaywrightTargets(
   configFilePath: string,
   projectRoot: string,
   options: NormalizedOptions,
-  context: CreateNodesContext
+  context: CreateNodesContext,
+  pmc: PackageManagerCommands
 ): Promise<PlaywrightTargets> {
-  const pmc = getPackageManagerCommand();
-
   // Playwright forbids importing the `@playwright/test` module twice. This would affect running the tests,
   // but we're just reading the config so let's delete the variable they are using to detect this.
   // See: https://github.com/microsoft/playwright/pull/11218/files
