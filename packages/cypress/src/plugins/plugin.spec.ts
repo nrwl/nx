@@ -100,7 +100,6 @@ describe('@nx/cypress/plugin', () => {
                       },
                     ],
                     "metadata": {
-                      "atomizedTarget": "e2e-ci",
                       "description": "Runs Cypress Tests",
                       "technologies": [
                         "cypress",
@@ -273,7 +272,6 @@ describe('@nx/cypress/plugin', () => {
                       },
                     ],
                     "metadata": {
-                      "atomizedTarget": "e2e-ci",
                       "description": "Runs Cypress Tests",
                       "technologies": [
                         "cypress",

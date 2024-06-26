@@ -184,7 +184,6 @@ async function buildJestTargets(
     metadata: {
       technologies: ['jest'],
       description: 'Run Jest Tests',
-      atomizedTarget: options.ciTargetName,
     },
   });
 

@@ -81,7 +81,6 @@ describe('@nx/jest/plugin', () => {
                       },
                     ],
                     "metadata": {
-                      "atomizedTarget": undefined,
                       "description": "Run Jest Tests",
                       "technologies": [
                         "jest",
@@ -151,7 +150,6 @@ describe('@nx/jest/plugin', () => {
                       },
                     ],
                     "metadata": {
-                      "atomizedTarget": "test-ci",
                       "description": "Run Jest Tests",
                       "technologies": [
                         "jest",
@@ -262,7 +260,6 @@ describe('@nx/jest/plugin', () => {
                       },
                     ],
                     "metadata": {
-                      "atomizedTarget": undefined,
                       "description": "Run Jest Tests",
                       "technologies": [
                         "jest",
@@ -332,7 +329,6 @@ describe('@nx/jest/plugin', () => {
                               },
                             ],
                             "metadata": {
-                              "atomizedTarget": undefined,
                               "description": "Run Jest Tests",
                               "technologies": [
                                 "jest",

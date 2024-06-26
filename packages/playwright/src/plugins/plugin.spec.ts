@@ -72,7 +72,6 @@ describe('@nx/playwright/plugin', () => {
                       },
                     ],
                     "metadata": {
-                      "atomizedTarget": "e2e-ci",
                       "description": "Runs Playwright Tests",
                       "technologies": [
                         "playwright",
@@ -163,7 +162,6 @@ describe('@nx/playwright/plugin', () => {
                       },
                     ],
                     "metadata": {
-                      "atomizedTarget": "e2e-ci",
                       "description": "Runs Playwright Tests",
                       "technologies": [
                         "playwright",
