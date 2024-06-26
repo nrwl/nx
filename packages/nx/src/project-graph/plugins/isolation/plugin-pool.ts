@@ -21,6 +21,8 @@ const cleanupFunctions = new Set<() => void>();
 
 const pluginNames = new Map<ChildProcess, string>();
 
+const MAX_MESSAGE_WAIT = 1000 * 60 * 5; // 5 minutes
+
 interface PendingPromise {
   promise: Promise<unknown>;
   resolver: (result: any) => void;
@@ -64,10 +66,23 @@ export async function loadRemoteNxPlugin(
     });
     // logger.verbose(`[plugin-worker] started worker: ${worker.pid}`);
 
+    const loadTimeout = setTimeout(() => {
+      rej(new Error('Plugin worker timed out when loading plugin:' + plugin));
+    }, MAX_MESSAGE_WAIT);
+
     socket.on(
       'data',
       consumeMessagesFromSocket(
-        createWorkerHandler(worker, pendingPromises, res, rej, socket)
+        createWorkerHandler(
+          worker,
+          pendingPromises,
+          (val) => {
+            clearTimeout(loadTimeout);
+            res(val);
+          },
+          rej,
+          socket
+        )
       )
     );
     worker.on('exit', exitHandler);
@@ -249,15 +264,20 @@ function registerPendingPromise(
   pending: Map<string, PendingPromise>,
   callback: () => void
 ): Promise<any> {
-  let resolver, rejector;
+  let resolver, rejector, timeout;
 
   const promise = new Promise((res, rej) => {
-    resolver = res;
     rejector = rej;
+    resolver = res;
+
+    timeout = setTimeout(() => {
+      rej(new Error(`Plugin worker timed out when processing message ${tx}`));
+    }, MAX_MESSAGE_WAIT);
 
     callback();
   }).finally(() => {
     pending.delete(tx);
+    clearTimeout(timeout);
   });
 
   pending.set(tx, {
@@ -315,7 +335,7 @@ async function startPluginWorker() {
     const id = setInterval(async () => {
       const socket = await isServerAvailable(ipcPath);
       if (socket) {
-        // socket.unref();
+        socket.unref();
         clearInterval(id);
         resolve({
           worker,
