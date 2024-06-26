@@ -14,8 +14,7 @@ import { loadEsmModule } from './module-loader';
 async function readDefaultTsConfig(fileName: string) {
   // these options are mandatory
   const extraOptions: ts.CompilerOptions = {
-    target: ts.ScriptTarget.ES2020,
-    experimentalDecorators: true,
+    target: ts.ScriptTarget.ES2022,
 
     // sourcemaps
     sourceMap: false,
@@ -25,7 +24,7 @@ async function readDefaultTsConfig(fileName: string) {
     outDir: '',
     declaration: true,
 
-    // ng compiler to options
+    // ng compiler
     enableResourceInlining: true,
 
     // these are required to set the appropriate EmitFlags
