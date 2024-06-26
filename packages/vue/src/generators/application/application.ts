@@ -2,6 +2,7 @@ import {
   addProjectConfiguration,
   formatFiles,
   GeneratorCallback,
+  readNxJson,
   runTasksInSerial,
   toJS,
   Tree,
@@ -28,7 +29,11 @@ export async function applicationGeneratorInternal(
   _options: Schema
 ): Promise<GeneratorCallback> {
   const options = await normalizeOptions(tree, _options);
-  options.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
+  const nxJson = readNxJson(tree);
+
+  options.addPlugin ??=
+    process.env.NX_ADD_PLUGINS !== 'false' &&
+    nxJson.useInferencePlugins !== false;
 
   const tasks: GeneratorCallback[] = [];
 
