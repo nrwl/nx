@@ -99,6 +99,10 @@ jobs:
       - run-pnpm-install:
           os: linux
       - run:
+          name: Check Documentation
+          command: pnpm nx documentation --no-dte
+          no_output_timeout: 20m
+      - run:
           name: Run Checks/Lint/Test/Build
           no_output_timeout: 60m
           command: |
@@ -110,7 +114,7 @@ jobs:
             pnpm nx run-many -t check-imports check-commit check-lock-files check-codeowners documentation --parallel=1 --no-dte &
             pids+=($!)
 
-            (pnpm nx affected --targets=lint,test,build --base=$NX_BASE --head=$NX_HEAD --parallel=3 --exclude nx &&
+            (pnpm nx affected --targets=lint,test,build --base=$NX_BASE --head=$NX_HEAD --parallel=3 &&
             pnpm nx affected --targets=e2e,e2e-ci --base=$NX_BASE --head=$NX_HEAD --parallel=1) &
             pids+=($!)
 
