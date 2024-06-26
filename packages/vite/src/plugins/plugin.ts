@@ -21,6 +21,7 @@ import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { getLockFileName } from '@nx/js';
 import { loadViteDynamicImport } from '../utils/executor-utils';
 import { hashObject } from 'nx/src/hasher/file-hasher';
+import type { PackageManagerCommands } from 'nx/src/utils/package-manager';
 
 export interface VitePluginOptions {
   buildTargetName?: string;
@@ -142,6 +143,8 @@ async function buildViteTargets(
   options: VitePluginOptions,
   context: CreateNodesContext
 ): Promise<ViteTargets> {
+  const pmc = getPackageManagerCommand();
+
   const absoluteConfigFilePath = joinPathFragments(
     context.workspaceRoot,
     configFilePath
@@ -185,13 +188,14 @@ async function buildViteTargets(
       options.buildTargetName,
       namedInputs,
       buildOutputs,
-      projectRoot
+      projectRoot,
+      pmc
     );
 
     // If running in library mode, then there is nothing to serve.
     if (!viteConfig.build?.lib) {
-      targets[options.serveTargetName] = serveTarget(projectRoot);
-      targets[options.previewTargetName] = previewTarget(projectRoot);
+      targets[options.serveTargetName] = serveTarget(projectRoot, pmc);
+      targets[options.previewTargetName] = previewTarget(projectRoot, pmc);
       targets[options.serveStaticTargetName] = serveStaticTarget(options) as {};
     }
   }
@@ -201,7 +205,8 @@ async function buildViteTargets(
     targets[options.testTargetName] = await testTarget(
       namedInputs,
       testOutputs,
-      projectRoot
+      projectRoot,
+      pmc
     );
   }
 
@@ -215,9 +220,9 @@ async function buildTarget(
     [inputName: string]: any[];
   },
   outputs: string[],
-  projectRoot: string
+  projectRoot: string,
+  pmc: PackageManagerCommands
 ) {
-  const pmc = getPackageManagerCommand();
   return {
     command: `vite build`,
     options: { cwd: joinPathFragments(projectRoot) },
@@ -248,8 +253,7 @@ async function buildTarget(
   };
 }
 
-function serveTarget(projectRoot: string) {
-  const pmc = getPackageManagerCommand();
+function serveTarget(projectRoot: string, pmc: PackageManagerCommands) {
   const targetConfig: TargetConfiguration = {
     command: `vite serve`,
     options: {
@@ -272,8 +276,7 @@ function serveTarget(projectRoot: string) {
   return targetConfig;
 }
 
-function previewTarget(projectRoot: string) {
-  const pmc = getPackageManagerCommand();
+function previewTarget(projectRoot: string, pmc: PackageManagerCommands) {
   const targetConfig: TargetConfiguration = {
     command: `vite preview`,
     options: {
@@ -301,9 +304,9 @@ async function testTarget(
     [inputName: string]: any[];
   },
   outputs: string[],
-  projectRoot: string
+  projectRoot: string,
+  pmc: PackageManagerCommands
 ) {
-  const pmc = getPackageManagerCommand();
   return {
     command: `vitest`,
     options: { cwd: joinPathFragments(projectRoot) },

@@ -4,6 +4,7 @@ import {
   type CreateNodes,
   type CreateNodesContext,
   detectPackageManager,
+  getPackageManagerCommand,
   joinPathFragments,
   readJsonFile,
   type TargetConfiguration,
@@ -16,6 +17,7 @@ import { type AppConfig } from '@remix-run/dev';
 import { dirname, join } from 'path';
 import { existsSync, readdirSync } from 'fs';
 import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
+import type { PackageManagerCommands } from 'nx/src/utils/package-manager';
 
 const cachePath = join(workspaceDataDirectory, 'remix.hash');
 const targetsCache = readTargetsCache();
@@ -98,6 +100,7 @@ async function buildRemixTargets(
   context: CreateNodesContext,
   siblingFiles: string[]
 ) {
+  const pmc = getPackageManagerCommand();
   const namedInputs = getNamedInputs(projectRoot, context);
   const { buildDirectory, assetsBuildDirectory, serverBuildPath } =
     await getBuildPaths(configFilePath, context.workspaceRoot);
@@ -108,9 +111,10 @@ async function buildRemixTargets(
     projectRoot,
     buildDirectory,
     assetsBuildDirectory,
-    namedInputs
+    namedInputs,
+    pmc
   );
-  targets[options.devTargetName] = devTarget(serverBuildPath, projectRoot);
+  targets[options.devTargetName] = devTarget(serverBuildPath, projectRoot, pmc);
   targets[options.startTargetName] = startTarget(
     projectRoot,
     serverBuildPath,
@@ -135,7 +139,8 @@ function buildTarget(
   projectRoot: string,
   buildDirectory: string,
   assetsBuildDirectory: string,
-  namedInputs: { [inputName: string]: any[] }
+  namedInputs: { [inputName: string]: any[] },
+  pmc: PackageManagerCommands
 ): TargetConfiguration {
   const serverBuildOutputPath =
     projectRoot === '.'
@@ -159,16 +164,41 @@ function buildTarget(
     outputs: [serverBuildOutputPath, assetsBuildOutputPath],
     command: 'remix build',
     options: { cwd: projectRoot },
+    metadata: {
+      technologies: ['remix'],
+      description: `Runs Remix build`,
+      help: {
+        command: `${pmc.exec} remix --help`,
+        example: {
+          options: {
+            sourcemap: true,
+          },
+        },
+      },
+    },
   };
 }
 
 function devTarget(
   serverBuildPath: string,
-  projectRoot: string
+  projectRoot: string,
+  pmc: PackageManagerCommands
 ): TargetConfiguration {
   return {
     command: 'remix dev --manual',
     options: { cwd: projectRoot },
+    metadata: {
+      technologies: ['remix'],
+      description: `Starts Remix dev server`,
+      help: {
+        command: `${pmc.exec} remix --help`,
+        example: {
+          options: {
+            port: 3000,
+          },
+        },
+      },
+    },
   };
 }
 

@@ -3,6 +3,7 @@ import {
   CreateNodes,
   CreateNodesContext,
   detectPackageManager,
+  getPackageManagerCommand,
   NxJsonConfiguration,
   readJsonFile,
   TargetConfiguration,
@@ -17,6 +18,7 @@ import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { getLockFileName } from '@nx/js';
 import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
+import type { PackageManagerCommands } from 'nx/src/utils/package-manager';
 
 export interface NextPluginOptions {
   buildTargetName?: string;
@@ -94,6 +96,7 @@ async function buildNextTargets(
   options: NextPluginOptions,
   context: CreateNodesContext
 ) {
+  const pmc = getPackageManagerCommand();
   const nextConfig = await getNextConfig(nextConfigPath, context);
   const namedInputs = getNamedInputs(projectRoot, context);
 
@@ -102,12 +105,17 @@ async function buildNextTargets(
   targets[options.buildTargetName] = await getBuildTargetConfig(
     namedInputs,
     projectRoot,
-    nextConfig
+    nextConfig,
+    pmc
   );
 
-  targets[options.devTargetName] = getDevTargetConfig(projectRoot);
+  targets[options.devTargetName] = getDevTargetConfig(projectRoot, pmc);
 
-  targets[options.startTargetName] = getStartTargetConfig(options, projectRoot);
+  targets[options.startTargetName] = getStartTargetConfig(
+    options,
+    projectRoot,
+    pmc
+  );
 
   targets[options.serveStaticTargetName] = getStaticServeTargetConfig(options);
 
@@ -117,7 +125,8 @@ async function buildNextTargets(
 async function getBuildTargetConfig(
   namedInputs: { [inputName: string]: any[] },
   projectRoot: string,
-  nextConfig: any
+  nextConfig: any,
+  pmc: PackageManagerCommands
 ) {
   const nextOutputPath = await getOutputs(projectRoot, nextConfig);
   // Set output path here so that `withNx` can pick it up.
@@ -130,6 +139,16 @@ async function getBuildTargetConfig(
     cache: true,
     inputs: getInputs(namedInputs),
     outputs: [nextOutputPath, `${nextOutputPath}/!(cache)`],
+    metadata: {
+      technologies: ['nextjs'],
+      description: `Runs Next.js build`,
+      help: {
+        command: `${pmc.exec} next build --help`,
+        example: {
+          args: ['--profile', '--experimental-turbo'],
+        },
+      },
+    },
   };
 
   // TODO(ndcunningham): Update this to be consider different versions of next.js which is running
@@ -139,24 +158,52 @@ async function getBuildTargetConfig(
   return targetConfig;
 }
 
-function getDevTargetConfig(projectRoot: string) {
+function getDevTargetConfig(projectRoot: string, pmc: PackageManagerCommands) {
   const targetConfig: TargetConfiguration = {
     command: `next dev`,
     options: {
       cwd: projectRoot,
+    },
+    metadata: {
+      technologies: ['nextjs'],
+      description: `Starts Next.js dev server`,
+      help: {
+        command: `${pmc.exec} next dev --help`,
+        example: {
+          options: {
+            port: 3000,
+          },
+        },
+      },
     },
   };
 
   return targetConfig;
 }
 
-function getStartTargetConfig(options: NextPluginOptions, projectRoot: string) {
+function getStartTargetConfig(
+  options: NextPluginOptions,
+  projectRoot: string,
+  pmc: PackageManagerCommands
+) {
   const targetConfig: TargetConfiguration = {
     command: `next start`,
     options: {
       cwd: projectRoot,
     },
     dependsOn: [options.buildTargetName],
+    metadata: {
+      technologies: ['nextjs'],
+      description: `Starts Next.js production server`,
+      help: {
+        command: `${pmc.exec} next start --help`,
+        example: {
+          options: {
+            port: 3000,
+          },
+        },
+      },
+    },
   };
 
   return targetConfig;

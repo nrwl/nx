@@ -6,6 +6,7 @@ import {
   type CreateNodes,
   CreateNodesContext,
   detectPackageManager,
+  getPackageManagerCommand,
   joinPathFragments,
   readJsonFile,
   type TargetConfiguration,
@@ -90,6 +91,7 @@ async function buildRollupTarget(
   options: RollupPluginOptions,
   context: CreateNodesContext
 ): Promise<Record<string, TargetConfiguration>> {
+  const pmc = getPackageManagerCommand();
   let loadConfigFile: (
     path: string,
     commandOptions: unknown,
@@ -134,6 +136,18 @@ async function buildRollupTarget(
       { externalDependencies: ['rollup'] },
     ],
     outputs,
+    metadata: {
+      technologies: ['rollup'],
+      description: `Runs Rollup build`,
+      help: {
+        command: `${pmc.exec} rollup --help`,
+        example: {
+          options: {
+            environment: 'CUSTOM_ENV_VAR:foo',
+          },
+        },
+      },
+    },
   };
   return targets;
 }
