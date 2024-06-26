@@ -21,12 +21,14 @@ interface ProjectDetailsProps {
   project: ProjectGraphProjectNode;
   sourceMap: Record<string, string[]>;
   errors?: GraphError[];
+  connectedToCloud?: boolean;
 }
 
 export function ProjectDetailsWrapper({
   project,
   sourceMap,
   errors,
+  connectedToCloud,
 }: ProjectDetailsProps) {
   const environment = useEnvironmentConfig()?.environment;
   const externalApiService = getExternalApiService();
@@ -92,6 +94,14 @@ export function ProjectDetailsWrapper({
         payload: { taskId: `${data.projectName}:${data.targetName}` },
       });
     },
+    [externalApiService]
+  );
+
+  const handleNxConnect = useCallback(
+    () =>
+      externalApiService.postEvent({
+        type: 'nx-connect',
+      }),
     [externalApiService]
   );
 
@@ -161,6 +171,10 @@ export function ProjectDetailsWrapper({
         onRunTarget={environment === 'nx-console' ? handleRunTarget : undefined}
         viewInProjectGraphPosition={
           environment === 'nx-console' ? 'bottom' : 'top'
+        }
+        connectedToCloud={connectedToCloud}
+        nxConnectCallback={
+          environment === 'nx-console' ? handleNxConnect : undefined
         }
       />
       <ErrorToast errors={errors} />

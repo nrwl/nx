@@ -306,6 +306,7 @@ describe('@nx/cypress/plugin', () => {
                     ],
                     "metadata": {
                       "description": "Runs Cypress Tests in CI",
+                      "nonAtomizedTarget": "e2e",
                       "technologies": [
                         "cypress",
                       ],
@@ -329,6 +330,7 @@ describe('@nx/cypress/plugin', () => {
                     ],
                     "metadata": {
                       "description": "Runs Cypress Tests in src/test.cy.ts in CI",
+                      "nonAtomizedTarget": "e2e",
                       "technologies": [
                         "cypress",
                       ],
