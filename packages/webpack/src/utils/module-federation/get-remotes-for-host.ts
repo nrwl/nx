@@ -129,9 +129,11 @@ export function getRemotes(
   const staticDynamicRemotes = knownDynamicRemotes.filter(
     (r) => !devServeApps.has(r) && !skipRemotesSet.has(r)
   );
-  const remotePorts = [...devServeRemotes, ...staticDynamicRemotes].map(
-    (r) => context.projectGraph.nodes[r].data.targets['serve'].options.port
-  );
+  const remotePorts = [...devServeRemotes, ...staticDynamicRemotes]
+    .filter((r) => context.projectGraph.nodes[r]) // Check app's existence
+    .map(
+      (r) => context.projectGraph.nodes[r].data.targets['serve'].options.port
+    );
 
   return {
     staticRemotes,
