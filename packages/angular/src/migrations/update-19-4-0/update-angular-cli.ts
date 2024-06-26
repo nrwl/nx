@@ -1,6 +1,6 @@
 import { formatFiles, Tree, updateJson } from '@nx/devkit';
 
-export const angularCliVersion = '~18.1.0-next.1';
+export const angularCliVersion = '~18.1.0-next.3';
 
 export default async function (tree: Tree) {
   let shouldFormat = false;
