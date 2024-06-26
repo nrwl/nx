@@ -9,6 +9,7 @@ import {
   getTagsFromPackageJson,
   readTargetsFromPackageJson,
 } from '../../../utils/package-json';
+import { buildPackageJsonWorkspacesMatcher } from '../../package-json-workspaces';
 
 // TODO: Remove this one day, this should not need to be done.
 
@@ -42,8 +43,16 @@ function createProjectFromPackageJsonNextToProjectJson(
   workspaceRoot: string
 ): ProjectConfiguration | null {
   const root = dirname(projectJsonPath);
-  const packageJsonPath = join(workspaceRoot, root, 'package.json');
-  if (!existsSync(packageJsonPath)) {
+  const relativePackageJsonPath = join(root, 'package.json');
+  const packageJsonPath = join(workspaceRoot, relativePackageJsonPath);
+  const readJson = (f) => readJsonFile(join(workspaceRoot, f));
+
+  // Do not create projects for package.json files
+  // that are part of the package manager workspaces
+  // Those package.json files will be processed later on
+  const matcher = buildPackageJsonWorkspacesMatcher(workspaceRoot, readJson);
+
+  if (!existsSync(packageJsonPath) || matcher(relativePackageJsonPath)) {
     return null;
   }
   try {

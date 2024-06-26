@@ -121,12 +121,50 @@ function getNxEnvVariablesForTask(
   };
 }
 
-function loadDotEnvFilesForTask(
-  task: Task,
-  environmentVariables: NodeJS.ProcessEnv
+/**
+ * This function loads a .env file and expands the variables in it.
+ * It is going to override existing environmentVariables.
+ * @param filename
+ * @param environmentVariables
+ */
+export function loadAndExpandDotEnvFile(
+  filename: string,
+  environmentVariables: NodeJS.ProcessEnv,
+  override = false
 ) {
+  const myEnv = loadDotEnvFile({
+    path: filename,
+    processEnv: environmentVariables,
+    override,
+  });
+  return expand({
+    ...myEnv,
+    processEnv: environmentVariables,
+  });
+}
+
+/**
+ * This function unloads a .env file and removes the variables in it from the environmentVariables.
+ * @param filename
+ * @param environmentVariables
+ */
+export function unloadDotEnvFile(
+  filename: string,
+  environmentVariables: NodeJS.ProcessEnv,
+  override = false
+) {
+  const parsedDotEnvFile: NodeJS.ProcessEnv = {};
+  loadAndExpandDotEnvFile(filename, parsedDotEnvFile, override);
+  Object.keys(parsedDotEnvFile).forEach((envVarKey) => {
+    if (environmentVariables[envVarKey] === parsedDotEnvFile[envVarKey]) {
+      delete environmentVariables[envVarKey];
+    }
+  });
+}
+
+function getEnvFilesForTask(task: Task): string[] {
   // Collect dot env files that may pertain to a task
-  const dotEnvFiles = [
+  return [
     // Load DotEnv Files for a configuration in the project root
     ...(task.target.configuration
       ? [
@@ -175,39 +213,22 @@ function loadDotEnvFilesForTask(
     `.env.local`,
     `.env`,
   ];
+}
 
+function loadDotEnvFilesForTask(
+  task: Task,
+  environmentVariables: NodeJS.ProcessEnv
+) {
+  const dotEnvFiles = getEnvFilesForTask(task);
   for (const file of dotEnvFiles) {
-    const myEnv = loadDotEnvFile({
-      path: file,
-      processEnv: environmentVariables,
-      // Do not override existing env variables as we load
-      override: false,
-    });
-    environmentVariables = {
-      ...expand({
-        ...myEnv,
-        ignoreProcessEnv: true, // Do not override existing env variables as we load
-      }).parsed,
-      ...environmentVariables,
-    };
+    loadAndExpandDotEnvFile(file, environmentVariables);
   }
-
   return environmentVariables;
 }
 
 function unloadDotEnvFiles(environmentVariables: NodeJS.ProcessEnv) {
-  const unloadDotEnvFile = (filename: string) => {
-    let parsedDotEnvFile: NodeJS.ProcessEnv = {};
-    loadDotEnvFile({ path: filename, processEnv: parsedDotEnvFile });
-    Object.keys(parsedDotEnvFile).forEach((envVarKey) => {
-      if (environmentVariables[envVarKey] === parsedDotEnvFile[envVarKey]) {
-        delete environmentVariables[envVarKey];
-      }
-    });
-  };
-
   for (const file of ['.env', '.local.env', '.env.local']) {
-    unloadDotEnvFile(file);
+    unloadDotEnvFile(file, environmentVariables);
   }
   return environmentVariables;
 }

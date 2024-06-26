@@ -83,6 +83,7 @@ const projectDetailsLoader = async (
   project: ProjectGraphProjectNode;
   sourceMap: Record<string, string[]>;
   errors?: GraphError[];
+  connectedToCloud?: boolean;
 }> => {
   const workspaceData = await workspaceDataLoader(selectedWorkspaceId);
   const sourceMaps = await sourceMapsLoader(selectedWorkspaceId);
@@ -102,6 +103,7 @@ const projectDetailsLoader = async (
     project,
     sourceMap: sourceMaps[project.data.root],
     errors: workspaceData.errors,
+    connectedToCloud: workspaceData.connectedToCloud,
   };
 };
 

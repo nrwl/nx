@@ -62,7 +62,7 @@
     },
     "workers": {
       "alias": "j",
-      "type": "string",
+      "oneOf": [{ "type": "number" }, { "type": "string" }],
       "description": "Number of concurrent workers or percentage of logical CPU cores, use 1 to run in a single worker"
     },
     "list": {

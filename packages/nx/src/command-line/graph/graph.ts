@@ -56,6 +56,7 @@ import { createTaskHasher } from '../../hasher/create-task-hasher';
 
 import { filterUsingGlobPatterns } from '../../hasher/task-hasher';
 import { ProjectGraphError } from '../../project-graph/error-types';
+import { isNxCloudUsed } from '../../utils/nx-cloud-utils';
 
 export interface GraphError {
   message: string;
@@ -78,6 +79,7 @@ export interface ProjectGraphClientResponse {
   exclude: string[];
   isPartial: boolean;
   errors?: GraphError[];
+  connectedToCloud?: boolean;
 }
 
 export interface TaskGraphClientResponse {
@@ -756,11 +758,14 @@ async function createProjectGraphAndSourceMapClientResponse(
   let sourceMaps: ConfigurationSourceMaps;
   let isPartial = false;
   let errors: GraphError[] | undefined;
+  let connectedToCloud: boolean | undefined;
   try {
     const projectGraphAndSourceMaps =
       await createProjectGraphAndSourceMapsAsync({ exitOnError: false });
     projectGraph = projectGraphAndSourceMaps.projectGraph;
     sourceMaps = projectGraphAndSourceMaps.sourceMaps;
+
+    connectedToCloud = isNxCloudUsed(readNxJson());
   } catch (e) {
     if (e instanceof ProjectGraphError) {
       projectGraph = e.getPartialProjectGraph();
@@ -794,7 +799,14 @@ async function createProjectGraphAndSourceMapClientResponse(
 
   const hasher = createHash('sha256');
   hasher.update(
-    JSON.stringify({ layout, projects, dependencies, sourceMaps, errors })
+    JSON.stringify({
+      layout,
+      projects,
+      dependencies,
+      sourceMaps,
+      errors,
+      connectedToCloud,
+    })
   );
 
   const hash = hasher.digest('hex');
@@ -824,6 +836,7 @@ async function createProjectGraphAndSourceMapClientResponse(
       fileMap,
       isPartial,
       errors,
+      connectedToCloud,
     },
     sourceMapResponse: sourceMaps,
   };

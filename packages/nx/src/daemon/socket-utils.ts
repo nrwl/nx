@@ -22,6 +22,11 @@ export const getForkedProcessOsSocketPath = (id: string) => {
   return isWindows ? '\\\\.\\pipe\\nx\\' + resolve(path) : resolve(path);
 };
 
+export const getPluginOsSocketPath = (id: string) => {
+  let path = resolve(join(getSocketDir(), 'plugin' + id + '.sock'));
+  return isWindows ? '\\\\.\\pipe\\nx\\' + resolve(path) : resolve(path);
+};
+
 export function killSocketOrPath(): void {
   try {
     unlinkSync(getFullOsSocketPath());

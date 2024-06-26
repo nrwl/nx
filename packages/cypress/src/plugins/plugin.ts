@@ -270,6 +270,7 @@ async function buildCypressTargets(
           metadata: {
             technologies: ['cypress'],
             description: `Runs Cypress Tests in ${relativeSpecFilePath} in CI`,
+            nonAtomizedTarget: options.targetName,
           },
         };
         dependsOn.push({
@@ -288,6 +289,7 @@ async function buildCypressTargets(
         metadata: {
           technologies: ['cypress'],
           description: 'Runs Cypress Tests in CI',
+          nonAtomizedTarget: options.targetName,
         },
       };
       ciTargetGroup.push(options.ciTargetName);
