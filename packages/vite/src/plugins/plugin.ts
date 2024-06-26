@@ -21,7 +21,8 @@ import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { getLockFileName } from '@nx/js';
 import { loadViteDynamicImport } from '../utils/executor-utils';
 import { hashObject } from 'nx/src/hasher/file-hasher';
-import type { PackageManagerCommands } from 'nx/src/utils/package-manager';
+
+const pmc = getPackageManagerCommand();
 
 export interface VitePluginOptions {
   buildTargetName?: string;
@@ -56,11 +57,10 @@ export const createNodesV2: CreateNodesV2<VitePluginOptions> = [
     const optionsHash = hashObject(options);
     const cachePath = join(workspaceDataDirectory, `vite-${optionsHash}.hash`);
     const targetsCache = readTargetsCache(cachePath);
-    const pmc = getPackageManagerCommand();
     try {
       return await createNodesFromFiles(
         (configFile, options, context) =>
-          createNodesInternal(configFile, options, context, targetsCache, pmc),
+          createNodesInternal(configFile, options, context, targetsCache),
         configFilePaths,
         options,
         context
@@ -77,8 +77,7 @@ export const createNodes: CreateNodes<VitePluginOptions> = [
     logger.warn(
       '`createNodes` is deprecated. Update your plugin to utilize createNodesV2 instead. In Nx 20, this will change to the createNodesV2 API.'
     );
-    const pmc = getPackageManagerCommand();
-    return createNodesInternal(configFilePath, options, context, {}, pmc);
+    return createNodesInternal(configFilePath, options, context, {});
   },
 ];
 
@@ -86,8 +85,7 @@ async function createNodesInternal(
   configFilePath: string,
   options: VitePluginOptions,
   context: CreateNodesContext,
-  targetsCache: Record<string, ViteTargets>,
-  pmc: PackageManagerCommands
+  targetsCache: Record<string, ViteTargets>
 ) {
   const projectRoot = dirname(configFilePath);
   // Do not create a project if package.json and project.json isn't there.
@@ -115,8 +113,7 @@ async function createNodesInternal(
     configFilePath,
     projectRoot,
     normalizedOptions,
-    context,
-    pmc
+    context
   );
 
   const { targets, metadata } = targetsCache[hash];
@@ -145,8 +142,7 @@ async function buildViteTargets(
   configFilePath: string,
   projectRoot: string,
   options: VitePluginOptions,
-  context: CreateNodesContext,
-  pmc: PackageManagerCommands
+  context: CreateNodesContext
 ): Promise<ViteTargets> {
   const absoluteConfigFilePath = joinPathFragments(
     context.workspaceRoot,
@@ -191,14 +187,13 @@ async function buildViteTargets(
       options.buildTargetName,
       namedInputs,
       buildOutputs,
-      projectRoot,
-      pmc
+      projectRoot
     );
 
     // If running in library mode, then there is nothing to serve.
     if (!viteConfig.build?.lib) {
-      targets[options.serveTargetName] = serveTarget(projectRoot, pmc);
-      targets[options.previewTargetName] = previewTarget(projectRoot, pmc);
+      targets[options.serveTargetName] = serveTarget(projectRoot);
+      targets[options.previewTargetName] = previewTarget(projectRoot);
       targets[options.serveStaticTargetName] = serveStaticTarget(options) as {};
     }
   }
@@ -208,8 +203,7 @@ async function buildViteTargets(
     targets[options.testTargetName] = await testTarget(
       namedInputs,
       testOutputs,
-      projectRoot,
-      pmc
+      projectRoot
     );
   }
 
@@ -223,8 +217,7 @@ async function buildTarget(
     [inputName: string]: any[];
   },
   outputs: string[],
-  projectRoot: string,
-  pmc: PackageManagerCommands
+  projectRoot: string
 ) {
   return {
     command: `vite build`,
@@ -256,7 +249,7 @@ async function buildTarget(
   };
 }
 
-function serveTarget(projectRoot: string, pmc: PackageManagerCommands) {
+function serveTarget(projectRoot: string) {
   const targetConfig: TargetConfiguration = {
     command: `vite serve`,
     options: {
@@ -279,7 +272,7 @@ function serveTarget(projectRoot: string, pmc: PackageManagerCommands) {
   return targetConfig;
 }
 
-function previewTarget(projectRoot: string, pmc: PackageManagerCommands) {
+function previewTarget(projectRoot: string) {
   const targetConfig: TargetConfiguration = {
     command: `vite preview`,
     options: {
@@ -307,8 +300,7 @@ async function testTarget(
     [inputName: string]: any[];
   },
   outputs: string[],
-  projectRoot: string,
-  pmc: PackageManagerCommands
+  projectRoot: string
 ) {
   return {
     command: `vitest`,

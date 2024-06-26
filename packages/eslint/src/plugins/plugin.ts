@@ -26,7 +26,8 @@ import {
   isFlatConfig,
 } from '../utils/config-file';
 import { resolveESLintClass } from '../utils/resolve-eslint-class';
-import type { PackageManagerCommands } from 'nx/src/utils/package-manager';
+
+const pmc = getPackageManagerCommand();
 
 export interface EslintPluginOptions {
   targetName?: string;
@@ -62,8 +63,7 @@ const internalCreateNodes = async (
   configFilePath: string,
   options: EslintPluginOptions,
   context: CreateNodesContext,
-  projectsCache: Record<string, CreateNodesResult['projects']>,
-  pmc: PackageManagerCommands
+  projectsCache: Record<string, CreateNodesResult['projects']>
 ): Promise<CreateNodesResult> => {
   options = normalizeOptions(options);
   const configDir = dirname(configFilePath);
@@ -150,8 +150,7 @@ const internalCreateNodes = async (
         childProjectRoot,
         eslintVersion,
         options,
-        context,
-        pmc
+        context
       );
 
       if (project) {
@@ -179,8 +178,7 @@ const internalCreateNodesV2 = async (
   allProjectRoots: string[],
   projectRootsByEslintRoots: Map<string, string[]>,
   lintableFilesPerProjectRoot: Map<string, string[]>,
-  projectsCache: Record<string, CreateNodesResult['projects']>,
-  pmc: PackageManagerCommands
+  projectsCache: Record<string, CreateNodesResult['projects']>
 ): Promise<CreateNodesResult> => {
   const configDir = dirname(configFilePath);
 
@@ -243,8 +241,7 @@ const internalCreateNodesV2 = async (
         projectRoot,
         eslintVersion,
         options,
-        context,
-        pmc
+        context
       );
 
       if (project) {
@@ -277,7 +274,6 @@ export const createNodesV2: CreateNodesV2<EslintPluginOptions> = [
     const { eslintConfigFiles, projectRoots, projectRootsByEslintRoots } =
       splitConfigFiles(configFiles);
     const lintableFilesPerProjectRoot = new Map<string, string[]>();
-    const pmc = getPackageManagerCommand();
 
     try {
       return await createNodesFromFiles(
@@ -290,8 +286,7 @@ export const createNodesV2: CreateNodesV2<EslintPluginOptions> = [
             projectRoots,
             projectRootsByEslintRoots,
             lintableFilesPerProjectRoot,
-            targetsCache,
-            pmc
+            targetsCache
           ),
         eslintConfigFiles,
         options,
@@ -309,8 +304,7 @@ export const createNodes: CreateNodes<EslintPluginOptions> = [
     logger.warn(
       '`createNodes` is deprecated. Update your plugin to utilize createNodesV2 instead. In Nx 20, this will change to the createNodesV2 API.'
     );
-    const pmc = getPackageManagerCommand();
-    return internalCreateNodes(configFilePath, options, context, {}, pmc);
+    return internalCreateNodes(configFilePath, options, context, {});
   },
 ];
 
@@ -411,8 +405,7 @@ function getProjectUsingESLintConfig(
   projectRoot: string,
   eslintVersion: string,
   options: EslintPluginOptions,
-  context: CreateNodesContext | CreateNodesContextV2,
-  pmc: PackageManagerCommands
+  context: CreateNodesContext | CreateNodesContextV2
 ): CreateNodesResult['projects'][string] | null {
   const rootEslintConfig = [
     baseEsLintConfigFile,
@@ -449,7 +442,6 @@ function getProjectUsingESLintConfig(
       projectRoot,
       context.workspaceRoot,
       options,
-      pmc,
       standaloneSrcPath
     ),
   };
@@ -461,7 +453,6 @@ function buildEslintTargets(
   projectRoot: string,
   workspaceRoot: string,
   options: EslintPluginOptions,
-  pmc: PackageManagerCommands,
   standaloneSrcPath?: string
 ) {
   const isRootProject = projectRoot === '.';

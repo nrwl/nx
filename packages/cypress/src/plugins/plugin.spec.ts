@@ -101,7 +101,7 @@ describe('@nx/cypress/plugin', () => {
                     ],
                     "metadata": {
                       "description": "Runs Cypress Tests",
-                      "example": {
+                      "help": {
                         "command": "npx cypress run --help",
                         "example": {
                           "args": [
@@ -126,7 +126,7 @@ describe('@nx/cypress/plugin', () => {
                     "command": "cypress open",
                     "metadata": {
                       "description": "Opens Cypress",
-                      "example": {
+                      "help": {
                         "command": "npx cypress open --help",
                         "example": {
                           "args": [
@@ -197,7 +197,7 @@ describe('@nx/cypress/plugin', () => {
                     ],
                     "metadata": {
                       "description": "Runs Cypress Component Tests",
-                      "example": {
+                      "help": {
                         "command": "npx cypress run --help",
                         "example": {
                           "args": [
@@ -222,7 +222,7 @@ describe('@nx/cypress/plugin', () => {
                     "command": "cypress open",
                     "metadata": {
                       "description": "Opens Cypress",
-                      "example": {
+                      "help": {
                         "command": "npx cypress open --help",
                         "example": {
                           "args": [
@@ -309,7 +309,7 @@ describe('@nx/cypress/plugin', () => {
                     ],
                     "metadata": {
                       "description": "Runs Cypress Tests",
-                      "example": {
+                      "help": {
                         "command": "npx cypress run --help",
                         "example": {
                           "args": [
@@ -351,8 +351,7 @@ describe('@nx/cypress/plugin', () => {
                     ],
                     "metadata": {
                       "description": "Runs Cypress Tests in CI",
-                      "nonAtomizedTarget": "e2e",
-                      "example": {
+                      "help": {
                         "command": "npx cypress run --help",
                         "example": {
                           "args": [
@@ -361,6 +360,7 @@ describe('@nx/cypress/plugin', () => {
                           ],
                         },
                       },
+                      "nonAtomizedTarget": "e2e",
                       "technologies": [
                         "cypress",
                       ],
@@ -384,8 +384,7 @@ describe('@nx/cypress/plugin', () => {
                     ],
                     "metadata": {
                       "description": "Runs Cypress Tests in src/test.cy.ts in CI",
-                      "nonAtomizedTarget": "e2e",
-                      "example": {
+                      "help": {
                         "command": "npx cypress run --help",
                         "example": {
                           "args": [
@@ -394,6 +393,7 @@ describe('@nx/cypress/plugin', () => {
                           ],
                         },
                       },
+                      "nonAtomizedTarget": "e2e",
                       "technologies": [
                         "cypress",
                       ],
@@ -410,7 +410,7 @@ describe('@nx/cypress/plugin', () => {
                     "command": "cypress open",
                     "metadata": {
                       "description": "Opens Cypress",
-                      "example": {
+                      "help": {
                         "command": "npx cypress open --help",
                         "example": {
                           "args": [

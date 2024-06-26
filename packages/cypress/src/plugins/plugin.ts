@@ -27,7 +27,6 @@ import { NX_PLUGIN_OPTIONS } from '../utils/constants';
 import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
 import { hashObject } from 'nx/src/devkit-internals';
 import { globWithWorkspaceContext } from 'nx/src/utils/workspace-context';
-import type { PackageManagerCommands } from 'nx/src/utils/package-manager';
 
 export interface CypressPluginOptions {
   ciTargetName?: string;
@@ -46,6 +45,8 @@ function writeTargetsToCache(cachePath: string, results: CypressTargets) {
 
 const cypressConfigGlob = '**/cypress.config.{js,ts,mjs,cjs}';
 
+const pmc = getPackageManagerCommand();
+
 export const createNodesV2: CreateNodesV2<CypressPluginOptions> = [
   cypressConfigGlob,
   async (configFiles, options, context) => {
@@ -55,11 +56,10 @@ export const createNodesV2: CreateNodesV2<CypressPluginOptions> = [
       `cypress-${optionsHash}.hash`
     );
     const targetsCache = readTargetsCache(cachePath);
-    const pmc = getPackageManagerCommand();
     try {
       return await createNodesFromFiles(
         (configFile, options, context) =>
-          createNodesInternal(configFile, options, context, targetsCache, pmc),
+          createNodesInternal(configFile, options, context, targetsCache),
         configFiles,
         options,
         context
@@ -80,8 +80,7 @@ export const createNodes: CreateNodes<CypressPluginOptions> = [
     logger.warn(
       '`createNodes` is deprecated. Update your plugin to utilize createNodesV2 instead. In Nx 20, this will change to the createNodesV2 API.'
     );
-    const pmc = getPackageManagerCommand();
-    return createNodesInternal(configFile, options, context, {}, pmc);
+    return createNodesInternal(configFile, options, context, {});
   },
 ];
 
@@ -89,8 +88,7 @@ async function createNodesInternal(
   configFilePath: string,
   options: CypressPluginOptions,
   context: CreateNodesContext,
-  targetsCache: CypressTargets,
-  pmc: PackageManagerCommands
+  targetsCache: CypressTargets
 ) {
   options = normalizeOptions(options);
   const projectRoot = dirname(configFilePath);
@@ -115,8 +113,7 @@ async function createNodesInternal(
     configFilePath,
     projectRoot,
     options,
-    context,
-    pmc
+    context
   );
   const { targets, metadata } = targetsCache[hash];
 
@@ -187,8 +184,7 @@ async function buildCypressTargets(
   configFilePath: string,
   projectRoot: string,
   options: CypressPluginOptions,
-  context: CreateNodesContext,
-  pmc: PackageManagerCommands
+  context: CreateNodesContext
 ): Promise<CypressTargets> {
   const cypressConfig = await loadConfigFile(
     join(context.workspaceRoot, configFilePath)
@@ -218,7 +214,7 @@ async function buildCypressTargets(
       metadata: {
         technologies: ['cypress'],
         description: 'Runs Cypress Tests',
-        example: {
+        help: {
           command: `${pmc.exec} cypress run --help`,
           example: {
             args: ['--dev', '--headed'],
@@ -284,7 +280,7 @@ async function buildCypressTargets(
             technologies: ['cypress'],
             description: `Runs Cypress Tests in ${relativeSpecFilePath} in CI`,
             nonAtomizedTarget: options.targetName,
-            example: {
+            help: {
               command: `${pmc.exec} cypress run --help`,
               example: {
                 args: ['--dev', '--headed'],
@@ -309,7 +305,7 @@ async function buildCypressTargets(
           technologies: ['cypress'],
           description: 'Runs Cypress Tests in CI',
           nonAtomizedTarget: options.targetName,
-          example: {
+          help: {
             command: `${pmc.exec} cypress run --help`,
             example: {
               args: ['--dev', '--headed'],
@@ -332,7 +328,7 @@ async function buildCypressTargets(
       metadata: {
         technologies: ['cypress'],
         description: 'Runs Cypress Component Tests',
-        example: {
+        help: {
           command: `${pmc.exec} cypress run --help`,
           example: {
             args: ['--dev', '--headed'],
@@ -348,7 +344,7 @@ async function buildCypressTargets(
     metadata: {
       technologies: ['cypress'],
       description: 'Opens Cypress',
-      example: {
+      help: {
         command: `${pmc.exec} cypress open --help`,
         example: {
           args: ['--dev', '--e2e'],
