@@ -27,7 +27,7 @@ export async function buildStaticRemotes(
     mappedLocationOfRemotes
   );
 
-  await new Promise<void>((res) => {
+  await new Promise<void>((res, rej) => {
     logger.info(
       `NX Building ${staticRemotesConfig.remotes.length} static remotes...`
     );
@@ -58,6 +58,13 @@ export async function buildStaticRemotes(
         /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g;
       const stdoutString = data.toString().replace(ANSII_CODE_REGEX, '');
       stdoutStream.write(stdoutString);
+
+      // in addition to writing into the stdout stream, also show error directly in console
+      // so the error is easily discoverable. 'ERROR in' is the key word to search in webpack output.
+      if (stdoutString.includes('ERROR in')) {
+        logger.log(stdoutString);
+      }
+
       if (stdoutString.includes('Successfully ran target build')) {
         staticProcess.stdout.removeAllListeners('data');
         logger.info(
@@ -72,11 +79,12 @@ export async function buildStaticRemotes(
       staticProcess.stdout.removeAllListeners('data');
       staticProcess.stderr.removeAllListeners('data');
       if (code !== 0) {
-        throw new Error(
+        rej(
           `Remote failed to start. A complete log can be found in: ${remoteBuildLogFile}`
         );
+      } else {
+        res();
       }
-      res();
     });
     process.on('SIGTERM', () => staticProcess.kill('SIGTERM'));
     process.on('exit', () => staticProcess.kill('SIGTERM'));
