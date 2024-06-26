@@ -161,6 +161,7 @@ export function isPluginWorkerMessage(
       'createNodes',
       'createDependencies',
       'processProjectGraph',
+      'createMetadata',
     ].includes(message.type)
   );
 }
@@ -177,6 +178,7 @@ export function isPluginWorkerResult(
       'createNodesResult',
       'createDependenciesResult',
       'processProjectGraphResult',
+      'createMetadataResult',
     ].includes(message.type)
   );
 }
