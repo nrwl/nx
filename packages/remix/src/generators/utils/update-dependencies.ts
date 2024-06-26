@@ -21,7 +21,6 @@ export function updateDependencies(tree: Tree) {
       'react-dom': reactDomVersion,
     },
     {
-      '@remix-run/eslint-config': remixVersion,
       '@types/react': typesReactVersion,
       '@types/react-dom': typesReactDomVersion,
       eslint: eslintVersion,

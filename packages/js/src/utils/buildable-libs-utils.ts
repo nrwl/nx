@@ -430,7 +430,8 @@ export function createTmpTsConfig(
   tsconfigPath: string,
   workspaceRoot: string,
   projectRoot: string,
-  dependencies: DependentBuildableProjectNode[]
+  dependencies: DependentBuildableProjectNode[],
+  useWorkspaceAsBaseUrl: boolean = false
 ) {
   const tmpTsConfigPath = join(
     workspaceRoot,
@@ -445,6 +446,12 @@ export function createTmpTsConfig(
     dependencies
   );
   process.on('exit', () => cleanupTmpTsConfigFile(tmpTsConfigPath));
+
+  if (useWorkspaceAsBaseUrl) {
+    parsedTSConfig.compilerOptions ??= {};
+    parsedTSConfig.compilerOptions.baseUrl = workspaceRoot;
+  }
+
   writeJsonFile(tmpTsConfigPath, parsedTSConfig);
   return join(tmpTsConfigPath);
 }

@@ -33,3 +33,18 @@ function sortNxReleasePublishLast(a: string, b: string) {
   if (b === 'nx-release-publish') return -1;
   return a.localeCompare(b);
 }
+
+export function getNonAtomizedTargetForGroup(
+  project: ProjectGraphProjectNode,
+  targetGroupName: string
+): string | undefined {
+  const targetWithNonAtomizedEquivalent = project.data.metadata?.targetGroups?.[
+    targetGroupName
+  ]?.find(
+    (target) => project.data.targets?.[target]?.metadata?.nonAtomizedTarget
+  );
+  return targetWithNonAtomizedEquivalent
+    ? project.data.targets?.[targetWithNonAtomizedEquivalent]?.metadata
+        ?.nonAtomizedTarget
+    : undefined;
+}

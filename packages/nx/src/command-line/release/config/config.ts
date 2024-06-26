@@ -226,6 +226,7 @@ export async function createNxReleaseConfig(
             renderer: defaultRendererPath,
             renderOptions: {
               authors: true,
+              mapAuthorsToGitHubUsernames: true,
               commitReferences: true,
               versionTitleDate: true,
             },
@@ -240,6 +241,7 @@ export async function createNxReleaseConfig(
             renderer: defaultRendererPath,
             renderOptions: {
               authors: true,
+              mapAuthorsToGitHubUsernames: true,
               commitReferences: true,
               versionTitleDate: true,
             },
@@ -275,6 +277,7 @@ export async function createNxReleaseConfig(
       renderer: defaultRendererPath,
       renderOptions: {
         authors: true,
+        mapAuthorsToGitHubUsernames: true,
         commitReferences: true,
         versionTitleDate: true,
       },

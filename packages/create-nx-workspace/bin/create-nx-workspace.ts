@@ -283,28 +283,18 @@ async function normalizeArgsMiddleware(
 
     const packageManager = await determinePackageManager(argv);
     const defaultBase = await determineDefaultBase(argv);
-    if (process.env.NX_NEW_CLOUD_ONBOARDING === 'true') {
-      const nxCloud =
-        argv.skipGit === true ? 'skip' : await determineNxCloud(argv);
-      const useGitHub =
-        nxCloud === 'skip'
-          ? undefined
-          : nxCloud === 'github' ||
-            (await determineIfGitHubWillBeUsed(nxCloud));
-      Object.assign(argv, {
-        nxCloud,
-        useGitHub,
-        packageManager,
-        defaultBase,
-      });
-    } else {
-      const nxCloud = await determineNxCloud(argv);
-      Object.assign(argv, {
-        nxCloud,
-        packageManager,
-        defaultBase,
-      });
-    }
+    const nxCloud =
+      argv.skipGit === true ? 'skip' : await determineNxCloud(argv);
+    const useGitHub =
+      nxCloud === 'skip'
+        ? undefined
+        : nxCloud === 'github' || (await determineIfGitHubWillBeUsed(nxCloud));
+    Object.assign(argv, {
+      nxCloud,
+      useGitHub,
+      packageManager,
+      defaultBase,
+    });
   } catch (e) {
     console.error(e);
     process.exit(1);

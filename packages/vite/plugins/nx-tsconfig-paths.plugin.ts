@@ -110,7 +110,8 @@ There should at least be a tsconfig.base.json or tsconfig.json in the root of th
           foundTsConfigPath,
           workspaceRoot,
           relative(workspaceRoot, projectRoot),
-          dependencies
+          dependencies,
+          true
         );
 
         if (config.command === 'serve') {

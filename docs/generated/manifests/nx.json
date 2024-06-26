@@ -4912,7 +4912,7 @@
   },
   "/recipes/nx-console/console-troubleshooting": {
     "id": "console-troubleshooting",
-    "name": "Troubleshooting Nx Console Issues",
+    "name": "Troubleshoot Nx Console Issues",
     "description": "",
     "mediaImage": "",
     "file": "shared/recipes/console-troubleshooting",
@@ -6104,7 +6104,7 @@
       },
       {
         "id": "troubleshoot-nx-install-issues",
-        "name": "Troubleshooting Nx Install Issues",
+        "name": "Troubleshoot Nx Install Issues",
         "description": "",
         "mediaImage": "",
         "file": "shared/installation/troubleshoot-installation",
@@ -6148,13 +6148,24 @@
       },
       {
         "id": "console-troubleshooting",
-        "name": "Troubleshooting Nx Console Issues",
+        "name": "Troubleshoot Nx Console Issues",
         "description": "",
         "mediaImage": "",
         "file": "shared/recipes/console-troubleshooting",
         "itemList": [],
         "isExternal": false,
         "path": "/recipes/nx-console/console-troubleshooting",
+        "tags": []
+      },
+      {
+        "id": "convert-to-inferred",
+        "name": "Troubleshoot Convert to Inferred Migration",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/guides/troubleshoot-convert-to-inferred",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/troubleshooting/convert-to-inferred",
         "tags": []
       }
     ],
@@ -6175,7 +6186,7 @@
   },
   "/troubleshooting/troubleshoot-nx-install-issues": {
     "id": "troubleshoot-nx-install-issues",
-    "name": "Troubleshooting Nx Install Issues",
+    "name": "Troubleshoot Nx Install Issues",
     "description": "",
     "mediaImage": "",
     "file": "shared/installation/troubleshoot-installation",
@@ -6216,6 +6227,17 @@
     "isExternal": false,
     "path": "/troubleshooting/performance-profiling",
     "tags": ["environment-variables"]
+  },
+  "/troubleshooting/convert-to-inferred": {
+    "id": "convert-to-inferred",
+    "name": "Troubleshoot Convert to Inferred Migration",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/guides/troubleshoot-convert-to-inferred",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/troubleshooting/convert-to-inferred",
+    "tags": []
   },
   "/deprecated": {
     "id": "deprecated",
