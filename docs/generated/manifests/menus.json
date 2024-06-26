@@ -3588,7 +3588,7 @@
         "disableCollapsible": false
       },
       {
-        "name": "Troubleshooting Nx Console Issues",
+        "name": "Troubleshoot Nx Console Issues",
         "path": "/recipes/nx-console/console-troubleshooting",
         "id": "console-troubleshooting",
         "isExternal": false,
@@ -4458,7 +4458,7 @@
             "disableCollapsible": false
           },
           {
-            "name": "Troubleshooting Nx Install Issues",
+            "name": "Troubleshoot Nx Install Issues",
             "path": "/troubleshooting/troubleshoot-nx-install-issues",
             "id": "troubleshoot-nx-install-issues",
             "isExternal": false,
@@ -4490,9 +4490,17 @@
             "disableCollapsible": false
           },
           {
-            "name": "Troubleshooting Nx Console Issues",
+            "name": "Troubleshoot Nx Console Issues",
             "path": "/recipes/nx-console/console-troubleshooting",
             "id": "console-troubleshooting",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Troubleshoot Convert to Inferred Migration",
+            "path": "/troubleshooting/convert-to-inferred",
+            "id": "convert-to-inferred",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -4509,7 +4517,7 @@
         "disableCollapsible": false
       },
       {
-        "name": "Troubleshooting Nx Install Issues",
+        "name": "Troubleshoot Nx Install Issues",
         "path": "/troubleshooting/troubleshoot-nx-install-issues",
         "id": "troubleshoot-nx-install-issues",
         "isExternal": false,
@@ -4536,6 +4544,14 @@
         "name": "Profiling Build Performance",
         "path": "/troubleshooting/performance-profiling",
         "id": "performance-profiling",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Troubleshoot Convert to Inferred Migration",
+        "path": "/troubleshooting/convert-to-inferred",
+        "id": "convert-to-inferred",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
