@@ -4,6 +4,7 @@ import { migrateProjectExecutorsToPluginV1 } from '@nx/devkit/src/generators/plu
 import { createNodes } from '../../plugins/plugin';
 import { buildPostTargetTransformer } from './lib/build-post-target-transformer';
 import { servePosTargetTransformer } from './lib/serve-post-target-tranformer';
+import { skipProjectFilterFactory } from './lib/skip-project-filter';
 
 interface Schema {
   project?: string;
@@ -32,6 +33,7 @@ export async function convertToInferred(tree: Tree, options: Schema) {
         targetPluginOptionMapper: (targetName) => ({
           buildTargetName: targetName,
         }),
+        skipProjectFilter: skipProjectFilterFactory(tree),
       },
       {
         executors: ['@nx/next:server'],
@@ -39,6 +41,7 @@ export async function convertToInferred(tree: Tree, options: Schema) {
         targetPluginOptionMapper: (targetName) => ({
           devTargetName: targetName,
         }),
+        skipProjectFilter: skipProjectFilterFactory(tree),
       },
     ],
     options.project

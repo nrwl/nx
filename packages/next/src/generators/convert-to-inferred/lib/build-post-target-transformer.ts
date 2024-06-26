@@ -1,6 +1,9 @@
 import { TargetConfiguration, Tree } from '@nx/devkit';
 import { AggregatedLog } from '@nx/devkit/src/generators/plugin-migrations/aggregate-log-util';
-import { processTargetOutputs } from '@nx/devkit/src/generators/plugin-migrations/plugin-migration-utils';
+import {
+  processTargetOutputs,
+  toProjectRelativePath,
+} from '@nx/devkit/src/generators/plugin-migrations/plugin-migration-utils';
 import { NextBuildBuilderOptions } from '../../../utils/types';
 import { updateNextConfig } from './update-next-config';
 
@@ -11,12 +14,15 @@ export function buildPostTargetTransformer(migrationLogs: AggregatedLog) {
     projectDetails: { projectName: string; root: string },
     inferredTargetConfiguration: TargetConfiguration
   ) => {
+    const configValues = {};
     if (target.options) {
       handlePropertiesFromTargetOptions(
         tree,
         target.options,
         projectDetails,
-        migrationLogs
+        migrationLogs,
+        'default',
+        configValues
       );
     }
 
@@ -27,7 +33,9 @@ export function buildPostTargetTransformer(migrationLogs: AggregatedLog) {
           tree,
           configuration,
           projectDetails,
-          migrationLogs
+          migrationLogs,
+          configurationName,
+          configValues
         );
       }
 
@@ -55,7 +63,19 @@ export function buildPostTargetTransformer(migrationLogs: AggregatedLog) {
         projectRoot: projectDetails.root,
       });
     }
+    const partialNextConfig = `
+    
+    const configValues = ${JSON.stringify(configValues, null, 2)};
 
+    const configuration = process.env.NX_TASK_TARGET_CONFIGURATION || 'default';
+
+    const options = {
+      ...configValues.default,
+      //@ts-expect-error: Ignore TypeScript error for indexing configValues with a dynamic key
+      ...configValues[configuration],
+    };
+    `;
+    updateNextConfig(tree, partialNextConfig, projectDetails.root);
     return target;
   };
 }
@@ -64,26 +84,44 @@ function handlePropertiesFromTargetOptions(
   tree: Tree,
   options: NextBuildBuilderOptions,
   projectDetails: { projectName: string; root: string },
-  migrationLogs: AggregatedLog
+  migrationLogs: AggregatedLog,
+  configuration: string = 'default',
+  configValues: any
 ) {
-  const { fileReplacements, assets, outputPath } = options;
-
-  updateNextConfig(tree, projectDetails, {
-    assets,
-    fileReplacements,
-    outputPath,
-  });
+  let configMap = configValues[configuration] ?? {};
 
   if ('outputPath' in options) {
+    migrationLogs.addLog({
+      project: projectDetails.projectName,
+      executorName: '@nx/next:build',
+      log: 'Unable to migrate `outputPath` to Next.js Config as it may lead to unexpected behavior. Please use the `distDir` option in your next.config.js file instead.',
+    });
     delete options.outputPath;
   }
   if ('fileReplacements' in options) {
+    configMap['fileReplacements'] = options.fileReplacements.map(
+      ({ replace: replacePath, with: withPath }) => {
+        return {
+          replace: toProjectRelativePath(replacePath, projectDetails.root),
+          with: toProjectRelativePath(withPath, projectDetails.root),
+        };
+      }
+    );
+
     delete options.fileReplacements;
   }
   if ('nextConfig' in options) {
     delete options.nextConfig;
   }
   if ('assets' in options) {
+    configMap['assets'] = options.assets.map((asset) => {
+      return {
+        ...asset,
+        input: toProjectRelativePath(asset.input, projectDetails.root),
+        output: toProjectRelativePath(asset.output, projectDetails.root),
+      };
+    });
+
     delete options.assets;
   }
 
@@ -122,7 +160,7 @@ function handlePropertiesFromTargetOptions(
     delete options.watch;
   }
 
-  if ('experimentalAppOnly' in options && options['experimentalAppOnly']) {
+  if ('experimentalAppOnly' in options && options.experimentalAppOnly) {
     options['args'] ??= [];
     options['args'].push('--experimental-app-only');
     delete options.experimentalAppOnly;
@@ -130,7 +168,11 @@ function handlePropertiesFromTargetOptions(
 
   if ('experimentalBuildMode' in options) {
     options['args'] ??= [];
-    options['args'].push('--experimental-build-mode');
+    options['args'].push(
+      `--experimental-build-mode ${options.experimentalBuildMode}`
+    );
     delete options.experimentalBuildMode;
   }
+
+  configValues[configuration] = configMap;
 }

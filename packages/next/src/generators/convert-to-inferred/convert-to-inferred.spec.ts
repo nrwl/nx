@@ -1,13 +1,13 @@
 import {
   addProjectConfiguration,
-  type ExpandedPluginConfiguration,
   joinPathFragments,
-  type ProjectConfiguration,
-  type ProjectGraph,
   readNxJson,
   readProjectConfiguration,
-  type Tree,
   writeJson,
+  type ExpandedPluginConfiguration,
+  type ProjectConfiguration,
+  type ProjectGraph,
+  type Tree,
 } from '@nx/devkit';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
@@ -277,6 +277,23 @@ describe('convert-to-inferred', () => {
       "//@ts-check
       // eslint-disable-next-line @typescript-eslint/no-var-requires
       const { composePlugins, withNx } = require('@nx/next');
+      const configValues = {
+        default: {
+          fileReplacements: [
+            {
+              replace: './environments/environment.ts',
+              with: './environments/environment.foo.ts',
+            },
+          ],
+        },
+        development: {},
+      };
+      const configuration = process.env.NX_TASK_TARGET_CONFIGURATION || 'default';
+      const options = {
+        ...configValues.default,
+        //@ts-expect-error: Ignore TypeScript error for indexing configValues with a dynamic key
+        ...configValues[configuration],
+      };
       /**
        * @type {import('@nx/next/plugins/with-nx').WithNxOptions}
        **/
@@ -285,14 +302,8 @@ describe('convert-to-inferred', () => {
           // Set this to true if you would like to use SVGR
           // See: https://github.com/gregberge/svgr
           svgr: false,
-          fileReplacements: [
-            {
-              replace: './environments/environment.ts',
-              with: './environments/environment.foo.ts',
-            },
-          ],
+          ...options,
         },
-        distDir: 'dist/apps/my-app',
       };
       const plugins = [
         // Add more Next.js plugins to this list if needed.

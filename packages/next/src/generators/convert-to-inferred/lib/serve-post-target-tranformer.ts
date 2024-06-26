@@ -81,8 +81,14 @@ function handlePropertiesFromTargetOptions(
       if (
         executorFieldsToRename.includes(key as keyof NextServeBuilderOptions)
       ) {
+        const value = options[key];
         const kebabCase = camelCaseToKebabCase(key);
-        options[kebabCase] = options[key];
+        options['args'] ??= [];
+        if (value === true || typeof value !== 'boolean') {
+          options['args'].push(
+            `--${kebabCase}` + (typeof value !== 'boolean' ? ` ${value}` : '')
+          );
+        }
         delete options[key];
       }
     }
