@@ -1,4 +1,4 @@
-import { Fragment, useMemo, useState } from 'react';
+import { Fragment, ReactNode, useMemo, useState } from 'react';
 import { PlayIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { Transition } from '@headlessui/react';
 import { getExternalApiService, useEnvironmentConfig } from '@nx/graph/shared';
@@ -27,7 +27,9 @@ export function ShowOptionsHelp({
   targetName,
   targetConfiguration,
 }: ShowOptionsHelpProps) {
-  const environment = useEnvironmentConfig()?.environment;
+  const config = useEnvironmentConfig();
+  const environment = config?.environment;
+  const localMode = config?.localMode;
   const [result, setResult] = useState<{
     text: string;
     success: boolean;
@@ -39,29 +41,6 @@ export function ShowOptionsHelp({
   const helpCommand = helpData?.command;
   const helpExampleOptions = helpData?.example?.options;
   const helpExampleArgs = helpData?.example?.args;
-
-  const runHelpCommand =
-    environment === 'nx-console'
-      ? () => {
-          externalApiService.postEvent({
-            type: 'run-help',
-            payload: {
-              projectName,
-              targetName,
-              helpCommand,
-            },
-          });
-        }
-      : async () => {
-          setPending(true);
-          const result = await fetch(
-            `/help?project=${encodeURIComponent(
-              projectName
-            )}&target=${encodeURIComponent(targetName)}`
-          ).then((resp) => resp.json());
-          setResult(result);
-          setPending(false);
-        };
 
   const helpExampleTest = useMemo(() => {
     const targetExampleJson =
@@ -81,6 +60,58 @@ export function ShowOptionsHelp({
       2
     );
   }, [helpExampleOptions, helpExampleArgs]);
+
+  let runHelpActionElement: null | ReactNode;
+  if (environment === 'docs') {
+    // Cannot run help command when rendering in docs (e.g. nx.dev).
+    runHelpActionElement = null;
+  } else if (environment === 'release' && localMode === 'build') {
+    // Cannot run help command when statically built via `nx graph --file=graph.html`.
+    runHelpActionElement = null;
+  } else if (isPending || !result) {
+    runHelpActionElement = (
+      <button
+        className="flex items-center rounded-md border border-slate-500 px-1 disabled:opacity-75"
+        disabled={isPending}
+        onClick={
+          environment === 'nx-console'
+            ? () => {
+                externalApiService.postEvent({
+                  type: 'run-help',
+                  payload: {
+                    projectName,
+                    targetName,
+                    helpCommand,
+                  },
+                });
+              }
+            : async () => {
+                setPending(true);
+                const result = await fetch(
+                  `/help?project=${encodeURIComponent(
+                    projectName
+                  )}&target=${encodeURIComponent(targetName)}`
+                ).then((resp) => resp.json());
+                setResult(result);
+                setPending(false);
+              }
+        }
+      >
+        <PlayIcon className="mr-1 h-4 w-4" />
+        Run
+      </button>
+    );
+  } else {
+    runHelpActionElement = (
+      <button
+        className="flex items-center rounded-md border border-slate-500 px-1"
+        onClick={() => setResult(null)}
+      >
+        <XMarkIcon className="mr-1 h-4 w-4" />
+        Clear output
+      </button>
+    );
+  }
 
   return (
     helpCommand && (
@@ -139,27 +170,7 @@ export function ShowOptionsHelp({
         <TerminalOutput
           command={helpCommand}
           path={targetConfiguration.options.cwd ?? ''}
-          actionElement={
-            // Cannot run help command when rendering in docs (e.g. nx.dev).
-            environment === 'docs' ? null : isPending || !result ? (
-              <button
-                className="flex items-center rounded-md border border-slate-500 px-1 disabled:opacity-75"
-                disabled={isPending}
-                onClick={runHelpCommand}
-              >
-                <PlayIcon className="mr-1 h-4 w-4" />
-                Run
-              </button>
-            ) : (
-              <button
-                className="flex items-center rounded-md border border-slate-500 px-1"
-                onClick={() => setResult(null)}
-              >
-                <XMarkIcon className="mr-1 h-4 w-4" />
-                Clear output
-              </button>
-            )
-          }
+          actionElement={runHelpActionElement}
           content={
             <div className="relative w-full">
               <Transition
