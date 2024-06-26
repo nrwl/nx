@@ -137,7 +137,7 @@ nx show project react-store
 {
   "project": {
     "name": "react-store",
-    "type": "app",
+    "type": "e2e",
     "data": {
       "root": "apps/react-store",
       "targets": {
@@ -572,7 +572,7 @@ You should be able to see something similar to the following in your browser.
   "projects": [
     {
       "name": "react-store",
-      "type": "app",
+      "type": "e2e",
       "data": {
         "tags": []
       }
@@ -586,7 +586,7 @@ You should be able to see something similar to the following in your browser.
     },
     {
       "name": "inventory",
-      "type": "app",
+      "type": "e2e",
       "data": {
         "tags": []
       }
@@ -741,7 +741,7 @@ nx graph --affected
   "projects": [
     {
       "name": "react-store",
-      "type": "app",
+      "type": "e2e",
       "data": {
         "tags": []
       }
@@ -755,7 +755,7 @@ nx graph --affected
     },
     {
       "name": "inventory",
-      "type": "app",
+      "type": "e2e",
       "data": {
         "tags": []
       }

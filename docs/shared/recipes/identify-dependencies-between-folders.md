@@ -90,14 +90,14 @@ Here is a graph that was created when doing this exercise on the [Angular Jump S
     },
     {
       "name": "playground",
-      "type": "app",
+      "type": "e2e",
       "data": {
         "tags": []
       }
     },
     {
       "name": "angular-jumpstart",
-      "type": "app",
+      "type": "e2e",
       "data": {
         "tags": []
       }

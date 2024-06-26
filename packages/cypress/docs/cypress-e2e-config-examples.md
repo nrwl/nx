@@ -32,14 +32,14 @@ Take the following workspace where the `feature-cart` project is affected.
 {
   "projects": [
     {
-      "type": "app",
+      "type": "e2e",
       "name": "fancy-app",
       "data": {
         "tags": []
       }
     },
     {
-      "type": "app",
+      "type": "e2e",
       "name": "fancy-app-e2e",
       "data": {
         "tags": []

@@ -510,7 +510,7 @@ You should be able to see something similar to the following in your browser.
   "projects": [
     {
       "name": "angular-store",
-      "type": "app",
+      "type": "e2e",
       "data": {
         "tags": []
       }
@@ -524,7 +524,7 @@ You should be able to see something similar to the following in your browser.
     },
     {
       "name": "inventory",
-      "type": "app",
+      "type": "e2e",
       "data": {
         "tags": []
       }
@@ -933,7 +933,7 @@ nx graph --affected
   "projects": [
     {
       "name": "angular-store",
-      "type": "app",
+      "type": "e2e",
       "data": {
         "tags": []
       }
@@ -947,7 +947,7 @@ nx graph --affected
     },
     {
       "name": "inventory",
-      "type": "app",
+      "type": "e2e",
       "data": {
         "tags": []
       }

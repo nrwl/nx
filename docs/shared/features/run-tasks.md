@@ -71,7 +71,7 @@ Nx is already able to automatically understand the dependencies between projects
   "projects": [
     {
       "name": "myreactapp",
-      "type": "app",
+      "type": "e2e",
       "data": {
         "tags": []
       }

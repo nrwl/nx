@@ -644,7 +644,7 @@ You should be able to see something similar to the following in your browser (hi
   "projects": [
     {
       "name": "myvueapp",
-      "type": "app",
+      "type": "e2e",
       "data": {
         "tags": []
       }

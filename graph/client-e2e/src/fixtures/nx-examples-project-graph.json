@@ -1216,7 +1216,7 @@
     },
     {
       "name": "products",
-      "type": "app",
+      "type": "e2e",
       "data": {
         "tags": ["type:app", "scope:products"],
         "root": "apps/products",
@@ -1445,7 +1445,7 @@
     },
     {
       "name": "cart",
-      "type": "app",
+      "type": "e2e",
       "data": {
         "tags": ["type:app", "scope:cart"],
         "root": "apps/cart",

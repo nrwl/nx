@@ -18,12 +18,12 @@ For instance, if my PR changes `lib10`, and we then run `nx affected -t test`, N
 {
   "projects": [
     {
-      "type": "app",
+      "type": "e2e",
       "name": "app1",
       "data": {}
     },
     {
-      "type": "app",
+      "type": "e2e",
       "name": "app2",
       "data": {}
     },

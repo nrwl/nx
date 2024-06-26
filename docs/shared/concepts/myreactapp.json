@@ -1,7 +1,7 @@
 {
   "project": {
     "name": "myreactapp",
-    "type": "app",
+    "type": "e2e",
     "data": {
       "root": "apps/myreactapp",
       "targets": {

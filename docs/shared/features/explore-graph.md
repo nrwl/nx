@@ -117,7 +117,7 @@ Try playing around with a [fully interactive graph on a sample repo](https://nrw
     },
     {
       "name": "cart",
-      "type": "app",
+      "type": "e2e",
       "data": {
         "tags": ["type:app", "scope:cart"]
       }

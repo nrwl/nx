@@ -625,7 +625,7 @@ export const Cart = {
   args: {
     project: {
       name: 'cart-e2e',
-      type: 'e2e',
+      type: 'app',
       data: {
         root: 'apps/cart-e2e',
         targets: {

@@ -41,7 +41,7 @@ const args: Partial<TaskListProps> = {
     },
     {
       name: 'app1-e2e',
-      type: 'e2e',
+      type: 'app',
       data: {
         root: 'apps/app1-e2e',
         targets: { e2e: { configurations: { production: {} } } },
