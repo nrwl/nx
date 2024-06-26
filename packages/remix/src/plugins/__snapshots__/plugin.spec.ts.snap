@@ -21,6 +21,20 @@ exports[`@nx/remix/plugin non-root project should create nodes 1`] = `
               ],
             },
           ],
+          "metadata": {
+            "description": "Runs Remix build",
+            "help": {
+              "command": "npx remix --help",
+              "example": {
+                "options": {
+                  "sourcemap": true,
+                },
+              },
+            },
+            "technologies": [
+              "remix",
+            ],
+          },
           "options": {
             "cwd": "my-app",
           },
@@ -31,6 +45,20 @@ exports[`@nx/remix/plugin non-root project should create nodes 1`] = `
         },
         "dev": {
           "command": "remix dev --manual",
+          "metadata": {
+            "description": "Starts Remix dev server",
+            "help": {
+              "command": "npx remix --help",
+              "example": {
+                "options": {
+                  "port": 3000,
+                },
+              },
+            },
+            "technologies": [
+              "remix",
+            ],
+          },
           "options": {
             "cwd": "my-app",
           },
@@ -96,6 +124,20 @@ exports[`@nx/remix/plugin root project should create nodes 1`] = `
               ],
             },
           ],
+          "metadata": {
+            "description": "Runs Remix build",
+            "help": {
+              "command": "npx remix --help",
+              "example": {
+                "options": {
+                  "sourcemap": true,
+                },
+              },
+            },
+            "technologies": [
+              "remix",
+            ],
+          },
           "options": {
             "cwd": ".",
           },
@@ -106,6 +148,20 @@ exports[`@nx/remix/plugin root project should create nodes 1`] = `
         },
         "dev": {
           "command": "remix dev --manual",
+          "metadata": {
+            "description": "Starts Remix dev server",
+            "help": {
+              "command": "npx remix --help",
+              "example": {
+                "options": {
+                  "port": 3000,
+                },
+              },
+            },
+            "technologies": [
+              "remix",
+            ],
+          },
           "options": {
             "cwd": ".",
           },

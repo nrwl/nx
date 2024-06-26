@@ -21,6 +21,21 @@ exports[`@nx/next/plugin integrated projects should create nodes 1`] = `
               ],
             },
           ],
+          "metadata": {
+            "description": "Runs Next.js build",
+            "help": {
+              "command": "npx next build --help",
+              "example": {
+                "args": [
+                  "--profile",
+                  "--experimental-turbo",
+                ],
+              },
+            },
+            "technologies": [
+              "nextjs",
+            ],
+          },
           "options": {
             "cwd": "my-app",
             "tty": false,
@@ -32,6 +47,20 @@ exports[`@nx/next/plugin integrated projects should create nodes 1`] = `
         },
         "my-serve": {
           "command": "next dev",
+          "metadata": {
+            "description": "Starts Next.js dev server",
+            "help": {
+              "command": "npx next dev --help",
+              "example": {
+                "options": {
+                  "port": 3000,
+                },
+              },
+            },
+            "technologies": [
+              "nextjs",
+            ],
+          },
           "options": {
             "cwd": "my-app",
           },
@@ -50,6 +79,20 @@ exports[`@nx/next/plugin integrated projects should create nodes 1`] = `
           "dependsOn": [
             "my-build",
           ],
+          "metadata": {
+            "description": "Starts Next.js production server",
+            "help": {
+              "command": "npx next start --help",
+              "example": {
+                "options": {
+                  "port": 3000,
+                },
+              },
+            },
+            "technologies": [
+              "nextjs",
+            ],
+          },
           "options": {
             "cwd": "my-app",
           },
@@ -81,6 +124,21 @@ exports[`@nx/next/plugin root projects should create nodes 1`] = `
               ],
             },
           ],
+          "metadata": {
+            "description": "Runs Next.js build",
+            "help": {
+              "command": "npx next build --help",
+              "example": {
+                "args": [
+                  "--profile",
+                  "--experimental-turbo",
+                ],
+              },
+            },
+            "technologies": [
+              "nextjs",
+            ],
+          },
           "options": {
             "cwd": ".",
             "tty": false,
@@ -92,6 +150,20 @@ exports[`@nx/next/plugin root projects should create nodes 1`] = `
         },
         "dev": {
           "command": "next dev",
+          "metadata": {
+            "description": "Starts Next.js dev server",
+            "help": {
+              "command": "npx next dev --help",
+              "example": {
+                "options": {
+                  "port": 3000,
+                },
+              },
+            },
+            "technologies": [
+              "nextjs",
+            ],
+          },
           "options": {
             "cwd": ".",
           },
@@ -110,6 +182,20 @@ exports[`@nx/next/plugin root projects should create nodes 1`] = `
           "dependsOn": [
             "build",
           ],
+          "metadata": {
+            "description": "Starts Next.js production server",
+            "help": {
+              "command": "npx next start --help",
+              "example": {
+                "options": {
+                  "port": 3000,
+                },
+              },
+            },
+            "technologies": [
+              "nextjs",
+            ],
+          },
           "options": {
             "cwd": ".",
           },
