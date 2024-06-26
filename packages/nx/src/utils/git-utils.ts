@@ -1,4 +1,5 @@
 import { execSync } from 'child_process';
+import { logger } from '../devkit-exports';
 
 export function getGithubSlugOrNull(): string | null {
   try {
@@ -46,16 +47,28 @@ function parseGitHubUrl(url: string): string | null {
   return null;
 }
 
-export function commitChanges(commitMessage: string): string | null {
+export function commitChanges(
+  commitMessage: string,
+  directory?: string
+): string | null {
   try {
     execSync('git add -A', { encoding: 'utf8', stdio: 'pipe' });
     execSync('git commit --no-verify -F -', {
       encoding: 'utf8',
       stdio: 'pipe',
       input: commitMessage,
+      cwd: directory,
     });
   } catch (err) {
-    throw new Error(`Error committing changes:\n${err.stderr}`);
+    if (directory) {
+      // We don't want to throw during create-nx-workspace
+      // because maybe there was an error when setting up git
+      // initially.
+      logger.verbose(`Git may not be set up correctly for this new workspace.
+        ${err}`);
+    } else {
+      throw new Error(`Error committing changes:\n${err.stderr}`);
+    }
   }
 
   return getLatestCommitSha();

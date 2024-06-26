@@ -21,6 +21,7 @@ expect.addSnapshotSerializer({
     );
   },
 });
+
 describe('createNxReleaseConfig()', () => {
   let projectGraph: ProjectGraph;
   let projectFileMap: ProjectFileMap;
@@ -149,6 +150,7 @@ describe('createNxReleaseConfig()', () => {
                 "renderOptions": {
                   "authors": true,
                   "commitReferences": true,
+                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -323,6 +325,7 @@ describe('createNxReleaseConfig()', () => {
                 "renderOptions": {
                   "authors": true,
                   "commitReferences": true,
+                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -500,6 +503,7 @@ describe('createNxReleaseConfig()', () => {
                 "renderOptions": {
                   "authors": true,
                   "commitReferences": true,
+                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -708,6 +712,7 @@ describe('createNxReleaseConfig()', () => {
                 "renderOptions": {
                   "authors": true,
                   "commitReferences": true,
+                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -900,6 +905,7 @@ describe('createNxReleaseConfig()', () => {
                 "renderOptions": {
                   "authors": true,
                   "commitReferences": true,
+                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -1101,6 +1107,7 @@ describe('createNxReleaseConfig()', () => {
                 "renderOptions": {
                   "authors": true,
                   "commitReferences": true,
+                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -1300,6 +1307,7 @@ describe('createNxReleaseConfig()', () => {
                 "renderOptions": {
                   "authors": true,
                   "commitReferences": true,
+                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -1484,6 +1492,7 @@ describe('createNxReleaseConfig()', () => {
                 "renderOptions": {
                   "authors": true,
                   "commitReferences": true,
+                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -1663,6 +1672,7 @@ describe('createNxReleaseConfig()', () => {
                 "renderOptions": {
                   "authors": true,
                   "commitReferences": true,
+                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -2041,6 +2051,7 @@ describe('createNxReleaseConfig()', () => {
                 "renderOptions": {
                   "authors": true,
                   "commitReferences": true,
+                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -2159,6 +2170,7 @@ describe('createNxReleaseConfig()', () => {
                   "renderOptions": {
                     "authors": true,
                     "commitReferences": true,
+                    "mapAuthorsToGitHubUsernames": true,
                     "versionTitleDate": true,
                   },
                   "renderer": "<dirname>/release/changelog-renderer",
@@ -2344,6 +2356,7 @@ describe('createNxReleaseConfig()', () => {
                   "renderOptions": {
                     "authors": true,
                     "commitReferences": true,
+                    "mapAuthorsToGitHubUsernames": true,
                     "versionTitleDate": true,
                   },
                   "renderer": "<dirname>/release/changelog-renderer",
@@ -2368,6 +2381,7 @@ describe('createNxReleaseConfig()', () => {
                   "renderOptions": {
                     "authors": true,
                     "commitReferences": true,
+                    "mapAuthorsToGitHubUsernames": true,
                     "versionTitleDate": true,
                   },
                   "renderer": "<dirname>/release/changelog-renderer",
@@ -2550,6 +2564,7 @@ describe('createNxReleaseConfig()', () => {
                   "renderOptions": {
                     "authors": true,
                     "commitReferences": true,
+                    "mapAuthorsToGitHubUsernames": true,
                     "versionTitleDate": true,
                   },
                   "renderer": "<dirname>/release/changelog-renderer",
@@ -2625,6 +2640,7 @@ describe('createNxReleaseConfig()', () => {
                 "renderOptions": {
                   "authors": true,
                   "commitReferences": true,
+                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -2809,6 +2825,7 @@ describe('createNxReleaseConfig()', () => {
                 "renderOptions": {
                   "authors": true,
                   "commitReferences": true,
+                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -2992,6 +3009,7 @@ describe('createNxReleaseConfig()', () => {
                 "renderOptions": {
                   "authors": true,
                   "commitReferences": true,
+                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -3171,6 +3189,7 @@ describe('createNxReleaseConfig()', () => {
                 "renderOptions": {
                   "authors": true,
                   "commitReferences": true,
+                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -3370,6 +3389,7 @@ describe('createNxReleaseConfig()', () => {
                 "renderOptions": {
                   "authors": true,
                   "commitReferences": true,
+                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -3547,6 +3567,7 @@ describe('createNxReleaseConfig()', () => {
                 "renderOptions": {
                   "authors": true,
                   "commitReferences": true,
+                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -3736,6 +3757,7 @@ describe('createNxReleaseConfig()', () => {
                 "renderOptions": {
                   "authors": true,
                   "commitReferences": true,
+                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -3854,6 +3876,7 @@ describe('createNxReleaseConfig()', () => {
                   "renderOptions": {
                     "authors": true,
                     "commitReferences": true,
+                    "mapAuthorsToGitHubUsernames": true,
                     "versionTitleDate": true,
                   },
                   "renderer": "<dirname>/release/changelog-renderer",
@@ -4108,6 +4131,7 @@ describe('createNxReleaseConfig()', () => {
                 "renderOptions": {
                   "authors": false,
                   "commitReferences": false,
+                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -4119,6 +4143,7 @@ describe('createNxReleaseConfig()', () => {
                 "renderOptions": {
                   "authors": true,
                   "commitReferences": true,
+                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -4237,6 +4262,7 @@ describe('createNxReleaseConfig()', () => {
                   "renderOptions": {
                     "authors": false,
                     "commitReferences": false,
+                    "mapAuthorsToGitHubUsernames": true,
                     "versionTitleDate": true,
                   },
                   "renderer": "<dirname>/release/changelog-renderer",
@@ -4308,6 +4334,7 @@ describe('createNxReleaseConfig()', () => {
                 "renderOptions": {
                   "authors": true,
                   "commitReferences": true,
+                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -4319,6 +4346,7 @@ describe('createNxReleaseConfig()', () => {
                 "renderOptions": {
                   "authors": true,
                   "commitReferences": true,
+                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -4437,6 +4465,7 @@ describe('createNxReleaseConfig()', () => {
                   "renderOptions": {
                     "authors": true,
                     "commitReferences": true,
+                    "mapAuthorsToGitHubUsernames": true,
                     "versionTitleDate": true,
                   },
                   "renderer": "<dirname>/release/changelog-renderer",
@@ -4509,6 +4538,7 @@ describe('createNxReleaseConfig()', () => {
                 "renderOptions": {
                   "authors": true,
                   "commitReferences": true,
+                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -4689,6 +4719,7 @@ describe('createNxReleaseConfig()', () => {
                 "renderOptions": {
                   "authors": true,
                   "commitReferences": true,
+                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -4867,6 +4898,7 @@ describe('createNxReleaseConfig()', () => {
                 "renderOptions": {
                   "authors": true,
                   "commitReferences": true,
+                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -5067,6 +5099,7 @@ describe('createNxReleaseConfig()', () => {
                 "renderOptions": {
                   "authors": true,
                   "commitReferences": true,
+                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -5264,6 +5297,7 @@ describe('createNxReleaseConfig()', () => {
                 "renderOptions": {
                   "authors": true,
                   "commitReferences": true,
+                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -5457,6 +5491,7 @@ describe('createNxReleaseConfig()', () => {
                 "renderOptions": {
                   "authors": true,
                   "commitReferences": true,
+                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -5651,6 +5686,7 @@ describe('createNxReleaseConfig()', () => {
                 "renderOptions": {
                   "authors": true,
                   "commitReferences": true,
+                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -5848,6 +5884,7 @@ describe('createNxReleaseConfig()', () => {
                 "renderOptions": {
                   "authors": true,
                   "commitReferences": true,
+                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -6025,6 +6062,7 @@ describe('createNxReleaseConfig()', () => {
               createRelease: 'github', // set field in group config
               renderOptions: {
                 authors: false, // override deeply nested field in group config
+                mapAuthorsToGitHubUsernames: false, // override deeply nested field in group config
               },
             },
           },
@@ -6062,6 +6100,7 @@ describe('createNxReleaseConfig()', () => {
                 "renderOptions": {
                   "authors": true,
                   "commitReferences": true,
+                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -6181,6 +6220,7 @@ describe('createNxReleaseConfig()', () => {
                   "renderOptions": {
                     "authors": false,
                     "commitReferences": true,
+                    "mapAuthorsToGitHubUsernames": false,
                     "versionTitleDate": true,
                   },
                   "renderer": "<dirname>/release/changelog-renderer",
@@ -6219,6 +6259,7 @@ describe('createNxReleaseConfig()', () => {
                   "renderOptions": {
                     "authors": true,
                     "commitReferences": true,
+                    "mapAuthorsToGitHubUsernames": true,
                     "versionTitleDate": true,
                   },
                   "renderer": "<dirname>/release/changelog-renderer",
@@ -6300,6 +6341,7 @@ describe('createNxReleaseConfig()', () => {
                 "renderOptions": {
                   "authors": true,
                   "commitReferences": true,
+                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -6311,6 +6353,7 @@ describe('createNxReleaseConfig()', () => {
                 "renderOptions": {
                   "authors": true,
                   "commitReferences": true,
+                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -6429,6 +6472,7 @@ describe('createNxReleaseConfig()', () => {
                   "renderOptions": {
                     "authors": true,
                     "commitReferences": true,
+                    "mapAuthorsToGitHubUsernames": true,
                     "versionTitleDate": true,
                   },
                   "renderer": "<dirname>/release/changelog-renderer",
@@ -7058,6 +7102,7 @@ describe('createNxReleaseConfig()', () => {
                 "renderOptions": {
                   "authors": true,
                   "commitReferences": true,
+                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -7244,6 +7289,7 @@ describe('createNxReleaseConfig()', () => {
                 "renderOptions": {
                   "authors": true,
                   "commitReferences": true,
+                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -7429,6 +7475,7 @@ describe('createNxReleaseConfig()', () => {
                 "renderOptions": {
                   "authors": true,
                   "commitReferences": true,
+                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -7622,6 +7669,7 @@ describe('createNxReleaseConfig()', () => {
                 "renderOptions": {
                   "authors": true,
                   "commitReferences": true,
+                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -7805,6 +7853,7 @@ describe('createNxReleaseConfig()', () => {
                 "renderOptions": {
                   "authors": true,
                   "commitReferences": true,
+                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -8031,6 +8080,7 @@ describe('createNxReleaseConfig()', () => {
                 "renderOptions": {
                   "authors": true,
                   "commitReferences": true,
+                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",

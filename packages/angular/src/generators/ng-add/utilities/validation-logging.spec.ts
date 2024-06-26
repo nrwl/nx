@@ -1,4 +1,4 @@
-import * as chalk from 'chalk';
+import chalk = require('chalk');
 import {
   arrayToString,
   getProjectValidationResultMessage,

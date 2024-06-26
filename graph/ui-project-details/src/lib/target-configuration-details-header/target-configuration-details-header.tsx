@@ -129,14 +129,15 @@ export const TargetConfigurationDetailsHeader = ({
               // TODO: fix tooltip overflow in collapsed state
               data-tooltip={isCollasped ? false : 'View in Task Graph'}
               data-tooltip-align-right
+              onClick={(e) => {
+                if (isCollasped) {
+                  return;
+                }
+                e.stopPropagation();
+                onViewInTaskGraph({ projectName, targetName });
+              }}
             >
-              <EyeIcon
-                className={`h-5 w-5 !cursor-pointer`}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onViewInTaskGraph({ projectName, targetName });
-                }}
-              />
+              <EyeIcon className={`h-5 w-5 !cursor-pointer`} />
             </button>
           )}
 

@@ -99,7 +99,7 @@ export function PropertyInfoTooltip({ type }: PropertyInfoTooltipProps) {
             : ''
         )}
       >
-        <p className="flex grow items-center gap-2 whitespace-pre-wrap">
+        <p className="flex grow items-center gap-2 whitespace-pre-wrap normal-case">
           {propertyInfo.description}
         </p>
       </div>

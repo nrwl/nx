@@ -52,6 +52,18 @@ describe('app migrator', () => {
     jest.clearAllMocks();
   });
 
+  it('should not migrate project when validation fails', async () => {
+    // add project with no root
+    const project = addProject('app1', {} as any);
+    const migrator = new AppMigrator(tree, {}, project);
+
+    await migrator.migrate();
+
+    expect(tree.exists('apps/app1/project.json')).toBe(false);
+    const { projects } = readJson(tree, 'angular.json');
+    expect(projects.app1).toBeDefined();
+  });
+
   describe('validation', () => {
     it('should fail validation when the project root is not specified', async () => {
       const project = addProject('app1', {} as any);

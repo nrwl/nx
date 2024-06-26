@@ -5,7 +5,7 @@ import {
   type TargetConfiguration,
   type Tree,
 } from '@nx/devkit';
-import { migrateExecutorToPlugin } from '@nx/devkit/src/generators/plugin-migrations/executor-to-plugin-migrator';
+import { migrateProjectExecutorsToPlugin } from '@nx/devkit/src/generators/plugin-migrations/executor-to-plugin-migrator';
 import {
   processTargetOutputs,
   toProjectRelativePath,
@@ -22,34 +22,24 @@ interface Schema {
 
 export async function convertToInferred(tree: Tree, options: Schema) {
   const projectGraph = await createProjectGraphAsync();
-  const migratedProjectsModern =
-    await migrateExecutorToPlugin<JestPluginOptions>(
-      tree,
-      projectGraph,
-      '@nx/jest:jest',
-      '@nx/jest/plugin',
-      (targetName) => ({ targetName }),
-      postTargetTransformer,
-      createNodesV2,
-      options.project
-    );
-
-  const migratedProjectsLegacy =
-    await migrateExecutorToPlugin<JestPluginOptions>(
-      tree,
-      projectGraph,
-      '@nrwl/jest:jest',
-      '@nx/jest/plugin',
-      (targetName) => ({ targetName }),
-      postTargetTransformer,
-      createNodesV2,
-      options.project
-    );
-
   const migratedProjects =
-    migratedProjectsModern.size + migratedProjectsLegacy.size;
+    await migrateProjectExecutorsToPlugin<JestPluginOptions>(
+      tree,
+      projectGraph,
+      '@nx/jest/plugin',
+      createNodesV2,
+      { targetName: 'test' },
+      [
+        {
+          executors: ['@nx/jest:jest', '@nrwl/jest:jest'],
+          postTargetTransformer,
+          targetPluginOptionMapper: (targetName) => ({ targetName }),
+        },
+      ],
+      options.project
+    );
 
-  if (migratedProjects === 0) {
+  if (migratedProjects.size === 0) {
     throw new Error('Could not find any targets to migrate.');
   }
 
