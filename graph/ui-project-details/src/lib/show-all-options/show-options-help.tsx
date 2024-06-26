@@ -140,7 +140,8 @@ export function ShowOptionsHelp({
           command={helpCommand}
           path={targetConfiguration.options.cwd ?? ''}
           actionElement={
-            isPending || !result ? (
+            // Cannot run help command when rendering in docs (e.g. nx.dev).
+            environment === 'docs' ? null : isPending || !result ? (
               <button
                 className="flex items-center rounded-md border border-slate-500 px-1 disabled:opacity-75"
                 disabled={isPending}
