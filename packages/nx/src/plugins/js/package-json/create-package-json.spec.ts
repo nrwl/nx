@@ -391,7 +391,7 @@ describe('createPackageJson', () => {
     });
   });
 
-  describe('parsing "package.json" versions', () => {
+  describe('parsing "package.json"', () => {
     const appDependencies = [
       { source: 'app1', target: 'npm:@nx/devkit', type: 'static' },
       { source: 'app1', target: 'npm:typescript', type: 'static' },
@@ -535,8 +535,12 @@ describe('createPackageJson', () => {
           root: '',
         })
       ).toEqual({
-        name: 'app1',
-        version: '0.0.1',
+        name: 'other-name',
+        version: '1.2.3',
+        dependencies: {
+          random: '1.0.0',
+          typescript: '^4.8.4',
+        },
       });
     });
 
@@ -587,9 +591,105 @@ describe('createPackageJson', () => {
           root: '',
         })
       ).toEqual({
-        name: 'lib1',
-        version: '0.0.1',
+        name: 'other-name',
+        version: '1.2.3',
+        dependencies: {
+          random: '1.0.0',
+          typescript: '^4.8.4',
+        },
       });
+    });
+
+    it('should add packageManager if missing', () => {
+      spies.push(
+        jest.spyOn(fs, 'existsSync').mockImplementation((path) => {
+          if (path === 'libs/lib1/package.json') {
+            return true;
+          }
+          if (path === 'package.json') {
+            return true;
+          }
+        })
+      );
+      spies.push(
+        jest
+          .spyOn(fileutilsModule, 'readJsonFile')
+          .mockImplementation((path) => {
+            if (path === 'package.json') {
+              return {
+                ...rootPackageJson(),
+                packageManager: 'yarn',
+              };
+            }
+            if (path === 'libs/lib1/package.json') {
+              return projectPackageJson();
+            }
+          })
+      );
+
+      expect(
+        createPackageJson('lib1', graph, {
+          root: '',
+        })
+      ).toEqual({
+        dependencies: {
+          random: '1.0.0',
+          typescript: '^4.8.4',
+        },
+        name: 'other-name',
+        packageManager: 'yarn',
+        version: '1.2.3',
+      });
+    });
+
+    it('should replace packageManager if not in sync with root and show warning', () => {
+      spies.push(
+        jest.spyOn(fs, 'existsSync').mockImplementation((path) => {
+          if (path === 'libs/lib1/package.json') {
+            return true;
+          }
+          if (path === 'package.json') {
+            return true;
+          }
+        })
+      );
+      const consoleWarnSpy = jest.spyOn(process.stdout, 'write');
+      spies.push(consoleWarnSpy);
+      spies.push(
+        jest
+          .spyOn(fileutilsModule, 'readJsonFile')
+          .mockImplementation((path) => {
+            if (path === 'package.json') {
+              return {
+                ...rootPackageJson(),
+                packageManager: 'yarn@1.2',
+              };
+            }
+            if (path === 'libs/lib1/package.json') {
+              return {
+                ...projectPackageJson(),
+                packageManager: 'yarn@4.3',
+              };
+            }
+          })
+      );
+
+      expect(
+        createPackageJson('lib1', graph, {
+          root: '',
+        })
+      ).toEqual({
+        dependencies: {
+          random: '1.0.0',
+          typescript: '^4.8.4',
+        },
+        name: 'other-name',
+        packageManager: 'yarn@1.2',
+        version: '1.2.3',
+      });
+      expect(JSON.stringify(consoleWarnSpy.mock.calls)).toMatch(
+        /Package Manager Mismatch/
+      );
     });
   });
 });

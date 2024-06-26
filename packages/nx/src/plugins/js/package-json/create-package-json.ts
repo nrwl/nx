@@ -16,6 +16,7 @@ import {
   filterUsingGlobPatterns,
   getTargetInputs,
 } from '../../../hasher/task-hasher';
+import { output } from '../../../utils/output';
 
 interface NpmDeps {
   readonly dependencies: Record<string, string>;
@@ -44,7 +45,7 @@ export function createPackageJson(
   const isLibrary = projectNode.type === 'lib';
 
   const rootPackageJson: PackageJson = readJsonFile(
-    `${options.root || workspaceRoot}/package.json`
+    join(options.root ?? workspaceRoot, 'package.json')
   );
 
   const npmDeps = findProjectsNpmDependencies(
@@ -65,7 +66,7 @@ export function createPackageJson(
     version: '0.0.1',
   };
   const projectPackageJsonPath = join(
-    options.root || workspaceRoot,
+    options.root ?? workspaceRoot,
     projectNode.data.root,
     'package.json'
   );
@@ -181,6 +182,18 @@ export function createPackageJson(
   );
 
   if (rootPackageJson.packageManager) {
+    if (
+      packageJson.packageManager &&
+      packageJson.packageManager !== rootPackageJson.packageManager
+    ) {
+      output.warn({
+        title: 'Package Manager Mismatch',
+        bodyLines: [
+          `The project ${projectName} has explicitly specified "packageManager" config of "${packageJson.packageManager}" but the workspace is using "${rootPackageJson.packageManager}".`,
+          `Please remove the project level "packageManager" config or align it with the workspace root package.json.`,
+        ],
+      });
+    }
     packageJson.packageManager = rootPackageJson.packageManager;
   }
 
