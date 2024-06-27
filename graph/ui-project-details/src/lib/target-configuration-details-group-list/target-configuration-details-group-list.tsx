@@ -4,10 +4,7 @@ import type { ProjectGraphProjectNode } from '@nx/devkit';
 
 import { TargetConfigurationDetailsListItem } from '../target-configuration-details-list-item/target-configuration-details-list-item';
 import { TargetConfigurationGroupContainer } from '../target-configuration-details-group-container/target-configuration-details-group-container';
-import {
-  getNonAtomizedTargetForGroup,
-  groupTargets,
-} from '../utils/group-targets';
+import { groupTargets } from '../utils/group-targets';
 import { useMemo } from 'react';
 
 export interface TargetConfigurationGroupListProps {
@@ -19,7 +16,7 @@ export interface TargetConfigurationGroupListProps {
     projectName: string;
     targetName: string;
   }) => void;
-  nxConnectCallback?: () => void;
+  onNxConnect?: () => void;
   connectedToCloud?: boolean;
   className?: string;
 }
@@ -30,7 +27,7 @@ export function TargetConfigurationGroupList({
   sourceMap,
   onRunTarget,
   onViewInTaskGraph,
-  nxConnectCallback,
+  onNxConnect,
   className = '',
   connectedToCloud,
 }: TargetConfigurationGroupListProps) {
@@ -51,12 +48,6 @@ export function TargetConfigurationGroupList({
               <TargetConfigurationGroupContainer
                 targetGroupName={targetGroupName}
                 targetsNumber={targets.length}
-                nonAtomizedTarget={getNonAtomizedTargetForGroup(
-                  project,
-                  targetGroupName
-                )}
-                connectedToCloud={connectedToCloud}
-                nxConnectCallback={nxConnectCallback}
                 key={targetGroupName}
               >
                 <ul className={className}>
@@ -64,9 +55,11 @@ export function TargetConfigurationGroupList({
                     <TargetConfigurationDetailsListItem
                       project={project}
                       sourceMap={sourceMap}
+                      connectedToCloud={connectedToCloud}
                       variant={variant}
                       onRunTarget={onRunTarget}
                       onViewInTaskGraph={onViewInTaskGraph}
+                      onNxConnect={onNxConnect}
                       targetName={targetName}
                       collapsable={true}
                       key={targetName}
@@ -88,9 +81,11 @@ export function TargetConfigurationGroupList({
                 <TargetConfigurationDetailsListItem
                   project={project}
                   sourceMap={sourceMap}
+                  connectedToCloud={connectedToCloud}
                   variant={variant}
                   onRunTarget={onRunTarget}
                   onViewInTaskGraph={onViewInTaskGraph}
+                  onNxConnect={onNxConnect}
                   targetName={targetName}
                   collapsable={true}
                   key={targetName}
@@ -109,9 +104,11 @@ export function TargetConfigurationGroupList({
             <TargetConfigurationDetailsListItem
               project={project}
               sourceMap={sourceMap}
+              connectedToCloud={connectedToCloud}
               variant={variant}
               onRunTarget={onRunTarget}
               onViewInTaskGraph={onViewInTaskGraph}
+              onNxConnect={onNxConnect}
               targetName={targetName}
               collapsable={true}
               key={targetName}
