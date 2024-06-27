@@ -1,0 +1,157 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`@nx/jest/plugin should add package as externalDependencies to the inputs when specified as preset and containing a jest-preset.cjs file 1`] = `
+[
+  [
+    "proj/jest.config.js",
+    {
+      "projects": {
+        "proj": {
+          "metadata": undefined,
+          "root": "proj",
+          "targets": {
+            "test": {
+              "cache": true,
+              "command": "jest",
+              "inputs": [
+                "default",
+                "^production",
+                {
+                  "externalDependencies": [
+                    "jest",
+                    "some-package",
+                  ],
+                },
+              ],
+              "metadata": {
+                "description": "Run Jest Tests",
+                "help": {
+                  "command": "npx jest --help",
+                  "example": {
+                    "options": {
+                      "coverage": true,
+                    },
+                  },
+                },
+                "technologies": [
+                  "jest",
+                ],
+              },
+              "options": {
+                "cwd": "proj",
+              },
+              "outputs": [
+                "{workspaceRoot}/coverage",
+              ],
+            },
+          },
+        },
+      },
+    },
+  ],
+]
+`;
+
+exports[`@nx/jest/plugin should add package as externalDependencies to the inputs when specified as preset and containing a jest-preset.js file 1`] = `
+[
+  [
+    "proj/jest.config.js",
+    {
+      "projects": {
+        "proj": {
+          "metadata": undefined,
+          "root": "proj",
+          "targets": {
+            "test": {
+              "cache": true,
+              "command": "jest",
+              "inputs": [
+                "default",
+                "^production",
+                {
+                  "externalDependencies": [
+                    "jest",
+                    "some-package",
+                  ],
+                },
+              ],
+              "metadata": {
+                "description": "Run Jest Tests",
+                "help": {
+                  "command": "npx jest --help",
+                  "example": {
+                    "options": {
+                      "coverage": true,
+                    },
+                  },
+                },
+                "technologies": [
+                  "jest",
+                ],
+              },
+              "options": {
+                "cwd": "proj",
+              },
+              "outputs": [
+                "{workspaceRoot}/coverage",
+              ],
+            },
+          },
+        },
+      },
+    },
+  ],
+]
+`;
+
+exports[`@nx/jest/plugin should add package as externalDependencies to the inputs when specified as preset and containing a jest-preset.json file 1`] = `
+[
+  [
+    "proj/jest.config.js",
+    {
+      "projects": {
+        "proj": {
+          "metadata": undefined,
+          "root": "proj",
+          "targets": {
+            "test": {
+              "cache": true,
+              "command": "jest",
+              "inputs": [
+                "default",
+                "^production",
+                {
+                  "externalDependencies": [
+                    "jest",
+                    "some-package",
+                  ],
+                },
+              ],
+              "metadata": {
+                "description": "Run Jest Tests",
+                "help": {
+                  "command": "npx jest --help",
+                  "example": {
+                    "options": {
+                      "coverage": true,
+                    },
+                  },
+                },
+                "technologies": [
+                  "jest",
+                ],
+              },
+              "options": {
+                "cwd": "proj",
+              },
+              "outputs": [
+                "{workspaceRoot}/coverage",
+              ],
+            },
+          },
+        },
+      },
+    },
+  ],
+]
+`;

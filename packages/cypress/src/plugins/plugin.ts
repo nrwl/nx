@@ -4,6 +4,7 @@ import {
   createNodesFromFiles,
   CreateNodesV2,
   detectPackageManager,
+  getPackageManagerCommand,
   joinPathFragments,
   logger,
   normalizePath,
@@ -43,6 +44,8 @@ function writeTargetsToCache(cachePath: string, results: CypressTargets) {
 }
 
 const cypressConfigGlob = '**/cypress.config.{js,ts,mjs,cjs}';
+
+const pmc = getPackageManagerCommand();
 
 export const createNodesV2: CreateNodesV2<CypressPluginOptions> = [
   cypressConfigGlob,
@@ -211,6 +214,12 @@ async function buildCypressTargets(
       metadata: {
         technologies: ['cypress'],
         description: 'Runs Cypress Tests',
+        help: {
+          command: `${pmc.exec} cypress run --help`,
+          example: {
+            args: ['--dev', '--headed'],
+          },
+        },
       },
     };
 
@@ -271,6 +280,12 @@ async function buildCypressTargets(
             technologies: ['cypress'],
             description: `Runs Cypress Tests in ${relativeSpecFilePath} in CI`,
             nonAtomizedTarget: options.targetName,
+            help: {
+              command: `${pmc.exec} cypress run --help`,
+              example: {
+                args: ['--dev', '--headed'],
+              },
+            },
           },
         };
         dependsOn.push({
@@ -290,6 +305,12 @@ async function buildCypressTargets(
           technologies: ['cypress'],
           description: 'Runs Cypress Tests in CI',
           nonAtomizedTarget: options.targetName,
+          help: {
+            command: `${pmc.exec} cypress run --help`,
+            example: {
+              args: ['--dev', '--headed'],
+            },
+          },
         },
       };
       ciTargetGroup.push(options.ciTargetName);
@@ -307,6 +328,12 @@ async function buildCypressTargets(
       metadata: {
         technologies: ['cypress'],
         description: 'Runs Cypress Component Tests',
+        help: {
+          command: `${pmc.exec} cypress run --help`,
+          example: {
+            args: ['--dev', '--headed'],
+          },
+        },
       },
     };
   }
@@ -317,6 +344,12 @@ async function buildCypressTargets(
     metadata: {
       technologies: ['cypress'],
       description: 'Opens Cypress',
+      help: {
+        command: `${pmc.exec} cypress open --help`,
+        example: {
+          args: ['--dev', '--e2e'],
+        },
+      },
     },
   };
 

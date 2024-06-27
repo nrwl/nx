@@ -1,5 +1,6 @@
-import { ChildProcess, Serializable, fork } from 'child_process';
+import { ChildProcess, spawn } from 'child_process';
 import path = require('path');
+import { Socket, connect } from 'net';
 
 import { PluginConfiguration } from '../../../config/nx-json';
 
@@ -9,13 +10,13 @@ import { PluginConfiguration } from '../../../config/nx-json';
 import { LoadedNxPlugin, nxPluginCache } from '../internal-api';
 import { getPluginOsSocketPath } from '../../../daemon/socket-utils';
 import { consumeMessagesFromSocket } from '../../../utils/consume-messages-from-socket';
+import { signalToCode } from '../../../utils/exit-codes';
 
 import {
   consumeMessage,
   isPluginWorkerResult,
   sendMessageOverSocket,
 } from './messaging';
-import { Socket, connect } from 'net';
 
 const cleanupFunctions = new Set<() => void>();
 
@@ -248,7 +249,6 @@ function createWorkerExitHandler(
 
 let cleanedUp = false;
 const exitHandler = () => {
-  if (cleanedUp) return;
   for (const fn of cleanupFunctions) {
     fn();
   }
@@ -256,7 +256,10 @@ const exitHandler = () => {
 };
 
 process.on('exit', exitHandler);
-process.on('SIGINT', exitHandler);
+process.on('SIGINT', () => {
+  exitHandler();
+  process.exit(signalToCode('SIGINT'));
+});
 process.on('SIGTERM', exitHandler);
 
 function registerPendingPromise(
@@ -314,17 +317,21 @@ async function startPluginWorker() {
     [process.pid, global.nxPluginWorkerCount++].join('-')
   );
 
-  const worker = fork(workerPath, [ipcPath], {
-    stdio: process.stdout.isTTY ? 'inherit' : 'ignore',
-    env,
-    execArgv: [
-      ...process.execArgv,
-      // If the worker is typescript, we need to register ts-node
-      ...(isWorkerTypescript ? ['-r', 'ts-node/register'] : []),
+  const worker = spawn(
+    process.execPath,
+    [
+      ...(isWorkerTypescript ? ['--require', 'ts-node/register'] : []),
+      workerPath,
+      ipcPath,
     ],
-    detached: true,
-  });
-  worker.disconnect();
+    {
+      stdio: process.stdout.isTTY ? 'inherit' : 'ignore',
+      env,
+      detached: true,
+      shell: false,
+      windowsHide: true,
+    }
+  );
   worker.unref();
 
   let attempts = 0;

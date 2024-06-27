@@ -28,12 +28,15 @@ import type { ConfigurationResult } from 'nx/src/project-graph/utils/project-con
 import { forEachExecutorOptions } from '../executor-options-utils';
 import { deleteMatchingProperties } from './plugin-migration-utils';
 
+export type InferredTargetConfiguration = TargetConfiguration & {
+  name: string;
+};
 type PluginOptionsBuilder<T> = (targetName: string) => T;
 type PostTargetTransformer = (
   targetConfiguration: TargetConfiguration,
   tree: Tree,
   projectDetails: { projectName: string; root: string },
-  inferredTargetConfiguration: TargetConfiguration
+  inferredTargetConfiguration: InferredTargetConfiguration
 ) => TargetConfiguration | Promise<TargetConfiguration>;
 type SkipTargetFilter = (
   targetConfiguration: TargetConfiguration
@@ -154,7 +157,7 @@ class ExecutorToPluginMigrator<T> {
       projectTarget,
       this.tree,
       { projectName, root: projectFromGraph.data.root },
-      createdTarget
+      { ...createdTarget, name: targetName }
     );
 
     if (
