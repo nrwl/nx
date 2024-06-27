@@ -83,7 +83,7 @@ export function updateNextConfig(
           };
         });
 
-        nextConfigObject['properties'].push(
+        nxConfigObject['properties'].push(
           createPropertyAssignment(
             'assets',
             createArrayLiteralExpression(assetsProperty)

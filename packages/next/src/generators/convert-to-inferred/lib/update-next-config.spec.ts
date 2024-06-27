@@ -75,14 +75,14 @@ describe('UpdateNextConfig', () => {
                       with: "./environments/environment.prod.ts"
                   }
               ],
+              assets: [
+                  {
+                      input: "./assets",
+                      output: "./public/assets",
+                      glob: "**/*"
+                  }
+              ],
           },
-          assets: [
-              {
-                  input: "./assets",
-                  output: "./public/assets",
-                  glob: "**/*"
-              }
-          ],
       };
       const plugins = [
           // Add more Next.js plugins to this list if needed.
@@ -233,14 +233,14 @@ describe('UpdateNextConfig', () => {
               // Set this to true if you would like to use SVGR
               // See: https://github.com/gregberge/svgr
               svgr: false,
+              assets: [
+                  {
+                      input: "./assets",
+                      output: "./public/assets",
+                      glob: "**/*"
+                  }
+              ],
           },
-          assets: [
-              {
-                  input: "./assets",
-                  output: "./public/assets",
-                  glob: "**/*"
-              }
-          ],
       };
       const plugins = [
           // Add more Next.js plugins to this list if needed.

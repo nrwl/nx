@@ -1,21 +1,18 @@
 import {
   addProjectConfiguration,
-  joinPathFragments,
-  readNxJson,
-  readProjectConfiguration,
-  updateNxJson,
-  updateProjectConfiguration,
-  writeJson,
   type ExpandedPluginConfiguration,
+  joinPathFragments,
   type ProjectConfiguration,
   type ProjectGraph,
+  readNxJson,
+  readProjectConfiguration,
   type Tree,
+  writeJson,
 } from '@nx/devkit';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { join } from 'node:path';
 import { getRelativeProjectJsonSchemaPath } from 'nx/src/generators/utils/project-configuration';
-import type { NextPluginOptions } from '../../plugins/plugin';
 import { convertToInferred } from './convert-to-inferred';
 
 let fs: TempFs;

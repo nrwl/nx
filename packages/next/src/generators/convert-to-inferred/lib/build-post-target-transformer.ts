@@ -122,13 +122,15 @@ function handlePropertiesFromTargetOptions(
     delete options.watch;
   }
 
-  if ('experimentalAppOnly' in options) {
-    options['experimental-app-only'] = options['experimentalAppOnly'];
+  if ('experimentalAppOnly' in options && options['experimentalAppOnly']) {
+    options['args'] ??= [];
+    options['args'].push('--experimental-app-only');
     delete options.experimentalAppOnly;
   }
 
   if ('experimentalBuildMode' in options) {
-    options['experimental-build-mode'] = options['experimentalBuildMode'];
+    options['args'] ??= [];
+    options['args'].push('--experimental-build-mode');
     delete options.experimentalBuildMode;
   }
 }

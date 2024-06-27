@@ -37,7 +37,7 @@ export async function convertToInferred(tree: Tree, options: Schema) {
         executors: ['@nx/next:server'],
         postTargetTransformer: servePosTargetTransformer(migrationLogs),
         targetPluginOptionMapper: (targetName) => ({
-          startTargetName: targetName,
+          devTargetName: targetName,
         }),
       },
     ],
