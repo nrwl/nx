@@ -508,6 +508,7 @@
       - [library](/nx-api/next/generators/library)
       - [custom-server](/nx-api/next/generators/custom-server)
       - [cypress-component-configuration](/nx-api/next/generators/cypress-component-configuration)
+      - [convert-to-inferred](/nx-api/next/generators/convert-to-inferred)
   - [node](/nx-api/node)
     - [documents](/nx-api/node/documents)
       - [Overview](/nx-api/node/documents/overview)
