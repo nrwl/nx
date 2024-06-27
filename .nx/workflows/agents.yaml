@@ -30,10 +30,6 @@ launch-templates:
         script: |
           npm install -g pnpm@8
 
-      - name: Pnpm Install
-        script: |
-          pnpm install --frozen-lockfile
-
       - name: Install Browsers
         script: |
           pnpm exec cypress install
@@ -44,6 +40,10 @@ launch-templates:
           curl --proto '=https' --tlsv1.3 https://sh.rustup.rs -sSf | sh -s -- -y
           source "$HOME/.cargo/env"
           rustup toolchain install 1.70.0
+
+      - name: Pnpm Install
+        script: |
+          pnpm install --frozen-lockfile
 
       - name: Configure git metadata (needed for lerna smoke tests)
         script: |
