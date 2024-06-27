@@ -234,7 +234,6 @@ describe('@nx/jest/plugin', () => {
                           },
                         },
                       },
-                      "nonAtomizedTarget": "test",
                       "technologies": [
                         "jest",
                       ],

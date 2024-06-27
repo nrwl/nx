@@ -348,7 +348,6 @@ describe('@nx/playwright/plugin', () => {
               },
             },
           },
-          "nonAtomizedTarget": "e2e",
           "technologies": [
             "playwright",
           ],
@@ -384,7 +383,6 @@ describe('@nx/playwright/plugin', () => {
               },
             },
           },
-          "nonAtomizedTarget": "e2e",
           "technologies": [
             "playwright",
           ],
