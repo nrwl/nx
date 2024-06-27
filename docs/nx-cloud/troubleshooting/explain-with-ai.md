@@ -15,6 +15,10 @@ To use the "Explain with AI" feature, you need to [enable AI features for your o
 
 ## How to Use
 
+{% callout type="check" title="Authentication Required" %}
+If you don't see the "Explain with AI" button, make sure that you are logged into the application.
+{% /callout %}
+
 1. **Access the Task**:
 
    - First, navigate to the Nx Cloud dashboard and locate the task that failed.
