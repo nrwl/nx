@@ -24,6 +24,7 @@ interface TargetConfigurationDetailsProps {
   targetName: string;
   targetConfiguration: TargetConfiguration;
   sourceMap: Record<string, string[]>;
+  connectedToCloud?: boolean;
   variant?: 'default' | 'compact';
   onCollapse?: (targetName: string) => void;
   onExpand?: (targetName: string) => void;
@@ -32,6 +33,7 @@ interface TargetConfigurationDetailsProps {
     projectName: string;
     targetName: string;
   }) => void;
+  onNxConnect?: () => void;
   collapsable: boolean;
 }
 
@@ -41,8 +43,10 @@ export default function TargetConfigurationDetails({
   targetName,
   targetConfiguration,
   sourceMap,
+  connectedToCloud,
   onViewInTaskGraph,
   onRunTarget,
+  onNxConnect,
   collapsable,
 }: TargetConfigurationDetailsProps) {
   const isCompact = variant === 'compact';
@@ -95,9 +99,11 @@ export default function TargetConfigurationDetails({
         targetConfiguration={targetConfiguration}
         projectName={projectName}
         targetName={targetName}
+        connectedToCloud={connectedToCloud}
         sourceMap={sourceMap}
         onRunTarget={onRunTarget}
         onViewInTaskGraph={onViewInTaskGraph}
+        onNxConnect={onNxConnect}
       />
       {/* body */}
       {!collapsed && (
