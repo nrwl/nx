@@ -381,8 +381,10 @@ describe('convert-to-inferred', () => {
       {},
       {
         build: {
+          debug: true,
+          profile: true,
           experimentalAppOnly: true,
-          experimentalBuildMode: true,
+          experimentalBuildMode: 'generate',
         },
       }
     );
@@ -391,10 +393,33 @@ describe('convert-to-inferred', () => {
     await convertToInferred(tree, { project: project.name });
 
     const projectConfig = readProjectConfiguration(tree, project.name);
-    expect(projectConfig.targets.build).toMatchObject({
-      options: {
-        args: ['--experimental-app-only', '--experimental-build-mode'],
-      },
+    expect(projectConfig.targets.build.options).toEqual({
+      args: [
+        '--debug',
+        '--profile',
+        '--experimental-app-only',
+        '--experimental-build-mode generate',
+      ],
     });
+  });
+
+  it('should not migrate options to CLI args if they are booleans and are false', async () => {
+    const project = createProject(
+      tree,
+      {},
+      {
+        build: {
+          debug: false,
+          profile: false,
+          experimentalAppOnly: false,
+        },
+      }
+    );
+    writeNextConfig(tree, project.root);
+
+    await convertToInferred(tree, { project: project.name });
+
+    const projectConfig = readProjectConfiguration(tree, project.name);
+    expect(projectConfig.targets.build.options).toBeUndefined();
   });
 });

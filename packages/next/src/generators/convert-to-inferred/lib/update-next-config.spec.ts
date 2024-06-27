@@ -145,4 +145,80 @@ describe('UpdateNextConfig', () => {
       project: 'no-compose-plugins',
     });
   });
+
+  describe('Reserved variables', () => {
+    it('should warn the user if the next config file contains reserved variables', () => {
+      const initConfig = `
+    const options = {};
+    const configValues = {};
+    const configuration = {};
+    `;
+      const projectDetails = {
+        projectName: 'reserved-variables',
+        root: 'reserved-variables',
+      };
+      tree.write(`${projectDetails.root}/next.config.js`, initConfig);
+
+      updateNextConfig(tree, '', projectDetails, mockLog);
+
+      expect(mockLog.addLog).toHaveBeenCalledWith({
+        executorName: '@nx/next:build',
+        log: "The project (reserved-variables) Next.js config contains reserved variables ('options', 'configValues' or 'configuration') which are generated during the migration. Leaving it as is.",
+        project: 'reserved-variables',
+      });
+    });
+
+    it('should warn the user if the next config file contains a reserved variable (option)', () => {
+      const initConfig = `const options = {};`;
+      const projectDetails = {
+        projectName: 'reserved-options',
+        root: 'reserved-options',
+      };
+      tree.write(`${projectDetails.root}/next.config.js`, initConfig);
+
+      updateNextConfig(tree, '', projectDetails, mockLog);
+
+      expect(mockLog.addLog).toHaveBeenCalledWith({
+        executorName: '@nx/next:build',
+        log: "The project (reserved-options) Next.js config contains reserved variables ('options', 'configValues' or 'configuration') which are generated during the migration. Leaving it as is.",
+        project: 'reserved-options',
+      });
+    });
+
+    it('should warn the user if the next config file contains a reserved variable (configValues)', () => {
+      const initConfig = `const configValues = {};`;
+      const projectDetails = {
+        projectName: 'reserved-config-values',
+        root: 'reserved-config-values',
+      };
+
+      tree.write(`${projectDetails.root}/next.config.js`, initConfig);
+
+      updateNextConfig(tree, '', projectDetails, mockLog);
+
+      expect(mockLog.addLog).toHaveBeenCalledWith({
+        executorName: '@nx/next:build',
+        log: "The project (reserved-config-values) Next.js config contains reserved variables ('options', 'configValues' or 'configuration') which are generated during the migration. Leaving it as is.",
+        project: 'reserved-config-values',
+      });
+    });
+
+    it('should warn the user if the next config file contains a reserved variable (configuration)', () => {
+      const initConfig = `const configuration = {};`;
+      const projectDetails = {
+        projectName: 'reserved-configuration-values',
+        root: 'reserved-configuration-values',
+      };
+
+      tree.write(`${projectDetails.root}/next.config.js`, initConfig);
+
+      updateNextConfig(tree, '', projectDetails, mockLog);
+
+      expect(mockLog.addLog).toHaveBeenCalledWith({
+        executorName: '@nx/next:build',
+        log: "The project (reserved-configuration-values) Next.js config contains reserved variables ('options', 'configValues' or 'configuration') which are generated during the migration. Leaving it as is.",
+        project: 'reserved-configuration-values',
+      });
+    });
+  });
 });
