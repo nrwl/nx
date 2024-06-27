@@ -157,17 +157,36 @@ function handlePropertiesFromTargetOptions(
     delete options.watch;
   }
 
-  if ('experimentalAppOnly' in options && options.experimentalAppOnly) {
-    options['args'] ??= [];
-    options['args'].push('--experimental-app-only');
+  if ('debug' in options) {
+    if (options.debug) {
+      options['args'] ??= [];
+      options['args'].push('--debug');
+    }
+    delete options.debug;
+  }
+
+  if ('profile' in options) {
+    if (options.profile) {
+      options['args'] ??= [];
+      options['args'].push('--profile');
+    }
+    delete options.profile;
+  }
+
+  if ('experimentalAppOnly' in options) {
+    if (options.experimentalAppOnly) {
+      options['args'] ??= [];
+      options['args'].push('--experimental-app-only');
+    }
     delete options.experimentalAppOnly;
   }
 
-  if ('experimentalBuildMode' in options && options.experimentalBuildMode) {
+  if ('experimentalBuildMode' in options) {
     options['args'] ??= [];
-    options['args'].push(`--experimental-build-mode`);
+    options['args'].push(
+      `--experimental-build-mode ${options.experimentalBuildMode}`
+    );
     delete options.experimentalBuildMode;
   }
-
   configValues[configuration] = configMap;
 }
