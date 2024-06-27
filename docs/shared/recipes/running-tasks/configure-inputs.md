@@ -22,7 +22,7 @@ Throughout this recipe, the following project structure of a simple workspace wi
   "projects": [
     {
       "name": "myreactapp",
-      "type": "e2e",
+      "type": "app",
       "data": {
         "tags": []
       }

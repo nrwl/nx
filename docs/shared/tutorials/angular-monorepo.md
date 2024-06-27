@@ -510,28 +510,28 @@ You should be able to see something similar to the following in your browser.
   "projects": [
     {
       "name": "angular-store",
-      "type": "e2e",
+      "type": "app",
       "data": {
         "tags": []
       }
     },
     {
       "name": "angular-store-e2e",
-      "type": "e2e",
+      "type": "app",
       "data": {
         "tags": []
       }
     },
     {
       "name": "inventory",
-      "type": "e2e",
+      "type": "app",
       "data": {
         "tags": []
       }
     },
     {
       "name": "inventory-e2e",
-      "type": "e2e",
+      "type": "app",
       "data": {
         "tags": []
       }
@@ -620,7 +620,7 @@ nx show project angular-store-e2e --web
 {
   "project": {
     "name": "angular-store-e2e",
-    "type": "e2e",
+    "type": "app",
     "data": {
       "metadata": {
         "targetGroups": {
@@ -933,28 +933,28 @@ nx graph --affected
   "projects": [
     {
       "name": "angular-store",
-      "type": "e2e",
+      "type": "app",
       "data": {
         "tags": []
       }
     },
     {
       "name": "angular-store-e2e",
-      "type": "e2e",
+      "type": "app",
       "data": {
         "tags": []
       }
     },
     {
       "name": "inventory",
-      "type": "e2e",
+      "type": "app",
       "data": {
         "tags": []
       }
     },
     {
       "name": "inventory-e2e",
-      "type": "e2e",
+      "type": "app",
       "data": {
         "tags": []
       }

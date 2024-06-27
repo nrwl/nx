@@ -1311,7 +1311,7 @@
     },
     {
       "name": "e2e-angular-extensions",
-      "type": "e2e",
+      "type": "app",
       "data": {
         "tags": [],
         "root": "e2e/angular-extensions",
@@ -1579,7 +1579,7 @@
     },
     {
       "name": "e2e-storybook-angular",
-      "type": "e2e",
+      "type": "app",
       "data": {
         "tags": [],
         "root": "e2e/storybook-angular",
@@ -3075,7 +3075,7 @@
     },
     {
       "name": "e2e-workspace-create",
-      "type": "e2e",
+      "type": "app",
       "data": {
         "tags": [],
         "root": "e2e/workspace-create",
@@ -6124,7 +6124,7 @@
     },
     {
       "name": "nx-dev-e2e",
-      "type": "e2e",
+      "type": "app",
       "data": {
         "tags": ["scope:nx-dev", "type:e2e"],
         "root": "nx-dev/nx-dev-e2e",
@@ -6475,7 +6475,7 @@
     },
     {
       "name": "e2e-angular-core",
-      "type": "e2e",
+      "type": "app",
       "data": {
         "tags": [],
         "root": "e2e/angular-core",
@@ -6574,7 +6574,7 @@
     },
     {
       "name": "e2e-react-native",
-      "type": "e2e",
+      "type": "app",
       "data": {
         "tags": [],
         "root": "e2e/react-native",
@@ -6648,7 +6648,7 @@
     },
     {
       "name": "e2e-graph-client",
-      "type": "e2e",
+      "type": "app",
       "data": {
         "tags": [],
         "root": "graph/client-e2e",
@@ -15503,7 +15503,7 @@
     },
     {
       "name": "e2e-nx-plugin",
-      "type": "e2e",
+      "type": "app",
       "data": {
         "tags": [],
         "root": "e2e/nx-plugin",
@@ -15581,7 +15581,7 @@
     },
     {
       "name": "e2e-storybook",
-      "type": "e2e",
+      "type": "app",
       "data": {
         "tags": [],
         "root": "e2e/storybook",
@@ -15660,7 +15660,7 @@
     },
     {
       "name": "nx-dev",
-      "type": "e2e",
+      "type": "app",
       "data": {
         "tags": ["scope:nx-dev", "type:app"],
         "root": "nx-dev/nx-dev",
@@ -19830,7 +19830,7 @@
     },
     {
       "name": "graph-client",
-      "type": "e2e",
+      "type": "app",
       "data": {
         "tags": [],
         "root": "graph/client",
@@ -21529,7 +21529,7 @@
     },
     {
       "name": "e2e-cypress",
-      "type": "e2e",
+      "type": "app",
       "data": {
         "tags": [],
         "root": "e2e/cypress",
@@ -21603,7 +21603,7 @@
     },
     {
       "name": "e2e-esbuild",
-      "type": "e2e",
+      "type": "app",
       "data": {
         "tags": [],
         "root": "e2e/esbuild",
@@ -21677,7 +21677,7 @@
     },
     {
       "name": "e2e-nx-init",
-      "type": "e2e",
+      "type": "app",
       "data": {
         "tags": [],
         "root": "e2e/nx-init",
@@ -21756,7 +21756,7 @@
     },
     {
       "name": "e2e-nx-misc",
-      "type": "e2e",
+      "type": "app",
       "data": {
         "tags": [],
         "root": "e2e/nx-misc",
@@ -21840,7 +21840,7 @@
     },
     {
       "name": "e2e-webpack",
-      "type": "e2e",
+      "type": "app",
       "data": {
         "tags": [],
         "root": "e2e/webpack",
@@ -23907,7 +23907,7 @@
     },
     {
       "name": "e2e-linter",
-      "type": "e2e",
+      "type": "app",
       "data": {
         "tags": [],
         "root": "e2e/linter",
@@ -23985,7 +23985,7 @@
     },
     {
       "name": "e2e-nx-run",
-      "type": "e2e",
+      "type": "app",
       "data": {
         "tags": [],
         "root": "e2e/nx-run",
@@ -24069,7 +24069,7 @@
     },
     {
       "name": "e2e-rollup",
-      "type": "e2e",
+      "type": "app",
       "data": {
         "tags": [],
         "root": "e2e/rollup",
@@ -24143,7 +24143,7 @@
     },
     {
       "name": "e2e-detox",
-      "type": "e2e",
+      "type": "app",
       "data": {
         "tags": [],
         "root": "e2e/detox",
@@ -24217,7 +24217,7 @@
     },
     {
       "name": "e2e-react",
-      "type": "e2e",
+      "type": "app",
       "data": {
         "tags": [],
         "root": "e2e/react",
@@ -24344,7 +24344,7 @@
     },
     {
       "name": "e2e-expo",
-      "type": "e2e",
+      "type": "app",
       "data": {
         "tags": [],
         "root": "e2e/expo",
@@ -24418,7 +24418,7 @@
     },
     {
       "name": "e2e-jest",
-      "type": "e2e",
+      "type": "app",
       "data": {
         "tags": [],
         "root": "e2e/jest",
@@ -24497,7 +24497,7 @@
     },
     {
       "name": "e2e-next",
-      "type": "e2e",
+      "type": "app",
       "data": {
         "tags": [],
         "root": "e2e/next",
@@ -24582,7 +24582,7 @@
     },
     {
       "name": "e2e-node",
-      "type": "e2e",
+      "type": "app",
       "data": {
         "tags": [],
         "root": "e2e/node",
@@ -24662,7 +24662,7 @@
     },
     {
       "name": "e2e-vite",
-      "type": "e2e",
+      "type": "app",
       "data": {
         "tags": [],
         "root": "e2e/vite",
@@ -24736,7 +24736,7 @@
     },
     {
       "name": "e2e-web",
-      "type": "e2e",
+      "type": "app",
       "data": {
         "tags": [],
         "root": "e2e/web",
@@ -24820,7 +24820,7 @@
     },
     {
       "name": "e2e-js",
-      "type": "e2e",
+      "type": "app",
       "data": {
         "tags": [],
         "root": "e2e/js",

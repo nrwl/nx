@@ -1072,7 +1072,7 @@
     },
     {
       "name": "products-e2e",
-      "type": "e2e",
+      "type": "app",
       "data": {
         "tags": ["scope:products", "type:e2e"],
         "root": "apps/products-e2e",
@@ -1144,7 +1144,7 @@
     },
     {
       "name": "cart-e2e",
-      "type": "e2e",
+      "type": "app",
       "data": {
         "tags": ["scope:cart", "type:e2e"],
         "root": "apps/cart-e2e",
@@ -1300,7 +1300,7 @@
     },
     {
       "name": "products",
-      "type": "e2e",
+      "type": "app",
       "data": {
         "tags": ["type:app", "scope:products"],
         "root": "apps/products",
@@ -1529,7 +1529,7 @@
     },
     {
       "name": "cart",
-      "type": "e2e",
+      "type": "app",
       "data": {
         "tags": ["type:app", "scope:cart"],
         "root": "apps/cart",

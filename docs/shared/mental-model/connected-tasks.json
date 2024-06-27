@@ -2,7 +2,7 @@
   "projects": [
     {
       "name": "app1",
-      "type": "e2e",
+      "type": "app",
       "data": {
         "tags": [],
         "targets": {
@@ -12,7 +12,7 @@
     },
     {
       "name": "app2",
-      "type": "e2e",
+      "type": "app",
       "data": {
         "tags": [],
         "targets": {

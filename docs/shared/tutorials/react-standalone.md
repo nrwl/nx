@@ -629,14 +629,14 @@ You should be able to see something similar to the following in your browser.
   "projects": [
     {
       "name": "myreactapp",
-      "type": "e2e",
+      "type": "app",
       "data": {
         "tags": []
       }
     },
     {
       "name": "e2e",
-      "type": "e2e",
+      "type": "app",
       "data": {
         "tags": []
       }

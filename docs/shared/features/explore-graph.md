@@ -110,14 +110,14 @@ Try playing around with a [fully interactive graph on a sample repo](https://nrw
     },
     {
       "name": "cart-e2e",
-      "type": "e2e",
+      "type": "app",
       "data": {
         "tags": ["scope:cart", "type:e2e"]
       }
     },
     {
       "name": "cart",
-      "type": "e2e",
+      "type": "app",
       "data": {
         "tags": ["type:app", "scope:cart"]
       }

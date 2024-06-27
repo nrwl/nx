@@ -11,7 +11,7 @@ As you can see in the graph visualization below, the `myreactapp` project depend
   "projects": [
     {
       "name": "myreactapp",
-      "type": "e2e",
+      "type": "app",
       "data": {
         "tags": []
       }

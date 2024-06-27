@@ -27,7 +27,7 @@ And the following [final configuration](/reference/project-configuration):
 {
   "project": {
     "name": "my-app",
-    "type": "e2e",
+    "type": "app",
     "data": {
       "name": "my-app",
       "root": "apps/my-app",

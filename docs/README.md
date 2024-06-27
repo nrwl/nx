@@ -346,7 +346,7 @@ Embed an Nx Graph visualization that can be panned by the user.
 {
   "projects": [
     {
-      "type": "e2e",
+      "type": "app",
       "name": "app-changed",
       "data": {
         "tags": ["scope:cart"]
