@@ -44,7 +44,7 @@ export function createPackageJson(
   const isLibrary = projectNode.type === 'lib';
 
   const rootPackageJson = readJsonFile(
-    `${options.root || workspaceRoot}/package.json`
+    join(options.root ?? workspaceRoot, 'package.json')
   );
 
   const npmDeps = findProjectsNpmDependencies(
@@ -65,7 +65,7 @@ export function createPackageJson(
     version: '0.0.1',
   };
   const projectPackageJsonPath = join(
-    options.root || workspaceRoot,
+    options.root ?? workspaceRoot,
     projectNode.data.root,
     'package.json'
   );

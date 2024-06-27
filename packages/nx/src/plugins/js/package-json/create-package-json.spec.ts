@@ -1,7 +1,12 @@
 import * as fs from 'fs';
 
 import * as configModule from '../../../config/configuration';
-import { ProjectGraph } from '../../../config/project-graph';
+import {
+  FileData,
+  FileDataDependency,
+  ProjectFileMap,
+  ProjectGraph,
+} from '../../../config/project-graph';
 import * as hashModule from '../../../hasher/task-hasher';
 import { createPackageJson } from './create-package-json';
 import * as fileutilsModule from '../../../utils/fileutils';
@@ -294,6 +299,7 @@ describe('createPackageJson', () => {
 
     expect(filterUsingGlobPatternsSpy).toHaveBeenCalledTimes(1);
   });
+
   it('should exclude devDependencies from production build when local package.json is imported', () => {
     jest.spyOn(configModule, 'readNxJson').mockReturnValueOnce({
       namedInputs: {
@@ -426,12 +432,12 @@ describe('createPackageJson', () => {
         'npm:@nx/devkit': {
           type: 'npm',
           name: 'npm:@nx/devkit',
-          data: { version: '16.0.0', hash: '', packageName: '@nx/devkit' },
+          data: { version: '16.0.3', hash: '', packageName: '@nx/devkit' },
         },
         'npm:nx': {
           type: 'npm',
           name: 'npm:nx',
-          data: { version: '16.0.0', hash: '', packageName: 'nx' },
+          data: { version: '16.0.3', hash: '', packageName: 'nx' },
         },
         'npm:tslib': {
           type: 'npm',
@@ -448,6 +454,22 @@ describe('createPackageJson', () => {
         app1: appDependencies,
         lib1: libDependencies,
       },
+    };
+
+    const fileMap: ProjectFileMap = {
+      app1: [
+        createFile(`apps/app1/src/main.ts`, [
+          'npm:@nx/devkit',
+          'npm:typecript',
+        ]),
+      ],
+      lib1: [
+        createFile(`libs/lib1/src/main.ts`, [
+          'npm:@nx/devkit',
+          'npm:typecript',
+          'npm:tslib',
+        ]),
+      ],
     };
 
     const rootPackageJson = () => ({
@@ -474,7 +496,13 @@ describe('createPackageJson', () => {
       spies.push(
         jest
           .spyOn(hashModule, 'filterUsingGlobPatterns')
-          .mockImplementation(() => [])
+          .mockImplementation((root) => {
+            if (root === 'libs/lib1') {
+              return fileMap['lib1'];
+            } else {
+              return fileMap['app1'];
+            }
+          })
       );
     });
 
@@ -503,9 +531,13 @@ describe('createPackageJson', () => {
           })
       );
 
-      expect(createPackageJson('app1', graph, { root: '' })).toEqual({
+      expect(createPackageJson('app1', graph, { root: '' }, fileMap)).toEqual({
         name: 'app1',
         version: '0.0.1',
+        dependencies: {
+          '@nx/devkit': '16.0.3',
+          nx: '16.0.3',
+        },
       });
     });
 
@@ -531,12 +563,23 @@ describe('createPackageJson', () => {
       );
 
       expect(
-        createPackageJson('app1', graph, {
-          root: '',
-        })
+        createPackageJson(
+          'app1',
+          graph,
+          {
+            root: '',
+          },
+          fileMap
+        )
       ).toEqual({
-        name: 'app1',
-        version: '0.0.1',
+        name: 'other-name',
+        version: '1.2.3',
+        dependencies: {
+          '@nx/devkit': '16.0.3',
+          nx: '16.0.3',
+          random: '1.0.0',
+          typescript: '^4.8.4',
+        },
       });
     });
 
@@ -552,12 +595,21 @@ describe('createPackageJson', () => {
       );
 
       expect(
-        createPackageJson('lib1', graph, {
-          root: '',
-        })
+        createPackageJson(
+          'lib1',
+          graph,
+          {
+            root: '',
+          },
+          fileMap
+        )
       ).toEqual({
         name: 'lib1',
         version: '0.0.1',
+        dependencies: {
+          '@nx/devkit': '~16.0.0',
+          tslib: '~2.4.0',
+        },
       });
     });
 
@@ -583,13 +635,28 @@ describe('createPackageJson', () => {
       );
 
       expect(
-        createPackageJson('lib1', graph, {
-          root: '',
-        })
+        createPackageJson(
+          'lib1',
+          graph,
+          {
+            root: '',
+          },
+          fileMap
+        )
       ).toEqual({
-        name: 'lib1',
-        version: '0.0.1',
+        name: 'other-name',
+        version: '1.2.3',
+        dependencies: {
+          '@nx/devkit': '~16.0.0',
+          tslib: '~2.4.0',
+          random: '1.0.0',
+          typescript: '^4.8.4',
+        },
       });
     });
   });
 });
+
+function createFile(f: string, deps?: FileDataDependency[]): FileData {
+  return { file: f, hash: '', deps };
+}
