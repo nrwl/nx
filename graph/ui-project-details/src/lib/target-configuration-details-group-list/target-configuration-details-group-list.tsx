@@ -47,9 +47,6 @@ export function TargetConfigurationGroupList({
       <>
         {Object.entries(targetsGroup.groups).map(
           ([targetGroupName, targets]) => {
-            if (targets.length === 0) {
-              return null;
-            }
             return (
               <TargetConfigurationGroupContainer
                 targetGroupName={targetGroupName}
