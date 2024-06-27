@@ -12,6 +12,8 @@ import {
   runCLIAsync,
   runE2ETests,
   killPorts,
+  createFile,
+  removeFile,
 } from 'e2e/utils';
 import { join } from 'path';
 
@@ -158,5 +160,19 @@ describe('@nx/expo', () => {
       `${appName}/.storybook/main.ts`,
       `${appName}/src/app/App.stories.tsx`
     );
+  });
+
+  it('should work with app.config.ts', () => {
+    const appJson = join(appName, `app.json`);
+    const appJsonContent = readJson(appJson);
+    removeFile(appJson);
+    createFile(
+      join(appName, 'app.config.ts'),
+      `export default { expo: { name: 'my-app', slug: 'my-app' } };`
+    );
+    const result = runCLI(`show project ${appName} --json false`);
+    expect(result).toContain('start:');
+    expect(result).toContain('serve:');
+    createFile(appJson, JSON.stringify(appJsonContent));
   });
 });
