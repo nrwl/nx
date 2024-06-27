@@ -19,12 +19,14 @@ export interface ProjectDetailsProps {
   sourceMap: Record<string, string[]>;
   errors?: GraphError[];
   variant?: 'default' | 'compact';
+  connectedToCloud?: boolean;
   onViewInProjectGraph?: (data: { projectName: string }) => void;
   onViewInTaskGraph?: (data: {
     projectName: string;
     targetName: string;
   }) => void;
   onRunTarget?: (data: { projectName: string; targetName: string }) => void;
+  onNxConnect?: () => void;
   viewInProjectGraphPosition?: 'top' | 'bottom';
 }
 
@@ -41,7 +43,9 @@ export const ProjectDetails = ({
   onViewInProjectGraph,
   onViewInTaskGraph,
   onRunTarget,
+  onNxConnect,
   viewInProjectGraphPosition = 'top',
+  connectedToCloud,
 }: ProjectDetailsProps) => {
   const projectData = project.data;
   const isCompact = variant === 'compact';
@@ -161,6 +165,8 @@ export const ProjectDetails = ({
           variant={variant}
           onRunTarget={onRunTarget}
           onViewInTaskGraph={onViewInTaskGraph}
+          connectedToCloud={connectedToCloud}
+          onNxConnect={onNxConnect}
         />
       </div>
     </>

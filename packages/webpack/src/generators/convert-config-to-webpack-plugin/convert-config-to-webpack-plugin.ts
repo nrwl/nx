@@ -111,6 +111,10 @@ export async function convertConfigToWebpackPluginGenerator(
                   // svgr: false
                   })`
                 },
+                // NOTE: useLegacyNxPlugin ensures that the non-standard Webpack configuration file previously used still works.
+                // To remove its usage, move options such as "plugins" into this file as standard Webpack configuration options.
+                // To enhance configurations after Nx plugins have applied, you can add a new plugin with the \`apply\` method.
+                // e.g. \`{ apply: (compiler) => { /* modify compiler.options */ }\`
                 // eslint-disable-next-line react-hooks/rules-of-hooks
                 await useLegacyNxPlugin(require('./webpack.config.old'), options),
               ],

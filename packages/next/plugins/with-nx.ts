@@ -11,6 +11,7 @@ import {
   type ProjectGraphProjectNode,
   type Target,
 } from '@nx/devkit';
+import type { AssetGlobPattern } from '@nx/webpack';
 
 export interface SvgrOptions {
   svgo?: boolean;
@@ -22,6 +23,8 @@ export interface WithNxOptions extends NextConfig {
   nx?: {
     svgr?: boolean | SvgrOptions;
     babelUpwardRootMode?: boolean;
+    fileReplacements?: { replace: string; with: string }[];
+    assets?: AssetGlobPattern[];
   };
 }
 
@@ -210,12 +213,15 @@ function withNx(
       const userWebpackConfig = nextConfig.webpack;
 
       const { createWebpackConfig } = require('@nx/next/src/utils/config');
+      // If we have file replacements or assets, inside of the next config we pass the workspaceRoot as a join of the workspaceRoot and the projectDirectory
+      // Because the file replacements and assets are relative to the projectRoot, not the workspaceRoot
       nextConfig.webpack = (a, b) =>
         createWebpackConfig(
-          workspaceRoot,
-          projectDirectory,
-          options.fileReplacements,
-          options.assets
+          _nextConfig.nx?.fileReplacements
+            ? joinPathFragments(workspaceRoot, projectDirectory)
+            : workspaceRoot,
+          _nextConfig.nx?.assets || options.assets,
+          _nextConfig.nx?.fileReplacements || options.fileReplacements
         )(userWebpackConfig ? userWebpackConfig(a, b) : a, b);
 
       return nextConfig;

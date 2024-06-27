@@ -16,13 +16,11 @@ export async function setupNxCloud(
   try {
     const pmc = getPackageManagerCommand(packageManager);
     const res = await execAndWait(
-      process.env.NX_NEW_CLOUD_ONBOARDING === 'true'
-        ? `${
-            pmc.exec
-          } nx g nx:connect-to-nx-cloud --installationSource=create-nx-workspace ${
-            useGitHub ? '--github' : ''
-          } --no-interactive`
-        : `${pmc.exec} nx g nx:connect-to-nx-cloud --no-interactive --quiet`,
+      `${
+        pmc.exec
+      } nx g nx:connect-to-nx-cloud --installationSource=create-nx-workspace --directory=${directory} ${
+        useGitHub ? '--github' : ''
+      } --no-interactive`,
       directory
     );
 

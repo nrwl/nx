@@ -8,15 +8,34 @@ import {
   uniq,
   updateFile,
   runCommandAsync,
-  listFiles,
 } from '@nx/e2e/utils';
 
 describe('Remix E2E Tests', () => {
-  describe('--integrated', () => {
-    let proj: string;
-
+  describe('--integrated (npm)', () => {
     beforeAll(() => {
-      proj = newProject({ packages: ['@nx/remix', '@nx/react'] });
+      newProject({
+        packages: ['@nx/remix', '@nx/react'],
+        packageManager: 'npm',
+      });
+    });
+
+    afterAll(() => {
+      killPorts();
+      cleanupProject();
+    });
+
+    it('should not cause peer dependency conflicts', async () => {
+      const plugin = uniq('remix');
+      runCLI(
+        `generate @nx/remix:app ${plugin} --projectNameAndRootFormat=as-provided`
+      );
+
+      await runCommandAsync('npm install');
+    }, 120000);
+  });
+  describe('--integrated (yarn)', () => {
+    beforeAll(() => {
+      newProject({ packages: ['@nx/remix', '@nx/react'] });
     });
 
     afterAll(() => {

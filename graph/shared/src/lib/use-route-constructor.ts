@@ -3,13 +3,23 @@ import { getEnvironmentConfig } from './use-environment-config';
 
 export const useRouteConstructor = (): ((
   to: To,
-  retainSearchParams: boolean
+  retainSearchParams: boolean,
+  searchParamsKeysToOmit?: string[]
 ) => To) => {
   const { environment } = getEnvironmentConfig();
   const { selectedWorkspaceId } = useParams();
   const [searchParams] = useSearchParams();
 
-  return (to: To, retainSearchParams: true) => {
+  return (
+    to: To,
+    retainSearchParams: boolean = true,
+    searchParamsKeysToOmit: string[] = []
+  ) => {
+    if (searchParamsKeysToOmit?.length) {
+      searchParamsKeysToOmit.forEach((key) => {
+        searchParams.delete(key);
+      });
+    }
     let pathname = '';
 
     if (typeof to === 'object') {

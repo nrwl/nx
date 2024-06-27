@@ -4,16 +4,16 @@ import {
   type TargetConfiguration,
   type Tree,
 } from '@nx/devkit';
-import { migrateExecutorToPlugin } from '@nx/devkit/src/generators/plugin-migrations/executor-to-plugin-migrator';
-import { createNodesV2 } from '../../plugins/plugin';
-import { targetOptionsToCliMap } from './lib/target-options-map';
-import { upsertBaseUrl } from './lib/upsert-baseUrl';
-import { addDevServerTargetToConfig } from './lib/add-dev-server-target-to-config';
-import { addExcludeSpecPattern } from './lib/add-exclude-spec-pattern';
+import { migrateProjectExecutorsToPlugin } from '@nx/devkit/src/generators/plugin-migrations/executor-to-plugin-migrator';
 import {
   processTargetOutputs,
   toProjectRelativePath,
 } from '@nx/devkit/src/generators/plugin-migrations/plugin-migration-utils';
+import { createNodesV2, type CypressPluginOptions } from '../../plugins/plugin';
+import { addDevServerTargetToConfig } from './lib/add-dev-server-target-to-config';
+import { addExcludeSpecPattern } from './lib/add-exclude-spec-pattern';
+import { targetOptionsToCliMap } from './lib/target-options-map';
+import { upsertBaseUrl } from './lib/upsert-baseUrl';
 
 interface Schema {
   project?: string;
@@ -23,38 +23,29 @@ interface Schema {
 
 export async function convertToInferred(tree: Tree, options: Schema) {
   const projectGraph = await createProjectGraphAsync();
-  const migratedProjectsModern = await migrateExecutorToPlugin(
-    tree,
-    projectGraph,
-    '@nx/cypress:cypress',
-    '@nx/cypress/plugin',
-    (targetName) => ({
-      targetName,
-      ciTargetName: 'e2e-ci',
-    }),
-    postTargetTransformer,
-    createNodesV2,
-    options.project
-  );
-
-  const migratedProjectsLegacy = await migrateExecutorToPlugin(
-    tree,
-    projectGraph,
-    '@nrwl/cypress:cypress',
-    '@nx/cypress/plugin',
-    (targetName) => ({
-      targetName,
-      ciTargetName: 'e2e-ci',
-    }),
-    postTargetTransformer,
-    createNodesV2,
-    options.project
-  );
-
   const migratedProjects =
-    migratedProjectsModern.size + migratedProjectsLegacy.size;
+    await migrateProjectExecutorsToPlugin<CypressPluginOptions>(
+      tree,
+      projectGraph,
+      '@nx/cypress/plugin',
+      createNodesV2,
+      {
+        targetName: 'cypress',
+        ciTargetName: 'e2e-ci',
+        componentTestingTargetName: 'component-test',
+        openTargetName: 'open-cypress',
+      },
+      [
+        {
+          executors: ['@nx/cypress:cypress', '@nrwl/cypress:cypress'],
+          postTargetTransformer,
+          targetPluginOptionMapper: (targetName) => ({ targetName }),
+        },
+      ],
+      options.project
+    );
 
-  if (migratedProjects === 0) {
+  if (migratedProjects.size === 0) {
     throw new Error('Could not find any targets to migrate.');
   }
 

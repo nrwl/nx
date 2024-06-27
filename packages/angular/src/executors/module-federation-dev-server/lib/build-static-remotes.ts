@@ -67,13 +67,16 @@ export async function buildStaticRemotes(
       }
     });
     staticProcess.stderr.on('data', (data) => logger.info(data.toString()));
-    staticProcess.on('exit', (code) => {
+    staticProcess.once('exit', (code) => {
       stdoutStream.end();
+      staticProcess.stdout.removeAllListeners('data');
+      staticProcess.stderr.removeAllListeners('data');
       if (code !== 0) {
         throw new Error(
           `Remote failed to start. A complete log can be found in: ${remoteBuildLogFile}`
         );
       }
+      res();
     });
     process.on('SIGTERM', () => staticProcess.kill('SIGTERM'));
     process.on('exit', () => staticProcess.kill('SIGTERM'));

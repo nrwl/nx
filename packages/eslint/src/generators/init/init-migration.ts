@@ -1,5 +1,6 @@
 import {
   addDependenciesToPackageJson,
+  GeneratorCallback,
   joinPathFragments,
   offsetFromRoot,
   ProjectConfiguration,
@@ -15,7 +16,7 @@ import {
   getGlobalFlatEslintConfiguration,
 } from './global-eslint-config';
 import { useFlatConfig } from '../../utils/flat-config';
-import { eslintVersion } from '../../utils/versions';
+import { eslintVersion, nxVersion } from '../../utils/versions';
 import {
   addBlockToFlatConfigExport,
   addImportToFlatConfig,
@@ -31,7 +32,7 @@ export function migrateConfigToMonorepoStyle(
   tree: Tree,
   unitTestRunner: string,
   keepExistingVersions?: boolean
-): void {
+): GeneratorCallback {
   const rootEslintConfig = findEslintFile(tree);
   let skipCleanup = false;
   if (
@@ -105,6 +106,14 @@ export function migrateConfigToMonorepoStyle(
       }
     }
   });
+
+  return addDependenciesToPackageJson(
+    tree,
+    {},
+    {
+      '@nx/eslint-plugin': nxVersion,
+    }
+  );
 }
 
 export function findLintTarget(
