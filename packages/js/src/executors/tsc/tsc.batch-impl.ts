@@ -1,4 +1,10 @@
-import { ExecutorContext, TaskGraph, parseTargetString } from '@nx/devkit';
+import {
+  ExecutorContext,
+  isDaemonEnabled,
+  output,
+  parseTargetString,
+  TaskGraph,
+} from '@nx/devkit';
 import { rmSync } from 'fs';
 import type { BatchExecutorTaskResult } from 'nx/src/config/misc-interfaces';
 import { getLastValueFromAsyncIterableIterator } from 'nx/src/utils/async-iterator';
@@ -6,17 +12,17 @@ import { updatePackageJson } from '../../utils/package-json/update-package-json'
 import type { ExecutorOptions } from '../../utils/schema';
 import { determineModuleFormatFromTsConfig } from './tsc.impl';
 import {
+  compileTypescriptSolution,
+  getProcessedTaskTsConfigs,
   TypescripCompilationLogger,
   TypescriptCompilationResult,
   TypescriptInMemoryTsConfig,
   TypescriptProjectContext,
-  compileTypescriptSolution,
-  getProcessedTaskTsConfigs,
 } from './lib';
 import {
-  TaskInfo,
   createTaskInfoPerTsConfigMap,
   normalizeTasksOptions,
+  TaskInfo,
   watchTaskProjectsFileChangesForAssets,
   watchTaskProjectsPackageJsonFileChanges,
 } from './lib/batch';
@@ -115,8 +121,13 @@ export async function* tscBatchExecutor(
       afterProjectCompilationCallback: processTaskPostCompilation,
     }
   );
-
-  if (shouldWatch) {
+  if (shouldWatch && !isDaemonEnabled()) {
+    output.warn({
+      title:
+        'Nx Daemon is not enabled. Assets and package.json files will not be updated on file changes.',
+    });
+  }
+  if (shouldWatch && isDaemonEnabled()) {
     const taskInfos = Object.values(tsConfigTaskInfoMap);
     const watchAssetsChangesDisposer =
       await watchTaskProjectsFileChangesForAssets(taskInfos);

@@ -82,6 +82,11 @@ describe('Node Applications + webpack', () => {
       `serve ${app} --watch --runBuildTargetDependencies`,
       (output) => {
         return output.includes(`Hello`);
+      },
+      {
+        env: {
+          NX_DAEMON: 'true',
+        },
       }
     );
 

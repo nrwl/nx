@@ -135,6 +135,7 @@ It only uses language primitives and immutable objects
 - [globAsync](../../devkit/documents/globAsync)
 - [hashArray](../../devkit/documents/hashArray)
 - [installPackagesTask](../../devkit/documents/installPackagesTask)
+- [isDaemonEnabled](../../devkit/documents/isDaemonEnabled)
 - [isWorkspacesEnabled](../../devkit/documents/isWorkspacesEnabled)
 - [joinPathFragments](../../devkit/documents/joinPathFragments)
 - [moveFilesToNewDirectory](../../devkit/documents/moveFilesToNewDirectory)

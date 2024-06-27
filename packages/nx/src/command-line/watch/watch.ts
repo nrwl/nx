@@ -159,6 +159,14 @@ export async function watch(args: WatchArguments) {
     process.env.NX_VERBOSE_LOGGING = 'true';
   }
 
+  if (daemonClient.enabled()) {
+    output.error({
+      title:
+        'Daemon is not running. The watch command is not supported without the Nx Daemon.',
+    });
+    process.exit(1);
+  }
+
   if (
     args.includeGlobalWorkspaceFiles &&
     args.command.match(projectReplacementRegex)

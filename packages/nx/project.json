@@ -4,13 +4,39 @@
   "sourceRoot": "packages/nx",
   "projectType": "library",
   "implicitDependencies": ["graph-client"],
+  "release": {
+    "version": {
+      "generator": "@nx/js:release-version"
+    }
+  },
   "targets": {
+    "build-native-wasm": {
+      "cache": true,
+      "outputs": [
+        "{projectRoot}/src/native/*.wasm",
+        "{projectRoot}/src/native/*.js",
+        "{projectRoot}/src/native/*.cjs",
+        "{projectRoot}/src/native/*.mjs",
+        "{projectRoot}/src/native/index.d.ts"
+      ],
+      "executor": "@monodon/rust:napi",
+      "options": {
+        "target": "wasm32-wasip1-threads",
+        "dist": "packages/nx/src/native",
+        "jsFile": "native-bindings.js",
+        "release": true
+      }
+    },
     "build-native": {
-      "outputs": ["{projectRoot}/src/native/*.node"],
+      "outputs": [
+        "{projectRoot}/src/native/*.node",
+        "{projectRoot}/src/native/*.js",
+        "{projectRoot}/src/native/index.d.ts"
+      ],
       "executor": "@monodon/rust:napi",
       "options": {
         "dist": "packages/nx/src/native",
-        "jsFile": "packages/nx/src/native/native-bindings.js",
+        "jsFile": "native-bindings.js",
         "release": true
       },
       "configurations": {
@@ -24,7 +50,7 @@
     },
     "artifacts": {
       "dependsOn": ["copy-native-package-directories"],
-      "command": "pnpm napi artifacts -c build/packages/nx/package.json -d ./artifacts --dist build/packages"
+      "command": "pnpm napi artifacts --package-json-path build/packages/nx/package.json -d ./artifacts --npm-dir build/packages"
     },
     "build-base": {
       "executor": "@nx/js:tsc",
@@ -58,7 +84,7 @@
           },
           {
             "input": "packages/nx",
-            "glob": "**/*.{js,css,html,svg}",
+            "glob": "**/*.{mjs,cjs,js,css,html,svg,wasm}",
             "ignore": ["**/jest.config.js"],
             "output": "/"
           },

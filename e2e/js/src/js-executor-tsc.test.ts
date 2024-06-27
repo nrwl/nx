@@ -60,7 +60,12 @@ describe('js:tsc executor', () => {
     });
     const libBuildProcess = await runCommandUntil(
       `build ${lib} --watch`,
-      (output) => output.includes(`Watching for file changes`)
+      (output) => output.includes(`Watching for file changes`),
+      {
+        env: {
+          NX_DAEMON: 'true',
+        },
+      }
     );
     updateFile(`libs/${lib}/README.md`, `Hello, World!`);
     updateJson(`libs/${lib}/package.json`, (json) => {

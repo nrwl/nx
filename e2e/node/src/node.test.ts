@@ -263,8 +263,15 @@ module.exports = {
 
     // checking serve
     updateFile(`apps/${nodeapp}/src/assets/file.txt`, `Test`);
-    const p = await runCommandUntil(`serve ${nodeapp}`, (output) =>
-      output.includes(`Listening at http://localhost:${port}`)
+    const p = await runCommandUntil(
+      `serve ${nodeapp}`,
+      (output) => output.includes(`Listening at http://localhost:${port}`),
+
+      {
+        env: {
+          NX_DAEMON: 'true',
+        },
+      }
     );
 
     let result = await getData(port);
@@ -312,6 +319,11 @@ module.exports = {
       (output) => {
         process.stdout.write(output);
         return output.includes(`listening on ws://localhost:${port}`);
+      },
+      {
+        env: {
+          NX_DAEMON: 'true',
+        },
       }
     );
 
@@ -361,9 +373,17 @@ module.exports = {
       `
     );
     await runCLIAsync(`build ${esmapp}`);
-    const p = await runCommandUntil(`serve ${esmapp}`, (output) => {
-      return output.includes('Hello World');
-    });
+    const p = await runCommandUntil(
+      `serve ${esmapp}`,
+      (output) => {
+        return output.includes('Hello World');
+      },
+      {
+        env: {
+          NX_DAEMON: 'true',
+        },
+      }
+    );
     p.kill();
   }, 300000);
 });
