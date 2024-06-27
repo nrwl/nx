@@ -23,6 +23,22 @@ export function updateNextConfig(
   const nextConfigContents = tree.read(nextConfigPath, 'utf-8');
   let ast = tsquery.ast(nextConfigContents);
 
+  const reservedVarQuery = `
+  VariableStatement > VariableDeclarationList > VariableDeclaration:has(Identifier[name=configValues]), 
+  VariableStatement > VariableDeclarationList > VariableDeclaration:has(Identifier[name=configuration]),
+  VariableStatement > VariableDeclarationList > VariableDeclaration:has(Identifier[name=options])
+  `;
+
+  const matches = tsquery(ast, reservedVarQuery);
+  if (matches.length > 0) {
+    migrationLogs.addLog({
+      project: project.projectName,
+      executorName: '@nx/next:build',
+      log: `The project (${project.projectName}) Next.js config contains reserved variables ('options', 'configValues' or 'configuration') which are generated during the migration. Leaving it as is.`,
+    });
+    return;
+  }
+
   // Query to check for composePlugins in module.exports
   const composePluginsQuery = `ExpressionStatement > BinaryExpression > CallExpression > CallExpression:has(Identifier[name=composePlugins])`;
   const composePluginNode = tsquery(ast, composePluginsQuery)[0];
