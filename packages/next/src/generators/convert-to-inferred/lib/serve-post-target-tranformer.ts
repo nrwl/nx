@@ -1,33 +1,24 @@
 import { TargetConfiguration, Tree } from '@nx/devkit';
 import { AggregatedLog } from '@nx/devkit/src/generators/plugin-migrations/aggregate-log-util';
-import { NextServeBuilderOptions } from '../../../utils/types';
+import type { NextServeBuilderOptions } from '../../../utils/types';
+import type { InferredTargetConfiguration } from '@nx/devkit/src/generators/plugin-migrations/executor-to-plugin-migrator';
 
 export function servePosTargetTransformer(migrationLogs: AggregatedLog) {
   return (
     target: TargetConfiguration<NextServeBuilderOptions>,
-    tree: Tree,
+    _tree: Tree,
     projectDetails: { projectName: string; root: string },
-    inferredTargetConfiguration: TargetConfiguration
+    inferredTargetConfiguration: InferredTargetConfiguration
   ) => {
     if (target.options) {
-      handlePropertiesFromTargetOptions(
-        tree,
-        target.options,
-        projectDetails.projectName,
-        migrationLogs
-      );
+      handlePropertiesFromTargetOptions(target.options);
     }
 
     if (target.configurations) {
       for (const configurationName in target.configurations) {
         const configuration = target.configurations[configurationName];
 
-        handlePropertiesFromTargetOptions(
-          tree,
-          configuration,
-          projectDetails.projectName,
-          migrationLogs
-        );
+        handlePropertiesFromTargetOptions(configuration);
       }
 
       if (Object.keys(target.configurations).length === 0) {
@@ -44,6 +35,12 @@ export function servePosTargetTransformer(migrationLogs: AggregatedLog) {
         delete target.defaultConfiguration;
       }
     }
+
+    migrationLogs.addLog({
+      project: projectDetails.projectName,
+      executorName: '@nx/next:server',
+      log: `Note that "nx run ${projectDetails.projectName}:${inferredTargetConfiguration.name}" only runs the dev server after the migration. To start the prod server, use "nx run ${projectDetails.projectName}:start".`,
+    });
 
     return target;
   };
@@ -64,13 +61,7 @@ const executorFieldsToRemain: Array<keyof NextServeBuilderOptions> = [
 const camelCaseToKebabCase = (str: string) =>
   str.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`);
 
-// TODO(nicholas): Clean up this function
-function handlePropertiesFromTargetOptions(
-  tree: Tree,
-  options: NextServeBuilderOptions,
-  projectName: string,
-  migrationLogs: AggregatedLog
-) {
+function handlePropertiesFromTargetOptions(options: NextServeBuilderOptions) {
   Object.keys(options).forEach((key) => {
     if (
       !executorFieldsToRename.includes(key as keyof NextServeBuilderOptions) &&

@@ -17,7 +17,6 @@ export function buildPostTargetTransformer(migrationLogs: AggregatedLog) {
     const configValues = {};
     if (target.options) {
       handlePropertiesFromTargetOptions(
-        tree,
         target.options,
         projectDetails,
         migrationLogs,
@@ -30,7 +29,6 @@ export function buildPostTargetTransformer(migrationLogs: AggregatedLog) {
       for (const configurationName in target.configurations) {
         const configuration = target.configurations[configurationName];
         handlePropertiesFromTargetOptions(
-          tree,
           configuration,
           projectDetails,
           migrationLogs,
@@ -71,7 +69,7 @@ export function buildPostTargetTransformer(migrationLogs: AggregatedLog) {
 
     const options = {
       ...configValues.default,
-      //@ts-expect-error: Ignore TypeScript error for indexing configValues with a dynamic key
+      // @ts-expect-error: Ignore TypeScript error for indexing configValues with a dynamic key
       ...configValues[configuration],
     };
     `;
@@ -81,7 +79,6 @@ export function buildPostTargetTransformer(migrationLogs: AggregatedLog) {
 }
 
 function handlePropertiesFromTargetOptions(
-  tree: Tree,
   options: NextBuildBuilderOptions,
   projectDetails: { projectName: string; root: string },
   migrationLogs: AggregatedLog,
@@ -94,7 +91,7 @@ function handlePropertiesFromTargetOptions(
     migrationLogs.addLog({
       project: projectDetails.projectName,
       executorName: '@nx/next:build',
-      log: 'Unable to migrate `outputPath` to Next.js Config as it may lead to unexpected behavior. Please use the `distDir` option in your next.config.js file instead.',
+      log: 'Unable to migrate `outputPath` to Next.js config as it may lead to unexpected behavior. Please use the `distDir` option in your next.config.js file instead.',
     });
     delete options.outputPath;
   }
@@ -129,7 +126,7 @@ function handlePropertiesFromTargetOptions(
     migrationLogs.addLog({
       project: projectDetails.projectName,
       executorName: '@nx/next:build',
-      log: "Unable to migrate `includeDevDependenciesInPackageJson` to Next.js Config. Use the `@nx/dependency-checks` ESLint rule to update your project's package.json.",
+      log: "Unable to migrate `includeDevDependenciesInPackageJson` to Next.js config. Use the `@nx/dependency-checks` ESLint rule to update your project's package.json.",
     });
 
     delete options.includeDevDependenciesInPackageJson;
@@ -139,7 +136,7 @@ function handlePropertiesFromTargetOptions(
     migrationLogs.addLog({
       project: projectDetails.projectName,
       executorName: '@nx/next:build',
-      log: "Unable to migrate `generatePackageJson` to Next.js Config. Use the `@nx/dependency-checks` ESLint rule to update your project's package.json.",
+      log: "Unable to migrate `generatePackageJson` to Next.js config. Use the `@nx/dependency-checks` ESLint rule to update your project's package.json.",
     });
 
     delete options.generatePackageJson;
@@ -149,7 +146,7 @@ function handlePropertiesFromTargetOptions(
     migrationLogs.addLog({
       project: projectDetails.projectName,
       executorName: '@nx/next:build',
-      log: 'Unable to migrate `generateLockfile` to Next.js Config. This option is not supported.',
+      log: 'Unable to migrate `generateLockfile` to Next.js config. This option is not supported.',
     });
 
     delete options.generateLockfile;
@@ -166,11 +163,9 @@ function handlePropertiesFromTargetOptions(
     delete options.experimentalAppOnly;
   }
 
-  if ('experimentalBuildMode' in options) {
+  if ('experimentalBuildMode' in options && options.experimentalBuildMode) {
     options['args'] ??= [];
-    options['args'].push(
-      `--experimental-build-mode ${options.experimentalBuildMode}`
-    );
+    options['args'].push(`--experimental-build-mode`);
     delete options.experimentalBuildMode;
   }
 

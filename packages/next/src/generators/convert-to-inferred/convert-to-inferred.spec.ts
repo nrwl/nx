@@ -1,13 +1,13 @@
 import {
   addProjectConfiguration,
-  joinPathFragments,
-  readNxJson,
-  readProjectConfiguration,
-  writeJson,
   type ExpandedPluginConfiguration,
+  joinPathFragments,
   type ProjectConfiguration,
   type ProjectGraph,
+  readNxJson,
+  readProjectConfiguration,
   type Tree,
+  writeJson,
 } from '@nx/devkit';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
@@ -253,12 +253,13 @@ describe('convert-to-inferred', () => {
     });
   });
 
-  it('should move fileReplacement option to withNx', async () => {
+  it('should move fileReplacement and assets option to withNx', async () => {
     const project = createProject(
       tree,
       {},
       {
         build: {
+          assets: [{ input: 'tools', output: '.', glob: 'test.txt' }],
           fileReplacements: [
             {
               replace: 'apps/my-app/environments/environment.ts',
@@ -285,13 +286,20 @@ describe('convert-to-inferred', () => {
               with: './environments/environment.foo.ts',
             },
           ],
+          assets: [
+            {
+              input: '../../tools',
+              output: '../..',
+              glob: 'test.txt',
+            },
+          ],
         },
         development: {},
       };
       const configuration = process.env.NX_TASK_TARGET_CONFIGURATION || 'default';
       const options = {
         ...configValues.default,
-        //@ts-expect-error: Ignore TypeScript error for indexing configValues with a dynamic key
+        // @ts-expect-error: Ignore TypeScript error for indexing configValues with a dynamic key
         ...configValues[configuration],
       };
       /**
@@ -365,5 +373,28 @@ describe('convert-to-inferred', () => {
         },
       }
     `);
+  });
+
+  it('should migrate options to CLI options and args', async () => {
+    const project = createProject(
+      tree,
+      {},
+      {
+        build: {
+          experimentalAppOnly: true,
+          experimentalBuildMode: true,
+        },
+      }
+    );
+    writeNextConfig(tree, project.root);
+
+    await convertToInferred(tree, { project: project.name });
+
+    const projectConfig = readProjectConfiguration(tree, project.name);
+    expect(projectConfig.targets.build).toMatchObject({
+      options: {
+        args: ['--experimental-app-only', '--experimental-build-mode'],
+      },
+    });
   });
 });
