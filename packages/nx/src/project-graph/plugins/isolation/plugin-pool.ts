@@ -1,4 +1,4 @@
-import { ChildProcess, Serializable, fork } from 'child_process';
+import { ChildProcess, spawn } from 'child_process';
 import path = require('path');
 
 import { PluginConfiguration } from '../../../config/nx-json';
@@ -314,17 +314,21 @@ async function startPluginWorker() {
     [process.pid, global.nxPluginWorkerCount++].join('-')
   );
 
-  const worker = fork(workerPath, [ipcPath], {
-    stdio: process.stdout.isTTY ? 'inherit' : 'ignore',
-    env,
-    execArgv: [
-      ...process.execArgv,
-      // If the worker is typescript, we need to register ts-node
-      ...(isWorkerTypescript ? ['-r', 'ts-node/register'] : []),
+  const worker = spawn(
+    process.execPath,
+    [
+      ...(isWorkerTypescript ? ['--require', 'ts-node/register'] : []),
+      workerPath,
+      ipcPath,
     ],
-    detached: true,
-  });
-  worker.disconnect();
+    {
+      stdio: process.stdout.isTTY ? 'inherit' : 'ignore',
+      env,
+      detached: true,
+      shell: false,
+      windowsHide: true,
+    }
+  );
   worker.unref();
 
   let attempts = 0;
