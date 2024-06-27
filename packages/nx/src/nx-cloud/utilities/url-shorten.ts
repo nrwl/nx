@@ -15,7 +15,7 @@ export async function shortenedCloudUrl(
 
   const version = await getNxCloudVersion(apiUrl);
 
-  if (version && lt(truncateToSemver(version), '2406.11.5')) {
+  if (version && lt(removeVersionModifier(version), '2406.11.5')) {
     return apiUrl;
   }
 
@@ -110,16 +110,18 @@ function getURLifShortenFailed(
 
 async function getInstallationSupportsGitHub(apiUrl: string): Promise<boolean> {
   try {
-    const response = await require('axios').get(`${apiUrl}/vcs-integrations`);
+    const response = await require('axios').get(
+      `${apiUrl}/nx-cloud/system/features`
+    );
     if (!response?.data || response.data.message) {
       throw new Error(
         response?.data?.message ?? 'Failed to shorten Nx Cloud URL'
       );
     }
-    return !!response.data.github;
+    return !!response.data.isGithubIntegrationEnabled;
   } catch (e) {
     if (process.env.NX_VERBOSE_LOGGING) {
-      logger.warn(`Failed to access vcs-integrations endpoint.
+      logger.warn(`Failed to access system features. GitHub integration assumed to be disabled. 
     ${e}`);
     }
     return false;
@@ -128,10 +130,10 @@ async function getInstallationSupportsGitHub(apiUrl: string): Promise<boolean> {
 
 async function getNxCloudVersion(apiUrl: string): Promise<string | null> {
   try {
-    const response = await require('axios').get(`${apiUrl}/version`, {
-      responseType: 'document',
-    });
-    const version = extractVersion(response.data);
+    const response = await require('axios').get(
+      `${apiUrl}/nx-cloud/system/version`
+    );
+    const version = removeVersionModifier(response.data.version);
     if (!version) {
       throw new Error('Failed to extract version from response.');
     }
@@ -142,16 +144,7 @@ async function getNxCloudVersion(apiUrl: string): Promise<string | null> {
   }
 }
 
-function extractVersion(htmlString: string): string | null {
-  // The pattern assumes 'Version' is inside an h1 tag and the version number is the next span's content
-  const regex =
-    /<h1[^>]*>Version<\/h1>\s*<div[^>]*><div[^>]*><div[^>]*><span[^>]*>([^<]+)<\/span>/;
-  const match = htmlString.match(regex);
-
-  return match ? match[1].trim() : null;
-}
-
-function truncateToSemver(versionString: string): string {
+function removeVersionModifier(versionString: string): string {
   // version may be something like 2406.13.5.hotfix2
   return versionString.split(/[\.-]/).slice(0, 3).join('.');
 }
