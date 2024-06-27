@@ -1458,7 +1458,7 @@ Violation detected in:
           },
           myappE2eName: {
             name: 'myappE2eName',
-            type: 'app',
+            type: 'e2e',
             data: {
               root: 'apps/myapp-e2e',
               tags: [],
