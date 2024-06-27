@@ -22,12 +22,6 @@ executors:
       - image: cimg/rust:1.73.0-browsers
     resource_class: medium+
 
-  macos:
-    <<: *defaults
-    resource_class: macos.m1.medium.gen1
-    macos:
-      xcode: '14.2.0'
-
 # -------------------------
 #        COMMANDS
 # -------------------------
@@ -91,11 +85,6 @@ jobs:
       - nx/set-shas:
           main-branch-name: 'master'
       - run: npx nx-cloud@next start-ci-run --distribute-on=".nx/workflows/dynamic-changesets.yaml" --stop-agents-after="e2e"
-      - run:
-          command: |
-            sudo apt-get update
-            sudo apt-get install -y ca-certificates lsof libvips-dev libglib2.0-dev libgirepository1.0-dev
-      - browser-tools/install-chrome
       - run-pnpm-install:
           os: linux
       - run:
@@ -125,36 +114,22 @@ jobs:
   #     JOBS: Main-MacOS
   # -------------------------
   mainmacos:
-    executor: macos
+    executor: linux # Use linux executor to setup, use macos agents to distribute the job
     environment:
       NX_E2E_CI_CACHE_KEY: e2e-circleci-macos
+      NX_DAEMON: 'true'
       NX_PERF_LOGGING: 'false'
+      NX_NATIVE_LOGGING: 'false'
       NX_CI_EXECUTION_ENV: 'macos'
       SELECTED_PM: 'npm' # explicitly define npm for macOS tests
+      NX_CLOUD_DTE_V2: 'true'
     steps:
       - checkout
-      - restore_cache:
-          name: Restore Homebrew packages
-          keys:
-            - nrwl-nx-homebrew-packages
-      - run:
-          name: Configure Detox Environment, Install applesimutils
-          command: |
-            HOMEBREW_NO_AUTO_UPDATE=1 brew tap wix/brew >/dev/null
-            HOMEBREW_NO_AUTO_UPDATE=1 brew install applesimutils >/dev/null
-            xcrun simctl shutdown all && xcrun simctl erase all
-          no_output_timeout: 20m
-      - save_cache:
-          name: Save Homebrew Cache
-          key: nrwl-nx-homebrew-packages
-          paths:
-            - /usr/local/Homebrew
-            - ~/Library/Caches/Homebrew
-      - run-pnpm-install:
-          os: macos
-      - rust/install
       - nx/set-shas:
           main-branch-name: 'master'
+      - run: npx nx-cloud@next start-ci-run --distribute-on="1 macos-medium" --stop-agents-after="e2e-macos-ci"
+      - run-pnpm-install:
+          os: linux
       - run:
           name: Run E2E Tests for macOS
           command: |

@@ -11,17 +11,17 @@ launch-templates:
       NPM_CONFIG_PREFIX: '/home/workflows/.npm-global'
     init-steps:
       - name: Checkout
-        uses: 'nrwl/nx-cloud-workflows/v3.6/workflow-steps/checkout/main.yaml'
+        uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/checkout/main.yaml'
       - name: Cache restore
-        uses: 'nrwl/nx-cloud-workflows/v3.6/workflow-steps/cache/main.yaml'
-        env:
-          KEY: 'pnpm-lock.yaml'
-          PATHS: |
+        uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/cache/main.yaml'
+        inputs:
+          key: 'pnpm-lock.yaml'
+          paths: |
             node_modules
             ~/.cache/Cypress
             ~/.cache/ms-playwright
             ~/.pnpm-store
-          BASE_BRANCH: 'master'
+          base-branch: 'master'
       - name: Install e2e deps
         script: |
           sudo apt-get update
@@ -31,13 +31,10 @@ launch-templates:
           npm install -g pnpm@8
 
       - name: Pnpm Install
-        script: |
-          pnpm install --frozen-lockfile
+        uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/install-node-modules/main.yaml'
 
       - name: Install Browsers
-        script: |
-          pnpm exec cypress install
-          pnpm exec playwright install
+        uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/install-browsers/main.yaml'
 
       - name: Install Rust
         script: |
@@ -55,3 +52,38 @@ launch-templates:
 
       - name: Install zip and unzip
         script: sudo apt-get -yqq install zip unzip
+  macos-medium:
+    resource-class: 'macos_arm64/medium'
+    image: nx-agent-macos-sonoma:15.2.0
+    env:
+      GIT_AUTHOR_EMAIL: test@test.com
+      GIT_AUTHOR_NAME: Test
+      GIT_COMMITTER_EMAIL: test@test.com
+      GIT_COMMITTER_NAME: Test
+      SELECTED_PM: 'npm' # explicitly define npm for macOS tests
+    init-steps:
+      - name: Checkout
+        uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/checkout/main.yaml'
+      - name: Cache restore
+        uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/cache/main.yaml'
+        inputs:
+          key: 'pnpm-lock.yaml'
+          paths: |
+            node_modules
+            ~/.pnpm-store
+          base-branch: 'master'
+
+      - name: Install Pnpm
+        script: npm install -g pnpm@8
+
+      - name: Install Dependencies Step
+        uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/install-node-modules/main.yaml'
+
+      - name: Install Rust
+        script: |
+          curl --proto '=https' https://sh.rustup.rs -sSf | sh -s -- -y
+          source "$HOME/.cargo/env"
+          rustup toolchain install 1.70.0
+
+      - name: Load Cargo Env
+        script: echo "PATH=$HOME/.cargo/bin:$PATH" >> $NX_CLOUD_ENV
