@@ -35,6 +35,12 @@ Generate a static website with project graph into an html file, accompanied by a
  nx graph --file=output.html
 ```
 
+Print the project graph as JSON to the console:
+
+```shell
+ nx graph --print
+```
+
 Show the graph where every node is either an ancestor or a descendant of todos-feature-main:
 
 ```shell
@@ -89,7 +95,7 @@ Exclude certain projects from being processed
 
 Type: `string`
 
-Output file (e.g. --file=output.json or --file=dep-graph.html)
+Output file (e.g. --file=output.json or --file=dep-graph.html).
 
 ### files
 
@@ -141,6 +147,12 @@ Type: `number`
 
 Bind the project graph server to a specific port.
 
+### print
+
+Type: `boolean`
+
+Print the project graph to stdout in the terminal.
+
 ### targets
 
 Type: `string`
@@ -158,6 +170,12 @@ Uncommitted changes
 Type: `boolean`
 
 Untracked changes
+
+### verbose
+
+Type: `boolean`
+
+Prints additional information about the commands (e.g., stack traces)
 
 ### version
 
@@ -179,6 +197,6 @@ Choose whether to view the projects or task graph
 
 Type: `boolean`
 
-Default: `false`
+Default: `true`
 
 Watch for changes to project graph and update in-browser

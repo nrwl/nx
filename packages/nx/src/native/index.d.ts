@@ -29,11 +29,8 @@ export function findImports(projectFileMap: Record<string, Array<string>>): Arra
  * This wont be needed once the project graph is created in Rust
  */
 export function transferProjectGraph(projectGraph: ProjectGraph): ExternalObject<ProjectGraph>
-export interface ExternalNodeData {
-  version: string
-  hash?: string
-}
 export interface ExternalNode {
+  packageName?: string
   version: string
   hash?: string
 }
@@ -153,12 +150,12 @@ export class ChildProcess {
 }
 export class RustPseudoTerminal {
   constructor()
-  runCommand(command: string, commandDir?: string | undefined | null, jsEnv?: Record<string, string> | undefined | null, quiet?: boolean | undefined | null): ChildProcess
+  runCommand(command: string, commandDir?: string | undefined | null, jsEnv?: Record<string, string> | undefined | null, execArgv?: Array<string> | undefined | null, quiet?: boolean | undefined | null, tty?: boolean | undefined | null): ChildProcess
   /**
    * This allows us to run a pseudoterminal with a fake node ipc channel
    * this makes it possible to be backwards compatible with the old implementation
    */
-  fork(id: string, forkScript: string, pseudoIpcPath: string, commandDir: string | undefined | null, jsEnv: Record<string, string> | undefined | null, quiet: boolean): ChildProcess
+  fork(id: string, forkScript: string, pseudoIpcPath: string, commandDir: string | undefined | null, jsEnv: Record<string, string> | undefined | null, execArgv: Array<string> | undefined | null, quiet: boolean): ChildProcess
 }
 export class HashPlanner {
   constructor(nxJson: NxJson, projectGraph: ExternalObject<ProjectGraph>)

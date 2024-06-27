@@ -19,7 +19,7 @@ jobs:
 
       - name: Install PNPM
         run: |
-          npm install -g @pnpm/exe@8.3.1
+          npm install -g @pnpm/exe@8
 
       - name: Run a security audit
         run: pnpm dlx audit-ci --critical --report-type summary

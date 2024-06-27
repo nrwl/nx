@@ -1,3 +1,4 @@
+use crate::native::logger::enable_logger;
 use crate::native::tasks::{
     dep_outputs::get_dep_output,
     types::{HashInstruction, TaskGraph},
@@ -11,6 +12,7 @@ use napi::bindgen_prelude::External;
 use napi::{Env, JsExternal};
 use rayon::prelude::*;
 use std::collections::HashMap;
+use tracing::trace;
 
 use crate::native::tasks::inputs::{
     expand_single_project_inputs, get_inputs, get_inputs_for_dependency, get_named_inputs,
@@ -28,6 +30,7 @@ pub struct HashPlanner {
 impl HashPlanner {
     #[napi(constructor)]
     pub fn new(nx_json: NxJson, project_graph: External<ProjectGraph>) -> Self {
+        enable_logger();
         Self {
             nx_json,
             project_graph,
@@ -110,19 +113,12 @@ impl HashPlanner {
         project_name: &str,
         target_name: &str,
         self_inputs: &[Input],
-        external_deps_map: &hashbrown::HashMap<&str, Vec<&'a str>>,
+        external_deps_map: &hashbrown::HashMap<&String, Vec<&'a String>>,
     ) -> anyhow::Result<Option<Vec<HashInstruction>>> {
         let project = &self.project_graph.nodes[project_name];
         let Some(target) = project.targets.get(target_name) else {
             return Ok(None);
         };
-
-        let external_nodes_keys: Vec<&str> = self
-            .project_graph
-            .external_nodes
-            .keys()
-            .map(|s| s.as_str())
-            .collect();
 
         // we can only vouch for @nx packages's executor dependencies
         // if it's "run commands" or third-party we skip traversing since we have no info what this command depends on
@@ -139,29 +135,50 @@ impl HashPlanner {
                 .next()
                 .expect("Executors should always have a ':'");
             let Some(existing_package) =
-                find_external_dependency_node_name(executor_package, &external_nodes_keys)
+                find_external_dependency_node_name(executor_package, &self.project_graph)
             else {
                 // this usually happens because the executor was a local plugin.
                 // todo)) @Cammisuli: we need to gather the project's inputs and its dep inputs similar to how we do it in `self_and_deps_inputs`
                 return Ok(None);
             };
-            Ok(Some(vec![HashInstruction::External(
-                existing_package.to_string(),
-            )]))
+            let mut external_deps: Vec<&'a String> = vec![];
+            trace!(
+                "Add External Instruction for executor {existing_package}: {}",
+                target.executor.as_ref().unwrap()
+            );
+            trace!(
+                "Add External Instructions for dependencies of executor {existing_package}: {:?}",
+                &external_deps_map[&existing_package]
+            );
+            external_deps.push(existing_package);
+            external_deps.extend(&external_deps_map[&existing_package]);
+            Ok(Some(
+                external_deps
+                    .iter()
+                    .map(|s| HashInstruction::External(s.to_string()))
+                    .collect(),
+            ))
         } else {
-            let mut external_deps: Vec<&str> = vec![];
+            let mut external_deps: Vec<&'a String> = vec![];
             for input in self_inputs {
                 match input {
                     Input::ExternalDependency(deps) => {
                         for dep in deps.iter() {
-                            let external_node_name: Option<&str> =
-                                find_external_dependency_node_name(dep, &external_nodes_keys);
+                            let external_node_name =
+                                find_external_dependency_node_name(dep, &self.project_graph);
                             let Some(external_node_name) = external_node_name else {
                                 anyhow::bail!("The externalDependency '{dep}' for '{project_name}:{target_name}' could not be found")
                             };
-
+                            trace!(
+                                "Add External Instruction for External Input {external_node_name}: {}",
+                                target.executor.as_ref().unwrap()
+                            );
+                            trace!(
+                                "Add External Instructions for dependencies of External Input {external_node_name}: {:?}",
+                                &external_deps_map[&external_node_name]
+                            );
                             external_deps.push(external_node_name);
-                            external_deps.extend(&external_deps_map[external_node_name]);
+                            external_deps.extend(&external_deps_map[&external_node_name]);
                         }
                     }
                     _ => continue,
@@ -186,12 +203,11 @@ impl HashPlanner {
         task: &Task,
         inputs: &SplitInputs,
         task_graph: &TaskGraph,
-        external_deps_mapped: &hashbrown::HashMap<&str, Vec<&str>>,
+        external_deps_mapped: &hashbrown::HashMap<&String, Vec<&String>>,
         visited: &mut Box<hashbrown::HashSet<String>>,
     ) -> anyhow::Result<Vec<HashInstruction>> {
         let project_deps = &self.project_graph.dependencies[project_name]
             .iter()
-            .map(|d| d.as_str())
             .collect::<Vec<_>>();
         let self_inputs = self.gather_self_inputs(project_name, &inputs.self_inputs);
         let deps_inputs = self.gather_dependency_inputs(
@@ -215,15 +231,13 @@ impl HashPlanner {
             .collect())
     }
 
-    fn setup_external_deps(&self) -> hashbrown::HashMap<&str, Vec<&str>> {
+    fn setup_external_deps(&self) -> hashbrown::HashMap<&String, Vec<&String>> {
         self.project_graph
             .external_nodes
             .keys()
-            .collect::<Vec<_>>()
-            .par_iter()
             .map(|external_node| {
                 (
-                    external_node.as_str(),
+                    external_node,
                     utils::find_all_project_node_dependencies(
                         external_node,
                         &self.project_graph,
@@ -240,8 +254,8 @@ impl HashPlanner {
         task: &Task,
         inputs: &[Input],
         task_graph: &TaskGraph,
-        project_deps: &[&'a str],
-        external_deps_mapped: &hashbrown::HashMap<&str, Vec<&'a str>>,
+        project_deps: &[&'a String],
+        external_deps_mapped: &hashbrown::HashMap<&String, Vec<&'a String>>,
         visited: &mut Box<hashbrown::HashSet<String>>,
     ) -> anyhow::Result<Vec<HashInstruction>> {
         let mut deps_inputs: Vec<HashInstruction> = vec![];
@@ -377,12 +391,23 @@ impl HashPlanner {
 
 fn find_external_dependency_node_name<'a>(
     package_name: &str,
-    external_nodes: &[&'a str],
-) -> Option<&'a str> {
-    external_nodes
-        .iter()
-        .find(|n| **n == package_name || n.ends_with(package_name))
-        .copied()
+    project_graph: &'a ProjectGraph,
+) -> Option<&'a String> {
+    let npm_name = format!("npm:{}", &package_name);
+    if let Some((key, _)) = project_graph.external_nodes.get_key_value(package_name) {
+        Some(key)
+    } else if let Some((key, _)) = project_graph.external_nodes.get_key_value(&npm_name) {
+        Some(key)
+    } else {
+        for (node_name, node) in project_graph.external_nodes.iter() {
+            if let Some(pkg_name) = &node.package_name {
+                if pkg_name.as_str() == package_name {
+                    return Some(node_name);
+                }
+            }
+        }
+        None
+    }
 }
 
 fn project_file_set_inputs(project_name: &str, file_sets: Vec<&str>) -> Vec<HashInstruction> {

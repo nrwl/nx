@@ -1,3 +1,5 @@
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
 import {
   getProjects,
   NxJsonConfiguration,
@@ -94,6 +96,22 @@ describe('lib', () => {
     expect(devDependencies['codelyzer']).toBeUndefined();
   });
 
+  it('should not touch the package.json when run with `--skipPackageJson`', async () => {
+    let initialPackageJson;
+    updateJson(tree, 'package.json', (json) => {
+      json.dependencies = {};
+      json.devDependencies = {};
+      initialPackageJson = json;
+
+      return json;
+    });
+
+    await runLibraryGeneratorWithOpts({ skipPackageJson: true });
+
+    const packageJson = readJson(tree, 'package.json');
+    expect(packageJson).toEqual(initialPackageJson);
+  });
+
   describe('not nested', () => {
     it('should update ng-package.json', async () => {
       // ACT
@@ -160,6 +178,9 @@ describe('lib', () => {
       expect(packageJson.devDependencies['postcss']).toBeDefined();
       expect(packageJson.devDependencies['autoprefixer']).toBeDefined();
       expect(packageJson.devDependencies['postcss-url']).toBeDefined();
+
+      const libPackageJson = readJson(tree, 'my-lib/package.json');
+      expect(libPackageJson.dependencies?.['tslib']).toBeFalsy();
     });
 
     it('should create project configuration', async () => {

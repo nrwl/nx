@@ -3,16 +3,21 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "e2e/eslint",
   "projectType": "application",
+  "implicitDependencies": ["eslint"],
   "targets": {
-    "e2e": {},
-    "run-e2e-tests": {
-      "executor": "@nx/jest:jest",
-      "options": {
-        "jestConfig": "e2e/eslint/jest.config.ts",
-        "runInBand": true
-      },
-      "outputs": ["{workspaceRoot}/coverage/e2e/eslint"]
+    "e2e-ci--src/linter.test.ts": {
+      "dependsOn": [
+        "nx:build-native",
+        "@nx/nx-source:populate-local-registry-storage"
+      ],
+      "inputs": ["e2eInputs", "^production"]
+    },
+    "e2e-ci--src/linter-legacy.test.ts": {
+      "dependsOn": [
+        "nx:build-native",
+        "@nx/nx-source:populate-local-registry-storage"
+      ],
+      "inputs": ["e2eInputs", "^production"]
     }
-  },
-  "implicitDependencies": ["eslint"]
+  }
 }

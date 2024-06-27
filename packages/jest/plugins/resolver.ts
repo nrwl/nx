@@ -1,4 +1,4 @@
-import { dirname, extname, join } from 'path';
+import { dirname, extname, join, resolve } from 'path';
 import { resolve as resolveExports } from 'resolve.exports';
 import type defaultResolver from 'jest-resolve/build/defaultResolver';
 
@@ -67,7 +67,8 @@ module.exports = function (path: string, options: ResolveOptions) {
   } catch (e) {
     if (
       path === 'jest-sequencer-@jest/test-sequencer' ||
-      path === '@jest/test-sequencer'
+      path === '@jest/test-sequencer' ||
+      path.startsWith('jest-sequencer-')
     ) {
       return;
     }
@@ -75,11 +76,15 @@ module.exports = function (path: string, options: ResolveOptions) {
     ts = ts || require('typescript');
     compilerSetup = compilerSetup || getCompilerSetup(options.rootDir);
     const { compilerOptions, host } = compilerSetup;
-    return ts.resolveModuleName(
+    const resolvedFileName = ts.resolveModuleName(
       path,
       join(options.basedir, 'fake-placeholder.ts'),
       compilerOptions,
       host
-    ).resolvedModule.resolvedFileName;
+    ).resolvedModule?.resolvedFileName;
+    if (!resolvedFileName) {
+      throw new Error(`Could not resolve ${path}`);
+    }
+    return resolve(options.rootDir, resolvedFileName);
   }
 };

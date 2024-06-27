@@ -1,5 +1,7 @@
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
 import { createApp, createLib } from '../../utils/testing-generators';
-import { logger, readJson, Tree } from '@nx/devkit';
+import { logger, Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { hookGenerator } from './hook';
 

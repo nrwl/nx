@@ -27,6 +27,11 @@
         "type": "boolean",
         "description": "Copy all dependencies and devDependencies from the workspace root package.json.",
         "default": false
+      },
+      "excludeImplicit": {
+        "type": "boolean",
+        "description": "This will ignore npm packages from projects listed in implicitDependencies (e.g. backend API projects)",
+        "default": false
       }
     },
     "presets": []

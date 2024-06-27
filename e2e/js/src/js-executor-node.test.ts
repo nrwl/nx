@@ -44,6 +44,7 @@ describe('js:node executor', () => {
 
     const output = runCLI(`run ${esbuildLib}:run-node`, {
       redirectStderr: true,
+      silenceError: true,
     });
     expect(output).toContain('Hello from my library!');
     expect(output).toContain('This is an error');

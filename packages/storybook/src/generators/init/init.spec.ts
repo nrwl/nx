@@ -1,11 +1,27 @@
-import { readJson, type NxJsonConfiguration, type Tree } from '@nx/devkit';
+import {
+  readJson,
+  type NxJsonConfiguration,
+  type Tree,
+  ProjectGraph,
+} from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { initGenerator } from './init';
 
+let projectGraph: ProjectGraph;
+jest.mock('@nx/devkit', () => ({
+  ...jest.requireActual<any>('@nx/devkit'),
+  createProjectGraphAsync: jest.fn().mockImplementation(async () => {
+    return projectGraph;
+  }),
+}));
 describe('@nx/storybook:init', () => {
   let tree: Tree;
 
   beforeEach(() => {
+    projectGraph = {
+      nodes: {},
+      dependencies: {},
+    };
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   });
 

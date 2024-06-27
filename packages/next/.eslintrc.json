@@ -88,6 +88,7 @@
               "webpack",
               // require.resovle is used for these
               "@babel/plugin-proposal-decorators",
+              "file-loader",
               "url-loader",
               "@svgr/webpack"
             ]

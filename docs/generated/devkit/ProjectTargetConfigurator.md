@@ -4,7 +4,7 @@
 
 **`Deprecated`**
 
-Add targets to the projects in a [CreateNodes](../../devkit/documents/CreateNodes) function instead. This will be removed in Nx 19
+Add targets to the projects in a [CreateNodes](../../devkit/documents/CreateNodes) function instead. This will be removed in Nx 20
 
 #### Type declaration
 

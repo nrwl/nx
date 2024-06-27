@@ -826,6 +826,29 @@ export function addProviderToComponent(
   );
 }
 
+/**
+ * Add a view provider to a Standalone Component
+ * @param host Virtual Tree
+ * @param source TS Source File containing the Component
+ * @param componentPath Path to the Component
+ * @param symbolName The provider to add
+ */
+export function addViewProviderToComponent(
+  host: Tree,
+  source: ts.SourceFile,
+  componentPath: string,
+  symbolName: string
+): ts.SourceFile {
+  return _addSymbolToDecoratorMetadata(
+    host,
+    source,
+    componentPath,
+    'viewProviders',
+    symbolName,
+    'Component'
+  );
+}
+
 export function addDeclarationToModule(
   host: Tree,
   source: ts.SourceFile,

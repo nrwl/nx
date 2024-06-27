@@ -1,63 +1,69 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`@nx/webpack/plugin should create nodes 1`] = `
-{
-  "projects": {
-    "my-app": {
-      "projectType": "application",
-      "targets": {
-        "build-something": {
-          "cache": true,
-          "command": "webpack-cli build",
-          "dependsOn": [
-            "^build-something",
-          ],
-          "inputs": [
-            "production",
-            "^production",
-            {
-              "externalDependencies": [
-                "webpack-cli",
+[
+  [
+    "my-app/webpack.config.js",
+    {
+      "projects": {
+        "my-app": {
+          "metadata": {},
+          "projectType": "application",
+          "targets": {
+            "build-something": {
+              "cache": true,
+              "command": "webpack-cli build",
+              "dependsOn": [
+                "^build-something",
+              ],
+              "inputs": [
+                "production",
+                "^production",
+                {
+                  "externalDependencies": [
+                    "webpack-cli",
+                  ],
+                },
+              ],
+              "options": {
+                "args": [
+                  "--node-env=production",
+                ],
+                "cwd": "my-app",
+              },
+              "outputs": [
+                "{projectRoot}/dist/foo",
               ],
             },
-          ],
-          "options": {
-            "args": [
-              "--node-env=production",
-            ],
-            "cwd": "my-app",
-          },
-          "outputs": [
-            "{projectRoot}/dist/foo",
-          ],
-        },
-        "my-serve": {
-          "command": "webpack-cli serve",
-          "options": {
-            "args": [
-              "--node-env=development",
-            ],
-            "cwd": "my-app",
-          },
-        },
-        "preview-site": {
-          "command": "webpack-cli serve",
-          "options": {
-            "args": [
-              "--node-env=production",
-            ],
-            "cwd": "my-app",
-          },
-        },
-        "serve-static": {
-          "executor": "@nx/web:file-server",
-          "options": {
-            "buildTarget": "build-something",
-            "spa": true,
+            "my-serve": {
+              "command": "webpack-cli serve",
+              "options": {
+                "args": [
+                  "--node-env=development",
+                ],
+                "cwd": "my-app",
+              },
+            },
+            "preview-site": {
+              "command": "webpack-cli serve",
+              "options": {
+                "args": [
+                  "--node-env=production",
+                ],
+                "cwd": "my-app",
+              },
+            },
+            "serve-static": {
+              "executor": "@nx/web:file-server",
+              "options": {
+                "buildTarget": "build-something",
+                "spa": true,
+              },
+            },
           },
         },
       },
     },
-  },
-}
+  ],
+]
 `;

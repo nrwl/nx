@@ -40,7 +40,11 @@ export default function AiDocs(): JSX.Element {
           className="flex h-full flex-1 overflow-y-hidden"
         >
           <div className="hidden">
-            <SidebarContainer menu={{ sections: [] }} navIsOpen={navIsOpen} />
+            <SidebarContainer
+              menu={{ sections: [] }}
+              navIsOpen={navIsOpen}
+              toggleNav={toggleNav}
+            />
           </div>
 
           <FeedContainer />

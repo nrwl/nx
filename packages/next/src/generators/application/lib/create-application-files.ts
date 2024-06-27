@@ -164,7 +164,7 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
     host.delete(`${options.appProjectRoot}/.babelrc`);
   }
 
-  if (options.styledModule) {
+  if (options.styledModule || options.style === 'tailwind') {
     if (options.appDir) {
       host.delete(`${generatedAppFilePath}/app/page.module.${options.style}`);
     } else {

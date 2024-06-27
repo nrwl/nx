@@ -20,7 +20,7 @@ export function SourcemapInfoToolTip({
   // Every other property within in the target has the form `target.${targetName}.${propertyName}
   const isTarget = propertyKey.split('.').length === 2;
 
-  const docsUrlSlug: string | undefined = plugin.startsWith('@nx/')
+  const docsUrlSlug: string | undefined = plugin?.startsWith('@nx/')
     ? plugin.replace('@nx/', '').split('/')[0]
     : undefined;
 
@@ -28,12 +28,11 @@ export function SourcemapInfoToolTip({
     <>
       <p className="flex grow items-center gap-2">
         <span className="font-bold">{isTarget ? 'Created' : 'Set'} by:</span>
-        <span className="inline-flex grow justify-between items-center">
+        <span className="inline-flex grow items-center justify-between">
           {docsUrlSlug ? (
-            <ExternalLink
-              text={plugin}
-              href={`https://nx.dev/nx-api/${docsUrlSlug}`}
-            />
+            <ExternalLink href={`https://nx.dev/nx-api/${docsUrlSlug}`}>
+              {plugin}
+            </ExternalLink>
           ) : (
             `${plugin}`
           )}
@@ -46,10 +45,10 @@ export function SourcemapInfoToolTip({
   );
 
   return (
-    <div className="text-sm text-slate-700 dark:text-slate-400 max-w-md sm:max-w-full">
+    <div className="max-w-md text-sm text-slate-700 sm:max-w-full dark:text-slate-400">
       <div
         className={twMerge(
-          `flex flex-col font-mono py-2`,
+          `flex flex-col py-2 font-mono`,
           showLink ? 'border-b border-slate-200 dark:border-slate-700/60' : ''
         )}
       >
@@ -58,10 +57,9 @@ export function SourcemapInfoToolTip({
       {showLink && (
         <div className="flex py-2">
           <p className={`flex flex-col gap-1`}>
-            <ExternalLink
-              text="Learn more about how projects are configured"
-              href="https://nx.dev/concepts/inferred-tasks"
-            />
+            <ExternalLink href="https://nx.dev/concepts/inferred-tasks">
+              Learn more about how projects are configured
+            </ExternalLink>
           </p>
         </div>
       )}

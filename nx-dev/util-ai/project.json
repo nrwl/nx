@@ -13,17 +13,6 @@
         "tsConfig": "nx-dev/util-ai/tsconfig.lib.json",
         "assets": ["nx-dev/util-ai/*.md"]
       }
-    },
-    "lint": {
-      "executor": "@nx/eslint:lint",
-      "outputs": ["{options.outputFile}"]
-    },
-    "test": {
-      "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
-      "options": {
-        "jestConfig": "nx-dev/util-ai/jest.config.ts"
-      }
     }
   },
   "tags": []

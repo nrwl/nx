@@ -18,18 +18,27 @@ import {
   createAsyncIterable,
 } from '@nx/devkit/src/utils/async-iterable';
 import { waitForPortOpen } from '@nx/web/src/utils/wait-for-port-open';
-import { projectGraphCacheDirectory } from 'nx/src/utils/cache-directory';
+import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { fork } from 'node:child_process';
 import { basename, dirname, join } from 'node:path';
 import { createWriteStream, cpSync } from 'node:fs';
+import { existsSync } from 'fs';
+import { extname } from 'path';
 
 type ModuleFederationDevServerOptions = WebDevServerOptions & {
-  devRemotes?: string[];
+  devRemotes?: (
+    | string
+    | {
+        remoteName: string;
+        configuration: string;
+      }
+  )[];
   skipRemotes?: string[];
   static?: boolean;
   isInitialHost?: boolean;
   parallel?: number;
   staticRemotesPort?: number;
+  pathToManifestFile?: string;
 };
 
 function getBuildOptions(buildTarget: string, context: ExecutorContext) {
@@ -93,47 +102,61 @@ function startStaticRemotesFileServer(
   return staticRemotesIter;
 }
 
-async function startDevRemotes(
-  remotes: {
-    remotePorts: any[];
-    staticRemotes: string[];
-    devRemotes: string[];
-  },
+async function startRemotes(
+  remotes: string[],
   context: ExecutorContext,
-  options: ModuleFederationDevServerOptions
+  options: ModuleFederationDevServerOptions,
+  target: 'serve' | 'serve-static' = 'serve'
 ) {
-  const devRemoteIters: AsyncIterable<{ success: boolean }>[] = [];
+  const remoteIters: AsyncIterable<{ success: boolean }>[] = [];
 
-  for (const app of remotes.devRemotes) {
+  for (const app of remotes) {
     const remoteProjectServeTarget =
-      context.projectGraph.nodes[app].data.targets['serve'];
+      context.projectGraph.nodes[app].data.targets[target];
     const isUsingModuleFederationDevServerExecutor =
       remoteProjectServeTarget.executor.includes(
         'module-federation-dev-server'
       );
 
-    devRemoteIters.push(
+    const configurationOverride = options.devRemotes?.find(
+      (
+        r
+      ): r is {
+        remoteName: string;
+        configuration: string;
+      } => typeof r !== 'string' && r.remoteName === app
+    )?.configuration;
+
+    const defaultOverrides = {
+      ...(options.host ? { host: options.host } : {}),
+      ...(options.ssl ? { ssl: options.ssl } : {}),
+      ...(options.sslCert ? { sslCert: options.sslCert } : {}),
+      ...(options.sslKey ? { sslKey: options.sslKey } : {}),
+    };
+    const overrides =
+      target === 'serve'
+        ? {
+            watch: true,
+            ...(isUsingModuleFederationDevServerExecutor
+              ? { isInitialHost: false }
+              : {}),
+            ...defaultOverrides,
+          }
+        : { ...defaultOverrides };
+
+    remoteIters.push(
       await runExecutor(
         {
           project: app,
-          target: 'serve',
-          configuration: context.configurationName,
+          target,
+          configuration: configurationOverride ?? context.configurationName,
         },
-        {
-          watch: true,
-          ...(options.host ? { host: options.host } : {}),
-          ...(options.ssl ? { ssl: options.ssl } : {}),
-          ...(options.sslCert ? { sslCert: options.sslCert } : {}),
-          ...(options.sslKey ? { sslKey: options.sslKey } : {}),
-          ...(isUsingModuleFederationDevServerExecutor
-            ? { isInitialHost: false }
-            : {}),
-        },
+        overrides,
         context
       )
     );
   }
-  return devRemoteIters;
+  return remoteIters;
 }
 
 async function buildStaticRemotes(
@@ -182,7 +205,7 @@ async function buildStaticRemotes(
 
     // File to debug build failures e.g. 2024-01-01T00_00_0_0Z-build.log'
     const remoteBuildLogFile = join(
-      projectGraphCacheDirectory,
+      workspaceDataDirectory,
       `${new Date().toISOString().replace(/[:\.]/g, '_')}-build.log`
     );
     const stdoutStream = createWriteStream(remoteBuildLogFile);
@@ -201,13 +224,16 @@ async function buildStaticRemotes(
       }
     });
     staticProcess.stderr.on('data', (data) => logger.info(data.toString()));
-    staticProcess.on('exit', (code) => {
+    staticProcess.once('exit', (code) => {
       stdoutStream.end();
+      staticProcess.stdout.removeAllListeners('data');
+      staticProcess.stderr.removeAllListeners('data');
       if (code !== 0) {
         throw new Error(
           `Remote failed to start. A complete log can be found in: ${remoteBuildLogFile}`
         );
       }
+      res();
     });
     process.on('SIGTERM', () => staticProcess.kill('SIGTERM'));
     process.on('exit', () => staticProcess.kill('SIGTERM'));
@@ -269,6 +295,29 @@ export default async function* moduleFederationDevServer(
   const p = context.projectsConfigurations.projects[context.projectName];
   const buildOptions = getBuildOptions(options.buildTarget, context);
 
+  let pathToManifestFile = join(
+    context.root,
+    p.sourceRoot,
+    'assets/module-federation.manifest.json'
+  );
+  if (options.pathToManifestFile) {
+    const userPathToManifestFile = join(
+      context.root,
+      options.pathToManifestFile
+    );
+    if (!existsSync(userPathToManifestFile)) {
+      throw new Error(
+        `The provided Module Federation manifest file path does not exist. Please check the file exists at "${userPathToManifestFile}".`
+      );
+    } else if (extname(options.pathToManifestFile) !== '.json') {
+      throw new Error(
+        `The Module Federation manifest file must be a JSON. Please ensure the file at ${userPathToManifestFile} is a JSON.`
+      );
+    }
+
+    pathToManifestFile = userPathToManifestFile;
+  }
+
   if (!options.isInitialHost) {
     return yield* currIter;
   }
@@ -280,21 +329,28 @@ export default async function* moduleFederationDevServer(
     'react'
   );
 
+  const remoteNames = options.devRemotes?.map((r) =>
+    typeof r === 'string' ? r : r.remoteName
+  );
+
   const remotes = getRemotes(
-    options.devRemotes,
+    remoteNames,
     options.skipRemotes,
     moduleFederationConfig,
     {
       projectName: context.projectName,
       projectGraph: context.projectGraph,
       root: context.root,
-    }
+    },
+    pathToManifestFile
   );
 
   if (remotes.devRemotes.length > 0 && !initialStaticRemotesPorts) {
     options.staticRemotesPort = options.devRemotes.reduce((portToUse, r) => {
+      const remoteName = typeof r === 'string' ? r : r.remoteName;
       const remotePort =
-        context.projectGraph.nodes[r].data.targets['serve'].options.port;
+        context.projectGraph.nodes[remoteName].data.targets['serve'].options
+          .port;
       if (remotePort >= portToUse) {
         return remotePort + 1;
       } else {
@@ -309,7 +365,18 @@ export default async function* moduleFederationDevServer(
   );
   await buildStaticRemotes(staticRemotesConfig, nxBin, context, options);
 
-  const devRemoteIters = await startDevRemotes(remotes, context, options);
+  const devRemoteIters = await startRemotes(
+    remotes.devRemotes,
+    context,
+    options,
+    'serve'
+  );
+  const dynamicRemotesIters = await startRemotes(
+    remotes.dynamicRemotes,
+    context,
+    options,
+    'serve-static'
+  );
 
   const staticRemotesIter =
     remotes.staticRemotes.length > 0
@@ -319,6 +386,7 @@ export default async function* moduleFederationDevServer(
   return yield* combineAsyncIterables(
     currIter,
     ...devRemoteIters,
+    ...dynamicRemotesIters,
     ...(staticRemotesIter ? [staticRemotesIter] : []),
     createAsyncIterable<{ success: true; baseUrl: string }>(
       async ({ next, done }) => {

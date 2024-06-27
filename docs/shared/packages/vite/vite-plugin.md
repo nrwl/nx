@@ -39,6 +39,12 @@ In any Nx workspace, you can install `@nx/vite` by running the following command
 nx add @nx/vite
 ```
 
+You can also pass the `--setupPathsPlugin` flag to add [`nxViteTsPaths` plugin](/recipes/vite/configure-vite#typescript-paths), so your projects can use workspace libraries.
+
+```shell {% skipRescope=true %}
+nx add @nx/vite --setupPathsPlugin
+```
+
 This will install the correct version of `@nx/vite`.
 
 ### How @nx/vite Infers Tasks

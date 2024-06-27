@@ -92,4 +92,19 @@ myLib();
     }).toString();
     expect(result).toContain('x');
   }, 240_000);
+
+  it('should support --strip-leading-paths option', () => {
+    const lib = uniq('lib');
+    runCLI(`generate @nx/js:lib ${lib} --bundler=swc --no-interactive`);
+
+    runCLI(`build ${lib} --stripLeadingPaths`);
+
+    checkFilesExist(
+      `dist/libs/${lib}/package.json`,
+      `dist/libs/${lib}/index.js`,
+      `dist/libs/${lib}/lib/${lib}.js`,
+      `dist/libs/${lib}/index.d.ts`,
+      `dist/libs/${lib}/lib/${lib}.d.ts`
+    );
+  });
 });

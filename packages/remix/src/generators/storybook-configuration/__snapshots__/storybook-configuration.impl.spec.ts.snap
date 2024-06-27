@@ -1,6 +1,25 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`Storybook Configuration it should create a storybook configuration and use react-vite framework with testing framework jest 1`] = `
+"/// <reference types="vitest" />
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import viteTsConfigPaths from 'vite-tsconfig-paths';
+
+export default defineConfig({
+  cacheDir: '../../node_modules/.vite/storybook/libs/storybook-test',
+
+  plugins: [
+    react(),
+    viteTsConfigPaths({
+      root: '../../../',
+    }),
+  ],
+});
+"
+`;
+
+exports[`Storybook Configuration it should create a storybook configuration and use react-vite framework with testing framework jest 2`] = `
 "import type { StorybookConfig } from '@storybook/react-vite';
 
 const config: StorybookConfig = {
@@ -25,6 +44,25 @@ export default config;
 `;
 
 exports[`Storybook Configuration it should create a storybook configuration and use react-vite framework with testing framework none 1`] = `
+"/// <reference types="vitest" />
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import viteTsConfigPaths from 'vite-tsconfig-paths';
+
+export default defineConfig({
+  cacheDir: '../../node_modules/.vite/storybook/libs/storybook-test',
+
+  plugins: [
+    react(),
+    viteTsConfigPaths({
+      root: '../../../',
+    }),
+  ],
+});
+"
+`;
+
+exports[`Storybook Configuration it should create a storybook configuration and use react-vite framework with testing framework none 2`] = `
 "import type { StorybookConfig } from '@storybook/react-vite';
 
 const config: StorybookConfig = {
@@ -49,6 +87,39 @@ export default config;
 `;
 
 exports[`Storybook Configuration it should create a storybook configuration and use react-vite framework with testing framework vitest 1`] = `
+"import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+
+export default defineConfig({
+  root: __dirname,
+  cacheDir: '../../node_modules/.vite/libs/storybook-test',
+
+  plugins: [react(), nxViteTsPaths()],
+
+  // Uncomment this if you are using workers.
+  // worker: {
+  //  plugins: [ nxViteTsPaths() ],
+  // },
+
+  test: {
+    setupFiles: ['./src/test-setup.ts'],
+    watch: false,
+    globals: true,
+    cache: { dir: '../../node_modules/.vitest/libs/storybook-test' },
+    environment: 'jsdom',
+    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    reporters: ['default'],
+    coverage: {
+      reportsDirectory: '../../coverage/libs/storybook-test',
+      provider: 'v8',
+    },
+  },
+});
+"
+`;
+
+exports[`Storybook Configuration it should create a storybook configuration and use react-vite framework with testing framework vitest 2`] = `
 "import type { StorybookConfig } from '@storybook/react-vite';
 
 const config: StorybookConfig = {

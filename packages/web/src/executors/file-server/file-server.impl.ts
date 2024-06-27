@@ -18,38 +18,49 @@ import { interpolate } from 'nx/src/tasks-runner/utils';
 const pmCmd = platform() === 'win32' ? `npx.cmd` : 'npx';
 
 function getHttpServerArgs(options: Schema) {
+  const {
+    buildTarget,
+    parallel,
+    host,
+    proxyUrl,
+    ssl,
+    sslCert,
+    sslKey,
+    proxyOptions,
+    watch,
+    spa,
+    cacheSeconds,
+    ...rest
+  } = options;
   const args = [`-c${options.cacheSeconds}`];
-
-  if (options.cors) {
-    args.push(`--cors`);
+  for (const [key, value] of Object.entries(rest)) {
+    if (typeof value === 'boolean' && value) {
+      args.push(`--${key}`);
+    } else if (typeof value === 'string') {
+      args.push(`--${key}=${value}`);
+    }
   }
-  if (options.host) {
-    args.push(`-a=${options.host}`);
+  if (host) {
+    args.push(`-a=${host}`);
   }
-  if (options.ssl) {
+  if (ssl) {
     args.push(`-S`);
   }
-  if (options.sslCert) {
-    args.push(`-C=${options.sslCert}`);
+  if (sslCert) {
+    args.push(`-C=${sslCert}`);
   }
-  if (options.sslKey) {
-    args.push(`-K=${options.sslKey}`);
+  if (sslKey) {
+    args.push(`-K=${sslKey}`);
   }
-  if (options.proxyUrl) {
-    args.push(`-P=${options.proxyUrl}`);
+  if (proxyUrl) {
+    args.push(`-P=${proxyUrl}`);
   }
-  if (options.gzip) {
-    args.push('-g');
-  }
-  if (options.brotli) {
-    args.push('-b');
-  }
-
-  if (options.proxyOptions) {
+  if (proxyOptions) {
     Object.keys(options.proxyOptions).forEach((key) => {
       args.push(`--proxy-options.${key}=${options.proxyOptions[key]}`);
     });
   }
+
   return args;
 }
 
@@ -159,6 +170,8 @@ export default async function* fileServerExecutor(
           const args = getBuildTargetCommand(options, context);
           execFileSync(pmCmd, args, {
             stdio: [0, 1, 2],
+            shell: true,
+            windowsHide: true,
           });
         } catch {
           throw new Error(

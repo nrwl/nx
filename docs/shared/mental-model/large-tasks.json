@@ -3031,7 +3031,7 @@
                 },
                 {
                   "input": "packages/react-native/src",
-                  "glob": "**/*.!(ts)",
+                  "glob": "**/!(*.ts)",
                   "output": "/src"
                 },
                 {
@@ -10527,10 +10527,6 @@
           {
             "file": "packages/cypress/docs/cypress-examples.md",
             "hash": "095268b213f109e89f2c5681c9039e70ef144552"
-          },
-          {
-            "file": "packages/cypress/docs/cypress-project-examples.md",
-            "hash": "3eee4b9890863e77ce86617424f154b4532ad96b"
           },
           {
             "file": "packages/cypress/executors.json",
@@ -25624,7 +25620,7 @@
             "hash": "57082bdf506236cbaea7f156d1ea12645934ece4"
           },
           {
-            "file": "docs/shared/features/integrate-with-editors.md",
+            "file": "docs/shared/getting-started/editor-setup.md",
             "hash": "eb249de959b95a89756a17dd6619fcb35a732755"
           },
           {

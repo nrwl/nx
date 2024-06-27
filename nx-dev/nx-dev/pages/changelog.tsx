@@ -223,38 +223,46 @@ export default function Changelog(props: ChangeLogProps): JSX.Element {
       </div>
 
       <main id="main" role="main">
-        <div className="mx-auto flex max-w-7xl flex-col py-8 px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto flex max-w-7xl flex-col px-4 py-8 sm:px-6 lg:px-8">
           <div className="mb-6">
             <Breadcrumbs path={router.asPath} />
           </div>
           <div className="hidden">
-            <SidebarContainer menu={menu} navIsOpen={navIsOpen} />
+            <SidebarContainer
+              menu={menu}
+              toggleNav={toggleNav}
+              navIsOpen={navIsOpen}
+            />
           </div>
           <header className="mt-0">
-            <h1 className="text-3xl font-semibold tracking-tight text-slate-900 dark:text-slate-100 sm:text-5xl">
+            <h1 className="text-3xl font-semibold tracking-tight text-slate-900 sm:text-5xl dark:text-slate-100">
               Nx Changelog
             </h1>
             <p className="mt-4">
-              All the Nx goodies in one page, sorted by release.
+              All the Nx goodies in one page, sorted by release. See our{' '}
+              <Link className="underline" href="/reference/releases">
+                release page
+              </Link>{' '}
+              for information about the release cycle and LTS policy.
             </p>
           </header>
           <ul className="m-0 space-y-6 py-6">
             {renderedChangelog.map((changelog, idx) => (
-              <li key={changelog.version} className="relative sm:flex gap-x-4">
+              <li key={changelog.version} className="relative gap-x-4 sm:flex">
                 <div
                   className={cx(
                     idx === renderedChangelog.length - 1 ? 'h-6' : '-bottom-6',
-                    'absolute left-0 top-0 sm:flex w-6 justify-center hidden'
+                    'absolute left-0 top-0 hidden w-6 justify-center sm:flex'
                   )}
                 >
                   <div className="w-px bg-slate-200 dark:bg-slate-700" />
                 </div>
-                <div className="mt-1 hidden relative sm:flex h-6 w-6 flex-none items-center justify-center">
-                  <div className="h-2 w-2 rounded-full bg-slate-100 ring-1 ring-slate-300 dark:ring-slate-500 dark:bg-slate-600" />
+                <div className="relative mt-1 hidden h-6 w-6 flex-none items-center justify-center sm:flex">
+                  <div className="h-2 w-2 rounded-full bg-slate-100 ring-1 ring-slate-300 dark:bg-slate-600 dark:ring-slate-500" />
                 </div>
                 <div
                   id={changelog.version}
-                  className="flex flex-col w-36 shrink-0 group"
+                  className="group flex w-36 shrink-0 flex-col"
                 >
                   <p className="py-0.5">
                     <a
@@ -262,7 +270,7 @@ export default function Changelog(props: ChangeLogProps): JSX.Element {
                       href={`https://github.com/nrwl/nx/releases/tag/${changelog.version}`}
                       target="_blank"
                       rel="noreferrer"
-                      className="text-xl leading-5 font-medium text-slate-900 dark:text-slate-100 hover:underline"
+                      className="text-xl font-medium leading-5 text-slate-900 hover:underline dark:text-slate-100"
                     >
                       <TagIcon
                         className="inline-flex h-4 w-4"
@@ -271,7 +279,7 @@ export default function Changelog(props: ChangeLogProps): JSX.Element {
                       v{changelog.version.split('.').slice(0, 2).join('.')}
                     </a>
                     <Link aria-hidden="true" href={`#${changelog.version}`}>
-                      <LinkIcon className="ml-2 mb-1 inline h-5 w-5 opacity-0 group-hover:opacity-100" />
+                      <LinkIcon className="mb-1 ml-2 inline h-5 w-5 opacity-0 group-hover:opacity-100" />
                     </Link>
                   </p>
                   <p className="py-0.5 text-xs leading-5 text-slate-400 dark:text-slate-500">
@@ -285,19 +293,19 @@ export default function Changelog(props: ChangeLogProps): JSX.Element {
                   </p>
                 </div>
                 {/* CONTAINER */}
-                <div className="md:ml-12 flex flex-grow flex-col gap-8">
+                <div className="flex flex-grow flex-col gap-8 md:ml-12">
                   <div className="prose prose-slate dark:prose-invert max-w-none">
                     {changelog.content}
                   </div>
                   {changelog.patches.length > 0 && (
-                    <div className="text-right space-x-2">
+                    <div className="space-x-2 text-right">
                       {changelog.patches.map((version) => (
                         <a
                           key={version}
                           href={`https://github.com/nrwl/nx/releases/tag/${version}`}
                           target="_blank"
                           rel="noreferrer"
-                          className="inline-flex items-center rounded-md bg-slate-50 dark:bg-slate-600/30 px-2 py-1 text-xs font-medium text-slate-600 ring-1 ring-inset ring-slate-500/10 dark:text-slate-500 dark:ring-slate-700 hover:underline"
+                          className="inline-flex items-center rounded-md bg-slate-50 px-2 py-1 text-xs font-medium text-slate-600 ring-1 ring-inset ring-slate-500/10 hover:underline dark:bg-slate-600/30 dark:text-slate-500 dark:ring-slate-700"
                         >
                           {version}
                         </a>

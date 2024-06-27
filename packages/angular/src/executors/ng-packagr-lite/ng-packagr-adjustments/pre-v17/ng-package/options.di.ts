@@ -5,7 +5,7 @@
  * - Use our own options interface to add support for tailwindConfig.
  */
 
-import * as findCacheDirectory from 'find-cache-dir';
+import findCacheDirectory from 'find-cache-dir';
 import { InjectionToken, Provider, ValueProvider } from 'injection-js';
 import { NgPackagrOptions as NgPackagrOptionsBase } from 'ng-packagr/lib/ng-package/options.di';
 import { tmpdir } from 'os';

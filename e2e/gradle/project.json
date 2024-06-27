@@ -3,8 +3,14 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "e2e/gradle",
   "projectType": "application",
+  "implicitDependencies": ["eslint"],
   "targets": {
-    "e2e": {}
-  },
-  "implicitDependencies": ["eslint"]
+    "e2e-ci--src/gradle.test.ts": {
+      "dependsOn": [
+        "nx:build-native",
+        "@nx/nx-source:populate-local-registry-storage"
+      ],
+      "inputs": ["e2eInputs", "^production"]
+    }
+  }
 }

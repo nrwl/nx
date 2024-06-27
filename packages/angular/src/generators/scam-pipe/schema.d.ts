@@ -9,15 +9,15 @@ export interface Schema {
   export?: boolean;
   skipFormat?: boolean;
   /**
-   * @deprecated Provide the `directory` option instead and use the `as-provided` format. It will be removed in Nx v19.
+   * @deprecated Provide the `directory` option instead and use the `as-provided` format. It will be removed in Nx v20.
    */
   flat?: boolean;
   /**
-   * @deprecated Provide the `directory` option instead. It will be removed in Nx v19.
+   * @deprecated Provide the `directory` option instead. It will be removed in Nx v20.
    */
   path?: string;
   /**
-   * @deprecated Provide the `directory` option instead. The project will be determined from the directory provided. It will be removed in Nx v19.
+   * @deprecated Provide the `directory` option instead. The project will be determined from the directory provided. It will be removed in Nx v20.
    */
   project?: string;
 }

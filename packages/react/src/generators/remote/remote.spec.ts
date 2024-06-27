@@ -1,4 +1,5 @@
-import * as devkit from '@nx/devkit';
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
 import { ProjectGraph, readJson, readNxJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { Linter } from '@nx/eslint';
@@ -290,5 +291,25 @@ describe('remote generator', () => {
     expect(
       tree.read('test/module-federation.server.config.ts', 'utf-8')
     ).toMatchSnapshot();
+  });
+
+  it('should throw an error if invalid remotes names are provided and --dynamic is set to true', async () => {
+    const tree = createTreeWithEmptyWorkspace();
+    const name = 'invalid-dynamic-remote-name';
+    await expect(
+      remote(tree, {
+        name,
+        devServerPort: 4209,
+        dynamic: true,
+        e2eTestRunner: 'cypress',
+        linter: Linter.EsLint,
+        skipFormat: false,
+        style: 'css',
+        unitTestRunner: 'jest',
+        ssr: true,
+        projectNameAndRootFormat: 'as-provided',
+        typescriptConfiguration: true,
+      })
+    ).rejects.toThrowError(`Invalid remote name provided: ${name}.`);
   });
 });

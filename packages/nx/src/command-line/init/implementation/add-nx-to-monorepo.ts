@@ -5,13 +5,10 @@ import { join, relative } from 'path';
 import { InitArgs } from '../init-v1';
 import { readJsonFile } from '../../../utils/fileutils';
 import { output } from '../../../utils/output';
-import { getPackageManagerCommand } from '../../../utils/package-manager';
 import {
   addDepsToPackageJson,
   createNxJsonFile,
   initCloud,
-  markPackageJsonAsNxProject,
-  printFinalMessage,
   runInstall,
   updateGitIgnore,
 } from './utils';
@@ -41,27 +38,35 @@ export async function addNxToMonorepo(options: Options) {
     });
 
     targetDefaults = (
-      (await prompt([
+      await prompt<{ targetDefaults: string[] }>([
         {
           type: 'multiselect',
           name: 'targetDefaults',
           message:
             'Which scripts need to be run in order? (e.g. before building a project, dependent projects must be built)',
           choices: scripts,
-        },
-      ])) as any
+          /**
+           * limit is missing from the interface but it limits the amount of options shown
+           */
+          limit: process.stdout.rows - 4, // 4 leaves room for the header above, the prompt and some whitespace
+        } as any,
+      ])
     ).targetDefaults;
 
     cacheableOperations = (
-      (await prompt([
+      await prompt<{ cacheableOperations: string[] }>([
         {
           type: 'multiselect',
           name: 'cacheableOperations',
           message:
             'Which scripts are cacheable? (Produce the same output given the same input, e.g. build, test and lint usually are, serve and start are not)',
           choices: scripts,
-        },
-      ])) as any
+          /**
+           * limit is missing from the interface but it limits the amount of options shown
+           */
+          limit: process.stdout.rows - 4, // 4 leaves room for the header above, the prompt and some whitespace
+        } as any,
+      ])
     ).cacheableOperations;
 
     for (const scriptName of cacheableOperations) {
@@ -94,14 +99,6 @@ export async function addNxToMonorepo(options: Options) {
     cacheableOperations,
     scriptOutputs
   );
-  if (!options.legacy) {
-    packageJsonFiles.forEach((packageJsonPath) => {
-      markPackageJsonAsNxProject(
-        join(repoRoot, packageJsonPath),
-        cacheableOperations
-      );
-    });
-  }
 
   updateGitIgnore(repoRoot);
   addDepsToPackageJson(repoRoot);
@@ -113,16 +110,6 @@ export async function addNxToMonorepo(options: Options) {
     output.log({ title: '🛠️ Setting up Nx Cloud' });
     initCloud(repoRoot, 'nx-init-monorepo');
   }
-
-  const pmc = getPackageManagerCommand();
-  printFinalMessage({
-    learnMoreLink: 'https://nx.dev/recipes/adopting-nx/adding-to-monorepo',
-    bodyLines: [
-      `- Run "${pmc.exec} nx run-many --target=build" to run the build script for every project in the monorepo.`,
-      '- Run it again to replay the cached computation.',
-      `- Run "${pmc.exec} nx graph" to see the structure of the monorepo.`,
-    ],
-  });
 }
 
 // scanning package.json files

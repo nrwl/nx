@@ -1,18 +1,16 @@
-import type { Tree } from 'nx/src/generators/tree';
+import {
+  getProjects,
+  logger,
+  readNxJson,
+  Tree,
+  updateJson,
+  updateNxJson,
+  updateProjectConfiguration,
+} from 'nx/src/devkit-exports';
 import type { PackageJson } from 'nx/src/utils/package-json';
-import { requireNx } from '../../nx';
 import { visitNotIgnoredFiles } from '../generators/visit-not-ignored-files';
 import { basename } from 'path';
 import { isBinaryPath } from './binary-extensions';
-const { logger } = requireNx();
-
-const {
-  getProjects,
-  updateProjectConfiguration,
-  readNxJson,
-  updateNxJson,
-  updateJson,
-} = requireNx();
 
 export function replaceNrwlPackageWithNxPackage(
   tree: Tree,
@@ -163,6 +161,7 @@ function replaceMentions(
       'yarn.lock',
       'package-lock.json',
       'pnpm-lock.yaml',
+      'bun.lockb',
       'CHANGELOG.md',
     ];
     if (ignoredFiles.includes(basename(path))) {

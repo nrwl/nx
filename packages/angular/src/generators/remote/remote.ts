@@ -72,21 +72,25 @@ export async function remoteInternal(tree: Tree, schema: Schema) {
     setParserOptionsProject: options.setParserOptionsProject,
   });
 
-  const installSwcHelpersTask = addDependenciesToPackageJson(
-    tree,
-    {},
-    {
-      '@swc/helpers': swcHelpersVersion,
-    }
-  );
+  const installTasks = [appInstallTask];
+  if (!options.skipPackageJson) {
+    const installSwcHelpersTask = addDependenciesToPackageJson(
+      tree,
+      {},
+      {
+        '@swc/helpers': swcHelpersVersion,
+      }
+    );
+    installTasks.push(installSwcHelpersTask);
+  }
 
-  let installTasks = [appInstallTask, installSwcHelpersTask];
   if (options.ssr) {
     let ssrInstallTask = await updateSsrSetup(tree, {
       appName: remoteProjectName,
       port,
       typescriptConfiguration,
       standalone: options.standalone,
+      skipPackageJson: options.skipPackageJson,
     });
     installTasks.push(ssrInstallTask);
   }

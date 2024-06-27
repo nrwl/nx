@@ -11,7 +11,7 @@
  * defaults and user overrides, as well as handling common errors, up front to produce a single, consistent,
  * and easy to consume config object for all the `nx release` command implementations.
  */
-import { join } from 'path';
+import { join, relative } from 'node:path';
 import { NxJsonConfiguration } from '../../../config/nx-json';
 import { ProjectFileMap, ProjectGraph } from '../../../config/project-graph';
 import { readJsonFile } from '../../../utils/fileutils';
@@ -19,6 +19,7 @@ import { findMatchingProjects } from '../../../utils/find-matching-projects';
 import { output } from '../../../utils/output';
 import { PackageJson } from '../../../utils/package-json';
 import { workspaceRoot } from '../../../utils/workspace-root';
+import { resolveChangelogRenderer } from '../utils/resolve-changelog-renderer';
 import { resolveNxJsonConfigErrorMessage } from '../utils/resolve-nx-json-error-message';
 import { DEFAULT_CONVENTIONAL_COMMITS_CONFIG } from './conventional-commits';
 
@@ -177,12 +178,18 @@ export async function createNxReleaseConfig(
   const workspaceProjectsRelationship =
     userConfig.projectsRelationship || 'fixed';
 
-  const defaultGeneratorOptions = userConfig.version?.conventionalCommits
-    ? {
-        currentVersionResolver: 'git-tag',
-        specifierSource: 'conventional-commits',
-      }
-    : {};
+  const defaultGeneratorOptions: {
+    currentVersionResolver?: string;
+    specifierSource?: string;
+  } = {};
+
+  if (userConfig.version?.conventionalCommits) {
+    defaultGeneratorOptions.currentVersionResolver = 'git-tag';
+    defaultGeneratorOptions.specifierSource = 'conventional-commits';
+  }
+  if (userConfig.versionPlans) {
+    defaultGeneratorOptions.specifierSource = 'version-plans';
+  }
 
   const userGroups = Object.values(userConfig.groups ?? {});
   const disableWorkspaceChangelog =
@@ -219,6 +226,7 @@ export async function createNxReleaseConfig(
             renderer: defaultRendererPath,
             renderOptions: {
               authors: true,
+              mapAuthorsToGitHubUsernames: true,
               commitReferences: true,
               versionTitleDate: true,
             },
@@ -233,6 +241,7 @@ export async function createNxReleaseConfig(
             renderer: defaultRendererPath,
             renderOptions: {
               authors: true,
+              mapAuthorsToGitHubUsernames: true,
               commitReferences: true,
               versionTitleDate: true,
             },
@@ -247,6 +256,7 @@ export async function createNxReleaseConfig(
         ? defaultIndependentReleaseTagPattern
         : defaultFixedReleaseTagPattern),
     conventionalCommits: DEFAULT_CONVENTIONAL_COMMITS_CONFIG,
+    versionPlans: false,
   };
 
   const groupProjectsRelationship =
@@ -267,6 +277,7 @@ export async function createNxReleaseConfig(
       renderer: defaultRendererPath,
       renderOptions: {
         authors: true,
+        mapAuthorsToGitHubUsernames: true,
         commitReferences: true,
         versionTitleDate: true,
       },
@@ -276,6 +287,7 @@ export async function createNxReleaseConfig(
       groupProjectsRelationship === 'independent'
         ? defaultIndependentReleaseTagPattern
         : WORKSPACE_DEFAULTS.releaseTagPattern,
+    versionPlans: false,
   };
 
   /**
@@ -323,6 +335,9 @@ export async function createNxReleaseConfig(
     >
   );
 
+  const rootVersionPlansConfig: NxReleaseConfig['versionPlans'] =
+    userConfig.versionPlans ?? WORKSPACE_DEFAULTS.versionPlans;
+
   const rootConventionalCommitsConfig: NxReleaseConfig['conventionalCommits'] =
     deepMergeDefaults(
       [WORKSPACE_DEFAULTS.conventionalCommits],
@@ -352,6 +367,17 @@ export async function createNxReleaseConfig(
     delete rootVersionWithoutGlobalOptions.generatorOptions.specifierSource;
   }
 
+  // Apply versionPlans shorthand to the final group defaults if explicitly configured in the original user config
+  if (userConfig.versionPlans) {
+    rootVersionWithoutGlobalOptions.generatorOptions = {
+      ...rootVersionWithoutGlobalOptions.generatorOptions,
+      specifierSource: 'version-plans',
+    };
+  }
+  if (userConfig.versionPlans === false) {
+    delete rootVersionWithoutGlobalOptions.generatorOptions.specifierSource;
+  }
+
   const groups: NxReleaseConfig['groups'] =
     userConfig.groups && Object.keys(userConfig.groups).length
       ? ensureProjectsConfigIsArray(userConfig.groups)
@@ -360,7 +386,7 @@ export async function createNxReleaseConfig(
          * as being in one release group together in which the projects are released in lock step.
          */
         {
-          [IMPLICIT_DEFAULT_RELEASE_GROUP]: {
+          [IMPLICIT_DEFAULT_RELEASE_GROUP]: <NxReleaseConfig['groups'][string]>{
             projectsRelationship: GROUP_DEFAULTS.projectsRelationship,
             projects: userConfig.projects
               ? // user-defined top level "projects" config takes priority if set
@@ -384,6 +410,7 @@ export async function createNxReleaseConfig(
               userConfig.releaseTagPattern || GROUP_DEFAULTS.releaseTagPattern,
             // Directly inherit the root level config for projectChangelogs, if set
             changelog: rootChangelogConfig.projectChangelogs || false,
+            versionPlans: rootVersionPlansConfig || GROUP_DEFAULTS.versionPlans,
           },
         };
 
@@ -481,6 +508,7 @@ export async function createNxReleaseConfig(
         (projectsRelationship === 'independent'
           ? defaultIndependentReleaseTagPattern
           : userConfig.releaseTagPattern || defaultFixedReleaseTagPattern),
+      versionPlans: releaseGroup.versionPlans ?? rootVersionPlansConfig,
     };
 
     const finalReleaseGroup = deepMergeDefaults([groupDefaults], {
@@ -505,8 +533,27 @@ export async function createNxReleaseConfig(
       delete finalReleaseGroup.version.generatorOptions.specifierSource;
     }
 
+    // Apply versionPlans shorthand to the final group if explicitly configured in the original group
+    if (releaseGroup.versionPlans) {
+      finalReleaseGroup.version = {
+        ...finalReleaseGroup.version,
+        generatorOptions: {
+          ...finalReleaseGroup.version?.generatorOptions,
+          specifierSource: 'version-plans',
+        },
+      };
+    }
+    if (
+      releaseGroup.versionPlans === false &&
+      releaseGroupName !== IMPLICIT_DEFAULT_RELEASE_GROUP
+    ) {
+      delete finalReleaseGroup.version.generatorOptions.specifierSource;
+    }
+
     releaseGroups[releaseGroupName] = finalReleaseGroup;
   }
+
+  ensureChangelogRenderersAreResolvable(releaseGroups, rootChangelogConfig);
 
   return {
     error: null,
@@ -518,6 +565,7 @@ export async function createNxReleaseConfig(
       changelog: rootChangelogConfig,
       groups: releaseGroups,
       conventionalCommits: rootConventionalCommitsConfig,
+      versionPlans: rootVersionPlansConfig,
     },
   };
 }
@@ -882,5 +930,57 @@ function isProjectPublic(
     // do nothing and assume that the project is not public if there is a parsing issue
     // this will result in it being excluded from the default projects list
     return false;
+  }
+}
+
+function ensureChangelogRenderersAreResolvable(
+  releaseGroups: NxReleaseConfig['groups'],
+  rootChangelogConfig: NxReleaseConfig['changelog']
+) {
+  /**
+   * If any form of changelog config is enabled, ensure that any provided changelog renderers are resolvable
+   * up front so that we do not end up erroring only after the versioning step has been completed.
+   */
+  const uniqueRendererPaths = new Set<string>();
+
+  if (
+    rootChangelogConfig.workspaceChangelog &&
+    typeof rootChangelogConfig.workspaceChangelog !== 'boolean' &&
+    rootChangelogConfig.workspaceChangelog.renderer?.length
+  ) {
+    uniqueRendererPaths.add(rootChangelogConfig.workspaceChangelog.renderer);
+  }
+  if (
+    rootChangelogConfig.projectChangelogs &&
+    typeof rootChangelogConfig.projectChangelogs !== 'boolean' &&
+    rootChangelogConfig.projectChangelogs.renderer?.length
+  ) {
+    uniqueRendererPaths.add(rootChangelogConfig.projectChangelogs.renderer);
+  }
+
+  for (const group of Object.values(releaseGroups)) {
+    if (
+      group.changelog &&
+      typeof group.changelog !== 'boolean' &&
+      group.changelog.renderer?.length
+    ) {
+      uniqueRendererPaths.add(group.changelog.renderer);
+    }
+  }
+
+  if (!uniqueRendererPaths.size) {
+    return;
+  }
+
+  for (const rendererPath of uniqueRendererPaths) {
+    try {
+      resolveChangelogRenderer(rendererPath);
+    } catch (e) {
+      const workspaceRelativePath = relative(workspaceRoot, rendererPath);
+      output.error({
+        title: `There was an error when resolving the configured changelog renderer at path: ${workspaceRelativePath}`,
+      });
+      throw e;
+    }
   }
 }

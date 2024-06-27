@@ -40,7 +40,7 @@ In order to guarantee that cache poisoning will never affect your end users, [sk
 
 ### Do Not Manually Share Your Local Cache
 
-Nx implicitly trusts the local cache which is stored by default in the `.nx/cache` folder. You can change the location of that folder in the `nx.json` file, so it could be tempting to place it on a network drive and easily share your cache with everyone on the company network. However, by doing this you've voided the guarantee of immutability from your cache. If someone has direct access to the cached files, they could directly poison the cache. Nx will automatically detect if a cache entry has been created in your local cache using a different machine and warn you with an [Unknown Local Cache Error](/recipes/troubleshooting/unknown-local-cache). Instead, use Nx Cloud [remote caching](/ci/features/remote-cache).
+Nx implicitly trusts the local cache which is stored by default in the `.nx/cache` folder. You can change the location of that folder in the `nx.json` file, so it could be tempting to place it on a network drive and easily share your cache with everyone on the company network. However, by doing this you've voided the guarantee of immutability from your cache. If someone has direct access to the cached files, they could directly poison the cache. Nx will automatically detect if a cache entry has been created in your local cache using a different machine and warn you with an [Unknown Local Cache Error](/troubleshooting/unknown-local-cache). Instead, use Nx Cloud [remote caching](/ci/features/remote-cache).
 
 ### Configure End to End Encryption
 
@@ -48,8 +48,8 @@ Nx Cloud guarantees your cache entries will remain immutable - once they've been
 
 ### Use An On-Premise Version of Nx Cloud If Needed
 
-If you need to have all cache artifacts on servers that you control, there is an on-premise version of Nx Cloud that you can use as part of the [Enterprise plan](https://nx.app/enterprise).
+If you need to have all cache artifacts on servers that you control, there is an on-premise version of Nx Cloud that you can use as part of the [Enterprise plan](/enterprise).
 
 ## Security Decisions
 
-In any security discussion, there is a trade off between convenience and security. It could be that some of these threats do not apply to your organization. If that is the case you could relax some of the security precautions and gain the performance benefits of more task results being stored in the remote cache. Every organization is different and Nx can be adapted to best meet your needs without opening up vulnerabilities. If you would Nx team members to help your organization fine tune your set up, [talk to us about Nx Enterprise](https://nx.app/enterprise).
+In any security discussion, there is a trade off between convenience and security. It could be that some of these threats do not apply to your organization. If that is the case you could relax some of the security precautions and gain the performance benefits of more task results being stored in the remote cache. Every organization is different and Nx can be adapted to best meet your needs without opening up vulnerabilities. If you would Nx team members to help your organization fine tune your set up, [talk to us about Nx Enterprise](/enterprise).

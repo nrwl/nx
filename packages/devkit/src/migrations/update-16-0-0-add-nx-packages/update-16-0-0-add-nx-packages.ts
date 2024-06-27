@@ -1,4 +1,4 @@
-import type { Tree } from 'nx/src/generators/tree';
+import type { Tree } from 'nx/src/devkit-exports';
 import { formatFiles } from '../../generators/format-files';
 import { replaceNrwlPackageWithNxPackage } from '../../utils/replace-package';
 

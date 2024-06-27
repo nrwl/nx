@@ -4,8 +4,5 @@
   "sourceRoot": "nx-dev/ui-sponsor-card/src",
   "projectType": "library",
   "tags": ["scope:nx-dev", "type:ui"],
-  "targets": {
-    "lint": {},
-    "test": {}
-  }
+  "targets": {}
 }

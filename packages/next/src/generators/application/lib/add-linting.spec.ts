@@ -21,6 +21,9 @@ describe('updateEslint', () => {
       unitTestRunner: 'jest',
       e2eProjectName: 'my-app-e2e',
       e2eProjectRoot: 'my-app-e2e',
+      e2ePort: 3000,
+      e2eWebServerTarget: 'start',
+      e2eWebServerAddress: 'http://localhost:4200',
       outputPath: 'dist/my-app',
       name: 'my-app',
       parsedTags: [],
@@ -113,7 +116,7 @@ describe('updateEslint', () => {
 
     expect(tree.read(`${schema.appProjectRoot}/eslint.config.js`, 'utf-8'))
       .toMatchInlineSnapshot(`
-      "const FlatCompat = require("@eslint/eslintrc");
+      "const { FlatCompat } = require("@eslint/eslintrc");
       const js = require("@eslint/js");
       const baseConfig = require("../eslint.config.js");
 
@@ -124,6 +127,7 @@ describe('updateEslint', () => {
         
 
       module.exports = [
+      ...compat.extends("plugin:@nx/react-typescript", "next", "next/core-web-vitals"),
           ...baseConfig,
           {
         "files": [
@@ -153,7 +157,6 @@ describe('updateEslint', () => {
               ],
               rules: {}
           },
-      ...compat.extends("plugin:@nx/react-typescript", "next", "next/core-web-vitals"),
       ...compat.config({ env: { jest: true } }).map(config => ({
           ...config,
           files: [
@@ -161,7 +164,10 @@ describe('updateEslint', () => {
               "**/*.spec.tsx",
               "**/*.spec.js",
               "**/*.spec.jsx"
-          ]
+          ],
+          rules: {
+              ...config.rules
+          }
       })),
       { ignores: [".next/**/*"] }
       ];

@@ -1,6 +1,7 @@
 import { defaultMaxListeners } from 'events';
 import { performance } from 'perf_hooks';
 import { relative } from 'path';
+import { writeFileSync } from 'fs';
 import { TaskHasher } from '../hasher/task-hasher';
 import runCommandsImpl from '../executors/run-commands/run-commands.impl';
 import { ForkedProcessTaskRunner } from './forked-process-task-runner';
@@ -158,7 +159,7 @@ export class TaskOrchestrator {
       );
     }
 
-    this.options.lifeCycle.scheduleTask(task);
+    await this.options.lifeCycle.scheduleTask(task);
 
     return taskSpecificEnv;
   }
@@ -175,7 +176,7 @@ export class TaskOrchestrator {
             this.batchEnv
           );
         }
-        this.options.lifeCycle.scheduleTask(task);
+        await this.options.lifeCycle.scheduleTask(task);
       })
     );
   }
@@ -392,53 +393,69 @@ export class TaskOrchestrator {
         targetConfiguration.executor === 'nx:run-commands' &&
         !shouldPrefix
       ) {
-        const { schema } = getExecutorForTask(task, this.projectGraph);
-        const isRunOne = this.initiatingProject != null;
-        const combinedOptions = combineOptionsForExecutor(
-          task.overrides,
-          task.target.configuration ?? targetConfiguration.defaultConfiguration,
-          targetConfiguration,
-          schema,
-          task.target.project,
-          relative(task.projectRoot ?? workspaceRoot, process.cwd()),
-          process.env.NX_VERBOSE_LOGGING === 'true'
-        );
-        if (combinedOptions.env) {
-          env = {
-            ...env,
-            ...combinedOptions.env,
-          };
-        }
-        if (streamOutput) {
-          const args = getPrintableCommandArgsForTask(task);
-          output.logCommand(args.join(' '));
-        }
-        const { success, terminalOutput } = await runCommandsImpl(
-          {
-            ...combinedOptions,
-            env,
-            usePty: isRunOne && !this.tasksSchedule.hasTasks(),
-            streamOutput,
-          },
-          {
-            root: workspaceRoot, // only root is needed in runCommandsImpl
-          } as any
-        );
+        try {
+          const { schema } = getExecutorForTask(task, this.projectGraph);
+          const isRunOne = this.initiatingProject != null;
+          const combinedOptions = combineOptionsForExecutor(
+            task.overrides,
+            task.target.configuration ??
+              targetConfiguration.defaultConfiguration,
+            targetConfiguration,
+            schema,
+            task.target.project,
+            relative(task.projectRoot ?? workspaceRoot, process.cwd()),
+            process.env.NX_VERBOSE_LOGGING === 'true'
+          );
+          if (combinedOptions.env) {
+            env = {
+              ...env,
+              ...combinedOptions.env,
+            };
+          }
+          if (streamOutput) {
+            const args = getPrintableCommandArgsForTask(task);
+            output.logCommand(args.join(' '));
+          }
+          const { success, terminalOutput } = await runCommandsImpl(
+            {
+              ...combinedOptions,
+              env,
+              usePty: isRunOne && !this.tasksSchedule.hasTasks(),
+              streamOutput,
+            },
+            {
+              root: workspaceRoot, // only root is needed in runCommandsImpl
+            } as any
+          );
 
-        const status = success ? 'success' : 'failure';
-        if (!streamOutput) {
-          this.options.lifeCycle.printTaskTerminalOutput(
+          const status = success ? 'success' : 'failure';
+          if (!streamOutput) {
+            this.options.lifeCycle.printTaskTerminalOutput(
+              task,
+              status,
+              terminalOutput
+            );
+          }
+          writeFileSync(temporaryOutputPath, terminalOutput);
+          results.push({
             task,
             status,
-            terminalOutput
-          );
+            terminalOutput,
+          });
+        } catch (e) {
+          if (process.env.NX_VERBOSE_LOGGING === 'true') {
+            console.error(e);
+          } else {
+            console.error(e.message);
+          }
+          const terminalOutput = e.stack ?? e.message ?? '';
+          writeFileSync(temporaryOutputPath, terminalOutput);
+          results.push({
+            task,
+            status: 'failure',
+            terminalOutput,
+          });
         }
-
-        results.push({
-          task,
-          status,
-          terminalOutput,
-        });
       } else {
         // cache prep
         const { code, terminalOutput } = await this.runTaskInForkedProcess(
@@ -503,7 +520,7 @@ export class TaskOrchestrator {
 
   // region Lifecycle
   private async preRunSteps(tasks: Task[], metadata: TaskMetadata) {
-    this.options.lifeCycle.startTasks(tasks, metadata);
+    await this.options.lifeCycle.startTasks(tasks, metadata);
   }
 
   private async postRunSteps(
@@ -556,7 +573,7 @@ export class TaskOrchestrator {
         'cache-results-end'
       );
     }
-    this.options.lifeCycle.endTasks(
+    await this.options.lifeCycle.endTasks(
       results.map((result) => {
         const code =
           result.status === 'success' ||

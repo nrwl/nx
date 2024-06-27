@@ -40,6 +40,9 @@ describe('Normalize Options', () => {
       rootProject: false,
       e2eProjectName: 'my-app-e2e',
       e2eProjectRoot: 'my-app-e2e',
+      e2ePort: 8081,
+      e2eWebServerAddress: 'http://localhost:8081',
+      e2eWebServerTarget: 'serve',
     } as NormalizedSchema);
   });
 
@@ -72,6 +75,9 @@ describe('Normalize Options', () => {
       rootProject: false,
       e2eProjectName: 'myApp-e2e',
       e2eProjectRoot: 'myApp-e2e',
+      e2ePort: 8081,
+      e2eWebServerAddress: 'http://localhost:8081',
+      e2eWebServerTarget: 'serve',
     } as NormalizedSchema);
   });
 
@@ -106,6 +112,9 @@ describe('Normalize Options', () => {
       rootProject: false,
       e2eProjectName: 'my-app-e2e',
       e2eProjectRoot: 'directory-e2e',
+      e2ePort: 8081,
+      e2eWebServerAddress: 'http://localhost:8081',
+      e2eWebServerTarget: 'serve',
     } as NormalizedSchema);
   });
 
@@ -138,6 +147,9 @@ describe('Normalize Options', () => {
       rootProject: false,
       e2eProjectName: 'my-app-e2e',
       e2eProjectRoot: 'directory/my-app-e2e',
+      e2ePort: 8081,
+      e2eWebServerAddress: 'http://localhost:8081',
+      e2eWebServerTarget: 'serve',
     } as NormalizedSchema);
   });
 
@@ -171,6 +183,9 @@ describe('Normalize Options', () => {
       rootProject: false,
       e2eProjectName: 'my-app-e2e',
       e2eProjectRoot: 'my-app-e2e',
+      e2ePort: 8081,
+      e2eWebServerAddress: 'http://localhost:8081',
+      e2eWebServerTarget: 'serve',
     } as NormalizedSchema);
   });
 });

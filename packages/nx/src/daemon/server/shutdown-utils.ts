@@ -4,6 +4,11 @@ import { serverLogger } from './logger';
 import { serializeResult } from '../socket-utils';
 import { deleteDaemonJsonProcessCache } from '../cache';
 import type { Watcher } from '../../native';
+import { cleanupPlugins } from './plugins';
+import {
+  DaemonProjectGraphError,
+  ProjectGraphError,
+} from '../../project-graph/error-types';
 
 export const SERVER_INACTIVITY_TIMEOUT_MS = 10800000 as const; // 10800000 ms = 3 hours
 
@@ -39,6 +44,7 @@ export async function handleServerProcessTermination({
   try {
     server.close();
     deleteDaemonJsonProcessCache();
+    cleanupPlugins();
 
     if (watcherInstance) {
       await watcherInstance.stop();
@@ -93,13 +99,19 @@ export async function respondWithErrorAndExit(
   description: string,
   error: Error
 ) {
+  const normalizedError =
+    error instanceof DaemonProjectGraphError
+      ? ProjectGraphError.fromDaemonProjectGraphError(error)
+      : error;
+
   // print some extra stuff in the error message
   serverLogger.requestLog(
     `Responding to the client with an error.`,
     description,
-    error.message
+    normalizedError.message
   );
-  console.error(error.stack);
+  console.error(normalizedError.stack);
 
+  // Respond with the original error
   await respondToClient(socket, serializeResult(error, null, null), null);
 }

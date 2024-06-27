@@ -36,6 +36,10 @@ export async function createRunManyDynamicOutputRenderer({
   overrides: Record<string, unknown>;
 }): Promise<{ lifeCycle: LifeCycle; renderIsDone: Promise<void> }> {
   cliCursor.hide();
+  // Show the cursor again after the process exits
+  process.on('exit', () => {
+    cliCursor.show();
+  });
   let resolveRenderIsDonePromise: (value: void) => void;
   const renderIsDone = new Promise<void>(
     (resolve) => (resolveRenderIsDonePromise = resolve)
@@ -405,7 +409,7 @@ export async function createRunManyDynamicOutputRenderer({
                 '-'
               )} ${output.formatCommand(t.toString())}`
           )
-          .join('\n ')}`,
+          .join('\n')}`,
       ];
 
       if (failedTasks.size > numFailedToPrint) {
@@ -486,7 +490,7 @@ function writeCompletedTaskResultLine(line: string) {
 function writeCommandOutputBlock(commandOutput: string) {
   commandOutput = commandOutput || '';
   commandOutput = commandOutput.trimStart();
-  const lines = commandOutput.split(EOL);
+  const lines = commandOutput.split(/\r?\n/);
   let totalTrailingEmptyLines = 0;
   for (let i = lines.length - 1; i >= 0; i--) {
     if (lines[i] !== '') {

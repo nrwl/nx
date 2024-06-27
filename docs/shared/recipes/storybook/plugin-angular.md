@@ -148,7 +148,7 @@ Notice the interaction test on the second story, inside the `play` function. Thi
 You will notice that `browserTarget` is specified for the `storybook` and `build-storybook` targets, much like it is done for `serve` or other targets. Angular needs the `browserTarget` for Storybook in order to know which configuration to use for the build. If your project is buildable (it has a `build` target, and uses the main Angular builder - `@angular-devkit/build-angular:browser`, `@angular-devkit/build-angular:application` or `@angular-devkit/build-angular:browser-esbuild`) the `browserTarget` for Storybook will use the `build` target, if it's not buildable (or is using another Angular builder) it will use the `build-storybook` target.
 You do not have to do anything manually. Nx will create the configuration for you. Even if you are migrating from an older version of Nx, Nx will make sure to change your `package.json` Storybook targets to match the new schema.
 
-You can read more about the `browserTarget` in the [official Angular documentation](https://angular.io/cli/serve).
+You can read more about the `browserTarget` in the [official Angular documentation](https://angular.dev/cli/serve).
 
 Your Storybook targets in your `project.json` (or if you run `nx show project my-project --web`) will look like this:
 
@@ -177,9 +177,7 @@ This setup instructs Nx to use the configuration under the `build` target of `my
 ## More Documentation
 
 - [Set up Compodoc for Storybook on Nx](/recipes/storybook/angular-storybook-compodoc)
-- [Information about the `storybook` tasks](/deprecated/storybook/angular-storybook-targets)
 - [Configuring styles and preprocessor options](/recipes/storybook/angular-configuring-styles)
-- [The `projectBuildConfig`](/deprecated/storybook/angular-project-build-config)
 
 You can find all Storybook-related Nx topics [here](/nx-api#storybook).
 
@@ -191,8 +189,3 @@ Here's more information on common migration scenarios for Storybook with Nx. For
 
 - [Set up Storybook version 7](/nx-api/storybook/documents/storybook-7-setup)
 - [Migrate to Storybook version 7](/nx-api/storybook/generators/migrate-7)
-
-#### Older migration scenarios
-
-- [Upgrading to Storybook 6](/deprecated/storybook/upgrade-storybook-v6-angular)
-- [Migrate to the new Storybook `webpackFinal` config](/deprecated/storybook/migrate-webpack-final-angular)

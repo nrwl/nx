@@ -5,35 +5,37 @@ import {
   TargetConfiguration,
 } from '../../config/workspace-json-project-json';
 import { findMatchingProjects } from '../../utils/find-matching-projects';
-import { NX_PREFIX } from '../../utils/logger';
-import { resolveNxTokensInOptions } from '../utils/project-configuration-utils';
-import { CreateDependenciesContext } from '../../utils/nx-plugin';
+import { CreateDependenciesContext } from '../plugins';
 
 export async function normalizeProjectNodes(
-  ctx: CreateDependenciesContext,
+  { projects }: CreateDependenciesContext,
   builder: ProjectGraphBuilder
 ) {
-  const toAdd = [];
   // Sorting projects by name to make sure that the order of projects in the graph is deterministic.
   // This is important to ensure that expanded properties referencing projects (e.g. implicit dependencies)
   // are also deterministic, and thus don't cause the calculated project configuration hash to shift.
-  const projects = Object.keys(ctx.projects).sort();
+  const sortedProjectNames = Object.keys(projects).sort();
 
   // Used for expanding implicit dependencies (e.g. `@proj/*` or `tag:foo`)
-  const partialProjectGraphNodes = projects.reduce((graph, project) => {
-    const projectConfiguration = ctx.projects[project];
-    graph[project] = {
-      name: project,
-      type: projectConfiguration.projectType === 'library' ? 'lib' : 'app', // missing fallback to `e2e`
-      data: {
-        ...projectConfiguration,
-      },
-    };
-    return graph;
-  }, {} as Record<string, ProjectGraphProjectNode>);
+  const partialProjectGraphNodes = sortedProjectNames.reduce(
+    (graph, project) => {
+      const projectConfiguration = projects[project];
+      graph[project] = {
+        name: project,
+        type: projectConfiguration.projectType === 'library' ? 'lib' : 'app', // missing fallback to `e2e`
+        data: {
+          ...projectConfiguration,
+        },
+      };
+      return graph;
+    },
+    {} as Record<string, ProjectGraphProjectNode>
+  );
 
-  for (const key of projects) {
-    const p = ctx.projects[key];
+  const toAdd = [];
+
+  for (const key of sortedProjectNames) {
+    const p = projects[key];
 
     p.implicitDependencies = normalizeImplicitDependencies(
       key,
@@ -41,7 +43,7 @@ export async function normalizeProjectNodes(
       partialProjectGraphNodes
     );
 
-    p.targets = normalizeProjectTargets(p, key);
+    p.targets ??= {};
 
     // TODO: remove in v16
     const projectType =
@@ -50,7 +52,7 @@ export async function normalizeProjectNodes(
           ? 'e2e'
           : 'app'
         : 'lib';
-    const tags = ctx.projects?.[key]?.tags || [];
+    const tags = p.tags || [];
 
     toAdd.push({
       name: key,
@@ -78,40 +80,6 @@ export async function normalizeProjectNodes(
   });
 }
 
-/**
- * Apply target defaults and normalization
- */
-export function normalizeProjectTargets(
-  project: ProjectConfiguration,
-  projectName: string
-): Record<string, TargetConfiguration> {
-  // Any node on the graph will have a targets object, it just may be empty
-  const targets = project.targets ?? {};
-
-  for (const target in targets) {
-    if (!targets[target].command && !targets[target].executor) {
-      delete targets[target];
-      continue;
-    }
-
-    targets[target].options = resolveNxTokensInOptions(
-      targets[target].options,
-      project,
-      `${projectName}:${target}`
-    );
-
-    targets[target].configurations ??= {};
-    for (const configuration in targets[target].configurations) {
-      targets[target].configurations[configuration] = resolveNxTokensInOptions(
-        targets[target].configurations[configuration],
-        project,
-        `${projectName}:${target}:${configuration}`
-      );
-    }
-  }
-  return targets;
-}
-
 export function normalizeImplicitDependencies(
   source: string,
   implicitDependencies: ProjectConfiguration['implicitDependencies'],
@@ -120,12 +88,38 @@ export function normalizeImplicitDependencies(
   if (!implicitDependencies?.length) {
     return implicitDependencies ?? [];
   }
-  const matches = findMatchingProjects(implicitDependencies, projects);
-  return (
-    matches
-      .filter((x) => x !== source)
-      // implicit dependencies that start with ! should hang around, to be processed by
-      // implicit-project-dependencies.ts after explicit deps are added to graph.
-      .concat(implicitDependencies.filter((x) => x.startsWith('!')))
+
+  // Implicit dependencies handle negatives in a different
+  // way from most other `projects` fields. This is because
+  // they are used for multiple purposes.
+  const positivePatterns: string[] = [];
+  const negativePatterns: string[] = [];
+
+  for (const dep of implicitDependencies) {
+    if (dep.startsWith('!')) {
+      negativePatterns.push(dep);
+    } else {
+      positivePatterns.push(dep);
+    }
+  }
+
+  // Finds all projects that match a positive pattern and are not excluded by a negative pattern
+  const deps = positivePatterns.length
+    ? findMatchingProjects(
+        positivePatterns.concat(negativePatterns),
+        projects
+      ).filter((x) => x !== source)
+    : [];
+
+  // Expands negative patterns to equal project names
+  const alwaysIgnoredDeps = findMatchingProjects(
+    negativePatterns.map((x) => x.slice(1)),
+    projects
   );
+
+  // We return the matching deps, but keep the negative patterns in the list
+  // so that they can be processed later by implicit-project-dependencies.ts
+  // This is what allows using a negative implicit dep to remove a dependency
+  // detected by createDependencies.
+  return deps.concat(alwaysIgnoredDeps.map((x) => '!' + x)) as string[];
 }

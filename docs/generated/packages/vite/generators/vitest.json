@@ -56,7 +56,7 @@
     "required": ["project"],
     "presets": []
   },
-  "description": "Generate a vitest configuration",
+  "description": "Generate a vitest configuration.",
   "implementation": "/packages/vite/src/generators/vitest/vitest-generator#vitestGeneratorInternal.ts",
   "aliases": [],
   "hidden": false,

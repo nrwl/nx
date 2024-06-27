@@ -47,7 +47,7 @@ export function JsonCodeBlock(props: JsonCodeBlockProps): JSX.Element {
   }, [copied]);
   return (
     <div className="code-block group relative w-full">
-      <div className="absolute top-0 right-0 z-10 flex">
+      <div className="absolute right-0 top-0 z-10 flex">
         <CopyToClipboard
           text={jsonString}
           onCopy={() => {
@@ -103,13 +103,10 @@ export function sourcesRenderer(
         }
       }
       return (
-        <span
-          className="flex group/line min-w-0 flex shrink-1"
-          key={`code-group${idx}`}
-        >
+        <span className="group/line flex" key={`code-group${idx}`}>
           <span>{element}</span>
           {sourceElement && (
-            <span className="opacity-0 min-w-0 flex shrink-1 group-hover/line:opacity-100 transition-opacity duration-150 ease-in-out inline pl-2">
+            <span className="min-w-0 flex-1 pl-2 opacity-0 transition-opacity duration-150 ease-in-out group-hover/line:opacity-100">
               {sourceElement}
             </span>
           )}

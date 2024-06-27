@@ -1,10 +1,187 @@
 # Using environment variables in Angular applications
 
-Angular executors (e.g. `@nx/angular:webpack-browser` and `@angular-devkit/build-angular:browser`) don't have built-in support for using environment variables when building applications.
+## For Angular applications using ESBuild
+
+### Setting the `define` option of the `application` executor
+
+{% callout type="note" title="Required Angular version" %}
+Support for the `define` option requires Angular **17.2.0** or later.
+{% /callout %}
+
+In Angular applications using the `@nx/angular:application` or `@angular-devkit/build-angular:application` executors, you can set the `define` option in the `build` target to define variables that will be available in your application code at build time:
+
+```json {% fileName="apps/my-app/project.json" highlightLines=[5,"8-10"] %}
+{
+  ...
+  "targets": {
+    "build": {
+      "executor": "@nx/angular:application",
+      "options": {
+        ...
+        "define": {
+          "MY_API_URL": "http://localhost:3333"
+        }
+      }
+    },
+    ...
+  }
+}
+```
+
+{% callout type="note" title="Nx executors for Angular" %}
+When you use one of the `@nx/angular` executors for building your applications, make sure to also change the `serve` executor to `@nx/angular:dev-server` to ensure the extra features provided by Nx are also available when serving the application.
+{% /callout %}
+
+Next, make sure to inform TypeScript of the defined variables to prevent type-checking errors during the build. We can achieve this in a number of ways. For example you could create or update a type definition file included in the TypeScript build process (e.g. `src/types.d.ts`) with `declare` statements for the defined variables:
+
+```ts {% fileName="apps/my-app/src/types.d.ts" %}
+declare const MY_API_URL: string;
+```
+
+The above would allow you to use the `MY_API_URL` variable in your application code as in the following example:
+
+```ts {% fileName="apps/my-app/src/app/api.service.ts" highlightLines=[6] %}
+import { Injectable } from '@angular/core';
+
+@Injectable({ providedIn: 'root' })
+export class ApiService {
+  constructor() {
+    console.log('API URL:', MY_API_URL);
+  }
+}
+```
+
+You can also define the variables in a way that allows you to consume them as you would do in Node.js applications:
+
+```json {% fileName="apps/my-app/project.json" highlightLines=[5,"8-10"] %}
+{
+  ...
+  "targets": {
+    "build": {
+      "executor": "@nx/angular:application",
+      "options": {
+        ...
+        "define": {
+          "process.env.MY_API_URL": "http://localhost:3333"
+        }
+      }
+    },
+    ...
+  }
+}
+```
+
+Like the previous example, you must configure TypeScript to recognize the `process.env` object. You can do this by defining the `process.env` object in a type definition file:
+
+```ts {% fileName="apps/my-app/src/types.d.ts" %}
+declare const process: {
+  env: {
+    API_URL: string;
+  };
+};
+```
+
+{% callout type="warning" title="Beware" %}
+You could also add the Node.js types to your `tsconfig.json` file, but this would add many types that you don't need in a browser environment. This can be misleading since you'll see some types are available, but the runtime functionality won't be. It's better to define only the types you need in a type definition file.
+{% /callout %}
+
+And then use the variable in your application code:
+
+```ts {% fileName="apps/my-app/src/app/api.service.ts" highlightLines=[6] %}
+import { Injectable } from '@angular/core';
+
+@Injectable({ providedIn: 'root' })
+export class ApiService {
+  constructor() {
+    console.log('API URL:', process.env.MY_API_URL);
+  }
+}
+```
+
+### Using a custom ESBuild plugin
+
+{% callout type="note" title="Required Angular version" %}
+Support for custom ESBuild plugins requires Angular **17.0.0** or later.
+{% /callout %}
+
+The previous method is useful to statically define variables in the project configuration that will be available at build time. However, if you need to dynamically collect and define the environment variables available at build time, you can create a custom ESBuild plugin.
+
+You can provide a custom ESBuild plugin to the `@nx/angular:application` or `@nx/angular:browser-esbuild` executors:
+
+```json {% fileName="apps/my-app/project.json" highlightLines=[5,8] %}
+{
+  ...
+  "targets": {
+    "build": {
+      "executor": "@nx/angular:application",
+      "options": {
+        ...
+        "plugins": ["apps/my-app/plugins/env-var-plugin.js"]
+      }
+    },
+    ...
+  }
+}
+```
+
+Next, create the custom ESBuild plugin:
+
+```js {% fileName="apps/my-app/plugins/env-var-plugin.js" %}
+const myOrgEnvRegex = /^MY_ORG_/i;
+
+const envVarPlugin = {
+  name: 'env-var-plugin',
+  setup(build) {
+    const options = build.initialOptions;
+
+    const envVars = {};
+    for (const key in process.env) {
+      if (myOrgEnvRegex.test(key)) {
+        envVars[key] = process.env[key];
+      }
+    }
+
+    options.define['process.env'] = JSON.stringify(envVars);
+  },
+};
+
+module.exports = envVarPlugin;
+```
+
+The plugin collects all environment variables that start with `MY_ORG_` and defines them in the `process.env` object. You can adjust the plugin to your needs (e.g., use a different regular expression, use a whitelist, add all environment variables, etc.).
+
+As shown in the previous section, add the defined variables to a type definition file to ensure TypeScript recognizes them.
+
+Now, you can define variables in an `.env` file, such as:
+
+```text {% fileName="apps/my-app/.env" %}
+MY_ORG_API_URL=http://localhost:3333
+```
+
+{% callout type="note" title="Set environment variables from the terminal" %}
+Alternatively, you can also [set environment variables when running a terminal command](/recipes/tips-n-tricks/define-environment-variables#adhoc-variables).
+{% /callout %}
+
+Finally, you can use the environment variables in your application code:
+
+```ts {% fileName="apps/my-app/src/app/api.service.ts" highlightLines=[6] %}
+import { Injectable } from '@angular/core';
+
+@Injectable({ providedIn: 'root' })
+export class ApiService {
+  constructor() {
+    console.log('API URL:', process.env.MY_ORG_API_URL);
+  }
+}
+```
+
+## For Angular applications using Webpack
+
+Angular executors for Webpack (e.g. `@nx/angular:webpack-browser` and `@angular-devkit/build-angular:browser`) don't have built-in support for using environment variables when building applications.
 
 To add support for environment variables we need to use the webpack `DefinePlugin` in our own custom webpack configuration. We'll see how to do so in the following sections.
 
-## A note on `NODE_ENV`
+### A note on `NODE_ENV`
 
 The webpack-based Angular executors (e.g. `@nx/angular:webpack-browser` and `@angular-devkit/build-angular:browser`) set the webpack's `mode` configuration option based on the values for the following in the builder options:
 
@@ -25,81 +202,49 @@ To change the `NODE_ENV` variable we can do one of the following:
 
 The first two options is a matter of changing your build target configuration or passing the specific flag in the command line. We'll see how to do the last in the following section.
 
-## Use a custom webpack configuration to support environment variables
+### Use a custom webpack configuration to support environment variables
 
-First, install `@types/node` so we can use `process.env` in our code.
+Update the `build` and `serve` targets to use the `@nx/angular` relevant executors and provide a custom Webpack configuration:
 
-{% tabs %}
-{% tab label="npm" %}
-
-```shell
-npm add -D @types/node
-```
-
-{% /tab %}
-{% tab label="yarn" %}
-
-```shell
-yarn add -D @types/node
-```
-
-{% /tab %}
-{% tab label="pnpm" %}
-
-```shell
-pnpm add -D @types/node
-```
-
-{% /tab %}
-{% /tabs %}
-
-Next, update the `build` and `serve` targets (in `project.json` or `angular.json` file), to the following.
-
-```json lines
+```json {% fileName="apps/my-app/project.json" highlightLines=[5,"8-10",14] %}
 {
-  "build": {
-    // NOTE: change the executor to one that supports custom webpack config.
-    "executor": "@nx/angular:webpack-browser",
-    // snip
-    "options": {
-      // NOTE: This file needs to be created.
-      "customWebpackConfig": {
-        "path": "apps/myapp/webpack.config.js"
+  ...
+  "targets": {
+    "build": {
+      "executor": "@nx/angular:webpack-browser",
+      "options": {
+        ...
+        "customWebpackConfig": {
+          "path": "apps/my-app/webpack.config.js"
+        }
       }
-      // snip
-    }
-  },
-  "serve": {
-    // NOTE: use dev-server that supports custom webpack config.
-    "executor": "@nx/angular:dev-server"
-    // snip
+    },
+    "serve": {
+      "executor": "@nx/angular:dev-server"
+      ...
+    },
+    ...
   }
 }
 ```
 
-Then, we can use `DefinePlugin` in our custom webpack.
+Then, we can use `DefinePlugin` in our custom Webpack configuration:
 
-```javascript {% fileName="apps/myapp/webpack.config.js" %}
+```js {% fileName="apps/my-app/webpack.config.js" %}
 const webpack = require('webpack');
 
+const myOrgEnvRegex = /^MY_ORG_/i;
+
 function getClientEnvironment() {
-  // Grab NX_* environment variables and prepare them to be injected
-  // into the application via DefinePlugin in webpack configuration.
-  const NX_APP = /^NX_/i;
+  const envVars = {};
+  for (const key in process.env) {
+    if (myOrgEnvRegex.test(key)) {
+      envVars[key] = process.env[key];
+    }
+  }
 
-  const raw = Object.keys(process.env)
-    .filter((key) => NX_APP.test(key))
-    .reduce((env, key) => {
-      env[key] = process.env[key];
-      return env;
-    }, {});
-
-  // Stringify all values so we can feed into webpack DefinePlugin
   return {
-    'process.env': Object.keys(raw).reduce((env, key) => {
-      env[key] = JSON.stringify(raw[key]);
-      return env;
-    }, {}),
+    'process.env': JSON.stringify(envVars),
   };
 }
 
@@ -111,78 +256,65 @@ module.exports = (config, options, context) => {
 };
 ```
 
-Now, when we define variables in our `.env` file, such as...
+In our custom Webpack configuration we collect all environment variables that start with `MY_ORG_`, define the `process.env` object with them, and provide it to the `DefinePlugin`. You can adjust the configuration to your needs (e.g., use a different regular expression, use a whitelist, add all environment variables, etc.).
 
-```text
-# apps/myapp/.env
-NX_API_URL=http://localhost:3333
+Next, make sure to inform TypeScript of the defined variables to prevent type-checking errors during the build. We can achieve this in a number of ways. For example you could create or update a type definition file included in the TypeScript build process (e.g. `src/types.d.ts`) with `declare` statements for the defined variables:
+
+```ts {% fileName="apps/my-app/src/types.d.ts" %}
+declare const process: {
+  env: {
+    MY_ORG_API_URL: string;
+  };
+};
+```
+
+Now, we can define variables in our `.env` file, such as:
+
+```text {% fileName="apps/my-app/.env" %}
+MY_ORG_API_URL=http://localhost:3333
 ```
 
 {% callout type="note" title="Set environment variables from the terminal" %}
-Alternatively, you can set the variable when running a terminal command by using:
-
-- MacOS & Linux: `NX_API_URL=http://localhost:9999 npm run build-prod`
-- Windows: `set NX_API_URL=http://localhost:9999 & npm run build-prod`
-
+Alternatively, you can also [set environment variables when running a terminal command](/recipes/tips-n-tricks/define-environment-variables#adhoc-variables).
 {% /callout %}
 
-Finally, We can use environment variables in our code. For example,
+Finally, we can use environment variables in our code:
 
-```typescript {% fileName="apps/myapp/src/main.ts" %}
-import { enableProdMode } from '@angular/core';
-import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
-import { AppModule } from './app/app.module';
+```ts {% fileName="apps/my-app/src/app/api.service.ts" highlightLines=[6] %}
+import { Injectable } from '@angular/core';
 
-if (process.env['NODE_ENV'] === 'production') {
-  enableProdMode();
-}
-
-// This is defined in our .env file.
-console.log('>>> NX_API_URL', process.env['NX_API_URL']);
-
-platformBrowserDynamic()
-  .bootstrapModule(AppModule)
-  .catch((err) => console.error(err));
-```
-
-You should also update `tsconfig.apps.json` and `tsconfig.spec.json` files to include node types.
-
-```json lines
-{
-  "extends": "./tsconfig.json",
-  "compilerOptions": {
-    // snip
-    "types": ["node"]
+@Injectable({ providedIn: 'root' })
+export class ApiService {
+  constructor() {
+    console.log('API URL:', process.env.MY_ORG_API_URL);
   }
-  // snip
 }
 ```
 
-## Using environment variables in `index.html`
+### Using environment variables in `index.html`
 
-While you cannot use variable in `index.html`, one workaround for this is to create different `index.*.html` files, such
-as `index.prod.html`, then swap it in different environments.
+While you cannot use environment variables in `index.html`, one workaround is to create different `index.*.html` files, such
+as `index.prod.html`, then swap them in different environments.
 
-For example in `project.json` (or `angular.json`),
+For example, you can configure your `build` target in `project.json` as follows:
 
-```json lines {% fileName="project.json or angular.json" %}
+```json {% fileName="project.json" highlightLines=["10-15"] %}
 {
-  "build": {
-    "executor": "@angular-devkit/build-angular:browser",
-    // snip
-    "configurations": {
-      "production": {
-        // snip
-        "fileReplacements": [
-          {
-            "replace": "apps/myapp/src/environments/environment.ts",
-            "with": "apps/myapp/src/environments/environment.prod.ts"
-          },
-          {
-            "replace": "apps/myapp/src/index.html",
-            "with": "apps/myapp/src/index.prod.html"
-          }
-        ]
+  ...
+  "targets": {
+    "build": {
+      "executor": "@angular-devkit/build-angular:browser",
+      ...
+      "configurations": {
+        "production": {
+          ...
+          "fileReplacements": [
+            {
+              "replace": "apps/my-app/src/index.html",
+              "with": "apps/my-app/src/index.prod.html"
+            }
+          ]
+        }
       }
     }
   }

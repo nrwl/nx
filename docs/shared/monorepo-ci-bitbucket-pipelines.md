@@ -27,7 +27,7 @@ pipelines:
       - step:
           name: "Build and test affected apps on 'main' branch changes"
           script:
-            - export NX_BRANCH=$BITBUCKET_PR_ID
+            - export NX_BRANCH=$BITBUCKET_BRANCH
             # This line enables distribution
             # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "e2e-ci" targets have been requested
             # - npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="e2e-ci"

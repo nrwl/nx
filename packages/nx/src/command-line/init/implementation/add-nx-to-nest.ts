@@ -17,7 +17,6 @@ import {
   createNxJsonFile,
   initCloud,
   markRootPackageJsonAsNxProjectLegacy,
-  printFinalMessage,
   runInstall,
   updateGitIgnore,
 } from './utils';
@@ -75,15 +74,19 @@ export async function addNxToNest(options: Options, packageJson: PackageJson) {
         '🧑‍🔧 Please answer the following questions about the scripts found in your package.json in order to generate task runner configuration',
     });
     cacheableOperations = (
-      (await enquirer.prompt([
+      await enquirer.prompt<{ cacheableOperations: string[] }>([
         {
           type: 'multiselect',
           name: 'cacheableOperations',
           message:
             'Which of the following scripts are cacheable? (Produce the same output given the same input, e.g. build, test and lint usually are, serve and start are not)',
           choices: scripts,
-        },
-      ])) as any
+          /**
+           * limit is missing from the interface but it limits the amount of options shown
+           */
+          limit: process.stdout.rows - 4, // 4 leaves room for the header above, the prompt and some whitespace
+        } as any,
+      ])
     ).cacheableOperations;
 
     for (const scriptName of cacheableOperations) {
@@ -139,10 +142,6 @@ export async function addNxToNest(options: Options, packageJson: PackageJson) {
     output.log({ title: '🛠️ Setting up Nx Cloud' });
     initCloud(repoRoot, 'nx-init-nest');
   }
-
-  printFinalMessage({
-    learnMoreLink: 'https://nx.dev/recipes/adopting-nx/adding-to-monorepo',
-  });
 }
 
 function addNestPluginToPackageJson(repoRoot: string) {
@@ -177,8 +176,6 @@ function createProjectJson(
         buildTarget: `${packageName}:build`,
       },
     };
-
-    console.log(nestCLIOptions);
 
     if (nestCLIOptions.webpackOptions) {
       json.targets['build'] = {

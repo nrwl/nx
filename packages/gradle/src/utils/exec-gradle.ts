@@ -1,23 +1,9 @@
 import { workspaceRoot } from '@nx/devkit';
-import { ExecFileOptions } from 'child_process';
-import {
-  ExecFileSyncOptionsWithBufferEncoding,
-  execFile,
-  execFileSync,
-} from 'node:child_process';
+import { ExecFileOptions, execFile } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 
-export function execGradle(
-  args: string[],
-  execOptions: ExecFileSyncOptionsWithBufferEncoding
-) {
-  const gradleBinaryPath = getGradleBinaryPath();
-
-  return execFileSync(gradleBinaryPath, args, execOptions);
-}
-
-export function getGradleBinaryPath() {
+export function getGradleBinaryPath(): string {
   const gradleFile = process.platform.startsWith('win')
     ? 'gradlew.bat'
     : 'gradlew';
@@ -29,17 +15,22 @@ export function getGradleBinaryPath() {
   return gradleBinaryPath;
 }
 
+export function getGradleExecFile(): string {
+  return process.platform.startsWith('win') ? '.\\gradlew.bat' : './gradlew';
+}
+
 export function execGradleAsync(
   args: ReadonlyArray<string>,
-  execOptions: ExecFileOptions
-) {
+  execOptions: ExecFileOptions = {}
+): Promise<Buffer> {
   const gradleBinaryPath = getGradleBinaryPath();
-  if (!existsSync(gradleBinaryPath)) {
-    throw new Error('Gradle is not setup. Run "gradle init"');
-  }
 
   return new Promise<Buffer>((res, rej) => {
-    const cp = execFile(gradleBinaryPath, args, execOptions);
+    const cp = execFile(gradleBinaryPath, args, {
+      ...execOptions,
+      shell: true,
+      windowsHide: true,
+    });
 
     let stdout = Buffer.from('');
     cp.stdout?.on('data', (data) => {

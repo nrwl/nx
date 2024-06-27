@@ -1,60 +1,45 @@
 import {
   addDependenciesToPackageJson,
+  createProjectGraphAsync,
   formatFiles,
   GeneratorCallback,
   Tree,
-  readNxJson,
-  updateNxJson,
 } from '@nx/devkit';
-import { nxVersion } from '../../utils/versions';
+import { nxVersion, rollupVersion } from '../../utils/versions';
 import { Schema } from './schema';
-import { updatePackageScripts } from '@nx/devkit/src/utils/update-package-scripts';
+import { addPluginV1 } from '@nx/devkit/src/utils/add-plugin';
 import { createNodes } from '../../plugins/plugin';
-
-function addPlugin(tree: Tree) {
-  const nxJson = readNxJson(tree);
-  nxJson.plugins ??= [];
-
-  for (const plugin of nxJson.plugins) {
-    if (
-      typeof plugin === 'string'
-        ? plugin === '@nx/rollup/plugin'
-        : plugin.plugin === '@nx/rollup/plugin'
-    ) {
-      return;
-    }
-  }
-
-  nxJson.plugins.push({
-    plugin: '@nx/rollup/plugin',
-    options: {
-      buildTargetName: 'build',
-    },
-  });
-
-  updateNxJson(tree, nxJson);
-}
 
 export async function rollupInitGenerator(tree: Tree, schema: Schema) {
   let task: GeneratorCallback = () => {};
+  schema.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
 
   if (!schema.skipPackageJson) {
+    const devDependencies = { '@nx/rollup': nxVersion };
+    if (schema.addPlugin) {
+      // Ensure user can run Rollup CLI.
+      devDependencies['rollup'] = rollupVersion;
+    }
     task = addDependenciesToPackageJson(
       tree,
       {},
-      { '@nx/rollup': nxVersion },
+      devDependencies,
       undefined,
       schema.keepExistingVersions
     );
   }
 
-  schema.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
   if (schema.addPlugin) {
-    addPlugin(tree);
-  }
-
-  if (schema.updatePackageScripts) {
-    await updatePackageScripts(tree, createNodes);
+    await addPluginV1(
+      tree,
+      await createProjectGraphAsync(),
+      '@nx/rollup/plugin',
+      createNodes,
+      {
+        buildTargetName: ['build', 'rollup:build', 'rollup-build'],
+      },
+      schema.updatePackageScripts
+    );
   }
 
   if (!schema.skipFormat) {

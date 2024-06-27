@@ -106,7 +106,7 @@ function createWebpackConfig(
       joinPathFragments(project.root, 'webpack.config.js'),
       hasPlugin(tree)
         ? `
-const { NxWebpackPlugin } = require('@nx/webpack');
+const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
 const { join } = require('path');
 
 module.exports = {
@@ -116,7 +116,7 @@ module.exports = {
           }'),
   },
   plugins: [
-    new NxWebpackPlugin({
+    new NxAppWebpackPlugin({
       target: '${buildOptions.target}',
       tsConfig: '${buildOptions.tsConfig}',
       compiler: '${buildOptions.compiler}',
@@ -142,7 +142,7 @@ module.exports = composePlugins(withNx(), withWeb(), (config) => {
       joinPathFragments(project.root, 'webpack.config.js'),
       hasPlugin(tree)
         ? `
-const { NxWebpackPlugin } = require('@nx/webpack');
+const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
 const { join } = require('path');
 
 module.exports = {
@@ -152,7 +152,7 @@ module.exports = {
           }'),
   },
   plugins: [
-    new NxWebpackPlugin({
+    new NxAppWebpackPlugin({
       target: '${buildOptions.target}',
       tsConfig: '${buildOptions.tsConfig}',
       compiler: '${buildOptions.compiler}',

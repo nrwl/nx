@@ -12,7 +12,7 @@ import { runNxSync } from '../../utils/child-process';
 import { directoryExists, readJsonFile } from '../../utils/fileutils';
 import { PackageJson } from '../../utils/package-json';
 import { nxVersion } from '../../utils/versions';
-import { isMonorepo } from './implementation/utils';
+import { isMonorepo, printFinalMessage } from './implementation/utils';
 
 export interface InitArgs {
   addE2e: boolean;
@@ -40,14 +40,37 @@ export async function initHandler(options: InitArgs) {
     const packageJson: PackageJson = readJsonFile('package.json');
     if (existsSync('angular.json')) {
       await addNxToAngularCliRepo(options);
+
+      printFinalMessage({
+        learnMoreLink: 'https://nx.dev/recipes/angular/migration/angular',
+      });
+      return;
     } else if (isCRA(packageJson)) {
       await addNxToCraRepo(options);
+
+      printFinalMessage({
+        learnMoreLink: options.integrated
+          ? 'https://nx.dev/getting-started/tutorials/react-monorepo-tutorial'
+          : 'https://nx.dev/getting-started/tutorials/react-standalone-tutorial',
+      });
+      return;
     } else if (isNestCLI(packageJson)) {
       await addNxToNest(options, packageJson);
+      printFinalMessage({
+        learnMoreLink: 'https://nx.dev/recipes/adopting-nx/adding-to-monorepo',
+      });
+      return;
     } else if (isMonorepo(packageJson)) {
       await addNxToMonorepo({ ...options, legacy: true });
+      printFinalMessage({
+        learnMoreLink: 'https://nx.dev/recipes/adopting-nx/adding-to-monorepo',
+      });
     } else {
       await addNxToNpmRepo({ ...options, legacy: true });
+      printFinalMessage({
+        learnMoreLink:
+          'https://nx.dev/recipes/adopting-nx/adding-to-existing-project',
+      });
     }
   } else {
     const useDotNxFolder = await prompt<{ useDotNxFolder: string }>([

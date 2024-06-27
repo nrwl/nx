@@ -26,6 +26,7 @@ import { addVitest } from './lib/add-vitest';
 import { vueTestUtilsVersion, vitePluginVueVersion } from '@nx/vue';
 import { ensureDependencies } from './lib/ensure-dependencies';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
+import { execSync } from 'node:child_process';
 
 export async function applicationGenerator(tree: Tree, schema: Schema) {
   const tasks: GeneratorCallback[] = [];
@@ -40,14 +41,9 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
     skipFormat: true,
   });
   tasks.push(jsInitTask);
-  const nuxtInitTask = await nuxtInitGenerator(tree, {
-    ...options,
-    skipFormat: true,
-  });
-  tasks.push(nuxtInitTask);
   tasks.push(ensureDependencies(tree, options));
 
-  addProjectConfiguration(tree, options.name, {
+  addProjectConfiguration(tree, options.projectName, {
     root: options.appProjectRoot,
     projectType: 'application',
     sourceRoot: `${options.appProjectRoot}/src`,
@@ -113,11 +109,27 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
     tasks.push(await addVitest(tree, options));
   }
 
+  const nuxtInitTask = await nuxtInitGenerator(tree, {
+    ...options,
+    skipFormat: true,
+  });
+  tasks.push(nuxtInitTask);
+
   tasks.push(await addE2e(tree, options));
 
   if (options.js) toJS(tree);
 
   if (!options.skipFormat) await formatFiles(tree);
+
+  tasks.push(() => {
+    try {
+      execSync(`npx -y nuxi prepare`, { cwd: options.appProjectRoot });
+    } catch (e) {
+      console.error(
+        `Failed to run \`nuxi prepare\` in "${options.appProjectRoot}". Please run the command manually.`
+      );
+    }
+  });
 
   tasks.push(() => {
     logShowProjectCommand(options.projectName);

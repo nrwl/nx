@@ -243,8 +243,10 @@ exports[`app --project-name-and-root-format=derived should generate correctly wh
       "executor": "@angular-devkit/build-angular:application",
       "options": {
         "assets": [
-          "apps/my-dir/my-app/src/favicon.ico",
-          "apps/my-dir/my-app/src/assets",
+          {
+            "glob": "**/*",
+            "input": "apps/my-dir/my-app/public",
+          },
         ],
         "browser": "apps/my-dir/my-app/src/main.ts",
         "index": "apps/my-dir/my-app/src/index.html",
@@ -287,6 +289,7 @@ exports[`app --project-name-and-root-format=derived should generate correctly wh
       "executor": "@nx/web:file-server",
       "options": {
         "buildTarget": "my-dir-my-app:build",
+        "port": 4200,
         "spa": true,
         "staticFilePath": "dist/apps/my-dir/my-app/browser",
       },
@@ -443,8 +446,10 @@ exports[`app --project-name-and-root-format=derived should generate correctly wh
       "executor": "@angular-devkit/build-angular:application",
       "options": {
         "assets": [
-          "apps/my-app/src/favicon.ico",
-          "apps/my-app/src/assets",
+          {
+            "glob": "**/*",
+            "input": "apps/my-app/public",
+          },
         ],
         "browser": "apps/my-app/src/main.ts",
         "index": "apps/my-app/src/index.html",
@@ -487,6 +492,7 @@ exports[`app --project-name-and-root-format=derived should generate correctly wh
       "executor": "@nx/web:file-server",
       "options": {
         "buildTarget": "my-app:build",
+        "port": 4200,
         "spa": true,
         "staticFilePath": "dist/apps/my-app/browser",
       },
@@ -618,12 +624,12 @@ bootstrapApplication(AppComponent, appConfig).catch((err) =>
 `;
 
 exports[`app --standalone should generate a standalone app correctly with routing 2`] = `
-"import { ApplicationConfig } from '@angular/core';
+"import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { appRoutes } from './app.routes';
 
 export const appConfig: ApplicationConfig = {
-  providers: [provideRouter(appRoutes) ]
+  providers: [provideZoneChangeDetection({ eventCoalescing: true }), provideRouter(appRoutes) ]
 };
 "
 `;
@@ -696,10 +702,10 @@ bootstrapApplication(AppComponent, appConfig).catch((err) =>
 `;
 
 exports[`app --standalone should generate a standalone app correctly without routing 2`] = `
-"import { ApplicationConfig } from '@angular/core';
+"import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
 
 export const appConfig: ApplicationConfig = {
-  providers: []
+  providers: [provideZoneChangeDetection({ eventCoalescing: true }), ]
 };
 "
 `;
@@ -748,6 +754,17 @@ describe('AppComponent', () => {
     expect(app.title).toEqual('standalone');
   });
 });
+"
+`;
+
+exports[`app --standalone should should not use event coalescing in versions lower than v18 1`] = `
+"import { ApplicationConfig } from '@angular/core';
+import { provideRouter } from '@angular/router';
+import { appRoutes } from './app.routes';
+
+export const appConfig: ApplicationConfig = {
+  providers: [provideRouter(appRoutes) ]
+};
 "
 `;
 
@@ -817,8 +834,8 @@ exports[`app --strict should enable strict type checking: e2e tsconfig.json 1`] 
 }
 `;
 
-exports[`app angular v15 support should import "ApplicationConfig" from "@angular/platform-browser" 1`] = `
-"import { ApplicationConfig } from '@angular/platform-browser';
+exports[`app angular compat support should import "ApplicationConfig" from "@angular/platform-browser" 1`] = `
+"import { ApplicationConfig } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { appRoutes } from './app.routes';
 
@@ -938,8 +955,10 @@ exports[`app nested should create project configs 1`] = `
       "executor": "@angular-devkit/build-angular:application",
       "options": {
         "assets": [
-          "my-dir/my-app/src/favicon.ico",
-          "my-dir/my-app/src/assets",
+          {
+            "glob": "**/*",
+            "input": "my-dir/my-app/public",
+          },
         ],
         "browser": "my-dir/my-app/src/main.ts",
         "index": "my-dir/my-app/src/index.html",
@@ -982,6 +1001,7 @@ exports[`app nested should create project configs 1`] = `
       "executor": "@nx/web:file-server",
       "options": {
         "buildTarget": "my-app:build",
+        "port": 4200,
         "spa": true,
         "staticFilePath": "dist/my-dir/my-app/browser",
       },
@@ -1051,8 +1071,10 @@ exports[`app not nested should create project configs 1`] = `
       "executor": "@angular-devkit/build-angular:application",
       "options": {
         "assets": [
-          "my-app/src/favicon.ico",
-          "my-app/src/assets",
+          {
+            "glob": "**/*",
+            "input": "my-app/public",
+          },
         ],
         "browser": "my-app/src/main.ts",
         "index": "my-app/src/index.html",
@@ -1095,6 +1117,7 @@ exports[`app not nested should create project configs 1`] = `
       "executor": "@nx/web:file-server",
       "options": {
         "buildTarget": "my-app:build",
+        "port": 4200,
         "spa": true,
         "staticFilePath": "dist/my-app/browser",
       },

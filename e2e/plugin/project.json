@@ -3,8 +3,14 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "e2e/plugin",
   "projectType": "application",
+  "implicitDependencies": ["create-nx-plugin"],
   "targets": {
-    "e2e": {}
-  },
-  "implicitDependencies": ["create-nx-plugin"]
+    "e2e-ci--src/nx-plugin.test.ts": {
+      "dependsOn": [
+        "nx:build-native",
+        "@nx/nx-source:populate-local-registry-storage"
+      ],
+      "inputs": ["e2eInputs", "^production"]
+    }
+  }
 }

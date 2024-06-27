@@ -27,10 +27,10 @@ describe('react:storybook-configuration', () => {
     mockedInstalledCypressVersion.mockReturnValue(10);
     jest.spyOn(logger, 'warn').mockImplementation(() => {});
     jest.spyOn(logger, 'debug').mockImplementation(() => {});
-    jest.resetModules();
   });
 
   afterEach(() => {
+    jest.resetModules();
     jest.restoreAllMocks();
   });
 

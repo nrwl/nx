@@ -1,3 +1,5 @@
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
 import { installedCypressVersion } from '@nx/cypress/src/utils/cypress-version';
 import { getProjects, readProjectConfiguration, Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
@@ -135,6 +137,8 @@ describe('react app generator (legacy)', () => {
       bundler: 'vite',
       skipFormat: true,
     });
-    expect(appTree.read('my-vite-app/vite.config.ts')).toMatchSnapshot();
+    expect(
+      appTree.read('my-vite-app/vite.config.ts', 'utf-8')
+    ).toMatchSnapshot();
   });
 });

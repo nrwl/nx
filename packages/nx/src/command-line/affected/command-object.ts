@@ -4,7 +4,6 @@ import {
   withAffectedOptions,
   withBatch,
   withConfiguration,
-  withDepGraphOptions,
   withOutputStyleOption,
   withOverrides,
   withRunOptions,
@@ -38,7 +37,7 @@ export const yargsAffectedCommand: CommandModule = {
       'affected'
     ),
   handler: async (args) => {
-    return handleErrors(
+    const exitCode = await handleErrors(
       (args.verbose as boolean) ?? process.env.NX_VERBOSE_LOGGING === 'true',
       async () => {
         return (await import('./affected')).affected(
@@ -47,6 +46,7 @@ export const yargsAffectedCommand: CommandModule = {
         );
       }
     );
+    process.exit(exitCode);
   },
 };
 
@@ -61,7 +61,7 @@ export const yargsAffectedTestCommand: CommandModule = {
       'affected'
     ),
   handler: async (args) => {
-    return handleErrors(
+    const exitCode = await handleErrors(
       (args.verbose as boolean) ?? process.env.NX_VERBOSE_LOGGING === 'true',
       async () => {
         return (await import('./affected')).affected('affected', {
@@ -70,6 +70,7 @@ export const yargsAffectedTestCommand: CommandModule = {
         });
       }
     );
+    process.exit(exitCode);
   },
 };
 
@@ -84,7 +85,7 @@ export const yargsAffectedBuildCommand: CommandModule = {
       'affected'
     ),
   handler: async (args) => {
-    return handleErrors(
+    const exitCode = await handleErrors(
       (args.verbose as boolean) ?? process.env.NX_VERBOSE_LOGGING === 'true',
       async () => {
         return (await import('./affected')).affected('affected', {
@@ -93,6 +94,7 @@ export const yargsAffectedBuildCommand: CommandModule = {
         });
       }
     );
+    process.exit(exitCode);
   },
 };
 
@@ -107,7 +109,7 @@ export const yargsAffectedLintCommand: CommandModule = {
       'affected'
     ),
   handler: async (args) => {
-    return handleErrors(
+    const exitCode = await handleErrors(
       (args.verbose as boolean) ?? process.env.NX_VERBOSE_LOGGING === 'true',
       async () => {
         return (await import('./affected')).affected('affected', {
@@ -116,6 +118,7 @@ export const yargsAffectedLintCommand: CommandModule = {
         });
       }
     );
+    process.exit(exitCode);
   },
 };
 
@@ -130,7 +133,7 @@ export const yargsAffectedE2ECommand: CommandModule = {
       'affected'
     ),
   handler: async (args) => {
-    return handleErrors(
+    const exitCode = await handleErrors(
       (args.verbose as boolean) ?? process.env.NX_VERBOSE_LOGGING === 'true',
       async () => {
         return (await import('./affected')).affected('affected', {
@@ -139,73 +142,6 @@ export const yargsAffectedE2ECommand: CommandModule = {
         });
       }
     );
+    process.exit(exitCode);
   },
-};
-
-export const affectedGraphDeprecationMessage =
-  'Use `nx graph --affected`, or `nx affected --graph` instead depending on which best suits your use case. The `affected:graph` command will be removed in Nx 19.';
-/**
- * @deprecated 'Use `nx graph --affected`, or` nx affected --graph` instead depending on which best suits your use case. The `affected:graph` command will be removed in Nx 19.'
- */
-export const yargsAffectedGraphCommand: CommandModule = {
-  command: 'affected:graph',
-  describe: 'Graph dependencies affected by changes',
-  aliases: ['affected:dep-graph'],
-  builder: (yargs) =>
-    linkToNxDevAndExamples(
-      withAffectedOptions(withDepGraphOptions(yargs)),
-      'affected:graph'
-    ),
-  handler: async (args) => {
-    return handleErrors(
-      (args.verbose as boolean) ?? process.env.NX_VERBOSE_LOGGING === 'true',
-      async () => {
-        return await (
-          await import('./affected')
-        ).affected('graph', {
-          ...args,
-        });
-      }
-    );
-  },
-  deprecated: affectedGraphDeprecationMessage,
-};
-
-export const printAffectedDeprecationMessage =
-  'Use `nx show projects --affected`, `nx affected --graph -t build` or `nx graph --affected` depending on which best suits your use case. The `print-affected` command will be removed in Nx 19.';
-/**
- * @deprecated 'Use `nx show --affected`, `nx affected --graph` or `nx graph --affected` depending on which best suits your use case. The `print-affected` command will be removed in Nx 19.'
- */
-export const yargsPrintAffectedCommand: CommandModule = {
-  command: 'print-affected',
-  describe:
-    'Prints information about the projects and targets affected by changes',
-  builder: (yargs) =>
-    linkToNxDevAndExamples(
-      withAffectedOptions(withTargetAndConfigurationOption(yargs, false)),
-      'print-affected'
-    )
-      .option('select', {
-        type: 'string',
-        describe:
-          'Select the subset of the returned json document (e.g., --select=projects)',
-      })
-      .option('type', {
-        type: 'string',
-        choices: ['app', 'lib'],
-        describe:
-          'Select the type of projects to be returned (e.g., --type=app)',
-      }),
-  handler: async (args) => {
-    return handleErrors(
-      (args.verbose as boolean) ?? process.env.NX_VERBOSE_LOGGING === 'true',
-      async () => {
-        await (
-          await import('./affected')
-        ).affected('print-affected', withOverrides(args));
-        process.exit(0);
-      }
-    );
-  },
-  deprecated: printAffectedDeprecationMessage,
 };

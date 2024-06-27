@@ -16,7 +16,7 @@ import { ReleaseVersion, noDiffInChangelogMessage } from './shared';
 
 // axios types and values don't seem to match
 import _axios = require('axios');
-const axios = _axios as any as typeof _axios['default'];
+const axios = _axios as any as (typeof _axios)['default'];
 
 export type RepoSlug = `${string}/${string}`;
 

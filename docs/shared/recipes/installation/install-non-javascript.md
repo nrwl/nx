@@ -41,9 +41,3 @@ nx graph
 
 {% /tab %}
 {% /tabs %}
-
-{% callout type="note" title="Available since Nx v15.8.7" %}
-
-Support for `--use-dot-nx-installation` was added in Nx v15.8.7. To ensure that it is available, specify the version of nx when running your command so that `npx` doesn't accept an older version that is in the cache. (e.g. `npx nx@latest init`)
-
-{% /callout %}

@@ -75,15 +75,9 @@ After the changes are applied, your workspace file structure should look similar
 └── tsconfig.base.json
 ```
 
-### Older Versions of Angular
-
-Support for workspaces with multiple applications and libraries was added in Nx v14.1.0. If you are migrating using an older version of Nx, your workspace can only contain one application and no libraries in order to use the automated migration, otherwise, you can still [migrate manually](/recipes/angular/migration/angular-manual).
-
 ### Modified Folder Structure
 
-The automated migration supports Angular CLI workspaces with a standard structure, configurations and features. If your workspace has deviated from what the Angular CLI generates, you might not be able to use the automated migration and you will need to [manually migrate your workspace](/recipes/angular/migration/angular-manual).
-
-Currently, the automated migration supports workspaces using the following executors (builders):
+The automated migration supports Angular CLI workspaces with a standard structure, configurations and features. It supports workspaces using the following executors (builders):
 
 - `@angular-devkit/build-angular:application`
 - `@angular-devkit/build-angular:browser`
@@ -114,6 +108,67 @@ Your workspace is now powered by Nx! You can verify that your application still 
 
 > Your project graph will grow as you add and use more applications and libraries. You can add the `--watch` flag to `nx graph` to see the changes in-browser as you add them.
 
+## Set Up CI for Your Angular Workspace
+
+This tutorial walked you through how Nx can improve the local development experience, but the biggest difference Nx makes is in CI. As repositories get bigger, making sure that the CI is fast, reliable and maintainable can get very challenging. Nx provides a solution.
+
+- Nx reduces wasted time in CI with the [`affected` command](/ci/features/affected).
+- Nx Replay's [remote caching](/ci/features/remote-cache) will reuse task artifacts from different CI executions making sure you will never run the same computation twice.
+- Nx Agents [efficiently distribute tasks across machines](/ci/concepts/parallelization-distribution) ensuring constant CI time regardless of the repository size. The right number of machines is allocated for each PR to ensure good performance without wasting compute.
+- Nx Atomizer [automatically splits](/ci/features/split-e2e-tasks) large e2e tests to distribute them across machines. Nx can also automatically [identify and rerun flaky e2e tests](/ci/features/flaky-tasks).
+
+### Generate a CI Workflow
+
+If you are starting a new project, you can use the following command to generate a CI workflow file.
+
+```shell
+npx nx generate ci-workflow --ci=github
+```
+
+{% callout type="note" title="Choose your CI provider" %}
+You can choose `github`, `circleci`, `azure`, `bitbucket-pipelines`, or `gitlab` for the `ci` flag.
+{% /callout %}
+
+This generator creates a `.github/workflows/ci.yml` file that contains a CI pipeline that will run the `lint`, `test`, `build` and `e2e` tasks for projects that are affected by any given PR.
+
+The key line in the CI pipeline is:
+
+```yml
+- run: npx nx affected -t lint test build e2e-ci
+```
+
+### Connect to Nx Cloud
+
+Nx Cloud is a companion app for your CI system that provides remote caching, task distribution, e2e tests deflaking, better DX and more.
+
+To connect to Nx Cloud:
+
+- Commit and push your changes
+- Go to [https://cloud.nx.app](https://cloud.nx.app), create an account, and connect your repository
+
+#### Connect to Nx Cloud Manually
+
+If you are not able to connect via the automated process at [https://cloud.nx.app](https://cloud.nx.app), you can connect your workspace manually by running:
+
+```shell
+npx nx connect
+```
+
+You will then need to merge your changes and connect to your workspace on [https://cloud.nx.app](https://cloud.nx.app).
+
+### Enable a Distributed CI Pipeline
+
+The current CI pipeline runs on a single machine and can only handle small workspaces. To transform your CI into a CI that runs on multiple machines and can handle workspaces of any size, uncomment the `npx nx-cloud start-ci-run` line in the `.github/workflows/ci.yml` file.
+
+```yml
+- run: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="e2e-ci"
+```
+
+For more information about how Nx can improve your CI pipeline, check out one of these detailed tutorials:
+
+- [Circle CI with Nx](/ci/intro/tutorials/circle)
+- [GitHub Actions with Nx](/ci/intro/tutorials/github-actions)
+
 ## Learn More
 
 Learn more about the advantages of Nx in the following guides:
@@ -122,7 +177,7 @@ Learn more about the advantages of Nx in the following guides:
 - [Using Jest for unit tests](/nx-api/jest)
 - [Computation Caching](/concepts/how-caching-works)
 - [Rebuilding and Retesting What is Affected](/ci/features/affected)
-- [Integrate with Editors](/features/integrate-with-editors)
+- [Integrate with Editors](/getting-started/editor-setup)
 - [Advanced Angular Micro Frontends with Dynamic Module Federation](/recipes/angular/dynamic-module-federation-with-angular)
 
 ## From Nx Console
@@ -138,9 +193,7 @@ Once the script has run, commit the changes. Reverting this commit will effectiv
 
 {% cards cols="1" mdCols="3" smCols="3" lgCols="3" %}
 
-{% card title="Nx and the Angular CLI" description="Differences between Nx and the Angular CLI" type="documentation" url="/concepts/more-concepts/nx-and-angular" /%}
-
-{% card title="Angular CLI manual migration" description="Add Nx by hand" type="documentation" url="/recipes/angular/migration/angular-manual" /%}
+{% card title="Nx and the Angular CLI" description="Differences between Nx and the Angular CLI" type="documentation" url="/nx-api/angular/documents/nx-and-angular" /%}
 
 {% card title="Multiple Angular Repositories to one Nx Workspace" description="Combine multiple Angular CLI workspaces into one Nx workspace" type="documentation" url="/recipes/angular/migration/angular-multiple" /%}
 

@@ -1,3 +1,5 @@
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
 import {
   addProjectConfiguration,
   joinPathFragments,
@@ -6,10 +8,11 @@ import {
   Tree,
   updateJson,
   updateProjectConfiguration,
+  writeJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { installedCypressVersion } from '../../utils/cypress-version';
-import { cypressProjectGenerator } from '../cypress-project/cypress-project';
+import { configurationGenerator } from '../configuration/configuration';
 import {
   createSupportFileImport,
   updateImports,
@@ -31,7 +34,7 @@ describe('convertToCypressTen', () => {
     mockedInstalledCypressVersion.mockReturnValue(9);
   });
 
-  afterEach(() => {
+  afterAll(() => {
     jest.resetAllMocks();
   });
 
@@ -49,11 +52,23 @@ describe('convertToCypressTen', () => {
       });
       mockedInstalledCypressVersion.mockReturnValue(9);
 
-      await cypressProjectGenerator(tree, {
-        name: 'app-e2e',
+      addProjectConfiguration(tree, 'app-e2e', {
+        projectType: 'application',
+        root: 'app-e2e',
+        sourceRoot: 'app-e2e/src',
+        targets: {},
+        implicitDependencies: ['app'],
+        tags: [],
+      });
+
+      writeJson(tree, 'app-e2e/tsconfig.json', {
+        include: ['src/**/*.ts', 'src/**/*.js'],
+      });
+
+      await configurationGenerator(tree, {
         skipFormat: true,
-        project: 'app',
-        projectNameAndRootFormat: 'as-provided',
+        project: 'app-e2e',
+        devServerTarget: 'app:serve',
         addPlugin: false,
       });
     });
@@ -294,12 +309,26 @@ describe('convertToCypressTen', () => {
         },
       });
 
-      await cypressProjectGenerator(tree, {
-        name: 'app-two-e2e',
-        skipFormat: true,
-        project: 'app-two',
-        projectNameAndRootFormat: 'as-provided',
+      addProjectConfiguration(tree, 'app-two-e2e', {
+        projectType: 'application',
+        root: 'app-two-e2e',
+        sourceRoot: 'app-two-e2e/src',
+        targets: {},
+        implicitDependencies: ['app-two'],
+        tags: [],
       });
+
+      writeJson(tree, 'app-two-e2e/tsconfig.json', {
+        include: ['src/**/*.ts', 'src/**/*.js'],
+      });
+
+      await configurationGenerator(tree, {
+        skipFormat: true,
+        project: 'app-two-e2e',
+        devServerTarget: 'app-two:serve',
+        addPlugin: false,
+      });
+
       const appOneProjectConfig = readProjectConfiguration(tree, 'app-e2e');
       appOneProjectConfig.targets['e2e'].options.cypressConfig = 'cypress.json';
       updateProjectConfiguration(tree, 'app-e2e', appOneProjectConfig);
@@ -336,11 +365,6 @@ describe('convertToCypressTen', () => {
           devServerTarget: 'app:serve',
           testingType: 'e2e',
         },
-        configurations: {
-          production: {
-            devServerTarget: 'app:serve:production',
-          },
-        },
       });
       expect(readJson(tree, 'app-two-e2e/tsconfig.json').include).toEqual([
         'src/**/*.ts',
@@ -357,11 +381,6 @@ describe('convertToCypressTen', () => {
           cypressConfig: 'cypress.config.ts',
           devServerTarget: 'app-two:serve',
           testingType: 'e2e',
-        },
-        configurations: {
-          production: {
-            devServerTarget: 'app-two:serve:production',
-          },
         },
       });
     });

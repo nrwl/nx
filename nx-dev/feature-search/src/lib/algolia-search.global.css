@@ -3,7 +3,7 @@
 }
 
 body .DocSearch-Container {
-  @apply fixed top-0 left-0 z-[50] flex h-screen w-screen cursor-auto flex-col bg-black/10 p-4 backdrop-blur-sm dark:bg-white/10 sm:p-6 md:p-[10vh] lg:p-[12vh];
+  @apply fixed left-0 top-0 z-[50] flex h-screen w-screen cursor-auto flex-col bg-black/10 p-4 backdrop-blur-sm sm:p-6 md:p-[10vh] lg:p-[12vh] dark:bg-white/10;
 }
 
 .DocSearch-LoadingIndicator svg {
@@ -243,11 +243,11 @@ body .DocSearch-Container {
 }
 
 .DocSearch-Hit > a {
-  @apply block py-4 px-6;
+  @apply block px-6 py-4;
 }
 
 .DocSearch-Hit--Result {
-  @apply py-3 px-4 !important;
+  @apply px-4 py-3 !important;
 }
 
 .DocSearch-Hit {
@@ -296,7 +296,7 @@ body .DocSearch-Container {
 }
 
 .DocSearch-Footer {
-  @apply flex flex-none justify-end border-t border-slate-200 py-4 px-6 dark:border-slate-800;
+  @apply flex flex-none justify-end border-t border-slate-200 px-6 py-4 dark:border-slate-800;
 }
 
 .DocSearch-Commands {
@@ -330,11 +330,11 @@ body .DocSearch-Container {
 }
 
 .DocSearch-StartScreen .DocSearch-Help {
-  @apply py-16 px-6 text-center text-slate-400 dark:text-slate-600;
+  @apply px-6 py-16 text-center text-slate-400 dark:text-slate-600;
 }
 
 .DocSearch-NoResults {
-  @apply px-4 pt-10 pb-8;
+  @apply px-4 pb-8 pt-10;
 }
 
 .DocSearch-NoResults .DocSearch-Title {

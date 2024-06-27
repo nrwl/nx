@@ -30,11 +30,13 @@ For example, a URL of `https://dev.azure.com/nrwl/_git/large-monorepo` has the r
 
 To use a Personal Access Token for authentication, one must be generated with proper permissions. The minimum required permissions are shown in the screenshot below.
 
-![Work Items - Read, Code - Read, Build - Read & execute, Release - Read, write, & execute](/nx-cloud/set-up/minimal-ado-access-token.webp 'Minimum Azure DevOps Personal Access Token Permissions')
+![Work Items - Read, Code - Read, Build - Read & execute, Release - Read, write, & execute](/nx-cloud/set-up/minimal-ado-access-token.webp)
 
 Once this token is created paste the value and then click "Connect".
 
 This will verify that Nx Cloud can connect to your repo. Upon a successful test, your configuration is saved, and setup is complete.
+
+Please note that Azure DevOps will impose rate limits which can degrade the performance of the integration leading to missing data or functionality. To mitigate the impact, we recommend you assign the [Basic + Test plan](https://learn.microsoft.com/en-us/azure/devops/organizations/billing/buy-basic-access-add-users?view=azure-devops#assign-basic-or-basic--test-plans) to the user whose token you utilise for this integration.
 
 ### Advanced Configuration
 

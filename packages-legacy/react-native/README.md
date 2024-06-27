@@ -4,7 +4,7 @@
 
 [Read more here](https://nx.dev/recipes/other/rescope)
 
-@nrwl/react-native will no longer be published in Nx v18.
+@nrwl/react-native will no longer be published in the future.
 
 <p style="text-align: center;">
   <picture>

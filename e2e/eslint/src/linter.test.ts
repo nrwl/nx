@@ -1,5 +1,6 @@
 import * as path from 'path';
 import {
+  checkFilesDoNotExist,
   checkFilesExist,
   cleanupProject,
   createFile,
@@ -521,6 +522,43 @@ describe('Linter', () => {
         );
       });
     });
+
+    describe('flat config', () => {
+      beforeAll(() => {
+        runCLI(`generate @nx/eslint:convert-to-flat-config`);
+      });
+
+      it('should generate new projects using flat config', () => {
+        const reactLib = uniq('react-lib');
+        const jsLib = uniq('js-lib');
+
+        runCLI(
+          `generate @nx/react:lib ${reactLib} --directory=${reactLib} --projectNameAndRootFormat=as-provided`
+        );
+        runCLI(
+          `generate @nx/js:lib ${jsLib} --directory=${jsLib} --projectNameAndRootFormat=as-provided`
+        );
+
+        checkFilesExist(
+          `${reactLib}/eslint.config.js`,
+          `${jsLib}/eslint.config.js`
+        );
+        checkFilesDoNotExist(
+          `${reactLib}/.eslintrc.json`,
+          `${jsLib}/.eslintrc.json`
+        );
+
+        // validate that the new projects are linted successfully
+        let output = runCLI(`lint ${reactLib}`);
+        expect(output).toContain(
+          `Successfully ran target lint for project ${reactLib}`
+        );
+        output = runCLI(`lint ${jsLib}`);
+        expect(output).toContain(
+          `Successfully ran target lint for project ${jsLib}`
+        );
+      });
+    });
   });
 
   describe('Root projects migration', () => {
@@ -595,7 +633,6 @@ describe('Linter', () => {
       expect(appOverrides).toContain('plugin:@nx/typescript');
       let e2eOverrides = JSON.stringify(e2eEslint.overrides);
       expect(e2eOverrides).toContain('plugin:@nx/javascript');
-      expect(e2eOverrides).toContain('plugin:@nx/typescript');
 
       runCLI(`generate @nx/js:lib ${mylib} --unitTestRunner=jest`);
       verifySuccessfulMigratedSetup(myapp, mylib);
@@ -628,7 +665,7 @@ describe('Linter', () => {
       let appOverrides = JSON.stringify(appEslint.overrides);
       expect(appOverrides).toContain('plugin:@nx/typescript');
       let e2eOverrides = JSON.stringify(e2eEslint.overrides);
-      expect(e2eOverrides).toContain('plugin:@nx/typescript');
+      expect(e2eOverrides).toContain('plugin:@nx/javascript');
 
       runCLI(`generate @nx/js:lib ${mylib} --no-interactive`);
       verifySuccessfulMigratedSetup(myapp, mylib);

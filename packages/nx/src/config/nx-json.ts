@@ -40,6 +40,7 @@ export interface NrwlJsPluginConfig {
   analyzeSourceFiles?: boolean;
   analyzePackageJson?: boolean;
   analyzeLockfile?: boolean;
+  projectsAffectedByDependencyUpdates?: 'all' | 'auto' | string[];
 }
 
 interface NxInstallationConfiguration {
@@ -218,6 +219,11 @@ interface NxReleaseConfiguration {
        * Optionally override the git/release tag pattern to use for this group.
        */
       releaseTagPattern?: string;
+      /**
+       * Enables using version plans as a specifier source for versioning and
+       * to determine changes for changelog generation.
+       */
+      versionPlans?: boolean;
     }
   >;
   /**
@@ -285,6 +291,11 @@ interface NxReleaseConfiguration {
    */
   git?: NxReleaseGitConfiguration;
   conventionalCommits?: NxReleaseConventionalCommitsConfiguration;
+  /**
+   * Enables using version plans as a specifier source for versioning and
+   * to determine changes for changelog generation.
+   */
+  versionPlans?: boolean;
 }
 
 /**
@@ -436,14 +447,14 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
   useInferencePlugins?: boolean;
 }
 
-export type PluginConfiguration =
-  | string
-  | {
-      plugin: string;
-      options?: unknown;
-      include?: string[];
-      exclude?: string[];
-    };
+export type PluginConfiguration = string | ExpandedPluginConfiguration;
+
+export type ExpandedPluginConfiguration<T = unknown> = {
+  plugin: string;
+  options?: T;
+  include?: string[];
+  exclude?: string[];
+};
 
 export function readNxJson(root: string = workspaceRoot): NxJsonConfiguration {
   const nxJson = join(root, 'nx.json');

@@ -85,7 +85,10 @@ export async function addLinterToCyProject(
       : () => {}
   );
 
-  if (isEslintConfigSupported(tree)) {
+  if (
+    isEslintConfigSupported(tree, projectConfig.root) ||
+    isEslintConfigSupported(tree)
+  ) {
     const overrides = [];
     if (options.rootProject) {
       addPluginsToLintConfig(tree, projectConfig.root, '@nx');

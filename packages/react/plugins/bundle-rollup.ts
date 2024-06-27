@@ -1,5 +1,6 @@
 import * as rollup from 'rollup';
 
+// TODO(v20): This should be deprecated and removed in v22.
 function getRollupOptions(options: rollup.RollupOptions) {
   const extraGlobals = {
     react: 'React',
@@ -38,7 +39,7 @@ function getRollupOptions(options: rollup.RollupOptions) {
       url({
         limit: 10000, // 10kB
       }),
-      ...options.plugins,
+      ...(Array.isArray(options.plugins) ? options.plugins : []),
     ];
   } catch {
     // Ignored for React Native

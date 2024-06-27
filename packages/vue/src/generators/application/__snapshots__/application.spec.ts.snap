@@ -68,6 +68,7 @@ export default defineConfig({
 
   build: {
     outDir: '../dist/test',
+    emptyOutDir: true,
     reportCompressedSize: true,
     commonjsOptions: {
       transformMixedEsModules: true,
@@ -75,9 +76,10 @@ export default defineConfig({
   },
 
   test: {
+    watch: false,
     globals: true,
     cache: {
-      dir: '../node_modules/.vitest',
+      dir: '../node_modules/.vitest/test',
     },
     environment: 'jsdom',
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
@@ -121,8 +123,9 @@ import { mount } from '@vue/test-utils';
 import App from './App.vue';
 
 describe('App', () => {
-  it('renders properly', () => {
+  it('renders properly', async () => {
     const wrapper = mount(App, {});
+
     expect(wrapper.text()).toContain('Welcome test 👋');
   });
 });
@@ -135,16 +138,13 @@ exports[`application generator should set up project correctly with given option
   ".eslintrc.json",
   ".prettierignore",
   ".prettierrc",
+  ".vscode/extensions.json",
   "nx.json",
   "package.json",
   "test-e2e/.eslintrc.json",
-  "test-e2e/cypress.config.ts",
+  "test-e2e/playwright.config.ts",
   "test-e2e/project.json",
-  "test-e2e/src/e2e/app.cy.ts",
-  "test-e2e/src/fixtures/example.json",
-  "test-e2e/src/support/app.po.ts",
-  "test-e2e/src/support/commands.ts",
-  "test-e2e/src/support/e2e.ts",
+  "test-e2e/src/example.spec.ts",
   "test-e2e/tsconfig.json",
   "test/.eslintrc.json",
   "test/index.html",

@@ -9,4 +9,5 @@ export interface Schema {
   standalone?: boolean;
   hydration?: boolean;
   skipFormat?: boolean;
+  skipPackageJson?: boolean;
 }

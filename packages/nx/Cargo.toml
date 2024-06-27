@@ -4,7 +4,7 @@ version = '0.1.0'
 edition = '2021'
 
 [dependencies]
-portable-pty = { git = "https://github.com/cammisuli/wezterm" }
+portable-pty = { git = "https://github.com/cammisuli/wezterm", rev = "b538ee29e1e89eeb4832fb35ae095564dce34c29" }
 anyhow = "1.0.71"
 colored = "2"
 crossbeam-channel = '0.5'

@@ -167,6 +167,30 @@ nx run frontend:finish-when-ready
 ```
 
 The above commands will finish immediately, instead of waiting for 5 seconds.
+
+When we have multiple commands running in parallel, there is a possibility that we want to wait for more than 1 string to appear in stdout or stderr.
+For example, imagine a case where we are running multiple commands to start multiple dev servers in parallel.
+
+```json
+"finish-when-multiple-ready": {
+    "executor": "nx:run-commands",
+    "options": {
+        "commands": [
+            "sleep $[ ( $RANDOM % 10 ) + 1 ] && echo 'READY1' && sleep 3600",
+            "sleep $[ ( $RANDOM % 10 ) + 1 ] && echo 'READY2' && sleep 3600",
+        ],
+        "readyWhen": ["READY1", "READY2"],
+        "parallel": true
+    }
+}
+```
+
+```bash
+nx run frontend:finish-when-multiple-ready
+```
+
+The above commands will finish as soon as both the 1st and the 2nd command echoed "READY" (between 1 and 10 seconds), instead of waiting for the extra hour.
+
 {% /tab %}
 {% tab label="Nx Affected" %}
 

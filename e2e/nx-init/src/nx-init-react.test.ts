@@ -163,7 +163,6 @@ describe('nx init (for React - legacy)', () => {
     );
 
     const packageJson = readJson('package.json');
-    expect(packageJson.devDependencies['@nx/jest']).toBeUndefined();
     expect(packageJson.dependencies['redux']).toBeDefined();
     expect(packageJson.name).toEqual(appName);
 

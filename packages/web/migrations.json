@@ -1,29 +1,5 @@
 {
   "generators": {
-    "add-babel-inputs": {
-      "cli": "nx",
-      "version": "15.0.0-beta.0",
-      "description": "Adds babel.config.json to the hash of all tasks",
-      "factory": "./src/migrations/update-15-0-0/add-babel-inputs"
-    },
-    "update-rollup-executor": {
-      "cli": "nx",
-      "version": "15.0.0-beta.1",
-      "description": "Update usages of rollup executors to @nrwl/rollup",
-      "factory": "./src/migrations/update-15-0-0/update-rollup-executor"
-    },
-    "update-babel-preset": {
-      "cli": "nx",
-      "version": "15.5.4-beta.0",
-      "description": "Update `@nrwl/web/babel` preset to `@nrwl/js/babel` for projects that have a .babelrc file.",
-      "factory": "./src/migrations/update-15-5-4/update-babel-preset"
-    },
-    "add-dropped-dependencies": {
-      "cli": "nx",
-      "version": "15.9.1",
-      "description": "Add @nrwl/linter, @nrwl/cypress, @nrwl/jest, @nrwl/rollup if they are used",
-      "factory": "./src/migrations/update-15-9-1/add-dropped-dependencies"
-    },
     "update-16-0-0-add-nx-packages": {
       "cli": "nx",
       "version": "16.0.0-beta.1",

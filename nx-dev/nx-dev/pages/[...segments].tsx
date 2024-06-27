@@ -57,7 +57,11 @@ export default function NxDocumentation({
         role="main"
         className="flex h-full flex-1 overflow-y-hidden"
       >
-        <SidebarContainer menu={menuWithSections} navIsOpen={navIsOpen} />
+        <SidebarContainer
+          menu={menuWithSections}
+          toggleNav={toggleNav}
+          navIsOpen={navIsOpen}
+        />
         <div
           ref={wrapperElement}
           id="wrapper"

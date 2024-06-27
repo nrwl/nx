@@ -1,3 +1,5 @@
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
 import { readProjectConfiguration, Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 
@@ -88,5 +90,25 @@ describe('updateRootJestConfig', () => {
     const rootJestConfig = tree.read('jest.config.ts', 'utf-8');
 
     expect(rootJestConfig).toMatchSnapshot();
+  });
+
+  it('should handle not having a root jest config file', async () => {
+    // ARRANGE
+    tree.delete('jest.config.ts');
+
+    await libraryGenerator(tree, {
+      name: 'test',
+      bundler: 'vite',
+      unitTestRunner: 'vitest',
+    });
+
+    // ACT
+    expect(() =>
+      updateJestConfig(
+        tree,
+        { projectName: 'test', skipFormat: false, forceRemove: false },
+        readProjectConfiguration(tree, 'test')
+      )
+    ).not.toThrow();
   });
 });

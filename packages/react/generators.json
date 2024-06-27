@@ -6,7 +6,7 @@
     "init": {
       "factory": "./src/generators/init/init#reactInitGenerator",
       "schema": "./src/generators/init/schema.json",
-      "description": "Initialize the `@nrwl/react` plugin.",
+      "description": "Initialize the `@nx/react` plugin.",
       "aliases": ["ng-add"],
       "hidden": true
     },

@@ -1,6 +1,5 @@
 import { Tab } from '@headlessui/react';
 import { Button, SectionHeading } from '@nx/nx-dev/ui-common';
-import { AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { Fragment } from 'react';
 import { tabs } from './extensible-and-integrated/tabs';
@@ -11,7 +10,7 @@ export function ExtensibleAndIntegrated(): JSX.Element {
       id="extensible-and-integrated"
       className="overflow-hidden bg-slate-50 pt-28 dark:bg-slate-800/40"
     >
-      <div className="mx-auto max-w-7xl py-12 px-4 sm:px-6 lg:py-16 lg:px-8">
+      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
         <header className="max-w-2xl">
           <SectionHeading
             as="h1"
@@ -35,7 +34,7 @@ export function ExtensibleAndIntegrated(): JSX.Element {
             <span className="font-medium">Stay in the flow!</span> Augment your
             editor with Nx Console, a dedicated extension available for{' '}
             <Link
-              href="/features/integrate-with-editors"
+              href="/getting-started/editor-setup"
               title="Install VSCode's native extension for Nx"
               className="font-medium text-blue-500 dark:text-sky-500"
             >
@@ -43,7 +42,7 @@ export function ExtensibleAndIntegrated(): JSX.Element {
             </Link>{' '}
             ,{' '}
             <Link
-              href="/features/integrate-with-editors"
+              href="/getting-started/editor-setup"
               className="font-medium text-blue-500 dark:text-sky-500"
               title="Install JetBrains' native plugin for Nx"
             >
@@ -51,7 +50,7 @@ export function ExtensibleAndIntegrated(): JSX.Element {
             </Link>{' '}
             and{' '}
             <Link
-              href="/features/integrate-with-editors#neovim"
+              href="/getting-started/editor-setup#neovim"
               className="font-medium text-blue-500 dark:text-sky-500"
             >
               Neovim
@@ -81,7 +80,7 @@ export function ExtensibleAndIntegrated(): JSX.Element {
           </p>
         </div>
       </div>
-      <div className="relative mx-auto max-w-7xl px-4 pt-6 pb-12 sm:px-6 lg:px-8 lg:pb-4 lg:pt-6">
+      <div className="relative mx-auto max-w-7xl px-4 pb-12 pt-6 sm:px-6 lg:px-8 lg:pb-4 lg:pt-6">
         <Tab.Group>
           <Tab.List>
             <div className="flex justify-between space-x-4 md:justify-start">

@@ -27,6 +27,8 @@ export type {
 export type {
   Generator,
   GeneratorCallback,
+  PromiseExecutor,
+  AsyncIteratorExecutor,
   Executor,
   ExecutorContext,
   TaskGraphExecutor,
@@ -37,26 +39,34 @@ export type {
   HasherContext,
 } from './config/misc-interfaces';
 
-// TODO(v19): Remove this export
-/**
- * @category Workspace
- */
-export { Workspaces } from './config/workspaces';
-
 export { workspaceLayout } from './config/configuration';
 
 export type {
   NxPlugin,
-  NxPluginV1,
   NxPluginV2,
-  ProjectTargetConfigurator,
   CreateNodes,
   CreateNodesFunction,
   CreateNodesResult,
   CreateNodesContext,
+  CreateNodesContextV2,
+  CreateNodesFunctionV2,
+  CreateNodesResultV2,
+  CreateNodesV2,
   CreateDependencies,
   CreateDependenciesContext,
-} from './utils/nx-plugin';
+  CreateMetadata,
+  CreateMetadataContext,
+  ProjectsMetadata,
+} from './project-graph/plugins';
+
+export { AggregateCreateNodesError } from './project-graph/error-types';
+
+export { createNodesFromFiles } from './project-graph/plugins';
+
+export type {
+  NxPluginV1,
+  ProjectTargetConfigurator,
+} from './utils/nx-plugin.deprecated';
 
 /**
  * @category Workspace
@@ -71,6 +81,7 @@ export type {
   ImplicitJsonSubsetDependency,
   NxJsonConfiguration,
   PluginConfiguration,
+  ExpandedPluginConfiguration,
   TargetDefaults,
   NxAffectedConfig,
 } from './config/nx-json';
@@ -123,7 +134,7 @@ export {
 /**
  * @category Generators
  */
-export { glob } from './generators/utils/glob';
+export { glob, globAsync } from './generators/utils/glob';
 
 /**
  * @category Generators

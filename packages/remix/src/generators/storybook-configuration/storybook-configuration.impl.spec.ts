@@ -1,3 +1,5 @@
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import libraryGenerator from '../library/library.impl';
 import storybookConfigurationGenerator from './storybook-configuration.impl';
@@ -26,7 +28,9 @@ describe('Storybook Configuration', () => {
       });
 
       // ASSERT
-      expect(tree.exists(`libs/storybook-test/vite.config.ts`));
+      expect(
+        tree.read(`libs/storybook-test/vite.config.ts`, 'utf-8')
+      ).toMatchSnapshot();
       expect(
         tree.read(`libs/storybook-test/.storybook/main.ts`, 'utf-8')
       ).toMatchSnapshot();

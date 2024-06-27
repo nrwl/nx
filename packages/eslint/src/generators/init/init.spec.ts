@@ -1,6 +1,9 @@
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
 import { NxJsonConfiguration, readJson, Tree, updateJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { LinterInitOptions, lintInitGenerator } from './init';
+import { setWorkspaceRoot } from 'nx/src/utils/workspace-root';
 
 describe('@nx/eslint:init', () => {
   let tree: Tree;
@@ -8,6 +11,7 @@ describe('@nx/eslint:init', () => {
 
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    setWorkspaceRoot(tree.root);
     options = {
       addPlugin: true,
     };

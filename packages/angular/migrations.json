@@ -386,6 +386,24 @@
       },
       "description": "Update the @angular/cli package version to ~17.3.0.",
       "factory": "./src/migrations/update-18-2-0/update-angular-cli"
+    },
+    "update-angular-cli-version-18-0-0": {
+      "cli": "nx",
+      "version": "19.1.0-beta.2",
+      "requires": {
+        "@angular/core": ">=18.0.0"
+      },
+      "description": "Update the @angular/cli package version to ~18.0.0.",
+      "factory": "./src/migrations/update-19-1-0/update-angular-cli"
+    },
+    "add-typescript-eslint-utils": {
+      "cli": "nx",
+      "version": "19.2.1-beta.0",
+      "requires": {
+        "@angular-eslint/eslint-plugin": ">=18.0.0"
+      },
+      "description": "Installs the '@typescript-eslint/utils' package when having installed '@angular-eslint/eslint-plugin' or '@angular-eslint/eslint-plugin-template' with version >=18.0.0.",
+      "factory": "./src/migrations/update-19-2-1/add-typescript-eslint-utils"
     }
   },
   "packageJsonUpdates": {
@@ -1802,6 +1820,116 @@
         },
         "@angular-eslint/template-parser": {
           "version": "~17.3.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "19.1.0": {
+      "version": "19.1.0-beta.2",
+      "x-prompt": "Do you want to update the Angular version to v18?",
+      "requires": {
+        "@angular/core": ">=17.3.0 <18.0.0"
+      },
+      "packages": {
+        "@angular-devkit/build-angular": {
+          "version": "~18.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/core": {
+          "version": "~18.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/schematics": {
+          "version": "~18.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/pwa": {
+          "version": "~18.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/ssr": {
+          "version": "~18.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@schematics/angular": {
+          "version": "~18.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/architect": {
+          "version": "~0.1800.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/build-webpack": {
+          "version": "~0.1800.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/core": {
+          "version": "~18.0.0",
+          "alwaysAddToPackageJson": true
+        },
+        "@angular/material": {
+          "version": "~18.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/cdk": {
+          "version": "~18.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "ng-packagr": {
+          "version": "~18.0.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "19.1.0-jest": {
+      "version": "19.1.0-beta.2",
+      "requires": {
+        "@angular-devkit/build-angular": ">=15.0.0 <19.0.0",
+        "@angular/compiler-cli": ">=15.0.0 <19.0.0",
+        "@angular/core": ">=15.0.0 <19.0.0",
+        "@angular/platform-browser-dynamic": ">=15.0.0 <19.0.0",
+        "jest": "^29.0.0"
+      },
+      "packages": {
+        "jest-preset-angular": {
+          "version": "~14.1.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "19.1.2": {
+      "version": "19.1.2-beta.1",
+      "requires": {
+        "eslint": "^8.57.0 || ^9.0.0",
+        "@angular/core": ">= 18.0.0 < 19.0.0"
+      },
+      "packages": {
+        "@angular-eslint/eslint-plugin": {
+          "version": "^18.0.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/eslint-plugin-template": {
+          "version": "^18.0.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/template-parser": {
+          "version": "^18.0.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/utils": {
+          "version": "^18.0.1",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "19.4.0-ngrx": {
+      "version": "19.4.0-beta.1",
+      "requires": {
+        "@angular/core": "^18.0.0"
+      },
+      "packages": {
+        "@ngrx/store": {
+          "version": "^18.0.0",
           "alwaysAddToPackageJson": false
         }
       }

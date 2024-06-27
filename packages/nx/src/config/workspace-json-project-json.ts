@@ -111,10 +111,24 @@ export interface ProjectConfiguration {
       'generator' | 'generatorOptions'
     >;
   };
-  metadata?: {
-    technologies?: string[];
-    targetGroups?: Record<string, string[]>;
-  };
+
+  /**
+   * Metadata about the project
+   */
+  metadata?: ProjectMetadata;
+}
+
+export interface ProjectMetadata {
+  description?: string;
+  technologies?: string[];
+  targetGroups?: Record<string, string[]>;
+}
+
+export interface TargetMetadata {
+  [k: string]: any;
+  description?: string;
+  technologies?: string[];
+  nonAtomizedTarget?: string;
 }
 
 export interface TargetDependencyConfig {
@@ -203,4 +217,9 @@ export interface TargetConfiguration<T = any> {
    * Determines if Nx is able to cache a given target.
    */
   cache?: boolean;
+
+  /**
+   * Metadata about the target
+   */
+  metadata?: TargetMetadata;
 }

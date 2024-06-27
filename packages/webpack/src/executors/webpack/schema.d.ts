@@ -47,7 +47,7 @@ export interface WebpackExecutorOptions {
   extractLicenses?: boolean;
   fileReplacements?: FileReplacement[];
   generatePackageJson?: boolean;
-  // TODO(v19): Remove this option
+  // TODO(v20): Remove this option
   /** @deprecated set webpackConfig and provide an explicit webpack.config.js file (See: https://nx.dev/recipes/webpack/webpack-config-setup) */
   isolatedConfig?: boolean;
   standardWebpackConfigFunction?: boolean;
@@ -84,6 +84,8 @@ export interface WebpackExecutorOptions {
   stylePreprocessorOptions?: any;
   styles?: Array<ExtraEntryPointClass | string>;
   subresourceIntegrity?: boolean;
+  publicPath?: string;
+  rebaseRootRelative?: boolean;
 }
 
 export interface NormalizedWebpackExecutorOptions

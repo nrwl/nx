@@ -30,7 +30,7 @@ export interface RunOptions {
 }
 
 export function withRunOptions<T>(yargs: Argv<T>): Argv<T & RunOptions> {
-  return withExcludeOption(yargs)
+  return withVerbose(withExcludeOption(yargs))
     .option('parallel', {
       describe: 'Max number of parallel processes [default is 3]',
       type: 'string',
@@ -52,7 +52,7 @@ export function withRunOptions<T>(yargs: Argv<T>): Argv<T & RunOptions> {
     .option('graph', {
       type: 'string',
       describe:
-        'Show the task graph of the command. Pass a file path to save the graph data instead of viewing it in the browser.',
+        'Show the task graph of the command. Pass a file path to save the graph data instead of viewing it in the browser. Pass "stdout" to print the results to the terminal.',
       coerce: (value) =>
         // when the type of an opt is "string", passing `--opt` comes through as having an empty string value.
         // this coercion allows `--graph` to be passed through as a boolean directly, and also normalizes the
@@ -62,11 +62,6 @@ export function withRunOptions<T>(yargs: Argv<T>): Argv<T & RunOptions> {
           : value === 'false' || value === false
           ? false
           : value,
-    })
-    .option('verbose', {
-      type: 'boolean',
-      describe:
-        'Prints additional information about the commands (e.g., stack traces)',
     })
     .option('nxBail', {
       describe: 'Stop command execution after the first failed task',
@@ -121,6 +116,20 @@ export function withConfiguration(yargs: Argv) {
     type: 'string',
     alias: 'c',
   });
+}
+
+export function withVerbose(yargs: Argv) {
+  return yargs
+    .option('verbose', {
+      describe:
+        'Prints additional information about the commands (e.g., stack traces)',
+      type: 'boolean',
+    })
+    .middleware((args) => {
+      if (args.verbose) {
+        process.env.NX_VERBOSE_LOGGING = 'true';
+      }
+    });
 }
 
 export function withBatch(yargs: Argv) {
@@ -238,7 +247,7 @@ const allOutputStyles = [
   'compact',
 ] as const;
 
-export type OutputStyle = typeof allOutputStyles[number];
+export type OutputStyle = (typeof allOutputStyles)[number];
 
 export function withOutputStyleOption(
   yargs: Argv,
@@ -250,64 +259,18 @@ export function withOutputStyleOption(
   ]
 ) {
   return yargs.option('output-style', {
-    describe: 'Defines how Nx emits outputs tasks logs',
+    describe: `Defines how Nx emits outputs tasks logs
+
+| option | description |
+| --- | --- |
+| dynamic | use dynamic output life cycle, previous content is overwritten or modified as new outputs are added, display minimal logs by default, always show errors. This output format is recommended on your local development environments. |
+| static | uses static output life cycle, no previous content is rewritten or modified as new outputs are added. This output format is recommened for CI environments. |
+| stream | nx by default logs output to an internal output stream, enable this option to stream logs to stdout / stderr |
+| stream-without-prefixes | nx prefixes the project name the target is running on, use this option remove the project name prefix from output |
+`,
     type: 'string',
     choices,
   });
-}
-
-export function withDepGraphOptions(yargs: Argv) {
-  return yargs
-    .option('file', {
-      describe:
-        'Output file (e.g. --file=output.json or --file=dep-graph.html)',
-      type: 'string',
-    })
-    .option('view', {
-      describe: 'Choose whether to view the projects or task graph',
-      type: 'string',
-      default: 'projects',
-      choices: ['projects', 'tasks'],
-    })
-    .option('targets', {
-      describe: 'The target to show tasks for in the task graph',
-      type: 'string',
-      coerce: parseCSV,
-    })
-    .option('focus', {
-      describe:
-        'Use to show the project graph for a particular project and every node that is either an ancestor or a descendant.',
-      type: 'string',
-    })
-    .option('exclude', {
-      describe:
-        'List of projects delimited by commas to exclude from the project graph.',
-      type: 'string',
-      coerce: parseCSV,
-    })
-
-    .option('groupByFolder', {
-      describe: 'Group projects by folder in the project graph',
-      type: 'boolean',
-    })
-    .option('host', {
-      describe: 'Bind the project graph server to a specific ip address.',
-      type: 'string',
-    })
-    .option('port', {
-      describe: 'Bind the project graph server to a specific port.',
-      type: 'number',
-    })
-    .option('watch', {
-      describe: 'Watch for changes to project graph and update in-browser',
-      type: 'boolean',
-      default: false,
-    })
-    .option('open', {
-      describe: 'Open the project graph in the browser.',
-      type: 'boolean',
-      default: true,
-    });
 }
 
 export function withRunOneOptions(yargs: Argv) {

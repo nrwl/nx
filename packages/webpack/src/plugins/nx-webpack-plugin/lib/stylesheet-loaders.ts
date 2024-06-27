@@ -5,7 +5,7 @@ import MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
 import { getCSSModuleLocalIdent } from '../../../utils/get-css-module-local-ident';
 import { getOutputHashFormat } from '../../../utils/hash-format';
-import { NormalizedNxWebpackPluginOptions } from '../nx-webpack-plugin-options';
+import { NormalizedNxAppWebpackPluginOptions } from '../nx-app-webpack-plugin-options';
 import { PostcssCliResources } from '../../../utils/webpack/plugins/postcss-cli-resources';
 
 interface PostcssOptions {
@@ -15,7 +15,7 @@ interface PostcssOptions {
 }
 
 export function getCommonLoadersForCssModules(
-  options: NormalizedNxWebpackPluginOptions,
+  options: NormalizedNxAppWebpackPluginOptions,
   includePaths: string[]
 ) {
   // load component css as raw strings
@@ -49,7 +49,7 @@ export function getCommonLoadersForCssModules(
 }
 
 export function getCommonLoadersForGlobalCss(
-  options: NormalizedNxWebpackPluginOptions,
+  options: NormalizedNxAppWebpackPluginOptions,
   includePaths: string[]
 ) {
   return [
@@ -72,7 +72,7 @@ export function getCommonLoadersForGlobalCss(
 }
 
 export function getCommonLoadersForGlobalStyle(
-  options: NormalizedNxWebpackPluginOptions,
+  options: NormalizedNxAppWebpackPluginOptions,
   includePaths: string[]
 ) {
   return [
@@ -96,7 +96,7 @@ export function getCommonLoadersForGlobalStyle(
 }
 
 function postcssOptionsCreator(
-  options: NormalizedNxWebpackPluginOptions,
+  options: NormalizedNxAppWebpackPluginOptions,
   {
     includePaths,
     forCssModules = false,
@@ -128,6 +128,8 @@ function postcssOptionsCreator(
               deployUrl: options.deployUrl,
               loader,
               filename: `[name]${hashFormat.file}.[ext]`,
+              publicPath: options.publicPath,
+              rebaseRootRelative: options.rebaseRootRelative,
             }),
             autoprefixer(),
           ]),

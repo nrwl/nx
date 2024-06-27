@@ -37,7 +37,7 @@ out
 .angular
 
 # Local dev files
-.env
+.env.local
 .bashrc
 .nx
 
@@ -46,6 +46,7 @@ out
 # Fix for issue when working on the repo in a dev container
 .pnpm-store
 .nx/cache
+.nx/workspace-data
 
 .cargo/.package-cache
 .cargo/bin/

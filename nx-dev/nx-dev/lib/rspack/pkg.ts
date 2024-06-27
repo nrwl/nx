@@ -87,7 +87,7 @@ export const pkg: ProcessedPackageMetadata = {
     },
   },
   githubRoot: 'https://github.com/nrwl/nx-labs/tree/main/packages/rspack',
-  name: 'Rspack',
+  name: 'rspack',
   packageName: '@nx/rspack',
   path: '',
   root: '',

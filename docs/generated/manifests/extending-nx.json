@@ -215,7 +215,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/extending-nx/recipes/project-graph-plugins",
-        "tags": ["create-your-own-plugin", "explore-graph"]
+        "tags": ["create-your-own-plugin", "explore-graph", "inferred-tasks"]
       }
     ],
     "isExternal": false,
@@ -341,6 +341,6 @@
     "itemList": [],
     "isExternal": false,
     "path": "/extending-nx/recipes/project-graph-plugins",
-    "tags": ["create-your-own-plugin", "explore-graph"]
+    "tags": ["create-your-own-plugin", "explore-graph", "inferred-tasks"]
   }
 }

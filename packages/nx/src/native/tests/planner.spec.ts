@@ -1,6 +1,4 @@
 import { TempFs } from '../../internal-testing-utils/temp-fs';
-let tempFs = new TempFs('task-planner');
-
 import { HashPlanner, transferProjectGraph } from '../index';
 import { Task, TaskGraph } from '../../config/task-graph';
 import { InProcessTaskHasher } from '../../hasher/task-hasher';
@@ -8,6 +6,9 @@ import { withEnvironmentVariables } from '../../internal-testing-utils/with-envi
 import { ProjectGraphBuilder } from '../../project-graph/project-graph-builder';
 import { createTaskGraph } from '../../tasks-runner/create-task-graph';
 import { transformProjectGraphForRust } from '../transform-objects';
+import { DependencyType } from '../../config/project-graph';
+
+let tempFs = new TempFs('task-planner');
 
 describe('task planner', () => {
   // disable NX_NATIVE_TASK_HASHER for this test because we need to compare the results of the new planner with the old task hasher
@@ -164,10 +165,10 @@ describe('task planner', () => {
         {}
       );
 
-      const planner = new HashPlanner(
-        nxJson as any,
-        transferProjectGraph(transformProjectGraphForRust(projectGraph))
+      const ref = transferProjectGraph(
+        transformProjectGraphForRust(projectGraph)
       );
+      const planner = new HashPlanner(nxJson as any, ref);
 
       await assertHashPlan(
         taskGraph.tasks['parent:build'],
@@ -475,6 +476,81 @@ describe('task planner', () => {
         expect(plans).toMatchSnapshot();
       }
     );
+  });
+
+  it('should hash executors', async () => {
+    let projectFileMap = {
+      parent: [],
+      child: [],
+    };
+    const builder = new ProjectGraphBuilder(undefined, projectFileMap);
+    builder.addNode({
+      name: 'proj',
+      type: 'lib',
+      data: {
+        root: 'libs/proj',
+        targets: {
+          lint: {
+            inputs: ['default'],
+            executor: '@nx/eslint:lint',
+          },
+        },
+      },
+    });
+    builder.addExternalNode({
+      type: 'npm',
+      name: 'npm:@nx/eslint',
+      data: {
+        packageName: '@nx/eslint',
+        hash: 'hash1',
+        version: '1.0.0',
+      },
+    });
+    builder.addExternalNode({
+      type: 'npm',
+      name: 'npm:@nx/devkit',
+      data: {
+        packageName: '@nx/devkit',
+        hash: 'hash2',
+        version: '1.0.0',
+      },
+    });
+    builder.addDependency(
+      'npm:@nx/eslint',
+      'npm:@nx/devkit',
+      DependencyType.static
+    );
+    let projectGraph = builder.getUpdatedProjectGraph();
+    let taskGraph = createTaskGraph(
+      projectGraph,
+      { build: ['^build'] },
+      ['proj'],
+      ['lint'],
+      undefined,
+      {}
+    );
+    let nxJson = {
+      namedInputs: {
+        default: ['{projectRoot}/**/*', '{workspaceRoot}/global1'],
+        prod: ['!{projectRoot}/**/*.spec.ts'],
+      },
+    };
+    const hasher = new InProcessTaskHasher(
+      projectFileMap,
+      allWorkspaceFiles,
+      projectGraph,
+      nxJson as any,
+      null,
+      {}
+    );
+
+    const planner = new HashPlanner(
+      nxJson as any,
+      transferProjectGraph(transformProjectGraphForRust(projectGraph))
+    );
+    const tasks = Object.values(taskGraph.tasks);
+    let plans = await assertHashPlan(tasks, taskGraph, hasher, planner);
+    expect(plans).toMatchSnapshot();
   });
 
   it('should build plans where the project graph has circular dependencies', async () => {

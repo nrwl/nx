@@ -62,7 +62,7 @@
     },
     "workers": {
       "alias": "j",
-      "type": "string",
+      "oneOf": [{ "type": "number" }, { "type": "string" }],
       "description": "Number of concurrent workers or percentage of logical CPU cores, use 1 to run in a single worker"
     },
     "list": {
@@ -155,7 +155,7 @@
       "description": "Host to serve UI on; specifying this option opens UI in a browser tab"
     },
     "uiPort": {
-      "type": "string",
+      "type": "number",
       "description": "Port to serve UI on, 0 for any free port; specifying this option opens UI in a browser tab"
     },
     "skipInstall": {

@@ -24,9 +24,9 @@ export function LaunchNxIntro() {
             />
           </svg>
         </div>
-        <div className="mt-8 flex w-full flex-col pb-10 lg:mt-0 lg:w-3/5 lg:pl-16 lg:pb-0">
+        <div className="mt-8 flex w-full flex-col pb-10 lg:mt-0 lg:w-3/5 lg:pb-0 lg:pl-16">
           <h2>
-            <div className="font-input-mono mb-4 inline-block rounded-lg border border-slate-200 bg-white/40 p-4 py-4 px-6 text-xl text-sm font-extrabold leading-none tracking-tight shadow-sm transition hover:bg-white dark:border-slate-800/40 dark:bg-slate-800/60 dark:hover:bg-slate-800 sm:text-2xl lg:text-2xl">
+            <div className="font-input-mono mb-4 inline-block rounded-lg border border-slate-200 bg-white/40 p-4 px-6 py-4 text-sm text-xl font-extrabold leading-none tracking-tight shadow-sm transition hover:bg-white sm:text-2xl lg:text-2xl dark:border-slate-800/40 dark:bg-slate-800/60 dark:hover:bg-slate-800">
               <span className="sr-only">Announcing Launch Nx on </span> February
               5-9, 2024
             </div>
@@ -48,13 +48,34 @@ export function LaunchNxIntro() {
           </p>
 
           <a
+            href="#conf"
+            className="font-input-mono group flex w-full items-center text-blue-500 sm:text-xl dark:text-sky-500"
+          >
+            <span className="group-hover:underline">Watch the talks</span>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="ml-1 h-8 w-8 transform-gpu transition duration-200 ease-out group-hover:translate-x-2 "
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M13 7l5 5m0 0l-5 5m5-5H6"
+              />
+            </svg>
+          </a>
+
+          <a
             rel="noreferrer"
             target="_blank"
             href="https://youtu.be/fy0K2Smyj5A"
-            className="font-input-mono group flex w-full items-center text-blue-500 dark:text-sky-500 sm:text-xl"
+            className="font-input-mono group flex w-full items-center text-blue-500 sm:text-xl dark:text-sky-500"
           >
             <span className="group-hover:underline">
-              Watch the conference recording
+              Watch the full conference recording
             </span>
             <svg
               xmlns="http://www.w3.org/2000/svg"

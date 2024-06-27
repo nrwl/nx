@@ -13,7 +13,7 @@ Because we are not using an Nx plugin for Astro, there are few items we'll have 
 {% pill url="/ci/features/remote-cache" %}✅ Remote Caching{% /pill %}
 {% pill url="/features/explore-graph" %}✅ Explore the Graph{% /pill %}
 {% pill url="/ci/features/distribute-task-execution" %}✅ Distribute Task Execution{% /pill %}
-{% pill url="/features/integrate-with-editors" %}✅ Integrate with Editors{% /pill %}
+{% pill url="/getting-started/editor-setup" %}✅ Integrate with Editors{% /pill %}
 {% pill url="/features/automate-updating-dependencies" %}✅ Automate Updating Nx{% /pill %}
 {% pill url="/recipes/enforce-module-boundaries" %}✅ Enforce Project Boundaries{% /pill %}
 {% pill url="/features/generate-code" %}🚫 Use Code Generators{% /pill %}
@@ -27,7 +27,7 @@ npm create astro@latest
 
 ## Add Nx
 
-We can leverage [`nx init`](/recipes/adopting-nx/adding-to-existing-project#installing-nx-on-a-non-monorepo-project) to add Nx to the Astro application.
+We can leverage [`nx init`](/recipes/adopting-nx/adding-to-existing-project#install-nx-on-a-nonmonorepo-project) to add Nx to the Astro application.
 
 ```{% command="npx nx@latest init" path="~/astro-app"%}
 NX   🐳 Nx initialization

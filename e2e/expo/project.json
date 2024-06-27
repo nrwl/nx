@@ -3,8 +3,27 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "e2e/expo",
   "projectType": "application",
+  "implicitDependencies": ["expo"],
   "targets": {
-    "e2e-macos": {}
-  },
-  "implicitDependencies": ["expo"]
+    "e2e-macos-ci--src/expo.test.ts": {
+      "inputs": ["e2eInputs", "^production"]
+    },
+    "e2e-macos-ci--src/expo-legacy.test.ts": {
+      "inputs": ["e2eInputs", "^production"]
+    },
+    "e2e-ci--src/expo-legacy.test.ts": {
+      "dependsOn": [
+        "nx:build-native",
+        "@nx/nx-source:populate-local-registry-storage"
+      ],
+      "inputs": ["e2eInputs", "^production"]
+    },
+    "e2e-ci--src/expo.test.ts": {
+      "dependsOn": [
+        "nx:build-native",
+        "@nx/nx-source:populate-local-registry-storage"
+      ],
+      "inputs": ["e2eInputs", "^production"]
+    }
+  }
 }

@@ -36,6 +36,7 @@ import { pruneExternalNodes } from '../../project-graph/operators';
 import {
   createProjectGraphAndSourceMapsAsync,
   createProjectGraphAsync,
+  handleProjectGraphError,
 } from '../../project-graph/project-graph';
 import {
   createTaskGraph,
@@ -48,21 +49,37 @@ import { HashPlanner, transferProjectGraph } from '../../native';
 import { transformProjectGraphForRust } from '../../native/transform-objects';
 import { getAffectedGraphNodes } from '../affected/affected';
 import { readFileMapCache } from '../../project-graph/nx-deps-cache';
+import { Hash, getNamedInputs } from '../../hasher/task-hasher';
 import { ConfigurationSourceMaps } from '../../project-graph/utils/project-configuration-utils';
 
-import { filterUsingGlobPatterns } from '../../hasher/task-hasher';
 import { createTaskHasher } from '../../hasher/create-task-hasher';
+
+import { filterUsingGlobPatterns } from '../../hasher/task-hasher';
+import { ProjectGraphError } from '../../project-graph/error-types';
+import { isNxCloudUsed } from '../../utils/nx-cloud-utils';
+
+export interface GraphError {
+  message: string;
+  stack: string;
+  cause: unknown;
+  name: string;
+  pluginName: string;
+  fileName?: string;
+}
 
 export interface ProjectGraphClientResponse {
   hash: string;
   projects: ProjectGraphProjectNode[];
   dependencies: Record<string, ProjectGraphDependency[]>;
-  fileMap: ProjectFileMap;
+  fileMap?: ProjectFileMap;
   layout: { appsDir: string; libsDir: string };
   affected: string[];
   focus: string;
   groupByFolder: boolean;
   exclude: string[];
+  isPartial: boolean;
+  errors?: GraphError[];
+  connectedToCloud?: boolean;
 }
 
 export interface TaskGraphClientResponse {
@@ -273,10 +290,42 @@ export async function generateGraph(
     ? args.targets[0]
     : args.targets;
 
-  const { projectGraph: rawGraph, sourceMaps } =
-    await createProjectGraphAndSourceMapsAsync({
-      exitOnError: true,
-    });
+  let rawGraph: ProjectGraph;
+  let sourceMaps: ConfigurationSourceMaps;
+  let isPartial = false;
+  try {
+    const projectGraphAndSourceMaps =
+      await createProjectGraphAndSourceMapsAsync({
+        exitOnError: false,
+      });
+    rawGraph = projectGraphAndSourceMaps.projectGraph;
+    sourceMaps = projectGraphAndSourceMaps.sourceMaps;
+  } catch (e) {
+    if (e instanceof ProjectGraphError) {
+      rawGraph = e.getPartialProjectGraph();
+      sourceMaps = e.getPartialSourcemaps();
+
+      isPartial = true;
+    }
+    if (!rawGraph) {
+      handleProjectGraphError({ exitOnError: true }, e);
+    } else {
+      const errors = e.getErrors();
+      if (errors?.length > 0) {
+        errors.forEach((e) => {
+          output.error({
+            title: e.message,
+            bodyLines: [e.stack],
+          });
+        });
+      }
+      output.warn({
+        title: `${
+          errors?.length > 1 ? `${errors.length} errors` : `An error`
+        } occured while processing the project graph. Showing partial graph.`,
+      });
+    }
+  }
   let prunedGraph = pruneExternalNodes(rawGraph);
 
   const projects = Object.values(
@@ -302,7 +351,7 @@ export async function generateGraph(
         splitArgsIntoNxArgsAndOverrides(
           args,
           'affected',
-          { printWarnings: true },
+          { printWarnings: args.file !== 'stdout' },
           readNxJson()
         ).nxArgs,
         rawGraph
@@ -354,6 +403,7 @@ export async function generateGraph(
           2
         )
       );
+      await output.drain();
       process.exit(0);
     }
 
@@ -397,7 +447,7 @@ export async function generateGraph(
       );
       html = html.replace(/src="/g, 'src="static/');
       html = html.replace(/href="styles/g, 'href="static/styles');
-      html = html.replace('<base href="/" />', '');
+      html = html.replace(/<base href="\/".*>/g, '');
       html = html.replace(/type="module"/g, '');
 
       writeFileSync(fullFilePath, html);
@@ -416,20 +466,8 @@ export async function generateGraph(
         args.projects,
         args.targets
       );
-      json.affectedProjects = affectedProjects;
-      json.criticalPath = affectedProjects;
 
       writeJsonFile(fullFilePath, json);
-
-      output.warn({
-        title: 'JSON output contains deprecated fields:',
-        bodyLines: [
-          '- affectedProjects',
-          '- criticalPath',
-          '',
-          'These fields will be removed in Nx 19. If you need to see which projects were affected, use `nx show projects --affected`.',
-        ],
-      });
 
       output.success({
         title: `JSON output created in ${fileFolderPath}`,
@@ -504,7 +542,7 @@ async function startServer(
   environmentJs: string,
   host: string,
   port = 4211,
-  watchForchanges = false,
+  watchForchanges = true,
   affected: string[] = [],
   focus: string = null,
   groupByFolder: boolean = false,
@@ -632,6 +670,8 @@ let currentProjectGraphClientResponse: ProjectGraphClientResponse = {
   focus: null,
   groupByFolder: false,
   exclude: [],
+  isPartial: false,
+  errors: [],
 };
 let currentSourceMapsClientResponse: ConfigurationSourceMaps = {};
 
@@ -649,7 +689,11 @@ function debounce(fn: (...args) => void, time: number) {
 
 function createFileWatcher() {
   return daemonClient.registerFileWatcher(
-    { watchProjects: 'all', includeGlobalWorkspaceFiles: true },
+    {
+      watchProjects: 'all',
+      includeGlobalWorkspaceFiles: true,
+      allowPartialGraph: true,
+    },
     debounce(async (error, changes) => {
       if (error === 'closed') {
         output.error({ title: `Watch error: Daemon closed the connection` });
@@ -667,6 +711,21 @@ function createFileWatcher() {
             currentProjectGraphClientResponse.hash &&
           sourceMapResponse
         ) {
+          if (projectGraphClientResponse.errors?.length > 0) {
+            projectGraphClientResponse.errors.forEach((e) => {
+              output.error({
+                title: e.message,
+                bodyLines: [e.stack],
+              });
+            });
+            output.warn({
+              title: `${
+                projectGraphClientResponse.errors.length > 1
+                  ? `${projectGraphClientResponse.errors.length} errors`
+                  : `An error`
+              } occured while processing the project graph. Showing partial graph.`,
+            });
+          }
           output.note({ title: 'Graph changes updated.' });
 
           currentProjectGraphClientResponse = projectGraphClientResponse;
@@ -687,11 +746,42 @@ async function createProjectGraphAndSourceMapClientResponse(
 }> {
   performance.mark('project graph watch calculation:start');
 
-  const { projectGraph, sourceMaps } =
-    await createProjectGraphAndSourceMapsAsync({ exitOnError: true });
+  let projectGraph: ProjectGraph;
+  let sourceMaps: ConfigurationSourceMaps;
+  let isPartial = false;
+  let errors: GraphError[] | undefined;
+  let connectedToCloud: boolean | undefined;
+  try {
+    const projectGraphAndSourceMaps =
+      await createProjectGraphAndSourceMapsAsync({ exitOnError: false });
+    projectGraph = projectGraphAndSourceMaps.projectGraph;
+    sourceMaps = projectGraphAndSourceMaps.sourceMaps;
+
+    connectedToCloud = isNxCloudUsed(readNxJson());
+  } catch (e) {
+    if (e instanceof ProjectGraphError) {
+      projectGraph = e.getPartialProjectGraph();
+      sourceMaps = e.getPartialSourcemaps();
+      errors = e.getErrors().map((e) => ({
+        message: e.message,
+        stack: e.stack,
+        cause: e.cause,
+        name: e.name,
+        pluginName: (e as any).pluginName,
+        fileName:
+          (e as any).file ?? (e.cause as any)?.errors?.[0]?.location?.file,
+      }));
+      isPartial = true;
+    }
+
+    if (!projectGraph) {
+      handleProjectGraphError({ exitOnError: true }, e);
+    }
+  }
 
   let graph = pruneExternalNodes(projectGraph);
-  let fileMap = readFileMapCache().fileMap.projectFileMap;
+  let fileMap: ProjectFileMap | undefined =
+    readFileMapCache()?.fileMap.projectFileMap;
   performance.mark('project graph watch calculation:end');
   performance.mark('project graph response generation:start');
 
@@ -700,7 +790,16 @@ async function createProjectGraphAndSourceMapClientResponse(
   const dependencies = graph.dependencies;
 
   const hasher = createHash('sha256');
-  hasher.update(JSON.stringify({ layout, projects, dependencies, sourceMaps }));
+  hasher.update(
+    JSON.stringify({
+      layout,
+      projects,
+      dependencies,
+      sourceMaps,
+      errors,
+      connectedToCloud,
+    })
+  );
 
   const hash = hasher.digest('hex');
 
@@ -727,6 +826,9 @@ async function createProjectGraphAndSourceMapClientResponse(
       dependencies,
       affected,
       fileMap,
+      isPartial,
+      errors,
+      connectedToCloud,
     },
     sourceMapResponse: sourceMaps,
   };
@@ -736,12 +838,15 @@ async function createTaskGraphClientResponse(
   pruneExternal: boolean = false
 ): Promise<TaskGraphClientResponse> {
   let graph: ProjectGraph;
+  try {
+    graph = await createProjectGraphAsync({ exitOnError: false });
+  } catch (e) {
+    if (e instanceof ProjectGraphError) {
+      graph = e.getPartialProjectGraph();
+    }
+  }
   if (pruneExternal) {
-    graph = pruneExternalNodes(
-      await createProjectGraphAsync({ exitOnError: true })
-    );
-  } else {
-    graph = await createProjectGraphAsync({ exitOnError: true });
+    graph = pruneExternalNodes(graph);
   }
 
   const nxJson = readNxJson();
@@ -1032,16 +1137,6 @@ interface GraphJsonResponse {
   tasks?: TaskGraph;
   taskPlans?: Record<string, string[]>;
   graph: ProjectGraph;
-
-  /**
-   * @deprecated To see affected projects, use `nx show projects --affected`. This will be removed in Nx 19.
-   */
-  affectedProjects?: string[];
-
-  /**
-   * @deprecated To see affected projects, use `nx show projects --affected`. This will be removed in Nx 19.
-   */
-  criticalPath?: string[];
 }
 
 async function createJsonOutput(

@@ -85,7 +85,8 @@
             "type": "string"
           }
         }
-      ]
+      ],
+      "x-deprecated": "Make sure all dependencies are buildable by running `nx g @nx/js:setup-build`. This option will be removed in Nx 20."
     },
     "externalBuildTargets": {
       "type": "array",

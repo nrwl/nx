@@ -28,7 +28,7 @@ describe('Web Components Applications with bundler set as vite', () => {
 
     const testResults = await runCLIAsync(`test ${appName}`);
 
-    expect(testResults.combinedOutput).toContain('Tests  2 passed (2)');
+    expect(testResults.combinedOutput).toContain(`PASS ${appName}`);
 
     const lintE2eResults = runCLI(`lint ${appName}-e2e`);
 
@@ -36,7 +36,7 @@ describe('Web Components Applications with bundler set as vite', () => {
 
     if (isNotWindows() && runE2ETests()) {
       const e2eResults = runCLI(`e2e ${appName}-e2e`);
-      expect(e2eResults).toContain('All specs passed!');
+      expect(e2eResults).toContain('Successfully ran target e2e for project');
       await killPorts();
     }
   }, 500000);

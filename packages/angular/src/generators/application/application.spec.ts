@@ -32,6 +32,10 @@ jest.mock('@nx/devkit', () => {
   return {
     ...original,
     ensurePackage: (pkg: string) => jest.requireActual(pkg),
+    createProjectGraphAsync: jest.fn().mockResolvedValue({
+      nodes: {},
+      dependencies: {},
+    }),
   };
 });
 
@@ -85,6 +89,22 @@ describe('app', () => {
 
     const tsConfig = readJson(appTree, 'my-app/tsconfig.editor.json');
     expect(tsConfig).toMatchSnapshot();
+  });
+
+  it('should not touch the package.json when run with `--skipPackageJson`', async () => {
+    let initialPackageJson;
+    updateJson(appTree, 'package.json', (json) => {
+      json.dependencies = {};
+      json.devDependencies = {};
+      initialPackageJson = json;
+
+      return json;
+    });
+
+    await generateApp(appTree, 'my-app', { skipPackageJson: true });
+
+    const packageJson = readJson(appTree, 'package.json');
+    expect(packageJson).toEqual(initialPackageJson);
   });
 
   describe('not nested', () => {
@@ -876,6 +896,19 @@ describe('app', () => {
         appTree.read('standalone/src/app/nx-welcome.component.ts', 'utf-8')
       ).toContain('standalone: true');
     });
+
+    it('should should not use event coalescing in versions lower than v18', async () => {
+      updateJson(appTree, 'package.json', (json) => ({
+        ...json,
+        dependencies: { ...json.dependencies, '@angular/core': '~17.0.0' },
+      }));
+
+      await generateApp(appTree, 'standalone', { standalone: true });
+
+      expect(
+        appTree.read('standalone/src/app/app.config.ts', 'utf-8')
+      ).toMatchSnapshot();
+    });
   });
 
   it('should generate correct main.ts', async () => {
@@ -883,6 +916,27 @@ describe('app', () => {
     await generateApp(appTree, 'myapp');
 
     // ASSERT
+    expect(appTree.read('myapp/src/main.ts', 'utf-8')).toMatchInlineSnapshot(`
+      "import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
+      import { AppModule } from './app/app.module';
+
+      platformBrowserDynamic()
+        .bootstrapModule(AppModule, {
+          ngZoneEventCoalescing: true
+        })
+        .catch((err) => console.error(err));
+      "
+    `);
+  });
+
+  it('should should not use event coalescing in versions lower than v18', async () => {
+    updateJson(appTree, 'package.json', (json) => ({
+      ...json,
+      dependencies: { ...json.dependencies, '@angular/core': '~17.0.0' },
+    }));
+
+    await generateApp(appTree, 'myapp');
+
     expect(appTree.read('myapp/src/main.ts', 'utf-8')).toMatchInlineSnapshot(`
       "import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
       import { AppModule } from './app/app.module';
@@ -1170,70 +1224,31 @@ describe('app', () => {
     });
   });
 
-  describe('angular v15 support', () => {
+  describe('angular compat support', () => {
     beforeEach(() => {
       appTree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
       updateJson(appTree, 'package.json', (json) => ({
         ...json,
         dependencies: {
           ...json.dependencies,
-          '@angular/core': '~15.2.0',
+          '@angular/core': '~16.2.0',
         },
       }));
     });
 
-    it('should add angular dependencies', async () => {
-      // ACT
+    it('should add angular peer dependencies when not installed', async () => {
       await generateApp(appTree, 'my-app');
 
-      // ASSERT
-      const { dependencies, devDependencies } = readJson(
-        appTree,
-        'package.json'
-      );
-
-      expect(dependencies['@angular/animations']).toEqual(
-        backwardCompatibleVersions.angularV15.angularVersion
-      );
-      expect(dependencies['@angular/common']).toEqual(
-        backwardCompatibleVersions.angularV15.angularVersion
-      );
-      expect(dependencies['@angular/compiler']).toEqual(
-        backwardCompatibleVersions.angularV15.angularVersion
-      );
-      expect(dependencies['@angular/core']).toEqual(
-        backwardCompatibleVersions.angularV15.angularVersion
-      );
-      expect(dependencies['@angular/platform-browser']).toEqual(
-        backwardCompatibleVersions.angularV15.angularVersion
-      );
-      expect(dependencies['@angular/platform-browser-dynamic']).toEqual(
-        backwardCompatibleVersions.angularV15.angularVersion
-      );
-      expect(dependencies['@angular/router']).toEqual(
-        backwardCompatibleVersions.angularV15.angularVersion
-      );
-      expect(dependencies['rxjs']).toEqual(
-        backwardCompatibleVersions.angularV15.rxjsVersion
-      );
-      expect(dependencies['zone.js']).toEqual(
-        backwardCompatibleVersions.angularV15.zoneJsVersion
-      );
-      expect(devDependencies['@angular/cli']).toEqual(
-        backwardCompatibleVersions.angularV15.angularDevkitVersion
-      );
-      expect(devDependencies['@angular/compiler-cli']).toEqual(
-        backwardCompatibleVersions.angularV15.angularDevkitVersion
-      );
-      expect(devDependencies['@angular/language-service']).toEqual(
-        backwardCompatibleVersions.angularV15.angularVersion
-      );
+      const { devDependencies } = readJson(appTree, 'package.json');
       expect(devDependencies['@angular-devkit/build-angular']).toEqual(
-        backwardCompatibleVersions.angularV15.angularDevkitVersion
+        backwardCompatibleVersions.angularV16.angularDevkitVersion
       );
-
-      // codelyzer should no longer be there by default
-      expect(devDependencies['codelyzer']).toBeUndefined();
+      expect(devDependencies['@angular-devkit/schematics']).toEqual(
+        backwardCompatibleVersions.angularV16.angularDevkitVersion
+      );
+      expect(devDependencies['@schematics/angular']).toEqual(
+        backwardCompatibleVersions.angularV16.angularDevkitVersion
+      );
     });
 
     it('should import "ApplicationConfig" from "@angular/platform-browser"', async () => {
@@ -1282,6 +1297,21 @@ describe('app', () => {
         readJson(appTree, 'my-app/tsconfig.json').compilerOptions
           .esModuleInterop
       ).toBeUndefined();
+    });
+
+    it('should configure the correct assets for versions lower than v18', async () => {
+      updateJson(appTree, 'package.json', (json) => ({
+        ...json,
+        dependencies: { ...json.dependencies, '@angular/core': '~17.0.0' },
+      }));
+
+      await generateApp(appTree, 'my-app', { rootProject: true });
+
+      const project = readProjectConfiguration(appTree, 'my-app');
+      expect(project.targets.build.options.assets).toStrictEqual([
+        './src/favicon.ico',
+        './src/assets',
+      ]);
     });
   });
 });

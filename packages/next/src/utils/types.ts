@@ -39,6 +39,7 @@ export interface NextBuildBuilderOptions {
   debug?: boolean;
   profile?: boolean;
   experimentalAppOnly?: boolean;
+  experimentalBuildMode?: 'compile' | 'generate';
 }
 
 export interface NextServeBuilderOptions {
@@ -53,6 +54,10 @@ export interface NextServeBuilderOptions {
   keepAliveTimeout?: number;
   turbo?: boolean;
   experimentalHttps?: boolean;
+  experimentalHttpsKey?: string;
+  experimentalHttpsCert?: string;
+  experimentalHttpsCa?: string;
+  customServerHttps?: boolean;
 }
 
 export interface NextExportBuilderOptions {

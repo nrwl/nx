@@ -114,10 +114,23 @@ export function updateGitIgnore(root: string) {
   const ignorePath = join(root, '.gitignore');
   try {
     let contents = readFileSync(ignorePath, 'utf-8');
+    const lines = contents.split('\n');
+    let sepIncluded = false;
     if (!contents.includes('.nx/cache')) {
-      contents = [contents, '', '.nx/cache'].join('\n');
-      writeFileSync(ignorePath, contents, 'utf-8');
+      if (!sepIncluded) {
+        lines.push('\n');
+        sepIncluded = true;
+      }
+      lines.push('.nx/cache');
     }
+    if (!contents.includes('.nx/workspace-data')) {
+      if (!sepIncluded) {
+        lines.push('\n');
+        sepIncluded = true;
+      }
+      lines.push('.nx/workspace-data');
+    }
+    writeFileSync(ignorePath, lines.join('\n'), 'utf-8');
   } catch {}
 }
 
@@ -194,40 +207,28 @@ export function markRootPackageJsonAsNxProjectLegacy(
   writeJsonFile(`package.json`, json);
 }
 
-export function markPackageJsonAsNxProject(
-  packageJsonPath: string,
-  cacheableScripts: string[]
-) {
+export function markPackageJsonAsNxProject(packageJsonPath: string) {
   const json = readJsonFile<PackageJson>(packageJsonPath);
   if (!json.scripts) {
     return;
   }
 
-  json.nx = { includedScripts: [] };
-  for (let script of cacheableScripts) {
-    if (json.scripts[script]) {
-      json.nx.includedScripts.push(script);
-    }
-  }
+  json.nx = {};
   writeJsonFile(packageJsonPath, json);
 }
 
 export function printFinalMessage({
   learnMoreLink,
-  bodyLines,
 }: {
   learnMoreLink?: string;
-  bodyLines?: string[];
 }): void {
-  const normalizedBodyLines = (bodyLines ?? []).map((l) =>
-    l.startsWith('- ') ? l : `- ${l}`
-  );
+  const pmc = getPackageManagerCommand();
 
   output.success({
     title: '🎉 Done!',
     bodyLines: [
-      '- Enabled computation caching!',
-      ...normalizedBodyLines,
+      `- Run "${pmc.exec} nx run-many -t build" to run the build target for every project in the workspace. Run it again to replay the cached computation. https://nx.dev/features/cache-task-results`,
+      `- Run "${pmc.exec} nx graph" to see the graph of projects and tasks in your workspace. https://nx.dev/core-features/explore-graph`,
       learnMoreLink ? `- Learn more at ${learnMoreLink}.` : undefined,
     ].filter(Boolean),
   });

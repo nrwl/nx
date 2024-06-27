@@ -5,8 +5,8 @@ import { createSandbox } from './create-sandbox';
 import { createEmptyWorkspace } from './create-empty-workspace';
 import { createPreset } from './create-preset';
 import { setupCI } from './utils/ci/setup-ci';
-import { initializeGitRepo } from './utils/git/git';
-import { getThirdPartyPreset } from './utils/preset/get-third-party-preset';
+import { commitChanges, initializeGitRepo } from './utils/git/git';
+import { getPackageNameFromThirdPartyPreset } from './utils/preset/get-third-party-preset';
 import { mapErrorToBodyLines } from './utils/error-utils';
 
 export async function createWorkspace<T extends CreateWorkspaceOptions>(
@@ -21,6 +21,7 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
     defaultBase = 'main',
     commit,
     cliName,
+    useGitHub,
   } = options;
 
   if (cliName) {
@@ -40,27 +41,21 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
   // If the preset is a third-party preset, we need to call createPreset to install it
   // For first-party presets, it will be created by createEmptyWorkspace instead.
   // In createEmptyWorkspace, it will call `nx new` -> `@nx/workspace newGenerator` -> `@nx/workspace generatePreset`.
-  const thirdPartyPreset = await getThirdPartyPreset(preset);
-  if (thirdPartyPreset) {
-    await createPreset(thirdPartyPreset, options, packageManager, directory);
+  const thirdPartyPackageName = getPackageNameFromThirdPartyPreset(preset);
+  if (thirdPartyPackageName) {
+    await createPreset(
+      thirdPartyPackageName,
+      options,
+      packageManager,
+      directory
+    );
   }
 
-  let nxCloudInstallRes;
-  if (nxCloud !== 'skip') {
-    nxCloudInstallRes = await setupNxCloud(directory, packageManager, nxCloud);
-
-    if (nxCloud !== 'yes') {
-      await setupCI(
-        directory,
-        nxCloud,
-        packageManager,
-        nxCloudInstallRes?.code === 0
-      );
-    }
-  }
+  let gitSuccess = false;
   if (!skipGit && commit) {
     try {
       await initializeGitRepo(directory, { defaultBase, commit });
+      gitSuccess = true;
     } catch (e) {
       if (e instanceof Error) {
         output.error({
@@ -69,6 +64,28 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
         });
       } else {
         console.error(e);
+      }
+    }
+  }
+
+  let nxCloudInstallRes;
+  if (nxCloud !== 'skip') {
+    nxCloudInstallRes = await setupNxCloud(
+      directory,
+      packageManager,
+      nxCloud,
+      useGitHub
+    );
+
+    if (nxCloud !== 'yes') {
+      const nxCIsetupRes = await setupCI(
+        directory,
+        nxCloud,
+        packageManager,
+        nxCloudInstallRes?.code === 0
+      );
+      if (nxCIsetupRes?.code === 0) {
+        commitChanges(directory, `feat(nx): Generated CI workflow`);
       }
     }
   }

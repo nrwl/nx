@@ -3,8 +3,14 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "e2e/remix",
   "projectType": "application",
+  "implicitDependencies": ["remix"],
   "targets": {
-    "e2e": {}
-  },
-  "implicitDependencies": ["remix"]
+    "e2e-ci--src/nx-remix.test.ts": {
+      "dependsOn": [
+        "nx:build-native",
+        "@nx/nx-source:populate-local-registry-storage"
+      ],
+      "inputs": ["e2eInputs", "^production"]
+    }
+  }
 }

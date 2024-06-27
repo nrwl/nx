@@ -5,6 +5,13 @@
 At the beginning of your main job, invoke `npx nx-cloud start-ci-run`. This tells Nx Cloud that the following series of
 command correspond to the same CI run.
 
+{% callout type="warning" title="Do not run start-ci-run locally" %}
+`nx-cloud start-ci-run` generates a temporary marker file that can cause a local Nx repo to behave as if it is a part of a CI run. This can cause strange behavior like Nx commands timing out or throwing unexpected errors.
+To discourage this from happening, this command will run a check to see if it is running in a CI environment. You can bypass this check with `nx-cloud start-ci-run --force`.
+
+If you accidentally run this command locally, remove all generated marker files with `nx-cloud cleanup`.
+{% /callout %}
+
 You can configure your CI run by passing the following flags:
 
 ### --distribute-on
@@ -26,23 +33,23 @@ distribute-on:
   large-changeset: 10 linux-medium-js
 ```
 
-### --with-env-vars
+### --with-env-vars (Nx Agents Only)
 
-By default, invoking `npx nx-cloud start-ci-run` will take all environment variables prefixed with `NX_` and send them over to agents.
+By default, invoking `npx nx-cloud start-ci-run` will take all environment variables prefixed with `NX_` and send them over to Nx Agents.
 This means that your access token, verbose logging configuration and other Nx-related environment variables will be the same on your
-main CI jobs and the agents.
+main CI jobs and the Nx Agent machines.
 
-If you want to pass other environment variables from the main job to agents, you can do it as follows: `--with-env-vars="VAR1,VAR2"`.
-This will set `VAR1` and `VAR2` on agents to the same values set on the main job before any steps run.
+If you want to pass other environment variables from the main job to Nx Agents, you can do it as follows: `--with-env-vars="VAR1,VAR2"`.
+This will set `VAR1` and `VAR2` on Nx Agents to the same values set on the main job before any steps run.
 
-You can also pass `--with-env-vars="auto"` which will filter out all OS-specific environment variables and pass the rest to agents.
+You can also pass `--with-env-vars="auto"` which will filter out all OS-specific environment variables and pass the rest to Nx Agents.
 
 {% callout type="warning" title="Use Caution With 'auto'" %}
-Using `--with-env-vars="auto"` will override any existing environment variables on the agent, some of which might be critical to the
-functionality of that machine. In case of unexpected issues on agents, try fallback to the explicit variable definition using `--with-env-vars="VAR1,VAR2,..."`.
+Using `--with-env-vars="auto"` will override any existing environment variables on the Nx Agent, some of which might be critical to the
+functionality of that machine. In case of unexpected issues on Nx Agents, try fallback to the explicit variable definition using `--with-env-vars="VAR1,VAR2,..."`.
 {% /callout %}
 
-Note: none of the values passed to agents are stored by Nx Cloud.
+Note: none of the values passed to Nx Agents are stored by Nx Cloud.
 
 ### --use-dte-by-default
 
@@ -62,6 +69,28 @@ run.
 
 You can fix it by telling Nx Cloud that it can terminate agents after it sees a certain
 target: `npx nx-cloud start-ci-run --stop-agents-after=e2e`.
+
+The target name for `--stop-agents-after` should be the last target run within your pipeline. If not, Nx Cloud will end the CI pipeline execution, preventing the subsequent commands from running.
+
+Incorrect example:
+
+```yaml
+- run: npx nx-cloud start-ci-run --stop-agents-after=build
+- run: nx affected -t build
+- run: nx affected -t lint
+- run: nx affected -t test
+```
+
+If build tasks are all cached, then all build tasks will complete immediately causing lint and test tasks to fail with an error saying the CI pipeline execution has already been completed. Instead you should re-order your targets to make sure the build target is last.
+
+Corrected example:
+
+```yaml
+- run: npx nx-cloud start-ci-run --stop-agents-after=build
+- run: nx affected -t lint
+- run: nx affected -t test
+- run: nx affected -t build
+```
 
 ### --require-explicit-completion
 

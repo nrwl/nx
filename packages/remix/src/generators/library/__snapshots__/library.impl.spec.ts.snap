@@ -41,8 +41,9 @@ export default defineConfig({
 
   test: {
     setupFiles: ['./src/test-setup.ts'],
+    watch: false,
     globals: true,
-    cache: { dir: '../node_modules/.vitest' },
+    cache: { dir: '../node_modules/.vitest/test' },
     environment: 'jsdom',
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
     reporters: ['default'],
@@ -119,8 +120,9 @@ export default defineConfig({
 
   test: {
     setupFiles: ['./src/test-setup.ts'],
+    watch: false,
     globals: true,
-    cache: { dir: '../../node_modules/.vitest' },
+    cache: { dir: '../../node_modules/.vitest/libs/test' },
     environment: 'jsdom',
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
     reporters: ['default'],

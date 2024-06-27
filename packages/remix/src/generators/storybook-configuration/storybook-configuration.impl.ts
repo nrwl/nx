@@ -1,6 +1,7 @@
 import {
   generateFiles,
   joinPathFragments,
+  offsetFromRoot,
   readProjectConfiguration,
   readNxJson,
   type Tree,
@@ -19,6 +20,12 @@ export function remixStorybookConfiguration(
   });
 }
 
+function normalizedJoinPaths(...paths: string[]): string {
+  const path = joinPathFragments(...paths);
+
+  return path.startsWith('.') ? path : `./${path}`;
+}
+
 export default async function remixStorybookConfigurationInternal(
   tree: Tree,
   schema: StorybookConfigurationSchema
@@ -31,7 +38,14 @@ export default async function remixStorybookConfigurationInternal(
   const { root } = readProjectConfiguration(tree, schema.project);
 
   if (!tree.exists(joinPathFragments(root, 'vite.config.ts'))) {
-    generateFiles(tree, join(__dirname, 'files'), root, { tpl: '' });
+    const cacheDir = normalizedJoinPaths(
+      offsetFromRoot(root),
+      'node_modules',
+      '.vite',
+      'storybook',
+      root === '.' ? schema.project : root
+    );
+    generateFiles(tree, join(__dirname, 'files'), root, { cacheDir, tpl: '' });
   }
 
   const task = await storybookConfigurationGenerator(tree, schema);

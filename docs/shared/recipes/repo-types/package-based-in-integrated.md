@@ -27,7 +27,7 @@ With [npm](https://docs.npmjs.com/cli/v7/using-npm/workspaces)/[yarn](https://cl
 
 When you manage dependencies this way, you can still hoist dependencies to the root-level `package.json` file, but you have to make the explicit decision for each dependency.
 
-There are difficulties with code sharing when you maintain separate dependencies. See the [Dependency Management Strategies](/concepts/more-concepts/dependency-management) guide for more information.
+There are difficulties with code sharing when you maintain separate dependencies. See the [Dependency Management Strategies](/concepts/decisions/dependency-management) guide for more information.
 
 ## Run Tasks Without the Use of an Nx Plugin
 

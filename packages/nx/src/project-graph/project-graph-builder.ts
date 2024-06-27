@@ -15,12 +15,12 @@ import {
   ProjectGraphProjectNode,
 } from '../config/project-graph';
 import { ProjectConfiguration } from '../config/workspace-json-project-json';
-import { CreateDependenciesContext } from '../utils/nx-plugin';
+import { CreateDependenciesContext } from './plugins';
 import { getFileMap } from './build-project-graph';
 
 /**
  * A class which builds up a project graph
- * @deprecated The {@link ProjectGraphProcessor} has been deprecated. Use a {@link CreateNodes} and/or a {@link CreateDependencies} instead. This will be removed in Nx 19.
+ * @deprecated The {@link ProjectGraphProcessor} has been deprecated. Use a {@link CreateNodes} and/or a {@link CreateDependencies} instead. This will be removed in Nx 20.
  */
 export class ProjectGraphBuilder {
   // TODO(FrozenPandaz): make this private

@@ -1,7 +1,7 @@
 {
   "extends": "../../.eslintrc",
   "rules": {},
-  "ignorePatterns": ["!**/*"],
+  "ignorePatterns": ["!**/*", "**/__fixtures__/**/*"],
   "overrides": [
     {
       "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
@@ -25,6 +25,10 @@
               {
                 "group": ["nx/*"],
                 "message": "Circular import in 'nx' found. Use relative path."
+              },
+              {
+                "group": ["**/native-bindings", "**/native-bindings.js"],
+                "message": "Direct imports from native-bindings.js are not allowed. Import from index.js instead."
               }
             ]
           }

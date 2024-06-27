@@ -42,7 +42,7 @@ The [`NxWebpackPlugin`](/recipes/webpack/webpack-plugins#nxwebpackplugin) plugin
 To generate a `package.json` we would declare it in the plugin options.
 
 ```js {% fileName="apps/acme/app/webpack.config.js" %}
-const { NxWebpackPlugin } = require('@nx/webpack');
+const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
 const { join } = require('path');
 
 module.exports = {
@@ -53,7 +53,7 @@ module.exports = {
     port: 4200,
   },
   plugins: [
-    new NxWebpackPlugin({
+    new NxAppWebpackPlugin({
       tsConfig: './tsconfig.app.json',
       compiler: 'swc',
       main: './src/main.tsx',
@@ -97,6 +97,7 @@ const {
   createProjectGraphAsync,
   readCachedProjectGraph,
   detectPackageManager,
+  writeJsonFile,
 } = require('@nx/devkit');
 const {
   createLockFile,
@@ -128,7 +129,7 @@ async function main() {
 
   const lockFileName = getLockFileName(pm);
 
-  writeFileSync(`${outputDir}/package.json`, packageJson);
+  writeJsonFile(`${outputDir}/package.json`, packageJson);
   writeFileSync(`${outputDir}/${lockFileName}`, lockFile, {
     encoding: 'utf8',
   });

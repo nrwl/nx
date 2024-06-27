@@ -14,7 +14,6 @@ import {
   normalizeOptions,
   setRouterInitialNavigation,
   setServerTsConfigOptionsForApplicationBuilder,
-  updateAppModule,
   updateProjectConfigForApplicationBuilder,
   updateProjectConfigForBrowserBuilder,
   validateOptions,
@@ -30,12 +29,11 @@ export async function setupSsr(tree: Tree, schema: Schema) {
     targets.build.executor === '@angular-devkit/build-angular:application' ||
     targets.build.executor === '@nx/angular:application';
 
-  addDependencies(tree, isUsingApplicationBuilder);
+  if (!schema.skipPackageJson) {
+    addDependencies(tree, isUsingApplicationBuilder);
+  }
   generateSSRFiles(tree, options, isUsingApplicationBuilder);
 
-  if (!options.standalone) {
-    updateAppModule(tree, options);
-  }
   if (options.hydration) {
     addHydration(tree, options);
   }

@@ -3,43 +3,39 @@ import {
   CreateNodes,
   CreateNodesContext,
   detectPackageManager,
-  joinPathFragments,
   readJsonFile,
   TargetConfiguration,
   workspaceRoot,
   writeJsonFile,
 } from '@nx/devkit';
-import { basename, dirname, isAbsolute, join, relative } from 'path';
-import { projectGraphCacheDirectory } from 'nx/src/utils/cache-directory';
+import { dirname, isAbsolute, join, relative } from 'path';
+import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { existsSync, readdirSync } from 'fs';
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { getLockFileName } from '@nx/js';
 import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
 
-const cachePath = join(projectGraphCacheDirectory, 'nuxt.hash');
-const targetsCache = existsSync(cachePath) ? readTargetsCache() : {};
-
-const calculatedTargets: Record<
-  string,
-  Record<string, TargetConfiguration>
-> = {};
+const cachePath = join(workspaceDataDirectory, 'nuxt.hash');
+const targetsCache = readTargetsCache();
 
 function readTargetsCache(): Record<
   string,
   Record<string, TargetConfiguration>
 > {
-  return readJsonFile(cachePath);
+  return existsSync(cachePath) ? readJsonFile(cachePath) : {};
 }
 
-function writeTargetsToCache(
-  targets: Record<string, Record<string, TargetConfiguration>>
-) {
-  writeJsonFile(cachePath, targets);
+function writeTargetsToCache() {
+  const oldCache = readTargetsCache();
+  writeJsonFile(cachePath, {
+    ...oldCache,
+    ...targetsCache,
+  });
 }
 
 export const createDependencies: CreateDependencies = () => {
-  writeTargetsToCache(calculatedTargets);
+  writeTargetsToCache();
   return [];
 };
 
@@ -65,20 +61,24 @@ export const createNodes: CreateNodes<NuxtPluginOptions> = [
 
     options = normalizeOptions(options);
 
-    const hash = calculateHashForCreateNodes(projectRoot, options, context, [
-      getLockFileName(detectPackageManager(context.workspaceRoot)),
-    ]);
-    const targets = targetsCache[hash]
-      ? targetsCache[hash]
-      : await buildNuxtTargets(configFilePath, projectRoot, options, context);
-
-    calculatedTargets[hash] = targets;
+    const hash = await calculateHashForCreateNodes(
+      projectRoot,
+      options,
+      context,
+      [getLockFileName(detectPackageManager(context.workspaceRoot))]
+    );
+    targetsCache[hash] ??= await buildNuxtTargets(
+      configFilePath,
+      projectRoot,
+      options,
+      context
+    );
 
     return {
       projects: {
         [projectRoot]: {
           root: projectRoot,
-          targets,
+          targets: targetsCache[hash],
         },
       },
     };
@@ -233,7 +233,7 @@ function getOutputs(
   );
 
   return {
-    buildOutputs: [buildOutputPath],
+    buildOutputs: [buildOutputPath, '{projectRoot}/.output'],
   };
 }
 

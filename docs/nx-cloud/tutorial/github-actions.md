@@ -286,6 +286,8 @@ jobs:
       - uses: nrwl/nx-set-shas@v3
       # This line is needed for nx affected to work when CI is running on a PR
       - run: git branch --track main origin/main
+        if: ${{ github.event_name == 'pull_request' }}
+
       - run: pnpm nx affected -t lint test build --parallel=3
       - run: pnpm nx affected -t e2e --parallel=1
 ```
@@ -401,7 +403,7 @@ The Nx Agents feature
 Let's enable Nx Agents
 
 ```shell
-pnpm exec nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
+pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
 ```
 
 We recommend you add this line right after you check out the repo, before installing node modules.
@@ -440,7 +442,7 @@ jobs:
         with:
           version: 8
       - run: |
-          pnpm exec nx-cloud start-ci-run \
+          pnpm dlx nx-cloud start-ci-run \
             --distribute-on="3 linux-medium-js" \
             --stop-agents-after="e2e-ci"
       - name: Restore cached npm dependencies
@@ -463,6 +465,7 @@ jobs:
       - uses: nrwl/nx-set-shas@v3
       # This line is needed for nx affected to work when CI is running on a PR
       - run: git branch --track main origin/main
+        if: ${{ github.event_name == 'pull_request' }}
       - run: pnpm nx affected -t lint test build --parallel=3
       - run: pnpm nx affected -t e2e-ci --parallel=1
       - run: pnpm nx affected -t deploy --no-agents

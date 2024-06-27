@@ -4,7 +4,7 @@ Here are some common scenarios we came across while trying to run Nx on CIs
 
 ## Native Modules
 
-With more recent versions of Nx, we publish native binaries that should be automatically downloaded and installed when Nx is used.
+Nx publishes native binaries that should be automatically downloaded and installed when Nx is used.
 
 If you see a message saying that your platform is not supported (or that Nx cannot find a `@nx/nx-platform` module for versions of Nx between 15.8 and 16.4), there
 are a few reasons why this could potentially happen:

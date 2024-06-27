@@ -7,10 +7,15 @@ import {
   readModulePackageJson,
   readTargetsFromPackageJson,
 } from './package-json';
+import { getPackageManagerCommand } from './package-manager';
 
 describe('buildTargetFromScript', () => {
   it('should use nx:run-script', () => {
-    const target = buildTargetFromScript('build');
+    const target = buildTargetFromScript(
+      'build',
+      {},
+      getPackageManagerCommand()
+    );
     expect(target.executor).toEqual('nx:run-script');
   });
 });
@@ -29,23 +34,35 @@ describe('readTargetsFromPackageJson', () => {
     options: {
       script: 'build',
     },
+    metadata: {
+      runCommand: 'npm run build',
+      scriptContent: 'echo 1',
+    },
   };
 
   it('should read targets from project.json and package.json', () => {
     const result = readTargetsFromPackageJson(packageJson);
-    expect(result).toEqual({
-      build: {
-        executor: 'nx:run-script',
-        options: {
-          script: 'build',
+    expect(result).toMatchInlineSnapshot(`
+      {
+        "build": {
+          "executor": "nx:run-script",
+          "metadata": {
+            "runCommand": "npm run build",
+            "scriptContent": "echo 1",
+          },
+          "options": {
+            "script": "build",
+          },
         },
-      },
-      'nx-release-publish': {
-        dependsOn: ['^nx-release-publish'],
-        executor: '@nx/js:release-publish',
-        options: {},
-      },
-    });
+        "nx-release-publish": {
+          "dependsOn": [
+            "^nx-release-publish",
+          ],
+          "executor": "@nx/js:release-publish",
+          "options": {},
+        },
+      }
+    `);
   });
 
   it('should contain extended options from nx property in package.json', () => {
@@ -86,17 +103,27 @@ describe('readTargetsFromPackageJson', () => {
       },
     });
 
-    expect(result).toEqual({
-      test: {
-        executor: 'nx:run-script',
-        options: { script: 'test' },
-      },
-      'nx-release-publish': {
-        dependsOn: ['^nx-release-publish'],
-        executor: '@nx/js:release-publish',
-        options: {},
-      },
-    });
+    expect(result).toMatchInlineSnapshot(`
+      {
+        "nx-release-publish": {
+          "dependsOn": [
+            "^nx-release-publish",
+          ],
+          "executor": "@nx/js:release-publish",
+          "options": {},
+        },
+        "test": {
+          "executor": "nx:run-script",
+          "metadata": {
+            "runCommand": "npm run test",
+            "scriptContent": "echo testing",
+          },
+          "options": {
+            "script": "test",
+          },
+        },
+      }
+    `);
   });
 
   it('should extend script based targets if matching config', () => {
@@ -117,6 +144,10 @@ describe('readTargetsFromPackageJson', () => {
     expect(result.build).toMatchInlineSnapshot(`
       {
         "executor": "nx:run-script",
+        "metadata": {
+          "runCommand": "npm run build",
+          "scriptContent": "echo 1",
+        },
         "options": {
           "script": "build",
         },

@@ -4,15 +4,24 @@ description: The Nx Plugin for Angular contains executors, generators, and utili
 ---
 
 The Nx Plugin for Angular contains executors, generators, and utilities for managing Angular applications and libraries
-within an Nx workspace. It provides:
+within an Nx workspace. It also enables using Angular Devkit builders and schematics in Nx workspaces.
 
-- Integration with libraries such as Storybook, Jest and Cypress.
+Among other things, it provides:
+
+- Integration with libraries such as:
+  - Cypress
+  - ESLint
+  - Jest
+  - Playwright
+  - Storybook
 - Generators to help scaffold code quickly, including:
   - Micro Frontends
   - Libraries, both internal to your codebase and publishable to npm
-  - Single Component Application Modules (SCAMs)
-- NgRx helpers.
-- Utilities for automatic workspace refactoring.
+  - Projects with Tailwind CSS
+- Executors providing extra capabilities on top of the Angular Devkit builders:
+  - Provide ESBuild plugins
+  - Provide custom webpack configurations
+- Utilities for automatic workspace refactoring
 
 {% callout type="note" title="Currently using the Angular CLI?" %}
 You can easily and mostly **automatically migrate from an Angular CLI** project to Nx! Learn
@@ -102,9 +111,9 @@ nx lint libName
 
 Read more about:
 
-- [Creating Libraries](/concepts/more-concepts/creating-libraries)
-- [Library Types](/concepts/more-concepts/library-types)
-- [Buildable and Publishable Libraries](/concepts/more-concepts/buildable-and-publishable-libraries)
+- [Creating Libraries](/concepts/decisions/project-size)
+- [Library Types](/concepts/decisions/project-dependency-rules)
+- [Buildable and Publishable Libraries](/concepts/buildable-and-publishable-libraries)
 
 ### Fallback to `@schematics/angular`
 

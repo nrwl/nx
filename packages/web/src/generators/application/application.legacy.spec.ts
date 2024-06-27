@@ -1,3 +1,5 @@
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
 import { installedCypressVersion } from '@nx/cypress/src/utils/cypress-version';
 import { getProjects, readProjectConfiguration, Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
@@ -200,12 +202,12 @@ describe('web app generator (legacy)', () => {
             },
           },
           "test": {
-            "executor": "@nx/vite:test",
+            "executor": "@nx/jest:jest",
             "options": {
-              "reportsDirectory": "../coverage/my-vite-app",
+              "jestConfig": "my-vite-app/jest.config.ts",
             },
             "outputs": [
-              "{options.reportsDirectory}",
+              "{workspaceRoot}/coverage/{projectRoot}",
             ],
           },
         },

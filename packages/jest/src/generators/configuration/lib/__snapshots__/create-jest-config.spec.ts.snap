@@ -11,7 +11,7 @@ projects: await getJestProjectsAsync()
 exports[`createJestConfig should generate files  2`] = `
 "const nxPreset = require('@nx/jest/preset').default;
 
-module.exports = { ...nxPreset }"
+module.exports = { ...nxPreset };"
 `;
 
 exports[`createJestConfig should generate files with --js flag 1`] = `
@@ -25,5 +25,5 @@ projects: await getJestProjectsAsync()
 exports[`createJestConfig should generate files with --js flag 2`] = `
 "const nxPreset = require('@nx/jest/preset').default;
 
-module.exports = { ...nxPreset }"
+module.exports = { ...nxPreset };"
 `;

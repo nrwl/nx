@@ -23,10 +23,6 @@ import { Route, Link } from 'react-router-dom';
     var extras = '';
 } %>
 
-/* eslint-disable-next-line */
-export interface <%= className %>Props {
-}
-
 <% if (styledModule && styledModule !== 'styled-jsx') { %>
 const Styled<%= className %> = styled.div`
   color: pink;
@@ -34,7 +30,7 @@ const Styled<%= className %> = styled.div`
 <% }%>
 <% if(!isNextPage) { %>
   <% if (classComponent) { %>
-  export class <%= className %> extends Component<<%= className %>Props> {
+  export class <%= className %> extends Component<{}> {
     override render() {
       return (
         <<%= wrapper %><%- extras %>>
@@ -51,7 +47,7 @@ const Styled<%= className %> = styled.div`
     }
   }
   <% } else { %>
-  export function <%= className %>(props: <%= className %>Props) {
+  export function <%= className %>() {
     return (
       <<%= wrapper %><%- extras %>>
         <% if (styledModule === 'styled-jsx') { %><style jsx>{`div { color: pink; }`}</style><% } %>
@@ -69,7 +65,7 @@ const Styled<%= className %> = styled.div`
 
   export default <%= className %>;
 <% } else { %>
-  export default function <%= className %>(props: <%= className %>Props) {
+  export default function <%= className %>() {
     return (
       <<%= wrapper %><%- extras %>>
         <% if (styledModule === 'styled-jsx') { %><style jsx>{`div { color: pink; }`}</style><% } %>

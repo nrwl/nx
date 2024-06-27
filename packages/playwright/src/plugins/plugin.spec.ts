@@ -1,11 +1,11 @@
 import { CreateNodesContext } from '@nx/devkit';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
 
-import { createNodes } from './plugin';
+import { createNodesV2 } from './plugin';
 import { PlaywrightTestConfig } from '@playwright/test';
 
 describe('@nx/playwright/plugin', () => {
-  let createNodesFunction = createNodes[1];
+  let createNodesFunction = createNodesV2[1];
   let context: CreateNodesContext;
   let tempFs: TempFs;
 
@@ -35,48 +35,85 @@ describe('@nx/playwright/plugin', () => {
 
   it('should create nodes with default playwright configuration', async () => {
     await mockPlaywrightConfig(tempFs, {});
-    const { projects } = await createNodesFunction(
-      'playwright.config.js',
+    const results = await createNodesFunction(
+      ['playwright.config.js'],
       {
         targetName: 'e2e',
       },
       context
     );
 
-    expect(projects).toMatchInlineSnapshot(`
-      {
-        ".": {
-          "root": ".",
-          "targets": {
-            "e2e": {
-              "cache": true,
-              "command": "playwright test",
-              "inputs": [
-                "default",
-                "^production",
-              ],
-              "options": {
-                "cwd": "{projectRoot}",
+    expect(results).toMatchInlineSnapshot(`
+      [
+        [
+          "playwright.config.js",
+          {
+            "projects": {
+              ".": {
+                "metadata": {
+                  "targetGroups": {
+                    "E2E (CI)": [
+                      "e2e-ci",
+                    ],
+                  },
+                },
+                "root": ".",
+                "targets": {
+                  "e2e": {
+                    "cache": true,
+                    "command": "playwright test",
+                    "inputs": [
+                      "default",
+                      "^production",
+                      {
+                        "externalDependencies": [
+                          "@playwright/test",
+                        ],
+                      },
+                    ],
+                    "metadata": {
+                      "description": "Runs Playwright Tests",
+                      "technologies": [
+                        "playwright",
+                      ],
+                    },
+                    "options": {
+                      "cwd": "{projectRoot}",
+                    },
+                    "outputs": [
+                      "{projectRoot}/test-results",
+                    ],
+                  },
+                  "e2e-ci": {
+                    "cache": true,
+                    "dependsOn": [],
+                    "executor": "nx:noop",
+                    "inputs": [
+                      "default",
+                      "^production",
+                      {
+                        "externalDependencies": [
+                          "@playwright/test",
+                        ],
+                      },
+                    ],
+                    "metadata": {
+                      "description": "Runs Playwright Tests in CI",
+                      "nonAtomizedTarget": "e2e",
+                      "technologies": [
+                        "playwright",
+                      ],
+                    },
+                    "outputs": [
+                      "{projectRoot}/test-results",
+                    ],
+                  },
+                },
               },
-              "outputs": [
-                "{projectRoot}/test-results",
-              ],
-            },
-            "e2e-ci": {
-              "cache": true,
-              "dependsOn": [],
-              "executor": "nx:noop",
-              "inputs": [
-                "default",
-                "^production",
-              ],
-              "outputs": [
-                "{projectRoot}/test-results",
-              ],
             },
           },
-        },
-      }
+        ],
+      ]
     `);
   });
 
@@ -88,54 +125,91 @@ describe('@nx/playwright/plugin', () => {
         ['html', { outputFolder: 'test-results/html' }],
       ],
     });
-    const { projects } = await createNodesFunction(
-      'playwright.config.js',
+    const results = await createNodesFunction(
+      ['playwright.config.js'],
       {
         targetName: 'e2e',
       },
       context
     );
 
-    expect(projects).toMatchInlineSnapshot(`
-      {
-        ".": {
-          "root": ".",
-          "targets": {
-            "e2e": {
-              "cache": true,
-              "command": "playwright test",
-              "inputs": [
-                "default",
-                "^production",
-              ],
-              "options": {
-                "cwd": "{projectRoot}",
+    expect(results).toMatchInlineSnapshot(`
+      [
+        [
+          "playwright.config.js",
+          {
+            "projects": {
+              ".": {
+                "metadata": {
+                  "targetGroups": {
+                    "E2E (CI)": [
+                      "e2e-ci",
+                    ],
+                  },
+                },
+                "root": ".",
+                "targets": {
+                  "e2e": {
+                    "cache": true,
+                    "command": "playwright test",
+                    "inputs": [
+                      "default",
+                      "^production",
+                      {
+                        "externalDependencies": [
+                          "@playwright/test",
+                        ],
+                      },
+                    ],
+                    "metadata": {
+                      "description": "Runs Playwright Tests",
+                      "technologies": [
+                        "playwright",
+                      ],
+                    },
+                    "options": {
+                      "cwd": "{projectRoot}",
+                    },
+                    "outputs": [
+                      "{projectRoot}/playwright-report",
+                      "{projectRoot}/test-results/report.json",
+                      "{projectRoot}/test-results/html",
+                      "{projectRoot}/test-results",
+                    ],
+                  },
+                  "e2e-ci": {
+                    "cache": true,
+                    "dependsOn": [],
+                    "executor": "nx:noop",
+                    "inputs": [
+                      "default",
+                      "^production",
+                      {
+                        "externalDependencies": [
+                          "@playwright/test",
+                        ],
+                      },
+                    ],
+                    "metadata": {
+                      "description": "Runs Playwright Tests in CI",
+                      "nonAtomizedTarget": "e2e",
+                      "technologies": [
+                        "playwright",
+                      ],
+                    },
+                    "outputs": [
+                      "{projectRoot}/playwright-report",
+                      "{projectRoot}/test-results/report.json",
+                      "{projectRoot}/test-results/html",
+                      "{projectRoot}/test-results",
+                    ],
+                  },
+                },
               },
-              "outputs": [
-                "{projectRoot}/playwright-report",
-                "{projectRoot}/test-results/report.json",
-                "{projectRoot}/test-results/html",
-                "{projectRoot}/test-results",
-              ],
-            },
-            "e2e-ci": {
-              "cache": true,
-              "dependsOn": [],
-              "executor": "nx:noop",
-              "inputs": [
-                "default",
-                "^production",
-              ],
-              "outputs": [
-                "{projectRoot}/playwright-report",
-                "{projectRoot}/test-results/report.json",
-                "{projectRoot}/test-results/html",
-                "{projectRoot}/test-results",
-              ],
             },
           },
-        },
-      }
+        ],
+      ]
     `);
   });
 
@@ -155,15 +229,25 @@ describe('@nx/playwright/plugin', () => {
       'not-tests/run-me.spec.ts': '',
     });
 
-    const { projects } = await createNodesFunction(
-      'playwright.config.js',
+    const results = await createNodesFunction(
+      ['playwright.config.js'],
       {
         targetName: 'e2e',
         ciTargetName: 'e2e-ci',
       },
       context
     );
-    const { targets } = projects['.'];
+    const project = results[0][1].projects['.'];
+    const { targets } = project;
+    expect(project.metadata.targetGroups).toMatchInlineSnapshot(`
+      {
+        "E2E (CI)": [
+          "e2e-ci--tests/run-me-2.spec.ts",
+          "e2e-ci--tests/run-me.spec.ts",
+          "e2e-ci",
+        ],
+      }
+    `);
     expect(targets['e2e-ci']).toMatchInlineSnapshot(`
       {
         "cache": true,
@@ -183,7 +267,19 @@ describe('@nx/playwright/plugin', () => {
         "inputs": [
           "default",
           "^production",
+          {
+            "externalDependencies": [
+              "@playwright/test",
+            ],
+          },
         ],
+        "metadata": {
+          "description": "Runs Playwright Tests in CI",
+          "nonAtomizedTarget": "e2e",
+          "technologies": [
+            "playwright",
+          ],
+        },
         "outputs": [
           "{projectRoot}/test-results",
         ],
@@ -196,7 +292,19 @@ describe('@nx/playwright/plugin', () => {
         "inputs": [
           "default",
           "^production",
+          {
+            "externalDependencies": [
+              "@playwright/test",
+            ],
+          },
         ],
+        "metadata": {
+          "description": "Runs Playwright Tests in tests/run-me.spec.ts in CI",
+          "nonAtomizedTarget": "e2e",
+          "technologies": [
+            "playwright",
+          ],
+        },
         "options": {
           "cwd": "{projectRoot}",
         },
@@ -212,7 +320,19 @@ describe('@nx/playwright/plugin', () => {
         "inputs": [
           "default",
           "^production",
+          {
+            "externalDependencies": [
+              "@playwright/test",
+            ],
+          },
         ],
+        "metadata": {
+          "description": "Runs Playwright Tests in tests/run-me-2.spec.ts in CI",
+          "nonAtomizedTarget": "e2e",
+          "technologies": [
+            "playwright",
+          ],
+        },
         "options": {
           "cwd": "{projectRoot}",
         },

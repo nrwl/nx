@@ -55,7 +55,10 @@ export async function applicationGeneratorInternal(
     ...options,
     skipFormat: true,
   });
-  ensureAngularDependencies(tree);
+
+  if (!options.skipPackageJson) {
+    ensureAngularDependencies(tree);
+  }
 
   createProject(tree, options);
 
@@ -95,6 +98,7 @@ export async function applicationGeneratorInternal(
     await setupSsr(tree, {
       project: options.name,
       standalone: options.standalone,
+      skipPackageJson: options.skipPackageJson,
     });
   }
 

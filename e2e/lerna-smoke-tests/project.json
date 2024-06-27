@@ -3,8 +3,14 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "e2e/lerna-smoke-tests",
   "projectType": "application",
+  "implicitDependencies": ["nx", "devkit"],
   "targets": {
-    "e2e": {}
-  },
-  "implicitDependencies": ["nx", "devkit"]
+    "e2e-ci--src/lerna-smoke-tests.test.ts": {
+      "dependsOn": [
+        "nx:build-native",
+        "@nx/nx-source:populate-local-registry-storage"
+      ],
+      "inputs": ["e2eInputs", "^production"]
+    }
+  }
 }

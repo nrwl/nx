@@ -71,6 +71,24 @@ Run lint, test, and build targets for all projects. Requires Nx v15.4+:
  nx run-many --targets=lint,test,build
 ```
 
+Preview the task graph that Nx would run inside a webview:
+
+```shell
+ nx run-many -t=build --graph
+```
+
+Save the task graph to a file:
+
+```shell
+ nx run-many -t=build --graph=output.json
+```
+
+Print the task graph to the console:
+
+```shell
+ nx run-many -t=build --graph=stdout
+```
+
 ## Options
 
 ### all
@@ -105,7 +123,7 @@ Exclude certain projects from being processed
 
 Type: `string`
 
-Show the task graph of the command. Pass a file path to save the graph data instead of viewing it in the browser.
+Show the task graph of the command. Pass a file path to save the graph data instead of viewing it in the browser. Pass "stdout" to print the results to the terminal.
 
 ### help
 
@@ -136,6 +154,13 @@ Type: `string`
 Choices: [dynamic, static, stream, stream-without-prefixes]
 
 Defines how Nx emits outputs tasks logs
+
+| option                  | description                                                                                                                                                                                                                         |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| dynamic                 | use dynamic output life cycle, previous content is overwritten or modified as new outputs are added, display minimal logs by default, always show errors. This output format is recommended on your local development environments. |
+| static                  | uses static output life cycle, no previous content is rewritten or modified as new outputs are added. This output format is recommened for CI environments.                                                                         |
+| stream                  | nx by default logs output to an internal output stream, enable this option to stream logs to stdout / stderr                                                                                                                        |
+| stream-without-prefixes | nx prefixes the project name the target is running on, use this option remove the project name prefix from output                                                                                                                   |
 
 ### parallel
 

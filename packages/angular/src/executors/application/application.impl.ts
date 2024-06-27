@@ -10,11 +10,12 @@ import {
 } from '../utilities/esbuild-extensions';
 import type { ApplicationExecutorOptions } from './schema';
 import { validateOptions } from './utils/validate-options';
+import type { buildApplication as buildApplicationFn } from '@angular-devkit/build-angular';
 
 export default async function* applicationExecutor(
   options: ApplicationExecutorOptions,
   context: ExecutorContext
-) {
+): ReturnType<typeof buildApplicationFn> {
   validateOptions(options);
 
   const {
@@ -46,7 +47,7 @@ export default async function* applicationExecutor(
     {
       builderName: 'application',
       description: 'Build an application.',
-      optionSchema: await import('./schema.json'),
+      optionSchema: require('./schema.json'),
     },
     context
   );

@@ -5,7 +5,9 @@ Nx is a powerful open-source build system that provides tools and techniques for
 ## Core Features
 
 - **Run Tasks Efficiently**: Nx [runs tasks in parallel](/features/run-tasks) and orders the tasks based on the dependencies between them.
+- **Distribute Tasks in CI**: Nx scales your CI by [distributing tasks](/ci/features/distribute-task-execution) across many VMs. Your CI is fast no matter how big your repository is.
 - **Cache Locally & Remotely**: With [local](/features/cache-task-results) and [remote caching](/ci/features/remote-cache), Nx prevents unnecessary re-runs of tasks, saving you valuable dev time.
+- **Split E2E Tests and Rerun Flaky Tests**: Nx [automatically splits](/ci/features/split-e2e-tasks) large e2e tests to distribute them across VMs. Nx can also automatically [identify and rerun flaky e2e tests](/ci/features/flaky-tasks).
 - **Automate Dependency Updates**: if you leverage [Nx plugins](/concepts/nx-plugins) you gain additional features such as [code generation](/features/generate-code) and tools to [automatically upgrade](features/automate-updating-dependencies) your codebase and dependencies.
 - **Make it Your Own**: Nx is highly customizable and extensible. Fine-tune it by [creating your own plugins](/extending-nx/intro/getting-started) and optionally [share them with the community](/extending-nx/tutorials/publish-plugin#publish-your-nx-plugin).
 
@@ -33,21 +35,25 @@ npx create-nx-workspace@latest
 
 {% /cards %}
 
-{% cards cols="2" lgCols="5" mdCols="5" smCols="2" %}
+{% cards cols="2" lgCols="3" mdCols="3" smCols="2" %}
 
 {% link-card title="NPM Workspaces" type="tutorial" url="/getting-started/tutorials/npm-workspaces-tutorial" icon="jsMono" /%}
 
-{% link-card title="Integrated Monorepos" type="tutorial" url="/getting-started/tutorials/integrated-repo-tutorial" icon="nx" /%}
-
 {% link-card title="Single React App" type="tutorial" url="/getting-started/tutorials/react-standalone-tutorial" icon="react" /%}
 
-{% link-card title="Single Angular App" type="tutorial" url="/getting-started/tutorials/angular-standalone-tutorial" icon="angular" /%}
+{% link-card title="React Monorepo" type="tutorial" url="/getting-started/tutorials/react-monorepo-tutorial" icon="reactMono" /%}
+
+{% /cards %}
+
+{% cards cols="2" lgCols="4" mdCols="4" smCols="2" %}
 
 {% link-card title="Single Vue App" type="tutorial" url="/getting-started/tutorials/vue-standalone-tutorial" icon="vue" /%}
 
-<!-- {% link-card title="React Monorepo" type="tutorial" url="/getting-started/tutorials/react-standalone-tutorial" icon="reactMono" /%}
+{% link-card title="Single Angular App" type="tutorial" url="/getting-started/tutorials/angular-standalone-tutorial" icon="angular" /%}
 
-{% link-card title="Angular Monorepo" type="tutorial" url="/getting-started/tutorials/angular-standalone-tutorial" icon="angularMono" /%}-->
+{% link-card title="Angular Monorepo" type="tutorial" url="/getting-started/tutorials/angular-monorepo-tutorial" icon="angularMono" /%}
+
+{% link-card title="Gradle Monorepo" type="tutorial" url="/getting-started/tutorials/gradle-tutorial" icon="gradle" /%}
 
 {% /cards %}
 
@@ -66,8 +72,6 @@ Alternatively, here are some recipes that give you more details based on the tec
 {% link-card title="Add to Existing Monorepo" appearance="small" url="/recipes/adopting-nx/adding-to-monorepo" icon="pnpm" /%}
 
 {% link-card title="Add to Any Project" appearance="small" url="/recipes/adopting-nx/adding-to-existing-project" icon="nx" /%}
-
-{% link-card title="Migrate from CRA" appearance="small" url="/recipes/react/migration-cra" icon="cra" /%}
 
 {% link-card title="Migrate from Angular CLI" appearance="small" url="/recipes/angular/migration/angular" icon="angular" /%}
 

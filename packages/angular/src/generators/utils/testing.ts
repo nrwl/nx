@@ -1,9 +1,8 @@
 import type { Tree } from '@nx/devkit';
-import { names, readProjectConfiguration, updateJson } from '@nx/devkit';
+import { names, readProjectConfiguration } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { Linter } from '@nx/eslint';
 import { UnitTestRunner } from '../../utils/test-runners';
-import { angularDevkitVersion } from '../../utils/versions';
 import { applicationGenerator } from '../application/application';
 import type { Schema as ApplicationOptions } from '../application/schema';
 import { componentGenerator } from '../component/component';
@@ -18,7 +17,6 @@ export async function generateTestApplication(
   tree: Tree,
   options: ApplicationOptions
 ): Promise<void> {
-  addAngularPluginPeerDeps(tree);
   tree.write('.gitignore', '');
   await applicationGenerator(tree, {
     projectNameAndRootFormat: 'as-provided',
@@ -30,7 +28,6 @@ export async function generateTestHostApplication(
   tree: Tree,
   options: HostOptions
 ): Promise<void> {
-  addAngularPluginPeerDeps(tree);
   tree.write('.gitignore', '');
   await host(tree, { projectNameAndRootFormat: 'as-provided', ...options });
 }
@@ -39,7 +36,6 @@ export async function generateTestRemoteApplication(
   tree: Tree,
   options: RemoteOptions
 ): Promise<void> {
-  addAngularPluginPeerDeps(tree);
   tree.write('.gitignore', '');
   await remote(tree, { projectNameAndRootFormat: 'as-provided', ...options });
 }
@@ -48,7 +44,6 @@ export async function generateTestLibrary(
   tree: Tree,
   options: LibraryOptions
 ): Promise<void> {
-  addAngularPluginPeerDeps(tree);
   tree.write('.gitignore', '');
   await libraryGenerator(tree, {
     projectNameAndRootFormat: 'as-provided',
@@ -60,7 +55,6 @@ export async function createStorybookTestWorkspaceForLib(
   libName: string
 ): Promise<Tree> {
   let tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-  addAngularPluginPeerDeps(tree);
   tree.write('.gitignore', '');
 
   await libraryGenerator(tree, {
@@ -308,18 +302,6 @@ export class StaticMemberDeclarationsModule {
   });
 
   return tree;
-}
-
-function addAngularPluginPeerDeps(tree: Tree): void {
-  updateJson(tree, 'package.json', (json) => ({
-    ...json,
-    devDependencies: {
-      ...json.devDependencies,
-      '@angular-devkit/core': angularDevkitVersion,
-      '@angular-devkit/schematics': angularDevkitVersion,
-      '@schematics/angular': angularDevkitVersion,
-    },
-  }));
 }
 
 function generateModule(

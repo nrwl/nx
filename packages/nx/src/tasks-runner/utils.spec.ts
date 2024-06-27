@@ -1,6 +1,7 @@
 import {
   expandDependencyConfigSyntaxSugar,
   getOutputsForTargetAndConfiguration,
+  interpolate,
   transformLegacyOutputs,
   validateOutputs,
 } from './utils';
@@ -19,6 +20,14 @@ describe('utils', () => {
       },
     };
   }
+
+  describe('interpolate', () => {
+    it('should not mangle URLs', () => {
+      expect(interpolate('https://npm-registry.example.com/', {})).toEqual(
+        'https://npm-registry.example.com/'
+      );
+    });
+  });
 
   describe('getOutputsForTargetAndConfiguration', () => {
     const task = {
@@ -56,6 +65,18 @@ describe('utils', () => {
           })
         )
       ).toEqual(['one', 'myapp/two', 'myapp/three']);
+    });
+
+    it('should handle relative paths after {projectRoot}', () => {
+      expect(
+        getOutputsForTargetAndConfiguration(
+          task.target,
+          task.overrides,
+          getNode({
+            outputs: ['{projectRoot}/../relative/path'],
+          })
+        )
+      ).toEqual(['relative/path']);
     });
 
     it('should interpolate {projectRoot} when it is not at the beginning', () => {
@@ -487,6 +508,26 @@ describe('utils', () => {
       expect(result).toEqual({
         target: 'target:with:colons',
       });
+    });
+  });
+
+  describe('validateOutputs', () => {
+    it('returns undefined if there are no errors', () => {
+      expect(validateOutputs(['{projectRoot}/dist'])).toBeUndefined();
+    });
+
+    it('throws an error if the output is not an array', () => {
+      expect(() => validateOutputs('output' as unknown as string[])).toThrow(
+        "The 'outputs' field must be an array"
+      );
+    });
+
+    it("throws an error if the output has entries that aren't strings", () => {
+      expect(() =>
+        validateOutputs(['foo', 1, null, true, {}, []] as unknown as string[])
+      ).toThrow(
+        "The 'outputs' field must contain only strings, but received types: [string, number, object, boolean, object, object]"
+      );
     });
   });
 });

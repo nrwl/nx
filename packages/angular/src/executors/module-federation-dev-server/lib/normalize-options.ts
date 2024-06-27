@@ -18,6 +18,7 @@ export function normalizeOptions(schema: Schema): NormalizedSchema {
   return {
     ...schema,
     buildTarget,
+    devRemotes: schema.devRemotes ?? [],
     host: schema.host ?? 'localhost',
     port: schema.port ?? 4200,
     liveReload: schema.liveReload ?? true,

@@ -1,4 +1,4 @@
-import { projectGraphCacheDirectory } from 'nx/src/utils/cache-directory';
+import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import {
   type CreateDependencies,
   type CreateNodes,
@@ -17,28 +17,26 @@ import { dirname, join } from 'path';
 import { existsSync, readdirSync } from 'fs';
 import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
 
-const cachePath = join(projectGraphCacheDirectory, 'remix.hash');
-const targetsCache = existsSync(cachePath) ? readTargetsCache() : {};
-const calculatedTargets: Record<
-  string,
-  Record<string, TargetConfiguration>
-> = {};
+const cachePath = join(workspaceDataDirectory, 'remix.hash');
+const targetsCache = readTargetsCache();
 
 function readTargetsCache(): Record<
   string,
   Record<string, TargetConfiguration>
 > {
-  return readJsonFile(cachePath);
+  return existsSync(cachePath) ? readJsonFile(cachePath) : {};
 }
 
-function writeTargetsToCache(
-  targets: Record<string, Record<string, TargetConfiguration>>
-) {
-  writeJsonFile(cachePath, targets);
+function writeTargetsToCache() {
+  const oldCache = readTargetsCache();
+  writeJsonFile(cachePath, {
+    ...oldCache,
+    ...targetsCache,
+  });
 }
 
 export const createDependencies: CreateDependencies = () => {
-  writeTargetsToCache(calculatedTargets);
+  writeTargetsToCache();
   return [];
 };
 
@@ -47,6 +45,7 @@ export interface RemixPluginOptions {
   devTargetName?: string;
   startTargetName?: string;
   typecheckTargetName?: string;
+  staticServeTargetName?: string;
 }
 
 export const createNodes: CreateNodes<RemixPluginOptions> = [
@@ -67,26 +66,25 @@ export const createNodes: CreateNodes<RemixPluginOptions> = [
 
     options = normalizeOptions(options);
 
-    const hash = calculateHashForCreateNodes(projectRoot, options, context, [
-      getLockFileName(detectPackageManager(context.workspaceRoot)),
-    ]);
-    const targets = targetsCache[hash]
-      ? targetsCache[hash]
-      : await buildRemixTargets(
-          configFilePath,
-          projectRoot,
-          options,
-          context,
-          siblingFiles
-        );
-
-    calculatedTargets[hash] = targets;
+    const hash = await calculateHashForCreateNodes(
+      projectRoot,
+      options,
+      context,
+      [getLockFileName(detectPackageManager(context.workspaceRoot))]
+    );
+    targetsCache[hash] ??= await buildRemixTargets(
+      configFilePath,
+      projectRoot,
+      options,
+      context,
+      siblingFiles
+    );
 
     return {
       projects: {
         [projectRoot]: {
           root: projectRoot,
-          targets,
+          targets: targetsCache[hash],
         },
       },
     };
@@ -114,6 +112,11 @@ async function buildRemixTargets(
   );
   targets[options.devTargetName] = devTarget(serverBuildPath, projectRoot);
   targets[options.startTargetName] = startTarget(
+    projectRoot,
+    serverBuildPath,
+    options.buildTargetName
+  );
+  targets[options.staticServeTargetName] = startTarget(
     projectRoot,
     serverBuildPath,
     options.buildTargetName
@@ -151,6 +154,7 @@ function buildTarget(
       ...('production' in namedInputs
         ? ['production', '^production']
         : ['default', '^default']),
+      { externalDependencies: ['@remix-run/dev'] },
     ],
     outputs: [serverBuildOutputPath, assetsBuildOutputPath],
     command: 'remix build',
@@ -198,6 +202,7 @@ function typecheckTarget(
       ...('production' in namedInputs
         ? ['production', '^production']
         : ['default', '^default']),
+      { externalDependencies: ['typescript'] },
     ],
     options: {
       cwd: projectRoot,
@@ -228,6 +233,7 @@ function normalizeOptions(options: RemixPluginOptions) {
   options.devTargetName ??= 'dev';
   options.startTargetName ??= 'start';
   options.typecheckTargetName ??= 'typecheck';
+  options.staticServeTargetName ??= 'static-serve';
 
   return options;
 }
