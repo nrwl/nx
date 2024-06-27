@@ -1,5 +1,6 @@
 import { ChildProcess, spawn } from 'child_process';
 import path = require('path');
+import { Socket, connect } from 'net';
 
 import { PluginConfiguration } from '../../../config/nx-json';
 
@@ -9,13 +10,13 @@ import { PluginConfiguration } from '../../../config/nx-json';
 import { LoadedNxPlugin, nxPluginCache } from '../internal-api';
 import { getPluginOsSocketPath } from '../../../daemon/socket-utils';
 import { consumeMessagesFromSocket } from '../../../utils/consume-messages-from-socket';
+import { signalToCode } from '../../../utils/exit-codes';
 
 import {
   consumeMessage,
   isPluginWorkerResult,
   sendMessageOverSocket,
 } from './messaging';
-import { Socket, connect } from 'net';
 
 const cleanupFunctions = new Set<() => void>();
 
@@ -248,7 +249,6 @@ function createWorkerExitHandler(
 
 let cleanedUp = false;
 const exitHandler = () => {
-  if (cleanedUp) return;
   for (const fn of cleanupFunctions) {
     fn();
   }
@@ -256,7 +256,10 @@ const exitHandler = () => {
 };
 
 process.on('exit', exitHandler);
-process.on('SIGINT', exitHandler);
+process.on('SIGINT', () => {
+  exitHandler();
+  process.exit(signalToCode('SIGINT'));
+});
 process.on('SIGTERM', exitHandler);
 
 function registerPendingPromise(
