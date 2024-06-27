@@ -279,7 +279,6 @@ async function buildCypressTargets(
           metadata: {
             technologies: ['cypress'],
             description: `Runs Cypress Tests in ${relativeSpecFilePath} in CI`,
-            nonAtomizedTarget: options.targetName,
             help: {
               command: `${pmc.exec} cypress run --help`,
               example: {

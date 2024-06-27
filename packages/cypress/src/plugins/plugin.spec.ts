@@ -393,7 +393,6 @@ describe('@nx/cypress/plugin', () => {
                           ],
                         },
                       },
-                      "nonAtomizedTarget": "e2e",
                       "technologies": [
                         "cypress",
                       ],

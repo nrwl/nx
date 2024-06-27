@@ -226,7 +226,6 @@ async function buildPlaywrightTargets(
           metadata: {
             technologies: ['playwright'],
             description: `Runs Playwright Tests in ${relativeSpecFilePath} in CI`,
-            nonAtomizedTarget: options.targetName,
             help: {
               command: `${pmc.exec} playwright test --help`,
               example: {
