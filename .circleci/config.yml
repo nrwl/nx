@@ -100,7 +100,7 @@ jobs:
           os: linux
       - run:
           name: Check Documentation
-          command: pnpm nx documentation --no-dte
+          command: NX_VERBOSE_LOGGING=true pnpm nx documentation --no-dte --verbose
           no_output_timeout: 20m
       - run:
           name: Run Checks/Lint/Test/Build
