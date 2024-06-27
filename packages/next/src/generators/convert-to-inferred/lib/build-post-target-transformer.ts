@@ -73,7 +73,7 @@ export function buildPostTargetTransformer(migrationLogs: AggregatedLog) {
       ...configValues[configuration],
     };
     `;
-    updateNextConfig(tree, partialNextConfig, projectDetails.root);
+    updateNextConfig(tree, partialNextConfig, projectDetails, migrationLogs);
     return target;
   };
 }

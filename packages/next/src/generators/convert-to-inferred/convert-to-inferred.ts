@@ -1,10 +1,9 @@
-import { Tree, createProjectGraphAsync, formatFiles } from '@nx/devkit';
+import { createProjectGraphAsync, formatFiles, Tree } from '@nx/devkit';
 import { AggregatedLog } from '@nx/devkit/src/generators/plugin-migrations/aggregate-log-util';
 import { migrateProjectExecutorsToPluginV1 } from '@nx/devkit/src/generators/plugin-migrations/executor-to-plugin-migrator';
 import { createNodes } from '../../plugins/plugin';
 import { buildPostTargetTransformer } from './lib/build-post-target-transformer';
 import { servePosTargetTransformer } from './lib/serve-post-target-tranformer';
-import { skipProjectFilterFactory } from './lib/skip-project-filter';
 
 interface Schema {
   project?: string;
@@ -33,7 +32,6 @@ export async function convertToInferred(tree: Tree, options: Schema) {
         targetPluginOptionMapper: (targetName) => ({
           buildTargetName: targetName,
         }),
-        skipProjectFilter: skipProjectFilterFactory(tree),
       },
       {
         executors: ['@nx/next:server'],
@@ -41,7 +39,6 @@ export async function convertToInferred(tree: Tree, options: Schema) {
         targetPluginOptionMapper: (targetName) => ({
           devTargetName: targetName,
         }),
-        skipProjectFilter: skipProjectFilterFactory(tree),
       },
     ],
     options.project

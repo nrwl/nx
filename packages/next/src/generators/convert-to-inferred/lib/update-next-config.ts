@@ -2,19 +2,39 @@ import { Tree } from '@nx/devkit';
 import { findNextConfigPath } from './utils';
 import { tsquery } from '@phenomnomnominal/tsquery';
 import * as ts from 'typescript';
+import { AggregatedLog } from '@nx/devkit/src/generators/plugin-migrations/aggregate-log-util';
 
 export function updateNextConfig(
   tree: Tree,
   updatedConfigFileContents: string,
-  projectRoot: string
+  project: { projectName: string; root: string },
+  migrationLogs: AggregatedLog
 ) {
-  const nextConfigPath = findNextConfigPath(tree, projectRoot);
+  const nextConfigPath = findNextConfigPath(tree, project.root);
   if (!nextConfigPath) {
+    migrationLogs.addLog({
+      project: project.projectName,
+      executorName: '@nx/next:build',
+      log: `The project ${project.projectName} does not use a supported Next.js config file format. Only .js and .cjs files using "composePlugins" is supported. Leaving it as is.`,
+    });
     return;
   }
 
   const nextConfigContents = tree.read(nextConfigPath, 'utf-8');
   let ast = tsquery.ast(nextConfigContents);
+
+  // Query to check for composePlugins in module.exports
+  const composePluginsQuery = `ExpressionStatement > BinaryExpression > CallExpression > CallExpression:has(Identifier[name=composePlugins])`;
+  const composePluginNode = tsquery(ast, composePluginsQuery)[0];
+
+  if (!composePluginNode) {
+    migrationLogs.addLog({
+      project: project.projectName,
+      executorName: '@nx/next:build',
+      log: `The project ${project.projectName} does not use a supported Next.js config file format. Only .js and .cjs files using "composePlugins" is supported. Leaving it as is.`,
+    });
+    return;
+  }
 
   let lastRequireEndPosition = -1;
 
@@ -68,6 +88,7 @@ export function updateNextConfig(
             }
             return ts.visitEachChild(node, visit, context);
           }
+
           return ts.visitNode(rootNode, visit);
         };
 
