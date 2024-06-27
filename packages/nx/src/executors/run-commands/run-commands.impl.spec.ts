@@ -234,6 +234,42 @@ describe('Run Commands', () => {
     expect(readFile(f)).toEqual('1212');
   });
 
+  it('should run the command, but divided into paths', async () => {
+    const f = fileSync().name;
+    const result = await runCommands(
+      {
+        command: [`echo 1 >> ${f}`, '&&', `echo 2 >> ${f}`],
+        parallel: false,
+
+        __unparsed__: [],
+      },
+      context
+    );
+    expect(result).toEqual(expect.objectContaining({ success: true }));
+    expect(readFile(f)).toEqual('12');
+  });
+
+  it('should run the command, but divided into several paths', async () => {
+    const f = fileSync().name;
+    const result = await runCommands(
+      {
+        command: [
+          `echo 1 >> ${f}  `,
+          `&&`,
+          `echo 2 >> ${f}`,
+          ';',
+          `echo 34 >> ${f}`,
+        ],
+        parallel: false,
+
+        __unparsed__: [],
+      },
+      context
+    );
+    expect(result).toEqual(expect.objectContaining({ success: true }));
+    expect(readFile(f)).toEqual('1234');
+  });
+
   it('should run commands in parallel', async () => {
     const f = fileSync().name;
     const result = await runCommands(
