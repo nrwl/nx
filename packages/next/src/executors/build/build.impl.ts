@@ -124,13 +124,24 @@ function runCliBuild(
   projectRoot: string,
   options: NextBuildBuilderOptions
 ) {
-  const { experimentalAppOnly, profile, debug, outputPath } = options;
+  const {
+    experimentalAppOnly,
+    experimentalBuildMode,
+    profile,
+    debug,
+    outputPath,
+  } = options;
 
   // Set output path here since it can also be set via CLI
   // We can retrieve it inside plugins/with-nx
   process.env.NX_NEXT_OUTPUT_PATH ??= outputPath;
 
-  const args = createCliOptions({ experimentalAppOnly, profile, debug });
+  const args = createCliOptions({
+    experimentalAppOnly,
+    experimentalBuildMode,
+    profile,
+    debug,
+  });
   return new Promise((resolve, reject) => {
     childProcess = fork(
       require.resolve('next/dist/bin/next'),
