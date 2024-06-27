@@ -32,7 +32,7 @@ export async function applicationGeneratorInternal(
 
   const tasks: GeneratorCallback[] = [];
 
-  addProjectConfiguration(tree, options.name, {
+  addProjectConfiguration(tree, options.projectName, {
     root: options.appProjectRoot,
     projectType: 'application',
     sourceRoot: `${options.appProjectRoot}/src`,
