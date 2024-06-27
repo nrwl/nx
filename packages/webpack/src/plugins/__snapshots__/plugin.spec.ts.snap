@@ -25,6 +25,23 @@ exports[`@nx/webpack/plugin should create nodes 1`] = `
                   ],
                 },
               ],
+              "metadata": {
+                "description": "Runs Webpack build",
+                "help": {
+                  "command": "npx webpack-cli build --help",
+                  "example": {
+                    "args": [
+                      "--profile",
+                    ],
+                    "options": {
+                      "json": "stats.json",
+                    },
+                  },
+                },
+                "technologies": [
+                  "webpack",
+                ],
+              },
               "options": {
                 "args": [
                   "--node-env=production",
@@ -37,6 +54,23 @@ exports[`@nx/webpack/plugin should create nodes 1`] = `
             },
             "my-serve": {
               "command": "webpack-cli serve",
+              "metadata": {
+                "description": "Starts Webpack dev server",
+                "help": {
+                  "command": "npx webpack-cli serve --help",
+                  "example": {
+                    "options": {
+                      "args": [
+                        "--client-progress",
+                        "--history-api-fallback ",
+                      ],
+                    },
+                  },
+                },
+                "technologies": [
+                  "webpack",
+                ],
+              },
               "options": {
                 "args": [
                   "--node-env=development",
@@ -46,6 +80,23 @@ exports[`@nx/webpack/plugin should create nodes 1`] = `
             },
             "preview-site": {
               "command": "webpack-cli serve",
+              "metadata": {
+                "description": "Starts Webpack dev server in production mode",
+                "help": {
+                  "command": "npx webpack-cli serve --help",
+                  "example": {
+                    "options": {
+                      "args": [
+                        "--client-progress",
+                        "--history-api-fallback ",
+                      ],
+                    },
+                  },
+                },
+                "technologies": [
+                  "webpack",
+                ],
+              },
               "options": {
                 "args": [
                   "--node-env=production",
