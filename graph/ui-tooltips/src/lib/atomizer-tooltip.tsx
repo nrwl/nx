@@ -27,7 +27,7 @@ export function AtomizerTooltip(props: AtomizerTooltipProps) {
             text="automatically split"
           />
           {' the potentially slow'}
-          <code className="mx-2 inline rounded bg-gray-100 px-1 font-mono text-gray-800 dark:bg-gray-700 dark:text-gray-300">
+          <code className="mx-2 rounded bg-gray-100 px-1 font-mono text-gray-800 dark:bg-gray-700 dark:text-gray-300">
             {props.nonAtomizedTarget}
           </code>
           {'task into separate tasks for each file. Enable '}
@@ -59,7 +59,7 @@ export function AtomizerTooltip(props: AtomizerTooltipProps) {
             text="flaky task re-runs"
           />
           . Use
-          <code className="mx-2 inline rounded bg-gray-100 px-1 font-mono text-gray-800 dark:bg-gray-700 dark:text-gray-300">
+          <code className="mx-2 rounded bg-gray-100 px-1 font-mono text-gray-800 dark:bg-gray-700 dark:text-gray-300">
             {props.nonAtomizedTarget}
           </code>
           when running without{' '}
@@ -80,7 +80,7 @@ export function AtomizerTooltip(props: AtomizerTooltipProps) {
             ) : (
               <span className="font-mono">
                 {'Run'}
-                <code className="mx-2 inline rounded bg-gray-100 px-1 font-mono text-gray-800 dark:bg-gray-700 dark:text-gray-300">
+                <code className="mx-2 rounded bg-gray-100 px-1 font-mono text-gray-800 dark:bg-gray-700 dark:text-gray-300">
                   nx connect
                 </code>
                 {'to connect to Nx Cloud'}

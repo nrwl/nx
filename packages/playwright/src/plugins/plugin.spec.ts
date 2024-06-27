@@ -376,7 +376,6 @@ describe('@nx/playwright/plugin', () => {
         ],
         "metadata": {
           "description": "Runs Playwright Tests in tests/run-me-2.spec.ts in CI",
-<<<<<<< HEAD
           "help": {
             "command": "npx playwright test --help",
             "example": {
@@ -386,8 +385,6 @@ describe('@nx/playwright/plugin', () => {
             },
           },
           "nonAtomizedTarget": "e2e",
-=======
->>>>>>> 90f0157527 (fix(graph): update atomizer metadata & pdv hint)
           "technologies": [
             "playwright",
           ],
