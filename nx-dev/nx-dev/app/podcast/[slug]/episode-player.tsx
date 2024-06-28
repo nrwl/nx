@@ -16,6 +16,7 @@ export function EpisodePlayer({ data }: { data: PodcastData }) {
           frameBorder="0"
           allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
           loading="lazy"
+          key="audio"
         ></iframe>
       ) : (
         <iframe
@@ -28,6 +29,7 @@ export function EpisodePlayer({ data }: { data: PodcastData }) {
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
           referrerPolicy="strict-origin-when-cross-origin"
           allowFullScreen
+          key="video"
         ></iframe>
       )}
       <button
