@@ -19,12 +19,14 @@ You'll be entering it in the instructions below.
 
    1. The Single Sign On URL needs to be:
       - If using the main-US cluster: `https://auth.nx.app/login/callback?connection=SAML-IDENTIFIER`
-      - If using the EU cluster: `https://auth.eu.nx.app/login/callback?connection=SAML-IDENTIFIER`
    2. The Audience should be `urn:auth0:nrwl:SAML-IDENTIFIER`
       - If using the main-US cluster: `urn:auth0:nrwl:SAML-IDENTIFIER`
-      - If using the EU cluster: `urn:auth0:nxcloud-eu:SAML-IDENTIFIER`
 
-   ![Okta 4](/nx-cloud/enterprise/on-premise/images/saml/okta_4_public.png)
+{% callout type="note" title="EU Cluster" %}
+Contact your developer productivity engineer (DPE) to configure SAML auth in the EU cluster. The EU cluster is only available for enterprise customers.
+{% /callout %}
+
+![Okta 4](/nx-cloud/enterprise/on-premise/images/saml/okta_4_public.png)
 
 4. Scroll down to attribute statements and configure them as per below:
 
