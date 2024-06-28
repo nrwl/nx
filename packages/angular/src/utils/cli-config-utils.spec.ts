@@ -5,6 +5,7 @@ describe('replaceAppNameWithPath', () => {
     const node = 'application';
     const appName = 'app';
     const root = 'apps/app';
+    expect(true).toBe(false);
     expect(replaceAppNameWithPath(node, appName, root)).toEqual(node);
   });
 
