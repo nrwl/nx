@@ -173,9 +173,7 @@ export function ProjectDetailsWrapper({
           environment === 'nx-console' ? 'bottom' : 'top'
         }
         connectedToCloud={connectedToCloud}
-        nxConnectCallback={
-          environment === 'nx-console' ? handleNxConnect : undefined
-        }
+        onNxConnect={environment === 'nx-console' ? handleNxConnect : undefined}
       />
       <ErrorToast errors={errors} />
     </>

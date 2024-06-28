@@ -114,6 +114,20 @@ describe('@nx/eslint/plugin', () => {
                       ],
                     },
                   ],
+                  "metadata": {
+                    "description": "Runs ESLint on project",
+                    "help": {
+                      "command": "npx eslint --help",
+                      "example": {
+                        "options": {
+                          "max-warnings": 0,
+                        },
+                      },
+                    },
+                    "technologies": [
+                      "eslint",
+                    ],
+                  },
                   "options": {
                     "cwd": ".",
                   },
@@ -155,6 +169,20 @@ describe('@nx/eslint/plugin', () => {
                       ],
                     },
                   ],
+                  "metadata": {
+                    "description": "Runs ESLint on project",
+                    "help": {
+                      "command": "npx eslint --help",
+                      "example": {
+                        "options": {
+                          "max-warnings": 0,
+                        },
+                      },
+                    },
+                    "technologies": [
+                      "eslint",
+                    ],
+                  },
                   "options": {
                     "cwd": ".",
                   },
@@ -227,6 +255,20 @@ describe('@nx/eslint/plugin', () => {
                       ],
                     },
                   ],
+                  "metadata": {
+                    "description": "Runs ESLint on project",
+                    "help": {
+                      "command": "npx eslint --help",
+                      "example": {
+                        "options": {
+                          "max-warnings": 0,
+                        },
+                      },
+                    },
+                    "technologies": [
+                      "eslint",
+                    ],
+                  },
                   "options": {
                     "cwd": "apps/my-app",
                   },
@@ -268,6 +310,20 @@ describe('@nx/eslint/plugin', () => {
                       ],
                     },
                   ],
+                  "metadata": {
+                    "description": "Runs ESLint on project",
+                    "help": {
+                      "command": "npx eslint --help",
+                      "example": {
+                        "options": {
+                          "max-warnings": 0,
+                        },
+                      },
+                    },
+                    "technologies": [
+                      "eslint",
+                    ],
+                  },
                   "options": {
                     "cwd": "apps/my-app",
                   },
@@ -381,6 +437,20 @@ describe('@nx/eslint/plugin', () => {
                       ],
                     },
                   ],
+                  "metadata": {
+                    "description": "Runs ESLint on project",
+                    "help": {
+                      "command": "npx eslint --help",
+                      "example": {
+                        "options": {
+                          "max-warnings": 0,
+                        },
+                      },
+                    },
+                    "technologies": [
+                      "eslint",
+                    ],
+                  },
                   "options": {
                     "cwd": "apps/my-app",
                   },
@@ -406,6 +476,20 @@ describe('@nx/eslint/plugin', () => {
                       ],
                     },
                   ],
+                  "metadata": {
+                    "description": "Runs ESLint on project",
+                    "help": {
+                      "command": "npx eslint --help",
+                      "example": {
+                        "options": {
+                          "max-warnings": 0,
+                        },
+                      },
+                    },
+                    "technologies": [
+                      "eslint",
+                    ],
+                  },
                   "options": {
                     "cwd": "libs/my-lib",
                   },
@@ -491,6 +575,20 @@ describe('@nx/eslint/plugin', () => {
                       ],
                     },
                   ],
+                  "metadata": {
+                    "description": "Runs ESLint on project",
+                    "help": {
+                      "command": "npx eslint --help",
+                      "example": {
+                        "options": {
+                          "max-warnings": 0,
+                        },
+                      },
+                    },
+                    "technologies": [
+                      "eslint",
+                    ],
+                  },
                   "options": {
                     "cwd": "apps/my-app",
                   },
@@ -517,6 +615,20 @@ describe('@nx/eslint/plugin', () => {
                       ],
                     },
                   ],
+                  "metadata": {
+                    "description": "Runs ESLint on project",
+                    "help": {
+                      "command": "npx eslint --help",
+                      "example": {
+                        "options": {
+                          "max-warnings": 0,
+                        },
+                      },
+                    },
+                    "technologies": [
+                      "eslint",
+                    ],
+                  },
                   "options": {
                     "cwd": "libs/my-lib",
                   },
@@ -560,6 +672,20 @@ describe('@nx/eslint/plugin', () => {
                       ],
                     },
                   ],
+                  "metadata": {
+                    "description": "Runs ESLint on project",
+                    "help": {
+                      "command": "npx eslint --help",
+                      "example": {
+                        "options": {
+                          "max-warnings": 0,
+                        },
+                      },
+                    },
+                    "technologies": [
+                      "eslint",
+                    ],
+                  },
                   "options": {
                     "cwd": "apps/myapp",
                   },
@@ -608,6 +734,20 @@ describe('@nx/eslint/plugin', () => {
                       ],
                     },
                   ],
+                  "metadata": {
+                    "description": "Runs ESLint on project",
+                    "help": {
+                      "command": "npx eslint --help",
+                      "example": {
+                        "options": {
+                          "max-warnings": 0,
+                        },
+                      },
+                    },
+                    "technologies": [
+                      "eslint",
+                    ],
+                  },
                   "options": {
                     "cwd": "apps/myapp/nested/mylib",
                   },

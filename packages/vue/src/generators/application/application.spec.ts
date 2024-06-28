@@ -29,6 +29,20 @@ describe('application generator', () => {
     expect(listFiles(tree)).toMatchSnapshot();
   });
 
+  it('should set up project correctly with PascalCase name', async () => {
+    await applicationGenerator(tree, {
+      ...options,
+      name: 'TestApp',
+      unitTestRunner: 'vitest',
+      projectNameAndRootFormat: 'as-provided',
+    });
+    expect(tree.read('.eslintrc.json', 'utf-8')).toMatchSnapshot();
+    expect(tree.read('TestApp/vite.config.ts', 'utf-8')).toMatchSnapshot();
+    expect(tree.read('TestApp/.eslintrc.json', 'utf-8')).toMatchSnapshot();
+    expect(tree.read('TestApp/src/app/App.spec.ts', 'utf-8')).toMatchSnapshot();
+    expect(listFiles(tree)).toMatchSnapshot();
+  });
+
   it('should not use stylesheet if --style=none', async () => {
     await applicationGenerator(tree, { ...options, style: 'none' });
 

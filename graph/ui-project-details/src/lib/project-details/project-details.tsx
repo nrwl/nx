@@ -26,7 +26,7 @@ export interface ProjectDetailsProps {
     targetName: string;
   }) => void;
   onRunTarget?: (data: { projectName: string; targetName: string }) => void;
-  nxConnectCallback?: () => void;
+  onNxConnect?: () => void;
   viewInProjectGraphPosition?: 'top' | 'bottom';
 }
 
@@ -43,7 +43,7 @@ export const ProjectDetails = ({
   onViewInProjectGraph,
   onViewInTaskGraph,
   onRunTarget,
-  nxConnectCallback,
+  onNxConnect,
   viewInProjectGraphPosition = 'top',
   connectedToCloud,
 }: ProjectDetailsProps) => {
@@ -166,7 +166,7 @@ export const ProjectDetails = ({
           onRunTarget={onRunTarget}
           onViewInTaskGraph={onViewInTaskGraph}
           connectedToCloud={connectedToCloud}
-          nxConnectCallback={nxConnectCallback}
+          onNxConnect={onNxConnect}
         />
       </div>
     </>

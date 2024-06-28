@@ -84,6 +84,20 @@
       "x-priority": "important"
     },
     "command": {
+      "oneOf": [
+        {
+          "type": "array",
+          "description": "Command to run in child process, but divided into parts.",
+          "items": {
+            "type": "string"
+          },
+          "x-priority": "important"
+        },
+        {
+          "type": "string",
+          "description": "Command to run in child process."
+        }
+      ],
       "type": "string",
       "description": "Command to run in child process.",
       "x-priority": "important"
