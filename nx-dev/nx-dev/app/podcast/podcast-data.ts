@@ -7,6 +7,7 @@ export interface PodcastData {
   squareImageUrl: string;
   guestImageUrl?: string;
   date: Date;
+  episodeDescription: string;
 }
 
 export const data: PodcastData[] = [
@@ -19,8 +20,11 @@ export const data: PodcastData[] = [
     duration: '2:03:50',
     guestImageUrl:
       'https://pbs.twimg.com/profile_images/1490455285/Photo_031708_003_400x400.jpg',
-    squareImageUrl: '/documentation/shared/images/episode-1-square.jpg',
+    squareImageUrl: '/documentation/podcast/images/episode-1-square.jpg',
     date: new Date('2024-6-18'),
+    episodeDescription: `In this episode, Zach DeRose from Nx chats with Hicham El Hammouchi, a veteran in enterprise software. Hicham dives into his background, sharing his career journey and the wealth of experience he's gathered along the way.
+They tackle the tough challenges that companies face in software development. Hicham offers practical insights and real-life examples from his own career, making complex issues easier to understand. He also shares some tried-and-true strategies for overcoming these hurdles, emphasizing the importance of teamwork and effective project management.
+As the chat continues, Zach and Hicham explore the latest tech trends and innovations that are shaking up the industry. Hicham's forward-thinking views provide a sneak peek into the future of enterprise software. They also discuss detailed case studies of successful projects, highlighting the importance of staying focused on customer needs and feedback.`,
   },
 ];
 

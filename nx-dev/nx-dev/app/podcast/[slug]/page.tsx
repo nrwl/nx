@@ -95,6 +95,19 @@ export default function PodcastEpisodePage({
             )}
           </div>
         </div>
+        <div>
+          <h3 className="text-2xl tracking-tight text-slate-900 dark:text-slate-100">
+            About this Episode
+          </h3>
+          {data.episodeDescription
+            .split('\n')
+            .filter((x) => x.length)
+            .map((paragraph) => (
+              <p className="my-4 text-xl text-slate-900 dark:text-slate-100">
+                {paragraph}
+              </p>
+            ))}
+        </div>
       </div>
     </main>
   );
