@@ -26,6 +26,21 @@ exports[`@nx/vite/plugin Library mode should exclude serve and preview targets w
                   ],
                 },
               ],
+              "metadata": {
+                "description": "Run Vite build",
+                "help": {
+                  "command": "npx vite build --help",
+                  "example": {
+                    "options": {
+                      "manifest": "manifest.json",
+                      "sourcemap": true,
+                    },
+                  },
+                },
+                "technologies": [
+                  "vite",
+                ],
+              },
               "options": {
                 "cwd": "my-lib",
               },
@@ -67,6 +82,21 @@ exports[`@nx/vite/plugin not root project should create nodes 1`] = `
                   ],
                 },
               ],
+              "metadata": {
+                "description": "Run Vite build",
+                "help": {
+                  "command": "npx vite build --help",
+                  "example": {
+                    "options": {
+                      "manifest": "manifest.json",
+                      "sourcemap": true,
+                    },
+                  },
+                },
+                "technologies": [
+                  "vite",
+                ],
+              },
               "options": {
                 "cwd": "my-app",
               },
@@ -76,12 +106,40 @@ exports[`@nx/vite/plugin not root project should create nodes 1`] = `
             },
             "my-serve": {
               "command": "vite serve",
+              "metadata": {
+                "description": "Starts Vite dev server",
+                "help": {
+                  "command": "npx vite --help",
+                  "example": {
+                    "options": {
+                      "port": 3000,
+                    },
+                  },
+                },
+                "technologies": [
+                  "vite",
+                ],
+              },
               "options": {
                 "cwd": "my-app",
               },
             },
             "preview-site": {
               "command": "vite preview",
+              "metadata": {
+                "description": "Locally preview Vite production build",
+                "help": {
+                  "command": "npx vite preview --help",
+                  "example": {
+                    "options": {
+                      "port": 3000,
+                    },
+                  },
+                },
+                "technologies": [
+                  "vite",
+                ],
+              },
               "options": {
                 "cwd": "my-app",
               },
@@ -127,6 +185,21 @@ exports[`@nx/vite/plugin root project should create nodes 1`] = `
                   ],
                 },
               ],
+              "metadata": {
+                "description": "Run Vite build",
+                "help": {
+                  "command": "npx vite build --help",
+                  "example": {
+                    "options": {
+                      "manifest": "manifest.json",
+                      "sourcemap": true,
+                    },
+                  },
+                },
+                "technologies": [
+                  "vite",
+                ],
+              },
               "options": {
                 "cwd": ".",
               },
@@ -136,12 +209,40 @@ exports[`@nx/vite/plugin root project should create nodes 1`] = `
             },
             "preview": {
               "command": "vite preview",
+              "metadata": {
+                "description": "Locally preview Vite production build",
+                "help": {
+                  "command": "npx vite preview --help",
+                  "example": {
+                    "options": {
+                      "port": 3000,
+                    },
+                  },
+                },
+                "technologies": [
+                  "vite",
+                ],
+              },
               "options": {
                 "cwd": ".",
               },
             },
             "serve": {
               "command": "vite serve",
+              "metadata": {
+                "description": "Starts Vite dev server",
+                "help": {
+                  "command": "npx vite --help",
+                  "example": {
+                    "options": {
+                      "port": 3000,
+                    },
+                  },
+                },
+                "technologies": [
+                  "vite",
+                ],
+              },
               "options": {
                 "cwd": ".",
               },

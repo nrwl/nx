@@ -51,7 +51,8 @@
     "@nx/react": "file:../react",
     "@nx/web": "file:../web",
     "@nx/webpack": "file:../webpack",
-    "@nx/workspace": "file:../workspace"
+    "@nx/workspace": "file:../workspace",
+    "@phenomnomnominal/tsquery": "~5.0.1"
   },
   "publishConfig": {
     "access": "public"

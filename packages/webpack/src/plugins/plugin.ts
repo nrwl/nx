@@ -6,6 +6,7 @@ import {
   CreateNodesResult,
   CreateNodesV2,
   detectPackageManager,
+  getPackageManagerCommand,
   logger,
   ProjectConfiguration,
   readJsonFile,
@@ -22,6 +23,8 @@ import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { dirname, isAbsolute, join, relative, resolve } from 'path';
 import { readWebpackOptions } from '../utils/webpack/read-webpack-options';
 import { resolveUserDefinedWebpackConfig } from '../utils/webpack/resolve-user-defined-webpack-config';
+
+const pmc = getPackageManagerCommand();
 
 export interface WebpackPluginOptions {
   buildTargetName?: string;
@@ -176,6 +179,19 @@ async function createWebpackTargets(
             },
           ],
     outputs: [outputPath],
+    metadata: {
+      technologies: ['webpack'],
+      description: 'Runs Webpack build',
+      help: {
+        command: `${pmc.exec} webpack-cli build --help`,
+        example: {
+          options: {
+            json: 'stats.json',
+          },
+          args: ['--profile'],
+        },
+      },
+    },
   };
 
   targets[options.serveTargetName] = {
@@ -184,6 +200,18 @@ async function createWebpackTargets(
       cwd: projectRoot,
       args: ['--node-env=development'],
     },
+    metadata: {
+      technologies: ['webpack'],
+      description: 'Starts Webpack dev server',
+      help: {
+        command: `${pmc.exec} webpack-cli serve --help`,
+        example: {
+          options: {
+            args: ['--client-progress', '--history-api-fallback '],
+          },
+        },
+      },
+    },
   };
 
   targets[options.previewTargetName] = {
@@ -191,6 +219,18 @@ async function createWebpackTargets(
     options: {
       cwd: projectRoot,
       args: ['--node-env=production'],
+    },
+    metadata: {
+      technologies: ['webpack'],
+      description: 'Starts Webpack dev server in production mode',
+      help: {
+        command: `${pmc.exec} webpack-cli serve --help`,
+        example: {
+          options: {
+            args: ['--client-progress', '--history-api-fallback '],
+          },
+        },
+      },
     },
   };
 

@@ -42,6 +42,11 @@
       "factory": "./src/generators/cypress-component-configuration/cypress-component-configuration#cypressComponentConfigurationInternal",
       "schema": "./src/generators/cypress-component-configuration/schema.json",
       "description": "cypress-component-configuration generator"
+    },
+    "convert-to-inferred": {
+      "factory": "./src/generators/convert-to-inferred/convert-to-inferred",
+      "schema": "./src/generators/convert-to-inferred/schema.json",
+      "description": "Convert an existing Next.js project(s) using `@nx/next:build` to use `@nx/next/plugin`. Defaults to migrating all projects. Pass '--project' to migrate a single project."
     }
   }
 }
