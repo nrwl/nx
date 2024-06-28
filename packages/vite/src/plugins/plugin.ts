@@ -365,7 +365,7 @@ function getOutputs(
 
   const isBuildable =
     build?.lib ||
-    build?.rollupOptions?.inputs ||
+    build?.rollupOptions?.input ||
     existsSync(join(workspaceRoot, projectRoot, 'index.html'));
 
   const reportsDirectoryPath = normalizeOutputPath(
