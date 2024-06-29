@@ -16,7 +16,7 @@ import {
   fetchProjectGraph,
   getProjectGraphDataService,
   useEnvironmentConfig,
-  useIntervalWhen,
+  usePoll,
 } from '@nx/graph/shared';
 import { Dropdown, Spinner } from '@nx/graph/ui-components';
 import { getSystemTheme, Theme, ThemePanel } from '@nx/graph/ui-theme';
@@ -71,15 +71,15 @@ export function Shell(): JSX.Element {
   useLayoutEffect(() => {
     setErrors(routerErrors);
   }, [routerErrors]);
-  useIntervalWhen(
-    () => {
-      fetchProjectGraph(
+
+  usePoll(
+    async () => {
+      const response: ProjectGraphClientResponse = await fetchProjectGraph(
         projectGraphDataService,
         params,
         environmentConfig.appConfig
-      ).then((response: ProjectGraphClientResponse) => {
-        setErrors(response.errors);
-      });
+      );
+      setErrors(response.errors);
     },
     1000,
     environmentConfig.watch

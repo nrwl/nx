@@ -4,9 +4,9 @@ export function GettingStarted(): JSX.Element {
   return (
     <article
       id="getting-started"
-      className="border-t border-b border-slate-200 bg-gradient-to-r from-cyan-500 to-blue-500 shadow-inner dark:border-slate-700"
+      className="border-b border-t border-slate-200 bg-gradient-to-r from-cyan-500 to-blue-500 shadow-inner dark:border-slate-700"
     >
-      <div className="mx-auto max-w-7xl py-12 px-4 sm:px-6 lg:flex lg:items-center lg:justify-between lg:py-24 lg:px-8">
+      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:flex lg:items-center lg:justify-between lg:px-8 lg:py-24">
         <div>
           <h2 className="text-3xl font-bold tracking-tight text-slate-900 md:text-4xl">
             <span className="block">Ready to dive in?</span>

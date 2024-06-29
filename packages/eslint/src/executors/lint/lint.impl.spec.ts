@@ -448,6 +448,36 @@ Please see https://nx.dev/recipes/tips-n-tricks/eslint for full guidance on how 
       );
     });
 
+    it('should intercept the error from `@typescript-eslint` regarding missing parserServices and provide a more detailed user-facing message logging the found flat config at the workspace root', async () => {
+      setupMocks();
+      tempFs.createFileSync('eslint.config.js', '');
+      tempFs.createFileSync('apps/proj/src/some-file.ts', '');
+
+      mockLintFiles.mockImplementation(() => {
+        throw new Error(
+          `Error while loading rule '@typescript-eslint/await-thenable': You have used a rule which requires parserServices to be generated. You must therefore provide a value for the "parserOptions.project" property for @typescript-eslint/parser.
+Occurred while linting ${mockContext.root}/apps/proj/src/some-file.ts`
+        );
+      });
+
+      await lintExecutor(
+        createValidRunBuilderOptions({
+          lintFilePatterns: ['includedFile1'],
+          format: 'json',
+          silent: false,
+        }),
+        mockContext
+      );
+      expect(console.error).toHaveBeenCalledWith(
+        `
+Error: You have attempted to use the lint rule "@typescript-eslint/await-thenable" which requires the full TypeScript type-checker to be available, but you do not have "parserOptions.project" configured to point at your project tsconfig.json files in the relevant TypeScript file "overrides" block of your ESLint config "eslint.config.js"
+Occurred while linting ${mockContext.root}/apps/proj/src/some-file.ts
+
+Please see https://nx.dev/recipes/tips-n-tricks/eslint for full guidance on how to resolve this issue.
+`
+      );
+    });
+
     it('should intercept the error from `@typescript-eslint` regarding missing parserServices and provide a more detailed user-facing message logging the found old config', async () => {
       setupMocks();
       tempFs.createFileSync('apps/proj/.eslintrc.json', '{}');
@@ -471,6 +501,36 @@ Occurred while linting ${mockContext.root}/apps/proj/src/some-file.ts`
       expect(console.error).toHaveBeenCalledWith(
         `
 Error: You have attempted to use the lint rule "@typescript-eslint/await-thenable" which requires the full TypeScript type-checker to be available, but you do not have "parserOptions.project" configured to point at your project tsconfig.json files in the relevant TypeScript file "overrides" block of your ESLint config "apps/proj/.eslintrc.json"
+Occurred while linting ${mockContext.root}/apps/proj/src/some-file.ts
+
+Please see https://nx.dev/recipes/tips-n-tricks/eslint for full guidance on how to resolve this issue.
+`
+      );
+    });
+
+    it('should intercept the error from `@typescript-eslint` regarding missing parserServices and provide a more detailed user-facing message logging the found old config at the workspace root', async () => {
+      setupMocks();
+      tempFs.createFileSync('.eslintrc.json', '{}');
+      tempFs.createFileSync('apps/proj/src/some-file.ts', '');
+
+      mockLintFiles.mockImplementation(() => {
+        throw new Error(
+          `Error while loading rule '@typescript-eslint/await-thenable': You have used a rule which requires parserServices to be generated. You must therefore provide a value for the "parserOptions.project" property for @typescript-eslint/parser.
+Occurred while linting ${mockContext.root}/apps/proj/src/some-file.ts`
+        );
+      });
+
+      await lintExecutor(
+        createValidRunBuilderOptions({
+          lintFilePatterns: ['includedFile1'],
+          format: 'json',
+          silent: false,
+        }),
+        mockContext
+      );
+      expect(console.error).toHaveBeenCalledWith(
+        `
+Error: You have attempted to use the lint rule "@typescript-eslint/await-thenable" which requires the full TypeScript type-checker to be available, but you do not have "parserOptions.project" configured to point at your project tsconfig.json files in the relevant TypeScript file "overrides" block of your ESLint config ".eslintrc.json"
 Occurred while linting ${mockContext.root}/apps/proj/src/some-file.ts
 
 Please see https://nx.dev/recipes/tips-n-tricks/eslint for full guidance on how to resolve this issue.

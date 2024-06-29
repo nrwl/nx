@@ -386,9 +386,14 @@ export async function createProjectConfigurations(
         : // This represents a single plugin erroring out with a hard error.
           new AggregateCreateNodesError([[null, e]], []);
 
-      errorBodyLines.push(
-        ...error.errors.map(([file, e]) => `  - ${file}: ${e.message}`)
-      );
+      const innerErrors = error.errors;
+      for (const [file, e] of innerErrors) {
+        if (file) {
+          errorBodyLines.push(`  - ${file}: ${e.message}`);
+        } else {
+          errorBodyLines.push(`  - ${e.message}`);
+        }
+      }
 
       error.message = errorBodyLines.join('\n');
 
@@ -454,7 +459,7 @@ function mergeCreateNodesResults(
   > = {};
 
   for (const result of results.flat()) {
-    const [file, pluginName, nodes] = result;
+    const [pluginName, file, nodes] = result;
 
     const { projects: projectNodes, externalNodes: pluginExternalNodes } =
       nodes;
@@ -636,10 +641,21 @@ function validateAndNormalizeProjectRootMap(
       );
 
       if (
+        // If the target has no executor or command, it doesn't do anything
         !project.targets[targetName].executor &&
         !project.targets[targetName].command
       ) {
-        delete project.targets[targetName];
+        // But it may have dependencies that do something
+        if (
+          project.targets[targetName].dependsOn &&
+          project.targets[targetName].dependsOn.length > 0
+        ) {
+          project.targets[targetName].executor = 'nx:noop';
+        } else {
+          // If it does nothing, and has no depenencies,
+          // we can remove it.
+          delete project.targets[targetName];
+        }
       }
     }
   }

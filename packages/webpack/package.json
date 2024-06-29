@@ -31,6 +31,7 @@
   },
   "dependencies": {
     "@babel/core": "^7.23.2",
+    "@phenomnomnominal/tsquery": "~5.0.1",
     "ajv": "^8.12.0",
     "autoprefixer": "^10.4.9",
     "babel-loader": "^9.1.2",
@@ -52,7 +53,7 @@
     "rxjs": "^7.8.0",
     "sass": "^1.42.1",
     "sass-loader": "^12.2.0",
-    "source-map-loader": "^3.0.0",
+    "source-map-loader": "^5.0.0",
     "style-loader": "^3.3.0",
     "stylus": "^0.59.0",
     "stylus-loader": "^7.1.0",

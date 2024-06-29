@@ -72,6 +72,11 @@
       "experimentalAppOnly": {
         "type": "boolean",
         "description": "Only build 'app' routes"
+      },
+      "experimentalBuildMode": {
+        "type": "string",
+        "description": "Change the build mode.",
+        "enum": ["compile", "generate"]
       }
     },
     "required": ["outputPath"],

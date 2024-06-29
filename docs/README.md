@@ -408,3 +408,22 @@ Embed an Nx Graph visualization that can be panned by the user.
 
 {% /graph %}
 ````
+
+## Publishing Process
+
+There are multiple versions of the `nx.dev` site.
+
+- [canary.nx.dev](https://canary.nx.dev) contains the documentation on the `master` branch
+- [nx.dev](https://nx.dev) contains the documentation as of the latest release of Nx to npm. The main site will not include reference documentation for APIs that have been merged to the codebase, but not yet released to the public.
+- `[version].nx.dev` contains the documentation for that version of Nx. `[version]` in this case is the major version up to the current LTS version of Nx. So [18.nx.dev](https://18.nx.dev) will show the Nx documentation as of the last released version of Nx 18.
+
+When a commit that contains documentation is merged into `master`, it will be immediately published to `canary.nx.dev`. Whenever a new release of Nx is published to npm, that documentation will then be available on the main site.
+
+### Immediately Publishing Time-Sensitive Documentation
+
+If you have a documentation change that should be published immediately, you'll need to create 2 PRs.
+
+1. First, create a PR against `master` in the normal manner.
+2. Your second PR needs to be made against the website branch with the latest major version of Nx. So your second PR can be created against `website-19` if the latest version of Nx is `19.1.0`. Once `website-19` is updated with your changes, the main `nx.dev` site will be updated.
+
+Later, when Nx `19.1.1` is released, `website-19` will be overwritten with whatever is on `master` and the first PR you created will take effect.

@@ -30,7 +30,7 @@
     "./migrations.json": "./migrations.json",
     "./generators.json": "./generators.json"
   },
-  "nx-migrate": {
+  "nx-migrations": {
     "migrations": "./migrations.json"
   },
   "dependencies": {

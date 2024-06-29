@@ -34,6 +34,9 @@ jest.mock('nx/src/plugins/js/utils/resolve-relative-to-dir', () => ({
     if (pathOrPackage === 'minimatch') {
       return '/root/node_modules/minimatch/dist/cjs/package.json';
     }
+    if (pathOrPackage === '@json2csv/plainjs/package.json') {
+      return '/root/node_modules/@json2csv/plainjs/dist/cjs/package.json';
+    }
     return join(
       '/root',
       'node_modules',
@@ -83,15 +86,15 @@ describe('TargetProjectLocator', () => {
         './tsconfig.base.json': JSON.stringify(tsConfig),
         './node_modules/@ng/core/package.json': JSON.stringify({
           name: '@ng/core',
-          version: '1',
+          version: '1.0.0',
         }),
         './node_modules/npm-package/package.json': JSON.stringify({
           name: 'npm-package',
-          version: '1',
+          version: '1.0.0',
         }),
         './node_modules/@proj/proj123-base/package.json': JSON.stringify({
           name: '@proj/proj123-base',
-          version: '1',
+          version: '1.0.0',
         }),
       };
       vol.fromJSON(fsJson, '/root');
@@ -200,7 +203,7 @@ describe('TargetProjectLocator', () => {
           name: 'npm:@ng/core',
           type: 'npm',
           data: {
-            version: '1',
+            version: '1.0.0',
             packageName: '@ng/core',
           },
         },
@@ -208,7 +211,7 @@ describe('TargetProjectLocator', () => {
           name: 'npm:@ng/common',
           type: 'npm',
           data: {
-            version: '1',
+            version: '1.0.0',
             packageName: '@ng/common',
           },
         },
@@ -216,7 +219,7 @@ describe('TargetProjectLocator', () => {
           name: 'npm:npm-package',
           type: 'npm',
           data: {
-            version: '1',
+            version: '1.0.0',
             packageName: 'npm-package',
           },
         },
@@ -224,7 +227,7 @@ describe('TargetProjectLocator', () => {
           name: 'npm:@proj/my-second-proj',
           type: 'npm',
           data: {
-            version: '1',
+            version: '1.0.0',
             packageName: '@proj/my-second-proj',
           },
         },
@@ -232,7 +235,7 @@ describe('TargetProjectLocator', () => {
           name: 'npm:@proj/proj5',
           type: 'npm',
           data: {
-            version: '1',
+            version: '1.0.0',
             packageName: '@proj/proj5',
           },
         },
@@ -240,7 +243,7 @@ describe('TargetProjectLocator', () => {
           name: 'npm:@proj/proj6',
           type: 'npm',
           data: {
-            version: '1',
+            version: '1.0.0',
             packageName: '@proj/proj6',
           },
         },
@@ -248,7 +251,7 @@ describe('TargetProjectLocator', () => {
           name: 'npm:@proj/proj7',
           type: 'npm',
           data: {
-            version: '1',
+            version: '1.0.0',
             packageName: '@proj/proj7',
           },
         },
@@ -256,7 +259,7 @@ describe('TargetProjectLocator', () => {
           name: 'npm:@proj/proj123-base',
           type: 'npm',
           data: {
-            version: '1',
+            version: '1.0.0',
             packageName: '@proj/proj123-base',
           },
         },
@@ -487,15 +490,19 @@ describe('TargetProjectLocator', () => {
         './libs/proj1234-child/index.ts': 'export const a = 12345',
         './node_modules/@proj/proj123-base/package.json': JSON.stringify({
           name: '@proj/proj123-base',
-          version: '1',
+          version: '1.0.0',
         }),
         './node_modules/@ng/core/package.json': JSON.stringify({
           name: '@ng/core',
-          version: '1',
+          version: '1.0.0',
         }),
         './node_modules/npm-package/package.json': JSON.stringify({
           name: 'npm-package',
-          version: '1',
+          version: '1.0.0',
+        }),
+        './node_modules/@trpc/server/package.json': JSON.stringify({
+          name: '@trpc/server',
+          version: '1.0.0-rc.0+abc123',
         }),
         // minimatch is a real world example of a multi module format package with nested package.json files.
         // node will resolve the dist/cjs/package.json file when using require.resolve('minimatch') in commonjs
@@ -508,6 +515,15 @@ describe('TargetProjectLocator', () => {
         './node_modules/minimatch/dist/cjs/package.json': JSON.stringify({
           type: 'commonjs',
         }),
+        './node_modules/@json2csv/plainjs/package.json': JSON.stringify({
+          name: '@json2csv/plainjs',
+          description: 'something json to csv',
+          version: '7.0.6',
+        }),
+        './node_modules/@json2csv/plainjs/dist/cjs/package.json':
+          JSON.stringify({
+            type: 'commonjs',
+          }),
       };
       vol.fromJSON(fsJson, '/root');
 
@@ -595,7 +611,7 @@ describe('TargetProjectLocator', () => {
           name: 'npm:@ng/core',
           type: 'npm',
           data: {
-            version: '1',
+            version: '1.0.0',
             packageName: '@ng/core',
           },
         },
@@ -603,7 +619,7 @@ describe('TargetProjectLocator', () => {
           name: 'npm:@ng/common',
           type: 'npm',
           data: {
-            version: '1',
+            version: '1.0.0',
             packageName: '@ng/common',
           },
         },
@@ -611,7 +627,7 @@ describe('TargetProjectLocator', () => {
           name: 'npm:npm-package',
           type: 'npm',
           data: {
-            version: '1',
+            version: '1.0.0',
             packageName: 'npm-package',
           },
         },
@@ -619,7 +635,7 @@ describe('TargetProjectLocator', () => {
           name: 'npm:@proj/my-second-proj',
           type: 'npm',
           data: {
-            version: '1',
+            version: '1.0.0',
             packageName: '@proj/my-second-proj',
           },
         },
@@ -627,7 +643,7 @@ describe('TargetProjectLocator', () => {
           name: 'npm:@proj/proj5',
           type: 'npm',
           data: {
-            version: '1',
+            version: '1.0.0',
             packageName: '@proj/proj5',
           },
         },
@@ -635,7 +651,7 @@ describe('TargetProjectLocator', () => {
           name: 'npm:@proj/proj6',
           type: 'npm',
           data: {
-            version: '1',
+            version: '1.0.0',
             packageName: '@proj/proj6',
           },
         },
@@ -643,7 +659,7 @@ describe('TargetProjectLocator', () => {
           name: 'npm:@proj/proj7',
           type: 'npm',
           data: {
-            version: '1',
+            version: '1.0.0',
             packageName: '@proj/proj7',
           },
         },
@@ -651,7 +667,7 @@ describe('TargetProjectLocator', () => {
           name: 'npm:@proj/proj123-base',
           type: 'npm',
           data: {
-            version: '1',
+            version: '1.0.0',
             packageName: '@proj/proj123-base',
           },
         },
@@ -679,6 +695,15 @@ describe('TargetProjectLocator', () => {
             hash: 'sha512-ggewenDQWc5azOEM/HI7AREuIHXSPO0STL+ehAG2PvoQPHglCdfLQy904D85ttm9wS7AKdK+d3wqMzSQaj7FsA==',
           },
         },
+        'npm:@trpc/server': {
+          type: 'npm',
+          name: 'npm:@trpc/server',
+          data: {
+            version: '1.0.0-rc.0',
+            packageName: '@trpc/server',
+            hash: 'sha512-ggewenDQWc5azOEM/HI7AREuIHXSPO0STL+ehAG2PvoQPHglCdfLQy904D85ttm9wS7AKdK+d3wqMzSQaj7FsA==',
+          },
+        },
         /**
          * We use minimatch as an example of a multiple module format package.
          */
@@ -689,6 +714,18 @@ describe('TargetProjectLocator', () => {
             version: '9.0.3',
             packageName: 'minimatch',
             hash: 'sha512-RHiac9mvaRw0x3AYRgDC1CxAP7HTcNrrECeA8YYJeWnpo+2Q5CegtZjaotWTWxDG3UeGA1coE05iH1mPjT/2mg==',
+          },
+        },
+        /**
+         * We use @json2csv/plainjs as an example of a package where package.json is rerouted to an improper package.json.
+         */
+        'npm:@json2csv/plainjs': {
+          type: 'npm',
+          name: 'npm:@json2csv/plainjs',
+          data: {
+            version: '7.0.6',
+            packageName: '@json2csv/plainjs',
+            hash: 'sha512-4Md7RPDCSYpmW1HWIpWBOqCd4vWfIqm53S3e/uzQ62iGi7L3r34fK/8nhOMEe+/eVfCx8+gdSCt1d74SlacQHw==',
           },
         },
       };
@@ -774,6 +811,14 @@ describe('TargetProjectLocator', () => {
       expect(similarDeepImportFromNpm).toEqual('npm:@proj/proj123-base');
     });
 
+    it('should be able to resolve npm projects with unclean versions', () => {
+      const trpcProject = targetProjectLocator.findProjectFromImport(
+        '@trpc/server',
+        'libs/proj/index.ts'
+      );
+      expect(trpcProject).toEqual('npm:@trpc/server');
+    });
+
     it('should return null for native modules', () => {
       const result = targetProjectLocator.findProjectFromImport(
         'path',
@@ -806,6 +851,14 @@ describe('TargetProjectLocator', () => {
         'libs/proj/index.ts'
       );
       expect(result).toEqual('npm:minimatch');
+    });
+
+    it('should handle resolving packages which reroutes package.json', () => {
+      const result = targetProjectLocator.findProjectFromImport(
+        '@json2csv/plainjs',
+        'libs/proj/index.ts'
+      );
+      expect(result).toEqual('npm:@json2csv/plainjs');
     });
   });
 });

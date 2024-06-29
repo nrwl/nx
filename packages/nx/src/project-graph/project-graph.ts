@@ -148,7 +148,13 @@ export async function buildProjectGraphAndSourceMapsWithoutDaemon() {
       throw e;
     }
   } finally {
-    cleanup();
+    // When plugins are isolated we don't clean them up during
+    // a single run of the CLI. They are cleaned up when the CLI
+    // process exits. Cleaning them here could cause issues if pending
+    // promises are not resolved.
+    if (process.env.NX_ISOLATE_PLUGINS !== 'true') {
+      cleanup();
+    }
   }
 
   const { projectGraph, projectFileMapCache } = projectGraphResult;

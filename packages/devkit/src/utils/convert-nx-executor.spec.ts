@@ -23,7 +23,8 @@ describe('Convert Nx Executor', () => {
     const {
       TestingArchitectHost,
       // nx-ignore-next-line
-    } = require('@angular-devkit/architect/testing') as typeof import('@angular-devkit/architect/testing');
+    } =
+      require('@angular-devkit/architect/testing') as typeof import('@angular-devkit/architect/testing');
     const { Architect } = require('@angular-devkit/architect');
 
     const registry = new schema.CoreSchemaRegistry();

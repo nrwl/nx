@@ -1,6 +1,7 @@
 ---
 title: Monorepos - Why Speed Matters
-authors: ['Katerina Skroumpelou']
+slug: 'monorepos-why-speed-matters'
+authors: ['Katerina Skroumpelou', 'Jeff Cross']
 tags: nx, nxdevtools, speed, ci
 cover_image: '/blog/images/2024-03-20/featured_img.png'
 ---

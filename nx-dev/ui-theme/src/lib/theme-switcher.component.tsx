@@ -1,3 +1,4 @@
+'use client';
 import { Listbox, Transition } from '@headlessui/react';
 import {
   ComputerDesktopIcon,
@@ -67,7 +68,7 @@ export function ThemeSwitcher(): JSX.Element {
             leaveFrom="transform opacity-100 scale-100"
             leaveTo="transform opacity-0 scale-95"
           >
-            <Listbox.Options className="absolute top-full -right-10 z-50 mt-2 w-36 origin-top-right divide-y divide-slate-100 rounded-md bg-white shadow-lg ring-1 ring-black/5 focus:outline-none dark:divide-slate-800 dark:bg-slate-900 dark:ring-white/5">
+            <Listbox.Options className="absolute -right-10 top-full z-50 mt-2 w-36 origin-top-right divide-y divide-slate-100 rounded-md bg-white shadow-lg ring-1 ring-black/5 focus:outline-none dark:divide-slate-800 dark:bg-slate-900 dark:ring-white/5">
               {availableThemes.map((t) => (
                 <Listbox.Option key={t.value} value={t.value} as={Fragment}>
                   {({ active, selected }) => (

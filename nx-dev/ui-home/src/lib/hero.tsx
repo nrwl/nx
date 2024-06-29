@@ -41,7 +41,7 @@ export function Hero(): JSX.Element {
         </div>
         <div className="text-center">
           <h1
-            className="text-3xl font-bold leading-none tracking-tight text-black dark:text-white sm:mt-6 sm:text-5xl md:text-6xl"
+            className="text-3xl font-bold leading-none tracking-tight text-black sm:mt-6 sm:text-5xl md:text-6xl dark:text-white"
             data-cy="primary-heading"
           >
             <span className="rounded-lg bg-gradient-to-r from-cyan-500 to-blue-500 bg-clip-text text-transparent">

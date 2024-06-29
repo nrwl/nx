@@ -1,0 +1,112 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Webpack Plugin (legacy) ConvertConfigToWebpackPlugin, should convert withNx webpack config to a standard config using NxWebpackPlugin 1`] = `
+"const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
+const { NxReactWebpackPlugin } = require('@nx/react/webpack-plugin');
+const { useLegacyNxPlugin } = require('@nx/webpack');
+
+// This file was migrated using @nx/webpack:convert-config-to-webpack-plugin from your './webpack.config.old.js'
+// Please check that the options here are correct as they were moved from the old webpack.config.js to this file.
+const options = {};
+
+/**
+ * @type{import('webpack').WebpackOptionsNormalized}
+ */
+module.exports = async () => ({
+  plugins: [
+    new NxAppWebpackPlugin(),
+    new NxReactWebpackPlugin({
+      // Uncomment this line if you don't want to use SVGR
+      // See: https://react-svgr.com/
+      // svgr: false
+    }),
+    // NOTE: useLegacyNxPlugin ensures that the non-standard Webpack configuration file previously used still works.
+    // To remove its usage, move options such as "plugins" into this file as standard Webpack configuration options.
+    // To enhance configurations after Nx plugins have applied, you can add a new plugin with the \\\`apply\\\` method.
+    // e.g. \\\`{ apply: (compiler) => { /* modify compiler.options */ }\\\`
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    await useLegacyNxPlugin(require('./webpack.config.old'), options),
+  ],
+});
+"
+`;
+
+exports[`Webpack Plugin (legacy) ConvertConfigToWebpackPlugin, should convert withNx webpack config to a standard config using NxWebpackPlugin 2`] = `
+"{
+  "name": "app3224373",
+  "$schema": "../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "sourceRoot": "app3224373/src",
+  "tags": [],
+  "targets": {
+    "build": {
+      "executor": "@nx/webpack:webpack",
+      "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
+      "options": {
+        "target": "web",
+        "outputPath": "dist/app3224373",
+        "compiler": "swc",
+        "main": "app3224373/src/main.ts",
+        "tsConfig": "app3224373/tsconfig.app.json",
+        "webpackConfig": "app3224373/webpack.config.js",
+        "assets": ["app3224373/src/favicon.ico", "app3224373/src/assets"],
+        "index": "app3224373/src/index.html",
+        "baseHref": "/",
+        "styles": ["app3224373/src/styles.css"],
+        "scripts": [],
+        "standardWebpackConfigFunction": true
+      },
+      "configurations": {
+        "production": {
+          "optimization": true,
+          "outputHashing": "all",
+          "sourceMap": false,
+          "namedChunks": false,
+          "extractLicenses": true,
+          "vendorChunk": false,
+          "fileReplacements": [
+            {
+              "replace": "app3224373/src/environments/environment.ts",
+              "with": "app3224373/src/environments/environment.prod.ts"
+            }
+          ]
+        }
+      }
+    },
+    "serve": {
+      "executor": "@nx/webpack:dev-server",
+      "options": {
+        "buildTarget": "app3224373:build"
+      },
+      "configurations": {
+        "production": {
+          "buildTarget": "app3224373:build:production"
+        }
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "app3224373/jest.config.ts"
+      }
+    }
+  }
+}
+"
+`;
+
+exports[`Webpack Plugin (legacy) ConvertConfigToWebpackPlugin, should convert withNx webpack config to a standard config using NxWebpackPlugin 3`] = `
+"const { composePlugins } = require('@nx/webpack');
+// Nx plugins for webpack.
+module.exports = composePlugins((config) => {
+  // Update the webpack config as needed here.
+  // e.g. \`config.plugins.push(new MyPlugin())\`
+  return config;
+});
+"
+`;

@@ -56,11 +56,11 @@ export const defaultTasksRunner: TasksRunner<
     (options as any)['parallel'] = Number((options as any)['maxParallel'] || 3);
   }
 
-  options.lifeCycle.startCommand();
+  await options.lifeCycle.startCommand();
   try {
     return await runAllTasks(tasks, options, context);
   } finally {
-    options.lifeCycle.endCommand();
+    await options.lifeCycle.endCommand();
   }
 };
 

@@ -37,7 +37,11 @@ export async function* viteBuildExecutor(
     await loadViteDynamicImport();
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
-  createBuildableTsConfig(projectRoot, options, context);
+  const tsConfigForBuild = createBuildableTsConfig(
+    projectRoot,
+    options,
+    context
+  );
 
   const viteConfigPath = normalizeViteConfigFilePath(
     context.root,
@@ -83,7 +87,7 @@ export async function* viteBuildExecutor(
     await validateTypes({
       workspaceRoot: context.root,
       projectRoot: projectRoot,
-      tsconfig: options.tsConfig ?? getProjectTsConfigPath(projectRoot),
+      tsconfig: tsConfigForBuild,
     });
   }
 

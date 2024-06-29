@@ -226,6 +226,21 @@ export class AggregateCreateNodesError extends Error {
   ) {
     super('Failed to create nodes');
     this.name = this.constructor.name;
+    if (
+      // Errors should be an array
+      !Array.isArray(errors) ||
+      !errors.every(
+        // Where every element is a tuple
+        (errorTuple) =>
+          Array.isArray(errorTuple) &&
+          // That has a length of 2
+          errorTuple.length === 2
+      )
+    ) {
+      throw new Error(
+        'AggregateCreateNodesError must be constructed with an array of tuples where the first element is a filename or undefined and the second element is the underlying error.'
+      );
+    }
   }
 }
 

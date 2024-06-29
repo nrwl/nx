@@ -15,7 +15,6 @@ import {
   getUserQuery,
   initializeChat,
   extractErrorMessage,
-  // moderateContent,
 } from '@nx/nx-dev/util-ai';
 import { SupabaseClient } from '@supabase/supabase-js';
 import OpenAI from 'openai';
@@ -36,7 +35,24 @@ export const config = {
 };
 
 export default async function handler(request: NextRequest) {
+  const country = request.geo.country;
+  const restrictedCountries: string[] = [
+    'BY', // Belarus
+    'CN', // China
+    'CU', // Cuba
+    'IR', // Iran
+    'KP', // North Korea
+    'RU', // Russia
+    'SY', // Syria
+    'VE', // Venezuela
+  ];
   try {
+    if (restrictedCountries.includes(country)) {
+      throw new CustomError(
+        'user_error',
+        'Service is not available in your region.'
+      );
+    }
     const openai = getOpenAI(openAiKey);
     const supabaseClient: SupabaseClient<any, 'public', any> =
       getSupabaseClient(supabaseUrl, supabaseServiceKey);
@@ -45,11 +61,6 @@ export default async function handler(request: NextRequest) {
 
     const query: string | null = getUserQuery(messages);
     const sanitizedQuery = query.trim();
-
-    // Moderate the content to comply with OpenAI T&C
-    // Removing the moderation for now
-    // to see if it's faster
-    // await moderateContent(sanitizedQuery, openai);
 
     // We include the previous response,
     // to make sure the embeddings (doc sections)

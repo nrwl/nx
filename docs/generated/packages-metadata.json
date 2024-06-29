@@ -494,7 +494,7 @@
     ],
     "generators": [
       {
-        "description": "Initialize the `@nrwl/cypress` plugin.",
+        "description": "Initialize the `@nx/cypress` plugin.",
         "file": "generated/packages/cypress/generators/init.json",
         "hidden": true,
         "name": "init",
@@ -582,7 +582,7 @@
     ],
     "generators": [
       {
-        "description": "Initialize the `@nrwl/detox` plugin.",
+        "description": "Initialize the `@nx/detox` plugin.",
         "file": "generated/packages/detox/generators/init.json",
         "hidden": true,
         "name": "init",
@@ -668,7 +668,7 @@
     ],
     "generators": [
       {
-        "description": "Initialize the `@nrwl/esbuild` plugin.",
+        "description": "Initialize the `@nx/esbuild` plugin.",
         "file": "generated/packages/esbuild/generators/init.json",
         "hidden": true,
         "name": "init",
@@ -1003,7 +1003,7 @@
     "executors": [],
     "generators": [
       {
-        "description": "Initialize the `@nrwl/express` plugin.",
+        "description": "Initialize the `@nx/express` plugin.",
         "file": "generated/packages/express/generators/init.json",
         "hidden": true,
         "name": "init",
@@ -1097,7 +1097,7 @@
     ],
     "generators": [
       {
-        "description": "Initialize the `@nrwl/jest` plugin.",
+        "description": "Initialize the `@nx/jest` plugin.",
         "file": "generated/packages/jest/generators/init.json",
         "hidden": true,
         "name": "init",
@@ -1112,6 +1112,15 @@
         "name": "configuration",
         "originalFilePath": "/packages/jest/src/generators/configuration/schema.json",
         "path": "jest/generators/configuration",
+        "type": "generator"
+      },
+      {
+        "description": "Convert existing Jest project(s) using `@nx/jest:jest` executor to use `@nx/jest/plugin`.",
+        "file": "generated/packages/jest/generators/convert-to-inferred.json",
+        "hidden": false,
+        "name": "convert-to-inferred",
+        "originalFilePath": "/packages/jest/src/generators/convert-to-inferred/schema.json",
+        "path": "jest/generators/convert-to-inferred",
         "type": "generator"
       }
     ],
@@ -1281,7 +1290,7 @@
         "type": "generator"
       },
       {
-        "description": "Initialize the `@nrwl/nest` plugin.",
+        "description": "Initialize the `@nx/nest` plugin.",
         "file": "generated/packages/nest/generators/init.json",
         "hidden": true,
         "name": "init",
@@ -1486,7 +1495,7 @@
     ],
     "generators": [
       {
-        "description": "Initialize the `@nrwl/next` plugin.",
+        "description": "Initialize the `@nx/next` plugin.",
         "file": "generated/packages/next/generators/init.json",
         "hidden": true,
         "name": "init",
@@ -1547,6 +1556,15 @@
         "originalFilePath": "/packages/next/src/generators/cypress-component-configuration/schema.json",
         "path": "next/generators/cypress-component-configuration",
         "type": "generator"
+      },
+      {
+        "description": "Convert an existing Next.js project(s) using `@nx/next:build` to use `@nx/next/plugin`. Defaults to migrating all projects. Pass '--project' to migrate a single project.",
+        "file": "generated/packages/next/generators/convert-to-inferred.json",
+        "hidden": false,
+        "name": "convert-to-inferred",
+        "originalFilePath": "/packages/next/src/generators/convert-to-inferred/schema.json",
+        "path": "next/generators/convert-to-inferred",
+        "type": "generator"
       }
     ],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
@@ -1573,7 +1591,7 @@
     "executors": [],
     "generators": [
       {
-        "description": "Initialize the `@nrwl/node` plugin.",
+        "description": "Initialize the `@nx/node` plugin.",
         "file": "generated/packages/node/generators/init.json",
         "hidden": true,
         "name": "init",
@@ -2152,7 +2170,7 @@
     ],
     "generators": [
       {
-        "description": "Initialize the `@nrwl/react` plugin.",
+        "description": "Initialize the `@nx/react` plugin.",
         "file": "generated/packages/react/generators/init.json",
         "hidden": true,
         "name": "init",
@@ -2686,6 +2704,15 @@
         "originalFilePath": "/packages/remix/src/generators/error-boundary/schema.json",
         "path": "remix/generators/error-boundary",
         "type": "generator"
+      },
+      {
+        "description": "Convert existing Remix project(s) using `@nx/remix:*` executors to use `@nx/remix/plugin`. Defaults to migrating all projects. Pass '--project' to migrate only one target.",
+        "file": "generated/packages/remix/generators/convert-to-inferred.json",
+        "hidden": false,
+        "name": "convert-to-inferred",
+        "originalFilePath": "/packages/remix/src/generators/convert-to-inferred/schema.json",
+        "path": "remix/generators/convert-to-inferred",
+        "type": "generator"
       }
     ],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
@@ -2710,7 +2737,7 @@
     ],
     "generators": [
       {
-        "description": "Initialize the `@nrwl/rollup` plugin.",
+        "description": "Initialize the `@nx/rollup` plugin.",
         "file": "generated/packages/rollup/generators/init.json",
         "hidden": true,
         "name": "init",
@@ -2725,6 +2752,15 @@
         "name": "configuration",
         "originalFilePath": "/packages/rollup/src/generators/configuration/schema.json",
         "path": "rollup/generators/configuration",
+        "type": "generator"
+      },
+      {
+        "description": "Convert existing Rollup project(s) using `@nx/rollup:*` executors to use `@nx/rollup/plugin`.",
+        "file": "generated/packages/rollup/generators/convert-to-inferred.json",
+        "hidden": false,
+        "name": "convert-to-inferred",
+        "originalFilePath": "/packages/rollup/src/generators/convert-to-inferred/schema.json",
+        "path": "rollup/generators/convert-to-inferred",
         "type": "generator"
       }
     ],
@@ -2817,6 +2853,15 @@
         "name": "cypress-project",
         "originalFilePath": "/packages/storybook/src/generators/cypress-project/schema.json",
         "path": "storybook/generators/cypress-project",
+        "type": "generator"
+      },
+      {
+        "description": "Convert existing Storybook project(s) using `@nx/storybook:*` executors to use `@nx/storybook/plugin`. Defaults to migrating all projects. Pass '--project' to migrate only one target.",
+        "file": "generated/packages/storybook/generators/convert-to-inferred.json",
+        "hidden": false,
+        "name": "convert-to-inferred",
+        "originalFilePath": "/packages/storybook/src/generators/convert-to-inferred/schema.json",
+        "path": "storybook/generators/convert-to-inferred",
         "type": "generator"
       },
       {
@@ -2919,7 +2964,25 @@
         "type": "generator"
       },
       {
-        "description": "Generate a vitest configuration",
+        "description": "Sets up the nxViteTsPaths plugin to enable support for workspace libraries.",
+        "file": "generated/packages/vite/generators/setup-paths-plugin.json",
+        "hidden": false,
+        "name": "setup-paths-plugin",
+        "originalFilePath": "/packages/vite/src/generators/setup-paths-plugin/schema.json",
+        "path": "vite/generators/setup-paths-plugin",
+        "type": "generator"
+      },
+      {
+        "description": "Convert existing Vite project(s) using `@nx/vite:*` executors to use `@nx/vite/plugin`. Defaults to migrating all projects. Pass '--project' to migrate only one target.",
+        "file": "generated/packages/vite/generators/convert-to-inferred.json",
+        "hidden": false,
+        "name": "convert-to-inferred",
+        "originalFilePath": "/packages/vite/src/generators/convert-to-inferred/schema.json",
+        "path": "vite/generators/convert-to-inferred",
+        "type": "generator"
+      },
+      {
+        "description": "Generate a vitest configuration.",
         "file": "generated/packages/vite/generators/vitest.json",
         "hidden": false,
         "name": "vitest",
@@ -3128,7 +3191,7 @@
     ],
     "generators": [
       {
-        "description": "Initialize the `@nrwl/webpack` plugin.",
+        "description": "Initialize the `@nx/webpack` plugin.",
         "file": "generated/packages/webpack/generators/init.json",
         "hidden": true,
         "name": "init",
@@ -3143,6 +3206,24 @@
         "name": "configuration",
         "originalFilePath": "/packages/webpack/src/generators/configuration/schema.json",
         "path": "webpack/generators/configuration",
+        "type": "generator"
+      },
+      {
+        "description": "Convert the project to use the `NxAppWebpackPlugin` and `NxReactWebpackPlugin`.",
+        "file": "generated/packages/webpack/generators/convert-config-to-webpack-plugin.json",
+        "hidden": false,
+        "name": "convert-config-to-webpack-plugin",
+        "originalFilePath": "/packages/webpack/src/generators/convert-config-to-webpack-plugin/schema.json",
+        "path": "webpack/generators/convert-config-to-webpack-plugin",
+        "type": "generator"
+      },
+      {
+        "description": "Convert existing Webpack project(s) using `@nx/webpack:wepack` executor to use `@nx/webpack/plugin`.",
+        "file": "generated/packages/webpack/generators/convert-to-inferred.json",
+        "hidden": false,
+        "name": "convert-to-inferred",
+        "originalFilePath": "/packages/webpack/src/generators/convert-to-inferred/schema.json",
+        "path": "webpack/generators/convert-to-inferred",
         "type": "generator"
       }
     ],

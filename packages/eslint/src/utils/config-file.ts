@@ -34,17 +34,16 @@ export function findFlatConfigFile(
 ): string | null {
   let currentDir = resolve(workspaceRoot, directory);
 
-  if (currentDir === workspaceRoot) {
-    return getConfigFileInDirectory(currentDir, ESLINT_FLAT_CONFIG_FILENAMES);
-  }
-
-  while (currentDir !== workspaceRoot) {
+  while (true) {
     const configFilePath = getConfigFileInDirectory(
       currentDir,
       ESLINT_FLAT_CONFIG_FILENAMES
     );
     if (configFilePath) {
       return configFilePath;
+    }
+    if (currentDir === workspaceRoot) {
+      break;
     }
     currentDir = dirname(currentDir);
   }
@@ -56,21 +55,21 @@ export function findOldConfigFile(
   filePathOrDirectory: string,
   workspaceRoot: string
 ): string | null {
-  let currentDir = statSync(filePathOrDirectory).isDirectory()
-    ? filePathOrDirectory
-    : dirname(filePathOrDirectory);
-
-  if (currentDir === workspaceRoot) {
-    return getConfigFileInDirectory(currentDir, ESLINT_OLD_CONFIG_FILENAMES);
+  let currentDir = resolve(workspaceRoot, filePathOrDirectory);
+  if (!statSync(currentDir).isDirectory()) {
+    currentDir = dirname(currentDir);
   }
 
-  while (currentDir !== workspaceRoot) {
+  while (true) {
     const configFilePath = getConfigFileInDirectory(
       currentDir,
       ESLINT_OLD_CONFIG_FILENAMES
     );
     if (configFilePath) {
       return configFilePath;
+    }
+    if (currentDir === workspaceRoot) {
+      break;
     }
     currentDir = dirname(currentDir);
   }

@@ -7,6 +7,7 @@ import {
   createNodesFromFiles,
   CreateNodesV2,
   detectPackageManager,
+  getPackageManagerCommand,
   joinPathFragments,
   logger,
   normalizePath,
@@ -25,6 +26,8 @@ import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { getLockFileName } from '@nx/js';
 import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
 import { hashObject } from 'nx/src/hasher/file-hasher';
+
+const pmc = getPackageManagerCommand();
 
 export interface PlaywrightPluginOptions {
   targetName?: string;
@@ -162,6 +165,14 @@ async function buildPlaywrightTargets(
     metadata: {
       technologies: ['playwright'],
       description: 'Runs Playwright Tests',
+      help: {
+        command: `${pmc.exec} playwright test --help`,
+        example: {
+          options: {
+            workers: 1,
+          },
+        },
+      },
     },
   };
 
@@ -215,6 +226,14 @@ async function buildPlaywrightTargets(
           metadata: {
             technologies: ['playwright'],
             description: `Runs Playwright Tests in ${relativeSpecFilePath} in CI`,
+            help: {
+              command: `${pmc.exec} playwright test --help`,
+              example: {
+                options: {
+                  workers: 1,
+                },
+              },
+            },
           },
         };
         dependsOn.push({
@@ -241,6 +260,15 @@ async function buildPlaywrightTargets(
       metadata: {
         technologies: ['playwright'],
         description: 'Runs Playwright Tests in CI',
+        nonAtomizedTarget: options.targetName,
+        help: {
+          command: `${pmc.exec} playwright test --help`,
+          example: {
+            options: {
+              workers: 1,
+            },
+          },
+        },
       },
     };
     ciTargetGroup.push(options.ciTargetName);

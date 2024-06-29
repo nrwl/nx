@@ -1,3 +1,5 @@
+'use client';
+
 import {
   ChevronDoubleUpIcon,
   ChevronDoubleDownIcon,
@@ -37,21 +39,21 @@ export function Disclosure({
   return (
     <span
       className={cx(
-        'my-6 block rounded-md flex-col ring-1 bg-slate-50 dark:bg-slate-800/40 ring-slate-100 dark:ring-slate-700',
+        'my-6 block flex-col rounded-md bg-slate-50 ring-1 ring-slate-100 dark:bg-slate-800/40 dark:ring-slate-700',
         ui.backgroundColor,
         ui.borderColor
       )}
     >
       <span
         onClick={() => setCollapsed(!collapsed)}
-        className="flex-shrink-0 cursor-pointer flex p-4"
+        className="flex flex-shrink-0 cursor-pointer p-4"
       >
         {collapsed ? ui.downIcon : ui.upIcon}
         <span className={cx('ml-3 block text-sm font-medium', ui.titleColor)}>
           {title}
         </span>
       </span>
-      <span className={cx('p-4 pl-12 pt-0 block', collapsed ? 'hidden' : '')}>
+      <span className={cx('block p-4 pl-12 pt-0', collapsed ? 'hidden' : '')}>
         <span className={cx('prose-sm block', ui.textColor)}>{children}</span>
       </span>
     </span>

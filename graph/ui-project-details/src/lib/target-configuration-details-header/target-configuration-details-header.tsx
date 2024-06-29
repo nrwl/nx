@@ -8,7 +8,11 @@ import {
   PlayIcon,
 } from '@heroicons/react/24/outline';
 
-import { PropertyInfoTooltip, Tooltip } from '@nx/graph/ui-tooltips';
+import {
+  AtomizerTooltip,
+  PropertyInfoTooltip,
+  Tooltip,
+} from '@nx/graph/ui-tooltips';
 import { twMerge } from 'tailwind-merge';
 import { Pill } from '../pill';
 import { TargetTechnologies } from '../target-technologies/target-technologies';
@@ -26,11 +30,13 @@ export interface TargetConfigurationDetailsHeaderProps {
   projectName: string;
   targetName: string;
   sourceMap: Record<string, string[]>;
+  connectedToCloud?: boolean;
   onRunTarget?: (data: { projectName: string; targetName: string }) => void;
   onViewInTaskGraph?: (data: {
     projectName: string;
     targetName: string;
   }) => void;
+  onNxConnect?: () => void;
 }
 
 export const TargetConfigurationDetailsHeader = ({
@@ -41,9 +47,11 @@ export const TargetConfigurationDetailsHeader = ({
   targetConfiguration,
   projectName,
   targetName,
+  connectedToCloud = true,
   sourceMap,
   onRunTarget,
   onViewInTaskGraph,
+  onNxConnect,
 }: TargetConfigurationDetailsHeaderProps) => {
   const handleCopyClick = async (copyText: string) => {
     await window.navigator.clipboard.writeText(copyText);
@@ -97,7 +105,7 @@ export const TargetConfigurationDetailsHeader = ({
                 </p>
               )}
           </div>
-          <div>
+          <div className="flex items-center gap-2">
             {targetName === 'nx-release-publish' && (
               <Tooltip
                 openAction="hover"
@@ -106,6 +114,31 @@ export const TargetConfigurationDetailsHeader = ({
               >
                 <span className="inline-flex">
                   <Pill text="nx release" color="grey" />
+                </span>
+              </Tooltip>
+            )}
+            {targetConfiguration.metadata?.nonAtomizedTarget && (
+              <Tooltip
+                openAction="hover"
+                strategy="fixed"
+                usePortal={true}
+                content={
+                  (
+                    <AtomizerTooltip
+                      connectedToCloud={connectedToCloud}
+                      nonAtomizedTarget={
+                        targetConfiguration.metadata.nonAtomizedTarget
+                      }
+                      onNxConnect={onNxConnect}
+                    />
+                  ) as any
+                }
+              >
+                <span className="inline-flex">
+                  <Pill
+                    color={connectedToCloud ? 'grey' : 'yellow'}
+                    text={'Atomizer'}
+                  />
                 </span>
               </Tooltip>
             )}
@@ -129,14 +162,15 @@ export const TargetConfigurationDetailsHeader = ({
               // TODO: fix tooltip overflow in collapsed state
               data-tooltip={isCollasped ? false : 'View in Task Graph'}
               data-tooltip-align-right
+              onClick={(e) => {
+                if (isCollasped) {
+                  return;
+                }
+                e.stopPropagation();
+                onViewInTaskGraph({ projectName, targetName });
+              }}
             >
-              <EyeIcon
-                className={`h-5 w-5 !cursor-pointer`}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onViewInTaskGraph({ projectName, targetName });
-                }}
-              />
+              <EyeIcon className={`h-5 w-5 !cursor-pointer`} />
             </button>
           )}
 

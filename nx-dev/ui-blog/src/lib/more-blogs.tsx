@@ -41,7 +41,7 @@ export function MoreBlogs({ blogs }: MoreBlogsProps) {
                 {formattedDate}
               </span>
               <span className="hidden flex-1 overflow-hidden sm:inline-block">
-                <BlogAuthors authors={post.authors} />
+                <BlogAuthors authors={post.authors} showAuthorDetails={false} />
               </span>
             </Link>
           );

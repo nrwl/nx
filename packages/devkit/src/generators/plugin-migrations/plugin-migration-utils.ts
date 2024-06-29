@@ -1,4 +1,5 @@
-import type { TargetConfiguration } from 'nx/src/devkit-exports';
+import { relative, resolve } from 'node:path/posix';
+import { workspaceRoot, type TargetConfiguration } from 'nx/src/devkit-exports';
 import { interpolate } from 'nx/src/devkit-internals';
 
 /**
@@ -126,6 +127,24 @@ export function processTargetOutputs(
   }
 
   target.outputs = targetOutputs;
+}
+
+export function toProjectRelativePath(
+  path: string,
+  projectRoot: string
+): string {
+  if (projectRoot === '.') {
+    // workspace and project root are the same, we add a leading './' which is
+    // required by some tools (e.g. Jest)
+    return path.startsWith('.') ? path : `./${path}`;
+  }
+
+  const relativePath = relative(
+    resolve(workspaceRoot, projectRoot),
+    resolve(workspaceRoot, path)
+  );
+
+  return relativePath.startsWith('.') ? relativePath : `./${relativePath}`;
 }
 
 function updateOutputRenamingOption(

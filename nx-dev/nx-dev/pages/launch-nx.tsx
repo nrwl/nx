@@ -48,9 +48,9 @@ export default function ConfPage(): JSX.Element {
         <Header />
         <LaunchNxIntro />
         {/*NAVIGATION*/}
-        <div className="hidden border-t border-b border-slate-200 dark:border-slate-700 md:block">
+        <div className="hidden border-b border-t border-slate-200 md:block dark:border-slate-700">
           <div className="mx-auto max-w-screen-lg xl:max-w-screen-xl">
-            <div className="font-input-mono grid-cols-5 items-center divide-x divide-slate-200 text-center dark:divide-slate-700 md:grid">
+            <div className="font-input-mono grid-cols-5 items-center divide-x divide-slate-200 text-center md:grid dark:divide-slate-700">
               <div className="p-6">
                 <svg
                   className="inline-block dark:text-white"

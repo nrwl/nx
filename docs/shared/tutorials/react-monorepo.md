@@ -98,7 +98,7 @@ Let's name the initial application `react-store`. In this tutorial we're going t
 The setup includes..
 
 - a new React application (`apps/react-store/`)
-- a Cypress based set of e2e tests (`apps/react-store-e2e/`)
+- a Playwright based set of e2e tests (`apps/react-store-e2e/`)
 - Prettier preconfigured
 - ESLint preconfigured
 - Jest preconfigured
@@ -128,7 +128,7 @@ Nx uses the following syntax to run tasks:
 Nx identifies available tasks for your project from [tooling configuration files](/concepts/inferred-tasks), `package.json` scripts and the targets defined in `project.json`. To view the tasks that Nx has detected, look in the [Nx Console](/getting-started/editor-setup) project detail view or run:
 
 ```shell
-nx show project react-store --web
+nx show project react-store
 ```
 
 {% project-details title="Project Details View (Simplified)" height="100px" %}
@@ -137,13 +137,9 @@ nx show project react-store --web
 {
   "project": {
     "name": "react-store",
+    "type": "app",
     "data": {
-      "metadata": {
-        "technologies": ["react"]
-      },
       "root": "apps/react-store",
-      "includedScripts": [],
-      "name": "react-store",
       "targets": {
         "build": {
           "options": {
@@ -161,15 +157,13 @@ nx show project react-store --web
           ],
           "outputs": ["{workspaceRoot}/dist/apps/react-store"],
           "executor": "nx:run-commands",
-          "configurations": {},
-          "metadata": {
-            "technologies": ["vite"]
-          }
+          "configurations": {}
         }
       },
+      "name": "react-store",
+      "$schema": "../../node_modules/nx/schemas/project-schema.json",
       "sourceRoot": "apps/react-store/src",
       "projectType": "application",
-      "$schema": "node_modules/nx/schemas/project-schema.json",
       "tags": [],
       "implicitDependencies": []
     }
@@ -433,35 +427,12 @@ All libraries that we generate automatically have aliases created in the root-le
 }
 ```
 
-Hence we can easily import them into other libraries and our React application. As an example, let's create and expose a `ProductList` component from our `libs/products` library. Either create it by hand or run
+Hence we can easily import them into other libraries and our Angular application. As an example, let's use the pre-generated `ProductsComponent` component from our `libs/products` library.
 
-```shell
-nx g @nx/react:component product-list --project=products --directory="libs/products/src/lib/product-list"
-```
-
-We don't need to implement anything fancy as we just want to learn how to import it into our main React application.
-
-```tsx {% fileName="libs/products/src/lib/product-list/product-list.tsx" %}
-import styles from './product-list.module.css';
-
-/* eslint-disable-next-line */
-export interface ProductListProps {}
-
-export function ProductList(props: ProductListProps) {
-  return (
-    <div className={styles['container']}>
-      <h1>Welcome to ProductList!</h1>
-    </div>
-  );
-}
-
-export default ProductList;
-```
-
-Make sure the `ProductList` is exported via the `index.ts` file of our `products` library. This is our public API with the rest of the workspace. Only export what's really necessary to be usable outside the library itself.
+You can see that the `Products` component is exported via the `index.ts` file of our `products` library so that other projects in the repository can use it. This is our public API with the rest of the workspace. Only export what's really necessary to be usable outside the library itself.
 
 ```ts {% fileName="libs/products/src/index.ts" %}
-export * from './lib/product-list/product-list';
+export * from './lib/products';
 ```
 
 We're ready to import it into our main application now. First (if you haven't already), let's set up React Router.
@@ -512,13 +483,13 @@ root.render(
 );
 ```
 
-Then we can import the `ProductList` component into our `app.tsx` and render it via the routing mechanism whenever a user hits the `/products` route.
+Then we can import the `Products` component into our `app.tsx` and render it via the routing mechanism whenever a user hits the `/products` route.
 
 ```tsx {% fileName="apps/react-store/src/app/app.tsx" %}
 import { Route, Routes } from 'react-router-dom';
 
 // importing the component from the library
-import { ProductList } from '@react-monorepo/products';
+import { Products } from '@react-monorepo/products';
 
 function Home() {
   return <h1>Home</h1>;
@@ -528,7 +499,7 @@ export function App() {
   return (
     <Routes>
       <Route path="/" element={<Home />}></Route>
-      <Route path="/products" element={<ProductList />}></Route>
+      <Route path="/products" element={<Products />}></Route>
     </Routes>
   );
 }
@@ -542,15 +513,14 @@ Serving your app (`nx serve react-store`) and then navigating to `/products` sho
 
 Let's apply the same for our `orders` library.
 
-- generate a new component `OrderList` in `libs/orders` and export it in the corresponding `index.ts` file
-- import it into the `app.tsx` and render it via the routing mechanism whenever a user hits the `/orders` route
+- import the `Orders` component from `libs/orders` into the `app.tsx` and render it via the routing mechanism whenever a user hits the `/orders` route
 
 In the end, your `app.tsx` should look similar to this:
 
 ```tsx {% fileName="apps/react-store/src/app/app.tsx" %}
 import { Route, Routes } from 'react-router-dom';
-import { ProductList } from '@react-monorepo/products';
-import { OrderList } from '@react-monorepo/orders';
+import { Products } from '@react-monorepo/products';
+import { Orders } from '@react-monorepo/orders';
 
 function Home() {
   return <h1>Home</h1>;
@@ -560,8 +530,8 @@ export function App() {
   return (
     <Routes>
       <Route path="/" element={<Home />}></Route>
-      <Route path="/products" element={<ProductList />}></Route>
-      <Route path="/orders" element={<OrderList />}></Route>
+      <Route path="/products" element={<Products />}></Route>
+      <Route path="/orders" element={<Orders />}></Route>
     </Routes>
   );
 }
@@ -572,10 +542,10 @@ export default App;
 Let's also show products in the `inventory` app.
 
 ```tsx {% fileName="apps/inventory/src/app/app.tsx" %}
-import { ProductList } from '@react-monorepo/products';
+import { Products } from '@react-monorepo/products';
 
 export function App() {
-  return <ProductList />;
+  return <Products />;
 }
 
 export default App;
@@ -735,22 +705,19 @@ git commit -a -m "some commit message"
 
 And then make a small change to the `products` library.
 
-```tsx {% fileName="libs/products/src/lib/product-list/product-list.tsx" %}
-import styles from './product-list.module.css';
+```tsx {% fileName="libs/products/src/lib/products.tsx" %}
+import styles from './products.module.css';
 
-/* eslint-disable-next-line */
-export interface ProductListProps {}
-
-export function ProductList(props: ProductListProps) {
+export function Products() {
   return (
     <div className={styles['container']}>
-      <h1>Welcome to ProductList!</h1>
+      <h1>Welcome to Products!</h1>
       <p>This is a change. 👋</p>
     </div>
   );
 }
 
-export default ProductList;
+export default Products;
 ```
 
 One of the key features of Nx in a monorepo setting is that you're able to run tasks only for projects that are actually affected by the code changes that you've made. To run the tests for only the projects affected by this change, run:
@@ -971,10 +938,6 @@ To enforce the rules, Nx ships with a custom ESLint rule. Open the `.eslintrc.ba
             "allow": [],
             "depConstraints": [
               {
-                "sourceTag": "*",
-                "onlyDependOnLibsWithTags": ["*"]
-              },
-              {
                 "sourceTag": "type:feature",
                 "onlyDependOnLibsWithTags": ["type:feature", "type:ui"]
               },
@@ -1008,27 +971,24 @@ To enforce the rules, Nx ships with a custom ESLint rule. Open the `.eslintrc.ba
 }
 ```
 
-To test it, go to your `libs/products/src/lib/product-list/product-list.tsx` file and import the `OrderList` from the `orders` project:
+To test it, go to your `libs/products/src/lib/products.tsx` file and import the `Orders` component from the `orders` project:
 
-```tsx {% fileName="libs/products/src/lib/product-list/product-list.tsx" %}
-import styles from './product-list.module.css';
+```tsx {% fileName="libs/products/src/lib/products.tsx" %}
+import styles from './products.module.css';
 
 // This import is not allowed 👇
-import { OrderList } from '@react-monorepo/orders';
+import { Orders } from '@react-monorepo/orders';
 
-/* eslint-disable-next-line */
-export interface ProductListProps {}
-
-export function ProductList(props: ProductListProps) {
+export function Products() {
   return (
     <div className={styles['container']}>
-      <h1>Welcome to ProductList!</h1>
-      <OrderList />
+      <h1>Welcome to Products!</h1>
+      <p>This is a change. 👋</p>
     </div>
   );
 }
 
-export default ProductList;
+export default Products;
 ```
 
 If you lint your workspace you'll get an error now:
@@ -1038,9 +998,9 @@ If you lint your workspace you'll get an error now:
 ✖  nx run products:lint
    Linting "products"...
 
-   /Users/isaac/Documents/code/nx-recipes/react-monorepo/libs/products/src/lib/product-list/product-list.tsx
+   /Users/isaac/Documents/code/nx-recipes/react-monorepo/libs/products/src/lib/products.tsx
      4:1   error    A project tagged with "scope:products" can only depend on libs tagged with "scope:products", "scope:shared"  @nx/enforce-module-boundaries
-     4:10  warning  'OrderList' is defined but never used                                                                        @typescript-eslint/no-unused-vars
+     4:10  warning  'Orders' is defined but never used                                                                        @typescript-eslint/no-unused-vars
 
    ✖ 2 problems (1 error, 1 warning)
 

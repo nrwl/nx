@@ -1,7 +1,13 @@
 import { ExecutorContext, names } from '@nx/devkit';
+import { readJsonFile } from 'nx/src/utils/fileutils';
 import { ChildProcess, fork } from 'child_process';
 
 import { ExpoInstallOptions } from './schema';
+import { join } from 'path';
+import {
+  displayNewlyAddedDepsMessage,
+  syncDeps,
+} from '../sync-deps/sync-deps.impl';
 
 export interface ExpoInstallOutput {
   success: boolean;
@@ -13,12 +19,8 @@ export default async function* installExecutor(
   options: ExpoInstallOptions,
   context: ExecutorContext
 ): AsyncGenerator<ExpoInstallOutput> {
-  const projectRoot =
-    context.projectsConfigurations.projects[context.projectName].root;
-
   try {
-    await installAsync(context.root, options);
-
+    await installAndUpdatePackageJson(context, options);
     yield {
       success: true,
     };
@@ -27,6 +29,40 @@ export default async function* installExecutor(
       childProcess.kill();
     }
   }
+}
+
+export async function installAndUpdatePackageJson(
+  context: ExecutorContext,
+  options: ExpoInstallOptions
+) {
+  await installAsync(context.root, options);
+
+  const projectRoot =
+    context.projectsConfigurations.projects[context.projectName].root;
+  const workspacePackageJsonPath = join(context.root, 'package.json');
+  const projectPackageJsonPath = join(
+    context.root,
+    projectRoot,
+    'package.json'
+  );
+
+  const workspacePackageJson = readJsonFile(workspacePackageJsonPath);
+  const projectPackageJson = readJsonFile(projectPackageJsonPath);
+  const packages =
+    typeof options.packages === 'string'
+      ? options.packages.split(',')
+      : options.packages;
+  displayNewlyAddedDepsMessage(
+    context.projectName,
+    await syncDeps(
+      context.projectName,
+      projectPackageJson,
+      projectPackageJsonPath,
+      workspacePackageJson,
+      context.projectGraph,
+      packages
+    )
+  );
 }
 
 export function installAsync(

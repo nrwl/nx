@@ -1,3 +1,4 @@
+'use client';
 /* eslint-disable @nx/enforce-module-boundaries */
 /* nx-ignore-next-line */
 import type {
