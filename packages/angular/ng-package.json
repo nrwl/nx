@@ -25,7 +25,8 @@
     "magic-string",
     "enquirer",
     "find-cache-dir",
-    "piscina"
+    "piscina",
+    "webpack"
   ],
   "keepLifecycleScripts": true
 }

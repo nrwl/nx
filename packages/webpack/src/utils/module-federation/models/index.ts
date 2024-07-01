@@ -45,6 +45,12 @@ export interface ModuleFederationConfig {
   exposes?: Record<string, string>;
   shared?: SharedFunction;
   additionalShared?: AdditionalSharedConfig;
+  /**
+   * `nxRuntimeLibraryControlPlugin` is a runtime module federation plugin to ensure
+   * that shared libraries are resolved from a remote with live reload capabilities.
+   * If you run into any issues with loading shared libraries, try disabling this option.
+   */
+  disableNxRuntimeLibraryControlPlugin?: boolean;
 }
 
 export type NxModuleFederationConfigOverride = Omit<

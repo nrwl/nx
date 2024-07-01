@@ -33,6 +33,7 @@
     "@babel/core": "^7.23.2",
     "@phenomnomnominal/tsquery": "~5.0.1",
     "@module-federation/sdk": "^0.2.3",
+    "@module-federation/enhanced": "^0.2.3",
     "ajv": "^8.12.0",
     "autoprefixer": "^10.4.9",
     "babel-loader": "^9.1.2",
