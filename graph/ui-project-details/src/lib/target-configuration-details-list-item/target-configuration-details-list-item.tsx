@@ -6,12 +6,14 @@ import TargetConfigurationDetails from '../target-configuration-details/target-c
 export interface TargetConfigurationDetailsListItemProps {
   project: ProjectGraphProjectNode;
   sourceMap: Record<string, string[]>;
+  connectedToCloud?: boolean;
   variant?: 'default' | 'compact';
   onRunTarget?: (data: { projectName: string; targetName: string }) => void;
   onViewInTaskGraph?: (data: {
     projectName: string;
     targetName: string;
   }) => void;
+  onNxConnect?: () => void;
   targetName: string;
   collapsable: boolean;
 }
@@ -20,8 +22,10 @@ export function TargetConfigurationDetailsListItem({
   project,
   variant,
   sourceMap,
+  connectedToCloud,
   onRunTarget,
   onViewInTaskGraph,
+  onNxConnect,
   targetName,
   collapsable,
 }: TargetConfigurationDetailsListItemProps) {
@@ -37,8 +41,10 @@ export function TargetConfigurationDetailsListItem({
         targetName={targetName}
         targetConfiguration={target}
         sourceMap={sourceMap}
+        connectedToCloud={connectedToCloud}
         onRunTarget={onRunTarget}
         onViewInTaskGraph={onViewInTaskGraph}
+        onNxConnect={onNxConnect}
         collapsable={collapsable}
       />
     </li>
