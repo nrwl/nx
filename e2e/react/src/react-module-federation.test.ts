@@ -39,9 +39,6 @@ describe('React Module Federation', () => {
         const remote2 = uniq('remote2');
         const remote3 = uniq('remote3');
 
-        // Since we are using a single-file server for the remotes
-        const defaultRemotePort = 4201;
-
         runCLI(
           `generate @nx/react:host ${shell} --remotes=${remote1},${remote2},${remote3} --e2eTestRunner=cypress --style=css --no-interactive --skipFormat --js=${js}`
         );
@@ -64,54 +61,6 @@ describe('React Module Federation', () => {
             'Test Suites: 1 passed, 1 total'
           ),
         });
-
-        if (js) {
-          updateFile(
-            `apps/${shell}/webpack.config.js`,
-            stripIndents`
-        const { composePlugins, withNx } = require('@nx/webpack');
-        const { withReact } = require('@nx/react');
-        const { withModuleFederation } = require('@nx/react/module-federation');
-        
-        const baseConfig = require('./module-federation.config');
-        
-        const config = {
-          ...baseConfig,
-              remotes: [
-                '${remote1}',
-                ['${remote2}', 'http://localhost:${defaultRemotePort}/${remote2}/remoteEntry.js'],
-                ['${remote3}', 'http://localhost:${defaultRemotePort}/${remote3}/remoteEntry.js'],
-              ],
-        };
-
-        // Nx plugins for webpack to build config object from Nx options and context.
-        module.exports = composePlugins(withNx(), withReact(), withModuleFederation(config));
-      `
-          );
-        } else {
-          updateFile(
-            `apps/${shell}/webpack.config.ts`,
-            stripIndents`
-        import { composePlugins, withNx } from '@nx/webpack';
-        import { withReact } from '@nx/react';
-        import { withModuleFederation } from '@nx/react/module-federation';
-        
-        import baseConfig from './module-federation.config';
-        
-        const config = {
-          ...baseConfig,
-              remotes: [
-                '${remote1}',
-                ['${remote2}', 'http://localhost:${defaultRemotePort}/${remote2}/remoteEntry.js'],
-                ['${remote3}', 'http://localhost:${defaultRemotePort}/${remote3}/remoteEntry.js'],
-              ],
-        };
-
-        // Nx plugins for webpack to build config object from Nx options and context.
-        export default composePlugins(withNx(), withReact(), withModuleFederation(config));
-      `
-          );
-        }
 
         updateFile(
           `apps/${shell}-e2e/src/integration/app.spec.${js ? 'js' : 'ts'}`,
@@ -153,11 +102,7 @@ describe('React Module Federation', () => {
           output.includes(`http://localhost:${readPort(shell)}`)
         );
 
-        await killProcessAndPorts(
-          serveResult.pid,
-          readPort(shell),
-          defaultRemotePort
-        );
+        await killProcessAndPorts(serveResult.pid, readPort(shell));
 
         if (runE2ETests()) {
           const e2eResultsSwc = await runCommandUntil(
@@ -165,11 +110,7 @@ describe('React Module Federation', () => {
             (output) => output.includes('All specs passed!')
           );
 
-          await killProcessAndPorts(
-            e2eResultsSwc.pid,
-            readPort(shell),
-            defaultRemotePort
-          );
+          await killProcessAndPorts(e2eResultsSwc.pid, readPort(shell));
 
           const e2eResultsTsNode = await runCommandUntil(
             `e2e ${shell}-e2e --no-watch --verbose`,
@@ -179,11 +120,7 @@ describe('React Module Federation', () => {
               env: { NX_PREFER_TS_NODE: 'true' },
             }
           );
-          await killProcessAndPorts(
-            e2eResultsTsNode.pid,
-            readPort(shell),
-            defaultRemotePort
-          );
+          await killProcessAndPorts(e2eResultsTsNode.pid, readPort(shell));
         }
       },
       500_000
