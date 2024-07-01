@@ -50,6 +50,7 @@
     "@jest/reporters": "^29.4.1",
     "@jest/test-result": "^29.4.1",
     "@jest/types": "^29.4.1",
+    "@module-federation/enhanced": "^0.2.3",
     "@monodon/rust": "1.3.3",
     "@napi-rs/cli": "2.14.0",
     "@nestjs/cli": "^10.0.2",

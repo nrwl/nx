@@ -1,7 +1,7 @@
 import { ModuleFederationConfig } from '@nx/webpack/src/utils/module-federation';
 import { getModuleFederationConfig } from './utils';
 import type { AsyncNxComposableWebpackPlugin } from '@nx/webpack';
-import ModuleFederationPlugin = require('webpack/lib/container/ModuleFederationPlugin');
+import { ModuleFederationPlugin } from '@module-federation/enhanced/webpack';
 
 const isVarOrWindow = (libType?: string) =>
   libType === 'var' || libType === 'window';

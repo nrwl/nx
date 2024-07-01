@@ -38,6 +38,7 @@
     "file-loader": "^6.2.0",
     "minimatch": "9.0.3",
     "tslib": "^2.3.0",
+    "@module-federation/enhanced": "~0.2.3",
     "@nx/devkit": "file:../devkit",
     "@nx/js": "file:../js",
     "@nx/eslint": "file:../eslint",
