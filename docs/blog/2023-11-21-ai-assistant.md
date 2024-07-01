@@ -1,5 +1,6 @@
 ---
 title: Nx Docs AI Assistant
+slug: 'nx-docs-ai-assistant'
 authors: [Katerina Skroumpelou]
 cover_image: '/blog/images/2023-11-21/featured_img.webp'
 tags: [nx, docs, AI]

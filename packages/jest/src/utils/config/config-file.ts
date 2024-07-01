@@ -8,10 +8,10 @@ export const jestConfigExtensions = [
   'mts',
   'cts',
 ] as const;
-export type JestConfigExtension = typeof jestConfigExtensions[number];
+export type JestConfigExtension = (typeof jestConfigExtensions)[number];
 
 export const jestPresetExtensions = ['js', 'cjs', 'mjs'] as const;
-export type JestPresetExtension = typeof jestPresetExtensions[number];
+export type JestPresetExtension = (typeof jestPresetExtensions)[number];
 
 export function getPresetExt(tree: Tree): JestPresetExtension {
   const ext = jestPresetExtensions.find((ext) =>

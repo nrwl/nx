@@ -1,5 +1,6 @@
 ---
 title: Nx Console gets Lit
+slug: 'nx-console-gets-lit'
 authors: [Max Kless]
 cover_image: '/blog/images/2023-06-29/featured_img.webp'
 tags: [nx, nx-console]

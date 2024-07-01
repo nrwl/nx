@@ -31,7 +31,7 @@ module.exports = {
   mode: 'jit',
   darkMode: 'class',
   content: [
-    path.join(__dirname, 'pages/**/*.{js,ts,jsx,tsx}'),
+    path.join(__dirname, '{pages,app}/**/*.{js,ts,jsx,tsx}'),
     ...createGlobPatternsForDependencies(__dirname),
   ],
   theme: {

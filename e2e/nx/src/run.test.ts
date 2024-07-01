@@ -86,6 +86,23 @@ describe('Nx Running Tests', () => {
         const output = runCLI(`echo ${proj} ${args}`);
         expect(output).toContain(`ECHO: ${result}`);
       });
+
+      it.each([
+        {
+          args: '-- a b c --a --a.b=1 --no-color --no-parallel',
+          result: 'ECHO: a b c --a --a.b=1',
+        },
+        {
+          args: '-- a b c --a --a.b=1 --color --parallel',
+          result: 'ECHO: a b c --a --a.b=1',
+        },
+      ])(
+        'should not forward --color --parallel for $args',
+        ({ args, result }) => {
+          const output = runCLI(`echo ${proj} ${args}`);
+          expect(output).toContain(result);
+        }
+      );
     });
 
     it('should execute long running tasks', () => {

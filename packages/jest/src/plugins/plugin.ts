@@ -3,6 +3,7 @@ import {
   CreateNodesContext,
   createNodesFromFiles,
   CreateNodesV2,
+  getPackageManagerCommand,
   joinPathFragments,
   logger,
   normalizePath,
@@ -12,18 +13,24 @@ import {
   TargetConfiguration,
   writeJsonFile,
 } from '@nx/devkit';
-import { dirname, join, relative, resolve } from 'path';
+import { dirname, isAbsolute, join, relative, resolve } from 'path';
 
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { existsSync, readdirSync, readFileSync } from 'fs';
-import { readConfig } from 'jest-config';
+import { readConfig, replaceRootDirInPath } from 'jest-config';
+import jestResolve from 'jest-resolve';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
-import { clearRequireCache } from '@nx/devkit/src/utils/config-utils';
+import {
+  clearRequireCache,
+  loadConfigFile,
+} from '@nx/devkit/src/utils/config-utils';
 import { getGlobPatternsFromPackageManagerWorkspaces } from 'nx/src/plugins/package-json-workspaces';
 import { combineGlobPatterns } from 'nx/src/utils/globs';
 import { minimatch } from 'minimatch';
 import { hashObject } from 'nx/src/devkit-internals';
+
+const pmc = getPackageManagerCommand();
 
 export interface JestPluginOptions {
   targetName?: string;
@@ -51,6 +58,7 @@ export const createNodesV2: CreateNodesV2<JestPluginOptions> = [
     const optionsHash = hashObject(options);
     const cachePath = join(workspaceDataDirectory, `jest-${optionsHash}.hash`);
     const targetsCache = readTargetsCache(cachePath);
+
     try {
       return await createNodesFromFiles(
         (configFile, options, context) =>
@@ -75,6 +83,7 @@ export const createNodes: CreateNodes<JestPluginOptions> = [
     logger.warn(
       '`createNodes` is deprecated. Update your plugin to utilize createNodesV2 instead. In Nx 20, this will change to the createNodesV2 API.'
     );
+
     return createNodesInternal(...args, {});
   },
 ];
@@ -157,12 +166,15 @@ async function buildJestTargets(
     clearRequireCache();
   }
 
+  const rawConfig = await loadConfigFile(absConfigFilePath);
   const config = await readConfig(
     {
       _: [],
       $0: undefined,
     },
-    absConfigFilePath
+    rawConfig,
+    undefined,
+    dirname(absConfigFilePath)
   );
 
   const namedInputs = getNamedInputs(projectRoot, context);
@@ -177,11 +189,24 @@ async function buildJestTargets(
     metadata: {
       technologies: ['jest'],
       description: 'Run Jest Tests',
+      help: {
+        command: `${pmc.exec} jest --help`,
+        example: {
+          options: {
+            coverage: true,
+          },
+        },
+      },
     },
   });
 
   const cache = (target.cache = true);
-  const inputs = (target.inputs = getInputs(namedInputs));
+  const inputs = (target.inputs = getInputs(
+    namedInputs,
+    rawConfig,
+    projectRoot,
+    context.workspaceRoot
+  ));
   const outputs = (target.outputs = getOutputs(projectRoot, config, context));
 
   let metadata: ProjectConfiguration['metadata'];
@@ -225,6 +250,15 @@ async function buildJestTargets(
         metadata: {
           technologies: ['jest'],
           description: 'Run Jest Tests in CI',
+          nonAtomizedTarget: options.targetName,
+          help: {
+            command: `${pmc.exec} jest --help`,
+            example: {
+              options: {
+                coverage: true,
+              },
+            },
+          },
         },
       };
       targetGroup.push(options.ciTargetName);
@@ -246,6 +280,14 @@ async function buildJestTargets(
           metadata: {
             technologies: ['jest'],
             description: `Run Jest Tests in ${relativePath}`,
+            help: {
+              command: `${pmc.exec} jest --help`,
+              example: {
+                options: {
+                  coverage: true,
+                },
+              },
+            },
           },
         };
         targetGroup.push(targetName);
@@ -257,16 +299,72 @@ async function buildJestTargets(
 }
 
 function getInputs(
-  namedInputs: NxJsonConfiguration['namedInputs']
+  namedInputs: NxJsonConfiguration['namedInputs'],
+  jestConfig: { preset?: string },
+  projectRoot: string,
+  workspaceRoot: string
 ): TargetConfiguration['inputs'] {
-  return [
+  const inputs: TargetConfiguration['inputs'] = [
     ...('production' in namedInputs
       ? ['default', '^production']
       : ['default', '^default']),
-    {
-      externalDependencies: ['jest'],
-    },
   ];
+
+  const externalDependencies = ['jest'];
+  const presetInput = resolvePresetInput(
+    jestConfig.preset,
+    projectRoot,
+    workspaceRoot
+  );
+  if (presetInput) {
+    if (
+      typeof presetInput !== 'string' &&
+      'externalDependencies' in presetInput
+    ) {
+      externalDependencies.push(...presetInput.externalDependencies);
+    } else {
+      inputs.push(presetInput);
+    }
+  }
+
+  inputs.push({ externalDependencies });
+
+  return inputs;
+}
+
+// preset resolution adapted from:
+// https://github.com/jestjs/jest/blob/c54bccd657fb4cf060898717c09f633b4da3eec4/packages/jest-config/src/normalize.ts#L122
+function resolvePresetInput(
+  presetValue: string | undefined,
+  projectRoot: string,
+  workspaceRoot: string
+): TargetConfiguration['inputs'][number] | null {
+  if (!presetValue) {
+    return null;
+  }
+
+  let presetPath = replaceRootDirInPath(projectRoot, presetValue);
+  const isNpmPackage = !presetValue.startsWith('.') && !isAbsolute(presetPath);
+  presetPath = presetPath.startsWith('.')
+    ? presetPath
+    : join(presetPath, 'jest-preset');
+  const presetModule = jestResolve.findNodeModule(presetPath, {
+    basedir: projectRoot,
+    extensions: ['.json', '.js', '.cjs', '.mjs'],
+  });
+
+  if (!presetModule) {
+    return null;
+  }
+
+  if (isNpmPackage) {
+    return { externalDependencies: [presetValue] };
+  }
+
+  const relativePath = relative(join(workspaceRoot, projectRoot), presetModule);
+  return relativePath.startsWith('..')
+    ? join('{workspaceRoot}', join(projectRoot, relativePath))
+    : join('{projectRoot}', relativePath);
 }
 
 function getOutputs(

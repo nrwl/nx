@@ -1,10 +1,10 @@
 import { CreateNodesContext } from '@nx/devkit';
-import { createNodes } from './plugin';
+import { createNodesV2 } from './plugin';
 import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
 import { join } from 'path';
 
 describe('@nx/webpack/plugin', () => {
-  let createNodesFunction = createNodes[1];
+  let createNodesFunction = createNodesV2[1];
   let context: CreateNodesContext;
   let tempFs: TempFs;
 
@@ -40,7 +40,7 @@ describe('@nx/webpack/plugin', () => {
       },
     });
     const nodes = await createNodesFunction(
-      'my-app/webpack.config.js',
+      ['my-app/webpack.config.js'],
       {
         buildTargetName: 'build-something',
         serveTargetName: 'my-serve',

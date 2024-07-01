@@ -1,5 +1,6 @@
 ---
 title: Manage Your Gradle Project using Nx
+slug: 'manage-your-gradle-project-using-nx'
 authors: ['Emily Xiong']
 cover_image: '/blog/images/2024-04-19/featured_img.png'
 tags: [nx, gradle, how-to]

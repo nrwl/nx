@@ -1,10 +1,11 @@
 import { logger } from '../../devkit-exports';
 import { getGithubSlugOrNull } from '../../utils/git-utils';
+import { lt } from 'semver';
 
 export async function shortenedCloudUrl(
   installationSource: string,
-  accessToken: string,
-  github?: boolean
+  accessToken?: string,
+  usesGithub?: boolean
 ) {
   const githubSlug = getGithubSlugOrNull();
 
@@ -12,15 +13,11 @@ export async function shortenedCloudUrl(
     process.env.NX_CLOUD_API || process.env.NRWL_API || `https://cloud.nx.app`
   );
 
-  const installationSupportsGitHub = await getInstallationSupportsGitHub(
-    apiUrl
-  );
+  const version = await getNxCloudVersion(apiUrl);
 
-  const usesGithub =
-    (githubSlug || github) &&
-    (apiUrl.includes('cloud.nx.app') ||
-      apiUrl.includes('eu.nx.app') ||
-      installationSupportsGitHub);
+  if (version && lt(removeVersionModifier(version), '2406.11.5')) {
+    return apiUrl;
+  }
 
   const source = getSource(installationSource);
 
@@ -49,10 +46,29 @@ export async function shortenedCloudUrl(
       usesGithub,
       githubSlug,
       apiUrl,
-      accessToken,
-      source
+      source,
+      accessToken
     );
   }
+}
+
+export async function repoUsesGithub(github?: boolean) {
+  const githubSlug = getGithubSlugOrNull();
+
+  const apiUrl = removeTrailingSlash(
+    process.env.NX_CLOUD_API || process.env.NRWL_API || `https://cloud.nx.app`
+  );
+
+  const installationSupportsGitHub = await getInstallationSupportsGitHub(
+    apiUrl
+  );
+
+  return (
+    (githubSlug || github) &&
+    (apiUrl.includes('cloud.nx.app') ||
+      apiUrl.includes('eu.nx.app') ||
+      installationSupportsGitHub)
+  );
 }
 
 function removeTrailingSlash(apiUrl: string) {
@@ -77,16 +93,16 @@ function getURLifShortenFailed(
   usesGithub: boolean,
   githubSlug: string,
   apiUrl: string,
-  accessToken: string,
-  source: string
+  source: string,
+  accessToken?: string
 ) {
   if (usesGithub) {
     if (githubSlug) {
-      return `${apiUrl}/setup/connect-workspace/vcs?provider=GITHUB&selectedRepositoryName=${encodeURIComponent(
+      return `${apiUrl}/setup/connect-workspace/github/connect?name=${encodeURIComponent(
         githubSlug
       )}&source=${source}`;
     } else {
-      return `${apiUrl}/setup/connect-workspace/vcs?provider=GITHUB&source=${source}`;
+      return `${apiUrl}/setup/connect-workspace/github/select&source=${source}`;
     }
   }
   return `${apiUrl}/setup/connect-workspace/manual?accessToken=${accessToken}&source=${source}`;
@@ -94,18 +110,41 @@ function getURLifShortenFailed(
 
 async function getInstallationSupportsGitHub(apiUrl: string): Promise<boolean> {
   try {
-    const response = await require('axios').get(`${apiUrl}/vcs-integrations`);
+    const response = await require('axios').get(
+      `${apiUrl}/nx-cloud/system/features`
+    );
     if (!response?.data || response.data.message) {
       throw new Error(
         response?.data?.message ?? 'Failed to shorten Nx Cloud URL'
       );
     }
-    return !!response.data.github;
+    return !!response.data.isGithubIntegrationEnabled;
   } catch (e) {
     if (process.env.NX_VERBOSE_LOGGING) {
-      logger.warn(`Failed to access vcs-integrations endpoint.
+      logger.warn(`Failed to access system features. GitHub integration assumed to be disabled. 
     ${e}`);
     }
     return false;
   }
+}
+
+async function getNxCloudVersion(apiUrl: string): Promise<string | null> {
+  try {
+    const response = await require('axios').get(
+      `${apiUrl}/nx-cloud/system/version`
+    );
+    const version = removeVersionModifier(response.data.version);
+    if (!version) {
+      throw new Error('Failed to extract version from response.');
+    }
+    return version;
+  } catch (e) {
+    logger.verbose(`Failed to get version of Nx Cloud.
+      ${e}`);
+  }
+}
+
+function removeVersionModifier(versionString: string): string {
+  // version may be something like 2406.13.5.hotfix2
+  return versionString.split(/[\.-]/).slice(0, 3).join('.');
 }

@@ -24,6 +24,10 @@
       "description": "The name of the build target",
       "type": "string",
       "default": "build"
+    },
+    "outputPath": {
+      "description": "The output path for the node application",
+      "type": "string"
     }
   }
 }

@@ -73,6 +73,14 @@ describe('@nx/playwright/plugin', () => {
                     ],
                     "metadata": {
                       "description": "Runs Playwright Tests",
+                      "help": {
+                        "command": "npx playwright test --help",
+                        "example": {
+                          "options": {
+                            "workers": 1,
+                          },
+                        },
+                      },
                       "technologies": [
                         "playwright",
                       ],
@@ -99,6 +107,15 @@ describe('@nx/playwright/plugin', () => {
                     ],
                     "metadata": {
                       "description": "Runs Playwright Tests in CI",
+                      "help": {
+                        "command": "npx playwright test --help",
+                        "example": {
+                          "options": {
+                            "workers": 1,
+                          },
+                        },
+                      },
+                      "nonAtomizedTarget": "e2e",
                       "technologies": [
                         "playwright",
                       ],
@@ -162,6 +179,14 @@ describe('@nx/playwright/plugin', () => {
                     ],
                     "metadata": {
                       "description": "Runs Playwright Tests",
+                      "help": {
+                        "command": "npx playwright test --help",
+                        "example": {
+                          "options": {
+                            "workers": 1,
+                          },
+                        },
+                      },
                       "technologies": [
                         "playwright",
                       ],
@@ -191,6 +216,15 @@ describe('@nx/playwright/plugin', () => {
                     ],
                     "metadata": {
                       "description": "Runs Playwright Tests in CI",
+                      "help": {
+                        "command": "npx playwright test --help",
+                        "example": {
+                          "options": {
+                            "workers": 1,
+                          },
+                        },
+                      },
+                      "nonAtomizedTarget": "e2e",
                       "technologies": [
                         "playwright",
                       ],
@@ -273,6 +307,15 @@ describe('@nx/playwright/plugin', () => {
         ],
         "metadata": {
           "description": "Runs Playwright Tests in CI",
+          "help": {
+            "command": "npx playwright test --help",
+            "example": {
+              "options": {
+                "workers": 1,
+              },
+            },
+          },
+          "nonAtomizedTarget": "e2e",
           "technologies": [
             "playwright",
           ],
@@ -297,6 +340,14 @@ describe('@nx/playwright/plugin', () => {
         ],
         "metadata": {
           "description": "Runs Playwright Tests in tests/run-me.spec.ts in CI",
+          "help": {
+            "command": "npx playwright test --help",
+            "example": {
+              "options": {
+                "workers": 1,
+              },
+            },
+          },
           "technologies": [
             "playwright",
           ],
@@ -324,6 +375,14 @@ describe('@nx/playwright/plugin', () => {
         ],
         "metadata": {
           "description": "Runs Playwright Tests in tests/run-me-2.spec.ts in CI",
+          "help": {
+            "command": "npx playwright test --help",
+            "example": {
+              "options": {
+                "workers": 1,
+              },
+            },
+          },
           "technologies": [
             "playwright",
           ],

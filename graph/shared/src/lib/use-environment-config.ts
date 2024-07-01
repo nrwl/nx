@@ -10,7 +10,7 @@ export function useEnvironmentConfig(): {
   watch: boolean;
   localMode: 'serve' | 'build';
   projectGraphResponse?: ProjectGraphClientResponse;
-  environment: 'dev' | 'watch' | 'release' | 'nx-console';
+  environment: 'dev' | 'watch' | 'release' | 'nx-console' | 'docs';
   appConfig: AppConfig;
   useXstateInspect: boolean;
 } {
@@ -25,13 +25,14 @@ export function getEnvironmentConfig() {
     watch: window.watch,
     localMode: window.localMode,
     projectGraphResponse: window.projectGraphResponse,
-    environment: window.environment,
+    // If this was not built into JS or HTML, then it is rendered on docs (nx.dev).
+    environment: window.environment ?? ('docs' as const),
     appConfig: {
       ...window.appConfig,
       showExperimentalFeatures:
         localStorage.getItem('showExperimentalFeatures') === 'true'
           ? true
-          : window.appConfig.showExperimentalFeatures,
+          : window.appConfig?.showExperimentalFeatures,
     },
     useXstateInspect: window.useXstateInspect,
   };

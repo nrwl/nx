@@ -6,7 +6,7 @@ import {
   type Tree,
 } from '@nx/devkit';
 import { createNodesV2, PlaywrightPluginOptions } from '../../plugins/plugin';
-import { migrateExecutorToPlugin } from '@nx/devkit/src/generators/plugin-migrations/executor-to-plugin-migrator';
+import { migrateProjectExecutorsToPlugin } from '@nx/devkit/src/generators/plugin-migrations/executor-to-plugin-migrator';
 
 interface Schema {
   project?: string;
@@ -17,14 +17,19 @@ interface Schema {
 export async function convertToInferred(tree: Tree, options: Schema) {
   const projectGraph = await createProjectGraphAsync();
   const migratedProjects =
-    await migrateExecutorToPlugin<PlaywrightPluginOptions>(
+    await migrateProjectExecutorsToPlugin<PlaywrightPluginOptions>(
       tree,
       projectGraph,
-      '@nx/playwright:playwright',
       '@nx/playwright/plugin',
-      (targetName) => ({ targetName, ciTargetName: 'e2e-ci' }),
-      postTargetTransformer,
       createNodesV2,
+      { targetName: 'e2e', ciTargetName: 'e2e-ci' },
+      [
+        {
+          executors: ['@nx/playwright:playwright'],
+          postTargetTransformer,
+          targetPluginOptionMapper: (targetName) => ({ targetName }),
+        },
+      ],
       options.project
     );
 
@@ -45,14 +50,25 @@ function postTargetTransformer(
       delete target.options.config;
     }
 
-    for (const [key, value] of Object.entries(target.options)) {
-      const newKeyName = names(key).fileName;
-      delete target.options[key];
-      target.options[newKeyName] = value;
+    handleRenameOfProperties(target.options);
+  }
+
+  if (target.configurations) {
+    for (const configurationName in target.configurations) {
+      const configuration = target.configurations[configurationName];
+      handleRenameOfProperties(configuration);
     }
   }
 
   return target;
+}
+
+function handleRenameOfProperties(options: Record<string, unknown>) {
+  for (const [key, value] of Object.entries(options)) {
+    const newKeyName = names(key).fileName;
+    delete options[key];
+    options[newKeyName] = value;
+  }
 }
 
 export default convertToInferred;

@@ -15,7 +15,6 @@
   },
   "devDependencies": {
     "@remix-run/dev": "<%= remixVersion %>",
-    "@remix-run/eslint-config": "<%= remixVersion %>",
     "@types/react": "<%= typesReactVersion %>",
     "@types/react-dom": "<%= typesReactDomVersion %>",
     "eslint": "<%= eslintVersion %>",

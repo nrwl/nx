@@ -119,14 +119,24 @@ export interface ProjectConfiguration {
 }
 
 export interface ProjectMetadata {
+  description?: string;
   technologies?: string[];
   targetGroups?: Record<string, string[]>;
 }
 
 export interface TargetMetadata {
   [k: string]: any;
+
   description?: string;
   technologies?: string[];
+  nonAtomizedTarget?: string;
+  help?: {
+    command: string;
+    example: {
+      options?: Record<string, unknown>;
+      args?: string[];
+    };
+  };
 }
 
 export interface TargetDependencyConfig {

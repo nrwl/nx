@@ -16,35 +16,35 @@ import {
   fetchProjectGraph,
   getProjectGraphDataService,
   useEnvironmentConfig,
-  useIntervalWhen,
+  usePoll,
 } from '@nx/graph/shared';
 import { ProjectDetailsHeader } from './project-details-header';
 
 export function ProjectDetailsPage() {
-  const { project, sourceMap, hash, errors } = useRouteLoaderData(
-    'selectedProjectDetails'
-  ) as {
-    hash: string;
-    project: ProjectGraphProjectNode;
-    sourceMap: Record<string, string[]>;
-    errors?: GraphError[];
-  };
+  const { project, sourceMap, hash, errors, connectedToCloud } =
+    useRouteLoaderData('selectedProjectDetails') as {
+      hash: string;
+      project: ProjectGraphProjectNode;
+      sourceMap: Record<string, string[]>;
+      errors?: GraphError[];
+      connectedToCloud?: boolean;
+    };
 
   const { environment, watch, appConfig } = useEnvironmentConfig();
 
   const projectGraphDataService = getProjectGraphDataService();
   const params = useParams();
 
-  useIntervalWhen(
+  usePoll(
     async () => {
-      fetchProjectGraph(projectGraphDataService, params, appConfig).then(
-        (data) => {
-          if (data?.hash !== hash) {
-            window.location.reload();
-          }
-          return;
-        }
+      const data = await fetchProjectGraph(
+        projectGraphDataService,
+        params,
+        appConfig
       );
+      if (data?.hash !== hash) {
+        window.location.reload();
+      }
     },
     1000,
     watch
@@ -64,6 +64,7 @@ export function ProjectDetailsPage() {
             project={project}
             sourceMap={sourceMap}
             errors={errors}
+            connectedToCloud={connectedToCloud}
           ></ProjectDetailsWrapper>
         </div>
       </div>

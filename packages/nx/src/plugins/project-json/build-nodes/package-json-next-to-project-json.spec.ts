@@ -18,11 +18,16 @@ describe('nx project.json plugin', () => {
     };
   });
 
-  it('should build projects from project.json', () => {
+  it('should build projects from package.json next to project.json', () => {
     memfs.vol.fromJSON(
       {
+        'package.json': JSON.stringify({
+          name: 'lib-a',
+          description: 'lib-a project description',
+        }),
         'packages/lib-a/project.json': JSON.stringify({
           name: 'lib-a',
+          description: 'lib-a project description',
           targets: {
             build: {
               executor: 'nx:run-commands',
@@ -32,6 +37,7 @@ describe('nx project.json plugin', () => {
         }),
         'packages/lib-a/package.json': JSON.stringify({
           name: 'lib-a',
+          description: 'lib-a package description',
           scripts: {
             test: 'jest',
           },
@@ -47,6 +53,7 @@ describe('nx project.json plugin', () => {
         "projects": {
           "lib-a": {
             "metadata": {
+              "description": "lib-a package description",
               "targetGroups": {
                 "NPM Scripts": [
                   "test",
@@ -55,6 +62,9 @@ describe('nx project.json plugin', () => {
             },
             "name": "lib-a",
             "root": "packages/lib-a",
+            "tags": [
+              "npm:public",
+            ],
             "targets": {
               "nx-release-publish": {
                 "dependsOn": [
@@ -78,5 +88,39 @@ describe('nx project.json plugin', () => {
         },
       }
     `);
+  });
+
+  it('should not build package manager workspace projects from package.json next to project.json', () => {
+    memfs.vol.fromJSON(
+      {
+        'package.json': JSON.stringify({
+          name: 'lib-a',
+          description: 'lib-a project description',
+          workspaces: ['packages/lib-a'],
+        }),
+        'packages/lib-a/project.json': JSON.stringify({
+          name: 'lib-a',
+          description: 'lib-a project description',
+          targets: {
+            build: {
+              executor: 'nx:run-commands',
+              options: {},
+            },
+          },
+        }),
+        'packages/lib-a/package.json': JSON.stringify({
+          name: 'lib-a',
+          description: 'lib-a package description',
+          scripts: {
+            test: 'jest',
+          },
+        }),
+      },
+      '/root'
+    );
+
+    expect(
+      createNodesFunction('packages/lib-a/project.json', undefined, context)
+    ).toMatchInlineSnapshot(`{}`);
   });
 });

@@ -3,6 +3,7 @@ import {
   createProjectGraphAsync,
   formatFiles,
   GeneratorCallback,
+  readNxJson,
   Tree,
 } from '@nx/devkit';
 import { nxVersion, rollupVersion } from '../../utils/versions';
@@ -12,7 +13,10 @@ import { createNodes } from '../../plugins/plugin';
 
 export async function rollupInitGenerator(tree: Tree, schema: Schema) {
   let task: GeneratorCallback = () => {};
-  schema.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
+  const nxJson = readNxJson(tree);
+  schema.addPlugin ??=
+    process.env.NX_ADD_PLUGINS !== 'false' &&
+    nxJson.useInferencePlugins !== false;
 
   if (!schema.skipPackageJson) {
     const devDependencies = { '@nx/rollup': nxVersion };

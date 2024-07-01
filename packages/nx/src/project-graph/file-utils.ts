@@ -215,6 +215,7 @@ function getProjectsSync(
       const packageJson = readJsonFile<PackageJson>(projectFile);
       const config = buildProjectConfigurationFromPackageJson(
         packageJson,
+        root,
         projectFile,
         nxJson
       );

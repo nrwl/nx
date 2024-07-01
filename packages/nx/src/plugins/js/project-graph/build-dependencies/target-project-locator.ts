@@ -1,6 +1,6 @@
-import { existsSync } from 'node:fs';
 import { builtinModules } from 'node:module';
 import { dirname, join, parse, posix, relative } from 'node:path';
+import { clean } from 'semver';
 import {
   ProjectGraphExternalNode,
   ProjectGraphProjectNode,
@@ -186,7 +186,8 @@ export class TargetProjectLocator {
         return externalNodeName;
       }
 
-      const npmProjectKey = `npm:${externalPackageJson.name}@${externalPackageJson.version}`;
+      const version = clean(externalPackageJson.version);
+      const npmProjectKey = `npm:${externalPackageJson.name}@${version}`;
       const matchingExternalNode = this.npmProjects[npmProjectKey];
       if (!matchingExternalNode) {
         return null;
@@ -335,13 +336,18 @@ export class TargetProjectLocator {
       relativeToDir
     );
     if (packageJsonPath) {
-      return readJsonFile(packageJsonPath);
+      const parsedPackageJson = readJsonFile(packageJsonPath);
+
+      if (parsedPackageJson.name && parsedPackageJson.version) {
+        return parsedPackageJson;
+      }
     }
 
     try {
       // Resolve the main entry point of the package
-      const mainPath = resolveRelativeToDir(packageName, relativeToDir);
-      let dir = dirname(mainPath);
+      const pathOfFileInPackage =
+        packageJsonPath ?? resolveRelativeToDir(packageName, relativeToDir);
+      let dir = dirname(pathOfFileInPackage);
 
       while (dir !== parse(dir).root) {
         const packageJsonPath = join(dir, 'package.json');

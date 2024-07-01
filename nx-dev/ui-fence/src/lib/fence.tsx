@@ -1,3 +1,4 @@
+'use client';
 import {
   ClipboardDocumentCheckIcon,
   ClipboardDocumentIcon,
@@ -160,7 +161,7 @@ export function Fence({
   return (
     <div className="code-block group relative w-full">
       <div>
-        <div className="absolute top-0 right-0 z-10 flex">
+        <div className="absolute right-0 top-0 z-10 flex">
           {enableCopy && enableCopy === true && (
             <CopyToClipboard
               text={command && command !== '' ? command : children}

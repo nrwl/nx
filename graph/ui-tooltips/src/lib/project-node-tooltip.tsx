@@ -26,10 +26,10 @@ export function ProjectNodeToolTip({
 }: ProjectNodeToolTipProps) {
   return (
     <div className="text-sm text-slate-700 dark:text-slate-400">
-      <h4 className="flex justify-between items-center gap-4">
+      <h4 className="flex items-center justify-between gap-4">
         <div className="flex items-center">
           <Tag className="mr-3">{type}</Tag>
-          <span className="font-mono mr-3">{id}</span>
+          <span className="mr-3 font-mono">{id}</span>
         </div>
         {openConfigCallback && (
           <button
@@ -50,7 +50,7 @@ export function ProjectNodeToolTip({
         )}
       </h4>
       {tags.length > 0 ? (
-        <p className="my-2">
+        <p className="my-2 lowercase">
           <strong>tags</strong>
           <br></br>
           {tags.join(', ')}

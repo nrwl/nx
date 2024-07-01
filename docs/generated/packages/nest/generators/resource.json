@@ -22,6 +22,11 @@
         "alias": "p",
         "x-deprecated": "Provide The `directory` option instead and use the `as-provided` format. the project will be determined from the directory provided. It will be removed in Nx v20."
       },
+      "nameAndDirectoryFormat": {
+        "description": "Whether to generate the project name and root directory as provided (`as-provided`) or generate them composing their values and taking the configured layout into account (`derived`).",
+        "type": "string",
+        "enum": ["as-provided", "derived"]
+      },
       "directory": {
         "description": "Directory where the generated files are placed. when `--nameAndDirectoryFormat=as-provided`, it will be relative to the current working directory. otherwise, it will be relative to the workspace root.",
         "type": "string",

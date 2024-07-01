@@ -1,15 +1,50 @@
-import { dirname, join } from 'path';
+import { dirname, join, sep } from 'path';
 import type { TsConfigOptions } from 'ts-node';
 import type { CompilerOptions } from 'typescript';
-import { logger, NX_PREFIX, stripIndent } from '../../../utils/logger';
-import { existsSync } from 'fs';
-import { workspaceRoot } from '../../../utils/workspace-root';
+import { NX_PREFIX, logger, stripIndent } from '../../../utils/logger';
 
 const swcNodeInstalled = packageIsInstalled('@swc-node/register');
 const tsNodeInstalled = packageIsInstalled('ts-node/register');
 let ts: typeof import('typescript');
 
 let isTsEsmLoaderRegistered = false;
+
+/**
+ * tsx is a utility to run TypeScript files in node which is growing in popularity:
+ * https://tsx.is
+ *
+ * Behind the scenes it is invoking node with relevant --require and --import flags.
+ *
+ * If the user is invoking Nx via a script which is being invoked via tsx, then we
+ * do not need to register any transpiler at all as the environment will have already
+ * been configured by tsx. In fact, registering a transpiler such as ts-node or swc
+ * in this case causes issues.
+ *
+ * Because node is being invoked by tsx, the tsx binary does not end up in the final
+ * process.argv and so we need to check a few possible things to account for usage
+ * via different package managers (e.g. pnpm does not set process._ to tsx, but rather
+ * pnpm itself, modern yarn does not set process._ at all etc.).
+ */
+const isInvokedByTsx: boolean = (() => {
+  if (process.env._?.endsWith(`${sep}tsx`)) {
+    return true;
+  }
+  const requireArgs: string[] = [];
+  const importArgs: string[] = [];
+  (process.execArgv ?? []).forEach((arg, i) => {
+    if (arg === '-r' || arg === '--require') {
+      requireArgs.push(process.execArgv[i + 1]);
+    }
+    if (arg === '--import') {
+      importArgs.push(process.execArgv[i + 1]);
+    }
+  });
+  const isTsxPath = (p: string) => p.includes(`${sep}tsx${sep}`);
+  return (
+    requireArgs.some((a) => isTsxPath(a)) ||
+    importArgs.some((a) => isTsxPath(a))
+  );
+})();
 
 /**
  * Optionally, if swc-node and tsconfig-paths are available in the current workspace, apply the require
@@ -38,6 +73,11 @@ export function registerTsProject(
   path: string,
   configFilename?: string
 ): () => void {
+  // See explanation alongside isInvokedByTsx declaration
+  if (isInvokedByTsx) {
+    return () => {};
+  }
+
   const tsConfigPath = configFilename ? join(path, configFilename) : path;
   const compilerOptions: CompilerOptions = readCompilerOptions(tsConfigPath);
 
@@ -80,10 +120,17 @@ export function getSwcTranspiler(
   return typeof cleanupFn === 'function' ? cleanupFn : () => {};
 }
 
+const registered = new Set<string>();
+
 export function getTsNodeTranspiler(
-  compilerOptions: CompilerOptions,
-  tsNodeOptions?: TsConfigOptions
+  compilerOptions: CompilerOptions
 ): (...args: unknown[]) => unknown {
+  // Just return if transpiler was already registered before.
+  const registrationKey = JSON.stringify(compilerOptions);
+  if (registered.has(registrationKey)) {
+    return () => {};
+  }
+
   const { register } = require('ts-node') as typeof import('ts-node');
   // ts-node doesn't provide a cleanup method
   const service = register({
@@ -92,6 +139,7 @@ export function getTsNodeTranspiler(
     // we already read and provide the compiler options, so prevent ts-node from reading them again
     skipProject: true,
   });
+  registered.add(registrationKey);
 
   const { transpiler, swc } = service.options;
 
@@ -101,7 +149,7 @@ export function getTsNodeTranspiler(
   }
 
   return () => {
-    service.enabled(false);
+    // Do not cleanup ts-node service since other consumers may need it
   };
 }
 
@@ -206,7 +254,7 @@ export function getTranspiler(
   if (tsNodeInstalled) {
     const tsNodeOptions =
       filterRecognizedTsConfigTsNodeOptions(tsConfigRaw).recognized;
-    return () => getTsNodeTranspiler(compilerOptions, tsNodeOptions);
+    return () => getTsNodeTranspiler(compilerOptions);
   }
 }
 

@@ -11,7 +11,7 @@ We offer multiple ways of running Nx Cloud for our Enterprise customers. The bel
 The quickest and easiest way to start using Nx Cloud is by utilizing our pre-existing secure, multi-tenant managed clusters:
 
 - [https://nx.app/](https://nx.app/)
-- [https://eu.nx.app/](https://eu.nx.app/) if you have special restrictions and your data needs to be hosted in Europe.
+- Enterprise customers can contact their developer productivity engineer (DPE) to configure the EU hosted version of Nx Cloud.
 
 You get the **same level of security**, **dedicated support**, and **predictable seat-based pricing** as all our other hosting options. But you won't have to manage the instance yourself.
 

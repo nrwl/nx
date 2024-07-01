@@ -1,3 +1,4 @@
+'use client';
 // TODO@ben: refactor to use HeadlessUI tabs
 import cx from 'classnames';
 import {

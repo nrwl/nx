@@ -1,3 +1,4 @@
+'use client';
 import { Fragment, type JSX } from 'react';
 import {
   ArrowUpRightIcon,

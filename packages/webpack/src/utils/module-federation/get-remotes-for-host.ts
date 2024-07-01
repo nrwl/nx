@@ -103,7 +103,7 @@ export function getRemotes(
   );
 
   const knownDynamicRemotes = dynamicRemotes.filter(
-    (r) => !remotesToSkip.has(r)
+    (r) => !remotesToSkip.has(r) && context.projectGraph.nodes[r]
   );
 
   logger.info(

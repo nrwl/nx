@@ -8,6 +8,7 @@ export function isCI() {
     process.env.CIRRUS_CI === 'true' ||
     process.env.TRAVIS === 'true' ||
     !!process.env['bamboo.buildKey'] ||
+    !!process.env['bamboo_buildKey'] ||
     !!process.env.CODEBUILD_BUILD_ID ||
     !!process.env.GITLAB_CI ||
     !!process.env.HEROKU_TEST_RUN_ID ||

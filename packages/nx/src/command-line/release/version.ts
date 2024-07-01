@@ -72,7 +72,7 @@ export interface ReleaseVersionGeneratorSchema {
   fallbackCurrentVersionResolver?: 'disk';
   firstRelease?: boolean;
   // auto means the existing prefix will be preserved, and is the default behavior
-  versionPrefix?: typeof validReleaseVersionPrefixes[number];
+  versionPrefix?: (typeof validReleaseVersionPrefixes)[number];
   skipLockFileUpdate?: boolean;
   installArgs?: string;
   installIgnoreScripts?: boolean;
@@ -662,7 +662,7 @@ function resolveGeneratorData({
          */
         if (collectionName === '@nx/js') {
           throw new Error(
-            'The @nx/js plugin is required in order to version your JavaScript packages. Please install it and try again.'
+            'The @nx/js plugin is required in order to version your JavaScript packages. Run "nx add @nx/js" to add it to your workspace.'
           );
         }
         throw new Error(

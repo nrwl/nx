@@ -219,6 +219,7 @@ export default ESLintUtils.RuleCreator(
         packageRange.startsWith('file:') ||
         npmDependencies[packageName] === '*' ||
         packageRange === '*' ||
+        packageRange === 'workspace:*' ||
         satisfies(npmDependencies[packageName], packageRange, {
           includePrerelease: true,
         })

@@ -4,12 +4,16 @@ import {
   type TargetConfiguration,
   type Tree,
 } from '@nx/devkit';
-import { migrateExecutorToPlugin } from '@nx/devkit/src/generators/plugin-migrations/executor-to-plugin-migrator';
-import { createNodesV2 } from '../../plugins/plugin';
-import { targetOptionsToCliMap } from './lib/target-options-map';
-import { upsertBaseUrl } from './lib/upsert-baseUrl';
+import { migrateProjectExecutorsToPlugin } from '@nx/devkit/src/generators/plugin-migrations/executor-to-plugin-migrator';
+import {
+  processTargetOutputs,
+  toProjectRelativePath,
+} from '@nx/devkit/src/generators/plugin-migrations/plugin-migration-utils';
+import { createNodesV2, type CypressPluginOptions } from '../../plugins/plugin';
 import { addDevServerTargetToConfig } from './lib/add-dev-server-target-to-config';
 import { addExcludeSpecPattern } from './lib/add-exclude-spec-pattern';
+import { targetOptionsToCliMap } from './lib/target-options-map';
+import { upsertBaseUrl } from './lib/upsert-baseUrl';
 
 interface Schema {
   project?: string;
@@ -19,38 +23,29 @@ interface Schema {
 
 export async function convertToInferred(tree: Tree, options: Schema) {
   const projectGraph = await createProjectGraphAsync();
-  const migratedProjectsModern = await migrateExecutorToPlugin(
-    tree,
-    projectGraph,
-    '@nx/cypress:cypress',
-    '@nx/cypress/plugin',
-    (targetName) => ({
-      targetName,
-      ciTargetName: 'e2e-ci',
-    }),
-    postTargetTransformer,
-    createNodesV2,
-    options.project
-  );
-
-  const migratedProjectsLegacy = await migrateExecutorToPlugin(
-    tree,
-    projectGraph,
-    '@nrwl/cypress:cypress',
-    '@nx/cypress/plugin',
-    (targetName) => ({
-      targetName,
-      ciTargetName: 'e2e-ci',
-    }),
-    postTargetTransformer,
-    createNodesV2,
-    options.project
-  );
-
   const migratedProjects =
-    migratedProjectsModern.size + migratedProjectsLegacy.size;
+    await migrateProjectExecutorsToPlugin<CypressPluginOptions>(
+      tree,
+      projectGraph,
+      '@nx/cypress/plugin',
+      createNodesV2,
+      {
+        targetName: 'cypress',
+        ciTargetName: 'e2e-ci',
+        componentTestingTargetName: 'component-test',
+        openTargetName: 'open-cypress',
+      },
+      [
+        {
+          executors: ['@nx/cypress:cypress', '@nrwl/cypress:cypress'],
+          postTargetTransformer,
+          targetPluginOptionMapper: (targetName) => ({ targetName }),
+        },
+      ],
+      options.project
+    );
 
-  if (migratedProjects === 0) {
+  if (migratedProjects.size === 0) {
     throw new Error('Could not find any targets to migrate.');
   }
 
@@ -61,83 +56,35 @@ export async function convertToInferred(tree: Tree, options: Schema) {
 
 function postTargetTransformer(
   target: TargetConfiguration,
-  tree: Tree
+  tree: Tree,
+  projectDetails: { projectName: string; root: string },
+  inferredTargetConfiguration: TargetConfiguration
 ): TargetConfiguration {
   if (target.options) {
-    const configFilePath = target.options.cypressConfig;
-
-    delete target.options.cypressConfig;
-    delete target.options.copyFiles;
-    delete target.options.skipServe;
-
-    for (const key in targetOptionsToCliMap) {
-      if (target.options[key]) {
-        target.options[targetOptionsToCliMap[key]] = target.options[key];
-        delete target.options[key];
-      }
-    }
-
-    if ('exit' in target.options && !target.options.exit) {
-      delete target.options.exit;
-      target.options['no-exit'] = true;
-    }
-
-    if (target.options.testingType) {
-      delete target.options.testingType;
-    }
-
-    if (target.options.watch) {
-      target.options.headed = true;
-      target.options['no-exit'] = true;
-      delete target.options.watch;
-    }
-
-    if (target.options.baseUrl) {
-      upsertBaseUrl(tree, configFilePath, target.options.baseUrl);
-      delete target.options.baseUrl;
-    }
-
-    if (target.options.devServerTarget) {
-      const webServerCommands: Record<string, string> = {
-        default: `npx nx run ${target.options.devServerTarget}`,
-      };
-      delete target.options.devServerTarget;
-
-      if (target.configurations) {
-        for (const configuration in target.configurations) {
-          if (target.configurations[configuration]?.devServerTarget) {
-            webServerCommands[
-              configuration
-            ] = `npx nx run ${target.configurations[configuration].devServerTarget}`;
-            delete target.configurations[configuration].devServerTarget;
-          }
-        }
-      }
-
-      addDevServerTargetToConfig(
-        tree,
-        configFilePath,
-        webServerCommands,
-        webServerCommands?.['ci']
-      );
-    }
-
-    if (target.options.ignoreTestFiles) {
-      addExcludeSpecPattern(
-        tree,
-        configFilePath,
-        target.options.ignoreTestFiles
-      );
-      delete target.options.ignoreTestFiles;
-    }
+    handlePropertiesInOptions(
+      tree,
+      target.options,
+      projectDetails.root,
+      target
+    );
 
     if (Object.keys(target.options).length === 0) {
       delete target.options;
     }
-    if (
-      target.configurations &&
-      Object.keys(target.configurations).length !== 0
-    ) {
+  }
+
+  if (target.configurations) {
+    for (const configurationName in target.configurations) {
+      const configuration = target.configurations[configurationName];
+      handlePropertiesInOptions(
+        tree,
+        configuration,
+        projectDetails.root,
+        target
+      );
+    }
+
+    if (Object.keys(target.configurations).length !== 0) {
       for (const configuration in target.configurations) {
         if (Object.keys(target.configurations[configuration]).length === 0) {
           delete target.configurations[configuration];
@@ -149,7 +96,94 @@ function postTargetTransformer(
     }
   }
 
+  if (target.outputs) {
+    processTargetOutputs(target, [], inferredTargetConfiguration, {
+      projectName: projectDetails.projectName,
+      projectRoot: projectDetails.root,
+    });
+  }
+
   return target;
+}
+
+function handlePropertiesInOptions(
+  tree: Tree,
+  options: Record<string, any>,
+  projectRoot: string,
+  target: TargetConfiguration
+) {
+  let configFilePath: string;
+  if ('cypressConfig' in options) {
+    configFilePath = options.cypressConfig;
+    options['config-file'] = toProjectRelativePath(configFilePath, projectRoot);
+    delete options.cypressConfig;
+  }
+
+  if ('copyFiles' in options) {
+    delete options.copyFiles;
+  }
+
+  if ('skipServe' in options) {
+    delete options.skipServe;
+  }
+
+  for (const key in targetOptionsToCliMap) {
+    if (options[key]) {
+      const prevValue = options[key];
+      delete options[key];
+      options[targetOptionsToCliMap[key]] = prevValue;
+    }
+  }
+
+  if ('exit' in options && !options.exit) {
+    delete options.exit;
+    options['no-exit'] = true;
+  }
+
+  if ('testingType' in options) {
+    delete options.testingType;
+  }
+
+  if ('watch' in options) {
+    options.headed = true;
+    options['no-exit'] = true;
+    delete options.watch;
+  }
+
+  if (options.baseUrl && configFilePath) {
+    upsertBaseUrl(tree, configFilePath, options.baseUrl);
+    delete options.baseUrl;
+  }
+
+  if (options.devServerTarget && configFilePath) {
+    const webServerCommands: Record<string, string> = {
+      default: `npx nx run ${options.devServerTarget}`,
+    };
+    delete options.devServerTarget;
+
+    if (target.configurations && configFilePath) {
+      for (const configuration in target.configurations) {
+        if (target.configurations[configuration]?.devServerTarget) {
+          webServerCommands[
+            configuration
+          ] = `npx nx run ${target.configurations[configuration].devServerTarget}`;
+          delete target.configurations[configuration].devServerTarget;
+        }
+      }
+    }
+
+    addDevServerTargetToConfig(
+      tree,
+      configFilePath,
+      webServerCommands,
+      webServerCommands?.['ci']
+    );
+  }
+
+  if ('ignoreTestFiles' in options) {
+    addExcludeSpecPattern(tree, configFilePath, options.ignoreTestFiles);
+    delete options.ignoreTestFiles;
+  }
 }
 
 export default convertToInferred;

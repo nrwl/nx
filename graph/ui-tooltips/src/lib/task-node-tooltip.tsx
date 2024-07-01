@@ -28,11 +28,11 @@ export function TaskNodeTooltip({
 }: TaskNodeTooltipProps) {
   return (
     <div className="text-sm text-slate-700 dark:text-slate-400">
-      <h4 className="flex justify-between items-center gap-4 mb-3">
+      <h4 className="mb-3 flex items-center justify-between gap-4">
         <div className="flex grow items-center justify-between">
           <div className="flex items-center">
             <Tag className="mr-3">{executor}</Tag>
-            <span className="font-mono mr-3">{id}</span>
+            <span className="mr-3 font-mono">{id}</span>
           </div>
           {openConfigCallback && (
             <button

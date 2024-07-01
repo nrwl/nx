@@ -77,12 +77,12 @@
   {
     "name": "@nxext/ionic-react",
     "description": "An Nx plugin for developing Ionic React applications and libraries",
-    "url": "https://github.com/nxext/nx-extensions/tree/main/packages/ionic-react"
+    "url": "https://github.com/nxext/nx-extensions-ionic/tree/main/packages/ionic-react"
   },
   {
     "name": "@nxext/ionic-angular",
     "description": "An Nx plugin for developing Ionic Angular applications and libraries",
-    "url": "https://github.com/nxext/nx-extensions/tree/main/packages/ionic-angular"
+    "url": "https://github.com/nxext/nx-extensions-ionic/tree/main/packages/ionic-angular"
   },
   {
     "name": "@nxext/capacitor",
@@ -298,6 +298,11 @@
     "name": "@nx-extend/shadcn-ui",
     "description": "Nx plugin for working with shadcn/ui",
     "url": "https://github.com/tripss/nx-extend/tree/master/packages/shadcn-ui"
+  },
+  {
+    "name": "@nx-extend/docusaurus",
+    "description": "Nx plugin adding first class support for Docusaurus in your Nx workspace.",
+    "url": "https://github.com/tripss/nx-extend/tree/master/packages/docusaurus"
   },
   {
     "name": "@nativescript/nx",

@@ -10,7 +10,7 @@ import type { ProjectGraph } from '../../src/config/project-graph';
 
 // axios types and values don't seem to match
 import _axios = require('axios');
-const axios = _axios as any as typeof _axios['default'];
+const axios = _axios as any as (typeof _axios)['default'];
 
 /**
  * The ChangelogRenderOptions are specific to each ChangelogRenderer implementation, and are taken
@@ -66,6 +66,12 @@ export interface DefaultChangelogRenderOptions extends ChangelogRenderOptions {
    * section. Defaults to true.
    */
   authors?: boolean;
+  /**
+   * If authors is enabled, controls whether or not to try to map the authors to their GitHub usernames
+   * using https://ungh.cc (from https://github.com/unjs/ungh) and the email addresses found in the commits.
+   * Defaults to true.
+   */
+  mapAuthorsToGitHubUsernames?: boolean;
   /**
    * Whether or not the commit references (such as commit and/or PR links) should be included in the changelog.
    * Defaults to true.
@@ -290,7 +296,7 @@ const defaultChangelogRenderer: ChangelogRenderer = async ({
     }
 
     // Try to map authors to github usernames
-    if (repoSlug) {
+    if (repoSlug && changelogRenderOptions.mapAuthorsToGitHubUsernames) {
       await Promise.all(
         [..._authors.keys()].map(async (authorName) => {
           const meta = _authors.get(authorName);

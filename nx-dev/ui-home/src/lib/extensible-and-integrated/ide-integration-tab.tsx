@@ -46,7 +46,7 @@ export function IdeIntegrationTab(): JSX.Element {
       className="wrapper my-8 grid h-full items-center gap-16 md:grid-cols-2 lg:grid-cols-3"
     >
       <div className="lg:col-span-2">
-        <div className="w-full overflow-hidden overflow-hidden rounded-lg rounded-lg border border-slate-200 shadow-lg shadow dark:hidden dark:border-slate-700">
+        <div className="w-full overflow-hidden overflow-hidden rounded-lg rounded-lg border border-slate-200 shadow shadow-lg dark:hidden dark:border-slate-700">
           <Image
             src="/images/nx-console/vscode-light.webp"
             alt="Nx Console app screenshot"
@@ -55,7 +55,7 @@ export function IdeIntegrationTab(): JSX.Element {
             height={800}
           />
         </div>
-        <div className="hidden w-full overflow-hidden overflow-hidden rounded-lg rounded-lg border border-slate-200 shadow-lg shadow dark:block dark:border-slate-700">
+        <div className="hidden w-full overflow-hidden overflow-hidden rounded-lg rounded-lg border border-slate-200 shadow shadow-lg dark:block dark:border-slate-700">
           <Image
             src="/images/nx-console/vscode-dark.webp"
             alt="Nx Console app screenshot"
@@ -69,7 +69,7 @@ export function IdeIntegrationTab(): JSX.Element {
         {features.map((feature) => (
           <div
             key={feature.name}
-            className="group relative rounded-lg px-4 py-2 transition hover:bg-slate-100 dark:hover:bg-slate-800/40 sm:flex"
+            className="group relative rounded-lg px-4 py-2 transition hover:bg-slate-100 sm:flex dark:hover:bg-slate-800/40"
           >
             <div
               className={cx(
@@ -77,11 +77,11 @@ export function IdeIntegrationTab(): JSX.Element {
                 feature.connectionWidth
               )}
             >
-              <span className="absolute top-0 left-0 -mt-1 -ml-1 flex h-2 w-2">
+              <span className="absolute left-0 top-0 -ml-1 -mt-1 flex h-2 w-2">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-500 opacity-75 transition dark:bg-sky-500" />
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-slate-200 transition group-hover:bg-blue-600 group-hover:bg-sky-600 dark:bg-slate-700" />
               </span>
-              <span className="absolute top-0 right-0 -mt-1 -mr-1 flex h-2 w-2">
+              <span className="absolute right-0 top-0 -mr-1 -mt-1 flex h-2 w-2">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-500 opacity-75 transition dark:bg-sky-500" />
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-slate-200 transition group-hover:bg-blue-600 group-hover:bg-sky-600 dark:bg-slate-700" />
               </span>
@@ -90,7 +90,7 @@ export function IdeIntegrationTab(): JSX.Element {
             <div className="sm:flex-shrink-0">
               <div className="flow-root">{feature.icon}</div>
             </div>
-            <div className="mt-3 sm:mt-0 sm:ml-3">
+            <div className="mt-3 sm:ml-3 sm:mt-0">
               <h3 className="text-sm font-medium">{feature.name}</h3>
               <Link href={feature.link}>
                 <span className="absolute inset-0" aria-hidden="true" />

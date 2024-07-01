@@ -69,8 +69,7 @@ export function TooltipDisplay() {
               externalApiService.postEvent({
                 type: 'file-click',
                 payload: {
-                  sourceRoot: currentTooltip.props.sourceRoot,
-                  file: url,
+                  url: `${currentTooltip.props.sourceRoot}/${url}`,
                 },
               })
           : undefined;

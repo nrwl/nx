@@ -6,9 +6,13 @@ import {
   type Tree,
 } from '@nx/devkit';
 import { createNodesV2, EslintPluginOptions } from '../../plugins/plugin';
-import { migrateExecutorToPlugin } from '@nx/devkit/src/generators/plugin-migrations/executor-to-plugin-migrator';
+import { migrateProjectExecutorsToPlugin } from '@nx/devkit/src/generators/plugin-migrations/executor-to-plugin-migrator';
 import { targetOptionsToCliMap } from './lib/target-options-map';
 import { interpolate } from 'nx/src/tasks-runner/utils';
+import {
+  processTargetOutputs,
+  toProjectRelativePath,
+} from '@nx/devkit/src/generators/plugin-migrations/plugin-migration-utils';
 
 interface Schema {
   project?: string;
@@ -18,33 +22,24 @@ interface Schema {
 export async function convertToInferred(tree: Tree, options: Schema) {
   const projectGraph = await createProjectGraphAsync();
 
-  const migratedProjectsModern =
-    await migrateExecutorToPlugin<EslintPluginOptions>(
-      tree,
-      projectGraph,
-      '@nx/eslint:lint',
-      '@nx/eslint/plugin',
-      (targetName) => ({ targetName }),
-      postTargetTransformer,
-      createNodesV2,
-      options.project
-    );
-
-  const migratedProjectsLegacy =
-    await migrateExecutorToPlugin<EslintPluginOptions>(
-      tree,
-      projectGraph,
-      '@nrwl/linter:eslint',
-      '@nx/eslint/plugin',
-      (targetName) => ({ targetName }),
-      postTargetTransformer,
-      createNodesV2,
-      options.project
-    );
-
   const migratedProjects =
-    migratedProjectsModern.size + migratedProjectsLegacy.size;
-  if (migratedProjects === 0) {
+    await migrateProjectExecutorsToPlugin<EslintPluginOptions>(
+      tree,
+      projectGraph,
+      '@nx/eslint/plugin',
+      createNodesV2,
+      { targetName: 'lint' },
+      [
+        {
+          executors: ['@nx/eslint:lint', '@nrwl/linter:eslint'],
+          postTargetTransformer,
+          targetPluginOptionMapper: (targetName) => ({ targetName }),
+        },
+      ],
+      options.project
+    );
+
+  if (migratedProjects.size === 0) {
     throw new Error('Could not find any targets to migrate.');
   }
 
@@ -56,7 +51,8 @@ export async function convertToInferred(tree: Tree, options: Schema) {
 function postTargetTransformer(
   target: TargetConfiguration,
   tree: Tree,
-  projectDetails: { projectName: string; root: string }
+  projectDetails: { projectName: string; root: string },
+  inferredTargetConfiguration: TargetConfiguration
 ): TargetConfiguration {
   if (target.inputs) {
     const inputs = target.inputs.filter(
@@ -75,63 +71,101 @@ function postTargetTransformer(
   }
 
   if (target.options) {
-    if ('eslintConfig' in target.options) {
-      delete target.options.eslintConfig;
+    handlePropertiesInOptions(target.options, projectDetails, target);
+  }
+
+  if (target.configurations) {
+    for (const configurationName in target.configurations) {
+      const configuration = target.configurations[configurationName];
+      handlePropertiesInOptions(configuration, projectDetails, target);
     }
 
-    if ('force' in target.options) {
-      delete target.options.force;
-    }
-
-    if ('silent' in target.options) {
-      delete target.options.silent;
-    }
-
-    if ('hasTypeAwareRules' in target.options) {
-      delete target.options.hasTypeAwareRules;
-    }
-
-    if ('errorOnUnmatchedPattern' in target.options) {
-      if (!target.options.errorOnUnmatchedPattern) {
-        target.options['no-error-on-unmatched-pattern'] = true;
-      }
-      delete target.options.errorOnUnmatchedPattern;
-    }
-
-    if ('outputFile' in target.options) {
-      target.outputs ??= [];
-      target.outputs.push(target.options.outputFile);
-    }
-
-    for (const key in targetOptionsToCliMap) {
-      if (target.options[key]) {
-        target.options[targetOptionsToCliMap[key]] = target.options[key];
-        delete target.options[key];
-      }
-    }
-
-    if ('lintFilePatterns' in target.options) {
-      const normalizedLintFilePatterns = target.options.lintFilePatterns.map(
-        (pattern) => {
-          return interpolate(pattern, {
-            workspaceRoot: '',
-            projectRoot: projectDetails.root,
-            projectName: projectDetails.projectName,
-          });
+    if (Object.keys(target.configurations).length !== 0) {
+      for (const configuration in target.configurations) {
+        if (Object.keys(target.configurations[configuration]).length === 0) {
+          delete target.configurations[configuration];
         }
-      );
-
-      target.options.args = normalizedLintFilePatterns.map((pattern) =>
-        pattern.startsWith(projectDetails.root)
-          ? pattern.replace(new RegExp(`^${projectDetails.root}/`), './')
-          : pattern
-      );
-
-      delete target.options.lintFilePatterns;
+      }
+      if (Object.keys(target.configurations).length === 0) {
+        delete target.configurations;
+      }
     }
   }
 
+  if (target.outputs) {
+    processTargetOutputs(target, [], inferredTargetConfiguration, {
+      projectName: projectDetails.projectName,
+      projectRoot: projectDetails.root,
+    });
+  }
+
   return target;
+}
+
+function handlePropertiesInOptions(
+  options: Record<string, any>,
+  projectDetails: { projectName: string; root: string },
+  target: TargetConfiguration
+) {
+  if ('eslintConfig' in options) {
+    options.config = toProjectRelativePath(
+      options.eslintConfig,
+      projectDetails.root
+    );
+    delete options.eslintConfig;
+  }
+
+  if ('force' in options) {
+    delete options.force;
+  }
+
+  if ('silent' in options) {
+    delete options.silent;
+  }
+
+  if ('hasTypeAwareRules' in options) {
+    delete options.hasTypeAwareRules;
+  }
+
+  if ('errorOnUnmatchedPattern' in options) {
+    if (!options.errorOnUnmatchedPattern) {
+      options['no-error-on-unmatched-pattern'] = true;
+    }
+    delete options.errorOnUnmatchedPattern;
+  }
+
+  if ('outputFile' in options) {
+    target.outputs ??= [];
+    target.outputs.push(options.outputFile);
+  }
+
+  for (const key in targetOptionsToCliMap) {
+    if (options[key]) {
+      const prevValue = options[key];
+      delete options[key];
+      options[targetOptionsToCliMap[key]] = prevValue;
+    }
+  }
+
+  if ('lintFilePatterns' in options) {
+    const normalizedLintFilePatterns = options.lintFilePatterns.map(
+      (pattern) => {
+        return interpolate(pattern, {
+          workspaceRoot: '',
+          projectRoot: projectDetails.root,
+          projectName: projectDetails.projectName,
+        });
+      }
+    );
+
+    options.args = normalizedLintFilePatterns.map((pattern) =>
+      pattern.startsWith(projectDetails.root)
+        ? pattern.replace(new RegExp(`^${projectDetails.root}/`), './')
+        : pattern
+    );
+
+    delete options.lintFilePatterns;
+  }
 }
 
 export default convertToInferred;

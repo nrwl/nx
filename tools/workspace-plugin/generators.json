@@ -9,6 +9,11 @@
       "factory": "./src/generators/create-nodes-plugin/generator",
       "schema": "./src/generators/create-nodes-plugin/schema.json",
       "description": "Workspace Generator to create a create-nodes-plugin"
+    },
+    "sync-e2e-configs": {
+      "factory": "./src/generators/sync-e2e-config/generator",
+      "schema": "./src/generators/sync-e2e-config/schema.json",
+      "description": "Generator to sync configuration for our e2e targets"
     }
   }
 }
