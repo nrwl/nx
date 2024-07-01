@@ -19,6 +19,7 @@ const nxPackages = new Set([
   '@nx/nx-linux-arm64-musl',
   '@nx/nx-linux-arm64-gnu',
   '@nx/nx-linux-arm-gnueabihf',
+  '@nx/nx-linux-s390x-gnu',
 ]);
 
 const localNodeFiles = [
@@ -36,6 +37,7 @@ const localNodeFiles = [
   'nx.linux-arm64-musl.node',
   'nx.linux-arm64-gnu.node',
   'nx.linux-arm-gnueabihf.node',
+  'nx.linux-s390x-gnu.node',
 ];
 
 const originalLoad = Module._load;
