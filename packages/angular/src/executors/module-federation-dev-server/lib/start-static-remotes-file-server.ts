@@ -10,6 +10,12 @@ export function startStaticRemotesFileServer(
   context: ExecutorContext,
   options: Schema
 ) {
+  if (
+    !staticRemotesConfig.remotes ||
+    staticRemotesConfig.remotes.length === 0
+  ) {
+    return;
+  }
   let shouldMoveToCommonLocation = false;
   let commonOutputDirectory: string;
   for (const app of staticRemotesConfig.remotes) {
