@@ -209,6 +209,27 @@ export async function* nodeExecutor(
       tasks.push(task);
     };
 
+    const stopAllTasks = async (signal: NodeJS.Signals = 'SIGTERM') => {
+      additionalExitHandler?.();
+      await currentTask?.stop(signal);
+      for (const task of tasks) {
+        await task.stop(signal);
+      }
+    };
+
+    process.on('SIGTERM', async () => {
+      await stopAllTasks('SIGTERM');
+      process.exit(128 + 15);
+    });
+    process.on('SIGINT', async () => {
+      await stopAllTasks('SIGINT');
+      process.exit(128 + 2);
+    });
+    process.on('SIGHUP', async () => {
+      await stopAllTasks('SIGHUP');
+      process.exit(128 + 1);
+    });
+
     if (options.runBuildTargetDependencies) {
       // If a all dependencies need to be rebuild on changes, then register with watcher
       // and run through CLI, otherwise only the current project will rebuild.
@@ -282,26 +303,6 @@ export async function* nodeExecutor(
         }
       }
     }
-
-    const stopAllTasks = (signal: NodeJS.Signals = 'SIGTERM') => {
-      additionalExitHandler?.();
-      for (const task of tasks) {
-        task.stop(signal);
-      }
-    };
-
-    process.on('SIGTERM', async () => {
-      stopAllTasks('SIGTERM');
-      process.exit(128 + 15);
-    });
-    process.on('SIGINT', async () => {
-      stopAllTasks('SIGINT');
-      process.exit(128 + 2);
-    });
-    process.on('SIGHUP', async () => {
-      stopAllTasks('SIGHUP');
-      process.exit(128 + 1);
-    });
   });
 }
 

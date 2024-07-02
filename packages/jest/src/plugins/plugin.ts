@@ -280,7 +280,6 @@ async function buildJestTargets(
           metadata: {
             technologies: ['jest'],
             description: `Run Jest Tests in ${relativePath}`,
-            nonAtomizedTarget: options.targetName,
             help: {
               command: `${pmc.exec} jest --help`,
               example: {

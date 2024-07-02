@@ -16,6 +16,7 @@ import {
   filterUsingGlobPatterns,
   getTargetInputs,
 } from '../../../hasher/task-hasher';
+import { output } from '../../../utils/output';
 
 interface NpmDeps {
   readonly dependencies: Record<string, string>;
@@ -43,7 +44,7 @@ export function createPackageJson(
   const projectNode = graph.nodes[projectName];
   const isLibrary = projectNode.type === 'lib';
 
-  const rootPackageJson = readJsonFile(
+  const rootPackageJson: PackageJson = readJsonFile(
     join(options.root ?? workspaceRoot, 'package.json')
   );
 
@@ -179,6 +180,22 @@ export function createPackageJson(
   packageJson.peerDependenciesMeta &&= sortObjectByKeys(
     packageJson.peerDependenciesMeta
   );
+
+  if (rootPackageJson.packageManager) {
+    if (
+      packageJson.packageManager &&
+      packageJson.packageManager !== rootPackageJson.packageManager
+    ) {
+      output.warn({
+        title: 'Package Manager Mismatch',
+        bodyLines: [
+          `The project ${projectName} has explicitly specified "packageManager" config of "${packageJson.packageManager}" but the workspace is using "${rootPackageJson.packageManager}".`,
+          `Please remove the project level "packageManager" config or align it with the workspace root package.json.`,
+        ],
+      });
+    }
+    packageJson.packageManager = rootPackageJson.packageManager;
+  }
 
   return packageJson;
 }

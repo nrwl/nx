@@ -1,5 +1,5 @@
 import { CreateNodesContext } from '@nx/devkit';
-import { createNodes, createNodesV2 } from './plugin';
+import { createNodesV2 } from './plugin';
 import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
 import { loadViteDynamicImport } from '../utils/executor-utils';
 
@@ -57,6 +57,34 @@ describe('@nx/vite/plugin', () => {
       );
 
       expect(nodes).toMatchSnapshot();
+    });
+
+    it('should create nodes when rollupOptions contains input', async () => {
+      // Don't need index.html if we're setting inputs
+      tempFs.removeFileSync('index.html');
+
+      (loadViteDynamicImport as jest.Mock).mockResolvedValue({
+        resolveConfig: jest.fn().mockResolvedValue({
+          build: {
+            rollupOptions: {
+              input: { index: 'src/index.js' },
+            },
+          },
+        }),
+      });
+
+      const nodes = await createNodesFunction(
+        ['vite.config.ts'],
+        {
+          buildTargetName: 'build-input',
+          serveTargetName: 'serve-input',
+        },
+        context
+      );
+
+      const targets = nodes[0]?.[1]?.projects?.['.']?.targets;
+      expect(targets?.['build-input']?.command).toMatch(/vite/);
+      expect(targets?.['serve-input'].command).toMatch(/vite/);
     });
   });
 

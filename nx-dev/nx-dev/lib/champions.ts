@@ -355,4 +355,17 @@ export const champions3: Champion[] = [
     ],
     location: 'USA',
   },
+  {
+    name: 'Jonathan Gelin',
+    expertise:
+      'Empowering organizations with Nx for streamlined development, robust monorepos, efficient CI/CD, micro-frontend architecture, and strong testing strategies',
+    imageUrl: '/images/champions/jonathan-gelin.webp',
+    contact: [
+      {
+        label: 'gelin.jonathan@gmail.com',
+        link: 'mailto:gelin.jonathan@gmail.com',
+      },
+    ],
+    location: 'Belgium',
+  },
 ];
