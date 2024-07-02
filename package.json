@@ -366,5 +366,10 @@
       "documentation"
     ]
   },
-  "packageManager": "pnpm@8.15.7"
+  "packageManager": "pnpm@8.15.7",
+  "pnpm": {
+    "patchedDependencies": {
+      "nx@19.4.0-rc.1": "patches/nx@19.4.0-rc.1.patch"
+    }
+  }
 }

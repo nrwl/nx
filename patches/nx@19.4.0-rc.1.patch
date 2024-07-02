@@ -1,0 +1,28 @@
+diff --git a/src/plugins/js/utils/register.js b/src/plugins/js/utils/register.js
+index dddbaaf5775dafa6bae9971ad7eea1aa7f2d0ccf..2a0e71c45ffb7943ecd1db2d1900a2dff4b683c6 100644
+--- a/src/plugins/js/utils/register.js
++++ b/src/plugins/js/utils/register.js
+@@ -84,8 +84,10 @@ function getTsNodeTranspiler(compilerOptions) {
+     // Just return if transpiler was already registered before.
+     const registrationKey = JSON.stringify(compilerOptions);
+     if (registered.has(registrationKey)) {
++        console.log('REUSING');
+         return () => { };
+     }
++    console.log('REGISTERING TS NODE');
+     const { register } = require('ts-node');
+     // ts-node doesn't provide a cleanup method
+     const service = register({
+diff --git a/src/project-graph/plugins/isolation/plugin-pool.js b/src/project-graph/plugins/isolation/plugin-pool.js
+index 7c04da7df69f093451b37fb756b869f086ef0196..e146969967d996f5773509e9f592821bfe417885 100644
+--- a/src/project-graph/plugins/isolation/plugin-pool.js
++++ b/src/project-graph/plugins/isolation/plugin-pool.js
+@@ -235,7 +235,7 @@ async function startPluginWorker() {
+         workerPath,
+         ipcPath,
+     ], {
+-        stdio: process.stdout.isTTY ? 'inherit' : 'ignore',
++        stdio: 'inherit',
+         env,
+         detached: true,
+         shell: false,
