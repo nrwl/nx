@@ -196,7 +196,6 @@ async function normalizePlugins(plugins: PluginConfiguration[], root: string) {
 export async function getDefaultPlugins(root: string) {
   return [
     join(__dirname, '../../plugins/js'),
-    join(__dirname, '../../plugins/target-defaults/target-defaults-plugin'),
     ...(shouldMergeAngularProjects(root, false)
       ? [join(__dirname, '../../adapter/angular-json')]
       : []),
