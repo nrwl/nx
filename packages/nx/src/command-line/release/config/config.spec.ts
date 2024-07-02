@@ -666,7 +666,7 @@ describe('createNxReleaseConfig()', () => {
 
       projectGraph.nodes['e2e-1'] = {
         name: 'e2e-1',
-        type: 'e2e',
+        type: 'app',
         data: {
           root: 'apps/e2e-1',
           targets: {},

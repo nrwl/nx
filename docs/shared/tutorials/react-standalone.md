@@ -636,7 +636,7 @@ You should be able to see something similar to the following in your browser.
     },
     {
       "name": "e2e",
-      "type": "e2e",
+      "type": "app",
       "data": {
         "tags": []
       }

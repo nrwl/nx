@@ -579,7 +579,7 @@ You should be able to see something similar to the following in your browser.
     },
     {
       "name": "react-store-e2e",
-      "type": "e2e",
+      "type": "app",
       "data": {
         "tags": []
       }
@@ -593,7 +593,7 @@ You should be able to see something similar to the following in your browser.
     },
     {
       "name": "inventory-e2e",
-      "type": "e2e",
+      "type": "app",
       "data": {
         "tags": []
       }
@@ -748,7 +748,7 @@ nx graph --affected
     },
     {
       "name": "react-store-e2e",
-      "type": "e2e",
+      "type": "app",
       "data": {
         "tags": []
       }
@@ -762,7 +762,7 @@ nx graph --affected
     },
     {
       "name": "inventory-e2e",
-      "type": "e2e",
+      "type": "app",
       "data": {
         "tags": []
       }
