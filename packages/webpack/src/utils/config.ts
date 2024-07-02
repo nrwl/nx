@@ -105,5 +105,6 @@ function ensureNxWebpackExecutionContext(ctx: NxWebpackExecutionContext): void {
     cwd: process.cwd(),
     root: workspaceRoot,
     isVerbose: process.env['NX_VERBOSE_LOGGING'] === 'true',
+    projectGraph,
   };
 }
