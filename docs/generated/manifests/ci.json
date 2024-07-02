@@ -186,6 +186,17 @@
         "tags": []
       },
       {
+        "id": "nx-cloud-ai",
+        "name": "Nx Cloud AI (Tusky)",
+        "description": "Learn how to enable AI features in Nx Cloud, and what features it enables",
+        "mediaImage": "",
+        "file": "nx-cloud/features/ai-features",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/features/nx-cloud-ai",
+        "tags": []
+      },
+      {
         "id": "dynamic-agents",
         "name": "Dynamically Allocate Agents",
         "description": "Learn how to dynamically allocate agents based on the size of a PR, keeping the balance of speed and cost.",
@@ -265,6 +276,17 @@
     "itemList": [],
     "isExternal": false,
     "path": "/ci/features/distribute-task-execution",
+    "tags": []
+  },
+  "/ci/features/nx-cloud-ai": {
+    "id": "nx-cloud-ai",
+    "name": "Nx Cloud AI (Tusky)",
+    "description": "Learn how to enable AI features in Nx Cloud, and what features it enables",
+    "mediaImage": "",
+    "file": "nx-cloud/features/ai-features",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/features/nx-cloud-ai",
     "tags": []
   },
   "/ci/features/dynamic-agents": {
@@ -1964,6 +1986,17 @@
         "isExternal": false,
         "path": "/ci/troubleshooting/ci-execution-failed",
         "tags": []
+      },
+      {
+        "id": "explain-with-ai",
+        "name": "Explain With AI",
+        "description": "",
+        "mediaImage": "",
+        "file": "nx-cloud/troubleshooting/explain-with-ai",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/troubleshooting/explain-with-ai",
+        "tags": []
       }
     ],
     "isExternal": false,
@@ -1979,6 +2012,17 @@
     "itemList": [],
     "isExternal": false,
     "path": "/ci/troubleshooting/ci-execution-failed",
+    "tags": []
+  },
+  "/ci/troubleshooting/explain-with-ai": {
+    "id": "explain-with-ai",
+    "name": "Explain With AI",
+    "description": "",
+    "mediaImage": "",
+    "file": "nx-cloud/troubleshooting/explain-with-ai",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/troubleshooting/explain-with-ai",
     "tags": []
   }
 }
