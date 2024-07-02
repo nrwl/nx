@@ -1,8 +1,8 @@
 import { type CreateNodesContext } from '@nx/devkit';
+import { TempFs } from '@nx/devkit/internal-testing-utils';
 import { minimatch } from 'minimatch';
-import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
-import { PLUGIN_NAME, TscPluginOptions, createNodes } from './plugin';
 import { setupWorkspaceContext } from 'nx/src/utils/workspace-context';
+import { PLUGIN_NAME, createNodesV2, type TscPluginOptions } from './plugin';
 
 describe(`Plugin: ${PLUGIN_NAME}`, () => {
   let context: CreateNodesContext;
@@ -42,6 +42,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       {
         "projects": {
           ".": {
+            "metadata": {},
             "projectType": "library",
             "targets": {
               "typecheck": {
@@ -112,6 +113,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         {
           "projects": {
             "libs/my-lib": {
+              "metadata": {},
               "projectType": "library",
               "targets": {
                 "typecheck": {
@@ -150,6 +152,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         {
           "projects": {
             "libs/my-lib": {
+              "metadata": {},
               "projectType": "library",
               "targets": {
                 "typecheck": {
@@ -191,6 +194,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         {
           "projects": {
             "libs/my-lib": {
+              "metadata": {},
               "projectType": "library",
               "targets": {
                 "typecheck": {
@@ -234,6 +238,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         {
           "projects": {
             "libs/my-lib": {
+              "metadata": {},
               "projectType": "library",
               "targets": {},
             },
@@ -254,6 +259,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         {
           "projects": {
             "libs/my-lib": {
+              "metadata": {},
               "projectType": "library",
               "targets": {},
             },
@@ -275,6 +281,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         {
           "projects": {
             "libs/my-lib": {
+              "metadata": {},
               "projectType": "library",
               "targets": {
                 "typecheck": {
@@ -318,6 +325,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         {
           "projects": {
             "libs/my-lib": {
+              "metadata": {},
               "projectType": "library",
               "targets": {
                 "typecheck": {
@@ -363,6 +371,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         {
           "projects": {
             "libs/my-lib": {
+              "metadata": {},
               "projectType": "library",
               "targets": {
                 "typecheck": {
@@ -406,6 +415,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
+                "metadata": {},
                 "projectType": "library",
                 "targets": {
                   "typecheck": {
@@ -454,6 +464,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
+                "metadata": {},
                 "projectType": "library",
                 "targets": {
                   "typecheck": {
@@ -515,6 +526,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
+                "metadata": {},
                 "projectType": "library",
                 "targets": {
                   "typecheck": {
@@ -747,6 +759,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
+                "metadata": {},
                 "projectType": "library",
                 "targets": {
                   "typecheck": {
@@ -805,6 +818,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
+                "metadata": {},
                 "projectType": "library",
                 "targets": {
                   "typecheck": {
@@ -853,6 +867,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
+                "metadata": {},
                 "projectType": "library",
                 "targets": {
                   "typecheck": {
@@ -896,6 +911,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
+                "metadata": {},
                 "projectType": "library",
                 "targets": {
                   "typecheck": {
@@ -964,6 +980,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
+                "metadata": {},
                 "projectType": "library",
                 "targets": {
                   "typecheck": {
@@ -1020,6 +1037,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
+                "metadata": {},
                 "projectType": "library",
                 "targets": {
                   "typecheck": {
@@ -1069,6 +1087,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
+                "metadata": {},
                 "projectType": "library",
                 "targets": {
                   "typecheck": {
@@ -1132,6 +1151,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         {
           "projects": {
             "libs/my-lib": {
+              "metadata": {},
               "projectType": "library",
               "targets": {},
             },
@@ -1155,6 +1175,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         {
           "projects": {
             "libs/my-lib": {
+              "metadata": {},
               "projectType": "library",
               "targets": {},
             },
@@ -1181,6 +1202,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         {
           "projects": {
             "libs/my-lib": {
+              "metadata": {},
               "projectType": "library",
               "targets": {},
             },
@@ -1205,6 +1227,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         {
           "projects": {
             "libs/my-lib": {
+              "metadata": {},
               "projectType": "library",
               "targets": {},
             },
@@ -1231,6 +1254,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         {
           "projects": {
             "libs/my-lib": {
+              "metadata": {},
               "projectType": "library",
               "targets": {
                 "build": {
@@ -1276,6 +1300,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         {
           "projects": {
             "libs/my-lib": {
+              "metadata": {},
               "projectType": "library",
               "targets": {
                 "build": {
@@ -1325,6 +1350,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         {
           "projects": {
             "libs/my-lib": {
+              "metadata": {},
               "projectType": "library",
               "targets": {
                 "my-build": {
@@ -1374,6 +1400,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         {
           "projects": {
             "libs/my-lib": {
+              "metadata": {},
               "projectType": "library",
               "targets": {
                 "build": {
@@ -1422,6 +1449,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
+                "metadata": {},
                 "projectType": "library",
                 "targets": {
                   "build": {
@@ -1475,6 +1503,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
+                "metadata": {},
                 "projectType": "library",
                 "targets": {
                   "build": {
@@ -1535,6 +1564,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
+                "metadata": {},
                 "projectType": "library",
                 "targets": {
                   "build": {
@@ -1764,6 +1794,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
+                "metadata": {},
                 "projectType": "library",
                 "targets": {
                   "build": {
@@ -1827,6 +1858,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
+                "metadata": {},
                 "projectType": "library",
                 "targets": {
                   "build": {
@@ -1880,6 +1912,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
+                "metadata": {},
                 "projectType": "library",
                 "targets": {
                   "build": {
@@ -1928,6 +1961,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
+                "metadata": {},
                 "projectType": "library",
                 "targets": {
                   "build": {
@@ -1994,6 +2028,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
+                "metadata": {},
                 "projectType": "library",
                 "targets": {
                   "build": {
@@ -2054,6 +2089,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
+                "metadata": {},
                 "projectType": "library",
                 "targets": {
                   "build": {
@@ -2108,6 +2144,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           {
             "projects": {
               "libs/my-lib": {
+                "metadata": {},
                 "projectType": "library",
                 "targets": {
                   "build": {
@@ -2162,7 +2199,7 @@ async function applyFilesToTempFsAndContext(
   await tempFs.createFiles(fileSys);
   // @ts-expect-error update otherwise readonly property for testing
   context.configFiles = Object.keys(fileSys).filter((file) =>
-    minimatch(file, createNodes[0], { dot: true })
+    minimatch(file, createNodesV2[0], { dot: true })
   );
   setupWorkspaceContext(tempFs.tempDir);
 }
@@ -2173,15 +2210,19 @@ async function invokeCreateNodesOnMatchingFiles(
 ) {
   const aggregateProjects: Record<string, any> = {};
   for (const file of context.configFiles) {
-    const nodes = await createNodes[1](file, pluginOptions, context);
-    for (const [projectName, project] of Object.entries(nodes.projects ?? {})) {
-      if (aggregateProjects[projectName]) {
-        aggregateProjects[projectName].targets = {
-          ...aggregateProjects[projectName].targets,
-          ...project.targets,
-        };
-      } else {
-        aggregateProjects[projectName] = project;
+    const results = await createNodesV2[1]([file], pluginOptions, context);
+    for (const [, nodes] of results) {
+      for (const [projectName, project] of Object.entries(
+        nodes.projects ?? {}
+      )) {
+        if (aggregateProjects[projectName]) {
+          aggregateProjects[projectName].targets = {
+            ...aggregateProjects[projectName].targets,
+            ...project.targets,
+          };
+        } else {
+          aggregateProjects[projectName] = project;
+        }
       }
     }
   }

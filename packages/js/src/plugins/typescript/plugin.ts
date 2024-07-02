@@ -1,20 +1,26 @@
 import {
+  createNodesFromFiles,
   detectPackageManager,
   joinPathFragments,
+  logger,
   normalizePath,
   readJsonFile,
   writeJsonFile,
   type CreateDependencies,
   type CreateNodes,
   type CreateNodesContext,
+  type CreateNodesResult,
+  type CreateNodesV2,
   type NxJsonConfiguration,
+  type ProjectConfiguration,
   type TargetConfiguration,
 } from '@nx/devkit';
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
+import { minimatch } from 'minimatch';
 import { existsSync, readdirSync, statSync } from 'node:fs';
 import { basename, dirname, join, relative } from 'node:path';
-import { minimatch } from 'minimatch';
+import { hashObject } from 'nx/src/hasher/file-hasher';
 // eslint-disable-next-line @typescript-eslint/no-restricted-imports
 import { getLockFileName } from 'nx/src/plugins/js/lock-file/lock-file';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
@@ -49,84 +55,119 @@ interface NormalizedPluginOptions {
       };
 }
 
-const cachePath = join(workspaceDataDirectory, 'tsc.hash');
-const targetsCache = readTargetsCache();
+type TscTargets = Pick<ProjectConfiguration, 'targets' | 'metadata'>;
 
-function readTargetsCache(): Record<
-  string,
-  Record<string, TargetConfiguration<unknown>>
-> {
+function readTargetsCache(cachePath: string): Record<string, TscTargets> {
   return existsSync(cachePath) ? readJsonFile(cachePath) : {};
 }
 
-function writeTargetsToCache() {
-  const oldCache = readTargetsCache();
-  writeJsonFile(cachePath, {
-    ...oldCache,
-    ...targetsCache,
-  });
+function writeTargetsToCache(
+  cachePath: string,
+  results?: Record<string, TscTargets>
+) {
+  writeJsonFile(cachePath, results);
 }
 
+/**
+ * @deprecated The 'createDependencies' function is now a no-op. This functionality is included in 'createNodesV2'.
+ */
 export const createDependencies: CreateDependencies = () => {
-  writeTargetsToCache();
   return [];
 };
 
 export const PLUGIN_NAME = '@nx/js/typescript';
 
-export const createNodes: CreateNodes<TscPluginOptions> = [
-  '**/tsconfig*.json',
-  async (configFilePath, options, context) => {
-    const pluginOptions = normalizePluginOptions(options);
-    const projectRoot = dirname(configFilePath);
-    const fullConfigPath = joinPathFragments(
-      context.workspaceRoot,
-      configFilePath
-    );
+const tsConfigGlob = '**/tsconfig*.json';
 
-    // Do not create a project if package.json and project.json isn't there.
-    const siblingFiles = readdirSync(join(context.workspaceRoot, projectRoot));
-    if (
-      !siblingFiles.includes('package.json') &&
-      !siblingFiles.includes('project.json')
-    ) {
-      return {};
+export const createNodesV2: CreateNodesV2<TscPluginOptions> = [
+  tsConfigGlob,
+  async (configFilePaths, options, context) => {
+    const optionsHash = hashObject(options);
+    const cachePath = join(workspaceDataDirectory, `tsc-${optionsHash}.hash`);
+    const targetsCache = readTargetsCache(cachePath);
+    const normalizedOptions = normalizePluginOptions(options);
+    try {
+      return await createNodesFromFiles(
+        (configFile, options, context) =>
+          createNodesInternal(configFile, options, context, targetsCache),
+        configFilePaths,
+        normalizedOptions,
+        context
+      );
+    } finally {
+      writeTargetsToCache(cachePath, targetsCache);
     }
-
-    // Do not create a project if it's not a tsconfig.json and there is no tsconfig.json in the same directory
-    if (
-      basename(configFilePath) !== 'tsconfig.json' &&
-      !siblingFiles.includes('tsconfig.json')
-    ) {
-      return {};
-    }
-
-    const nodeHash = await calculateHashForCreateNodes(
-      projectRoot,
-      pluginOptions,
-      context,
-      [getLockFileName(detectPackageManager(context.workspaceRoot))]
-    );
-    // The hash is calculated at the node/project level, so we add the config file path to avoid conflicts when caching
-    const cacheKey = `${nodeHash}_${configFilePath}`;
-
-    targetsCache[cacheKey] ??= buildTscTargets(
-      fullConfigPath,
-      projectRoot,
-      pluginOptions,
-      context
-    );
-
-    return {
-      projects: {
-        [projectRoot]: {
-          projectType: 'library',
-          targets: targetsCache[cacheKey],
-        },
-      },
-    };
   },
 ];
+
+export const createNodes: CreateNodes<TscPluginOptions> = [
+  tsConfigGlob,
+  async (configFilePath, options, context) => {
+    logger.warn(
+      '`createNodes` is deprecated. Update your plugin to utilize createNodesV2 instead. In Nx 20, this will change to the createNodesV2 API.'
+    );
+    const normalizedOptions = normalizePluginOptions(options);
+    return createNodesInternal(configFilePath, normalizedOptions, context, {});
+  },
+];
+
+async function createNodesInternal(
+  configFilePath: string,
+  options: NormalizedPluginOptions,
+  context: CreateNodesContext,
+  targetsCache: Record<string, TscTargets>
+): Promise<CreateNodesResult> {
+  const projectRoot = dirname(configFilePath);
+  const fullConfigPath = joinPathFragments(
+    context.workspaceRoot,
+    configFilePath
+  );
+
+  // Do not create a project if package.json and project.json isn't there.
+  const siblingFiles = readdirSync(join(context.workspaceRoot, projectRoot));
+  if (
+    !siblingFiles.includes('package.json') &&
+    !siblingFiles.includes('project.json')
+  ) {
+    return {};
+  }
+
+  // Do not create a project if it's not a tsconfig.json and there is no tsconfig.json in the same directory
+  if (
+    basename(configFilePath) !== 'tsconfig.json' &&
+    !siblingFiles.includes('tsconfig.json')
+  ) {
+    return {};
+  }
+
+  const nodeHash = await calculateHashForCreateNodes(
+    projectRoot,
+    options,
+    context,
+    [getLockFileName(detectPackageManager(context.workspaceRoot))]
+  );
+  // The hash is calculated at the node/project level, so we add the config file path to avoid conflicts when caching
+  const cacheKey = `${nodeHash}_${configFilePath}`;
+
+  targetsCache[cacheKey] ??= buildTscTargets(
+    fullConfigPath,
+    projectRoot,
+    options,
+    context
+  );
+
+  const { targets, metadata } = targetsCache[cacheKey];
+
+  return {
+    projects: {
+      [projectRoot]: {
+        projectType: 'library',
+        targets,
+        metadata,
+      },
+    },
+  };
+}
 
 function buildTscTargets(
   configFilePath: string,
@@ -220,7 +261,7 @@ function buildTscTargets(
     };
   }
 
-  return targets;
+  return { targets, metadata: {} };
 }
 
 function getInputs(
