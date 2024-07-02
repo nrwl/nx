@@ -53,7 +53,7 @@ export const createDependencies: CreateDependencies = () => {
 };
 
 export const createNodes: CreateNodes<ExpoPluginOptions> = [
-  '**/app.{json,config.js}',
+  '**/app.{json,config.js,config.ts}',
   async (configFilePath, options, context) => {
     options = normalizeOptions(options);
     const projectRoot = dirname(configFilePath);

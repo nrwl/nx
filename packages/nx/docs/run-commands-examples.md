@@ -15,7 +15,7 @@
 }
 ```
 
-```bash
+```shell
 nx run frontend:ls-project-root
 ```
 
@@ -83,13 +83,13 @@ You can use custom arguments in your scripts with `{args.[someFlag]}`:
 
 We run the above with:
 
-```bash
+```shell
 nx run frontend:create-script --args="--name=example"
 ```
 
 or simply with:
 
-```bash
+```shell
 nx run frontend:create-script --name=example
 ```
 
@@ -101,7 +101,7 @@ This is useful when you need to pass raw argument strings to your command.
 
 For example, when you run:
 
-```bash
+```shell
 nx run frontend:webpack --args="--config=example.config.js"
 ```
 
@@ -162,7 +162,7 @@ Normally, `run-commands` considers the commands done when all of them have finis
 }
 ```
 
-```bash
+```shell
 nx run frontend:finish-when-ready
 ```
 
@@ -185,7 +185,7 @@ For example, imagine a case where we are running multiple commands to start mult
 }
 ```
 
-```bash
+```shell
 nx run frontend:finish-when-multiple-ready
 ```
 
@@ -198,7 +198,7 @@ The true power of `run-commands` comes from the fact that it runs through `nx`, 
 
 We can create some configurations to generate docs, and if run using `nx affected`, it will only generate documentation for the projects that have been changed:
 
-```bash
+```shell
 nx affected --target=generate-docs
 ```
 

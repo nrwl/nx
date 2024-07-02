@@ -159,7 +159,7 @@ export async function loadNxPlugins(
 
   const cleanupFunctions: Array<() => void> = [];
   for (const plugin of plugins) {
-    const [loadedPluginPromise, cleanup] = loadingMethod(plugin, root);
+    const [loadedPluginPromise, cleanup] = await loadingMethod(plugin, root);
     result.push(loadedPluginPromise);
     cleanupFunctions.push(cleanup);
   }

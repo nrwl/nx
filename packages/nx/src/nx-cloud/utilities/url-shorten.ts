@@ -1,6 +1,5 @@
 import { logger } from '../../devkit-exports';
 import { getGithubSlugOrNull } from '../../utils/git-utils';
-import { lt } from 'semver';
 
 export async function shortenedCloudUrl(
   installationSource: string,
@@ -13,9 +12,17 @@ export async function shortenedCloudUrl(
     process.env.NX_CLOUD_API || process.env.NRWL_API || `https://cloud.nx.app`
   );
 
-  const version = await getNxCloudVersion(apiUrl);
-
-  if (version && lt(truncateToSemver(version), '2406.11.5')) {
+  try {
+    const version = await getNxCloudVersion(apiUrl);
+    if (
+      (version && compareCleanCloudVersions(version, '2406.11.5') < 0) ||
+      !version
+    ) {
+      return apiUrl;
+    }
+  } catch (e) {
+    logger.verbose(`Failed to get Nx Cloud version.
+    ${e}`);
     return apiUrl;
   }
 
@@ -71,7 +78,7 @@ export async function repoUsesGithub(github?: boolean) {
   );
 }
 
-function removeTrailingSlash(apiUrl: string) {
+export function removeTrailingSlash(apiUrl: string) {
   return apiUrl[apiUrl.length - 1] === '/' ? apiUrl.slice(0, -1) : apiUrl;
 }
 
@@ -89,7 +96,7 @@ function getSource(
   }
 }
 
-function getURLifShortenFailed(
+export function getURLifShortenFailed(
   usesGithub: boolean,
   githubSlug: string,
   apiUrl: string,
@@ -110,48 +117,85 @@ function getURLifShortenFailed(
 
 async function getInstallationSupportsGitHub(apiUrl: string): Promise<boolean> {
   try {
-    const response = await require('axios').get(`${apiUrl}/vcs-integrations`);
+    const response = await require('axios').get(
+      `${apiUrl}/nx-cloud/system/features`
+    );
     if (!response?.data || response.data.message) {
       throw new Error(
         response?.data?.message ?? 'Failed to shorten Nx Cloud URL'
       );
     }
-    return !!response.data.github;
+    return !!response.data.isGithubIntegrationEnabled;
   } catch (e) {
     if (process.env.NX_VERBOSE_LOGGING) {
-      logger.warn(`Failed to access vcs-integrations endpoint.
+      logger.warn(`Failed to access system features. GitHub integration assumed to be disabled. 
     ${e}`);
     }
     return false;
   }
 }
 
-async function getNxCloudVersion(apiUrl: string): Promise<string | null> {
+export async function getNxCloudVersion(
+  apiUrl: string
+): Promise<string | null> {
   try {
-    const response = await require('axios').get(`${apiUrl}/version`, {
-      responseType: 'document',
-    });
-    const version = extractVersion(response.data);
+    const response = await require('axios').get(
+      `${apiUrl}/nx-cloud/system/version`
+    );
+    const version = removeVersionModifier(response.data.version);
+    const isValid = versionIsValid(version);
     if (!version) {
       throw new Error('Failed to extract version from response.');
+    }
+    if (!isValid) {
+      throw new Error(`Invalid version format: ${version}`);
     }
     return version;
   } catch (e) {
     logger.verbose(`Failed to get version of Nx Cloud.
       ${e}`);
+    return null;
   }
 }
 
-function extractVersion(htmlString: string): string | null {
-  // The pattern assumes 'Version' is inside an h1 tag and the version number is the next span's content
-  const regex =
-    /<h1[^>]*>Version<\/h1>\s*<div[^>]*><div[^>]*><div[^>]*><span[^>]*>([^<]+)<\/span>/;
-  const match = htmlString.match(regex);
-
-  return match ? match[1].trim() : null;
+export function removeVersionModifier(versionString: string): string {
+  // Cloud version string is in the format of YYMM.DD.BuildNumber-Modifier
+  return versionString.split(/[\.-]/).slice(0, 3).join('.');
 }
 
-function truncateToSemver(versionString: string): string {
-  // version may be something like 2406.13.5.hotfix2
-  return versionString.split(/[\.-]/).slice(0, 3).join('.');
+export function versionIsValid(version: string): boolean {
+  // Updated Regex pattern to require YYMM.DD.BuildNumber format
+  // All parts are required, including the BuildNumber.
+  const pattern = /^\d{4}\.\d{2}\.\d+$/;
+  return pattern.test(version);
+}
+
+export function compareCleanCloudVersions(
+  version1: string,
+  version2: string
+): number {
+  const parseVersion = (version: string) => {
+    // The format we're using is YYMM.DD.BuildNumber
+    const parts = version.split('.').map((part) => parseInt(part, 10));
+    return {
+      yearMonth: parts[0],
+      day: parts[1],
+      buildNumber: parts[2],
+    };
+  };
+
+  const v1 = parseVersion(version1);
+  const v2 = parseVersion(version2);
+
+  if (v1.yearMonth !== v2.yearMonth) {
+    return v1.yearMonth > v2.yearMonth ? 1 : -1;
+  }
+  if (v1.day !== v2.day) {
+    return v1.day > v2.day ? 1 : -1;
+  }
+  if (v1.buildNumber !== v2.buildNumber) {
+    return v1.buildNumber > v2.buildNumber ? 1 : -1;
+  }
+
+  return 0;
 }

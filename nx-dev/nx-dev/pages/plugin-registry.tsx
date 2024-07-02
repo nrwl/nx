@@ -117,8 +117,20 @@ export default function Browse(props: BrowseProps): JSX.Element {
                 <div className="mb-6 pt-8">
                   <Breadcrumbs path={router.asPath} />
                 </div>
-                <div className="min-w-0 flex-auto pb-24 lg:pb-16">
+                <div className="min-w-0 flex-auto">
                   <PluginDirectory pluginList={props.pluginList} />
+                </div>
+                <div className="pb-24 lg:pb-16">
+                  <p>
+                    Are you a plugin author? You can{' '}
+                    <a
+                      className="underline"
+                      href="/extending-nx/tutorials/publish-plugin#list-your-nx-plugin"
+                    >
+                      add your plugin to the registry
+                    </a>{' '}
+                    with a few simple steps.
+                  </p>
                 </div>
               </div>
             </div>
