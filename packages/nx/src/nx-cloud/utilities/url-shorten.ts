@@ -12,11 +12,17 @@ export async function shortenedCloudUrl(
     process.env.NX_CLOUD_API || process.env.NRWL_API || `https://cloud.nx.app`
   );
 
-  const version = await getNxCloudVersion(apiUrl);
-  if (
-    (version && compareCleanCloudVersions(version, '2406.11.5') < 0) ||
-    !version
-  ) {
+  try {
+    const version = await getNxCloudVersion(apiUrl);
+    if (
+      (version && compareCleanCloudVersions(version, '2406.11.5') < 0) ||
+      !version
+    ) {
+      return apiUrl;
+    }
+  } catch (e) {
+    logger.verbose(`Failed to get Nx Cloud version.
+    ${e}`);
     return apiUrl;
   }
 
@@ -137,8 +143,12 @@ export async function getNxCloudVersion(
       `${apiUrl}/nx-cloud/system/version`
     );
     const version = removeVersionModifier(response.data.version);
+    const isValid = versionIsValid(version);
     if (!version) {
       throw new Error('Failed to extract version from response.');
+    }
+    if (!isValid) {
+      throw new Error(`Invalid version format: ${version}`);
     }
     return version;
   } catch (e) {
@@ -151,6 +161,13 @@ export async function getNxCloudVersion(
 export function removeVersionModifier(versionString: string): string {
   // Cloud version string is in the format of YYMM.DD.BuildNumber-Modifier
   return versionString.split(/[\.-]/).slice(0, 3).join('.');
+}
+
+export function versionIsValid(version: string): boolean {
+  // Updated Regex pattern to require YYMM.DD.BuildNumber format
+  // All parts are required, including the BuildNumber.
+  const pattern = /^\d{4}\.\d{2}\.\d+$/;
+  return pattern.test(version);
 }
 
 export function compareCleanCloudVersions(

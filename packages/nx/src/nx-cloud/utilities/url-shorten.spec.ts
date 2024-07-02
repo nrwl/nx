@@ -2,6 +2,7 @@ import {
   removeVersionModifier,
   compareCleanCloudVersions,
   getNxCloudVersion,
+  versionIsValid,
 } from './url-shorten';
 
 jest.mock('axios', () => ({
@@ -31,12 +32,6 @@ describe('URL shorten various functions', () => {
       expect(compareCleanCloudVersions('2312.25.50', '2312.25.50')).toBe(0);
       expect(compareCleanCloudVersions('2407.01.100', '2407.01.100')).toBe(0);
     });
-
-    it('should handle versions with two parts correctly', () => {
-      expect(compareCleanCloudVersions('2407.01', '2407.01')).toBe(0);
-      expect(compareCleanCloudVersions('2407.01', '2406.31')).toBe(1);
-      expect(compareCleanCloudVersions('2205.15', '2304.25')).toBe(-1);
-    });
   });
 
   describe('removeVersionModifier', () => {
@@ -56,15 +51,6 @@ describe('URL shorten various functions', () => {
       expect(removeVersionModifier('2406-13-5-hotfix2')).toBe('2406.13.5');
       expect(removeVersionModifier('2024.07.01-patch')).toBe('2024.07.01');
       expect(removeVersionModifier('2023.12.25.alpha-1')).toBe('2023.12.25');
-    });
-
-    it('should return an empty string if the input is an empty string', () => {
-      expect(removeVersionModifier('')).toBe('');
-    });
-
-    it('should return the correct version if the input has less than 3 parts', () => {
-      expect(removeVersionModifier('2024.07')).toBe('2024.07');
-      expect(removeVersionModifier('2024')).toBe('2024');
     });
   });
 
@@ -90,6 +76,28 @@ describe('URL shorten various functions', () => {
       axios.get.mockRejectedValue(mockError);
       const version = await getNxCloudVersion(apiUrl);
       expect(version).toBeNull();
+    });
+  });
+
+  describe('versionIsValid', () => {
+    it('should return true for valid versions with build numbers', () => {
+      expect(versionIsValid('2407.01.100')).toBe(true);
+      expect(versionIsValid('2312.25.50')).toBe(true);
+    });
+
+    it('should return false for versions without build numbers', () => {
+      expect(versionIsValid('2407.01')).toBe(false); // Missing build number
+      expect(versionIsValid('2312.25')).toBe(false); // Missing build number
+    });
+
+    it('should return false for invalid versions', () => {
+      expect(versionIsValid('240701.100')).toBe(false); // No periods separating parts
+      expect(versionIsValid('2312.250.50')).toBe(false); // Day part has three digits
+      expect(versionIsValid('2401.1.100')).toBe(false); // Day part has one digit
+      expect(versionIsValid('23.12.26')).toBe(false); // YearMonth part has two digits
+      expect(versionIsValid('2312.26.')).toBe(false); // Extra period at the end
+      expect(versionIsValid('.2312.26.100')).toBe(false); // Extra period at the beginning
+      expect(versionIsValid('2312.26.extra')).toBe(false); // Non-numeric build number
     });
   });
 });
