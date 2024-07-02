@@ -1,8 +1,12 @@
-import { ModuleFederationConfig } from '@nx/webpack/src/utils/module-federation';
+import {
+  ModuleFederationConfig,
+  NxModuleFederationConfigOverride,
+} from '@nx/webpack/src/utils/module-federation';
 import { getModuleFederationConfig } from './utils';
 
 export async function withModuleFederationForSSR(
-  options: ModuleFederationConfig
+  options: ModuleFederationConfig,
+  configOverride?: NxModuleFederationConfigOverride
 ) {
   if (global.NX_GRAPH_CREATION) {
     return (config) => config;
@@ -34,6 +38,10 @@ export async function withModuleFederationForSSR(
             type: 'commonjs-module',
           },
           isServer: true,
+          /**
+           * Apply user-defined config overrides
+           */
+          ...(configOverride ? configOverride : {}),
         },
         {}
       ),

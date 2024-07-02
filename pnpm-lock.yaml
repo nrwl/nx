@@ -227,6 +227,9 @@ devDependencies:
   '@module-federation/enhanced':
     specifier: ^0.2.3
     version: 0.2.3(typescript@5.4.2)(webpack@5.88.0)
+  '@module-federation/sdk':
+    specifier: ^0.2.3
+    version: 0.2.3
   '@monodon/rust':
     specifier: 1.3.3
     version: 1.3.3(@swc-node/register@1.9.1)(@swc/core@1.5.7)(@types/node@18.19.8)(typescript@5.4.2)(verdaccio@5.31.0)
@@ -481,7 +484,7 @@ devDependencies:
     version: 0.3.1(immer@9.0.16)(xstate@4.34.0)
   '@xstate/inspect':
     specifier: 0.7.0
-    version: 0.7.0(ws@8.16.0)(xstate@4.34.0)
+    version: 0.7.0(ws@8.17.1)(xstate@4.34.0)
   '@xstate/react':
     specifier: 3.0.1
     version: 3.0.1(@types/react@18.3.1)(react@18.3.1)(xstate@4.34.0)
@@ -16385,7 +16388,7 @@ packages:
       xstate: 4.34.0
     dev: true
 
-  /@xstate/inspect@0.7.0(ws@8.16.0)(xstate@4.34.0):
+  /@xstate/inspect@0.7.0(ws@8.17.1)(xstate@4.34.0):
     resolution: {integrity: sha512-3wrTf8TfBYprH1gBFdxmOQUBDpBazlICWvGdFzr8IHFL4MbiexEZdAsL2QC/WAmW9BqNYTWTwgfbvKHKg+FrlA==}
     peerDependencies:
       '@types/ws': ^8.0.0
@@ -16396,7 +16399,7 @@ packages:
         optional: true
     dependencies:
       fast-safe-stringify: 2.1.1
-      ws: 8.16.0
+      ws: 8.17.1
       xstate: 4.34.0
     dev: true
 

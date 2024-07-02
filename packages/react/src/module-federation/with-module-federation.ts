@@ -1,4 +1,7 @@
-import { ModuleFederationConfig } from '@nx/webpack/src/utils/module-federation';
+import {
+  ModuleFederationConfig,
+  NxModuleFederationConfigOverride,
+} from '@nx/webpack/src/utils/module-federation';
 import { getModuleFederationConfig } from './utils';
 import type { AsyncNxComposableWebpackPlugin } from '@nx/webpack';
 import { ModuleFederationPlugin } from '@module-federation/enhanced/webpack';
@@ -11,7 +14,8 @@ const isVarOrWindow = (libType?: string) =>
  * @return {Promise<AsyncNxComposableWebpackPlugin>}
  */
 export async function withModuleFederation(
-  options: ModuleFederationConfig
+  options: ModuleFederationConfig,
+  configOverride?: NxModuleFederationConfigOverride
 ): Promise<AsyncNxComposableWebpackPlugin> {
   if (global.NX_GRAPH_CREATION) {
     return (config) => config;
@@ -62,6 +66,10 @@ export async function withModuleFederation(
          *  { appY: 'appY@http://localhost:3002/remoteEntry.js' }
          */
         ...(isGlobal ? { remoteType: 'script' } : {}),
+        /**
+         * Apply user-defined config overrides
+         */
+        ...(configOverride ? configOverride : {}),
       }),
       sharedLibraries.getReplacementPlugin()
     );
