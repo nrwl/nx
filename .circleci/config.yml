@@ -86,6 +86,7 @@ jobs:
       NX_E2E_RUN_E2E: 'true'
       NX_CI_EXECUTION_ENV: 'linux'
       NX_CLOUD_DTE_V2: 'true'
+      NX_VERBOSE_LOGGING: 'true'
     steps:
       - checkout
       - nx/set-shas:
