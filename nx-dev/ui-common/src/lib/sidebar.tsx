@@ -187,11 +187,17 @@ export function SidebarMobile({
   const router = useRouter();
   const isCI: boolean = router.asPath.startsWith('/ci');
   const isAPI: boolean = router.asPath.startsWith('/nx-api');
-  const isPlugins: boolean = router.asPath.startsWith('/extending-nx');
+  const isExtendingNx: boolean = router.asPath.startsWith('/extending-nx');
+  const isPlugins: boolean = router.asPath.startsWith('/plugin-registry');
   const isChangelog: boolean = router.asPath.startsWith('/changelog');
   const isAiChat: boolean = router.asPath.startsWith('/ai-chat');
   const isNx: boolean =
-    !isCI && !isAPI && !isPlugins && !isChangelog && !isAiChat;
+    !isCI &&
+    !isAPI &&
+    !isExtendingNx &&
+    !isPlugins &&
+    !isChangelog &&
+    !isAiChat;
 
   const sections = {
     general: [
@@ -220,6 +226,11 @@ export function SidebarMobile({
       {
         name: 'Extending Nx',
         href: '/extending-nx/intro/getting-started',
+        current: isExtendingNx,
+      },
+      {
+        name: 'Plugins',
+        href: '/plugin-registry',
         current: isPlugins,
       },
       {

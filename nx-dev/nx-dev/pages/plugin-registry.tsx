@@ -1,6 +1,11 @@
 import { getBasicPluginsSection } from '@nx/nx-dev/data-access-menu';
 import { Menu } from '@nx/nx-dev/models-menu';
-import { Breadcrumbs, DocumentationHeader, Footer } from '@nx/nx-dev/ui-common';
+import {
+  Breadcrumbs,
+  DocumentationHeader,
+  Footer,
+  SidebarContainer,
+} from '@nx/nx-dev/ui-common';
 import { PluginDirectory } from '@nx/nx-dev/ui-community';
 import { NextSeo } from 'next-seo';
 import { useRouter } from 'next/router';
@@ -106,6 +111,11 @@ export default function Browse(props: BrowseProps): JSX.Element {
           role="main"
           className="flex h-full flex-1 overflow-y-hidden"
         >
+          <SidebarContainer
+            menu={vm.menu}
+            navIsOpen={navIsOpen}
+            toggleNav={toggleNav}
+          />
           <div
             ref={wrapperElement}
             id="wrapper"
