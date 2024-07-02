@@ -80,7 +80,7 @@ export function newProject({
   name?: string;
   packageManager?: 'npm' | 'yarn' | 'pnpm' | 'bun';
   unsetProjectNameAndRootFormat?: boolean;
-  readonly packages?: Array<NxPackage>;
+  readonly packages?: Array<NxPackage | string>;
 } = {}): string {
   const newProjectStart = performance.mark('new-project:start');
   try {
@@ -104,14 +104,6 @@ export function newProject({
         createNxWorkspaceEnd.name
       );
 
-      if (unsetProjectNameAndRootFormat) {
-        console.warn(
-          'ATTENTION: The workspace generated for this e2e test does not use the new as-provided project name/root format. Please update this test'
-        );
-        createFile('apps/.gitkeep');
-        createFile('libs/.gitkeep');
-      }
-
       // Temporary hack to prevent installing with `--frozen-lockfile`
       if (isCI && packageManager === 'pnpm') {
         updateFile(
@@ -120,19 +112,6 @@ export function newProject({
         );
       }
 
-      if (!packages) {
-        console.warn(
-          'ATTENTION: All packages are installed into the new workspace. To make this test faster, please pass the subset of packages that this test needs by passing a packages array in the options'
-        );
-      }
-      const packageInstallStart = performance.mark('packageInstall:start');
-      packageInstall((packages ?? nxPackages).join(` `), projScope);
-      const packageInstallEnd = performance.mark('packageInstall:end');
-      packageInstallMeasure = performance.measure(
-        'packageInstall',
-        packageInstallStart.name,
-        packageInstallEnd.name
-      );
       // stop the daemon
       execSync(`${getPackageManagerCommand().runNx} reset`, {
         cwd: `${e2eCwd}/proj`,
@@ -146,10 +125,27 @@ export function newProject({
     const projectDirectory = tmpProjPath();
     copySync(`${tmpBackupProjPath()}`, `${projectDirectory}`);
 
+    if (unsetProjectNameAndRootFormat) {
+      console.warn(
+        'ATTENTION: The workspace generated for this e2e test does not use the new as-provided project name/root format. Please update this test'
+      );
+      createFile('apps/.gitkeep');
+      createFile('libs/.gitkeep');
+    }
+
+    if (!packages) {
+      console.warn(
+        'ATTENTION: All packages are installed into the new workspace. To make this test faster, please pass the subset of packages that this test needs by passing a packages array in the options'
+      );
+    }
+    const packageInstallStart = performance.mark('packageInstall:start');
+
     const dependencies = readJsonFile(
       `${projectDirectory}/package.json`
     ).devDependencies;
-    const missingPackages = (packages || []).filter((p) => !dependencies[p]);
+    const missingPackages = (packages ?? nxPackages).filter(
+      (p) => !dependencies[p]
+    );
 
     if (missingPackages.length > 0) {
       packageInstall(missingPackages.join(` `), projName);
@@ -163,6 +159,12 @@ export function newProject({
         encoding: 'utf-8',
       });
     }
+    const packageInstallEnd = performance.mark('packageInstall:end');
+    packageInstallMeasure = performance.measure(
+      'packageInstall',
+      packageInstallStart.name,
+      packageInstallEnd.name
+    );
 
     const newProjectEnd = performance.mark('new-project:end');
     const perfMeasure = performance.measure(
@@ -171,12 +173,11 @@ export function newProject({
       newProjectEnd.name
     );
 
-    if (isVerbose()) {
-      logInfo(
-        `NX`,
-        `E2E created a project: ${projectDirectory} in ${
-          perfMeasure.duration / 1000
-        } seconds
+    logInfo(
+      `NX`,
+      `E2E created a project: ${projectDirectory} in ${
+        perfMeasure.duration / 1000
+      } seconds
 ${
   createNxWorkspaceMeasure
     ? `create-nx-workspace: ${
@@ -184,14 +185,11 @@ ${
       } seconds\n`
     : ''
 }${
-          packageInstallMeasure
-            ? `packageInstall: ${
-                packageInstallMeasure.duration / 1000
-              } seconds\n`
-            : ''
-        }`
-      );
-    }
+        packageInstallMeasure
+          ? `packageInstall: ${packageInstallMeasure.duration / 1000} seconds\n`
+          : ''
+      }`
+    );
 
     if (process.env.NX_E2E_EDITOR) {
       const editor = process.env.NX_E2E_EDITOR;
