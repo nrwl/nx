@@ -1,6 +1,6 @@
 import {
   removeVersionModifier,
-  compareCalver,
+  compareCleanCloudVersions,
   getNxCloudVersion,
 } from './url-shorten';
 
@@ -9,31 +9,33 @@ jest.mock('axios', () => ({
 }));
 
 describe('URL shorten various functions', () => {
-  describe('compareCalver', () => {
+  describe('compareCleanCloudVersions', () => {
     it('should return 1 if the first version is newer', () => {
-      expect(compareCalver('2024.07.01', '2023.12.25')).toBe(1);
-      expect(compareCalver('2024.01.01', '2023.12.31')).toBe(1);
-      expect(compareCalver('2023.12.26', '2023.12.25')).toBe(1);
-      expect(compareCalver('2023.12.25', '2023.11.25')).toBe(1);
-      expect(compareCalver('2023.12.25', '2023.12.24')).toBe(1);
+      expect(compareCleanCloudVersions('2407.01.100', '2312.25.50')).toBe(1);
+      expect(compareCleanCloudVersions('2402.01.20', '2401.31.300')).toBe(1);
+      expect(compareCleanCloudVersions('2401.01.20', '2312.31.300')).toBe(1);
+      expect(compareCleanCloudVersions('2312.26.05', '2312.25.100')).toBe(1);
+      expect(compareCleanCloudVersions('2312.25.100', '2311.25.90')).toBe(1);
+      expect(compareCleanCloudVersions('2312.25.120', '2312.24.110')).toBe(1);
     });
 
     it('should return -1 if the first version is older', () => {
-      expect(compareCalver('2023.12.25', '2024.07.01')).toBe(-1);
-      expect(compareCalver('2023.12.31', '2024.01.01')).toBe(-1);
-      expect(compareCalver('2023.12.25', '2023.12.26')).toBe(-1);
-      expect(compareCalver('2023.11.25', '2023.12.25')).toBe(-1);
-      expect(compareCalver('2023.12.24', '2023.12.25')).toBe(-1);
+      expect(compareCleanCloudVersions('2312.25.50', '2407.01.100')).toBe(-1);
+      expect(compareCleanCloudVersions('2312.31.100', '2401.01.100')).toBe(-1);
+      expect(compareCleanCloudVersions('2312.25.100', '2312.26.50')).toBe(-1);
+      expect(compareCleanCloudVersions('2311.25.90', '2312.25.80')).toBe(-1);
+      expect(compareCleanCloudVersions('2312.24.110', '2312.25.100')).toBe(-1);
     });
 
     it('should return 0 if both versions are the same', () => {
-      expect(compareCalver('2023.12.25', '2023.12.25')).toBe(0);
-      expect(compareCalver('2024.07.01', '2024.07.01')).toBe(0);
+      expect(compareCleanCloudVersions('2312.25.50', '2312.25.50')).toBe(0);
+      expect(compareCleanCloudVersions('2407.01.100', '2407.01.100')).toBe(0);
     });
 
-    it('should return the correct version if the input has less than 3 parts', () => {
-      expect(removeVersionModifier('2024.07')).toBe('2024.07');
-      expect(removeVersionModifier('2024')).toBe('2024');
+    it('should handle versions with two parts correctly', () => {
+      expect(compareCleanCloudVersions('2407.01', '2407.01')).toBe(0);
+      expect(compareCleanCloudVersions('2407.01', '2406.31')).toBe(1);
+      expect(compareCleanCloudVersions('2205.15', '2304.25')).toBe(-1);
     });
   });
 

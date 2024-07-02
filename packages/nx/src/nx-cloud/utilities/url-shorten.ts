@@ -13,7 +13,10 @@ export async function shortenedCloudUrl(
   );
 
   const version = await getNxCloudVersion(apiUrl);
-  if ((version && compareCalver(version, '2406.11.5') < 0) || !version) {
+  if (
+    (version && compareCleanCloudVersions(version, '2406.11.5') < 0) ||
+    !version
+  ) {
     return apiUrl;
   }
 
@@ -146,32 +149,35 @@ export async function getNxCloudVersion(
 }
 
 export function removeVersionModifier(versionString: string): string {
-  // version may be something like 2406.13.5.hotfix2
+  // Cloud version string is in the format of YYMM.DD.BuildNumber-Modifier
   return versionString.split(/[\.-]/).slice(0, 3).join('.');
 }
 
-export function compareCalver(version1: string, version2: string): number {
+export function compareCleanCloudVersions(
+  version1: string,
+  version2: string
+): number {
   const parseVersion = (version: string) => {
+    // The format we're using is YYMM.DD.BuildNumber
     const parts = version.split('.').map((part) => parseInt(part, 10));
     return {
-      // Technically we're not using year, but it follows the same format
-      year: parts[0],
-      month: parts[1],
-      day: parts[2],
+      yearMonth: parts[0],
+      day: parts[1],
+      buildNumber: parts[2],
     };
   };
 
   const v1 = parseVersion(version1);
   const v2 = parseVersion(version2);
 
-  if (v1.year !== v2.year) {
-    return v1.year > v2.year ? 1 : -1;
-  }
-  if (v1.month !== v2.month) {
-    return v1.month > v2.month ? 1 : -1;
+  if (v1.yearMonth !== v2.yearMonth) {
+    return v1.yearMonth > v2.yearMonth ? 1 : -1;
   }
   if (v1.day !== v2.day) {
     return v1.day > v2.day ? 1 : -1;
+  }
+  if (v1.buildNumber !== v2.buildNumber) {
+    return v1.buildNumber > v2.buildNumber ? 1 : -1;
   }
 
   return 0;
