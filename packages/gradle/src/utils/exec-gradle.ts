@@ -30,6 +30,7 @@ export function execGradleAsync(
       ...execOptions,
       shell: true,
       windowsHide: true,
+      env: process.env,
     });
 
     let stdout = Buffer.from('');
