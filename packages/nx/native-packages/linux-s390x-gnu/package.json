@@ -1,0 +1,29 @@
+{
+  "name": "@nx/nx-linux-s390x-gnu",
+  "version": "0.0.0",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nrwl/nx.git",
+    "directory": "packages/nx/native-packages/linux-s390x-gnu"
+  },
+  "os": [
+    "linux"
+  ],
+  "cpu": [
+    "s390x"
+  ],
+  "main": "nx.linux-s390x-gnu.node",
+  "files": [
+    "nx.linux-s390x-gnu.node"
+  ],
+  "engines": {
+    "node": ">= 10"
+  },
+  "libc": [
+    "glibc"
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
+}

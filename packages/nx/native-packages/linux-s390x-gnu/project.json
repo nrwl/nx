@@ -1,0 +1,4 @@
+{
+  "name": "linux-s390x-gnu",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json"
+}
