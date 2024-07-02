@@ -20,11 +20,13 @@ export function ProjectDetails({
   height,
   title,
   jsonFile,
+  expandedTargets = [],
   children,
 }: {
   height: string;
   title: string;
   jsonFile?: string;
+  expandedTargets?: string[];
   children: ReactElement;
 }): JSX.Element {
   const [parsedProps, setParsedProps] = useState<any>();
@@ -82,7 +84,7 @@ export function ProjectDetails({
           height ? `p-4 h-[${height}] overflow-y-auto` : 'p-4'
         }`}
       >
-        <ExpandedTargetsProvider>
+        <ExpandedTargetsProvider initialExpanededTargets={expandedTargets}>
           <ProjectDetailsUi
             project={parsedProps.project}
             sourceMap={parsedProps.sourceMap}

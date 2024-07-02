@@ -14,5 +14,8 @@ export const projectDetails: Schema = {
     height: {
       type: 'String',
     },
+    expandedTargets: {
+      type: 'Array',
+    },
   },
 };
