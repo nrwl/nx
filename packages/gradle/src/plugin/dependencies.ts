@@ -10,6 +10,7 @@ import { readFileSync } from 'node:fs';
 import { basename } from 'node:path';
 
 import {
+  GRADLE_BUILD_FILES,
   getCurrentGradleReport,
   newLineSeparator,
 } from '../utils/get-gradle-report';
@@ -58,14 +59,12 @@ export const createDependencies: CreateDependencies = async (
   return Array.from(dependencies);
 };
 
-const gradleConfigFileNames = new Set(['build.gradle', 'build.gradle.kts']);
-
 function findGradleFiles(fileMap: FileMap): string[] {
   const gradleFiles: string[] = [];
 
   for (const [_, files] of Object.entries(fileMap.projectFileMap)) {
     for (const file of files) {
-      if (gradleConfigFileNames.has(basename(file.file))) {
+      if (GRADLE_BUILD_FILES.includes(basename(file.file))) {
         gradleFiles.push(file.file);
       }
     }

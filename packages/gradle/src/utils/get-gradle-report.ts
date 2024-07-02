@@ -7,6 +7,7 @@ import {
   normalizePath,
   workspaceRoot,
 } from '@nx/devkit';
+import { combineGlobPatterns } from 'nx/src/utils/globs';
 
 import { execGradleAsync } from './exec-gradle';
 import { hashWithWorkspaceContext } from 'nx/src/utils/workspace-context';
@@ -30,7 +31,15 @@ export interface GradleReport {
 let gradleReportCache: GradleReport;
 let gradleCurrentConfigHash: string;
 
-export const gradleConfigGlob = '**/build.{gradle.kts,gradle}';
+export const GRADLE_BUILD_FILES = ['build.gradle', 'build.gradle.kts'];
+export const GRADLE_TEST_FILES = [
+  '**/src/test/java/**/*.java',
+  '**/src/test/kotlin/**/*.kt',
+];
+
+export const gradleConfigGlob = combineGlobPatterns(
+  ...GRADLE_BUILD_FILES.map((file) => `**/${file}`)
+);
 
 export function getCurrentGradleReport() {
   if (!gradleReportCache) {

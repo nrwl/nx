@@ -58,6 +58,7 @@ function addPlugin(tree: Tree) {
       plugin: '@nx/gradle',
       options: {
         testTargetName: 'test',
+        ciTargetName: 'test-ci',
         classesTargetName: 'classes',
         buildTargetName: 'build',
       },

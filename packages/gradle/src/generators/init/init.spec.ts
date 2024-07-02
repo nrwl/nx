@@ -19,17 +19,18 @@ describe('@nx/gradle:init', () => {
       });
       const nxJson = readNxJson(tree);
       expect(nxJson.plugins).toMatchInlineSnapshot(`
-              [
-                {
-                  "options": {
-                    "buildTargetName": "build",
-                    "classesTargetName": "classes",
-                    "testTargetName": "test",
-                  },
-                  "plugin": "@nx/gradle",
-                },
-              ]
-          `);
+        [
+          {
+            "options": {
+              "buildTargetName": "build",
+              "ciTargetName": "test-ci",
+              "classesTargetName": "classes",
+              "testTargetName": "test",
+            },
+            "plugin": "@nx/gradle",
+          },
+        ]
+      `);
     });
 
     it('should not overwrite existing plugins', async () => {
@@ -42,18 +43,19 @@ describe('@nx/gradle:init', () => {
       });
       const nxJson = readNxJson(tree);
       expect(nxJson.plugins).toMatchInlineSnapshot(`
-              [
-                "foo",
-                {
-                  "options": {
-                    "buildTargetName": "build",
-                    "classesTargetName": "classes",
-                    "testTargetName": "test",
-                  },
-                  "plugin": "@nx/gradle",
-                },
-              ]
-          `);
+        [
+          "foo",
+          {
+            "options": {
+              "buildTargetName": "build",
+              "ciTargetName": "test-ci",
+              "classesTargetName": "classes",
+              "testTargetName": "test",
+            },
+            "plugin": "@nx/gradle",
+          },
+        ]
+      `);
     });
 
     it('should not add plugin if already in array', async () => {
