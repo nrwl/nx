@@ -1,5 +1,6 @@
 import {
   expandDependencyConfigSyntaxSugar,
+  getDependencyConfigs,
   getOutputsForTargetAndConfiguration,
   interpolate,
   transformLegacyOutputs,
@@ -408,6 +409,7 @@ describe('utils', () => {
         const result = transformLegacyOutputs('myapp', e);
         expect(result).toEqual(['{workspaceRoot}/dist']);
       }
+      expect.assertions(1);
     });
 
     it('should prefix unix-absolute paths with {workspaceRoot}', () => {
@@ -418,6 +420,7 @@ describe('utils', () => {
         const result = transformLegacyOutputs('myapp', e);
         expect(result).toEqual(['{workspaceRoot}/dist']);
       }
+      expect.assertions(1);
     });
   });
 
@@ -429,6 +432,7 @@ describe('utils', () => {
       const result = transformLegacyOutputs('myapp', e);
       expect(result).toEqual(['{workspaceRoot}/dist']);
     }
+    expect.assertions(1);
   });
 
   it('should prefix paths within the project with {projectRoot}', () => {
@@ -439,6 +443,7 @@ describe('utils', () => {
       const result = transformLegacyOutputs('myapp', e);
       expect(result).toEqual(['{projectRoot}/dist']);
     }
+    expect.assertions(1);
   });
 
   describe('expandDependencyConfigSyntaxSugar', () => {
@@ -508,6 +513,111 @@ describe('utils', () => {
       expect(result).toEqual({
         target: 'target:with:colons',
       });
+    });
+
+    it('supports wildcards in targets', () => {
+      const result = getDependencyConfigs(
+        { project: 'project', target: 'build' },
+        {},
+        {
+          dependencies: {},
+          nodes: {
+            project: {
+              name: 'project',
+              type: 'app',
+              data: {
+                root: 'libs/project',
+                targets: {
+                  build: {
+                    dependsOn: ['build-*'],
+                  },
+                  'build-css': {},
+                  'build-js': {},
+                  'then-build-something-else': {},
+                },
+              },
+            },
+          },
+        },
+        ['build', 'build-css', 'build-js', 'then-build-something-else']
+      );
+      expect(result).toEqual([
+        {
+          target: 'build-css',
+          projects: ['project'],
+        },
+        {
+          target: 'build-js',
+          projects: ['project'],
+        },
+      ]);
+    });
+
+    it('should support wildcards with dependencies', () => {
+      const result = getDependencyConfigs(
+        { project: 'project', target: 'build' },
+        {},
+        {
+          dependencies: {},
+          nodes: {
+            project: {
+              name: 'project',
+              type: 'app',
+              data: {
+                root: 'libs/project',
+                targets: {
+                  build: {
+                    dependsOn: ['^build-*'],
+                  },
+                  'then-build-something-else': {},
+                },
+              },
+            },
+            dep1: {
+              name: 'dep1',
+              type: 'lib',
+              data: {
+                root: 'libs/dep1',
+                targets: {
+                  'build-css': {},
+                  'build-js': {},
+                },
+              },
+            },
+            dep2: {
+              name: 'dep2',
+              type: 'lib',
+              data: {
+                root: 'libs/dep2',
+                targets: {
+                  'build-python': {},
+                },
+              },
+            },
+          },
+        },
+        [
+          'build',
+          'build-css',
+          'build-js',
+          'then-build-something-else',
+          'build-python',
+        ]
+      );
+      expect(result).toEqual([
+        {
+          target: 'build-css',
+          dependencies: true,
+        },
+        {
+          target: 'build-js',
+          dependencies: true,
+        },
+        {
+          target: 'build-python',
+          dependencies: true,
+        },
+      ]);
     });
   });
 
