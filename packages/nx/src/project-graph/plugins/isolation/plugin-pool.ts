@@ -325,7 +325,7 @@ async function startPluginWorker() {
       ipcPath,
     ],
     {
-      stdio: process.stdout.isTTY ? 'inherit' : 'ignore',
+      stdio: 'inherit',
       env,
       detached: true,
       shell: false,
