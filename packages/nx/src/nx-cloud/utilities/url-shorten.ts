@@ -69,7 +69,7 @@ export async function repoUsesGithub(github?: boolean) {
   );
 }
 
-function removeTrailingSlash(apiUrl: string) {
+export function removeTrailingSlash(apiUrl: string) {
   return apiUrl[apiUrl.length - 1] === '/' ? apiUrl.slice(0, -1) : apiUrl;
 }
 
@@ -87,7 +87,7 @@ function getSource(
   }
 }
 
-function getURLifShortenFailed(
+export function getURLifShortenFailed(
   usesGithub: boolean,
   githubSlug: string,
   apiUrl: string,
@@ -126,7 +126,9 @@ async function getInstallationSupportsGitHub(apiUrl: string): Promise<boolean> {
   }
 }
 
-async function getNxCloudVersion(apiUrl: string): Promise<string | null> {
+export async function getNxCloudVersion(
+  apiUrl: string
+): Promise<string | null> {
   try {
     const response = await require('axios').get(
       `${apiUrl}/nx-cloud/system/version`
@@ -143,12 +145,12 @@ async function getNxCloudVersion(apiUrl: string): Promise<string | null> {
   }
 }
 
-function removeVersionModifier(versionString: string): string {
+export function removeVersionModifier(versionString: string): string {
   // version may be something like 2406.13.5.hotfix2
   return versionString.split(/[\.-]/).slice(0, 3).join('.');
 }
 
-function compareCalver(version1: string, version2: string): number {
+export function compareCalver(version1: string, version2: string): number {
   const parseVersion = (version: string) => {
     const parts = version.split('.').map((part) => parseInt(part, 10));
     return {
