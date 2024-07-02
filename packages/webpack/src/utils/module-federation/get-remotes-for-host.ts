@@ -121,8 +121,8 @@ export function getRemotes(
   );
 
   const staticRemotes = knownRemotes.filter((r) => !devServeApps.has(r));
-  const devServeRemotes = [...knownRemotes, ...dynamicRemotes].filter((r) =>
-    devServeApps.has(r)
+  const devServeRemotes = [...knownRemotes, ...knownDynamicRemotes].filter(
+    (r) => devServeApps.has(r)
   );
   const staticDynamicRemotes = knownDynamicRemotes.filter(
     (r) => !devServeApps.has(r)
@@ -130,12 +130,23 @@ export function getRemotes(
   const remotePorts = [...devServeRemotes, ...staticDynamicRemotes].map(
     (r) => context.projectGraph.nodes[r].data.targets['serve'].options.port
   );
+  const staticRemotePort =
+    Math.max(
+      ...([
+        ...remotePorts,
+        ...staticRemotes.map(
+          (r) =>
+            context.projectGraph.nodes[r].data.targets['serve'].options.port
+        ),
+      ] as number[])
+    ) + 1;
 
   return {
     staticRemotes,
     devRemotes: devServeRemotes,
     dynamicRemotes: staticDynamicRemotes,
     remotePorts,
+    staticRemotePort,
   };
 }
 

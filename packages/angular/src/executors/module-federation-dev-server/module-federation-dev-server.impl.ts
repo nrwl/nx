@@ -10,6 +10,7 @@ import {
   parseStaticRemotesConfig,
   startRemotes,
   startStaticRemotesFileServer,
+  startRemoteProxies,
 } from './lib';
 import { eachValueFrom } from '@nx/devkit/src/utils/rxjs-for-await';
 import {
@@ -123,25 +124,18 @@ export async function* moduleFederationDevServerExecutor(
     pathToManifestFile
   );
 
-  if (remotes.devRemotes.length > 0 && !schema.staticRemotesPort) {
-    options.staticRemotesPort = options.devRemotes.reduce((portToUse, r) => {
-      const remoteName = typeof r === 'string' ? r : r.remoteName;
-      const remotePort =
-        context.projectGraph.nodes[remoteName].data.targets['serve'].options
-          .port;
-      if (remotePort >= portToUse) {
-        return remotePort + 1;
-      } else {
-        return portToUse;
-      }
-    }, options.staticRemotesPort);
-  }
+  options.staticRemotesPort ??= remotes.staticRemotePort;
 
   const staticRemotesConfig = parseStaticRemotesConfig(
-    remotes.staticRemotes,
+    [...remotes.staticRemotes, ...remotes.dynamicRemotes],
     context
   );
-  await buildStaticRemotes(staticRemotesConfig, nxBin, context, options);
+  const mappedLocationsOfStaticRemotes = await buildStaticRemotes(
+    staticRemotesConfig,
+    nxBin,
+    context,
+    options
+  );
 
   const devRemoteIters = await startRemotes(
     remotes.devRemotes,
@@ -151,18 +145,13 @@ export async function* moduleFederationDevServerExecutor(
     'serve'
   );
 
-  const dynamicRemoteIters = await startRemotes(
-    remotes.dynamicRemotes,
-    workspaceProjects,
-    options,
+  const staticRemotesIter = startStaticRemotesFileServer(
+    staticRemotesConfig,
     context,
-    'serve-static'
+    options
   );
 
-  const staticRemotesIter =
-    remotes.staticRemotes.length > 0
-      ? startStaticRemotesFileServer(staticRemotesConfig, context, options)
-      : undefined;
+  startRemoteProxies(staticRemotesConfig, mappedLocationsOfStaticRemotes);
 
   const removeBaseUrlEmission = (iter: AsyncIterable<unknown>) =>
     mapAsyncIterable(iter, (v) => ({
@@ -173,7 +162,6 @@ export async function* moduleFederationDevServerExecutor(
   return yield* combineAsyncIterables(
     removeBaseUrlEmission(currIter),
     ...devRemoteIters.map(removeBaseUrlEmission),
-    ...dynamicRemoteIters.map(removeBaseUrlEmission),
     ...(staticRemotesIter ? [removeBaseUrlEmission(staticRemotesIter)] : []),
     createAsyncIterable<{ success: true; baseUrl: string }>(
       async ({ next, done }) => {

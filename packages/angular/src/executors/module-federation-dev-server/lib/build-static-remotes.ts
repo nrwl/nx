@@ -23,9 +23,6 @@ export async function buildStaticRemotes(
       staticRemotesConfig.config[app].urlSegment
     }`;
   }
-  process.env.NX_MF_DEV_SERVER_STATIC_REMOTES = JSON.stringify(
-    mappedLocationOfRemotes
-  );
 
   await new Promise<void>((res) => {
     logger.info(
@@ -81,4 +78,6 @@ export async function buildStaticRemotes(
     process.on('SIGTERM', () => staticProcess.kill('SIGTERM'));
     process.on('exit', () => staticProcess.kill('SIGTERM'));
   });
+
+  return mappedLocationOfRemotes;
 }

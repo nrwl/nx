@@ -21,6 +21,8 @@
     "tsconfig-paths",
     "semver",
     "webpack",
+    "express",
+    "http-proxy-middleware",
     "http-server",
     "magic-string",
     "enquirer",
