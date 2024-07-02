@@ -1,0 +1,248 @@
+{
+  "project": {
+    "name": "react-app",
+    "type": "lib",
+    "data": {
+      "root": ".",
+      "targets": {
+        "vite:build": {
+          "options": {
+            "cwd": ".",
+            "command": "vite build"
+          },
+          "cache": true,
+          "dependsOn": ["^vite:build"],
+          "inputs": [
+            "default",
+            "^default",
+            {
+              "externalDependencies": ["vite"]
+            }
+          ],
+          "outputs": ["{projectRoot}/dist"],
+          "executor": "nx:run-commands",
+          "configurations": {}
+        },
+        "build": {
+          "executor": "nx:run-script",
+          "metadata": {
+            "scriptContent": "nx vite:build",
+            "runCommand": "npm run build"
+          },
+          "cache": true,
+          "dependsOn": ["typecheck"],
+          "options": {
+            "script": "build"
+          },
+          "configurations": {}
+        }
+      },
+      "sourceRoot": ".",
+      "name": "react-app",
+      "projectType": "library",
+      "metadata": {
+        "targetGroups": {
+          "NPM Scripts": ["build"]
+        }
+      },
+      "implicitDependencies": [],
+      "tags": []
+    }
+  },
+  "sourceMap": {
+    "root": ["package.json", "nx/core/package-json-workspaces"],
+    "targets": ["vite.config.ts", "@nx/vite/plugin"],
+    "targets.vite:build": ["vite.config.ts", "@nx/vite/plugin"],
+    "targets.vite:build.options": ["vite.config.ts", "@nx/vite/plugin"],
+    "targets.vite:build.cache": ["vite.config.ts", "@nx/vite/plugin"],
+    "targets.vite:build.dependsOn": ["vite.config.ts", "@nx/vite/plugin"],
+    "targets.vite:build.inputs": ["vite.config.ts", "@nx/vite/plugin"],
+    "targets.vite:build.outputs": ["vite.config.ts", "@nx/vite/plugin"],
+    "targets.vite:build.executor": ["vite.config.ts", "@nx/vite/plugin"],
+    "targets.vite:build.options.cwd": ["vite.config.ts", "@nx/vite/plugin"],
+    "targets.vite:build.options.command": ["vite.config.ts", "@nx/vite/plugin"],
+    "targets.serve": ["vite.config.ts", "@nx/vite/plugin"],
+    "targets.serve.options": ["vite.config.ts", "@nx/vite/plugin"],
+    "targets.serve.executor": ["vite.config.ts", "@nx/vite/plugin"],
+    "targets.serve.options.cwd": ["vite.config.ts", "@nx/vite/plugin"],
+    "targets.serve.options.command": ["vite.config.ts", "@nx/vite/plugin"],
+    "targets.vite:preview": ["vite.config.ts", "@nx/vite/plugin"],
+    "targets.vite:preview.options": ["vite.config.ts", "@nx/vite/plugin"],
+    "targets.vite:preview.executor": ["vite.config.ts", "@nx/vite/plugin"],
+    "targets.vite:preview.options.cwd": ["vite.config.ts", "@nx/vite/plugin"],
+    "targets.vite:preview.options.command": [
+      "vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.serve-static": ["vite.config.ts", "@nx/vite/plugin"],
+    "targets.serve-static.executor": ["vite.config.ts", "@nx/vite/plugin"],
+    "targets.serve-static.options": ["vite.config.ts", "@nx/vite/plugin"],
+    "targets.serve-static.options.buildTarget": [
+      "vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.serve-static.options.spa": ["vite.config.ts", "@nx/vite/plugin"],
+    "targets.eslint:lint": [".eslintrc.cjs", "@nx/eslint/plugin"],
+    "targets.eslint:lint.cache": [".eslintrc.cjs", "@nx/eslint/plugin"],
+    "targets.eslint:lint.options": [".eslintrc.cjs", "@nx/eslint/plugin"],
+    "targets.eslint:lint.inputs": [".eslintrc.cjs", "@nx/eslint/plugin"],
+    "targets.eslint:lint.outputs": [".eslintrc.cjs", "@nx/eslint/plugin"],
+    "targets.eslint:lint.executor": [".eslintrc.cjs", "@nx/eslint/plugin"],
+    "targets.eslint:lint.options.cwd": [".eslintrc.cjs", "@nx/eslint/plugin"],
+    "targets.eslint:lint.options.command": [
+      ".eslintrc.cjs",
+      "@nx/eslint/plugin"
+    ],
+    "targets.typecheck": ["package.json", "nx/core/package-json-workspaces"],
+    "targets.typecheck.executor": [
+      "package.json",
+      "nx/core/package-json-workspaces"
+    ],
+    "targets.typecheck.options": [
+      "package.json",
+      "nx/core/package-json-workspaces"
+    ],
+    "targets.typecheck.metadata": [
+      "package.json",
+      "nx/core/package-json-workspaces"
+    ],
+    "targets.typecheck.cache": ["nx.json", "nx/core/target-defaults"],
+    "targets.typecheck.options.script": [
+      "package.json",
+      "nx/core/package-json-workspaces"
+    ],
+    "targets.typecheck.metadata.scriptContent": [
+      "package.json",
+      "nx/core/package-json-workspaces"
+    ],
+    "targets.typecheck.metadata.runCommand": [
+      "package.json",
+      "nx/core/package-json-workspaces"
+    ],
+    "targets.build": ["package.json", "nx/core/package-json-workspaces"],
+    "targets.build.executor": [
+      "package.json",
+      "nx/core/package-json-workspaces"
+    ],
+    "targets.build.options": [
+      "package.json",
+      "nx/core/package-json-workspaces"
+    ],
+    "targets.build.metadata": [
+      "package.json",
+      "nx/core/package-json-workspaces"
+    ],
+    "targets.build.cache": ["nx.json", "nx/core/target-defaults"],
+    "targets.build.options.script": [
+      "package.json",
+      "nx/core/package-json-workspaces"
+    ],
+    "targets.build.metadata.scriptContent": [
+      "package.json",
+      "nx/core/package-json-workspaces"
+    ],
+    "targets.build.metadata.runCommand": [
+      "package.json",
+      "nx/core/package-json-workspaces"
+    ],
+    "targets.lint": ["package.json", "nx/core/package-json-workspaces"],
+    "targets.lint.executor": [
+      "package.json",
+      "nx/core/package-json-workspaces"
+    ],
+    "targets.lint.options": ["package.json", "nx/core/package-json-workspaces"],
+    "targets.lint.metadata": [
+      "package.json",
+      "nx/core/package-json-workspaces"
+    ],
+    "targets.lint.cache": ["nx.json", "nx/core/target-defaults"],
+    "targets.lint.options.script": [
+      "package.json",
+      "nx/core/package-json-workspaces"
+    ],
+    "targets.lint.metadata.scriptContent": [
+      "package.json",
+      "nx/core/package-json-workspaces"
+    ],
+    "targets.lint.metadata.runCommand": [
+      "package.json",
+      "nx/core/package-json-workspaces"
+    ],
+    "sourceRoot": ["package.json", "nx/core/package-json-workspaces"],
+    "name": ["package.json", "nx/core/package-json-workspaces"],
+    "projectType": ["package.json", "nx/core/package-json-workspaces"],
+    "metadata.targetGroups": [
+      "package.json",
+      "nx/core/package-json-workspaces"
+    ],
+    "metadata.targetGroups.NPM Scripts": [
+      "package.json",
+      "nx/core/package-json-workspaces"
+    ],
+    "metadata.targetGroups.NPM Scripts.0": [
+      "package.json",
+      "nx/core/package-json-workspaces"
+    ],
+    "metadata.targetGroups.NPM Scripts.1": [
+      "package.json",
+      "nx/core/package-json-workspaces"
+    ],
+    "metadata.targetGroups.NPM Scripts.2": [
+      "package.json",
+      "nx/core/package-json-workspaces"
+    ],
+    "metadata.targetGroups.NPM Scripts.3": [
+      "package.json",
+      "nx/core/package-json-workspaces"
+    ],
+    "metadata.targetGroups.NPM Scripts.4": [
+      "package.json",
+      "nx/core/package-json-workspaces"
+    ],
+    "targets.dev": ["package.json", "nx/core/package-json-workspaces"],
+    "targets.dev.executor": ["package.json", "nx/core/package-json-workspaces"],
+    "targets.dev.options": ["package.json", "nx/core/package-json-workspaces"],
+    "targets.dev.metadata": ["package.json", "nx/core/package-json-workspaces"],
+    "targets.dev.options.script": [
+      "package.json",
+      "nx/core/package-json-workspaces"
+    ],
+    "targets.dev.metadata.scriptContent": [
+      "package.json",
+      "nx/core/package-json-workspaces"
+    ],
+    "targets.dev.metadata.runCommand": [
+      "package.json",
+      "nx/core/package-json-workspaces"
+    ],
+    "targets.build.dependsOn": [
+      "package.json",
+      "nx/core/package-json-workspaces"
+    ],
+    "targets.preview": ["package.json", "nx/core/package-json-workspaces"],
+    "targets.preview.executor": [
+      "package.json",
+      "nx/core/package-json-workspaces"
+    ],
+    "targets.preview.options": [
+      "package.json",
+      "nx/core/package-json-workspaces"
+    ],
+    "targets.preview.metadata": [
+      "package.json",
+      "nx/core/package-json-workspaces"
+    ],
+    "targets.preview.options.script": [
+      "package.json",
+      "nx/core/package-json-workspaces"
+    ],
+    "targets.preview.metadata.scriptContent": [
+      "package.json",
+      "nx/core/package-json-workspaces"
+    ],
+    "targets.preview.metadata.runCommand": [
+      "package.json",
+      "nx/core/package-json-workspaces"
+    ]
+  }
+}

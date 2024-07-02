@@ -509,7 +509,7 @@ export default App;
 
 Serving your app (`nx serve react-store`) and then navigating to `/products` should give you the following result:
 
-![products route](/shared/images/tutorial-react-standalone/react-tutorial-products-route.png)
+![products route](/shared/tutorials/react-tutorial-products-route.png)
 
 Let's apply the same for our `orders` library.
 
@@ -1026,9 +1026,7 @@ NX   Ran target lint for 7 projects (2s)
      - nx run products:lint
 ```
 
-If you have the ESLint plugin installed in your IDE you should immediately see an error:
-
-![ESLint module boundary error](/shared/images/tutorial-react-standalone/react-standalone-module-boundaries.png)
+If you have the ESLint plugin installed in your IDE you should also immediately see an error.
 
 Learn more about how to [enforce module boundaries](/features/enforce-module-boundaries).
 
