@@ -13,8 +13,7 @@ export async function shortenedCloudUrl(
   );
 
   const version = await getNxCloudVersion(apiUrl);
-
-  if (version && compareCalver(version, '2406.11.5') < 0) {
+  if ((version && compareCalver(version, '2406.11.5') < 0) || !version) {
     return apiUrl;
   }
 
@@ -140,6 +139,7 @@ async function getNxCloudVersion(apiUrl: string): Promise<string | null> {
   } catch (e) {
     logger.verbose(`Failed to get version of Nx Cloud.
       ${e}`);
+    return null;
   }
 }
 
