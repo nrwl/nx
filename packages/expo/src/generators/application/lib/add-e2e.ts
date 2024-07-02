@@ -15,10 +15,9 @@ export async function addE2e(
   tree: Tree,
   options: NormalizedSchema
 ): Promise<GeneratorCallback> {
-  const hasPlugin = hasExpoPlugin(tree);
+  const hasNxExpoPlugin = hasExpoPlugin(tree);
   switch (options.e2eTestRunner) {
     case 'cypress': {
-      const hasNxExpoPlugin = hasExpoPlugin(tree);
       if (!hasNxExpoPlugin) {
         await webStaticServeGenerator(tree, {
           buildTarget: `${options.projectName}:export`,

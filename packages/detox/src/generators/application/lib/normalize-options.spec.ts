@@ -41,7 +41,7 @@ describe('Normalize Options', () => {
   });
 
   it('should normalize options with name in camel case', async () => {
-    addProjectConfiguration(appTree, 'my-app', {
+    addProjectConfiguration(appTree, 'myApp', {
       root: 'apps/my-app',
       targets: {},
     });
@@ -67,7 +67,7 @@ describe('Normalize Options', () => {
   });
 
   it('should normalize options with display name', async () => {
-    addProjectConfiguration(appTree, 'my-app', {
+    addProjectConfiguration(appTree, 'myApp', {
       root: 'apps/my-app',
       targets: {},
     });

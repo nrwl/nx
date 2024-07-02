@@ -32,10 +32,7 @@ export async function normalizeOptions(
   const { fileName: appFileName, className: appClassName } = names(
     options.appName || options.appProject
   );
-  const { root: appRoot } = readProjectConfiguration(
-    host,
-    names(options.appProject).fileName
-  );
+  const { root: appRoot } = readProjectConfiguration(host, options.appProject);
 
   return {
     ...options,
