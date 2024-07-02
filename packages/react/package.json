@@ -38,8 +38,6 @@
     "file-loader": "^6.2.0",
     "minimatch": "9.0.3",
     "tslib": "^2.3.0",
-    "express": "^4.19.2",
-    "http-proxy-middleware": "^3.0.0",
     "@nx/devkit": "file:../devkit",
     "@nx/js": "file:../js",
     "@nx/eslint": "file:../eslint",

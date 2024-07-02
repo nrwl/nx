@@ -55,8 +55,6 @@
     "magic-string": "~0.30.2",
     "minimatch": "9.0.3",
     "semver": "^7.5.3",
-    "express": "^4.19.2",
-    "http-proxy-middleware": "^3.0.0",
     "tslib": "^2.3.0",
     "webpack": "^5.80.0",
     "webpack-merge": "^5.8.0",
