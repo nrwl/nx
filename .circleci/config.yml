@@ -90,7 +90,7 @@ jobs:
       - checkout
       - nx/set-shas:
           main-branch-name: 'master'
-      - run: npx nx-cloud@next start-ci-run --distribute-on=".nx/workflows/dynamic-changesets.yaml" --stop-agents-after="e2e"
+      - run: npx nx-cloud@next start-ci-run --distributes-on="auto linux-medium" --stop-agents-after="e2e"
       - run:
           command: |
             sudo apt-get update
