@@ -185,7 +185,7 @@
         "x-priority": "important"
       },
       "minimal": {
-        "description": "Generate a React app with a minimal setup, no separate test files.",
+        "description": "Generate a React app with a minimal setup, no separate test files if using vitest.",
         "type": "boolean",
         "default": false
       }

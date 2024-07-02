@@ -181,7 +181,7 @@
         "x-priority": "internal"
       },
       "minimal": {
-        "description": "Create a React library with a minimal setup, no separate test files.",
+        "description": "Create a React library with a minimal setup, no separate test files if using vitest.",
         "type": "boolean",
         "default": false
       },
