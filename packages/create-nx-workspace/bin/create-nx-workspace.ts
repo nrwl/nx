@@ -7,7 +7,7 @@ import { createWorkspace } from '../src/create-workspace';
 import { isKnownPreset, Preset } from '../src/utils/preset/preset';
 import { CLIErrorMessageConfig, output } from '../src/utils/output';
 import { nxVersion } from '../src/utils/nx/nx-version';
-import { pointToTutorialAndCourse } from '../src/utils/preset/point-to-tutorial-and-course';
+// import { pointToTutorialAndCourse } from '../src/utils/preset/point-to-tutorial-and-course';
 
 import { yargsDecorator } from './decorator';
 import { getPackageNameFromThirdPartyPreset } from '../src/utils/preset/get-third-party-preset';
@@ -236,13 +236,14 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
     printNxCloudSuccessMessage(workspaceInfo.nxCloudInfo);
   }
 
-  if (isKnownPreset(parsedArgs.preset)) {
-    pointToTutorialAndCourse(parsedArgs.preset as Preset);
-  } else {
-    output.log({
-      title: `Successfully applied preset: ${parsedArgs.preset}`,
-    });
-  }
+  // Commenting out for now
+  // if (isKnownPreset(parsedArgs.preset)) {
+  //   pointToTutorialAndCourse(parsedArgs.preset as Preset);
+  // } else {
+  //   output.log({
+  //     title: `Successfully applied preset: ${parsedArgs.preset}`,
+  //   });
+  // }
 }
 
 /**
