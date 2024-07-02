@@ -90,7 +90,7 @@ jobs:
       - checkout
       - nx/set-shas:
           main-branch-name: 'master'
-      - run: npx nx-cloud@next start-ci-run --distribute-on=".nx/workflows/dynamic-changesets.yaml" --stop-agents-after="e2e"
+      - run: npx nx-cloud@next start-ci-run --distribute-on=".nx/workflows/dynamic-changesets-linux.yaml" --stop-agents-after="e2e"
       - run:
           command: |
             sudo apt-get update
@@ -128,11 +128,17 @@ jobs:
     executor: macos
     environment:
       NX_E2E_CI_CACHE_KEY: e2e-circleci-macos
+      NX_DAEMON: 'true'
       NX_PERF_LOGGING: 'false'
+      NX_NATIVE_LOGGING: 'false'
+      NX_E2E_RUN_E2E: 'true'
       NX_CI_EXECUTION_ENV: 'macos'
-      SELECTED_PM: 'npm' # explicitly define npm for macOS tests
+      NX_CLOUD_DTE_V2: 'true'
     steps:
       - checkout
+      - nx/set-shas:
+          main-branch-name: 'master'
+      - run: npx nx-cloud@next start-ci-run --distribute-on=".nx/workflows/dynamic-changesets-macos.yaml" --stop-agents-after="e2e-macos-ci"
       - restore_cache:
           name: Restore Homebrew packages
           keys:
@@ -153,8 +159,6 @@ jobs:
       - run-pnpm-install:
           os: macos
       - rust/install
-      - nx/set-shas:
-          main-branch-name: 'master'
       - run:
           name: Run E2E Tests for macOS
           command: |
