@@ -1,5 +1,6 @@
 import { join } from 'path';
 import {
+  addDependenciesToPackageJson,
   formatFiles,
   generateFiles,
   GeneratorCallback,
@@ -24,6 +25,7 @@ import { addRemoteToDynamicHost } from './lib/add-remote-to-dynamic-host';
 import { addMfEnvToTargetDefaultInputs } from '../../utils/add-mf-env-to-inputs';
 import { maybeJs } from '../../utils/maybe-js';
 import { isValidVariable } from '@nx/js';
+import { moduleFederationEnhancedVersion } from '../../utils/versions';
 
 export function addModuleFederationFiles(
   host: Tree,
@@ -170,6 +172,13 @@ export async function remoteGeneratorInternal(host: Tree, schema: Schema) {
   }
 
   addMfEnvToTargetDefaultInputs(host);
+
+  const installTask = addDependenciesToPackageJson(
+    host,
+    {},
+    { '@module-federation/enhanced': moduleFederationEnhancedVersion }
+  );
+  tasks.push(installTask);
 
   if (!options.skipFormat) {
     await formatFiles(host);

@@ -1,8 +1,14 @@
-import { ModuleFederationConfig } from '@nx/webpack/src/utils/module-federation';
+import type {
+  ModuleFederationConfig,
+  NxModuleFederationConfigOverride,
+} from '@nx/webpack/src/utils/module-federation';
 import { getModuleFederationConfig } from './utils';
-import ModuleFederationPlugin from 'webpack/lib/container/ModuleFederationPlugin';
+import { ModuleFederationPlugin } from '@module-federation/enhanced/webpack';
 
-export async function withModuleFederation(options: ModuleFederationConfig) {
+export async function withModuleFederation(
+  options: ModuleFederationConfig,
+  configOverride?: NxModuleFederationConfigOverride
+) {
   if (global.NX_GRAPH_CREATION) {
     return (config) => config;
   }
@@ -44,6 +50,10 @@ export async function withModuleFederation(options: ModuleFederationConfig) {
         library: {
           type: 'module',
         },
+        /**
+         * Apply user-defined config override
+         */
+        ...(configOverride ? configOverride : {}),
       }),
       sharedLibraries.getReplacementPlugin(),
     ],

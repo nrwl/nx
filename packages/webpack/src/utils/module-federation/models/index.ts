@@ -1,4 +1,5 @@
 import type { NormalModuleReplacementPlugin } from 'webpack';
+import type { moduleFederationPlugin } from '@module-federation/sdk';
 
 export type ModuleFederationLibrary = { type: string; name: string };
 
@@ -45,6 +46,17 @@ export interface ModuleFederationConfig {
   shared?: SharedFunction;
   additionalShared?: AdditionalSharedConfig;
 }
+
+export type NxModuleFederationConfigOverride = Omit<
+  moduleFederationPlugin.ModuleFederationPluginOptions,
+  | 'exposes'
+  | 'remotes'
+  | 'name'
+  | 'library'
+  | 'shared'
+  | 'filename'
+  | 'remoteType'
+>;
 
 export type WorkspaceLibrarySecondaryEntryPoint = {
   name: string;

@@ -14,7 +14,8 @@ export const typesCorsVersion = '~2.8.5';
 export const expressVersion = '~4.18.2';
 export const typesExpressVersion = '4.17.14';
 export const browserSyncVersion = '^3.0.0';
-export const moduleFederationNodeVersion = '~1.0.5';
+export const moduleFederationNodeVersion = '^2.3.0';
+export const moduleFederationEnhancedVersion = '~0.2.3';
 
 export const angularEslintVersion = '^18.0.1';
 export const typescriptEslintVersion = '^8.0.0-alpha.28';

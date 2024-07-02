@@ -22,7 +22,10 @@ import {
   updateHostAppRoutes,
   updateTsConfig,
 } from './lib';
-import { nxVersion } from '../../utils/versions';
+import {
+  moduleFederationEnhancedVersion,
+  nxVersion,
+} from '../../utils/versions';
 
 export async function setupMf(tree: Tree, rawOptions: Schema) {
   const options = normalizeOptions(tree, rawOptions);
@@ -43,7 +46,11 @@ export async function setupMf(tree: Tree, rawOptions: Schema) {
       installTask = addDependenciesToPackageJson(
         tree,
         {},
-        { '@nx/web': nxVersion, '@nx/webpack': nxVersion }
+        {
+          '@nx/web': nxVersion,
+          '@nx/webpack': nxVersion,
+          '@module-federation/enhanced': moduleFederationEnhancedVersion,
+        }
       );
     }
   }
@@ -71,7 +78,10 @@ export async function setupMf(tree: Tree, rawOptions: Schema) {
       installTask = addDependenciesToPackageJson(
         tree,
         {},
-        { '@nx/webpack': nxVersion }
+        {
+          '@nx/webpack': nxVersion,
+          '@module-federation/enhanced': moduleFederationEnhancedVersion,
+        }
       );
     }
   }
