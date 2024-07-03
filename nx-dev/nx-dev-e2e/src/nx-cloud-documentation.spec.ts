@@ -32,7 +32,7 @@ const pages: Array<{ title: string; path: string }> = [
   },
   {
     title: 'Running Nx Cloud Enterprise',
-    path: '/ci/features/on-premise',
+    path: '/ci/recipes/enterprise/on-premise/on-premise',
   },
   {
     title: 'Auth (Basic)',

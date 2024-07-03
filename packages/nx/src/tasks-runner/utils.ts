@@ -201,7 +201,7 @@ export function getOutputsForTargetAndConfiguration(
   const targetConfiguration = node.data.targets[target];
 
   const options = {
-    ...targetConfiguration.options,
+    ...targetConfiguration?.options,
     ...targetConfiguration?.configurations?.[configuration],
     ...overrides,
   };
