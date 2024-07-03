@@ -1,7 +1,7 @@
 import { dirname, join, sep } from 'path';
 import type { TsConfigOptions } from 'ts-node';
 import type { CompilerOptions } from 'typescript';
-import { NX_PREFIX, logger, stripIndent } from '../../../utils/logger';
+import { logger, NX_PREFIX, stripIndent } from '../../../utils/logger';
 
 const swcNodeInstalled = packageIsInstalled('@swc-node/register');
 const tsNodeInstalled = packageIsInstalled('ts-node/register');
@@ -120,17 +120,9 @@ export function getSwcTranspiler(
   return typeof cleanupFn === 'function' ? cleanupFn : () => {};
 }
 
-const registered = new Set<string>();
-
 export function getTsNodeTranspiler(
   compilerOptions: CompilerOptions
 ): (...args: unknown[]) => unknown {
-  // Just return if transpiler was already registered before.
-  const registrationKey = JSON.stringify(compilerOptions);
-  if (registered.has(registrationKey)) {
-    return () => {};
-  }
-
   const { register } = require('ts-node') as typeof import('ts-node');
   // ts-node doesn't provide a cleanup method
   const service = register({
@@ -139,7 +131,6 @@ export function getTsNodeTranspiler(
     // we already read and provide the compiler options, so prevent ts-node from reading them again
     skipProject: true,
   });
-  registered.add(registrationKey);
 
   const { transpiler, swc } = service.options;
 
@@ -227,6 +218,11 @@ function filterRecognizedTsConfigTsNodeOptions(jsonObject: any): {
   return { recognized: filteredTsConfigOptions, unrecognized };
 }
 
+const registered = new Map<
+  string,
+  { refCount: number; cleanup: () => (...args: unknown[]) => unknown }
+>();
+
 export function getTranspiler(
   compilerOptions: CompilerOptions,
   tsConfigRaw?: unknown
@@ -246,15 +242,38 @@ export function getTranspiler(
   compilerOptions.inlineSourceMap = true;
   compilerOptions.skipLibCheck = true;
 
-  if (swcNodeInstalled && !preferTsNode) {
-    return () => getSwcTranspiler(compilerOptions);
+  // Just return if transpiler was already registered before.
+  const registrationKey = JSON.stringify(compilerOptions);
+  const registrationEntry = registered.get(registrationKey);
+  if (registered.has(registrationKey)) {
+    registrationEntry.refCount++;
+    return registrationEntry.cleanup;
   }
 
-  // We can fall back on ts-node if it's available
-  if (tsNodeInstalled) {
-    const tsNodeOptions =
-      filterRecognizedTsConfigTsNodeOptions(tsConfigRaw).recognized;
-    return () => getTsNodeTranspiler(compilerOptions);
+  const _getTranspiler =
+    swcNodeInstalled && !preferTsNode
+      ? getSwcTranspiler
+      : tsNodeInstalled
+      ? // We can fall back on ts-node if it's available
+        getTsNodeTranspiler
+      : undefined;
+
+  if (_getTranspiler) {
+    const transpilerCleanup = _getTranspiler(compilerOptions);
+    const currRegistrationEntry = {
+      refCount: 1,
+      cleanup: () => {
+        return () => {
+          currRegistrationEntry.refCount--;
+          if (currRegistrationEntry.refCount === 0) {
+            registered.delete(registrationKey);
+            transpilerCleanup();
+          }
+        };
+      },
+    };
+    registered.set(registrationKey, currRegistrationEntry);
+    return currRegistrationEntry.cleanup;
   }
 }
 
