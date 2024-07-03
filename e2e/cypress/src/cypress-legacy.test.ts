@@ -9,8 +9,7 @@ import {
 
 const TEN_MINS_MS = 600_000;
 
-// TODO(colum): Re-enable after investigation into Cypress 13.12 and Xvfb
-xdescribe('Cypress E2E Test runner (legacy)', () => {
+describe('Cypress E2E Test runner (legacy)', () => {
   beforeAll(() => {
     newProject({ packages: ['@nx/angular', '@nx/react'] });
   });
