@@ -81,6 +81,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "{projectRoot}/**/*.d.mts.map",
                   "{projectRoot}/tsconfig.tsbuildinfo",
                 ],
+                "syncGenerators": [
+                  "@nx/js:typescript-sync",
+                ],
               },
             },
           },
@@ -137,6 +140,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "cwd": "libs/my-lib",
                   },
                   "outputs": [],
+                  "syncGenerators": [
+                    "@nx/js:typescript-sync",
+                  ],
                 },
               },
             },
@@ -175,6 +181,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "cwd": "libs/my-lib",
                   },
                   "outputs": [],
+                  "syncGenerators": [
+                    "@nx/js:typescript-sync",
+                  ],
                 },
               },
             },
@@ -216,6 +225,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "cwd": "libs/my-lib",
                   },
                   "outputs": [],
+                  "syncGenerators": [
+                    "@nx/js:typescript-sync",
+                  ],
                 },
               },
             },
@@ -300,6 +312,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "cwd": "libs/my-lib",
                   },
                   "outputs": [],
+                  "syncGenerators": [
+                    "@nx/js:typescript-sync",
+                  ],
                 },
               },
             },
@@ -343,6 +358,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "cwd": "libs/my-lib",
                   },
                   "outputs": [],
+                  "syncGenerators": [
+                    "@nx/js:typescript-sync",
+                  ],
                 },
               },
             },
@@ -388,6 +406,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "cwd": "libs/my-lib",
                   },
                   "outputs": [],
+                  "syncGenerators": [
+                    "@nx/js:typescript-sync",
+                  ],
                 },
               },
             },
@@ -433,6 +454,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "cwd": "libs/my-lib",
                     },
                     "outputs": [],
+                    "syncGenerators": [
+                      "@nx/js:typescript-sync",
+                    ],
                   },
                 },
               },
@@ -486,6 +510,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "cwd": "libs/my-lib",
                     },
                     "outputs": [],
+                    "syncGenerators": [
+                      "@nx/js:typescript-sync",
+                    ],
                   },
                 },
               },
@@ -564,6 +591,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "cwd": "libs/my-lib",
                     },
                     "outputs": [],
+                    "syncGenerators": [
+                      "@nx/js:typescript-sync",
+                    ],
                   },
                 },
               },
@@ -830,6 +860,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/**/*.d.mts.map",
                       "{projectRoot}/tsconfig.tsbuildinfo",
                     ],
+                    "syncGenerators": [
+                      "@nx/js:typescript-sync",
+                    ],
                   },
                 },
               },
@@ -880,6 +913,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{workspaceRoot}/dist/libs/my-lib/index.d.ts.map",
                       "{workspaceRoot}/dist/libs/my-lib/index.tsbuildinfo",
                     ],
+                    "syncGenerators": [
+                      "@nx/js:typescript-sync",
+                    ],
                   },
                 },
               },
@@ -923,6 +959,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     },
                     "outputs": [
                       "{workspaceRoot}/dist/libs/my-lib",
+                    ],
+                    "syncGenerators": [
+                      "@nx/js:typescript-sync",
                     ],
                   },
                 },
@@ -978,6 +1017,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/**/*.d.cts.map",
                       "{projectRoot}/**/*.d.mts.map",
                       "{projectRoot}/tsconfig.tsbuildinfo",
+                    ],
+                    "syncGenerators": [
+                      "@nx/js:typescript-sync",
                     ],
                   },
                 },
@@ -1094,6 +1136,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "outputs": [
                       "{workspaceRoot}/dist/out-tsc/libs/my-lib/nested-project",
                     ],
+                    "syncGenerators": [
+                      "@nx/js:typescript-sync",
+                    ],
                   },
                 },
               },
@@ -1145,6 +1190,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{workspaceRoot}/dist/libs/my-lib/index.d.ts",
                       "{workspaceRoot}/dist/libs/my-lib/index.d.ts.map",
                       "{workspaceRoot}/dist/libs/my-lib/my-lib.tsbuildinfo",
+                    ],
+                    "syncGenerators": [
+                      "@nx/js:typescript-sync",
                     ],
                   },
                 },
@@ -1202,6 +1250,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/**/*.d.cts.map",
                       "{projectRoot}/**/*.d.mts.map",
                       "{workspaceRoot}/dist/libs/my-lib/my-lib.tsbuildinfo",
+                    ],
+                    "syncGenerators": [
+                      "@nx/js:typescript-sync",
                     ],
                   },
                 },
@@ -1351,6 +1402,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "cwd": "libs/my-lib",
                   },
                   "outputs": [],
+                  "syncGenerators": [
+                    "@nx/js:typescript-sync",
+                  ],
                 },
               },
             },
@@ -1396,6 +1450,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "cwd": "libs/my-lib",
                   },
                   "outputs": [],
+                  "syncGenerators": [
+                    "@nx/js:typescript-sync",
+                  ],
                 },
               },
             },
@@ -1445,6 +1502,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "cwd": "libs/my-lib",
                   },
                   "outputs": [],
+                  "syncGenerators": [
+                    "@nx/js:typescript-sync",
+                  ],
                 },
               },
             },
@@ -1494,6 +1554,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "cwd": "libs/my-lib",
                   },
                   "outputs": [],
+                  "syncGenerators": [
+                    "@nx/js:typescript-sync",
+                  ],
                 },
               },
             },
@@ -1544,6 +1607,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "cwd": "libs/my-lib",
                     },
                     "outputs": [],
+                    "syncGenerators": [
+                      "@nx/js:typescript-sync",
+                    ],
                   },
                 },
               },
@@ -1602,6 +1668,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "cwd": "libs/my-lib",
                     },
                     "outputs": [],
+                    "syncGenerators": [
+                      "@nx/js:typescript-sync",
+                    ],
                   },
                 },
               },
@@ -1665,6 +1734,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "cwd": "libs/my-lib",
                     },
                     "outputs": [],
+                    "syncGenerators": [
+                      "@nx/js:typescript-sync",
+                    ],
                   },
                 },
               },
@@ -1902,6 +1974,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/**/*.d.mts.map",
                       "{projectRoot}/tsconfig.lib.tsbuildinfo",
                     ],
+                    "syncGenerators": [
+                      "@nx/js:typescript-sync",
+                    ],
                   },
                 },
               },
@@ -1957,6 +2032,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{workspaceRoot}/dist/libs/my-lib/index.d.ts.map",
                       "{workspaceRoot}/dist/libs/my-lib/index.tsbuildinfo",
                     ],
+                    "syncGenerators": [
+                      "@nx/js:typescript-sync",
+                    ],
                   },
                 },
               },
@@ -2005,6 +2083,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     },
                     "outputs": [
                       "{workspaceRoot}/dist/libs/my-lib",
+                    ],
+                    "syncGenerators": [
+                      "@nx/js:typescript-sync",
                     ],
                   },
                 },
@@ -2065,6 +2146,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/**/*.d.cts.map",
                       "{projectRoot}/**/*.d.mts.map",
                       "{projectRoot}/tsconfig.lib.tsbuildinfo",
+                    ],
+                    "syncGenerators": [
+                      "@nx/js:typescript-sync",
                     ],
                   },
                 },
@@ -2127,6 +2211,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{workspaceRoot}/dist/libs/my-lib/lib.tsbuildinfo",
                       "{workspaceRoot}/dist/libs/my-lib/other",
                     ],
+                    "syncGenerators": [
+                      "@nx/js:typescript-sync",
+                    ],
                   },
                 },
               },
@@ -2183,6 +2270,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{workspaceRoot}/dist/libs/my-lib/index.d.ts",
                       "{workspaceRoot}/dist/libs/my-lib/index.d.ts.map",
                       "{workspaceRoot}/dist/libs/my-lib/my-lib.tsbuildinfo",
+                    ],
+                    "syncGenerators": [
+                      "@nx/js:typescript-sync",
                     ],
                   },
                 },
@@ -2245,6 +2335,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/**/*.d.cts.map",
                       "{projectRoot}/**/*.d.mts.map",
                       "{workspaceRoot}/dist/libs/my-lib/my-lib.tsbuildinfo",
+                    ],
+                    "syncGenerators": [
+                      "@nx/js:typescript-sync",
                     ],
                   },
                 },
