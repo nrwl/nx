@@ -100,7 +100,11 @@ function applyNxIndependentConfig(
     path:
       config.output?.path ??
       (options.outputPath
-        ? path.join(options.root, options.outputPath)
+        ? // If path is relative, it is relative from project root (aka cwd).
+          // Otherwise, it is relative to workspace root (legacy behavior).
+          options.outputPath.startsWith('.')
+          ? path.join(options.root, options.projectRoot, options.outputPath)
+          : path.join(options.root, options.outputPath)
         : undefined),
     filename:
       config.output?.filename ??

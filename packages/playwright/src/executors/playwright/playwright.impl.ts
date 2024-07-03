@@ -23,7 +23,7 @@ export interface PlaywrightExecutorSchema {
   testFiles?: string[];
   headed?: boolean;
   ignoreSnapshots?: boolean;
-  workers?: string;
+  workers?: number | string;
   list?: boolean;
   maxFailures?: number | boolean;
   noDeps?: boolean;

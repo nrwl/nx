@@ -2,14 +2,14 @@ import {
   formatFiles,
   getProjects,
   readNxJson,
-  type Tree,
-  updateNxJson,
   updateProjectConfiguration,
+  type Tree,
 } from '@nx/devkit';
 import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
-
+import type { RollupExecutorOptions } from '../../executors/rollup/schema';
+import type { RollupPluginOptions } from '../../plugins/plugin';
 import { extractRollupConfigFromExecutorOptions } from './lib/extract-rollup-config-from-executor-options';
-import { RollupExecutorOptions } from '../../executors/rollup/schema';
+import { addPluginRegistrations } from './lib/add-plugin-registrations';
 
 interface Schema {
   project?: string;
@@ -17,9 +17,8 @@ interface Schema {
 }
 
 export async function convertToInferred(tree: Tree, options: Schema) {
-  let migrated = 0;
-
-  const projects = getProjects(tree);
+  const migratedProjects = new Map<string, RollupPluginOptions>();
+  let projects = getProjects(tree);
 
   forEachExecutorOptions<RollupExecutorOptions>(
     tree,
@@ -96,30 +95,21 @@ export async function convertToInferred(tree: Tree, options: Schema) {
 
       updateProjectConfiguration(tree, projectName, project);
 
-      nxJson.plugins ??= [];
-      if (
-        !nxJson.plugins.some((p) =>
-          typeof p === 'string'
-            ? p === '@nx/rollup/plugin'
-            : p.plugin === '@nx/rollup/plugin'
-        )
-      ) {
-        nxJson.plugins.push({
-          plugin: '@nx/rollup/plugin',
-          options: {
-            targetName: 'build',
-          },
-        });
-      }
-      updateNxJson(tree, nxJson);
-
-      migrated++;
+      migratedProjects.set(projectName, { buildTargetName: targetName });
     }
   );
 
-  if (migrated === 0) {
+  if (migratedProjects.size === 0) {
     throw new Error('Could not find any targets to migrate.');
   }
+
+  projects = getProjects(tree);
+  await addPluginRegistrations<RollupPluginOptions>(
+    tree,
+    migratedProjects,
+    projects,
+    '@nx/rollup/plugin'
+  );
 
   if (!options.skipFormat) {
     await formatFiles(tree);

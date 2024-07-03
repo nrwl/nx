@@ -3,6 +3,7 @@ import {
   CreateNodesContext,
   createNodesFromFiles,
   CreateNodesV2,
+  getPackageManagerCommand,
   joinPathFragments,
   logger,
   normalizePath,
@@ -28,6 +29,8 @@ import { getGlobPatternsFromPackageManagerWorkspaces } from 'nx/src/plugins/pack
 import { combineGlobPatterns } from 'nx/src/utils/globs';
 import { minimatch } from 'minimatch';
 import { hashObject } from 'nx/src/devkit-internals';
+
+const pmc = getPackageManagerCommand();
 
 export interface JestPluginOptions {
   targetName?: string;
@@ -55,6 +58,7 @@ export const createNodesV2: CreateNodesV2<JestPluginOptions> = [
     const optionsHash = hashObject(options);
     const cachePath = join(workspaceDataDirectory, `jest-${optionsHash}.hash`);
     const targetsCache = readTargetsCache(cachePath);
+
     try {
       return await createNodesFromFiles(
         (configFile, options, context) =>
@@ -79,6 +83,7 @@ export const createNodes: CreateNodes<JestPluginOptions> = [
     logger.warn(
       '`createNodes` is deprecated. Update your plugin to utilize createNodesV2 instead. In Nx 20, this will change to the createNodesV2 API.'
     );
+
     return createNodesInternal(...args, {});
   },
 ];
@@ -184,6 +189,14 @@ async function buildJestTargets(
     metadata: {
       technologies: ['jest'],
       description: 'Run Jest Tests',
+      help: {
+        command: `${pmc.exec} jest --help`,
+        example: {
+          options: {
+            coverage: true,
+          },
+        },
+      },
     },
   });
 
@@ -237,6 +250,15 @@ async function buildJestTargets(
         metadata: {
           technologies: ['jest'],
           description: 'Run Jest Tests in CI',
+          nonAtomizedTarget: options.targetName,
+          help: {
+            command: `${pmc.exec} jest --help`,
+            example: {
+              options: {
+                coverage: true,
+              },
+            },
+          },
         },
       };
       targetGroup.push(options.ciTargetName);
@@ -258,6 +280,14 @@ async function buildJestTargets(
           metadata: {
             technologies: ['jest'],
             description: `Run Jest Tests in ${relativePath}`,
+            help: {
+              command: `${pmc.exec} jest --help`,
+              example: {
+                options: {
+                  coverage: true,
+                },
+              },
+            },
           },
         };
         targetGroup.push(targetName);

@@ -82,6 +82,14 @@ describe('@nx/jest/plugin', () => {
                     ],
                     "metadata": {
                       "description": "Run Jest Tests",
+                      "help": {
+                        "command": "npx jest --help",
+                        "example": {
+                          "options": {
+                            "coverage": true,
+                          },
+                        },
+                      },
                       "technologies": [
                         "jest",
                       ],
@@ -151,6 +159,14 @@ describe('@nx/jest/plugin', () => {
                     ],
                     "metadata": {
                       "description": "Run Jest Tests",
+                      "help": {
+                        "command": "npx jest --help",
+                        "example": {
+                          "options": {
+                            "coverage": true,
+                          },
+                        },
+                      },
                       "technologies": [
                         "jest",
                       ],
@@ -179,6 +195,15 @@ describe('@nx/jest/plugin', () => {
                     ],
                     "metadata": {
                       "description": "Run Jest Tests in CI",
+                      "help": {
+                        "command": "npx jest --help",
+                        "example": {
+                          "options": {
+                            "coverage": true,
+                          },
+                        },
+                      },
+                      "nonAtomizedTarget": "test",
                       "technologies": [
                         "jest",
                       ],
@@ -201,6 +226,14 @@ describe('@nx/jest/plugin', () => {
                     ],
                     "metadata": {
                       "description": "Run Jest Tests in src/unit.spec.ts",
+                      "help": {
+                        "command": "npx jest --help",
+                        "example": {
+                          "options": {
+                            "coverage": true,
+                          },
+                        },
+                      },
                       "technologies": [
                         "jest",
                       ],
@@ -259,6 +292,14 @@ describe('@nx/jest/plugin', () => {
                     ],
                     "metadata": {
                       "description": "Run Jest Tests",
+                      "help": {
+                        "command": "npx jest --help",
+                        "example": {
+                          "options": {
+                            "coverage": true,
+                          },
+                        },
+                      },
                       "technologies": [
                         "jest",
                       ],
@@ -303,49 +344,7 @@ describe('@nx/jest/plugin', () => {
         context
       );
 
-      expect(results).toMatchInlineSnapshot(`
-      [
-        [
-          "proj/jest.config.js",
-          {
-            "projects": {
-              "proj": {
-                "metadata": undefined,
-                "root": "proj",
-                "targets": {
-                  "test": {
-                    "cache": true,
-                    "command": "jest",
-                    "inputs": [
-                      "default",
-                      "^production",
-                      {
-                        "externalDependencies": [
-                          "jest",
-                          "some-package",
-                        ],
-                      },
-                    ],
-                    "metadata": {
-                      "description": "Run Jest Tests",
-                      "technologies": [
-                        "jest",
-                      ],
-                    },
-                    "options": {
-                      "cwd": "proj",
-                    },
-                    "outputs": [
-                      "{workspaceRoot}/coverage",
-                    ],
-                  },
-                },
-              },
-            },
-          },
-        ],
-      ]
-    `);
+      expect(results).toMatchSnapshot();
     }
   );
 });

@@ -1264,7 +1264,7 @@
               "file": "shared/recipes/resolve-circular-dependencies"
             },
             {
-              "name": "Troubleshooting Nx Install Issues",
+              "name": "Troubleshoot Nx Install Issues",
               "id": "troubleshoot-nx-install-issues",
               "file": "shared/installation/troubleshoot-installation"
             },
@@ -1287,10 +1287,16 @@
               "file": "shared/guides/performance-profiling"
             },
             {
-              "name": "Troubleshooting Nx Console Issues",
+              "name": "Troubleshoot Nx Console Issues",
               "id": "console-troubleshooting",
               "path": "/recipes/nx-console/console-troubleshooting",
               "file": "shared/recipes/console-troubleshooting"
+            },
+            {
+              "name": "Troubleshoot Convert to Inferred Migration",
+              "id": "convert-to-inferred",
+              "tags": [],
+              "file": "shared/guides/troubleshoot-convert-to-inferred"
             }
           ]
         },

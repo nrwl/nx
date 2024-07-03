@@ -1,44 +1,49 @@
-import type { RunCommandsOptions } from 'nx/src/executors/run-commands/run-commands.impl';
-
 import { minimatch } from 'minimatch';
 import { deepStrictEqual } from 'node:assert';
-
+import type {
+  InputDefinition,
+  ProjectConfiguration,
+} from 'nx/src/config/workspace-json-project-json';
+import {
+  readNxJson,
+  readProjectConfiguration,
+  updateNxJson,
+  updateProjectConfiguration,
+  type CreateNodes,
+  type CreateNodesV2,
+  type ExpandedPluginConfiguration,
+  type NxJsonConfiguration,
+  type ProjectGraph,
+  type TargetConfiguration,
+  type Tree,
+} from 'nx/src/devkit-exports';
+import {
+  LoadedNxPlugin,
+  ProjectConfigurationsError,
+  mergeTargetConfigurations,
+  retrieveProjectConfigurations,
+} from 'nx/src/devkit-internals';
+import type { RunCommandsOptions } from 'nx/src/executors/run-commands/run-commands.impl';
+import type { ConfigurationResult } from 'nx/src/project-graph/utils/project-configuration-utils';
 import { forEachExecutorOptions } from '../executor-options-utils';
 import { deleteMatchingProperties } from './plugin-migration-utils';
 
-import {
-  readNxJson,
-  updateNxJson,
-  updateProjectConfiguration,
-  readProjectConfiguration,
-  ProjectGraph,
-  ExpandedPluginConfiguration,
-  NxJsonConfiguration,
-  TargetConfiguration,
-  Tree,
-  CreateNodes,
-  CreateNodesV2,
-} from 'nx/src/devkit-exports';
-
-import {
-  mergeTargetConfigurations,
-  retrieveProjectConfigurations,
-  LoadedNxPlugin,
-  ProjectConfigurationsError,
-} from 'nx/src/devkit-internals';
-import type { ConfigurationResult } from 'nx/src/project-graph/utils/project-configuration-utils';
-import type { InputDefinition } from 'nx/src/config/workspace-json-project-json';
-
+export type InferredTargetConfiguration = TargetConfiguration & {
+  name: string;
+};
 type PluginOptionsBuilder<T> = (targetName: string) => T;
 type PostTargetTransformer = (
   targetConfiguration: TargetConfiguration,
   tree: Tree,
   projectDetails: { projectName: string; root: string },
-  inferredTargetConfiguration: TargetConfiguration
+  inferredTargetConfiguration: InferredTargetConfiguration
 ) => TargetConfiguration | Promise<TargetConfiguration>;
 type SkipTargetFilter = (
   targetConfiguration: TargetConfiguration
-) => [boolean, string];
+) => false | string;
+type SkipProjectFilter = (
+  projectConfiguration: ProjectConfiguration
+) => false | string;
 
 class ExecutorToPluginMigrator<T> {
   readonly tree: Tree;
@@ -48,6 +53,7 @@ class ExecutorToPluginMigrator<T> {
   readonly #pluginOptionsBuilder: PluginOptionsBuilder<T>;
   readonly #postTargetTransformer: PostTargetTransformer;
   readonly #skipTargetFilter: SkipTargetFilter;
+  readonly #skipProjectFilter: SkipProjectFilter;
   readonly #specificProjectToMigrate: string;
   #nxJson: NxJsonConfiguration;
   #targetDefaultsForExecutor: Partial<TargetConfiguration>;
@@ -56,6 +62,7 @@ class ExecutorToPluginMigrator<T> {
   #createNodes?: CreateNodes<T>;
   #createNodesV2?: CreateNodesV2<T>;
   #createNodesResultsForTargets: Map<string, ConfigurationResult>;
+  #skippedProjects: Set<string>;
 
   constructor(
     tree: Tree,
@@ -67,7 +74,10 @@ class ExecutorToPluginMigrator<T> {
     createNodes?: CreateNodes<T>,
     createNodesV2?: CreateNodesV2<T>,
     specificProjectToMigrate?: string,
-    skipTargetFilter?: SkipTargetFilter
+    filters?: {
+      skipProjectFilter?: SkipProjectFilter;
+      skipTargetFilter?: SkipTargetFilter;
+    }
   ) {
     this.tree = tree;
     this.#projectGraph = projectGraph;
@@ -78,7 +88,9 @@ class ExecutorToPluginMigrator<T> {
     this.#createNodes = createNodes;
     this.#createNodesV2 = createNodesV2;
     this.#specificProjectToMigrate = specificProjectToMigrate;
-    this.#skipTargetFilter = skipTargetFilter ?? ((...args) => [false, '']);
+    this.#skipProjectFilter =
+      filters?.skipProjectFilter ?? ((...args) => false);
+    this.#skipTargetFilter = filters?.skipTargetFilter ?? ((...args) => false);
   }
 
   async run(): Promise<Map<string, Set<string>>> {
@@ -87,7 +99,6 @@ class ExecutorToPluginMigrator<T> {
       for (const targetName of this.#targetAndProjectsToMigrate.keys()) {
         await this.#migrateTarget(targetName);
       }
-      await this.#addPlugins();
     }
     return this.#targetAndProjectsToMigrate;
   }
@@ -99,6 +110,7 @@ class ExecutorToPluginMigrator<T> {
     this.#targetAndProjectsToMigrate = new Map();
     this.#pluginToAddForTarget = new Map();
     this.#createNodesResultsForTargets = new Map();
+    this.#skippedProjects = new Set();
 
     this.#getTargetDefaultsForExecutor();
     this.#getTargetAndProjectsToMigrate();
@@ -145,7 +157,7 @@ class ExecutorToPluginMigrator<T> {
       projectTarget,
       this.tree,
       { projectName, root: projectFromGraph.data.root },
-      createdTarget
+      { ...createdTarget, name: targetName }
     );
 
     if (
@@ -221,97 +233,12 @@ class ExecutorToPluginMigrator<T> {
     }
   }
 
-  async #pluginRequiresIncludes(
-    targetName: string,
-    plugin: ExpandedPluginConfiguration<T>
-  ) {
-    const loadedPlugin = new LoadedNxPlugin(
-      {
-        createNodesV2: this.#createNodesV2,
-        createNodes: this.#createNodes,
-        name: this.#pluginPath,
-      },
-      plugin
-    );
-
-    const originalResults = this.#createNodesResultsForTargets.get(targetName);
-
-    let resultsWithIncludes: ConfigurationResult;
-    try {
-      resultsWithIncludes = await retrieveProjectConfigurations(
-        [loadedPlugin],
-        this.tree.root,
-        this.#nxJson
-      );
-    } catch (e) {
-      if (e instanceof ProjectConfigurationsError) {
-        resultsWithIncludes = e.partialProjectConfigurationsResult;
-      } else {
-        throw e;
-      }
-    }
-
-    return !deepEqual(originalResults, resultsWithIncludes);
-  }
-
-  async #addPlugins() {
-    for (const [targetName, plugin] of this.#pluginToAddForTarget.entries()) {
-      const pluginOptions = this.#pluginOptionsBuilder(targetName);
-
-      const existingPlugin = this.#nxJson.plugins.find(
-        (plugin: ExpandedPluginConfiguration<T>) => {
-          if (
-            typeof plugin === 'string' ||
-            plugin.plugin !== this.#pluginPath
-          ) {
-            return;
-          }
-
-          for (const key in plugin.options) {
-            if (plugin.options[key] !== pluginOptions[key]) {
-              return false;
-            }
-          }
-
-          return true;
-        }
-      ) as ExpandedPluginConfiguration<T>;
-
-      if (existingPlugin?.include) {
-        // Add to the existing plugin includes
-        existingPlugin.include = existingPlugin.include.concat(
-          // Any include that is in the new plugin's include list
-          plugin.include.filter(
-            (projectPath) =>
-              // And is not already covered by the existing plugin's include list
-              !existingPlugin.include.some((pluginIncludes) =>
-                minimatch(projectPath, pluginIncludes, { dot: true })
-              )
-          )
-        );
-
-        if (!(await this.#pluginRequiresIncludes(targetName, existingPlugin))) {
-          delete existingPlugin.include;
-        }
-      }
-
-      if (!existingPlugin) {
-        if (!(await this.#pluginRequiresIncludes(targetName, plugin))) {
-          plugin.include = undefined;
-        }
-        this.#nxJson.plugins.push(plugin);
-      }
-    }
-
-    updateNxJson(this.tree, this.#nxJson);
-  }
-
   #getTargetAndProjectsToMigrate() {
     forEachExecutorOptions(
       this.tree,
       this.#executor,
       (targetConfiguration, projectName, targetName, configurationName) => {
-        if (configurationName) {
+        if (this.#skippedProjects.has(projectName) || configurationName) {
           return;
         }
 
@@ -322,10 +249,23 @@ class ExecutorToPluginMigrator<T> {
           return;
         }
 
-        const [skipTarget, reasonTargetWasSkipped] =
-          this.#skipTargetFilter(targetConfiguration);
-        if (skipTarget) {
-          const errorMsg = `${targetName} target on project "${projectName}" cannot be migrated. ${reasonTargetWasSkipped}`;
+        const skipProjectReason = this.#skipProjectFilter(
+          this.#projectGraph.nodes[projectName].data
+        );
+        if (skipProjectReason) {
+          this.#skippedProjects.add(projectName);
+          const errorMsg = `The "${projectName}" project cannot be migrated. ${skipProjectReason}`;
+          if (this.#specificProjectToMigrate) {
+            throw new Error(errorMsg);
+          }
+
+          console.warn(errorMsg);
+          return;
+        }
+
+        const skipTargetReason = this.#skipTargetFilter(targetConfiguration);
+        if (skipTargetReason) {
+          const errorMsg = `${targetName} target on project "${projectName}" cannot be migrated. ${skipTargetReason}`;
           if (this.#specificProjectToMigrate) {
             throw new Error(errorMsg);
           } else {
@@ -375,88 +315,290 @@ class ExecutorToPluginMigrator<T> {
       return;
     }
 
-    for (const targetName of this.#targetAndProjectsToMigrate.keys()) {
-      const loadedPlugin = new LoadedNxPlugin(
-        {
-          createNodesV2: this.#createNodesV2,
-          createNodes: this.#createNodes,
-          name: this.#pluginPath,
-        },
-        {
-          plugin: this.#pluginPath,
-          options: this.#pluginOptionsBuilder(targetName),
-        }
-      );
-      let projectConfigs: ConfigurationResult;
-      try {
-        projectConfigs = await retrieveProjectConfigurations(
-          [loadedPlugin],
-          this.tree.root,
+    global.NX_GRAPH_CREATION = true;
+    try {
+      for (const targetName of this.#targetAndProjectsToMigrate.keys()) {
+        const result = await getCreateNodesResultsForPlugin(
+          this.tree,
+          {
+            plugin: this.#pluginPath,
+            options: this.#pluginOptionsBuilder(targetName),
+          },
+          this.#pluginPath,
+          this.#createNodes,
+          this.#createNodesV2,
           this.#nxJson
         );
-      } catch (e) {
-        if (e instanceof ProjectConfigurationsError) {
-          projectConfigs = e.partialProjectConfigurationsResult;
-        } else {
-          throw e;
-        }
+        this.#createNodesResultsForTargets.set(targetName, result);
       }
-
-      this.#createNodesResultsForTargets.set(targetName, projectConfigs);
+    } finally {
+      global.NX_GRAPH_CREATION = false;
     }
   }
 }
 
-export async function migrateExecutorToPlugin<T>(
+export async function migrateProjectExecutorsToPlugin<T>(
   tree: Tree,
   projectGraph: ProjectGraph,
-  executor: string,
   pluginPath: string,
-  pluginOptionsBuilder: PluginOptionsBuilder<T>,
-  postTargetTransformer: PostTargetTransformer,
-  createNodes: CreateNodesV2<T>,
-  specificProjectToMigrate?: string,
-  skipTargetFilter?: SkipTargetFilter
-): Promise<Map<string, Set<string>>> {
-  const migrator = new ExecutorToPluginMigrator<T>(
+  createNodesV2: CreateNodesV2<T>,
+  defaultPluginOptions: T,
+  migrations: Array<{
+    executors: string[];
+    targetPluginOptionMapper: (targetName: string) => Partial<T>;
+    postTargetTransformer: PostTargetTransformer;
+    skipProjectFilter?: SkipProjectFilter;
+    skipTargetFilter?: SkipTargetFilter;
+  }>,
+  specificProjectToMigrate?: string
+): Promise<Map<string, Record<string, string>>> {
+  const projects = await migrateProjects(
     tree,
     projectGraph,
-    executor,
     pluginPath,
-    pluginOptionsBuilder,
-    postTargetTransformer,
     undefined,
-    createNodes,
-    specificProjectToMigrate,
-    skipTargetFilter
+    createNodesV2,
+    defaultPluginOptions,
+    migrations,
+    specificProjectToMigrate
   );
-  return await migrator.run();
+
+  return projects;
 }
 
-export async function migrateExecutorToPluginV1<T>(
+export async function migrateProjectExecutorsToPluginV1<T>(
   tree: Tree,
   projectGraph: ProjectGraph,
-  executor: string,
   pluginPath: string,
-  pluginOptionsBuilder: PluginOptionsBuilder<T>,
-  postTargetTransformer: PostTargetTransformer,
   createNodes: CreateNodes<T>,
-  specificProjectToMigrate?: string,
-  skipTargetFilter?: SkipTargetFilter
-): Promise<Map<string, Set<string>>> {
-  const migrator = new ExecutorToPluginMigrator<T>(
+  defaultPluginOptions: T,
+  migrations: Array<{
+    executors: string[];
+    targetPluginOptionMapper: (targetName: string) => Partial<T>;
+    postTargetTransformer: PostTargetTransformer;
+    skipProjectFilter?: SkipProjectFilter;
+    skipTargetFilter?: SkipTargetFilter;
+  }>,
+  specificProjectToMigrate?: string
+): Promise<Map<string, Record<string, string>>> {
+  const projects = await migrateProjects(
     tree,
     projectGraph,
-    executor,
     pluginPath,
-    pluginOptionsBuilder,
-    postTargetTransformer,
     createNodes,
     undefined,
-    specificProjectToMigrate,
-    skipTargetFilter
+    defaultPluginOptions,
+    migrations,
+    specificProjectToMigrate
   );
-  return await migrator.run();
+
+  return projects;
+}
+
+async function migrateProjects<T>(
+  tree: Tree,
+  projectGraph: ProjectGraph,
+  pluginPath: string,
+  createNodes: CreateNodes<T>,
+  createNodesV2: CreateNodesV2<T>,
+  defaultPluginOptions: T,
+  migrations: Array<{
+    executors: string[];
+    targetPluginOptionMapper: (targetName: string) => Partial<T>;
+    postTargetTransformer: PostTargetTransformer;
+    skipProjectFilter?: SkipProjectFilter;
+    skipTargetFilter?: SkipTargetFilter;
+  }>,
+  specificProjectToMigrate?: string
+): Promise<Map<string, Record<string, string>>> {
+  const projects = new Map<string, Record<string, string>>();
+
+  for (const migration of migrations) {
+    for (const executor of migration.executors) {
+      const migrator = new ExecutorToPluginMigrator(
+        tree,
+        projectGraph,
+        executor,
+        pluginPath,
+        migration.targetPluginOptionMapper,
+        migration.postTargetTransformer,
+        createNodes,
+        createNodesV2,
+        specificProjectToMigrate,
+        {
+          skipProjectFilter: migration.skipProjectFilter,
+          skipTargetFilter: migration.skipTargetFilter,
+        }
+      );
+
+      const result = await migrator.run();
+
+      // invert the result to have a map of projects to their targets
+      for (const [target, projectList] of result.entries()) {
+        for (const project of projectList) {
+          if (!projects.has(project)) {
+            projects.set(project, {});
+          }
+
+          projects.set(project, {
+            ...projects.get(project),
+            ...migration.targetPluginOptionMapper(target),
+          });
+        }
+      }
+    }
+  }
+
+  // apply default options
+  for (const [project, pluginOptions] of projects.entries()) {
+    projects.set(project, {
+      ...defaultPluginOptions,
+      ...pluginOptions,
+    });
+  }
+
+  await addPluginRegistrations(
+    tree,
+    projects,
+    pluginPath,
+    createNodes,
+    createNodesV2,
+    defaultPluginOptions,
+    projectGraph
+  );
+
+  return projects;
+}
+
+async function addPluginRegistrations<T>(
+  tree: Tree,
+  projects: Map<string, Record<string, string>>,
+  pluginPath: string,
+  createNodes: CreateNodes | undefined,
+  createNodesV2: CreateNodesV2 | undefined,
+  defaultPluginOptions: T,
+  projectGraph: ProjectGraph
+) {
+  const nxJson = readNxJson(tree);
+
+  // collect createNodes results for each project before adding the plugins
+  const createNodesResults = new Map<string, ConfigurationResult>();
+  global.NX_GRAPH_CREATION = true;
+  try {
+    for (const [project, options] of projects.entries()) {
+      const projectConfigs = await getCreateNodesResultsForPlugin(
+        tree,
+        { plugin: pluginPath, options },
+        pluginPath,
+        createNodes,
+        createNodesV2,
+        nxJson
+      );
+
+      createNodesResults.set(project, projectConfigs);
+    }
+  } finally {
+    global.NX_GRAPH_CREATION = false;
+  }
+
+  const arePluginIncludesRequired = async (
+    project: string,
+    pluginConfiguration: ExpandedPluginConfiguration
+  ): Promise<boolean> => {
+    global.NX_GRAPH_CREATION = true;
+    let result: ConfigurationResult;
+    try {
+      result = await getCreateNodesResultsForPlugin(
+        tree,
+        pluginConfiguration,
+        pluginPath,
+        createNodes,
+        createNodesV2,
+        nxJson
+      );
+    } finally {
+      global.NX_GRAPH_CREATION = false;
+    }
+
+    const originalResults = createNodesResults.get(project);
+
+    return !deepEqual(originalResults, result);
+  };
+
+  for (const [project, options] of projects.entries()) {
+    const existingPlugin = nxJson.plugins?.find(
+      (plugin): plugin is ExpandedPluginConfiguration =>
+        typeof plugin !== 'string' &&
+        plugin.plugin === pluginPath &&
+        Object.keys(options).every(
+          (key) =>
+            plugin.options[key] === options[key] ||
+            (plugin.options[key] === undefined &&
+              options[key] === defaultPluginOptions[key])
+        )
+    );
+
+    const projectIncludeGlob = `${projectGraph.nodes[project].data.root}/**/*`;
+    if (!existingPlugin) {
+      nxJson.plugins ??= [];
+      const plugin: ExpandedPluginConfiguration = {
+        plugin: pluginPath,
+        options,
+        include: [projectIncludeGlob],
+      };
+
+      if (!(await arePluginIncludesRequired(project, plugin))) {
+        delete plugin.include;
+      }
+
+      nxJson.plugins.push(plugin);
+    } else if (existingPlugin.include) {
+      if (
+        !existingPlugin.include.some((include) =>
+          minimatch(projectIncludeGlob, include, { dot: true })
+        )
+      ) {
+        existingPlugin.include.push(projectIncludeGlob);
+
+        if (!(await arePluginIncludesRequired(project, existingPlugin))) {
+          delete existingPlugin.include;
+        }
+      }
+    }
+  }
+
+  updateNxJson(tree, nxJson);
+}
+
+async function getCreateNodesResultsForPlugin(
+  tree: Tree,
+  pluginConfiguration: ExpandedPluginConfiguration,
+  pluginPath: string,
+  createNodes: CreateNodes | undefined,
+  createNodesV2: CreateNodesV2 | undefined,
+  nxJson: NxJsonConfiguration
+): Promise<ConfigurationResult> {
+  let projectConfigs: ConfigurationResult;
+
+  try {
+    const plugin = new LoadedNxPlugin(
+      { createNodes, createNodesV2, name: pluginPath },
+      pluginConfiguration
+    );
+    projectConfigs = await retrieveProjectConfigurations(
+      [plugin],
+      tree.root,
+      nxJson
+    );
+  } catch (e) {
+    if (e instanceof ProjectConfigurationsError) {
+      projectConfigs = e.partialProjectConfigurationsResult;
+    } else {
+      throw e;
+    }
+  }
+
+  return projectConfigs;
 }
 
 // Checks if two objects are structurely equal, without caring

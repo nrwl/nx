@@ -39,6 +39,7 @@ export interface NextBuildBuilderOptions {
   debug?: boolean;
   profile?: boolean;
   experimentalAppOnly?: boolean;
+  experimentalBuildMode?: 'compile' | 'generate';
 }
 
 export interface NextServeBuilderOptions {

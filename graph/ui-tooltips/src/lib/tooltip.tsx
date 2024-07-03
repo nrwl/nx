@@ -25,6 +25,7 @@ import {
   useRole,
   safePolygon,
   useTransitionStyles,
+  FloatingPortal,
 } from '@floating-ui/react';
 
 export type TooltipProps = HTMLAttributes<HTMLDivElement> & {
@@ -37,6 +38,7 @@ export type TooltipProps = HTMLAttributes<HTMLDivElement> & {
   buffer?: number;
   showTooltipArrow?: boolean;
   strategy?: 'absolute' | 'fixed';
+  usePortal?: boolean;
 };
 
 export function Tooltip({
@@ -49,6 +51,7 @@ export function Tooltip({
   strategy = 'absolute',
   buffer = 0,
   showTooltipArrow = true,
+  usePortal = false,
 }: TooltipProps) {
   const [isOpen, setIsOpen] = useState(open);
   const arrowRef = useRef(null);
@@ -123,41 +126,49 @@ export function Tooltip({
     ...getReferenceProps(),
   };
 
+  const renderTooltip = () => (
+    <div
+      ref={refs.setFloating}
+      style={{
+        position: appliedStrategy,
+        top: showTooltipArrow ? y : y + 8 ?? 0,
+        left: x ?? 0,
+        width: 'max-content',
+        ...animationStyles,
+      }}
+      className="z-20 min-w-[250px] max-w-prose rounded-md border border-slate-500"
+      {...getFloatingProps()}
+    >
+      {showTooltipArrow && (
+        <div
+          style={{
+            left: arrowX != null ? `${arrowX}px` : '',
+            top: arrowY != null ? `${arrowY}px` : '',
+            right: '',
+            bottom: '',
+            [staticSide]: '-4px',
+          }}
+          className="absolute -z-10 h-4 w-4 rotate-45 bg-slate-500"
+          ref={arrowRef}
+        ></div>
+      )}
+      <div className="select-text rounded-md bg-white p-3 dark:bg-slate-900 dark:text-slate-400">
+        {content}
+      </div>
+    </div>
+  );
+
   return (
     <>
       {!externalReference && !!children
         ? cloneElement(children, cloneProps)
         : children}
       {isOpen && isMounted ? (
-        <div
-          ref={refs.setFloating}
-          style={{
-            position: appliedStrategy,
-            top: showTooltipArrow ? y : y + 8 ?? 0,
-            left: x ?? 0,
-            width: 'max-content',
-            ...animationStyles,
-          }}
-          className="z-10 min-w-[250px] max-w-prose rounded-md border border-slate-500"
-          {...getFloatingProps()}
-        >
-          {showTooltipArrow && (
-            <div
-              style={{
-                left: arrowX != null ? `${arrowX}px` : '',
-                top: arrowY != null ? `${arrowY}px` : '',
-                right: '',
-                bottom: '',
-                [staticSide]: '-4px',
-              }}
-              className="absolute -z-10 h-4 w-4 rotate-45 bg-slate-500"
-              ref={arrowRef}
-            ></div>
-          )}
-          <div className="select-text rounded-md bg-white p-3 dark:bg-slate-900 dark:text-slate-400">
-            {content}
-          </div>
-        </div>
+        usePortal ? (
+          <FloatingPortal>{renderTooltip()}</FloatingPortal>
+        ) : (
+          renderTooltip()
+        )
       ) : null}
     </>
   );

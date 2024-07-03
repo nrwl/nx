@@ -1,8 +1,8 @@
 import { NxJsonConfiguration, readNxJson } from '../config/nx-json';
 
-export function isNxCloudUsed(nxJson: NxJsonConfiguration) {
+export function isNxCloudUsed(nxJson: NxJsonConfiguration): boolean {
   return (
-    process.env.NX_CLOUD_ACCESS_TOKEN ||
+    !!process.env.NX_CLOUD_ACCESS_TOKEN ||
     !!nxJson.nxCloudAccessToken ||
     !!Object.values(nxJson.tasksRunnerOptions ?? {}).find(
       (r) => r.runner == '@nrwl/nx-cloud' || r.runner == 'nx-cloud'

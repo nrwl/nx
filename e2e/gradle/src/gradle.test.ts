@@ -53,7 +53,7 @@ describe('Gradle', () => {
           createFile(
             `app2/build.gradle`,
             `plugins {
-    id 'gradleProject.groovy-application-conventions'
+    id 'buildlogic.groovy-application-conventions'
 }
 
 dependencies {
@@ -64,7 +64,7 @@ dependencies {
           createFile(
             `app2/build.gradle.kts`,
             `plugins {
-    id("gradleProject.kotlin-library-conventions")
+    id("buildlogic.kotlin-application-conventions")
 }
 
 dependencies {

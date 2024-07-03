@@ -5,7 +5,7 @@ import { createSandbox } from './create-sandbox';
 import { createEmptyWorkspace } from './create-empty-workspace';
 import { createPreset } from './create-preset';
 import { setupCI } from './utils/ci/setup-ci';
-import { initializeGitRepo } from './utils/git/git';
+import { commitChanges, initializeGitRepo } from './utils/git/git';
 import { getPackageNameFromThirdPartyPreset } from './utils/preset/get-third-party-preset';
 import { mapErrorToBodyLines } from './utils/error-utils';
 
@@ -51,6 +51,23 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
     );
   }
 
+  let gitSuccess = false;
+  if (!skipGit && commit) {
+    try {
+      await initializeGitRepo(directory, { defaultBase, commit });
+      gitSuccess = true;
+    } catch (e) {
+      if (e instanceof Error) {
+        output.error({
+          title: 'Could not initialize git repository',
+          bodyLines: mapErrorToBodyLines(e),
+        });
+      } else {
+        console.error(e);
+      }
+    }
+  }
+
   let nxCloudInstallRes;
   if (nxCloud !== 'skip') {
     nxCloudInstallRes = await setupNxCloud(
@@ -61,25 +78,14 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
     );
 
     if (nxCloud !== 'yes') {
-      await setupCI(
+      const nxCIsetupRes = await setupCI(
         directory,
         nxCloud,
         packageManager,
         nxCloudInstallRes?.code === 0
       );
-    }
-  }
-  if (!skipGit && commit) {
-    try {
-      await initializeGitRepo(directory, { defaultBase, commit });
-    } catch (e) {
-      if (e instanceof Error) {
-        output.error({
-          title: 'Could not initialize git repository',
-          bodyLines: mapErrorToBodyLines(e),
-        });
-      } else {
-        console.error(e);
+      if (nxCIsetupRes?.code === 0) {
+        commitChanges(directory, `feat(nx): Generated CI workflow`);
       }
     }
   }

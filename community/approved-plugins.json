@@ -77,12 +77,12 @@
   {
     "name": "@nxext/ionic-react",
     "description": "An Nx plugin for developing Ionic React applications and libraries",
-    "url": "https://github.com/nxext/nx-extensions/tree/main/packages/ionic-react"
+    "url": "https://github.com/nxext/nx-extensions-ionic/tree/main/packages/ionic-react"
   },
   {
     "name": "@nxext/ionic-angular",
     "description": "An Nx plugin for developing Ionic Angular applications and libraries",
-    "url": "https://github.com/nxext/nx-extensions/tree/main/packages/ionic-angular"
+    "url": "https://github.com/nxext/nx-extensions-ionic/tree/main/packages/ionic-angular"
   },
   {
     "name": "@nxext/capacitor",

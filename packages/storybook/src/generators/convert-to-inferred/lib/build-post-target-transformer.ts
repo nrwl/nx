@@ -107,7 +107,7 @@ export function buildPostTargetTransformer(migrationLogs: AggregatedLog) {
     if (target.outputs) {
       processTargetOutputs(
         target,
-        [{ newName: 'outputDir', oldName: 'outputDir' }],
+        [{ newName: 'output-dir', oldName: 'outputDir' }],
         inferredTargetConfiguration,
         {
           projectName: projectDetails.projectName,

@@ -126,8 +126,17 @@ export interface ProjectMetadata {
 
 export interface TargetMetadata {
   [k: string]: any;
+
   description?: string;
   technologies?: string[];
+  nonAtomizedTarget?: string;
+  help?: {
+    command: string;
+    example: {
+      options?: Record<string, unknown>;
+      args?: string[];
+    };
+  };
 }
 
 export interface TargetDependencyConfig {

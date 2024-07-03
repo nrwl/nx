@@ -70,13 +70,17 @@ describe('buildPostTargetTransformer', () => {
         export default config;"
       `);
       expect(target).toMatchInlineSnapshot(`
-              {
-                "options": {
-                  "config-dir": ".storybook",
-                  "output-dir": "../../dist/storybook/myapp",
-                },
-              }
-          `);
+        {
+          "options": {
+            "config-dir": ".storybook",
+            "output-dir": "../../dist/storybook/myapp",
+          },
+          "outputs": [
+            "{projectRoot}/{options.output-dir}",
+            "{projectRoot}/{options.outputDir}",
+          ],
+        }
+      `);
     });
 
     it('should handle configurations correctly and migrate docsMode and staticDir to storybook config correctly', () => {
@@ -157,19 +161,23 @@ describe('buildPostTargetTransformer', () => {
         export default config;"
       `);
       expect(target).toMatchInlineSnapshot(`
-              {
-                "configurations": {
-                  "dev": {
-                    "config-dir": "./dev/.storybook",
-                    "output-dir": "../../dist/storybook/myapp/dev",
-                  },
-                },
-                "options": {
-                  "config-dir": ".storybook",
-                  "output-dir": "../../dist/storybook/myapp",
-                },
-              }
-          `);
+        {
+          "configurations": {
+            "dev": {
+              "config-dir": "./dev/.storybook",
+              "output-dir": "../../dist/storybook/myapp/dev",
+            },
+          },
+          "options": {
+            "config-dir": ".storybook",
+            "output-dir": "../../dist/storybook/myapp",
+          },
+          "outputs": [
+            "{projectRoot}/{options.output-dir}",
+            "{projectRoot}/{options.outputDir}",
+          ],
+        }
+      `);
       const devConfigFile = tree.read(
         'apps/myapp/dev/.storybook/main.ts',
         'utf-8'
@@ -262,13 +270,17 @@ describe('buildPostTargetTransformer', () => {
         export default config;"
       `);
       expect(target).toMatchInlineSnapshot(`
-              {
-                "options": {
-                  "config-dir": ".storybook",
-                  "output-dir": "../../dist/storybook/myapp",
-                },
-              }
-          `);
+        {
+          "options": {
+            "config-dir": ".storybook",
+            "output-dir": "../../dist/storybook/myapp",
+          },
+          "outputs": [
+            "{projectRoot}/{options.output-dir}",
+            "{projectRoot}/{options.outputDir}",
+          ],
+        }
+      `);
     });
 
     it('should handle configurations correctly and migrate docsMode and staticDir to storybook config correctly', () => {
@@ -349,19 +361,23 @@ describe('buildPostTargetTransformer', () => {
         export default config;"
       `);
       expect(target).toMatchInlineSnapshot(`
-              {
-                "configurations": {
-                  "dev": {
-                    "config-dir": "./dev/.storybook",
-                    "output-dir": "../../dist/storybook/myapp/dev",
-                  },
-                },
-                "options": {
-                  "config-dir": ".storybook",
-                  "output-dir": "../../dist/storybook/myapp",
-                },
-              }
-          `);
+        {
+          "configurations": {
+            "dev": {
+              "config-dir": "./dev/.storybook",
+              "output-dir": "../../dist/storybook/myapp/dev",
+            },
+          },
+          "options": {
+            "config-dir": ".storybook",
+            "output-dir": "../../dist/storybook/myapp",
+          },
+          "outputs": [
+            "{projectRoot}/{options.output-dir}",
+            "{projectRoot}/{options.outputDir}",
+          ],
+        }
+      `);
       const devConfigFile = tree.read(
         'apps/myapp/dev/.storybook/main.ts',
         'utf-8'
@@ -454,13 +470,17 @@ describe('buildPostTargetTransformer', () => {
         export default config;"
       `);
       expect(target).toMatchInlineSnapshot(`
-              {
-                "options": {
-                  "config-dir": ".storybook",
-                  "output-dir": "../../dist/storybook/myapp",
-                },
-              }
-          `);
+        {
+          "options": {
+            "config-dir": ".storybook",
+            "output-dir": "../../dist/storybook/myapp",
+          },
+          "outputs": [
+            "{projectRoot}/{options.output-dir}",
+            "{projectRoot}/{options.outputDir}",
+          ],
+        }
+      `);
     });
 
     it('should handle configurations correctly and migrate docsMode and staticDir to storybook config correctly', () => {
@@ -541,19 +561,23 @@ describe('buildPostTargetTransformer', () => {
         export default config;"
       `);
       expect(target).toMatchInlineSnapshot(`
-              {
-                "configurations": {
-                  "dev": {
-                    "config-dir": "./dev/.storybook",
-                    "output-dir": "../../dist/storybook/myapp/dev",
-                  },
-                },
-                "options": {
-                  "config-dir": ".storybook",
-                  "output-dir": "../../dist/storybook/myapp",
-                },
-              }
-          `);
+        {
+          "configurations": {
+            "dev": {
+              "config-dir": "./dev/.storybook",
+              "output-dir": "../../dist/storybook/myapp/dev",
+            },
+          },
+          "options": {
+            "config-dir": ".storybook",
+            "output-dir": "../../dist/storybook/myapp",
+          },
+          "outputs": [
+            "{projectRoot}/{options.output-dir}",
+            "{projectRoot}/{options.outputDir}",
+          ],
+        }
+      `);
       const devConfigFile = tree.read(
         'apps/myapp/dev/.storybook/main.ts',
         'utf-8'

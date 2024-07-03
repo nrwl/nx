@@ -1,6 +1,6 @@
 import { readFileSync } from 'fs';
 import { join } from 'path';
-import { processProjectReports, fileSeparator } from './get-gradle-report';
+import { processProjectReports } from './get-gradle-report';
 
 describe('processProjectReports', () => {
   it('should process project reports', () => {
