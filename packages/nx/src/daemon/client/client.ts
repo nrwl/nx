@@ -49,6 +49,11 @@ import {
   HandleWriteTaskRunsToHistoryMessage,
 } from '../message-types/task-history';
 import { FORCE_SHUTDOWN } from '../message-types/force-shutdown';
+import {
+  GET_SYNC_GENERATOR_CHANGES,
+  type HandleGetSyncGeneratorChangesMessage,
+} from '../message-types/get-sync-generator-changes';
+import type { FileChange } from '../../generators/tree';
 
 const DAEMON_ENV_SETTINGS = {
   NX_PROJECT_GLOB_CACHE: 'false',
@@ -341,6 +346,19 @@ export class DaemonClient {
       taskRuns,
     };
     return this.sendMessageToDaemon(message);
+  }
+
+  async getSyncGeneratorChanges(generators: string[]): Promise<FileChange[]> {
+    const message: HandleGetSyncGeneratorChangesMessage = {
+      type: GET_SYNC_GENERATOR_CHANGES,
+      generators,
+    };
+    const changes = await this.sendToDaemonViaQueue(message);
+    for (const change of changes) {
+      // We need to convert the content back to a buffer
+      change.content = Buffer.from(change.content);
+    }
+    return changes;
   }
 
   async isServerAvailable(): Promise<boolean> {
