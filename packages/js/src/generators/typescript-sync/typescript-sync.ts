@@ -72,6 +72,9 @@ export async function syncGenerator(tree: Tree, options: SyncSchema) {
   let hasChanges = false;
 
   if (tsconfigProjectNodeValues.length > 0) {
+    // Similarly, don't write to the file if there are no changes to avoid
+    // unnecessary changes due to JSON serialization
+    let hasRootTsconfigChanges = false;
     // Sync the root tsconfig references from the project graph (do not destroy existing references)
     rootTsconfig.references = rootTsconfig.references || [];
     const referencesSet = new Set(
@@ -82,11 +85,13 @@ export async function syncGenerator(tree: Tree, options: SyncSchema) {
       // Skip the root tsconfig itself
       if (node.data.root !== '.' && !referencesSet.has(normalizedPath)) {
         rootTsconfig.references.push({ path: `./${normalizedPath}` });
-        hasChanges = true;
+        hasChanges = hasRootTsconfigChanges = true;
       }
     }
 
-    writeJson(tree, rootTsconfigPath, rootTsconfig);
+    if (hasRootTsconfigChanges) {
+      writeJson(tree, rootTsconfigPath, rootTsconfig);
+    }
   }
 
   const pluginOptions = normalizePluginOptions(
@@ -198,7 +203,9 @@ function updateTsConfigReferences(
     }
   }
 
-  writeJson(tree, tsConfigPath, tsConfig);
+  if (hasChanges) {
+    writeJson(tree, tsConfigPath, tsConfig);
+  }
 
   return hasChanges;
 }
