@@ -99,22 +99,6 @@ export const featuresItems: MenuItem[] = [
     isNew: false,
     isHighlight: true,
   },
-  {
-    name: 'Automatically Split E2E Tasks (Atomizer)',
-    description: null,
-    href: '/ci/features/split-e2e-tasks',
-    icon: RectangleGroupIcon,
-    isNew: false,
-    isHighlight: true,
-  },
-  {
-    name: 'Identify and Re-run Flaky Tasks',
-    description: null,
-    href: '/ci/features/flaky-tasks',
-    icon: ArrowPathIcon,
-    isNew: false,
-    isHighlight: true,
-  },
 ];
 export const plans: MenuItem[] = [
   {
