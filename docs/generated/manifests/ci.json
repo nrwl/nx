@@ -217,17 +217,6 @@
         "isExternal": false,
         "path": "/ci/features/flaky-tasks",
         "tags": []
-      },
-      {
-        "id": "on-premise",
-        "name": "Set up Nx Cloud On-Premise",
-        "description": "Set up Nx Cloud on machines that you control",
-        "mediaImage": "",
-        "file": "nx-cloud/features/nx-enterprise-on-prem",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/ci/features/on-premise",
-        "tags": ["on-premise"]
       }
     ],
     "isExternal": false,
@@ -299,17 +288,6 @@
     "isExternal": false,
     "path": "/ci/features/flaky-tasks",
     "tags": []
-  },
-  "/ci/features/on-premise": {
-    "id": "on-premise",
-    "name": "Set up Nx Cloud On-Premise",
-    "description": "Set up Nx Cloud on machines that you control",
-    "mediaImage": "",
-    "file": "nx-cloud/features/nx-enterprise-on-prem",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/ci/features/on-premise",
-    "tags": ["on-premise"]
   },
   "/ci/concepts": {
     "id": "concepts",
@@ -622,6 +600,17 @@
             "mediaImage": "",
             "file": "",
             "itemList": [
+              {
+                "id": "on-premise",
+                "name": "Set up Nx Cloud On-Premise",
+                "description": "Set up Nx Cloud on machines that you control",
+                "mediaImage": "",
+                "file": "nx-cloud/features/nx-enterprise-on-prem",
+                "itemList": [],
+                "isExternal": false,
+                "path": "/ci/recipes/enterprise/on-premise/on-premise",
+                "tags": ["on-premise"]
+              },
               {
                 "id": "auth-single-admin",
                 "name": "Authenticate with a Single Admin",
@@ -1207,6 +1196,17 @@
         "file": "",
         "itemList": [
           {
+            "id": "on-premise",
+            "name": "Set up Nx Cloud On-Premise",
+            "description": "Set up Nx Cloud on machines that you control",
+            "mediaImage": "",
+            "file": "nx-cloud/features/nx-enterprise-on-prem",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/ci/recipes/enterprise/on-premise/on-premise",
+            "tags": ["on-premise"]
+          },
+          {
             "id": "auth-single-admin",
             "name": "Authenticate with a Single Admin",
             "description": "",
@@ -1401,6 +1401,17 @@
     "file": "",
     "itemList": [
       {
+        "id": "on-premise",
+        "name": "Set up Nx Cloud On-Premise",
+        "description": "Set up Nx Cloud on machines that you control",
+        "mediaImage": "",
+        "file": "nx-cloud/features/nx-enterprise-on-prem",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/recipes/enterprise/on-premise/on-premise",
+        "tags": ["on-premise"]
+      },
+      {
         "id": "auth-single-admin",
         "name": "Authenticate with a Single Admin",
         "description": "",
@@ -1503,6 +1514,17 @@
     "isExternal": false,
     "path": "/ci/recipes/enterprise/on-premise",
     "tags": []
+  },
+  "/ci/recipes/enterprise/on-premise/on-premise": {
+    "id": "on-premise",
+    "name": "Set up Nx Cloud On-Premise",
+    "description": "Set up Nx Cloud on machines that you control",
+    "mediaImage": "",
+    "file": "nx-cloud/features/nx-enterprise-on-prem",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/recipes/enterprise/on-premise/on-premise",
+    "tags": ["on-premise"]
   },
   "/ci/recipes/enterprise/on-premise/auth-single-admin": {
     "id": "auth-single-admin",
