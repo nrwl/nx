@@ -100,6 +100,14 @@ export async function updateSsrSetup(
       `webpack.server.config.${typescriptConfiguration ? 'ts' : 'js'}`
     ),
   };
+  if (
+    project.targets.server.configurations &&
+    project.targets.server.configurations.development
+  ) {
+    if ('vendorChunk' in project.targets.server.configurations.development) {
+      delete project.targets.server.configurations.development.vendorChunk;
+    }
+  }
   project.targets['serve-ssr'].options = {
     ...(project.targets['serve-ssr'].options ?? {}),
     port,

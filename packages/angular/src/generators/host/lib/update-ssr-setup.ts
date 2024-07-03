@@ -71,6 +71,15 @@ export async function updateSsrSetup(
     ),
   };
 
+  if (
+    project.targets.server.configurations &&
+    project.targets.server.configurations.development
+  ) {
+    if ('vendorChunk' in project.targets.server.configurations.development) {
+      delete project.targets.server.configurations.development.vendorChunk;
+    }
+  }
+
   project.targets['serve-ssr'].executor =
     '@nx/angular:module-federation-dev-ssr';
 
