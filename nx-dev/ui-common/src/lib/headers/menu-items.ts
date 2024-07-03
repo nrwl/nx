@@ -9,7 +9,9 @@ import {
   PlayCircleIcon,
   ShareIcon,
   Squares2X2Icon,
+  RectangleGroupIcon,
   ChatBubbleBottomCenterTextIcon,
+  ArrowUpCircleIcon,
 } from '@heroicons/react/24/outline';
 import { FC, SVGProps } from 'react';
 import { NxAgentsIcon } from '../nx-agents-icon';
@@ -58,7 +60,7 @@ export const featuresItems: MenuItem[] = [
     // description: 'Keep running on latest without effort.',
     description: null,
     href: '/features/automate-updating-dependencies',
-    icon: ArrowPathIcon,
+    icon: ArrowUpCircleIcon,
     isNew: false,
     isHighlight: false,
   },
@@ -77,7 +79,7 @@ export const featuresItems: MenuItem[] = [
     description: null,
     href: '/features/manage-releases',
     icon: CubeIcon,
-    isNew: true,
+    isNew: false,
     isHighlight: false,
   },
   {
@@ -91,10 +93,26 @@ export const featuresItems: MenuItem[] = [
   {
     name: 'Distribute Task Execution (Nx Agents)',
     description:
-      'One-line config for distributing tasks, E2E tests split & flaky tasks rerun.',
+      'One-line config for distributing tasks across multiple machines',
     href: '/ci/features/distribute-task-execution',
     icon: NxAgentsIcon,
-    isNew: true,
+    isNew: false,
+    isHighlight: true,
+  },
+  {
+    name: 'Automatically Split E2E Tasks (Atomizer)',
+    description: null,
+    href: '/ci/features/split-e2e-tasks',
+    icon: RectangleGroupIcon,
+    isNew: false,
+    isHighlight: true,
+  },
+  {
+    name: 'Identify and Re-run Flaky Tasks',
+    description: null,
+    href: '/ci/features/flaky-tasks',
+    icon: ArrowPathIcon,
+    isNew: false,
     isHighlight: true,
   },
 ];
