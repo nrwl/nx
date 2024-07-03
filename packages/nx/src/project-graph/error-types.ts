@@ -42,7 +42,14 @@ export class ProjectGraphError extends Error {
     this.#partialProjectGraph = partialProjectGraph;
     this.#partialSourceMaps = partialSourceMaps;
     this.stack = `${this.message}\n  ${errors
-      .map((error) => error.stack.split('\n').join('\n  '))
+      .map((error) => {
+        if (isAggregateCreateNodesError(error)) {
+          // AggregateCreateNodesError has a custom error message that shows more detail than the stack.
+          return error.message;
+        } else {
+          return error.stack.split('\n').join('\n  ');
+        }
+      })
       .join('\n')}`;
   }
 
