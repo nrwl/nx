@@ -44,7 +44,7 @@ Here's the source code of the final result for this tutorial.
 
 {% youtube
 src="https://www.youtube.com/embed/gc4N7kxiA50"
-title="Tutorial: Standalone React Application"
+title="Nx React Monorepo Tutorial Walkthrough"
 /%}
 
 ## Creating a new React Monorepo
