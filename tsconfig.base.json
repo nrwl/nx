@@ -93,6 +93,7 @@
       "@nx/nx-dev/ui-company": ["nx-dev/ui-company/src/index.ts"],
       "@nx/nx-dev/ui-conference": ["nx-dev/ui-conference/src/index.ts"],
       "@nx/nx-dev/ui-contact": ["nx-dev/ui-contact/src/index.ts"],
+      "@nx/nx-dev/ui-customers": ["nx-dev/ui-customers/src/index.ts"],
       "@nx/nx-dev/ui-enterprise": ["nx-dev/ui-enterprise/src/index.ts"],
       "@nx/nx-dev/ui-fence": ["nx-dev/ui-fence/src/index.ts"],
       "@nx/nx-dev/ui-home": ["nx-dev/ui-home/src/index.ts"],

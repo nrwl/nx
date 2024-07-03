@@ -1,17 +1,19 @@
 import { motion, Variants } from 'framer-motion';
 import { DownloadCaseStudy } from './download-case-study';
-import { RoyalBankOfCanadaColoredIcon } from './logos/royal-bank-of-canada';
-import { ManIcon } from './logos/man';
-import { ShopifyIcon } from './logos/shopify';
-import { CapitalOneIcon } from './logos/capital-one';
-import { VmwareIcon } from './logos/vmware';
-import { StorybookIcon } from './logos/storybook';
-import { CaterpillarIcon } from './logos/caterpillar';
-import { SevenElevenColoredIcon } from './logos/7eleven';
-import { BillColoredIcon } from './logos/bill';
-import { FicoIcon } from './logos/fico';
-import { HiltonIcon } from './logos/hilton';
-import { CiscoIcon } from './logos/cisco';
+import {
+  BillColoredIcon,
+  CapitalOneIcon,
+  CaterpillarIcon,
+  CiscoIcon,
+  FicoIcon,
+  HiltonIcon,
+  ManIcon,
+  RoyalBankOfCanadaColoredIcon,
+  SevenElevenColoredIcon,
+  ShopifyIcon,
+  StorybookIcon,
+  VmwareIcon,
+} from '@nx/nx-dev/ui-common';
 
 export function MetricsAndCustomers(): JSX.Element {
   const downloadElement: Variants = {

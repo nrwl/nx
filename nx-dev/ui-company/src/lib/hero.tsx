@@ -38,7 +38,7 @@ export function Hero(): JSX.Element {
             className="mx-auto mt-6 max-w-3xl"
           >
             We are the creators of Nx and Nx Cloud. We are also the maintainers
-            of Lerna any many other widely used open-source projects.
+            of Lerna and many other widely used open-source projects.
           </SectionHeading>
         </div>
         <dl className="mt-24 grid grid-cols-1 gap-16 lg:grid-cols-3">
