@@ -27,7 +27,7 @@ export interface MenuItem {
 
 export const featuresItems: MenuItem[] = [
   {
-    name: 'Task Running',
+    name: 'Run Tasks',
     // description: 'Run one or many tasks in parallel.',
     description: null,
     href: '/features/run-tasks',
@@ -36,7 +36,7 @@ export const featuresItems: MenuItem[] = [
     isHighlight: false,
   },
   {
-    name: 'Local Caching',
+    name: 'Cache Task Results',
     // description: 'Speeds up your local workflow.',
     description: null,
     href: '/features/cache-task-results',
@@ -45,7 +45,7 @@ export const featuresItems: MenuItem[] = [
     isHighlight: false,
   },
   {
-    name: 'Nx Graph',
+    name: 'Explore Your Workspace',
     // description: 'See interactions for tasks and modules.',
     description: null,
     href: '/features/explore-graph',
@@ -54,7 +54,7 @@ export const featuresItems: MenuItem[] = [
     isHighlight: false,
   },
   {
-    name: 'Automated updates',
+    name: 'Automate Updating Dependencies',
     // description: 'Keep running on latest without effort.',
     description: null,
     href: '/features/automate-updating-dependencies',
@@ -63,7 +63,7 @@ export const featuresItems: MenuItem[] = [
     isHighlight: false,
   },
   {
-    name: 'Module Boundaries',
+    name: 'Enforce Module Boundaries',
     // description: 'Partition your code into defined units.',
     description: null,
     href: '/features/enforce-module-boundaries',
@@ -72,7 +72,7 @@ export const featuresItems: MenuItem[] = [
     isHighlight: false,
   },
   {
-    name: 'Nx Release',
+    name: 'Manage Releases',
     // description: 'Versioning, changelog, publishing.',
     description: null,
     href: '/features/manage-releases',
@@ -81,7 +81,7 @@ export const featuresItems: MenuItem[] = [
     isHighlight: false,
   },
   {
-    name: 'Nx Replay',
+    name: 'Use Remote Caching (Nx Replay)',
     description: 'Zero-config, fast & secure remote cache solution.',
     href: '/ci/features/remote-cache',
     icon: NxReplayIcon,
@@ -89,7 +89,7 @@ export const featuresItems: MenuItem[] = [
     isHighlight: true,
   },
   {
-    name: 'Nx Agents',
+    name: 'Distribute Task Execution (Nx Agents)',
     description:
       'One-line config for distributing tasks, E2E tests split & flaky tasks rerun.',
     href: '/ci/features/distribute-task-execution',

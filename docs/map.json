@@ -99,7 +99,7 @@
               "file": "shared/features/cache-task-results"
             },
             {
-              "name": "Explore your Workspace",
+              "name": "Explore Your Workspace",
               "id": "explore-graph",
               "tags": ["explore-graph"],
               "file": "shared/features/explore-graph"
@@ -1633,13 +1633,6 @@
               "id": "flaky-tasks",
               "description": "Learn how Nx Cloud is able to automatically identify flaky tasks and re-run them for you.",
               "file": "nx-cloud/features/flaky-tasks"
-            },
-            {
-              "name": "Set up Nx Cloud On-Premise",
-              "description": "Set up Nx Cloud on machines that you control",
-              "id": "on-premise",
-              "tags": ["on-premise"],
-              "file": "nx-cloud/features/nx-enterprise-on-prem"
             }
           ]
         },
@@ -1780,6 +1773,13 @@
                   "id": "on-premise",
                   "description": "Manage an on-premise installation of Nx Cloud",
                   "itemList": [
+                    {
+                      "name": "Set up Nx Cloud On-Premise",
+                      "description": "Set up Nx Cloud on machines that you control",
+                      "id": "on-premise",
+                      "tags": ["on-premise"],
+                      "file": "nx-cloud/features/nx-enterprise-on-prem"
+                    },
                     {
                       "name": "Authenticate with a Single Admin",
                       "id": "auth-single-admin",

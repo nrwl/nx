@@ -385,7 +385,7 @@
       },
       {
         "id": "explore-graph",
-        "name": "Explore your Workspace",
+        "name": "Explore Your Workspace",
         "description": "",
         "mediaImage": "",
         "file": "shared/features/explore-graph",
@@ -556,7 +556,7 @@
   },
   "/features/explore-graph": {
     "id": "explore-graph",
-    "name": "Explore your Workspace",
+    "name": "Explore Your Workspace",
     "description": "",
     "mediaImage": "",
     "file": "shared/features/explore-graph",

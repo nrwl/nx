@@ -284,7 +284,7 @@
             "disableCollapsible": false
           },
           {
-            "name": "Explore your Workspace",
+            "name": "Explore Your Workspace",
             "path": "/features/explore-graph",
             "id": "explore-graph",
             "isExternal": false,
@@ -408,7 +408,7 @@
         "disableCollapsible": false
       },
       {
-        "name": "Explore your Workspace",
+        "name": "Explore Your Workspace",
         "path": "/features/explore-graph",
         "id": "explore-graph",
         "isExternal": false,
@@ -5307,14 +5307,6 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
-          },
-          {
-            "name": "Set up Nx Cloud On-Premise",
-            "path": "/ci/features/on-premise",
-            "id": "on-premise",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -5363,14 +5355,6 @@
         "name": "Identify and Re-run Flaky Tasks",
         "path": "/ci/features/flaky-tasks",
         "id": "flaky-tasks",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Set up Nx Cloud On-Premise",
-        "path": "/ci/features/on-premise",
-        "id": "on-premise",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -5605,6 +5589,14 @@
                 "id": "on-premise",
                 "isExternal": false,
                 "children": [
+                  {
+                    "name": "Set up Nx Cloud On-Premise",
+                    "path": "/ci/recipes/enterprise/on-premise/on-premise",
+                    "id": "on-premise",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  },
                   {
                     "name": "Authenticate with a Single Admin",
                     "path": "/ci/recipes/enterprise/on-premise/auth-single-admin",
@@ -6032,6 +6024,14 @@
             "isExternal": false,
             "children": [
               {
+                "name": "Set up Nx Cloud On-Premise",
+                "path": "/ci/recipes/enterprise/on-premise/on-premise",
+                "id": "on-premise",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
                 "name": "Authenticate with a Single Admin",
                 "path": "/ci/recipes/enterprise/on-premise/auth-single-admin",
                 "id": "auth-single-admin",
@@ -6173,6 +6173,14 @@
         "isExternal": false,
         "children": [
           {
+            "name": "Set up Nx Cloud On-Premise",
+            "path": "/ci/recipes/enterprise/on-premise/on-premise",
+            "id": "on-premise",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Authenticate with a Single Admin",
             "path": "/ci/recipes/enterprise/on-premise/auth-single-admin",
             "id": "auth-single-admin",
@@ -6245,6 +6253,14 @@
             "disableCollapsible": false
           }
         ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Set up Nx Cloud On-Premise",
+        "path": "/ci/recipes/enterprise/on-premise/on-premise",
+        "id": "on-premise",
+        "isExternal": false,
+        "children": [],
         "disableCollapsible": false
       },
       {
