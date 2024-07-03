@@ -7987,9 +7987,9 @@
                 "disableCollapsible": false
               },
               {
-                "id": "sync",
-                "path": "/nx-api/js/generators/sync",
-                "name": "sync",
+                "id": "typescript-sync",
+                "path": "/nx-api/js/generators/typescript-sync",
+                "name": "typescript-sync",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false

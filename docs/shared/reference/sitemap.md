@@ -476,7 +476,7 @@
       - [release-version](/nx-api/js/generators/release-version)
       - [setup-verdaccio](/nx-api/js/generators/setup-verdaccio)
       - [setup-build](/nx-api/js/generators/setup-build)
-      - [sync](/nx-api/js/generators/sync)
+      - [typescript-sync](/nx-api/js/generators/typescript-sync)
   - [nest](/nx-api/nest)
     - [documents](/nx-api/nest/documents)
       - [Overview](/nx-api/nest/documents/overview)
