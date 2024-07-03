@@ -282,7 +282,11 @@ function getInputs(
         pathToInputOrOutput(p, workspaceRoot, projectRoot)
       ),
       ...Array.from(includePaths).map((p: string) =>
-        joinPathFragments('{projectRoot}', p)
+        pathToInputOrOutput(
+          joinPathFragments(projectRoot, p),
+          workspaceRoot,
+          projectRoot
+        )
       )
     );
   } else {
@@ -294,7 +298,12 @@ function getInputs(
   if (excludePaths.size) {
     inputs.push(
       ...Array.from(excludePaths).map(
-        (p: string) => `!${joinPathFragments('{projectRoot}', p)}`
+        (p: string) =>
+          `!${pathToInputOrOutput(
+            joinPathFragments(projectRoot, p),
+            workspaceRoot,
+            projectRoot
+          )}`
       )
     );
   }
