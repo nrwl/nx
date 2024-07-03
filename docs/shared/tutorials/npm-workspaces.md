@@ -18,7 +18,14 @@ Here's the source code of the final result for this tutorial.
 
 {% github-repository url="https://github.com/nrwl/nx-recipes/tree/main/npm-workspaces" /%} -->
 
+{% youtube
+src="https://www.youtube.com/embed/ZA9K4iT3ANc"
+title="Nx NPM Workspaces Tutorial Walkthrough"
+/%}
+
 ## Starting Repository
+
+{% video-link link="https://youtu.be/ZA9K4iT3ANc?t=51" /%}
 
 To get started, check out [the sample repository](https://github.com/nrwl/tuskydesign) on your local machine:
 
@@ -92,6 +99,8 @@ Now that you have a basic understanding of the repository we're working with, le
 
 ## Add Nx
 
+{% video-link link="https://youtu.be/ZA9K4iT3ANc?t=170" /%}
+
 Nx offers many features, but at its core, it is a task runner. Out of the box, it can cache your tasks and ensure those tasks are run in the correct order. After the initial set up, you can incrementally add on other features that would be helpful in your organization.
 
 To enable Nx in your repository, run a single command:
@@ -143,6 +152,8 @@ Read this guide on exploring your workspace: https://nx.dev/features/explore-gra
 
 ## Explore Your Workspace
 
+{% video-link link="https://youtu.be/ZA9K4iT3ANc?t=250" /%}
+
 If you run `nx graph` as instructed, you'll see the dependencies between your projects.
 
 ```shell {% path="~/tuskydesigns" %}
@@ -155,6 +166,8 @@ npx nx graph
 Nx uses this graph to determine the order tasks are run and enforce module boundaries. You can also leverage this graph to gain an accurate understanding of the architecture of your codebase. Part of what makes this graph invaluable is that it is derived directly from your codebase, so it will never become out of date.
 
 ## Caching Pre-configured
+
+{% video-link link="https://youtu.be/ZA9K4iT3ANc?t=285" /%}
 
 Nx has been configured to run your `build`, `typecheck` and `lint` tasks. You can run a single task like this:
 
@@ -206,6 +219,8 @@ You can see the same caching behavior working when you run `npx nx lint` or `npx
 
 ## Use Task Pipelines
 
+{% video-link link="https://youtu.be/ZA9K4iT3ANc?t=358" /%}
+
 You may be wondering why the caching message in the previous section mentioned 3 tasks when you only ran the `build` task from the terminal. When we said that `build` tasks must be run in order during the setup script, Nx created a simple task pipeline. You can see the configuration for it in the `nx.json` file:
 
 ```json {% fileName="nx.json" %}
@@ -241,6 +256,8 @@ Not only does the build complete successfully, but it finishes instantly and the
 
 ## Create a Task Pipeline
 
+{% video-link link="https://youtu.be/ZA9K4iT3ANc?t=450" /%}
+
 You may have noticed in the `apps/demo/package.json` file, there is a `prebuild` script that runs `typecheck` before the `build` script in order to catch any type errors. Let's set up this same behavior in the Nx task pipeline as well.
 
 ```json {% fileName="nx.json" highlightLines=[5] %}
@@ -266,6 +283,8 @@ You may have noticed in the `apps/demo/package.json` file, there is a `prebuild`
 The `dependsOn` line makes Nx run the `typecheck` task for the current project and the `build` task for any dependencies before running the current project's `build` task. Now `nx build` will run the `typecheck` task just like `npm run build` does.
 
 ## Use Nx Plugins to Enhance Vite Tasks with Caching
+
+{% video-link link="https://youtu.be/ZA9K4iT3ANc?t=507" /%}
 
 You may remember that we defined the `outputs` property in `nx.json` when we were answering questions in the `nx init` script. The value is currently hard-coded so that if you change the output path in your `vite.config.ts`, you have to remember to also change the `outputs` array in the `build` task configuration. This is where plugins can help. They directly infer information from the actual tooling configuration files (`vite.config.ts` in this case).
 
@@ -349,6 +368,8 @@ The final task graph for `demo` app's `build` task looks like this:
 
 ## Manage Releases
 
+{% video-link link="https://youtu.be/ZA9K4iT3ANc?t=713" /%}
+
 If you decide to publish the `forms` or `buttons` packages on NPM, Nx can also help you [manage the release process](/features/manage-releases). Release management involves updating the version of your package, populating a changelog, and publishing the new version to the NPM registry.
 
 First you'll need to define which projects Nx should manage releases for by setting the `release.projects` property in `nx.json`:
@@ -378,6 +399,8 @@ nx release --first-release
 After this first release, you can remove the `--first-release` flag and just run `nx release --dry-run`. There is also a [dedicated feature page](/features/manage-releases) that goes into more detail about how to use the `nx release` command.
 
 ## Set Up CI for Your NPM Workspace
+
+{% video-link link="https://youtu.be/ZA9K4iT3ANc?t=821" /%}
 
 This tutorial walked you through how Nx can improve the local development experience, but the biggest difference Nx makes is in CI. As repositories get bigger, making sure that the CI is fast, reliable and maintainable can get very challenging. Nx provides a solution.
 
