@@ -18,7 +18,7 @@ What are you going to learn?
 Note, this tutorial sets up a repo with a single application at the root level that breaks out its code into libraries to add structure. If you are looking for a React monorepo setup then check out our [React monorepo tutorial](/getting-started/tutorials/react-monorepo-tutorial).
 {% /callout %}
 
-Note, while you could easily use Nx together with your manually set up React application, we're going to use the `@nx/react` plugin for this tutorial which provides some nice enhancements when working with React. [Visit our "Why Nx" page](/getting-started/why-nx) to learn more about plugins and what role they play in the Nx architecture.
+We're going to start with a default React application and progressively add the core of Nx, then use the `@nx/react` plugin. [Visit our "Why Nx" page](/getting-started/why-nx) to learn more about plugins and what role they play in the Nx architecture.
 
 ## Final Code
 
@@ -113,7 +113,7 @@ Second, the script asks a series of questions to help set up caching for you.
 - `Does the "lint" script create any outputs?` - Enter nothing
 - `Would you like remote caching to make your build faster?` - Choose `Skip for now`
 
-We'll enable Nx Cloud and set up remote caching and distributed task execution later in the tutorial.
+We'll enable Nx Cloud and set up remote caching later in the tutorial.
 
 ## Caching Pre-configured
 
