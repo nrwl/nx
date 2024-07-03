@@ -510,17 +510,6 @@
             "isExternal": true,
             "path": "/ci/features/flaky-tasks",
             "tags": []
-          },
-          {
-            "id": "on-premise",
-            "name": "Set up Nx Cloud On-Premise",
-            "description": "Set up Nx Cloud on machines that you control",
-            "mediaImage": "",
-            "file": "",
-            "itemList": [],
-            "isExternal": true,
-            "path": "/ci/features/on-premise",
-            "tags": []
           }
         ],
         "isExternal": false,
@@ -681,17 +670,6 @@
         "isExternal": true,
         "path": "/ci/features/flaky-tasks",
         "tags": []
-      },
-      {
-        "id": "on-premise",
-        "name": "Set up Nx Cloud On-Premise",
-        "description": "Set up Nx Cloud on machines that you control",
-        "mediaImage": "",
-        "file": "",
-        "itemList": [],
-        "isExternal": true,
-        "path": "/ci/features/on-premise",
-        "tags": []
       }
     ],
     "isExternal": false,
@@ -762,17 +740,6 @@
     "itemList": [],
     "isExternal": true,
     "path": "/ci/features/flaky-tasks",
-    "tags": []
-  },
-  "/ci/features/on-premise": {
-    "id": "on-premise",
-    "name": "Set up Nx Cloud On-Premise",
-    "description": "Set up Nx Cloud on machines that you control",
-    "mediaImage": "",
-    "file": "",
-    "itemList": [],
-    "isExternal": true,
-    "path": "/ci/features/on-premise",
     "tags": []
   },
   "/concepts": {

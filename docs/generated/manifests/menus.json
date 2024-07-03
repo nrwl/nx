@@ -376,14 +376,6 @@
                 "isExternal": true,
                 "children": [],
                 "disableCollapsible": false
-              },
-              {
-                "name": "Set up Nx Cloud On-Premise",
-                "path": "/ci/features/on-premise",
-                "id": "on-premise",
-                "isExternal": true,
-                "children": [],
-                "disableCollapsible": false
               }
             ],
             "disableCollapsible": false
@@ -500,14 +492,6 @@
             "isExternal": true,
             "children": [],
             "disableCollapsible": false
-          },
-          {
-            "name": "Set up Nx Cloud On-Premise",
-            "path": "/ci/features/on-premise",
-            "id": "on-premise",
-            "isExternal": true,
-            "children": [],
-            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -556,14 +540,6 @@
         "name": "Identify and Re-run Flaky Tasks",
         "path": "/ci/features/flaky-tasks",
         "id": "flaky-tasks",
-        "isExternal": true,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Set up Nx Cloud On-Premise",
-        "path": "/ci/features/on-premise",
-        "id": "on-premise",
         "isExternal": true,
         "children": [],
         "disableCollapsible": false
