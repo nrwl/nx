@@ -371,9 +371,11 @@ export async function createProjectConfigurations(
         } else {
           errorBodyLines.push(`  - ${e.message}`);
         }
+        const innerStackTrace = '    ' + e.stack.split('\n').join('\n    ');
+        errorBodyLines.push(innerStackTrace);
       }
 
-      error.message = errorBodyLines.join('\n');
+      error.stack = errorBodyLines.join('\n');
 
       // This represents a single plugin erroring out with a hard error.
       errors.push(error);
