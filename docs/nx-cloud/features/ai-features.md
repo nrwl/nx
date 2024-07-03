@@ -6,7 +6,7 @@ To harness the power of Tusky in Nx Cloud, you need to enable AI features in you
 
 1. **Navigate to Organization Settings**:
 
-   - Go to your Nx Cloud dashboard.
+   - Go to your [Nx Cloud dashboard](https://cloud.nx.app/orgs?utm_source=nx.dev&utm_campaign=ai).
    - Select your organization from the list.
    - Access the settings by clicking on the settings icon.
 
