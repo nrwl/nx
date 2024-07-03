@@ -9,7 +9,7 @@ In this tutorial you'll learn how to use Vue with Nx in a ["standalone" (non-mon
 
 What are you going to learn?
 
-- how to create a new Vue application
+- how to add Nx to a Vue project
 - how to run a single task (i.e. serve your app) or run multiple tasks in parallel
 - how to leverage code generators to scaffold components
 - how to modularize your codebase and impose architectural constraints for better maintainability
@@ -99,7 +99,12 @@ npm run build
 
 ## Add Nx
 
-Nx offers many features, but at its core, it is a task runner. Out of the box, it can cache your tasks and ensure those tasks are run in the correct order. After the initial set up, you can incrementally add on other features that would be helpful in your organization.
+Nx offers many features, but at its core, it is a task runner. Out of the box, it can:
+
+- [cache your tasks](/features/cache-task-results)
+- ensure those tasks are [run in the correct order](/features/run-tasks)
+
+After the initial set up, you can incrementally add on other features that would be helpful in your organization.
 
 To enable Nx in your repository, run a single command:
 
@@ -117,34 +122,12 @@ Second, the script asks a series of questions to help set up caching for you.
 
 - `Which scripts are cacheable?` - Choose `test:e2e`, `build-only`, `type-check` and `lint`
 - `Does the "test:e2e" script create any outputs?` - Enter `playwright-report`
-- `Does the "build" script create any outputs?` - Enter `dist`
+- `Does the "build-only" script create any outputs?` - Enter `dist`
 - `Does the "type-check" script create any outputs?` - Enter nothing
 - `Does the "lint" script create any outputs?` - Enter nothing
-- `Would you like remote caching to make your build faster?` - Choose `Skip for now`. We will add remote caching later in the tutorial.
+- `Would you like remote caching to make your build faster?` - Choose `Skip for now`.
 
-```text {% command="npx nx@latest init" path="~/vue-app" %}
- NX   Recommended Plugins:
-
-Add these Nx plugins to integrate with the tools used in your workspace.
-
-✔ Which plugins would you like to add? Press <Space> to select and <Enter> to submit. · No items were selected
-
- NX   🐳 Nx initialization
-
-
- NX   🧑‍🔧 Please answer the following questions about the scripts found in your package.json in order to generate task runner configuration
-
-✔ Which of the following scripts are cacheable? (Produce the same output given the same input, e.g. build, test and lint usually are, serve and start are not). You can use spacebar to select one or more scripts. · build
-
-✔ Does the "build" script create any outputs? If not, leave blank, otherwise provide a path (e.g. dist, lib, build, coverage) · dist
-✔ Does the "lint" script create any outputs? If not, leave blank, otherwise provide a path relative to a project root (e.g. dist, lib, build, coverage) ·
-
-...
-
-- Run "npx nx run-many -t build" to run the build target for every project in the workspace. Run it again to replay the cached computation. https://nx.dev/features/cache-task-results
-- Run "npx nx graph" to see the graph of projects and tasks in your workspace. https://nx.dev/core-features/explore-graph
-- Learn more at https://nx.dev/recipes/adopting-nx/adding-to-existing-project.
-```
+We'll enable Nx Cloud and add remote caching later in the tutorial.
 
 ## Caching Pre-configured
 
@@ -209,47 +192,45 @@ If you look at the `build` script in `package.json`, you'll notice that it is ac
 
 Instead of deciding ahead of time whether tasks need to be run in parallel or series, let's define the dependencies between tasks and then allow Nx to run them in the most efficient way possible. Update the `package.json` file with the following information:
 
-```json {% fileName="package.json" highlightLines=[3,"8-12"] %}
+```json {% fileName="package.json" highlightLines=[3] %}
 {
   "scripts": {
     "build": "nx exec -- echo 'Ran type-check and build-only'",
     "build-only": "vite build",
     "type-check": "vue-tsc --build --force"
-  },
-  "nx": {
-    "targets": {
-      "build": {
-        "dependsOn": ["type-check", "build-only"]
-      }
+  }
+}
+```
+
+Since the `build` command itself doesn't do anything, we can replace it with an echo to the console. The dependencies between the tasks we can define in the `dependsOn` property in the `nx.json` file:
+
+```json {% fileName="nx.json" highlightLines=["3-5"] %}
+{
+  "targetDefaults": {
+    "build": {
+      "dependsOn": ["type-check", "build-only"]
     }
   }
 }
 ```
 
-Since the `build` command itself doesn't do anything, we can replace it with an echo to the console. The dependencies between the tasks are defined in the `nx.targets.build.dependsOn` property. Whenever Nx runs the `build` task, it knows that the `type-check` and `build-only` tasks need to be run first. However, if the `build` script is run without using Nx (say with `npm run build`), the task dependencies will not be run. That's why we add the `nx exec --` command at the beginning of the `build` script. If you run `npm run build`, Nx will be used to run the task and any dependencies will be invoked correctly.
+Whenever Nx runs the `build` task, it knows that the `type-check` and `build-only` tasks need to be run first. However, if the `build` script is run without using Nx (say with `npm run build`), the task dependencies will not be run. That's why we add the `nx exec --` command at the beginning of the `build` script in `package.json`. If you run `npm run build`, Nx will be used to run the task and any dependencies will be invoked correctly.
 
 Now if you run `nx build vue-app`, Nx will run `type-check` and `build-only` first.
 
 There's still one piece of functionality that was lost by this change. The `{@}` syntax in the original `build` script was used to forward command line arguments to the `build-only` script. To accomplish the same thing with Nx, instead of using a string for the `build-only` task dependency, we'll use an object and tell Nx to forward arguments on to that task.
 
-```json {% fileName="package.json" highlightLines=["12-15"] %}
+```json {% fileName="nx.json" highlightLines=["6-9"] %}
 {
-  "scripts": {
-    "build": "nx exec -- echo 'Ran type-check and build-only'",
-    "build-only": "vite build",
-    "type-check": "vue-tsc --build --force"
-  },
-  "nx": {
-    "targets": {
-      "build": {
-        "dependsOn": [
-          "type-check",
-          {
-            "target": "build-only",
-            "params": "forward"
-          }
-        ]
-      }
+  "targetDefaults": {
+    "build": {
+      "dependsOn": [
+        "type-check",
+        {
+          "target": "build-only",
+          "params": "forward"
+        }
+      ]
     }
   }
 }
@@ -292,12 +273,12 @@ And once again, running `npx nx build` or `npm run build` twice will complete in
 
 ## Use Nx Plugins to Enhance Vite Tasks with Caching
 
-You may remember that we defined the `outputs` property in `nx.json` when we were answering questions in the `nx init` script. The value is currently hard-coded so that if you change the output path in your `vite.config.ts`, you have to remember to also change the `outputs` array in the `build` task configuration. This is where plugins can help. They directly infer information from the actual tooling configuration files (`vite.config.ts` in this case).
+You may remember that we defined the `outputs` property in `nx.json` when we were answering questions in the `nx init` script. The value is currently hard-coded so that if you change the output path in your `vite.config.ts`, you have to remember to also change the `outputs` array in the `build` task configuration. This is where plugins can help. Plugins enable better integration with specific tools. The `@nx/vite` plugin can understand the `vite.config.ts` file and automatically create and configure tasks based on the settings in that file.
 
 Nx plugins can:
 
 - automatically configure caching for you, including inputs and outputs based on the underlying tooling configuration
-- infer tasks that can be run on a project because of the tooling present
+- create tasks for a project using the tooling configuration files
 - provide code generators to help scaffold out projects
 - automatically keep the tooling versions and configuration files up to date
 
@@ -312,6 +293,15 @@ First, let's delete the `outputs` array for the `build-only` task in `nx.json` s
     "test:e2e": {
       "outputs": ["{projectRoot}/playwright-report"],
       "cache": true
+    },
+    "build": {
+      "dependsOn": [
+        "type-check",
+        {
+          "target": "build-only",
+          "params": "forward"
+        }
+      ]
     },
     "build-only": {
       "cache": true
@@ -330,7 +320,7 @@ First, let's delete the `outputs` array for the `build-only` task in `nx.json` s
 Now let's add the `@nx/vite` plugin:
 
 ```{% command="npx nx add @nx/vite" path="~/vue-app" %}
-✔ Installing @nx/vite@18.1.0...
+✔ Installing @nx/vite...
 ✔ Initializing @nx/vite...
 
  NX   Package @nx/vite added successfully.
@@ -372,11 +362,10 @@ export default defineConfig({
 
 Now if you look at project details view again, you'll see that the `outputs` property for Nx's caching has been updated to stay in sync with the setting in the `vite.config.ts` file.
 
-You can also add the `@nx/eslint` and `@nx/playwright` plugins to see how they infer `lint` and `e2e` tasks based on their respective configuration files.
+You can also add the `@nx/eslint` plugin to see how it infers `lint` tasks based on the ESLint configuration files.
 
 ```text
 npx nx add @nx/eslint
-npx nx add @nx/playwright
 ```
 
 ## Creating New Components
@@ -416,7 +405,7 @@ More info can be found in [the editor setup page](/getting-started/editor-setup)
 
 Run the following command to generate a new "BaseButton" component. Note how we append `--dry-run` to first check the output.
 
-```{% command="npx nx g @nx/vue:component BaseButton --no-export --no-unit-test --directory=src/components --dry-run" path="~/vue-app" %}
+```{% command="npx nx g @nx/vue:component BaseButton --no-export --skipTests --directory=src/components --dry-run" path="~/vue-app" %}
  NX  Generating @nx/vue:component
 
 ✔ Where should the component be generated? · src/components/BaseButton.vue
@@ -482,7 +471,7 @@ Nx allows you to separate this logic into "local libraries". The main benefits i
 Let's assume our domain areas include `products`, `orders` and some more generic design system components, called `ui`. We can generate a new library for these areas using the Vue library generator:
 
 ```
-nx g @nx/vue:library products --unitTestRunner=vitest --bundler=vite --directory=modules/products
+nx g @nx/vue:library products --unitTestRunner=vitest --bundler=vite --directory=modules/products --component
 ```
 
 Note how we use the `--directory` flag to place the library into a subfolder. You can choose whatever folder structure you like to organize your libraries.
@@ -490,12 +479,6 @@ Note how we use the `--directory` flag to place the library into a subfolder. Yo
 Nx tries to set up your workspace to work with the modular library architecture, but depending on your existing configuration, you may need to tweak some settings. In this repo, you'll need to do a few things in order to prepare for future steps.
 
 #### Lint Settings
-
-Install the `@nx/eslint-plugin` package:
-
-```
-npx nx add @nx/eslint-plugin
-```
 
 We want the `lint` task for the root `vue-app` project to only lint the files for that project, so we'll change the `lint` command in `package.json`:
 
@@ -535,36 +518,11 @@ module.exports = {
 };
 ```
 
-We'll also extend the `plugin:vue/vue3-essential` config and set `enforceBuildableLibDependency` to `false` in `.eslintrc.base.json`.
-
-```{% fileName=".eslintrc.base.json" highlightLines=[4,13] %}
-{
-  "root": true,
-  "ignorePatterns": ["**/*"],
-  "extends": ["plugin:vue/vue3-essential"],
-  "plugins": ["@nx"],
-  "overrides": [
-    {
-      "files": ["*.ts", "*.tsx", "*.js", "*.jsx", "*.vue"],
-      "rules": {
-        "@nx/enforce-module-boundaries": [
-          "error",
-          {
-            "enforceBuildableLibDependency": false,
-            // ...
-          }
-        ]
-      }
-    }
-  ]
-}
-```
-
 #### Build Settings
 
-To make sure that the build can correctly pull in code from libraries, we'll update `tsconfig.app.json`, `tsconfig.vitest.json`, `tsconfig.base.json` and `vite.config.ts`.
+To make sure that the build can correctly pull in code from libraries, we need to move the typescript `paths` from the `tsconfig.app.json` file to the newly created `tsconfig.base.json` and extend that base file.
 
-```json {% fileName="tsconfig.app.json" %}
+```json {% fileName="tsconfig.app.json" highlightLines=[2] %}
 {
   "extends": ["@vue/tsconfig/tsconfig.dom.json", "./tsconfig.base.json"],
   "include": ["env.d.ts", "src/**/*", "src/**/*.vue"],
@@ -572,7 +530,7 @@ To make sure that the build can correctly pull in code from libraries, we'll upd
 }
 ```
 
-```json {% fileName="tsconfig.vitest.json" %}
+```json {% fileName="tsconfig.vitest.json" highlightLines=[2] %}
 {
   "extends": "./tsconfig.app.json",
   "exclude": [],
@@ -583,7 +541,7 @@ To make sure that the build can correctly pull in code from libraries, we'll upd
 }
 ```
 
-```json {% fileName="tsconfig.base.json" highlightLines=[4,6] %}
+```json {% fileName="tsconfig.base.json" highlightLines=["5-8"] %}
 {
   "compileOnSave": false,
   "compilerOptions": {
@@ -596,7 +554,15 @@ To make sure that the build can correctly pull in code from libraries, we'll upd
 }
 ```
 
-```js {% fileName="vite.config.ts" highlightLines=[6,10] %}
+We also need to update `vite.config.ts` to account for typescript aliases. Run the following generator to automatically update your configuration file.
+
+```shell
+npx nx g @nx/vite:setup-paths-plugin
+```
+
+This will update the `vite.config.ts` file to include the `nxViteTsPaths` plugin in the `plugins` array.
+
+```ts {% fileName="vite.config.ts" highlightLines=[6,10] %}
 import { fileURLToPath, URL } from 'node:url';
 
 import { defineConfig } from 'vite';
@@ -839,7 +805,7 @@ You should be able to see something similar to the following in your browser (hi
 
 Notice how `ui` is not yet connected to anything because we didn't import it in any of our projects. Also the arrows to `orders` and `products` are dashed because we're using lazy imports.
 
-Exercise for you: change the codebase so that `ui` is used by `orders` and `products`. Note: you need to restart the `nx graph` command to update the graph visualization or run the CLI command with the `--watch` flag.
+Exercise for you: change the codebase so that `ui` is used by `orders` and `products`.
 
 ## Imposing Constraints with Module Boundary Rules
 
@@ -895,19 +861,60 @@ Next, let's come up with a set of rules based on these tags:
 - `scope:orders` should be able to import from `scope:orders`, `scope:shared` and `scope:products`
 - `scope:products` should be able to import from `scope:products` and `scope:shared`
 
-To enforce the rules, Nx ships with a custom ESLint rule. Open the `.eslintrc.base.json` at the root of the workspace and add the following `depConstraints` in the `@nx/enforce-module-boundaries` rule configuration:
+To enforce the rules, Nx ships with a custom ESLint rule.
 
-```json {% fileName=".eslintrc.base.json" %}
+### Lint Settings
+
+We want the `lint` task for the root `react-app` project to only lint the files for that project (in the `src` folder), so we'll change the `lint` command in `package.json`:
+
+```json {% fileName="package.json" %}
 {
-  ...
+  "scripts": {
+    "lint": "eslint src --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore"
+  }
+}
+```
+
+We need to update the `.eslintrc.cjs` file to extend the `.eslintrc.base.json` file and undo the `ignorePattern` from that config that ignores every file. The `.eslintrc.base.json` file serves as a common set of lint rules for every project in the repository.
+
+```js {% fileName=".eslintrc.cjs" highlightLines=[11,13] %}
+/* eslint-env node */
+require('@rushstack/eslint-patch/modern-module-resolution');
+
+module.exports = {
+  root: true,
+  extends: [
+    'plugin:vue/vue3-essential',
+    'eslint:recommended',
+    '@vue/eslint-config-typescript',
+    '@vue/eslint-config-prettier/skip-formatting',
+    './.eslintrc.base.json',
+  ],
+  ignorePatterns: ['!**/*'],
+  overrides: [
+    {
+      files: ['e2e/**/*.{test,spec}.{js,ts,jsx,tsx}'],
+      extends: ['plugin:playwright/recommended'],
+    },
+  ],
+  parserOptions: {
+    ecmaVersion: 'latest',
+  },
+};
+```
+
+Now we need to update the `.eslintrc.base.json` file and define the `depConstraints` in the `@nx/enforce-module-boundaries` rule:
+
+```json {% fileName=".eslintrc.base.json" highlightLines=["16-39"] %}
+{
   "overrides": [
     {
-      ...
+      "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
       "rules": {
         "@nx/enforce-module-boundaries": [
           "error",
           {
-            "enforceBuildableLibDependency": false,
+            "enforceBuildableLibDependency": true,
             "allow": [],
             "depConstraints": [
               {
@@ -942,11 +949,31 @@ To enforce the rules, Nx ships with a custom ESLint rule. Open the `.eslintrc.ba
           }
         ]
       }
-    },
+    }
     ...
   ]
 }
 ```
+
+When Nx set up the `@nx/eslint` plugin, it chose a task name that would not conflict with the pre-existing `lint` script. Let's overwrite that name so that all the linting tasks use the same `lint` name. Update the setting in the `nx.json` file:
+
+```json {% fileName="nx.json" highlightLines=[7] %}
+{
+  ...
+  "plugins": [
+    {
+      "plugin": "@nx/eslint/plugin",
+      "options": {
+        "targetName": "lint"
+      }
+    }
+  ]
+}
+```
+
+### Test Boundary Rules
+
+To test the boundary rules, go to your `modules/products/src/lib/products.tsx` file and import the `Orders` from the `orders` project:
 
 To test it, go to your `modules/products/src/lib/products.vue` file and import the `Orders` component from the `orders` project:
 
@@ -967,12 +994,12 @@ import { Orders } from 'orders';
 
 If you lint your workspace you'll get an error now:
 
-```{% command="nx run-many -t lint,eslint:lint" %}
-   ✔  nx run ui:eslint:lint  [existing outputs match the cache, left as is]
-   ✔  nx run orders:eslint:lint  [existing outputs match the cache, left as is]
+```{% command="nx run-many -t lint" %}
+   ✔  nx run ui:lint  [existing outputs match the cache, left as is]
+   ✔  nx run orders:lint  [existing outputs match the cache, left as is]
 
 ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-   ✖  nx run products:eslint:lint
+   ✖  nx run products:lint
       > eslint .
 
       ~/vue-app/modules/products/src/lib/products.vue
@@ -980,18 +1007,18 @@ If you lint your workspace you'll get an error now:
 
       ✖ 1 problem (1 error, 0 warnings)
 
-   ✔  nx run vue-app:eslint:lint (892ms)
+   ✔  nx run vue-app:lint (892ms)
    ✔  nx run vue-app:lint (1s)
 
 ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
- NX   Ran targets lint, eslint:lint for 4 projects (1s)
+ NX   Ran targets lint for 4 projects (1s)
 
    ✔  4/5 succeeded [2 read from cache]
 
    ✖  1/5 targets failed, including the following:
 
-      - nx run products:eslint:lint
+      - nx run products:lint
 ```
 
 Learn more about how to [enforce module boundaries](/features/enforce-module-boundaries).
