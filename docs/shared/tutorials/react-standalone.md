@@ -1,302 +1,374 @@
 ---
-title: 'React Standalone Tutorial'
+title: 'React App Tutorial'
 description: In this tutorial you'll create a frontend-focused workspace with Nx.
 ---
 
-# Building React Apps with the Nx Standalone Setup
+# Building a Single React App with Nx
 
 In this tutorial you'll learn how to use React with Nx in a ["standalone" (non-monorepo) setup](/concepts/integrated-vs-package-based#standalone-applications).
 
 What are you going to learn?
 
-- how to create a new React application
+- how to add Nx to a React and Vite project
 - how to run a single task (i.e. serve your app) or run multiple tasks in parallel
 - how to leverage code generators to scaffold components
 - how to modularize your codebase and impose architectural constraints for better maintainability
 
 {% callout type="info" title="Looking for React monorepos?" %}
 Note, this tutorial sets up a repo with a single application at the root level that breaks out its code into libraries to add structure. If you are looking for a React monorepo setup then check out our [React monorepo tutorial](/getting-started/tutorials/react-monorepo-tutorial).
-
 {% /callout %}
 
-Note, while you could easily use Nx together with your manually set up React application, we're going to use the `@nx/react` plugin for this tutorial which provides some nice enhancements when working with React. [Visit our "Why Nx" page](/getting-started/why-nx) to learn more about plugins and what role they play in the Nx architecture.
+We're going to start with a default React application and progressively add the core of Nx, then use the `@nx/react` plugin. [Visit our "Why Nx" page](/getting-started/why-nx) to learn more about plugins and what role they play in the Nx architecture.
 
 ## Final Code
 
 Here's the source code of the final result for this tutorial.
 
-{% github-repository url="https://github.com/nrwl/nx-recipes/tree/main/react-standalone" /%}
+{% github-repository url="https://github.com/nrwl/nx-recipes/tree/main/react-app" /%}
 
 <!-- {% stackblitz-button url="github.com/nrwl/nx-recipes/tree/main/react-standalone?file=README.md" /%} -->
 
 ## Creating a new React App
 
-Create a new standalone React application with the following command:
+Create a new React application that uses Vite with the following command:
 
-```{% command="npx create-nx-workspace@latest myreactapp --preset=react-standalone" path="~" %}
+```{% command="npm create vite react-app -- --template=react-ts" path="~" %}
 
-NX   Let's create a new workspace [https://nx.dev/getting-started/intro]
+Scaffolding project in ~/react-app...
 
-✔ Which bundler would you like to use? · vite
-✔ Test runner to use for end to end (E2E) tests · cypress
-✔ Default stylesheet format · css
-✔ Set up CI with caching, distribution and test deflaking · github
+Done. Now run:
+
+  cd react-app
+  npm install
+  npm run dev
 ```
 
-You can choose any bundler you like. In this tutorial we're going to use Vite. The above command generates the following structure:
+Once you have run `npm install`, set up Git with the following commands:
+
+```shell
+git init
+git add .
+git commit -m "initial commit"
+```
+
+Your repository should now have the following structure:
 
 ```
-└─ myreactapp
+└─ react-app
    ├─ ...
-   ├─ e2e
-   │  └─ ...
    ├─ public
    │  └─ ...
    ├─ src
-   │  ├─ app
-   │  │  ├─ app.module.css
-   │  │  ├─ app.spec.tsx
-   │  │  ├─ app.tsx
-   │  │  └─ nx-welcome.tsx
    │  ├─ assets
-   │  ├─ main.tsx
-   │  └─ styles.css
+   │  ├─ App.css
+   │  ├─ App.tsx
+   │  ├─ index.css
+   │  └─ main.tsx
+   ├─ .eslintrc.cjs
    ├─ index.html
-   ├─ nx.json
    ├─ package.json
-   ├─ project.json
-   ├─ tsconfig.app.json
+   ├─ README.md
    ├─ tsconfig.json
-   ├─ tsconfig.spec.json
+   ├─ tsconfig.node.json
    └─ vite.config.ts
 ```
 
 The setup includes..
 
-- a new React application at the root of the Nx workspace (`src/app`)
-- a Cypress based set of e2e tests (`e2e/`)
-- Prettier preconfigured
+- a new React application at the root of the repository (`src`)
 - ESLint preconfigured
-- Jest preconfigured
+- Vite preconfigured
 
-Let me explain a couple of things that might be new to you.
+You can build the application with the following command:
 
-| File           | Description                                                                                                                                                                                                          |
-| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `nx.json`      | This is where we fine-tune how Nx works. We define what [cacheable operations](/features/cache-task-results) there are, and configure our [task pipeline](/concepts/task-pipeline-configuration). More on that soon. |
-| `project.json` | This file is where you can modify the inferred tasks for the `myreactapp` project. More about this later.                                                                                                            |
+```
+npm run build
+```
 
-## Serving the App
+## Add Nx
 
-The most common tasks are already mapped in the `package.json` file:
+Nx offers many features, but at its core, it is a task runner. Out of the box, it can:
+
+- [cache your tasks](/features/cache-task-results)
+- ensure those tasks are [run in the correct order](/features/run-tasks)
+
+After the initial set up, you can incrementally add on other features that would be helpful in your organization.
+
+To enable Nx in your repository, run a single command:
+
+```shell {% path="~/react-app" %}
+npx nx@latest init
+```
+
+This command will download the latest version of Nx and help set up your repository to take advantage of it.
+
+First, the script will propose installing some plugins based on the packages that are being used in your repository.
+
+- Leave the plugins deselected so that we can explore what Nx provides without any plugins.
+
+Second, the script asks a series of questions to help set up caching for you.
+
+- `Which scripts are cacheable?` - Choose `build` and `lint`
+- `Does the "build" script create any outputs?` - Enter `dist`
+- `Does the "lint" script create any outputs?` - Enter nothing
+- `Would you like remote caching to make your build faster?` - Choose `Skip for now`
+
+We'll enable Nx Cloud and set up remote caching later in the tutorial.
+
+## Caching Pre-configured
+
+Nx has been configured to run your npm scripts as Nx tasks. You can run a single task like this:
+
+```shell {% path="~/react-app" %}
+npx nx build react-app
+```
+
+During the `init` script, Nx also configured caching for these tasks. You can see in the `nx.json` file that the `build` and `lint` targets have the `cache` property set to `true` and the `build` target specifies that its output goes to the project's `dist` folder.
+
+```json {% fileName="nx.json" %}
+{
+  "$schema": "./node_modules/nx/schemas/nx-schema.json",
+  "targetDefaults": {
+    "build": {
+      "outputs": ["{projectRoot}/dist"],
+      "cache": true
+    },
+    "lint": {
+      "cache": true
+    }
+  },
+  "defaultBase": "main"
+}
+```
+
+Try running `build` for the `react-app` app a second time:
+
+```shell {% path="~/react-app" %}
+npx nx build react-app
+```
+
+The first time `nx build` was run, it took about 2 seconds - just like running `npm run build`. But the second time you run `nx build`, it completes instantly and displays this message:
+
+```text
+Nx read the output from the cache instead of running the command for 1 out of 1 tasks.
+```
+
+You can see the same caching behavior working when you run `npx nx lint`.
+
+## Create a Task Pipeline
+
+If you look at the `build` script in `package.json`, you'll notice that it is actually doing two things. First, it runs `tsc` to type check the application and then it uses Vite to build the application.
 
 ```json {% fileName="package.json" %}
 {
-  "name": "myreactapp",
   "scripts": {
-    "start": "nx serve",
-    "build": "nx build",
-    "test": "nx test"
+    "build": "tsc && vite build"
   }
-  ...
 }
 ```
 
-To serve your new React application, just run: `npm start`. Alternatively you can directly use Nx by using
+Let's split this into two separate tasks, so we can run `typecheck` without running the `build` task.
 
-```shell
-nx serve
-```
-
-Your application should be served at [http://localhost:4200](http://localhost:4200).
-
-Nx uses the following syntax to run tasks:
-
-![Syntax for Running Tasks in Nx](/shared/images/run-target-syntax.svg)
-
-### Inferred Tasks
-
-Nx identifies available tasks for your project from [tooling configuration files](/concepts/inferred-tasks), `package.json` scripts and the targets defined in `project.json`. To view the tasks that Nx has detected, look in the [Nx Console](/getting-started/editor-setup) project detail view or run:
-
-```shell
-nx show project myreactapp --web
-```
-
-{% project-details title="Project Details View (Simplified)" height="100px" %}
-
-```json
+```json {% fileName="package.json" %}
 {
-  "project": {
-    "name": "myreactapp",
-    "data": {
-      "metadata": {
-        "technologies": ["react"]
-      },
-      "root": ".",
-      "includedScripts": [],
-      "name": "myreactapp",
-      "targets": {
-        "build": {
-          "options": {
-            "cwd": ".",
-            "command": "vite build"
-          },
-          "cache": true,
-          "dependsOn": ["^build"],
-          "inputs": [
-            "production",
-            "^production",
-            {
-              "externalDependencies": ["vite"]
-            }
-          ],
-          "outputs": ["{projectRoot}/dist/myreactapp"],
-          "executor": "nx:run-commands",
-          "configurations": {},
-          "metadata": {
-            "technologies": ["vite"]
-          }
-        }
-      },
-      "sourceRoot": "./src",
-      "projectType": "application",
-      "$schema": "node_modules/nx/schemas/project-schema.json",
-      "tags": [],
-      "implicitDependencies": []
+  "scripts": {
+    "typecheck": "tsc",
+    "build": "vite build"
+  }
+}
+```
+
+But we also want to make sure that `typecheck` is always run when you run the `build` task. Nx can take care of this for you with a [task pipeline](/concepts/task-pipeline-configuration). The `dependsOn` property in `nx.json` can be used to ensure that all task dependencies are run first.
+
+```json {% fileName="nx.json" highlightLines=[6] %}
+{
+  "targetDefaults": {
+    "build": {
+      "outputs": ["{projectRoot}/dist"],
+      "cache": true,
+      "dependsOn": ["typecheck"]
+    },
+    "lint": {
+      "cache": true
+    }
+  }
+}
+```
+
+{% callout type="info" title="Project-Specific Settings" %}
+
+The `targetDefaults` in the `nx.json` file will apply to all the projects in your repository. If you want to specify these options for a specific project, you can set them under `nx.targets.build` in that project's `package.json` file.
+
+{% /callout %}
+
+Now if you run `nx build`, Nx will run `typecheck` first.
+
+```text {% command="npx nx build" path="~/react-app" %}
+> nx run react-app:typecheck
+
+
+> react-app@0.0.0 typecheck
+> tsc
+
+
+> nx run react-app:build
+
+
+> react-app@0.0.0 build
+> vite build
+
+vite v5.2.12 building for production...
+✓ 34 modules transformed.
+dist/index.html                   0.46 kB │ gzip:  0.30 kB
+dist/assets/react-CHdo91hT.svg    4.13 kB │ gzip:  2.05 kB
+dist/assets/index-DiwrgTda.css    1.39 kB │ gzip:  0.72 kB
+dist/assets/index-DVoHNO1Y.js   143.36 kB │ gzip: 46.09 kB
+✓ built in 347ms
+
+——————————————————————————————————————————————————————
+
+ NX   Successfully ran target build for project react-app and 1 task it depends on (2s)
+```
+
+We can also cache the `typecheck` task by updating the `nx.json` file.
+
+```json {% fileName="nx.json" highlightLines=["4-6"] %}
+{
+  "$schema": "./node_modules/nx/schemas/nx-schema.json",
+  "targetDefaults": {
+    "typecheck": {
+      "cache": true
+    },
+    "build": {
+      "outputs": ["{projectRoot}/dist"],
+      "cache": true,
+      "dependsOn": ["typecheck"]
+    },
+    "lint": {
+      "cache": true
     }
   },
-  "sourceMap": {
-    "root": ["project.json", "nx/core/project-json"],
-    "includedScripts": ["package.json", "nx/core/package-json-workspaces"],
-    "name": ["project.json", "nx/core/project-json"],
-    "targets": ["project.json", "nx/core/project-json"],
-    "targets.build": ["vite.config.ts", "@nx/vite/plugin"],
-    "targets.build.command": ["vite.config.ts", "@nx/vite/plugin"],
-    "targets.build.options": ["vite.config.ts", "@nx/vite/plugin"],
-    "targets.build.cache": ["vite.config.ts", "@nx/vite/plugin"],
-    "targets.build.dependsOn": ["vite.config.ts", "@nx/vite/plugin"],
-    "targets.build.inputs": ["vite.config.ts", "@nx/vite/plugin"],
-    "targets.build.outputs": ["vite.config.ts", "@nx/vite/plugin"],
-    "targets.build.options.cwd": ["vite.config.ts", "@nx/vite/plugin"],
-    "sourceRoot": ["project.json", "nx/core/project-json"],
-    "projectType": ["project.json", "nx/core/project-json"],
-    "$schema": ["project.json", "nx/core/project-json"],
-    "tags": ["project.json", "nx/core/project-json"]
-  }
+  "defaultBase": "main"
 }
 ```
 
+Now, running `npx nx build` twice will once again complete instantly.
+
+## Use Nx Plugins to Enhance Vite Tasks with Caching
+
+You may remember that we defined the `outputs` property in `nx.json` when we were answering questions in the `nx init` script. The value is currently hard-coded so that if you change the output path in your `vite.config.ts`, you have to remember to also change the `outputs` array in the `build` task configuration. This is where plugins can help. Plugins enable better integration with specific tools. The `@nx/vite` plugin can understand the `vite.config.ts` file and automatically create and configure tasks based on the settings in that file.
+
+Nx plugins can:
+
+- automatically configure caching for you, including inputs and outputs based on the underlying tooling configuration
+- create tasks for a project using the tooling configuration files
+- provide code generators to help scaffold out projects
+- automatically keep the tooling versions and configuration files up to date
+
+For this tutorial, we'll just focus on the automatic caching configuration.
+
+First, let's delete the `outputs` array from `nx.json` so that we don't override the inferred values from the plugin. Your `nx.json` should look like this:
+
+```json {% fileName="nx.json" %}
+{
+  "$schema": "./node_modules/nx/schemas/nx-schema.json",
+  "targetDefaults": {
+    "typecheck": {
+      "cache": true
+    },
+    "build": {
+      "cache": true,
+      "dependsOn": ["typecheck"]
+    },
+    "lint": {
+      "cache": true
+    }
+  },
+  "defaultBase": "main"
+}
+```
+
+Now let's add the `@nx/vite` plugin:
+
+```{% command="npx nx add @nx/vite" path="~/react-app" %}
+✔ Installing @nx/vite...
+✔ Initializing @nx/vite...
+
+ NX   Package @nx/vite added successfully.
+```
+
+The `nx add` command installs the version of the plugin that matches your repo's Nx version and runs that plugin's initialization script. For `@nx/vite`, the initialization script registers the plugin in the `plugins` array of `nx.json` and updates any `package.json` scripts that execute Vite related tasks to run those tasks through Nx. Running the tasks through Nx is necessary for caching and task pipelines to work.
+
+Open the project details view for the `demo` app and look at the `build` task. You can view the project details using [Nx Console](/getting-started/editor-setup) or by running the following command in the terminal:
+
+```shell {% path="~/react-app" %}
+npx nx show project react-app
+```
+
+{% project-details title="Project Details View" jsonFile="shared/tutorials/react-standalone-pdv.json" %}
 {% /project-details %}
 
-If you expand the `build` task, you can see that it was created by the `@nx/vite` plugin by analyzing your `vite.config.ts` file. Notice the outputs are defined as `{projectRoot}/dist/myreactapp`. This value is being read from the `build.outDir` defined in your `vite.config.ts` file. Let's change that value in your `vite.config.ts` file:
+If you hover over the settings for the `build` task, you can see where those settings come from. The `inputs` and `outputs` are defined by the `@nx/vite` plugin from the `vite.config.ts` file where as the `dependsOn` property we set earlier in the tutorial in the `targetDefaults` in the `nx.json` file.
 
-```ts {% fileName="vite.config.ts" %}
+Now let's change where the `build` results are output to in the `vite.config.ts` file.
+
+```{% fileName="vite.config.ts" highlightLines=["7-9"] %}
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+
+// https://vitejs.dev/config/
 export default defineConfig({
-  // ...
+  plugins: [react()],
   build: {
-    outDir: './build/myreactapp',
-    // ...
+    outDir: 'dist/react-app',
   },
 });
 ```
 
-Now if you look at the project details view, the outputs for the build target will say `{projectRoot}/build/myreactapp`. This feature ensures that Nx will always cache the correct files.
-
-You can also override the settings for inferred tasks by modifying the [`targetDefaults` in `nx.json`](/reference/nx-json#target-defaults) or setting a value in your [`project.json` file](/reference/project-configuration). Nx will merge the values from the inferred tasks with the values you define in `targetDefaults` and in your specific project's configuration.
-
-## Testing and Linting - Running Multiple Tasks
-
-Our current setup doesn't just come with targets for serving and building the React application, but also has targets for unit testing, e2e testing and linting. We can use the same syntax as before to run these tasks:
-
-```bash
-nx test # runs tests using Vitest (or you can configure it to use Jest)
-nx lint # runs linting with ESLint
-nx e2e e2e # runs e2e tests with Cypress
-```
-
-More conveniently, we can also run them in parallel using the following syntax:
-
-```{% command="nx run-many -t test lint e2e" path="myreactapp" %}
-
-✔  nx run e2e:lint (2s)
-✔  nx run myreactapp:lint (2s)
-✔  nx run myreactapp:test (2s)
-✔  nx run e2e:e2e (6s)
-
-——————————————————————————————————————————————————————
-
-NX   Successfully ran targets test, lint, e2e for 2 projects (7s)
-```
-
-### Caching
-
-One thing to highlight is that Nx is able to [cache the tasks you run](/features/cache-task-results).
-
-Note that all of these targets are automatically cached by Nx. If you re-run a single one or all of them again, you'll see that the task completes immediately. In addition, (as can be seen in the output example below) there will be a note that a matching cache result was found and therefore the task was not run again.
-
-```{% command="nx run-many -t test lint e2e" path="myreactapp" %}
-
-✔  nx run e2e:lint  [existing outputs match the cache, left as is]
-✔  nx run myreactapp:lint  [existing outputs match the cache, left as is]
-✔  nx run myreactapp:test  [existing outputs match the cache, left as is]
-✔  nx run e2e:e2e  [existing outputs match the cache, left as is]
-
-——————————————————————————————————————————————————————
-
-NX   Successfully ran targets test, lint, e2e for 5 projects (54ms)
-
-Nx read the output from the cache instead of running the command for 10 out of 10 tasks.
-```
-
-Not all tasks might be cacheable though. You can configure the `cache` properties in the targets under `targetDefaults` in the `nx.json` file. You can also [learn more about how caching works](/features/cache-task-results).
-
-## Nx Plugins? Why?
-
-One thing you might be curious about is the [inferred tasks](/concepts/inferred-tasks). You may wonder why we are detecting tasks from your tooling configuration instead of directly defining them in `package.json` scripts or in the `project.json` file.
-
-Nx understands and supports both approaches, allowing you to define tasks in your `package.json` and `project.json` files or have Nx plugins automatically detect them. The inferred tasks give you the benefit of automatically setting the Nx cache settings for you based on your tooling configuration. In this tutorial, we take advantage of those inferred tasks to demonstrate the full value of Nx plugins.
-
-So, what are Nx Plugins? Nx Plugins are optional packages that extend the capabilities of Nx, catering to various specific technologies. For instance, we have plugins tailored to React (e.g., `@nx/react`), Vite (`@nx/vite`), Cypress (`@nx/cypress`), and more. These plugins offer additional features, making your development experience more efficient and enjoyable when working with specific tech stacks.
-
-[Visit our "Why Nx" page](/getting-started/why-nx) for more details.
+Now if you look at project details view again, you'll see that the `outputs` property for Nx's caching has been updated to stay in sync with the setting in the `vite.config.ts` file.
 
 ## Creating New Components
 
-You can just create new React components as you normally would. However, Nx plugins usually also ship [generators](/features/generate-code). They allow you to easily scaffold code, configuration or entire projects. To see what capabilities the `@nx/react` plugin ships, run the following command and inspect the output:
+You can just create new React components as you normally would. However, Nx plugins also ship [generators](/features/generate-code). They allow you to easily scaffold code, configuration or entire projects. Let's add the `@nx/react` plugin to take advantage of the generators it provides.
 
-```{% command="npx nx list @nx/react" path="myreactapp" %}
-
-NX   Capabilities in @nx/react:
-
-   GENERATORS
-
-   init : Initialize the `@nrwl/react` plugin.
-   application : Create a React application.
-   library : Create a React library.
-   component : Create a React component.
-   redux : Create a Redux slice for a project.
-   storybook-configuration : Set up storybook for a React app or library.
-   component-story : Generate storybook story for a React component
-   stories : Create stories/specs for all components declared in an app or library.
-   component-cypress-spec : Create a Cypress spec for a UI component that has a story.
-   hook : Create a hook.
-   host : Generate a host react application
-   remote : Generate a remote react application
-   cypress-component-configuration : Setup Cypress component testing for a React project
-   component-test : Generate a Cypress component test for a React component
-   setup-tailwind : Set up Tailwind configuration for a project.
-   setup-ssr : Set up SSR configuration for a project.
-   federate-module : Federate a module.
-
-   EXECUTORS/BUILDERS
-
-   module-federation-dev-server : Serve a host or remote application.
-   module-federation-ssr-dev-server : Serve a host application along with it's known remotes.
+```shell
+npx nx add @nx/react
 ```
 
-{% callout type="info" title="Prefer a more visual UI?" %}
+To see what capabilities the `@nx/react` plugin ships, run the following command and inspect the output:
 
-If you prefer a more integrated experience, you can install the "Nx Console" extension for your code editor. It has support for VSCode, IntelliJ and ships a LSP for Vim. Nx Console provides autocompletion support in Nx configuration files and has UIs for browsing and running generators.
+```text {% command="npx nx list @nx/react" path="react-app" %}
+ NX   Capabilities in @nx/react:
+
+GENERATORS
+
+init : Initialize the `@nx/react` plugin.
+application : Create a React application.
+library : Create a React library.
+component : Create a React component.
+redux : Create a Redux slice for a project.
+storybook-configuration : Set up storybook for a React app or library.
+component-story : Generate storybook story for a React component
+stories : Create stories/specs for all components declared in an app or library.
+component-cypress-spec : Create a Cypress spec for a UI component that has a story.
+hook : Create a hook.
+host : Generate a host react application
+remote : Generate a remote react application
+cypress-component-configuration : Setup Cypress component testing for a React project
+component-test : Generate a Cypress component test for a React component
+setup-tailwind : Set up Tailwind configuration for a project.
+setup-ssr : Set up SSR configuration for a project.
+federate-module : Federate a module.
+
+EXECUTORS/BUILDERS
+
+module-federation-dev-server : Serve a host or remote application.
+module-federation-ssr-dev-server : Serve a host application along with it's known remotes.
+```
+
+{% callout type="info" title="Integrate with Your Editor" %}
+
+For a more integrated experience, install the "Nx Console" extension for your code editor. It has support for VSCode, IntelliJ and ships a LSP for Vim. Nx Console provides autocompletion support in Nx configuration files and has UIs for browsing and running generators.
 
 More info can be found in [the integrate with editors article](/getting-started/editor-setup).
 
@@ -304,27 +376,26 @@ More info can be found in [the integrate with editors article](/getting-started/
 
 Run the following command to generate a new "hello-world" component. Note how we append `--dry-run` to first check the output.
 
-```{% command="npx nx g @nx/react:component --directory=src/app/hello-world hello-world --dry-run" path="myreactapp" %}
+```text {% command="npx nx g @nx/react:component --directory=src/app/hello-world --skipTests=true hello-world --dry-run" path="react-app" %}
 NX  Generating @nx/react:component
 
+✔ Which stylesheet format would you like to use? · css
 ✔ Should this component be exported in the project? (y/N) · false
 ✔ Where should the component be generated? · src/app/hello-world/hello-world.tsx
 CREATE src/app/hello-world/hello-world.module.css
-CREATE src/app/hello-world/hello-world.spec.tsx
 CREATE src/app/hello-world/hello-world.tsx
 
 NOTE: The "dryRun" flag means no changes were made.
 ```
 
-As you can see it generates a new component in the `app/hello-world/` folder. If you want to actually run the generator, remove the `--dry-run` flag.
+As you can see it generates a new component in the `src/app/hello-world/` folder. If you want to actually run the generator, remove the `--dry-run` flag.
 
-```tsx {% fileName="src/app/hello-world/hello-world.tsx" %}
+The `hello-world` component will look like this:
+
+```tsx {% fileName="src/app/hello-world/hello-world.tsx" highlightLines=[6] %}
 import styles from './hello-world.module.css';
 
-/* eslint-disable-next-line */
-export interface HelloWorldProps {}
-
-export function HelloWorld(props: HelloWorldProps) {
+export function HelloWorld() {
   return (
     <div className={styles['container']}>
       <h1>Welcome to HelloWorld!</h1>
@@ -335,24 +406,28 @@ export function HelloWorld(props: HelloWorldProps) {
 export default HelloWorld;
 ```
 
-## Building the App for Deployment
+Let's update the `App.tsx` file to use the new `HelloWorld` component:
 
-If you're ready and want to ship your application, you can build it using
+```tsx {% fileName="src/App.tsx" %}
+import './App.css';
+import HelloWorld from './app/hello-world/hello-world';
 
-```{% command="npx nx build" path="myreactapp" %}
-vite v4.3.5 building for production...
-✓ 33 modules transformed.
-dist/myreactapp/index.html                   0.48 kB │ gzip:  0.30 kB
-dist/myreactapp/assets/index-e3b0c442.css    0.00 kB │ gzip:  0.02 kB
-dist/myreactapp/assets/index-378e8124.js   165.64 kB │ gzip: 51.63 kB
-✓ built in 496ms
+function App() {
+  return (
+    <>
+      <HelloWorld />
+    </>
+  );
+}
 
-——————————————————————————————————————————————————————————————————————————————————————————————————————————
-
-NX   Successfully ran target build for project reactutorial (1s)
+export default App;
 ```
 
-All the required files will be placed in the `dist/myreactapp` folder and can be deployed to your favorite hosting provider.
+You can view your app with the `nx serve` command:
+
+```shell
+npx nx serve
+```
 
 ## You're ready to go!
 
@@ -363,12 +438,12 @@ But there's more to learn. You have two possibilities here:
 - [Jump to the next steps section](#next-steps) to find where to go from here or
 - keep reading and learn some more about what makes Nx unique when working with React.
 
-## Modularizing your React App with Local Libraries
+## Modularize your React App with Local Libraries
 
-When you develop your React application, usually all your logic sits in the `app` folder. Ideally separated by various folder names which represent your "domains". As your app grows, this becomes more and more monolithic though.
+When you develop your React application, usually all your logic sits in the `src` folder. Ideally separated by various folder names which represent your "domains". As your app grows, this becomes more and more monolithic though.
 
 ```
-└─ myreactapp
+└─ react-app
    ├─ ...
    ├─ src
    │  ├─ app
@@ -392,22 +467,55 @@ Nx allows you to separate this logic into "local libraries". The main benefits i
 - better scalability in CI by enabling independent test/lint/build commands for each library
 - better scalability in your teams by allowing different teams to work on separate libraries
 
-### Creating Local Libraries
+### Create a Local Library
 
-Let's assume our domain areas include `products`, `orders` and some more generic design system components, called `ui`. We can generate a new library for each of these areas using the React library generator:
+Let's assume our domain areas include `products`, `orders` and some more generic design system components, called `ui`. We can generate a new library for these areas using the React library generator:
 
 ```
-nx g @nx/react:library products --unitTestRunner=vitest --bundler=none --directory=modules/products
+npx nx g @nx/react:library products --unitTestRunner=vitest --bundler=none --directory=modules/products
+```
+
+Note how we use the `--directory` flag to place the library into a subfolder. You can choose whatever folder structure you like to organize your libraries.
+
+Nx sets up your workspace to work with the modular library architecture, but depending on your existing configuration, you may need to tweak some settings. In this repo, you'll need to make a small change in order to prepare for future steps.
+
+#### Build Settings
+
+To make sure that the build can correctly pull in code from libraries, we'll update `vite.config.ts` to account for typescript aliases. Run the following generator to automatically update your configuration file.
+
+```shell
+npx nx g @nx/vite:setup-paths-plugin
+```
+
+This will update the `vite.config.ts` file to include the `nxViteTsPaths` plugin in the `plugins` array.
+
+```{% fileName="vite.config.ts" highlightLines=[3,7] %}
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+
+// https://vitejs.dev/config/
+export default defineConfig({
+  plugins: [react(), nxViteTsPaths()],
+  build: {
+    outDir: 'dist/react-app',
+  },
+});
+```
+
+### Create More Libraries
+
+Now that the build system is set up, let's generate the `orders` and `ui` libraries.
+
+```
 nx g @nx/react:library orders --unitTestRunner=vitest --bundler=none --directory=modules/orders
 nx g @nx/react:library ui --unitTestRunner=vitest --bundler=none --directory=modules/shared/ui
 ```
 
-Note how we use the `--directory` flag to place the libraries into a subfolder. You can choose whatever folder structure you like, even keep all of them at the root-level.
-
 Running the above commands should lead to the following directory structure:
 
 ```
-└─ myreactapp
+└─ react-app
    ├─ ...
    ├─ modules
    │  ├─ products
@@ -441,7 +549,6 @@ Running the above commands should lead to the following directory structure:
    │  ├─ app
    │  │  ├─ hello-world
    │  │  │  ├─ hello-world.module.css
-   │  │  │  ├─ hello-world.spec.tsx
    │  │  │  └─ hello-world.tsx
    │  │  └─ ...
    │  ├─ ...
@@ -465,47 +572,16 @@ All libraries that we generate automatically have aliases created in the root-le
   "compilerOptions": {
     ...
     "paths": {
-      "@myreactapp/orders": ["modules/orders/src/index.ts"],
-      "@myreactapp/products": ["modules/products/src/index.ts"],
-      "@myreactapp/ui": ["modules/shared/ui/src/index.ts"]
+      "orders": ["modules/orders/src/index.ts"],
+      "products": ["modules/products/src/index.ts"],
+      "ui": ["modules/shared/ui/src/index.ts"]
     },
     ...
   },
 }
 ```
 
-Hence we can easily import them into other libraries and our React application. As an example, let's create and expose a `ProductList` component from our `modules/products` library. Either create it by hand or run
-
-```shell
-nx g @nx/react:component product-list --directory=modules/products/src/lib/product-list
-```
-
-We don't need to implement anything fancy as we just want to learn how to import it into our main React application.
-
-```tsx {% fileName="modules/products/src/lib/product-list/product-list.tsx" %}
-import styles from './product-list.module.css';
-
-/* eslint-disable-next-line */
-export interface ProductListProps {}
-
-export function ProductList(props: ProductListProps) {
-  return (
-    <div className={styles['container']}>
-      <h1>Welcome to ProductList!</h1>
-    </div>
-  );
-}
-
-export default ProductList;
-```
-
-Make sure the `ProductList` is exported via the `index.ts` file of our `products` library. This is our public API with the rest of the workspace. Only export what's really necessary to be usable outside the library itself.
-
-```ts {% fileName="modules/products/src/index.ts" %}
-export * from './lib/product-list/product-list';
-```
-
-We're ready to import it into our main application now. First (if you haven't already), let's set up React Router.
+That way we can easily import them into other libraries and our React application. As an example, let's import the `Products` component from the `products` project into our main application. First (if you haven't already), let's set up React Router.
 
 {% tabs %}
 {% tab label="npm" %}
@@ -538,7 +614,7 @@ import { StrictMode } from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import ReactDOM from 'react-dom/client';
 
-import App from './app/app';
+import App from './App';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
@@ -553,23 +629,21 @@ root.render(
 );
 ```
 
-Then we can import the `ProductList` component into our `app.tsx` and render it via the routing mechanism whenever a user hits the `/products` route.
+Then we can import the `Products` component into our `app.tsx` and render it via the routing mechanism whenever a user hits the `/products` route.
 
-```tsx {% fileName="src/app/app.tsx" %}
+```tsx {% fileName="src/App.tsx" %}
+import './App.css';
+import HelloWorld from './app/hello-world/hello-world';
 import { Route, Routes } from 'react-router-dom';
 
 // importing the component from the library
-import { ProductList } from '@myreactapp/products';
-
-function Home() {
-  return <h1>Home</h1>;
-}
+import { Products } from 'products';
 
 export function App() {
   return (
     <Routes>
-      <Route path="/" element={<Home />}></Route>
-      <Route path="/products" element={<ProductList />}></Route>
+      <Route path="/" element={<HelloWorld />}></Route>
+      <Route path="/products" element={<Products />}></Route>
     </Routes>
   );
 }
@@ -579,30 +653,25 @@ export default App;
 
 Serving your app (`nx serve`) and then navigating to `/products` should give you the following result:
 
-![products route](/shared/images/tutorial-react-standalone/react-tutorial-products-route.png)
+![products route](/shared/tutorials/react-standalone-products-route.png)
 
-Let's apply the same for our `orders` library.
+Let's apply the same steps for our `orders` library. Import the `Orders` component into the `App.tsx` file and render it via the routing mechanism whenever a user hits the `/orders` route
 
-- generate a new component `OrderList` in `modules/orders` and export it in the corresponding `index.ts` file
-- import it into the `app.tsx` and render it via the routing mechanism whenever a user hits the `/orders` route
+In the end, your `App.tsx` should look similar to this:
 
-In the end, your `app.tsx` should look similar to this:
-
-```tsx {% fileName="src/app/app.tsx" %}
+```tsx {% fileName="src/App.tsx" %}
+import './App.css';
+import HelloWorld from './app/hello-world/hello-world';
 import { Route, Routes } from 'react-router-dom';
-import { ProductList } from '@myreactapp/products';
-import { OrderList } from '@myreactapp/orders';
-
-function Home() {
-  return <h1>Home</h1>;
-}
+import { Products } from 'products';
+import { Orders } from 'orders';
 
 export function App() {
   return (
     <Routes>
-      <Route path="/" element={<Home />}></Route>
-      <Route path="/products" element={<ProductList />}></Route>
-      <Route path="/orders" element={<OrderList />}></Route>
+      <Route path="/" element={<HelloWorld />}></Route>
+      <Route path="/products" element={<Products />}></Route>
+      <Route path="/orders" element={<Orders />}></Route>
     </Routes>
   );
 }
@@ -628,15 +697,8 @@ You should be able to see something similar to the following in your browser.
 {
   "projects": [
     {
-      "name": "myreactapp",
+      "name": "react-app",
       "type": "app",
-      "data": {
-        "tags": []
-      }
-    },
-    {
-      "name": "e2e",
-      "type": "e2e",
       "data": {
         "tags": []
       }
@@ -665,11 +727,10 @@ You should be able to see something similar to the following in your browser.
     }
   ],
   "dependencies": {
-    "myreactapp": [
-      { "source": "myreactapp", "target": "orders", "type": "static" },
-      { "source": "myreactapp", "target": "products", "type": "static" }
+    "react-app": [
+      { "source": "react-app", "target": "orders", "type": "static" },
+      { "source": "react-app", "target": "products", "type": "static" }
     ],
-    "e2e": [{ "source": "e2e", "target": "myreactapp", "type": "implicit" }],
     "ui": [],
     "orders": [],
     "products": []
@@ -685,7 +746,7 @@ You should be able to see something similar to the following in your browser.
 
 Notice how `ui` is not yet connected to anything because we didn't import it in any of our projects.
 
-Exercise for you: change the codebase such that `ui` is used by `orders` and `products`. Note: you need to restart the `nx graph` command to update the graph visualization or run the CLI command with the `--watch` flag.
+Exercise for you: change the codebase such that `ui` is used by `orders` and `products`.
 
 ## Imposing Constraints with Module Boundary Rules
 
@@ -736,14 +797,57 @@ Next, let's come up with a set of rules based on these tags:
 - `scope:orders` should be able to import from `scope:orders`, `scope:shared` and `scope:products`
 - `scope:products` should be able to import from `scope:products` and `scope:shared`
 
-To enforce the rules, Nx ships with a custom ESLint rule. Open the `.eslintrc.base.json` at the root of the workspace and add the following `depConstraints` in the `@nx/enforce-module-boundaries` rule configuration:
+To enforce the rules, Nx ships with a custom ESLint rule.
 
-```json {% fileName=".eslintrc.base.json" %}
+### Lint Settings
+
+We want the `lint` task for the root `react-app` project to only lint the files for that project (in the `src` folder), so we'll change the `lint` command in `package.json`:
+
+```json {% fileName="package.json" %}
 {
-  ...
+  "scripts": {
+    "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0"
+  }
+}
+```
+
+Install the `@nx/eslint-plugin` package. This is an ESLint plugin that can be used in the `plugins` property of your ESLint configuration. There is also an Nx plugin named `@nx/eslint` that was automatically installed with the `@nx/react` plugin that was added earlier in the tutorial.
+
+```
+npx nx add @nx/eslint-plugin
+```
+
+We need to update the `.eslintrc.cjs` file to extend the `.eslintrc.base.json` file and undo the `ignorePattern` from that config that ignores every file. The `.eslintrc.base.json` file serves as a common set of lint rules for every project in the repository.
+
+```js {% fileName=".eslintrc.cjs" highlightLines=[11,"17-53"] %}
+module.exports = {
+  root: true,
+  env: { browser: true, es2020: true },
+  extends: [
+    'eslint:recommended',
+    'plugin:@typescript-eslint/recommended',
+    'plugin:react-hooks/recommended',
+    './.eslintrc.base.json',
+  ],
+  ignorePatterns: ['!**/*', 'dist', '.eslintrc.cjs'],
+  parser: '@typescript-eslint/parser',
+  plugins: ['react-refresh'],
+  rules: {
+    'react-refresh/only-export-components': [
+      'warn',
+      { allowConstantExport: true },
+    ],
+  },
+};
+```
+
+Now we need to update the `.eslintrc.base.json` file and define the `depConstraints` in the `@nx/enforce-module-boundaries` rule:
+
+```json {% fileName=".eslintrc.base.json" highlightLines=["16-39"] %}
+{
   "overrides": [
     {
-      ...
+      "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
       "rules": {
         "@nx/enforce-module-boundaries": [
           "error",
@@ -783,73 +887,87 @@ To enforce the rules, Nx ships with a custom ESLint rule. Open the `.eslintrc.ba
           }
         ]
       }
-    },
+    }
     ...
   ]
 }
 ```
 
-To test it, go to your `modules/products/src/lib/product-list/product-list.tsx` file and import the `OrderList` from the `orders` project:
+When Nx set up the `@nx/eslint` plugin, it chose a task name that would not conflict with the pre-existing `lint` script. Let's overwrite that name so that all the linting tasks use the same `lint` name. Update the setting in the `nx.json` file:
 
-```tsx {% fileName="modules/products/src/lib/product-list/product-list.tsx" %}
-import styles from './product-list.module.css';
+```json {% fileName="nx.json" highlightLines=[7] %}
+{
+  ...
+  "plugins": [
+    {
+      "plugin": "@nx/eslint/plugin",
+      "options": {
+        "targetName": "lint"
+      }
+    }
+  ]
+}
+```
+
+### Test Boundary Rules
+
+To test the boundary rules, go to your `modules/products/src/lib/products.tsx` file and import the `Orders` from the `orders` project:
+
+```tsx {% fileName="modules/products/src/lib/products.tsx" %}
+import styles from './products.module.css';
 
 // This import is not allowed 👇
-import { OrderList } from '@myreactapp/orders';
+import { Orders } from 'orders';
 
 /* eslint-disable-next-line */
-export interface ProductListProps {}
+export interface ProductsProps {}
 
-export function ProductList(props: ProductListProps) {
+export function Products() {
   return (
     <div className={styles['container']}>
-      <h1>Welcome to ProductList!</h1>
-      <OrderList />
+      <h1>Welcome to Products!</h1>
     </div>
   );
 }
 
-export default ProductList;
+export default Products;
 ```
 
 If you lint your workspace you'll get an error now:
 
 ```{% command="nx run-many -t lint" %}
-✔  nx run myreactapp:lint  [existing outputs match the cache, left as is]
-✔  nx run e2e:lint  [existing outputs match the cache, left as is]
+✔  nx run orders:lint  [existing outputs match the cache, left as is]
 ✔  nx run ui:lint (1s)
 
 ✖  nx run products:lint
    Linting "products"...
 
-   /Users/.../myreactapp/modules/products/src/lib/product-list/product-list.tsx
+   /Users/.../react-app/modules/products/src/lib/products.tsx
      3:1  error  A project tagged with "scope:products" can only depend on libs tagged with "scope:products", "scope:shared"  @nx/enforce-module-boundaries
 
    ✖ 1 problem (1 error, 0 warnings)
 
    Lint errors found in the listed files.
 
-✔  nx run orders:lint (1s)
+✔  nx run react-app:lint (1s)
 
 ————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
-NX   Ran target lint for 5 projects (1s)
+NX   Ran target lint for 4 projects (1s)
 
-✔    4/5 succeeded [2 read from cache]
+✔    3/4 succeeded [1 read from cache]
 
-✖    1/5 targets failed, including the following:
+✖    1/4 targets failed, including the following:
      - nx run products:lint
 ```
 
-If you have the ESLint plugin installed in your IDE you should immediately see an error:
-
-![ESLint module boundary error](/shared/images/tutorial-react-standalone/react-standalone-module-boundaries.png)
+If you have the ESLint plugin installed in your IDE you should also immediately see an error.
 
 Learn more about how to [enforce module boundaries](/features/enforce-module-boundaries).
 
 ## Migrating to a Monorepo
 
-When you are ready to add another application to the repo, you'll probably want to move `myreactapp` to its own folder. To do this, you can run the [`convert-to-monorepo` generator](/nx-api/workspace/generators/convert-to-monorepo) or [manually move the configuration files](/recipes/tips-n-tricks/standalone-to-integrated).
+When you are ready to add another application to the repo, you'll probably want to move `react-app` to its own folder. To do this, you can run the [`convert-to-monorepo` generator](/nx-api/workspace/generators/convert-to-monorepo) or [manually move the configuration files](/recipes/tips-n-tricks/standalone-to-integrated).
 
 You can also go through the full [React monorepo tutorial](/getting-started/tutorials/react-monorepo-tutorial)
 
