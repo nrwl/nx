@@ -230,4 +230,10 @@ export interface TargetConfiguration<T = any> {
    * Metadata about the target
    */
   metadata?: TargetMetadata;
+
+  /**
+   * Whether this target can be run in parallel with other tasks
+   * Default is true
+   */
+  parallelism?: boolean;
 }

@@ -162,6 +162,7 @@ async function buildPlaywrightTargets(
     options: {
       cwd: '{projectRoot}',
     },
+    parallelism: false,
     metadata: {
       technologies: ['playwright'],
       description: 'Runs Playwright Tests',
@@ -257,6 +258,7 @@ async function buildPlaywrightTargets(
       inputs: ciBaseTargetConfig.inputs,
       outputs: ciBaseTargetConfig.outputs,
       dependsOn,
+      parallelism: false,
       metadata: {
         technologies: ['playwright'],
         description: 'Runs Playwright Tests in CI',

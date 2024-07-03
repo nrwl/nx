@@ -1104,5 +1104,7 @@ export function normalizeTarget(
     );
   }
 
+  target.parallelism ??= true;
+
   return target;
 }

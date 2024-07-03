@@ -1502,6 +1502,7 @@ describe('project-configuration-utils', () => {
           "options": {
             "command": "echo libs/project",
           },
+          "parallelism": true,
         }
       `);
     });
@@ -1658,6 +1659,7 @@ describe('project-configuration-utils', () => {
           "options": {
             "command": "echo a @ libs/a",
           },
+          "parallelism": true,
         }
       `);
     });

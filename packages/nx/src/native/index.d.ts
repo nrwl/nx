@@ -185,6 +185,7 @@ export interface Target {
   outputs?: Array<string>
   options?: string
   configurations?: string
+  parallelism?: boolean
 }
 
 export interface Task {
