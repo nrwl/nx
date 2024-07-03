@@ -78,6 +78,11 @@ import { handleGetTaskHistoryForHashes } from './handle-get-task-history';
 import { handleWriteTaskRunsToHistory } from './handle-write-task-runs-to-history';
 import { isHandleForceShutdownMessage } from '../message-types/force-shutdown';
 import { handleForceShutdown } from './handle-force-shutdown';
+import {
+  GET_SYNC_GENERATOR_CHANGES,
+  isHandleGetSyncGeneratorChangesMessage,
+} from '../message-types/get-sync-generator-changes';
+import { handleGetSyncGeneratorChanges } from './handle-get-sync-generator-changes';
 
 let performanceObserver: PerformanceObserver | undefined;
 let workspaceWatcherError: Error | undefined;
@@ -224,6 +229,10 @@ async function handleMessage(socket, data: string) {
   } else if (isHandleForceShutdownMessage(payload)) {
     await handleResult(socket, 'FORCE_SHUTDOWN', () =>
       handleForceShutdown(server)
+    );
+  } else if (isHandleGetSyncGeneratorChangesMessage(payload)) {
+    await handleResult(socket, GET_SYNC_GENERATOR_CHANGES, () =>
+      handleGetSyncGeneratorChanges(payload.generators)
     );
   } else {
     await respondWithErrorAndExit(
