@@ -161,6 +161,8 @@ export async function syncGenerator(tree: Tree, options: SyncSchema) {
   }
 }
 
+export default syncGenerator;
+
 function updateTsConfigReferences(
   tree: Tree,
   tsConfigPath: string,

@@ -6,7 +6,7 @@ import {
   type Tree,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { syncGenerator } from './sync';
+import { syncGenerator } from './typescript-sync';
 
 let projectGraph: ProjectGraph;
 jest.mock('@nx/devkit', () => ({
