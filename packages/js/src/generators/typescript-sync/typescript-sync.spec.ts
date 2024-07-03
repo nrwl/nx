@@ -416,10 +416,13 @@ describe('syncGenerator()', () => {
           { path: './packages/d' },
         ],
       }));
-      updateJson(tree, 'packages/b/tsconfig.json', (json) => ({
-        ...json,
-        references: [{ path: '../a' }],
-      }));
+      // unformatted tsconfig.json to test that it doesn't get picked up as a change
+      tree.write(
+        'packages/b/tsconfig.json',
+        `{
+              "references": [     { "path": "../a" }
+]}`
+      );
       updateJson(tree, 'packages/c/tsconfig.json', (json) => ({
         ...json,
         references: [{ path: '../b' }, { path: '../a' }],
@@ -432,11 +435,11 @@ describe('syncGenerator()', () => {
         ...json,
         references: [{ path: '../b' }, { path: '../d' }, { path: '../a' }],
       }));
-      const currentChanges = tree.listChanges();
+      const changesBeforeSyncing = tree.listChanges();
 
       await syncGenerator(tree, {});
 
-      expect(tree.listChanges()).toEqual(currentChanges);
+      expect(tree.listChanges()).toStrictEqual(changesBeforeSyncing);
     });
   });
 });
