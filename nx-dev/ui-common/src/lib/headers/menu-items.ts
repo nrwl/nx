@@ -1,6 +1,5 @@
 import {
   AcademicCapIcon,
-  ArrowPathIcon,
   BoltIcon,
   CircleStackIcon,
   CodeBracketIcon,
@@ -9,9 +8,10 @@ import {
   PlayCircleIcon,
   ShareIcon,
   Squares2X2Icon,
-  RectangleGroupIcon,
   ChatBubbleBottomCenterTextIcon,
   ArrowUpCircleIcon,
+  UserGroupIcon,
+  FaceSmileIcon,
 } from '@heroicons/react/24/outline';
 import { FC, SVGProps } from 'react';
 import { NxAgentsIcon } from '../nx-agents-icon';
@@ -224,6 +224,25 @@ export const eventItems: MenuItem[] = [
     isHighlight: false,
   },
 ];
+
+export const companyItems: MenuItem[] = [
+  {
+    name: 'About Us',
+    description: null,
+    href: '/company',
+    icon: UserGroupIcon,
+    isNew: false,
+    isHighlight: false,
+  },
+  {
+    name: 'Customers',
+    description: null,
+    icon: FaceSmileIcon,
+    href: '/customers',
+    isNew: false,
+    isHighlight: false,
+  },
+];
 export const solutionsMenuItems = {
   'Helping you grow': plans,
   // 'Use cases': useCaseItems
@@ -231,4 +250,5 @@ export const solutionsMenuItems = {
 export const resourceMenuItems = {
   Learn: learnItems,
   Events: eventItems,
+  Company: companyItems,
 };

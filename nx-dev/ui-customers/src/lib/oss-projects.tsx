@@ -8,6 +8,7 @@ import {
   StorybookIcon,
 } from '@nx/nx-dev/ui-common';
 import { motion } from 'framer-motion';
+import Link from 'next/link';
 
 const variants = {
   hidden: {
@@ -48,58 +49,72 @@ const ossProjects = [
   {
     name: 'Tanstack',
     logo: TanstackIcon,
+    url: 'https://github.com/tanstack',
   },
   {
     name: 'EpicWeb',
     logo: EpicWebIcon,
+    url: 'https://github.com/epicweb-dev/epicshop',
   },
   {
     name: 'RedwoodJS',
     logo: RedwoodJsIcon,
+    url: 'https://redwoodjs.com/',
   },
   {
     name: 'Storybook',
     logo: StorybookIcon,
+    url: 'https://github.com/storybookjs/storybook',
   },
   {
     name: 'Cypress',
     logo: null,
+    url: 'https://github.com/cypress-io/cypress',
   },
   {
     name: 'Lerna',
     logo: LernaIcon,
+    url: 'https://lerna.js.org',
   },
   {
     name: 'BuilderIO Mitosis',
     logo: null,
+    url: 'https://github.com/BuilderIO/mitosis',
   },
   {
     name: 'RxJS',
     logo: null,
+    url: 'https://github.com/ReactiveX/rxjs',
   },
   {
     name: 'Electron Forge',
     logo: null,
+    url: 'https://github.com/electron/forge',
   },
   {
     name: 'TypeScript ESLint',
     logo: null,
+    url: 'https://github.com/typescript-eslint/typescript-eslint',
   },
   {
     name: 'Angular ESLint',
     logo: AngularIcon,
+    url: 'https://github.com/angular-eslint/angular-eslint',
   },
   {
     name: 'Strapi',
     logo: null,
+    url: 'https://github.com/strapi/strapi',
   },
   {
     name: 'Sentry',
     logo: null,
+    url: 'https://github.com/getsentry/sentry-javascript',
   },
   {
     name: 'MUI',
     logo: null,
+    url: 'https://github.com/mui/material-ui',
   },
 ];
 export function OssProjects(): JSX.Element {
@@ -161,7 +176,9 @@ export function OssProjects(): JSX.Element {
                       key={oss.name}
                       className="flex items-center justify-center"
                     >
-                      <oss.logo aria-hidden="true" className="h-16 w-16" />
+                      <Link href={oss.url} target="_blank">
+                        <oss.logo aria-hidden="true" className="h-16 w-16" />
+                      </Link>
                     </motion.div>
                   )
               )}
