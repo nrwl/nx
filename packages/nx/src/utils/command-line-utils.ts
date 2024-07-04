@@ -56,6 +56,10 @@ export function createOverrides(__overrides_unparsed__: string[] = []) {
   return overrides;
 }
 
+export function getBaseRef(nxJson: NxJsonConfiguration) {
+  return nxJson.defaultBase ?? nxJson.affected?.defaultBase ?? 'main';
+}
+
 export function splitArgsIntoNxArgsAndOverrides(
   args: { [k: string]: any },
   mode: 'run-one' | 'run-many' | 'affected' | 'print-affected',
@@ -143,8 +147,7 @@ export function splitArgsIntoNxArgsAndOverrides(
     }
 
     if (!nxArgs.base) {
-      nxArgs.base =
-        nxJson.defaultBase ?? nxJson.affected?.defaultBase ?? 'main';
+      nxArgs.base = getBaseRef(nxJson);
 
       // No user-provided arguments to set the affected criteria, so inform the user of the defaults being used
       if (
