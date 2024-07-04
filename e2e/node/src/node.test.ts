@@ -337,7 +337,7 @@ module.exports = {
     expect(e2eRsult.combinedOutput).toContain('Test Suites: 1 passed, 1 total');
 
     await killPorts(port);
-    p.kill();
+    await promisifiedTreeKill(p.pid, 'SIGKILL');
   }, 120000);
 
   // TODO(crystal, @ndcunningham): how do we handle this now?
