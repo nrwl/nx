@@ -76,6 +76,7 @@
       - [Adding Images, Fonts, and Files](/recipes/react/adding-assets-react)
       - [Setup Module Federation with SSR for React](/recipes/react/module-federation-with-ssr)
       - [Deploying Next.js applications to Vercel](/recipes/react/deploy-nextjs-to-vercel)
+      - [React Compiler with Nx](/recipes/react/react-compiler)
     - [Angular](/recipes/angular)
       - [Migration](/recipes/angular/migration)
         - [Migrating from Angular CLI](/recipes/angular/migration/angular)
