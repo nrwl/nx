@@ -1,10 +1,14 @@
-import { getBasicPluginsSection } from '@nx/nx-dev/data-access-menu';
-import { Menu } from '@nx/nx-dev/models-menu';
-import { Breadcrumbs, DocumentationHeader, Footer } from '@nx/nx-dev/ui-common';
+import { getBasicNxSection } from '@nx/nx-dev/data-access-menu';
+import { MenuItem } from '@nx/nx-dev/models-menu';
+import {
+  Breadcrumbs,
+  DocumentationHeader,
+  Footer,
+  SidebarContainer,
+} from '@nx/nx-dev/ui-common';
 import { PluginDirectory } from '@nx/nx-dev/ui-community';
 import { NextSeo } from 'next-seo';
 import { useRouter } from 'next/router';
-import { useRef } from 'react';
 import { menusApi } from '../lib/menus.api';
 import { useNavToggle } from '../lib/navigation-toggle.effect';
 import { nxPackagesApi } from '../lib/packages.api';
@@ -20,7 +24,7 @@ interface PluginInfo {
 }
 interface BrowseProps {
   pluginList: PluginInfo[];
-  // segments: string[];
+  menu: MenuItem[];
 }
 
 export async function getStaticProps(): Promise<{ props: BrowseProps }> {
@@ -56,7 +60,7 @@ export async function getStaticProps(): Promise<{ props: BrowseProps }> {
           isOfficial: false,
         })),
       ],
-      // segments,
+      menu: menusApi.getMenu('nx', ''),
     },
   };
 }
@@ -64,14 +68,9 @@ export async function getStaticProps(): Promise<{ props: BrowseProps }> {
 export default function Browse(props: BrowseProps): JSX.Element {
   const router = useRouter();
   const { toggleNav, navIsOpen } = useNavToggle();
-  const wrapperElement = useRef(null);
 
-  const vm: {
-    menu: Menu;
-  } = {
-    menu: {
-      sections: [getBasicPluginsSection(menusApi.getMenu('extending-nx', ''))],
-    },
+  const menu = {
+    sections: [getBasicNxSection(props.menu)],
   };
 
   return (
@@ -106,8 +105,14 @@ export default function Browse(props: BrowseProps): JSX.Element {
           role="main"
           className="flex h-full flex-1 overflow-y-hidden"
         >
+          <div className="hidden">
+            <SidebarContainer
+              menu={menu}
+              navIsOpen={navIsOpen}
+              toggleNav={toggleNav}
+            />
+          </div>
           <div
-            ref={wrapperElement}
             id="wrapper"
             data-testid="wrapper"
             className="relative flex flex-grow flex-col items-stretch justify-start overflow-y-scroll"
