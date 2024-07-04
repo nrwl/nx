@@ -38,7 +38,7 @@ export function Hero(): JSX.Element {
             className="mx-auto mt-6 max-w-3xl"
           >
             We make developers{' '}
-            <span className="text-gray-500 line-through">10</span>
+            <span className="text-gray-500 line-through">10x</span>
             Nx more productive
           </SectionHeading>
         </div>
