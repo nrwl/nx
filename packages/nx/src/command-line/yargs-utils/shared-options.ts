@@ -124,7 +124,7 @@ export function withConfiguration(yargs: Argv) {
   });
 }
 
-export function withVerbose(yargs: Argv) {
+export function withVerbose<T>(yargs: Argv<T>) {
   return yargs
     .option('verbose', {
       describe:
