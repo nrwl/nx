@@ -389,7 +389,7 @@ module.exports = {
         },
       }
     );
-    p.kill();
+    await promisifiedTreeKill(p.pid, 'SIGKILL');
   }, 300000);
 });
 
