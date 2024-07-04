@@ -11,6 +11,7 @@ import {
   uniq,
   updateFile,
   updateJson,
+  promisifiedTreeKill,
 } from '@nx/e2e/utils';
 import { execSync } from 'child_process';
 import { join } from 'path';
@@ -111,6 +112,6 @@ describe('Node Applications + webpack', () => {
       { timeout: 60_000, ms: 200 }
     );
 
-    serveProcess.kill();
+    await promisifiedTreeKill(serveProcess.pid, 'SIGKILL');
   }, 300_000);
 });

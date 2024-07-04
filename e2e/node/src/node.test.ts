@@ -207,6 +207,11 @@ module.exports = {
       (output) => {
         process.stdout.write(output);
         return output.includes(`foobar: test foo bar`);
+      },
+      {
+        env: {
+          NX_DAEMON: 'true',
+        },
       }
     );
     try {
