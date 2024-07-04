@@ -1,5 +1,4 @@
 import Link from 'next/link';
-import { SectionHeading } from './section-tags';
 import {
   ManIcon,
   VmwareIcon,
@@ -12,6 +11,7 @@ import {
   CaterpillarIcon,
   FicoIcon,
   HiltonIcon,
+  FedExIcon,
 } from '@nx/nx-dev/ui-common';
 
 const enterpriseCustomers = [
@@ -262,7 +262,7 @@ const enterpriseCustomers = [
   },
   {
     name: 'FedEx',
-    logo: null,
+    logo: FedExIcon,
     url: '',
   },
   {
@@ -285,57 +285,22 @@ const enterpriseCustomers = [
 export function EnterpriseCustomers(): JSX.Element {
   return (
     <section>
-      <div className="group relative isolate pb-24 pt-8">
-        <svg
-          className="absolute inset-0 -z-10 h-full w-full rotate-180 transform stroke-slate-100 transition [mask-image:radial-gradient(100%_100%_at_top,white,transparent)] group-hover:stroke-slate-200/70 dark:stroke-slate-800/60 dark:[mask-image:radial-gradient(100%_100%_at_top,black,transparent)] dark:group-hover:stroke-slate-800/90"
-          aria-hidden="true"
-        >
-          <defs>
-            <pattern
-              id="83dwp7e5a-9d52-45fc-17c6-718e5d7fe918"
-              width={200}
-              height={200}
-              x="50%"
-              y={-1}
-              patternUnits="userSpaceOnUse"
-            >
-              <path d="M100 200V.5M.5 .5H200" fill="none" />
-            </pattern>
-          </defs>
-          <svg
-            x="50%"
-            y={-1}
-            className="overflow-visible fill-slate-50/15 dark:fill-slate-900/10"
-          >
-            <path
-              d="M-100.5 0h201v201h-201Z M699.5 0h201v201h-201Z M499.5 400h201v201h-201Z M-300.5 600h201v201h-201Z"
-              strokeWidth={0}
-            />
-          </svg>
-          <rect
-            width="100%"
-            height="100%"
-            strokeWidth={0}
-            fill="url(#83dwp7e5a-9d52-45fc-17c6-718e5d7fe918)"
-          />
-        </svg>
-        <div className="mx-auto max-w-7xl text-center">
-          <div className="mt-8">
-            <div className="grid grid-cols-2 justify-between gap-6 sm:grid-cols-3 lg:grid-cols-5">
-              {enterpriseCustomers.map(
-                (customer) =>
-                  customer.logo && (
-                    <Link
-                      href={customer.url}
-                      key={customer.name}
-                      target="_blank"
-                      className="flex items-center justify-center"
-                    >
-                      <customer.logo aria-hidden="true" className="h-20 w-20" />
-                    </Link>
-                  )
-              )}
-            </div>
+      <div className="mx-auto max-w-7xl text-center">
+        <div className="mt-8">
+          <div className="grid grid-cols-2 justify-between sm:grid-cols-3 lg:grid-cols-4">
+            {enterpriseCustomers.map(
+              (customer) =>
+                customer.logo && (
+                  <Link
+                    href={customer.url}
+                    key={customer.name}
+                    target="_blank"
+                    className="flex items-center justify-center border border-slate-200/20 p-12 transition hover:bg-slate-100/20 dark:border-slate-800/20 dark:hover:border-slate-600/20 dark:hover:bg-slate-600/10"
+                  >
+                    <customer.logo aria-hidden="true" className="h-20 w-20" />
+                  </Link>
+                )
+            )}
           </div>
         </div>
       </div>

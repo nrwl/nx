@@ -11,12 +11,14 @@ import {
   ChatBubbleBottomCenterTextIcon,
   ArrowUpCircleIcon,
   UserGroupIcon,
-  FaceSmileIcon,
+  ComputerDesktopIcon,
+  GlobeAltIcon,
 } from '@heroicons/react/24/outline';
 import { FC, SVGProps } from 'react';
 import { NxAgentsIcon } from '../nx-agents-icon';
 import { NxReplayIcon } from '../nx-replay-icon';
 import { DiscordIcon } from '../discord-icon';
+import { BuildingOfficeIcon } from '@heroicons/react/24/solid';
 
 export interface MenuItem {
   name: string;
@@ -207,19 +209,17 @@ export const learnItems: MenuItem[] = [
 export const eventItems: MenuItem[] = [
   {
     name: 'Monorepo World',
-    description:
-      'In person & virtual conference about the latest monorepo advancements.',
+    description: null,
     href: 'https://monorepo.world',
-    icon: null,
+    icon: GlobeAltIcon,
     isNew: false,
     isHighlight: false,
   },
   {
     name: 'Webinars',
-    description:
-      'Virtual courses to get a deeper understanding on monorepos animated by the Nx team.',
+    description: null,
     href: 'https://go.nx.dev/webinar',
-    icon: null,
+    icon: ComputerDesktopIcon,
     isNew: false,
     isHighlight: false,
   },
@@ -237,7 +237,7 @@ export const companyItems: MenuItem[] = [
   {
     name: 'Customers',
     description: null,
-    icon: FaceSmileIcon,
+    icon: BuildingOfficeIcon,
     href: '/customers',
     isNew: false,
     isHighlight: false,

@@ -37,8 +37,8 @@ export function Hero(): JSX.Element {
             variant="subtitle"
             className="mx-auto mt-6 max-w-3xl"
           >
-            We make developers{' '}
-            <span className="text-gray-500 line-through">10x</span>
+            We make developers
+            <span className="mx-1 text-gray-500 line-through">10x</span>
             Nx more productive
           </SectionHeading>
         </div>

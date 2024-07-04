@@ -2,10 +2,12 @@ import { SectionHeading } from './section-tags';
 import {
   TanstackIcon,
   LernaIcon,
-  AngularIcon,
   EpicWebIcon,
   RedwoodJsIcon,
   StorybookIcon,
+  RxJSIcon,
+  SentryIcon,
+  MuiIcon,
 } from '@nx/nx-dev/ui-common';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
@@ -83,7 +85,7 @@ const ossProjects = [
   },
   {
     name: 'RxJS',
-    logo: null,
+    logo: RxJSIcon,
     url: 'https://github.com/ReactiveX/rxjs',
   },
   {
@@ -98,7 +100,7 @@ const ossProjects = [
   },
   {
     name: 'Angular ESLint',
-    logo: AngularIcon,
+    logo: null,
     url: 'https://github.com/angular-eslint/angular-eslint',
   },
   {
@@ -108,82 +110,113 @@ const ossProjects = [
   },
   {
     name: 'Sentry',
-    logo: null,
+    logo: SentryIcon,
     url: 'https://github.com/getsentry/sentry-javascript',
   },
   {
     name: 'MUI',
-    logo: null,
+    logo: MuiIcon,
     url: 'https://github.com/mui/material-ui',
   },
 ];
 export function OssProjects(): JSX.Element {
   return (
     <section>
-      <div className="relative isolate pb-24">
-        <svg
-          className="absolute inset-0 -z-10 h-full w-full rotate-180 transform stroke-slate-100 [mask-image:radial-gradient(100%_100%_at_top,white,transparent)] dark:stroke-slate-800/60 dark:[mask-image:radial-gradient(100%_100%_at_top,black,transparent)]"
-          aria-hidden="true"
-        >
-          <defs>
-            <pattern
-              id="83dwp7e5a-9d52-45fc-17c6-718e5d7fe918"
-              width={200}
-              height={200}
-              x="50%"
-              y={-1}
-              patternUnits="userSpaceOnUse"
-            >
-              <path d="M100 200V.5M.5 .5H200" fill="none" />
-            </pattern>
-          </defs>
-          <svg
-            x="50%"
-            y={-1}
-            className="overflow-visible fill-slate-50/15 dark:fill-slate-900/10"
-          >
-            <path
-              d="M-100.5 0h201v201h-201Z M699.5 0h201v201h-201Z M499.5 400h201v201h-201Z M-300.5 600h201v201h-201Z"
-              strokeWidth={0}
-            />
-          </svg>
-          <rect
-            width="100%"
-            height="100%"
-            strokeWidth={0}
-            fill="url(#83dwp7e5a-9d52-45fc-17c6-718e5d7fe918)"
-          />
-        </svg>
-        <div className="mx-auto max-w-7xl text-center">
-          <SectionHeading as="h2" variant="subtitle">
-            Popular OSS projects using Nx
-          </SectionHeading>
+      <div className="mx-auto max-w-7xl text-center">
+        <SectionHeading as="h2" variant="subtitle">
+          Popular OSS projects using Nx
+        </SectionHeading>
 
-          <div className="mt-20">
-            <motion.dl
-              initial="hidden"
-              variants={variants}
-              whileInView="visible"
-              viewport={{ once: true }}
-              className="grid grid-cols-2 justify-between gap-6 sm:grid-cols-3 lg:grid-cols-6"
+        <div className="mt-20">
+          <motion.dl
+            initial="hidden"
+            variants={variants}
+            whileInView="visible"
+            viewport={{ once: true }}
+            className="grid grid-cols-2 justify-between sm:grid-cols-4"
+          >
+            <motion.div
+              custom={1}
+              variants={itemVariants}
+              className="flex items-center justify-center border border-slate-200/20 p-12 transition hover:bg-slate-100/25 dark:border-slate-800/20 dark:hover:border-slate-600/20 dark:hover:bg-slate-600/10"
             >
-              {ossProjects.map(
-                (oss, index) =>
-                  oss.logo && (
-                    <motion.div
-                      custom={index + 1}
-                      variants={itemVariants}
-                      key={oss.name}
-                      className="flex items-center justify-center"
-                    >
-                      <Link href={oss.url} target="_blank">
-                        <oss.logo aria-hidden="true" className="h-16 w-16" />
-                      </Link>
-                    </motion.div>
-                  )
-              )}
-            </motion.dl>
-          </div>
+              <Link href="https://github.com/tanstack'" target="_blank">
+                <TanstackIcon aria-hidden="true" className="h-16 w-16" />
+              </Link>
+            </motion.div>
+            <motion.div
+              custom={2}
+              variants={itemVariants}
+              className="flex items-center justify-center border border-slate-200/20 p-12 transition hover:bg-slate-100/25 dark:border-slate-800/20 dark:hover:border-slate-600/20 dark:hover:bg-slate-600/10"
+            >
+              <Link
+                href="https://github.com/epicweb-dev/epicshop"
+                target="_blank"
+              >
+                <EpicWebIcon aria-hidden="true" className="h-16 w-16" />
+              </Link>
+            </motion.div>
+            <motion.div
+              custom={3}
+              variants={itemVariants}
+              className="flex items-center justify-center border border-slate-200/20 p-12 transition hover:bg-slate-100/25 dark:border-slate-800/20 dark:hover:border-slate-600/20 dark:hover:bg-slate-600/10"
+            >
+              <Link href="https://redwoodjs.com/" target="_blank">
+                <RedwoodJsIcon aria-hidden="true" className="h-16 w-16" />
+              </Link>
+            </motion.div>
+            <motion.div
+              custom={4}
+              variants={itemVariants}
+              className="flex items-center justify-center border border-slate-200/20 p-12 transition hover:bg-slate-100/25 dark:border-slate-800/20 dark:hover:border-slate-600/20 dark:hover:bg-slate-600/10"
+            >
+              <Link
+                href="https://github.com/storybookjs/storybook"
+                target="_blank"
+              >
+                <StorybookIcon aria-hidden="true" className="h-16 w-16" />
+              </Link>
+            </motion.div>
+            <motion.div
+              custom={5}
+              variants={itemVariants}
+              className="flex items-center justify-center border border-slate-200/20 p-12 transition hover:bg-slate-100/25 dark:border-slate-800/20 dark:hover:border-slate-600/20 dark:hover:bg-slate-600/10"
+            >
+              <Link href="https://lerna.js.org'" target="_blank">
+                <LernaIcon aria-hidden="true" className="h-16 w-16" />
+              </Link>
+            </motion.div>
+            <motion.div
+              custom={6}
+              variants={itemVariants}
+              className="flex items-center justify-center border border-slate-200/20 p-12 transition hover:bg-slate-100/25 dark:border-slate-800/20 dark:hover:border-slate-600/20 dark:hover:bg-slate-600/10"
+            >
+              <Link href="https://github.com/ReactiveX/rxjs" target="_blank">
+                <RxJSIcon aria-hidden="true" className="h-16 w-16" />
+              </Link>
+            </motion.div>
+            <motion.div
+              custom={7}
+              variants={itemVariants}
+              className="flex items-center justify-center border border-slate-200/20 p-12 transition hover:bg-slate-100/25 dark:border-slate-800/20 dark:hover:border-slate-600/20 dark:hover:bg-slate-600/10"
+            >
+              <Link
+                href="https://github.com/getsentry/sentry-javascript"
+                target="_blank"
+              >
+                <SentryIcon aria-hidden="true" className="h-16 w-16" />
+              </Link>
+            </motion.div>
+            <motion.div
+              custom={8}
+              variants={itemVariants}
+              className="flex items-center justify-center border border-slate-200/20 p-12 transition hover:bg-slate-100/25 dark:border-slate-800/20 dark:hover:border-slate-600/20 dark:hover:bg-slate-600/10"
+            >
+              <Link href="https://github.com/mui/material-ui" target="_blank">
+                <MuiIcon aria-hidden="true" className="h-16 w-16" />
+              </Link>
+            </motion.div>
+          </motion.dl>
         </div>
       </div>
     </section>
