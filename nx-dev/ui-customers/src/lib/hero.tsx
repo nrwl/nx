@@ -17,19 +17,19 @@ export function Hero(): JSX.Element {
           <SectionHeading
             as="h1"
             variant="display"
-            className="text-3xl sm:text-6xl"
+            className="pt-4 text-3xl sm:text-6xl"
           >
             Build Smarter & Ship Faster
           </SectionHeading>
 
-          <div className="mt-4 flex items-center justify-center gap-x-6">
+          <div className="mt-16 flex items-center justify-center gap-x-6">
             <ButtonLink
               href="/contact"
               variant="primary"
               size="large"
               title="Join us"
             >
-              Join us
+              Reach out
             </ButtonLink>
 
             <Link

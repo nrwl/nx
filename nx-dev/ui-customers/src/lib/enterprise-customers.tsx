@@ -285,7 +285,7 @@ const enterpriseCustomers = [
 export function EnterpriseCustomers(): JSX.Element {
   return (
     <section>
-      <div className="group relative isolate pb-24 pt-16">
+      <div className="group relative isolate pb-24 pt-8">
         <svg
           className="absolute inset-0 -z-10 h-full w-full rotate-180 transform stroke-slate-100 transition [mask-image:radial-gradient(100%_100%_at_top,white,transparent)] group-hover:stroke-slate-200/70 dark:stroke-slate-800/60 dark:[mask-image:radial-gradient(100%_100%_at_top,black,transparent)] dark:group-hover:stroke-slate-800/90"
           aria-hidden="true"
@@ -320,10 +320,7 @@ export function EnterpriseCustomers(): JSX.Element {
           />
         </svg>
         <div className="mx-auto max-w-7xl text-center">
-          <SectionHeading as="h2" variant="subtitle">
-            Fortune 500 companies
-          </SectionHeading>
-          <div className="mt-20">
+          <div className="mt-8">
             <div className="grid grid-cols-2 justify-between gap-6 sm:grid-cols-3 lg:grid-cols-5">
               {enterpriseCustomers.map(
                 (customer) =>

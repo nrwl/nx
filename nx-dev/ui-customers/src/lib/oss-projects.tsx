@@ -120,7 +120,7 @@ const ossProjects = [
 export function OssProjects(): JSX.Element {
   return (
     <section>
-      <div className="relative isolate pb-24 pt-16">
+      <div className="relative isolate pb-24">
         <svg
           className="absolute inset-0 -z-10 h-full w-full rotate-180 transform stroke-slate-100 [mask-image:radial-gradient(100%_100%_at_top,white,transparent)] dark:stroke-slate-800/60 dark:[mask-image:radial-gradient(100%_100%_at_top,black,transparent)]"
           aria-hidden="true"
@@ -156,7 +156,7 @@ export function OssProjects(): JSX.Element {
         </svg>
         <div className="mx-auto max-w-7xl text-center">
           <SectionHeading as="h2" variant="subtitle">
-            OSS projects using Nx
+            Popular OSS projects using Nx
           </SectionHeading>
 
           <div className="mt-20">

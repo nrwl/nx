@@ -38,10 +38,10 @@ export function Customers(): JSX.Element {
         <div>
           <Hero />
         </div>
-        <div className="mt-32 lg:mt-56">
+        <div className="mt-16 lg:mt-16">
           <EnterpriseCustomers />
         </div>
-        <div className="mt-32 lg:mt-56">
+        <div className="mt-16 lg:mt-32">
           <OssProjects />
         </div>
       </DefaultLayout>
