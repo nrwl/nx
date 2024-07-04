@@ -439,14 +439,16 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
 
       it('should add extended config files', async () => {
         await applyFilesToTempFsAndContext(tempFs, context, {
-          'libs/my-lib/tsconfig.json': JSON.stringify({
-            extends: '../../tsconfig.foo.json',
-            include: ['src/**/*.ts'],
+          'tsconfig.base.json': JSON.stringify({
+            exclude: ['node_modules', 'tmp'],
           }),
           'tsconfig.foo.json': JSON.stringify({
             extends: './tsconfig.base.json',
           }),
-          'tsconfig.base.json': '{}',
+          'libs/my-lib/tsconfig.json': JSON.stringify({
+            extends: '../../tsconfig.foo.json',
+            include: ['src/**/*.ts'],
+          }),
           'libs/my-lib/package.json': `{}`,
         });
         expect(await invokeCreateNodesOnMatchingFiles(context, {}))
@@ -467,6 +469,8 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{workspaceRoot}/tsconfig.base.json",
                       "{projectRoot}/tsconfig.json",
                       "{projectRoot}/src/**/*.ts",
+                      "!{workspaceRoot}/node_modules",
+                      "!{workspaceRoot}/tmp",
                       "^production",
                       {
                         "externalDependencies": [
@@ -1455,15 +1459,17 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
 
       it('should add extended config files', async () => {
         await applyFilesToTempFsAndContext(tempFs, context, {
+          'tsconfig.base.json': JSON.stringify({
+            exclude: ['node_modules', 'tmp'],
+          }),
+          'tsconfig.foo.json': JSON.stringify({
+            extends: './tsconfig.base.json',
+          }),
           'libs/my-lib/tsconfig.json': '{}',
           'libs/my-lib/tsconfig.lib.json': JSON.stringify({
             extends: '../../tsconfig.foo.json',
             include: ['src/**/*.ts'],
           }),
-          'tsconfig.foo.json': JSON.stringify({
-            extends: './tsconfig.base.json',
-          }),
-          'tsconfig.base.json': '{}',
           'libs/my-lib/package.json': `{}`,
         });
         expect(
@@ -1488,6 +1494,8 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{workspaceRoot}/tsconfig.base.json",
                       "{projectRoot}/tsconfig.lib.json",
                       "{projectRoot}/src/**/*.ts",
+                      "!{workspaceRoot}/node_modules",
+                      "!{workspaceRoot}/tmp",
                       "^production",
                       {
                         "externalDependencies": [
