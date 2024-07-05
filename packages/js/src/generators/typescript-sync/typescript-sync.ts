@@ -13,7 +13,6 @@ import {
 import { normalize, relative } from 'node:path/posix';
 import {
   PLUGIN_NAME,
-  normalizePluginOptions,
   type TscPluginOptions,
 } from '../../plugins/typescript/plugin';
 import type { SyncSchema } from './schema';
@@ -26,6 +25,15 @@ interface Tsconfig {
     outDir?: string;
   };
 }
+
+const COMMON_RUNTIME_TS_CONFIG_FILE_NAMES = [
+  'tsconfig.app.json',
+  'tsconfig.lib.json',
+  'tsconfig.build.json',
+  'tsconfig.cjs.json',
+  'tsconfig.esm.json',
+  'tsconfig.runtime.json',
+];
 
 export async function syncGenerator(tree: Tree, options: SyncSchema) {
   // Ensure that the plugin has been wired up in nx.json
@@ -94,12 +102,10 @@ export async function syncGenerator(tree: Tree, options: SyncSchema) {
     }
   }
 
-  const pluginOptions = normalizePluginOptions(
-    typeof tscPluginConfig !== 'string' ? tscPluginConfig.options : undefined
-  );
-  const runtimeTsConfigFileName = pluginOptions.build
-    ? pluginOptions.build.configName
-    : undefined;
+  const runtimeTsConfigFileNames =
+    (nxJson.sync?.generatorOptions?.['@nx/js:typescript-sync']
+      ?.runtimeTsConfigFileNames as string[]) ??
+    COMMON_RUNTIME_TS_CONFIG_FILE_NAMES;
 
   const collectedDependencies = new Map<string, ProjectGraphProjectNode[]>();
   for (const [name, data] of Object.entries(projectGraph.dependencies)) {
@@ -133,22 +139,25 @@ export async function syncGenerator(tree: Tree, options: SyncSchema) {
       continue;
     }
 
-    if (runtimeTsConfigFileName) {
+    for (const runtimeTsConfigFileName of runtimeTsConfigFileNames) {
       const runtimeTsConfigPath = joinPathFragments(
         sourceProjectNode.data.root,
         runtimeTsConfigFileName
       );
-      if (tree.exists(runtimeTsConfigPath)) {
-        // Update project references for the runtime tsconfig
-        hasChanges =
-          updateTsConfigReferences(
-            tree,
-            runtimeTsConfigPath,
-            dependencies,
-            sourceProjectNode.data.root,
-            runtimeTsConfigFileName
-          ) || hasChanges;
+      if (!tree.exists(runtimeTsConfigPath)) {
+        continue;
       }
+
+      // Update project references for the runtime tsconfig
+      hasChanges =
+        updateTsConfigReferences(
+          tree,
+          runtimeTsConfigPath,
+          dependencies,
+          sourceProjectNode.data.root,
+          runtimeTsConfigFileName,
+          runtimeTsConfigFileNames
+        ) || hasChanges;
     }
 
     // Update project references for the tsconfig.json file
@@ -173,7 +182,8 @@ function updateTsConfigReferences(
   tsConfigPath: string,
   dependencies: ProjectGraphProjectNode[],
   projectRoot: string,
-  runtimeTsConfigFileName?: string
+  runtimeTsConfigFileName?: string,
+  possibleRuntimeTsConfigFileNames?: string[]
 ): boolean {
   const tsConfig = readJson<Tsconfig>(tree, tsConfigPath);
   // We have at least one dependency so we can safely set it to an empty array if not already set
@@ -193,6 +203,20 @@ function updateTsConfigReferences(
       );
       if (tree.exists(runtimeTsConfigPath)) {
         referencePath = runtimeTsConfigPath;
+      } else {
+        // Check for other possible runtime tsconfig file names
+        // TODO(leo): should we check if there are more than one runtime tsconfig files and throw an error?
+        for (const possibleRuntimeTsConfigFileName of possibleRuntimeTsConfigFileNames ??
+          []) {
+          const possibleRuntimeTsConfigPath = joinPathFragments(
+            dep.data.root,
+            possibleRuntimeTsConfigFileName
+          );
+          if (tree.exists(possibleRuntimeTsConfigPath)) {
+            referencePath = possibleRuntimeTsConfigPath;
+            break;
+          }
+        }
       }
     }
     const relativePathToTargetRoot = relative(projectRoot, referencePath);

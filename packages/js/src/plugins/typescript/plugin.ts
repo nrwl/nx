@@ -636,7 +636,7 @@ function getTsConfigCacheKey(tsConfigPath: string): string {
   return `${tsConfigPath}-${timestamp}`;
 }
 
-export function normalizePluginOptions(
+function normalizePluginOptions(
   pluginOptions: TscPluginOptions = {}
 ): NormalizedPluginOptions {
   const defaultTypecheckTargetName = 'typecheck';
