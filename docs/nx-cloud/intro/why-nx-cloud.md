@@ -21,39 +21,9 @@ All this is possible because Nx Cloud directly integrates with Nx and has knowle
 
 Read more about individual features of Nx Cloud in the [features section](/ci/features).
 
-## How does Nx Cloud integrate into my existing CI setup
+## Integrate Nx Cloud into my CI setup
 
-Nx Cloud directly integrates with your existing CI setup.
-
-![Nx Cloud Overview](/shared/images/nx-cloud/nx-cloud-overview.webp)
-
-In a nutshell, here's how this works:
-
-**Step 1: Connect your workspace to Nx Cloud**
-
-This can be done by signing up on [nx.app](https://nx.app) and then connecting to your git repository. Read more about all the details [on this doc page](/ci/recipes/set-up/connect-to-cloud).
-
-**Step 2: Your CI script triggers Nx Cloud**
-
-```yml
-- name: Start CI run
-  run: 'npx nx-cloud start-ci-run --distribute-on="8 linux-medium-js"'
-```
-
-Check out our [recipes for the various CI providers](/ci/recipes/set-up).
-
-**Step 3: Run your Nx command as usual**
-
-```yml
-- run: npx nx-cloud record -- nx format:check
-- run: npx nx affected -t lint test build e2e-ci
-```
-
-All these commands are automatically picked up by Nx Cloud, split up into smaller tasks and distributed across the specified number of machines.
-
-**Step 4: All results are played back automatically**
-
-Nx Cloud automatically plays back all results to your CI system, as if distribution never happened. You can continue doing post-processing on the results, like uploading test reports, deploying artifacts etc.
+Ready to experience fast CI? Read the [connect to Nx Cloud](/ci/intro/connect-to-cloud) page for more details.
 
 ## Learn more
 
