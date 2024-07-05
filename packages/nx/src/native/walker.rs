@@ -1,10 +1,6 @@
+use std::fmt::Debug;
 use std::path::{Path, PathBuf};
-use std::thread;
-use std::thread::available_parallelism;
-
-use crossbeam_channel::unbounded;
 use ignore::{WalkBuilder};
-use tracing::trace;
 
 use crate::native::glob::build_glob_set;
 
@@ -59,106 +55,14 @@ where
         })
 }
 
-/// Walks the directory in a single thread and does not ignore any files
-/// This should only be used in wasm environments
-// #[cfg(target_arch = "wasm32")]
-// pub fn nx_walker_sync_with_ignore<'a, P>(
-//     directory: P
-// ) -> impl Iterator<Item = NxFile>
-//     where
-//         P: AsRef<Path> + 'a,
-// {
-//     let base_dir: PathBuf = directory.as_ref().into();
-//
-//     let base_ignores: Vec<String> = vec![
-//         "**/node_modules".into(),
-//         "**/.git".into(),
-//         "**/.nx/cache".into(),
-//         "**/.nx/workspace-data".into(),
-//         "**/.yarn/cache".into(),
-//     ];
-//
-//     let ignore_glob_set = build_glob_set(&base_ignores).expect("Should be valid globs");
-//
-//
-//     let mut ignore_builder = ignore::gitignore::GitignoreBuilder::new(&base_dir);
-//
-//
-//     ignore_builder.add(base_dir.join(".gitignore"));
-//     ignore_builder.add(base_dir.join(".nxignore"));
-//     let ignore = ignore_builder.build().unwrap();
-//
-//
-//     let base_dir_clone = base_dir.clone();
-//     // Use WalkDir instead of ignore::WalkBuilder because it's faster
-//     WalkDir::new(&base_dir)
-//         .into_iter()
-//         .filter_entry(move |entry| {
-//             let path = entry.path();
-//
-//             let is_dir = path.is_dir();
-//
-//             !matches!(
-//                             ignore.matched_path_or_any_parents(&path.strip_prefix(&base_dir_clone).unwrap(), is_dir),
-//                             ignore::Match::Ignore(_)
-//                         ) && !ignore_glob_set.is_match(path)
-//         })
-//         .filter_map(move |entry| {
-//             entry
-//                 .ok()
-//                 .and_then(|e| {
-//                     let path = e.path();
-//                     let is_dir = path.is_dir();
-//
-//                     if is_dir {
-//                         return None;
-//                     }
-//
-//                     let Ok(relative_path) = e.path().strip_prefix(&base_dir) else {
-//                         return None;
-//                     };
-//                     let Ok(metadata) = e.metadata() else {
-//                         return None;
-//                     };
-//
-//                     let normalized_path = relative_path.to_normalized_string();
-//                     let mod_time = get_mod_time(&metadata);
-//                     trace!("Walked {}", &normalized_path);
-//
-//                     Some(NxFile {
-//                         full_path: String::from(e.path().to_string_lossy()),
-//                         normalized_path,
-//                         mod_time,
-//                     })
-//                 })
-//         })
-// }
-
+/// Walk the directory and ignore files from .gitignore and .nxignore
 #[cfg(target_arch = "wasm32")]
-pub fn nx_walker_sync_with_ignore<P>(directory: P) -> impl Iterator<Item = NxFile>
+pub fn nx_walker<P>(directory: P) -> impl Iterator<Item = NxFile>
 where
     P: AsRef<Path>,
 {
     let directory: PathBuf = directory.as_ref().into();
-
-    let ignore_glob_set = build_glob_set(&[
-        "**/node_modules",
-        "**/.git",
-        "**/.nx/cache",
-        "**/.nx/workspace-data",
-        "**/.yarn/cache",
-    ])
-        .expect("These static ignores always build");
-
-    let mut walker = WalkBuilder::new(&directory);
-    walker.hidden(false);
-    walker.add_custom_ignore_filename(".nxignore");
-
-    // We should make sure to always ignore node_modules and the .git folder
-    walker.filter_entry(move |entry| {
-        let path = entry.path().to_string_lossy();
-        !ignore_glob_set.is_match(path.as_ref())
-    });
+    let walker = create_walker(&directory);
 
     let entries = walker.build();
 
@@ -188,30 +92,19 @@ where
 }
 
 /// Walk the directory and ignore files from .gitignore and .nxignore
+#[cfg(not(target_arch = "wasm32"))]
 pub fn nx_walker<P>(directory: P) -> impl Iterator<Item = NxFile>
 where
     P: AsRef<Path>,
 {
+    use std::thread;
+    use std::thread::available_parallelism;
+
+    use crossbeam_channel::unbounded;
+    use tracing::trace;
+
     let directory = directory.as_ref();
-
-    let ignore_glob_set = build_glob_set(&[
-        "**/node_modules",
-        "**/.git",
-        "**/.nx/cache",
-        "**/.nx/workspace-data",
-        "**/.yarn/cache",
-    ])
-    .expect("These static ignores always build");
-
-    let mut walker = WalkBuilder::new(directory);
-    walker.hidden(false);
-    walker.add_custom_ignore_filename(".nxignore");
-
-    // We should make sure to always ignore node_modules and the .git folder
-    walker.filter_entry(move |entry| {
-        let path = entry.path().to_string_lossy();
-        !ignore_glob_set.is_match(path.as_ref())
-    });
+    let mut walker = create_walker(directory);
 
     let cpus = available_parallelism().map_or(2, |n| n.get()) - 1;
 
@@ -246,7 +139,7 @@ where
                 normalized_path: file_path.to_normalized_string(),
                 mod_time: get_mod_time(&metadata),
             })
-            .ok();
+                .ok();
 
             Continue
         })
@@ -256,6 +149,34 @@ where
     let receiver_thread = thread::spawn(move || receiver.into_iter());
     drop(sender);
     receiver_thread.join().unwrap()
+}
+
+fn create_walker<P>(directory: P) -> WalkBuilder
+where
+    P: AsRef<Path>
+{
+    let directory: PathBuf = directory.as_ref().into();
+
+    let ignore_glob_set = build_glob_set(&[
+        "**/node_modules",
+        "**/.git",
+        "**/.nx/cache",
+        "**/.nx/workspace-data",
+        "**/.yarn/cache",
+    ])
+        .expect("These static ignores always build");
+
+    let mut walker = WalkBuilder::new(&directory);
+    walker.require_git(false);
+    walker.hidden(false);
+    walker.add_custom_ignore_filename(".nxignore");
+
+    // We should make sure to always ignore node_modules and the .git folder
+    walker.filter_entry(move |entry| {
+        let path = entry.path().to_string_lossy();
+        !ignore_glob_set.is_match(path.as_ref())
+    });
+    walker
 }
 
 #[cfg(test)]
