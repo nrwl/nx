@@ -333,7 +333,7 @@ Configuration for `nx release` (versioning and publishing of applications and li
 
 • `Optional` **sync**: `NxSyncConfiguration`
 
-Configuration for `nx sync`.
+Configuration for the `nx sync` command.
 
 #### Inherited from
 
