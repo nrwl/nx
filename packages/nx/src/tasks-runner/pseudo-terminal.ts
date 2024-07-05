@@ -1,4 +1,4 @@
-import { ChildProcess, RustPseudoTerminal, isWasm } from '../native';
+import { ChildProcess, RustPseudoTerminal, IS_WASM } from '../native';
 import { PseudoIPCServer } from './pseudo-ipc';
 import { getForkedProcessOsSocketPath } from '../daemon/socket-utils';
 import { Serializable } from 'child_process';
@@ -206,7 +206,7 @@ function messageToCode(message: string): number {
 }
 
 function supportedPtyPlatform() {
-  if (isWasm()) {
+  if (IS_WASM) {
     return false;
   }
   if (process.platform !== 'win32') {

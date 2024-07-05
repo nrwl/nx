@@ -1,12 +1,7 @@
 #[napi]
-pub fn is_wasm() -> bool {
-    #[cfg(not(target_arch = "wasm32"))]
-    {
-        false
-    }
+#[cfg(target_arch = "wasm32")]
+pub const IS_WASM: bool = true;
 
-    #[cfg(target_arch = "wasm32")]
-    {
-        true
-    }
-}
+#[napi]
+#[cfg(not(target_arch = "wasm32"))]
+pub const IS_WASM: bool = false;

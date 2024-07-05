@@ -89,7 +89,7 @@ function __napi_rs_initialize_modules(__napiInstance) {
   __napiInstance.exports['__napi_register__UpdatedWorkspaceFiles_struct_48']?.()
   __napiInstance.exports['__napi_register__FileMap_struct_49']?.()
   __napiInstance.exports['__napi_register____test_only_transfer_file_map_50']?.()
-  __napiInstance.exports['__napi_register__is_wasm_51']?.()
+  __napiInstance.exports['__napi_register__IS_WASM_51']?.()
 }
 export const HashPlanner = __napiModule.exports.HashPlanner
 export const ImportResult = __napiModule.exports.ImportResult
@@ -101,7 +101,7 @@ export const findImports = __napiModule.exports.findImports
 export const getFilesForOutputs = __napiModule.exports.getFilesForOutputs
 export const hashArray = __napiModule.exports.hashArray
 export const hashFile = __napiModule.exports.hashFile
-export const isWasm = __napiModule.exports.isWasm
+export const IS_WASM = __napiModule.exports.IS_WASM
 export const remove = __napiModule.exports.remove
 export const testOnlyTransferFileMap = __napiModule.exports.testOnlyTransferFileMap
 export const transferProjectGraph = __napiModule.exports.transferProjectGraph

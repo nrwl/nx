@@ -28,7 +28,7 @@ import {
   DaemonProjectGraphError,
   ProjectGraphError,
 } from '../../project-graph/error-types';
-import { isWasm, NxWorkspaceFiles } from '../../native';
+import { IS_WASM, NxWorkspaceFiles } from '../../native';
 import { HandleGlobMessage } from '../message-types/glob';
 import {
   GET_NX_WORKSPACE_FILES,
@@ -124,7 +124,7 @@ export class DaemonClient {
         (useDaemonProcessOption === false && env === 'false')
       ) {
         this._enabled = false;
-      } else if (isWasm()) {
+      } else if (IS_WASM) {
         output.warn({
           title:
             'The Nx Daemon is unsupported in WebAssembly environments. Some things may be slower than or not function as expected.',

@@ -141,7 +141,7 @@ export interface InputsInput {
   projects?: string | Array<string>
 }
 
-export declare export function isWasm(): boolean
+export const IS_WASM: boolean
 
 /** Stripped version of the NxJson interface for use in rust */
 export interface NxJson {
