@@ -13,6 +13,8 @@ import pluginGenerator from '../plugin/plugin';
 import { createPackageGenerator } from './create-package';
 import { CreatePackageSchema } from './schema';
 import { setCwd } from '@nx/devkit/internal-testing-utils';
+import { tsLibVersion } from '@nx/js/src/utils/versions';
+import { nxVersion } from 'nx/src/utils/versions';
 
 const getSchema: (
   overrides?: Partial<CreatePackageSchema>
@@ -127,5 +129,22 @@ describe('NxPlugin Create Package Generator', () => {
     );
 
     expect(name).toEqual('create-a-workspace');
+  });
+
+  it("should have valid default package.json's dependencies", async () => {
+    await createPackageGenerator(tree, getSchema());
+
+    const { root } = readProjectConfiguration(tree, 'create-a-workspace');
+    const { dependencies } = readJson<PackageJson>(
+      tree,
+      joinPathFragments(root, 'package.json')
+    );
+
+    expect(dependencies).toEqual(
+      expect.objectContaining({
+        'create-nx-workspace': nxVersion,
+        tslib: tsLibVersion,
+      })
+    );
   });
 });
