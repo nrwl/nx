@@ -5146,6 +5146,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Connect Nx Cloud",
+            "path": "/ci/intro/connect-to-cloud",
+            "id": "connect-to-cloud",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Tutorials",
             "path": "/ci/intro/tutorials",
             "id": "tutorials",
@@ -5185,6 +5193,14 @@
         "name": "Why Nx Cloud?",
         "path": "/ci/intro/why-nx-cloud",
         "id": "why-nx-cloud",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Connect Nx Cloud",
+        "path": "/ci/intro/connect-to-cloud",
+        "id": "connect-to-cloud",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -5420,14 +5436,6 @@
             "id": "set-up",
             "isExternal": false,
             "children": [
-              {
-                "name": "Connect Nx Cloud",
-                "path": "/ci/recipes/set-up/connect-to-cloud",
-                "id": "connect-to-cloud",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
               {
                 "name": "Setting up Azure Pipelines",
                 "path": "/ci/recipes/set-up/monorepo-ci-azure",
@@ -5743,14 +5751,6 @@
         "isExternal": false,
         "children": [
           {
-            "name": "Connect Nx Cloud",
-            "path": "/ci/recipes/set-up/connect-to-cloud",
-            "id": "connect-to-cloud",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
             "name": "Setting up Azure Pipelines",
             "path": "/ci/recipes/set-up/monorepo-ci-azure",
             "id": "monorepo-ci-azure",
@@ -5799,14 +5799,6 @@
             "disableCollapsible": false
           }
         ],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Connect Nx Cloud",
-        "path": "/ci/recipes/set-up/connect-to-cloud",
-        "id": "connect-to-cloud",
-        "isExternal": false,
-        "children": [],
         "disableCollapsible": false
       },
       {

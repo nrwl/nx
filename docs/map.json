@@ -1565,6 +1565,11 @@
               "file": "nx-cloud/intro/why-nx-cloud"
             },
             {
+              "name": "Connect Nx Cloud",
+              "id": "connect-to-cloud",
+              "file": "nx-cloud/intro/connect-to-cloud"
+            },
+            {
               "name": "Tutorials",
               "id": "tutorials",
               "description": "Tutorials setting up CI with Nx",
@@ -1669,11 +1674,6 @@
               "description": "Learn how to set up Nx Cloud for your workspace.",
               "tags": ["distribute-task-execution"],
               "itemList": [
-                {
-                  "name": "Connect Nx Cloud",
-                  "id": "connect-to-cloud",
-                  "file": "nx-cloud/recipes/connect-to-cloud"
-                },
                 {
                   "name": "Setting up Azure Pipelines",
                   "id": "monorepo-ci-azure",
