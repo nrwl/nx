@@ -1,5 +1,5 @@
 import * as ts from 'typescript';
-import { ExecutorContext } from '@nx/devkit';
+import { ExecutorContext, isDaemonEnabled, output } from '@nx/devkit';
 import type { TypeScriptCompilationOptions } from '@nx/workspace/src/utilities/typescript/compilation';
 import { CopyAssetsHandler } from '../../utils/assets/copy-assets-handler';
 import { checkDependencies } from '../../utils/check-dependencies';
@@ -133,7 +133,14 @@ export async function* tscExecutor(
     }
   );
 
-  if (options.watch) {
+  if (!isDaemonEnabled() && options.watch) {
+    output.warn({
+      title:
+        'Nx Daemon is not enabled. Assets and package.json files will not be updated when files change.',
+    });
+  }
+
+  if (isDaemonEnabled() && options.watch) {
     const disposeWatchAssetChanges =
       await assetHandler.watchAndProcessOnAssetChange();
     const disposePackageJsonChanges = await watchForSingleFileChanges(
