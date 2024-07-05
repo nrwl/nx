@@ -79,6 +79,7 @@ export const allowedWorkspaceExtensions = [
   'useDaemonProcess',
   'useInferencePlugins',
   'neverConnectToCloud',
+  'sync',
 ] as const;
 
 if (!patched) {
