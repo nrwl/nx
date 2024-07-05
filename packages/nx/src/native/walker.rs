@@ -61,77 +61,130 @@ where
 
 /// Walks the directory in a single thread and does not ignore any files
 /// This should only be used in wasm environments
+// #[cfg(target_arch = "wasm32")]
+// pub fn nx_walker_sync_with_ignore<'a, P>(
+//     directory: P
+// ) -> impl Iterator<Item = NxFile>
+//     where
+//         P: AsRef<Path> + 'a,
+// {
+//     let base_dir: PathBuf = directory.as_ref().into();
+//
+//     let base_ignores: Vec<String> = vec![
+//         "**/node_modules".into(),
+//         "**/.git".into(),
+//         "**/.nx/cache".into(),
+//         "**/.nx/workspace-data".into(),
+//         "**/.yarn/cache".into(),
+//     ];
+//
+//     let ignore_glob_set = build_glob_set(&base_ignores).expect("Should be valid globs");
+//
+//
+//     let mut ignore_builder = ignore::gitignore::GitignoreBuilder::new(&base_dir);
+//
+//
+//     ignore_builder.add(base_dir.join(".gitignore"));
+//     ignore_builder.add(base_dir.join(".nxignore"));
+//     let ignore = ignore_builder.build().unwrap();
+//
+//
+//     let base_dir_clone = base_dir.clone();
+//     // Use WalkDir instead of ignore::WalkBuilder because it's faster
+//     WalkDir::new(&base_dir)
+//         .into_iter()
+//         .filter_entry(move |entry| {
+//             let path = entry.path();
+//
+//             let is_dir = path.is_dir();
+//
+//             !matches!(
+//                             ignore.matched_path_or_any_parents(&path.strip_prefix(&base_dir_clone).unwrap(), is_dir),
+//                             ignore::Match::Ignore(_)
+//                         ) && !ignore_glob_set.is_match(path)
+//         })
+//         .filter_map(move |entry| {
+//             entry
+//                 .ok()
+//                 .and_then(|e| {
+//                     let path = e.path();
+//                     let is_dir = path.is_dir();
+//
+//                     if is_dir {
+//                         return None;
+//                     }
+//
+//                     let Ok(relative_path) = e.path().strip_prefix(&base_dir) else {
+//                         return None;
+//                     };
+//                     let Ok(metadata) = e.metadata() else {
+//                         return None;
+//                     };
+//
+//                     let normalized_path = relative_path.to_normalized_string();
+//                     let mod_time = get_mod_time(&metadata);
+//                     trace!("Walked {}", &normalized_path);
+//
+//                     Some(NxFile {
+//                         full_path: String::from(e.path().to_string_lossy()),
+//                         normalized_path,
+//                         mod_time,
+//                     })
+//                 })
+//         })
+// }
+
 #[cfg(target_arch = "wasm32")]
-pub fn nx_walker_sync_with_ignore<'a, P>(
-    directory: P
-) -> impl Iterator<Item = NxFile>
-    where
-        P: AsRef<Path> + 'a,
+pub fn nx_walker_sync_with_ignore<P>(directory: P) -> impl Iterator<Item = NxFile>
+where
+    P: AsRef<Path>,
 {
-    let base_dir: PathBuf = directory.as_ref().into();
+    let directory: PathBuf = directory.as_ref().into();
 
-    let base_ignores: Vec<String> = vec![
-        "**/node_modules".into(),
-        "**/.git".into(),
-        "**/.nx/cache".into(),
-        "**/.nx/workspace-data".into(),
-        "**/.yarn/cache".into(),
-    ];
+    let ignore_glob_set = build_glob_set(&[
+        "**/node_modules",
+        "**/.git",
+        "**/.nx/cache",
+        "**/.nx/workspace-data",
+        "**/.yarn/cache",
+    ])
+        .expect("These static ignores always build");
 
-    let ignore_glob_set = build_glob_set(&base_ignores).expect("Should be valid globs");
+    let mut walker = WalkBuilder::new(&directory);
+    walker.hidden(false);
+    walker.add_custom_ignore_filename(".nxignore");
 
+    // We should make sure to always ignore node_modules and the .git folder
+    walker.filter_entry(move |entry| {
+        let path = entry.path().to_string_lossy();
+        !ignore_glob_set.is_match(path.as_ref())
+    });
 
-    let mut ignore_builder = ignore::gitignore::GitignoreBuilder::new(&base_dir);
+    let entries = walker.build();
 
+    entries.filter_map(move |entry| {
+        let Ok(dir_entry) = entry else {
+            return None;
+        };
 
-    ignore_builder.add(base_dir.join(".gitignore"));
-    ignore_builder.add(base_dir.join(".nxignore"));
-    let ignore = ignore_builder.build().unwrap();
+        if dir_entry.file_type().is_some_and(|d| d.is_dir()) {
+            return None;
+        }
 
+        let Ok(file_path) = dir_entry.path().strip_prefix(&directory) else {
+            return None;
+        };
 
-    let base_dir_clone = base_dir.clone();
-    // Use WalkDir instead of ignore::WalkBuilder because it's faster
-    WalkDir::new(&base_dir)
-        .into_iter()
-        .filter_entry(move |entry| {
-            let path = entry.path();
+        let Ok(metadata) = dir_entry.metadata() else {
+            return None;
+        };
 
-            let is_dir = path.is_dir();
-
-            !matches!(
-                            ignore.matched_path_or_any_parents(&path.strip_prefix(&base_dir_clone).unwrap(), is_dir),
-                            ignore::Match::Ignore(_)
-                        ) && !ignore_glob_set.is_match(path)
+        Some(NxFile {
+            full_path: String::from(dir_entry.path().to_string_lossy()),
+            normalized_path: file_path.to_normalized_string(),
+            mod_time: get_mod_time(&metadata),
         })
-        .filter_map(move |entry| {
-            entry
-                .ok()
-                .and_then(|e| {
-                    let path = e.path();
-                    let is_dir = path.is_dir();
-
-                    if is_dir {
-                        return None;
-                    }
-
-                    let Ok(relative_path) = e.path().strip_prefix(&base_dir) else {
-                        return None;
-                    };
-                    let Ok(metadata) = e.metadata() else {
-                        return None;
-                    };
-
-                    let normalized_path = relative_path.to_normalized_string();
-                    let mod_time = get_mod_time(&metadata);
-                    trace!("Walked {}", &normalized_path);
-
-                    Some(NxFile {
-                        full_path: String::from(e.path().to_string_lossy()),
-                        normalized_path,
-                        mod_time,
-                    })
-                })
-        })
+    })
 }
 
 /// Walk the directory and ignore files from .gitignore and .nxignore

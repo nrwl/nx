@@ -11,22 +11,6 @@ impl <T> NxMutex<T> {
     }
 }
 
-// pub struct NxMutexGuard<'a, T>(MutexGuard<'a, T>);
-//
-// impl <T> Deref for NxMutexGuard<'_, T> {
-//     type Target = T;
-//
-//     fn deref(&self) -> &Self::Target {
-//         &*self.0
-//     }
-// }
-//
-// impl <'a, T> DerefMut for NxMutexGuard<'a, T> {
-//     fn deref_mut(&mut self) -> &mut Self::Target {
-//         &mut *self.0
-//     }
-// }
-//
 pub struct NxCondvar(Condvar);
 
 impl NxCondvar {
