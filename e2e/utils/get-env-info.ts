@@ -160,7 +160,11 @@ export function getStrippedEnvironmentVariables() {
         return true;
       }
 
-      const allowedKeys = ['NX_ADD_PLUGINS', 'NX_ISOLATE_PLUGINS'];
+      const allowedKeys = [
+        'NX_ADD_PLUGINS',
+        'NX_ISOLATE_PLUGINS',
+        'NAPI_RS_FORCE_WASI',
+      ];
 
       if (key.startsWith('NX_') && !allowedKeys.includes(key)) {
         return false;
