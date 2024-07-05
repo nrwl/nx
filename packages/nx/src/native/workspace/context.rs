@@ -115,7 +115,11 @@ impl FilesWorker {
             trace!("waiting for files to be available");
             let files = files_lock.lock().expect("Should be able to lock files");
 
+            #[cfg(target_arch = "wasm32")]
             let mut files = cvar.wait(files, |guard| guard.len() == 0).expect("Should be able to wait for files");
+
+            #[cfg(not(target_arch = "wasm32"))]
+            let files = cvar.wait(files, |guard| guard.len() == 0).expect("Should be able to wait for files");
 
             let file_data = files
                 .iter()

@@ -3,8 +3,7 @@ use std::thread;
 use std::thread::available_parallelism;
 
 use crossbeam_channel::unbounded;
-use ignore::{Match, WalkBuilder};
-use ignore::gitignore::GitignoreBuilder;
+use ignore::{WalkBuilder};
 use tracing::trace;
 
 use crate::native::glob::build_glob_set;
@@ -62,6 +61,7 @@ where
 
 /// Walks the directory in a single thread and does not ignore any files
 /// This should only be used in wasm environments
+#[cfg(target_arch = "wasm32")]
 pub fn nx_walker_sync_with_ignore<'a, P>(
     directory: P
 ) -> impl Iterator<Item = NxFile>
@@ -81,7 +81,7 @@ pub fn nx_walker_sync_with_ignore<'a, P>(
     let ignore_glob_set = build_glob_set(&base_ignores).expect("Should be valid globs");
 
 
-    let mut ignore_builder = GitignoreBuilder::new(&base_dir);
+    let mut ignore_builder = ignore::gitignore::GitignoreBuilder::new(&base_dir);
 
 
     ignore_builder.add(base_dir.join(".gitignore"));
@@ -100,7 +100,7 @@ pub fn nx_walker_sync_with_ignore<'a, P>(
 
             !matches!(
                             ignore.matched_path_or_any_parents(&path.strip_prefix(&base_dir_clone).unwrap(), is_dir),
-                            Match::Ignore(_)
+                            ignore::Match::Ignore(_)
                         ) && !ignore_glob_set.is_match(path)
         })
         .filter_map(move |entry| {

@@ -21,7 +21,8 @@
     "echo": "echo 123458",
     "preinstall": "node ./scripts/preinstall.js",
     "test": "nx run-many -t test",
-    "e2e": "nx run-many -t e2e --projects ./e2e/*"
+    "e2e": "nx run-many -t e2e --projects ./e2e/*",
+    "build:wasm": "rustup override set nightly-2024-07-04 && rustup target add wasm32-wasip1-threads && pnpm exec nx run-many -t build-native-wasm && rustup override unset"
   },
   "devDependencies": {
     "@actions/core": "^1.10.0",
@@ -51,7 +52,7 @@
     "@jest/test-result": "^29.4.1",
     "@jest/types": "^29.4.1",
     "@monodon/rust": "2.0.0-beta.1",
-    "@napi-rs/cli": "3.0.0-alpha.55",
+    "@napi-rs/cli": "3.0.0-alpha.56",
     "@napi-rs/wasm-runtime": "0.2.4",
     "@nestjs/cli": "^10.0.2",
     "@nestjs/common": "^9.0.0",

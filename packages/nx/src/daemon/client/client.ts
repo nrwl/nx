@@ -112,18 +112,8 @@ export class DaemonClient {
       // CI=true,env=undefined => no daemon
       // CI=true,env=false => no daemon
       // CI=true,env=true => daemon
-
-      const wasm = isWasm();
-      if (wasm) {
-        output.warn({
-          title:
-            'The Nx Daemon is unsupported in WebAssembly environments. Some things may be slower than or not function as expected.',
-        });
-      }
-
       // WASM => no daemon because file watching does not work
       if (
-        wasm ||
         (isCI() && env !== 'true') ||
         isDocker() ||
         isDaemonDisabled() ||
@@ -133,6 +123,12 @@ export class DaemonClient {
         (useDaemonProcessOption === false && env === undefined) ||
         (useDaemonProcessOption === false && env === 'false')
       ) {
+        this._enabled = false;
+      } else if (isWasm()) {
+        output.warn({
+          title:
+            'The Nx Daemon is unsupported in WebAssembly environments. Some things may be slower than or not function as expected.',
+        });
         this._enabled = false;
       } else {
         this._enabled = true;
