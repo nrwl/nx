@@ -1720,6 +1720,17 @@
             "isExternal": false,
             "path": "/recipes/react/deploy-nextjs-to-vercel",
             "tags": []
+          },
+          {
+            "id": "react-compiler",
+            "name": "React Compiler with Nx",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/guides/react-compiler",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/react/react-compiler",
+            "tags": []
           }
         ],
         "isExternal": false,
@@ -3229,6 +3240,17 @@
         "isExternal": false,
         "path": "/recipes/react/deploy-nextjs-to-vercel",
         "tags": []
+      },
+      {
+        "id": "react-compiler",
+        "name": "React Compiler with Nx",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/guides/react-compiler",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/react/react-compiler",
+        "tags": []
       }
     ],
     "isExternal": false,
@@ -3310,6 +3332,17 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/react/deploy-nextjs-to-vercel",
+    "tags": []
+  },
+  "/recipes/react/react-compiler": {
+    "id": "react-compiler",
+    "name": "React Compiler with Nx",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/guides/react-compiler",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/react/react-compiler",
     "tags": []
   },
   "/recipes/angular": {
