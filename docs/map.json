@@ -496,6 +496,11 @@
                   "name": "Deploying Next.js applications to Vercel",
                   "id": "deploy-nextjs-to-vercel",
                   "file": "shared/recipes/deployment/deploy-nextjs-to-vercel"
+                },
+                {
+                  "name": "React Compiler with Nx",
+                  "id": "react-compiler",
+                  "file": "shared/guides/react-compiler"
                 }
               ]
             },

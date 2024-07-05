@@ -1259,6 +1259,14 @@
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
+              },
+              {
+                "name": "React Compiler with Nx",
+                "path": "/recipes/react/react-compiler",
+                "id": "react-compiler",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
               }
             ],
             "disableCollapsible": false
@@ -2361,6 +2369,14 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
+          },
+          {
+            "name": "React Compiler with Nx",
+            "path": "/recipes/react/react-compiler",
+            "id": "react-compiler",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -2417,6 +2433,14 @@
         "name": "Deploying Next.js applications to Vercel",
         "path": "/recipes/react/deploy-nextjs-to-vercel",
         "id": "deploy-nextjs-to-vercel",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "React Compiler with Nx",
+        "path": "/recipes/react/react-compiler",
+        "id": "react-compiler",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false

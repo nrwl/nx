@@ -165,6 +165,7 @@ export function Footer(): JSX.Element {
                   href={item.href}
                   title={item.label}
                   className="text-sm text-slate-500 hover:text-slate-600 dark:hover:text-slate-400"
+                  prefetch={false}
                 >
                   <span className="sr-only">{item.name}</span>
                   <item.icon className="h-6 w-6" aria-hidden="true" />
@@ -187,6 +188,7 @@ export function Footer(): JSX.Element {
                       <Link
                         href={item.href}
                         className="text-sm text-slate-500 hover:text-slate-600 dark:hover:text-slate-400"
+                        prefetch={false}
                       >
                         {item.name}
                       </Link>
@@ -204,6 +206,7 @@ export function Footer(): JSX.Element {
                       <Link
                         href={item.href}
                         className="text-sm text-slate-500 hover:text-slate-600 dark:hover:text-slate-400"
+                        prefetch={false}
                       >
                         {item.name}
                       </Link>
@@ -223,6 +226,7 @@ export function Footer(): JSX.Element {
                       <Link
                         href={item.href}
                         className="text-sm text-slate-500 hover:text-slate-600 dark:hover:text-slate-400"
+                        prefetch={false}
                       >
                         {item.name}
                       </Link>
@@ -240,6 +244,7 @@ export function Footer(): JSX.Element {
                       <Link
                         href={item.href}
                         className="text-sm text-slate-500 hover:text-slate-600 dark:hover:text-slate-400"
+                        prefetch={false}
                       >
                         {item.name}
                       </Link>
