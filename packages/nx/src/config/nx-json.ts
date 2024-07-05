@@ -299,7 +299,14 @@ export interface NxReleaseConfiguration {
 }
 
 export interface NxSyncConfiguration {
+  /**
+   * List of workspace-wide sync generators to be run (not attached to targets).
+   */
   globalGenerators?: string[];
+
+  /**
+   * Options for the sync generators.
+   */
   generatorOptions?: {
     [generatorName: string]: Record<string, unknown>;
   };
@@ -465,7 +472,7 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
   neverConnectToCloud?: boolean;
 
   /**
-   * Configuration for `nx sync`.
+   * Configuration for the `nx sync` command.
    */
   sync?: NxSyncConfiguration;
 }

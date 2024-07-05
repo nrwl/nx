@@ -246,6 +246,27 @@
           "type": "string"
         }
       }
+    },
+    "sync": {
+      "type": "object",
+      "description": "Configuration for the `nx sync` command",
+      "properties": {
+        "globalGenerators": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "List of workspace-wide sync generators to be run (not attached to targets)"
+        },
+        "generatorOptions": {
+          "type": "object",
+          "description": "Options for the sync generators.",
+          "additionalProperties": {
+            "type": "object"
+          }
+        }
+      },
+      "additionalProperties": false
     }
   },
   "definitions": {
