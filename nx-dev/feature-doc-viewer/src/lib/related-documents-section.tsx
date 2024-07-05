@@ -54,6 +54,7 @@ function CategoryBox({ category }: { category: RelatedDocumentsCategory }) {
             <Link
               href={d.path}
               className="flex flex-grow items-center justify-between no-underline hover:text-sky-600 hover:underline dark:hover:text-sky-400"
+              prefetch={false}
             >
               <span>{d.name}</span>
               <ArrowRightIcon className="h-4 w-4 text-slate-500 dark:text-slate-400" />

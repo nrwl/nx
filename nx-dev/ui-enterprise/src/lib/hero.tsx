@@ -33,6 +33,7 @@ export function Hero(): JSX.Element {
                 href="/contact/sales"
                 title="Talk to the sales team"
                 className="font-semibold underline"
+                prefetch={false}
               >
                 Speak directly to sales
               </Link>

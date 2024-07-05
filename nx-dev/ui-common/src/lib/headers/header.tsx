@@ -54,6 +54,7 @@ export function Header(): JSX.Element {
           <Link
             href="/"
             className="mr-4 flex items-center text-slate-900 dark:text-white"
+            prefetch={false}
           >
             <span className="sr-only">Nx</span>
             <NxIcon aria-hidden="true" className="h-8 w-8" />
@@ -156,6 +157,7 @@ export function Header(): JSX.Element {
               href="/getting-started/intro"
               title="Documentation"
               className="hidden px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-slate-200 dark:hover:text-sky-500"
+              prefetch={false}
             >
               Docs
             </Link>
@@ -163,6 +165,7 @@ export function Header(): JSX.Element {
               href="/blog"
               title="Blog"
               className="hidden px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-slate-200 dark:hover:text-sky-500"
+              prefetch={false}
             >
               Blog
             </Link>
@@ -227,6 +230,7 @@ export function Header(): JSX.Element {
               className="hidden cursor-pointer px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-slate-200 dark:hover:text-sky-500"
               title="Contact Us"
               href="/contact"
+              prefetch={false}
             >
               Contact
             </Link>
@@ -260,6 +264,7 @@ export function Header(): JSX.Element {
           <Link
             href="/"
             className="flex items-center text-slate-900 dark:text-white"
+            prefetch={false}
           >
             <span className="sr-only">Nx</span>
             <NxIcon aria-hidden="true" className="h-8 w-8" />
@@ -315,6 +320,7 @@ export function Header(): JSX.Element {
                             <Link
                               href="/"
                               className="flex items-center text-slate-900 dark:text-white"
+                              prefetch={false}
                             >
                               <svg
                                 role="img"
@@ -435,6 +441,7 @@ export function Header(): JSX.Element {
                             href="/getting-started/intro"
                             title="Documentation"
                             className="block py-4 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500"
+                            prefetch={false}
                           >
                             Docs
                           </Link>
@@ -442,6 +449,7 @@ export function Header(): JSX.Element {
                             href="/blog"
                             title="Blog"
                             className="block py-4 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500"
+                            prefetch={false}
                           >
                             Blog
                           </Link>
@@ -501,6 +509,7 @@ export function Header(): JSX.Element {
                             href="/contact"
                             title="Contact"
                             className="block py-4 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500"
+                            prefetch={false}
                           >
                             Contact
                           </Link>

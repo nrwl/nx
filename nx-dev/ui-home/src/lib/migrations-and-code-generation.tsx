@@ -116,6 +116,7 @@ export function MigrationsAndCodeGeneration(): JSX.Element {
                   <Link
                     href="https://nx.dev/features/automate-updating-dependencies"
                     className="ml-2 underline"
+                    prefetch={false}
                   >
                     https://nx.dev/features/automate-updating-dependencies
                   </Link>

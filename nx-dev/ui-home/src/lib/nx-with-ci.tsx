@@ -149,6 +149,7 @@ export function NxWithCi(): JSX.Element {
                   <Link
                     href="/ci/features/remote-cache"
                     title="Discover Nx Replay"
+                    prefetch={false}
                   >
                     <span className="absolute inset-0"></span>Nx Replay
                   </Link>
