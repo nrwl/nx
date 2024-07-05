@@ -110,6 +110,7 @@ export const ButtonLink = forwardRef(function (
       href={href}
       title={title}
       className={getLayoutClassName(className)}
+      prefetch={false}
       {...props}
     >
       <ButtonInner variant={variant} size={size}>

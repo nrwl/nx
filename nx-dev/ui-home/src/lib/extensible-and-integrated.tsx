@@ -37,6 +37,7 @@ export function ExtensibleAndIntegrated(): JSX.Element {
               href="/getting-started/editor-setup"
               title="Install VSCode's native extension for Nx"
               className="font-medium text-blue-500 dark:text-sky-500"
+              prefetch={false}
             >
               VSCode
             </Link>{' '}
@@ -45,6 +46,7 @@ export function ExtensibleAndIntegrated(): JSX.Element {
               href="/getting-started/editor-setup"
               className="font-medium text-blue-500 dark:text-sky-500"
               title="Install JetBrains' native plugin for Nx"
+              prefetch={false}
             >
               JetBrains
             </Link>{' '}
@@ -52,6 +54,7 @@ export function ExtensibleAndIntegrated(): JSX.Element {
             <Link
               href="/getting-started/editor-setup#neovim"
               className="font-medium text-blue-500 dark:text-sky-500"
+              prefetch={false}
             >
               Neovim
             </Link>
@@ -70,6 +73,7 @@ export function ExtensibleAndIntegrated(): JSX.Element {
               href="https://nx.app/?utm_source=nx.dev"
               title="Nx Cloud: Distributed Task execution & Caching"
               className="font-medium text-blue-500 dark:text-sky-500"
+              prefetch={false}
               target="_blank"
               rel="noreferrer"
             >

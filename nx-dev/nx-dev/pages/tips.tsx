@@ -43,6 +43,7 @@ const tips: NewYearTip[] = [
           <Link
             href="/getting-started/intro"
             className="text-slate-900 underline dark:text-slate-100"
+            prefetch={false}
           >
             Intro to Nx
           </Link>
@@ -78,6 +79,7 @@ const tips: NewYearTip[] = [
           <Link
             href="/concepts/integrated-vs-package-based"
             className="text-slate-900 underline dark:text-slate-100"
+            prefetch={false}
           >
             Types of Repos Guide
           </Link>
@@ -109,6 +111,7 @@ const tips: NewYearTip[] = [
           <Link
             href="/ci/features/distribute-task-execution"
             className="text-slate-900 underline dark:text-slate-100"
+            prefetch={false}
           >
             Nx Agents
           </Link>
@@ -120,6 +123,7 @@ const tips: NewYearTip[] = [
           <Link
             href="/ci/intro/ci-with-nx"
             className="text-slate-900 underline dark:text-slate-100"
+            prefetch={false}
           >
             CI with Nx
           </Link>
@@ -153,6 +157,7 @@ const tips: NewYearTip[] = [
           <Link
             href="/recipes/adopting-nx/adding-to-existing-project"
             className="text-slate-900 underline dark:text-slate-100"
+            prefetch={false}
           >
             Add Nx to an Existing Project
           </Link>
@@ -187,6 +192,7 @@ const tips: NewYearTip[] = [
           <Link
             href="/concepts/module-federation/micro-frontend-architecture"
             className="text-slate-900 underline dark:text-slate-100"
+            prefetch={false}
           >
             Micro Frontends with Nx
           </Link>
@@ -211,18 +217,21 @@ const tips: NewYearTip[] = [
           <Link
             href="/getting-started/tutorials/react-standalone-tutorial"
             className="m-4 w-20"
+            prefetch={false}
           >
             {frameworkIcons.react.image}
           </Link>
           <Link
             href="/getting-started/tutorials/angular-standalone-tutorial"
             className="m-4 w-20"
+            prefetch={false}
           >
             {frameworkIcons.angular.image}
           </Link>
           <Link
             href="/getting-started/tutorials/vue-standalone-tutorial"
             className="m-4 w-20"
+            prefetch={false}
           >
             {frameworkIcons.vue.image}
           </Link>
@@ -232,6 +241,7 @@ const tips: NewYearTip[] = [
           <Link
             href="/showcase/example-repos"
             className="text-slate-900 underline dark:text-slate-100"
+            prefetch={false}
           >
             Nx with your Favorite Tech
           </Link>
@@ -266,6 +276,7 @@ const tips: NewYearTip[] = [
           <Link
             href="/extending-nx/recipes/create-install-package"
             className="text-slate-900 underline dark:text-slate-100"
+            prefetch={false}
           >
             Build Your Own CLI
           </Link>
@@ -304,6 +315,7 @@ const tips: NewYearTip[] = [
           <Link
             href="https://go.nx.dev/nx-agents-ea"
             className="text-slate-900 underline dark:text-slate-100"
+            prefetch={false}
           >
             Sign up now for early access.
           </Link>
@@ -313,6 +325,7 @@ const tips: NewYearTip[] = [
           <Link
             href="/ci/features/distribute-task-execution"
             className="text-slate-900 underline dark:text-slate-100"
+            prefetch={false}
           >
             Nx Agents
           </Link>
@@ -347,6 +360,7 @@ const tips: NewYearTip[] = [
           <Link
             href="/recipes/tips-n-tricks/standalone-to-integrated"
             className="text-slate-900 underline dark:text-slate-100"
+            prefetch={false}
           >
             convert a standalone app repo to a monorepo
           </Link>
@@ -378,6 +392,7 @@ const tips: NewYearTip[] = [
           <Link
             href="https://blog.nrwl.io/evergreen-tooling-more-than-just-codemods-fc68f32ce605"
             className="text-slate-900 underline dark:text-slate-100"
+            prefetch={false}
           >
             Evergreen Tooling
           </Link>
@@ -388,6 +403,7 @@ const tips: NewYearTip[] = [
           <Link
             href="/features/automate-updating-dependencies"
             className="text-slate-900 underline dark:text-slate-100"
+            prefetch={false}
           >
             Automate Updating Dependencies
           </Link>
