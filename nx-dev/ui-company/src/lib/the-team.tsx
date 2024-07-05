@@ -1,5 +1,4 @@
 import { SectionHeading } from './section-tags';
-import Image from 'next/image';
 
 const teamMembers = [
   {
@@ -51,11 +50,6 @@ const teamMembers = [
     name: 'Emily Xiong',
     title: 'Senior Engineer',
     imageUrl: 'emily-xiong.avif',
-  },
-  {
-    name: 'Eric Amitoelau',
-    title: 'VP of Sales',
-    imageUrl: 'eric-amitoelau.avif',
   },
   {
     name: 'Drew Romney',
@@ -203,10 +197,8 @@ export function TheTeam(): JSX.Element {
               return (
                 <li key={teamMember.name}>
                   <div className="space-y-4">
-                    <Image
-                      width={0}
-                      height={0}
-                      sizes="100vw"
+                    <img
+                      loading="lazy"
                       src={`/images/team/${teamMember.imageUrl}`}
                       alt={teamMember.name}
                       className="mx-auto h-20 w-20 rounded-full lg:h-24 lg:w-24"

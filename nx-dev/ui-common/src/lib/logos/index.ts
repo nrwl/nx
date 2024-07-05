@@ -23,3 +23,4 @@ export * from './fedex';
 export * from './rxjs';
 export * from './sentry';
 export * from './mui';
+export * from './tide';

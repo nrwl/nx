@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import { SectionHeading } from './section-tags';
 import { ButtonLink } from '@nx/nx-dev/ui-common';
 
@@ -32,7 +31,7 @@ export function Hero(): JSX.Element {
               Reach out
             </ButtonLink>
 
-            <Link
+            <a
               href="https://staging.nx.app/orgs/62d013d4d26f260059f7765e/workspaces/62d013ea0852fe0a2df74438/overview"
               className="group text-sm font-semibold leading-6 text-slate-950 dark:text-white"
             >
@@ -43,7 +42,7 @@ export function Hero(): JSX.Element {
               >
                 →
               </span>
-            </Link>
+            </a>
           </div>
         </div>
       </div>

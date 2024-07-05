@@ -1,7 +1,6 @@
 import { useRouter } from 'next/router';
 import { NextSeo } from 'next-seo';
-import { DefaultLayout } from '@nx/nx-dev/ui-common';
-import { CoFounders, Hero, TheTeam } from '@nx/nx-dev/ui-company';
+import { CoFounders, Hero, TheTeam, Layout } from '@nx/nx-dev/ui-company';
 
 export function Company(): JSX.Element {
   const router = useRouter();
@@ -29,7 +28,7 @@ export function Company(): JSX.Element {
           type: 'website',
         }}
       />
-      <DefaultLayout>
+      <Layout>
         <div>
           <Hero />
         </div>
@@ -39,7 +38,7 @@ export function Company(): JSX.Element {
         <div className="mt-32 lg:mt-56">
           <TheTeam />
         </div>
-      </DefaultLayout>
+      </Layout>
     </>
   );
 }
