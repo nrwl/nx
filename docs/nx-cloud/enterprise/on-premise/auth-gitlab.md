@@ -37,19 +37,4 @@ Once you create, keep a note of the Client ID and the Secret:
 
 ## Connect your Nx Cloud installation to your new app
 
-Provide the following env variables to the `nx-cloud-frontend` container:
-
-- `GITLAB_APP_ID`
-- `GITLAB_APP_SECRET`
-
-{% callout title="Helm Chart Environment Variables" %}
-If you are using our Helm chart, you can find all the information you need about env variables in [the Helm chart repository](https://github.com/nrwl/nx-cloud-helm/blob/main/AUTH-GUIDE.md).
-{% /callout %}
-
-## Self-hosted GitLab
-
-If you are running a self-hosted version of GitLab, you will need to configure one additional environment variable:
-
-`GITLAB_API_URL=https://custom-gitlab-instance.com`
-
-This will point all the auth endpoints to your GitLab server (rather the public one).
+It's now time to enable auth on NxCloud. Refer to the [auth guide](https://github.com/nrwl/nx-cloud-helm/blob/main/AUTH-GUIDE.md) here for instructions on configuring your Helm values file.
