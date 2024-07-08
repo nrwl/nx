@@ -55,6 +55,10 @@ const pages: Array<{ title: string; path: string }> = [
     path: '/ci/recipes/enterprise/on-premise/auth-bitbucket',
   },
   {
+    title: 'BitBucket Auth Data Center',
+    path: '/ci/recipes/enterprise/on-premise/auth-bitbucket-data-center',
+  },
+  {
     title: 'SAML Auth',
     path: '/ci/recipes/enterprise/on-premise/auth-saml',
   },
