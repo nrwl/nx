@@ -2,37 +2,51 @@ import { execSync } from 'node:child_process';
 import { isCI } from '../ci/is-ci';
 import { getPackageManagerCommand } from '../package-manager';
 
-export const NxCloudChoices = ['yes', 'github', 'circleci', 'skip'];
+export const NxCloudChoices = [
+  'github',
+  'circleci',
+  'gitlab',
+  'azure',
+  'bitbucket',
+  'skip',
+  'yes', // Deprecated but still handled
+];
 
-const messageOptions = {
+const messageOptions: Record<string, MessageData[]> = {
   setupCI: [
     {
-      code: 'enable-nx-cloud',
-      message: `Do you want Nx Cloud to make your CI fast?`,
-      initial: 1,
+      code: 'which-ci-provider',
+      message: `Which CI provider would you like to use?`,
+      initial: 0,
       choices: [
-        { value: 'yes', name: 'Yes, enable Nx Cloud' },
-        { value: 'github', name: 'Yes, configure Nx Cloud for GitHub Actions' },
-        { value: 'circleci', name: 'Yes, configure Nx Cloud for Circle CI' },
-        { value: 'skip', name: 'Skip for now' },
+        { value: 'github', name: 'GitHub Actions' },
+        { value: 'circleci', name: 'Circle CI' },
+        { value: 'gitlab', name: 'Gitlab' },
+        { value: 'azure', name: 'Azure DevOps' },
+        { value: 'bitbucket', name: 'BitBucket Pipelines' },
+        { value: 'skip', name: '\nDo it later' },
       ],
       footer:
-        '\nWatch a short video on Nx Cloud at https://nx.dev/ci/intro/why-nx-cloud',
-      hint: `\n(it's free and can be disabled any time)`,
-      fallback: undefined,
+        '\nRemote caching, task distribution, and test splitting are provided by Nx Cloud. Read more at https://nx.dev/ci',
+      fallback: { value: 'skip', key: 'setupNxCloud' },
     },
     {
       code: 'set-up-ci',
       message: `Set up CI with caching, distribution and test deflaking`,
       initial: 0,
       choices: [
-        { value: 'github', name: 'Yes, for GitHub Actions with Nx Cloud' },
-        { value: 'circleci', name: 'Yes, for CircleCI with Nx Cloud' },
-        { value: 'skip', name: 'Skip for now' },
+        { value: 'github', name: 'GitHub Actions' },
+        { value: 'circleci', name: 'CircleCI' },
+        { value: 'gitlab', name: 'Gitlab' },
+        { value: 'azure', name: 'Azure DevOps' },
+        {
+          value: 'bitbucket',
+          name: 'BitBucket Pipelines',
+        },
+        { value: 'skip', name: '\nDo it later' },
       ],
       footer:
-        '\nWatch a short video on Nx Cloud at https://nx.dev/ci/intro/why-nx-cloud',
-      hint: `\n(it's free and can be disabled any time)`,
+        '\nRemote caching, task distribution, and test splitting are provided by Nx Cloud. Read more at https://nx.dev/ci',
       fallback: { value: 'skip', key: 'setupNxCloud' },
     },
   ],
@@ -51,10 +65,18 @@ const messageOptions = {
       fallback: undefined,
     },
   ],
-} as const;
+};
 
 export type MessageKey = keyof typeof messageOptions;
-type MessageData = (typeof messageOptions)[MessageKey][number];
+interface MessageData {
+  code: string;
+  message: string;
+  initial: number;
+  choices: Array<{ value: string; name: string }>;
+  footer: string;
+  hint?: string;
+  fallback?: { value: string; key: MessageKey };
+}
 
 export class PromptMessages {
   private selectedMessages: { [key in MessageKey]?: number } = {};
