@@ -74,6 +74,7 @@ export function Hero(): JSX.Element {
                 width={2550}
                 height={1622}
                 loading="eager"
+                priority
               />
             </picture>
             <div className="absolute inset-0 z-10 grid h-full w-full items-center justify-center">

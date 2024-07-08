@@ -45,12 +45,10 @@ function fetchTimeSaved(): Promise<{
         }>
     )
     .catch(() => ({
-      // TODO: Remove this mock data once the API is ready.
-      // Below is the latest data as of 2024-07-08.
       date: new Date(),
-      last7days: 184326783183,
-      last30days: 853784967976,
-      sinceStart: 27250634509494,
+      last7days: Math.round(Math.random() * 1000000000),
+      last30days: Math.round(Math.random() * 100000000000),
+      sinceStart: Math.round(Math.random() * 10000000000000),
     }));
 }
 
