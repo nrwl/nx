@@ -1,4 +1,4 @@
-# BitBucket Data CenterAuth
+# BitBucket Data Center Auth
 
 This page is for configuring auth via BitBucket Data Center (on-prem). If you are using BitBucket Cloud please refer to the docs [here](/ci/recipes/enterprise/on-premise/auth-bitbucket).
 
@@ -6,26 +6,17 @@ Before creating your container, your Bitbucket Data Center admin will need to cr
 
 ## Creating an Application Link
 
-(TODO-R) finish this section with screenshots from bitbucket
+Your BitBucket installation admin will need to navigate to their installation settings:
 
-From BitBucket, click on your profile picture and select your workspace:
+![Step 1](/nx-cloud/enterprise/on-premise/images/bitbucket_onprem_1.png)
 
-![Step 1](/nx-cloud/enterprise/on-premise/images/bitbucket_1.png)
+Then "Application Links":
 
-Then "Settings":
+![Step 2](/nx-cloud/enterprise/on-premise/images/bitbucket_onprem_2.png)
 
-![Step 2](/nx-cloud/enterprise/on-premise/images/bitbucket_2.png)
+And create a new link using the settings below (make sure the callback URL is pointed to your BitBucket installation):
 
-And create a new consumer.
-
-Give the app a name. The callback zURL is the important bit. It needs to be in this form:
-
-```
-[your-nx-cloud-url]/auth-callback
-
-# for example
-https://my.nx-enterprise.url:8080/auth-callback
-```
+![Step 3](/nx-cloud/enterprise/on-premise/images/bitbucket_onprem_3.png)
 
 ## Connect your Nx Cloud installation to your new app
 

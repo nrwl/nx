@@ -25,8 +25,6 @@ Once the app password is created, save it in a secure location and then head bac
 
 #### Using an HTTP Access Tokens
 
-(TODO-R use webp for image below)
-
 If you are using BitBucket Data Center (on-prem) you need to enable ["HTTP Access Tokens" for authentication](https://confluence.atlassian.com/bitbucketserver/http-access-tokens-939515499.html).
 
 {% callout type="note" title="User linked access tokens" %}
@@ -42,7 +40,7 @@ Once the token is created, save it in a secure location and then head back to yo
 ![Access VCS Setup](/nx-cloud/set-up/access-vcs-setup.webp)
 
 1. Fill-in all the required fields for selecting your Bitbucket repository
-2. Username is found on the [account settings](https://bitbucket.org/account/settings/) screen (it is not your email address) (TODO-R verify the user link here)
+2. Username is found on the [account settings](https://your-bitbucket-instance.com/profile) screen (it is not your email address)
 3. Paste your access token created earlier into the Access Token box
 4. Make sure you give NxCloud the URL of your BitBucket instance (this can be in the simple form of `https://your-bitbucket-instance.com`)
 5. That's it!
