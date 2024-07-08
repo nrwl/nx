@@ -6,6 +6,8 @@ import { ComponentProps, Fragment, useState } from 'react';
 import { ButtonLink } from '@nx/nx-dev/ui-common';
 import { SectionHeading } from './elements/section-tags';
 import { MovingBorder } from './elements/moving-border';
+import Link from 'next/link';
+import Image from 'next/image';
 
 export function Hero(): JSX.Element {
   const [isOpen, setIsOpen] = useState(false);
@@ -32,10 +34,19 @@ export function Hero(): JSX.Element {
           >
             Get started
           </ButtonLink>
+          <ButtonLink
+            href="/ci/intro/ci-with-nx"
+            title="Learn More"
+            variant="secondary"
+            size="default"
+          >
+            Learn More
+          </ButtonLink>
           <a
             href="https://staging.nx.app/orgs/62d013d4d26f260059f7765e/workspaces/62d013ea0852fe0a2df74438/overview"
             target="_blank"
             rel="noreferrer"
+            title="Live demo"
             className="group text-sm font-semibold leading-6 text-slate-950 dark:text-white"
           >
             Live demo{' '}
@@ -57,7 +68,7 @@ export function Hero(): JSX.Element {
               </MovingBorder>
             </div>
             <picture className="relative flex h-full w-full items-center justify-center overflow-hidden rounded-xl border border-slate-100 bg-slate-50 antialiased backdrop-blur-xl dark:border-slate-900 dark:bg-slate-900/[0.8]">
-              <img
+              <Image
                 src="/images/cloud/nrwl-ocean.avif"
                 alt="App screenshot: overview"
                 width={2550}

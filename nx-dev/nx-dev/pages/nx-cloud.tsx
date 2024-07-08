@@ -13,7 +13,7 @@ import {
   CallToAction,
 } from '@nx/nx-dev/ui-cloud';
 
-export default function NxCloud() {
+export function NxCloud(): JSX.Element {
   const router = useRouter();
 
   return (
@@ -41,10 +41,9 @@ export default function NxCloud() {
         }}
       />
       <Layout>
-        <div>
-          <Hero />
-          <TrustedBy />
-        </div>
+        <Hero />
+        <TrustedBy />
+
         <div className="mt-32 lg:mt-56">
           <FasterAndCheaper />
         </div>
@@ -70,3 +69,5 @@ export default function NxCloud() {
     </>
   );
 }
+
+export default NxCloud;
