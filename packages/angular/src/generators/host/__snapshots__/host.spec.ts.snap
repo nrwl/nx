@@ -232,7 +232,6 @@ exports[`Host App Generator --ssr should generate the correct files 9`] = `
       "extractLicenses": false,
       "optimization": false,
       "sourceMap": true,
-      "vendorChunk": true,
     },
     "production": {
       "outputHashing": "media",
@@ -446,7 +445,6 @@ exports[`Host App Generator --ssr should generate the correct files for standalo
       "extractLicenses": false,
       "optimization": false,
       "sourceMap": true,
-      "vendorChunk": true,
     },
     "production": {
       "outputHashing": "media",
@@ -661,7 +659,6 @@ exports[`Host App Generator --ssr should generate the correct files for standalo
       "extractLicenses": false,
       "optimization": false,
       "sourceMap": true,
-      "vendorChunk": true,
     },
     "production": {
       "outputHashing": "media",
@@ -863,7 +860,6 @@ exports[`Host App Generator --ssr should generate the correct files when --types
       "extractLicenses": false,
       "optimization": false,
       "sourceMap": true,
-      "vendorChunk": true,
     },
     "production": {
       "outputHashing": "media",

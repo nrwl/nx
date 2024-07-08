@@ -93,6 +93,7 @@ export function TableOfContents({
                         'pl-6': item.level === 3,
                       }
                     )}
+                    prefetch={false}
                   >
                     {item.level === 1 ? 'Overview' : item.title}
                   </Link>

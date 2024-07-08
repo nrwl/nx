@@ -145,6 +145,7 @@ export function ContactLinks(): JSX.Element {
             href="/getting-started/intro"
             title="Nx documentation"
             className="mt-2 flex items-center gap-2 text-sm text-slate-500 transition hover:text-slate-800 dark:hover:text-slate-400"
+            prefetch={false}
           >
             <span>Nx docs</span>
             <ChevronRightIcon aria-hidden="true" className="h-3 w-3" />

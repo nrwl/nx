@@ -46,6 +46,7 @@ export function BlogDetails({ post }: BlogDetailsProps) {
         <Link
           href="/blog"
           className="flex w-20 shrink-0 items-center gap-2 text-slate-400 hover:text-slate-800 dark:text-slate-600 dark:hover:text-slate-200"
+          prefetch={false}
         >
           <ChevronLeftIcon className="h-3 w-3" />
           Blog

@@ -6,5 +6,5 @@ export default {
     '^.+\\.[tj]sx?$': 'babel-jest',
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
-  coverageDirectory: '../../coverage/graph/ui-graph',
+  coverageDirectory: '../../coverage/graph/graph-ui-tooltips',
 };

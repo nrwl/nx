@@ -30,6 +30,7 @@ export function MonorepoStyles(): JSX.Element {
                 href="/recipes/adopting-nx/adding-to-monorepo"
                 title="Install VSCode's native extension for Nx"
                 className="font-medium text-blue-500 dark:text-sky-500"
+                prefetch={false}
               >
                 Add Nx on top!
               </Link>{' '}
@@ -41,6 +42,7 @@ export function MonorepoStyles(): JSX.Element {
                 href="/extending-nx"
                 title="Install VSCode's native extension for Nx"
                 className="font-medium text-blue-500 dark:text-sky-500"
+                prefetch={false}
               >
                 powerful plugins
               </Link>

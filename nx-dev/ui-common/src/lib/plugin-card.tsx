@@ -47,6 +47,7 @@ export function PluginCard({
           target={isOfficial ? undefined : '_blank'}
           rel={isOfficial ? undefined : 'noreferrer'}
           className="flex grow flex-col focus:outline-none"
+          prefetch={false}
         >
           <span className="absolute inset-0" aria-hidden="true" />
           <p className="mb-2 line-clamp-3 grow text-sm">{description}</p>

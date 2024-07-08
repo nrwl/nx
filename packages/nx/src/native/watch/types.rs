@@ -1,6 +1,5 @@
 use std::path::{Path, PathBuf};
 
-use napi::bindgen_prelude::*;
 use tracing::trace;
 use watchexec_events::filekind::CreateKind;
 use watchexec_events::filekind::FileEventKind;
@@ -127,7 +126,7 @@ pub fn transform_event_to_watch_events(
             use crate::native::walker::nx_walker_sync;
             use ignore::gitignore::GitignoreBuilder;
             use ignore::Match;
-            
+
             if matches!(event_kind, FileEventKind::Create(CreateKind::Folder)) {
                 let mut result = vec![];
 

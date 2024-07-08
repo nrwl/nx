@@ -175,7 +175,7 @@ jobs:
               sudo apt-get update
               sudo apt-get install gcc-arm-linux-gnueabihf -y
             build: |
-              pnpm nx run-many --target=build-native -- --target=armv7-unknown-linux-gnueabihf
+              CARGO_TARGET_ARMV7_UNKNOWN_LINUX_GNUEABIHF_LINKER=/usr/bin/arm-linux-gnueabihf-gcc pnpm nx run-many --target=build-native -- --target=armv7-unknown-linux-gnueabihf
           # Android (not needed)
           # - host: ubuntu-latest
           #   target: aarch64-linux-android
@@ -203,7 +203,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          repository: ${{ needs.resolve-required-data.outputs.repo }} 
+          repository: ${{ needs.resolve-required-data.outputs.repo }}
           ref: ${{ needs.resolve-required-data.outputs.ref }}
 
       - uses: pnpm/action-setup@v4
@@ -281,7 +281,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: bindings-${{ matrix.settings.target }}
-          path: packages/**/*.node
+          path: |
+            packages/**/*.node
+            packages/**/*.wasm
           if-no-files-found: error
 
   build-freebsd:
@@ -294,7 +296,7 @@ jobs:
       - uses: actions/checkout@v4
         if: ${{ github.event_name != 'schedule' && !github.event.inputs.pr }}
         with:
-          repository: ${{ needs.resolve-required-data.outputs.repo }} 
+          repository: ${{ needs.resolve-required-data.outputs.repo }}
           ref: ${{ needs.resolve-required-data.outputs.ref }}
 
       - name: Build
@@ -396,7 +398,8 @@ jobs:
       - name: List artifacts
         run: ls -R artifacts
         shell: bash
-
+      - name: Build Wasm
+        run: pnpm build:wasm
       - name: Publish
         env:
           VERSION: ${{ needs.resolve-required-data.outputs.version }}
