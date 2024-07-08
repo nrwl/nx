@@ -21,5 +21,3 @@ And create a new link using the settings below (make sure the callback URL is po
 ## Connect your Nx Cloud installation to your new app
 
 It's now time to enable auth on NxCloud. Refer to the [auth guide](https://github.com/nrwl/nx-cloud-helm/blob/main/AUTH-GUIDE.md) here for instructions on configuring your Helm values file.
-
-
