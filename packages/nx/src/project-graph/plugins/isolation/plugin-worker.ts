@@ -121,7 +121,11 @@ const server = createServer((socket) => {
           } catch (e) {
             return {
               type: 'createMetadataResult',
-              payload: { success: false, error: e.stack, tx },
+              payload: {
+                success: false,
+                error: createSerializableError(e),
+                tx,
+              },
             };
           }
         },
