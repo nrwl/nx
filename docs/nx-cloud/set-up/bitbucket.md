@@ -33,7 +33,7 @@ Due to the type of APIs NxCloud needs to call, we need to create an access [**at
 
 The minimum required permissions are write access to the repository:
 
-![Create an HTTP Access Token](/nx-cloud/set-up/bitbucket-data-center-access-token.webp)
+![Create an HTTP Access Token](/nx-cloud/set-up/bitbucket-data-center-access-token.png)
 
 Once the token is created, save it in a secure location and then head back to your workspace settings on NxCloud and let's set up a BitBucket integration:
 
