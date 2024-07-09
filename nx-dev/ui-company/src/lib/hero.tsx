@@ -21,7 +21,7 @@ const statements = [
     title: 'Experts',
     icon: UserGroupIcon,
     description:
-      "Since 2016 we've been helping global enterprises use build tools to optimize their development processess, speed up their CI and create better software.",
+      "Since 2016 we've been helping global enterprises use build tools to optimize their development processes, speed up their CI and create better software.",
   },
 ];
 export function Hero(): JSX.Element {
