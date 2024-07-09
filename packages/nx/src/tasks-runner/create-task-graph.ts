@@ -7,18 +7,27 @@ import {
 import { Task, TaskGraph } from '../config/task-graph';
 import { TargetDefaults, TargetDependencies } from '../config/nx-json';
 import { TargetDependencyConfig } from '../devkit-exports';
-import { findMatchingProjects } from '../utils/find-matching-projects';
 import { output } from '../utils/output';
 
 export class ProcessTasks {
   private readonly seen = new Set<string>();
   readonly tasks: { [id: string]: Task } = {};
   readonly dependencies: { [k: string]: string[] } = {};
+  private readonly allTargetNames: string[];
 
   constructor(
     private readonly extraTargetDependencies: TargetDependencies,
     private readonly projectGraph: ProjectGraph
-  ) {}
+  ) {
+    const allTargetNames = new Set<string>();
+    for (const projectName in projectGraph.nodes) {
+      const project = projectGraph.nodes[projectName];
+      for (const targetName in project.data.targets ?? {}) {
+        allTargetNames.add(targetName);
+      }
+    }
+    this.allTargetNames = Array.from(allTargetNames);
+  }
 
   processTasks(
     projectNames: string[],
@@ -100,7 +109,8 @@ export class ProcessTasks {
     const dependencyConfigs = getDependencyConfigs(
       { project: task.target.project, target: task.target.target },
       this.extraTargetDependencies,
-      this.projectGraph
+      this.projectGraph,
+      this.allTargetNames
     );
     for (const dependencyConfig of dependencyConfigs) {
       const taskOverrides =
@@ -108,40 +118,7 @@ export class ProcessTasks {
           ? overrides
           : { __overrides_unparsed__: [] };
       if (dependencyConfig.projects) {
-        /** LERNA SUPPORT START - Remove in v20 */
-        // Lerna uses `dependencies` in `prepNxOptions`, so we need to maintain
-        // support for it until lerna can be updated to use the syntax.
-        //
-        // This should have been removed in v17, but the updates to lerna had not
-        // been made yet.
-        //
-        // TODO(@agentender): Remove this part in v20
-        if (typeof dependencyConfig.projects === 'string') {
-          if (dependencyConfig.projects === 'self') {
-            this.processTasksForSingleProject(
-              task,
-              task.target.project,
-              dependencyConfig,
-              configuration,
-              taskOverrides,
-              overrides
-            );
-            continue;
-          } else if (dependencyConfig.projects === 'dependencies') {
-            this.processTasksForDependencies(
-              projectUsedToDeriveDependencies,
-              dependencyConfig,
-              configuration,
-              task,
-              taskOverrides,
-              overrides
-            );
-            continue;
-          }
-        }
-        /** LERNA SUPPORT END - Remove in v17 */
-
-        this.processTasksForMatchingProjects(
+        this.processTasksForMultipleProjects(
           dependencyConfig,
           configuration,
           task,
@@ -170,31 +147,22 @@ export class ProcessTasks {
     }
   }
 
-  private processTasksForMatchingProjects(
+  private processTasksForMultipleProjects(
     dependencyConfig: TargetDependencyConfig,
     configuration: string,
     task: Task,
     taskOverrides: Object | { __overrides_unparsed__: any[] },
     overrides: Object
   ) {
-    const targetProjectSpecifiers =
-      typeof dependencyConfig.projects === 'string'
-        ? [dependencyConfig.projects]
-        : dependencyConfig.projects;
-    const matchingProjects = findMatchingProjects(
-      targetProjectSpecifiers,
-      this.projectGraph.nodes
-    );
-
-    if (matchingProjects.length === 0) {
+    if (dependencyConfig.projects.length === 0) {
       output.warn({
         title: `\`dependsOn\` is misconfigured for ${task.target.project}:${task.target.target}`,
         bodyLines: [
-          `Project patterns "${targetProjectSpecifiers}" does not match any projects.`,
+          `Project patterns "${dependencyConfig.projects}" does not match any projects.`,
         ],
       });
     }
-    for (const projectName of matchingProjects) {
+    for (const projectName of dependencyConfig.projects) {
       this.processTasksForSingleProject(
         task,
         projectName,
