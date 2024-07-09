@@ -33,7 +33,10 @@ import {
   disableOutputsTracking,
   processFileChangesInOutputs,
 } from './outputs-tracking';
-import { addUpdatedAndDeletedFiles } from './project-graph-incremental-recomputation';
+import {
+  addUpdatedAndDeletedFiles,
+  registerProjectGraphRecomputationListener,
+} from './project-graph-incremental-recomputation';
 import {
   getOutputWatcherInstance,
   getWatcherInstance,
@@ -83,6 +86,7 @@ import {
   isHandleGetSyncGeneratorChangesMessage,
 } from '../message-types/get-sync-generator-changes';
 import { handleGetSyncGeneratorChanges } from './handle-get-sync-generator-changes';
+import { collectAndScheduleSyncGenerators } from './sync-generators';
 
 let performanceObserver: PerformanceObserver | undefined;
 let workspaceWatcherError: Error | undefined;
@@ -490,6 +494,13 @@ export async function startServer(): Promise<Server> {
               await watchOutputFiles(handleOutputsChanges)
             );
           }
+
+          // listen for project graph recomputation events to collect and schedule sync generators
+          registerProjectGraphRecomputationListener(
+            collectAndScheduleSyncGenerators
+          );
+          // trigger an initial project graph recomputation
+          addUpdatedAndDeletedFiles([], [], []);
 
           return resolve(server);
         } catch (err) {
