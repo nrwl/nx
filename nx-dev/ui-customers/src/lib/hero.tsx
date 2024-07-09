@@ -6,21 +6,16 @@ export function Hero(): JSX.Element {
     <section>
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="mx-auto max-w-3xl text-center">
-          <SectionHeading
-            as="p"
-            variant="subtitle"
-            className="mx-auto max-w-3xl text-slate-950 dark:text-white"
-          >
+          <p className="mx-auto max-w-3xl text-3xl font-normal tracking-tight text-slate-700 sm:text-4xl dark:text-slate-400">
             We empower our clients to
-          </SectionHeading>
+          </p>
           <SectionHeading
             as="h1"
             variant="display"
-            className="pt-4 text-3xl sm:text-6xl"
+            className="pt-4 text-4xl sm:text-5xl md:text-6xl"
           >
             Build Smarter & Ship Faster
           </SectionHeading>
-
           <div className="mt-16 flex items-center justify-center gap-x-6">
             <ButtonLink
               href="/contact"
