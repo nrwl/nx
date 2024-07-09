@@ -2,7 +2,7 @@ export const nxVersion = require('../../package.json').version;
 
 // vue core
 export const vueVersion = '^3.3.4';
-export const vueTscVersion = '^1.8.8';
+export const vueTscVersion = '^2.0.0';
 export const vueRouterVersion = '^4.2.4';
 
 // test deps
