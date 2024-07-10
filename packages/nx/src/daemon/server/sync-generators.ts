@@ -1,13 +1,14 @@
 import { readNxJson } from '../../config/nx-json';
-import type {
-  ProjectGraph,
-  ProjectGraphDependency,
-} from '../../config/project-graph';
+import type { ProjectGraph } from '../../config/project-graph';
 import type { ProjectConfiguration } from '../../config/workspace-json-project-json';
 import { FsTree, type FileChange } from '../../generators/tree';
-import { hashArray, hashObject } from '../../hasher/file-hasher';
+import { hashArray } from '../../hasher/file-hasher';
 import { readProjectsConfigurationFromProjectGraph } from '../../project-graph/project-graph';
-import { runSyncGenerator } from '../../utils/sync-generators';
+import {
+  collectRegisteredGlobalSyncGenerators,
+  collectRegisteredTaskSyncGenerators,
+  runSyncGenerator,
+} from '../../utils/sync-generators';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { serverLogger } from './logger';
 import { getCachedSerializedProjectGraphPromise } from './project-graph-incremental-recomputation';
@@ -16,12 +17,12 @@ const syncGeneratorsCacheResultPromises = new Map<
   string,
   Promise<FileChange[]> | undefined
 >();
-const registeredTaskSyncGenerators = new Set<string>();
-const registeredGlobalSyncGenerators = new Set<string>();
-const registeredSyncGenerators = new Set<string>();
+let registeredTaskSyncGenerators = new Set<string>();
+let registeredGlobalSyncGenerators = new Set<string>();
 const scheduledGenerators = new Set<string>();
 
 let waitPeriod = 100;
+let registeredSyncGenerators: Set<string> | undefined;
 let scheduledTimeoutId: NodeJS.Timeout | undefined;
 let storedProjectGraphHash: string | undefined;
 let storedNxJsonHash: string | undefined;
@@ -121,13 +122,40 @@ export function collectAndScheduleSyncGenerators(
   }, waitPeriod);
 }
 
+export async function getCachedRegisteredSyncGenerators(): Promise<string[]> {
+  if (!registeredSyncGenerators) {
+    const { projectGraph } = await getCachedSerializedProjectGraphPromise();
+    collectAllRegisteredSyncGenerators(projectGraph);
+  }
+
+  return [...registeredSyncGenerators];
+}
+
 function collectAllRegisteredSyncGenerators(projectGraph: ProjectGraph): void {
-  collectRegisteredTaskSyncGenerators(projectGraph);
-  collectRegisteredGlobalSyncGenerators();
+  const projectGraphHash = hashProjectGraph(projectGraph);
+  if (storedProjectGraphHash !== projectGraphHash) {
+    storedProjectGraphHash = projectGraphHash;
+    registeredTaskSyncGenerators =
+      collectRegisteredTaskSyncGenerators(projectGraph);
+  }
+
+  const nxJson = readNxJson();
+  const nxJsonHash = hashArray(nxJson.sync?.globalGenerators?.sort() ?? []);
+  if (storedNxJsonHash !== nxJsonHash) {
+    storedNxJsonHash = nxJsonHash;
+    registeredGlobalSyncGenerators =
+      collectRegisteredGlobalSyncGenerators(nxJson);
+  }
+
   const generators = new Set<string>([
     ...registeredTaskSyncGenerators,
     ...registeredGlobalSyncGenerators,
   ]);
+
+  if (!registeredSyncGenerators) {
+    registeredSyncGenerators = new Set(generators);
+    return;
+  }
 
   for (const generator of registeredSyncGenerators) {
     if (!generators.has(generator)) {
@@ -140,49 +168,6 @@ function collectAllRegisteredSyncGenerators(projectGraph: ProjectGraph): void {
     if (!registeredSyncGenerators.has(generator)) {
       registeredSyncGenerators.add(generator);
     }
-  }
-}
-
-function collectRegisteredTaskSyncGenerators(projectGraph: ProjectGraph): void {
-  const projectGraphHash = hashProjectGraph(projectGraph);
-  if (storedProjectGraphHash === projectGraphHash) {
-    return;
-  }
-  storedProjectGraphHash = projectGraphHash;
-
-  registeredTaskSyncGenerators.clear();
-
-  for (const {
-    data: { targets },
-  } of Object.values(projectGraph.nodes)) {
-    if (!targets) {
-      continue;
-    }
-
-    for (const target of Object.values(targets)) {
-      if (!target.syncGenerators) {
-        continue;
-      }
-
-      for (const generator of target.syncGenerators) {
-        registeredTaskSyncGenerators.add(generator);
-      }
-    }
-  }
-}
-
-function collectRegisteredGlobalSyncGenerators(): void {
-  const nxJson = readNxJson();
-  const nxJsonHash = hashArray(nxJson.sync?.globalGenerators?.sort() ?? []);
-  if (storedNxJsonHash === nxJsonHash) {
-    return;
-  }
-  storedNxJsonHash = nxJsonHash;
-
-  registeredGlobalSyncGenerators.clear();
-
-  for (const generator of nxJson.sync?.globalGenerators ?? []) {
-    registeredGlobalSyncGenerators.add(generator);
   }
 }
 
@@ -207,19 +192,14 @@ function runGenerator(
 }
 
 function hashProjectGraph(projectGraph: ProjectGraph): string {
-  return hashObject({
-    nodes: Object.entries(projectGraph.nodes).sort(([a], [b]) =>
-      a.localeCompare(b)
-    ),
-    dependencies: Object.entries(projectGraph.dependencies)
-      .map(([projectName, deps]): [string, ProjectGraphDependency[]] => [
-        projectName,
-        deps.sort((a, b) => a.target.localeCompare(b.target)),
-      ])
-      .sort(([a], [b]) => a.localeCompare(b)),
-    externalNodes: Object.entries(projectGraph.externalNodes ?? {}).sort(
-      ([a], [b]) => a.localeCompare(b)
-    ),
-    version: projectGraph.version,
-  });
+  const stringifiedProjects = Object.entries(projectGraph.nodes)
+    .sort(([projectNameA], [projectNameB]) =>
+      projectNameA.localeCompare(projectNameB)
+    )
+    .map(
+      ([projectName, projectConfig]) =>
+        `${projectName}:${JSON.stringify(projectConfig)}`
+    );
+
+  return hashArray(stringifiedProjects);
 }
