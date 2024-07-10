@@ -448,7 +448,7 @@ describe('app', () => {
   });
 
   describe('routing', () => {
-    it('should include RouterTestingModule', async () => {
+    it('should include RouterModule', async () => {
       await generateApp(appTree, 'myApp', {
         directory: 'my-dir/my-app',
       });
@@ -457,7 +457,7 @@ describe('app', () => {
       ).toContain('RouterModule.forRoot');
       expect(
         appTree.read('my-dir/my-app/src/app/app.component.spec.ts', 'utf-8')
-      ).toContain('imports: [RouterTestingModule]');
+      ).toContain('imports: [RouterModule.forRoot([])]');
     });
 
     it('should not modify tests when --skip-tests is set', async () => {
@@ -1257,6 +1257,42 @@ describe('app', () => {
       expect(
         appTree.read('my-app/src/app/app.config.ts', 'utf-8')
       ).toMatchSnapshot();
+    });
+
+    it('should import "RouterTestingModule" in test files', async () => {
+      await generateApp(appTree, 'my-app', { standalone: true });
+
+      expect(appTree.read('my-app/src/app/app.component.spec.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "import { TestBed } from '@angular/core/testing';
+        import { AppComponent } from './app.component';
+        import { NxWelcomeComponent } from './nx-welcome.component';
+        import { RouterTestingModule } from '@angular/router/testing';
+
+        describe('AppComponent', () => {
+          beforeEach(async () => {
+            await TestBed.configureTestingModule({
+              imports: [AppComponent, NxWelcomeComponent, RouterTestingModule],
+            }).compileComponents();
+          });
+
+          it('should render title', () => {
+            const fixture = TestBed.createComponent(AppComponent);
+            fixture.detectChanges();
+            const compiled = fixture.nativeElement as HTMLElement;
+            expect(compiled.querySelector('h1')?.textContent).toContain(
+              'Welcome my-app'
+            );
+          });
+
+          it(\`should have as title 'my-app'\`, () => {
+            const fixture = TestBed.createComponent(AppComponent);
+            const app = fixture.componentInstance;
+            expect(app.title).toEqual('my-app');
+          });
+        });
+        "
+      `);
     });
 
     it('should use "@angular-devkit/build-angular:browser-esbuild" for --bundler=esbuild', async () => {

@@ -41,6 +41,7 @@ export async function createFiles(
     isUsingApplicationBuilder,
     disableModernClassFieldsBehavior,
     useEventCoalescing: angularMajorVersion >= 18,
+    useRouterTestingModule: angularMajorVersion < 18,
     tpl: '',
   };
 
