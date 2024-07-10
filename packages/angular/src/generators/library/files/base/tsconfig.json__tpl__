@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
-    "target": "es2022",
-    "useDefineForClassFields": false
+    "target": "es2022"<% if (disableModernClassFieldsBehavior) { %>,
+    "useDefineForClassFields": false<% } %>
   },
   "files": [],
   "include": [],
