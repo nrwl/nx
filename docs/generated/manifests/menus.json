@@ -5559,9 +5559,9 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Enable Bitbucket Cloud PR Integration",
-                "path": "/ci/recipes/source-control-integration/bitbucket-cloud",
-                "id": "bitbucket-cloud",
+                "name": "Enable Bitbucket PR Integration",
+                "path": "/ci/recipes/source-control-integration/bitbucket",
+                "id": "bitbucket",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -5641,6 +5641,14 @@
                     "name": "Authenticate with BitBucket",
                     "path": "/ci/recipes/enterprise/on-premise/auth-bitbucket",
                     "id": "auth-bitbucket",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  },
+                  {
+                    "name": "Authenticate with BitBucket Data Center",
+                    "path": "/ci/recipes/enterprise/on-premise/auth-bitbucket-data-center",
+                    "id": "auth-bitbucket-data-center",
                     "isExternal": false,
                     "children": [],
                     "disableCollapsible": false
@@ -5945,9 +5953,9 @@
             "disableCollapsible": false
           },
           {
-            "name": "Enable Bitbucket Cloud PR Integration",
-            "path": "/ci/recipes/source-control-integration/bitbucket-cloud",
-            "id": "bitbucket-cloud",
+            "name": "Enable Bitbucket PR Integration",
+            "path": "/ci/recipes/source-control-integration/bitbucket",
+            "id": "bitbucket",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -5980,9 +5988,9 @@
         "disableCollapsible": false
       },
       {
-        "name": "Enable Bitbucket Cloud PR Integration",
-        "path": "/ci/recipes/source-control-integration/bitbucket-cloud",
-        "id": "bitbucket-cloud",
+        "name": "Enable Bitbucket PR Integration",
+        "path": "/ci/recipes/source-control-integration/bitbucket",
+        "id": "bitbucket",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -6059,6 +6067,14 @@
                 "name": "Authenticate with BitBucket",
                 "path": "/ci/recipes/enterprise/on-premise/auth-bitbucket",
                 "id": "auth-bitbucket",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Authenticate with BitBucket Data Center",
+                "path": "/ci/recipes/enterprise/on-premise/auth-bitbucket-data-center",
+                "id": "auth-bitbucket-data-center",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -6213,6 +6229,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Authenticate with BitBucket Data Center",
+            "path": "/ci/recipes/enterprise/on-premise/auth-bitbucket-data-center",
+            "id": "auth-bitbucket-data-center",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Authenticate via SAML",
             "path": "/ci/recipes/enterprise/on-premise/auth-saml",
             "id": "auth-saml",
@@ -6291,6 +6315,14 @@
         "name": "Authenticate with BitBucket",
         "path": "/ci/recipes/enterprise/on-premise/auth-bitbucket",
         "id": "auth-bitbucket",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Authenticate with BitBucket Data Center",
+        "path": "/ci/recipes/enterprise/on-premise/auth-bitbucket-data-center",
+        "id": "auth-bitbucket-data-center",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false

@@ -1,8 +1,8 @@
-# BitBucket Auth
+# BitBucket Cloud Auth
 
-Nx Private Cloud currently only support **public** BitBucket auth. On-prem installation of BitBucket Server are currently not supported.
+This page is only for BitBucket Cloud (bitbucket.org). If you have an on-premise version of BitBucket Data Center please refer to the docs [here](/ci/recipes/enterprise/on-premise/auth-bitbucket-data-center).
 
-Before creating your container, you'll need to create a BitBucket "OAuth consumer" for your organisation.
+First, you'll need to create a BitBucket "OAuth consumer" for your organisation.
 
 ## Creating a BitBucket OAuth consumer
 
@@ -45,11 +45,4 @@ Once you create, keep a note of the Key and the Secret:
 
 ## Connect your Nx Cloud installation to your new app
 
-Provide the following env variables to the `nx-cloud-frontend` container:
-
-- `BITBUCKET_APP_ID`
-- `BITBUCKET_APP_SECRET`
-
-{% callout title="Helm Chart Environment Variables" %}
-If you are using our Helm chart, you can find all the information you need about env variables in [the Helm chart repository](https://github.com/nrwl/nx-cloud-helm/blob/main/AUTH-GUIDE.md).
-{% /callout %}
+It's now time to enable auth on NxCloud. Refer to the [auth guide](https://github.com/nrwl/nx-cloud-helm/blob/main/AUTH-GUIDE.md) here for instructions on configuring your Helm values file.
