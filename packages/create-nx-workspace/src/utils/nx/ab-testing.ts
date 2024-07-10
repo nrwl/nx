@@ -7,7 +7,7 @@ export const NxCloudChoices = [
   'circleci',
   'gitlab',
   'azure',
-  'bitbucket',
+  'bitbucket-pipelines',
   'skip',
   'yes', // Deprecated but still handled
 ];
@@ -23,7 +23,7 @@ const messageOptions: Record<string, MessageData[]> = {
         { value: 'circleci', name: 'Circle CI' },
         { value: 'gitlab', name: 'Gitlab' },
         { value: 'azure', name: 'Azure DevOps' },
-        { value: 'bitbucket', name: 'BitBucket Pipelines' },
+        { value: 'bitbucket-pipelines', name: 'BitBucket Pipelines' },
         { value: 'skip', name: '\nDo it later' },
       ],
       footer:
@@ -40,7 +40,7 @@ const messageOptions: Record<string, MessageData[]> = {
         { value: 'gitlab', name: 'Gitlab' },
         { value: 'azure', name: 'Azure DevOps' },
         {
-          value: 'bitbucket',
+          value: 'bitbucket-pipelines',
           name: 'BitBucket Pipelines',
         },
         { value: 'skip', name: '\nDo it later' },
