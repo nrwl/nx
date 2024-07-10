@@ -408,7 +408,7 @@ describe('Angular Projects', () => {
 
     let mainBundle = readFile(`dist/${esbuildApp}/browser/main.js`);
     expect(mainBundle).toContain(
-      'this.buildDefined = "Value was provided at build time";'
+      'buildDefined = "Value was provided at build time";'
     );
 
     // check @nx/angular:browser-esbuild
@@ -426,7 +426,7 @@ describe('Angular Projects', () => {
 
     mainBundle = readFile(`dist/${esbuildApp}/main.js`);
     expect(mainBundle).toContain(
-      'this.buildDefined = "Value was provided at build time";'
+      'buildDefined = "Value was provided at build time";'
     );
   });
 
