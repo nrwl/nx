@@ -25,7 +25,7 @@ jobs:
           main-branch-name: '<%= mainBranch %>'
 
 <% for (const command of commands) { %>
-      - run: <%= command %><% } %>
+      <% if (command.command) { %>- run: <%= command.command %><% } else if (command.comment) { %><%= command.comment %><% } else {%>- run: <%= command %><% } %><% } %>
 
 workflows:
   version: 2
