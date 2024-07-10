@@ -87,6 +87,11 @@ import {
 } from '../message-types/get-sync-generator-changes';
 import { handleGetSyncGeneratorChanges } from './handle-get-sync-generator-changes';
 import { collectAndScheduleSyncGenerators } from './sync-generators';
+import {
+  GET_REGISTERED_SYNC_GENERATORS,
+  isHandleGetRegisteredSyncGeneratorsMessage,
+} from '../message-types/get-registered-sync-generators';
+import { handleGetRegisteredSyncGenerators } from './handle-get-registered-sync-generators';
 
 let performanceObserver: PerformanceObserver | undefined;
 let workspaceWatcherError: Error | undefined;
@@ -237,6 +242,10 @@ async function handleMessage(socket, data: string) {
   } else if (isHandleGetSyncGeneratorChangesMessage(payload)) {
     await handleResult(socket, GET_SYNC_GENERATOR_CHANGES, () =>
       handleGetSyncGeneratorChanges(payload.generators)
+    );
+  } else if (isHandleGetRegisteredSyncGeneratorsMessage(payload)) {
+    await handleResult(socket, GET_REGISTERED_SYNC_GENERATORS, () =>
+      handleGetRegisteredSyncGenerators()
     );
   } else {
     await respondWithErrorAndExit(

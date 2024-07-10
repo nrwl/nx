@@ -455,4 +455,11 @@ export const examples: Record<string, Example[]> = {
         'Install version `17.0.0` of the `@nx/react` package and run its `@nx/react:init` generator',
     },
   ],
+  sync: [
+    {
+      command: 'sync --check',
+      description:
+        'Check if the workspace is in sync without making changes. It throws an error and exits with a non-zero status code if the workspace is not in sync',
+    },
+  ],
 };

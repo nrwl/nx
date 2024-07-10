@@ -54,6 +54,10 @@ import {
   type HandleGetSyncGeneratorChangesMessage,
 } from '../message-types/get-sync-generator-changes';
 import type { FileChange } from '../../generators/tree';
+import {
+  GET_REGISTERED_SYNC_GENERATORS,
+  HandleGetRegisteredSyncGeneratorsMessage,
+} from '../message-types/get-registered-sync-generators';
 
 const DAEMON_ENV_SETTINGS = {
   NX_PROJECT_GLOB_CACHE: 'false',
@@ -359,6 +363,13 @@ export class DaemonClient {
       change.content = Buffer.from(change.content);
     }
     return changes;
+  }
+
+  getRegisteredSyncGenerators(): Promise<string[]> {
+    const message: HandleGetRegisteredSyncGeneratorsMessage = {
+      type: GET_REGISTERED_SYNC_GENERATORS,
+    };
+    return this.sendToDaemonViaQueue(message);
   }
 
   async isServerAvailable(): Promise<boolean> {

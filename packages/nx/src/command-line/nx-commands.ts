@@ -40,6 +40,7 @@ import {
   yargsPrintAffectedCommand,
   yargsAffectedGraphCommand,
 } from './deprecated/command-objects';
+import { yargsSyncCommand } from './sync/command-object';
 
 // Ensure that the output takes up the available width of the terminal.
 yargs.wrap(yargs.terminalWidth());
@@ -86,6 +87,7 @@ export const commandsObject = yargs
   .command(yargsRunCommand)
   .command(yargsRunManyCommand)
   .command(yargsShowCommand)
+  .command(yargsSyncCommand)
   .command(yargsViewLogsCommand)
   .command(yargsWatchCommand)
   .command(yargsNxInfixCommand)
