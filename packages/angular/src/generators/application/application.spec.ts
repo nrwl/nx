@@ -1299,6 +1299,15 @@ describe('app', () => {
       ).toBeUndefined();
     });
 
+    it('should disable modern class fields behavior', async () => {
+      await generateApp(appTree, 'my-app');
+
+      expect(
+        readJson(appTree, 'my-app/tsconfig.json').compilerOptions
+          .useDefineForClassFields
+      ).toBe(false);
+    });
+
     it('should configure the correct assets for versions lower than v18', async () => {
       updateJson(appTree, 'package.json', (json) => ({
         ...json,
