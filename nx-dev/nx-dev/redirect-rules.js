@@ -418,9 +418,9 @@ const nxCloudUrls = {
   '/nx-cloud/set-up/github':
     '/nx-cloud/recipes/source-control-integration/github',
   '/nx-cloud/set-up/bitbucket-cloud':
-    '/nx-cloud/recipes/source-control-integration/bitbucket',
+    '/ci/recipes/source-control-integration/bitbucket',
   '/nx-cloud/recipes/source-control-integration/bitbucket-cloud':
-    '/nx-cloud/recipes/source-control-integration/bitbucket',
+    '/ci/recipes/source-control-integration/bitbucket',
   '/nx-cloud/set-up/gitlab':
     '/nx-cloud/recipes/source-control-integration/gitlab',
   '/core-features/remote-cache': '/ci/features/remote-cache',
