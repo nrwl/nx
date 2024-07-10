@@ -27,13 +27,19 @@ let scheduledTimeoutId: NodeJS.Timeout | undefined;
 let storedProjectGraphHash: string | undefined;
 let storedNxJsonHash: string | undefined;
 
+const log = (...messageParts: unknown[]) => {
+  serverLogger.log('[SYNC]:', ...messageParts);
+};
+
 // TODO(leo): check conflicts and reuse the Tree where possible
 export async function getCachedSyncGeneratorChanges(
   generators: string[]
 ): Promise<FileChange[]> {
   try {
+    log('get sync generators changes on demand', generators);
     // this is invoked imperatively, so we clear any scheduled run
     if (scheduledTimeoutId) {
+      log('clearing scheduled run');
       clearTimeout(scheduledTimeoutId);
       scheduledTimeoutId = undefined;
     }
@@ -57,15 +63,22 @@ export async function getCachedSyncGeneratorChanges(
     return (
       await Promise.all(
         generators.map(async (generator) => {
-          serverLogger.log('on demand generator', generator);
           if (scheduledGenerators.has(generator)) {
-            serverLogger.log('already scheduled', generator, 'run it now');
+            log(generator, 'already scheduled, running it now');
             // it's scheduled to run, so there are pending changes, run it
             runGenerator(generator, await getProjectsConfigurations());
           } else if (!syncGeneratorsCacheResultPromises.has(generator)) {
-            serverLogger.log('not scheduled and no cached result', generator);
+            log(
+              generator,
+              'not scheduled and no cached result, running it now'
+            );
             // it's not scheduled and there's no cached result, so run it
             runGenerator(generator, await getProjectsConfigurations());
+          } else {
+            log(
+              generator,
+              'not scheduled and has cached result, returning cached result'
+            );
           }
 
           return syncGeneratorsCacheResultPromises.get(generator);
@@ -83,7 +96,7 @@ export async function getCachedSyncGeneratorChanges(
 export function collectAndScheduleSyncGenerators(
   projectGraph: ProjectGraph
 ): void {
-  serverLogger.log('collect registered sync generators');
+  log('collect registered sync generators');
   collectAllRegisteredSyncGenerators(projectGraph);
 
   // a change imply we need to re-run all the generators
@@ -93,7 +106,7 @@ export function collectAndScheduleSyncGenerators(
     scheduledGenerators.add(generator);
   }
 
-  serverLogger.log('scheduledGenerators', [...scheduledGenerators]);
+  log('scheduling:', [...scheduledGenerators]);
 
   if (scheduledTimeoutId) {
     // we have a scheduled run already, so we don't need to do anything
@@ -123,9 +136,13 @@ export function collectAndScheduleSyncGenerators(
 }
 
 export async function getCachedRegisteredSyncGenerators(): Promise<string[]> {
+  log('get registered sync generators');
   if (!registeredSyncGenerators) {
+    log('no registered sync generators, collecting them');
     const { projectGraph } = await getCachedSerializedProjectGraphPromise();
     collectAllRegisteredSyncGenerators(projectGraph);
+  } else {
+    log('registered sync generators already collected, returning them');
   }
 
   return [...registeredSyncGenerators];
@@ -137,6 +154,8 @@ function collectAllRegisteredSyncGenerators(projectGraph: ProjectGraph): void {
     storedProjectGraphHash = projectGraphHash;
     registeredTaskSyncGenerators =
       collectRegisteredTaskSyncGenerators(projectGraph);
+  } else {
+    log('project graph hash is the same, not collecting task sync generators');
   }
 
   const nxJson = readNxJson();
@@ -145,6 +164,8 @@ function collectAllRegisteredSyncGenerators(projectGraph: ProjectGraph): void {
     storedNxJsonHash = nxJsonHash;
     registeredGlobalSyncGenerators =
       collectRegisteredGlobalSyncGenerators(nxJson);
+  } else {
+    log('nx.json hash is the same, not collecting global sync generators');
   }
 
   const generators = new Set<string>([
@@ -175,7 +196,7 @@ function runGenerator(
   generator: string,
   projects: Record<string, ProjectConfiguration>
 ): void {
-  serverLogger.log('running scheduled generator', generator);
+  log('running scheduled generator', generator);
   // remove it from the scheduled set
   scheduledGenerators.delete(generator);
   const tree = new FsTree(
@@ -187,7 +208,10 @@ function runGenerator(
   // run the generator and cache the result
   syncGeneratorsCacheResultPromises.set(
     generator,
-    runSyncGenerator(tree, generator, projects)
+    runSyncGenerator(tree, generator, projects).then((changes) => {
+      log(generator, 'changes:', changes.map((c) => c.path).join(', '));
+      return changes;
+    })
   );
 }
 
