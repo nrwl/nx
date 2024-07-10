@@ -1,4 +1,5 @@
 'use client';
+/* eslint-disable @typescript-eslint/no-restricted-imports */
 import { useLayoutEffect as ReactUseLayoutEffect } from 'react';
 
 /**
@@ -8,6 +9,6 @@ import { useLayoutEffect as ReactUseLayoutEffect } from 'react';
  *
  * See: https://reactjs.org/docs/hooks-reference.html#uselayouteffect
  */
-export const useLayoutEffect = (globalThis as any)?.document
+export const useLayoutEffect = globalThis?.document
   ? ReactUseLayoutEffect
   : () => void 0;

@@ -17,9 +17,31 @@ Find out more about [why you should use Nx](/getting-started/why-nx) or browse o
 
 ## Try Nx Yourself!
 
-```shell
-npx create-nx-workspace@latest
+{% side-by-side %}
+
+```shell {% title="Create a new workspace" %}
+npx create-nx-workspace
 ```
+
+```shell {% title="Add Nx to an existing workspace" %}
+npx nx init
+```
+
+{% /side-by-side %}
+
+Also, here are some recipes that give you more details based on the technology stack you're using:
+
+{% cards cols="2" mdCols="4" smCols="2" moreLink="/recipes/adopting-nx" %}
+
+{% link-card title="Add to Existing Monorepo" appearance="small" url="/recipes/adopting-nx/adding-to-monorepo" icon="pnpm" /%}
+
+{% link-card title="Add to Any Project" appearance="small" url="/recipes/adopting-nx/adding-to-existing-project" icon="nx" /%}
+
+{% link-card title="Migrate from Angular CLI" appearance="small" url="/recipes/angular/migration/angular" icon="angular" /%}
+
+{% /cards %}
+{% /tab %}
+{% /tabs %}
 
 ## Learn Nx
 
@@ -54,26 +76,6 @@ npx create-nx-workspace@latest
 {% link-card title="Angular Monorepo" type="tutorial" url="/getting-started/tutorials/angular-monorepo-tutorial" icon="angularMono" /%}
 
 {% link-card title="Gradle Monorepo" type="tutorial" url="/getting-started/tutorials/gradle-tutorial" icon="gradle" /%}
-
-{% /cards %}
-
-## Have an Existing Project? Add Nx to it!
-
-If you have an existing project and want to adopt Nx or migrate to Nx just run the following command which guides you through the migration process:
-
-```shell
-npx nx@latest init
-```
-
-Alternatively, here are some recipes that give you more details based on the technology stack you're using:
-
-{% cards cols="2" mdCols="4" smCols="2" moreLink="/recipes/adopting-nx" %}
-
-{% link-card title="Add to Existing Monorepo" appearance="small" url="/recipes/adopting-nx/adding-to-monorepo" icon="pnpm" /%}
-
-{% link-card title="Add to Any Project" appearance="small" url="/recipes/adopting-nx/adding-to-existing-project" icon="nx" /%}
-
-{% link-card title="Migrate from Angular CLI" appearance="small" url="/recipes/angular/migration/angular" icon="angular" /%}
 
 {% /cards %}
 

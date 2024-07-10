@@ -1,28 +1,28 @@
-import { SectionHeading } from '@nx/nx-dev/ui-common/src/lib/section-tags';
+import { SectionHeading } from '@nx/nx-dev/ui-common';
 import {
-  TanstackIcon,
-  LernaIcon,
+  AwsAmplifyIcon,
+  CypressIcon,
+  ElectronIcon,
   EpicWebIcon,
+  GhostIcon,
+  LernaIcon,
+  MicrosoftIcon,
+  MuiIcon,
   RedwoodJsIcon,
-  StorybookIcon,
   RxJSIcon,
   SentryIcon,
-  MuiIcon,
-  AwsAmplifyIcon,
   ShopifyIcon,
-  GhostIcon,
-  TypescriptEslintIcon,
-  CypressIcon,
-  MicrosoftIcon,
-  ElectronIcon,
+  StorybookIcon,
   StrapiIcon,
-} from '@nx/nx-dev/ui-common';
+  TanstackIcon,
+  TypescriptEslintIcon,
+} from '@nx/nx-dev/ui-icons';
 
 export function OssProjects(): JSX.Element {
   return (
     <section>
       <div className="mx-auto max-w-7xl text-center">
-        <SectionHeading as="h2" variant="subtitle">
+        <SectionHeading as="h2" variant="subtitle" id="popular-oss">
           Popular OSS projects using Nx
         </SectionHeading>
 
@@ -74,7 +74,6 @@ export function OssProjects(): JSX.Element {
               target="_blank"
               className="flex items-center justify-center border-b border-slate-200/20 p-12 transition hover:bg-slate-100/25 hover:text-slate-950 dark:border-slate-800/20 dark:hover:border-slate-600/20 dark:hover:bg-slate-600/10 dark:hover:text-white"
             >
-              {' '}
               <RxJSIcon aria-hidden="true" className="h-12 w-12" />
             </a>
             <a
@@ -110,7 +109,6 @@ export function OssProjects(): JSX.Element {
             >
               <ShopifyIcon aria-hidden="true" className="h-12 w-12" />
             </a>
-
             <a
               href="https://github.com/electron/forge"
               rel="noreferrer"

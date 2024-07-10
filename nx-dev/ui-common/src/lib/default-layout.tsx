@@ -1,12 +1,16 @@
 import { Footer } from './footer';
 import { Header } from './headers/header';
 import { PropsWithChildren } from 'react';
+import cx from 'classnames';
 
-export function DefaultLayout({ children }: PropsWithChildren): JSX.Element {
+export function DefaultLayout({
+  isHome = false,
+  children,
+}: { isHome?: boolean } & PropsWithChildren): JSX.Element {
   return (
     <div className="dark:bg-slate-950">
       <Header />
-      <div className="relative isolate pt-14">
+      <div className="relative isolate">
         <div
           className="absolute inset-x-0 -top-40 -z-10 h-full transform-gpu overflow-hidden blur-3xl sm:-top-80"
           aria-hidden="true"
@@ -19,7 +23,7 @@ export function DefaultLayout({ children }: PropsWithChildren): JSX.Element {
             }}
           />
         </div>
-        <main className="py-24 sm:py-32">{children}</main>
+        <main className={isHome ? '' : 'py-24 sm:py-32'}>{children}</main>
       </div>
       <Footer />
     </div>
