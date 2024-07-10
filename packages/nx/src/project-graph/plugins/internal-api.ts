@@ -147,8 +147,8 @@ export const nxPluginCache: Map<
 export async function loadNxPlugins(
   plugins: PluginConfiguration[],
   root = workspaceRoot
-): Promise<[LoadedNxPlugin[], () => void]> {
-  const result: Promise<LoadedNxPlugin>[] = [];
+): Promise<readonly [LoadedNxPlugin[], () => void]> {
+  performance.mark('loadNxPlugins:start');
 
   const loadingMethod =
     process.env.NX_ISOLATE_PLUGINS === 'true'
@@ -157,14 +157,18 @@ export async function loadNxPlugins(
 
   plugins = await normalizePlugins(plugins, root);
 
-  const cleanupFunctions: Array<() => void> = [];
-  for (const plugin of plugins) {
-    const [loadedPluginPromise, cleanup] = await loadingMethod(plugin, root);
-    result.push(loadedPluginPromise);
-    cleanupFunctions.push(cleanup);
-  }
+  const result: Promise<LoadedNxPlugin>[] = new Array(plugins?.length);
 
-  return [
+  const cleanupFunctions: Array<() => void> = [];
+  await Promise.all(
+    plugins.map(async (plugin, idx) => {
+      const [loadedPluginPromise, cleanup] = await loadingMethod(plugin, root);
+      result[idx] = loadedPluginPromise;
+      cleanupFunctions.push(cleanup);
+    })
+  );
+
+  const ret = [
     await Promise.all(result),
     () => {
       for (const fn of cleanupFunctions) {
@@ -175,6 +179,13 @@ export async function loadNxPlugins(
       }
     },
   ] as const;
+  performance.mark('loadNxPlugins:end');
+  performance.measure(
+    'loadNxPlugins',
+    'loadNxPlugins:start',
+    'loadNxPlugins:end'
+  );
+  return ret;
 }
 
 async function normalizePlugins(plugins: PluginConfiguration[], root: string) {
