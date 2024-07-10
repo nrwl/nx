@@ -7,10 +7,51 @@ import { NxJsonConfiguration } from '../config/nx-json';
 import { Task, TaskGraph } from '../config/task-graph';
 import { NxArgs } from '../utils/command-line-utils';
 import { DaemonClient } from '../daemon/client/client';
+import { readFile, writeFile } from 'fs/promises';
+import { join } from 'path';
+import { CachedResult } from '../native';
 
 export interface RemoteCache {
   retrieve: (hash: string, cacheDirectory: string) => Promise<boolean>;
   store: (hash: string, cacheDirectory: string) => Promise<boolean>;
+}
+
+export abstract class RemoteCacheV2 {
+  static fromCacheV1(cache: RemoteCache): RemoteCacheV2 {
+    return {
+      retrieve: async (hash, cacheDirectory) => {
+        const res = cache.retrieve(hash, cacheDirectory);
+        const [terminalOutput, code] = await Promise.all([
+          readFile(join(cacheDirectory, hash, 'terminalOutputs'), 'utf-8'),
+          readFile(join(cacheDirectory, hash, 'code'), 'utf-8').then((s) => +s),
+        ]);
+        if (res) {
+          return {
+            outputsPath: cacheDirectory,
+            terminalOutput,
+            code,
+          };
+        } else {
+          return null;
+        }
+      },
+      store: async (hash, cacheDirectory, __, code) => {
+        await writeFile(join(cacheDirectory, hash, 'code'), code.toString());
+
+        return cache.store(hash, cacheDirectory);
+      },
+    };
+  }
+  abstract retrieve(
+    hash: string,
+    cacheDirectory: string
+  ): Promise<CachedResult | null>;
+  abstract store(
+    hash: string,
+    cacheDirectory: string,
+    terminalOutput: string,
+    code: number
+  ): Promise<boolean>;
 }
 
 export interface DefaultTasksRunnerOptions {

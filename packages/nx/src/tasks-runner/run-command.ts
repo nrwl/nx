@@ -34,6 +34,7 @@ import { StaticRunManyTerminalOutputLifeCycle } from './life-cycles/static-run-m
 import { StaticRunOneTerminalOutputLifeCycle } from './life-cycles/static-run-one-terminal-output-life-cycle';
 import { StoreRunInformationLifeCycle } from './life-cycles/store-run-information-life-cycle';
 import { TaskHistoryLifeCycle } from './life-cycles/task-history-life-cycle';
+import { LegacyTaskHistoryLifeCycle } from './life-cycles/task-history-life-cycle-old';
 import { TaskProfilingLifeCycle } from './life-cycles/task-profiling-life-cycle';
 import { TaskTimingsLifeCycle } from './life-cycles/task-timings-life-cycle';
 import {
@@ -44,6 +45,7 @@ import {
 import { TasksRunner, TaskStatus } from './tasks-runner';
 import { shouldStreamOutput } from './utils';
 import chalk = require('chalk');
+import { IS_WASM } from '../native';
 
 async function getTerminalOutputLifeCycle(
   initiatingProject: string,
@@ -517,7 +519,9 @@ function constructLifeCycles(lifeCycle: LifeCycle) {
     lifeCycles.push(new TaskProfilingLifeCycle(process.env.NX_PROFILE));
   }
   if (!isNxCloudUsed(readNxJson())) {
-    lifeCycles.push(new TaskHistoryLifeCycle());
+    lifeCycles.push(
+      !IS_WASM ? new TaskHistoryLifeCycle() : new LegacyTaskHistoryLifeCycle()
+    );
   }
   return lifeCycles;
 }
