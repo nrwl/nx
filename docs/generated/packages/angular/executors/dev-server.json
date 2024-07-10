@@ -110,6 +110,17 @@
         "description": "Force the development server to use the 'browser-esbuild' builder when building. This is a developer preview option for the esbuild-based build system. _Note: this is only supported in Angular versions >= 16.1.0_.",
         "default": false
       },
+      "inspect": {
+        "default": false,
+        "description": "Activate debugging inspector. This option only has an effect when 'SSR' or 'SSG' are enabled. _Note: this is only supported in Angular versions >= 18.1.0_.",
+        "oneOf": [
+          {
+            "type": "string",
+            "description": "Activate the inspector on host and port in the format of `[[host:]port]`. See the security warning in https://nodejs.org/docs/latest-v22.x/api/cli.html#warning-binding-inspector-to-a-public-ipport-combination-is-insecure regarding the host parameter usage."
+          },
+          { "type": "boolean" }
+        ]
+      },
       "prebundle": {
         "description": "Enable and control the Vite-based development server's prebundling capabilities. To enable prebundling, the Angular CLI cache must also be enabled. This option has no effect when using the 'browser' or other Webpack-based builders. _Note: this is only supported in Angular versions >= 17.2.0_.",
         "oneOf": [
