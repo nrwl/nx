@@ -505,7 +505,7 @@ export function NxWelcome({ title }: { title: string }) {
                 </svg>
               </a>
               <a
-                href="https://blog.nrwl.io/?utm_source=nx-project"
+                href="https://nx.dev/blog/?utm_source=nx-project"
                 target="_blank"
                 rel="noreferrer"
                 className="list-item-link"
