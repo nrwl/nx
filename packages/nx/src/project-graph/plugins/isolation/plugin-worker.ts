@@ -2,8 +2,9 @@ import { consumeMessage, isPluginWorkerMessage } from './messaging';
 import { LoadedNxPlugin } from '../internal-api';
 import { loadNxPlugin } from '../loader';
 import { createSerializableError } from '../../../utils/serializable-error';
-import { createServer } from 'net';
 import { consumeMessagesFromSocket } from '../../../utils/consume-messages-from-socket';
+
+import { createServer } from 'net';
 import { unlinkSync } from 'fs';
 
 if (process.env.NX_PERF_LOGGING === 'true') {
