@@ -151,7 +151,7 @@ export async function loadNxPlugins(
   performance.mark('loadNxPlugins:start');
 
   const loadingMethod =
-    process.env.NX_ISOLATE_PLUGINS === 'true'
+    process.env.NX_ISOLATE_PLUGINS !== 'false'
       ? loadNxPluginInIsolation
       : loadNxPlugin;
 
