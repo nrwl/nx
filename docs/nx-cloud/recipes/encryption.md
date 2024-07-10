@@ -22,5 +22,5 @@ Data is encrypted both at rest and in transit.
 - Every communication with the Nx Cloud API is encrypted in transit, including fetching/storing artifacts.
 - When using Nx Public Cloud, the stored metadata is encrypted.
 - When using Nx Public Cloud and e2e encryption, stored artifacts are encrypted.
-- When using the on-prem version of Nx Cloud, the stored metadata is encrypted if you run MongoDB yourself with encryption on (or if you, for instance, use CosmosDB)
+- When using the on-prem version of Nx Cloud, the stored metadata is encrypted if you run MongoDB yourself with encryption on
 - When using the on-prem version of Nx Cloud, stored artifacts are encrypted using e2e encryption.

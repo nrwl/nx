@@ -560,14 +560,14 @@
             "tags": []
           },
           {
-            "id": "bitbucket-cloud",
-            "name": "Enable Bitbucket Cloud PR Integration",
+            "id": "bitbucket",
+            "name": "Enable Bitbucket PR Integration",
             "description": "",
             "mediaImage": "",
-            "file": "nx-cloud/set-up/bitbucket-cloud",
+            "file": "nx-cloud/set-up/bitbucket",
             "itemList": [],
             "isExternal": false,
-            "path": "/ci/recipes/source-control-integration/bitbucket-cloud",
+            "path": "/ci/recipes/source-control-integration/bitbucket",
             "tags": []
           },
           {
@@ -675,6 +675,17 @@
                 "itemList": [],
                 "isExternal": false,
                 "path": "/ci/recipes/enterprise/on-premise/auth-bitbucket",
+                "tags": []
+              },
+              {
+                "id": "auth-bitbucket-data-center",
+                "name": "Authenticate with BitBucket Data Center",
+                "description": "",
+                "mediaImage": "",
+                "file": "nx-cloud/enterprise/on-premise/auth-bitbucket-data-center",
+                "itemList": [],
+                "isExternal": false,
+                "path": "/ci/recipes/enterprise/on-premise/auth-bitbucket-data-center",
                 "tags": []
               },
               {
@@ -1089,14 +1100,14 @@
         "tags": []
       },
       {
-        "id": "bitbucket-cloud",
-        "name": "Enable Bitbucket Cloud PR Integration",
+        "id": "bitbucket",
+        "name": "Enable Bitbucket PR Integration",
         "description": "",
         "mediaImage": "",
-        "file": "nx-cloud/set-up/bitbucket-cloud",
+        "file": "nx-cloud/set-up/bitbucket",
         "itemList": [],
         "isExternal": false,
-        "path": "/ci/recipes/source-control-integration/bitbucket-cloud",
+        "path": "/ci/recipes/source-control-integration/bitbucket",
         "tags": []
       },
       {
@@ -1137,15 +1148,15 @@
     "path": "/ci/recipes/source-control-integration/github",
     "tags": []
   },
-  "/ci/recipes/source-control-integration/bitbucket-cloud": {
-    "id": "bitbucket-cloud",
-    "name": "Enable Bitbucket Cloud PR Integration",
+  "/ci/recipes/source-control-integration/bitbucket": {
+    "id": "bitbucket",
+    "name": "Enable Bitbucket PR Integration",
     "description": "",
     "mediaImage": "",
-    "file": "nx-cloud/set-up/bitbucket-cloud",
+    "file": "nx-cloud/set-up/bitbucket",
     "itemList": [],
     "isExternal": false,
-    "path": "/ci/recipes/source-control-integration/bitbucket-cloud",
+    "path": "/ci/recipes/source-control-integration/bitbucket",
     "tags": []
   },
   "/ci/recipes/source-control-integration/gitlab": {
@@ -1248,6 +1259,17 @@
             "itemList": [],
             "isExternal": false,
             "path": "/ci/recipes/enterprise/on-premise/auth-bitbucket",
+            "tags": []
+          },
+          {
+            "id": "auth-bitbucket-data-center",
+            "name": "Authenticate with BitBucket Data Center",
+            "description": "",
+            "mediaImage": "",
+            "file": "nx-cloud/enterprise/on-premise/auth-bitbucket-data-center",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/ci/recipes/enterprise/on-premise/auth-bitbucket-data-center",
             "tags": []
           },
           {
@@ -1456,6 +1478,17 @@
         "tags": []
       },
       {
+        "id": "auth-bitbucket-data-center",
+        "name": "Authenticate with BitBucket Data Center",
+        "description": "",
+        "mediaImage": "",
+        "file": "nx-cloud/enterprise/on-premise/auth-bitbucket-data-center",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/recipes/enterprise/on-premise/auth-bitbucket-data-center",
+        "tags": []
+      },
+      {
         "id": "auth-saml",
         "name": "Authenticate via SAML",
         "description": "",
@@ -1568,6 +1601,17 @@
     "itemList": [],
     "isExternal": false,
     "path": "/ci/recipes/enterprise/on-premise/auth-bitbucket",
+    "tags": []
+  },
+  "/ci/recipes/enterprise/on-premise/auth-bitbucket-data-center": {
+    "id": "auth-bitbucket-data-center",
+    "name": "Authenticate with BitBucket Data Center",
+    "description": "",
+    "mediaImage": "",
+    "file": "nx-cloud/enterprise/on-premise/auth-bitbucket-data-center",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/recipes/enterprise/on-premise/auth-bitbucket-data-center",
     "tags": []
   },
   "/ci/recipes/enterprise/on-premise/auth-saml": {
