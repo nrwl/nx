@@ -4,18 +4,11 @@ import {
   readProjectConfiguration,
   type Tree,
 } from '@nx/devkit';
-import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 import { addRoute } from '../../../utils/nx-devkit/route-utils';
 import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
 import type { Schema } from '../schema';
 
-let tsModule: typeof import('typescript');
-
 export function updateHostAppRoutes(tree: Tree, options: Schema) {
-  if (!tsModule) {
-    tsModule = ensureTypescript();
-  }
-
   const { sourceRoot } = readProjectConfiguration(tree, options.appName);
 
   tree.write(
