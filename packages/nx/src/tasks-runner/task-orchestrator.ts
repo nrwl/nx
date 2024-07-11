@@ -1,13 +1,27 @@
 import { defaultMaxListeners } from 'events';
-import { performance } from 'perf_hooks';
-import { relative } from 'path';
 import { writeFileSync } from 'fs';
-import { TaskHasher } from '../hasher/task-hasher';
+import { relative } from 'path';
+import { performance } from 'perf_hooks';
+import { ProjectGraph } from '../config/project-graph';
+import { Task, TaskGraph } from '../config/task-graph';
+import { DaemonClient } from '../daemon/client/client';
 import runCommandsImpl from '../executors/run-commands/run-commands.impl';
-import { ForkedProcessTaskRunner } from './forked-process-task-runner';
+import { hashTask } from '../hasher/hash-task';
+import { TaskHasher } from '../hasher/task-hasher';
+import { output } from '../utils/output';
+import { combineOptionsForExecutor } from '../utils/params';
+import { workspaceRoot } from '../utils/workspace-root';
 import { Cache } from './cache';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
+import { ForkedProcessTaskRunner } from './forked-process-task-runner';
+import { TaskMetadata } from './life-cycle';
+import {
+  getEnvVariablesForBatchProcess,
+  getEnvVariablesForTask,
+  getTaskSpecificEnv,
+} from './task-env';
 import { TaskStatus } from './tasks-runner';
+import { Batch, TasksSchedule } from './tasks-schedule';
 import {
   calculateReverseDeps,
   getExecutorForTask,
@@ -17,20 +31,6 @@ import {
   removeTasksFromTaskGraph,
   shouldStreamOutput,
 } from './utils';
-import { Batch, TasksSchedule } from './tasks-schedule';
-import { TaskMetadata } from './life-cycle';
-import { ProjectGraph } from '../config/project-graph';
-import { Task, TaskGraph } from '../config/task-graph';
-import { DaemonClient } from '../daemon/client/client';
-import { hashTask } from '../hasher/hash-task';
-import {
-  getEnvVariablesForBatchProcess,
-  getEnvVariablesForTask,
-  getTaskSpecificEnv,
-} from './task-env';
-import { workspaceRoot } from '../utils/workspace-root';
-import { output } from '../utils/output';
-import { combineOptionsForExecutor } from '../utils/params';
 
 export class TaskOrchestrator {
   private cache = new Cache(this.options);
@@ -388,7 +388,15 @@ export class TaskOrchestrator {
         task,
         this.projectGraph
       );
-      if (
+
+      if (targetConfiguration.executor === 'nx:noop') {
+        writeFileSync(temporaryOutputPath, '');
+        results.push({
+          task,
+          status: 'success',
+          terminalOutput: '',
+        });
+      } else if (
         process.env.NX_RUN_COMMANDS_DIRECTLY !== 'false' &&
         targetConfiguration.executor === 'nx:run-commands' &&
         !shouldPrefix
@@ -456,13 +464,6 @@ export class TaskOrchestrator {
             terminalOutput,
           });
         }
-      } else if (targetConfiguration.executor === 'nx:noop') {
-        writeFileSync(temporaryOutputPath, '');
-        results.push({
-          task,
-          status: 'success',
-          terminalOutput: '',
-        });
       } else {
         // cache prep
         const { code, terminalOutput } = await this.runTaskInForkedProcess(

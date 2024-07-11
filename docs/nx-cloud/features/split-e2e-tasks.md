@@ -7,11 +7,11 @@ width="100%" /%}
 
 In almost every codebase, e2e tests are the largest portion of the CI pipeline. Typically, e2e tests are grouped by application so that whenever an application's code changes, all the e2e tests for that application are run. These large groupings of e2e tests make caching and distribution less effective. Also, because e2e tests deal with a lot of integration code, they are at a much higher risk to be flaky.
 
-You could manually address these problems by splitting your e2e tests into smaller tasks, but this requires developer time to maintain and adds additional configuration overhead to your codebase. Or, you could allow Nx to automatically split your Cypress or Playwright e2e tests by file.
+You could manually address these problems by splitting your e2e tests into smaller tasks, but this requires developer time to maintain and adds additional configuration overhead to your codebase. Or, you could allow Nx to automatically split your e2e tests by file. Doing this will split your large e2e tasks into smaller, atomized tasks.
 
 ## Set up
 
-To enable automatically split e2e tasks, you need to turn on [inferred tasks](/concepts/inferred-tasks#existing-nx-workspaces) for the [@nx/cypress](/nx-api/cypress), [@nx/playwright](/nx-api/playwright), or [@nx/jest](/nx-api/jest) plugins. Run this command to set up inferred tasks:
+To enable atomized tasks, you need to turn on [inferred tasks](/concepts/inferred-tasks#existing-nx-workspaces) for the [@nx/cypress](/nx-api/cypress), [@nx/playwright](/nx-api/playwright), [@nx/jest](/nx-api/jest) or [@nx/gradle](/nx-api/gradle) plugins. Run this command to set up inferred tasks:
 
 {% tabs %}
 {% tab label="Cypress" %}
@@ -32,6 +32,13 @@ nx add @nx/playwright
 
 ```shell {% skipRescope=true %}
 nx add @nx/jest
+```
+
+{% /tab %}
+{% tab label="Gradle" %}
+
+```shell {% skipRescope=true %}
+nx add @nx/gradle
 ```
 
 {% /tab %}
@@ -394,3 +401,10 @@ With more granular e2e tasks, all the other features of Nx become more powerful.
 ### More Precise Flaky Task Identification
 
 Nx Agents [automatically re-run failed flaky e2e tests](/ci/features/flaky-tasks) on a separate agent without a developer needing to manually re-run the CI pipeline. Leveraging e2e task splitting, Nx identifies the specific flaky test file - this way you can quickly fix the offending test file. Without e2e splitting, Nx identifies that at least one of the e2e tests are flaky - requiring you to find the flaky test on your own.
+
+## Nx Cloud is Required to Run Atomized Tasks!
+
+Running a group of atomized tasks on a single machine takes longer than running the large e2e task.
+Nx Cloud [distributes](/ci/features/distribute-task-execution) the atomized tasks across multiple Nx agents in parallel.
+
+When running locally or if you cannot use Nx Agents, it's better to use the non-atomized target instead (`e2e` in the example above).
