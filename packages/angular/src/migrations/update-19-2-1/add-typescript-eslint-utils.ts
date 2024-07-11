@@ -8,7 +8,7 @@ import {
   getInstalledPackageVersionInfo,
 } from '../../generators/utils/version-utils';
 
-export const typescriptEslintUtilsVersion = '^8.0.0-alpha.28';
+export const typescriptEslintUtilsVersion = '^7.16.0';
 
 export default async function (tree: Tree) {
   if (getInstalledPackageVersion(tree, '@typescript-eslint/utils')) {

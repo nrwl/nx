@@ -158,14 +158,18 @@ function* compileTS(
 
     /**
      * This only applies when the deprecated `prepend` option is set to `true`.
+     * This was completely dropped in TS 5.5.
      * Skip support.
      */
-    if (project.kind === ts.InvalidatedProjectKind.UpdateBundle) {
+    if (
+      project.kind !== ts.InvalidatedProjectKind.Build &&
+      project.kind !== ts.InvalidatedProjectKind.UpdateOutputFileStamps
+    ) {
       logger.warn(
         `The project ${projectName} ` +
           `is using the deprecated "prepend" Typescript compiler option. ` +
           `This option is not supported by the batch executor and it's ignored.\n`,
-        project.project
+        (project as any).project
       );
       continue;
     }
@@ -310,9 +314,13 @@ function compileTSWithWatch(
 
       /**
        * This only applies when the deprecated `prepend` option is set to `true`.
+       * This was completely dropped in TS 5.5.
        * Skip support.
        */
-      if (project.kind === ts.InvalidatedProjectKind.UpdateBundle) {
+      if (
+        project.kind !== ts.InvalidatedProjectKind.Build &&
+        project.kind !== ts.InvalidatedProjectKind.UpdateOutputFileStamps
+      ) {
         logger.warn(
           `The project ${projectName} ` +
             `is using the deprecated "prepend" Typescript compiler option. ` +
