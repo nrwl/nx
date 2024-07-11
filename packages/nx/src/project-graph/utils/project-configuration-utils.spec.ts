@@ -71,12 +71,12 @@ describe('project-configuration-utils', () => {
       ).toBeNull();
     });
 
-    it('should return first matching target', () => {
+    it('should return longest matching target', () => {
       expect(
         // This matches both 'e2e-ci--*' and 'e2e-ci--file-*', we expect the first match to be returned.
         readTargetDefaultsForTarget('e2e-ci--file-foo', targetDefaults, null)
           .options['key']
-      ).toEqual('default-value-for-e2e-ci');
+      ).toEqual('default-value-for-e2e-ci-file');
     });
 
     it('should not merge top level properties for incompatible targets', () => {

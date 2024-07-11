@@ -1042,10 +1042,19 @@ export function readTargetDefaultsForTarget(
     return targetDefaults?.[targetName];
   }
 
+  let matchingTargetDefaultKey: string | null = null;
   for (const key in targetDefaults ?? {}) {
     if (isGlobPattern(key) && minimatch(targetName, key)) {
-      return targetDefaults[key];
+      if (
+        !matchingTargetDefaultKey ||
+        matchingTargetDefaultKey.length < key.length
+      ) {
+        matchingTargetDefaultKey = key;
+      }
     }
+  }
+  if (matchingTargetDefaultKey) {
+    return targetDefaults[matchingTargetDefaultKey];
   }
 
   return {};
