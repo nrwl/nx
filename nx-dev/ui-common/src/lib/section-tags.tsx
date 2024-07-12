@@ -26,6 +26,8 @@ const variants: Record<AllowedVariants, string> = {
   subtitle: 'text-lg leading-8 text-slate-700 dark:text-slate-300 sm:text-2xl',
 };
 
+// TODO(nicholas): Replace `typography.tsx` with this file after ensuring all components are using the new `SectionHeading` and `SectionDescription` components.
+// Also remove the entry from tsconfig.base.json for this file.
 export function SectionHeading({
   as = 'div',
   children,

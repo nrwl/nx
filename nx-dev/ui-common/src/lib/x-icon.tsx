@@ -1,6 +1,6 @@
 import { FC, SVGProps } from 'react';
 
-export const TwitterIcon: FC<SVGProps<SVGSVGElement>> = (props) => (
+export const XIcon: FC<SVGProps<SVGSVGElement>> = (props) => (
   <svg
     fill="currentColor"
     role="img"

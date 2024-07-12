@@ -1,4 +1,4 @@
-import { SectionHeading } from './section-tags';
+import { SectionHeading } from '@nx/nx-dev/ui-common/src/lib/section-tags';
 
 const teamMembers = [
   {
@@ -205,7 +205,7 @@ export function TheTeam(): JSX.Element {
                     />
                     <div className="space-y-2">
                       <div className="text-xs font-medium lg:text-sm">
-                        <h3> {teamMember.name} </h3>
+                        <h3>{teamMember.name}</h3>
                         <p className="text-slate-400 dark:text-slate-600">
                           {teamMember.title}
                         </p>

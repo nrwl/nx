@@ -1,4 +1,4 @@
-import { SectionHeading } from './section-tags';
+import { SectionHeading } from '@nx/nx-dev/ui-common/src/lib/section-tags';
 import {
   GlobeAltIcon,
   TrophyIcon,
@@ -42,7 +42,7 @@ export function Hero(): JSX.Element {
             Nx more productive
           </SectionHeading>
         </div>
-        <dl className="mt-24 grid grid-cols-1 gap-16 lg:grid-cols-3">
+        <dl className="mt-24 grid grid-cols-1 gap-16 lg:grid lg:grid-cols-3">
           {statements.map((statement, _) => {
             return (
               <div key={statement.title}>
@@ -53,7 +53,7 @@ export function Hero(): JSX.Element {
                   </p>
                 </dt>
                 <dd className="mt-4 text-slate-500 dark:text-slate-400">
-                  {statement.description}
+                  <p className="leading 7 text-base">{statement.description}</p>
                 </dd>
               </div>
             );

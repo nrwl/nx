@@ -1,4 +1,4 @@
-import { SectionHeading } from './section-tags';
+import { SectionHeading } from '@nx/nx-dev/ui-common/src/lib/section-tags';
 import { ButtonLink } from '@nx/nx-dev/ui-common';
 
 export function Hero(): JSX.Element {
@@ -32,6 +32,7 @@ export function Hero(): JSX.Element {
             </ButtonLink>
 
             <a
+              title="Live demo"
               href="https://staging.nx.app/orgs/62d013d4d26f260059f7765e/workspaces/62d013ea0852fe0a2df74438/overview"
               className="group text-sm font-semibold leading-6 text-slate-950 dark:text-white"
             >

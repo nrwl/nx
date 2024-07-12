@@ -19,7 +19,7 @@ export * from './lib/tweet';
 export * from './lib/typography';
 export * from './lib/github-star-widget';
 export * from './lib/youtube.component';
-export * from './lib/twitter-icon';
+export * from './lib/x-icon';
 export * from './lib/discord-icon';
 export * from './lib/logos';
 

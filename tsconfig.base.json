@@ -89,6 +89,7 @@
       "@nx/nx-dev/ui-blog": ["nx-dev/ui-blog/src/index.ts"],
       "@nx/nx-dev/ui-commands": ["nx-dev/ui-commands/src/index.ts"],
       "@nx/nx-dev/ui-common": ["nx-dev/ui-common/src/index.ts"],
+      "@nx/nx-dev/ui-common/*": ["nx-dev/ui-common/*"],
       "@nx/nx-dev/ui-community": ["nx-dev/ui-community/src/index.ts"],
       "@nx/nx-dev/ui-company": ["nx-dev/ui-company/src/index.ts"],
       "@nx/nx-dev/ui-conference": ["nx-dev/ui-conference/src/index.ts"],

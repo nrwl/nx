@@ -1,28 +1,24 @@
-import { SectionHeading } from './section-tags';
-import { TwitterIcon } from '@nx/nx-dev/ui-common';
+import { SectionHeading } from '@nx/nx-dev/ui-common/src/lib/section-tags';
+import { XIcon } from '@nx/nx-dev/ui-common';
 
 const coFounders = [
   {
     name: 'Victor Savkin',
     title: 'Co-Founder, CTO',
     image: 'victor-savkin.avif',
-    socials: [
-      {
-        icon: TwitterIcon,
-        url: 'https://x.com/victorsavkin',
-      },
-    ],
+    social: {
+      icon: XIcon,
+      url: 'https://x.com/victorsavkin',
+    },
   },
   {
     name: 'Jeff Cross',
     title: 'Co-Founder, CEO',
     image: 'jeff-cross.avif',
-    socials: [
-      {
-        icon: TwitterIcon,
-        url: 'https://x.com/jeffbcross',
-      },
-    ],
+    social: {
+      icon: XIcon,
+      url: 'https://x.com/jeffbcross',
+    },
   },
 ];
 export function CoFounders(): JSX.Element {
@@ -55,21 +51,21 @@ export function CoFounders(): JSX.Element {
                             <h3 className="font-semi-bold leading-8 tracking-tight text-slate-800 dark:text-slate-200">
                               {coFounder.name}
                             </h3>
-                            <p className="text-blue-500 dark:text-sky-500">
+                            <p className="text-slate-500 dark:text-slate-600">
                               {coFounder.title}
                             </p>
                           </div>
                           <ul className="flex space-x-5">
-                            {coFounder.socials.map((social, _) => (
-                              <li key={social.url}>
-                                <a
-                                  href={social.url}
-                                  className="text-blue-500 dark:text-sky-500"
-                                >
-                                  <social.icon className="h-5 w-5" />
-                                </a>
-                              </li>
-                            ))}
+                            <li key={coFounder.social.url}>
+                              <a
+                                title="X"
+                                href={coFounder.social.url}
+                                className="text-slate-500 dark:text-slate-600"
+                              >
+                                <span className="sr-only">X</span>
+                                <coFounder.social.icon className="h-5 w-5" />
+                              </a>
+                            </li>
                           </ul>
                         </div>
                       </div>
