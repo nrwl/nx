@@ -14,7 +14,8 @@ describe('<%=propertyName%>Hasher', () => {
                 target: 'target'
             },
             overrides: {},
-            outputs: []
+            outputs: [],
+            parallelism: true
         }, {
             hasher: mockHasher
         } as unknown as HasherContext)
