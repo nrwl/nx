@@ -11,6 +11,7 @@ import Link from 'next/link';
 import { Fragment, useEffect, useState } from 'react';
 import { ButtonLink } from '../button';
 import {
+  companyItems,
   eventItems,
   featuresItems,
   learnItems,
@@ -496,6 +497,12 @@ export function Header(): JSX.Element {
                                     />
                                   ))}
                                   {eventItems.map((item) => (
+                                    <MobileMenuItem
+                                      key={item.name}
+                                      item={item}
+                                    />
+                                  ))}
+                                  {companyItems.map((item) => (
                                     <MobileMenuItem
                                       key={item.name}
                                       item={item}
