@@ -1614,6 +1614,12 @@
               "file": "shared/features/distribute-task-execution"
             },
             {
+              "name": "Nx Cloud AI",
+              "id": "nx-cloud-ai",
+              "description": "Learn how to enable AI features in Nx Cloud, and what features it enables",
+              "file": "nx-cloud/features/ai-features"
+            },
+            {
               "name": "Dynamically Allocate Agents",
               "description": "Learn how to dynamically allocate agents based on the size of a PR, keeping the balance of speed and cost.",
               "id": "dynamic-agents",
@@ -1929,6 +1935,11 @@
               "name": "CI Execution Failed",
               "id": "ci-execution-failed",
               "file": "nx-cloud/troubleshooting/ci-execution-failed"
+            },
+            {
+              "name": "Explain With AI",
+              "id": "explain-with-ai",
+              "file": "nx-cloud/troubleshooting/explain-with-ai"
             }
           ]
         }
