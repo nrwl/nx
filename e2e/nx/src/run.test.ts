@@ -757,6 +757,10 @@ describe('Nx Running Tests', () => {
 
       updateJson<PackageJson>('package.json', (v) => {
         v.workspaces = ['libs/*'];
+        v.scripts.compound = `nx exec -- "echo 'HELLO' && pwd"`;
+        v.scripts.shellCommand = `nx exec -- 'for i in package.json project.json; do test -e $i && echo $i; done'`;
+        v.scripts.singleQuote = `nx exec -- 'node -e console.log("HELLO")'`;
+        v.scripts.doubleQuote = `nx exec -- "node -e console.log('HELLO')"`;
         return v;
       });
 
@@ -847,6 +851,28 @@ describe('Nx Running Tests', () => {
       expect(output).toContain(`nx run ${pkg}:"build:option"`);
     });
 
+    it('should run scripts with mixed quotes', () => {
+      const output = runCommand('npm run singleQuote');
+      expect(output).toContain('HELLO');
+
+      const output2 = runCommand('npm run doubleQuote');
+      expect(output2).toContain('HELLO');
+    });
+
+    it('should support compound scripts', () => {
+      const output = runCommand('npm run compound');
+      expect(output).toContain(`HELLO\n${pkgRoot}`);
+      expect(output).toContain(`HELLO\n${pkg2Root}`);
+    });
+
+    it('supports complex shell scripts', () => {
+      const output = runCommand('npm run shellCommand');
+
+      expect(output).toContain(
+        'package.json\nproject.json\npackage.json\nproject.json'
+      );
+    });
+
     it('should pass overrides', () => {
       const output = runCommand('npm run build WORLD', {
         cwd: pkgRoot,
@@ -877,7 +903,7 @@ describe('Nx Running Tests', () => {
             name: pkg,
             version: '0.0.1',
             scripts: {
-              build: `nx exec -- node -e "${nodeCommands.join(';')}"`,
+              build: `nx exec -- "node -e ${nodeCommands.join(';')}"`,
             },
             nx: {
               targets: {
