@@ -22,7 +22,7 @@ export function OssProjects(): JSX.Element {
           <dl className="grid grid-cols-2 justify-between sm:grid-cols-4">
             <a
               rel="noreferrer"
-              href="https://github.com/tanstack'"
+              href="https://github.com/tanstack"
               target="_blank"
               className="flex items-center justify-center border border-slate-200/20 p-12 transition hover:bg-slate-100/25 hover:text-slate-950 dark:border-slate-800/20 dark:hover:border-slate-600/20 dark:hover:bg-slate-600/10 dark:hover:text-white"
             >
