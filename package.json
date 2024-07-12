@@ -337,7 +337,7 @@
     "json-schema-to-typescript": "^10.1.5",
     "jsonpointer": "^5.0.0",
     "license-checker": "^25.0.1",
-    "next": "14.2.4",
+    "next": "14.2.5",
     "next-seo": "^5.13.0",
     "node-machine-id": "1.1.12",
     "npm-run-path": "^4.0.1",
