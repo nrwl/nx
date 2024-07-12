@@ -5301,7 +5301,7 @@
             "disableCollapsible": false
           },
           {
-            "name": "Nx Cloud AI (Tusky)",
+            "name": "Nx Cloud AI",
             "path": "/ci/features/nx-cloud-ai",
             "id": "nx-cloud-ai",
             "isExternal": false,
@@ -5360,7 +5360,7 @@
         "disableCollapsible": false
       },
       {
-        "name": "Nx Cloud AI (Tusky)",
+        "name": "Nx Cloud AI",
         "path": "/ci/features/nx-cloud-ai",
         "id": "nx-cloud-ai",
         "isExternal": false,

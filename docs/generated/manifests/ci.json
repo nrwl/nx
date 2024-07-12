@@ -209,7 +209,7 @@
       },
       {
         "id": "nx-cloud-ai",
-        "name": "Nx Cloud AI (Tusky)",
+        "name": "Nx Cloud AI",
         "description": "Learn how to enable AI features in Nx Cloud, and what features it enables",
         "mediaImage": "",
         "file": "nx-cloud/features/ai-features",
@@ -291,7 +291,7 @@
   },
   "/ci/features/nx-cloud-ai": {
     "id": "nx-cloud-ai",
-    "name": "Nx Cloud AI (Tusky)",
+    "name": "Nx Cloud AI",
     "description": "Learn how to enable AI features in Nx Cloud, and what features it enables",
     "mediaImage": "",
     "file": "nx-cloud/features/ai-features",

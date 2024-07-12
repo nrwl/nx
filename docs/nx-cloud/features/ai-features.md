@@ -1,6 +1,6 @@
-# Nx Cloud AI (Tusky)
+# Nx Cloud AI
 
-To harness the power of Tusky in Nx Cloud, you need to enable AI features in your organization settings. This will unlock advanced capabilities designed to enhance your development workflow.
+To use AI in Nx Cloud, you need to enable AI features in your organization settings. This will unlock advanced capabilities designed to enhance your development workflow.
 
 ### How to Enable AI Features
 
@@ -10,14 +10,14 @@ To harness the power of Tusky in Nx Cloud, you need to enable AI features in you
    - Select your organization from the list.
    - Access the settings by clicking on the settings icon.
 
-2. **Enable Tusky AI Features**:
+2. **Enable AI Features**:
 
    - In the settings menu, locate the **AI Features** section.
    - Toggle the setting to **On**.
      ![enable ai features](/nx-cloud/features/ai-features.png)
 
 3. **Accept AI Terms**:
-   - Upon enabling the Tusky AI features, a prompt will appear.
+   - Once the AI features are enabled, a terms and conditions prompt will appear.
    - Review and accept the terms and conditions related to AI usage to proceed.
 
 ### AI Driven Capabilities

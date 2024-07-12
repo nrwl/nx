@@ -254,7 +254,7 @@
     - [Run Only Tasks Affected by a PR](/ci/features/affected)
     - [Use Remote Caching (Nx Replay)](/ci/features/remote-cache)
     - [Distribute Task Execution (Nx Agents)](/ci/features/distribute-task-execution)
-    - [Nx Cloud AI (Tusky)](/ci/features/nx-cloud-ai)
+    - [Nx Cloud AI](/ci/features/nx-cloud-ai)
     - [Dynamically Allocate Agents](/ci/features/dynamic-agents)
     - [Automatically Split E2E Tasks (Atomizer)](/ci/features/split-e2e-tasks)
     - [Identify and Re-run Flaky Tasks](/ci/features/flaky-tasks)

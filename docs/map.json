@@ -1619,7 +1619,7 @@
               "file": "shared/features/distribute-task-execution"
             },
             {
-              "name": "Nx Cloud AI (Tusky)",
+              "name": "Nx Cloud AI",
               "id": "nx-cloud-ai",
               "description": "Learn how to enable AI features in Nx Cloud, and what features it enables",
               "file": "nx-cloud/features/ai-features"
