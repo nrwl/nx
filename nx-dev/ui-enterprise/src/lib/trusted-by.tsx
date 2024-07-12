@@ -1,21 +1,21 @@
-import { AwsAmplifyIcon } from './logos/aws-amplify';
-import { RoyalBankOfCanadaColoredIcon } from './logos/royal-bank-of-canada';
-import { CiscoIcon } from './logos/cisco';
-import { ManIcon } from './logos/man';
-import { CapitalOneIcon } from './logos/capital-one';
-import { ShopifyIcon } from './logos/shopify';
-import { VmwareIcon } from './logos/vmware';
-import { StorybookIcon } from './logos/storybook';
-import { FicoIcon } from './logos/fico';
-import { CaterpillarIcon } from './logos/caterpillar';
-import { SectionHeading } from './temp/typography';
+import {
+  AwsAmplifyIcon,
+  BillColoredIcon,
+  CapitalOneIcon,
+  CaterpillarIcon,
+  CiscoIcon,
+  FicoIcon,
+  HiltonIcon,
+  ManIcon,
+  ReactQueryIcon,
+  RedwoodJsIcon,
+  RoyalBankOfCanadaColoredIcon,
+  SevenElevenColoredIcon,
+  ShopifyIcon,
+  StorybookIcon,
+  VmwareIcon,
+} from '@nx/nx-dev/ui-common';
 import { motion } from 'framer-motion';
-import { AmericanAirlinesIcon } from './logos/american-airlines';
-import { BillColoredIcon } from './logos/bill';
-import { SevenElevenColoredIcon } from './logos/7eleven';
-import { HiltonIcon } from './logos/hilton';
-import { RedwoodJsIcon } from './logos/redwood-js';
-import { ReactQueryIcon } from './logos/react-query';
 
 export function TrustedBy(): JSX.Element {
   const variants = {
