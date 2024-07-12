@@ -46,11 +46,10 @@ export async function nxExecCommand(
 
   // NX is already running
   if (process.env.NX_TASK_TARGET_PROJECT) {
-    const command = scriptArgV
-      .reduce((cmd, arg) => cmd + `"${arg}" `, '')
-      .trim();
-    execSync(command, {
+    const command = scriptArgV.join(' ').trim();
+    spawnSync(command, {
       stdio: 'inherit',
+      shell: true,
       env: {
         ...process.env,
         NX_PROJECT_NAME: process.env.NX_TASK_TARGET_PROJECT,
