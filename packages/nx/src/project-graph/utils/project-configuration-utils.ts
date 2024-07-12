@@ -29,6 +29,7 @@ import {
   AggregateCreateNodesError,
 } from '../error-types';
 import { CreateNodesResult } from '../plugins';
+import { isGlobPattern } from '../../utils/globs';
 
 export type SourceInformation = [file: string | null, plugin: string];
 export type ConfigurationSourceMaps = Record<
@@ -1036,10 +1037,27 @@ export function readTargetDefaultsForTarget(
     // If not, use build if it is present.
     const key = [executor, targetName].find((x) => targetDefaults?.[x]);
     return key ? targetDefaults?.[key] : null;
-  } else {
+  } else if (targetDefaults?.[targetName]) {
     // If the executor is not defined, the only key we have is the target name.
     return targetDefaults?.[targetName];
   }
+
+  let matchingTargetDefaultKey: string | null = null;
+  for (const key in targetDefaults ?? {}) {
+    if (isGlobPattern(key) && minimatch(targetName, key)) {
+      if (
+        !matchingTargetDefaultKey ||
+        matchingTargetDefaultKey.length < key.length
+      ) {
+        matchingTargetDefaultKey = key;
+      }
+    }
+  }
+  if (matchingTargetDefaultKey) {
+    return targetDefaults[matchingTargetDefaultKey];
+  }
+
+  return {};
 }
 
 function createRootMap(projectRootMap: Record<string, ProjectConfiguration>) {
