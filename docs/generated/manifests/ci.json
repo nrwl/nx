@@ -208,6 +208,17 @@
         "tags": []
       },
       {
+        "id": "nx-cloud-ai",
+        "name": "Nx Cloud AI",
+        "description": "Learn how to enable AI features in Nx Cloud, and what features it enables",
+        "mediaImage": "",
+        "file": "nx-cloud/features/ai-features",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/features/nx-cloud-ai",
+        "tags": []
+      },
+      {
         "id": "dynamic-agents",
         "name": "Dynamically Allocate Agents",
         "description": "Learn how to dynamically allocate agents based on the size of a PR, keeping the balance of speed and cost.",
@@ -276,6 +287,17 @@
     "itemList": [],
     "isExternal": false,
     "path": "/ci/features/distribute-task-execution",
+    "tags": []
+  },
+  "/ci/features/nx-cloud-ai": {
+    "id": "nx-cloud-ai",
+    "name": "Nx Cloud AI",
+    "description": "Learn how to enable AI features in Nx Cloud, and what features it enables",
+    "mediaImage": "",
+    "file": "nx-cloud/features/ai-features",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/features/nx-cloud-ai",
     "tags": []
   },
   "/ci/features/dynamic-agents": {
@@ -560,14 +582,14 @@
             "tags": []
           },
           {
-            "id": "bitbucket-cloud",
-            "name": "Enable Bitbucket Cloud PR Integration",
+            "id": "bitbucket",
+            "name": "Enable Bitbucket PR Integration",
             "description": "",
             "mediaImage": "",
-            "file": "nx-cloud/set-up/bitbucket-cloud",
+            "file": "nx-cloud/set-up/bitbucket",
             "itemList": [],
             "isExternal": false,
-            "path": "/ci/recipes/source-control-integration/bitbucket-cloud",
+            "path": "/ci/recipes/source-control-integration/bitbucket",
             "tags": []
           },
           {
@@ -675,6 +697,17 @@
                 "itemList": [],
                 "isExternal": false,
                 "path": "/ci/recipes/enterprise/on-premise/auth-bitbucket",
+                "tags": []
+              },
+              {
+                "id": "auth-bitbucket-data-center",
+                "name": "Authenticate with BitBucket Data Center",
+                "description": "",
+                "mediaImage": "",
+                "file": "nx-cloud/enterprise/on-premise/auth-bitbucket-data-center",
+                "itemList": [],
+                "isExternal": false,
+                "path": "/ci/recipes/enterprise/on-premise/auth-bitbucket-data-center",
                 "tags": []
               },
               {
@@ -1089,14 +1122,14 @@
         "tags": []
       },
       {
-        "id": "bitbucket-cloud",
-        "name": "Enable Bitbucket Cloud PR Integration",
+        "id": "bitbucket",
+        "name": "Enable Bitbucket PR Integration",
         "description": "",
         "mediaImage": "",
-        "file": "nx-cloud/set-up/bitbucket-cloud",
+        "file": "nx-cloud/set-up/bitbucket",
         "itemList": [],
         "isExternal": false,
-        "path": "/ci/recipes/source-control-integration/bitbucket-cloud",
+        "path": "/ci/recipes/source-control-integration/bitbucket",
         "tags": []
       },
       {
@@ -1137,15 +1170,15 @@
     "path": "/ci/recipes/source-control-integration/github",
     "tags": []
   },
-  "/ci/recipes/source-control-integration/bitbucket-cloud": {
-    "id": "bitbucket-cloud",
-    "name": "Enable Bitbucket Cloud PR Integration",
+  "/ci/recipes/source-control-integration/bitbucket": {
+    "id": "bitbucket",
+    "name": "Enable Bitbucket PR Integration",
     "description": "",
     "mediaImage": "",
-    "file": "nx-cloud/set-up/bitbucket-cloud",
+    "file": "nx-cloud/set-up/bitbucket",
     "itemList": [],
     "isExternal": false,
-    "path": "/ci/recipes/source-control-integration/bitbucket-cloud",
+    "path": "/ci/recipes/source-control-integration/bitbucket",
     "tags": []
   },
   "/ci/recipes/source-control-integration/gitlab": {
@@ -1248,6 +1281,17 @@
             "itemList": [],
             "isExternal": false,
             "path": "/ci/recipes/enterprise/on-premise/auth-bitbucket",
+            "tags": []
+          },
+          {
+            "id": "auth-bitbucket-data-center",
+            "name": "Authenticate with BitBucket Data Center",
+            "description": "",
+            "mediaImage": "",
+            "file": "nx-cloud/enterprise/on-premise/auth-bitbucket-data-center",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/ci/recipes/enterprise/on-premise/auth-bitbucket-data-center",
             "tags": []
           },
           {
@@ -1456,6 +1500,17 @@
         "tags": []
       },
       {
+        "id": "auth-bitbucket-data-center",
+        "name": "Authenticate with BitBucket Data Center",
+        "description": "",
+        "mediaImage": "",
+        "file": "nx-cloud/enterprise/on-premise/auth-bitbucket-data-center",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/recipes/enterprise/on-premise/auth-bitbucket-data-center",
+        "tags": []
+      },
+      {
         "id": "auth-saml",
         "name": "Authenticate via SAML",
         "description": "",
@@ -1568,6 +1623,17 @@
     "itemList": [],
     "isExternal": false,
     "path": "/ci/recipes/enterprise/on-premise/auth-bitbucket",
+    "tags": []
+  },
+  "/ci/recipes/enterprise/on-premise/auth-bitbucket-data-center": {
+    "id": "auth-bitbucket-data-center",
+    "name": "Authenticate with BitBucket Data Center",
+    "description": "",
+    "mediaImage": "",
+    "file": "nx-cloud/enterprise/on-premise/auth-bitbucket-data-center",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/recipes/enterprise/on-premise/auth-bitbucket-data-center",
     "tags": []
   },
   "/ci/recipes/enterprise/on-premise/auth-saml": {
@@ -1975,6 +2041,17 @@
         "isExternal": false,
         "path": "/ci/troubleshooting/ci-execution-failed",
         "tags": []
+      },
+      {
+        "id": "explain-with-ai",
+        "name": "Explain With AI",
+        "description": "",
+        "mediaImage": "",
+        "file": "nx-cloud/troubleshooting/explain-with-ai",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/troubleshooting/explain-with-ai",
+        "tags": []
       }
     ],
     "isExternal": false,
@@ -1990,6 +2067,17 @@
     "itemList": [],
     "isExternal": false,
     "path": "/ci/troubleshooting/ci-execution-failed",
+    "tags": []
+  },
+  "/ci/troubleshooting/explain-with-ai": {
+    "id": "explain-with-ai",
+    "name": "Explain With AI",
+    "description": "",
+    "mediaImage": "",
+    "file": "nx-cloud/troubleshooting/explain-with-ai",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/troubleshooting/explain-with-ai",
     "tags": []
   }
 }

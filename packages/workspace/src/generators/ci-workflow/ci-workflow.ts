@@ -11,7 +11,7 @@ import {
 } from '@nx/devkit';
 import { deduceDefaultBase } from '../../utilities/default-base';
 import { join } from 'path';
-import { getNxCloudUrl } from 'nx/src/utils/nx-cloud-utils';
+import { getNxCloudUrl, isNxCloudUsed } from 'nx/src/utils/nx-cloud-utils';
 
 export interface Schema {
   name: string;
@@ -42,6 +42,7 @@ interface Substitutes {
   nxCloudHost: string;
   hasE2E: boolean;
   tmpl: '';
+  connectedToCloud: boolean;
 }
 
 function normalizeOptions(options: Schema, tree: Tree): Substitutes {
@@ -70,6 +71,8 @@ function normalizeOptions(options: Schema, tree: Tree): Substitutes {
   const hasE2E =
     allDependencies['@nx/cypress'] || allDependencies['@nx/playwright'];
 
+  const connectedToCloud = isNxCloudUsed(readJson(tree, 'nx.json'));
+
   return {
     workflowName,
     workflowFileName,
@@ -81,6 +84,7 @@ function normalizeOptions(options: Schema, tree: Tree): Substitutes {
     hasE2E,
     nxCloudHost,
     tmpl: '',
+    connectedToCloud,
   };
 }
 

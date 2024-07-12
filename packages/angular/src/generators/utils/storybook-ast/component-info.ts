@@ -120,7 +120,7 @@ function getStandaloneComponents(tree: Tree, filePath: string): string[] {
   const ast = tsquery.ast(fileContent);
   const components = tsquery<Identifier>(
     ast,
-    'ClassDeclaration:has(Decorator > CallExpression:has(Identifier[name=Component]) ObjectLiteralExpression PropertyAssignment Identifier[name=standalone] ~ TrueKeyword) > Identifier',
+    'ClassDeclaration:has(Decorator > CallExpression:has(Identifier[name=Component]) ObjectLiteralExpression PropertyAssignment:has(Identifier[name=standalone]) > TrueKeyword) > Identifier',
     { visitAllChildren: true }
   );
 

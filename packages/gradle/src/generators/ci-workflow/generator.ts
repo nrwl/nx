@@ -3,11 +3,9 @@ import {
   names,
   generateFiles,
   getPackageManagerCommand,
-  NxJsonConfiguration,
   formatFiles,
   detectPackageManager,
   readNxJson,
-  readJson,
 } from '@nx/devkit';
 import { join } from 'path';
 import { getNxCloudUrl, isNxCloudUsed } from 'nx/src/utils/nx-cloud-utils';
@@ -47,6 +45,7 @@ interface Substitutes {
   packageManagerPrefix: string;
   commands: string[];
   nxCloudHost: string;
+  connectedToCloud: boolean;
 }
 
 function getTemplateData(tree: Tree, options: Schema): Substitutes {
@@ -59,13 +58,15 @@ function getTemplateData(tree: Tree, options: Schema): Substitutes {
 
   let nxCloudHost: string = 'nx.app';
   try {
-    const nxCloudUrl = getNxCloudUrl(readJson(tree, 'nx.json'));
+    const nxCloudUrl = getNxCloudUrl(readNxJson(tree));
     nxCloudHost = new URL(nxCloudUrl).host;
   } catch {}
 
   const mainBranch = deduceDefaultBase();
 
   const commands = options.commands ?? getCiCommands(options.ci, mainBranch);
+
+  const connectedToCloud = isNxCloudUsed(readNxJson(tree));
 
   return {
     workflowName,
@@ -75,6 +76,7 @@ function getTemplateData(tree: Tree, options: Schema): Substitutes {
     commands,
     mainBranch,
     nxCloudHost,
+    connectedToCloud,
   };
 }
 

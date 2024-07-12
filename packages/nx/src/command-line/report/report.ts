@@ -21,6 +21,8 @@ import { gt, valid } from 'semver';
 import { findInstalledPlugins } from '../../utils/plugins/installed-plugins';
 import { getNxRequirePaths } from '../../utils/installation-directory';
 import { NxJsonConfiguration, readNxJson } from '../../config/nx-json';
+import { ProjectGraph } from '../../config/project-graph';
+import { ProjectGraphError } from '../../project-graph/error-types';
 
 const nxPackageJson = readJsonFile<typeof import('../../../package.json')>(
   join(__dirname, '../../../package.json')
@@ -160,19 +162,12 @@ export async function getReportData(): Promise<ReportData> {
   const pm = detectPackageManager();
   const pmVersion = getPackageManagerVersion(pm);
 
+  const { graph, error: projectGraphError } = await tryGetProjectGraph();
+
   const nxJson = readNxJson();
-  const localPlugins = await findLocalPlugins(nxJson);
+  const localPlugins = await findLocalPlugins(graph, nxJson);
   const communityPlugins = findInstalledCommunityPlugins();
   const registeredPlugins = findRegisteredPluginsBeingUsed(nxJson);
-
-  let projectGraphError: Error | null = null;
-  if (isNativeAvailable()) {
-    try {
-      await createProjectGraphAsync();
-    } catch (e) {
-      projectGraphError = e;
-    }
-  }
 
   const packageVersionsWeCareAbout = findInstalledPackagesWeCareAbout();
   packageVersionsWeCareAbout.unshift({
@@ -200,9 +195,27 @@ export async function getReportData(): Promise<ReportData> {
   };
 }
 
-async function findLocalPlugins(nxJson: NxJsonConfiguration) {
+async function tryGetProjectGraph() {
   try {
-    const projectGraph = await createProjectGraphAsync({ exitOnError: true });
+    return { graph: await createProjectGraphAsync() };
+  } catch (error) {
+    if (error instanceof ProjectGraphError) {
+      return {
+        graph: error.getPartialProjectGraph(),
+        error: error,
+      };
+    }
+    return {
+      error,
+    };
+  }
+}
+
+async function findLocalPlugins(
+  projectGraph: ProjectGraph,
+  nxJson: NxJsonConfiguration
+) {
+  try {
     const localPlugins = await getLocalWorkspacePlugins(
       readProjectsConfigurationFromProjectGraph(projectGraph),
       nxJson

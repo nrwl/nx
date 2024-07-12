@@ -254,6 +254,7 @@
     - [Run Only Tasks Affected by a PR](/ci/features/affected)
     - [Use Remote Caching (Nx Replay)](/ci/features/remote-cache)
     - [Distribute Task Execution (Nx Agents)](/ci/features/distribute-task-execution)
+    - [Nx Cloud AI](/ci/features/nx-cloud-ai)
     - [Dynamically Allocate Agents](/ci/features/dynamic-agents)
     - [Automatically Split E2E Tasks (Atomizer)](/ci/features/split-e2e-tasks)
     - [Identify and Re-run Flaky Tasks](/ci/features/flaky-tasks)
@@ -276,7 +277,7 @@
       - [Enable End to End Encryption](/ci/recipes/security/encryption)
     - [Source Control Integration](/ci/recipes/source-control-integration)
       - [Enable GitHub PR Integration](/ci/recipes/source-control-integration/github)
-      - [Enable Bitbucket Cloud PR Integration](/ci/recipes/source-control-integration/bitbucket-cloud)
+      - [Enable Bitbucket PR Integration](/ci/recipes/source-control-integration/bitbucket)
       - [Enable GitLab MR Integration](/ci/recipes/source-control-integration/gitlab)
       - [Enable Azure DevOps PR Integration](/ci/recipes/source-control-integration/azure-devops)
     - [Enterprise](/ci/recipes/enterprise)
@@ -287,6 +288,7 @@
         - [On-Prem VM Setup](/ci/recipes/enterprise/on-premise/ami-setup)
         - [Authenticate with GitLab](/ci/recipes/enterprise/on-premise/auth-gitlab)
         - [Authenticate with BitBucket](/ci/recipes/enterprise/on-premise/auth-bitbucket)
+        - [Authenticate with BitBucket Data Center](/ci/recipes/enterprise/on-premise/auth-bitbucket-data-center)
         - [Authenticate via SAML](/ci/recipes/enterprise/on-premise/auth-saml)
         - [Authenticate via SAML on Managed Version](/ci/recipes/enterprise/on-premise/auth-saml-managed)
         - [Advanced Configuration](/ci/recipes/enterprise/on-premise/advanced-config)
@@ -310,6 +312,7 @@
     - [Release Notes](/ci/reference/release-notes)
   - [Troubleshooting](/ci/troubleshooting)
     - [CI Execution Failed](/ci/troubleshooting/ci-execution-failed)
+    - [Explain With AI](/ci/troubleshooting/explain-with-ai)
 
 - Nx-api
   - [angular](/nx-api/angular)

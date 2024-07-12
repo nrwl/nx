@@ -121,7 +121,7 @@ Generate a 'src/' directory for Next.js
 
 Type: `string`
 
-Choices: [github, circleci, gitlab, azure, bitbucket, skip, yes]
+Choices: [github, circleci, gitlab, azure, bitbucket-pipelines, skip, yes]
 
 Which CI provider would you like to use?
 
