@@ -12,7 +12,6 @@ import {
   ShopifyIcon,
   GhostIcon,
   TypescriptEslintIcon,
-  BuilderMitosisIcon,
   CypressIcon,
   MicrosoftIcon,
   ElectronIcon,
@@ -130,7 +129,7 @@ export function OssProjects(): JSX.Element {
             </a>
 
             <a
-              href="https://github.com/BuilderIO/mitosis"
+              href="https://github.com/typescript-eslint/typescript-eslint"
               rel="noreferrer"
               target="_blank"
               className="flex items-center justify-center border-x border-b border-slate-200/20 p-12 transition hover:bg-slate-100/20 hover:text-slate-950 dark:border-slate-800/20 dark:hover:border-slate-600/20 dark:hover:bg-slate-600/10 dark:hover:text-white"
