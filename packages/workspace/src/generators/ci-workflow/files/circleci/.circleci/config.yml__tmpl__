@@ -34,6 +34,7 @@ jobs:
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - run: <%= packageManagerPrefix %> nx-cloud record -- echo Hello World
+      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - run: <%= packageManagerPrefix %> nx affected --base=$NX_BASE --head=$NX_HEAD -t lint test build<% if(hasE2E){ %>
       - run: <%= packageManagerPrefix %> nx affected --base=$NX_BASE --head=$NX_HEAD --parallel 1 -t e2e-ci<% } %>
 
