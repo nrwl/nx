@@ -388,7 +388,7 @@ export function EnterpriseCustomers(): JSX.Element {
               <CaisGroupIcon aria-hidden="true" className="h-28 w-28" />
             </a>
             <a
-              href="https://payfit.com/"
+              href="https://www.caseware.com/"
               rel="noreferrer"
               target="_blank"
               className="flex items-center justify-center border-x border-b border-slate-200/20 p-12 transition hover:bg-slate-100/20 hover:text-slate-950 dark:border-slate-800/20 dark:hover:border-slate-600/20 dark:hover:bg-slate-600/10 dark:hover:text-white"
