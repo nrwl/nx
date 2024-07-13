@@ -10,20 +10,6 @@
     },
     "e2e-macos-ci--src/expo-legacy.test.ts": {
       "inputs": ["e2eInputs", "^production"]
-    },
-    "e2e-ci--src/expo-legacy.test.ts": {
-      "dependsOn": [
-        "nx:build-native",
-        "@nx/nx-source:populate-local-registry-storage"
-      ],
-      "inputs": ["e2eInputs", "^production"]
-    },
-    "e2e-ci--src/expo.test.ts": {
-      "dependsOn": [
-        "nx:build-native",
-        "@nx/nx-source:populate-local-registry-storage"
-      ],
-      "inputs": ["e2eInputs", "^production"]
     }
   }
 }
