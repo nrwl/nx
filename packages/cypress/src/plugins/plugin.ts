@@ -211,6 +211,7 @@ async function buildCypressTargets(
       cache: true,
       inputs: getInputs(namedInputs),
       outputs: getOutputs(projectRoot, cypressConfig, 'e2e'),
+      parallelism: false,
       metadata: {
         technologies: ['cypress'],
         description: 'Runs Cypress Tests',
@@ -276,6 +277,7 @@ async function buildCypressTargets(
           options: {
             cwd: projectRoot,
           },
+          parallelism: false,
           metadata: {
             technologies: ['cypress'],
             description: `Runs Cypress Tests in ${relativeSpecFilePath} in CI`,
@@ -300,6 +302,7 @@ async function buildCypressTargets(
         inputs,
         outputs,
         dependsOn,
+        parallelism: false,
         metadata: {
           technologies: ['cypress'],
           description: 'Runs Cypress Tests in CI',

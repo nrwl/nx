@@ -39,4 +39,4 @@ jobs:
       - uses: nrwl/nx-set-shas@v4
 
 <% for (const command of commands) { %>
-      - run: <%= command %><% } %>
+      <% if (command.command) { %>- run: <%= command.command %><% } else if (command.comment) { %><%= command.comment %><% } else {%>- run: <%= command %><% } %><% } %>

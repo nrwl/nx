@@ -32,6 +32,16 @@ describe('project-configuration-utils', () => {
           key: 'default-value-for-targetname',
         },
       },
+      'e2e-ci--*': {
+        options: {
+          key: 'default-value-for-e2e-ci',
+        },
+      },
+      'e2e-ci--file-*': {
+        options: {
+          key: 'default-value-for-e2e-ci-file',
+        },
+      },
     };
 
     it('should prefer executor key', () => {
@@ -59,6 +69,14 @@ describe('project-configuration-utils', () => {
           'other-executor'
         )
       ).toBeNull();
+    });
+
+    it('should return longest matching target', () => {
+      expect(
+        // This matches both 'e2e-ci--*' and 'e2e-ci--file-*', we expect the first match to be returned.
+        readTargetDefaultsForTarget('e2e-ci--file-foo', targetDefaults, null)
+          .options['key']
+      ).toEqual('default-value-for-e2e-ci-file');
     });
 
     it('should not merge top level properties for incompatible targets', () => {
@@ -1502,6 +1520,7 @@ describe('project-configuration-utils', () => {
           "options": {
             "command": "echo libs/project",
           },
+          "parallelism": true,
         }
       `);
     });
@@ -1658,6 +1677,7 @@ describe('project-configuration-utils', () => {
           "options": {
             "command": "echo a @ libs/a",
           },
+          "parallelism": true,
         }
       `);
     });

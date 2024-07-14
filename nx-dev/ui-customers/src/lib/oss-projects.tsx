@@ -8,6 +8,14 @@ import {
   RxJSIcon,
   SentryIcon,
   MuiIcon,
+  AwsAmplifyIcon,
+  ShopifyIcon,
+  GhostIcon,
+  TypescriptEslintIcon,
+  CypressIcon,
+  MicrosoftIcon,
+  ElectronIcon,
+  StrapiIcon,
 } from '@nx/nx-dev/ui-common';
 
 export function OssProjects(): JSX.Element {
@@ -22,7 +30,7 @@ export function OssProjects(): JSX.Element {
           <dl className="grid grid-cols-2 justify-between sm:grid-cols-4">
             <a
               rel="noreferrer"
-              href="https://github.com/tanstack'"
+              href="https://github.com/tanstack"
               target="_blank"
               className="flex items-center justify-center border border-slate-200/20 p-12 transition hover:bg-slate-100/25 hover:text-slate-950 dark:border-slate-800/20 dark:hover:border-slate-600/20 dark:hover:bg-slate-600/10 dark:hover:text-white"
             >
@@ -30,19 +38,19 @@ export function OssProjects(): JSX.Element {
             </a>
             <a
               rel="noreferrer"
-              href="https://github.com/epicweb-dev/epicshop"
+              href="https://redwoodjs.com/"
               target="_blank"
               className="flex cursor-pointer items-center justify-center border-y border-slate-200/20 p-12 transition hover:bg-slate-100/25 hover:text-slate-950 dark:border-slate-800/20 dark:hover:border-slate-600/20 dark:hover:bg-slate-600/10 dark:hover:text-white"
             >
-              <EpicWebIcon aria-hidden="true" className="h-12 w-12" />
+              <RedwoodJsIcon aria-hidden="true" className="h-12 w-12" />
             </a>
             <a
+              href="https://github.com/epicweb-dev/epicshop"
               rel="noreferrer"
-              href="https://redwoodjs.com/"
               target="_blank"
               className="flex items-center justify-center border border-slate-200/20 p-12 transition hover:bg-slate-100/25 hover:text-slate-950 dark:border-slate-800/20 dark:hover:border-slate-600/20 dark:hover:bg-slate-600/10 dark:hover:text-white"
             >
-              <RedwoodJsIcon aria-hidden="true" className="h-12 w-12" />
+              <EpicWebIcon aria-hidden="true" className="h-12 w-12" />
             </a>
             <a
               rel="noreferrer"
@@ -84,6 +92,73 @@ export function OssProjects(): JSX.Element {
               className="flex items-center justify-center border-b border-r border-slate-200/20 p-12 transition hover:bg-slate-100/25 hover:text-slate-950 dark:border-slate-800/20 dark:hover:border-slate-600/20 dark:hover:bg-slate-600/10 dark:hover:text-white"
             >
               <MuiIcon aria-hidden="true" className="h-12 w-12" />
+            </a>
+
+            <a
+              rel="noreferrer"
+              href="https://github.com/aws-amplify/amplify-cli"
+              target="_blank"
+              className="flex items-center justify-center border-x border-b  border-slate-200/20 p-12 transition hover:bg-slate-100/25 hover:text-slate-950 dark:border-slate-800/20 dark:hover:border-slate-600/20 dark:hover:bg-slate-600/10 dark:hover:text-white"
+            >
+              <AwsAmplifyIcon aria-hidden="true" className="h-16 w-16" />
+            </a>
+            <a
+              href="https://github.com/Shopify/cli"
+              rel="noreferrer"
+              target="_blank"
+              className="flex items-center justify-center border-b border-slate-200/20 p-12 transition hover:bg-slate-100/20 hover:text-slate-950 dark:border-slate-800/20 dark:hover:border-slate-600/20 dark:hover:bg-slate-600/10 dark:hover:text-white"
+            >
+              <ShopifyIcon aria-hidden="true" className="h-12 w-12" />
+            </a>
+
+            <a
+              href="https://github.com/electron/forge"
+              rel="noreferrer"
+              target="_blank"
+              className="flex items-center justify-center border-x border-b border-slate-200/20 p-12 transition hover:bg-slate-100/20 hover:text-slate-950 dark:border-slate-800/20 dark:hover:border-slate-600/20 dark:hover:bg-slate-600/10 dark:hover:text-white"
+            >
+              <ElectronIcon aria-hidden="true" className="h-14 w-14" />
+            </a>
+            <a
+              rel="noreferrer"
+              href="https://github.com/strapi/strapi"
+              target="_blank"
+              className="flex items-center justify-center border-b border-r border-slate-200/20 p-12 transition hover:bg-slate-100/25 hover:text-slate-950 dark:border-slate-800/20 dark:hover:border-slate-600/20 dark:hover:bg-slate-600/10 dark:hover:text-white"
+            >
+              <StrapiIcon aria-hidden="true" className="h-12 w-12" />
+            </a>
+
+            <a
+              href="https://github.com/typescript-eslint/typescript-eslint"
+              rel="noreferrer"
+              target="_blank"
+              className="flex items-center justify-center border-x border-b border-slate-200/20 p-12 transition hover:bg-slate-100/20 hover:text-slate-950 dark:border-slate-800/20 dark:hover:border-slate-600/20 dark:hover:bg-slate-600/10 dark:hover:text-white"
+            >
+              <TypescriptEslintIcon aria-hidden="true" className="h-14 w-14" />
+            </a>
+            <a
+              href="https://github.com/cypress-io/cypress"
+              rel="noreferrer"
+              target="_blank"
+              className="flex items-center justify-center border-b border-slate-200/20 p-12 transition hover:bg-slate-100/20 hover:text-slate-950 dark:border-slate-800/20 dark:hover:border-slate-600/20 dark:hover:bg-slate-600/10 dark:hover:text-white"
+            >
+              <CypressIcon aria-hidden="true" className="h-14 w-14" />
+            </a>
+            <a
+              href="https://github.com/microsoft/fluentui"
+              rel="noreferrer"
+              target="_blank"
+              className="flex items-center justify-center border-x border-b border-slate-200/20 p-12 transition hover:bg-slate-100/20 hover:text-slate-950 dark:border-slate-800/20 dark:hover:border-slate-600/20 dark:hover:bg-slate-600/10 dark:hover:text-white"
+            >
+              <MicrosoftIcon aria-hidden="true" className="h-12 w-12" />
+            </a>
+            <a
+              href="https://github.com/TryGhost/Ghost"
+              rel="noreferrer"
+              target="_blank"
+              className="flex items-center justify-center border-b border-r border-slate-200/20 p-12 transition hover:bg-slate-100/20 hover:text-slate-950 dark:border-slate-800/20 dark:hover:border-slate-600/20 dark:hover:bg-slate-600/10 dark:hover:text-white"
+            >
+              <GhostIcon aria-hidden="true" className="h-14 w-14" />
             </a>
           </dl>
         </div>

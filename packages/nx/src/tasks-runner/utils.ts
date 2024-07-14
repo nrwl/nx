@@ -15,11 +15,9 @@ import { splitByColons } from '../utils/split-target';
 import { getExecutorInformation } from '../command-line/run/executor-utils';
 import { CustomHasher, ExecutorConfig } from '../config/misc-interfaces';
 import { readProjectsConfigurationFromProjectGraph } from '../project-graph/project-graph';
-import {
-  GLOB_CHARACTERS,
-  findMatchingProjects,
-} from '../utils/find-matching-projects';
+import { findMatchingProjects } from '../utils/find-matching-projects';
 import { minimatch } from 'minimatch';
+import { isGlobPattern } from '../utils/globs';
 
 export type NormalizedTargetDependencyConfig = TargetDependencyConfig & {
   projects: string[];
@@ -122,7 +120,7 @@ export function expandWildcardTargetConfiguration(
   dependencyConfig: NormalizedTargetDependencyConfig,
   allTargetNames: string[]
 ): NormalizedTargetDependencyConfig[] {
-  if (!GLOB_CHARACTERS.some((char) => dependencyConfig.target.includes(char))) {
+  if (!isGlobPattern(dependencyConfig.target)) {
     return [dependencyConfig];
   }
   let cache = patternResultCache.get(allTargetNames);

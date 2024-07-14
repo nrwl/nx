@@ -11,22 +11,36 @@ import { join } from 'path';
 import { getNxCloudUrl, isNxCloudUsed } from 'nx/src/utils/nx-cloud-utils';
 import { deduceDefaultBase } from 'nx/src/utils/default-base';
 
-function getCiCommands(ci: Schema['ci'], mainBranch: string): string[] {
+function getCiCommands(ci: Schema['ci']): Command[] {
   switch (ci) {
     case 'circleci': {
-      return [`./nx affected --base=$NX_BASE --head=$NX_HEAD -t test build`];
+      return [
+        {
+          comment: `# Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected`,
+        },
+        {
+          command: `./nx affected --base=$NX_BASE --head=$NX_HEAD -t test build`,
+        },
+      ];
     }
     default: {
-      return [`./nx affected -t test build`];
+      return [
+        {
+          comment: `# Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected`,
+        },
+        { command: `./nx affected -t test build` },
+      ];
     }
   }
 }
+
+export type Command = { command: string } | { comment: string } | string;
 
 export interface Schema {
   name: string;
   ci: 'github' | 'circleci';
   packageManager?: null;
-  commands?: string[];
+  commands?: Command[];
 }
 
 export async function ciWorkflowGenerator(tree: Tree, schema: Schema) {
@@ -43,7 +57,7 @@ interface Substitutes {
   workflowFileName: string;
   packageManager: string;
   packageManagerPrefix: string;
-  commands: string[];
+  commands: Command[];
   nxCloudHost: string;
   connectedToCloud: boolean;
 }
@@ -64,7 +78,7 @@ function getTemplateData(tree: Tree, options: Schema): Substitutes {
 
   const mainBranch = deduceDefaultBase();
 
-  const commands = options.commands ?? getCiCommands(options.ci, mainBranch);
+  const commands = options.commands ?? getCiCommands(options.ci);
 
   const connectedToCloud = isNxCloudUsed(readNxJson(tree));
 

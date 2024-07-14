@@ -121,6 +121,7 @@ describe('TaskHasher', () => {
         id: 'parent-build',
         overrides: { prop: 'prop-value' },
         outputs: [],
+        parallelism: true,
       },
       {
         roots: ['parent-build'],
@@ -130,6 +131,7 @@ describe('TaskHasher', () => {
             target: { project: 'parent', target: 'build' },
             overrides: {},
             outputs: [],
+            parallelism: true,
           },
         },
         dependencies: {},
@@ -188,6 +190,7 @@ describe('TaskHasher', () => {
         id: 'parent-build',
         overrides: { prop: 'prop-value' },
         outputs: [],
+        parallelism: true,
       },
       {
         roots: ['child-build'],
@@ -197,12 +200,14 @@ describe('TaskHasher', () => {
             target: { project: 'parent', target: 'build' },
             overrides: {},
             outputs: [],
+            parallelism: true,
           },
           'child-build': {
             id: 'child-build',
             target: { project: 'child', target: 'build' },
             overrides: {},
             outputs: [],
+            parallelism: true,
           },
         },
         dependencies: {
@@ -275,6 +280,7 @@ describe('TaskHasher', () => {
         id: 'parent-build',
         overrides: { prop: 'prop-value' },
         outputs: [],
+        parallelism: true,
       },
       {
         roots: ['child-build'],
@@ -284,12 +290,14 @@ describe('TaskHasher', () => {
             target: { project: 'parent', target: 'build' },
             overrides: {},
             outputs: [],
+            parallelism: true,
           },
           'child-build': {
             id: 'child-build',
             target: { project: 'child', target: 'build' },
             overrides: {},
             outputs: [],
+            parallelism: true,
           },
         },
         dependencies: {
@@ -354,6 +362,7 @@ describe('TaskHasher', () => {
           target: { project: 'parent', target: 'test' },
           overrides: {},
           outputs: [],
+          parallelism: true,
         },
       },
       dependencies: {},
@@ -365,6 +374,7 @@ describe('TaskHasher', () => {
         id: 'parent-test',
         overrides: { prop: 'prop-value' },
         outputs: [],
+        parallelism: true,
       },
       taskGraph,
       {}
@@ -378,6 +388,7 @@ describe('TaskHasher', () => {
         id: 'parent-build',
         overrides: { prop: 'prop-value' },
         outputs: [],
+        parallelism: true,
       },
       taskGraph,
       {}
@@ -459,12 +470,14 @@ describe('TaskHasher', () => {
           target: { project: 'parent', target: 'test' },
           overrides: {},
           outputs: [],
+          parallelism: true,
         },
         'child-test': {
           id: 'child-test',
           target: { project: 'child', target: 'test' },
           overrides: {},
           outputs: [],
+          parallelism: true,
         },
       },
       dependencies: {
@@ -478,6 +491,7 @@ describe('TaskHasher', () => {
         id: 'parent-test',
         overrides: { prop: 'prop-value' },
         outputs: [],
+        parallelism: true,
       },
       taskGraph,
       { MY_TEST_HASH_ENV: 'MY_TEST_HASH_ENV_VALUE' }
@@ -491,6 +505,7 @@ describe('TaskHasher', () => {
         id: 'child-test',
         overrides: { prop: 'prop-value' },
         outputs: [],
+        parallelism: true,
       },
       taskGraph,
       { MY_TEST_HASH_ENV: 'MY_TEST_HASH_ENV_VALUE' }
@@ -559,6 +574,7 @@ describe('TaskHasher', () => {
         id: 'parent-build',
         overrides: { prop: 'prop-value' },
         outputs: [],
+        parallelism: true,
       },
       {
         roots: ['child-build'],
@@ -568,12 +584,14 @@ describe('TaskHasher', () => {
             target: { project: 'parent', target: 'build' },
             overrides: {},
             outputs: [],
+            parallelism: true,
           },
           'child-build': {
             id: 'child-build',
             target: { project: 'child', target: 'build' },
             overrides: {},
             outputs: [],
+            parallelism: true,
           },
         },
         dependencies: {
@@ -622,6 +640,7 @@ describe('TaskHasher', () => {
         id: 'parent-build',
         overrides: { prop: 'prop-value' },
         outputs: [],
+        parallelism: true,
       },
       {
         roots: ['parent:build'],
@@ -631,6 +650,7 @@ describe('TaskHasher', () => {
             target: { project: 'parent', target: 'build' },
             overrides: {},
             outputs: [],
+            parallelism: true,
           },
         },
         dependencies: {},
@@ -687,12 +707,14 @@ describe('TaskHasher', () => {
           target: { project: 'parent', target: 'build' },
           overrides: {},
           outputs: [],
+          parallelism: true,
         },
         'child-build': {
           id: 'child-build',
           target: { project: 'child', target: 'build' },
           overrides: {},
           outputs: [],
+          parallelism: true,
         },
       },
       dependencies: {
@@ -706,6 +728,7 @@ describe('TaskHasher', () => {
         id: 'parent-build',
         overrides: { prop: 'prop-value' },
         outputs: [],
+        parallelism: true,
       },
       taskGraph,
       {}
@@ -719,6 +742,7 @@ describe('TaskHasher', () => {
         id: 'child-build',
         overrides: { prop: 'prop-value' },
         outputs: [],
+        parallelism: true,
       },
       taskGraph,
       {}
@@ -763,6 +787,7 @@ describe('TaskHasher', () => {
           id: 'parent-build',
           overrides: {},
           outputs: [],
+          parallelism: true,
         },
         {
           roots: ['parent:build'],
@@ -772,6 +797,7 @@ describe('TaskHasher', () => {
               target: { project: 'parent', target: 'build' },
               overrides: {},
               outputs: [],
+              parallelism: true,
             },
           },
           dependencies: {},
@@ -834,6 +860,7 @@ describe('TaskHasher', () => {
         id: 'app-build',
         overrides: { prop: 'prop-value' },
         outputs: [],
+        parallelism: true,
       },
       {
         roots: ['app-build'],
@@ -843,6 +870,7 @@ describe('TaskHasher', () => {
             target: { project: 'app', target: 'build' },
             overrides: {},
             outputs: [],
+            parallelism: true,
           },
         },
         dependencies: {},
@@ -902,6 +930,7 @@ describe('TaskHasher', () => {
         id: 'app-build',
         overrides: { prop: 'prop-value' },
         outputs: [],
+        parallelism: true,
       },
       {
         roots: ['app-build'],
@@ -911,6 +940,7 @@ describe('TaskHasher', () => {
             target: { project: 'app', target: 'build' },
             overrides: {},
             outputs: [],
+            parallelism: true,
           },
         },
         dependencies: {},
@@ -961,6 +991,7 @@ describe('TaskHasher', () => {
           id: 'app-build',
           overrides: { prop: 'prop-value' },
           outputs: [],
+          parallelism: true,
         },
         {
           roots: ['app-build'],
@@ -970,6 +1001,7 @@ describe('TaskHasher', () => {
               target: { project: 'app', target: 'build' },
               overrides: {},
               outputs: [],
+              parallelism: true,
             },
           },
           dependencies: {},
@@ -1051,12 +1083,14 @@ describe('TaskHasher', () => {
             target: { project: 'a', target: 'build' },
             overrides: {},
             outputs: [],
+            parallelism: true,
           },
           'b-build': {
             id: 'b-build',
             target: { project: 'b', target: 'build' },
             overrides: {},
             outputs: [],
+            parallelism: true,
           },
         },
         dependencies: {},
@@ -1071,6 +1105,7 @@ describe('TaskHasher', () => {
           target: { project: 'a', target: 'build' },
           overrides: {},
           outputs: [],
+          parallelism: true,
         },
         taskGraph,
         {}
@@ -1081,6 +1116,7 @@ describe('TaskHasher', () => {
           target: { project: 'b', target: 'build' },
           overrides: {},
           outputs: [],
+          parallelism: true,
         },
         taskGraph,
         {}
@@ -1092,6 +1128,7 @@ describe('TaskHasher', () => {
           target: { project: 'b', target: 'build' },
           overrides: {},
           outputs: [],
+          parallelism: true,
         },
         taskGraph,
         {}
@@ -1102,6 +1139,7 @@ describe('TaskHasher', () => {
           target: { project: 'a', target: 'build' },
           overrides: {},
           outputs: [],
+          parallelism: true,
         },
         taskGraph,
         {}
@@ -1201,6 +1239,7 @@ describe('TaskHasher', () => {
           id: 'app-build',
           overrides: { prop: 'prop-value' },
           outputs: [],
+          parallelism: true,
         },
         {
           roots: ['app-build'],
@@ -1210,6 +1249,7 @@ describe('TaskHasher', () => {
               target: { project: 'app', target: 'build' },
               overrides: {},
               outputs: [],
+              parallelism: true,
             },
           },
           dependencies: {},
@@ -1418,6 +1458,7 @@ describe('TaskHasher', () => {
           id: 'app-build',
           overrides: { prop: 'prop-value' },
           outputs: [],
+          parallelism: true,
         },
         {
           roots: ['app-build'],
@@ -1427,6 +1468,7 @@ describe('TaskHasher', () => {
               target: { project: 'app', target: 'build' },
               overrides: {},
               outputs: [],
+              parallelism: true,
             },
           },
           dependencies: {},
@@ -1502,6 +1544,7 @@ describe('TaskHasher', () => {
           id: 'app-build',
           overrides: { prop: 'prop-value' },
           outputs: [],
+          parallelism: true,
         },
         {
           roots: ['app-build'],
@@ -1511,6 +1554,7 @@ describe('TaskHasher', () => {
               target: { project: 'app', target: 'build' },
               overrides: {},
               outputs: [],
+              parallelism: true,
             },
           },
           dependencies: {},
@@ -1584,6 +1628,7 @@ describe('TaskHasher', () => {
           id: 'app-build',
           overrides: { prop: 'prop-value' },
           outputs: [],
+          parallelism: true,
         },
         {
           roots: ['app-build'],
@@ -1593,6 +1638,7 @@ describe('TaskHasher', () => {
               target: { project: 'app', target: 'build' },
               overrides: {},
               outputs: [],
+              parallelism: true,
             },
           },
           dependencies: {},
@@ -1710,6 +1756,7 @@ describe('TaskHasher', () => {
           id: 'parent-build',
           overrides: { prop: 'prop-value' },
           outputs: [],
+          parallelism: true,
         },
         {
           roots: ['grandchild-build'],
@@ -1719,18 +1766,21 @@ describe('TaskHasher', () => {
               target: { project: 'parent', target: 'build' },
               overrides: {},
               outputs: ['dist/libs/libs/parent'],
+              parallelism: true,
             },
             'child-build': {
               id: 'child-build',
               target: { project: 'child', target: 'build' },
               overrides: {},
               outputs: ['dist/libs/libs/child'],
+              parallelism: true,
             },
             'grandchild-build': {
               id: 'grandchild-build',
               target: { project: 'grandchild', target: 'build' },
               overrides: {},
               outputs: ['dist/libs/libs/grandchild'],
+              parallelism: true,
             },
           },
           dependencies: {
@@ -1850,6 +1900,7 @@ describe('TaskHasher', () => {
           id: 'parent-build',
           overrides: { prop: 'prop-value' },
           outputs: [],
+          parallelism: true,
         },
         {
           roots: ['grandchild-build'],
@@ -1859,18 +1910,21 @@ describe('TaskHasher', () => {
               target: { project: 'parent', target: 'build' },
               overrides: {},
               outputs: [],
+              parallelism: true,
             },
             'child-build': {
               id: 'child-build',
               target: { project: 'child', target: 'build' },
               overrides: {},
               outputs: [],
+              parallelism: true,
             },
             'grandchild-build': {
               id: 'grandchild-build',
               target: { project: 'grandchild', target: 'build' },
               overrides: {},
               outputs: [],
+              parallelism: true,
             },
           },
           dependencies: {

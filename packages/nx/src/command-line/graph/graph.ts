@@ -1220,6 +1220,6 @@ function getHelpTextFromTarget(
     throw new Error(`No help command found for ${projectName}:${targetName}`);
 
   return execSync(command, {
-    cwd: join(workspaceRoot, project.data.root),
+    cwd: target.options?.cwd ?? workspaceRoot,
   }).toString();
 }

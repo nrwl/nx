@@ -35,7 +35,7 @@ export class ProcessTasks {
     configuration: string,
     overrides: Object,
     excludeTaskDependencies: boolean
-  ) {
+  ): string[] {
     for (const projectName of projectNames) {
       for (const target of targets) {
         const project = this.projectGraph.nodes[projectName];
@@ -319,6 +319,7 @@ export class ProcessTasks {
         interpolatedOverrides
       ),
       cache: project.data.targets[target].cache,
+      parallelism: project.data.targets[target].parallelism ?? true,
     };
   }
 

@@ -158,7 +158,12 @@ jobs:
       - run:
           name: Run E2E Tests for macOS
           command: |
-            pnpm nx affected -t e2e-macos-ci --parallel=1 --base=$NX_BASE --head=$NX_HEAD
+            HAS_CHANGED=$(node ./scripts/check-react-native-changes.js $NX_BASE $NX_HEAD);
+            if $HAS_CHANGED; then
+              pnpm nx affected -t e2e-macos-ci --parallel=1 --base=$NX_BASE --head=$NX_HEAD
+            else
+              echo "Skip E2E tests for macOS as there are no changes in React Native projects."
+            fi
           no_output_timeout: 45m
 
 # -------------------------

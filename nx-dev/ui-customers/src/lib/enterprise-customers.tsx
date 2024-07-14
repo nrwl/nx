@@ -43,6 +43,9 @@ import {
   CaisGroupIcon,
   MillienniumIcon,
   EntainIcon,
+  ZipariIcon,
+  BillIcon,
+  RoyalBankOfCanadaIcon,
 } from '@nx/nx-dev/ui-common';
 
 export function EnterpriseCustomers(): JSX.Element {
@@ -116,12 +119,12 @@ export function EnterpriseCustomers(): JSX.Element {
               <CiscoIcon aria-hidden="true" className="h-24 w-24" />
             </a>
             <a
-              href="https://github.com/aws-amplify/amplify-cli"
+              href="https://www.paramountplus.com/"
               rel="noreferrer"
               target="_blank"
               className="flex items-center justify-center border-x border-b border-slate-200/20 p-12 transition hover:bg-slate-100/20 hover:text-slate-950 dark:border-slate-800/20 dark:hover:border-slate-600/20 dark:hover:bg-slate-600/10 dark:hover:text-white"
             >
-              <AwsAmplifyIcon aria-hidden="true" className="h-16 w-16" />
+              <ParamountIcon aria-hidden="true" className="h-14 w-14" />
             </a>
             <a
               href="https://www.fedex.com/"
@@ -140,20 +143,21 @@ export function EnterpriseCustomers(): JSX.Element {
               <AmericanAirlinesIcon aria-hidden="true" className="h-12 w-12" />
             </a>
             <a
-              href="https://github.com/Shopify/cli"
+              href="https://zipari.com/"
               rel="noreferrer"
               target="_blank"
               className="flex items-center justify-center border-b border-r border-slate-200/20 p-12 transition hover:bg-slate-100/20 hover:text-slate-950 dark:border-slate-800/20 dark:hover:border-slate-600/20 dark:hover:bg-slate-600/10 dark:hover:text-white"
             >
-              <ShopifyIcon aria-hidden="true" className="h-12 w-12" />
+              <ZipariIcon aria-hidden="true" className="h-12 w-12" />
             </a>
+
             <a
-              href="https://www.paramountplus.com/"
+              href="https://github.com/aws-amplify/amplify-cli"
               rel="noreferrer"
               target="_blank"
               className="flex items-center justify-center border-x border-b border-slate-200/20 p-12 transition hover:bg-slate-100/20 hover:text-slate-950 dark:border-slate-800/20 dark:hover:border-slate-600/20 dark:hover:bg-slate-600/10 dark:hover:text-white"
             >
-              <ParamountIcon aria-hidden="true" className="h-14 w-14" />
+              <BillIcon aria-hidden="true" className="h-16 w-16" />
             </a>
             <a
               href="https://www.adobe.com/"
@@ -329,7 +333,7 @@ export function EnterpriseCustomers(): JSX.Element {
               target="_blank"
               className="flex items-center justify-center border-x border-b border-slate-200/20 p-12 transition hover:bg-slate-100/20 hover:text-slate-950 dark:border-slate-800/20 dark:hover:border-slate-600/20 dark:hover:bg-slate-600/10 dark:hover:text-white"
             >
-              <GhostIcon aria-hidden="true" className="h-14 w-14" />
+              <RoyalBankOfCanadaIcon aria-hidden="true" className="h-14 w-14" />
             </a>
             <a
               href="https://www.ukg.ca/"

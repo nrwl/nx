@@ -289,7 +289,7 @@ jobs:
   build-freebsd:
     needs: [resolve-required-data]
     if: ${{ github.repository_owner == 'nrwl' }}
-    runs-on: macos-13-large
+    runs-on: ubuntu-latest
     name: Build FreeBSD
     timeout-minutes: 45
     steps:
@@ -302,7 +302,7 @@ jobs:
       - name: Build
         id: build
         if: ${{ github.event_name != 'schedule' && !github.event.inputs.pr }}
-        uses: cross-platform-actions/action@v0.22.0
+        uses: cross-platform-actions/action@v0.25.0
         env:
           DEBUG: napi:*
           RUSTUP_IO_THREADS: 1
@@ -310,14 +310,14 @@ jobs:
           PLAYWRIGHT_BROWSERS_PATH: 0
         with:
           operating_system: freebsd
-          version: '13.2'
+          version: '14.0'
           architecture: x86-64
           environment_variables: DEBUG RUSTUP_IO_THREADS CI NX_PREFER_TS_NODE PLAYWRIGHT_BROWSERS_PATH
           shell: bash
           run: |
             env
             whoami
-            sudo pkg install -y -f node libnghttp2 npm git
+            sudo pkg install -y -f node libnghttp2 www/npm git
             sudo npm install --location=global --ignore-scripts pnpm@8.15.7
             curl https://sh.rustup.rs -sSf --output rustup.sh
             sh rustup.sh -y --profile minimal --default-toolchain stable
@@ -333,8 +333,6 @@ jobs:
             whoami
             env
             freebsd-version
-            mkdir -p /Users/runner/work/_temp/_github_workflow
-            echo "{}" > /Users/runner/work/_temp/_github_workflow/event.json
             pnpm install --frozen-lockfile --ignore-scripts
             pnpm nx run-many --verbose --outputStyle stream --target=build-native -- --target=x86_64-unknown-freebsd
             pnpm nx reset
