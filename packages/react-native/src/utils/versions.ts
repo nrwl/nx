@@ -21,6 +21,6 @@ export const testingLibraryJestNativeVersion = '~5.4.3';
 export const jestReactNativeVersion = '18.0.0';
 
 export const reactNativeSvgTransformerVersion = '1.3.0';
-export const reactNativeSvgVersion = '15.2.0';
+export const reactNativeSvgVersion = '15.3.0';
 
 export const babelRuntimeVersion = '7.24.5';

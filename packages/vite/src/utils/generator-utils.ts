@@ -434,14 +434,6 @@ export function createOrEditViteConfig(
     ? `test: {
     watch: false,
     globals: true,
-    cache: {
-      dir: '${normalizedJoinPaths(
-        offsetFromRoot(projectRoot),
-        'node_modules',
-        '.vitest',
-        projectRoot === '.' ? options.project : projectRoot
-      )}'
-    },
     environment: '${options.testEnvironment ?? 'jsdom'}',
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
     ${

@@ -1,14 +1,15 @@
-import { ONLY_MODIFIES_EXISTING_TARGET } from '../../plugins/target-defaults/symbols';
 import {
   ProjectConfiguration,
   TargetConfiguration,
 } from '../../config/workspace-json-project-json';
 import {
   ConfigurationSourceMaps,
+  SourceInformation,
   createProjectConfigurations,
   isCompatibleTarget,
   mergeProjectConfigurationIntoRootMap,
   mergeTargetConfigurations,
+  mergeTargetDefaultWithTargetDefinition,
   normalizeTarget,
   readProjectConfigurationsFromRootMap,
   readTargetDefaultsForTarget,
@@ -29,6 +30,16 @@ describe('project-configuration-utils', () => {
       build: {
         options: {
           key: 'default-value-for-targetname',
+        },
+      },
+      'e2e-ci--*': {
+        options: {
+          key: 'default-value-for-e2e-ci',
+        },
+      },
+      'e2e-ci--file-*': {
+        options: {
+          key: 'default-value-for-e2e-ci-file',
         },
       },
     };
@@ -60,6 +71,14 @@ describe('project-configuration-utils', () => {
       ).toBeNull();
     });
 
+    it('should return longest matching target', () => {
+      expect(
+        // This matches both 'e2e-ci--*' and 'e2e-ci--file-*', we expect the first match to be returned.
+        readTargetDefaultsForTarget('e2e-ci--file-foo', targetDefaults, null)
+          .options['key']
+      ).toEqual('default-value-for-e2e-ci-file');
+    });
+
     it('should not merge top level properties for incompatible targets', () => {
       expect(
         mergeTargetConfigurations(
@@ -73,32 +92,6 @@ describe('project-configuration-utils', () => {
           }
         )
       ).toEqual({ executor: 'target2', outputs: ['output1'] });
-    });
-
-    it('should not overwrite target with information from defaults', () => {
-      const result = mergeTargetConfigurations(
-        {
-          executor: 'foo',
-          options: {
-            baz: true,
-          },
-          [ONLY_MODIFIES_EXISTING_TARGET]: true,
-        } as any,
-        {
-          executor: 'bar',
-          options: {
-            bang: true,
-          },
-        }
-      );
-      expect(result).toMatchInlineSnapshot(`
-        {
-          "executor": "bar",
-          "options": {
-            "bang": true,
-          },
-        }
-      `);
     });
 
     describe('options', () => {
@@ -692,47 +685,6 @@ describe('project-configuration-utils', () => {
         shouldntMergeConfigurationB
       );
       expect(merged.targets['newTarget']).toEqual(newTargetConfiguration);
-    });
-
-    it('should not create new targets if ONLY_MODIFIES_EXISTING_TARGET is true', () => {
-      const rootMap = new RootMapBuilder()
-        .addProject({
-          root: 'libs/lib-a',
-          name: 'lib-a',
-          targets: {
-            echo: {
-              command: 'echo lib-a',
-            },
-          },
-        })
-        .getRootMap();
-      mergeProjectConfigurationIntoRootMap(rootMap, {
-        root: 'libs/lib-a',
-        name: 'lib-a',
-        targets: {
-          build: {
-            command: 'tsc',
-            [ONLY_MODIFIES_EXISTING_TARGET]: true,
-          } as any,
-          echo: {
-            options: {
-              cwd: '{projectRoot}',
-            },
-            [ONLY_MODIFIES_EXISTING_TARGET]: true,
-          } as any,
-        },
-      });
-      const { targets } = rootMap['libs/lib-a'];
-      expect(targets.build).toBeUndefined();
-      // cwd was merged in, and ONLY_MODIFIES_EXISTING_TARGET was removed
-      expect(targets.echo).toMatchInlineSnapshot(`
-        {
-          "command": "echo lib-a",
-          "options": {
-            "cwd": "{projectRoot}",
-          },
-        }
-      `);
     });
 
     it('should concatenate tags and implicitDependencies', () => {
@@ -1568,8 +1520,44 @@ describe('project-configuration-utils', () => {
           "options": {
             "command": "echo libs/project",
           },
+          "parallelism": true,
         }
       `);
+    });
+    it('should not mutate the target', () => {
+      const config = {
+        name: 'project',
+        root: 'libs/project',
+        targets: {
+          foo: {
+            executor: 'nx:noop',
+            options: {
+              config: '{projectRoot}/config.json',
+            },
+            configurations: {
+              prod: {
+                config: '{projectRoot}/config.json',
+              },
+            },
+          },
+          bar: {
+            command: 'echo {projectRoot}',
+            options: {
+              config: '{projectRoot}/config.json',
+            },
+            configurations: {
+              prod: {
+                config: '{projectRoot}/config.json',
+              },
+            },
+          },
+        },
+      };
+      const originalConfig = JSON.stringify(config, null, 2);
+
+      normalizeTarget(config.targets.foo, config);
+      normalizeTarget(config.targets.bar, config);
+      expect(JSON.stringify(config, null, 2)).toEqual(originalConfig);
     });
   });
 
@@ -1724,6 +1712,7 @@ describe('project-configuration-utils', () => {
           "options": {
             "command": "echo a @ libs/a",
           },
+          "parallelism": true,
         }
       `);
     });
@@ -1825,6 +1814,57 @@ describe('project-configuration-utils', () => {
           },
         }
       `);
+    });
+  });
+
+  describe('merge target default with target definition', () => {
+    it('should merge options', () => {
+      const sourceMap: Record<string, SourceInformation> = {
+        targets: ['dummy', 'dummy.ts'],
+        'targets.build': ['dummy', 'dummy.ts'],
+        'targets.build.options': ['dummy', 'dummy.ts'],
+        'targets.build.options.command': ['dummy', 'dummy.ts'],
+        'targets.build.options.cwd': ['project.json', 'nx/project-json'],
+      };
+      const result = mergeTargetDefaultWithTargetDefinition(
+        'build',
+        {
+          name: 'myapp',
+          root: 'apps/myapp',
+          targets: {
+            build: {
+              executor: 'nx:run-commands',
+              options: {
+                command: 'echo',
+                cwd: '{workspaceRoot}',
+              },
+            },
+          },
+        },
+        {
+          options: {
+            command: 'tsc',
+            cwd: 'apps/myapp',
+          },
+        },
+        sourceMap
+      );
+
+      // Command was defined by a non-core plugin so it should be
+      // overwritten.
+      expect(result.options.command).toEqual('tsc');
+      expect(sourceMap['targets.build.options.command']).toEqual([
+        'nx.json',
+        'nx/target-defaults',
+      ]);
+      // Cwd was defined by a core plugin so it should be left unchanged.
+      expect(result.options.cwd).toEqual('{workspaceRoot}');
+      expect(sourceMap['targets.build.options.cwd']).toEqual([
+        'project.json',
+        'nx/project-json',
+      ]);
+      // other source map entries should be left unchanged
+      expect(sourceMap['targets']).toEqual(['dummy', 'dummy.ts']);
     });
   });
 });

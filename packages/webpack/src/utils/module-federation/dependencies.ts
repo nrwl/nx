@@ -5,7 +5,6 @@ import {
   getOutputsForTargetAndConfiguration,
   parseTargetString,
 } from '@nx/devkit';
-import { interpolate } from 'nx/src/tasks-runner/utils';
 
 export function getDependentPackagesForProject(
   projectGraph: ProjectGraph,

@@ -60,6 +60,7 @@ export const BentoGridItem = ({
             href={url}
             title="Learn more"
             className="float-right text-sm font-medium transition duration-200 group-hover/bento:text-blue-500 group-hover/bento:dark:text-sky-500"
+            prefetch={false}
           >
             <span className="group absolute inset-0" />
 

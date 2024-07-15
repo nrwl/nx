@@ -114,7 +114,11 @@ export default function Packages({
                     <p>
                       In version 16, we have rescoped our packages to{' '}
                       <code>@nx/*</code> from <code>@nrwl/*</code>.{' '}
-                      <Link href="/recipes/other/rescope" className="underline">
+                      <Link
+                        href="/recipes/other/rescope"
+                        className="underline"
+                        prefetch={false}
+                      >
                         Read more about the rescope ≫
                       </Link>
                     </p>
@@ -129,6 +133,7 @@ export default function Packages({
                           key={'ref-' + pkg.name}
                           href={pkg.path}
                           className="group relative flex items-center gap-3 rounded-md border border-slate-200 bg-slate-50/40 p-4 text-sm capitalize shadow-sm transition hover:bg-slate-50 dark:border-slate-800/40 dark:bg-slate-800/60 dark:hover:bg-slate-800"
+                          prefetch={false}
                         >
                           <img
                             className="h-5 w-5 object-cover opacity-75 dark:invert"

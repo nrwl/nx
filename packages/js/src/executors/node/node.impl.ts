@@ -1,14 +1,14 @@
 import * as chalk from 'chalk';
-import { ChildProcess, exec, fork } from 'child_process';
+import { ChildProcess, fork } from 'child_process';
 import {
   ExecutorContext,
+  isDaemonEnabled,
   joinPathFragments,
   logger,
   parseTargetString,
   ProjectGraphProjectNode,
   readTargetOptions,
   runExecutor,
-  Target,
 } from '@nx/devkit';
 import { createAsyncIterable } from '@nx/devkit/src/utils/async-iterable';
 import { daemonClient } from 'nx/src/daemon/client/client';
@@ -258,23 +258,29 @@ export async function* nodeExecutor(
         await addToQueue(childProcess, whenReady);
         await debouncedProcessQueue();
       };
-      additionalExitHandler = await daemonClient.registerFileWatcher(
-        {
-          watchProjects: [context.projectName],
-          includeDependentProjects: true,
-        },
-        async (err, data) => {
-          if (err === 'closed') {
-            logger.error(`Watch error: Daemon closed the connection`);
-            process.exit(1);
-          } else if (err) {
-            logger.error(`Watch error: ${err?.message ?? 'Unknown'}`);
-          } else {
-            logger.info(`NX File change detected. Restarting...`);
-            await runBuild();
+      if (isDaemonEnabled()) {
+        additionalExitHandler = await daemonClient.registerFileWatcher(
+          {
+            watchProjects: [context.projectName],
+            includeDependentProjects: true,
+          },
+          async (err, data) => {
+            if (err === 'closed') {
+              logger.error(`Watch error: Daemon closed the connection`);
+              process.exit(1);
+            } else if (err) {
+              logger.error(`Watch error: ${err?.message ?? 'Unknown'}`);
+            } else {
+              logger.info(`NX File change detected. Restarting...`);
+              await runBuild();
+            }
           }
-        }
-      );
+        );
+      } else {
+        logger.warn(
+          `NX Daemon is not running. Node process will not restart automatically after file changes.`
+        );
+      }
       await runBuild(); // run first build
     } else {
       // Otherwise, run the build executor, which will not run task dependencies.

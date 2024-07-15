@@ -33,6 +33,7 @@ export function Hero(): JSX.Element {
               href="/ci/features/distribute-task-execution"
               title="Discover Nx Agents"
               className="font-semibold text-blue-500 dark:text-sky-500"
+              prefetch={false}
             >
               <span className="absolute inset-0" aria-hidden="true"></span>Read
               more <span aria-hidden="true">→</span>

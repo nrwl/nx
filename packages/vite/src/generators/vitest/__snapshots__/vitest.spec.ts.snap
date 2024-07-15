@@ -23,9 +23,6 @@ export default defineConfig({
   test: {
     watch: false,
     globals: true,
-    cache: {
-      dir: '../../node_modules/.vitest/apps/my-test-react-app',
-    },
     environment: 'jsdom',
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
     includeSource: ['src/**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
@@ -64,9 +61,6 @@ export default defineConfig({
   test: {
     watch: false,
     globals: true,
-    cache: {
-      dir: '../../node_modules/.vitest/apps/my-test-react-app',
-    },
     environment: 'jsdom',
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
 
@@ -100,9 +94,6 @@ export default defineConfig({
   test: {
     watch: false,
     globals: true,
-    cache: {
-      dir: '../../node_modules/.vitest/libs/react-lib-nonb-jest',
-    },
     environment: 'jsdom',
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
 

@@ -248,7 +248,7 @@
       "description": "",
       "file": "shared/features/explore-graph",
       "id": "explore-graph",
-      "name": "Explore your Workspace",
+      "name": "Explore Your Workspace",
       "path": "/features/explore-graph"
     },
     {
@@ -1134,7 +1134,7 @@
       "file": "nx-cloud/features/nx-enterprise-on-prem",
       "id": "on-premise",
       "name": "Set up Nx Cloud On-Premise",
-      "path": "/ci/features/on-premise"
+      "path": "/ci/recipes/enterprise/on-premise/on-premise"
     }
   ],
   "docker": [

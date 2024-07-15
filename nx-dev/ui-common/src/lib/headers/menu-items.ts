@@ -1,6 +1,5 @@
 import {
   AcademicCapIcon,
-  ArrowPathIcon,
   BoltIcon,
   CircleStackIcon,
   CodeBracketIcon,
@@ -10,11 +9,16 @@ import {
   ShareIcon,
   Squares2X2Icon,
   ChatBubbleBottomCenterTextIcon,
+  ArrowUpCircleIcon,
+  UserGroupIcon,
+  ComputerDesktopIcon,
+  GlobeAltIcon,
 } from '@heroicons/react/24/outline';
 import { FC, SVGProps } from 'react';
 import { NxAgentsIcon } from '../nx-agents-icon';
 import { NxReplayIcon } from '../nx-replay-icon';
 import { DiscordIcon } from '../discord-icon';
+import { BuildingOfficeIcon } from '@heroicons/react/24/solid';
 
 export interface MenuItem {
   name: string;
@@ -27,7 +31,7 @@ export interface MenuItem {
 
 export const featuresItems: MenuItem[] = [
   {
-    name: 'Task Running',
+    name: 'Run Tasks',
     // description: 'Run one or many tasks in parallel.',
     description: null,
     href: '/features/run-tasks',
@@ -36,7 +40,7 @@ export const featuresItems: MenuItem[] = [
     isHighlight: false,
   },
   {
-    name: 'Local Caching',
+    name: 'Cache Task Results',
     // description: 'Speeds up your local workflow.',
     description: null,
     href: '/features/cache-task-results',
@@ -45,7 +49,7 @@ export const featuresItems: MenuItem[] = [
     isHighlight: false,
   },
   {
-    name: 'Nx Graph',
+    name: 'Explore Your Workspace',
     // description: 'See interactions for tasks and modules.',
     description: null,
     href: '/features/explore-graph',
@@ -54,16 +58,16 @@ export const featuresItems: MenuItem[] = [
     isHighlight: false,
   },
   {
-    name: 'Automated updates',
+    name: 'Automate Updating Dependencies',
     // description: 'Keep running on latest without effort.',
     description: null,
     href: '/features/automate-updating-dependencies',
-    icon: ArrowPathIcon,
+    icon: ArrowUpCircleIcon,
     isNew: false,
     isHighlight: false,
   },
   {
-    name: 'Module Boundaries',
+    name: 'Enforce Module Boundaries',
     // description: 'Partition your code into defined units.',
     description: null,
     href: '/features/enforce-module-boundaries',
@@ -72,16 +76,16 @@ export const featuresItems: MenuItem[] = [
     isHighlight: false,
   },
   {
-    name: 'Nx Release',
+    name: 'Manage Releases',
     // description: 'Versioning, changelog, publishing.',
     description: null,
     href: '/features/manage-releases',
     icon: CubeIcon,
-    isNew: true,
+    isNew: false,
     isHighlight: false,
   },
   {
-    name: 'Nx Replay',
+    name: 'Use Remote Caching (Nx Replay)',
     description: 'Zero-config, fast & secure remote cache solution.',
     href: '/ci/features/remote-cache',
     icon: NxReplayIcon,
@@ -89,12 +93,12 @@ export const featuresItems: MenuItem[] = [
     isHighlight: true,
   },
   {
-    name: 'Nx Agents',
+    name: 'Distribute Task Execution (Nx Agents)',
     description:
-      'One-line config for distributing tasks, E2E tests split & flaky tasks rerun.',
+      'One-line config for distributing tasks across multiple machines',
     href: '/ci/features/distribute-task-execution',
     icon: NxAgentsIcon,
-    isNew: true,
+    isNew: false,
     isHighlight: true,
   },
 ];
@@ -205,19 +209,36 @@ export const learnItems: MenuItem[] = [
 export const eventItems: MenuItem[] = [
   {
     name: 'Monorepo World',
-    description:
-      'In person & virtual conference about the latest monorepo advancements.',
+    description: null,
     href: 'https://monorepo.world',
-    icon: null,
+    icon: GlobeAltIcon,
     isNew: false,
     isHighlight: false,
   },
   {
     name: 'Webinars',
-    description:
-      'Virtual courses to get a deeper understanding on monorepos animated by the Nx team.',
+    description: null,
     href: 'https://go.nx.dev/webinar',
-    icon: null,
+    icon: ComputerDesktopIcon,
+    isNew: false,
+    isHighlight: false,
+  },
+];
+
+export const companyItems: MenuItem[] = [
+  {
+    name: 'About Us',
+    description: null,
+    href: '/company',
+    icon: UserGroupIcon,
+    isNew: false,
+    isHighlight: false,
+  },
+  {
+    name: 'Customers',
+    description: null,
+    icon: BuildingOfficeIcon,
+    href: '/customers',
     isNew: false,
     isHighlight: false,
   },
@@ -229,4 +250,5 @@ export const solutionsMenuItems = {
 export const resourceMenuItems = {
   Learn: learnItems,
   Events: eventItems,
+  Company: companyItems,
 };

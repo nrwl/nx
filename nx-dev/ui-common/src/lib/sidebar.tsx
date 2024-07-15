@@ -103,7 +103,11 @@ function SidebarSectionItems({ item }: { item: MenuItem }): JSX.Element {
         onClick={handleCollapseToggle}
       >
         {item.disableCollapsible ? (
-          <Link href={item.path as string} className="hover:underline">
+          <Link
+            href={item.path as string}
+            className="hover:underline"
+            prefetch={false}
+          >
             {item.name}
           </Link>
         ) : (
@@ -134,6 +138,7 @@ function SidebarSectionItems({ item }: { item: MenuItem }): JSX.Element {
                   className={cx(
                     'relative block py-1 text-slate-500 transition-colors duration-200 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-300'
                   )}
+                  prefetch={false}
                 >
                   <span
                     className={cx('relative', {
@@ -187,11 +192,17 @@ export function SidebarMobile({
   const router = useRouter();
   const isCI: boolean = router.asPath.startsWith('/ci');
   const isAPI: boolean = router.asPath.startsWith('/nx-api');
-  const isPlugins: boolean = router.asPath.startsWith('/extending-nx');
+  const isExtendingNx: boolean = router.asPath.startsWith('/extending-nx');
+  const isPlugins: boolean = router.asPath.startsWith('/plugin-registry');
   const isChangelog: boolean = router.asPath.startsWith('/changelog');
   const isAiChat: boolean = router.asPath.startsWith('/ai-chat');
   const isNx: boolean =
-    !isCI && !isAPI && !isPlugins && !isChangelog && !isAiChat;
+    !isCI &&
+    !isAPI &&
+    !isExtendingNx &&
+    !isPlugins &&
+    !isChangelog &&
+    !isAiChat;
 
   const sections = {
     general: [
@@ -220,6 +231,11 @@ export function SidebarMobile({
       {
         name: 'Extending Nx',
         href: '/extending-nx/intro/getting-started',
+        current: isExtendingNx,
+      },
+      {
+        name: 'Plugins',
+        href: '/plugin-registry',
         current: isPlugins,
       },
       {
@@ -275,6 +291,7 @@ export function SidebarMobile({
                   <Link
                     href="/"
                     className="flex flex-grow items-center px-4 text-slate-900 lg:px-0 dark:text-white"
+                    prefetch={false}
                   >
                     <span className="sr-only">Nx</span>
                     <NxIcon aria-hidden="true" className="h-8 w-8" />
@@ -296,6 +313,7 @@ export function SidebarMobile({
                           'whitespace-nowrap p-4 text-center text-sm font-medium'
                         )}
                         aria-current={section.current ? 'page' : undefined}
+                        prefetch={false}
                       >
                         {section.name}
                       </Link>
@@ -313,6 +331,7 @@ export function SidebarMobile({
                           'whitespace-nowrap p-4 text-center text-sm font-medium'
                         )}
                         aria-current={section.current ? 'page' : undefined}
+                        prefetch={false}
                       >
                         {section.name}
                       </Link>

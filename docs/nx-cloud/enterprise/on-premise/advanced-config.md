@@ -2,15 +2,7 @@
 
 ## Troubleshooting and Verbose Logging
 
-To help troubleshoot installations, add the following env variables when starting the container:
-
-```
--e NX_VERBOSE_LOGGING=true
--e NX_API_LOG_LEVEL=DEBUG
--e NX_MONGO_LOG_LEVEL=DEBUG
-```
-
-or if using helm set `verboseLogging` to `'true'`:
+To help troubleshoot installations set `verboseLogging` to `'true'`:
 
 ```yaml
 image:
@@ -29,10 +21,6 @@ The MongoDB team maintains the open
 source [MongoDB Kubernetes Operator](https://github.com/mongodb/mongodb-kubernetes-operator). You can use it to set up
 your own deployment of MongoDB. See [the Nx Cloud Kubernetes example](https://github.com/nrwl/nxcloud-k8s-setup) for
 more information.
-
-### Using CosmosDB
-
-If you are deploying to Azure, you might have access to CosmosDB. See here for more information.
 
 ### Using Mongo Atlas
 

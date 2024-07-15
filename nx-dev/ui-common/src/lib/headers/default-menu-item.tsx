@@ -36,6 +36,7 @@ export function DefaultMenuItem({
           title={item.name}
           target={hasExternalLink ? '_blank' : '_self'}
           className="text-sm font-medium text-slate-900 dark:text-slate-200"
+          prefetch={false}
         >
           {item.name}
           {item.isNew ? (
