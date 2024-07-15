@@ -986,6 +986,13 @@ export function normalizeTarget(
   target: TargetConfiguration,
   project: ProjectConfiguration
 ) {
+  target = {
+    ...target,
+    configurations: {
+      ...target.configurations,
+    },
+  };
+
   target = resolveCommandSyntacticSugar(target, project.root);
 
   target.options = resolveNxTokensInOptions(
@@ -994,7 +1001,6 @@ export function normalizeTarget(
     `${project.root}:${target}`
   );
 
-  target.configurations ??= {};
   for (const configuration in target.configurations) {
     target.configurations[configuration] = resolveNxTokensInOptions(
       target.configurations[configuration],
