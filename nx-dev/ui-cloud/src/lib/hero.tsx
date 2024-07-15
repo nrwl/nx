@@ -4,9 +4,8 @@ import { PlayIcon } from '@heroicons/react/24/outline';
 import { motion } from 'framer-motion';
 import { ComponentProps, Fragment, useState } from 'react';
 import { ButtonLink } from '@nx/nx-dev/ui-common';
-import { SectionHeading } from './elements/section-tags';
+import { SectionHeading } from '@nx/nx-dev/ui-common/src/lib/section-tags';
 import { MovingBorder } from './elements/moving-border';
-import Link from 'next/link';
 import Image from 'next/image';
 
 export function Hero(): JSX.Element {

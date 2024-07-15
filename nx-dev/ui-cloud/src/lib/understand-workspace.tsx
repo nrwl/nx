@@ -8,7 +8,7 @@ import {
   LockClosedIcon,
   SparklesIcon,
 } from '@heroicons/react/24/outline';
-import { SectionHeading } from './elements/section-tags';
+import { SectionHeading } from '@nx/nx-dev/ui-common/src/lib/section-tags';
 import { BentoGrid, BentoGridItem } from './elements/bento-grid';
 import { cx } from '@nx/nx-dev/ui-primitives';
 import { animate, motion, useMotionValue, useTransform } from 'framer-motion';
