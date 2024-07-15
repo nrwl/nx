@@ -61,6 +61,7 @@ launch-templates:
       GIT_COMMITTER_EMAIL: test@test.com
       GIT_COMMITTER_NAME: Test
       SELECTED_PM: 'npm' # explicitly define npm for macOS tests
+      PNPN_HOME: '~/Library/pnpm/store'
     init-steps:
       - name: Checkout
         uses: 'nrwl/nx-cloud-workflows/quote-pwd/workflow-steps/checkout/main.yaml'
