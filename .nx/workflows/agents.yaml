@@ -64,14 +64,14 @@ launch-templates:
     init-steps:
       - name: Checkout
         uses: 'nrwl/nx-cloud-workflows/quote-pwd/workflow-steps/checkout/main.yaml'
-      - name: Cache restore
-        uses: 'nrwl/nx-cloud-workflows/quote-pwd/workflow-steps/cache/main.yaml'
-        inputs:
-          key: 'pnpm-lock.yaml'
-          paths: |
-            node_modules
-            ~/.pnpm-store
-          base-branch: 'master'
+      # - name: Cache restore
+      #   uses: 'nrwl/nx-cloud-workflows/quote-pwd/workflow-steps/cache/main.yaml'
+      #   inputs:
+      #     key: 'pnpm-lock.yaml'
+      #     paths: |
+      #       node_modules
+      #       ~/.pnpm-store
+      #     base-branch: 'master'
 
       - name: Install Pnpm
         script: npm install -g pnpm@8
