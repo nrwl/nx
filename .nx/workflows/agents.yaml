@@ -63,9 +63,9 @@ launch-templates:
       SELECTED_PM: 'npm' # explicitly define npm for macOS tests
     init-steps:
       - name: Checkout
-        uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/checkout/main.yaml'
+        uses: 'nrwl/nx-cloud-workflows/quote-pwd/workflow-steps/checkout/main.yaml'
       - name: Cache restore
-        uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/cache/main.yaml'
+        uses: 'nrwl/nx-cloud-workflows/quote-pwd/workflow-steps/cache/main.yaml'
         inputs:
           key: 'pnpm-lock.yaml'
           paths: |
