@@ -46,7 +46,7 @@ export function Header(): JSX.Element {
   return (
     <div className="fixed inset-x-0 top-0 isolate z-[5] flex print:hidden">
       <div
-        className="absolute inset-x-0 top-0 mx-auto h-20 max-w-7xl bg-white/40 backdrop-blur dark:bg-slate-950/40"
+        className="absolute inset-x-0 top-0 mx-auto h-20 max-w-7xl backdrop-blur"
         style={{
           maskImage:
             'linear-gradient(to bottom, #000000 20%, transparent calc(100% - 20%))',
