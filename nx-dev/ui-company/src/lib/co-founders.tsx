@@ -1,4 +1,4 @@
-import { SectionHeading } from '@nx/nx-dev/ui-common/src/lib/section-tags';
+import { SectionHeading } from '@nx/nx-dev/ui-common';
 import { XIcon } from '@nx/nx-dev/ui-common';
 
 const coFounders = [

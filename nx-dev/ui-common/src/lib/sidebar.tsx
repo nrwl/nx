@@ -7,7 +7,7 @@ import cx from 'classnames';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { createRef, Fragment, useCallback, useEffect, useState } from 'react';
-import { NxIcon } from './nx-icon';
+import { NxIcon } from '@nx/nx-dev/ui-icons';
 
 export interface SidebarProps {
   menu: Menu;
