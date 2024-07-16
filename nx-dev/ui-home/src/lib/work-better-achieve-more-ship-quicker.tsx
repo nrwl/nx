@@ -67,7 +67,7 @@ export function WorkBetterAchieveMoreShipQuicker(): JSX.Element {
       </div>
 
       <div className="mt-12 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:gap-32">
-        <div className="group/card rounded-2xl border border-slate-100 bg-slate-50/40 p-6 transition-all duration-500 dark:border-slate-800/60 dark:bg-black">
+        <div className="group/card rounded-2xl border border-slate-100 bg-slate-50/30 p-6 transition-all duration-500 dark:border-slate-800/60 dark:bg-black">
           <SectionHeading
             as="h3"
             variant="title"
@@ -80,7 +80,7 @@ export function WorkBetterAchieveMoreShipQuicker(): JSX.Element {
             width={700}
             height={700}
             alt="chaos"
-            className="translation-all block max-w-full brightness-95 duration-500 group-hover/card:brightness-75 dark:hidden"
+            className="translation-all block max-w-full duration-500 group-hover/card:brightness-95 dark:hidden"
           />
           <Image
             src="/images/home/yarn-dark.avif"
@@ -90,7 +90,7 @@ export function WorkBetterAchieveMoreShipQuicker(): JSX.Element {
             className="translation-all hidden max-w-full duration-500 group-hover/card:brightness-200 dark:block"
           />
         </div>
-        <div className="group/card rounded-2xl border border-slate-100 bg-slate-50/40 p-6 transition-all duration-500 dark:border-slate-800/60 dark:bg-black">
+        <div className="group/card rounded-2xl border border-slate-100 bg-slate-50/30 p-6 transition-all duration-500 dark:border-slate-800/60 dark:bg-black">
           <SectionHeading
             as="h3"
             variant="title"
@@ -104,7 +104,7 @@ export function WorkBetterAchieveMoreShipQuicker(): JSX.Element {
             width={1000}
             height={1000}
             alt="order"
-            className="translation-all block max-w-full brightness-95 duration-500 group-hover/card:brightness-75 dark:hidden"
+            className="translation-all block max-w-full duration-500 group-hover/card:brightness-95 dark:hidden"
           />
           <Image
             src="/images/home/order-dark.avif"
