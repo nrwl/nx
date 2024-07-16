@@ -136,7 +136,7 @@ export const ApplicationCard = () => {
         </p>
         <p className="mt-2 text-slate-600 dark:text-slate-400">
           CI application build for monorepos, so you can quickly find what
-          failed, debug and optimize.
+          failed, debug and move on.
         </p>
         <div className="mt-10 flex items-center justify-center gap-x-6">
           <a
@@ -312,7 +312,7 @@ export const ProjectsCreatedEveryMonth = () => {
           <ButtonLink
             href="https://cloud.nx.app?utm_source=homepage&utm_medium=website&utm_campaign=homepage_links&utm_content=cta_ci_for_monorepos_connect_now"
             title="Get started"
-            variant="contrast"
+            variant="primary"
             size="large"
             target="_blank"
             rel="nofollow"

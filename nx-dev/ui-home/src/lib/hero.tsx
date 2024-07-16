@@ -45,9 +45,9 @@ export function Hero(): JSX.Element {
           </SectionHeading>
           <div className="mt-10 flex items-center justify-center gap-x-6">
             <ButtonLink
-              href="/getting-started/intro#try-nx-yourself"
+              href="/getting-started/intro?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_hero_get_started#try-nx-yourself"
               title="Get started"
-              variant="contrast"
+              variant="primary"
               size="default"
             >
               Get started

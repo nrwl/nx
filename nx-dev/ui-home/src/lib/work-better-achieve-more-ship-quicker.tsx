@@ -64,12 +64,14 @@ export function WorkBetterAchieveMoreShipQuicker(): JSX.Element {
         </SectionHeading>
         <div className="mt-10 flex gap-x-6">
           <ButtonLink
-            href="/getting-started/intro#try-nx-yourself"
+            href="/getting-started/intro?utm_source=homepage&utm_medium=website&utm_campaign=homepage_links&utm_content=cta_achieve_more_ship_quicker_getstarted#try-nx-yourself"
             title="Get started"
-            variant="contrast"
-            size="default"
+            variant="primary"
+            size="large"
+            target="_blank"
+            rel="nofollow"
           >
-            Start shipping faster now!
+            Get Started. It's FREE
           </ButtonLink>
         </div>
       </div>
