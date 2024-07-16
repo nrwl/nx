@@ -63,7 +63,7 @@ export function Hero(): JSX.Element {
               target="blank"
               title="Start with Nx"
               prefetch={false}
-              className="group text-sm font-semibold leading-6 text-slate-950 dark:text-white"
+              className="group font-semibold leading-6 text-slate-950 dark:text-white"
             >
               Connect your Nx repository{' '}
               <span
