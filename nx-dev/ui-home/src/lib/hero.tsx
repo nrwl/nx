@@ -1,9 +1,11 @@
+'use client';
 import { ButtonLink, SectionHeading, Strong } from '@nx/nx-dev/ui-common';
 import { ShaderGradient, ShaderGradientCanvas } from 'shadergradient';
 import { BlurFade } from '@nx/nx-dev/ui-animations';
 import { Theme, useTheme } from '@nx/nx-dev/ui-theme';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useIsomorphicLayoutEffect } from '@nx/nx-dev/ui-primitives';
 
 export function Hero(): JSX.Element {
   return (
@@ -82,13 +84,33 @@ export function Hero(): JSX.Element {
 function ShaderGradientElement() {
   const [theme] = useTheme();
   const [displayTheme, setDisplayTheme] = useState<Theme>('system');
-  useEffect(() => {
-    if (theme === 'system') {
-      const darkThemeMq = window.matchMedia('(prefers-color-scheme: dark)');
-      setDisplayTheme(darkThemeMq.matches ? 'dark' : 'light');
-    } else {
-      setDisplayTheme(theme === 'dark' ? 'dark' : 'light');
+  useIsomorphicLayoutEffect(() => {
+    const matchMedia: any = window.matchMedia('(prefers-color-scheme: dark)');
+
+    function handleChange(): void {
+      if (theme === 'system') {
+        setDisplayTheme(matchMedia.matches ? 'dark' : 'light');
+      } else {
+        setDisplayTheme(theme === 'dark' ? 'dark' : 'light');
+      }
     }
+
+    handleChange();
+
+    // Use deprecated `addListener` and `removeListener` to support Safari < 14 (#135)
+    if (matchMedia.addListener) {
+      matchMedia.addListener(handleChange);
+    } else {
+      matchMedia.addEventListener('change', handleChange);
+    }
+
+    return () => {
+      if (matchMedia.removeListener) {
+        matchMedia.removeListener(handleChange);
+      } else {
+        matchMedia.removeEventListener('change', handleChange);
+      }
+    };
   }, [theme]);
 
   if (displayTheme === 'dark')
