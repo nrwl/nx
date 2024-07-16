@@ -44,11 +44,10 @@ export function Hero(): JSX.Element {
             className="mx-auto mt-6 max-w-4xl"
           >
             {/*Structured, maintainable and efficient monorepos. Locally and on CI, easy as that.*/}
-            <Strong>Build system</Strong> optimized for monorepos with plugins
+            <Strong>Build system</Strong>, optimized for monorepos, with plugins
             for popular frameworks and tools and{' '}
             <Strong>advanced CI capabilities</Strong> including caching and
-            distribution. <br />
-            <Strong>Maintain and scale monorepos locally and on CI</Strong>.
+            distribution.
           </SectionHeading>
           <div className="mt-10 flex items-center justify-center gap-x-6">
             <ButtonLink
