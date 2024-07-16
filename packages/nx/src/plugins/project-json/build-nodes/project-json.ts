@@ -3,25 +3,35 @@ import { dirname, join } from 'node:path';
 import { ProjectConfiguration } from '../../../config/workspace-json-project-json';
 import { toProjectName } from '../../../config/to-project-name';
 import { readJsonFile } from '../../../utils/fileutils';
-import { NxPluginV2 } from '../../../project-graph/plugins';
+import {
+  createNodesFromFiles,
+  NxPluginV2,
+} from '../../../project-graph/plugins';
 import { PackageJson } from '../../../utils/package-json';
 
 export const ProjectJsonProjectsPlugin: NxPluginV2 = {
   name: 'nx/core/project-json',
-  createNodes: [
+  createNodesV2: [
     '{project.json,**/project.json}',
-    (file, _, { workspaceRoot }) => {
-      const json = readJsonFile<ProjectConfiguration>(
-        join(workspaceRoot, file)
-      );
+    (configFiles, _, context) => {
+      return createNodesFromFiles(
+        (file) => {
+          const json = readJsonFile<ProjectConfiguration>(
+            join(context.workspaceRoot, file)
+          );
 
-      const project = buildProjectFromProjectJson(json, file);
+          const project = buildProjectFromProjectJson(json, file);
 
-      return {
-        projects: {
-          [project.root]: project,
+          return {
+            projects: {
+              [project.root]: project,
+            },
+          };
         },
-      };
+        configFiles,
+        _,
+        context
+      );
     },
   ],
 };
