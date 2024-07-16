@@ -21,7 +21,7 @@ export function WorkBetterAchieveMoreShipQuicker(): JSX.Element {
         <SectionHeading as="p" variant="subtitle" className="mt-6">
           <Strong>Tangled codebases</Strong> without well-defined ownership{' '}
           <Strong>crush the velocity</Strong> of teams and the quality of
-          products. Nx fixes it. By defining{' '}
+          products. Nx solves it. By defining{' '}
           <TextLink
             href="/features/enforce-module-boundaries?utm_source=homepage&utm_medium=website&utm_campaign=homepage_links&utm_content=cta_achieve_more_ship_quicker"
             target="_blank"
@@ -38,7 +38,7 @@ export function WorkBetterAchieveMoreShipQuicker(): JSX.Element {
             rel="noopener"
             title="What are plugins?"
           >
-            Nx's plugins
+            Nx plugins
           </TextLink>{' '}
           and{' '}
           <TextLink

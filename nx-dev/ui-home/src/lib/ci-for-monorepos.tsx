@@ -36,17 +36,17 @@ export function CiForMonorepos(): JSX.Element {
           </SectionHeading>
           <SectionHeading as="p" variant="subtitle" className="mt-6">
             Current CI systems are <Strong>slow</Strong>,{' '}
-            <Strong>hard to maintain and unreliable</Strong>. With Nx Cloud we
-            introduce a new{' '}
+            <Strong>hard to maintain and unreliable</Strong>. With Nx Cloud, we
+            introduce an{' '}
             <TextLink
               href="/blog/reliable-ci-a-new-execution-model-fixing-both-flakiness-and-slowness?utm_source=homepage&utm_medium=website&utm_campaign=homepage_links&utm_content=cta_ci_for_monorepos"
               target="_blank"
-              title="Task based CI by Nx"
+              title="Task-based CI by Nx"
             >
-              task based approach
+              innovative task-based approach
             </TextLink>{' '}
             to making CI for monorepos not just <Strong>fast</Strong>, but also{' '}
-            <Strong>cost efficient</Strong>. It plugs right into your existing
+            <Strong>cost-efficient</Strong>. It plugs right into your existing
             CI setup, enabling features such as{' '}
             <TextLink
               href="ci/features/remote-cache?utm_source=homepage&utm_medium=website&utm_campaign=homepage_links&utm_content=cta_ci_for_monorepos"

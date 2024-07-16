@@ -58,7 +58,7 @@ export function SmarterToolsForMonorepos(): JSX.Element {
             Smarter tools for your monorepo.
           </SectionHeading>
           <SectionHeading as="p" variant="subtitle" className="mt-6">
-            Nx Plugins are{' '}
+            Nx plugins are{' '}
             <Strong>like VSCode extensions, but for your Nx workspace</Strong>.
             Imagine your{' '}
             <TextLink
@@ -97,7 +97,7 @@ export function SmarterToolsForMonorepos(): JSX.Element {
               task splitting
             </TextLink>{' '}
             being pre-configured for you. All in sync with your underlying
-            tooling configuration. Plus there's{' '}
+            tooling configuration. Plus there are{' '}
             <TextLink
               href="/features/generate-code?utm_source=homepage?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools"
               title="Task distribution"
