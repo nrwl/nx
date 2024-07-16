@@ -181,4 +181,20 @@ describe('CI Workflow generator', () => {
       expect(tree.read('bitbucket-pipelines.yml', 'utf-8')).toMatchSnapshot();
     });
   });
+
+  it('should add workflow files to namedInputs.sharedGlobals', async () => {
+    await ciWorkflowGenerator(tree, { ci: 'azure', name: 'CI' });
+    await ciWorkflowGenerator(tree, { ci: 'bitbucket-pipelines', name: 'CI' });
+    await ciWorkflowGenerator(tree, { ci: 'circleci', name: 'CI' });
+    await ciWorkflowGenerator(tree, { ci: 'github', name: 'CI' });
+    await ciWorkflowGenerator(tree, { ci: 'gitlab', name: 'CI' });
+
+    expect(readJson(tree, 'nx.json').namedInputs.sharedGlobals).toEqual([
+      '{workspaceRoot}/azure-pipelines.yml',
+      '{workspaceRoot}/bitbucket-pipelines.yml',
+      '{workspaceRoot}/.circleci/config.yml',
+      '{workspaceRoot}/.github/workflows/ci.yml',
+      '{workspaceRoot}/.gitlab-ci.yml',
+    ]);
+  });
 });
