@@ -1,5 +1,3 @@
-import { Header, Footer } from '@nx/nx-dev/ui-common';
-
 export function Layout({
   children,
 }: {
@@ -7,7 +5,6 @@ export function Layout({
 }): JSX.Element {
   return (
     <div>
-      <Header />
       <div className="relative isolate pt-14">
         <div
           className="absolute inset-x-0 -top-40 -z-10 h-full transform-gpu overflow-hidden blur-3xl sm:-top-80"
@@ -23,7 +20,6 @@ export function Layout({
         </div>
         <main className="py-24 sm:py-32">{children}</main>
       </div>
-      <Footer />
     </div>
   );
 }

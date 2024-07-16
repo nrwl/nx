@@ -1,3 +1,4 @@
+'use client';
 import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
 import { SectionHeading } from '@nx/nx-dev/ui-common/src/lib/section-tags';

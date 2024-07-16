@@ -1,3 +1,4 @@
+'use client';
 import { Dialog, Transition } from '@headlessui/react';
 import { cx } from '@nx/nx-dev/ui-primitives';
 import { PlayIcon } from '@heroicons/react/24/outline';
