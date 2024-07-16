@@ -61,7 +61,7 @@ export function WorkBetterAchieveMoreShipQuicker(): JSX.Element {
             variant="primary"
             size="large"
           >
-            Get Started. It's FREE
+            Get started with Cloud. It’s Free
           </ButtonLink>
         </div>
       </div>
@@ -80,7 +80,7 @@ export function WorkBetterAchieveMoreShipQuicker(): JSX.Element {
             width={700}
             height={700}
             alt="chaos"
-            className="translation-all block max-w-full duration-500 group-hover/card:brightness-90 dark:hidden"
+            className="translation-all block max-w-full brightness-95 duration-500 group-hover/card:brightness-75 dark:hidden"
           />
           <Image
             src="/images/home/yarn-dark.avif"
@@ -104,7 +104,7 @@ export function WorkBetterAchieveMoreShipQuicker(): JSX.Element {
             width={1000}
             height={1000}
             alt="order"
-            className="translation-all block max-w-full duration-500 group-hover/card:brightness-90 dark:hidden"
+            className="translation-all block max-w-full brightness-95 duration-500 group-hover/card:brightness-75 dark:hidden"
           />
           <Image
             src="/images/home/order-dark.avif"
