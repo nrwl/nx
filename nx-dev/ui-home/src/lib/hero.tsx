@@ -1,4 +1,4 @@
-import { ButtonLink, SectionHeading } from '@nx/nx-dev/ui-common';
+import { ButtonLink, SectionHeading, Strong } from '@nx/nx-dev/ui-common';
 import { ShaderGradient, ShaderGradientCanvas } from 'shadergradient';
 import { BlurFade } from '@nx/nx-dev/ui-animations';
 import { Theme, useTheme } from '@nx/nx-dev/ui-theme';
@@ -39,11 +39,14 @@ export function Hero(): JSX.Element {
           <SectionHeading
             as="p"
             variant="subtitle"
-            className="mx-auto mt-6 max-w-xl"
+            className="mx-auto mt-6 max-w-4xl"
           >
-            {/* Makes your builds super efficient, easy as that. */}
-            Structured, maintainable and efficient monorepos. Locally and on CI,
-            easy as that.
+            {/*Structured, maintainable and efficient monorepos. Locally and on CI, easy as that.*/}
+            <Strong>Build system</Strong> optimized for monorepos with plugins
+            for popular frameworks and tools and{' '}
+            <Strong>advanced CI capabilities</Strong> including caching and
+            distribution. <br />
+            <Strong>Maintain and scale monorepos locally and on CI</Strong>.
           </SectionHeading>
           <div className="mt-10 flex items-center justify-center gap-x-6">
             <ButtonLink
