@@ -9,7 +9,7 @@ import { useIsomorphicLayoutEffect } from '@nx/nx-dev/ui-primitives';
 
 export function Hero(): JSX.Element {
   return (
-    <div className="mx-auto h-screen w-screen max-w-7xl px-6 lg:px-8">
+    <div className="mx-auto h-screen w-full max-w-7xl px-6 lg:px-8">
       <ShaderGradientElement />
       <div className="absolute left-0 right-0 -z-10 mx-auto flex h-full max-h-screen w-full flex-row justify-between border-b border-dashed border-slate-200/30 px-6 lg:h-full lg:max-w-7xl lg:px-0 dark:border-slate-800/40">
         <div className="h-full w-full border-x border-dashed border-slate-200/20 dark:border-slate-800/40" />
@@ -114,8 +114,12 @@ function ShaderGradientElement() {
 
   if (displayTheme === 'dark')
     return (
-      <BlurFade delay={1} duration={1.8} className="absolute left-0 -z-10">
-        <div className="h-screen w-screen overflow-hidden">
+      <BlurFade
+        delay={1}
+        duration={1.8}
+        className="absolute left-0 -z-10 w-full"
+      >
+        <div className="h-screen w-full overflow-hidden">
           <ShaderGradientCanvas
             pointerEvents="none"
             eventPrefix="client"
@@ -156,8 +160,8 @@ function ShaderGradientElement() {
       </BlurFade>
     );
   return (
-    <BlurFade delay={1} duration={1.8} className="absolute left-0 -z-10">
-      <div className="h-screen w-screen overflow-hidden">
+    <BlurFade delay={1} duration={1.8} className="absolute left-0 -z-10 w-full">
+      <div className="h-screen w-full overflow-hidden">
         <ShaderGradientCanvas
           pointerEvents="none"
           eventPrefix="client"
