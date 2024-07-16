@@ -1029,14 +1029,13 @@ export function readTargetDefaultsForTarget(
   targetDefaults: TargetDefaults,
   executor?: string
 ): TargetDefaults[string] {
-  if (executor) {
+  if (executor && targetDefaults?.[executor]) {
     // If an executor is defined in project.json, defaults should be read
     // from the most specific key that matches that executor.
     // e.g. If executor === run-commands, and the target is named build:
     // Use, use nx:run-commands if it is present
     // If not, use build if it is present.
-    const key = [executor, targetName].find((x) => targetDefaults?.[x]);
-    return key ? targetDefaults?.[key] : null;
+    return targetDefaults?.[executor];
   } else if (targetDefaults?.[targetName]) {
     // If the executor is not defined, the only key we have is the target name.
     return targetDefaults?.[targetName];
@@ -1057,7 +1056,7 @@ export function readTargetDefaultsForTarget(
     return targetDefaults[matchingTargetDefaultKey];
   }
 
-  return {};
+  return null;
 }
 
 function createRootMap(projectRootMap: Record<string, ProjectConfiguration>) {

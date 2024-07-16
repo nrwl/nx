@@ -79,6 +79,18 @@ describe('project-configuration-utils', () => {
       ).toEqual('default-value-for-e2e-ci-file');
     });
 
+    it('should return longest matching target even if executor is passed', () => {
+      expect(
+        // This uses an executor which does not have settings in target defaults
+        // thus the target name pattern target defaults are used
+        readTargetDefaultsForTarget(
+          'e2e-ci--file-foo',
+          targetDefaults,
+          'other-executor'
+        ).options['key']
+      ).toEqual('default-value-for-e2e-ci-file');
+    });
+
     it('should not merge top level properties for incompatible targets', () => {
       expect(
         mergeTargetConfigurations(
