@@ -1,4 +1,4 @@
-import { DefaultLayout } from '@nx/nx-dev/ui-common';
+import { CallToAction, DefaultLayout } from '@nx/nx-dev/ui-common';
 import { NextSeo } from 'next-seo';
 import { useRouter } from 'next/router';
 
@@ -43,6 +43,9 @@ export function Customers(): JSX.Element {
         </div>
         <div className="mt-16 lg:mt-32">
           <OssProjects />
+        </div>
+        <div className="mt-32 lg:mt-56">
+          <CallToAction />
         </div>
       </DefaultLayout>
     </>

@@ -13,7 +13,7 @@ import {
   ShopifyIcon,
   StorybookIcon,
   VmwareIcon,
-} from '@nx/nx-dev/ui-common';
+} from '@nx/nx-dev/ui-icons';
 
 export function MetricsAndCustomers(): JSX.Element {
   const downloadElement: Variants = {

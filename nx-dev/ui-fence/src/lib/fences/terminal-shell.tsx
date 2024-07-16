@@ -1,8 +1,10 @@
 import { JSX, ReactNode } from 'react';
 
 export function TerminalShellWrapper({
+  title,
   children,
 }: {
+  title?: string;
   children: ReactNode;
 }): JSX.Element {
   return (
@@ -13,7 +15,7 @@ export function TerminalShellWrapper({
           <span className="h-2 w-2 rounded-full bg-yellow-400 dark:bg-yellow-600" />
           <span className="h-2 w-2 rounded-full bg-green-400 dark:bg-green-600" />
         </div>
-        <span className="h-5"></span>
+        <span className="h-5">{title}</span>
       </div>
       {children}
     </div>
