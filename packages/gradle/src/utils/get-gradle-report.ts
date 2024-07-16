@@ -33,8 +33,10 @@ let gradleCurrentConfigHash: string;
 
 export const GRADLE_BUILD_FILES = new Set(['build.gradle', 'build.gradle.kts']);
 export const GRADLE_TEST_FILES = [
-  '**/src/test/java/**/*.java',
-  '**/src/test/kotlin/**/*.kt',
+  '**/src/test/java/**/*Test.java',
+  '**/src/test/kotlin/**/*Test.kt',
+  '**/src/test/java/**/*Tests.java',
+  '**/src/test/kotlin/**/*Tests.kt',
 ];
 
 export const gradleConfigGlob = combineGlobPatterns(
