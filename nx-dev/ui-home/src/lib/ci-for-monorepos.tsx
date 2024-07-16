@@ -40,7 +40,6 @@ export function CiForMonorepos(): JSX.Element {
             introduce an{' '}
             <TextLink
               href="/blog/reliable-ci-a-new-execution-model-fixing-both-flakiness-and-slowness?utm_source=homepage&utm_medium=website&utm_campaign=homepage_links&utm_content=cta_ci_for_monorepos"
-              target="_blank"
               title="Task-based CI by Nx"
             >
               innovative task-based approach
@@ -49,32 +48,28 @@ export function CiForMonorepos(): JSX.Element {
             <Strong>cost-efficient</Strong>. It plugs right into your existing
             CI setup, enabling features such as{' '}
             <TextLink
-              href="ci/features/remote-cache?utm_source=homepage&utm_medium=website&utm_campaign=homepage_links&utm_content=cta_ci_for_monorepos"
-              target="_blank"
+              href="/ci/features/remote-cache?utm_source=homepage&utm_medium=website&utm_campaign=homepage_links&utm_content=cta_ci_for_monorepos"
               title="Remote caching with Nx Replay"
             >
               remote caching
             </TextLink>
             ,{' '}
             <TextLink
-              href="ci/features/distribute-task-execution?utm_source=homepage&utm_medium=website&utm_campaign=homepage_links&utm_content=cta_ci_for_monorepos"
-              target="_blank"
+              href="/ci/features/distribute-task-execution?utm_source=homepage&utm_medium=website&utm_campaign=homepage_links&utm_content=cta_ci_for_monorepos"
               title="Distribute task execution with Nx Agents "
             >
               dynamically allocating machines to distribute tasks
             </TextLink>
             , providing{' '}
             <TextLink
-              href="ci/features/split-e2e-tasks?utm_source=homepage&utm_medium=website&utm_campaign=homepage_links&utm_content=cta_ci_for_monorepos"
-              target="_blank"
+              href="/ci/features/split-e2e-tasks?utm_source=homepage&utm_medium=website&utm_campaign=homepage_links&utm_content=cta_ci_for_monorepos"
               title="E2E test splitting with Atomizer"
             >
               fine-grained e2e test splitting
             </TextLink>{' '}
             and{' '}
             <TextLink
-              href="https://nx.dev/ci/features/flaky-tasks?utm_source=homepage&utm_medium=website&utm_campaign=homepage_links&utm_content=cta_ci_for_monorepos"
-              target="_blank"
+              href="/ci/features/flaky-tasks?utm_source=homepage&utm_medium=website&utm_campaign=homepage_links&utm_content=cta_ci_for_monorepos"
               title="Flakiness detection with Nx"
             >
               automated flakiness detection

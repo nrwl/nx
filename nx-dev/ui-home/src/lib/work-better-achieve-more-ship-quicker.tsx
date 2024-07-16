@@ -24,8 +24,6 @@ export function WorkBetterAchieveMoreShipQuicker(): JSX.Element {
           products. Nx solves it. By defining{' '}
           <TextLink
             href="/features/enforce-module-boundaries?utm_source=homepage&utm_medium=website&utm_campaign=homepage_links&utm_content=cta_achieve_more_ship_quicker"
-            target="_blank"
-            rel="noopener"
             title="Enforce module boundaries"
           >
             project boundaries
@@ -34,8 +32,6 @@ export function WorkBetterAchieveMoreShipQuicker(): JSX.Element {
           maintain. By using{' '}
           <TextLink
             href="/concepts/nx-plugins?utm_source=homepage&utm_medium=website&utm_campaign=homepage_links&utm_content=cta_achieve_more_ship_quicker"
-            target="_blank"
-            rel="noopener"
             title="What are plugins?"
           >
             Nx plugins
@@ -43,8 +39,6 @@ export function WorkBetterAchieveMoreShipQuicker(): JSX.Element {
           and{' '}
           <TextLink
             href="/features/generate-code?utm_source=homepage&utm_medium=website&utm_campaign=homepage_links&utm_content=cta_achieve_more_ship_quicker"
-            target="_blank"
-            rel="noopener"
             title="Generate code"
           >
             code generation
@@ -54,8 +48,6 @@ export function WorkBetterAchieveMoreShipQuicker(): JSX.Element {
           using Nx's{' '}
           <TextLink
             href="/features/automate-updating-dependencies?utm_source=homepage&utm_medium=website&utm_campaign=homepage_links&utm_content=cta_achieve_more_ship_quicker"
-            target="_blank"
-            rel="noopener"
             title="Automate updating dependencies"
           >
             automated updating mechanism
@@ -68,8 +60,6 @@ export function WorkBetterAchieveMoreShipQuicker(): JSX.Element {
             title="Get started"
             variant="primary"
             size="large"
-            target="_blank"
-            rel="nofollow"
           >
             Get Started. It's FREE
           </ButtonLink>

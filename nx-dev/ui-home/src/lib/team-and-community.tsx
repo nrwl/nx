@@ -44,8 +44,6 @@ export function TeamAndCommunity(): JSX.Element {
           <TextLink
             href="/company?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_team_and_community"
             title="Our company"
-            target="_blank"
-            rel="noopener"
           >
             talented and enthusiastic team
           </TextLink>
@@ -53,12 +51,7 @@ export function TeamAndCommunity(): JSX.Element {
         </SectionHeading>
         <SectionHeading as="p" variant="subtitle" className="mt-6">
           We closely collaborate with many{' '}
-          <TextLink
-            href="/customers#popular-oss"
-            title="OSS projects"
-            target="_blank"
-            rel="noopener"
-          >
+          <TextLink href="/customers#popular-oss" title="OSS projects">
             OSS projects
           </TextLink>{' '}
           and companies in the ecosystem. Our team is highly motivated to{' '}
@@ -76,8 +69,6 @@ export function TeamAndCommunity(): JSX.Element {
                 href="/docs?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_team_and_community"
                 className="grow text-base"
                 prefetch={false}
-                target="_blank"
-                rel="noopener"
               >
                 <span className="absolute inset-0" />
                 Docs
@@ -95,8 +86,6 @@ export function TeamAndCommunity(): JSX.Element {
                 href="/blog?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_team_and_community"
                 className="grow text-base"
                 prefetch={false}
-                target="_blank"
-                rel="noopener"
               >
                 <span className="absolute inset-0" />
                 Blog
@@ -113,8 +102,6 @@ export function TeamAndCommunity(): JSX.Element {
               <a
                 href="https://youtube.com/@nxdevtools"
                 className="grow text-base"
-                rel="noreferrer"
-                target="_blank"
               >
                 <span className="absolute inset-0" />
                 Youtube
@@ -132,8 +119,6 @@ export function TeamAndCommunity(): JSX.Element {
               <a
                 href="https://go.nx.dev/community?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_team_and_community"
                 className="grow text-base"
-                rel="noreferrer"
-                target="_blank"
               >
                 <span className="absolute inset-0" />
                 Discord
@@ -150,8 +135,10 @@ export function TeamAndCommunity(): JSX.Element {
               <MicrophoneIcon aria-hidden="true" className="size-6 shrink-0" />
               <Link
                 href="https://podcasters.spotify.com/pod/show/enterprise-software"
-                className="grow text-base"
                 prefetch={false}
+                rel="noreferrer"
+                target="_blank"
+                className="grow text-base"
               >
                 <span className="absolute inset-0" />
                 Podcasts
@@ -171,10 +158,10 @@ export function TeamAndCommunity(): JSX.Element {
               />
               <Link
                 href="https://go.nx.dev/june-webinar?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_team_and_community"
-                className="grow text-base"
                 prefetch={false}
                 target="_blank"
                 rel="noopener"
+                className="grow text-base"
               >
                 <span className="absolute inset-0" />
                 Webinars

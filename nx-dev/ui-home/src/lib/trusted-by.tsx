@@ -107,7 +107,7 @@ export function TrustedBy(): JSX.Element {
         <div className="mt-8 text-center">
           <Link
             href="/customers?utm_source=homepage&utm_medium=website&utm_campaign=homepage_links&utm_content=our_customers"
-            target="_blank"
+            title="Our customers"
             prefetch={false}
             className="group font-semibold leading-6 text-slate-950 transition-all duration-200 dark:text-white"
           >

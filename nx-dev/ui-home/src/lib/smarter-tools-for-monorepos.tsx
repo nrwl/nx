@@ -63,8 +63,6 @@ export function SmarterToolsForMonorepos(): JSX.Element {
             Imagine your{' '}
             <TextLink
               href="/concepts/inferred-tasks?utm_source=homepage?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools"
-              target="_blank"
-              rel="noopener"
               title="Inferred tasks"
             >
               tools being automatically detected
@@ -73,8 +71,6 @@ export function SmarterToolsForMonorepos(): JSX.Element {
             <TextLink
               href="/features/cache-task-results?utm_source=homepage?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools"
               title="Caching"
-              target="_blank"
-              rel="noopener"
             >
               caching
             </TextLink>
@@ -82,8 +78,6 @@ export function SmarterToolsForMonorepos(): JSX.Element {
             <TextLink
               href="/ci/features/distribute-task-execution?utm_source=homepage?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools"
               title="Task distribution"
-              target="_blank"
-              rel="noopener"
             >
               task distribution
             </TextLink>
@@ -91,8 +85,6 @@ export function SmarterToolsForMonorepos(): JSX.Element {
             <TextLink
               href="/ci/features/distribute-task-execution?utm_source=homepage?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools"
               title="Task distribution"
-              target="_blank"
-              rel="noopener"
             >
               task splitting
             </TextLink>{' '}
@@ -101,8 +93,6 @@ export function SmarterToolsForMonorepos(): JSX.Element {
             <TextLink
               href="/features/generate-code?utm_source=homepage?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools"
               title="Task distribution"
-              target="_blank"
-              rel="noopener"
             >
               code generators
             </TextLink>{' '}
@@ -121,8 +111,6 @@ export function SmarterToolsForMonorepos(): JSX.Element {
                   prefetch={false}
                   title="Nx with Gradle"
                   className="h-full w-full p-4"
-                  target="_blank"
-                  rel="noopener"
                 >
                   <span className="absolute inset-0" />
                   <GradleIcon aria-hidden="true" className="h-full w-full" />
@@ -134,8 +122,6 @@ export function SmarterToolsForMonorepos(): JSX.Element {
                   prefetch={false}
                   title="Nx with Playwright"
                   className="h-full w-full p-4"
-                  target="_blank"
-                  rel="noopener"
                 >
                   <span className="absolute inset-0" />
                   <PlaywrightIcon
@@ -150,8 +136,6 @@ export function SmarterToolsForMonorepos(): JSX.Element {
                   prefetch={false}
                   title="Nx with Typescript"
                   className="h-full w-full p-4"
-                  target="_blank"
-                  rel="noopener"
                 >
                   <span className="absolute inset-0" />
                   <TypeScriptIcon
@@ -166,8 +150,6 @@ export function SmarterToolsForMonorepos(): JSX.Element {
                   prefetch={false}
                   title="Nx with Go"
                   className="h-full w-full p-4"
-                  target="_blank"
-                  rel="noopener"
                 >
                   <span className="absolute inset-0" />
                   <GoIcon aria-hidden="true" className="h-full w-full" />
@@ -179,8 +161,6 @@ export function SmarterToolsForMonorepos(): JSX.Element {
                   prefetch={false}
                   title="Nx with Nextjs"
                   className="h-full w-full p-4"
-                  target="_blank"
-                  rel="noopener"
                 >
                   <span className="absolute inset-0" />
                   <NextJSIcon aria-hidden="true" className="h-full w-full" />
@@ -192,8 +172,6 @@ export function SmarterToolsForMonorepos(): JSX.Element {
                   prefetch={false}
                   title="Nx with Storybook"
                   className="h-full w-full p-4"
-                  target="_blank"
-                  rel="noopener"
                 >
                   <span className="absolute inset-0" />
                   <StorybookIcon aria-hidden="true" className="h-full w-full" />
@@ -205,8 +183,6 @@ export function SmarterToolsForMonorepos(): JSX.Element {
                   prefetch={false}
                   title="Nx with Rollup"
                   className="h-full w-full p-4"
-                  target="_blank"
-                  rel="noopener"
                 >
                   <span className="absolute inset-0" />
                   <RollupIcon aria-hidden="true" className="h-full w-full" />
@@ -218,8 +194,6 @@ export function SmarterToolsForMonorepos(): JSX.Element {
                   prefetch={false}
                   title="Nx with Jest"
                   className="h-full w-full p-4"
-                  target="_blank"
-                  rel="noopener"
                 >
                   <span className="absolute inset-0" />
                   <JestIcon aria-hidden="true" className="h-full w-full" />
@@ -231,8 +205,6 @@ export function SmarterToolsForMonorepos(): JSX.Element {
                   prefetch={false}
                   title="Nx with EsLint"
                   className="h-full w-full p-4"
-                  target="_blank"
-                  rel="noopener"
                 >
                   <span className="absolute inset-0" />
                   <EslintIcon aria-hidden="true" className="h-full w-full" />
@@ -244,8 +216,6 @@ export function SmarterToolsForMonorepos(): JSX.Element {
                   prefetch={false}
                   title="Nx with Pnpm"
                   className="h-full w-full p-4"
-                  target="_blank"
-                  rel="noopener"
                 >
                   <span className="absolute inset-0" />
                   <PnpmIcon aria-hidden="true" className="h-full w-full" />
@@ -257,8 +227,6 @@ export function SmarterToolsForMonorepos(): JSX.Element {
                   prefetch={false}
                   title="Nx with Vite"
                   className="h-full w-full p-4"
-                  target="_blank"
-                  rel="noopener"
                 >
                   <span className="absolute inset-0" />
                   <ViteIcon aria-hidden="true" className="h-full w-full" />
@@ -270,8 +238,6 @@ export function SmarterToolsForMonorepos(): JSX.Element {
                   prefetch={false}
                   title="Nx with Solid"
                   className="h-full w-full p-4"
-                  target="_blank"
-                  rel="noopener"
                 >
                   <span className="absolute inset-0" />
                   <SolidIcon aria-hidden="true" className="h-full w-full" />
@@ -314,8 +280,6 @@ export function SmarterToolsForMonorepos(): JSX.Element {
                       prefetch={false}
                       title="Nx with Java"
                       className="h-full w-full p-4"
-                      target="_blank"
-                      rel="noopener"
                     >
                       <span className="absolute inset-0" />
                       <JavaIcon aria-hidden="true" className="h-full w-full" />
@@ -327,8 +291,6 @@ export function SmarterToolsForMonorepos(): JSX.Element {
                       prefetch={false}
                       title="Nx with Remix"
                       className="h-full w-full p-4"
-                      target="_blank"
-                      rel="noopener"
                     >
                       <span className="absolute inset-0" />
                       <RemixIcon aria-hidden="true" className="h-full w-full" />
@@ -340,8 +302,6 @@ export function SmarterToolsForMonorepos(): JSX.Element {
                       prefetch={false}
                       title="Nx with Angular"
                       className="h-full w-full p-4"
-                      target="_blank"
-                      rel="noopener"
                     >
                       <span className="absolute inset-0" />
                       <AngularIcon
@@ -386,8 +346,6 @@ export function SmarterToolsForMonorepos(): JSX.Element {
                       prefetch={false}
                       title="Nx with Rust"
                       className="h-full w-full p-4"
-                      target="_blank"
-                      rel="noopener"
                     >
                       <span className="absolute inset-0" />
                       <RustIcon aria-hidden="true" className="h-full w-full" />
@@ -399,8 +357,6 @@ export function SmarterToolsForMonorepos(): JSX.Element {
                       prefetch={false}
                       title="Nx with Vue"
                       className="h-full w-full p-4"
-                      target="_blank"
-                      rel="noopener"
                     >
                       <span className="absolute inset-0" />
                       <VueIcon aria-hidden="true" className="h-full w-full" />
@@ -412,8 +368,6 @@ export function SmarterToolsForMonorepos(): JSX.Element {
                       prefetch={false}
                       title="Nx with Nuxt"
                       className="h-full w-full p-4"
-                      target="_blank"
-                      rel="noopener"
                     >
                       <span className="absolute inset-0" />
                       <NuxtIcon aria-hidden="true" className="h-full w-full" />
@@ -427,8 +381,6 @@ export function SmarterToolsForMonorepos(): JSX.Element {
                   prefetch={false}
                   title="Webstorm plugin"
                   className="flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-xs transition dark:border-slate-800 dark:bg-slate-900"
-                  target="_blank"
-                  rel="noopener"
                 >
                   <JetBrainsIcon aria-hidden="true" className="size-3" />{' '}
                   JetBrains
@@ -441,8 +393,6 @@ export function SmarterToolsForMonorepos(): JSX.Element {
                   prefetch={false}
                   title="VSCode plugin"
                   className="flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-xs dark:border-slate-800 dark:bg-slate-900"
-                  target="_blank"
-                  rel="noopener"
                 >
                   <VisualStudioCodeIcon aria-hidden="true" className="size-3" />{' '}
                   VS Code
@@ -456,8 +406,6 @@ export function SmarterToolsForMonorepos(): JSX.Element {
                   prefetch={false}
                   title="Nx with DotNet"
                   className="h-full w-full p-4"
-                  target="_blank"
-                  rel="noopener"
                 >
                   <span className="absolute inset-0" />
                   <DotNetIcon aria-hidden="true" className="h-full w-full" />
@@ -469,8 +417,6 @@ export function SmarterToolsForMonorepos(): JSX.Element {
                   prefetch={false}
                   title="Nx with Astro"
                   className="h-full w-full p-4"
-                  target="_blank"
-                  rel="noopener"
                 >
                   <span className="absolute inset-0" />
                   <AstroIcon aria-hidden="true" className="h-full w-full" />
@@ -482,8 +428,6 @@ export function SmarterToolsForMonorepos(): JSX.Element {
                   prefetch={false}
                   title="Nx with Cypress"
                   className="h-full w-full p-4"
-                  target="_blank"
-                  rel="noopener"
                 >
                   <span className="absolute inset-0" />
                   <CypressIcon aria-hidden="true" className="h-full w-full" />
@@ -495,8 +439,6 @@ export function SmarterToolsForMonorepos(): JSX.Element {
                   prefetch={false}
                   title="Nx with React"
                   className="h-full w-full p-4"
-                  target="_blank"
-                  rel="noopener"
                 >
                   <span className="absolute inset-0" />
                   <ReactIcon aria-hidden="true" className="h-full w-full" />
@@ -508,8 +450,6 @@ export function SmarterToolsForMonorepos(): JSX.Element {
                   prefetch={false}
                   title="Nx with NestJS"
                   className="h-full w-full p-4"
-                  target="_blank"
-                  rel="noopener"
                 >
                   <span className="absolute inset-0" />
                   <NestJSIcon aria-hidden="true" className="h-full w-full" />
@@ -521,8 +461,6 @@ export function SmarterToolsForMonorepos(): JSX.Element {
                   prefetch={false}
                   title="Nx with Vitest"
                   className="h-full w-full p-4"
-                  target="_blank"
-                  rel="noopener"
                 >
                   <span className="absolute inset-0" />
                   <FastifyIcon aria-hidden="true" className="h-full w-full" />
@@ -534,8 +472,6 @@ export function SmarterToolsForMonorepos(): JSX.Element {
                   prefetch={false}
                   title="Nx with RSpack"
                   className="h-full w-full p-4"
-                  target="_blank"
-                  rel="noopener"
                 >
                   <span className="absolute inset-0" />
                   <RspackIcon aria-hidden="true" className="h-full w-full" />
@@ -547,8 +483,6 @@ export function SmarterToolsForMonorepos(): JSX.Element {
                   prefetch={false}
                   title="Nx with Express"
                   className="h-full w-full p-4"
-                  target="_blank"
-                  rel="noopener"
                 >
                   <span className="absolute inset-0" />
                   <ExpressIcon aria-hidden="true" className="h-full w-full" />
@@ -560,8 +494,6 @@ export function SmarterToolsForMonorepos(): JSX.Element {
                   prefetch={false}
                   title="Nx with Webpack"
                   className="h-full w-full p-4"
-                  target="_blank"
-                  rel="noopener"
                 >
                   <span className="absolute inset-0" />
                   <WebpackIcon aria-hidden="true" className="h-full w-full" />
@@ -573,8 +505,6 @@ export function SmarterToolsForMonorepos(): JSX.Element {
                   prefetch={false}
                   title="Nx with NodeJs"
                   className="h-full w-full p-4"
-                  target="_blank"
-                  rel="noopener"
                 >
                   <span className="absolute inset-0" />
                   <NodeIcon aria-hidden="true" className="h-full w-full" />
@@ -586,8 +516,6 @@ export function SmarterToolsForMonorepos(): JSX.Element {
                   prefetch={false}
                   title="Nx with Qwik"
                   className="h-full w-full p-4"
-                  target="_blank"
-                  rel="noopener"
                 >
                   <span className="absolute inset-0" />
                   <QwikIcon aria-hidden="true" className="h-full w-full" />
@@ -599,8 +527,6 @@ export function SmarterToolsForMonorepos(): JSX.Element {
                   prefetch={false}
                   title="Nx with Expo"
                   className="h-full w-full p-4"
-                  target="_blank"
-                  rel="noopener"
                 >
                   <span className="absolute inset-0" />
                   <ExpoIcon aria-hidden="true" className="h-full w-full" />
@@ -644,8 +570,6 @@ export function SmarterToolsForMonorepos(): JSX.Element {
                   prefetch={false}
                   title="Nx with Gradle"
                   className="h-full w-full p-4"
-                  target="_blank"
-                  rel="noopener"
                 >
                   <span className="absolute inset-0" />
                   <GradleIcon aria-hidden="true" className="h-full w-full" />
@@ -657,8 +581,6 @@ export function SmarterToolsForMonorepos(): JSX.Element {
                   prefetch={false}
                   title="Nx with Playwright"
                   className="h-full w-full p-4"
-                  target="_blank"
-                  rel="noopener"
                 >
                   <span className="absolute inset-0" />
                   <PlaywrightIcon
@@ -673,8 +595,6 @@ export function SmarterToolsForMonorepos(): JSX.Element {
                   prefetch={false}
                   title="Nx with Typescript"
                   className="h-full w-full p-4"
-                  target="_blank"
-                  rel="noopener"
                 >
                   <span className="absolute inset-0" />
                   <TypeScriptIcon
@@ -689,8 +609,6 @@ export function SmarterToolsForMonorepos(): JSX.Element {
                   prefetch={false}
                   title="Nx with Go"
                   className="h-full w-full p-4"
-                  target="_blank"
-                  rel="noopener"
                 >
                   <span className="absolute inset-0" />
                   <GoIcon aria-hidden="true" className="h-full w-full" />
@@ -702,8 +620,6 @@ export function SmarterToolsForMonorepos(): JSX.Element {
                   prefetch={false}
                   title="Nx with Nextjs"
                   className="h-full w-full p-4"
-                  target="_blank"
-                  rel="noopener"
                 >
                   <span className="absolute inset-0" />
                   <NextJSIcon aria-hidden="true" className="h-full w-full" />
@@ -715,8 +631,6 @@ export function SmarterToolsForMonorepos(): JSX.Element {
                   prefetch={false}
                   title="Nx with Storybook"
                   className="h-full w-full p-4"
-                  target="_blank"
-                  rel="noopener"
                 >
                   <span className="absolute inset-0" />
                   <StorybookIcon aria-hidden="true" className="h-full w-full" />
@@ -728,8 +642,6 @@ export function SmarterToolsForMonorepos(): JSX.Element {
                   prefetch={false}
                   title="Nx with Rollup"
                   className="h-full w-full p-4"
-                  target="_blank"
-                  rel="noopener"
                 >
                   <span className="absolute inset-0" />
                   <RollupIcon aria-hidden="true" className="h-full w-full" />
@@ -741,8 +653,6 @@ export function SmarterToolsForMonorepos(): JSX.Element {
                   prefetch={false}
                   title="Nx with Jest"
                   className="h-full w-full p-4"
-                  target="_blank"
-                  rel="noopener"
                 >
                   <span className="absolute inset-0" />
                   <JestIcon aria-hidden="true" className="h-full w-full" />
@@ -754,8 +664,6 @@ export function SmarterToolsForMonorepos(): JSX.Element {
                   prefetch={false}
                   title="Nx with EsLint"
                   className="h-full w-full p-4"
-                  target="_blank"
-                  rel="noopener"
                 >
                   <span className="absolute inset-0" />
                   <EslintIcon aria-hidden="true" className="h-full w-full" />
@@ -767,8 +675,6 @@ export function SmarterToolsForMonorepos(): JSX.Element {
                   prefetch={false}
                   title="Nx with Pnpm"
                   className="h-full w-full p-4"
-                  target="_blank"
-                  rel="noopener"
                 >
                   <span className="absolute inset-0" />
                   <PnpmIcon aria-hidden="true" className="h-full w-full" />
@@ -780,8 +686,6 @@ export function SmarterToolsForMonorepos(): JSX.Element {
                   prefetch={false}
                   title="Nx with Vite"
                   className="h-full w-full p-4"
-                  target="_blank"
-                  rel="noopener"
                 >
                   <span className="absolute inset-0" />
                   <ViteIcon aria-hidden="true" className="h-full w-full" />
@@ -804,8 +708,6 @@ export function SmarterToolsForMonorepos(): JSX.Element {
                   prefetch={false}
                   title="Nx with Java"
                   className="h-full w-full p-4"
-                  target="_blank"
-                  rel="noopener"
                 >
                   <span className="absolute inset-0" />
                   <JavaIcon aria-hidden="true" className="h-full w-full" />
@@ -817,8 +719,6 @@ export function SmarterToolsForMonorepos(): JSX.Element {
                   prefetch={false}
                   title="Nx with Remix"
                   className="h-full w-full p-4"
-                  target="_blank"
-                  rel="noopener"
                 >
                   <span className="absolute inset-0" />
                   <RemixIcon aria-hidden="true" className="h-full w-full" />
@@ -830,8 +730,6 @@ export function SmarterToolsForMonorepos(): JSX.Element {
                   prefetch={false}
                   title="Nx with Angular"
                   className="h-full w-full p-4"
-                  target="_blank"
-                  rel="noopener"
                 >
                   <span className="absolute inset-0" />
                   <AngularIcon aria-hidden="true" className="h-full w-full" />
@@ -843,8 +741,6 @@ export function SmarterToolsForMonorepos(): JSX.Element {
                   prefetch={false}
                   title="Nx with Rust"
                   className="h-full w-full p-4"
-                  target="_blank"
-                  rel="noopener"
                 >
                   <span className="absolute inset-0" />
                   <RustIcon aria-hidden="true" className="h-full w-full" />
@@ -856,8 +752,6 @@ export function SmarterToolsForMonorepos(): JSX.Element {
                   prefetch={false}
                   title="Nx with Vue"
                   className="h-full w-full p-4"
-                  target="_blank"
-                  rel="noopener"
                 >
                   <span className="absolute inset-0" />
                   <VueIcon aria-hidden="true" className="h-full w-full" />
@@ -869,8 +763,6 @@ export function SmarterToolsForMonorepos(): JSX.Element {
                   prefetch={false}
                   title="Nx with Nuxt"
                   className="h-full w-full p-4"
-                  target="_blank"
-                  rel="noopener"
                 >
                   <span className="absolute inset-0" />
                   <NuxtIcon aria-hidden="true" className="h-full w-full" />
@@ -882,8 +774,6 @@ export function SmarterToolsForMonorepos(): JSX.Element {
                   prefetch={false}
                   title="Nx with DotNet"
                   className="h-full w-full p-4"
-                  target="_blank"
-                  rel="noopener"
                 >
                   <span className="absolute inset-0" />
                   <DotNetIcon aria-hidden="true" className="h-full w-full" />
@@ -895,8 +785,6 @@ export function SmarterToolsForMonorepos(): JSX.Element {
                   prefetch={false}
                   title="Nx with Astro"
                   className="h-full w-full p-4"
-                  target="_blank"
-                  rel="noopener"
                 >
                   <span className="absolute inset-0" />
                   <AstroIcon aria-hidden="true" className="h-full w-full" />
@@ -908,8 +796,6 @@ export function SmarterToolsForMonorepos(): JSX.Element {
                   prefetch={false}
                   title="Nx with Cypress"
                   className="h-full w-full p-4"
-                  target="_blank"
-                  rel="noopener"
                 >
                   <span className="absolute inset-0" />
                   <CypressIcon aria-hidden="true" className="h-full w-full" />
@@ -921,8 +807,6 @@ export function SmarterToolsForMonorepos(): JSX.Element {
                   prefetch={false}
                   title="Nx with React"
                   className="h-full w-full p-4"
-                  target="_blank"
-                  rel="noopener"
                 >
                   <span className="absolute inset-0" />
                   <ReactIcon aria-hidden="true" className="h-full w-full" />
@@ -934,8 +818,6 @@ export function SmarterToolsForMonorepos(): JSX.Element {
                   prefetch={false}
                   title="Nx with NestJS"
                   className="h-full w-full p-4"
-                  target="_blank"
-                  rel="noopener"
                 >
                   <span className="absolute inset-0" />
                   <NestJSIcon aria-hidden="true" className="h-full w-full" />
@@ -947,8 +829,6 @@ export function SmarterToolsForMonorepos(): JSX.Element {
                   prefetch={false}
                   title="Nx with Vitest"
                   className="h-full w-full p-4"
-                  target="_blank"
-                  rel="noopener"
                 >
                   <span className="absolute inset-0" />
                   <FastifyIcon aria-hidden="true" className="h-full w-full" />
@@ -960,8 +840,6 @@ export function SmarterToolsForMonorepos(): JSX.Element {
                   prefetch={false}
                   title="Nx with RSpack"
                   className="h-full w-full p-4"
-                  target="_blank"
-                  rel="noopener"
                 >
                   <span className="absolute inset-0" />
                   <RspackIcon aria-hidden="true" className="h-full w-full" />
@@ -973,8 +851,6 @@ export function SmarterToolsForMonorepos(): JSX.Element {
                   prefetch={false}
                   title="Nx with Express"
                   className="h-full w-full p-4"
-                  target="_blank"
-                  rel="noopener"
                 >
                   <span className="absolute inset-0" />
                   <ExpressIcon aria-hidden="true" className="h-full w-full" />
@@ -986,8 +862,6 @@ export function SmarterToolsForMonorepos(): JSX.Element {
                   prefetch={false}
                   title="Nx with Webpack"
                   className="h-full w-full p-4"
-                  target="_blank"
-                  rel="noopener"
                 >
                   <span className="absolute inset-0" />
                   <WebpackIcon aria-hidden="true" className="h-full w-full" />
@@ -999,8 +873,6 @@ export function SmarterToolsForMonorepos(): JSX.Element {
                   prefetch={false}
                   title="Nx with NodeJs"
                   className="h-full w-full p-4"
-                  target="_blank"
-                  rel="noopener"
                 >
                   <span className="absolute inset-0" />
                   <NodeIcon aria-hidden="true" className="h-full w-full" />
@@ -1012,8 +884,6 @@ export function SmarterToolsForMonorepos(): JSX.Element {
                   prefetch={false}
                   title="Nx with Qwik"
                   className="h-full w-full p-4"
-                  target="_blank"
-                  rel="noopener"
                 >
                   <span className="absolute inset-0" />
                   <QwikIcon aria-hidden="true" className="h-full w-full" />
@@ -1025,8 +895,6 @@ export function SmarterToolsForMonorepos(): JSX.Element {
                   prefetch={false}
                   title="Nx with Expo"
                   className="h-full w-full p-4"
-                  target="_blank"
-                  rel="noopener"
                 >
                   <span className="absolute inset-0" />
                   <ExpoIcon aria-hidden="true" className="h-full w-full" />
@@ -1045,8 +913,6 @@ export function SmarterToolsForMonorepos(): JSX.Element {
                 href="/getting-started/editor-setup?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
                 title="Nx editor support"
                 variant="secondary"
-                target="_blank"
-                rel="noopener"
               >
                 See editors support
               </ButtonLink>
