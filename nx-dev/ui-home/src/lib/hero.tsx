@@ -41,7 +41,9 @@ export function Hero(): JSX.Element {
             variant="subtitle"
             className="mx-auto mt-6 max-w-xl"
           >
-            Makes your builds super efficient, easy as that.
+            {/* Makes your builds super efficient, easy as that. */}
+            Structured, maintainable and efficient monorepos. Locally and on CI,
+            easy as that.
           </SectionHeading>
           <div className="mt-10 flex items-center justify-center gap-x-6">
             <ButtonLink
