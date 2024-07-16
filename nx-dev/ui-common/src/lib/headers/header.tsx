@@ -44,7 +44,7 @@ export function Header(): JSX.Element {
   }, []);
 
   return (
-    <div className="fixed inset-x-0 top-0 isolate z-[5] flex print:hidden">
+    <div className="fixed inset-x-0 top-0 isolate z-[5] flex px-4 print:hidden">
       <div
         className="absolute inset-x-0 top-0 mx-auto h-20 max-w-7xl backdrop-blur"
         style={{
