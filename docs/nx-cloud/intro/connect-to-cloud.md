@@ -32,12 +32,12 @@ Or, check out our [recipes for the various CI providers](/ci/recipes/set-up).
 **Step 3: Run your Nx commands as usual**
 
 ```yml
-- run: npx nx-cloud record -- nx format:check
+- run: npx nx-cloud record -- node tools/custom-script.js
 - run: npx nx affected -t lint test build
 - run: npx nx affected -t e2e-ci --parallel 1
 ```
 
-All these commands are automatically picked up by Nx Cloud, split up into smaller tasks and distributed across the specified number of machines.
+All these commands are automatically picked up by Nx Cloud, split up into smaller tasks and distributed across the specified number of machines. Nx Cloud works with Nx tasks automatically, or you can [record non-Nx commands with `nx-cloud record`](/ci/recipes/other/record-commands).
 
 **Step 4: All results are played back automatically**
 

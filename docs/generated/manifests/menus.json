@@ -5170,9 +5170,9 @@
             "disableCollapsible": false
           },
           {
-            "name": "Connect Nx Cloud",
-            "path": "/ci/intro/connect-to-cloud",
-            "id": "connect-to-cloud",
+            "name": "Connect to Nx Cloud",
+            "path": "/ci/intro/connect-to-nx-cloud",
+            "id": "connect-to-nx-cloud",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -5222,9 +5222,9 @@
         "disableCollapsible": false
       },
       {
-        "name": "Connect Nx Cloud",
-        "path": "/ci/intro/connect-to-cloud",
-        "id": "connect-to-cloud",
+        "name": "Connect to Nx Cloud",
+        "path": "/ci/intro/connect-to-nx-cloud",
+        "id": "connect-to-nx-cloud",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
