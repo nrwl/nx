@@ -1,7 +1,7 @@
 import '../../internal-testing-utils/mock-fs';
 
 import { vol } from 'memfs';
-import { createNodeFromPackageJson, createNodes } from './create-nodes';
+import { createNodeFromPackageJson, createNodesV2 } from './create-nodes';
 
 describe('nx package.json workspaces plugin', () => {
   const context = {
@@ -198,7 +198,7 @@ describe('nx package.json workspaces plugin', () => {
   });
 
   describe('negative patterns', () => {
-    it('should work based on negative patterns defined in package.json workspaces', () => {
+    it('should work based on negative patterns defined in package.json workspaces', async () => {
       vol.fromJSON(
         {
           'package.json': JSON.stringify({
@@ -231,64 +231,74 @@ describe('nx package.json workspaces plugin', () => {
 
       // No matching project based on the package.json "workspace" config
       expect(
-        createNodes[1]('package.json', undefined, context)
-      ).toMatchInlineSnapshot(`{}`);
+        await createNodesV2[1](['package.json'], undefined, context)
+      ).toMatchInlineSnapshot(`[]`);
 
       // Matching project based on the package.json "workspace" config
-      expect(createNodes[1]('packages/vite/package.json', undefined, context))
-        .toMatchInlineSnapshot(`
-        {
-          "projects": {
-            "packages/vite": {
-              "metadata": {
-                "description": undefined,
-                "targetGroups": {},
-              },
-              "name": "vite",
-              "root": "packages/vite",
-              "sourceRoot": "packages/vite",
-              "tags": [
-                "npm:public",
-              ],
-              "targets": {
-                "nx-release-publish": {
-                  "dependsOn": [
-                    "^nx-release-publish",
+      expect(
+        await createNodesV2[1](
+          ['packages/vite/package.json'],
+          undefined,
+          context
+        )
+      ).toMatchInlineSnapshot(`
+        [
+          [
+            "packages/vite/package.json",
+            {
+              "projects": {
+                "packages/vite": {
+                  "metadata": {
+                    "description": undefined,
+                    "targetGroups": {},
+                  },
+                  "name": "vite",
+                  "root": "packages/vite",
+                  "sourceRoot": "packages/vite",
+                  "tags": [
+                    "npm:public",
                   ],
-                  "executor": "@nx/js:release-publish",
-                  "options": {},
+                  "targets": {
+                    "nx-release-publish": {
+                      "dependsOn": [
+                        "^nx-release-publish",
+                      ],
+                      "executor": "@nx/js:release-publish",
+                      "options": {},
+                    },
+                  },
                 },
               },
             },
-          },
-        }
+          ],
+        ]
       `);
 
       // No matching project based on the package.json "workspace" config
       expect(
-        createNodes[1]('packages/fs/package.json', undefined, context)
-      ).toMatchInlineSnapshot(`{}`);
+        await createNodesV2[1](['packages/fs/package.json'], undefined, context)
+      ).toMatchInlineSnapshot(`[]`);
 
       // No matching project based on the package.json "workspace" config
       expect(
-        createNodes[1](
-          'packages/orm-browser-example/package.json',
+        await createNodesV2[1](
+          ['packages/orm-browser-example/package.json'],
           undefined,
           context
         )
-      ).toMatchInlineSnapshot(`{}`);
+      ).toMatchInlineSnapshot(`[]`);
 
       // No matching project based on the package.json "workspace" config
       expect(
-        createNodes[1](
-          'packages/framework-examples/package.json',
+        await createNodesV2[1](
+          ['packages/framework-examples/package.json'],
           undefined,
           context
         )
-      ).toMatchInlineSnapshot(`{}`);
+      ).toMatchInlineSnapshot(`[]`);
     });
 
-    it('should work based on negative patterns defined in pnpm-workspace.yaml', () => {
+    it('should work based on negative patterns defined in pnpm-workspace.yaml', async () => {
       vol.fromJSON(
         {
           'package.json': JSON.stringify({ name: 'root' }),
@@ -319,64 +329,74 @@ describe('nx package.json workspaces plugin', () => {
 
       // No matching project based on the pnpm-workspace.yaml "packages" config
       expect(
-        createNodes[1]('package.json', undefined, context)
-      ).toMatchInlineSnapshot(`{}`);
+        await createNodesV2[1](['package.json'], undefined, context)
+      ).toMatchInlineSnapshot(`[]`);
 
       // Matching project based on the pnpm-workspace.yaml "packages" config
-      expect(createNodes[1]('packages/vite/package.json', undefined, context))
-        .toMatchInlineSnapshot(`
-        {
-          "projects": {
-            "packages/vite": {
-              "metadata": {
-                "description": undefined,
-                "targetGroups": {},
-              },
-              "name": "vite",
-              "root": "packages/vite",
-              "sourceRoot": "packages/vite",
-              "tags": [
-                "npm:public",
-              ],
-              "targets": {
-                "nx-release-publish": {
-                  "dependsOn": [
-                    "^nx-release-publish",
+      expect(
+        await createNodesV2[1](
+          ['packages/vite/package.json'],
+          undefined,
+          context
+        )
+      ).toMatchInlineSnapshot(`
+        [
+          [
+            "packages/vite/package.json",
+            {
+              "projects": {
+                "packages/vite": {
+                  "metadata": {
+                    "description": undefined,
+                    "targetGroups": {},
+                  },
+                  "name": "vite",
+                  "root": "packages/vite",
+                  "sourceRoot": "packages/vite",
+                  "tags": [
+                    "npm:public",
                   ],
-                  "executor": "@nx/js:release-publish",
-                  "options": {},
+                  "targets": {
+                    "nx-release-publish": {
+                      "dependsOn": [
+                        "^nx-release-publish",
+                      ],
+                      "executor": "@nx/js:release-publish",
+                      "options": {},
+                    },
+                  },
                 },
               },
             },
-          },
-        }
+          ],
+        ]
       `);
 
       // No matching project based on the pnpm-workspace.yaml "packages" config
       expect(
-        createNodes[1]('packages/fs/package.json', undefined, context)
-      ).toMatchInlineSnapshot(`{}`);
+        await createNodesV2[1](['packages/fs/package.json'], undefined, context)
+      ).toMatchInlineSnapshot(`[]`);
 
       // No matching project based on the pnpm-workspace.yaml "packages" config
       expect(
-        createNodes[1](
-          'packages/orm-browser-example/package.json',
+        await createNodesV2[1](
+          ['packages/orm-browser-example/package.json'],
           undefined,
           context
         )
-      ).toMatchInlineSnapshot(`{}`);
+      ).toMatchInlineSnapshot(`[]`);
 
       // No matching project based on the pnpm-workspace.yaml "packages" config
       expect(
-        createNodes[1](
-          'packages/framework-examples/package.json',
+        await createNodesV2[1](
+          ['packages/framework-examples/package.json'],
           undefined,
           context
         )
-      ).toMatchInlineSnapshot(`{}`);
+      ).toMatchInlineSnapshot(`[]`);
     });
 
-    it('should work based on negative patterns defined in lerna.json', () => {
+    it('should work based on negative patterns defined in lerna.json', async () => {
       vol.fromJSON(
         {
           'package.json': JSON.stringify({ name: 'root' }),
@@ -403,66 +423,76 @@ describe('nx package.json workspaces plugin', () => {
 
       // No matching project based on the lerna.json "packages" config
       expect(
-        createNodes[1]('package.json', undefined, context)
-      ).toMatchInlineSnapshot(`{}`);
+        await createNodesV2[1](['package.json'], undefined, context)
+      ).toMatchInlineSnapshot(`[]`);
 
       // Matching project based on the lerna.json "packages" config
-      expect(createNodes[1]('packages/vite/package.json', undefined, context))
-        .toMatchInlineSnapshot(`
-        {
-          "projects": {
-            "packages/vite": {
-              "metadata": {
-                "description": undefined,
-                "targetGroups": {},
-              },
-              "name": "vite",
-              "root": "packages/vite",
-              "sourceRoot": "packages/vite",
-              "tags": [
-                "npm:public",
-              ],
-              "targets": {
-                "nx-release-publish": {
-                  "dependsOn": [
-                    "^nx-release-publish",
+      expect(
+        await createNodesV2[1](
+          ['packages/vite/package.json'],
+          undefined,
+          context
+        )
+      ).toMatchInlineSnapshot(`
+        [
+          [
+            "packages/vite/package.json",
+            {
+              "projects": {
+                "packages/vite": {
+                  "metadata": {
+                    "description": undefined,
+                    "targetGroups": {},
+                  },
+                  "name": "vite",
+                  "root": "packages/vite",
+                  "sourceRoot": "packages/vite",
+                  "tags": [
+                    "npm:public",
                   ],
-                  "executor": "@nx/js:release-publish",
-                  "options": {},
+                  "targets": {
+                    "nx-release-publish": {
+                      "dependsOn": [
+                        "^nx-release-publish",
+                      ],
+                      "executor": "@nx/js:release-publish",
+                      "options": {},
+                    },
+                  },
                 },
               },
             },
-          },
-        }
+          ],
+        ]
       `);
 
       // No matching project based on the lerna.json "packages" config
       expect(
-        createNodes[1]('packages/fs/package.json', undefined, context)
-      ).toMatchInlineSnapshot(`{}`);
+        await createNodesV2[1](['packages/fs/package.json'], undefined, context)
+      ).toMatchInlineSnapshot(`[]`);
 
       // No matching project based on the lerna.json "packages" config
       expect(
-        createNodes[1](
-          'packages/orm-browser-example/package.json',
+        await createNodesV2[1](
+          ['packages/orm-browser-example/package.json'],
           undefined,
           context
         )
-      ).toMatchInlineSnapshot(`{}`);
+      ).toMatchInlineSnapshot(`[]`);
 
       // No matching project based on the lerna.json "packages" config
       expect(
-        createNodes[1](
-          'packages/framework-examples/package.json',
+        await createNodesV2[1](
+          ['packages/framework-examples/package.json'],
           undefined,
           context
         )
-      ).toMatchInlineSnapshot(`{}`);
+      ).toMatchInlineSnapshot(`[]`);
     });
   });
 
   describe('sibling project.json files', () => {
-    it('should add a script target if the sibling project.json file does not exist', () => {
+    it('should add a script target if the sibling project.json file does not exist', async () => {
       vol.fromJSON(
         {
           'package.json': JSON.stringify({
@@ -479,51 +509,57 @@ describe('nx package.json workspaces plugin', () => {
         '/root'
       );
 
-      expect(createNodes[1]('packages/a/package.json', undefined, context))
-        .toMatchInlineSnapshot(`
-        {
-          "projects": {
-            "packages/a": {
-              "metadata": {
-                "description": undefined,
-                "targetGroups": {
-                  "NPM Scripts": [
-                    "build",
-                  ],
-                },
-              },
-              "name": "root",
-              "root": "packages/a",
-              "sourceRoot": "packages/a",
-              "tags": [
-                "npm:public",
-              ],
-              "targets": {
-                "build": {
-                  "executor": "nx:run-script",
+      expect(
+        await createNodesV2[1](['packages/a/package.json'], undefined, context)
+      ).toMatchInlineSnapshot(`
+        [
+          [
+            "packages/a/package.json",
+            {
+              "projects": {
+                "packages/a": {
                   "metadata": {
-                    "runCommand": "npm run build",
-                    "scriptContent": "echo build",
+                    "description": undefined,
+                    "targetGroups": {
+                      "NPM Scripts": [
+                        "build",
+                      ],
+                    },
                   },
-                  "options": {
-                    "script": "build",
-                  },
-                },
-                "nx-release-publish": {
-                  "dependsOn": [
-                    "^nx-release-publish",
+                  "name": "root",
+                  "root": "packages/a",
+                  "sourceRoot": "packages/a",
+                  "tags": [
+                    "npm:public",
                   ],
-                  "executor": "@nx/js:release-publish",
-                  "options": {},
+                  "targets": {
+                    "build": {
+                      "executor": "nx:run-script",
+                      "metadata": {
+                        "runCommand": "npm run build",
+                        "scriptContent": "echo build",
+                      },
+                      "options": {
+                        "script": "build",
+                      },
+                    },
+                    "nx-release-publish": {
+                      "dependsOn": [
+                        "^nx-release-publish",
+                      ],
+                      "executor": "@nx/js:release-publish",
+                      "options": {},
+                    },
+                  },
                 },
               },
             },
-          },
-        }
+          ],
+        ]
       `);
     });
 
-    it('should add a script target if the sibling project.json exists but does not have a conflicting target', () => {
+    it('should add a script target if the sibling project.json exists but does not have a conflicting target', async () => {
       vol.fromJSON(
         {
           'package.json': JSON.stringify({
@@ -547,51 +583,57 @@ describe('nx package.json workspaces plugin', () => {
         '/root'
       );
 
-      expect(createNodes[1]('packages/a/package.json', undefined, context))
-        .toMatchInlineSnapshot(`
-        {
-          "projects": {
-            "packages/a": {
-              "metadata": {
-                "description": undefined,
-                "targetGroups": {
-                  "NPM Scripts": [
-                    "build",
-                  ],
-                },
-              },
-              "name": "root",
-              "root": "packages/a",
-              "sourceRoot": "packages/a",
-              "tags": [
-                "npm:public",
-              ],
-              "targets": {
-                "build": {
-                  "executor": "nx:run-script",
+      expect(
+        await createNodesV2[1](['packages/a/package.json'], undefined, context)
+      ).toMatchInlineSnapshot(`
+        [
+          [
+            "packages/a/package.json",
+            {
+              "projects": {
+                "packages/a": {
                   "metadata": {
-                    "runCommand": "npm run build",
-                    "scriptContent": "echo build",
+                    "description": undefined,
+                    "targetGroups": {
+                      "NPM Scripts": [
+                        "build",
+                      ],
+                    },
                   },
-                  "options": {
-                    "script": "build",
-                  },
-                },
-                "nx-release-publish": {
-                  "dependsOn": [
-                    "^nx-release-publish",
+                  "name": "root",
+                  "root": "packages/a",
+                  "sourceRoot": "packages/a",
+                  "tags": [
+                    "npm:public",
                   ],
-                  "executor": "@nx/js:release-publish",
-                  "options": {},
+                  "targets": {
+                    "build": {
+                      "executor": "nx:run-script",
+                      "metadata": {
+                        "runCommand": "npm run build",
+                        "scriptContent": "echo build",
+                      },
+                      "options": {
+                        "script": "build",
+                      },
+                    },
+                    "nx-release-publish": {
+                      "dependsOn": [
+                        "^nx-release-publish",
+                      ],
+                      "executor": "@nx/js:release-publish",
+                      "options": {},
+                    },
+                  },
                 },
               },
             },
-          },
-        }
+          ],
+        ]
       `);
     });
 
-    it('should not add a script target if the sibling project.json exists and has a conflicting target', () => {
+    it('should not add a script target if the sibling project.json exists and has a conflicting target', async () => {
       vol.fromJSON(
         {
           'package.json': JSON.stringify({
@@ -615,33 +657,39 @@ describe('nx package.json workspaces plugin', () => {
         '/root'
       );
 
-      expect(createNodes[1]('packages/a/package.json', undefined, context))
-        .toMatchInlineSnapshot(`
-        {
-          "projects": {
-            "packages/a": {
-              "metadata": {
-                "description": undefined,
-                "targetGroups": {},
-              },
-              "name": "root",
-              "root": "packages/a",
-              "sourceRoot": "packages/a",
-              "tags": [
-                "npm:public",
-              ],
-              "targets": {
-                "nx-release-publish": {
-                  "dependsOn": [
-                    "^nx-release-publish",
+      expect(
+        await createNodesV2[1](['packages/a/package.json'], undefined, context)
+      ).toMatchInlineSnapshot(`
+        [
+          [
+            "packages/a/package.json",
+            {
+              "projects": {
+                "packages/a": {
+                  "metadata": {
+                    "description": undefined,
+                    "targetGroups": {},
+                  },
+                  "name": "root",
+                  "root": "packages/a",
+                  "sourceRoot": "packages/a",
+                  "tags": [
+                    "npm:public",
                   ],
-                  "executor": "@nx/js:release-publish",
-                  "options": {},
+                  "targets": {
+                    "nx-release-publish": {
+                      "dependsOn": [
+                        "^nx-release-publish",
+                      ],
+                      "executor": "@nx/js:release-publish",
+                      "options": {},
+                    },
+                  },
                 },
               },
             },
-          },
-        }
+          ],
+        ]
       `);
     });
   });

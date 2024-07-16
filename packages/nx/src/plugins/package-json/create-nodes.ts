@@ -16,21 +16,70 @@ import {
   readTargetsFromPackageJson,
 } from '../../utils/package-json';
 import { joinPathFragments } from '../../utils/path';
-import { CreateNodes } from '../../project-graph/plugins';
+import {
+  createNodesFromFiles,
+  CreateNodesV2,
+} from '../../project-graph/plugins';
+import { basename } from 'path';
 
-export const createNodes: CreateNodes = [
-  combineGlobPatterns('package.json', '**/package.json'),
-  (p, _, { workspaceRoot }) => {
-    const readJson = (f) => readJsonFile(join(workspaceRoot, f));
-    const matcher = buildPackageJsonWorkspacesMatcher(workspaceRoot, readJson);
+export const createNodesV2: CreateNodesV2 = [
+  combineGlobPatterns(
+    'package.json',
+    '**/package.json',
+    'project.json',
+    '**/project.json'
+  ),
+  (configFiles, _, context) => {
+    const { packageJsons, projectJsonRoots } = splitConfigFiles(configFiles);
 
-    if (matcher(p)) {
-      return createNodeFromPackageJson(p, workspaceRoot);
-    }
-    // The given package.json is not part of the workspaces configuration.
-    return {};
+    const readJson = (f) => readJsonFile(join(context.workspaceRoot, f));
+    const isInPackageJsonWorkspaces = buildPackageJsonWorkspacesMatcher(
+      context.workspaceRoot,
+      readJson
+    );
+    const isNextToProjectJson = (packageJsonPath: string) => {
+      return projectJsonRoots.has(dirname(packageJsonPath));
+    };
+
+    return createNodesFromFiles(
+      (packageJsonPath, options, context) => {
+        if (
+          !isInPackageJsonWorkspaces(packageJsonPath) &&
+          !isNextToProjectJson(packageJsonPath)
+        ) {
+          // Skip if package.json is not part of the package.json workspaces and not next to a project.json.
+          return null;
+        }
+
+        return createNodeFromPackageJson(
+          packageJsonPath,
+          context.workspaceRoot
+        );
+      },
+      packageJsons,
+      _,
+      context
+    );
   },
 ];
+
+function splitConfigFiles(configFiles: readonly string[]): {
+  packageJsons: string[];
+  projectJsonRoots: Set<string>;
+} {
+  const packageJsons = [];
+  const projectJsonRoots = new Set<string>();
+
+  for (const configFile of configFiles) {
+    if (basename(configFile) === 'package.json') {
+      packageJsons.push(configFile);
+    } else {
+      projectJsonRoots.add(dirname(configFile));
+    }
+  }
+
+  return { packageJsons, projectJsonRoots };
+}
 
 export function buildPackageJsonWorkspacesMatcher(
   workspaceRoot: string,

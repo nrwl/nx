@@ -192,12 +192,6 @@ async function normalizePlugins(plugins: PluginConfiguration[], root: string) {
   plugins ??= [];
 
   return [
-    // This plugin adds targets that we want to be able to overwrite
-    // in any user-land plugin, so it has to be first :).
-    join(
-      __dirname,
-      '../../plugins/project-json/build-nodes/package-json-next-to-project-json'
-    ),
     ...plugins,
     // Most of the nx core node plugins go on the end, s.t. it overwrites any other plugins
     ...(await getDefaultPlugins(root)),
@@ -210,7 +204,7 @@ export async function getDefaultPlugins(root: string) {
     ...(shouldMergeAngularProjects(root, false)
       ? [join(__dirname, '../../adapter/angular-json')]
       : []),
-    join(__dirname, '../../plugins/package-json-workspaces'),
+    join(__dirname, '../../plugins/package-json'),
     join(__dirname, '../../plugins/project-json/build-nodes/project-json'),
   ];
 }
