@@ -57,9 +57,6 @@ export function CallToAction(): JSX.Element {
           <br />
           build smarter and ship faster?
         </h2>
-        <p className="mx-auto mt-6 max-w-xl text-2xl leading-8 text-slate-700 dark:text-slate-300">
-          Experience the next generation of build tooling.
-        </p>
         <div className="mt-10 flex items-center justify-center gap-x-6">
           <Link
             href="/getting-started/intro"

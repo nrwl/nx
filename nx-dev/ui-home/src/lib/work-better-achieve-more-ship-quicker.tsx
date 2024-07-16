@@ -61,7 +61,7 @@ export function WorkBetterAchieveMoreShipQuicker(): JSX.Element {
             variant="primary"
             size="large"
           >
-            Get started with Cloud. It’s Free
+            Try Nx for yourself
           </ButtonLink>
         </div>
       </div>
