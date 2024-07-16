@@ -28,6 +28,7 @@ import {
   AggregateCreateNodesError,
   isAggregateCreateNodesError,
 } from '../error-types';
+import { IS_WASM } from '../../native';
 
 export class LoadedNxPlugin {
   readonly name: string;
@@ -151,7 +152,8 @@ export async function loadNxPlugins(
   performance.mark('loadNxPlugins:start');
 
   const loadingMethod =
-    process.env.NX_ISOLATE_PLUGINS !== 'false'
+    process.env.NX_ISOLATE_PLUGINS === 'true' ||
+    (!IS_WASM && process.env.NX_ISOLATE_PLUGINS !== 'false')
       ? loadNxPluginInIsolation
       : loadNxPlugin;
 
