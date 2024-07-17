@@ -1570,8 +1570,8 @@
               "file": "nx-cloud/intro/why-nx-cloud"
             },
             {
-              "name": "Connect to Nx Cloud",
-              "id": "connect-to-nx-cloud",
+              "name": "Connect Nx Cloud",
+              "id": "connect-to-cloud",
               "file": "nx-cloud/intro/connect-to-cloud"
             },
             {
@@ -1617,12 +1617,6 @@
               "id": "distribute-task-execution",
               "description": "Learn how to efficiently distribute tasks across machines to take full advantage of parallelization. Nx Agents make this a trivial task.",
               "file": "shared/features/distribute-task-execution"
-            },
-            {
-              "name": "Nx Cloud AI",
-              "id": "nx-cloud-ai",
-              "description": "Learn how to enable AI features in Nx Cloud, and what features it enables",
-              "file": "nx-cloud/features/ai-features"
             },
             {
               "name": "Dynamically Allocate Agents",
@@ -1819,11 +1813,6 @@
                       "file": "nx-cloud/enterprise/on-premise/auth-saml"
                     },
                     {
-                      "name": "Authenticate via SAML on Managed Version",
-                      "id": "auth-saml-managed",
-                      "file": "nx-cloud/enterprise/on-premise/auth-saml-managed"
-                    },
-                    {
                       "name": "Advanced Configuration",
                       "id": "advanced-config",
                       "file": "nx-cloud/enterprise/on-premise/advanced-config"
@@ -1940,11 +1929,6 @@
               "name": "CI Execution Failed",
               "id": "ci-execution-failed",
               "file": "nx-cloud/troubleshooting/ci-execution-failed"
-            },
-            {
-              "name": "Explain With AI",
-              "id": "explain-with-ai",
-              "file": "nx-cloud/troubleshooting/explain-with-ai"
             }
           ]
         }

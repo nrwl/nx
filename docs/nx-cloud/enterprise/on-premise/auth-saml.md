@@ -6,7 +6,7 @@ if you are interested.
 ### Jump To
 
 - [Azure AD Config](#azure-active-directory-set-up)
-- [Okta Config](#okta-set-up)
+- [Okta Config](#okta-setup)
 
 ## Azure Active Directory Set-up
 
