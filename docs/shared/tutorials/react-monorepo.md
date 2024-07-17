@@ -61,10 +61,10 @@ NX   Let's create a new workspace [https://nx.dev/getting-started/intro]
 ✔ Which bundler would you like to use? · vite
 ✔ Test runner to use for end to end (E2E) tests · cypress
 ✔ Default stylesheet format · css
-✔ Do you want Nx Cloud to make your CI fast? · Yes
+✔ Which CI provider would you like to use? · GitHub Actions
 ```
 
-Let's name the initial application `react-store`. In this tutorial we're going to use `vite` as a bundler, `cypress` for e2e tests and `css` for styling. The above command generates the following structure:
+Let's name the initial application `react-store`. In this tutorial we're going to use `vite` as a bundler, `cypress` for e2e tests and `css` for styling. We'll talk more about how Nx integrates with GitHub Actions later in the tutorial. The above command generates the following structure:
 
 ```
 └─ react-monorepo
@@ -1043,20 +1043,23 @@ This tutorial walked you through how Nx can improve the local development experi
 
 Nx Cloud is a companion app for your CI system that provides remote caching, task distribution, e2e tests deflaking, better DX and more.
 
-To connect to Nx Cloud:
+{% callout type="note" title="Commit and push your changes" %}
+Now that we're working on the CI pipeline, it is important for your changes to be pushed to a github repository. Commit all your changes so far and push them up to a hosted repository.
+{% /callout %}
 
-- Commit and push your changes
-- Go to [https://cloud.nx.app](https://cloud.nx.app), create an account, and connect your repository
+When we set up the repository at the beginning of this tutorial, we chose to use GitHub Actions as a CI provider. This created a basic CI pipeline and configured Nx Cloud in the repository. It also printed a url in the terminal to register your repository in your [Nx Cloud](https://cloud.nx.app) account. If you didn't click on the link when first creating your repository, you can show it again by running:
 
 ```shell
 npx nx connect
 ```
 
-Follow the steps and make sure Nx Cloud is enabled on the main branch.
+Once you click the link, follow the steps provided and make sure Nx Cloud is enabled on the main branch of your repository.
 
-### Generate a CI Workflow
+### Configure Your CI Workflow
 
-Use the following command to generate a CI workflow file.
+When you chose GitHub Actions as your CI provider at the beginning of the tutorial, `create-nx-workspace` created a `.github/workflows/ci.yml` file that contains a CI pipeline that will run the `lint`, `test`, `build` and `e2e` tasks for projects that are affected by any given PR.
+
+If you need to generate the default pipeline, you can do so with this command:
 
 ```shell
 npx nx generate ci-workflow --ci github
@@ -1066,11 +1069,9 @@ npx nx generate ci-workflow --ci github
 You can choose `github`, `circleci`, `azure`, `bitbucket-pipelines`, or `gitlab` for the `ci` flag.
 {% /callout %}
 
-This generator creates a `.github/workflows/ci.yml` file that contains a CI pipeline that will run the `lint`, `test`, `build` and `e2e` tasks for projects that are affected by any given PR.
-
 The key lines in the CI pipeline are:
 
-```yml
+```yml {% fileName=".github/workflows/ci.yml" %}
 - run: npx nx affected -t lint test build
 - run: npx nx affected -t e2e-ci --parallel 1
 ```
@@ -1079,7 +1080,7 @@ The key lines in the CI pipeline are:
 
 Running tasks on a single machine is not scalable as the workspace grows. To distribute your tasks across multiple machines, make sure the following line is uncommented in the `.github/workflows/ci.yml` file.
 
-```yml
+```yml {% fileName=".github/workflows/ci.yml" %}
 - run: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="e2e-ci"
 ```
 

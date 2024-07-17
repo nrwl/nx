@@ -43,13 +43,13 @@ NX   Let's create a new workspace [https://nx.dev/getting-started/intro]
 ✔ Default stylesheet format · css
 ✔ Do you want to enable Server-Side Rendering (SSR) and Static Site Generation (SSG/Prerendering)? · No
 ✔ Test runner to use for end to end (E2E) tests · cypress
-✔ Set up CI with caching, distribution and test deflaking · github
+✔ Which CI provider would you like to use? · github
 ```
 
 You get asked a few questions that help Nx preconfigure your new Angular application. These include:
 
 - Angular specific questions, such as which bundler to use, whether to enable server-side rendering and which stylesheet format to use
-- General Nx questions, such as whether to enable remote caching with Nx Cloud. Nx comes with built-in [local caching](/features/cache-task-results). If you want to benefit from this cache in CI, you can enable [remote caching](/ci/features/remote-cache) which will set up [Nx Cloud](https://nx.app). This is also a prerequisite for enabling [distributed task execution](/ci/features/distribute-task-execution).
+- General Nx questions, such as whether to enable remote caching with Nx Cloud. Nx comes with built-in [local caching](/features/cache-task-results). If you want to benefit from this cache in CI, you can enable [remote caching](/ci/features/remote-cache) which will set up [Nx Cloud](https://nx.app). This is also a prerequisite for enabling [distributed task execution](/ci/features/distribute-task-execution). We'll explore this later in the tutorial.
 
 For the sake of this tutorial, let's respond to all the questions with the default response.
 
@@ -1054,20 +1054,23 @@ This tutorial walked you through how Nx can improve the local development experi
 
 Nx Cloud is a companion app for your CI system that provides remote caching, task distribution, e2e tests deflaking, better DX and more.
 
-To connect to Nx Cloud:
+{% callout type="note" title="Commit and push your changes" %}
+Now that we're working on the CI pipeline, it is important for your changes to be pushed to a github repository. Commit all your changes so far and push them up to a hosted repository.
+{% /callout %}
 
-- Commit and push your changes
-- Go to [https://cloud.nx.app](https://cloud.nx.app), create an account, and connect your repository
+When we set up the repository at the beginning of this tutorial, we chose to use GitHub Actions as a CI provider. This created a basic CI pipeline and configured Nx Cloud in the repository. It also printed a url in the terminal to register your repository in your [Nx Cloud](https://cloud.nx.app) account. If you didn't click on the link when first creating your repository, you can show it again by running:
 
 ```shell
 npx nx connect
 ```
 
-Follow the steps and make sure Nx Cloud is enabled on the main branch.
+Once you click the link, follow the steps provided and make sure Nx Cloud is enabled on the main branch of your repository.
 
-### Generate a CI Workflow
+### Configure Your CI Workflow
 
-Use the following command to generate a CI workflow file.
+When you chose GitHub Actions as your CI provider at the beginning of the tutorial, `create-nx-workspace` created a `.github/workflows/ci.yml` file that contains a CI pipeline that will run the `lint`, `test`, `build` and `e2e` tasks for projects that are affected by any given PR.
+
+If you need to generate the default pipeline, you can do so with this command:
 
 ```shell
 npx nx generate ci-workflow --ci github
@@ -1077,11 +1080,9 @@ npx nx generate ci-workflow --ci github
 You can choose `github`, `circleci`, `azure`, `bitbucket-pipelines`, or `gitlab` for the `ci` flag.
 {% /callout %}
 
-This generator creates a `.github/workflows/ci.yml` file that contains a CI pipeline that will run the `lint`, `test`, `build` and `e2e` tasks for projects that are affected by any given PR.
-
 The key lines in the CI pipeline are:
 
-```yml
+```yml {% fileName=".github/workflows/ci.yml" %}
 - run: npx nx affected -t lint test build
 - run: npx nx affected -t e2e-ci --parallel 1
 ```
@@ -1090,7 +1091,7 @@ The key lines in the CI pipeline are:
 
 Running tasks on a single machine is not scalable as the workspace grows. To distribute your tasks across multiple machines, make sure the following line is uncommented in the `.github/workflows/ci.yml` file.
 
-```yml
+```yml {% fileName=".github/workflows/ci.yml" %}
 - run: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="e2e-ci"
 ```
 

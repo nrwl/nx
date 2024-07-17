@@ -117,26 +117,6 @@ This tutorial walked you through how Nx can improve the local development experi
 - Nx Agents [efficiently distribute tasks across machines](/ci/concepts/parallelization-distribution) ensuring constant CI time regardless of the repository size. The right number of machines is allocated for each PR to ensure good performance without wasting compute.
 - Nx Atomizer [automatically splits](/ci/features/split-e2e-tasks) large e2e tests to distribute them across machines. Nx can also automatically [identify and rerun flaky e2e tests](/ci/features/flaky-tasks).
 
-### Generate a CI Workflow
-
-If you are starting a new project, you can use the following command to generate a CI workflow file.
-
-```shell
-npx nx generate ci-workflow --ci=github
-```
-
-{% callout type="note" title="Choose your CI provider" %}
-You can choose `github`, `circleci`, `azure`, `bitbucket-pipelines`, or `gitlab` for the `ci` flag.
-{% /callout %}
-
-This generator creates a `.github/workflows/ci.yml` file that contains a CI pipeline that will run the `lint`, `test`, `build` and `e2e` tasks for projects that are affected by any given PR.
-
-The key line in the CI pipeline is:
-
-```yml
-- run: npx nx affected -t lint test build e2e-ci
-```
-
 ### Connect to Nx Cloud
 
 Nx Cloud is a companion app for your CI system that provides remote caching, task distribution, e2e tests deflaking, better DX and more.
@@ -150,33 +130,26 @@ To connect to Nx Cloud:
 npx nx connect
 ```
 
-Follow the steps and make sure Nx Cloud is enabled on the main branch.
+When you are prompted to choose your CI provider, choose `GitHub Actions`.
 
-### Generate a CI Workflow
+Once the script is finished, it will print a link in the terminal to register your repository in your [Nx Cloud](https://cloud.nx.app) account. Click the link and follow the steps provided to make sure Nx Cloud is enabled on the main branch of your repository.
 
-Use the following command to generate a CI workflow file.
+### Configure Your CI Workflow
 
-```shell
-npx nx generate ci-workflow --ci=github
-```
+The `nx connect` command you ran in the previous step created a `.github/workflows/ci.yml` file that contains a CI pipeline that will run the `lint`, `test`, `build` and `e2e` tasks for projects that are affected by any given PR.
 
-{% callout type="note" title="Choose your CI provider" %}
-You can choose `github`, `circleci`, `azure`, `bitbucket-pipelines`, or `gitlab` for the `ci` flag.
-{% /callout %}
+The key lines in the CI pipeline are:
 
-This generator creates a `.github/workflows/ci.yml` file that contains a CI pipeline that will run the `lint`, `test`, `build` and `e2e` tasks for projects that are affected by any given PR.
-
-The key line in the CI pipeline is:
-
-```yml
-- run: npx nx affected -t lint test build e2e-ci
+```yml {% fileName=".github/workflows/ci.yml" %}
+- run: npx nx affected -t lint test build
+- run: npx nx affected -t e2e-ci --parallel 1
 ```
 
 ### Enable a Distributed CI Pipeline
 
 Running tasks on a single machine is not scalable as the workspace grows. To distribute your tasks across multiple machines, make sure the following line is uncommented in the `.github/workflows/ci.yml` file.
 
-```yml
+```yml {% fileName=".github/workflows/ci.yml" %}
 - run: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="e2e-ci"
 ```
 
