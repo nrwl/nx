@@ -362,6 +362,14 @@
                 "disableCollapsible": false
               },
               {
+                "name": "Nx Cloud AI",
+                "path": "/ci/features/ai-features",
+                "id": "ai-features",
+                "isExternal": true,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
                 "name": "Automatically Split E2E Tasks",
                 "path": "/ci/features/split-e2e-tasks",
                 "id": "split-e2e-tasks",
@@ -478,6 +486,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Nx Cloud AI",
+            "path": "/ci/features/ai-features",
+            "id": "ai-features",
+            "isExternal": true,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Automatically Split E2E Tasks",
             "path": "/ci/features/split-e2e-tasks",
             "id": "split-e2e-tasks",
@@ -524,6 +540,14 @@
         "name": "Dynamically Allocate Agents",
         "path": "/ci/features/dynamic-agents",
         "id": "dynamic-agents",
+        "isExternal": true,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Nx Cloud AI",
+        "path": "/ci/features/ai-features",
+        "id": "ai-features",
         "isExternal": true,
         "children": [],
         "disableCollapsible": false
@@ -6591,6 +6615,14 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
+          },
+          {
+            "name": "Explain with AI (beta)",
+            "path": "/ci/troubleshooting/explain-with-ai",
+            "id": "explain-with-ai",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -6599,6 +6631,14 @@
         "name": "CI Execution Failed",
         "path": "/ci/troubleshooting/ci-execution-failed",
         "id": "ci-execution-failed",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Explain with AI (beta)",
+        "path": "/ci/troubleshooting/explain-with-ai",
+        "id": "explain-with-ai",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false

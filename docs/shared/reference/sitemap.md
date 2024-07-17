@@ -310,6 +310,7 @@
     - [Release Notes](/ci/reference/release-notes)
   - [Troubleshooting](/ci/troubleshooting)
     - [CI Execution Failed](/ci/troubleshooting/ci-execution-failed)
+    - [Explain with AI (beta)](/ci/troubleshooting/explain-with-ai)
 
 - Nx-api
   - [angular](/nx-api/angular)

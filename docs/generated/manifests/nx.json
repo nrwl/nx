@@ -490,6 +490,17 @@
             "tags": []
           },
           {
+            "id": "ai-features",
+            "name": "Nx Cloud AI",
+            "description": "",
+            "mediaImage": "",
+            "file": "",
+            "itemList": [],
+            "isExternal": true,
+            "path": "/ci/features/ai-features",
+            "tags": []
+          },
+          {
             "id": "split-e2e-tasks",
             "name": "Automatically Split E2E Tasks",
             "description": "",
@@ -650,6 +661,17 @@
         "tags": []
       },
       {
+        "id": "ai-features",
+        "name": "Nx Cloud AI",
+        "description": "",
+        "mediaImage": "",
+        "file": "",
+        "itemList": [],
+        "isExternal": true,
+        "path": "/ci/features/ai-features",
+        "tags": []
+      },
+      {
         "id": "split-e2e-tasks",
         "name": "Automatically Split E2E Tasks",
         "description": "",
@@ -718,6 +740,17 @@
     "itemList": [],
     "isExternal": true,
     "path": "/ci/features/dynamic-agents",
+    "tags": []
+  },
+  "/ci/features/ai-features": {
+    "id": "ai-features",
+    "name": "Nx Cloud AI",
+    "description": "",
+    "mediaImage": "",
+    "file": "",
+    "itemList": [],
+    "isExternal": true,
+    "path": "/ci/features/ai-features",
     "tags": []
   },
   "/ci/features/split-e2e-tasks": {
