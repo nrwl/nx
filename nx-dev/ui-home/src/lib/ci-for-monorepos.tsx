@@ -330,7 +330,7 @@ export const HalveYouBill = () => {
           Halve your CI bill
         </p>
         <p className="mt-2 text-slate-600 dark:text-slate-400">
-          Nx Cloud doesn't only makes your runs{' '}
+          Nx Cloud not only makes your runs{' '}
           <span className="font-semibold text-slate-800 dark:text-slate-200">
             30% to 70% faster
           </span>
@@ -380,8 +380,8 @@ export const IntegratesToYouCurrentCiProvider = () => {
           </p>
           <p className="mt-2 max-w-md text-slate-600 dark:text-slate-400">
             Use your current CI provider, export your compute and slash your CI
-            bill by using Nx engines to save time, better performance and proper
-            developer experience.
+            bill by using Nx engines to save time, improve performance and
+            ramp-up developer experience.
           </p>
           <div className="mt-4 flex items-center">
             <Link

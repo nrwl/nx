@@ -31,7 +31,7 @@ export function TeamAndCommunity(): JSX.Element {
         </SectionHeading>
         <SectionHeading as="p" variant="subtitle" className="mt-6">
           Founded {yearsAgo} years ago by two <Strong>ex-Googlers</Strong>, our
-          mission is to revoluzionize software development with the power of{' '}
+          mission is to revolutionize software development with the power of{' '}
           <TextLink
             href="https://github.com/nrwl/nx"
             title="Monorepo & OSS"
