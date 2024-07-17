@@ -1,7 +1,7 @@
 import { readFileSync, readdirSync } from 'fs';
 import { join, basename } from 'path';
 import { extractFrontmatter } from '@nx/nx-dev/ui-markdoc';
-import { sortPosts } from './blog.util';
+import { sortPodcasts, sortPosts } from './blog.util';
 import { BlogPostDataEntry } from './blog.model';
 import { readFile, readdir } from 'fs/promises';
 
@@ -29,7 +29,23 @@ export class BlogApi {
     return Array.from(tags);
   }
 
-  async getBlogs(): Promise<BlogPostDataEntry[]> {
+  async getPodcastBlogs(): Promise<BlogPostDataEntry[]> {
+    return sortPodcasts(
+      await this.getBlogs((post) =>
+        post.tags.map((t) => t.toLowerCase()).includes('podcast')
+      )
+    );
+  }
+
+  async getBlogs(
+    filterFn?: (post: BlogPostDataEntry) => boolean
+  ): Promise<BlogPostDataEntry[]> {
+    return sortPosts(await this.getAllBlogs(filterFn));
+  }
+
+  async getAllBlogs(
+    filterFn?: (post: BlogPostDataEntry) => boolean
+  ): Promise<BlogPostDataEntry[]> {
     const files: string[] = await readdir(this.options.blogRoot);
     const authors = JSON.parse(
       readFileSync(join(this.options.blogRoot, 'authors.json'), 'utf8')
@@ -59,62 +75,16 @@ export class BlogApi {
         filePath,
         slug,
       };
-      if (!frontmatter.draft || process.env.NODE_ENV === 'development') {
+      const isDevelopment = process.env.NODE_ENV === 'development';
+      const shouldIncludePost = !frontmatter.draft || isDevelopment;
+
+      if (shouldIncludePost && (!filterFn || filterFn(post))) {
         allPosts.push(post);
       }
     }
-    return sortPosts(allPosts);
+    return allPosts;
   }
 
-  getBlogPosts(): BlogPostDataEntry[] {
-    const files: string[] = readdirSync(this.options.blogRoot);
-    const authors = JSON.parse(
-      readFileSync(join(this.options.blogRoot, 'authors.json'), 'utf8')
-    );
-    const allPosts: BlogPostDataEntry[] = [];
-
-    for (const file of files) {
-      const filePath = join(this.options.blogRoot, file);
-      // filter out directories (e.g. images)
-      if (!filePath.endsWith('.md')) continue;
-
-      const content = readFileSync(filePath, 'utf8');
-      const frontmatter = extractFrontmatter(content);
-      const slug = this.calculateSlug(filePath, frontmatter);
-      const post = {
-        content,
-        title: frontmatter.title ?? null,
-        description: frontmatter.description ?? null,
-        authors: authors.filter((author) =>
-          frontmatter.authors.includes(author.name)
-        ),
-        date: this.calculateDate(file, frontmatter),
-        cover_image: frontmatter.cover_image
-          ? `/documentation${frontmatter.cover_image}` // Match the prefix used by markdown parser
-          : null,
-        tags: frontmatter.tags ?? [],
-        reposts: frontmatter.reposts ?? [],
-        pinned: frontmatter.pinned ?? false,
-        filePath,
-        slug,
-      };
-
-      if (!frontmatter.draft || process.env.NODE_ENV === 'development') {
-        allPosts.push(post);
-      }
-    }
-
-    return sortPosts(allPosts);
-  }
-
-  getBlogPost(slug: string): BlogPostDataEntry {
-    const blogs = this.getBlogPosts();
-    const blog = blogs.find((b) => b.slug === slug);
-    if (!blog) {
-      throw new Error(`Could not find blog post with slug: ${slug}`);
-    }
-    return blog;
-  }
   // Optimize this so we don't read the FS multiple times
   async getBlogPostBySlug(
     slug: string | null

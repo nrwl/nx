@@ -13,6 +13,7 @@ import {
   UserGroupIcon,
   ComputerDesktopIcon,
   GlobeAltIcon,
+  MicrophoneIcon,
 } from '@heroicons/react/24/outline';
 import { FC, SVGProps } from 'react';
 import { DiscordIcon } from '../discord-icon';
@@ -206,11 +207,19 @@ export const learnItems: MenuItem[] = [
   },
 ];
 export const eventItems: MenuItem[] = [
+  // {
+  //   name: 'Monorepo World',
+  //   description: null,
+  //   href: 'https://monorepo.world',
+  //   icon: GlobeAltIcon,
+  //   isNew: false,
+  //   isHighlight: false,
+  // },
   {
-    name: 'Monorepo World',
+    name: 'Podcasts',
     description: null,
-    href: 'https://monorepo.world',
-    icon: GlobeAltIcon,
+    href: '/podcast',
+    icon: MicrophoneIcon,
     isNew: false,
     isHighlight: false,
   },

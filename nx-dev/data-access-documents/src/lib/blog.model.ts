@@ -9,6 +9,7 @@ export type BlogPostDataEntry = {
   reposts: string[];
   updated?: string;
   pinned?: boolean;
+  episode?: number;
   filePath: string;
   slug: string;
 };
