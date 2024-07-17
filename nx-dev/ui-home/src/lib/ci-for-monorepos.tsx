@@ -312,7 +312,7 @@ export const ProjectsCreatedEveryMonth = () => {
             target="_blank"
             rel="nofollow"
           >
-            Connect your Nx repository now!
+            Connect to Nx Cloud now!
           </ButtonLink>
         </div>
       </Card>
