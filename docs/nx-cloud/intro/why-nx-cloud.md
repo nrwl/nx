@@ -23,7 +23,7 @@ Read more about individual features of Nx Cloud in the [features section](/ci/fe
 
 ## Integrate Nx Cloud into my CI setup
 
-Ready to experience fast CI? Read the [connect to Nx Cloud](/ci/intro/connect-to-cloud) page for more details.
+Ready to experience fast CI? Read the [connect to Nx Cloud](/ci/intro/connect-to-nx-cloud) page for more details.
 
 ## Learn more
 
