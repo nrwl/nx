@@ -3,14 +3,14 @@ import { AnimateValue } from '@nx/nx-dev/ui-animations';
 const statistics = [
   {
     id: 1,
-    name: 'use it every day',
+    name: 'use Nx every day',
     value: 2,
     suffix: ' million',
     associative: 'developers',
   },
   {
     id: 2,
-    name: 'companies use it',
+    name: 'companies use Nx to ship their products',
     value: 50,
     suffix: '%',
     associative: 'of Fortune 500',

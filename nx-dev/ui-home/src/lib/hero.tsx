@@ -75,21 +75,15 @@ export function Hero(): JSX.Element {
             >
               Get started
             </ButtonLink>
-            <Link
+
+            <ButtonLink
               href="ci/intro/ci-with-nx?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_hero_get_started&utm_source=nxdev"
-              target="blank"
-              title="Start with Nx"
-              prefetch={false}
-              className="group font-semibold leading-6 text-slate-950 dark:text-white"
+              title="Get started"
+              variant="contrast"
+              size="default"
             >
-              Connect your Nx repository{' '}
-              <span
-                aria-hidden="true"
-                className="inline-block transition group-hover:translate-x-1"
-              >
-                →
-              </span>
-            </Link>
+              Learn about Nx on CI
+            </ButtonLink>
           </div>
         </div>
       </div>
