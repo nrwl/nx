@@ -362,14 +362,6 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Nx Cloud AI",
-                "path": "/ci/features/ai-features",
-                "id": "ai-features",
-                "isExternal": true,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
                 "name": "Automatically Split E2E Tasks",
                 "path": "/ci/features/split-e2e-tasks",
                 "id": "split-e2e-tasks",
@@ -486,14 +478,6 @@
             "disableCollapsible": false
           },
           {
-            "name": "Nx Cloud AI",
-            "path": "/ci/features/ai-features",
-            "id": "ai-features",
-            "isExternal": true,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
             "name": "Automatically Split E2E Tasks",
             "path": "/ci/features/split-e2e-tasks",
             "id": "split-e2e-tasks",
@@ -540,14 +524,6 @@
         "name": "Dynamically Allocate Agents",
         "path": "/ci/features/dynamic-agents",
         "id": "dynamic-agents",
-        "isExternal": true,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Nx Cloud AI",
-        "path": "/ci/features/ai-features",
-        "id": "ai-features",
         "isExternal": true,
         "children": [],
         "disableCollapsible": false
@@ -5347,6 +5323,14 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
+          },
+          {
+            "name": "Nx Cloud AI",
+            "path": "/ci/features/ai-features",
+            "id": "ai-features",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -5395,6 +5379,14 @@
         "name": "Identify and Re-run Flaky Tasks",
         "path": "/ci/features/flaky-tasks",
         "id": "flaky-tasks",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Nx Cloud AI",
+        "path": "/ci/features/ai-features",
+        "id": "ai-features",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false

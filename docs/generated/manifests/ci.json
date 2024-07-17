@@ -239,6 +239,17 @@
         "isExternal": false,
         "path": "/ci/features/flaky-tasks",
         "tags": []
+      },
+      {
+        "id": "ai-features",
+        "name": "Nx Cloud AI",
+        "description": "Unlock AI capabilities in NxCloud.",
+        "mediaImage": "",
+        "file": "nx-cloud/features/ai-features",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/features/ai-features",
+        "tags": []
       }
     ],
     "isExternal": false,
@@ -309,6 +320,17 @@
     "itemList": [],
     "isExternal": false,
     "path": "/ci/features/flaky-tasks",
+    "tags": []
+  },
+  "/ci/features/ai-features": {
+    "id": "ai-features",
+    "name": "Nx Cloud AI",
+    "description": "Unlock AI capabilities in NxCloud.",
+    "mediaImage": "",
+    "file": "nx-cloud/features/ai-features",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/features/ai-features",
     "tags": []
   },
   "/ci/concepts": {
