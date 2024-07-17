@@ -4,7 +4,7 @@ import { basename, join, relative } from 'path';
 import {
   buildProjectConfigurationFromPackageJson,
   getGlobPatternsFromPackageManagerWorkspaces,
-} from '../../plugins/package-json-workspaces';
+} from '../../plugins/package-json';
 import { buildProjectFromProjectJson } from '../../plugins/project-json/build-nodes/project-json';
 import { renamePropertyWithStableKeys } from '../../adapter/angular-json';
 import {

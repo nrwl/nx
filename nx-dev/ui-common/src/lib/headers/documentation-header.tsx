@@ -11,7 +11,6 @@ import cx from 'classnames';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { ButtonLink } from '../button';
-import { NxIcon } from '../nx-icon';
 import { Popover, Transition } from '@headlessui/react';
 import { TwoColumnsMenu } from './two-columns-menu';
 import {
@@ -20,9 +19,9 @@ import {
   solutionsMenuItems,
 } from './menu-items';
 import { SectionsMenu } from './sections-menu';
-import { NxCloudIcon } from '../nx-cloud-icon';
 import { AnnouncementBanner } from '../announcement-banner';
 import { DiscordIcon } from '../discord-icon';
+import { NxCloudIcon, NxIcon } from '@nx/nx-dev/ui-icons';
 
 function Menu({ tabs }: { tabs: any[] }): JSX.Element {
   return (

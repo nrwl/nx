@@ -123,7 +123,7 @@ export const App = () => {
               <TouchableOpacity
                 style={[styles.listItem, styles.learning]}
                 onPress={() =>
-                  Linking.openURL('https://blog.nrwl.io/?utm_source=nx-project')
+                  Linking.openURL('https://nx.dev/blog/?utm_source=nx-project')
                 }
               >
                 <Svg

@@ -10,7 +10,7 @@ export function ConnectWithUs(): JSX.Element {
     >
       <header className="space-y-10 md:py-12 lg:w-5/12 xl:w-5/12">
         <div>
-          <SectionHeading as="h1" variant="display" id="connect-with-us">
+          <SectionHeading as="h1" variant="title" id="connect-with-us">
             Let's connect together!
           </SectionHeading>
           <p className="mt-4">

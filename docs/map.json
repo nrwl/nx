@@ -1570,8 +1570,8 @@
               "file": "nx-cloud/intro/why-nx-cloud"
             },
             {
-              "name": "Connect Nx Cloud",
-              "id": "connect-to-cloud",
+              "name": "Connect to Nx Cloud",
+              "id": "connect-to-nx-cloud",
               "file": "nx-cloud/intro/connect-to-cloud"
             },
             {

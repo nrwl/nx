@@ -45,7 +45,7 @@ export function LaunchWeekAnnouncements(): JSX.Element {
                   <ButtonLink
                     variant="primary"
                     size="default"
-                    href="https://blog.nrwl.io/what-if-nx-plugins-were-more-like-vscode-extensions-dcdad140ae09?source=friends_link&sk=ade76fe8d50d44aafb4d4d89ab882e24"
+                    href="https://nx.dev/blog/what-if-nx-plugins-were-more-like-vscode-extensions"
                     title="Unveiling Project Crystal"
                   >
                     Read the blog post
@@ -114,7 +114,7 @@ export function LaunchWeekAnnouncements(): JSX.Element {
                   <ButtonLink
                     variant="primary"
                     size="default"
-                    href="https://blog.nrwl.io/introducing-nx-nuxt-enhanced-nuxt-js-support-in-nx-01eac78034fc?source=friends_link&sk=91582cdbd0719dc23375338ad92afa9b"
+                    href="https://nx.dev/blog/introducing-nx-nuxt-enhanced-nuxt-js-support-in-nx"
                     title="Introducing @nx/nuxt: Enhanced Nuxt.js Support in Nx"
                   >
                     Read the blog post
@@ -179,7 +179,7 @@ export function LaunchWeekAnnouncements(): JSX.Element {
                   <ButtonLink
                     variant="primary"
                     size="default"
-                    href="https://blog.nrwl.io/fast-effortless-ci-67812514ffb4?source=friends_link&sk=89e1b5c0388dda077e64a2eab5495d95"
+                    href="https://nx.dev/blog/fast-effortless-ci"
                     title="Fast, Effortless CI"
                   >
                     Read the blog post
@@ -299,7 +299,7 @@ export function LaunchWeekAnnouncements(): JSX.Element {
                   <ButtonLink
                     variant="primary"
                     size="default"
-                    href="https://blog.nrwl.io/versioning-and-releasing-packages-in-a-monorepo-45ee194378d1?source=friends_link&sk=934e4c5321774c8a9f88433e0dea578b"
+                    href="https://nx.dev/blog/versioning-and-releasing-packages-in-a-monorepo"
                     title="Blog post - Versioning and Releasing Packages in a Monorepo"
                   >
                     Read the blog post

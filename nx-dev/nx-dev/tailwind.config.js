@@ -3,6 +3,9 @@ const path = require('path');
 // nx-ignore-next-line
 const { createGlobPatternsForDependencies } = require('@nx/next/tailwind');
 const plugin = require('tailwindcss/plugin');
+const {
+  default: flattenColorPalette,
+} = require('tailwindcss/lib/util/flattenColorPalette');
 
 if (!createGlobPatternsForDependencies(__dirname).length)
   throw Error('GRAPH ISSUE: No dependency found when many are expected.');
@@ -24,6 +27,18 @@ const FlipAnimation = plugin(function ({ addUtilities }) {
   });
 });
 
+// This plugin adds each Tailwind color as a global CSS variable, e.g. var(--gray-200).
+function addVariablesForColors({ addBase, theme }) {
+  let allColors = flattenColorPalette(theme('colors'));
+  let newVars = Object.fromEntries(
+    Object.entries(allColors).map(([key, val]) => [`--${key}`, val])
+  );
+
+  addBase({
+    ':root': newVars,
+  });
+}
+
 module.exports = {
   experimental: {
     optimizeUniversalDefaults: true,
@@ -36,6 +51,20 @@ module.exports = {
   ],
   theme: {
     extend: {
+      animation: {
+        marquee: 'marquee var(--duration) linear infinite',
+        'marquee-vertical': 'marquee-vertical var(--duration) linear infinite',
+      },
+      keyframes: {
+        marquee: {
+          from: { transform: 'translateX(0)' },
+          to: { transform: 'translateX(calc(-100% - var(--gap)))' },
+        },
+        'marquee-vertical': {
+          from: { transform: 'translateY(0)' },
+          to: { transform: 'translateY(calc(-100% - var(--gap)))' },
+        },
+      },
       typography: {
         DEFAULT: {
           css: {
@@ -61,5 +90,6 @@ module.exports = {
     require('@tailwindcss/typography'),
     require('@tailwindcss/forms'),
     FlipAnimation,
+    addVariablesForColors,
   ],
 };

@@ -183,6 +183,14 @@ To display a terminal command, use:
 ‎```
 ````
 
+You can also add a title to the shell as follows:
+
+````
+‎```shell {% title="Build the app" %}
+‎ npx nx build
+‎```
+````
+
 #### Terminal Output
 
 You can display your terminal output with a dedicated component the same way you would show code.

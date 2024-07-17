@@ -14,7 +14,7 @@ import {
   ShopifyIcon,
   StorybookIcon,
   VmwareIcon,
-} from '@nx/nx-dev/ui-common';
+} from '@nx/nx-dev/ui-icons';
 import { motion } from 'framer-motion';
 
 export function TrustedBy(): JSX.Element {

@@ -29,7 +29,7 @@ A few links to help you get started:
 - [Nx.Dev: Core Tutorials](https://nx.dev/getting-started/intro)
 - [Recipe: Adding Nx to an Existing Monorepo](https://nx.dev/recipes/adopting-nx/adding-to-monorepo)
 - [Official Nx YouTube Channel](https://www.youtube.com/@NxDevtools)
-- [Blog Posts About Nx](https://blog.nrwl.io/nx/home)
+- [Blog Posts About Nx](https://nx.dev/blog)
 
 <p style="text-align: center;"><a href="https://nx.dev/#learning-materials" target="_blank" rel="noreferrer"><img src="./images/nx-courses-and-videos.svg" 
 width="100%" alt="Nx - Smart Monorepos · Fast CI"></a></p>
