@@ -1,7 +1,9 @@
-import { AmazonMusicIcon } from './icons/amazon-music';
-import { ApplePodcastsIcon } from './icons/apple-podcasts';
-import { IHeartRadioIcon } from './icons/i-heart-radio';
-import { SpotifyIcon } from './icons/spotify';
+import {
+  AmazonMusicIcon,
+  ApplePodcastsIcon,
+  IHeartRadioIcon,
+  SpotifyIcon,
+} from '@nx/nx-dev/ui-icons';
 
 export function ListenOn(): JSX.Element {
   const platforms = [
