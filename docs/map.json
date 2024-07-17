@@ -167,13 +167,6 @@
                   "isExternal": true
                 },
                 {
-                  "name": "Nx Cloud AI",
-                  "id": "ai-features",
-                  "file": "",
-                  "path": "/ci/features/ai-features",
-                  "isExternal": true
-                },
-                {
                   "name": "Automatically Split E2E Tasks",
                   "id": "split-e2e-tasks",
                   "file": "",
@@ -1642,6 +1635,12 @@
               "id": "flaky-tasks",
               "description": "Learn how Nx Cloud is able to automatically identify flaky tasks and re-run them for you.",
               "file": "nx-cloud/features/flaky-tasks"
+            },
+            {
+              "name": "Nx Cloud AI",
+              "id": "ai-features",
+              "description": "Use AI capabilities in NxCloud.",
+              "file": "nx-cloud/features/ai-features"
             }
           ]
         },
