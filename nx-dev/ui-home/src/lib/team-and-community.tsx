@@ -1,10 +1,4 @@
 import {
-  DiscordIcon,
-  SectionHeading,
-  Strong,
-  TextLink,
-} from '@nx/nx-dev/ui-common';
-import {
   ArrowUpRightIcon,
   ChevronRightIcon,
   ComputerDesktopIcon,
@@ -12,8 +6,14 @@ import {
   MicrophoneIcon,
   NewspaperIcon,
 } from '@heroicons/react/24/outline';
-import Link from 'next/link';
+import {
+  DiscordIcon,
+  SectionHeading,
+  Strong,
+  TextLink,
+} from '@nx/nx-dev/ui-common';
 import { YoutubeIcon } from '@nx/nx-dev/ui-icons';
+import Link from 'next/link';
 
 const yearsAgo = new Date().getFullYear() - 2017;
 
@@ -31,7 +31,7 @@ export function TeamAndCommunity(): JSX.Element {
         </SectionHeading>
         <SectionHeading as="p" variant="subtitle" className="mt-6">
           Founded {yearsAgo} years ago by two <Strong>ex-Googlers</Strong>, our
-          mission is to revoluzionize software development with the power of{' '}
+          mission is to revolutionize software development with the power of{' '}
           <TextLink
             href="https://github.com/nrwl/nx"
             title="Monorepo & OSS"

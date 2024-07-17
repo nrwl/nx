@@ -1,17 +1,12 @@
 import { Dialog, Transition } from '@headlessui/react';
 import { PlayIcon } from '@heroicons/react/24/outline';
-import { cx } from '@nx/nx-dev/ui-primitives';
-import { motion } from 'framer-motion';
-import Image from 'next/image';
-import Link from 'next/link';
-import { ComponentProps, Fragment, ReactNode, useState } from 'react';
+import { AnimateValue, Marquee } from '@nx/nx-dev/ui-animations';
 import {
   ButtonLink,
   SectionHeading,
   Strong,
   TextLink,
 } from '@nx/nx-dev/ui-common';
-import { AnimateValue, Marquee } from '@nx/nx-dev/ui-animations';
 import {
   AzureDevOpsIcon,
   BitbucketIcon,
@@ -20,6 +15,11 @@ import {
   JenkinsIcon,
   TravisCiIcon,
 } from '@nx/nx-dev/ui-icons';
+import { cx } from '@nx/nx-dev/ui-primitives';
+import { motion } from 'framer-motion';
+import Image from 'next/image';
+import Link from 'next/link';
+import { ComponentProps, Fragment, ReactNode, useState } from 'react';
 
 export function CiForMonorepos(): JSX.Element {
   return (
@@ -36,7 +36,7 @@ export function CiForMonorepos(): JSX.Element {
           </SectionHeading>
           <SectionHeading as="p" variant="subtitle" className="mt-6">
             Current CI systems are <Strong>slow</Strong>,{' '}
-            <Strong>hard to maintain and unreliable</Strong>. With Nx Cloud, we
+            <Strong>hard to maintain, and unreliable</Strong>. With Nx Cloud, we
             introduce an{' '}
             <TextLink
               href="/blog/reliable-ci-a-new-execution-model-fixing-both-flakiness-and-slowness?utm_source=homepage&utm_medium=website&utm_campaign=homepage_links&utm_content=cta_ci_for_monorepos"
@@ -130,7 +130,7 @@ export const ApplicationCard = () => {
           Powerful and elegant UI
         </p>
         <p className="mt-2 text-slate-600 dark:text-slate-400">
-          CI application build for monorepos, so you can quickly find what
+          An application built for monorepo CI, so you can quickly find what
           failed, debug and move on.
         </p>
         <div className="mt-10 flex items-center justify-center gap-x-6">
@@ -330,7 +330,7 @@ export const HalveYouBill = () => {
           Halve your CI bill
         </p>
         <p className="mt-2 text-slate-600 dark:text-slate-400">
-          Nx Cloud doesn't only makes your runs{' '}
+          Nx Cloud not only makes your runs{' '}
           <span className="font-semibold text-slate-800 dark:text-slate-200">
             30% to 70% faster
           </span>
@@ -380,8 +380,8 @@ export const IntegratesToYouCurrentCiProvider = () => {
           </p>
           <p className="mt-2 max-w-md text-slate-600 dark:text-slate-400">
             Use your current CI provider, export your compute and slash your CI
-            bill by using Nx engines to save time, better performance and proper
-            developer experience.
+            bill by using Nx Agents to save time, improve performance and
+            ramp-up your developer experience.
           </p>
           <div className="mt-4 flex items-center">
             <Link
@@ -390,7 +390,7 @@ export const IntegratesToYouCurrentCiProvider = () => {
               prefetch={false}
               className="group font-semibold leading-6 text-slate-950 dark:text-white"
             >
-              Enable speed with a single line{' '}
+              Enable faster CI with a single line{' '}
               <span
                 aria-hidden="true"
                 className="inline-block transition group-hover:translate-x-1"

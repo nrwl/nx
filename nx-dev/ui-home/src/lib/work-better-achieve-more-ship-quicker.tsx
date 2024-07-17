@@ -16,12 +16,12 @@ export function WorkBetterAchieveMoreShipQuicker(): JSX.Element {
           id="achieve-more-ship-quicker"
           className="scroll-mt-24"
         >
-          Work better together. Achieve more. Ship quicker.
+          Collaborate better. Achieve more. Ship faster.
         </SectionHeading>
         <SectionHeading as="p" variant="subtitle" className="mt-6">
           <Strong>Tangled codebases</Strong> without well-defined ownership{' '}
           <Strong>crush the velocity</Strong> of teams and the quality of
-          products. Nx solves it. By defining{' '}
+          products. Nx is the solution. By defining{' '}
           <TextLink
             href="/features/enforce-module-boundaries?utm_source=homepage&utm_medium=website&utm_campaign=homepage_links&utm_content=cta_achieve_more_ship_quicker"
             title="Enforce module boundaries"
@@ -43,7 +43,7 @@ export function WorkBetterAchieveMoreShipQuicker(): JSX.Element {
           >
             code generation
           </TextLink>{' '}
-          , developers <Strong>standardize</Strong> best practices and reduce
+          , developers <Strong>standardize</Strong> on best practices and reduce
           duplication. Plus, they <Strong>keep everything up-to-date</Strong> by
           using Nx's{' '}
           <TextLink
