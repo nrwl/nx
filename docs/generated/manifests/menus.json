@@ -5170,9 +5170,9 @@
             "disableCollapsible": false
           },
           {
-            "name": "Connect Nx Cloud",
-            "path": "/ci/intro/connect-to-cloud",
-            "id": "connect-to-cloud",
+            "name": "Connect to Nx Cloud",
+            "path": "/ci/intro/connect-to-nx-cloud",
+            "id": "connect-to-nx-cloud",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -5222,9 +5222,9 @@
         "disableCollapsible": false
       },
       {
-        "name": "Connect Nx Cloud",
-        "path": "/ci/intro/connect-to-cloud",
-        "id": "connect-to-cloud",
+        "name": "Connect to Nx Cloud",
+        "path": "/ci/intro/connect-to-nx-cloud",
+        "id": "connect-to-nx-cloud",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -5301,6 +5301,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Nx Cloud AI",
+            "path": "/ci/features/nx-cloud-ai",
+            "id": "nx-cloud-ai",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Dynamically Allocate Agents",
             "path": "/ci/features/dynamic-agents",
             "id": "dynamic-agents",
@@ -5320,14 +5328,6 @@
             "name": "Identify and Re-run Flaky Tasks",
             "path": "/ci/features/flaky-tasks",
             "id": "flaky-tasks",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Nx Cloud AI",
-            "path": "/ci/features/ai-features",
-            "id": "ai-features",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -5360,6 +5360,14 @@
         "disableCollapsible": false
       },
       {
+        "name": "Nx Cloud AI",
+        "path": "/ci/features/nx-cloud-ai",
+        "id": "nx-cloud-ai",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
         "name": "Dynamically Allocate Agents",
         "path": "/ci/features/dynamic-agents",
         "id": "dynamic-agents",
@@ -5379,14 +5387,6 @@
         "name": "Identify and Re-run Flaky Tasks",
         "path": "/ci/features/flaky-tasks",
         "id": "flaky-tasks",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Nx Cloud AI",
-        "path": "/ci/features/ai-features",
-        "id": "ai-features",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -5673,6 +5673,14 @@
                     "name": "Authenticate via SAML",
                     "path": "/ci/recipes/enterprise/on-premise/auth-saml",
                     "id": "auth-saml",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  },
+                  {
+                    "name": "Authenticate via SAML on Managed Version",
+                    "path": "/ci/recipes/enterprise/on-premise/auth-saml-managed",
+                    "id": "auth-saml-managed",
                     "isExternal": false,
                     "children": [],
                     "disableCollapsible": false
@@ -6096,6 +6104,14 @@
                 "disableCollapsible": false
               },
               {
+                "name": "Authenticate via SAML on Managed Version",
+                "path": "/ci/recipes/enterprise/on-premise/auth-saml-managed",
+                "id": "auth-saml-managed",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
                 "name": "Advanced Configuration",
                 "path": "/ci/recipes/enterprise/on-premise/advanced-config",
                 "id": "advanced-config",
@@ -6245,6 +6261,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Authenticate via SAML on Managed Version",
+            "path": "/ci/recipes/enterprise/on-premise/auth-saml-managed",
+            "id": "auth-saml-managed",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Advanced Configuration",
             "path": "/ci/recipes/enterprise/on-premise/advanced-config",
             "id": "advanced-config",
@@ -6323,6 +6347,14 @@
         "name": "Authenticate via SAML",
         "path": "/ci/recipes/enterprise/on-premise/auth-saml",
         "id": "auth-saml",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Authenticate via SAML on Managed Version",
+        "path": "/ci/recipes/enterprise/on-premise/auth-saml-managed",
+        "id": "auth-saml-managed",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -6609,7 +6641,7 @@
             "disableCollapsible": false
           },
           {
-            "name": "Explain with AI (beta)",
+            "name": "Explain With AI",
             "path": "/ci/troubleshooting/explain-with-ai",
             "id": "explain-with-ai",
             "isExternal": false,
@@ -6628,7 +6660,7 @@
         "disableCollapsible": false
       },
       {
-        "name": "Explain with AI (beta)",
+        "name": "Explain With AI",
         "path": "/ci/troubleshooting/explain-with-ai",
         "id": "explain-with-ai",
         "isExternal": false,
