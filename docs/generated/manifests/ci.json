@@ -29,14 +29,14 @@
         "tags": []
       },
       {
-        "id": "connect-to-nx-cloud",
-        "name": "Connect to Nx Cloud",
+        "id": "connect-to-cloud",
+        "name": "Connect Nx Cloud",
         "description": "",
         "mediaImage": "",
         "file": "nx-cloud/intro/connect-to-cloud",
         "itemList": [],
         "isExternal": false,
-        "path": "/ci/intro/connect-to-nx-cloud",
+        "path": "/ci/intro/connect-to-cloud",
         "tags": []
       },
       {
@@ -100,15 +100,15 @@
     "path": "/ci/intro/why-nx-cloud",
     "tags": []
   },
-  "/ci/intro/connect-to-nx-cloud": {
-    "id": "connect-to-nx-cloud",
-    "name": "Connect to Nx Cloud",
+  "/ci/intro/connect-to-cloud": {
+    "id": "connect-to-cloud",
+    "name": "Connect Nx Cloud",
     "description": "",
     "mediaImage": "",
     "file": "nx-cloud/intro/connect-to-cloud",
     "itemList": [],
     "isExternal": false,
-    "path": "/ci/intro/connect-to-nx-cloud",
+    "path": "/ci/intro/connect-to-cloud",
     "tags": []
   },
   "/ci/intro/tutorials": {
@@ -208,17 +208,6 @@
         "tags": []
       },
       {
-        "id": "nx-cloud-ai",
-        "name": "Nx Cloud AI",
-        "description": "Learn how to enable AI features in Nx Cloud, and what features it enables",
-        "mediaImage": "",
-        "file": "nx-cloud/features/ai-features",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/ci/features/nx-cloud-ai",
-        "tags": []
-      },
-      {
         "id": "dynamic-agents",
         "name": "Dynamically Allocate Agents",
         "description": "Learn how to dynamically allocate agents based on the size of a PR, keeping the balance of speed and cost.",
@@ -287,17 +276,6 @@
     "itemList": [],
     "isExternal": false,
     "path": "/ci/features/distribute-task-execution",
-    "tags": []
-  },
-  "/ci/features/nx-cloud-ai": {
-    "id": "nx-cloud-ai",
-    "name": "Nx Cloud AI",
-    "description": "Learn how to enable AI features in Nx Cloud, and what features it enables",
-    "mediaImage": "",
-    "file": "nx-cloud/features/ai-features",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/ci/features/nx-cloud-ai",
     "tags": []
   },
   "/ci/features/dynamic-agents": {
@@ -719,17 +697,6 @@
                 "itemList": [],
                 "isExternal": false,
                 "path": "/ci/recipes/enterprise/on-premise/auth-saml",
-                "tags": []
-              },
-              {
-                "id": "auth-saml-managed",
-                "name": "Authenticate via SAML on Managed Version",
-                "description": "",
-                "mediaImage": "",
-                "file": "nx-cloud/enterprise/on-premise/auth-saml-managed",
-                "itemList": [],
-                "isExternal": false,
-                "path": "/ci/recipes/enterprise/on-premise/auth-saml-managed",
                 "tags": []
               },
               {
@@ -1306,17 +1273,6 @@
             "tags": []
           },
           {
-            "id": "auth-saml-managed",
-            "name": "Authenticate via SAML on Managed Version",
-            "description": "",
-            "mediaImage": "",
-            "file": "nx-cloud/enterprise/on-premise/auth-saml-managed",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/ci/recipes/enterprise/on-premise/auth-saml-managed",
-            "tags": []
-          },
-          {
             "id": "advanced-config",
             "name": "Advanced Configuration",
             "description": "",
@@ -1522,17 +1478,6 @@
         "tags": []
       },
       {
-        "id": "auth-saml-managed",
-        "name": "Authenticate via SAML on Managed Version",
-        "description": "",
-        "mediaImage": "",
-        "file": "nx-cloud/enterprise/on-premise/auth-saml-managed",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/ci/recipes/enterprise/on-premise/auth-saml-managed",
-        "tags": []
-      },
-      {
         "id": "advanced-config",
         "name": "Advanced Configuration",
         "description": "",
@@ -1645,17 +1590,6 @@
     "itemList": [],
     "isExternal": false,
     "path": "/ci/recipes/enterprise/on-premise/auth-saml",
-    "tags": []
-  },
-  "/ci/recipes/enterprise/on-premise/auth-saml-managed": {
-    "id": "auth-saml-managed",
-    "name": "Authenticate via SAML on Managed Version",
-    "description": "",
-    "mediaImage": "",
-    "file": "nx-cloud/enterprise/on-premise/auth-saml-managed",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/ci/recipes/enterprise/on-premise/auth-saml-managed",
     "tags": []
   },
   "/ci/recipes/enterprise/on-premise/advanced-config": {
@@ -2044,7 +1978,7 @@
       },
       {
         "id": "explain-with-ai",
-        "name": "Explain With AI",
+        "name": "Explain with AI (beta)",
         "description": "",
         "mediaImage": "",
         "file": "nx-cloud/troubleshooting/explain-with-ai",
@@ -2071,7 +2005,7 @@
   },
   "/ci/troubleshooting/explain-with-ai": {
     "id": "explain-with-ai",
-    "name": "Explain With AI",
+    "name": "Explain with AI (beta)",
     "description": "",
     "mediaImage": "",
     "file": "nx-cloud/troubleshooting/explain-with-ai",
