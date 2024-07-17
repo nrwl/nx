@@ -1570,8 +1570,8 @@
               "file": "nx-cloud/intro/why-nx-cloud"
             },
             {
-              "name": "Connect Nx Cloud",
-              "id": "connect-to-cloud",
+              "name": "Connect to Nx Cloud",
+              "id": "connect-to-nx-cloud",
               "file": "nx-cloud/intro/connect-to-cloud"
             },
             {
@@ -1619,6 +1619,12 @@
               "file": "shared/features/distribute-task-execution"
             },
             {
+              "name": "Nx Cloud AI",
+              "id": "nx-cloud-ai",
+              "description": "Learn how to enable AI features in Nx Cloud, and what features it enables",
+              "file": "nx-cloud/features/ai-features"
+            },
+            {
               "name": "Dynamically Allocate Agents",
               "description": "Learn how to dynamically allocate agents based on the size of a PR, keeping the balance of speed and cost.",
               "id": "dynamic-agents",
@@ -1635,12 +1641,6 @@
               "id": "flaky-tasks",
               "description": "Learn how Nx Cloud is able to automatically identify flaky tasks and re-run them for you.",
               "file": "nx-cloud/features/flaky-tasks"
-            },
-            {
-              "name": "Nx Cloud AI",
-              "id": "ai-features",
-              "description": "Use AI capabilities in NxCloud.",
-              "file": "nx-cloud/features/ai-features"
             }
           ]
         },
@@ -1937,7 +1937,7 @@
               "file": "nx-cloud/troubleshooting/ci-execution-failed"
             },
             {
-              "name": "Explain with AI (beta)",
+              "name": "Explain With AI",
               "id": "explain-with-ai",
               "file": "nx-cloud/troubleshooting/explain-with-ai"
             }
