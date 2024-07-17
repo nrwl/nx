@@ -3,7 +3,7 @@ import { ButtonLink, SectionHeading, Strong } from '@nx/nx-dev/ui-common';
 import { ShaderGradient, ShaderGradientCanvas } from 'shadergradient';
 import { BlurFade } from '@nx/nx-dev/ui-animations';
 import { Theme, useTheme } from '@nx/nx-dev/ui-theme';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { useIsomorphicLayoutEffect } from '@nx/nx-dev/ui-primitives';
 
@@ -21,6 +21,23 @@ export function Hero(): JSX.Element {
       </div>
       <div className="z-20 mx-auto grid h-screen max-w-6xl grid-cols-1 place-items-center text-center">
         <div className="container">
+          <div className="-mt-16 hidden sm:mb-8 sm:flex sm:justify-center">
+            <div className="relative rounded-full px-3 py-1 text-sm leading-6 ring-1 ring-slate-900/10 transition-all hover:ring-slate-900/20 dark:ring-slate-100/10 dark:hover:ring-slate-100/20">
+              <span className="text-blue-500 dark:text-sky-500">
+                Monorepo World
+              </span>{' '}
+              - The conf for monorepos and dev tooling.{' '}
+              <Link
+                href="https://monorepo.world"
+                title="Discover Nx Agents"
+                className="font-semibold text-blue-500 dark:text-sky-500"
+                prefetch={false}
+              >
+                <span className="absolute inset-0" aria-hidden="true"></span>
+                Find out more <span aria-hidden="true">→</span>
+              </Link>
+            </div>
+          </div>
           <SectionHeading as="h1" variant="display" data-cy="primary-heading">
             <span className="rounded-lg bg-gradient-to-r from-cyan-500 to-blue-500 bg-clip-text text-transparent">
               Smart
