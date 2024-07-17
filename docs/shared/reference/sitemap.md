@@ -257,6 +257,7 @@
     - [Dynamically Allocate Agents](/ci/features/dynamic-agents)
     - [Automatically Split E2E Tasks (Atomizer)](/ci/features/split-e2e-tasks)
     - [Identify and Re-run Flaky Tasks](/ci/features/flaky-tasks)
+    - [Nx Cloud AI](/ci/features/ai-features)
   - [Concepts](/ci/concepts)
     - [The Building Blocks of Fast CI](/ci/concepts/building-blocks-fast-ci)
     - [Reduce Wasted Time in CI](/ci/concepts/reduce-waste)
