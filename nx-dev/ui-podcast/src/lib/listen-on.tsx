@@ -30,7 +30,7 @@ export function ListenOn(): JSX.Element {
   ];
 
   return (
-    <ul className="flex flex-col gap-6 sm:flex-row sm:gap-3">
+    <ul className="flex gap-6 sm:gap-3">
       {platforms.map((platform) => {
         return (
           <li
