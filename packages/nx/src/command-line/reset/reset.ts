@@ -54,7 +54,7 @@ export async function resetHandler(args: ResetCommandOptions) {
     try {
       await cleanupNativeFileCache();
     } catch {
-      errors.push('Failed to clean up the native file cache.');
+      // ignore, deleting the native file cache is not critical and can fail if another process is locking the file
     }
     try {
       await cleanupWorkspaceData();

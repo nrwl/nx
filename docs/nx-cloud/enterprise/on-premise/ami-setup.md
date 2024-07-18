@@ -116,6 +116,7 @@ nxCloudAppURL: 'https://nx-cloud.on.my-domain.ca' # make sure no backslash is at
 
 # we do not support self-hosted bitbucket instances
 #bitbucket:
+#  apiUrl: '' (if using Data Center/on-prem)
 #  auth:
 #    enabled: false
 

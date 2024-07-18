@@ -24,7 +24,7 @@ import {
 import {
   buildProjectConfigurationFromPackageJson,
   getGlobPatternsFromPackageManagerWorkspaces,
-} from '../plugins/package-json-workspaces';
+} from '../plugins/package-json';
 import { globWithWorkspaceContextSync } from '../utils/workspace-context';
 import { buildProjectFromProjectJson } from '../plugins/project-json/build-nodes/project-json';
 import { PackageJson } from '../utils/package-json';

@@ -14,6 +14,7 @@ export function Pill({
         <Link
           href={url}
           className="flex items-center font-semibold no-underline group-hover:underline"
+          prefetch={false}
         >
           <span className="absolute inset-0" aria-hidden="true"></span>
           {children}

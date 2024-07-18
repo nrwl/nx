@@ -27,12 +27,22 @@ function normalizeOptions(
 
 function addDocker(tree: Tree, options: SetUpDockerOptions) {
   const projectConfig = readProjectConfiguration(tree, options.project);
+
+  const outputPath =
+    projectConfig.targets[options.buildTarget]?.options['outputPath'];
+
   if (!projectConfig) {
     throw new Error(`Cannot find project configuration for ${options.project}`);
   }
+
+  if (!outputPath && !options.outputPath) {
+    throw new Error(
+      `The output path for the project ${options.project} is not defined. Please provide it as an option to the generator.`
+    );
+  }
   generateFiles(tree, join(__dirname, './files'), projectConfig.root, {
     tmpl: '',
-    buildLocation: options.outputPath,
+    buildLocation: options.outputPath ?? outputPath,
     project: options.project,
   });
 }

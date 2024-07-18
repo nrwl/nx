@@ -17,6 +17,13 @@ export function createSerializableError<T extends Error>(error: T): T {
       value = value.map((v) => {
         if (typeof v === 'object' && v instanceof Error) {
           return createSerializableError(v);
+          // Support for AggregateCreateNodesError
+        } else if (
+          Array.isArray(v) &&
+          v.length === 2 &&
+          v[1] instanceof Error
+        ) {
+          return [v[0], createSerializableError(v[1])];
         }
         return v;
       });

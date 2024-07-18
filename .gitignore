@@ -56,3 +56,5 @@ out
 .npm/
 .profile
 .rustup/
+target
+*.wasm

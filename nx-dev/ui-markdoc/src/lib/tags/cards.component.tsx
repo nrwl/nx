@@ -83,6 +83,7 @@ export function Cards({
           <Link
             className="group flex items-center whitespace-nowrap border-transparent px-4 py-0 text-sm font-semibold no-underline transition-all duration-200 ease-in-out hover:text-slate-900 dark:hover:text-sky-400"
             href={moreLink}
+            prefetch={false}
           >
             Browse more
             <span
@@ -117,6 +118,7 @@ export function LinkCard({
       href={url}
       className="no-prose relative col-span-1 flex flex-col items-center rounded-md border border-slate-200 bg-slate-50/40 p-4 text-center font-semibold shadow-sm transition focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 hover:bg-slate-100 dark:border-slate-800/40 dark:bg-slate-800/60 dark:hover:bg-slate-800"
       style={{ textDecorationLine: 'none' }}
+      prefetch={false}
     >
       {icon && (
         <div
@@ -177,6 +179,7 @@ export function Card({
       href={url}
       title={title}
       className="group flex flex-col items-stretch rounded-md border border-slate-200 bg-slate-50/40 text-sm no-underline shadow-sm transition focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 hover:bg-slate-50 dark:border-slate-800/40 dark:bg-slate-800/60 dark:hover:bg-slate-800"
+      prefetch={false}
     >
       {!!hasYoutubeId && (
         <div className="max-h-24">

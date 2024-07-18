@@ -4,6 +4,27 @@
   "title": "JSON schema for Nx projects",
   "type": "object",
   "properties": {
+    "name": {
+      "type": "string",
+      "description": "Project's name. Optional if specified in workspace.json"
+    },
+    "root": {
+      "type": "string",
+      "description": "Project's location relative to the root of the workspace"
+    },
+    "sourceRoot": {
+      "type": "string",
+      "description": "The location of project's sources relative to the root of the workspace"
+    },
+    "projectType": {
+      "type": "string",
+      "description": "Type of project supported",
+      "enum": ["library", "application"]
+    },
+    "generators": {
+      "type": "object",
+      "description": "List of default values used by generators"
+    },
     "namedInputs": {
       "type": "object",
       "description": "Named inputs used by inputs defined in targets",
@@ -112,6 +133,11 @@
           "cache": {
             "type": "boolean",
             "description": "Specifies if the given target should be cacheable"
+          },
+          "parallelism": {
+            "type": "boolean",
+            "default": true,
+            "description": "Whether this target can be run in parallel with other tasks"
           }
         }
       }

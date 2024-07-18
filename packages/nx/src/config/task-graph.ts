@@ -76,6 +76,11 @@ export interface Task {
    * Determines if a given task should be cacheable.
    */
   cache?: boolean;
+
+  /**
+   * Determines if a given task should be parallelizable.
+   */
+  parallelism: boolean;
 }
 
 /**

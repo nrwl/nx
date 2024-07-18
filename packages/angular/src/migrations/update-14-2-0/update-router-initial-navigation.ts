@@ -18,6 +18,7 @@ import {
   factory,
   isIdentifier,
   isObjectLiteralExpression,
+  isPropertyAccessExpression,
   isPropertyAssignment,
   isStringLiteralLike,
 } from 'typescript';
@@ -128,13 +129,13 @@ function getRouterModuleForRootCall(
 
 function isRouterModuleForRoot(node: CallExpression): boolean {
   // make sure is not an outer call expression (NgModule call)
-  const routerModuleForRootIdentifier = tsquery(
-    node.expression,
-    'CallExpression > PropertyAccessExpression > Identifier[name=RouterModule] ~ Identifier[name=forRoot]',
-    { visitAllChildren: true }
-  )[0];
-
-  return !!routerModuleForRootIdentifier;
+  return (
+    isPropertyAccessExpression(node.expression) &&
+    isIdentifier(node.expression.expression) &&
+    node.expression.expression.text === 'RouterModule' &&
+    isIdentifier(node.expression.name) &&
+    node.expression.name.text === 'forRoot'
+  );
 }
 
 function needsMigration(node: PropertyAssignment): boolean {

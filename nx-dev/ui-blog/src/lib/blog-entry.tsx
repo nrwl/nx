@@ -28,6 +28,7 @@ export function BlogEntry({ post }: BlogEntryProps) {
           href={`/blog/${post.slug}`}
           title={post.title}
           className="text-balance text-lg font-semibold text-slate-900 dark:text-white"
+          prefetch={false}
         >
           <span className="absolute inset-0" aria-hidden="true" />
           {post.title}

@@ -5,47 +5,12 @@
   "projectType": "application",
   "implicitDependencies": ["jest"],
   "targets": {
-    "e2e-ci--src/js-executor-node.test.ts": {
-      "dependsOn": [
-        "nx:build-native",
-        "@nx/nx-source:populate-local-registry-storage"
-      ],
-      "inputs": ["e2eInputs", "^production"]
-    },
-    "e2e-ci--src/js-executor-swc.test.ts": {
-      "dependsOn": [
-        "nx:build-native",
-        "@nx/nx-source:populate-local-registry-storage"
-      ],
-      "inputs": ["e2eInputs", "^production"]
-    },
-    "e2e-ci--src/js-executor-tsc.test.ts": {
-      "dependsOn": [
-        "nx:build-native",
-        "@nx/nx-source:populate-local-registry-storage"
-      ],
-      "inputs": ["e2eInputs", "^production"]
-    },
     "e2e-ci--src/js-generators.test.ts": {
       "dependsOn": [
         "nx:build-native",
         "@nx/nx-source:populate-local-registry-storage"
       ],
       "inputs": ["e2eInputs"]
-    },
-    "e2e-ci--src/js-inlining.test.ts": {
-      "dependsOn": [
-        "nx:build-native",
-        "@nx/nx-source:populate-local-registry-storage"
-      ],
-      "inputs": ["e2eInputs", "^production"]
-    },
-    "e2e-ci--src/js-packaging.test.ts": {
-      "dependsOn": [
-        "nx:build-native",
-        "@nx/nx-source:populate-local-registry-storage"
-      ],
-      "inputs": ["e2eInputs", "^production"]
     }
   }
 }
