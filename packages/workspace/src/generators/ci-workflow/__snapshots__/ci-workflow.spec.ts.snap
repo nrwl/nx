@@ -50,7 +50,7 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      - script: bunx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+      - script: bunx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - script: bun install --no-cache
       - script: git branch --track main origin/main
@@ -82,7 +82,7 @@ pipelines:
             # This enables task distribution via Nx Cloud
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-            - bunx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+            - bunx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
             - bun install --no-cache
 
@@ -99,7 +99,7 @@ pipelines:
             # This enables task distribution via Nx Cloud
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-            - bunx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+            - bunx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
             - npm install --prefix=$HOME/.local -g bun
 
@@ -132,7 +132,7 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      - run: bunx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+      - run: bunx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - run: bun install --no-cache
       - nx/set-shas:
@@ -180,7 +180,7 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      - run: bunx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+      - run: bunx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - run: bun install --no-cache
       - uses: nrwl/nx-set-shas@v4
@@ -220,7 +220,7 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      - run: bunx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+      - run: bunx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - run: bun install --no-cache
       - uses: nrwl/nx-set-shas@v4
@@ -249,7 +249,7 @@ CI:
     # This enables task distribution via Nx Cloud
     # Run this command as early as possible, before dependencies are installed
     # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-    - bunx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+    - bunx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
     - bun install --no-cache
     - NX_HEAD=$CI_COMMIT_SHA
@@ -309,9 +309,9 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      - script: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+      - script: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-      - script: npm ci
+      - script: npm ci --legacy-peer-deps
       - script: git branch --track main origin/main
         condition: eq(variables['Build.Reason'], 'PullRequest')
 
@@ -339,9 +339,9 @@ pipelines:
             # This enables task distribution via Nx Cloud
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-            - npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+            - npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-            - npm ci
+            - npm ci --legacy-peer-deps
 
             - npx nx-cloud record -- nx format:check
             # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
@@ -356,9 +356,9 @@ pipelines:
             # This enables task distribution via Nx Cloud
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-            - npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+            - npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-            - npm ci
+            - npm ci --legacy-peer-deps
 
             # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
             # - npx nx-cloud record -- echo Hello World
@@ -383,9 +383,9 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      - run: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+      - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-      - run: npm ci
+      - run: npm ci --legacy-peer-deps
       - nx/set-shas:
           main-branch-name: 'main'
 
@@ -427,7 +427,7 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      - run: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+      - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       # Cache node_modules
       - uses: actions/setup-node@v3
@@ -435,7 +435,7 @@ jobs:
           node-version: 20
           cache: 'npm'
 
-      - run: npm ci
+      - run: npm ci --legacy-peer-deps
       - uses: nrwl/nx-set-shas@v4
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
@@ -469,7 +469,7 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      - run: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+      - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       # Cache node_modules
       - uses: actions/setup-node@v3
@@ -477,7 +477,7 @@ jobs:
           node-version: 20
           cache: 'npm'
 
-      - run: npm ci
+      - run: npm ci --legacy-peer-deps
       - uses: nrwl/nx-set-shas@v4
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
@@ -502,9 +502,9 @@ CI:
     # This enables task distribution via Nx Cloud
     # Run this command as early as possible, before dependencies are installed
     # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-    - npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+    - npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-    - npm ci
+    - npm ci --legacy-peer-deps
     - NX_HEAD=$CI_COMMIT_SHA
     - NX_BASE=\${CI_MERGE_REQUEST_DIFF_BASE_SHA:-$CI_COMMIT_BEFORE_SHA}
 
@@ -565,7 +565,7 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      - script: pnpm dlx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+      - script: pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - script: pnpm install --frozen-lockfile
       - script: git branch --track main origin/main
@@ -597,7 +597,7 @@ pipelines:
             # This enables task distribution via Nx Cloud
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-            - pnpm dlx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+            - pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
             - pnpm install --frozen-lockfile
 
@@ -614,7 +614,7 @@ pipelines:
             # This enables task distribution via Nx Cloud
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-            - pnpm dlx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+            - pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
             - npm install --prefix=$HOME/.local -g pnpm@8
 
@@ -647,7 +647,7 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      - run: pnpm dlx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+      - run: pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - run: pnpm install --frozen-lockfile
       - nx/set-shas:
@@ -695,7 +695,7 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      - run: pnpm dlx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+      - run: pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       # Cache node_modules
       - uses: actions/setup-node@v3
@@ -741,7 +741,7 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      - run: pnpm dlx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+      - run: pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       # Cache node_modules
       - uses: actions/setup-node@v3
@@ -776,7 +776,7 @@ CI:
     # This enables task distribution via Nx Cloud
     # Run this command as early as possible, before dependencies are installed
     # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-    - pnpm dlx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+    - pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
     - pnpm install --frozen-lockfile
     - NX_HEAD=$CI_COMMIT_SHA
@@ -836,7 +836,7 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      - script: yarn nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+      - script: yarn nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - script: yarn install --frozen-lockfile
       - script: git branch --track main origin/main
@@ -866,7 +866,7 @@ pipelines:
             # This enables task distribution via Nx Cloud
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-            - yarn nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+            - yarn nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
             - yarn install --frozen-lockfile
 
@@ -883,7 +883,7 @@ pipelines:
             # This enables task distribution via Nx Cloud
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-            - yarn nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+            - yarn nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
             - yarn install --frozen-lockfile
 
@@ -910,7 +910,7 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      - run: yarn nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+      - run: yarn nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - run: yarn install --frozen-lockfile
       - nx/set-shas:
@@ -954,7 +954,7 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      - run: yarn nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+      - run: yarn nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       # Cache node_modules
       - uses: actions/setup-node@v3
@@ -996,7 +996,7 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      - run: yarn nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+      - run: yarn nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       # Cache node_modules
       - uses: actions/setup-node@v3
@@ -1029,7 +1029,7 @@ CI:
     # This enables task distribution via Nx Cloud
     # Run this command as early as possible, before dependencies are installed
     # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-    - yarn nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+    - yarn nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
     - yarn install --frozen-lockfile
     - NX_HEAD=$CI_COMMIT_SHA
@@ -1093,7 +1093,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Connect your workspace by running "nx connect" and uncomment this
-      # - script: bunx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+      # - script: bunx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - script: bun install --no-cache
       - script: git branch --track main origin/main
@@ -1126,7 +1126,7 @@ pipelines:
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
             # Connect your workspace by running "nx connect" and uncomment this
-            # - bunx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+            # - bunx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
             - bun install --no-cache
 
@@ -1144,7 +1144,7 @@ pipelines:
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
             # Connect your workspace by running "nx connect" and uncomment this
-            # - bunx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+            # - bunx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
             - npm install --prefix=$HOME/.local -g bun
 
@@ -1178,7 +1178,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Connect your workspace by running "nx connect" and uncomment this
-      # - run: bunx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+      # - run: bunx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - run: bun install --no-cache
       - nx/set-shas:
@@ -1227,7 +1227,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Connect your workspace by running "nx connect" and uncomment this
-      # - run: bunx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+      # - run: bunx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - run: bun install --no-cache
       - uses: nrwl/nx-set-shas@v4
@@ -1268,7 +1268,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Connect your workspace by running "nx connect" and uncomment this
-      # - run: bunx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+      # - run: bunx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - run: bun install --no-cache
       - uses: nrwl/nx-set-shas@v4
@@ -1298,7 +1298,7 @@ CI:
     # Run this command as early as possible, before dependencies are installed
     # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
     # Connect your workspace by running "nx connect" and uncomment this
-    # - bunx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+    # - bunx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
     - bun install --no-cache
     - NX_HEAD=$CI_COMMIT_SHA
@@ -1359,9 +1359,9 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Connect your workspace by running "nx connect" and uncomment this
-      # - script: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+      # - script: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-      - script: npm ci
+      - script: npm ci --legacy-peer-deps
       - script: git branch --track main origin/main
         condition: eq(variables['Build.Reason'], 'PullRequest')
 
@@ -1390,9 +1390,9 @@ pipelines:
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
             # Connect your workspace by running "nx connect" and uncomment this
-            # - npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+            # - npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-            - npm ci
+            - npm ci --legacy-peer-deps
 
             - npx nx-cloud record -- nx format:check
             # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
@@ -1408,9 +1408,9 @@ pipelines:
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
             # Connect your workspace by running "nx connect" and uncomment this
-            # - npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+            # - npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-            - npm ci
+            - npm ci --legacy-peer-deps
 
             # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
             # - npx nx-cloud record -- echo Hello World
@@ -1436,9 +1436,9 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Connect your workspace by running "nx connect" and uncomment this
-      # - run: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+      # - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-      - run: npm ci
+      - run: npm ci --legacy-peer-deps
       - nx/set-shas:
           main-branch-name: 'main'
 
@@ -1481,7 +1481,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Connect your workspace by running "nx connect" and uncomment this
-      # - run: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+      # - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       # Cache node_modules
       - uses: actions/setup-node@v3
@@ -1489,7 +1489,7 @@ jobs:
           node-version: 20
           cache: 'npm'
 
-      - run: npm ci
+      - run: npm ci --legacy-peer-deps
       - uses: nrwl/nx-set-shas@v4
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
@@ -1524,7 +1524,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Connect your workspace by running "nx connect" and uncomment this
-      # - run: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+      # - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       # Cache node_modules
       - uses: actions/setup-node@v3
@@ -1532,7 +1532,7 @@ jobs:
           node-version: 20
           cache: 'npm'
 
-      - run: npm ci
+      - run: npm ci --legacy-peer-deps
       - uses: nrwl/nx-set-shas@v4
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
@@ -1558,9 +1558,9 @@ CI:
     # Run this command as early as possible, before dependencies are installed
     # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
     # Connect your workspace by running "nx connect" and uncomment this
-    # - npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+    # - npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-    - npm ci
+    - npm ci --legacy-peer-deps
     - NX_HEAD=$CI_COMMIT_SHA
     - NX_BASE=\${CI_MERGE_REQUEST_DIFF_BASE_SHA:-$CI_COMMIT_BEFORE_SHA}
 
@@ -1622,7 +1622,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Connect your workspace by running "nx connect" and uncomment this
-      # - script: pnpm dlx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+      # - script: pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - script: pnpm install --frozen-lockfile
       - script: git branch --track main origin/main
@@ -1655,7 +1655,7 @@ pipelines:
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
             # Connect your workspace by running "nx connect" and uncomment this
-            # - pnpm dlx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+            # - pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
             - pnpm install --frozen-lockfile
 
@@ -1673,7 +1673,7 @@ pipelines:
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
             # Connect your workspace by running "nx connect" and uncomment this
-            # - pnpm dlx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+            # - pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
             - npm install --prefix=$HOME/.local -g pnpm@8
 
@@ -1707,7 +1707,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Connect your workspace by running "nx connect" and uncomment this
-      # - run: pnpm dlx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+      # - run: pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - run: pnpm install --frozen-lockfile
       - nx/set-shas:
@@ -1756,7 +1756,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Connect your workspace by running "nx connect" and uncomment this
-      # - run: pnpm dlx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+      # - run: pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       # Cache node_modules
       - uses: actions/setup-node@v3
@@ -1803,7 +1803,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Connect your workspace by running "nx connect" and uncomment this
-      # - run: pnpm dlx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+      # - run: pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       # Cache node_modules
       - uses: actions/setup-node@v3
@@ -1839,7 +1839,7 @@ CI:
     # Run this command as early as possible, before dependencies are installed
     # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
     # Connect your workspace by running "nx connect" and uncomment this
-    # - pnpm dlx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+    # - pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
     - pnpm install --frozen-lockfile
     - NX_HEAD=$CI_COMMIT_SHA
@@ -1900,7 +1900,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Connect your workspace by running "nx connect" and uncomment this
-      # - script: yarn nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+      # - script: yarn nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - script: yarn install --frozen-lockfile
       - script: git branch --track main origin/main
@@ -1931,7 +1931,7 @@ pipelines:
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
             # Connect your workspace by running "nx connect" and uncomment this
-            # - yarn nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+            # - yarn nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
             - yarn install --frozen-lockfile
 
@@ -1949,7 +1949,7 @@ pipelines:
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
             # Connect your workspace by running "nx connect" and uncomment this
-            # - yarn nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+            # - yarn nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
             - yarn install --frozen-lockfile
 
@@ -1977,7 +1977,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Connect your workspace by running "nx connect" and uncomment this
-      # - run: yarn nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+      # - run: yarn nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       - run: yarn install --frozen-lockfile
       - nx/set-shas:
@@ -2022,7 +2022,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Connect your workspace by running "nx connect" and uncomment this
-      # - run: yarn nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+      # - run: yarn nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       # Cache node_modules
       - uses: actions/setup-node@v3
@@ -2065,7 +2065,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Connect your workspace by running "nx connect" and uncomment this
-      # - run: yarn nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+      # - run: yarn nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       # Cache node_modules
       - uses: actions/setup-node@v3
@@ -2099,7 +2099,7 @@ CI:
     # Run this command as early as possible, before dependencies are installed
     # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
     # Connect your workspace by running "nx connect" and uncomment this
-    # - yarn nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+    # - yarn nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
     - yarn install --frozen-lockfile
     - NX_HEAD=$CI_COMMIT_SHA
@@ -2159,9 +2159,9 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      - script: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="e2e-ci"
+      - script: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
 
-      - script: npm ci
+      - script: npm ci --legacy-peer-deps
       - script: git branch --track main origin/main
         condition: eq(variables['Build.Reason'], 'PullRequest')
 
@@ -2190,9 +2190,9 @@ pipelines:
             # This enables task distribution via Nx Cloud
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-            - npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="e2e-ci"
+            - npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
 
-            - npm ci
+            - npm ci --legacy-peer-deps
 
             - npx nx-cloud record -- nx format:check
             # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
@@ -2208,9 +2208,9 @@ pipelines:
             # This enables task distribution via Nx Cloud
             # Run this command as early as possible, before dependencies are installed
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-            - npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="e2e-ci"
+            - npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
 
-            - npm ci
+            - npm ci --legacy-peer-deps
 
             # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
             # - npx nx-cloud record -- echo Hello World
@@ -2235,9 +2235,9 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      - run: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="e2e-ci"
+      - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
 
-      - run: npm ci
+      - run: npm ci --legacy-peer-deps
       - nx/set-shas:
           main-branch-name: 'main'
 
@@ -2280,7 +2280,7 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      - run: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="e2e-ci"
+      - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
 
       # Cache node_modules
       - uses: actions/setup-node@v3
@@ -2288,7 +2288,7 @@ jobs:
           node-version: 20
           cache: 'npm'
 
-      - run: npm ci
+      - run: npm ci --legacy-peer-deps
       - uses: nrwl/nx-set-shas@v4
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
@@ -2323,7 +2323,7 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      - run: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="e2e-ci"
+      - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
 
       # Cache node_modules
       - uses: actions/setup-node@v3
@@ -2331,7 +2331,7 @@ jobs:
           node-version: 20
           cache: 'npm'
 
-      - run: npm ci
+      - run: npm ci --legacy-peer-deps
       - uses: nrwl/nx-set-shas@v4
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
