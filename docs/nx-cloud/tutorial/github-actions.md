@@ -41,7 +41,7 @@ To get started:
 3. Make sure all tasks are working on your machine, by running lint, test, build and e2e on all projects of the workspace
 
    ```shell
-   pnpm exec nx run-many -t lint test build e2e
+   pnpm nx run-many -t lint test build e2e
    ```
 
 ## Connect to Nx Cloud
@@ -51,7 +51,7 @@ Nx Cloud is a companion app for your CI system that provides remote caching, tas
 Let's connect your repository to Nx Cloud with the following command:
 
 ```shell
-pnpm exec nx connect
+pnpm nx connect
 ```
 
 Once the script is finished, it will print a link in the terminal to register your repository in your [Nx Cloud](https://cloud.nx.app) account. Click the link and follow the steps provided to make sure Nx Cloud is enabled on the main branch of your repository.
@@ -77,7 +77,7 @@ git checkout -b setup-ci
 Now we can use an Nx generator to create a default CI workflow file.
 
 ```shell
-pnpm exec nx generate ci-workflow --ci=github
+pnpm nx generate ci-workflow --ci=github
 ```
 
 This generator creates a `.github/workflows/ci.yml` file that contains a CI pipeline that will run the `lint`, `test`, `build` and `e2e` tasks for projects that are affected by any given PR.
@@ -89,9 +89,9 @@ The key lines in the CI pipeline are highlighted in this excerpt:
 - uses: nrwl/nx-set-shas@v4
 
 # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
-# - run: pnpm exec nx-cloud record -- echo Hello World
-- run: pnpm exec nx affected -t lint test build
-- run: pnpm exec nx affected --parallel 1 -t e2e-ci
+# - run: pnpm nx-cloud record -- echo Hello World
+- run: pnpm nx affected -t lint test build
+- run: pnpm nx affected --parallel 1 -t e2e-ci
 ```
 
 The [`nx affected` command](/ci/features/affected) will run the specified tasks only for projects that have been affected by a particular PR, which can save a lot of time as repositories grow larger. In this particular branch, however, the only file that has changed is the `CI.yml` file which is not associated with any project. This will cause `nx affected` to not run any tasks. Let's fix this by adding the CI workflow file to the `sharedGlobals` defined in the `nx.json` - this will tell Nx that changes to the CI pipeline should affect every project in the repository.
@@ -135,14 +135,14 @@ Nx Cloud will create a comment on your PR that gives you a summary of the CI run
 [Nx Replay](/ci/features/remote-cache) is enabled by default. We can see it in action by running a few commands locally. First, let's build every project in the repository:
 
 ```shell
-pnpm exec nx run-many -t build
+pnpm nx run-many -t build
 ```
 
 Nx will store the output of those tasks locally in the `.nx/cache` folder and remotely in Nx Cloud. If someone else in the organization were to run the same `build` command on the same source code, they would receive the remotely cached outputs instead of re-running the `build` task themselves. We can simulate this by deleting the `.nx/cache` folder and re-running the `build` command.
 
 ```shell
 rm -rf .nx/cache
-pnpm exec nx run-many -t build
+pnpm nx run-many -t build
 ```
 
 The `build` tasks complete almost instantly, and you can see in the logs that Nx has pulled the outputs from the remote cache:
