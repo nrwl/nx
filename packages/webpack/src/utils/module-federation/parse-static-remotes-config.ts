@@ -5,6 +5,7 @@ export type StaticRemoteConfig = {
   basePath: string;
   outputPath: string;
   urlSegment: string;
+  port: number;
 };
 
 export type StaticRemotesConfig = {
@@ -26,7 +27,9 @@ export function parseStaticRemotesConfig(
       context.projectGraph.nodes[app].data.targets['build'].options.outputPath;
     const basePath = dirname(outputPath);
     const urlSegment = basename(outputPath);
-    config[app] = { basePath, outputPath, urlSegment };
+    const port =
+      context.projectGraph.nodes[app].data.targets['serve'].options.port;
+    config[app] = { basePath, outputPath, urlSegment, port };
   }
 
   return { remotes: staticRemotes, config };
