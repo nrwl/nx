@@ -22,7 +22,7 @@ We now have full support for BitBucket Data Center (self-hosted):
 - VCS integration for posting comments with live updates about your CI runs
 - full agents integration
 - more info about each one of your commits on the NxCloud web app
-- you can even [set-up auth with BitBucket Data Center](https://nx.dev/ci/recipes/enterprise/on-premise/auth-bitbucket-data-center#bitbucket-data-center-auth)
+- you can even [set-up auth with BitBucket Data Center](/ci/recipes/enterprise/on-premise/auth-bitbucket-data-center#bitbucket-data-center-auth)
 
 ##### Misc
 
