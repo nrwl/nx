@@ -20,13 +20,13 @@ import { join } from 'path';
 import { createTreeWithEmptyWorkspace } from 'nx/src/devkit-testing-exports';
 
 describe('React Module Federation', () => {
-  beforeAll(() => {
-    newProject({ packages: ['@nx/react'] });
-  });
-
-  afterAll(() => cleanupProject());
-
   describe('Default Configuration', () => {
+    beforeAll(() => {
+      newProject({ packages: ['@nx/react'] });
+    });
+
+    afterAll(() => cleanupProject());
+
     it.each`
       js
       ${false}
@@ -856,18 +856,24 @@ describe('React Module Federation', () => {
   });
 
   describe('Dynamic Module Federation', () => {
-    // beforeAll(() => {
-    //   newProject({ packages: ['@nx/react'] });
-    // });
-    //
-    // afterAll(() => cleanupProject());
-    it('should load remote dynamic module', async () => {
+    beforeAll(() => {
+      newProject({ packages: ['@nx/react'] });
+    });
+
+    afterAll(() => cleanupProject());
+    it('ttt should load remote dynamic module', async () => {
       const shell = uniq('shell');
       const remote = uniq('remote');
+      const remotePort = 4205;
 
       runCLI(
         `generate @nx/react:host ${shell} --remotes=${remote} --e2eTestRunner=cypress --dynamic=true --project-name-and-root-format=as-provided --no-interactive --skipFormat`
       );
+
+      updateJson(`${remote}/project.json`, (project) => {
+        project.targets.serve.options.port = remotePort;
+        return project;
+      });
 
       // Webpack prod config should not exists when loading dynamic modules
       expect(
@@ -879,12 +885,20 @@ describe('React Module Federation', () => {
         )
       ).toBeTruthy();
 
+      updateJson(
+        `${shell}/src/assets/module-federation.manifest.json`,
+        (json) => {
+          return {
+            [remote]: `http://localhost:${remotePort}`,
+          };
+        }
+      );
+
       const manifest = readJson(
         `${shell}/src/assets/module-federation.manifest.json`
       );
-
       expect(manifest[remote]).toBeDefined();
-      expect(manifest[remote]).toEqual('http://localhost:4201');
+      expect(manifest[remote]).toEqual('http://localhost:4205');
 
       // update e2e
       updateFile(
@@ -918,7 +932,6 @@ describe('React Module Federation', () => {
       expect(remoteOutput).toContain('Successfully ran target build');
 
       const shellPort = readPort(shell);
-      const remotePort = readPort(remote);
 
       if (runE2ETests()) {
         // Serve Remote since it is dynamic and won't be started with the host
