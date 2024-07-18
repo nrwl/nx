@@ -15,7 +15,7 @@ export default function Index(): JSX.Element {
     <>
       <NextSeo
         title="Nx: Smart Monorepos · Fast CI"
-        description="Nx is a build system with built-in tooling and advanced CI capabilities. It helps you maintain and scale monorepos, both locally and on CI."
+        description="Build system, optimized for monorepos, with plugins for popular frameworks and tools and advanced CI capabilities including caching and distribution."
         openGraph={{
           url: 'https://nx.dev',
           title: 'Nx: Smart Monorepos · Fast CI',
@@ -34,8 +34,7 @@ export default function Index(): JSX.Element {
           type: 'website',
         }}
       />
-      <h1 className="sr-only">Next generation monorepo tool</h1>
-      {/*<AnnouncementBanner />*/}
+      <h1 className="sr-only">Build system with advanced CI capabilities.</h1>
       <DefaultLayout isHome>
         <Hero />
         <div className="mt-16 lg:-mt-32">
