@@ -856,11 +856,11 @@ describe('React Module Federation', () => {
   });
 
   describe('Dynamic Module Federation', () => {
-    beforeAll(() => {
-      newProject({ packages: ['@nx/react'] });
-    });
-
-    afterAll(() => cleanupProject());
+    // beforeAll(() => {
+    //   newProject({ packages: ['@nx/react'] });
+    // });
+    //
+    // afterAll(() => cleanupProject());
     it('should load remote dynamic module', async () => {
       const shell = uniq('shell');
       const remote = uniq('remote');
