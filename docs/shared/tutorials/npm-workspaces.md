@@ -410,20 +410,50 @@ The key line in the CI pipeline is:
 
 Nx Cloud is a companion app for your CI system that provides remote caching, task distribution, e2e tests deflaking, better DX and more.
 
-To connect to Nx Cloud:
+Now that we're working on the CI pipeline, it is important for your changes to be pushed to a GitHub repository.
 
-- Commit and push your changes to GitHub
-- Go to [https://cloud.nx.app](https://cloud.nx.app), create an account, and connect your repository
+1. Commit your existing changes with `git add . && git commit -am "updates"`
+2. [Create a new GitHub repository](https://github.com/new)
+3. Follow GitHub's instructions to push your existing code to the repository
 
-#### Connect to Nx Cloud Manually
+You can verify that the GitHub repository is set up correctly by running the following command:
 
-If you are not able to connect via the automated process at [nx.app](https://cloud.nx.app), you can connect your workspace manually by running:
+```shell
+git remote get-url origin
+```
+
+Now connect your repository to Nx Cloud with the following command:
 
 ```shell
 npx nx connect
 ```
 
-You will then need to merge your changes and connect to your workspace on [https://cloud.nx.app](https://cloud.nx.app).
+Once the script is finished, it will print a link in the terminal to register your repository in your [Nx Cloud](https://cloud.nx.app) account. Click the link and follow the steps provided to make sure Nx Cloud is enabled on the main branch of your repository.
+
+When you're finished, you'll need to pull down the changes that were merged into the hosted repository with this command:
+
+```shell
+git pull
+```
+
+You should now have an `nxCloudAccessToken` property specified in the `nx.json` file.
+
+### Create a CI Workflow
+
+Use the following command to generate a CI workflow file.
+
+```shell
+npx nx generate ci-workflow --ci=github
+```
+
+This generator creates a `.github/workflows/ci.yml` file that contains a CI pipeline that will run the `lint`, `test`, `build` and `e2e` tasks for projects that are affected by any given PR.
+
+The key lines in the CI pipeline are:
+
+```yml {% fileName=".github/workflows/ci.yml" %}
+- run: npx nx affected -t lint test build
+- run: npx nx affected -t e2e-ci --parallel 1
+```
 
 ### Enable a Distributed CI Pipeline
 

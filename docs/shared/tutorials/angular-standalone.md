@@ -1054,9 +1054,17 @@ This tutorial walked you through how Nx can improve the local development experi
 
 Nx Cloud is a companion app for your CI system that provides remote caching, task distribution, e2e tests deflaking, better DX and more.
 
-{% callout type="note" title="Commit and push your changes" %}
-Now that we're working on the CI pipeline, it is important for your changes to be pushed to a github repository. Commit all your changes so far and push them up to a hosted repository.
-{% /callout %}
+Now that we're working on the CI pipeline, it is important for your changes to be pushed to a GitHub repository.
+
+1. Commit your existing changes with `git add . && git commit -am "updates"`
+2. [Create a new GitHub repository](https://github.com/new)
+3. Follow GitHub's instructions to push your existing code to the repository
+
+You can verify that the GitHub repository is set up correctly by running the following command:
+
+```shell
+git remote get-url origin
+```
 
 When we set up the repository at the beginning of this tutorial, we chose to use GitHub Actions as a CI provider. This created a basic CI pipeline and configured Nx Cloud in the repository. It also printed a url in the terminal to register your repository in your [Nx Cloud](https://cloud.nx.app) account. If you didn't click on the link when first creating your repository, you can show it again by running:
 
@@ -1070,15 +1078,11 @@ Once you click the link, follow the steps provided and make sure Nx Cloud is ena
 
 When you chose GitHub Actions as your CI provider at the beginning of the tutorial, `create-nx-workspace` created a `.github/workflows/ci.yml` file that contains a CI pipeline that will run the `lint`, `test`, `build` and `e2e` tasks for projects that are affected by any given PR.
 
-If you need to generate the default pipeline, you can do so with this command:
+If you need to generate a new workflow file for GitHub Actions or other providers, you can do so with this command:
 
 ```shell
-npx nx generate ci-workflow --ci github
+npx nx generate ci-workflow
 ```
-
-{% callout type="note" title="Choose your CI provider" %}
-You can choose `github`, `circleci`, `azure`, `bitbucket-pipelines`, or `gitlab` for the `ci` flag.
-{% /callout %}
 
 The key lines in the CI pipeline are:
 

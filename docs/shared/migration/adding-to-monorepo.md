@@ -320,22 +320,43 @@ This tutorial walked you through how Nx can improve the local development experi
 
 Nx Cloud is a companion app for your CI system that provides remote caching, task distribution, e2e tests deflaking, better DX and more.
 
-To connect to Nx Cloud:
+Now that we're working on the CI pipeline, it is important for your changes to be pushed to a GitHub repository.
 
-- Commit and push your changes
-- Go to [https://cloud.nx.app](https://cloud.nx.app), create an account, and connect your repository
+1. Commit your existing changes with `git add . && git commit -am "updates"`
+2. [Create a new GitHub repository](https://github.com/new)
+3. Follow GitHub's instructions to push your existing code to the repository
+
+You can verify that the GitHub repository is set up correctly by running the following command:
+
+```shell
+git remote get-url origin
+```
+
+Now connect your repository to Nx Cloud with the following command:
 
 ```shell
 npx nx connect
 ```
 
-When you are prompted to choose your CI provider, choose `GitHub Actions`.
-
 Once the script is finished, it will print a link in the terminal to register your repository in your [Nx Cloud](https://cloud.nx.app) account. Click the link and follow the steps provided to make sure Nx Cloud is enabled on the main branch of your repository.
 
-### Configure Your CI Workflow
+When you're finished, you'll need to pull down the changes that were merged into the hosted repository with this command:
 
-The `nx connect` command you ran in the previous step created a `.github/workflows/ci.yml` file that contains a CI pipeline that will run the `lint`, `test`, `build` and `e2e` tasks for projects that are affected by any given PR.
+```shell
+git pull
+```
+
+You should now have an `nxCloudAccessToken` property specified in the `nx.json` file.
+
+### Create a CI Workflow
+
+Use the following command to generate a CI workflow file.
+
+```shell
+npx nx generate ci-workflow --ci=github
+```
+
+This generator creates a `.github/workflows/ci.yml` file that contains a CI pipeline that will run the `lint`, `test`, `build` and `e2e` tasks for projects that are affected by any given PR.
 
 The key lines in the CI pipeline are:
 
