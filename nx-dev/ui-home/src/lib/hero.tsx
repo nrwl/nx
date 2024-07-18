@@ -10,7 +10,9 @@ import { useIsomorphicLayoutEffect } from '@nx/nx-dev/ui-primitives';
 export function Hero(): JSX.Element {
   return (
     <div className="mx-auto h-screen w-full max-w-7xl px-6 lg:px-8">
-      <ShaderGradientElement />
+      <div className="hidden lg:block">
+        <ShaderGradientElement />
+      </div>
       <div className="absolute left-0 right-0 -z-10 mx-auto flex h-full max-h-screen w-full flex-row justify-between border-b border-dashed border-slate-200/30 px-6 lg:h-full lg:max-w-7xl lg:px-0 dark:border-slate-800/40">
         <div className="h-full w-full border-x border-dashed border-slate-200/20 dark:border-slate-800/40" />
         <div className="h-full w-full border-x border-dashed border-slate-200/20 dark:border-slate-800/40" />
@@ -22,7 +24,7 @@ export function Hero(): JSX.Element {
       <div className="z-20 mx-auto grid h-screen max-w-6xl grid-cols-1 place-items-center text-center">
         <div className="container">
           <div className="-mt-16 hidden sm:mb-8 sm:flex sm:justify-center">
-            <div className="relative rounded-full px-3 py-1 text-sm leading-6 ring-1 ring-slate-900/10 transition-all hover:ring-slate-900/20 dark:ring-slate-100/10 dark:hover:ring-slate-100/20">
+            <div className="relative rounded-full bg-white px-3 py-1 text-sm leading-6 ring-1 ring-slate-900/10 transition-all hover:ring-slate-900/20 dark:bg-slate-950 dark:ring-slate-100/10 dark:hover:ring-slate-100/20">
               <span className="text-blue-500 dark:text-sky-500">
                 Monorepo World
               </span>{' '}
