@@ -123,6 +123,11 @@ export async function* moduleFederationDevServerExecutor(
     pathToManifestFile
   );
 
+  // Set NX_MF_DEV_REMOTES for the Nx Runtime Library Control Plugin
+  process.env.NX_MF_DEV_REMOTES = JSON.stringify(
+    remotes.devRemotes.map((r) => (typeof r === 'string' ? r : r.remoteName))
+  );
+
   if (remotes.devRemotes.length > 0 && !schema.staticRemotesPort) {
     options.staticRemotesPort = options.devRemotes.reduce((portToUse, r) => {
       const remoteName = typeof r === 'string' ? r : r.remoteName;
