@@ -84,7 +84,7 @@ This generator creates a `.github/workflows/ci.yml` file that contains a CI pipe
 
 The key lines in the CI pipeline are highlighted in this excerpt:
 
-```yml {% fileName=".github/workflows/ci.yml" highlightedLines="6,7" %}
+```yml {% fileName=".github/workflows/ci.yml" highlightLines=[6,7] %}
 - run: pnpm install --frozen-lockfile
 - uses: nrwl/nx-set-shas@v4
 
@@ -96,7 +96,7 @@ The key lines in the CI pipeline are highlighted in this excerpt:
 
 The [`nx affected` command](/ci/features/affected) will run the specified tasks only for projects that have been affected by a particular PR, which can save a lot of time as repositories grow larger. In this particular branch, however, the only file that has changed is the `CI.yml` file which is not associated with any project. This will cause `nx affected` to not run any tasks. Let's fix this by adding the CI workflow file to the `sharedGlobals` defined in the `nx.json` - this will tell Nx that changes to the CI pipeline should affect every project in the repository.
 
-```jsonc {% fileName="nx.json" highlightedLines="7" %}
+```json {% fileName="nx.json" highlightLines=[7] %}
 {
   // ...
   "namedInputs": {
@@ -176,7 +176,7 @@ The Nx Agents feature
 
 To enable Nx Agents, make sure the following line is uncommented in the `.github/workflows/ci.yml` file.
 
-```yml {% fileName=".github/workflows/ci.yml" highlightLines="3" %}
+```yml {% fileName=".github/workflows/ci.yml" highlightLines=[3] %}
 # Connect your workspace on nx.app and uncomment this to enable task distribution.
 # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "e2e-ci" targets have been requested
 - run: pnpm dlx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="e2e-ci"
