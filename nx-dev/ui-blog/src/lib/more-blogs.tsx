@@ -1,19 +1,74 @@
+'use client';
 import Link from 'next/link';
 import { BlogPostDataEntry } from '@nx/nx-dev/data-access-documents/node-only';
 import { BlogAuthors } from './authors';
+import {
+  ComputerDesktopIcon,
+  BookOpenIcon,
+  MicrophoneIcon,
+  CubeIcon,
+  AcademicCapIcon,
+  ChatBubbleOvalLeftEllipsisIcon,
+  XCircleIcon,
+} from '@heroicons/react/24/outline';
+import { Filters } from './filters';
+import { useState } from 'react';
 
 export interface MoreBlogsProps {
   blogs: BlogPostDataEntry[];
 }
 
+const filters = [
+  {
+    label: 'All',
+    icon: XCircleIcon,
+    value: 'All',
+  },
+  {
+    label: 'Stories',
+    icon: BookOpenIcon,
+    value: 'customer story',
+  },
+  {
+    label: 'Webinars',
+    icon: ComputerDesktopIcon,
+    value: 'webinar',
+  },
+  {
+    label: 'Podcasts',
+    icon: MicrophoneIcon,
+    value: 'podcast',
+  },
+  {
+    label: 'Releases',
+    icon: CubeIcon,
+    value: 'release',
+  },
+  {
+    label: 'Talks',
+    icon: ChatBubbleOvalLeftEllipsisIcon,
+    value: 'talk',
+  },
+  {
+    label: 'Tutorials',
+    icon: AcademicCapIcon,
+    value: 'tutorial',
+  },
+];
+
 export function MoreBlogs({ blogs }: MoreBlogsProps) {
+  const [filteredList, setFilteredList] = useState(blogs);
+
   return (
     <>
       <div className="mx-auto mb-8 mt-20 border-b-2 border-slate-300 pb-3 text-sm dark:border-slate-700">
-        <h2 className="font-semibold">More blogs</h2>
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="font-semibold">More blogs</h2>
+          <Filters blogs={blogs} setFilteredList={setFilteredList} />
+        </div>
       </div>
       <div className="mx-auto">
-        {blogs?.map((post) => {
+        {filteredList?.map((post) => {
           const formattedDate = new Date(post.date).toLocaleDateString(
             'en-US',
             {
