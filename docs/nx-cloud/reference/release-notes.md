@@ -1,5 +1,34 @@
 # Enterprise Release Notes
 
+### 2406.29.1
+
+##### Full terminal outputs in the web app
+
+Due to storage constrains in Mongo, long terminal outputs were sometimes truncated when viewed in the UI. With this update we are now loading all terminal outputs directly
+from the storage bucket, removing the need to keep them in Mongo. You should now be able to view full, complete logs in the UI regardless of how large the output is.
+
+##### OpenShift fixes for Agents
+
+- the latest messagequeue image is now OpenShift ready
+  - to use, just update to the latest Helm version `0.15.6` and make sure you are not passing in an explicit tag for the messagequeue
+  - then use version `2406.29.1` for NxCloud. This should use the latest, OpenShift enabled messagequeue image
+- when running Agents on OpenShift, they run as a specific user with ID 1000
+  - to override this, make sure to set `NX_CLOUD_RUN_UNIX_PODS_AS_USER: <userId>` and `NX_CLOUD_RUN_UNIX_PODS_AS_GROUP: <groupId>` on the [workflow controller env vars](https://github.com/nrwl/nx-cloud-helm/blob/main/charts/nx-agents/values.yaml#L63) 
+
+##### Full Bitbucket Data Center (on-prem)
+
+We now have full support for BitBucket Data Center (self-hosted):
+- VCS integration for posting comments with live updates about your CI runs
+- full agents integration
+- more info about each one of your commits on the NxCloud web app
+- you can even [set-up auth with BitBucket Data Center](https://nx.dev/ci/recipes/enterprise/on-premise/auth-bitbucket-data-center#bitbucket-data-center-auth)
+
+##### Misc
+
+- easier workspace setup experience for new customers
+- the CIPE visualisation has been updated (elapsed task time)
+- general web app performance improvements
+
 ### 2405.02.15
 
 ##### Easy membership management via GitHub
