@@ -10,7 +10,7 @@ import {
   AcademicCapIcon,
   ChatBubbleOvalLeftEllipsisIcon,
   ChevronDownIcon,
-  XCircleIcon,
+  ListBulletIcon,
 } from '@heroicons/react/24/outline';
 import { Menu, Transition } from '@headlessui/react';
 import { cx } from '@nx/nx-dev/ui-primitives';
@@ -19,47 +19,59 @@ import { BlogPostDataEntry } from '@nx/nx-dev/data-access-documents/node-only';
 export interface FiltersProps {
   blogs: BlogPostDataEntry[];
   setFilteredList: (blogs: BlogPostDataEntry[]) => void;
+  setSelectedFilterHeading: (heading: string) => void;
 }
 
 const filters = [
   {
     label: 'All',
-    icon: XCircleIcon,
+    icon: ListBulletIcon,
     value: 'All',
+    heading: 'All Blogs',
   },
   {
     label: 'Stories',
     icon: BookOpenIcon,
     value: 'customer story',
+    heading: 'Customer Stories',
   },
   {
     label: 'Webinars',
     icon: ComputerDesktopIcon,
     value: 'webinar',
+    heading: 'Webinars',
   },
   {
     label: 'Podcasts',
     icon: MicrophoneIcon,
     value: 'podcast',
+    heading: 'Podcasts',
   },
   {
     label: 'Releases',
     icon: CubeIcon,
     value: 'release',
+    heading: 'Release Blogs',
   },
   {
     label: 'Talks',
     icon: ChatBubbleOvalLeftEllipsisIcon,
     value: 'talk',
+    heading: 'Talks',
   },
   {
     label: 'Tutorials',
     icon: AcademicCapIcon,
     value: 'tutorial',
+    heading: 'Tutorials',
   },
 ];
 
-export function Filters({ blogs, setFilteredList }: FiltersProps) {
+export function Filters({
+  blogs,
+  setFilteredList,
+  setSelectedFilterHeading,
+}: FiltersProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [selectedFilter, setSelectedFilter] = useState('All');
@@ -107,7 +119,7 @@ export function Filters({ blogs, setFilteredList }: FiltersProps) {
               scroll={false}
               prefetch={false}
               className={cx(
-                'flex items-center justify-center gap-2 rounded-full bg-white px-4 py-2 font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 hover:text-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700',
+                'flex items-center justify-center gap-2 rounded-full bg-white px-3 py-2 font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 hover:text-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700',
                 {
                   'ring-2 ring-slate-500 ring-offset-1 ring-offset-transparent dark:ring-slate-600':
                     filter.value === selectedFilter,
@@ -117,9 +129,9 @@ export function Filters({ blogs, setFilteredList }: FiltersProps) {
                     filter.value !== selectedFilter,
                 }
               )}
-              onClick={() => updateFilter(filter.value)}
+              onClick={() => setSelectedFilterHeading(filter.heading)}
             >
-              {filter.icon && <filter.icon className="h-6 w-6" />}
+              {filter.icon && <filter.icon className="h-5 w-5" />}
               {filter.label}
             </Link>
           </li>
@@ -154,7 +166,7 @@ export function Filters({ blogs, setFilteredList }: FiltersProps) {
                   <Link
                     className={cx('flex items-center gap-2')}
                     href={pathname + '?' + updateFilter(filter.value)}
-                    onClick={() => updateFilter(filter.value)}
+                    onClick={() => setSelectedFilterHeading(filter.heading)}
                     prefetch={false}
                     scroll={false}
                   >

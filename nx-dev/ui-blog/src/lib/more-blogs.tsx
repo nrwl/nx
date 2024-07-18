@@ -1,4 +1,3 @@
-'use client';
 import Link from 'next/link';
 import { BlogPostDataEntry } from '@nx/nx-dev/data-access-documents/node-only';
 import { BlogAuthors } from './authors';
@@ -11,8 +10,6 @@ import {
   ChatBubbleOvalLeftEllipsisIcon,
   XCircleIcon,
 } from '@heroicons/react/24/outline';
-import { Filters } from './filters';
-import { useState } from 'react';
 
 export interface MoreBlogsProps {
   blogs: BlogPostDataEntry[];
@@ -57,18 +54,13 @@ const filters = [
 ];
 
 export function MoreBlogs({ blogs }: MoreBlogsProps) {
-  const [filteredList, setFilteredList] = useState(blogs);
-
   return (
     <>
       <div className="mx-auto mb-8 mt-20 border-b-2 border-slate-300 pb-3 text-sm dark:border-slate-700">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="font-semibold">More blogs</h2>
-          <Filters blogs={blogs} setFilteredList={setFilteredList} />
-        </div>
+        <h2 className="font-semibold">More blogs</h2>
       </div>
       <div className="mx-auto">
-        {filteredList?.map((post) => {
+        {blogs?.map((post) => {
           const formattedDate = new Date(post.date).toLocaleDateString(
             'en-US',
             {
