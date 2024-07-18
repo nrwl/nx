@@ -1,80 +1,36 @@
 'use client';
 import Link from 'next/link';
-import { Fragment, useEffect, useState } from 'react';
+import { FC, Fragment, SVGProps, useEffect, useState } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
-import {
-  ComputerDesktopIcon,
-  BookOpenIcon,
-  MicrophoneIcon,
-  CubeIcon,
-  AcademicCapIcon,
-  ChatBubbleOvalLeftEllipsisIcon,
-  ChevronDownIcon,
-  ListBulletIcon,
-} from '@heroicons/react/24/outline';
+import { ChevronDownIcon } from '@heroicons/react/24/outline';
+
 import { Menu, Transition } from '@headlessui/react';
 import { cx } from '@nx/nx-dev/ui-primitives';
 import { BlogPostDataEntry } from '@nx/nx-dev/data-access-documents/node-only';
 
 export interface FiltersProps {
   blogs: BlogPostDataEntry[];
+  filters: {
+    label: string;
+    icon: FC<SVGProps<SVGSVGElement>>;
+    value: string;
+    heading: string;
+  }[];
+  initialSelectedFilter: string;
   setFilteredList: (blogs: BlogPostDataEntry[]) => void;
   setSelectedFilterHeading: (heading: string) => void;
 }
-
-const filters = [
-  {
-    label: 'All',
-    icon: ListBulletIcon,
-    value: 'All',
-    heading: 'All Blogs',
-  },
-  {
-    label: 'Stories',
-    icon: BookOpenIcon,
-    value: 'customer story',
-    heading: 'Customer Stories',
-  },
-  {
-    label: 'Webinars',
-    icon: ComputerDesktopIcon,
-    value: 'webinar',
-    heading: 'Webinars',
-  },
-  {
-    label: 'Podcasts',
-    icon: MicrophoneIcon,
-    value: 'podcast',
-    heading: 'Podcasts',
-  },
-  {
-    label: 'Releases',
-    icon: CubeIcon,
-    value: 'release',
-    heading: 'Release Blogs',
-  },
-  {
-    label: 'Talks',
-    icon: ChatBubbleOvalLeftEllipsisIcon,
-    value: 'talk',
-    heading: 'Talks',
-  },
-  {
-    label: 'Tutorials',
-    icon: AcademicCapIcon,
-    value: 'tutorial',
-    heading: 'Tutorials',
-  },
-];
 
 export function Filters({
   blogs,
   setFilteredList,
   setSelectedFilterHeading,
+  initialSelectedFilter,
+  filters,
 }: FiltersProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const [selectedFilter, setSelectedFilter] = useState('All');
+  const [selectedFilter, setSelectedFilter] = useState(initialSelectedFilter);
 
   useEffect(() => {
     const filterBy = searchParams.get('filterBy');
@@ -104,7 +60,7 @@ export function Filters({
     } else {
       params.delete('filterBy');
     }
-    return params.toString();
+    return `${pathname}${filterBy === 'All' ? '' : '?' + params.toString()}`;
   };
 
   return (
@@ -114,7 +70,7 @@ export function Filters({
         {filters.map((filter) => (
           <li key={filter.value}>
             <Link
-              href={pathname + '?' + updateFilter(filter.value)}
+              href={updateFilter(filter.value)}
               title={'Filter by ' + filter.value}
               scroll={false}
               prefetch={false}
@@ -142,7 +98,7 @@ export function Filters({
       <div className="relative lg:hidden">
         <Menu as="div" className="inline-block text-left">
           <Menu.Button className="inline-flex w-full justify-center rounded-md border border-slate-400 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 hover:text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700">
-            Filters
+            Topics
             <ChevronDownIcon
               className="-mr-1 ml-2 h-5 w-5 text-violet-200 hover:text-violet-100"
               aria-hidden="true"
@@ -165,7 +121,7 @@ export function Filters({
                 <Menu.Item as="li" className="text-lg" key={filter.value}>
                   <Link
                     className={cx('flex items-center gap-2')}
-                    href={pathname + '?' + updateFilter(filter.value)}
+                    href={updateFilter(filter.value)}
                     onClick={() => setSelectedFilterHeading(filter.heading)}
                     prefetch={false}
                     scroll={false}

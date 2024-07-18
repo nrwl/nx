@@ -1,57 +1,10 @@
 import Link from 'next/link';
 import { BlogPostDataEntry } from '@nx/nx-dev/data-access-documents/node-only';
 import { BlogAuthors } from './authors';
-import {
-  ComputerDesktopIcon,
-  BookOpenIcon,
-  MicrophoneIcon,
-  CubeIcon,
-  AcademicCapIcon,
-  ChatBubbleOvalLeftEllipsisIcon,
-  XCircleIcon,
-} from '@heroicons/react/24/outline';
 
 export interface MoreBlogsProps {
   blogs: BlogPostDataEntry[];
 }
-
-const filters = [
-  {
-    label: 'All',
-    icon: XCircleIcon,
-    value: 'All',
-  },
-  {
-    label: 'Stories',
-    icon: BookOpenIcon,
-    value: 'customer story',
-  },
-  {
-    label: 'Webinars',
-    icon: ComputerDesktopIcon,
-    value: 'webinar',
-  },
-  {
-    label: 'Podcasts',
-    icon: MicrophoneIcon,
-    value: 'podcast',
-  },
-  {
-    label: 'Releases',
-    icon: CubeIcon,
-    value: 'release',
-  },
-  {
-    label: 'Talks',
-    icon: ChatBubbleOvalLeftEllipsisIcon,
-    value: 'talk',
-  },
-  {
-    label: 'Tutorials',
-    icon: AcademicCapIcon,
-    value: 'tutorial',
-  },
-];
 
 export function MoreBlogs({ blogs }: MoreBlogsProps) {
   return (
