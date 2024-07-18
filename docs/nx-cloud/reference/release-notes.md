@@ -13,11 +13,12 @@ from the storage bucket, removing the need to keep them in Mongo. You should now
   - to use, just update to the latest Helm version `0.15.6` and make sure you are not passing in an explicit tag for the messagequeue
   - then use version `2406.29.1` for NxCloud. This should use the latest, OpenShift enabled messagequeue image
 - when running Agents on OpenShift, they run as a specific user with ID 1000
-  - to override this, make sure to set `NX_CLOUD_RUN_UNIX_PODS_AS_USER: <userId>` and `NX_CLOUD_RUN_UNIX_PODS_AS_GROUP: <groupId>` on the [workflow controller env vars](https://github.com/nrwl/nx-cloud-helm/blob/main/charts/nx-agents/values.yaml#L63) 
+  - to override this, make sure to set `NX_CLOUD_RUN_UNIX_PODS_AS_USER: <userId>` and `NX_CLOUD_RUN_UNIX_PODS_AS_GROUP: <groupId>` on the [workflow controller env vars](https://github.com/nrwl/nx-cloud-helm/blob/main/charts/nx-agents/values.yaml#L63)
 
 ##### Full Bitbucket Data Center (on-prem)
 
 We now have full support for BitBucket Data Center (self-hosted):
+
 - VCS integration for posting comments with live updates about your CI runs
 - full agents integration
 - more info about each one of your commits on the NxCloud web app
