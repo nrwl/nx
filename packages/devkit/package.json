@@ -28,7 +28,7 @@
   },
   "homepage": "https://nx.dev",
   "dependencies": {
-    "ejs": "^3.1.7",
+    "ejs": "^3.1.10",
     "enquirer": "~2.3.6",
     "ignore": "^5.0.4",
     "tmp": "~0.2.1",
