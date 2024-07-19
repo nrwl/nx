@@ -362,6 +362,24 @@ jobs:
       - run: npx nx affected -t lint test build
 ```
 
+### Open a Pull Request
+
+Commit the changes and open a new PR on GitHub.
+
+```shell
+git add .
+git commit -m 'add CI workflow file'
+git push origin add-workflow
+```
+
+When you view the PR on GitHub, you will see a comment from Nx Cloud that reports on the status of the CI run.
+
+![Nx Cloud report](/shared/tutorials/github-pr-cloud-report.avif)
+
+The `See all runs` link goes to a page with the progress and results of tasks that were run in the CI pipeline.
+
+![Run details](/shared/tutorials/nx-cloud-run-details.avif)
+
 For more information about how Nx can improve your CI pipeline, check out one of these detailed tutorials:
 
 - [Circle CI with Nx](/ci/intro/tutorials/circle)

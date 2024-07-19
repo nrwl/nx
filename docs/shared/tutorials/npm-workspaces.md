@@ -22,10 +22,9 @@ Here's the source code of the final result for this tutorial.
 
 To get started, check out [the sample repository](https://github.com/nrwl/tuskydesign) on your local machine:
 
-`` shel````l
-git clone https://github.com/nrwl/tuskydesign.gi `t
-
-````
+```shell
+git clone https://github.com/nrwl/tuskydesign.git
+```
 
 The repository has two React packages (under `packages/buttons` and `packages/forms`) that are used in a `demo` application (located in `apps/demo`) that was designed to be used with the Vite CLI. The root `package.json` has a `workspaces` property that tells NPM how to find the projects in the repository.
 
@@ -33,7 +32,7 @@ The repository has two React packages (under `packages/buttons` and `packages/fo
 {
   "workspaces": ["packages/*", "apps/*"]
 }
-````
+```
 
 Because of this setting, when the install command is run at the root, the correct packages are installed for each project. NPM will create dedicated `node_modules` folders inside of each project folder where necessary.
 
@@ -402,6 +401,24 @@ jobs:
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - run: npx nx affected -t lint test build
 ```
+
+### Open a Pull Request
+
+Commit the changes and open a new PR on GitHub.
+
+```shell
+git add .
+git commit -m 'add CI workflow file'
+git push origin add-workflow
+```
+
+When you view the PR on GitHub, you will see a comment from Nx Cloud that reports on the status of the CI run.
+
+![Nx Cloud report](/shared/tutorials/github-pr-cloud-report.avif)
+
+The `See all runs` link goes to a page with the progress and results of tasks that were run in the CI pipeline.
+
+![Run details](/shared/tutorials/nx-cloud-run-details.avif)
 
 For more information about how Nx can improve your CI pipeline, check out one of these detailed tutorials:
 

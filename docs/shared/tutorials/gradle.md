@@ -303,13 +303,19 @@ You should now have an `nxCloudAccessToken` property specified in the `nx.json` 
 
 ### Create a CI Workflow
 
-Use the following command to generate a CI workflow file.
+Let's create a branch to add a CI workflow.
+
+```shell
+git checkout -b add-workflow
+```
+
+And use the following command to generate a CI workflow file.
 
 ```shell
 npx nx generate ci-workflow --ci=github
 ```
 
-This generator creates a `.github/workflows/ci.yml` file that contains a CI pipeline that will run the `lint`, `test`, `build` and `e2e` tasks for projects that are affected by any given PR.
+This generator creates a `.github/workflows/ci.yml` file that contains a CI pipeline that will run the `lint`, `test`, `build` and `e2e` tasks for projects that are affected by any given PR. Since we are using Nx Cloud, the pipeline will also distribute tasks across multiple machines to ensure fast and reliable CI runs.
 
 The key lines in the CI pipeline are:
 
@@ -338,15 +344,21 @@ jobs:
       - run: npx nx affected -t lint test build
 ```
 
-### Enable a Distributed CI Pipeline
+### Open a Pull Request
 
-The current CI pipeline runs on a single machine and can only handle small workspaces. To transform your CI into a CI that runs on multiple machines and can handle workspaces of any size, uncomment the `npx nx-cloud start-ci-run` line in the `.github/workflows/ci.yml` file.
+Commit the changes and open a new PR on GitHub.
 
-```yml
-# Connect your workspace on nx.app and uncomment this to enable task distribution.
-# The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
-- run: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-jvm" --stop-agents-after="build"
+```shell
+git add .
+git commit -m 'add CI workflow file'
+git push origin add-workflow
 ```
+
+When you view the PR on GitHub, you will see a comment from Nx Cloud that reports on the status of the CI run.
+
+![Nx Cloud report](/shared/tutorials/gradle-github-pr-cloud-report.avif)
+
+The `See all runs` link goes to a page with the progress and results of tasks that were run in the CI pipeline.
 
 ![Gradle run details](/shared/tutorials/gradle-run-details.webp)
 
