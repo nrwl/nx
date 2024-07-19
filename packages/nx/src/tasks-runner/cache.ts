@@ -1,5 +1,5 @@
 import { workspaceRoot } from '../utils/workspace-root';
-import { mkdir, mkdirSync, pathExists, readFile, writeFile, remove as fsRemove } from 'fs-extra';
+import { mkdir, mkdirSync, pathExists, readFile, writeFile } from 'fs-extra';
 import { join } from 'path';
 import { performance } from 'perf_hooks';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
@@ -203,11 +203,15 @@ export class Cache {
   }
 
   private async remove(path: string): Promise<void> {
-    try {
-      fsRemove(path);
-    } catch (e) {
-      // It's okay if this fails, the OS will clean it up eventually
-    }
+    const { remove } = require('../native');
+    return new Promise((res, rej) => {
+      try {
+        remove(path);
+        res();
+      } catch (e) {
+        rej(e);
+      }
+    });
   }
 
   private async getFromLocalDir(task: Task) {

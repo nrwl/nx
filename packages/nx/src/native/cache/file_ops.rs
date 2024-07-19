@@ -1,14 +1,17 @@
 use std::path::{Path, PathBuf};
 use std::{fs, io};
 
-use fs_extra::error::ErrorKind;
-
 #[napi]
 pub fn remove(src: String) -> anyhow::Result<()> {
-    fs_extra::remove_items(&[src]).map_err(|err| match err.kind {
-        ErrorKind::Io(err_kind) => anyhow::Error::new(err_kind),
-        _ => anyhow::Error::new(err),
-    })
+    fs::metadata(&src)
+        .and_then(|metadata| {
+            if metadata.is_dir() {
+                fs::remove_dir_all(src)
+            } else {
+                fs::remove_file(src)
+            }
+        })
+        .map_err(anyhow::Error::new)
 }
 
 #[napi]
