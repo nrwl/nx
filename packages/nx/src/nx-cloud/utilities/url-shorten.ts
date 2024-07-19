@@ -36,6 +36,7 @@ export async function shortenedCloudUrl(
         source,
         accessToken: usesGithub ? null : accessToken,
         selectedRepositoryName: githubSlug,
+        intent: usesGithub ? 'ONBOARDING_GITHUB' : 'ONBOARDING_MANUAL',
       }
     );
 
