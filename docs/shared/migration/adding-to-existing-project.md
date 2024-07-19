@@ -317,7 +317,7 @@ Once the PR is created, merge it into your main branch.
 
 ![](/shared/tutorials/github-cloud-pr-merged.avif)
 
-And make sure you pull the main branch locally to get the latest changes:
+And make sure you pull the latest changes locally:
 
 ```shell
 git pull
@@ -333,7 +333,7 @@ Use the following command to generate a CI workflow file.
 npx nx generate ci-workflow --ci=github
 ```
 
-This generator creates a `.github/workflows/ci.yml` file that contains a CI pipeline that will run the `lint`, `test`, `build` and `e2e` tasks for projects that are affected by any given PR.
+This generator creates a `.github/workflows/ci.yml` file that contains a CI pipeline that will run the `lint`, `test`, `build` and `e2e` tasks for projects that are affected by any given PR. Since we are using Nx Cloud, the pipeline will also distribute tasks across multiple machines to ensure fast and reliable CI runs.
 
 The key lines in the CI pipeline are:
 
@@ -360,14 +360,6 @@ jobs:
       - uses: nrwl/nx-set-shas@v4
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - run: npx nx affected -t lint test build
-```
-
-### Enable a Distributed CI Pipeline
-
-Running tasks on a single machine is not scalable as the workspace grows. To distribute your tasks across multiple machines, make sure the following line is uncommented in the `.github/workflows/ci.yml` file.
-
-```yml {% fileName=".github/workflows/ci.yml" %}
-- run: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="e2e-ci"
 ```
 
 For more information about how Nx can improve your CI pipeline, check out one of these detailed tutorials:

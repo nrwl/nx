@@ -1261,7 +1261,7 @@ Once you click the link, follow the steps provided and make sure Nx Cloud is ena
 
 ### Configure Your CI Workflow
 
-When you chose GitHub Actions as your CI provider at the beginning of the tutorial, `create-nx-workspace` created a `.github/workflows/ci.yml` file that contains a CI pipeline that will run the `lint`, `test`, `build` and `e2e` tasks for projects that are affected by any given PR.
+When you chose GitHub Actions as your CI provider at the beginning of the tutorial, `create-nx-workspace` created a `.github/workflows/ci.yml` file that contains a CI pipeline that will run the `lint`, `test`, `build` and `e2e` tasks for projects that are affected by any given PR. Since we are using Nx Cloud, the pipeline will also distribute tasks across multiple machines to ensure fast and reliable CI runs.
 
 If you need to generate a new workflow file for GitHub Actions or other providers, you can do so with this command:
 
@@ -1294,14 +1294,6 @@ jobs:
       - uses: nrwl/nx-set-shas@v4
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       - run: npx nx affected -t lint test build
-```
-
-### Enable a Distributed CI Pipeline
-
-Running tasks on a single machine is not scalable as the workspace grows. To distribute your tasks across multiple machines, make sure the following line is uncommented in the `.github/workflows/ci.yml` file.
-
-```yml {% fileName=".github/workflows/ci.yml" %}
-- run: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="e2e-ci"
 ```
 
 For more information about how Nx can improve your CI pipeline, check out one of these detailed tutorials:

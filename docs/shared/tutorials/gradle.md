@@ -293,7 +293,7 @@ Once the PR is created, merge it into your main branch.
 
 ![](/shared/tutorials/github-cloud-pr-merged.avif)
 
-And make sure you pull the main branch locally to get the latest changes:
+And make sure you pull the latest changes locally:
 
 ```shell
 git pull
