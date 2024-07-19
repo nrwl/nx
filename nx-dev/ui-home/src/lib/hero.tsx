@@ -43,10 +43,11 @@ export function Hero(): JSX.Element {
               Smart
             </span>{' '}
             Monorepos
+            <br className="sm:hidden" />
             <svg
               viewBox="0 0 2 2"
               fill="currentColor"
-              className="mx-4 inline-flex h-2 w-2"
+              className="mx-6 hidden size-2 sm:inline-flex xl:size-3"
             >
               <circle cx={1} cy={1} r={1} />
             </svg>
