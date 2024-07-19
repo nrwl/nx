@@ -88,6 +88,22 @@ export async function connectToNxCloudCommand(
   return true;
 }
 
+export async function connectExistingRepoToNxCloudPrompt(
+  command = 'init',
+  key: MessageKey = 'setupNxCloud'
+): Promise<boolean> {
+  const res = await nxCloudPrompt(key).then(
+    (value: MessageOptionKey) => value === 'yes'
+  );
+  await recordStat({
+    command,
+    nxVersion,
+    useCloud: res,
+    meta: messages.codeOfSelectedPromptMessage(key),
+  });
+  return res;
+}
+
 export async function connectToNxCloudWithPrompt(command: string) {
   const setNxCloud = await nxCloudPrompt('setupNxCloud');
   const useCloud =
@@ -98,12 +114,6 @@ export async function connectToNxCloudWithPrompt(command: string) {
     useCloud,
     meta: messages.codeOfSelectedPromptMessage('setupNxCloud'),
   });
-}
-
-export async function connectExistingRepoToNxCloudPrompt(
-  key: MessageKey = 'setupNxCloud'
-): Promise<boolean> {
-  return nxCloudPrompt(key).then((value: MessageOptionKey) => value === 'yes');
 }
 
 async function nxCloudPrompt(key: MessageKey): Promise<MessageOptionKey> {
