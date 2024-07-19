@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { SectionDescription, SectionHeading } from '@nx/nx-dev/ui-common';
+import { SectionDescription, SectionHeading } from './typography';
 import {
   AdobeIcon,
   AwsIcon,
