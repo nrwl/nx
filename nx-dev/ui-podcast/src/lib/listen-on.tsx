@@ -30,7 +30,7 @@ export function ListenOn(): JSX.Element {
   ];
 
   return (
-    <ul className="flex gap-6 sm:gap-3">
+    <ul className="flex gap-6 sm:gap-4">
       {platforms.map((platform) => {
         return (
           <li
@@ -43,7 +43,7 @@ export function ListenOn(): JSX.Element {
               rel="noopener noreferrer"
               className="flex h-full w-full items-center justify-center"
             >
-              <platform.icon className="h-10 w-10 sm:h-8 sm:w-8" />
+              <platform.icon className="h-10 w-10 shrink-0 sm:h-8 sm:w-8" />
             </a>
           </li>
         );

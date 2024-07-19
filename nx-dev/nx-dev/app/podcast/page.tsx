@@ -1,6 +1,7 @@
 import { Metadata } from 'next';
-import { blogApi } from '../../lib/blog.api';
-import { Hero, PodcastList, Layout } from '@nx/nx-dev/ui-podcast';
+import { podcastApi } from '../../lib/podcast.api';
+import { DefaultLayout } from '@nx/nx-dev/ui-common';
+import { Hero, PodcastList } from '@nx/nx-dev/ui-podcast';
 
 export const metadata: Metadata = {
   title: 'Nx Podcast - Updates from the Nx & Nx Cloud team',
@@ -25,14 +26,14 @@ export const metadata: Metadata = {
 };
 
 async function getPodcasts() {
-  return await blogApi.getPodcastBlogs();
+  return await podcastApi.getPodcastBlogs();
 }
 export default async function Page() {
   const podcasts = await getPodcasts();
   return (
-    <Layout>
+    <DefaultLayout>
       <Hero />
       <PodcastList podcasts={podcasts} />
-    </Layout>
+    </DefaultLayout>
   );
 }
