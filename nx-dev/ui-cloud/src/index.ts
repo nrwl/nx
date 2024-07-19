@@ -7,4 +7,3 @@ export * from './lib/enhance-with-ai';
 export * from './lib/automated-agents-management';
 export * from './lib/agent-number-over-time';
 export * from './lib/statistics';
-export * from './lib/call-to-action';

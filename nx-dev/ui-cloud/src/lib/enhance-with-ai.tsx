@@ -45,7 +45,7 @@ export function EnhancedWithAi(): JSX.Element {
           </SectionHeading>
           <SectionHeading as="p" variant="subtitle" className="mt-6">
             With the knowledge of your workspace structure, your CI and commit
-            history, Tusky AI can optimize CI resource usage, help resolve
+            history, Nx Cloud can optimize CI resource usage, help resolve
             issues, provide powerful analytics and suggest refactorings.
           </SectionHeading>
         </div>

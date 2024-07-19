@@ -1,13 +1,7 @@
 'use client';
-import {
-  Variants,
-  animate,
-  motion,
-  useMotionValue,
-  useTransform,
-} from 'framer-motion';
-import { useEffect } from 'react';
+import { Variants, motion } from 'framer-motion';
 import { Spotlight } from './elements/spotlight';
+import { AnimateValue } from '@nx/nx-dev/ui-animations';
 
 export function FasterAndCheaper(): JSX.Element {
   const spotlight: Variants = {
@@ -16,33 +10,6 @@ export function FasterAndCheaper(): JSX.Element {
     },
     onscreen: {
       display: 'block',
-    },
-  };
-
-  const ciBar: Variants = {
-    start: {
-      width: 0,
-    },
-    end: {
-      width: '100%',
-      transition: {
-        type: 'tween',
-        ease: 'easeOut',
-        duration: 1.2,
-      },
-    },
-  };
-  const nxBar: Variants = {
-    start: {
-      width: 0,
-    },
-    end: {
-      width: '50%',
-      transition: {
-        type: 'tween',
-        ease: 'easeOut',
-        duration: 1.2,
-      },
     },
   };
 
@@ -75,8 +42,8 @@ export function FasterAndCheaper(): JSX.Element {
             <article className="group/card relative grid transform-gpu cursor-default items-center gap-4 overflow-hidden rounded-xl border border-slate-200 bg-white/50 backdrop-blur-sm transition duration-200 hover:-translate-y-4 hover:shadow-xl md:col-span-1 dark:border-slate-800 dark:bg-slate-950/50 dark:shadow-none">
               <div className="p-4 text-center">
                 <div className="mt-2 text-3xl font-medium leading-7 text-slate-950 transition duration-200 lg:text-8xl dark:text-white">
-                  <Counter value={30}></Counter> -{' '}
-                  <Counter value={70}></Counter>%
+                  <AnimateValue num={30} suffix=" - " />
+                  <AnimateValue num={70} suffix="%" />
                 </div>
                 <div className="mt-4 text-3xl font-medium leading-7 text-slate-950 transition duration-200 lg:text-5xl dark:text-white">
                   Faster CI
@@ -97,15 +64,9 @@ export function FasterAndCheaper(): JSX.Element {
                       CI
                     </div>
                     <div className="flex-grow py-1.5 font-semibold">
-                      <motion.div
-                        initial="start"
-                        whileInView="end"
-                        variants={ciBar}
-                        viewport={{ once: true }}
-                        className="w-full flex-grow items-center justify-end rounded-r-lg border border-l-0 border-slate-200 bg-slate-100 px-4 py-2 text-right text-slate-900 transition duration-200 dark:border-slate-800 dark:bg-slate-700 dark:text-white"
-                      >
+                      <div className="w-full flex-grow items-center justify-end rounded-r-lg border border-l-0 border-slate-200 bg-slate-100 px-4 py-2 text-right text-slate-900 transition duration-200 dark:border-slate-800 dark:bg-slate-700 dark:text-white">
                         <span className="drop-shadow-sm">$6k</span>
-                      </motion.div>
+                      </div>
                     </div>
                   </div>
                   <div className="flex items-center">
@@ -113,15 +74,9 @@ export function FasterAndCheaper(): JSX.Element {
                       CI + Nx Cloud
                     </div>
                     <div className="flex-grow py-1.5 font-semibold">
-                      <motion.div
-                        initial="start"
-                        whileInView="end"
-                        variants={nxBar}
-                        viewport={{ once: true }}
-                        className="w-1/2 rounded-r-lg border border-l-0 border-slate-200 bg-gradient-to-r from-emerald-500 to-green-500 px-4 py-2 text-right text-white transition duration-200 dark:border-slate-800"
-                      >
+                      <div className="w-1/2 rounded-r-lg border border-l-0 border-slate-200 bg-gradient-to-r from-emerald-500 to-green-500 px-4 py-2 text-right text-white transition duration-200 dark:border-slate-800">
                         <span className="drop-shadow-sm">$3.2k</span>
-                      </motion.div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -139,27 +94,4 @@ export function FasterAndCheaper(): JSX.Element {
       </motion.div>
     </section>
   );
-}
-
-function Counter({
-  value,
-  duration = 2,
-}: {
-  value: number;
-  duration?: number;
-}) {
-  const count = useMotionValue(0);
-  const rounded = useTransform(count, Math.round);
-
-  useEffect(() => {
-    const animation = animate(count, value, {
-      type: 'tween',
-      ease: 'easeOut',
-      duration,
-    });
-
-    return animation.stop;
-  }, []);
-
-  return <motion.span>{rounded}</motion.span>;
 }

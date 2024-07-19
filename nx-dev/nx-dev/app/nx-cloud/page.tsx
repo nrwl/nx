@@ -1,5 +1,4 @@
 import {
-  Layout,
   Hero,
   TrustedBy,
   FasterAndCheaper,
@@ -8,8 +7,10 @@ import {
   AutomatedAgentsManagement,
   AgentNumberOverTime,
   Statistics,
-  CallToAction,
 } from '@nx/nx-dev/ui-cloud';
+
+import { CallToAction, DefaultLayout } from '@nx/nx-dev/ui-common';
+
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
@@ -37,7 +38,7 @@ export const metadata: Metadata = {
 
 export default function NxCloudPage(): JSX.Element {
   return (
-    <Layout>
+    <DefaultLayout>
       <Hero />
       <TrustedBy />
 
@@ -62,6 +63,6 @@ export default function NxCloudPage(): JSX.Element {
       <div className="mt-32 lg:mt-56">
         <CallToAction />
       </div>
-    </Layout>
+    </DefaultLayout>
   );
 }
