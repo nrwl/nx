@@ -41,32 +41,10 @@ To get started:
 3. Make sure all tasks are working on your machine, by running lint, test, build and e2e on all projects of the workspace
 
    ```shell
-   pnpm nx run-many -t lint test build e2e
+   pnpm nx run-many -t lint test build
    ```
 
-## Connect to Nx Cloud
-
-Nx Cloud is a companion app for your CI system that provides remote caching, task distribution, e2e test deflaking, better DX and more.
-
-Let's connect your repository to Nx Cloud with the following command:
-
-```shell
-pnpm nx connect
-```
-
-Once the script is finished, it will print a link in the terminal to register your repository in your [Nx Cloud](https://cloud.nx.app) account. Click the link and follow the steps provided to make sure Nx Cloud is enabled on the main branch of your repository.
-
-The set up process will create a PR on your repository that you'll need to merge in order connect to Nx Cloud.
-
-When you're finished, you'll need to pull down the changes that were merged into the hosted repository with this command:
-
-```shell
-git pull
-```
-
-You should now have an `nxCloudAccessToken` property specified in the `nx.json` file.
-
-### Create a CI Workflow
+## Create a CI Workflow
 
 First, we'll create a new branch to start adding a CI workflow.
 
@@ -84,31 +62,42 @@ This generator creates a `.github/workflows/ci.yml` file that contains a CI pipe
 
 The key lines in the CI pipeline are highlighted in this excerpt:
 
-```yml {% fileName=".github/workflows/ci.yml" highlightLines=[6,7] %}
-- run: pnpm install --frozen-lockfile
-- uses: nrwl/nx-set-shas@v4
+```yml {% fileName=".github/workflows/ci.yml" highlightLines=["31-33"] %}
+name: CI
+# ...
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-# Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
-# - run: pnpm nx-cloud record -- echo Hello World
-- run: pnpm nx affected -t lint test build
-- run: pnpm nx affected --parallel 1 -t e2e-ci
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      # This enables task distribution via Nx Cloud
+      # Run this command as early as possible, before dependencies are installed
+      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
+      # Connect your workspace by running "nx connect" and uncomment this
+      # - run: pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - run: pnpm install --frozen-lockfile
+      - uses: nrwl/nx-set-shas@v4
+
+      # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+      # - run: pnpm exec nx-cloud record -- echo Hello World
+      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
+      - run: pnpm exec nx affected -t lint test build
 ```
 
-The [`nx affected` command](/ci/features/affected) will run the specified tasks only for projects that have been affected by a particular PR, which can save a lot of time as repositories grow larger. In this particular branch, however, the only file that has changed is the `CI.yml` file which is not associated with any project. This will cause `nx affected` to not run any tasks. Let's fix this by adding the CI workflow file to the `sharedGlobals` defined in the `nx.json` - this will tell Nx that changes to the CI pipeline should affect every project in the repository.
-
-```json {% fileName="nx.json" highlightLines=[7] %}
-{
-  // ...
-  "namedInputs": {
-    "default": ["{projectRoot}/**/*", "sharedGlobals"],
-    "sharedGlobals": [
-      "{workspaceRoot}/babel.config.json",
-      "{workspaceRoot}/.github/workflows/ci.yml"
-    ]
-    // ...
-  }
-}
-```
+The [`nx affected` command](/ci/features/affected) will run the specified tasks only for projects that have been affected by a particular PR, which can save a lot of time as repositories grow larger.
 
 Commit your changes and push your branch:
 
@@ -124,11 +113,43 @@ Create a pull request with the new branch and watch your CI in action.
 Make sure that the PR you create is against your own repository's `main` branch - not the `nrwl/nx-shops` repository.
 {% /callout %}
 
+Once CI is green, merge the PR.
+
+![](/nx-cloud/tutorial/github-pr-workflow.avif)
+
+The rest of the tutorial covers remote caching and distribution across multiple machines, which need Nx Cloud to be enabled. Let's set that up next.
+
+## Connect to Nx Cloud
+
+Nx Cloud is a companion app for your CI system that provides remote caching, task distribution, e2e test deflaking, better DX and more.
+
+Let's connect your repository to Nx Cloud with the following command:
+
+```shell
+pnpm nx connect
+```
+
+A browser window will open to register your repository in your [Nx Cloud](https://cloud.nx.app) account. The link is also printed to the terminal if the windows does not open, or you closed it before finishing the steps. The app will guide you to create a PR to enable Nx Cloud on your repository.
+
+![](/nx-cloud/tutorial/nx-cloud-setup.avif)
+
 Nx Cloud will create a comment on your PR that gives you a summary of the CI run and a link to dig into logs and understand everything that happened during the CI run.
 
 ![Nx Cloud report comment](/nx-cloud/tutorial/nx-cloud-report-comment.png)
 
-### Understand Remote Caching
+Once the PR is green, merge it into your main branch.
+
+![](/nx-cloud/tutorial/github-cloud-pr.avif)
+
+And make sure you pull the latest changes locally:
+
+```shell
+git pull
+```
+
+You should now have an `nxCloudAccessToken` property specified in the `nx.json` file.
+
+## Understand Remote Caching
 
 [Nx Cloud](https://nx.app) provides [Nx Replay](/ci/features/remote-cache), which is a powerful, scalable and, very importantly, secure way to share task artifacts across machines. It lets you configure permissions and guarantees the cached artifacts cannot be tempered with.
 
@@ -162,7 +183,7 @@ This remote cache is useful to speed up tasks when developing on a local machine
 
 You might also want to learn more about [how to fine-tune caching](/recipes/running-tasks/configure-inputs) to get even better results.
 
-### Parallelize Tasks Across Multiple Machines Using Nx Agents
+## Parallelize Tasks Across Multiple Machines Using Nx Agents
 
 The affected command and Nx Replay help speed up the average CI time, but there will be some PRs that affect everything in the repository. The only way to speed up that worst case scenario is through efficient parallelization. The best way to parallelize CI with Nx is to use [Nx Agents](/ci/features/distribute-task-execution).
 

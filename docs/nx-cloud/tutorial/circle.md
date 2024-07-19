@@ -41,36 +41,24 @@ To get started:
 3. Make sure all tasks are working on your machine, by running lint, test, build and e2e on all projects of the workspace
 
    ```shell
-   pnpm nx run-many -t lint test build e2e
+   pnpm nx run-many -t lint test build
    ```
-
-## Connect to Nx Cloud
-
-Nx Cloud is a companion app for your CI system that provides remote caching, task distribution, e2e test deflaking, better DX and more.
-
-Let's connect your repository to Nx Cloud with the following command:
-
-```shell
-pnpm nx connect
-```
-
-Once the script is finished, it will print a link in the terminal to register your repository in your [Nx Cloud](https://cloud.nx.app) account. Click the link and follow the steps provided to make sure Nx Cloud is enabled on the main branch of your repository.
-
-The set up process will create a PR on your repository that you'll need to merge in order connect to Nx Cloud.
-
-When you're finished, you'll need to pull down the changes that were merged into the hosted repository with this command:
-
-```shell
-git pull
-```
-
-You should now have an `nxCloudAccessToken` property specified in the `nx.json` file.
 
 ## Connect to Circle CI
 
-In order to use Circle CI, you need to [sign up and create an organization](https://circleci.com/docs/first-steps/#sign-up-and-create-an-org). Follow the steps in the Circle CI documentation to connect to your GitHub repository. When you are asked to configure a pipeline, choose any option, since we'll overwrite it in the next step.
+In order to use Circle CI, you need to [sign up and create an organization](https://circleci.com/docs/first-steps/#sign-up-and-create-an-org). Follow the steps in the Circle CI documentation to connect to your GitHub repository to a project.
 
-Make sure to merge the PR that Circle CI creates and then pull the changes to your local machine with the following command:
+![](/nx-cloud/tutorial/circle-setup-project.avif)
+
+The easiest way is to create a branch and PR in your GitHub repository. Note that a sample pipeline workflow file will be created, which we will overwrite in the next step.
+
+![](/nx-cloud/tutorial/circle-create-pr.avif)
+
+Once the PR is created, merge it into your main branch.
+
+![](/nx-cloud/tutorial/circle-pr.avif)
+
+And pull the changes locally:
 
 ```shell
 git pull
@@ -94,32 +82,44 @@ This generator will overwrite Circle CI's default `.circleci/config.yml` file to
 
 The key lines in the CI pipeline are highlighted in this excerpt:
 
-```yml {% fileName=".circleci/config.yml" highlightLines=[7,8] %}
-- run: pnpm install --frozen-lockfile
-- nx/set-shas:
-    main-branch-name: 'main'
+```yml {% fileName=".circleci/config.yml" highlightLines=["25-27"] %}
+version: 2.1
 
-# Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
-# - run: pnpm nx-cloud record -- echo Hello World
-- run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD -t lint test build
-- run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --parallel 1 -t e2e-ci
+orbs:
+  nx: nrwl/nx@1.6.2
+
+jobs:
+  main:
+    docker:
+      - image: cimg/node:lts-browsers
+    steps:
+      - checkout
+
+      - run:
+          name: Install PNPM
+          command: npm install --prefix=$HOME/.local -g pnpm@8
+
+      # Connect your workspace on nx.app and uncomment this to enable task distribution.
+      # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "e2e-ci" targets have been requested
+      # - run: pnpm dlx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="e2e-ci"
+
+      - run: pnpm install --frozen-lockfile
+      - nx/set-shas:
+          main-branch-name: 'main'
+
+      # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+      # - run: pnpm exec nx-cloud record -- echo Hello World
+      - run: pnpm exec nx affected --base=$NX_BASE --head=$NX_HEAD -t lint test build
+
+workflows:
+  version: 2
+
+  ci:
+    jobs:
+      - main
 ```
 
-The [`nx affected` command](/ci/features/affected) will run the specified tasks only for projects that have been affected by a particular PR, which can save a lot of time as repositories grow larger. In this particular branch, however, the only file that has changed is the `CI.yml` file which is not associated with any project. This will cause `nx affected` to not run any tasks. Let's fix this by adding the CI workflow file to the `sharedGlobals` defined in the `nx.json` - this will tell Nx that changes to the CI pipeline should affect every project in the repository.
-
-```json {% fileName="nx.json" highlightLines=[7] %}
-{
-  // ...
-  "namedInputs": {
-    "default": ["{projectRoot}/**/*", "sharedGlobals"],
-    "sharedGlobals": [
-      "{workspaceRoot}/babel.config.json",
-      "{workspaceRoot}/.circleci/config.yml"
-    ]
-    // ...
-  }
-}
-```
+The [`nx affected` command](/ci/features/affected) will run the specified tasks only for projects that have been affected by a particular PR, which can save a lot of time as repositories grow larger.
 
 Commit your changes and push your branch:
 
@@ -129,15 +129,58 @@ git commit -am "basic ci workflow"
 git push -u origin HEAD
 ```
 
-Now create a pull request with the new branch.
+Open up a new PR to see the run on CircleCI. If you see a message about the `nrwl/nx` orb not being loaded, you need to enable third-party CircleCI orbs in your organization settings. In the Circle CI project dashboard, go to `Organization Settings -> Security` and select `Yes` under Orb Security Settings: Allow Uncertified Orbs.
+
+![](/nx-cloud/tutorial/circle-orb-security.png)
 
 {% callout type="warning" title="Create Your PR on Your Own Repository" %}
 Make sure that the PR you create is against your own repository's `main` branch - not the `nrwl/nx-shops` repository.
 {% /callout %}
 
+![](/nx-cloud/tutorial/circle-new-run.avif)
+
+Once CI is green, merge the PR.
+
+![](/nx-cloud/tutorial/github-pr-workflow.avif)
+
+And make sure to pull the changes locally:
+
+```shell
+git checkout main
+git pull origin main
+```
+
+The rest of the tutorial covers remote caching and distribution across multiple machines, which need Nx Cloud to be enabled. Let's set that up next.
+
+## Connect to Nx Cloud
+
+Nx Cloud is a companion app for your CI system that provides remote caching, task distribution, e2e test deflaking, better DX and more.
+
+Let's connect your repository to Nx Cloud with the following command:
+
+```shell
+pnpm nx connect
+```
+
+A browser window will open to register your repository in your [Nx Cloud](https://cloud.nx.app) account. The link is also printed to the terminal if the windows does not open, or you closed it before finishing the steps. The app will guide you to create a PR to enable Nx Cloud on your repository.
+
+![](/nx-cloud/tutorial/nx-cloud-setup.avif)
+
 Nx Cloud will create a comment on your PR that gives you a summary of the CI run and a link to dig into logs and understand everything that happened during the CI run.
 
 ![Nx Cloud report comment](/nx-cloud/tutorial/nx-cloud-report-comment.png)
+
+Once the PR is green, merge it into your main branch.
+
+![](/nx-cloud/tutorial/github-cloud-pr.avif)
+
+And make sure you pull the latest changes locally:
+
+```shell
+git pull
+```
+
+You should now have an `nxCloudAccessToken` property specified in the `nx.json` file.
 
 ## Understand Remote Caching
 
