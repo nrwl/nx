@@ -88,6 +88,7 @@
       "@nx/nx-dev/models-package": ["nx-dev/models-package/src/index.ts"],
       "@nx/nx-dev/ui-animations": ["nx-dev/ui-animations/src/index.ts"],
       "@nx/nx-dev/ui-blog": ["nx-dev/ui-blog/src/index.ts"],
+      "@nx/nx-dev/ui-cloud": ["nx-dev/ui-cloud/src/index.ts"],
       "@nx/nx-dev/ui-commands": ["nx-dev/ui-commands/src/index.ts"],
       "@nx/nx-dev/ui-common": ["nx-dev/ui-common/src/index.ts"],
       "@nx/nx-dev/ui-common/*": ["nx-dev/ui-common/*"],

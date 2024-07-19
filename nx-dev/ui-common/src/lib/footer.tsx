@@ -8,7 +8,7 @@ export function Footer(): JSX.Element {
     solutions: [
       { name: 'Nx Enterprise', href: '/enterprise' },
       { name: 'Nx', href: 'https://nx.dev' },
-      { name: 'Nx Cloud', href: 'https://nx.app/?utm_source=nx.dev' },
+      { name: 'Nx Cloud', href: '/nx-cloud' },
     ],
     resources: [
       { name: 'Blog', href: '/blog' },
