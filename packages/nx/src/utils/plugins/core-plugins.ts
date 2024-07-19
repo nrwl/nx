@@ -1,10 +1,10 @@
 export interface CorePlugin {
   name: string;
-  capabilities: 'executors' | 'generators' | 'executors,generators';
+  capabilities: 'executors' | 'generators' | 'executors,generators' | 'graph';
   link?: string;
 }
 
-export const CORE_PLUGINS = [
+export const CORE_PLUGINS: CorePlugin[] = [
   {
     name: '@nx/angular',
     capabilities: 'executors,generators',
@@ -30,6 +30,10 @@ export const CORE_PLUGINS = [
     capabilities: 'generators',
   },
   {
+    name: '@nx/gradle',
+    capabilities: 'graph',
+  },
+  {
     name: '@nx/jest',
     capabilities: 'executors,generators',
   },
@@ -52,6 +56,10 @@ export const CORE_PLUGINS = [
   {
     name: '@nx/node',
     capabilities: 'executors,generators',
+  },
+  {
+    name: '@nx/nuxt',
+    capabilities: 'generators',
   },
   {
     name: 'nx',
@@ -84,6 +92,10 @@ export const CORE_PLUGINS = [
   {
     name: '@nx/vite',
     capabilities: 'executors,generators',
+  },
+  {
+    name: '@nx/vue',
+    capabilities: 'generators',
   },
   {
     name: '@nx/web',

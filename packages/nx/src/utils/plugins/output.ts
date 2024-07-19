@@ -114,9 +114,12 @@ export async function listPluginCapabilities(
     bodyLines.push(chalk.bold(chalk.green('EXECUTORS/BUILDERS')));
     bodyLines.push('');
     bodyLines.push(
-      ...Object.keys(plugin.executors).map(
-        (name) => `${chalk.bold(name)} : ${plugin.executors[name].description}`
-      )
+      ...Object.keys(plugin.executors).map((name) => {
+        const definition = plugin.executors[name];
+        return typeof definition === 'string'
+          ? chalk.bold(name)
+          : `${chalk.bold(name)} : ${definition.description}`;
+      })
     );
   }
 
