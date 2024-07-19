@@ -473,5 +473,44 @@ describe('splitArgs', () => {
 
       expect(parallel).toEqual(5);
     });
+
+    it('should be able to be specified in the environment', () => {
+      const { nxArgs } = withEnvironment(
+        {
+          NX_PARALLEL: '5',
+        },
+        () =>
+          splitArgsIntoNxArgsAndOverrides(
+            {
+              $0: '',
+              __overrides_unparsed__: [],
+            },
+            'affected',
+            {} as any,
+            {} as any
+          )
+      );
+      expect(nxArgs.parallel).toEqual(5);
+    });
+
+    it('should be able to override NX_PARALLEL with the parallel flag', () => {
+      const { nxArgs } = withEnvironment(
+        {
+          NX_PARALLEL: '5',
+        },
+        () =>
+          splitArgsIntoNxArgsAndOverrides(
+            {
+              $0: '',
+              __overrides_unparsed__: [],
+              parallel: '3',
+            },
+            'affected',
+            {} as any,
+            {} as any
+          )
+      );
+      expect(nxArgs.parallel).toEqual(3);
+    });
   });
 });
