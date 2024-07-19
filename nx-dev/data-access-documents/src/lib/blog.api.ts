@@ -1,7 +1,7 @@
 import { readFileSync } from 'fs';
 import { join, basename } from 'path';
 import { extractFrontmatter } from '@nx/nx-dev/ui-markdoc';
-import { sortPodcasts, sortPosts } from './blog.util';
+import { sortPosts } from './blog.util';
 import { BlogPostDataEntry } from './blog.model';
 import { readFile, readdir } from 'fs/promises';
 
@@ -19,7 +19,6 @@ export class BlogApi {
       throw new Error('public blog root cannot be undefined');
     }
   }
-
   async getBlogTags(): Promise<string[]> {
     const blogs = await this.getBlogs();
     const tags = new Set<string>();
@@ -28,19 +27,10 @@ export class BlogApi {
     });
     return Array.from(tags);
   }
-
-  async getPodcastBlogs(): Promise<BlogPostDataEntry[]> {
-    return sortPodcasts(
-      await this.getBlogs((post) =>
-        post.tags.map((t) => t.toLowerCase()).includes('podcast')
-      )
-    );
-  }
-
   async getBlogs(
     filterFn?: (post: BlogPostDataEntry) => boolean
   ): Promise<BlogPostDataEntry[]> {
-    return sortPosts(await this.getAllBlogs(filterFn));
+    return await this.getAllBlogs(filterFn);
   }
 
   async getAllBlogs(
@@ -82,7 +72,7 @@ export class BlogApi {
         allPosts.push(post);
       }
     }
-    return allPosts;
+    return sortPosts(allPosts);
   }
 
   // Optimize this so we don't read the FS multiple times

@@ -4,7 +4,7 @@ import { ListenOn } from './listen-on';
 export function Hero(): JSX.Element {
   return (
     <div className="mx-auto max-w-7xl">
-      <div className="mx-auto grid max-w-7xl grid-cols-4 gap-x-4 lg:grid-cols-12 lg:gap-x-6">
+      <div className="grid grid-cols-4 gap-x-4 px-8 lg:grid-cols-12 lg:gap-x-6">
         <div className="col-span-full md:col-span-4 lg:col-span-6">
           <SectionHeading as="h1" variant="title">
             The Enterprise Software Podcast
