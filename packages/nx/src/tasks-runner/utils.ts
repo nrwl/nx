@@ -195,7 +195,6 @@ export function normalizeTargetDependencyWithStringProjects(
     } else if (dependencyConfig.projects === 'dependencies') {
       dependencyConfig.dependencies = true;
       delete dependencyConfig.projects;
-      return;
       /** LERNA SUPPORT END - Remove in v20 */
     } else {
       dependencyConfig.projects = [dependencyConfig.projects];
