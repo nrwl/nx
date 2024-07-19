@@ -56,6 +56,7 @@ export async function* moduleFederationDevServerExecutor(
           spa: false,
           withDeps: false,
           cors: true,
+          cacheSeconds: -1,
         },
         context
       )
