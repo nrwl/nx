@@ -62,7 +62,7 @@ launch-templates:
       GIT_COMMITTER_NAME: Test
       SELECTED_PM: 'npm' # explicitly define npm for macOS tests
       # Fix typo in PNPM_HOME (was PNPN_HOME)
-      PNPM_HOME: '~/work/workspace/pnpm/store'
+      PNPM_HOME: '~/work/workspace/pnpm'
     init-steps:
       - name: Checkout
         uses: 'nrwl/nx-cloud-workflows/quote-pwd/workflow-steps/checkout/main.yaml'
@@ -72,7 +72,7 @@ launch-templates:
           key: 'pnpm-lock.yaml'
           paths: |
             node_modules
-            ~/work/workspace/.pnpm-store
+            ~/work/workspace/pnpm/store
           base-branch: 'master'
 
       - name: Install Pnpm
