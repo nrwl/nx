@@ -107,6 +107,7 @@ function startStaticRemotesFileServer(
       ssl: options.ssl,
       sslCert: options.sslCert,
       sslKey: options.sslKey,
+      cacheSeconds: -1,
     },
     context
   );
@@ -267,6 +268,7 @@ export default async function* moduleFederationDevServer(
           withDeps: false,
           spa: false,
           cors: true,
+          cacheSeconds: -1,
         },
         context
       )
