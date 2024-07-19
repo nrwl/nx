@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-import { Header, Footer, AnnouncementBanner } from '@nx/nx-dev/ui-common';
+import { AnnouncementBanner } from '@nx/nx-dev/ui-common';
 import AppRouterAnalytics from './app-router-analytics';
 import GlobalScripts from './global-scripts';
 
