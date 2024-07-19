@@ -7,7 +7,7 @@ import {
   ShopifyIcon,
   StorybookIcon,
   VmwareIcon,
-} from '@nx/nx-dev/ui-common';
+} from '@nx/nx-dev/ui-icons';
 export function TrustedBy(): JSX.Element {
   return (
     <section className="">
