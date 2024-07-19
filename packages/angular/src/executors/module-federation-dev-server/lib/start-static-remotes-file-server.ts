@@ -56,6 +56,7 @@ export function startStaticRemotesFileServer(
       ssl: options.ssl,
       sslCert: options.sslCert,
       sslKey: options.sslKey,
+      cacheSeconds: -1,
     },
     context
   );
