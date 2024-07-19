@@ -1251,7 +1251,7 @@ Now that we're working on the CI pipeline, it is important for your changes to b
 2. [Create a new GitHub repository](https://github.com/new)
 3. Follow GitHub's instructions to push your existing code to the repository
 
-When we set up the repository at the beginning of this tutorial, we chose to use GitHub Actions as a CI provider. This created a basic CI pipeline and configured Nx Cloud in the repository. It also printed a url in the terminal to register your repository in your [Nx Cloud](https://cloud.nx.app) account. If you didn't click on the link when first creating your repository, you can show it again by running:
+When we set up the repository at the beginning of this tutorial, we chose to use GitHub Actions as a CI provider. This created a basic CI pipeline and configured Nx Cloud in the repository. It also printed a URL in the terminal to register your repository in your [Nx Cloud](https://cloud.nx.app) account. If you didn't click on the link when first creating your repository, you can show it again by running:
 
 ```shell
 npx nx connect

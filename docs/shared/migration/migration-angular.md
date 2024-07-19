@@ -133,9 +133,15 @@ Now connect your repository to Nx Cloud with the following command:
 npx nx connect
 ```
 
-Once the script is finished, it will print a link in the terminal to register your repository in your [Nx Cloud](https://cloud.nx.app) account. Click the link and follow the steps provided to make sure Nx Cloud is enabled on the main branch of your repository.
+A browser window will open to register your repository in your [Nx Cloud](https://cloud.nx.app) account. The link is also printed to the terminal if the windows does not open, or you closed it before finishing the steps. The app will guide you to create a PR to enable Nx Cloud on your repository.
 
-When you're finished, you'll need to pull down the changes that were merged into the hosted repository with this command:
+![](/shared/tutorials/nx-cloud-github-connect.avif)
+
+Once the PR is created, merge it into your main branch.
+
+![](/shared/tutorials/github-cloud-pr-merged.avif)
+
+And make sure you pull the main branch locally to get the latest changes:
 
 ```shell
 git pull

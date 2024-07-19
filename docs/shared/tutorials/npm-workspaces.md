@@ -22,9 +22,10 @@ Here's the source code of the final result for this tutorial.
 
 To get started, check out [the sample repository](https://github.com/nrwl/tuskydesign) on your local machine:
 
-```shell
-git clone https://github.com/nrwl/tuskydesign.git
-```
+`` shel````l
+git clone https://github.com/nrwl/tuskydesign.gi `t
+
+````
 
 The repository has two React packages (under `packages/buttons` and `packages/forms`) that are used in a `demo` application (located in `apps/demo`) that was designed to be used with the Vite CLI. The root `package.json` has a `workspaces` property that tells NPM how to find the projects in the repository.
 
@@ -32,7 +33,7 @@ The repository has two React packages (under `packages/buttons` and `packages/fo
 {
   "workspaces": ["packages/*", "apps/*"]
 }
-```
+````
 
 Because of this setting, when the install command is run at the root, the correct packages are installed for each project. NPM will create dedicated `node_modules` folders inside of each project folder where necessary.
 
@@ -49,35 +50,8 @@ Now let's try running some tasks. To lint the `demo` app, use the `lint` npm scr
 
 If you try to build the `demo` app, it will fail.
 
-```text {% command="npm run build -w @tuskdesign/demo" path="~/tuskydesigns" %}
-> @tuskdesign/demo@0.0.0 prebuild
-> npm run typecheck
-
-> @tuskdesign/demo@0.0.0 typecheck
-> tsc
-
-> @tuskdesign/demo@0.0.0 build
-> vite build
-
-vite v5.0.12 building for production...
-✓ 4 modules transformed.
-[commonjs--resolver] Failed to resolve entry for package "@tuskdesign/buttons". The package may have incorrect main/module/exports specified in its package.json.
-error during build:
+```text
 Error: Failed to resolve entry for package "@tuskdesign/buttons". The package may have incorrect main/module/exports specified in its package.json.
-    at packageEntryFailure (file:///Users/isaac/Documents/code/tuskydesign/node_modules/vite/dist/node/chunks/dep-9A4-l-43.js:29443:17)
-    at resolvePackageEntry (file:///Users/isaac/Documents/code/tuskydesign/node_modules/vite/dist/node/chunks/dep-9A4-l-43.js:29440:5)
-    at tryNodeResolve (file:///Users/isaac/Documents/code/tuskydesign/node_modules/vite/dist/node/chunks/dep-9A4-l-43.js:29210:20)
-    at Object.resolveId (file:///Users/isaac/Documents/code/tuskydesign/node_modules/vite/dist/node/chunks/dep-9A4-l-43.js:28978:28)
-    at file:///Users/isaac/Documents/code/tuskydesign/node_modules/vite/node_modules/rollup/dist/es/shared/node-entry.js:19579:40
-    at async PluginDriver.hookFirstAndGetPlugin (file:///Users/isaac/Documents/code/tuskydesign/node_modules/vite/node_modules/rollup/dist/es/shared/node-entry.js:19479:28)
-    at async resolveId (file:///Users/isaac/Documents/code/tuskydesign/node_modules/vite/node_modules/rollup/dist/es/shared/node-entry.js:18149:26)
-    at async ModuleLoader.resolveId (file:///Users/isaac/Documents/code/tuskydesign/node_modules/vite/node_modules/rollup/dist/es/shared/node-entry.js:18563:15)
-    at async Object.resolveId (file:///Users/isaac/Documents/code/tuskydesign/node_modules/vite/dist/node/chunks/dep-9A4-l-43.js:8141:10)
-    at async PluginDriver.hookFirstAndGetPlugin (file:///Users/isaac/Documents/code/tuskydesign/node_modules/vite/node_modules/rollup/dist/es/shared/node-entry.js:19479:28)
-npm ERR! Lifecycle script `build` failed with error:
-npm ERR! Error: command failed
-npm ERR!   in workspace: @tuskdesign/demo@0.0.0
-npm ERR!   at location: /Users/isaac/Documents/code/tuskydesign/apps/demo
 ```
 
 The `build` script fails because it needs the `buttons` and `forms` projects to be built first in order to work correctly. To do this, lets return to the root of the repository and run the `build` task for every project in the repo:
@@ -115,38 +89,12 @@ Second, the script asks a series of questions to help set up caching for you.
 - `Does the "lint" script create any outputs?` - Enter nothing
 - `Would you like remote caching to make your build faster?` - Choose `Skip for now`
 
-```text {% command="npx nx@latest init" path="~/tuskydesigns" %}
- NX   Recommended Plugins:
-
-Add these Nx plugins to integrate with the tools used in your workspace.
-
-✔ Which plugins would you like to add? · No items were selected
-
- NX   🐳 Nx initialization
-
- NX   🧑‍🔧 Please answer the following questions about the scripts found in your workspace in order to generate task runner configuration
-
-✔ Which scripts need to be run in order? (e.g. before building a project, dependent projects must be built) · build
-✔ Which scripts are cacheable? (Produce the same output given the same input, e.g. build, test and lint usually are, serve and start are not) · typecheck, build, lint
-✔ Does the "typecheck" script create any outputs? If not, leave blank, otherwise provide a path relative to a project root (e.g. dist, lib, build, coverage) ·
-✔ Does the "build" script create any outputs? If not, leave blank, otherwise provide a path relative to a project root (e.g. dist, lib, build, coverage) · dist
-✔ Does the "lint" script create any outputs? If not, leave blank, otherwise provide a path relative to a project root (e.g. dist, lib, build, coverage) ·
-✔ Would you like remote caching to make your build faster? · skip
-
- ...
-
- NX   👀 Explore Your Workspace
-
-Run "nx graph" to show the graph of the workspace. It will show tasks that you can run with Nx.
-Read this guide on exploring your workspace: https://nx.dev/features/explore-graph
-```
-
 ## Explore Your Workspace
 
 If you run `nx graph` as instructed, you'll see the dependencies between your projects.
 
 ```shell {% path="~/tuskydesigns" %}
-npx nx graph
+npx nx graph --focus=@tuskdesign/demo
 ```
 
 {% graph title="Tusk Design" height="200px" jsonFile="shared/tutorials/npm-workspaces-project-graph.json" %}
@@ -402,9 +350,15 @@ Now connect your repository to Nx Cloud with the following command:
 npx nx connect
 ```
 
-Once the script is finished, it will print a link in the terminal to register your repository in your [Nx Cloud](https://cloud.nx.app) account. Click the link and follow the steps provided to make sure Nx Cloud is enabled on the main branch of your repository.
+A browser window will open to register your repository in your [Nx Cloud](https://cloud.nx.app) account. The link is also printed to the terminal if the windows does not open, or you closed it before finishing the steps. The app will guide you to create a PR to enable Nx Cloud on your repository.
 
-When you're finished, you'll need to pull down the changes that were merged into the hosted repository with this command:
+![](/shared/tutorials/nx-cloud-github-connect.avif)
+
+Once the PR is created, merge it into your main branch.
+
+![](/shared/tutorials/github-cloud-pr-merged.avif)
+
+And make sure you pull the main branch locally to get the latest changes:
 
 ```shell
 git pull
