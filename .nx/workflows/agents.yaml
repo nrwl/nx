@@ -61,6 +61,7 @@ launch-templates:
       GIT_COMMITTER_EMAIL: test@test.com
       GIT_COMMITTER_NAME: Test
       SELECTED_PM: 'npm' # explicitly define npm for macOS tests
+      # Fix typo in PNPM_HOME (was PNPN_HOME)
       PNPM_HOME: '~/work/workspace/pnpm/store'
     init-steps:
       - name: Checkout
