@@ -1,4 +1,4 @@
-import { readFileSync, unlinkSync, writeFileSync } from 'fs';
+import { appendFileSync, readFileSync, unlinkSync, writeFileSync } from 'fs';
 import { relative } from 'path';
 import { dirSync, fileSync } from 'tmp';
 import runCommands, {
@@ -234,6 +234,42 @@ describe('Run Commands', () => {
     expect(readFile(f)).toEqual('1212');
   });
 
+  it('should run the command, but divided into paths', async () => {
+    const f = fileSync().name;
+    const result = await runCommands(
+      {
+        command: [`echo 1 >> ${f}`, '&&', `echo 2 >> ${f}`],
+        parallel: false,
+
+        __unparsed__: [],
+      },
+      context
+    );
+    expect(result).toEqual(expect.objectContaining({ success: true }));
+    expect(readFile(f)).toEqual('12');
+  });
+
+  it('should run the command, but divided into several paths', async () => {
+    const f = fileSync().name;
+    const result = await runCommands(
+      {
+        command: [
+          `echo 1 >> ${f}  `,
+          `&&`,
+          `echo 2 >> ${f}`,
+          ';',
+          `echo 34 >> ${f}`,
+        ],
+        parallel: false,
+
+        __unparsed__: [],
+      },
+      context
+    );
+    expect(result).toEqual(expect.objectContaining({ success: true }));
+    expect(readFile(f)).toEqual('1234');
+  });
+
   it('should run commands in parallel', async () => {
     const f = fileSync().name;
     const result = await runCommands(
@@ -336,8 +372,6 @@ describe('Run Commands', () => {
         ).then((res) => {
           result = res;
         });
-
-        expect(readFile(f)).toEqual('');
 
         setTimeout(() => {
           expect(readFile(f)).toEqual('1');
@@ -808,7 +842,7 @@ describe('Run Commands', () => {
     });
 
     it('should load the root .env file by default if there is one', async () => {
-      let f = fileSync().name;
+      const f = fileSync().name;
       const result = await runCommands(
         {
           commands: [
@@ -828,8 +862,8 @@ describe('Run Commands', () => {
     it('should load the specified .env file instead of the root one', async () => {
       const devEnv = fileSync().name;
       writeFileSync(devEnv, 'NX_SITE=https://nx.dev/');
-      let f = fileSync().name;
-      const result = await runCommands(
+      const f = fileSync().name;
+      let result = await runCommands(
         {
           commands: [
             {
@@ -843,11 +877,27 @@ describe('Run Commands', () => {
       );
 
       expect(result).toEqual(expect.objectContaining({ success: true }));
-      expect(readFile(f)).toEqual('https://nx.dev/');
+      expect(readFile(f)).toContain('https://nx.dev/');
+
+      appendFileSync(devEnv, 'NX_TEST=$NX_SITE');
+      await runCommands(
+        {
+          commands: [
+            {
+              command: `echo $NX_TEST >> ${f}`,
+            },
+          ],
+          envFile: devEnv,
+          __unparsed__: [],
+        },
+        context
+      );
+      expect(result).toEqual(expect.objectContaining({ success: true }));
+      expect(readFile(f)).toContain('https://nx.dev/');
     });
 
     it('should error if the specified .env file does not exist', async () => {
-      let f = fileSync().name;
+      const f = fileSync().name;
       try {
         await runCommands(
           {

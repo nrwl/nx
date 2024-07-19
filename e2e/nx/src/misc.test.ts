@@ -334,6 +334,12 @@ describe('Nx Commands', () => {
       }
     }, 300000);
   });
+
+  it('should show help if no command provided', () => {
+    const output = runCLI('', { silenceError: true });
+    expect(output).toContain('Smart Monorepos · Fast CI');
+    expect(output).toContain('Commands:');
+  });
 });
 
 // TODO(colum): Change the fetcher to allow incremental migrations over multiple versions, allowing for beforeAll

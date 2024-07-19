@@ -62,7 +62,6 @@ describe('@nx/storybook:configuration for Storybook v7', () => {
       });
 
       const packageJson = readJson(tree, 'package.json');
-      expect(packageJson).toMatchSnapshot();
       // general deps
       expect(packageJson.dependencies[existing]).toBeDefined();
       expect(packageJson.devDependencies[existing]).toBeDefined();

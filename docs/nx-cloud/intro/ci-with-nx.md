@@ -14,6 +14,10 @@ Implementing an efficient CI setup for monorepos - while crucial - can be challe
 
 [Create an account on Nx Cloud](https://cloud.nx.app) and connect your repository.
 
+```shell
+npx nx connect
+```
+
 ## Learn about Nx on CI
 
 {% cards cols="2" lgCols="4" mdCols="4" smCols="2" %}

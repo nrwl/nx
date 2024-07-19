@@ -159,7 +159,7 @@ export class TaskOrchestrator {
       );
     }
 
-    this.options.lifeCycle.scheduleTask(task);
+    await this.options.lifeCycle.scheduleTask(task);
 
     return taskSpecificEnv;
   }
@@ -176,7 +176,7 @@ export class TaskOrchestrator {
             this.batchEnv
           );
         }
-        this.options.lifeCycle.scheduleTask(task);
+        await this.options.lifeCycle.scheduleTask(task);
       })
     );
   }
@@ -456,6 +456,13 @@ export class TaskOrchestrator {
             terminalOutput,
           });
         }
+      } else if (targetConfiguration.executor === 'nx:noop') {
+        writeFileSync(temporaryOutputPath, '');
+        results.push({
+          task,
+          status: 'success',
+          terminalOutput: '',
+        });
       } else {
         // cache prep
         const { code, terminalOutput } = await this.runTaskInForkedProcess(
@@ -520,7 +527,7 @@ export class TaskOrchestrator {
 
   // region Lifecycle
   private async preRunSteps(tasks: Task[], metadata: TaskMetadata) {
-    this.options.lifeCycle.startTasks(tasks, metadata);
+    await this.options.lifeCycle.startTasks(tasks, metadata);
   }
 
   private async postRunSteps(
@@ -573,7 +580,7 @@ export class TaskOrchestrator {
         'cache-results-end'
       );
     }
-    this.options.lifeCycle.endTasks(
+    await this.options.lifeCycle.endTasks(
       results.map((result) => {
         const code =
           result.status === 'success' ||

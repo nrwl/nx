@@ -103,11 +103,11 @@ export class AppMigrator extends ProjectMigrator<SupportedTargets> {
   }
 
   override async migrate(): Promise<void> {
+    await super.migrate();
+
     if (this.skipMigration === true) {
       return;
     }
-
-    await super.migrate();
 
     this.updateProjectConfiguration();
 

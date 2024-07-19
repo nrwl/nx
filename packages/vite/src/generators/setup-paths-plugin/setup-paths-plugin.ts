@@ -25,11 +25,14 @@ export async function setupPathsPlugin(
   }
 }
 
-function ensureImportExists(tree, file) {
+function ensureImportExists(tree: Tree, file: string) {
   const { tsquery } = require('@phenomnomnominal/tsquery');
   let content = tree.read(file, 'utf-8');
   const ast = tsquery.ast(content);
   const allImports = tsquery.query(ast, 'ImportDeclaration');
+  if (content.includes('@nx/vite/plugins/nx-tsconfig-paths.plugin')) {
+    return;
+  }
   if (allImports.length) {
     const lastImport = allImports[allImports.length - 1];
     tree.write(

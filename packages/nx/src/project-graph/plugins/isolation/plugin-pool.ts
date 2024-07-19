@@ -1,5 +1,6 @@
-import { ChildProcess, Serializable, fork } from 'child_process';
+import { ChildProcess, spawn } from 'child_process';
 import path = require('path');
+import { Socket, connect } from 'net';
 
 import { PluginConfiguration } from '../../../config/nx-json';
 
@@ -7,11 +8,21 @@ import { PluginConfiguration } from '../../../config/nx-json';
 // import { logger } from '../../utils/logger';
 
 import { LoadedNxPlugin, nxPluginCache } from '../internal-api';
-import { consumeMessage, isPluginWorkerResult } from './messaging';
+import { getPluginOsSocketPath } from '../../../daemon/socket-utils';
+import { consumeMessagesFromSocket } from '../../../utils/consume-messages-from-socket';
+import { signalToCode } from '../../../utils/exit-codes';
+
+import {
+  consumeMessage,
+  isPluginWorkerResult,
+  sendMessageOverSocket,
+} from './messaging';
 
 const cleanupFunctions = new Set<() => void>();
 
 const pluginNames = new Map<ChildProcess, string>();
+
+const MAX_MESSAGE_WAIT = 1000 * 60 * 5; // 5 minutes
 
 interface PendingPromise {
   promise: Promise<unknown>;
@@ -19,41 +30,22 @@ interface PendingPromise {
   rejector: (err: any) => void;
 }
 
-export function loadRemoteNxPlugin(
+type NxPluginWorkerCache = Map<string, Promise<LoadedNxPlugin>>;
+
+const nxPluginWorkerCache: NxPluginWorkerCache = (global[
+  'nxPluginWorkerCache'
+] ??= new Map());
+
+export async function loadRemoteNxPlugin(
   plugin: PluginConfiguration,
   root: string
-): Promise<LoadedNxPlugin> {
-  // this should only really be true when running unit tests within
-  // the Nx repo. We still need to start the worker in this case,
-  // but its typescript.
-  const isWorkerTypescript = path.extname(__filename) === '.ts';
-  const workerPath = path.join(__dirname, 'plugin-worker');
+): Promise<[Promise<LoadedNxPlugin>, () => void]> {
+  const cacheKey = JSON.stringify({ plugin, root });
+  if (nxPluginWorkerCache.has(cacheKey)) {
+    return [nxPluginWorkerCache.get(cacheKey), () => {}];
+  }
 
-  const env: Record<string, string> = {
-    ...process.env,
-    ...(isWorkerTypescript
-      ? {
-          // Ensures that the worker uses the same tsconfig as the main process
-          TS_NODE_PROJECT: path.join(
-            __dirname,
-            '../../../../tsconfig.lib.json'
-          ),
-        }
-      : {}),
-  };
-
-  const worker = fork(workerPath, [], {
-    stdio: ['ignore', 'inherit', 'inherit', 'ipc'],
-    env,
-    execArgv: [
-      ...process.execArgv,
-      // If the worker is typescript, we need to register ts-node
-      ...(isWorkerTypescript ? ['-r', 'ts-node/register'] : []),
-    ],
-  });
-  worker.send({ type: 'load', payload: { plugin, root } });
-
-  // logger.verbose(`[plugin-worker] started worker: ${worker.pid}`);
+  const { worker, socket } = await startPluginWorker();
 
   const pendingPromises = new Map<string, PendingPromise>();
 
@@ -61,18 +53,45 @@ export function loadRemoteNxPlugin(
 
   const cleanupFunction = () => {
     worker.off('exit', exitHandler);
+    socket.destroy();
     shutdownPluginWorker(worker);
+    nxPluginWorkerCache.delete(cacheKey);
   };
 
   cleanupFunctions.add(cleanupFunction);
 
-  return new Promise<LoadedNxPlugin>((res, rej) => {
-    worker.on(
-      'message',
-      createWorkerHandler(worker, pendingPromises, res, rej)
+  const pluginPromise = new Promise<LoadedNxPlugin>((res, rej) => {
+    sendMessageOverSocket(socket, {
+      type: 'load',
+      payload: { plugin, root },
+    });
+    // logger.verbose(`[plugin-worker] started worker: ${worker.pid}`);
+
+    const loadTimeout = setTimeout(() => {
+      rej(new Error('Plugin worker timed out when loading plugin:' + plugin));
+    }, MAX_MESSAGE_WAIT);
+
+    socket.on(
+      'data',
+      consumeMessagesFromSocket(
+        createWorkerHandler(
+          worker,
+          pendingPromises,
+          (val) => {
+            clearTimeout(loadTimeout);
+            res(val);
+          },
+          rej,
+          socket
+        )
+      )
     );
     worker.on('exit', exitHandler);
   });
+
+  nxPluginWorkerCache.set(cacheKey, pluginPromise);
+
+  return [pluginPromise, cleanupFunction];
 }
 
 function shutdownPluginWorker(worker: ChildProcess) {
@@ -96,15 +115,20 @@ function createWorkerHandler(
   worker: ChildProcess,
   pending: Map<string, PendingPromise>,
   onload: (plugin: LoadedNxPlugin) => void,
-  onloadError: (err?: unknown) => void
+  onloadError: (err?: unknown) => void,
+  socket: Socket
 ) {
   let pluginName: string;
 
-  return function (message: Serializable) {
+  let txId = 0;
+
+  return function (raw: string) {
+    const message = JSON.parse(raw);
+
     if (!isPluginWorkerResult(message)) {
       return;
     }
-    return consumeMessage(message, {
+    return consumeMessage(socket, message, {
       'load-result': (result) => {
         if (result.success) {
           const { name, createNodesPattern, include, exclude } = result;
@@ -118,9 +142,10 @@ function createWorkerHandler(
               ? [
                   createNodesPattern,
                   (configFiles, ctx) => {
-                    const tx = pluginName + ':createNodes:' + performance.now();
+                    const tx =
+                      pluginName + worker.pid + ':createNodes:' + txId++;
                     return registerPendingPromise(tx, pending, () => {
-                      worker.send({
+                      sendMessageOverSocket(socket, {
                         type: 'createNodes',
                         payload: { configFiles, context: ctx, tx },
                       });
@@ -131,9 +156,9 @@ function createWorkerHandler(
             createDependencies: result.hasCreateDependencies
               ? (ctx) => {
                   const tx =
-                    pluginName + ':createDependencies:' + performance.now();
+                    pluginName + worker.pid + ':createDependencies:' + txId++;
                   return registerPendingPromise(tx, pending, () => {
-                    worker.send({
+                    sendMessageOverSocket(socket, {
                       type: 'createDependencies',
                       payload: { context: ctx, tx },
                     });
@@ -143,9 +168,9 @@ function createWorkerHandler(
             processProjectGraph: result.hasProcessProjectGraph
               ? (graph, ctx) => {
                   const tx =
-                    pluginName + ':processProjectGraph:' + performance.now();
+                    pluginName + worker.pid + ':processProjectGraph:' + txId++;
                   return registerPendingPromise(tx, pending, () => {
-                    worker.send({
+                    sendMessageOverSocket(socket, {
                       type: 'processProjectGraph',
                       payload: { graph, ctx, tx },
                     });
@@ -155,9 +180,9 @@ function createWorkerHandler(
             createMetadata: result.hasCreateMetadata
               ? (graph, ctx) => {
                   const tx =
-                    pluginName + ':createMetadata:' + performance.now();
+                    pluginName + worker.pid + ':createMetadata:' + txId++;
                   return registerPendingPromise(tx, pending, () => {
-                    worker.send({
+                    sendMessageOverSocket(socket, {
                       type: 'createMetadata',
                       payload: { graph, context: ctx, tx },
                     });
@@ -222,26 +247,40 @@ function createWorkerExitHandler(
   };
 }
 
-process.on('exit', () => {
+let cleanedUp = false;
+const exitHandler = () => {
   for (const fn of cleanupFunctions) {
     fn();
   }
+  cleanedUp = true;
+};
+
+process.on('exit', exitHandler);
+process.on('SIGINT', () => {
+  exitHandler();
+  process.exit(signalToCode('SIGINT'));
 });
+process.on('SIGTERM', exitHandler);
 
 function registerPendingPromise(
   tx: string,
   pending: Map<string, PendingPromise>,
   callback: () => void
 ): Promise<any> {
-  let resolver, rejector;
+  let resolver, rejector, timeout;
 
   const promise = new Promise((res, rej) => {
-    resolver = res;
     rejector = rej;
+    resolver = res;
+
+    timeout = setTimeout(() => {
+      rej(new Error(`Plugin worker timed out when processing message ${tx}`));
+    }, MAX_MESSAGE_WAIT);
 
     callback();
   }).finally(() => {
     pending.delete(tx);
+    clearTimeout(timeout);
   });
 
   pending.set(tx, {
@@ -251,4 +290,86 @@ function registerPendingPromise(
   });
 
   return promise;
+}
+
+global.nxPluginWorkerCount ??= 0;
+async function startPluginWorker() {
+  // this should only really be true when running unit tests within
+  // the Nx repo. We still need to start the worker in this case,
+  // but its typescript.
+  const isWorkerTypescript = path.extname(__filename) === '.ts';
+  const workerPath = path.join(__dirname, 'plugin-worker');
+
+  const env: Record<string, string> = {
+    ...process.env,
+    ...(isWorkerTypescript
+      ? {
+          // Ensures that the worker uses the same tsconfig as the main process
+          TS_NODE_PROJECT: path.join(
+            __dirname,
+            '../../../../tsconfig.lib.json'
+          ),
+        }
+      : {}),
+  };
+
+  const ipcPath = getPluginOsSocketPath(
+    [process.pid, global.nxPluginWorkerCount++].join('-')
+  );
+
+  const worker = spawn(
+    process.execPath,
+    [
+      ...(isWorkerTypescript ? ['--require', 'ts-node/register'] : []),
+      workerPath,
+      ipcPath,
+    ],
+    {
+      stdio: 'inherit',
+      env,
+      detached: true,
+      shell: false,
+      windowsHide: true,
+    }
+  );
+  worker.unref();
+
+  let attempts = 0;
+  return new Promise<{
+    worker: ChildProcess;
+    socket: Socket;
+  }>((resolve, reject) => {
+    const id = setInterval(async () => {
+      const socket = await isServerAvailable(ipcPath);
+      if (socket) {
+        socket.unref();
+        clearInterval(id);
+        resolve({
+          worker,
+          socket,
+        });
+      } else if (attempts > 1000) {
+        // daemon fails to start, the process probably exited
+        // we print the logs and exit the client
+        reject('Failed to start plugin worker.');
+      } else {
+        attempts++;
+      }
+    }, 10);
+  });
+}
+
+function isServerAvailable(ipcPath: string): Promise<Socket | false> {
+  return new Promise((resolve) => {
+    try {
+      const socket = connect(ipcPath, () => {
+        resolve(socket);
+      });
+      socket.once('error', () => {
+        resolve(false);
+      });
+    } catch (err) {
+      resolve(false);
+    }
+  });
 }

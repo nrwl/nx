@@ -1576,6 +1576,15 @@
         "originalFilePath": "/packages/next/src/generators/cypress-component-configuration/schema.json",
         "path": "/nx-api/next/generators/cypress-component-configuration",
         "type": "generator"
+      },
+      "/nx-api/next/generators/convert-to-inferred": {
+        "description": "Convert an existing Next.js project(s) using `@nx/next:build` to use `@nx/next/plugin`. Defaults to migrating all projects. Pass '--project' to migrate a single project.",
+        "file": "generated/packages/next/generators/convert-to-inferred.json",
+        "hidden": false,
+        "name": "convert-to-inferred",
+        "originalFilePath": "/packages/next/src/generators/convert-to-inferred/schema.json",
+        "path": "/nx-api/next/generators/convert-to-inferred",
+        "type": "generator"
       }
     },
     "path": "/nx-api/next"
@@ -3241,6 +3250,15 @@
         "name": "convert-config-to-webpack-plugin",
         "originalFilePath": "/packages/webpack/src/generators/convert-config-to-webpack-plugin/schema.json",
         "path": "/nx-api/webpack/generators/convert-config-to-webpack-plugin",
+        "type": "generator"
+      },
+      "/nx-api/webpack/generators/convert-to-inferred": {
+        "description": "Convert existing Webpack project(s) using `@nx/webpack:wepack` executor to use `@nx/webpack/plugin`.",
+        "file": "generated/packages/webpack/generators/convert-to-inferred.json",
+        "hidden": false,
+        "name": "convert-to-inferred",
+        "originalFilePath": "/packages/webpack/src/generators/convert-to-inferred/schema.json",
+        "path": "/nx-api/webpack/generators/convert-to-inferred",
         "type": "generator"
       }
     },

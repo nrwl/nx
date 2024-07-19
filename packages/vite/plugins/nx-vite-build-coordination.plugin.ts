@@ -57,14 +57,24 @@ export function nxViteBuildCoordinationPlugin(
     );
   }
 
+  let firstBuildStart = true;
+
   return {
     name: 'nx-vite-build-coordination-plugin',
     async buildStart() {
-      if (!unregisterFileWatcher) {
+      if (firstBuildStart) {
+        firstBuildStart = false;
         await buildChangedProjects();
-        unregisterFileWatcher = await createFileWatcher();
-        process.on('exit', () => unregisterFileWatcher());
-        process.on('SIGINT', () => process.exit());
+        if (daemonClient.enabled()) {
+          unregisterFileWatcher = await createFileWatcher();
+          process.on('exit', () => unregisterFileWatcher());
+          process.on('SIGINT', () => process.exit());
+        } else {
+          output.warn({
+            title:
+              'Nx Daemon is not enabled. Projects will not be rebuilt when files change.',
+          });
+        }
       }
     },
   };

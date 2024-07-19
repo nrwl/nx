@@ -1,5 +1,6 @@
 import { minimatch } from 'minimatch';
 import type { ProjectGraphProjectNode } from '../config/project-graph';
+import { isGlobPattern } from './globs';
 
 const validPatternTypes = [
   'name', // Pattern is based on the project's name
@@ -17,8 +18,6 @@ interface ProjectPattern {
   // The pattern to match against
   value: string;
 }
-
-const globCharacters = ['*', '|', '{', '}', '(', ')'];
 
 /**
  * Find matching project names given a list of potential project names or globs.
@@ -166,7 +165,7 @@ function addMatchingProjectsByName(
     return;
   }
 
-  if (!globCharacters.some((c) => pattern.value.includes(c))) {
+  if (!isGlobPattern(pattern.value)) {
     return;
   }
 
@@ -201,7 +200,7 @@ function addMatchingProjectsByTag(
       continue;
     }
 
-    if (!globCharacters.some((c) => pattern.value.includes(c))) {
+    if (!isGlobPattern(pattern.value)) {
       continue;
     }
 

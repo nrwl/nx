@@ -1,7 +1,13 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
 
-import { normalizePath, workspaceRoot } from '@nx/devkit';
+import {
+  AggregateCreateNodesError,
+  logger,
+  normalizePath,
+  workspaceRoot,
+} from '@nx/devkit';
+import { combineGlobPatterns } from 'nx/src/utils/globs';
 
 import { execGradleAsync } from './exec-gradle';
 import { hashWithWorkspaceContext } from 'nx/src/utils/workspace-context';
@@ -25,7 +31,22 @@ export interface GradleReport {
 let gradleReportCache: GradleReport;
 let gradleCurrentConfigHash: string;
 
-export const gradleConfigGlob = '**/build.{gradle.kts,gradle}';
+export const GRADLE_BUILD_FILES = new Set(['build.gradle', 'build.gradle.kts']);
+export const GRADLE_TEST_FILES = [
+  '**/src/test/java/**/*Test.java',
+  '**/src/test/kotlin/**/*Test.kt',
+  '**/src/test/java/**/*Tests.java',
+  '**/src/test/kotlin/**/*Tests.kt',
+];
+
+export const gradleConfigGlob = combineGlobPatterns(
+  ...Array.from(GRADLE_BUILD_FILES).map((file) => `**/${file}`)
+);
+
+export const gradleConfigAndTestGlob = combineGlobPatterns(
+  ...Array.from(GRADLE_BUILD_FILES).map((file) => `**/${file}`),
+  ...GRADLE_TEST_FILES
+);
 
 export function getCurrentGradleReport() {
   if (!gradleReportCache) {
@@ -49,13 +70,38 @@ export async function populateGradleReport(
   const gradleProjectReportStart = performance.mark(
     'gradleProjectReport:start'
   );
-  const projectReportLines = (
-    await execGradleAsync(['projectReport'], {
+  let projectReportLines;
+  try {
+    projectReportLines = await execGradleAsync(['projectReportAll'], {
       cwd: workspaceRoot,
-    })
-  )
+    });
+  } catch (e) {
+    try {
+      projectReportLines = await execGradleAsync(['projectReport'], {
+        cwd: workspaceRoot,
+      });
+      logger.warn(
+        'Could not run `projectReportAll` task. Ran `projectReport` instead. Please run `nx generate @nx/gradle:init` to generate the necessary tasks.'
+      );
+    } catch (e) {
+      throw new AggregateCreateNodesError(
+        [
+          [
+            null,
+            new Error(
+              'Could not run `projectReportAll` or `projectReport` task. Please run `nx generate @nx/gradle:init` to generate the necessary tasks.'
+            ),
+          ],
+        ],
+        []
+      );
+    }
+  }
+  projectReportLines = projectReportLines
     .toString()
-    .split(newLineSeparator);
+    .split(newLineSeparator)
+    .filter((line) => line.trim() !== '');
+
   const gradleProjectReportEnd = performance.mark('gradleProjectReport:end');
   performance.measure(
     'gradleProjectReport',
@@ -72,10 +118,6 @@ export function processProjectReports(
    * Map of Gradle File path to Gradle Project Name
    */
   const gradleFileToGradleProjectMap = new Map<string, string>();
-  /**
-   * Map of Gradle Project Name to Gradle File
-   */
-  const gradleProjectToGradleFileMap = new Map<string, string>();
   const dependenciesMap = new Map<string, string>();
   /**
    * Map of Gradle Build File to tasks type map
@@ -170,7 +212,6 @@ export function processProjectReports(
 
         gradleFileToOutputDirsMap.set(buildFile, outputDirMap);
         gradleFileToGradleProjectMap.set(buildFile, gradleProject);
-        gradleProjectToGradleFileMap.set(gradleProject, buildFile);
         gradleProjectToProjectName.set(gradleProject, projectName);
       }
       if (line.endsWith('taskReport')) {

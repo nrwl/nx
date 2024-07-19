@@ -202,6 +202,15 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "19.5.0-module-federation": {
+      "version": "19.5.0-beta.0",
+      "packages": {
+        "@module-federation/node": {
+          "version": "^2.3.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }

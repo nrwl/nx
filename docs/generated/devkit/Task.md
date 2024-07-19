@@ -13,6 +13,7 @@ A representation of the invocation of an Executor
 - [id](../../devkit/documents/Task#id): string
 - [outputs](../../devkit/documents/Task#outputs): string[]
 - [overrides](../../devkit/documents/Task#overrides): any
+- [parallelism](../../devkit/documents/Task#parallelism): boolean
 - [projectRoot](../../devkit/documents/Task#projectroot): string
 - [startTime](../../devkit/documents/Task#starttime): number
 - [target](../../devkit/documents/Task#target): Object
@@ -81,6 +82,14 @@ The outputs the task may produce
 • **overrides**: `any`
 
 Overrides for the configured options of the target
+
+---
+
+### parallelism
+
+• **parallelism**: `boolean`
+
+Determines if a given task should be parallelizable.
 
 ---
 

@@ -239,7 +239,7 @@ describe('Remix - Convert To Inferred', () => {
         plugin: '@nx/remix/plugin',
         options: {
           buildTargetName: 'build',
-          devTargetName: defaultTestProjectOptions.serveTargetName,
+          devTargetName: 'custom-dev',
           startTargetName: 'start',
           typecheckTargetName: 'typecheck',
           staticServeTargetName: 'static-serve',

@@ -1,4 +1,4 @@
-# Nx Console Troubleshooting
+# Troubleshoot Nx Console Issues
 
 Often, issues with Nx Console are the result of underlying issues with Nx. Make sure to read the [Nx installation troubleshooting docs](/troubleshooting/troubleshoot-nx-install-issues) for more help.
 

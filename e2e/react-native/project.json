@@ -10,20 +10,6 @@
     },
     "e2e-macos-ci--src/react-native.test.ts": {
       "inputs": ["e2eInputs", "^production"]
-    },
-    "e2e-ci--src/react-native-legacy.test.ts": {
-      "dependsOn": [
-        "nx:build-native",
-        "@nx/nx-source:populate-local-registry-storage"
-      ],
-      "inputs": ["e2eInputs", "^production"]
-    },
-    "e2e-ci--src/react-native.test.ts": {
-      "dependsOn": [
-        "nx:build-native",
-        "@nx/nx-source:populate-local-registry-storage"
-      ],
-      "inputs": ["e2eInputs", "^production"]
     }
   }
 }

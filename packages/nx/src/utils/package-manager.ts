@@ -156,7 +156,7 @@ export function getPackageManagerCommand(
 
       return {
         install: 'npm install',
-        ciInstall: 'npm ci',
+        ciInstall: 'npm ci --legacy-peer-deps',
         updateLockFile: 'npm install --package-lock-only',
         add: 'npm install',
         addDev: 'npm install -D',

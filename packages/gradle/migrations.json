@@ -1,4 +1,17 @@
 {
-  "generators": {},
+  "generators": {
+    "add-project-report-all": {
+      "version": "19.4.0-beta.1",
+      "cli": "nx",
+      "description": "Add task projectReportAll to build.gradle file",
+      "factory": "./src/migrations/19-4-0/add-project-report-all"
+    },
+    "change-regex-production-test": {
+      "version": "19.4.1-beta.0",
+      "cli": "nx",
+      "description": "This function changes !{projectRoot}/test/**/* in nx.json for production to !{projectRoot}/src/test/**/*",
+      "factory": "./src/migrations/19-4-1/change-regex-test-production"
+    }
+  },
   "packageJsonUpdates": {}
 }

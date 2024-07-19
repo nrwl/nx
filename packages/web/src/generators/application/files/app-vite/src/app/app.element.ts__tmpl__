@@ -89,7 +89,7 @@ export class AppElement extends HTMLElement {
                 />
               </svg>
             </a>
-            <a href="https://blog.nrwl.io/?utm_source=nx-project" target="_blank" rel="noreferrer" class="list-item-link">
+            <a href="https://nx.dev/blog/?utm_source=nx-project" target="_blank" rel="noreferrer" class="list-item-link">
               <svg
                 fill="none"
                 stroke="currentColor"

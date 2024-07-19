@@ -11,7 +11,6 @@ import cx from 'classnames';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { ButtonLink } from '../button';
-import { NxIcon } from '../nx-icon';
 import { Popover, Transition } from '@headlessui/react';
 import { TwoColumnsMenu } from './two-columns-menu';
 import {
@@ -20,9 +19,9 @@ import {
   solutionsMenuItems,
 } from './menu-items';
 import { SectionsMenu } from './sections-menu';
-import { NxCloudIcon } from '../nx-cloud-icon';
 import { AnnouncementBanner } from '../announcement-banner';
 import { DiscordIcon } from '../discord-icon';
+import { NxCloudIcon, NxIcon } from '@nx/nx-dev/ui-icons';
 
 function Menu({ tabs }: { tabs: any[] }): JSX.Element {
   return (
@@ -43,6 +42,7 @@ function Menu({ tabs }: { tabs: any[] }): JSX.Element {
               'whitespace-nowrap border-b-2 py-2 text-sm font-medium'
             )}
             aria-current={tab.current ? 'page' : undefined}
+            prefetch={false}
           >
             {tab.name}
           </Link>
@@ -203,6 +203,7 @@ export function DocumentationHeader({
           <Link
             href="/"
             className="flex flex-grow items-center px-4 text-slate-900 lg:px-0 dark:text-white"
+            prefetch={false}
           >
             <span className="sr-only">Nx</span>
             <NxIcon aria-hidden="true" className="h-8 w-8" />
@@ -210,6 +211,7 @@ export function DocumentationHeader({
           <Link
             href="/getting-started/intro"
             className="ml-2 hidden items-center px-4 text-slate-900 lg:flex lg:px-0 dark:text-white"
+            prefetch={false}
           >
             <span className="text-xl font-bold uppercase tracking-wide">
               Docs
@@ -320,13 +322,15 @@ export function DocumentationHeader({
               href="/getting-started/intro"
               title="Documentation"
               className="hidden px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-slate-200 dark:hover:text-sky-500"
+              prefetch={false}
             >
-              Documentation
+              Docs
             </Link>
             <Link
               href="/blog"
               title="Blog"
               className="hidden px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-slate-200 dark:hover:text-sky-500"
+              prefetch={false}
             >
               Blog
             </Link>
@@ -391,6 +395,7 @@ export function DocumentationHeader({
               className="hidden cursor-pointer px-3 py-2 text-sm font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-slate-200 dark:hover:text-sky-500"
               title="Contact Us"
               href="/contact"
+              prefetch={false}
             >
               Contact
             </Link>

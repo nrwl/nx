@@ -286,7 +286,7 @@ This is one of our biggest Nx Cloud On-Prem releases. It also marks a change in 
 
 A few months ago we announced a complete re-design of the Nx Cloud UI! It's faster, easier to use and pleasant to look at! We're now bringing this to On-Prem users as well:
 
-You can read more about it in our [announcement blog post](https://blog.nrwl.io/nx-cloud-3-0-faster-more-efficient-modernized-36ac5ae33b86).
+You can read more about it in our [announcement blog post](/blog/nx-cloud-3-0-faster-more-efficient-modernized).
 
 ##### Pricing updates
 
@@ -310,7 +310,7 @@ We completely re-wrote our Task Distribution engine, which should result in much
 
 We've also added a new internal task queueing system, which should further improve the performance of DTE. While this is an implementation detail which will be automatically enabled in future releases, you can test it out today by setting [`enableMessageQueue: true`](https://github.com/nrwl/nx-cloud-helm/blob/main/charts/nx-cloud/values.yaml#L18) in your Helm config.
 
-You can read more about the recent DTE improvements in our [Nx Cloud 3.0 blog post](https://blog.nrwl.io/nx-cloud-3-0-faster-more-efficient-modernized-36ac5ae33b86).
+You can read more about the recent DTE improvements in our [Nx Cloud 3.0 blog post](/blog/nx-cloud-3-0-faster-more-efficient-modernized).
 
 ##### Misc updates
 

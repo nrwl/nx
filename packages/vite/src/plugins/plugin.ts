@@ -5,6 +5,7 @@ import {
   createNodesFromFiles,
   CreateNodesV2,
   detectPackageManager,
+  getPackageManagerCommand,
   joinPathFragments,
   logger,
   ProjectConfiguration,
@@ -21,6 +22,8 @@ import { getLockFileName } from '@nx/js';
 import { loadViteDynamicImport } from '../utils/executor-utils';
 import { hashObject } from 'nx/src/hasher/file-hasher';
 
+const pmc = getPackageManagerCommand();
+
 export interface VitePluginOptions {
   buildTargetName?: string;
   testTargetName?: string;
@@ -28,6 +31,7 @@ export interface VitePluginOptions {
   previewTargetName?: string;
   serveStaticTargetName?: string;
 }
+
 type ViteTargets = Pick<ProjectConfiguration, 'targets' | 'metadata'>;
 
 function readTargetsCache(cachePath: string): Record<string, ViteTargets> {
@@ -229,6 +233,19 @@ async function buildTarget(
       },
     ],
     outputs,
+    metadata: {
+      technologies: ['vite'],
+      description: `Run Vite build`,
+      help: {
+        command: `${pmc.exec} vite build --help`,
+        example: {
+          options: {
+            sourcemap: true,
+            manifest: 'manifest.json',
+          },
+        },
+      },
+    },
   };
 }
 
@@ -237,6 +254,18 @@ function serveTarget(projectRoot: string) {
     command: `vite serve`,
     options: {
       cwd: joinPathFragments(projectRoot),
+    },
+    metadata: {
+      technologies: ['vite'],
+      description: `Starts Vite dev server`,
+      help: {
+        command: `${pmc.exec} vite --help`,
+        example: {
+          options: {
+            port: 3000,
+          },
+        },
+      },
     },
   };
 
@@ -248,6 +277,18 @@ function previewTarget(projectRoot: string) {
     command: `vite preview`,
     options: {
       cwd: joinPathFragments(projectRoot),
+    },
+    metadata: {
+      technologies: ['vite'],
+      description: `Locally preview Vite production build`,
+      help: {
+        command: `${pmc.exec} vite preview --help`,
+        example: {
+          options: {
+            port: 3000,
+          },
+        },
+      },
     },
   };
 
@@ -275,6 +316,19 @@ async function testTarget(
       { env: 'CI' },
     ],
     outputs,
+    metadata: {
+      technologies: ['vite'],
+      description: `Run Vite tests`,
+      help: {
+        command: `${pmc.exec} vitest --help`,
+        example: {
+          options: {
+            bail: 1,
+            coverage: true,
+          },
+        },
+      },
+    },
   };
 }
 
@@ -311,7 +365,7 @@ function getOutputs(
 
   const isBuildable =
     build?.lib ||
-    build?.rollupOptions?.inputs ||
+    build?.rollupOptions?.input ||
     existsSync(join(workspaceRoot, projectRoot, 'index.html'));
 
   const reportsDirectoryPath = normalizeOutputPath(

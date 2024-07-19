@@ -1,20 +1,23 @@
 import type { Tree } from '@nx/devkit';
 import { generateFiles, joinPathFragments } from '@nx/devkit';
-import type { NormalizedSchema } from './normalized-schema';
 import { getRelativePathToRootTsConfig, getRootTsConfigFileName } from '@nx/js';
-import { updateProjectRootTsConfig } from '../../utils/update-project-root-tsconfig';
+import { lt } from 'semver';
 import { UnitTestRunner } from '../../../utils/test-runners';
-import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
 import { validateHtmlSelector } from '../../utils/selector';
+import { updateProjectRootTsConfig } from '../../utils/update-project-root-tsconfig';
+import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
+import type { NormalizedSchema } from './normalized-schema';
 
 export async function createFiles(
   tree: Tree,
   options: NormalizedSchema,
   rootOffset: string
 ) {
-  const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
+  const { major: angularMajorVersion, version: angularVersion } =
+    getInstalledAngularVersionInfo(tree);
   const isUsingApplicationBuilder =
     angularMajorVersion >= 17 && options.bundler === 'esbuild';
+  const disableModernClassFieldsBehavior = lt(angularVersion, '18.1.0-rc.0');
 
   const rootSelector = `${options.prefix}-root`;
   validateHtmlSelector(rootSelector);
@@ -36,7 +39,9 @@ export async function createFiles(
     angularMajorVersion,
     rootOffset,
     isUsingApplicationBuilder,
+    disableModernClassFieldsBehavior,
     useEventCoalescing: angularMajorVersion >= 18,
+    useRouterTestingModule: angularMajorVersion < 18,
     tpl: '',
   };
 
