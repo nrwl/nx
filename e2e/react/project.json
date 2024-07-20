@@ -4,62 +4,6 @@
   "sourceRoot": "e2e/react",
   "projectType": "application",
   "implicitDependencies": ["react"],
-  "targets": {
-    "e2e-ci--src/react-package.test.ts": {
-      "dependsOn": [
-        "nx:build-native",
-        "@nx/nx-source:populate-local-registry-storage"
-      ],
-      "inputs": ["e2eInputs", "^production"]
-    },
-    "e2e-ci--src/react.test.ts": {
-      "dependsOn": [
-        "nx:build-native",
-        "@nx/nx-source:populate-local-registry-storage"
-      ],
-      "inputs": ["e2eInputs", "^production"]
-    },
-    "e2e-ci--src/cypress-component-tests.test.ts": {
-      "dependsOn": [
-        "nx:build-native",
-        "@nx/nx-source:populate-local-registry-storage"
-      ],
-      "inputs": ["e2eInputs", "^production"]
-    },
-    "e2e-ci--src/playwright.test.ts": {
-      "dependsOn": [
-        "nx:build-native",
-        "@nx/nx-source:populate-local-registry-storage"
-      ],
-      "inputs": ["e2eInputs", "^production"]
-    },
-    "e2e-ci--src/react-module-federation.test.ts": {
-      "dependsOn": [
-        "nx:build-native",
-        "@nx/nx-source:populate-local-registry-storage"
-      ],
-      "inputs": ["e2eInputs", "^production"]
-    },
-    "e2e-ci--src/react-vite.test.ts": {
-      "dependsOn": [
-        "nx:build-native",
-        "@nx/nx-source:populate-local-registry-storage"
-      ],
-      "inputs": ["e2eInputs", "^production"]
-    },
-    "e2e-ci--src/react-webpack.test.ts": {
-      "dependsOn": [
-        "nx:build-native",
-        "@nx/nx-source:populate-local-registry-storage"
-      ],
-      "inputs": ["e2eInputs", "^production"]
-    },
-    "e2e-ci--src/react-package-legacy.test.ts": {
-      "dependsOn": [
-        "nx:build-native",
-        "@nx/nx-source:populate-local-registry-storage"
-      ],
-      "inputs": ["e2eInputs", "^production"]
-    }
-  }
+  "// targets": "to see all targets run: nx show project e2e-react --web",
+  "targets": {}
 }

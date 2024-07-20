@@ -1,0 +1,87 @@
+import { ShaderGradient, ShaderGradientCanvas } from 'shadergradient';
+
+export default function Shader(): JSX.Element {
+  return (
+    <>
+      <div className="absolute left-0 top-0 z-10 h-screen w-screen overflow-hidden bg-white text-gray-50">
+        {/*COTTON CANDY*/}
+        {/*<ShaderGradientCanvas
+          pointerEvents="none"
+          eventPrefix="client"
+          fov={45}
+          pixelDensity={1}
+          className="pointer-events-none"
+        >
+          <ShaderGradient
+            brightness={4}
+            cDistance={5}
+            color1="#ebedff"
+            color2="#f3f2f8"
+            color3="#dbf8ff"
+            frameRate={10}
+            grain="off"
+            lightType="3d"
+            positionX={0}
+            positionY={1.8}
+            positionZ={0}
+            range="enabled"
+            rangeEnd={40}
+            rangeStart={0}
+            reflection={0.1}
+            rotationX={0}
+            rotationY={0}
+            rotationZ={-90}
+            shader="defaults"
+            type="waterPlane"
+            uDensity={1}
+            uFrequency={5.5}
+            uSpeed={0.3}
+            uStrength={3}
+            uTime={0.2}
+          />
+        </ShaderGradientCanvas>*/}
+
+        {/*UNIVERSE*/}
+        <ShaderGradientCanvas
+          pointerEvents="none"
+          eventPrefix="client"
+          fov={45}
+          pixelDensity={1}
+          className="pointer-events-none"
+        >
+          <ShaderGradient
+            brightness={4}
+            cAzimuthAngle={180}
+            cameraZoom={1}
+            cDistance={4}
+            cPolarAngle={115}
+            color1="#5606FF"
+            color2="#FE8989"
+            color3="#000000"
+            frameRate={10}
+            grain="off"
+            lightType="3d"
+            positionX={-0.5}
+            positionY={0.1}
+            positionZ={0}
+            range="enabled"
+            rangeEnd={40}
+            rangeStart={0}
+            reflection={0.1}
+            rotationX={0}
+            rotationY={0}
+            rotationZ={235}
+            shader="defaults"
+            type="waterPlane"
+            uAmplitude={0}
+            uDensity={1.1}
+            uFrequency={5.5}
+            uSpeed={0.1}
+            uStrength={2.4}
+            uTime={0.2}
+          />
+        </ShaderGradientCanvas>
+      </div>
+    </>
+  );
+}

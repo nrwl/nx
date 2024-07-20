@@ -183,4 +183,18 @@ describe('createNodesFromFiles', () => {
       `);
     }
   });
+
+  it('should filter out null results', async () => {
+    const createNodes = [
+      '**/*',
+      () => {
+        return null;
+      },
+    ] as const;
+    const options = {};
+
+    expect(
+      await createNodesFromFiles(createNodes[1], configFiles, options, context)
+    ).toEqual([]);
+  });
 });

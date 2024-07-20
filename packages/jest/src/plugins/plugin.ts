@@ -25,7 +25,7 @@ import {
   clearRequireCache,
   loadConfigFile,
 } from '@nx/devkit/src/utils/config-utils';
-import { getGlobPatternsFromPackageManagerWorkspaces } from 'nx/src/plugins/package-json-workspaces';
+import { getGlobPatternsFromPackageManagerWorkspaces } from 'nx/src/plugins/package-json';
 import { combineGlobPatterns } from 'nx/src/utils/globs';
 import { minimatch } from 'minimatch';
 import { hashObject } from 'nx/src/devkit-internals';

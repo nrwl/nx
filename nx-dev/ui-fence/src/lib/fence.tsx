@@ -28,18 +28,25 @@ function resolveLanguage(lang: string) {
 function CodeWrapper(options: {
   fileName: string;
   command: string;
+  title: string;
   path: string;
   language: string;
   children: string; // intentionally typed as such
 }): ({ children }: { children: ReactNode }) => JSX.Element {
   return ({ children }: { children: ReactNode }) =>
     options.language === 'shell' ? (
-      <TerminalOutput command={options.children} path="" content={null} />
+      <TerminalOutput
+        command={options.children}
+        path=""
+        title={options.title}
+        content={null}
+      />
     ) : options.command ? (
       <TerminalOutput
         content={children}
         command={options.command}
         path={options.path}
+        title={options.title}
       />
     ) : (
       <CodeOutput content={children} fileName={options.fileName} />
@@ -75,6 +82,7 @@ function processHighlightLines(highlightLines: any): number[] {
 export interface FenceProps {
   children: string;
   command: string;
+  title: string;
   path: string;
   fileName: string;
   highlightLines: number[];
@@ -89,6 +97,7 @@ export interface FenceProps {
 export function Fence({
   children,
   command,
+  title,
   path,
   fileName,
   lineGroups,
@@ -206,6 +215,7 @@ export function Fence({
           PreTag={CodeWrapper({
             fileName,
             command,
+            title,
             path,
             language,
             children,

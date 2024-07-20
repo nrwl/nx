@@ -21,11 +21,15 @@
     "ts-node",
     "tsconfig-paths",
     "semver",
+    "webpack",
+    "express",
+    "http-proxy-middleware",
     "http-server",
     "magic-string",
     "enquirer",
     "find-cache-dir",
-    "piscina"
+    "piscina",
+    "webpack"
   ],
   "keepLifecycleScripts": true
 }

@@ -20,7 +20,7 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      - run: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-jvm" --stop-agents-after="build"
+      - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-jvm" --stop-agents-after="build"
 
       - nx/set-shas:
           main-branch-name: 'main'
@@ -61,7 +61,7 @@ jobs:
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      - run: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-jvm" --stop-agents-after="build"
+      - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-jvm" --stop-agents-after="build"
 
       - name: Set up JDK 17 for x64
         uses: actions/setup-java@v4
@@ -101,7 +101,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Connect your workspace by running "nx connect" and uncomment this
-      # - run: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-jvm" --stop-agents-after="build"
+      # - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-jvm" --stop-agents-after="build"
 
       - nx/set-shas:
           main-branch-name: 'main'
@@ -143,7 +143,7 @@ jobs:
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Connect your workspace by running "nx connect" and uncomment this
-      # - run: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-jvm" --stop-agents-after="build"
+      # - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-jvm" --stop-agents-after="build"
 
       - name: Set up JDK 17 for x64
         uses: actions/setup-java@v4

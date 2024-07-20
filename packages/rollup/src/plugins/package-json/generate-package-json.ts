@@ -12,12 +12,14 @@ export interface GeneratePackageJsonOptions {
   additionalEntryPoints?: string[];
 }
 
+export const pluginName = 'rollup-plugin-nx-generate-package-json';
+
 export function generatePackageJson(
   options: GeneratePackageJsonOptions,
   packageJson: PackageJson
 ): Plugin {
   return {
-    name: 'rollup-plugin-nx-generate-package-json',
+    name: pluginName,
     writeBundle: () => {
       updatePackageJson(options, packageJson);
     },

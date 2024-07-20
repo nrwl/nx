@@ -2,7 +2,7 @@ import { shouldMergeAngularProjects } from '../adapter/angular-json';
 import { ProjectGraphProcessor } from '../config/project-graph';
 import { TargetConfiguration } from '../config/workspace-json-project-json';
 import ProjectJsonProjectsPlugin from '../plugins/project-json/build-nodes/project-json';
-import * as PackageJsonWorkspacesPlugin from '../plugins/package-json-workspaces';
+import * as PackageJsonWorkspacesPlugin from '../plugins/package-json';
 import { NxPluginV2 } from '../project-graph/plugins';
 
 /**

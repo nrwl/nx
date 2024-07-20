@@ -29,14 +29,14 @@
         "tags": []
       },
       {
-        "id": "connect-to-cloud",
-        "name": "Connect Nx Cloud",
+        "id": "connect-to-nx-cloud",
+        "name": "Connect to Nx Cloud",
         "description": "",
         "mediaImage": "",
         "file": "nx-cloud/intro/connect-to-cloud",
         "itemList": [],
         "isExternal": false,
-        "path": "/ci/intro/connect-to-cloud",
+        "path": "/ci/intro/connect-to-nx-cloud",
         "tags": []
       },
       {
@@ -100,15 +100,15 @@
     "path": "/ci/intro/why-nx-cloud",
     "tags": []
   },
-  "/ci/intro/connect-to-cloud": {
-    "id": "connect-to-cloud",
-    "name": "Connect Nx Cloud",
+  "/ci/intro/connect-to-nx-cloud": {
+    "id": "connect-to-nx-cloud",
+    "name": "Connect to Nx Cloud",
     "description": "",
     "mediaImage": "",
     "file": "nx-cloud/intro/connect-to-cloud",
     "itemList": [],
     "isExternal": false,
-    "path": "/ci/intro/connect-to-cloud",
+    "path": "/ci/intro/connect-to-nx-cloud",
     "tags": []
   },
   "/ci/intro/tutorials": {

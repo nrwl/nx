@@ -293,7 +293,9 @@ async function importPluginModule(pluginPath: string): Promise<NxPlugin> {
   const m = await import(pluginPath);
   if (
     m.default &&
-    ('createNodes' in m.default || 'createDependencies' in m.default)
+    ('createNodes' in m.default ||
+      'createNodesV2' in m.default ||
+      'createDependencies' in m.default)
   ) {
     return m.default;
   }

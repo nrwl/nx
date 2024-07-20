@@ -3,7 +3,7 @@ import { type Tree, readNxJson, updateNxJson } from '@nx/devkit';
 export function addMfEnvToTargetDefaultInputs(tree: Tree) {
   const nxJson = readNxJson(tree);
   const webpackExecutor = '@nx/webpack:webpack';
-  const mfEnvVar = 'NX_MF_DEV_SERVER_STATIC_REMOTES';
+  const mfEnvVar = 'NX_MF_DEV_REMOTES';
 
   nxJson.targetDefaults ??= {};
   nxJson.targetDefaults[webpackExecutor] ??= {};

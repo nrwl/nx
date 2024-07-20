@@ -6,12 +6,14 @@ export function addRemoteToDynamicHost(
   remotePort: number,
   pathToMfManifest: string
 ) {
-  const current = tree.read(pathToMfManifest, 'utf8');
-  tree.write(
-    pathToMfManifest,
-    JSON.stringify({
-      ...JSON.parse(current),
-      [remoteName]: `http://localhost:${remotePort}`,
-    })
-  );
+  if (tree.exists(pathToMfManifest)) {
+    const current = tree.read(pathToMfManifest, 'utf8');
+    tree.write(
+      pathToMfManifest,
+      JSON.stringify({
+        ...JSON.parse(current),
+        [remoteName]: `http://localhost:${remotePort}`,
+      })
+    );
+  }
 }

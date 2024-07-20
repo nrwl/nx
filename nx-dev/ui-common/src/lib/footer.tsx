@@ -8,7 +8,7 @@ export function Footer(): JSX.Element {
     solutions: [
       { name: 'Nx Enterprise', href: '/enterprise' },
       { name: 'Nx', href: 'https://nx.dev' },
-      { name: 'Nx Cloud', href: 'https://nx.app/?utm_source=nx.dev' },
+      { name: 'Nx Cloud', href: '/nx-cloud' },
     ],
     resources: [
       { name: 'Blog', href: '/blog' },
@@ -138,13 +138,13 @@ export function Footer(): JSX.Element {
   };
   return (
     <footer
-      className="bg-slate-50 dark:bg-slate-900"
+      className="bg-white dark:bg-slate-950"
       aria-labelledby="footer-heading"
     >
       <h2 id="footer-heading" className="sr-only">
         Footer
       </h2>
-      <div className="mx-auto max-w-7xl px-4 pt-12 opacity-50 transition-opacity hover:opacity-100 sm:px-6 lg:px-8 lg:pt-16">
+      <div className="mx-auto max-w-7xl px-4 pt-12 transition-opacity sm:px-6 lg:px-8 lg:pt-16 lg:opacity-50 lg:hover:opacity-100">
         <div className="xl:grid xl:grid-cols-3 xl:gap-8">
           <div className="space-y-4 text-slate-700 xl:col-span-1 dark:text-slate-300">
             <svg
@@ -164,8 +164,8 @@ export function Footer(): JSX.Element {
                   key={item.name}
                   href={item.href}
                   title={item.label}
-                  className="text-sm text-slate-500 hover:text-slate-600 dark:hover:text-slate-400"
                   prefetch={false}
+                  className="text-sm text-slate-500 hover:text-slate-600 dark:hover:text-slate-400"
                 >
                   <span className="sr-only">{item.name}</span>
                   <item.icon className="h-6 w-6" aria-hidden="true" />
@@ -173,7 +173,7 @@ export function Footer(): JSX.Element {
               ))}
             </div>
             <div className="flex items-center text-sm">
-              Preferences <ThemeSwitcher />
+              Theme <ThemeSwitcher />
             </div>
           </div>
           <div className="mt-12 grid grid-cols-2 gap-8 xl:col-span-2 xl:mt-0">
@@ -187,8 +187,8 @@ export function Footer(): JSX.Element {
                     <li key={item.name}>
                       <Link
                         href={item.href}
-                        className="text-sm text-slate-500 hover:text-slate-600 dark:hover:text-slate-400"
                         prefetch={false}
+                        className="text-sm text-slate-500 hover:text-slate-600 dark:hover:text-slate-400"
                       >
                         {item.name}
                       </Link>
@@ -205,8 +205,8 @@ export function Footer(): JSX.Element {
                     <li key={item.name}>
                       <Link
                         href={item.href}
-                        className="text-sm text-slate-500 hover:text-slate-600 dark:hover:text-slate-400"
                         prefetch={false}
+                        className="text-sm text-slate-500 hover:text-slate-600 dark:hover:text-slate-400"
                       >
                         {item.name}
                       </Link>
@@ -225,8 +225,8 @@ export function Footer(): JSX.Element {
                     <li key={item.name}>
                       <Link
                         href={item.href}
-                        className="text-sm text-slate-500 hover:text-slate-600 dark:hover:text-slate-400"
                         prefetch={false}
+                        className="text-sm text-slate-500 hover:text-slate-600 dark:hover:text-slate-400"
                       >
                         {item.name}
                       </Link>
@@ -243,8 +243,8 @@ export function Footer(): JSX.Element {
                     <li key={item.name}>
                       <Link
                         href={item.href}
-                        className="text-sm text-slate-500 hover:text-slate-600 dark:hover:text-slate-400"
                         prefetch={false}
+                        className="text-sm text-slate-500 hover:text-slate-600 dark:hover:text-slate-400"
                       >
                         {item.name}
                       </Link>
@@ -259,7 +259,7 @@ export function Footer(): JSX.Element {
           <p className="text-sm text-slate-400 xl:text-center">
             &copy; 2024 made with{' '}
             <HeartIcon className="-mt-0.5 inline h-4 w-4" /> by{' '}
-            <Link
+            <a
               href="https://nx.app/company/?utm_source=nx.dev"
               target="_blank"
               rel="noreferrer"
@@ -273,7 +273,7 @@ export function Footer(): JSX.Element {
               >
                 <path d="m12 14.1-3.1 5-5.2-8.5v8.9H0v-15h3.7l5.2 8.9v-4l3 4.7zm.6-5.7V4.5H8.9v3.9h3.7zm5.6 4.1a2 2 0 0 0-2 1.3 2 2 0 0 1 2.4-.7c.4.2 1 .4 1.3.3a2.1 2.1 0 0 0-1.7-.9zm3.4 1c-.4 0-.8-.2-1.1-.6l-.2-.3a2.1 2.1 0 0 0-.5-.6 2 2 0 0 0-1.2-.3 2.5 2.5 0 0 0-2.3 1.5 2.3 2.3 0 0 1 4 .4.8.8 0 0 0 .9.3c.5 0 .4.4 1.2.5v-.1c0-.4-.3-.5-.8-.7zm2 1.3a.7.7 0 0 0 .4-.6c0-3-2.4-5.5-5.4-5.5a5.4 5.4 0 0 0-4.5 2.4l-1.5-2.4H8.9l3.5 5.4L9 19.5h3.6L14 17l1.6 2.4h3.5l-3.1-5a.7.7 0 0 1 0-.3 2.7 2.7 0 0 1 2.6-2.7c1.5 0 1.7.9 2 1.3.7.8 2 .5 2 1.5a.7.7 0 0 0 1 .6zm.4.2c-.2.3-.6.3-.8.6-.1.3.1.4.1.4s.4.2.6-.3V15z" />
               </svg>
-            </Link>
+            </a>
           </p>
         </div>
       </div>

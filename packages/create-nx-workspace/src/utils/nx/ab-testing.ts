@@ -33,42 +33,11 @@ const messageOptions: Record<string, MessageData[]> = {
         '\nRemote caching, task distribution and test splitting are provided by Nx Cloud. Read more at https://nx.dev/ci',
       fallback: { value: 'skip', key: 'setupNxCloud' },
     },
-    {
-      code: 'which-ci-provider2',
-      message: `Which CI provider would you like to use?`,
-      initial: 0,
-      choices: [
-        { value: 'github', name: 'GitHub Actions' },
-        { value: 'circleci', name: 'Circle CI' },
-        { value: 'gitlab', name: 'Gitlab' },
-        { value: 'azure', name: 'Azure DevOps' },
-        { value: 'bitbucket-pipelines', name: 'BitBucket Pipelines' },
-        {
-          value: 'skip',
-          name: '\nNo - I would not like to set up CI with remote caching, task distribution and test splitting',
-        },
-      ],
-      footer:
-        '\nRemote caching, task distribution and test splitting are provided by Nx Cloud. Read more at https://nx.dev/ci',
-    },
   ],
   /**
    * These messages are a fallback for setting up CI as well as when migrating major versions
    */
   setupNxCloud: [
-    {
-      code: 'enable-caching',
-      message: `Would you like remote caching to make your build faster?`,
-      initial: 0,
-      choices: [
-        { value: 'yes', name: 'Yes' },
-        { value: 'skip', name: 'Skip for now' },
-      ],
-      footer:
-        '\nRead more about remote caching at https://nx.dev/ci/features/remote-cache',
-      hint: `\n(can be disabled any time)`,
-      fallback: undefined,
-    },
     {
       code: 'enable-caching2',
       message: `Would you like remote caching to make your build faster?`,

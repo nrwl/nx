@@ -10,6 +10,7 @@ import {
 import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
 import { createAsyncIterable } from '@nx/devkit/src/utils/async-iterable';
 import { withNx } from '../../plugins/with-nx/with-nx';
+import { pluginName as generatePackageJsonPluginName } from '../../plugins/package-json/generate-package-json';
 import { calculateProjectBuildableDependencies } from '@nx/js/src/utils/buildable-libs-utils';
 
 export async function* rollupExecutor(
@@ -100,6 +101,14 @@ export async function createRollupOptions(
 
   const rollupConfig = withNx(options, {}, dependencies);
 
+  // `generatePackageJson` is a plugin rather than being embedded into @nx/rollup:rollup.
+  // Make sure the plugin is always present to keep the previous before of Nx < 19.4, where it was not a plugin.
+  const generatePackageJsonPlugin = Array.isArray(rollupConfig.plugins)
+    ? rollupConfig.plugins.find(
+        (p) => p['name'] === generatePackageJsonPluginName
+      )
+    : null;
+
   const userDefinedRollupConfigs = options.rollupConfig.map((plugin) =>
     loadConfigFile(plugin)
   );
@@ -122,6 +131,17 @@ export async function createRollupOptions(
       };
     }
   }
+
+  if (
+    generatePackageJsonPlugin &&
+    Array.isArray(finalConfig.plugins) &&
+    !finalConfig.plugins.some(
+      (p) => p['name'] === generatePackageJsonPluginName
+    )
+  ) {
+    finalConfig.plugins.push(generatePackageJsonPlugin);
+  }
+
   return finalConfig;
 }
 

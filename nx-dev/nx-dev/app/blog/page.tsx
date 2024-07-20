@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { blogApi } from '../../lib/blog.api';
 import { BlogContainer } from '@nx/nx-dev/ui-blog';
+import { DefaultLayout } from '@nx/nx-dev/ui-common';
 
 export const metadata: Metadata = {
   title: 'Nx Blog - Updates from the Nx & Nx Cloud team',
@@ -29,5 +30,9 @@ async function getBlogs() {
 
 export default async function BlogIndex() {
   const blogs = await getBlogs();
-  return <BlogContainer blogPosts={blogs} />;
+  return (
+    <DefaultLayout>
+      <BlogContainer blogPosts={blogs} />
+    </DefaultLayout>
+  );
 }
