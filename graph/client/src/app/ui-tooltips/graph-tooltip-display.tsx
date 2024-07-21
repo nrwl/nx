@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from 'use-sync-external-store/shim';
 import { getTooltipService } from '../machines/get-services';
 import {
+  CompositeNodeTooltip,
   ProjectEdgeNodeTooltip,
   ProjectNodeToolTip,
   TaskNodeTooltip,
@@ -10,6 +11,7 @@ import { ProjectNodeActions } from './project-node-actions';
 import { TaskNodeActions } from './task-node-actions';
 import { getExternalApiService, useRouteConstructor } from '@nx/graph/shared';
 import { useNavigate } from 'react-router-dom';
+import { CompositeNodeActions } from './composite-node-actions';
 
 const tooltipService = getTooltipService();
 
@@ -61,6 +63,12 @@ export function TooltipDisplay() {
         >
           <ProjectNodeActions {...currentTooltip.props} />
         </ProjectNodeToolTip>
+      );
+    } else if (currentTooltip.type === 'compositeNode') {
+      tooltipToRender = (
+        <CompositeNodeTooltip {...currentTooltip.props}>
+          <CompositeNodeActions {...currentTooltip.props} />
+        </CompositeNodeTooltip>
       );
     } else if (currentTooltip.type === 'projectEdge') {
       const onFileClick =

@@ -9,7 +9,6 @@ export interface ProjectNodeDataDefinition extends cy.NodeDataDefinition {
   id: string;
   type: 'app' | 'lib' | 'e2e';
   tags: string[];
-
   description?: string;
 }
 

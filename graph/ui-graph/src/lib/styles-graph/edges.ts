@@ -71,3 +71,21 @@ export const edgeStyles: Stylesheet[] = [
   dynamicEdges,
   transparentEdges,
 ];
+
+const compositeEdges: Stylesheet = {
+  selector: 'edge.compositeEdge',
+  style: {
+    width: 4,
+    label: 'data(label)',
+    'font-size': 36,
+    'text-rotation': 'autorotate',
+    'line-style': 'dashed',
+    'arrow-scale': 2,
+  },
+};
+
+export const compositeEdgeStyles: Stylesheet[] = [
+  allEdges,
+  implicitEdges,
+  compositeEdges,
+];

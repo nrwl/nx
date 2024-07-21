@@ -11,6 +11,7 @@ import { GraphInteractionEvents } from './graph-interaction-events';
 import { RenderGraph } from './util-cytoscape/render-graph';
 import { ProjectTraversalGraph } from './util-cytoscape/project-traversal-graph';
 import { TaskTraversalGraph } from './util-cytoscape/task-traversal.graph';
+import { CompositeNode } from './util-cytoscape/composite/composite-node';
 
 export class GraphService {
   private projectTraversalGraph: ProjectTraversalGraph;
@@ -41,7 +42,6 @@ export class GraphService {
     use(popper);
 
     this.renderGraph = new RenderGraph(container, theme, renderMode, rankDir);
-
     this.renderGraph.listen((event) => this.broadcast(event));
     this.projectTraversalGraph = new ProjectTraversalGraph();
     this.taskTraversalGraph = new TaskTraversalGraph();
@@ -53,6 +53,16 @@ export class GraphService {
 
   set rankDir(rankDir: 'TB' | 'LR') {
     this.renderGraph.rankDir = rankDir;
+  }
+
+  setMode(mode: 'normal' | 'composite') {
+    this.projectTraversalGraph.mode = mode;
+    this.renderGraph.mode = mode;
+  }
+
+  setCompositeContext(context: string | null) {
+    this.renderGraph.compositeContext = context;
+    this.projectTraversalGraph.compositeContext = context;
   }
 
   listen(callback: (event: GraphInteractionEvents) => void) {
@@ -71,6 +81,11 @@ export class GraphService {
   handleProjectEvent(event: ProjectGraphRenderEvents): {
     selectedProjectNames: string[];
     perfReport: GraphPerfReport;
+    compositeNodes: Array<{
+      label: string;
+      id: string;
+      state: 'expanded' | 'collapsed' | 'hidden';
+    }>;
   } {
     const time = Date.now();
 
@@ -83,6 +98,8 @@ export class GraphService {
     switch (event.type) {
       case 'notifyGraphInitGraph':
         this.renderGraph.collapseEdges = event.collapseEdges;
+        this.setMode(event.composite.enabled ? 'composite' : 'normal');
+        this.setCompositeContext(event.composite.context || null);
         this.broadcast({ type: 'GraphRegenerated' });
         this.projectTraversalGraph.initGraph(
           event.fileMap,
@@ -97,6 +114,8 @@ export class GraphService {
 
       case 'notifyGraphUpdateGraph':
         this.renderGraph.collapseEdges = event.collapseEdges;
+        this.setMode(event.composite.enabled ? 'composite' : 'normal');
+        this.setCompositeContext(event.composite.context || null);
         this.broadcast({ type: 'GraphRegenerated' });
         this.projectTraversalGraph.initGraph(
           event.fileMap,
@@ -174,9 +193,26 @@ export class GraphService {
           }
         }
         break;
+      case 'notifyGraphDisableCompositeGraph':
+        this.projectTraversalGraph.mode = 'composite';
+        break;
+      case 'notifyGraphExpandCompositeNode':
+        elementsToSendToRender = this.projectTraversalGraph.expandCompositeNode(
+          event.id
+        );
+        break;
+      case 'notifyGraphCollapseCompositeNode':
+        elementsToSendToRender =
+          this.projectTraversalGraph.collapseCompositeNode(event.id);
+        break;
     }
 
     let selectedProjectNames: string[] = [];
+    let compositeNodes: Array<{
+      label: string;
+      id: string;
+      state: 'expanded' | 'collapsed' | 'hidden';
+    }> = [];
     let perfReport: GraphPerfReport = {
       numEdges: 0,
       numNodes: 0,
@@ -196,6 +232,38 @@ export class GraphService {
         selectedProjectNames = (
           elementsToSendToRender.nodes('[type!="dir"]') ?? []
         ).map((node) => node.id());
+
+        compositeNodes = this.projectTraversalGraph.compositeNodes.reduce(
+          (accumulator, compositeNode) => {
+            // NOTE: We don't want to show the composite node if it has a parent
+            if (!!compositeNode.parent) return accumulator;
+
+            const compositeElement = elementsToSendToRender.$id(
+              compositeNode.id
+            );
+
+            let state: 'expanded' | 'collapsed' | 'hidden' = 'hidden';
+
+            if (compositeElement.length > 0) {
+              state = compositeElement.hasClass('expanded')
+                ? 'expanded'
+                : 'collapsed';
+            }
+
+            accumulator.push({
+              label: compositeNode.label,
+              id: compositeNode.id,
+              state,
+            });
+
+            return accumulator;
+          },
+          [] as Array<{
+            label: string;
+            id: string;
+            state: 'expanded' | 'collapsed' | 'hidden';
+          }>
+        );
 
         const renderTime = Date.now() - time;
 
@@ -222,7 +290,11 @@ export class GraphService {
     this.lastPerformanceReport = perfReport;
     this.broadcast({ type: 'GraphRegenerated' });
 
-    return { selectedProjectNames, perfReport };
+    return {
+      selectedProjectNames,
+      perfReport,
+      compositeNodes,
+    };
   }
 
   handleTaskEvent(event: TaskGraphRenderEvents) {

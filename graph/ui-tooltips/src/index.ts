@@ -7,3 +7,4 @@ export * from './lib/property-info-tooltip';
 export * from './lib/sourcemap-info-tooltip';
 export * from './lib/external-link';
 export * from './lib/atomizer-tooltip';
+export * from './lib/composite-node-tooltip';

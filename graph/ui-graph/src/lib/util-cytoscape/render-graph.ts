@@ -4,7 +4,12 @@ import cytoscape, {
   EdgeDefinition,
   EdgeSingular,
 } from 'cytoscape';
-import { edgeStyles, nodeStyles } from '../styles-graph';
+import {
+  compositeEdgeStyles,
+  compositeNodeStyles,
+  edgeStyles,
+  nodeStyles,
+} from '../styles-graph';
 import { GraphInteractionEvents } from '../graph-interaction-events';
 import { VirtualElement } from '@floating-ui/react';
 import {
@@ -25,6 +30,8 @@ const cytoscapeDagreConfig = {
 export class RenderGraph {
   private cy?: Core;
   collapseEdges = false;
+  mode: 'normal' | 'composite' = 'normal';
+  compositeContext: string | null = null;
 
   private _theme: 'light' | 'dark';
   private _rankDir: 'TB' | 'LR' = 'TB';
@@ -85,7 +92,7 @@ export class RenderGraph {
       headless: this.activeContainer === null,
       container: this.activeContainer,
       boxSelectionEnabled: false,
-      style: [...nodeStyles, ...edgeStyles],
+      style: this.getStyles(),
       panningEnabled: true,
       userZoomingEnabled: this.renderMode !== 'nx-docs',
     });
@@ -101,6 +108,7 @@ export class RenderGraph {
     });
 
     this.listenForProjectNodeClicks();
+    this.listenForCompositeNodeClicks();
     this.listenForEdgeNodeClicks();
     this.listenForProjectNodeHovers();
     this.listenForTaskNodeClicks();
@@ -237,6 +245,28 @@ export class RenderGraph {
     });
   }
 
+  private listenForCompositeNodeClicks() {
+    this.cy.$('node.composite').on('click', (event) => {
+      const node = event.target;
+      let ref: VirtualElement = node.popperRef(); // used only for positioning
+
+      const isExpanded = node.hasClass('expanded');
+
+      this.broadcast({
+        type: 'CompositeNodeClick',
+        ref,
+        id: node.id(),
+        data: {
+          id: node.id(),
+          label: node.data('label'),
+          projectCount: node.data('projectCount'),
+          compositeCount: node.data('composites')?.length ?? 0,
+          expanded: isExpanded,
+        },
+      });
+    });
+  }
+
   private listenForTaskNodeClicks() {
     this.cy.$('node.taskNode').on('click', (event) => {
       const node = event.target;
@@ -352,5 +382,12 @@ export class RenderGraph {
 
   getCurrentlyShownProjectIds(): string[] {
     return this.cy?.nodes().map((node) => node.data('id')) ?? [];
+  }
+
+  getStyles() {
+    if (this.mode === 'composite') {
+      return [...compositeNodeStyles, ...compositeEdgeStyles];
+    }
+    return [...nodeStyles, ...edgeStyles];
   }
 }

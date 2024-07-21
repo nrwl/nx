@@ -4,6 +4,7 @@ import {
   TaskNodeTooltipProps,
   ProjectNodeToolTipProps,
   ProjectEdgeNodeTooltipProps,
+  CompositeNodeTooltipProps,
 } from '@nx/graph/ui-tooltips';
 import { TooltipEvent } from './interfaces';
 import { GraphInteractionEvents } from './graph-interaction-events';
@@ -27,6 +28,15 @@ export class GraphTooltipService {
             type: event.data.type,
             description: event.data.description,
             renderMode: graph.renderMode,
+          });
+          break;
+        case 'CompositeNodeClick':
+          this.openCompositeNodeTooltip(event.ref, {
+            id: event.data.id,
+            label: event.data.label,
+            expanded: event.data.expanded,
+            projectCount: event.data.projectCount,
+            compositeCount: event.data.compositeCount,
           });
           break;
         case 'TaskNodeClick':
@@ -67,6 +77,14 @@ export class GraphTooltipService {
 
   openProjectNodeToolTip(ref: VirtualElement, props: ProjectNodeToolTipProps) {
     this.currentTooltip = { type: 'projectNode', ref, props };
+    this.broadcastChange();
+  }
+
+  openCompositeNodeTooltip(
+    ref: VirtualElement,
+    props: CompositeNodeTooltipProps
+  ) {
+    this.currentTooltip = { type: 'compositeNode', ref, props };
     this.broadcastChange();
   }
 

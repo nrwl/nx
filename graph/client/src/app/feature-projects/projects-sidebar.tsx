@@ -7,6 +7,8 @@ import { useProjectGraphSelector } from './hooks/use-project-graph-selector';
 import { TracingAlgorithmType } from './machines/interfaces';
 import {
   collapseEdgesSelector,
+  compositeContextSelector,
+  compositeGraphEnabledSelector,
   focusedProjectNameSelector,
   getTracingInfo,
   groupByFolderSelector,
@@ -40,6 +42,8 @@ import {
 } from 'react-router-dom';
 import { useCurrentPath } from '../hooks/use-current-path';
 import { ProjectDetailsModal } from '../ui-components/project-details-modal';
+import { CompositeGraphPanel } from './panels/composite-graph-panel';
+import { CompositeContextPanel } from '../ui-components/composite-context-panel';
 
 export function ProjectsSidebar(): JSX.Element {
   const environmentConfig = useEnvironmentConfig();
@@ -53,6 +57,10 @@ export function ProjectsSidebar(): JSX.Element {
   );
   const groupByFolder = useProjectGraphSelector(groupByFolderSelector);
   const collapseEdges = useProjectGraphSelector(collapseEdgesSelector);
+  const compositeGraphEnabled = useProjectGraphSelector(
+    compositeGraphEnabledSelector
+  );
+  const compositeContext = useProjectGraphSelector(compositeContextSelector);
 
   const isTracing = projectGraphService.getSnapshot().matches('tracing');
   const tracingInfo = useProjectGraphSelector(getTracingInfo);
@@ -68,24 +76,34 @@ export function ProjectsSidebar(): JSX.Element {
   const [lastHash, setLastHash] = useState(selectedProjectRouteData.hash);
   const params = useParams();
   const navigate = useNavigate();
-  const routeContructor = useRouteConstructor();
+  const routeConstructor = useRouteConstructor();
 
   function resetFocus() {
     projectGraphService.send({ type: 'unfocusProject' });
-    navigate(routeContructor('/projects', true));
+    navigate(routeConstructor('/projects', true));
+  }
+
+  function resetCompositeContext() {
+    navigate(
+      routeConstructor(
+        { pathname: '/projects', search: `?composite=true` },
+        false
+      ),
+      { replace: true }
+    );
   }
 
   function showAllProjects() {
-    navigate(routeContructor('/projects/all', true));
+    navigate(routeConstructor('/projects/all', true));
   }
 
   function hideAllProjects() {
     projectGraphService.send({ type: 'deselectAll' });
-    navigate(routeContructor('/projects', true));
+    navigate(routeConstructor('/projects', true));
   }
 
   function showAffectedProjects() {
-    navigate(routeContructor('/projects/affected', true));
+    navigate(routeConstructor('/projects/affected', true));
   }
 
   function searchDepthFilterEnabledChange(checked: boolean) {
@@ -121,6 +139,17 @@ export function ProjectsSidebar(): JSX.Element {
         currentSearchParams.set('collapseEdges', 'true');
       } else {
         currentSearchParams.delete('collapseEdges');
+      }
+      return currentSearchParams;
+    });
+  }
+
+  function compositeGraphEnabledChanged(checked: boolean) {
+    setSearchParams((currentSearchParams) => {
+      if (checked) {
+        currentSearchParams.set('composite', 'true');
+      } else {
+        currentSearchParams.delete('composite');
       }
       return currentSearchParams;
     });
@@ -166,12 +195,12 @@ export function ProjectsSidebar(): JSX.Element {
 
   function resetTraceStart() {
     projectGraphService.send({ type: 'clearTraceStart' });
-    navigate(routeContructor('/projects', true));
+    navigate(routeConstructor('/projects', true));
   }
 
   function resetTraceEnd() {
     projectGraphService.send({ type: 'clearTraceEnd' });
-    navigate(routeContructor('/projects', true));
+    navigate(routeConstructor('/projects', true));
   }
 
   function setAlgorithm(algorithm: TracingAlgorithmType) {
@@ -251,6 +280,20 @@ export function ProjectsSidebar(): JSX.Element {
       });
     }
 
+    if (searchParams.has('composite')) {
+      projectGraphService.send({
+        type: 'enableCompositeGraph',
+        context: searchParams.get('compositeContext'),
+      });
+    } else if (
+      !searchParams.has('composite') &&
+      compositeGraphEnabled === true
+    ) {
+      projectGraphService.send({
+        type: 'disableCompositeGraph',
+      });
+    }
+
     if (searchParams.has('searchDepth')) {
       const parsedValue = parseInt(searchParams.get('searchDepth'), 10);
 
@@ -320,7 +363,7 @@ export function ProjectsSidebar(): JSX.Element {
   const updateTextFilter = useCallback(
     (textFilter: string) => {
       projectGraphService.send({ type: 'filterByText', search: textFilter });
-      navigate(routeContructor('/projects', true));
+      navigate(routeConstructor('/projects', true));
     },
     [projectGraphService]
   );
@@ -329,12 +372,20 @@ export function ProjectsSidebar(): JSX.Element {
     <>
       <ProjectDetailsModal />
 
+      {compositeContext ? (
+        <CompositeContextPanel
+          compositeContext={compositeContext}
+          reset={resetCompositeContext}
+        />
+      ) : null}
+
       {focusedProject ? (
         <FocusedPanel
           focusedLabel={focusedProject}
           resetFocus={resetFocus}
         ></FocusedPanel>
       ) : null}
+
       {isTracing ? (
         <TracingPanel
           start={tracingInfo.start}
@@ -385,6 +436,10 @@ export function ProjectsSidebar(): JSX.Element {
               collapseEdges={collapseEdges}
               collapseEdgesChanged={collapseEdgesChanged}
             ></CollapseEdgesPanel>
+            <CompositeGraphPanel
+              compositeEnabled={compositeGraphEnabled}
+              compositeEnabledChanged={compositeGraphEnabledChanged}
+            ></CompositeGraphPanel>
           </div>
         </ExperimentalFeature>
       </div>

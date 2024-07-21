@@ -88,6 +88,7 @@ export function NxProjectGraphViz({
             dependencies,
             affectedProjects: affectedProjectIds,
             collapseEdges: false,
+            composite: { enabled: false, context: null },
           });
           graph.handleProjectEvent({ type: 'notifyGraphShowAllProjects' });
 
