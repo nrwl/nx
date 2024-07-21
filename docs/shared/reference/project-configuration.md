@@ -340,34 +340,9 @@ instance, `"dependsOn": ["build"]` of
 the `test` target tells Nx that before it can test `mylib` it needs to make sure that `mylib` is built, which will
 result in `mylib`'s dependencies being built as well.
 
-Starting from v19.5.0, wildcards can be used to define dependencies in the `dependsOn` field.
-
 You can also express task dependencies with an object syntax:
 
 {% tabs %}
-{% tab label="Version >=19.5.0" %}
-
-```json
-{
-  "targets": {
-    "test": {
-      "dependsOn": [
-        {
-          "target": "build", // target name
-          "params": "ignore" // "forward" or "ignore", defaults to "ignore"
-        },
-        "build-*", // support for using wildcards in dependsOn, matches: build-css, build-js and also then-build-something-else
-        "^build-*" // matches only build-css, build-js
-      ]
-    },
-    "build-css": {},
-    "build-js": {},
-    "then-build-something-else": {}
-  }
-}
-```
-
-{% /tab %}
 {% tab label="Version 16+ (self)" %}
 
 ```json
@@ -444,6 +419,28 @@ You can also express task dependencies with an object syntax:
 
 {% /tab %}
 {% /tabs %}
+
+Starting from v19.5.0, wildcards can be used to define dependencies in the `dependsOn` field.
+
+```json
+{
+  "targets": {
+    "test": {
+      "dependsOn": [
+        {
+          "target": "build", // target name
+          "params": "ignore" // "forward" or "ignore", defaults to "ignore"
+        },
+        "build-*", // support for using wildcards in dependsOn, matches: build-css, build-js and also then-build-something-else
+        "^build-*" // matches only build-css, build-js
+      ]
+    },
+    "build-css": {},
+    "build-js": {},
+    "then-build-something-else": {}
+  }
+}
+```
 
 #### Examples
 
