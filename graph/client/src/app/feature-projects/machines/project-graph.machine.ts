@@ -7,6 +7,7 @@ import { textFilteredStateConfig } from './text-filtered.state';
 import { tracingStateConfig } from './tracing.state';
 import { unselectedStateConfig } from './unselected.state';
 import { ProjectGraphContext, ProjectGraphMachineEvents } from './interfaces';
+import { compositeGraphStateConfig } from './composite-graph.state';
 
 export const initialContext: ProjectGraphContext = {
   projects: [],
@@ -36,6 +37,10 @@ export const initialContext: ProjectGraphContext = {
     end: null,
     algorithm: 'shortest',
   },
+  compositeGraph: {
+    enabled: false,
+    nodes: [],
+  },
 };
 
 export const projectGraphMachine = createMachine<
@@ -54,6 +59,7 @@ export const projectGraphMachine = createMachine<
       focused: focusedStateConfig,
       textFiltered: textFilteredStateConfig,
       tracing: tracingStateConfig,
+      composite: compositeGraphStateConfig,
     },
     on: {
       setProjects: {
@@ -70,6 +76,7 @@ export const projectGraphMachine = createMachine<
               workspaceLayout: ctx.workspaceLayout,
               groupByFolder: ctx.groupByFolder,
               collapseEdges: ctx.collapseEdges,
+              composite: ctx.compositeGraph.enabled,
             }),
             {
               to: (context) => context.graphActor,
@@ -82,6 +89,7 @@ export const projectGraphMachine = createMachine<
           assign((ctx, event) => {
             ctx.selectedProjects = event.selectedProjectNames;
             ctx.lastPerfReport = event.perfReport;
+            ctx.compositeGraph.nodes = event.compositeNodes;
           }),
         ],
       },
@@ -147,6 +155,7 @@ export const projectGraphMachine = createMachine<
               groupByFolder: ctx.groupByFolder,
               collapseEdges: ctx.collapseEdges,
               selectedProjects: ctx.selectedProjects,
+              composite: ctx.compositeGraph,
             }),
             {
               to: (context) => context.graphActor,
@@ -168,6 +177,7 @@ export const projectGraphMachine = createMachine<
               groupByFolder: ctx.groupByFolder,
               collapseEdges: ctx.collapseEdges,
               selectedProjects: ctx.selectedProjects,
+              composite: ctx.compositeGraph,
             }),
             {
               to: (context) => context.graphActor,
@@ -205,12 +215,18 @@ export const projectGraphMachine = createMachine<
       filterByText: {
         target: 'textFiltered',
       },
+      enableCompositeGraph: {
+        target: 'composite',
+      },
     },
   },
   {
     guards: {
       deselectLastProject: (ctx) => {
         return ctx.selectedProjects.length <= 1;
+      },
+      isCompositeGraphEnabled: (ctx) => {
+        return ctx.compositeGraph.enabled;
       },
     },
     actions: {
@@ -356,7 +372,6 @@ export const projectGraphMachine = createMachine<
           to: (context) => context.graphActor,
         }
       ),
-
       notifyGraphFilterProjectsByText: send(
         (context, event) => ({
           type: 'notifyGraphFilterProjectsByText',
