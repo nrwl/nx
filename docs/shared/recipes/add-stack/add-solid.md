@@ -28,7 +28,7 @@ updating any framework dependencies as needed.
 
 ```shell
 npm add solid-js
-npm add -D solid-devtools vite-plugin-solid
+npm add -D solid-devtools vite-plugin-solid vite-tsconfig-paths
 nx add @nx/web
 ```
 
@@ -37,7 +37,7 @@ nx add @nx/web
 
 ```shell
 yarn add solid-js
-yarn add -D solid-devtools vite-plugin-solid
+yarn add -D solid-devtools vite-plugin-solid vite-tsconfig-paths
 nx add @nx/web
 ```
 
@@ -46,7 +46,7 @@ nx add @nx/web
 
 ```shell
 pnpm add solid-js
-pnpm add -D solid-devtools vite-plugin-solid
+pnpm add -D solid-devtools vite-plugin-solid vite-tsconfig-paths
 nx add @nx/web
 ```
 
