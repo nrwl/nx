@@ -22,7 +22,7 @@ main:
   script:
     # Connect your workspace on <%= nxCloudHost %> and uncomment this to enable task distribution.
     # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "e2e-ci" targets have been requested
-    # - npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="e2e-ci"
+    # - npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
 
     - npm ci --cache .npm --prefer-offline
     - NX_HEAD=$CI_COMMIT_SHA

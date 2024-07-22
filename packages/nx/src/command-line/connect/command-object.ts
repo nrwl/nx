@@ -1,5 +1,6 @@
 import { CommandModule } from 'yargs';
 import { linkToNxDevAndExamples } from '../yargs-utils/documentation';
+import { nxVersion } from '../../utils/versions';
 
 export const yargsConnectCommand: CommandModule = {
   command: 'connect',
@@ -8,6 +9,13 @@ export const yargsConnectCommand: CommandModule = {
   builder: (yargs) => linkToNxDevAndExamples(yargs, 'connect-to-nx-cloud'),
   handler: async () => {
     await (await import('./connect-to-nx-cloud')).connectToNxCloudCommand();
+    await (
+      await import('../../utils/ab-testing')
+    ).recordStat({
+      command: 'connect',
+      nxVersion,
+      useCloud: true,
+    });
     process.exit(0);
   },
 };

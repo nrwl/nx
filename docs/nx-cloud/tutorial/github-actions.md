@@ -200,12 +200,12 @@ To enable Nx Agents, make sure the following line is uncommented in the `.github
 ```yml {% fileName=".github/workflows/ci.yml" highlightLines=[3] %}
 # Connect your workspace on nx.app and uncomment this to enable task distribution.
 # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "e2e-ci" targets have been requested
-- run: pnpm dlx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="e2e-ci"
+- run: pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
 ```
 
 We recommend you add this line right after you check out the repo, before installing node modules.
 
-- `nx-cloud start-ci-run --distribute-on="5 linux-medium-js` lets Nx know that all the tasks after this line should using Nx Agents and that Nx Cloud should use 5 instances of the `linux-medium-js` launch template. See the separate reference on how to [configure a custom launch template](/ci/reference/launch-templates).
+- `nx-cloud start-ci-run --distribute-on="3 linux-medium-js` lets Nx know that all the tasks after this line should using Nx Agents and that Nx Cloud should use 5 instances of the `linux-medium-js` launch template. See the separate reference on how to [configure a custom launch template](/ci/reference/launch-templates).
 - `--stop-agents-after="e2e-ci"` lets Nx Cloud know which line is the last command in this pipeline. Once there are no more e2e tasks for an agent to run, Nx Cloud will automatically shut them down. This way you're not wasting money on idle agents while a particularly long e2e task is running on a single agent.
 
 Try it out by creating a new PR with the above changes.
