@@ -1,16 +1,16 @@
-import type { Metadata } from 'next';
 import { DefaultLayout, SquareDottedPattern } from '@nx/nx-dev/ui-common';
-import { Header, TermsAndDefinitions } from '@nx/nx-dev/ui-terms';
+import { Heading, Policies } from '@nx/nx-dev/ui-privacy';
+import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Nx Terms of Service',
+  title: 'Privacy policy',
   description:
-    "These Terms of Service reflect the way Nx Cloud's business works, the laws that apply to our company.",
+    'Our policies regarding the collection, use and disclosure of personal data when you use our Service and the choices you have associated with that data.',
   openGraph: {
-    url: 'https://nx.dev/terms',
-    title: 'Nx Terms of Service',
+    url: 'https://nx.dev/privacy',
+    title: 'Privacy policy',
     description:
-      "These Terms of Service reflect the way Nx Cloud's business works, the laws that apply to our company.",
+      'Our policies regarding the collection, use and disclosure of personal data when you use our Service and the choices you have associated with that data.',
     images: [
       {
         url: 'https://nx.dev/socials/nx-media.png',
@@ -25,7 +25,7 @@ export const metadata: Metadata = {
   },
 };
 
-export default function TermsPage() {
+export default function PrivacyPage() {
   return (
     <DefaultLayout>
       <div className="relative overflow-hidden">
@@ -38,8 +38,8 @@ export default function TermsPage() {
           </div>
         </div>
         <article className="relative px-4 sm:px-6 lg:px-8">
-          <Header />
-          <TermsAndDefinitions />
+          <Heading />
+          <Policies />
         </article>
       </div>
     </DefaultLayout>

@@ -110,6 +110,7 @@
       "@nx/nx-dev/ui-member-card": ["nx-dev/ui-member-card/src/index.ts"],
       "@nx/nx-dev/ui-pricing": ["nx-dev/ui-pricing/src/index.ts"],
       "@nx/nx-dev/ui-primitives": ["nx-dev/ui-primitives/src/index.ts"],
+      "@nx/nx-dev/ui-privacy": ["nx-dev/ui-privacy/src/index.ts"],
       "@nx/nx-dev/ui-references": ["nx-dev/ui-references/src/index.ts"],
       "@nx/nx-dev/ui-sponsor-card": ["nx-dev/ui-sponsor-card/src/index.ts"],
       "@nx/nx-dev/ui-terms": ["nx-dev/ui-terms/src/index.ts"],

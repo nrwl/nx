@@ -18,11 +18,11 @@ export function Footer(): JSX.Element {
       },
       {
         name: 'Privacy Policy',
-        href: 'https://nx.app/privacy?utm_source=nx.dev',
+        href: '/privacy',
       },
       {
         name: 'Brands & Guidelines',
-        href: 'https://nx.app/brands?utm_source=nx.dev',
+        href: '/brands',
       },
       {
         name: 'Site Map',
@@ -259,11 +259,7 @@ export function Footer(): JSX.Element {
           <p className="text-sm text-slate-400 xl:text-center">
             &copy; 2024 made with{' '}
             <HeartIcon className="-mt-0.5 inline h-4 w-4" /> by{' '}
-            <a
-              href="https://nx.app/company/?utm_source=nx.dev"
-              target="_blank"
-              rel="noreferrer"
-            >
+            <a href="/company" target="_blank" rel="noreferrer">
               <svg
                 role="img"
                 viewBox="0 0 24 24"
