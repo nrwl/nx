@@ -4,7 +4,7 @@
 
 ##### Full terminal outputs in the web app
 
-Due to storage constrains in Mongo, long terminal outputs were sometimes truncated when viewed in the UI. With this update we are now loading all terminal outputs directly
+Due to storage constraints in Mongo, long terminal outputs were sometimes truncated when viewed in the UI. With this update we are now loading all terminal outputs directly
 from the storage bucket, removing the need to keep them in Mongo. You should now be able to view full, complete logs in the UI regardless of how large the output is.
 
 ##### OpenShift fixes for Agents
