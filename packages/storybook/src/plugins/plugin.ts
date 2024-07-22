@@ -2,21 +2,22 @@ import {
   CreateDependencies,
   CreateNodes,
   CreateNodesContext,
-  TargetConfiguration,
   detectPackageManager,
   joinPathFragments,
   parseJson,
   readJsonFile,
+  TargetConfiguration,
   writeJsonFile,
 } from '@nx/devkit';
 import { dirname, join } from 'path';
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
-import { existsSync, readFileSync, readdirSync } from 'fs';
+import { existsSync, readFileSync } from 'fs';
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { getLockFileName } from '@nx/js';
 import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
 import type { StorybookConfig } from '@storybook/types';
+import { projectFoundInRootPath } from '@nx/devkit/src/utils/project-found-in-root-path';
 
 export interface StorybookPluginOptions {
   buildStorybookTargetName?: string;
@@ -62,12 +63,8 @@ export const createNodes: CreateNodes<StorybookPluginOptions> = [
       projectRoot = '.';
     }
 
-    // Do not create a project if package.json and project.json isn't there.
-    const siblingFiles = readdirSync(join(context.workspaceRoot, projectRoot));
-    if (
-      !siblingFiles.includes('package.json') &&
-      !siblingFiles.includes('project.json')
-    ) {
+    // Configurations will be generated only if project exists at projectRoot
+    if (!projectFoundInRootPath(projectRoot, context)) {
       return {};
     }
 

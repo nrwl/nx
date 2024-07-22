@@ -16,6 +16,7 @@ import { type AppConfig } from '@remix-run/dev';
 import { dirname, join } from 'path';
 import { existsSync, readdirSync } from 'fs';
 import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
+import { projectFoundInRootPath } from '@nx/devkit/src/utils/project-found-in-root-path';
 
 const cachePath = join(workspaceDataDirectory, 'remix.hash');
 const targetsCache = readTargetsCache();
@@ -53,13 +54,14 @@ export const createNodes: CreateNodes<RemixPluginOptions> = [
   async (configFilePath, options, context) => {
     const projectRoot = dirname(configFilePath);
     const fullyQualifiedProjectRoot = join(context.workspaceRoot, projectRoot);
-    // Do not create a project if package.json and project.json isn't there
     const siblingFiles = readdirSync(fullyQualifiedProjectRoot);
+
+    // Configurations will be generated only if project exists at projectRoot
     if (
-      !siblingFiles.includes('package.json') &&
-      !siblingFiles.includes('project.json') &&
-      !siblingFiles.includes('vite.config.ts') &&
-      !siblingFiles.includes('vite.config.js')
+      !projectFoundInRootPath(projectRoot, context, [
+        'vite.config.ts',
+        'vite.config.js',
+      ])
     ) {
       return {};
     }

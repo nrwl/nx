@@ -19,7 +19,7 @@ import { dirname, join, relative } from 'path';
 import { getLockFileName } from '@nx/js';
 
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
-import { existsSync, readdirSync } from 'fs';
+import { existsSync } from 'fs';
 
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
@@ -27,6 +27,7 @@ import { NX_PLUGIN_OPTIONS } from '../utils/constants';
 import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
 import { hashObject } from 'nx/src/devkit-internals';
 import { globWithWorkspaceContext } from 'nx/src/utils/workspace-context';
+import { projectFoundInRootPath } from '@nx/devkit/src/utils/project-found-in-root-path';
 
 export interface CypressPluginOptions {
   ciTargetName?: string;
@@ -93,12 +94,8 @@ async function createNodesInternal(
   options = normalizeOptions(options);
   const projectRoot = dirname(configFilePath);
 
-  // Do not create a project if package.json and project.json isn't there.
-  const siblingFiles = readdirSync(join(context.workspaceRoot, projectRoot));
-  if (
-    !siblingFiles.includes('package.json') &&
-    !siblingFiles.includes('project.json')
-  ) {
+  // Configurations will be generated only if project exists at projectRoot
+  if (!projectFoundInRootPath(projectRoot, context)) {
     return {};
   }
 

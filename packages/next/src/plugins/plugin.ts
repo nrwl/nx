@@ -11,12 +11,13 @@ import {
 import { dirname, join } from 'path';
 
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
-import { existsSync, readdirSync } from 'fs';
+import { existsSync } from 'fs';
 
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { getLockFileName } from '@nx/js';
 import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
+import { projectFoundInRootPath } from '@nx/devkit/src/utils/project-found-in-root-path';
 
 export interface NextPluginOptions {
   buildTargetName?: string;
@@ -53,14 +54,11 @@ export const createNodes: CreateNodes<NextPluginOptions> = [
   async (configFilePath, options, context) => {
     const projectRoot = dirname(configFilePath);
 
-    // Do not create a project if package.json and project.json isn't there.
-    const siblingFiles = readdirSync(join(context.workspaceRoot, projectRoot));
-    if (
-      !siblingFiles.includes('package.json') &&
-      !siblingFiles.includes('project.json')
-    ) {
+    // Configurations will be generated only if project exists at projectRoot
+    if (!projectFoundInRootPath(projectRoot, context)) {
       return {};
     }
+
     options = normalizeOptions(options);
 
     const hash = await calculateHashForCreateNodes(

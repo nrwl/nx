@@ -11,9 +11,10 @@ import {
 import { dirname, join } from 'path';
 import { getLockFileName } from '@nx/js';
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
-import { existsSync, readdirSync } from 'fs';
+import { existsSync } from 'fs';
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
+import { projectFoundInRootPath } from '@nx/devkit/src/utils/project-found-in-root-path';
 
 export interface DetoxPluginOptions {
   buildTargetName?: string;
@@ -46,9 +47,8 @@ export const createNodes: CreateNodes<DetoxPluginOptions> = [
     options = normalizeOptions(options);
     const projectRoot = dirname(configFilePath);
 
-    // Do not create a project if project.json isn't there.
-    const siblingFiles = readdirSync(join(context.workspaceRoot, projectRoot));
-    if (!siblingFiles.includes('project.json')) {
+    // Configurations will be generated only if project exists at projectRoot
+    if (!projectFoundInRootPath(projectRoot, context)) {
       return {};
     }
 
