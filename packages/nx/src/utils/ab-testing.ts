@@ -1,6 +1,7 @@
 import { execSync } from 'node:child_process';
 import { isCI } from './is-ci';
 import { getPackageManagerCommand } from './package-manager';
+import { getCloudUrl } from '../nx-cloud/utilities/get-cloud-options';
 
 export type MessageOptionKey = 'yes' | 'skip';
 
@@ -74,7 +75,7 @@ export async function recordStat(opts: {
   command: string;
   nxVersion: string;
   useCloud: boolean;
-  meta: string;
+  meta?: string;
 }) {
   try {
     if (!shouldRecordStats()) {
@@ -83,7 +84,7 @@ export async function recordStat(opts: {
     const axios = require('axios');
     await (axios['default'] ?? axios)
       .create({
-        baseURL: 'https://cloud.nx.app',
+        baseURL: getCloudUrl(),
         timeout: 400,
       })
       .post('/nx-cloud/stats', {

@@ -1,5 +1,4 @@
 import { execSync } from 'child_process';
-import { URL } from 'node:url';
 import { output } from '../../../utils/output';
 import { Tree } from '../../../generators/tree';
 import { readJson } from '../../../generators/utils/json';
@@ -7,6 +6,7 @@ import { NxJsonConfiguration } from '../../../config/nx-json';
 import { readNxJson, updateNxJson } from '../../../generators/utils/nx-json';
 import { formatChangedFilesWithPrettierIfAvailable } from '../../../generators/internal-utils/format-changed-files-with-prettier-if-available';
 import { repoUsesGithub, shortenedCloudUrl } from '../../utilities/url-shorten';
+import { getCloudUrl } from '../../utilities/get-cloud-options';
 import { commitChanges } from '../../../utils/git-utils';
 import * as ora from 'ora';
 import * as open from 'open';
@@ -31,11 +31,6 @@ function getRootPackageName(tree: Tree): string {
   } catch (e) {}
   return packageJson?.name ?? 'my-workspace';
 }
-function removeTrailingSlash(apiUrl: string) {
-  return apiUrl[apiUrl.length - 1] === '/'
-    ? apiUrl.substr(0, apiUrl.length - 1)
-    : apiUrl;
-}
 
 function getNxInitDate(): string | null {
   try {
@@ -57,9 +52,7 @@ async function createNxCloudWorkspace(
   installationSource: string,
   nxInitDate: string | null
 ): Promise<{ token: string; url: string }> {
-  const apiUrl = removeTrailingSlash(
-    process.env.NX_CLOUD_API || process.env.NRWL_API || `https://cloud.nx.app`
-  );
+  const apiUrl = getCloudUrl();
   const response = await require('axios').post(
     `${apiUrl}/nx-cloud/create-org-and-workspace`,
     {
@@ -212,9 +205,7 @@ export async function connectToNxCloud(
         silent: schema.hideFormatLogs,
       });
     }
-    const apiUrl = removeTrailingSlash(
-      process.env.NX_CLOUD_API || process.env.NRWL_API || `https://cloud.nx.app`
-    );
+    const apiUrl = getCloudUrl();
     return async () =>
       await printSuccessMessage(
         responseFromCreateNxCloudWorkspace?.url ?? apiUrl,
