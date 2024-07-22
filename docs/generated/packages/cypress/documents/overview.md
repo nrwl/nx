@@ -56,9 +56,7 @@ The `@nx/cypress` plugin will create a task for any project that has a Cypress c
 - `cypress.config.js`
 - `cypress.config.ts`
 - `cypress.config.mjs`
-- `cypress.config.mts`
 - `cypress.config.cjs`
-- `cypress.config.cts`
 
 ### View Inferred Tasks
 
