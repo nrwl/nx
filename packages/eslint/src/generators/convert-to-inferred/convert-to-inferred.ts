@@ -1,18 +1,17 @@
 import {
   createProjectGraphAsync,
   formatFiles,
-  names,
+  type ProjectConfiguration,
   type TargetConfiguration,
   type Tree,
 } from '@nx/devkit';
-import { createNodesV2, EslintPluginOptions } from '../../plugins/plugin';
 import { migrateProjectExecutorsToPlugin } from '@nx/devkit/src/generators/plugin-migrations/executor-to-plugin-migrator';
-import { targetOptionsToCliMap } from './lib/target-options-map';
+import { processTargetOutputs } from '@nx/devkit/src/generators/plugin-migrations/plugin-migration-utils';
+import { basename, dirname, relative } from 'node:path/posix';
 import { interpolate } from 'nx/src/tasks-runner/utils';
-import {
-  processTargetOutputs,
-  toProjectRelativePath,
-} from '@nx/devkit/src/generators/plugin-migrations/plugin-migration-utils';
+import { createNodesV2, type EslintPluginOptions } from '../../plugins/plugin';
+import { ESLINT_CONFIG_FILENAMES } from '../../utils/config-file';
+import { targetOptionsToCliMap } from './lib/target-options-map';
 
 interface Schema {
   project?: string;
@@ -34,6 +33,7 @@ export async function convertToInferred(tree: Tree, options: Schema) {
           executors: ['@nx/eslint:lint', '@nrwl/linter:eslint'],
           postTargetTransformer,
           targetPluginOptionMapper: (targetName) => ({ targetName }),
+          skipTargetFilter,
         },
       ],
       options.project
@@ -107,13 +107,9 @@ function handlePropertiesInOptions(
   projectDetails: { projectName: string; root: string },
   target: TargetConfiguration
 ) {
-  if ('eslintConfig' in options) {
-    options.config = toProjectRelativePath(
-      options.eslintConfig,
-      projectDetails.root
-    );
-    delete options.eslintConfig;
-  }
+  // inferred targets are only identified after known files that ESLint would
+  // pick up, so we can remove the eslintConfig option
+  delete options.eslintConfig;
 
   if ('force' in options) {
     delete options.force;
@@ -150,22 +146,61 @@ function handlePropertiesInOptions(
   if ('lintFilePatterns' in options) {
     const normalizedLintFilePatterns = options.lintFilePatterns.map(
       (pattern) => {
-        return interpolate(pattern, {
+        const interpolatedPattern = interpolate(pattern, {
           workspaceRoot: '',
           projectRoot: projectDetails.root,
           projectName: projectDetails.projectName,
         });
+
+        if (interpolatedPattern === projectDetails.root) {
+          return '.';
+        }
+
+        return interpolatedPattern.replace(
+          new RegExp(`^(?:\./)?${projectDetails.root}/`),
+          ''
+        );
       }
     );
 
-    options.args = normalizedLintFilePatterns.map((pattern) =>
-      pattern.startsWith(projectDetails.root)
-        ? pattern.replace(new RegExp(`^${projectDetails.root}/`), './')
-        : pattern
-    );
+    options.args = normalizedLintFilePatterns
+      // the @nx/eslint/plugin automatically infers these, so we don't need to pass them in
+      .filter((p) =>
+        projectDetails.root === '.'
+          ? !['.', 'src', './src', 'lib', './lib'].includes(p)
+          : p !== '.'
+      );
+    if (options.args.length === 0) {
+      delete options.args;
+    }
 
     delete options.lintFilePatterns;
   }
 }
 
 export default convertToInferred;
+
+function skipTargetFilter(
+  targetOptions: { eslintConfig?: string },
+  project: ProjectConfiguration
+) {
+  if (targetOptions.eslintConfig) {
+    // check that the eslintConfig option is a default config file known by ESLint
+    if (
+      !ESLINT_CONFIG_FILENAMES.includes(basename(targetOptions.eslintConfig))
+    ) {
+      return `The "eslintConfig" option value (${targetOptions.eslintConfig}) is not a default config file known by ESLint.`;
+    }
+
+    // check that it is at the project root or in a parent directory
+    const eslintConfigPath = relative(project.root, targetOptions.eslintConfig);
+    if (
+      dirname(eslintConfigPath) !== '.' &&
+      !eslintConfigPath.startsWith('../')
+    ) {
+      return `The "eslintConfig" option value (${targetOptions.eslintConfig}) must point to a file in the project root or a parent directory.`;
+    }
+  }
+
+  return false;
+}
