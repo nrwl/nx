@@ -1,5 +1,6 @@
 import { minimatch } from 'minimatch';
 import { deepStrictEqual } from 'node:assert';
+import { join } from 'node:path/posix';
 import type {
   InputDefinition,
   ProjectConfiguration,
@@ -39,7 +40,8 @@ type PostTargetTransformer = (
   inferredTargetConfiguration: InferredTargetConfiguration
 ) => TargetConfiguration | Promise<TargetConfiguration>;
 type SkipTargetFilter = (
-  targetConfiguration: TargetConfiguration
+  targetOptions: Record<string, unknown>,
+  projectConfiguration: ProjectConfiguration
 ) => false | string;
 type SkipProjectFilter = (
   projectConfiguration: ProjectConfiguration
@@ -58,7 +60,6 @@ class ExecutorToPluginMigrator<T> {
   #nxJson: NxJsonConfiguration;
   #targetDefaultsForExecutor: Partial<TargetConfiguration>;
   #targetAndProjectsToMigrate: Map<string, Set<string>>;
-  #pluginToAddForTarget: Map<string, ExpandedPluginConfiguration<T>>;
   #createNodes?: CreateNodes<T>;
   #createNodesV2?: CreateNodesV2<T>;
   #createNodesResultsForTargets: Map<string, ConfigurationResult>;
@@ -108,7 +109,6 @@ class ExecutorToPluginMigrator<T> {
     nxJson.plugins ??= [];
     this.#nxJson = nxJson;
     this.#targetAndProjectsToMigrate = new Map();
-    this.#pluginToAddForTarget = new Map();
     this.#createNodesResultsForTargets = new Map();
     this.#skippedProjects = new Set();
 
@@ -118,18 +118,11 @@ class ExecutorToPluginMigrator<T> {
   }
 
   async #migrateTarget(targetName: string) {
-    const include: string[] = [];
     for (const projectName of this.#targetAndProjectsToMigrate.get(
       targetName
     )) {
-      include.push(await this.#migrateProject(projectName, targetName));
+      await this.#migrateProject(projectName, targetName);
     }
-
-    this.#pluginToAddForTarget.set(targetName, {
-      plugin: this.#pluginPath,
-      options: this.#pluginOptionsBuilder(targetName),
-      include,
-    });
   }
 
   async #migrateProject(projectName: string, targetName: string) {
@@ -180,8 +173,6 @@ class ExecutorToPluginMigrator<T> {
     }
 
     updateProjectConfiguration(this.tree, projectName, projectConfig);
-
-    return `${projectFromGraph.data.root}/**/*`;
   }
 
   #mergeInputs(
@@ -237,7 +228,12 @@ class ExecutorToPluginMigrator<T> {
     forEachExecutorOptions(
       this.tree,
       this.#executor,
-      (targetConfiguration, projectName, targetName, configurationName) => {
+      (
+        options: Record<string, unknown>,
+        projectName,
+        targetName,
+        configurationName
+      ) => {
         if (this.#skippedProjects.has(projectName) || configurationName) {
           return;
         }
@@ -263,9 +259,12 @@ class ExecutorToPluginMigrator<T> {
           return;
         }
 
-        const skipTargetReason = this.#skipTargetFilter(targetConfiguration);
+        const skipTargetReason = this.#skipTargetFilter(
+          options,
+          this.#projectGraph.nodes[projectName].data
+        );
         if (skipTargetReason) {
-          const errorMsg = `${targetName} target on project "${projectName}" cannot be migrated. ${skipTargetReason}`;
+          const errorMsg = `The ${targetName} target on project "${projectName}" cannot be migrated. ${skipTargetReason}`;
           if (this.#specificProjectToMigrate) {
             throw new Error(errorMsg);
           } else {
@@ -538,7 +537,10 @@ async function addPluginRegistrations<T>(
         )
     );
 
-    const projectIncludeGlob = `${projectGraph.nodes[project].data.root}/**/*`;
+    const projectIncludeGlob =
+      projectGraph.nodes[project].data.root === '.'
+        ? '*'
+        : join(projectGraph.nodes[project].data.root, '**/*');
     if (!existingPlugin) {
       nxJson.plugins ??= [];
       const plugin: ExpandedPluginConfiguration = {
