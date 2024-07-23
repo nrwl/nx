@@ -58,10 +58,16 @@ export function ProjectDetails({
       const header = document.getElementById('target-' + expandedTargets[0]);
       const container = document.getElementById('project-details-container');
       if (header && container) {
+        const groupHeaderOffset =
+          header
+            .closest('[id^="target-group-container-"]')
+            ?.querySelector('[id^="target-group-header-"]')
+            ?.getBoundingClientRect().height ?? 0;
         elementRef.current?.scrollTo({
           top:
             header?.getBoundingClientRect().top -
-            container.getBoundingClientRect()?.top,
+            container.getBoundingClientRect()?.top -
+            groupHeaderOffset,
           behavior: 'instant',
         });
       }
