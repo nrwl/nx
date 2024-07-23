@@ -200,6 +200,26 @@ If you are using distributed task execution and disable caching for a given targ
 
 {% /callout %}
 
+### Parallelism
+
+In Nx 19.5.0+, tasks can be configured to support parallelism or not. By default, tasks are run in parallel with other tasks on a given machine. However, in some cases, tasks can require a shared resource such as a port or memory. For these cases, setting `"parallelism": false`, will ensure that those tasks will not run in parallel with other tasks on a single machine. For example, if the `e2e` tasks all require port 4200, running them in parallel will conflict so the targets can specify to not support parallelism:
+
+```json {% fileName="project.json" %}
+{
+  "targets": {
+    "e2e": {
+      "parallelism": false
+    }
+  }
+}
+```
+
+{% callout type="warning" title="Note: Parallelism is only per machine" %}
+
+If you are using distributed task execution, tasks will still be run simultaneously on different machines. Because different agents do not share resources with one another, it is perfectly fine for multiple agents to run tasks which do not support parallelism at the same time. Therefore, using Nx Agents is key to running tasks which do not support parallelism quickly and efficiently.
+
+{% /callout %}
+
 ### Inputs and Named Inputs
 
 Each cacheable task needs to define `inputs` which determine whether the task outputs can be retrieved from the cache or the task needs to be re-run. The `namedInputs` defined in `nx.json` or project level configuration are sets of reusable input definitions.

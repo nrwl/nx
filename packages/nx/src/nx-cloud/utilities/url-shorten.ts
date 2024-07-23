@@ -1,5 +1,6 @@
 import { logger } from '../../devkit-exports';
 import { getGithubSlugOrNull } from '../../utils/git-utils';
+import { getCloudUrl } from './get-cloud-options';
 
 export async function shortenedCloudUrl(
   installationSource: string,
@@ -8,9 +9,7 @@ export async function shortenedCloudUrl(
 ) {
   const githubSlug = getGithubSlugOrNull();
 
-  const apiUrl = removeTrailingSlash(
-    process.env.NX_CLOUD_API || process.env.NRWL_API || `https://cloud.nx.app`
-  );
+  const apiUrl = getCloudUrl();
 
   try {
     const version = await getNxCloudVersion(apiUrl);
@@ -62,9 +61,7 @@ export async function shortenedCloudUrl(
 export async function repoUsesGithub(github?: boolean) {
   const githubSlug = getGithubSlugOrNull();
 
-  const apiUrl = removeTrailingSlash(
-    process.env.NX_CLOUD_API || process.env.NRWL_API || `https://cloud.nx.app`
-  );
+  const apiUrl = getCloudUrl();
 
   const installationSupportsGitHub = await getInstallationSupportsGitHub(
     apiUrl
@@ -76,10 +73,6 @@ export async function repoUsesGithub(github?: boolean) {
       apiUrl.includes('eu.nx.app') ||
       installationSupportsGitHub)
   );
-}
-
-export function removeTrailingSlash(apiUrl: string) {
-  return apiUrl[apiUrl.length - 1] === '/' ? apiUrl.slice(0, -1) : apiUrl;
 }
 
 function getSource(

@@ -23,7 +23,7 @@ const variants: Record<AllowedVariants, string> = {
   title:
     'text-3xl font-bold tracking-tight text-slate-950 dark:text-white sm:text-5xl',
   display:
-    'text-4xl font-medium tracking-tight text-slate-950 dark:text-white sm:text-8xl',
+    'text-5xl font-medium tracking-tight text-slate-950 md:text-6xl dark:text-white xl:text-8xl',
   subtitle: 'text-lg leading-8 text-slate-700 dark:text-slate-300 sm:text-2xl',
 };
 

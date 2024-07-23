@@ -67,7 +67,7 @@ jobs:
         run: git branch --track main origin/main
 
       - name: Initialize the Nx Cloud distributed CI run and stop agents when the build tasks are done
-        run: npx nx-cloud start-ci-run --stop-agents-after=e2e-ci
+        run: npx nx-cloud start-ci-run --distribute-on="manual" --stop-agents-after=e2e-ci
 
       - name: Run commands in parallel
         run: |

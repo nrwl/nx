@@ -11,6 +11,20 @@ import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { ciWorkflowGenerator } from './ci-workflow';
 import { vol } from 'memfs';
 
+jest.mock('child_process', () => {
+  const cp = jest.requireActual('child_process');
+  return {
+    ...cp,
+    execSync: (...args) => {
+      if (args[0] === 'yarn --version') {
+        return '1.22.10';
+      } else {
+        return cp.execSync(...args);
+      }
+    },
+  };
+});
+
 jest.mock('@nx/devkit', () => ({
   ...jest.requireActual<any>('@nx/devkit'),
   workspaceRoot: '/root',
@@ -161,55 +175,57 @@ describe('CI Workflow generator', () => {
         });
       });
     });
-  });
 
-  describe('optional e2e', () => {
-    beforeEach(() => {
-      updateJson(tree, 'package.json', (json) => {
-        json.devDependencies = {
-          ...json.devDependencies,
-          '@nx/cypress': 'latest',
-        };
-        return json;
-      });
-    });
-
-    it('should add e2e to github CI config', async () => {
-      await ciWorkflowGenerator(tree, { ci: 'github', name: 'CI' });
-
-      expect(tree.read('.github/workflows/ci.yml', 'utf-8')).toMatchSnapshot();
-    });
-
-    it('should add e2e to circleci CI config', async () => {
-      await ciWorkflowGenerator(tree, { ci: 'circleci', name: 'CI' });
-
-      expect(tree.read('.circleci/config.yml', 'utf-8')).toMatchSnapshot();
-    });
-
-    it('should add e2e to azure CI config', async () => {
-      await ciWorkflowGenerator(tree, { ci: 'azure', name: 'CI' });
-
-      expect(tree.read('azure-pipelines.yml', 'utf-8')).toMatchSnapshot();
-    });
-
-    it('should add e2e to github CI config with custom name', async () => {
-      await ciWorkflowGenerator(tree, {
-        ci: 'github',
-        name: 'My custom-workflow',
+    describe('optional e2e', () => {
+      beforeEach(() => {
+        updateJson(tree, 'package.json', (json) => {
+          json.devDependencies = {
+            ...json.devDependencies,
+            '@nx/cypress': 'latest',
+          };
+          return json;
+        });
       });
 
-      expect(
-        tree.read('.github/workflows/my-custom-workflow.yml', 'utf-8')
-      ).toMatchSnapshot();
-    });
+      it('should add e2e to github CI config', async () => {
+        await ciWorkflowGenerator(tree, { ci: 'github', name: 'CI' });
 
-    it('should add e2e to bitbucket pipelines config', async () => {
-      await ciWorkflowGenerator(tree, {
-        ci: 'bitbucket-pipelines',
-        name: 'CI',
+        expect(
+          tree.read('.github/workflows/ci.yml', 'utf-8')
+        ).toMatchSnapshot();
       });
 
-      expect(tree.read('bitbucket-pipelines.yml', 'utf-8')).toMatchSnapshot();
+      it('should add e2e to circleci CI config', async () => {
+        await ciWorkflowGenerator(tree, { ci: 'circleci', name: 'CI' });
+
+        expect(tree.read('.circleci/config.yml', 'utf-8')).toMatchSnapshot();
+      });
+
+      it('should add e2e to azure CI config', async () => {
+        await ciWorkflowGenerator(tree, { ci: 'azure', name: 'CI' });
+
+        expect(tree.read('azure-pipelines.yml', 'utf-8')).toMatchSnapshot();
+      });
+
+      it('should add e2e to github CI config with custom name', async () => {
+        await ciWorkflowGenerator(tree, {
+          ci: 'github',
+          name: 'My custom-workflow',
+        });
+
+        expect(
+          tree.read('.github/workflows/my-custom-workflow.yml', 'utf-8')
+        ).toMatchSnapshot();
+      });
+
+      it('should add e2e to bitbucket pipelines config', async () => {
+        await ciWorkflowGenerator(tree, {
+          ci: 'bitbucket-pipelines',
+          name: 'CI',
+        });
+
+        expect(tree.read('bitbucket-pipelines.yml', 'utf-8')).toMatchSnapshot();
+      });
     });
   });
 

@@ -3,14 +3,16 @@ import { ButtonLink, SectionHeading, Strong } from '@nx/nx-dev/ui-common';
 import { ShaderGradient, ShaderGradientCanvas } from 'shadergradient';
 import { BlurFade } from '@nx/nx-dev/ui-animations';
 import { Theme, useTheme } from '@nx/nx-dev/ui-theme';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { useIsomorphicLayoutEffect } from '@nx/nx-dev/ui-primitives';
 
 export function Hero(): JSX.Element {
   return (
     <div className="mx-auto h-screen w-full max-w-7xl px-6 lg:px-8">
-      <ShaderGradientElement />
+      <div className="hidden lg:block">
+        <ShaderGradientElement />
+      </div>
       <div className="absolute left-0 right-0 -z-10 mx-auto flex h-full max-h-screen w-full flex-row justify-between border-b border-dashed border-slate-200/30 px-6 lg:h-full lg:max-w-7xl lg:px-0 dark:border-slate-800/40">
         <div className="h-full w-full border-x border-dashed border-slate-200/20 dark:border-slate-800/40" />
         <div className="h-full w-full border-x border-dashed border-slate-200/20 dark:border-slate-800/40" />
@@ -21,15 +23,33 @@ export function Hero(): JSX.Element {
       </div>
       <div className="z-20 mx-auto grid h-screen max-w-6xl grid-cols-1 place-items-center text-center">
         <div className="container">
+          <div className="-mt-16 hidden sm:mb-8 sm:flex sm:justify-center">
+            <div className="relative rounded-full bg-white px-3 py-1 text-sm leading-6 ring-1 ring-slate-900/10 transition-all hover:ring-slate-900/20 dark:bg-slate-950 dark:ring-slate-100/10 dark:hover:ring-slate-100/20">
+              <span className="text-blue-500 dark:text-sky-500">
+                Monorepo World
+              </span>{' '}
+              - The conf for monorepos and dev tooling.{' '}
+              <Link
+                href="https://monorepo.world"
+                title="Discover Nx Agents"
+                className="font-semibold text-blue-500 dark:text-sky-500"
+                prefetch={false}
+              >
+                <span className="absolute inset-0" aria-hidden="true"></span>
+                Find out more <span aria-hidden="true">→</span>
+              </Link>
+            </div>
+          </div>
           <SectionHeading as="h1" variant="display" data-cy="primary-heading">
             <span className="rounded-lg bg-gradient-to-r from-cyan-500 to-blue-500 bg-clip-text text-transparent">
               Smart
             </span>{' '}
             Monorepos
+            <br className="sm:hidden" />
             <svg
               viewBox="0 0 2 2"
               fill="currentColor"
-              className="mx-4 inline-flex h-2 w-2"
+              className="mx-6 hidden size-2 sm:inline-flex xl:size-3"
             >
               <circle cx={1} cy={1} r={1} />
             </svg>
@@ -58,21 +78,15 @@ export function Hero(): JSX.Element {
             >
               Get started
             </ButtonLink>
-            <Link
+
+            <ButtonLink
               href="ci/intro/ci-with-nx?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_hero_get_started&utm_source=nxdev"
-              target="blank"
-              title="Start with Nx"
-              prefetch={false}
-              className="group font-semibold leading-6 text-slate-950 dark:text-white"
+              title="Get started"
+              variant="contrast"
+              size="default"
             >
-              Connect your Nx repository{' '}
-              <span
-                aria-hidden="true"
-                className="inline-block transition group-hover:translate-x-1"
-              >
-                →
-              </span>
-            </Link>
+              Learn about Nx on CI
+            </ButtonLink>
           </div>
         </div>
       </div>

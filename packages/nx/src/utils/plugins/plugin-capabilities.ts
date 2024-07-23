@@ -182,6 +182,7 @@ export async function listPluginCapabilities(
       ...Object.keys(plugin.executors).map(
         (name) =>
           `${chalk.bold(name)} : ${resolveExecutorDescription(
+            pluginName,
             plugin.executors[name],
             projects
           )}`
@@ -204,20 +205,38 @@ export async function listPluginCapabilities(
 }
 
 function resolveExecutorDescription(
+  pluginName: string,
   executorJsonEntry: ExecutorsJsonEntry,
-  projects: Record<string, ProjectConfiguration>
+  projects: Record<string, ProjectConfiguration>,
+  requirePaths = getNxRequirePaths(workspaceRoot)
 ) {
   try {
     if (typeof executorJsonEntry === 'string') {
       // it points to another executor, resolve it
       const [pkgName, executor] = executorJsonEntry.split(':');
+      // read the package.json of the parent plugin
+      const { path: packageJsonPath } = readPluginPackageJson(
+        pluginName,
+        projects,
+        requirePaths
+      );
+      // accumulate the require paths to resolve nested packages
+      const cummulativeRequirePaths = [
+        ...requirePaths,
+        dirname(packageJsonPath),
+      ];
       const collection = loadExecutorsCollection(
-        workspaceRoot,
         pkgName,
-        projects
+        projects,
+        cummulativeRequirePaths
       );
 
-      return resolveExecutorDescription(collection[executor], projects);
+      return resolveExecutorDescription(
+        pkgName,
+        collection[executor],
+        projects,
+        cummulativeRequirePaths
+      );
     }
 
     return executorJsonEntry.description;
@@ -227,14 +246,14 @@ function resolveExecutorDescription(
 }
 
 function loadExecutorsCollection(
-  workspaceRoot: string,
   pluginName: string,
-  projects: Record<string, ProjectConfiguration>
+  projects: Record<string, ProjectConfiguration>,
+  requirePaths: string[]
 ): { [name: string]: ExecutorsJsonEntry } {
   const { json: packageJson, path: packageJsonPath } = readPluginPackageJson(
     pluginName,
     projects,
-    getNxRequirePaths(workspaceRoot)
+    requirePaths
   );
 
   return {

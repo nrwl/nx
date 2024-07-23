@@ -701,7 +701,7 @@ describe('global installation', () => {
       expect(() => {
         output = runCommand(`nx show projects`);
       }).not.toThrow();
-      expect(output).toContain('Its time to update Nx');
+      expect(output).toContain(`It's time to update Nx`);
       updateFile('node_modules/nx/package.json', packageJsonContents);
     });
 

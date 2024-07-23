@@ -7,7 +7,6 @@ import { type Schema } from './schema';
 import {
   buildStaticRemotes,
   normalizeOptions,
-  parseStaticRemotesConfig,
   startRemotes,
   startStaticRemotesFileServer,
 } from './lib';
@@ -31,6 +30,8 @@ import {
 } from '../../builders/utilities/module-federation';
 import { extname, join } from 'path';
 import { existsSync } from 'fs';
+import { startRemoteProxies } from '@nx/webpack/src/utils/module-federation/start-remote-proxies';
+import { parseStaticRemotesConfig } from '@nx/webpack/src/utils/module-federation/parse-static-remotes-config';
 
 export async function* moduleFederationDevServerExecutor(
   schema: Schema,
@@ -39,7 +40,6 @@ export async function* moduleFederationDevServerExecutor(
   // Force Node to resolve to look for the nx binary that is inside node_modules
   const nxBin = require.resolve('nx/bin/nx');
   const options = normalizeOptions(schema);
-  options.staticRemotesPort ??= options.port + 1;
 
   const { projects: workspaceProjects } =
     readProjectsConfigurationFromProjectGraph(context.projectGraph);
@@ -56,6 +56,7 @@ export async function* moduleFederationDevServerExecutor(
           spa: false,
           withDeps: false,
           cors: true,
+          cacheSeconds: -1,
         },
         context
       )
@@ -123,25 +124,23 @@ export async function* moduleFederationDevServerExecutor(
     pathToManifestFile
   );
 
-  if (remotes.devRemotes.length > 0 && !schema.staticRemotesPort) {
-    options.staticRemotesPort = options.devRemotes.reduce((portToUse, r) => {
-      const remoteName = typeof r === 'string' ? r : r.remoteName;
-      const remotePort =
-        context.projectGraph.nodes[remoteName].data.targets['serve'].options
-          .port;
-      if (remotePort >= portToUse) {
-        return remotePort + 1;
-      } else {
-        return portToUse;
-      }
-    }, options.staticRemotesPort);
-  }
+  options.staticRemotesPort ??= remotes.staticRemotePort;
+
+  // Set NX_MF_DEV_REMOTES for the Nx Runtime Library Control Plugin
+  process.env.NX_MF_DEV_REMOTES = JSON.stringify(
+    remotes.devRemotes.map((r) => (typeof r === 'string' ? r : r.remoteName))
+  );
 
   const staticRemotesConfig = parseStaticRemotesConfig(
-    remotes.staticRemotes,
+    [...remotes.staticRemotes, ...remotes.dynamicRemotes],
     context
   );
-  await buildStaticRemotes(staticRemotesConfig, nxBin, context, options);
+  const mappedLocationsOfStaticRemotes = await buildStaticRemotes(
+    staticRemotesConfig,
+    nxBin,
+    context,
+    options
+  );
 
   const devRemoteIters = await startRemotes(
     remotes.devRemotes,
@@ -151,18 +150,13 @@ export async function* moduleFederationDevServerExecutor(
     'serve'
   );
 
-  const dynamicRemoteIters = await startRemotes(
-    remotes.dynamicRemotes,
-    workspaceProjects,
-    options,
+  const staticRemotesIter = startStaticRemotesFileServer(
+    staticRemotesConfig,
     context,
-    'serve-static'
+    options
   );
 
-  const staticRemotesIter =
-    remotes.staticRemotes.length > 0
-      ? startStaticRemotesFileServer(staticRemotesConfig, context, options)
-      : undefined;
+  startRemoteProxies(staticRemotesConfig, mappedLocationsOfStaticRemotes);
 
   const removeBaseUrlEmission = (iter: AsyncIterable<unknown>) =>
     mapAsyncIterable(iter, (v) => ({
@@ -173,7 +167,6 @@ export async function* moduleFederationDevServerExecutor(
   return yield* combineAsyncIterables(
     removeBaseUrlEmission(currIter),
     ...devRemoteIters.map(removeBaseUrlEmission),
-    ...dynamicRemoteIters.map(removeBaseUrlEmission),
     ...(staticRemotesIter ? [removeBaseUrlEmission(staticRemotesIter)] : []),
     createAsyncIterable<{ success: true; baseUrl: string }>(
       async ({ next, done }) => {
