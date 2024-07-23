@@ -1,24 +1,24 @@
 import {
+  type CreateDependencies,
+  type CreateNodes,
+  type CreateNodesContext,
   createNodesFromFiles,
+  type CreateNodesResult,
+  type CreateNodesV2,
   detectPackageManager,
   joinPathFragments,
   logger,
   normalizePath,
-  readJsonFile,
-  writeJsonFile,
-  type CreateDependencies,
-  type CreateNodes,
-  type CreateNodesContext,
-  type CreateNodesResult,
-  type CreateNodesV2,
   type NxJsonConfiguration,
   type ProjectConfiguration,
+  readJsonFile,
   type TargetConfiguration,
+  writeJsonFile,
 } from '@nx/devkit';
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { minimatch } from 'minimatch';
-import { existsSync, readdirSync, statSync } from 'node:fs';
+import { existsSync, statSync } from 'node:fs';
 import { basename, dirname, join, relative } from 'node:path';
 import { hashObject } from 'nx/src/hasher/file-hasher';
 // eslint-disable-next-line @typescript-eslint/no-restricted-imports
@@ -26,6 +26,7 @@ import { getLockFileName } from 'nx/src/plugins/js/lock-file/lock-file';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import type { ParsedCommandLine } from 'typescript';
 import { readTsConfig } from '../../utils/typescript/ts-config';
+import { projectFoundInRootPath } from '@nx/devkit/src/utils/project-found-in-root-path';
 
 export interface TscPluginOptions {
   typecheck?:
@@ -123,20 +124,13 @@ async function createNodesInternal(
     configFilePath
   );
 
-  // Do not create a project if package.json and project.json isn't there.
-  const siblingFiles = readdirSync(join(context.workspaceRoot, projectRoot));
-  if (
-    !siblingFiles.includes('package.json') &&
-    !siblingFiles.includes('project.json')
-  ) {
+  // Do not create a project if it's not a tsconfig.json
+  if (basename(configFilePath) !== 'tsconfig.json') {
     return {};
   }
 
-  // Do not create a project if it's not a tsconfig.json and there is no tsconfig.json in the same directory
-  if (
-    basename(configFilePath) !== 'tsconfig.json' &&
-    !siblingFiles.includes('tsconfig.json')
-  ) {
+  // Configurations will be generated only if project exists at projectRoot
+  if (!projectFoundInRootPath(projectRoot, context, ['tsconfig.json'])) {
     return {};
   }
 
