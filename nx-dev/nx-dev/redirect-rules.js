@@ -444,7 +444,7 @@ const nxCloudUrls = {
   '/nx-cloud/private-cloud/auth-saml':
     '/ci/recipes/enterprise/on-premise/auth-saml',
   '/nx-cloud/private-cloud/auth-saml-managed':
-    '/nx-cloud/recipes/enterprise/on-premise/auth-saml-managed',
+    '/ci/recipes/enterprise/on-premise/auth-saml',
   '/nx-cloud/private-cloud/advanced-config':
     '/nx-cloud/recipes/enterprise/on-premise/advanced-config',
   '/ci/recipes/on-premise': '/ci/recipes/enterprise/on-premise',
@@ -461,7 +461,9 @@ const nxCloudUrls = {
   '/ci/recipes/on-premise/auth-saml':
     '/ci/recipes/enterprise/on-premise/auth-saml',
   '/ci/recipes/on-premise/auth-saml-managed':
-    '/ci/recipes/enterprise/on-premise/auth-saml-managed',
+    '/ci/recipes/enterprise/on-premise/auth-saml',
+  '/ci/recipes/enterprise/on-premise/auth-saml-managed':
+    '/ci/recipes/enterprise/on-premise/auth-saml',
   '/ci/recipes/on-premise/advanced-config':
     '/ci/recipes/enterprise/on-premise/advanced-config',
   '/concepts/dte': '/ci/concepts/parallelization-distribution',
