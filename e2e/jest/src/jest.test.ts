@@ -2,6 +2,7 @@ import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 import {
   cleanupProject,
   expectJestTestsToPass,
+  getStrippedEnvironmentVariables,
   newProject,
   runCLI,
   runCLIAsync,
@@ -161,6 +162,11 @@ describe('Jest', () => {
       return json;
     });
 
-    await runCLIAsync(`e2e-ci ${libName}`);
+    await runCLIAsync(`e2e-ci ${libName}`, {
+      env: {
+        ...getStrippedEnvironmentVariables(),
+        NX_SKIP_ATOMIZER_VALIDATION: 'true',
+      },
+    });
   }, 90000);
 });
