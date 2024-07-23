@@ -9,12 +9,12 @@ import {
 import { Testimonials, TrustedBy, DefaultLayout } from '@nx/nx-dev/ui-common';
 
 export const metadata: Metadata = {
-  title: 'Available Plans',
+  title: 'Nx Cloud - Available Plans',
   description:
     "Distribute everything, don't waste time waiting on CI. Use Nx Cloud's distributed task execution and caching features to release faster. Save time and money.",
   openGraph: {
     url: 'https://nx.dev/pricing',
-    title: 'Available Plans',
+    title: 'Nx Cloud - Available Plans',
     description:
       "Distribute everything, don't waste time waiting on CI. Use Nx Cloud's distributed task execution and caching features to release faster. Save time and money.",
     images: [
