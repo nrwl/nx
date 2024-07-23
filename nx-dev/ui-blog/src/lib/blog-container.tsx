@@ -2,7 +2,7 @@
 import { BlogPostDataEntry } from '@nx/nx-dev/data-access-documents/node-only';
 import { MoreBlogs } from './more-blogs';
 import { FeaturedBlogs } from './featured-blogs';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Filters } from './filters';
 import { useSearchParams } from 'next/navigation';
 import {
@@ -19,7 +19,7 @@ export interface BlogContainerProps {
   blogPosts: BlogPostDataEntry[];
   tags: string[];
 }
-let filters = [
+let ALL_TOPICS = [
   {
     label: 'All',
     icon: ListBulletIcon,
@@ -64,22 +64,26 @@ let filters = [
   },
 ];
 export function BlogContainer({ blogPosts, tags }: BlogContainerProps) {
+  const searchParams = useSearchParams();
   const [filteredList, setFilteredList] = useState(blogPosts);
 
   // Only show filters that have blog posts
-  filters = [
-    filters[0],
-    ...filters.filter((filter) => {
-      return tags.includes(filter.value);
-    }),
-  ];
+  const filters = useMemo(() => {
+    return [
+      ALL_TOPICS[0],
+      ...ALL_TOPICS.filter((filter) => tags.includes(filter.value)),
+    ];
+  }, [tags]);
 
   const {
     initialFirstFive,
     initialRest,
     initialSelectedFilterHeading,
     initialSelectedFilter,
-  } = initializeFilters(blogPosts);
+  } = useMemo(
+    () => initializeFilters(blogPosts, searchParams),
+    [blogPosts, searchParams]
+  );
 
   const [firstFiveBlogs, setFirstFiveBlogs] =
     useState<BlogPostDataEntry[]>(initialFirstFive);
@@ -127,8 +131,10 @@ export function BlogContainer({ blogPosts, tags }: BlogContainerProps) {
   );
 }
 
-function initializeFilters(blogPosts: BlogPostDataEntry[]) {
-  const searchParams = useSearchParams();
+function initializeFilters(
+  blogPosts: BlogPostDataEntry[],
+  searchParams: URLSearchParams
+) {
   const filterBy = searchParams.get('filterBy');
 
   const defaultState = {
@@ -144,7 +150,7 @@ function initializeFilters(blogPosts: BlogPostDataEntry[]) {
 
   const result = blogPosts.filter((post) => post.tags.includes(filterBy));
 
-  const initialFilter = filters.find((filter) => filter.value === filterBy);
+  const initialFilter = ALL_TOPICS.find((filter) => filter.value === filterBy);
 
   return {
     initialFirstFive: result.slice(0, 5),
