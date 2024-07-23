@@ -1819,11 +1819,6 @@
                       "file": "nx-cloud/enterprise/on-premise/auth-saml"
                     },
                     {
-                      "name": "Authenticate via SAML on Managed Version",
-                      "id": "auth-saml-managed",
-                      "file": "nx-cloud/enterprise/on-premise/auth-saml-managed"
-                    },
-                    {
                       "name": "Advanced Configuration",
                       "id": "advanced-config",
                       "file": "nx-cloud/enterprise/on-premise/advanced-config"

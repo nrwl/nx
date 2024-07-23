@@ -1,5 +1,5 @@
 import {
-  AwsAmplifyIcon,
+  AwsIcon,
   CapitalOneIcon,
   CiscoIcon,
   RedwoodJsIcon,
@@ -20,7 +20,7 @@ export function TrustedBy(): JSX.Element {
             <RoyalBankOfCanadaIcon className="h-14 w-14 text-slate-300 dark:text-slate-600" />
           </div>
           <div className="col-span-1 flex items-center justify-center">
-            <AwsAmplifyIcon className="h-14 w-14 text-slate-300 dark:text-slate-600" />
+            <AwsIcon className="h-14 w-14 text-slate-300 dark:text-slate-600" />
           </div>
           <div className="col-span-1 flex items-center justify-center">
             <CapitalOneIcon className="h-28 w-28 text-slate-300 dark:text-slate-600" />
