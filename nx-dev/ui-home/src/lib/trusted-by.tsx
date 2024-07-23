@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { SectionDescription, SectionHeading } from '@nx/nx-dev/ui-common';
 import {
-  AwsAmplifyIcon,
+  AwsIcon,
   BillIcon,
   CapitalOneIcon,
   CaterpillarIcon,
@@ -91,9 +91,9 @@ export function TrustedBy(): JSX.Element {
             aria-hidden="true"
             className="hidden h-28 w-28 text-slate-950 md:block dark:text-white"
           />
-          <AwsAmplifyIcon
+          <AwsIcon
             aria-hidden="true"
-            className="hidden h-10 w-10 text-slate-950 md:block dark:text-white"
+            className="hidden h-14 w-14 text-slate-950 md:block dark:text-white"
           />
           <WalmartIcon
             aria-hidden="true"
