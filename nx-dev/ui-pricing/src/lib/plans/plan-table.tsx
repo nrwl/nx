@@ -154,7 +154,7 @@ export function PlanTable(): JSX.Element {
               className="min-w-[124px] border-l border-t border-slate-200 bg-green-50 px-2 py-1.5 text-left font-normal leading-tight text-green-700 md:min-w-[180px] md:p-2 md:px-3 lg:w-[325px] lg:px-4 lg:py-2.5 lg:pl-8 dark:border-slate-800 dark:bg-green-500/10 dark:text-green-400"
               scope="row"
             >
-              <span className="font-semibold">Special</span>
+              <span className="font-semibold">Exclusive benefits</span>
             </th>
             <td className="border-l border-t border-slate-200 bg-green-50 px-2 py-1.5 text-green-700 md:px-3 lg:px-4 lg:py-2.5 dark:border-slate-800 dark:bg-green-500/10 dark:text-green-400">
               <XMarkIcon className="h-5 w-5 flex-none" aria-hidden="true" />
@@ -392,13 +392,13 @@ export function PlanTable(): JSX.Element {
               Workspace visibility
             </th>
             <td className="border-l border-t border-slate-200 px-2 py-1.5 md:px-3 lg:px-4 lg:py-2.5 dark:border-slate-800">
-              private/public
+              Private/Public
             </td>
             <td className="border-l border-t border-slate-200 px-2 py-1.5 md:px-3 lg:px-4 lg:py-2.5 dark:border-slate-800">
-              private/public
+              Private/Public
             </td>
             <td className="border-l border-r border-t border-slate-200 bg-slate-50/60 px-2 py-1.5 md:px-3 lg:px-4 lg:py-2.5 dark:border-slate-800 dark:bg-slate-800/60">
-              private/public
+              Private/Public
             </td>
           </tr>
           <tr className="text-sm transition hover:bg-slate-50/60 dark:hover:bg-slate-800/60">
@@ -409,13 +409,13 @@ export function PlanTable(): JSX.Element {
               Connect to GitHub repository
             </th>
             <td className="border-l border-t border-slate-200 px-2 py-1.5 md:px-3 lg:px-4 lg:py-2.5 dark:border-slate-800">
-              private/public
+              Private/Public
             </td>
             <td className="border-l border-t border-slate-200 px-2 py-1.5 md:px-3 lg:px-4 lg:py-2.5 dark:border-slate-800">
-              private/public
+              Private/Public
             </td>
             <td className="border-l border-r border-t border-slate-200 bg-slate-50/60 px-2 py-1.5 md:px-3 lg:px-4 lg:py-2.5 dark:border-slate-800 dark:bg-slate-800/60">
-              private/public
+              Private/Public
             </td>
           </tr>
           <tr className="text-sm transition hover:bg-slate-50/60 dark:hover:bg-slate-800/60">
@@ -695,7 +695,7 @@ export function PlanTable(): JSX.Element {
                       We provide a GitHub application allowing you to see what
                       tasks are being executed on the related CI pipeline from
                       your PR. See easily what failed and succeeded, with direct
-                      link to full status report!
+                      link to full status report.
                     </p>
                   </Popover.Panel>
                 </Transition>

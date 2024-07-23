@@ -9,16 +9,14 @@ export function StandardPlans() {
     <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
       <header className="mx-auto max-w-3xl text-center">
         <SectionHeading as="h2" variant="display">
-          Pricing
+          Nx Cloud Pricing
         </SectionHeading>
         <SectionHeading as="p" variant="subtitle" className="mt-6">
-          Empower your development lifecycle with Nx Cloud’s CI solutions.
-          Maximize your team's productivity while minimizing costs and time to
-          market.
+          Pricing that meets your needs - start free, scale as grow.
         </SectionHeading>
       </header>
 
-      <div className="relative mt-64 w-full" />
+      <div className="relative mt-32 w-full" />
       {/* Plans */}
       <section id="plans">
         <header>

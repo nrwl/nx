@@ -14,7 +14,7 @@ const features = [
 ];
 
 export function ProPlan({
-  cta = 'Get started',
+  cta = 'Get started now',
   url,
 }: {
   cta?: string;
