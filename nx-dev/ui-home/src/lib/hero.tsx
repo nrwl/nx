@@ -81,7 +81,7 @@ export function Hero(): JSX.Element {
 
             <ButtonLink
               href="ci/intro/ci-with-nx?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_hero_get_started&utm_source=nxdev"
-              title="Get started"
+              title="Learn about Nx on CI"
               variant="contrast"
               size="default"
             >

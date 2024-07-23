@@ -5,61 +5,49 @@ import { DiscordIcon } from './discord-icon';
 
 export function Footer(): JSX.Element {
   const navigation = {
+    nx: [
+      { name: 'Privacy', href: '/privacy' },
+      { name: 'Terms', href: '/terms' },
+      { name: 'Status', href: 'https://status.nx.app' },
+      { name: 'Security', href: 'https://security.nx.app' },
+    ],
+    nxCloud: [
+      { name: 'App', href: 'https://cloud.nx.app' },
+      { name: 'Docs', href: '/ci' },
+      { name: 'Pricing', href: '/pricing' },
+    ],
     solutions: [
-      { name: 'Nx Enterprise', href: '/enterprise' },
       { name: 'Nx', href: 'https://nx.dev' },
       { name: 'Nx Cloud', href: '/nx-cloud' },
+      { name: 'Nx Enterprise', href: '/enterprise' },
     ],
     resources: [
       { name: 'Blog', href: '/blog' },
       {
-        name: 'Nx Playbook',
-        href: 'https://nxplaybook.com/?utm_source=nx.dev',
+        name: 'Youtube',
+        href: 'https://youtube.com/@nxdevtools',
       },
       {
-        name: 'Privacy Policy',
-        href: 'https://nx.app/privacy?utm_source=nx.dev',
+        name: 'Community',
+        href: '/community',
       },
       {
-        name: 'Brands & Guidelines',
-        href: '/brands',
+        name: 'Customers',
+        href: '/customers',
       },
       {
         name: 'Site Map',
         href: '/see-also/sitemap',
       },
     ],
-    community: [
-      { name: 'X', href: 'https://x.com/NXdevtools?utm_source=nx.dev' },
-      { name: 'GitHub', href: 'https://github.com/nrwl/nx/?utm_source=nx.dev' },
+    company: [
+      { name: 'About us', href: '/company' },
+      { name: 'Careers', href: '/careers' },
       {
-        name: 'Newsletter',
-        href: 'https://go.nrwl.io/nx-newsletter?utm_source=nx.dev',
+        name: 'Brands & Guidelines',
+        href: '/brands',
       },
-      {
-        name: 'Discord',
-        href: 'https://go.nx.dev/community',
-      },
-      {
-        name: 'Help Us',
-        href: 'https://github.com/nrwl/nx/issues?q=is%3Aissue+is%3Aopen+sort%3Aupdated-desc+label%3Acommunity',
-      },
-    ],
-    help: [
-      { name: 'Documentation', href: '/getting-started/intro' },
-      { name: 'Community', href: '/community' },
-      {
-        name: 'StackOverflow',
-        href: 'https://stackoverflow.com/questions/tagged/nrwl-nx',
-      },
-      {
-        name: 'Report Issues',
-        href: 'https://github.com/nrwl/nx/issues?q=is%3Aopen+is%3Aissue',
-      },
-      {
-        name: 'Status Page',
-        href: 'https://status.nx.app',
-      },
+      { name: 'Contact us', href: '/contact' },
     ],
     social: [
       {
@@ -172,6 +160,30 @@ export function Footer(): JSX.Element {
                 </Link>
               ))}
             </div>
+            <div className="flex items-center gap-3 text-sm">
+              {navigation.nx.map((item) =>
+                item.href.startsWith('http') ? (
+                  <a
+                    key={item.name}
+                    href={item.href}
+                    target="_blank"
+                    rel="noreferer"
+                    className="text-slate-500 hover:text-slate-600 dark:hover:text-slate-400"
+                  >
+                    {item.name}
+                  </a>
+                ) : (
+                  <Link
+                    key={item.name}
+                    href={item.href}
+                    prefetch={false}
+                    className="text-slate-500 hover:text-slate-600 dark:hover:text-slate-400"
+                  >
+                    {item.name}
+                  </Link>
+                )
+              )}
+            </div>
             <div className="flex items-center text-sm">
               Theme <ThemeSwitcher />
             </div>
@@ -185,51 +197,24 @@ export function Footer(): JSX.Element {
                 <ul role="list" className="mt-4 space-y-4">
                   {navigation.resources.map((item) => (
                     <li key={item.name}>
-                      <Link
-                        href={item.href}
-                        prefetch={false}
-                        className="text-sm text-slate-500 hover:text-slate-600 dark:hover:text-slate-400"
-                      >
-                        {item.name}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              <div className="mt-12 md:mt-0">
-                <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-400">
-                  Help
-                </h3>
-                <ul role="list" className="mt-4 space-y-4">
-                  {navigation.help.map((item) => (
-                    <li key={item.name}>
-                      <Link
-                        href={item.href}
-                        prefetch={false}
-                        className="text-sm text-slate-500 hover:text-slate-600 dark:hover:text-slate-400"
-                      >
-                        {item.name}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-            <div className="md:grid md:grid-cols-2 md:gap-8">
-              <div>
-                <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-400">
-                  Community
-                </h3>
-                <ul role="list" className="mt-4 space-y-4">
-                  {navigation.community.map((item) => (
-                    <li key={item.name}>
-                      <Link
-                        href={item.href}
-                        prefetch={false}
-                        className="text-sm text-slate-500 hover:text-slate-600 dark:hover:text-slate-400"
-                      >
-                        {item.name}
-                      </Link>
+                      {item.href.startsWith('http') ? (
+                        <a
+                          href={item.href}
+                          target="_blank"
+                          rel="noreferer"
+                          className="text-sm text-slate-500 hover:text-slate-600 dark:hover:text-slate-400"
+                        >
+                          {item.name}
+                        </a>
+                      ) : (
+                        <Link
+                          href={item.href}
+                          prefetch={false}
+                          className="text-sm text-slate-500 hover:text-slate-600 dark:hover:text-slate-400"
+                        >
+                          {item.name}
+                        </Link>
+                      )}
                     </li>
                   ))}
                 </ul>
@@ -253,9 +238,58 @@ export function Footer(): JSX.Element {
                 </ul>
               </div>
             </div>
+            <div className="md:grid md:grid-cols-2 md:gap-8">
+              <div>
+                <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-400">
+                  Nx Cloud
+                </h3>
+                <ul role="list" className="mt-4 space-y-4">
+                  {navigation.nxCloud.map((item) => (
+                    <li key={item.name}>
+                      {item.href.startsWith('http') ? (
+                        <a
+                          href={item.href}
+                          target="_blank"
+                          rel="noreferer"
+                          className="text-sm text-slate-500 hover:text-slate-600 dark:hover:text-slate-400"
+                        >
+                          {item.name}
+                        </a>
+                      ) : (
+                        <Link
+                          href={item.href}
+                          prefetch={false}
+                          className="text-sm text-slate-500 hover:text-slate-600 dark:hover:text-slate-400"
+                        >
+                          {item.name}
+                        </Link>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div className="mt-12 md:mt-0">
+                <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-400">
+                  Company
+                </h3>
+                <ul role="list" className="mt-4 space-y-4">
+                  {navigation.company.map((item) => (
+                    <li key={item.name}>
+                      <Link
+                        href={item.href}
+                        prefetch={false}
+                        className="text-sm text-slate-500 hover:text-slate-600 dark:hover:text-slate-400"
+                      >
+                        {item.name}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
           </div>
         </div>
-        <div className="mt-12 border-t border-slate-200 p-2 dark:border-slate-800">
+        <div className="mt-20 border-t border-slate-200 p-2 dark:border-slate-800">
           <p className="text-sm text-slate-400 xl:text-center">
             &copy; 2024 made with{' '}
             <HeartIcon className="-mt-0.5 inline h-4 w-4" /> by{' '}
