@@ -28,6 +28,7 @@ import {
   extractFileFromTarball,
   fileExists,
   JsonReadOptions,
+  JsonWriteOptions,
   readJsonFile,
   writeJsonFile,
 } from '../../utils/fileutils';
@@ -54,7 +55,7 @@ import {
   onlyDefaultRunnerIsUsed,
 } from '../connect/connect-to-nx-cloud';
 import { output } from '../../utils/output';
-import { existsSync, readFileSync } from 'fs';
+import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { isCI } from '../../utils/is-ci';
 import { getNxRequirePaths } from '../../utils/installation-directory';
@@ -66,6 +67,7 @@ import {
   createProjectGraphAsync,
   readProjectsConfigurationFromProjectGraph,
 } from '../../project-graph/project-graph';
+import type * as Prettier from 'prettier';
 
 export interface ResolvedMigrationConfiguration extends MigrationsJson {
   packageGroup?: ArrayPackageGroup;
@@ -1105,17 +1107,17 @@ function readPackageMigrationConfig(
   }
 }
 
-function createMigrationsFile(
+async function createMigrationsFile(
   root: string,
   migrations: {
     package: string;
     name: string;
   }[]
 ) {
-  writeJsonFile(join(root, 'migrations.json'), { migrations });
+  await writeFormattedJsonFile(join(root, 'migrations.json'), { migrations });
 }
 
-function updatePackageJson(
+async function updatePackageJson(
   root: string,
   updatedPackages: Record<string, PackageUpdate>
 ) {
@@ -1145,7 +1147,7 @@ function updatePackageJson(
     }
   });
 
-  writeJsonFile(packageJsonPath, json, {
+  await writeFormattedJsonFile(packageJsonPath, json, {
     appendNewLine: parseOptions.endsWithNewline,
   });
 }
@@ -1178,7 +1180,7 @@ async function updateInstallationDetails(
     }
   }
 
-  writeJsonFile(nxJsonPath, nxJson, {
+  await writeFormattedJsonFile(nxJsonPath, nxJson, {
     appendNewLine: parseOptions.endsWithNewline,
   });
 }
@@ -1238,11 +1240,11 @@ async function generateMigrationsJsonAndUpdatePackageJson(
     const { migrations, packageUpdates, minVersionWithSkippedUpdates } =
       await migrator.migrate(opts.targetPackage, opts.targetVersion);
 
-    updatePackageJson(root, packageUpdates);
+    await updatePackageJson(root, packageUpdates);
     await updateInstallationDetails(root, packageUpdates);
 
     if (migrations.length > 0) {
-      createMigrationsFile(root, [
+      await createMigrationsFile(root, [
         ...addSplitConfigurationMigrationIfAvailable(from, packageUpdates),
         ...migrations,
       ] as any);
@@ -1315,6 +1317,54 @@ async function generateMigrationsJsonAndUpdatePackageJson(
       title: `The migrate command failed.`,
     });
     throw e;
+  }
+}
+
+async function writeFormattedJsonFile(
+  filePath: string,
+  content: any,
+  options?: JsonWriteOptions
+): Promise<void> {
+  let prettier: typeof Prettier;
+  try {
+    prettier = await import('prettier');
+  } catch {}
+
+  if (!prettier) {
+    // no prettier, write the json file as is
+    writeJsonFile(filePath, content, options);
+    return;
+  }
+
+  try {
+    const resolvedOptions = await prettier.resolveConfig(filePath, {
+      editorconfig: true,
+    });
+
+    const prettierOptions: Prettier.Options = {
+      ...resolvedOptions,
+      filepath: filePath,
+    };
+
+    const support = await prettier.getFileInfo(
+      filePath,
+      prettierOptions as any
+    );
+    if (support.ignored || !support.inferredParser) {
+      // it's ignored or the parser could not be inferred, write the json file as is
+      writeJsonFile(filePath, content, options);
+      return;
+    }
+
+    // format and write the file
+    const formattedContent = await (prettier.format(
+      JSON.stringify(content),
+      prettierOptions
+    ) as Promise<string> | string);
+    writeFileSync(filePath, formattedContent, { encoding: 'utf-8' });
+  } catch {
+    // prettier failed, ignore and write the json file as is
+    writeJsonFile(filePath, content, options);
   }
 }
 
