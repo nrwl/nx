@@ -722,17 +722,6 @@
                 "tags": []
               },
               {
-                "id": "auth-saml-managed",
-                "name": "Authenticate via SAML on Managed Version",
-                "description": "",
-                "mediaImage": "",
-                "file": "nx-cloud/enterprise/on-premise/auth-saml-managed",
-                "itemList": [],
-                "isExternal": false,
-                "path": "/ci/recipes/enterprise/on-premise/auth-saml-managed",
-                "tags": []
-              },
-              {
                 "id": "advanced-config",
                 "name": "Advanced Configuration",
                 "description": "",
@@ -1306,17 +1295,6 @@
             "tags": []
           },
           {
-            "id": "auth-saml-managed",
-            "name": "Authenticate via SAML on Managed Version",
-            "description": "",
-            "mediaImage": "",
-            "file": "nx-cloud/enterprise/on-premise/auth-saml-managed",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/ci/recipes/enterprise/on-premise/auth-saml-managed",
-            "tags": []
-          },
-          {
             "id": "advanced-config",
             "name": "Advanced Configuration",
             "description": "",
@@ -1522,17 +1500,6 @@
         "tags": []
       },
       {
-        "id": "auth-saml-managed",
-        "name": "Authenticate via SAML on Managed Version",
-        "description": "",
-        "mediaImage": "",
-        "file": "nx-cloud/enterprise/on-premise/auth-saml-managed",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/ci/recipes/enterprise/on-premise/auth-saml-managed",
-        "tags": []
-      },
-      {
         "id": "advanced-config",
         "name": "Advanced Configuration",
         "description": "",
@@ -1645,17 +1612,6 @@
     "itemList": [],
     "isExternal": false,
     "path": "/ci/recipes/enterprise/on-premise/auth-saml",
-    "tags": []
-  },
-  "/ci/recipes/enterprise/on-premise/auth-saml-managed": {
-    "id": "auth-saml-managed",
-    "name": "Authenticate via SAML on Managed Version",
-    "description": "",
-    "mediaImage": "",
-    "file": "nx-cloud/enterprise/on-premise/auth-saml-managed",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/ci/recipes/enterprise/on-premise/auth-saml-managed",
     "tags": []
   },
   "/ci/recipes/enterprise/on-premise/advanced-config": {

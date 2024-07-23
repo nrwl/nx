@@ -330,9 +330,31 @@ export default function TargetConfigurationDetails({
                 />
               </FadingCollapsible>
             </>
-          ) : (
-            ''
-          )}
+          ) : null}
+
+          {targetConfiguration.parallelism === false ? (
+            <div className="group mb-4">
+              <h4 className="mb-4">
+                <Tooltip
+                  openAction="hover"
+                  content={(<PropertyInfoTooltip type="parallelism" />) as any}
+                >
+                  <span className="font-medium">
+                    <TooltipTriggerText>Parallelism</TooltipTriggerText>
+                  </span>
+                </Tooltip>
+              </h4>
+              <div className="group/line overflow-hidden whitespace-nowrap pl-5">
+                <TargetConfigurationProperty data={{ paralelism: false }}>
+                  <TargetSourceInfo
+                    className="min-w-0 flex-1 pl-4 opacity-0 transition-opacity duration-150 ease-in-out group-hover/line:opacity-100"
+                    propertyKey={`targets.${targetName}.parallelism`}
+                    sourceMap={sourceMap}
+                  />
+                </TargetConfigurationProperty>
+              </div>
+            </div>
+          ) : null}
         </div>
       )}
     </div>

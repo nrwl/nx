@@ -40,7 +40,9 @@ const cache = new Map<string, string>();
  * This preprocessor shouldn't be used directly.
  * Instead, use the nxE2EPreset(__filename, { bundler: 'vite' }) function instead.
  */
-function vitePreprocessor(userConfigPath?: string): CypressPreprocessor {
+function vitePreprocessor(
+  configOverrides: InlineConfig = {}
+): CypressPreprocessor {
   return async (file) => {
     const { outputPath, filePath, shouldWatch } = file;
 
@@ -79,8 +81,8 @@ function vitePreprocessor(userConfigPath?: string): CypressPreprocessor {
     >);
 
     const watcher = (await build({
-      configFile: userConfigPath,
       ...defaultConfig,
+      ...configOverrides,
     })) as BuildResult;
 
     return new Promise((resolve, reject) => {
