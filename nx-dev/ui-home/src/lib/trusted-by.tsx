@@ -3,30 +3,20 @@ import { SectionDescription, SectionHeading } from '@nx/nx-dev/ui-common';
 import {
   AdobeIcon,
   AwsIcon,
-  BillIcon,
-  CapitalOneIcon,
-  CaterpillarIcon,
   CiscoIcon,
   CypressIcon,
-  EpicWebIcon,
   FedExIcon,
-  FicoIcon,
   HiltonIcon,
   IntelIcon,
-  ManIcon,
   MicrosoftIcon,
   RedBullIcon,
-  RoyalBankOfCanadaIcon,
   RxJSIcon,
   SentryIcon,
   SevenElevenIcon,
   ShopifyIcon,
   StorybookIcon,
   StrapiIcon,
-  TanstackIcon,
-  TypescriptEslintIcon,
   VmwareIcon,
-  WalmartIcon,
 } from '@nx/nx-dev/ui-icons';
 
 export function TrustedBy(): JSX.Element {
@@ -48,14 +38,14 @@ export function TrustedBy(): JSX.Element {
       </div>
 
       <div className="relative mt-12">
-        <div className="grid grid-cols-3 place-items-center items-center gap-6 transition-all sm:grid-cols-4 md:grid-cols-8">
+        <div className="grid grid-cols-3 place-items-center items-center gap-6 transition-all sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8">
           <MicrosoftIcon
             aria-hidden="true"
             className="h-10 w-10 text-slate-950 dark:text-white"
           />
           <AwsIcon
             aria-hidden="true"
-            className="hidden h-14 w-14 text-slate-950 md:block dark:text-white"            
+            className="h-14 w-14 text-slate-950 dark:text-white"
           />
           <AdobeIcon
             aria-hidden="true"
@@ -63,11 +53,11 @@ export function TrustedBy(): JSX.Element {
           />
           <IntelIcon
             aria-hidden="true"
-            className="h-16 w-16 text-slate-950 dark:text-white"
+            className="hidden h-16 w-16 text-slate-950 sm:block dark:text-white"
           />
           <CiscoIcon
             aria-hidden="true"
-            className="h-16 w-16 text-slate-950 dark:text-white"
+            className="hidden h-16 w-16 text-slate-950 md:block dark:text-white"
           />
           <VmwareIcon
             aria-hidden="true"
@@ -83,11 +73,11 @@ export function TrustedBy(): JSX.Element {
           />
           <SevenElevenIcon
             aria-hidden="true"
-            className="hidden h-10 w-10 text-slate-950 md:block dark:text-white"
+            className="hidden h-10 w-10 text-slate-950 lg:block dark:text-white"
           />
           <RedBullIcon
             aria-hidden="true"
-            className="hidden h-20 w-20 text-slate-950 md:block dark:text-white"
+            className="hidden h-20 w-20 text-slate-950 lg:block dark:text-white"
           />
           <StorybookIcon
             aria-hidden="true"
@@ -95,11 +85,11 @@ export function TrustedBy(): JSX.Element {
           />
           <StrapiIcon
             aria-hidden="true"
-            className="hidden h-10 w-10 text-slate-950 md:block dark:text-white"
+            className="hidden h-10 w-10 text-slate-950 lg:block dark:text-white"
           />
           <CypressIcon
             aria-hidden="true"
-            className="h-12 w-12 text-slate-950 dark:text-white"
+            className="hidden h-12 w-12 text-slate-950 sm:block dark:text-white"
           />
           <SentryIcon
             aria-hidden="true"
@@ -107,7 +97,7 @@ export function TrustedBy(): JSX.Element {
           />
           <RxJSIcon
             aria-hidden="true"
-            className="hidden h-10 w-10 text-slate-950 md:block dark:text-white"
+            className="hidden h-10 w-10 text-slate-950 lg:block dark:text-white"
           />
           <ShopifyIcon
             aria-hidden="true"
