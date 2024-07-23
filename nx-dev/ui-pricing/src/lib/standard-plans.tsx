@@ -26,7 +26,7 @@ export function StandardPlans() {
             </SectionHeading>
             <SectionHeading as="p" variant="subtitle" className="mt-6">
               Kick off with complimentary credits and explore everything Nx
-              Cloud offers. Input your card details when you're ready for more.
+              Cloud offers. Add your card details when you're ready for more.
             </SectionHeading>
           </div>
         </header>
