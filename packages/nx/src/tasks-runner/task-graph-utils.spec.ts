@@ -98,6 +98,7 @@ describe('task graph utils', () => {
       const taskGraph = {
         tasks: {
           'e2e:e2e': {
+            id: 'e2e:e2e',
             target: {
               project: 'e2e',
               target: 'e2e',
@@ -124,6 +125,7 @@ describe('task graph utils', () => {
       const taskGraph = {
         tasks: {
           'e2e:e2e-ci': {
+            id: 'e2e:e2e-ci',
             target: {
               project: 'e2e',
               target: 'e2e-ci',
@@ -153,12 +155,14 @@ describe('task graph utils', () => {
       const taskGraph = {
         tasks: {
           'e2e:e2e-ci': {
+            id: 'e2e:e2e-ci',
             target: {
               project: 'e2e',
               target: 'e2e-ci',
             },
           },
           'gradle:test-ci': {
+            id: 'gradle:test-ci',
             target: {
               project: 'gradle',
               target: 'test-ci',

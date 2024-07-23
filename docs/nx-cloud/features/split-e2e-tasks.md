@@ -35,13 +35,6 @@ nx add @nx/jest
 ```
 
 {% /tab %}
-{% tab label="Gradle" %}
-
-```shell {% skipRescope=true %}
-nx add @nx/gradle
-```
-
-{% /tab %}
 {% /tabs %}
 
 This command will register the appropriate plugin in the `plugins` array of `nx.json`.
