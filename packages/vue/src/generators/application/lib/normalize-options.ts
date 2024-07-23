@@ -2,14 +2,6 @@ import { Tree, extractLayoutDirectory, names } from '@nx/devkit';
 import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { NormalizedSchema, Schema } from '../schema';
 
-export function normalizeDirectory(options: Schema) {
-  options.directory = options.directory?.replace(/\\{1,2}/g, '/');
-  const { projectDirectory } = extractLayoutDirectory(options.directory);
-  return projectDirectory
-    ? `${names(projectDirectory).fileName}/${names(options.name).fileName}`
-    : names(options.name).fileName;
-}
-
 export async function normalizeOptions(
   host: Tree,
   options: Schema,
@@ -39,7 +31,6 @@ export async function normalizeOptions(
 
   const normalized = {
     ...options,
-    name: names(options.name).fileName,
     projectName: appProjectName,
     appProjectRoot,
     e2eProjectName,

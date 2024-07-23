@@ -15,16 +15,16 @@ function _findCycle(
   return null;
 }
 
-export function findCycle(taskGraph: {
+export function findCycle(graph: {
   dependencies: Record<string, string[]>;
 }): string[] | null {
   const visited = {};
-  for (const t of Object.keys(taskGraph.dependencies)) {
+  for (const t of Object.keys(graph.dependencies)) {
     visited[t] = false;
   }
 
-  for (const t of Object.keys(taskGraph.dependencies)) {
-    const cycle = _findCycle(taskGraph, t, visited, [t]);
+  for (const t of Object.keys(graph.dependencies)) {
+    const cycle = _findCycle(graph, t, visited, [t]);
     if (cycle) return cycle;
   }
 

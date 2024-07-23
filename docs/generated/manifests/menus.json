@@ -284,7 +284,7 @@
             "disableCollapsible": false
           },
           {
-            "name": "Explore your Workspace",
+            "name": "Explore Your Workspace",
             "path": "/features/explore-graph",
             "id": "explore-graph",
             "isExternal": false,
@@ -376,14 +376,6 @@
                 "isExternal": true,
                 "children": [],
                 "disableCollapsible": false
-              },
-              {
-                "name": "Set up Nx Cloud On-Premise",
-                "path": "/ci/features/on-premise",
-                "id": "on-premise",
-                "isExternal": true,
-                "children": [],
-                "disableCollapsible": false
               }
             ],
             "disableCollapsible": false
@@ -408,7 +400,7 @@
         "disableCollapsible": false
       },
       {
-        "name": "Explore your Workspace",
+        "name": "Explore Your Workspace",
         "path": "/features/explore-graph",
         "id": "explore-graph",
         "isExternal": false,
@@ -500,14 +492,6 @@
             "isExternal": true,
             "children": [],
             "disableCollapsible": false
-          },
-          {
-            "name": "Set up Nx Cloud On-Premise",
-            "path": "/ci/features/on-premise",
-            "id": "on-premise",
-            "isExternal": true,
-            "children": [],
-            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -556,14 +540,6 @@
         "name": "Identify and Re-run Flaky Tasks",
         "path": "/ci/features/flaky-tasks",
         "id": "flaky-tasks",
-        "isExternal": true,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Set up Nx Cloud On-Premise",
-        "path": "/ci/features/on-premise",
-        "id": "on-premise",
         "isExternal": true,
         "children": [],
         "disableCollapsible": false
@@ -1280,6 +1256,14 @@
                 "name": "Deploying Next.js applications to Vercel",
                 "path": "/recipes/react/deploy-nextjs-to-vercel",
                 "id": "deploy-nextjs-to-vercel",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "React Compiler with Nx",
+                "path": "/recipes/react/react-compiler",
+                "id": "react-compiler",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -2385,6 +2369,14 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
+          },
+          {
+            "name": "React Compiler with Nx",
+            "path": "/recipes/react/react-compiler",
+            "id": "react-compiler",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -2441,6 +2433,14 @@
         "name": "Deploying Next.js applications to Vercel",
         "path": "/recipes/react/deploy-nextjs-to-vercel",
         "id": "deploy-nextjs-to-vercel",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "React Compiler with Nx",
+        "path": "/recipes/react/react-compiler",
+        "id": "react-compiler",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -3588,7 +3588,7 @@
         "disableCollapsible": false
       },
       {
-        "name": "Troubleshooting Nx Console Issues",
+        "name": "Troubleshoot Nx Console Issues",
         "path": "/recipes/nx-console/console-troubleshooting",
         "id": "console-troubleshooting",
         "isExternal": false,
@@ -4458,7 +4458,7 @@
             "disableCollapsible": false
           },
           {
-            "name": "Troubleshooting Nx Install Issues",
+            "name": "Troubleshoot Nx Install Issues",
             "path": "/troubleshooting/troubleshoot-nx-install-issues",
             "id": "troubleshoot-nx-install-issues",
             "isExternal": false,
@@ -4490,9 +4490,17 @@
             "disableCollapsible": false
           },
           {
-            "name": "Troubleshooting Nx Console Issues",
+            "name": "Troubleshoot Nx Console Issues",
             "path": "/recipes/nx-console/console-troubleshooting",
             "id": "console-troubleshooting",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Troubleshoot Convert to Inferred Migration",
+            "path": "/troubleshooting/convert-to-inferred",
+            "id": "convert-to-inferred",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -4509,7 +4517,7 @@
         "disableCollapsible": false
       },
       {
-        "name": "Troubleshooting Nx Install Issues",
+        "name": "Troubleshoot Nx Install Issues",
         "path": "/troubleshooting/troubleshoot-nx-install-issues",
         "id": "troubleshoot-nx-install-issues",
         "isExternal": false,
@@ -4536,6 +4544,14 @@
         "name": "Profiling Build Performance",
         "path": "/troubleshooting/performance-profiling",
         "id": "performance-profiling",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Troubleshoot Convert to Inferred Migration",
+        "path": "/troubleshooting/convert-to-inferred",
+        "id": "convert-to-inferred",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -5154,6 +5170,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Connect to Nx Cloud",
+            "path": "/ci/intro/connect-to-nx-cloud",
+            "id": "connect-to-nx-cloud",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Tutorials",
             "path": "/ci/intro/tutorials",
             "id": "tutorials",
@@ -5193,6 +5217,14 @@
         "name": "Why Nx Cloud?",
         "path": "/ci/intro/why-nx-cloud",
         "id": "why-nx-cloud",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Connect to Nx Cloud",
+        "path": "/ci/intro/connect-to-nx-cloud",
+        "id": "connect-to-nx-cloud",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -5269,6 +5301,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Nx Cloud AI",
+            "path": "/ci/features/nx-cloud-ai",
+            "id": "nx-cloud-ai",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Dynamically Allocate Agents",
             "path": "/ci/features/dynamic-agents",
             "id": "dynamic-agents",
@@ -5288,14 +5328,6 @@
             "name": "Identify and Re-run Flaky Tasks",
             "path": "/ci/features/flaky-tasks",
             "id": "flaky-tasks",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Set up Nx Cloud On-Premise",
-            "path": "/ci/features/on-premise",
-            "id": "on-premise",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -5328,6 +5360,14 @@
         "disableCollapsible": false
       },
       {
+        "name": "Nx Cloud AI",
+        "path": "/ci/features/nx-cloud-ai",
+        "id": "nx-cloud-ai",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
         "name": "Dynamically Allocate Agents",
         "path": "/ci/features/dynamic-agents",
         "id": "dynamic-agents",
@@ -5347,14 +5387,6 @@
         "name": "Identify and Re-run Flaky Tasks",
         "path": "/ci/features/flaky-tasks",
         "id": "flaky-tasks",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Set up Nx Cloud On-Premise",
-        "path": "/ci/features/on-premise",
-        "id": "on-premise",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -5444,14 +5476,6 @@
             "id": "set-up",
             "isExternal": false,
             "children": [
-              {
-                "name": "Connect Nx Cloud",
-                "path": "/ci/recipes/set-up/connect-to-cloud",
-                "id": "connect-to-cloud",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
               {
                 "name": "Setting up Azure Pipelines",
                 "path": "/ci/recipes/set-up/monorepo-ci-azure",
@@ -5551,9 +5575,9 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Enable Bitbucket Cloud PR Integration",
-                "path": "/ci/recipes/source-control-integration/bitbucket-cloud",
-                "id": "bitbucket-cloud",
+                "name": "Enable Bitbucket PR Integration",
+                "path": "/ci/recipes/source-control-integration/bitbucket",
+                "id": "bitbucket",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -5590,6 +5614,14 @@
                 "isExternal": false,
                 "children": [
                   {
+                    "name": "Set up Nx Cloud On-Premise",
+                    "path": "/ci/recipes/enterprise/on-premise/on-premise",
+                    "id": "on-premise",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  },
+                  {
                     "name": "Authenticate with a Single Admin",
                     "path": "/ci/recipes/enterprise/on-premise/auth-single-admin",
                     "id": "auth-single-admin",
@@ -5625,6 +5657,14 @@
                     "name": "Authenticate with BitBucket",
                     "path": "/ci/recipes/enterprise/on-premise/auth-bitbucket",
                     "id": "auth-bitbucket",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  },
+                  {
+                    "name": "Authenticate with BitBucket Data Center",
+                    "path": "/ci/recipes/enterprise/on-premise/auth-bitbucket-data-center",
+                    "id": "auth-bitbucket-data-center",
                     "isExternal": false,
                     "children": [],
                     "disableCollapsible": false
@@ -5759,14 +5799,6 @@
         "isExternal": false,
         "children": [
           {
-            "name": "Connect Nx Cloud",
-            "path": "/ci/recipes/set-up/connect-to-cloud",
-            "id": "connect-to-cloud",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
             "name": "Setting up Azure Pipelines",
             "path": "/ci/recipes/set-up/monorepo-ci-azure",
             "id": "monorepo-ci-azure",
@@ -5815,14 +5847,6 @@
             "disableCollapsible": false
           }
         ],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Connect Nx Cloud",
-        "path": "/ci/recipes/set-up/connect-to-cloud",
-        "id": "connect-to-cloud",
-        "isExternal": false,
-        "children": [],
         "disableCollapsible": false
       },
       {
@@ -5945,9 +5969,9 @@
             "disableCollapsible": false
           },
           {
-            "name": "Enable Bitbucket Cloud PR Integration",
-            "path": "/ci/recipes/source-control-integration/bitbucket-cloud",
-            "id": "bitbucket-cloud",
+            "name": "Enable Bitbucket PR Integration",
+            "path": "/ci/recipes/source-control-integration/bitbucket",
+            "id": "bitbucket",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -5980,9 +6004,9 @@
         "disableCollapsible": false
       },
       {
-        "name": "Enable Bitbucket Cloud PR Integration",
-        "path": "/ci/recipes/source-control-integration/bitbucket-cloud",
-        "id": "bitbucket-cloud",
+        "name": "Enable Bitbucket PR Integration",
+        "path": "/ci/recipes/source-control-integration/bitbucket",
+        "id": "bitbucket",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -6015,6 +6039,14 @@
             "id": "on-premise",
             "isExternal": false,
             "children": [
+              {
+                "name": "Set up Nx Cloud On-Premise",
+                "path": "/ci/recipes/enterprise/on-premise/on-premise",
+                "id": "on-premise",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
               {
                 "name": "Authenticate with a Single Admin",
                 "path": "/ci/recipes/enterprise/on-premise/auth-single-admin",
@@ -6051,6 +6083,14 @@
                 "name": "Authenticate with BitBucket",
                 "path": "/ci/recipes/enterprise/on-premise/auth-bitbucket",
                 "id": "auth-bitbucket",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Authenticate with BitBucket Data Center",
+                "path": "/ci/recipes/enterprise/on-premise/auth-bitbucket-data-center",
+                "id": "auth-bitbucket-data-center",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -6157,6 +6197,14 @@
         "isExternal": false,
         "children": [
           {
+            "name": "Set up Nx Cloud On-Premise",
+            "path": "/ci/recipes/enterprise/on-premise/on-premise",
+            "id": "on-premise",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Authenticate with a Single Admin",
             "path": "/ci/recipes/enterprise/on-premise/auth-single-admin",
             "id": "auth-single-admin",
@@ -6197,6 +6245,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Authenticate with BitBucket Data Center",
+            "path": "/ci/recipes/enterprise/on-premise/auth-bitbucket-data-center",
+            "id": "auth-bitbucket-data-center",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Authenticate via SAML",
             "path": "/ci/recipes/enterprise/on-premise/auth-saml",
             "id": "auth-saml",
@@ -6229,6 +6285,14 @@
             "disableCollapsible": false
           }
         ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Set up Nx Cloud On-Premise",
+        "path": "/ci/recipes/enterprise/on-premise/on-premise",
+        "id": "on-premise",
+        "isExternal": false,
+        "children": [],
         "disableCollapsible": false
       },
       {
@@ -6267,6 +6331,14 @@
         "name": "Authenticate with BitBucket",
         "path": "/ci/recipes/enterprise/on-premise/auth-bitbucket",
         "id": "auth-bitbucket",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Authenticate with BitBucket Data Center",
+        "path": "/ci/recipes/enterprise/on-premise/auth-bitbucket-data-center",
+        "id": "auth-bitbucket-data-center",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -6567,6 +6639,14 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
+          },
+          {
+            "name": "Explain With AI",
+            "path": "/ci/troubleshooting/explain-with-ai",
+            "id": "explain-with-ai",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -6575,6 +6655,14 @@
         "name": "CI Execution Failed",
         "path": "/ci/troubleshooting/ci-execution-failed",
         "id": "ci-execution-failed",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Explain With AI",
+        "path": "/ci/troubleshooting/explain-with-ai",
+        "id": "explain-with-ai",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -8197,6 +8285,14 @@
                 "id": "cypress-component-configuration",
                 "path": "/nx-api/next/generators/cypress-component-configuration",
                 "name": "cypress-component-configuration",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "convert-to-inferred",
+                "path": "/nx-api/next/generators/convert-to-inferred",
+                "name": "convert-to-inferred",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false

@@ -310,7 +310,6 @@ describe('lib', () => {
           noImplicitReturns: true,
           strict: true,
           target: 'es2022',
-          useDefineForClassFields: false,
         },
         files: [],
         include: [],
@@ -1770,6 +1769,27 @@ describe('lib', () => {
       expect(
         tree.exists('libs/my-dir/my-lib/src/lib/my-dir-my-lib.module.ts')
       ).toBeTruthy();
+    });
+  });
+
+  describe('angular compat support', () => {
+    beforeEach(() => {
+      updateJson(tree, 'package.json', (json) => ({
+        ...json,
+        dependencies: {
+          ...json.dependencies,
+          '@angular/core': '~17.2.0',
+        },
+      }));
+    });
+
+    it('should disable modern class fields behavior', async () => {
+      await runLibraryGeneratorWithOpts();
+
+      expect(
+        readJson(tree, 'my-lib/tsconfig.json').compilerOptions
+          .useDefineForClassFields
+      ).toBe(false);
     });
   });
 });

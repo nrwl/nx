@@ -73,6 +73,7 @@ describe('Workspaces', () => {
               ],
               "executor": "@nx/js:release-publish",
               "options": {},
+              "parallelism": true,
             },
           },
         }

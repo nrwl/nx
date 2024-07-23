@@ -7,9 +7,11 @@ import {
   CreateDependenciesContext,
   CreateMetadataContext,
   CreateNodesContext,
+  CreateNodesContextV2,
 } from '../public-api';
 import { LoadedNxPlugin } from '../internal-api';
 import { Serializable } from 'child_process';
+import { Socket } from 'net';
 
 export interface PluginWorkerLoadMessage {
   type: 'load';
@@ -42,7 +44,7 @@ export interface PluginWorkerCreateNodesMessage {
   type: 'createNodes';
   payload: {
     configFiles: string[];
-    context: CreateNodesContext;
+    context: CreateNodesContextV2;
     tx: string;
   };
 }
@@ -104,7 +106,7 @@ export interface PluginCreateMetadataResult {
       }
     | {
         success: false;
-        error: string;
+        error: Error;
         tx: string;
       };
 }
@@ -159,6 +161,7 @@ export function isPluginWorkerMessage(
       'createNodes',
       'createDependencies',
       'processProjectGraph',
+      'createMetadata',
     ].includes(message.type)
   );
 }
@@ -175,6 +178,7 @@ export function isPluginWorkerResult(
       'createNodesResult',
       'createDependenciesResult',
       'processProjectGraphResult',
+      'createMetadataResult',
     ].includes(message.type)
   );
 }
@@ -192,6 +196,7 @@ type MessageHandlerReturn<T extends PluginWorkerMessage | PluginWorkerResult> =
 export async function consumeMessage<
   T extends PluginWorkerMessage | PluginWorkerResult
 >(
+  socket: Socket,
   raw: T,
   handlers: {
     [K in T['type']]: (
@@ -205,7 +210,14 @@ export async function consumeMessage<
   if (handler) {
     const response = await handler(message.payload);
     if (response) {
-      process.send!(response);
+      sendMessageOverSocket(socket, response);
     }
   }
+}
+
+export function sendMessageOverSocket(
+  socket: Socket,
+  message: PluginWorkerMessage | PluginWorkerResult
+) {
+  socket.write(JSON.stringify(message) + String.fromCodePoint(4));
 }

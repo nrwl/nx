@@ -146,7 +146,7 @@ allprojects {
   }
 }
 
-function updateNxJsonConfiguration(tree: Tree) {
+export function updateNxJsonConfiguration(tree: Tree) {
   const nxJson = readNxJson(tree);
 
   if (!nxJson.namedInputs) {
@@ -158,7 +158,7 @@ function updateNxJsonConfiguration(tree: Tree) {
   );
   const productionFileSet = nxJson.namedInputs.production ?? [];
   nxJson.namedInputs.production = Array.from(
-    new Set([...productionFileSet, 'default', '!{projectRoot}/test/**/*'])
+    new Set([...productionFileSet, 'default', '!{projectRoot}/src/test/**/*'])
   );
   updateNxJson(tree, nxJson);
 }

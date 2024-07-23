@@ -21,12 +21,14 @@ interface ProjectDetailsProps {
   project: ProjectGraphProjectNode;
   sourceMap: Record<string, string[]>;
   errors?: GraphError[];
+  connectedToCloud?: boolean;
 }
 
 export function ProjectDetailsWrapper({
   project,
   sourceMap,
   errors,
+  connectedToCloud,
 }: ProjectDetailsProps) {
   const environment = useEnvironmentConfig()?.environment;
   const externalApiService = getExternalApiService();
@@ -50,7 +52,8 @@ export function ProjectDetailsWrapper({
         navigate(
           routeConstructor(
             `/projects/${encodeURIComponent(data.projectName)}`,
-            true
+            true,
+            ['expanded'] // omit expanded targets from search params
           )
         );
       }
@@ -75,7 +78,8 @@ export function ProjectDetailsWrapper({
               pathname: `/tasks/${encodeURIComponent(data.targetName)}`,
               search: `?projects=${encodeURIComponent(data.projectName)}`,
             },
-            true
+            true,
+            ['expanded'] // omit expanded targets from search params
           )
         );
       }
@@ -93,11 +97,19 @@ export function ProjectDetailsWrapper({
     [externalApiService]
   );
 
+  const handleNxConnect = useCallback(
+    () =>
+      externalApiService.postEvent({
+        type: 'nx-connect',
+      }),
+    [externalApiService]
+  );
+
   const updateSearchParams = (
     params: URLSearchParams,
-    targetNames: string[]
+    targetNames?: string[]
   ) => {
-    if (targetNames.length === 0) {
+    if (!targetNames || targetNames.length === 0) {
       params.delete('expanded');
     } else {
       params.set('expanded', targetNames.join(','));
@@ -118,13 +130,6 @@ export function ProjectDetailsWrapper({
       if (collapseAllTargets) {
         collapseAllTargets();
       }
-      setSearchParams(
-        (currentSearchParams) => {
-          currentSearchParams.delete('expanded');
-          return currentSearchParams;
-        },
-        { replace: true, preventScrollReset: true }
-      );
     };
   }, []); // only run on mount
 
@@ -132,7 +137,7 @@ export function ProjectDetailsWrapper({
     const expandedTargetsParams =
       searchParams.get('expanded')?.split(',') || [];
 
-    if (expandedTargetsParams.join(',') === expandedTargets.join(',')) {
+    if (expandedTargetsParams.join(',') === expandedTargets?.join(',')) {
       return;
     }
 
@@ -167,6 +172,8 @@ export function ProjectDetailsWrapper({
         viewInProjectGraphPosition={
           environment === 'nx-console' ? 'bottom' : 'top'
         }
+        connectedToCloud={connectedToCloud}
+        onNxConnect={environment === 'nx-console' ? handleNxConnect : undefined}
       />
       <ErrorToast errors={errors} />
     </>

@@ -1,4 +1,4 @@
-import { CommandModule } from 'yargs';
+import { CommandModule, showHelp } from 'yargs';
 import {
   withBatch,
   withOverrides,
@@ -37,14 +37,20 @@ export const yargsNxInfixCommand: CommandModule = {
   command: '$0 <target> [project] [_..]',
   describe: 'Run a target for a project',
   handler: async (args) => {
-    await handleErrors(
+    const exitCode = await handleErrors(
       (args.verbose as boolean) ?? process.env.NX_VERBOSE_LOGGING === 'true',
       async () => {
+        // Yargs parses <target> as 'undefined' if running just 'nx'
+        if (!args.target || args.target === 'undefined') {
+          showHelp();
+          process.exit(1);
+        }
         return (await import('./run-one')).runOne(
           process.cwd(),
           withOverrides(args, 0)
         );
       }
     );
+    process.exit(exitCode);
   },
 };

@@ -1190,7 +1190,8 @@ async function getWrappedWorkspaceNodeModulesArchitectHost(
 
     private readExecutorsJson(
       nodeModule: string,
-      builder: string
+      builder: string,
+      extraRequirePaths: string[] = []
     ): {
       executorsFilePath: string;
       executorConfig: ExecutorJsonEntryConfig;
@@ -1200,7 +1201,9 @@ async function getWrappedWorkspaceNodeModulesArchitectHost(
         readPluginPackageJson(
           nodeModule,
           this.projects,
-          this.root ? [this.root, __dirname] : [__dirname]
+          this.root
+            ? [this.root, __dirname, ...extraRequirePaths]
+            : [__dirname, ...extraRequirePaths]
         );
       const executorsFile = packageJson.executors ?? packageJson.builders;
 
@@ -1210,9 +1213,8 @@ async function getWrappedWorkspaceNodeModulesArchitectHost(
         );
       }
 
-      const executorsFilePath = require.resolve(
-        join(dirname(packageJsonPath), executorsFile)
-      );
+      const basePath = dirname(packageJsonPath);
+      const executorsFilePath = require.resolve(join(basePath, executorsFile));
       const executorsJson = readJsonFile<ExecutorsJson>(executorsFilePath);
       const executorConfig =
         executorsJson.builders?.[builder] ?? executorsJson.executors?.[builder];
@@ -1224,7 +1226,7 @@ async function getWrappedWorkspaceNodeModulesArchitectHost(
       if (typeof executorConfig === 'string') {
         // Angular CLI can have a builder pointing to another package:builder
         const [packageName, executorName] = executorConfig.split(':');
-        return this.readExecutorsJson(packageName, executorName);
+        return this.readExecutorsJson(packageName, executorName, [basePath]);
       }
 
       return { executorsFilePath, executorConfig, isNgCompat: true };

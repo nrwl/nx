@@ -1,6 +1,7 @@
 /* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
 import type { TargetConfiguration } from '@nx/devkit';
+import { CopyToClipboardButton } from '@nx/graph/ui-components';
 import {
   ChevronDownIcon,
   ChevronUpIcon,
@@ -8,12 +9,15 @@ import {
   PlayIcon,
 } from '@heroicons/react/24/outline';
 
-import { PropertyInfoTooltip, Tooltip } from '@nx/graph/ui-tooltips';
+import {
+  AtomizerTooltip,
+  PropertyInfoTooltip,
+  Tooltip,
+} from '@nx/graph/ui-tooltips';
 import { twMerge } from 'tailwind-merge';
 import { Pill } from '../pill';
 import { TargetTechnologies } from '../target-technologies/target-technologies';
 import { SourceInfo } from '../source-info/source-info';
-import { CopyToClipboard } from '../copy-to-clipboard/copy-to-clipboard';
 import { getDisplayHeaderFromTargetConfiguration } from '../utils/get-display-header-from-target-configuration';
 import { TargetExecutor } from '../target-executor/target-executor';
 
@@ -26,11 +30,13 @@ export interface TargetConfigurationDetailsHeaderProps {
   projectName: string;
   targetName: string;
   sourceMap: Record<string, string[]>;
+  connectedToCloud?: boolean;
   onRunTarget?: (data: { projectName: string; targetName: string }) => void;
   onViewInTaskGraph?: (data: {
     projectName: string;
     targetName: string;
   }) => void;
+  onNxConnect?: () => void;
 }
 
 export const TargetConfigurationDetailsHeader = ({
@@ -41,14 +47,12 @@ export const TargetConfigurationDetailsHeader = ({
   targetConfiguration,
   projectName,
   targetName,
+  connectedToCloud = true,
   sourceMap,
   onRunTarget,
   onViewInTaskGraph,
+  onNxConnect,
 }: TargetConfigurationDetailsHeaderProps) => {
-  const handleCopyClick = async (copyText: string) => {
-    await window.navigator.clipboard.writeText(copyText);
-  };
-
   if (!collapsable) {
     // when collapsable is false, isCollasped should be false
     isCollasped = false;
@@ -97,7 +101,7 @@ export const TargetConfigurationDetailsHeader = ({
                 </p>
               )}
           </div>
-          <div>
+          <div className="flex items-center gap-2">
             {targetName === 'nx-release-publish' && (
               <Tooltip
                 openAction="hover"
@@ -106,6 +110,31 @@ export const TargetConfigurationDetailsHeader = ({
               >
                 <span className="inline-flex">
                   <Pill text="nx release" color="grey" />
+                </span>
+              </Tooltip>
+            )}
+            {targetConfiguration.metadata?.nonAtomizedTarget && (
+              <Tooltip
+                openAction="hover"
+                strategy="fixed"
+                usePortal={true}
+                content={
+                  (
+                    <AtomizerTooltip
+                      connectedToCloud={connectedToCloud}
+                      nonAtomizedTarget={
+                        targetConfiguration.metadata.nonAtomizedTarget
+                      }
+                      onNxConnect={onNxConnect}
+                    />
+                  ) as any
+                }
+              >
+                <span className="inline-flex">
+                  <Pill
+                    color={connectedToCloud ? 'grey' : 'yellow'}
+                    text={'Atomizer'}
+                  />
                 </span>
               </Tooltip>
             )}
@@ -123,20 +152,27 @@ export const TargetConfigurationDetailsHeader = ({
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <CopyToClipboardButton
+            text={JSON.stringify(targetConfiguration, null, 2)}
+            tooltipText={!isCollasped ? 'Copy Target' : undefined}
+            tooltipAlignment="right"
+            className="rounded-md bg-inherit p-1 text-sm text-slate-600 ring-1 ring-inset ring-slate-400/40 hover:bg-slate-200 dark:text-slate-300 dark:ring-slate-400/30 dark:hover:bg-slate-700/60"
+          />
           {onViewInTaskGraph && (
             <button
               className="rounded-md bg-inherit p-1 text-sm text-slate-600 ring-1 ring-inset ring-slate-400/40 hover:bg-slate-200 dark:text-slate-300 dark:ring-slate-400/30 dark:hover:bg-slate-700/60"
               // TODO: fix tooltip overflow in collapsed state
               data-tooltip={isCollasped ? false : 'View in Task Graph'}
               data-tooltip-align-right
+              onClick={(e) => {
+                if (isCollasped) {
+                  return;
+                }
+                e.stopPropagation();
+                onViewInTaskGraph({ projectName, targetName });
+              }}
             >
-              <EyeIcon
-                className={`h-5 w-5 !cursor-pointer`}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onViewInTaskGraph({ projectName, targetName });
-                }}
-              />
+              <EyeIcon className={`h-5 w-5 !cursor-pointer`} />
             </button>
           )}
 
@@ -160,21 +196,22 @@ export const TargetConfigurationDetailsHeader = ({
       </div>
       {!isCollasped && (
         <div className="ml-5 mt-2 text-sm">
-          <SourceInfo
-            data={sourceMap[`targets.${targetName}`]}
-            propertyKey={`targets.${targetName}`}
-            color="text-gray-500 dark:text-slate-400"
-          />
+          <div className="flex">
+            <SourceInfo
+              data={sourceMap[`targets.${targetName}`]}
+              propertyKey={`targets.${targetName}`}
+              color="text-gray-500 dark:text-slate-400"
+            />
+          </div>
           {targetName !== 'nx-release-publish' && (
             <div className="mt-2 text-right">
               <code className="ml-4 rounded bg-gray-100 px-2 py-1 font-mono text-gray-800 dark:bg-gray-700 dark:text-gray-300">
                 nx run {projectName}:{targetName}
               </code>
               <span>
-                <CopyToClipboard
-                  onCopy={() =>
-                    handleCopyClick(`nx run ${projectName}:${targetName}`)
-                  }
+                <CopyToClipboardButton
+                  text={`nx run ${projectName}:${targetName}`}
+                  tooltipText="Copy Command"
                   tooltipAlignment="right"
                 />
               </span>

@@ -219,7 +219,7 @@ function warnIfUsingOutdatedGlobalInstall(
       'For more information, see https://nx.dev/more-concepts/global-nx'
     );
     output.warn({
-      title: `Its time to update Nx 🎉`,
+      title: `It's time to update Nx 🎉`,
       bodyLines,
     });
   }

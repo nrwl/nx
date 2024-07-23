@@ -36,6 +36,7 @@ For instructions on how to set up third-party auth providers, please refer to th
 - [GitHub Auth](/ci/recipes/enterprise/on-premise/auth-github)
 - [GitLab Auth](/ci/recipes/enterprise/on-premise/auth-gitlab)
 - [BitBucket Auth](/ci/recipes/enterprise/on-premise/auth-bitbucket)
+- [BitBucket Data Center Auth](/ci/recipes/enterprise/on-premise/auth-bitbucket-data-center)
 - [SAML Auth](/ci/recipes/enterprise/on-premise/auth-saml)
 
 ## Inviting users

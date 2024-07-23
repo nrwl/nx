@@ -2,7 +2,7 @@ import { joinPathFragments, type ExecutorContext } from '@nx/devkit';
 import type { ESLint } from 'eslint';
 import { mkdirSync, writeFileSync } from 'fs';
 import { interpolate } from 'nx/src/tasks-runner/utils';
-import { dirname, posix, resolve } from 'path';
+import { dirname, posix, relative, resolve } from 'path';
 import { findFlatConfigFile, findOldConfigFile } from '../../utils/config-file';
 import type { Schema } from './schema';
 import { resolveAndInstantiateESLint } from './utility/eslint-utils';
@@ -45,10 +45,7 @@ export default async function run(
   // the flat config would be resolved starting from the cwd, which we changed to the workspace root
   // so we explicitly set the config path to the flat config file path we previously found
   if (hasFlatConfig && !normalizedOptions.eslintConfig) {
-    normalizedOptions.eslintConfig = posix.relative(
-      systemRoot,
-      flatConfigFilePath
-    );
+    normalizedOptions.eslintConfig = relative(systemRoot, flatConfigFilePath);
   }
 
   /**
@@ -201,6 +198,12 @@ Please see https://nx.dev/recipes/tips-n-tricks/eslint for full guidance on how 
 
   if (printInfo) {
     outputPrintInfo(totals);
+  }
+
+  if (totals.warnings > options.maxWarnings) {
+    console.info(
+      `ESLint found too many warnings (maximum: ${options.maxWarnings}).`
+    );
   }
 
   return {

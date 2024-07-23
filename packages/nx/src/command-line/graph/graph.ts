@@ -1,4 +1,5 @@
 import { createHash } from 'crypto';
+import { execSync } from 'node:child_process';
 import { existsSync, readFileSync, statSync, writeFileSync } from 'fs';
 import { copySync, ensureDirSync } from 'fs-extra';
 import * as http from 'http';
@@ -17,6 +18,7 @@ import {
 import { performance } from 'perf_hooks';
 import { readNxJson, workspaceLayout } from '../../config/configuration';
 import {
+  FileData,
   ProjectFileMap,
   ProjectGraph,
   ProjectGraphDependency,
@@ -27,8 +29,6 @@ import { output } from '../../utils/output';
 import { workspaceRoot } from '../../utils/workspace-root';
 
 import { Server } from 'net';
-
-import { FileData } from '../../config/project-graph';
 import { TaskGraph } from '../../config/task-graph';
 import { daemonClient } from '../../daemon/client/client';
 import { getRootTsConfigPath } from '../../plugins/js/utils/typescript';
@@ -49,13 +49,12 @@ import { HashPlanner, transferProjectGraph } from '../../native';
 import { transformProjectGraphForRust } from '../../native/transform-objects';
 import { getAffectedGraphNodes } from '../affected/affected';
 import { readFileMapCache } from '../../project-graph/nx-deps-cache';
-import { Hash, getNamedInputs } from '../../hasher/task-hasher';
+import { filterUsingGlobPatterns } from '../../hasher/task-hasher';
 import { ConfigurationSourceMaps } from '../../project-graph/utils/project-configuration-utils';
 
 import { createTaskHasher } from '../../hasher/create-task-hasher';
-
-import { filterUsingGlobPatterns } from '../../hasher/task-hasher';
 import { ProjectGraphError } from '../../project-graph/error-types';
+import { isNxCloudUsed } from '../../utils/nx-cloud-utils';
 
 export interface GraphError {
   message: string;
@@ -78,6 +77,7 @@ export interface ProjectGraphClientResponse {
   exclude: string[];
   isPartial: boolean;
   errors?: GraphError[];
+  connectedToCloud?: boolean;
 }
 
 export interface TaskGraphClientResponse {
@@ -540,14 +540,22 @@ async function startServer(
   environmentJs: string,
   host: string,
   port = 4211,
-  watchForchanges = true,
+  watchForChanges = true,
   affected: string[] = [],
   focus: string = null,
   groupByFolder: boolean = false,
   exclude: string[] = []
 ) {
   let unregisterFileWatcher: (() => void) | undefined;
-  if (watchForchanges) {
+
+  if (watchForChanges && !daemonClient.enabled()) {
+    output.warn({
+      title:
+        'Nx Daemon is not enabled. Graph will not refresh on file changes.',
+    });
+  }
+
+  if (watchForChanges && daemonClient.enabled()) {
     unregisterFileWatcher = await createFileWatcher();
   }
 
@@ -598,6 +606,7 @@ async function startServer(
         'task input generation:start',
         'task input generation:end'
       );
+
       return;
     }
 
@@ -616,6 +625,21 @@ async function startServer(
     if (sanitizePath === 'environment.js') {
       res.writeHead(200, { 'Content-Type': 'application/javascript' });
       res.end(environmentJs);
+      return;
+    }
+
+    if (sanitizePath === 'help') {
+      const project = parsedUrl.searchParams.get('project');
+      const target = parsedUrl.searchParams.get('target');
+
+      try {
+        const text = getHelpTextFromTarget(project, target);
+        res.writeHead(200, { 'Content-Type': 'application/javascript' });
+        res.end(JSON.stringify({ text, success: true }));
+      } catch (err) {
+        res.writeHead(200, { 'Content-Type': 'application/javascript' });
+        res.end(JSON.stringify({ text: err.message, success: false }));
+      }
       return;
     }
 
@@ -748,11 +772,14 @@ async function createProjectGraphAndSourceMapClientResponse(
   let sourceMaps: ConfigurationSourceMaps;
   let isPartial = false;
   let errors: GraphError[] | undefined;
+  let connectedToCloud: boolean | undefined;
   try {
     const projectGraphAndSourceMaps =
       await createProjectGraphAndSourceMapsAsync({ exitOnError: false });
     projectGraph = projectGraphAndSourceMaps.projectGraph;
     sourceMaps = projectGraphAndSourceMaps.sourceMaps;
+
+    connectedToCloud = isNxCloudUsed(readNxJson());
   } catch (e) {
     if (e instanceof ProjectGraphError) {
       projectGraph = e.getPartialProjectGraph();
@@ -786,7 +813,14 @@ async function createProjectGraphAndSourceMapClientResponse(
 
   const hasher = createHash('sha256');
   hasher.update(
-    JSON.stringify({ layout, projects, dependencies, sourceMaps, errors })
+    JSON.stringify({
+      layout,
+      projects,
+      dependencies,
+      sourceMaps,
+      errors,
+      connectedToCloud,
+    })
   );
 
   const hash = hasher.digest('hex');
@@ -816,6 +850,7 @@ async function createProjectGraphAndSourceMapClientResponse(
       fileMap,
       isPartial,
       errors,
+      connectedToCloud,
     },
     sourceMapResponse: sourceMaps,
   };
@@ -1163,4 +1198,28 @@ async function createJsonOutput(
   }
 
   return response;
+}
+
+function getHelpTextFromTarget(
+  projectName: string,
+  targetName: string
+): string {
+  if (!projectName) throw new Error(`Missing project`);
+  if (!targetName) throw new Error(`Missing target`);
+
+  const project = currentProjectGraphClientResponse.projects?.find(
+    (p) => p.name === projectName
+  );
+  if (!project) throw new Error(`Cannot find project ${projectName}`);
+
+  const target = project.data.targets[targetName];
+  if (!target) throw new Error(`Cannot find target ${targetName}`);
+
+  const command = target.metadata?.help?.command;
+  if (!command)
+    throw new Error(`No help command found for ${projectName}:${targetName}`);
+
+  return execSync(command, {
+    cwd: target.options?.cwd ?? workspaceRoot,
+  }).toString();
 }

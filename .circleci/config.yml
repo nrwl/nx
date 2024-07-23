@@ -114,8 +114,7 @@ jobs:
             pnpm nx run-many -t check-imports check-commit check-lock-files check-codeowners documentation --parallel=1 --no-dte &
             pids+=($!)
 
-            (pnpm nx affected --targets=lint,test,build --base=$NX_BASE --head=$NX_HEAD --parallel=3 &&
-            pnpm nx affected --targets=e2e,e2e-ci --base=$NX_BASE --head=$NX_HEAD --parallel=1) &
+            pnpm nx affected --targets=lint,test,build,e2e,e2e-ci --base=$NX_BASE --head=$NX_HEAD --parallel=3 &
             pids+=($!)
 
             for pid in "${pids[@]}"; do
@@ -158,7 +157,12 @@ jobs:
       - run:
           name: Run E2E Tests for macOS
           command: |
-            pnpm nx affected -t e2e-macos-ci --parallel=1 --base=$NX_BASE --head=$NX_HEAD
+            HAS_CHANGED=$(node ./scripts/check-react-native-changes.js $NX_BASE $NX_HEAD);
+            if $HAS_CHANGED; then
+              pnpm nx affected -t e2e-macos-ci --parallel=1 --base=$NX_BASE --head=$NX_HEAD
+            else
+              echo "Skip E2E tests for macOS as there are no changes in React Native projects."
+            fi
           no_output_timeout: 45m
 
 # -------------------------

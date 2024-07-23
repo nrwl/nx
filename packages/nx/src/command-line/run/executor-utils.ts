@@ -99,7 +99,8 @@ function readExecutorJson(
   nodeModule: string,
   executor: string,
   root: string,
-  projects: Record<string, ProjectConfiguration>
+  projects: Record<string, ProjectConfiguration>,
+  extraRequirePaths: string[] = []
 ): {
   executorsFilePath: string;
   executorConfig: {
@@ -114,8 +115,14 @@ function readExecutorJson(
     nodeModule,
     projects,
     root
-      ? [root, __dirname, process.cwd(), ...getNxRequirePaths()]
-      : [__dirname, process.cwd(), ...getNxRequirePaths()]
+      ? [
+          root,
+          __dirname,
+          process.cwd(),
+          ...getNxRequirePaths(),
+          ...extraRequirePaths,
+        ]
+      : [__dirname, process.cwd(), ...getNxRequirePaths(), ...extraRequirePaths]
   );
   const executorsFile = packageJson.executors ?? packageJson.builders;
 
@@ -125,9 +132,8 @@ function readExecutorJson(
     );
   }
 
-  const executorsFilePath = require.resolve(
-    join(dirname(packageJsonPath), executorsFile)
-  );
+  const basePath = dirname(packageJsonPath);
+  const executorsFilePath = require.resolve(join(basePath, executorsFile));
   const executorsJson = readJsonFile<ExecutorsJson>(executorsFilePath);
   const executorConfig =
     executorsJson.executors?.[executor] || executorsJson.builders?.[executor];
@@ -139,7 +145,9 @@ function readExecutorJson(
   if (typeof executorConfig === 'string') {
     // Angular CLI can have a builder pointing to another package:builder
     const [packageName, executorName] = executorConfig.split(':');
-    return readExecutorJson(packageName, executorName, root, projects);
+    return readExecutorJson(packageName, executorName, root, projects, [
+      basePath,
+    ]);
   }
   const isNgCompat = !executorsJson.executors?.[executor];
   return { executorsFilePath, executorConfig, isNgCompat };

@@ -17,6 +17,11 @@ packages/nx/src/plugins/js/lock-file/__fixtures__/**/*.*
 packages/**/schematics/**/files/**/*.html
 packages/**/generators/**/files/**/*.html
 packages/nx/src/native/**/*.rs
+packages/nx/src/native/browser.js
+packages/nx/src/native/nx.wasi-browser.js
+packages/nx/src/native/nx.wasi.cjs
+packages/nx/src/native/wasi-worker-browser.mjs
+packages/nx/src/native/wasi-worker.mjs
 packages/nx/src/native/native-bindings.js
 packages/nx/src/native/index.d.ts
 nx-dev/nx-dev/.next/

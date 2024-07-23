@@ -10,7 +10,8 @@ type PropertyInfoTooltipType =
   | 'dependsOn'
   | 'options'
   | 'configurations'
-  | 'release';
+  | 'release'
+  | 'parallelism';
 
 type PropertyInfoTooltipTypeOptions = {
   docsUrl?: string;
@@ -81,6 +82,12 @@ const PROPERTY_INFO_TOOLTIP_TYPE_OPTIONS: Record<
       "The nx-release-publish target is used to publish your project with nxrelease. Don't invoke this directly - use nx release publish instead.",
     docsUrl: 'https://nx.dev/nx-api/nx/documents/release',
   },
+  parallelism: {
+    heading: 'Parallelism',
+    description:
+      'By default, tasks are run in parallel with other tasks. Setting `"parallelism": false` ensures that the target will not run in parallel with other tasks on the same machine.',
+    docsUrl: 'https://nx.dev/reference/project-configuration#parallelism',
+  },
 };
 
 export function PropertyInfoTooltip({ type }: PropertyInfoTooltipProps) {
@@ -99,7 +106,7 @@ export function PropertyInfoTooltip({ type }: PropertyInfoTooltipProps) {
             : ''
         )}
       >
-        <p className="flex grow items-center gap-2 whitespace-pre-wrap">
+        <p className="flex grow items-center gap-2 whitespace-pre-wrap normal-case">
           {propertyInfo.description}
         </p>
       </div>

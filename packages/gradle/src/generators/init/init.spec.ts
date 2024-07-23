@@ -19,17 +19,17 @@ describe('@nx/gradle:init', () => {
       });
       const nxJson = readNxJson(tree);
       expect(nxJson.plugins).toMatchInlineSnapshot(`
-              [
-                {
-                  "options": {
-                    "buildTargetName": "build",
-                    "classesTargetName": "classes",
-                    "testTargetName": "test",
-                  },
-                  "plugin": "@nx/gradle",
-                },
-              ]
-          `);
+        [
+          {
+            "options": {
+              "buildTargetName": "build",
+              "classesTargetName": "classes",
+              "testTargetName": "test",
+            },
+            "plugin": "@nx/gradle",
+          },
+        ]
+      `);
     });
 
     it('should not overwrite existing plugins', async () => {
@@ -42,18 +42,18 @@ describe('@nx/gradle:init', () => {
       });
       const nxJson = readNxJson(tree);
       expect(nxJson.plugins).toMatchInlineSnapshot(`
-              [
-                "foo",
-                {
-                  "options": {
-                    "buildTargetName": "build",
-                    "classesTargetName": "classes",
-                    "testTargetName": "test",
-                  },
-                  "plugin": "@nx/gradle",
-                },
-              ]
-          `);
+        [
+          "foo",
+          {
+            "options": {
+              "buildTargetName": "build",
+              "classesTargetName": "classes",
+              "testTargetName": "test",
+            },
+            "plugin": "@nx/gradle",
+          },
+        ]
+      `);
     });
 
     it('should not add plugin if already in array', async () => {
@@ -81,16 +81,16 @@ describe('@nx/gradle:init', () => {
       });
       const nxJson = readNxJson(tree);
       expect(nxJson.namedInputs).toMatchInlineSnapshot(`
-              {
-                "default": [
-                  "{projectRoot}/**/*",
-                ],
-                "production": [
-                  "default",
-                  "!{projectRoot}/test/**/*",
-                ],
-              }
-          `);
+        {
+          "default": [
+            "{projectRoot}/**/*",
+          ],
+          "production": [
+            "default",
+            "!{projectRoot}/src/test/**/*",
+          ],
+        }
+      `);
     });
 
     it('should not overwrite existing namedInputs', async () => {
@@ -102,7 +102,7 @@ describe('@nx/gradle:init', () => {
             '!{projectRoot}/cypress/**/*',
             '!{projectRoot}/**/*.cy.[jt]s?(x)',
             '!{projectRoot}/cypress.config.[jt]s',
-            '!{projectRoot}/test/**/*',
+            '!{projectRoot}/src/test/**/*',
           ],
         },
       });
@@ -122,7 +122,7 @@ describe('@nx/gradle:init', () => {
             "!{projectRoot}/cypress/**/*",
             "!{projectRoot}/**/*.cy.[jt]s?(x)",
             "!{projectRoot}/cypress.config.[jt]s",
-            "!{projectRoot}/test/**/*",
+            "!{projectRoot}/src/test/**/*",
             "default",
           ],
         }

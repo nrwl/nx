@@ -22,6 +22,7 @@ Target's configuration
 - [metadata](../../devkit/documents/TargetConfiguration#metadata): TargetMetadata
 - [options](../../devkit/documents/TargetConfiguration#options): T
 - [outputs](../../devkit/documents/TargetConfiguration#outputs): string[]
+- [parallelism](../../devkit/documents/TargetConfiguration#parallelism): boolean
 
 ## Properties
 
@@ -109,3 +110,12 @@ Target's options. They are passed in to the executor.
 
 List of the target's outputs. The outputs will be cached by the Nx computation
 caching engine.
+
+---
+
+### parallelism
+
+• `Optional` **parallelism**: `boolean`
+
+Whether this target can be run in parallel with other tasks
+Default is true

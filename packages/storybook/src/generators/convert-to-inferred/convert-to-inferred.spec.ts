@@ -287,8 +287,8 @@ describe('Storybook - Convert To Inferred', () => {
       nxJson.plugins.push({
         plugin: '@nx/storybook/plugin',
         options: {
-          buildTargetName: 'storybook-build',
-          serveTargetName: defaultTestProjectOptions.serveTargetName,
+          buildStorybookTargetName: 'storybook-build',
+          serveStorybookTargetName: 'custom-storybook',
           staticStorybookTargetName: 'static-storybook',
           testStorybookTargetName: 'test-storybook',
         },

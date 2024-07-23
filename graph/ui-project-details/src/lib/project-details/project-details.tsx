@@ -1,5 +1,3 @@
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-
 /* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
 import type { ProjectGraphProjectNode } from '@nx/devkit';
@@ -19,12 +17,14 @@ export interface ProjectDetailsProps {
   sourceMap: Record<string, string[]>;
   errors?: GraphError[];
   variant?: 'default' | 'compact';
+  connectedToCloud?: boolean;
   onViewInProjectGraph?: (data: { projectName: string }) => void;
   onViewInTaskGraph?: (data: {
     projectName: string;
     targetName: string;
   }) => void;
   onRunTarget?: (data: { projectName: string; targetName: string }) => void;
+  onNxConnect?: () => void;
   viewInProjectGraphPosition?: 'top' | 'bottom';
 }
 
@@ -41,7 +41,9 @@ export const ProjectDetails = ({
   onViewInProjectGraph,
   onViewInTaskGraph,
   onRunTarget,
+  onNxConnect,
   viewInProjectGraphPosition = 'top',
+  connectedToCloud,
 }: ProjectDetailsProps) => {
   const projectData = project.data;
   const isCompact = variant === 'compact';
@@ -67,7 +69,7 @@ export const ProjectDetails = ({
       >
         <div
           className={twMerge(
-            `flex items-center justify-between`,
+            `flex flex-wrap items-center justify-between`,
             isCompact ? `gap-1` : `mb-4 gap-2`
           )}
         >
@@ -86,17 +88,15 @@ export const ProjectDetails = ({
               className="h-6 w-6"
             />
           </div>
-          <span>
-            {onViewInProjectGraph && viewInProjectGraphPosition === 'top' && (
-              <ViewInProjectGraphButton
-                callback={() =>
-                  onViewInProjectGraph({ projectName: project.name })
-                }
-              />
-            )}{' '}
-          </span>
+          {onViewInProjectGraph && viewInProjectGraphPosition === 'top' && (
+            <ViewInProjectGraphButton
+              callback={() =>
+                onViewInProjectGraph({ projectName: project.name })
+              }
+            />
+          )}
         </div>
-        <div className="flex justify-between py-2">
+        <div className="flex flex-wrap justify-between py-2">
           <div>
             {projectData.metadata?.description ? (
               <p className="mb-2 text-sm capitalize text-gray-500 dark:text-slate-400">
@@ -129,16 +129,14 @@ export const ProjectDetails = ({
             ) : null}
           </div>
           <div className="self-end">
-            <span>
-              {onViewInProjectGraph &&
-                viewInProjectGraphPosition === 'bottom' && (
-                  <ViewInProjectGraphButton
-                    callback={() =>
-                      onViewInProjectGraph({ projectName: project.name })
-                    }
-                  />
-                )}{' '}
-            </span>
+            {onViewInProjectGraph &&
+              viewInProjectGraphPosition === 'bottom' && (
+                <ViewInProjectGraphButton
+                  callback={() =>
+                    onViewInProjectGraph({ projectName: project.name })
+                  }
+                />
+              )}
           </div>
         </div>
       </header>
@@ -161,6 +159,8 @@ export const ProjectDetails = ({
           variant={variant}
           onRunTarget={onRunTarget}
           onViewInTaskGraph={onViewInTaskGraph}
+          connectedToCloud={connectedToCloud}
+          onNxConnect={onNxConnect}
         />
       </div>
     </>

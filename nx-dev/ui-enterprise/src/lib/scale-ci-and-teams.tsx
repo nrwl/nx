@@ -1,9 +1,6 @@
-import { BoltIcon, UserGroupIcon } from '@heroicons/react/24/outline';
-import {
-  NxAgentsIcon,
-  NxReplayIcon,
-  SectionHeading,
-} from '@nx/nx-dev/ui-common';
+import { BoltIcon } from '@heroicons/react/24/outline';
+import { SectionHeading } from '@nx/nx-dev/ui-common';
+import { NxAgentsIcon, NxReplayIcon } from '@nx/nx-dev/ui-icons';
 
 const features = [
   {

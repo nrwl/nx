@@ -1,10 +1,10 @@
 import { type Schema } from '../schema';
 import { type ExecutorContext, logger } from '@nx/devkit';
-import type { StaticRemotesConfig } from './parse-static-remotes-config';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { fork } from 'node:child_process';
 import { join } from 'node:path';
 import { createWriteStream } from 'node:fs';
+import type { StaticRemotesConfig } from '@nx/webpack/src/utils/module-federation/parse-static-remotes-config';
 
 export async function buildStaticRemotes(
   staticRemotesConfig: StaticRemotesConfig,
@@ -23,9 +23,6 @@ export async function buildStaticRemotes(
       staticRemotesConfig.config[app].urlSegment
     }`;
   }
-  process.env.NX_MF_DEV_SERVER_STATIC_REMOTES = JSON.stringify(
-    mappedLocationOfRemotes
-  );
 
   await new Promise<void>((res) => {
     logger.info(
@@ -67,15 +64,20 @@ export async function buildStaticRemotes(
       }
     });
     staticProcess.stderr.on('data', (data) => logger.info(data.toString()));
-    staticProcess.on('exit', (code) => {
+    staticProcess.once('exit', (code) => {
       stdoutStream.end();
+      staticProcess.stdout.removeAllListeners('data');
+      staticProcess.stderr.removeAllListeners('data');
       if (code !== 0) {
         throw new Error(
           `Remote failed to start. A complete log can be found in: ${remoteBuildLogFile}`
         );
       }
+      res();
     });
     process.on('SIGTERM', () => staticProcess.kill('SIGTERM'));
     process.on('exit', () => staticProcess.kill('SIGTERM'));
   });
+
+  return mappedLocationOfRemotes;
 }

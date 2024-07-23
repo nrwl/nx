@@ -1,16 +1,16 @@
 import {
   createProjectGraphAsync,
+  formatFiles,
   GeneratorCallback,
   NxJsonConfiguration,
+  offsetFromRoot,
   ProjectConfiguration,
   ProjectGraph,
-  Tree,
-  readNxJson,
-  formatFiles,
-  offsetFromRoot,
   readJson,
+  readNxJson,
   readProjectConfiguration,
   runTasksInSerial,
+  Tree,
   updateJson,
   updateProjectConfiguration,
   writeJson,
@@ -21,10 +21,7 @@ import { findEslintFile } from '../utils/eslint-file';
 import { join } from 'path';
 import { lintInitGenerator } from '../init/init';
 import type { Linter } from 'eslint';
-import {
-  findLintTarget,
-  migrateConfigToMonorepoStyle,
-} from '../init/init-migration';
+import { migrateConfigToMonorepoStyle } from '../init/init-migration';
 import { getProjects } from 'nx/src/generators/utils/project-configuration';
 import { useFlatConfig } from '../../utils/flat-config';
 import {
@@ -36,7 +33,6 @@ import {
 import {
   baseEsLintConfigFile,
   baseEsLintFlatConfigFile,
-  ESLINT_CONFIG_FILENAMES,
 } from '../../utils/config-file';
 import { hasEslintPlugin } from '../utils/plugin';
 import { setupRootEsLint } from './setup-root-eslint';
@@ -144,12 +140,13 @@ export async function lintProjectGeneratorInternal(
           filteredProjects.push(project);
         }
       });
-      migrateConfigToMonorepoStyle(
+      const migrateTask = migrateConfigToMonorepoStyle(
         filteredProjects,
         tree,
         options.unitTestRunner,
         options.keepExistingVersions
       );
+      tasks.push(migrateTask);
     }
   }
 

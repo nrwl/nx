@@ -21,12 +21,13 @@ pub fn hash_project_config(
         .sorted_by(|a, b| a.0.cmp(b.0))
         .map(|(k, v)| {
             format!(
-                "{}{}{}{}{}",
+                "{}{}{}{}{}{}",
                 k,
                 v.executor.as_deref().unwrap_or_default(),
                 v.outputs.as_deref().unwrap_or_default().concat(),
                 v.options.as_deref().unwrap_or_default(),
                 v.configurations.as_deref().unwrap_or_default(),
+                v.parallelism.unwrap_or_default()
             )
         })
         .collect::<Vec<_>>()
@@ -144,7 +145,7 @@ mod tests {
         assert_eq!(nx_project_hash.unwrap(), "3244421341483603138");
 
         let js_project_hash = hash_project_config("js", &projects).unwrap();
-        assert_eq!(js_project_hash, "18342193044952101577");
+        assert_eq!(js_project_hash, "13565578942842640362");
 
         let js_unsorted = hash_project_config("js-unsorted", &projects);
         assert_eq!(js_unsorted.unwrap(), js_project_hash);

@@ -1,5 +1,165 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`application generator should set up project correctly with PascalCase name 1`] = `
+"{
+  "root": true,
+  "ignorePatterns": ["**/*"],
+  "plugins": ["@nx"],
+  "overrides": [
+    {
+      "files": ["*.ts", "*.tsx", "*.js", "*.jsx", "*.vue"],
+      "rules": {
+        "@nx/enforce-module-boundaries": [
+          "error",
+          {
+            "enforceBuildableLibDependency": true,
+            "allow": [],
+            "depConstraints": [
+              {
+                "sourceTag": "*",
+                "onlyDependOnLibsWithTags": ["*"]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["*.ts", "*.tsx"],
+      "extends": ["plugin:@nx/typescript"],
+      "rules": {}
+    },
+    {
+      "files": ["*.js", "*.jsx"],
+      "extends": ["plugin:@nx/javascript"],
+      "rules": {}
+    }
+  ]
+}
+"
+`;
+
+exports[`application generator should set up project correctly with PascalCase name 2`] = `
+"/// <reference types='vitest' />
+import { defineConfig } from 'vite';
+import vue from '@vitejs/plugin-vue';
+import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+
+export default defineConfig({
+  root: __dirname,
+  cacheDir: '../node_modules/.vite/TestApp',
+
+  server: {
+    port: 4200,
+    host: 'localhost',
+  },
+
+  preview: {
+    port: 4300,
+    host: 'localhost',
+  },
+
+  plugins: [vue(), nxViteTsPaths()],
+
+  // Uncomment this if you are using workers.
+  // worker: {
+  //  plugins: [ nxViteTsPaths() ],
+  // },
+
+  build: {
+    outDir: '../dist/TestApp',
+    emptyOutDir: true,
+    reportCompressedSize: true,
+    commonjsOptions: {
+      transformMixedEsModules: true,
+    },
+  },
+
+  test: {
+    watch: false,
+    globals: true,
+    environment: 'jsdom',
+    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+
+    reporters: ['default'],
+    coverage: {
+      reportsDirectory: '../coverage/TestApp',
+      provider: 'v8',
+    },
+  },
+});
+"
+`;
+
+exports[`application generator should set up project correctly with PascalCase name 3`] = `
+"{
+  "extends": [
+    "plugin:vue/vue3-essential",
+    "eslint:recommended",
+    "@vue/eslint-config-typescript",
+    "@vue/eslint-config-prettier/skip-formatting",
+    "../.eslintrc.json"
+  ],
+  "ignorePatterns": ["!**/*"],
+  "overrides": [
+    {
+      "files": ["*.ts", "*.tsx", "*.js", "*.jsx", "*.vue"],
+      "rules": {
+        "vue/multi-word-component-names": "off"
+      }
+    }
+  ]
+}
+"
+`;
+
+exports[`application generator should set up project correctly with PascalCase name 4`] = `
+"import { describe, it, expect } from 'vitest';
+
+import { mount } from '@vue/test-utils';
+import App from './App.vue';
+
+describe('App', () => {
+  it('renders properly', async () => {
+    const wrapper = mount(App, {});
+
+    expect(wrapper.text()).toContain('Welcome TestApp 👋');
+  });
+});
+"
+`;
+
+exports[`application generator should set up project correctly with PascalCase name 5`] = `
+[
+  ".eslintignore",
+  ".eslintrc.json",
+  ".prettierignore",
+  ".prettierrc",
+  ".vscode/extensions.json",
+  "nx.json",
+  "package.json",
+  "TestApp-e2e/.eslintrc.json",
+  "TestApp-e2e/playwright.config.ts",
+  "TestApp-e2e/project.json",
+  "TestApp-e2e/src/example.spec.ts",
+  "TestApp-e2e/tsconfig.json",
+  "TestApp/.eslintrc.json",
+  "TestApp/index.html",
+  "TestApp/project.json",
+  "TestApp/src/app/App.spec.ts",
+  "TestApp/src/app/App.vue",
+  "TestApp/src/app/NxWelcome.vue",
+  "TestApp/src/main.ts",
+  "TestApp/src/styles.css",
+  "TestApp/tsconfig.app.json",
+  "TestApp/tsconfig.json",
+  "TestApp/tsconfig.spec.json",
+  "TestApp/vite.config.ts",
+  "tsconfig.base.json",
+  "vitest.workspace.ts",
+]
+`;
+
 exports[`application generator should set up project correctly with given options 1`] = `
 "{
   "root": true,
@@ -78,9 +238,6 @@ export default defineConfig({
   test: {
     watch: false,
     globals: true,
-    cache: {
-      dir: '../node_modules/.vitest/test',
-    },
     environment: 'jsdom',
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
 

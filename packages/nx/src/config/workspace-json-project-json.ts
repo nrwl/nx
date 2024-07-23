@@ -126,8 +126,17 @@ export interface ProjectMetadata {
 
 export interface TargetMetadata {
   [k: string]: any;
+
   description?: string;
   technologies?: string[];
+  nonAtomizedTarget?: string;
+  help?: {
+    command: string;
+    example: {
+      options?: Record<string, unknown>;
+      args?: string[];
+    };
+  };
 }
 
 export interface TargetDependencyConfig {
@@ -221,4 +230,10 @@ export interface TargetConfiguration<T = any> {
    * Metadata about the target
    */
   metadata?: TargetMetadata;
+
+  /**
+   * Whether this target can be run in parallel with other tasks
+   * Default is true
+   */
+  parallelism?: boolean;
 }
