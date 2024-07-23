@@ -462,6 +462,8 @@ const nxCloudUrls = {
     '/ci/recipes/enterprise/on-premise/auth-saml',
   '/ci/recipes/on-premise/auth-saml-managed':
     '/ci/recipes/enterprise/on-premise/auth-saml',
+  '/ci/recipes/enterprise/on-premise/auth-saml-managed':
+    '/ci/recipes/enterprise/on-premise/auth-saml',
   '/ci/recipes/on-premise/advanced-config':
     '/ci/recipes/enterprise/on-premise/advanced-config',
   '/concepts/dte': '/ci/concepts/parallelization-distribution',
