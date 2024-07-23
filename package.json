@@ -329,7 +329,7 @@
     "@widgetbot/react-embed": "^1.9.0",
     "@yarnpkg/lockfile": "^1.1.0",
     "@yarnpkg/parsers": "3.0.0-rc.46",
-    "axios": "^1.6.0",
+    "axios": "^1.7.2",
     "classnames": "^2.5.1",
     "cliui": "^8.0.1",
     "core-js": "3.36.1",
