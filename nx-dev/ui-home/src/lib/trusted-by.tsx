@@ -1,22 +1,22 @@
 import Link from 'next/link';
 import { SectionDescription, SectionHeading } from '@nx/nx-dev/ui-common';
 import {
+  AdobeIcon,
   AwsIcon,
-  BillIcon,
-  CapitalOneIcon,
-  CaterpillarIcon,
   CiscoIcon,
-  EpicWebIcon,
-  FicoIcon,
+  CypressIcon,
+  FedExIcon,
   HiltonIcon,
-  ManIcon,
-  RoyalBankOfCanadaIcon,
+  IntelIcon,
+  MicrosoftIcon,
+  RedBullIcon,
+  RxJSIcon,
+  SentryIcon,
+  SevenElevenIcon,
   ShopifyIcon,
   StorybookIcon,
-  TanstackIcon,
-  TypescriptEslintIcon,
+  StrapiIcon,
   VmwareIcon,
-  WalmartIcon,
 } from '@nx/nx-dev/ui-icons';
 
 export function TrustedBy(): JSX.Element {
@@ -38,70 +38,70 @@ export function TrustedBy(): JSX.Element {
       </div>
 
       <div className="relative mt-12">
-        <div className="grid grid-cols-3 place-items-center items-center gap-6 transition-all sm:grid-cols-4 md:grid-cols-8">
-          <FicoIcon
-            aria-hidden="true"
-            className="h-24 w-24 text-slate-950 dark:text-white"
-          />
-          <RoyalBankOfCanadaIcon
+        <div className="grid grid-cols-3 place-items-center items-center gap-6 transition-all sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8">
+          <MicrosoftIcon
             aria-hidden="true"
             className="h-10 w-10 text-slate-950 dark:text-white"
           />
-          <CapitalOneIcon
+          <AwsIcon
             aria-hidden="true"
-            className="h-28 w-28 text-slate-950 dark:text-white"
+            className="h-14 w-14 text-slate-950 dark:text-white"
           />
-          <TypescriptEslintIcon
+          <AdobeIcon
             aria-hidden="true"
             className="h-10 w-10 text-slate-950 dark:text-white"
+          />
+          <IntelIcon
+            aria-hidden="true"
+            className="hidden h-16 w-16 text-slate-950 sm:block dark:text-white"
           />
           <CiscoIcon
             aria-hidden="true"
-            className="h-16 w-16 text-slate-950 dark:text-white"
+            className="hidden h-16 w-16 text-slate-950 md:block dark:text-white"
           />
-          <StorybookIcon
+          <VmwareIcon
             aria-hidden="true"
-            className="h-10 w-10 text-slate-950 dark:text-white"
+            className="hidden h-24 w-24 text-slate-950 md:block dark:text-white"
           />
-          <BillIcon
+          <FedExIcon
             aria-hidden="true"
-            className="hidden h-14 w-14 text-slate-950 sm:block dark:text-white"
-          />
-          <TanstackIcon
-            aria-hidden="true"
-            className="hidden h-10 w-10 text-slate-950 sm:block dark:text-white"
-          />
-          <ManIcon
-            aria-hidden="true"
-            className="hidden h-14 w-14 text-slate-950 md:block dark:text-white"
+            className="hidden h-20 w-20 text-slate-950 md:block dark:text-white"
           />
           <HiltonIcon
             aria-hidden="true"
             className="hidden h-20 w-20 text-slate-950 md:block dark:text-white"
           />
-          <CaterpillarIcon
+          <SevenElevenIcon
             aria-hidden="true"
-            className="hidden h-12 w-12 text-slate-950 md:block dark:text-white"
+            className="hidden h-10 w-10 text-slate-950 lg:block dark:text-white"
           />
-          <EpicWebIcon
+          <RedBullIcon
             aria-hidden="true"
-            className="hidden h-10 w-10 text-slate-950 md:block dark:text-white"
+            className="hidden h-20 w-20 text-slate-950 lg:block dark:text-white"
           />
-          <VmwareIcon
+          <StorybookIcon
             aria-hidden="true"
-            className="hidden h-28 w-28 text-slate-950 md:block dark:text-white"
+            className="h-10 w-10 text-slate-950 dark:text-white"
           />
-          <AwsIcon
+          <StrapiIcon
             aria-hidden="true"
-            className="hidden h-14 w-14 text-slate-950 md:block dark:text-white"
+            className="hidden h-10 w-10 text-slate-950 lg:block dark:text-white"
           />
-          <WalmartIcon
+          <CypressIcon
             aria-hidden="true"
-            className="hidden h-28 w-28 text-slate-950 md:block dark:text-white"
+            className="hidden h-12 w-12 text-slate-950 sm:block dark:text-white"
+          />
+          <SentryIcon
+            aria-hidden="true"
+            className="h-16 w-16 text-slate-950 dark:text-white"
+          />
+          <RxJSIcon
+            aria-hidden="true"
+            className="hidden h-10 w-10 text-slate-950 lg:block dark:text-white"
           />
           <ShopifyIcon
             aria-hidden="true"
-            className="hidden h-10 w-10 text-slate-950 md:block dark:text-white"
+            className="h-10 w-10 text-slate-950 dark:text-white"
           />
         </div>
         <div className="mt-8 text-center">
