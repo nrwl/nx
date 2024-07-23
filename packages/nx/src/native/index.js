@@ -4,6 +4,22 @@ const Module = require('module');
 const { nxVersion } = require('../utils/versions');
 const { getNativeFileCacheLocation } = require('./native-file-cache-location');
 
+// WASI is still experimental and throws a warning when used
+// We spawn many many processes so the warning gets printed a lot
+// We have a different warning elsewhere to warn people using WASI
+const originalEmit = process.emit;
+process.emit = function (eventName, eventData) {
+  if (
+    eventName === `warning` &&
+    typeof eventData === `object` &&
+    eventData?.name === `ExperimentalWarning` &&
+    eventData?.message?.includes(`WASI`)
+  ) {
+    return false;
+  }
+  return originalEmit.apply(process, arguments);
+};
+
 const nxPackages = new Set([
   '@nx/nx-android-arm64',
   '@nx/nx-android-arm-eabi',

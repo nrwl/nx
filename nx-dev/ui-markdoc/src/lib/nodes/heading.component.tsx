@@ -18,7 +18,7 @@ export function Heading({
   return (
     <Component
       id={id}
-      className={['not-prose group', className].filter(Boolean).join(' ')}
+      className={['group', className].filter(Boolean).join(' ')}
     >
       {children}
       <Link aria-hidden="true" href={`#${id}`}>

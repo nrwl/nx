@@ -50,7 +50,7 @@ nx-dte:
   stage: affected
   extends: .base-pipeline
   script:
-    - yarn nx-cloud start-ci-run --stop-agents-after=e2e-ci
+    - yarn nx-cloud start-ci-run --distribute-on="manual" --stop-agents-after=e2e-ci
     - yarn nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD
     - yarn nx affected --base=$NX_BASE --head=$NX_HEAD -t lint,test,build,e2e-ci --parallel=2
 

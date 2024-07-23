@@ -23,6 +23,7 @@ export function transformProjectGraphForRust(
         outputs: targetConfig.outputs,
         options: JSON.stringify(targetConfig.options),
         configurations: JSON.stringify(targetConfig.configurations),
+        parallelism: targetConfig.parallelism,
       };
     }
     nodes[projectName] = {

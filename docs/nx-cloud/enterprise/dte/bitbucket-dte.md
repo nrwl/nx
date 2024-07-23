@@ -33,7 +33,7 @@ pipelines:
                 - export NX_CLOUD_DISTRIBUTED_EXECUTION_AGENT_COUNT=3
 
                 - npm ci
-                - npx nx-cloud start-ci-run --stop-agents-after="e2e-ci" --agent-count=3
+                - npx nx-cloud start-ci-run --distribute-on="manual" --stop-agents-after="e2e-ci" --agent-count=3
                 - npx nx-cloud record -- nx format:check
                 - npx nx affected --target=lint,test,build,e2e-ci --parallel=2
           - step: *agent

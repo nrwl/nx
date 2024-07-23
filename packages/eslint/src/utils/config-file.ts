@@ -1,8 +1,8 @@
 import { existsSync, statSync } from 'fs';
 import { basename, dirname, join, resolve } from 'path';
+import { eslintFlatConfigFilenames } from './flat-config';
 
-// TODO(leo): add support for eslint.config.mjs and eslint.config.cjs
-export const ESLINT_FLAT_CONFIG_FILENAMES = ['eslint.config.js'];
+export const ESLINT_FLAT_CONFIG_FILENAMES = eslintFlatConfigFilenames;
 
 export const ESLINT_OLD_CONFIG_FILENAMES = [
   '.eslintrc',

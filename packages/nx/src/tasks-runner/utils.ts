@@ -15,40 +15,79 @@ import { splitByColons } from '../utils/split-target';
 import { getExecutorInformation } from '../command-line/run/executor-utils';
 import { CustomHasher, ExecutorConfig } from '../config/misc-interfaces';
 import { readProjectsConfigurationFromProjectGraph } from '../project-graph/project-graph';
+import { findMatchingProjects } from '../utils/find-matching-projects';
+import { minimatch } from 'minimatch';
+import { isGlobPattern } from '../utils/globs';
+
+export type NormalizedTargetDependencyConfig = TargetDependencyConfig & {
+  projects: string[];
+};
 
 export function getDependencyConfigs(
   { project, target }: { project: string; target: string },
   extraTargetDependencies: Record<string, (TargetDependencyConfig | string)[]>,
-  projectGraph: ProjectGraph
-): TargetDependencyConfig[] | undefined {
+  projectGraph: ProjectGraph,
+  allTargetNames: string[]
+): NormalizedTargetDependencyConfig[] | undefined {
   const dependencyConfigs = (
     projectGraph.nodes[project].data?.targets[target]?.dependsOn ??
     // This is passed into `run-command` from programmatic invocations
     extraTargetDependencies[target] ??
     []
-  ).map((config) =>
-    typeof config === 'string'
-      ? expandDependencyConfigSyntaxSugar(config, projectGraph)
-      : config
+  ).flatMap((config) =>
+    normalizeDependencyConfigDefinition(
+      config,
+      project,
+      projectGraph,
+      allTargetNames
+    )
   );
-  for (const dependencyConfig of dependencyConfigs) {
-    if (dependencyConfig.projects && dependencyConfig.dependencies) {
-      output.error({
-        title: `dependsOn is improperly configured for ${project}:${target}`,
-        bodyLines: [
-          `dependsOn.projects and dependsOn.dependencies cannot be used together.`,
-        ],
-      });
-      process.exit(1);
-    }
-  }
   return dependencyConfigs;
 }
 
+export function normalizeDependencyConfigDefinition(
+  definition: string | TargetDependencyConfig,
+  currentProject: string,
+  graph: ProjectGraph,
+  allTargetNames: string[]
+): NormalizedTargetDependencyConfig[] {
+  return expandWildcardTargetConfiguration(
+    normalizeDependencyConfigProjects(
+      expandDependencyConfigSyntaxSugar(definition, graph),
+      currentProject,
+      graph
+    ),
+    allTargetNames
+  );
+}
+
+export function normalizeDependencyConfigProjects(
+  dependencyConfig: TargetDependencyConfig,
+  currentProject: string,
+  graph: ProjectGraph
+): NormalizedTargetDependencyConfig {
+  const noStringConfig =
+    normalizeTargetDependencyWithStringProjects(dependencyConfig);
+
+  if (noStringConfig.projects) {
+    dependencyConfig.projects = findMatchingProjects(
+      noStringConfig.projects,
+      graph.nodes
+    );
+  } else if (!noStringConfig.dependencies) {
+    dependencyConfig.projects = [currentProject];
+  }
+  return dependencyConfig as NormalizedTargetDependencyConfig;
+}
+
 export function expandDependencyConfigSyntaxSugar(
-  dependencyConfigString: string,
+  dependencyConfigString: string | TargetDependencyConfig,
   graph: ProjectGraph
 ): TargetDependencyConfig {
+  if (typeof dependencyConfigString !== 'string') {
+    return dependencyConfigString;
+  }
+
   const [dependencies, targetString] = dependencyConfigString.startsWith('^')
     ? [true, dependencyConfigString.substring(1)]
     : [false, dependencyConfigString];
@@ -62,22 +101,69 @@ export function expandDependencyConfigSyntaxSugar(
     };
   }
 
+  const { projects, target } = readProjectAndTargetFromTargetString(
+    targetString,
+    graph.nodes
+  );
+
+  return projects ? { projects, target } : { target };
+}
+
+// Weakmap let's the cache get cleared by garbage collector if allTargetNames is no longer used
+const patternResultCache = new WeakMap<
+  string[],
+  // Map< Pattern, Dependency Configs >
+  Map<string, NormalizedTargetDependencyConfig[]>
+>();
+
+export function expandWildcardTargetConfiguration(
+  dependencyConfig: NormalizedTargetDependencyConfig,
+  allTargetNames: string[]
+): NormalizedTargetDependencyConfig[] {
+  if (!isGlobPattern(dependencyConfig.target)) {
+    return [dependencyConfig];
+  }
+  let cache = patternResultCache.get(allTargetNames);
+  if (!cache) {
+    cache = new Map();
+    patternResultCache.set(allTargetNames, cache);
+  }
+  const cachedResult = cache.get(dependencyConfig.target);
+  if (cachedResult) {
+    return cachedResult;
+  }
+
+  const matcher = minimatch.filter(dependencyConfig.target);
+
+  const matchingTargets = allTargetNames.filter((t) => matcher(t));
+
+  const result = matchingTargets.map((t) => ({
+    ...dependencyConfig,
+    target: t,
+  }));
+  cache.set(dependencyConfig.target, result);
+  return result;
+}
+
+export function readProjectAndTargetFromTargetString(
+  targetString: string,
+  projects: Record<string, ProjectGraphProjectNode>
+): { projects?: string[]; target: string } {
   // Support for both `project:target` and `target:with:colons` syntax
   const [maybeProject, ...segments] = splitByColons(targetString);
 
-  // if no additional segments are provided, then the string references
-  // a target of the same project
   if (!segments.length) {
+    // if no additional segments are provided, then the string references
+    // a target of the same project
     return { target: maybeProject };
-  }
-
-  return {
+  } else if (maybeProject in projects) {
     // Only the first segment could be a project. If it is, the rest is a target.
     // If its not, then the whole targetString was a target with colons in its name.
-    target: maybeProject in graph.nodes ? segments.join(':') : targetString,
+    return { projects: [maybeProject], target: segments.join(':') };
+  } else {
     // If the first segment is a project, then we have a specific project. Otherwise, we don't.
-    projects: maybeProject in graph.nodes ? [maybeProject] : undefined,
-  };
+    return { target: targetString };
+  }
 }
 
 export function getOutputs(
@@ -90,6 +176,33 @@ export function getOutputs(
     overrides,
     p[target.project]
   );
+}
+
+export function normalizeTargetDependencyWithStringProjects(
+  dependencyConfig: TargetDependencyConfig
+): Omit<TargetDependencyConfig, 'projects'> & { projects: string[] } {
+  if (typeof dependencyConfig.projects === 'string') {
+    /** LERNA SUPPORT START - Remove in v20 */
+    // Lerna uses `dependencies` in `prepNxOptions`, so we need to maintain
+    // support for it until lerna can be updated to use the syntax.
+    //
+    // This should have been removed in v17, but the updates to lerna had not
+    // been made yet.
+    //
+    // TODO(@agentender): Remove this part in v20
+    if (dependencyConfig.projects === 'self') {
+      delete dependencyConfig.projects;
+    } else if (dependencyConfig.projects === 'dependencies') {
+      dependencyConfig.dependencies = true;
+      delete dependencyConfig.projects;
+      /** LERNA SUPPORT END - Remove in v20 */
+    } else {
+      dependencyConfig.projects = [dependencyConfig.projects];
+    }
+  }
+  return dependencyConfig as Omit<TargetDependencyConfig, 'projects'> & {
+    projects: string[];
+  };
 }
 
 class InvalidOutputsError extends Error {

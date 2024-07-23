@@ -198,4 +198,25 @@ describe('Rollup Plugin', () => {
 
     checkFilesExist(`dist/test/index.js`);
   });
+
+  it('should always generate package.json even if the plugin is removed from rollup config file (Nx < 19.4 behavior)', () => {
+    const jsLib = uniq('jslib');
+    runCLI(`generate @nx/js:lib ${jsLib} --bundler rollup --verbose`);
+    updateFile(
+      `libs/${jsLib}/rollup.config.js`,
+      `module.exports = (config) => ({
+        ...config,
+        // Filter out the plugin, but the @nx/rollup:rollup executor should add it back
+        plugins: config.plugins.filter((p) => p.name !== 'rollup-plugin-nx-generate-package-json'),
+      })`
+    );
+    updateJson(join('libs', jsLib, 'project.json'), (config) => {
+      config.targets.build.options.rollupConfig = `libs/${jsLib}/rollup.config.js`;
+      return config;
+    });
+
+    expect(() => runCLI(`build ${jsLib}`)).not.toThrow();
+
+    checkFilesExist(`dist/libs/${jsLib}/package.json`);
+  });
 });

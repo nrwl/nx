@@ -21,6 +21,7 @@ export class TasksSchedule {
   private reverseProjectGraph = reverse(this.projectGraph);
   private scheduledBatches: Batch[] = [];
   private scheduledTasks: string[] = [];
+  private runningTasks = new Set<string>();
   private completedTasks = new Set<string>();
   private scheduleRequestsExecutionChain = Promise.resolve();
 
@@ -48,6 +49,7 @@ export class TasksSchedule {
   public complete(taskIds: string[]) {
     for (const taskId of taskIds) {
       this.completedTasks.add(taskId);
+      this.runningTasks.delete(taskId);
     }
     this.notScheduledTaskGraph = removeTasksFromTaskGraph(
       this.notScheduledTaskGraph,
@@ -117,6 +119,7 @@ export class TasksSchedule {
             .length
         );
       });
+    this.runningTasks.add(taskId);
   }
 
   private async scheduleBatches() {
@@ -146,8 +149,8 @@ export class TasksSchedule {
     task: Task,
     rootExecutorName: string,
     isRoot: boolean
-  ) {
-    if (!this.canBatchTaskBeScheduled(task.id, batches[rootExecutorName])) {
+  ): Promise<void> {
+    if (!this.canBatchTaskBeScheduled(task, batches[rootExecutorName])) {
       return;
     }
 
@@ -191,18 +194,45 @@ export class TasksSchedule {
   }
 
   private canBatchTaskBeScheduled(
-    taskId: string,
+    task: Task,
     batchTaskGraph: TaskGraph | undefined
   ): boolean {
+    // task self needs to have parallelism true
     // all deps have either completed or belong to the same batch
-    return this.taskGraph.dependencies[taskId].every(
-      (id) => this.completedTasks.has(id) || !!batchTaskGraph?.tasks[id]
+    return (
+      task.parallelism === true &&
+      this.taskGraph.dependencies[task.id].every(
+        (id) => this.completedTasks.has(id) || !!batchTaskGraph?.tasks[id]
+      )
     );
   }
 
-  private canBeScheduled(taskId: string) {
-    return this.taskGraph.dependencies[taskId].every((id) =>
-      this.completedTasks.has(id)
+  private canBeScheduled(taskId: string): boolean {
+    const hasDependenciesCompleted = this.taskGraph.dependencies[taskId].every(
+      (id) => this.completedTasks.has(id)
     );
+
+    // if dependencies have not completed, cannot schedule
+    if (!hasDependenciesCompleted) {
+      return false;
+    }
+
+    // if there are no running tasks, can schedule anything
+    if (this.runningTasks.size === 0) {
+      return true;
+    }
+
+    const runningTasksNotSupportParallelism = Array.from(
+      this.runningTasks
+    ).some((taskId) => {
+      return this.taskGraph.tasks[taskId].parallelism === false;
+    });
+    if (runningTasksNotSupportParallelism) {
+      // if any running tasks do not support parallelism, no other tasks can be scheduled
+      return false;
+    } else {
+      // if all running tasks support parallelism, can only schedule task with parallelism
+      return this.taskGraph.tasks[taskId].parallelism === true;
+    }
   }
 }

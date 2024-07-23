@@ -1,5 +1,5 @@
 import type { BlogAuthor } from '@nx/nx-dev/data-access-documents/node-only';
-import { GithubIcon, TwitterIcon } from '@nx/nx-dev/ui-common';
+import { GithubIcon, XIcon } from '@nx/nx-dev/ui-common';
 import Image from 'next/image';
 
 interface AuthorDetailProps {
@@ -27,7 +27,7 @@ export default function AuthorDetail({ author }: AuthorDetailProps) {
         target="_blank"
         aria-label={`Follow ${author.name} on X`}
       >
-        <TwitterIcon aria-hidden="true" className="h-5 w-5" />
+        <XIcon aria-hidden="true" className="h-5 w-5" />
       </a>
       <a
         href={`https://github.com/${author.github}`}

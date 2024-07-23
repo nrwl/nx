@@ -16,6 +16,7 @@ pub struct Target {
     pub outputs: Option<Vec<String>>,
     pub options: Option<String>,
     pub configurations: Option<String>,
+    pub parallelism: Option<bool>,
 }
 
 #[napi(object)]

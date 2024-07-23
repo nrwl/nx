@@ -1570,6 +1570,11 @@
               "file": "nx-cloud/intro/why-nx-cloud"
             },
             {
+              "name": "Connect to Nx Cloud",
+              "id": "connect-to-nx-cloud",
+              "file": "nx-cloud/intro/connect-to-cloud"
+            },
+            {
               "name": "Tutorials",
               "id": "tutorials",
               "description": "Tutorials setting up CI with Nx",
@@ -1612,6 +1617,12 @@
               "id": "distribute-task-execution",
               "description": "Learn how to efficiently distribute tasks across machines to take full advantage of parallelization. Nx Agents make this a trivial task.",
               "file": "shared/features/distribute-task-execution"
+            },
+            {
+              "name": "Nx Cloud AI",
+              "id": "nx-cloud-ai",
+              "description": "Learn how to enable AI features in Nx Cloud, and what features it enables",
+              "file": "nx-cloud/features/ai-features"
             },
             {
               "name": "Dynamically Allocate Agents",
@@ -1674,11 +1685,6 @@
               "description": "Learn how to set up Nx Cloud for your workspace.",
               "tags": ["distribute-task-execution"],
               "itemList": [
-                {
-                  "name": "Connect Nx Cloud",
-                  "id": "connect-to-cloud",
-                  "file": "nx-cloud/recipes/connect-to-cloud"
-                },
                 {
                   "name": "Setting up Azure Pipelines",
                   "id": "monorepo-ci-azure",
@@ -1744,9 +1750,9 @@
                   "file": "nx-cloud/set-up/github"
                 },
                 {
-                  "name": "Enable Bitbucket Cloud PR Integration",
-                  "id": "bitbucket-cloud",
-                  "file": "nx-cloud/set-up/bitbucket-cloud"
+                  "name": "Enable Bitbucket PR Integration",
+                  "id": "bitbucket",
+                  "file": "nx-cloud/set-up/bitbucket"
                 },
                 {
                   "name": "Enable GitLab MR Integration",
@@ -1803,14 +1809,14 @@
                       "file": "nx-cloud/enterprise/on-premise/auth-bitbucket"
                     },
                     {
+                      "name": "Authenticate with BitBucket Data Center",
+                      "id": "auth-bitbucket-data-center",
+                      "file": "nx-cloud/enterprise/on-premise/auth-bitbucket-data-center"
+                    },
+                    {
                       "name": "Authenticate via SAML",
                       "id": "auth-saml",
                       "file": "nx-cloud/enterprise/on-premise/auth-saml"
-                    },
-                    {
-                      "name": "Authenticate via SAML on Managed Version",
-                      "id": "auth-saml-managed",
-                      "file": "nx-cloud/enterprise/on-premise/auth-saml-managed"
                     },
                     {
                       "name": "Advanced Configuration",
@@ -1929,6 +1935,11 @@
               "name": "CI Execution Failed",
               "id": "ci-execution-failed",
               "file": "nx-cloud/troubleshooting/ci-execution-failed"
+            },
+            {
+              "name": "Explain With AI",
+              "id": "explain-with-ai",
+              "file": "nx-cloud/troubleshooting/explain-with-ai"
             }
           ]
         }

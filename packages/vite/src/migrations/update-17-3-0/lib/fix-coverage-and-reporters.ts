@@ -102,11 +102,14 @@ export function fixCoverageAndRerporters(
       configNode,
       `PropertyAssignment:has(Identifier[name="test"])`
     )?.[0];
-    changes.push({
-      type: ChangeType.Insert,
-      index: testObject.getStart() + `test: {`.length + 1,
-      text: `reporters: ['default'],`,
-    });
+
+    if (testObject) {
+      changes.push({
+        type: ChangeType.Insert,
+        index: testObject.getStart() + `test: {`.length + 1,
+        text: `reporters: ['default'],`,
+      });
+    }
   }
 
   if (changes.length > 0) {

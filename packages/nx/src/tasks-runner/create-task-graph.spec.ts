@@ -107,6 +107,7 @@ describe('createTaskGraph', () => {
           outputs: [],
           overrides: { a: 123 },
           projectRoot: 'app1-root',
+          parallelism: true,
         },
       },
       dependencies: {
@@ -137,6 +138,7 @@ describe('createTaskGraph', () => {
           outputs: [],
           overrides: { a: 123 },
           projectRoot: 'app1-root',
+          parallelism: true,
         },
         'lib1:test': {
           id: 'lib1:test',
@@ -147,6 +149,7 @@ describe('createTaskGraph', () => {
           outputs: [],
           overrides: { a: 123 },
           projectRoot: 'lib1-root',
+          parallelism: true,
         },
       },
       dependencies: {
@@ -286,6 +289,7 @@ describe('createTaskGraph', () => {
           outputs: [],
           overrides: {},
           projectRoot: 'lib1-root',
+          parallelism: true,
         },
         'lib2:compile': {
           id: 'lib2:compile',
@@ -298,6 +302,7 @@ describe('createTaskGraph', () => {
             __overrides_unparsed__: [],
           },
           projectRoot: 'lib2-root',
+          parallelism: true,
         },
       },
       dependencies: {
@@ -328,6 +333,7 @@ describe('createTaskGraph', () => {
           outputs: [],
           overrides: {},
           projectRoot: 'app1-root',
+          parallelism: true,
         },
         'lib1:compile:libDefault': {
           id: 'lib1:compile:libDefault',
@@ -341,6 +347,7 @@ describe('createTaskGraph', () => {
             __overrides_unparsed__: [],
           },
           projectRoot: 'lib1-root',
+          parallelism: true,
         },
         'lib2:compile:ci': {
           id: 'lib2:compile:ci',
@@ -354,6 +361,7 @@ describe('createTaskGraph', () => {
             __overrides_unparsed__: [],
           },
           projectRoot: 'lib2-root',
+          parallelism: true,
         },
       },
       dependencies: {
@@ -454,6 +462,7 @@ describe('createTaskGraph', () => {
             project: 'app1',
             target: 'compile',
           },
+          parallelism: true,
         },
         'lib3:compile': {
           id: 'lib3:compile',
@@ -466,6 +475,7 @@ describe('createTaskGraph', () => {
             project: 'lib3',
             target: 'compile',
           },
+          parallelism: true,
         },
       },
     });
@@ -494,6 +504,7 @@ describe('createTaskGraph', () => {
           outputs: [],
           overrides: { a: '--value=app1-root' },
           projectRoot: 'app1-root',
+          parallelism: true,
         },
       },
       dependencies: {
@@ -525,6 +536,7 @@ describe('createTaskGraph', () => {
           outputs: [],
           overrides: { a: '--base-href=/app1-root${deploymentId}' },
           projectRoot: 'app1-root',
+          parallelism: true,
         },
       },
       dependencies: {
@@ -639,6 +651,7 @@ describe('createTaskGraph', () => {
           outputs: [],
           overrides: { myFlag: 'flag value' },
           projectRoot: 'app1-root',
+          parallelism: true,
         },
         'app1:precompile': {
           id: 'app1:precompile',
@@ -649,6 +662,7 @@ describe('createTaskGraph', () => {
           outputs: [],
           overrides: { myFlag: 'flag value' },
           projectRoot: 'app1-root',
+          parallelism: true,
         },
         'lib1:compile': {
           id: 'lib1:compile',
@@ -659,6 +673,7 @@ describe('createTaskGraph', () => {
           outputs: [],
           overrides: { myFlag: 'flag value' },
           projectRoot: 'lib1-root',
+          parallelism: true,
         },
         'lib2:compile': {
           id: 'lib2:compile',
@@ -669,6 +684,7 @@ describe('createTaskGraph', () => {
           outputs: [],
           overrides: { __overrides_unparsed__: [] },
           projectRoot: 'lib2-root',
+          parallelism: true,
         },
       },
       dependencies: {
@@ -706,6 +722,7 @@ describe('createTaskGraph', () => {
             __overrides_unparsed__: [],
           },
           projectRoot: 'app1-root',
+          parallelism: true,
         },
         'app1:precompile': {
           id: 'app1:precompile',
@@ -718,6 +735,7 @@ describe('createTaskGraph', () => {
             __overrides_unparsed__: [],
           },
           projectRoot: 'app1-root',
+          parallelism: true,
         },
         'app1:precompile2': {
           id: 'app1:precompile2',
@@ -730,6 +748,7 @@ describe('createTaskGraph', () => {
             __overrides_unparsed__: [],
           },
           projectRoot: 'app1-root',
+          parallelism: true,
         },
         'lib1:compile': {
           id: 'lib1:compile',
@@ -742,6 +761,7 @@ describe('createTaskGraph', () => {
             __overrides_unparsed__: [],
           },
           projectRoot: 'lib1-root',
+          parallelism: true,
         },
       },
       dependencies: {
@@ -779,6 +799,7 @@ describe('createTaskGraph', () => {
             __overrides_unparsed__: [],
           },
           projectRoot: 'app1-root',
+          parallelism: true,
         },
         'app1:precompile': {
           id: 'app1:precompile',
@@ -791,6 +812,7 @@ describe('createTaskGraph', () => {
             __overrides_unparsed__: [],
           },
           projectRoot: 'app1-root',
+          parallelism: true,
         },
         'app1:precompile2': {
           id: 'app1:precompile2',
@@ -803,6 +825,7 @@ describe('createTaskGraph', () => {
             __overrides_unparsed__: [],
           },
           projectRoot: 'app1-root',
+          parallelism: true,
         },
         'lib1:compile': {
           id: 'lib1:compile',
@@ -815,6 +838,7 @@ describe('createTaskGraph', () => {
             __overrides_unparsed__: [],
           },
           projectRoot: 'lib1-root',
+          parallelism: true,
         },
       },
       dependencies: {
@@ -921,6 +945,7 @@ describe('createTaskGraph', () => {
             __overrides_unparsed__: [],
           },
           projectRoot: 'app1-root',
+          parallelism: true,
         },
         'lib1:compile': {
           id: 'lib1:compile',
@@ -933,6 +958,7 @@ describe('createTaskGraph', () => {
             __overrides_unparsed__: [],
           },
           projectRoot: 'lib1-root',
+          parallelism: true,
         },
         'lib2:compile': {
           id: 'lib2:compile',
@@ -945,6 +971,7 @@ describe('createTaskGraph', () => {
             __overrides_unparsed__: [],
           },
           projectRoot: 'lib2-root',
+          parallelism: true,
         },
         'lib3:compile': {
           id: 'lib3:compile',
@@ -957,6 +984,7 @@ describe('createTaskGraph', () => {
             __overrides_unparsed__: [],
           },
           projectRoot: 'lib3-root',
+          parallelism: true,
         },
       },
       dependencies: {
@@ -1080,6 +1108,7 @@ describe('createTaskGraph', () => {
           projectRoot: 'infra1-root',
           outputs: [],
           overrides: { myFlag: 'flag value' },
+          parallelism: true,
         },
         'app2:compile': {
           id: 'app2:compile',
@@ -1087,6 +1116,7 @@ describe('createTaskGraph', () => {
           projectRoot: 'app2-root',
           outputs: [],
           overrides: { __overrides_unparsed__: [] },
+          parallelism: true,
         },
         'coreInfra:apply': {
           id: 'coreInfra:apply',
@@ -1094,6 +1124,7 @@ describe('createTaskGraph', () => {
           projectRoot: 'infra3-root',
           outputs: [],
           overrides: { myFlag: 'flag value' },
+          parallelism: true,
         },
         'app1:compile': {
           id: 'app1:compile',
@@ -1101,6 +1132,7 @@ describe('createTaskGraph', () => {
           projectRoot: 'app1-root',
           outputs: [],
           overrides: { __overrides_unparsed__: [] },
+          parallelism: true,
         },
         'infra2:apply': {
           id: 'infra2:apply',
@@ -1108,6 +1140,7 @@ describe('createTaskGraph', () => {
           projectRoot: 'infra2-root',
           outputs: [],
           overrides: { myFlag: 'flag value' },
+          parallelism: true,
         },
       },
       dependencies: {
@@ -1174,6 +1207,7 @@ describe('createTaskGraph', () => {
             __overrides_unparsed__: [],
           },
           projectRoot: 'app1-root',
+          parallelism: true,
         },
         'app1:test': {
           id: 'app1:test',
@@ -1186,6 +1220,7 @@ describe('createTaskGraph', () => {
             __overrides_unparsed__: [],
           },
           projectRoot: 'app1-root',
+          parallelism: true,
         },
       },
       dependencies: {
@@ -1267,6 +1302,7 @@ describe('createTaskGraph', () => {
             __overrides_unparsed__: [],
           },
           projectRoot: 'app1-root',
+          parallelism: true,
         },
         'app3:compile': {
           id: 'app3:compile',
@@ -1279,6 +1315,7 @@ describe('createTaskGraph', () => {
             __overrides_unparsed__: [],
           },
           projectRoot: 'app3-root',
+          parallelism: true,
         },
       },
       dependencies: {
@@ -1357,6 +1394,7 @@ describe('createTaskGraph', () => {
             __overrides_unparsed__: [],
           },
           projectRoot: 'app1-root',
+          parallelism: true,
         },
         'app3:compile': {
           id: 'app3:compile',
@@ -1369,6 +1407,7 @@ describe('createTaskGraph', () => {
             __overrides_unparsed__: [],
           },
           projectRoot: 'app3-root',
+          parallelism: true,
         },
       },
       dependencies: {
@@ -1445,6 +1484,7 @@ describe('createTaskGraph', () => {
             __overrides_unparsed__: [],
           },
           projectRoot: 'app1-root',
+          parallelism: true,
         },
       },
       dependencies: {
@@ -1478,6 +1518,7 @@ describe('createTaskGraph', () => {
             __overrides_unparsed__: [],
           },
           projectRoot: 'app1-root',
+          parallelism: true,
         },
         'app2:compile': {
           id: 'app2:compile',
@@ -1490,6 +1531,7 @@ describe('createTaskGraph', () => {
             __overrides_unparsed__: [],
           },
           projectRoot: 'app2-root',
+          parallelism: true,
         },
       },
       dependencies: {

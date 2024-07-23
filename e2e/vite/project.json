@@ -4,27 +4,6 @@
   "sourceRoot": "e2e/vite",
   "projectType": "application",
   "implicitDependencies": ["vite"],
-  "targets": {
-    "e2e-ci--src/vite-crystal.test.ts": {
-      "dependsOn": [
-        "nx:build-native",
-        "@nx/nx-source:populate-local-registry-storage"
-      ],
-      "inputs": ["e2eInputs", "^production"]
-    },
-    "e2e-ci--src/vite-esm.test.ts": {
-      "dependsOn": [
-        "nx:build-native",
-        "@nx/nx-source:populate-local-registry-storage"
-      ],
-      "inputs": ["e2eInputs", "^production"]
-    },
-    "e2e-ci--src/vite-legacy.test.ts": {
-      "dependsOn": [
-        "nx:build-native",
-        "@nx/nx-source:populate-local-registry-storage"
-      ],
-      "inputs": ["e2eInputs", "^production"]
-    }
-  }
+  "// targets": "to see all targets run: nx show project e2e-vite --web",
+  "targets": {}
 }

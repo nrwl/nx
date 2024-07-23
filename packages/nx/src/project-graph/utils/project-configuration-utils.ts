@@ -29,6 +29,7 @@ import {
   AggregateCreateNodesError,
 } from '../error-types';
 import { CreateNodesResult } from '../plugins';
+import { isGlobPattern } from '../../utils/globs';
 
 export type SourceInformation = [file: string | null, plugin: string];
 export type ConfigurationSourceMaps = Record<
@@ -371,9 +372,11 @@ export async function createProjectConfigurations(
         } else {
           errorBodyLines.push(`  - ${e.message}`);
         }
+        const innerStackTrace = '    ' + e.stack.split('\n').join('\n    ');
+        errorBodyLines.push(innerStackTrace);
       }
 
-      error.message = errorBodyLines.join('\n');
+      error.stack = errorBodyLines.join('\n');
 
       // This represents a single plugin erroring out with a hard error.
       errors.push(error);
@@ -1026,18 +1029,34 @@ export function readTargetDefaultsForTarget(
   targetDefaults: TargetDefaults,
   executor?: string
 ): TargetDefaults[string] {
-  if (executor) {
+  if (executor && targetDefaults?.[executor]) {
     // If an executor is defined in project.json, defaults should be read
     // from the most specific key that matches that executor.
     // e.g. If executor === run-commands, and the target is named build:
     // Use, use nx:run-commands if it is present
     // If not, use build if it is present.
-    const key = [executor, targetName].find((x) => targetDefaults?.[x]);
-    return key ? targetDefaults?.[key] : null;
-  } else {
+    return targetDefaults?.[executor];
+  } else if (targetDefaults?.[targetName]) {
     // If the executor is not defined, the only key we have is the target name.
     return targetDefaults?.[targetName];
   }
+
+  let matchingTargetDefaultKey: string | null = null;
+  for (const key in targetDefaults ?? {}) {
+    if (isGlobPattern(key) && minimatch(targetName, key)) {
+      if (
+        !matchingTargetDefaultKey ||
+        matchingTargetDefaultKey.length < key.length
+      ) {
+        matchingTargetDefaultKey = key;
+      }
+    }
+  }
+  if (matchingTargetDefaultKey) {
+    return targetDefaults[matchingTargetDefaultKey];
+  }
+
+  return null;
 }
 
 function createRootMap(projectRootMap: Record<string, ProjectConfiguration>) {
@@ -1085,6 +1104,13 @@ export function normalizeTarget(
   target: TargetConfiguration,
   project: ProjectConfiguration
 ) {
+  target = {
+    ...target,
+    configurations: {
+      ...target.configurations,
+    },
+  };
+
   target = resolveCommandSyntacticSugar(target, project.root);
 
   target.options = resolveNxTokensInOptions(
@@ -1093,7 +1119,6 @@ export function normalizeTarget(
     `${project.root}:${target}`
   );
 
-  target.configurations ??= {};
   for (const configuration in target.configurations) {
     target.configurations[configuration] = resolveNxTokensInOptions(
       target.configurations[configuration],
@@ -1101,6 +1126,8 @@ export function normalizeTarget(
       `${project.root}:${target}:${configuration}`
     );
   }
+
+  target.parallelism ??= true;
 
   return target;
 }

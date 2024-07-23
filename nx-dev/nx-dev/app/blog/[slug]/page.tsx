@@ -1,6 +1,7 @@
 import type { Metadata, ResolvingMetadata } from 'next';
 import { blogApi } from '../../../lib/blog.api';
 import { BlogDetails } from '@nx/nx-dev/ui-blog';
+import { DefaultLayout } from '@nx/nx-dev/ui-common';
 interface BlogPostDetailProps {
   params: { slug: string };
 }
@@ -48,7 +49,9 @@ export default async function BlogPostDetail({
     <>
       {/* This empty div is necessary as app router does not automatically scroll on route changes */}
       <div></div>
-      <BlogDetails post={blog} />
+      <DefaultLayout>
+        <BlogDetails post={blog} />
+      </DefaultLayout>
     </>
   ) : null;
 }

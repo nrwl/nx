@@ -103,7 +103,7 @@ Nx Cloud introduces an entirely different model. Instead of the graph of VMs, th
 By adding the following line…
 
 ```shell
-npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js"
+npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js"
 ```
 
 ... you are telling Nx Cloud to create five Nx Agents to execute all the tasks from all the commands that will follow.

@@ -5170,6 +5170,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Connect to Nx Cloud",
+            "path": "/ci/intro/connect-to-nx-cloud",
+            "id": "connect-to-nx-cloud",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Tutorials",
             "path": "/ci/intro/tutorials",
             "id": "tutorials",
@@ -5209,6 +5217,14 @@
         "name": "Why Nx Cloud?",
         "path": "/ci/intro/why-nx-cloud",
         "id": "why-nx-cloud",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Connect to Nx Cloud",
+        "path": "/ci/intro/connect-to-nx-cloud",
+        "id": "connect-to-nx-cloud",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -5285,6 +5301,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Nx Cloud AI",
+            "path": "/ci/features/nx-cloud-ai",
+            "id": "nx-cloud-ai",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Dynamically Allocate Agents",
             "path": "/ci/features/dynamic-agents",
             "id": "dynamic-agents",
@@ -5331,6 +5355,14 @@
         "name": "Distribute Task Execution (Nx Agents)",
         "path": "/ci/features/distribute-task-execution",
         "id": "distribute-task-execution",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Nx Cloud AI",
+        "path": "/ci/features/nx-cloud-ai",
+        "id": "nx-cloud-ai",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -5445,14 +5477,6 @@
             "isExternal": false,
             "children": [
               {
-                "name": "Connect Nx Cloud",
-                "path": "/ci/recipes/set-up/connect-to-cloud",
-                "id": "connect-to-cloud",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
                 "name": "Setting up Azure Pipelines",
                 "path": "/ci/recipes/set-up/monorepo-ci-azure",
                 "id": "monorepo-ci-azure",
@@ -5551,9 +5575,9 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Enable Bitbucket Cloud PR Integration",
-                "path": "/ci/recipes/source-control-integration/bitbucket-cloud",
-                "id": "bitbucket-cloud",
+                "name": "Enable Bitbucket PR Integration",
+                "path": "/ci/recipes/source-control-integration/bitbucket",
+                "id": "bitbucket",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -5638,17 +5662,17 @@
                     "disableCollapsible": false
                   },
                   {
-                    "name": "Authenticate via SAML",
-                    "path": "/ci/recipes/enterprise/on-premise/auth-saml",
-                    "id": "auth-saml",
+                    "name": "Authenticate with BitBucket Data Center",
+                    "path": "/ci/recipes/enterprise/on-premise/auth-bitbucket-data-center",
+                    "id": "auth-bitbucket-data-center",
                     "isExternal": false,
                     "children": [],
                     "disableCollapsible": false
                   },
                   {
-                    "name": "Authenticate via SAML on Managed Version",
-                    "path": "/ci/recipes/enterprise/on-premise/auth-saml-managed",
-                    "id": "auth-saml-managed",
+                    "name": "Authenticate via SAML",
+                    "path": "/ci/recipes/enterprise/on-premise/auth-saml",
+                    "id": "auth-saml",
                     "isExternal": false,
                     "children": [],
                     "disableCollapsible": false
@@ -5767,14 +5791,6 @@
         "isExternal": false,
         "children": [
           {
-            "name": "Connect Nx Cloud",
-            "path": "/ci/recipes/set-up/connect-to-cloud",
-            "id": "connect-to-cloud",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
             "name": "Setting up Azure Pipelines",
             "path": "/ci/recipes/set-up/monorepo-ci-azure",
             "id": "monorepo-ci-azure",
@@ -5823,14 +5839,6 @@
             "disableCollapsible": false
           }
         ],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Connect Nx Cloud",
-        "path": "/ci/recipes/set-up/connect-to-cloud",
-        "id": "connect-to-cloud",
-        "isExternal": false,
-        "children": [],
         "disableCollapsible": false
       },
       {
@@ -5953,9 +5961,9 @@
             "disableCollapsible": false
           },
           {
-            "name": "Enable Bitbucket Cloud PR Integration",
-            "path": "/ci/recipes/source-control-integration/bitbucket-cloud",
-            "id": "bitbucket-cloud",
+            "name": "Enable Bitbucket PR Integration",
+            "path": "/ci/recipes/source-control-integration/bitbucket",
+            "id": "bitbucket",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -5988,9 +5996,9 @@
         "disableCollapsible": false
       },
       {
-        "name": "Enable Bitbucket Cloud PR Integration",
-        "path": "/ci/recipes/source-control-integration/bitbucket-cloud",
-        "id": "bitbucket-cloud",
+        "name": "Enable Bitbucket PR Integration",
+        "path": "/ci/recipes/source-control-integration/bitbucket",
+        "id": "bitbucket",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -6072,17 +6080,17 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Authenticate via SAML",
-                "path": "/ci/recipes/enterprise/on-premise/auth-saml",
-                "id": "auth-saml",
+                "name": "Authenticate with BitBucket Data Center",
+                "path": "/ci/recipes/enterprise/on-premise/auth-bitbucket-data-center",
+                "id": "auth-bitbucket-data-center",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
               },
               {
-                "name": "Authenticate via SAML on Managed Version",
-                "path": "/ci/recipes/enterprise/on-premise/auth-saml-managed",
-                "id": "auth-saml-managed",
+                "name": "Authenticate via SAML",
+                "path": "/ci/recipes/enterprise/on-premise/auth-saml",
+                "id": "auth-saml",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -6221,17 +6229,17 @@
             "disableCollapsible": false
           },
           {
-            "name": "Authenticate via SAML",
-            "path": "/ci/recipes/enterprise/on-premise/auth-saml",
-            "id": "auth-saml",
+            "name": "Authenticate with BitBucket Data Center",
+            "path": "/ci/recipes/enterprise/on-premise/auth-bitbucket-data-center",
+            "id": "auth-bitbucket-data-center",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
           },
           {
-            "name": "Authenticate via SAML on Managed Version",
-            "path": "/ci/recipes/enterprise/on-premise/auth-saml-managed",
-            "id": "auth-saml-managed",
+            "name": "Authenticate via SAML",
+            "path": "/ci/recipes/enterprise/on-premise/auth-saml",
+            "id": "auth-saml",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -6304,17 +6312,17 @@
         "disableCollapsible": false
       },
       {
-        "name": "Authenticate via SAML",
-        "path": "/ci/recipes/enterprise/on-premise/auth-saml",
-        "id": "auth-saml",
+        "name": "Authenticate with BitBucket Data Center",
+        "path": "/ci/recipes/enterprise/on-premise/auth-bitbucket-data-center",
+        "id": "auth-bitbucket-data-center",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
       },
       {
-        "name": "Authenticate via SAML on Managed Version",
-        "path": "/ci/recipes/enterprise/on-premise/auth-saml-managed",
-        "id": "auth-saml-managed",
+        "name": "Authenticate via SAML",
+        "path": "/ci/recipes/enterprise/on-premise/auth-saml",
+        "id": "auth-saml",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -6599,6 +6607,14 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
+          },
+          {
+            "name": "Explain With AI",
+            "path": "/ci/troubleshooting/explain-with-ai",
+            "id": "explain-with-ai",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -6607,6 +6623,14 @@
         "name": "CI Execution Failed",
         "path": "/ci/troubleshooting/ci-execution-failed",
         "id": "ci-execution-failed",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Explain With AI",
+        "path": "/ci/troubleshooting/explain-with-ai",
+        "id": "explain-with-ai",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
