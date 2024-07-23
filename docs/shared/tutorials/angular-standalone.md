@@ -2,12 +2,13 @@
 
 In this tutorial you'll learn how to use Angular with Nx in a ["standalone" (non-monorepo) setup](/concepts/integrated-vs-package-based#standalone-applications). Not to be confused with the "Angular Standalone API", a standalone project in Nx is a non-monorepo setup where you have a single application at the root level. This setup is very similar to what the Angular CLI gives you.
 
-What are you going to learn?
+What will you learn?
 
 - how to create a new standalone (single-project) Nx workspace setup for Angular
 - how to run a single task (i.e. serve your app) or run multiple tasks in parallel
 - how to leverage code generators to scaffold components
 - how to modularize your codebase and impose architectural constraints for better maintainability
+- [how to speed up CI with Nx Cloud ⚡](#fast-ci)
 
 {% callout type="info" title="Looking for Angular monorepos?" %}
 Note, this tutorial sets up a repo with a single application at the root level that breaks out its code into libraries to add structure. If you are looking for an Angular monorepo setup then check out our [Angular monorepo tutorial](/getting-started/tutorials/angular-monorepo-tutorial).
@@ -1041,7 +1042,11 @@ When you are ready to add another application to the repo, you'll probably want 
 
 You can also go through the full [Angular monorepo tutorial](/getting-started/tutorials/angular-monorepo-tutorial)
 
-## Set Up CI for the Angular App
+## Fast CI ⚡ {% highlightColor="green" %}
+
+{% callout type="check" title="Repository with Nx" %}
+Make sure you have completed the previous sections of this tutorial before starting this one. If you want a clean starting point, you can check out the [reference code](https://github.com/nrwl/nx-recipes/tree/main/angular-standalone) as a starting point.
+{% /callout %}
 
 This tutorial walked you through how Nx can improve the local development experience, but the biggest difference Nx makes is in CI. As repositories get bigger, making sure that the CI is fast, reliable and maintainable can get very challenging. Nx provides a solution.
 
@@ -1050,7 +1055,7 @@ This tutorial walked you through how Nx can improve the local development experi
 - Nx Agents [efficiently distribute tasks across machines](/ci/concepts/parallelization-distribution) ensuring constant CI time regardless of the repository size. The right number of machines is allocated for each PR to ensure good performance without wasting compute.
 - Nx Atomizer [automatically splits](/ci/features/split-e2e-tasks) large e2e tests to distribute them across machines. Nx can also automatically [identify and rerun flaky e2e tests](/ci/features/flaky-tasks).
 
-### Connect to Nx Cloud
+### Connect to Nx Cloud {% highlightColor="green" %}
 
 Nx Cloud is a companion app for your CI system that provides remote caching, task distribution, e2e tests deflaking, better DX and more.
 
@@ -1068,7 +1073,7 @@ npx nx connect
 
 Once you click the link, follow the steps provided and make sure Nx Cloud is enabled on the main branch of your repository.
 
-### Configure Your CI Workflow
+### Configure Your CI Workflow {% highlightColor="green" %}
 
 When you chose GitHub Actions as your CI provider at the beginning of the tutorial, `create-nx-workspace` created a `.github/workflows/ci.yml` file that contains a CI pipeline that will run the `lint`, `test`, `build` and `e2e` tasks for projects that are affected by any given PR. Since we are using Nx Cloud, the pipeline will also distribute tasks across multiple machines to ensure fast and reliable CI runs.
 
@@ -1105,7 +1110,7 @@ jobs:
       - run: npx nx affected -t lint test build
 ```
 
-### Open a Pull Request
+### Open a Pull Request {% highlightColor="green" %}
 
 Commit the changes and open a new PR on GitHub.
 
