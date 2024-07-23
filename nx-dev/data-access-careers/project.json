@@ -1,0 +1,9 @@
+{
+  "name": "data-access-careers",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "nx-dev/data-access-careers/src",
+  "projectType": "library",
+  "tags": ["scope:nx-dev", "type:data-access"],
+  "// targets": "to see all targets run: nx show project data-access-careers --web",
+  "targets": {}
+}
