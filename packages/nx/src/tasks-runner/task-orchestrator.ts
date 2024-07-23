@@ -456,6 +456,13 @@ export class TaskOrchestrator {
             terminalOutput,
           });
         }
+      } else if (targetConfiguration.executor === 'nx:noop') {
+        writeFileSync(temporaryOutputPath, '');
+        results.push({
+          task,
+          status: 'success',
+          terminalOutput: '',
+        });
       } else {
         // cache prep
         const { code, terminalOutput } = await this.runTaskInForkedProcess(

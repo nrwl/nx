@@ -22,7 +22,7 @@ jobs:
       - nx/set-shas
 
       # Tell Nx Cloud to use DTE and stop agents when the e2e-ci tasks are done
-      - run: npx nx-cloud start-ci-run --stop-agents-after=e2e-ci
+      - run: npx nx-cloud start-ci-run --distribute-on="manual" --stop-agents-after=e2e-ci
       # Send logs to Nx Cloud for any CLI command
       - run: npx nx-cloud record -- nx format:check
       # Lint, test, build and run e2e on agent jobs for everything affected by a change

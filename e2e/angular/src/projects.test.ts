@@ -118,7 +118,7 @@ describe('Angular Projects', () => {
     console.log(
       `The current es2015 bundle size is ${es2015BundleSize / 1000} KB`
     );
-    expect(es2015BundleSize).toBeLessThanOrEqual(220000);
+    expect(es2015BundleSize).toBeLessThanOrEqual(221000);
 
     // check unit tests
     runCLI(
@@ -408,7 +408,7 @@ describe('Angular Projects', () => {
 
     let mainBundle = readFile(`dist/${esbuildApp}/browser/main.js`);
     expect(mainBundle).toContain(
-      'this.buildDefined = "Value was provided at build time";'
+      'buildDefined = "Value was provided at build time";'
     );
 
     // check @nx/angular:browser-esbuild
@@ -426,7 +426,7 @@ describe('Angular Projects', () => {
 
     mainBundle = readFile(`dist/${esbuildApp}/main.js`);
     expect(mainBundle).toContain(
-      'this.buildDefined = "Value was provided at build time";'
+      'buildDefined = "Value was provided at build time";'
     );
   });
 

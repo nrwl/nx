@@ -4,6 +4,7 @@ import { runNxSync } from '../../utils/child-process';
 import { linkToNxDevAndExamples } from '../yargs-utils/documentation';
 import { execSync } from 'child_process';
 import {
+  copyPackageManagerConfigurationFiles,
   detectPackageManager,
   getPackageManagerCommand,
 } from '../../utils/package-manager';
@@ -147,6 +148,7 @@ function nxCliPath() {
       },
       license: 'MIT',
     });
+    copyPackageManagerConfigurationFiles(workspaceRoot, tmpDir);
     if (pmc.preInstall) {
       // ensure package.json and repo in tmp folder is set to a proper package manager state
       execSync(pmc.preInstall, {

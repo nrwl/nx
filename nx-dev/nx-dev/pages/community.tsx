@@ -49,12 +49,12 @@ export default function Community(): JSX.Element {
             <div className="mx-auto max-w-7xl items-stretch px-4 py-12 sm:grid sm:grid-cols-1 sm:gap-8 sm:px-6 md:grid-cols-3 lg:px-8 lg:py-16">
               <div className="md:col-span-2">
                 <header>
-                  <SectionHeading as="h1" variant="title" id="champions">
+                  <SectionHeading as="h1" variant="subtitle" id="champions">
                     Get to know our
                   </SectionHeading>
                   <SectionHeading
                     as="p"
-                    variant="display"
+                    variant="title"
                     id="nx-champions"
                     className="mt-4"
                   >
@@ -81,7 +81,7 @@ export default function Community(): JSX.Element {
                   </div>
                 </div>
               </div>
-              <div className="mt-6 flex h-full w-full flex-col items-start items-stretch gap-6 md:mt-0">
+              <div className="mt-6 flex h-full w-full flex-col items-stretch gap-6 md:mt-0">
                 {champions3.map((data) => (
                   <ChampionCard key={data.name} data={data} />
                 ))}

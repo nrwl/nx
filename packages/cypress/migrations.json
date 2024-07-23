@@ -98,6 +98,18 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "19.4.1": {
+      "version": "19.4.1-beta.0",
+      "requires": {
+        "cypress": "^13.0.0"
+      },
+      "packages": {
+        "cypress": {
+          "version": "^13.13.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }

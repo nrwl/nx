@@ -334,6 +334,12 @@ describe('Nx Commands', () => {
       }
     }, 300000);
   });
+
+  it('should show help if no command provided', () => {
+    const output = runCLI('', { silenceError: true });
+    expect(output).toContain('Smart Monorepos · Fast CI');
+    expect(output).toContain('Commands:');
+  });
 });
 
 // TODO(colum): Change the fetcher to allow incremental migrations over multiple versions, allowing for beforeAll
@@ -695,7 +701,7 @@ describe('global installation', () => {
       expect(() => {
         output = runCommand(`nx show projects`);
       }).not.toThrow();
-      expect(output).toContain('Its time to update Nx');
+      expect(output).toContain(`It's time to update Nx`);
       updateFile('node_modules/nx/package.json', packageJsonContents);
     });
 

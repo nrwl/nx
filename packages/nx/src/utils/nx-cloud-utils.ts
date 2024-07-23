@@ -1,4 +1,4 @@
-import { NxJsonConfiguration, readNxJson } from '../config/nx-json';
+import { NxJsonConfiguration } from '../config/nx-json';
 
 export function isNxCloudUsed(nxJson: NxJsonConfiguration): boolean {
   return (

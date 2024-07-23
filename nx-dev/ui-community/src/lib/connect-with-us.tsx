@@ -10,7 +10,7 @@ export function ConnectWithUs(): JSX.Element {
     >
       <header className="space-y-10 md:py-12 lg:w-5/12 xl:w-5/12">
         <div>
-          <SectionHeading as="h1" variant="display" id="connect-with-us">
+          <SectionHeading as="h1" variant="title" id="connect-with-us">
             Let's connect together!
           </SectionHeading>
           <p className="mt-4">
@@ -19,7 +19,11 @@ export function ConnectWithUs(): JSX.Element {
           </p>
           <p className="py-4">
             Looking for community plugins? Find them listed in the{' '}
-            <Link href="/plugin-registry" className="font-semibold underline">
+            <Link
+              href="/plugin-registry"
+              className="font-semibold underline"
+              prefetch={false}
+            >
               plugin registry
             </Link>
             .

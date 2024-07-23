@@ -21,7 +21,7 @@ Tells Nx Cloud how many agents to use (and what launch templates to use) to dist
 using the `linux-medium-js` launch template.
 
 You can use different types of launch templates as follows:
-`npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js, 3 linux-large-js"`.
+`npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js, 3 linux-large-js"`.
 
 You can also define the configuration in a file and reference it as follows:
 `npx nx-cloud start-ci-run --distribute-on=".nx/workflows/dynamic-changesets.yaml"`.

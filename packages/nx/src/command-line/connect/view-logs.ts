@@ -19,6 +19,7 @@ export async function viewLogs(): Promise<number> {
   }
 
   const setupNxCloud = await connectExistingRepoToNxCloudPrompt(
+    'view-logs',
     'setupViewLogs'
   );
   if (!setupNxCloud) {
