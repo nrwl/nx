@@ -4,9 +4,13 @@ import {
   ComparablePlans,
   Oss,
   Faq,
-  GettingStarted,
 } from '@nx/nx-dev/ui-pricing';
-import { Testimonials, TrustedBy, DefaultLayout } from '@nx/nx-dev/ui-common';
+import {
+  Testimonials,
+  TrustedBy,
+  DefaultLayout,
+  CallToAction,
+} from '@nx/nx-dev/ui-common';
 
 export const metadata: Metadata = {
   title: 'Nx Cloud - Available Plans',
@@ -51,7 +55,11 @@ export default function PricingPage() {
         <Faq />
       </div>
       <div className="mt-32 lg:mt-56">
-        <GettingStarted />
+        <CallToAction
+          mainActionLinkText="Sign up"
+          mainActionLink="https://cloud.nx.app?utm_source=nx.dev&utm_medium=cta&utm_campaign=pricing"
+          mainActionDescription="Sign up to Nx Cloud"
+        />
       </div>
     </DefaultLayout>
   );

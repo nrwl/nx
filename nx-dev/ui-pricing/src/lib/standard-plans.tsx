@@ -7,19 +7,20 @@ import { ProPlan } from './plans/pro-plan';
 export function StandardPlans() {
   return (
     <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-      <header className="mx-auto max-w-3xl text-center">
+      <header className="mx-auto max-w-4xl text-center">
         <SectionHeading as="h2" variant="display">
-          Nx Cloud Pricing
+          Start with everything,
+          <br /> scale when you need
         </SectionHeading>
         <SectionHeading as="p" variant="subtitle" className="mt-6">
-          Pricing that meets your needs - start free, scale as grow.
+          Level up your CI with Nx Cloud
         </SectionHeading>
       </header>
 
       <div className="relative mt-32 w-full" />
       {/* Plans */}
       <section id="plans">
-        <header>
+        {/* <header>
           <div className="mx-auto max-w-4xl text-center">
             <SectionHeading as="h2" variant="title">
               Start Free, Scale Smart
@@ -29,7 +30,7 @@ export function StandardPlans() {
               Cloud offers. Add your card details when you're ready for more.
             </SectionHeading>
           </div>
-        </header>
+        </header> */}
         <div className="isolate mx-auto mt-10 grid max-w-lg grid-cols-1 items-stretch gap-x-4 gap-y-16 sm:mt-20 md:max-w-3xl md:grid-cols-3 xl:max-w-full xl:grid-cols-3">
           <HobbyPlan url="https://cloud.nx.app" />
           <ProPlan url="https://cloud.nx.app" />

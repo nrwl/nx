@@ -1,6 +1,12 @@
 import Link from 'next/link';
 
-export function CallToAction(): JSX.Element {
+export interface CTAProps {
+  mainActionLinkText?: string;
+  mainActionDescription?: string;
+  mainActionLink?: string;
+}
+
+export function CallToAction(props: CTAProps): JSX.Element {
   return (
     <section className="relative isolate px-6 py-32 sm:py-40 lg:px-8">
       <svg
@@ -59,12 +65,20 @@ export function CallToAction(): JSX.Element {
         </h2>
         <div className="mt-10 flex items-center justify-center gap-x-6">
           <Link
-            href="/getting-started/intro"
-            title="Get started with Nx"
+            href={
+              props && props.mainActionLink ? props.mainActionLink : '/docs'
+            }
+            title={
+              props && props.mainActionDescription
+                ? props.mainActionDescription
+                : 'Get started with Nx'
+            }
             prefetch={false}
             className="rounded-md bg-slate-950 px-3.5 py-2.5 text-sm font-semibold text-slate-100 shadow-sm hover:bg-slate-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
           >
-            Get started
+            {props && props.mainActionLinkText
+              ? props.mainActionLinkText
+              : 'Get started'}
           </Link>
           <Link
             href="/contact"
