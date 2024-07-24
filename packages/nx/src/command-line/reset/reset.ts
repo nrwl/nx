@@ -5,6 +5,9 @@ import { output } from '../../utils/output';
 import { getNativeFileCacheLocation } from '../../native/native-file-cache-location';
 import { ResetCommandOptions } from './command-object';
 
+import { getCloudClient } from '../../nx-cloud/utilities/client';
+import { getCloudOptions } from '../../nx-cloud/utilities/get-cloud-options';
+
 // Wait at max 5 seconds before giving up on a failing operation.
 const INCREMENTAL_BACKOFF_MAX_DURATION = 5000;
 
@@ -62,6 +65,9 @@ export async function resetHandler(args: ResetCommandOptions) {
       errors.push('Failed to clean up the workspace data directory.');
     }
   }
+  if (all || args.onlyCloud) {
+    await resetCloudClient();
+  }
   if (errors.length > 0) {
     output.error({
       title: 'Failed to reset the Nx workspace.',
@@ -77,6 +83,14 @@ export async function resetHandler(args: ResetCommandOptions) {
 
 function killDaemon() {
   return daemonClient.stop();
+}
+
+async function resetCloudClient() {
+  // Remove nx cloud marker files. This helps if the use happens to run `nx-cloud start-ci-run` or
+  // similar commands on their local machine.
+  try {
+    (await getCloudClient(getCloudOptions())).invoke('cleanup');
+  } catch {}
 }
 
 function cleanupCacheEntries() {
