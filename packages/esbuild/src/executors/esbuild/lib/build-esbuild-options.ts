@@ -167,17 +167,14 @@ function writeTmpEntryWithRequireOverrides(
     tmpPath,
     `main-with-require-overrides.js`
   );
+  const mainFile = `./${path.join(
+    mainPathRelativeToDist,
+    `${mainFileName}${outExtension}`
+  )}`;
+
   writeFileSync(
     mainWithRequireOverridesInPath,
-    getRegisterFileContent(
-      project,
-      paths,
-      `./${path.join(
-        mainPathRelativeToDist,
-        `${mainFileName}${outExtension}`
-      )}`,
-      outExtension
-    )
+    getRegisterFileContent(project, paths, mainFile, outExtension)
   );
 
   let mainWithRequireOverridesOutPath: string;
@@ -286,7 +283,7 @@ function isFile(s) {
 }
 
 // Call the user-defined main.
-require('${mainFile}');
+module.exports = require('${mainFile}');
 `;
 }
 
