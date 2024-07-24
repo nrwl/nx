@@ -11,6 +11,10 @@ export async function shortenedCloudUrl(
 
   const apiUrl = getCloudUrl();
 
+  if (usesGithub === undefined || usesGithub === null) {
+    usesGithub = await repoUsesGithub(undefined, githubSlug, apiUrl);
+  }
+
   try {
     const version = await getNxCloudVersion(apiUrl);
     if (
@@ -34,7 +38,7 @@ export async function shortenedCloudUrl(
         type: usesGithub ? 'GITHUB' : 'MANUAL',
         source,
         accessToken: usesGithub ? null : accessToken,
-        selectedRepositoryName: githubSlug,
+        selectedRepositoryName: githubSlug === 'github' ? null : githubSlug,
       }
     );
 
@@ -50,7 +54,7 @@ export async function shortenedCloudUrl(
     ${e}`);
     return getURLifShortenFailed(
       usesGithub,
-      githubSlug,
+      githubSlug === 'github' ? null : githubSlug,
       apiUrl,
       source,
       accessToken
@@ -58,17 +62,23 @@ export async function shortenedCloudUrl(
   }
 }
 
-export async function repoUsesGithub(github?: boolean) {
-  const githubSlug = getGithubSlugOrNull();
-
-  const apiUrl = getCloudUrl();
-
+export async function repoUsesGithub(
+  github?: boolean,
+  githubSlug?: string,
+  apiUrl?: string
+): Promise<boolean> {
+  if (!apiUrl) {
+    apiUrl = getCloudUrl();
+  }
+  if (!githubSlug) {
+    githubSlug = getGithubSlugOrNull();
+  }
   const installationSupportsGitHub = await getInstallationSupportsGitHub(
     apiUrl
   );
 
   return (
-    (githubSlug || github) &&
+    (!!githubSlug || !!github) &&
     (apiUrl.includes('cloud.nx.app') ||
       apiUrl.includes('eu.nx.app') ||
       installationSupportsGitHub)
@@ -91,7 +101,7 @@ function getSource(
 
 export function getURLifShortenFailed(
   usesGithub: boolean,
-  githubSlug: string,
+  githubSlug: string | null,
   apiUrl: string,
   source: string,
   accessToken?: string
