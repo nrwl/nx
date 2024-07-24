@@ -1,4 +1,4 @@
-import { readFileSync, readdirSync, accessSync, constants } from 'fs';
+import { readFileSync, accessSync, constants } from 'fs';
 import { join, basename, parse, resolve } from 'path';
 import { extractFrontmatter } from '@nx/nx-dev/ui-markdoc';
 import { sortPosts } from './blog.util';
