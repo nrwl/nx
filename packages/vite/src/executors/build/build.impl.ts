@@ -129,7 +129,7 @@ export async function* viteBuildExecutor(
       }
     );
 
-    builtPackageJson.type = 'module';
+    builtPackageJson.type ??= 'module';
 
     writeJsonFile(
       `${outDirRelativeToWorkspaceRoot}/package.json`,
