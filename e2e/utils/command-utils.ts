@@ -359,7 +359,6 @@ export function runCLI(
         ...getStrippedEnvironmentVariables(),
         ...opts.env,
         NX_PERF_LOGGING: 'true',
-        NX_ISOLATE_PLUGINS: 'true',
       },
       encoding: 'utf-8',
       stdio: 'pipe',
