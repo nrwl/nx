@@ -67,7 +67,7 @@ import {
   createProjectGraphAsync,
   readProjectsConfigurationFromProjectGraph,
 } from '../../project-graph/project-graph';
-import type * as Prettier from 'prettier';
+import { formatFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available';
 
 export interface ResolvedMigrationConfiguration extends MigrationsJson {
   packageGroup?: ArrayPackageGroup;
@@ -1325,45 +1325,17 @@ async function writeFormattedJsonFile(
   content: any,
   options?: JsonWriteOptions
 ): Promise<void> {
-  let prettier: typeof Prettier;
-  try {
-    prettier = await import('prettier');
-  } catch {}
+  const formattedContent = await formatFilesWithPrettierIfAvailable(
+    [{ path: filePath, content: JSON.stringify(content) }],
+    workspaceRoot,
+    { silent: true }
+  );
 
-  if (!prettier) {
-    // no prettier, write the json file as is
-    writeJsonFile(filePath, content, options);
-    return;
-  }
-
-  try {
-    const resolvedOptions = await prettier.resolveConfig(filePath, {
-      editorconfig: true,
+  if (formattedContent.has(filePath)) {
+    writeFileSync(filePath, formattedContent.get(filePath)!, {
+      encoding: 'utf-8',
     });
-
-    const prettierOptions: Prettier.Options = {
-      ...resolvedOptions,
-      filepath: filePath,
-    };
-
-    const support = await prettier.getFileInfo(
-      filePath,
-      prettierOptions as any
-    );
-    if (support.ignored || !support.inferredParser) {
-      // it's ignored or the parser could not be inferred, write the json file as is
-      writeJsonFile(filePath, content, options);
-      return;
-    }
-
-    // format and write the file
-    const formattedContent = await (prettier.format(
-      JSON.stringify(content),
-      prettierOptions
-    ) as Promise<string> | string);
-    writeFileSync(filePath, formattedContent, { encoding: 'utf-8' });
-  } catch {
-    // prettier failed, ignore and write the json file as is
+  } else {
     writeJsonFile(filePath, content, options);
   }
 }
