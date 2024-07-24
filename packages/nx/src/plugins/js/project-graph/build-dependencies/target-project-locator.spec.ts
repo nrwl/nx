@@ -864,10 +864,11 @@ describe('TargetProjectLocator', () => {
 });
 
 describe('isBuiltinModuleImport()', () => {
-  it('should return true for all node builtin modules', () => {
-    const allBuiltinModules = require('node:module').builtinModules;
-    allBuiltinModules.forEach((builtinModule) => {
+  const allBuiltinModules = require('node:module').builtinModules;
+  it.each(allBuiltinModules)(
+    `should return true for %s builtin module`,
+    (builtinModule) => {
       expect(isBuiltinModuleImport(builtinModule)).toBe(true);
-    });
-  });
+    }
+  );
 });
