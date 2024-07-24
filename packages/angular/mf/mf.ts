@@ -12,9 +12,13 @@ export function setRemoteUrlResolver(
   resolveRemoteUrl = _resolveRemoteUrl;
 }
 
-let remoteUrlDefinitions: Record<string, string>;
+let remoteUrlDefinitions: Record<string, string> = {};
 export function setRemoteDefinitions(definitions: Record<string, string>) {
   remoteUrlDefinitions = definitions;
+}
+
+export function setRemoteDefinition(remoteName: string, remoteUrl: string) {
+  remoteUrlDefinitions[remoteName] = remoteUrl;
 }
 
 let remoteModuleMap = new Map<string, unknown>();
