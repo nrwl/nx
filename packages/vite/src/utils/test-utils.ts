@@ -94,6 +94,8 @@ export function mockViteReactAppGenerator(tree: Tree): Tree {
     import tsconfigPaths from 'vite-tsconfig-paths';
     
     export default defineConfig({
+
+      cacheDir: '../../node_modules/.vitest',
       server: {
         port: 4200,
         host: 'localhost',
@@ -108,9 +110,6 @@ export function mockViteReactAppGenerator(tree: Tree): Tree {
     
       test: {
         globals: true,
-        cache: {
-          dir: '../../node_modules/.vitest',
-        },
         environment: 'jsdom',
         include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
       },
@@ -525,6 +524,7 @@ export function mockReactLibNonBuildableVitestRunnerGenerator(
 
     export default defineConfig({
 
+      cacheDir: '../../node_modules/.vitest',
       plugins: [
         nxViteTsPaths(),
         react(),
@@ -532,9 +532,6 @@ export function mockReactLibNonBuildableVitestRunnerGenerator(
 
       test: {
         globals: true,
-        cache: {
-          dir: '../../node_modules/.vitest',
-        },
         environment: 'jsdom',
         include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
       },
