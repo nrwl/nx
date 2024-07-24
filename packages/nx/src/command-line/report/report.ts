@@ -64,16 +64,23 @@ export async function reportHandler() {
     packageVersionsWeCareAbout,
     outOfSyncPackageGroup,
     projectGraphError,
+    nativeTarget,
   } = await getReportData();
 
-  const bodyLines = [
-    `Node   : ${process.versions.node}`,
-    `OS     : ${process.platform}-${process.arch}`,
-    `${pm.padEnd(7)}: ${pmVersion}`,
-    ``,
+  const fields = [
+    ['Node', process.versions.node],
+    ['OS', `${process.platform}-${process.arch}`],
+    ['Native Target', nativeTarget ?? 'Unavailable'],
+    [pm, pmVersion],
   ];
+  let padding = Math.max(...fields.map((f) => f[0].length));
+  const bodyLines = fields.map(
+    ([field, value]) => `${field.padEnd(padding)}  : ${value}`
+  );
 
-  let padding =
+  bodyLines.push('');
+
+  padding =
     Math.max(...packageVersionsWeCareAbout.map((x) => x.package.length)) + 1;
   packageVersionsWeCareAbout.forEach((p) => {
     bodyLines.push(
@@ -156,6 +163,7 @@ export interface ReportData {
     migrateTarget: string;
   };
   projectGraphError?: Error | null;
+  nativeTarget: string | null;
 }
 
 export async function getReportData(): Promise<ReportData> {
@@ -183,6 +191,8 @@ export async function getReportData(): Promise<ReportData> {
 
   const outOfSyncPackageGroup = findMisalignedPackagesForPackage(nxPackageJson);
 
+  const native = isNativeAvailable();
+
   return {
     pm,
     pmVersion,
@@ -192,6 +202,7 @@ export async function getReportData(): Promise<ReportData> {
     packageVersionsWeCareAbout,
     outOfSyncPackageGroup,
     projectGraphError,
+    nativeTarget: native ? native.getBinaryTarget() : null,
   };
 }
 
@@ -351,10 +362,9 @@ export function findInstalledPackagesWeCareAbout() {
   }));
 }
 
-function isNativeAvailable() {
+function isNativeAvailable(): typeof import('../../native') | false {
   try {
-    require('../../native');
-    return true;
+    return require('../../native');
   } catch {
     return false;
   }
