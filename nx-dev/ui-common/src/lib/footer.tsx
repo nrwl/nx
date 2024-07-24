@@ -35,10 +35,6 @@ export function Footer(): JSX.Element {
         name: 'Customers',
         href: '/customers',
       },
-      {
-        name: 'Site Map',
-        href: '/see-also/sitemap',
-      },
     ],
     company: [
       { name: 'About us', href: '/company' },
