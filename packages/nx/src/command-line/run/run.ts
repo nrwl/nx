@@ -70,19 +70,8 @@ async function* promiseToIterator<T extends { success: boolean }>(
 async function iteratorToProcessStatusCode(
   i: AsyncIterableIterator<{ success: boolean }>
 ): Promise<number> {
-  // This is a workaround to fix an issue that only happens with
-  // the @angular-devkit/build-angular:browser builder. Starting
-  // on version 12.0.1, a SASS compilation implementation was
-  // introduced making use of workers and it's unref()-ing the worker
-  // too early, causing the process to exit early in environments
-  // like CI or when running Docker builds.
-  const keepProcessAliveInterval = setInterval(() => {}, 1000);
-  try {
-    const { success } = await getLastValueFromAsyncIterableIterator(i);
-    return success ? 0 : 1;
-  } finally {
-    clearInterval(keepProcessAliveInterval);
-  }
+  const { success } = await getLastValueFromAsyncIterableIterator(i);
+  return success ? 0 : 1;
 }
 
 async function parseExecutorAndTarget(
