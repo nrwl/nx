@@ -6,8 +6,6 @@ import { DiscordIcon } from './discord-icon';
 export function Footer(): JSX.Element {
   const navigation = {
     nx: [
-      { name: 'Privacy', href: '/privacy' },
-      { name: 'Terms', href: '/terms' },
       { name: 'Status', href: 'https://status.nx.app' },
       { name: 'Security', href: 'https://security.nx.app' },
     ],
