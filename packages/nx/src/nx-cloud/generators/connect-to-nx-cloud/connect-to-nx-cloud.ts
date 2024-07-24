@@ -7,7 +7,6 @@ import { readNxJson, updateNxJson } from '../../../generators/utils/nx-json';
 import { formatChangedFilesWithPrettierIfAvailable } from '../../../generators/internal-utils/format-changed-files-with-prettier-if-available';
 import { repoUsesGithub, shortenedCloudUrl } from '../../utilities/url-shorten';
 import { getCloudUrl } from '../../utilities/get-cloud-options';
-import { commitChanges } from '../../../utils/git-utils';
 import * as ora from 'ora';
 import * as open from 'open';
 
@@ -70,11 +69,9 @@ async function createNxCloudWorkspace(
 }
 
 async function printSuccessMessage(
-  url: string,
   token: string | undefined,
   installationSource: string,
-  usesGithub?: boolean,
-  directory?: string
+  usesGithub: boolean
 ) {
   const connectCloudUrl = await shortenedCloudUrl(
     installationSource,
@@ -113,15 +110,6 @@ async function printSuccessMessage(
           `${connectCloudUrl}`,
         ],
       });
-      commitChanges(
-        `feat(nx): Added Nx Cloud token to your nx.json
-          
-          To connect your workspace to Nx Cloud, push your repository 
-          to your git hosting provider and go to the following URL:   
-          
-          ${connectCloudUrl}`,
-        directory
-      );
     } else {
       output.note({
         title: `Your Nx Cloud workspace is ready.`,
@@ -205,14 +193,11 @@ export async function connectToNxCloud(
         silent: schema.hideFormatLogs,
       });
     }
-    const apiUrl = getCloudUrl();
     return async () =>
       await printSuccessMessage(
-        responseFromCreateNxCloudWorkspace?.url ?? apiUrl,
         responseFromCreateNxCloudWorkspace?.token,
         schema.installationSource,
-        usesGithub,
-        schema.directory
+        usesGithub
       );
   }
 }
