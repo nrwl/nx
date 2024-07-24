@@ -69,6 +69,7 @@ export function HobbyPlan({
             <Link
               href="/products/replay#content"
               title="Learn more about Nx Replay"
+              prefetch={false}
               className="font-medium text-slate-700 underline dark:text-slate-300"
             >
               Nx Replay
@@ -85,6 +86,7 @@ export function HobbyPlan({
             <Link
               href="/products/agents#content"
               title="Learn more about Nx Agents"
+              prefetch={false}
               className="font-medium text-slate-700 underline dark:text-slate-300"
             >
               Nx Agents
@@ -101,6 +103,7 @@ export function HobbyPlan({
             <Link
               href="https://nx.app/products/workflows#content?utm_source=nx.dev"
               title="Learn more about Nx Workflows"
+              prefetch={false}
               className="font-medium text-slate-700 underline dark:text-slate-300"
             >
               Nx Workflows

@@ -460,7 +460,6 @@ export function Header(): JSX.Element {
                           <Link
                             href="/pricing"
                             title="Nx Cloud"
-                            target="_blank"
                             className="flex w-full gap-2 py-4 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500"
                             prefetch={false}
                           >

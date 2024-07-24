@@ -58,7 +58,7 @@ export default function PricingPage() {
         <CallToAction
           mainActionLinkText="Sign up"
           mainActionLink="https://cloud.nx.app?utm_source=nx.dev&utm_medium=cta&utm_campaign=pricing"
-          mainActionDescription="Sign up to Nx Cloud"
+          mainActionTitle="Sign up to Nx Cloud"
         />
       </div>
     </DefaultLayout>
