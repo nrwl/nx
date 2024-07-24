@@ -4,4 +4,5 @@ export interface VerdaccioExecutorSchema {
   port?: number;
   config?: string;
   clear?: boolean;
+  scopes?: string[];
 }
