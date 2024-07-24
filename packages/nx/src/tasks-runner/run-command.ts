@@ -1,36 +1,40 @@
-import { TasksRunner, TaskStatus } from './tasks-runner';
 import { join } from 'path';
-import { workspaceRoot } from '../utils/workspace-root';
-import { NxArgs } from '../utils/command-line-utils';
-import { isRelativePath } from '../utils/fileutils';
-import { output } from '../utils/output';
-import { shouldStreamOutput } from './utils';
-import { CompositeLifeCycle, LifeCycle } from './life-cycle';
-import { StaticRunManyTerminalOutputLifeCycle } from './life-cycles/static-run-many-terminal-output-life-cycle';
-import { StaticRunOneTerminalOutputLifeCycle } from './life-cycles/static-run-one-terminal-output-life-cycle';
-import { TaskTimingsLifeCycle } from './life-cycles/task-timings-life-cycle';
-import { createRunManyDynamicOutputRenderer } from './life-cycles/dynamic-run-many-terminal-output-life-cycle';
-import { TaskProfilingLifeCycle } from './life-cycles/task-profiling-life-cycle';
-import { isCI } from '../utils/is-ci';
-import { createRunOneDynamicOutputRenderer } from './life-cycles/dynamic-run-one-terminal-output-life-cycle';
-import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
 import {
   NxJsonConfiguration,
   readNxJson,
   TargetDefaults,
   TargetDependencies,
 } from '../config/nx-json';
+import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
 import { Task, TaskGraph } from '../config/task-graph';
-import { createTaskGraph } from './create-task-graph';
-import { findCycle, makeAcyclic } from './task-graph-utils';
 import { TargetDependencyConfig } from '../config/workspace-json-project-json';
-import { handleErrors } from '../utils/params';
-import { hashTasksThatDoNotDependOnOutputsOfOtherTasks } from '../hasher/hash-task';
 import { daemonClient } from '../daemon/client/client';
-import { StoreRunInformationLifeCycle } from './life-cycles/store-run-information-life-cycle';
 import { createTaskHasher } from '../hasher/create-task-hasher';
-import { TaskHistoryLifeCycle } from './life-cycles/task-history-life-cycle';
+import { hashTasksThatDoNotDependOnOutputsOfOtherTasks } from '../hasher/hash-task';
+import { NxArgs } from '../utils/command-line-utils';
+import { isRelativePath } from '../utils/fileutils';
+import { isCI } from '../utils/is-ci';
 import { isNxCloudUsed } from '../utils/nx-cloud-utils';
+import { output } from '../utils/output';
+import { handleErrors } from '../utils/params';
+import { workspaceRoot } from '../utils/workspace-root';
+import { createTaskGraph } from './create-task-graph';
+import { CompositeLifeCycle, LifeCycle } from './life-cycle';
+import { createRunManyDynamicOutputRenderer } from './life-cycles/dynamic-run-many-terminal-output-life-cycle';
+import { createRunOneDynamicOutputRenderer } from './life-cycles/dynamic-run-one-terminal-output-life-cycle';
+import { StaticRunManyTerminalOutputLifeCycle } from './life-cycles/static-run-many-terminal-output-life-cycle';
+import { StaticRunOneTerminalOutputLifeCycle } from './life-cycles/static-run-one-terminal-output-life-cycle';
+import { StoreRunInformationLifeCycle } from './life-cycles/store-run-information-life-cycle';
+import { TaskHistoryLifeCycle } from './life-cycles/task-history-life-cycle';
+import { TaskProfilingLifeCycle } from './life-cycles/task-profiling-life-cycle';
+import { TaskTimingsLifeCycle } from './life-cycles/task-timings-life-cycle';
+import {
+  findCycle,
+  makeAcyclic,
+  validateNoAtomizedTasks,
+} from './task-graph-utils';
+import { TasksRunner, TaskStatus } from './tasks-runner';
+import { shouldStreamOutput } from './utils';
 
 async function getTerminalOutputLifeCycle(
   initiatingProject: string,
@@ -91,7 +95,7 @@ async function getTerminalOutputLifeCycle(
   }
 }
 
-function createTaskGraphAndValidateCycles(
+function createTaskGraphAndRunValidations(
   projectGraph: ProjectGraph,
   extraTargetDependencies: TargetDependencies,
   projectNames: string[],
@@ -129,6 +133,14 @@ function createTaskGraphAndValidateCycles(
     }
   }
 
+  // validate that no atomized tasks like e2e-ci are used without Nx Cloud
+  if (
+    !isNxCloudUsed(readNxJson()) &&
+    !process.env['NX_SKIP_ATOMIZER_VALIDATION']
+  ) {
+    validateNoAtomizedTasks(taskGraph, projectGraph);
+  }
+
   return taskGraph;
 }
 
@@ -147,7 +159,7 @@ export async function runCommand(
     async () => {
       const projectNames = projectsToRun.map((t) => t.name);
 
-      const taskGraph = createTaskGraphAndValidateCycles(
+      const taskGraph = createTaskGraphAndRunValidations(
         projectGraph,
         extraTargetDependencies ?? {},
         projectNames,
