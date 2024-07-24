@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from 'next';
-import { Header, Footer, AnnouncementBanner } from '@nx/nx-dev/ui-common';
 import AppRouterAnalytics from './app-router-analytics';
 import GlobalScripts from './global-scripts';
 
@@ -80,10 +79,7 @@ export default function RootLayout({
         />
       </head>
       <body className="h-full bg-white text-slate-700 antialiased selection:bg-blue-500 selection:text-white dark:bg-slate-900 dark:text-slate-400 dark:selection:bg-sky-500">
-        <AnnouncementBanner />
-        <Header />
         {children}
-        <Footer />
         <GlobalScripts gaMeasurementId={gaMeasurementId} />
       </body>
     </html>

@@ -40,7 +40,6 @@ export function findFlatConfigFile(
       ESLINT_FLAT_CONFIG_FILENAMES
     );
     if (configFilePath) {
-      console.log(`Found eslint flat config file at: ${configFilePath}`);
       return configFilePath;
     }
     if (currentDir === workspaceRoot) {

@@ -1,5 +1,6 @@
 import { logger } from '../../devkit-exports';
 import { getGithubSlugOrNull } from '../../utils/git-utils';
+import { getCloudUrl } from './get-cloud-options';
 
 export async function shortenedCloudUrl(
   installationSource: string,
@@ -8,9 +9,11 @@ export async function shortenedCloudUrl(
 ) {
   const githubSlug = getGithubSlugOrNull();
 
-  const apiUrl = removeTrailingSlash(
-    process.env.NX_CLOUD_API || process.env.NRWL_API || `https://cloud.nx.app`
-  );
+  const apiUrl = getCloudUrl();
+
+  if (usesGithub === undefined || usesGithub === null) {
+    usesGithub = await repoUsesGithub(undefined, githubSlug, apiUrl);
+  }
 
   try {
     const version = await getNxCloudVersion(apiUrl);
@@ -35,7 +38,7 @@ export async function shortenedCloudUrl(
         type: usesGithub ? 'GITHUB' : 'MANUAL',
         source,
         accessToken: usesGithub ? null : accessToken,
-        selectedRepositoryName: githubSlug,
+        selectedRepositoryName: githubSlug === 'github' ? null : githubSlug,
       }
     );
 
@@ -51,7 +54,7 @@ export async function shortenedCloudUrl(
     ${e}`);
     return getURLifShortenFailed(
       usesGithub,
-      githubSlug,
+      githubSlug === 'github' ? null : githubSlug,
       apiUrl,
       source,
       accessToken
@@ -59,27 +62,27 @@ export async function shortenedCloudUrl(
   }
 }
 
-export async function repoUsesGithub(github?: boolean) {
-  const githubSlug = getGithubSlugOrNull();
-
-  const apiUrl = removeTrailingSlash(
-    process.env.NX_CLOUD_API || process.env.NRWL_API || `https://cloud.nx.app`
-  );
-
+export async function repoUsesGithub(
+  github?: boolean,
+  githubSlug?: string,
+  apiUrl?: string
+): Promise<boolean> {
+  if (!apiUrl) {
+    apiUrl = getCloudUrl();
+  }
+  if (!githubSlug) {
+    githubSlug = getGithubSlugOrNull();
+  }
   const installationSupportsGitHub = await getInstallationSupportsGitHub(
     apiUrl
   );
 
   return (
-    (githubSlug || github) &&
+    (!!githubSlug || !!github) &&
     (apiUrl.includes('cloud.nx.app') ||
       apiUrl.includes('eu.nx.app') ||
       installationSupportsGitHub)
   );
-}
-
-export function removeTrailingSlash(apiUrl: string) {
-  return apiUrl[apiUrl.length - 1] === '/' ? apiUrl.slice(0, -1) : apiUrl;
 }
 
 function getSource(
@@ -98,7 +101,7 @@ function getSource(
 
 export function getURLifShortenFailed(
   usesGithub: boolean,
-  githubSlug: string,
+  githubSlug: string | null,
   apiUrl: string,
   source: string,
   accessToken?: string

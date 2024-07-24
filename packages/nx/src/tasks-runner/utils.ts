@@ -195,7 +195,6 @@ export function normalizeTargetDependencyWithStringProjects(
     } else if (dependencyConfig.projects === 'dependencies') {
       dependencyConfig.dependencies = true;
       delete dependencyConfig.projects;
-      return;
       /** LERNA SUPPORT END - Remove in v20 */
     } else {
       dependencyConfig.projects = [dependencyConfig.projects];
@@ -323,19 +322,22 @@ export function getOutputsForTargetAndConfiguration(
   if (targetConfiguration?.outputs) {
     validateOutputs(targetConfiguration.outputs);
 
-    return targetConfiguration.outputs
-      .map((output: string) => {
-        return interpolate(output, {
-          projectRoot: node.data.root,
-          projectName: node.name,
-          project: { ...node.data, name: node.name }, // this is legacy
-          options,
-        });
-      })
-      .filter(
-        (output) =>
-          !!output && !output.match(/{(projectRoot|workspaceRoot|(options.*))}/)
-      );
+    const result = new Set<string>();
+    for (const output of targetConfiguration.outputs) {
+      const interpolatedOutput = interpolate(output, {
+        projectRoot: node.data.root,
+        projectName: node.name,
+        project: { ...node.data, name: node.name }, // this is legacy
+        options,
+      });
+      if (
+        !!interpolatedOutput &&
+        !interpolatedOutput.match(/{(projectRoot|workspaceRoot|(options.*))}/)
+      ) {
+        result.add(interpolatedOutput);
+      }
+    }
+    return Array.from(result);
   }
 
   // Keep backwards compatibility in case `outputs` doesn't exist

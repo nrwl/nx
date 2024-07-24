@@ -54,7 +54,7 @@ export const typesExpressVersion = '4.17.17';
 export const isbotVersion = '^3.6.5';
 export const corsVersion = '~2.8.5';
 export const typesCorsVersion = '~2.8.12';
-export const moduleFederationNodeVersion = '^2.3.0';
+export const moduleFederationNodeVersion = '~2.4.0';
 export const moduleFederationEnhancedVersion = '~0.2.3';
 
 // style preprocessors

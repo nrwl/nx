@@ -6,7 +6,7 @@ if you are interested.
 ### Jump To
 
 - [Azure AD Config](#azure-active-directory-set-up)
-- [Okta Config](#okta-set-up)
+- [Okta Config](#okta-setup)
 
 ## Azure Active Directory Set-up
 
@@ -88,7 +88,7 @@ if you are interested.
 
 3. On the Next page, configure it as below:
 
-   1. The Single Sign On URL needs to point to your Nx Cloud instance URL and ends with `/auth/saml/callback`
+   1. The Single Sign On URL needs to point to your Nx Cloud instance URL and ends with `/auth-callback`
    2. The Audience should be `nx-private-cloud`
 
    ![Okta 4](/nx-cloud/enterprise/on-premise/images/saml/okta_4.png)

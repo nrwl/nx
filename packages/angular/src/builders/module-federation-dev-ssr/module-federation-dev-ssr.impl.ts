@@ -60,6 +60,9 @@ export function executeModuleFederationDevSSRBuilder(
     ? options.devRemotes
     : [options.devRemotes];
 
+  // Set NX_MF_DEV_REMOTES for the Nx Runtime Library Control Plugin
+  process.env.NX_MF_DEV_REMOTES = JSON.stringify(devServeRemotes);
+
   validateDevRemotes({ devRemotes: devServeRemotes }, workspaceProjects);
 
   const remotesToSkip = new Set(options.skipRemotes ?? []);

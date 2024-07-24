@@ -87,7 +87,14 @@ export function addModuleFederationFiles(
     processWebpackConfig(options, host, 'webpack.config.prod.js');
     processWebpackConfig(options, host, 'webpack.config.prod.ts');
     if (!host.exists(pathToMFManifest)) {
-      host.write(pathToMFManifest, '{}');
+      host.write(
+        pathToMFManifest,
+        `{
+        ${defaultRemoteManifest
+          .map(({ name, port }) => `"${name}": "http://localhost:${port}"`)
+          .join(',\n')}
+          }`
+      );
     }
   }
 }

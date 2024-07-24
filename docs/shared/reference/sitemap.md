@@ -290,7 +290,6 @@
         - [Authenticate with BitBucket](/ci/recipes/enterprise/on-premise/auth-bitbucket)
         - [Authenticate with BitBucket Data Center](/ci/recipes/enterprise/on-premise/auth-bitbucket-data-center)
         - [Authenticate via SAML](/ci/recipes/enterprise/on-premise/auth-saml)
-        - [Authenticate via SAML on Managed Version](/ci/recipes/enterprise/on-premise/auth-saml-managed)
         - [Advanced Configuration](/ci/recipes/enterprise/on-premise/advanced-config)
         - [Custom GitHub App](/ci/recipes/enterprise/on-premise/custom-github-app)
       - [Custom Distributed Task Execution](/ci/recipes/enterprise/dte)

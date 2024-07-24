@@ -174,6 +174,7 @@ async function runWatch(command: string) {
         CI: 'true',
         ...getStrippedEnvironmentVariables(),
         FORCE_COLOR: 'false',
+        NX_DAEMON: 'true',
       },
       shell: true,
       stdio: 'pipe',

@@ -136,6 +136,22 @@
     "e2e-macos-ci": {
       "inputs": ["e2eInputs", "^production"]
     },
+    "e2e-ci--**/*": {
+      "inputs": ["e2eInputs", "^production"],
+      "parallelism": false,
+      "dependsOn": [
+        "nx:build-native",
+        "@nx/nx-source:populate-local-registry-storage"
+      ]
+    },
+    "e2e-macos-ci--**/*": {
+      "inputs": ["e2eInputs", "^production"],
+      "parallelism": false,
+      "dependsOn": [
+        "nx:build-native",
+        "@nx/nx-source:populate-local-registry-storage"
+      ]
+    },
     "e2e-base": {
       "inputs": ["default", "^production"]
     },
@@ -215,6 +231,6 @@
   "nxCloudUrl": "https://staging.nx.app",
   "parallel": 1,
   "cacheDirectory": "/tmp/nx-cache",
-  "bust": 7,
+  "bust": 8,
   "defaultBase": "master"
 }

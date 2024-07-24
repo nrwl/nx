@@ -20,10 +20,15 @@ import {
 import { waitForPortOpen } from '@nx/web/src/utils/wait-for-port-open';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { fork } from 'node:child_process';
-import { basename, dirname, join } from 'node:path';
-import { createWriteStream, cpSync } from 'node:fs';
+import { join } from 'node:path';
+import { cpSync, createWriteStream } from 'node:fs';
 import { existsSync } from 'fs';
 import { extname } from 'path';
+import { startRemoteProxies } from '@nx/webpack/src/utils/module-federation/start-remote-proxies';
+import {
+  parseStaticRemotesConfig,
+  type StaticRemotesConfig,
+} from '@nx/webpack/src/utils/module-federation/parse-static-remotes-config';
 
 type ModuleFederationDevServerOptions = WebDevServerOptions & {
   devRemotes?: (
@@ -56,6 +61,12 @@ function startStaticRemotesFileServer(
   context: ExecutorContext,
   options: ModuleFederationDevServerOptions
 ) {
+  if (
+    !staticRemotesConfig.remotes ||
+    staticRemotesConfig.remotes.length === 0
+  ) {
+    return;
+  }
   let shouldMoveToCommonLocation = false;
   let commonOutputDirectory: string;
   for (const app of staticRemotesConfig.remotes) {
@@ -96,6 +107,7 @@ function startStaticRemotesFileServer(
       ssl: options.ssl,
       sslCert: options.sslCert,
       sslKey: options.sslKey,
+      cacheSeconds: -1,
     },
     context
   );
@@ -185,7 +197,7 @@ async function buildStaticRemotes(
     mappedLocationOfRemotes
   );
 
-  await new Promise<void>((res) => {
+  await new Promise<void>((res, rej) => {
     const staticProcess = fork(
       nxBin,
       [
@@ -215,6 +227,13 @@ async function buildStaticRemotes(
         /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g;
       const stdoutString = data.toString().replace(ANSII_CODE_REGEX, '');
       stdoutStream.write(stdoutString);
+
+      // in addition to writing into the stdout stream, also show error directly in console
+      // so the error is easily discoverable. 'ERROR in' is the key word to search in webpack output.
+      if (stdoutString.includes('ERROR in')) {
+        logger.log(stdoutString);
+      }
+
       if (stdoutString.includes('Successfully ran target build')) {
         staticProcess.stdout.removeAllListeners('data');
         logger.info(
@@ -229,54 +248,24 @@ async function buildStaticRemotes(
       staticProcess.stdout.removeAllListeners('data');
       staticProcess.stderr.removeAllListeners('data');
       if (code !== 0) {
-        throw new Error(
+        rej(
           `Remote failed to start. A complete log can be found in: ${remoteBuildLogFile}`
         );
+      } else {
+        res();
       }
-      res();
     });
     process.on('SIGTERM', () => staticProcess.kill('SIGTERM'));
     process.on('exit', () => staticProcess.kill('SIGTERM'));
   });
-}
 
-type StaticRemoteConfig = {
-  basePath: string;
-  outputPath: string;
-  urlSegment: string;
-};
-
-type StaticRemotesConfig = {
-  remotes: string[];
-  config: Record<string, StaticRemoteConfig> | undefined;
-};
-
-export function parseStaticRemotesConfig(
-  staticRemotes: string[] | undefined,
-  context: ExecutorContext
-): StaticRemotesConfig {
-  if (!staticRemotes?.length) {
-    return { remotes: [], config: undefined };
-  }
-
-  const config: Record<string, StaticRemoteConfig> = {};
-  for (const app of staticRemotes) {
-    const outputPath =
-      context.projectGraph.nodes[app].data.targets['build'].options.outputPath;
-    const basePath = dirname(outputPath);
-    const urlSegment = basename(outputPath);
-    config[app] = { basePath, outputPath, urlSegment };
-  }
-
-  return { remotes: staticRemotes, config };
+  return mappedLocationOfRemotes;
 }
 
 export default async function* moduleFederationDevServer(
   options: ModuleFederationDevServerOptions,
   context: ExecutorContext
 ): AsyncIterableIterator<{ success: boolean; baseUrl?: string }> {
-  const initialStaticRemotesPorts = options.staticRemotesPort;
-  options.staticRemotesPort ??= options.port + 1;
   // Force Node to resolve to look for the nx binary that is inside node_modules
   const nxBin = require.resolve('nx/bin/nx');
   const currIter = options.static
@@ -287,6 +276,7 @@ export default async function* moduleFederationDevServer(
           withDeps: false,
           spa: false,
           cors: true,
+          cacheSeconds: -1,
         },
         context
       )
@@ -344,26 +334,23 @@ export default async function* moduleFederationDevServer(
     },
     pathToManifestFile
   );
+  options.staticRemotesPort ??= remotes.staticRemotePort;
 
-  if (remotes.devRemotes.length > 0 && !initialStaticRemotesPorts) {
-    options.staticRemotesPort = options.devRemotes.reduce((portToUse, r) => {
-      const remoteName = typeof r === 'string' ? r : r.remoteName;
-      const remotePort =
-        context.projectGraph.nodes[remoteName].data.targets['serve'].options
-          .port;
-      if (remotePort >= portToUse) {
-        return remotePort + 1;
-      } else {
-        return portToUse;
-      }
-    }, options.staticRemotesPort);
-  }
+  // Set NX_MF_DEV_REMOTES for the Nx Runtime Library Control Plugin
+  process.env.NX_MF_DEV_REMOTES = JSON.stringify(
+    remotes.devRemotes.map((r) => (typeof r === 'string' ? r : r.remoteName))
+  );
 
   const staticRemotesConfig = parseStaticRemotesConfig(
-    remotes.staticRemotes,
+    [...remotes.staticRemotes, ...remotes.dynamicRemotes],
     context
   );
-  await buildStaticRemotes(staticRemotesConfig, nxBin, context, options);
+  const mappedLocationsOfStaticRemotes = await buildStaticRemotes(
+    staticRemotesConfig,
+    nxBin,
+    context,
+    options
+  );
 
   const devRemoteIters = await startRemotes(
     remotes.devRemotes,
@@ -371,22 +358,18 @@ export default async function* moduleFederationDevServer(
     options,
     'serve'
   );
-  const dynamicRemotesIters = await startRemotes(
-    remotes.dynamicRemotes,
+
+  const staticRemotesIter = startStaticRemotesFileServer(
+    staticRemotesConfig,
     context,
-    options,
-    'serve-static'
+    options
   );
 
-  const staticRemotesIter =
-    remotes.staticRemotes.length > 0
-      ? startStaticRemotesFileServer(staticRemotesConfig, context, options)
-      : undefined;
+  startRemoteProxies(staticRemotesConfig, mappedLocationsOfStaticRemotes);
 
   return yield* combineAsyncIterables(
     currIter,
     ...devRemoteIters,
-    ...dynamicRemotesIters,
     ...(staticRemotesIter ? [staticRemotesIter] : []),
     createAsyncIterable<{ success: true; baseUrl: string }>(
       async ({ next, done }) => {

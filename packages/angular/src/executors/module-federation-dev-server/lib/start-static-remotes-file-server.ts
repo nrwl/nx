@@ -3,13 +3,19 @@ import { type Schema } from '../schema';
 import fileServerExecutor from '@nx/web/src/executors/file-server/file-server.impl';
 import { join } from 'path';
 import { cpSync } from 'fs';
-import type { StaticRemotesConfig } from './parse-static-remotes-config';
+import type { StaticRemotesConfig } from '@nx/webpack/src/utils/module-federation/parse-static-remotes-config';
 
 export function startStaticRemotesFileServer(
   staticRemotesConfig: StaticRemotesConfig,
   context: ExecutorContext,
   options: Schema
 ) {
+  if (
+    !staticRemotesConfig.remotes ||
+    staticRemotesConfig.remotes.length === 0
+  ) {
+    return;
+  }
   let shouldMoveToCommonLocation = false;
   let commonOutputDirectory: string;
   for (const app of staticRemotesConfig.remotes) {
@@ -50,6 +56,7 @@ export function startStaticRemotesFileServer(
       ssl: options.ssl,
       sslCert: options.sslCert,
       sslKey: options.sslKey,
+      cacheSeconds: -1,
     },
     context
   );

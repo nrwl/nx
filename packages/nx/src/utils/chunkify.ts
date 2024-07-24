@@ -1,7 +1,4 @@
-import { execSync } from 'child_process';
-
-const TERMINAL_SIZE =
-  process.platform === 'win32' ? 8192 : getUnixTerminalSize();
+const TERMINAL_SIZE = getMaxArgLength();
 
 export function chunkify(
   target: string[],
@@ -28,14 +25,22 @@ export function chunkify(
   return chunks;
 }
 
-function getUnixTerminalSize() {
-  try {
-    const argMax = execSync('getconf ARG_MAX').toString().trim();
-    return Number.parseInt(argMax);
-  } catch {
-    // This number varies by system, but 100k seems like a safe
-    // number from some research...
-    // https://stackoverflow.com/questions/19354870/bash-command-line-and-input-limit
-    return 100000;
+/**
+ * Get the maximum length of a command-line argument string based on current platform
+ *
+ * https://serverfault.com/questions/69430/what-is-the-maximum-length-of-a-command-line-in-mac-os-x
+ * https://support.microsoft.com/en-us/help/830473/command-prompt-cmd-exe-command-line-string-limitation
+ * https://unix.stackexchange.com/a/120652
+ *
+ * Taken from: https://github.com/lint-staged/lint-staged/blob/adf50b00669f6aac2eeca25dd28ff86a9a3c2a48/lib/index.js#L21-L37
+ */
+export function getMaxArgLength() {
+  switch (process.platform) {
+    case 'darwin':
+      return 262144;
+    case 'win32':
+      return 8191;
+    default:
+      return 131072;
   }
 }

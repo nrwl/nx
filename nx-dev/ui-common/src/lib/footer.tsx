@@ -8,7 +8,7 @@ export function Footer(): JSX.Element {
     solutions: [
       { name: 'Nx Enterprise', href: '/enterprise' },
       { name: 'Nx', href: 'https://nx.dev' },
-      { name: 'Nx Cloud', href: 'https://nx.app/?utm_source=nx.dev' },
+      { name: 'Nx Cloud', href: '/nx-cloud' },
     ],
     resources: [
       { name: 'Blog', href: '/blog' },
@@ -144,7 +144,7 @@ export function Footer(): JSX.Element {
       <h2 id="footer-heading" className="sr-only">
         Footer
       </h2>
-      <div className="mx-auto max-w-7xl px-4 pt-12 opacity-50 transition-opacity hover:opacity-100 sm:px-6 lg:px-8 lg:pt-16">
+      <div className="mx-auto max-w-7xl px-4 pt-12 transition-opacity sm:px-6 lg:px-8 lg:pt-16 lg:opacity-50 lg:hover:opacity-100">
         <div className="xl:grid xl:grid-cols-3 xl:gap-8">
           <div className="space-y-4 text-slate-700 xl:col-span-1 dark:text-slate-300">
             <svg
@@ -173,7 +173,7 @@ export function Footer(): JSX.Element {
               ))}
             </div>
             <div className="flex items-center text-sm">
-              Preferences <ThemeSwitcher />
+              Theme <ThemeSwitcher />
             </div>
           </div>
           <div className="mt-12 grid grid-cols-2 gap-8 xl:col-span-2 xl:mt-0">

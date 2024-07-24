@@ -57,6 +57,9 @@
       "@nx/node/*": ["packages/node/*"],
       "@nx/nuxt": ["packages/nuxt"],
       "@nx/nuxt/*": ["packages/nuxt/*"],
+      "@nx/nx-dev/data-access-careers/node-only": [
+        "nx-dev/data-access-careers/src/node.index.ts"
+      ],
       "@nx/nx-dev/data-access-documents": [
         "nx-dev/data-access-documents/src/index.ts"
       ],
@@ -88,6 +91,8 @@
       "@nx/nx-dev/models-package": ["nx-dev/models-package/src/index.ts"],
       "@nx/nx-dev/ui-animations": ["nx-dev/ui-animations/src/index.ts"],
       "@nx/nx-dev/ui-blog": ["nx-dev/ui-blog/src/index.ts"],
+      "@nx/nx-dev/ui-careers": ["nx-dev/ui-careers/src/index.ts"],
+      "@nx/nx-dev/ui-cloud": ["nx-dev/ui-cloud/src/index.ts"],
       "@nx/nx-dev/ui-commands": ["nx-dev/ui-commands/src/index.ts"],
       "@nx/nx-dev/ui-common": ["nx-dev/ui-common/src/index.ts"],
       "@nx/nx-dev/ui-common/*": ["nx-dev/ui-common/*"],
