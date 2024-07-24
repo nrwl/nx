@@ -40,7 +40,7 @@ export default function PricingPage() {
     <DefaultLayout>
       <StandardPlans />
       <div className="mt-18 lg:mt-32">
-        <TrustedBy />
+        <TrustedBy utmSource="pricingpage" utmCampaign="pricing" />
       </div>
       <div className="mt-32 lg:mt-56">
         <ComparablePlans />

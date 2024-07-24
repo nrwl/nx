@@ -19,7 +19,15 @@ import {
   VmwareIcon,
 } from '@nx/nx-dev/ui-icons';
 
-export function TrustedBy(): JSX.Element {
+export interface TrustedByProps {
+  utmSource?: string;
+  utmCampaign?: string;
+}
+
+export function TrustedBy({
+  utmSource = 'homepage',
+  utmCampaign = 'homepage_links',
+}: TrustedByProps): JSX.Element {
   return (
     <article className="mx-auto max-w-7xl px-6 lg:px-8">
       <div className="text-center">
@@ -104,9 +112,10 @@ export function TrustedBy(): JSX.Element {
             className="h-10 w-10 text-slate-950 dark:text-white"
           />
         </div>
+
         <div className="mt-8 text-center">
           <Link
-            href="/customers?utm_source=homepage&utm_medium=website&utm_campaign=homepage_links&utm_content=our_customers"
+            href={`/customers?utm_source=${utmSource}&utm_medium=website&utm_campaign=${utmCampaign}&utm_content=our_customers`}
             title="Our customers"
             prefetch={false}
             className="group font-semibold leading-6 text-slate-950 transition-all duration-200 dark:text-white"
