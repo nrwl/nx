@@ -4,9 +4,14 @@ import { logger } from '../devkit-exports';
 export function getGithubSlugOrNull(): string | null {
   try {
     const gitRemote = execSync('git remote -v').toString();
+    // If there are no remotes, we default to github
+    if (!gitRemote || gitRemote.length === 0) {
+      return 'github';
+    }
     return extractUserAndRepoFromGitHubUrl(gitRemote);
   } catch (e) {
-    return null;
+    // Probably git is not set up, so we default to github
+    return 'github';
   }
 }
 
@@ -15,19 +20,24 @@ export function extractUserAndRepoFromGitHubUrl(
 ): string | null {
   const regex =
     /^\s*(\w+)\s+(git@github\.com:|https:\/\/github\.com\/)([A-Za-z0-9_.-]+)\/([A-Za-z0-9_.-]+)\.git/gm;
+  const remotesPriority = ['origin', 'upstream', 'base'];
+  const foundRemotes: { [key: string]: string } = {};
   let firstGitHubUrl: string | null = null;
   let match;
 
   while ((match = regex.exec(gitRemotes)) !== null) {
     const remoteName = match[1];
     const url = match[2] + match[3] + '/' + match[4] + '.git';
-
-    if (remoteName === 'origin') {
-      return parseGitHubUrl(url);
-    }
+    foundRemotes[remoteName] = url;
 
     if (!firstGitHubUrl) {
       firstGitHubUrl = url;
+    }
+  }
+
+  for (const remote of remotesPriority) {
+    if (foundRemotes[remote]) {
+      return parseGitHubUrl(foundRemotes[remote]);
     }
   }
 

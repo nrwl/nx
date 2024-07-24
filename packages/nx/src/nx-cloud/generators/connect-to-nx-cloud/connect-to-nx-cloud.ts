@@ -70,10 +70,9 @@ async function createNxCloudWorkspace(
 }
 
 async function printSuccessMessage(
-  url: string,
   token: string | undefined,
   installationSource: string,
-  usesGithub?: boolean,
+  usesGithub: boolean,
   directory?: string
 ) {
   const connectCloudUrl = await shortenedCloudUrl(
@@ -205,10 +204,8 @@ export async function connectToNxCloud(
         silent: schema.hideFormatLogs,
       });
     }
-    const apiUrl = getCloudUrl();
     return async () =>
       await printSuccessMessage(
-        responseFromCreateNxCloudWorkspace?.url ?? apiUrl,
         responseFromCreateNxCloudWorkspace?.token,
         schema.installationSource,
         usesGithub,
