@@ -290,7 +290,6 @@ import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 export default defineConfig({
   // Configuration for building your library.
   // See: https://vitejs.dev/guide/build.html#library-mode
-  cacheDir: '../../node_modules/.vite/libs/react-lib-nonb-vitest',
   build: {
     outDir: '../../dist/libs/react-lib-nonb-vitest',
     emptyOutDir: true,
@@ -312,6 +311,7 @@ export default defineConfig({
       external: ['react', 'react-dom', 'react/jsx-runtime'],
     },
   },
+  cacheDir: '../../node_modules/.vitest',
   plugins: [
     nxViteTsPaths(),
     react(),
@@ -323,7 +323,6 @@ export default defineConfig({
 
   test: {
     globals: true,
-    cache: { dir: '../../node_modules/.vitest/libs/react-lib-nonb-vitest' },
     environment: 'jsdom',
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
     reporters: ['default'],
