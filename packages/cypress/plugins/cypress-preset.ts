@@ -1,11 +1,11 @@
 import { workspaceRoot } from '@nx/devkit';
 import { dirname, join, relative } from 'path';
-import { existsSync, lstatSync } from 'fs';
+import { lstatSync } from 'fs';
 
 import vitePreprocessor from '../src/plugins/preprocessor-vite';
 import { NX_PLUGIN_OPTIONS } from '../src/utils/constants';
 
-import { spawn } from 'child_process';
+import { execSync, spawn } from 'child_process';
 import { request as httpRequest } from 'http';
 import { request as httpsRequest } from 'https';
 import type { InlineConfig } from 'vite';
@@ -82,7 +82,13 @@ function startWebServer(webServerCommand: string) {
 
   return () => {
     if (process.platform === 'win32') {
-      serverProcess.kill();
+      try {
+        execSync('taskkill /pid ' + serverProcess.pid + ' /T /F');
+      } catch (e) {
+        if (process.env.NX_VERBOSE_LOGGING === 'true') {
+          console.error(e);
+        }
+      }
     } else {
       // child.kill() does not work on linux
       // process.kill will kill the whole process group on unix
