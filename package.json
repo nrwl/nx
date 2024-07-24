@@ -4,7 +4,7 @@
   "homepage": "https://nx.dev",
   "private": true,
   "scripts": {
-    "build": "nx run-many --target build --parallel 8 --exclude nx-dev,typedoc-theme,tools-documentation-create-embeddings",
+    "build": "nx run-many --target build --parallel 8 --exclude nx-dev,typedoc-theme,tools-documentation-create-embeddings,nx-dev-util-ai",
     "commit": "czg",
     "check-commit": "node ./scripts/commit-lint.js",
     "check-format": "nx format:check --all",
@@ -12,7 +12,7 @@
     "check-lock-files": "node ./scripts/check-lock-files.js",
     "check-documentation-map": "ts-node -P ./scripts/tsconfig.scripts.json ./scripts/documentation/map-link-checker.ts",
     "check-codeowners": "ts-node -P ./scripts/tsconfig.scripts.json ./scripts/check-codeowners.ts",
-    "nx-release": "ts-node -P ./scripts/tsconfig.release.json ./scripts/nx-release",
+    "nx-release": "nx nx-release @nx/nx-source --parallel 8",
     "prepublishOnly": "node ./scripts/update-package-group.js",
     "local-registry": "nx local-registry @nx/nx-source",
     "documentation": "ts-node -P scripts/tsconfig.scripts.json ./scripts/documentation/generators/main.ts && pnpm check-documentation-map",
