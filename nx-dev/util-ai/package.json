@@ -1,5 +1,6 @@
 {
   "name": "@nx/nx-dev/util-ai",
+  "private": true,
   "version": "0.0.1",
   "dependencies": {
     "@supabase/supabase-js": "^2.26.0",
