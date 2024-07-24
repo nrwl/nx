@@ -1,6 +1,6 @@
 import { SectionHeading } from '@nx/nx-dev/ui-common';
 import {
-  AwsAmplifyIcon,
+  AwsIcon,
   CypressIcon,
   ElectronIcon,
   EpicWebIcon,
@@ -99,7 +99,7 @@ export function OssProjects(): JSX.Element {
               target="_blank"
               className="flex items-center justify-center border-x border-b  border-slate-200/20 p-12 transition hover:bg-slate-100/25 hover:text-slate-950 dark:border-slate-800/20 dark:hover:border-slate-600/20 dark:hover:bg-slate-600/10 dark:hover:text-white"
             >
-              <AwsAmplifyIcon aria-hidden="true" className="h-16 w-16" />
+              <AwsIcon aria-hidden="true" className="h-16 w-16" />
             </a>
             <a
               href="https://github.com/Shopify/cli"

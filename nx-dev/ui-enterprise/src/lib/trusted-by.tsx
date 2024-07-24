@@ -1,5 +1,5 @@
 import {
-  AwsAmplifyIcon,
+  AwsIcon,
   BillColoredIcon,
   CapitalOneIcon,
   CaterpillarIcon,
@@ -73,7 +73,7 @@ export function TrustedBy(): JSX.Element {
             variants={itemVariants}
             className="col-span-1 flex items-center justify-center"
           >
-            <AwsAmplifyIcon className="h-14 w-14 text-[#FF9900]" />
+            <AwsIcon className="h-14 w-14 text-black dark:text-white" />
           </motion.div>
           <motion.div
             custom={2}
