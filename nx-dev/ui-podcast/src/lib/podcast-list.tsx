@@ -8,7 +8,7 @@ export interface PodcastListProps {
 export function PodcastList({ podcasts }: PodcastListProps): JSX.Element {
   return podcasts.length < 1 ? (
     <div>
-      <h2 className="mt-32 text-center text-2xl font-semibold text-slate-500 dark:text-white ">
+      <h2 className="mt-32 text-center text-xl font-semibold text-slate-500 sm:text-2xl dark:text-white ">
         No podcasts as yet but stay tuned!
       </h2>
     </div>
