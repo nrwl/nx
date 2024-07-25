@@ -208,7 +208,7 @@ For instance, if my PR changes `lib10`, and we then run `nx affected -t test`, N
 You can also visualize the affected projects using the [Nx graph](/features/explore-graph). Simply run:
 
 ```shell
-nx affected:graph
+nx graph --affected
 ```
 
 ## Specify Which SHAs to Use to Calculate Affected Code
