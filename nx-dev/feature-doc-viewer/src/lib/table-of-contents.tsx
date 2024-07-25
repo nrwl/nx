@@ -7,6 +7,7 @@ interface Heading {
   id: string;
   level: number;
   title: string;
+  highlightColor?: 'blue' | 'yellow' | 'green' | 'red';
 }
 
 export function collectHeadings(
@@ -28,8 +29,7 @@ export function collectHeadings(
 
       if (typeof title === 'string') {
         sections.push({
-          id: node.attributes['id'],
-          level: node.attributes['level'],
+          ...node.attributes,
           title,
         });
       }
@@ -89,7 +89,31 @@ export function TableOfContents({
                       'block w-full border-l-4 border-slate-200 py-1 pl-3 transition hover:border-slate-500 dark:border-slate-700/40 dark:hover:border-slate-700',
                       {
                         'border-slate-500 bg-slate-50 dark:border-slate-700 dark:bg-slate-800/60':
+                          activeId === item.id && !item.highlightColor,
+                        // region Highlight Color
+                        'border-blue-200 bg-blue-50 hover:border-blue-500 dark:border-blue-700/40 dark:bg-blue-800/40 dark:hover:border-blue-700':
+                          item.highlightColor === 'blue' &&
+                          activeId !== item.id,
+                        'border-blue-500 bg-blue-100 hover:border-blue-500 dark:border-blue-700 dark:bg-blue-800/60 dark:hover:border-blue-700':
+                          item.highlightColor === 'blue' &&
                           activeId === item.id,
+                        'border-green-200 bg-green-50 hover:border-green-500 dark:border-green-700/40 dark:bg-green-800/40 dark:hover:border-green-700':
+                          item.highlightColor === 'green' &&
+                          activeId !== item.id,
+                        'border-green-500 bg-green-100 hover:border-green-500 dark:border-green-700 dark:bg-green-800/60 dark:hover:border-green-700':
+                          item.highlightColor === 'green' &&
+                          activeId === item.id,
+                        'border-yellow-200 bg-yellow-50 hover:border-yellow-500 dark:border-yellow-700/40 dark:bg-yellow-800/40 dark:hover:border-yellow-700':
+                          item.highlightColor === 'yellow' &&
+                          activeId !== item.id,
+                        'border-yellow-500 bg-yellow-100 hover:border-yellow-500 dark:border-yellow-700 dark:bg-yellow-800/60 dark:hover:border-yellow-700':
+                          item.highlightColor === 'yellow' &&
+                          activeId === item.id,
+                        'border-red-200 bg-red-50 hover:border-red-500 dark:border-red-700/40 dark:bg-red-800/40 dark:hover:border-red-700':
+                          item.highlightColor === 'red' && activeId !== item.id,
+                        'border-red-500 bg-red-100 hover:border-red-500 dark:border-red-700 dark:bg-red-800/60 dark:hover:border-red-700':
+                          item.highlightColor === 'red' && activeId === item.id,
+                        // endregion Highlight Color
                         'pl-6': item.level === 3,
                       }
                     )}
