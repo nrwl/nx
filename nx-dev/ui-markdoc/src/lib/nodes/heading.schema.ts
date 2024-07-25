@@ -48,6 +48,7 @@ export const heading: Schema = {
     id: { type: 'String' },
     level: { type: 'Number', required: true, default: 1 },
     className: { type: 'String' },
+    highlightColor: { type: 'String' },
   },
   transform(node, config) {
     const attributes = node.transformAttributes(config);
