@@ -3,7 +3,7 @@
 To get started with building a local Nx Plugin, install the `@nx/plugin` package and generate a plugin:
 
 ```shell
-nx g @nx/plugin:plugin my-plugin
+nx g @nx/plugin:plugin my-plugin --directory=tools/my-plugin
 ```
 
 This will create a `my-plugin` project that contains all your plugin code and `my-plugin-e2e` for e2e tests.
@@ -15,7 +15,7 @@ This will create a `my-plugin` project that contains all your plugin code and `m
 To create a new generator run:
 
 ```shell
-nx generate @nx/plugin:generator my-generator --project=my-plugin
+nx generate @nx/plugin:generator my-generator --directory="tools/my-plugin/src/generators/my-generator"
 ```
 
 The new generator is located in `/src/generators/my-generator`. The `my-generator.ts` file contains the code that runs the generator. This generator creates a new project using a folder of template files.
