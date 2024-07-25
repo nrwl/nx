@@ -126,7 +126,10 @@ function createVerdaccioOptions(
     options.port ??= 4873; // set default port if config is not provided
   }
   if (options.port) {
-    verdaccioArgs.push('--listen', options.port.toString());
+    const listenAddress = options.listenAddress
+      ? `${options.listenAddress}:${options.port.toString()}`
+      : options.port.toString();
+    verdaccioArgs.push('--listen', listenAddress);
   }
   return verdaccioArgs;
 }
