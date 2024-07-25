@@ -143,17 +143,23 @@ export function newProject({
     }
     projName = name;
 
+    const copyStart = performance.mark('copy:start');
     const projectDirectory = tmpProjPath();
     copySync(`${tmpBackupProjPath()}`, `${projectDirectory}`);
-
-    const dependencies = readJsonFile(
-      `${projectDirectory}/package.json`
-    ).devDependencies;
-    const missingPackages = (packages || []).filter((p) => !dependencies[p]);
+    const copyEnd = performance.mark('copy:end');
+    const copyMeasure = performance.measure(
+      'copy',
+      copyStart.name,
+      copyEnd.name
+    );
 
     const alwaysPackageInstallStart = performance.mark(
       'alwaysPackageInstall:start'
     );
+    const dependencies = readJsonFile(
+      `${projectDirectory}/package.json`
+    ).devDependencies;
+    const missingPackages = (packages || []).filter((p) => !dependencies[p]);
 
     if (missingPackages.length > 0) {
       packageInstall(missingPackages.join(` `), projName);
@@ -204,7 +210,8 @@ ${
         }
             alwaysPackageInstall: ${
               alwaysPackageInstallMeasure.duration / 1000
-            } seconds`
+            } seconds
+            copy: ${copyMeasure.duration / 1000} seconds`
       );
     }
 
