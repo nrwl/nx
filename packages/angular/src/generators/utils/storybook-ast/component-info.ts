@@ -11,7 +11,6 @@ import type { Identifier, SourceFile, Statement } from 'typescript';
 import { getTsSourceFile } from '../../../utils/nx-devkit/ast-utils';
 import type { EntryPoint } from './entry-point';
 import { getModuleDeclaredComponents } from './module-info';
-import { getAllFilesRecursivelyFromDir } from './tree-utilities';
 
 let tsModule: typeof import('typescript');
 let tsquery: typeof import('@phenomnomnominal/tsquery').tsquery;
@@ -242,7 +241,12 @@ function getComponentInfoFromDir(
 ): ComponentInfo {
   let path = null;
   let componentFileName = null;
-  const componentImportPathChildren = getAllFilesRecursivelyFromDir(tree, dir);
+
+  const componentImportPathChildren: string[] = [];
+  visitNotIgnoredFiles(tree, dir, (filePath) => {
+    componentImportPathChildren.push(filePath);
+  });
+
   for (const candidateFile of componentImportPathChildren) {
     if (candidateFile.endsWith('.ts')) {
       const content = tree.read(candidateFile, 'utf-8');
