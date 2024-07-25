@@ -200,6 +200,7 @@ describe('getUpdatedPackageJsonContent', () => {
               'proj/src/foo.ts',
               'proj/src/bar.ts',
               'proj/migrations.json',
+              'proj/feature/index.ts',
             ],
             outputPath: 'dist/proj',
             projectRoot: 'proj',
@@ -219,6 +220,8 @@ describe('getUpdatedPackageJsonContent', () => {
           './bar': './src/bar.js',
           './package.json': './package.json',
           './migrations.json': './migrations.json',
+          './feature': './feature/index.js',
+          './feature/index': './feature/index.js',
         },
       });
 
@@ -231,7 +234,11 @@ describe('getUpdatedPackageJsonContent', () => {
           },
           {
             main: 'proj/src/index.ts',
-            additionalEntryPoints: ['proj/src/foo.ts', 'proj/src/bar.ts'],
+            additionalEntryPoints: [
+              'proj/src/foo.ts',
+              'proj/src/bar.ts',
+              'proj/feature/index.ts',
+            ],
             outputPath: 'dist/proj',
             projectRoot: 'proj',
             format: ['esm'],
@@ -250,6 +257,8 @@ describe('getUpdatedPackageJsonContent', () => {
           './foo': './src/foo.js',
           './bar': './src/bar.js',
           './package.json': './package.json',
+          './feature': './feature/index.js',
+          './feature/index': './feature/index.js',
         },
       });
 
@@ -262,7 +271,11 @@ describe('getUpdatedPackageJsonContent', () => {
           },
           {
             main: 'proj/src/index.ts',
-            additionalEntryPoints: ['proj/src/foo.ts', 'proj/src/bar.ts'],
+            additionalEntryPoints: [
+              'proj/src/foo.ts',
+              'proj/src/bar.ts',
+              'proj/feature/index.ts',
+            ],
             outputPath: 'dist/proj',
             projectRoot: 'proj',
             format: ['cjs', 'esm'],
@@ -288,6 +301,14 @@ describe('getUpdatedPackageJsonContent', () => {
           './bar': {
             import: './src/bar.js',
             default: './src/bar.cjs',
+          },
+          './feature': {
+            import: './feature/index.js',
+            default: './feature/index.cjs',
+          },
+          './feature/index': {
+            import: './feature/index.js',
+            default: './feature/index.cjs',
           },
           './package.json': './package.json',
         },
