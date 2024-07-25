@@ -57,6 +57,7 @@ import { Pill } from './lib/tags/pill.component';
 import { pill } from './lib/tags/pill.schema';
 import { fence } from './lib/nodes/fence.schema';
 import { FenceWrapper } from './lib/nodes/fence-wrapper.component';
+import { VideoPlayer, videoPlayer } from './lib/tags/video-player.component';
 
 // TODO fix this export
 export { GithubRepository } from './lib/tags/github-repository.component';
@@ -83,6 +84,7 @@ export const getMarkdocCustomConfig = (
       graph,
       iframe,
       'install-nx-console': installNxConsole,
+      'video-player': videoPlayer,
       persona,
       personas,
       'project-details': projectDetails,
@@ -127,6 +129,7 @@ export const getMarkdocCustomConfig = (
     Tweet,
     YouTube,
     VideoLink,
+    VideoPlayer,
     // SvgAnimation,
   },
 });
