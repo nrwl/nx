@@ -1,4 +1,4 @@
-import { CallToAction, DefaultLayout } from '@nx/nx-dev/ui-common';
+import { CallToAction, DefaultLayout, TrustedBy } from '@nx/nx-dev/ui-common';
 import { NextSeo } from 'next-seo';
 import {
   CiForMonorepos,
@@ -6,7 +6,6 @@ import {
   SmarterToolsForMonorepos,
   Statistics,
   TeamAndCommunity,
-  TrustedBy,
   WorkBetterAchieveMoreShipQuicker,
 } from '@nx/nx-dev/ui-home';
 

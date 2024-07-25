@@ -485,6 +485,7 @@ const nxCloudUrls = {
   '/core-features/:path*': '/features/:path*',
   '/ci/recipes/set-up/connect-to-cloud': '/ci/intro/connect-to-nx-cloud',
   '/ci/intro/connect-to-cloud': '/ci/intro/connect-to-nx-cloud',
+  '/pricing/special-offer': 'https://forms.gle/FBzvsspz1o63fDAz6',
 };
 
 /**

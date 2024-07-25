@@ -1,7 +1,6 @@
 'use client';
 import { Dialog, Disclosure, Popover, Transition } from '@headlessui/react';
 import {
-  ArrowUpRightIcon,
   Bars4Icon,
   ChevronDownIcon,
   XMarkIcon,
@@ -175,15 +174,14 @@ export function Header(): JSX.Element {
             >
               Blog
             </Link>
-            <a
-              href="https://nx.app/pricing"
+            <Link
+              href="/pricing"
               title="Nx Cloud"
-              target="_blank"
               className="hidden gap-2 px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-slate-200 dark:hover:text-sky-500"
+              prefetch={false}
             >
               CI Pricing
-              <ArrowUpRightIcon className="h-2 w-2 align-super" />
-            </a>
+            </Link>
             {/*RESOURCES*/}
             <Popover className="relative">
               {({ open }) => (
@@ -459,15 +457,14 @@ export function Header(): JSX.Element {
                           >
                             Blog
                           </Link>
-                          <a
-                            href="https://nx.app/pricing"
+                          <Link
+                            href="/pricing"
                             title="Nx Cloud"
-                            target="_blank"
                             className="flex w-full gap-2 py-4 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500"
+                            prefetch={false}
                           >
                             CI Pricing
-                            <ArrowUpRightIcon className="h-2 w-2 align-super" />
-                          </a>
+                          </Link>
                           {/*RESOURCES*/}
                           <Disclosure as="div">
                             {({ open }) => (
