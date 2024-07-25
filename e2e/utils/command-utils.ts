@@ -370,6 +370,7 @@ export function runCLI(
         CI: 'true',
         ...getStrippedEnvironmentVariables(),
         ...opts.env,
+        NX_PERF_LOGGING: 'true',
       },
       encoding: 'utf-8',
       stdio: 'pipe',

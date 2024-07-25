@@ -171,7 +171,7 @@ export function newProject({
       newProjectEnd.name
     );
 
-    if (isVerbose()) {
+    if (true) {
       logInfo(
         `NX`,
         `E2E created a project: ${projectDirectory} in ${
