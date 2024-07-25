@@ -94,6 +94,11 @@ describe('init', () => {
           "build": {
             "cache": true,
           },
+          "e2e-ci--**/*": {
+            "dependsOn": [
+              "^build",
+            ],
+          },
           "lint": {
             "cache": true,
           },

@@ -14,6 +14,7 @@ import { addPlugin as _addPlugin } from '@nx/devkit/src/utils/add-plugin';
 import { createNodesV2 } from '../../plugins/plugin';
 import { cypressVersion, nxVersion } from '../../utils/versions';
 import { Schema } from './schema';
+import { addTargetDefault } from '@nx/devkit/src/generators/target-defaults-utils';
 
 function setupE2ETargetDefaults(tree: Tree) {
   const nxJson = readNxJson(tree);
@@ -56,12 +57,12 @@ function updateDependencies(tree: Tree, options: Schema) {
   return runTasksInSerial(...tasks);
 }
 
-export function addPlugin(
+export async function addPlugin(
   tree: Tree,
   graph: ProjectGraph,
   updatePackageScripts: boolean
 ) {
-  return _addPlugin(
+  const pluginOptions = await _addPlugin(
     tree,
     graph,
     '@nx/cypress/plugin',
@@ -78,6 +79,13 @@ export function addPlugin(
     },
     updatePackageScripts
   );
+
+  if (pluginOptions?.ciTargetName) {
+    const ciTargetNameGlob = `${pluginOptions.ciTargetName}--**/*`;
+    addTargetDefault(tree, ciTargetNameGlob, {
+      dependsOn: ['^build'],
+    });
+  }
 }
 
 function updateProductionFileset(tree: Tree) {
