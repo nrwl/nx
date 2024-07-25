@@ -42,6 +42,7 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
   const templateVariables = {
     ...names(options.name),
     ...options,
+    js: !!options.js, // Ensure this is defined in template
     tmpl: '',
     offsetFromRoot: offsetFromRoot(options.appProjectRoot),
     appTests,
@@ -155,7 +156,9 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
   );
 
   if (options.js) {
-    toJS(host);
+    toJS(host, {
+      useJsx: options.bundler === 'vite',
+    });
   }
 
   createTsConfig(
