@@ -151,6 +151,10 @@ export function newProject({
     ).devDependencies;
     const missingPackages = (packages || []).filter((p) => !dependencies[p]);
 
+    const alwaysPackageInstallStart = performance.mark(
+      'alwaysPackageInstall:start'
+    );
+
     if (missingPackages.length > 0) {
       packageInstall(missingPackages.join(` `), projName);
     } else if (packageManager === 'pnpm') {
@@ -163,6 +167,14 @@ export function newProject({
         encoding: 'utf-8',
       });
     }
+    const alwaysPackageInstallEnd = performance.mark(
+      'alwaysPackageInstall:end'
+    );
+    const alwaysPackageInstallMeasure = performance.measure(
+      'alwaysPackageInstall',
+      alwaysPackageInstallStart.name,
+      alwaysPackageInstallEnd.name
+    );
 
     const newProjectEnd = performance.mark('new-project:end');
     const perfMeasure = performance.measure(
@@ -189,7 +201,10 @@ ${
                 packageInstallMeasure.duration / 1000
               } seconds\n`
             : ''
-        }`
+        }
+            alwaysPackageInstall: ${
+              alwaysPackageInstallMeasure.duration / 1000
+            } seconds`
       );
     }
 
