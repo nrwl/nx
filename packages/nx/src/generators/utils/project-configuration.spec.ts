@@ -277,5 +277,57 @@ describe('project configuration', () => {
         root: 'proj',
       });
     });
+
+    it('should handle reading + writing project configuration', () => {
+      writeJson(tree, 'proj/package.json', {
+        name: 'proj',
+        nx: {},
+      });
+
+      const proj = readProjectConfiguration(tree, 'proj');
+      expect(proj).toEqual({
+        name: 'proj',
+        root: 'proj',
+      });
+
+      updateProjectConfiguration(tree, 'proj', {
+        name: 'proj',
+        root: 'proj',
+        sourceRoot: 'proj/src',
+        targets: {
+          build: {
+            command: 'echo "building"',
+          },
+        },
+      });
+
+      const updatedProj = readProjectConfiguration(tree, 'proj');
+      expect(updatedProj).toEqual({
+        name: 'proj',
+        root: 'proj',
+        sourceRoot: 'proj/src',
+        targets: {
+          build: {
+            command: 'echo "building"',
+          },
+        },
+      });
+
+      expect(tree.read('proj/package.json', 'utf-8')).toMatchInlineSnapshot(`
+        "{
+          "name": "proj",
+          "nx": {
+            "sourceRoot": "proj/src",
+            "targets": {
+              "build": {
+                "command": "echo \\"building\\""
+              }
+            }
+          }
+        }
+        "
+      `);
+      expect(tree.exists('proj/project.json')).toBeFalsy();
+    });
   });
 });
