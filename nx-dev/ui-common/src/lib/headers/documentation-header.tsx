@@ -20,7 +20,7 @@ import {
 import { SectionsMenu } from './sections-menu';
 import { AnnouncementBanner } from '../announcement-banner';
 import { DiscordIcon } from '../discord-icon';
-import { NxCloudIcon, NxIcon } from '@nx/nx-dev/ui-icons';
+import { NxCloudAnimatedIcon, NxIcon } from '@nx/nx-dev/ui-icons';
 
 function Menu({ tabs }: { tabs: any[] }): JSX.Element {
   return (
@@ -403,7 +403,7 @@ export function DocumentationHeader({
               variant="secondary"
               size="small"
             >
-              <NxCloudIcon className="h-4 w-4" aria-hidden="true" />
+              <NxCloudAnimatedIcon className="h-4 w-4" aria-hidden="true" />
               <span>Go to app</span>
             </ButtonLink>
           </nav>
