@@ -11,7 +11,7 @@ export function Footer(): JSX.Element {
     ],
     nxCloud: [
       { name: 'App', href: 'https://cloud.nx.app' },
-      { name: 'Docs', href: '/ci' },
+      { name: 'Docs', href: '/ci/intro/ci-with-nx' },
       { name: 'Pricing', href: '/pricing' },
     ],
     solutions: [
@@ -160,6 +160,7 @@ export function Footer(): JSX.Element {
                   <a
                     key={item.name}
                     href={item.href}
+                    title={item.name}
                     target="_blank"
                     rel="noreferer"
                     className="text-slate-500 hover:text-slate-600 dark:hover:text-slate-400"
@@ -170,6 +171,7 @@ export function Footer(): JSX.Element {
                   <Link
                     key={item.name}
                     href={item.href}
+                    title={item.name}
                     prefetch={false}
                     className="text-slate-500 hover:text-slate-600 dark:hover:text-slate-400"
                   >
@@ -195,6 +197,7 @@ export function Footer(): JSX.Element {
                         <a
                           href={item.href}
                           target="_blank"
+                          title={item.name}
                           rel="noreferer"
                           className="text-sm text-slate-500 hover:text-slate-600 dark:hover:text-slate-400"
                         >
@@ -204,6 +207,7 @@ export function Footer(): JSX.Element {
                         <Link
                           href={item.href}
                           prefetch={false}
+                          title={item.name}
                           className="text-sm text-slate-500 hover:text-slate-600 dark:hover:text-slate-400"
                         >
                           {item.name}
@@ -223,6 +227,7 @@ export function Footer(): JSX.Element {
                       <Link
                         href={item.href}
                         prefetch={false}
+                        title={item.name}
                         className="text-sm text-slate-500 hover:text-slate-600 dark:hover:text-slate-400"
                       >
                         {item.name}
@@ -243,6 +248,7 @@ export function Footer(): JSX.Element {
                       {item.href.startsWith('http') ? (
                         <a
                           href={item.href}
+                          title={item.name}
                           target="_blank"
                           rel="noreferer"
                           className="text-sm text-slate-500 hover:text-slate-600 dark:hover:text-slate-400"
@@ -253,6 +259,7 @@ export function Footer(): JSX.Element {
                         <Link
                           href={item.href}
                           prefetch={false}
+                          title={item.name}
                           className="text-sm text-slate-500 hover:text-slate-600 dark:hover:text-slate-400"
                         >
                           {item.name}
@@ -272,6 +279,7 @@ export function Footer(): JSX.Element {
                       <Link
                         href={item.href}
                         prefetch={false}
+                        title={item.name}
                         className="text-sm text-slate-500 hover:text-slate-600 dark:hover:text-slate-400"
                       >
                         {item.name}
@@ -287,7 +295,7 @@ export function Footer(): JSX.Element {
           <p className="text-sm text-slate-400 xl:text-center">
             &copy; 2024 made with{' '}
             <HeartIcon className="-mt-0.5 inline h-4 w-4" /> by{' '}
-            <Link href="/company" prefetch={false}>
+            <Link href="/company" prefetch={false} title="Company">
               <svg
                 role="img"
                 viewBox="0 0 24 24"

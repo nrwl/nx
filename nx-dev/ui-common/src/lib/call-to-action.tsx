@@ -47,7 +47,7 @@ export function CallToAction({
         />
       </svg>
       <div
-        className="absolute inset-x-0 top-10 -z-10 flex transform-gpu justify-center overflow-hidden blur-3xl"
+        className="pointer-events-none absolute inset-x-0 top-10 -z-10 flex transform-gpu justify-center overflow-hidden blur-3xl"
         aria-hidden="true"
       >
         <div
