@@ -28,6 +28,7 @@ import {
   extractFileFromTarball,
   fileExists,
   JsonReadOptions,
+  JsonWriteOptions,
   readJsonFile,
   writeJsonFile,
 } from '../../utils/fileutils';
@@ -54,7 +55,7 @@ import {
   onlyDefaultRunnerIsUsed,
 } from '../connect/connect-to-nx-cloud';
 import { output } from '../../utils/output';
-import { existsSync, readFileSync } from 'fs';
+import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { isCI } from '../../utils/is-ci';
 import { getNxRequirePaths } from '../../utils/installation-directory';
@@ -66,6 +67,7 @@ import {
   createProjectGraphAsync,
   readProjectsConfigurationFromProjectGraph,
 } from '../../project-graph/project-graph';
+import { formatFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available';
 
 export interface ResolvedMigrationConfiguration extends MigrationsJson {
   packageGroup?: ArrayPackageGroup;
@@ -1105,17 +1107,17 @@ function readPackageMigrationConfig(
   }
 }
 
-function createMigrationsFile(
+async function createMigrationsFile(
   root: string,
   migrations: {
     package: string;
     name: string;
   }[]
 ) {
-  writeJsonFile(join(root, 'migrations.json'), { migrations });
+  await writeFormattedJsonFile(join(root, 'migrations.json'), { migrations });
 }
 
-function updatePackageJson(
+async function updatePackageJson(
   root: string,
   updatedPackages: Record<string, PackageUpdate>
 ) {
@@ -1145,7 +1147,7 @@ function updatePackageJson(
     }
   });
 
-  writeJsonFile(packageJsonPath, json, {
+  await writeFormattedJsonFile(packageJsonPath, json, {
     appendNewLine: parseOptions.endsWithNewline,
   });
 }
@@ -1178,7 +1180,7 @@ async function updateInstallationDetails(
     }
   }
 
-  writeJsonFile(nxJsonPath, nxJson, {
+  await writeFormattedJsonFile(nxJsonPath, nxJson, {
     appendNewLine: parseOptions.endsWithNewline,
   });
 }
@@ -1238,11 +1240,11 @@ async function generateMigrationsJsonAndUpdatePackageJson(
     const { migrations, packageUpdates, minVersionWithSkippedUpdates } =
       await migrator.migrate(opts.targetPackage, opts.targetVersion);
 
-    updatePackageJson(root, packageUpdates);
+    await updatePackageJson(root, packageUpdates);
     await updateInstallationDetails(root, packageUpdates);
 
     if (migrations.length > 0) {
-      createMigrationsFile(root, [
+      await createMigrationsFile(root, [
         ...addSplitConfigurationMigrationIfAvailable(from, packageUpdates),
         ...migrations,
       ] as any);
@@ -1315,6 +1317,26 @@ async function generateMigrationsJsonAndUpdatePackageJson(
       title: `The migrate command failed.`,
     });
     throw e;
+  }
+}
+
+async function writeFormattedJsonFile(
+  filePath: string,
+  content: any,
+  options?: JsonWriteOptions
+): Promise<void> {
+  const formattedContent = await formatFilesWithPrettierIfAvailable(
+    [{ path: filePath, content: JSON.stringify(content) }],
+    workspaceRoot,
+    { silent: true }
+  );
+
+  if (formattedContent.has(filePath)) {
+    writeFileSync(filePath, formattedContent.get(filePath)!, {
+      encoding: 'utf-8',
+    });
+  } else {
+    writeJsonFile(filePath, content, options);
   }
 }
 
