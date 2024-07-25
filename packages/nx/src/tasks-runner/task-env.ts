@@ -2,6 +2,7 @@ import { Task } from '../config/task-graph';
 import { config as loadDotEnvFile } from 'dotenv';
 import { expand } from 'dotenv-expand';
 import { workspaceRoot } from '../utils/workspace-root';
+import { join } from 'node:path';
 
 export function getEnvVariablesForBatchProcess(
   skipNxCache: boolean,
@@ -221,14 +222,14 @@ function loadDotEnvFilesForTask(
 ) {
   const dotEnvFiles = getEnvFilesForTask(task);
   for (const file of dotEnvFiles) {
-    loadAndExpandDotEnvFile(file, environmentVariables);
+    loadAndExpandDotEnvFile(join(workspaceRoot, file), environmentVariables);
   }
   return environmentVariables;
 }
 
 function unloadDotEnvFiles(environmentVariables: NodeJS.ProcessEnv) {
   for (const file of ['.env', '.local.env', '.env.local']) {
-    unloadDotEnvFile(file, environmentVariables);
+    unloadDotEnvFile(join(workspaceRoot, file), environmentVariables);
   }
   return environmentVariables;
 }

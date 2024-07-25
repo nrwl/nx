@@ -37,7 +37,7 @@
     "tmp": "~0.2.1",
     "tslib": "^2.3.0",
     "yargs": "^17.6.2",
-    "axios": "^1.6.0"
+    "axios": "^1.7.2"
   },
   "publishConfig": {
     "access": "public"

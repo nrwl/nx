@@ -20,6 +20,7 @@ export interface Schema {
   setParserOptionsProject?: boolean;
   skipFormat: boolean;
   skipNxJson?: boolean;
+  skipPackageJson?: boolean;
   ssr?: boolean;
   strict?: boolean;
   style: SupportedStyles;

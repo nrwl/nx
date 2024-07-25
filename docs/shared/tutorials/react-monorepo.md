@@ -43,14 +43,14 @@ Here's the source code of the final result for this tutorial.
 
 <!-- {% stackblitz-button url="github.com/nrwl/nx-recipes/tree/main/react-standalone?file=README.md" /%} -->
 
-<!-- {% youtube
-src="https://www.youtube.com/embed/OQ-Zc5tcxJE"
-title="Tutorial: Standalone React Application"
-/%} -->
+{% youtube
+src="https://www.youtube.com/embed/gc4N7kxiA50"
+title="Nx React Monorepo Tutorial Walkthrough"
+/%}
 
 ## Creating a new React Monorepo
 
-<!-- {% video-link link="https://youtu.be/OQ-Zc5tcxJE?t=64" /%} -->
+{% video-link link="https://youtu.be/gc4N7kxiA50?t=66" /%}
 
 Create a new React monorepo with the following command:
 
@@ -110,7 +110,7 @@ The [`nx.json` file](/reference/nx-json) contains configuration settings for Nx 
 
 ## Serving the App
 
-<!-- {% video-link link="https://youtu.be/OQ-Zc5tcxJE?t=207" /%} -->
+{% video-link link="https://youtu.be/gc4N7kxiA50?t=120" /%}
 
 To serve your new React application, just run:
 
@@ -125,6 +125,8 @@ Nx uses the following syntax to run tasks:
 ![Syntax for Running Tasks in Nx](/shared/images/run-target-syntax.svg)
 
 ### Inferred Tasks
+
+{% video-link link="https://youtu.be/gc4N7kxiA50?t=158" /%}
 
 Nx identifies available tasks for your project from [tooling configuration files](/concepts/inferred-tasks), `package.json` scripts and the targets defined in `project.json`. To view the tasks that Nx has detected, look in the [Nx Console](/getting-started/editor-setup) project detail view or run:
 
@@ -230,7 +232,7 @@ You can also override the settings for inferred tasks by modifying the [`targetD
 
 ## Adding Another Application
 
-<!-- {% video-link link="https://youtu.be/OQ-Zc5tcxJE?t=706" /%} -->
+{% video-link link="https://youtu.be/gc4N7kxiA50?t=259" /%}
 
 Nx plugins usually provide [generators](/features/generate-code) that allow you to easily scaffold code, configuration or entire projects. To see what capabilities the `@nx/react` plugin provides, run the following command and inspect the output:
 
@@ -316,7 +318,7 @@ npx nx g @nx/react:app inventory --directory=apps/inventory
 
 ## Sharing Code with Local Libraries
 
-<!-- {% video-link link="https://youtu.be/OQ-Zc5tcxJE?t=986" /%} -->
+{% video-link link="https://youtu.be/gc4N7kxiA50?t=324" /%}
 
 When you develop your React application, usually all your logic sits in the `app` folder. Ideally separated by various folder names which represent your "domains". As your app grows, however, the app becomes more and more monolithic and the code is unable to be shared with other applications.
 
@@ -351,7 +353,7 @@ Nx allows you to separate this logic into "local libraries". The main benefits i
 
 ### Creating Local Libraries
 
-<!-- {% video-link link="https://youtu.be/OQ-Zc5tcxJE?t=1041" /%} -->
+{% video-link link="https://youtu.be/gc4N7kxiA50?t=366" /%}
 
 Let's assume our domain areas include `products`, `orders` and some more generic design system components, called `ui`. We can generate a new library for each of these areas using the React library generator:
 
@@ -410,7 +412,7 @@ Each of these libraries
 
 ### Importing Libraries into the React Applications
 
-<!-- {% video-link link="https://youtu.be/OQ-Zc5tcxJE?t=1245" /%} -->
+{% video-link link="https://youtu.be/gc4N7kxiA50?t=456" /%}
 
 All libraries that we generate automatically have aliases created in the root-level `tsconfig.base.json`.
 
@@ -554,7 +556,7 @@ export default App;
 
 ## Visualizing your Project Structure
 
-<!-- {% video-link link="https://youtu.be/OQ-Zc5tcxJE?t=1416" /%} -->
+{% video-link link="https://youtu.be/gc4N7kxiA50?t=530" /%}
 
 Nx automatically detects the dependencies between the various parts of your workspace and builds a [project graph](/features/explore-graph). This graph is used by Nx to perform various optimizations such as determining the correct order of execution when running tasks like `npx nx build`, identifying [affected projects](/features/run-tasks#run-tasks-on-projects-affected-by-a-pr) and more. Interestingly you can also visualize it.
 
@@ -659,7 +661,7 @@ Exercise for you: change the codebase such that `shared-ui` is used by `orders` 
 
 ## Testing and Linting - Running Multiple Tasks
 
-<!-- {% video-link link="https://youtu.be/OQ-Zc5tcxJE?t=410" /%} -->
+{% video-link link="https://youtu.be/gc4N7kxiA50?t=589" /%}
 
 Our current setup doesn't just come with targets for serving and building the React application, but also has targets for unit testing, e2e testing and linting. Again, these are defined in the `project.json` file. We can use the same syntax as before to run these tasks:
 
@@ -697,6 +699,8 @@ Nx read the output from the cache instead of running the command for 10 out of 1
 Not all tasks might be cacheable though. You can configure the `cache` settings in the `targetDefaults` property of the `nx.json` file. You can also [learn more about how caching works](/features/cache-task-results).
 
 ### Testing Affected Projects
+
+{% video-link link="https://youtu.be/gc4N7kxiA50?t=614" /%}
 
 Commit your changes to git.
 
@@ -830,7 +834,7 @@ npx nx graph --affected
 
 ## Building the Apps for Deployment
 
-<!-- {% video-link link="https://youtu.be/OQ-Zc5tcxJE?t=856" /%} -->
+{% video-link link="https://youtu.be/gc4N7kxiA50?t=713" /%}
 
 If you're ready and want to ship your applications, you can build them using
 
@@ -874,7 +878,7 @@ npx nx affected -t deploy
 
 ## Imposing Constraints with Module Boundary Rules
 
-<!-- {% video-link link="https://youtu.be/OQ-Zc5tcxJE?t=1456" /%} -->
+{% video-link link="https://youtu.be/gc4N7kxiA50?t=791" /%}
 
 Once you modularize your codebase you want to make sure that the libs are not coupled to each other in an uncontrolled way. Here are some examples of how we might want to guard our small demo workspace:
 
@@ -1036,6 +1040,8 @@ Learn more about how to [enforce module boundaries](/features/enforce-module-bou
 {% callout type="check" title="Repository with Nx" %}
 Make sure you have completed the previous sections of this tutorial before starting this one. If you want a clean starting point, you can check out the [reference code](https://github.com/nrwl/nx-recipes/tree/main/react-monorepo) as a starting point.
 {% /callout %}
+
+{% video-link link="https://youtu.be/gc4N7kxiA50?t=907" /%}
 
 This tutorial walked you through how Nx can improve the local development experience, but the biggest difference Nx makes is in CI. As repositories get bigger, making sure that the CI is fast, reliable and maintainable can get very challenging. Nx provides a solution.
 
