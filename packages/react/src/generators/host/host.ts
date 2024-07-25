@@ -97,6 +97,7 @@ export async function hostGeneratorInternal(
         js: options.js,
         dynamic: options.dynamic,
         host: options.name,
+        skipPackageJson: options.skipPackageJson,
       });
       tasks.push(remoteTask);
       remotePort++;
