@@ -14,14 +14,14 @@ launch-templates:
         uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/checkout/main.yaml'
       - name: Cache restore
         uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/cache/main.yaml'
-        env:
-          KEY: 'pnpm-lock.yaml'
-          PATHS: |
+        inputs:
+          key: 'pnpm-lock.yaml'
+          paths: |
             node_modules
             ~/.cache/Cypress
             ~/.cache/ms-playwright
             ~/.pnpm-store
-          BASE_BRANCH: 'master'
+          base-branch: 'master'
       - name: Install e2e deps
         script: |
           sudo apt-get update
