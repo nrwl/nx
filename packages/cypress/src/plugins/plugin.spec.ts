@@ -121,7 +121,6 @@ describe('@nx/cypress/plugin', () => {
                       "{projectRoot}/dist/videos",
                       "{projectRoot}/dist/screenshots",
                     ],
-                    "parallelism": false,
                   },
                   "open-cypress": {
                     "command": "cypress open",
@@ -330,7 +329,6 @@ describe('@nx/cypress/plugin', () => {
                       "{projectRoot}/dist/videos",
                       "{projectRoot}/dist/screenshots",
                     ],
-                    "parallelism": false,
                   },
                   "e2e-ci": {
                     "cache": true,
@@ -371,7 +369,6 @@ describe('@nx/cypress/plugin', () => {
                       "{projectRoot}/dist/videos",
                       "{projectRoot}/dist/screenshots",
                     ],
-                    "parallelism": false,
                   },
                   "e2e-ci--src/test.cy.ts": {
                     "cache": true,
@@ -407,7 +404,6 @@ describe('@nx/cypress/plugin', () => {
                       "{projectRoot}/dist/videos",
                       "{projectRoot}/dist/screenshots",
                     ],
-                    "parallelism": false,
                   },
                   "open-cypress": {
                     "command": "cypress open",

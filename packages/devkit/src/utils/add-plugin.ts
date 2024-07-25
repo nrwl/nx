@@ -33,7 +33,7 @@ export async function addPlugin<PluginOptions>(
     Record<keyof PluginOptions, PluginOptions[keyof PluginOptions][]>
   >,
   shouldUpdatePackageJsonScripts: boolean
-): Promise<void> {
+): Promise<PluginOptions> {
   return _addPluginInternal(
     tree,
     graph,
@@ -68,7 +68,7 @@ export async function addPluginV1<PluginOptions>(
     Record<keyof PluginOptions, PluginOptions[keyof PluginOptions][]>
   >,
   shouldUpdatePackageJsonScripts: boolean
-): Promise<void> {
+): Promise<PluginOptions> {
   return _addPluginInternal(
     tree,
     graph,
@@ -98,7 +98,7 @@ async function _addPluginInternal<PluginOptions>(
     Record<keyof PluginOptions, PluginOptions[keyof PluginOptions][]>
   >,
   shouldUpdatePackageJsonScripts: boolean
-) {
+): Promise<PluginOptions> {
   const graphNodes = Object.values(graph.nodes);
   const nxJson = readNxJson(tree);
 
@@ -173,6 +173,8 @@ async function _addPluginInternal<PluginOptions>(
   if (shouldUpdatePackageJsonScripts) {
     updatePackageScripts(tree, projConfigs);
   }
+
+  return pluginOptions;
 }
 
 type TargetCommand = {
