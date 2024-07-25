@@ -322,6 +322,7 @@ function isMigrationToMonorepoNeeded(tree: Tree, graph: ProjectGraph): boolean {
         targetConfig.executor
       ) ||
       (targetConfig.executor === 'nx:run-commands' &&
+        targetConfig.options?.command &&
         targetConfig.options?.command.startsWith('eslint '))
     ) {
       return true;
