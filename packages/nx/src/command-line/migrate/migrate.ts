@@ -1427,7 +1427,14 @@ export async function executeMigrations(
       : 1;
   });
 
+  logger.info(`Running the following migrations:`);
+  sortedMigrations.forEach((m) =>
+    logger.info(`- ${m.package}: ${m.name} (${m.description})`)
+  );
+  logger.info(`---------------------------------------------------------\n`);
+
   for (const m of sortedMigrations) {
+    logger.info(`Running migration ${m.package}: ${m.name}`);
     try {
       const { collection, collectionPath } = readMigrationCollection(
         m.package,
@@ -1441,15 +1448,17 @@ export async function executeMigrations(
           m.name
         );
 
+        logger.info(`Ran ${m.name} from ${m.package}`);
+        logger.info(`  ${m.description}\n`);
         if (changes.length < 1) {
+          logger.info(`No changes were made\n`);
           migrationsWithNoChanges.push(m);
-          // If no changes are made, continue on without printing anything
           continue;
         }
 
-        logger.info(`Ran ${m.name} from ${m.package}`);
-        logger.info(`  ${m.description}\n`);
+        logger.info('Changes:');
         printChanges(changes, '  ');
+        logger.info('');
       } else {
         const ngCliAdapter = await getNgCompatLayer();
         const { madeChanges, loggingQueue } = await ngCliAdapter.runMigration(
@@ -1462,15 +1471,17 @@ export async function executeMigrations(
           isVerbose
         );
 
+        logger.info(`Ran ${m.name} from ${m.package}`);
+        logger.info(`  ${m.description}\n`);
         if (!madeChanges) {
+          logger.info(`No changes were made\n`);
           migrationsWithNoChanges.push(m);
-          // If no changes are made, continue on without printing anything
           continue;
         }
 
-        logger.info(`Ran ${m.name} from ${m.package}`);
-        logger.info(`  ${m.description}\n`);
+        logger.info('Changes:');
         loggingQueue.forEach((log) => logger.info('  ' + log));
+        logger.info('');
       }
 
       if (shouldCreateCommits) {
