@@ -33,11 +33,27 @@ describe('@nx/playwright:init', () => {
       [
         {
           "options": {
+            "ciTargetName": "e2e-ci",
             "targetName": "e2e",
           },
           "plugin": "@nx/playwright/plugin",
         },
       ]
+    `);
+    expect(nxJson.targetDefaults).toMatchInlineSnapshot(`
+      {
+        "build": {
+          "cache": true,
+        },
+        "e2e-ci--**/*": {
+          "dependsOn": [
+            "^build",
+          ],
+        },
+        "lint": {
+          "cache": true,
+        },
+      }
     `);
   });
 
@@ -56,6 +72,7 @@ describe('@nx/playwright:init', () => {
         "foo",
         {
           "options": {
+            "ciTargetName": "e2e-ci",
             "targetName": "e2e",
           },
           "plugin": "@nx/playwright/plugin",
