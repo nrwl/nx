@@ -22,7 +22,7 @@ import { MobileMenuItem } from './mobile-menu-item';
 import { SectionsMenu } from './sections-menu';
 import { TwoColumnsMenu } from './two-columns-menu';
 import { AlgoliaSearch } from '@nx/nx-dev/feature-search';
-import { GitHubIcon, NxCloudIcon, NxIcon } from '@nx/nx-dev/ui-icons';
+import { GitHubIcon, NxCloudAnimatedIcon, NxIcon } from '@nx/nx-dev/ui-icons';
 
 export function Header(): JSX.Element {
   let [isOpen, setIsOpen] = useState(false);
@@ -245,7 +245,7 @@ export function Header(): JSX.Element {
               target="_blank"
               title="Log in to your Nx Cloud Account"
             >
-              <NxCloudIcon className="h-4 w-4" aria-hidden="true" />
+              <NxCloudAnimatedIcon className="h-4 w-4" aria-hidden="true" />
               <span>Go to app</span>
             </ButtonLink>
             <a
