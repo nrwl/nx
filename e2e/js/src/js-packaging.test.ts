@@ -146,8 +146,18 @@ describe('packaging libs', () => {
       json.compilerOptions.module = 'esnext';
       return json;
     });
+    updateJson(`libs/${tscEsmLib}/package.json`, (json) => {
+      // check one lib without type, the build output should be set with type module
+      delete json.type;
+      return json;
+    });
     updateJson(`libs/${swcEsmLib}/.swcrc`, (json) => {
       json.module.type = 'es6';
+      return json;
+    });
+    updateJson(`libs/${swcEsmLib}/package.json`, (json) => {
+      // check one lib with the type set, the build output should be set with type module
+      json.type = 'module';
       return json;
     });
     // Node ESM requires file extensions in imports so must add them before building

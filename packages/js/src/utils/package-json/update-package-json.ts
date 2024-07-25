@@ -96,6 +96,22 @@ export function updatePackageJson(
       : { name: context.projectName, version: '0.0.1' };
   }
 
+  if (packageJson.type === 'module') {
+    if (options.format?.includes('cjs')) {
+      logger.warn(
+        `Package type is set to "module" but "cjs" format is included. Going to use "esm" format instead. You can change the package type to "commonjs" or remove type in the package.json file.`
+      );
+    }
+    options.format = ['esm'];
+  } else if (packageJson.type === 'commonjs') {
+    if (options.format?.includes('esm')) {
+      logger.warn(
+        `Package type is set to "commonjs" but "esm" format is included. Going to use "cjs" format instead. You can change the package type to "module" or remove type in the package.json file.`
+      );
+    }
+    options.format = ['cjs'];
+  }
+
   // update package specific settings
   packageJson = getUpdatedPackageJsonContent(packageJson, options);
 
@@ -278,7 +294,7 @@ export function getUpdatedPackageJsonContent(
     packageJson.module ??= esmExports['.'];
 
     if (!hasCjsFormat) {
-      packageJson.type = 'module';
+      packageJson.type ??= 'module';
       packageJson.main ??= esmExports['.'];
     }
 
@@ -302,7 +318,7 @@ export function getUpdatedPackageJsonContent(
 
     packageJson.main ??= cjsExports['.'];
     if (!hasEsmFormat) {
-      packageJson.type = 'commonjs';
+      packageJson.type ??= 'commonjs';
     }
 
     if (options.generateExportsField) {
