@@ -5,4 +5,5 @@ export interface VerdaccioExecutorSchema {
   listenAddress?: string;
   config?: string;
   clear?: boolean;
+  scopes?: string[];
 }

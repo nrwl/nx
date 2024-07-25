@@ -31,13 +31,6 @@ const VALID_AUTHORS_FOR_LATEST = [
     });
   }
 
-  const buildCommand = 'pnpm build';
-  console.log(`> ${buildCommand}`);
-  execSync(buildCommand, {
-    stdio: [0, 1, 2],
-    maxBuffer: LARGE_BUFFER,
-  });
-
   // Ensure all the native-packages directories are available at the top level of the build directory, enabling consistent packageRoot structure
   execSync(`pnpm nx copy-native-package-directories nx`, {
     stdio: isVerboseLogging ? [0, 1, 2] : 'ignore',
