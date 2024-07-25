@@ -6,8 +6,8 @@ To create a TypeScript schema to use in your generator function, define a TypeSc
 
 ```typescript
 export interface GeneratorOptions {
-  name: string;
-  type?: string;
+   name: string;
+   type?: string;
 }
 ```
 
@@ -18,11 +18,13 @@ import { Tree, formatFiles, installPackagesTask } from '@nx/devkit';
 import { libraryGenerator } from '@nx/js';
 
 export default async function (tree: Tree, schema: GeneratorOptions) {
-  await libraryGenerator(tree, { name: `${schema.name}-${schema.type || ''}` });
-  await formatFiles(tree);
-  return () => {
-    installPackagesTask(tree);
-  };
+   await libraryGenerator(tree, {
+      name: `${schema.name}-${schema.type || ''}`,
+   });
+   await formatFiles(tree);
+   return () => {
+      installPackagesTask(tree);
+   };
 }
 ```
 
@@ -32,24 +34,24 @@ Static options for a generator don't prompt the user for input. To add a static 
 
 ```json
 {
-  "$schema": "https://json-schema.org/schema",
-  "id": "my-generator",
-  "type": "object",
-  "properties": {
-    "name": {
-      "type": "string",
-      "description": "Library name",
-      "$default": {
-        "$source": "argv",
-        "index": 0
+   "$schema": "https://json-schema.org/schema",
+   "id": "my-generator",
+   "type": "object",
+   "properties": {
+      "name": {
+         "type": "string",
+         "description": "Library name",
+         "$default": {
+            "$source": "argv",
+            "index": 0
+         }
+      },
+      "type": {
+         "type": "string",
+         "description": "Provide the library type, such as 'data-access' or 'state'"
       }
-    },
-    "type": {
-      "type": "string",
-      "description": "Provide the library type, such as 'data-access' or 'state'"
-    }
-  },
-  "required": ["name"]
+   },
+   "required": ["name"]
 }
 ```
 
@@ -61,42 +63,42 @@ Dynamic options can prompt the user to select from a list of options. To define 
 
 ```json
 {
-  "$schema": "https://json-schema.org/schema",
-  "id": "my-generator",
-  "type": "object",
-  "properties": {
-    "name": {
-      "type": "string",
-      "description": "Library name",
-      "$default": {
-        "$source": "argv",
-        "index": 0
+   "$schema": "https://json-schema.org/schema",
+   "id": "my-generator",
+   "type": "object",
+   "properties": {
+      "name": {
+         "type": "string",
+         "description": "Library name",
+         "$default": {
+            "$source": "argv",
+            "index": 0
+         }
+      },
+      "type": {
+         "type": "string",
+         "description": "Provide the library type",
+         "x-prompt": {
+            "message": "Which type of library would you like to generate?",
+            "type": "list",
+            "items": [
+               {
+                  "value": "data-access",
+                  "label": "Data Access"
+               },
+               {
+                  "value": "feature",
+                  "label": "Feature"
+               },
+               {
+                  "value": "state",
+                  "label": "State Management"
+               }
+            ]
+         }
       }
-    },
-    "type": {
-      "type": "string",
-      "description": "Provide the library type",
-      "x-prompt": {
-        "message": "Which type of library would you like to generate?",
-        "type": "list",
-        "items": [
-          {
-            "value": "data-access",
-            "label": "Data Access"
-          },
-          {
-            "value": "feature",
-            "label": "Feature"
-          },
-          {
-            "value": "state",
-            "label": "State Management"
-          }
-        ]
-      }
-    }
-  },
-  "required": ["name"]
+   },
+   "required": ["name"]
 }
 ```
 
@@ -108,26 +110,26 @@ There's a special dynamic option property that populates a selection list with y
 
 ```json
 {
-  "$schema": "https://json-schema.org/schema",
-  "id": "my-generator",
-  "type": "object",
-  "properties": {
-    "name": {
-      "type": "string",
-      "description": "Component name",
-      "$default": {
-        "$source": "argv",
-        "index": 0
+   "$schema": "https://json-schema.org/schema",
+   "id": "my-generator",
+   "type": "object",
+   "properties": {
+      "name": {
+         "type": "string",
+         "description": "Component name",
+         "$default": {
+            "$source": "argv",
+            "index": 0
+         }
+      },
+      "project": {
+         "type": "string",
+         "description": "The project where the component will be located.",
+         "x-prompt": "Which project will this component be located in?",
+         "x-dropdown": "projects"
       }
-    },
-    "project": {
-      "type": "string",
-      "description": "The project where the component will be located.",
-      "x-prompt": "Which project will this component be located in?",
-      "x-dropdown": "projects"
-    }
-  },
-  "required": ["name", "project"]
+   },
+   "required": ["name", "project"]
 }
 ```
 
@@ -139,13 +141,13 @@ Properties tagged with ⚠️ are required. Others are optional.
 
 ```jsonc
 {
-  "properties": {
-    "name": {} // see Properties
-  },
-  "required": [],
-  "description": "",
-  "definitions": {}, // same as "properties"
-  "additionalProperties": false
+   "properties": {
+      "name": {} // see Properties
+   },
+   "required": [],
+   "description": "",
+   "definitions": {}, // same as "properties"
+   "additionalProperties": false
 }
 ```
 
@@ -155,9 +157,9 @@ The properties of a generator. Properties are listed by name:
 
 ```jsonc
 {
-  "properties_name": {
-    // properties configuration
-  }
+   "properties_name": {
+      // properties configuration
+   }
 }
 ```
 
@@ -170,15 +172,15 @@ The property keys that are required. Example:
 
 ```json
 {
-  "properties": {
-    "name": {
-      "type": "string"
-    },
-    "type": {
-      "type": "string"
-    }
-  },
-  "required": ["name"]
+   "properties": {
+      "name": {
+         "type": "string"
+      },
+      "type": {
+         "type": "string"
+      }
+   },
+   "required": ["name"]
 }
 ```
 
@@ -187,8 +189,8 @@ You can define your TypeScript schema like this:
 
 ```typescript
 interface Schema {
-  name: string; // required
-  type?: string; // optional
+   name: string; // required
+   type?: string; // optional
 }
 ```
 
@@ -205,41 +207,41 @@ Define an auxiliary schema in order to be reused and combined later on. Examples
 
 ```json
 {
-  "$id": "https://example.com/schemas/customer",
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+   "$id": "https://example.com/schemas/customer",
+   "$schema": "https://json-schema.org/draft/2020-12/schema",
 
-  "type": "object",
-  "properties": {
-    "first_name": { "type": "string" },
-    "last_name": { "type": "string" },
-    "shipping_address": { "$ref": "/schemas/address" },
-    "billing_address": { "$ref": "/schemas/address" }
-  },
-  "required": [
-    "first_name",
-    "last_name",
-    "shipping_address",
-    "billing_address"
-  ],
+   "type": "object",
+   "properties": {
+      "first_name": { "type": "string" },
+      "last_name": { "type": "string" },
+      "shipping_address": { "$ref": "/schemas/address" },
+      "billing_address": { "$ref": "/schemas/address" }
+   },
+   "required": [
+      "first_name",
+      "last_name",
+      "shipping_address",
+      "billing_address"
+   ],
 
-  "$defs": {
-    "address": {
-      "$id": "/schemas/address",
-      "$schema": "http://json-schema.org/draft-07/schema#",
+   "$defs": {
+      "address": {
+         "$id": "/schemas/address",
+         "$schema": "http://json-schema.org/draft-07/schema#",
 
-      "type": "object",
-      "properties": {
-        "street_address": { "type": "string" },
-        "city": { "type": "string" },
-        "state": { "$ref": "#/definitions/state" }
-      },
-      "required": ["street_address", "city", "state"],
+         "type": "object",
+         "properties": {
+            "street_address": { "type": "string" },
+            "city": { "type": "string" },
+            "state": { "$ref": "#/definitions/state" }
+         },
+         "required": ["street_address", "city", "state"],
 
-      "definitions": {
-        "state": { "enum": ["CA", "NY", "... etc ..."] }
+         "definitions": {
+            "state": { "enum": ["CA", "NY", "... etc ..."] }
+         }
       }
-    }
-  }
+   }
 }
 ```
 
@@ -256,13 +258,13 @@ Specify whether the additional properties in the input are allowed. Example:
 
 ```json
 {
-  "type": "object",
-  "properties": {
-    "number": { "type": "number" },
-    "street_name": { "type": "string" },
-    "street_type": { "enum": ["Street", "Avenue", "Boulevard"] }
-  },
-  "additionalProperties": false
+   "type": "object",
+   "properties": {
+      "number": { "type": "number" },
+      "street_name": { "type": "string" },
+      "street_type": { "enum": ["Street", "Avenue", "Boulevard"] }
+   },
+   "additionalProperties": false
 }
 ```
 
@@ -276,10 +278,10 @@ Any additional properties will be considered invalid.
 
 ```json
 {
-  "number": 1600,
-  "street_name": "Pennsylvania",
-  "street_type": "Avenue",
-  "direction": "NW"
+   "number": 1600,
+   "street_name": "Pennsylvania",
+   "street_type": "Avenue",
+   "direction": "NW"
 }
 ```
 
@@ -290,35 +292,35 @@ Any additional properties will be considered invalid.
 
 ```json
 {
-  "type": "",
-  "required": [],
-  "enum": [],
-  "properties": {},
-  "oneOf": [],
-  "anyOf": [],
-  "allOf": [],
-  "items": [],
-  "alias": "",
-  "aliases": [],
-  "description": "",
-  "format": "",
-  "visible": false,
-  "default": "",
-  "$ref": "",
-  "$default": {
-    "$source": "argv",
-    "index": 0
-  },
-  "additionalProperties": false,
-  "x-prompt": {
-    "message": "",
-    "type": "",
-    "items": [],
-    "multiselect": false
-  },
-  "x-deprecated": false,
-  "x-priority": "important",
-  "x-dropdown": "projects"
+   "type": "",
+   "required": [],
+   "enum": [],
+   "properties": {},
+   "oneOf": [],
+   "anyOf": [],
+   "allOf": [],
+   "items": [],
+   "alias": "",
+   "aliases": [],
+   "description": "",
+   "format": "",
+   "visible": false,
+   "default": "",
+   "$ref": "",
+   "$default": {
+      "$source": "argv",
+      "index": 0
+   },
+   "additionalProperties": false,
+   "x-prompt": {
+      "message": "",
+      "type": "",
+      "items": [],
+      "multiselect": false
+   },
+   "x-deprecated": false,
+   "x-priority": "important",
+   "x-dropdown": "projects"
 }
 ```
 
@@ -326,11 +328,11 @@ Options available in `number` type:
 
 ```json
 {
-  "multipleOf": 5,
-  "minimum": 5,
-  "exclusiveMinimum": 4,
-  "maximum": 200,
-  "exclusiveMaximum": 201
+   "multipleOf": 5,
+   "minimum": 5,
+   "exclusiveMinimum": 4,
+   "maximum": 200,
+   "exclusiveMaximum": 201
 }
 ```
 
@@ -338,9 +340,9 @@ Options available in `string` type:
 
 ```json
 {
-  "pattern": "\\d+",
-  "minLength": 10,
-  "maxLength": 100
+   "pattern": "\\d+",
+   "minLength": 10,
+   "maxLength": 100
 }
 ```
 
@@ -352,8 +354,8 @@ Example:
 
 ```json
 {
-  "type": "string",
-  "minLength": "10"
+   "type": "string",
+   "minLength": "10"
 }
 ```
 
@@ -363,15 +365,15 @@ The property keys that are required. Example:
 
 ```json
 {
-  "properties": {
-    "a": {
-      "type": "boolean"
-    },
-    "b": {
-      "type": "boolean"
-    }
-  },
-  "required": ["a"]
+   "properties": {
+      "a": {
+         "type": "boolean"
+      },
+      "b": {
+         "type": "boolean"
+      }
+   },
+   "required": ["a"]
 }
 ```
 
@@ -383,11 +385,11 @@ Make sure that the value is in the enumeration. Example:
 
 ```jsonc
 {
-  "type": "string",
-  "enum": ["foo", "bar"]
+   "type": "string",
+   "enum": ["foo", "bar"]
 
-  // valid case: `foo`, `bar`
-  // invalid case: any other string like `hello`
+   // valid case: `foo`, `bar`
+   // invalid case: any other string like `hello`
 }
 ```
 
@@ -397,24 +399,24 @@ The sub-properties of a property. Example:
 
 ```json
 {
-  "index": {
-    "description": "Configures the generation of the application's HTML index.",
-    "type": "object",
-    "properties": {
-      "input": {
-        "type": "string",
-        "minLength": 1,
-        "description": "The path of a file to use for the application's generated HTML index."
+   "index": {
+      "description": "Configures the generation of the application's HTML index.",
+      "type": "object",
+      "properties": {
+         "input": {
+            "type": "string",
+            "minLength": 1,
+            "description": "The path of a file to use for the application's generated HTML index."
+         },
+         "output": {
+            "type": "string",
+            "minLength": 1,
+            "default": "index.html",
+            "description": "The output path of the application's generated HTML index file. The full provided path will be used and will be considered relative to the application's configured output path."
+         }
       },
-      "output": {
-        "type": "string",
-        "minLength": 1,
-        "default": "index.html",
-        "description": "The output path of the application's generated HTML index file. The full provided path will be used and will be considered relative to the application's configured output path."
-      }
-    },
-    "required": ["input"]
-  }
+      "required": ["input"]
+   }
 }
 ```
 
@@ -426,18 +428,18 @@ Only accepts a value that matches one of the condition properties. Example:
 
 ```json
 {
-  "sourceMap": {
-    "description": "Output sourcemaps. Use 'hidden' for use with error reporting tools without generating sourcemap comment.",
-    "default": true,
-    "oneOf": [
-      {
-        "type": "boolean"
-      },
-      {
-        "type": "string"
-      }
-    ]
-  }
+   "sourceMap": {
+      "description": "Output sourcemaps. Use 'hidden' for use with error reporting tools without generating sourcemap comment.",
+      "default": true,
+      "oneOf": [
+         {
+            "type": "boolean"
+         },
+         {
+            "type": "string"
+         }
+      ]
+   }
 }
 ```
 
@@ -445,30 +447,30 @@ In this example, `sourceMap` accepts a value whose type is either `boolean` or `
 
 ```json
 {
-  "optimization": {
-    "description": "Enables optimization of the build output.",
-    "oneOf": [
-      {
-        "type": "object",
-        "properties": {
-          "scripts": {
-            "type": "boolean",
-            "description": "Enables optimization of the scripts output.",
-            "default": true
-          },
-          "styles": {
-            "type": "boolean",
-            "description": "Enables optimization of the styles output.",
-            "default": true
-          }
-        },
-        "additionalProperties": false
-      },
-      {
-        "type": "boolean"
-      }
-    ]
-  }
+   "optimization": {
+      "description": "Enables optimization of the build output.",
+      "oneOf": [
+         {
+            "type": "object",
+            "properties": {
+               "scripts": {
+                  "type": "boolean",
+                  "description": "Enables optimization of the scripts output.",
+                  "default": true
+               },
+               "styles": {
+                  "type": "boolean",
+                  "description": "Enables optimization of the styles output.",
+                  "default": true
+               }
+            },
+            "additionalProperties": false
+         },
+         {
+            "type": "boolean"
+         }
+      ]
+   }
 }
 ```
 
@@ -480,31 +482,31 @@ Only accepts a value that matches one of the condition properties. Example:
 
 ```json
 {
-  "format": {
-    "type": "string",
-    "description": "ESLint Output formatter (https://eslint.org/docs/user-guide/formatters).",
-    "default": "stylish",
-    "anyOf": [
-      {
-        "enum": [
-          "stylish",
-          "compact",
-          "codeframe",
-          "unix",
-          "visualstudio",
-          "table",
-          "checkstyle",
-          "html",
-          "jslint-xml",
-          "json",
-          "json-with-metadata",
-          "junit",
-          "tap"
-        ]
-      },
-      { "minLength": 1 }
-    ]
-  }
+   "format": {
+      "type": "string",
+      "description": "ESLint Output formatter (https://eslint.org/docs/user-guide/formatters).",
+      "default": "stylish",
+      "anyOf": [
+         {
+            "enum": [
+               "stylish",
+               "compact",
+               "codeframe",
+               "unix",
+               "visualstudio",
+               "table",
+               "checkstyle",
+               "html",
+               "jslint-xml",
+               "json",
+               "json-with-metadata",
+               "junit",
+               "tap"
+            ]
+         },
+         { "minLength": 1 }
+      ]
+   }
 }
 ```
 
@@ -516,10 +518,10 @@ Only accepts a value that matches all the condition properties. Example:
 
 ```json
 {
-  "a": {
-    "type": "number",
-    "allOf": [{ "multipleOf": 5 }, { "multipleOf": 3 }]
-  }
+   "a": {
+      "type": "number",
+      "allOf": [{ "multipleOf": 5 }, { "multipleOf": 3 }]
+   }
 }
 ```
 
@@ -531,16 +533,16 @@ The alias of this property. Example:
 
 ```json
 {
-  "tags": {
-    "type": "string",
-    "description": "Add tags to the project (used for linting)",
-    "alias": "t"
-  },
-  "directory": {
-    "type": "string",
-    "description": "A directory where the project is placed",
-    "alias": "d"
-  }
+   "tags": {
+      "type": "string",
+      "description": "Add tags to the project (used for linting)",
+      "alias": "t"
+   },
+   "directory": {
+      "type": "string",
+      "description": "A directory where the project is placed",
+      "alias": "d"
+   }
 }
 ```
 
@@ -552,11 +554,11 @@ Mostly same as `alias`, but it can accept multiple aliases. Example:
 
 ```json
 {
-  "directory": {
-    "description": "Directory where the generated files are placed.",
-    "type": "string",
-    "aliases": ["dir", "path"]
-  }
+   "directory": {
+      "description": "Directory where the generated files are placed.",
+      "type": "string",
+      "aliases": ["dir", "path"]
+   }
 }
 ```
 
@@ -568,11 +570,11 @@ The description for users of your property. Example:
 
 ```json
 {
-  "flat": {
-    "description": "Flag to indicate if a directory is created.",
-    "type": "boolean",
-    "default": false
-  }
+   "flat": {
+      "description": "Flag to indicate if a directory is created.",
+      "type": "boolean",
+      "default": false
+   }
 }
 ```
 
@@ -582,12 +584,12 @@ The format of this property. Available options are: `path`, `html-selector`, etc
 
 ```json
 {
-  "prefix": {
-    "type": "string",
-    "format": "html-selector",
-    "description": "The prefix to apply to generated selectors.",
-    "alias": "p"
-  }
+   "prefix": {
+      "type": "string",
+      "format": "html-selector",
+      "description": "The prefix to apply to generated selectors.",
+      "alias": "p"
+   }
 }
 ```
 
@@ -599,10 +601,10 @@ Indicate whether the property should be visible in the configuration UI. Example
 
 ```json
 {
-  "path": {
-    "format": "path",
-    "visible": false
-  }
+   "path": {
+      "format": "path",
+      "visible": false
+   }
 }
 ```
 
@@ -614,12 +616,12 @@ The default value of this property. Example:
 
 ```json
 {
-  "linter": {
-    "description": "The tool to use for running lint checks.",
-    "type": "string",
-    "enum": ["eslint"],
-    "default": "eslint"
-  }
+   "linter": {
+      "description": "The tool to use for running lint checks.",
+      "type": "string",
+      "enum": ["eslint"],
+      "default": "eslint"
+   }
 }
 ```
 
@@ -644,16 +646,16 @@ Example of `$source: argv`:
 
 ```json
 {
-  "name": {
-    "type": "string",
-    "description": "Library name",
-    "$default": {
-      "$source": "argv",
-      "index": 0
-    },
-    "x-prompt": "What name would you like to use for the library?",
-    "pattern": "^[a-zA-Z].*$"
-  }
+   "name": {
+      "type": "string",
+      "description": "Library name",
+      "$default": {
+         "$source": "argv",
+         "index": 0
+      },
+      "x-prompt": "What name would you like to use for the library?",
+      "pattern": "^[a-zA-Z].*$"
+   }
 }
 ```
 
@@ -663,15 +665,15 @@ Example of `$source: projectName`:
 
 ```json
 {
-  "project": {
-    "type": "string",
-    "description": "The name of the project.",
-    "alias": "p",
-    "$default": {
-      "$source": "projectName"
-    },
-    "x-prompt": "What is the name of the project for the migration?"
-  }
+   "project": {
+      "type": "string",
+      "description": "The name of the project.",
+      "alias": "p",
+      "$default": {
+         "$source": "projectName"
+      },
+      "x-prompt": "What is the name of the project for the migration?"
+   }
 }
 ```
 
@@ -698,15 +700,15 @@ The string `x-prompt` example:
 
 ```json
 {
-  "name": {
-    "type": "string",
-    "description": "Library name",
-    "$default": {
-      "$source": "argv",
-      "index": 0
-    },
-    "x-prompt": "What is your desired library name?"
-  }
+   "name": {
+      "type": "string",
+      "description": "Library name",
+      "$default": {
+         "$source": "argv",
+         "index": 0
+      },
+      "x-prompt": "What is your desired library name?"
+   }
 }
 ```
 
@@ -737,34 +739,34 @@ Example that contains `value` and `label`:
 
 ```json
 {
-  "style": {
-    "description": "The file extension to be used for style files.",
-    "type": "string",
-    "default": "css",
-    "enum": ["css", "scss", "sass", "less"],
-    "x-prompt": {
-      "message": "Which stylesheet format would you like to use?",
-      "type": "list",
-      "items": [
-        {
-          "value": "css",
-          "label": "CSS"
-        },
-        {
-          "value": "scss",
-          "label": "SASS(.scss)  [ https://sass-lang.com   ]"
-        },
-        {
-          "value": "sass",
-          "label": "SASS(.sass)  [ https://sass-lang.com   ]"
-        },
-        {
-          "value": "less",
-          "label": "LESS         [ https://lesscss.org     ]"
-        }
-      ]
-    }
-  }
+   "style": {
+      "description": "The file extension to be used for style files.",
+      "type": "string",
+      "default": "css",
+      "enum": ["css", "scss", "sass", "less"],
+      "x-prompt": {
+         "message": "Which stylesheet format would you like to use?",
+         "type": "list",
+         "items": [
+            {
+               "value": "css",
+               "label": "CSS"
+            },
+            {
+               "value": "scss",
+               "label": "SASS(.scss)  [ https://sass-lang.com   ]"
+            },
+            {
+               "value": "sass",
+               "label": "SASS(.sass)  [ https://sass-lang.com   ]"
+            },
+            {
+               "value": "less",
+               "label": "LESS         [ https://lesscss.org     ]"
+            }
+         ]
+      }
+   }
 }
 ```
 
@@ -778,11 +780,11 @@ Indicate whether the property is deprecated. Can be a `boolean` or a `string`. T
 
 ```json
 {
-  "setupFile": {
-    "description": "The name of a setup file used by Jest. (use Jest config file https://jestjs.io/docs/en/configuration#setupfilesafterenv-array)",
-    "type": "string",
-    "x-deprecated": true
-  }
+   "setupFile": {
+      "description": "The name of a setup file used by Jest. (use Jest config file https://jestjs.io/docs/en/configuration#setupfilesafterenv-array)",
+      "type": "string",
+      "x-deprecated": true
+   }
 }
 ```
 
@@ -790,11 +792,11 @@ This indicates that the property `setupFile` is deprecated without a reason. The
 
 ```json
 {
-  "tsSpecConfig": {
-    "type": "string",
-    "description": "The tsconfig file for specs.",
-    "x-deprecated": "Use the `tsconfig` property for `ts-jest` in the e2e project `jest.config.js` file. It will be removed in the next major release."
-  }
+   "tsSpecConfig": {
+      "type": "string",
+      "description": "The tsconfig file for specs.",
+      "x-deprecated": "Use the `tsconfig` property for `ts-jest` in the e2e project `jest.config.js` file. It will be removed in the next major release."
+   }
 }
 ```
 
@@ -806,11 +808,11 @@ Indicates the priority of a property. Can either be `important` or `internal`. T
 
 ```json
 {
-  "directory": {
-    "description": "The directory of the new application.",
-    "type": "string",
-    "x-priority": "important"
-  }
+   "directory": {
+      "description": "The directory of the new application.",
+      "type": "string",
+      "x-priority": "important"
+   }
 }
 ```
 
@@ -820,12 +822,12 @@ Populates the list of projects in your workspace to a selection prompt.
 
 ```json
 {
-  "project": {
-    "description": "The project where the component will be located.",
-    "type": "string",
-    "x-prompt": "Which project will this component be located in?",
-    "x-dropdown": "projects"
-  }
+   "project": {
+      "description": "The project where the component will be located.",
+      "type": "string",
+      "x-prompt": "Which project will this component be located in?",
+      "x-dropdown": "projects"
+   }
 }
 ```
 
@@ -835,10 +837,10 @@ Make sure that the number can be divided by the specified number. Example:
 
 ```json
 {
-  "a": {
-    "type": "number",
-    "multipleOf": 5
-  }
+   "a": {
+      "type": "number",
+      "multipleOf": 5
+   }
 }
 ```
 
@@ -850,10 +852,10 @@ Make sure that the number is greater than or equal to the specified number.
 
 ```json
 {
-  "value": {
-    "type": "number",
-    "minimum": 5
-  }
+   "value": {
+      "type": "number",
+      "minimum": 5
+   }
 }
 ```
 
@@ -867,10 +869,10 @@ Make sure that the number is greater than the specified number.
 
 ```json
 {
-  "value": {
-    "type": "number",
-    "exclusiveMinimum": 4
-  }
+   "value": {
+      "type": "number",
+      "exclusiveMinimum": 4
+   }
 }
 ```
 
@@ -884,10 +886,10 @@ Make sure that the number is less than or equal to the specified number.
 
 ```json
 {
-  "value": {
-    "type": "number",
-    "maximum": 200
-  }
+   "value": {
+      "type": "number",
+      "maximum": 200
+   }
 }
 ```
 
@@ -901,10 +903,10 @@ Make sure that the number is less than the specified number.
 
 ```json
 {
-  "value": {
-    "type": "number",
-    "exclusiveMaximum": 201
-  }
+   "value": {
+      "type": "number",
+      "exclusiveMaximum": 201
+   }
 }
 ```
 
@@ -918,10 +920,10 @@ Make sure that the string matches the Regexp pattern.
 
 ```json
 {
-  "value": {
-    "type": "string",
-    "pattern": "^\\d+$"
-  }
+   "value": {
+      "type": "string",
+      "pattern": "^\\d+$"
+   }
 }
 ```
 
@@ -933,10 +935,10 @@ Make sure that the string length is greater than or equal to the specified value
 
 ```json
 {
-  "value": {
-    "type": "string",
-    "minLength": 10
-  }
+   "value": {
+      "type": "string",
+      "minLength": 10
+   }
 }
 ```
 
@@ -948,10 +950,10 @@ Make sure that the string length is less than or equal to the specified value.
 
 ```json
 {
-  "value": {
-    "type": "string",
-    "maxLength": 10
-  }
+   "value": {
+      "type": "string",
+      "maxLength": 10
+   }
 }
 ```
 

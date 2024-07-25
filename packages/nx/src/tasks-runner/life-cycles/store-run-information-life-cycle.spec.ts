@@ -2,45 +2,45 @@ import { Task } from '../../config/task-graph';
 import { TaskStatus } from '../tasks-runner';
 import { StoreRunInformationLifeCycle } from './store-run-information-life-cycle';
 describe('StoreRunInformationLifeCycle', () => {
-  it.only('should handle startTime/endTime in TaskResults', () => {
-    let runDetails;
-    const store = new StoreRunInformationLifeCycle(
-      'nx run-many --target=test',
-      (res) => (runDetails = res),
-      () => 'DATE'
-    );
+   it.only('should handle startTime/endTime in TaskResults', () => {
+      let runDetails;
+      const store = new StoreRunInformationLifeCycle(
+         'nx run-many --target=test',
+         (res) => (runDetails = res),
+         () => 'DATE'
+      );
 
-    store.startCommand();
+      store.startCommand();
 
-    store.startTasks([{ id: 'proj1:test' }, { id: 'proj2:test' }] as any);
+      store.startTasks([{ id: 'proj1:test' }, { id: 'proj2:test' }] as any);
 
-    store.endTasks([
-      {
-        task: {
-          id: 'proj1:test',
-          target: { target: 'test', project: 'proj1' },
-          hash: 'hash1',
-          startTime: new Date('2020-01-0T10:00:00:000Z').getTime(),
-          endTime: new Date('2020-01-0T10:00:02:000Z').getTime(),
-        },
-        status: 'cache-miss',
-        code: 0,
-      },
-      {
-        task: {
-          id: 'proj2:test',
-          target: { target: 'test', project: 'proj2' },
-          hash: 'hash2',
-          startTime: new Date('2020-01-0T10:00:01:000Z').getTime(),
-          endTime: new Date('2020-01-0T10:00:04:000Z').getTime(),
-        },
-        status: 'cache-miss',
-        code: 0,
-      },
-    ] as any);
+      store.endTasks([
+         {
+            task: {
+               id: 'proj1:test',
+               target: { target: 'test', project: 'proj1' },
+               hash: 'hash1',
+               startTime: new Date('2020-01-0T10:00:00:000Z').getTime(),
+               endTime: new Date('2020-01-0T10:00:02:000Z').getTime(),
+            },
+            status: 'cache-miss',
+            code: 0,
+         },
+         {
+            task: {
+               id: 'proj2:test',
+               target: { target: 'test', project: 'proj2' },
+               hash: 'hash2',
+               startTime: new Date('2020-01-0T10:00:01:000Z').getTime(),
+               endTime: new Date('2020-01-0T10:00:04:000Z').getTime(),
+            },
+            status: 'cache-miss',
+            code: 0,
+         },
+      ] as any);
 
-    store.endCommand();
-    expect(runDetails).toMatchInlineSnapshot(`
+      store.endCommand();
+      expect(runDetails).toMatchInlineSnapshot(`
       {
         "run": {
           "command": "nx run-many --target=test",
@@ -74,67 +74,67 @@ describe('StoreRunInformationLifeCycle', () => {
         ],
       }
     `);
-  });
+   });
 
-  it('should create run details', () => {
-    let runDetails;
-    const store = new StoreRunInformationLifeCycle(
-      'nx run-many --target=test',
-      (res) => (runDetails = res),
-      () => 'DATE'
-    );
+   it('should create run details', () => {
+      let runDetails;
+      const store = new StoreRunInformationLifeCycle(
+         'nx run-many --target=test',
+         (res) => (runDetails = res),
+         () => 'DATE'
+      );
 
-    store.startCommand();
+      store.startCommand();
 
-    store.startTasks([
-      { id: 'proj1:test' },
-      { id: 'proj2:test' },
-      { id: 'proj3:test' },
-      { id: 'proj4:test' },
-    ] as Task[]);
+      store.startTasks([
+         { id: 'proj1:test' },
+         { id: 'proj2:test' },
+         { id: 'proj3:test' },
+         { id: 'proj4:test' },
+      ] as Task[]);
 
-    store.endTasks([
-      {
-        task: {
-          id: 'proj1:test',
-          target: { target: 'test', project: 'proj1' },
-          hash: 'hash1',
-        },
-        status: 'remote-cache',
-        code: 0,
-      },
-      {
-        task: {
-          id: 'proj2:test',
-          target: { target: 'test', project: 'proj2' },
-          hash: 'hash2',
-        },
-        status: 'local-cache',
-        code: 0,
-      },
-      {
-        task: {
-          id: 'proj3:test',
-          target: { target: 'test', project: 'proj3' },
-          hash: 'hash3',
-        },
-        status: 'local-cache-kept-existing',
-        code: 0,
-      },
-      {
-        task: {
-          id: 'proj4:test',
-          target: { target: 'test', project: 'proj4' },
-          hash: 'hash4',
-        },
-        status: 'cache-miss',
-        code: 1,
-      },
-    ] as Array<{ task: Task; status: TaskStatus; code: number }>);
+      store.endTasks([
+         {
+            task: {
+               id: 'proj1:test',
+               target: { target: 'test', project: 'proj1' },
+               hash: 'hash1',
+            },
+            status: 'remote-cache',
+            code: 0,
+         },
+         {
+            task: {
+               id: 'proj2:test',
+               target: { target: 'test', project: 'proj2' },
+               hash: 'hash2',
+            },
+            status: 'local-cache',
+            code: 0,
+         },
+         {
+            task: {
+               id: 'proj3:test',
+               target: { target: 'test', project: 'proj3' },
+               hash: 'hash3',
+            },
+            status: 'local-cache-kept-existing',
+            code: 0,
+         },
+         {
+            task: {
+               id: 'proj4:test',
+               target: { target: 'test', project: 'proj4' },
+               hash: 'hash4',
+            },
+            status: 'cache-miss',
+            code: 1,
+         },
+      ] as Array<{ task: Task; status: TaskStatus; code: number }>);
 
-    store.endCommand();
+      store.endCommand();
 
-    expect(runDetails).toMatchInlineSnapshot(`
+      expect(runDetails).toMatchInlineSnapshot(`
       Object {
         "run": Object {
           "command": "nx run-many --target=test",
@@ -190,5 +190,5 @@ describe('StoreRunInformationLifeCycle', () => {
         ],
       }
     `);
-  });
+   });
 });

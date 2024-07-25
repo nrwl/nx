@@ -1,52 +1,52 @@
 import type { Tree } from '@nx/devkit';
 import type {
-  NestGeneratorWithLanguageOption,
-  NestGeneratorWithTestOption,
-  NormalizedOptions,
+   NestGeneratorWithLanguageOption,
+   NestGeneratorWithTestOption,
+   NormalizedOptions,
 } from '../utils';
 import {
-  normalizeOptions,
-  runNestSchematic,
-  unitTestRunnerToSpec,
+   normalizeOptions,
+   runNestSchematic,
+   unitTestRunnerToSpec,
 } from '../utils';
 
 export type ServiceGeneratorOptions = NestGeneratorWithLanguageOption &
-  NestGeneratorWithTestOption;
+   NestGeneratorWithTestOption;
 
 export async function serviceGenerator(
-  tree: Tree,
-  rawOptions: ServiceGeneratorOptions
+   tree: Tree,
+   rawOptions: ServiceGeneratorOptions
 ) {
-  await serviceGeneratorInternal(tree, {
-    nameAndDirectoryFormat: 'derived',
-    ...rawOptions,
-  });
+   await serviceGeneratorInternal(tree, {
+      nameAndDirectoryFormat: 'derived',
+      ...rawOptions,
+   });
 }
 
 export async function serviceGeneratorInternal(
-  tree: Tree,
-  rawOptions: ServiceGeneratorOptions
+   tree: Tree,
+   rawOptions: ServiceGeneratorOptions
 ): Promise<any> {
-  const options = await normalizeServiceOptions(tree, rawOptions);
+   const options = await normalizeServiceOptions(tree, rawOptions);
 
-  return runNestSchematic(tree, 'service', options);
+   return runNestSchematic(tree, 'service', options);
 }
 
 export default serviceGenerator;
 
 async function normalizeServiceOptions(
-  tree: Tree,
-  options: ServiceGeneratorOptions
+   tree: Tree,
+   options: ServiceGeneratorOptions
 ): Promise<NormalizedOptions> {
-  const normalizedOptions = await normalizeOptions(
-    tree,
-    'service',
-    '@nx/nest:service',
-    options
-  );
-  return {
-    ...normalizedOptions,
-    language: options.language,
-    spec: unitTestRunnerToSpec(options.unitTestRunner),
-  };
+   const normalizedOptions = await normalizeOptions(
+      tree,
+      'service',
+      '@nx/nest:service',
+      options
+   );
+   return {
+      ...normalizedOptions,
+      language: options.language,
+      spec: unitTestRunnerToSpec(options.unitTestRunner),
+   };
 }

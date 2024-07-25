@@ -9,9 +9,9 @@ If CI feels challenging to you, **it might not be your fault**. It's a fundament
 
 Nx Cloud addresses critical aspects of CI/CD, including:
 
-- **speed** - 30% - 70% faster CI (based on reports from our clients)
-- **cost** - 40% - 75% reduction in CI costs (observed on the Nx OSS monorepo)
-- **reliability** - by automatically identifying flaky tasks (e2e tests in particular) and re-running them
+-  **speed** - 30% - 70% faster CI (based on reports from our clients)
+-  **cost** - 40% - 75% reduction in CI costs (observed on the Nx OSS monorepo)
+-  **reliability** - by automatically identifying flaky tasks (e2e tests in particular) and re-running them
 
 ## How?
 
@@ -27,7 +27,7 @@ Ready to experience fast CI? Read the [connect to Nx Cloud](/ci/intro/connect-to
 
 ## Learn more
 
-- [Blog post: Reliable CI: A new execution model fixing both flakiness and slowness](/blog/reliable-ci-a-new-execution-model-fixing-both-flakiness-and-slowness)
-- [Live stream: Unlock the secret of fast CI - Hands-on session](https://www.youtube.com/live/rkLKaqLeDa0)
-- [Webinar: Nx Agents Walkthrough: Effortlessly Fast CI Built for Monorepos](https://go.nx.dev/march-webinar?utm_source=nx_cloud&utm_medium=nxdocs&utm_campaign=nx_agents&utm_id=devrel)
-- [Youtube: 10x Faster e2e Tests](https://www.youtube.com/watch?v=0YxcxIR7QU0)
+-  [Blog post: Reliable CI: A new execution model fixing both flakiness and slowness](/blog/reliable-ci-a-new-execution-model-fixing-both-flakiness-and-slowness)
+-  [Live stream: Unlock the secret of fast CI - Hands-on session](https://www.youtube.com/live/rkLKaqLeDa0)
+-  [Webinar: Nx Agents Walkthrough: Effortlessly Fast CI Built for Monorepos](https://go.nx.dev/march-webinar?utm_source=nx_cloud&utm_medium=nxdocs&utm_campaign=nx_agents&utm_id=devrel)
+-  [Youtube: 10x Faster e2e Tests](https://www.youtube.com/watch?v=0YxcxIR7QU0)

@@ -6,27 +6,27 @@ Below is an example of a Circle CI setup, building, and testing only what is aff
 version: 2.1
 
 orbs:
-  nx: nrwl/nx@1.6.2
+   nx: nrwl/nx@1.6.2
 
 jobs:
-  main:
-    docker:
-      - image: cimg/node:lts-browsers
-    steps:
-      - checkout
-      # This line enables distribution
-      # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "e2e-ci" targets have been requested
-      # - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
-      - run: npm ci
+   main:
+      docker:
+         - image: cimg/node:lts-browsers
+      steps:
+         - checkout
+         # This line enables distribution
+         # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "e2e-ci" targets have been requested
+         # - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
+         - run: npm ci
 
-      - nx/set-shas
+         - nx/set-shas
 
-      - run: npx nx-cloud record -- nx format:check
-      - run: npx nx affected --base=$NX_BASE --head=$NX_HEAD -t lint test build e2e-ci
+         - run: npx nx-cloud record -- nx format:check
+         - run: npx nx affected --base=$NX_BASE --head=$NX_HEAD -t lint test build e2e-ci
 workflows:
-  build:
-    jobs:
-      - main
+   build:
+      jobs:
+         - main
 ```
 
 ### Get the Commit of the Last Successful Build

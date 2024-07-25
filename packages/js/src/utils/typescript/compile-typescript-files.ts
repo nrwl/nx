@@ -1,7 +1,7 @@
 import {
-  compileTypeScript,
-  compileTypeScriptWatcher,
-  TypeScriptCompilationOptions,
+   compileTypeScript,
+   compileTypeScriptWatcher,
+   TypeScriptCompilationOptions,
 } from '@nx/workspace/src/utilities/typescript/compilation';
 import type { Diagnostic } from 'typescript';
 import { createAsyncIterable } from '@nx/devkit/src/utils/async-iterable';
@@ -13,61 +13,64 @@ const TYPESCRIPT_FOUND_N_ERRORS_WATCHING_FOR_FILE_CHANGES = 6194;
 const ERROR_COUNT_REGEX = /Found (\d+) errors/;
 
 function getErrorCountFromMessage(messageText: string) {
-  return Number.parseInt(ERROR_COUNT_REGEX.exec(messageText)[1]);
+   return Number.parseInt(ERROR_COUNT_REGEX.exec(messageText)[1]);
 }
 
 export interface TypescriptCompilationResult {
-  success: boolean;
-  outfile: string;
+   success: boolean;
+   outfile: string;
 }
 
 export function compileTypeScriptFiles(
-  normalizedOptions: NormalizedExecutorOptions,
-  tscOptions: TypeScriptCompilationOptions,
-  postCompilationCallback: () => void | Promise<void>
+   normalizedOptions: NormalizedExecutorOptions,
+   tscOptions: TypeScriptCompilationOptions,
+   postCompilationCallback: () => void | Promise<void>
 ): {
-  iterator: AsyncIterable<TypescriptCompilationResult>;
-  close: () => void | Promise<void>;
+   iterator: AsyncIterable<TypescriptCompilationResult>;
+   close: () => void | Promise<void>;
 } {
-  const getResult = (success: boolean) => ({
-    success,
-    outfile: normalizedOptions.mainOutputPath,
-  });
+   const getResult = (success: boolean) => ({
+      success,
+      outfile: normalizedOptions.mainOutputPath,
+   });
 
-  let tearDown: (() => void) | undefined;
+   let tearDown: (() => void) | undefined;
 
-  return {
-    iterator: createAsyncIterable<TypescriptCompilationResult>(
-      async ({ next, done }) => {
-        if (normalizedOptions.watch) {
-          const host = compileTypeScriptWatcher(
-            tscOptions,
-            async (d: Diagnostic) => {
-              if (
-                d.code === TYPESCRIPT_FOUND_N_ERRORS_WATCHING_FOR_FILE_CHANGES
-              ) {
-                await postCompilationCallback();
-                next(
-                  getResult(
-                    getErrorCountFromMessage(d.messageText as string) === 0
-                  )
-                );
-              }
+   return {
+      iterator: createAsyncIterable<TypescriptCompilationResult>(
+         async ({ next, done }) => {
+            if (normalizedOptions.watch) {
+               const host = compileTypeScriptWatcher(
+                  tscOptions,
+                  async (d: Diagnostic) => {
+                     if (
+                        d.code ===
+                        TYPESCRIPT_FOUND_N_ERRORS_WATCHING_FOR_FILE_CHANGES
+                     ) {
+                        await postCompilationCallback();
+                        next(
+                           getResult(
+                              getErrorCountFromMessage(
+                                 d.messageText as string
+                              ) === 0
+                           )
+                        );
+                     }
+                  }
+               );
+
+               tearDown = () => {
+                  host.close();
+                  done();
+               };
+            } else {
+               const { success } = compileTypeScript(tscOptions);
+               await postCompilationCallback();
+               next(getResult(success));
+               done();
             }
-          );
-
-          tearDown = () => {
-            host.close();
-            done();
-          };
-        } else {
-          const { success } = compileTypeScript(tscOptions);
-          await postCompilationCallback();
-          next(getResult(success));
-          done();
-        }
-      }
-    ),
-    close: () => tearDown?.(),
-  };
+         }
+      ),
+      close: () => tearDown?.(),
+   };
 }

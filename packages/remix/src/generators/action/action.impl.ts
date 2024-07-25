@@ -6,27 +6,27 @@ import { resolveRemixRouteFile } from '../../utils/remix-route-utils';
 import { LoaderSchema } from './schema';
 
 export default async function (tree: Tree, schema: LoaderSchema) {
-  const routeFilePath =
-    schema.nameAndDirectoryFormat === 'as-provided'
-      ? schema.path
-      : await resolveRemixRouteFile(tree, schema.path, schema.project);
+   const routeFilePath =
+      schema.nameAndDirectoryFormat === 'as-provided'
+         ? schema.path
+         : await resolveRemixRouteFile(tree, schema.path, schema.project);
 
-  if (!tree.exists(routeFilePath)) {
-    throw new Error(
-      `Route path does not exist: ${routeFilePath}. Please generate a Remix route first.`
-    );
-  }
+   if (!tree.exists(routeFilePath)) {
+      throw new Error(
+         `Route path does not exist: ${routeFilePath}. Please generate a Remix route first.`
+      );
+   }
 
-  insertImport(tree, routeFilePath, 'ActionFunctionArgs', '@remix-run/node', {
-    typeOnly: true,
-  });
-  insertImport(tree, routeFilePath, 'json', '@remix-run/node');
-  insertImport(tree, routeFilePath, 'useActionData', '@remix-run/react');
+   insertImport(tree, routeFilePath, 'ActionFunctionArgs', '@remix-run/node', {
+      typeOnly: true,
+   });
+   insertImport(tree, routeFilePath, 'json', '@remix-run/node');
+   insertImport(tree, routeFilePath, 'useActionData', '@remix-run/react');
 
-  insertStatementAfterImports(
-    tree,
-    routeFilePath,
-    `
+   insertStatementAfterImports(
+      tree,
+      routeFilePath,
+      `
     export const action = async ({ request }: ActionFunctionArgs) => {
       let formData = await request.formData();
 
@@ -34,15 +34,15 @@ export default async function (tree: Tree, schema: LoaderSchema) {
     };
 
     `
-  );
+   );
 
-  const statement = `\nconst actionMessage = useActionData<typeof action>();`;
+   const statement = `\nconst actionMessage = useActionData<typeof action>();`;
 
-  try {
-    insertStatementInDefaultFunction(tree, routeFilePath, statement);
-  } catch (err) {
-    // eslint-disable-next-line no-empty
-  } finally {
-    await formatFiles(tree);
-  }
+   try {
+      insertStatementInDefaultFunction(tree, routeFilePath, statement);
+   } catch (err) {
+      // eslint-disable-next-line no-empty
+   } finally {
+      await formatFiles(tree);
+   }
 }

@@ -56,29 +56,29 @@ Update the `project.json` file of each library to set the `port` option to `4401
 
 ```json {% fileName="libs/storybook-host-angular/project.json" highlightLines=[7] %}
 {
-  // ...
-  "targets": {
-    // ...
-    "storybook": {
-      "options": {
-        "port": 4401
+   // ...
+   "targets": {
+      // ...
+      "storybook": {
+         "options": {
+            "port": 4401
+         }
       }
-    }
-  }
+   }
 }
 ```
 
 ```json {% fileName="libs/storybook-host-react/project.json" highlightLines=[7] %}
 {
-  // ...
-  "targets": {
-    // ...
-    "storybook": {
-      "options": {
-        "port": 4402
+   // ...
+   "targets": {
+      // ...
+      "storybook": {
+         "options": {
+            "port": 4402
+         }
       }
-    }
-  }
+   }
 }
 ```
 
@@ -98,26 +98,26 @@ import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { mergeConfig } from 'vite';
 
 const config: StorybookConfig = {
-  stories: ['../src/lib/**/*.stories.@(js|jsx|ts|tsx|mdx)'],
-  addons: ['@storybook/addon-essentials', '@storybook/addon-interactions'],
-  framework: {
-    name: '@storybook/react-vite',
-    options: {},
-  },
-  refs: {
-    'angular-stories': {
-      title: 'Angular Stories',
-      url: 'http://localhost:4401',
-    },
-    'react-stories': {
-      title: 'React Stories',
-      url: 'http://localhost:4402',
-    },
-  },
-  viteFinal: async (config) =>
-    mergeConfig(config, {
-      plugins: [nxViteTsPaths()],
-    }),
+   stories: ['../src/lib/**/*.stories.@(js|jsx|ts|tsx|mdx)'],
+   addons: ['@storybook/addon-essentials', '@storybook/addon-interactions'],
+   framework: {
+      name: '@storybook/react-vite',
+      options: {},
+   },
+   refs: {
+      'angular-stories': {
+         title: 'Angular Stories',
+         url: 'http://localhost:4401',
+      },
+      'react-stories': {
+         title: 'React Stories',
+         url: 'http://localhost:4402',
+      },
+   },
+   viteFinal: async (config) =>
+      mergeConfig(config, {
+         plugins: [nxViteTsPaths()],
+      }),
 };
 
 export default config;
@@ -148,4 +148,4 @@ To deploy the composed Storybooks you need to do the following:
 
 ## Use cases that apply to this solution
 
-- Workspaces with multiple apps and libs using more than one framework
+-  Workspaces with multiple apps and libs using more than one framework

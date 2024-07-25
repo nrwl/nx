@@ -4,16 +4,16 @@ Projects Configurations
 
 ## Hierarchy
 
-- **`ProjectsConfigurations`**
+-  **`ProjectsConfigurations`**
 
-  ↳ [`Workspace`](../../devkit/documents/Workspace)
+   ↳ [`Workspace`](../../devkit/documents/Workspace)
 
 ## Table of contents
 
 ### Properties
 
-- [projects](../../devkit/documents/ProjectsConfigurations#projects): Object
-- [version](../../devkit/documents/ProjectsConfigurations#version): number
+-  [projects](../../devkit/documents/ProjectsConfigurations#projects): Object
+-  [version](../../devkit/documents/ProjectsConfigurations#version): number
 
 ## Properties
 

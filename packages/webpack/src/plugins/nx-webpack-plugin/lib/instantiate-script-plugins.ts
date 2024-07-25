@@ -7,52 +7,52 @@ import { normalizeExtraEntryPoints } from '../../../utils/webpack/normalize-entr
 import { NormalizedNxAppWebpackPluginOptions } from '../nx-app-webpack-plugin-options';
 
 export function instantiateScriptPlugins(
-  options: NormalizedNxAppWebpackPluginOptions
+   options: NormalizedNxAppWebpackPluginOptions
 ): WebpackPluginInstance[] {
-  // process global scripts
-  const globalScriptsByBundleName = normalizeExtraEntryPoints(
-    options.scripts || [],
-    'scripts'
-  ).reduce(
-    (
-      prev: { inject: boolean; bundleName: string; paths: string[] }[],
-      curr
-    ) => {
-      const bundleName = curr.bundleName;
-      const resolvedPath = path.resolve(options.root, curr.input);
-      const existingEntry = prev.find((el) => el.bundleName === bundleName);
-      if (existingEntry) {
-        existingEntry.paths.push(resolvedPath);
-      } else {
-        prev.push({
-          inject: curr.inject,
-          bundleName,
-          paths: [resolvedPath],
-        });
-      }
+   // process global scripts
+   const globalScriptsByBundleName = normalizeExtraEntryPoints(
+      options.scripts || [],
+      'scripts'
+   ).reduce(
+      (
+         prev: { inject: boolean; bundleName: string; paths: string[] }[],
+         curr
+      ) => {
+         const bundleName = curr.bundleName;
+         const resolvedPath = path.resolve(options.root, curr.input);
+         const existingEntry = prev.find((el) => el.bundleName === bundleName);
+         if (existingEntry) {
+            existingEntry.paths.push(resolvedPath);
+         } else {
+            prev.push({
+               inject: curr.inject,
+               bundleName,
+               paths: [resolvedPath],
+            });
+         }
 
-      return prev;
-    },
-    []
-  );
+         return prev;
+      },
+      []
+   );
 
-  const hashFormat = getOutputHashFormat(options.outputHashing as string);
-  const plugins = [];
-  // Add a new asset for each entry.
-  globalScriptsByBundleName.forEach((script) => {
-    const hash = script.inject ? hashFormat.script : '';
-    const bundleName = script.bundleName;
+   const hashFormat = getOutputHashFormat(options.outputHashing as string);
+   const plugins = [];
+   // Add a new asset for each entry.
+   globalScriptsByBundleName.forEach((script) => {
+      const hash = script.inject ? hashFormat.script : '';
+      const bundleName = script.bundleName;
 
-    plugins.push(
-      new ScriptsWebpackPlugin({
-        name: bundleName,
-        sourceMap: !!options.sourceMap,
-        filename: `${path.basename(bundleName)}${hash}.js`,
-        scripts: script.paths,
-        basePath: options.sourceRoot,
-      })
-    );
-  });
+      plugins.push(
+         new ScriptsWebpackPlugin({
+            name: bundleName,
+            sourceMap: !!options.sourceMap,
+            filename: `${path.basename(bundleName)}${hash}.js`,
+            scripts: script.paths,
+            basePath: options.sourceRoot,
+         })
+      );
+   });
 
-  return plugins;
+   return plugins;
 }

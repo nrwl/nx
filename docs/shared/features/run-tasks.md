@@ -68,46 +68,46 @@ Nx is already able to automatically understand the dependencies between projects
 
 ```json
 {
-  "projects": [
-    {
-      "name": "myreactapp",
-      "type": "app",
-      "data": {
-        "tags": []
-      }
-    },
-    {
-      "name": "shared-ui",
-      "type": "lib",
-      "data": {
-        "tags": []
-      }
-    },
-    {
-      "name": "feat-products",
-      "type": "lib",
-      "data": {
-        "tags": []
-      }
-    }
-  ],
-  "dependencies": {
-    "myreactapp": [
-      { "source": "myreactapp", "target": "feat-products", "type": "static" }
-    ],
-    "shared-ui": [],
-    "feat-products": [
+   "projects": [
       {
-        "source": "feat-products",
-        "target": "shared-ui",
-        "type": "static"
+         "name": "myreactapp",
+         "type": "app",
+         "data": {
+            "tags": []
+         }
+      },
+      {
+         "name": "shared-ui",
+         "type": "lib",
+         "data": {
+            "tags": []
+         }
+      },
+      {
+         "name": "feat-products",
+         "type": "lib",
+         "data": {
+            "tags": []
+         }
       }
-    ]
-  },
-  "workspaceLayout": { "appsDir": "", "libsDir": "" },
-  "affectedProjectIds": [],
-  "focus": null,
-  "groupByFolder": false
+   ],
+   "dependencies": {
+      "myreactapp": [
+         { "source": "myreactapp", "target": "feat-products", "type": "static" }
+      ],
+      "shared-ui": [],
+      "feat-products": [
+         {
+            "source": "feat-products",
+            "target": "shared-ui",
+            "type": "static"
+         }
+      ]
+   },
+   "workspaceLayout": { "appsDir": "", "libsDir": "" },
+   "affectedProjectIds": [],
+   "focus": null,
+   "groupByFolder": false
 }
 ```
 
@@ -130,8 +130,8 @@ Meaning, if we run `nx build myreactapp`, Nx will first run `build` on `modules-
 
 Learn all the details:
 
-- [What a task pipeline is all about](/concepts/task-pipeline-configuration)
-- [How to configure a task pipeline](/recipes/running-tasks/defining-task-pipeline)
+-  [What a task pipeline is all about](/concepts/task-pipeline-configuration)
+-  [How to configure a task pipeline](/recipes/running-tasks/defining-task-pipeline)
 
 ## Run Root-Level Tasks
 
@@ -139,11 +139,11 @@ Sometimes you have tasks that apply to the entire codebase rather than to a sing
 
 ```json {% fileName="package.json" %}
 {
-  "name": "myorg",
-  "scripts": {
-    "docs": "node ./generateDocsSite.js"
-  },
-  "nx": {}
+   "name": "myorg",
+   "scripts": {
+      "docs": "node ./generateDocsSite.js"
+   },
+   "nx": {}
 }
 ```
 
@@ -159,11 +159,11 @@ If you want Nx to cache the task, but prefer to use npm (or pnpm/yarn) to run th
 
 ```json {% fileName="package.json" %}
 {
-  "name": "myorg",
-  "scripts": {
-    "docs": "nx exec -- node ./generateDocsSite.js"
-  },
-  "nx": {}
+   "name": "myorg",
+   "scripts": {
+      "docs": "nx exec -- node ./generateDocsSite.js"
+   },
+   "nx": {}
 }
 ```
 

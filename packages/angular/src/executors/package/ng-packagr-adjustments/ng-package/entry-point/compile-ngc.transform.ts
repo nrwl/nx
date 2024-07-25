@@ -8,15 +8,15 @@
  */
 
 import {
-  Transform,
-  transformFromPromise,
+   Transform,
+   transformFromPromise,
 } from 'ng-packagr/lib/graph/transform';
 import {
-  EntryPointNode,
-  isEntryPoint,
-  isEntryPointInProgress,
-  isPackage,
-  PackageNode,
+   EntryPointNode,
+   isEntryPoint,
+   isEntryPointInProgress,
+   isPackage,
+   PackageNode,
 } from 'ng-packagr/lib/ng-package/nodes';
 import { setDependenciesTsConfigPaths } from 'ng-packagr/lib/ts/tsconfig';
 import ora from 'ora';
@@ -29,92 +29,92 @@ import { ngccCompilerCli } from '../../utils/ng-compiler-cli';
 import { NgPackagrOptions } from '../options.di';
 
 export const compileNgcTransformFactory = (
-  StylesheetProcessor: typeof StylesheetProcessorClass,
-  options: NgPackagrOptions
+   StylesheetProcessor: typeof StylesheetProcessorClass,
+   options: NgPackagrOptions
 ): Transform => {
-  return transformFromPromise(async (graph) => {
-    const spinner = ora({
-      hideCursor: false,
-      discardStdin: false,
-    });
+   return transformFromPromise(async (graph) => {
+      const spinner = ora({
+         hideCursor: false,
+         discardStdin: false,
+      });
 
-    const entryPoints: EntryPointNode[] = graph.filter(isEntryPoint);
-    const entryPoint: EntryPointNode = graph.find(isEntryPointInProgress());
-    const ngPackageNode: PackageNode = graph.find(isPackage);
-    const projectBasePath = ngPackageNode.data.primary.basePath;
+      const entryPoints: EntryPointNode[] = graph.filter(isEntryPoint);
+      const entryPoint: EntryPointNode = graph.find(isEntryPointInProgress());
+      const ngPackageNode: PackageNode = graph.find(isPackage);
+      const projectBasePath = ngPackageNode.data.primary.basePath;
 
-    try {
-      // Add paths mappings for dependencies
-      const tsConfig = setDependenciesTsConfigPaths(
-        entryPoint.data.tsConfig,
-        entryPoints
-      );
-
-      const angularVersion = getInstalledAngularVersionInfo();
-
-      // Compile TypeScript sources
-      const { declarations } = entryPoint.data.destinationFiles;
-      const esmModulePath =
-        angularVersion.major < 16
-          ? (entryPoint.data.destinationFiles as any).esm2020
-          : entryPoint.data.destinationFiles.esm2022;
-      const { basePath, cssUrl, styleIncludePaths } =
-        entryPoint.data.entryPoint;
-      const { moduleResolutionCache } = entryPoint.cache;
-
-      spinner.start(
-        `Compiling with Angular sources in Ivy ${
-          tsConfig.options.compilationMode || 'full'
-        } compilation mode.`
-      );
-      let ngccProcessor: any;
-      if (angularVersion && angularVersion.major < 16) {
-        ngccProcessor =
-          new (require('ng-packagr/lib/ngc/ngcc-processor').NgccProcessor)(
-            await ngccCompilerCli(),
-            (entryPoint.cache as any).ngccProcessingCache,
-            tsConfig.project,
-            tsConfig.options,
+      try {
+         // Add paths mappings for dependencies
+         const tsConfig = setDependenciesTsConfigPaths(
+            entryPoint.data.tsConfig,
             entryPoints
-          );
-        if (!entryPoint.data.entryPoint.isSecondaryEntryPoint) {
-          // Only run the async version of NGCC during the primary entrypoint processing.
-          await ngccProcessor.process();
-        }
+         );
+
+         const angularVersion = getInstalledAngularVersionInfo();
+
+         // Compile TypeScript sources
+         const { declarations } = entryPoint.data.destinationFiles;
+         const esmModulePath =
+            angularVersion.major < 16
+               ? (entryPoint.data.destinationFiles as any).esm2020
+               : entryPoint.data.destinationFiles.esm2022;
+         const { basePath, cssUrl, styleIncludePaths } =
+            entryPoint.data.entryPoint;
+         const { moduleResolutionCache } = entryPoint.cache;
+
+         spinner.start(
+            `Compiling with Angular sources in Ivy ${
+               tsConfig.options.compilationMode || 'full'
+            } compilation mode.`
+         );
+         let ngccProcessor: any;
+         if (angularVersion && angularVersion.major < 16) {
+            ngccProcessor =
+               new (require('ng-packagr/lib/ngc/ngcc-processor').NgccProcessor)(
+                  await ngccCompilerCli(),
+                  (entryPoint.cache as any).ngccProcessingCache,
+                  tsConfig.project,
+                  tsConfig.options,
+                  entryPoints
+               );
+            if (!entryPoint.data.entryPoint.isSecondaryEntryPoint) {
+               // Only run the async version of NGCC during the primary entrypoint processing.
+               await ngccProcessor.process();
+            }
+         }
+
+         entryPoint.cache.stylesheetProcessor ??= new StylesheetProcessor(
+            projectBasePath,
+            basePath,
+            cssUrl,
+            styleIncludePaths,
+            options.cacheEnabled && options.cacheDirectory,
+            options.tailwindConfig
+         ) as any;
+
+         await compileSourceFiles(
+            graph,
+            tsConfig,
+            moduleResolutionCache,
+            options,
+            {
+               outDir: path.dirname(esmModulePath),
+               declarationDir: path.dirname(declarations),
+               declaration: true,
+               target:
+                  angularVersion.major >= 16
+                     ? ts.ScriptTarget.ES2022
+                     : ts.ScriptTarget.ES2020,
+            },
+            entryPoint.cache.stylesheetProcessor as any,
+            ngccProcessor
+         );
+      } catch (error) {
+         spinner.fail();
+         throw error;
       }
 
-      entryPoint.cache.stylesheetProcessor ??= new StylesheetProcessor(
-        projectBasePath,
-        basePath,
-        cssUrl,
-        styleIncludePaths,
-        options.cacheEnabled && options.cacheDirectory,
-        options.tailwindConfig
-      ) as any;
-
-      await compileSourceFiles(
-        graph,
-        tsConfig,
-        moduleResolutionCache,
-        options,
-        {
-          outDir: path.dirname(esmModulePath),
-          declarationDir: path.dirname(declarations),
-          declaration: true,
-          target:
-            angularVersion.major >= 16
-              ? ts.ScriptTarget.ES2022
-              : ts.ScriptTarget.ES2020,
-        },
-        entryPoint.cache.stylesheetProcessor as any,
-        ngccProcessor
-      );
-    } catch (error) {
-      spinner.fail();
-      throw error;
-    }
-
-    spinner.succeed();
-    return graph;
-  });
+      spinner.succeed();
+      return graph;
+   });
 };

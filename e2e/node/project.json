@@ -1,16 +1,16 @@
 {
-  "name": "e2e-node",
-  "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "e2e/node",
-  "projectType": "application",
-  "implicitDependencies": ["node", "nest", "webpack"],
-  "targets": {
-    "e2e-ci--src/webpack.test.ts": {
-      "dependsOn": [
-        "nx:build-native",
-        "@nx/nx-source:populate-local-registry-storage"
-      ],
-      "inputs": ["e2eInputs"]
-    }
-  }
+   "name": "e2e-node",
+   "$schema": "../../node_modules/nx/schemas/project-schema.json",
+   "sourceRoot": "e2e/node",
+   "projectType": "application",
+   "implicitDependencies": ["node", "nest", "webpack"],
+   "targets": {
+      "e2e-ci--src/webpack.test.ts": {
+         "dependsOn": [
+            "nx:build-native",
+            "@nx/nx-source:populate-local-registry-storage"
+         ],
+         "inputs": ["e2eInputs"]
+      }
+   }
 }

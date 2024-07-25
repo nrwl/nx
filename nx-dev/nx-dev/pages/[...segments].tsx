@@ -13,108 +13,109 @@ import { tagsApi } from '../lib/tags.api';
 import { fetchGithubStarCount } from '../lib/githubStars.api';
 
 export default function NxDocumentation({
-  document,
-  menu,
-  relatedDocuments,
-  widgetData,
+   document,
+   menu,
+   relatedDocuments,
+   widgetData,
 }: {
-  document: ProcessedDocument;
-  menu: MenuItem[];
-  relatedDocuments: RelatedDocument[];
-  widgetData: { githubStarsCount: number };
+   document: ProcessedDocument;
+   menu: MenuItem[];
+   relatedDocuments: RelatedDocument[];
+   widgetData: { githubStarsCount: number };
 }) {
-  const router = useRouter();
-  const { toggleNav, navIsOpen } = useNavToggle();
-  const wrapperElement = useRef(null);
+   const router = useRouter();
+   const { toggleNav, navIsOpen } = useNavToggle();
+   const wrapperElement = useRef(null);
 
-  useEffect(() => {
-    const handleRouteChange = (url: string) => {
-      if (url.includes('#')) return;
-      if (!wrapperElement) return;
+   useEffect(() => {
+      const handleRouteChange = (url: string) => {
+         if (url.includes('#')) return;
+         if (!wrapperElement) return;
 
-      (wrapperElement as any).current.scrollTo({
-        top: 0,
-        left: 0,
-        behavior: 'smooth',
-      });
-    };
+         (wrapperElement as any).current.scrollTo({
+            top: 0,
+            left: 0,
+            behavior: 'smooth',
+         });
+      };
 
-    router.events.on('routeChangeComplete', handleRouteChange);
-    return () => router.events.off('routeChangeComplete', handleRouteChange);
-  }, [router, wrapperElement]);
+      router.events.on('routeChangeComplete', handleRouteChange);
+      return () => router.events.off('routeChangeComplete', handleRouteChange);
+   }, [router, wrapperElement]);
 
-  const menuWithSections = {
-    sections: [getBasicNxSection(menu)],
-  };
+   const menuWithSections = {
+      sections: [getBasicNxSection(menu)],
+   };
 
-  return (
-    <div id="shell" className="flex h-full flex-col">
-      <div className="w-full flex-shrink-0">
-        <DocumentationHeader isNavOpen={navIsOpen} toggleNav={toggleNav} />
+   return (
+      <div id="shell" className="flex h-full flex-col">
+         <div className="w-full flex-shrink-0">
+            <DocumentationHeader isNavOpen={navIsOpen} toggleNav={toggleNav} />
+         </div>
+         <main
+            id="main"
+            role="main"
+            className="flex h-full flex-1 overflow-y-hidden"
+         >
+            <SidebarContainer
+               menu={menuWithSections}
+               toggleNav={toggleNav}
+               navIsOpen={navIsOpen}
+            />
+            <div
+               ref={wrapperElement}
+               id="wrapper"
+               data-testid="wrapper"
+               className="relative flex flex-grow flex-col items-stretch justify-start overflow-y-scroll"
+            >
+               <DocViewer
+                  document={document}
+                  relatedDocuments={relatedDocuments}
+                  widgetData={widgetData}
+               />
+            </div>
+         </main>
       </div>
-      <main
-        id="main"
-        role="main"
-        className="flex h-full flex-1 overflow-y-hidden"
-      >
-        <SidebarContainer
-          menu={menuWithSections}
-          toggleNav={toggleNav}
-          navIsOpen={navIsOpen}
-        />
-        <div
-          ref={wrapperElement}
-          id="wrapper"
-          data-testid="wrapper"
-          className="relative flex flex-grow flex-col items-stretch justify-start overflow-y-scroll"
-        >
-          <DocViewer
-            document={document}
-            relatedDocuments={relatedDocuments}
-            widgetData={widgetData}
-          />
-        </div>
-      </main>
-    </div>
-  );
+   );
 }
 
 export const getStaticPaths: GetStaticPaths = () => {
-  const reservedPaths = ['/ci', '/nx-api', '/changelog'];
-  return {
-    paths: nxDocumentationApi
-      .getSlugsStaticDocumentPaths()
-      .filter(
-        (path) => !reservedPaths.some((reserved) => path.startsWith(reserved))
-      ),
-    fallback: 'blocking',
-  };
+   const reservedPaths = ['/ci', '/nx-api', '/changelog'];
+   return {
+      paths: nxDocumentationApi
+         .getSlugsStaticDocumentPaths()
+         .filter(
+            (path) =>
+               !reservedPaths.some((reserved) => path.startsWith(reserved))
+         ),
+      fallback: 'blocking',
+   };
 };
 export const getStaticProps: GetStaticProps = async ({
-  params,
+   params,
 }: {
-  params: { segments: string[] };
+   params: { segments: string[] };
 }) => {
-  try {
-    const document = nxDocumentationApi.getDocument(params.segments);
-    return {
-      props: {
-        document,
-        widgetData: {
-          githubStarsCount: await fetchGithubStarCount(),
-        },
-        relatedDocuments: tagsApi
-          .getAssociatedItemsFromTags(document.tags)
-          .filter((item) => item.path !== '/' + params.segments.join('/')), // Remove currently displayed item
-        menu: menusApi.getMenu('nx', ''),
-      },
-    };
-  } catch (e) {
-    return {
-      notFound: true,
-      props: {
-        statusCode: 404,
-      },
-    };
-  }
+   try {
+      const document = nxDocumentationApi.getDocument(params.segments);
+      return {
+         props: {
+            document,
+            widgetData: {
+               githubStarsCount: await fetchGithubStarCount(),
+            },
+            relatedDocuments: tagsApi
+               .getAssociatedItemsFromTags(document.tags)
+               .filter((item) => item.path !== '/' + params.segments.join('/')), // Remove currently displayed item
+            menu: menusApi.getMenu('nx', ''),
+         },
+      };
+   } catch (e) {
+      return {
+         notFound: true,
+         props: {
+            statusCode: 404,
+         },
+      };
+   }
 };

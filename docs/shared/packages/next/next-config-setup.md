@@ -14,11 +14,11 @@ understand workspace libraries, and other Nx-specific features. See below for an
 // ...
 
 module.exports = withNx({
-  // Nx configuration goes here
-  nx: {
-    svgr: false,
-  },
-  // Add Next.js configuration goes here
+   // Nx configuration goes here
+   nx: {
+      svgr: false,
+   },
+   // Add Next.js configuration goes here
 });
 ```
 
@@ -59,17 +59,17 @@ const { composePlugins, withNx } = require('@nx/next');
  * @type {import('@nx/next/plugins/with-nx').WithNxOptions}
  **/
 const nextConfig = {
-  nx: {
-    // Set this to true if you would like to to use SVGR
-    // See: https://github.com/gregberge/svgr
-    svgr: false,
-  },
-  // Add Next.js configuration here
+   nx: {
+      // Set this to true if you would like to to use SVGR
+      // See: https://github.com/gregberge/svgr
+      svgr: false,
+   },
+   // Add Next.js configuration here
 };
 
 const plugins = [
-  // Add more Next.js plugins to this list if needed.
-  withNx,
+   // Add more Next.js plugins to this list if needed.
+   withNx,
 ];
 
 module.exports = composePlugins(...plugins)(nextConfig);
@@ -79,9 +79,9 @@ If you want to add additional plugins, say [`@next/mdx`](https://www.npmjs.com/p
 
 ```js
 const plugins = [
-  // Add more Next.js plugins to this list if needed.
-  require('@next/mdx')(),
-  withNx,
+   // Add more Next.js plugins to this list if needed.
+   require('@next/mdx')(),
+   withNx,
 ];
 
 module.exports = composePlugins(...plugins)(nextConfig);
@@ -91,9 +91,9 @@ This the exported configuration will correctly call each plugin in order and app
 
 ```js
 module.exports = composePlugins(...plugins, function debug(config) {
-  // The debug plugin will be called last
-  console.log({ config });
-  return config;
+   // The debug plugin will be called last
+   console.log({ config });
+   return config;
 })(nextConfig);
 ```
 
@@ -110,24 +110,24 @@ If you are not on Nx 16 and later versions, the `composePlugins` utility is not 
  * @type {import('@nx/next/plugins/with-nx').WithNxOptions}
  **/
 const nextConfig = {
-  // ...
+   // ...
 };
 
 const plugins = [
-  // Your plugins exlcuding withNx
+   // Your plugins exlcuding withNx
 ];
 
 module.exports = async (phase, context) => {
-  let updatedConfig = plugins.reduce((acc, fn) => fn(acc), nextConfig);
+   let updatedConfig = plugins.reduce((acc, fn) => fn(acc), nextConfig);
 
-  // Apply the async function that `withNx` returns.
-  updatedConfig = await withNx(updatedConfig)(phase, context);
+   // Apply the async function that `withNx` returns.
+   updatedConfig = await withNx(updatedConfig)(phase, context);
 
-  // If you have plugins that has to be added after Nx you can do that here.
-  // For example, Sentry needs to be added last.
-  const { withSentryConfig } = require('@sentry/nextjs');
-  updatedConfig = withSentryConfig(updatedConfig);
+   // If you have plugins that has to be added after Nx you can do that here.
+   // For example, Sentry needs to be added last.
+   const { withSentryConfig } = require('@sentry/nextjs');
+   updatedConfig = withSentryConfig(updatedConfig);
 
-  return updatedConfig;
+   return updatedConfig;
 };
 ```

@@ -6,13 +6,13 @@ This API has been superceded by the [v2 API](/extending-nx/recipes/project-graph
 
 The v1 plugin API for modifying the project graph was split into two parts:
 
-- [Project Inference Plugins](#project-inference-plugins)
-- [Project Graph Plugins](#project-graph-plugins)
+-  [Project Inference Plugins](#project-inference-plugins)
+-  [Project Graph Plugins](#project-graph-plugins)
 
 Project inference plugins are used to infer projects from the file system. Project graph plugins are used to modify the project graph after projects have been identified. In the v2 API, there are still two parts but they are divided differently:
 
-- [createNodes](/extending-nx/recipes/project-graph-plugins#adding-new-nodes-to-the-project-graph)
-- [createDependencies](/extending-nx/recipes/project-graph-plugins#adding-new-dependencies-to-the-project-graph)
+-  [createNodes](/extending-nx/recipes/project-graph-plugins#adding-new-nodes-to-the-project-graph)
+-  [createDependencies](/extending-nx/recipes/project-graph-plugins#adding-new-dependencies-to-the-project-graph)
 
 These are much clearer in terms of responsibility, and are more flexible. The v1 API is still documented below for reference.
 
@@ -39,15 +39,15 @@ Project inference plugins allow you to extend this functionality of Nx to other 
 
 Project file patterns are used in two scenarios:
 
-- Inferring projects
-- Determining which files should be passed into `registerProjectTargets`.
+-  Inferring projects
+-  Determining which files should be passed into `registerProjectTargets`.
 
 Let's use the below plugin and workspace layout as an example:
 
 ```typescript {% fileName="libs/awesome-plugin/index.ts" %}
 export const projectFilePatterns = ['project.json', 'my-other-project-file'];
 export function registerProjectTargets(projectFilePath) {
-  console.log(projectFilePath);
+   console.log(projectFilePath);
 }
 ```
 
@@ -83,16 +83,16 @@ import { TargetConfiguration } from '@nx/devkit';
 export const projectFilePatterns = ['project.json', 'my-other-project-file'];
 
 export function registerProjectTargets(
-  projectFilePath: string
+   projectFilePath: string
 ): Record<string, TargetConfiguration> {
-  return {
-    build: {
-      /**
-       * This object should look exactly like a target
-       * configured inside `project.json`
-       */
-    },
-  };
+   return {
+      build: {
+         /**
+          * This object should look exactly like a target
+          * configured inside `project.json`
+          */
+      },
+   };
 }
 ```
 
@@ -102,8 +102,8 @@ For guidance on implementing a similar function in the v2 API, see the documenta
 
 It is possible that the registerProjectTargets function may be called multiple times for one project. This could occur in a few cases, one of which is demonstrated above.
 
-- One plugin may list multiple file patterns, and a project may match more than one of them.
-- Multiple plugins may list similar patterns, and pick up the project separately.
+-  One plugin may list multiple file patterns, and a project may match more than one of them.
+-  Multiple plugins may list similar patterns, and pick up the project separately.
 
 **In the first case**, the plugin that you are writing will be called into multiple times. If you return the same target (e.g. `build`) on each call, whichever is ran last would be the target that Nx calls into.
 
@@ -131,33 +131,33 @@ A Project Graph Processor takes a project graph and returns a new project graph.
 
 Plugins should export a function named `processProjectGraph` that handles updating the project graph with new nodes and edges. This function receives two things:
 
-- A `ProjectGraph`
+-  A `ProjectGraph`
 
-  - `graph.nodes` lists all the projects currently known to Nx.
-  - `graph.dependencies` lists the dependencies between projects.
+   -  `graph.nodes` lists all the projects currently known to Nx.
+   -  `graph.dependencies` lists the dependencies between projects.
 
-- A `Context`
-  - `context.workspace` contains the combined configuration for the workspace.
-  - `files` contains all the files found in the workspace.
-  - `filesToProcess` contains all the files that have changed since the last invocation and need to be reanalyzed.
+-  A `Context`
+   -  `context.workspace` contains the combined configuration for the workspace.
+   -  `files` contains all the files found in the workspace.
+   -  `filesToProcess` contains all the files that have changed since the last invocation and need to be reanalyzed.
 
 The `processProjectGraph` function should return an updated `ProjectGraph`. This is most easily done using `ProjectGraphBuilder`. The builder is there for convenience, so you don't have to use it.
 
 ```typescript
 import {
-  ProjectGraph,
-  ProjectGraphBuilder,
-  ProjectGraphProcessorContext,
-  DependencyType,
+   ProjectGraph,
+   ProjectGraphBuilder,
+   ProjectGraphProcessorContext,
+   DependencyType,
 } from '@nx/devkit';
 
 export function processProjectGraph(
-  graph: ProjectGraph,
-  context: ProjectGraphProcessorContext
+   graph: ProjectGraph,
+   context: ProjectGraphProcessorContext
 ): ProjectGraph {
-  const builder = new ProjectGraphBuilder(graph);
-  // We will see how this is used below.
-  return builder.getUpdatedProjectGraph();
+   const builder = new ProjectGraphBuilder(graph);
+   // We will see how this is used below.
+   return builder.getUpdatedProjectGraph();
 }
 ```
 
@@ -170,11 +170,11 @@ A Project Graph Plugin can add them to the project graph. After these packages a
 ```typescript
 // Add a new node
 builder.addNode({
-  name: 'new-project',
-  type: 'npm',
-  data: {
-    files: [],
-  },
+   name: 'new-project',
+   type: 'npm',
+   data: {
+      files: [],
+   },
 });
 ```
 
@@ -210,9 +210,9 @@ Nx knows what files have changed since the last invocation. Only those files wil
 ```typescript
 // Add a new edge
 builder.addStaticDependency(
-  'existing-project',
-  'new-project',
-  'libs/existing-project/src/index.ts'
+   'existing-project',
+   'new-project',
+   'libs/existing-project/src/index.ts'
 );
 ```
 
@@ -228,9 +228,9 @@ import { DependencyType } from '@nx/devkit';
 
 // Add a new edge
 builder.addDynamicDependency(
-  'existing-project',
-  'lazy-route',
-  'libs/existing-project/src/router-setup.ts'
+   'existing-project',
+   'lazy-route',
+   'libs/existing-project/src/router-setup.ts'
 );
 ```
 

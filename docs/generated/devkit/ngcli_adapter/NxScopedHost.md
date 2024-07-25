@@ -2,43 +2,43 @@
 
 ## Hierarchy
 
-- `ScopedHost`\<`any`\>
+-  `ScopedHost`\<`any`\>
 
-  ↳ **`NxScopedHost`**
+   ↳ **`NxScopedHost`**
 
 ## Table of contents
 
 ### Constructors
 
-- [constructor](../../devkit/documents/ngcli_adapter/NxScopedHost#constructor)
+-  [constructor](../../devkit/documents/ngcli_adapter/NxScopedHost#constructor)
 
 ### Properties
 
-- [\_delegate](../../devkit/documents/ngcli_adapter/NxScopedHost#_delegate): Host<any>
-- [\_root](../../devkit/documents/ngcli_adapter/NxScopedHost#_root): Path
-- [root](../../devkit/documents/ngcli_adapter/NxScopedHost#root): string
+-  [\_delegate](../../devkit/documents/ngcli_adapter/NxScopedHost#_delegate): Host<any>
+-  [\_root](../../devkit/documents/ngcli_adapter/NxScopedHost#_root): Path
+-  [root](../../devkit/documents/ngcli_adapter/NxScopedHost#root): string
 
 ### Accessors
 
-- [capabilities](../../devkit/documents/ngcli_adapter/NxScopedHost#capabilities)
+-  [capabilities](../../devkit/documents/ngcli_adapter/NxScopedHost#capabilities)
 
 ### Methods
 
-- [\_resolve](../../devkit/documents/ngcli_adapter/NxScopedHost#_resolve)
-- [delete](../../devkit/documents/ngcli_adapter/NxScopedHost#delete)
-- [exists](../../devkit/documents/ngcli_adapter/NxScopedHost#exists)
-- [isDirectory](../../devkit/documents/ngcli_adapter/NxScopedHost#isdirectory)
-- [isFile](../../devkit/documents/ngcli_adapter/NxScopedHost#isfile)
-- [list](../../devkit/documents/ngcli_adapter/NxScopedHost#list)
-- [mergeProjectConfiguration](../../devkit/documents/ngcli_adapter/NxScopedHost#mergeprojectconfiguration)
-- [read](../../devkit/documents/ngcli_adapter/NxScopedHost#read)
-- [readExistingAngularJson](../../devkit/documents/ngcli_adapter/NxScopedHost#readexistingangularjson)
-- [readJson](../../devkit/documents/ngcli_adapter/NxScopedHost#readjson)
-- [readMergedWorkspaceConfiguration](../../devkit/documents/ngcli_adapter/NxScopedHost#readmergedworkspaceconfiguration)
-- [rename](../../devkit/documents/ngcli_adapter/NxScopedHost#rename)
-- [stat](../../devkit/documents/ngcli_adapter/NxScopedHost#stat)
-- [watch](../../devkit/documents/ngcli_adapter/NxScopedHost#watch)
-- [write](../../devkit/documents/ngcli_adapter/NxScopedHost#write)
+-  [\_resolve](../../devkit/documents/ngcli_adapter/NxScopedHost#_resolve)
+-  [delete](../../devkit/documents/ngcli_adapter/NxScopedHost#delete)
+-  [exists](../../devkit/documents/ngcli_adapter/NxScopedHost#exists)
+-  [isDirectory](../../devkit/documents/ngcli_adapter/NxScopedHost#isdirectory)
+-  [isFile](../../devkit/documents/ngcli_adapter/NxScopedHost#isfile)
+-  [list](../../devkit/documents/ngcli_adapter/NxScopedHost#list)
+-  [mergeProjectConfiguration](../../devkit/documents/ngcli_adapter/NxScopedHost#mergeprojectconfiguration)
+-  [read](../../devkit/documents/ngcli_adapter/NxScopedHost#read)
+-  [readExistingAngularJson](../../devkit/documents/ngcli_adapter/NxScopedHost#readexistingangularjson)
+-  [readJson](../../devkit/documents/ngcli_adapter/NxScopedHost#readjson)
+-  [readMergedWorkspaceConfiguration](../../devkit/documents/ngcli_adapter/NxScopedHost#readmergedworkspaceconfiguration)
+-  [rename](../../devkit/documents/ngcli_adapter/NxScopedHost#rename)
+-  [stat](../../devkit/documents/ngcli_adapter/NxScopedHost#stat)
+-  [watch](../../devkit/documents/ngcli_adapter/NxScopedHost#watch)
+-  [write](../../devkit/documents/ngcli_adapter/NxScopedHost#write)
 
 ## Constructors
 

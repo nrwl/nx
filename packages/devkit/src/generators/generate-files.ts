@@ -8,19 +8,19 @@ import { logger, type Tree } from 'nx/src/devkit-exports';
  * Specify what should be done when a file is generated but already exists on the system
  */
 export enum OverwriteStrategy {
-  Overwrite = 'overwrite',
-  KeepExisting = 'keepExisting',
-  ThrowIfExisting = 'throwIfExisting',
+   Overwrite = 'overwrite',
+   KeepExisting = 'keepExisting',
+   ThrowIfExisting = 'throwIfExisting',
 }
 
 /**
  * Options for the generateFiles function
  */
 export interface GenerateFilesOptions {
-  /**
-   * Specify what should be done when a file is generated but already exists on the system
-   */
-  overwriteStrategy?: OverwriteStrategy;
+   /**
+    * Specify what should be done when a file is generated but already exists on the system
+    */
+   overwriteStrategy?: OverwriteStrategy;
 }
 
 /**
@@ -47,97 +47,99 @@ export interface GenerateFilesOptions {
  * @param options - See {@link GenerateFilesOptions}
  */
 export function generateFiles(
-  tree: Tree,
-  srcFolder: string,
-  target: string,
-  substitutions: { [k: string]: any },
-  options: GenerateFilesOptions = {
-    overwriteStrategy: OverwriteStrategy.Overwrite,
-  }
+   tree: Tree,
+   srcFolder: string,
+   target: string,
+   substitutions: { [k: string]: any },
+   options: GenerateFilesOptions = {
+      overwriteStrategy: OverwriteStrategy.Overwrite,
+   }
 ): void {
-  options ??= {};
-  options.overwriteStrategy ??= OverwriteStrategy.Overwrite;
+   options ??= {};
+   options.overwriteStrategy ??= OverwriteStrategy.Overwrite;
 
-  const ejs: typeof import('ejs') = require('ejs');
+   const ejs: typeof import('ejs') = require('ejs');
 
-  const files = allFilesInDir(srcFolder);
-  if (files.length === 0) {
-    throw new Error(
-      `generateFiles: No files found in "${srcFolder}". Are you sure you specified the correct path?`
-    );
-  } else {
-    files.forEach((filePath) => {
-      let newContent: Buffer | string;
-      const computedPath = computePath(
-        srcFolder,
-        target,
-        filePath,
-        substitutions
+   const files = allFilesInDir(srcFolder);
+   if (files.length === 0) {
+      throw new Error(
+         `generateFiles: No files found in "${srcFolder}". Are you sure you specified the correct path?`
       );
+   } else {
+      files.forEach((filePath) => {
+         let newContent: Buffer | string;
+         const computedPath = computePath(
+            srcFolder,
+            target,
+            filePath,
+            substitutions
+         );
 
-      if (tree.exists(computedPath)) {
-        if (options.overwriteStrategy === OverwriteStrategy.KeepExisting) {
-          return;
-        } else if (
-          options.overwriteStrategy === OverwriteStrategy.ThrowIfExisting
-        ) {
-          throw new Error(
-            `Generated file already exists, not allowed by overwrite strategy in generator (${computedPath})`
-          );
-        }
-        // else: file should be overwritten, so just fall through to file generation
-      }
+         if (tree.exists(computedPath)) {
+            if (options.overwriteStrategy === OverwriteStrategy.KeepExisting) {
+               return;
+            } else if (
+               options.overwriteStrategy === OverwriteStrategy.ThrowIfExisting
+            ) {
+               throw new Error(
+                  `Generated file already exists, not allowed by overwrite strategy in generator (${computedPath})`
+               );
+            }
+            // else: file should be overwritten, so just fall through to file generation
+         }
 
-      if (isBinaryPath(filePath)) {
-        newContent = readFileSync(filePath);
-      } else {
-        const template = readFileSync(filePath, 'utf-8');
-        try {
-          newContent = ejs.render(template, substitutions, {
-            filename: filePath,
-          });
-        } catch (e) {
-          logger.error(`Error in ${filePath.replace(`${tree.root}/`, '')}:`);
-          throw e;
-        }
-      }
+         if (isBinaryPath(filePath)) {
+            newContent = readFileSync(filePath);
+         } else {
+            const template = readFileSync(filePath, 'utf-8');
+            try {
+               newContent = ejs.render(template, substitutions, {
+                  filename: filePath,
+               });
+            } catch (e) {
+               logger.error(
+                  `Error in ${filePath.replace(`${tree.root}/`, '')}:`
+               );
+               throw e;
+            }
+         }
 
-      tree.write(computedPath, newContent);
-    });
-  }
+         tree.write(computedPath, newContent);
+      });
+   }
 }
 
 function computePath(
-  srcFolder: string,
-  target: string,
-  filePath: string,
-  substitutions: { [k: string]: any }
+   srcFolder: string,
+   target: string,
+   filePath: string,
+   substitutions: { [k: string]: any }
 ): string {
-  const relativeFromSrcFolder = path.relative(srcFolder, filePath);
-  let computedPath = path.join(target, relativeFromSrcFolder);
-  if (computedPath.endsWith('.template')) {
-    computedPath = computedPath.substring(0, computedPath.length - 9);
-  }
-  Object.entries(substitutions).forEach(([propertyName, value]) => {
-    computedPath = computedPath.split(`__${propertyName}__`).join(value);
-  });
-  return computedPath;
+   const relativeFromSrcFolder = path.relative(srcFolder, filePath);
+   let computedPath = path.join(target, relativeFromSrcFolder);
+   if (computedPath.endsWith('.template')) {
+      computedPath = computedPath.substring(0, computedPath.length - 9);
+   }
+   Object.entries(substitutions).forEach(([propertyName, value]) => {
+      computedPath = computedPath.split(`__${propertyName}__`).join(value);
+   });
+   return computedPath;
 }
 
 function allFilesInDir(parent: string): string[] {
-  let res: string[] = [];
-  try {
-    readdirSync(parent).forEach((c) => {
-      const child = path.join(parent, c);
-      try {
-        const s = statSync(child);
-        if (!s.isDirectory()) {
-          res.push(child);
-        } else if (s.isDirectory()) {
-          res = [...res, ...allFilesInDir(child)];
-        }
-      } catch {}
-    });
-  } catch {}
-  return res;
+   let res: string[] = [];
+   try {
+      readdirSync(parent).forEach((c) => {
+         const child = path.join(parent, c);
+         try {
+            const s = statSync(child);
+            if (!s.isDirectory()) {
+               res.push(child);
+            } else if (s.isDirectory()) {
+               res = [...res, ...allFilesInDir(child)];
+            }
+         } catch {}
+      });
+   } catch {}
+   return res;
 }

@@ -6,15 +6,15 @@ Generates a folder of files based on provided templates.
 
 While doing so it performs two substitutions:
 
-- Substitutes segments of file names surrounded by \_\_
-- Uses ejs to substitute values in templates
+-  Substitutes segments of file names surrounded by \_\_
+-  Uses ejs to substitute values in templates
 
 Examples:
 
 ```typescript
 generateFiles(tree, path.join(__dirname, 'files'), './tools/scripts', {
-  tmpl: '',
-  name: 'myscript',
+   tmpl: '',
+   name: 'myscript',
 });
 ```
 

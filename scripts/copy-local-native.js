@@ -9,5 +9,5 @@ const nativeFiles = glob.sync(`packages/${p}/**/*.{node,wasm,js,mjs,cjs}`);
 console.log({ nativeFiles });
 
 nativeFiles.forEach((file) => {
-  fs.copyFileSync(file, `build/${file}`);
+   fs.copyFileSync(file, `build/${file}`);
 });

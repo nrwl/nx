@@ -5,19 +5,20 @@ import { createProjectRootMappingsFromProjectConfigurations } from 'nx/src/proje
 import { replaceProjectConfigurationsWithPlugin } from '@nx/devkit/src/utils/replace-project-configuration-with-plugin';
 
 export default async function update(tree: Tree) {
-  const proj = Object.fromEntries(getProjects(tree).entries());
+   const proj = Object.fromEntries(getProjects(tree).entries());
 
-  const rootMappings = createProjectRootMappingsFromProjectConfigurations(proj);
+   const rootMappings =
+      createProjectRootMappingsFromProjectConfigurations(proj);
 
-  await replaceProjectConfigurationsWithPlugin(
-    tree,
-    rootMappings,
-    '@nx/<%= dirName %>/plugin',
-    createNodes,
-    {
-      targetName: 'TODO',
-    }
-  );
+   await replaceProjectConfigurationsWithPlugin(
+      tree,
+      rootMappings,
+      '@nx/<%= dirName %>/plugin',
+      createNodes,
+      {
+         targetName: 'TODO',
+      }
+   );
 
-  await formatFiles(tree);
+   await formatFiles(tree);
 }

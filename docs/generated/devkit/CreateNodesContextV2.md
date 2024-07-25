@@ -2,16 +2,16 @@
 
 ## Hierarchy
 
-- **`CreateNodesContextV2`**
+-  **`CreateNodesContextV2`**
 
-  ↳ [`CreateNodesContext`](../../devkit/documents/CreateNodesContext)
+   ↳ [`CreateNodesContext`](../../devkit/documents/CreateNodesContext)
 
 ## Table of contents
 
 ### Properties
 
-- [nxJsonConfiguration](../../devkit/documents/CreateNodesContextV2#nxjsonconfiguration): NxJsonConfiguration<string[] | "\*">
-- [workspaceRoot](../../devkit/documents/CreateNodesContextV2#workspaceroot): string
+-  [nxJsonConfiguration](../../devkit/documents/CreateNodesContextV2#nxjsonconfiguration): NxJsonConfiguration<string[] | "\*">
+-  [workspaceRoot](../../devkit/documents/CreateNodesContextV2#workspaceroot): string
 
 ## Properties
 

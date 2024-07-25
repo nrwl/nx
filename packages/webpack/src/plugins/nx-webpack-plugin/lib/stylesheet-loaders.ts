@@ -9,138 +9,139 @@ import { NormalizedNxAppWebpackPluginOptions } from '../nx-app-webpack-plugin-op
 import { PostcssCliResources } from '../../../utils/webpack/plugins/postcss-cli-resources';
 
 interface PostcssOptions {
-  (loader: any): any;
+   (loader: any): any;
 
-  config?: string;
+   config?: string;
 }
 
 export function getCommonLoadersForCssModules(
-  options: NormalizedNxAppWebpackPluginOptions,
-  includePaths: string[]
+   options: NormalizedNxAppWebpackPluginOptions,
+   includePaths: string[]
 ) {
-  // load component css as raw strings
-  return [
-    {
-      loader: options.extractCss
-        ? MiniCssExtractPlugin.loader
-        : require.resolve('style-loader'),
-    },
-    {
-      loader: require.resolve('css-loader'),
-      options: {
-        modules: {
-          mode: 'local',
-          getLocalIdent: getCSSModuleLocalIdent,
-        },
-        importLoaders: 1,
+   // load component css as raw strings
+   return [
+      {
+         loader: options.extractCss
+            ? MiniCssExtractPlugin.loader
+            : require.resolve('style-loader'),
       },
-    },
-    {
-      loader: require.resolve('postcss-loader'),
-      options: {
-        implementation: require('postcss'),
-        postcssOptions: postcssOptionsCreator(options, {
-          includePaths,
-          forCssModules: true,
-        }),
+      {
+         loader: require.resolve('css-loader'),
+         options: {
+            modules: {
+               mode: 'local',
+               getLocalIdent: getCSSModuleLocalIdent,
+            },
+            importLoaders: 1,
+         },
       },
-    },
-  ];
+      {
+         loader: require.resolve('postcss-loader'),
+         options: {
+            implementation: require('postcss'),
+            postcssOptions: postcssOptionsCreator(options, {
+               includePaths,
+               forCssModules: true,
+            }),
+         },
+      },
+   ];
 }
 
 export function getCommonLoadersForGlobalCss(
-  options: NormalizedNxAppWebpackPluginOptions,
-  includePaths: string[]
+   options: NormalizedNxAppWebpackPluginOptions,
+   includePaths: string[]
 ) {
-  return [
-    {
-      loader: options.extractCss
-        ? MiniCssExtractPlugin.loader
-        : require.resolve('style-loader'),
-    },
-    { loader: require.resolve('css-loader'), options: { url: false } },
-    {
-      loader: require.resolve('postcss-loader'),
-      options: {
-        implementation: require('postcss'),
-        postcssOptions: postcssOptionsCreator(options, {
-          includePaths,
-        }),
+   return [
+      {
+         loader: options.extractCss
+            ? MiniCssExtractPlugin.loader
+            : require.resolve('style-loader'),
       },
-    },
-  ];
+      { loader: require.resolve('css-loader'), options: { url: false } },
+      {
+         loader: require.resolve('postcss-loader'),
+         options: {
+            implementation: require('postcss'),
+            postcssOptions: postcssOptionsCreator(options, {
+               includePaths,
+            }),
+         },
+      },
+   ];
 }
 
 export function getCommonLoadersForGlobalStyle(
-  options: NormalizedNxAppWebpackPluginOptions,
-  includePaths: string[]
+   options: NormalizedNxAppWebpackPluginOptions,
+   includePaths: string[]
 ) {
-  return [
-    {
-      loader: options.extractCss
-        ? MiniCssExtractPlugin.loader
-        : require.resolve('style-loader'),
-      options: { esModule: true },
-    },
-    { loader: require.resolve('css-loader'), options: { url: false } },
-    {
-      loader: require.resolve('postcss-loader'),
-      options: {
-        implementation: require('postcss'),
-        postcssOptions: postcssOptionsCreator(options, {
-          includePaths,
-        }),
+   return [
+      {
+         loader: options.extractCss
+            ? MiniCssExtractPlugin.loader
+            : require.resolve('style-loader'),
+         options: { esModule: true },
       },
-    },
-  ];
+      { loader: require.resolve('css-loader'), options: { url: false } },
+      {
+         loader: require.resolve('postcss-loader'),
+         options: {
+            implementation: require('postcss'),
+            postcssOptions: postcssOptionsCreator(options, {
+               includePaths,
+            }),
+         },
+      },
+   ];
 }
 
 function postcssOptionsCreator(
-  options: NormalizedNxAppWebpackPluginOptions,
-  {
-    includePaths,
-    forCssModules = false,
-  }: {
-    includePaths: string[];
-    forCssModules?: boolean;
-  }
+   options: NormalizedNxAppWebpackPluginOptions,
+   {
+      includePaths,
+      forCssModules = false,
+   }: {
+      includePaths: string[];
+      forCssModules?: boolean;
+   }
 ) {
-  const hashFormat = getOutputHashFormat(options.outputHashing as string);
-  // PostCSS options depend on the webpack loader, but we need to set the `config` path as a string due to this check:
-  // https://github.com/webpack-contrib/postcss-loader/blob/0d342b1/src/utils.js#L36
+   const hashFormat = getOutputHashFormat(options.outputHashing as string);
+   // PostCSS options depend on the webpack loader, but we need to set the `config` path as a string due to this check:
+   // https://github.com/webpack-contrib/postcss-loader/blob/0d342b1/src/utils.js#L36
 
-  const postcssOptions: PostcssOptions = (loader) => ({
-    map: options.sourceMap &&
-      options.sourceMap !== 'hidden' && {
-        inline: true,
-        annotation: false,
-      },
-    plugins: [
-      postcssImports({
-        addModulesDirectories: includePaths,
-        resolve: (url: string) => (url.startsWith('~') ? url.slice(1) : url),
-      }),
-      ...(forCssModules
-        ? []
-        : [
-            PostcssCliResources({
-              baseHref: options.baseHref,
-              deployUrl: options.deployUrl,
-              loader,
-              filename: `[name]${hashFormat.file}.[ext]`,
-              publicPath: options.publicPath,
-              rebaseRootRelative: options.rebaseRootRelative,
-            }),
-            autoprefixer(),
-          ]),
-    ],
-  });
+   const postcssOptions: PostcssOptions = (loader) => ({
+      map: options.sourceMap &&
+         options.sourceMap !== 'hidden' && {
+            inline: true,
+            annotation: false,
+         },
+      plugins: [
+         postcssImports({
+            addModulesDirectories: includePaths,
+            resolve: (url: string) =>
+               url.startsWith('~') ? url.slice(1) : url,
+         }),
+         ...(forCssModules
+            ? []
+            : [
+                 PostcssCliResources({
+                    baseHref: options.baseHref,
+                    deployUrl: options.deployUrl,
+                    loader,
+                    filename: `[name]${hashFormat.file}.[ext]`,
+                    publicPath: options.publicPath,
+                    rebaseRootRelative: options.rebaseRootRelative,
+                 }),
+                 autoprefixer(),
+              ]),
+      ],
+   });
 
-  // If a path to postcssConfig is passed in, set it for app and all libs, otherwise
-  // use automatic detection.
-  if (typeof options.postcssConfig === 'string') {
-    postcssOptions.config = path.join(options.root, options.postcssConfig);
-  }
+   // If a path to postcssConfig is passed in, set it for app and all libs, otherwise
+   // use automatic detection.
+   if (typeof options.postcssConfig === 'string') {
+      postcssOptions.config = path.join(options.root, options.postcssConfig);
+   }
 
-  return postcssOptions;
+   return postcssOptions;
 }

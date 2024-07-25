@@ -1,24 +1,24 @@
 {
-  "name": "Nx rollup",
-  "version": "0.1",
-  "generators": {
-    "init": {
-      "factory": "./src/generators/init/init#rollupInitGenerator",
-      "schema": "./src/generators/init/schema.json",
-      "description": "Initialize the `@nx/rollup` plugin.",
-      "aliases": ["ng-add"],
-      "hidden": true
-    },
-    "configuration": {
-      "aliases": ["rollup-project"],
-      "factory": "./src/generators/configuration/configuration",
-      "schema": "./src/generators/configuration/schema.json",
-      "description": "Add rollup configuration to a project."
-    },
-    "convert-to-inferred": {
-      "factory": "./src/generators/convert-to-inferred/convert-to-inferred",
-      "schema": "./src/generators/convert-to-inferred/schema.json",
-      "description": "Convert existing Rollup project(s) using `@nx/rollup:*` executors to use `@nx/rollup/plugin`."
-    }
-  }
+   "name": "Nx rollup",
+   "version": "0.1",
+   "generators": {
+      "init": {
+         "factory": "./src/generators/init/init#rollupInitGenerator",
+         "schema": "./src/generators/init/schema.json",
+         "description": "Initialize the `@nx/rollup` plugin.",
+         "aliases": ["ng-add"],
+         "hidden": true
+      },
+      "configuration": {
+         "aliases": ["rollup-project"],
+         "factory": "./src/generators/configuration/configuration",
+         "schema": "./src/generators/configuration/schema.json",
+         "description": "Add rollup configuration to a project."
+      },
+      "convert-to-inferred": {
+         "factory": "./src/generators/convert-to-inferred/convert-to-inferred",
+         "schema": "./src/generators/convert-to-inferred/schema.json",
+         "description": "Convert existing Rollup project(s) using `@nx/rollup:*` executors to use `@nx/rollup/plugin`."
+      }
+   }
 }

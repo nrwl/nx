@@ -25,21 +25,21 @@ Nx is a build system with built-in tooling and advanced CI capabilities. It help
 
 A few links to help you get started:
 
-- [Nx.Dev: Documentation, Guides, Interactive Tutorials](https://nx.dev)
-- [Nx.Dev: Core Tutorials](https://nx.dev/getting-started/intro)
-- [Recipe: Adding Nx to an Existing Monorepo](https://nx.dev/recipes/adopting-nx/adding-to-monorepo)
-- [Official Nx YouTube Channel](https://www.youtube.com/@NxDevtools)
-- [Blog Posts About Nx](https://nx.dev/blog)
+-  [Nx.Dev: Documentation, Guides, Interactive Tutorials](https://nx.dev)
+-  [Nx.Dev: Core Tutorials](https://nx.dev/getting-started/intro)
+-  [Recipe: Adding Nx to an Existing Monorepo](https://nx.dev/recipes/adopting-nx/adding-to-monorepo)
+-  [Official Nx YouTube Channel](https://www.youtube.com/@NxDevtools)
+-  [Blog Posts About Nx](https://nx.dev/blog)
 
 <p style="text-align: center;"><a href="https://nx.dev/#learning-materials" target="_blank" rel="noreferrer"><img src="./images/nx-courses-and-videos.svg" 
 width="100%" alt="Nx - Smart Monorepos · Fast CI"></a></p>
 
 # Engage with the Core Team and the Community
 
-- [Nx.Dev Community Page: Community Discord Channel, Newsletter, etc.](https://nx.dev/community)
-- [The Nx Show Playlist on YouTube](https://www.youtube.com/playlist?list=PLakNactNC1dE8KLQ5zd3fQwu_yQHjTmR5). It's a
-  regular YouTube stream where we talk all things Nx. Join the stream, ask questions, etc.
-- [Follow Nx on Twitter](https://twitter.com/NxDevTools)
+-  [Nx.Dev Community Page: Community Discord Channel, Newsletter, etc.](https://nx.dev/community)
+-  [The Nx Show Playlist on YouTube](https://www.youtube.com/playlist?list=PLakNactNC1dE8KLQ5zd3fQwu_yQHjTmR5). It's a
+   regular YouTube stream where we talk all things Nx. Join the stream, ask questions, etc.
+-  [Follow Nx on Twitter](https://twitter.com/NxDevTools)
 
 ## Want to help?
 

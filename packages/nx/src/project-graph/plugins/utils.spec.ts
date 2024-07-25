@@ -4,34 +4,34 @@ import { createNodesFromFiles } from './utils';
 const configFiles = ['file1', 'file2'] as const;
 
 const context = {
-  nxJsonConfiguration: {},
-  workspaceRoot: '',
+   nxJsonConfiguration: {},
+   workspaceRoot: '',
 } as const;
 
 describe('createNodesFromFiles', () => {
-  it('should return results with context', async () => {
-    const createNodes = [
-      '*/**/*',
-      async (file: string) => {
-        return {
-          projects: {
-            [file]: {
-              root: file,
-            },
-          },
-        };
-      },
-    ] as const;
-    const options = {};
+   it('should return results with context', async () => {
+      const createNodes = [
+         '*/**/*',
+         async (file: string) => {
+            return {
+               projects: {
+                  [file]: {
+                     root: file,
+                  },
+               },
+            };
+         },
+      ] as const;
+      const options = {};
 
-    const results = await createNodesFromFiles(
-      createNodes[1],
-      configFiles,
-      options,
-      context
-    );
+      const results = await createNodesFromFiles(
+         createNodes[1],
+         configFiles,
+         options,
+         context
+      );
 
-    expect(results).toMatchInlineSnapshot(`
+      expect(results).toMatchInlineSnapshot(`
       [
         [
           "file1",
@@ -55,30 +55,30 @@ describe('createNodesFromFiles', () => {
         ],
       ]
     `);
-  });
+   });
 
-  it('should handle async errors', async () => {
-    const createNodes = [
-      '*/**/*',
-      async () => {
-        throw new Error('Async Error');
-      },
-    ] as const;
-    const options = {};
+   it('should handle async errors', async () => {
+      const createNodes = [
+         '*/**/*',
+         async () => {
+            throw new Error('Async Error');
+         },
+      ] as const;
+      const options = {};
 
-    let error;
-    await createNodesFromFiles(
-      createNodes[1],
-      configFiles,
-      options,
-      context
-    ).catch((e) => (error = e));
+      let error;
+      await createNodesFromFiles(
+         createNodes[1],
+         configFiles,
+         options,
+         context
+      ).catch((e) => (error = e));
 
-    const isAggregateError = isAggregateCreateNodesError(error);
-    expect(isAggregateError).toBe(true);
+      const isAggregateError = isAggregateCreateNodesError(error);
+      expect(isAggregateError).toBe(true);
 
-    if (isAggregateCreateNodesError(error)) {
-      expect(error.errors).toMatchInlineSnapshot(`
+      if (isAggregateCreateNodesError(error)) {
+         expect(error.errors).toMatchInlineSnapshot(`
         [
           [
             "file1",
@@ -90,31 +90,31 @@ describe('createNodesFromFiles', () => {
           ],
         ]
       `);
-    }
-  });
+      }
+   });
 
-  it('should handle sync errors', async () => {
-    const createNodes = [
-      '*/**/*',
-      () => {
-        throw new Error('Sync Error');
-      },
-    ] as const;
-    const options = {};
+   it('should handle sync errors', async () => {
+      const createNodes = [
+         '*/**/*',
+         () => {
+            throw new Error('Sync Error');
+         },
+      ] as const;
+      const options = {};
 
-    let error;
-    await createNodesFromFiles(
-      createNodes[1],
-      configFiles,
-      options,
-      context
-    ).catch((e) => (error = e));
+      let error;
+      await createNodesFromFiles(
+         createNodes[1],
+         configFiles,
+         options,
+         context
+      ).catch((e) => (error = e));
 
-    const isAggregateError = isAggregateCreateNodesError(error);
-    expect(isAggregateError).toBe(true);
+      const isAggregateError = isAggregateCreateNodesError(error);
+      expect(isAggregateError).toBe(true);
 
-    if (isAggregateCreateNodesError(error)) {
-      expect(error.errors).toMatchInlineSnapshot(`
+      if (isAggregateCreateNodesError(error)) {
+         expect(error.errors).toMatchInlineSnapshot(`
         [
           [
             "file1",
@@ -126,40 +126,40 @@ describe('createNodesFromFiles', () => {
           ],
         ]
       `);
-    }
-  });
+      }
+   });
 
-  it('should handle partial errors', async () => {
-    const createNodes = [
-      '*/**/*',
-      async (file: string) => {
-        if (file === 'file1') {
-          throw new Error('Error');
-        }
-        return {
-          projects: {
-            [file]: {
-              root: file,
-            },
-          },
-        };
-      },
-    ] as const;
-    const options = {};
+   it('should handle partial errors', async () => {
+      const createNodes = [
+         '*/**/*',
+         async (file: string) => {
+            if (file === 'file1') {
+               throw new Error('Error');
+            }
+            return {
+               projects: {
+                  [file]: {
+                     root: file,
+                  },
+               },
+            };
+         },
+      ] as const;
+      const options = {};
 
-    let error;
-    await createNodesFromFiles(
-      createNodes[1],
-      configFiles,
-      options,
-      context
-    ).catch((e) => (error = e));
+      let error;
+      await createNodesFromFiles(
+         createNodes[1],
+         configFiles,
+         options,
+         context
+      ).catch((e) => (error = e));
 
-    const isAggregateError = isAggregateCreateNodesError(error);
-    expect(isAggregateError).toBe(true);
+      const isAggregateError = isAggregateCreateNodesError(error);
+      expect(isAggregateError).toBe(true);
 
-    if (isAggregateCreateNodesError(error)) {
-      expect(error.errors).toMatchInlineSnapshot(`
+      if (isAggregateCreateNodesError(error)) {
+         expect(error.errors).toMatchInlineSnapshot(`
         [
           [
             "file1",
@@ -167,7 +167,7 @@ describe('createNodesFromFiles', () => {
           ],
         ]
       `);
-      expect(error.partialResults).toMatchInlineSnapshot(`
+         expect(error.partialResults).toMatchInlineSnapshot(`
         [
           [
             "file2",
@@ -181,20 +181,25 @@ describe('createNodesFromFiles', () => {
           ],
         ]
       `);
-    }
-  });
+      }
+   });
 
-  it('should filter out null results', async () => {
-    const createNodes = [
-      '**/*',
-      () => {
-        return null;
-      },
-    ] as const;
-    const options = {};
+   it('should filter out null results', async () => {
+      const createNodes = [
+         '**/*',
+         () => {
+            return null;
+         },
+      ] as const;
+      const options = {};
 
-    expect(
-      await createNodesFromFiles(createNodes[1], configFiles, options, context)
-    ).toEqual([]);
-  });
+      expect(
+         await createNodesFromFiles(
+            createNodes[1],
+            configFiles,
+            options,
+            context
+         )
+      ).toEqual([]);
+   });
 });

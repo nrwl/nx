@@ -15,35 +15,35 @@ Nx does not support Storybook v6 any more. So, Nx will configure your project to
 
 If you are using Angular, React, Next.js, Vue or React Native in your project, it's best to use the framework specific Storybook configuration generator:
 
-- [React Storybook Configuration Generator](/nx-api/react/generators/storybook-configuration) (React and Next.js projects)
+-  [React Storybook Configuration Generator](/nx-api/react/generators/storybook-configuration) (React and Next.js projects)
 
-- [Angular Storybook Configuration Generator](/nx-api/angular/generators/storybook-configuration)
+-  [Angular Storybook Configuration Generator](/nx-api/angular/generators/storybook-configuration)
 
-- [React Native Storybook Configuration Generator](/nx-api/react-native/generators/storybook-configuration)
+-  [React Native Storybook Configuration Generator](/nx-api/react-native/generators/storybook-configuration)
 
-- [Vue Storybook Configuration Generator](/nx-api/vue/generators/storybook-configuration)
+-  [Vue Storybook Configuration Generator](/nx-api/vue/generators/storybook-configuration)
 
 If you are not using one of the framework-specific generators mentioned above, when running this generator you will be prompted to provide the following:
 
-- The `name` of the project you want to generate the configuration for.
-- The `uiFramework` you want to use. Supported values are:
-  - `@storybook/angular`
-  - `@storybook/html-webpack5`
-  - `@storybook/nextjs`
-  - `@storybook/preact-webpack5`
-  - `@storybook/react-webpack5`
-  - `@storybook/react-vite`
-  - `@storybook/server-webpack5`
-  - `@storybook/svelte-webpack5`
-  - `@storybook/svelte-vite`
-  - `@storybook/sveltekit`
-  - `@storybook/vue-webpack5`
-  - `@storybook/vue-vite`
-  - `@storybook/vue3-webpack5`
-  - `@storybook/vue3-vite`
-  - `@storybook/web-components-webpack5`
-  - `@storybook/web-components-vite`
-- Whether you want to set up [Storybook interaction tests](https://storybook.js.org/docs/angular/writing-tests/interaction-testing) (`interactionTests`). If you choose `yes`, all the necessary dependencies will be installed. Also, a `test-storybook` target will be generated in your project's `project.json`, with a command to invoke the [Storybook `test-runner`](https://storybook.js.org/docs/angular/writing-tests/test-runner). You can read more about this in the [Nx Storybook interaction tests documentation page](/recipes/storybook/storybook-interaction-tests#setup-storybook-interaction-tests).
+-  The `name` of the project you want to generate the configuration for.
+-  The `uiFramework` you want to use. Supported values are:
+   -  `@storybook/angular`
+   -  `@storybook/html-webpack5`
+   -  `@storybook/nextjs`
+   -  `@storybook/preact-webpack5`
+   -  `@storybook/react-webpack5`
+   -  `@storybook/react-vite`
+   -  `@storybook/server-webpack5`
+   -  `@storybook/svelte-webpack5`
+   -  `@storybook/svelte-vite`
+   -  `@storybook/sveltekit`
+   -  `@storybook/vue-webpack5`
+   -  `@storybook/vue-vite`
+   -  `@storybook/vue3-webpack5`
+   -  `@storybook/vue3-vite`
+   -  `@storybook/web-components-webpack5`
+   -  `@storybook/web-components-vite`
+-  Whether you want to set up [Storybook interaction tests](https://storybook.js.org/docs/angular/writing-tests/interaction-testing) (`interactionTests`). If you choose `yes`, all the necessary dependencies will be installed. Also, a `test-storybook` target will be generated in your project's `project.json`, with a command to invoke the [Storybook `test-runner`](https://storybook.js.org/docs/angular/writing-tests/test-runner). You can read more about this in the [Nx Storybook interaction tests documentation page](/recipes/storybook/storybook-interaction-tests#setup-storybook-interaction-tests).
 
 You must provide a `name` and a `uiFramework` for the generator to work.
 

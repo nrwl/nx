@@ -145,11 +145,11 @@ You can then use the library by importing one of the exports into your applicati
 import { Login } from '@acme/login';
 
 export default function Index() {
-  return (
-    <div>
-      <Login />
-    </div>
-  );
+   return (
+      <div>
+         <Login />
+      </div>
+   );
 }
 ```
 
@@ -188,9 +188,9 @@ UPDATE apps/myapp/app/routes/admin.tsx
 import { json, LoaderFunctionArgs } from '@remix-run/node';
 
 export const adminLoader = async ({ request }: LoaderFunctionArgs) => {
-  return json({
-    message: 'Hello, world!',
-  });
+   return json({
+      message: 'Hello, world!',
+   });
 };
 ```
 
@@ -206,9 +206,9 @@ Replace the default loader code:
 
 ```tsx
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-  return json({
-    message: 'Hello, world!',
-  });
+   return json({
+      message: 'Hello, world!',
+   });
 };
 ```
 

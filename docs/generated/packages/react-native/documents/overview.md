@@ -7,9 +7,9 @@ React Native brings React's declarative UI framework to iOS and Android. With Re
 
 The Nx Plugin for React Native contains generators for managing React Native applications and libraries within an Nx workspace. It provides:
 
-- Integration with libraries such as Jest, Detox, and Storybook.
-- Scaffolding for creating buildable libraries that can be published to npm.
-- Utilities for automatic workspace refactoring.
+-  Integration with libraries such as Jest, Detox, and Storybook.
+-  Scaffolding for creating buildable libraries that can be published to npm.
+-  Utilities for automatic workspace refactoring.
 
 ## Setting Up React Native
 
@@ -66,8 +66,8 @@ Since Nx 18, Nx plugins can infer tasks for your projects based on the configura
 
 The `@nx/react-native` plugin will create a task for any project that has an app configuration file present. Any of the following files will be recognized as an app configuration file:
 
-- `app.config.js`
-- `app.json`
+-  `app.config.js`
+-  `app.json`
 
 ### View Inferred Tasks
 
@@ -79,20 +79,20 @@ The `@nx/react-native/plugin` is configured in the `plugins` array in `nx.json`.
 
 ```json {% fileName="nx.json" %}
 {
-  "plugins": [
-    {
-      "plugin": "@nx/react-native/plugin",
-      "options": {
-        "startTargetName": "start",
-        "podInstallTargetName": "pod-install",
-        "bundleTargetName": "bundle",
-        "runIosTargetName": "run-ios",
-        "runAndroidTargetName": "run-android",
-        "buildIosTargetName": "build-ios",
-        "buildAndroidTargetName": "build-android"
+   "plugins": [
+      {
+         "plugin": "@nx/react-native/plugin",
+         "options": {
+            "startTargetName": "start",
+            "podInstallTargetName": "pod-install",
+            "bundleTargetName": "bundle",
+            "runIosTargetName": "run-ios",
+            "runAndroidTargetName": "run-android",
+            "buildIosTargetName": "build-ios",
+            "buildAndroidTargetName": "build-android"
+         }
       }
-    }
-  ]
+   ]
 }
 ```
 
@@ -194,5 +194,5 @@ The build artifacts will be located under `<your app folder>/android/app/build`.
 
 ## More Documentation
 
-- [Using Detox](/nx-api/detox)
-- [Using Jest](/nx-api/jest)
+-  [Using Detox](/nx-api/detox)
+-  [Using Jest](/nx-api/jest)

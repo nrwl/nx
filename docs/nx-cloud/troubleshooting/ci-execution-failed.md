@@ -42,8 +42,8 @@ Nx Cloud was unable to communicate with the Nx Agents assigned to a workflow for
 
 The current CI Pipeline Execution had a workflow cancelled due to either:
 
-- a manual request in the Nx Cloud UI, or
-- a push to the same branch that already had a running workflow.
+-  a manual request in the Nx Cloud UI, or
+-  a push to the same branch that already had a running workflow.
 
 ### One or more workflows encountered a critical error
 

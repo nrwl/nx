@@ -5,9 +5,9 @@ import { convertConfigToWebpackPluginGenerator } from './src/generators/convert-
 import { useLegacyNxPlugin } from './src/plugins/use-legacy-nx-plugin/use-legacy-nx-plugin';
 
 export {
-  configurationGenerator,
-  convertConfigToWebpackPluginGenerator,
-  useLegacyNxPlugin,
+   configurationGenerator,
+   convertConfigToWebpackPluginGenerator,
+   useLegacyNxPlugin,
 };
 
 // Exported for backwards compatibility in case a plugin is using the old name.
@@ -27,10 +27,10 @@ export type { WebDevServerOptions } from './src/executors/dev-server/schema';
 export * from './src/executors/dev-server/dev-server.impl';
 export * from './src/executors/webpack/lib/normalize-options';
 export type {
-  WebpackExecutorOptions,
-  NormalizedWebpackExecutorOptions,
-  AssetGlobPattern,
-  FileReplacement,
+   WebpackExecutorOptions,
+   NormalizedWebpackExecutorOptions,
+   AssetGlobPattern,
+   FileReplacement,
 } from './src/executors/webpack/schema';
 export * from './src/executors/webpack/webpack.impl';
 export * from './src/utils/get-css-module-local-ident';

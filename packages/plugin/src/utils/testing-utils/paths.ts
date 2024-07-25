@@ -1,7 +1,7 @@
 import { workspaceRoot } from '@nx/devkit';
 
 export function tmpFolder() {
-  return `${workspaceRoot}/tmp`;
+   return `${workspaceRoot}/tmp`;
 }
 
 /**
@@ -11,9 +11,9 @@ export function tmpFolder() {
  * @returns `'${process.cwd()}/tmp/nx-e2e/proj/<path>'`
  */
 export function tmpProjPath(path?: string) {
-  return path
-    ? `${tmpFolder()}/nx-e2e/proj/${path}`
-    : `${tmpFolder()}/nx-e2e/proj`;
+   return path
+      ? `${tmpFolder()}/nx-e2e/proj/${path}`
+      : `${tmpFolder()}/nx-e2e/proj`;
 }
 
 /**
@@ -23,7 +23,7 @@ export function tmpProjPath(path?: string) {
  * @returns `'${process.cwd()}/tmp/nx-e2e/proj-backup/<path>'`
  */
 export function tmpBackupProjPath(path?: string) {
-  return path
-    ? `${workspaceRoot}/tmp/nx-e2e/proj-backup/${path}`
-    : `${workspaceRoot}/tmp/nx-e2e/proj-backup`;
+   return path
+      ? `${workspaceRoot}/tmp/nx-e2e/proj-backup/${path}`
+      : `${workspaceRoot}/tmp/nx-e2e/proj-backup`;
 }

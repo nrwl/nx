@@ -58,4 +58,4 @@ Setting `NX_CLOUD_DISTRIBUTED_EXECUTION` to `false` disables distributed task ex
 
 ## See Also
 
-- [Nx Environment Variables](/reference/environment-variables)
+-  [Nx Environment Variables](/reference/environment-variables)

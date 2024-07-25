@@ -1,115 +1,115 @@
 {
-  "generators": {
-    "update-16-0-0-add-nx-packages": {
-      "cli": "nx",
-      "version": "16.0.0-beta.1",
-      "description": "Replace @nrwl/cypress with @nx/cypress",
-      "implementation": "./src/migrations/update-16-0-0-add-nx-packages/update-16-0-0-add-nx-packages"
-    },
-    "update-16-2-0-normalize-tsconfigs": {
-      "cli": "nx",
-      "version": "16.2.0-beta.0",
-      "description": "Normalize tsconfig.cy.json files to be located at '<projectRoot>/cypress/tsconfig.json'",
-      "implementation": "./src/migrations/update-16-2-0/update-cy-tsconfig"
-    },
-    "update-16-3-0-remove-old-tsconfigs": {
-      "cli": "nx",
-      "version": "16.4.0-beta.10",
-      "description": "Remove tsconfig.e2e.json and add settings to project tsconfig.json. tsConfigs executor option is now deprecated. The project level tsconfig.json file should be used instead.",
-      "implementation": "./src/migrations/update-16-4-0/tsconfig-sourcemaps"
-    },
-    "update-16-8-0-cypress-13": {
-      "cli": "nx",
-      "version": "16.8.0-beta.4",
-      "description": "Update to Cypress v13. Most noteable change is video recording is off by default. This migration will only update if the workspace is already on Cypress v12. https://docs.cypress.io/guides/references/migration-guide#Migrating-to-Cypress-130",
-      "implementation": "./src/migrations/update-16-8-0/cypress-13"
-    },
-    "update-cypress-version-13-6-6": {
-      "cli": "nx",
-      "version": "18.1.0-beta.3",
-      "description": "Update to Cypress ^13.6.6 if the workspace is using Cypress v13 to ensure workspaces don't use v13.6.5 which has an issue when verifying Cypress.",
-      "implementation": "./src/migrations/update-18-1-0/update-cypress-version-13-6-6"
-    }
-  },
-  "packageJsonUpdates": {
-    "16.1.0": {
-      "version": "16.1.0-beta.0",
-      "requires": {
-        "cypress": ">=12.0.0 <12.11.0"
+   "generators": {
+      "update-16-0-0-add-nx-packages": {
+         "cli": "nx",
+         "version": "16.0.0-beta.1",
+         "description": "Replace @nrwl/cypress with @nx/cypress",
+         "implementation": "./src/migrations/update-16-0-0-add-nx-packages/update-16-0-0-add-nx-packages"
       },
-      "packages": {
-        "cypress": {
-          "version": "^12.11.0",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
-    "16.5.0": {
-      "version": "16.5.0-beta.0",
-      "requires": {
-        "cypress": ">=12.0.0 <12.16.0"
+      "update-16-2-0-normalize-tsconfigs": {
+         "cli": "nx",
+         "version": "16.2.0-beta.0",
+         "description": "Normalize tsconfig.cy.json files to be located at '<projectRoot>/cypress/tsconfig.json'",
+         "implementation": "./src/migrations/update-16-2-0/update-cy-tsconfig"
       },
-      "packages": {
-        "cypress": {
-          "version": "^12.16.0",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
-    "16.7.0": {
-      "version": "16.7.0-beta.3",
-      "packages": {
-        "eslint-plugin-cypress": {
-          "version": "^2.13.4",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
-    "17.2.0-beta.2": {
-      "version": "17.2.0-beta.2",
-      "packages": {
-        "vite": {
-          "version": "^5.0.0",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
-    "17.3.0": {
-      "version": "17.3.0-beta.3",
-      "packages": {
-        "@types/node": {
-          "version": "18.16.9",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
-    "19.1.0": {
-      "version": "19.1.0-beta.0",
-      "requires": {
-        "cypress": "^13.0.0"
+      "update-16-3-0-remove-old-tsconfigs": {
+         "cli": "nx",
+         "version": "16.4.0-beta.10",
+         "description": "Remove tsconfig.e2e.json and add settings to project tsconfig.json. tsConfigs executor option is now deprecated. The project level tsconfig.json file should be used instead.",
+         "implementation": "./src/migrations/update-16-4-0/tsconfig-sourcemaps"
       },
-      "packages": {
-        "cypress": {
-          "version": "^13.8.0",
-          "alwaysAddToPackageJson": false
-        },
-        "@cypress/webpack-dev-server": {
-          "version": "^3.8.0",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
-    "19.4.1": {
-      "version": "19.4.1-beta.0",
-      "requires": {
-        "cypress": "^13.0.0"
+      "update-16-8-0-cypress-13": {
+         "cli": "nx",
+         "version": "16.8.0-beta.4",
+         "description": "Update to Cypress v13. Most noteable change is video recording is off by default. This migration will only update if the workspace is already on Cypress v12. https://docs.cypress.io/guides/references/migration-guide#Migrating-to-Cypress-130",
+         "implementation": "./src/migrations/update-16-8-0/cypress-13"
       },
-      "packages": {
-        "cypress": {
-          "version": "^13.13.0",
-          "alwaysAddToPackageJson": false
-        }
+      "update-cypress-version-13-6-6": {
+         "cli": "nx",
+         "version": "18.1.0-beta.3",
+         "description": "Update to Cypress ^13.6.6 if the workspace is using Cypress v13 to ensure workspaces don't use v13.6.5 which has an issue when verifying Cypress.",
+         "implementation": "./src/migrations/update-18-1-0/update-cypress-version-13-6-6"
       }
-    }
-  }
+   },
+   "packageJsonUpdates": {
+      "16.1.0": {
+         "version": "16.1.0-beta.0",
+         "requires": {
+            "cypress": ">=12.0.0 <12.11.0"
+         },
+         "packages": {
+            "cypress": {
+               "version": "^12.11.0",
+               "alwaysAddToPackageJson": false
+            }
+         }
+      },
+      "16.5.0": {
+         "version": "16.5.0-beta.0",
+         "requires": {
+            "cypress": ">=12.0.0 <12.16.0"
+         },
+         "packages": {
+            "cypress": {
+               "version": "^12.16.0",
+               "alwaysAddToPackageJson": false
+            }
+         }
+      },
+      "16.7.0": {
+         "version": "16.7.0-beta.3",
+         "packages": {
+            "eslint-plugin-cypress": {
+               "version": "^2.13.4",
+               "alwaysAddToPackageJson": false
+            }
+         }
+      },
+      "17.2.0-beta.2": {
+         "version": "17.2.0-beta.2",
+         "packages": {
+            "vite": {
+               "version": "^5.0.0",
+               "alwaysAddToPackageJson": false
+            }
+         }
+      },
+      "17.3.0": {
+         "version": "17.3.0-beta.3",
+         "packages": {
+            "@types/node": {
+               "version": "18.16.9",
+               "alwaysAddToPackageJson": false
+            }
+         }
+      },
+      "19.1.0": {
+         "version": "19.1.0-beta.0",
+         "requires": {
+            "cypress": "^13.0.0"
+         },
+         "packages": {
+            "cypress": {
+               "version": "^13.8.0",
+               "alwaysAddToPackageJson": false
+            },
+            "@cypress/webpack-dev-server": {
+               "version": "^3.8.0",
+               "alwaysAddToPackageJson": false
+            }
+         }
+      },
+      "19.4.1": {
+         "version": "19.4.1-beta.0",
+         "requires": {
+            "cypress": "^13.0.0"
+         },
+         "packages": {
+            "cypress": {
+               "version": "^13.13.0",
+               "alwaysAddToPackageJson": false
+            }
+         }
+      }
+   }
 }

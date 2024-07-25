@@ -7,23 +7,23 @@ import { Schema } from '../schema';
  * Throws an error if the project is in use, unless the `--forceRemove` option is used.
  */
 export async function checkDependencies(_, schema: Schema): Promise<void> {
-  if (schema.forceRemove) {
-    return;
-  }
+   if (schema.forceRemove) {
+      return;
+   }
 
-  const graph: ProjectGraph = await createProjectGraphAsync();
+   const graph: ProjectGraph = await createProjectGraphAsync();
 
-  const reverseGraph = reverse(graph);
+   const reverseGraph = reverse(graph);
 
-  const deps = reverseGraph.dependencies[schema.projectName] || [];
+   const deps = reverseGraph.dependencies[schema.projectName] || [];
 
-  if (deps.length > 0) {
-    throw new Error(
-      `${
-        schema.projectName
-      } is still a dependency of the following projects:\n${deps
-        .map((x) => x.target)
-        .join('\n')}`
-    );
-  }
+   if (deps.length > 0) {
+      throw new Error(
+         `${
+            schema.projectName
+         } is still a dependency of the following projects:\n${deps
+            .map((x) => x.target)
+            .join('\n')}`
+      );
+   }
 }

@@ -1,9 +1,9 @@
 import {
-  formatFiles,
-  GeneratorCallback,
-  joinPathFragments,
-  runTasksInSerial,
-  Tree,
+   formatFiles,
+   GeneratorCallback,
+   joinPathFragments,
+   runTasksInSerial,
+   Tree,
 } from '@nx/devkit';
 import { initGenerator as jsInitGenerator } from '@nx/js';
 
@@ -22,70 +22,70 @@ import { initRootBabelConfig } from '../../utils/init-root-babel-config';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 
 export async function expoApplicationGenerator(
-  host: Tree,
-  schema: Schema
+   host: Tree,
+   schema: Schema
 ): Promise<GeneratorCallback> {
-  return await expoApplicationGeneratorInternal(host, {
-    addPlugin: false,
-    projectNameAndRootFormat: 'derived',
-    ...schema,
-  });
+   return await expoApplicationGeneratorInternal(host, {
+      addPlugin: false,
+      projectNameAndRootFormat: 'derived',
+      ...schema,
+   });
 }
 
 export async function expoApplicationGeneratorInternal(
-  host: Tree,
-  schema: Schema
+   host: Tree,
+   schema: Schema
 ): Promise<GeneratorCallback> {
-  const options = await normalizeOptions(host, schema);
+   const options = await normalizeOptions(host, schema);
 
-  const tasks: GeneratorCallback[] = [];
-  const jsInitTask = await jsInitGenerator(host, {
-    ...schema,
-    skipFormat: true,
-  });
-  tasks.push(jsInitTask);
-  const initTask = await initGenerator(host, { ...options, skipFormat: true });
-  tasks.push(initTask);
-  if (!options.skipPackageJson) {
-    tasks.push(ensureDependencies(host));
-  }
-  initRootBabelConfig(host);
+   const tasks: GeneratorCallback[] = [];
+   const jsInitTask = await jsInitGenerator(host, {
+      ...schema,
+      skipFormat: true,
+   });
+   tasks.push(jsInitTask);
+   const initTask = await initGenerator(host, { ...options, skipFormat: true });
+   tasks.push(initTask);
+   if (!options.skipPackageJson) {
+      tasks.push(ensureDependencies(host));
+   }
+   initRootBabelConfig(host);
 
-  createApplicationFiles(host, options);
-  addProject(host, options);
+   createApplicationFiles(host, options);
+   addProject(host, options);
 
-  const lintTask = await addLinting(host, {
-    ...options,
-    projectRoot: options.appProjectRoot,
-    tsConfigPaths: [
-      joinPathFragments(options.appProjectRoot, 'tsconfig.app.json'),
-    ],
-  });
-  tasks.push(lintTask);
+   const lintTask = await addLinting(host, {
+      ...options,
+      projectRoot: options.appProjectRoot,
+      tsConfigPaths: [
+         joinPathFragments(options.appProjectRoot, 'tsconfig.app.json'),
+      ],
+   });
+   tasks.push(lintTask);
 
-  const jestTask = await addJest(
-    host,
-    options.unitTestRunner,
-    options.projectName,
-    options.appProjectRoot,
-    options.js,
-    options.skipPackageJson,
-    options.addPlugin
-  );
-  tasks.push(jestTask);
-  const e2eTask = await addE2e(host, options);
-  tasks.push(e2eTask);
-  addEasScripts(host);
+   const jestTask = await addJest(
+      host,
+      options.unitTestRunner,
+      options.projectName,
+      options.appProjectRoot,
+      options.js,
+      options.skipPackageJson,
+      options.addPlugin
+   );
+   tasks.push(jestTask);
+   const e2eTask = await addE2e(host, options);
+   tasks.push(e2eTask);
+   addEasScripts(host);
 
-  if (!options.skipFormat) {
-    await formatFiles(host);
-  }
+   if (!options.skipFormat) {
+      await formatFiles(host);
+   }
 
-  tasks.push(() => {
-    logShowProjectCommand(options.projectName);
-  });
+   tasks.push(() => {
+      logShowProjectCommand(options.projectName);
+   });
 
-  return runTasksInSerial(...tasks);
+   return runTasksInSerial(...tasks);
 }
 
 export default expoApplicationGenerator;

@@ -43,9 +43,9 @@ This command will register the appropriate plugin in the `plugins` array of `nx.
 
 If you are already using the `@nx/cypress`, `@nx/playwright`, or `@nx/jest` plugin, you need to manually add the appropriate configuration to the `plugins` array of `nx.json`. Follow the instructions for the plugin you are using:
 
-- [Configure Cypress Task Splitting](/nx-api/cypress#nxcypress-configuration)
-- [Configure Playwright Task Splitting](/nx-api/playwright#nxplaywright-configuration)
-- [Configure Jest Task Splitting](/nx-api/jest#splitting-e2e-tests)
+-  [Configure Cypress Task Splitting](/nx-api/cypress#nxcypress-configuration)
+-  [Configure Playwright Task Splitting](/nx-api/playwright#nxplaywright-configuration)
+-  [Configure Jest Task Splitting](/nx-api/jest#splitting-e2e-tests)
 
 ## Usage
 
@@ -59,307 +59,307 @@ nx show project myproject-e2e --web
 
 ```json
 {
-  "project": {
-    "name": "admin-e2e",
-    "data": {
-      "metadata": {
-        "targetGroups": {
-          "E2E (CI)": [
-            "e2e-ci--src/e2e/app.cy.ts",
-            "e2e-ci--src/e2e/login.cy.ts",
-            "e2e-ci"
-          ]
-        }
-      },
-      "root": "apps/admin-e2e",
-      "projectType": "application",
-      "targets": {
-        "e2e": {
-          "cache": true,
-          "inputs": ["default", "^production"],
-          "outputs": [
-            "{workspaceRoot}/dist/cypress/apps/admin-e2e/videos",
-            "{workspaceRoot}/dist/cypress/apps/admin-e2e/screenshots"
-          ],
-          "executor": "nx:run-commands",
-          "dependsOn": ["^build"],
-          "options": {
-            "cwd": "apps/admin-e2e",
-            "command": "cypress run"
-          },
-          "configurations": {
-            "production": {
-              "command": "cypress run --env webServerCommand=\"nx run admin:preview\""
-            }
-          },
-          "metadata": {
-            "technologies": ["cypress"]
-          }
-        },
-        "e2e-ci--src/e2e/app.cy.ts": {
-          "outputs": [
-            "{workspaceRoot}/dist/cypress/apps/admin-e2e/videos",
-            "{workspaceRoot}/dist/cypress/apps/admin-e2e/screenshots"
-          ],
-          "inputs": [
-            "default",
-            "^production",
-            {
-              "externalDependencies": ["cypress"]
-            }
-          ],
-          "cache": true,
-          "options": {
-            "cwd": "apps/admin-e2e",
-            "command": "cypress run --env webServerCommand=\"nx run admin:serve-static\" --spec src/e2e/app.cy.ts"
-          },
-          "executor": "nx:run-commands",
-          "configurations": {},
-          "metadata": {
-            "technologies": ["cypress"]
-          }
-        },
-        "e2e-ci--src/e2e/login.cy.ts": {
-          "outputs": [
-            "{workspaceRoot}/dist/cypress/apps/admin-e2e/videos",
-            "{workspaceRoot}/dist/cypress/apps/admin-e2e/screenshots"
-          ],
-          "inputs": [
-            "default",
-            "^production",
-            {
-              "externalDependencies": ["cypress"]
-            }
-          ],
-          "cache": true,
-          "options": {
-            "cwd": "apps/admin-e2e",
-            "command": "cypress run --env webServerCommand=\"nx run admin:serve-static\" --spec src/e2e/login.cy.ts"
-          },
-          "executor": "nx:run-commands",
-          "configurations": {},
-          "metadata": {
-            "technologies": ["cypress"]
-          }
-        },
-        "e2e-ci": {
-          "executor": "nx:noop",
-          "cache": true,
-          "inputs": [
-            "default",
-            "^production",
-            {
-              "externalDependencies": ["cypress"]
-            }
-          ],
-          "outputs": [
-            "{workspaceRoot}/dist/cypress/apps/admin-e2e/videos",
-            "{workspaceRoot}/dist/cypress/apps/admin-e2e/screenshots"
-          ],
-          "dependsOn": [
-            {
-              "target": "e2e-ci--src/e2e/app.cy.ts",
-              "projects": "self",
-              "params": "forward"
-            },
-            {
-              "target": "e2e-ci--src/e2e/login.cy.ts",
-              "projects": "self",
-              "params": "forward"
-            }
-          ],
-          "options": {},
-          "configurations": {},
-          "metadata": {
-            "technologies": ["cypress"]
-          }
-        },
-        "lint": {
-          "executor": "@nx/eslint:lint",
-          "inputs": ["default", "{workspaceRoot}/.eslintrc.json"],
-          "cache": true,
-          "outputs": ["{options.outputFile}"],
-          "options": {},
-          "configurations": {},
-          "metadata": {
-            "technologies": ["eslint"]
-          }
-        }
-      },
+   "project": {
       "name": "admin-e2e",
-      "$schema": "../../node_modules/nx/schemas/project-schema.json",
-      "sourceRoot": "apps/admin-e2e/src",
-      "tags": [],
-      "implicitDependencies": ["admin"]
-    }
-  },
-  "sourceMap": {
-    "root": ["apps/admin-e2e/project.json", "nx/core/project-json"],
-    "projectType": ["apps/admin-e2e/project.json", "nx/core/project-json"],
-    "targets": ["apps/admin-e2e/project.json", "nx/core/project-json"],
-    "targets.e2e": ["apps/admin-e2e/project.json", "nx/core/target-defaults"],
-    "targets.e2e.options": [
-      "apps/admin-e2e/cypress.config.ts",
-      "@nx/cypress/plugin"
-    ],
-    "targets.e2e.cache": [
-      "apps/admin-e2e/project.json",
-      "nx/core/target-defaults"
-    ],
-    "targets.e2e.inputs": [
-      "apps/admin-e2e/project.json",
-      "nx/core/target-defaults"
-    ],
-    "targets.e2e.outputs": [
-      "apps/admin-e2e/cypress.config.ts",
-      "@nx/cypress/plugin"
-    ],
-    "targets.e2e.configurations": [
-      "apps/admin-e2e/cypress.config.ts",
-      "@nx/cypress/plugin"
-    ],
-    "targets.e2e.executor": [
-      "apps/admin-e2e/cypress.config.ts",
-      "@nx/cypress/plugin"
-    ],
-    "targets.e2e.options.cwd": [
-      "apps/admin-e2e/cypress.config.ts",
-      "@nx/cypress/plugin"
-    ],
-    "targets.e2e.options.command": [
-      "apps/admin-e2e/cypress.config.ts",
-      "@nx/cypress/plugin"
-    ],
-    "targets.e2e.configurations.production": [
-      "apps/admin-e2e/cypress.config.ts",
-      "@nx/cypress/plugin"
-    ],
-    "targets.e2e.configurations.production.command": [
-      "apps/admin-e2e/cypress.config.ts",
-      "@nx/cypress/plugin"
-    ],
-    "targets.e2e-ci--src/e2e/app.cy.ts": [
-      "apps/admin-e2e/cypress.config.ts",
-      "@nx/cypress/plugin"
-    ],
-    "targets.e2e-ci--src/e2e/app.cy.ts.outputs": [
-      "apps/admin-e2e/cypress.config.ts",
-      "@nx/cypress/plugin"
-    ],
-    "targets.e2e-ci--src/e2e/app.cy.ts.inputs": [
-      "apps/admin-e2e/cypress.config.ts",
-      "@nx/cypress/plugin"
-    ],
-    "targets.e2e-ci--src/e2e/app.cy.ts.cache": [
-      "apps/admin-e2e/cypress.config.ts",
-      "@nx/cypress/plugin"
-    ],
-    "targets.e2e-ci--src/e2e/app.cy.ts.options": [
-      "apps/admin-e2e/cypress.config.ts",
-      "@nx/cypress/plugin"
-    ],
-    "targets.e2e-ci--src/e2e/app.cy.ts.executor": [
-      "apps/admin-e2e/cypress.config.ts",
-      "@nx/cypress/plugin"
-    ],
-    "targets.e2e-ci--src/e2e/app.cy.ts.options.cwd": [
-      "apps/admin-e2e/cypress.config.ts",
-      "@nx/cypress/plugin"
-    ],
-    "targets.e2e-ci--src/e2e/app.cy.ts.options.command": [
-      "apps/admin-e2e/cypress.config.ts",
-      "@nx/cypress/plugin"
-    ],
-    "targets.e2e-ci--src/e2e/login.cy.ts": [
-      "apps/admin-e2e/cypress.config.ts",
-      "@nx/cypress/plugin"
-    ],
-    "targets.e2e-ci--src/e2e/login.cy.ts.outputs": [
-      "apps/admin-e2e/cypress.config.ts",
-      "@nx/cypress/plugin"
-    ],
-    "targets.e2e-ci--src/e2e/login.cy.ts.inputs": [
-      "apps/admin-e2e/cypress.config.ts",
-      "@nx/cypress/plugin"
-    ],
-    "targets.e2e-ci--src/e2e/login.cy.ts.cache": [
-      "apps/admin-e2e/cypress.config.ts",
-      "@nx/cypress/plugin"
-    ],
-    "targets.e2e-ci--src/e2e/login.cy.ts.options": [
-      "apps/admin-e2e/cypress.config.ts",
-      "@nx/cypress/plugin"
-    ],
-    "targets.e2e-ci--src/e2e/login.cy.ts.executor": [
-      "apps/admin-e2e/cypress.config.ts",
-      "@nx/cypress/plugin"
-    ],
-    "targets.e2e-ci--src/e2e/login.cy.ts.options.cwd": [
-      "apps/admin-e2e/cypress.config.ts",
-      "@nx/cypress/plugin"
-    ],
-    "targets.e2e-ci--src/e2e/login.cy.ts.options.command": [
-      "apps/admin-e2e/cypress.config.ts",
-      "@nx/cypress/plugin"
-    ],
-    "targets.e2e-ci": [
-      "apps/admin-e2e/cypress.config.ts",
-      "@nx/cypress/plugin"
-    ],
-    "targets.e2e-ci.executor": [
-      "apps/admin-e2e/cypress.config.ts",
-      "@nx/cypress/plugin"
-    ],
-    "targets.e2e-ci.cache": [
-      "apps/admin-e2e/cypress.config.ts",
-      "@nx/cypress/plugin"
-    ],
-    "targets.e2e-ci.inputs": [
-      "apps/admin-e2e/cypress.config.ts",
-      "@nx/cypress/plugin"
-    ],
-    "targets.e2e-ci.outputs": [
-      "apps/admin-e2e/cypress.config.ts",
-      "@nx/cypress/plugin"
-    ],
-    "targets.e2e-ci.dependsOn": [
-      "apps/admin-e2e/cypress.config.ts",
-      "@nx/cypress/plugin"
-    ],
-    "targets.e2e.dependsOn": [
-      "apps/admin-e2e/project.json",
-      "nx/core/target-defaults"
-    ],
-    "targets.lint": ["apps/admin-e2e/project.json", "nx/core/project-json"],
-    "targets.lint.executor": [
-      "apps/admin-e2e/project.json",
-      "nx/core/project-json"
-    ],
-    "targets.lint.inputs": [
-      "apps/admin-e2e/project.json",
-      "nx/core/target-defaults"
-    ],
-    "targets.lint.cache": [
-      "apps/admin-e2e/project.json",
-      "nx/core/target-defaults"
-    ],
-    "name": ["apps/admin-e2e/project.json", "nx/core/project-json"],
-    "$schema": ["apps/admin-e2e/project.json", "nx/core/project-json"],
-    "sourceRoot": ["apps/admin-e2e/project.json", "nx/core/project-json"],
-    "tags": ["apps/admin-e2e/project.json", "nx/core/project-json"],
-    "implicitDependencies": [
-      "apps/admin-e2e/project.json",
-      "nx/core/project-json"
-    ],
-    "implicitDependencies.admin": [
-      "apps/admin-e2e/project.json",
-      "nx/core/project-json"
-    ],
-    "targets.lint.outputs": [
-      "apps/admin-e2e/project.json",
-      "nx/core/project-json"
-    ]
-  }
+      "data": {
+         "metadata": {
+            "targetGroups": {
+               "E2E (CI)": [
+                  "e2e-ci--src/e2e/app.cy.ts",
+                  "e2e-ci--src/e2e/login.cy.ts",
+                  "e2e-ci"
+               ]
+            }
+         },
+         "root": "apps/admin-e2e",
+         "projectType": "application",
+         "targets": {
+            "e2e": {
+               "cache": true,
+               "inputs": ["default", "^production"],
+               "outputs": [
+                  "{workspaceRoot}/dist/cypress/apps/admin-e2e/videos",
+                  "{workspaceRoot}/dist/cypress/apps/admin-e2e/screenshots"
+               ],
+               "executor": "nx:run-commands",
+               "dependsOn": ["^build"],
+               "options": {
+                  "cwd": "apps/admin-e2e",
+                  "command": "cypress run"
+               },
+               "configurations": {
+                  "production": {
+                     "command": "cypress run --env webServerCommand=\"nx run admin:preview\""
+                  }
+               },
+               "metadata": {
+                  "technologies": ["cypress"]
+               }
+            },
+            "e2e-ci--src/e2e/app.cy.ts": {
+               "outputs": [
+                  "{workspaceRoot}/dist/cypress/apps/admin-e2e/videos",
+                  "{workspaceRoot}/dist/cypress/apps/admin-e2e/screenshots"
+               ],
+               "inputs": [
+                  "default",
+                  "^production",
+                  {
+                     "externalDependencies": ["cypress"]
+                  }
+               ],
+               "cache": true,
+               "options": {
+                  "cwd": "apps/admin-e2e",
+                  "command": "cypress run --env webServerCommand=\"nx run admin:serve-static\" --spec src/e2e/app.cy.ts"
+               },
+               "executor": "nx:run-commands",
+               "configurations": {},
+               "metadata": {
+                  "technologies": ["cypress"]
+               }
+            },
+            "e2e-ci--src/e2e/login.cy.ts": {
+               "outputs": [
+                  "{workspaceRoot}/dist/cypress/apps/admin-e2e/videos",
+                  "{workspaceRoot}/dist/cypress/apps/admin-e2e/screenshots"
+               ],
+               "inputs": [
+                  "default",
+                  "^production",
+                  {
+                     "externalDependencies": ["cypress"]
+                  }
+               ],
+               "cache": true,
+               "options": {
+                  "cwd": "apps/admin-e2e",
+                  "command": "cypress run --env webServerCommand=\"nx run admin:serve-static\" --spec src/e2e/login.cy.ts"
+               },
+               "executor": "nx:run-commands",
+               "configurations": {},
+               "metadata": {
+                  "technologies": ["cypress"]
+               }
+            },
+            "e2e-ci": {
+               "executor": "nx:noop",
+               "cache": true,
+               "inputs": [
+                  "default",
+                  "^production",
+                  {
+                     "externalDependencies": ["cypress"]
+                  }
+               ],
+               "outputs": [
+                  "{workspaceRoot}/dist/cypress/apps/admin-e2e/videos",
+                  "{workspaceRoot}/dist/cypress/apps/admin-e2e/screenshots"
+               ],
+               "dependsOn": [
+                  {
+                     "target": "e2e-ci--src/e2e/app.cy.ts",
+                     "projects": "self",
+                     "params": "forward"
+                  },
+                  {
+                     "target": "e2e-ci--src/e2e/login.cy.ts",
+                     "projects": "self",
+                     "params": "forward"
+                  }
+               ],
+               "options": {},
+               "configurations": {},
+               "metadata": {
+                  "technologies": ["cypress"]
+               }
+            },
+            "lint": {
+               "executor": "@nx/eslint:lint",
+               "inputs": ["default", "{workspaceRoot}/.eslintrc.json"],
+               "cache": true,
+               "outputs": ["{options.outputFile}"],
+               "options": {},
+               "configurations": {},
+               "metadata": {
+                  "technologies": ["eslint"]
+               }
+            }
+         },
+         "name": "admin-e2e",
+         "$schema": "../../node_modules/nx/schemas/project-schema.json",
+         "sourceRoot": "apps/admin-e2e/src",
+         "tags": [],
+         "implicitDependencies": ["admin"]
+      }
+   },
+   "sourceMap": {
+      "root": ["apps/admin-e2e/project.json", "nx/core/project-json"],
+      "projectType": ["apps/admin-e2e/project.json", "nx/core/project-json"],
+      "targets": ["apps/admin-e2e/project.json", "nx/core/project-json"],
+      "targets.e2e": ["apps/admin-e2e/project.json", "nx/core/target-defaults"],
+      "targets.e2e.options": [
+         "apps/admin-e2e/cypress.config.ts",
+         "@nx/cypress/plugin"
+      ],
+      "targets.e2e.cache": [
+         "apps/admin-e2e/project.json",
+         "nx/core/target-defaults"
+      ],
+      "targets.e2e.inputs": [
+         "apps/admin-e2e/project.json",
+         "nx/core/target-defaults"
+      ],
+      "targets.e2e.outputs": [
+         "apps/admin-e2e/cypress.config.ts",
+         "@nx/cypress/plugin"
+      ],
+      "targets.e2e.configurations": [
+         "apps/admin-e2e/cypress.config.ts",
+         "@nx/cypress/plugin"
+      ],
+      "targets.e2e.executor": [
+         "apps/admin-e2e/cypress.config.ts",
+         "@nx/cypress/plugin"
+      ],
+      "targets.e2e.options.cwd": [
+         "apps/admin-e2e/cypress.config.ts",
+         "@nx/cypress/plugin"
+      ],
+      "targets.e2e.options.command": [
+         "apps/admin-e2e/cypress.config.ts",
+         "@nx/cypress/plugin"
+      ],
+      "targets.e2e.configurations.production": [
+         "apps/admin-e2e/cypress.config.ts",
+         "@nx/cypress/plugin"
+      ],
+      "targets.e2e.configurations.production.command": [
+         "apps/admin-e2e/cypress.config.ts",
+         "@nx/cypress/plugin"
+      ],
+      "targets.e2e-ci--src/e2e/app.cy.ts": [
+         "apps/admin-e2e/cypress.config.ts",
+         "@nx/cypress/plugin"
+      ],
+      "targets.e2e-ci--src/e2e/app.cy.ts.outputs": [
+         "apps/admin-e2e/cypress.config.ts",
+         "@nx/cypress/plugin"
+      ],
+      "targets.e2e-ci--src/e2e/app.cy.ts.inputs": [
+         "apps/admin-e2e/cypress.config.ts",
+         "@nx/cypress/plugin"
+      ],
+      "targets.e2e-ci--src/e2e/app.cy.ts.cache": [
+         "apps/admin-e2e/cypress.config.ts",
+         "@nx/cypress/plugin"
+      ],
+      "targets.e2e-ci--src/e2e/app.cy.ts.options": [
+         "apps/admin-e2e/cypress.config.ts",
+         "@nx/cypress/plugin"
+      ],
+      "targets.e2e-ci--src/e2e/app.cy.ts.executor": [
+         "apps/admin-e2e/cypress.config.ts",
+         "@nx/cypress/plugin"
+      ],
+      "targets.e2e-ci--src/e2e/app.cy.ts.options.cwd": [
+         "apps/admin-e2e/cypress.config.ts",
+         "@nx/cypress/plugin"
+      ],
+      "targets.e2e-ci--src/e2e/app.cy.ts.options.command": [
+         "apps/admin-e2e/cypress.config.ts",
+         "@nx/cypress/plugin"
+      ],
+      "targets.e2e-ci--src/e2e/login.cy.ts": [
+         "apps/admin-e2e/cypress.config.ts",
+         "@nx/cypress/plugin"
+      ],
+      "targets.e2e-ci--src/e2e/login.cy.ts.outputs": [
+         "apps/admin-e2e/cypress.config.ts",
+         "@nx/cypress/plugin"
+      ],
+      "targets.e2e-ci--src/e2e/login.cy.ts.inputs": [
+         "apps/admin-e2e/cypress.config.ts",
+         "@nx/cypress/plugin"
+      ],
+      "targets.e2e-ci--src/e2e/login.cy.ts.cache": [
+         "apps/admin-e2e/cypress.config.ts",
+         "@nx/cypress/plugin"
+      ],
+      "targets.e2e-ci--src/e2e/login.cy.ts.options": [
+         "apps/admin-e2e/cypress.config.ts",
+         "@nx/cypress/plugin"
+      ],
+      "targets.e2e-ci--src/e2e/login.cy.ts.executor": [
+         "apps/admin-e2e/cypress.config.ts",
+         "@nx/cypress/plugin"
+      ],
+      "targets.e2e-ci--src/e2e/login.cy.ts.options.cwd": [
+         "apps/admin-e2e/cypress.config.ts",
+         "@nx/cypress/plugin"
+      ],
+      "targets.e2e-ci--src/e2e/login.cy.ts.options.command": [
+         "apps/admin-e2e/cypress.config.ts",
+         "@nx/cypress/plugin"
+      ],
+      "targets.e2e-ci": [
+         "apps/admin-e2e/cypress.config.ts",
+         "@nx/cypress/plugin"
+      ],
+      "targets.e2e-ci.executor": [
+         "apps/admin-e2e/cypress.config.ts",
+         "@nx/cypress/plugin"
+      ],
+      "targets.e2e-ci.cache": [
+         "apps/admin-e2e/cypress.config.ts",
+         "@nx/cypress/plugin"
+      ],
+      "targets.e2e-ci.inputs": [
+         "apps/admin-e2e/cypress.config.ts",
+         "@nx/cypress/plugin"
+      ],
+      "targets.e2e-ci.outputs": [
+         "apps/admin-e2e/cypress.config.ts",
+         "@nx/cypress/plugin"
+      ],
+      "targets.e2e-ci.dependsOn": [
+         "apps/admin-e2e/cypress.config.ts",
+         "@nx/cypress/plugin"
+      ],
+      "targets.e2e.dependsOn": [
+         "apps/admin-e2e/project.json",
+         "nx/core/target-defaults"
+      ],
+      "targets.lint": ["apps/admin-e2e/project.json", "nx/core/project-json"],
+      "targets.lint.executor": [
+         "apps/admin-e2e/project.json",
+         "nx/core/project-json"
+      ],
+      "targets.lint.inputs": [
+         "apps/admin-e2e/project.json",
+         "nx/core/target-defaults"
+      ],
+      "targets.lint.cache": [
+         "apps/admin-e2e/project.json",
+         "nx/core/target-defaults"
+      ],
+      "name": ["apps/admin-e2e/project.json", "nx/core/project-json"],
+      "$schema": ["apps/admin-e2e/project.json", "nx/core/project-json"],
+      "sourceRoot": ["apps/admin-e2e/project.json", "nx/core/project-json"],
+      "tags": ["apps/admin-e2e/project.json", "nx/core/project-json"],
+      "implicitDependencies": [
+         "apps/admin-e2e/project.json",
+         "nx/core/project-json"
+      ],
+      "implicitDependencies.admin": [
+         "apps/admin-e2e/project.json",
+         "nx/core/project-json"
+      ],
+      "targets.lint.outputs": [
+         "apps/admin-e2e/project.json",
+         "nx/core/project-json"
+      ]
+   }
 }
 ```
 

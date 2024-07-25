@@ -1,145 +1,146 @@
 import type { ProjectConfiguration, Tree } from '@nx/devkit';
 import {
-  createProjectGraphAsync,
-  formatFiles,
-  readProjectConfiguration,
-  visitNotIgnoredFiles,
+   createProjectGraphAsync,
+   formatFiles,
+   readProjectConfiguration,
+   visitNotIgnoredFiles,
 } from '@nx/devkit';
 import { tsquery } from '@phenomnomnominal/tsquery';
 import type {
-  CallExpression,
-  ObjectLiteralExpression,
-  PropertyAssignment,
-  SourceFile,
+   CallExpression,
+   ObjectLiteralExpression,
+   PropertyAssignment,
+   SourceFile,
 } from 'typescript';
 import {
-  createPrinter,
-  EmitHint,
-  factory,
-  isIdentifier,
-  isObjectLiteralExpression,
-  isPropertyAccessExpression,
-  isPropertyAssignment,
-  isStringLiteralLike,
+   createPrinter,
+   EmitHint,
+   factory,
+   isIdentifier,
+   isObjectLiteralExpression,
+   isPropertyAccessExpression,
+   isPropertyAssignment,
+   isStringLiteralLike,
 } from 'typescript';
 
 export default async function (tree: Tree) {
-  const printer = createPrinter();
-  const projects = await getProjectsWithAngularRouter(tree);
+   const printer = createPrinter();
+   const projects = await getProjectsWithAngularRouter(tree);
 
-  for (const project of projects) {
-    visitNotIgnoredFiles(tree, project.root, (filePath) => {
-      // we are only interested in .ts files
-      if (!filePath.endsWith('.ts')) {
-        return;
-      }
+   for (const project of projects) {
+      visitNotIgnoredFiles(tree, project.root, (filePath) => {
+         // we are only interested in .ts files
+         if (!filePath.endsWith('.ts')) {
+            return;
+         }
 
-      const content = tree.read(filePath, 'utf-8');
-      const ast = tsquery.ast(content);
-      const routerModuleForRootCall = getRouterModuleForRootCall(ast);
-      if (!routerModuleForRootCall) {
-        return;
-      }
+         const content = tree.read(filePath, 'utf-8');
+         const ast = tsquery.ast(content);
+         const routerModuleForRootCall = getRouterModuleForRootCall(ast);
+         if (!routerModuleForRootCall) {
+            return;
+         }
 
-      const initialNavigationAssignment = getInitialNavigationAssignment(
-        routerModuleForRootCall.arguments[1] as ObjectLiteralExpression
-      );
-      if (!initialNavigationAssignment) {
-        return;
-      }
+         const initialNavigationAssignment = getInitialNavigationAssignment(
+            routerModuleForRootCall.arguments[1] as ObjectLiteralExpression
+         );
+         if (!initialNavigationAssignment) {
+            return;
+         }
 
-      const updatedInitialNavigationAssignment = printer.printNode(
-        EmitHint.Unspecified,
-        factory.updatePropertyAssignment(
-          initialNavigationAssignment,
-          initialNavigationAssignment.name,
-          factory.createIdentifier(`'enabledBlocking'`)
-        ),
-        initialNavigationAssignment.getSourceFile()
-      );
-      const updatedContent = `${content.slice(
-        0,
-        initialNavigationAssignment.getStart()
-      )}${updatedInitialNavigationAssignment}${content.slice(
-        initialNavigationAssignment.getEnd()
-      )}`;
+         const updatedInitialNavigationAssignment = printer.printNode(
+            EmitHint.Unspecified,
+            factory.updatePropertyAssignment(
+               initialNavigationAssignment,
+               initialNavigationAssignment.name,
+               factory.createIdentifier(`'enabledBlocking'`)
+            ),
+            initialNavigationAssignment.getSourceFile()
+         );
+         const updatedContent = `${content.slice(
+            0,
+            initialNavigationAssignment.getStart()
+         )}${updatedInitialNavigationAssignment}${content.slice(
+            initialNavigationAssignment.getEnd()
+         )}`;
 
-      tree.write(filePath, updatedContent);
-    });
-  }
+         tree.write(filePath, updatedContent);
+      });
+   }
 
-  await formatFiles(tree);
+   await formatFiles(tree);
 }
 
 function getInitialNavigationAssignment(
-  extraOptionsLiteral: ObjectLiteralExpression
+   extraOptionsLiteral: ObjectLiteralExpression
 ): PropertyAssignment | null {
-  for (const prop of extraOptionsLiteral.properties) {
-    if (
-      isPropertyAssignment(prop) &&
-      (isIdentifier(prop.name) || isStringLiteralLike(prop.name)) &&
-      prop.name.text === 'initialNavigation' &&
-      needsMigration(prop)
-    ) {
-      return prop;
-    }
-  }
+   for (const prop of extraOptionsLiteral.properties) {
+      if (
+         isPropertyAssignment(prop) &&
+         (isIdentifier(prop.name) || isStringLiteralLike(prop.name)) &&
+         prop.name.text === 'initialNavigation' &&
+         needsMigration(prop)
+      ) {
+         return prop;
+      }
+   }
 
-  return null;
+   return null;
 }
 
 async function getProjectsWithAngularRouter(
-  tree: Tree
+   tree: Tree
 ): Promise<ProjectConfiguration[]> {
-  const projectGraph = await createProjectGraphAsync();
+   const projectGraph = await createProjectGraphAsync();
 
-  return Object.entries(projectGraph.dependencies)
-    .filter(([node, dep]) =>
-      dep.some(
-        ({ target }) =>
-          target === 'npm:@angular/router' &&
-          !projectGraph.externalNodes?.[node]
+   return Object.entries(projectGraph.dependencies)
+      .filter(([node, dep]) =>
+         dep.some(
+            ({ target }) =>
+               target === 'npm:@angular/router' &&
+               !projectGraph.externalNodes?.[node]
+         )
       )
-    )
-    .map(([projectName]) => readProjectConfiguration(tree, projectName));
+      .map(([projectName]) => readProjectConfiguration(tree, projectName));
 }
 
 function getRouterModuleForRootCall(
-  sourceFile: SourceFile
+   sourceFile: SourceFile
 ): CallExpression | null {
-  // narrow down call expressions
-  const routerModuleForRootCalls = tsquery(
-    sourceFile,
-    'CallExpression:has(PropertyAccessExpression:has(Identifier[name=RouterModule]):has(Identifier[name=forRoot]))',
-    { visitAllChildren: true }
-  ) as CallExpression[];
+   // narrow down call expressions
+   const routerModuleForRootCalls = tsquery(
+      sourceFile,
+      'CallExpression:has(PropertyAccessExpression:has(Identifier[name=RouterModule]):has(Identifier[name=forRoot]))',
+      { visitAllChildren: true }
+   ) as CallExpression[];
 
-  for (const node of routerModuleForRootCalls) {
-    if (
-      isRouterModuleForRoot(node) &&
-      node.arguments.length >= 2 &&
-      isObjectLiteralExpression(node.arguments[1])
-    ) {
-      return node;
-    }
-  }
+   for (const node of routerModuleForRootCalls) {
+      if (
+         isRouterModuleForRoot(node) &&
+         node.arguments.length >= 2 &&
+         isObjectLiteralExpression(node.arguments[1])
+      ) {
+         return node;
+      }
+   }
 
-  return null;
+   return null;
 }
 
 function isRouterModuleForRoot(node: CallExpression): boolean {
-  // make sure is not an outer call expression (NgModule call)
-  return (
-    isPropertyAccessExpression(node.expression) &&
-    isIdentifier(node.expression.expression) &&
-    node.expression.expression.text === 'RouterModule' &&
-    isIdentifier(node.expression.name) &&
-    node.expression.name.text === 'forRoot'
-  );
+   // make sure is not an outer call expression (NgModule call)
+   return (
+      isPropertyAccessExpression(node.expression) &&
+      isIdentifier(node.expression.expression) &&
+      node.expression.expression.text === 'RouterModule' &&
+      isIdentifier(node.expression.name) &&
+      node.expression.name.text === 'forRoot'
+   );
 }
 
 function needsMigration(node: PropertyAssignment): boolean {
-  return (
-    isStringLiteralLike(node.initializer) && node.initializer.text === 'enabled'
-  );
+   return (
+      isStringLiteralLike(node.initializer) &&
+      node.initializer.text === 'enabled'
+   );
 }

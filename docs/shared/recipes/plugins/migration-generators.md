@@ -18,22 +18,22 @@ This command will update the following files:
 
 ```json {% fileName="package.json" %}
 {
-  "nx-migrations": {
-    "migrations": "./migrations.json"
-  }
+   "nx-migrations": {
+      "migrations": "./migrations.json"
+   }
 }
 ```
 
 ```json {% fileName="migrations.json" %}
 {
-  "generators": {
-    "change-executor-name": {
-      "version": "2.0.1",
-      "description": "Changes the executor name from oldExecutorName to newExecutorName",
-      "cli": "nx",
-      "implementation": "./src/migrations/change-executor-name/change-executor-name"
-    }
-  }
+   "generators": {
+      "change-executor-name": {
+         "version": "2.0.1",
+         "description": "Changes the executor name from oldExecutorName to newExecutorName",
+         "cli": "nx",
+         "implementation": "./src/migrations/change-executor-name/change-executor-name"
+      }
+   }
 }
 ```
 
@@ -45,16 +45,17 @@ And it creates a blank generator under: `libs/pluginName/src/migrations/change-e
 import { getProjects, Tree, updateProjectConfiguration } from '@nx/devkit';
 
 export function changeExecutorNameToNewName(tree: Tree) {
-  const projects = getProjects(tree);
+   const projects = getProjects(tree);
 
-  for (const [name, project] of projects) {
-    if (
-      project.targets?.build?.executor === '@myorg/pluginName:oldExecutorName'
-    ) {
-      project.targets.build.executor = '@myorg/pluginName:newExecutorName';
-      updateProjectConfiguration(tree, name, project);
-    }
-  }
+   for (const [name, project] of projects) {
+      if (
+         project.targets?.build?.executor ===
+         '@myorg/pluginName:oldExecutorName'
+      ) {
+         project.targets.build.executor = '@myorg/pluginName:newExecutorName';
+         updateProjectConfiguration(tree, name, project);
+      }
+   }
 }
 
 export default changeExecutorNameToNewName;
@@ -66,21 +67,21 @@ If you just need to change dependency versions, you can add some configuration o
 
 ```json {% fileName="migrations.json" %}
 {
-  "packageJsonUpdates": {
-    // this can be any name
-    "12.10.0": {
-      // this is version at which the change will be applied
-      "version": "12.10.0-beta.2",
-      "packages": {
-        // the name of the dependency to update
-        "@testing-library/react": {
-          // the version to set the dependency to
-          "version": "11.2.6",
-          // When true, the dependency will be added if it isn't there.  When false, the dependency is skipped if it isn't already present.
-          "alwaysAddToPackageJson": false
-        }
+   "packageJsonUpdates": {
+      // this can be any name
+      "12.10.0": {
+         // this is version at which the change will be applied
+         "version": "12.10.0-beta.2",
+         "packages": {
+            // the name of the dependency to update
+            "@testing-library/react": {
+               // the version to set the dependency to
+               "version": "11.2.6",
+               // When true, the dependency will be added if it isn't there.  When false, the dependency is skipped if it isn't already present.
+               "alwaysAddToPackageJson": false
+            }
+         }
       }
-    }
-  }
+   }
 }
 ```

@@ -6,7 +6,7 @@ To help troubleshoot installations set `verboseLogging` to `'true'`:
 
 ```yaml
 image:
-  tag: 'latest'
+   tag: 'latest'
 
 verboseLogging: 'true'
 ```

@@ -9,10 +9,10 @@ into multiple smaller
 remote applications that are built independently. There are some costs to slicing an application through Module
 Federation:
 
-- Cognitive overhead of developing multiple applications versus a SPA.
-- Coordinating build and deployment across many applications is a huge headache, especially in a multi-repo setup.
-- Version-Mismatch-Hell where different applications are deployed with different versions of shared libraries can lead
-  to unexpected errors.
+-  Cognitive overhead of developing multiple applications versus a SPA.
+-  Coordinating build and deployment across many applications is a huge headache, especially in a multi-repo setup.
+-  Version-Mismatch-Hell where different applications are deployed with different versions of shared libraries can lead
+   to unexpected errors.
 
 Nx provides the best experience for teams that want faster builds, but want to also minimize the downsides that come
 with Module Federation. Starting in Nx 14,
@@ -23,11 +23,11 @@ we provide specialized generators, executors, and utilities that make Module Fed
 Whether Module Federation makes sense for your team depends on the size of your application. Although Nx hides most of
 the complexity around Module Federation, it still comes with some downsides:
 
-- Developers need to think about which remotes they are working on, since it is a waste of CPU and memory to run _all_
-  remotes in development mode. In practice this may not be a problem if the teams are already divided by domain or
-  feature.
-- Increased orchestration since remotes are independent of each other, shared state may require the host application to
-  coordinate it between remotes. For example, sharing Redux state across remotes is more complicated versus a SPA.
+-  Developers need to think about which remotes they are working on, since it is a waste of CPU and memory to run _all_
+   remotes in development mode. In practice this may not be a problem if the teams are already divided by domain or
+   feature.
+-  Increased orchestration since remotes are independent of each other, shared state may require the host application to
+   coordinate it between remotes. For example, sharing Redux state across remotes is more complicated versus a SPA.
 
 {% callout type="note" title="Nx Saves Machine Resources" %}
 As Nx knows the remote applications that your host application depends on, it will serve your remote applications automatically when you serve your host.  
@@ -180,7 +180,7 @@ import { withModuleFederation } from '@nx/react/module-federation';
 import moduleFederationConfig from './module-federation.config';
 
 export default withModuleFederation({
-  ...moduleFederationConfig,
+   ...moduleFederationConfig,
 });
 ```
 
@@ -199,23 +199,23 @@ import { LicenseWebpackPlugin } from 'license-webpack-plugin';
 import { resolve } from 'path';
 
 export default async function (wco) {
-  const wmf = await withModuleFederation(config);
-  return wmf({
-    ...wco,
-    plugins: [
-      ...(wco.plugins ?? []),
-      new LicenseWebpackPlugin({
-        stats: {
-          warnings: false,
-          errors: false,
-        },
-        perChunkOutput: false,
-        outputFilename: '3rdpartylicenses.txt',
-        skipChildCompilers: true,
-        modulesDirectories: [resolve(__dirname, '../../node_modules')],
-      }),
-    ],
-  });
+   const wmf = await withModuleFederation(config);
+   return wmf({
+      ...wco,
+      plugins: [
+         ...(wco.plugins ?? []),
+         new LicenseWebpackPlugin({
+            stats: {
+               warnings: false,
+               errors: false,
+            },
+            perChunkOutput: false,
+            outputFilename: '3rdpartylicenses.txt',
+            skipChildCompilers: true,
+            modulesDirectories: [resolve(__dirname, '../../node_modules')],
+         }),
+      ],
+   });
 }
 ```
 
@@ -230,8 +230,8 @@ remotes as well.
 import { ModuleFederationConfig } from '@nx/webpack';
 
 export const config: ModuleFederationConfig = {
-  name: 'host',
-  remotes: ['shop', 'cart', 'about'],
+   name: 'host',
+   remotes: ['shop', 'cart', 'about'],
 };
 
 export default config;
@@ -251,8 +251,8 @@ manually.
 In the previous section, we saw `withModuleFederation` used in the webpack config. This function is an abstraction on
 top of webpack's `ModuleFederationPlugin` with some Nx-specific behavior.
 
-- All libraries (npm and workspace) are shared singletons by default, so you don't manually configure them.
-- Remotes are referenced by name only, since Nx knows which ports each remote is running on (in development mode).
+-  All libraries (npm and workspace) are shared singletons by default, so you don't manually configure them.
+-  Remotes are referenced by name only, since Nx knows which ports each remote is running on (in development mode).
 
 With Nx, the developer experience (DX) when working with Module Federation matches more closely to development on a SPA.
 You don't have to worry about managing a bunch of configuration, and most things just work out of the box.
@@ -270,14 +270,14 @@ the `shared: (libraryName, sharedConfig) => sharedConfig` function in your confi
 import { ModuleFederationConfig } from '@nx/webpack';
 
 export const config: ModuleFederationConfig = {
-  name: 'host',
-  remotes: ['shop', 'cart', 'about'],
-  shared: (name, config) => {
-    // We want lodash to be tree shaken, and bundled into each host/remote separately.
-    if (name === 'lodash') {
-      return false;
-    }
-  },
+   name: 'host',
+   remotes: ['shop', 'cart', 'about'],
+   shared: (name, config) => {
+      // We want lodash to be tree shaken, and bundled into each host/remote separately.
+      if (name === 'lodash') {
+         return false;
+      }
+   },
 };
 ```
 
@@ -346,9 +346,9 @@ statically from cache.
 
 In addition to computation caching, Nx Cloud also comes with:
 
-- Distributed task execution, which simplifies your CI/CD setup, and speeds up your builds.
-- GitHub integration, so you can easily access important information without digging through a bunch of CI/CD logs.
-- Actionable insights, which improve caching and task distribution.
+-  Distributed task execution, which simplifies your CI/CD setup, and speeds up your builds.
+-  GitHub integration, so you can easily access important information without digging through a bunch of CI/CD logs.
+-  Actionable insights, which improve caching and task distribution.
 
 ![Nx Cloud run details](/shared/concepts/module-federation/nx-cloud.png)
 
@@ -361,8 +361,8 @@ the following line to the `host`'s project configuration.
 
 ```jsonc {% fileName="apps/host/project.json" %}
 {
-  //...
-  "implicitDependencies": ["about", "shop", "cart"]
+   //...
+   "implicitDependencies": ["about", "shop", "cart"]
 }
 ```
 
@@ -374,12 +374,12 @@ import { withModuleFederation } from '@nx/react/module-federation';
 import moduleFederationConfig from './module-federation.config';
 
 export default withModuleFederation({
-  ...moduleFederationConfig,
-  remotes: [
-    ['shop', 'http://localhost:3000/shop'],
-    ['cart', 'http://localhost:3000/cart'],
-    ['about', 'http://localhost:3000/about'],
-  ],
+   ...moduleFederationConfig,
+   remotes: [
+      ['shop', 'http://localhost:3000/shop'],
+      ['cart', 'http://localhost:3000/cart'],
+      ['about', 'http://localhost:3000/about'],
+   ],
 });
 ```
 
@@ -475,5 +475,5 @@ all the code to building the largest remote, which is often an order of magnitud
 
 ## Resources
 
-- [React Module Federation example](https://github.com/nrwl/react-module-federation)
-- [Angular Module Federation example](https://github.com/nrwl/ng-module-federation)
+-  [React Module Federation example](https://github.com/nrwl/react-module-federation)
+-  [Angular Module Federation example](https://github.com/nrwl/ng-module-federation)

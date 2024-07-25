@@ -12,51 +12,51 @@ export type { Tree, FileChange } from './generators/tree';
  * @category Workspace
  */
 export type {
-  WorkspaceJsonConfiguration,
-  ProjectsConfigurations,
-  TargetDependencyConfig,
-  TargetConfiguration,
-  ProjectConfiguration,
-  ProjectType,
-  Workspace,
+   WorkspaceJsonConfiguration,
+   ProjectsConfigurations,
+   TargetDependencyConfig,
+   TargetConfiguration,
+   ProjectConfiguration,
+   ProjectType,
+   Workspace,
 } from './config/workspace-json-project-json';
 
 /**
  * @category Workspace
  */
 export type {
-  Generator,
-  GeneratorCallback,
-  PromiseExecutor,
-  AsyncIteratorExecutor,
-  Executor,
-  ExecutorContext,
-  TaskGraphExecutor,
-  GeneratorsJson,
-  ExecutorsJson,
-  MigrationsJson,
-  CustomHasher,
-  HasherContext,
+   Generator,
+   GeneratorCallback,
+   PromiseExecutor,
+   AsyncIteratorExecutor,
+   Executor,
+   ExecutorContext,
+   TaskGraphExecutor,
+   GeneratorsJson,
+   ExecutorsJson,
+   MigrationsJson,
+   CustomHasher,
+   HasherContext,
 } from './config/misc-interfaces';
 
 export { workspaceLayout } from './config/configuration';
 
 export type {
-  NxPlugin,
-  NxPluginV2,
-  CreateNodes,
-  CreateNodesFunction,
-  CreateNodesResult,
-  CreateNodesContext,
-  CreateNodesContextV2,
-  CreateNodesFunctionV2,
-  CreateNodesResultV2,
-  CreateNodesV2,
-  CreateDependencies,
-  CreateDependenciesContext,
-  CreateMetadata,
-  CreateMetadataContext,
-  ProjectsMetadata,
+   NxPlugin,
+   NxPluginV2,
+   CreateNodes,
+   CreateNodesFunction,
+   CreateNodesResult,
+   CreateNodesContext,
+   CreateNodesContextV2,
+   CreateNodesFunctionV2,
+   CreateNodesResultV2,
+   CreateNodesV2,
+   CreateDependencies,
+   CreateDependenciesContext,
+   CreateMetadata,
+   CreateMetadataContext,
+   ProjectsMetadata,
 } from './project-graph/plugins';
 
 export { AggregateCreateNodesError } from './project-graph/error-types';
@@ -64,8 +64,8 @@ export { AggregateCreateNodesError } from './project-graph/error-types';
 export { createNodesFromFiles } from './project-graph/plugins';
 
 export type {
-  NxPluginV1,
-  ProjectTargetConfigurator,
+   NxPluginV1,
+   ProjectTargetConfigurator,
 } from './utils/nx-plugin.deprecated';
 
 /**
@@ -77,13 +77,13 @@ export type { Task, TaskGraph } from './config/task-graph';
  * @category Workspace
  */
 export type {
-  ImplicitDependencyEntry,
-  ImplicitJsonSubsetDependency,
-  NxJsonConfiguration,
-  PluginConfiguration,
-  ExpandedPluginConfiguration,
-  TargetDefaults,
-  NxAffectedConfig,
+   ImplicitDependencyEntry,
+   ImplicitJsonSubsetDependency,
+   NxJsonConfiguration,
+   PluginConfiguration,
+   ExpandedPluginConfiguration,
+   TargetDefaults,
+   NxAffectedConfig,
 } from './config/nx-json';
 
 /**
@@ -105,10 +105,10 @@ export type { PackageManager } from './utils/package-manager';
  * @category Package Manager
  */
 export {
-  getPackageManagerCommand,
-  detectPackageManager,
-  getPackageManagerVersion,
-  isWorkspacesEnabled,
+   getPackageManagerCommand,
+   detectPackageManager,
+   getPackageManagerVersion,
+   isWorkspacesEnabled,
 } from './utils/package-manager';
 
 /**
@@ -124,11 +124,11 @@ export { runExecutor } from './command-line/run/run';
  * @category Generators
  */
 export {
-  addProjectConfiguration,
-  readProjectConfiguration,
-  removeProjectConfiguration,
-  updateProjectConfiguration,
-  getProjects,
+   addProjectConfiguration,
+   readProjectConfiguration,
+   removeProjectConfiguration,
+   updateProjectConfiguration,
+   getProjects,
 } from './generators/utils/project-configuration';
 
 /**
@@ -140,23 +140,23 @@ export { glob, globAsync } from './generators/utils/glob';
  * @category Generators
  */
 export {
-  readNxJson,
-  updateNxJson,
+   readNxJson,
+   updateNxJson,
 } from './generators/utils/project-configuration';
 
 /**
  * @category Project Graph
  */
 export type {
-  ProjectFileMap,
-  FileMap,
-  FileData,
-  ProjectGraph,
-  ProjectGraphDependency,
-  ProjectGraphNode,
-  ProjectGraphProjectNode,
-  ProjectGraphExternalNode,
-  ProjectGraphProcessorContext,
+   ProjectFileMap,
+   FileMap,
+   FileData,
+   ProjectGraph,
+   ProjectGraphDependency,
+   ProjectGraphNode,
+   ProjectGraphProjectNode,
+   ProjectGraphExternalNode,
+   ProjectGraphProcessorContext,
 } from './config/project-graph';
 
 /**
@@ -168,12 +168,12 @@ export { DependencyType } from './config/project-graph';
  * @category Project Graph
  */
 export {
-  ProjectGraphBuilder,
-  RawProjectGraphDependency,
-  DynamicDependency,
-  ImplicitDependency,
-  StaticDependency,
-  validateDependency,
+   ProjectGraphBuilder,
+   RawProjectGraphDependency,
+   DynamicDependency,
+   ImplicitDependency,
+   StaticDependency,
+   validateDependency,
 } from './project-graph/project-graph-builder';
 
 /**
@@ -220,9 +220,9 @@ export { reverse } from './project-graph/operators';
  * @category Utils
  */
 export {
-  createProjectGraphAsync,
-  readCachedProjectGraph,
-  readProjectsConfigurationFromProjectGraph,
+   createProjectGraphAsync,
+   readCachedProjectGraph,
+   readProjectsConfigurationFromProjectGraph,
 } from './project-graph/project-graph';
 
 /**
@@ -234,9 +234,9 @@ export { getOutputsForTargetAndConfiguration } from './tasks-runner/utils';
  * @category Utils
  */
 export {
-  defaultTasksRunner,
-  DefaultTasksRunnerOptions,
-  RemoteCache,
+   defaultTasksRunner,
+   DefaultTasksRunnerOptions,
+   RemoteCache,
 } from './tasks-runner/default-tasks-runner';
 
 /**

@@ -9,36 +9,36 @@
  */
 
 class ServerLogger {
-  log(...s: unknown[]) {
-    console.log(
-      this.formatLogMessage(
-        `${s
-          .map((val) => {
-            if (typeof val === 'string') {
-              return val;
-            }
-            return JSON.stringify(val);
-          })
-          .join(' ')}`
-      )
-    );
-  }
+   log(...s: unknown[]) {
+      console.log(
+         this.formatLogMessage(
+            `${s
+               .map((val) => {
+                  if (typeof val === 'string') {
+                     return val;
+                  }
+                  return JSON.stringify(val);
+               })
+               .join(' ')}`
+         )
+      );
+   }
 
-  requestLog(...s: unknown[]) {
-    this.log(`[REQUEST]: ${s.join(' ')}`);
-  }
+   requestLog(...s: unknown[]) {
+      this.log(`[REQUEST]: ${s.join(' ')}`);
+   }
 
-  watcherLog(...s: unknown[]) {
-    this.log(`[WATCHER]: ${s.join(' ')}`);
-  }
+   watcherLog(...s: unknown[]) {
+      this.log(`[WATCHER]: ${s.join(' ')}`);
+   }
 
-  private formatLogMessage(message: string) {
-    return `[NX Daemon Server] - ${this.getNow()} - ${message}`;
-  }
+   private formatLogMessage(message: string) {
+      return `[NX Daemon Server] - ${this.getNow()} - ${message}`;
+   }
 
-  private getNow() {
-    return new Date(Date.now()).toISOString();
-  }
+   private getNow() {
+      return new Date(Date.now()).toISOString();
+   }
 }
 
 export const serverLogger = new ServerLogger();

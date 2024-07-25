@@ -2,10 +2,10 @@
 
 Plug'n'Play (PnP) is an innovative installation strategy for Node that tries to solve the challenges of using `node_modules` for storing installed packages:
 
-- slow installation process
-- slow node runtime cold start
-- expensive packages diffing when adding new packages
-- no ability to restrict access and enforce hoisting/nesting
+-  slow installation process
+-  slow node runtime cold start
+-  expensive packages diffing when adding new packages
+-  no ability to restrict access and enforce hoisting/nesting
 
 Instead of using the `node_modules` folder, `PnP` creates a map from package names to hoisted package versions and creates dependency edges between packages. The packages are kept in `zip` archives which makes caching and restoring faster.
 
@@ -29,8 +29,8 @@ This command will update `.yarnrc.yml` with the path to the local yarn `bin` of 
 
 ```jsonc {% fileName="package.json" %}
 {
-  // ...
-  "packageManager": "yarn@3.6.1"
+   // ...
+   "packageManager": "yarn@3.6.1"
 }
 ```
 

@@ -1,7 +1,7 @@
 The `@nx/eslint-plugin` package is an ESLint plugin that contains a collection of recommended ESLint rule configurations which you can extend from in your own ESLint configs, as well as the following Nx-specific ESLint rules:
 
-- [enforce-module-boundaries](#enforce-module-boundaries-rule)
-- [dependency-checks](#dependency-checks-rule)
+-  [enforce-module-boundaries](#enforce-module-boundaries-rule)
+-  [dependency-checks](#dependency-checks-rule)
 
 ## Setting Up ESLint Plugin
 
@@ -50,16 +50,16 @@ The `@nx/typescript` ESLint plugin contains best practices when using TypeScript
 
 Contains configurations matching best practices when using Angular framework:
 
-- `@nx/angular`
-- `@nx/angular-template`
+-  `@nx/angular`
+-  `@nx/angular-template`
 
 ### React
 
 Contains configurations matching best practices when using React framework:
 
-- `@nx/react-base`
-- `@nx/react-jsx`
-- `@nx/react-typescript`
+-  `@nx/react-base`
+-  `@nx/react-jsx`
+-  `@nx/react-typescript`
 
 You can also use `@nx/react` which includes all three `@nx/react-*` plugins
 

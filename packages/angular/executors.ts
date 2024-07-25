@@ -12,10 +12,10 @@ export * from './src/executors/extract-i18n/extract-i18n.impl';
 import { executeDevServerBuilder } from './src/builders/dev-server/dev-server.impl';
 
 export {
-  // TODO(v20): remove this alias
-  /**
-   * @deprecated Use executeDevServerBuilder instead. It will be removed in Nx v20.
-   */
-  executeDevServerBuilder as executeWebpackDevServerBuilder,
-  executeDevServerBuilder,
+   // TODO(v20): remove this alias
+   /**
+    * @deprecated Use executeDevServerBuilder instead. It will be removed in Nx v20.
+    */
+   executeDevServerBuilder as executeWebpackDevServerBuilder,
+   executeDevServerBuilder,
 };

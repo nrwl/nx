@@ -1,4 +1,4 @@
 {
-  "extends": ["@nx/nest"],
-  "schematics": {}
+   "extends": ["@nx/nest"],
+   "schematics": {}
 }

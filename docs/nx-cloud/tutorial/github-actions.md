@@ -7,10 +7,10 @@ description: In this tutorial you'll set up continuous integration with GitHub A
 
 In this tutorial we're going to learn how to leverage Nx to setup a scalable CI pipeline on GitHub Actions. As repositories get bigger, making sure that the CI is fast, reliable and maintainable can get very challenging. Nx provides a solution.
 
-- Nx reduces wasted time in CI with the [`affected` command](/ci/features/affected).
-- Nx Replay's [remote caching](/ci/features/remote-cache) will reuse task artifacts from different CI executions making sure you will never run the same computation twice.
-- Nx Agents [efficiently distribute tasks across machines](/ci/concepts/parallelization-distribution) ensuring constant CI time regardless of the repository size. The right number of machines is allocated for each PR to ensure good performance without wasting compute.
-- Nx Atomizer [automatically splits](/ci/features/split-e2e-tasks) large e2e tests to distribute them across machines. Nx can also automatically [identify and rerun flaky e2e tests](/ci/features/flaky-tasks).
+-  Nx reduces wasted time in CI with the [`affected` command](/ci/features/affected).
+-  Nx Replay's [remote caching](/ci/features/remote-cache) will reuse task artifacts from different CI executions making sure you will never run the same computation twice.
+-  Nx Agents [efficiently distribute tasks across machines](/ci/concepts/parallelization-distribution) ensuring constant CI time regardless of the repository size. The right number of machines is allocated for each PR to ensure good performance without wasting compute.
+-  Nx Atomizer [automatically splits](/ci/features/split-e2e-tasks) large e2e tests to distribute them across machines. Nx can also automatically [identify and rerun flaky e2e tests](/ci/features/flaky-tasks).
 
 ## Example Repository
 
@@ -20,9 +20,9 @@ To follow along with this tutorial, we recommend using the [nx-shops sample repo
 
 The `nx-shops` repo is useful to demonstrate the value of the CI pipeline because it has the following characteristics:
 
-- Multiple Nx projects with interdependencies
-- Defined lint, test, build and e2e tasks
-- Running all the tasks takes more than a minute to finish
+-  Multiple Nx projects with interdependencies
+-  Defined lint, test, build and e2e tasks
+-  Running all the tasks takes more than a minute to finish
 
 To get started:
 
@@ -66,35 +66,35 @@ The key lines in the CI pipeline are:
 name: CI
 # ...
 jobs:
-  main:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+   main:
+      runs-on: ubuntu-latest
+      steps:
+         - uses: actions/checkout@v4
+           with:
+              fetch-depth: 0
 
-      - uses: pnpm/action-setup@v2
-        with:
-          version: 8
+         - uses: pnpm/action-setup@v2
+           with:
+              version: 8
 
-      # This enables task distribution via Nx Cloud
-      # Run this command as early as possible, before dependencies are installed
-      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      # Connect your workspace by running "nx connect" and uncomment this
-      # - run: pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
+         # This enables task distribution via Nx Cloud
+         # Run this command as early as possible, before dependencies are installed
+         # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
+         # Connect your workspace by running "nx connect" and uncomment this
+         # - run: pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
 
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 20
-          cache: 'pnpm'
+         - uses: actions/setup-node@v3
+           with:
+              node-version: 20
+              cache: 'pnpm'
 
-      - run: pnpm install --frozen-lockfile
-      - uses: nrwl/nx-set-shas@v4
+         - run: pnpm install --frozen-lockfile
+         - uses: nrwl/nx-set-shas@v4
 
-      # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
-      # - run: pnpm exec nx-cloud record -- echo Hello World
-      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-      - run: pnpm exec nx affected -t lint test build
+         # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+         # - run: pnpm exec nx-cloud record -- echo Hello World
+         # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
+         - run: pnpm exec nx affected -t lint test build
 ```
 
 The [`nx affected` command](/ci/features/affected) will run the specified tasks only for projects that have been affected by a particular PR, which can save a lot of time as repositories grow larger.
@@ -189,11 +189,11 @@ The affected command and Nx Replay help speed up the average CI time, but there 
 
 The Nx Agents feature
 
-- takes a command (e.g. `run-many -t build lint test e2e-ci`) and splits it into individual tasks which it then distributes across multiple agents
-- distributes tasks by considering the dependencies between them; e.g. if `e2e-ci` depends on `build`, Nx Cloud will make sure that `build` is executed before `e2e-ci`; it does this across machines
-- distributes tasks to optimize for CPU processing time and reduce idle time by taking into account historical data about how long each task takes to run
-- collects the results and logs of all the tasks and presents them in a single view
-- automatically shuts down agents when they are no longer needed
+-  takes a command (e.g. `run-many -t build lint test e2e-ci`) and splits it into individual tasks which it then distributes across multiple agents
+-  distributes tasks by considering the dependencies between them; e.g. if `e2e-ci` depends on `build`, Nx Cloud will make sure that `build` is executed before `e2e-ci`; it does this across machines
+-  distributes tasks to optimize for CPU processing time and reduce idle time by taking into account historical data about how long each task takes to run
+-  collects the results and logs of all the tasks and presents them in a single view
+-  automatically shuts down agents when they are no longer needed
 
 To enable Nx Agents, make sure the following line is uncommented in the `.github/workflows/ci.yml` file.
 
@@ -201,41 +201,41 @@ To enable Nx Agents, make sure the following line is uncommented in the `.github
 name: CI
 # ...
 jobs:
-  main:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+   main:
+      runs-on: ubuntu-latest
+      steps:
+         - uses: actions/checkout@v4
+           with:
+              fetch-depth: 0
 
-      - uses: pnpm/action-setup@v2
-        with:
-          version: 8
+         - uses: pnpm/action-setup@v2
+           with:
+              version: 8
 
-      # This enables task distribution via Nx Cloud
-      # Run this command as early as possible, before dependencies are installed
-      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      # Connect your workspace by running "nx connect" and uncomment this
-      - run: pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
+         # This enables task distribution via Nx Cloud
+         # Run this command as early as possible, before dependencies are installed
+         # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
+         # Connect your workspace by running "nx connect" and uncomment this
+         - run: pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
 
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 20
-          cache: 'pnpm'
+         - uses: actions/setup-node@v3
+           with:
+              node-version: 20
+              cache: 'pnpm'
 
-      - run: pnpm install --frozen-lockfile
-      - uses: nrwl/nx-set-shas@v4
+         - run: pnpm install --frozen-lockfile
+         - uses: nrwl/nx-set-shas@v4
 
-      # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
-      # - run: pnpm exec nx-cloud record -- echo Hello World
-      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-      - run: pnpm exec nx affected -t lint test build
+         # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+         # - run: pnpm exec nx-cloud record -- echo Hello World
+         # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
+         - run: pnpm exec nx affected -t lint test build
 ```
 
 We recommend you add this line right after you check out the repo, before installing node modules.
 
-- `nx-cloud start-ci-run --distribute-on="3 linux-medium-js` lets Nx know that all the tasks after this line should use Nx Agents and that Nx Cloud should use three instances of the `linux-medium-js` launch template. See the separate reference on how to [configure a custom launch template](/ci/reference/launch-templates).
-- `--stop-agents-after="e2e-ci"` lets Nx Cloud know which line is the last command in this pipeline. Once there are no more e2e tasks for an agent to run, Nx Cloud will automatically shut them down. This way you're not wasting money on idle agents while a particularly long e2e task is running on a single agent.
+-  `nx-cloud start-ci-run --distribute-on="3 linux-medium-js` lets Nx know that all the tasks after this line should use Nx Agents and that Nx Cloud should use three instances of the `linux-medium-js` launch template. See the separate reference on how to [configure a custom launch template](/ci/reference/launch-templates).
+-  `--stop-agents-after="e2e-ci"` lets Nx Cloud know which line is the last command in this pipeline. Once there are no more e2e tasks for an agent to run, Nx Cloud will automatically shut them down. This way you're not wasting money on idle agents while a particularly long e2e task is running on a single agent.
 
 Try it out by creating a new PR with the above changes.
 
@@ -256,6 +256,6 @@ With this pipeline configuration in place, no matter how large the repository sc
 
 You now have a highly optimized CI configuration that will scale as your repository scales. See what else you can do with Nx Cloud.
 
-- Configure [dynamic agent allocation](/ci/features/dynamic-agents)
-- Learn about [automatically splitting e2e tasks](/ci/features/split-e2e-tasks)
-- Identify and re-run [flaky tasks](/ci/features/flaky-tasks)
+-  Configure [dynamic agent allocation](/ci/features/dynamic-agents)
+-  Learn about [automatically splitting e2e tasks](/ci/features/split-e2e-tasks)
+-  Identify and re-run [flaky tasks](/ci/features/flaky-tasks)

@@ -14,15 +14,15 @@ Nx is a suite of powerful tools designed to optimize your development workflow, 
 
 The ability to iterate quickly and efficiently is vital for any software project. Speed in the development process offers several critical advantages:
 
-- **Faster feedback loops:** Quick iterations mean immediate feedback, allowing teams to adapt, learn, and improve their work on the fly.
-- **Reduced time to market:** Accelerating the development process can significantly cut down the overall time to market, providing a competitive edge which reclaims revenue that would have otherwise been lost.
-- **Decreased developer frustration:** [No more waiting for builds and tests to complete](/ci/concepts/reduce-waste). A streamlined workflow keeps morale high and productivity higher.
+-  **Faster feedback loops:** Quick iterations mean immediate feedback, allowing teams to adapt, learn, and improve their work on the fly.
+-  **Reduced time to market:** Accelerating the development process can significantly cut down the overall time to market, providing a competitive edge which reclaims revenue that would have otherwise been lost.
+-  **Decreased developer frustration:** [No more waiting for builds and tests to complete](/ci/concepts/reduce-waste). A streamlined workflow keeps morale high and productivity higher.
 
 If you’re using Nx already, you’re already familiar with
 
-- [**Affected**](/ci/features/affected) - identifying and running tasks only on projects impacted by code changes,
-- [**Nx Replay**](/ci/features/remote-cache) - our powerful cache and
-- [**Nx Agents**](/ci/features/distribute-task-execution) - the concept of [Parallelization and Distribution](/ci/concepts/parallelization-distribution).
+-  [**Affected**](/ci/features/affected) - identifying and running tasks only on projects impacted by code changes,
+-  [**Nx Replay**](/ci/features/remote-cache) - our powerful cache and
+-  [**Nx Agents**](/ci/features/distribute-task-execution) - the concept of [Parallelization and Distribution](/ci/concepts/parallelization-distribution).
 
 But let’s see all the extra things we did this past year to make everything faster.
 
@@ -54,13 +54,13 @@ With Nx Replay, you can see significant speed improvements in your CI pipelines 
 
 [Nx Agents](/ci/features/distribute-task-execution) represent the pinnacle of task distribution optimization, ensuring that tasks are executed as efficiently as possible based on the specific requirements of each change. Some features that make up this effort are:
 
-- [Easy integration with existing providers](/ci/features/distribute-task-execution#cicd-guides)
-  - Distribution is handled on the Nx Cloud infrastructure and all you need is a single line. What’s more, all results are played back to your original CI provider script which triggers the Nx Cloud distribution, so that you can make use of the resulting artifacts
-- [Efficient task distribution](/ci/features/dynamic-agents)
-  - Save compute resources and reduce costs, minimizing idle time and compute waste
-  - Dynamic sizing based on PR size
-- [Tusky](https://nx.app/products/tusky) - our AI solution - coming soon
-  - You set your desired cost/speed ratio, and you forget about any more configuration. We ensure maximum speed up to limits you set yourself.
+-  [Easy integration with existing providers](/ci/features/distribute-task-execution#cicd-guides)
+   -  Distribution is handled on the Nx Cloud infrastructure and all you need is a single line. What’s more, all results are played back to your original CI provider script which triggers the Nx Cloud distribution, so that you can make use of the resulting artifacts
+-  [Efficient task distribution](/ci/features/dynamic-agents)
+   -  Save compute resources and reduce costs, minimizing idle time and compute waste
+   -  Dynamic sizing based on PR size
+-  [Tusky](https://nx.app/products/tusky) - our AI solution - coming soon
+   -  You set your desired cost/speed ratio, and you forget about any more configuration. We ensure maximum speed up to limits you set yourself.
 
 You can read more about Nx Agents [here](https://nx.app/products/agents#content).
 
@@ -96,10 +96,10 @@ Nx provides an unparalleled toolkit for developers and teams looking to optimize
 
 ## Learn more
 
-- [Nx Docs](/getting-started/intro)
-- [X / Twitter](https://twitter.com/nxdevtools)
-- [LinkedIn](https://www.linkedin.com/company/nrwl)
-- [Nx GitHub](https://github.com/nrwl/nx)
-- [Nx Community Discord](https://go.nx.dev/community)
-- [Nx Youtube Channel](https://www.youtube.com/@nxdevtools)
-- [Speed up your CI](https://nx.app)
+-  [Nx Docs](/getting-started/intro)
+-  [X / Twitter](https://twitter.com/nxdevtools)
+-  [LinkedIn](https://www.linkedin.com/company/nrwl)
+-  [Nx GitHub](https://github.com/nrwl/nx)
+-  [Nx Community Discord](https://go.nx.dev/community)
+-  [Nx Youtube Channel](https://www.youtube.com/@nxdevtools)
+-  [Speed up your CI](https://nx.app)

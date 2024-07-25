@@ -4,8 +4,8 @@
 
 ### Properties
 
-- [externalNodes](../../devkit/documents/CreateNodesResult#externalnodes): Record<string, ProjectGraphExternalNode>
-- [projects](../../devkit/documents/CreateNodesResult#projects): Record<string, Optional<ProjectConfiguration, "root">>
+-  [externalNodes](../../devkit/documents/CreateNodesResult#externalnodes): Record<string, ProjectGraphExternalNode>
+-  [projects](../../devkit/documents/CreateNodesResult#projects): Record<string, Optional<ProjectConfiguration, "root">>
 
 ## Properties
 

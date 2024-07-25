@@ -172,14 +172,14 @@ And the `targetDefaults` configured in the `nx.json` as:
 
 ```json
 {
-  "targetDefaults": {
-    "build": {
-      "dependsOn": ["build-base"]
-    },
-    "build-base": {
-      "dependsOn": ["^build-base"]
-    }
-  }
+   "targetDefaults": {
+      "build": {
+         "dependsOn": ["build-base"]
+      },
+      "build-base": {
+         "dependsOn": ["^build-base"]
+      }
+   }
 }
 ```
 

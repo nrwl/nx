@@ -33,4 +33,4 @@ caption="Demoes how to use Nx generators in a PNPM workspace to automate the cre
 
 ## See Also
 
-- [nx.json generator defaults](/reference/nx-json#generators)
+-  [nx.json generator defaults](/reference/nx-json#generators)

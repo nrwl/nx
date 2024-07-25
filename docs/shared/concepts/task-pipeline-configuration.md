@@ -8,46 +8,46 @@ As you can see in the graph visualization below, the `myreactapp` project depend
 
 ```json
 {
-  "projects": [
-    {
-      "name": "myreactapp",
-      "type": "app",
-      "data": {
-        "tags": []
-      }
-    },
-    {
-      "name": "shared-ui",
-      "type": "lib",
-      "data": {
-        "tags": []
-      }
-    },
-    {
-      "name": "feat-products",
-      "type": "lib",
-      "data": {
-        "tags": []
-      }
-    }
-  ],
-  "dependencies": {
-    "myreactapp": [
-      { "source": "myreactapp", "target": "feat-products", "type": "static" }
-    ],
-    "shared-ui": [],
-    "feat-products": [
+   "projects": [
       {
-        "source": "feat-products",
-        "target": "shared-ui",
-        "type": "static"
+         "name": "myreactapp",
+         "type": "app",
+         "data": {
+            "tags": []
+         }
+      },
+      {
+         "name": "shared-ui",
+         "type": "lib",
+         "data": {
+            "tags": []
+         }
+      },
+      {
+         "name": "feat-products",
+         "type": "lib",
+         "data": {
+            "tags": []
+         }
       }
-    ]
-  },
-  "workspaceLayout": { "appsDir": "", "libsDir": "" },
-  "affectedProjectIds": [],
-  "focus": null,
-  "groupByFolder": false
+   ],
+   "dependencies": {
+      "myreactapp": [
+         { "source": "myreactapp", "target": "feat-products", "type": "static" }
+      ],
+      "shared-ui": [],
+      "feat-products": [
+         {
+            "source": "feat-products",
+            "target": "shared-ui",
+            "type": "static"
+         }
+      ]
+   },
+   "workspaceLayout": { "appsDir": "", "libsDir": "" },
+   "affectedProjectIds": [],
+   "focus": null,
+   "groupByFolder": false
 }
 ```
 

@@ -12,5 +12,5 @@ If you'd like them to sign-in with Google directly, which ensures they automatic
 
 Nx Cloud does not currently provide direct integration with SAML identity providers. You can, however, connect your existing SAML provider to Google, and then use the method above to invite employees:
 
-- [Azure AD](https://docs.microsoft.com/en-us/azure/active-directory/saas-apps/google-apps-tutorial)
-- [Okta](https://www.okta.com/integrations/google-workspace/#overview)
+-  [Azure AD](https://docs.microsoft.com/en-us/azure/active-directory/saas-apps/google-apps-tutorial)
+-  [Okta](https://www.okta.com/integrations/google-workspace/#overview)

@@ -93,14 +93,14 @@ In your project's `.storybook/tsconfig.json` file, in the `include` array, add t
 
 ```json {% fileName="apps/my-app/.storybook/tsconfig.json" %}
 {
-  "extends": "../tsconfig.json",
-  "compilerOptions": {
-    "emitDecoratorMetadata": true,
-    "resolveJsonModule": true
-  },
-  "files": ["../src/polyfills.ts"],
-  "exclude": ["../**/*.spec.ts"],
-  "include": ["../src/**/*.stories.ts", "../src/**/*.component.ts", "*.js"]
+   "extends": "../tsconfig.json",
+   "compilerOptions": {
+      "emitDecoratorMetadata": true,
+      "resolveJsonModule": true
+   },
+   "files": ["../src/polyfills.ts"],
+   "exclude": ["../**/*.spec.ts"],
+   "include": ["../src/**/*.stories.ts", "../src/**/*.component.ts", "*.js"]
 }
 ```
 
@@ -167,14 +167,14 @@ Notice how we are adding `"resolveJsonModule": true` in our app's `.storybook/ts
 
 ```json {% fileName="apps/my-app/.storybook/tsconfig.json" %}
 {
-  "extends": "../tsconfig.json",
-  "compilerOptions": {
-    "emitDecoratorMetadata": true,
-    "resolveJsonModule": true
-  },
-  "files": ["../src/polyfills.ts"],
-  "exclude": ["../**/*.spec.ts"],
-  "include": ["../src/**/*.stories.ts", "../src/**/*.component.ts", "*.js"]
+   "extends": "../tsconfig.json",
+   "compilerOptions": {
+      "emitDecoratorMetadata": true,
+      "resolveJsonModule": true
+   },
+   "files": ["../src/polyfills.ts"],
+   "exclude": ["../**/*.spec.ts"],
+   "include": ["../src/**/*.stories.ts", "../src/**/*.component.ts", "*.js"]
 }
 ```
 
@@ -184,16 +184,16 @@ In your project's `.storybook/main.ts` file you have to enable autodocs:
 
 ```js {% fileName="apps/my-app/.storybook/main.ts" %}
 const config = {
-  stories: ['../src/app/**/*.stories.@(js|jsx|ts|tsx|mdx)'],
-  addons: ['@storybook/addon-essentials'],
-  framework: {
-    name: '@storybook/angular',
-    options: {},
-  },
-  docs: {
-    autodocs: true,
-    defaultName: 'Docs',
-  },
+   stories: ['../src/app/**/*.stories.@(js|jsx|ts|tsx|mdx)'],
+   addons: ['@storybook/addon-essentials'],
+   framework: {
+      name: '@storybook/angular',
+      options: {},
+   },
+   docs: {
+      autodocs: true,
+      defaultName: 'Docs',
+   },
 };
 
 export default config;

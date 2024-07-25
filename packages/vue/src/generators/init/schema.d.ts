@@ -1,5 +1,5 @@
 export interface InitSchema {
-  skipFormat?: boolean;
-  skipPackageJson?: boolean;
-  keepExistingVersions?: boolean;
+   skipFormat?: boolean;
+   skipPackageJson?: boolean;
+   keepExistingVersions?: boolean;
 }

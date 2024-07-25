@@ -6,15 +6,15 @@ The `runtimeCacheInputs` property was used as a way to add extra inputs to the N
 
 ```json
 {
-  "tasksRunnerOptions": {
-    "default": {
-      "runner": "nx/tasks-runners/default",
-      "options": {
-        "cacheableOperations": ["build", "lint", "test", "e2e"],
-        "runtimeCacheInputs": ["node -v"]
+   "tasksRunnerOptions": {
+      "default": {
+         "runner": "nx/tasks-runners/default",
+         "options": {
+            "cacheableOperations": ["build", "lint", "test", "e2e"],
+            "runtimeCacheInputs": ["node -v"]
+         }
       }
-    }
-  }
+   }
 }
 ```
 
@@ -24,11 +24,11 @@ The new style looks like this:
 
 ```jsonc
 {
-  "targets": {
-    "build": {
-      "inputs": ["^build", { "runtime": "node -v" }]
-      // ...
-    }
-  }
+   "targets": {
+      "build": {
+         "inputs": ["^build", { "runtime": "node -v" }]
+         // ...
+      }
+   }
 }
 ```

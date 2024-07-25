@@ -70,20 +70,20 @@ We'll go over a few parts of a test file below:
 
 ```typescript
 beforeAll(() => {
-  ensureNxProject('my-plugin', 'dist/./.');
+   ensureNxProject('my-plugin', 'dist/./.');
 });
 
 xit('should be able to build generated projects', async () => {
-  const name = 'proj';
-  const generator = 'PLACEHOLDER';
-  await runNxCommandAsync(`generate my-plugin:${generator} --name ${name}`);
-  expect(() => runNxCommand('build ${proj}')).not.toThrow();
-  expect(() => checkFilesExist(`dist/${name}/index.js`)).not.toThrow();
+   const name = 'proj';
+   const generator = 'PLACEHOLDER';
+   await runNxCommandAsync(`generate my-plugin:${generator} --name ${name}`);
+   expect(() => runNxCommand('build ${proj}')).not.toThrow();
+   expect(() => checkFilesExist(`dist/${name}/index.js`)).not.toThrow();
 });
 ```
 
-- The `ensureNxProject` is the function that will create the temporary directory. It takes two arguments, the plugin package name and the dist directory of when it's built.
-- The `runNxCommandAsync` function will execute a `nx` command in the E2E directory.
+-  The `ensureNxProject` is the function that will create the temporary directory. It takes two arguments, the plugin package name and the dist directory of when it's built.
+-  The `runNxCommandAsync` function will execute a `nx` command in the E2E directory.
 
 There are additional functions that the `@nx/plugin/testing` package exports. Most of them are file utilities to manipulate and read files in the E2E directory.
 

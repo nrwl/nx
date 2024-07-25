@@ -2,12 +2,12 @@ import { type Tree } from '@nx/devkit';
 import { join } from 'path';
 
 export const defaultExclude = [
-  'jest.config.ts',
-  '.*\\.spec.tsx?$',
-  '.*\\.test.tsx?$',
-  './src/jest-setup.ts$',
-  './**/jest-setup.ts$',
-  '.*.js$',
+   'jest.config.ts',
+   '.*\\.spec.tsx?$',
+   '.*\\.test.tsx?$',
+   './src/jest-setup.ts$',
+   './**/jest-setup.ts$',
+   '.*.js$',
 ];
 
 const swcOptionsString = (type: 'commonjs' | 'es6' = 'commonjs') => `{
@@ -34,11 +34,11 @@ const swcOptionsString = (type: 'commonjs' | 'es6' = 'commonjs') => `{
 }`;
 
 export function addSwcConfig(
-  tree: Tree,
-  projectDir: string,
-  type: 'commonjs' | 'es6' = 'commonjs'
+   tree: Tree,
+   projectDir: string,
+   type: 'commonjs' | 'es6' = 'commonjs'
 ) {
-  const swcrcPath = join(projectDir, '.swcrc');
-  if (tree.exists(swcrcPath)) return;
-  tree.write(swcrcPath, swcOptionsString(type));
+   const swcrcPath = join(projectDir, '.swcrc');
+   if (tree.exists(swcrcPath)) return;
+   tree.write(swcrcPath, swcOptionsString(type));
 }

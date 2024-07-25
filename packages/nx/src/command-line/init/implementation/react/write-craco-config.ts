@@ -1,11 +1,11 @@
 import { writeFileSync } from 'fs';
 
 export function writeCracoConfig(
-  appName: string,
-  isCRA5: boolean,
-  isStandalone: boolean
+   appName: string,
+   isCRA5: boolean,
+   isStandalone: boolean
 ) {
-  const configOverride = `
+   const configOverride = `
   const path = require('path');
   const TsConfigPathsPlugin = require('tsconfig-paths-webpack-plugin');
   const ModuleScopePlugin = require('react-dev-utils/ModuleScopePlugin');
@@ -26,8 +26,8 @@ export function writeCracoConfig(
           })
         );
         ${
-          isCRA5
-            ? `
+           isCRA5
+              ? `
         // Replace include option for babel loader with exclude
         // so babel will handle workspace projects as well.
         config.module.rules[1].oneOf.forEach((r) => {
@@ -36,7 +36,7 @@ export function writeCracoConfig(
             delete r.include;
           }
         });`
-            : `
+              : `
         // Replace include option for babel loader with exclude
         // so babel will handle workspace projects as well.
         config.module.rules.forEach((r) => {
@@ -61,8 +61,8 @@ export function writeCracoConfig(
     },
   };
   `;
-  writeFileSync(
-    isStandalone ? 'craco.config.js' : `apps/${appName}/craco.config.js`,
-    configOverride
-  );
+   writeFileSync(
+      isStandalone ? 'craco.config.js' : `apps/${appName}/craco.config.js`,
+      configOverride
+   );
 }

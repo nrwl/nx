@@ -1,4 +1,4 @@
 {
-  "extends": ["@nx/eslint"],
-  "schematics": {}
+   "extends": ["@nx/eslint"],
+   "schematics": {}
 }

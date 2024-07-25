@@ -14,105 +14,105 @@ import { pkg } from '../../../../lib/rspack/pkg';
 import { fetchGithubStarCount } from '../../../../lib/githubStars.api';
 
 export default function RspackConfigSetup({
-  document,
-  menu,
-  relatedDocuments,
-  widgetData,
+   document,
+   menu,
+   relatedDocuments,
+   widgetData,
 }: {
-  document: ProcessedDocument;
-  menu: MenuItem[];
-  pkg: ProcessedPackageMetadata;
-  relatedDocuments: RelatedDocument[];
-  widgetData: { githubStarsCount: number };
+   document: ProcessedDocument;
+   menu: MenuItem[];
+   pkg: ProcessedPackageMetadata;
+   relatedDocuments: RelatedDocument[];
+   widgetData: { githubStarsCount: number };
 }): JSX.Element {
-  const router = useRouter();
-  const { toggleNav, navIsOpen } = useNavToggle();
-  const wrapperElement = useRef(null);
+   const router = useRouter();
+   const { toggleNav, navIsOpen } = useNavToggle();
+   const wrapperElement = useRef(null);
 
-  useEffect(() => {
-    const handleRouteChange = (url: string) => {
-      if (url.includes('#')) return;
-      if (!wrapperElement) return;
+   useEffect(() => {
+      const handleRouteChange = (url: string) => {
+         if (url.includes('#')) return;
+         if (!wrapperElement) return;
 
-      (wrapperElement as any).current.scrollTo({
-        top: 0,
-        left: 0,
-        behavior: 'smooth',
-      });
-    };
+         (wrapperElement as any).current.scrollTo({
+            top: 0,
+            left: 0,
+            behavior: 'smooth',
+         });
+      };
 
-    router.events.on('routeChangeComplete', handleRouteChange);
-    return () => router.events.off('routeChangeComplete', handleRouteChange);
-  }, [router, wrapperElement]);
+      router.events.on('routeChangeComplete', handleRouteChange);
+      return () => router.events.off('routeChangeComplete', handleRouteChange);
+   }, [router, wrapperElement]);
 
-  const vm: {
-    document: ProcessedDocument;
-    menu: Menu;
-    relatedDocuments: RelatedDocument[];
-  } = {
-    document,
-    menu: {
-      sections: sortCorePackagesFirst<MenuSection>(
-        getPackagesSections(menu),
-        'id'
-      ),
-    },
-    relatedDocuments,
-  };
+   const vm: {
+      document: ProcessedDocument;
+      menu: Menu;
+      relatedDocuments: RelatedDocument[];
+   } = {
+      document,
+      menu: {
+         sections: sortCorePackagesFirst<MenuSection>(
+            getPackagesSections(menu),
+            'id'
+         ),
+      },
+      relatedDocuments,
+   };
 
-  return (
-    <div id="shell" className="flex h-full flex-col">
-      <div className="w-full flex-shrink-0">
-        <DocumentationHeader isNavOpen={navIsOpen} toggleNav={toggleNav} />
+   return (
+      <div id="shell" className="flex h-full flex-col">
+         <div className="w-full flex-shrink-0">
+            <DocumentationHeader isNavOpen={navIsOpen} toggleNav={toggleNav} />
+         </div>
+         <main
+            id="main"
+            role="main"
+            className="flex h-full flex-1 overflow-y-hidden"
+         >
+            <SidebarContainer
+               menu={vm.menu}
+               navIsOpen={navIsOpen}
+               toggleNav={toggleNav}
+            />
+            <div
+               ref={wrapperElement}
+               id="wrapper"
+               data-testid="wrapper"
+               className="relative flex flex-grow flex-col items-stretch justify-start overflow-y-scroll"
+            >
+               <DocViewer
+                  document={vm.document}
+                  relatedDocuments={vm.relatedDocuments}
+                  widgetData={widgetData}
+               />
+            </div>
+         </main>
       </div>
-      <main
-        id="main"
-        role="main"
-        className="flex h-full flex-1 overflow-y-hidden"
-      >
-        <SidebarContainer
-          menu={vm.menu}
-          navIsOpen={navIsOpen}
-          toggleNav={toggleNav}
-        />
-        <div
-          ref={wrapperElement}
-          id="wrapper"
-          data-testid="wrapper"
-          className="relative flex flex-grow flex-col items-stretch justify-start overflow-y-scroll"
-        >
-          <DocViewer
-            document={vm.document}
-            relatedDocuments={vm.relatedDocuments}
-            widgetData={widgetData}
-          />
-        </div>
-      </main>
-    </div>
-  );
+   );
 }
 
 export async function getStaticProps() {
-  const document = {
-    content: content,
-    description:
-      'A guide on how to configure Rspack on your Nx workspace, and instructions on how to customize your Rspack configuration.',
-    filePath: '',
-    id: 'rspack-plugins',
-    name: ' How to configure Rspack on your Nx workspace',
-    relatedDocuments: {},
-    tags: [],
-  };
+   const document = {
+      content: content,
+      description:
+         'A guide on how to configure Rspack on your Nx workspace, and instructions on how to customize your Rspack configuration.',
+      filePath: '',
+      id: 'rspack-plugins',
+      name: ' How to configure Rspack on your Nx workspace',
+      relatedDocuments: {},
+      tags: [],
+   };
 
-  return {
-    props: {
-      pkg,
-      document,
-      widgetData: {
-        githubStarsCount: await fetchGithubStarCount(),
+   return {
+      props: {
+         pkg,
+         document,
+         widgetData: {
+            githubStarsCount: await fetchGithubStarCount(),
+         },
+         relatedDocuments: [],
+         menu: menusApi.getMenu('nx-api', ''),
       },
-      relatedDocuments: [],
-      menu: menusApi.getMenu('nx-api', ''),
-    },
-  };
+   };
 }

@@ -3,15 +3,15 @@ import { formatChangedFilesWithPrettierIfAvailable } from '../../generators/inte
 import { updateJson } from '../../generators/utils/json';
 
 export default async function (tree: Tree) {
-  updateJson(tree, 'package.json', (json) => {
-    for (const deps of [json.dependencies, json.devDependencies]) {
-      if (deps) {
-        delete deps['@nrwl/cli'];
+   updateJson(tree, 'package.json', (json) => {
+      for (const deps of [json.dependencies, json.devDependencies]) {
+         if (deps) {
+            delete deps['@nrwl/cli'];
+         }
       }
-    }
 
-    return json;
-  });
+      return json;
+   });
 
-  await formatChangedFilesWithPrettierIfAvailable(tree);
+   await formatChangedFilesWithPrettierIfAvailable(tree);
 }

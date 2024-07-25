@@ -6,9 +6,9 @@ A node describing a project in a workspace
 
 ### Properties
 
-- [data](../../devkit/documents/ProjectGraphProjectNode#data): ProjectConfiguration & Object
-- [name](../../devkit/documents/ProjectGraphProjectNode#name): string
-- [type](../../devkit/documents/ProjectGraphProjectNode#type): "app" | "e2e" | "lib"
+-  [data](../../devkit/documents/ProjectGraphProjectNode#data): ProjectConfiguration & Object
+-  [name](../../devkit/documents/ProjectGraphProjectNode#name): string
+-  [type](../../devkit/documents/ProjectGraphProjectNode#type): "app" | "e2e" | "lib"
 
 ## Properties
 

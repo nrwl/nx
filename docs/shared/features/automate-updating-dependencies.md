@@ -6,9 +6,9 @@ Keeping a codebase updated with the latest changes in your framework of choice c
 
 The `nx migrate` command helps by automating the process of updating:
 
-- package versions in your `package.json`
-- configuration files (e.g. your Jest, ESLint or Nx config)
-- your source code (e.g. fixing breaking changes or migrating to new best practices)
+-  package versions in your `package.json`
+-  configuration files (e.g. your Jest, ESLint or Nx config)
+-  your source code (e.g. fixing breaking changes or migrating to new best practices)
 
 ## How Does It Work?
 
@@ -23,9 +23,9 @@ For example, the [Nx ESLint plugin](/nx-api/eslint) excels at configuring lintin
 
 Updating happens in three steps:
 
-- The installed dependencies are updated including the `package.json` (and `node_modules`).
-- The source code in the repo is updated to match the new versions of packages according to the set of instructions specified in `migrations.json` file.
-- Optionally remove the `migrations.json` file or keep it to re-run the migration in different Git branches
+-  The installed dependencies are updated including the `package.json` (and `node_modules`).
+-  The source code in the repo is updated to match the new versions of packages according to the set of instructions specified in `migrations.json` file.
+-  Optionally remove the `migrations.json` file or keep it to re-run the migration in different Git branches
 
 ### Step 1: Update Dependencies and Generating Migrations
 
@@ -43,8 +43,8 @@ To avoid potential issues, it is [recommended to update one major version of Nx 
 
 This fetches the specified version of the `nx` package, analyzes the dependencies and fetches all the dependent packages. The process keeps going until all the dependencies are resolved. This results in:
 
-- The `package.json` being updated
-- A `migrations.json` being generated if there are pending migrations.
+-  The `package.json` being updated
+-  A `migrations.json` being generated if there are pending migrations.
 
 {% callout type="note" title="Dependency Updates" %}
 The migrations will update the `@nx/*` packages to the desired version. Subsequently, these packages _may_ also update other dependencies in your `package.json` to new versions if support has been added for them.

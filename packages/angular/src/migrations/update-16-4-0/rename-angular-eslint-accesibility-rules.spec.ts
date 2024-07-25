@@ -5,54 +5,53 @@ import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import migration from './rename-angular-eslint-accesibility-rules';
 
 describe('rename-angular-eslint-accesibility-rules migration', () => {
-  let tree: Tree;
+   let tree: Tree;
 
-  beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
-    jest
-      .spyOn(devkit, 'formatFiles')
-      .mockImplementation(() => Promise.resolve());
-  });
+   beforeEach(() => {
+      tree = createTreeWithEmptyWorkspace();
+      jest
+         .spyOn(devkit, 'formatFiles')
+         .mockImplementation(() => Promise.resolve());
+   });
 
-  it('should rename relevant rules keeping their config and handling overrides', async () => {
-    writeJson(tree, '.eslintrc.json', {
-      rules: {
-        '@angular-eslint/component-class-suffix': [
-          'error',
-          { suffixes: ['Page', 'View'] },
-        ],
-        '@angular-eslint/template/accessibility-alt-text': ['error'],
-        '@angular-eslint/template/no-call-expression': ['error'],
-        '@angular-eslint/template/accessibility-role-has-required-aria': [
-          'error',
-        ],
-      },
-      overrides: [
-        {
-          files: ['*.ts'],
-          rules: {
+   it('should rename relevant rules keeping their config and handling overrides', async () => {
+      writeJson(tree, '.eslintrc.json', {
+         rules: {
             '@angular-eslint/component-class-suffix': [
-              'warn',
-              { suffixes: ['Page', 'View'] },
+               'error',
+               { suffixes: ['Page', 'View'] },
             ],
-          },
-        },
-        {
-          files: ['*.html'],
-          rules: {
-            '@angular-eslint/template/accessibility-alt-text': ['warn'],
-            '@angular-eslint/template/no-call-expression': ['warn'],
+            '@angular-eslint/template/accessibility-alt-text': ['error'],
+            '@angular-eslint/template/no-call-expression': ['error'],
             '@angular-eslint/template/accessibility-role-has-required-aria': [
-              'warn',
+               'error',
             ],
-          },
-        },
-      ],
-    });
+         },
+         overrides: [
+            {
+               files: ['*.ts'],
+               rules: {
+                  '@angular-eslint/component-class-suffix': [
+                     'warn',
+                     { suffixes: ['Page', 'View'] },
+                  ],
+               },
+            },
+            {
+               files: ['*.html'],
+               rules: {
+                  '@angular-eslint/template/accessibility-alt-text': ['warn'],
+                  '@angular-eslint/template/no-call-expression': ['warn'],
+                  '@angular-eslint/template/accessibility-role-has-required-aria':
+                     ['warn'],
+               },
+            },
+         ],
+      });
 
-    await migration(tree);
+      await migration(tree);
 
-    expect(readJson(tree, '.eslintrc.json')).toMatchInlineSnapshot(`
+      expect(readJson(tree, '.eslintrc.json')).toMatchInlineSnapshot(`
       {
         "overrides": [
           {
@@ -110,5 +109,5 @@ describe('rename-angular-eslint-accesibility-rules migration', () => {
         },
       }
     `);
-  });
+   });
 });

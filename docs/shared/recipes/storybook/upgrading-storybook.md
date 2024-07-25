@@ -13,9 +13,9 @@ Nx offers migration generators to help you upgrade your Nx workspace and your pr
 
 So, you should prefer to use the Storybook CLI to upgrade your Storybook setup in the following cases:
 
-- When you want to try out a new version of Storybook, for example the `next` version, for which Nx might not have a migration generator yet.
+-  When you want to try out a new version of Storybook, for example the `next` version, for which Nx might not have a migration generator yet.
 
-- When Nx does not already have a migrator for a specific Storybook version in place. Nx will in most cases take care of migrations that are specific to Nx, but the Storybook CLI automigrations are more comprehensive.
+-  When Nx does not already have a migrator for a specific Storybook version in place. Nx will in most cases take care of migrations that are specific to Nx, but the Storybook CLI automigrations are more comprehensive.
 
 It's worth noting that whenever Nx adds a migration generator to move from one major Storybook version to the next, Nx still calls the Storybook CLI migration commands under the hood.
 

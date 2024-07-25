@@ -8,190 +8,194 @@ import { EOL } from 'os';
 import { isCI } from './ci/is-ci';
 
 export interface CLIErrorMessageConfig {
-  title: string;
-  bodyLines?: string[];
+   title: string;
+   bodyLines?: string[];
 }
 
 export interface CLIWarnMessageConfig {
-  title: string;
-  bodyLines?: string[];
+   title: string;
+   bodyLines?: string[];
 }
 
 export interface CLINoteMessageConfig {
-  title: string;
-  bodyLines?: string[];
+   title: string;
+   bodyLines?: string[];
 }
 
 export interface CLISuccessMessageConfig {
-  title: string;
-  bodyLines?: string[];
+   title: string;
+   bodyLines?: string[];
 }
 
 /**
  * Automatically disable styling applied by chalk if CI=true
  */
 if (isCI()) {
-  (chalk as any).level = 0;
+   (chalk as any).level = 0;
 }
 
 class CLIOutput {
-  /**
-   * Longer dash character which forms more of a continuous line when place side to side
-   * with itself, unlike the standard dash character
-   */
-  private get VERTICAL_SEPARATOR() {
-    let divider = '';
-    for (let i = 0; i < process.stdout.columns - 1; i++) {
-      divider += '\u2014';
-    }
-    return divider;
-  }
+   /**
+    * Longer dash character which forms more of a continuous line when place side to side
+    * with itself, unlike the standard dash character
+    */
+   private get VERTICAL_SEPARATOR() {
+      let divider = '';
+      for (let i = 0; i < process.stdout.columns - 1; i++) {
+         divider += '\u2014';
+      }
+      return divider;
+   }
 
-  /**
-   * Expose some color and other utility functions so that other parts of the codebase that need
-   * more fine-grained control of message bodies are still using a centralized
-   * implementation.
-   */
-  colors = {
-    gray: chalk.gray,
-    green: chalk.green,
-    red: chalk.red,
-    cyan: chalk.cyan,
-    white: chalk.white,
-  };
-  bold = chalk.bold;
-  underline = chalk.underline;
-  dim = chalk.dim;
+   /**
+    * Expose some color and other utility functions so that other parts of the codebase that need
+    * more fine-grained control of message bodies are still using a centralized
+    * implementation.
+    */
+   colors = {
+      gray: chalk.gray,
+      green: chalk.green,
+      red: chalk.red,
+      cyan: chalk.cyan,
+      white: chalk.white,
+   };
+   bold = chalk.bold;
+   underline = chalk.underline;
+   dim = chalk.dim;
 
-  private writeToStdOut(str: string) {
-    process.stdout.write(str);
-  }
+   private writeToStdOut(str: string) {
+      process.stdout.write(str);
+   }
 
-  private writeOutputTitle({
-    color,
-    title,
-  }: {
-    color: string;
-    title: string;
-  }): void {
-    this.writeToStdOut(`${this.applyCLIPrefix(color, title)}${EOL}`);
-  }
+   private writeOutputTitle({
+      color,
+      title,
+   }: {
+      color: string;
+      title: string;
+   }): void {
+      this.writeToStdOut(`${this.applyCLIPrefix(color, title)}${EOL}`);
+   }
 
-  private writeOptionalOutputBody(bodyLines?: string[]): void {
-    if (!bodyLines) {
-      return;
-    }
-    this.addNewline();
-    bodyLines.forEach((bodyLine) => this.writeToStdOut(`${bodyLine}${EOL}`));
-  }
+   private writeOptionalOutputBody(bodyLines?: string[]): void {
+      if (!bodyLines) {
+         return;
+      }
+      this.addNewline();
+      bodyLines.forEach((bodyLine) => this.writeToStdOut(`${bodyLine}${EOL}`));
+   }
 
-  private cliName = 'NX';
+   private cliName = 'NX';
 
-  setCliName(name: string) {
-    this.cliName = name;
-  }
+   setCliName(name: string) {
+      this.cliName = name;
+   }
 
-  applyCLIPrefix(color = 'cyan', text: string): string {
-    let cliPrefix = '';
-    if ((chalk as any)[color]) {
-      cliPrefix = (chalk as any).reset.inverse.bold[color](` ${this.cliName} `);
-    } else {
-      cliPrefix = chalk.reset.inverse.bold.keyword(color)(` ${this.cliName} `);
-    }
-    return `${cliPrefix}  ${text}`;
-  }
+   applyCLIPrefix(color = 'cyan', text: string): string {
+      let cliPrefix = '';
+      if ((chalk as any)[color]) {
+         cliPrefix = (chalk as any).reset.inverse.bold[color](
+            ` ${this.cliName} `
+         );
+      } else {
+         cliPrefix = chalk.reset.inverse.bold.keyword(color)(
+            ` ${this.cliName} `
+         );
+      }
+      return `${cliPrefix}  ${text}`;
+   }
 
-  addNewline() {
-    this.writeToStdOut(EOL);
-  }
+   addNewline() {
+      this.writeToStdOut(EOL);
+   }
 
-  addVerticalSeparator(color = 'gray') {
-    this.addNewline();
-    this.addVerticalSeparatorWithoutNewLines(color);
-    this.addNewline();
-  }
+   addVerticalSeparator(color = 'gray') {
+      this.addNewline();
+      this.addVerticalSeparatorWithoutNewLines(color);
+      this.addNewline();
+   }
 
-  addVerticalSeparatorWithoutNewLines(color = 'gray') {
-    this.writeToStdOut(
-      `${(chalk as any).dim[color](this.VERTICAL_SEPARATOR)}${EOL}`
-    );
-  }
+   addVerticalSeparatorWithoutNewLines(color = 'gray') {
+      this.writeToStdOut(
+         `${(chalk as any).dim[color](this.VERTICAL_SEPARATOR)}${EOL}`
+      );
+   }
 
-  error({ title, bodyLines }: CLIErrorMessageConfig) {
-    this.addNewline();
+   error({ title, bodyLines }: CLIErrorMessageConfig) {
+      this.addNewline();
 
-    this.writeOutputTitle({
-      color: 'red',
-      title: chalk.red(title),
-    });
+      this.writeOutputTitle({
+         color: 'red',
+         title: chalk.red(title),
+      });
 
-    this.writeOptionalOutputBody(bodyLines);
+      this.writeOptionalOutputBody(bodyLines);
 
-    this.addNewline();
-  }
+      this.addNewline();
+   }
 
-  warn({ title, bodyLines }: CLIWarnMessageConfig) {
-    this.addNewline();
+   warn({ title, bodyLines }: CLIWarnMessageConfig) {
+      this.addNewline();
 
-    this.writeOutputTitle({
-      color: 'yellow',
-      title: chalk.yellow(title),
-    });
+      this.writeOutputTitle({
+         color: 'yellow',
+         title: chalk.yellow(title),
+      });
 
-    this.writeOptionalOutputBody(bodyLines);
+      this.writeOptionalOutputBody(bodyLines);
 
-    this.addNewline();
-  }
+      this.addNewline();
+   }
 
-  note({ title, bodyLines }: CLINoteMessageConfig) {
-    this.addNewline();
+   note({ title, bodyLines }: CLINoteMessageConfig) {
+      this.addNewline();
 
-    this.writeOutputTitle({
-      color: 'orange',
-      title: chalk.keyword('orange')(title),
-    });
+      this.writeOutputTitle({
+         color: 'orange',
+         title: chalk.keyword('orange')(title),
+      });
 
-    this.writeOptionalOutputBody(bodyLines);
+      this.writeOptionalOutputBody(bodyLines);
 
-    this.addNewline();
-  }
+      this.addNewline();
+   }
 
-  success({ title, bodyLines }: CLISuccessMessageConfig) {
-    this.addNewline();
+   success({ title, bodyLines }: CLISuccessMessageConfig) {
+      this.addNewline();
 
-    this.writeOutputTitle({
-      color: 'green',
-      title: chalk.green(title),
-    });
+      this.writeOutputTitle({
+         color: 'green',
+         title: chalk.green(title),
+      });
 
-    this.writeOptionalOutputBody(bodyLines);
+      this.writeOptionalOutputBody(bodyLines);
 
-    this.addNewline();
-  }
+      this.addNewline();
+   }
 
-  logSingleLine(message: string) {
-    this.addNewline();
+   logSingleLine(message: string) {
+      this.addNewline();
 
-    this.writeOutputTitle({
-      color: 'gray',
-      title: message,
-    });
+      this.writeOutputTitle({
+         color: 'gray',
+         title: message,
+      });
 
-    this.addNewline();
-  }
+      this.addNewline();
+   }
 
-  log({ title, bodyLines, color }: CLIWarnMessageConfig & { color?: string }) {
-    this.addNewline();
+   log({ title, bodyLines, color }: CLIWarnMessageConfig & { color?: string }) {
+      this.addNewline();
 
-    this.writeOutputTitle({
-      color: 'cyan',
-      title: color ? (chalk as any)[color](title) : title,
-    });
+      this.writeOutputTitle({
+         color: 'cyan',
+         title: color ? (chalk as any)[color](title) : title,
+      });
 
-    this.writeOptionalOutputBody(bodyLines);
+      this.writeOptionalOutputBody(bodyLines);
 
-    this.addNewline();
-  }
+      this.addNewline();
+   }
 }
 
 export const output = new CLIOutput();

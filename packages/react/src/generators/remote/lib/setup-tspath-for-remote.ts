@@ -5,13 +5,13 @@ import { maybeJs } from '../../../utils/maybe-js';
 import type { Schema } from '../schema';
 
 export function setupTspathForRemote(tree: Tree, options: Schema) {
-  const project = readProjectConfiguration(tree, options.name);
+   const project = readProjectConfiguration(tree, options.name);
 
-  const exportPath = maybeJs(options, './src/remote-entry.ts');
+   const exportPath = maybeJs(options, './src/remote-entry.ts');
 
-  const exportName = 'Module';
+   const exportName = 'Module';
 
-  addTsConfigPath(tree, `${options.name}/${exportName}`, [
-    joinPathFragments(project.root, exportPath),
-  ]);
+   addTsConfigPath(tree, `${options.name}/${exportName}`, [
+      joinPathFragments(project.root, exportPath),
+   ]);
 }

@@ -1,4 +1,4 @@
 export interface PluginLintChecksGeneratorSchema {
-  projectName: string;
-  skipFormat?: boolean;
+   projectName: string;
+   skipFormat?: boolean;
 }

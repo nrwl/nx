@@ -1,9 +1,9 @@
 import { parseChangelogMarkdown } from './markdown';
 
 describe('markdown utils', () => {
-  describe('parseChangelogMarkdown()', () => {
-    it('should extract the versions from the given markdown', () => {
-      const markdown = `
+   describe('parseChangelogMarkdown()', () => {
+      it('should extract the versions from the given markdown', () => {
+         const markdown = `
 ## 0.0.3
 
 
@@ -30,7 +30,7 @@ describe('markdown utils', () => {
 
 - James Henry
     `;
-      expect(parseChangelogMarkdown(markdown)).toMatchInlineSnapshot(`
+         expect(parseChangelogMarkdown(markdown)).toMatchInlineSnapshot(`
         {
           "releases": [
             {
@@ -60,10 +60,10 @@ describe('markdown utils', () => {
           ],
         }
       `);
-    });
+      });
 
-    it('should work for prerelease versions', () => {
-      const markdown = `
+      it('should work for prerelease versions', () => {
+         const markdown = `
 ## 0.0.3-alpha.1
 
 
@@ -90,7 +90,7 @@ describe('markdown utils', () => {
 
 - James Henry
     `;
-      expect(parseChangelogMarkdown(markdown)).toMatchInlineSnapshot(`
+         expect(parseChangelogMarkdown(markdown)).toMatchInlineSnapshot(`
         {
           "releases": [
             {
@@ -120,10 +120,10 @@ describe('markdown utils', () => {
           ],
         }
       `);
-    });
+      });
 
-    it('should work for major versions using a single #', () => {
-      const markdown = `
+      it('should work for major versions using a single #', () => {
+         const markdown = `
 ## 1.0.1
 
 
@@ -150,7 +150,7 @@ describe('markdown utils', () => {
 
 - James Henry
     `;
-      expect(parseChangelogMarkdown(markdown)).toMatchInlineSnapshot(`
+         expect(parseChangelogMarkdown(markdown)).toMatchInlineSnapshot(`
         {
           "releases": [
             {
@@ -180,6 +180,6 @@ describe('markdown utils', () => {
           ],
         }
       `);
-    });
-  });
+      });
+   });
 });

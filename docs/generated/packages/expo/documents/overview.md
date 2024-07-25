@@ -43,17 +43,17 @@ npm add -D @nx/expo
 
 The `@nx/expo` plugin will create a task for any project that has an app configuration file present. Any of the following files will be recognized as an app configuration file:
 
-- `app.config.js`
-- `app.json`
+-  `app.config.js`
+-  `app.json`
 
 In the app config file, it needs to have key `expo`:
 
 ```json
 {
-  "expo": {
-    "name": "MyProject",
-    "slug": "my-project"
-  }
+   "expo": {
+      "name": "MyProject",
+      "slug": "my-project"
+   }
 }
 ```
 
@@ -67,22 +67,22 @@ The `@nx/expo/plugin` is configured in the `plugins` array in `nx.json`.
 
 ```json {% fileName="nx.json" %}
 {
-  "plugins": [
-    {
-      "plugin": "@nx/expo/plugin",
-      "options": {
-        "startTargetName": "start",
-        "serveTargetName": "serve",
-        "runIosTargetName": "run-ios",
-        "runAndroidTargetName": "run-android",
-        "exportTargetName": "export",
-        "prebuildTargetName": "prebuild",
-        "installTargetName": "install",
-        "buildTargetName": "build",
-        "submitTargetName": "submit"
+   "plugins": [
+      {
+         "plugin": "@nx/expo/plugin",
+         "options": {
+            "startTargetName": "start",
+            "serveTargetName": "serve",
+            "runIosTargetName": "run-ios",
+            "runAndroidTargetName": "run-android",
+            "exportTargetName": "export",
+            "prebuildTargetName": "prebuild",
+            "installTargetName": "install",
+            "buildTargetName": "build",
+            "submitTargetName": "submit"
+         }
       }
-    }
-  ]
+   ]
 }
 ```
 
@@ -353,5 +353,5 @@ Below table is a map between expo commands and Nx commands:
 
 ## More Documentation
 
-- [Using Detox](/nx-api/detox)
-- [Using Jest](/nx-api/jest)
+-  [Using Detox](/nx-api/detox)
+-  [Using Jest](/nx-api/jest)

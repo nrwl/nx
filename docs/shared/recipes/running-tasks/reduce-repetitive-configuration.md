@@ -28,44 +28,44 @@ All three libraries have a similar project configuration. Here is what their `pr
 
 ```json {% fileName="libs/lib1/project.json" %}
 {
-  "name": "lib1",
-  "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "libs/lib1/src",
-  "projectType": "library",
-  "targets": {
-    "build": {
-      "executor": "@nx/js:tsc",
-      "outputs": ["{options.outputPath}"],
-      "options": {
-        "outputPath": "dist/libs/lib1",
-        "main": "libs/lib1/src/index.ts",
-        "tsConfig": "libs/lib1/tsconfig.lib.json",
-        "assets": ["libs/lib1/*.md", "libs/lib1/src/images/*"]
-      }
-    },
-    "lint": {
-      "executor": "@nx/eslint:lint",
-      "outputs": ["{options.outputFile}"],
-      "options": {
-        "lintFilePatterns": ["libs/lib1/**/*.ts"]
-      }
-    },
-    "test": {
-      "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
-      "options": {
-        "jestConfig": "libs/lib1/jest.config.ts",
-        "passWithNoTests": true
+   "name": "lib1",
+   "$schema": "../../node_modules/nx/schemas/project-schema.json",
+   "sourceRoot": "libs/lib1/src",
+   "projectType": "library",
+   "targets": {
+      "build": {
+         "executor": "@nx/js:tsc",
+         "outputs": ["{options.outputPath}"],
+         "options": {
+            "outputPath": "dist/libs/lib1",
+            "main": "libs/lib1/src/index.ts",
+            "tsConfig": "libs/lib1/tsconfig.lib.json",
+            "assets": ["libs/lib1/*.md", "libs/lib1/src/images/*"]
+         }
       },
-      "configurations": {
-        "ci": {
-          "ci": true,
-          "codeCoverage": true
-        }
+      "lint": {
+         "executor": "@nx/eslint:lint",
+         "outputs": ["{options.outputFile}"],
+         "options": {
+            "lintFilePatterns": ["libs/lib1/**/*.ts"]
+         }
+      },
+      "test": {
+         "executor": "@nx/jest:jest",
+         "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+         "options": {
+            "jestConfig": "libs/lib1/jest.config.ts",
+            "passWithNoTests": true
+         },
+         "configurations": {
+            "ci": {
+               "ci": true,
+               "codeCoverage": true
+            }
+         }
       }
-    }
-  },
-  "tags": []
+   },
+   "tags": []
 }
 ```
 
@@ -74,45 +74,45 @@ All three libraries have a similar project configuration. Here is what their `pr
 
 ```json {% fileName="libs/lib2/project.json" %}
 {
-  "name": "lib2",
-  "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "libs/lib2/src",
-  "projectType": "library",
-  "targets": {
-    "build": {
-      "executor": "@nx/js:tsc",
-      "outputs": ["{options.outputPath}"],
-      "options": {
-        "outputPath": "dist/libs/lib2",
-        "main": "libs/lib2/src/index.ts",
-        "tsConfig": "libs/lib2/tsconfig.lib.json",
-        "assets": ["libs/lib2/*.md"]
-      }
-    },
-    "lint": {
-      "executor": "@nx/eslint:lint",
-      "outputs": ["{options.outputFile}"],
-      "options": {
-        "lintFilePatterns": ["libs/lib2/**/*.ts"]
-      }
-    },
-    "test": {
-      "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
-      "options": {
-        "jestConfig": "libs/lib2/jest.config.ts",
-        "passWithNoTests": true,
-        "testTimeout": 10000
+   "name": "lib2",
+   "$schema": "../../node_modules/nx/schemas/project-schema.json",
+   "sourceRoot": "libs/lib2/src",
+   "projectType": "library",
+   "targets": {
+      "build": {
+         "executor": "@nx/js:tsc",
+         "outputs": ["{options.outputPath}"],
+         "options": {
+            "outputPath": "dist/libs/lib2",
+            "main": "libs/lib2/src/index.ts",
+            "tsConfig": "libs/lib2/tsconfig.lib.json",
+            "assets": ["libs/lib2/*.md"]
+         }
       },
-      "configurations": {
-        "ci": {
-          "ci": true,
-          "codeCoverage": true
-        }
+      "lint": {
+         "executor": "@nx/eslint:lint",
+         "outputs": ["{options.outputFile}"],
+         "options": {
+            "lintFilePatterns": ["libs/lib2/**/*.ts"]
+         }
+      },
+      "test": {
+         "executor": "@nx/jest:jest",
+         "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+         "options": {
+            "jestConfig": "libs/lib2/jest.config.ts",
+            "passWithNoTests": true,
+            "testTimeout": 10000
+         },
+         "configurations": {
+            "ci": {
+               "ci": true,
+               "codeCoverage": true
+            }
+         }
       }
-    }
-  },
-  "tags": []
+   },
+   "tags": []
 }
 ```
 
@@ -121,44 +121,44 @@ All three libraries have a similar project configuration. Here is what their `pr
 
 ```json {% fileName="libs/lib3/project.json" %}
 {
-  "name": "lib3",
-  "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "libs/lib3/src",
-  "projectType": "library",
-  "targets": {
-    "build": {
-      "executor": "@nx/js:tsc",
-      "outputs": ["{options.outputPath}"],
-      "options": {
-        "outputPath": "dist/libs/lib3",
-        "main": "libs/lib3/src/index.ts",
-        "tsConfig": "libs/lib3/tsconfig.lib.json",
-        "assets": ["libs/lib3/*.md"]
-      }
-    },
-    "lint": {
-      "executor": "@nx/eslint:lint",
-      "outputs": ["{options.outputFile}"],
-      "options": {
-        "lintFilePatterns": ["libs/lib3/**/*.ts"]
-      }
-    },
-    "test": {
-      "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
-      "options": {
-        "jestConfig": "libs/lib3/jest.config.ts",
-        "passWithNoTests": true
+   "name": "lib3",
+   "$schema": "../../node_modules/nx/schemas/project-schema.json",
+   "sourceRoot": "libs/lib3/src",
+   "projectType": "library",
+   "targets": {
+      "build": {
+         "executor": "@nx/js:tsc",
+         "outputs": ["{options.outputPath}"],
+         "options": {
+            "outputPath": "dist/libs/lib3",
+            "main": "libs/lib3/src/index.ts",
+            "tsConfig": "libs/lib3/tsconfig.lib.json",
+            "assets": ["libs/lib3/*.md"]
+         }
       },
-      "configurations": {
-        "ci": {
-          "ci": true,
-          "codeCoverage": true
-        }
+      "lint": {
+         "executor": "@nx/eslint:lint",
+         "outputs": ["{options.outputFile}"],
+         "options": {
+            "lintFilePatterns": ["libs/lib3/**/*.ts"]
+         }
+      },
+      "test": {
+         "executor": "@nx/jest:jest",
+         "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+         "options": {
+            "jestConfig": "libs/lib3/jest.config.ts",
+            "passWithNoTests": true
+         },
+         "configurations": {
+            "ci": {
+               "ci": true,
+               "codeCoverage": true
+            }
+         }
       }
-    }
-  },
-  "tags": []
+   },
+   "tags": []
 }
 ```
 
@@ -173,39 +173,39 @@ Let's use [the `targetDefaults` property](/reference/nx-json#target-defaults) in
 
 ```json {% fileName="nx.json" %}
 {
-  "targetDefaults": {
-    "build": {
-      "executor": "@nx/js:tsc",
-      "outputs": ["{options.outputPath}"],
-      "options": {
-        "outputPath": "dist/{projectRoot}",
-        "main": "{projectRoot}/src/index.ts",
-        "tsConfig": "{projectRoot}/tsconfig.lib.json",
-        "assets": ["{projectRoot}/*.md"]
-      }
-    },
-    "lint": {
-      "executor": "@nx/eslint:lint",
-      "outputs": ["{options.outputFile}"],
-      "options": {
-        "lintFilePatterns": ["{projectRoot}/**/*.ts"]
-      }
-    },
-    "test": {
-      "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
-      "options": {
-        "jestConfig": "{projectRoot}/jest.config.ts",
-        "passWithNoTests": true
+   "targetDefaults": {
+      "build": {
+         "executor": "@nx/js:tsc",
+         "outputs": ["{options.outputPath}"],
+         "options": {
+            "outputPath": "dist/{projectRoot}",
+            "main": "{projectRoot}/src/index.ts",
+            "tsConfig": "{projectRoot}/tsconfig.lib.json",
+            "assets": ["{projectRoot}/*.md"]
+         }
       },
-      "configurations": {
-        "ci": {
-          "ci": true,
-          "codeCoverage": true
-        }
+      "lint": {
+         "executor": "@nx/eslint:lint",
+         "outputs": ["{options.outputFile}"],
+         "options": {
+            "lintFilePatterns": ["{projectRoot}/**/*.ts"]
+         }
+      },
+      "test": {
+         "executor": "@nx/jest:jest",
+         "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+         "options": {
+            "jestConfig": "{projectRoot}/jest.config.ts",
+            "passWithNoTests": true
+         },
+         "configurations": {
+            "ci": {
+               "ci": true,
+               "codeCoverage": true
+            }
+         }
       }
-    }
-  }
+   }
 }
 ```
 
@@ -216,20 +216,20 @@ Now the `project.json` files can be reduced to this:
 
 ```json {% fileName="libs/lib1/project.json" %}
 {
-  "name": "lib1",
-  "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "libs/lib1/src",
-  "projectType": "library",
-  "targets": {
-    "build": {
-      "options": {
-        "assets": ["libs/lib1/*.md", "libs/lib1/src/images/*"]
-      }
-    },
-    "lint": {},
-    "test": {}
-  },
-  "tags": []
+   "name": "lib1",
+   "$schema": "../../node_modules/nx/schemas/project-schema.json",
+   "sourceRoot": "libs/lib1/src",
+   "projectType": "library",
+   "targets": {
+      "build": {
+         "options": {
+            "assets": ["libs/lib1/*.md", "libs/lib1/src/images/*"]
+         }
+      },
+      "lint": {},
+      "test": {}
+   },
+   "tags": []
 }
 ```
 
@@ -238,20 +238,20 @@ Now the `project.json` files can be reduced to this:
 
 ```json {% fileName="libs/lib2/project.json" %}
 {
-  "name": "lib2",
-  "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "libs/lib2/src",
-  "projectType": "library",
-  "targets": {
-    "build": {},
-    "lint": {},
-    "test": {
-      "options": {
-        "testTimeout": 10000
+   "name": "lib2",
+   "$schema": "../../node_modules/nx/schemas/project-schema.json",
+   "sourceRoot": "libs/lib2/src",
+   "projectType": "library",
+   "targets": {
+      "build": {},
+      "lint": {},
+      "test": {
+         "options": {
+            "testTimeout": 10000
+         }
       }
-    }
-  },
-  "tags": []
+   },
+   "tags": []
 }
 ```
 
@@ -260,16 +260,16 @@ Now the `project.json` files can be reduced to this:
 
 ```json {% fileName="libs/lib3/project.json" %}
 {
-  "name": "lib3",
-  "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "libs/lib3/src",
-  "projectType": "library",
-  "targets": {
-    "build": {},
-    "lint": {},
-    "test": {}
-  },
-  "tags": []
+   "name": "lib3",
+   "$schema": "../../node_modules/nx/schemas/project-schema.json",
+   "sourceRoot": "libs/lib3/src",
+   "projectType": "library",
+   "targets": {
+      "build": {},
+      "lint": {},
+      "test": {}
+   },
+   "tags": []
 }
 ```
 
@@ -286,8 +286,8 @@ This change adds 33 lines of code to `nx.json` and removes 84 lines of code from
 
 Reducing lines of code is nice, but just like using the DRY principle in code, there are other benefits:
 
-- You can easily change the default settings for the whole repository in one location.
-- When looking at a single project, it is clear how it differs from the defaults.
+-  You can easily change the default settings for the whole repository in one location.
+-  When looking at a single project, it is clear how it differs from the defaults.
 
 {% callout type="warning" title="Don't Over Do It" %}
 You need to be careful to only put configuration settings in the `targetDefaults` that are actually defaults for the whole repository. If you have to make exceptions for most of the projects in your repository, then that setting probably should not be a default.

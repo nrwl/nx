@@ -1,5 +1,5 @@
 {
-  "compilerOptions": {
-    "importHelpers": true
-  }
+   "compilerOptions": {
+      "importHelpers": true
+   }
 }

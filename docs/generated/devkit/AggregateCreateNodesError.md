@@ -5,30 +5,30 @@ It allows Nx to recieve partial results and continue processing for better UX.
 
 ## Hierarchy
 
-- `Error`
+-  `Error`
 
-  ↳ **`AggregateCreateNodesError`**
+   ↳ **`AggregateCreateNodesError`**
 
 ## Table of contents
 
 ### Constructors
 
-- [constructor](../../devkit/documents/AggregateCreateNodesError#constructor)
+-  [constructor](../../devkit/documents/AggregateCreateNodesError#constructor)
 
 ### Properties
 
-- [cause](../../devkit/documents/AggregateCreateNodesError#cause): unknown
-- [errors](../../devkit/documents/AggregateCreateNodesError#errors): [file: string, error: Error][]
-- [message](../../devkit/documents/AggregateCreateNodesError#message): string
-- [name](../../devkit/documents/AggregateCreateNodesError#name): string
-- [partialResults](../../devkit/documents/AggregateCreateNodesError#partialresults): CreateNodesResultV2
-- [stack](../../devkit/documents/AggregateCreateNodesError#stack): string
-- [prepareStackTrace](../../devkit/documents/AggregateCreateNodesError#preparestacktrace): Function
-- [stackTraceLimit](../../devkit/documents/AggregateCreateNodesError#stacktracelimit): number
+-  [cause](../../devkit/documents/AggregateCreateNodesError#cause): unknown
+-  [errors](../../devkit/documents/AggregateCreateNodesError#errors): [file: string, error: Error][]
+-  [message](../../devkit/documents/AggregateCreateNodesError#message): string
+-  [name](../../devkit/documents/AggregateCreateNodesError#name): string
+-  [partialResults](../../devkit/documents/AggregateCreateNodesError#partialresults): CreateNodesResultV2
+-  [stack](../../devkit/documents/AggregateCreateNodesError#stack): string
+-  [prepareStackTrace](../../devkit/documents/AggregateCreateNodesError#preparestacktrace): Function
+-  [stackTraceLimit](../../devkit/documents/AggregateCreateNodesError#stacktracelimit): number
 
 ### Methods
 
-- [captureStackTrace](../../devkit/documents/AggregateCreateNodesError#capturestacktrace)
+-  [captureStackTrace](../../devkit/documents/AggregateCreateNodesError#capturestacktrace)
 
 ## Constructors
 
@@ -53,22 +53,22 @@ Throwing this error from a `createNodesV2` function will allow Nx to continue pr
 
 ```ts
 export async function createNodesV2(files: string[]) {
-  const partialResults = [];
-  const errors = [];
-  await Promise.all(
-    files.map(async (file) => {
-      try {
-        const result = await createNodes(file);
-        partialResults.push(result);
-      } catch (e) {
-        errors.push([file, e]);
-      }
-    })
-  );
-  if (errors.length > 0) {
-    throw new AggregateCreateNodesError(errors, partialResults);
-  }
-  return partialResults;
+   const partialResults = [];
+   const errors = [];
+   await Promise.all(
+      files.map(async (file) => {
+         try {
+            const result = await createNodes(file);
+            partialResults.push(result);
+         } catch (e) {
+            errors.push([file, e]);
+         }
+      })
+   );
+   if (errors.length > 0) {
+      throw new AggregateCreateNodesError(errors, partialResults);
+   }
+   return partialResults;
 }
 ```
 

@@ -1,3 +1,3 @@
 export interface SetupVerdaccioGeneratorSchema {
-  skipFormat: boolean;
+   skipFormat: boolean;
 }

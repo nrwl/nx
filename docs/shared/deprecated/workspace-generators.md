@@ -12,22 +12,22 @@ Check the [local generator guide](/extending-nx/recipes/local-generators) for in
 When migrating to Nx 16, a new workspace plugin is automatically generated in the tools folder if you already have workspace-generators.
 {% /callout %}
 
-- If you don't already have a local plugin, use Nx to generate one:
+-  If you don't already have a local plugin, use Nx to generate one:
 
 ```shell
 npm add -D @nx/plugin
 nx g @nx/plugin:plugin my-plugin
 ```
 
-- Use the Nx CLI to generate the initial files needed for your generator. Replace `my-generator` with the name of your workspace generator.
+-  Use the Nx CLI to generate the initial files needed for your generator. Replace `my-generator` with the name of your workspace generator.
 
 ```shell
 nx generate @nx/plugin:generator my-generator --project=my-plugin
 ```
 
-- Copy the code for your workspace generator into the newly created generator's folder. e.g. `libs/my-plugin/src/generators/my-generator/`
+-  Copy the code for your workspace generator into the newly created generator's folder. e.g. `libs/my-plugin/src/generators/my-generator/`
 
-- Now you can run the generator like this:
+-  Now you can run the generator like this:
 
 ```shell
 nx g my-generator

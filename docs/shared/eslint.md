@@ -8,22 +8,22 @@ Let's take an example of an ESLint config that Nx might generate for you out of 
 
 ```jsonc {% fileName="apps/tuskdesk/.eslintrc.json" %}
 {
-  "extends": ["plugin:@nx/react", "../../.eslintrc.json"],
-  "ignorePatterns": ["!**/*"],
-  "overrides": [
-    {
-      "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
-      "rules": {}
-    },
-    {
-      "files": ["*.ts", "*.tsx"],
-      "rules": {}
-    },
-    {
-      "files": ["*.js", "*.jsx"],
-      "rules": {}
-    }
-  ]
+   "extends": ["plugin:@nx/react", "../../.eslintrc.json"],
+   "ignorePatterns": ["!**/*"],
+   "overrides": [
+      {
+         "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
+         "rules": {}
+      },
+      {
+         "files": ["*.ts", "*.tsx"],
+         "rules": {}
+      },
+      {
+         "files": ["*.js", "*.jsx"],
+         "rules": {}
+      }
+   ]
 }
 ```
 
@@ -33,25 +33,25 @@ If we now come in and add a rule which does require type information, for exampl
 
 ```jsonc {% fileName="apps/tuskdesk/.eslintrc.json" %}
 {
-  "extends": ["plugin:@nx/react", "../../.eslintrc.json"],
-  "ignorePatterns": ["!**/*"],
-  "overrides": [
-    {
-      "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
-      "rules": {
-        // This rule requires the TypeScript type checker to be present when it runs
-        "@typescript-eslint/await-thenable": "error"
+   "extends": ["plugin:@nx/react", "../../.eslintrc.json"],
+   "ignorePatterns": ["!**/*"],
+   "overrides": [
+      {
+         "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
+         "rules": {
+            // This rule requires the TypeScript type checker to be present when it runs
+            "@typescript-eslint/await-thenable": "error"
+         }
+      },
+      {
+         "files": ["*.ts", "*.tsx"],
+         "rules": {}
+      },
+      {
+         "files": ["*.js", "*.jsx"],
+         "rules": {}
       }
-    },
-    {
-      "files": ["*.ts", "*.tsx"],
-      "rules": {}
-    },
-    {
-      "files": ["*.js", "*.jsx"],
-      "rules": {}
-    }
-  ]
+   ]
 }
 ```
 
@@ -74,28 +74,28 @@ The solution is to update our config once more, this time to set `parserOptions.
 
 ```jsonc {% fileName="apps/tuskdesk/.eslintrc.json" %}
 {
-  "extends": ["plugin:@nx/react", "../../.eslintrc.json"],
-  "ignorePatterns": ["!**/*"],
-  "overrides": [
-    {
-      "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
-      // We set parserOptions.project for the project to allow TypeScript to create the type-checker behind the scenes when we run linting
-      "parserOptions": {
-        "project": ["apps/tuskdesk/tsconfig.*?.json"]
+   "extends": ["plugin:@nx/react", "../../.eslintrc.json"],
+   "ignorePatterns": ["!**/*"],
+   "overrides": [
+      {
+         "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
+         // We set parserOptions.project for the project to allow TypeScript to create the type-checker behind the scenes when we run linting
+         "parserOptions": {
+            "project": ["apps/tuskdesk/tsconfig.*?.json"]
+         },
+         "rules": {
+            "@typescript-eslint/await-thenable": "error"
+         }
       },
-      "rules": {
-        "@typescript-eslint/await-thenable": "error"
+      {
+         "files": ["*.ts", "*.tsx"],
+         "rules": {}
+      },
+      {
+         "files": ["*.js", "*.jsx"],
+         "rules": {}
       }
-    },
-    {
-      "files": ["*.ts", "*.tsx"],
-      "rules": {}
-    },
-    {
-      "files": ["*.js", "*.jsx"],
-      "rules": {}
-    }
-  ]
+   ]
 }
 ```
 

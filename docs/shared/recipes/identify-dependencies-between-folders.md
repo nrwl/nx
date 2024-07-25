@@ -23,7 +23,7 @@ Nx 15.3 introduced nested projects, which are necessary for Nx to be aware of `p
 
 ```json {% fileName="project.json" %}
 {
-  "name": "[name_of_the_folder]"
+   "name": "[name_of_the_folder]"
 }
 ```
 
@@ -37,116 +37,116 @@ Here is a graph that was created when doing this exercise on the [Angular Jump S
 
 ```json
 {
-  "hash": "9713539543f19c5299e56715e78c576a40b91056b9cbb4e42118780cfcd22b5e",
-  "projects": [
-    {
-      "name": "customers",
-      "type": "lib",
-      "data": {
-        "tags": []
-      }
-    },
-    {
-      "name": "customer",
-      "type": "lib",
-      "data": {
-        "tags": []
-      }
-    },
-    {
-      "name": "orders",
-      "type": "lib",
-      "data": {
-        "tags": []
-      }
-    },
-    {
-      "name": "shared",
-      "type": "lib",
-      "data": {
-        "tags": []
-      }
-    },
-    {
-      "name": "about",
-      "type": "lib",
-      "data": {
-        "tags": []
-      }
-    },
-    {
-      "name": "login",
-      "type": "lib",
-      "data": {
-        "tags": []
-      }
-    },
-    {
-      "name": "core",
-      "type": "lib",
-      "data": {
-        "tags": []
-      }
-    },
-    {
-      "name": "playground",
-      "type": "app",
-      "data": {
-        "tags": []
-      }
-    },
-    {
-      "name": "angular-jumpstart",
-      "type": "app",
-      "data": {
-        "tags": []
-      }
-    }
-  ],
-  "dependencies": {
-    "customers": [
-      { "source": "customers", "target": "shared", "type": "static" },
-      { "source": "customers", "target": "core", "type": "static" }
-    ],
-    "customer": [
-      { "source": "customer", "target": "shared", "type": "static" },
-      { "source": "customer", "target": "core", "type": "static" }
-    ],
-    "orders": [
-      { "source": "orders", "target": "core", "type": "static" },
-      { "source": "orders", "target": "shared", "type": "static" }
-    ],
-    "shared": [],
-    "about": [],
-    "login": [
-      { "source": "login", "target": "core", "type": "static" },
-      { "source": "login", "target": "shared", "type": "static" }
-    ],
-    "core": [
-      { "source": "core", "target": "shared", "type": "static" },
-      { "source": "core", "target": "angular-jumpstart", "type": "static" }
-    ],
-    "playground": [
+   "hash": "9713539543f19c5299e56715e78c576a40b91056b9cbb4e42118780cfcd22b5e",
+   "projects": [
       {
-        "source": "playground",
-        "target": "angular-jumpstart",
-        "type": "static"
+         "name": "customers",
+         "type": "lib",
+         "data": {
+            "tags": []
+         }
       },
-      { "source": "playground", "target": "core", "type": "static" },
-      { "source": "playground", "target": "customer", "type": "static" },
-      { "source": "playground", "target": "customers", "type": "static" },
-      { "source": "playground", "target": "orders", "type": "static" },
-      { "source": "playground", "target": "about", "type": "static" },
-      { "source": "playground", "target": "login", "type": "static" },
-      { "source": "playground", "target": "shared", "type": "static" }
-    ],
-    "angular-jumpstart": []
-  },
-  "workspaceLayout": { "appsDir": "projects", "libsDir": "projects" },
-  "affectedProjectIds": [],
-  "focus": null,
-  "groupByFolder": false,
-  "exclude": []
+      {
+         "name": "customer",
+         "type": "lib",
+         "data": {
+            "tags": []
+         }
+      },
+      {
+         "name": "orders",
+         "type": "lib",
+         "data": {
+            "tags": []
+         }
+      },
+      {
+         "name": "shared",
+         "type": "lib",
+         "data": {
+            "tags": []
+         }
+      },
+      {
+         "name": "about",
+         "type": "lib",
+         "data": {
+            "tags": []
+         }
+      },
+      {
+         "name": "login",
+         "type": "lib",
+         "data": {
+            "tags": []
+         }
+      },
+      {
+         "name": "core",
+         "type": "lib",
+         "data": {
+            "tags": []
+         }
+      },
+      {
+         "name": "playground",
+         "type": "app",
+         "data": {
+            "tags": []
+         }
+      },
+      {
+         "name": "angular-jumpstart",
+         "type": "app",
+         "data": {
+            "tags": []
+         }
+      }
+   ],
+   "dependencies": {
+      "customers": [
+         { "source": "customers", "target": "shared", "type": "static" },
+         { "source": "customers", "target": "core", "type": "static" }
+      ],
+      "customer": [
+         { "source": "customer", "target": "shared", "type": "static" },
+         { "source": "customer", "target": "core", "type": "static" }
+      ],
+      "orders": [
+         { "source": "orders", "target": "core", "type": "static" },
+         { "source": "orders", "target": "shared", "type": "static" }
+      ],
+      "shared": [],
+      "about": [],
+      "login": [
+         { "source": "login", "target": "core", "type": "static" },
+         { "source": "login", "target": "shared", "type": "static" }
+      ],
+      "core": [
+         { "source": "core", "target": "shared", "type": "static" },
+         { "source": "core", "target": "angular-jumpstart", "type": "static" }
+      ],
+      "playground": [
+         {
+            "source": "playground",
+            "target": "angular-jumpstart",
+            "type": "static"
+         },
+         { "source": "playground", "target": "core", "type": "static" },
+         { "source": "playground", "target": "customer", "type": "static" },
+         { "source": "playground", "target": "customers", "type": "static" },
+         { "source": "playground", "target": "orders", "type": "static" },
+         { "source": "playground", "target": "about", "type": "static" },
+         { "source": "playground", "target": "login", "type": "static" },
+         { "source": "playground", "target": "shared", "type": "static" }
+      ],
+      "angular-jumpstart": []
+   },
+   "workspaceLayout": { "appsDir": "projects", "libsDir": "projects" },
+   "affectedProjectIds": [],
+   "focus": null,
+   "groupByFolder": false,
+   "exclude": []
 }
 ```
 

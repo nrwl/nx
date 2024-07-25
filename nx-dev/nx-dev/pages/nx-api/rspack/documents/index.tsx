@@ -11,86 +11,86 @@ import { useNavToggle } from '../../../../lib/navigation-toggle.effect';
 import { pkg } from '../../../../lib/rspack/pkg';
 
 export default function DocumentsIndex({
-  menu,
-  pkg,
+   menu,
+   pkg,
 }: {
-  menu: MenuItem[];
-  pkg: ProcessedPackageMetadata;
+   menu: MenuItem[];
+   pkg: ProcessedPackageMetadata;
 }): JSX.Element {
-  const router = useRouter();
-  const { toggleNav, navIsOpen } = useNavToggle();
-  const wrapperElement = useRef(null);
+   const router = useRouter();
+   const { toggleNav, navIsOpen } = useNavToggle();
+   const wrapperElement = useRef(null);
 
-  useEffect(() => {
-    const handleRouteChange = (url: string) => {
-      if (url.includes('#')) return;
-      if (!wrapperElement) return;
+   useEffect(() => {
+      const handleRouteChange = (url: string) => {
+         if (url.includes('#')) return;
+         if (!wrapperElement) return;
 
-      (wrapperElement as any).current.scrollTo({
-        top: 0,
-        left: 0,
-        behavior: 'smooth',
-      });
-    };
+         (wrapperElement as any).current.scrollTo({
+            top: 0,
+            left: 0,
+            behavior: 'smooth',
+         });
+      };
 
-    router.events.on('routeChangeComplete', handleRouteChange);
-    return () => router.events.off('routeChangeComplete', handleRouteChange);
-  }, [router, wrapperElement]);
+      router.events.on('routeChangeComplete', handleRouteChange);
+      return () => router.events.off('routeChangeComplete', handleRouteChange);
+   }, [router, wrapperElement]);
 
-  const vm: { menu: Menu; package: ProcessedPackageMetadata } = {
-    menu: {
-      sections: sortCorePackagesFirst<MenuSection>(
-        getPackagesSections(menu),
-        'id'
-      ),
-    },
-    package: pkg,
-  };
+   const vm: { menu: Menu; package: ProcessedPackageMetadata } = {
+      menu: {
+         sections: sortCorePackagesFirst<MenuSection>(
+            getPackagesSections(menu),
+            'id'
+         ),
+      },
+      package: pkg,
+   };
 
-  /**
-   * Show either the docviewer or the package view depending on:
-   * - docviewer: it is a documentation document
-   * - packageviewer: it is package generated documentation
-   */
+   /**
+    * Show either the docviewer or the package view depending on:
+    * - docviewer: it is a documentation document
+    * - packageviewer: it is package generated documentation
+    */
 
-  return (
-    <div id="shell" className="flex h-full flex-col">
-      <div className="w-full flex-shrink-0">
-        <DocumentationHeader isNavOpen={navIsOpen} toggleNav={toggleNav} />
+   return (
+      <div id="shell" className="flex h-full flex-col">
+         <div className="w-full flex-shrink-0">
+            <DocumentationHeader isNavOpen={navIsOpen} toggleNav={toggleNav} />
+         </div>
+         <main
+            id="main"
+            role="main"
+            className="flex h-full flex-1 overflow-y-hidden"
+         >
+            <SidebarContainer
+               menu={vm.menu}
+               navIsOpen={navIsOpen}
+               toggleNav={toggleNav}
+            />
+            <div
+               ref={wrapperElement}
+               id="wrapper"
+               data-testid="wrapper"
+               className="relative flex flex-grow flex-col items-stretch justify-start overflow-y-scroll"
+            >
+               <PackageSchemaSubList pkg={vm.package} type={'document'} />
+            </div>
+         </main>
       </div>
-      <main
-        id="main"
-        role="main"
-        className="flex h-full flex-1 overflow-y-hidden"
-      >
-        <SidebarContainer
-          menu={vm.menu}
-          navIsOpen={navIsOpen}
-          toggleNav={toggleNav}
-        />
-        <div
-          ref={wrapperElement}
-          id="wrapper"
-          data-testid="wrapper"
-          className="relative flex flex-grow flex-col items-stretch justify-start overflow-y-scroll"
-        >
-          <PackageSchemaSubList pkg={vm.package} type={'document'} />
-        </div>
-      </main>
-    </div>
-  );
+   );
 }
 
 export async function getStaticProps(): Promise<{
-  props: {
-    menu: MenuItem[];
-    pkg: ProcessedPackageMetadata;
-  };
+   props: {
+      menu: MenuItem[];
+      pkg: ProcessedPackageMetadata;
+   };
 }> {
-  return {
-    props: {
-      menu: menusApi.getMenu('nx-api', 'nx-api'),
-      pkg,
-    },
-  };
+   return {
+      props: {
+         menu: menusApi.getMenu('nx-api', 'nx-api'),
+         pkg,
+      },
+   };
 }

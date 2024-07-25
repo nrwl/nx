@@ -1,57 +1,57 @@
 {
-  "name": "e2e-graph-client",
-  "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "graph/client-e2e/src",
-  "projectType": "application",
-  "targets": {
-    "e2e-base": {
-      "executor": "@nx/cypress:cypress",
-      "options": {
-        "testingType": "e2e",
-        "skipServe": true,
-        "browser": "chrome"
+   "name": "e2e-graph-client",
+   "$schema": "../../node_modules/nx/schemas/project-schema.json",
+   "sourceRoot": "graph/client-e2e/src",
+   "projectType": "application",
+   "targets": {
+      "e2e-base": {
+         "executor": "@nx/cypress:cypress",
+         "options": {
+            "testingType": "e2e",
+            "skipServe": true,
+            "browser": "chrome"
+         },
+         "configurations": {
+            "dev": {
+               "cypressConfig": "graph/client-e2e/cypress.config.ts"
+            },
+            "watch": {
+               "cypressConfig": "graph/client-e2e/cypress-watch-mode.config.ts"
+            },
+            "release": {
+               "cypressConfig": "graph/client-e2e/cypress-release.config.ts"
+            },
+            "release-static": {
+               "cypressConfig": "graph/client-e2e/cypress-release-static.config.ts"
+            }
+         },
+         "defaultConfiguration": "dev"
       },
-      "configurations": {
-        "dev": {
-          "cypressConfig": "graph/client-e2e/cypress.config.ts"
-        },
-        "watch": {
-          "cypressConfig": "graph/client-e2e/cypress-watch-mode.config.ts"
-        },
-        "release": {
-          "cypressConfig": "graph/client-e2e/cypress-release.config.ts"
-        },
-        "release-static": {
-          "cypressConfig": "graph/client-e2e/cypress-release-static.config.ts"
-        }
+      "e2e-local": {
+         "executor": "nx:run-commands",
+         "outputs": [],
+         "options": {
+            "commands": [
+               "npx nx e2e-base e2e-graph-client --configuration dev",
+               "npx nx e2e-base e2e-graph-client --configuration watch",
+               "npx nx e2e-base e2e-graph-client --configuration release",
+               "npx nx e2e-base e2e-graph-client --configuration release-static"
+            ],
+            "parallel": false
+         }
       },
-      "defaultConfiguration": "dev"
-    },
-    "e2e-local": {
-      "executor": "nx:run-commands",
-      "outputs": [],
-      "options": {
-        "commands": [
-          "npx nx e2e-base e2e-graph-client --configuration dev",
-          "npx nx e2e-base e2e-graph-client --configuration watch",
-          "npx nx e2e-base e2e-graph-client --configuration release",
-          "npx nx e2e-base e2e-graph-client --configuration release-static"
-        ],
-        "parallel": false
+      "e2e": {
+         "executor": "nx:run-commands",
+         "outputs": [],
+         "options": {
+            "commands": [
+               "npx nx e2e-base e2e-graph-client --configuration dev",
+               "npx nx e2e-base e2e-graph-client --configuration release",
+               "npx nx e2e-base e2e-graph-client --configuration release-static"
+            ],
+            "parallel": false
+         }
       }
-    },
-    "e2e": {
-      "executor": "nx:run-commands",
-      "outputs": [],
-      "options": {
-        "commands": [
-          "npx nx e2e-base e2e-graph-client --configuration dev",
-          "npx nx e2e-base e2e-graph-client --configuration release",
-          "npx nx e2e-base e2e-graph-client --configuration release-static"
-        ],
-        "parallel": false
-      }
-    }
-  },
-  "implicitDependencies": ["graph-client"]
+   },
+   "implicitDependencies": ["graph-client"]
 }

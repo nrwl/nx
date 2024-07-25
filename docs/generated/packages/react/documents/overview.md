@@ -1,10 +1,10 @@
 The React plugin contains executors and generators for managing React applications and libraries within an Nx workspace.
 It provides:
 
-- Integration with libraries such as Jest, Cypress, and Storybook.
-- Generators for applications, libraries, components, hooks, and more.
-- Library build support for publishing packages to npm or other registries.
-- Utilities for automatic workspace refactoring.
+-  Integration with libraries such as Jest, Cypress, and Storybook.
+-  Generators for applications, libraries, components, hooks, and more.
+-  Library build support for publishing packages to npm or other registries.
+-  Utilities for automatic workspace refactoring.
 
 ## Setting Up @nx/react
 
@@ -147,8 +147,8 @@ The library in `dist` is publishable to npm or a private registry.
 
 ## More Documentation
 
-- [React Standalone Tutorial](/getting-started/tutorials/react-standalone-tutorial)
-- [React Monorepo Tutorial](/getting-started/tutorials/react-monorepo-tutorial)
-- [Using Cypress](/nx-api/cypress)
-- [Using Jest](/nx-api/jest)
-- [Using Storybook](/recipes/storybook/overview-react)
+-  [React Standalone Tutorial](/getting-started/tutorials/react-standalone-tutorial)
+-  [React Monorepo Tutorial](/getting-started/tutorials/react-monorepo-tutorial)
+-  [Using Cypress](/nx-api/cypress)
+-  [Using Jest](/nx-api/jest)
+-  [Using Storybook](/recipes/storybook/overview-react)

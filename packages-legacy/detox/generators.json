@@ -1,4 +1,4 @@
 {
-  "extends": ["@nx/detox"],
-  "schematics": {}
+   "extends": ["@nx/detox"],
+   "schematics": {}
 }

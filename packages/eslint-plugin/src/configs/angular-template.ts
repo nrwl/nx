@@ -13,7 +13,7 @@
  * package.
  */
 export default {
-  plugins: ['@angular-eslint/template'],
-  extends: ['plugin:@angular-eslint/template/recommended'],
-  rules: {},
+   plugins: ['@angular-eslint/template'],
+   extends: ['plugin:@angular-eslint/template/recommended'],
+   rules: {},
 };

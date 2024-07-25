@@ -1,9 +1,9 @@
 import {
-  DependencyType,
-  ProjectGraph,
-  readProjectConfiguration,
-  Tree,
-  updateProjectConfiguration,
+   DependencyType,
+   ProjectGraph,
+   readProjectConfiguration,
+   Tree,
+   updateProjectConfiguration,
 } from '@nx/devkit';
 import { Schema } from '../schema';
 import { checkDependencies } from './check-dependencies';
@@ -19,9 +19,9 @@ import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 //
 
 describe('empty', () => {
-  it('empty', () => {
-    expect(1).toEqual(1);
-  });
+   it('empty', () => {
+      expect(1).toEqual(1);
+   });
 });
 
 // describe('checkDependencies', () => {

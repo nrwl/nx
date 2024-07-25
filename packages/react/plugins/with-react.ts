@@ -5,12 +5,12 @@ import { applyReactConfig } from './nx-react-webpack-plugin/lib/apply-react-conf
 const processed = new Set();
 
 export interface SvgrOptions {
-  svgo?: boolean;
-  titleProp?: boolean;
-  ref?: boolean;
+   svgo?: boolean;
+   titleProp?: boolean;
+   ref?: boolean;
 }
 export interface WithReactOptions extends WithWebOptions {
-  svgr?: boolean | SvgrOptions;
+   svgr?: boolean | SvgrOptions;
 }
 
 /**
@@ -18,20 +18,20 @@ export interface WithReactOptions extends WithWebOptions {
  * @returns {NxWebpackPlugin}
  */
 export function withReact(pluginOptions: WithReactOptions = {}) {
-  return function configure(
-    config: Configuration,
-    context: NxWebpackExecutionContext
-  ): Configuration {
-    const { withWeb } = require('@nx/webpack');
+   return function configure(
+      config: Configuration,
+      context: NxWebpackExecutionContext
+   ): Configuration {
+      const { withWeb } = require('@nx/webpack');
 
-    if (processed.has(config)) return config;
+      if (processed.has(config)) return config;
 
-    // Apply web config for CSS, JSX, index.html handling, etc.
-    config = withWeb(pluginOptions)(config, context);
+      // Apply web config for CSS, JSX, index.html handling, etc.
+      config = withWeb(pluginOptions)(config, context);
 
-    applyReactConfig(pluginOptions, config);
+      applyReactConfig(pluginOptions, config);
 
-    processed.add(config);
-    return config;
-  };
+      processed.add(config);
+      return config;
+   };
 }

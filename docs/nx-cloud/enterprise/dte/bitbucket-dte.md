@@ -10,35 +10,35 @@ Run agents directly on Bitbucket Pipelines with the workflow below:
 image: node:20
 
 clone:
-  depth: full
+   depth: full
 
 definitions:
-  steps:
-    - step: &agent
-        name: Agent
-        script:
-          - export NX_BRANCH=$BITBUCKET_PR_ID
+   steps:
+      - step: &agent
+           name: Agent
+           script:
+              - export NX_BRANCH=$BITBUCKET_PR_ID
 
-          - npm ci
-          - npx nx-cloud start-agent
+              - npm ci
+              - npx nx-cloud start-agent
 
 pipelines:
-  pull-requests:
-    '**':
-      - parallel:
-          - step:
-              name: CI
-              script:
-                - export NX_BRANCH=$BITBUCKET_PR_ID
-                - export NX_CLOUD_DISTRIBUTED_EXECUTION_AGENT_COUNT=3
+   pull-requests:
+      '**':
+         - parallel:
+              - step:
+                   name: CI
+                   script:
+                      - export NX_BRANCH=$BITBUCKET_PR_ID
+                      - export NX_CLOUD_DISTRIBUTED_EXECUTION_AGENT_COUNT=3
 
-                - npm ci
-                - npx nx-cloud start-ci-run --distribute-on="manual" --stop-agents-after="e2e-ci" --agent-count=3
-                - npx nx-cloud record -- nx format:check
-                - npx nx affected --target=lint,test,build,e2e-ci --parallel=2
-          - step: *agent
-          - step: *agent
-          - step: *agent
+                      - npm ci
+                      - npx nx-cloud start-ci-run --distribute-on="manual" --stop-agents-after="e2e-ci" --agent-count=3
+                      - npx nx-cloud record -- nx format:check
+                      - npx nx affected --target=lint,test,build,e2e-ci --parallel=2
+              - step: *agent
+              - step: *agent
+              - step: *agent
 ```
 
 This configuration is setting up two types of jobs - a main job and three agent jobs.

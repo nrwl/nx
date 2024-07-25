@@ -1,5 +1,5 @@
 export interface SetupTailwindSchema {
-  project: string;
-  js?: boolean;
-  skipFormat?: boolean;
+   project: string;
+   js?: boolean;
+   skipFormat?: boolean;
 }

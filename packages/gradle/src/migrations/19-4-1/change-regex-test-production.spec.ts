@@ -3,19 +3,19 @@ import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import update from './change-regex-test-production';
 
 describe('change-regex-test-production', () => {
-  let tree: Tree;
+   let tree: Tree;
 
-  beforeAll(() => {
-    tree = createTreeWithEmptyWorkspace();
-  });
+   beforeAll(() => {
+      tree = createTreeWithEmptyWorkspace();
+   });
 
-  it('should not add to the namedInputs if it does not exist', async () => {
-    tree.write(
-      'nx.json',
-      JSON.stringify({ namedInputs: {}, plugins: ['@nx/gradle'] })
-    );
-    update(tree);
-    expect(readNxJson(tree)).toMatchInlineSnapshot(`
+   it('should not add to the namedInputs if it does not exist', async () => {
+      tree.write(
+         'nx.json',
+         JSON.stringify({ namedInputs: {}, plugins: ['@nx/gradle'] })
+      );
+      update(tree);
+      expect(readNxJson(tree)).toMatchInlineSnapshot(`
       {
         "namedInputs": {},
         "plugins": [
@@ -23,18 +23,18 @@ describe('change-regex-test-production', () => {
         ],
       }
     `);
-  });
+   });
 
-  it('should not add to the namedInputs production if it is empty', async () => {
-    tree.write(
-      'nx.json',
-      JSON.stringify({
-        namedInputs: { production: [] },
-        plugins: ['@nx/gradle'],
-      })
-    );
-    update(tree);
-    expect(readNxJson(tree)).toMatchInlineSnapshot(`
+   it('should not add to the namedInputs production if it is empty', async () => {
+      tree.write(
+         'nx.json',
+         JSON.stringify({
+            namedInputs: { production: [] },
+            plugins: ['@nx/gradle'],
+         })
+      );
+      update(tree);
+      expect(readNxJson(tree)).toMatchInlineSnapshot(`
       {
         "namedInputs": {
           "production": [],
@@ -44,18 +44,18 @@ describe('change-regex-test-production', () => {
         ],
       }
     `);
-  });
+   });
 
-  it('should remove !{projectRoot}/test/**/* from the namedInputs production', async () => {
-    tree.write(
-      'nx.json',
-      JSON.stringify({
-        namedInputs: { production: ['!{projectRoot}/test/**/*'] },
-        plugins: ['@nx/gradle'],
-      })
-    );
-    update(tree);
-    expect(readNxJson(tree)).toMatchInlineSnapshot(`
+   it('should remove !{projectRoot}/test/**/* from the namedInputs production', async () => {
+      tree.write(
+         'nx.json',
+         JSON.stringify({
+            namedInputs: { production: ['!{projectRoot}/test/**/*'] },
+            plugins: ['@nx/gradle'],
+         })
+      );
+      update(tree);
+      expect(readNxJson(tree)).toMatchInlineSnapshot(`
       {
         "namedInputs": {
           "production": [
@@ -67,5 +67,5 @@ describe('change-regex-test-production', () => {
         ],
       }
     `);
-  });
+   });
 });

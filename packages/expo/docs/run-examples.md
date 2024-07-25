@@ -4,24 +4,24 @@ The `run` command allows you to compile your app locally.
 
 ```json
 {
-  "name": "mobile",
-  //...
-  "targets": {
-    //...
-    "run-ios": {
-      "executor": "@nx/expo:run",
-      "options": {
-        "platform": "ios"
+   "name": "mobile",
+   //...
+   "targets": {
+      //...
+      "run-ios": {
+         "executor": "@nx/expo:run",
+         "options": {
+            "platform": "ios"
+         }
+      },
+      "run-android": {
+         "executor": "@nx/expo:run",
+         "options": {
+            "platform": "android"
+         }
       }
-    },
-    "run-android": {
-      "executor": "@nx/expo:run",
-      "options": {
-        "platform": "android"
-      }
-    }
-    //...
-  }
+      //...
+   }
 }
 ```
 

@@ -1,3 +1,3 @@
 export function isOnDaemon() {
-  return !!global.NX_DAEMON;
+   return !!global.NX_DAEMON;
 }

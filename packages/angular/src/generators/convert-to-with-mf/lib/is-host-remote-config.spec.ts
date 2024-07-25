@@ -1,14 +1,14 @@
 import { tsquery } from '@phenomnomnominal/tsquery';
 import {
-  isHostRemoteConfig,
-  getRemotesFromHost,
-  getExposedModulesFromRemote,
+   isHostRemoteConfig,
+   getRemotesFromHost,
+   getExposedModulesFromRemote,
 } from './is-host-remote-config';
 
 describe('isHostRemoteConfig', () => {
-  it('should return host when correct host config found', () => {
-    // ARRANGE
-    const sourceText = `module.exports = {
+   it('should return host when correct host config found', () => {
+      // ARRANGE
+      const sourceText = `module.exports = {
             plugins: [
                 new ModuleFederationPlugin({
                     remotes: {
@@ -18,18 +18,18 @@ describe('isHostRemoteConfig', () => {
             ]
         }`;
 
-    const ast = tsquery.ast(sourceText);
+      const ast = tsquery.ast(sourceText);
 
-    // ACT
-    const result = isHostRemoteConfig(ast);
+      // ACT
+      const result = isHostRemoteConfig(ast);
 
-    // ASSERT
-    expect(result).toEqual('host');
-  });
+      // ASSERT
+      expect(result).toEqual('host');
+   });
 
-  it('should return remote when correct remote config found', () => {
-    // ARRANGE
-    const sourceText = `module.exports = {
+   it('should return remote when correct remote config found', () => {
+      // ARRANGE
+      const sourceText = `module.exports = {
             plugins: [
                 new ModuleFederationPlugin({
                     exposes: {
@@ -39,18 +39,18 @@ describe('isHostRemoteConfig', () => {
             ]
         }`;
 
-    const ast = tsquery.ast(sourceText);
+      const ast = tsquery.ast(sourceText);
 
-    // ACT
-    const result = isHostRemoteConfig(ast);
+      // ACT
+      const result = isHostRemoteConfig(ast);
 
-    // ASSERT
-    expect(result).toEqual('remote');
-  });
+      // ASSERT
+      expect(result).toEqual('remote');
+   });
 
-  it('should return both when correct remote and host config found', () => {
-    // ARRANGE
-    const sourceText = `module.exports = {
+   it('should return both when correct remote and host config found', () => {
+      // ARRANGE
+      const sourceText = `module.exports = {
             plugins: [
                 new ModuleFederationPlugin({
                     remotes: {
@@ -63,36 +63,36 @@ describe('isHostRemoteConfig', () => {
             ]
         }`;
 
-    const ast = tsquery.ast(sourceText);
+      const ast = tsquery.ast(sourceText);
 
-    // ACT
-    const result = isHostRemoteConfig(ast);
+      // ACT
+      const result = isHostRemoteConfig(ast);
 
-    // ASSERT
-    expect(result).toEqual('both');
-  });
+      // ASSERT
+      expect(result).toEqual('both');
+   });
 
-  it('should return false when no valid config found', () => {
-    // ARRANGE
-    const sourceText = `module.exports = {
+   it('should return false when no valid config found', () => {
+      // ARRANGE
+      const sourceText = `module.exports = {
             plugins: [
                 new ModuleFederationPlugin({
                 })
             ]
         }`;
 
-    const ast = tsquery.ast(sourceText);
+      const ast = tsquery.ast(sourceText);
 
-    // ACT
-    const result = isHostRemoteConfig(ast);
+      // ACT
+      const result = isHostRemoteConfig(ast);
 
-    // ASSERT
-    expect(result).toBeFalsy();
-  });
+      // ASSERT
+      expect(result).toBeFalsy();
+   });
 
-  it('should return remotes from the host correctly', () => {
-    // ARRANGE
-    const sourceText = `module.exports = {
+   it('should return remotes from the host correctly', () => {
+      // ARRANGE
+      const sourceText = `module.exports = {
             plugins: [
                 new ModuleFederationPlugin({
                     remotes: {
@@ -102,18 +102,18 @@ describe('isHostRemoteConfig', () => {
             ]
         }`;
 
-    const ast = tsquery.ast(sourceText);
+      const ast = tsquery.ast(sourceText);
 
-    // ACT
-    const result = getRemotesFromHost(ast);
+      // ACT
+      const result = getRemotesFromHost(ast);
 
-    // ASSERT
-    expect(result).toEqual([['remote1', 'http://localhost:4201']]);
-  });
+      // ASSERT
+      expect(result).toEqual([['remote1', 'http://localhost:4201']]);
+   });
 
-  it('should return remote when correct remote config found', () => {
-    // ARRANGE
-    const sourceText = `module.exports = {
+   it('should return remote when correct remote config found', () => {
+      // ARRANGE
+      const sourceText = `module.exports = {
             plugins: [
                 new ModuleFederationPlugin({
                     exposes: {
@@ -123,13 +123,13 @@ describe('isHostRemoteConfig', () => {
             ]
         }`;
 
-    const ast = tsquery.ast(sourceText);
+      const ast = tsquery.ast(sourceText);
 
-    // ACT
-    const result = getExposedModulesFromRemote(ast);
+      // ACT
+      const result = getExposedModulesFromRemote(ast);
 
-    // ASSERT
-    // this needs to be snapshot because prettier formats a literal string incorrectly, causing test failure
-    expect(result).toMatchSnapshot();
-  });
+      // ASSERT
+      // this needs to be snapshot because prettier formats a literal string incorrectly, causing test failure
+      expect(result).toMatchSnapshot();
+   });
 });

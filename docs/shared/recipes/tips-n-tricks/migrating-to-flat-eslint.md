@@ -2,9 +2,9 @@
 
 Version 8 of ESLint introduced a new configuration format called [Flat Config](https://eslint.org/docs/latest/use/configure/configuration-files-new). The next major version will use this config format by default. The purpose of this format is to:
 
-- push towards a single configuration format (in contrast to the existing `JSON`, `Yaml` and `JS`-based configs)
-- enforce explicit native loading (instead of the implicit imports in `JSON` and `Yaml`)
-- use a flat cascading of rules (instead of a mix of rules and overrides)
+-  push towards a single configuration format (in contrast to the existing `JSON`, `Yaml` and `JS`-based configs)
+-  enforce explicit native loading (instead of the implicit imports in `JSON` and `Yaml`)
+-  use a flat cascading of rules (instead of a mix of rules and overrides)
 
 See below a direct comparison between `JSON`, `JS` and `Flat` config:
 {% tabs %}
@@ -21,47 +21,47 @@ const jsoncParser = require('jsonc-eslint-parser');
 const tsParser = require('@typescript-eslint/parser');
 
 module.exports = [
-  js.configs.recommended,
-  // this will spread the export blocks from the base config
-  ...baseConfig,
-  { plugins: { '@nx': nxPlugin } },
-  {
-    languageOptions: {
-      parser: tsParser,
-      globals: {
-        ...globals.node,
+   js.configs.recommended,
+   // this will spread the export blocks from the base config
+   ...baseConfig,
+   { plugins: { '@nx': nxPlugin } },
+   {
+      languageOptions: {
+         parser: tsParser,
+         globals: {
+            ...globals.node,
+         },
       },
-    },
-    rules: {
-      '@typescript-eslint/explicit-module-boundary-types': ['error'],
-    },
-  },
-  // there are no overrides, all the config blocks are "flat"
-  {
-    files: ['*.json'],
-    languageOptions: {
-      parser: jsoncParser,
-    },
-    rules: {},
-  },
-  {
-    files: ['*.ts', '*.tsx', '*.js', '*.jsx'],
-    rules: {
-      '@nx/enforce-module-boundaries': [
-        'error',
-        {
-          enforceBuildableLibDependency: true,
-          allow: [],
-          depConstraints: [
+      rules: {
+         '@typescript-eslint/explicit-module-boundary-types': ['error'],
+      },
+   },
+   // there are no overrides, all the config blocks are "flat"
+   {
+      files: ['*.json'],
+      languageOptions: {
+         parser: jsoncParser,
+      },
+      rules: {},
+   },
+   {
+      files: ['*.ts', '*.tsx', '*.js', '*.jsx'],
+      rules: {
+         '@nx/enforce-module-boundaries': [
+            'error',
             {
-              sourceTag: '*',
-              onlyDependOnLibsWithTags: ['*'],
+               enforceBuildableLibDependency: true,
+               allow: [],
+               depConstraints: [
+                  {
+                     sourceTag: '*',
+                     onlyDependOnLibsWithTags: ['*'],
+                  },
+               ],
             },
-          ],
-        },
-      ],
-    },
-  },
+         ],
+      },
+   },
 ];
 ```
 
@@ -70,41 +70,41 @@ module.exports = [
 
 ```json {% fileName=".eslintrc.json" %}
 {
-  "root": true,
-  "parser": "@typescript-eslint/parser",
-  "env": {
-    "node": true
-  },
-  "extends": ["eslint:recommended", "./.eslintrc.base.json"],
-  "plugins": ["@nx"],
-  "rules": {
-    "@typescript-eslint/explicit-module-boundary-types": "error"
-  },
-  "overrides": [
-    {
-      "files": ["*.json"],
-      "parser": "jsonc-eslint-parser",
-      "rules": {}
-    },
-    {
-      "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
-      "rules": {
-        "@nx/enforce-module-boundaries": [
-          "error",
-          {
-            "enforceBuildableLibDependency": true,
-            "allow": [],
-            "depConstraints": [
-              {
-                "sourceTag": "*",
-                "onlyDependOnLibsWithTags": ["*"]
-              }
+   "root": true,
+   "parser": "@typescript-eslint/parser",
+   "env": {
+      "node": true
+   },
+   "extends": ["eslint:recommended", "./.eslintrc.base.json"],
+   "plugins": ["@nx"],
+   "rules": {
+      "@typescript-eslint/explicit-module-boundary-types": "error"
+   },
+   "overrides": [
+      {
+         "files": ["*.json"],
+         "parser": "jsonc-eslint-parser",
+         "rules": {}
+      },
+      {
+         "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
+         "rules": {
+            "@nx/enforce-module-boundaries": [
+               "error",
+               {
+                  "enforceBuildableLibDependency": true,
+                  "allow": [],
+                  "depConstraints": [
+                     {
+                        "sourceTag": "*",
+                        "onlyDependOnLibsWithTags": ["*"]
+                     }
+                  ]
+               }
             ]
-          }
-        ]
+         }
       }
-    }
-  ]
+   ]
 }
 ```
 
@@ -113,41 +113,41 @@ module.exports = [
 
 ```js {% fileName=".eslintrc.js" %}
 module.exports = {
-  root: true,
-  env: {
-    node: true,
-  },
-  parser: '@typescript-eslint/parser',
-  extends: ['eslint:recommended', './.eslintrc.base.js'],
-  plugins: ['@nx'],
-  rules: {
-    '@typescript-eslint/explicit-module-boundary-types': ['error'],
-  },
-  overrides: [
-    {
-      files: ['*.json'],
-      parser: 'jsonc-eslint-parser',
-      rules: {},
-    },
-    {
-      files: ['*.ts', '*.tsx', '*.js', '*.jsx'],
-      rules: {
-        '@nx/enforce-module-boundaries': [
-          'error',
-          {
-            enforceBuildableLibDependency: true,
-            allow: [],
-            depConstraints: [
-              {
-                sourceTag: '*',
-                onlyDependOnLibsWithTags: ['*'],
-              },
-            ],
-          },
-        ],
+   root: true,
+   env: {
+      node: true,
+   },
+   parser: '@typescript-eslint/parser',
+   extends: ['eslint:recommended', './.eslintrc.base.js'],
+   plugins: ['@nx'],
+   rules: {
+      '@typescript-eslint/explicit-module-boundary-types': ['error'],
+   },
+   overrides: [
+      {
+         files: ['*.json'],
+         parser: 'jsonc-eslint-parser',
+         rules: {},
       },
-    },
-  ],
+      {
+         files: ['*.ts', '*.tsx', '*.js', '*.jsx'],
+         rules: {
+            '@nx/enforce-module-boundaries': [
+               'error',
+               {
+                  enforceBuildableLibDependency: true,
+                  allow: [],
+                  depConstraints: [
+                     {
+                        sourceTag: '*',
+                        onlyDependOnLibsWithTags: ['*'],
+                     },
+                  ],
+               },
+            ],
+         },
+      },
+   ],
 };
 ```
 

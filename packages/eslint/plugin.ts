@@ -1,5 +1,5 @@
 export {
-  createNodes,
-  createNodesV2,
-  EslintPluginOptions,
+   createNodes,
+   createNodesV2,
+   EslintPluginOptions,
 } from './src/plugins/plugin';

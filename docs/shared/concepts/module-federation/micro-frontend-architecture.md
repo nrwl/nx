@@ -13,10 +13,10 @@ before continuing with this MFE guide.
 We recommend MFE for teams that require applications to be deployed independently. It is important to consider the cost
 of MFEs and decide whether it makes sense for your own teams.
 
-- Version mismatches where applications are deployed with different versions of shared libraries, which can lead to
-  incompatibility issues.
-- Independent deployments can lead to unexpected errors, such as any host-level changes to orchestration/coordination
-  logic that breaks compatibility with remotes.
+-  Version mismatches where applications are deployed with different versions of shared libraries, which can lead to
+   incompatibility issues.
+-  Independent deployments can lead to unexpected errors, such as any host-level changes to orchestration/coordination
+   logic that breaks compatibility with remotes.
 
 If you are looking at optimizing builds and do not need independent deployments, we recommend reading our guide on
 [Faster Builds with Module Federation](/concepts/module-federation/faster-builds-with-module-federation).
@@ -105,24 +105,24 @@ import { ModuleFederationConfig } from '@nx/webpack';
 // Core libraries such as react, angular, redux, ngrx, etc. must be
 // singletons. Otherwise the applications will not work together.
 const coreLibraries = new Set([
-  'react',
-  'react-dom',
-  'react-router-dom',
-  // A workspace library for a publish/subscribe
-  // system of communication.
-  '@acme/pub-sub',
+   'react',
+   'react-dom',
+   'react-router-dom',
+   // A workspace library for a publish/subscribe
+   // system of communication.
+   '@acme/pub-sub',
 ]);
 
 export const config: ModuleFederationConfig = {
-  // Share core libraries, and avoid everything else
-  shared: (libraryName, defaultConfig) => {
-    if (coreLibraries.has(libraryName)) {
-      return defaultConfig;
-    }
+   // Share core libraries, and avoid everything else
+   shared: (libraryName, defaultConfig) => {
+      if (coreLibraries.has(libraryName)) {
+         return defaultConfig;
+      }
 
-    // Returning false means the library is not shared.
-    return false;
-  },
+      // Returning false means the library is not shared.
+      return false;
+   },
 };
 
 export default config;
@@ -135,9 +135,9 @@ import { ModuleFederationConfig } from '@nx/webpack';
 import baseConfig from '../../module-federation.config';
 
 export const config: ModuleFederationConfig = {
-  ...baseConfig,
-  name: 'shell',
-  remotes: ['shop', 'cart', 'about'],
+   ...baseConfig,
+   name: 'shell',
+   remotes: ['shop', 'cart', 'about'],
 };
 
 export default config;

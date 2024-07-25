@@ -10,11 +10,11 @@ The ProjectGraphProcessor is deprecated. This will be removed in Nx 20.
 
 ### Properties
 
-- [fileMap](../../devkit/documents/ProjectGraphProcessorContext#filemap): ProjectFileMap
-- [filesToProcess](../../devkit/documents/ProjectGraphProcessorContext#filestoprocess): ProjectFileMap
-- [nxJsonConfiguration](../../devkit/documents/ProjectGraphProcessorContext#nxjsonconfiguration): NxJsonConfiguration<string[] | "\*">
-- [projectsConfigurations](../../devkit/documents/ProjectGraphProcessorContext#projectsconfigurations): ProjectsConfigurations
-- [workspace](../../devkit/documents/ProjectGraphProcessorContext#workspace): Workspace
+-  [fileMap](../../devkit/documents/ProjectGraphProcessorContext#filemap): ProjectFileMap
+-  [filesToProcess](../../devkit/documents/ProjectGraphProcessorContext#filestoprocess): ProjectFileMap
+-  [nxJsonConfiguration](../../devkit/documents/ProjectGraphProcessorContext#nxjsonconfiguration): NxJsonConfiguration<string[] | "\*">
+-  [projectsConfigurations](../../devkit/documents/ProjectGraphProcessorContext#projectsconfigurations): ProjectsConfigurations
+-  [workspace](../../devkit/documents/ProjectGraphProcessorContext#workspace): Workspace
 
 ## Properties
 

@@ -1,10 +1,10 @@
 import 'nx/src/internal-testing-utils/mock-project-graph';
 
 import {
-  readNxJson,
-  readProjectConfiguration,
-  Tree,
-  updateNxJson,
+   readNxJson,
+   readProjectConfiguration,
+   Tree,
+   updateNxJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 
@@ -12,24 +12,24 @@ import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { applicationGenerator } from './application';
 
 describe('node app generator (legacy)', () => {
-  let tree: Tree;
+   let tree: Tree;
 
-  beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
-    const nxJson = readNxJson(tree);
-    updateNxJson(tree, nxJson);
-  });
+   beforeEach(() => {
+      tree = createTreeWithEmptyWorkspace();
+      const nxJson = readNxJson(tree);
+      updateNxJson(tree, nxJson);
+   });
 
-  it('should not skip the build target', async () => {
-    await applicationGenerator(tree, {
-      name: 'my-node-app',
-      bundler: 'webpack',
-      projectNameAndRootFormat: 'as-provided',
-      addPlugin: false,
-    });
-    const project = readProjectConfiguration(tree, 'my-node-app');
-    expect(project.root).toEqual('my-node-app');
-    expect(project.targets.build).toMatchInlineSnapshot(`
+   it('should not skip the build target', async () => {
+      await applicationGenerator(tree, {
+         name: 'my-node-app',
+         bundler: 'webpack',
+         projectNameAndRootFormat: 'as-provided',
+         addPlugin: false,
+      });
+      const project = readProjectConfiguration(tree, 'my-node-app');
+      expect(project.root).toEqual('my-node-app');
+      expect(project.targets.build).toMatchInlineSnapshot(`
       {
         "configurations": {
           "development": {},
@@ -54,8 +54,8 @@ describe('node app generator (legacy)', () => {
       }
     `);
 
-    const webpackConfig = tree.read('my-node-app/webpack.config.js', 'utf-8');
-    expect(webpackConfig).toContain(`composePlugins`);
-    expect(webpackConfig).toContain(`target: 'node'`);
-  });
+      const webpackConfig = tree.read('my-node-app/webpack.config.js', 'utf-8');
+      expect(webpackConfig).toContain(`composePlugins`);
+      expect(webpackConfig).toContain(`target: 'node'`);
+   });
 });

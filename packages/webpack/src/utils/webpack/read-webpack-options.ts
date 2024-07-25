@@ -11,35 +11,35 @@ import { Configuration } from 'webpack';
  * @param webpackConfig
  */
 export async function readWebpackOptions(
-  webpackConfig: unknown
+   webpackConfig: unknown
 ): Promise<Configuration> {
-  let config: Configuration;
-  if (isNxWebpackComposablePlugin(webpackConfig)) {
-    config = await webpackConfig(
-      {},
-      {
-        // These values are only used during build-time, so passing stubs here just to read out
-        // the returned config object.
-        options: {
-          root: workspaceRoot,
-          projectRoot: '',
-          sourceRoot: '',
-          outputFileName: undefined,
-          outputPath: undefined,
-          assets: undefined,
-        },
-        context: { root: workspaceRoot, cwd: undefined, isVerbose: false },
-      }
-    );
-  } else if (typeof webpackConfig === 'function') {
-    config = await webpackConfig(
-      {
-        production: true, // we want the production build options
-      },
-      {}
-    );
-  } else {
-    config = webpackConfig;
-  }
-  return config;
+   let config: Configuration;
+   if (isNxWebpackComposablePlugin(webpackConfig)) {
+      config = await webpackConfig(
+         {},
+         {
+            // These values are only used during build-time, so passing stubs here just to read out
+            // the returned config object.
+            options: {
+               root: workspaceRoot,
+               projectRoot: '',
+               sourceRoot: '',
+               outputFileName: undefined,
+               outputPath: undefined,
+               assets: undefined,
+            },
+            context: { root: workspaceRoot, cwd: undefined, isVerbose: false },
+         }
+      );
+   } else if (typeof webpackConfig === 'function') {
+      config = await webpackConfig(
+         {
+            production: true, // we want the production build options
+         },
+         {}
+      );
+   } else {
+      config = webpackConfig;
+   }
+   return config;
 }

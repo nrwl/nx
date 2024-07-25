@@ -1,49 +1,49 @@
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import {
-  buildPostTargetTransformer,
-  moveBuildLibsFromSourceToViteConfig,
+   buildPostTargetTransformer,
+   moveBuildLibsFromSourceToViteConfig,
 } from './build-post-target-transformer';
 
 describe('buildPostTargetTransformer', () => {
-  it('should remove the correct options and move the AST options to the vite config file correctly and remove outputs when they match inferred', () => {
-    // ARRANGE
-    const tree = createTreeWithEmptyWorkspace();
+   it('should remove the correct options and move the AST options to the vite config file correctly and remove outputs when they match inferred', () => {
+      // ARRANGE
+      const tree = createTreeWithEmptyWorkspace();
 
-    const targetConfiguration = {
-      outputs: ['{options.outputPath}'],
-      options: {
-        outputPath: 'build/apps/myapp',
-        configFile: 'apps/myapp/vite.config.ts',
-        buildLibsFromSource: true,
-        skipTypeCheck: false,
-        watch: true,
-        generatePackageJson: true,
-        includeDevDependenciesInPackageJson: false,
-        tsConfig: 'apps/myapp/tsconfig.json',
-      },
-    };
+      const targetConfiguration = {
+         outputs: ['{options.outputPath}'],
+         options: {
+            outputPath: 'build/apps/myapp',
+            configFile: 'apps/myapp/vite.config.ts',
+            buildLibsFromSource: true,
+            skipTypeCheck: false,
+            watch: true,
+            generatePackageJson: true,
+            includeDevDependenciesInPackageJson: false,
+            tsConfig: 'apps/myapp/tsconfig.json',
+         },
+      };
 
-    const inferredTargetConfiguration = {
-      outputs: ['{projectRoot}/{options.outDir}'],
-    };
+      const inferredTargetConfiguration = {
+         outputs: ['{projectRoot}/{options.outDir}'],
+      };
 
-    tree.write('apps/myapp/vite.config.ts', viteConfigFileV17);
+      tree.write('apps/myapp/vite.config.ts', viteConfigFileV17);
 
-    // ACT
-    const target = buildPostTargetTransformer(
-      targetConfiguration,
-      tree,
-      {
-        projectName: 'myapp',
-        root: 'apps/myapp',
-      },
-      inferredTargetConfiguration
-    );
+      // ACT
+      const target = buildPostTargetTransformer(
+         targetConfiguration,
+         tree,
+         {
+            projectName: 'myapp',
+            root: 'apps/myapp',
+         },
+         inferredTargetConfiguration
+      );
 
-    // ASSERT
-    const configFile = tree.read('apps/myapp/vite.config.ts', 'utf-8');
-    expect(configFile).toMatchSnapshot();
-    expect(target).toMatchInlineSnapshot(`
+      // ASSERT
+      const configFile = tree.read('apps/myapp/vite.config.ts', 'utf-8');
+      expect(configFile).toMatchSnapshot();
+      expect(target).toMatchInlineSnapshot(`
       {
         "options": {
           "config": "./vite.config.ts",
@@ -52,55 +52,55 @@ describe('buildPostTargetTransformer', () => {
         },
       }
     `);
-  });
+   });
 
-  it('should move the AST options to each vite config file correctly for configurations', () => {
-    // ARRANGE
-    const tree = createTreeWithEmptyWorkspace();
+   it('should move the AST options to each vite config file correctly for configurations', () => {
+      // ARRANGE
+      const tree = createTreeWithEmptyWorkspace();
 
-    const targetConfiguration = {
-      outputs: ['{options.outputPath}'],
-      options: {
-        outputPath: 'build/apps/myapp',
-        configFile: 'apps/myapp/vite.config.ts',
-        buildLibsFromSource: true,
-        skipTypeCheck: false,
-        watch: true,
-        generatePackageJson: true,
-        includeDevDependenciesInPackageJson: false,
-        tsConfig: 'apps/myapp/tsconfig.json',
-      },
-      configurations: {
-        dev: {
-          configFile: 'apps/myapp/vite.dev.config.ts',
-        },
-      },
-    };
+      const targetConfiguration = {
+         outputs: ['{options.outputPath}'],
+         options: {
+            outputPath: 'build/apps/myapp',
+            configFile: 'apps/myapp/vite.config.ts',
+            buildLibsFromSource: true,
+            skipTypeCheck: false,
+            watch: true,
+            generatePackageJson: true,
+            includeDevDependenciesInPackageJson: false,
+            tsConfig: 'apps/myapp/tsconfig.json',
+         },
+         configurations: {
+            dev: {
+               configFile: 'apps/myapp/vite.dev.config.ts',
+            },
+         },
+      };
 
-    const inferredTargetConfiguration = {
-      outputs: ['{projectRoot}/{options.outDir}'],
-    };
+      const inferredTargetConfiguration = {
+         outputs: ['{projectRoot}/{options.outDir}'],
+      };
 
-    tree.write('apps/myapp/vite.config.ts', viteConfigFileV17);
-    tree.write('apps/myapp/vite.dev.config.ts', viteConfigFileV17);
+      tree.write('apps/myapp/vite.config.ts', viteConfigFileV17);
+      tree.write('apps/myapp/vite.dev.config.ts', viteConfigFileV17);
 
-    // ACT
-    const target = buildPostTargetTransformer(
-      targetConfiguration,
-      tree,
-      {
-        projectName: 'myapp',
-        root: 'apps/myapp',
-      },
-      inferredTargetConfiguration
-    );
+      // ACT
+      const target = buildPostTargetTransformer(
+         targetConfiguration,
+         tree,
+         {
+            projectName: 'myapp',
+            root: 'apps/myapp',
+         },
+         inferredTargetConfiguration
+      );
 
-    // ASSERT
-    const configFile = tree.read('apps/myapp/vite.config.ts', 'utf-8');
-    expect(configFile).toMatchSnapshot();
-    const devConfigFile = tree.read('apps/myapp/vite.dev.config.ts', 'utf-8');
-    expect(devConfigFile).toMatchSnapshot();
-    expect(target).toMatchInlineSnapshot(`
+      // ASSERT
+      const configFile = tree.read('apps/myapp/vite.config.ts', 'utf-8');
+      expect(configFile).toMatchSnapshot();
+      const devConfigFile = tree.read('apps/myapp/vite.dev.config.ts', 'utf-8');
+      expect(devConfigFile).toMatchSnapshot();
+      expect(target).toMatchInlineSnapshot(`
       {
         "configurations": {
           "dev": {
@@ -114,45 +114,45 @@ describe('buildPostTargetTransformer', () => {
         },
       }
     `);
-  });
+   });
 
-  it('should add inferred outputs when a custom output exists', () => {
-    // ARRANGE
-    const tree = createTreeWithEmptyWorkspace();
+   it('should add inferred outputs when a custom output exists', () => {
+      // ARRANGE
+      const tree = createTreeWithEmptyWorkspace();
 
-    const targetConfiguration = {
-      outputs: ['{options.outputPath}', '{workspaceRoot}/my/custom/path'],
-      options: {
-        outputPath: 'build/apps/myapp',
-        configFile: 'vite.config.ts',
-        buildLibsFromSource: true,
-        skipTypeCheck: false,
-        watch: true,
-        generatePackageJson: true,
-        includeDevDependenciesInPackageJson: false,
-        tsConfig: 'apps/myapp/tsconfig.json',
-      },
-    };
+      const targetConfiguration = {
+         outputs: ['{options.outputPath}', '{workspaceRoot}/my/custom/path'],
+         options: {
+            outputPath: 'build/apps/myapp',
+            configFile: 'vite.config.ts',
+            buildLibsFromSource: true,
+            skipTypeCheck: false,
+            watch: true,
+            generatePackageJson: true,
+            includeDevDependenciesInPackageJson: false,
+            tsConfig: 'apps/myapp/tsconfig.json',
+         },
+      };
 
-    const inferredTargetConfiguration = {
-      outputs: ['{projectRoot}/{options.outDir}'],
-    };
+      const inferredTargetConfiguration = {
+         outputs: ['{projectRoot}/{options.outDir}'],
+      };
 
-    tree.write('vite.config.ts', viteConfigFileV17);
+      tree.write('vite.config.ts', viteConfigFileV17);
 
-    // ACT
-    const target = buildPostTargetTransformer(
-      targetConfiguration,
-      tree,
-      {
-        projectName: 'myapp',
-        root: 'apps/myapp',
-      },
-      inferredTargetConfiguration
-    );
+      // ACT
+      const target = buildPostTargetTransformer(
+         targetConfiguration,
+         tree,
+         {
+            projectName: 'myapp',
+            root: 'apps/myapp',
+         },
+         inferredTargetConfiguration
+      );
 
-    // ASSERT
-    expect(target).toMatchInlineSnapshot(`
+      // ASSERT
+      expect(target).toMatchInlineSnapshot(`
       {
         "options": {
           "config": "../../vite.config.ts",
@@ -165,73 +165,73 @@ describe('buildPostTargetTransformer', () => {
         ],
       }
     `);
-  });
+   });
 
-  describe('moveBuildLibsFromSourceToViteConfig', () => {
-    it('should add buildLibsFromSource to existing nxViteTsPaths plugin with no existing options', () => {
-      // ARRANGE
-      const tree = createTreeWithEmptyWorkspace();
-      tree.write('vite.config.ts', viteConfigFileV17);
+   describe('moveBuildLibsFromSourceToViteConfig', () => {
+      it('should add buildLibsFromSource to existing nxViteTsPaths plugin with no existing options', () => {
+         // ARRANGE
+         const tree = createTreeWithEmptyWorkspace();
+         tree.write('vite.config.ts', viteConfigFileV17);
 
-      // ACT
-      moveBuildLibsFromSourceToViteConfig(tree, 'vite.config.ts');
+         // ACT
+         moveBuildLibsFromSourceToViteConfig(tree, 'vite.config.ts');
 
-      // ASSERT
-      const newContents = tree.read('vite.config.ts', 'utf-8');
-      expect(newContents).toContain(
-        'nxViteTsPaths({ buildLibsFromSource: options.buildLibsFromSource })'
-      );
-      expect(newContents).toMatchSnapshot();
-    });
+         // ASSERT
+         const newContents = tree.read('vite.config.ts', 'utf-8');
+         expect(newContents).toContain(
+            'nxViteTsPaths({ buildLibsFromSource: options.buildLibsFromSource })'
+         );
+         expect(newContents).toMatchSnapshot();
+      });
 
-    it('should add buildLibsFromSource to existing nxViteTsPaths plugin with existing options', () => {
-      // ARRANGE
-      const tree = createTreeWithEmptyWorkspace();
-      tree.write('vite.config.ts', viteConfigFileV17NxViteTsPathsOpts);
+      it('should add buildLibsFromSource to existing nxViteTsPaths plugin with existing options', () => {
+         // ARRANGE
+         const tree = createTreeWithEmptyWorkspace();
+         tree.write('vite.config.ts', viteConfigFileV17NxViteTsPathsOpts);
 
-      // ACT
-      moveBuildLibsFromSourceToViteConfig(tree, 'vite.config.ts');
+         // ACT
+         moveBuildLibsFromSourceToViteConfig(tree, 'vite.config.ts');
 
-      // ASSERT
-      const newContents = tree.read('vite.config.ts', 'utf-8');
-      expect(newContents).toContain(
-        'nxViteTsPaths({buildLibsFromSource: options.buildLibsFromSource,  debug: true })'
-      );
-      expect(newContents).toMatchSnapshot();
-    });
+         // ASSERT
+         const newContents = tree.read('vite.config.ts', 'utf-8');
+         expect(newContents).toContain(
+            'nxViteTsPaths({buildLibsFromSource: options.buildLibsFromSource,  debug: true })'
+         );
+         expect(newContents).toMatchSnapshot();
+      });
 
-    it('should add buildLibsFromSource to new nxViteTsPaths plugin when the plugin is not added', () => {
-      // ARRANGE
-      const tree = createTreeWithEmptyWorkspace();
-      tree.write('vite.config.ts', viteConfigFileV17NoNxViteTsPaths);
+      it('should add buildLibsFromSource to new nxViteTsPaths plugin when the plugin is not added', () => {
+         // ARRANGE
+         const tree = createTreeWithEmptyWorkspace();
+         tree.write('vite.config.ts', viteConfigFileV17NoNxViteTsPaths);
 
-      // ACT
-      moveBuildLibsFromSourceToViteConfig(tree, 'vite.config.ts');
+         // ACT
+         moveBuildLibsFromSourceToViteConfig(tree, 'vite.config.ts');
 
-      // ASSERT
-      const newContents = tree.read('vite.config.ts', 'utf-8');
-      expect(newContents).toContain(
-        'nxViteTsPaths({ buildLibsFromSource: options.buildLibsFromSource })'
-      );
-      expect(newContents).toMatchSnapshot();
-    });
+         // ASSERT
+         const newContents = tree.read('vite.config.ts', 'utf-8');
+         expect(newContents).toContain(
+            'nxViteTsPaths({ buildLibsFromSource: options.buildLibsFromSource })'
+         );
+         expect(newContents).toMatchSnapshot();
+      });
 
-    it('should add buildLibsFromSource to new nxViteTsPaths plugin when the plugins property does not exist', () => {
-      // ARRANGE
-      const tree = createTreeWithEmptyWorkspace();
-      tree.write('vite.config.ts', viteConfigFileV17NoPlugins);
+      it('should add buildLibsFromSource to new nxViteTsPaths plugin when the plugins property does not exist', () => {
+         // ARRANGE
+         const tree = createTreeWithEmptyWorkspace();
+         tree.write('vite.config.ts', viteConfigFileV17NoPlugins);
 
-      // ACT
-      moveBuildLibsFromSourceToViteConfig(tree, 'vite.config.ts');
+         // ACT
+         moveBuildLibsFromSourceToViteConfig(tree, 'vite.config.ts');
 
-      // ASSERT
-      const newContents = tree.read('vite.config.ts', 'utf-8');
-      expect(newContents).toContain(
-        'nxViteTsPaths({ buildLibsFromSource: options.buildLibsFromSource })'
-      );
-      expect(newContents).toMatchSnapshot();
-    });
-  });
+         // ASSERT
+         const newContents = tree.read('vite.config.ts', 'utf-8');
+         expect(newContents).toContain(
+            'nxViteTsPaths({ buildLibsFromSource: options.buildLibsFromSource })'
+         );
+         expect(newContents).toMatchSnapshot();
+      });
+   });
 });
 
 const viteConfigFileV17 = `/// <reference types='vitest' />

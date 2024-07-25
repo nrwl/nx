@@ -1,6 +1,6 @@
 export interface CypressComponentConfigurationGeneratorSchema {
-  project: string;
-  generateTests: boolean;
-  skipFormat?: boolean;
-  addPlugin?: boolean;
+   project: string;
+   generateTests: boolean;
+   skipFormat?: boolean;
+   addPlugin?: boolean;
 }

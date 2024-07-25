@@ -3,9 +3,9 @@
 
 import { NxPluginV1 } from '../../utils/nx-plugin.deprecated';
 import {
-  FileMap,
-  ProjectGraph,
-  ProjectGraphExternalNode,
+   FileMap,
+   ProjectGraph,
+   ProjectGraphExternalNode,
 } from '../../config/project-graph';
 
 import { ProjectConfiguration } from '../../config/workspace-json-project-json';
@@ -17,15 +17,15 @@ import { RawProjectGraphDependency } from '../project-graph-builder';
  * Context for {@link CreateNodesFunction}
  */
 export interface CreateNodesContext extends CreateNodesContextV2 {
-  /**
-   * The subset of configuration files which match the createNodes pattern
-   */
-  readonly configFiles: readonly string[];
+   /**
+    * The subset of configuration files which match the createNodes pattern
+    */
+   readonly configFiles: readonly string[];
 }
 
 export interface CreateNodesContextV2 {
-  readonly nxJsonConfiguration: NxJsonConfiguration;
-  readonly workspaceRoot: string;
+   readonly nxJsonConfiguration: NxJsonConfiguration;
+   readonly workspaceRoot: string;
 }
 
 /**
@@ -33,33 +33,33 @@ export interface CreateNodesContextV2 {
  * Used for creating nodes for the {@link ProjectGraph}
  */
 export type CreateNodesFunction<T = unknown> = (
-  projectConfigurationFile: string,
-  options: T | undefined,
-  context: CreateNodesContext
+   projectConfigurationFile: string,
+   options: T | undefined,
+   context: CreateNodesContext
 ) => CreateNodesResult | Promise<CreateNodesResult>;
 
 export type CreateNodesResultV2 = Array<
-  readonly [configFileSource: string, result: CreateNodesResult]
+   readonly [configFileSource: string, result: CreateNodesResult]
 >;
 
 export type CreateNodesFunctionV2<T = unknown> = (
-  projectConfigurationFiles: readonly string[],
-  options: T | undefined,
-  context: CreateNodesContextV2
+   projectConfigurationFiles: readonly string[],
+   options: T | undefined,
+   context: CreateNodesContextV2
 ) => CreateNodesResultV2 | Promise<CreateNodesResultV2>;
 
 export type Optional<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
 
 export interface CreateNodesResult {
-  /**
-   * A map of project root -> project configuration
-   */
-  projects?: Record<string, Optional<ProjectConfiguration, 'root'>>;
+   /**
+    * A map of project root -> project configuration
+    */
+   projects?: Record<string, Optional<ProjectConfiguration, 'root'>>;
 
-  /**
-   * A map of external node name -> external node. External nodes do not have a root, so the key is their name.
-   */
-  externalNodes?: Record<string, ProjectGraphExternalNode>;
+   /**
+    * A map of external node name -> external node. External nodes do not have a root, so the key is their name.
+    */
+   externalNodes?: Record<string, ProjectGraphExternalNode>;
 }
 
 /**
@@ -76,8 +76,8 @@ export interface CreateNodesResult {
  * @deprecated Use {@link CreateNodesV2} instead. CreateNodesV2 will replace this API. Read more about the transition above.
  */
 export type CreateNodes<T = unknown> = readonly [
-  projectFilePattern: string,
-  createNodesFunction: CreateNodesFunction<T>
+   projectFilePattern: string,
+   createNodesFunction: CreateNodesFunction<T>
 ];
 
 /**
@@ -85,40 +85,40 @@ export type CreateNodes<T = unknown> = readonly [
  * In Nx 20 {@link CreateNodes} will be replaced with this type. In Nx 21, this type will be removed.
  */
 export type CreateNodesV2<T = unknown> = readonly [
-  projectFilePattern: string,
-  createNodesFunction: CreateNodesFunctionV2<T>
+   projectFilePattern: string,
+   createNodesFunction: CreateNodesFunctionV2<T>
 ];
 
 /**
  * Context for {@link CreateDependencies}
  */
 export interface CreateDependenciesContext {
-  /**
-   * The external nodes that have been added to the graph.
-   */
-  readonly externalNodes: ProjectGraph['externalNodes'];
+   /**
+    * The external nodes that have been added to the graph.
+    */
+   readonly externalNodes: ProjectGraph['externalNodes'];
 
-  /**
-   * The configuration of each project in the workspace.
-   */
-  readonly projects: Record<string, ProjectConfiguration>;
+   /**
+    * The configuration of each project in the workspace.
+    */
+   readonly projects: Record<string, ProjectConfiguration>;
 
-  /**
-   * The `nx.json` configuration from the workspace
-   */
-  readonly nxJsonConfiguration: NxJsonConfiguration;
+   /**
+    * The `nx.json` configuration from the workspace
+    */
+   readonly nxJsonConfiguration: NxJsonConfiguration;
 
-  /**
-   * All files in the workspace
-   */
-  readonly fileMap: FileMap;
+   /**
+    * All files in the workspace
+    */
+   readonly fileMap: FileMap;
 
-  /**
-   * Files changes since last invocation
-   */
-  readonly filesToProcess: FileMap;
+   /**
+    * Files changes since last invocation
+    */
+   readonly filesToProcess: FileMap;
 
-  readonly workspaceRoot: string;
+   readonly workspaceRoot: string;
 }
 
 /**
@@ -126,57 +126,57 @@ export interface CreateDependenciesContext {
  * Use {@link validateDependency} to validate dependencies
  */
 export type CreateDependencies<T = unknown> = (
-  options: T | undefined,
-  context: CreateDependenciesContext
+   options: T | undefined,
+   context: CreateDependenciesContext
 ) => RawProjectGraphDependency[] | Promise<RawProjectGraphDependency[]>;
 
 export type CreateMetadataContext = {
-  readonly nxJsonConfiguration: NxJsonConfiguration;
-  readonly workspaceRoot: string;
+   readonly nxJsonConfiguration: NxJsonConfiguration;
+   readonly workspaceRoot: string;
 };
 
 export type ProjectsMetadata = Record<
-  string,
-  Pick<ProjectConfiguration, 'metadata'>
+   string,
+   Pick<ProjectConfiguration, 'metadata'>
 >;
 
 export type CreateMetadata<T = unknown> = (
-  graph: ProjectGraph,
-  options: T | undefined,
-  context: CreateMetadataContext
+   graph: ProjectGraph,
+   options: T | undefined,
+   context: CreateMetadataContext
 ) => ProjectsMetadata | Promise<ProjectsMetadata>;
 
 /**
  * A plugin for Nx which creates nodes and dependencies for the {@link ProjectGraph}
  */
 export type NxPluginV2<TOptions = unknown> = {
-  name: string;
+   name: string;
 
-  /**
-   * Provides a file pattern and function that retrieves configuration info from
-   * those files. e.g. { '**\/*.csproj': buildProjectsFromCsProjFile }
-   *
-   * @deprecated Use {@link createNodesV2} instead. In Nx 20 support for calling createNodes with a single file for the first argument will be removed.
-   */
-  createNodes?: CreateNodes<TOptions>;
+   /**
+    * Provides a file pattern and function that retrieves configuration info from
+    * those files. e.g. { '**\/*.csproj': buildProjectsFromCsProjFile }
+    *
+    * @deprecated Use {@link createNodesV2} instead. In Nx 20 support for calling createNodes with a single file for the first argument will be removed.
+    */
+   createNodes?: CreateNodes<TOptions>;
 
-  /**
-   * Provides a file pattern and function that retrieves configuration info from
-   * those files. e.g. { '**\/*.csproj': buildProjectsFromCsProjFiles }
-   *
-   * In Nx 20 {@link createNodes} will be replaced with this property. In Nx 21, this property will be removed.
-   */
-  createNodesV2?: CreateNodesV2<TOptions>;
+   /**
+    * Provides a file pattern and function that retrieves configuration info from
+    * those files. e.g. { '**\/*.csproj': buildProjectsFromCsProjFiles }
+    *
+    * In Nx 20 {@link createNodes} will be replaced with this property. In Nx 21, this property will be removed.
+    */
+   createNodesV2?: CreateNodesV2<TOptions>;
 
-  /**
-   * Provides a function to analyze files to create dependencies for the {@link ProjectGraph}
-   */
-  createDependencies?: CreateDependencies<TOptions>;
+   /**
+    * Provides a function to analyze files to create dependencies for the {@link ProjectGraph}
+    */
+   createDependencies?: CreateDependencies<TOptions>;
 
-  /**
-   * Provides a function to create metadata for the {@link ProjectGraph}
-   */
-  createMetadata?: CreateMetadata<TOptions>;
+   /**
+    * Provides a function to create metadata for the {@link ProjectGraph}
+    */
+   createMetadata?: CreateMetadata<TOptions>;
 };
 
 /**

@@ -10,36 +10,36 @@ import { Schema } from './schema';
 //  which is v9 while we are testing for the new v10 version
 jest.mock('@nx/cypress/src/utils/cypress-version');
 describe('react app generator (legacy)', () => {
-  let appTree: Tree;
-  let schema: Schema = {
-    compiler: 'babel',
-    e2eTestRunner: 'cypress',
-    skipFormat: false,
-    name: 'my-app',
-    linter: Linter.EsLint,
-    style: 'css',
-    strict: true,
-    projectNameAndRootFormat: 'as-provided',
-    addPlugin: false,
-  };
-  let mockedInstalledCypressVersion: jest.Mock<
-    ReturnType<typeof installedCypressVersion>
-  > = installedCypressVersion as never;
-
-  beforeEach(() => {
-    mockedInstalledCypressVersion.mockReturnValue(10);
-    appTree = createTreeWithEmptyWorkspace();
-  });
-
-  it('should setup webpack config that is compatible without project targets', async () => {
-    await applicationGenerator(appTree, {
-      ...schema,
+   let appTree: Tree;
+   let schema: Schema = {
+      compiler: 'babel',
+      e2eTestRunner: 'cypress',
+      skipFormat: false,
       name: 'my-app',
-      bundler: 'webpack',
-    });
+      linter: Linter.EsLint,
+      style: 'css',
+      strict: true,
+      projectNameAndRootFormat: 'as-provided',
+      addPlugin: false,
+   };
+   let mockedInstalledCypressVersion: jest.Mock<
+      ReturnType<typeof installedCypressVersion>
+   > = installedCypressVersion as never;
 
-    const targets = readProjectConfiguration(appTree, 'my-app').targets;
-    expect(targets.build).toMatchInlineSnapshot(`
+   beforeEach(() => {
+      mockedInstalledCypressVersion.mockReturnValue(10);
+      appTree = createTreeWithEmptyWorkspace();
+   });
+
+   it('should setup webpack config that is compatible without project targets', async () => {
+      await applicationGenerator(appTree, {
+         ...schema,
+         name: 'my-app',
+         bundler: 'webpack',
+      });
+
+      const targets = readProjectConfiguration(appTree, 'my-app').targets;
+      expect(targets.build).toMatchInlineSnapshot(`
       {
         "configurations": {
           "development": {
@@ -87,7 +87,7 @@ describe('react app generator (legacy)', () => {
         ],
       }
     `);
-    expect(targets.serve).toMatchInlineSnapshot(`
+      expect(targets.serve).toMatchInlineSnapshot(`
       {
         "configurations": {
           "development": {
@@ -107,8 +107,8 @@ describe('react app generator (legacy)', () => {
       }
     `);
 
-    const webpackConfig = appTree.read('my-app/webpack.config.js', 'utf-8');
-    expect(webpackConfig).toMatchInlineSnapshot(`
+      const webpackConfig = appTree.read('my-app/webpack.config.js', 'utf-8');
+      expect(webpackConfig).toMatchInlineSnapshot(`
       "const { composePlugins, withNx } = require('@nx/webpack');
       const { withReact } = require('@nx/react');
 
@@ -128,17 +128,17 @@ describe('react app generator (legacy)', () => {
       );
       "
     `);
-  });
+   });
 
-  it('should setup vite', async () => {
-    await applicationGenerator(appTree, {
-      ...schema,
-      name: 'my-vite-app',
-      bundler: 'vite',
-      skipFormat: true,
-    });
-    expect(
-      appTree.read('my-vite-app/vite.config.ts', 'utf-8')
-    ).toMatchSnapshot();
-  });
+   it('should setup vite', async () => {
+      await applicationGenerator(appTree, {
+         ...schema,
+         name: 'my-vite-app',
+         bundler: 'vite',
+         skipFormat: true,
+      });
+      expect(
+         appTree.read('my-vite-app/vite.config.ts', 'utf-8')
+      ).toMatchSnapshot();
+   });
 });

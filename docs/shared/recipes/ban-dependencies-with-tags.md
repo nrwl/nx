@@ -4,14 +4,14 @@ Specifying which tags a project is allowed to depend on can sometimes lead to a 
 
 ```jsonc
 {
-  "sourceTag": "scope:client",
-  // we actually want to say it cannot depend on `scope:admin`
-  "onlyDependOnLibsWithTags": [
-    "scope:shared",
-    "scope:utils",
-    "scope:core",
-    "scope:client"
-  ]
+   "sourceTag": "scope:client",
+   // we actually want to say it cannot depend on `scope:admin`
+   "onlyDependOnLibsWithTags": [
+      "scope:shared",
+      "scope:utils",
+      "scope:core",
+      "scope:client"
+   ]
 }
 ```
 
@@ -19,9 +19,9 @@ The property `notDependOnLibsWithTags` is used to invert this condition by expli
 
 ```jsonc
 {
-  "sourceTag": "scope:client",
-  // we accept any tag except for `scope:admin`
-  "notDependOnLibsWithTags": ["scope:admin"]
+   "sourceTag": "scope:client",
+   // we accept any tag except for `scope:admin`
+   "notDependOnLibsWithTags": ["scope:admin"]
 }
 ```
 
@@ -29,14 +29,14 @@ The property `notDependOnLibsWithTags` is used to invert this condition by expli
 
 ```jsonc
 {
-  "sourceTag": "type:react",
-  "onlyDependOnLibsWithTags": [
-    "type:react",
-    "type:utils",
-    "type:animation",
-    "type:model"
-  ],
-  // make sure no `angular` code ends up being referenced by react projects
-  "notDependOnLibsWithTags": ["type:angular"]
+   "sourceTag": "type:react",
+   "onlyDependOnLibsWithTags": [
+      "type:react",
+      "type:utils",
+      "type:animation",
+      "type:model"
+   ],
+   // make sure no `angular` code ends up being referenced by react projects
+   "notDependOnLibsWithTags": ["type:angular"]
 }
 ```

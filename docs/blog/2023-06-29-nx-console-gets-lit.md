@@ -10,15 +10,15 @@ Over the last few weeks, we rebuilt one of Nx Console’s most liked features fr
 
 You can use it today by installing the latest version of Nx Console for VSCode and JetBrains IDEs! 🎉🎉🎉
 
-- [Nx Console on the VSCode Marketplace](https://marketplace.visualstudio.com/items?itemName=nrwl.angular-console)
-- [Nx Console on the JetBrains Marketplace](https://plugins.jetbrains.com/plugin/21060-nx-console)
+-  [Nx Console on the VSCode Marketplace](https://marketplace.visualstudio.com/items?itemName=nrwl.angular-console)
+-  [Nx Console on the JetBrains Marketplace](https://plugins.jetbrains.com/plugin/21060-nx-console)
 
 If you’re curious to learn more about the rewrite and the motivations behind it, this is the blog post for you! We’ll touch on these topics and more:
 
-- Why did we choose to rewrite?
-- What’s Lit and why did we use it over Angular?
-- How did the rewrite go and what Lit features were important for us?
-- What does the performance look like before and after?
+-  Why did we choose to rewrite?
+-  What’s Lit and why did we use it over Angular?
+-  How did the rewrite go and what Lit features were important for us?
+-  What does the performance look like before and after?
 
 {% youtube src="https://www.youtube.com/embed/p455D4W7330?si=FRbiKJhGxT8dYzf9" /%}
 
@@ -54,17 +54,17 @@ Before I dive deeper into specifics, let’s have a look at the general architec
 
 Nx Console is composed of 3 core parts:
 
-- The **nxls** is a language server based on the [Language Server Protocol (LSP)](https://microsoft.github.io/language-server-protocol/) and acts as the “brain” of Nx Console. It analyzes your Nx workspace and provides information on it, including code completion and more.
-- The **Generate UI** is the form-based view for running Nx generators.
-- The **platform-specific wrappers**. These are written in Typescript and Kotlin and connect the rest of Nx Console to IDE-specific APIs. Having the other parts separate greatly reduces the amount of duplicated code we have to write in order to support multiple IDEs
+-  The **nxls** is a language server based on the [Language Server Protocol (LSP)](https://microsoft.github.io/language-server-protocol/) and acts as the “brain” of Nx Console. It analyzes your Nx workspace and provides information on it, including code completion and more.
+-  The **Generate UI** is the form-based view for running Nx generators.
+-  The **platform-specific wrappers**. These are written in Typescript and Kotlin and connect the rest of Nx Console to IDE-specific APIs. Having the other parts separate greatly reduces the amount of duplicated code we have to write in order to support multiple IDEs
 
 This architecture’s modularity meant we could quickly switch out the Generate UI for a new version without significantly impacting the rest of the codebase — only the parts that actually render the UI and communicate with it had to be adjusted slightly. It also allowed us to ensure backward compatibility: the old generate UI is still available via a feature toggle in the settings.
 
 If you want to dive deeper, there are many more resources on the architecture of Nx Console and how it’s built:
 
-- [In-depth blog post about expanding to JetBrains IDEs](https://blog.nrwl.io/expanding-nx-console-to-jetbrains-ides-8a5b80fff2d7?source=friends_link&sk=967080ea30bdbf9f8132f098a2cdd188)
-- [Accompanying Youtube video by Zack DeRose](https://www.youtube.com/watch?v=xUTm6GDqwJM)
-- [The Power of Nx Console — talk by Jon Cammisuli](https://www.youtube.com/watch?v=3C_9g9kt2KM)
+-  [In-depth blog post about expanding to JetBrains IDEs](https://blog.nrwl.io/expanding-nx-console-to-jetbrains-ides-8a5b80fff2d7?source=friends_link&sk=967080ea30bdbf9f8132f098a2cdd188)
+-  [Accompanying Youtube video by Zack DeRose](https://www.youtube.com/watch?v=xUTm6GDqwJM)
+-  [The Power of Nx Console — talk by Jon Cammisuli](https://www.youtube.com/watch?v=3C_9g9kt2KM)
 
 ## Migrating to Lit: Step by Step
 
@@ -76,9 +76,9 @@ This generates an entire project for us, with a `tsconfig.json`, `index.html`, `
 
 I also installed a couple of dependencies:
 
-- The `@nx/esbuild` plugin because I like fast build times 🏎️
-- TailwindCSS because I don’t like writing CSS 🤫
-- `@vscode/webview-ui-toolkit` because it does all of the VSCode work for me 🤖
+-  The `@nx/esbuild` plugin because I like fast build times 🏎️
+-  TailwindCSS because I don’t like writing CSS 🤫
+-  `@vscode/webview-ui-toolkit` because it does all of the VSCode work for me 🤖
 
 This is really where Nx shines, because it allows you to take these tools and quickly patch them together and build a pipeline that does exactly what you need. And it also allows you to think about your workspace visually. This is what this is what my task graph for building the Lit app ultimately looks like:
 
@@ -86,15 +86,15 @@ This is really where Nx shines, because it allows you to take these tools and qu
 
 You can see three build steps:
 
-- `generate-ui-v2:_build` uses esbuild to bundle my Lit components written in Typescript and spits out a `main.js` file
-- `generate-ui-v2:extract-dependencies` copies the third party assets we need into the dist folder. Right now it’s just codicons `.css` and `.ttf` files.
-- `generate-ui-v2:build` finally runs tailwind over the bundled code. This could also be done with `postCss` or a custom `esbuild` plugin but running tailwind directly is the easier, so why complicate things?
+-  `generate-ui-v2:_build` uses esbuild to bundle my Lit components written in Typescript and spits out a `main.js` file
+-  `generate-ui-v2:extract-dependencies` copies the third party assets we need into the dist folder. Right now it’s just codicons `.css` and `.ttf` files.
+-  `generate-ui-v2:build` finally runs tailwind over the bundled code. This could also be done with `postCss` or a custom `esbuild` plugin but running tailwind directly is the easier, so why complicate things?
 
 > 💡 There are different ways to generate this visualisation for your own workspaces:
 >
-> - In VSCode, use the Nx Project View or the `Nx: Focus task in Graph` action
-> - In JetBrains IDEs, use the Nx Toolwindow or context menus
-> - In the command line, run `nx build {{your project}} --graph`
+> -  In VSCode, use the Nx Project View or the `Nx: Focus task in Graph` action
+> -  In JetBrains IDEs, use the Nx Toolwindow or context menus
+> -  In the command line, run `nx build {{your project}} --graph`
 
 In the bigger context of Nx Console, here’s what happens when you build the VSCode extension:
 
@@ -109,19 +109,19 @@ Lit is a very small library that provides useful abstractions over browser-nativ
 ```ts {% fileName="main.ts" %}
 @customElement('root-element')
 export class Root extends LitElement {
-  render() {
-    return html`<p>Hello World</p>`;
-  }
+   render() {
+      return html`<p>Hello World</p>`;
+   }
 }
 ```
 
 ```html {% fileName="index.html" %}
 <!DOCTYPE html>
 <html lang="en">
-  <body>
-    <script type="module" src="main.js"></script>
-    <root-element></root-element>
-  </body>
+   <body>
+      <script type="module" src="main.js"></script>
+      <root-element></root-element>
+   </body>
 </html>
 ```
 
@@ -136,29 +136,29 @@ To communicate with the host IDE, we were able to reuse almost all the logic fro
 ```ts {% fileName="main.ts" %}
 @customElement('root-element')
 export class Root extends LitElement {
-  icc: IdeCommunicationController;
+   icc: IdeCommunicationController;
 
-  constructor() {
-    super();
-    this.icc = new IdeCommunicationController(this);
-  }
-  render() {
-    return html`${JSON.stringify(this.icc.generatorSchema)}`;
-  }
+   constructor() {
+      super();
+      this.icc = new IdeCommunicationController(this);
+   }
+   render() {
+      return html`${JSON.stringify(this.icc.generatorSchema)}`;
+   }
 }
 ```
 
 ```ts {% fileName="ide-communication-controller.ts" %}
 // ide-communication-controller.ts
 export class IdeCommunicationController implements ReactiveController {
-  generatorSchema: GeneratorSchema | undefined;
-  constructor(private host: ReactiveControllerHost) {}
-  // ...
-  private handleMessageFromIde(message: InputMessage) {
-    // ...
-    this.generatorSchema = message.payload;
-    this.host.requestUpdate();
-  }
+   generatorSchema: GeneratorSchema | undefined;
+   constructor(private host: ReactiveControllerHost) {}
+   // ...
+   private handleMessageFromIde(message: InputMessage) {
+      // ...
+      this.generatorSchema = message.payload;
+      this.host.requestUpdate();
+   }
 }
 ```
 
@@ -170,42 +170,42 @@ The core part of the UI is the form. We built all kinds of inputs: text fields, 
 
 ```ts {% fileName="field-mixin.ts" %}
 const Field = (superClass) =>
-  class extends superClass {
-    // we can define (reactive) properties that every field is going to need
-    @property()
-    option: Option;
-    protected get fieldId(): string {
-      return `${this.option.name}-field`;
-    }
+   class extends superClass {
+      // we can define (reactive) properties that every field is going to need
+      @property()
+      option: Option;
+      protected get fieldId(): string {
+         return `${this.option.name}-field`;
+      }
 
-    // we can define methods that should be available to all fields
-    dispatchValue(value: string) {
-      // ...
-    }
-  };
+      // we can define methods that should be available to all fields
+      dispatchValue(value: string) {
+         // ...
+      }
+   };
 ```
 
 ```ts {% fileName="field-wrapper-mixin.ts" %}
 const FieldWrapper = (superClass) =>
-  class extends superClass {
-    // we can define a render() method so that fields are all rendered the same
-    protected render() {
-      return html` <label for="${this.fieldId}">${this.option.name}</label>
-        <p>${this.option.description}</p>
-        ${this.renderField()}`;
-    }
-  };
+   class extends superClass {
+      // we can define a render() method so that fields are all rendered the same
+      protected render() {
+         return html` <label for="${this.fieldId}">${this.option.name}</label>
+            <p>${this.option.description}</p>
+            ${this.renderField()}`;
+      }
+   };
 ```
 
 ```ts {% fileName="input-field.ts" %}
 @customElement('input-field')
 export class InputField extends FieldWrapper(Field(LitElement)) {
-  renderField() {
-    return html` <input
-      id="${this.fieldId}"
-      @input="${(e) => this.dispatchValue(e.target.value)}"
-    />`;
-  }
+   renderField() {
+      return html` <input
+         id="${this.fieldId}"
+         @input="${(e) => this.dispatchValue(e.target.value)}"
+      />`;
+   }
 }
 ```
 
@@ -225,37 +225,37 @@ Have a look at the following example:
 
 ```ts {% fileName="editor-context.ts" %}
 export const editorContext = createContext<'vscode' | 'intellij'>(
-  Symbol('editor')
+   Symbol('editor')
 );
 
 const EditorContext = (superClass) =>
-  class extends superClass {
-    @consume({ context: editorContext })
-    @state()
-    editor: 'vscode' | 'intellij';
-  };
+   class extends superClass {
+      @consume({ context: editorContext })
+      @state()
+      editor: 'vscode' | 'intellij';
+   };
 ```
 
 ```ts {% fileName="ide-communication-controller.ts" %}
 export class IdeCommunicationController implements ReactiveController {
-  // ...
-  constructor(private host: ReactiveElement) {
-    const editor = isVscode() ? 'vscode' : 'intellij';
-    // provide the context to all DOM children of the host element
-    new ContextProvider(host, {
-      context: editorContext,
-      initialValue: editor,
-    });
-  }
+   // ...
+   constructor(private host: ReactiveElement) {
+      const editor = isVscode() ? 'vscode' : 'intellij';
+      // provide the context to all DOM children of the host element
+      new ContextProvider(host, {
+         context: editorContext,
+         initialValue: editor,
+      });
+   }
 }
 ```
 
 ```ts {% fileName="some-component.ts" %}
 @customElement('some-component')
 export class SomeComponent extends EditorContext(LitElement) {
-  render() {
-    return html`<p>I am rendered in ${this.editor}</p>`;
-  }
+   render() {
+      return html`<p>I am rendered in ${this.editor}</p>`;
+   }
 }
 ```
 
@@ -320,9 +320,9 @@ So keep your eyes peeled for announcements and let us know via GitHub or Twitter
 
 Nx Console is a tool by developers for developers and there’s one thing we love — keyboard shortcuts. So of course we had to build some in. In addition to being keyboard-friendly and tabbable, you can do the following:
 
-- `Cmd/Ctrl + Enter` to run the generator
-- `Cmd/Ctrl + Shift + Enter` to start a dry run
-- `Cmd/Ctrl + Shift + S` to focus the search bar and look for a specific option. Just `tab` to get back to the form
+-  `Cmd/Ctrl + Enter` to run the generator
+-  `Cmd/Ctrl + Shift + Enter` to start a dry run
+-  `Cmd/Ctrl + Shift + S` to focus the search bar and look for a specific option. Just `tab` to get back to the form
 
 If the prettier UI and better performance haven’t convinced you, this surely will! 😉
 
@@ -330,9 +330,9 @@ If the prettier UI and better performance haven’t convinced you, this surely w
 
 ## Learn more
 
-- [Nx Docs](/getting-started/intro)
-- [X/Twitter](https://twitter.com/nxdevtools) -- [LinkedIn](https://www.linkedin.com/company/nrwl/)
-- [Nx GitHub](https://github.com/nrwl/nx)
-- [Nx Official Discord Server](https://go.nx.dev/community)
-- [Nx Youtube Channel](https://www.youtube.com/@nxdevtools)
-- [Speed up your CI](https://nx.app/)
+-  [Nx Docs](/getting-started/intro)
+-  [X/Twitter](https://twitter.com/nxdevtools) -- [LinkedIn](https://www.linkedin.com/company/nrwl/)
+-  [Nx GitHub](https://github.com/nrwl/nx)
+-  [Nx Official Discord Server](https://go.nx.dev/community)
+-  [Nx Youtube Channel](https://www.youtube.com/@nxdevtools)
+-  [Speed up your CI](https://nx.app/)

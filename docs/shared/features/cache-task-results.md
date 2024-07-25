@@ -13,14 +13,14 @@ To enable caching for `build` and `test`, edit the `targetDefaults` property in 
 
 ```json {% fileName="nx.json" %}
 {
-  "targetDefaults": {
-    "build": {
-      "cache": true
-    },
-    "test": {
-      "cache": true
-    }
-  }
+   "targetDefaults": {
+      "build": {
+         "cache": true
+      },
+      "test": {
+         "cache": true
+      }
+   }
 }
 ```
 
@@ -31,14 +31,14 @@ To enable caching for `build` and `test`, edit the `cacheableOperations` propert
 
 ```json {% fileName="nx.json" %}
 {
-  "tasksRunnerOptions": {
-    "default": {
-      "runner": "nx/tasks-runners/default",
-      "options": {
-        "cacheableOperations": ["build", "test"]
+   "tasksRunnerOptions": {
+      "default": {
+         "runner": "nx/tasks-runners/default",
+         "options": {
+            "cacheableOperations": ["build", "test"]
+         }
       }
-    }
-  }
+   }
 }
 ```
 
@@ -57,8 +57,8 @@ Now, if you run a `build` task twice, the second time the operation will be inst
 
 Nx restores both
 
-- the terminal output
-- the files & artifacts created as a result of running the task (e.g. your `build` or `dist` directory)
+-  the terminal output
+-  the files & artifacts created as a result of running the task (e.g. your `build` or `dist` directory)
 
 Keep reading to learn how to fine-tune what gets cached.
 
@@ -70,8 +70,8 @@ Nx can automatically set inputs and outputs for you based on your tooling config
 
 Nx's caching feature starts with sensible defaults, but you can also fine-tune the defaults to control exactly what gets cached and when. There are two main options that control caching:
 
-- **Inputs -** define what gets included as part of the calculated hash (e.g. files, environment variables, etc.)
-- **Outputs -** define folders where files might be placed as part of the task execution.
+-  **Inputs -** define what gets included as part of the calculated hash (e.g. files, environment variables, etc.)
+-  **Outputs -** define folders where files might be placed as part of the task execution.
 
 You can define these inputs and outputs at the project level (`project.json`) or globally for all projects (in `nx.json`).
 
@@ -84,12 +84,12 @@ To achieve this, we can add an `inputs` and `outputs` definition globally for al
 
 ```json {% fileName="nx.json" %}
 {
-  "targetDefaults": {
-    "build": {
-      "inputs": ["{projectRoot}/**/*", "!{projectRoot}/**/*.md"],
-      "outputs": ["{workspaceRoot}/dist/{projectName}"]
-    }
-  }
+   "targetDefaults": {
+      "build": {
+         "inputs": ["{projectRoot}/**/*", "!{projectRoot}/**/*.md"],
+         "outputs": ["{workspaceRoot}/dist/{projectName}"]
+      }
+   }
 }
 ```
 

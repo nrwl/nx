@@ -10,26 +10,26 @@ import { fileExists } from './utils';
  * @param opts
  */
 export function runCommandAsync(
-  command: string,
-  opts: { silenceError?: boolean; env?: NodeJS.ProcessEnv; cwd?: string } = {
-    silenceError: false,
-  }
+   command: string,
+   opts: { silenceError?: boolean; env?: NodeJS.ProcessEnv; cwd?: string } = {
+      silenceError: false,
+   }
 ): Promise<{ stdout: string; stderr: string }> {
-  return new Promise((resolve, reject) => {
-    exec(
-      command,
-      {
-        cwd: opts.cwd ?? tmpProjPath(),
-        env: { ...process.env, ...opts.env },
-      },
-      (err, stdout, stderr) => {
-        if (!opts.silenceError && err) {
-          reject(err);
-        }
-        resolve({ stdout, stderr });
-      }
-    );
-  });
+   return new Promise((resolve, reject) => {
+      exec(
+         command,
+         {
+            cwd: opts.cwd ?? tmpProjPath(),
+            env: { ...process.env, ...opts.env },
+         },
+         (err, stdout, stderr) => {
+            if (!opts.silenceError && err) {
+               reject(err);
+            }
+            resolve({ stdout, stderr });
+         }
+      );
+   });
 }
 
 /**
@@ -38,18 +38,18 @@ export function runCommandAsync(
  * @param opts
  */
 export function runNxCommandAsync(
-  command: string,
-  opts: { silenceError?: boolean; env?: NodeJS.ProcessEnv; cwd?: string } = {
-    silenceError: false,
-  }
+   command: string,
+   opts: { silenceError?: boolean; env?: NodeJS.ProcessEnv; cwd?: string } = {
+      silenceError: false,
+   }
 ): Promise<{ stdout: string; stderr: string }> {
-  const cwd = opts.cwd ?? tmpProjPath();
-  if (fileExists(tmpProjPath('package.json'))) {
-    const pmc = getPackageManagerCommand(detectPackageManager(cwd));
-    return runCommandAsync(`${pmc.exec} nx ${command}`, opts);
-  } else if (process.platform === 'win32') {
-    return runCommandAsync(`./nx.bat %${command}`, opts);
-  } else {
-    return runCommandAsync(`./nx %${command}`, opts);
-  }
+   const cwd = opts.cwd ?? tmpProjPath();
+   if (fileExists(tmpProjPath('package.json'))) {
+      const pmc = getPackageManagerCommand(detectPackageManager(cwd));
+      return runCommandAsync(`${pmc.exec} nx ${command}`, opts);
+   } else if (process.platform === 'win32') {
+      return runCommandAsync(`./nx.bat %${command}`, opts);
+   } else {
+      return runCommandAsync(`./nx %${command}`, opts);
+   }
 }

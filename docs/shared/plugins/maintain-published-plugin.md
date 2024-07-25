@@ -44,17 +44,17 @@ pnpm add -D @my-org/my-plugin
 
 Nx provides a utility (`nx list`) that lists both core and community plugins. You can submit your plugin to be added to this list, but it needs to meet a few criteria first:
 
-- Run some kind of automated e2e tests in your repository
-- Include `@nx/devkit` as a `dependency` in the plugin's `package.json`
-- List a `repository.url` in the plugin's `package.json`
+-  Run some kind of automated e2e tests in your repository
+-  Include `@nx/devkit` as a `dependency` in the plugin's `package.json`
+-  List a `repository.url` in the plugin's `package.json`
 
 ```jsonc {% fileName="package.json" %}
 {
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/nrwl/nx.git",
-    "directory": "packages/web"
-  }
+   "repository": {
+      "type": "git",
+      "url": "https://github.com/nrwl/nx.git",
+      "directory": "packages/web"
+   }
 }
 ```
 
@@ -64,10 +64,10 @@ We reserve the right to remove unmaintained plugins from the registry. If the pl
 
 Once those criteria are met, you can submit your plugin by following the steps below:
 
-- Fork the [Nx repo](https://github.com/nrwl/nx/fork) (if you haven't already)
-- Update the [`community/approved-plugins.json` file](https://github.com/nrwl/nx/blob/master/community/approved-plugins.json) with a new entry for your plugin that includes name, url and description
-- Use the following commit message template: `chore(core): nx plugin submission [PLUGIN_NAME]`
-- push your changes, and run `yarn submit-plugin`
+-  Fork the [Nx repo](https://github.com/nrwl/nx/fork) (if you haven't already)
+-  Update the [`community/approved-plugins.json` file](https://github.com/nrwl/nx/blob/master/community/approved-plugins.json) with a new entry for your plugin that includes name, url and description
+-  Use the following commit message template: `chore(core): nx plugin submission [PLUGIN_NAME]`
+-  push your changes, and run `yarn submit-plugin`
 
 > The `yarn submit-plugin` command automatically opens the GitHub pull request process with the correct template.
 

@@ -1,4 +1,4 @@
 export interface ComponentTestSchema {
-  project: string;
-  componentPath: string;
+   project: string;
+   componentPath: string;
 }

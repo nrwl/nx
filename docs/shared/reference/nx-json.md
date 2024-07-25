@@ -6,61 +6,61 @@ The following is an expanded example showing all options. Your `nx.json` will li
 
 ```json {% fileName="nx.json" %}
 {
-  "plugins": [
-    {
-      "plugin": "@nx/eslint/plugin",
-      "options": {
-        "targetName": "lint"
+   "plugins": [
+      {
+         "plugin": "@nx/eslint/plugin",
+         "options": {
+            "targetName": "lint"
+         }
       }
-    }
-  ],
-  "parallel": 4,
-  "cacheDirectory": "tmp/my-nx-cache",
-  "defaultBase": "main",
-  "namedInputs": {
-    "default": ["{projectRoot}/**/*"],
-    "production": ["!{projectRoot}/**/*.spec.tsx"]
-  },
-  "targetDefaults": {
-    "@nx/js:tsc": {
-      "inputs": ["production", "^production"],
-      "dependsOn": ["^build"],
-      "options": {
-        "main": "{projectRoot}/src/index.ts"
+   ],
+   "parallel": 4,
+   "cacheDirectory": "tmp/my-nx-cache",
+   "defaultBase": "main",
+   "namedInputs": {
+      "default": ["{projectRoot}/**/*"],
+      "production": ["!{projectRoot}/**/*.spec.tsx"]
+   },
+   "targetDefaults": {
+      "@nx/js:tsc": {
+         "inputs": ["production", "^production"],
+         "dependsOn": ["^build"],
+         "options": {
+            "main": "{projectRoot}/src/index.ts"
+         },
+         "cache": true
       },
-      "cache": true
-    },
-    "test": {
-      "cache": true,
-      "inputs": ["default", "^production", "{workspaceRoot}/jest.preset.js"],
-      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
-      "executor": "@nx/jest:jest"
-    }
-  },
-  "release": {
-    "version": {
-      "generatorOptions": {
-        "currentVersionResolver": "git-tag",
-        "specifierSource": "conventional-commits"
+      "test": {
+         "cache": true,
+         "inputs": ["default", "^production", "{workspaceRoot}/jest.preset.js"],
+         "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+         "executor": "@nx/jest:jest"
       }
-    },
-    "changelog": {
-      "git": {
-        "commit": true,
-        "tag": true
+   },
+   "release": {
+      "version": {
+         "generatorOptions": {
+            "currentVersionResolver": "git-tag",
+            "specifierSource": "conventional-commits"
+         }
       },
-      "workspaceChangelog": {
-        "createRelease": "github"
-      },
-      "projectChangelogs": true
-    }
-  },
-  "generators": {
-    "@nx/js:library": {
-      "buildable": true
-    }
-  },
-  "extends": "nx/presets/npm.json"
+      "changelog": {
+         "git": {
+            "commit": true,
+            "tag": true
+         },
+         "workspaceChangelog": {
+            "createRelease": "github"
+         },
+         "projectChangelogs": true
+      }
+   },
+   "generators": {
+      "@nx/js:library": {
+         "buildable": true
+      }
+   },
+   "extends": "nx/presets/npm.json"
 }
 ```
 
@@ -74,15 +74,15 @@ To learn about creating your own plugin read about [extending Nx](/extending-nx/
 
 ```json {% fileName="nx.json" %}
 {
-  "plugins": [
-    "@my-org/graph-plugin",
-    {
-      "plugin": "@nx/eslint/plugin",
-      "options": {
-        "targetName": "lint"
+   "plugins": [
+      "@my-org/graph-plugin",
+      {
+         "plugin": "@nx/eslint/plugin",
+         "options": {
+            "targetName": "lint"
+         }
       }
-    }
-  ]
+   ]
 }
 ```
 
@@ -92,13 +92,13 @@ Plugins use config files to infer tasks for projects. You can specify which conf
 
 ```jsonc {% fileName="nx.json" %}
 {
-  "plugins": [
-    {
-      "plugin": "@nx/jest/plugin",
-      "include": ["packages/**/*"], // include any projects in the packages folder
-      "exclude": ["**/*-e2e/**/*"] // exclude any projects in a *-e2e folder
-    }
-  ]
+   "plugins": [
+      {
+         "plugin": "@nx/jest/plugin",
+         "include": ["packages/**/*"], // include any projects in the packages folder
+         "exclude": ["**/*-e2e/**/*"] // exclude any projects in a *-e2e folder
+      }
+   ]
 }
 ```
 
@@ -123,14 +123,14 @@ You can configure `parallel` in `nx.json`, but you can also set a `--parallel` f
 
 Tells Nx which base branch to use when calculating affected projects.
 
-- `defaultBase` defines the default base branch, defaults to `main`.
+-  `defaultBase` defines the default base branch, defaults to `main`.
 
 ## Target Defaults
 
 Target defaults provide ways to set common options for a particular target in your workspace. When building your project's configuration, we merge it with up to 1 default from this map. For a given target, we look at its name and its executor. We then check target defaults looking for a configuration whose key matches any of the following:
 
-- `` `${executor}` ``
-- `` `${targetName}` `` (if the configuration specifies the executor, this needs to match the target's executor as well)
+-  `` `${executor}` ``
+-  `` `${targetName}` `` (if the configuration specifies the executor, this needs to match the target's executor as well)
 
 Target defaults matching the executor takes precedence over those matching the target name. If we find a target default for a given target, we use it as the base for that target's configuration.
 
@@ -151,11 +151,11 @@ You can also define and redefine named inputs. This enables one key use case, wh
 
 ```json {% fileName="nx.json" %}
 {
-  "targetDefaults": {
-    "test": {
-      "inputs": ["default", "^production"]
-    }
-  }
+   "targetDefaults": {
+      "test": {
+         "inputs": ["default", "^production"]
+      }
+   }
 }
 ```
 
@@ -163,9 +163,9 @@ And projects can define their `production` inputs, without having to redefine th
 
 ```json {% fileName="project.json" %}
 {
-  "namedInputs": {
-    "production": ["default", "!{projectRoot}/**/*.test.js"]
-  }
+   "namedInputs": {
+      "production": ["default", "!{projectRoot}/**/*.test.js"]
+   }
 }
 ```
 
@@ -187,11 +187,11 @@ defining `targetDefaults` in `nx.json` is helpful.
 
 ```json {% fileName="nx.json" %}
 {
-  "targetDefaults": {
-    "build": {
-      "dependsOn": ["^build"]
-    }
-  }
+   "targetDefaults": {
+      "build": {
+         "dependsOn": ["^build"]
+      }
+   }
 }
 ```
 
@@ -208,11 +208,11 @@ Another target default you can configure is `outputs`:
 
 ```json {% fileName="nx.json" %}
 {
-  "targetDefaults": {
-    "build": {
-      "outputs": ["{projectRoot}/custom-dist"]
-    }
-  }
+   "targetDefaults": {
+      "build": {
+         "outputs": ["{projectRoot}/custom-dist"]
+      }
+   }
 }
 ```
 
@@ -220,25 +220,25 @@ When defining any options or configurations inside of a target default, you may 
 
 ```json {% fileName="nx.json" %}
 {
-  "targetDefaults": {
-    "@nx/js:tsc": {
-      "options": {
-        "main": "{projectRoot}/src/index.ts"
+   "targetDefaults": {
+      "@nx/js:tsc": {
+         "options": {
+            "main": "{projectRoot}/src/index.ts"
+         },
+         "configurations": {
+            "prod": {
+               "tsconfig": "{projectRoot}/tsconfig.prod.json"
+            }
+         },
+         "inputs": ["prod"],
+         "outputs": ["{workspaceRoot}/{projectRoot}"]
       },
-      "configurations": {
-        "prod": {
-          "tsconfig": "{projectRoot}/tsconfig.prod.json"
-        }
-      },
-      "inputs": ["prod"],
-      "outputs": ["{workspaceRoot}/{projectRoot}"]
-    },
-    "build": {
-      "inputs": ["prod"],
-      "outputs": ["{workspaceRoot}/{projectRoot}"],
-      "cache": true
-    }
-  }
+      "build": {
+         "inputs": ["prod"],
+         "outputs": ["{workspaceRoot}/{projectRoot}"],
+         "cache": true
+      }
+   }
 }
 ```
 
@@ -256,11 +256,11 @@ In Nx 17 and higher, caching is configured by specifying `"cache": true` in a ta
 
 ```json {% fileName="nx.json" %}
 {
-  "targetDefaults": {
-    "test": {
-      "cache": true
-    }
-  }
+   "targetDefaults": {
+      "test": {
+         "cache": true
+      }
+   }
 }
 ```
 
@@ -276,13 +276,13 @@ You can configure options specific to a target's executor. As an example, if you
 
 ```json {% fileName="nx.json" %}
 {
-  "targetDefaults": {
-    "@nx/js:tsc": {
-      "options": {
-        "generateExportsField": true
+   "targetDefaults": {
+      "@nx/js:tsc": {
+         "options": {
+            "generateExportsField": true
+         }
       }
-    }
-  }
+   }
 }
 ```
 
@@ -290,14 +290,14 @@ You can also provide defaults for [inferred targets](/concepts/inferred-tasks) o
 
 ```json {% fileName="nx.json" %}
 {
-  "targetDefaults": {
-    "build": {
-      "options": {
-        "assetsInlineLimit": 2048,
-        "assetsDir": "static/assets"
+   "targetDefaults": {
+      "build": {
+         "options": {
+            "assetsInlineLimit": 2048,
+            "assetsDir": "static/assets"
+         }
       }
-    }
-  }
+   }
 }
 ```
 
@@ -321,11 +321,11 @@ If you want to limit the projects that `nx release` targets, you can use the `pr
 
 ```jsonc {% fileName="nx.json" %}
 {
-  "release": {
-    // Here we are configuring nx release to target all projects
-    // except the one called "ignore-me"
-    "projects": ["*", "!ignore-me"]
-  }
+   "release": {
+      // Here we are configuring nx release to target all projects
+      // except the one called "ignore-me"
+      "projects": ["*", "!ignore-me"]
+   }
 }
 ```
 
@@ -335,11 +335,11 @@ The `projectsRelationship` property tells Nx whether to release projects indepen
 
 ```jsonc {% fileName="nx.json" %}
 {
-  "release": {
-    // Here we are configuring nx release to release projects
-    // independently, as opposed to the default of "fixed"
-    "projectsRelationship": "independent"
-  }
+   "release": {
+      // Here we are configuring nx release to release projects
+      // independently, as opposed to the default of "fixed"
+      "projectsRelationship": "independent"
+   }
 }
 ```
 
@@ -355,11 +355,11 @@ The default `"releaseTagPattern"` for independent releases at the project level 
 
 ```jsonc {% fileName="nx.json" %}
 {
-  "release": {
-    // Here we are configuring nx release to use a custom release
-    // tag pattern (we have dropped the v prefix from the default)
-    "releaseTagPattern": "{version}"
-  }
+   "release": {
+      // Here we are configuring nx release to use a custom release
+      // tag pattern (we have dropped the v prefix from the default)
+      "releaseTagPattern": "{version}"
+   }
 }
 ```
 
@@ -373,19 +373,19 @@ It is therefore a common requirement to be able to tweak the options given to th
 
 ```jsonc {% fileName="nx.json" %}
 {
-  "release": {
-    "version": {
-      "generatorOptions": {
-        // Here we are configuring the generator to use git tags as the
-        // source of truth for a project's current version
-        "currentVersionResolver": "git-tag",
-        // Here we are configuring the generator to use conventional
-        // commits as the source of truth for how to determine the
-        // relevant version bump for the next version
-        "specifierSource": "conventional-commits"
+   "release": {
+      "version": {
+         "generatorOptions": {
+            // Here we are configuring the generator to use git tags as the
+            // source of truth for a project's current version
+            "currentVersionResolver": "git-tag",
+            // Here we are configuring the generator to use conventional
+            // commits as the source of truth for how to determine the
+            // relevant version bump for the next version
+            "specifierSource": "conventional-commits"
+         }
       }
-    }
-  }
+   }
 }
 ```
 
@@ -397,9 +397,9 @@ The `changelog` property configures the changelog phase of the release process. 
 
 There are two types of possible changelog that can be generated:
 
-- **Workspace Changelog**: A changelog that contains all changes across all projects in your workspace. This is not applicable when releasing projects independently.
+-  **Workspace Changelog**: A changelog that contains all changes across all projects in your workspace. This is not applicable when releasing projects independently.
 
-- **Project Changelogs**: A changelog that contains all changes for a given project.
+-  **Project Changelogs**: A changelog that contains all changes for a given project.
 
 The `changelog` property is used to configure both of these changelogs.
 
@@ -409,28 +409,28 @@ The `changelog.workspaceChangelog` property configures the workspace changelog. 
 
 ```jsonc {% fileName="nx.json" %}
 {
-  "release": {
-    "changelog": {
-      // This disables the workspace changelog
-      "workspaceChangelog": false
-    }
-  }
+   "release": {
+      "changelog": {
+         // This disables the workspace changelog
+         "workspaceChangelog": false
+      }
+   }
 }
 ```
 
 ```jsonc {% fileName="nx.json" %}
 {
-  "release": {
-    "changelog": {
-      "workspaceChangelog": {
-        // This will create a GitHub release containing the workspace
-        // changelog contents
-        "createRelease": "github",
-        // This will disable creating a workspace CHANGELOG.md file
-        "file": false
+   "release": {
+      "changelog": {
+         "workspaceChangelog": {
+            // This will create a GitHub release containing the workspace
+            // changelog contents
+            "createRelease": "github",
+            // This will disable creating a workspace CHANGELOG.md file
+            "file": false
+         }
       }
-    }
-  }
+   }
 }
 ```
 
@@ -440,29 +440,29 @@ The `changelog.projectChangelogs` property configures the project changelogs. It
 
 ```jsonc {% fileName="nx.json" %}
 {
-  "release": {
-    "changelog": {
-      // This enables project changelogs with the default options
-      "projectChangelogs": true
-    }
-  }
+   "release": {
+      "changelog": {
+         // This enables project changelogs with the default options
+         "projectChangelogs": true
+      }
+   }
 }
 ```
 
 ```jsonc {% fileName="nx.json" %}
 {
-  "release": {
-    "changelog": {
-      "projectChangelogs": {
-        // This will create one GitHub release per project containing
-        // the project changelog contents
-        "createRelease": "github",
-        // This will disable creating any project level CHANGELOG.md
-        // files
-        "file": false
+   "release": {
+      "changelog": {
+         "projectChangelogs": {
+            // This will create one GitHub release per project containing
+            // the project changelog contents
+            "createRelease": "github",
+            // This will disable creating any project level CHANGELOG.md
+            // files
+            "file": false
+         }
       }
-    }
-  }
+   }
 }
 ```
 
@@ -472,16 +472,16 @@ The `git` property configures the automated git operations that take place as pa
 
 ```jsonc {% fileName="nx.json" %}
 {
-  "release": {
-    "git": {
-      // This will enable committing any changes (e.g. package.json
-      // updates, CHANGELOG.md files) to git
-      "commit": true,
-      // This will enable create a git for the overall release, or
-      // one tag per project for independent project releases
-      "tag": false
-    }
-  }
+   "release": {
+      "git": {
+         // This will enable committing any changes (e.g. package.json
+         // updates, CHANGELOG.md files) to git
+         "commit": true,
+         // This will enable create a git for the overall release, or
+         // one tag per project for independent project releases
+         "tag": false
+      }
+   }
 }
 ```
 
@@ -492,11 +492,11 @@ pass `--buildable=true` when creating new libraries with the `@nx/js` plugin.
 
 ```json {% fileName="nx.json" %}
 {
-  "generators": {
-    "@nx/js:library": {
-      "buildable": true
-    }
-  }
+   "generators": {
+      "@nx/js:library": {
+         "buildable": true
+      }
+   }
 }
 ```
 
@@ -510,7 +510,7 @@ There are also options for [Nx Cloud](https://nx.app) that are set in the `nx.js
 
 ```json {% fileName="nx.json" %}
 {
-  "nxCloudAccessToken": "SOMETOKEN"
+   "nxCloudAccessToken": "SOMETOKEN"
 }
 ```
 

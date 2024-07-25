@@ -1,15 +1,15 @@
 import {
-  useNavigate,
-  useParams,
-  useRouteLoaderData,
-  useSearchParams,
+   useNavigate,
+   useParams,
+   useRouteLoaderData,
+   useSearchParams,
 } from 'react-router-dom';
 import { TaskList } from './task-list';
 /* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
 import type {
-  ProjectGraphClientResponse,
-  TaskGraphClientResponse,
+   ProjectGraphClientResponse,
+   TaskGraphClientResponse,
 } from 'nx/src/command-line/graph/graph';
 /* eslint-enable @nx/enforce-module-boundaries */
 import { useEffect, useMemo } from 'react';
@@ -23,230 +23,232 @@ import { ShowHideAll } from '../ui-components/show-hide-all';
 import { createTaskName } from '../util';
 
 export function TasksSidebar() {
-  const graphService = getGraphService();
-  const navigate = useNavigate();
-  const params = useParams();
-  const createRoute = useRouteConstructor();
+   const graphService = getGraphService();
+   const navigate = useNavigate();
+   const params = useParams();
+   const createRoute = useRouteConstructor();
 
-  const [searchParams, setSearchParams] = useSearchParams();
-  const groupByProject = searchParams.get('groupByProject') === 'true';
+   const [searchParams, setSearchParams] = useSearchParams();
+   const groupByProject = searchParams.get('groupByProject') === 'true';
 
-  const selectedWorkspaceRouteData = useRouteLoaderData(
-    'selectedWorkspace'
-  ) as ProjectGraphClientResponse & { targets: string[] };
-  const workspaceLayout = selectedWorkspaceRouteData.layout;
+   const selectedWorkspaceRouteData = useRouteLoaderData(
+      'selectedWorkspace'
+   ) as ProjectGraphClientResponse & { targets: string[] };
+   const workspaceLayout = selectedWorkspaceRouteData.layout;
 
-  const routeData = useRouteLoaderData(
-    'selectedTarget'
-  ) as TaskGraphClientResponse;
-  const { taskGraphs, errors } = routeData;
-  let { projects, targets } = selectedWorkspaceRouteData;
+   const routeData = useRouteLoaderData(
+      'selectedTarget'
+   ) as TaskGraphClientResponse;
+   const { taskGraphs, errors } = routeData;
+   let { projects, targets } = selectedWorkspaceRouteData;
 
-  const selectedTarget = params['selectedTarget'] ?? targets[0];
+   const selectedTarget = params['selectedTarget'] ?? targets[0];
 
-  const currentRoute = useCurrentPath();
-  const isAllRoute =
-    currentRoute.currentPath === `/tasks/${selectedTarget}/all`;
+   const currentRoute = useCurrentPath();
+   const isAllRoute =
+      currentRoute.currentPath === `/tasks/${selectedTarget}/all`;
 
-  const allProjectsWithTargetAndNoErrors = projects.filter(
-    (project) =>
-      project.data.targets?.hasOwnProperty(selectedTarget) &&
-      !errors?.hasOwnProperty(createTaskName(project.name, selectedTarget))
-  );
+   const allProjectsWithTargetAndNoErrors = projects.filter(
+      (project) =>
+         project.data.targets?.hasOwnProperty(selectedTarget) &&
+         !errors?.hasOwnProperty(createTaskName(project.name, selectedTarget))
+   );
 
-  const selectedProjects = useMemo(
-    () =>
-      isAllRoute
-        ? allProjectsWithTargetAndNoErrors.map(({ name }) => name)
-        : searchParams.get('projects')?.split(' ') ?? [],
-    [allProjectsWithTargetAndNoErrors, searchParams, isAllRoute]
-  );
+   const selectedProjects = useMemo(
+      () =>
+         isAllRoute
+            ? allProjectsWithTargetAndNoErrors.map(({ name }) => name)
+            : searchParams.get('projects')?.split(' ') ?? [],
+      [allProjectsWithTargetAndNoErrors, searchParams, isAllRoute]
+   );
 
-  function selectTarget(target: string) {
-    if (target === selectedTarget) return;
+   function selectTarget(target: string) {
+      if (target === selectedTarget) return;
 
-    hideAllProjects();
+      hideAllProjects();
 
-    if (params['selectedTarget']) {
-      navigate({
-        pathname: `../${encodeURIComponent(target)}`,
-        search: searchParams.toString(),
-      });
-    } else {
-      navigate({
-        pathname: `${encodeURIComponent(target)}`,
-        search: searchParams.toString(),
-      });
-    }
-  }
+      if (params['selectedTarget']) {
+         navigate({
+            pathname: `../${encodeURIComponent(target)}`,
+            search: searchParams.toString(),
+         });
+      } else {
+         navigate({
+            pathname: `${encodeURIComponent(target)}`,
+            search: searchParams.toString(),
+         });
+      }
+   }
 
-  function toggleProject(project: string) {
-    if (selectedProjects.includes(project)) {
-      deselectProject(project);
-    } else {
-      selectProject(project);
-    }
-  }
+   function toggleProject(project: string) {
+      if (selectedProjects.includes(project)) {
+         deselectProject(project);
+      } else {
+         selectProject(project);
+      }
+   }
 
-  function selectProject(project: string) {
-    const newSelectedProjects = [...selectedProjects, project];
-    const allProjectsSelected =
-      newSelectedProjects.length === allProjectsWithTargetAndNoErrors.length;
-    if (allProjectsSelected) {
+   function selectProject(project: string) {
+      const newSelectedProjects = [...selectedProjects, project];
+      const allProjectsSelected =
+         newSelectedProjects.length === allProjectsWithTargetAndNoErrors.length;
+      if (allProjectsSelected) {
+         searchParams.delete('projects');
+      } else {
+         searchParams.set('projects', newSelectedProjects.join(' '));
+      }
+
+      navigate(
+         createRoute(
+            {
+               pathname: allProjectsSelected
+                  ? `/tasks/${encodeURIComponent(selectedTarget)}/all`
+                  : `/tasks/${encodeURIComponent(selectedTarget)}`,
+               search: searchParams.toString(),
+            },
+            false
+         )
+      );
+   }
+
+   function deselectProject(project: string) {
+      const newSelectedProjects = selectedProjects.filter(
+         (selectedProject) => selectedProject !== project
+      );
+      if (newSelectedProjects.length === 0) {
+         searchParams.delete('projects');
+      } else {
+         searchParams.set('projects', newSelectedProjects.join(' '));
+      }
+      navigate(
+         createRoute(
+            {
+               pathname: `/tasks/${encodeURIComponent(selectedTarget)}`,
+               search: searchParams.toString(),
+            },
+            false
+         )
+      );
+   }
+
+   function selectAllProjects() {
       searchParams.delete('projects');
-    } else {
-      searchParams.set('projects', newSelectedProjects.join(' '));
-    }
+      navigate(
+         createRoute(
+            {
+               pathname: `/tasks/${encodeURIComponent(selectedTarget)}/all`,
+               search: searchParams.toString(),
+            },
+            false
+         )
+      );
+   }
 
-    navigate(
-      createRoute(
-        {
-          pathname: allProjectsSelected
-            ? `/tasks/${encodeURIComponent(selectedTarget)}/all`
-            : `/tasks/${encodeURIComponent(selectedTarget)}`,
-          search: searchParams.toString(),
-        },
-        false
-      )
-    );
-  }
-
-  function deselectProject(project: string) {
-    const newSelectedProjects = selectedProjects.filter(
-      (selectedProject) => selectedProject !== project
-    );
-    if (newSelectedProjects.length === 0) {
+   function hideAllProjects() {
       searchParams.delete('projects');
-    } else {
-      searchParams.set('projects', newSelectedProjects.join(' '));
-    }
-    navigate(
-      createRoute(
-        {
-          pathname: `/tasks/${encodeURIComponent(selectedTarget)}`,
-          search: searchParams.toString(),
-        },
-        false
-      )
-    );
-  }
+      navigate(
+         createRoute(
+            {
+               pathname: `/tasks/${encodeURIComponent(selectedTarget)}`,
+               search: searchParams.toString(),
+            },
+            false
+         )
+      );
+   }
 
-  function selectAllProjects() {
-    searchParams.delete('projects');
-    navigate(
-      createRoute(
-        {
-          pathname: `/tasks/${encodeURIComponent(selectedTarget)}/all`,
-          search: searchParams.toString(),
-        },
-        false
-      )
-    );
-  }
-
-  function hideAllProjects() {
-    searchParams.delete('projects');
-    navigate(
-      createRoute(
-        {
-          pathname: `/tasks/${encodeURIComponent(selectedTarget)}`,
-          search: searchParams.toString(),
-        },
-        false
-      )
-    );
-  }
-
-  useEffect(() => {
-    graphService.handleTaskEvent({
-      type: 'notifyTaskGraphSetProjects',
-      projects: selectedWorkspaceRouteData.projects,
-      taskGraphs,
-    });
-  }, [selectedWorkspaceRouteData]);
-
-  useEffect(() => {
-    if (groupByProject) {
+   useEffect(() => {
       graphService.handleTaskEvent({
-        type: 'setGroupByProject',
-        groupByProject: true,
+         type: 'notifyTaskGraphSetProjects',
+         projects: selectedWorkspaceRouteData.projects,
+         taskGraphs,
       });
-    } else {
+   }, [selectedWorkspaceRouteData]);
+
+   useEffect(() => {
+      if (groupByProject) {
+         graphService.handleTaskEvent({
+            type: 'setGroupByProject',
+            groupByProject: true,
+         });
+      } else {
+         graphService.handleTaskEvent({
+            type: 'setGroupByProject',
+            groupByProject: false,
+         });
+      }
+   }, [searchParams]);
+
+   useEffect(() => {
       graphService.handleTaskEvent({
-        type: 'setGroupByProject',
-        groupByProject: false,
+         type: 'notifyTaskGraphSetTasks',
+         taskIds: selectedProjects.map((p) =>
+            createTaskName(p, selectedTarget)
+         ),
       });
-    }
-  }, [searchParams]);
+   }, [graphService, selectedProjects, selectedTarget]);
 
-  useEffect(() => {
-    graphService.handleTaskEvent({
-      type: 'notifyTaskGraphSetTasks',
-      taskIds: selectedProjects.map((p) => createTaskName(p, selectedTarget)),
-    });
-  }, [graphService, selectedProjects, selectedTarget]);
+   function groupByProjectChanged(checked) {
+      setSearchParams(
+         (currentSearchParams) => {
+            if (checked) {
+               currentSearchParams.set('groupByProject', 'true');
+            } else {
+               currentSearchParams.delete('groupByProject');
+            }
 
-  function groupByProjectChanged(checked) {
-    setSearchParams(
-      (currentSearchParams) => {
-        if (checked) {
-          currentSearchParams.set('groupByProject', 'true');
-        } else {
-          currentSearchParams.delete('groupByProject');
-        }
+            return currentSearchParams;
+         },
+         { relative: 'path' }
+      );
+   }
 
-        return currentSearchParams;
-      },
-      { relative: 'path' }
-    );
-  }
+   return (
+      <>
+         <ShowHideAll
+            showAll={() => selectAllProjects()}
+            hideAll={() => hideAllProjects()}
+            showAffected={() => {}}
+            hasAffected={false}
+            label="tasks"
+         ></ShowHideAll>
 
-  return (
-    <>
-      <ShowHideAll
-        showAll={() => selectAllProjects()}
-        hideAll={() => hideAllProjects()}
-        showAffected={() => {}}
-        hasAffected={false}
-        label="tasks"
-      ></ShowHideAll>
+         <CheckboxPanel
+            checked={groupByProject}
+            checkChanged={groupByProjectChanged}
+            name={'groupByProject'}
+            label={'Group by project'}
+            description={'Visually arrange tasks by project.'}
+         />
 
-      <CheckboxPanel
-        checked={groupByProject}
-        checkChanged={groupByProjectChanged}
-        name={'groupByProject'}
-        label={'Group by project'}
-        description={'Visually arrange tasks by project.'}
-      />
-
-      <TaskList
-        projects={projects}
-        selectedProjects={selectedProjects}
-        workspaceLayout={workspaceLayout}
-        selectedTarget={selectedTarget}
-        toggleProject={toggleProject}
-        errors={errors}
-      >
-        <label
-          htmlFor="selectedTarget"
-          className="my-2 block text-sm font-medium text-gray-700"
-        >
-          Target Name
-        </label>
-        <Dropdown
-          id="selectedTarget"
-          className="w-full"
-          data-cy="selected-target-dropdown"
-          defaultValue={selectedTarget}
-          onChange={(event) => selectTarget(event.currentTarget.value)}
-        >
-          {targets.map((target) => (
-            <option key={target} value={target}>
-              {target}
-            </option>
-          ))}
-        </Dropdown>
-      </TaskList>
-    </>
-  );
+         <TaskList
+            projects={projects}
+            selectedProjects={selectedProjects}
+            workspaceLayout={workspaceLayout}
+            selectedTarget={selectedTarget}
+            toggleProject={toggleProject}
+            errors={errors}
+         >
+            <label
+               htmlFor="selectedTarget"
+               className="my-2 block text-sm font-medium text-gray-700"
+            >
+               Target Name
+            </label>
+            <Dropdown
+               id="selectedTarget"
+               className="w-full"
+               data-cy="selected-target-dropdown"
+               defaultValue={selectedTarget}
+               onChange={(event) => selectTarget(event.currentTarget.value)}
+            >
+               {targets.map((target) => (
+                  <option key={target} value={target}>
+                     {target}
+                  </option>
+               ))}
+            </Dropdown>
+         </TaskList>
+      </>
+   );
 }

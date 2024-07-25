@@ -3,16 +3,16 @@ import { Tree } from '@nx/devkit';
 import { updateGitIgnore } from './update-gitignore';
 
 describe('update gitignore', () => {
-  let tree: Tree;
+   let tree: Tree;
 
-  beforeEach(async () => {
-    tree = createTreeWithEmptyWorkspace();
-  });
+   beforeEach(async () => {
+      tree = createTreeWithEmptyWorkspace();
+   });
 
-  it('should add entries to .gitignore if they do not exist', () => {
-    tree.write(
-      '.gitignore',
-      `
+   it('should add entries to .gitignore if they do not exist', () => {
+      tree.write(
+         '.gitignore',
+         `
 # See http://help.github.com/ignore-files/ for more about ignoring files.
 
 # compiled output
@@ -33,17 +33,17 @@ node_modules
 *.sublime-workspace
 .output_data
 `
-    );
+      );
 
-    updateGitIgnore(tree);
+      updateGitIgnore(tree);
 
-    expect(tree.read('.gitignore', 'utf-8')).toMatchSnapshot();
-  });
+      expect(tree.read('.gitignore', 'utf-8')).toMatchSnapshot();
+   });
 
-  it('should not add duplicate entries to .gitignore if they already exist', () => {
-    tree.write(
-      '.gitignore',
-      `
+   it('should not add duplicate entries to .gitignore if they already exist', () => {
+      tree.write(
+         '.gitignore',
+         `
 # See http://help.github.com/ignore-files/ for more about ignoring files.
 
 # compiled output
@@ -70,10 +70,10 @@ node_modules
 .nitro
 .cache
 `
-    );
+      );
 
-    updateGitIgnore(tree);
+      updateGitIgnore(tree);
 
-    expect(tree.read('.gitignore', 'utf-8')).toMatchSnapshot();
-  });
+      expect(tree.read('.gitignore', 'utf-8')).toMatchSnapshot();
+   });
 });

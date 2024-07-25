@@ -1,6 +1,6 @@
 export interface ReactNativeStorybookOptions {
-  searchDir: string[];
-  outputFile: string;
-  pattern: string;
-  syncDeps?: boolean;
+   searchDir: string[];
+   outputFile: string;
+   pattern: string;
+   syncDeps?: boolean;
 }

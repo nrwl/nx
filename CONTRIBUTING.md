@@ -27,13 +27,13 @@ can [submit a Pull Request](https://github.com/nrwl/nx/blob/master/CONTRIBUTING.
 
 Source code and documentation are included in the top-level folders listed below.
 
-- `docs` - Markdown and configuration files for documentation including tutorials, guides for each supported platform,
-  and API docs.
-- `e2e` - E2E tests.
-- `packages` - Source code for Nx packages such as Angular, React, Web, NestJS, Next and others including generators and
-  executors (or builders).
-- `scripts` - Miscellaneous scripts for project tasks such as building documentation, testing, and code formatting.
-- `tmp` - Folder used by e2e tests. If you are a WebStorm user, make sure to mark this folder as excluded.
+-  `docs` - Markdown and configuration files for documentation including tutorials, guides for each supported platform,
+   and API docs.
+-  `e2e` - E2E tests.
+-  `packages` - Source code for Nx packages such as Angular, React, Web, NestJS, Next and others including generators and
+   executors (or builders).
+-  `scripts` - Miscellaneous scripts for project tasks such as building documentation, testing, and code formatting.
+-  `tmp` - Folder used by e2e tests. If you are a WebStorm user, make sure to mark this folder as excluded.
 
 ## Development Workstation Setup
 
@@ -41,9 +41,9 @@ If you are using `VSCode`, and provided you have [Docker](https://docker.com) in
 
 To do so, simply:
 
-- Checkout the repo
-- Open it with VSCode
-- Open the [Command Palette](https://code.visualstudio.com/docs/getstarted/userinterface#_command-palette) and select "Dev Containers: Open Folder in Container..."
+-  Checkout the repo
+-  Open it with VSCode
+-  Open the [Command Palette](https://code.visualstudio.com/docs/getstarted/userinterface#_command-palette) and select "Dev Containers: Open Folder in Container..."
 
 The repo comes with a preconfigured `devcontainer.json` file (located in `.devcontainer/` folder at root), that `VSCode` will automatically use to install the aforementioned tools, inside a Docker image. It will even run `pnpm install` for you, so you can start contributing to Nx right after.
 
@@ -73,12 +73,12 @@ it can be useful to publish to a local registry.
 
 Check out [this video for a live walkthrough](https://youtu.be/Tx257WpNsxc) or follow the instructions below:
 
-- Run `pnpm local-registry` in Terminal 1 (keep it running)
-- Run `npm adduser --registry http://localhost:4873` in Terminal 2 (real credentials are not required, you just need to
-  be logged in. You can use test/test/test@test.io.)
-- Run `pnpm nx-release 20.0.0 --local` in Terminal 2 - you can choose any nonexistent version number here, but it's recommended to use the next major
-- Run `cd ./tmp` in Terminal 2
-- Run `npx create-nx-workspace@20.0.0` in Terminal 2
+-  Run `pnpm local-registry` in Terminal 1 (keep it running)
+-  Run `npm adduser --registry http://localhost:4873` in Terminal 2 (real credentials are not required, you just need to
+   be logged in. You can use test/test/test@test.io.)
+-  Run `pnpm nx-release 20.0.0 --local` in Terminal 2 - you can choose any nonexistent version number here, but it's recommended to use the next major
+-  Run `cd ./tmp` in Terminal 2
+-  Run `npx create-nx-workspace@20.0.0` in Terminal 2
 
 If you have problems publishing, make sure you use Node 18 and NPM 8.
 
@@ -88,33 +88,33 @@ If you have problems publishing, make sure you use Node 18 and NPM 8.
 
 Yarn Berry operates slightly differently than Yarn Classic. In order to publish packages for Berry follow next steps:
 
-- Run `yarn set version berry` to switch to latest Yarn version.
-- Create `.yarnrc.yml` in root with following contents:
+-  Run `yarn set version berry` to switch to latest Yarn version.
+-  Create `.yarnrc.yml` in root with following contents:
 
-  ```yml
-  nodeLinker: node-modules
-  npmRegistryServer: 'http://localhost:4873'
-  unsafeHttpWhitelist:
-    - localhost
-  ```
+   ```yml
+   nodeLinker: node-modules
+   npmRegistryServer: 'http://localhost:4873'
+   unsafeHttpWhitelist:
+      - localhost
+   ```
 
-- Run `pnpm local-registry` in Terminal 1 (keep it running)
-- If you are creating nx workspace outside of your nx repo, make sure to add npm registry info to your root yarnrc (
-  usually in ~/.yarnrc.yml). The file should look something like this:
+-  Run `pnpm local-registry` in Terminal 1 (keep it running)
+-  If you are creating nx workspace outside of your nx repo, make sure to add npm registry info to your root yarnrc (
+   usually in ~/.yarnrc.yml). The file should look something like this:
 
-  ```yml
-  npmRegistries:
-    'https://registry.yarnpkg.com':
-      npmAuthToken: npm_******************
-  yarnPath: .yarn/releases/yarn-3.2.2.cjs
-  npmRegistryServer: 'http://localhost:4873'
-  unsafeHttpWhitelist:
-    - localhost
-  ```
+   ```yml
+   npmRegistries:
+      'https://registry.yarnpkg.com':
+         npmAuthToken: npm_******************
+   yarnPath: .yarn/releases/yarn-3.2.2.cjs
+   npmRegistryServer: 'http://localhost:4873'
+   unsafeHttpWhitelist:
+      - localhost
+   ```
 
-- Run `pnpm nx-release minor --local` in Terminal 2 to publish next minor version. The output will report the version of published packages.
-- Go to your target folder (e.g. `cd ./tmp`) in Terminal 2
-- Run `yarn dlx create-nx-workspace@123.4.5` in Terminal 2 (replace `123.4.5` with the version that got published).
+-  Run `pnpm nx-release minor --local` in Terminal 2 to publish next minor version. The output will report the version of published packages.
+-  Go to your target folder (e.g. `cd ./tmp`) in Terminal 2
+-  Run `yarn dlx create-nx-workspace@123.4.5` in Terminal 2 (replace `123.4.5` with the version that got published).
 
 ### Running Unit Tests
 
@@ -158,9 +158,9 @@ The above command sets verbose logging (this exposes stack traces and underlying
 
 To build Nx on Windows, you need to use WSL.
 
-- Run `pnpm install` in WSL. Yarn will compile several dependencies. If you don't run `install` in WSL, they will be
-  compiled for Windows.
-- Run `nx affected --target=test` and other commands in WSL.
+-  Run `pnpm install` in WSL. Yarn will compile several dependencies. If you don't run `install` in WSL, they will be
+   compiled for Windows.
+-  Run `nx affected --target=test` and other commands in WSL.
 
 ## Documentation Contributions
 
@@ -247,9 +247,9 @@ We want to fix all the issues as soon as possible, but before fixing a bug we ne
 reproducible scenario gives us wealth of important information without going back and forth with you requiring
 additional information, such as:
 
-- the output of `nx report`
-- `yarn.lock` or `package-lock.json` or `pnpm-lock.yaml`
-- and most importantly - a use-case that fails
+-  the output of `nx report`
+-  `yarn.lock` or `package-lock.json` or `pnpm-lock.yaml`
+-  and most importantly - a use-case that fails
 
 A minimal reproduction allows us to quickly confirm a bug (or point out a coding problem) as well as confirm that we are
 fixing the right problem.
@@ -265,18 +265,18 @@ You can file new issues by filling out our [issue form](https://github.com/nrwl/
 
 Please follow the following guidelines:
 
-- Make sure unit tests pass (`nx affected --target=test`)
-  - Target a specific project with: `nx run proj:test` (i.e. `nx run angular:test` to target `packages/angular`)
-  - Target a specific unit test file (i.e. `packages/angular/src/utils/ast-command-line-utils.spec.ts`)
-    with `npx jest angular/src/utils/ast-utils` or `npx jest packages/angular/src/utils/ast-utils`
-  - For more options on running tests - check `npx jest --help` or visit [jestjs.io](https://jestjs.io/)
-  - Debug with `node --inspect-brk ./node_modules/jest/bin/jest.js build/packages/angular/src/utils/ast-utils.spec.js`
-- Make sure e2e tests pass (this can take a while, so you can always let CI check those) (`nx affected --target=e2e`)
-  - Target a specific e2e test with `nx e2e e2e-cypress`
-- Make sure you run `nx format`
-- Update documentation with `pnpm documentation`. For documentation, check for spelling and grammatical errors.
-- Update your commit message to follow the guidelines below (use `pnpm commit` to automate compliance)
-  - `pnpm check-commit` will check to make sure your commit messages are formatted correctly
+-  Make sure unit tests pass (`nx affected --target=test`)
+   -  Target a specific project with: `nx run proj:test` (i.e. `nx run angular:test` to target `packages/angular`)
+   -  Target a specific unit test file (i.e. `packages/angular/src/utils/ast-command-line-utils.spec.ts`)
+      with `npx jest angular/src/utils/ast-utils` or `npx jest packages/angular/src/utils/ast-utils`
+   -  For more options on running tests - check `npx jest --help` or visit [jestjs.io](https://jestjs.io/)
+   -  Debug with `node --inspect-brk ./node_modules/jest/bin/jest.js build/packages/angular/src/utils/ast-utils.spec.js`
+-  Make sure e2e tests pass (this can take a while, so you can always let CI check those) (`nx affected --target=e2e`)
+   -  Target a specific e2e test with `nx e2e e2e-cypress`
+-  Make sure you run `nx format`
+-  Update documentation with `pnpm documentation`. For documentation, check for spelling and grammatical errors.
+-  Update your commit message to follow the guidelines below (use `pnpm commit` to automate compliance)
+   -  `pnpm check-commit` will check to make sure your commit messages are formatted correctly
 
 #### Commit Message Guidelines
 
@@ -292,46 +292,46 @@ body
 
 The type must be one of the following:
 
-- feat - New or improved behavior being introduced (e.g. Updating to new versions of React or Jest which bring in new
-  features)
-- fix - Fixes the current unexpected behavior to match expected behavior (e.g. Fixing the library generator to create
-  the proper named project)
-- cleanup - Code Style changes that have little to no effect on the user (e.g. Refactoring some functions into a
-  different file)
-- docs - Changes to the documentation (e.g. Adding more details into the getting started guide)
-- chore - Changes that have absolutely no effect on users (e.g. Updating the version of Nx used to build the repo)
+-  feat - New or improved behavior being introduced (e.g. Updating to new versions of React or Jest which bring in new
+   features)
+-  fix - Fixes the current unexpected behavior to match expected behavior (e.g. Fixing the library generator to create
+   the proper named project)
+-  cleanup - Code Style changes that have little to no effect on the user (e.g. Refactoring some functions into a
+   different file)
+-  docs - Changes to the documentation (e.g. Adding more details into the getting started guide)
+-  chore - Changes that have absolutely no effect on users (e.g. Updating the version of Nx used to build the repo)
 
 ##### Scope
 
 The scope must be one of the following:
 
-- angular - anything Angular specific
-- bundling - anything bundling specific (e.g. rollup, webpack, etc.)
-- core - anything Nx core specific
-- detox - anything Detox specific
-- devkit - devkit-related changes
-- graph - anything graph app specific
-- expo - anything Expo specific
-- express - anything Express specific
-- js - anything related to @nx/js package or general js/ts support
-- linter - anything Linter specific
-- nest - anything Nest specific
-- nextjs - anything Next specific
-- node - anything Node specific
-- nx-cloud - anything Nx Cloud specific
-- nx-plugin - anything Nx Plugin specific
-- nx-dev - anything related to docs infrastructure
-- react - anything React specific
-- react-native - anything React Native specific
-- release - anything related to nx release
-- repo - anything related to managing the Nx repo itself
-- storybook - anything Storybook specific
-- testing - anything testing specific (e.g., Jest or Cypress)
-- vite - anything Vite specific
-- vue - anything Vue specific
-- web - anything Web specific
-- webpack - anything Webpack specific
-- misc - misc stuff
+-  angular - anything Angular specific
+-  bundling - anything bundling specific (e.g. rollup, webpack, etc.)
+-  core - anything Nx core specific
+-  detox - anything Detox specific
+-  devkit - devkit-related changes
+-  graph - anything graph app specific
+-  expo - anything Expo specific
+-  express - anything Express specific
+-  js - anything related to @nx/js package or general js/ts support
+-  linter - anything Linter specific
+-  nest - anything Nest specific
+-  nextjs - anything Next specific
+-  node - anything Node specific
+-  nx-cloud - anything Nx Cloud specific
+-  nx-plugin - anything Nx Plugin specific
+-  nx-dev - anything related to docs infrastructure
+-  react - anything React specific
+-  react-native - anything React Native specific
+-  release - anything related to nx release
+-  repo - anything related to managing the Nx repo itself
+-  storybook - anything Storybook specific
+-  testing - anything testing specific (e.g., Jest or Cypress)
+-  vite - anything Vite specific
+-  vue - anything Vue specific
+-  web - anything Web specific
+-  webpack - anything Webpack specific
+-  misc - misc stuff
 
 ##### Subject and Body
 

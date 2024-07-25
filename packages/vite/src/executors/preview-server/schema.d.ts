@@ -1,5 +1,5 @@
 export interface VitePreviewServerExecutorOptions {
-  buildTarget: string;
-  proxyConfig?: string;
-  staticFilePath?: string;
+   buildTarget: string;
+   proxyConfig?: string;
+   staticFilePath?: string;
 }

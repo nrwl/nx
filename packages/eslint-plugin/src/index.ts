@@ -8,35 +8,35 @@ import angularCode from './configs/angular';
 import angularTemplate from './configs/angular-template';
 
 import enforceModuleBoundaries, {
-  RULE_NAME as enforceModuleBoundariesRuleName,
+   RULE_NAME as enforceModuleBoundariesRuleName,
 } from './rules/enforce-module-boundaries';
 
 import nxPluginChecksRule, {
-  RULE_NAME as nxPluginChecksRuleName,
+   RULE_NAME as nxPluginChecksRuleName,
 } from './rules/nx-plugin-checks';
 
 import dependencyChecks, {
-  RULE_NAME as dependencyChecksRuleName,
+   RULE_NAME as dependencyChecksRuleName,
 } from './rules/dependency-checks';
 
 // Resolve any custom rules that might exist in the current workspace
 import { workspaceRules } from './resolve-workspace-rules';
 
 module.exports = {
-  configs: {
-    typescript,
-    javascript,
-    react: reactTmp,
-    'react-base': reactBase,
-    'react-typescript': reactTypescript,
-    'react-jsx': reactJsx,
-    angular: angularCode,
-    'angular-template': angularTemplate,
-  },
-  rules: {
-    [enforceModuleBoundariesRuleName]: enforceModuleBoundaries,
-    [nxPluginChecksRuleName]: nxPluginChecksRule,
-    [dependencyChecksRuleName]: dependencyChecks,
-    ...workspaceRules,
-  },
+   configs: {
+      typescript,
+      javascript,
+      react: reactTmp,
+      'react-base': reactBase,
+      'react-typescript': reactTypescript,
+      'react-jsx': reactJsx,
+      angular: angularCode,
+      'angular-template': angularTemplate,
+   },
+   rules: {
+      [enforceModuleBoundariesRuleName]: enforceModuleBoundaries,
+      [nxPluginChecksRuleName]: nxPluginChecksRule,
+      [dependencyChecksRuleName]: dependencyChecks,
+      ...workspaceRules,
+   },
 };

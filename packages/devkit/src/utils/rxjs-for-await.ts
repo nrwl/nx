@@ -3,12 +3,12 @@
 import type { Observable } from 'rxjs';
 
 export class Deferred<T> {
-  resolve: (value: T | PromiseLike<T>) => void = null!;
-  reject: (reason?: any) => void = null!;
-  promise = new Promise<T>((a, b) => {
-    this.resolve = a;
-    this.reject = b;
-  });
+   resolve: (value: T | PromiseLike<T>) => void = null!;
+   reject: (reason?: any) => void = null!;
+   promise = new Promise<T>((a, b) => {
+      this.resolve = a;
+      this.reject = b;
+   });
 }
 
 const RESOLVED = Promise.resolve();
@@ -41,61 +41,61 @@ const RESOLVED = Promise.resolve();
  * @param source the Observable source to await values from
  */
 export async function* eachValueFrom<T>(
-  source: Observable<T>
+   source: Observable<T>
 ): AsyncIterableIterator<T> {
-  const deferreds: Deferred<IteratorResult<T>>[] = [];
-  const values: T[] = [];
-  let hasError = false;
-  let error: any = null;
-  let completed = false;
+   const deferreds: Deferred<IteratorResult<T>>[] = [];
+   const values: T[] = [];
+   let hasError = false;
+   let error: any = null;
+   let completed = false;
 
-  const subs = source.subscribe({
-    next: (value) => {
-      if (deferreds.length > 0) {
-        deferreds.shift()!.resolve({ value, done: false });
-      } else {
-        values.push(value);
-      }
-    },
-    error: (err) => {
-      hasError = true;
-      error = err;
-      while (deferreds.length > 0) {
-        deferreds.shift()!.reject(err);
-      }
-    },
-    complete: () => {
-      completed = true;
-      while (deferreds.length > 0) {
-        deferreds.shift()!.resolve({ value: undefined, done: true });
-      }
-    },
-  });
+   const subs = source.subscribe({
+      next: (value) => {
+         if (deferreds.length > 0) {
+            deferreds.shift()!.resolve({ value, done: false });
+         } else {
+            values.push(value);
+         }
+      },
+      error: (err) => {
+         hasError = true;
+         error = err;
+         while (deferreds.length > 0) {
+            deferreds.shift()!.reject(err);
+         }
+      },
+      complete: () => {
+         completed = true;
+         while (deferreds.length > 0) {
+            deferreds.shift()!.resolve({ value: undefined, done: true });
+         }
+      },
+   });
 
-  try {
-    while (true) {
-      if (values.length > 0) {
-        yield values.shift()!;
-      } else if (completed) {
-        return;
-      } else if (hasError) {
-        throw error;
-      } else {
-        const d = new Deferred<IteratorResult<T>>();
-        deferreds.push(d);
-        const result = await d.promise;
-        if (result.done) {
-          return;
-        } else {
-          yield result.value;
-        }
+   try {
+      while (true) {
+         if (values.length > 0) {
+            yield values.shift()!;
+         } else if (completed) {
+            return;
+         } else if (hasError) {
+            throw error;
+         } else {
+            const d = new Deferred<IteratorResult<T>>();
+            deferreds.push(d);
+            const result = await d.promise;
+            if (result.done) {
+               return;
+            } else {
+               yield result.value;
+            }
+         }
       }
-    }
-  } catch (err) {
-    throw err;
-  } finally {
-    subs.unsubscribe();
-  }
+   } catch (err) {
+      throw err;
+   } finally {
+      subs.unsubscribe();
+   }
 }
 
 /**
@@ -124,70 +124,70 @@ export async function* eachValueFrom<T>(
  * @param source the Observable source to await values from
  */
 export async function* bufferedValuesFrom<T>(
-  source: Observable<T>
+   source: Observable<T>
 ): AsyncGenerator<T[]> {
-  let deferred: Deferred<IteratorResult<T[]>> | null = null;
-  const buffer: T[] = [];
-  let hasError = false;
-  let error: any = null;
-  let completed = false;
+   let deferred: Deferred<IteratorResult<T[]>> | null = null;
+   const buffer: T[] = [];
+   let hasError = false;
+   let error: any = null;
+   let completed = false;
 
-  const subs = source.subscribe({
-    next: (value) => {
-      if (deferred) {
-        deferred.resolve(
-          RESOLVED.then(() => {
+   const subs = source.subscribe({
+      next: (value) => {
+         if (deferred) {
+            deferred.resolve(
+               RESOLVED.then(() => {
+                  const bufferCopy = buffer.slice();
+                  buffer.length = 0;
+                  return { value: bufferCopy, done: false };
+               })
+            );
+            deferred = null;
+         }
+         buffer.push(value);
+      },
+      error: (err) => {
+         hasError = true;
+         error = err;
+         if (deferred) {
+            deferred.reject(err);
+            deferred = null;
+         }
+      },
+      complete: () => {
+         completed = true;
+         if (deferred) {
+            deferred.resolve({ value: undefined, done: true });
+            deferred = null;
+         }
+      },
+   });
+
+   try {
+      while (true) {
+         if (buffer.length > 0) {
             const bufferCopy = buffer.slice();
             buffer.length = 0;
-            return { value: bufferCopy, done: false };
-          })
-        );
-        deferred = null;
+            yield bufferCopy;
+         } else if (completed) {
+            return;
+         } else if (hasError) {
+            throw error;
+         } else {
+            deferred = new Deferred<IteratorResult<T[]>>();
+            const result = await deferred.promise;
+            if (result.done) {
+               return;
+            } else {
+               yield result.value;
+            }
+         }
       }
-      buffer.push(value);
-    },
-    error: (err) => {
-      hasError = true;
-      error = err;
-      if (deferred) {
-        deferred.reject(err);
-        deferred = null;
-      }
-    },
-    complete: () => {
-      completed = true;
-      if (deferred) {
-        deferred.resolve({ value: undefined, done: true });
-        deferred = null;
-      }
-    },
-  });
-
-  try {
-    while (true) {
-      if (buffer.length > 0) {
-        const bufferCopy = buffer.slice();
-        buffer.length = 0;
-        yield bufferCopy;
-      } else if (completed) {
-        return;
-      } else if (hasError) {
-        throw error;
-      } else {
-        deferred = new Deferred<IteratorResult<T[]>>();
-        const result = await deferred.promise;
-        if (result.done) {
-          return;
-        } else {
-          yield result.value;
-        }
-      }
-    }
-  } catch (err) {
-    throw err;
-  } finally {
-    subs.unsubscribe();
-  }
+   } catch (err) {
+      throw err;
+   } finally {
+      subs.unsubscribe();
+   }
 }
 
 /**
@@ -214,70 +214,70 @@ export async function* bufferedValuesFrom<T>(
  * @param source the Observable source to await values from
  */
 export async function* latestValueFrom<T>(
-  source: Observable<T>
+   source: Observable<T>
 ): AsyncGenerator<T> {
-  let deferred: Deferred<IteratorResult<T>> | undefined = undefined;
-  let latestValue: T;
-  let hasLatestValue = false;
-  let hasError = false;
-  let error: any = null;
-  let completed = false;
+   let deferred: Deferred<IteratorResult<T>> | undefined = undefined;
+   let latestValue: T;
+   let hasLatestValue = false;
+   let hasError = false;
+   let error: any = null;
+   let completed = false;
 
-  const subs = source.subscribe({
-    next: (value) => {
-      hasLatestValue = true;
-      latestValue = value;
-      if (deferred) {
-        deferred.resolve(
-          RESOLVED.then(() => {
+   const subs = source.subscribe({
+      next: (value) => {
+         hasLatestValue = true;
+         latestValue = value;
+         if (deferred) {
+            deferred.resolve(
+               RESOLVED.then(() => {
+                  hasLatestValue = false;
+                  return { value: latestValue, done: false };
+               })
+            );
+         }
+      },
+      error: (err) => {
+         hasError = true;
+         error = err;
+         if (deferred) {
+            deferred.reject(err);
+         }
+      },
+      complete: () => {
+         completed = true;
+         if (deferred) {
             hasLatestValue = false;
-            return { value: latestValue, done: false };
-          })
-        );
-      }
-    },
-    error: (err) => {
-      hasError = true;
-      error = err;
-      if (deferred) {
-        deferred.reject(err);
-      }
-    },
-    complete: () => {
-      completed = true;
-      if (deferred) {
-        hasLatestValue = false;
-        deferred.resolve({ value: undefined, done: true });
-      }
-    },
-  });
+            deferred.resolve({ value: undefined, done: true });
+         }
+      },
+   });
 
-  try {
-    while (true) {
-      if (hasLatestValue) {
-        await RESOLVED;
-        const value = latestValue!;
-        hasLatestValue = false;
-        yield value;
-      } else if (completed) {
-        return;
-      } else if (hasError) {
-        throw error;
-      } else {
-        deferred = new Deferred<IteratorResult<T>>();
-        const result = await deferred.promise;
-        if (result.done) {
-          return;
-        } else {
-          yield result.value;
-        }
+   try {
+      while (true) {
+         if (hasLatestValue) {
+            await RESOLVED;
+            const value = latestValue!;
+            hasLatestValue = false;
+            yield value;
+         } else if (completed) {
+            return;
+         } else if (hasError) {
+            throw error;
+         } else {
+            deferred = new Deferred<IteratorResult<T>>();
+            const result = await deferred.promise;
+            if (result.done) {
+               return;
+            } else {
+               yield result.value;
+            }
+         }
       }
-    }
-  } catch (err) {
-    throw err;
-  } finally {
-    subs.unsubscribe();
-  }
+   } catch (err) {
+      throw err;
+   } finally {
+      subs.unsubscribe();
+   }
 }
 
 /**
@@ -305,53 +305,53 @@ export async function* latestValueFrom<T>(
  * @param source the Observable source to await values from
  */
 export async function* nextValueFrom<T>(
-  source: Observable<T>
+   source: Observable<T>
 ): AsyncGenerator<T, void, void> {
-  let deferred: Deferred<IteratorResult<T>> | undefined = undefined;
-  let hasError = false;
-  let error: any = null;
-  let completed = false;
+   let deferred: Deferred<IteratorResult<T>> | undefined = undefined;
+   let hasError = false;
+   let error: any = null;
+   let completed = false;
 
-  const subs = source.subscribe({
-    next: (value) => {
-      if (deferred) {
-        deferred.resolve({ value, done: false });
-      }
-    },
-    error: (err) => {
-      hasError = true;
-      error = err;
-      if (deferred) {
-        deferred.reject(err);
-      }
-    },
-    complete: () => {
-      completed = true;
-      if (deferred) {
-        deferred.resolve({ value: undefined, done: true });
-      }
-    },
-  });
+   const subs = source.subscribe({
+      next: (value) => {
+         if (deferred) {
+            deferred.resolve({ value, done: false });
+         }
+      },
+      error: (err) => {
+         hasError = true;
+         error = err;
+         if (deferred) {
+            deferred.reject(err);
+         }
+      },
+      complete: () => {
+         completed = true;
+         if (deferred) {
+            deferred.resolve({ value: undefined, done: true });
+         }
+      },
+   });
 
-  try {
-    while (true) {
-      if (completed) {
-        return;
-      } else if (hasError) {
-        throw error;
-      } else {
-        deferred = new Deferred<IteratorResult<T>>();
-        const result = await deferred.promise;
-        if (result.done) {
-          return;
-        } else {
-          yield result.value;
-        }
+   try {
+      while (true) {
+         if (completed) {
+            return;
+         } else if (hasError) {
+            throw error;
+         } else {
+            deferred = new Deferred<IteratorResult<T>>();
+            const result = await deferred.promise;
+            if (result.done) {
+               return;
+            } else {
+               yield result.value;
+            }
+         }
       }
-    }
-  } catch (err) {
-    throw err;
-  } finally {
-    subs.unsubscribe();
-  }
+   } catch (err) {
+      throw err;
+   } finally {
+      subs.unsubscribe();
+   }
 }

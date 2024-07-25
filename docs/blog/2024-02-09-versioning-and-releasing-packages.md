@@ -28,16 +28,16 @@ As you can see `@tuskdesign/forms` relies on `@tuskdesign/buttons` and as such h
 
 ## Table Of Contents
 
-- [Adding Nx](#adding-nx)
-- [Installing the JavaScript/TypeScript versioning Package](#installing-the-javascripttypescript-versioning-package)
-- [Running Nx Release](#running-nx-release)
-- [Excluding Packages](#excluding-packages)
-- [Running the Versioning and Changelog Generation](#running-the-versioning-and-changelog-generation)
-- [Versioning using Conventional Commits](#versioning-using-conventional-commits)
-- [Generating a GitHub Release](#generating-a-github-release)
-- [Programmatic Mode](#programmatic-mode)
-- [Wrapping Up](#wrapping-up)
-- [Learn more](#learn-more)
+-  [Adding Nx](#adding-nx)
+-  [Installing the JavaScript/TypeScript versioning Package](#installing-the-javascripttypescript-versioning-package)
+-  [Running Nx Release](#running-nx-release)
+-  [Excluding Packages](#excluding-packages)
+-  [Running the Versioning and Changelog Generation](#running-the-versioning-and-changelog-generation)
+-  [Versioning using Conventional Commits](#versioning-using-conventional-commits)
+-  [Generating a GitHub Release](#generating-a-github-release)
+-  [Programmatic Mode](#programmatic-mode)
+-  [Wrapping Up](#wrapping-up)
+-  [Learn more](#learn-more)
 
 ## Adding Nx
 
@@ -91,12 +91,12 @@ pnpm nx release --dry-run --first-release
 
 If you inspect the console output, you can see that:
 
-- it would increment the version in the package.json
-- update the pnpm (or npm) lockfile
-- stage the changes with git
-- creates a `CHANGELOG.md` file
-- git commits everything
-- git tags the commit using the version
+-  it would increment the version in the package.json
+-  update the pnpm (or npm) lockfile
+-  stage the changes with git
+-  creates a `CHANGELOG.md` file
+-  git commits everything
+-  git tags the commit using the version
 
 The dry-run mode also nicely previews all `package.json` changes in a git diff style:
 
@@ -108,9 +108,9 @@ Note, if you want to get even more insights into what is happening when running 
 
 If you look closely at the dry-run logs, you may notice that Nx Release bumped the version on all of our packages:
 
-- `@tuskdesign/forms`
-- `@tuskdesign/buttons`
-- `@tuskdesign/demo`
+-  `@tuskdesign/forms`
+-  `@tuskdesign/buttons`
+-  `@tuskdesign/demo`
 
 ![](/blog/images/2024-02-09/bodyimg6.png)
 
@@ -221,9 +221,9 @@ Use the `createRelease` property and set it to `github`.
 
 To see the working, you need to make sure to:
 
-- push the repo to GitHub
-- make some change so you can run the `nx release` command again and get a changelog generated
-- now also get a GH release created
+-  push the repo to GitHub
+-  make some change so you can run the `nx release` command again and get a changelog generated
+-  now also get a GH release created
 
 Note, you can still use `--dry-run` and it'd show you the URL where the GitHub release would be created. You can also use the `--skip-publish` to skip the NPM publishing.
 
@@ -242,47 +242,47 @@ import { releaseChangelog, releasePublish, releaseVersion } from 'nx/release';
 import * as yargs from 'yargs';
 
 (async () => {
-  const options = await yargs
-    .version(false) // don't use the default meaning of version in yargs
-    .option('version', {
-      description:
-        'Explicit version specifier to use, if overriding conventional commits',
-      type: 'string',
-    })
-    .option('dryRun', {
-      alias: 'd',
-      description:
-        'Whether or not to perform a dry-run of the release process, defaults to true',
-      type: 'boolean',
-      default: true,
-    })
-    .option('verbose', {
-      description:
-        'Whether or not to enable verbose logging, defaults to false',
-      type: 'boolean',
-      default: false,
-    })
-    .parseAsync();
+   const options = await yargs
+      .version(false) // don't use the default meaning of version in yargs
+      .option('version', {
+         description:
+            'Explicit version specifier to use, if overriding conventional commits',
+         type: 'string',
+      })
+      .option('dryRun', {
+         alias: 'd',
+         description:
+            'Whether or not to perform a dry-run of the release process, defaults to true',
+         type: 'boolean',
+         default: true,
+      })
+      .option('verbose', {
+         description:
+            'Whether or not to enable verbose logging, defaults to false',
+         type: 'boolean',
+         default: false,
+      })
+      .parseAsync();
 
-  const { workspaceVersion, projectsVersionData } = await releaseVersion({
-    specifier: options.version,
-    dryRun: options.dryRun,
-    verbose: options.verbose,
-  });
+   const { workspaceVersion, projectsVersionData } = await releaseVersion({
+      specifier: options.version,
+      dryRun: options.dryRun,
+      verbose: options.verbose,
+   });
 
-  await releaseChangelog({
-    versionData: projectsVersionData,
-    version: workspaceVersion,
-    dryRun: options.dryRun,
-    verbose: options.verbose,
-  });
+   await releaseChangelog({
+      versionData: projectsVersionData,
+      version: workspaceVersion,
+      dryRun: options.dryRun,
+      verbose: options.verbose,
+   });
 
-  // The returned number value from releasePublish will be zero if all projects are published successfully, non-zero if not
-  const publishStatus = await releasePublish({
-    dryRun: options.dryRun,
-    verbose: options.verbose,
-  });
-  process.exit(publishStatus);
+   // The returned number value from releasePublish will be zero if all projects are published successfully, non-zero if not
+   const publishStatus = await releasePublish({
+      dryRun: options.dryRun,
+      verbose: options.verbose,
+   });
+   process.exit(publishStatus);
 })();
 ```
 
@@ -296,8 +296,8 @@ Notice by default in the script we have `dry-run` enabled as a more cautious app
 
 From here on you have full control and can pretty much do whatever works best for your workspace setup. Common examples include:
 
-- moving files to a common root-level `dist/` folder and version and release them from there. This is pretty common to avoid messing with your src files and swapping versions there, allowing you to always depend on the latest local packages for instance.
-- setting up fully automated releases on CI, including enabling provenance support. Our docs have [more details on how to set that up](/recipes/nx-release/publish-in-ci-cd) or check out the linked talk above which goes through those steps.
+-  moving files to a common root-level `dist/` folder and version and release them from there. This is pretty common to avoid messing with your src files and swapping versions there, allowing you to always depend on the latest local packages for instance.
+-  setting up fully automated releases on CI, including enabling provenance support. Our docs have [more details on how to set that up](/recipes/nx-release/publish-in-ci-cd) or check out the linked talk above which goes through those steps.
 
 ## Wrapping Up
 
@@ -305,18 +305,18 @@ With this release of Nx Release it is fully ready to be used. Make sure to check
 
 Here are some example repositories already leveraging Nx release:
 
-- [Our own Nx Repo](https://github.com/nrwl/nx/blob/master/scripts/nx-release.ts)
-- [RxJS repo](https://github.com/ReactiveX/rxjs/tree/master/scripts)
-- [Typescript-eslint](https://github.com/typescript-eslint/typescript-eslint/blob/main/tools/release/release.mts)
-- [Watch the live stream](https://www.youtube.com/watch?v=lYNa6Ct4RkY) with [Kent](https://twitter.com/kentcdodds) and [James](https://twitter.com/MrJamesHenry) as they enable Nx Release on the [EpicWeb workshop app repository](https://github.com/epicweb-dev/kcdshop)
+-  [Our own Nx Repo](https://github.com/nrwl/nx/blob/master/scripts/nx-release.ts)
+-  [RxJS repo](https://github.com/ReactiveX/rxjs/tree/master/scripts)
+-  [Typescript-eslint](https://github.com/typescript-eslint/typescript-eslint/blob/main/tools/release/release.mts)
+-  [Watch the live stream](https://www.youtube.com/watch?v=lYNa6Ct4RkY) with [Kent](https://twitter.com/kentcdodds) and [James](https://twitter.com/MrJamesHenry) as they enable Nx Release on the [EpicWeb workshop app repository](https://github.com/epicweb-dev/kcdshop)
 
 ---
 
 ## Learn more
 
-- [Nx Docs](/getting-started/intro)
-- [X / Twitter](https://twitter.com/nxdevtools) — [LinkedIn](https://www.linkedin.com/company/nrwl/)
-- [Nx GitHub](https://github.com/nrwl/nx)
-- [Nx Official Discord Server](https://go.nx.dev/community)
-- [Nx Youtube Channel](https://www.youtube.com/@nxdevtools)
-- [Speed up your CI](https://nx.app/)
+-  [Nx Docs](/getting-started/intro)
+-  [X / Twitter](https://twitter.com/nxdevtools) — [LinkedIn](https://www.linkedin.com/company/nrwl/)
+-  [Nx GitHub](https://github.com/nrwl/nx)
+-  [Nx Official Discord Server](https://go.nx.dev/community)
+-  [Nx Youtube Channel](https://www.youtube.com/@nxdevtools)
+-  [Speed up your CI](https://nx.app/)

@@ -7,30 +7,30 @@ import { workspaceRootInner } from './workspace-root';
  * @param dir Directory to start searching with
  */
 export function findWorkspaceRoot(dir: string): WorkspaceTypeAndRoot | null {
-  const r = workspaceRootInner(dir, null);
+   const r = workspaceRootInner(dir, null);
 
-  if (r === null) return null;
+   if (r === null) return null;
 
-  if (isAngularCliInstalled(r)) {
-    return { type: 'angular', dir: r };
-  } else {
-    return { type: 'nx', dir: r };
-  }
+   if (isAngularCliInstalled(r)) {
+      return { type: 'angular', dir: r };
+   } else {
+      return { type: 'nx', dir: r };
+   }
 }
 
 export interface WorkspaceTypeAndRoot {
-  type: 'nx' | 'angular';
-  dir: string;
+   type: 'nx' | 'angular';
+   dir: string;
 }
 
 function isAngularCliInstalled(root: string): boolean {
-  try {
-    // nx-ignore-next-line
-    require.resolve('@angular/cli', {
-      paths: [root],
-    });
-    return true;
-  } catch {
-    return false;
-  }
+   try {
+      // nx-ignore-next-line
+      require.resolve('@angular/cli', {
+         paths: [root],
+      });
+      return true;
+   } catch {
+      return false;
+   }
 }

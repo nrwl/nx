@@ -15,29 +15,29 @@ import { E2eTestRunner } from '../../utils/test-runners';
 jest.mock('@nx/cypress/src/utils/cypress-version');
 
 describe('componentCypressSpec generator', () => {
-  let tree: Tree;
-  const appName = 'ng-app1';
-  const specFile = `${appName}-e2e/src/e2e/test-button/test-button.component.cy.ts`;
-  let mockedInstalledCypressVersion: jest.Mock<
-    ReturnType<typeof installedCypressVersion>
-  > = installedCypressVersion as never;
-  beforeEach(async () => {
-    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+   let tree: Tree;
+   const appName = 'ng-app1';
+   const specFile = `${appName}-e2e/src/e2e/test-button/test-button.component.cy.ts`;
+   let mockedInstalledCypressVersion: jest.Mock<
+      ReturnType<typeof installedCypressVersion>
+   > = installedCypressVersion as never;
+   beforeEach(async () => {
+      tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
-    await generateTestApplication(tree, {
-      name: appName,
-      skipFormat: true,
-      e2eTestRunner: E2eTestRunner.Cypress,
-    });
-    await componentGenerator(tree, {
-      name: 'test-button',
-      project: appName,
-      skipFormat: true,
-    });
+      await generateTestApplication(tree, {
+         name: appName,
+         skipFormat: true,
+         e2eTestRunner: E2eTestRunner.Cypress,
+      });
+      await componentGenerator(tree, {
+         name: 'test-button',
+         project: appName,
+         skipFormat: true,
+      });
 
-    tree.write(
-      `${appName}/src/app/test-button/test-button.component.ts`,
-      `import { Component, Input } from '@angular/core';
+      tree.write(
+         `${appName}/src/app/test-button/test-button.component.ts`,
+         `import { Component, Input } from '@angular/core';
 
 export type ButtonStyle = 'default' | 'primary' | 'accent';
 
@@ -52,61 +52,61 @@ export class TestButtonComponent {
   @Input() age?: number;
   @Input() isOn = false;      
 }`
-    );
-  });
+      );
+   });
 
-  it('should not generate the component spec file when it already exists', async () => {
-    mockedInstalledCypressVersion.mockReturnValue(10);
-    jest.spyOn(storybookUtils, 'getComponentProps');
-    jest.spyOn(devkit, 'generateFiles');
-    tree.write(specFile, '');
+   it('should not generate the component spec file when it already exists', async () => {
+      mockedInstalledCypressVersion.mockReturnValue(10);
+      jest.spyOn(storybookUtils, 'getComponentProps');
+      jest.spyOn(devkit, 'generateFiles');
+      tree.write(specFile, '');
 
-    await componentCypressSpecGenerator(tree, {
-      componentFileName: 'test-button.component',
-      componentName: 'TestButtonComponent',
-      componentPath: `test-button`,
-      projectPath: `${appName}/src/app`,
-      projectName: appName,
-      skipFormat: true,
-    });
+      await componentCypressSpecGenerator(tree, {
+         componentFileName: 'test-button.component',
+         componentName: 'TestButtonComponent',
+         componentPath: `test-button`,
+         projectPath: `${appName}/src/app`,
+         projectName: appName,
+         skipFormat: true,
+      });
 
-    expect(storybookUtils.getComponentProps).not.toHaveBeenCalled();
-    expect(devkit.generateFiles).not.toHaveBeenCalled();
-    expect(tree.read(specFile).toString()).toBe('');
-  });
+      expect(storybookUtils.getComponentProps).not.toHaveBeenCalled();
+      expect(devkit.generateFiles).not.toHaveBeenCalled();
+      expect(tree.read(specFile).toString()).toBe('');
+   });
 
-  it('should generate the component spec file', async () => {
-    mockedInstalledCypressVersion.mockReturnValue(10);
-    await componentCypressSpecGenerator(tree, {
-      componentFileName: 'test-button.component',
-      componentName: 'TestButtonComponent',
-      componentPath: `test-button`,
-      projectPath: `${appName}/src/app`,
-      projectName: appName,
-    });
+   it('should generate the component spec file', async () => {
+      mockedInstalledCypressVersion.mockReturnValue(10);
+      await componentCypressSpecGenerator(tree, {
+         componentFileName: 'test-button.component',
+         componentName: 'TestButtonComponent',
+         componentPath: `test-button`,
+         projectPath: `${appName}/src/app`,
+         projectName: appName,
+      });
 
-    expect(tree.exists(specFile)).toBe(true);
-    const specFileContent = tree.read(specFile).toString();
-    expect(specFileContent).toMatchSnapshot();
-  });
+      expect(tree.exists(specFile)).toBe(true);
+      const specFileContent = tree.read(specFile).toString();
+      expect(specFileContent).toMatchSnapshot();
+   });
 
-  it('should generate .spec.ts when using cypress.json', async () => {
-    mockedInstalledCypressVersion.mockReturnValue(9);
-    const v9SpecFile = `${appName}-e2e/src/integration/test-button/test-button.component.spec.ts`;
-    tree.delete(`${appName}-e2e/cypress.config.ts`);
-    tree.write(`${appName}-e2e/cypress.json`, `{}`);
+   it('should generate .spec.ts when using cypress.json', async () => {
+      mockedInstalledCypressVersion.mockReturnValue(9);
+      const v9SpecFile = `${appName}-e2e/src/integration/test-button/test-button.component.spec.ts`;
+      tree.delete(`${appName}-e2e/cypress.config.ts`);
+      tree.write(`${appName}-e2e/cypress.json`, `{}`);
 
-    await componentCypressSpecGenerator(tree, {
-      componentFileName: 'test-button.component',
-      componentName: 'TestButtonComponent',
-      componentPath: `test-button`,
-      projectPath: `${appName}/src/app`,
-      projectName: appName,
-      skipFormat: true,
-    });
+      await componentCypressSpecGenerator(tree, {
+         componentFileName: 'test-button.component',
+         componentName: 'TestButtonComponent',
+         componentPath: `test-button`,
+         projectPath: `${appName}/src/app`,
+         projectName: appName,
+         skipFormat: true,
+      });
 
-    expect(tree.exists(v9SpecFile)).toBe(true);
-    const specFileContent = tree.read(v9SpecFile).toString();
-    expect(specFileContent).toMatchSnapshot();
-  });
+      expect(tree.exists(v9SpecFile)).toBe(true);
+      const specFileContent = tree.read(v9SpecFile).toString();
+      expect(specFileContent).toMatchSnapshot();
+   });
 });

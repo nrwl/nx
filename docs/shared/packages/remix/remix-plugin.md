@@ -6,14 +6,14 @@ description: The Nx Plugin for Remix contains executors, generators, and utiliti
 The Nx Plugin for Remix contains executors, generators, and utilities for managing Remix applications and libraries
 within an Nx workspace. It provides:
 
-- Integration with libraries such as Storybook, Jest, Vitest, Playwright and Cypress.
-- Generators to help scaffold code quickly, including:
-  - Libraries, both internal to your codebase and publishable to npm
-  - Routes
-  - Loaders
-  - Actions
-  - Meta
-- Utilities for automatic workspace refactoring.
+-  Integration with libraries such as Storybook, Jest, Vitest, Playwright and Cypress.
+-  Generators to help scaffold code quickly, including:
+   -  Libraries, both internal to your codebase and publishable to npm
+   -  Routes
+   -  Loaders
+   -  Actions
+   -  Meta
+-  Utilities for automatic workspace refactoring.
 
 ## Setting up @nx/remix
 
@@ -38,9 +38,9 @@ This will install the correct version of `@nx/remix`.
 
 The `@nx/remix` plugin will create a task for any project that has a Remix configuration file present. Any of the following files will be recognized as a Remix configuration file:
 
-- `remix.config.js`
-- `remix.config.mjs`
-- `remix.config.cjs`
+-  `remix.config.js`
+-  `remix.config.mjs`
+-  `remix.config.cjs`
 
 ### View Inferred Tasks
 
@@ -52,17 +52,17 @@ The `@nx/remix/plugin` is configured in the `plugins` array in `nx.json`.
 
 ```json {% fileName="nx.json" %}
 {
-  "plugins": [
-    {
-      "plugin": "@nx/remix/plugin",
-      "options": {
-        "buildTargetName": "build",
-        "devTargetName": "dev",
-        "startTargetName": "start",
-        "typecheckTargetName": "typecheck"
+   "plugins": [
+      {
+         "plugin": "@nx/remix/plugin",
+         "options": {
+            "buildTargetName": "build",
+            "devTargetName": "dev",
+            "startTargetName": "start",
+            "typecheckTargetName": "typecheck"
+         }
       }
-    }
-  ]
+   ]
 }
 ```
 
@@ -212,11 +212,11 @@ You can then use the library by importing one of the exports into your applicati
 import { Login } from '@acme/login';
 
 export default function Index() {
-  return (
-    <div>
-      <Login />
-    </div>
-  );
+   return (
+      <div>
+         <Login />
+      </div>
+   );
 }
 ```
 
@@ -255,9 +255,9 @@ UPDATE apps/myapp/app/routes/admin.tsx
 import { json, LoaderFunctionArgs } from '@remix-run/node';
 
 export const adminLoader = async ({ request }: LoaderFunctionArgs) => {
-  return json({
-    message: 'Hello, world!',
-  });
+   return json({
+      message: 'Hello, world!',
+   });
 };
 ```
 
@@ -273,9 +273,9 @@ Replace the default loader code:
 
 ```tsx
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-  return json({
-    message: 'Hello, world!',
-  });
+   return json({
+      message: 'Hello, world!',
+   });
 };
 ```
 

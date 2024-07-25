@@ -13,9 +13,9 @@ For this recipe we'll use a project with the following `project.json` file:
 
 ```json {% fileName="apps/my-app/project.json" %}
 {
-  "sourceRoot": "apps/my-app/src",
-  "projectType": "application",
-  "targets": {}
+   "sourceRoot": "apps/my-app/src",
+   "projectType": "application",
+   "targets": {}
 }
 ```
 
@@ -25,136 +25,151 @@ And the following [final configuration](/reference/project-configuration):
 
 ```json
 {
-  "project": {
-    "name": "my-app",
-    "type": "app",
-    "data": {
+   "project": {
       "name": "my-app",
-      "root": "apps/my-app",
-      "sourceRoot": "apps/my-app/src",
-      "projectType": "application",
-      "targets": {
-        "build": {
-          "options": {
-            "cwd": "apps/my-app",
-            "command": "vite build"
-          },
-          "cache": true,
-          "dependsOn": ["^build"],
-          "inputs": [
-            "production",
-            "^production",
-            {
-              "externalDependencies": ["vite"]
+      "type": "app",
+      "data": {
+         "name": "my-app",
+         "root": "apps/my-app",
+         "sourceRoot": "apps/my-app/src",
+         "projectType": "application",
+         "targets": {
+            "build": {
+               "options": {
+                  "cwd": "apps/my-app",
+                  "command": "vite build"
+               },
+               "cache": true,
+               "dependsOn": ["^build"],
+               "inputs": [
+                  "production",
+                  "^production",
+                  {
+                     "externalDependencies": ["vite"]
+                  }
+               ],
+               "outputs": ["{workspaceRoot}/dist/apps/my-app"],
+               "executor": "nx:run-commands",
+               "configurations": {},
+               "metadata": {
+                  "technologies": ["vite"]
+               }
+            },
+            "serve": {
+               "options": {
+                  "cwd": "apps/my-app",
+                  "command": "vite serve"
+               },
+               "executor": "nx:run-commands",
+               "configurations": {},
+               "metadata": {
+                  "technologies": ["vite"]
+               }
+            },
+            "preview": {
+               "options": {
+                  "cwd": "apps/my-app",
+                  "command": "vite preview"
+               },
+               "executor": "nx:run-commands",
+               "configurations": {},
+               "metadata": {
+                  "technologies": ["vite"]
+               }
+            },
+            "test": {
+               "options": {
+                  "cwd": "apps/my-app",
+                  "command": "vitest run"
+               },
+               "cache": true,
+               "inputs": [
+                  "default",
+                  "^production",
+                  {
+                     "externalDependencies": ["vitest"]
+                  }
+               ],
+               "outputs": ["{workspaceRoot}/coverage/apps/my-app"],
+               "executor": "nx:run-commands",
+               "configurations": {},
+               "metadata": {
+                  "technologies": ["vite"]
+               }
             }
-          ],
-          "outputs": ["{workspaceRoot}/dist/apps/my-app"],
-          "executor": "nx:run-commands",
-          "configurations": {},
-          "metadata": {
-            "technologies": ["vite"]
-          }
-        },
-        "serve": {
-          "options": {
-            "cwd": "apps/my-app",
-            "command": "vite serve"
-          },
-          "executor": "nx:run-commands",
-          "configurations": {},
-          "metadata": {
-            "technologies": ["vite"]
-          }
-        },
-        "preview": {
-          "options": {
-            "cwd": "apps/my-app",
-            "command": "vite preview"
-          },
-          "executor": "nx:run-commands",
-          "configurations": {},
-          "metadata": {
-            "technologies": ["vite"]
-          }
-        },
-        "test": {
-          "options": {
-            "cwd": "apps/my-app",
-            "command": "vitest run"
-          },
-          "cache": true,
-          "inputs": [
-            "default",
-            "^production",
-            {
-              "externalDependencies": ["vitest"]
-            }
-          ],
-          "outputs": ["{workspaceRoot}/coverage/apps/my-app"],
-          "executor": "nx:run-commands",
-          "configurations": {},
-          "metadata": {
-            "technologies": ["vite"]
-          }
-        }
-      },
-      "tags": [],
-      "implicitDependencies": []
-    }
-  },
-  "sourceMap": {
-    "root": ["apps/my-app/project.json", "nx/core/project-json"],
-    "targets": ["apps/my-app/project.json", "nx/core/project-json"],
-    "targets.build": ["apps/my-app/vite.config.ts", "@nx/vite/plugin"],
-    "targets.build.command": ["apps/my-app/vite.config.ts", "@nx/vite/plugin"],
-    "targets.build.options": ["apps/my-app/vite.config.ts", "@nx/vite/plugin"],
-    "targets.build.cache": ["apps/my-app/vite.config.ts", "@nx/vite/plugin"],
-    "targets.build.dependsOn": [
-      "apps/my-app/vite.config.ts",
-      "@nx/vite/plugin"
-    ],
-    "targets.build.inputs": ["apps/my-app/vite.config.ts", "@nx/vite/plugin"],
-    "targets.build.outputs": ["apps/my-app/vite.config.ts", "@nx/vite/plugin"],
-    "targets.build.options.cwd": [
-      "apps/my-app/vite.config.ts",
-      "@nx/vite/plugin"
-    ],
-    "targets.serve": ["apps/my-app/vite.config.ts", "@nx/vite/plugin"],
-    "targets.serve.command": ["apps/my-app/vite.config.ts", "@nx/vite/plugin"],
-    "targets.serve.options": ["apps/my-app/vite.config.ts", "@nx/vite/plugin"],
-    "targets.serve.options.cwd": [
-      "apps/my-app/vite.config.ts",
-      "@nx/vite/plugin"
-    ],
-    "targets.preview": ["apps/my-app/vite.config.ts", "@nx/vite/plugin"],
-    "targets.preview.command": [
-      "apps/my-app/vite.config.ts",
-      "@nx/vite/plugin"
-    ],
-    "targets.preview.options": [
-      "apps/my-app/vite.config.ts",
-      "@nx/vite/plugin"
-    ],
-    "targets.preview.options.cwd": [
-      "apps/my-app/vite.config.ts",
-      "@nx/vite/plugin"
-    ],
-    "targets.test": ["apps/my-app/vite.config.ts", "@nx/vite/plugin"],
-    "targets.test.command": ["apps/my-app/vite.config.ts", "@nx/vite/plugin"],
-    "targets.test.options": ["apps/my-app/vite.config.ts", "@nx/vite/plugin"],
-    "targets.test.cache": ["apps/my-app/vite.config.ts", "@nx/vite/plugin"],
-    "targets.test.inputs": ["apps/my-app/vite.config.ts", "@nx/vite/plugin"],
-    "targets.test.outputs": ["apps/my-app/vite.config.ts", "@nx/vite/plugin"],
-    "targets.test.options.cwd": [
-      "apps/my-app/vite.config.ts",
-      "@nx/vite/plugin"
-    ],
-    "name": ["apps/my-app/project.json", "nx/core/project-json"],
-    "$schema": ["apps/my-app/project.json", "nx/core/project-json"],
-    "sourceRoot": ["apps/my-app/project.json", "nx/core/project-json"],
-    "projectType": ["apps/my-app/project.json", "nx/core/project-json"],
-    "tags": ["apps/my-app/project.json", "nx/core/project-json"]
-  }
+         },
+         "tags": [],
+         "implicitDependencies": []
+      }
+   },
+   "sourceMap": {
+      "root": ["apps/my-app/project.json", "nx/core/project-json"],
+      "targets": ["apps/my-app/project.json", "nx/core/project-json"],
+      "targets.build": ["apps/my-app/vite.config.ts", "@nx/vite/plugin"],
+      "targets.build.command": [
+         "apps/my-app/vite.config.ts",
+         "@nx/vite/plugin"
+      ],
+      "targets.build.options": [
+         "apps/my-app/vite.config.ts",
+         "@nx/vite/plugin"
+      ],
+      "targets.build.cache": ["apps/my-app/vite.config.ts", "@nx/vite/plugin"],
+      "targets.build.dependsOn": [
+         "apps/my-app/vite.config.ts",
+         "@nx/vite/plugin"
+      ],
+      "targets.build.inputs": ["apps/my-app/vite.config.ts", "@nx/vite/plugin"],
+      "targets.build.outputs": [
+         "apps/my-app/vite.config.ts",
+         "@nx/vite/plugin"
+      ],
+      "targets.build.options.cwd": [
+         "apps/my-app/vite.config.ts",
+         "@nx/vite/plugin"
+      ],
+      "targets.serve": ["apps/my-app/vite.config.ts", "@nx/vite/plugin"],
+      "targets.serve.command": [
+         "apps/my-app/vite.config.ts",
+         "@nx/vite/plugin"
+      ],
+      "targets.serve.options": [
+         "apps/my-app/vite.config.ts",
+         "@nx/vite/plugin"
+      ],
+      "targets.serve.options.cwd": [
+         "apps/my-app/vite.config.ts",
+         "@nx/vite/plugin"
+      ],
+      "targets.preview": ["apps/my-app/vite.config.ts", "@nx/vite/plugin"],
+      "targets.preview.command": [
+         "apps/my-app/vite.config.ts",
+         "@nx/vite/plugin"
+      ],
+      "targets.preview.options": [
+         "apps/my-app/vite.config.ts",
+         "@nx/vite/plugin"
+      ],
+      "targets.preview.options.cwd": [
+         "apps/my-app/vite.config.ts",
+         "@nx/vite/plugin"
+      ],
+      "targets.test": ["apps/my-app/vite.config.ts", "@nx/vite/plugin"],
+      "targets.test.command": ["apps/my-app/vite.config.ts", "@nx/vite/plugin"],
+      "targets.test.options": ["apps/my-app/vite.config.ts", "@nx/vite/plugin"],
+      "targets.test.cache": ["apps/my-app/vite.config.ts", "@nx/vite/plugin"],
+      "targets.test.inputs": ["apps/my-app/vite.config.ts", "@nx/vite/plugin"],
+      "targets.test.outputs": ["apps/my-app/vite.config.ts", "@nx/vite/plugin"],
+      "targets.test.options.cwd": [
+         "apps/my-app/vite.config.ts",
+         "@nx/vite/plugin"
+      ],
+      "name": ["apps/my-app/project.json", "nx/core/project-json"],
+      "$schema": ["apps/my-app/project.json", "nx/core/project-json"],
+      "sourceRoot": ["apps/my-app/project.json", "nx/core/project-json"],
+      "projectType": ["apps/my-app/project.json", "nx/core/project-json"],
+      "tags": ["apps/my-app/project.json", "nx/core/project-json"]
+   }
 }
 ```
 
@@ -175,16 +190,16 @@ Support for providing command args as options was added in **Nx v18.1.1**.
 
 ```json {% fileName="apps/my-app/project.json" highlightLines=["5-10"] %}
 {
-  "sourceRoot": "apps/my-app/src",
-  "projectType": "application",
-  "targets": {
-    "build": {
-      "options": {
-        "assetsInlineLimit": 2048,
-        "assetsDir": "static/assets"
+   "sourceRoot": "apps/my-app/src",
+   "projectType": "application",
+   "targets": {
+      "build": {
+         "options": {
+            "assetsInlineLimit": 2048,
+            "assetsDir": "static/assets"
+         }
       }
-    }
-  }
+   }
 }
 ```
 
@@ -194,17 +209,17 @@ Support for providing command args as options was added in **Nx v18.1.1**.
 
 ```json {% fileName="apps/my-app/project.json" highlightLines=["5-11"] %}
 {
-  "sourceRoot": "apps/my-app/src",
-  "projectType": "application",
-  "targets": {
-    "build": {
-      "options": {
-        "args": ["--assetsInlineLimit=2048", "--assetsDir=static/assets"]
-        // it also accepts a single string:
-        // "args": "--assetsInlineLimit=2048 --assetsDir=static/assets"
+   "sourceRoot": "apps/my-app/src",
+   "projectType": "application",
+   "targets": {
+      "build": {
+         "options": {
+            "args": ["--assetsInlineLimit=2048", "--assetsDir=static/assets"]
+            // it also accepts a single string:
+            // "args": "--assetsInlineLimit=2048 --assetsDir=static/assets"
+         }
       }
-    }
-  }
+   }
 }
 ```
 
@@ -224,14 +239,14 @@ To provide the same args for all projects in the workspace, you need to update t
 
 ```json {% fileName="nx.json" %}
 {
-  "targetDefaults": {
-    "build": {
-      "options": {
-        "assetsInlineLimit": 2048,
-        "assetsDir": "static/assets"
+   "targetDefaults": {
+      "build": {
+         "options": {
+            "assetsInlineLimit": 2048,
+            "assetsDir": "static/assets"
+         }
       }
-    }
-  }
+   }
 }
 ```
 
@@ -241,13 +256,13 @@ To provide the same args for all projects in the workspace, you need to update t
 
 ```json {% fileName="nx.json" %}
 {
-  "targetDefaults": {
-    "build": {
-      "options": {
-        "args": ["--assetsInlineLimit=2048", "--assetsDir=static/assets"]
+   "targetDefaults": {
+      "build": {
+         "options": {
+            "args": ["--assetsInlineLimit=2048", "--assetsDir=static/assets"]
+         }
       }
-    }
-  }
+   }
 }
 ```
 

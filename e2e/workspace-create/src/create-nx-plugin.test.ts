@@ -1,75 +1,77 @@
 import {
-  checkFilesExist,
-  cleanupProject,
-  getSelectedPackageManager,
-  packageManagerLockFile,
-  runCLI,
-  runCreatePlugin,
-  uniq,
+   checkFilesExist,
+   cleanupProject,
+   getSelectedPackageManager,
+   packageManagerLockFile,
+   runCLI,
+   runCreatePlugin,
+   uniq,
 } from '@nx/e2e/utils';
 
 describe('create-nx-plugin', () => {
-  const packageManager = getSelectedPackageManager() || 'pnpm';
+   const packageManager = getSelectedPackageManager() || 'pnpm';
 
-  afterEach(() => cleanupProject());
+   afterEach(() => cleanupProject());
 
-  it('should be able to create a plugin repo build a plugin', () => {
-    const pluginName = uniq('plugin');
-    const generatorName = uniq('generator');
-    const executorName = uniq('executor');
+   it('should be able to create a plugin repo build a plugin', () => {
+      const pluginName = uniq('plugin');
+      const generatorName = uniq('generator');
+      const executorName = uniq('executor');
 
-    runCreatePlugin(pluginName, {
-      packageManager,
-      extraArgs: `--createPackageName=false`,
-    });
+      runCreatePlugin(pluginName, {
+         packageManager,
+         extraArgs: `--createPackageName=false`,
+      });
 
-    checkFilesExist(
-      'package.json',
-      packageManagerLockFile[packageManager],
-      `project.json`
-    );
+      checkFilesExist(
+         'package.json',
+         packageManagerLockFile[packageManager],
+         `project.json`
+      );
 
-    runCLI(`build ${pluginName}`);
+      runCLI(`build ${pluginName}`);
 
-    checkFilesExist(
-      `dist/${pluginName}/package.json`,
-      `dist/${pluginName}/src/index.js`
-    );
+      checkFilesExist(
+         `dist/${pluginName}/package.json`,
+         `dist/${pluginName}/src/index.js`
+      );
 
-    runCLI(
-      `generate @nx/plugin:generator ${generatorName} --project=${pluginName}`
-    );
-    runCLI(
-      `generate @nx/plugin:executor ${executorName} --project=${pluginName}`
-    );
+      runCLI(
+         `generate @nx/plugin:generator ${generatorName} --project=${pluginName}`
+      );
+      runCLI(
+         `generate @nx/plugin:executor ${executorName} --project=${pluginName}`
+      );
 
-    runCLI(`build ${pluginName}`);
+      runCLI(`build ${pluginName}`);
 
-    checkFilesExist(
-      `dist/${pluginName}/package.json`,
-      `dist/${pluginName}/generators.json`,
-      `dist/${pluginName}/executors.json`
-    );
-  });
+      checkFilesExist(
+         `dist/${pluginName}/package.json`,
+         `dist/${pluginName}/generators.json`,
+         `dist/${pluginName}/executors.json`
+      );
+   });
 
-  it('should be able to create a repo with create workspace cli', () => {
-    const pluginName = uniq('plugin');
+   it('should be able to create a repo with create workspace cli', () => {
+      const pluginName = uniq('plugin');
 
-    runCreatePlugin(pluginName, {
-      packageManager,
-      extraArgs: `--createPackageName=create-${pluginName}-package`,
-    });
+      runCreatePlugin(pluginName, {
+         packageManager,
+         extraArgs: `--createPackageName=create-${pluginName}-package`,
+      });
 
-    runCLI(`build ${pluginName}`);
-    checkFilesExist(
-      `dist/packages/${pluginName}/package.json`,
-      `dist/packages/${pluginName}/generators.json`,
-      `packages/${pluginName}-e2e/src/${pluginName}.spec.ts`
-    );
+      runCLI(`build ${pluginName}`);
+      checkFilesExist(
+         `dist/packages/${pluginName}/package.json`,
+         `dist/packages/${pluginName}/generators.json`,
+         `packages/${pluginName}-e2e/src/${pluginName}.spec.ts`
+      );
 
-    runCLI(`build create-${pluginName}-package`);
-    checkFilesExist(`dist/packages/create-${pluginName}-package/bin/index.js`);
+      runCLI(`build create-${pluginName}-package`);
+      checkFilesExist(
+         `dist/packages/create-${pluginName}-package/bin/index.js`
+      );
 
-    expect(() => runCLI(`e2e ${pluginName}-e2e`)).not.toThrow();
-  });
+      expect(() => runCLI(`e2e ${pluginName}-e2e`)).not.toThrow();
+   });
 });

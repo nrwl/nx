@@ -1,4 +1,4 @@
 {
-  "extends": ["@nx/js"],
-  "schematics": {}
+   "extends": ["@nx/js"],
+   "schematics": {}
 }

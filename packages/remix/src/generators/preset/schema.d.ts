@@ -1,4 +1,4 @@
 export interface RemixGeneratorSchema {
-  name: string;
-  tags?: string;
+   name: string;
+   tags?: string;
 }

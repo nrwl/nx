@@ -1,31 +1,31 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <title>Nx Workspace Project Graph</title>
-    <base href="/" />
+   <head>
+      <meta charset="utf-8" />
+      <title>Nx Workspace Project Graph</title>
+      <base href="/" />
 
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="icon" type="image/x-icon" href="favicon.ico" />
+      <meta name="viewport" content="width=device-width, initial-scale=1" />
+      <link rel="icon" type="image/x-icon" href="favicon.ico" />
 
-    <script id="environment" src="environment.js"></script>
+      <script id="environment" src="environment.js"></script>
 
-    <!-- Theming -->
-    <script>
-      // On page load or when changing themes, best to add inline in `head` to avoid FOUC
-      if (
-        localStorage.getItem('nx-dep-graph-theme') === 'dark' ||
-        (localStorage.getItem('nx-dep-graph-theme') === null &&
-          window.matchMedia('(prefers-color-scheme: dark)').matches)
-      ) {
-        document.documentElement.classList.add('dark');
-      } else {
-        document.documentElement.classList.remove('dark');
-      }
-    </script>
-  </head>
+      <!-- Theming -->
+      <script>
+         // On page load or when changing themes, best to add inline in `head` to avoid FOUC
+         if (
+            localStorage.getItem('nx-dep-graph-theme') === 'dark' ||
+            (localStorage.getItem('nx-dep-graph-theme') === null &&
+               window.matchMedia('(prefers-color-scheme: dark)').matches)
+         ) {
+            document.documentElement.classList.add('dark');
+         } else {
+            document.documentElement.classList.remove('dark');
+         }
+      </script>
+   </head>
 
-  <body class="bg-white text-slate-500 dark:bg-slate-900 dark:text-slate-400">
-    <div class="flex p-0" id="app"></div>
-  </body>
+   <body class="bg-white text-slate-500 dark:bg-slate-900 dark:text-slate-400">
+      <div class="flex p-0" id="app"></div>
+   </body>
 </html>

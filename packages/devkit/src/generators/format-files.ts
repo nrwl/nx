@@ -9,95 +9,101 @@ import { sortObjectByKeys } from 'nx/src/devkit-internals';
  * @param tree - the file system tree
  */
 export async function formatFiles(tree: Tree): Promise<void> {
-  let prettier: typeof Prettier;
-  try {
-    prettier = await import('prettier');
-  } catch {}
+   let prettier: typeof Prettier;
+   try {
+      prettier = await import('prettier');
+   } catch {}
 
-  sortTsConfig(tree);
+   sortTsConfig(tree);
 
-  if (!prettier) return;
+   if (!prettier) return;
 
-  const files = new Set(
-    tree.listChanges().filter((file) => file.type !== 'DELETE')
-  );
+   const files = new Set(
+      tree.listChanges().filter((file) => file.type !== 'DELETE')
+   );
 
-  const changedPrettierInTree = getChangedPrettierConfigInTree(tree);
+   const changedPrettierInTree = getChangedPrettierConfigInTree(tree);
 
-  await Promise.all(
-    Array.from(files).map(async (file) => {
-      try {
-        const systemPath = path.join(tree.root, file.path);
+   await Promise.all(
+      Array.from(files).map(async (file) => {
+         try {
+            const systemPath = path.join(tree.root, file.path);
 
-        const resolvedOptions = await prettier.resolveConfig(systemPath, {
-          editorconfig: true,
-        });
+            const resolvedOptions = await prettier.resolveConfig(systemPath, {
+               editorconfig: true,
+            });
 
-        const options: Prettier.Options = {
-          ...resolvedOptions,
-          ...changedPrettierInTree,
-          filepath: systemPath,
-        };
+            const options: Prettier.Options = {
+               ...resolvedOptions,
+               ...changedPrettierInTree,
+               filepath: systemPath,
+            };
 
-        if (file.path.endsWith('.swcrc')) {
-          options.parser = 'json';
-        }
+            if (file.path.endsWith('.swcrc')) {
+               options.parser = 'json';
+            }
 
-        const support = await prettier.getFileInfo(systemPath, options as any);
-        if (support.ignored || !support.inferredParser) {
-          return;
-        }
+            const support = await prettier.getFileInfo(
+               systemPath,
+               options as any
+            );
+            if (support.ignored || !support.inferredParser) {
+               return;
+            }
 
-        tree.write(
-          file.path,
-          // In prettier v3 the format result is a promise
-          await (prettier.format(file.content.toString('utf-8'), options) as
-            | Promise<string>
-            | string)
-        );
-      } catch (e) {
-        console.warn(`Could not format ${file.path}. Error: "${e.message}"`);
-      }
-    })
-  );
+            tree.write(
+               file.path,
+               // In prettier v3 the format result is a promise
+               await (prettier.format(
+                  file.content.toString('utf-8'),
+                  options
+               ) as Promise<string> | string)
+            );
+         } catch (e) {
+            console.warn(
+               `Could not format ${file.path}. Error: "${e.message}"`
+            );
+         }
+      })
+   );
 }
 
 function sortTsConfig(tree: Tree) {
-  try {
-    const tsConfigPath = getRootTsConfigPath(tree);
-    if (!tsConfigPath) {
-      return;
-    }
-    updateJson(tree, tsConfigPath, (tsconfig) => ({
-      ...tsconfig,
-      compilerOptions: {
-        ...tsconfig.compilerOptions,
-        paths: sortObjectByKeys(tsconfig.compilerOptions.paths),
-      },
-    }));
-  } catch (e) {
-    // catch noop
-  }
+   try {
+      const tsConfigPath = getRootTsConfigPath(tree);
+      if (!tsConfigPath) {
+         return;
+      }
+      updateJson(tree, tsConfigPath, (tsconfig) => ({
+         ...tsconfig,
+         compilerOptions: {
+            ...tsconfig.compilerOptions,
+            paths: sortObjectByKeys(tsconfig.compilerOptions.paths),
+         },
+      }));
+   } catch (e) {
+      // catch noop
+   }
 }
 
 function getRootTsConfigPath(tree: Tree): string | null {
-  for (const path of ['tsconfig.base.json', 'tsconfig.json']) {
-    if (tree.exists(path)) {
-      return path;
-    }
-  }
+   for (const path of ['tsconfig.base.json', 'tsconfig.json']) {
+      if (tree.exists(path)) {
+         return path;
+      }
+   }
 
-  return null;
+   return null;
 }
 
 function getChangedPrettierConfigInTree(tree: Tree): Prettier.Options | null {
-  if (tree.listChanges().find((file) => file.path === '.prettierrc')) {
-    try {
-      return readJson(tree, '.prettierrc');
-    } catch {
+   if (tree.listChanges().find((file) => file.path === '.prettierrc')) {
+      try {
+         return readJson(tree, '.prettierrc');
+      } catch {
+         return null;
+      }
+   } else {
       return null;
-    }
-  } else {
-    return null;
-  }
+   }
 }

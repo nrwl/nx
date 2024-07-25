@@ -5,6 +5,6 @@ import { dirname } from 'path';
  * Todo: Should refactor, not duplicate.
  */
 export function toProjectName(fileName: string): string {
-  const parts = dirname(fileName).split(/[\/\\]/g);
-  return parts[parts.length - 1].toLowerCase();
+   const parts = dirname(fileName).split(/[\/\\]/g);
+   return parts[parts.length - 1].toLowerCase();
 }

@@ -10,8 +10,8 @@ Read-write tokens allow full write access to your remote cache. They should only
 
 There are currently two (2) types of Access Tokens for Nx Cloud's runner that you can use on your workspace. Both tokens support distributed task execution and allow Nx Cloud to store metadata about runs.
 
-- `read-only`
-- `read-write`
+-  `read-only`
+-  `read-write`
 
 ### Access Tokens: Read Only
 
@@ -32,7 +32,7 @@ If you open your `nx.json`, you will see something like this:
 
 ```json
 {
-  "nxCloudAccessToken": "SOMETOKEN"
+   "nxCloudAccessToken": "SOMETOKEN"
 }
 ```
 

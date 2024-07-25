@@ -4,23 +4,23 @@ import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { normalizeOptions } from './normalize-options';
 
 describe('normalizeOptions', () => {
-  let tree: Tree;
+   let tree: Tree;
 
-  beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
-  });
+   beforeEach(() => {
+      tree = createTreeWithEmptyWorkspace();
+   });
 
-  it('should set importPath and projectRoot', async () => {
-    const options = await normalizeOptions(tree, {
-      name: 'my-lib',
-      style: 'css',
-      linter: Linter.None,
-      unitTestRunner: 'jest',
-    });
+   it('should set importPath and projectRoot', async () => {
+      const options = await normalizeOptions(tree, {
+         name: 'my-lib',
+         style: 'css',
+         linter: Linter.None,
+         unitTestRunner: 'jest',
+      });
 
-    expect(options).toMatchObject({
-      importPath: '@proj/my-lib',
-      projectRoot: 'my-lib',
-    });
-  });
+      expect(options).toMatchObject({
+         importPath: '@proj/my-lib',
+         projectRoot: 'my-lib',
+      });
+   });
 });

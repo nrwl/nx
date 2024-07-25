@@ -1,44 +1,44 @@
 {
-  "extends": "../../tsconfig.base.json",
-  "compilerOptions": {
-    "lib": ["dom", "dom.iterable", "esnext"],
-    "jsx": "preserve",
-    "allowJs": true,
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
-    "strict": false,
-    "forceConsistentCasingInFileNames": true,
-    "noEmit": true,
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "incremental": true,
-    "strictNullChecks": false,
-    "plugins": [
+   "extends": "../../tsconfig.base.json",
+   "compilerOptions": {
+      "lib": ["dom", "dom.iterable", "esnext"],
+      "jsx": "preserve",
+      "allowJs": true,
+      "esModuleInterop": true,
+      "allowSyntheticDefaultImports": true,
+      "strict": false,
+      "forceConsistentCasingInFileNames": true,
+      "noEmit": true,
+      "resolveJsonModule": true,
+      "isolatedModules": true,
+      "incremental": true,
+      "strictNullChecks": false,
+      "plugins": [
+         {
+            "name": "next"
+         }
+      ]
+   },
+   "types": ["node", "jest"],
+   "include": [
+      "**/*.js",
+      "**/*.ts",
+      "**/*.tsx",
+      "next-env.d.ts",
+      ".next/types/**/*.ts",
+      "../../dist/nx-dev/nx-dev/.next/types/**/*.ts"
+   ],
+   "references": [
       {
-        "name": "next"
+         "path": "./tsconfig.spec.json"
       }
-    ]
-  },
-  "types": ["node", "jest"],
-  "include": [
-    "**/*.js",
-    "**/*.ts",
-    "**/*.tsx",
-    "next-env.d.ts",
-    ".next/types/**/*.ts",
-    "../../dist/nx-dev/nx-dev/.next/types/**/*.ts"
-  ],
-  "references": [
-    {
-      "path": "./tsconfig.spec.json"
-    }
-  ],
-  "exclude": [
-    "**/*.spec.ts",
-    "**/*.test.ts",
-    "**/*.spec.tsx",
-    "**/*.test.tsx",
-    "jest.config.ts",
-    "node_modules"
-  ]
+   ],
+   "exclude": [
+      "**/*.spec.ts",
+      "**/*.test.ts",
+      "**/*.spec.tsx",
+      "**/*.test.tsx",
+      "jest.config.ts",
+      "node_modules"
+   ]
 }

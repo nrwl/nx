@@ -2,28 +2,28 @@
 
 ```json
 {
-  "name": "mobile",
-  //...
-  "targets": {
-    //...
-    "bundle-ios": {
-      "executor": "@nx/react-native:bundle",
-      "outputs": ["{projectRoot}/build"],
-      "options": {
-        "entryFile": "src/main.tsx",
-        "platform": "ios",
-        "bundleOutput": "dist/apps/mobile/ios/main.jsbundle"
+   "name": "mobile",
+   //...
+   "targets": {
+      //...
+      "bundle-ios": {
+         "executor": "@nx/react-native:bundle",
+         "outputs": ["{projectRoot}/build"],
+         "options": {
+            "entryFile": "src/main.tsx",
+            "platform": "ios",
+            "bundleOutput": "dist/apps/mobile/ios/main.jsbundle"
+         }
+      },
+      "bundle-android": {
+         "executor": "@nx/react-native:bundle",
+         "options": {
+            "entryFile": "src/main.tsx",
+            "platform": "android",
+            "bundleOutput": "dist/apps/mobile/android/main.jsbundle"
+         }
       }
-    },
-    "bundle-android": {
-      "executor": "@nx/react-native:bundle",
-      "options": {
-        "entryFile": "src/main.tsx",
-        "platform": "android",
-        "bundleOutput": "dist/apps/mobile/android/main.jsbundle"
-      }
-    }
-  }
+   }
 }
 ```
 

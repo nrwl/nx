@@ -5,14 +5,14 @@ import type { NormalizedExecutorOptions } from '../../../../utils/schema';
 import type { TypescriptInMemoryTsConfig } from '../typescript-compilation';
 
 export interface TaskInfo {
-  task: string;
-  options: NormalizedExecutorOptions;
-  context: ExecutorContext;
-  assetsHandler: CopyAssetsHandler;
-  buildableProjectNodeDependencies: DependentBuildableProjectNode[];
-  projectGraphNode: ProjectGraphProjectNode;
-  tsConfig: TypescriptInMemoryTsConfig;
-  startTime?: number;
-  endTime?: number;
-  terminalOutput: string;
+   task: string;
+   options: NormalizedExecutorOptions;
+   context: ExecutorContext;
+   assetsHandler: CopyAssetsHandler;
+   buildableProjectNodeDependencies: DependentBuildableProjectNode[];
+   projectGraphNode: ProjectGraphProjectNode;
+   tsConfig: TypescriptInMemoryTsConfig;
+   startTime?: number;
+   endTime?: number;
+   terminalOutput: string;
 }

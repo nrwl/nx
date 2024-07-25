@@ -2,19 +2,19 @@
 
 ```json
 {
-  "name": "mobile",
-  //...
-  "targets": {
-    //...
-    "build-android": {
-      "executor": "@nx/react-native:build-android",
-      "outputs": [
-        "{projectRoot}/build/outputs/bundle",
-        "{projectRoot}/build/outputs/apk"
-      ],
-      "options": {}
-    }
-  }
+   "name": "mobile",
+   //...
+   "targets": {
+      //...
+      "build-android": {
+         "executor": "@nx/react-native:build-android",
+         "outputs": [
+            "{projectRoot}/build/outputs/bundle",
+            "{projectRoot}/build/outputs/apk"
+         ],
+         "options": {}
+      }
+   }
 }
 ```
 

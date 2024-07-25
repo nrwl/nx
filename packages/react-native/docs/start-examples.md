@@ -2,17 +2,17 @@
 
 ```json
 {
-  "name": "mobile",
-  //...
-  "targets": {
-    //...
-    "start": {
-      "executor": "@nx/react-native:start",
-      "options": {
-        "port": 8081
+   "name": "mobile",
+   //...
+   "targets": {
+      //...
+      "start": {
+         "executor": "@nx/react-native:start",
+         "options": {
+            "port": 8081
+         }
       }
-    }
-  }
+   }
 }
 ```
 

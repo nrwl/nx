@@ -7,26 +7,26 @@ import { updateJson, type Tree } from '@nx/devkit';
  * to esnext, and Storybook does not recognise the main.ts code as a module.
  */
 export function editRootTsConfig(tree: Tree) {
-  if (!tree.exists('tsconfig.json')) {
-    return;
-  }
+   if (!tree.exists('tsconfig.json')) {
+      return;
+   }
 
-  updateJson(tree, 'tsconfig.json', (json) => {
-    if (json['ts-node']) {
-      json['ts-node'] = {
-        ...json['ts-node'],
-        compilerOptions: {
-          ...(json['ts-node'].compilerOptions ?? {}),
-          module: 'commonjs',
-        },
-      };
-    } else {
-      json['ts-node'] = {
-        compilerOptions: {
-          module: 'commonjs',
-        },
-      };
-    }
-    return json;
-  });
+   updateJson(tree, 'tsconfig.json', (json) => {
+      if (json['ts-node']) {
+         json['ts-node'] = {
+            ...json['ts-node'],
+            compilerOptions: {
+               ...(json['ts-node'].compilerOptions ?? {}),
+               module: 'commonjs',
+            },
+         };
+      } else {
+         json['ts-node'] = {
+            compilerOptions: {
+               module: 'commonjs',
+            },
+         };
+      }
+      return json;
+   });
 }

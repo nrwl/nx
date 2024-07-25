@@ -27,11 +27,11 @@ The `@nx/webpack` plugin creates tasks named `build`, `serve` and `preview` by d
 
 Nx plugins infer the following properties by analyzing the tool configuration.
 
-- Command - How is the tool invoked
-- [Cacheability](/concepts/how-caching-works) - Whether the task will be cached by Nx. When the Inputs have not changed the Outputs will be restored from the cache.
-- [Inputs](/recipes/running-tasks/configure-inputs) - Inputs are used by the task to produce Outputs. Inputs are used to determine when the Outputs of a task can be restored from the cache.
-- [Outputs](/recipes/running-tasks/configure-outputs) - Outputs are the results of a task. Outputs are restored from the cache when the Inputs are the same as a previous run.
-- [Task Dependencies](/concepts/task-pipeline-configuration) - The list of other tasks which must be completed before running this task.
+-  Command - How is the tool invoked
+-  [Cacheability](/concepts/how-caching-works) - Whether the task will be cached by Nx. When the Inputs have not changed the Outputs will be restored from the cache.
+-  [Inputs](/recipes/running-tasks/configure-inputs) - Inputs are used by the task to produce Outputs. Inputs are used to determine when the Outputs of a task can be restored from the cache.
+-  [Outputs](/recipes/running-tasks/configure-outputs) - Outputs are the results of a task. Outputs are restored from the cache when the Inputs are the same as a previous run.
+-  [Task Dependencies](/concepts/task-pipeline-configuration) - The list of other tasks which must be completed before running this task.
 
 ## Nx Uses Plugins to Build the Graph
 
@@ -67,10 +67,10 @@ The order of precedence for task configuration is:
 
 More details about how to override task configuration is available in these recipes:
 
-- [Configure Inputs for Task Caching](/recipes/running-tasks/configure-inputs)
-- [Configure Outputs for Task Caching](/recipes/running-tasks/configure-outputs)
-- [Defining a Task Pipeline](/recipes/running-tasks/defining-task-pipeline)
-- [Pass Arguments to Commands](/recipes/running-tasks/pass-args-to-commands)
+-  [Configure Inputs for Task Caching](/recipes/running-tasks/configure-inputs)
+-  [Configure Outputs for Task Caching](/recipes/running-tasks/configure-outputs)
+-  [Defining a Task Pipeline](/recipes/running-tasks/defining-task-pipeline)
+-  [Pass Arguments to Commands](/recipes/running-tasks/pass-args-to-commands)
 
 ## Existing Nx Workspaces
 

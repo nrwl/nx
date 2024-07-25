@@ -8,114 +8,114 @@ import { groupTargets } from '../utils/group-targets';
 import { useMemo } from 'react';
 
 export interface TargetConfigurationGroupListProps {
-  project: ProjectGraphProjectNode;
-  sourceMap: Record<string, string[]>;
-  variant?: 'default' | 'compact';
-  onRunTarget?: (data: { projectName: string; targetName: string }) => void;
-  onViewInTaskGraph?: (data: {
-    projectName: string;
-    targetName: string;
-  }) => void;
-  onNxConnect?: () => void;
-  connectedToCloud?: boolean;
-  className?: string;
+   project: ProjectGraphProjectNode;
+   sourceMap: Record<string, string[]>;
+   variant?: 'default' | 'compact';
+   onRunTarget?: (data: { projectName: string; targetName: string }) => void;
+   onViewInTaskGraph?: (data: {
+      projectName: string;
+      targetName: string;
+   }) => void;
+   onNxConnect?: () => void;
+   connectedToCloud?: boolean;
+   className?: string;
 }
 
 export function TargetConfigurationGroupList({
-  project,
-  variant,
-  sourceMap,
-  onRunTarget,
-  onViewInTaskGraph,
-  onNxConnect,
-  className = '',
-  connectedToCloud,
+   project,
+   variant,
+   sourceMap,
+   onRunTarget,
+   onViewInTaskGraph,
+   onNxConnect,
+   className = '',
+   connectedToCloud,
 }: TargetConfigurationGroupListProps) {
-  const targetsGroup = useMemo(() => groupTargets(project), [project]);
-  const hasGroups = useMemo(() => {
-    for (const group of Object.entries(targetsGroup.groups)) {
-      if (group[1]?.length > 0) return true;
-    }
-    return false;
-  }, [targetsGroup]);
+   const targetsGroup = useMemo(() => groupTargets(project), [project]);
+   const hasGroups = useMemo(() => {
+      for (const group of Object.entries(targetsGroup.groups)) {
+         if (group[1]?.length > 0) return true;
+      }
+      return false;
+   }, [targetsGroup]);
 
-  if (hasGroups) {
-    return (
-      <>
-        {Object.entries(targetsGroup.groups).map(
-          ([targetGroupName, targets]) => {
-            return (
-              <TargetConfigurationGroupContainer
-                targetGroupName={targetGroupName}
-                targetsNumber={targets.length}
-                key={targetGroupName}
-              >
-                <ul className={className}>
-                  {targets.map((targetName) => (
-                    <TargetConfigurationDetailsListItem
-                      project={project}
-                      sourceMap={sourceMap}
-                      connectedToCloud={connectedToCloud}
-                      variant={variant}
-                      onRunTarget={onRunTarget}
-                      onViewInTaskGraph={onViewInTaskGraph}
-                      onNxConnect={onNxConnect}
-                      targetName={targetName}
-                      collapsable={true}
-                      key={targetName}
-                    />
-                  ))}
-                </ul>
-              </TargetConfigurationGroupContainer>
-            );
-          }
-        )}
-        <TargetConfigurationGroupContainer
-          targetGroupName="Others"
-          targetsNumber={targetsGroup.targets.length}
-          key="others-group"
-        >
-          <ul className={`p-2 ${className}`}>
+   if (hasGroups) {
+      return (
+         <>
+            {Object.entries(targetsGroup.groups).map(
+               ([targetGroupName, targets]) => {
+                  return (
+                     <TargetConfigurationGroupContainer
+                        targetGroupName={targetGroupName}
+                        targetsNumber={targets.length}
+                        key={targetGroupName}
+                     >
+                        <ul className={className}>
+                           {targets.map((targetName) => (
+                              <TargetConfigurationDetailsListItem
+                                 project={project}
+                                 sourceMap={sourceMap}
+                                 connectedToCloud={connectedToCloud}
+                                 variant={variant}
+                                 onRunTarget={onRunTarget}
+                                 onViewInTaskGraph={onViewInTaskGraph}
+                                 onNxConnect={onNxConnect}
+                                 targetName={targetName}
+                                 collapsable={true}
+                                 key={targetName}
+                              />
+                           ))}
+                        </ul>
+                     </TargetConfigurationGroupContainer>
+                  );
+               }
+            )}
+            <TargetConfigurationGroupContainer
+               targetGroupName="Others"
+               targetsNumber={targetsGroup.targets.length}
+               key="others-group"
+            >
+               <ul className={`p-2 ${className}`}>
+                  {targetsGroup.targets.map((targetName) => {
+                     return (
+                        <TargetConfigurationDetailsListItem
+                           project={project}
+                           sourceMap={sourceMap}
+                           connectedToCloud={connectedToCloud}
+                           variant={variant}
+                           onRunTarget={onRunTarget}
+                           onViewInTaskGraph={onViewInTaskGraph}
+                           onNxConnect={onNxConnect}
+                           targetName={targetName}
+                           collapsable={true}
+                           key={targetName}
+                        />
+                     );
+                  })}
+               </ul>
+            </TargetConfigurationGroupContainer>
+         </>
+      );
+   } else {
+      return (
+         <ul className={className}>
             {targetsGroup.targets.map((targetName) => {
-              return (
-                <TargetConfigurationDetailsListItem
-                  project={project}
-                  sourceMap={sourceMap}
-                  connectedToCloud={connectedToCloud}
-                  variant={variant}
-                  onRunTarget={onRunTarget}
-                  onViewInTaskGraph={onViewInTaskGraph}
-                  onNxConnect={onNxConnect}
-                  targetName={targetName}
-                  collapsable={true}
-                  key={targetName}
-                />
-              );
+               return (
+                  <TargetConfigurationDetailsListItem
+                     project={project}
+                     sourceMap={sourceMap}
+                     connectedToCloud={connectedToCloud}
+                     variant={variant}
+                     onRunTarget={onRunTarget}
+                     onViewInTaskGraph={onViewInTaskGraph}
+                     onNxConnect={onNxConnect}
+                     targetName={targetName}
+                     collapsable={true}
+                     key={targetName}
+                  />
+               );
             })}
-          </ul>
-        </TargetConfigurationGroupContainer>
-      </>
-    );
-  } else {
-    return (
-      <ul className={className}>
-        {targetsGroup.targets.map((targetName) => {
-          return (
-            <TargetConfigurationDetailsListItem
-              project={project}
-              sourceMap={sourceMap}
-              connectedToCloud={connectedToCloud}
-              variant={variant}
-              onRunTarget={onRunTarget}
-              onViewInTaskGraph={onViewInTaskGraph}
-              onNxConnect={onNxConnect}
-              targetName={targetName}
-              collapsable={true}
-              key={targetName}
-            />
-          );
-        })}
-      </ul>
-    );
-  }
+         </ul>
+      );
+   }
 }

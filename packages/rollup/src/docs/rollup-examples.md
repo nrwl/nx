@@ -4,9 +4,9 @@ To include dependencies in the output `package.json`, the dependencies must be i
 
 ```json {% fileName="package.json" %}
 {
-  "dependencies": {
-    "some-dependency": "^1.0.0"
-  }
+   "dependencies": {
+      "some-dependency": "^1.0.0"
+   }
 }
 ```
 
@@ -48,7 +48,7 @@ Then for each package, you must have a `.babelrc` file that will be applied to t
 
 ```json
 {
-  "presets": ["@babel/preset-env", "@babel/preset-typescript"]
+   "presets": ["@babel/preset-env", "@babel/preset-typescript"]
 }
 ```
 

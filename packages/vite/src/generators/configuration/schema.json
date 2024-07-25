@@ -1,61 +1,61 @@
 {
-  "cli": "nx",
-  "title": "Configure a project to use Vite.js.",
-  "description": "Configure a project to use Vite.js.",
-  "$id": "configure-vite-project",
-  "type": "object",
-  "properties": {
-    "project": {
-      "type": "string",
-      "description": "The name of the project.",
-      "$default": {
-        "$source": "argv",
-        "index": 0
+   "cli": "nx",
+   "title": "Configure a project to use Vite.js.",
+   "description": "Configure a project to use Vite.js.",
+   "$id": "configure-vite-project",
+   "type": "object",
+   "properties": {
+      "project": {
+         "type": "string",
+         "description": "The name of the project.",
+         "$default": {
+            "$source": "argv",
+            "index": 0
+         },
+         "aliases": ["name", "projectName"],
+         "x-dropdown": "project",
+         "x-prompt": "What is the name of the project to set up Vite for?"
       },
-      "aliases": ["name", "projectName"],
-      "x-dropdown": "project",
-      "x-prompt": "What is the name of the project to set up Vite for?"
-    },
-    "includeLib": {
-      "type": "boolean",
-      "description": "Add a library build option and skip the server option.",
-      "hidden": true
-    },
-    "includeVitest": {
-      "type": "boolean",
-      "description": "Use vitest for the test suite."
-    },
-    "uiFramework": {
-      "type": "string",
-      "description": "UI Framework to use for Vite.",
-      "enum": ["react", "none"],
-      "default": "none",
-      "x-prompt": "What UI framework plugin should Vite use?"
-    },
-    "compiler": {
-      "type": "string",
-      "description": "Compiler to use for Vite when UI Framework is React.",
-      "enum": ["babel", "swc"],
-      "default": "babel"
-    },
-    "newProject": {
-      "type": "boolean",
-      "description": "Is this a new project?",
-      "default": false,
-      "hidden": true
-    },
-    "skipFormat": {
-      "description": "Skip formatting files.",
-      "type": "boolean",
-      "default": false,
-      "x-priority": "internal"
-    },
-    "testEnvironment": {
-      "description": "The vitest environment to use. See https://vitest.dev/config/#environment.",
-      "type": "string",
-      "enum": ["node", "jsdom", "happy-dom", "edge-runtime"],
-      "default": "jsdom"
-    }
-  },
-  "examplesFile": "../../../docs/configuration-examples.md"
+      "includeLib": {
+         "type": "boolean",
+         "description": "Add a library build option and skip the server option.",
+         "hidden": true
+      },
+      "includeVitest": {
+         "type": "boolean",
+         "description": "Use vitest for the test suite."
+      },
+      "uiFramework": {
+         "type": "string",
+         "description": "UI Framework to use for Vite.",
+         "enum": ["react", "none"],
+         "default": "none",
+         "x-prompt": "What UI framework plugin should Vite use?"
+      },
+      "compiler": {
+         "type": "string",
+         "description": "Compiler to use for Vite when UI Framework is React.",
+         "enum": ["babel", "swc"],
+         "default": "babel"
+      },
+      "newProject": {
+         "type": "boolean",
+         "description": "Is this a new project?",
+         "default": false,
+         "hidden": true
+      },
+      "skipFormat": {
+         "description": "Skip formatting files.",
+         "type": "boolean",
+         "default": false,
+         "x-priority": "internal"
+      },
+      "testEnvironment": {
+         "description": "The vitest environment to use. See https://vitest.dev/config/#environment.",
+         "type": "string",
+         "enum": ["node", "jsdom", "happy-dom", "edge-runtime"],
+         "default": "jsdom"
+      }
+   },
+   "examplesFile": "../../../docs/configuration-examples.md"
 }

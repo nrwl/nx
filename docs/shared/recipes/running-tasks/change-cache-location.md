@@ -7,7 +7,7 @@ By default the cache is stored locally in `.nx/cache`. Cache results are stored 
 
 ```json {% fileName="nx.json"%}
 {
-  "cacheDirectory": "/tmp/mycache"
+   "cacheDirectory": "/tmp/mycache"
 }
 ```
 
@@ -16,13 +16,13 @@ By default the cache is stored locally in `.nx/cache`. Cache results are stored 
 
 ```json {% fileName="nx.json"%}
 {
-  "tasksRunnerOptions": {
-    "default": {
-      "options": {
-        "cacheDirectory": "/tmp/mycache"
+   "tasksRunnerOptions": {
+      "default": {
+         "options": {
+            "cacheDirectory": "/tmp/mycache"
+         }
       }
-    }
-  }
+   }
 }
 ```
 

@@ -4,19 +4,21 @@ import type { DecoratorGeneratorOptions } from './decorator';
 import { decoratorGenerator } from './decorator';
 
 describe('decorator generator', () => {
-  let tree: Tree;
-  const project = 'api';
-  const options: DecoratorGeneratorOptions = {
-    name: 'test',
-    project,
-  };
+   let tree: Tree;
+   const project = 'api';
+   const options: DecoratorGeneratorOptions = {
+      name: 'test',
+      project,
+   };
 
-  beforeEach(() => {
-    tree = createTreeWithNestApplication(project);
-    jest.clearAllMocks();
-  });
+   beforeEach(() => {
+      tree = createTreeWithNestApplication(project);
+      jest.clearAllMocks();
+   });
 
-  it('should run successfully', async () => {
-    await expect(decoratorGenerator(tree, options)).resolves.not.toThrowError();
-  });
+   it('should run successfully', async () => {
+      await expect(
+         decoratorGenerator(tree, options)
+      ).resolves.not.toThrowError();
+   });
 });

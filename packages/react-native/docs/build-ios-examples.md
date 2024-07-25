@@ -2,15 +2,15 @@
 
 ```json
 {
-  "name": "mobile",
-  //...
-  "targets": {
-    //...
-    "build-ios": {
-      "executor": "@nx/react-native:build-ios",
-      "options": {}
-    }
-  }
+   "name": "mobile",
+   //...
+   "targets": {
+      //...
+      "build-ios": {
+         "executor": "@nx/react-native:build-ios",
+         "options": {}
+      }
+   }
 }
 ```
 

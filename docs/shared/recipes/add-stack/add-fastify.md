@@ -74,7 +74,7 @@ Once the library is created, update the following files.
 
 ```typescript {% fileName="libs/my-lib/src/lib/my-lib.ts" %}
 export function someFunction(): string {
-  return 'some function';
+   return 'some function';
 }
 ```
 
@@ -83,12 +83,12 @@ import { someFunction } from '@my-org/my-lib';
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 
 export default async function (fastify: FastifyInstance) {
-  fastify.get(
-    '/',
-    async function (request: FastifyRequest, reply: FastifyReply) {
-      return { message: 'Hello API ' + someFunction };
-    }
-  );
+   fastify.get(
+      '/',
+      async function (request: FastifyRequest, reply: FastifyReply) {
+         return { message: 'Hello API ' + someFunction };
+      }
+   );
 }
 ```
 
@@ -96,9 +96,9 @@ Now when you serve your API, you'll see the content from the library being displ
 
 ## More Documentation
 
-- [@nx/node](/nx-api/node)
-- [Using Mongo with Fastify](/showcase/example-repos/mongo-fastify)
-- [Using Redis with Fastify](/showcase/example-repos/redis-fastify)
-- [Using Postgres with Fastify](/showcase/example-repos/postgres-fastify)
-- [Using PlanetScale with Serverless Fastify](/showcase/example-repos/serverless-fastify-planetscale)
-- [Fastify](https://fastify.dev/)
+-  [@nx/node](/nx-api/node)
+-  [Using Mongo with Fastify](/showcase/example-repos/mongo-fastify)
+-  [Using Redis with Fastify](/showcase/example-repos/redis-fastify)
+-  [Using Postgres with Fastify](/showcase/example-repos/postgres-fastify)
+-  [Using PlanetScale with Serverless Fastify](/showcase/example-repos/serverless-fastify-planetscale)
+-  [Fastify](https://fastify.dev/)

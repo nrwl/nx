@@ -1,9 +1,9 @@
 {
-  "name": "e2e-eslint",
-  "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "e2e/eslint",
-  "projectType": "application",
-  "implicitDependencies": ["eslint"],
-  "// targets": "to see all targets run: nx show project e2e-eslint --web",
-  "targets": {}
+   "name": "e2e-eslint",
+   "$schema": "../../node_modules/nx/schemas/project-schema.json",
+   "sourceRoot": "e2e/eslint",
+   "projectType": "application",
+   "implicitDependencies": ["eslint"],
+   "// targets": "to see all targets run: nx show project e2e-eslint --web",
+   "targets": {}
 }

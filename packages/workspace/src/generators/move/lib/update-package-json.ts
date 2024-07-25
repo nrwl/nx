@@ -3,7 +3,7 @@ import * as path from 'path';
 import { NormalizedSchema } from '../schema';
 
 interface PartialPackageJson {
-  name: string;
+   name: string;
 }
 
 /**
@@ -12,21 +12,21 @@ interface PartialPackageJson {
  * @param schema The options provided to the schematic
  */
 export function updatePackageJson(tree: Tree, schema: NormalizedSchema) {
-  if (!schema.importPath) {
-    return;
-  }
+   if (!schema.importPath) {
+      return;
+   }
 
-  const packageJsonPath = path.join(
-    schema.relativeToRootDestination,
-    'package.json'
-  );
+   const packageJsonPath = path.join(
+      schema.relativeToRootDestination,
+      'package.json'
+   );
 
-  if (!tree.exists(packageJsonPath)) {
-    // nothing to do
-    return;
-  }
+   if (!tree.exists(packageJsonPath)) {
+      // nothing to do
+      return;
+   }
 
-  const packageJson = readJson(tree, packageJsonPath) as PartialPackageJson;
-  packageJson.name = schema.importPath;
-  tree.write(packageJsonPath, JSON.stringify(packageJson));
+   const packageJson = readJson(tree, packageJsonPath) as PartialPackageJson;
+   packageJson.name = schema.importPath;
+   tree.write(packageJsonPath, JSON.stringify(packageJson));
 }

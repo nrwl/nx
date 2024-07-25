@@ -1,36 +1,36 @@
 {
-  "cli": "nx",
-  "title": "Initialize Vite in the workspace.",
-  "description": "Initialize Vite in the workspace.",
-  "$id": "init-vite-plugin",
-  "type": "object",
-  "properties": {
-    "skipFormat": {
-      "description": "Skip formatting files.",
-      "type": "boolean",
-      "default": false
-    },
-    "skipPackageJson": {
-      "description": "Do not add dependencies to `package.json`.",
-      "type": "boolean",
-      "default": false
-    },
-    "setupPathsPlugin": {
-      "type": "boolean",
-      "description": "Updates vite config files to enable support for workspace libraries via the nxViteTsPaths plugin.",
-      "default": false
-    },
-    "keepExistingVersions": {
-      "type": "boolean",
-      "x-priority": "internal",
-      "description": "Keep existing dependencies versions",
-      "default": false
-    },
-    "updatePackageScripts": {
-      "type": "boolean",
-      "x-priority": "internal",
-      "description": "Update `package.json` scripts with inferred targets",
-      "default": false
-    }
-  }
+   "cli": "nx",
+   "title": "Initialize Vite in the workspace.",
+   "description": "Initialize Vite in the workspace.",
+   "$id": "init-vite-plugin",
+   "type": "object",
+   "properties": {
+      "skipFormat": {
+         "description": "Skip formatting files.",
+         "type": "boolean",
+         "default": false
+      },
+      "skipPackageJson": {
+         "description": "Do not add dependencies to `package.json`.",
+         "type": "boolean",
+         "default": false
+      },
+      "setupPathsPlugin": {
+         "type": "boolean",
+         "description": "Updates vite config files to enable support for workspace libraries via the nxViteTsPaths plugin.",
+         "default": false
+      },
+      "keepExistingVersions": {
+         "type": "boolean",
+         "x-priority": "internal",
+         "description": "Keep existing dependencies versions",
+         "default": false
+      },
+      "updatePackageScripts": {
+         "type": "boolean",
+         "x-priority": "internal",
+         "description": "Update `package.json` scripts with inferred targets",
+         "default": false
+      }
+   }
 }

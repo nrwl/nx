@@ -2,8 +2,8 @@
 
 To turn on end to end encryption, specify an encryption key in one of two ways:
 
-- Set the `nxCloudEncryptionKey` property in `nx.json`
-- Set the `NX_CLOUD_ENCRYPTION_KEY` environment variable
+-  Set the `nxCloudEncryptionKey` property in `nx.json`
+-  Set the `NX_CLOUD_ENCRYPTION_KEY` environment variable
 
 The key can be any string up to 32 characters long.
 
@@ -19,8 +19,8 @@ We also store an un-encrypted version of the terminal output separately that is 
 
 Data is encrypted both at rest and in transit.
 
-- Every communication with the Nx Cloud API is encrypted in transit, including fetching/storing artifacts.
-- When using Nx Public Cloud, the stored metadata is encrypted.
-- When using Nx Public Cloud and e2e encryption, stored artifacts are encrypted.
-- When using the on-prem version of Nx Cloud, the stored metadata is encrypted if you run MongoDB yourself with encryption on
-- When using the on-prem version of Nx Cloud, stored artifacts are encrypted using e2e encryption.
+-  Every communication with the Nx Cloud API is encrypted in transit, including fetching/storing artifacts.
+-  When using Nx Public Cloud, the stored metadata is encrypted.
+-  When using Nx Public Cloud and e2e encryption, stored artifacts are encrypted.
+-  When using the on-prem version of Nx Cloud, the stored metadata is encrypted if you run MongoDB yourself with encryption on
+-  When using the on-prem version of Nx Cloud, stored artifacts are encrypted using e2e encryption.

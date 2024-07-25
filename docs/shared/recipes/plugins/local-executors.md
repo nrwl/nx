@@ -44,14 +44,14 @@ This file describes the options being sent to the executor (very similar to the 
 
 ```json
 {
-  "$schema": "https://json-schema.org/schema",
-  "type": "object",
-  "properties": {
-    "textToEcho": {
-      "type": "string",
-      "description": "Text To Echo"
-    }
-  }
+   "$schema": "https://json-schema.org/schema",
+   "type": "object",
+   "properties": {
+      "textToEcho": {
+         "type": "string",
+         "description": "Text To Echo"
+      }
+   }
 }
 ```
 
@@ -69,24 +69,24 @@ import { exec } from 'child_process';
 import { promisify } from 'util';
 
 export interface EchoExecutorOptions {
-  textToEcho: string;
+   textToEcho: string;
 }
 
 export default async function echoExecutor(
-  options: EchoExecutorOptions,
-  context: ExecutorContext
+   options: EchoExecutorOptions,
+   context: ExecutorContext
 ): Promise<{ success: boolean }> {
-  console.info(`Executing "echo"...`);
-  console.info(`Options: ${JSON.stringify(options, null, 2)}`);
+   console.info(`Executing "echo"...`);
+   console.info(`Options: ${JSON.stringify(options, null, 2)}`);
 
-  const { stdout, stderr } = await promisify(exec)(
-    `echo ${options.textToEcho}`
-  );
-  console.log(stdout);
-  console.error(stderr);
+   const { stdout, stderr } = await promisify(exec)(
+      `echo ${options.textToEcho}`
+   );
+   console.log(stdout);
+   console.error(stderr);
 
-  const success = !stderr;
-  return { success };
+   const success = !stderr;
+   return { success };
 }
 ```
 
@@ -96,16 +96,16 @@ Our last step is to add this executor to a given project’s `targets` object in
 
 ```jsonc {% fileName="project.json" highlightLines=["5-10"] %}
 {
-  //...
-  "targets": {
-    // ...
-    "echo": {
-      "executor": "@my-org/my-plugin:echo",
-      "options": {
-        "textToEcho": "Hello World"
+   //...
+   "targets": {
+      // ...
+      "echo": {
+         "executor": "@my-org/my-plugin:echo",
+         "options": {
+            "textToEcho": "Hello World"
+         }
       }
-    }
-  }
+   }
 }
 ```
 
@@ -145,26 +145,26 @@ import { ExecutorContext, runExecutor } from '@nx/devkit';
 export interface MultipleExecutorOptions {}
 
 export default async function multipleExecutor(
-  options: MultipleExecutorOptions,
-  context: ExecutorContext
+   options: MultipleExecutorOptions,
+   context: ExecutorContext
 ): Promise<{ success: boolean }> {
-  const result = await Promise.race([
-    await runExecutor(
-      { project: 'api', target: 'serve' },
-      { watch: true },
-      context
-    ),
-    await runExecutor(
-      { project: 'web-client', target: 'serve' },
-      { watch: true },
-      context
-    ),
-  ]);
-  for await (const res of result) {
-    if (!res.success) return res;
-  }
+   const result = await Promise.race([
+      await runExecutor(
+         { project: 'api', target: 'serve' },
+         { watch: true },
+         context
+      ),
+      await runExecutor(
+         { project: 'web-client', target: 'serve' },
+         { watch: true },
+         context
+      ),
+   ]);
+   for await (const res of result) {
+      if (!res.success) return res;
+   }
 
-  return { success: true };
+   return { success: true };
 }
 ```
 
@@ -182,13 +182,13 @@ If you want to add a custom hasher manually, create a new file beside your execu
 
 ```json {% fileName="executors.json" %}
 {
-  "executors": {
-    "echo": {
-      "implementation": "./src/executors/my-executor/executor",
-      "hasher": "./src/executors/my-executor/hasher",
-      "schema": "./src/executors/my-executor/schema.json"
-    }
-  }
+   "executors": {
+      "echo": {
+         "implementation": "./src/executors/my-executor/executor",
+         "hasher": "./src/executors/my-executor/hasher",
+         "schema": "./src/executors/my-executor/schema.json"
+      }
+   }
 }
 ```
 
@@ -198,10 +198,10 @@ This would allow you to write a custom function in `hasher.ts`, which Nx would u
 import { CustomHasher, Task, HasherContext } from '@nx/devkit';
 
 export const mimicNxHasher: CustomHasher = async (
-  task: Task,
-  context: HasherContext
+   task: Task,
+   context: HasherContext
 ) => {
-  return context.hasher.hashTask(task);
+   return context.hasher.hashTask(task);
 };
 
 export default mimicNxHasher;
@@ -213,12 +213,12 @@ The hash function can do anything it wants, but it is important to remember that
 import { CustomHasher, Task, HasherContext } from '@nx/devkit';
 
 export const badHasher: CustomHasher = async (
-  task: Task,
-  context: HasherContext
+   task: Task,
+   context: HasherContext
 ) => {
-  return {
-    value: 'my-static-hash',
-  };
+   return {
+      value: 'my-static-hash',
+   };
 };
 
 export default badHasher;

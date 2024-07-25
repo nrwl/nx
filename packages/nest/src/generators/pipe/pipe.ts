@@ -1,52 +1,52 @@
 import type { Tree } from '@nx/devkit';
 import type {
-  NestGeneratorWithLanguageOption,
-  NestGeneratorWithTestOption,
-  NormalizedOptions,
+   NestGeneratorWithLanguageOption,
+   NestGeneratorWithTestOption,
+   NormalizedOptions,
 } from '../utils';
 import {
-  normalizeOptions,
-  runNestSchematic,
-  unitTestRunnerToSpec,
+   normalizeOptions,
+   runNestSchematic,
+   unitTestRunnerToSpec,
 } from '../utils';
 
 export type PipeGeneratorOptions = NestGeneratorWithLanguageOption &
-  NestGeneratorWithTestOption;
+   NestGeneratorWithTestOption;
 
 export async function pipeGenerator(
-  tree: Tree,
-  rawOptions: PipeGeneratorOptions
+   tree: Tree,
+   rawOptions: PipeGeneratorOptions
 ) {
-  await pipeGeneratorInternal(tree, {
-    nameAndDirectoryFormat: 'derived',
-    ...rawOptions,
-  });
+   await pipeGeneratorInternal(tree, {
+      nameAndDirectoryFormat: 'derived',
+      ...rawOptions,
+   });
 }
 
 export async function pipeGeneratorInternal(
-  tree: Tree,
-  rawOptions: PipeGeneratorOptions
+   tree: Tree,
+   rawOptions: PipeGeneratorOptions
 ): Promise<any> {
-  const options = await normalizePipeOptions(tree, rawOptions);
+   const options = await normalizePipeOptions(tree, rawOptions);
 
-  return runNestSchematic(tree, 'pipe', options);
+   return runNestSchematic(tree, 'pipe', options);
 }
 
 export default pipeGenerator;
 
 async function normalizePipeOptions(
-  tree: Tree,
-  options: PipeGeneratorOptions
+   tree: Tree,
+   options: PipeGeneratorOptions
 ): Promise<NormalizedOptions> {
-  const normalizedOptions = await normalizeOptions(
-    tree,
-    'pipe',
-    '@nx/nest:pipe',
-    options
-  );
-  return {
-    ...normalizedOptions,
-    language: options.language,
-    spec: unitTestRunnerToSpec(options.unitTestRunner),
-  };
+   const normalizedOptions = await normalizeOptions(
+      tree,
+      'pipe',
+      '@nx/nest:pipe',
+      options
+   );
+   return {
+      ...normalizedOptions,
+      language: options.language,
+      spec: unitTestRunnerToSpec(options.unitTestRunner),
+   };
 }

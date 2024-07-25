@@ -4,11 +4,11 @@
 import { ReactNativeStartOptions } from '../start/schema';
 
 export interface ReactNativeBuildAndroidOptions
-  extends ReactNativeStartOptions {
-  // react native options
-  mode: string; // default is debug
-  activeArchOnly: boolean; // default is false
-  tasks?: string | Array<string>;
-  extraParams?: Array<string>;
-  interactive: boolean;
+   extends ReactNativeStartOptions {
+   // react native options
+   mode: string; // default is debug
+   activeArchOnly: boolean; // default is false
+   tasks?: string | Array<string>;
+   extraParams?: Array<string>;
+   interactive: boolean;
 }

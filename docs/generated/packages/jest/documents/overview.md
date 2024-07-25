@@ -5,9 +5,9 @@ description: The Nx Plugin for Jest contains executors and generators that suppo
 
 [Jest](https://jestjs.io/) is an open source test runner created by Facebook. It has a lot of great features:
 
-- Immersive watch mode for providing near instant feedback when developing tests.
-- Snapshot testing for validating features.
-- Great built-in reporter for printing out test results.
+-  Immersive watch mode for providing near instant feedback when developing tests.
+-  Snapshot testing for validating features.
+-  Great built-in reporter for printing out test results.
 
 ## Setting Up @nx/jest
 
@@ -47,23 +47,23 @@ within the same workspace. In this case, you can configure the `@nx/jest/plugin`
 
 ```json {% fileName="nx.json" %}
 {
-  "plugins": [
-    {
-      "plugin": "@nx/jest/plugin",
-      "exclude": ["e2e/**/*"],
-      "options": {
-        "targetName": "test"
+   "plugins": [
+      {
+         "plugin": "@nx/jest/plugin",
+         "exclude": ["e2e/**/*"],
+         "options": {
+            "targetName": "test"
+         }
+      },
+      {
+         "plugin": "@nx/jest/plugin",
+         "include": ["e2e/**/*"],
+         "options": {
+            "targetName": "e2e-local",
+            "ciTargetName": "e2e-ci"
+         }
       }
-    },
-    {
-      "plugin": "@nx/jest/plugin",
-      "include": ["e2e/**/*"],
-      "options": {
-        "targetName": "e2e-local",
-        "ciTargetName": "e2e-ci"
-      }
-    }
-  ]
+   ]
 }
 ```
 
@@ -75,16 +75,16 @@ target with that name which can be used in CI to run the tests for each file in 
 
 ```json {% fileName="nx.json" %}
 {
-  "plugins": [
-    {
-      "plugin": "@nx/jest/plugin",
-      "include": ["e2e/**/*"],
-      "options": {
-        "targetName": "e2e-local",
-        "ciTargetName": "e2e-ci"
+   "plugins": [
+      {
+         "plugin": "@nx/jest/plugin",
+         "include": ["e2e/**/*"],
+         "options": {
+            "targetName": "e2e-local",
+            "ciTargetName": "e2e-ci"
+         }
       }
-    }
-  ]
+   ]
 }
 ```
 
@@ -96,12 +96,12 @@ Since Nx 18, Nx plugins can infer tasks for your projects based on the configura
 
 The `@nx/jest` plugin will create a task for any project that has an Jest configuration file present. Any of the following files will be recognized as an Jest configuration file:
 
-- `jest.config.js`
-- `jest.config.ts`
-- `jest.config.mjs`
-- `jest.config.mts`
-- `jest.config.cjs`
-- `jest.config.cts`
+-  `jest.config.js`
+-  `jest.config.ts`
+-  `jest.config.mjs`
+-  `jest.config.mts`
+-  `jest.config.cjs`
+-  `jest.config.cts`
 
 ### View Inferred Tasks
 
@@ -113,18 +113,18 @@ The `@nx/jest/plugin` is configured in the `plugins` array in `nx.json`.
 
 ```json {% fileName="nx.json" %}
 {
-  "plugins": [
-    {
-      "plugin": "@nx/jest/plugin",
-      "options": {
-        "targetName": "test"
+   "plugins": [
+      {
+         "plugin": "@nx/jest/plugin",
+         "options": {
+            "targetName": "test"
+         }
       }
-    }
-  ]
+   ]
 }
 ```
 
-- The `targetName` option controls the name of the inferred Jest tasks. The default name is `test`.
+-  The `targetName` option controls the name of the inferred Jest tasks. The default name is `test`.
 
 ## Using Jest
 
@@ -152,8 +152,8 @@ Replacing `<project-name>` with the name of the project you're wanting to add Je
 
 The recommended way to run/debug Jest tests via an editor
 
-- [VSCode](https://marketplace.visualstudio.com/items?itemName=firsttris.vscode-jest-runner)
-- [Webstorm](https://blog.jetbrains.com/webstorm/2018/10/testing-with-jest-in-webstorm/)
+-  [VSCode](https://marketplace.visualstudio.com/items?itemName=firsttris.vscode-jest-runner)
+-  [Webstorm](https://blog.jetbrains.com/webstorm/2018/10/testing-with-jest-in-webstorm/)
 
 To run Jest tests via nx use
 
@@ -177,10 +177,10 @@ Example of using snapshots:
 
 ```typescript
 describe('SuperAwesomeFunction', () => {
-  it('should return the correct data shape', () => {
-    const actual = superAwesomeFunction();
-    expect(actual).toMatchSnapshot();
-  });
+   it('should return the correct data shape', () => {
+      const actual = superAwesomeFunction();
+      expect(actual).toMatchSnapshot();
+   });
 });
 ```
 
@@ -220,10 +220,10 @@ You can manually add Jest projects not identified by the `getJestProjectsAsync` 
 import { getJestProjectsAsync } from '@nx/jest';
 
 export default async () => ({
-  projects: [
-    ...(await getJestProjectsAsync()),
-    '<rootDir>/path/to/jest.config.ts',
-  ],
+   projects: [
+      ...(await getJestProjectsAsync()),
+      '<rootDir>/path/to/jest.config.ts',
+   ],
 });
 ```
 
@@ -239,7 +239,7 @@ You can add Jest projects which are not included in `getJestProjects()`, because
 import { getJestProjects } from '@nx/jest';
 
 export default {
-  projects: [...getJestProjects(), '<rootDir>/path/to/jest.config.ts'],
+   projects: [...getJestProjects(), '<rootDir>/path/to/jest.config.ts'],
 };
 ```
 
@@ -273,7 +273,7 @@ const cleanupRegisteredPaths = registerTsProject('./tsconfig.base.json');
 
 import { yourFancyFunction } from '@some-org/my-util-library';
 export default async function () {
-  yourFancyFunction();
+   yourFancyFunction();
 }
 // make sure to run the clean up!
 cleanupRegisteredPaths();
@@ -288,24 +288,24 @@ import { readFileSync } from 'fs';
 // Reading the SWC compilation config and remove the "exclude"
 // for the test files to be compiled by SWC
 const { exclude: _, ...swcJestConfig } = JSON.parse(
-  readFileSync(`${__dirname}/.swcrc`, 'utf-8')
+   readFileSync(`${__dirname}/.swcrc`, 'utf-8')
 );
 
 // disable .swcrc look-up by SWC core because we're passing in swcJestConfig ourselves.
 // If we do not disable this, SWC Core will read .swcrc and won't transform our test files due to "exclude"
 if (swcJestConfig.swcrc === undefined) {
-  swcJestConfig.swcrc = false;
+   swcJestConfig.swcrc = false;
 }
 
 // jest needs EsModule Interop to find the default exported function
 swcJestConfig.module.noInterop = false;
 
 export default {
-  globalSetup: '<rootDir>/src/global-setup-swc.ts',
-  transform: {
-    '^.+\\.[tj]s$': ['@swc/jest', swcJestConfig],
-  },
-  // other settings
+   globalSetup: '<rootDir>/src/global-setup-swc.ts',
+   transform: {
+      '^.+\\.[tj]s$': ['@swc/jest', swcJestConfig],
+   },
+   // other settings
 };
 ```
 
@@ -314,17 +314,17 @@ import { registerTsProject } from '@nx/js/src/internal';
 const cleanupRegisteredPaths = registerTsProject('./tsconfig.base.json');
 
 export default async function () {
-  // swc will hoist all imports, and we need to make sure the register happens first
-  // so we import all nx project alias within the setup function first.
-  const { yourFancyFunction } = await import('@some-org/my-util-library');
+   // swc will hoist all imports, and we need to make sure the register happens first
+   // so we import all nx project alias within the setup function first.
+   const { yourFancyFunction } = await import('@some-org/my-util-library');
 
-  yourFancyFunction();
+   yourFancyFunction();
 
-  // make sure to run the clean up!
-  cleanupRegisteredPaths();
+   // make sure to run the clean up!
+   cleanupRegisteredPaths();
 }
 ```
 
 ## More Documentation
 
-- [Jest Docs](https://jestjs.io/)
+-  [Jest Docs](https://jestjs.io/)

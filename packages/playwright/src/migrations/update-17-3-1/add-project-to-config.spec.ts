@@ -4,20 +4,20 @@ import { createTreeWithEmptyWorkspace } from 'nx/src/devkit-testing-exports';
 import update from './add-project-to-config';
 
 describe('update-nx-next-dependency', () => {
-  let tree: Tree;
+   let tree: Tree;
 
-  beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
-  });
+   beforeEach(() => {
+      tree = createTreeWithEmptyWorkspace();
+   });
 
-  it('should update playwright.config.ts', async () => {
-    addProjectConfiguration(tree, 'acme', {
-      root: 'acme',
-    });
+   it('should update playwright.config.ts', async () => {
+      addProjectConfiguration(tree, 'acme', {
+         root: 'acme',
+      });
 
-    tree.write(
-      'acme/playwright.config.ts',
-      `import { defineConfig } from '@playwright/test';
+      tree.write(
+         'acme/playwright.config.ts',
+         `import { defineConfig } from '@playwright/test';
             import { nxE2EPreset } from '@nx/playwright/preset';
 
             import { workspaceRoot } from '@nx/devkit';
@@ -41,22 +41,22 @@ describe('update-nx-next-dependency', () => {
                 }
               });
               `
-    );
-    await update(tree);
+      );
+      await update(tree);
 
-    const content = tree.read('acme/playwright.config.ts', 'utf-8');
-    expect(content).toContain('projects: [');
-    expect(content).toMatchSnapshot();
-  });
+      const content = tree.read('acme/playwright.config.ts', 'utf-8');
+      expect(content).toContain('projects: [');
+      expect(content).toMatchSnapshot();
+   });
 
-  it('should not update playwright.config.ts if projects is already defined', async () => {
-    addProjectConfiguration(tree, 'acme', {
-      root: 'acme',
-    });
+   it('should not update playwright.config.ts if projects is already defined', async () => {
+      addProjectConfiguration(tree, 'acme', {
+         root: 'acme',
+      });
 
-    tree.write(
-      'acme/playwright.config.ts',
-      `import { defineConfig } from '@playwright/test';
+      tree.write(
+         'acme/playwright.config.ts',
+         `import { defineConfig } from '@playwright/test';
               import { nxE2EPreset } from '@nx/playwright/preset';
   
               import { workspaceRoot } from '@nx/devkit';
@@ -81,11 +81,11 @@ describe('update-nx-next-dependency', () => {
                   projects: []
                 });
                 `
-    );
-    await update(tree);
-    expect(tree.read('acme/playwright.config.ts', 'utf-8')).toContain(
-      'projects: []'
-    );
-    expect(tree.read('acme/playwright.config.ts', 'utf-8')).toMatchSnapshot();
-  });
+      );
+      await update(tree);
+      expect(tree.read('acme/playwright.config.ts', 'utf-8')).toContain(
+         'projects: []'
+      );
+      expect(tree.read('acme/playwright.config.ts', 'utf-8')).toMatchSnapshot();
+   });
 });

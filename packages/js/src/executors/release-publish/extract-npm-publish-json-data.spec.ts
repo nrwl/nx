@@ -1,18 +1,18 @@
 import { extractNpmPublishJsonData } from './extract-npm-publish-json-data';
 
 describe('extractNpmPublishJsonData()', () => {
-  describe('only unrelated JSON data', () => {
-    // Does not match expected npm publish JSON data
-    const data = {
-      foo: true,
-      bar: [1, 2, 3],
-    };
+   describe('only unrelated JSON data', () => {
+      // Does not match expected npm publish JSON data
+      const data = {
+         foo: true,
+         bar: [1, 2, 3],
+      };
 
-    it('should safely ignore unrelated formatted JSON data', () => {
-      const formattedJsonStr = JSON.stringify(data, null, 2);
-      const res = extractNpmPublishJsonData(formattedJsonStr);
+      it('should safely ignore unrelated formatted JSON data', () => {
+         const formattedJsonStr = JSON.stringify(data, null, 2);
+         const res = extractNpmPublishJsonData(formattedJsonStr);
 
-      expect(res.beforeJsonData).toMatchInlineSnapshot(`
+         expect(res.beforeJsonData).toMatchInlineSnapshot(`
         "{
           "foo": true,
           "bar": [
@@ -22,38 +22,38 @@ describe('extractNpmPublishJsonData()', () => {
           ]
         }"
       `);
-      expect(res.jsonData).toEqual(null);
-      expect(res.afterJsonData).toMatchInlineSnapshot(`""`);
-    });
+         expect(res.jsonData).toEqual(null);
+         expect(res.afterJsonData).toMatchInlineSnapshot(`""`);
+      });
 
-    it('should safely ignore unrelated unformatted JSON data', () => {
-      const unformattedJsonStr = JSON.stringify(data);
-      const res = extractNpmPublishJsonData(unformattedJsonStr);
+      it('should safely ignore unrelated unformatted JSON data', () => {
+         const unformattedJsonStr = JSON.stringify(data);
+         const res = extractNpmPublishJsonData(unformattedJsonStr);
 
-      expect(res.beforeJsonData).toMatchInlineSnapshot(
-        `"{"foo":true,"bar":[1,2,3]}"`
-      );
-      expect(res.jsonData).toEqual(null);
-      expect(res.afterJsonData).toMatchInlineSnapshot(`""`);
-    });
-  });
+         expect(res.beforeJsonData).toMatchInlineSnapshot(
+            `"{"foo":true,"bar":[1,2,3]}"`
+         );
+         expect(res.jsonData).toEqual(null);
+         expect(res.afterJsonData).toMatchInlineSnapshot(`""`);
+      });
+   });
 
-  describe('mixed unrelated JSON and non-JSON data', () => {
-    // Does not match expected npm publish JSON data
-    const data = {
-      foo: true,
-      bar: [1, 2, 3],
-    };
-    const extraContentBefore = 'Some random text';
-    const extraContentAfter = 'More random text';
+   describe('mixed unrelated JSON and non-JSON data', () => {
+      // Does not match expected npm publish JSON data
+      const data = {
+         foo: true,
+         bar: [1, 2, 3],
+      };
+      const extraContentBefore = 'Some random text';
+      const extraContentAfter = 'More random text';
 
-    it('should safely ignore unrelated mixed data containing formatted JSON', () => {
-      const formattedJsonStr = JSON.stringify(data, null, 2);
-      const res = extractNpmPublishJsonData(`${extraContentBefore}
+      it('should safely ignore unrelated mixed data containing formatted JSON', () => {
+         const formattedJsonStr = JSON.stringify(data, null, 2);
+         const res = extractNpmPublishJsonData(`${extraContentBefore}
 ${formattedJsonStr}
 ${extraContentAfter}`);
 
-      expect(res.beforeJsonData).toMatchInlineSnapshot(`
+         expect(res.beforeJsonData).toMatchInlineSnapshot(`
         "Some random text
         {
           "foo": true,
@@ -65,29 +65,29 @@ ${extraContentAfter}`);
         }
         More random text"
       `);
-      expect(res.jsonData).toEqual(null);
-      expect(res.afterJsonData).toMatchInlineSnapshot(`""`);
-    });
+         expect(res.jsonData).toEqual(null);
+         expect(res.afterJsonData).toMatchInlineSnapshot(`""`);
+      });
 
-    it('should safely ignore unrelated mixed data containing unformatted JSON', () => {
-      const unformattedJsonStr = JSON.stringify(data);
-      const res = extractNpmPublishJsonData(`${extraContentBefore}
+      it('should safely ignore unrelated mixed data containing unformatted JSON', () => {
+         const unformattedJsonStr = JSON.stringify(data);
+         const res = extractNpmPublishJsonData(`${extraContentBefore}
 ${unformattedJsonStr}
 ${extraContentAfter}`);
 
-      expect(res.beforeJsonData).toMatchInlineSnapshot(`
+         expect(res.beforeJsonData).toMatchInlineSnapshot(`
         "Some random text
         {"foo":true,"bar":[1,2,3]}
         More random text"
       `);
-      expect(res.jsonData).toEqual(null);
-      expect(res.afterJsonData).toMatchInlineSnapshot(`""`);
-    });
-  });
+         expect(res.jsonData).toEqual(null);
+         expect(res.afterJsonData).toMatchInlineSnapshot(`""`);
+      });
+   });
 
-  describe('output containing npm publish JSON data', () => {
-    it('should extract the relevant JSON data from a simple publish output string containing only the data', () => {
-      const commandOutput = `{
+   describe('output containing npm publish JSON data', () => {
+      it('should extract the relevant JSON data from a simple publish output string containing only the data', () => {
+         const commandOutput = `{
   "id": "package-a@1.0.0",
   "name": "package-a",
   "version": "1.0.0",
@@ -106,10 +106,10 @@ ${extraContentAfter}`);
   "entryCount": 1,
   "bundled": []
 }`;
-      const res = extractNpmPublishJsonData(commandOutput);
+         const res = extractNpmPublishJsonData(commandOutput);
 
-      expect(res.beforeJsonData).toMatchInlineSnapshot(`""`);
-      expect(res.jsonData).toMatchInlineSnapshot(`
+         expect(res.beforeJsonData).toMatchInlineSnapshot(`""`);
+         expect(res.jsonData).toMatchInlineSnapshot(`
         {
           "bundled": [],
           "entryCount": 1,
@@ -130,11 +130,11 @@ ${extraContentAfter}`);
           "version": "1.0.0",
         }
       `);
-      expect(res.afterJsonData).toMatchInlineSnapshot(`""`);
-    });
+         expect(res.afterJsonData).toMatchInlineSnapshot(`""`);
+      });
 
-    it('should extract the relevant JSON data from a publish output string containing lifecycle script outputs', () => {
-      const exampleCommandOutputWithLifecycleScripts = `
+      it('should extract the relevant JSON data from a publish output string containing lifecycle script outputs', () => {
+         const exampleCommandOutputWithLifecycleScripts = `
 > package-a@1.0.0 prepublishOnly
 > echo 'prepublishOnly from package-a'
 
@@ -159,11 +159,11 @@ prepublishOnly from package-a
   "bundled": []
 }
 `;
-      const res = extractNpmPublishJsonData(
-        exampleCommandOutputWithLifecycleScripts
-      );
+         const res = extractNpmPublishJsonData(
+            exampleCommandOutputWithLifecycleScripts
+         );
 
-      expect(res.beforeJsonData).toMatchInlineSnapshot(`
+         expect(res.beforeJsonData).toMatchInlineSnapshot(`
         "
         > package-a@1.0.0 prepublishOnly
         > echo 'prepublishOnly from package-a'
@@ -172,7 +172,7 @@ prepublishOnly from package-a
         "
       `);
 
-      expect(res.jsonData).toMatchInlineSnapshot(`
+         expect(res.jsonData).toMatchInlineSnapshot(`
         {
           "bundled": [],
           "entryCount": 1,
@@ -194,14 +194,14 @@ prepublishOnly from package-a
         }
       `);
 
-      expect(res.afterJsonData).toMatchInlineSnapshot(`
+         expect(res.afterJsonData).toMatchInlineSnapshot(`
         "
         "
       `);
-    });
+      });
 
-    it('should work when a user lifecycle script adds custom, unformatted JSON data to the output', () => {
-      const exampleCommandOutputWithLifecycleScripts = `
+      it('should work when a user lifecycle script adds custom, unformatted JSON data to the output', () => {
+         const exampleCommandOutputWithLifecycleScripts = `
 > package-a@1.0.0 prepublishOnly
 > node -e 'console.log(JSON.stringify({"name": "package-a", "version": "1.0.0"}));'
 
@@ -225,11 +225,11 @@ prepublishOnly from package-a
   "entryCount": 1,
   "bundled": []
 }`;
-      const res = extractNpmPublishJsonData(
-        exampleCommandOutputWithLifecycleScripts
-      );
+         const res = extractNpmPublishJsonData(
+            exampleCommandOutputWithLifecycleScripts
+         );
 
-      expect(res.beforeJsonData).toMatchInlineSnapshot(`
+         expect(res.beforeJsonData).toMatchInlineSnapshot(`
         "
         > package-a@1.0.0 prepublishOnly
         > node -e 'console.log(JSON.stringify({"name": "package-a", "version": "1.0.0"}));'
@@ -238,7 +238,7 @@ prepublishOnly from package-a
         "
       `);
 
-      expect(res.jsonData).toMatchInlineSnapshot(`
+         expect(res.jsonData).toMatchInlineSnapshot(`
         {
           "bundled": [],
           "entryCount": 1,
@@ -260,11 +260,11 @@ prepublishOnly from package-a
         }
       `);
 
-      expect(res.afterJsonData).toMatchInlineSnapshot(`""`);
-    });
+         expect(res.afterJsonData).toMatchInlineSnapshot(`""`);
+      });
 
-    it('should extract the relevant JSON data when formatted JSON data is present alongside the expected npm publish JSON data', () => {
-      const exampleCommandOutputWithFormattedJSON = `
+      it('should extract the relevant JSON data when formatted JSON data is present alongside the expected npm publish JSON data', () => {
+         const exampleCommandOutputWithFormattedJSON = `
       {
         "unrelated": true,
         "data": [
@@ -297,11 +297,11 @@ prepublishOnly from package-a
         "foo": "bar"
       }`;
 
-      const res = extractNpmPublishJsonData(
-        exampleCommandOutputWithFormattedJSON
-      );
+         const res = extractNpmPublishJsonData(
+            exampleCommandOutputWithFormattedJSON
+         );
 
-      expect(res.beforeJsonData).toMatchInlineSnapshot(`
+         expect(res.beforeJsonData).toMatchInlineSnapshot(`
         "
               {
                 "unrelated": true,
@@ -314,7 +314,7 @@ prepublishOnly from package-a
               "
       `);
 
-      expect(res.jsonData).toMatchInlineSnapshot(`
+         expect(res.jsonData).toMatchInlineSnapshot(`
         {
           "bundled": [],
           "entryCount": 1,
@@ -336,13 +336,13 @@ prepublishOnly from package-a
         }
       `);
 
-      expect(res.afterJsonData).toMatchInlineSnapshot(`
+         expect(res.afterJsonData).toMatchInlineSnapshot(`
         "
               {
                 "extra": "data",
                 "foo": "bar"
               }"
       `);
-    });
-  });
+      });
+   });
 });

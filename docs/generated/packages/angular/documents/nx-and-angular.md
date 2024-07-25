@@ -11,11 +11,11 @@ Nx evolved from being an extension of the Angular CLI to a [fully standalone CLI
 
 Nx...
 
-- helps define clear architectural guidelines and promotes best practices to organize and scale your codebase.
-- helps integrate modern tooling by actively working with devtool authors to make sure they work well with Nx and your framework of choice.
-- is adaptable: start small with a single-project setup and grow it to a monorepo when needed.
-- has an active community of contributors and plugin authors.
-- has been proven in large enterprise-level projects.
+-  helps define clear architectural guidelines and promotes best practices to organize and scale your codebase.
+-  helps integrate modern tooling by actively working with devtool authors to make sure they work well with Nx and your framework of choice.
+-  is adaptable: start small with a single-project setup and grow it to a monorepo when needed.
+-  has an active community of contributors and plugin authors.
+-  has been proven in large enterprise-level projects.
 
 Note, the Nx team's focus is on building the best possible developer productivity tool.
 
@@ -64,8 +64,8 @@ Learn about the similarities between the Angular CLI and Nx which makes it easy 
 
 Nx is not just exclusively for monorepos, but can create
 
-- a single-project workspace (basically what the Angular CLI gives you)
-- a monorepo workspace (multiple projects in a single repo)
+-  a single-project workspace (basically what the Angular CLI gives you)
+-  a monorepo workspace (multiple projects in a single repo)
 
 You can check out the [Angular single-project workspace tutorial](/getting-started/tutorials/angular-standalone-tutorial) to learn more about it.
 
@@ -164,10 +164,10 @@ Nx has more abilities to run commands in parallel, just for specific projects et
 
 An Angular-based Nx Workspace already comes with a lot of batteries included:
 
-- Prettier preconfigured
-- ESLint
-- e2e testing with [Cypress](https://www.cypress.io/) or [Playwright](https://playwright.dev/)
-- unit testing with [Jest](https://jestjs.io/)
+-  Prettier preconfigured
+-  ESLint
+-  e2e testing with [Cypress](https://www.cypress.io/) or [Playwright](https://playwright.dev/)
+-  unit testing with [Jest](https://jestjs.io/)
 
 But Nx expands beyond just that, offering automated integration with a lot of modern tools such as [Storybook](https://storybook.js.org/) or [Tailwind](https://tailwindcss.com/) just to mention a few.
 
@@ -183,13 +183,13 @@ What's the difference?
 
 `nx migrate` is a much-improved version of `ng update`. It runs the same migrations but allows you to:
 
-- Rerun the same migration multiple times.
-- Reorder migrations.
-- Skip migrations.
-- Fix migrations that "almost work".
-- Commit a partially migrated state.
-- Change versions of packages to match org requirements.
-- [Opt out of Angular updates when updating Nx versions](/recipes/tips-n-tricks/advanced-update#choosing-optional-package-updates-to-apply) as long as [the Angular version is still supported](/nx-api/angular/documents/angular-nx-version-matrix)
+-  Rerun the same migration multiple times.
+-  Reorder migrations.
+-  Skip migrations.
+-  Fix migrations that "almost work".
+-  Commit a partially migrated state.
+-  Change versions of packages to match org requirements.
+-  [Opt out of Angular updates when updating Nx versions](/recipes/tips-n-tricks/advanced-update#choosing-optional-package-updates-to-apply) as long as [the Angular version is still supported](/nx-api/angular/documents/angular-nx-version-matrix)
 
 `nx migrate` does this by splitting the process into two steps. `nx migrate latest` creates a `migrations.json` file with a list of all the migrations needed by Nx, Angular, and other packages. You can then modify that file before running `nx migrate --run-migrations` to execute those migrations.
 
@@ -242,11 +242,11 @@ Nx is designed to be fast. The Angular CLI leverages Webpack's caching, which Nx
 
 Features like
 
-- only running tasks on [affected projects](/ci/features/affected)
-- running [tasks in parallel](/features/run-tasks#run-tasks-for-multiple-projects)
-- applying [computation caching](/features/cache-task-results)
-- offering [remote caching abilities](/ci/features/remote-cache) on CI
-- offering [task distribution across machines (Nx Agents)](/ci/features/distribute-task-execution)
+-  only running tasks on [affected projects](/ci/features/affected)
+-  running [tasks in parallel](/features/run-tasks#run-tasks-for-multiple-projects)
+-  applying [computation caching](/features/cache-task-results)
+-  offering [remote caching abilities](/ci/features/remote-cache) on CI
+-  offering [task distribution across machines (Nx Agents)](/ci/features/distribute-task-execution)
 
 And, Nx already uses fast, modern tooling like [ESBuild](/nx-api/esbuild), [Vite](/nx-api/vite), Vitest and [Rspack](/nx-api/rspack) for non-Angular stacks. So once Angular is ready to use these tools, Nx will also be ready.
 
@@ -260,10 +260,10 @@ Nx goes beyond being just a CLI and comes with [Nx Console](/getting-started/edi
 
 Nx is really made to scale with you. You can
 
-- start small with a single-project workspace
-- modularize your application into more fine-grained libraries for better maintainability as your application (and team) grows ([more about that here](/getting-started/tutorials/angular-standalone-tutorial#modularizing-your-angular-app-with-local-libraries)), including mechanisms to make sure [things stay within their boundaries](/features/enforce-module-boundaries)
-- you can then migrate to a monorepo when you are ready and need one ([more here](/recipes/tips-n-tricks/standalone-to-integrated))
-- or even [add Webpack Module Federation support](/recipes/angular/module-federation-with-ssr)
+-  start small with a single-project workspace
+-  modularize your application into more fine-grained libraries for better maintainability as your application (and team) grows ([more about that here](/getting-started/tutorials/angular-standalone-tutorial#modularizing-your-angular-app-with-local-libraries)), including mechanisms to make sure [things stay within their boundaries](/features/enforce-module-boundaries)
+-  you can then migrate to a monorepo when you are ready and need one ([more here](/recipes/tips-n-tricks/standalone-to-integrated))
+-  or even [add Webpack Module Federation support](/recipes/angular/module-federation-with-ssr)
 
 ### Visualize your Workspace
 
@@ -273,105 +273,105 @@ As you start modularizing your Angular workspace, Nx can visualize it using the 
 
 ```json
 {
-  "hash": "58420bb4002bb9b6914bdeb7808c77a591a089fc82aaee11e656d73b2735e3fa",
-  "projects": [
-    {
-      "name": "shared-product-state",
-      "type": "lib",
-      "data": {
-        "tags": ["scope:shared", "type:state"]
-      }
-    },
-    {
-      "name": "shared-product-types",
-      "type": "lib",
-      "data": {
-        "tags": ["type:types", "scope:shared"]
-      }
-    },
-    {
-      "name": "shared-product-data",
-      "type": "lib",
-      "data": {
-        "tags": ["type:data", "scope:shared"]
-      }
-    },
-    {
-      "name": "cart-cart-page",
-      "type": "lib",
-      "data": {
-        "tags": ["scope:cart", "type:feature"]
-      }
-    },
-    {
-      "name": "shared-styles",
-      "type": "lib",
-      "data": {
-        "tags": ["scope:shared", "type:styles"]
-      }
-    },
-    {
-      "name": "cart-e2e",
-      "type": "e2e",
-      "data": {
-        "tags": ["scope:cart", "type:e2e"]
-      }
-    },
-    {
-      "name": "cart",
-      "type": "app",
-      "data": {
-        "tags": ["type:app", "scope:cart"]
-      }
-    }
-  ],
-  "dependencies": {
-    "shared-product-state": [
+   "hash": "58420bb4002bb9b6914bdeb7808c77a591a089fc82aaee11e656d73b2735e3fa",
+   "projects": [
       {
-        "source": "shared-product-state",
-        "target": "shared-product-data",
-        "type": "static"
+         "name": "shared-product-state",
+         "type": "lib",
+         "data": {
+            "tags": ["scope:shared", "type:state"]
+         }
       },
       {
-        "source": "shared-product-state",
-        "target": "shared-product-types",
-        "type": "static"
-      }
-    ],
-    "shared-product-types": [],
-    "shared-product-data": [
+         "name": "shared-product-types",
+         "type": "lib",
+         "data": {
+            "tags": ["type:types", "scope:shared"]
+         }
+      },
       {
-        "source": "shared-product-data",
-        "target": "shared-product-types",
-        "type": "static"
-      }
-    ],
-    "shared-e2e-utils": [],
-    "cart-cart-page": [
+         "name": "shared-product-data",
+         "type": "lib",
+         "data": {
+            "tags": ["type:data", "scope:shared"]
+         }
+      },
       {
-        "source": "cart-cart-page",
-        "target": "shared-product-state",
-        "type": "static"
+         "name": "cart-cart-page",
+         "type": "lib",
+         "data": {
+            "tags": ["scope:cart", "type:feature"]
+         }
+      },
+      {
+         "name": "shared-styles",
+         "type": "lib",
+         "data": {
+            "tags": ["scope:shared", "type:styles"]
+         }
+      },
+      {
+         "name": "cart-e2e",
+         "type": "e2e",
+         "data": {
+            "tags": ["scope:cart", "type:e2e"]
+         }
+      },
+      {
+         "name": "cart",
+         "type": "app",
+         "data": {
+            "tags": ["type:app", "scope:cart"]
+         }
       }
-    ],
-    "shared-styles": [],
-    "cart-e2e": [
-      { "source": "cart-e2e", "target": "cart", "type": "implicit" }
-    ],
-    "cart": [
-      { "source": "cart", "target": "shared-styles", "type": "implicit" },
-      { "source": "cart", "target": "cart-cart-page", "type": "static" }
-    ]
-  },
-  "workspaceLayout": {
-    "appsDir": "apps",
-    "libsDir": "libs"
-  },
-  "affectedProjectIds": [],
-  "focus": null,
-  "groupByFolder": false,
-  "exclude": [],
-  "enableTooltips": true
+   ],
+   "dependencies": {
+      "shared-product-state": [
+         {
+            "source": "shared-product-state",
+            "target": "shared-product-data",
+            "type": "static"
+         },
+         {
+            "source": "shared-product-state",
+            "target": "shared-product-types",
+            "type": "static"
+         }
+      ],
+      "shared-product-types": [],
+      "shared-product-data": [
+         {
+            "source": "shared-product-data",
+            "target": "shared-product-types",
+            "type": "static"
+         }
+      ],
+      "shared-e2e-utils": [],
+      "cart-cart-page": [
+         {
+            "source": "cart-cart-page",
+            "target": "shared-product-state",
+            "type": "static"
+         }
+      ],
+      "shared-styles": [],
+      "cart-e2e": [
+         { "source": "cart-e2e", "target": "cart", "type": "implicit" }
+      ],
+      "cart": [
+         { "source": "cart", "target": "shared-styles", "type": "implicit" },
+         { "source": "cart", "target": "cart-cart-page", "type": "static" }
+      ]
+   },
+   "workspaceLayout": {
+      "appsDir": "apps",
+      "libsDir": "libs"
+   },
+   "affectedProjectIds": [],
+   "focus": null,
+   "groupByFolder": false,
+   "exclude": [],
+   "enableTooltips": true
 }
 ```
 
@@ -399,5 +399,5 @@ There is also a guide describing how to [consolidate multiple Angular CLI projec
 
 You can learn more about Angular & Nx by following our dedicated tutorials:
 
-- [Tutorial: Building Angular Apps with the Nx Standalone Projects Setup](/getting-started/tutorials/angular-standalone-tutorial)
-- [Tutorial: Building Angular Apps in an Nx Monorepo](/getting-started/tutorials/angular-monorepo-tutorial)
+-  [Tutorial: Building Angular Apps with the Nx Standalone Projects Setup](/getting-started/tutorials/angular-standalone-tutorial)
+-  [Tutorial: Building Angular Apps in an Nx Monorepo](/getting-started/tutorials/angular-monorepo-tutorial)

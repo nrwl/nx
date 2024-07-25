@@ -10,18 +10,18 @@ import type { JsonParseOptions, JsonSerializeOptions } from '../../utils/json';
  * @param options - Optional JSON Parse Options
  */
 export function readJson<T extends object = any>(
-  tree: Tree,
-  path: string,
-  options?: JsonParseOptions
+   tree: Tree,
+   path: string,
+   options?: JsonParseOptions
 ): T {
-  if (!tree.exists(path)) {
-    throw new Error(`Cannot find ${path}`);
-  }
-  try {
-    return parseJson(tree.read(path, 'utf-8'), options);
-  } catch (e) {
-    throw new Error(`Cannot parse ${path}: ${e.message}`);
-  }
+   if (!tree.exists(path)) {
+      throw new Error(`Cannot find ${path}`);
+   }
+   try {
+      return parseJson(tree.read(path, 'utf-8'), options);
+   } catch (e) {
+      throw new Error(`Cannot parse ${path}: ${e.message}`);
+   }
 }
 
 /**
@@ -33,13 +33,13 @@ export function readJson<T extends object = any>(
  * @param options Optional JSON Serialize Options
  */
 export function writeJson<T extends object = object>(
-  tree: Tree,
-  path: string,
-  value: T,
-  options?: JsonSerializeOptions
+   tree: Tree,
+   path: string,
+   value: T,
+   options?: JsonSerializeOptions
 ): void {
-  const serialized = serializeJson(value, options);
-  tree.write(path, `${serialized}\n`);
+   const serialized = serializeJson(value, options);
+   tree.write(path, `${serialized}\n`);
 }
 
 /**
@@ -51,11 +51,11 @@ export function writeJson<T extends object = object>(
  * @param options Optional JSON Parse and Serialize Options
  */
 export function updateJson<T extends object = any, U extends object = T>(
-  tree: Tree,
-  path: string,
-  updater: (value: T) => U,
-  options?: JsonParseOptions & JsonSerializeOptions
+   tree: Tree,
+   path: string,
+   updater: (value: T) => U,
+   options?: JsonParseOptions & JsonSerializeOptions
 ): void {
-  const updatedValue = updater(readJson(tree, path, options));
-  writeJson(tree, path, updatedValue, options);
+   const updatedValue = updater(readJson(tree, path, options));
+   writeJson(tree, path, updatedValue, options);
 }

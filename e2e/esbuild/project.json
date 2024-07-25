@@ -1,9 +1,9 @@
 {
-  "name": "e2e-esbuild",
-  "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "e2e/esbuild",
-  "projectType": "application",
-  "implicitDependencies": ["esbuild"],
-  "// targets": "to see all targets run: nx show project e2e-esbuild --web",
-  "targets": {}
+   "name": "e2e-esbuild",
+   "$schema": "../../node_modules/nx/schemas/project-schema.json",
+   "sourceRoot": "e2e/esbuild",
+   "projectType": "application",
+   "implicitDependencies": ["esbuild"],
+   "// targets": "to see all targets run: nx show project e2e-esbuild --web",
+   "targets": {}
 }

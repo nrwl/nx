@@ -5,12 +5,12 @@ description: The Nx Plugin for Cypress contains executors and generators that su
 
 Cypress is a test runner built for the modern web. It has a lot of great features:
 
-- Time travel
-- Real-time reloads
-- Automatic waiting
-- Spies, stubs, and clocks
-- Network traffic control
-- Screenshots and videos
+-  Time travel
+-  Real-time reloads
+-  Automatic waiting
+-  Spies, stubs, and clocks
+-  Network traffic control
+-  Screenshots and videos
 
 ## Setting Up @nx/cypress
 
@@ -53,10 +53,10 @@ Since Nx 18, Nx plugins can infer tasks for your projects based on the configura
 
 The `@nx/cypress` plugin will create a task for any project that has a Cypress configuration file present. Any of the following files will be recognized as a Cypress configuration file:
 
-- `cypress.config.js`
-- `cypress.config.ts`
-- `cypress.config.mjs`
-- `cypress.config.cjs`
+-  `cypress.config.js`
+-  `cypress.config.ts`
+-  `cypress.config.mjs`
+-  `cypress.config.cjs`
 
 ### View Inferred Tasks
 
@@ -68,17 +68,17 @@ The `@nx/cypress/plugin` is configured in the `plugins` array in `nx.json`.
 
 ```json {% fileName="nx.json" %}
 {
-  "plugins": [
-    {
-      "plugin": "@nx/cypress/plugin",
-      "options": {
-        "targetName": "e2e",
-        "ciTargetName": "e2e-ci",
-        "componentTestingTargetName": "component-test",
-        "openTargetName": "open-cypress"
+   "plugins": [
+      {
+         "plugin": "@nx/cypress/plugin",
+         "options": {
+            "targetName": "e2e",
+            "ciTargetName": "e2e-ci",
+            "componentTestingTargetName": "component-test",
+            "openTargetName": "open-cypress"
+         }
       }
-    }
-  ]
+   ]
 }
 ```
 
@@ -95,18 +95,18 @@ import { defineConfig } from 'cypress';
 import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
 
 export default defineConfig({
-  e2e: {
-    ...nxE2EPreset(__filename, {
-      cypressDir: 'src',
-      bundler: 'vite',
-      webServerCommands: {
-        default: 'nx run my-project:serve',
-        production: 'nx run my-project:preview',
-      },
-      ciWebServerCommand: 'nx run my-project:serve-static',
-    }),
-    baseUrl: 'http://localhost:4200',
-  },
+   e2e: {
+      ...nxE2EPreset(__filename, {
+         cypressDir: 'src',
+         bundler: 'vite',
+         webServerCommands: {
+            default: 'nx run my-project:serve',
+            production: 'nx run my-project:preview',
+         },
+         ciWebServerCommand: 'nx run my-project:serve-static',
+      }),
+      baseUrl: 'http://localhost:4200',
+   },
 });
 ```
 

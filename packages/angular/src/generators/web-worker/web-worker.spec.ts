@@ -7,87 +7,87 @@ import { generateTestApplication } from '../utils/testing';
 import { webWorkerGenerator } from './web-worker';
 
 describe('webWorker generator', () => {
-  let tree: Tree;
-  const appName = 'ng-app1';
+   let tree: Tree;
+   const appName = 'ng-app1';
 
-  beforeEach(async () => {
-    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-    await generateTestApplication(tree, { name: appName, skipFormat: true });
-    jest.clearAllMocks();
-  });
+   beforeEach(async () => {
+      tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+      await generateTestApplication(tree, { name: appName, skipFormat: true });
+      jest.clearAllMocks();
+   });
 
-  it('should generate files', async () => {
-    await webWorkerGenerator(tree, {
-      name: 'test-worker',
-      project: appName,
-      skipFormat: true,
-    });
+   it('should generate files', async () => {
+      await webWorkerGenerator(tree, {
+         name: 'test-worker',
+         project: appName,
+         skipFormat: true,
+      });
 
-    expect(tree.exists(`${appName}/tsconfig.worker.json`));
-    expect(tree.exists(`${appName}/src/app/test-worker.worker.ts`));
-  });
+      expect(tree.exists(`${appName}/tsconfig.worker.json`));
+      expect(tree.exists(`${appName}/src/app/test-worker.worker.ts`));
+   });
 
-  it('should extend from tsconfig.base.json', async () => {
-    await webWorkerGenerator(tree, {
-      name: 'test-worker',
-      project: appName,
-      skipFormat: true,
-    });
+   it('should extend from tsconfig.base.json', async () => {
+      await webWorkerGenerator(tree, {
+         name: 'test-worker',
+         project: appName,
+         skipFormat: true,
+      });
 
-    expect(tree.read(`${appName}/tsconfig.worker.json`, 'utf-8')).toContain(
-      '"extends": "../tsconfig.base.json"'
-    );
-  });
+      expect(tree.read(`${appName}/tsconfig.worker.json`, 'utf-8')).toContain(
+         '"extends": "../tsconfig.base.json"'
+      );
+   });
 
-  it('should extend from tsconfig.json when used instead of tsconfig.base.json', async () => {
-    tree.rename('tsconfig.base.json', 'tsconfig.json');
+   it('should extend from tsconfig.json when used instead of tsconfig.base.json', async () => {
+      tree.rename('tsconfig.base.json', 'tsconfig.json');
 
-    await webWorkerGenerator(tree, {
-      name: 'test-worker',
-      project: appName,
-      skipFormat: true,
-    });
+      await webWorkerGenerator(tree, {
+         name: 'test-worker',
+         project: appName,
+         skipFormat: true,
+      });
 
-    expect(tree.read(`${appName}/tsconfig.worker.json`, 'utf-8')).toContain(
-      '"extends": "../tsconfig.json"'
-    );
-  });
+      expect(tree.read(`${appName}/tsconfig.worker.json`, 'utf-8')).toContain(
+         '"extends": "../tsconfig.json"'
+      );
+   });
 
-  it('should format files', async () => {
-    jest.spyOn(devkit, 'formatFiles');
+   it('should format files', async () => {
+      jest.spyOn(devkit, 'formatFiles');
 
-    await webWorkerGenerator(tree, { name: 'test-worker', project: appName });
+      await webWorkerGenerator(tree, { name: 'test-worker', project: appName });
 
-    expect(devkit.formatFiles).toHaveBeenCalled();
-  });
+      expect(devkit.formatFiles).toHaveBeenCalled();
+   });
 
-  it('should not format files when --skipFormat=true', async () => {
-    jest.spyOn(devkit, 'formatFiles');
+   it('should not format files when --skipFormat=true', async () => {
+      jest.spyOn(devkit, 'formatFiles');
 
-    await webWorkerGenerator(tree, {
-      name: 'test-worker',
-      project: appName,
-      skipFormat: true,
-    });
+      await webWorkerGenerator(tree, {
+         name: 'test-worker',
+         project: appName,
+         skipFormat: true,
+      });
 
-    expect(devkit.formatFiles).not.toHaveBeenCalled();
-  });
+      expect(devkit.formatFiles).not.toHaveBeenCalled();
+   });
 
-  it('should add the snippet correctly', async () => {
-    // ARRANGE
-    tree.write(`${appName}/src/app/test-worker.ts`, ``);
+   it('should add the snippet correctly', async () => {
+      // ARRANGE
+      tree.write(`${appName}/src/app/test-worker.ts`, ``);
 
-    // ACT
-    await webWorkerGenerator(tree, {
-      name: 'test-worker',
-      project: appName,
-      snippet: true,
-      skipFormat: true,
-    });
+      // ACT
+      await webWorkerGenerator(tree, {
+         name: 'test-worker',
+         project: appName,
+         snippet: true,
+         skipFormat: true,
+      });
 
-    // ASSERT
-    expect(tree.read(`${appName}/src/app/test-worker.ts`, 'utf-8'))
-      .toMatchInlineSnapshot(`
+      // ASSERT
+      expect(tree.read(`${appName}/src/app/test-worker.ts`, 'utf-8'))
+         .toMatchInlineSnapshot(`
       "if (typeof Worker !== 'undefined') {
       // Create a new
       const worker = new Worker(new URL('./test-worker.worker', import.meta.url));
@@ -100,8 +100,8 @@ describe('webWorker generator', () => {
       // You should add a fallback so that your program still executes correctly.
       }"
     `);
-    expect(tree.read(`${appName}/src/app/test-worker.worker.ts`, 'utf-8'))
-      .toMatchInlineSnapshot(`
+      expect(tree.read(`${appName}/src/app/test-worker.worker.ts`, 'utf-8'))
+         .toMatchInlineSnapshot(`
       "/// <reference lib="webworker" />
 
       addEventListener('message', ({ data }) => {
@@ -110,5 +110,5 @@ describe('webWorker generator', () => {
       });
       "
     `);
-  });
+   });
 });

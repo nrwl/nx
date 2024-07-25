@@ -1,5 +1,6 @@
 {
-  "singleQuote": true,
-  "endOfLine": "lf",
-  "plugins": ["prettier-plugin-tailwindcss"]
+   "singleQuote": true,
+   "endOfLine": "lf",
+   "plugins": ["prettier-plugin-tailwindcss"],
+   "tabWidth": 3
 }

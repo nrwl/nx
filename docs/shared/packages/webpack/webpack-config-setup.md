@@ -61,22 +61,23 @@ const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
 const { join } = require('path');
 
 module.exports = {
-  output: {
-    path: join(__dirname, '../../dist/apps/demo'),
-  },
-  devServer: {
-    port: 4200,
-  },
-  plugins: [
-    new NxAppWebpackPlugin({
-      main: './src/main.ts',
-      tsConfig: './tsconfig.app.json',
-      index: './src/index.html',
-      styles: ['./src/styles.css'],
-      outputHashing: process.env['NODE_ENV'] === 'production' ? 'all' : 'none',
-      optimization: process.env['NODE_ENV'] === 'production',
-    }),
-  ],
+   output: {
+      path: join(__dirname, '../../dist/apps/demo'),
+   },
+   devServer: {
+      port: 4200,
+   },
+   plugins: [
+      new NxAppWebpackPlugin({
+         main: './src/main.ts',
+         tsConfig: './tsconfig.app.json',
+         index: './src/index.html',
+         styles: ['./src/styles.css'],
+         outputHashing:
+            process.env['NODE_ENV'] === 'production' ? 'all' : 'none',
+         optimization: process.env['NODE_ENV'] === 'production',
+      }),
+   ],
 };
 ```
 
@@ -96,16 +97,16 @@ Nx supports a function to be returned from the Webpack configuration file. This 
 const { composePlugins, withNx } = require('@nx/webpack');
 
 module.exports = composePlugins(
-  // Default Nx composable plugin
-  withNx(),
-  // Custom composable plugin
-  (config, { options, context }) => {
-    // `config` is the Webpack configuration object
-    // `options` is the options passed to the `@nx/webpack:webpack` executor
-    // `context` is the context passed to the `@nx/webpack:webpack` executor
-    // customize configuration here
-    return config;
-  }
+   // Default Nx composable plugin
+   withNx(),
+   // Custom composable plugin
+   (config, { options, context }) => {
+      // `config` is the Webpack configuration object
+      // `options` is the options passed to the `@nx/webpack:webpack` executor
+      // `context` is the context passed to the `@nx/webpack:webpack` executor
+      // customize configuration here
+      return config;
+   }
 );
 ```
 
@@ -137,28 +138,29 @@ const { NxReactWebpackPlugin } = require('@nx/react/webpack-plugin');
 const { join } = require('path');
 
 module.exports = {
-  output: {
-    path: join(__dirname, '../../dist/apps/demo'),
-  },
-  devServer: {
-    port: 4200,
-  },
-  plugins: [
-    new NxAppWebpackPlugin({
-      tsConfig: './tsconfig.app.json',
-      compiler: 'swc',
-      main: './src/main.tsx',
-      index: '.src/index.html',
-      styles: ['./src/styles.css'],
-      outputHashing: process.env['NODE_ENV'] === 'production' ? 'all' : 'none',
-      optimization: process.env['NODE_ENV'] === 'production',
-    }),
-    new NxReactWebpackPlugin({
-      // Uncomment this line if you don't want to use SVGR
-      // See: https://react-svgr.com/
-      // svgr: false
-    }),
-  ],
+   output: {
+      path: join(__dirname, '../../dist/apps/demo'),
+   },
+   devServer: {
+      port: 4200,
+   },
+   plugins: [
+      new NxAppWebpackPlugin({
+         tsConfig: './tsconfig.app.json',
+         compiler: 'swc',
+         main: './src/main.tsx',
+         index: '.src/index.html',
+         styles: ['./src/styles.css'],
+         outputHashing:
+            process.env['NODE_ENV'] === 'production' ? 'all' : 'none',
+         optimization: process.env['NODE_ENV'] === 'production',
+      }),
+      new NxReactWebpackPlugin({
+         // Uncomment this line if you don't want to use SVGR
+         // See: https://react-svgr.com/
+         // svgr: false
+      }),
+   ],
 };
 ```
 
@@ -171,13 +173,13 @@ const { withReact } = require('@nx/react');
 
 // Nx composable plugins for webpack.
 module.exports = composePlugins(
-  withNx(),
-  withReact(),
-  (config, { options, context }) => {
-    // Update the webpack configuration as needed here.
-    // e.g. config.plugins.push(new MyPlugin())
-    return config;
-  }
+   withNx(),
+   withReact(),
+   (config, { options, context }) => {
+      // Update the webpack configuration as needed here.
+      // e.g. config.plugins.push(new MyPlugin())
+      return config;
+   }
 );
 ```
 
@@ -202,16 +204,16 @@ const withModuleFederation = require('@nx/react/module-federation');
 // or `const withModuleFederation = require('@nx/angular/module-federation');`
 
 module.exports = composePlugins(
-  withNx(),
-  async (config, { options, context }) => {
-    const federatedModules = await withModuleFederation({
-      // your options here
-    });
+   withNx(),
+   async (config, { options, context }) => {
+      const federatedModules = await withModuleFederation({
+         // your options here
+      });
 
-    return merge(federatedModules(config, { options, context }), {
-      // overwrite values here
-    });
-  }
+      return merge(federatedModules(config, { options, context }), {
+         // overwrite values here
+      });
+   }
 );
 ```
 
@@ -226,13 +228,13 @@ Next.js supports Webpack customization in the `next.config.js` file.
 const { withNx } = require('@nx/next/plugins/with-nx');
 
 const nextConfig = {
-  webpack: (
-    config,
-    { buildId, dev, isServer, defaultLoaders, nextRuntime, webpack }
-  ) => {
-    // Important: return the modified config
-    return config;
-  },
+   webpack: (
+      config,
+      { buildId, dev, isServer, defaultLoaders, nextRuntime, webpack }
+   ) => {
+      // Important: return the modified config
+      return config;
+   },
 };
 
 return withNx(nextConfig);

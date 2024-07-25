@@ -16,8 +16,8 @@ nx migrate latest # same as nx migrate nx@latest
 
 This performs the following changes:
 
-- Updates the versions of the relevant packages in the `package.json` file.
-- Generates a `migrations.json` if there are pending migrations.
+-  Updates the versions of the relevant packages in the `package.json` file.
+-  Generates a `migrations.json` if there are pending migrations.
 
 ### Step 2: Running migrations
 
@@ -41,10 +41,10 @@ Migrating Jest, Cypress, ESLint, React, Angular, Next, and more is a difficult t
 
 Say you want to migrate from Nx 17.1.0 to Nx 18.2.4. The following steps are more likely to work comparing to `nx migrate 18.2.4`.
 
-- Run `nx migrate 17.3.2` to update the latest version in the 17.x branch.
-- Run `nx migrate --run-migrations`.
-- Next, run `nx migrate 18.2.4`.
-- Run `nx migrate --run-migrations`.
+-  Run `nx migrate 17.3.2` to update the latest version in the 17.x branch.
+-  Run `nx migrate --run-migrations`.
+-  Next, run `nx migrate 18.2.4`.
+-  Run `nx migrate --run-migrations`.
 
 {% callout type="warning" title="Angular updates" %}
 If your workspace uses Angular, this becomes a requirement rather than a recommendation. The Angular packages maintain migrations for a single major version at a time. If you try to update over multiple major versions, only the migrations for the latest major version will be applied. This can lead to issues in your workspace.
@@ -112,10 +112,10 @@ For small projects, running all the migrations at once often succeeds without an
 
 All you need to do is amend the JSON file in whatever way makes sense based on your circumstances, for example:
 
-- You may have to skip a migration.
-- You may want to run one migration at a time to address minor issues.
-- You may want to reorder migrations.
-- You may want to run the same migration multiple time if the process takes a long time and you had to rebase.
+-  You may have to skip a migration.
+-  You may want to run one migration at a time to address minor issues.
+-  You may want to reorder migrations.
+-  You may want to run the same migration multiple time if the process takes a long time and you had to rebase.
 
 Because you can run `nx migrate --run-migrations` as many times as you want, you can achieve all of that by commenting out and reordering items in `migrations.json`. The migration process can take a long time, depending on the number of migrations, so it is useful to commit the migrations file with the partially-updated repo alongside any changes which were created by previously completed migrations.
 
@@ -159,8 +159,8 @@ nx migrate latest --from=nx@16.0.0 --exclude-applied-migrations
 
 A couple of things are happening there:
 
-- The `--from=nx@16.0.0` flag tells the `migrate` command to use the version **16.0.0** as the installed version for the `nx` package and all the first-party Nx plugins. Note we use a version lower than the one where the update was meant to happen. This is to account for the fact that the update is normally targeted to a prerelease version for testing it before the final release.
-- The `--exclude-applied-migrations` flag tells the `migrate` command not to collect migrations that should have been applied on previous updates.
+-  The `--from=nx@16.0.0` flag tells the `migrate` command to use the version **16.0.0** as the installed version for the `nx` package and all the first-party Nx plugins. Note we use a version lower than the one where the update was meant to happen. This is to account for the fact that the update is normally targeted to a prerelease version for testing it before the final release.
+-  The `--exclude-applied-migrations` flag tells the `migrate` command not to collect migrations that should have been applied on previous updates.
 
 So, the above command will effectively collect any package update and migration meant to run if your workspace had `nx@16.0.0` installed while excluding those that should have been applied before. You can provide a different older version to collect migrations from.
 
@@ -202,25 +202,25 @@ If you don't have the command and need to find out from which version to run the
 
 ```jsonc {% fileName="node_modules/@nx/angular/migrations.json" %}
 {
-  // ...
-  "packageJsonUpdates": {
-    // ...
-    "16.1.0": {
-      "version": "16.1.0-beta.1",
-      "x-prompt": "Do you want to update the Angular version to v16?",
-      "requires": {
-        "@angular/core": ">=15.2.0 <16.0.0"
-      },
-      "packages": {
-        "@angular/core": {
-          "version": "~16.0.0",
-          "alwaysAddToPackageJson": true
-        }
-        // ...
+   // ...
+   "packageJsonUpdates": {
+      // ...
+      "16.1.0": {
+         "version": "16.1.0-beta.1",
+         "x-prompt": "Do you want to update the Angular version to v16?",
+         "requires": {
+            "@angular/core": ">=15.2.0 <16.0.0"
+         },
+         "packages": {
+            "@angular/core": {
+               "version": "~16.0.0",
+               "alwaysAddToPackageJson": true
+            }
+            // ...
+         }
       }
-    }
-    // ...
-  }
+      // ...
+   }
 }
 ```
 

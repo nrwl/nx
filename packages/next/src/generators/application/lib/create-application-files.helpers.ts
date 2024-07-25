@@ -1,5 +1,5 @@
 export function createAppJsx(name: string) {
-  return `
+   return `
     <div className="wrapper">
       <div className="container">
         <div id="welcome">
@@ -449,7 +449,7 @@ export function createAppJsx(name: string) {
 }
 
 export function createStyleRules() {
-  return `
+   return `
     html {
       -webkit-text-size-adjust: 100%;
       font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica Neue, Arial, Noto Sans, sans-serif, Apple Color Emoji, Segoe UI Emoji, Segoe UI Symbol, Noto Color Emoji;

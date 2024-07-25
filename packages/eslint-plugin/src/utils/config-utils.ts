@@ -4,10 +4,10 @@
  * @returns
  */
 export function packageExists(name: string): boolean {
-  try {
-    require.resolve(name);
-    return true;
-  } catch {
-    return false;
-  }
+   try {
+      require.resolve(name);
+      return true;
+   } catch {
+      return false;
+   }
 }

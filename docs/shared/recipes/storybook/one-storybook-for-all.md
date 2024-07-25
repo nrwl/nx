@@ -56,17 +56,17 @@ import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { mergeConfig } from 'vite';
 
 const config: StorybookConfig = {
-  stories: ['../../**/ui/**/src/lib/**/*.stories.@(js|jsx|ts|tsx|mdx)'],
-  addons: ['@storybook/addon-essentials', '@storybook/addon-interactions'],
-  framework: {
-    name: '@storybook/react-vite',
-    options: {},
-  },
+   stories: ['../../**/ui/**/src/lib/**/*.stories.@(js|jsx|ts|tsx|mdx)'],
+   addons: ['@storybook/addon-essentials', '@storybook/addon-interactions'],
+   framework: {
+      name: '@storybook/react-vite',
+      options: {},
+   },
 
-  viteFinal: async (config) =>
-    mergeConfig(config, {
-      plugins: [nxViteTsPaths()],
-    }),
+   viteFinal: async (config) =>
+      mergeConfig(config, {
+         plugins: [nxViteTsPaths()],
+      }),
 };
 
 export default config;
@@ -79,12 +79,12 @@ For example:
 ```javascript
 // ...
 const config: StorybookConfig = {
-  stories: [
-    '../../**/ui/**/src/lib/**/*.stories.@(js|jsx|ts|tsx|mdx)',
-    '../../**/src/lib/**/*.stories.@(js|jsx|ts|tsx|mdx)',
-    // ...
-  ],
-  // ...
+   stories: [
+      '../../**/ui/**/src/lib/**/*.stories.@(js|jsx|ts|tsx|mdx)',
+      '../../**/src/lib/**/*.stories.@(js|jsx|ts|tsx|mdx)',
+      // ...
+   ],
+   // ...
 };
 ```
 
@@ -94,12 +94,12 @@ Here is a sample `libs/storybook-host/.storybook/tsconfig.json` file:
 
 ```json {% fileName="libs/storybook-host/.storybook/tsconfig.json" highlightLines=[7] %}
 {
-  "extends": "../tsconfig.json",
-  "compilerOptions": {
-    "emitDecoratorMetadata": true
-  },
-  "exclude": ["../**/*.spec.ts"],
-  "include": ["../../**/ui/**/src/lib/**/*.stories.ts", "*.ts"]
+   "extends": "../tsconfig.json",
+   "compilerOptions": {
+      "emitDecoratorMetadata": true
+   },
+   "exclude": ["../**/*.spec.ts"],
+   "include": ["../../**/ui/**/src/lib/**/*.stories.ts", "*.ts"]
 }
 ```
 
@@ -129,11 +129,11 @@ nx test-storybook storybook-host
 
 Can be used for:
 
-- Workspaces with multiple apps and libraries, all using a single framework
+-  Workspaces with multiple apps and libraries, all using a single framework
 
 Ideal for:
 
-- Workspaces with a single app and multiple libraries all using a single framework
+-  Workspaces with a single app and multiple libraries all using a single framework
 
 ## Extras - Dependencies
 
@@ -143,18 +143,18 @@ The good thing is that there is a solution to this. You can manually add the pro
 
 ```json {% fileName="libs/storybook-host/project.json" highlightLines=["6-14"] %}
 {
-  "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "libs/storybook-host/src",
-  "projectType": "library",
-  "tags": ["type:storybook"],
-  "implicitDependencies": [
-    "admin-ui-footer",
-    "admin-ui-header",
-    "client-ui-footer",
-    "client-ui-header",
-    "shared-ui-button",
-    "shared-ui-main",
-    "shared-ui-notification"
-  ]
+   "$schema": "../../node_modules/nx/schemas/project-schema.json",
+   "sourceRoot": "libs/storybook-host/src",
+   "projectType": "library",
+   "tags": ["type:storybook"],
+   "implicitDependencies": [
+      "admin-ui-footer",
+      "admin-ui-header",
+      "client-ui-footer",
+      "client-ui-header",
+      "shared-ui-button",
+      "shared-ui-main",
+      "shared-ui-notification"
+   ]
 }
 ```

@@ -1,10 +1,10 @@
 export { readTsConfig } from './src/utilities/ts-config';
 export { ProjectType, projectRootDir } from './src/utils/project-type';
 export {
-  renameSync,
-  updateJsonFile,
-  copyFile,
-  createDirectory,
+   renameSync,
+   updateJsonFile,
+   copyFile,
+   createDirectory,
 } from './src/utilities/fileutils';
 
 export { names } from '@nx/devkit';
@@ -12,15 +12,15 @@ export { names } from '@nx/devkit';
 export { output } from './src/utilities/output';
 
 export {
-  readWorkspaceConfig,
-  readPackageJson,
+   readWorkspaceConfig,
+   readPackageJson,
 } from 'nx/src/project-graph/file-utils';
 
 export {
-  getWorkspacePath,
-  editTarget,
-  parseTarget,
-  serializeTarget,
+   getWorkspacePath,
+   editTarget,
+   parseTarget,
+   serializeTarget,
 } from './src/utils/cli-config-utils';
 
 export { Linter } from './src/utils/lint';

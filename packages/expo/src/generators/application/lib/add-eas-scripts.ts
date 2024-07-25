@@ -63,13 +63,13 @@ symlink(join(projectRoot, 'node_modules'), join(workspaceRoot, 'node_modules'), 
 `;
 
 export function addEasScripts(tree: Tree) {
-  const preInstallScriptPath = 'tools/scripts/eas-build-pre-install.mjs';
-  const postInstallScriptPath = 'tools/scripts/eas-build-post-install.mjs';
+   const preInstallScriptPath = 'tools/scripts/eas-build-pre-install.mjs';
+   const postInstallScriptPath = 'tools/scripts/eas-build-post-install.mjs';
 
-  if (!tree.exists(preInstallScriptPath)) {
-    tree.write(preInstallScriptPath, preInstallScript);
-  }
-  if (!tree.exists(postInstallScriptPath)) {
-    tree.write(postInstallScriptPath, postInstallScript);
-  }
+   if (!tree.exists(preInstallScriptPath)) {
+      tree.write(preInstallScriptPath, preInstallScript);
+   }
+   if (!tree.exists(postInstallScriptPath)) {
+      tree.write(postInstallScriptPath, postInstallScript);
+   }
 }

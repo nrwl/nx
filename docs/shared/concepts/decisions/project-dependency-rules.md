@@ -110,40 +110,40 @@ In order to enforce the dependency constraints that were listed for each type, y
 
 ```json {% fileName="/.eslintrc.json" %}
 {
-  "root": true,
-  "ignorePatterns": ["**/*"],
-  "plugins": ["@nx"],
-  "overrides": [
-    {
-      "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
-      "rules": {
-        "@nx/enforce-module-boundaries": [
-          "error",
-          {
-            "allow": [],
-            "depConstraints": [
-              {
-                "sourceTag": "type:feature",
-                "onlyDependOnLibsWithTags": [
-                  "type:feature",
-                  "type:ui",
-                  "type:util"
-                ]
-              },
-              {
-                "sourceTag": "type:ui",
-                "onlyDependOnLibsWithTags": ["type:ui", "type:util"]
-              },
-              {
-                "sourceTag": "type:util",
-                "onlyDependOnLibsWithTags": ["type:util"]
-              }
+   "root": true,
+   "ignorePatterns": ["**/*"],
+   "plugins": ["@nx"],
+   "overrides": [
+      {
+         "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
+         "rules": {
+            "@nx/enforce-module-boundaries": [
+               "error",
+               {
+                  "allow": [],
+                  "depConstraints": [
+                     {
+                        "sourceTag": "type:feature",
+                        "onlyDependOnLibsWithTags": [
+                           "type:feature",
+                           "type:ui",
+                           "type:util"
+                        ]
+                     },
+                     {
+                        "sourceTag": "type:ui",
+                        "onlyDependOnLibsWithTags": ["type:ui", "type:util"]
+                     },
+                     {
+                        "sourceTag": "type:util",
+                        "onlyDependOnLibsWithTags": ["type:util"]
+                     }
+                  ]
+               }
             ]
-          }
-        ]
+         }
       }
-    }
-  ]
+   ]
 }
 ```
 
@@ -151,5 +151,5 @@ In order to enforce the dependency constraints that were listed for each type, y
 
 You will probably come up with other library types that make sense for your organization. That's fine. Just keep a few things in mind:
 
-- Keep the number of library types low
-- Clearly document what each type of library means
+-  Keep the number of library types low
+-  Clearly document what each type of library means

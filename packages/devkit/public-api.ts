@@ -17,8 +17,8 @@ export { formatFiles } from './src/generators/format-files';
  * @category Generators
  */
 export {
-  generateFiles,
-  OverwriteStrategy,
+   generateFiles,
+   OverwriteStrategy,
 } from './src/generators/generate-files';
 
 /**
@@ -42,8 +42,8 @@ export { runTasksInSerial } from './src/generators/run-tasks-in-serial';
 export { visitNotIgnoredFiles } from './src/generators/visit-not-ignored-files';
 
 export {
-  parseTargetString,
-  targetToTargetString,
+   parseTargetString,
+   targetToTargetString,
 } from './src/executors/parse-target-string';
 
 /**
@@ -55,10 +55,10 @@ export { readTargetOptions } from './src/executors/read-target-options';
  * @category Utils
  */
 export {
-  addDependenciesToPackageJson,
-  ensurePackage,
-  removeDependenciesFromPackageJson,
-  NX_VERSION,
+   addDependenciesToPackageJson,
+   ensurePackage,
+   removeDependenciesFromPackageJson,
+   NX_VERSION,
 } from './src/utils/package-json';
 
 /**
@@ -75,17 +75,17 @@ export { names } from './src/utils/names';
  * @category Utils
  */
 export {
-  getWorkspaceLayout,
-  extractLayoutDirectory,
+   getWorkspaceLayout,
+   extractLayoutDirectory,
 } from './src/utils/get-workspace-layout';
 
 /**
  * @category Utils
  */
 export type {
-  StringChange,
-  StringDeletion,
-  StringInsertion,
+   StringChange,
+   StringDeletion,
+   StringInsertion,
 } from './src/utils/string-change';
 
 /**

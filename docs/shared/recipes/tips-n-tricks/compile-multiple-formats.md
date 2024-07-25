@@ -24,17 +24,17 @@ You can then configure Rollup to compile your library by adding a `build` target
 
 ```jsonc {% fileName="packages/my-awesome-lib/project.json" %}
 {
-  "name": "my-awesome-lib",
-  "nx": {
-    "targets": {
-      "build": {
-        "executor": "@nx/rollup:rollup",
-        "options": {
-          "main": "packages/my-awesome-lib/src/index.ts"
-        }
+   "name": "my-awesome-lib",
+   "nx": {
+      "targets": {
+         "build": {
+            "executor": "@nx/rollup:rollup",
+            "options": {
+               "main": "packages/my-awesome-lib/src/index.ts"
+            }
+         }
       }
-    }
-  }
+   }
 }
 ```
 
@@ -43,15 +43,15 @@ You can then configure Rollup to compile your library by adding a `build` target
 
 ```jsonc {% fileName="packages/my-awesome-lib/project.json" %}
 {
-  "name": "my-awesome-lib",
-  "targets": {
-    "build": {
-      "executor": "@nx/rollup:rollup",
-      "options": {
-        "main": "packages/my-awesome-lib/src/index.ts"
+   "name": "my-awesome-lib",
+   "targets": {
+      "build": {
+         "executor": "@nx/rollup:rollup",
+         "options": {
+            "main": "packages/my-awesome-lib/src/index.ts"
+         }
       }
-    }
-  }
+   }
 }
 ```
 
@@ -66,18 +66,18 @@ You'll need to specify `format`, `additionalEntryPoints` and `generateExportsFie
 
 ```jsonc {% fileName="packages/my-awesome-lib/project.json" highlightLines=["8-10"] %}
 {
-  "name": "my-awesome-lib",
-  "targets": {
-    "build": {
-      "executor": "@nx/rollup:rollup",
-      "options": {
-        "main": "packages/my-awesome-lib/src/index.ts",
-        "format": ["esm", "cjs"],
-        "additionalEntryPoints": ["packages/my-awesome-lib/src/foo.ts"],
-        "generateExportsField": true
+   "name": "my-awesome-lib",
+   "targets": {
+      "build": {
+         "executor": "@nx/rollup:rollup",
+         "options": {
+            "main": "packages/my-awesome-lib/src/index.ts",
+            "format": ["esm", "cjs"],
+            "additionalEntryPoints": ["packages/my-awesome-lib/src/foo.ts"],
+            "generateExportsField": true
+         }
       }
-    }
-  }
+   }
 }
 ```
 

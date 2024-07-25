@@ -1,34 +1,34 @@
 {
-  "name": "nx/node",
-  "version": "0.1",
-  "extends": ["@nx/workspace"],
-  "generators": {
-    "init": {
-      "factory": "./src/generators/init/init",
-      "schema": "./src/generators/init/schema.json",
-      "description": "Initialize the `@nx/node` plugin.",
-      "aliases": ["ng-add"],
-      "hidden": true
-    },
-    "application": {
-      "factory": "./src/generators/application/application#applicationGeneratorInternal",
-      "schema": "./src/generators/application/schema.json",
-      "aliases": ["app"],
-      "x-type": "application",
-      "description": "Create a node application."
-    },
-    "library": {
-      "factory": "./src/generators/library/library#libraryGeneratorInternal",
-      "schema": "./src/generators/library/schema.json",
-      "aliases": ["lib"],
-      "x-type": "library",
-      "description": "Create a node library."
-    },
-    "setup-docker": {
-      "factory": "./src/generators/setup-docker/setup-docker",
-      "schema": "./src/generators/setup-docker/schema.json",
-      "description": "Set up Docker configuration for a project.",
-      "hidden": false
-    }
-  }
+   "name": "nx/node",
+   "version": "0.1",
+   "extends": ["@nx/workspace"],
+   "generators": {
+      "init": {
+         "factory": "./src/generators/init/init",
+         "schema": "./src/generators/init/schema.json",
+         "description": "Initialize the `@nx/node` plugin.",
+         "aliases": ["ng-add"],
+         "hidden": true
+      },
+      "application": {
+         "factory": "./src/generators/application/application#applicationGeneratorInternal",
+         "schema": "./src/generators/application/schema.json",
+         "aliases": ["app"],
+         "x-type": "application",
+         "description": "Create a node application."
+      },
+      "library": {
+         "factory": "./src/generators/library/library#libraryGeneratorInternal",
+         "schema": "./src/generators/library/schema.json",
+         "aliases": ["lib"],
+         "x-type": "library",
+         "description": "Create a node library."
+      },
+      "setup-docker": {
+         "factory": "./src/generators/setup-docker/setup-docker",
+         "schema": "./src/generators/setup-docker/schema.json",
+         "description": "Set up Docker configuration for a project.",
+         "hidden": false
+      }
+   }
 }

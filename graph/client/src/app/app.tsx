@@ -7,5 +7,5 @@ themeInit();
 rankDirInit();
 
 export function App() {
-  return <RouterProvider router={getRouter()} />;
+   return <RouterProvider router={getRouter()} />;
 }

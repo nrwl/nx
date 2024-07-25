@@ -9,12 +9,12 @@ In this tutorial, you'll learn how to add Nx to a repository with an existing [N
 
 What will you learn?
 
-- how to add Nx to the repository with a single command
-- how to configure caching for your tasks
-- how to configure a task pipeline
-- how to configure projects automatically with Nx Plugins
-- how to manage your releases with `nx release`
-- [how to speed up CI with Nx Cloud ⚡](#fast-ci)
+-  how to add Nx to the repository with a single command
+-  how to configure caching for your tasks
+-  how to configure a task pipeline
+-  how to configure projects automatically with Nx Plugins
+-  how to manage your releases with `nx release`
+-  [how to speed up CI with Nx Cloud ⚡](#fast-ci)
 
 <!-- ## Final Source Code
 
@@ -34,7 +34,7 @@ The repository has two React packages (under `packages/buttons` and `packages/fo
 
 ```json {% fileName="package.json" %}
 {
-  "workspaces": ["packages/*", "apps/*"]
+   "workspaces": ["packages/*", "apps/*"]
 }
 ```
 
@@ -83,16 +83,16 @@ This command will download the latest version of Nx and help set up your reposit
 
 First, the script will propose installing some plugins based on the packages that are being used in your repository.
 
-- Deselect both proposed plugins so that we can explore what Nx provides without any plugins.
+-  Deselect both proposed plugins so that we can explore what Nx provides without any plugins.
 
 Second, the script asks a series of questions to help set up caching for you.
 
-- `Which scripts need to be run in order?` - Choose `build`
-- `Which scripts are cacheable?` - Choose `typecheck`, `build` and `lint`
-- `Does the "typecheck" script create any outputs?` - Enter nothing
-- `Does the "build" script create any outputs?` - Enter `dist`
-- `Does the "lint" script creggggggate any outputs?` - Enter nothing
-- `Would you like remote caching to make your build faster?` - Choose `Skip for now`
+-  `Which scripts need to be run in order?` - Choose `build`
+-  `Which scripts are cacheable?` - Choose `typecheck`, `build` and `lint`
+-  `Does the "typecheck" script create any outputs?` - Enter nothing
+-  `Does the "build" script create any outputs?` - Enter `dist`
+-  `Does the "lint" script creggggggate any outputs?` - Enter nothing
+-  `Would you like remote caching to make your build faster?` - Choose `Skip for now`
 
 ### Explore Your Workspace
 
@@ -125,21 +125,21 @@ During the `init` script, Nx also configured caching for these tasks. You can se
 
 ```json {% fileName="nx.json" %}
 {
-  "$schema": "./node_modules/nx/schemas/nx-schema.json",
-  "targetDefaults": {
-    "build": {
-      "dependsOn": ["^build"],
-      "outputs": ["{projectRoot}/dist"],
-      "cache": true
-    },
-    "typecheck": {
-      "cache": true
-    },
-    "lint": {
-      "cache": true
-    }
-  },
-  "defaultBase": "main"
+   "$schema": "./node_modules/nx/schemas/nx-schema.json",
+   "targetDefaults": {
+      "build": {
+         "dependsOn": ["^build"],
+         "outputs": ["{projectRoot}/dist"],
+         "cache": true
+      },
+      "typecheck": {
+         "cache": true
+      },
+      "lint": {
+         "cache": true
+      }
+   },
+   "defaultBase": "main"
 }
 ```
 
@@ -163,11 +163,11 @@ You may be wondering why the caching message in the previous section mentioned 3
 
 ```json {% fileName="nx.json" %}
 {
-  "targetDefaults": {
-    "build": {
-      "dependsOn": ["^build"]
-    }
-  }
+   "targetDefaults": {
+      "build": {
+         "dependsOn": ["^build"]
+      }
+   }
 }
 ```
 
@@ -204,21 +204,21 @@ You may have noticed in the `apps/demo/package.json` file, there is a `prebuild`
 
 ```json {% fileName="nx.json" highlightLines=[5] %}
 {
-  "$schema": "./node_modules/nx/schemas/nx-schema.json",
-  "targetDefaults": {
-    "build": {
-      "dependsOn": ["^build", "typecheck"],
-      "outputs": ["{projectRoot}/dist"],
-      "cache": true
-    },
-    "typecheck": {
-      "cache": true
-    },
-    "lint": {
-      "cache": true
-    }
-  },
-  "defaultBase": "main"
+   "$schema": "./node_modules/nx/schemas/nx-schema.json",
+   "targetDefaults": {
+      "build": {
+         "dependsOn": ["^build", "typecheck"],
+         "outputs": ["{projectRoot}/dist"],
+         "cache": true
+      },
+      "typecheck": {
+         "cache": true
+      },
+      "lint": {
+         "cache": true
+      }
+   },
+   "defaultBase": "main"
 }
 ```
 
@@ -230,10 +230,10 @@ You may remember that we defined the `outputs` property in `nx.json` when we wer
 
 Nx plugins can:
 
-- automatically configure caching for you, including inputs and outputs based on the underlying tooling configuration
-- infer tasks that can be run on a project because of the tooling present
-- provide code generators to help scaffold out projects
-- automatically keep the tooling versions and configuration files up to date
+-  automatically configure caching for you, including inputs and outputs based on the underlying tooling configuration
+-  infer tasks that can be run on a project because of the tooling present
+-  provide code generators to help scaffold out projects
+-  automatically keep the tooling versions and configuration files up to date
 
 For this tutorial, we'll just focus on the automatic caching configuration.
 
@@ -241,20 +241,20 @@ First, let's delete the `outputs` array from `nx.json` so that we don't override
 
 ```json {% fileName="nx.json" %}
 {
-  "$schema": "./node_modules/nx/schemas/nx-schema.json",
-  "targetDefaults": {
-    "build": {
-      "dependsOn": ["^build", "typecheck"],
-      "cache": true
-    },
-    "typecheck": {
-      "cache": true
-    },
-    "lint": {
-      "cache": true
-    }
-  },
-  "defaultBase": "main"
+   "$schema": "./node_modules/nx/schemas/nx-schema.json",
+   "targetDefaults": {
+      "build": {
+         "dependsOn": ["^build", "typecheck"],
+         "cache": true
+      },
+      "typecheck": {
+         "cache": true
+      },
+      "lint": {
+         "cache": true
+      }
+   },
+   "defaultBase": "main"
 }
 ```
 
@@ -286,10 +286,10 @@ import react from '@vitejs/plugin-react';
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react()],
-  build: {
-    outDir: '../../dist/demo',
-  },
+   plugins: [react()],
+   build: {
+      outDir: '../../dist/demo',
+   },
 });
 ```
 
@@ -318,9 +318,9 @@ First you'll need to define which projects Nx should manage releases for by sett
 
 ```json {% fileName="nx.json" %}
 {
-  "release": {
-    "projects": ["packages/*"]
-  }
+   "release": {
+      "projects": ["packages/*"]
+   }
 }
 ```
 
@@ -348,10 +348,10 @@ Make sure you have completed the previous sections of this tutorial before start
 
 So far in this tutorial you've seen how Nx improves the local development experience, but the biggest difference Nx makes is in CI. As repositories get bigger, making sure that the CI is fast, reliable and maintainable can get very challenging. Nx provides a solution.
 
-- Nx reduces wasted time in CI with the [`affected` command](/ci/features/affected).
-- Nx Replay's [remote caching](/ci/features/remote-cache) will reuse task artifacts from different CI executions making sure you will never run the same computation twice.
-- Nx Agents [efficiently distribute tasks across machines](/ci/features/distribute-task-execution) ensuring constant CI time regardless of the repository size. The right number of machines is allocated for each PR to ensure good performance without wasting compute.
-- Nx Atomizer [automatically splits](/ci/features/split-e2e-tasks) large e2e tests to distribute them across machines. Nx can also automatically [identify and rerun flaky e2e tests](/ci/features/flaky-tasks).
+-  Nx reduces wasted time in CI with the [`affected` command](/ci/features/affected).
+-  Nx Replay's [remote caching](/ci/features/remote-cache) will reuse task artifacts from different CI executions making sure you will never run the same computation twice.
+-  Nx Agents [efficiently distribute tasks across machines](/ci/features/distribute-task-execution) ensuring constant CI time regardless of the repository size. The right number of machines is allocated for each PR to ensure good performance without wasting compute.
+-  Nx Atomizer [automatically splits](/ci/features/split-e2e-tasks) large e2e tests to distribute them across machines. Nx can also automatically [identify and rerun flaky e2e tests](/ci/features/flaky-tasks).
 
 ### Connect to Nx Cloud {% highlightColor="green" %}
 
@@ -400,25 +400,25 @@ The key lines in the CI pipeline are:
 name: CI
 # ...
 jobs:
-  main:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      # This enables task distribution via Nx Cloud
-      # Run this command as early as possible, before dependencies are installed
-      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      # Connect your workspace by running "nx connect" and uncomment this
-      - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 20
-          cache: 'npm'
-      - run: npm ci --legacy-peer-deps
-      - uses: nrwl/nx-set-shas@v4
-      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-      - run: npx nx affected -t lint test build
+   main:
+      runs-on: ubuntu-latest
+      steps:
+         - uses: actions/checkout@v4
+           with:
+              fetch-depth: 0
+         # This enables task distribution via Nx Cloud
+         # Run this command as early as possible, before dependencies are installed
+         # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
+         # Connect your workspace by running "nx connect" and uncomment this
+         - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+         - uses: actions/setup-node@v3
+           with:
+              node-version: 20
+              cache: 'npm'
+         - run: npm ci --legacy-peer-deps
+         - uses: nrwl/nx-set-shas@v4
+         # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
+         - run: npx nx affected -t lint test build
 ```
 
 ### Open a Pull Request {% highlightColor="green" %}
@@ -441,15 +441,15 @@ The `See all runs` link goes to a page with the progress and results of tasks th
 
 For more information about how Nx can improve your CI pipeline, check out one of these detailed tutorials:
 
-- [Circle CI with Nx](/ci/intro/tutorials/circle)
-- [GitHub Actions with Nx](/ci/intro/tutorials/github-actions)
+-  [Circle CI with Nx](/ci/intro/tutorials/circle)
+-  [GitHub Actions with Nx](/ci/intro/tutorials/github-actions)
 -
 
 ## Next Steps
 
 Connect with the rest of the Nx community with these resources:
 
-- [Join the Official Nx Discord Server](https://go.nx.dev/community) to ask questions and find out the latest news about Nx.
-- [Follow Nx on Twitter](https://twitter.com/nxdevtools) to stay up to date with Nx news
-- [Read our Nx blog](/blog)
-- [Subscribe to our Youtube channel](https://www.youtube.com/@nxdevtools) for demos and Nx insights
+-  [Join the Official Nx Discord Server](https://go.nx.dev/community) to ask questions and find out the latest news about Nx.
+-  [Follow Nx on Twitter](https://twitter.com/nxdevtools) to stay up to date with Nx news
+-  [Read our Nx blog](/blog)
+-  [Subscribe to our Youtube channel](https://www.youtube.com/@nxdevtools) for demos and Nx insights

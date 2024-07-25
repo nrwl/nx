@@ -1,45 +1,45 @@
 import * as chalk from 'chalk';
 import {
-  generateMarkdownFile,
-  generateOptionsMarkdown,
-  getCommands,
-  parseCommand,
-  ParsedCommand,
+   generateMarkdownFile,
+   generateOptionsMarkdown,
+   getCommands,
+   parseCommand,
+   ParsedCommand,
 } from '../utils';
 
 const importFresh = require('import-fresh');
 
 export async function generateCnwDocumentation(
-  commandsOutputDirectory: string
+   commandsOutputDirectory: string
 ) {
-  process.env.NX_GENERATE_DOCS_PROCESS = 'true';
+   process.env.NX_GENERATE_DOCS_PROCESS = 'true';
 
-  console.log(
-    `\n${chalk.blue(
-      'i'
-    )} Generating Documentation for Create Nx Workspace Command`
-  );
+   console.log(
+      `\n${chalk.blue(
+         'i'
+      )} Generating Documentation for Create Nx Workspace Command`
+   );
 
-  const { commandsObject } = importFresh(
-    '../../../packages/create-nx-workspace/bin/create-nx-workspace'
-  );
+   const { commandsObject } = importFresh(
+      '../../../packages/create-nx-workspace/bin/create-nx-workspace'
+   );
 
-  const command = getCommands(commandsObject)['$0'];
-  const parsedCommand = await parseCommand('create-nx-workspace', command);
-  const markdown = generateMarkdown(parsedCommand);
-  generateMarkdownFile(commandsOutputDirectory, markdown);
+   const command = getCommands(commandsObject)['$0'];
+   const parsedCommand = await parseCommand('create-nx-workspace', command);
+   const markdown = generateMarkdown(parsedCommand);
+   generateMarkdownFile(commandsOutputDirectory, markdown);
 
-  delete process.env.NX_GENERATE_DOCS_PROCESS;
+   delete process.env.NX_GENERATE_DOCS_PROCESS;
 
-  console.log(
-    `${chalk.green(
-      '✓'
-    )} Generated Documentation for Create Nx Workspace Command`
-  );
+   console.log(
+      `${chalk.green(
+         '✓'
+      )} Generated Documentation for Create Nx Workspace Command`
+   );
 }
 
 function generateMarkdown(command: ParsedCommand) {
-  let template = `
+   let template = `
 ---
 title: "${command.name} - CLI command"
 description: "${command.description}"
@@ -57,10 +57,10 @@ ${command.commandString}
 Install \`create-nx-workspace\` globally to invoke the command directly, or use \`npx create-nx-workspace\`, \`yarn create nx-workspace\`, or \`pnpx create-nx-workspace\`.\n
   `;
 
-  template += generateOptionsMarkdown(command);
+   template += generateOptionsMarkdown(command);
 
-  return {
-    name: command.name,
-    template,
-  };
+   return {
+      name: command.name,
+      template,
+   };
 }

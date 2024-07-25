@@ -3,31 +3,31 @@ import { createTree } from '@nx/devkit/testing';
 import { insertStatementAfterImports } from './insert-statement-after-imports';
 
 describe('insertStatement', () => {
-  let tree: Tree;
+   let tree: Tree;
 
-  beforeEach(() => {
-    tree = createTree();
-  });
+   beforeEach(() => {
+      tree = createTree();
+   });
 
-  it('should insert a statement after the last import', () => {
-    tree.write('index.ts', `import { a } from 'a';`);
+   it('should insert a statement after the last import', () => {
+      tree.write('index.ts', `import { a } from 'a';`);
 
-    insertStatementAfterImports(tree, 'index.ts', 'const b = 0;');
+      insertStatementAfterImports(tree, 'index.ts', 'const b = 0;');
 
-    expect(tree.read('index.ts', 'utf-8')).toMatchInlineSnapshot(`
+      expect(tree.read('index.ts', 'utf-8')).toMatchInlineSnapshot(`
       "import { a } from 'a';
       const b = 0;"
     `);
-  });
+   });
 
-  it('should insert a statement at the beginning if there are no imports', () => {
-    tree.write('index.ts', `const a = 0;`);
+   it('should insert a statement at the beginning if there are no imports', () => {
+      tree.write('index.ts', `const a = 0;`);
 
-    insertStatementAfterImports(tree, 'index.ts', 'const b = 0;\n');
+      insertStatementAfterImports(tree, 'index.ts', 'const b = 0;\n');
 
-    expect(tree.read('index.ts', 'utf-8')).toMatchInlineSnapshot(`
+      expect(tree.read('index.ts', 'utf-8')).toMatchInlineSnapshot(`
       "const b = 0;
       const a = 0;"
     `);
-  });
+   });
 });

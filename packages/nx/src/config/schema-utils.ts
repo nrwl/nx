@@ -9,24 +9,24 @@ import { registerPluginTSTranspiler } from '../project-graph/plugins';
  * @returns a function that returns the implementation
  */
 export function getImplementationFactory<T>(
-  implementation: string,
-  directory: string
+   implementation: string,
+   directory: string
 ): () => T {
-  const [implementationModulePath, implementationExportName] =
-    implementation.split('#');
-  return () => {
-    const modulePath = resolveImplementation(
-      implementationModulePath,
-      directory
-    );
-    if (extname(modulePath) === '.ts') {
-      registerPluginTSTranspiler();
-    }
-    const module = require(modulePath);
-    return implementationExportName
-      ? module[implementationExportName]
-      : module.default ?? module;
-  };
+   const [implementationModulePath, implementationExportName] =
+      implementation.split('#');
+   return () => {
+      const modulePath = resolveImplementation(
+         implementationModulePath,
+         directory
+      );
+      if (extname(modulePath) === '.ts') {
+         registerPluginTSTranspiler();
+      }
+      const module = require(modulePath);
+      return implementationExportName
+         ? module[implementationExportName]
+         : module.default ?? module;
+   };
 }
 
 /**
@@ -36,38 +36,38 @@ export function getImplementationFactory<T>(
  * @returns path to the implementation
  */
 export function resolveImplementation(
-  implementationModulePath: string,
-  directory: string
+   implementationModulePath: string,
+   directory: string
 ): string {
-  const validImplementations = ['', '.js', '.ts'].map(
-    (x) => implementationModulePath + x
-  );
+   const validImplementations = ['', '.js', '.ts'].map(
+      (x) => implementationModulePath + x
+   );
 
-  for (const maybeImplementation of validImplementations) {
-    const maybeImplementationPath = join(directory, maybeImplementation);
-    if (existsSync(maybeImplementationPath)) {
-      return maybeImplementationPath;
-    }
+   for (const maybeImplementation of validImplementations) {
+      const maybeImplementationPath = join(directory, maybeImplementation);
+      if (existsSync(maybeImplementationPath)) {
+         return maybeImplementationPath;
+      }
 
-    try {
-      return require.resolve(maybeImplementation, {
-        paths: [directory],
-      });
-    } catch {}
-  }
+      try {
+         return require.resolve(maybeImplementation, {
+            paths: [directory],
+         });
+      } catch {}
+   }
 
-  throw new Error(
-    `Could not resolve "${implementationModulePath}" from "${directory}".`
-  );
+   throw new Error(
+      `Could not resolve "${implementationModulePath}" from "${directory}".`
+   );
 }
 
 export function resolveSchema(schemaPath: string, directory: string): string {
-  const maybeSchemaPath = join(directory, schemaPath);
-  if (existsSync(maybeSchemaPath)) {
-    return maybeSchemaPath;
-  }
+   const maybeSchemaPath = join(directory, schemaPath);
+   if (existsSync(maybeSchemaPath)) {
+      return maybeSchemaPath;
+   }
 
-  return require.resolve(schemaPath, {
-    paths: [directory],
-  });
+   return require.resolve(schemaPath, {
+      paths: [directory],
+   });
 }

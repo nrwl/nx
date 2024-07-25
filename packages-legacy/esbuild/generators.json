@@ -1,4 +1,4 @@
 {
-  "extends": ["@nx/esbuild"],
-  "schematics": {}
+   "extends": ["@nx/esbuild"],
+   "schematics": {}
 }

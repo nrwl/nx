@@ -2,8 +2,8 @@
 
 There are some cases where an issue could arise when using an outdated global installation of Nx. If the structure of your Nx workspace no longer matches up with what the globally installed copy of Nx expects, it may fail to hand off to your local installation properly and instead error. This commonly results in errors such as:
 
-- `Could not find Nx modules in this workspace.`
-- `The current directory isn't part of an Nx workspace.`
+-  `Could not find Nx modules in this workspace.`
+-  `The current directory isn't part of an Nx workspace.`
 
 If you find yourself in this position, you will need to update your global install of Nx.
 

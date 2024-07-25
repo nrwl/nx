@@ -10,13 +10,13 @@ export type ProjectRootMappings = Map<string, string>;
  * @param projects This is the map of project configurations commonly found in "workspace.json"
  */
 export function createProjectRootMappingsFromProjectConfigurations(
-  projects: Record<string, ProjectConfiguration>
+   projects: Record<string, ProjectConfiguration>
 ) {
-  const projectRootMappings: ProjectRootMappings = new Map();
-  for (const { name, root } of Object.values(projects)) {
-    projectRootMappings.set(normalizeProjectRoot(root), name);
-  }
-  return projectRootMappings;
+   const projectRootMappings: ProjectRootMappings = new Map();
+   for (const { name, root } of Object.values(projects)) {
+      projectRootMappings.set(normalizeProjectRoot(root), name);
+   }
+   return projectRootMappings;
 }
 
 /**
@@ -24,15 +24,15 @@ export function createProjectRootMappingsFromProjectConfigurations(
  * @param nodes This is the nodes from the project graph
  */
 export function createProjectRootMappings(
-  nodes: Record<string, ProjectGraphProjectNode>
+   nodes: Record<string, ProjectGraphProjectNode>
 ): ProjectRootMappings {
-  const projectRootMappings = new Map<string, string>();
-  for (const projectName of Object.keys(nodes)) {
-    let root = nodes[projectName].data.root;
+   const projectRootMappings = new Map<string, string>();
+   for (const projectName of Object.keys(nodes)) {
+      let root = nodes[projectName].data.root;
 
-    projectRootMappings.set(normalizeProjectRoot(root), projectName);
-  }
-  return projectRootMappings;
+      projectRootMappings.set(normalizeProjectRoot(root), projectName);
+   }
+   return projectRootMappings;
 }
 
 /**
@@ -41,29 +41,31 @@ export function createProjectRootMappings(
  * @param projectRootMap Map<projectRoot, projectName> Use {@link createProjectRootMappings} to create this
  */
 export function findProjectForPath(
-  filePath: string,
-  projectRootMap: ProjectRootMappings
+   filePath: string,
+   projectRootMap: ProjectRootMappings
 ): string | null {
-  /**
-   * Project Mappings are in UNIX-style file paths
-   * Windows may pass Win-style file paths
-   * Ensure filePath is in UNIX-style
-   */
-  let currentPath = normalizePath(filePath);
-  for (
-    ;
-    currentPath != dirname(currentPath);
-    currentPath = dirname(currentPath)
-  ) {
-    const p = projectRootMap.get(currentPath);
-    if (p) {
-      return p;
-    }
-  }
-  return projectRootMap.get(currentPath);
+   /**
+    * Project Mappings are in UNIX-style file paths
+    * Windows may pass Win-style file paths
+    * Ensure filePath is in UNIX-style
+    */
+   let currentPath = normalizePath(filePath);
+   for (
+      ;
+      currentPath != dirname(currentPath);
+      currentPath = dirname(currentPath)
+   ) {
+      const p = projectRootMap.get(currentPath);
+      if (p) {
+         return p;
+      }
+   }
+   return projectRootMap.get(currentPath);
 }
 
 export function normalizeProjectRoot(root: string) {
-  root = root === '' ? '.' : root;
-  return root && root.endsWith('/') ? root.substring(0, root.length - 1) : root;
+   root = root === '' ? '.' : root;
+   return root && root.endsWith('/')
+      ? root.substring(0, root.length - 1)
+      : root;
 }

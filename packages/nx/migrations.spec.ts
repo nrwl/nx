@@ -4,5 +4,5 @@ import { assertValidMigrationPaths } from './src/internal-testing-utils/assert-v
 import { MigrationsJson } from './src/config/misc-interfaces';
 
 describe('nx migrations', () => {
-  assertValidMigrationPaths(json as MigrationsJson, __dirname);
+   assertValidMigrationPaths(json as MigrationsJson, __dirname);
 });

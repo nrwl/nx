@@ -1,11 +1,11 @@
 import {
-  GeneratorCallback,
-  Tree,
-  formatFiles,
-  logger,
-  readJson,
-  runTasksInSerial,
-  stripIndents,
+   GeneratorCallback,
+   Tree,
+   formatFiles,
+   logger,
+   readJson,
+   runTasksInSerial,
+   stripIndents,
 } from '@nx/devkit';
 import { Schema } from './schema';
 
@@ -15,65 +15,66 @@ import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/pr
 import { addTsConfigPath, getRootTsConfigPathInTree } from '@nx/js';
 
 export async function federateModuleGenerator(tree: Tree, schema: Schema) {
-  // Check if the file exists
-  if (!tree.exists(schema.path)) {
-    throw new Error(stripIndents`The "path" provided  does not exist. Please verify the path is correct and pointing to a file that exists in the workspace.
+   // Check if the file exists
+   if (!tree.exists(schema.path)) {
+      throw new Error(stripIndents`The "path" provided  does not exist. Please verify the path is correct and pointing to a file that exists in the workspace.
     
     Path: ${schema.path}`);
-  }
-  const tasks: GeneratorCallback[] = [];
-  // Check remote exists
-  const remote = checkRemoteExists(tree, schema.remote);
+   }
+   const tasks: GeneratorCallback[] = [];
+   // Check remote exists
+   const remote = checkRemoteExists(tree, schema.remote);
 
-  let projectRoot, remoteName;
+   let projectRoot, remoteName;
 
-  if (!remote) {
-    // create remote
-    const remoteGenerator = await remoteGeneratorInternal(tree, {
-      name: schema.remote,
-      directory: schema.remoteDirectory,
-      e2eTestRunner: schema.e2eTestRunner,
-      skipFormat: schema.skipFormat,
-      linter: schema.linter,
-      style: schema.style,
-      unitTestRunner: schema.unitTestRunner,
-      host: schema.host,
-      projectNameAndRootFormat: schema.projectNameAndRootFormat ?? 'derived',
-    });
-
-    tasks.push(remoteGenerator);
-
-    const { projectName, projectRoot: remoteRoot } =
-      await determineProjectNameAndRootOptions(tree, {
-        name: schema.remote,
-        directory: schema.remoteDirectory,
-        projectType: 'application',
-        projectNameAndRootFormat: schema.projectNameAndRootFormat ?? 'derived',
-        callingGenerator: '@nx/react:federate-module',
+   if (!remote) {
+      // create remote
+      const remoteGenerator = await remoteGeneratorInternal(tree, {
+         name: schema.remote,
+         directory: schema.remoteDirectory,
+         e2eTestRunner: schema.e2eTestRunner,
+         skipFormat: schema.skipFormat,
+         linter: schema.linter,
+         style: schema.style,
+         unitTestRunner: schema.unitTestRunner,
+         host: schema.host,
+         projectNameAndRootFormat: schema.projectNameAndRootFormat ?? 'derived',
       });
 
-    projectRoot = remoteRoot;
-    remoteName = projectName;
-  } else {
-    projectRoot = remote.root;
-    remoteName = remote.name;
-  }
+      tasks.push(remoteGenerator);
 
-  // add path to exposes property
-  addPathToExposes(tree, projectRoot, schema.name, schema.path);
+      const { projectName, projectRoot: remoteRoot } =
+         await determineProjectNameAndRootOptions(tree, {
+            name: schema.remote,
+            directory: schema.remoteDirectory,
+            projectType: 'application',
+            projectNameAndRootFormat:
+               schema.projectNameAndRootFormat ?? 'derived',
+            callingGenerator: '@nx/react:federate-module',
+         });
 
-  // Add new path to tsconfig
-  const rootJSON = readJson(tree, getRootTsConfigPathInTree(tree));
-  if (!rootJSON?.compilerOptions?.paths[`${remoteName}/${schema.name}`]) {
-    addTsConfigPath(tree, `${remoteName}/${schema.name}`, [schema.path]);
-  }
+      projectRoot = remoteRoot;
+      remoteName = projectName;
+   } else {
+      projectRoot = remote.root;
+      remoteName = remote.name;
+   }
 
-  if (!schema.skipFormat) {
-    await formatFiles(tree);
-  }
+   // add path to exposes property
+   addPathToExposes(tree, projectRoot, schema.name, schema.path);
 
-  logger.info(
-    `✅️ Updated module federation config.
+   // Add new path to tsconfig
+   const rootJSON = readJson(tree, getRootTsConfigPathInTree(tree));
+   if (!rootJSON?.compilerOptions?.paths[`${remoteName}/${schema.name}`]) {
+      addTsConfigPath(tree, `${remoteName}/${schema.name}`, [schema.path]);
+   }
+
+   if (!schema.skipFormat) {
+      await formatFiles(tree);
+   }
+
+   logger.info(
+      `✅️ Updated module federation config.
     Now you can use the module from your host app like this:
 
     Static import:
@@ -82,8 +83,8 @@ export async function federateModuleGenerator(tree: Tree, schema: Schema) {
     Dynamic import:
     import('${remoteName}/${schema.name}').then((m) => m.${schema.name});
   `
-  );
-  return runTasksInSerial(...tasks);
+   );
+   return runTasksInSerial(...tasks);
 }
 
 export default federateModuleGenerator;

@@ -31,19 +31,19 @@ Confirm that you see `@nx/nx-<platform-arch>` in your `node_modules` folder (e.g
 If you are still experiencing issues after following the previous steps, please [open an issue on GitHub](https://github.com/nrwl/nx/issues/new?assignees=&labels=type:+bug&projects=&template=1-bug.yml) and we will help you troubleshoot.
 Be prepared to give as much detail as possible about your system, we will need the following information at a minimum, the contents of `nx report` plus
 
-- Operating system version
-- The package manager (npm, yarn, pnpm, etc) install command
+-  Operating system version
+-  The package manager (npm, yarn, pnpm, etc) install command
 
 ### Supported native module platforms
 
 We publish modules for the following platforms:
 
-- macOS 11+ (arm64, x64)
-- Windows (arm64, x64)
-  - We use the `msvc` target, so as long as Microsoft supports your Windows version, it should work on it
-- Linux (arm64, x64)
-  - We use `gnu` ang `musl` targets, which are used by the most popular Linux distributions
-- FreeBSD (x64)
+-  macOS 11+ (arm64, x64)
+-  Windows (arm64, x64)
+   -  We use the `msvc` target, so as long as Microsoft supports your Windows version, it should work on it
+-  Linux (arm64, x64)
+   -  We use `gnu` ang `musl` targets, which are used by the most popular Linux distributions
+-  FreeBSD (x64)
 
 If you're running a machine that isn't part of the list above, then Nx does not support it at this time. [Please open an issue on GitHub](https://github.com/nrwl/nx/issues/new/choose) if you feel Nx should support that platform and we will assess what can be done, please make sure to include your platform and architecture in the issue.
 

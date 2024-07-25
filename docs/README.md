@@ -8,10 +8,10 @@ When writing documentation, it is important to know the audience you are writing
 
 We are generally following the [Diataxis](https://diataxis.fr) model where documents are divided into tutorials, concept guides, recipes and reference.
 
-- Tutorial - Focused on explaining a concept through step by step instructions.
-- Concept guide - Explains why something works the way it does or how to think about something.
-- Recipe - Focused directions to accomplish a specific task. Describes how to do something.
-- Reference - Lists what you can do with the tool (i.e. API docs).
+-  Tutorial - Focused on explaining a concept through step by step instructions.
+-  Concept guide - Explains why something works the way it does or how to think about something.
+-  Recipe - Focused directions to accomplish a specific task. Describes how to do something.
+-  Reference - Lists what you can do with the tool (i.e. API docs).
 
 ### Audiences
 
@@ -19,40 +19,40 @@ We also have different audiences in mind when writing docs:
 
 👶 New user starting from scratch
 
-- They know their framework of choice
-- They have probably heard the term monorepo but don't really know what it is
-- They're smart and eager to learn
+-  They know their framework of choice
+-  They have probably heard the term monorepo but don't really know what it is
+-  They're smart and eager to learn
 
 👶 New user migrating an existing repo
 
-- They know their framework of choice
-- They know how npm workspaces work
-- They're smart and eager to learn
+-  They know their framework of choice
+-  They know how npm workspaces work
+-  They're smart and eager to learn
 
 👦 Intermediate User
 
-- They know how to create an Nx repo or add Nx to an existing repo
-- They have heard the terms integrated and package-based
-- They know what a project is and how to make one
-- They understand how to run a task and the basics of caching
-- They can launch the graph
-- They know that it is possible to enforce project boundaries
+-  They know how to create an Nx repo or add Nx to an existing repo
+-  They have heard the terms integrated and package-based
+-  They know what a project is and how to make one
+-  They understand how to run a task and the basics of caching
+-  They can launch the graph
+-  They know that it is possible to enforce project boundaries
 
 👨‍🦳 Advanced User
 
-- They know everything about Nx except the specific piece of knowledge that is being taught by this document.
+-  They know everything about Nx except the specific piece of knowledge that is being taught by this document.
 
 ### Outline
 
-- Getting Started - These documents assume a new user and are generally concept guides with a lot of links to other parts of the site. There are some elements of recipes mixed in, but those should be kept to a minimum.
-- Tutorials - These are tutorials written for a new user. After completing one of these tutorials, the user should have enough knowledge to be an intermediate user.
-- Core Features - These are primarily recipes with a little concept mixed in. These documents should be short and provide the basic information that people will want 80% of the time and link to anything more complex. A new user should be able to click through these documents and skim them to get a good understanding of what Nx does without getting overwhelmed with details.
-- Concepts - These are concept guides written for a new user. Any recipe content should be split into a recipe document and linked.
-- More Concepts (or other categories under Concepts) - These are concept guides written for an intermediate user.
-- Recipes - These are recipes written for an advanced user.
-- Nx with Your Favorite Tech - These are tutorials written for an intermediate user.
-- Benchmarks - Reference documents linking to external resources.
-- Reference - Reference documents.
+-  Getting Started - These documents assume a new user and are generally concept guides with a lot of links to other parts of the site. There are some elements of recipes mixed in, but those should be kept to a minimum.
+-  Tutorials - These are tutorials written for a new user. After completing one of these tutorials, the user should have enough knowledge to be an intermediate user.
+-  Core Features - These are primarily recipes with a little concept mixed in. These documents should be short and provide the basic information that people will want 80% of the time and link to anything more complex. A new user should be able to click through these documents and skim them to get a good understanding of what Nx does without getting overwhelmed with details.
+-  Concepts - These are concept guides written for a new user. Any recipe content should be split into a recipe document and linked.
+-  More Concepts (or other categories under Concepts) - These are concept guides written for an intermediate user.
+-  Recipes - These are recipes written for an advanced user.
+-  Nx with Your Favorite Tech - These are tutorials written for an intermediate user.
+-  Benchmarks - Reference documents linking to external resources.
+-  Reference - Reference documents.
 
 ## Markdown syntax available
 
@@ -64,8 +64,8 @@ Front matter is used to add metadata to your Markdown file (`title` & `descripti
 
 If no Front matter is detected, the metadata will be populated with the following:
 
-- `title`: first main title detected
-- `description`: first paragraph detected
+-  `title`: first main title detected
+-  `description`: first paragraph detected
 
 ```markdown
 ---
@@ -309,34 +309,34 @@ Embed a Project Details View that is identical what is shown in Nx Console or `n
 
 ```json
 {
-  "project": {
-    "name": "demo",
-    "data": {
-      "root": " packages/demo",
-      "projectType": "application",
-      "targets": {
-        "dev": {
-          "executor": "nx:run-commands",
-          "options": {
-            "command": "vite dev"
-          }
-        },
-        "build": {
-          "executor": "nx:run-commands",
-          "inputs": ["production", "^production"],
-          "outputs": ["{projectRoot}/dist"],
-          "options": {
-            "command": "vite build"
-          }
-        }
+   "project": {
+      "name": "demo",
+      "data": {
+         "root": " packages/demo",
+         "projectType": "application",
+         "targets": {
+            "dev": {
+               "executor": "nx:run-commands",
+               "options": {
+                  "command": "vite dev"
+               }
+            },
+            "build": {
+               "executor": "nx:run-commands",
+               "inputs": ["production", "^production"],
+               "outputs": ["{projectRoot}/dist"],
+               "options": {
+                  "command": "vite build"
+               }
+            }
+         }
       }
-    }
-  },
-  "sourceMap": {
-    "targets": ["packages/demo/vite.config.ts", "@nx/vite"],
-    "targets.dev": ["packages/demo/vite.config.ts", "@nx/vite"],
-    "targets.build": ["packages/demo/vite.config.ts", "@nx/vite"]
-  }
+   },
+   "sourceMap": {
+      "targets": ["packages/demo/vite.config.ts", "@nx/vite"],
+      "targets.dev": ["packages/demo/vite.config.ts", "@nx/vite"],
+      "targets.build": ["packages/demo/vite.config.ts", "@nx/vite"]
+   }
 }
 ```
 
@@ -352,65 +352,65 @@ Embed an Nx Graph visualization that can be panned by the user.
 
 ```json
 {
-  "projects": [
-    {
-      "type": "app",
-      "name": "app-changed",
-      "data": {
-        "tags": ["scope:cart"]
-      }
-    },
-    {
-      "type": "lib",
-      "name": "lib",
-      "data": {
-        "tags": ["scope:cart"]
-      }
-    },
-    {
-      "type": "lib",
-      "name": "lib2",
-      "data": {
-        "tags": ["scope:cart"]
-      }
-    },
-    {
-      "type": "lib",
-      "name": "lib3",
-      "data": {
-        "tags": ["scope:cart"]
-      }
-    }
-  ],
-  "groupByFolder": false,
-  "workspaceLayout": {
-    "appsDir": "apps",
-    "libsDir": "libs"
-  },
-  "dependencies": {
-    "app-changed": [
+   "projects": [
       {
-        "target": "lib",
-        "source": "app-changed",
-        "type": "direct"
-      }
-    ],
-    "lib": [
-      {
-        "target": "lib2",
-        "source": "lib",
-        "type": "implicit"
+         "type": "app",
+         "name": "app-changed",
+         "data": {
+            "tags": ["scope:cart"]
+         }
       },
       {
-        "target": "lib3",
-        "source": "lib",
-        "type": "direct"
+         "type": "lib",
+         "name": "lib",
+         "data": {
+            "tags": ["scope:cart"]
+         }
+      },
+      {
+         "type": "lib",
+         "name": "lib2",
+         "data": {
+            "tags": ["scope:cart"]
+         }
+      },
+      {
+         "type": "lib",
+         "name": "lib3",
+         "data": {
+            "tags": ["scope:cart"]
+         }
       }
-    ],
-    "lib2": [],
-    "lib3": []
-  },
-  "affectedProjectIds": []
+   ],
+   "groupByFolder": false,
+   "workspaceLayout": {
+      "appsDir": "apps",
+      "libsDir": "libs"
+   },
+   "dependencies": {
+      "app-changed": [
+         {
+            "target": "lib",
+            "source": "app-changed",
+            "type": "direct"
+         }
+      ],
+      "lib": [
+         {
+            "target": "lib2",
+            "source": "lib",
+            "type": "implicit"
+         },
+         {
+            "target": "lib3",
+            "source": "lib",
+            "type": "direct"
+         }
+      ],
+      "lib2": [],
+      "lib3": []
+   },
+   "affectedProjectIds": []
 }
 ```
 
@@ -421,9 +421,9 @@ Embed an Nx Graph visualization that can be panned by the user.
 
 There are multiple versions of the `nx.dev` site.
 
-- [canary.nx.dev](https://canary.nx.dev) contains the documentation on the `master` branch
-- [nx.dev](https://nx.dev) contains the documentation as of the latest release of Nx to npm. The main site will not include reference documentation for APIs that have been merged to the codebase, but not yet released to the public.
-- `[version].nx.dev` contains the documentation for that version of Nx. `[version]` in this case is the major version up to the current LTS version of Nx. So [18.nx.dev](https://18.nx.dev) will show the Nx documentation as of the last released version of Nx 18.
+-  [canary.nx.dev](https://canary.nx.dev) contains the documentation on the `master` branch
+-  [nx.dev](https://nx.dev) contains the documentation as of the latest release of Nx to npm. The main site will not include reference documentation for APIs that have been merged to the codebase, but not yet released to the public.
+-  `[version].nx.dev` contains the documentation for that version of Nx. `[version]` in this case is the major version up to the current LTS version of Nx. So [18.nx.dev](https://18.nx.dev) will show the Nx documentation as of the last released version of Nx 18.
 
 When a commit that contains documentation is merged into `master`, it will be immediately published to `canary.nx.dev`. Whenever a new release of Nx is published to npm, that documentation will then be available on the main site.
 

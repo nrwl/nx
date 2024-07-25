@@ -2,35 +2,35 @@
  * This function transforms an error into an object which can be properly serialized and deserialized to be sent between processes.
  */
 export function createSerializableError<T extends Error>(error: T): T {
-  const res = {} as T;
+   const res = {} as T;
 
-  Object.getOwnPropertyNames(error).forEach((k) => {
-    let value = error[k];
+   Object.getOwnPropertyNames(error).forEach((k) => {
+      let value = error[k];
 
-    // If an error has an error as a property such as cause, it will be transformed into a serializable error
-    if (typeof value === 'object' && value instanceof Error) {
-      value = createSerializableError(value);
-    }
+      // If an error has an error as a property such as cause, it will be transformed into a serializable error
+      if (typeof value === 'object' && value instanceof Error) {
+         value = createSerializableError(value);
+      }
 
-    // If an error has an array of errors as a property, they will be transformed into serializable errors
-    if (Array.isArray(value)) {
-      value = value.map((v) => {
-        if (typeof v === 'object' && v instanceof Error) {
-          return createSerializableError(v);
-          // Support for AggregateCreateNodesError
-        } else if (
-          Array.isArray(v) &&
-          v.length === 2 &&
-          v[1] instanceof Error
-        ) {
-          return [v[0], createSerializableError(v[1])];
-        }
-        return v;
-      });
-    }
+      // If an error has an array of errors as a property, they will be transformed into serializable errors
+      if (Array.isArray(value)) {
+         value = value.map((v) => {
+            if (typeof v === 'object' && v instanceof Error) {
+               return createSerializableError(v);
+               // Support for AggregateCreateNodesError
+            } else if (
+               Array.isArray(v) &&
+               v.length === 2 &&
+               v[1] instanceof Error
+            ) {
+               return [v[0], createSerializableError(v[1])];
+            }
+            return v;
+         });
+      }
 
-    res[k] = value;
-  });
+      res[k] = value;
+   });
 
-  return res;
+   return res;
 }

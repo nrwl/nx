@@ -4,8 +4,8 @@
 
 ### Properties
 
-- [nonProjectFiles](../../devkit/documents/FileMap#nonprojectfiles): FileData[]
-- [projectFileMap](../../devkit/documents/FileMap#projectfilemap): ProjectFileMap
+-  [nonProjectFiles](../../devkit/documents/FileMap#nonprojectfiles): FileData[]
+-  [projectFileMap](../../devkit/documents/FileMap#projectfilemap): ProjectFileMap
 
 ## Properties
 

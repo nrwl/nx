@@ -27,32 +27,32 @@ The script below is a very simple example with only three tasks and one file bei
 
 ```yaml
 jobs:
-  build_base:
-    steps:
-      - run: npm run build-base
-      - name: Save assets for use by other jobs
-        uses: actions/upload-artifact@v4
-        with:
-          name: base_output
-          path: base/output.ts
+   build_base:
+      steps:
+         - run: npm run build-base
+         - name: Save assets for use by other jobs
+           uses: actions/upload-artifact@v4
+           with:
+              name: base_output
+              path: base/output.ts
 
-  build_app1:
-    needs: build_base
-    steps:
-      - name: Download base output
-        uses: actions/download-artifact@v4
-        with:
-          name: base_output
-      - run: npm run build-app1
+   build_app1:
+      needs: build_base
+      steps:
+         - name: Download base output
+           uses: actions/download-artifact@v4
+           with:
+              name: base_output
+         - run: npm run build-app1
 
-  build_app2:
-    needs: build_base
-    steps:
-      - name: Download base output
-        uses: actions/download-artifact@v4
-        with:
-          name: base_output
-      - run: npm run build-app2
+   build_app2:
+      needs: build_base
+      steps:
+         - name: Download base output
+           uses: actions/download-artifact@v4
+           with:
+              name: base_output
+         - run: npm run build-app2
 ```
 
 At any point in the future, if a task is added to the system or there is a change to the output files of build_base, this pipeline will need to be updated.
@@ -79,15 +79,15 @@ The pipeline configuration below will work no matter how many projects are in th
 
 ```yaml
 jobs:
-  main:
-    # Tell Nx Cloud how many agents to use and the name of the last task
-    - run: |
-        nx-cloud start-ci-run \
-          --distribute-on="3 linux-medium-js" \
-          --stop-agents-after="e2e-ci"
-    # Run tasks the same way you would locally
-    - run: nx affected -t lint test build --parallel=3
-    - run: nx affected -t e2e-ci --parallel=1
+   main:
+      # Tell Nx Cloud how many agents to use and the name of the last task
+      - run: |
+           nx-cloud start-ci-run \
+             --distribute-on="3 linux-medium-js" \
+             --stop-agents-after="e2e-ci"
+      # Run tasks the same way you would locally
+      - run: nx affected -t lint test build --parallel=3
+      - run: nx affected -t e2e-ci --parallel=1
 ```
 
 The only reason to modify this file is if you need to change the number of agent machines or there is another type of task that needs to run in CI.
@@ -120,8 +120,8 @@ If you have a task that can’t be run on Nx Agents for some reason, you can eas
 
 ## Learn more
 
-- [Nx Docs](/getting-started/intro)
-- [Nx GitHub](https://github.com/nrwl/nx)
-- [Nx Official Discord Server](https://go.nx.dev/community)
-- [Nx Youtube Channel](https://www.youtube.com/@nxdevtools)
-- [Speed up your CI](https://nx.app/)
+-  [Nx Docs](/getting-started/intro)
+-  [Nx GitHub](https://github.com/nrwl/nx)
+-  [Nx Official Discord Server](https://go.nx.dev/community)
+-  [Nx Youtube Channel](https://www.youtube.com/@nxdevtools)
+-  [Speed up your CI](https://nx.app/)

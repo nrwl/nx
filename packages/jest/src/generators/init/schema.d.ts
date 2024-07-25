@@ -1,8 +1,8 @@
 export interface JestInitSchema {
-  skipFormat?: boolean;
-  skipPackageJson?: boolean;
-  keepExistingVersions?: boolean;
-  updatePackageScripts?: boolean;
+   skipFormat?: boolean;
+   skipPackageJson?: boolean;
+   keepExistingVersions?: boolean;
+   updatePackageScripts?: boolean;
 
-  addPlugin?: boolean;
+   addPlugin?: boolean;
 }

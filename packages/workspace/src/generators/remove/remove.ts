@@ -10,17 +10,17 @@ import { Schema } from './schema';
 import { updateJestConfig } from './lib/update-jest-config';
 
 export async function removeGenerator(tree: Tree, schema: Schema) {
-  const project = readProjectConfiguration(tree, schema.projectName);
-  await checkProjectIsSafeToRemove(tree, schema, project);
-  await checkDependencies(tree, schema);
-  await checkTargets(tree, schema);
-  updateJestConfig(tree, schema, project);
-  removeProjectReferencesInConfig(tree, schema);
-  removeProject(tree, project);
-  await updateTsconfig(tree, schema);
-  if (!schema.skipFormat) {
-    await formatFiles(tree);
-  }
+   const project = readProjectConfiguration(tree, schema.projectName);
+   await checkProjectIsSafeToRemove(tree, schema, project);
+   await checkDependencies(tree, schema);
+   await checkTargets(tree, schema);
+   updateJestConfig(tree, schema, project);
+   removeProjectReferencesInConfig(tree, schema);
+   removeProject(tree, project);
+   await updateTsconfig(tree, schema);
+   if (!schema.skipFormat) {
+      await formatFiles(tree);
+   }
 }
 
 export default removeGenerator;

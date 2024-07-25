@@ -6,29 +6,29 @@ import { codeFrameColumns } from './code-frames';
 export { stripComments as stripJsonComments };
 
 export interface JsonParseOptions extends ParseOptions {
-  /**
-   * Expect JSON with javascript-style
-   * @default false
-   */
-  expectComments?: boolean;
-  /**
-   * Disallow javascript-style
-   * @default false
-   */
-  disallowComments?: boolean;
+   /**
+    * Expect JSON with javascript-style
+    * @default false
+    */
+   expectComments?: boolean;
+   /**
+    * Disallow javascript-style
+    * @default false
+    */
+   disallowComments?: boolean;
 
-  /**
-   * Allow trailing commas in the JSON content
-   */
-  allowTrailingComma?: boolean;
+   /**
+    * Allow trailing commas in the JSON content
+    */
+   allowTrailingComma?: boolean;
 }
 
 export interface JsonSerializeOptions {
-  /**
-   * the whitespaces to add as indentation to make the output more readable.
-   * @default 2
-   */
-  spaces?: number;
+   /**
+    * the whitespaces to add as indentation to make the output more readable.
+    * @default 2
+    */
+   spaces?: number;
 }
 
 /**
@@ -40,25 +40,25 @@ export interface JsonSerializeOptions {
  * @returns Object the JSON content represents
  */
 export function parseJson<T extends object = any>(
-  input: string,
-  options?: JsonParseOptions
+   input: string,
+   options?: JsonParseOptions
 ): T {
-  try {
-    if (options?.expectComments !== true) {
-      return JSON.parse(input);
-    }
-  } catch {}
+   try {
+      if (options?.expectComments !== true) {
+         return JSON.parse(input);
+      }
+   } catch {}
 
-  options = { allowTrailingComma: true, ...options };
+   options = { allowTrailingComma: true, ...options };
 
-  const errors: ParseError[] = [];
-  const result: T = parse(input, errors, options);
+   const errors: ParseError[] = [];
+   const result: T = parse(input, errors, options);
 
-  if (errors.length > 0) {
-    throw new Error(formatParseError(input, errors[0]));
-  }
+   if (errors.length > 0) {
+      throw new Error(formatParseError(input, errors[0]));
+   }
 
-  return result;
+   return result;
 }
 
 /**
@@ -69,19 +69,19 @@ export function parseJson<T extends object = any>(
  * @returns
  */
 function formatParseError(input: string, parseError: ParseError) {
-  const { error, offset, length } = parseError;
-  let { line, column } = new LinesAndColumns(input).locationForIndex(offset);
-  line++;
-  column++;
+   const { error, offset, length } = parseError;
+   let { line, column } = new LinesAndColumns(input).locationForIndex(offset);
+   line++;
+   column++;
 
-  return (
-    `${printParseErrorCode(error)} in JSON at ${line}:${column}\n` +
-    codeFrameColumns(input, {
-      start: { line, column },
-      end: { line, column: column + length },
-    }) +
-    '\n'
-  );
+   return (
+      `${printParseErrorCode(error)} in JSON at ${line}:${column}\n` +
+      codeFrameColumns(input, {
+         start: { line, column },
+         end: { line, column: column + length },
+      }) +
+      '\n'
+   );
 }
 
 /**
@@ -93,8 +93,8 @@ function formatParseError(input: string, parseError: ParseError) {
  * @returns the formatted JSON representation of the object
  */
 export function serializeJson<T extends object = object>(
-  input: T,
-  options?: JsonSerializeOptions
+   input: T,
+   options?: JsonSerializeOptions
 ): string {
-  return JSON.stringify(input, null, options?.spaces ?? 2);
+   return JSON.stringify(input, null, options?.spaces ?? 2);
 }

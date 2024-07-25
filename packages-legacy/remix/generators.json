@@ -1,4 +1,4 @@
 {
-  "extends": ["@nx/remix"],
-  "schematics": {}
+   "extends": ["@nx/remix"],
+   "schematics": {}
 }

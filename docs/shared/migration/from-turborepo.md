@@ -28,26 +28,26 @@ Let's say you start with the following `turbo.json` file:
 
 ```json {% fileName="/turbo.json" %}
 {
-  "$schema": "https://turbo.build/schema.json",
-  "pipeline": {
-    "build": {
-      "dependsOn": ["^build"],
-      "outputs": ["dist/**"]
-    },
-    "docs#build": {
-      "dependsOn": ["^build"],
-      "outputs": ["www/**"]
-    },
-    "test": {
-      "dependsOn": ["build"],
-      "outputs": []
-    },
-    "e2e": {
-      "dependsOn": ["build"],
-      "outputs": []
-    }
-  },
-  "globalDependencies": ["babel.config.json"]
+   "$schema": "https://turbo.build/schema.json",
+   "pipeline": {
+      "build": {
+         "dependsOn": ["^build"],
+         "outputs": ["dist/**"]
+      },
+      "docs#build": {
+         "dependsOn": ["^build"],
+         "outputs": ["www/**"]
+      },
+      "test": {
+         "dependsOn": ["build"],
+         "outputs": []
+      },
+      "e2e": {
+         "dependsOn": ["build"],
+         "outputs": []
+      }
+   },
+   "globalDependencies": ["babel.config.json"]
 }
 ```
 
@@ -55,44 +55,44 @@ Creating the equivalent configuration with Nx yields the following files:
 
 ```json {% fileName="/nx.json" %}
 {
-  "$schema": "./node_modules/nx/schemas/nx-schema.json",
-  "namedInputs": {
-    "sharedGlobals": ["babel.config.json"],
-    "default": ["{projectRoot}/**/*", "sharedGlobals"]
-  },
-  "targetDefaults": {
-    "build": {
-      "dependsOn": ["^build"],
-      "inputs": ["default"],
-      "outputs": ["{projectRoot}/dist"],
-      "cache": true
-    },
-    "test": {
-      "dependsOn": ["build"],
-      "inputs": ["default"],
-      "cache": true
-    },
-    "e2e": {
-      "dependsOn": ["build"],
-      "inputs": ["default"],
-      "cache": true
-    }
-  },
-  "nxCloudAccessToken": "..."
+   "$schema": "./node_modules/nx/schemas/nx-schema.json",
+   "namedInputs": {
+      "sharedGlobals": ["babel.config.json"],
+      "default": ["{projectRoot}/**/*", "sharedGlobals"]
+   },
+   "targetDefaults": {
+      "build": {
+         "dependsOn": ["^build"],
+         "inputs": ["default"],
+         "outputs": ["{projectRoot}/dist"],
+         "cache": true
+      },
+      "test": {
+         "dependsOn": ["build"],
+         "inputs": ["default"],
+         "cache": true
+      },
+      "e2e": {
+         "dependsOn": ["build"],
+         "inputs": ["default"],
+         "cache": true
+      }
+   },
+   "nxCloudAccessToken": "..."
 }
 ```
 
 ```jsonc {% fileName="/packages/docs/package.json" %}
 {
-  "name": "docs",
-  // etc...
-  "nx": {
-    "targets": {
-      "build": {
-        "outputs": ["www/**"]
+   "name": "docs",
+   // etc...
+   "nx": {
+      "targets": {
+         "build": {
+            "outputs": ["www/**"]
+         }
       }
-    }
-  }
+   }
 }
 ```
 

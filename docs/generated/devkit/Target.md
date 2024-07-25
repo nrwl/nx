@@ -4,9 +4,9 @@
 
 ### Properties
 
-- [configuration](../../devkit/documents/Target#configuration): string
-- [project](../../devkit/documents/Target#project): string
-- [target](../../devkit/documents/Target#target): string
+-  [configuration](../../devkit/documents/Target#configuration): string
+-  [project](../../devkit/documents/Target#project): string
+-  [target](../../devkit/documents/Target#target): string
 
 ## Properties
 

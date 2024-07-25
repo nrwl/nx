@@ -8,10 +8,10 @@ The old way to have the `myapp` project depend on specific files in the root of 
 
 ```json
 {
-  "implicitDependencies": {
-    "globalConfig.js": ["myapp"],
-    "styles/**/*.css": ["myapp"]
-  }
+   "implicitDependencies": {
+      "globalConfig.js": ["myapp"],
+      "styles/**/*.css": ["myapp"]
+   }
 }
 ```
 
@@ -19,16 +19,16 @@ To express the same dependencies with `inputs` and `namedInputs`, modify the def
 
 ```json {% fileName="nx.json" %}
 {
-  "namedInputs": {
-    "sharedGlobals": [
-      "{workspaceRoot}/globalConfig.js",
-      "{workspaceRoot}/styles/**/*.css"
-    ],
-    "default": [
-      "sharedGlobals"
-      // etc
-    ]
-  }
+   "namedInputs": {
+      "sharedGlobals": [
+         "{workspaceRoot}/globalConfig.js",
+         "{workspaceRoot}/styles/**/*.css"
+      ],
+      "default": [
+         "sharedGlobals"
+         // etc
+      ]
+   }
 }
 ```
 
@@ -42,14 +42,14 @@ You used to be able to set up dependencies on specific packages in the `dependen
 
 ```json
 {
-  "implicitDependencies": {
-    "package.json": {
-      "dependencies": "*",
-      "devDependencies": {
-        "mypackage": ["mylib"]
+   "implicitDependencies": {
+      "package.json": {
+         "dependencies": "*",
+         "devDependencies": {
+            "mypackage": ["mylib"]
+         }
       }
-    }
-  }
+   }
 }
 ```
 

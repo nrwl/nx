@@ -194,15 +194,15 @@ export const buildOption = `
       }
     },`;
 export const buildOptionObject = {
-  lib: {
-    entry: 'src/index.ts',
-    name: 'my-app',
-    fileName: 'index',
-    formats: ['es', 'cjs'],
-  },
-  rollupOptions: {
-    external: ['react', 'react-dom', 'react/jsx-runtime'],
-  },
+   lib: {
+      entry: 'src/index.ts',
+      name: 'my-app',
+      fileName: 'index',
+      formats: ['es', 'cjs'],
+   },
+   rollupOptions: {
+      external: ['react', 'react-dom', 'react/jsx-runtime'],
+   },
 };
 
 export const testOption = `test: {
@@ -212,14 +212,14 @@ export const testOption = `test: {
     },`;
 
 export const testOptionObject = {
-  globals: true,
-  environment: 'jsdom',
-  include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+   globals: true,
+   environment: 'jsdom',
+   include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
 };
 
 export const imports = [
-  `import dts from 'vite-plugin-dts'`,
-  `import { joinPathFragments } from '@nx/devkit'`,
+   `import dts from 'vite-plugin-dts'`,
+   `import { joinPathFragments } from '@nx/devkit'`,
 ];
 
 export const plugins = [`react()`, `nxViteTsPaths()`];

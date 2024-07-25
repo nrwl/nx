@@ -6,22 +6,22 @@ import { join } from 'path';
  *
  */
 export default async function update(tree: Tree) {
-  const projects = getProjects(tree);
+   const projects = getProjects(tree);
 
-  for (const [_, config] of projects.entries()) {
-    if (config.targets?.['start']?.executor === '@nx/expo:start') {
-      if (tree.exists(join(config.root, 'metro.config.js'))) {
-        const oldConfig = tree
-          .read(join(config.root, 'metro.config.js'))
-          .toString();
-        tree.write(
-          join(config.root, 'metro-v71.config.js'),
-          oldConfigComment + oldConfig
-        );
-        tree.write(join(config.root, 'metro.config.js'), content);
+   for (const [_, config] of projects.entries()) {
+      if (config.targets?.['start']?.executor === '@nx/expo:start') {
+         if (tree.exists(join(config.root, 'metro.config.js'))) {
+            const oldConfig = tree
+               .read(join(config.root, 'metro.config.js'))
+               .toString();
+            tree.write(
+               join(config.root, 'metro-v71.config.js'),
+               oldConfigComment + oldConfig
+            );
+            tree.write(join(config.root, 'metro.config.js'), content);
+         }
       }
-    }
-  }
+   }
 }
 
 const oldConfigComment = `/**

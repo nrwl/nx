@@ -21,7 +21,7 @@ import { defineConfig } from 'cypress';
 import { nxComponentTestingPreset } from '@nx/next/plugins/component-testing';
 
 export default defineConfig({
-  component: nxComponentTestingPreset(__filename),
+   component: nxComponentTestingPreset(__filename),
 });
 ```
 
@@ -32,10 +32,10 @@ import { defineConfig } from 'cypress';
 import { nxComponentTestingPreset } from '@nx/next/plugins/component-testing';
 
 export default defineConfig({
-  component: {
-    ...nxComponentTestingPreset(__filename),
-    // extra options here
-  },
+   component: {
+      ...nxComponentTestingPreset(__filename),
+      // extra options here
+   },
 });
 ```
 

@@ -1,128 +1,131 @@
 import { NxJsonConfiguration } from '@nx/devkit';
 import {
-  cleanupProject,
-  getSelectedPackageManager,
-  newProject,
-  runCLI,
-  runCommand,
-  tmpProjPath,
-  uniq,
-  updateJson,
+   cleanupProject,
+   getSelectedPackageManager,
+   newProject,
+   runCLI,
+   runCommand,
+   tmpProjPath,
+   uniq,
+   updateJson,
 } from '@nx/e2e/utils';
 
 expect.addSnapshotSerializer({
-  serialize(str: string) {
-    return (
-      str
-        // Remove all output unique to specific projects to ensure deterministic snapshots
-        .replaceAll(`/private/${tmpProjPath()}`, '')
-        .replaceAll(tmpProjPath(), '')
-        .replaceAll('/private/', '')
-        .replaceAll(/my-pkg-\d+/g, '{project-name}')
-        .replaceAll(' in /{project-name}', ' in {project-name}')
-        .replaceAll(
-          /integrity:\s*.*/g,
-          'integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
-        )
-        .replaceAll(/\b[0-9a-f]{40}\b/g, '{SHASUM}')
-        .replaceAll(/\d*B  index\.js/g, 'XXB  index.js')
-        .replaceAll(/\d*B  project\.json/g, 'XXB  project.json')
-        .replaceAll(/\d*B package\.json/g, 'XXXB package.json')
-        .replaceAll(/\d*B CHANGELOG\.md/g, 'XXXB CHANGELOG.md')
-        .replaceAll(/size:\s*\d*\s?B/g, 'size: XXXB')
-        .replaceAll(/\d*\.\d*\s?kB/g, 'XXX.XXX kb')
-        // Normalize the version title date
-        .replaceAll(/\(\d{4}-\d{2}-\d{2}\)/g, '(YYYY-MM-DD)')
-        .replaceAll('package-lock.json', '{lock-file}')
-        .replaceAll('yarn.lock', '{lock-file}')
-        .replaceAll('pnpm-lock.yaml', '{lock-file}')
-        .replaceAll('npm install --package-lock-only', '{lock-file-command}')
-        .replaceAll(
-          'yarn install --mode update-lockfile',
-          '{lock-file-command}'
-        )
-        .replaceAll('pnpm install --lockfile-only', '{lock-file-command}')
-        .replaceAll(getSelectedPackageManager(), '{package-manager}')
-        // We trim each line to reduce the chances of snapshot flakiness
-        .split('\n')
-        .map((r) => r.trim())
-        .join('\n')
-    );
-  },
-  test(val: string) {
-    return val != null && typeof val === 'string';
-  },
+   serialize(str: string) {
+      return (
+         str
+            // Remove all output unique to specific projects to ensure deterministic snapshots
+            .replaceAll(`/private/${tmpProjPath()}`, '')
+            .replaceAll(tmpProjPath(), '')
+            .replaceAll('/private/', '')
+            .replaceAll(/my-pkg-\d+/g, '{project-name}')
+            .replaceAll(' in /{project-name}', ' in {project-name}')
+            .replaceAll(
+               /integrity:\s*.*/g,
+               'integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
+            )
+            .replaceAll(/\b[0-9a-f]{40}\b/g, '{SHASUM}')
+            .replaceAll(/\d*B  index\.js/g, 'XXB  index.js')
+            .replaceAll(/\d*B  project\.json/g, 'XXB  project.json')
+            .replaceAll(/\d*B package\.json/g, 'XXXB package.json')
+            .replaceAll(/\d*B CHANGELOG\.md/g, 'XXXB CHANGELOG.md')
+            .replaceAll(/size:\s*\d*\s?B/g, 'size: XXXB')
+            .replaceAll(/\d*\.\d*\s?kB/g, 'XXX.XXX kb')
+            // Normalize the version title date
+            .replaceAll(/\(\d{4}-\d{2}-\d{2}\)/g, '(YYYY-MM-DD)')
+            .replaceAll('package-lock.json', '{lock-file}')
+            .replaceAll('yarn.lock', '{lock-file}')
+            .replaceAll('pnpm-lock.yaml', '{lock-file}')
+            .replaceAll(
+               'npm install --package-lock-only',
+               '{lock-file-command}'
+            )
+            .replaceAll(
+               'yarn install --mode update-lockfile',
+               '{lock-file-command}'
+            )
+            .replaceAll('pnpm install --lockfile-only', '{lock-file-command}')
+            .replaceAll(getSelectedPackageManager(), '{package-manager}')
+            // We trim each line to reduce the chances of snapshot flakiness
+            .split('\n')
+            .map((r) => r.trim())
+            .join('\n')
+      );
+   },
+   test(val: string) {
+      return val != null && typeof val === 'string';
+   },
 });
 
 describe('nx release multiple release branches', () => {
-  let pkg1: string;
-  let pkg2: string;
-  let pkg3: string;
+   let pkg1: string;
+   let pkg2: string;
+   let pkg3: string;
 
-  beforeEach(() => {
-    newProject({
-      unsetProjectNameAndRootFormat: false,
-      packages: ['@nx/js'],
-    });
+   beforeEach(() => {
+      newProject({
+         unsetProjectNameAndRootFormat: false,
+         packages: ['@nx/js'],
+      });
 
-    pkg1 = uniq('my-pkg-1');
-    runCLI(`generate @nx/workspace:npm-package ${pkg1}`);
+      pkg1 = uniq('my-pkg-1');
+      runCLI(`generate @nx/workspace:npm-package ${pkg1}`);
 
-    pkg2 = uniq('my-pkg-2');
-    runCLI(`generate @nx/workspace:npm-package ${pkg2}`);
+      pkg2 = uniq('my-pkg-2');
+      runCLI(`generate @nx/workspace:npm-package ${pkg2}`);
 
-    pkg3 = uniq('my-pkg-3');
-    runCLI(`generate @nx/workspace:npm-package ${pkg3}`);
-  });
-  afterEach(() => cleanupProject());
+      pkg3 = uniq('my-pkg-3');
+      runCLI(`generate @nx/workspace:npm-package ${pkg3}`);
+   });
+   afterEach(() => cleanupProject());
 
-  it('git-tag version resolver should not detect tags in other branches', async () => {
-    updateJson<NxJsonConfiguration>('nx.json', (json) => {
-      json.release = {
-        version: {
-          git: {
-            commit: true,
-            tag: true,
-          },
-          generatorOptions: {
-            currentVersionResolver: 'git-tag',
-          },
-        },
-      };
+   it('git-tag version resolver should not detect tags in other branches', async () => {
+      updateJson<NxJsonConfiguration>('nx.json', (json) => {
+         json.release = {
+            version: {
+               git: {
+                  commit: true,
+                  tag: true,
+               },
+               generatorOptions: {
+                  currentVersionResolver: 'git-tag',
+               },
+            },
+         };
 
-      return json;
-    });
+         return json;
+      });
 
-    runCommand(`git checkout -b release/0.x`);
-    runCommand(`git add .`);
-    runCommand(`git commit -m "chore: initial commit"`);
-    const initialVersionResult = runCLI(
-      `release version 0.0.7 --first-release`
-    );
+      runCommand(`git checkout -b release/0.x`);
+      runCommand(`git add .`);
+      runCommand(`git commit -m "chore: initial commit"`);
+      const initialVersionResult = runCLI(
+         `release version 0.0.7 --first-release`
+      );
 
-    runCommand(`git checkout -b release/1.x`);
+      runCommand(`git checkout -b release/1.x`);
 
-    // update my-pkg-1 with a feature commit
-    updateJson(`${pkg1}/package.json`, (json) => ({
-      ...json,
-      license: 'MIT',
-    }));
-    runCommand(`git add ${pkg1}/package.json`);
-    runCommand(`git commit -m "feat(${pkg1}): new feature 1"`);
+      // update my-pkg-1 with a feature commit
+      updateJson(`${pkg1}/package.json`, (json) => ({
+         ...json,
+         license: 'MIT',
+      }));
+      runCommand(`git add ${pkg1}/package.json`);
+      runCommand(`git commit -m "feat(${pkg1}): new feature 1"`);
 
-    const versionResult1x = runCLI(`release version minor`);
+      const versionResult1x = runCLI(`release version minor`);
 
-    // update my-pkg-2 with a fix commit
-    updateJson(`${pkg2}/package.json`, (json) => ({
-      ...json,
-      license: 'MIT',
-    }));
-    runCommand(`git add ${pkg2}/package.json`);
-    runCommand(`git commit -m "fix(${pkg2}): new fix 1"`);
-    runCommand(`git checkout release/0.x`);
-    const versionResult0x = runCLI(`release version patch`);
+      // update my-pkg-2 with a fix commit
+      updateJson(`${pkg2}/package.json`, (json) => ({
+         ...json,
+         license: 'MIT',
+      }));
+      runCommand(`git add ${pkg2}/package.json`);
+      runCommand(`git commit -m "fix(${pkg2}): new fix 1"`);
+      runCommand(`git checkout release/0.x`);
+      const versionResult0x = runCLI(`release version patch`);
 
-    expect(initialVersionResult).toMatchInlineSnapshot(`
+      expect(initialVersionResult).toMatchInlineSnapshot(`
 
       NX   Running release version for project: {project-name}
 
@@ -171,7 +174,7 @@ describe('nx release multiple release branches', () => {
 
 
     `);
-    expect(versionResult1x).toMatchInlineSnapshot(`
+      expect(versionResult1x).toMatchInlineSnapshot(`
 
       NX   Running release version for project: {project-name}
 
@@ -223,7 +226,7 @@ describe('nx release multiple release branches', () => {
 
 
     `);
-    expect(versionResult0x).toMatchInlineSnapshot(`
+      expect(versionResult0x).toMatchInlineSnapshot(`
 
       NX   Running release version for project: {project-name}
 
@@ -272,53 +275,53 @@ describe('nx release multiple release branches', () => {
 
 
     `);
-  });
+   });
 
-  it('git-tag version resolver should detect tags in other branches if none are reachable from the current commit', async () => {
-    updateJson<NxJsonConfiguration>('nx.json', (json) => {
-      json.release = {
-        version: {
-          git: {
-            commit: true,
-            tag: true,
-          },
-          generatorOptions: {
-            currentVersionResolver: 'git-tag',
-          },
-        },
-      };
+   it('git-tag version resolver should detect tags in other branches if none are reachable from the current commit', async () => {
+      updateJson<NxJsonConfiguration>('nx.json', (json) => {
+         json.release = {
+            version: {
+               git: {
+                  commit: true,
+                  tag: true,
+               },
+               generatorOptions: {
+                  currentVersionResolver: 'git-tag',
+               },
+            },
+         };
 
-      return json;
-    });
+         return json;
+      });
 
-    runCommand(`git checkout -b test-main`);
-    runCommand(`git add .`);
-    runCommand(`git commit -m "chore: initial commit"`);
+      runCommand(`git checkout -b test-main`);
+      runCommand(`git add .`);
+      runCommand(`git commit -m "chore: initial commit"`);
 
-    runCommand(`git checkout -b release/1.x`);
+      runCommand(`git checkout -b release/1.x`);
 
-    // update my-pkg-1 with a feature commit
-    updateJson(`${pkg1}/package.json`, (json) => ({
-      ...json,
-      license: 'MIT',
-    }));
-    runCommand(`git add ${pkg1}/package.json`);
-    runCommand(`git commit -m "feat(${pkg1}): new feature 1"`);
+      // update my-pkg-1 with a feature commit
+      updateJson(`${pkg1}/package.json`, (json) => ({
+         ...json,
+         license: 'MIT',
+      }));
+      runCommand(`git add ${pkg1}/package.json`);
+      runCommand(`git commit -m "feat(${pkg1}): new feature 1"`);
 
-    const versionResult1x = runCLI(`release version minor --first-release`);
+      const versionResult1x = runCLI(`release version minor --first-release`);
 
-    runCommand(`git checkout test-main`);
-    // update my-pkg-2 with a fix commit
-    updateJson(`${pkg2}/package.json`, (json) => ({
-      ...json,
-      license: 'MIT',
-    }));
-    runCommand(`git add ${pkg2}/package.json`);
-    runCommand(`git commit -m "fix(${pkg2}): new fix 1"`);
-    runCommand(`git checkout -b release/2.x`);
-    const versionResult2x = runCLI(`release version major`);
+      runCommand(`git checkout test-main`);
+      // update my-pkg-2 with a fix commit
+      updateJson(`${pkg2}/package.json`, (json) => ({
+         ...json,
+         license: 'MIT',
+      }));
+      runCommand(`git add ${pkg2}/package.json`);
+      runCommand(`git commit -m "fix(${pkg2}): new fix 1"`);
+      runCommand(`git checkout -b release/2.x`);
+      const versionResult2x = runCLI(`release version major`);
 
-    expect(versionResult1x).toMatchInlineSnapshot(`
+      expect(versionResult1x).toMatchInlineSnapshot(`
 
       NX   Running release version for project: {project-name}
 
@@ -370,7 +373,7 @@ describe('nx release multiple release branches', () => {
 
 
     `);
-    expect(versionResult2x).toMatchInlineSnapshot(`
+      expect(versionResult2x).toMatchInlineSnapshot(`
 
       NX   Running release version for project: {project-name}
 
@@ -422,5 +425,5 @@ describe('nx release multiple release branches', () => {
 
 
     `);
-  });
+   });
 });

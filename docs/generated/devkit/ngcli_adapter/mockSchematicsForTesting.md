@@ -14,9 +14,9 @@ Example:
 
 ```typescript
 mockSchematicsForTesting({
-  'mycollection:myschematic': (tree, params) => {
-    tree.write('README');
-  },
+   'mycollection:myschematic': (tree, params) => {
+      tree.write('README');
+   },
 });
 ```
 

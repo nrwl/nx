@@ -1,11 +1,11 @@
 {
-  "extends": "./tsconfig.json",
-  "compilerOptions": {
-    "module": "esnext",
-    "declaration": true
-  },
-  "include": ["index.ts", "src/runtime/**/*", "mf/**/*", "testing/**/*"],
-  "angularCompilerOptions": {
-    "compilationMode": "partial"
-  }
+   "extends": "./tsconfig.json",
+   "compilerOptions": {
+      "module": "esnext",
+      "declaration": true
+   },
+   "include": ["index.ts", "src/runtime/**/*", "mf/**/*", "testing/**/*"],
+   "angularCompilerOptions": {
+      "compilationMode": "partial"
+   }
 }

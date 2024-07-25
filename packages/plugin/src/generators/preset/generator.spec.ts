@@ -7,19 +7,19 @@ import generator from './generator';
 import { PackageJson } from 'nx/src/utils/package-json';
 
 describe('preset generator', () => {
-  let tree: Tree;
+   let tree: Tree;
 
-  beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-  });
+   beforeEach(() => {
+      tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+   });
 
-  it('should create a plugin', async () => {
-    await generator(tree, {
-      pluginName: 'my-plugin',
-    });
-    const config = readProjectConfiguration(tree, 'my-plugin');
-    expect(config).toBeDefined();
-    const packageJson = readJson<PackageJson>(tree, 'package.json');
-    expect(packageJson.dependencies).toHaveProperty('@nx/devkit');
-  });
+   it('should create a plugin', async () => {
+      await generator(tree, {
+         pluginName: 'my-plugin',
+      });
+      const config = readProjectConfiguration(tree, 'my-plugin');
+      expect(config).toBeDefined();
+      const packageJson = readJson<PackageJson>(tree, 'package.json');
+      expect(packageJson.dependencies).toHaveProperty('@nx/devkit');
+   });
 });

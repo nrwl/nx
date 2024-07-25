@@ -11,22 +11,22 @@ import { Node } from 'ng-packagr/lib/graph/node';
 import { transformFromPromise } from 'ng-packagr/lib/graph/transform';
 import { NgEntryPoint } from 'ng-packagr/lib/ng-package/entry-point/entry-point';
 import {
-  EntryPointNode,
-  fileUrl,
-  isEntryPointInProgress,
-  isEntryPoint,
-  isPackage,
-  PackageNode,
+   EntryPointNode,
+   fileUrl,
+   isEntryPointInProgress,
+   isEntryPoint,
+   isPackage,
+   PackageNode,
 } from 'ng-packagr/lib/ng-package/nodes';
 import { NgPackagrOptions } from 'ng-packagr/lib/ng-package/options.di';
 import { NgPackage } from 'ng-packagr/lib/ng-package/package';
 import {
-  copyFile,
-  exists,
-  readFile,
-  rmdir,
-  stat,
-  writeFile,
+   copyFile,
+   exists,
+   readFile,
+   rmdir,
+   stat,
+   writeFile,
 } from 'ng-packagr/lib/utils/fs';
 import { globFiles } from 'ng-packagr/lib/utils/glob';
 import { ensureUnixPath } from 'ng-packagr/lib/utils/path';
@@ -34,173 +34,175 @@ import { AssetPattern } from 'ng-packagr/ng-package.schema';
 import * as path from 'path';
 
 export const nxWritePackageTransform = (options: NgPackagrOptions) =>
-  transformFromPromise(async (graph) => {
-    const entryPoint: EntryPointNode = graph.find(isEntryPointInProgress());
-    const ngEntryPoint: NgEntryPoint = entryPoint.data.entryPoint;
-    const ngPackageNode: PackageNode = graph.find(isPackage);
-    const ngPackage = ngPackageNode.data;
-    const { destinationFiles } = entryPoint.data;
+   transformFromPromise(async (graph) => {
+      const entryPoint: EntryPointNode = graph.find(isEntryPointInProgress());
+      const ngEntryPoint: NgEntryPoint = entryPoint.data.entryPoint;
+      const ngPackageNode: PackageNode = graph.find(isPackage);
+      const ngPackage = ngPackageNode.data;
+      const { destinationFiles } = entryPoint.data;
 
-    if (!ngEntryPoint.isSecondaryEntryPoint) {
-      logger.log('Copying assets');
+      if (!ngEntryPoint.isSecondaryEntryPoint) {
+         logger.log('Copying assets');
 
-      try {
-        await copyAssets(graph, entryPoint, ngPackageNode);
-      } catch (error) {
-        throw error;
-      }
-    }
-
-    // 6. WRITE PACKAGE.JSON
-    const relativeUnixFromDestPath = (filePath: string) =>
-      ensureUnixPath(path.relative(ngEntryPoint.destinationPath, filePath));
-
-    if (!ngEntryPoint.isSecondaryEntryPoint) {
-      try {
-        logger.info('Writing package manifest');
-        if (!options.watch) {
-          const primary = ngPackageNode.data.primary;
-          await writeFile(
-            path.join(primary.destinationPath, '.npmignore'),
-            `# Nested package.json's are only needed for development.\n**/package.json`
-          );
-        }
-
-        await writePackageJson(
-          ngEntryPoint,
-          ngPackage,
-          {
-            module: relativeUnixFromDestPath(destinationFiles.esm2022),
-            typings: relativeUnixFromDestPath(destinationFiles.declarations),
-            exports: generatePackageExports(ngEntryPoint, graph),
-            // webpack v4+ specific flag to enable advanced optimizations and code splitting
-            sideEffects: ngEntryPoint.packageJson.sideEffects ?? false,
-          },
-          !!options.watch
-        );
-      } catch (error) {
-        throw error;
-      }
-    } else if (ngEntryPoint.isSecondaryEntryPoint) {
-      if (options.watch) {
-        // Update the watch version of the primary entry point `package.json` file.
-        // this is needed because of Webpack's 5 `cachemanagedpaths`
-        // https://github.com/ng-packagr/ng-packagr/issues/2069
-        const primary = ngPackageNode.data.primary;
-        const packageJsonPath = path.join(
-          primary.destinationPath,
-          'package.json'
-        );
-
-        if (await exists(packageJsonPath)) {
-          const packageJson = JSON.parse(
-            await readFile(packageJsonPath, { encoding: 'utf8' })
-          );
-          packageJson.version = generateWatchVersion();
-          await writeFile(
-            path.join(primary.destinationPath, 'package.json'),
-            JSON.stringify(packageJson, undefined, 2)
-          );
-        }
+         try {
+            await copyAssets(graph, entryPoint, ngPackageNode);
+         } catch (error) {
+            throw error;
+         }
       }
 
-      // Write a package.json in each secondary entry-point
-      // This is need for esbuild to secondary entry-points in dist correctly.
-      await writeFile(
-        path.join(ngEntryPoint.destinationPath, 'package.json'),
-        JSON.stringify(
-          { module: relativeUnixFromDestPath(destinationFiles.esm2022) },
-          undefined,
-          2
-        )
-      );
-    }
+      // 6. WRITE PACKAGE.JSON
+      const relativeUnixFromDestPath = (filePath: string) =>
+         ensureUnixPath(path.relative(ngEntryPoint.destinationPath, filePath));
 
-    logger.info(`Built ${ngEntryPoint.moduleId}`);
+      if (!ngEntryPoint.isSecondaryEntryPoint) {
+         try {
+            logger.info('Writing package manifest');
+            if (!options.watch) {
+               const primary = ngPackageNode.data.primary;
+               await writeFile(
+                  path.join(primary.destinationPath, '.npmignore'),
+                  `# Nested package.json's are only needed for development.\n**/package.json`
+               );
+            }
 
-    return graph;
-  });
+            await writePackageJson(
+               ngEntryPoint,
+               ngPackage,
+               {
+                  module: relativeUnixFromDestPath(destinationFiles.esm2022),
+                  typings: relativeUnixFromDestPath(
+                     destinationFiles.declarations
+                  ),
+                  exports: generatePackageExports(ngEntryPoint, graph),
+                  // webpack v4+ specific flag to enable advanced optimizations and code splitting
+                  sideEffects: ngEntryPoint.packageJson.sideEffects ?? false,
+               },
+               !!options.watch
+            );
+         } catch (error) {
+            throw error;
+         }
+      } else if (ngEntryPoint.isSecondaryEntryPoint) {
+         if (options.watch) {
+            // Update the watch version of the primary entry point `package.json` file.
+            // this is needed because of Webpack's 5 `cachemanagedpaths`
+            // https://github.com/ng-packagr/ng-packagr/issues/2069
+            const primary = ngPackageNode.data.primary;
+            const packageJsonPath = path.join(
+               primary.destinationPath,
+               'package.json'
+            );
+
+            if (await exists(packageJsonPath)) {
+               const packageJson = JSON.parse(
+                  await readFile(packageJsonPath, { encoding: 'utf8' })
+               );
+               packageJson.version = generateWatchVersion();
+               await writeFile(
+                  path.join(primary.destinationPath, 'package.json'),
+                  JSON.stringify(packageJson, undefined, 2)
+               );
+            }
+         }
+
+         // Write a package.json in each secondary entry-point
+         // This is need for esbuild to secondary entry-points in dist correctly.
+         await writeFile(
+            path.join(ngEntryPoint.destinationPath, 'package.json'),
+            JSON.stringify(
+               { module: relativeUnixFromDestPath(destinationFiles.esm2022) },
+               undefined,
+               2
+            )
+         );
+      }
+
+      logger.info(`Built ${ngEntryPoint.moduleId}`);
+
+      return graph;
+   });
 
 type AssetEntry = Exclude<AssetPattern, string>;
 
 async function copyAssets(
-  graph: BuildGraph,
-  entryPointNode: EntryPointNode,
-  ngPackageNode: PackageNode
+   graph: BuildGraph,
+   entryPointNode: EntryPointNode,
+   ngPackageNode: PackageNode
 ): Promise<void> {
-  const ngPackage = ngPackageNode.data;
+   const ngPackage = ngPackageNode.data;
 
-  const globsForceIgnored: string[] = [
-    '.gitkeep',
-    '**/.DS_Store',
-    '**/Thumbs.db',
-    `${ngPackage.dest}/**`,
-  ];
+   const globsForceIgnored: string[] = [
+      '.gitkeep',
+      '**/.DS_Store',
+      '**/Thumbs.db',
+      `${ngPackage.dest}/**`,
+   ];
 
-  const assets: AssetEntry[] = [];
+   const assets: AssetEntry[] = [];
 
-  for (const assetPath of ngPackage.assets) {
-    let asset: AssetEntry;
-    if (typeof assetPath === 'object') {
-      asset = { ...assetPath };
-    } else {
-      const [isDir, isFile] = await stat(path.join(ngPackage.src, assetPath))
-        .then((stats) => [stats.isDirectory(), stats.isFile()])
-        .catch(() => [false, false]);
-      if (isDir) {
-        asset = { glob: '**/*', input: assetPath, output: assetPath };
-      } else if (isFile) {
-        // filenames are their own glob
-        asset = {
-          glob: path.basename(assetPath),
-          input: path.dirname(assetPath),
-          output: path.dirname(assetPath),
-        };
+   for (const assetPath of ngPackage.assets) {
+      let asset: AssetEntry;
+      if (typeof assetPath === 'object') {
+         asset = { ...assetPath };
       } else {
-        asset = { glob: assetPath, input: '/', output: '/' };
+         const [isDir, isFile] = await stat(path.join(ngPackage.src, assetPath))
+            .then((stats) => [stats.isDirectory(), stats.isFile()])
+            .catch(() => [false, false]);
+         if (isDir) {
+            asset = { glob: '**/*', input: assetPath, output: assetPath };
+         } else if (isFile) {
+            // filenames are their own glob
+            asset = {
+               glob: path.basename(assetPath),
+               input: path.dirname(assetPath),
+               output: path.dirname(assetPath),
+            };
+         } else {
+            asset = { glob: assetPath, input: '/', output: '/' };
+         }
       }
-    }
 
-    asset.input = path.join(ngPackage.src, asset.input);
-    asset.output = path.join(ngPackage.dest, asset.output);
+      asset.input = path.join(ngPackage.src, asset.input);
+      asset.output = path.join(ngPackage.dest, asset.output);
 
-    const isAncestorPath = (target: string, datum: string) =>
-      path.relative(datum, target).startsWith('..');
-    if (isAncestorPath(asset.input, ngPackage.src)) {
-      throw new Error(
-        'Cannot read assets from a location outside of the project root.'
-      );
-    }
-    if (isAncestorPath(asset.output, ngPackage.dest)) {
-      throw new Error(
-        'Cannot write assets to a location outside of the output path.'
-      );
-    }
-
-    assets.push(asset);
-  }
-
-  for (const asset of assets) {
-    const filePaths = await globFiles(asset.glob, {
-      cwd: asset.input,
-      ignore: [...(asset.ignore ?? []), ...globsForceIgnored],
-      dot: true,
-      onlyFiles: true,
-      followSymbolicLinks: asset.followSymlinks,
-    });
-    for (const filePath of filePaths) {
-      const fileSrcFullPath = path.join(asset.input, filePath);
-      const fileDestFullPath = path.join(asset.output, filePath);
-      const nodeUri = fileUrl(ensureUnixPath(fileSrcFullPath));
-      let node = graph.get(nodeUri);
-      if (!node) {
-        node = new Node(nodeUri);
-        graph.put(node);
+      const isAncestorPath = (target: string, datum: string) =>
+         path.relative(datum, target).startsWith('..');
+      if (isAncestorPath(asset.input, ngPackage.src)) {
+         throw new Error(
+            'Cannot read assets from a location outside of the project root.'
+         );
       }
-      entryPointNode.dependsOn(node);
-      await copyFile(fileSrcFullPath, fileDestFullPath);
-    }
-  }
+      if (isAncestorPath(asset.output, ngPackage.dest)) {
+         throw new Error(
+            'Cannot write assets to a location outside of the output path.'
+         );
+      }
+
+      assets.push(asset);
+   }
+
+   for (const asset of assets) {
+      const filePaths = await globFiles(asset.glob, {
+         cwd: asset.input,
+         ignore: [...(asset.ignore ?? []), ...globsForceIgnored],
+         dot: true,
+         onlyFiles: true,
+         followSymbolicLinks: asset.followSymlinks,
+      });
+      for (const filePath of filePaths) {
+         const fileSrcFullPath = path.join(asset.input, filePath);
+         const fileDestFullPath = path.join(asset.output, filePath);
+         const nodeUri = fileUrl(ensureUnixPath(fileSrcFullPath));
+         let node = graph.get(nodeUri);
+         if (!node) {
+            node = new Node(nodeUri);
+            graph.put(node);
+         }
+         entryPointNode.dependsOn(node);
+         await copyFile(fileSrcFullPath, fileDestFullPath);
+      }
+   }
 }
 
 /**
@@ -219,128 +221,128 @@ async function copyAssets(
  * @param additionalProperties Additional properties, e.g. binary artefacts (bundle files), to merge into `package.json`
  */
 async function writePackageJson(
-  entryPoint: NgEntryPoint,
-  pkg: NgPackage,
-  additionalProperties: {
-    [key: string]: string | boolean | string[] | ConditionalExport;
-  },
-  isWatchMode: boolean
+   entryPoint: NgEntryPoint,
+   pkg: NgPackage,
+   additionalProperties: {
+      [key: string]: string | boolean | string[] | ConditionalExport;
+   },
+   isWatchMode: boolean
 ): Promise<void> {
-  // set additional properties
-  const packageJson = { ...entryPoint.packageJson, ...additionalProperties };
+   // set additional properties
+   const packageJson = { ...entryPoint.packageJson, ...additionalProperties };
 
-  // read tslib version from `@angular/compiler` so that our tslib
-  // version at least matches that of angular if we use require('tslib').version
-  // it will get what installed and not the minimum version nor if it is a `~` or `^`
-  // this is only required for primary
-  if (isWatchMode) {
-    // Needed because of Webpack's 5 `cachemanagedpaths`
-    // https://github.com/angular/angular-cli/issues/20962
-    packageJson.version = generateWatchVersion();
-  }
+   // read tslib version from `@angular/compiler` so that our tslib
+   // version at least matches that of angular if we use require('tslib').version
+   // it will get what installed and not the minimum version nor if it is a `~` or `^`
+   // this is only required for primary
+   if (isWatchMode) {
+      // Needed because of Webpack's 5 `cachemanagedpaths`
+      // https://github.com/angular/angular-cli/issues/20962
+      packageJson.version = generateWatchVersion();
+   }
 
-  if (
-    !packageJson.peerDependencies?.tslib &&
-    !packageJson.dependencies?.tslib
-  ) {
-    const {
-      peerDependencies: angularPeerDependencies = {},
-      dependencies: angularDependencies = {},
-    } = require('@angular/compiler/package.json');
-    const tsLibVersion =
-      angularPeerDependencies.tslib || angularDependencies.tslib;
+   if (
+      !packageJson.peerDependencies?.tslib &&
+      !packageJson.dependencies?.tslib
+   ) {
+      const {
+         peerDependencies: angularPeerDependencies = {},
+         dependencies: angularDependencies = {},
+      } = require('@angular/compiler/package.json');
+      const tsLibVersion =
+         angularPeerDependencies.tslib || angularDependencies.tslib;
 
-    if (tsLibVersion) {
-      packageJson.dependencies = {
-        ...packageJson.dependencies,
-        tslib: tsLibVersion,
-      };
-    }
-  } else if (packageJson.peerDependencies?.tslib) {
-    logger.warn(
-      `'tslib' is no longer recommended to be used as a 'peerDependencies'. Moving it to 'dependencies'.`
-    );
-    packageJson.dependencies = {
-      ...(packageJson.dependencies || {}),
-      tslib: packageJson.peerDependencies.tslib,
-    };
-
-    delete packageJson.peerDependencies.tslib;
-  }
-
-  // Verify non-peerDependencies as they can easily lead to duplicate installs or version conflicts
-  // in the node_modules folder of an application
-  const allowedList = pkg.allowedNonPeerDependencies.map(
-    (value) => new RegExp(value)
-  );
-  try {
-    checkNonPeerDependencies(packageJson, 'dependencies', allowedList);
-  } catch (e) {
-    await rmdir(entryPoint.destinationPath, { recursive: true });
-    throw e;
-  }
-
-  // Removes scripts from package.json after build
-  if (packageJson.scripts) {
-    if (pkg.keepLifecycleScripts !== true) {
-      logger.info(
-        `Removing scripts section in package.json as it's considered a potential security vulnerability.`
-      );
-      delete packageJson.scripts;
-    } else {
+      if (tsLibVersion) {
+         packageJson.dependencies = {
+            ...packageJson.dependencies,
+            tslib: tsLibVersion,
+         };
+      }
+   } else if (packageJson.peerDependencies?.tslib) {
       logger.warn(
-        `You enabled keepLifecycleScripts explicitly. The scripts section in package.json will be published to npm.`
+         `'tslib' is no longer recommended to be used as a 'peerDependencies'. Moving it to 'dependencies'.`
       );
-    }
-  }
+      packageJson.dependencies = {
+         ...(packageJson.dependencies || {}),
+         tslib: packageJson.peerDependencies.tslib,
+      };
 
-  // keep the dist package.json clean
-  // this will not throw if ngPackage field does not exist
-  delete packageJson.ngPackage;
+      delete packageJson.peerDependencies.tslib;
+   }
 
-  const packageJsonPropertiesToDelete = [
-    'stylelint',
-    'prettier',
-    'browserslist',
-    'devDependencies',
-    'jest',
-    'workspaces',
-    'husky',
-  ];
+   // Verify non-peerDependencies as they can easily lead to duplicate installs or version conflicts
+   // in the node_modules folder of an application
+   const allowedList = pkg.allowedNonPeerDependencies.map(
+      (value) => new RegExp(value)
+   );
+   try {
+      checkNonPeerDependencies(packageJson, 'dependencies', allowedList);
+   } catch (e) {
+      await rmdir(entryPoint.destinationPath, { recursive: true });
+      throw e;
+   }
 
-  for (const prop of packageJsonPropertiesToDelete) {
-    if (prop in packageJson) {
-      delete packageJson[prop];
-      logger.info(`Removing ${prop} section in package.json.`);
-    }
-  }
+   // Removes scripts from package.json after build
+   if (packageJson.scripts) {
+      if (pkg.keepLifecycleScripts !== true) {
+         logger.info(
+            `Removing scripts section in package.json as it's considered a potential security vulnerability.`
+         );
+         delete packageJson.scripts;
+      } else {
+         logger.warn(
+            `You enabled keepLifecycleScripts explicitly. The scripts section in package.json will be published to npm.`
+         );
+      }
+   }
 
-  packageJson.name = entryPoint.moduleId;
-  await writeFile(
-    path.join(entryPoint.destinationPath, 'package.json'),
-    JSON.stringify(packageJson, undefined, 2)
-  );
+   // keep the dist package.json clean
+   // this will not throw if ngPackage field does not exist
+   delete packageJson.ngPackage;
+
+   const packageJsonPropertiesToDelete = [
+      'stylelint',
+      'prettier',
+      'browserslist',
+      'devDependencies',
+      'jest',
+      'workspaces',
+      'husky',
+   ];
+
+   for (const prop of packageJsonPropertiesToDelete) {
+      if (prop in packageJson) {
+         delete packageJson[prop];
+         logger.info(`Removing ${prop} section in package.json.`);
+      }
+   }
+
+   packageJson.name = entryPoint.moduleId;
+   await writeFile(
+      path.join(entryPoint.destinationPath, 'package.json'),
+      JSON.stringify(packageJson, undefined, 2)
+   );
 }
 
 function checkNonPeerDependencies(
-  packageJson: Record<string, unknown>,
-  property: string,
-  allowed: RegExp[]
+   packageJson: Record<string, unknown>,
+   property: string,
+   allowed: RegExp[]
 ) {
-  if (!packageJson[property]) {
-    return;
-  }
+   if (!packageJson[property]) {
+      return;
+   }
 
-  for (const dep of Object.keys(packageJson[property])) {
-    if (!allowed.some((regex) => regex.test(dep))) {
-      logger.warn(
-        `Distributing npm packages with '${property}' is not recommended. Please consider adding ${dep} to 'peerDependencies' or remove it from '${property}'.`
-      );
-      throw new Error(
-        `Dependency ${dep} must be explicitly allowed using the "allowedNonPeerDependencies" option.`
-      );
-    }
-  }
+   for (const dep of Object.keys(packageJson[property])) {
+      if (!allowed.some((regex) => regex.test(dep))) {
+         logger.warn(
+            `Distributing npm packages with '${property}' is not recommended. Please consider adding ${dep} to 'peerDependencies' or remove it from '${property}'.`
+         );
+         throw new Error(
+            `Dependency ${dep} must be explicitly allowed using the "allowedNonPeerDependencies" option.`
+         );
+      }
+   }
 }
 
 type PackageExports = Record<string, ConditionalExport>;
@@ -350,10 +352,10 @@ type PackageExports = Record<string, ConditionalExport>;
  * https://nodejs.org/api/packages.html#packages_conditional_exports
  */
 type ConditionalExport = {
-  types?: string;
-  esm2022?: string;
-  esm?: string;
-  default?: string;
+   types?: string;
+   esm2022?: string;
+   esm?: string;
+   default?: string;
 };
 
 /**
@@ -361,64 +363,64 @@ type ConditionalExport = {
  * This is supposed to match with: https://github.com/angular/angular/blob/e0667efa6eada64d1fb8b143840689090fc82e52/packages/bazel/src/ng_package/packager.ts#L415.
  */
 function generatePackageExports(
-  { destinationPath, packageJson }: NgEntryPoint,
-  graph: BuildGraph
+   { destinationPath, packageJson }: NgEntryPoint,
+   graph: BuildGraph
 ): PackageExports {
-  const exports: PackageExports = packageJson.exports
-    ? JSON.parse(JSON.stringify(packageJson.exports))
-    : {};
+   const exports: PackageExports = packageJson.exports
+      ? JSON.parse(JSON.stringify(packageJson.exports))
+      : {};
 
-  const insertMappingOrError = (
-    subpath: string,
-    mapping: ConditionalExport
-  ) => {
-    exports[subpath] ??= {};
-    const subpathExport = exports[subpath];
+   const insertMappingOrError = (
+      subpath: string,
+      mapping: ConditionalExport
+   ) => {
+      exports[subpath] ??= {};
+      const subpathExport = exports[subpath];
 
-    // Go through all conditions that should be inserted. If the condition is already
-    // manually set of the subpath export, we throw an error. In general, we allow for
-    // additional conditions to be set. These will always precede the generated ones.
-    for (const conditionName of Object.keys(mapping)) {
-      if (subpathExport[conditionName] !== undefined) {
-        logger.warn(
-          `Found a conflicting export condition for "${subpath}". The "${conditionName}" ` +
-            `condition would be overridden by ng-packagr. Please unset it.`
-        );
+      // Go through all conditions that should be inserted. If the condition is already
+      // manually set of the subpath export, we throw an error. In general, we allow for
+      // additional conditions to be set. These will always precede the generated ones.
+      for (const conditionName of Object.keys(mapping)) {
+         if (subpathExport[conditionName] !== undefined) {
+            logger.warn(
+               `Found a conflicting export condition for "${subpath}". The "${conditionName}" ` +
+                  `condition would be overridden by ng-packagr. Please unset it.`
+            );
+         }
+
+         // **Note**: The order of the conditions is preserved even though we are setting
+         // the conditions once at a time (the latest assignment will be at the end).
+         subpathExport[conditionName] = mapping[conditionName];
       }
+   };
 
-      // **Note**: The order of the conditions is preserved even though we are setting
-      // the conditions once at a time (the latest assignment will be at the end).
-      subpathExport[conditionName] = mapping[conditionName];
-    }
-  };
+   const relativeUnixFromDestPath = (filePath: string) =>
+      './' + ensureUnixPath(path.relative(destinationPath, filePath));
 
-  const relativeUnixFromDestPath = (filePath: string) =>
-    './' + ensureUnixPath(path.relative(destinationPath, filePath));
+   insertMappingOrError('./package.json', { default: './package.json' });
 
-  insertMappingOrError('./package.json', { default: './package.json' });
+   const entryPoints = graph.filter(isEntryPoint);
+   for (const entryPoint of entryPoints) {
+      const { destinationFiles, isSecondaryEntryPoint } =
+         entryPoint.data.entryPoint;
+      const subpath = isSecondaryEntryPoint
+         ? `./${destinationFiles.directory}`
+         : '.';
 
-  const entryPoints = graph.filter(isEntryPoint);
-  for (const entryPoint of entryPoints) {
-    const { destinationFiles, isSecondaryEntryPoint } =
-      entryPoint.data.entryPoint;
-    const subpath = isSecondaryEntryPoint
-      ? `./${destinationFiles.directory}`
-      : '.';
+      insertMappingOrError(subpath, {
+         types: relativeUnixFromDestPath(destinationFiles.declarations),
+         esm2022: relativeUnixFromDestPath(destinationFiles.esm2022),
+         esm: relativeUnixFromDestPath(destinationFiles.esm2022),
+         default: relativeUnixFromDestPath(destinationFiles.esm2022),
+      });
+   }
 
-    insertMappingOrError(subpath, {
-      types: relativeUnixFromDestPath(destinationFiles.declarations),
-      esm2022: relativeUnixFromDestPath(destinationFiles.esm2022),
-      esm: relativeUnixFromDestPath(destinationFiles.esm2022),
-      default: relativeUnixFromDestPath(destinationFiles.esm2022),
-    });
-  }
-
-  return exports;
+   return exports;
 }
 
 /**
  * Generates a new version for the package `package.json` when runing in watch mode.
  */
 function generateWatchVersion() {
-  return `0.0.0-watch+${Date.now()}`;
+   return `0.0.0-watch+${Date.now()}`;
 }

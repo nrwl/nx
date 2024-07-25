@@ -6,14 +6,14 @@ In order for teams to work together in a monorepo, they need to agree on how tha
 
 **Organizational Decisions:**
 
-- [Dependency Management](/concepts/decisions/dependency-management) - Should there be an enforced single version policy or should each project maintain their own dependency versions independently?
-- [Code Ownership](/concepts/decisions/code-ownership) - What is the code review process? Who is responsible for reviewing changes to each portion of the repository?
-- [Project Dependency Rules](/concepts/decisions/project-dependency-rules) - What are the restrictions on dependencies between projects? Which projects can depend on which other projects?
-- [Folder Structure](/concepts/decisions/folder-structure) - What is the folder structure and naming convention for projects in the repository?
-- [Project Size](/concepts/decisions/project-size) - What size should projects be before they need to be split into separate projects?
-- Git Workflow - What Git workflow should be used? Will you use trunk-based development or long running feature branches?
-- CI Pipeline - How is the CI pipeline managed? Who is responsible for maintaining it?
-- Deployment - How are deployments managed? Does each project deploy independently or do they all deploy at once?
+-  [Dependency Management](/concepts/decisions/dependency-management) - Should there be an enforced single version policy or should each project maintain their own dependency versions independently?
+-  [Code Ownership](/concepts/decisions/code-ownership) - What is the code review process? Who is responsible for reviewing changes to each portion of the repository?
+-  [Project Dependency Rules](/concepts/decisions/project-dependency-rules) - What are the restrictions on dependencies between projects? Which projects can depend on which other projects?
+-  [Folder Structure](/concepts/decisions/folder-structure) - What is the folder structure and naming convention for projects in the repository?
+-  [Project Size](/concepts/decisions/project-size) - What size should projects be before they need to be split into separate projects?
+-  Git Workflow - What Git workflow should be used? Will you use trunk-based development or long running feature branches?
+-  CI Pipeline - How is the CI pipeline managed? Who is responsible for maintaining it?
+-  Deployment - How are deployments managed? Does each project deploy independently or do they all deploy at once?
 
 ## How Many Repositories?
 

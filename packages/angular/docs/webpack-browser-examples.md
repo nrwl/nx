@@ -2,8 +2,8 @@ This executor is a drop-in replacement for the `@angular-devkit/build-angular:br
 
 In addition to the features provided by the Angular CLI builder, the `@nx/angular:webpack-browser` executor also supports the following:
 
-- Providing a custom webpack configuration
-- Incremental builds
+-  Providing a custom webpack configuration
+-  Incremental builds
 
 {% callout type="check" title="Dev Server" %}
 The [`@nx/angular:dev-server` executor](/nx-api/angular/executors/dev-server) is required to serve your application when using the `@nx/angular:webpack-browser` to build it. It is a drop-in replacement for the Angular CLI's `@angular-devkit/build-angular:dev-server` builder and ensures the application is correctly served with Webpack when using the `@nx/angular:webpack-browser` executor.
@@ -16,14 +16,14 @@ The [`@nx/angular:dev-server` executor](/nx-api/angular/executors/dev-server) is
 
 The executor supports providing a path to a custom webpack configuration. This allows you to customize how your Angular application is built. It currently supports the following types of webpack configurations:
 
-- `object`
-- `Function`
-- `Promise<object|Function>`
+-  `object`
+-  `Function`
+-  `Promise<object|Function>`
 
 The executor will merge the provided configuration with the webpack configuration that Angular Devkit uses. The merge order is:
 
-- Angular Devkit Configuration
-- Provided Configuration
+-  Angular Devkit Configuration
+-  Provided Configuration
 
 To use a custom webpack configuration when building your Angular application, change the `build` target in your `project.json` to match the following:
 

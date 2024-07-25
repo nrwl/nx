@@ -4,25 +4,25 @@ In Nx 13.10+, local nx plugins can contain executors that are used in the worksp
 
 ## Converting workspace executors to local executors
 
-- If you don't already have a local plugin, use Nx to generate one:
+-  If you don't already have a local plugin, use Nx to generate one:
 
 ```shell
 npm add -D @nx/plugin
 nx g @nx/plugin:plugin my-plugin
 ```
 
-- Use the Nx CLI to generate the initial files needed for your executor. Replace `my-executor` with the name of your workspace executor.
+-  Use the Nx CLI to generate the initial files needed for your executor. Replace `my-executor` with the name of your workspace executor.
 
 ```shell
 nx generate @nx/plugin:executor my-executor --project=my-plugin
 ```
 
-- Copy the code for your workspace executor into the newly created executor's folder. e.g. `libs/my-plugin/src/executors/my-executor/`
+-  Copy the code for your workspace executor into the newly created executor's folder. e.g. `libs/my-plugin/src/executors/my-executor/`
 
-- Now you can reference the executor like this:
+-  Now you can reference the executor like this:
 
 ```jsonc
 {
-  "executor": "@my-org/my-plugin:my-executor"
+   "executor": "@my-org/my-plugin:my-executor"
 }
 ```

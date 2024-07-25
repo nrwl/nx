@@ -1,727 +1,727 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema",
-  "$id": "https://nx.dev/reference/nx-json",
-  "title": "JSON schema for Nx configuration",
-  "type": "object",
-  "properties": {
-    "implicitDependencies": {
-      "type": "object",
-      "description": "Map of files to projects that implicitly depend on them.",
-      "deprecated": "Use named inputs instead.  See https://nx.dev/deprecated/global-implicit-dependencies"
-    },
-    "affected": {
-      "type": "object",
-      "description": "Default options for `nx affected`.",
-      "properties": {
-        "defaultBase": {
-          "type": "string",
-          "description": "Default based branch used by affected commands."
-        }
+   "$schema": "http://json-schema.org/draft-07/schema",
+   "$id": "https://nx.dev/reference/nx-json",
+   "title": "JSON schema for Nx configuration",
+   "type": "object",
+   "properties": {
+      "implicitDependencies": {
+         "type": "object",
+         "description": "Map of files to projects that implicitly depend on them.",
+         "deprecated": "Use named inputs instead.  See https://nx.dev/deprecated/global-implicit-dependencies"
       },
-      "additionalProperties": false,
-      "deprecated": "Use `defaultBase` instead. Support for setting `defaultBase` in `affected` will be removed in Nx 20."
-    },
-    "defaultBase": {
-      "type": "string",
-      "description": "Default --base used by affected logic."
-    },
-    "tasksRunnerOptions": {
-      "type": "object",
-      "additionalProperties": {
-        "$ref": "#/definitions/tasksRunnerOptions"
-      }
-    },
-    "namedInputs": {
-      "type": "object",
-      "description": "Named inputs used by inputs defined in targets",
-      "additionalProperties": {
-        "$ref": "#/definitions/inputs"
-      }
-    },
-    "targetDefaults": {
-      "type": "object",
-      "description": "Target defaults",
-      "additionalProperties": {
-        "$ref": "#/definitions/targetDefaultsConfig"
-      }
-    },
-    "workspaceLayout": {
-      "type": "object",
-      "description": "Where new apps + libs should be placed.",
-      "properties": {
-        "libsDir": {
-          "type": "string",
-          "description": "Default folder name for libs."
-        },
-        "appsDir": {
-          "type": "string",
-          "description": "Default folder name for apps."
-        }
+      "affected": {
+         "type": "object",
+         "description": "Default options for `nx affected`.",
+         "properties": {
+            "defaultBase": {
+               "type": "string",
+               "description": "Default based branch used by affected commands."
+            }
+         },
+         "additionalProperties": false,
+         "deprecated": "Use `defaultBase` instead. Support for setting `defaultBase` in `affected` will be removed in Nx 20."
       },
-      "additionalProperties": false
-    },
-    "cli": {
-      "$ref": "#/definitions/cliOptions"
-    },
-    "generators": {
-      "$ref": "#/definitions/generatorOptions"
-    },
-    "plugins": {
-      "type": "array",
-      "description": "Plugins for extending the project graph.",
-      "items": {
-        "$ref": "#/definitions/plugins"
-      }
-    },
-    "defaultProject": {
-      "type": "string",
-      "description": "Default project. When project isn't provided, the default project will be used."
-    },
-    "nxCloudAccessToken": {
-      "type": "string",
-      "description": "The access token to use for nx-cloud. If set, the default tasks runner will be nx-cloud."
-    },
-    "nxCloudUrl": {
-      "type": "string",
-      "description": "Specifies the url pointing to an instance of nx cloud. Used for remote caching and displaying run links."
-    },
-    "nxCloudEncryptionKey": {
-      "type": "string",
-      "description": "Specifies the encryption key used to encrypt artifacts data before sending it to nx cloud."
-    },
-    "parallel": {
-      "type": "number",
-      "description": "Specifies how many tasks are ran in parallel by Nx for the default tasks runner."
-    },
-    "cacheDirectory": {
-      "type": "string",
-      "description": "Specifies the default location of the cache directory."
-    },
-    "useDaemonProcess": {
-      "type": "boolean",
-      "description": "Specifies whether the daemon should be used for the default tasks runner."
-    },
-    "useInferencePlugins": {
-      "type": "boolean",
-      "description": "Specifies whether to add inference plugins when generating new projects."
-    },
-    "release": {
-      "type": "object",
-      "description": "Configuration for the nx release commands.",
-      "additionalProperties": false,
-      "properties": {
-        "projects": {
-          "oneOf": [
-            {
-              "type": "string",
-              "description": "A project name"
-            },
-            {
-              "type": "array",
-              "description": "An array of project names",
-              "minItems": 1,
-              "items": {
-                "type": "string"
-              }
-            }
-          ]
-        },
-        "groups": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "object",
-            "properties": {
-              "projectsRelationship": {
-                "type": "string",
-                "enum": ["fixed", "independent"]
-              },
-              "projects": {
-                "oneOf": [
-                  {
-                    "type": "string",
-                    "description": "A project name"
-                  },
-                  {
-                    "type": "array",
-                    "description": "An array of project names",
-                    "minItems": 1,
-                    "items": {
-                      "type": "string"
-                    }
-                  }
-                ]
-              },
-              "version": {
-                "allOf": [
-                  {
-                    "$ref": "#/definitions/NxReleaseVersionConfiguration"
-                  },
-                  {
-                    "allOf": [
-                      {
-                        "not": {
-                          "required": ["git"]
-                        }
-                      },
-                      {
-                        "not": {
-                          "required": ["preVersionCommand"]
-                        }
-                      }
-                    ]
-                  }
-                ]
-              },
-              "changelog": {
-                "oneOf": [
-                  {
-                    "$ref": "#/definitions/NxReleaseChangelogConfiguration"
-                  },
-                  {
-                    "type": "boolean"
-                  }
-                ]
-              },
-              "releaseTagPattern": {
-                "type": "string"
-              },
-              "versionPlans": {
-                "type": "boolean",
-                "description": "Enables using version plans as a specifier source for versioning and to determine changes for changelog generation."
-              }
-            },
-            "required": ["projects"]
-          }
-        },
-        "changelog": {
-          "type": "object",
-          "properties": {
-            "workspaceChangelog": {
-              "oneOf": [
-                {
-                  "$ref": "#/definitions/NxReleaseChangelogConfiguration"
-                },
-                {
-                  "type": "boolean"
-                }
-              ]
-            },
-            "projectChangelogs": {
-              "oneOf": [
-                {
-                  "$ref": "#/definitions/NxReleaseChangelogConfiguration"
-                },
-                {
-                  "type": "boolean"
-                }
-              ]
-            },
-            "automaticFromRef": {
-              "type": "boolean",
-              "description": "Whether or not to automatically look up the first commit for the workspace (or package, if versioning independently) and use that as the starting point for changelog generation. If this is not enabled, changelog generation will fail if there is no previous matching git tag to use as a starting point."
-            },
-            "git": {
-              "$ref": "#/definitions/NxReleaseGitConfiguration"
-            }
-          }
-        },
-        "conventionalCommits": {
-          "$ref": "#/definitions/NxReleaseConventionalCommitsConfiguration"
-        },
-        "projectsRelationship": {
-          "type": "string",
-          "enum": ["fixed", "independent"]
-        },
-        "git": {
-          "$ref": "#/definitions/NxReleaseGitConfiguration"
-        },
-        "version": {
-          "$ref": "#/definitions/NxReleaseVersionConfiguration"
-        },
-        "versionPlans": {
-          "type": "boolean",
-          "description": "Enables using version plans as a specifier source for versioning and to determine changes for changelog generation."
-        },
-        "releaseTagPattern": {
-          "type": "string"
-        }
-      }
-    }
-  },
-  "definitions": {
-    "inputs": {
-      "type": "array",
-      "items": {
-        "oneOf": [
-          {
-            "type": "string"
-          },
-          {
-            "type": "object",
-            "properties": {
-              "fileset": {
-                "type": "string",
-                "description": "A glob"
-              }
-            },
-            "additionalProperties": false
-          },
-          {
-            "type": "object",
-            "properties": {
-              "projects": {
-                "oneOf": [
-                  {
-                    "type": "string",
-                    "description": "The project that the targets belong to."
-                  },
-                  {
-                    "type": "array",
-                    "description": "The projects that the targets belong to.",
-                    "items": {
-                      "type": "string"
-                    }
-                  }
-                ]
-              },
-              "dependencies": {
-                "type": "boolean",
-                "description": "Include files belonging to the input for all the project dependencies of this target."
-              },
-              "input": {
-                "type": "string",
-                "description": "The name of the input."
-              }
-            },
-            "oneOf": [
-              {
-                "required": ["projects", "input"]
-              },
-              {
-                "required": ["dependencies", "input"]
-              },
-              {
-                "required": ["input"],
-                "not": {
-                  "anyOf": [
-                    {
-                      "required": ["projects"]
-                    },
-                    {
-                      "required": ["dependencies"]
-                    }
-                  ]
-                }
-              }
-            ],
-            "additionalProperties": false
-          },
-          {
-            "type": "object",
-            "properties": {
-              "runtime": {
-                "type": "string",
-                "description": "The command that will be executed and the results of which is added to the hash"
-              }
-            },
-            "additionalProperties": false
-          },
-          {
-            "type": "object",
-            "properties": {
-              "env": {
-                "type": "string",
-                "description": "The name of the env var which value is added to the hash"
-              }
-            },
-            "additionalProperties": false
-          },
-          {
-            "type": "object",
-            "properties": {
-              "externalDependencies": {
-                "type": "array",
-                "items": {
-                  "type": "string"
-                },
-                "description": "The list of external dependencies that our target depends on for `nx:run-commands` and community plugins."
-              }
-            },
-            "additionalProperties": false
-          },
-          {
-            "type": "object",
-            "properties": {
-              "dependentTasksOutputFiles": {
-                "type": "string",
-                "description": "The glob list of output files that project depends on."
-              },
-              "transitive": {
-                "type": "boolean",
-                "description": "Whether the check for outputs should be recursive or stop at the first level of dependencies."
-              }
-            },
-            "required": ["dependentTasksOutputFiles"],
-            "additionalProperties": false
-          }
-        ]
-      }
-    },
-    "cliOptions": {
-      "type": "object",
-      "description": "Default generator collection.",
-      "properties": {
-        "packageManager": {
-          "type": "string",
-          "description": "The default package manager to use.",
-          "enum": ["yarn", "pnpm", "npm", "bun"]
-        }
-      }
-    },
-    "generatorOptions": {
-      "type": "object",
-      "description": "List of default values used by generators."
-    },
-    "tasksRunnerOptions": {
-      "type": "object",
-      "description": "Available Task Runners.",
-      "properties": {
-        "runner": {
-          "type": "string",
-          "description": "Path to resolve the runner."
-        },
-        "options": {
-          "type": "object",
-          "description": "Default options for the runner.",
-          "properties": {
-            "accessToken": {
-              "type": "string"
-            },
-            "captureStderr": {
-              "type": "boolean",
-              "description": "Defines whether the cache captures stderr or just stdout."
-            },
-            "parallel": {
-              "type": "number",
-              "description": "Defines the max number of targets ran in parallel."
-            },
-            "cacheableOperations": {
-              "type": "array",
-              "description": "Defines the list of targets/operations that are cached by Nx.",
-              "items": {
-                "type": "string"
-              }
-            },
-            "cacheDirectory": {
-              "type": "string",
-              "description": "Defines where the local cache is stored."
-            },
-            "skipNxCache": {
-              "type": "boolean",
-              "description": "Defines whether the Nx Cache should be skipped."
-            },
-            "encryptionKey": {
-              "type": "string",
-              "description": "Defines an encryption key to support end-to-end encryption of your cloud cache. You may also provide an environment variable with the key NX_CLOUD_ENCRYPTION_KEY that contains an encryption key as its value. The Nx Cloud task runner normalizes the key length, so any length of key is acceptable."
-            }
-          }
-        }
+      "defaultBase": {
+         "type": "string",
+         "description": "Default --base used by affected logic."
       },
-      "additionalProperties": false
-    },
-    "targetDefaultsConfig": {
-      "type": "object",
-      "description": "Target defaults",
-      "properties": {
-        "executor": {
-          "description": "The function that Nx will invoke when you run this target",
-          "type": "string"
-        },
-        "options": {
-          "type": "object"
-        },
-        "outputs": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "defaultConfiguration": {
-          "type": "string",
-          "description": "The name of a configuration to use as the default if a configuration is not provided"
-        },
-        "configurations": {
-          "type": "object",
-          "description": "provides extra sets of values that will be merged into the options map",
-          "additionalProperties": {
-            "type": "object"
-          }
-        },
-        "inputs": {
-          "$ref": "#/definitions/inputs"
-        },
-        "dependsOn": {
-          "type": "array",
-          "items": {
-            "oneOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "object",
-                "properties": {
-                  "projects": {
-                    "oneOf": [
-                      {
+      "tasksRunnerOptions": {
+         "type": "object",
+         "additionalProperties": {
+            "$ref": "#/definitions/tasksRunnerOptions"
+         }
+      },
+      "namedInputs": {
+         "type": "object",
+         "description": "Named inputs used by inputs defined in targets",
+         "additionalProperties": {
+            "$ref": "#/definitions/inputs"
+         }
+      },
+      "targetDefaults": {
+         "type": "object",
+         "description": "Target defaults",
+         "additionalProperties": {
+            "$ref": "#/definitions/targetDefaultsConfig"
+         }
+      },
+      "workspaceLayout": {
+         "type": "object",
+         "description": "Where new apps + libs should be placed.",
+         "properties": {
+            "libsDir": {
+               "type": "string",
+               "description": "Default folder name for libs."
+            },
+            "appsDir": {
+               "type": "string",
+               "description": "Default folder name for apps."
+            }
+         },
+         "additionalProperties": false
+      },
+      "cli": {
+         "$ref": "#/definitions/cliOptions"
+      },
+      "generators": {
+         "$ref": "#/definitions/generatorOptions"
+      },
+      "plugins": {
+         "type": "array",
+         "description": "Plugins for extending the project graph.",
+         "items": {
+            "$ref": "#/definitions/plugins"
+         }
+      },
+      "defaultProject": {
+         "type": "string",
+         "description": "Default project. When project isn't provided, the default project will be used."
+      },
+      "nxCloudAccessToken": {
+         "type": "string",
+         "description": "The access token to use for nx-cloud. If set, the default tasks runner will be nx-cloud."
+      },
+      "nxCloudUrl": {
+         "type": "string",
+         "description": "Specifies the url pointing to an instance of nx cloud. Used for remote caching and displaying run links."
+      },
+      "nxCloudEncryptionKey": {
+         "type": "string",
+         "description": "Specifies the encryption key used to encrypt artifacts data before sending it to nx cloud."
+      },
+      "parallel": {
+         "type": "number",
+         "description": "Specifies how many tasks are ran in parallel by Nx for the default tasks runner."
+      },
+      "cacheDirectory": {
+         "type": "string",
+         "description": "Specifies the default location of the cache directory."
+      },
+      "useDaemonProcess": {
+         "type": "boolean",
+         "description": "Specifies whether the daemon should be used for the default tasks runner."
+      },
+      "useInferencePlugins": {
+         "type": "boolean",
+         "description": "Specifies whether to add inference plugins when generating new projects."
+      },
+      "release": {
+         "type": "object",
+         "description": "Configuration for the nx release commands.",
+         "additionalProperties": false,
+         "properties": {
+            "projects": {
+               "oneOf": [
+                  {
+                     "type": "string",
+                     "description": "A project name"
+                  },
+                  {
+                     "type": "array",
+                     "description": "An array of project names",
+                     "minItems": 1,
+                     "items": {
+                        "type": "string"
+                     }
+                  }
+               ]
+            },
+            "groups": {
+               "type": "object",
+               "additionalProperties": {
+                  "type": "object",
+                  "properties": {
+                     "projectsRelationship": {
                         "type": "string",
-                        "description": "A project name"
-                      },
-                      {
-                        "type": "array",
-                        "description": "An array of project names",
-                        "minItems": 1,
-                        "items": {
-                          "type": "string"
-                        }
-                      }
-                    ]
+                        "enum": ["fixed", "independent"]
+                     },
+                     "projects": {
+                        "oneOf": [
+                           {
+                              "type": "string",
+                              "description": "A project name"
+                           },
+                           {
+                              "type": "array",
+                              "description": "An array of project names",
+                              "minItems": 1,
+                              "items": {
+                                 "type": "string"
+                              }
+                           }
+                        ]
+                     },
+                     "version": {
+                        "allOf": [
+                           {
+                              "$ref": "#/definitions/NxReleaseVersionConfiguration"
+                           },
+                           {
+                              "allOf": [
+                                 {
+                                    "not": {
+                                       "required": ["git"]
+                                    }
+                                 },
+                                 {
+                                    "not": {
+                                       "required": ["preVersionCommand"]
+                                    }
+                                 }
+                              ]
+                           }
+                        ]
+                     },
+                     "changelog": {
+                        "oneOf": [
+                           {
+                              "$ref": "#/definitions/NxReleaseChangelogConfiguration"
+                           },
+                           {
+                              "type": "boolean"
+                           }
+                        ]
+                     },
+                     "releaseTagPattern": {
+                        "type": "string"
+                     },
+                     "versionPlans": {
+                        "type": "boolean",
+                        "description": "Enables using version plans as a specifier source for versioning and to determine changes for changelog generation."
+                     }
                   },
-                  "dependencies": {
-                    "type": "boolean"
-                  },
-                  "target": {
-                    "type": "string",
-                    "description": "The name of the target."
-                  },
-                  "params": {
-                    "type": "string",
-                    "description": "Configuration for params handling.",
-                    "enum": ["ignore", "forward"],
-                    "default": "ignore"
-                  }
-                },
-                "oneOf": [
-                  {
-                    "required": ["projects", "target"]
-                  },
-                  {
-                    "required": ["dependencies", "target"]
-                  },
-                  {
-                    "required": ["target"],
-                    "not": {
-                      "anyOf": [
+                  "required": ["projects"]
+               }
+            },
+            "changelog": {
+               "type": "object",
+               "properties": {
+                  "workspaceChangelog": {
+                     "oneOf": [
                         {
-                          "required": ["projects"]
+                           "$ref": "#/definitions/NxReleaseChangelogConfiguration"
                         },
                         {
-                          "required": ["dependencies"]
+                           "type": "boolean"
                         }
-                      ]
-                    }
+                     ]
+                  },
+                  "projectChangelogs": {
+                     "oneOf": [
+                        {
+                           "$ref": "#/definitions/NxReleaseChangelogConfiguration"
+                        },
+                        {
+                           "type": "boolean"
+                        }
+                     ]
+                  },
+                  "automaticFromRef": {
+                     "type": "boolean",
+                     "description": "Whether or not to automatically look up the first commit for the workspace (or package, if versioning independently) and use that as the starting point for changelog generation. If this is not enabled, changelog generation will fail if there is no previous matching git tag to use as a starting point."
+                  },
+                  "git": {
+                     "$ref": "#/definitions/NxReleaseGitConfiguration"
                   }
-                ],
-                "additionalProperties": false
-              }
+               }
+            },
+            "conventionalCommits": {
+               "$ref": "#/definitions/NxReleaseConventionalCommitsConfiguration"
+            },
+            "projectsRelationship": {
+               "type": "string",
+               "enum": ["fixed", "independent"]
+            },
+            "git": {
+               "$ref": "#/definitions/NxReleaseGitConfiguration"
+            },
+            "version": {
+               "$ref": "#/definitions/NxReleaseVersionConfiguration"
+            },
+            "versionPlans": {
+               "type": "boolean",
+               "description": "Enables using version plans as a specifier source for versioning and to determine changes for changelog generation."
+            },
+            "releaseTagPattern": {
+               "type": "string"
+            }
+         }
+      }
+   },
+   "definitions": {
+      "inputs": {
+         "type": "array",
+         "items": {
+            "oneOf": [
+               {
+                  "type": "string"
+               },
+               {
+                  "type": "object",
+                  "properties": {
+                     "fileset": {
+                        "type": "string",
+                        "description": "A glob"
+                     }
+                  },
+                  "additionalProperties": false
+               },
+               {
+                  "type": "object",
+                  "properties": {
+                     "projects": {
+                        "oneOf": [
+                           {
+                              "type": "string",
+                              "description": "The project that the targets belong to."
+                           },
+                           {
+                              "type": "array",
+                              "description": "The projects that the targets belong to.",
+                              "items": {
+                                 "type": "string"
+                              }
+                           }
+                        ]
+                     },
+                     "dependencies": {
+                        "type": "boolean",
+                        "description": "Include files belonging to the input for all the project dependencies of this target."
+                     },
+                     "input": {
+                        "type": "string",
+                        "description": "The name of the input."
+                     }
+                  },
+                  "oneOf": [
+                     {
+                        "required": ["projects", "input"]
+                     },
+                     {
+                        "required": ["dependencies", "input"]
+                     },
+                     {
+                        "required": ["input"],
+                        "not": {
+                           "anyOf": [
+                              {
+                                 "required": ["projects"]
+                              },
+                              {
+                                 "required": ["dependencies"]
+                              }
+                           ]
+                        }
+                     }
+                  ],
+                  "additionalProperties": false
+               },
+               {
+                  "type": "object",
+                  "properties": {
+                     "runtime": {
+                        "type": "string",
+                        "description": "The command that will be executed and the results of which is added to the hash"
+                     }
+                  },
+                  "additionalProperties": false
+               },
+               {
+                  "type": "object",
+                  "properties": {
+                     "env": {
+                        "type": "string",
+                        "description": "The name of the env var which value is added to the hash"
+                     }
+                  },
+                  "additionalProperties": false
+               },
+               {
+                  "type": "object",
+                  "properties": {
+                     "externalDependencies": {
+                        "type": "array",
+                        "items": {
+                           "type": "string"
+                        },
+                        "description": "The list of external dependencies that our target depends on for `nx:run-commands` and community plugins."
+                     }
+                  },
+                  "additionalProperties": false
+               },
+               {
+                  "type": "object",
+                  "properties": {
+                     "dependentTasksOutputFiles": {
+                        "type": "string",
+                        "description": "The glob list of output files that project depends on."
+                     },
+                     "transitive": {
+                        "type": "boolean",
+                        "description": "Whether the check for outputs should be recursive or stop at the first level of dependencies."
+                     }
+                  },
+                  "required": ["dependentTasksOutputFiles"],
+                  "additionalProperties": false
+               }
             ]
-          }
-        },
-        "cache": {
-          "type": "boolean",
-          "description": "Specifies if the given target should be cacheable"
-        }
+         }
       },
-      "additionalProperties": false
-    },
-    "plugins": {
-      "oneOf": [
-        {
-          "type": "string",
-          "description": "A plugin module to load with default options"
-        },
-        {
-          "type": "object",
-          "properties": {
-            "plugin": {
-              "type": "string",
-              "description": "The plugin module to load"
+      "cliOptions": {
+         "type": "object",
+         "description": "Default generator collection.",
+         "properties": {
+            "packageManager": {
+               "type": "string",
+               "description": "The default package manager to use.",
+               "enum": ["yarn", "pnpm", "npm", "bun"]
+            }
+         }
+      },
+      "generatorOptions": {
+         "type": "object",
+         "description": "List of default values used by generators."
+      },
+      "tasksRunnerOptions": {
+         "type": "object",
+         "description": "Available Task Runners.",
+         "properties": {
+            "runner": {
+               "type": "string",
+               "description": "Path to resolve the runner."
             },
             "options": {
-              "type": "object",
-              "description": "The options passed to the plugin when creating nodes and dependencies"
-            },
-            "include": {
-              "type": "array",
-              "description": "File patterns which are included by the plugin",
-              "items": {
-                "type": "string"
-              }
-            },
-            "exclude": {
-              "type": "array",
-              "description": "File patterns which are excluded by the plugin",
-              "items": {
-                "type": "string"
-              }
-            }
-          }
-        }
-      ]
-    },
-    "NxReleaseGitConfiguration": {
-      "type": "object",
-      "properties": {
-        "commit": {
-          "type": "boolean",
-          "description": "Whether or not to automatically commit the changes made by current command"
-        },
-        "commitMessage": {
-          "type": "string",
-          "description": "Custom git commit message to use when committing the changes made by this command"
-        },
-        "commitArgs": {
-          "type": "string",
-          "description": "Additional arguments (added after the --message argument, which may or may not be customized with --git-commit-message) to pass to the `git commit` command invoked behind the scenes"
-        },
-        "stageChanges": {
-          "type": "boolean",
-          "description": "Whether or not to stage the changes made by this command. Always treated as true if commit is true."
-        },
-        "tag": {
-          "type": "boolean",
-          "description": "Whether or not to automatically tag the changes made by this command"
-        },
-        "tagMessage": {
-          "type": "string",
-          "description": "Custom git tag message to use when tagging the changes made by this command. This defaults to be the same value as the tag itself."
-        },
-        "tagArgs": {
-          "type": "string",
-          "description": "Additional arguments to pass to the `git tag` command invoked behind the scenes"
-        }
-      }
-    },
-    "NxReleaseVersionConfiguration": {
-      "type": "object",
-      "properties": {
-        "conventionalCommits": {
-          "type": "boolean",
-          "description": "Shorthand for enabling the current version of projects to be resolved from git tags, and the next version to be determined by analyzing commit messages according to the Conventional Commits specification.",
-          "default": false
-        },
-        "generator": {
-          "type": "string"
-        },
-        "generatorOptions": {
-          "type": "object",
-          "additionalProperties": true
-        },
-        "git": {
-          "$ref": "#/definitions/NxReleaseGitConfiguration"
-        },
-        "preVersionCommand": {
-          "type": "string",
-          "description": "A command to run after validation of nx release configuration, but before versioning begins. Used for preparing build artifacts. If --dry-run is passed, the command is still executed, but with the NX_DRY_RUN environment variable set to 'true'."
-        }
-      }
-    },
-    "NxReleaseChangelogConfiguration": {
-      "type": "object",
-      "properties": {
-        "createRelease": {
-          "oneOf": [
-            {
-              "type": "string",
-              "enum": ["github"]
-            },
-            {
-              "type": "boolean",
-              "enum": [false]
-            }
-          ]
-        },
-        "entryWhenNoChanges": {
-          "oneOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "boolean",
-              "enum": [false]
-            }
-          ]
-        },
-        "file": {
-          "oneOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "boolean",
-              "enum": [false]
-            }
-          ]
-        },
-        "renderer": {
-          "type": "string"
-        },
-        "renderOptions": {
-          "$ref": "#/definitions/ChangelogRenderOptions"
-        }
-      }
-    },
-    "ChangelogRenderOptions": {
-      "type": "object",
-      "additionalProperties": true
-    },
-    "NxReleaseConventionalCommitsConfiguration": {
-      "type": "object",
-      "properties": {
-        "types": {
-          "type": "object",
-          "description": "A map of commit types to their configuration. If a type is set to 'true', then it will be enabled with the default 'semverBump' of 'patch' and will appear in the changelog. If a type is set to 'false', then it will not trigger a version bump and will be hidden from the changelog.",
-          "additionalProperties": {
-            "oneOf": [
-              {
-                "type": "boolean"
-              },
-              {
-                "type": "object",
-                "properties": {
-                  "semverBump": {
-                    "type": "string",
-                    "enum": ["major", "minor", "patch", "none"],
-                    "description": "The semver bump to apply to the version of the project(s) when a commit of this type is included in the release.",
-                    "default": "patch"
+               "type": "object",
+               "description": "Default options for the runner.",
+               "properties": {
+                  "accessToken": {
+                     "type": "string"
                   },
-                  "changelog": {
-                    "description": "Configuration for the changelog section for commits of this type. If set to 'true', then commits of this type will be included in the changelog with their default title for the type. If set to 'false', then commits of this type will not be included in the changelog.",
-                    "oneOf": [
-                      {
-                        "type": "boolean"
-                      },
-                      {
+                  "captureStderr": {
+                     "type": "boolean",
+                     "description": "Defines whether the cache captures stderr or just stdout."
+                  },
+                  "parallel": {
+                     "type": "number",
+                     "description": "Defines the max number of targets ran in parallel."
+                  },
+                  "cacheableOperations": {
+                     "type": "array",
+                     "description": "Defines the list of targets/operations that are cached by Nx.",
+                     "items": {
+                        "type": "string"
+                     }
+                  },
+                  "cacheDirectory": {
+                     "type": "string",
+                     "description": "Defines where the local cache is stored."
+                  },
+                  "skipNxCache": {
+                     "type": "boolean",
+                     "description": "Defines whether the Nx Cache should be skipped."
+                  },
+                  "encryptionKey": {
+                     "type": "string",
+                     "description": "Defines an encryption key to support end-to-end encryption of your cloud cache. You may also provide an environment variable with the key NX_CLOUD_ENCRYPTION_KEY that contains an encryption key as its value. The Nx Cloud task runner normalizes the key length, so any length of key is acceptable."
+                  }
+               }
+            }
+         },
+         "additionalProperties": false
+      },
+      "targetDefaultsConfig": {
+         "type": "object",
+         "description": "Target defaults",
+         "properties": {
+            "executor": {
+               "description": "The function that Nx will invoke when you run this target",
+               "type": "string"
+            },
+            "options": {
+               "type": "object"
+            },
+            "outputs": {
+               "type": "array",
+               "items": {
+                  "type": "string"
+               }
+            },
+            "defaultConfiguration": {
+               "type": "string",
+               "description": "The name of a configuration to use as the default if a configuration is not provided"
+            },
+            "configurations": {
+               "type": "object",
+               "description": "provides extra sets of values that will be merged into the options map",
+               "additionalProperties": {
+                  "type": "object"
+               }
+            },
+            "inputs": {
+               "$ref": "#/definitions/inputs"
+            },
+            "dependsOn": {
+               "type": "array",
+               "items": {
+                  "oneOf": [
+                     {
+                        "type": "string"
+                     },
+                     {
                         "type": "object",
                         "properties": {
-                          "title": {
-                            "type": "string",
-                            "description": "The title of the section in the changelog for commits of this type"
-                          },
-                          "hidden": {
-                            "type": "boolean",
-                            "description": "Whether or not to include commits of this type in the changelog",
-                            "default": false
-                          }
-                        }
-                      }
-                    ]
+                           "projects": {
+                              "oneOf": [
+                                 {
+                                    "type": "string",
+                                    "description": "A project name"
+                                 },
+                                 {
+                                    "type": "array",
+                                    "description": "An array of project names",
+                                    "minItems": 1,
+                                    "items": {
+                                       "type": "string"
+                                    }
+                                 }
+                              ]
+                           },
+                           "dependencies": {
+                              "type": "boolean"
+                           },
+                           "target": {
+                              "type": "string",
+                              "description": "The name of the target."
+                           },
+                           "params": {
+                              "type": "string",
+                              "description": "Configuration for params handling.",
+                              "enum": ["ignore", "forward"],
+                              "default": "ignore"
+                           }
+                        },
+                        "oneOf": [
+                           {
+                              "required": ["projects", "target"]
+                           },
+                           {
+                              "required": ["dependencies", "target"]
+                           },
+                           {
+                              "required": ["target"],
+                              "not": {
+                                 "anyOf": [
+                                    {
+                                       "required": ["projects"]
+                                    },
+                                    {
+                                       "required": ["dependencies"]
+                                    }
+                                 ]
+                              }
+                           }
+                        ],
+                        "additionalProperties": false
+                     }
+                  ]
+               }
+            },
+            "cache": {
+               "type": "boolean",
+               "description": "Specifies if the given target should be cacheable"
+            }
+         },
+         "additionalProperties": false
+      },
+      "plugins": {
+         "oneOf": [
+            {
+               "type": "string",
+               "description": "A plugin module to load with default options"
+            },
+            {
+               "type": "object",
+               "properties": {
+                  "plugin": {
+                     "type": "string",
+                     "description": "The plugin module to load"
+                  },
+                  "options": {
+                     "type": "object",
+                     "description": "The options passed to the plugin when creating nodes and dependencies"
+                  },
+                  "include": {
+                     "type": "array",
+                     "description": "File patterns which are included by the plugin",
+                     "items": {
+                        "type": "string"
+                     }
+                  },
+                  "exclude": {
+                     "type": "array",
+                     "description": "File patterns which are excluded by the plugin",
+                     "items": {
+                        "type": "string"
+                     }
                   }
-                }
-              }
-            ]
-          }
-        }
+               }
+            }
+         ]
+      },
+      "NxReleaseGitConfiguration": {
+         "type": "object",
+         "properties": {
+            "commit": {
+               "type": "boolean",
+               "description": "Whether or not to automatically commit the changes made by current command"
+            },
+            "commitMessage": {
+               "type": "string",
+               "description": "Custom git commit message to use when committing the changes made by this command"
+            },
+            "commitArgs": {
+               "type": "string",
+               "description": "Additional arguments (added after the --message argument, which may or may not be customized with --git-commit-message) to pass to the `git commit` command invoked behind the scenes"
+            },
+            "stageChanges": {
+               "type": "boolean",
+               "description": "Whether or not to stage the changes made by this command. Always treated as true if commit is true."
+            },
+            "tag": {
+               "type": "boolean",
+               "description": "Whether or not to automatically tag the changes made by this command"
+            },
+            "tagMessage": {
+               "type": "string",
+               "description": "Custom git tag message to use when tagging the changes made by this command. This defaults to be the same value as the tag itself."
+            },
+            "tagArgs": {
+               "type": "string",
+               "description": "Additional arguments to pass to the `git tag` command invoked behind the scenes"
+            }
+         }
+      },
+      "NxReleaseVersionConfiguration": {
+         "type": "object",
+         "properties": {
+            "conventionalCommits": {
+               "type": "boolean",
+               "description": "Shorthand for enabling the current version of projects to be resolved from git tags, and the next version to be determined by analyzing commit messages according to the Conventional Commits specification.",
+               "default": false
+            },
+            "generator": {
+               "type": "string"
+            },
+            "generatorOptions": {
+               "type": "object",
+               "additionalProperties": true
+            },
+            "git": {
+               "$ref": "#/definitions/NxReleaseGitConfiguration"
+            },
+            "preVersionCommand": {
+               "type": "string",
+               "description": "A command to run after validation of nx release configuration, but before versioning begins. Used for preparing build artifacts. If --dry-run is passed, the command is still executed, but with the NX_DRY_RUN environment variable set to 'true'."
+            }
+         }
+      },
+      "NxReleaseChangelogConfiguration": {
+         "type": "object",
+         "properties": {
+            "createRelease": {
+               "oneOf": [
+                  {
+                     "type": "string",
+                     "enum": ["github"]
+                  },
+                  {
+                     "type": "boolean",
+                     "enum": [false]
+                  }
+               ]
+            },
+            "entryWhenNoChanges": {
+               "oneOf": [
+                  {
+                     "type": "string"
+                  },
+                  {
+                     "type": "boolean",
+                     "enum": [false]
+                  }
+               ]
+            },
+            "file": {
+               "oneOf": [
+                  {
+                     "type": "string"
+                  },
+                  {
+                     "type": "boolean",
+                     "enum": [false]
+                  }
+               ]
+            },
+            "renderer": {
+               "type": "string"
+            },
+            "renderOptions": {
+               "$ref": "#/definitions/ChangelogRenderOptions"
+            }
+         }
+      },
+      "ChangelogRenderOptions": {
+         "type": "object",
+         "additionalProperties": true
+      },
+      "NxReleaseConventionalCommitsConfiguration": {
+         "type": "object",
+         "properties": {
+            "types": {
+               "type": "object",
+               "description": "A map of commit types to their configuration. If a type is set to 'true', then it will be enabled with the default 'semverBump' of 'patch' and will appear in the changelog. If a type is set to 'false', then it will not trigger a version bump and will be hidden from the changelog.",
+               "additionalProperties": {
+                  "oneOf": [
+                     {
+                        "type": "boolean"
+                     },
+                     {
+                        "type": "object",
+                        "properties": {
+                           "semverBump": {
+                              "type": "string",
+                              "enum": ["major", "minor", "patch", "none"],
+                              "description": "The semver bump to apply to the version of the project(s) when a commit of this type is included in the release.",
+                              "default": "patch"
+                           },
+                           "changelog": {
+                              "description": "Configuration for the changelog section for commits of this type. If set to 'true', then commits of this type will be included in the changelog with their default title for the type. If set to 'false', then commits of this type will not be included in the changelog.",
+                              "oneOf": [
+                                 {
+                                    "type": "boolean"
+                                 },
+                                 {
+                                    "type": "object",
+                                    "properties": {
+                                       "title": {
+                                          "type": "string",
+                                          "description": "The title of the section in the changelog for commits of this type"
+                                       },
+                                       "hidden": {
+                                          "type": "boolean",
+                                          "description": "Whether or not to include commits of this type in the changelog",
+                                          "default": false
+                                       }
+                                    }
+                                 }
+                              ]
+                           }
+                        }
+                     }
+                  ]
+               }
+            }
+         }
       }
-    }
-  }
+   }
 }

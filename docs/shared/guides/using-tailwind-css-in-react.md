@@ -18,7 +18,7 @@ You will now be able to use Tailwind class names and utilities in your app. For 
 
 ```jsx
 function Hello() {
-  return <div className="bg-indigo-500 p-2 font-mono">Hello!</div>;
+   return <div className="bg-indigo-500 p-2 font-mono">Hello!</div>;
 }
 ```
 
@@ -75,12 +75,12 @@ Next, adjust the `postcss.config.js` as follows:
 const { join } = require('path');
 
 module.exports = {
-  plugins: {
-    tailwindcss: {
-      config: join(__dirname, 'tailwind.config.js'),
-    },
-    autoprefixer: {},
-  },
+   plugins: {
+      tailwindcss: {
+         config: join(__dirname, 'tailwind.config.js'),
+      },
+      autoprefixer: {},
+   },
 };
 ```
 
@@ -99,17 +99,17 @@ const { createGlobPatternsForDependencies } = require('@nx/react/tailwind');
 const { join } = require('path');
 
 module.exports = {
-  content: [
-    join(
-      __dirname,
-      '{src,pages,components,app}/**/*!(*.stories|*.spec).{ts,tsx,html}'
-    ),
-    ...createGlobPatternsForDependencies(__dirname),
-  ],
-  theme: {
-    extend: {},
-  },
-  plugins: [],
+   content: [
+      join(
+         __dirname,
+         '{src,pages,components,app}/**/*!(*.stories|*.spec).{ts,tsx,html}'
+      ),
+      ...createGlobPatternsForDependencies(__dirname),
+   ],
+   theme: {
+      extend: {},
+   },
+   plugins: [],
 };
 ```
 
@@ -117,8 +117,8 @@ In the above, you are invoking the `createGlobPatternsForDependencies` utility f
 
 ```javascript
 [
-  'libs/lib1/src/**/!(*.stories|*.spec).{ts,tsx,html}',
-  'libs/lib2/src/**/!(*.stories|*.spec).{ts,tsx,html}',
+   'libs/lib1/src/**/!(*.stories|*.spec).{ts,tsx,html}',
+   'libs/lib2/src/**/!(*.stories|*.spec).{ts,tsx,html}',
 ];
 ```
 
@@ -140,17 +140,17 @@ Open up the `apps/{your app here}/project.json` file and add the following to th
 
 ```json lines {% fileName="apps/{your app here}/project.json" %}
 {
-  // ...
-  "targets": {
-    "build": {
-      "executor": "@nx/web:webpack",
-      "options": {
-        // ...
-        "postcssConfig": "apps/{your app here}/postcss.config.js"
+   // ...
+   "targets": {
+      "build": {
+         "executor": "@nx/web:webpack",
+         "options": {
+            // ...
+            "postcssConfig": "apps/{your app here}/postcss.config.js"
+         }
       }
-    }
-  }
-  // ...
+   }
+   // ...
 }
 ```
 

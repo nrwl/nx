@@ -1,20 +1,20 @@
 {
-  "name": "Nx Detox",
-  "version": "0.1",
-  "extends": ["@nx/workspace"],
-  "generators": {
-    "init": {
-      "factory": "./src/generators/init/init#detoxInitGeneratorInternal",
-      "schema": "./src/generators/init/schema.json",
-      "description": "Initialize the `@nx/detox` plugin.",
-      "hidden": true
-    },
-    "application": {
-      "factory": "./src/generators/application/application#detoxApplicationGeneratorInternal",
-      "schema": "./src/generators/application/schema.json",
-      "aliases": ["app"],
-      "x-type": "application",
-      "description": "Create a Detox application."
-    }
-  }
+   "name": "Nx Detox",
+   "version": "0.1",
+   "extends": ["@nx/workspace"],
+   "generators": {
+      "init": {
+         "factory": "./src/generators/init/init#detoxInitGeneratorInternal",
+         "schema": "./src/generators/init/schema.json",
+         "description": "Initialize the `@nx/detox` plugin.",
+         "hidden": true
+      },
+      "application": {
+         "factory": "./src/generators/application/application#detoxApplicationGeneratorInternal",
+         "schema": "./src/generators/application/schema.json",
+         "aliases": ["app"],
+         "x-type": "application",
+         "description": "Create a Detox application."
+      }
+   }
 }

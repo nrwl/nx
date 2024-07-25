@@ -9,8 +9,8 @@ description: This guide explains how you can set up Storybook composition on you
 
 As explained in the [Storybook official docs](https://storybook.js.org/docs/angular/workflows/storybook-composition), Storybook Composition allows you to embed components from any Storybook inside your local Storybook. If you want to learn more about Storybook Composition, please take a look at the following articles, which explain it in detail:
 
-- [Storybook Composition - Chromatic blog](https://www.chromatic.com/blog/storybook-composition/)
-- [Storybook Composition - Storybook docs](https://storybook.js.org/docs/angular/workflows/storybook-composition)
+-  [Storybook Composition - Chromatic blog](https://www.chromatic.com/blog/storybook-composition/)
+-  [Storybook Composition - Storybook docs](https://storybook.js.org/docs/angular/workflows/storybook-composition)
 
 ## How it works
 
@@ -82,15 +82,15 @@ To solve this, we must statically set different ports for each project. We can k
 
 ```json {% fileName="<some-project-root>/project.json" highlightLines=[7] %}
 {
-  // ...
-  "targets": {
-    // ...
-    "storybook": {
-      "options": {
-        "port": 4401 // make sure to set a port different than the rest of the projects
+   // ...
+   "targets": {
+      // ...
+      "storybook": {
+         "options": {
+            "port": 4401 // make sure to set a port different than the rest of the projects
+         }
       }
-    }
-  }
+   }
 }
 ```
 
@@ -138,21 +138,21 @@ The objective is to end up with a new target in your `main-host`'s `project.json
 
 ```jsonc {% fileName="apps/main-host/project.json" highlightLines=["5-15"] %}
 {
-  // ...
-  "targets": {
-    // ...
-    "storybook-composition": {
-      "executor": "nx:run-commands",
-      "options": {
-        "commands": [
-          "nx storybook one-composed",
-          "nx storybook two-composed",
-          "nx storybook three-composed"
-        ],
-        "parallel": true
+   // ...
+   "targets": {
+      // ...
+      "storybook-composition": {
+         "executor": "nx:run-commands",
+         "options": {
+            "commands": [
+               "nx storybook one-composed",
+               "nx storybook two-composed",
+               "nx storybook three-composed"
+            ],
+            "parallel": true
+         }
       }
-    }
-  }
+   }
 }
 ```
 
@@ -178,17 +178,17 @@ This will create a new `target` in your `apps/main-host/project.json`:
 
 ```jsonc {% fileName="apps/main-host/project.json" highlightLines=["5-11"] %}
 {
-  // ...
-  "targets": {
-    // ...
-    "storybook-composition": {
-      "executor": "nx:run-commands",
-      "outputs": [],
-      "options": {
-        "command": "nx storybook one-composed"
+   // ...
+   "targets": {
+      // ...
+      "storybook-composition": {
+         "executor": "nx:run-commands",
+         "outputs": [],
+         "options": {
+            "command": "nx storybook one-composed"
+         }
       }
-    }
-  }
+   }
 }
 ```
 
@@ -196,21 +196,21 @@ Now, change the `command` option to be `commands`, add the `"parallel": true` op
 
 ```jsonc {% fileName="apps/main-host/project.json" highlightLines=["5-15"] %}
 {
-  // ...
-  "targets": {
-    // ...
-    "storybook-composition": {
-      "executor": "nx:run-commands",
-      "options": {
-        "commands": [
-          "nx storybook one-composed",
-          "nx storybook two-composed",
-          "nx storybook three-composed"
-        ],
-        "parallel": true
+   // ...
+   "targets": {
+      // ...
+      "storybook-composition": {
+         "executor": "nx:run-commands",
+         "options": {
+            "commands": [
+               "nx storybook one-composed",
+               "nx storybook two-composed",
+               "nx storybook three-composed"
+            ],
+            "parallel": true
+         }
       }
-    }
-  }
+   }
 }
 ```
 

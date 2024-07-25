@@ -1,4 +1,4 @@
 export const enum Linter {
-  EsLint = 'eslint',
-  None = 'none',
+   EsLint = 'eslint',
+   None = 'none',
 }

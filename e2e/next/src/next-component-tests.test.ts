@@ -1,135 +1,135 @@
 import {
-  cleanupProject,
-  createFile,
-  newProject,
-  runCLI,
-  runE2ETests,
-  uniq,
-  updateFile,
+   cleanupProject,
+   createFile,
+   newProject,
+   runCLI,
+   runE2ETests,
+   uniq,
+   updateFile,
 } from '@nx/e2e/utils';
 
 describe('NextJs Component Testing', () => {
-  beforeAll(() => {
-    newProject({
-      name: uniq('next-ct'),
-      packages: ['@nx/next'],
-    });
-  });
+   beforeAll(() => {
+      newProject({
+         name: uniq('next-ct'),
+         packages: ['@nx/next'],
+      });
+   });
 
-  afterAll(() => cleanupProject());
+   afterAll(() => cleanupProject());
 
-  it('should test a NextJs app', () => {
-    const appName = uniq('next-app');
-    createAppWithCt(appName);
-    if (runE2ETests()) {
-      expect(runCLI(`component-test ${appName}`)).toContain(
-        'All specs passed!'
-      );
-    }
-    addTailwindToApp(appName);
-    if (runE2ETests()) {
-      expect(runCLI(`component-test ${appName}`)).toContain(
-        'All specs passed!'
-      );
-    }
-  });
+   it('should test a NextJs app', () => {
+      const appName = uniq('next-app');
+      createAppWithCt(appName);
+      if (runE2ETests()) {
+         expect(runCLI(`component-test ${appName}`)).toContain(
+            'All specs passed!'
+         );
+      }
+      addTailwindToApp(appName);
+      if (runE2ETests()) {
+         expect(runCLI(`component-test ${appName}`)).toContain(
+            'All specs passed!'
+         );
+      }
+   });
 
-  it('should test a NextJs app using babel compiler', () => {
-    const appName = uniq('next-app');
-    createAppWithCt(appName);
-    //  add bable compiler to app
-    addBabelSupport(`apps/${appName}`);
-    if (runE2ETests()) {
-      expect(runCLI(`component-test ${appName}`)).toContain(
-        'All specs passed!'
-      );
-    }
-  });
+   it('should test a NextJs app using babel compiler', () => {
+      const appName = uniq('next-app');
+      createAppWithCt(appName);
+      //  add bable compiler to app
+      addBabelSupport(`apps/${appName}`);
+      if (runE2ETests()) {
+         expect(runCLI(`component-test ${appName}`)).toContain(
+            'All specs passed!'
+         );
+      }
+   });
 
-  it('should test a NextJs lib using babel compiler', async () => {
-    const libName = uniq('next-lib');
-    createLibWithCt(libName, false);
-    //  add bable compiler to lib
-    addBabelSupport(`libs/${libName}`);
-    if (runE2ETests()) {
-      expect(runCLI(`component-test ${libName}`)).toContain(
-        'All specs passed!'
-      );
-    }
-  });
+   it('should test a NextJs lib using babel compiler', async () => {
+      const libName = uniq('next-lib');
+      createLibWithCt(libName, false);
+      //  add bable compiler to lib
+      addBabelSupport(`libs/${libName}`);
+      if (runE2ETests()) {
+         expect(runCLI(`component-test ${libName}`)).toContain(
+            'All specs passed!'
+         );
+      }
+   });
 
-  it('should test a NextJs lib', async () => {
-    const libName = uniq('next-lib');
-    createLibWithCt(libName, false);
-    if (runE2ETests()) {
-      expect(runCLI(`component-test ${libName}`)).toContain(
-        'All specs passed!'
-      );
-    }
-    addTailwindToLib(libName);
-    if (runE2ETests()) {
-      expect(runCLI(`component-test ${libName}`)).toContain(
-        'All specs passed!'
-      );
-    }
-  });
+   it('should test a NextJs lib', async () => {
+      const libName = uniq('next-lib');
+      createLibWithCt(libName, false);
+      if (runE2ETests()) {
+         expect(runCLI(`component-test ${libName}`)).toContain(
+            'All specs passed!'
+         );
+      }
+      addTailwindToLib(libName);
+      if (runE2ETests()) {
+         expect(runCLI(`component-test ${libName}`)).toContain(
+            'All specs passed!'
+         );
+      }
+   });
 
-  it('should test a NextJs buildable lib', async () => {
-    const buildableLibName = uniq('next-buildable-lib');
-    createLibWithCt(buildableLibName, true);
-    if (runE2ETests()) {
-      expect(runCLI(`component-test ${buildableLibName}`)).toContain(
-        'All specs passed!'
-      );
-    }
+   it('should test a NextJs buildable lib', async () => {
+      const buildableLibName = uniq('next-buildable-lib');
+      createLibWithCt(buildableLibName, true);
+      if (runE2ETests()) {
+         expect(runCLI(`component-test ${buildableLibName}`)).toContain(
+            'All specs passed!'
+         );
+      }
 
-    addTailwindToLib(buildableLibName);
-    if (runE2ETests()) {
-      expect(runCLI(`component-test ${buildableLibName}`)).toContain(
-        'All specs passed!'
-      );
-    }
-  });
+      addTailwindToLib(buildableLibName);
+      if (runE2ETests()) {
+         expect(runCLI(`component-test ${buildableLibName}`)).toContain(
+            'All specs passed!'
+         );
+      }
+   });
 
-  it('should test a NextJs server component that uses router', async () => {
-    const lib = uniq('next-lib');
-    createLibWithCtCypress(lib);
-    if (runE2ETests()) {
-      expect(runCLI(`component-test ${lib}`)).toContain('All specs passed!');
-    }
-  }, 600_000);
+   it('should test a NextJs server component that uses router', async () => {
+      const lib = uniq('next-lib');
+      createLibWithCtCypress(lib);
+      if (runE2ETests()) {
+         expect(runCLI(`component-test ${lib}`)).toContain('All specs passed!');
+      }
+   }, 600_000);
 });
 
 function addBabelSupport(path: string) {
-  updateFile(`${path}/cypress.config.ts`, (content) => {
-    // apply babel compiler
-    return content.replace(
-      'nxComponentTestingPreset(__filename)',
-      'nxComponentTestingPreset(__filename, {compiler: "babel"})'
-    );
-  });
+   updateFile(`${path}/cypress.config.ts`, (content) => {
+      // apply babel compiler
+      return content.replace(
+         'nxComponentTestingPreset(__filename)',
+         'nxComponentTestingPreset(__filename, {compiler: "babel"})'
+      );
+   });
 
-  //  added needed .babelrc file with defaults
-  createFile(
-    `${path}/.babelrc`,
-    JSON.stringify({ presets: ['next/babel'], plugins: ['istanbul'] })
-  );
+   //  added needed .babelrc file with defaults
+   createFile(
+      `${path}/.babelrc`,
+      JSON.stringify({ presets: ['next/babel'], plugins: ['istanbul'] })
+   );
 }
 
 function createAppWithCt(appName: string) {
-  runCLI(
-    `generate @nx/next:app ${appName} --directory=apps/${appName} --no-interactive --appDir=false --src=false --projectNameAndRootFormat=as-provided`
-  );
-  runCLI(
-    `generate @nx/next:component button --project=${appName} --directory=apps/${appName}/components --nameAndDirectoryFormat=as-provided --no-interactive`
-  );
-  createFile(
-    `apps/${appName}/public/data.json`,
-    JSON.stringify({ message: 'loaded from app data.json' })
-  );
+   runCLI(
+      `generate @nx/next:app ${appName} --directory=apps/${appName} --no-interactive --appDir=false --src=false --projectNameAndRootFormat=as-provided`
+   );
+   runCLI(
+      `generate @nx/next:component button --project=${appName} --directory=apps/${appName}/components --nameAndDirectoryFormat=as-provided --no-interactive`
+   );
+   createFile(
+      `apps/${appName}/public/data.json`,
+      JSON.stringify({ message: 'loaded from app data.json' })
+   );
 
-  updateFile(`apps/${appName}/components/button.tsx`, (content) => {
-    return `import { useEffect, useState } from 'react';
+   updateFile(`apps/${appName}/components/button.tsx`, (content) => {
+      return `import { useEffect, useState } from 'react';
 
 export interface ButtonProps {
   text: string;
@@ -150,24 +150,24 @@ export default function Button(props: ButtonProps) {
   );
 }
 `;
-  });
+   });
 
-  runCLI(
-    `generate @nx/next:cypress-component-configuration --project=${appName} --generate-tests --no-interactive`
-  );
+   runCLI(
+      `generate @nx/next:cypress-component-configuration --project=${appName} --generate-tests --no-interactive`
+   );
 }
 
 function addTailwindToApp(appName: string) {
-  runCLI(
-    `generate @nx/react:setup-tailwind --project=${appName} --no-interactive`
-  );
-  updateFile(`apps/${appName}/cypress/support/component.ts`, (content) => {
-    return `${content}
+   runCLI(
+      `generate @nx/react:setup-tailwind --project=${appName} --no-interactive`
+   );
+   updateFile(`apps/${appName}/cypress/support/component.ts`, (content) => {
+      return `${content}
 import '../../pages/styles.css'`;
-  });
+   });
 
-  updateFile(`apps/${appName}/components/button.cy.tsx`, (content) => {
-    return `import * as React from 'react';
+   updateFile(`apps/${appName}/components/button.cy.tsx`, (content) => {
+      return `import * as React from 'react';
 import Button from './button';
 
 describe(Button.name, () => {
@@ -182,19 +182,19 @@ describe(Button.name, () => {
   });
 });
 `;
-  });
+   });
 }
 
 function createLibWithCt(libName: string, buildable: boolean) {
-  runCLI(
-    `generate @nx/next:lib ${libName} --buildable=${buildable} --no-interactive`
-  );
+   runCLI(
+      `generate @nx/next:lib ${libName} --buildable=${buildable} --no-interactive`
+   );
 
-  runCLI(
-    `generate @nx/next:component button --project=${libName} --flat --export --no-interactive`
-  );
-  updateFile(`libs/${libName}/src/lib/button.tsx`, (content) => {
-    return `import { useEffect, useState } from 'react';
+   runCLI(
+      `generate @nx/next:component button --project=${libName} --flat --export --no-interactive`
+   );
+   updateFile(`libs/${libName}/src/lib/button.tsx`, (content) => {
+      return `import { useEffect, useState } from 'react';
 export interface ButtonProps {
 text: string
 }
@@ -205,24 +205,24 @@ return <button className="text-white bg-black p-4">{props.text}</button>
 
 export default Button;
 `;
-  });
+   });
 
-  runCLI(
-    `generate @nx/next:cypress-component-configuration --project=${libName} --generate-tests --no-interactive`
-  );
+   runCLI(
+      `generate @nx/next:cypress-component-configuration --project=${libName} --generate-tests --no-interactive`
+   );
 }
 
 function createLibWithCtCypress(libName: string) {
-  runCLI(
-    `generate @nx/next:lib ${libName} --no-interactive --projectNameAndRootFormat=as-provided`
-  );
+   runCLI(
+      `generate @nx/next:lib ${libName} --no-interactive --projectNameAndRootFormat=as-provided`
+   );
 
-  runCLI(
-    `generate @nx/next:cypress-component-configuration --project=${libName} --no-interactive`
-  );
+   runCLI(
+      `generate @nx/next:cypress-component-configuration --project=${libName} --no-interactive`
+   );
 
-  updateFile(`${libName}/src/lib/hello-server.tsx`, () => {
-    return `import { useRouter } from 'next/router';
+   updateFile(`${libName}/src/lib/hello-server.tsx`, () => {
+      return `import { useRouter } from 'next/router';
 
     export function HelloServer() {
       useRouter();
@@ -230,11 +230,11 @@ function createLibWithCtCypress(libName: string) {
       return <h1>Hello Server</h1>;
     }
     `;
-  });
-  // Add cypress component test
-  createFile(
-    `${libName}/src/lib/hello-server.cy.tsx`,
-    `import * as Router from 'next/router';
+   });
+   // Add cypress component test
+   createFile(
+      `${libName}/src/lib/hello-server.cy.tsx`,
+      `import * as Router from 'next/router';
     import { HelloServer } from './hello-server';
     
     describe('HelloServer', () => {
@@ -252,15 +252,15 @@ function createLibWithCtCypress(libName: string) {
     });
     
     `
-  );
+   );
 }
 function addTailwindToLib(libName: string) {
-  createFile(`libs/${libName}/src/lib/styles.css`, ``);
-  runCLI(
-    `generate @nx/react:setup-tailwind --project=${libName} --no-interactive`
-  );
-  updateFile(`libs/${libName}/src/lib/button.cy.tsx`, (content) => {
-    return `import * as React from 'react';
+   createFile(`libs/${libName}/src/lib/styles.css`, ``);
+   runCLI(
+      `generate @nx/react:setup-tailwind --project=${libName} --no-interactive`
+   );
+   updateFile(`libs/${libName}/src/lib/button.cy.tsx`, (content) => {
+      return `import * as React from 'react';
 import Button from './button';
 
 describe(Button.name, () => {
@@ -275,12 +275,12 @@ describe(Button.name, () => {
   });
 });
 `;
-  });
-  updateFile(`libs/${libName}/cypress/support/styles.ct.css`, (content) => {
-    return `${content}
+   });
+   updateFile(`libs/${libName}/cypress/support/styles.ct.css`, (content) => {
+      return `${content}
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 `;
-  });
+   });
 }

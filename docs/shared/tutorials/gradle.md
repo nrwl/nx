@@ -9,11 +9,11 @@ In this tutorial, you'll learn how to add Nx to a repository with an existing Gr
 
 What will you learn?
 
-- how to add Nx to a Gradle project
-- how to run a single task (i.e. serve your app) or run multiple tasks in parallel
-- how to leverage code generators to scaffold components
-- how to modularize your codebase and impose architectural constraints for better maintainability
-- [how to speed up CI with Nx Cloud ⚡](#fast-ci)
+-  how to add Nx to a Gradle project
+-  how to run a single task (i.e. serve your app) or run multiple tasks in parallel
+-  how to leverage code generators to scaffold components
+-  how to modularize your codebase and impose architectural constraints for better maintainability
+-  [how to speed up CI with Nx Cloud ⚡](#fast-ci)
 
 ## Prerequisites
 
@@ -46,8 +46,8 @@ git clone https://github.com/<your-username>/gradle-tutorial.git
 
 The Multi-Module Spring Tutorial left us with 2 projects:
 
-- The main `application` project which contains the Spring `DemoApplication`
-- A `library` project which contains a Service used in the `DemoApplication`
+-  The main `application` project which contains the Spring `DemoApplication`
+-  A `library` project which contains a Service used in the `DemoApplication`
 
 You can see the above 2 projects by running `./gradlew projects`
 
@@ -275,10 +275,10 @@ Make sure you have completed the previous sections of this tutorial before start
 
 This tutorial walked you through how Nx can improve the local development experience, but the biggest difference Nx makes is in CI. As repositories get bigger, making sure that the CI is fast, reliable and maintainable can get very challenging. Nx provides a solution.
 
-- Nx reduces wasted time in CI with the [`affected` command](/ci/features/affected).
-- Nx Replay's [remote caching](/ci/features/remote-cache) will reuse task artifacts from different CI executions making sure you will never run the same computation twice.
-- Nx Agents [efficiently distribute tasks across machines](/ci/concepts/parallelization-distribution) ensuring constant CI time regardless of the repository size. The right number of machines is allocated for each PR to ensure good performance without wasting compute.
-- Nx Atomizer [automatically splits](/ci/features/split-e2e-tasks) large e2e tests to distribute them across machines. Nx can also automatically [identify and rerun flaky e2e tests](/ci/features/flaky-tasks).
+-  Nx reduces wasted time in CI with the [`affected` command](/ci/features/affected).
+-  Nx Replay's [remote caching](/ci/features/remote-cache) will reuse task artifacts from different CI executions making sure you will never run the same computation twice.
+-  Nx Agents [efficiently distribute tasks across machines](/ci/concepts/parallelization-distribution) ensuring constant CI time regardless of the repository size. The right number of machines is allocated for each PR to ensure good performance without wasting compute.
+-  Nx Atomizer [automatically splits](/ci/features/split-e2e-tasks) large e2e tests to distribute them across machines. Nx can also automatically [identify and rerun flaky e2e tests](/ci/features/flaky-tasks).
 
 ### Connect to Nx Cloud {% highlightColor="green" %}
 
@@ -334,42 +334,42 @@ The key lines in the CI pipeline are:
 name: CI
 
 on:
-  push:
-    branches:
-      - main
-  pull_request:
+   push:
+      branches:
+         - main
+   pull_request:
 
 permissions:
-  actions: read
-  contents: read
+   actions: read
+   contents: read
 
 jobs:
-  main:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+   main:
+      runs-on: ubuntu-latest
+      steps:
+         - uses: actions/checkout@v4
+           with:
+              fetch-depth: 0
 
-      # This enables task distribution via Nx Cloud
-      # Run this command as early as possible, before dependencies are installed
-      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-jvm" --stop-agents-after="build"
+         # This enables task distribution via Nx Cloud
+         # Run this command as early as possible, before dependencies are installed
+         # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
+         - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-jvm" --stop-agents-after="build"
 
-      - name: Set up JDK 17 for x64
-        uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'temurin'
-          architecture: x64
+         - name: Set up JDK 17 for x64
+           uses: actions/setup-java@v4
+           with:
+              java-version: '17'
+              distribution: 'temurin'
+              architecture: x64
 
-      - name: Setup Gradle
-        uses: gradle/gradle-build-action@v2
+         - name: Setup Gradle
+           uses: gradle/gradle-build-action@v2
 
-      - uses: nrwl/nx-set-shas@v4
+         - uses: nrwl/nx-set-shas@v4
 
-      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-      - run: ./nx affected -t test build
+         # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
+         - run: ./nx affected -t test build
 ```
 
 ### Open a Pull Request {% highlightColor="green" %}
@@ -392,26 +392,26 @@ The `See all runs` link goes to a page with the progress and results of tasks th
 
 For more information about how Nx can improve your CI pipeline, check out one of these detailed tutorials:
 
-- [Circle CI with Nx](/ci/intro/tutorials/circle)
-- [GitHub Actions with Nx](/ci/intro/tutorials/github-actions)
+-  [Circle CI with Nx](/ci/intro/tutorials/circle)
+-  [GitHub Actions with Nx](/ci/intro/tutorials/github-actions)
 
 ## Summary
 
 Now that you have added Nx to this sample Gradle repository, you have learned several ways that Nx can help your
 organization:
 
-- Nx reflects the Gradle graph into the Nx graph
-- Nx's dependency graph visualisation helps you understand your codebase
-- Nx caches task results and reuses them when the same task is rerun later
-- Nx intelligently determines which tasks are `affected` by code changes to reduce waste in CI
-- Nx Cloud provides remote caching and distributed task execution to speed up CI
+-  Nx reflects the Gradle graph into the Nx graph
+-  Nx's dependency graph visualisation helps you understand your codebase
+-  Nx caches task results and reuses them when the same task is rerun later
+-  Nx intelligently determines which tasks are `affected` by code changes to reduce waste in CI
+-  Nx Cloud provides remote caching and distributed task execution to speed up CI
 
 ## Next Steps
 
 Connect with the rest of the Nx community with these resources:
 
-- [Join the Official Nx Discord Server](https://go.nx.dev/community) to ask questions and find out the latest news about
-  Nx.
-- [Follow Nx on Twitter](https://twitter.com/nxdevtools) to stay up to date with Nx news
-- [Read our Nx blog](/blog)
-- [Subscribe to our Youtube channel](https://www.youtube.com/@nxdevtools) for demos and Nx insights
+-  [Join the Official Nx Discord Server](https://go.nx.dev/community) to ask questions and find out the latest news about
+   Nx.
+-  [Follow Nx on Twitter](https://twitter.com/nxdevtools) to stay up to date with Nx news
+-  [Read our Nx blog](/blog)
+-  [Subscribe to our Youtube channel](https://www.youtube.com/@nxdevtools) for demos and Nx insights

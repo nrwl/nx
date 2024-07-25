@@ -9,10 +9,10 @@ The Nx Gradle plugin registers Gradle projects in your Nx workspace. It allows G
 
 Nx adds the following features to your workspace:
 
-- [Cache task results](/features/cache-task-results)
-- [Distribute task execution](/ci/features/distribute-task-execution)
-- [Run only tasks affected by a PR](/ci/features/affected)
-- [Interactively explore your workspace](/features/explore-graph)
+-  [Cache task results](/features/cache-task-results)
+-  [Distribute task execution](/ci/features/distribute-task-execution)
+-  [Run only tasks affected by a PR](/ci/features/affected)
+-  [Interactively explore your workspace](/features/explore-graph)
 
 ## Add Nx to a Gradle Workspace
 
@@ -53,8 +53,8 @@ nx add @nx/gradle
 
 The `@nx/gradle` plugin will create an Nx project for each Gradle configuration file present. Any of the following files will be recognized as a Gradle configuration file:
 
-- `build.gradle`
-- `build.gradle.kts`
+-  `build.gradle`
+-  `build.gradle.kts`
 
 ### @nx/gradle Configuration
 
@@ -62,16 +62,16 @@ The `@nx/gradle` is configured in the `plugins` array in `nx.json`.
 
 ```json {% fileName="nx.json" %}
 {
-  "plugins": [
-    {
-      "plugin": "@nx/gradle",
-      "options": {
-        "testTargetName": "test",
-        "classesTargetName": "classes",
-        "buildTargetName": "build"
+   "plugins": [
+      {
+         "plugin": "@nx/gradle",
+         "options": {
+            "testTargetName": "test",
+            "classesTargetName": "classes",
+            "buildTargetName": "build"
+         }
       }
-    }
-  ]
+   ]
 }
 ```
 

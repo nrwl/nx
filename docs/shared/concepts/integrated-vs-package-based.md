@@ -2,9 +2,9 @@
 
 There are many different ways to structure a repository and Nx is designed to support them all. To better discuss how Nx can improve a repository, it is helpful to define some terms.
 
-- Standalone Application - A repository with a single application
-- Package-Based Repository - A repository with multiple projects that depend on each other via `package.json` and often have nested `node_modules`
-- Integrated Repository - A repository with multiple projects that depend on each other via typescript imports and often employ a single version policy
+-  Standalone Application - A repository with a single application
+-  Package-Based Repository - A repository with multiple projects that depend on each other via `package.json` and often have nested `node_modules`
+-  Integrated Repository - A repository with multiple projects that depend on each other via typescript imports and often employ a single version policy
 
 Nx's features can be enabled in each of these types of repositories. Just as each repository is unique and may not exactly fit in one of these categories, the way Nx is used will vary between repositories.
 
@@ -22,9 +22,9 @@ Lerna, Yarn, Lage, [Turborepo](/concepts/turbo-and-nx) and Nx support this style
 
 Someone who appreciates the flexibility of a package-based repository will be most interested in the following features of Nx:
 
-- Add [caching](/features/cache-task-results) and [task orchestration](/features/run-tasks) without modifying tooling or file structure
-- Import existing projects into the repo without modifying their tooling
-- Easily create new projects or tools with [code generators](/features/generate-code)
+-  Add [caching](/features/cache-task-results) and [task orchestration](/features/run-tasks) without modifying tooling or file structure
+-  Import existing projects into the repo without modifying their tooling
+-  Easily create new projects or tools with [code generators](/features/generate-code)
 
 {% cards %}
 {% card title="NPM Workspaces Tutorial" description="Add Nx to an existing NPM workspaces repo" type="documentation" url="/getting-started/tutorials/npm-workspaces-tutorial" /%}
@@ -38,9 +38,9 @@ Bazel and Nx support this style.
 
 Someone who appreciates the structure and consistency of an integrated repository will be most interested in the following features of Nx:
 
-- [Enforce architectural decisions](/features/enforce-module-boundaries) with tagging rules
-- Encourage consistency with custom [code generators](/features/generate-code)
-- [Automate updating dependencies](/features/automate-updating-dependencies) of the entire toolchain
+-  [Enforce architectural decisions](/features/enforce-module-boundaries) with tagging rules
+-  Encourage consistency with custom [code generators](/features/generate-code)
+-  [Automate updating dependencies](/features/automate-updating-dependencies) of the entire toolchain
 
 {% cards %}
 {% card title="Tutorial: React Monorepo" description="Create a React monorepo with Nx" type="documentation" url="/getting-started/tutorials/react-monorepo-tutorial" /%}
@@ -53,8 +53,8 @@ Nx plugins, especially the [generators](/features/generate-code), [executors](/c
 
 Someone whose main focus is on improving their single application will be most interested in the following features of Nx:
 
-- Set up a [fast CI system](/ci/intro/ci-with-nx) without CI expertise
-- Easily [add new tooling](/plugin-registry)
+-  Set up a [fast CI system](/ci/intro/ci-with-nx) without CI expertise
+-  Easily [add new tooling](/plugin-registry)
 
 {% cards %}
 {% card title="Standalone Applications with Nx" description="Learn what Standlone Apps are and how Nx can be useful" type="video" url="https://youtu.be/qEaVzh-oBBc" /%}
@@ -68,8 +68,8 @@ Nx itself doesn't care which style you choose. You can use all the features of N
 
 You can be successful working in any style, and there are ways to transition between them. At a high level
 
-- **standalone apps -** for when you want a single project that can be nicely structured and modularized. It's a good starting point if you're not looking into a monorepo but with the option to expand later.
-- **package-based repos -** ideally when you already have a monorepo (e.g. yarn/npm/pnpm workspace) and you want Nx primarily for speed and task scheduling. Also, when you want Nx to stay mostly out of your way and you set up everything on your own.
-- **integrated repos -** when you want more help from Nx. It takes away the burden of the configuration by coming up with a pre-configured setup that scales well, and provides scaffolding support and automated code migrations. Organizations choose this approach if they are bought into monorepos and want to scale up. Integrated repos might restrict some choices to allow Nx to help you more but result in better maintainability and more value in the long run.
+-  **standalone apps -** for when you want a single project that can be nicely structured and modularized. It's a good starting point if you're not looking into a monorepo but with the option to expand later.
+-  **package-based repos -** ideally when you already have a monorepo (e.g. yarn/npm/pnpm workspace) and you want Nx primarily for speed and task scheduling. Also, when you want Nx to stay mostly out of your way and you set up everything on your own.
+-  **integrated repos -** when you want more help from Nx. It takes away the burden of the configuration by coming up with a pre-configured setup that scales well, and provides scaffolding support and automated code migrations. Organizations choose this approach if they are bought into monorepos and want to scale up. Integrated repos might restrict some choices to allow Nx to help you more but result in better maintainability and more value in the long run.
 
 The comparison between package-based repos and integrated repos is similar to that between JSDoc and TypeScript. The former is easier to adopt and provides some good benefits. The latter takes more work but offers more value, especially at a larger scale.

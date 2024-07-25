@@ -8,8 +8,8 @@ tags: [nx, unit testing]
 
 In my latest [blog](https://dev.to/nx/step-by-step-guide-to-creating-an-expo-monorepo-with-nx-3b17), I successfully navigated through the steps of setting up an Expo Monorepo with [Nx](). The next challenge? Testing! This blog dives into:
 
-- Crafting effective unit tests for Expo components utilizing Jest
-- Addressing common issues encountered during unit testing
+-  Crafting effective unit tests for Expo components utilizing Jest
+-  Addressing common issues encountered during unit testing
 
 Repo:
 {% github-repository url="https://github.com/xiongemi/nx-expo-monorepo" /%}
@@ -18,9 +18,9 @@ Repo:
 
 Here’s my setup
 
-- Testing framework: [jest](https://jestjs.io/)
-- Testing library: [@testing-library/react-native](https://callstack.github.io/react-native-testing-library/)
-- Jest Preset: [jest-expo](https://www.npmjs.com/package/jest-expo)
+-  Testing framework: [jest](https://jestjs.io/)
+-  Testing library: [@testing-library/react-native](https://callstack.github.io/react-native-testing-library/)
+-  Jest Preset: [jest-expo](https://www.npmjs.com/package/jest-expo)
 
 ## Writing and Running Unit Tests
 
@@ -33,10 +33,10 @@ import React from 'react';
 import Loading from './loading';
 
 describe('Loading', () => {
-  it('should render successfully', () => {
-    const { root } = render(<Loading />);
-    expect(root).toBeTruthy();
-  });
+   it('should render successfully', () => {
+      const { root } = render(<Loading />);
+      expect(root).toBeTruthy();
+   });
 });
 ```
 
@@ -99,7 +99,7 @@ In the app’s test-setup.ts file, add the below lines:
 
 ```typescript
 jest.mock('@react-native-async-storage/async-storage', () =>
-  require('@react-native-async-storage/async-storage/jest/async-storage-mock')
+   require('@react-native-async-storage/async-storage/jest/async-storage-mock')
 );
 ```
 
@@ -196,14 +196,14 @@ To solve this, I can just mock the `useQuery` function:
 import * as ReactQuery from '@tanstack/react-query';
 
 jest.spyOn(ReactQuery, 'useQuery').mockImplementation(
-  jest.fn().mockReturnValue({
-    data: 'random cat fact',
-    isLoading: false,
-    isSuccess: true,
-    refetch: jest.fn(),
-    isFetching: false,
-    isError: false,
-  })
+   jest.fn().mockReturnValue({
+      data: 'random cat fact',
+      isLoading: false,
+      isSuccess: true,
+      refetch: jest.fn(),
+      isFetching: false,
+      isError: false,
+   })
 );
 ```
 
@@ -219,18 +219,18 @@ The fix this, I need to mock the `@react-nativgation/native` library. In the app
 
 ```typescript
 jest.mock('@react-navigation/native', () => {
-  return {
-    useNavigation: () => ({
-      navigate: jest.fn(),
-      dispatch: jest.fn(),
-      setOptions: jest.fn(),
-    }),
-    useRoute: () => ({
-      params: {
-        id: '123',
-      },
-    }),
-  };
+   return {
+      useNavigation: () => ({
+         navigate: jest.fn(),
+         dispatch: jest.fn(),
+         setOptions: jest.fn(),
+      }),
+      useRoute: () => ({
+         params: {
+            id: '123',
+         },
+      }),
+   };
 });
 ```
 
@@ -256,9 +256,9 @@ In the app’s `jest.config.ts`, there should be an option called `moduleNameMap
 
 ```typescript
 module.exports = {
-  moduleNameMapper: {
-    uuid: require.resolve('uuid'),
-  },
+   moduleNameMapper: {
+      uuid: require.resolve('uuid'),
+   },
 };
 ```
 
@@ -268,9 +268,9 @@ Alternatively, I can also mock this library in the test files:
 import { v4 as uuidv4 } from 'uuid';
 
 jest.mock('uuid', () => {
-  return {
-    v4: jest.fn(() => 1),
-  };
+   return {
+      v4: jest.fn(() => 1),
+   };
 });
 ```
 
@@ -317,8 +317,8 @@ transformIgnorePatterns: \[
 
 If I have an error related to a library with an unexpected token, I need to check whether they are compiled or not.
 
-- If this library source files are already transformed to `.js`, then its name should match regex, so it would be ignored, so it will NOT be transformed.
-- If this library source files are NOT transformed to `.js` (e.g. still in `.ts` or `.tsx`), then its name should NOT match regex, so it will be transformed.
+-  If this library source files are already transformed to `.js`, then its name should match regex, so it would be ignored, so it will NOT be transformed.
+-  If this library source files are NOT transformed to `.js` (e.g. still in `.ts` or `.tsx`), then its name should NOT match regex, so it will be transformed.
 
 ## Summary
 
@@ -328,9 +328,9 @@ With Nx, you do not need to explicitly install any testing library, so you can d
 
 ## Learn more
 
-- [Add Cypress, Playwright, and Storybook to Nx Expo Apps](https://medium.com/@emilyxiong/add-cypress-playwright-and-storybook-to-nx-expo-apps-1d3e409ce834)
-- 🧠 [Nx Docs](/getting-started/intro)
-- 👩‍💻 [Nx GitHub](https://github.com/nrwl/nx)
-- 💬 [Nx Community Discord](https://go.nx.dev/community)
-- 📹 [Nx Youtube Channel](https://www.youtube.com/@nxdevtools)
-- 🚀 [Speed up your CI](https://nx.app/)
+-  [Add Cypress, Playwright, and Storybook to Nx Expo Apps](https://medium.com/@emilyxiong/add-cypress-playwright-and-storybook-to-nx-expo-apps-1d3e409ce834)
+-  🧠 [Nx Docs](/getting-started/intro)
+-  👩‍💻 [Nx GitHub](https://github.com/nrwl/nx)
+-  💬 [Nx Community Discord](https://go.nx.dev/community)
+-  📹 [Nx Youtube Channel](https://www.youtube.com/@nxdevtools)
+-  🚀 [Speed up your CI](https://nx.app/)

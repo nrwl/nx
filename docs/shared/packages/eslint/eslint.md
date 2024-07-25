@@ -23,13 +23,13 @@ This will install the correct version of `@nx/eslint`.
 
 The `@nx/eslint` plugin will create a task for any project that has an ESLint configuration file present and files to lint. Any of the following files will be recognized as an ESLint configuration file:
 
-- `.eslintrc`
-- `.eslintrc.js`
-- `.eslintrc.cjs`
-- `.eslintrc.yaml`
-- `.eslintrc.yml`
-- `.eslintrc.json`
-- `eslint.config.js`
+-  `.eslintrc`
+-  `.eslintrc.js`
+-  `.eslintrc.cjs`
+-  `.eslintrc.yaml`
+-  `.eslintrc.yml`
+-  `.eslintrc.json`
+-  `eslint.config.js`
 
 Because ESLint applies configuration files to all subdirectories, the `@nx/eslint` plugin will also infer tasks for projects in subdirectories. So, if there is an ESLint configuration file in the root of the repository, every project will have an inferred ESLint task.
 
@@ -45,18 +45,18 @@ The `@nx/eslint/plugin` is configured in the `plugins` array in `nx.json`.
 
 ```json {% fileName="nx.json" %}
 {
-  "plugins": [
-    {
-      "plugin": "@nx/eslint/plugin",
-      "options": {
-        "targetName": "lint"
+   "plugins": [
+      {
+         "plugin": "@nx/eslint/plugin",
+         "options": {
+            "targetName": "lint"
+         }
       }
-    }
-  ]
+   ]
 }
 ```
 
-- The `targetName` option controls the name of the inferred ESLint tasks. The default name is `lint`.
+-  The `targetName` option controls the name of the inferred ESLint tasks. The default name is `lint`.
 
 {% /tab %}
 {% tab label="Nx 17" %}
@@ -89,7 +89,7 @@ nx lint my-project
 
 ## Utils
 
-- [convert-to-flat-config](/nx-api/eslint/generators/convert-to-flat-config) - Converts the workspace's [ESLint](https://eslint.org/) configs to the new [Flat Config](https://eslint.org/blog/2022/08/new-config-system-part-2)
+-  [convert-to-flat-config](/nx-api/eslint/generators/convert-to-flat-config) - Converts the workspace's [ESLint](https://eslint.org/) configs to the new [Flat Config](https://eslint.org/blog/2022/08/new-config-system-part-2)
 
 ## ESLint plugin
 

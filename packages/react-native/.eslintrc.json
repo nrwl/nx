@@ -1,48 +1,48 @@
 {
-  "extends": "../../.eslintrc",
-  "rules": {},
-  "ignorePatterns": ["!**/*"],
-  "overrides": [
-    {
-      "files": [
-        "./package.json",
-        "./generators.json",
-        "./executors.json",
-        "./migrations.json"
-      ],
-      "parser": "jsonc-eslint-parser",
-      "rules": {
-        "@nx/nx-plugin-checks": "error"
-      }
-    },
-    {
-      "files": ["./package.json"],
-      "parser": "jsonc-eslint-parser",
-      "rules": {
-        "@nx/dependency-checks": [
-          "error",
-          {
-            "buildTargets": ["build-base"],
-            "ignoredDependencies": [
-              "nx",
-              "eslint",
-              "prettier",
-              "typescript",
-              "react",
-              "react-native",
-              // These are in ensurePackage
-              "@nx/rollup",
-              "@nx/storybook",
-              "@nx/vite",
-              "@nx/webpack",
-              "@nx/detox",
-              "@nx/cypress",
-              "@nx/playwright",
-              "ajv"
+   "extends": "../../.eslintrc",
+   "rules": {},
+   "ignorePatterns": ["!**/*"],
+   "overrides": [
+      {
+         "files": [
+            "./package.json",
+            "./generators.json",
+            "./executors.json",
+            "./migrations.json"
+         ],
+         "parser": "jsonc-eslint-parser",
+         "rules": {
+            "@nx/nx-plugin-checks": "error"
+         }
+      },
+      {
+         "files": ["./package.json"],
+         "parser": "jsonc-eslint-parser",
+         "rules": {
+            "@nx/dependency-checks": [
+               "error",
+               {
+                  "buildTargets": ["build-base"],
+                  "ignoredDependencies": [
+                     "nx",
+                     "eslint",
+                     "prettier",
+                     "typescript",
+                     "react",
+                     "react-native",
+                     // These are in ensurePackage
+                     "@nx/rollup",
+                     "@nx/storybook",
+                     "@nx/vite",
+                     "@nx/webpack",
+                     "@nx/detox",
+                     "@nx/cypress",
+                     "@nx/playwright",
+                     "ajv"
+                  ]
+               }
             ]
-          }
-        ]
+         }
       }
-    }
-  ]
+   ]
 }

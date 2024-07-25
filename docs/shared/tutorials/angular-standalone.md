@@ -4,11 +4,11 @@ In this tutorial you'll learn how to use Angular with Nx in a ["standalone" (non
 
 What will you learn?
 
-- how to create a new standalone (single-project) Nx workspace setup for Angular
-- how to run a single task (i.e. serve your app) or run multiple tasks in parallel
-- how to leverage code generators to scaffold components
-- how to modularize your codebase and impose architectural constraints for better maintainability
-- [how to speed up CI with Nx Cloud ⚡](#fast-ci)
+-  how to create a new standalone (single-project) Nx workspace setup for Angular
+-  how to run a single task (i.e. serve your app) or run multiple tasks in parallel
+-  how to leverage code generators to scaffold components
+-  how to modularize your codebase and impose architectural constraints for better maintainability
+-  [how to speed up CI with Nx Cloud ⚡](#fast-ci)
 
 {% callout type="info" title="Looking for Angular monorepos?" %}
 Note, this tutorial sets up a repo with a single application at the root level that breaks out its code into libraries to add structure. If you are looking for an Angular monorepo setup then check out our [Angular monorepo tutorial](/getting-started/tutorials/angular-monorepo-tutorial).
@@ -49,8 +49,8 @@ NX   Let's create a new workspace [https://nx.dev/getting-started/intro]
 
 You get asked a few questions that help Nx preconfigure your new Angular application. These include:
 
-- Angular specific questions, such as which bundler to use, whether to enable server-side rendering and which stylesheet format to use
-- General Nx questions, such as whether to enable remote caching with Nx Cloud. Nx comes with built-in [local caching](/features/cache-task-results). If you want to benefit from this cache in CI, you can enable [remote caching](/ci/features/remote-cache) which will set up [Nx Cloud](https://nx.app). This is also a prerequisite for enabling [distributed task execution](/ci/features/distribute-task-execution). We'll explore this later in the tutorial.
+-  Angular specific questions, such as which bundler to use, whether to enable server-side rendering and which stylesheet format to use
+-  General Nx questions, such as whether to enable remote caching with Nx Cloud. Nx comes with built-in [local caching](/features/cache-task-results). If you want to benefit from this cache in CI, you can enable [remote caching](/ci/features/remote-cache) which will set up [Nx Cloud](https://nx.app). This is also a prerequisite for enabling [distributed task execution](/ci/features/distribute-task-execution). We'll explore this later in the tutorial.
 
 For the sake of this tutorial, let's respond to all the questions with the default response.
 
@@ -98,11 +98,11 @@ The `create-nx-workspace` command generates the following structure:
 
 The setup includes:
 
-- a new Angular application at the root of the Nx workspace (`src/app`)
-- a Cypress based set of e2e tests (`e2e/`)
-- Prettier preconfigured
-- ESLint & Angular ESLint preconfigured
-- Jest preconfigured
+-  a new Angular application at the root of the Nx workspace (`src/app`)
+-  a Cypress based set of e2e tests (`e2e/`)
+-  Prettier preconfigured
+-  ESLint & Angular ESLint preconfigured
+-  Jest preconfigured
 
 Compared to the Angular CLI, you might notice the addition of an `nx.json` file and the absence of an `angular.json` file. Instead of the `angular.json` file there is a `project.json` file. Each file is described below:
 
@@ -186,8 +186,8 @@ Each target contains a configuration object that tells Nx how to run that target
 
 The most critical parts are:
 
-- `executor` - This corresponds to the `builder` property in an Angular CLI workspace. You can use Angular builders or executors from [Nx plugins](/extending-nx/intro/getting-started).
-- `options` - these are additional properties and flags passed to the executor function to customize it
+-  `executor` - This corresponds to the `builder` property in an Angular CLI workspace. You can use Angular builders or executors from [Nx plugins](/extending-nx/intro/getting-started).
+-  `options` - these are additional properties and flags passed to the executor function to customize it
 
 Learn more about how to [run tasks with Nx](/features/run-tasks).
 
@@ -215,165 +215,171 @@ nx show project e2e --web
 
 ```json
 {
-  "project": {
-    "name": "e2e",
-    "type": "e2e",
-    "data": {
-      "metadata": {
-        "targetGroups": {
-          "E2E (CI)": ["e2e-ci--src/e2e/app.cy.ts", "e2e-ci"]
-        }
-      },
+   "project": {
       "name": "e2e",
-      "root": "e2e",
-      "sourceRoot": "e2e/src",
-      "projectType": "application",
-      "tags": [],
-      "implicitDependencies": ["myngapp"],
-      "targets": {
-        "e2e": {
-          "options": {
-            "cwd": "e2e",
-            "command": "cypress run"
-          },
-          "cache": true,
-          "inputs": [
-            "default",
-            "^production",
-            {
-              "externalDependencies": ["cypress"]
+      "type": "e2e",
+      "data": {
+         "metadata": {
+            "targetGroups": {
+               "E2E (CI)": ["e2e-ci--src/e2e/app.cy.ts", "e2e-ci"]
             }
-          ],
-          "outputs": [
-            "{workspaceRoot}/dist/cypress/e2e/videos",
-            "{workspaceRoot}/dist/cypress/e2e/screenshots"
-          ],
-          "configurations": {
-            "production": {
-              "command": "cypress run --env webServerCommand=\"nx run myngapp:serve:production\""
+         },
+         "name": "e2e",
+         "root": "e2e",
+         "sourceRoot": "e2e/src",
+         "projectType": "application",
+         "tags": [],
+         "implicitDependencies": ["myngapp"],
+         "targets": {
+            "e2e": {
+               "options": {
+                  "cwd": "e2e",
+                  "command": "cypress run"
+               },
+               "cache": true,
+               "inputs": [
+                  "default",
+                  "^production",
+                  {
+                     "externalDependencies": ["cypress"]
+                  }
+               ],
+               "outputs": [
+                  "{workspaceRoot}/dist/cypress/e2e/videos",
+                  "{workspaceRoot}/dist/cypress/e2e/screenshots"
+               ],
+               "configurations": {
+                  "production": {
+                     "command": "cypress run --env webServerCommand=\"nx run myngapp:serve:production\""
+                  }
+               },
+               "executor": "nx:run-commands",
+               "metadata": {
+                  "technologies": ["cypress"]
+               }
+            },
+            "e2e-ci--src/e2e/app.cy.ts": {
+               "outputs": [
+                  "{workspaceRoot}/dist/cypress/e2e/videos",
+                  "{workspaceRoot}/dist/cypress/e2e/screenshots"
+               ],
+               "inputs": [
+                  "default",
+                  "^production",
+                  {
+                     "externalDependencies": ["cypress"]
+                  }
+               ],
+               "cache": true,
+               "options": {
+                  "cwd": "e2e",
+                  "command": "cypress run --env webServerCommand=\"nx run myngapp:serve-static\" --spec src/e2e/app.cy.ts"
+               },
+               "executor": "nx:run-commands",
+               "configurations": {},
+               "metadata": {
+                  "technologies": ["cypress"]
+               }
+            },
+            "e2e-ci": {
+               "executor": "nx:noop",
+               "cache": true,
+               "inputs": [
+                  "default",
+                  "^production",
+                  {
+                     "externalDependencies": ["cypress"]
+                  }
+               ],
+               "outputs": [
+                  "{workspaceRoot}/dist/cypress/e2e/videos",
+                  "{workspaceRoot}/dist/cypress/e2e/screenshots"
+               ],
+               "dependsOn": [
+                  {
+                     "target": "e2e-ci--src/e2e/app.cy.ts",
+                     "projects": "self",
+                     "params": "forward"
+                  }
+               ],
+               "options": {},
+               "configurations": {},
+               "metadata": {
+                  "technologies": ["cypress"]
+               }
+            },
+            "lint": {
+               "cache": true,
+               "options": {
+                  "cwd": "e2e",
+                  "command": "eslint ."
+               },
+               "inputs": [
+                  "default",
+                  "{workspaceRoot}/.eslintrc.json",
+                  "{workspaceRoot}/e2e/.eslintrc.json",
+                  "{workspaceRoot}/tools/eslint-rules/**/*",
+                  {
+                     "externalDependencies": ["eslint"]
+                  }
+               ],
+               "executor": "nx:run-commands",
+               "configurations": {},
+               "metadata": {
+                  "technologies": ["eslint"]
+               }
             }
-          },
-          "executor": "nx:run-commands",
-          "metadata": {
-            "technologies": ["cypress"]
-          }
-        },
-        "e2e-ci--src/e2e/app.cy.ts": {
-          "outputs": [
-            "{workspaceRoot}/dist/cypress/e2e/videos",
-            "{workspaceRoot}/dist/cypress/e2e/screenshots"
-          ],
-          "inputs": [
-            "default",
-            "^production",
-            {
-              "externalDependencies": ["cypress"]
-            }
-          ],
-          "cache": true,
-          "options": {
-            "cwd": "e2e",
-            "command": "cypress run --env webServerCommand=\"nx run myngapp:serve-static\" --spec src/e2e/app.cy.ts"
-          },
-          "executor": "nx:run-commands",
-          "configurations": {},
-          "metadata": {
-            "technologies": ["cypress"]
-          }
-        },
-        "e2e-ci": {
-          "executor": "nx:noop",
-          "cache": true,
-          "inputs": [
-            "default",
-            "^production",
-            {
-              "externalDependencies": ["cypress"]
-            }
-          ],
-          "outputs": [
-            "{workspaceRoot}/dist/cypress/e2e/videos",
-            "{workspaceRoot}/dist/cypress/e2e/screenshots"
-          ],
-          "dependsOn": [
-            {
-              "target": "e2e-ci--src/e2e/app.cy.ts",
-              "projects": "self",
-              "params": "forward"
-            }
-          ],
-          "options": {},
-          "configurations": {},
-          "metadata": {
-            "technologies": ["cypress"]
-          }
-        },
-        "lint": {
-          "cache": true,
-          "options": {
-            "cwd": "e2e",
-            "command": "eslint ."
-          },
-          "inputs": [
-            "default",
-            "{workspaceRoot}/.eslintrc.json",
-            "{workspaceRoot}/e2e/.eslintrc.json",
-            "{workspaceRoot}/tools/eslint-rules/**/*",
-            {
-              "externalDependencies": ["eslint"]
-            }
-          ],
-          "executor": "nx:run-commands",
-          "configurations": {},
-          "metadata": {
-            "technologies": ["eslint"]
-          }
-        }
+         }
       }
-    }
-  },
-  "sourceMap": {
-    "targets": ["project.json", "nx/core/project-json"],
-    "targets.e2e": ["e2e/cypress.config.ts", "@nx/cypress/plugin"],
-    "targets.e2e.cache": ["e2e/cypress.config.ts", "@nx/cypress/plugin"],
-    "targets.e2e.inputs": ["e2e/cypress.config.ts", "@nx/cypress/plugin"],
-    "targets.e2e.outputs": ["e2e/cypress.config.ts", "@nx/cypress/plugin"],
-    "targets.e2e.options": ["e2e/cypress.config.ts", "@nx/cypress/plugin"],
-    "targets.e2e.configurations": [
-      "e2e/cypress.config.ts",
-      "@nx/cypress/plugin"
-    ],
-    "targets.e2e-ci--src/e2e/app.cy.ts": [
-      "e2e/cypress.config.ts",
-      "@nx/cypress/plugin"
-    ],
-    "targets.e2e-ci--src/e2e/app.cy.ts.cache": [
-      "e2e/cypress.config.ts",
-      "@nx/cypress/plugin"
-    ],
-    "targets.e2e-ci--src/e2e/app.cy.ts.inputs": [
-      "e2e/cypress.config.ts",
-      "@nx/cypress/plugin"
-    ],
-    "targets.e2e-ci--src/e2e/app.cy.ts.outputs": [
-      "e2e/cypress.config.ts",
-      "@nx/cypress/plugin"
-    ],
-    "targets.e2e-ci--src/e2e/app.cy.ts.options": [
-      "e2e/cypress.config.ts",
-      "@nx/cypress/plugin"
-    ],
-    "targets.e2e-ci": ["e2e/cypress.config.ts", "@nx/cypress/plugin"],
-    "targets.e2e-ci.cache": ["e2e/cypress.config.ts", "@nx/cypress/plugin"],
-    "targets.e2e-ci.dependsOn": ["e2e/cypress.config.ts", "@nx/cypress/plugin"],
-    "targets.e2e-ci.inputs": ["e2e/cypress.config.ts", "@nx/cypress/plugin"],
-    "targets.e2e-ci.outputs": ["e2e/cypress.config.ts", "@nx/cypress/plugin"],
-    "targets.e2e-ci.executor": ["e2e/cypress.config.ts", "@nx/cypress/plugin"],
-    "targets.lint": ["e2e/project.json", "@nx/eslint/plugin"],
-    "targets.lint.cache": ["e2e/project.json", "@nx/eslint/plugin"],
-    "targets.lint.inputs": ["e2e/project.json", "@nx/eslint/plugin"],
-    "targets.lint.options": ["e2e/project.json", "@nx/eslint/plugin"]
-  }
+   },
+   "sourceMap": {
+      "targets": ["project.json", "nx/core/project-json"],
+      "targets.e2e": ["e2e/cypress.config.ts", "@nx/cypress/plugin"],
+      "targets.e2e.cache": ["e2e/cypress.config.ts", "@nx/cypress/plugin"],
+      "targets.e2e.inputs": ["e2e/cypress.config.ts", "@nx/cypress/plugin"],
+      "targets.e2e.outputs": ["e2e/cypress.config.ts", "@nx/cypress/plugin"],
+      "targets.e2e.options": ["e2e/cypress.config.ts", "@nx/cypress/plugin"],
+      "targets.e2e.configurations": [
+         "e2e/cypress.config.ts",
+         "@nx/cypress/plugin"
+      ],
+      "targets.e2e-ci--src/e2e/app.cy.ts": [
+         "e2e/cypress.config.ts",
+         "@nx/cypress/plugin"
+      ],
+      "targets.e2e-ci--src/e2e/app.cy.ts.cache": [
+         "e2e/cypress.config.ts",
+         "@nx/cypress/plugin"
+      ],
+      "targets.e2e-ci--src/e2e/app.cy.ts.inputs": [
+         "e2e/cypress.config.ts",
+         "@nx/cypress/plugin"
+      ],
+      "targets.e2e-ci--src/e2e/app.cy.ts.outputs": [
+         "e2e/cypress.config.ts",
+         "@nx/cypress/plugin"
+      ],
+      "targets.e2e-ci--src/e2e/app.cy.ts.options": [
+         "e2e/cypress.config.ts",
+         "@nx/cypress/plugin"
+      ],
+      "targets.e2e-ci": ["e2e/cypress.config.ts", "@nx/cypress/plugin"],
+      "targets.e2e-ci.cache": ["e2e/cypress.config.ts", "@nx/cypress/plugin"],
+      "targets.e2e-ci.dependsOn": [
+         "e2e/cypress.config.ts",
+         "@nx/cypress/plugin"
+      ],
+      "targets.e2e-ci.inputs": ["e2e/cypress.config.ts", "@nx/cypress/plugin"],
+      "targets.e2e-ci.outputs": ["e2e/cypress.config.ts", "@nx/cypress/plugin"],
+      "targets.e2e-ci.executor": [
+         "e2e/cypress.config.ts",
+         "@nx/cypress/plugin"
+      ],
+      "targets.lint": ["e2e/project.json", "@nx/eslint/plugin"],
+      "targets.lint.cache": ["e2e/project.json", "@nx/eslint/plugin"],
+      "targets.lint.inputs": ["e2e/project.json", "@nx/eslint/plugin"],
+      "targets.lint.options": ["e2e/project.json", "@nx/eslint/plugin"]
+   }
 }
 ```
 
@@ -383,8 +389,8 @@ If you expand the `e2e` task, you can see that it was created by the `@nx/cypres
 
 ```json
 [
-  "{workspaceRoot}/dist/cypress/e2e/videos",
-  "{workspaceRoot}/dist/cypress/e2e/screenshots"
+   "{workspaceRoot}/dist/cypress/e2e/videos",
+   "{workspaceRoot}/dist/cypress/e2e/screenshots"
 ]
 ```
 
@@ -393,14 +399,14 @@ This value is being read from the `videosFolder` and `screenshotsFolder` defined
 ```ts {% fileName="e2e/cypress.config.ts" highlightLines=[8,9] %}
 // ...
 export default defineConfig({
-  e2e: {
-    ...nxE2EPreset(__filename, {
-      // ...
-    }),
-    baseUrl: 'http://localhost:4200',
-    videosFolder: '../dist/cypress/e2e/videos-changed',
-    screenshotsFolder: '../dist/cypress/e2e/screenshots-changed',
-  },
+   e2e: {
+      ...nxE2EPreset(__filename, {
+         // ...
+      }),
+      baseUrl: 'http://localhost:4200',
+      videosFolder: '../dist/cypress/e2e/videos-changed',
+      screenshotsFolder: '../dist/cypress/e2e/screenshots-changed',
+   },
 });
 ```
 
@@ -408,8 +414,8 @@ Now if you look at the project details view again, the outputs for the `e2e` tar
 
 ```json
 [
-  "{workspaceRoot}/dist/cypress/e2e/videos-changed",
-  "{workspaceRoot}/dist/cypress/e2e/screenshots-changed"
+   "{workspaceRoot}/dist/cypress/e2e/videos-changed",
+   "{workspaceRoot}/dist/cypress/e2e/screenshots-changed"
 ]
 ```
 
@@ -535,11 +541,11 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 @Component({
-  selector: 'myngapp-hello-world',
-  standalone: true,
-  imports: [CommonModule],
-  templateUrl: './hello-world.component.html',
-  styleUrls: ['./hello-world.component.css'],
+   selector: 'myngapp-hello-world',
+   standalone: true,
+   imports: [CommonModule],
+   templateUrl: './hello-world.component.html',
+   styleUrls: ['./hello-world.component.css'],
 })
 export class HelloWorldComponent {}
 ```
@@ -582,8 +588,8 @@ In the previous sections you learned about the basics of using Nx, running tasks
 
 But there's more to learn. You have two possibilities here:
 
-- [Jump to the next steps section](#next-steps) to find where to go from here or
-- keep reading and learn some more about what makes Nx unique when working with Angular.
+-  [Jump to the next steps section](#next-steps) to find where to go from here or
+-  keep reading and learn some more about what makes Nx unique when working with Angular.
 
 ## Modularizing your Angular App with Local Libraries
 
@@ -612,11 +618,11 @@ The following structure is a common example of this kind of monolithic code orga
 
 Nx allows you to separate this logic into "local libraries". The main benefits include
 
-- better separation of concerns
-- better reusability
-- more explicit "APIs" between your "domain areas"
-- better scalability in CI by enabling independent test/lint/build commands for each library
-- better scalability in your teams by allowing different teams to work on separate libraries
+-  better separation of concerns
+-  better reusability
+-  more explicit "APIs" between your "domain areas"
+-  better scalability in CI by enabling independent test/lint/build commands for each library
+-  better scalability in your teams by allowing different teams to work on separate libraries
 
 ### Creating Local Libraries
 
@@ -686,9 +692,9 @@ Running the above commands should lead to the following directory structure:
 
 Each of these libraries
 
-- has its own `project.json` file with corresponding targets you can run (e.g. running tests for just orders: `nx test orders`)
-- has a dedicated `index.ts` file which is the "public API" of the library
-- is mapped in the `tsconfig.base.json` at the root of the workspace
+-  has its own `project.json` file with corresponding targets you can run (e.g. running tests for just orders: `nx test orders`)
+-  has a dedicated `index.ts` file which is the "public API" of the library
+-  is mapped in the `tsconfig.base.json` at the root of the workspace
 
 ### Importing Libraries into the Angular Application
 
@@ -717,11 +723,11 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 @Component({
-  selector: 'myngapp-products',
-  standalone: true,
-  imports: [CommonModule],
-  templateUrl: './products.component.html',
-  styleUrl: './products.component.css',
+   selector: 'myngapp-products',
+   standalone: true,
+   imports: [CommonModule],
+   templateUrl: './products.component.html',
+   styleUrl: './products.component.css',
 })
 export class ProductsComponent {}
 ```
@@ -741,16 +747,16 @@ import { Route } from '@angular/router';
 import { NxWelcomeComponent } from './nx-welcome.component';
 
 export const appRoutes: Route[] = [
-  {
-    path: '',
-    component: NxWelcomeComponent,
-    pathMatch: 'full',
-  },
-  {
-    path: 'products',
-    loadComponent: () =>
-      import('@myngapp/products').then((m) => m.ProductsComponent),
-  },
+   {
+      path: '',
+      component: NxWelcomeComponent,
+      pathMatch: 'full',
+   },
+   {
+      path: 'products',
+      loadComponent: () =>
+         import('@myngapp/products').then((m) => m.ProductsComponent),
+   },
 ];
 ```
 
@@ -771,21 +777,21 @@ import { Route } from '@angular/router';
 import { NxWelcomeComponent } from './nx-welcome.component';
 
 export const appRoutes: Route[] = [
-  {
-    path: '',
-    component: NxWelcomeComponent,
-    pathMatch: 'full',
-  },
-  {
-    path: 'products',
-    loadComponent: () =>
-      import('@myngapp/products').then((m) => m.ProductsComponent),
-  },
-  {
-    path: 'orders',
-    loadComponent: () =>
-      import('@myngapp/orders').then((m) => m.OrdersComponent),
-  },
+   {
+      path: '',
+      component: NxWelcomeComponent,
+      pathMatch: 'full',
+   },
+   {
+      path: 'products',
+      loadComponent: () =>
+         import('@myngapp/products').then((m) => m.ProductsComponent),
+   },
+   {
+      path: 'orders',
+      loadComponent: () =>
+         import('@myngapp/orders').then((m) => m.OrdersComponent),
+   },
 ];
 ```
 
@@ -793,8 +799,8 @@ Similarly, navigating to [http://localhost:4200/orders](http://localhost:4200/or
 
 A couple of notes:
 
-- both the `ProductsComponent` and `OrdersComponent` are lazy loaded
-- you could go even further and configure routes within the libraries and only import and attach those routes to the application routing mechanism.
+-  both the `ProductsComponent` and `OrdersComponent` are lazy loaded
+-  you could go even further and configure routes within the libraries and only import and attach those routes to the application routing mechanism.
 
 ## Visualizing your Project Structure
 
@@ -814,58 +820,58 @@ You should be able to see something similar to the following in your browser (hi
 
 ```json
 {
-  "projects": [
-    {
-      "name": "myngapp",
-      "type": "app",
-      "data": {
-        "tags": []
-      }
-    },
-    {
-      "name": "e2e",
-      "type": "e2e",
-      "data": {
-        "tags": []
-      }
-    },
-    {
-      "name": "shared-ui",
-      "type": "lib",
-      "data": {
-        "tags": []
-      }
-    },
-    {
-      "name": "orders",
-      "type": "lib",
-      "data": {
-        "tags": []
-      }
-    },
+   "projects": [
+      {
+         "name": "myngapp",
+         "type": "app",
+         "data": {
+            "tags": []
+         }
+      },
+      {
+         "name": "e2e",
+         "type": "e2e",
+         "data": {
+            "tags": []
+         }
+      },
+      {
+         "name": "shared-ui",
+         "type": "lib",
+         "data": {
+            "tags": []
+         }
+      },
+      {
+         "name": "orders",
+         "type": "lib",
+         "data": {
+            "tags": []
+         }
+      },
 
-    {
-      "name": "products",
-      "type": "lib",
-      "data": {
-        "tags": []
+      {
+         "name": "products",
+         "type": "lib",
+         "data": {
+            "tags": []
+         }
       }
-    }
-  ],
-  "dependencies": {
-    "myngapp": [
-      { "source": "myngapp", "target": "orders", "type": "dynamic" },
-      { "source": "myngapp", "target": "products", "type": "dynamic" }
-    ],
-    "e2e": [{ "source": "e2e", "target": "myngapp", "type": "implicit" }],
-    "shared-ui": [],
-    "orders": [],
-    "products": []
-  },
-  "workspaceLayout": { "appsDir": "", "libsDir": "" },
-  "affectedProjectIds": [],
-  "focus": null,
-  "groupByFolder": false
+   ],
+   "dependencies": {
+      "myngapp": [
+         { "source": "myngapp", "target": "orders", "type": "dynamic" },
+         { "source": "myngapp", "target": "products", "type": "dynamic" }
+      ],
+      "e2e": [{ "source": "e2e", "target": "myngapp", "type": "implicit" }],
+      "shared-ui": [],
+      "orders": [],
+      "products": []
+   },
+   "workspaceLayout": { "appsDir": "", "libsDir": "" },
+   "affectedProjectIds": [],
+   "focus": null,
+   "groupByFolder": false
 }
 ```
 
@@ -881,14 +887,14 @@ Exercise for you: change the codebase so that `shared-ui` is used by `orders` an
 
 Once you modularize your codebase you want to make sure that the modules are not coupled to each other in an uncontrolled way. Here are some examples of how we might want to guard our small demo workspace:
 
-- we might want to allow `orders` to import from `shared-ui` but not the other way around
-- we might want to allow `orders` to import from `products` but not the other way around
-- we might want to allow all libraries to import the `shared-ui` components, but not the other way around
+-  we might want to allow `orders` to import from `shared-ui` but not the other way around
+-  we might want to allow `orders` to import from `products` but not the other way around
+-  we might want to allow all libraries to import the `shared-ui` components, but not the other way around
 
 When building these kinds of constraints you usually have two dimensions:
 
-- **type of project:** what is the type of your library. Example: "feature" library, "utility" library, "data-access" library, "ui" library (see [library types](/concepts/decisions/project-dependency-rules))
-- **scope (domain) of the project:** what domain area is covered by the project. Example: "orders", "products", "shared" ... this really depends on the type of product you're developing
+-  **type of project:** what is the type of your library. Example: "feature" library, "utility" library, "data-access" library, "ui" library (see [library types](/concepts/decisions/project-dependency-rules))
+-  **scope (domain) of the project:** what domain area is covered by the project. Example: "orders", "products", "shared" ... this really depends on the type of product you're developing
 
 Nx comes with a generic mechanism that allows you to assign "tags" to projects. "tags" are arbitrary strings you can assign to a project that can be used later when defining boundaries between projects. For example, go to the `project.json` of your `orders` library and assign the tags `type:feature` and `scope:orders` to it.
 
@@ -924,10 +930,10 @@ Notice how we assign `scope:shared` to our UI library because it is intended to 
 
 Next, let's come up with a set of rules based on these tags:
 
-- `type:feature` should be able to import from `type:feature` and `type:ui`
-- `type:ui` should only be able to import from `type:ui`
-- `scope:orders` should be able to import from `scope:orders`, `scope:shared` and `scope:products`
-- `scope:products` should be able to import from `scope:products` and `scope:shared`
+-  `type:feature` should be able to import from `type:feature` and `type:ui`
+-  `type:ui` should only be able to import from `type:ui`
+-  `scope:orders` should be able to import from `scope:orders`, `scope:shared` and `scope:products`
+-  `scope:products` should be able to import from `scope:products` and `scope:shared`
 
 To enforce the rules, Nx ships with a custom ESLint rule. Open the `.eslintrc.base.json` at the root of the workspace and add the following `depConstraints` in the `@nx/enforce-module-boundaries` rule configuration:
 
@@ -992,11 +998,11 @@ import { CommonModule } from '@angular/common';
 import { OrdersComponent } from '@myngapp/orders';
 
 @Component({
-  selector: 'myngapp-products',
-  standalone: true,
-  imports: [CommonModule, OrdersComponent],
-  templateUrl: './products.component.html',
-  styleUrls: ['./products.component.css'],
+   selector: 'myngapp-products',
+   standalone: true,
+   imports: [CommonModule, OrdersComponent],
+   templateUrl: './products.component.html',
+   styleUrls: ['./products.component.css'],
 })
 export class ProductsComponent {}
 ```
@@ -1050,10 +1056,10 @@ Make sure you have completed the previous sections of this tutorial before start
 
 This tutorial walked you through how Nx can improve the local development experience, but the biggest difference Nx makes is in CI. As repositories get bigger, making sure that the CI is fast, reliable and maintainable can get very challenging. Nx provides a solution.
 
-- Nx reduces wasted time in CI with the [`affected` command](/ci/features/affected).
-- Nx Replay's [remote caching](/ci/features/remote-cache) will reuse task artifacts from different CI executions making sure you will never run the same computation twice.
-- Nx Agents [efficiently distribute tasks across machines](/ci/concepts/parallelization-distribution) ensuring constant CI time regardless of the repository size. The right number of machines is allocated for each PR to ensure good performance without wasting compute.
-- Nx Atomizer [automatically splits](/ci/features/split-e2e-tasks) large e2e tests to distribute them across machines. Nx can also automatically [identify and rerun flaky e2e tests](/ci/features/flaky-tasks).
+-  Nx reduces wasted time in CI with the [`affected` command](/ci/features/affected).
+-  Nx Replay's [remote caching](/ci/features/remote-cache) will reuse task artifacts from different CI executions making sure you will never run the same computation twice.
+-  Nx Agents [efficiently distribute tasks across machines](/ci/concepts/parallelization-distribution) ensuring constant CI time regardless of the repository size. The right number of machines is allocated for each PR to ensure good performance without wasting compute.
+-  Nx Atomizer [automatically splits](/ci/features/split-e2e-tasks) large e2e tests to distribute them across machines. Nx can also automatically [identify and rerun flaky e2e tests](/ci/features/flaky-tasks).
 
 ### Connect to Nx Cloud {% highlightColor="green" %}
 
@@ -1089,25 +1095,25 @@ The key lines in the CI pipeline are:
 name: CI
 # ...
 jobs:
-  main:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      # This enables task distribution via Nx Cloud
-      # Run this command as early as possible, before dependencies are installed
-      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      # Connect your workspace by running "nx connect" and uncomment this
-      - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 20
-          cache: 'npm'
-      - run: npm ci --legacy-peer-deps
-      - uses: nrwl/nx-set-shas@v4
-      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-      - run: npx nx affected -t lint test build
+   main:
+      runs-on: ubuntu-latest
+      steps:
+         - uses: actions/checkout@v4
+           with:
+              fetch-depth: 0
+         # This enables task distribution via Nx Cloud
+         # Run this command as early as possible, before dependencies are installed
+         # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
+         # Connect your workspace by running "nx connect" and uncomment this
+         - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+         - uses: actions/setup-node@v3
+           with:
+              node-version: 20
+              cache: 'npm'
+         - run: npm ci --legacy-peer-deps
+         - uses: nrwl/nx-set-shas@v4
+         # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
+         - run: npx nx affected -t lint test build
 ```
 
 ### Open a Pull Request {% highlightColor="green" %}
@@ -1130,20 +1136,20 @@ The `See all runs` link goes to a page with the progress and results of tasks th
 
 For more information about how Nx can improve your CI pipeline, check out one of these detailed tutorials:
 
-- [Circle CI with Nx](/ci/intro/tutorials/circle)
-- [GitHub Actions with Nx](/ci/intro/tutorials/github-actions)
+-  [Circle CI with Nx](/ci/intro/tutorials/circle)
+-  [GitHub Actions with Nx](/ci/intro/tutorials/github-actions)
 
 ## Next Steps
 
 Here's some things you can dive into next:
 
-- Learn more about the [underlying mental model of Nx](/concepts/mental-model)
-- Learn about popular generators such as [how to setup Tailwind](/recipes/angular/using-tailwind-css-with-angular-projects) or [add Storybook to your UI library](/recipes/storybook/overview-angular)
-- Learn how to [migrate your existing Angular CLI repo to Nx](/recipes/angular/migration/angular)
+-  Learn more about the [underlying mental model of Nx](/concepts/mental-model)
+-  Learn about popular generators such as [how to setup Tailwind](/recipes/angular/using-tailwind-css-with-angular-projects) or [add Storybook to your UI library](/recipes/storybook/overview-angular)
+-  Learn how to [migrate your existing Angular CLI repo to Nx](/recipes/angular/migration/angular)
 
 Also, make sure you
 
-- [Join the Official Nx Discord Server](https://go.nx.dev/community) to ask questions and find out the latest news about Nx.
-- [Follow Nx on Twitter](https://twitter.com/nxdevtools) to stay up to date with Nx news
-- [Read our Nx blog](/blog)
-- [Subscribe to our Youtube channel](https://www.youtube.com/@nxdevtools) for demos and Nx insights
+-  [Join the Official Nx Discord Server](https://go.nx.dev/community) to ask questions and find out the latest news about Nx.
+-  [Follow Nx on Twitter](https://twitter.com/nxdevtools) to stay up to date with Nx news
+-  [Read our Nx blog](/blog)
+-  [Subscribe to our Youtube channel](https://www.youtube.com/@nxdevtools) for demos and Nx insights

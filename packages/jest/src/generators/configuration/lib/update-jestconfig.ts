@@ -4,34 +4,34 @@ import { addPropertyToJestConfig } from '../../../utils/config/update-config';
 import type { NormalizedJestProjectSchema } from '../schema';
 
 function isUsingUtilityFunction(host: Tree) {
-  const rootConfig = findRootJestConfig(host);
-  if (!rootConfig) {
-    return false;
-  }
+   const rootConfig = findRootJestConfig(host);
+   if (!rootConfig) {
+      return false;
+   }
 
-  const rootConfigContent = host.read(rootConfig, 'utf-8');
+   const rootConfigContent = host.read(rootConfig, 'utf-8');
 
-  return (
-    rootConfigContent.includes('getJestProjects()') ||
-    rootConfigContent.includes('getJestProjectsAsync()')
-  );
+   return (
+      rootConfigContent.includes('getJestProjects()') ||
+      rootConfigContent.includes('getJestProjectsAsync()')
+   );
 }
 
 export function updateJestConfig(
-  host: Tree,
-  options: NormalizedJestProjectSchema
+   host: Tree,
+   options: NormalizedJestProjectSchema
 ) {
-  if (isUsingUtilityFunction(host)) {
-    return;
-  }
-  const project = readProjectConfiguration(host, options.project);
-  const rootConfig = findRootJestConfig(host);
-  if (rootConfig) {
-    addPropertyToJestConfig(
-      host,
-      findRootJestConfig(host),
-      'projects',
-      `<rootDir>/${project.root}`
-    );
-  }
+   if (isUsingUtilityFunction(host)) {
+      return;
+   }
+   const project = readProjectConfiguration(host, options.project);
+   const rootConfig = findRootJestConfig(host);
+   if (rootConfig) {
+      addPropertyToJestConfig(
+         host,
+         findRootJestConfig(host),
+         'projects',
+         `<rootDir>/${project.root}`
+      );
+   }
 }

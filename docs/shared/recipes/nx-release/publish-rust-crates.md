@@ -32,9 +32,9 @@ For example, to release just the projects in the `crates` directory:
 
 ```json nx.json
 {
-  "release": {
-    "projects": ["crates/*"]
-  }
+   "release": {
+      "projects": ["crates/*"]
+   }
 }
 ```
 
@@ -200,12 +200,12 @@ For this same example, if you want the commit message to be 'chore(release): 1.2
 
 ```json nx.json
 {
-  "release": {
-    "releaseTagPattern": "release/{version}",
-    "git": {
-      "commitMessage": "chore(release): {version}"
-    }
-  }
+   "release": {
+      "releaseTagPattern": "release/{version}",
+      "git": {
+         "commitMessage": "chore(release): {version}"
+      }
+   }
 }
 ```
 

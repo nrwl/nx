@@ -39,21 +39,21 @@ If you are on a project using Angular, React or React Native, you can also gener
 
 If your project is not configured yet, check out one of these guides:
 
-- [Set up Storybook for React (and Next.js) Projects](/recipes/storybook/overview-react)
+-  [Set up Storybook for React (and Next.js) Projects](/recipes/storybook/overview-react)
 
-- [Set up Storybook for Angular Projects](/recipes/storybook/overview-angular)
+-  [Set up Storybook for Angular Projects](/recipes/storybook/overview-angular)
 
-- [Set up Storybook for Vue Projects](/recipes/storybook/overview-vue)
+-  [Set up Storybook for Vue Projects](/recipes/storybook/overview-vue)
 
 If your project is [already configured](/nx-api/storybook), you can use the `stories` generator:
 
-- [React (and Next.js) stories generator](/nx-api/react/generators/stories)
+-  [React (and Next.js) stories generator](/nx-api/react/generators/stories)
 
-- [Angular stories generator](/nx-api/angular/generators/stories)
+-  [Angular stories generator](/nx-api/angular/generators/stories)
 
-- [Vue stories generator](/nx-api/vue/generators/stories)
+-  [Vue stories generator](/nx-api/vue/generators/stories)
 
-- [React Native stories generator](/nx-api/react-native/generators/stories)
+-  [React Native stories generator](/nx-api/react-native/generators/stories)
 
 The stories generator will read your inputs (if you’re using Angular), or your props (if you're using React), and will generate stories with the corresponding arguments/controls already prefilled.
 
@@ -135,9 +135,9 @@ Before moving on to the examples section, it could be useful to read the [Librar
 
 You can check out the following examples (recipes) to see publishing strategies for Storybook in Nx:
 
-- [One main Storybook instance for all projects](/recipes/storybook/one-storybook-for-all)
-- [One Storybook instance per scope](/recipes/storybook/one-storybook-per-scope)
-- [One main Storybook instance using Storybook Composition](/recipes/storybook/one-storybook-with-composition)
+-  [One main Storybook instance for all projects](/recipes/storybook/one-storybook-for-all)
+-  [One Storybook instance per scope](/recipes/storybook/one-storybook-per-scope)
+-  [One main Storybook instance using Storybook Composition](/recipes/storybook/one-storybook-with-composition)
 
 ## Conclusion
 

@@ -1,54 +1,54 @@
 import type { Tree } from '@nx/devkit';
 import type {
-  NestGeneratorWithLanguageOption,
-  NestGeneratorWithResourceOption,
-  NestGeneratorWithTestOption,
-  NormalizedOptions,
+   NestGeneratorWithLanguageOption,
+   NestGeneratorWithResourceOption,
+   NestGeneratorWithTestOption,
+   NormalizedOptions,
 } from '../utils';
 import {
-  normalizeOptions,
-  runNestSchematic,
-  unitTestRunnerToSpec,
+   normalizeOptions,
+   runNestSchematic,
+   unitTestRunnerToSpec,
 } from '../utils';
 
 export type ResourceGeneratorOptions = NestGeneratorWithLanguageOption &
-  NestGeneratorWithTestOption &
-  NestGeneratorWithResourceOption;
+   NestGeneratorWithTestOption &
+   NestGeneratorWithResourceOption;
 
 export async function resourceGenerator(
-  tree: Tree,
-  rawOptions: ResourceGeneratorOptions
+   tree: Tree,
+   rawOptions: ResourceGeneratorOptions
 ) {
-  await resourceGeneratorInternal(tree, {
-    nameAndDirectoryFormat: 'derived',
-    ...rawOptions,
-  });
+   await resourceGeneratorInternal(tree, {
+      nameAndDirectoryFormat: 'derived',
+      ...rawOptions,
+   });
 }
 
 export async function resourceGeneratorInternal(
-  tree: Tree,
-  rawOptions: ResourceGeneratorOptions
+   tree: Tree,
+   rawOptions: ResourceGeneratorOptions
 ): Promise<any> {
-  const options = await normalizeResourceOptions(tree, rawOptions);
+   const options = await normalizeResourceOptions(tree, rawOptions);
 
-  return runNestSchematic(tree, 'resource', options);
+   return runNestSchematic(tree, 'resource', options);
 }
 
 export default resourceGenerator;
 
 async function normalizeResourceOptions(
-  tree: Tree,
-  options: ResourceGeneratorOptions
+   tree: Tree,
+   options: ResourceGeneratorOptions
 ): Promise<NormalizedOptions> {
-  const normalizedOptions = await normalizeOptions(
-    tree,
-    'resource',
-    '@nx/nest:resource',
-    options
-  );
-  return {
-    ...normalizedOptions,
-    language: options.language,
-    spec: unitTestRunnerToSpec(options.unitTestRunner),
-  };
+   const normalizedOptions = await normalizeOptions(
+      tree,
+      'resource',
+      '@nx/nest:resource',
+      options
+   );
+   return {
+      ...normalizedOptions,
+      language: options.language,
+      spec: unitTestRunnerToSpec(options.unitTestRunner),
+   };
 }

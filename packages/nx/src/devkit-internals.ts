@@ -19,8 +19,8 @@ export { splitByColons } from './utils/split-target';
 export { hashObject } from './hasher/file-hasher';
 export { hashWithWorkspaceContext } from './utils/workspace-context';
 export {
-  createProjectRootMappingsFromProjectConfigurations,
-  findProjectForPath,
+   createProjectRootMappingsFromProjectConfigurations,
+   findProjectForPath,
 } from './project-graph/utils/find-project-for-path';
 export { retrieveProjectConfigurations } from './project-graph/utils/retrieve-workspace-files';
 export { LoadedNxPlugin } from './project-graph/plugins/internal-api';

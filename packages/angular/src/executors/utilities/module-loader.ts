@@ -2,30 +2,30 @@ import { extname } from 'path';
 import { pathToFileURL } from 'node:url';
 
 export async function loadModule<T = any>(path: string): Promise<T> {
-  switch (extname(path)) {
-    case '.mjs': {
-      const result = await loadEsmModule(pathToFileURL(path));
-      return (result as { default: T }).default ?? (result as T);
-    }
-    case '.cjs': {
-      const result = require(path);
-      return result.default ?? result;
-    }
-
-    default:
-      // it can be CommonJS or ESM, try both
-      try {
-        const result = require(path);
-        return result.default ?? result;
-      } catch (e: any) {
-        if (e.code === 'ERR_REQUIRE_ESM') {
-          const result = await loadEsmModule(pathToFileURL(path));
-          return (result as { default: T }).default ?? (result as T);
-        }
-
-        throw e;
+   switch (extname(path)) {
+      case '.mjs': {
+         const result = await loadEsmModule(pathToFileURL(path));
+         return (result as { default: T }).default ?? (result as T);
       }
-  }
+      case '.cjs': {
+         const result = require(path);
+         return result.default ?? result;
+      }
+
+      default:
+         // it can be CommonJS or ESM, try both
+         try {
+            const result = require(path);
+            return result.default ?? result;
+         } catch (e: any) {
+            if (e.code === 'ERR_REQUIRE_ESM') {
+               const result = await loadEsmModule(pathToFileURL(path));
+               return (result as { default: T }).default ?? (result as T);
+            }
+
+            throw e;
+         }
+   }
 }
 
 /**
@@ -46,10 +46,10 @@ let load: (<T>(modulePath: string | URL) => Promise<T>) | undefined;
  * @returns A Promise that resolves to the dynamically imported module.
  */
 export function loadEsmModule<T = any>(modulePath: string | URL): Promise<T> {
-  load ??= new Function('modulePath', `return import(modulePath);`) as Exclude<
-    typeof load,
-    undefined
-  >;
+   load ??= new Function('modulePath', `return import(modulePath);`) as Exclude<
+      typeof load,
+      undefined
+   >;
 
-  return load(modulePath);
+   return load(modulePath);
 }

@@ -1,4 +1,4 @@
 export interface PresetGeneratorSchema {
-  pluginName: string;
-  createPackageName?: string;
+   pluginName: string;
+   createPackageName?: string;
 }

@@ -1,192 +1,192 @@
 {
-  "name": "nx",
-  "version": "0.0.1",
-  "private": false,
-  "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/nrwl/nx.git",
-    "directory": "packages/nx"
-  },
-  "scripts": {
-    "postinstall": "node ./bin/post-install"
-  },
-  "keywords": [
-    "Monorepo",
-    "Angular",
-    "React",
-    "Web",
-    "Node",
-    "Nest",
-    "Jest",
-    "Cypress",
-    "CLI",
-    "Testing",
-    "Front-end",
-    "Backend",
-    "Mobile"
-  ],
-  "bin": {
-    "nx": "./bin/nx.js",
-    "nx-cloud": "./bin/nx-cloud.js"
-  },
-  "author": "Victor Savkin",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/nrwl/nx/issues"
-  },
-  "homepage": "https://nx.dev",
-  "dependencies": {
-    "@napi-rs/wasm-runtime": "0.2.4",
-    "@yarnpkg/lockfile": "^1.1.0",
-    "@yarnpkg/parsers": "3.0.0-rc.46",
-    "@zkochan/js-yaml": "0.0.7",
-    "axios": "^1.6.0",
-    "chalk": "^4.1.0",
-    "cli-cursor": "3.1.0",
-    "cli-spinners": "2.6.1",
-    "cliui": "^8.0.1",
-    "dotenv": "~16.4.5",
-    "dotenv-expand": "~11.0.6",
-    "enquirer": "~2.3.6",
-    "figures": "3.2.0",
-    "flat": "^5.0.2",
-    "front-matter": "^4.0.2",
-    "fs-extra": "^11.1.0",
-    "ignore": "^5.0.4",
-    "jest-diff": "^29.4.1",
-    "jsonc-parser": "3.2.0",
-    "lines-and-columns": "~2.0.3",
-    "minimatch": "9.0.3",
-    "npm-run-path": "^4.0.1",
-    "open": "^8.4.0",
-    "semver": "^7.5.3",
-    "string-width": "^4.2.3",
-    "strong-log-transformer": "^2.1.0",
-    "tar-stream": "~2.2.0",
-    "tmp": "~0.2.1",
-    "tsconfig-paths": "^4.1.2",
-    "tslib": "^2.3.0",
-    "yargs": "^17.6.2",
-    "yargs-parser": "21.1.1",
-    "node-machine-id": "1.1.12",
-    "ora": "5.3.0"
-  },
-  "peerDependencies": {
-    "@swc-node/register": "^1.8.0",
-    "@swc/core": "^1.3.85"
-  },
-  "peerDependenciesMeta": {
-    "@swc-node/register": {
-      "optional": true
-    },
-    "@swc/core": {
-      "optional": true
-    }
-  },
-  "optionalDependencies": {
-    "@nx/nx-darwin-x64": "*",
-    "@nx/nx-darwin-arm64": "*",
-    "@nx/nx-linux-x64-gnu": "*",
-    "@nx/nx-linux-x64-musl": "*",
-    "@nx/nx-win32-x64-msvc": "*",
-    "@nx/nx-linux-arm64-gnu": "*",
-    "@nx/nx-linux-arm64-musl": "*",
-    "@nx/nx-linux-arm-gnueabihf": "*",
-    "@nx/nx-win32-arm64-msvc": "*",
-    "@nx/nx-freebsd-x64": "*"
-  },
-  "nx-migrations": {
-    "migrations": "./migrations.json",
-    "packageGroup": [
-      "@nx/js",
-      "@nrwl/js",
-      "@nx/jest",
-      "@nrwl/jest",
-      "@nx/linter",
-      "@nx/eslint",
-      "@nrwl/linter",
-      "@nx/workspace",
-      "@nrwl/workspace",
-      "@nx/angular",
-      "@nrwl/angular",
-      "@nx/cypress",
-      "@nrwl/cypress",
-      "@nx/detox",
-      "@nrwl/detox",
-      "@nx/devkit",
-      "@nrwl/devkit",
-      "@nx/esbuild",
-      "@nrwl/esbuild",
-      "@nx/eslint-plugin",
-      "@nrwl/eslint-plugin-nx",
-      "@nx/expo",
-      "@nrwl/expo",
-      "@nx/express",
-      "@nrwl/express",
-      "@nx/gradle",
-      "@nx/nest",
-      "@nrwl/nest",
-      "@nx/next",
-      "@nrwl/next",
-      "@nx/node",
-      "@nrwl/node",
-      "@nx/nuxt",
-      "@nx/playwright",
-      "@nx/plugin",
-      "@nrwl/nx-plugin",
-      "@nx/react",
-      "@nrwl/react",
-      "@nx/react-native",
-      "@nrwl/react-native",
-      "@nx/rollup",
-      "@nrwl/rollup",
-      "@nx/remix",
-      "@nrwl/remix",
-      "@nx/storybook",
-      "@nrwl/storybook",
-      "@nrwl/tao",
-      "@nx/vite",
-      "@nrwl/vite",
-      "@nx/vue",
-      "@nx/web",
-      "@nrwl/web",
-      "@nx/webpack",
-      "@nrwl/webpack",
-      {
-        "package": "nx-cloud",
-        "version": "latest"
+   "name": "nx",
+   "version": "0.0.1",
+   "private": false,
+   "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+   "repository": {
+      "type": "git",
+      "url": "https://github.com/nrwl/nx.git",
+      "directory": "packages/nx"
+   },
+   "scripts": {
+      "postinstall": "node ./bin/post-install"
+   },
+   "keywords": [
+      "Monorepo",
+      "Angular",
+      "React",
+      "Web",
+      "Node",
+      "Nest",
+      "Jest",
+      "Cypress",
+      "CLI",
+      "Testing",
+      "Front-end",
+      "Backend",
+      "Mobile"
+   ],
+   "bin": {
+      "nx": "./bin/nx.js",
+      "nx-cloud": "./bin/nx-cloud.js"
+   },
+   "author": "Victor Savkin",
+   "license": "MIT",
+   "bugs": {
+      "url": "https://github.com/nrwl/nx/issues"
+   },
+   "homepage": "https://nx.dev",
+   "dependencies": {
+      "@napi-rs/wasm-runtime": "0.2.4",
+      "@yarnpkg/lockfile": "^1.1.0",
+      "@yarnpkg/parsers": "3.0.0-rc.46",
+      "@zkochan/js-yaml": "0.0.7",
+      "axios": "^1.6.0",
+      "chalk": "^4.1.0",
+      "cli-cursor": "3.1.0",
+      "cli-spinners": "2.6.1",
+      "cliui": "^8.0.1",
+      "dotenv": "~16.4.5",
+      "dotenv-expand": "~11.0.6",
+      "enquirer": "~2.3.6",
+      "figures": "3.2.0",
+      "flat": "^5.0.2",
+      "front-matter": "^4.0.2",
+      "fs-extra": "^11.1.0",
+      "ignore": "^5.0.4",
+      "jest-diff": "^29.4.1",
+      "jsonc-parser": "3.2.0",
+      "lines-and-columns": "~2.0.3",
+      "minimatch": "9.0.3",
+      "npm-run-path": "^4.0.1",
+      "open": "^8.4.0",
+      "semver": "^7.5.3",
+      "string-width": "^4.2.3",
+      "strong-log-transformer": "^2.1.0",
+      "tar-stream": "~2.2.0",
+      "tmp": "~0.2.1",
+      "tsconfig-paths": "^4.1.2",
+      "tslib": "^2.3.0",
+      "yargs": "^17.6.2",
+      "yargs-parser": "21.1.1",
+      "node-machine-id": "1.1.12",
+      "ora": "5.3.0"
+   },
+   "peerDependencies": {
+      "@swc-node/register": "^1.8.0",
+      "@swc/core": "^1.3.85"
+   },
+   "peerDependenciesMeta": {
+      "@swc-node/register": {
+         "optional": true
       },
-      {
-        "package": "@nrwl/nx-cloud",
-        "version": "latest"
+      "@swc/core": {
+         "optional": true
       }
-    ]
-  },
-  "generators": "./generators.json",
-  "executors": "./executors.json",
-  "builders": "./executors.json",
-  "publishConfig": {
-    "access": "public"
-  },
-  "napi": {
-    "binaryName": "nx",
-    "packageName": "@nx/nx",
-    "wasm": {
-      "initialMemory": 1024,
-      "maximumMemory": 32768
-    },
-    "targets": [
-      "x86_64-unknown-linux-gnu",
-      "x86_64-pc-windows-msvc",
-      "x86_64-apple-darwin",
-      "aarch64-apple-darwin",
-      "aarch64-unknown-linux-gnu",
-      "aarch64-unknown-linux-musl",
-      "aarch64-pc-windows-msvc",
-      "armv7-unknown-linux-gnueabihf",
-      "x86_64-unknown-linux-musl",
-      "x86_64-unknown-freebsd"
-    ]
-  }
+   },
+   "optionalDependencies": {
+      "@nx/nx-darwin-x64": "*",
+      "@nx/nx-darwin-arm64": "*",
+      "@nx/nx-linux-x64-gnu": "*",
+      "@nx/nx-linux-x64-musl": "*",
+      "@nx/nx-win32-x64-msvc": "*",
+      "@nx/nx-linux-arm64-gnu": "*",
+      "@nx/nx-linux-arm64-musl": "*",
+      "@nx/nx-linux-arm-gnueabihf": "*",
+      "@nx/nx-win32-arm64-msvc": "*",
+      "@nx/nx-freebsd-x64": "*"
+   },
+   "nx-migrations": {
+      "migrations": "./migrations.json",
+      "packageGroup": [
+         "@nx/js",
+         "@nrwl/js",
+         "@nx/jest",
+         "@nrwl/jest",
+         "@nx/linter",
+         "@nx/eslint",
+         "@nrwl/linter",
+         "@nx/workspace",
+         "@nrwl/workspace",
+         "@nx/angular",
+         "@nrwl/angular",
+         "@nx/cypress",
+         "@nrwl/cypress",
+         "@nx/detox",
+         "@nrwl/detox",
+         "@nx/devkit",
+         "@nrwl/devkit",
+         "@nx/esbuild",
+         "@nrwl/esbuild",
+         "@nx/eslint-plugin",
+         "@nrwl/eslint-plugin-nx",
+         "@nx/expo",
+         "@nrwl/expo",
+         "@nx/express",
+         "@nrwl/express",
+         "@nx/gradle",
+         "@nx/nest",
+         "@nrwl/nest",
+         "@nx/next",
+         "@nrwl/next",
+         "@nx/node",
+         "@nrwl/node",
+         "@nx/nuxt",
+         "@nx/playwright",
+         "@nx/plugin",
+         "@nrwl/nx-plugin",
+         "@nx/react",
+         "@nrwl/react",
+         "@nx/react-native",
+         "@nrwl/react-native",
+         "@nx/rollup",
+         "@nrwl/rollup",
+         "@nx/remix",
+         "@nrwl/remix",
+         "@nx/storybook",
+         "@nrwl/storybook",
+         "@nrwl/tao",
+         "@nx/vite",
+         "@nrwl/vite",
+         "@nx/vue",
+         "@nx/web",
+         "@nrwl/web",
+         "@nx/webpack",
+         "@nrwl/webpack",
+         {
+            "package": "nx-cloud",
+            "version": "latest"
+         },
+         {
+            "package": "@nrwl/nx-cloud",
+            "version": "latest"
+         }
+      ]
+   },
+   "generators": "./generators.json",
+   "executors": "./executors.json",
+   "builders": "./executors.json",
+   "publishConfig": {
+      "access": "public"
+   },
+   "napi": {
+      "binaryName": "nx",
+      "packageName": "@nx/nx",
+      "wasm": {
+         "initialMemory": 1024,
+         "maximumMemory": 32768
+      },
+      "targets": [
+         "x86_64-unknown-linux-gnu",
+         "x86_64-pc-windows-msvc",
+         "x86_64-apple-darwin",
+         "aarch64-apple-darwin",
+         "aarch64-unknown-linux-gnu",
+         "aarch64-unknown-linux-musl",
+         "aarch64-pc-windows-msvc",
+         "armv7-unknown-linux-gnueabihf",
+         "x86_64-unknown-linux-musl",
+         "x86_64-unknown-freebsd"
+      ]
+   }
 }

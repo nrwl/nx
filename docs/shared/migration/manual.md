@@ -60,37 +60,37 @@ Now, let's set up caching for a script in your `package.json` file. Let's say yo
 
 ```json {% fileName="package.json" %}
 {
-  "scripts": {
-    "build": "tsc -p tsconfig.json"
-  }
+   "scripts": {
+      "build": "tsc -p tsconfig.json"
+   }
 }
 ```
 
 In order for Nx to cache this task, you need to:
 
-- run the script through Nx using `nx exec -- `
-- configure caching settings in the `nx` property of `package.json`
+-  run the script through Nx using `nx exec -- `
+-  configure caching settings in the `nx` property of `package.json`
 
 The new `package.json` will look like this:
 
 ```json {% fileName="package.json" %}
 {
-  "scripts": {
-    "build": "nx exec -- tsc -p tsconfig.json"
-  },
-  "nx": {
-    "targets": {
-      "build": {
-        "cache": true,
-        "inputs": [
-          "{projectRoot}/**/*.ts",
-          "{projectRoot}/tsconfig.json",
-          { "externalDependencies": ["typescript"] }
-        ],
-        "outputs": ["{projectRoot}/dist"]
+   "scripts": {
+      "build": "nx exec -- tsc -p tsconfig.json"
+   },
+   "nx": {
+      "targets": {
+         "build": {
+            "cache": true,
+            "inputs": [
+               "{projectRoot}/**/*.ts",
+               "{projectRoot}/tsconfig.json",
+               { "externalDependencies": ["typescript"] }
+            ],
+            "outputs": ["{projectRoot}/dist"]
+         }
       }
-    }
-  }
+   }
 }
 ```
 

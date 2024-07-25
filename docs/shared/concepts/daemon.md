@@ -22,8 +22,8 @@ The Nx Daemon is more efficient at recomputing the project graph because it watc
 
 In order to be most efficient, the Nx Daemon has some built in mechanisms to automatically shut down (including removing all file watchers) when it is not needed. These include:
 
-- after 3 hours of inactivity (meaning the workspace's Nx Daemon did not receive any requests or detect any file changes in that time)
-- when the Nx installation changes
+-  after 3 hours of inactivity (meaning the workspace's Nx Daemon did not receive any requests or detect any file changes in that time)
+-  when the Nx installation changes
 
 If you ever need to manually shut down the Nx Daemon, you can run `nx reset` within the workspace in question.
 
@@ -31,8 +31,8 @@ If you ever need to manually shut down the Nx Daemon, you can run `nx reset` wit
 
 The Nx Daemon is enabled by default when running on your local machine. If you want to turn it off
 
-- set `useDaemonProcess: false` in the runners options in `nx.json` or
-- set the `NX_DAEMON` env variable to `false`.
+-  set `useDaemonProcess: false` in the runners options in `nx.json` or
+-  set the `NX_DAEMON` env variable to `false`.
 
 When using Nx in a CI environment, the Nx Daemon is disabled by default. Whether the process runs is determined by the following function: [https://github.com/nrwl/nx/blob/master/packages/nx/src/utils/is-ci.ts](https://github.com/nrwl/nx/blob/master/packages/nx/src/utils/is-ci.ts)
 

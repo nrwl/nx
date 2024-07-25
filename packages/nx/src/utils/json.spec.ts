@@ -1,8 +1,8 @@
 import { parseJson } from './json';
 
 describe('parseJson', () => {
-  it('should parse JSON', () => {
-    const parsed = parseJson(`{
+   it('should parse JSON', () => {
+      const parsed = parseJson(`{
         "test": 123,
         "nested": {
             "test": 123,
@@ -11,18 +11,18 @@ describe('parseJson', () => {
         "array": [1, 2, 3]
     }`);
 
-    expect(parsed).toEqual({
-      test: 123,
-      nested: {
-        test: 123,
-        nx: 'workspace',
-      },
-      array: [1, 2, 3],
-    });
-  });
+      expect(parsed).toEqual({
+         test: 123,
+         nested: {
+            test: 123,
+            nx: 'workspace',
+         },
+         array: [1, 2, 3],
+      });
+   });
 
-  it('should parse JSON with comments', () => {
-    const parsed = parseJson(`{
+   it('should parse JSON with comments', () => {
+      const parsed = parseJson(`{
         //"test": 123,
         "nested": {
             "test": 123
@@ -34,18 +34,18 @@ describe('parseJson', () => {
         "array": [1, 2, 3]
     }`);
 
-    expect(parsed).toEqual({
-      nested: {
-        test: 123,
-      },
-      array: [1, 2, 3],
-    });
-  });
+      expect(parsed).toEqual({
+         nested: {
+            test: 123,
+         },
+         array: [1, 2, 3],
+      });
+   });
 
-  it('should throw when JSON with comments gets parsed and disallow comments is true', () => {
-    expect(() =>
-      parseJson(
-        `{
+   it('should throw when JSON with comments gets parsed and disallow comments is true', () => {
+      expect(() =>
+         parseJson(
+            `{
       //"test": 123,
       "nested": {
           "test": 123
@@ -56,9 +56,9 @@ describe('parseJson', () => {
       },
       "array": [1, 2, 3]
   }`,
-        { disallowComments: true }
-      )
-    ).toThrowErrorMatchingInlineSnapshot(`
+            { disallowComments: true }
+         )
+      ).toThrowErrorMatchingInlineSnapshot(`
       "InvalidCommentToken in JSON at 2:7
       [0m [90m 1 | [39m{[0m
       [0m[31m[1m>[22m[39m[90m 2 | [39m      //"test": 123,[0m
@@ -68,12 +68,12 @@ describe('parseJson', () => {
       [0m [90m 5 | [39m          /*[0m
       "
     `);
-  });
+   });
 
-  it('should throw when JSON with comments gets parsed and disallowComments and expectComments is true', () => {
-    expect(() =>
-      parseJson(
-        `{
+   it('should throw when JSON with comments gets parsed and disallowComments and expectComments is true', () => {
+      expect(() =>
+         parseJson(
+            `{
       //"test": 123,
       "nested": {
           "test": 123
@@ -84,9 +84,9 @@ describe('parseJson', () => {
       },
       "array": [1, 2, 3]
   }`,
-        { disallowComments: true, expectComments: true }
-      )
-    ).toThrowErrorMatchingInlineSnapshot(`
+            { disallowComments: true, expectComments: true }
+         )
+      ).toThrowErrorMatchingInlineSnapshot(`
       "InvalidCommentToken in JSON at 2:7
       [0m [90m 1 | [39m{[0m
       [0m[31m[1m>[22m[39m[90m 2 | [39m      //"test": 123,[0m
@@ -96,12 +96,12 @@ describe('parseJson', () => {
       [0m [90m 5 | [39m          /*[0m
       "
     `);
-  });
+   });
 
-  it('should allow trailing commas by default', () => {
-    expect(() =>
-      parseJson(
-        `{
+   it('should allow trailing commas by default', () => {
+      expect(() =>
+         parseJson(
+            `{
       "test": 123,
       "nested": {
           "test": 123,
@@ -109,14 +109,14 @@ describe('parseJson', () => {
      },
       "array": [1, 2, 3,]
   }`
-      )
-    ).not.toThrow();
-  });
+         )
+      ).not.toThrow();
+   });
 
-  it('should throw when JSON has trailing commas if disabled', () => {
-    expect(() =>
-      parseJson(
-        `{
+   it('should throw when JSON has trailing commas if disabled', () => {
+      expect(() =>
+         parseJson(
+            `{
       "test": 123,
       "nested": {
           "test": 123,
@@ -124,9 +124,9 @@ describe('parseJson', () => {
      },
       "array": [1, 2, 3,]
   }`,
-        { allowTrailingComma: false }
-      )
-    ).toThrowErrorMatchingInlineSnapshot(`
+            { allowTrailingComma: false }
+         )
+      ).toThrowErrorMatchingInlineSnapshot(`
       "PropertyNameExpected in JSON at 6:6
       [0m [90m 4 | [39m          "test": 123,[0m
       [0m [90m 5 | [39m          "more": 456,[0m
@@ -136,38 +136,38 @@ describe('parseJson', () => {
       [0m [90m 8 | [39m  }[0m
       "
     `);
-  });
+   });
 
-  it('should handle trailing commas', () => {
-    expect(
-      parseJson(
-        `{
+   it('should handle trailing commas', () => {
+      expect(
+         parseJson(
+            `{
       "nested": {
           "test": 123,
       },
       "array": [1, 2, 3,]
   }`,
-        { allowTrailingComma: true }
-      )
-    ).toEqual({
-      nested: { test: 123 },
-      array: [1, 2, 3],
-    });
-  });
+            { allowTrailingComma: true }
+         )
+      ).toEqual({
+         nested: { test: 123 },
+         array: [1, 2, 3],
+      });
+   });
 
-  it('should not call JSON.parse when expectComments is true', () => {
-    jest.spyOn(JSON, 'parse');
+   it('should not call JSON.parse when expectComments is true', () => {
+      jest.spyOn(JSON, 'parse');
 
-    expect(
-      parseJson(
-        `{
+      expect(
+         parseJson(
+            `{
       /* a comment */
       "foo": "bar"
     }`,
-        { expectComments: true }
-      )
-    ).toEqual({ foo: 'bar' });
+            { expectComments: true }
+         )
+      ).toEqual({ foo: 'bar' });
 
-    expect(JSON.parse).not.toHaveBeenCalled();
-  });
+      expect(JSON.parse).not.toHaveBeenCalled();
+   });
 });

@@ -10,27 +10,27 @@ The ProjectGraphProcessor has been deprecated. Use a [CreateNodes](../../devkit/
 
 ### Constructors
 
-- [constructor](../../devkit/documents/ProjectGraphBuilder#constructor)
+-  [constructor](../../devkit/documents/ProjectGraphBuilder#constructor)
 
 ### Properties
 
-- [graph](../../devkit/documents/ProjectGraphBuilder#graph): ProjectGraph
-- [removedEdges](../../devkit/documents/ProjectGraphBuilder#removededges): Object
+-  [graph](../../devkit/documents/ProjectGraphBuilder#graph): ProjectGraph
+-  [removedEdges](../../devkit/documents/ProjectGraphBuilder#removededges): Object
 
 ### Methods
 
-- [addDependency](../../devkit/documents/ProjectGraphBuilder#adddependency)
-- [addDynamicDependency](../../devkit/documents/ProjectGraphBuilder#adddynamicdependency)
-- [addExplicitDependency](../../devkit/documents/ProjectGraphBuilder#addexplicitdependency)
-- [addExternalNode](../../devkit/documents/ProjectGraphBuilder#addexternalnode)
-- [addImplicitDependency](../../devkit/documents/ProjectGraphBuilder#addimplicitdependency)
-- [addNode](../../devkit/documents/ProjectGraphBuilder#addnode)
-- [addStaticDependency](../../devkit/documents/ProjectGraphBuilder#addstaticdependency)
-- [getUpdatedProjectGraph](../../devkit/documents/ProjectGraphBuilder#getupdatedprojectgraph)
-- [mergeProjectGraph](../../devkit/documents/ProjectGraphBuilder#mergeprojectgraph)
-- [removeDependency](../../devkit/documents/ProjectGraphBuilder#removedependency)
-- [removeNode](../../devkit/documents/ProjectGraphBuilder#removenode)
-- [setVersion](../../devkit/documents/ProjectGraphBuilder#setversion)
+-  [addDependency](../../devkit/documents/ProjectGraphBuilder#adddependency)
+-  [addDynamicDependency](../../devkit/documents/ProjectGraphBuilder#adddynamicdependency)
+-  [addExplicitDependency](../../devkit/documents/ProjectGraphBuilder#addexplicitdependency)
+-  [addExternalNode](../../devkit/documents/ProjectGraphBuilder#addexternalnode)
+-  [addImplicitDependency](../../devkit/documents/ProjectGraphBuilder#addimplicitdependency)
+-  [addNode](../../devkit/documents/ProjectGraphBuilder#addnode)
+-  [addStaticDependency](../../devkit/documents/ProjectGraphBuilder#addstaticdependency)
+-  [getUpdatedProjectGraph](../../devkit/documents/ProjectGraphBuilder#getupdatedprojectgraph)
+-  [mergeProjectGraph](../../devkit/documents/ProjectGraphBuilder#mergeprojectgraph)
+-  [removeDependency](../../devkit/documents/ProjectGraphBuilder#removedependency)
+-  [removeNode](../../devkit/documents/ProjectGraphBuilder#removenode)
+-  [setVersion](../../devkit/documents/ProjectGraphBuilder#setversion)
 
 ## Constructors
 

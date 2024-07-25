@@ -130,12 +130,12 @@ For example, `libs/storybook-host-admin/.storybook/main.ts`:
 import type { StorybookConfig } from '@storybook/angular';
 
 const config: StorybookConfig = {
-  stories: ['../../admin/ui/**/src/lib/**/*.stories.ts'],
-  addons: ['@storybook/addon-essentials', '@storybook/addon-interactions'],
-  framework: {
-    name: '@storybook/angular',
-    options: {},
-  },
+   stories: ['../../admin/ui/**/src/lib/**/*.stories.ts'],
+   addons: ['@storybook/addon-essentials', '@storybook/addon-interactions'],
+   framework: {
+      name: '@storybook/angular',
+      options: {},
+   },
 };
 
 export default config;
@@ -145,22 +145,22 @@ And don't forget the `libs/storybook-host-admin/.storybook/tsconfig.json`:
 
 ```json {% fileName="libs/storybook-host-admin/.storybook/tsconfig.json" %}
 {
-  "extends": "../tsconfig.json",
-  "compilerOptions": {
-    "emitDecoratorMetadata": true
-  },
-  "exclude": ["../**/*.spec.ts"],
-  "include": ["../../admin/ui/**/src/lib/**/*.stories.ts", "*.ts"]
+   "extends": "../tsconfig.json",
+   "compilerOptions": {
+      "emitDecoratorMetadata": true
+   },
+   "exclude": ["../**/*.spec.ts"],
+   "include": ["../../admin/ui/**/src/lib/**/*.stories.ts", "*.ts"]
 }
 ```
 
 ## Use cases that apply to this solution
 
-- Workspaces with multiple apps and libraries, all using a single framework
+-  Workspaces with multiple apps and libraries, all using a single framework
 
-- Workspaces that use scopes and follow the suggested folder structure
+-  Workspaces that use scopes and follow the suggested folder structure
 
-- Workspaces that have multiple apps and libs divided by theme and by framework, that do not mind having more than one Storybook
+-  Workspaces that have multiple apps and libs divided by theme and by framework, that do not mind having more than one Storybook
 
 ## Extras - Dependencies
 

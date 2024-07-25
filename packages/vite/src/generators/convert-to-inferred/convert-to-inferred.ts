@@ -8,63 +8,72 @@ import { testPostTargetTransformer } from './lib/test-post-target-transformer';
 import { AggregatedLog } from '@nx/devkit/src/generators/plugin-migrations/aggregate-log-util';
 
 interface Schema {
-  project?: string;
-  skipFormat?: boolean;
+   project?: string;
+   skipFormat?: boolean;
 }
 
 export async function convertToInferred(tree: Tree, options: Schema) {
-  const projectGraph = await createProjectGraphAsync();
-  const migrationLogs = new AggregatedLog();
+   const projectGraph = await createProjectGraphAsync();
+   const migrationLogs = new AggregatedLog();
 
-  const migratedProjects =
-    await migrateProjectExecutorsToPlugin<VitePluginOptions>(
-      tree,
-      projectGraph,
-      '@nx/vite/plugin',
-      createNodesV2,
-      {
-        buildTargetName: 'build',
-        serveTargetName: 'serve',
-        previewTargetName: 'preview',
-        testTargetName: 'test',
-        serveStaticTargetName: 'serve-static',
-      },
-      [
-        {
-          executors: ['@nx/vite:build'],
-          postTargetTransformer: buildPostTargetTransformer,
-          targetPluginOptionMapper: (target) => ({ buildTargetName: target }),
-        },
-        {
-          executors: ['@nx/vite:dev-server'],
-          postTargetTransformer: servePostTargetTransformer(migrationLogs),
-          targetPluginOptionMapper: (target) => ({ serveTargetName: target }),
-        },
-        {
-          executors: ['@nx/vite:preview-server'],
-          postTargetTransformer: previewPostTargetTransformer(migrationLogs),
-          targetPluginOptionMapper: (target) => ({ previewTargetName: target }),
-        },
-        {
-          executors: ['@nx/vite:test'],
-          postTargetTransformer: testPostTargetTransformer,
-          targetPluginOptionMapper: (target) => ({ testTargetName: target }),
-        },
-      ],
-      options.project
-    );
+   const migratedProjects =
+      await migrateProjectExecutorsToPlugin<VitePluginOptions>(
+         tree,
+         projectGraph,
+         '@nx/vite/plugin',
+         createNodesV2,
+         {
+            buildTargetName: 'build',
+            serveTargetName: 'serve',
+            previewTargetName: 'preview',
+            testTargetName: 'test',
+            serveStaticTargetName: 'serve-static',
+         },
+         [
+            {
+               executors: ['@nx/vite:build'],
+               postTargetTransformer: buildPostTargetTransformer,
+               targetPluginOptionMapper: (target) => ({
+                  buildTargetName: target,
+               }),
+            },
+            {
+               executors: ['@nx/vite:dev-server'],
+               postTargetTransformer: servePostTargetTransformer(migrationLogs),
+               targetPluginOptionMapper: (target) => ({
+                  serveTargetName: target,
+               }),
+            },
+            {
+               executors: ['@nx/vite:preview-server'],
+               postTargetTransformer:
+                  previewPostTargetTransformer(migrationLogs),
+               targetPluginOptionMapper: (target) => ({
+                  previewTargetName: target,
+               }),
+            },
+            {
+               executors: ['@nx/vite:test'],
+               postTargetTransformer: testPostTargetTransformer,
+               targetPluginOptionMapper: (target) => ({
+                  testTargetName: target,
+               }),
+            },
+         ],
+         options.project
+      );
 
-  if (migratedProjects.size === 0) {
-    throw new Error('Could not find any targets to migrate.');
-  }
+   if (migratedProjects.size === 0) {
+      throw new Error('Could not find any targets to migrate.');
+   }
 
-  if (!options.skipFormat) {
-    await formatFiles(tree);
-  }
+   if (!options.skipFormat) {
+      await formatFiles(tree);
+   }
 
-  return () => {
-    migrationLogs.flushLogs();
-  };
+   return () => {
+      migrationLogs.flushLogs();
+   };
 }
 
 export default convertToInferred;

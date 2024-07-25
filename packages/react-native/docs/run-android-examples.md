@@ -2,15 +2,15 @@
 
 ```json
 {
-  "name": "mobile",
-  //...
-  "targets": {
-    //...
-    "run-android": {
-      "executor": "@nx/react-native:run-android",
-      "options": {}
-    }
-  }
+   "name": "mobile",
+   //...
+   "targets": {
+      //...
+      "run-android": {
+         "executor": "@nx/react-native:run-android",
+         "options": {}
+      }
+   }
 }
 ```
 

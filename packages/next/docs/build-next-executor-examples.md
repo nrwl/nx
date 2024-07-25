@@ -8,22 +8,22 @@ description: This page contains examples for the @nx/next:build executor.
 ```json
 //...
 {
-  "name": "acme",
-  "$schema": "node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": ".",
-  "projectType": "application",
-  "targets": {
-    //...
-    "build": {
-      "executor": "@nx/next:build",
-      "outputs": ["{options.outputPath}"],
-      "defaultConfiguration": "production",
-      "options": {
-        "outputPath": "dist/acme"
+   "name": "acme",
+   "$schema": "node_modules/nx/schemas/project-schema.json",
+   "sourceRoot": ".",
+   "projectType": "application",
+   "targets": {
+      //...
+      "build": {
+         "executor": "@nx/next:build",
+         "outputs": ["{options.outputPath}"],
+         "defaultConfiguration": "production",
+         "options": {
+            "outputPath": "dist/acme"
+         }
       }
-    }
-    //...
-  }
+      //...
+   }
 }
 ```
 

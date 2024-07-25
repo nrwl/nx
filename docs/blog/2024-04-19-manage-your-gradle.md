@@ -16,9 +16,9 @@ The Nx Gradle plugin registers Gradle projects in your Nx workspace. It allows G
 
 This blog will show you:
 
-- [What is Nx?](#what-is-nx)
-- [How to add Nx to a Gradle workspace](#how-to-add-nx-to-a-gradle-workspace)
-- [How to add @nx/gradle to an existing Nx workspace](#how-to-add-nxgradle-to-an-existing-nx-workspace)
+-  [What is Nx?](#what-is-nx)
+-  [How to add Nx to a Gradle workspace](#how-to-add-nx-to-a-gradle-workspace)
+-  [How to add @nx/gradle to an existing Nx workspace](#how-to-add-nxgradle-to-an-existing-nx-workspace)
 
 ---
 
@@ -30,10 +30,10 @@ From [nx.dev](): “Nx is a build system with built-in tooling and advanced CI c
 
 Nx adds the following features to your workspace:
 
-- [Cache task results](/features/cache-task-results): By storing task outputs in a cache, subsequent runs can skip redundant computations and reuse previously calculated results, significantly speeding up build processes. Nx intelligently manages this caching mechanism, invalidating the cache automatically when relevant inputs change.
-- [Distribute task execution](/ci/features/distribute-task-execution): Nx CI efficiently distributes tasks across multiple machines for faster build times. It uses a distributed task execution algorithm to intelligently divide and assign tasks to available resources, minimizing redundant work and maximizing parallelism.
-- [Run only tasks affected by a PR](/ci/features/affected): Nx identifies changes made since a specified base commit or branch, and then selectively runs tasks (like tests, linting, or builds) related to those changes.
-- [Interactively explore your workspace](/features/explore-graph): Nx allows developers to visualize and understand the dependencies and relationships within their projects.
+-  [Cache task results](/features/cache-task-results): By storing task outputs in a cache, subsequent runs can skip redundant computations and reuse previously calculated results, significantly speeding up build processes. Nx intelligently manages this caching mechanism, invalidating the cache automatically when relevant inputs change.
+-  [Distribute task execution](/ci/features/distribute-task-execution): Nx CI efficiently distributes tasks across multiple machines for faster build times. It uses a distributed task execution algorithm to intelligently divide and assign tasks to available resources, minimizing redundant work and maximizing parallelism.
+-  [Run only tasks affected by a PR](/ci/features/affected): Nx identifies changes made since a specified base commit or branch, and then selectively runs tasks (like tests, linting, or builds) related to those changes.
+-  [Interactively explore your workspace](/features/explore-graph): Nx allows developers to visualize and understand the dependencies and relationships within their projects.
 
 ![Example Nx Graph](/blog/images/2024-04-19/bodyimg1.webp)
 
@@ -147,8 +147,8 @@ Furthermore, instead of running the command in terminal, you can use the editor 
 
 To download:
 
-- [**Nx Console - Visual Studio Marketplace**](https://marketplace.visualstudio.com/items?itemName=nrwl.angular-console)
-- [**Nx Console - IntelliJ IDEs Plugin | Marketplace**](https://plugins.jetbrains.com/plugin/21060-nx-console)
+-  [**Nx Console - Visual Studio Marketplace**](https://marketplace.visualstudio.com/items?itemName=nrwl.angular-console)
+-  [**Nx Console - IntelliJ IDEs Plugin | Marketplace**](https://plugins.jetbrains.com/plugin/21060-nx-console)
 
 ---
 
@@ -176,8 +176,8 @@ For example, if you run `./gradlew :app:build` or `gradlew.bat :app:build` using
 
 The `@nx/gradle` plugin will create an Nx project for each Gradle configuration file present. Any of the following files will be recognized as a Gradle configuration file:
 
-- `gradle.build`
-- `gradle.build.kts`
+-  `gradle.build`
+-  `gradle.build.kts`
 
 ### @nx/gradle Configuration
 
@@ -185,16 +185,16 @@ The `@nx/gradle` is configured in the plugins array in `nx.json`:
 
 ```json {% fileName="nx.json" %}
 {
-  "plugins": [
-    {
-      "plugin": "@nx/gradle",
-      "options": {
-        "testTargetName": "test",
-        "classesTargetName": "classes",
-        "buildTargetName": "build"
+   "plugins": [
+      {
+         "plugin": "@nx/gradle",
+         "options": {
+            "testTargetName": "test",
+            "classesTargetName": "classes",
+            "buildTargetName": "build"
+         }
       }
-    }
-  ]
+   ]
 }
 ```
 
@@ -210,9 +210,9 @@ Here is how to set up Nx with the Gradle workspace. Hopefully, this gives you a 
 
 ## Learn more
 
-- [Nx Docs](/getting-started/intro)
-- [X/Twitter](https://twitter.com/nxdevtools) -- [LinkedIn](https://www.linkedin.com/company/nrwl/)
-- [Nx GitHub](https://github.com/nrwl/nx)
-- [Nx Official Discord Server](https://go.nx.dev/community)
-- [Nx Youtube Channel](https://www.youtube.com/@nxdevtools)
-- [Speed up your CI](https://nx.app/)
+-  [Nx Docs](/getting-started/intro)
+-  [X/Twitter](https://twitter.com/nxdevtools) -- [LinkedIn](https://www.linkedin.com/company/nrwl/)
+-  [Nx GitHub](https://github.com/nrwl/nx)
+-  [Nx Official Discord Server](https://go.nx.dev/community)
+-  [Nx Youtube Channel](https://www.youtube.com/@nxdevtools)
+-  [Speed up your CI](https://nx.app/)

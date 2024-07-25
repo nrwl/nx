@@ -19,17 +19,17 @@ It is configured in the `plugins` array in `nx.json`.
 
 ```json {% fileName="nx.json" %}
 {
-  "plugins": [
-    {
-      "plugin": "@nx/webpack/plugin",
-      "options": {
-        "buildTargetName": "build",
-        "serveTargetName": "serve",
-        "serveStaticTargetName": "serve-static",
-        "previewStaticTargetName": "preview"
+   "plugins": [
+      {
+         "plugin": "@nx/webpack/plugin",
+         "options": {
+            "buildTargetName": "build",
+            "serveTargetName": "serve",
+            "serveStaticTargetName": "serve-static",
+            "previewStaticTargetName": "preview"
+         }
       }
-    }
-  ]
+   ]
 }
 ```
 
@@ -46,22 +46,22 @@ const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
 const { join } = require('path');
 
 module.exports = {
-  output: {
-    path: join(__dirname, '../../dist/apps/acme'),
-  },
-  devServer: {
-    port: 4200,
-  },
-  plugins: [
-    new NxAppWebpackPlugin({
-      tsConfig: './tsconfig.app.json',
-      compiler: 'swc',
-      main: './src/main.tsx',
-      index: '.src/index.html',
-      styles: ['./src/styles.css'],
-      generatePackageJson: true,
-    }),
-  ],
+   output: {
+      path: join(__dirname, '../../dist/apps/acme'),
+   },
+   devServer: {
+      port: 4200,
+   },
+   plugins: [
+      new NxAppWebpackPlugin({
+         tsConfig: './tsconfig.app.json',
+         compiler: 'swc',
+         main: './src/main.tsx',
+         index: '.src/index.html',
+         styles: ['./src/styles.css'],
+         generatePackageJson: true,
+      }),
+   ],
 };
 ```
 
@@ -75,9 +75,9 @@ The `@nx/webpack:webpack` executor supports the `generatePackageJson` flag which
 
 Some executors automatically generate output `package.json` and the lock file generation is supported using the `generateLockfile` flag:
 
-- `@nx/js:swc`
-- `@nx/js:tsc`
-- `@nx/next:build`
+-  `@nx/js:swc`
+-  `@nx/js:tsc`
+-  `@nx/next:build`
 
 {% /tab %}
 {% /tabs %}
@@ -94,47 +94,47 @@ If you need to use a custom script, to build your application it should look sim
 
 ```javascript {% fileName="scripts/create-package-json.js" %}
 const {
-  createProjectGraphAsync,
-  readCachedProjectGraph,
-  detectPackageManager,
-  writeJsonFile,
+   createProjectGraphAsync,
+   readCachedProjectGraph,
+   detectPackageManager,
+   writeJsonFile,
 } = require('@nx/devkit');
 const {
-  createLockFile,
-  createPackageJson,
-  getLockFileName,
+   createLockFile,
+   createPackageJson,
+   getLockFileName,
 } = require('@nx/js');
 const { writeFileSync } = require('fs');
 
 async function main() {
-  const outputDir = 'dist'; // You can replace this with the output directory you want to use
-  // Detect the package manager you are using (npm, yarn, pnpm)
-  const pm = detectPackageManager();
-  let projectGraph = readCachedProjectGraph();
-  if (!projectGraph) {
-    projectGraph = await createProjectGraphAsync();
-  }
-  // You can replace <NX_TASK_TARGET_PROJECT> with the name of the project if you want.
-  const projectName = process.env.NX_TASK_TARGET_PROJECT;
-  const packageJson = createPackageJson(projectName, projectGraph, {
-    isProduction: true, // Used to strip any non-prod dependencies
-    root: projectGraph.nodes[projectName].data.root,
-  });
+   const outputDir = 'dist'; // You can replace this with the output directory you want to use
+   // Detect the package manager you are using (npm, yarn, pnpm)
+   const pm = detectPackageManager();
+   let projectGraph = readCachedProjectGraph();
+   if (!projectGraph) {
+      projectGraph = await createProjectGraphAsync();
+   }
+   // You can replace <NX_TASK_TARGET_PROJECT> with the name of the project if you want.
+   const projectName = process.env.NX_TASK_TARGET_PROJECT;
+   const packageJson = createPackageJson(projectName, projectGraph, {
+      isProduction: true, // Used to strip any non-prod dependencies
+      root: projectGraph.nodes[projectName].data.root,
+   });
 
-  const lockFile = createLockFile(
-    packageJson,
-    projectGraph,
-    detectPackageManager()
-  );
+   const lockFile = createLockFile(
+      packageJson,
+      projectGraph,
+      detectPackageManager()
+   );
 
-  const lockFileName = getLockFileName(pm);
+   const lockFileName = getLockFileName(pm);
 
-  writeJsonFile(`${outputDir}/package.json`, packageJson);
-  writeFileSync(`${outputDir}/${lockFileName}`, lockFile, {
-    encoding: 'utf8',
-  });
+   writeJsonFile(`${outputDir}/package.json`, packageJson);
+   writeFileSync(`${outputDir}/${lockFileName}`, lockFile, {
+      encoding: 'utf8',
+   });
 
-  //... Any additional steps you want to run
+   //... Any additional steps you want to run
 }
 
 main();
@@ -144,10 +144,10 @@ Then to run the script, update your `package.json` to include the following:
 
 ```json {% fileName="package.json" %}
 {
-  "scripts": {
-    "copy-package-json": "node scripts/create-package-json.js",
-    "custom-build": "nx build && npm run copy-package-json"
-  }
+   "scripts": {
+      "copy-package-json": "node scripts/create-package-json.js",
+      "custom-build": "nx build && npm run copy-package-json"
+   }
 }
 ```
 
@@ -164,41 +164,41 @@ import { Schema } from './schema';
 import { createPackageJson, createLockFile, getLockFileName } from '@nx/js';
 import { writeFileSync } from 'fs';
 import {
-  detectPackageManager,
-  ExecutorContext,
-  writeJsonFile,
+   detectPackageManager,
+   ExecutorContext,
+   writeJsonFile,
 } from '@nx/devkit';
 
 export default async function buildExecutor(
-  options: Schema,
-  context: ExecutorContext
+   options: Schema,
+   context: ExecutorContext
 ) {
-  // ...your executor code
-  const packageManager = detectPackageManager();
+   // ...your executor code
+   const packageManager = detectPackageManager();
 
-  const packageJson = createPackageJson(
-    context.projectName,
-    context.projectGraph,
-    {
-      root: context.root,
-      isProduction: true, // We want to strip any non-prod dependencies
-    }
-  );
+   const packageJson = createPackageJson(
+      context.projectName,
+      context.projectGraph,
+      {
+         root: context.root,
+         isProduction: true, // We want to strip any non-prod dependencies
+      }
+   );
 
-  // do any additional manipulations to "package.json" here
+   // do any additional manipulations to "package.json" here
 
-  const lockFile = createLockFile(
-    packageJson,
-    context.projectGraph,
-    packageManager
-  );
-  const lockFileName = getLockFileName(packageManager);
-  writeJsonFile(`${options.outputPath}/package.json`, packageJson);
-  writeFileSync(`${options.outputPath}/${lockFileName}`, lockFile, {
-    encoding: 'utf-8',
-  });
+   const lockFile = createLockFile(
+      packageJson,
+      context.projectGraph,
+      packageManager
+   );
+   const lockFileName = getLockFileName(packageManager);
+   writeJsonFile(`${options.outputPath}/package.json`, packageJson);
+   writeFileSync(`${options.outputPath}/${lockFileName}`, lockFile, {
+      encoding: 'utf-8',
+   });
 
-  // any subsequent executor code
+   // any subsequent executor code
 }
 ```
 

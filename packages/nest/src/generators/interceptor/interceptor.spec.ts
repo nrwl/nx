@@ -4,22 +4,22 @@ import type { InterceptorGeneratorOptions } from './interceptor';
 import { interceptorGenerator } from './interceptor';
 
 describe('interceptor generator', () => {
-  let tree: Tree;
-  const project = 'api';
-  const options: InterceptorGeneratorOptions = {
-    name: 'test',
-    project,
-    unitTestRunner: 'jest',
-  };
+   let tree: Tree;
+   const project = 'api';
+   const options: InterceptorGeneratorOptions = {
+      name: 'test',
+      project,
+      unitTestRunner: 'jest',
+   };
 
-  beforeEach(() => {
-    tree = createTreeWithNestApplication(project);
-    jest.clearAllMocks();
-  });
+   beforeEach(() => {
+      tree = createTreeWithNestApplication(project);
+      jest.clearAllMocks();
+   });
 
-  it('should run successfully', async () => {
-    await expect(
-      interceptorGenerator(tree, options)
-    ).resolves.not.toThrowError();
-  });
+   it('should run successfully', async () => {
+      await expect(
+         interceptorGenerator(tree, options)
+      ).resolves.not.toThrowError();
+   });
 });

@@ -5,187 +5,187 @@ import { Schema } from '../schema';
 import { NormalizedSchema, normalizeOptions } from './normalize-options';
 
 describe('Normalize Options', () => {
-  let appTree: Tree;
+   let appTree: Tree;
 
-  beforeEach(() => {
-    appTree = createTreeWithEmptyWorkspace();
-  });
+   beforeEach(() => {
+      appTree = createTreeWithEmptyWorkspace();
+   });
 
-  it('should normalize options with name in kebab case', async () => {
-    const schema: Schema = {
-      name: 'my-app',
-      linter: Linter.EsLint,
-      e2eTestRunner: 'none',
-      skipFormat: false,
-      js: true,
-      unitTestRunner: 'jest',
-      projectNameAndRootFormat: 'as-provided',
-    };
-    const options = await normalizeOptions(appTree, schema);
-    expect(options).toEqual({
-      addPlugin: true,
-      appProjectRoot: 'my-app',
-      className: 'MyApp',
-      displayName: 'MyApp',
-      lowerCaseName: 'myapp',
-      name: 'my-app',
-      parsedTags: [],
-      projectName: 'my-app',
-      projectNameAndRootFormat: 'as-provided',
-      linter: Linter.EsLint,
-      e2eTestRunner: 'none',
-      unitTestRunner: 'jest',
-      skipFormat: false,
-      js: true,
-      rootProject: false,
-      e2eProjectName: 'my-app-e2e',
-      e2eProjectRoot: 'my-app-e2e',
-      e2ePort: 8081,
-      e2eWebServerAddress: 'http://localhost:8081',
-      e2eWebServerTarget: 'serve',
-    } as NormalizedSchema);
-  });
+   it('should normalize options with name in kebab case', async () => {
+      const schema: Schema = {
+         name: 'my-app',
+         linter: Linter.EsLint,
+         e2eTestRunner: 'none',
+         skipFormat: false,
+         js: true,
+         unitTestRunner: 'jest',
+         projectNameAndRootFormat: 'as-provided',
+      };
+      const options = await normalizeOptions(appTree, schema);
+      expect(options).toEqual({
+         addPlugin: true,
+         appProjectRoot: 'my-app',
+         className: 'MyApp',
+         displayName: 'MyApp',
+         lowerCaseName: 'myapp',
+         name: 'my-app',
+         parsedTags: [],
+         projectName: 'my-app',
+         projectNameAndRootFormat: 'as-provided',
+         linter: Linter.EsLint,
+         e2eTestRunner: 'none',
+         unitTestRunner: 'jest',
+         skipFormat: false,
+         js: true,
+         rootProject: false,
+         e2eProjectName: 'my-app-e2e',
+         e2eProjectRoot: 'my-app-e2e',
+         e2ePort: 8081,
+         e2eWebServerAddress: 'http://localhost:8081',
+         e2eWebServerTarget: 'serve',
+      } as NormalizedSchema);
+   });
 
-  it('should normalize options with name in camel case', async () => {
-    const schema: Schema = {
-      name: 'myApp',
-      linter: Linter.EsLint,
-      e2eTestRunner: 'none',
-      skipFormat: false,
-      js: true,
-      unitTestRunner: 'jest',
-      projectNameAndRootFormat: 'as-provided',
-    };
-    const options = await normalizeOptions(appTree, schema);
-    expect(options).toEqual({
-      addPlugin: true,
-      appProjectRoot: 'myApp',
-      className: 'MyApp',
-      displayName: 'MyApp',
-      lowerCaseName: 'myapp',
-      name: 'myApp',
-      parsedTags: [],
-      projectName: 'myApp',
-      projectNameAndRootFormat: 'as-provided',
-      linter: Linter.EsLint,
-      e2eTestRunner: 'none',
-      skipFormat: false,
-      js: true,
-      unitTestRunner: 'jest',
-      rootProject: false,
-      e2eProjectName: 'myApp-e2e',
-      e2eProjectRoot: 'myApp-e2e',
-      e2ePort: 8081,
-      e2eWebServerAddress: 'http://localhost:8081',
-      e2eWebServerTarget: 'serve',
-    } as NormalizedSchema);
-  });
+   it('should normalize options with name in camel case', async () => {
+      const schema: Schema = {
+         name: 'myApp',
+         linter: Linter.EsLint,
+         e2eTestRunner: 'none',
+         skipFormat: false,
+         js: true,
+         unitTestRunner: 'jest',
+         projectNameAndRootFormat: 'as-provided',
+      };
+      const options = await normalizeOptions(appTree, schema);
+      expect(options).toEqual({
+         addPlugin: true,
+         appProjectRoot: 'myApp',
+         className: 'MyApp',
+         displayName: 'MyApp',
+         lowerCaseName: 'myapp',
+         name: 'myApp',
+         parsedTags: [],
+         projectName: 'myApp',
+         projectNameAndRootFormat: 'as-provided',
+         linter: Linter.EsLint,
+         e2eTestRunner: 'none',
+         skipFormat: false,
+         js: true,
+         unitTestRunner: 'jest',
+         rootProject: false,
+         e2eProjectName: 'myApp-e2e',
+         e2eProjectRoot: 'myApp-e2e',
+         e2ePort: 8081,
+         e2eWebServerAddress: 'http://localhost:8081',
+         e2eWebServerTarget: 'serve',
+      } as NormalizedSchema);
+   });
 
-  it('should normalize options with directory', async () => {
-    const schema: Schema = {
-      name: 'my-app',
-      directory: 'directory',
-      linter: Linter.EsLint,
-      e2eTestRunner: 'none',
-      skipFormat: false,
-      js: true,
-      unitTestRunner: 'jest',
-      projectNameAndRootFormat: 'as-provided',
-    };
-    const options = await normalizeOptions(appTree, schema);
-    expect(options).toEqual({
-      addPlugin: true,
-      appProjectRoot: 'directory',
-      className: 'MyApp',
-      displayName: 'MyApp',
-      lowerCaseName: 'myapp',
-      name: 'my-app',
-      directory: 'directory',
-      parsedTags: [],
-      projectName: 'my-app',
-      projectNameAndRootFormat: 'as-provided',
-      e2eTestRunner: 'none',
-      unitTestRunner: 'jest',
-      linter: Linter.EsLint,
-      skipFormat: false,
-      js: true,
-      rootProject: false,
-      e2eProjectName: 'my-app-e2e',
-      e2eProjectRoot: 'directory-e2e',
-      e2ePort: 8081,
-      e2eWebServerAddress: 'http://localhost:8081',
-      e2eWebServerTarget: 'serve',
-    } as NormalizedSchema);
-  });
+   it('should normalize options with directory', async () => {
+      const schema: Schema = {
+         name: 'my-app',
+         directory: 'directory',
+         linter: Linter.EsLint,
+         e2eTestRunner: 'none',
+         skipFormat: false,
+         js: true,
+         unitTestRunner: 'jest',
+         projectNameAndRootFormat: 'as-provided',
+      };
+      const options = await normalizeOptions(appTree, schema);
+      expect(options).toEqual({
+         addPlugin: true,
+         appProjectRoot: 'directory',
+         className: 'MyApp',
+         displayName: 'MyApp',
+         lowerCaseName: 'myapp',
+         name: 'my-app',
+         directory: 'directory',
+         parsedTags: [],
+         projectName: 'my-app',
+         projectNameAndRootFormat: 'as-provided',
+         e2eTestRunner: 'none',
+         unitTestRunner: 'jest',
+         linter: Linter.EsLint,
+         skipFormat: false,
+         js: true,
+         rootProject: false,
+         e2eProjectName: 'my-app-e2e',
+         e2eProjectRoot: 'directory-e2e',
+         e2ePort: 8081,
+         e2eWebServerAddress: 'http://localhost:8081',
+         e2eWebServerTarget: 'serve',
+      } as NormalizedSchema);
+   });
 
-  it('should normalize options that has directory in its name', async () => {
-    const schema: Schema = {
-      name: 'directory/my-app',
-      linter: Linter.EsLint,
-      e2eTestRunner: 'none',
-      skipFormat: false,
-      js: true,
-      unitTestRunner: 'jest',
-      projectNameAndRootFormat: 'as-provided',
-    };
-    const options = await normalizeOptions(appTree, schema);
-    expect(options).toEqual({
-      addPlugin: true,
-      appProjectRoot: 'directory/my-app',
-      className: 'DirectoryMyApp',
-      displayName: 'DirectoryMyApp',
-      lowerCaseName: 'directorymyapp',
-      name: 'my-app',
-      parsedTags: [],
-      projectName: 'my-app',
-      projectNameAndRootFormat: 'as-provided',
-      e2eTestRunner: 'none',
-      unitTestRunner: 'jest',
-      linter: Linter.EsLint,
-      skipFormat: false,
-      js: true,
-      rootProject: false,
-      e2eProjectName: 'my-app-e2e',
-      e2eProjectRoot: 'directory/my-app-e2e',
-      e2ePort: 8081,
-      e2eWebServerAddress: 'http://localhost:8081',
-      e2eWebServerTarget: 'serve',
-    } as NormalizedSchema);
-  });
+   it('should normalize options that has directory in its name', async () => {
+      const schema: Schema = {
+         name: 'directory/my-app',
+         linter: Linter.EsLint,
+         e2eTestRunner: 'none',
+         skipFormat: false,
+         js: true,
+         unitTestRunner: 'jest',
+         projectNameAndRootFormat: 'as-provided',
+      };
+      const options = await normalizeOptions(appTree, schema);
+      expect(options).toEqual({
+         addPlugin: true,
+         appProjectRoot: 'directory/my-app',
+         className: 'DirectoryMyApp',
+         displayName: 'DirectoryMyApp',
+         lowerCaseName: 'directorymyapp',
+         name: 'my-app',
+         parsedTags: [],
+         projectName: 'my-app',
+         projectNameAndRootFormat: 'as-provided',
+         e2eTestRunner: 'none',
+         unitTestRunner: 'jest',
+         linter: Linter.EsLint,
+         skipFormat: false,
+         js: true,
+         rootProject: false,
+         e2eProjectName: 'my-app-e2e',
+         e2eProjectRoot: 'directory/my-app-e2e',
+         e2ePort: 8081,
+         e2eWebServerAddress: 'http://localhost:8081',
+         e2eWebServerTarget: 'serve',
+      } as NormalizedSchema);
+   });
 
-  it('should normalize options with display name', async () => {
-    const schema: Schema = {
-      name: 'my-app',
-      displayName: 'My App',
-      linter: Linter.EsLint,
-      e2eTestRunner: 'none',
-      skipFormat: false,
-      js: true,
-      unitTestRunner: 'jest',
-      projectNameAndRootFormat: 'as-provided',
-    };
-    const options = await normalizeOptions(appTree, schema);
-    expect(options).toEqual({
-      addPlugin: true,
-      appProjectRoot: 'my-app',
-      className: 'MyApp',
-      displayName: 'My App',
-      lowerCaseName: 'myapp',
-      name: 'my-app',
-      parsedTags: [],
-      projectName: 'my-app',
-      projectNameAndRootFormat: 'as-provided',
-      e2eTestRunner: 'none',
-      unitTestRunner: 'jest',
-      linter: Linter.EsLint,
-      skipFormat: false,
-      js: true,
-      rootProject: false,
-      e2eProjectName: 'my-app-e2e',
-      e2eProjectRoot: 'my-app-e2e',
-      e2ePort: 8081,
-      e2eWebServerAddress: 'http://localhost:8081',
-      e2eWebServerTarget: 'serve',
-    } as NormalizedSchema);
-  });
+   it('should normalize options with display name', async () => {
+      const schema: Schema = {
+         name: 'my-app',
+         displayName: 'My App',
+         linter: Linter.EsLint,
+         e2eTestRunner: 'none',
+         skipFormat: false,
+         js: true,
+         unitTestRunner: 'jest',
+         projectNameAndRootFormat: 'as-provided',
+      };
+      const options = await normalizeOptions(appTree, schema);
+      expect(options).toEqual({
+         addPlugin: true,
+         appProjectRoot: 'my-app',
+         className: 'MyApp',
+         displayName: 'My App',
+         lowerCaseName: 'myapp',
+         name: 'my-app',
+         parsedTags: [],
+         projectName: 'my-app',
+         projectNameAndRootFormat: 'as-provided',
+         e2eTestRunner: 'none',
+         unitTestRunner: 'jest',
+         linter: Linter.EsLint,
+         skipFormat: false,
+         js: true,
+         rootProject: false,
+         e2eProjectName: 'my-app-e2e',
+         e2eProjectRoot: 'my-app-e2e',
+         e2ePort: 8081,
+         e2eWebServerAddress: 'http://localhost:8081',
+         e2eWebServerTarget: 'serve',
+      } as NormalizedSchema);
+   });
 });

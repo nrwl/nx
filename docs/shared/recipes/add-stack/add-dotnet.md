@@ -57,15 +57,15 @@ This generates the following files:
 
 ```json {% fileName=".config/dotnet-tools.json" %}
 {
-  "version": 1,
-  "isRoot": true,
-  "tools": {}
+   "version": 1,
+   "isRoot": true,
+   "tools": {}
 }
 ```
 
 ```json {% fileName=".nx-dotnet.rc.json" %}
 {
-  "nugetPackages": {}
+   "nugetPackages": {}
 }
 ```
 
@@ -175,5 +175,5 @@ Now when you serve your api it will use the class from the library.
 
 ## More Documentation
 
-- [nx-dotnet](https://www.nx-dotnet.com/)
-- [.NET](https://dotnet.microsoft.com/en-us/)
+-  [nx-dotnet](https://www.nx-dotnet.com/)
+-  [.NET](https://dotnet.microsoft.com/en-us/)

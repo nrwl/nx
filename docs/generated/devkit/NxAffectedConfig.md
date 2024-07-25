@@ -8,7 +8,7 @@ Use [NxJsonConfiguration#defaultBase](../../devkit/documents/NxJsonConfiguration
 
 ### Properties
 
-- [defaultBase](../../devkit/documents/NxAffectedConfig#defaultbase): string
+-  [defaultBase](../../devkit/documents/NxAffectedConfig#defaultbase): string
 
 ## Properties
 

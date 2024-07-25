@@ -6,40 +6,40 @@ use ProjectsConfigurations or NxJsonConfiguration
 
 ## Hierarchy
 
-- [`ProjectsConfigurations`](../../devkit/documents/ProjectsConfigurations)
+-  [`ProjectsConfigurations`](../../devkit/documents/ProjectsConfigurations)
 
-- [`NxJsonConfiguration`](../../devkit/documents/NxJsonConfiguration)
+-  [`NxJsonConfiguration`](../../devkit/documents/NxJsonConfiguration)
 
-  ↳ **`Workspace`**
+   ↳ **`Workspace`**
 
 ## Table of contents
 
 ### Properties
 
-- [affected](../../devkit/documents/Workspace#affected): NxAffectedConfig
-- [cacheDirectory](../../devkit/documents/Workspace#cachedirectory): string
-- [cli](../../devkit/documents/Workspace#cli): Object
-- [defaultBase](../../devkit/documents/Workspace#defaultbase): string
-- [defaultProject](../../devkit/documents/Workspace#defaultproject): string
-- [extends](../../devkit/documents/Workspace#extends): string
-- [generators](../../devkit/documents/Workspace#generators): Object
-- [implicitDependencies](../../devkit/documents/Workspace#implicitdependencies): ImplicitDependencyEntry<string[] | "\*">
-- [installation](../../devkit/documents/Workspace#installation): NxInstallationConfiguration
-- [namedInputs](../../devkit/documents/Workspace#namedinputs): Object
-- [nxCloudAccessToken](../../devkit/documents/Workspace#nxcloudaccesstoken): string
-- [nxCloudEncryptionKey](../../devkit/documents/Workspace#nxcloudencryptionkey): string
-- [nxCloudUrl](../../devkit/documents/Workspace#nxcloudurl): string
-- [parallel](../../devkit/documents/Workspace#parallel): number
-- [plugins](../../devkit/documents/Workspace#plugins): PluginConfiguration[]
-- [pluginsConfig](../../devkit/documents/Workspace#pluginsconfig): Record<string, Record<string, unknown>>
-- [projects](../../devkit/documents/Workspace#projects): Record<string, ProjectConfiguration>
-- [release](../../devkit/documents/Workspace#release): NxReleaseConfiguration
-- [targetDefaults](../../devkit/documents/Workspace#targetdefaults): TargetDefaults
-- [tasksRunnerOptions](../../devkit/documents/Workspace#tasksrunneroptions): Object
-- [useDaemonProcess](../../devkit/documents/Workspace#usedaemonprocess): boolean
-- [useInferencePlugins](../../devkit/documents/Workspace#useinferenceplugins): boolean
-- [version](../../devkit/documents/Workspace#version): number
-- [workspaceLayout](../../devkit/documents/Workspace#workspacelayout): Object
+-  [affected](../../devkit/documents/Workspace#affected): NxAffectedConfig
+-  [cacheDirectory](../../devkit/documents/Workspace#cachedirectory): string
+-  [cli](../../devkit/documents/Workspace#cli): Object
+-  [defaultBase](../../devkit/documents/Workspace#defaultbase): string
+-  [defaultProject](../../devkit/documents/Workspace#defaultproject): string
+-  [extends](../../devkit/documents/Workspace#extends): string
+-  [generators](../../devkit/documents/Workspace#generators): Object
+-  [implicitDependencies](../../devkit/documents/Workspace#implicitdependencies): ImplicitDependencyEntry<string[] | "\*">
+-  [installation](../../devkit/documents/Workspace#installation): NxInstallationConfiguration
+-  [namedInputs](../../devkit/documents/Workspace#namedinputs): Object
+-  [nxCloudAccessToken](../../devkit/documents/Workspace#nxcloudaccesstoken): string
+-  [nxCloudEncryptionKey](../../devkit/documents/Workspace#nxcloudencryptionkey): string
+-  [nxCloudUrl](../../devkit/documents/Workspace#nxcloudurl): string
+-  [parallel](../../devkit/documents/Workspace#parallel): number
+-  [plugins](../../devkit/documents/Workspace#plugins): PluginConfiguration[]
+-  [pluginsConfig](../../devkit/documents/Workspace#pluginsconfig): Record<string, Record<string, unknown>>
+-  [projects](../../devkit/documents/Workspace#projects): Record<string, ProjectConfiguration>
+-  [release](../../devkit/documents/Workspace#release): NxReleaseConfiguration
+-  [targetDefaults](../../devkit/documents/Workspace#targetdefaults): TargetDefaults
+-  [tasksRunnerOptions](../../devkit/documents/Workspace#tasksrunneroptions): Object
+-  [useDaemonProcess](../../devkit/documents/Workspace#usedaemonprocess): boolean
+-  [useInferencePlugins](../../devkit/documents/Workspace#useinferenceplugins): boolean
+-  [version](../../devkit/documents/Workspace#version): number
+-  [workspaceLayout](../../devkit/documents/Workspace#workspacelayout): Object
 
 ## Properties
 

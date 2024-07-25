@@ -10,27 +10,27 @@
 import { InjectionToken, Provider } from 'injection-js';
 import { Transform } from 'ng-packagr/lib/graph/transform';
 import {
-  provideTransform,
-  TransformProvider,
+   provideTransform,
+   TransformProvider,
 } from 'ng-packagr/lib/graph/transform.di';
 import {
-  NX_STYLESHEET_PROCESSOR,
-  NX_STYLESHEET_PROCESSOR_TOKEN,
+   NX_STYLESHEET_PROCESSOR,
+   NX_STYLESHEET_PROCESSOR_TOKEN,
 } from '../../styles/stylesheet-processor.di';
 import { NX_OPTIONS_TOKEN } from '../options.di';
 import { compileNgcTransformFactory } from './compile-ngc.transform';
 
 export const NX_COMPILE_NGC_TOKEN = new InjectionToken<Transform>(
-  `nx.v1.compileNgcTransform`
+   `nx.v1.compileNgcTransform`
 );
 
 export const NX_COMPILE_NGC_TRANSFORM: TransformProvider = provideTransform({
-  provide: NX_COMPILE_NGC_TOKEN,
-  useFactory: compileNgcTransformFactory,
-  deps: [NX_STYLESHEET_PROCESSOR_TOKEN, NX_OPTIONS_TOKEN],
+   provide: NX_COMPILE_NGC_TOKEN,
+   useFactory: compileNgcTransformFactory,
+   deps: [NX_STYLESHEET_PROCESSOR_TOKEN, NX_OPTIONS_TOKEN],
 });
 
 export const NX_COMPILE_NGC_PROVIDERS: Provider[] = [
-  NX_STYLESHEET_PROCESSOR,
-  NX_COMPILE_NGC_TRANSFORM,
+   NX_STYLESHEET_PROCESSOR,
+   NX_COMPILE_NGC_TRANSFORM,
 ];

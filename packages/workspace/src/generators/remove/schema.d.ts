@@ -1,10 +1,10 @@
 export interface Json {
-  [k: string]: any;
+   [k: string]: any;
 }
 
 export interface Schema extends Json {
-  projectName: string;
-  skipFormat: boolean;
-  forceRemove: boolean;
-  importPath?: string;
+   projectName: string;
+   skipFormat: boolean;
+   forceRemove: boolean;
+   importPath?: string;
 }

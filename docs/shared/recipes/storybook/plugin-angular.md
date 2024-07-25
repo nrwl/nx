@@ -81,7 +81,7 @@ Let's say that the template for that component looks like this:
 
 ```html {% fileName="libs/feature/ui/src/lib/my-button/my-button.component.html" %}
 <button [disabled]="disabled" [ngStyle]="{ 'padding.px': padding }">
-  {{ text }}
+   {{ text }}
 </button>
 ```
 
@@ -91,15 +91,15 @@ and the component looks like this:
 import { Component, Input } from '@angular/core';
 
 @Component({
-  selector: 'feature-ui-my-button',
-  standalone: true,
-  templateUrl: './my-button.component.html',
-  styleUrls: ['./my-button.component.css'],
+   selector: 'feature-ui-my-button',
+   standalone: true,
+   templateUrl: './my-button.component.html',
+   styleUrls: ['./my-button.component.css'],
 })
 export class MyButtonComponent {
-  @Input() text = 'Click me!';
-  @Input() padding = 10;
-  @Input() disabled = true;
+   @Input() text = 'Click me!';
+   @Input() padding = 10;
+   @Input() disabled = true;
 }
 ```
 
@@ -114,30 +114,30 @@ import { within } from '@storybook/testing-library';
 import { expect } from '@storybook/jest';
 
 const meta: Meta<MyButtonComponent> = {
-  component: MyButtonComponent,
-  title: 'MyButtonComponent',
+   component: MyButtonComponent,
+   title: 'MyButtonComponent',
 };
 export default meta;
 type Story = StoryObj<MyButtonComponent>;
 
 export const Primary: Story = {
-  args: {
-    text: 'Click me!',
-    padding: 10,
-    disabled: true,
-  },
+   args: {
+      text: 'Click me!',
+      padding: 10,
+      disabled: true,
+   },
 };
 
 export const Heading: Story = {
-  args: {
-    text: 'Click me!',
-    padding: 10,
-    disabled: true,
-  },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    expect(canvas.getByText(/my-button works!/gi)).toBeTruthy();
-  },
+   args: {
+      text: 'Click me!',
+      padding: 10,
+      disabled: true,
+   },
+   play: async ({ canvasElement }) => {
+      const canvas = within(canvasElement);
+      expect(canvas.getByText(/my-button works!/gi)).toBeTruthy();
+   },
 };
 ```
 
@@ -176,8 +176,8 @@ This setup instructs Nx to use the configuration under the `build` target of `my
 
 ## More Documentation
 
-- [Set up Compodoc for Storybook on Nx](/recipes/storybook/angular-storybook-compodoc)
-- [Configuring styles and preprocessor options](/recipes/storybook/angular-configuring-styles)
+-  [Set up Compodoc for Storybook on Nx](/recipes/storybook/angular-storybook-compodoc)
+-  [Configuring styles and preprocessor options](/recipes/storybook/angular-configuring-styles)
 
 You can find all Storybook-related Nx topics [here](/nx-api#storybook).
 
@@ -187,5 +187,5 @@ For more on using Storybook, see the [official Storybook documentation](https://
 
 Here's more information on common migration scenarios for Storybook with Nx. For Storybook specific migrations that are not automatically handled by Nx please refer to the [official Storybook page](https://storybook.js.org/)
 
-- [Set up Storybook version 7](/nx-api/storybook/documents/storybook-7-setup)
-- [Migrate to Storybook version 7](/nx-api/storybook/generators/migrate-7)
+-  [Set up Storybook version 7](/nx-api/storybook/documents/storybook-7-setup)
+-  [Migrate to Storybook version 7](/nx-api/storybook/generators/migrate-7)

@@ -1,52 +1,52 @@
 import type { Tree } from '@nx/devkit';
 import type {
-  NestGeneratorWithLanguageOption,
-  NestGeneratorWithTestOption,
-  NormalizedOptions,
+   NestGeneratorWithLanguageOption,
+   NestGeneratorWithTestOption,
+   NormalizedOptions,
 } from '../utils';
 import {
-  normalizeOptions,
-  runNestSchematic,
-  unitTestRunnerToSpec,
+   normalizeOptions,
+   runNestSchematic,
+   unitTestRunnerToSpec,
 } from '../utils';
 
 export type GuardGeneratorOptions = NestGeneratorWithLanguageOption &
-  NestGeneratorWithTestOption;
+   NestGeneratorWithTestOption;
 
 export async function guardGenerator(
-  tree: Tree,
-  rawOptions: GuardGeneratorOptions
+   tree: Tree,
+   rawOptions: GuardGeneratorOptions
 ) {
-  await guardGeneratorInternal(tree, {
-    nameAndDirectoryFormat: 'derived',
-    ...rawOptions,
-  });
+   await guardGeneratorInternal(tree, {
+      nameAndDirectoryFormat: 'derived',
+      ...rawOptions,
+   });
 }
 
 export async function guardGeneratorInternal(
-  tree: Tree,
-  rawOptions: GuardGeneratorOptions
+   tree: Tree,
+   rawOptions: GuardGeneratorOptions
 ): Promise<any> {
-  const options = await normalizeGuardOptions(tree, rawOptions);
+   const options = await normalizeGuardOptions(tree, rawOptions);
 
-  return runNestSchematic(tree, 'guard', options);
+   return runNestSchematic(tree, 'guard', options);
 }
 
 export default guardGenerator;
 
 async function normalizeGuardOptions(
-  tree: Tree,
-  options: GuardGeneratorOptions
+   tree: Tree,
+   options: GuardGeneratorOptions
 ): Promise<NormalizedOptions> {
-  const normalizedOptions = await normalizeOptions(
-    tree,
-    'guard',
-    '@nx/nest:guard',
-    options
-  );
-  return {
-    ...normalizedOptions,
-    language: options.language,
-    spec: unitTestRunnerToSpec(options.unitTestRunner),
-  };
+   const normalizedOptions = await normalizeOptions(
+      tree,
+      'guard',
+      '@nx/nest:guard',
+      options
+   );
+   return {
+      ...normalizedOptions,
+      language: options.language,
+      spec: unitTestRunnerToSpec(options.unitTestRunner),
+   };
 }

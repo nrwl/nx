@@ -56,11 +56,11 @@ import { Tree, formatFiles, installPackagesTask } from '@nx/devkit';
 import { libraryGenerator } from '@nx/js';
 
 export default async function (tree: Tree, schema: any) {
-  await libraryGenerator(tree, { name: schema.name });
-  await formatFiles(tree);
-  return () => {
-    installPackagesTask(tree);
-  };
+   await libraryGenerator(tree, { name: schema.name });
+   await formatFiles(tree);
+   return () => {
+      installPackagesTask(tree);
+   };
 }
 ```
 
@@ -70,20 +70,20 @@ In the `schema.json` file for your generator, the `name` is provided as a defaul
 
 ```json {% fileName="schema.json" %}
 {
-  "cli": "nx",
-  "id": "test",
-  "type": "object",
-  "properties": {
-    "name": {
-      "type": "string",
-      "description": "Library name",
-      "$default": {
-        "$source": "argv",
-        "index": 0
+   "cli": "nx",
+   "id": "test",
+   "type": "object",
+   "properties": {
+      "name": {
+         "type": "string",
+         "description": "Library name",
+         "$default": {
+            "$source": "argv",
+            "index": 0
+         }
       }
-    }
-  },
-  "required": ["name"]
+   },
+   "required": ["name"]
 }
 ```
 

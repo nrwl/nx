@@ -70,55 +70,59 @@ Our project configurations might now look like this:
 
 We can now restrict projects within the same group to depend on each other based on the type:
 
-- `app` can only depend on `feature`, `ui` or `util`, but not other apps
-- `feature` cannot depend on app or another feature
-- `ui` can only depend on other `ui`
-- everyone can depend on `util` including `util` itself
+-  `app` can only depend on `feature`, `ui` or `util`, but not other apps
+-  `feature` cannot depend on app or another feature
+-  `ui` can only depend on other `ui`
+-  everyone can depend on `util` including `util` itself
 
 ```jsonc
 {
-  // ... more ESLint config here
+   // ... more ESLint config here
 
-  // @nx/enforce-module-boundaries should already exist at the top-level of your config
-  "@nx/enforce-module-boundaries": [
-    "error",
-    {
-      "allow": [],
-      // update depConstraints based on your tags
-      "depConstraints": [
-        {
-          "sourceTag": "scope:shared",
-          "onlyDependOnLibsWithTags": ["scope:shared"]
-        },
-        {
-          "sourceTag": "scope:admin",
-          "onlyDependOnLibsWithTags": ["scope:shared", "scope:admin"]
-        },
-        {
-          "sourceTag": "scope:client",
-          "onlyDependOnLibsWithTags": ["scope:shared", "scope:client"]
-        },
-        {
-          "sourceTag": "type:app",
-          "onlyDependOnLibsWithTags": ["type:feature", "type:ui", "type:util"]
-        },
-        {
-          "sourceTag": "type:feature",
-          "onlyDependOnLibsWithTags": ["type:ui", "type:util"]
-        },
-        {
-          "sourceTag": "type:ui",
-          "onlyDependOnLibsWithTags": ["type:ui", "type:util"]
-        },
-        {
-          "sourceTag": "type:util",
-          "onlyDependOnLibsWithTags": ["type:util"]
-        }
-      ]
-    }
-  ]
+   // @nx/enforce-module-boundaries should already exist at the top-level of your config
+   "@nx/enforce-module-boundaries": [
+      "error",
+      {
+         "allow": [],
+         // update depConstraints based on your tags
+         "depConstraints": [
+            {
+               "sourceTag": "scope:shared",
+               "onlyDependOnLibsWithTags": ["scope:shared"]
+            },
+            {
+               "sourceTag": "scope:admin",
+               "onlyDependOnLibsWithTags": ["scope:shared", "scope:admin"]
+            },
+            {
+               "sourceTag": "scope:client",
+               "onlyDependOnLibsWithTags": ["scope:shared", "scope:client"]
+            },
+            {
+               "sourceTag": "type:app",
+               "onlyDependOnLibsWithTags": [
+                  "type:feature",
+                  "type:ui",
+                  "type:util"
+               ]
+            },
+            {
+               "sourceTag": "type:feature",
+               "onlyDependOnLibsWithTags": ["type:ui", "type:util"]
+            },
+            {
+               "sourceTag": "type:ui",
+               "onlyDependOnLibsWithTags": ["type:ui", "type:util"]
+            },
+            {
+               "sourceTag": "type:util",
+               "onlyDependOnLibsWithTags": ["type:util"]
+            }
+         ]
+      }
+   ]
 
-  // ... more ESLint config here
+   // ... more ESLint config here
 }
 ```
 
@@ -130,39 +134,39 @@ Matching just a single source tag is sometimes not enough for solving complex re
 
 ```jsonc
 {
-  // ... more ESLint config here
+   // ... more ESLint config here
 
-  // @nx/enforce-module-boundaries should already exist at the top-level of your config
-  "@nx/enforce-module-boundaries": [
-    "error",
-    {
-      "allow": [],
-      // update depConstraints based on your tags
-      "depConstraints": [
-        {
-          // this constraint applies to all "admin" projects
-          "sourceTag": "scope:admin",
-          "onlyDependOnLibsWithTags": ["scope:shared", "scope:admin"]
-        },
-        {
-          "sourceTag": "type:ui",
-          "onlyDependOnLibsWithTags": ["type:ui", "type:util"]
-        },
-        {
-          // we don't want our admin ui components to depend on anything except utilities,
-          // and we also want to ban router imports
-          "allSourceTags": ["scope:admin", "type:ui"],
-          "onlyDependOnLibsWithTags": ["type:util"],
-          "bannedExternalImports": ["*router*"]
-        }
-      ]
-    }
-  ]
+   // @nx/enforce-module-boundaries should already exist at the top-level of your config
+   "@nx/enforce-module-boundaries": [
+      "error",
+      {
+         "allow": [],
+         // update depConstraints based on your tags
+         "depConstraints": [
+            {
+               // this constraint applies to all "admin" projects
+               "sourceTag": "scope:admin",
+               "onlyDependOnLibsWithTags": ["scope:shared", "scope:admin"]
+            },
+            {
+               "sourceTag": "type:ui",
+               "onlyDependOnLibsWithTags": ["type:ui", "type:util"]
+            },
+            {
+               // we don't want our admin ui components to depend on anything except utilities,
+               // and we also want to ban router imports
+               "allSourceTags": ["scope:admin", "type:ui"],
+               "onlyDependOnLibsWithTags": ["type:util"],
+               "bannedExternalImports": ["*router*"]
+            }
+         ]
+      }
+   ]
 
-  // ... more ESLint config here
+   // ... more ESLint config here
 }
 ```
 
 ## Further reading
 
-- [Article: Taming Code Organization with Module Boundaries in Nx](https://blog.nrwl.io/mastering-the-project-boundaries-in-nx-f095852f5bf4)
+-  [Article: Taming Code Organization with Module Boundaries in Nx](https://blog.nrwl.io/mastering-the-project-boundaries-in-nx-f095852f5bf4)

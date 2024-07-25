@@ -62,7 +62,7 @@ Then for each package, you must have a `.babelrc` file that will be applied to t
 
 ```json
 {
-  "presets": ["@babel/preset-env", "@babel/preset-typescript"]
+   "presets": ["@babel/preset-env", "@babel/preset-typescript"]
 }
 ```
 

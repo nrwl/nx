@@ -3,69 +3,69 @@ import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { convertEslintJsonToFlatConfig } from './json-converter';
 
 describe('convertEslintJsonToFlatConfig', () => {
-  let tree: Tree;
+   let tree: Tree;
 
-  beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
-  });
+   beforeEach(() => {
+      tree = createTreeWithEmptyWorkspace();
+   });
 
-  it('should convert root configs', async () => {
-    tree.write(
-      '.eslintrc.json',
-      JSON.stringify({
-        root: true,
-        ignorePatterns: ['**/*', 'src/ignore/to/keep.ts'],
-        plugins: ['@nx'],
-        overrides: [
-          {
-            files: ['*.ts', '*.tsx', '*.js', '*.jsx'],
-            rules: {
-              '@nx/enforce-module-boundaries': [
-                'error',
-                {
-                  enforceBuildableLibDependency: true,
-                  allow: [],
-                  depConstraints: [
-                    {
-                      sourceTag: '*',
-                      onlyDependOnLibsWithTags: ['*'],
-                    },
+   it('should convert root configs', async () => {
+      tree.write(
+         '.eslintrc.json',
+         JSON.stringify({
+            root: true,
+            ignorePatterns: ['**/*', 'src/ignore/to/keep.ts'],
+            plugins: ['@nx'],
+            overrides: [
+               {
+                  files: ['*.ts', '*.tsx', '*.js', '*.jsx'],
+                  rules: {
+                     '@nx/enforce-module-boundaries': [
+                        'error',
+                        {
+                           enforceBuildableLibDependency: true,
+                           allow: [],
+                           depConstraints: [
+                              {
+                                 sourceTag: '*',
+                                 onlyDependOnLibsWithTags: ['*'],
+                              },
+                           ],
+                        },
+                     ],
+                  },
+               },
+               {
+                  files: ['*.ts', '*.tsx'],
+                  extends: ['plugin:@nx/typescript'],
+                  rules: {},
+               },
+               {
+                  files: [
+                     '**/*.spec.ts',
+                     '**/*.spec.tsx',
+                     '**/*.spec.js',
+                     '**/*.spec.jsx',
                   ],
-                },
-              ],
-            },
-          },
-          {
-            files: ['*.ts', '*.tsx'],
-            extends: ['plugin:@nx/typescript'],
-            rules: {},
-          },
-          {
-            files: [
-              '**/*.spec.ts',
-              '**/*.spec.tsx',
-              '**/*.spec.js',
-              '**/*.spec.jsx',
+                  env: {
+                     jest: true,
+                  },
+                  rules: {},
+               },
             ],
-            env: {
-              jest: true,
-            },
-            rules: {},
-          },
-        ],
-      })
-    );
+         })
+      );
 
-    tree.write('.eslintignore', 'node_modules\nsomething/else');
+      tree.write('.eslintignore', 'node_modules\nsomething/else');
 
-    const { content } = convertEslintJsonToFlatConfig(
-      tree,
-      '',
-      readJson(tree, '.eslintrc.json'),
-      ['.eslintignore']
-    );
+      const { content } = convertEslintJsonToFlatConfig(
+         tree,
+         '',
+         readJson(tree, '.eslintrc.json'),
+         ['.eslintignore']
+      );
 
-    expect(content).toMatchInlineSnapshot(`
+      expect(content).toMatchInlineSnapshot(`
       "const { FlatCompat } = require("@eslint/eslintrc");
       const nxEslintPlugin = require("@nx/eslint-plugin");
       const js = require("@eslint/js");
@@ -123,64 +123,64 @@ describe('convertEslintJsonToFlatConfig', () => {
       ];
       "
     `);
-  });
+   });
 
-  it('should convert project configs', async () => {
-    tree.write(
-      'mylib/.eslintrc.json',
-      JSON.stringify({
-        extends: [
-          'plugin:@nx/react-typescript',
-          'next',
-          'next/core-web-vitals',
-          '../../.eslintrc.json',
-        ],
-        ignorePatterns: ['!**/*', '.next/**/*'],
-        overrides: [
-          {
-            files: ['*.ts', '*.tsx', '*.js', '*.jsx'],
+   it('should convert project configs', async () => {
+      tree.write(
+         'mylib/.eslintrc.json',
+         JSON.stringify({
+            extends: [
+               'plugin:@nx/react-typescript',
+               'next',
+               'next/core-web-vitals',
+               '../../.eslintrc.json',
+            ],
+            ignorePatterns: ['!**/*', '.next/**/*'],
+            overrides: [
+               {
+                  files: ['*.ts', '*.tsx', '*.js', '*.jsx'],
+                  rules: {
+                     '@next/next/no-html-link-for-pages': [
+                        'error',
+                        'apps/test-next/pages',
+                     ],
+                  },
+               },
+               {
+                  files: ['*.ts', '*.tsx'],
+                  rules: {},
+               },
+               {
+                  files: ['*.js', '*.jsx'],
+                  rules: {},
+               },
+               {
+                  files: ['*.json'],
+                  parser: 'jsonc-eslint-parser',
+                  rules: {
+                     '@nx/dependency-checks': 'error',
+                  },
+               },
+            ],
             rules: {
-              '@next/next/no-html-link-for-pages': [
-                'error',
-                'apps/test-next/pages',
-              ],
+               '@next/next/no-html-link-for-pages': 'off',
             },
-          },
-          {
-            files: ['*.ts', '*.tsx'],
-            rules: {},
-          },
-          {
-            files: ['*.js', '*.jsx'],
-            rules: {},
-          },
-          {
-            files: ['*.json'],
-            parser: 'jsonc-eslint-parser',
-            rules: {
-              '@nx/dependency-checks': 'error',
+            env: {
+               jest: true,
             },
-          },
-        ],
-        rules: {
-          '@next/next/no-html-link-for-pages': 'off',
-        },
-        env: {
-          jest: true,
-        },
-      })
-    );
+         })
+      );
 
-    tree.write('mylib/.eslintignore', 'node_modules\nsomething/else');
+      tree.write('mylib/.eslintignore', 'node_modules\nsomething/else');
 
-    const { content } = convertEslintJsonToFlatConfig(
-      tree,
-      'mylib',
-      readJson(tree, 'mylib/.eslintrc.json'),
-      ['mylib/.eslintignore']
-    );
+      const { content } = convertEslintJsonToFlatConfig(
+         tree,
+         'mylib',
+         readJson(tree, 'mylib/.eslintrc.json'),
+         ['mylib/.eslintignore']
+      );
 
-    expect(content).toMatchInlineSnapshot(`
+      expect(content).toMatchInlineSnapshot(`
       "const { FlatCompat } = require("@eslint/eslintrc");
       const baseConfig = require("../../eslint.config.js");
       const globals = require("globals");
@@ -235,5 +235,5 @@ describe('convertEslintJsonToFlatConfig', () => {
       ];
       "
     `);
-  });
+   });
 });

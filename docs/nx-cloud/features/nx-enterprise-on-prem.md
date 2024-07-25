@@ -10,8 +10,8 @@ We offer multiple ways of running Nx Cloud for our Enterprise customers. The bel
 
 The quickest and easiest way to start using Nx Cloud is by utilizing our pre-existing secure, multi-tenant managed clusters:
 
-- [https://nx.app/](https://nx.app/)
-- Enterprise customers can contact their developer productivity engineer (DPE) to configure the EU hosted version of Nx Cloud.
+-  [https://nx.app/](https://nx.app/)
+-  Enterprise customers can contact their developer productivity engineer (DPE) to configure the EU hosted version of Nx Cloud.
 
 You get the **same level of security**, **dedicated support**, and **predictable seat-based pricing** as all our other hosting options. But you won't have to manage the instance yourself.
 
@@ -25,15 +25,15 @@ If you have very specific requirements, then we can also offer to host Nx Cloud 
 
 We'll be able to discuss specific requirements such as:
 
-- SAML/SSO
-- Specific regions you want your data to be in
-- Network isolation / dedicated VPCs
-- Dedicated instances
-- Different storage encryption than what is available on our multi-tenant instances
-- Custom storage replication / redundancy requirements
-- Custom Node types for Nx agents
-- Static IPs (if you need to open up connections in your corporate network)
-- VPC peering on GCloud or AWS Private Link
+-  SAML/SSO
+-  Specific regions you want your data to be in
+-  Network isolation / dedicated VPCs
+-  Dedicated instances
+-  Different storage encryption than what is available on our multi-tenant instances
+-  Custom storage replication / redundancy requirements
+-  Custom Node types for Nx agents
+-  Static IPs (if you need to open up connections in your corporate network)
+-  VPC peering on GCloud or AWS Private Link
 
 This would be a "best of both worlds" option, as it would free you up from managing the instance yourself, but you will get to define specific parameters of how it should it run.
 Your data and the Nx Cloud will run in complete isolation and will only serve your company. There will be no external API calls to any services outside of the clusters we set-up for you.
@@ -54,5 +54,5 @@ We also offer a multi-node Kubernetes setup, that is deployed via Helm. You can 
 
 ## Resources
 
-- [Integration with your source control provider](/ci/recipes/source-control-integration)
-- [On-Prem specific features](/ci/recipes/enterprise/on-premise/auth-single-admin)
+-  [Integration with your source control provider](/ci/recipes/source-control-integration)
+-  [On-Prem specific features](/ci/recipes/enterprise/on-premise/auth-single-admin)

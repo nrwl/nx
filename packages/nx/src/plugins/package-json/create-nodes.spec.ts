@@ -4,52 +4,52 @@ import { vol } from 'memfs';
 import { createNodeFromPackageJson, createNodesV2 } from './create-nodes';
 
 describe('nx package.json workspaces plugin', () => {
-  const context = {
-    workspaceRoot: '/root',
-    configFiles: [],
-    nxJsonConfiguration: {},
-  };
+   const context = {
+      workspaceRoot: '/root',
+      configFiles: [],
+      nxJsonConfiguration: {},
+   };
 
-  afterEach(() => {
-    vol.reset();
-  });
+   afterEach(() => {
+      vol.reset();
+   });
 
-  it('should build projects from package.json files', () => {
-    vol.fromJSON(
-      {
-        'package.json': JSON.stringify({
-          name: 'root',
-          scripts: { echo: 'echo root project' },
-        }),
-        'packages/lib-a/package.json': JSON.stringify({
-          name: 'lib-a',
-          description: 'lib-a description',
-          scripts: { test: 'jest' },
-        }),
-        'packages/lib-b/package.json': JSON.stringify({
-          name: 'lib-b',
-          description: 'lib-b description',
-          scripts: {
-            build: 'tsc',
-            test: 'jest',
-            nonNxOperation: 'rm -rf .',
-          },
-          nx: {
-            implicitDependencies: ['lib-a'],
-            includedScripts: ['build', 'test'],
-            targets: {
-              build: {
-                outputs: ['{projectRoot}/dist'],
-              },
-            },
-          },
-        }),
-      },
-      '/root'
-    );
+   it('should build projects from package.json files', () => {
+      vol.fromJSON(
+         {
+            'package.json': JSON.stringify({
+               name: 'root',
+               scripts: { echo: 'echo root project' },
+            }),
+            'packages/lib-a/package.json': JSON.stringify({
+               name: 'lib-a',
+               description: 'lib-a description',
+               scripts: { test: 'jest' },
+            }),
+            'packages/lib-b/package.json': JSON.stringify({
+               name: 'lib-b',
+               description: 'lib-b description',
+               scripts: {
+                  build: 'tsc',
+                  test: 'jest',
+                  nonNxOperation: 'rm -rf .',
+               },
+               nx: {
+                  implicitDependencies: ['lib-a'],
+                  includedScripts: ['build', 'test'],
+                  targets: {
+                     build: {
+                        outputs: ['{projectRoot}/dist'],
+                     },
+                  },
+               },
+            }),
+         },
+         '/root'
+      );
 
-    expect(createNodeFromPackageJson('package.json', '/root'))
-      .toMatchInlineSnapshot(`
+      expect(createNodeFromPackageJson('package.json', '/root'))
+         .toMatchInlineSnapshot(`
       {
         "projects": {
           ".": {
@@ -90,8 +90,8 @@ describe('nx package.json workspaces plugin', () => {
         },
       }
     `);
-    expect(createNodeFromPackageJson('packages/lib-a/package.json', '/root'))
-      .toMatchInlineSnapshot(`
+      expect(createNodeFromPackageJson('packages/lib-a/package.json', '/root'))
+         .toMatchInlineSnapshot(`
       {
         "projects": {
           "packages/lib-a": {
@@ -132,8 +132,8 @@ describe('nx package.json workspaces plugin', () => {
         },
       }
     `);
-    expect(createNodeFromPackageJson('packages/lib-b/package.json', '/root'))
-      .toMatchInlineSnapshot(`
+      expect(createNodeFromPackageJson('packages/lib-b/package.json', '/root'))
+         .toMatchInlineSnapshot(`
       {
         "projects": {
           "packages/lib-b": {
@@ -195,53 +195,53 @@ describe('nx package.json workspaces plugin', () => {
         },
       }
     `);
-  });
+   });
 
-  describe('negative patterns', () => {
-    it('should work based on negative patterns defined in package.json workspaces', async () => {
-      vol.fromJSON(
-        {
-          'package.json': JSON.stringify({
-            name: 'root',
-            workspaces: [
-              'packages/*',
-              // Multiple negative entries
-              '!packages/fs',
-              '!packages/orm-browser-example',
-              '!packages/framework-examples',
-            ],
-          }),
-          'packages/vite/package.json': JSON.stringify({ name: 'vite' }),
-          'packages/fs/package.json': JSON.stringify({ name: 'fs' }),
-          'packages/orm-browser-example/package.json': JSON.stringify({
-            name: 'orm-browser-example',
-          }),
-          'packages/framework-examples/package.json': JSON.stringify({
-            name: 'framework-examples',
-          }),
-        },
-        '/root'
-      );
+   describe('negative patterns', () => {
+      it('should work based on negative patterns defined in package.json workspaces', async () => {
+         vol.fromJSON(
+            {
+               'package.json': JSON.stringify({
+                  name: 'root',
+                  workspaces: [
+                     'packages/*',
+                     // Multiple negative entries
+                     '!packages/fs',
+                     '!packages/orm-browser-example',
+                     '!packages/framework-examples',
+                  ],
+               }),
+               'packages/vite/package.json': JSON.stringify({ name: 'vite' }),
+               'packages/fs/package.json': JSON.stringify({ name: 'fs' }),
+               'packages/orm-browser-example/package.json': JSON.stringify({
+                  name: 'orm-browser-example',
+               }),
+               'packages/framework-examples/package.json': JSON.stringify({
+                  name: 'framework-examples',
+               }),
+            },
+            '/root'
+         );
 
-      const context = {
-        workspaceRoot: '/root',
-        configFiles: [],
-        nxJsonConfiguration: {},
-      };
+         const context = {
+            workspaceRoot: '/root',
+            configFiles: [],
+            nxJsonConfiguration: {},
+         };
 
-      // No matching project based on the package.json "workspace" config
-      expect(
-        await createNodesV2[1](['package.json'], undefined, context)
-      ).toMatchInlineSnapshot(`[]`);
+         // No matching project based on the package.json "workspace" config
+         expect(
+            await createNodesV2[1](['package.json'], undefined, context)
+         ).toMatchInlineSnapshot(`[]`);
 
-      // Matching project based on the package.json "workspace" config
-      expect(
-        await createNodesV2[1](
-          ['packages/vite/package.json'],
-          undefined,
-          context
-        )
-      ).toMatchInlineSnapshot(`
+         // Matching project based on the package.json "workspace" config
+         expect(
+            await createNodesV2[1](
+               ['packages/vite/package.json'],
+               undefined,
+               context
+            )
+         ).toMatchInlineSnapshot(`
         [
           [
             "packages/vite/package.json",
@@ -274,72 +274,76 @@ describe('nx package.json workspaces plugin', () => {
         ]
       `);
 
-      // No matching project based on the package.json "workspace" config
-      expect(
-        await createNodesV2[1](['packages/fs/package.json'], undefined, context)
-      ).toMatchInlineSnapshot(`[]`);
+         // No matching project based on the package.json "workspace" config
+         expect(
+            await createNodesV2[1](
+               ['packages/fs/package.json'],
+               undefined,
+               context
+            )
+         ).toMatchInlineSnapshot(`[]`);
 
-      // No matching project based on the package.json "workspace" config
-      expect(
-        await createNodesV2[1](
-          ['packages/orm-browser-example/package.json'],
-          undefined,
-          context
-        )
-      ).toMatchInlineSnapshot(`[]`);
+         // No matching project based on the package.json "workspace" config
+         expect(
+            await createNodesV2[1](
+               ['packages/orm-browser-example/package.json'],
+               undefined,
+               context
+            )
+         ).toMatchInlineSnapshot(`[]`);
 
-      // No matching project based on the package.json "workspace" config
-      expect(
-        await createNodesV2[1](
-          ['packages/framework-examples/package.json'],
-          undefined,
-          context
-        )
-      ).toMatchInlineSnapshot(`[]`);
-    });
+         // No matching project based on the package.json "workspace" config
+         expect(
+            await createNodesV2[1](
+               ['packages/framework-examples/package.json'],
+               undefined,
+               context
+            )
+         ).toMatchInlineSnapshot(`[]`);
+      });
 
-    it('should work based on negative patterns defined in pnpm-workspace.yaml', async () => {
-      vol.fromJSON(
-        {
-          'package.json': JSON.stringify({ name: 'root' }),
-          // Multiple negative entries
-          'pnpm-workspace.yaml': `packages:
+      it('should work based on negative patterns defined in pnpm-workspace.yaml', async () => {
+         vol.fromJSON(
+            {
+               'package.json': JSON.stringify({ name: 'root' }),
+               // Multiple negative entries
+               'pnpm-workspace.yaml': `packages:
 - 'packages/*'
 - '!packages/fs'
 - '!packages/orm-browser-example'
 - '!packages/framework-examples'
 `,
-          'packages/vite/package.json': JSON.stringify({ name: 'vite' }),
-          'packages/fs/package.json': JSON.stringify({ name: 'fs' }),
-          'packages/orm-browser-example/package.json': JSON.stringify({
-            name: 'orm-browser-example',
-          }),
-          'packages/framework-examples/package.json': JSON.stringify({
-            name: 'framework-examples',
-          }),
-        },
-        '/root'
-      );
+               'packages/vite/package.json': JSON.stringify({ name: 'vite' }),
+               'packages/fs/package.json': JSON.stringify({ name: 'fs' }),
+               'packages/orm-browser-example/package.json': JSON.stringify({
+                  name: 'orm-browser-example',
+               }),
+               'packages/framework-examples/package.json': JSON.stringify({
+                  name: 'framework-examples',
+               }),
+            },
+            '/root'
+         );
 
-      const context = {
-        workspaceRoot: '/root',
-        configFiles: [],
-        nxJsonConfiguration: {},
-      };
+         const context = {
+            workspaceRoot: '/root',
+            configFiles: [],
+            nxJsonConfiguration: {},
+         };
 
-      // No matching project based on the pnpm-workspace.yaml "packages" config
-      expect(
-        await createNodesV2[1](['package.json'], undefined, context)
-      ).toMatchInlineSnapshot(`[]`);
+         // No matching project based on the pnpm-workspace.yaml "packages" config
+         expect(
+            await createNodesV2[1](['package.json'], undefined, context)
+         ).toMatchInlineSnapshot(`[]`);
 
-      // Matching project based on the pnpm-workspace.yaml "packages" config
-      expect(
-        await createNodesV2[1](
-          ['packages/vite/package.json'],
-          undefined,
-          context
-        )
-      ).toMatchInlineSnapshot(`
+         // Matching project based on the pnpm-workspace.yaml "packages" config
+         expect(
+            await createNodesV2[1](
+               ['packages/vite/package.json'],
+               undefined,
+               context
+            )
+         ).toMatchInlineSnapshot(`
         [
           [
             "packages/vite/package.json",
@@ -372,68 +376,72 @@ describe('nx package.json workspaces plugin', () => {
         ]
       `);
 
-      // No matching project based on the pnpm-workspace.yaml "packages" config
-      expect(
-        await createNodesV2[1](['packages/fs/package.json'], undefined, context)
-      ).toMatchInlineSnapshot(`[]`);
+         // No matching project based on the pnpm-workspace.yaml "packages" config
+         expect(
+            await createNodesV2[1](
+               ['packages/fs/package.json'],
+               undefined,
+               context
+            )
+         ).toMatchInlineSnapshot(`[]`);
 
-      // No matching project based on the pnpm-workspace.yaml "packages" config
-      expect(
-        await createNodesV2[1](
-          ['packages/orm-browser-example/package.json'],
-          undefined,
-          context
-        )
-      ).toMatchInlineSnapshot(`[]`);
+         // No matching project based on the pnpm-workspace.yaml "packages" config
+         expect(
+            await createNodesV2[1](
+               ['packages/orm-browser-example/package.json'],
+               undefined,
+               context
+            )
+         ).toMatchInlineSnapshot(`[]`);
 
-      // No matching project based on the pnpm-workspace.yaml "packages" config
-      expect(
-        await createNodesV2[1](
-          ['packages/framework-examples/package.json'],
-          undefined,
-          context
-        )
-      ).toMatchInlineSnapshot(`[]`);
-    });
+         // No matching project based on the pnpm-workspace.yaml "packages" config
+         expect(
+            await createNodesV2[1](
+               ['packages/framework-examples/package.json'],
+               undefined,
+               context
+            )
+         ).toMatchInlineSnapshot(`[]`);
+      });
 
-    it('should work based on negative patterns defined in lerna.json', async () => {
-      vol.fromJSON(
-        {
-          'package.json': JSON.stringify({ name: 'root' }),
-          'lerna.json': JSON.stringify({
-            packages: [
-              'packages/*',
-              // Multiple negative entries
-              '!packages/fs',
-              '!packages/orm-browser-example',
-              '!packages/framework-examples',
-            ],
-          }),
-          'packages/vite/package.json': JSON.stringify({ name: 'vite' }),
-          'packages/fs/package.json': JSON.stringify({ name: 'fs' }),
-          'packages/orm-browser-example/package.json': JSON.stringify({
-            name: 'orm-browser-example',
-          }),
-          'packages/framework-examples/package.json': JSON.stringify({
-            name: 'framework-examples',
-          }),
-        },
-        '/root'
-      );
+      it('should work based on negative patterns defined in lerna.json', async () => {
+         vol.fromJSON(
+            {
+               'package.json': JSON.stringify({ name: 'root' }),
+               'lerna.json': JSON.stringify({
+                  packages: [
+                     'packages/*',
+                     // Multiple negative entries
+                     '!packages/fs',
+                     '!packages/orm-browser-example',
+                     '!packages/framework-examples',
+                  ],
+               }),
+               'packages/vite/package.json': JSON.stringify({ name: 'vite' }),
+               'packages/fs/package.json': JSON.stringify({ name: 'fs' }),
+               'packages/orm-browser-example/package.json': JSON.stringify({
+                  name: 'orm-browser-example',
+               }),
+               'packages/framework-examples/package.json': JSON.stringify({
+                  name: 'framework-examples',
+               }),
+            },
+            '/root'
+         );
 
-      // No matching project based on the lerna.json "packages" config
-      expect(
-        await createNodesV2[1](['package.json'], undefined, context)
-      ).toMatchInlineSnapshot(`[]`);
+         // No matching project based on the lerna.json "packages" config
+         expect(
+            await createNodesV2[1](['package.json'], undefined, context)
+         ).toMatchInlineSnapshot(`[]`);
 
-      // Matching project based on the lerna.json "packages" config
-      expect(
-        await createNodesV2[1](
-          ['packages/vite/package.json'],
-          undefined,
-          context
-        )
-      ).toMatchInlineSnapshot(`
+         // Matching project based on the lerna.json "packages" config
+         expect(
+            await createNodesV2[1](
+               ['packages/vite/package.json'],
+               undefined,
+               context
+            )
+         ).toMatchInlineSnapshot(`
         [
           [
             "packages/vite/package.json",
@@ -466,52 +474,60 @@ describe('nx package.json workspaces plugin', () => {
         ]
       `);
 
-      // No matching project based on the lerna.json "packages" config
-      expect(
-        await createNodesV2[1](['packages/fs/package.json'], undefined, context)
-      ).toMatchInlineSnapshot(`[]`);
+         // No matching project based on the lerna.json "packages" config
+         expect(
+            await createNodesV2[1](
+               ['packages/fs/package.json'],
+               undefined,
+               context
+            )
+         ).toMatchInlineSnapshot(`[]`);
 
-      // No matching project based on the lerna.json "packages" config
-      expect(
-        await createNodesV2[1](
-          ['packages/orm-browser-example/package.json'],
-          undefined,
-          context
-        )
-      ).toMatchInlineSnapshot(`[]`);
+         // No matching project based on the lerna.json "packages" config
+         expect(
+            await createNodesV2[1](
+               ['packages/orm-browser-example/package.json'],
+               undefined,
+               context
+            )
+         ).toMatchInlineSnapshot(`[]`);
 
-      // No matching project based on the lerna.json "packages" config
-      expect(
-        await createNodesV2[1](
-          ['packages/framework-examples/package.json'],
-          undefined,
-          context
-        )
-      ).toMatchInlineSnapshot(`[]`);
-    });
-  });
+         // No matching project based on the lerna.json "packages" config
+         expect(
+            await createNodesV2[1](
+               ['packages/framework-examples/package.json'],
+               undefined,
+               context
+            )
+         ).toMatchInlineSnapshot(`[]`);
+      });
+   });
 
-  describe('sibling project.json files', () => {
-    it('should add a script target if the sibling project.json file does not exist', async () => {
-      vol.fromJSON(
-        {
-          'package.json': JSON.stringify({
-            name: 'root',
-            workspaces: ['packages/*'],
-          }),
-          'packages/a/package.json': JSON.stringify({
-            name: 'root',
-            scripts: {
-              build: 'echo build',
+   describe('sibling project.json files', () => {
+      it('should add a script target if the sibling project.json file does not exist', async () => {
+         vol.fromJSON(
+            {
+               'package.json': JSON.stringify({
+                  name: 'root',
+                  workspaces: ['packages/*'],
+               }),
+               'packages/a/package.json': JSON.stringify({
+                  name: 'root',
+                  scripts: {
+                     build: 'echo build',
+                  },
+               }),
             },
-          }),
-        },
-        '/root'
-      );
+            '/root'
+         );
 
-      expect(
-        await createNodesV2[1](['packages/a/package.json'], undefined, context)
-      ).toMatchInlineSnapshot(`
+         expect(
+            await createNodesV2[1](
+               ['packages/a/package.json'],
+               undefined,
+               context
+            )
+         ).toMatchInlineSnapshot(`
         [
           [
             "packages/a/package.json",
@@ -557,35 +573,39 @@ describe('nx package.json workspaces plugin', () => {
           ],
         ]
       `);
-    });
+      });
 
-    it('should add a script target if the sibling project.json exists but does not have a conflicting target', async () => {
-      vol.fromJSON(
-        {
-          'package.json': JSON.stringify({
-            name: 'root',
-            workspaces: ['packages/*'],
-          }),
-          'packages/a/package.json': JSON.stringify({
-            name: 'root',
-            scripts: {
-              build: 'echo build',
+      it('should add a script target if the sibling project.json exists but does not have a conflicting target', async () => {
+         vol.fromJSON(
+            {
+               'package.json': JSON.stringify({
+                  name: 'root',
+                  workspaces: ['packages/*'],
+               }),
+               'packages/a/package.json': JSON.stringify({
+                  name: 'root',
+                  scripts: {
+                     build: 'echo build',
+                  },
+               }),
+               'packages/a/project.json': JSON.stringify({
+                  targets: {
+                     'something-other-than-build': {
+                        command: 'echo something-other-than-build',
+                     },
+                  },
+               }),
             },
-          }),
-          'packages/a/project.json': JSON.stringify({
-            targets: {
-              'something-other-than-build': {
-                command: 'echo something-other-than-build',
-              },
-            },
-          }),
-        },
-        '/root'
-      );
+            '/root'
+         );
 
-      expect(
-        await createNodesV2[1](['packages/a/package.json'], undefined, context)
-      ).toMatchInlineSnapshot(`
+         expect(
+            await createNodesV2[1](
+               ['packages/a/package.json'],
+               undefined,
+               context
+            )
+         ).toMatchInlineSnapshot(`
         [
           [
             "packages/a/package.json",
@@ -631,35 +651,39 @@ describe('nx package.json workspaces plugin', () => {
           ],
         ]
       `);
-    });
+      });
 
-    it('should not add a script target if the sibling project.json exists and has a conflicting target', async () => {
-      vol.fromJSON(
-        {
-          'package.json': JSON.stringify({
-            name: 'root',
-            workspaces: ['packages/*'],
-          }),
-          'packages/a/package.json': JSON.stringify({
-            name: 'root',
-            scripts: {
-              build: 'echo "build from package.json"',
+      it('should not add a script target if the sibling project.json exists and has a conflicting target', async () => {
+         vol.fromJSON(
+            {
+               'package.json': JSON.stringify({
+                  name: 'root',
+                  workspaces: ['packages/*'],
+               }),
+               'packages/a/package.json': JSON.stringify({
+                  name: 'root',
+                  scripts: {
+                     build: 'echo "build from package.json"',
+                  },
+               }),
+               'packages/a/project.json': JSON.stringify({
+                  targets: {
+                     build: {
+                        command: 'echo "build from project.json"',
+                     },
+                  },
+               }),
             },
-          }),
-          'packages/a/project.json': JSON.stringify({
-            targets: {
-              build: {
-                command: 'echo "build from project.json"',
-              },
-            },
-          }),
-        },
-        '/root'
-      );
+            '/root'
+         );
 
-      expect(
-        await createNodesV2[1](['packages/a/package.json'], undefined, context)
-      ).toMatchInlineSnapshot(`
+         expect(
+            await createNodesV2[1](
+               ['packages/a/package.json'],
+               undefined,
+               context
+            )
+         ).toMatchInlineSnapshot(`
         [
           [
             "packages/a/package.json",
@@ -691,93 +715,93 @@ describe('nx package.json workspaces plugin', () => {
           ],
         ]
       `);
-    });
-  });
+      });
+   });
 
-  it('should infer library and application project types from appsDir and libsDir', () => {
-    vol.fromJSON(
-      {
-        'nx.json': JSON.stringify({
-          workspaceLayout: {
-            appsDir: 'apps',
-            libsDir: 'packages',
-          },
-        }),
-        'apps/myapp/package.json': JSON.stringify({
-          name: 'myapp',
-          scripts: { test: 'jest' },
-        }),
-        'packages/mylib/package.json': JSON.stringify({
-          name: 'mylib',
-          scripts: { test: 'jest' },
-        }),
-      },
-      '/root'
-    );
+   it('should infer library and application project types from appsDir and libsDir', () => {
+      vol.fromJSON(
+         {
+            'nx.json': JSON.stringify({
+               workspaceLayout: {
+                  appsDir: 'apps',
+                  libsDir: 'packages',
+               },
+            }),
+            'apps/myapp/package.json': JSON.stringify({
+               name: 'myapp',
+               scripts: { test: 'jest' },
+            }),
+            'packages/mylib/package.json': JSON.stringify({
+               name: 'mylib',
+               scripts: { test: 'jest' },
+            }),
+         },
+         '/root'
+      );
 
-    expect(
-      createNodeFromPackageJson('apps/myapp/package.json', '/root').projects[
-        'apps/myapp'
-      ].projectType
-    ).toEqual('application');
+      expect(
+         createNodeFromPackageJson('apps/myapp/package.json', '/root').projects[
+            'apps/myapp'
+         ].projectType
+      ).toEqual('application');
 
-    expect(
-      createNodeFromPackageJson('packages/mylib/package.json', '/root')
-        .projects['packages/mylib'].projectType
-    ).toEqual('library');
-  });
+      expect(
+         createNodeFromPackageJson('packages/mylib/package.json', '/root')
+            .projects['packages/mylib'].projectType
+      ).toEqual('library');
+   });
 
-  it('should infer library types for root library project if both appsDir and libsDir are set to empty string', () => {
-    vol.fromJSON(
-      {
-        'nx.json': JSON.stringify({
-          workspaceLayout: {
-            appsDir: '',
-            libsDir: '',
-          },
-        }),
-        'package.json': JSON.stringify({
-          name: 'mylib',
-          scripts: { test: 'jest' },
-        }),
-      },
-      '/root'
-    );
+   it('should infer library types for root library project if both appsDir and libsDir are set to empty string', () => {
+      vol.fromJSON(
+         {
+            'nx.json': JSON.stringify({
+               workspaceLayout: {
+                  appsDir: '',
+                  libsDir: '',
+               },
+            }),
+            'package.json': JSON.stringify({
+               name: 'mylib',
+               scripts: { test: 'jest' },
+            }),
+         },
+         '/root'
+      );
 
-    expect(
-      createNodeFromPackageJson('package.json', '/root').projects['.']
-        .projectType
-    ).toEqual('library');
-  });
+      expect(
+         createNodeFromPackageJson('package.json', '/root').projects['.']
+            .projectType
+      ).toEqual('library');
+   });
 
-  it('should infer library project type if only libsDir is set', () => {
-    vol.fromJSON(
-      {
-        'nx.json': JSON.stringify({
-          workspaceLayout: {
-            libsDir: 'packages',
-          },
-        }),
-        'example/package.json': JSON.stringify({
-          name: 'example',
-          scripts: { test: 'jest' },
-        }),
-        'packages/mylib/package.json': JSON.stringify({
-          name: 'mylib',
-          scripts: { test: 'jest' },
-        }),
-      },
-      '/root'
-    );
+   it('should infer library project type if only libsDir is set', () => {
+      vol.fromJSON(
+         {
+            'nx.json': JSON.stringify({
+               workspaceLayout: {
+                  libsDir: 'packages',
+               },
+            }),
+            'example/package.json': JSON.stringify({
+               name: 'example',
+               scripts: { test: 'jest' },
+            }),
+            'packages/mylib/package.json': JSON.stringify({
+               name: 'mylib',
+               scripts: { test: 'jest' },
+            }),
+         },
+         '/root'
+      );
 
-    expect(
-      createNodeFromPackageJson('packages/mylib/package.json', '/root')
-        .projects['packages/mylib'].projectType
-    ).toEqual('library');
-    expect(
-      createNodeFromPackageJson('example/package.json', '/root').projects[
-        'example'
-      ].projectType
-    ).toBeUndefined();
-  });
+      expect(
+         createNodeFromPackageJson('packages/mylib/package.json', '/root')
+            .projects['packages/mylib'].projectType
+      ).toEqual('library');
+      expect(
+         createNodeFromPackageJson('example/package.json', '/root').projects[
+            'example'
+         ].projectType
+      ).toBeUndefined();
+   });
 });

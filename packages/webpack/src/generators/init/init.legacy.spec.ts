@@ -4,25 +4,25 @@ import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { webpackInitGenerator } from './init';
 
 describe('webpackInitGenerator (legacy)', () => {
-  let tree: Tree;
+   let tree: Tree;
 
-  beforeEach(async () => {
-    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-  });
+   beforeEach(async () => {
+      tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+   });
 
-  it('should not install webpack dependencies', async () => {
-    await webpackInitGenerator(tree, {
-      addPlugin: false,
-    });
+   it('should not install webpack dependencies', async () => {
+      await webpackInitGenerator(tree, {
+         addPlugin: false,
+      });
 
-    const packageJson = readJson(tree, 'package.json');
-    expect(packageJson).toEqual({
-      name: expect.any(String),
-      dependencies: {},
-      devDependencies: {
-        '@nx/web': expect.any(String),
-        '@nx/webpack': expect.any(String),
-      },
-    });
-  });
+      const packageJson = readJson(tree, 'package.json');
+      expect(packageJson).toEqual({
+         name: expect.any(String),
+         dependencies: {},
+         devDependencies: {
+            '@nx/web': expect.any(String),
+            '@nx/webpack': expect.any(String),
+         },
+      });
+   });
 });

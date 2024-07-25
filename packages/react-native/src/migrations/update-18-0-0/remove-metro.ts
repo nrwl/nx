@@ -1,7 +1,7 @@
 import {
-  formatFiles,
-  removeDependenciesFromPackageJson,
-  Tree,
+   formatFiles,
+   removeDependenciesFromPackageJson,
+   Tree,
 } from '@nx/devkit';
 
 /**
@@ -17,19 +17,19 @@ import {
  * @returns
  */
 export default async function update(tree: Tree) {
-  removeDependenciesFromPackageJson(
-    tree,
-    [],
-    [
-      'metro',
-      'metro-resolver',
-      'metro-config',
-      'metro-react-native-babel-preset',
-      'metro-babel-register',
-      'metro-react-native-babel-transformer',
-      '@react-native-community/cli',
-      '@react-native-community/cli-platform-ios',
-    ]
-  );
-  await formatFiles(tree);
+   removeDependenciesFromPackageJson(
+      tree,
+      [],
+      [
+         'metro',
+         'metro-resolver',
+         'metro-config',
+         'metro-react-native-babel-preset',
+         'metro-babel-register',
+         'metro-react-native-babel-transformer',
+         '@react-native-community/cli',
+         '@react-native-community/cli-platform-ios',
+      ]
+   );
+   await formatFiles(tree);
 }

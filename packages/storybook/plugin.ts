@@ -1,5 +1,5 @@
 export {
-  createNodes,
-  StorybookPluginOptions,
-  createDependencies,
+   createNodes,
+   StorybookPluginOptions,
+   createDependencies,
 } from './src/plugins/plugin';

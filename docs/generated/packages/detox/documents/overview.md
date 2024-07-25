@@ -1,10 +1,10 @@
 Detox is gray box end-to-end testing and automation library for mobile apps. It has a lot of great features:
 
-- Cross Platform
-- Runs on Devices
-- Automatically Synchronized
-- Test Runner Independent
-- Debuggable
+-  Cross Platform
+-  Runs on Devices
+-  Automatically Synchronized
+-  Test Runner Independent
+-  Debuggable
 
 ## Setting Up Detox
 
@@ -46,10 +46,10 @@ This will install the correct version of `@nx/detox`.
 
 The `@nx/detox` plugin will create a task for any project that has an ESLint configuration file present. Any of the following files will be recognized as an ESLint configuration file:
 
-- `.detoxrc.js`
-- `.detoxrc.json`
-- `detox.config.js`
-- `detox.config.json`
+-  `.detoxrc.js`
+-  `.detoxrc.json`
+-  `detox.config.js`
+-  `detox.config.json`
 
 ### View Inferred Tasks
 
@@ -61,16 +61,16 @@ The `@nx/detox/plugin` is configured in the `plugins` array in `nx.json`.
 
 ```json {% fileName="nx.json" %}
 {
-  "plugins": [
-    {
-      "plugin": "@nx/detox/plugin",
-      "options": {
-        "buildTargetName": "build",
-        "startTargetName": "start",
-        "testTargetName": "test"
+   "plugins": [
+      {
+         "plugin": "@nx/detox/plugin",
+         "options": {
+            "buildTargetName": "build",
+            "startTargetName": "start",
+            "testTargetName": "test"
+         }
       }
-    }
-  ]
+   ]
 }
 ```
 
@@ -98,22 +98,22 @@ nx g @nx/expo:app frontend --e2eTestRunner=detox
 
 ### Testing Applications
 
-- Run `nx test-ios frontend-e2e` to build the iOS app and execute e2e tests with Detox for iOS (Mac only)
-- Run `nx test-android frontend-e2e` to build the Android app and execute e2e tests with Detox for Android
+-  Run `nx test-ios frontend-e2e` to build the iOS app and execute e2e tests with Detox for iOS (Mac only)
+-  Run `nx test-android frontend-e2e` to build the Android app and execute e2e tests with Detox for Android
 
 You can run below commands:
 
-- `nx build-ios frontend-e2e`: build the iOS app (Mac only)
-- `nx build-android frontend-e2e`: build the Android app
+-  `nx build-ios frontend-e2e`: build the iOS app (Mac only)
+-  `nx build-android frontend-e2e`: build the Android app
 
 ### Testing against Prod Build
 
 You can run your e2e test against a production build:
 
-- `nx test-ios frontend-e2e --prod`: to build the iOS app and execute e2e tests with Detox for iOS with Release configuration (Mac only)
-- `nx test-android frontend-e2e --prod`: to build the Android app and execute e2e tests with Detox for Android with release build type
-- `nx build-ios frontend-e2e --prod`: build the iOS app using Release configuration (Mac only)
-- `nx build-android frontend-e2e --prod`: build the Android app using release build type
+-  `nx test-ios frontend-e2e --prod`: to build the iOS app and execute e2e tests with Detox for iOS with Release configuration (Mac only)
+-  `nx test-android frontend-e2e --prod`: to build the Android app and execute e2e tests with Detox for Android with release build type
+-  `nx build-ios frontend-e2e --prod`: build the iOS app using Release configuration (Mac only)
+-  `nx build-android frontend-e2e --prod`: build the Android app using release build type
 
 ## Configuration
 

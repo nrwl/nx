@@ -2,8 +2,8 @@ import { Hash, TaskHasher } from '../hasher/task-hasher';
 import { ProjectGraph } from './project-graph';
 import { Task, TaskGraph } from './task-graph';
 import {
-  TargetConfiguration,
-  ProjectsConfigurations,
+   TargetConfiguration,
+   ProjectsConfigurations,
 } from './workspace-json-project-json';
 
 import type { NxJsonConfiguration } from './nx-json';
@@ -17,114 +17,114 @@ export type GeneratorCallback = () => void | Promise<void>;
  * A function that schedules updates to the filesystem to be done atomically
  */
 export type Generator<T = unknown> = (
-  tree,
-  schema: T
+   tree,
+   schema: T
 ) => void | GeneratorCallback | Promise<void | GeneratorCallback>;
 
 export interface GeneratorsJsonEntry {
-  hidden?: boolean;
-  schema: string;
-  implementation?: string;
-  factory?: string;
-  description?: string;
-  aliases?: string[];
-  cli?: 'nx';
-  'x-type'?: 'library' | 'application';
-  'x-deprecated'?: string;
-  // @todo(v17) Remove this and make it default behavior.
-  'x-use-standalone-layout'?: boolean;
+   hidden?: boolean;
+   schema: string;
+   implementation?: string;
+   factory?: string;
+   description?: string;
+   aliases?: string[];
+   cli?: 'nx';
+   'x-type'?: 'library' | 'application';
+   'x-deprecated'?: string;
+   // @todo(v17) Remove this and make it default behavior.
+   'x-use-standalone-layout'?: boolean;
 }
 
 export type OutputCaptureMethod = 'direct-nodejs' | 'pipe';
 
 export interface ExecutorJsonEntryConfig {
-  schema: string;
-  implementation: string;
-  batchImplementation?: string;
-  description?: string;
-  hasher?: string;
+   schema: string;
+   implementation: string;
+   batchImplementation?: string;
+   description?: string;
+   hasher?: string;
 }
 export type ExecutorsJsonEntry = string | ExecutorJsonEntryConfig;
 
 export type Dependencies = 'dependencies' | 'devDependencies';
 
 export interface PackageJsonUpdateForPackage {
-  version: string;
-  ifPackageInstalled?: string;
-  alwaysAddToPackageJson?: boolean | Dependencies;
-  addToPackageJson?: boolean | Dependencies;
+   version: string;
+   ifPackageInstalled?: string;
+   alwaysAddToPackageJson?: boolean | Dependencies;
+   addToPackageJson?: boolean | Dependencies;
 }
 
 export type PackageJsonUpdates = {
-  [name: string]: {
-    version: string;
-    packages: {
-      [packageName: string]: PackageJsonUpdateForPackage;
-    };
-    'x-prompt'?: string;
-    requires?: Record<string, string>;
-  };
+   [name: string]: {
+      version: string;
+      packages: {
+         [packageName: string]: PackageJsonUpdateForPackage;
+      };
+      'x-prompt'?: string;
+      requires?: Record<string, string>;
+   };
 };
 
 export interface MigrationsJsonEntry {
-  version: string;
-  description?: string;
-  cli?: string;
-  implementation?: string;
-  factory?: string;
-  requires?: Record<string, string>;
+   version: string;
+   description?: string;
+   cli?: string;
+   implementation?: string;
+   factory?: string;
+   requires?: Record<string, string>;
 }
 
 export interface MigrationsJson {
-  name?: string;
-  version?: string;
-  collection?: string;
-  generators?: { [name: string]: MigrationsJsonEntry };
-  schematics?: { [name: string]: MigrationsJsonEntry };
-  packageJsonUpdates?: PackageJsonUpdates;
+   name?: string;
+   version?: string;
+   collection?: string;
+   generators?: { [name: string]: MigrationsJsonEntry };
+   schematics?: { [name: string]: MigrationsJsonEntry };
+   packageJsonUpdates?: PackageJsonUpdates;
 }
 
 export interface GeneratorsJson {
-  extends?: string;
-  schematics?: Record<string, GeneratorsJsonEntry>;
-  generators?: Record<string, GeneratorsJsonEntry>;
+   extends?: string;
+   schematics?: Record<string, GeneratorsJsonEntry>;
+   generators?: Record<string, GeneratorsJsonEntry>;
 }
 
 export interface ExecutorsJson {
-  executors?: Record<string, ExecutorsJsonEntry>;
-  builders?: Record<string, ExecutorsJsonEntry>;
+   executors?: Record<string, ExecutorsJsonEntry>;
+   builders?: Record<string, ExecutorsJsonEntry>;
 }
 
 export interface ExecutorConfig {
-  schema: {
-    version?: number;
-    outputCapture?: OutputCaptureMethod;
-  } & Schema;
-  hasherFactory?: () => CustomHasher;
-  implementationFactory: () => Executor;
-  batchImplementationFactory?: () => TaskGraphExecutor;
+   schema: {
+      version?: number;
+      outputCapture?: OutputCaptureMethod;
+   } & Schema;
+   hasherFactory?: () => CustomHasher;
+   implementationFactory: () => Executor;
+   batchImplementationFactory?: () => TaskGraphExecutor;
 }
 
 /**
  * An executor implementation that returns a promise
  */
 export type PromiseExecutor<T = any> = (
-  /**
-   * Options that users configure or pass via the command line
-   */
-  options: T,
-  context: ExecutorContext
+   /**
+    * Options that users configure or pass via the command line
+    */
+   options: T,
+   context: ExecutorContext
 ) => Promise<{ success: boolean }>;
 
 /**
  * An executor implementation that returns an async iterator
  */
 export type AsyncIteratorExecutor<T = any> = (
-  /**
-   * Options that users configure or pass via the command line
-   */
-  options: T,
-  context: ExecutorContext
+   /**
+    * Options that users configure or pass via the command line
+    */
+   options: T,
+   context: ExecutorContext
 ) => AsyncIterableIterator<{ success: boolean }>;
 
 /**
@@ -133,122 +133,122 @@ export type AsyncIteratorExecutor<T = any> = (
 export type Executor<T = any> = PromiseExecutor<T> | AsyncIteratorExecutor<T>;
 
 export interface HasherContext {
-  hasher: TaskHasher;
-  projectGraph: ProjectGraph;
-  taskGraph: TaskGraph;
-  projectsConfigurations: ProjectsConfigurations;
-  nxJsonConfiguration: NxJsonConfiguration;
+   hasher: TaskHasher;
+   projectGraph: ProjectGraph;
+   taskGraph: TaskGraph;
+   projectsConfigurations: ProjectsConfigurations;
+   nxJsonConfiguration: NxJsonConfiguration;
 }
 
 export type CustomHasher = (
-  task: Task,
-  context: HasherContext
+   task: Task,
+   context: HasherContext
 ) => Promise<Hash>;
 
 export type TaskResult = {
-  success: boolean;
-  terminalOutput: string;
-  startTime?: number;
-  endTime?: number;
+   success: boolean;
+   terminalOutput: string;
+   startTime?: number;
+   endTime?: number;
 };
 export type BatchExecutorResult = Record<string, TaskResult>;
 export type BatchExecutorTaskResult = {
-  task: string;
-  result: TaskResult;
+   task: string;
+   result: TaskResult;
 };
 
 /**
  * Implementation of a target of a project that handles multiple projects to be batched
  */
 export type TaskGraphExecutor<T = any> = (
-  /**
-   * Graph of Tasks to be executed
-   */
-  taskGraph: TaskGraph,
-  /**
-   * Map of Task IDs to options for the task
-   */
-  options: Record<string, T>,
-  /**
-   * Set of overrides for the overall execution
-   */
-  overrides: T,
-  context: ExecutorContext
+   /**
+    * Graph of Tasks to be executed
+    */
+   taskGraph: TaskGraph,
+   /**
+    * Map of Task IDs to options for the task
+    */
+   options: Record<string, T>,
+   /**
+    * Set of overrides for the overall execution
+    */
+   overrides: T,
+   context: ExecutorContext
 ) => Promise<
-  BatchExecutorResult | AsyncIterableIterator<BatchExecutorTaskResult>
+   BatchExecutorResult | AsyncIterableIterator<BatchExecutorTaskResult>
 >;
 
 /**
  * Context that is passed into an executor
  */
 export interface ExecutorContext {
-  /**
-   * The root of the workspace
-   */
-  root: string;
+   /**
+    * The root of the workspace
+    */
+   root: string;
 
-  /**
-   * The name of the project being executed on
-   */
-  projectName?: string;
+   /**
+    * The name of the project being executed on
+    */
+   projectName?: string;
 
-  /**
-   * The name of the target being executed
-   */
-  targetName?: string;
+   /**
+    * The name of the target being executed
+    */
+   targetName?: string;
 
-  /**
-   * The name of the configuration being executed
-   */
-  configurationName?: string;
+   /**
+    * The name of the configuration being executed
+    */
+   configurationName?: string;
 
-  /**
-   * The configuration of the target being executed
-   */
-  target?: TargetConfiguration;
+   /**
+    * The configuration of the target being executed
+    */
+   target?: TargetConfiguration;
 
-  /**
-   * Projects config
-   *
-   * @todo(vsavkin): mark this as required for v17
-   */
-  projectsConfigurations?: ProjectsConfigurations;
+   /**
+    * Projects config
+    *
+    * @todo(vsavkin): mark this as required for v17
+    */
+   projectsConfigurations?: ProjectsConfigurations;
 
-  /**
-   * The contents of nx.json.
-   *
-   * @todo(vsavkin): mark this as required for v17
-   */
-  nxJsonConfiguration?: NxJsonConfiguration;
+   /**
+    * The contents of nx.json.
+    *
+    * @todo(vsavkin): mark this as required for v17
+    */
+   nxJsonConfiguration?: NxJsonConfiguration;
 
-  /**
-   * The current working directory
-   */
-  cwd: string;
+   /**
+    * The current working directory
+    */
+   cwd: string;
 
-  /**
-   * Enable verbose logging
-   */
-  isVerbose: boolean;
+   /**
+    * Enable verbose logging
+    */
+   isVerbose: boolean;
 
-  /**
-   * A snapshot of the project graph as
-   * it existed when the Nx command was kicked off
-   *
-   * @todo(vsavkin) mark this required for v17
-   */
-  projectGraph?: ProjectGraph;
+   /**
+    * A snapshot of the project graph as
+    * it existed when the Nx command was kicked off
+    *
+    * @todo(vsavkin) mark this required for v17
+    */
+   projectGraph?: ProjectGraph;
 
-  /**
-   * A snapshot of the task graph as
-   * it existed when the Nx command was kicked off
-   */
-  taskGraph?: TaskGraph;
+   /**
+    * A snapshot of the task graph as
+    * it existed when the Nx command was kicked off
+    */
+   taskGraph?: TaskGraph;
 
-  /**
-   * Deprecated. Use projectsConfigurations or nxJsonConfiguration
-   * The full workspace configuration
-   * @todo(vsavkin): remove after v17
-   */
-  workspace?: ProjectsConfigurations & NxJsonConfiguration;
+   /**
+    * Deprecated. Use projectsConfigurations or nxJsonConfiguration
+    * The full workspace configuration
+    * @todo(vsavkin): remove after v17
+    */
+   workspace?: ProjectsConfigurations & NxJsonConfiguration;
 }

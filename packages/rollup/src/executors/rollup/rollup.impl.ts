@@ -4,8 +4,8 @@ import { type ExecutorContext, logger } from '@nx/devkit';
 
 import { RollupExecutorOptions } from './schema';
 import {
-  NormalizedRollupExecutorOptions,
-  normalizeRollupExecutorOptions,
+   NormalizedRollupExecutorOptions,
+   normalizeRollupExecutorOptions,
 } from './lib/normalize';
 import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
 import { createAsyncIterable } from '@nx/devkit/src/utils/async-iterable';
@@ -14,144 +14,149 @@ import { pluginName as generatePackageJsonPluginName } from '../../plugins/packa
 import { calculateProjectBuildableDependencies } from '@nx/js/src/utils/buildable-libs-utils';
 
 export async function* rollupExecutor(
-  rawOptions: RollupExecutorOptions,
-  context: ExecutorContext
+   rawOptions: RollupExecutorOptions,
+   context: ExecutorContext
 ) {
-  process.env.NODE_ENV ??= 'production';
-  const options = normalizeRollupExecutorOptions(rawOptions, context);
-  const rollupOptions = await createRollupOptions(options, context);
-  const outfile = resolveOutfile(context, options);
+   process.env.NODE_ENV ??= 'production';
+   const options = normalizeRollupExecutorOptions(rawOptions, context);
+   const rollupOptions = await createRollupOptions(options, context);
+   const outfile = resolveOutfile(context, options);
 
-  if (options.watch) {
-    // region Watch build
-    return yield* createAsyncIterable(({ next }) => {
-      const watcher = rollup.watch(rollupOptions);
-      watcher.on('event', (data) => {
-        if (data.code === 'START') {
-          logger.info(`Bundling ${context.projectName}...`);
-        } else if (data.code === 'END') {
-          logger.info('Bundle complete. Watching for file changes...');
-          next({ success: true, outfile });
-        } else if (data.code === 'ERROR') {
-          logger.error(`Error during bundle: ${data.error.message}`);
-          next({ success: false });
-        }
+   if (options.watch) {
+      // region Watch build
+      return yield* createAsyncIterable(({ next }) => {
+         const watcher = rollup.watch(rollupOptions);
+         watcher.on('event', (data) => {
+            if (data.code === 'START') {
+               logger.info(`Bundling ${context.projectName}...`);
+            } else if (data.code === 'END') {
+               logger.info('Bundle complete. Watching for file changes...');
+               next({ success: true, outfile });
+            } else if (data.code === 'ERROR') {
+               logger.error(`Error during bundle: ${data.error.message}`);
+               next({ success: false });
+            }
+         });
+         const processExitListener =
+            (signal?: number | NodeJS.Signals) => () => {
+               watcher.close();
+            };
+         process.once('SIGTERM', processExitListener);
+         process.once('SIGINT', processExitListener);
+         process.once('SIGQUIT', processExitListener);
       });
-      const processExitListener = (signal?: number | NodeJS.Signals) => () => {
-        watcher.close();
-      };
-      process.once('SIGTERM', processExitListener);
-      process.once('SIGINT', processExitListener);
-      process.once('SIGQUIT', processExitListener);
-    });
-    // endregion
-  } else {
-    // region Single build
-    try {
-      logger.info(`Bundling ${context.projectName}...`);
+      // endregion
+   } else {
+      // region Single build
+      try {
+         logger.info(`Bundling ${context.projectName}...`);
 
-      const start = process.hrtime.bigint();
-      const allRollupOptions = Array.isArray(rollupOptions)
-        ? rollupOptions
-        : [rollupOptions];
+         const start = process.hrtime.bigint();
+         const allRollupOptions = Array.isArray(rollupOptions)
+            ? rollupOptions
+            : [rollupOptions];
 
-      for (const opts of allRollupOptions) {
-        const bundle = await rollup.rollup(opts);
-        const output = Array.isArray(opts.output) ? opts.output : [opts.output];
+         for (const opts of allRollupOptions) {
+            const bundle = await rollup.rollup(opts);
+            const output = Array.isArray(opts.output)
+               ? opts.output
+               : [opts.output];
 
-        for (const o of output) {
-          await bundle.write(o);
-        }
+            for (const o of output) {
+               await bundle.write(o);
+            }
+         }
+
+         const end = process.hrtime.bigint();
+         const duration = `${(Number(end - start) / 1_000_000_000).toFixed(
+            2
+         )}s`;
+
+         logger.info(`⚡ Done in ${duration}`);
+         return { success: true, outfile };
+      } catch (e) {
+         if (e.formatted) {
+            logger.info(e.formatted);
+         } else if (e.message) {
+            logger.info(e.message);
+         }
+         logger.error(e);
+         logger.error(`Bundle failed: ${context.projectName}`);
+         return { success: false };
       }
-
-      const end = process.hrtime.bigint();
-      const duration = `${(Number(end - start) / 1_000_000_000).toFixed(2)}s`;
-
-      logger.info(`⚡ Done in ${duration}`);
-      return { success: true, outfile };
-    } catch (e) {
-      if (e.formatted) {
-        logger.info(e.formatted);
-      } else if (e.message) {
-        logger.info(e.message);
-      }
-      logger.error(e);
-      logger.error(`Bundle failed: ${context.projectName}`);
-      return { success: false };
-    }
-    // endregion
-  }
+      // endregion
+   }
 }
 
 // -----------------------------------------------------------------------------
 
 export async function createRollupOptions(
-  options: NormalizedRollupExecutorOptions,
-  context: ExecutorContext
+   options: NormalizedRollupExecutorOptions,
+   context: ExecutorContext
 ): Promise<rollup.RollupOptions | rollup.RollupOptions[]> {
-  const { dependencies } = calculateProjectBuildableDependencies(
-    context.taskGraph,
-    context.projectGraph,
-    context.root,
-    context.projectName,
-    context.targetName,
-    context.configurationName,
-    true
-  );
+   const { dependencies } = calculateProjectBuildableDependencies(
+      context.taskGraph,
+      context.projectGraph,
+      context.root,
+      context.projectName,
+      context.targetName,
+      context.configurationName,
+      true
+   );
 
-  const rollupConfig = withNx(options, {}, dependencies);
+   const rollupConfig = withNx(options, {}, dependencies);
 
-  // `generatePackageJson` is a plugin rather than being embedded into @nx/rollup:rollup.
-  // Make sure the plugin is always present to keep the previous before of Nx < 19.4, where it was not a plugin.
-  const generatePackageJsonPlugin = Array.isArray(rollupConfig.plugins)
-    ? rollupConfig.plugins.find(
-        (p) => p['name'] === generatePackageJsonPluginName
+   // `generatePackageJson` is a plugin rather than being embedded into @nx/rollup:rollup.
+   // Make sure the plugin is always present to keep the previous before of Nx < 19.4, where it was not a plugin.
+   const generatePackageJsonPlugin = Array.isArray(rollupConfig.plugins)
+      ? rollupConfig.plugins.find(
+           (p) => p['name'] === generatePackageJsonPluginName
+        )
+      : null;
+
+   const userDefinedRollupConfigs = options.rollupConfig.map((plugin) =>
+      loadConfigFile(plugin)
+   );
+   let finalConfig: rollup.RollupOptions = rollupConfig;
+   for (const _config of userDefinedRollupConfigs) {
+      const config = await _config;
+      if (typeof config === 'function') {
+         finalConfig = config(finalConfig, options);
+      } else {
+         finalConfig = {
+            ...finalConfig,
+            ...config,
+            plugins: [
+               ...(Array.isArray(finalConfig.plugins) &&
+               finalConfig.plugins?.length > 0
+                  ? finalConfig.plugins
+                  : []),
+               ...(config.plugins?.length > 0 ? config.plugins : []),
+            ],
+         };
+      }
+   }
+
+   if (
+      generatePackageJsonPlugin &&
+      Array.isArray(finalConfig.plugins) &&
+      !finalConfig.plugins.some(
+         (p) => p['name'] === generatePackageJsonPluginName
       )
-    : null;
+   ) {
+      finalConfig.plugins.push(generatePackageJsonPlugin);
+   }
 
-  const userDefinedRollupConfigs = options.rollupConfig.map((plugin) =>
-    loadConfigFile(plugin)
-  );
-  let finalConfig: rollup.RollupOptions = rollupConfig;
-  for (const _config of userDefinedRollupConfigs) {
-    const config = await _config;
-    if (typeof config === 'function') {
-      finalConfig = config(finalConfig, options);
-    } else {
-      finalConfig = {
-        ...finalConfig,
-        ...config,
-        plugins: [
-          ...(Array.isArray(finalConfig.plugins) &&
-          finalConfig.plugins?.length > 0
-            ? finalConfig.plugins
-            : []),
-          ...(config.plugins?.length > 0 ? config.plugins : []),
-        ],
-      };
-    }
-  }
-
-  if (
-    generatePackageJsonPlugin &&
-    Array.isArray(finalConfig.plugins) &&
-    !finalConfig.plugins.some(
-      (p) => p['name'] === generatePackageJsonPluginName
-    )
-  ) {
-    finalConfig.plugins.push(generatePackageJsonPlugin);
-  }
-
-  return finalConfig;
+   return finalConfig;
 }
 
 function resolveOutfile(
-  context: ExecutorContext,
-  options: NormalizedRollupExecutorOptions
+   context: ExecutorContext,
+   options: NormalizedRollupExecutorOptions
 ) {
-  if (!options.format?.includes('cjs')) return undefined;
-  const { name } = parse(options.outputFileName ?? options.main);
-  return resolve(context.root, options.outputPath, `${name}.cjs.js`);
+   if (!options.format?.includes('cjs')) return undefined;
+   const { name } = parse(options.outputFileName ?? options.main);
+   return resolve(context.root, options.outputPath, `${name}.cjs.js`);
 }
 
 export default rollupExecutor;

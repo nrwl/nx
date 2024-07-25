@@ -1,70 +1,72 @@
 import {
-  e2eCwd,
-  exists,
-  getPackageManagerCommand,
-  getPublishedVersion,
-  runCLI,
+   e2eCwd,
+   exists,
+   getPackageManagerCommand,
+   getPublishedVersion,
+   runCLI,
 } from '@nx/e2e/utils';
 import { execSync } from 'child_process';
 import { removeSync } from 'fs-extra';
 
 describe('nx init (for NestCLI - legacy)', () => {
-  const pmc = getPackageManagerCommand({
-    packageManager: 'npm',
-  });
-  const projectName = 'nest-app';
-  const projectRoot = `${e2eCwd}/${projectName}`;
-  const cliOptions = { cwd: projectRoot };
+   const pmc = getPackageManagerCommand({
+      packageManager: 'npm',
+   });
+   const projectName = 'nest-app';
+   const projectRoot = `${e2eCwd}/${projectName}`;
+   const cliOptions = { cwd: projectRoot };
 
-  beforeEach(() => {
-    process.env.NX_ADD_PLUGINS = 'false';
-  });
+   beforeEach(() => {
+      process.env.NX_ADD_PLUGINS = 'false';
+   });
 
-  afterEach(() => {
-    delete process.env.NX_ADD_PLUGINS;
-    removeSync(projectRoot);
-  });
+   afterEach(() => {
+      delete process.env.NX_ADD_PLUGINS;
+      removeSync(projectRoot);
+   });
 
-  it('should convert NestCLI application to Nx standalone', () => {
-    execSync(
-      `${pmc.runUninstalledPackage} @nestjs/cli new ${projectName} --package-manager=npm`,
-      {
-        cwd: e2eCwd,
-        encoding: 'utf-8',
-        env: process.env,
-        stdio: 'pipe',
-      }
-    );
+   it('should convert NestCLI application to Nx standalone', () => {
+      execSync(
+         `${pmc.runUninstalledPackage} @nestjs/cli new ${projectName} --package-manager=npm`,
+         {
+            cwd: e2eCwd,
+            encoding: 'utf-8',
+            env: process.env,
+            stdio: 'pipe',
+         }
+      );
 
-    const output = execSync(
-      `${
-        pmc.runUninstalledPackage
-      } nx@${getPublishedVersion()} init --cacheable=format --no-interactive`,
-      {
-        cwd: projectRoot,
-        encoding: 'utf-8',
-        env: process.env,
-        stdio: 'pipe',
-      }
-    );
+      const output = execSync(
+         `${
+            pmc.runUninstalledPackage
+         } nx@${getPublishedVersion()} init --cacheable=format --no-interactive`,
+         {
+            cwd: projectRoot,
+            encoding: 'utf-8',
+            env: process.env,
+            stdio: 'pipe',
+         }
+      );
 
-    expect(output).toContain('Run it again to replay the cached computation.');
+      expect(output).toContain(
+         'Run it again to replay the cached computation.'
+      );
 
-    // nest-cli.json is removed
-    expect(exists(`${projectRoot}/nest-cli.json`)).toBeFalsy();
+      // nest-cli.json is removed
+      expect(exists(`${projectRoot}/nest-cli.json`)).toBeFalsy();
 
-    // root nx.json exists
-    expect(exists(`${projectRoot}/nx.json`)).toBeTruthy();
-    // root project.json exists
-    expect(exists(`${projectRoot}/project.json`)).toBeTruthy();
+      // root nx.json exists
+      expect(exists(`${projectRoot}/nx.json`)).toBeTruthy();
+      // root project.json exists
+      expect(exists(`${projectRoot}/project.json`)).toBeTruthy();
 
-    runCLI('build', cliOptions);
-    expect(
-      exists(`${projectRoot}/dist/${projectName}/src/main.js`)
-    ).toBeTruthy();
+      runCLI('build', cliOptions);
+      expect(
+         exists(`${projectRoot}/dist/${projectName}/src/main.js`)
+      ).toBeTruthy();
 
-    // run build again for cache
-    const buildOutput = runCLI('build', cliOptions);
-    expect(buildOutput).toContain('Nx read the output from the cache');
-  }, 10000);
+      // run build again for cache
+      const buildOutput = runCLI('build', cliOptions);
+      expect(buildOutput).toContain('Nx read the output from the cache');
+   }, 10000);
 });

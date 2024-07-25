@@ -1,9 +1,9 @@
 Nest.js is a framework designed for building scalable server-side applications. In many ways, Nest is familiar to Angular developers:
 
-- It has excellent TypeScript support.
-- Its dependency injection system is similar to the one in Angular.
-- It emphasises testability.
-- Its configuration APIs are similar to Angular as well.
+-  It has excellent TypeScript support.
+-  Its dependency injection system is similar to the one in Angular.
+-  It emphasises testability.
+-  Its configuration APIs are similar to Angular as well.
 
 Many conventions and best practices used in Angular applications can be also be used in Nest.
 
@@ -186,4 +186,4 @@ nx test my-nest-lib
 
 ## More Documentation
 
-- [Using Jest](/nx-api/jest)
+-  [Using Jest](/nx-api/jest)

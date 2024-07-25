@@ -5,11 +5,11 @@ description: The Nx Plugin for Playwright contains executors and generators that
 
 Playwright is a modern web test runner. With included features such as:
 
-- Cross browser support, including mobile browsers
-- Multi tab, origin, and user support
-- Automatic waiting
-- Test generation
-- Screenshots and videos
+-  Cross browser support, including mobile browsers
+-  Multi tab, origin, and user support
+-  Automatic waiting
+-  Test generation
+-  Screenshots and videos
 
 ## Setting Up @nx/playwright
 
@@ -34,12 +34,12 @@ This will install the correct version of `@nx/playwright`.
 
 The `@nx/playwright` plugin will create a task for any project that has a Playwright configuration file present. Any of the following files will be recognized as a Playwright configuration file:
 
-- `playwright.config.js`
-- `playwright.config.ts`
-- `playwright.config.mjs`
-- `playwright.config.mts`
-- `playwright.config.cjs`
-- `playwright.config.cts`
+-  `playwright.config.js`
+-  `playwright.config.ts`
+-  `playwright.config.mjs`
+-  `playwright.config.mts`
+-  `playwright.config.cjs`
+-  `playwright.config.cts`
 
 ### View Inferred Tasks
 
@@ -51,15 +51,15 @@ The `@nx/playwright/plugin` is configured in the `plugins` array in `nx.json`.
 
 ```json {% fileName="nx.json" %}
 {
-  "plugins": [
-    {
-      "plugin": "@nx/playwright/plugin",
-      "options": {
-        "ciTargetName": "e2e-ci",
-        "targetName": "e2e"
+   "plugins": [
+      {
+         "plugin": "@nx/playwright/plugin",
+         "options": {
+            "ciTargetName": "e2e-ci",
+            "targetName": "e2e"
+         }
       }
-    }
-  ]
+   ]
 }
 ```
 
@@ -149,17 +149,17 @@ The `baseURL` property within the Playwright configuration can control where the
 import { defineConfig } from '@playwright/test';
 
 export default defineConfig({
-  // Rest of your config...
+   // Rest of your config...
 
-  // Run your local dev server before starting the tests
-  webServer: {
-    command: 'npx serve <your-app-name>',
-    url: 'http://localhost:4200',
-    reuseExistingServer: !process.env.CI,
-  },
-  use: {
-    baseURL: 'http://localhost:4200', // url playwright visits with `await page.goto('/')`;
-  },
+   // Run your local dev server before starting the tests
+   webServer: {
+      command: 'npx serve <your-app-name>',
+      url: 'http://localhost:4200',
+      reuseExistingServer: !process.env.CI,
+   },
+   use: {
+      baseURL: 'http://localhost:4200', // url playwright visits with `await page.goto('/')`;
+   },
 });
 ```
 
@@ -169,22 +169,22 @@ In order to set different `baseURL` values for different environments you can pa
 import { defineConfig } from '@playwright/test';
 
 const baseUrl =
-  process.env.BASE_URL ?? process.env.CI
-    ? 'https://some-staging-url.example.com'
-    : 'http://localhost:4200';
+   process.env.BASE_URL ?? process.env.CI
+      ? 'https://some-staging-url.example.com'
+      : 'http://localhost:4200';
 
 export default defineConfig({
-  // Rest of your config...
+   // Rest of your config...
 
-  // Run your local dev server before starting the tests
-  webServer: {
-    command: 'npx serve <your-app-name>',
-    url: baseUrl,
-    reuseExistingServer: !process.env.CI,
-  },
-  use: {
-    baseURL: baseUrl, // url playwright visits with `await page.goto('/')`;
-  },
+   // Run your local dev server before starting the tests
+   webServer: {
+      command: 'npx serve <your-app-name>',
+      url: baseUrl,
+      reuseExistingServer: !process.env.CI,
+   },
+   use: {
+      baseURL: baseUrl, // url playwright visits with `await page.goto('/')`;
+   },
 });
 ```
 
@@ -208,20 +208,20 @@ const baseURL = process.env['BASE_URL'] || 'http://localhost:4200';
  * See https://playwright.dev/docs/test-configuration.
  */
 export default defineConfig({
-  ...nxE2EPreset(__filename, { testDir: './e2e' }),
-  /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
-  use: {
-    baseURL,
-    /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
-    trace: 'on-first-retry',
-  },
-  /* Run your local dev server before starting the tests */
-  webServer: {
-    command: 'npx nx serve <your-app-name>',
-    url: baseURL,
-    reuseExistingServer: !process.env.CI,
-    cwd: workspaceRoot,
-  },
+   ...nxE2EPreset(__filename, { testDir: './e2e' }),
+   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
+   use: {
+      baseURL,
+      /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
+      trace: 'on-first-retry',
+   },
+   /* Run your local dev server before starting the tests */
+   webServer: {
+      command: 'npx nx serve <your-app-name>',
+      url: baseURL,
+      reuseExistingServer: !process.env.CI,
+      cwd: workspaceRoot,
+   },
 });
 ```
 
@@ -229,12 +229,12 @@ This preset sets up the `outputDir` and [HTML reporter](https://playwright.dev/d
 
 ```ts
 export default defineConfig({
-  ...nxE2EPreset(__filename, {
-    testDir: './e2e',
-    includeMobileBrowsers: true, // includes mobile Chrome and Safari
-    includeBrandedBrowsers: true, // includes Google Chrome and Microsoft Edge
-  }),
-  // other settings
+   ...nxE2EPreset(__filename, {
+      testDir: './e2e',
+      includeMobileBrowsers: true, // includes mobile Chrome and Safari
+      includeBrandedBrowsers: true, // includes Google Chrome and Microsoft Edge
+   }),
+   // other settings
 });
 ```
 

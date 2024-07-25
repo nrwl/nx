@@ -42,6 +42,6 @@ npm add -D @nx/express
 
 ## Recipes
 
-- [Add an Express Application to Your Workspace](/showcase/example-repos/add-express)
-- [Set Up Application Proxies](/recipes/node/application-proxies)
-- [Wait For Tasks To Finish](/recipes/node/wait-for-tasks)
+-  [Add an Express Application to Your Workspace](/showcase/example-repos/add-express)
+-  [Set Up Application Proxies](/recipes/node/application-proxies)
+-  [Wait For Tasks To Finish](/recipes/node/wait-for-tasks)

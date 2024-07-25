@@ -23,9 +23,9 @@ import { defineConfig } from 'cypress';
 import { nxComponentTestingPreset } from '@nx/react/plugins/component-testing';
 
 export default defineConfig({
-  component: nxComponentTestingPreset(__filename, {
-    bundler: 'webpack',
-  }),
+   component: nxComponentTestingPreset(__filename, {
+      bundler: 'webpack',
+   }),
 });
 ```
 
@@ -36,9 +36,9 @@ import { defineConfig } from 'cypress';
 import { nxComponentTestingPreset } from '@nx/react/plugins/component-testing';
 
 export default defineConfig({
-  component: nxComponentTestingPreset(__filename, {
-    bundler: 'vite',
-  }),
+   component: nxComponentTestingPreset(__filename, {
+      bundler: 'vite',
+   }),
 });
 ```
 
@@ -49,12 +49,12 @@ import { defineConfig } from 'cypress';
 import { nxComponentTestingPreset } from '@nx/react/plugins/component-testing';
 
 export default defineConfig({
-  component: {
-    ...nxComponentTestingPreset(__filename, {
-      bundler: 'webpack',
-    }),
-    // extra options here
-  },
+   component: {
+      ...nxComponentTestingPreset(__filename, {
+         bundler: 'webpack',
+      }),
+      // extra options here
+   },
 });
 ```
 

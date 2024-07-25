@@ -10,35 +10,35 @@ import { Schema } from './schema';
 import { ensureDependencies } from './lib/ensure-dependencies';
 
 export async function detoxApplicationGenerator(host: Tree, schema: Schema) {
-  return await detoxApplicationGeneratorInternal(host, {
-    addPlugin: false,
-    projectNameAndRootFormat: 'derived',
-    ...schema,
-  });
+   return await detoxApplicationGeneratorInternal(host, {
+      addPlugin: false,
+      projectNameAndRootFormat: 'derived',
+      ...schema,
+   });
 }
 
 export async function detoxApplicationGeneratorInternal(
-  host: Tree,
-  schema: Schema
+   host: Tree,
+   schema: Schema
 ) {
-  const options = await normalizeOptions(host, schema);
+   const options = await normalizeOptions(host, schema);
 
-  const initTask = await detoxInitGenerator(host, {
-    ...options,
-    skipFormat: true,
-  });
-  createFiles(host, options);
-  addProject(host, options);
-  addGitIgnoreEntry(host, options);
+   const initTask = await detoxInitGenerator(host, {
+      ...options,
+      skipFormat: true,
+   });
+   createFiles(host, options);
+   addProject(host, options);
+   addGitIgnoreEntry(host, options);
 
-  const lintingTask = await addLinting(host, options);
-  const depsTask = ensureDependencies(host, options);
+   const lintingTask = await addLinting(host, options);
+   const depsTask = ensureDependencies(host, options);
 
-  if (!options.skipFormat) {
-    await formatFiles(host);
-  }
+   if (!options.skipFormat) {
+      await formatFiles(host);
+   }
 
-  return runTasksInSerial(initTask, lintingTask, depsTask);
+   return runTasksInSerial(initTask, lintingTask, depsTask);
 }
 
 export default detoxApplicationGenerator;

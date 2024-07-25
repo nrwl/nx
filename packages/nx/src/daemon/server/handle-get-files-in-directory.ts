@@ -3,11 +3,11 @@ import { workspaceRoot } from '../../utils/workspace-root';
 import { HandlerResult } from './server';
 
 export async function handleGetFilesInDirectory(
-  dir: string
+   dir: string
 ): Promise<HandlerResult> {
-  const files = await getFilesInDirectoryUsingContext(workspaceRoot, dir);
-  return {
-    response: JSON.stringify(files),
-    description: 'handleNxWorkspaceFiles',
-  };
+   const files = await getFilesInDirectoryUsingContext(workspaceRoot, dir);
+   return {
+      response: JSON.stringify(files),
+      description: 'handleNxWorkspaceFiles',
+   };
 }

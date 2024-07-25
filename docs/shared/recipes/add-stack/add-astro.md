@@ -64,9 +64,9 @@ i.e.
 
 ```json {% fileName="package.json" %}
 {
-  "scripts": {
-    "e2e": "nx exec -- playwright test"
-  }
+   "scripts": {
+      "e2e": "nx exec -- playwright test"
+   }
 }
 ```
 
@@ -112,18 +112,18 @@ If you plan to import `.astro` files within `.ts` files, then you can install th
 
 ```json {% fileName="tsconfig.json" %}
 {
-  "extends": "astro/tsconfigs/strict",
-  "compilerOptions": {
-    "baseUrl": ".",
-    "plugins": [
-      {
-        "name": "@astrojs/ts-plugin"
+   "extends": "astro/tsconfigs/strict",
+   "compilerOptions": {
+      "baseUrl": ".",
+      "plugins": [
+         {
+            "name": "@astrojs/ts-plugin"
+         }
+      ],
+      "paths": {
+         "@myrepo/ui": ["ui/src/index.ts"]
       }
-    ],
-    "paths": {
-      "@myrepo/ui": ["ui/src/index.ts"]
-    }
-  }
+   }
 }
 ```
 
@@ -132,14 +132,14 @@ You can do this by allowing deep imports in the tsconfig paths
 
 ```json {% fileName="tsconfig.json" %}
 {
-  "extends": "astro/tsconfigs/strict",
-  "compilerOptions": {
-    "baseUrl": ".",
-    "paths": {
-      // Note: the * allowing the deep imports
-      "@myrepo/ui/*": ["ui/src/*"]
-    }
-  }
+   "extends": "astro/tsconfigs/strict",
+   "compilerOptions": {
+      "baseUrl": ".",
+      "paths": {
+         // Note: the * allowing the deep imports
+         "@myrepo/ui/*": ["ui/src/*"]
+      }
+   }
 }
 ```
 

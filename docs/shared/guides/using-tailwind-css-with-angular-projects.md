@@ -62,14 +62,14 @@ const { createGlobPatternsForDependencies } = require('@nx/angular/tailwind');
 const { join } = require('path');
 
 module.exports = {
-  content: [
-    join(__dirname, 'src/**/!(*.stories|*.spec).{ts,html}'),
-    ...createGlobPatternsForDependencies(__dirname),
-  ],
-  theme: {
-    extend: {},
-  },
-  plugins: [],
+   content: [
+      join(__dirname, 'src/**/!(*.stories|*.spec).{ts,html}'),
+      ...createGlobPatternsForDependencies(__dirname),
+   ],
+   theme: {
+      extend: {},
+   },
+   plugins: [],
 };
 ```
 
@@ -80,8 +80,8 @@ and `lib2` as dependencies, the utility function will return the following glob 
 
 ```javascript
 [
-  'libs/lib1/src/**/!(*.stories|*.spec).{ts,html}',
-  'libs/lib2/src/**/!(*.stories|*.spec).{ts,html}',
+   'libs/lib1/src/**/!(*.stories|*.spec).{ts,html}',
+   'libs/lib2/src/**/!(*.stories|*.spec).{ts,html}',
 ];
 ```
 
@@ -127,29 +127,29 @@ Create a new folder `libs/tailwind-preset` with a `tailwind.config.js` file in i
 
 ```javascript {% fileName="libs/tailwind-preset/tailwind.config.js" %}
 module.exports = {
-  theme: {
-    colors: {
-      primary: {
-        light: '#5eead4',
-        DEFAULT: '#14b8a6',
-        dark: '#0f766e',
+   theme: {
+      colors: {
+         primary: {
+            light: '#5eead4',
+            DEFAULT: '#14b8a6',
+            dark: '#0f766e',
+         },
+         secondary: {
+            light: '#bae6fd',
+            DEFAULT: '#0ea5e9',
+            dark: '#0369a1',
+         },
+         white: '#ffffff',
+         black: '#000000',
       },
-      secondary: {
-        light: '#bae6fd',
-        DEFAULT: '#0ea5e9',
-        dark: '#0369a1',
+      spacing: {
+         sm: '0.5rem',
+         md: '1rem',
+         lg: '1.5rem',
+         xl: '2rem',
       },
-      white: '#ffffff',
-      black: '#000000',
-    },
-    spacing: {
-      sm: '0.5rem',
-      md: '1rem',
-      lg: '1.5rem',
-      xl: '2rem',
-    },
-  },
-  plugins: [],
+   },
+   plugins: [],
 };
 ```
 
@@ -161,10 +161,10 @@ Add the project configuration for the project:
 
 ```jsonc {% fileName="libs/tailwind-preset/project.json" %}
 {
-  "projectType": "library",
-  "sourceRoot": "libs/tailwind-preset",
-  "targets": {},
-  "tags": []
+   "projectType": "library",
+   "sourceRoot": "libs/tailwind-preset",
+   "targets": {},
+   "tags": []
 }
 ```
 
@@ -177,11 +177,11 @@ const { join } = require('path');
 const sharedTailwindConfig = require('../../libs/tailwind-preset/tailwind.config');
 
 module.exports = {
-  presets: [sharedTailwindConfig],
-  content: [
-    join(__dirname, 'src/**/!(*.stories|*.spec).{ts,html}'),
-    ...createGlobPatternsForDependencies(__dirname),
-  ],
+   presets: [sharedTailwindConfig],
+   content: [
+      join(__dirname, 'src/**/!(*.stories|*.spec).{ts,html}'),
+      ...createGlobPatternsForDependencies(__dirname),
+   ],
 };
 ```
 
@@ -193,11 +193,11 @@ const { join } = require('path');
 const sharedTailwindConfig = require('../../libs/tailwind-preset/tailwind.config');
 
 module.exports = {
-  presets: [sharedTailwindConfig],
-  content: [
-    join(__dirname, 'src/**/!(*.stories|*.spec).{ts,html}'),
-    ...createGlobPatternsForDependencies(__dirname),
-  ],
+   presets: [sharedTailwindConfig],
+   content: [
+      join(__dirname, 'src/**/!(*.stories|*.spec).{ts,html}'),
+      ...createGlobPatternsForDependencies(__dirname),
+   ],
 };
 ```
 
@@ -238,29 +238,29 @@ Create a new folder `libs/tailwind-preset` with a `tailwind.config.js` file in i
 
 ```javascript {% fileName="libs/tailwind-preset/tailwind.config.js" %}
 module.exports = {
-  theme: {
-    colors: {
-      primary: {
-        light: 'var(--primary-light)',
-        DEFAULT: 'var(--primary)',
-        dark: 'var(--primary-dark)',
+   theme: {
+      colors: {
+         primary: {
+            light: 'var(--primary-light)',
+            DEFAULT: 'var(--primary)',
+            dark: 'var(--primary-dark)',
+         },
+         secondary: {
+            light: 'var(--secondary-light)',
+            DEFAULT: 'var(--secondary)',
+            dark: 'var(--secondary-dark)',
+         },
+         white: 'var(--white)',
+         black: 'var(--black)',
       },
-      secondary: {
-        light: 'var(--secondary-light)',
-        DEFAULT: 'var(--secondary)',
-        dark: 'var(--secondary-dark)',
+      spacing: {
+         sm: 'var(--spacing-sm)',
+         md: 'var(--spacing-md)',
+         lg: 'var(--spacing-lg)',
+         xl: 'var(--spacing-xl)',
       },
-      white: 'var(--white)',
-      black: 'var(--black)',
-    },
-    spacing: {
-      sm: 'var(--spacing-sm)',
-      md: 'var(--spacing-md)',
-      lg: 'var(--spacing-lg)',
-      xl: 'var(--spacing-xl)',
-    },
-  },
-  plugins: [],
+   },
+   plugins: [],
 };
 ```
 
@@ -271,10 +271,10 @@ Add the project configuration for the project:
 
 ```json {% fileName="libs/tailwind-preset/project.json" %}
 {
-  "projectType": "library",
-  "sourceRoot": "libs/tailwind-preset",
-  "targets": {},
-  "tags": []
+   "projectType": "library",
+   "sourceRoot": "libs/tailwind-preset",
+   "targets": {},
+   "tags": []
 }
 ```
 
@@ -287,11 +287,11 @@ const { join } = require('path');
 const sharedTailwindConfig = require('../../libs/tailwind-preset/tailwind.config');
 
 module.exports = {
-  presets: [sharedTailwindConfig],
-  content: [
-    join(__dirname, 'src/**/!(*.stories|*.spec).{ts,html}'),
-    ...createGlobPatternsForDependencies(__dirname),
-  ],
+   presets: [sharedTailwindConfig],
+   content: [
+      join(__dirname, 'src/**/!(*.stories|*.spec).{ts,html}'),
+      ...createGlobPatternsForDependencies(__dirname),
+   ],
 };
 ```
 
@@ -301,11 +301,11 @@ const { join } = require('path');
 const sharedTailwindConfig = require('../../libs/tailwind-preset/tailwind.config');
 
 module.exports = {
-  presets: [sharedTailwindConfig],
-  content: [
-    join(__dirname, 'src/**/!(*.stories|*.spec).{ts,html}'),
-    ...createGlobPatternsForDependencies(__dirname),
-  ],
+   presets: [sharedTailwindConfig],
+   content: [
+      join(__dirname, 'src/**/!(*.stories|*.spec).{ts,html}'),
+      ...createGlobPatternsForDependencies(__dirname),
+   ],
 };
 ```
 
@@ -317,11 +317,11 @@ const { join } = require('path');
 const sharedTailwindConfig = require('../../libs/tailwind-preset/tailwind.config');
 
 module.exports = {
-  presets: [sharedTailwindConfig],
-  content: [
-    join(__dirname, 'src/**/!(*.stories|*.spec).{ts,html}'),
-    ...createGlobPatternsForDependencies(__dirname),
-  ],
+   presets: [sharedTailwindConfig],
+   content: [
+      join(__dirname, 'src/**/!(*.stories|*.spec).{ts,html}'),
+      ...createGlobPatternsForDependencies(__dirname),
+   ],
 };
 ```
 
@@ -333,21 +333,21 @@ Add the CSS variable values to the different application styles entry point:
 @tailwind utilities;
 
 :root {
-  /* Colors */
-  --primary-light: #5eead4;
-  --primary: #14b8a6;
-  --primary-dark: #0f766e;
-  --secondary-light: #bae6fd;
-  --secondary: #0ea5e9;
-  --secondary-dark: #0369a1;
-  --white: #ffffff;
-  --black: #000000;
+   /* Colors */
+   --primary-light: #5eead4;
+   --primary: #14b8a6;
+   --primary-dark: #0f766e;
+   --secondary-light: #bae6fd;
+   --secondary: #0ea5e9;
+   --secondary-dark: #0369a1;
+   --white: #ffffff;
+   --black: #000000;
 
-  /* Spacing */
-  --spacing-sm: 0.5rem;
-  --spacing-md: 1rem;
-  --spacing-lg: 1.5rem;
-  --spacing-xl: 2rem;
+   /* Spacing */
+   --spacing-sm: 0.5rem;
+   --spacing-md: 1rem;
+   --spacing-lg: 1.5rem;
+   --spacing-xl: 2rem;
 }
 ```
 
@@ -357,21 +357,21 @@ Add the CSS variable values to the different application styles entry point:
 @tailwind utilities;
 
 :root {
-  /* Colors */
-  --primary-light: #a5b4fc;
-  --primary: #6366f1;
-  --primary-dark: #4338ca;
-  --secondary-light: #e9d5ff;
-  --secondary: #a855f7;
-  --secondary-dark: #7e22ce;
-  --white: #ffffff;
-  --black: #000000;
+   /* Colors */
+   --primary-light: #a5b4fc;
+   --primary: #6366f1;
+   --primary-dark: #4338ca;
+   --secondary-light: #e9d5ff;
+   --secondary: #a855f7;
+   --secondary-dark: #7e22ce;
+   --white: #ffffff;
+   --black: #000000;
 
-  /* Spacing */
-  --spacing-sm: 1rem;
-  --spacing-md: 1.5rem;
-  --spacing-lg: 2rem;
-  --spacing-xl: 3rem;
+   /* Spacing */
+   --spacing-sm: 1rem;
+   --spacing-md: 1.5rem;
+   --spacing-lg: 2rem;
+   --spacing-xl: 3rem;
 }
 ```
 
@@ -391,21 +391,21 @@ To build and share a theme, you can create a theme file in the library like the 
 
 /* You can omit this if you're not using CSS variables */
 :root {
-  /* Colors */
-  --primary-light: #5eead4;
-  --primary: #14b8a6;
-  --primary-dark: #0f766e;
-  --secondary-light: #bae6fd;
-  --secondary: #0ea5e9;
-  --secondary-dark: #0369a1;
-  --white: #ffffff;
-  --black: #000000;
+   /* Colors */
+   --primary-light: #5eead4;
+   --primary: #14b8a6;
+   --primary-dark: #0f766e;
+   --secondary-light: #bae6fd;
+   --secondary: #0ea5e9;
+   --secondary-dark: #0369a1;
+   --white: #ffffff;
+   --black: #000000;
 
-  /* Spacing */
-  --spacing-sm: 0.5rem;
-  --spacing-md: 1rem;
-  --spacing-lg: 1.5rem;
-  --spacing-xl: 2rem;
+   /* Spacing */
+   --spacing-sm: 0.5rem;
+   --spacing-md: 1rem;
+   --spacing-lg: 1.5rem;
+   --spacing-xl: 2rem;
 }
 ```
 
@@ -502,10 +502,10 @@ One important thing to keep in mind is that if you use the default Tailwind CSS 
 theme with them, there can be conflicts with consumer applications that also use Tailwind CSS. To avoid this, you have a
 couple of options:
 
-- Add a unique [prefix](https://tailwindcss.com/docs/configuration#prefix) to your Tailwind CSS utility classes.
-- Create unique CSS classes for your components and theme in general using a Tailwind CSS directive
-  like [`@apply`](https://tailwindcss.com/docs/functions-and-directives#apply) or a function
-  like [`theme()`](https://tailwindcss.com/docs/functions-and-directives#theme).
+-  Add a unique [prefix](https://tailwindcss.com/docs/configuration#prefix) to your Tailwind CSS utility classes.
+-  Create unique CSS classes for your components and theme in general using a Tailwind CSS directive
+   like [`@apply`](https://tailwindcss.com/docs/functions-and-directives#apply) or a function
+   like [`theme()`](https://tailwindcss.com/docs/functions-and-directives#theme).
 
 {% callout type="note" title="Prefix" %}
 If you decide to use a unique prefix, remember to change the utility classes used in your components to use the prefix.

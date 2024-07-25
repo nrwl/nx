@@ -85,11 +85,11 @@ Follow our [Manage Library Versions Guide](/concepts/module-federation/manage-li
 
 Nx offers out-of-the-box support for Module Federation with React and Angular. There are a number of features that can assist you when developing a Module Federation architecture for your application, such as:
 
-- Generators - to aid in scaffolding `remotes`, `hosts` and `federated modules`
-- Executors - to aid in building your applications with Module Federation and for great DX when developing locally
-- Type Safety - allowing for type-safety between `hosts` and `remotes` to catch issues early and to take advantage of autocompletion in IDEs
-- Versioning of Libraries - to aid in preventing some common issues regarding incompatible package versions being used by `federated modules`
-- Scaling DX - techniques to ensure a smooth DX regardless of the number of remotes in the workspace
+-  Generators - to aid in scaffolding `remotes`, `hosts` and `federated modules`
+-  Executors - to aid in building your applications with Module Federation and for great DX when developing locally
+-  Type Safety - allowing for type-safety between `hosts` and `remotes` to catch issues early and to take advantage of autocompletion in IDEs
+-  Versioning of Libraries - to aid in preventing some common issues regarding incompatible package versions being used by `federated modules`
+-  Scaling DX - techniques to ensure a smooth DX regardless of the number of remotes in the workspace
 
 ## Use Cases
 

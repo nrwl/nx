@@ -1,6 +1,6 @@
 import {
-  RULE_NAME as validSchemaDescriptionName,
-  rule as validSchemaDescription,
+   RULE_NAME as validSchemaDescriptionName,
+   rule as validSchemaDescription,
 } from './rules/valid-schema-description';
 /**
  * Import your custom workspace rules at the top of this file.
@@ -18,14 +18,14 @@ import {
  */
 
 module.exports = {
-  /**
-   * Apply the imported custom rules here.
-   *
-   * For example (using the example import above):
-   *
-   * rules: {
-   *  [myCustomRuleName]: myCustomRule
-   * }
-   */
-  rules: { [validSchemaDescriptionName]: validSchemaDescription },
+   /**
+    * Apply the imported custom rules here.
+    *
+    * For example (using the example import above):
+    *
+    * rules: {
+    *  [myCustomRuleName]: myCustomRule
+    * }
+    */
+   rules: { [validSchemaDescriptionName]: validSchemaDescription },
 };

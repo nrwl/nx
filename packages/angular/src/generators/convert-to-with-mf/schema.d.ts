@@ -1,4 +1,4 @@
 export interface Schema {
-  project: string;
-  skipFormat?: boolean;
+   project: string;
+   skipFormat?: boolean;
 }

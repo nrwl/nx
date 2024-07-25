@@ -9,29 +9,29 @@ const script = join(__dirname, '../../bin/run-executor.js');
 
 let execArgv: string[] | undefined;
 if (process.env['NX_PSEUDO_TERMINAL_EXEC_ARGV']) {
-  execArgv = process.env['NX_PSEUDO_TERMINAL_EXEC_ARGV'].split('|');
-  delete process.env['NX_PSEUDO_TERMINAL_EXEC_ARGV'];
+   execArgv = process.env['NX_PSEUDO_TERMINAL_EXEC_ARGV'].split('|');
+   delete process.env['NX_PSEUDO_TERMINAL_EXEC_ARGV'];
 }
 
 const childProcess = fork(script, {
-  stdio: ['inherit', 'inherit', 'inherit', 'ipc'],
-  env: process.env,
-  execArgv,
+   stdio: ['inherit', 'inherit', 'inherit', 'ipc'],
+   env: process.env,
+   execArgv,
 });
 
 const pseudoIPC = new PseudoIPCClient(pseudoIPCPath);
 
 pseudoIPC.onMessageFromParent(forkId, (message) => {
-  childProcess.send(message);
+   childProcess.send(message);
 });
 
 pseudoIPC.notifyChildIsReady(forkId);
 
 process.on('message', (message: Serializable) => {
-  pseudoIPC.sendMessageToParent(message);
+   pseudoIPC.sendMessageToParent(message);
 });
 
 childProcess.on('exit', (code) => {
-  pseudoIPC.close();
-  process.exit(code);
+   pseudoIPC.close();
+   process.exit(code);
 });

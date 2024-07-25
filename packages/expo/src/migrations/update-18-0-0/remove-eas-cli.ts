@@ -1,7 +1,7 @@
 import {
-  formatFiles,
-  removeDependenciesFromPackageJson,
-  Tree,
+   formatFiles,
+   removeDependenciesFromPackageJson,
+   Tree,
 } from '@nx/devkit';
 
 /**
@@ -15,10 +15,10 @@ import {
  * @returns
  */
 export default async function update(tree: Tree) {
-  removeDependenciesFromPackageJson(
-    tree,
-    [],
-    ['eas-cli', 'metro', 'metro-resolver']
-  );
-  await formatFiles(tree);
+   removeDependenciesFromPackageJson(
+      tree,
+      [],
+      ['eas-cli', 'metro', 'metro-resolver']
+   );
+   await formatFiles(tree);
 }

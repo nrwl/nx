@@ -87,34 +87,34 @@ Create a new file `libs/data-access/src/lib/todo.context.tsx` with the following
 
 ```tsx
 import {
-  component$,
-  createContextId,
-  Slot,
-  useContextProvider,
-  useStore,
+   component$,
+   createContextId,
+   Slot,
+   useContextProvider,
+   useStore,
 } from '@builder.io/qwik';
 
 export interface Todo {
-  id: number;
-  message: string;
+   id: number;
+   message: string;
 }
 
 interface TodoStore {
-  todos: Todo[];
-  lastId: number;
+   todos: Todo[];
+   lastId: number;
 }
 
 export const TodoContext = createContextId<TodoStore>('todo.context');
 
 export const TodoContextProvider = component$(() => {
-  const todoStore = useStore<TodoStore>({
-    todos: [],
-    lastId: 0,
-  });
+   const todoStore = useStore<TodoStore>({
+      todos: [],
+      lastId: 0,
+   });
 
-  useContextProvider(TodoContext, todoStore);
+   useContextProvider(TodoContext, todoStore);
 
-  return <Slot />;
+   return <Slot />;
 });
 ```
 
@@ -129,58 +129,58 @@ import { Todo } from './todo.context';
 
 // A rudimentary in-mem DB that will run on the server
 interface DB {
-  store: Record<string, any[]>;
-  get: (storeName: string) => any[];
-  set: (storeName: string, value: any[]) => boolean;
-  add: (storeName: string, value: any) => boolean;
+   store: Record<string, any[]>;
+   get: (storeName: string) => any[];
+   set: (storeName: string, value: any[]) => boolean;
+   add: (storeName: string, value: any) => boolean;
 }
 
 export const db: DB = {
-  store: { todos: [] },
-  get(storeName) {
-    return db.store[storeName];
-  },
-  set(storeName, value) {
-    try {
-      db.store[storeName] = value;
-      return true;
-    } catch (e) {
-      return false;
-    }
-  },
-  add(storeName, value) {
-    try {
-      db.store[storeName].push(value);
-      return true;
-    } catch (e) {
-      return false;
-    }
-  },
+   store: { todos: [] },
+   get(storeName) {
+      return db.store[storeName];
+   },
+   set(storeName, value) {
+      try {
+         db.store[storeName] = value;
+         return true;
+      } catch (e) {
+         return false;
+      }
+   },
+   add(storeName, value) {
+      try {
+         db.store[storeName].push(value);
+         return true;
+      } catch (e) {
+         return false;
+      }
+   },
 };
 
 export function getTodos() {
-  // A network request or db connection could be made here to fetch persisted todos
-  // For illustrative purposes, we're going to seed a rudimentary in-memory DB if it hasn't been already
-  // Then return the value from it
-  if (db.get('todos')?.length === 0) {
-    db.set('todos', [
-      {
-        id: 1,
-        message: 'First todo',
-      },
-    ]);
-  }
-  const todos: Todo[] = db.get('todos');
-  const lastId = [...todos].sort((a, b) => b.id - a.id)[0].id;
-  return { todos, lastId };
+   // A network request or db connection could be made here to fetch persisted todos
+   // For illustrative purposes, we're going to seed a rudimentary in-memory DB if it hasn't been already
+   // Then return the value from it
+   if (db.get('todos')?.length === 0) {
+      db.set('todos', [
+         {
+            id: 1,
+            message: 'First todo',
+         },
+      ]);
+   }
+   const todos: Todo[] = db.get('todos');
+   const lastId = [...todos].sort((a, b) => b.id - a.id)[0].id;
+   return { todos, lastId };
 }
 
 export function addTodo(todo: { id: string; message: string }) {
-  const success = db.add('todos', {
-    id: parseInt(todo.id),
-    message: todo.message,
-  });
-  return { success };
+   const success = db.add('todos', {
+      id: parseInt(todo.id),
+      message: todo.message,
+   });
+   return { success };
 }
 ```
 
@@ -205,55 +205,55 @@ Update the new route file (`apps/todo/src/routes/todo/index.tsx`) to the followi
 ```tsx
 import { component$, useContext, useTask$ } from '@builder.io/qwik';
 import {
-  Form,
-  routeAction$,
-  routeLoader$,
-  z,
-  zod$,
+   Form,
+   routeAction$,
+   routeLoader$,
+   z,
+   zod$,
 } from '@builder.io/qwik-city';
 import { addTodo, getTodos, TodoContext } from '@acme/data-access';
 
 export const useGetTodos = routeLoader$(() => getTodos());
 
 export const useAddTodo = routeAction$(
-  (todo) => addTodo(todo),
-  zod$({ id: z.string(), message: z.string() })
+   (todo) => addTodo(todo),
+   zod$({ id: z.string(), message: z.string() })
 );
 
 export default component$(() => {
-  const todoStore = useContext(TodoContext);
-  const persistedTodos = useGetTodos();
-  const addTodoAction = useAddTodo();
+   const todoStore = useContext(TodoContext);
+   const persistedTodos = useGetTodos();
+   const addTodoAction = useAddTodo();
 
-  useTask$(({ track }) => {
-    track(() => persistedTodos.value);
-    if (persistedTodos.value) {
-      todoStore.todos = persistedTodos.value.todos;
-      todoStore.lastId =
-        todoStore.lastId > persistedTodos.value.lastId
-          ? todoStore.lastId
-          : persistedTodos.value.lastId;
-    }
-  });
+   useTask$(({ track }) => {
+      track(() => persistedTodos.value);
+      if (persistedTodos.value) {
+         todoStore.todos = persistedTodos.value.todos;
+         todoStore.lastId =
+            todoStore.lastId > persistedTodos.value.lastId
+               ? todoStore.lastId
+               : persistedTodos.value.lastId;
+      }
+   });
 
-  return (
-    <div>
-      <h1>Todos</h1>
-      {todoStore.todos.map((t) => (
-        <div key={`todo-${t.id}`}>
-          <label>
-            <input type="checkbox" /> {t.message}
-          </label>
-        </div>
-      ))}
-      <Form action={addTodoAction}>
-        <input type="hidden" name="id" value={todoStore.lastId + 1} />
-        <input type="text" name="message" />
-        <button type="submit">Add</button>
-      </Form>
-      {addTodoAction.value?.success && <p>Todo added!</p>}
-    </div>
-  );
+   return (
+      <div>
+         <h1>Todos</h1>
+         {todoStore.todos.map((t) => (
+            <div key={`todo-${t.id}`}>
+               <label>
+                  <input type="checkbox" /> {t.message}
+               </label>
+            </div>
+         ))}
+         <Form action={addTodoAction}>
+            <input type="hidden" name="id" value={todoStore.lastId + 1} />
+            <input type="text" name="message" />
+            <button type="submit">Add</button>
+         </Form>
+         {addTodoAction.value?.success && <p>Todo added!</p>}
+      </div>
+   );
 });
 ```
 
@@ -273,5 +273,5 @@ nx build todo
 
 ## More Documentation
 
-- [Qwik](https://qwik.builder.io)
-- [qwik-nx](https://github.com/qwikifiers/qwik-nx)
+-  [Qwik](https://qwik.builder.io)
+-  [qwik-nx](https://github.com/qwikifiers/qwik-nx)

@@ -1,14 +1,14 @@
 export class MockPerformanceObserver implements PerformanceObserver {
-  disconnect() {
-    //empty
-  }
+   disconnect() {
+      //empty
+   }
 
-  observe() {
-    //empty
-  }
+   observe() {
+      //empty
+   }
 
-  takeRecords() {
-    return [];
-  }
+   takeRecords() {
+      return [];
+   }
 }
 (global as any).PerformanceObserver = MockPerformanceObserver;

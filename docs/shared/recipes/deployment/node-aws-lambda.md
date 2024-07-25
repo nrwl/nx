@@ -11,8 +11,8 @@ This recipe guides you through setting up AWS Lambda functions with Nx.
 
 Depending on your current situation, you can either
 
-- create a new project with the goal of primarily developing and publishing AWS Lambda functions
-- add AWS Lambda functions to an existing Node.js project in an Nx workspace
+-  create a new project with the goal of primarily developing and publishing AWS Lambda functions
+-  add AWS Lambda functions to an existing Node.js project in an Nx workspace
 
 ### Starting a New Project
 
@@ -73,8 +73,8 @@ You need to configure your AWS credentials inside AWS before attempting to deplo
 
 The following requirements need to be met in order to run the AWS Lambda function deployment:
 
-- [SAM](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/install-sam-cli.html#install-sam-cli-instructions) installed on your machine
-- [esbuild](https://esbuild.github.io/getting-started/) available in your PATH (SAM need this). Example: `npm install -g esbuild`.
+-  [SAM](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/install-sam-cli.html#install-sam-cli-instructions) installed on your machine
+-  [esbuild](https://esbuild.github.io/getting-started/) available in your PATH (SAM need this). Example: `npm install -g esbuild`.
 
 Your `samconfig.toml` stores default parameters for the SAM CLI. On the other hand, if you want to configure your lambda function settings such as the AWS region, runtime, and handler function, update your `template.yaml`.
 

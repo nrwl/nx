@@ -8,11 +8,11 @@ should use `nx migrate` to ensure that they stay on a supported version.
 
 ### Major, Minor, and Patch Versions
 
-- **Patch** versions include security or bug fixes, and are released as needed.
-- **Minor** versions include new features and fixes, and are released less frequently. It is a good idea to regularly
-  update to the latest minor version.
-- **Major** versions may contain [breaking changes](#breaking-changes-and-migration-path), and are released twice a
-  year.
+-  **Patch** versions include security or bug fixes, and are released as needed.
+-  **Minor** versions include new features and fixes, and are released less frequently. It is a good idea to regularly
+   update to the latest minor version.
+-  **Major** versions may contain [breaking changes](#breaking-changes-and-migration-path), and are released twice a
+   year.
 
 ## Supported Versions
 

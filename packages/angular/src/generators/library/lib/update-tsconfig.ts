@@ -3,57 +3,57 @@ import { updateJson } from '@nx/devkit';
 import { getRelativePathToRootTsConfig } from '@nx/js';
 import { NormalizedSchema } from './normalized-schema';
 import {
-  extractTsConfigBase,
-  updateProjectRootTsConfig,
+   extractTsConfigBase,
+   updateProjectRootTsConfig,
 } from '../../utils/update-project-root-tsconfig';
 
 function updateProjectConfig(
-  host: Tree,
-  options: NormalizedSchema['libraryOptions']
+   host: Tree,
+   options: NormalizedSchema['libraryOptions']
 ) {
-  updateJson(host, `${options.projectRoot}/tsconfig.lib.json`, (json) => {
-    json.include = ['src/**/*.ts'];
-    json.exclude = [
-      ...new Set([
-        ...(json.exclude || []),
-        'jest.config.ts',
-        'src/**/*.test.ts',
-        'src/**/*.spec.ts',
-      ]),
-    ];
-    return json;
-  });
+   updateJson(host, `${options.projectRoot}/tsconfig.lib.json`, (json) => {
+      json.include = ['src/**/*.ts'];
+      json.exclude = [
+         ...new Set([
+            ...(json.exclude || []),
+            'jest.config.ts',
+            'src/**/*.test.ts',
+            'src/**/*.spec.ts',
+         ]),
+      ];
+      return json;
+   });
 
-  // tsconfig.json
-  updateProjectRootTsConfig(
-    host,
-    options.projectRoot,
-    getRelativePathToRootTsConfig(host, options.projectRoot)
-  );
+   // tsconfig.json
+   updateProjectRootTsConfig(
+      host,
+      options.projectRoot,
+      getRelativePathToRootTsConfig(host, options.projectRoot)
+   );
 }
 
 function updateProjectIvyConfig(
-  host: Tree,
-  options: NormalizedSchema['libraryOptions']
+   host: Tree,
+   options: NormalizedSchema['libraryOptions']
 ) {
-  if (options.buildable || options.publishable) {
-    return updateJson(
-      host,
-      `${options.projectRoot}/tsconfig.lib.prod.json`,
-      (json) => {
-        json.angularCompilerOptions['compilationMode'] =
-          options.compilationMode === 'full' ? undefined : 'partial';
-        return json;
-      }
-    );
-  }
+   if (options.buildable || options.publishable) {
+      return updateJson(
+         host,
+         `${options.projectRoot}/tsconfig.lib.prod.json`,
+         (json) => {
+            json.angularCompilerOptions['compilationMode'] =
+               options.compilationMode === 'full' ? undefined : 'partial';
+            return json;
+         }
+      );
+   }
 }
 
 export function updateTsConfig(
-  host: Tree,
-  options: NormalizedSchema['libraryOptions']
+   host: Tree,
+   options: NormalizedSchema['libraryOptions']
 ) {
-  extractTsConfigBase(host);
-  updateProjectConfig(host, options);
-  updateProjectIvyConfig(host, options);
+   extractTsConfigBase(host);
+   updateProjectConfig(host, options);
+   updateProjectIvyConfig(host, options);
 }

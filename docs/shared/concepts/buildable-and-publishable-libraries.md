@@ -2,10 +2,10 @@
 
 The `--buildable` and `--publishable` options are available on the Nx library generators for the following plugins:
 
-- Angular
-- React
-- NestJs
-- Node
+-  Angular
+-  React
+-  NestJs
+-  Node
 
 This document will look to explain the motivations for why you would use either the `--buildable` or `--publishable` option, as well as the mechanics of how they adjust the result when you add them to your generator.
 

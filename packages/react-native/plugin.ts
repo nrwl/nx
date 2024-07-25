@@ -1,5 +1,5 @@
 export {
-  createNodes,
-  createDependencies,
-  ReactNativePluginOptions,
+   createNodes,
+   createDependencies,
+   ReactNativePluginOptions,
 } from './plugins/plugin';

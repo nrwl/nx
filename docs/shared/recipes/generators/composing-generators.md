@@ -10,10 +10,10 @@ Nx Devkit generators can be imported and invoked like any javascript function. T
 import { libraryGenerator } from '@nx/js';
 
 export default async function (tree: Tree, schema: any) {
-  await libraryGenerator(
-    tree, // virtual file system tree
-    { name: schema.name } // options for the generator
-  );
+   await libraryGenerator(
+      tree, // virtual file system tree
+      { name: schema.name } // options for the generator
+   );
 }
 ```
 
@@ -28,15 +28,15 @@ import arrowFunctionsTransform from './arrow-functions';
 
 // The schema path can be an individual file or a directory
 export default async function (tree: Tree, schema: { path: string }): any {
-  visitNotIgnoredFiles(tree, schema.path, (filePath) => {
-    const input = tree.read(filePath).toString();
-    const transformOptions = {};
-    const output = applyTransform(
-      { default: arrowFunctionsTransform, parser: 'ts' },
-      transformOptions,
-      { source: input, path: filePath }
-    );
-    tree.write(filePath, output);
-  });
+   visitNotIgnoredFiles(tree, schema.path, (filePath) => {
+      const input = tree.read(filePath).toString();
+      const transformOptions = {};
+      const output = applyTransform(
+         { default: arrowFunctionsTransform, parser: 'ts' },
+         transformOptions,
+         { source: input, path: filePath }
+      );
+      tree.write(filePath, output);
+   });
 }
 ```

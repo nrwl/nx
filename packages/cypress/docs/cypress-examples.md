@@ -72,8 +72,8 @@ nx e2e my-app-e2e
 {% callout type="note" title="Cypress Component Testing" %}
 When adding component testing to a project, it's best to use the framework specific generator, instead `cypress-component-project` directly.
 
-- [React component testing](/nx-api/react/generators/cypress-component-configuration)
-- [Angular component testing](/nx-api/angular/generators/cypress-component-configuration)
+-  [React component testing](/nx-api/react/generators/cypress-component-configuration)
+-  [Angular component testing](/nx-api/angular/generators/cypress-component-configuration)
 
 {% /callout %}
 

@@ -1,10 +1,10 @@
 {
-  "extends": "<%= rootTsConfigPath %>",
-  "files": [],
-  "include": [],
-  "references": [
-    {
-      "path": "./tsconfig.e2e.json"
-    }
-  ]
+   "extends": "<%= rootTsConfigPath %>",
+   "files": [],
+   "include": [],
+   "references": [
+      {
+         "path": "./tsconfig.e2e.json"
+      }
+   ]
 }

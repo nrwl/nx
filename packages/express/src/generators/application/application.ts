@@ -1,11 +1,11 @@
 import type { GeneratorCallback, Tree } from '@nx/devkit';
 import {
-  addDependenciesToPackageJson,
-  formatFiles,
-  readNxJson,
-  runTasksInSerial,
-  toJS,
-  updateJson,
+   addDependenciesToPackageJson,
+   formatFiles,
+   readNxJson,
+   runTasksInSerial,
+   toJS,
+   updateJson,
 } from '@nx/devkit';
 import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { applicationGenerator as nodeApplicationGenerator } from '@nx/node';
@@ -16,25 +16,28 @@ import { initGenerator } from '../init/init';
 import type { Schema } from './schema';
 
 interface NormalizedSchema extends Schema {
-  appProjectName: string;
-  appProjectRoot: string;
+   appProjectName: string;
+   appProjectRoot: string;
 }
 
 function addTypes(tree: Tree, options: NormalizedSchema) {
-  updateJson(
-    tree,
-    join(options.appProjectRoot, 'tsconfig.app.json'),
-    (json) => {
-      json.compilerOptions.types = [...json.compilerOptions.types, 'express'];
-      return json;
-    }
-  );
+   updateJson(
+      tree,
+      join(options.appProjectRoot, 'tsconfig.app.json'),
+      (json) => {
+         json.compilerOptions.types = [
+            ...json.compilerOptions.types,
+            'express',
+         ];
+         return json;
+      }
+   );
 }
 
 function addMainFile(tree: Tree, options: NormalizedSchema) {
-  tree.write(
-    join(options.appProjectRoot, `src/main.${options.js ? 'js' : 'ts'}`),
-    `/**
+   tree.write(
+      join(options.appProjectRoot, `src/main.${options.js ? 'js' : 'ts'}`),
+      `/**
  * This is not a production server yet!
  * This is only a minimal backend to get started.
  */
@@ -56,82 +59,82 @@ const server = app.listen(port, () => {
 });
 server.on('error', console.error);
 `
-  );
+   );
 
-  if (options.js) {
-    toJS(tree);
-  }
+   if (options.js) {
+      toJS(tree);
+   }
 }
 
 export async function applicationGenerator(tree: Tree, schema: Schema) {
-  return await applicationGeneratorInternal(tree, {
-    addPlugin: false,
-    projectNameAndRootFormat: 'derived',
-    ...schema,
-  });
+   return await applicationGeneratorInternal(tree, {
+      addPlugin: false,
+      projectNameAndRootFormat: 'derived',
+      ...schema,
+   });
 }
 
 export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
-  const options = await normalizeOptions(tree, schema);
+   const options = await normalizeOptions(tree, schema);
 
-  const tasks: GeneratorCallback[] = [];
-  const initTask = await initGenerator(tree, { ...options, skipFormat: true });
-  tasks.push(initTask);
-  const applicationTask = await nodeApplicationGenerator(tree, {
-    ...options,
-    bundler: 'webpack',
-    skipFormat: true,
-  });
-  tasks.push(applicationTask);
-  addMainFile(tree, options);
-  addTypes(tree, options);
+   const tasks: GeneratorCallback[] = [];
+   const initTask = await initGenerator(tree, { ...options, skipFormat: true });
+   tasks.push(initTask);
+   const applicationTask = await nodeApplicationGenerator(tree, {
+      ...options,
+      bundler: 'webpack',
+      skipFormat: true,
+   });
+   tasks.push(applicationTask);
+   addMainFile(tree, options);
+   addTypes(tree, options);
 
-  if (!options.skipPackageJson) {
-    tasks.push(ensureDependencies(tree));
-  }
+   if (!options.skipPackageJson) {
+      tasks.push(ensureDependencies(tree));
+   }
 
-  if (!options.skipFormat) {
-    await formatFiles(tree);
-  }
+   if (!options.skipFormat) {
+      await formatFiles(tree);
+   }
 
-  return runTasksInSerial(...tasks);
+   return runTasksInSerial(...tasks);
 }
 
 export default applicationGenerator;
 
 async function normalizeOptions(
-  host: Tree,
-  options: Schema
+   host: Tree,
+   options: Schema
 ): Promise<NormalizedSchema> {
-  const {
-    projectName: appProjectName,
-    projectRoot: appProjectRoot,
-    projectNameAndRootFormat,
-  } = await determineProjectNameAndRootOptions(host, {
-    name: options.name,
-    projectType: 'application',
-    directory: options.directory,
-    projectNameAndRootFormat: options.projectNameAndRootFormat,
-    callingGenerator: '@nx/express:application',
-  });
-  options.projectNameAndRootFormat = projectNameAndRootFormat;
-  const nxJson = readNxJson(host);
-  const addPlugin =
-    process.env.NX_ADD_PLUGINS !== 'false' &&
-    nxJson.useInferencePlugins !== false;
-  options.addPlugin ??= addPlugin;
+   const {
+      projectName: appProjectName,
+      projectRoot: appProjectRoot,
+      projectNameAndRootFormat,
+   } = await determineProjectNameAndRootOptions(host, {
+      name: options.name,
+      projectType: 'application',
+      directory: options.directory,
+      projectNameAndRootFormat: options.projectNameAndRootFormat,
+      callingGenerator: '@nx/express:application',
+   });
+   options.projectNameAndRootFormat = projectNameAndRootFormat;
+   const nxJson = readNxJson(host);
+   const addPlugin =
+      process.env.NX_ADD_PLUGINS !== 'false' &&
+      nxJson.useInferencePlugins !== false;
+   options.addPlugin ??= addPlugin;
 
-  return {
-    ...options,
-    appProjectName,
-    appProjectRoot,
-  };
+   return {
+      ...options,
+      appProjectName,
+      appProjectRoot,
+   };
 }
 
 function ensureDependencies(tree: Tree): GeneratorCallback {
-  return addDependenciesToPackageJson(
-    tree,
-    { tslib: tslibVersion },
-    { '@nx/express': nxVersion }
-  );
+   return addDependenciesToPackageJson(
+      tree,
+      { tslib: tslibVersion },
+      { '@nx/express': nxVersion }
+   );
 }

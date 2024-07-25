@@ -2,7 +2,7 @@ import * as path from 'path';
 import { workspaceRoot } from './workspace-root';
 
 function removeWindowsDriveLetter(osSpecificPath: string): string {
-  return osSpecificPath.replace(/^[A-Z]:/, '');
+   return osSpecificPath.replace(/^[A-Z]:/, '');
 }
 
 /**
@@ -10,7 +10,7 @@ function removeWindowsDriveLetter(osSpecificPath: string): string {
  * This should not be used to read files on disk because of the removal of Windows drive letters.
  */
 export function normalizePath(osSpecificPath: string): string {
-  return removeWindowsDriveLetter(osSpecificPath).split('\\').join('/');
+   return removeWindowsDriveLetter(osSpecificPath).split('\\').join('/');
 }
 
 /**
@@ -18,7 +18,7 @@ export function normalizePath(osSpecificPath: string): string {
  * This should not be used to read files on disk because of the removal of Windows drive letters.
  */
 export function joinPathFragments(...fragments: string[]): string {
-  return normalizePath(path.join(...fragments));
+   return normalizePath(path.join(...fragments));
 }
 
 /**
@@ -30,7 +30,7 @@ export function joinPathFragments(...fragments: string[]): string {
  * @returns The path to the current working directory.
  */
 export function getCwd(): string {
-  return process.env.INIT_CWD?.startsWith(workspaceRoot)
-    ? process.env.INIT_CWD
-    : process.cwd();
+   return process.env.INIT_CWD?.startsWith(workspaceRoot)
+      ? process.env.INIT_CWD
+      : process.cwd();
 }

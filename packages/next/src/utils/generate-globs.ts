@@ -8,31 +8,31 @@ import { resolve } from 'path';
  * @deprecated Use createGlobPatternsForDependencies instead
  */
 export function createGlobPatternsOfDependentProjects(
-  projectName: string,
-  fileGlobPattern: string = '/**/!(*.stories|*.spec).tsx'
+   projectName: string,
+   fileGlobPattern: string = '/**/!(*.stories|*.spec).tsx'
 ): string[] {
-  logger.warn(
-    `createGlobPatternsOfDependentProjects is deprecated. Use "createGlobPatternsForDependencies(__dirname)" from "@nx/next/tailwind" instead`
-  );
+   logger.warn(
+      `createGlobPatternsOfDependentProjects is deprecated. Use "createGlobPatternsForDependencies(__dirname)" from "@nx/next/tailwind" instead`
+   );
 
-  try {
-    const [projectDirs, warnings] =
-      getSourceDirOfDependentProjects(projectName);
+   try {
+      const [projectDirs, warnings] =
+         getSourceDirOfDependentProjects(projectName);
 
-    if (warnings.length > 0) {
-      logger.warn(`
+      if (warnings.length > 0) {
+         logger.warn(`
 [createGlobPatternsForDependencies] Failed to generate glob pattern for the following:
 ${warnings.join('\n- ')}\n
 due to missing "sourceRoot" in the dependencies' project configuration
       `);
-    }
+      }
 
-    return projectDirs.map((sourceDir) =>
-      resolve(workspaceRoot, joinPathFragments(sourceDir, fileGlobPattern))
-    );
-  } catch (e) {
-    throw new Error(
-      `createGlobPatternsOfDependentProjects: Error when generating globs: ${e?.message}`
-    );
-  }
+      return projectDirs.map((sourceDir) =>
+         resolve(workspaceRoot, joinPathFragments(sourceDir, fileGlobPattern))
+      );
+   } catch (e) {
+      throw new Error(
+         `createGlobPatternsOfDependentProjects: Error when generating globs: ${e?.message}`
+      );
+   }
 }

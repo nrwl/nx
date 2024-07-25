@@ -36,29 +36,29 @@ import { pipe } from 'rxjs';
  * @param writeBundles Transformation flattening ES2022 modules to ESM2022, UMD, and minified UMD.
  */
 export const nxEntryPointTransformFactory = (
-  compileTs: Transform,
-  writePackage: Transform
+   compileTs: Transform,
+   writePackage: Transform
 ): Transform =>
-  pipe(
-    transformFromPromise(async (graph) => {
-      // Peek the first entry point from the graph
-      const entryPoint = graph.find(byEntryPoint().and(isInProgress));
-      logger.info(
-        '\n------------------------------------------------------------------------------'
-      );
-      logger.info(
-        `Building entry point '${entryPoint.data.entryPoint.moduleId}'`
-      );
-      logger.info(
-        '------------------------------------------------------------------------------'
-      );
-    }),
-    // TypeScript sources compilation
-    compileTs,
-    // After TypeScript: write package
-    writePackage,
-    transformFromPromise(async (graph) => {
-      const entryPoint = graph.find(byEntryPoint().and(isInProgress));
-      entryPoint.state = STATE_DONE;
-    })
-  );
+   pipe(
+      transformFromPromise(async (graph) => {
+         // Peek the first entry point from the graph
+         const entryPoint = graph.find(byEntryPoint().and(isInProgress));
+         logger.info(
+            '\n------------------------------------------------------------------------------'
+         );
+         logger.info(
+            `Building entry point '${entryPoint.data.entryPoint.moduleId}'`
+         );
+         logger.info(
+            '------------------------------------------------------------------------------'
+         );
+      }),
+      // TypeScript sources compilation
+      compileTs,
+      // After TypeScript: write package
+      writePackage,
+      transformFromPromise(async (graph) => {
+         const entryPoint = graph.find(byEntryPoint().and(isInProgress));
+         entryPoint.state = STATE_DONE;
+      })
+   );

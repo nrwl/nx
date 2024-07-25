@@ -2,9 +2,9 @@ import { tsquery } from '@phenomnomnominal/tsquery';
 import { writeNewWebpackConfig } from './write-new-webpack-config';
 
 describe('writeNewWebpackConfig', () => {
-  it('should convert host config correctly', () => {
-    // ARRANGE
-    const sourceText = `module.exports = {
+   it('should convert host config correctly', () => {
+      // ARRANGE
+      const sourceText = `module.exports = {
         plugins: [
             new ModuleFederationPlugin({
                 remotes: {
@@ -14,18 +14,18 @@ describe('writeNewWebpackConfig', () => {
         ]
     }`;
 
-    const ast = tsquery.ast(sourceText);
+      const ast = tsquery.ast(sourceText);
 
-    // ACT
-    const result = writeNewWebpackConfig(ast, 'host', 'host1');
+      // ACT
+      const result = writeNewWebpackConfig(ast, 'host', 'host1');
 
-    // ASSERT
-    expect(result).toMatchSnapshot();
-  });
+      // ASSERT
+      expect(result).toMatchSnapshot();
+   });
 
-  it('should convert remote config correctly', () => {
-    // ARRANGE
-    const sourceText = `module.exports = {
+   it('should convert remote config correctly', () => {
+      // ARRANGE
+      const sourceText = `module.exports = {
         plugins: [
             new ModuleFederationPlugin({
                 exposes: {
@@ -35,18 +35,18 @@ describe('writeNewWebpackConfig', () => {
         ]
     }`;
 
-    const ast = tsquery.ast(sourceText);
+      const ast = tsquery.ast(sourceText);
 
-    // ACT
-    const result = writeNewWebpackConfig(ast, 'remote', 'remote1');
+      // ACT
+      const result = writeNewWebpackConfig(ast, 'remote', 'remote1');
 
-    // ASSERT
-    expect(result).toMatchSnapshot();
-  });
+      // ASSERT
+      expect(result).toMatchSnapshot();
+   });
 
-  it('should convert config that is both remote and host correctly', () => {
-    // ARRANGE
-    const sourceText = `module.exports = {
+   it('should convert config that is both remote and host correctly', () => {
+      // ARRANGE
+      const sourceText = `module.exports = {
         plugins: [
             new ModuleFederationPlugin({
                 remotes: {
@@ -59,29 +59,29 @@ describe('writeNewWebpackConfig', () => {
         ]
     }`;
 
-    const ast = tsquery.ast(sourceText);
+      const ast = tsquery.ast(sourceText);
 
-    // ACT
-    const result = writeNewWebpackConfig(ast, 'both', 'both1');
+      // ACT
+      const result = writeNewWebpackConfig(ast, 'both', 'both1');
 
-    // ASSERT
-    expect(result).toMatchSnapshot();
-  });
+      // ASSERT
+      expect(result).toMatchSnapshot();
+   });
 
-  it('should convert config that is neither remote and host correctly', () => {
-    // ARRANGE
-    const sourceText = `module.exports = {
+   it('should convert config that is neither remote and host correctly', () => {
+      // ARRANGE
+      const sourceText = `module.exports = {
         plugins: [
             new ModuleFederationPlugin({})
         ]
     }`;
 
-    const ast = tsquery.ast(sourceText);
+      const ast = tsquery.ast(sourceText);
 
-    // ACT
-    const result = writeNewWebpackConfig(ast, false, 'neither');
+      // ACT
+      const result = writeNewWebpackConfig(ast, false, 'neither');
 
-    // ASSERT
-    expect(result).toMatchSnapshot();
-  });
+      // ASSERT
+      expect(result).toMatchSnapshot();
+   });
 });

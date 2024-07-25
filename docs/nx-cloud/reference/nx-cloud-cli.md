@@ -28,9 +28,9 @@ You can also define the configuration in a file and reference it as follows:
 
 ```yaml {% fileName=".nx/workflows/dynamic-changesets.yaml" %}
 distribute-on:
-  small-changeset: 3 linux-medium-js
-  medium-changeset: 6 linux-medium-js
-  large-changeset: 10 linux-medium-js
+   small-changeset: 3 linux-medium-js
+   medium-changeset: 6 linux-medium-js
+   large-changeset: 10 linux-medium-js
 ```
 
 ### --with-env-vars (Nx Agents Only)
@@ -106,14 +106,14 @@ individual commands as follows:
 {% tabs %}
 {% tab label="Nx >= 18" %}
 
-- `nx affected -t build --agents` (explicitly enable distribution)
-- `nx affected -t build --no-agents` (explicitly disable distribution)
+-  `nx affected -t build --agents` (explicitly enable distribution)
+-  `nx affected -t build --no-agents` (explicitly disable distribution)
 
 {% /tab %}
 {% tab label="Nx >= 14.7" %}
 
-- `nx affected -t build --dte` (explicitly enable distribution)
-- `nx affected -t build --no-dte` (explicitly disable distribution)
+-  `nx affected -t build --dte` (explicitly enable distribution)
+-  `nx affected -t build --no-dte` (explicitly disable distribution)
 
 {% /tab %}
 {% /tabs %}

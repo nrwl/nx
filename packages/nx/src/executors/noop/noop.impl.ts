@@ -1,3 +1,3 @@
 export default async function () {
-  return { success: true };
+   return { success: true };
 }

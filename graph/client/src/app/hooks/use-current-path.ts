@@ -4,31 +4,31 @@ import { useState } from 'react';
 import { getEnvironmentConfig } from '@nx/graph/shared';
 
 export const useCurrentPath = () => {
-  const [lastLocation, setLastLocation] = useState<string>();
-  const [lastPath, setLastPath] = useState();
+   const [lastLocation, setLastLocation] = useState<string>();
+   const [lastPath, setLastPath] = useState();
 
-  const location = useLocation();
+   const location = useLocation();
 
-  if (location.pathname === lastLocation) {
-    return lastPath;
-  }
+   if (location.pathname === lastLocation) {
+      return lastPath;
+   }
 
-  setLastLocation(location.pathname);
+   setLastLocation(location.pathname);
 
-  const route = matchRoutes(getRoutesForEnvironment(), location).at(-1);
+   const route = matchRoutes(getRoutesForEnvironment(), location).at(-1);
 
-  const { environment } = getEnvironmentConfig();
+   const { environment } = getEnvironmentConfig();
 
-  let currentPath;
-  // if using dev routes, remove first segment for workspace
-  if (environment === 'dev') {
-    currentPath = {
-      workspace: route.pathname.split('/')[1],
-      currentPath: `/${route.pathname.split('/').slice(2).join('/')}`,
-    };
-  } else {
-    currentPath = { workspace: 'local', currentPath: route.pathname };
-  }
-  setLastPath(currentPath);
-  return currentPath;
+   let currentPath;
+   // if using dev routes, remove first segment for workspace
+   if (environment === 'dev') {
+      currentPath = {
+         workspace: route.pathname.split('/')[1],
+         currentPath: `/${route.pathname.split('/').slice(2).join('/')}`,
+      };
+   } else {
+      currentPath = { workspace: 'local', currentPath: route.pathname };
+   }
+   setLastPath(currentPath);
+   return currentPath;
 };

@@ -1,8 +1,8 @@
 {
-  "name": "@nx/typedoc-theme",
-  "private": true,
-  "version": "0.0.1",
-  "keywords": [
-    "typedocplugin"
-  ]
+   "name": "@nx/typedoc-theme",
+   "private": true,
+   "version": "0.0.1",
+   "keywords": [
+      "typedocplugin"
+   ]
 }

@@ -7,30 +7,30 @@ import { daemonClient } from '../daemon/client/client';
 let workspaceContext: WorkspaceContext | undefined;
 
 export function setupWorkspaceContext(workspaceRoot: string) {
-  const { WorkspaceContext } =
-    require('../native') as typeof import('../native');
-  performance.mark('workspace-context');
-  workspaceContext = new WorkspaceContext(
-    workspaceRoot,
-    cacheDirectoryForWorkspace(workspaceRoot)
-  );
-  performance.mark('workspace-context:end');
-  performance.measure(
-    'workspace context init',
-    'workspace-context',
-    'workspace-context:end'
-  );
+   const { WorkspaceContext } =
+      require('../native') as typeof import('../native');
+   performance.mark('workspace-context');
+   workspaceContext = new WorkspaceContext(
+      workspaceRoot,
+      cacheDirectoryForWorkspace(workspaceRoot)
+   );
+   performance.mark('workspace-context:end');
+   performance.measure(
+      'workspace context init',
+      'workspace-context',
+      'workspace-context:end'
+   );
 }
 
 export async function getNxWorkspaceFilesFromContext(
-  workspaceRoot: string,
-  projectRootMap: Record<string, string>
+   workspaceRoot: string,
+   projectRootMap: Record<string, string>
 ) {
-  if (isOnDaemon() || !daemonClient.enabled()) {
-    ensureContextAvailable(workspaceRoot);
-    return workspaceContext.getWorkspaceFiles(projectRootMap);
-  }
-  return daemonClient.getWorkspaceFiles(projectRootMap);
+   if (isOnDaemon() || !daemonClient.enabled()) {
+      ensureContextAvailable(workspaceRoot);
+      return workspaceContext.getWorkspaceFiles(projectRootMap);
+   }
+   return daemonClient.getWorkspaceFiles(projectRootMap);
 }
 
 /**
@@ -41,86 +41,86 @@ export async function getNxWorkspaceFilesFromContext(
  * to be recreated which is slow.
  */
 export function globWithWorkspaceContextSync(
-  workspaceRoot: string,
-  globs: string[],
-  exclude?: string[]
+   workspaceRoot: string,
+   globs: string[],
+   exclude?: string[]
 ) {
-  ensureContextAvailable(workspaceRoot);
-  return workspaceContext.glob(globs, exclude);
+   ensureContextAvailable(workspaceRoot);
+   return workspaceContext.glob(globs, exclude);
 }
 
 export async function globWithWorkspaceContext(
-  workspaceRoot: string,
-  globs: string[],
-  exclude?: string[]
+   workspaceRoot: string,
+   globs: string[],
+   exclude?: string[]
 ) {
-  if (isOnDaemon() || !daemonClient.enabled()) {
-    ensureContextAvailable(workspaceRoot);
-    return workspaceContext.glob(globs, exclude);
-  } else {
-    return daemonClient.glob(globs, exclude);
-  }
+   if (isOnDaemon() || !daemonClient.enabled()) {
+      ensureContextAvailable(workspaceRoot);
+      return workspaceContext.glob(globs, exclude);
+   } else {
+      return daemonClient.glob(globs, exclude);
+   }
 }
 
 export async function hashWithWorkspaceContext(
-  workspaceRoot: string,
-  globs: string[],
-  exclude?: string[]
+   workspaceRoot: string,
+   globs: string[],
+   exclude?: string[]
 ) {
-  if (isOnDaemon() || !daemonClient.enabled()) {
-    ensureContextAvailable(workspaceRoot);
-    return workspaceContext.hashFilesMatchingGlob(globs, exclude);
-  }
-  return daemonClient.hashGlob(globs, exclude);
+   if (isOnDaemon() || !daemonClient.enabled()) {
+      ensureContextAvailable(workspaceRoot);
+      return workspaceContext.hashFilesMatchingGlob(globs, exclude);
+   }
+   return daemonClient.hashGlob(globs, exclude);
 }
 
 export function updateFilesInContext(
-  updatedFiles: string[],
-  deletedFiles: string[]
+   updatedFiles: string[],
+   deletedFiles: string[]
 ) {
-  return workspaceContext?.incrementalUpdate(updatedFiles, deletedFiles);
+   return workspaceContext?.incrementalUpdate(updatedFiles, deletedFiles);
 }
 
 export async function getAllFileDataInContext(workspaceRoot: string) {
-  if (isOnDaemon() || !daemonClient.enabled()) {
-    ensureContextAvailable(workspaceRoot);
-    return workspaceContext.allFileData();
-  }
-  return daemonClient.getWorkspaceContextFileData();
+   if (isOnDaemon() || !daemonClient.enabled()) {
+      ensureContextAvailable(workspaceRoot);
+      return workspaceContext.allFileData();
+   }
+   return daemonClient.getWorkspaceContextFileData();
 }
 
 export async function getFilesInDirectoryUsingContext(
-  workspaceRoot: string,
-  dir: string
+   workspaceRoot: string,
+   dir: string
 ) {
-  if (isOnDaemon() || !daemonClient.enabled()) {
-    ensureContextAvailable(workspaceRoot);
-    return workspaceContext.getFilesInDirectory(dir);
-  }
-  return daemonClient.getFilesInDirectory(dir);
+   if (isOnDaemon() || !daemonClient.enabled()) {
+      ensureContextAvailable(workspaceRoot);
+      return workspaceContext.getFilesInDirectory(dir);
+   }
+   return daemonClient.getFilesInDirectory(dir);
 }
 
 export function updateProjectFiles(
-  projectRootMappings: Record<string, string>,
-  rustReferences: NxWorkspaceFilesExternals,
-  updatedFiles: Record<string, string>,
-  deletedFiles: string[]
+   projectRootMappings: Record<string, string>,
+   rustReferences: NxWorkspaceFilesExternals,
+   updatedFiles: Record<string, string>,
+   deletedFiles: string[]
 ) {
-  return workspaceContext?.updateProjectFiles(
-    projectRootMappings,
-    rustReferences.projectFiles,
-    rustReferences.globalFiles,
-    updatedFiles,
-    deletedFiles
-  );
+   return workspaceContext?.updateProjectFiles(
+      projectRootMappings,
+      rustReferences.projectFiles,
+      rustReferences.globalFiles,
+      updatedFiles,
+      deletedFiles
+   );
 }
 
 function ensureContextAvailable(workspaceRoot: string) {
-  if (!workspaceContext || workspaceContext?.workspaceRoot !== workspaceRoot) {
-    setupWorkspaceContext(workspaceRoot);
-  }
+   if (!workspaceContext || workspaceContext?.workspaceRoot !== workspaceRoot) {
+      setupWorkspaceContext(workspaceRoot);
+   }
 }
 
 export function resetWorkspaceContext() {
-  workspaceContext = undefined;
+   workspaceContext = undefined;
 }

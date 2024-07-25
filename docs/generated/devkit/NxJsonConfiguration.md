@@ -10,36 +10,36 @@ Nx.json configuration
 
 ## Hierarchy
 
-- **`NxJsonConfiguration`**
+-  **`NxJsonConfiguration`**
 
-  ↳ [`Workspace`](../../devkit/documents/Workspace)
+   ↳ [`Workspace`](../../devkit/documents/Workspace)
 
 ## Table of contents
 
 ### Properties
 
-- [affected](../../devkit/documents/NxJsonConfiguration#affected): NxAffectedConfig
-- [cacheDirectory](../../devkit/documents/NxJsonConfiguration#cachedirectory): string
-- [cli](../../devkit/documents/NxJsonConfiguration#cli): Object
-- [defaultBase](../../devkit/documents/NxJsonConfiguration#defaultbase): string
-- [defaultProject](../../devkit/documents/NxJsonConfiguration#defaultproject): string
-- [extends](../../devkit/documents/NxJsonConfiguration#extends): string
-- [generators](../../devkit/documents/NxJsonConfiguration#generators): Object
-- [implicitDependencies](../../devkit/documents/NxJsonConfiguration#implicitdependencies): ImplicitDependencyEntry<T>
-- [installation](../../devkit/documents/NxJsonConfiguration#installation): NxInstallationConfiguration
-- [namedInputs](../../devkit/documents/NxJsonConfiguration#namedinputs): Object
-- [nxCloudAccessToken](../../devkit/documents/NxJsonConfiguration#nxcloudaccesstoken): string
-- [nxCloudEncryptionKey](../../devkit/documents/NxJsonConfiguration#nxcloudencryptionkey): string
-- [nxCloudUrl](../../devkit/documents/NxJsonConfiguration#nxcloudurl): string
-- [parallel](../../devkit/documents/NxJsonConfiguration#parallel): number
-- [plugins](../../devkit/documents/NxJsonConfiguration#plugins): PluginConfiguration[]
-- [pluginsConfig](../../devkit/documents/NxJsonConfiguration#pluginsconfig): Record<string, Record<string, unknown>>
-- [release](../../devkit/documents/NxJsonConfiguration#release): NxReleaseConfiguration
-- [targetDefaults](../../devkit/documents/NxJsonConfiguration#targetdefaults): TargetDefaults
-- [tasksRunnerOptions](../../devkit/documents/NxJsonConfiguration#tasksrunneroptions): Object
-- [useDaemonProcess](../../devkit/documents/NxJsonConfiguration#usedaemonprocess): boolean
-- [useInferencePlugins](../../devkit/documents/NxJsonConfiguration#useinferenceplugins): boolean
-- [workspaceLayout](../../devkit/documents/NxJsonConfiguration#workspacelayout): Object
+-  [affected](../../devkit/documents/NxJsonConfiguration#affected): NxAffectedConfig
+-  [cacheDirectory](../../devkit/documents/NxJsonConfiguration#cachedirectory): string
+-  [cli](../../devkit/documents/NxJsonConfiguration#cli): Object
+-  [defaultBase](../../devkit/documents/NxJsonConfiguration#defaultbase): string
+-  [defaultProject](../../devkit/documents/NxJsonConfiguration#defaultproject): string
+-  [extends](../../devkit/documents/NxJsonConfiguration#extends): string
+-  [generators](../../devkit/documents/NxJsonConfiguration#generators): Object
+-  [implicitDependencies](../../devkit/documents/NxJsonConfiguration#implicitdependencies): ImplicitDependencyEntry<T>
+-  [installation](../../devkit/documents/NxJsonConfiguration#installation): NxInstallationConfiguration
+-  [namedInputs](../../devkit/documents/NxJsonConfiguration#namedinputs): Object
+-  [nxCloudAccessToken](../../devkit/documents/NxJsonConfiguration#nxcloudaccesstoken): string
+-  [nxCloudEncryptionKey](../../devkit/documents/NxJsonConfiguration#nxcloudencryptionkey): string
+-  [nxCloudUrl](../../devkit/documents/NxJsonConfiguration#nxcloudurl): string
+-  [parallel](../../devkit/documents/NxJsonConfiguration#parallel): number
+-  [plugins](../../devkit/documents/NxJsonConfiguration#plugins): PluginConfiguration[]
+-  [pluginsConfig](../../devkit/documents/NxJsonConfiguration#pluginsconfig): Record<string, Record<string, unknown>>
+-  [release](../../devkit/documents/NxJsonConfiguration#release): NxReleaseConfiguration
+-  [targetDefaults](../../devkit/documents/NxJsonConfiguration#targetdefaults): TargetDefaults
+-  [tasksRunnerOptions](../../devkit/documents/NxJsonConfiguration#tasksrunneroptions): Object
+-  [useDaemonProcess](../../devkit/documents/NxJsonConfiguration#usedaemonprocess): boolean
+-  [useInferencePlugins](../../devkit/documents/NxJsonConfiguration#useinferenceplugins): boolean
+-  [workspaceLayout](../../devkit/documents/NxJsonConfiguration#workspacelayout): Object
 
 ## Properties
 

@@ -45,9 +45,9 @@ import { Injectable } from '@angular/core';
 
 @Injectable({ providedIn: 'root' })
 export class ApiService {
-  constructor() {
-    console.log('API URL:', MY_API_URL);
-  }
+   constructor() {
+      console.log('API URL:', MY_API_URL);
+   }
 }
 ```
 
@@ -75,9 +75,9 @@ Like the previous example, you must configure TypeScript to recognize the `proce
 
 ```ts {% fileName="apps/my-app/src/types.d.ts" %}
 declare const process: {
-  env: {
-    API_URL: string;
-  };
+   env: {
+      API_URL: string;
+   };
 };
 ```
 
@@ -92,9 +92,9 @@ import { Injectable } from '@angular/core';
 
 @Injectable({ providedIn: 'root' })
 export class ApiService {
-  constructor() {
-    console.log('API URL:', process.env.MY_API_URL);
-  }
+   constructor() {
+      console.log('API URL:', process.env.MY_API_URL);
+   }
 }
 ```
 
@@ -130,19 +130,19 @@ Next, create the custom ESBuild plugin:
 const myOrgEnvRegex = /^MY_ORG_/i;
 
 const envVarPlugin = {
-  name: 'env-var-plugin',
-  setup(build) {
-    const options = build.initialOptions;
+   name: 'env-var-plugin',
+   setup(build) {
+      const options = build.initialOptions;
 
-    const envVars = {};
-    for (const key in process.env) {
-      if (myOrgEnvRegex.test(key)) {
-        envVars[key] = process.env[key];
+      const envVars = {};
+      for (const key in process.env) {
+         if (myOrgEnvRegex.test(key)) {
+            envVars[key] = process.env[key];
+         }
       }
-    }
 
-    options.define['process.env'] = JSON.stringify(envVars);
-  },
+      options.define['process.env'] = JSON.stringify(envVars);
+   },
 };
 
 module.exports = envVarPlugin;
@@ -169,9 +169,9 @@ import { Injectable } from '@angular/core';
 
 @Injectable({ providedIn: 'root' })
 export class ApiService {
-  constructor() {
-    console.log('API URL:', process.env.MY_ORG_API_URL);
-  }
+   constructor() {
+      console.log('API URL:', process.env.MY_ORG_API_URL);
+   }
 }
 ```
 
@@ -185,10 +185,10 @@ To add support for environment variables we need to use the webpack `DefinePlugi
 
 The webpack-based Angular executors (e.g. `@nx/angular:webpack-browser` and `@angular-devkit/build-angular:browser`) set the webpack's `mode` configuration option based on the values for the following in the builder options:
 
-- `optimization`
-- `optimization.scripts`
-- `optimization.styles`
-- `optimization.styles.minify`
+-  `optimization`
+-  `optimization.scripts`
+-  `optimization.styles`
+-  `optimization.styles.minify`
 
 If any of the above is set to `true`, webpack's `mode` is set to `production`. Otherwise, it's set to `development`.
 
@@ -196,9 +196,9 @@ By default, webpack automatically sets the `NODE_ENV` variable to the value of t
 
 To change the `NODE_ENV` variable we can do one of the following:
 
-- Turn on the builder optimizations to set it to `production`
-- Turn off the builder optimizations to set it to `development`
-- Use a custom webpack configuration to override the webpack `mode` set by Angular executors
+-  Turn on the builder optimizations to set it to `production`
+-  Turn off the builder optimizations to set it to `development`
+-  Use a custom webpack configuration to override the webpack `mode` set by Angular executors
 
 The first two options is a matter of changing your build target configuration or passing the specific flag in the command line. We'll see how to do the last in the following section.
 
@@ -236,23 +236,23 @@ const webpack = require('webpack');
 const myOrgEnvRegex = /^MY_ORG_/i;
 
 function getClientEnvironment() {
-  const envVars = {};
-  for (const key in process.env) {
-    if (myOrgEnvRegex.test(key)) {
-      envVars[key] = process.env[key];
-    }
-  }
+   const envVars = {};
+   for (const key in process.env) {
+      if (myOrgEnvRegex.test(key)) {
+         envVars[key] = process.env[key];
+      }
+   }
 
-  return {
-    'process.env': JSON.stringify(envVars),
-  };
+   return {
+      'process.env': JSON.stringify(envVars),
+   };
 }
 
 module.exports = (config, options, context) => {
-  // Overwrite the mode set by Angular if the NODE_ENV is set
-  config.mode = process.env.NODE_ENV || config.mode;
-  config.plugins.push(new webpack.DefinePlugin(getClientEnvironment()));
-  return config;
+   // Overwrite the mode set by Angular if the NODE_ENV is set
+   config.mode = process.env.NODE_ENV || config.mode;
+   config.plugins.push(new webpack.DefinePlugin(getClientEnvironment()));
+   return config;
 };
 ```
 
@@ -262,9 +262,9 @@ Next, make sure to inform TypeScript of the defined variables to prevent type-ch
 
 ```ts {% fileName="apps/my-app/src/types.d.ts" %}
 declare const process: {
-  env: {
-    MY_ORG_API_URL: string;
-  };
+   env: {
+      MY_ORG_API_URL: string;
+   };
 };
 ```
 
@@ -285,9 +285,9 @@ import { Injectable } from '@angular/core';
 
 @Injectable({ providedIn: 'root' })
 export class ApiService {
-  constructor() {
-    console.log('API URL:', process.env.MY_ORG_API_URL);
-  }
+   constructor() {
+      console.log('API URL:', process.env.MY_ORG_API_URL);
+   }
 }
 ```
 

@@ -7,9 +7,9 @@
  * to the right file types via overrides.
  */
 export default {
-  extends: [
-    'plugin:@nx/react-base',
-    'plugin:@nx/react-typescript',
-    'plugin:@nx/react-jsx',
-  ],
+   extends: [
+      'plugin:@nx/react-base',
+      'plugin:@nx/react-typescript',
+      'plugin:@nx/react-jsx',
+   ],
 };

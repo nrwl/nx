@@ -23,13 +23,13 @@ After this command, `workspace.json` should look like this:
 
 ```jsonc
 {
-  "version": 2,
-  "projects": {
-    "my-app": "apps/my-app",
-    "some-lib": "libs/some-lib"
-    // ...
-  },
-  "$schema": "./node_modules/nx/schemas/workspace-schema.json"
+   "version": 2,
+   "projects": {
+      "my-app": "apps/my-app",
+      "some-lib": "libs/some-lib"
+      // ...
+   },
+   "$schema": "./node_modules/nx/schemas/workspace-schema.json"
 }
 ```
 

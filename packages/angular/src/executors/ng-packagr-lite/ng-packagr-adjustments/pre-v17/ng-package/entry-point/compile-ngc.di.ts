@@ -12,21 +12,21 @@ import { InjectionToken, Provider } from 'injection-js';
 import type { Transform } from 'ng-packagr/lib/graph/transform';
 import { provideTransform } from 'ng-packagr/lib/graph/transform.di';
 import {
-  NX_STYLESHEET_PROCESSOR,
-  NX_STYLESHEET_PROCESSOR_TOKEN,
+   NX_STYLESHEET_PROCESSOR,
+   NX_STYLESHEET_PROCESSOR_TOKEN,
 } from '../../styles/stylesheet-processor.di';
 import { NX_OPTIONS_TOKEN } from '../options.di';
 import { nxCompileNgcTransformFactory } from './compile-ngc.transform';
 
 export const NX_COMPILE_NGC_TOKEN = new InjectionToken<Transform>(
-  `nx.v1.compileNgc`
+   `nx.v1.compileNgc`
 );
 export const NX_COMPILE_NGC_TRANSFORM = provideTransform({
-  provide: NX_COMPILE_NGC_TOKEN,
-  useFactory: nxCompileNgcTransformFactory,
-  deps: [NX_STYLESHEET_PROCESSOR_TOKEN, NX_OPTIONS_TOKEN],
+   provide: NX_COMPILE_NGC_TOKEN,
+   useFactory: nxCompileNgcTransformFactory,
+   deps: [NX_STYLESHEET_PROCESSOR_TOKEN, NX_OPTIONS_TOKEN],
 });
 export const NX_COMPILE_NGC_PROVIDERS: Provider[] = [
-  NX_STYLESHEET_PROCESSOR,
-  NX_COMPILE_NGC_TRANSFORM,
+   NX_STYLESHEET_PROCESSOR,
+   NX_COMPILE_NGC_TRANSFORM,
 ];

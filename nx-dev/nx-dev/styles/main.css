@@ -8,70 +8,70 @@
 @tailwind utilities;
 
 svg {
-  shape-rendering: auto;
-  text-rendering: optimizeLegibility;
+   shape-rendering: auto;
+   text-rendering: optimizeLegibility;
 }
 
 @font-face {
-  src: url('../public/fonts/InputMono-Regular.woff2') format('woff2'),
-    url('../public/fonts/InputMono-Regular.woff') format('woff');
-  font-family: 'InputMono';
-  font-style: normal;
-  font-weight: normal;
-  font-display: swap;
+   src: url('../public/fonts/InputMono-Regular.woff2') format('woff2'),
+      url('../public/fonts/InputMono-Regular.woff') format('woff');
+   font-family: 'InputMono';
+   font-style: normal;
+   font-weight: normal;
+   font-display: swap;
 }
 .font-input-mono {
-  font-family: 'InputMono', monospace;
+   font-family: 'InputMono', monospace;
 }
 code,
 pre,
 .prose code,
 .prose pre {
-  font-family: 'InputMono', monospace;
+   font-family: 'InputMono', monospace;
 }
 
 /** Scrollbars **/
 .dark {
-  color-scheme: dark;
+   color-scheme: dark;
 }
 
 /** Layout **/
 #__next {
-  height: 100%;
+   height: 100%;
 }
 
 /** Theme Switcher **/
 .changing-theme,
 .changing-theme * {
-  transition: none !important;
+   transition: none !important;
 }
 
 /*
   General CSS rules for markdown iframes and img
  */
 iframe[src*='youtube'] {
-  aspect-ratio: 16 / 9;
+   aspect-ratio: 16 / 9;
 }
 .prose iframe,
 .prose img {
-  display: block;
-  margin: 2rem auto;
+   display: block;
+   margin: 2rem auto;
 }
 .prose iframe {
-  width: 100%;
-  max-width: 560px;
+   width: 100%;
+   max-width: 560px;
 }
 .prose img {
-  width: max-content;
+   width: max-content;
 }
 
 .prose iframe[src^="https://staging.nx.app"],
 .prose iframe[src^="https://nx.app"]
 {
-  height: 80vh;
-  max-width: 100%;
-  overflow: hidden;
-  width: 100%;
+   height: 80vh;
+   max-width: 100%;
+   overflow: hidden;
+   width: 100%;
 }
 
 /*
@@ -79,56 +79,56 @@ iframe[src*='youtube'] {
  */
 .prose h5,
 .prose h6 {
-  font-weight: 600;
+   font-weight: 600;
 }
 
 .prose .twitter-tweet {
-  margin: 0 auto;
+   margin: 0 auto;
 }
 
 /**
  * Tooltips
  */
 [data-tooltip] {
-  cursor: help;
-  position: relative;
+   cursor: help;
+   position: relative;
 }
 
 [data-tooltip]:before {
-  background-color: hsla(214, 61%, 11%, 1);
-  border-radius: 0.375rem;
-  color: hsla(0, 0%, 95%, 1);
-  content: attr(data-tooltip);
-  left: 0;
-  opacity: 0;
-  padding: 0.25rem 0.5rem;
-  position: absolute;
-  text-align: center;
-  text-transform: capitalize;
-  top: 120%;
-  transition: opacity 150ms ease-out;
-  visibility: hidden;
-  z-index: 1;
-  width: max-content;
+   background-color: hsla(214, 61%, 11%, 1);
+   border-radius: 0.375rem;
+   color: hsla(0, 0%, 95%, 1);
+   content: attr(data-tooltip);
+   left: 0;
+   opacity: 0;
+   padding: 0.25rem 0.5rem;
+   position: absolute;
+   text-align: center;
+   text-transform: capitalize;
+   top: 120%;
+   transition: opacity 150ms ease-out;
+   visibility: hidden;
+   z-index: 1;
+   width: max-content;
 }
 [data-tooltip][data-tooltip-align-right]:before {
-  left: auto;
-  right: 0;
+   left: auto;
+   right: 0;
 }
 
 [data-tooltip]:hover:before {
-  opacity: 1;
-  visibility: visible;
+   opacity: 1;
+   visibility: visible;
 }
 
 /* Dark mode */
 html.dark .adaptive-icon {
-  /* fill: white; */
-  filter: invert(1);
+   /* fill: white; */
+   filter: invert(1);
 }
 
 .adaptive-icon {
-  fill: black;
+   fill: black;
 }
 
 /* [data-theme='light'] .adaptive-icon {
@@ -143,115 +143,115 @@ html.dark .adaptive-icon {
 } */
 
 .fade-out {
-  -webkit-animation: fadeout 2s; /* Safari, Chrome and Opera > 12.1 */
-  -moz-animation: fadeout 2s; /* Firefox < 16 */
-  -ms-animation: fadeout 2s; /* Internet Explorer */
-  -o-animation: fadeout 2s; /* Opera < 12.1 */
-  animation: fadeout 2s;
+   -webkit-animation: fadeout 2s; /* Safari, Chrome and Opera > 12.1 */
+   -moz-animation: fadeout 2s; /* Firefox < 16 */
+   -ms-animation: fadeout 2s; /* Internet Explorer */
+   -o-animation: fadeout 2s; /* Opera < 12.1 */
+   animation: fadeout 2s;
 }
 
 @keyframes fadeout {
-  from {
-    transform: translateY(0);
-  }
-  to {
-    transform: translateY(10000px);
-  }
+   from {
+      transform: translateY(0);
+   }
+   to {
+      transform: translateY(10000px);
+   }
 }
 
 /* Firefox < 16 */
 @-moz-keyframes fadeout {
-  from {
-    transform: translateY(0);
-  }
-  to {
-    transform: translateY(10000px);
-  }
+   from {
+      transform: translateY(0);
+   }
+   to {
+      transform: translateY(10000px);
+   }
 }
 
 /* Safari, Chrome and Opera > 12.1 */
 @-webkit-keyframes fadeout {
-  from {
-    transform: translateY(0);
-  }
-  to {
-    transform: translateY(10000px);
-  }
+   from {
+      transform: translateY(0);
+   }
+   to {
+      transform: translateY(10000px);
+   }
 }
 
 /* Internet Explorer */
 @-ms-keyframes fadeout {
-  from {
-    transform: translateY(0);
-  }
-  to {
-    transform: translateY(10000px);
-  }
+   from {
+      transform: translateY(0);
+   }
+   to {
+      transform: translateY(10000px);
+   }
 }
 
 /* Opera < 12.1 */
 @-o-keyframes fadeout {
-  from {
-    transform: translateY(0);
-  }
-  to {
-    transform: translateY(10000px);
-  }
+   from {
+      transform: translateY(0);
+   }
+   to {
+      transform: translateY(10000px);
+   }
 }
 
 .fade-in {
-  -webkit-animation: fadein 2s; /* Safari, Chrome and Opera > 12.1 */
-  -moz-animation: fadein 2s; /* Firefox < 16 */
-  -ms-animation: fadein 2s; /* Internet Explorer */
-  -o-animation: fadein 2s; /* Opera < 12.1 */
-  animation: fadein 2s;
+   -webkit-animation: fadein 2s; /* Safari, Chrome and Opera > 12.1 */
+   -moz-animation: fadein 2s; /* Firefox < 16 */
+   -ms-animation: fadein 2s; /* Internet Explorer */
+   -o-animation: fadein 2s; /* Opera < 12.1 */
+   animation: fadein 2s;
 }
 
 @keyframes fadein {
-  from {
-    transform: translateY(10000px);
-  }
-  to {
-    transform: translateY(0);
-  }
+   from {
+      transform: translateY(10000px);
+   }
+   to {
+      transform: translateY(0);
+   }
 }
 
 /* Firefox < 16 */
 @-moz-keyframes fadein {
-  from {
-    transform: translateY(10000px);
-  }
-  to {
-    transform: translateY(0);
-  }
+   from {
+      transform: translateY(10000px);
+   }
+   to {
+      transform: translateY(0);
+   }
 }
 
 /* Safari, Chrome and Opera > 12.1 */
 @-webkit-keyframes fadein {
-  from {
-    transform: translateY(10000px);
-  }
-  to {
-    transform: translateY(0);
-  }
+   from {
+      transform: translateY(10000px);
+   }
+   to {
+      transform: translateY(0);
+   }
 }
 
 /* Internet Explorer */
 @-ms-keyframes fadein {
-  from {
-    transform: translateY(10000px);
-  }
-  to {
-    transform: translateY(0);
-  }
+   from {
+      transform: translateY(10000px);
+   }
+   to {
+      transform: translateY(0);
+   }
 }
 
 /* Opera < 12.1 */
 @-o-keyframes fadeout {
-  from {
-    transform: translateY(10000px);
-  }
-  to {
-    transform: translateY(0);
-  }
+   from {
+      transform: translateY(10000px);
+   }
+   to {
+      transform: translateY(0);
+   }
 }

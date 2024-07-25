@@ -1,5 +1,5 @@
 export {
-  setRemoteUrlResolver,
-  setRemoteDefinitions,
-  loadRemoteModule,
+   setRemoteUrlResolver,
+   setRemoteDefinitions,
+   loadRemoteModule,
 } from './mf';

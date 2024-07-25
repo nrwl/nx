@@ -4,58 +4,62 @@ import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
 import { join } from 'path';
 
 describe('@nx/webpack/plugin', () => {
-  let createNodesFunction = createNodesV2[1];
-  let context: CreateNodesContext;
-  let tempFs: TempFs;
+   let createNodesFunction = createNodesV2[1];
+   let context: CreateNodesContext;
+   let tempFs: TempFs;
 
-  beforeEach(() => {
-    tempFs = new TempFs('webpack-plugin');
+   beforeEach(() => {
+      tempFs = new TempFs('webpack-plugin');
 
-    context = {
-      nxJsonConfiguration: {
-        namedInputs: {
-          default: ['{projectRoot}/**/*'],
-          production: ['!{projectRoot}/**/*.spec.ts'],
-        },
-      },
-      workspaceRoot: tempFs.tempDir,
-      configFiles: [],
-    };
+      context = {
+         nxJsonConfiguration: {
+            namedInputs: {
+               default: ['{projectRoot}/**/*'],
+               production: ['!{projectRoot}/**/*.spec.ts'],
+            },
+         },
+         workspaceRoot: tempFs.tempDir,
+         configFiles: [],
+      };
 
-    tempFs.createFileSync(
-      'my-app/project.json',
-      JSON.stringify({ name: 'my-app' })
-    );
-    tempFs.createFileSync('my-app/webpack.config.js', '');
-  });
+      tempFs.createFileSync(
+         'my-app/project.json',
+         JSON.stringify({ name: 'my-app' })
+      );
+      tempFs.createFileSync('my-app/webpack.config.js', '');
+   });
 
-  afterEach(() => {
-    jest.resetModules();
-  });
+   afterEach(() => {
+      jest.resetModules();
+   });
 
-  it('should create nodes', async () => {
-    mockWebpackConfig({
-      output: {
-        path: 'dist/foo',
-      },
-    });
-    const nodes = await createNodesFunction(
-      ['my-app/webpack.config.js'],
-      {
-        buildTargetName: 'build-something',
-        serveTargetName: 'my-serve',
-        previewTargetName: 'preview-site',
-        serveStaticTargetName: 'serve-static',
-      },
-      context
-    );
+   it('should create nodes', async () => {
+      mockWebpackConfig({
+         output: {
+            path: 'dist/foo',
+         },
+      });
+      const nodes = await createNodesFunction(
+         ['my-app/webpack.config.js'],
+         {
+            buildTargetName: 'build-something',
+            serveTargetName: 'my-serve',
+            previewTargetName: 'preview-site',
+            serveStaticTargetName: 'serve-static',
+         },
+         context
+      );
 
-    expect(nodes).toMatchSnapshot();
-  });
+      expect(nodes).toMatchSnapshot();
+   });
 
-  function mockWebpackConfig(config: any) {
-    jest.mock(join(tempFs.tempDir, 'my-app/webpack.config.js'), () => config, {
-      virtual: true,
-    });
-  }
+   function mockWebpackConfig(config: any) {
+      jest.mock(
+         join(tempFs.tempDir, 'my-app/webpack.config.js'),
+         () => config,
+         {
+            virtual: true,
+         }
+      );
+   }
 });

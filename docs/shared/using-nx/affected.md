@@ -16,188 +16,188 @@ For instance, if my PR changes `lib10`, and we then run `nx affected -t test`, N
 
 ```json
 {
-  "projects": [
-    {
-      "type": "app",
-      "name": "app1",
-      "data": {}
-    },
-    {
-      "type": "app",
-      "name": "app2",
-      "data": {}
-    },
-    {
-      "type": "lib",
-      "name": "lib1",
-      "data": {}
-    },
-    {
-      "type": "lib",
-      "name": "lib2",
-      "data": {}
-    },
-    {
-      "type": "lib",
-      "name": "lib3",
-      "data": {}
-    },
-    {
-      "type": "lib",
-      "name": "lib4",
-      "data": {}
-    },
-    {
-      "type": "lib",
-      "name": "lib5",
-      "data": {}
-    },
-    {
-      "type": "lib",
-      "name": "lib6",
-      "data": {}
-    },
-    {
-      "type": "lib",
-      "name": "lib7",
-      "data": {}
-    },
-    {
-      "type": "lib",
-      "name": "lib8",
-      "data": {}
-    },
-    {
-      "type": "lib",
-      "name": "lib9",
-      "data": {}
-    },
-    {
-      "type": "lib",
-      "name": "lib10",
-      "data": {}
-    },
-    {
-      "type": "lib",
-      "name": "lib11",
-      "data": {}
-    },
-    {
-      "type": "lib",
-      "name": "lib12",
-      "data": {}
-    }
-  ],
-  "groupByFolder": false,
-  "workspaceLayout": {
-    "appsDir": "apps",
-    "libsDir": "libs"
-  },
-  "dependencies": {
-    "app1": [
+   "projects": [
       {
-        "target": "lib1",
-        "source": "app1",
-        "type": "direct"
+         "type": "app",
+         "name": "app1",
+         "data": {}
       },
       {
-        "target": "lib2",
-        "source": "app1",
-        "type": "direct"
-      }
-    ],
-    "app2": [
-      {
-        "target": "lib4",
-        "source": "app2",
-        "type": "direct"
+         "type": "app",
+         "name": "app2",
+         "data": {}
       },
       {
-        "target": "lib5",
-        "source": "app2",
-        "type": "direct"
+         "type": "lib",
+         "name": "lib1",
+         "data": {}
       },
       {
-        "target": "lib6",
-        "source": "app2",
-        "type": "direct"
-      }
-    ],
-    "lib1": [
-      {
-        "target": "lib7",
-        "source": "lib1",
-        "type": "direct"
+         "type": "lib",
+         "name": "lib2",
+         "data": {}
       },
       {
-        "target": "lib8",
-        "source": "lib1",
-        "type": "direct"
-      }
-    ],
-    "lib2": [
-      {
-        "target": "lib3",
-        "source": "lib2",
-        "type": "direct"
-      }
-    ],
-    "lib3": [
-      {
-        "target": "lib8",
-        "source": "lib3",
-        "type": "direct"
-      }
-    ],
-    "lib4": [
-      {
-        "target": "lib3",
-        "source": "lib4",
-        "type": "direct"
+         "type": "lib",
+         "name": "lib3",
+         "data": {}
       },
       {
-        "target": "lib9",
-        "source": "lib4",
-        "type": "direct"
+         "type": "lib",
+         "name": "lib4",
+         "data": {}
       },
       {
-        "target": "lib10",
-        "source": "lib4",
-        "type": "direct"
-      }
-    ],
-    "lib5": [
-      {
-        "target": "lib10",
-        "source": "lib5",
-        "type": "direct"
+         "type": "lib",
+         "name": "lib5",
+         "data": {}
       },
       {
-        "target": "lib11",
-        "source": "lib5",
-        "type": "direct"
+         "type": "lib",
+         "name": "lib6",
+         "data": {}
       },
       {
-        "target": "lib12",
-        "source": "lib5",
-        "type": "direct"
-      }
-    ],
-    "lib6": [
+         "type": "lib",
+         "name": "lib7",
+         "data": {}
+      },
       {
-        "target": "lib12",
-        "source": "lib6",
-        "type": "direct"
+         "type": "lib",
+         "name": "lib8",
+         "data": {}
+      },
+      {
+         "type": "lib",
+         "name": "lib9",
+         "data": {}
+      },
+      {
+         "type": "lib",
+         "name": "lib10",
+         "data": {}
+      },
+      {
+         "type": "lib",
+         "name": "lib11",
+         "data": {}
+      },
+      {
+         "type": "lib",
+         "name": "lib12",
+         "data": {}
       }
-    ],
-    "lib7": [],
-    "lib8": [],
-    "lib9": [],
-    "lib10": [],
-    "lib11": [],
-    "lib12": []
-  },
-  "affectedProjectIds": ["lib10", "lib4", "lib5", "app2"]
+   ],
+   "groupByFolder": false,
+   "workspaceLayout": {
+      "appsDir": "apps",
+      "libsDir": "libs"
+   },
+   "dependencies": {
+      "app1": [
+         {
+            "target": "lib1",
+            "source": "app1",
+            "type": "direct"
+         },
+         {
+            "target": "lib2",
+            "source": "app1",
+            "type": "direct"
+         }
+      ],
+      "app2": [
+         {
+            "target": "lib4",
+            "source": "app2",
+            "type": "direct"
+         },
+         {
+            "target": "lib5",
+            "source": "app2",
+            "type": "direct"
+         },
+         {
+            "target": "lib6",
+            "source": "app2",
+            "type": "direct"
+         }
+      ],
+      "lib1": [
+         {
+            "target": "lib7",
+            "source": "lib1",
+            "type": "direct"
+         },
+         {
+            "target": "lib8",
+            "source": "lib1",
+            "type": "direct"
+         }
+      ],
+      "lib2": [
+         {
+            "target": "lib3",
+            "source": "lib2",
+            "type": "direct"
+         }
+      ],
+      "lib3": [
+         {
+            "target": "lib8",
+            "source": "lib3",
+            "type": "direct"
+         }
+      ],
+      "lib4": [
+         {
+            "target": "lib3",
+            "source": "lib4",
+            "type": "direct"
+         },
+         {
+            "target": "lib9",
+            "source": "lib4",
+            "type": "direct"
+         },
+         {
+            "target": "lib10",
+            "source": "lib4",
+            "type": "direct"
+         }
+      ],
+      "lib5": [
+         {
+            "target": "lib10",
+            "source": "lib5",
+            "type": "direct"
+         },
+         {
+            "target": "lib11",
+            "source": "lib5",
+            "type": "direct"
+         },
+         {
+            "target": "lib12",
+            "source": "lib5",
+            "type": "direct"
+         }
+      ],
+      "lib6": [
+         {
+            "target": "lib12",
+            "source": "lib6",
+            "type": "direct"
+         }
+      ],
+      "lib7": [],
+      "lib8": [],
+      "lib9": [],
+      "lib10": [],
+      "lib11": [],
+      "lib12": []
+   },
+   "affectedProjectIds": ["lib10", "lib4", "lib5", "app2"]
 }
 ```
 
@@ -231,18 +231,18 @@ NX_HEAD=origin/main
 
 Typically, you want to set the base SHA not the most recent commit on the `main` branch, but rather that latest commit that successfully passed in CI. In other words, in order to be certain that the repo is in a good state, we need to check all the changes that have happened since the last time the repo was in a good state. Depending on your CI provider this might differ:
 
-- [Get last successful commit for Azure Pipelines](/ci/recipes/set-up/monorepo-ci-azure#get-the-commit-of-the-last-successful-build)
-- [Get last successful commit for GitHub Actions](/ci/recipes/set-up/monorepo-ci-github-actions#get-the-commit-of-the-last-successful-build)
-- [Get last successful commit for CircleCI](/ci/recipes/set-up/monorepo-ci-circle-ci#get-the-commit-of-the-last-successful-build)
-- [Get last successful commit for GitLab](/ci/recipes/set-up/monorepo-ci-gitlab)
-- [Get last successful commit for Jenkins](/ci/recipes/set-up/monorepo-ci-jenkins#get-the-commit-of-the-last-successful-build)
+-  [Get last successful commit for Azure Pipelines](/ci/recipes/set-up/monorepo-ci-azure#get-the-commit-of-the-last-successful-build)
+-  [Get last successful commit for GitHub Actions](/ci/recipes/set-up/monorepo-ci-github-actions#get-the-commit-of-the-last-successful-build)
+-  [Get last successful commit for CircleCI](/ci/recipes/set-up/monorepo-ci-circle-ci#get-the-commit-of-the-last-successful-build)
+-  [Get last successful commit for GitLab](/ci/recipes/set-up/monorepo-ci-gitlab)
+-  [Get last successful commit for Jenkins](/ci/recipes/set-up/monorepo-ci-jenkins#get-the-commit-of-the-last-successful-build)
 
 ## Ignoring Files from Affected Commands
 
 Nx provides two methods to exclude glob patterns (files and folders) from `affected:*` commands.
 
-- Glob patterns defined in your `.gitignore` file are ignored.
-- Glob patterns defined in an optional `.nxignore` file are ignored.
+-  Glob patterns defined in your `.gitignore` file are ignored.
+-  Glob patterns defined in an optional `.nxignore` file are ignored.
 
 ## Not Using Git
 

@@ -5,37 +5,37 @@ Below is an example of a GitHub Actions setup, building, and testing only what i
 ```yaml {% fileName=".github/workflows/ci.yml" %}
 name: CI
 on:
-  push:
-    branches:
-      # Change this if your primary branch is not main
-      - main
-  pull_request:
+   push:
+      branches:
+         # Change this if your primary branch is not main
+         - main
+   pull_request:
 
 # Needed for nx-set-shas when run on the main branch
 permissions:
-  actions: read
-  contents: read
+   actions: read
+   contents: read
 
 jobs:
-  main:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 20
-          cache: 'npm'
-      # This line enables distribution
-      # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "e2e-ci" targets have been requested
-      # - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
-      - run: npm ci
+   main:
+      runs-on: ubuntu-latest
+      steps:
+         - uses: actions/checkout@v4
+           with:
+              fetch-depth: 0
+         - uses: actions/setup-node@v3
+           with:
+              node-version: 20
+              cache: 'npm'
+         # This line enables distribution
+         # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "e2e-ci" targets have been requested
+         # - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
+         - run: npm ci
 
-      - uses: nrwl/nx-set-shas@v4
+         - uses: nrwl/nx-set-shas@v4
 
-      - run: npx nx-cloud record -- nx format:check
-      - run: npx nx affected -t lint test build e2e-ci
+         - run: npx nx-cloud record -- nx format:check
+         - run: npx nx affected -t lint test build e2e-ci
 ```
 
 ### Get the Commit of the Last Successful Build

@@ -1,117 +1,117 @@
 import type { ProjectType, Tree } from '@nx/devkit';
 import {
-  joinPathFragments,
-  normalizePath,
-  readJson,
-  readProjectConfiguration,
-  visitNotIgnoredFiles,
+   joinPathFragments,
+   normalizePath,
+   readJson,
+   readProjectConfiguration,
+   visitNotIgnoredFiles,
 } from '@nx/devkit';
 import { basename, dirname } from 'path';
 
 export type EntryPoint = { name: string; path: string; excludeDirs?: string[] };
 
 export function getProjectEntryPoints(
-  tree: Tree,
-  projectName: string
+   tree: Tree,
+   projectName: string
 ): EntryPoint[] {
-  const { root, sourceRoot, projectType } = readProjectConfiguration(
-    tree,
-    projectName
-  );
-
-  const rootEntryPoint: EntryPoint = {
-    name: '',
-    path: normalizeMainEntryPointSourceRoot(
+   const { root, sourceRoot, projectType } = readProjectConfiguration(
       tree,
-      root,
-      sourceRoot,
-      projectType
-    ),
-  };
-  const entryPointRootPaths = [rootEntryPoint];
+      projectName
+   );
 
-  if (projectType === 'application') {
-    return entryPointRootPaths;
-  }
+   const rootEntryPoint: EntryPoint = {
+      name: '',
+      path: normalizeMainEntryPointSourceRoot(
+         tree,
+         root,
+         sourceRoot,
+         projectType
+      ),
+   };
+   const entryPointRootPaths = [rootEntryPoint];
 
-  collectLibrarySecondaryEntryPoints(tree, root, entryPointRootPaths);
+   if (projectType === 'application') {
+      return entryPointRootPaths;
+   }
 
-  // since the root includes some secondary entry points, we need to ignore
-  // them when processing the main entry point
-  if (rootEntryPoint.path === root && entryPointRootPaths.length > 1) {
-    rootEntryPoint.excludeDirs = entryPointRootPaths
-      .slice(1)
-      .map((entryPoint) => entryPoint.path);
-  }
+   collectLibrarySecondaryEntryPoints(tree, root, entryPointRootPaths);
 
-  return entryPointRootPaths;
+   // since the root includes some secondary entry points, we need to ignore
+   // them when processing the main entry point
+   if (rootEntryPoint.path === root && entryPointRootPaths.length > 1) {
+      rootEntryPoint.excludeDirs = entryPointRootPaths
+         .slice(1)
+         .map((entryPoint) => entryPoint.path);
+   }
+
+   return entryPointRootPaths;
 }
 
 function collectLibrarySecondaryEntryPoints(
-  tree: Tree,
-  root: string,
-  entryPointPaths: EntryPoint[]
+   tree: Tree,
+   root: string,
+   entryPointPaths: EntryPoint[]
 ): void {
-  const exclude = new Set([`${root}/ng-package.json`, `${root}/package.json`]);
+   const exclude = new Set([`${root}/ng-package.json`, `${root}/package.json`]);
 
-  visitNotIgnoredFiles(tree, root, (path) => {
-    const normalizedPath = normalizePath(path);
+   visitNotIgnoredFiles(tree, root, (path) => {
+      const normalizedPath = normalizePath(path);
 
-    if (!tree.isFile(normalizedPath) || exclude.has(normalizedPath)) {
-      return;
-    }
+      if (!tree.isFile(normalizedPath) || exclude.has(normalizedPath)) {
+         return;
+      }
 
-    const fileName = basename(normalizedPath);
-    if (
-      fileName !== 'ng-package.json' &&
-      (fileName !== 'package.json' ||
-        (fileName === 'package.json' &&
-          !readJson(tree, normalizedPath).ngPackage))
-    ) {
-      return;
-    }
+      const fileName = basename(normalizedPath);
+      if (
+         fileName !== 'ng-package.json' &&
+         (fileName !== 'package.json' ||
+            (fileName === 'package.json' &&
+               !readJson(tree, normalizedPath).ngPackage))
+      ) {
+         return;
+      }
 
-    const entryPointPath = getSourcePath(
-      tree,
-      normalizePath(dirname(normalizedPath)),
-      'lib'
-    );
+      const entryPointPath = getSourcePath(
+         tree,
+         normalizePath(dirname(normalizedPath)),
+         'lib'
+      );
 
-    entryPointPaths.push({
-      name: basename(dirname(normalizedPath)),
-      path: entryPointPath,
-    });
-  });
+      entryPointPaths.push({
+         name: basename(dirname(normalizedPath)),
+         path: entryPointPath,
+      });
+   });
 }
 
 function normalizeMainEntryPointSourceRoot(
-  tree: Tree,
-  root: string,
-  sourceRoot: string,
-  projectType: ProjectType
+   tree: Tree,
+   root: string,
+   sourceRoot: string,
+   projectType: ProjectType
 ): string {
-  const projectTypeDir = projectType === 'application' ? 'app' : 'lib';
+   const projectTypeDir = projectType === 'application' ? 'app' : 'lib';
 
-  if (sourceRoot) {
-    return [joinPathFragments(sourceRoot, projectTypeDir), sourceRoot].find(
-      (path) => tree.exists(path)
-    );
-  }
+   if (sourceRoot) {
+      return [joinPathFragments(sourceRoot, projectTypeDir), sourceRoot].find(
+         (path) => tree.exists(path)
+      );
+   }
 
-  return getSourcePath(tree, root, projectTypeDir) ?? root;
+   return getSourcePath(tree, root, projectTypeDir) ?? root;
 }
 
 function getSourcePath(
-  tree: Tree,
-  basePath: string,
-  projectTypeDir: string
+   tree: Tree,
+   basePath: string,
+   projectTypeDir: string
 ): string | undefined {
-  const candidatePaths = [
-    joinPathFragments(basePath, 'src', projectTypeDir),
-    joinPathFragments(basePath, 'src'),
-    joinPathFragments(basePath, projectTypeDir),
-    basePath,
-  ];
+   const candidatePaths = [
+      joinPathFragments(basePath, 'src', projectTypeDir),
+      joinPathFragments(basePath, 'src'),
+      joinPathFragments(basePath, projectTypeDir),
+      basePath,
+   ];
 
-  return candidatePaths.find((candidatePath) => tree.exists(candidatePath));
+   return candidatePaths.find((candidatePath) => tree.exists(candidatePath));
 }

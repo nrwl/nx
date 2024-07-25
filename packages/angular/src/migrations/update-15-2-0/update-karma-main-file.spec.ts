@@ -6,36 +6,36 @@ import { Builders } from '@schematics/angular/utility/workspace-models';
 import updateKarmaMainFile from './update-karma-main-file';
 
 describe(`Migration to karma builder main file (test.ts)`, () => {
-  let tree: Tree;
-  beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
-    jest
-      .spyOn(devkit, 'formatFiles')
-      .mockImplementation(() => Promise.resolve());
-    addProjectConfiguration(tree, 'app', {
-      root: '',
-      sourceRoot: 'src',
-      projectType: 'application',
-      targets: {
-        test: {
-          executor: Builders.Karma,
-          options: {
-            main: 'test.ts',
-            karmaConfig: './karma.config.js',
-            tsConfig: 'test-spec.json',
-          },
-          configurations: {
-            production: {
-              main: 'test-multiple-context.ts',
+   let tree: Tree;
+   beforeEach(() => {
+      tree = createTreeWithEmptyWorkspace();
+      jest
+         .spyOn(devkit, 'formatFiles')
+         .mockImplementation(() => Promise.resolve());
+      addProjectConfiguration(tree, 'app', {
+         root: '',
+         sourceRoot: 'src',
+         projectType: 'application',
+         targets: {
+            test: {
+               executor: Builders.Karma,
+               options: {
+                  main: 'test.ts',
+                  karmaConfig: './karma.config.js',
+                  tsConfig: 'test-spec.json',
+               },
+               configurations: {
+                  production: {
+                     main: 'test-multiple-context.ts',
+                  },
+               },
             },
-          },
-        },
-      },
-    });
+         },
+      });
 
-    tree.write(
-      'test.ts',
-      stripIndents`
+      tree.write(
+         'test.ts',
+         stripIndents`
   import { getTestBed } from '@angular/core/testing';
   import {
     BrowserDynamicTestingModule,
@@ -57,11 +57,11 @@ describe(`Migration to karma builder main file (test.ts)`, () => {
   // And load the modules.
   context.keys().map(context);
   `
-    );
+      );
 
-    tree.write(
-      'test-multiple-context.ts',
-      stripIndents`
+      tree.write(
+         'test-multiple-context.ts',
+         stripIndents`
   import { getTestBed } from '@angular/core/testing';
   import {
     BrowserDynamicTestingModule,
@@ -85,13 +85,13 @@ describe(`Migration to karma builder main file (test.ts)`, () => {
   context2.keys().forEach(context2);
   context1.keys().map(context1);
   `
-    );
-  });
+      );
+   });
 
-  it(`should remove 'declare const require' and 'require.context' usages`, async () => {
-    await updateKarmaMainFile(tree);
+   it(`should remove 'declare const require' and 'require.context' usages`, async () => {
+      await updateKarmaMainFile(tree);
 
-    expect(tree.read('test.ts', 'utf-8')).toMatchInlineSnapshot(`
+      expect(tree.read('test.ts', 'utf-8')).toMatchInlineSnapshot(`
       "import { getTestBed } from '@angular/core/testing';
       import {
       BrowserDynamicTestingModule,
@@ -103,14 +103,14 @@ describe(`Migration to karma builder main file (test.ts)`, () => {
       platformBrowserDynamicTesting(),
       );"
     `);
-    expect(devkit.formatFiles).toHaveBeenCalled();
-  });
+      expect(devkit.formatFiles).toHaveBeenCalled();
+   });
 
-  it(`should remove multiple 'require.context' usages`, async () => {
-    await updateKarmaMainFile(tree);
+   it(`should remove multiple 'require.context' usages`, async () => {
+      await updateKarmaMainFile(tree);
 
-    expect(tree.read('test-multiple-context.ts', 'utf-8'))
-      .toMatchInlineSnapshot(`
+      expect(tree.read('test-multiple-context.ts', 'utf-8'))
+         .toMatchInlineSnapshot(`
       "import { getTestBed } from '@angular/core/testing';
       import {
       BrowserDynamicTestingModule,
@@ -122,5 +122,5 @@ describe(`Migration to karma builder main file (test.ts)`, () => {
       platformBrowserDynamicTesting(),
       );"
     `);
-  });
+   });
 });

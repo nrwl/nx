@@ -13,11 +13,11 @@ title="Storybook can do...WHAT???" /%}
 
 You can read more about Storybook interaction tests in the following sections of the Storybook documentation:
 
-- [Storybook interaction tests for React](https://storybook.js.org/docs/react/writing-tests/interaction-testing)
-- [Storybook interaction tests for Angular](https://storybook.js.org/docs/angular/writing-tests/interaction-testing)
-- [Storybook interaction tests for Vue](https://storybook.js.org/docs/vue/writing-tests/interaction-testing)
-- [Storybook test runner](https://storybook.js.org/docs/react/writing-tests/test-runner)
-- [The `play` function](https://storybook.js.org/docs/react/writing-stories/play-function)
+-  [Storybook interaction tests for React](https://storybook.js.org/docs/react/writing-tests/interaction-testing)
+-  [Storybook interaction tests for Angular](https://storybook.js.org/docs/angular/writing-tests/interaction-testing)
+-  [Storybook interaction tests for Vue](https://storybook.js.org/docs/vue/writing-tests/interaction-testing)
+-  [Storybook test runner](https://storybook.js.org/docs/react/writing-tests/test-runner)
+-  [The `play` function](https://storybook.js.org/docs/react/writing-stories/play-function)
 
 {% callout type="warning" title="Set up Storybook in your workspace" %}
 You first need to set up Storybook for your Nx workspace, if you haven't already. You can read the [Storybook plugin overview guide](/nx-api/storybook) to get started.
@@ -62,10 +62,10 @@ nx g @nx/storybook:configuration project-name --interactionTests=true
 
 This command will:
 
-- [Set up Storybook for your project](/nx-api/storybook) - including the `@storybook/addon-interactions` addon.
-- Add a `play` function to your stories.
-- Install the necessary dependencies.
-- [Infer the task](/concepts/inferred-tasks) `test-storybook` for the project, which has a command to invoke the Storybook test runner.
+-  [Set up Storybook for your project](/nx-api/storybook) - including the `@storybook/addon-interactions` addon.
+-  Add a `play` function to your stories.
+-  Install the necessary dependencies.
+-  [Infer the task](/concepts/inferred-tasks) `test-storybook` for the project, which has a command to invoke the Storybook test runner.
 
 {% callout type="note" title="Using explicit tasks" %}
 If you're on an Nx version lower than 18 or have opted out of using inferred tasks, the `test-storybook` target will be explicitly defined in the project's `project.json` file.
@@ -82,17 +82,17 @@ Let's take an example of a simple React component for a button:
 import React, { useState } from 'react';
 
 export function Button() {
-  const [count, setCount] = useState(0);
+   const [count, setCount] = useState(0);
 
-  const handleClick = () => {
-    setCount(count + 1);
-  };
+   const handleClick = () => {
+      setCount(count + 1);
+   };
 
-  return (
-    <button role="button" onClick={handleClick}>
-      You've clicked me {count} times
-    </button>
-  );
+   return (
+      <button role="button" onClick={handleClick}>
+         You've clicked me {count} times
+      </button>
+   );
 }
 
 export default Button;
@@ -102,18 +102,18 @@ In your `.stories.ts` file for that component, you can use the `play` function t
 
 ```typescript
 export const ButtonClicked: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    const button = canvas.getByRole('button');
-    await userEvent.click(button);
-    expect(canvas.getByRole('button').innerText).toBe(
-      "You've clicked me 1 times"
-    );
-    await userEvent.click(button);
-    expect(canvas.getByRole('button').innerText).toBe(
-      "You've clicked me 2 times"
-    );
-  },
+   play: async ({ canvasElement }) => {
+      const canvas = within(canvasElement);
+      const button = canvas.getByRole('button');
+      await userEvent.click(button);
+      expect(canvas.getByRole('button').innerText).toBe(
+         "You've clicked me 1 times"
+      );
+      await userEvent.click(button);
+      expect(canvas.getByRole('button').innerText).toBe(
+         "You've clicked me 2 times"
+      );
+   },
 };
 ```
 
@@ -143,12 +143,12 @@ However, with the introduction of Storybook Interaction Tests, this approach can
 
 Choosing to promote Storybook Interaction Tests over the previous Cypress e2e setup was not a decision made lightly. Here's why we believe it's a beneficial shift:
 
-- **Unified Workflow:** Interaction tests allow developers to keep their focus on one tool. Instead of juggling between Storybook and a separate e2e project, everything is integrated. This means quicker iterations and a simplified dev experience.
+-  **Unified Workflow:** Interaction tests allow developers to keep their focus on one tool. Instead of juggling between Storybook and a separate e2e project, everything is integrated. This means quicker iterations and a simplified dev experience.
 
-- **Leaner Project Structure:** Avoiding the need to generate a separate e2e project means fewer files, less configuration, and a more straightforward project structure. This can make onboarding new developers or navigating the codebase simpler.
+-  **Leaner Project Structure:** Avoiding the need to generate a separate e2e project means fewer files, less configuration, and a more straightforward project structure. This can make onboarding new developers or navigating the codebase simpler.
 
-- **Optimized Performance:** Interaction tests are lightweight and quick to execute compared to traditional e2e tests. They run directly in the context of the component story, ensuring that tests are precise and fast.
+-  **Optimized Performance:** Interaction tests are lightweight and quick to execute compared to traditional e2e tests. They run directly in the context of the component story, ensuring that tests are precise and fast.
 
-- **Consistency:** Keeping the stories and their associated tests together ensures a tighter bond between what's developed and what's tested. It reduces the chances of tests becoming outdated or misaligned with the component's actual behavior.
+-  **Consistency:** Keeping the stories and their associated tests together ensures a tighter bond between what's developed and what's tested. It reduces the chances of tests becoming outdated or misaligned with the component's actual behavior.
 
 Because of these benefits, it made sense for our Storybook configuration generator to switch from the Cypress e2e + Storybook combination to the integrated approach of Storybook Interaction Tests. By integrating e2e-like tests into the existing Storybook setup, we offer developers a smoother, more efficient, and simpler setup and testing experience.

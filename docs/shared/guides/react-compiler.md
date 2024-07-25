@@ -8,16 +8,16 @@ For Nx projects using Babel and the `@nx/react/babel` preset, install the `babel
 
 ```json {% highlightLines=[7] %}
 {
-  "presets": [
-    [
-      "@nx/react/babel",
-      {
-        "runtime": "automatic",
-        "reactCompiler": true
-      }
-    ]
-  ],
-  "plugins": []
+   "presets": [
+      [
+         "@nx/react/babel",
+         {
+            "runtime": "automatic",
+            "reactCompiler": true
+         }
+      ]
+   ],
+   "plugins": []
 }
 ```
 
@@ -25,18 +25,18 @@ You can also pass an object to set compiler options.
 
 ```json {% highlightLines=["7-9"] %}
 {
-  "presets": [
-    [
-      "@nx/react/babel",
-      {
-        "runtime": "automatic",
-        "reactCompiler": {
-          "compilationMode": "annotation"
-        }
-      }
-    ]
-  ],
-  "plugins": []
+   "presets": [
+      [
+         "@nx/react/babel",
+         {
+            "runtime": "automatic",
+            "reactCompiler": {
+               "compilationMode": "annotation"
+            }
+         }
+      ]
+   ],
+   "plugins": []
 }
 ```
 

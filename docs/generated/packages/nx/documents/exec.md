@@ -5,8 +5,8 @@ description: 'Executes any command as if it was a target on the project'
 
 # exec
 
-- Executes any command as if it was a target on the project
-- Executes an arbitrary command in each package
+-  Executes any command as if it was a target on the project
+-  Executes an arbitrary command in each package
 
 ## Usage
 
@@ -14,11 +14,11 @@ In package.json, adding a script with `nx exec` will run the command as if it is
 
 ```json
 {
-  "name": "myorg",
-  "version": "0.0.1",
-  "scripts": {
-    "build": "nx exec -- <command> [..args]"
-  }
+   "name": "myorg",
+   "version": "0.0.1",
+   "scripts": {
+      "build": "nx exec -- <command> [..args]"
+   }
 }
 ```
 

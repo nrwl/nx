@@ -1,27 +1,27 @@
 import { Tree, readNxJson, updateNxJson } from '@nx/devkit';
 
 export function addPlugin(tree: Tree) {
-  const nxJson = readNxJson(tree);
-  nxJson.plugins ??= [];
+   const nxJson = readNxJson(tree);
+   nxJson.plugins ??= [];
 
-  for (const plugin of nxJson.plugins) {
-    if (
-      typeof plugin === 'string'
-        ? plugin === '@nx/next/plugin'
-        : plugin.plugin === '@nx/next/plugin'
-    ) {
-      return;
-    }
-  }
+   for (const plugin of nxJson.plugins) {
+      if (
+         typeof plugin === 'string'
+            ? plugin === '@nx/next/plugin'
+            : plugin.plugin === '@nx/next/plugin'
+      ) {
+         return;
+      }
+   }
 
-  nxJson.plugins.push({
-    plugin: '@nx/next/plugin',
-    options: {
-      buildTargetName: 'build',
-      serveTargetName: 'serve',
-      exportTargetName: 'export',
-    },
-  });
+   nxJson.plugins.push({
+      plugin: '@nx/next/plugin',
+      options: {
+         buildTargetName: 'build',
+         serveTargetName: 'serve',
+         exportTargetName: 'export',
+      },
+   });
 
-  updateNxJson(tree, nxJson);
+   updateNxJson(tree, nxJson);
 }

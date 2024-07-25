@@ -6,17 +6,17 @@ Project configuration
 
 ### Properties
 
-- [generators](../../devkit/documents/ProjectConfiguration#generators): Object
-- [implicitDependencies](../../devkit/documents/ProjectConfiguration#implicitdependencies): string[]
-- [metadata](../../devkit/documents/ProjectConfiguration#metadata): ProjectMetadata
-- [name](../../devkit/documents/ProjectConfiguration#name): string
-- [namedInputs](../../devkit/documents/ProjectConfiguration#namedinputs): Object
-- [projectType](../../devkit/documents/ProjectConfiguration#projecttype): ProjectType
-- [release](../../devkit/documents/ProjectConfiguration#release): Object
-- [root](../../devkit/documents/ProjectConfiguration#root): string
-- [sourceRoot](../../devkit/documents/ProjectConfiguration#sourceroot): string
-- [tags](../../devkit/documents/ProjectConfiguration#tags): string[]
-- [targets](../../devkit/documents/ProjectConfiguration#targets): Object
+-  [generators](../../devkit/documents/ProjectConfiguration#generators): Object
+-  [implicitDependencies](../../devkit/documents/ProjectConfiguration#implicitdependencies): string[]
+-  [metadata](../../devkit/documents/ProjectConfiguration#metadata): ProjectMetadata
+-  [name](../../devkit/documents/ProjectConfiguration#name): string
+-  [namedInputs](../../devkit/documents/ProjectConfiguration#namedinputs): Object
+-  [projectType](../../devkit/documents/ProjectConfiguration#projecttype): ProjectType
+-  [release](../../devkit/documents/ProjectConfiguration#release): Object
+-  [root](../../devkit/documents/ProjectConfiguration#root): string
+-  [sourceRoot](../../devkit/documents/ProjectConfiguration#sourceroot): string
+-  [tags](../../devkit/documents/ProjectConfiguration#tags): string[]
+-  [targets](../../devkit/documents/ProjectConfiguration#targets): Object
 
 ## Properties
 

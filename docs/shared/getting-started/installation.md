@@ -50,8 +50,8 @@ Node:          Configures a Node API application with your framework of choice.
 
 Once you've created your workspace, you can
 
-- run single tasks with `npx nx <target> <project>`
-- run multiple tasks with `npx nx run-many -t <target1> <target2>`
+-  run single tasks with `npx nx <target> <project>`
+-  run multiple tasks with `npx nx run-many -t <target1> <target2>`
 
 Run `npx nx run-many -t build` twice to see how Nx's powerful caching speeds up your build.
 
@@ -136,16 +136,16 @@ To avoid potential issues, it is [recommended to update one major version of Nx 
 
 Try one of these tutorials for a full walkthrough of what to do after you install Nx
 
-- [NPM Workspaces Tutorial](/getting-started/tutorials/npm-workspaces-tutorial)
-- [Single React App Tutorial](/getting-started/tutorials/react-standalone-tutorial)
-- [Single Angular App Tutorial](/getting-started/tutorials/angular-standalone-tutorial)
-- [Single Vue App Tutorial](/getting-started/tutorials/vue-standalone-tutorial)
-- [React Monorepo Tutorial](/getting-started/tutorials/react-standalone-tutorial)
-- [Angular Monorepo Tutorial](/getting-started/tutorials/angular-standalone-tutorial)
+-  [NPM Workspaces Tutorial](/getting-started/tutorials/npm-workspaces-tutorial)
+-  [Single React App Tutorial](/getting-started/tutorials/react-standalone-tutorial)
+-  [Single Angular App Tutorial](/getting-started/tutorials/angular-standalone-tutorial)
+-  [Single Vue App Tutorial](/getting-started/tutorials/vue-standalone-tutorial)
+-  [React Monorepo Tutorial](/getting-started/tutorials/react-standalone-tutorial)
+-  [Angular Monorepo Tutorial](/getting-started/tutorials/angular-standalone-tutorial)
 
 ## More Documentation
 
-- [Add Nx to an Existing Repository](/recipes/adopting-nx)
-- [Update Nx](/features/automate-updating-dependencies)
-- [Update Your Global Nx Installation](/recipes/installation/update-global-installation)
-- [Install Nx in a Non-Javascript Repo](/recipes/installation/install-non-javascript)
+-  [Add Nx to an Existing Repository](/recipes/adopting-nx)
+-  [Update Nx](/features/automate-updating-dependencies)
+-  [Update Your Global Nx Installation](/recipes/installation/update-global-installation)
+-  [Install Nx in a Non-Javascript Repo](/recipes/installation/install-non-javascript)

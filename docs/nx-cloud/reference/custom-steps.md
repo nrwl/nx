@@ -11,8 +11,8 @@ To create a custom step, follow these steps:
 {% callout type="note" title="Custom step file location" %}
 Custom steps do not need to be in the `.nx/workflows` directory. However, they must be available on a public GitHub repository. You have a few options for organizing your custom steps:
 
-- **Same Repository as your Nx Workspace**: Ideal for open-source projects where the Nx workspace is publicly accessible.
-- **Create a Dedicated Repository**: Create a separate repository to store a collection of custom steps. This is useful for sharing steps across multiple projects or teams, or if your main Nx workspace is not on GitHub or is private.
+-  **Same Repository as your Nx Workspace**: Ideal for open-source projects where the Nx workspace is publicly accessible.
+-  **Create a Dedicated Repository**: Create a separate repository to store a collection of custom steps. This is useful for sharing steps across multiple projects or teams, or if your main Nx workspace is not on GitHub or is private.
 
 {% /callout %}
 
@@ -22,44 +22,44 @@ Custom steps do not need to be in the `.nx/workflows` directory. However, they m
 name: 'Custom Step'
 description: 'This is a custom step that does XYZ.'
 definition:
-  using: 'node'
-  main: './scripts/custom-script.js'
-  post: './scripts/post-custom-script.js'
+   using: 'node'
+   main: './scripts/custom-script.js'
+   post: './scripts/post-custom-script.js'
 inputs:
-  - name: 'input1'
-    description: 'Description for input1'
-    default: 'default_value'
-    required: true
-  - name: 'input2'
-    description: 'Description for input2'
-    required: false
+   - name: 'input1'
+     description: 'Description for input1'
+     default: 'default_value'
+     required: true
+   - name: 'input2'
+     description: 'Description for input2'
+     required: false
 ```
 
 ### Explanation of Fields
 
-- **name**:
+-  **name**:
 
-  - The name of the custom step.
+   -  The name of the custom step.
 
-- **description**:
+-  **description**:
 
-  - A description of what the custom step does.
+   -  A description of what the custom step does.
 
-- **definition**:
+-  **definition**:
 
-  - **using**: The runtime environment. Supported values are `node` and `aggregate`.
-    - **node**: If `using` is set to `node`, then only `main` and `post` can be used.
-    - **aggregate**: If `using` is set to `aggregate`, then only `steps` can be used.
-  - **main**: Path to the main script to run (only if `using` is `node`).
-  - **post**: Path to the post script to run (only if `using` is `node`).
-    - runs before the agent is cleaned up
-  - **steps**: A list of sub-steps to be executed (only if `using` is `aggregate`). Steps follow the same definition as [launch templates](/ci/reference/launch-templates#launch-template-structure).
+   -  **using**: The runtime environment. Supported values are `node` and `aggregate`.
+      -  **node**: If `using` is set to `node`, then only `main` and `post` can be used.
+      -  **aggregate**: If `using` is set to `aggregate`, then only `steps` can be used.
+   -  **main**: Path to the main script to run (only if `using` is `node`).
+   -  **post**: Path to the post script to run (only if `using` is `node`).
+      -  runs before the agent is cleaned up
+   -  **steps**: A list of sub-steps to be executed (only if `using` is `aggregate`). Steps follow the same definition as [launch templates](/ci/reference/launch-templates#launch-template-structure).
 
-- **inputs**:
-  - **name**: The name of the input.
-  - **description**: A description of the input.
-  - **default**: Default value for the input.
-  - **required**: Whether the input is required.
+-  **inputs**:
+   -  **name**: The name of the input.
+   -  **description**: A description of the input.
+   -  **default**: Default value for the input.
+   -  **required**: Whether the input is required.
 
 ### Using Inputs in Scripts
 
@@ -80,17 +80,17 @@ When specifying the location for the custom step, you must include a branch or t
 
 ```yaml {% fileName=".nx/workflows/agents.yaml" %}
 launch-templates:
-  custom-template:
-    resource-class: 'docker_linux_amd64/medium'
-    image: 'ubuntu22.04-node20.11-v7'
-    init-steps:
-      - name: Custom Step
-        uses: 'your-org/your-repo/main/.nx/workflows/custom-steps.yaml'
-        env:
-          CUSTOM_VAR: 'custom_value'
-        inputs:
-          input1: 'value1'
-          input2: 'value2'
+   custom-template:
+      resource-class: 'docker_linux_amd64/medium'
+      image: 'ubuntu22.04-node20.11-v7'
+      init-steps:
+         - name: Custom Step
+           uses: 'your-org/your-repo/main/.nx/workflows/custom-steps.yaml'
+           env:
+              CUSTOM_VAR: 'custom_value'
+           inputs:
+              input1: 'value1'
+              input2: 'value2'
 ```
 
 {% callout type="note" title="Recommendation on Using Inputs vs. Env" %}

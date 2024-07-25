@@ -1,8 +1,8 @@
 {
-  "name": "nx-dev-ui-primitives",
-  "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "nx-dev/ui-primitives/src",
-  "projectType": "library",
-  "tags": [],
-  "targets": {}
+   "name": "nx-dev-ui-primitives",
+   "$schema": "../../node_modules/nx/schemas/project-schema.json",
+   "sourceRoot": "nx-dev/ui-primitives/src",
+   "projectType": "library",
+   "tags": [],
+   "targets": {}
 }

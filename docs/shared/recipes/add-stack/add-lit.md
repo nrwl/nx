@@ -74,15 +74,15 @@ import { customElement, property } from 'lit/decorators.js';
 
 @customElement('my-element')
 export class MyElement extends LitElement {
-  @property()
-  version = 'STARTING';
+   @property()
+   version = 'STARTING';
 
-  render() {
-    return html`
-      <p>Welcome to the Lit tutorial!</p>
-      <p>This is the ${this.version} code.</p>
-    `;
-  }
+   render() {
+      return html`
+         <p>Welcome to the Lit tutorial!</p>
+         <p>This is the ${this.version} code.</p>
+      `;
+   }
 }
 ```
 
@@ -91,19 +91,19 @@ Create `index.html`:
 ```html {% fileName="apps/my-lit-app/index.html" %}
 <!DOCTYPE html>
 <html>
-  <head>
-    <script type="module" src="main.js"></script>
-    <style>
-      body {
-        font-family: 'Open Sans', sans-serif;
-        font-size: 1.5em;
-        padding-left: 0.5em;
-      }
-    </style>
-  </head>
-  <body>
-    <my-element></my-element>
-  </body>
+   <head>
+      <script type="module" src="main.js"></script>
+      <style>
+         body {
+            font-family: 'Open Sans', sans-serif;
+            font-size: 1.5em;
+            padding-left: 0.5em;
+         }
+      </style>
+   </head>
+   <body>
+      <my-element></my-element>
+   </body>
 </html>
 ```
 
@@ -113,29 +113,32 @@ In the `project.json` file update the `options` under the `build` target. The pr
 
 ```json {% fileName="apps/my-lit-app/project.json" %}
 {
-  "targets": {
-    "build": {
-      "executor": "@nx/esbuild:esbuild",
-      "outputs": ["{options.outputPath}"],
-      "defaultConfiguration": "production",
-      "options": {
-        "outputPath": "dist/apps/my-lit-app",
-        "format": ["esm"],
-        "bundle": true,
-        "thirdParty": true,
-        "main": "apps/my-lit-app/src/main.ts",
-        "tsConfig": "apps/my-lit-app/tsconfig.app.json",
-        "assets": ["apps/my-lit-app/src/assets", "apps/my-lit-app/index.html"],
-        "generatePackageJson": true,
-        "esbuildOptions": {
-          "sourcemap": true,
-          "outExtension": {
-            ".js": ".js"
-          }
-        }
+   "targets": {
+      "build": {
+         "executor": "@nx/esbuild:esbuild",
+         "outputs": ["{options.outputPath}"],
+         "defaultConfiguration": "production",
+         "options": {
+            "outputPath": "dist/apps/my-lit-app",
+            "format": ["esm"],
+            "bundle": true,
+            "thirdParty": true,
+            "main": "apps/my-lit-app/src/main.ts",
+            "tsConfig": "apps/my-lit-app/tsconfig.app.json",
+            "assets": [
+               "apps/my-lit-app/src/assets",
+               "apps/my-lit-app/index.html"
+            ],
+            "generatePackageJson": true,
+            "esbuildOptions": {
+               "sourcemap": true,
+               "outExtension": {
+                  ".js": ".js"
+               }
+            }
+         }
       }
-    }
-  }
+   }
 }
 ```
 
@@ -151,18 +154,18 @@ To serve the app, we'll completely overwrite the existing `serve` task. Change i
 
 ```json {% fileName="apps/my-lit-app/project.json" %}
 {
-  "targets": {
-    "serve": {
-      "dependsOn": ["build"],
-      "executor": "nx:run-commands",
-      "options": {
-        "commands": [
-          "http-server dist/apps/my-lit-app",
-          "nx watch --projects=my-lit-app --includeDependentProjects -- nx build my-lit-app"
-        ]
+   "targets": {
+      "serve": {
+         "dependsOn": ["build"],
+         "executor": "nx:run-commands",
+         "options": {
+            "commands": [
+               "http-server dist/apps/my-lit-app",
+               "nx watch --projects=my-lit-app --includeDependentProjects -- nx build my-lit-app"
+            ]
+         }
       }
-    }
-  }
+   }
 }
 ```
 
@@ -190,7 +193,7 @@ Once the library is created, update the following files.
 
 ```typescript {% fileName="libs/my-lib/src/lib/my-lib.ts" %}
 export function someFunction(): string {
-  return 'some function';
+   return 'some function';
 }
 ```
 
@@ -201,16 +204,16 @@ import { someFunction } from '@my-org/my-lib';
 
 @customElement('my-element')
 export class MyElement extends LitElement {
-  @property()
-  version = 'STARTING';
+   @property()
+   version = 'STARTING';
 
-  render() {
-    return html`
-      <p>Welcome to the Lit tutorial!</p>
-      <p>This is the ${this.version} code.</p>
-      <p>Imported from a library: ${someFunction()}.</p>
-    `;
-  }
+   render() {
+      return html`
+         <p>Welcome to the Lit tutorial!</p>
+         <p>This is the ${this.version} code.</p>
+         <p>Imported from a library: ${someFunction()}.</p>
+      `;
+   }
 }
 ```
 
@@ -218,6 +221,6 @@ Now when you serve your application, you'll see the content from the library bei
 
 ## More Documentation
 
-- [@nx/esbuild](/nx-api/esbuild)
-- [@nx/js](/nx-api/js)
-- [Lit](https://lit.dev/)
+-  [@nx/esbuild](/nx-api/esbuild)
+-  [@nx/js](/nx-api/js)
+-  [Lit](https://lit.dev/)

@@ -2,10 +2,10 @@ import { TSESLint } from '@typescript-eslint/utils';
 import { rule, RULE_NAME } from './valid-schema-description';
 
 const ruleTester = new TSESLint.RuleTester({
-  parser: require.resolve('@typescript-eslint/parser'),
+   parser: require.resolve('@typescript-eslint/parser'),
 });
 
 ruleTester.run(RULE_NAME, rule, {
-  valid: [`const example = true;`],
-  invalid: [],
+   valid: [`const example = true;`],
+   invalid: [],
 });

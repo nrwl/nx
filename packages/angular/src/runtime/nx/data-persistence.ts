@@ -1,7 +1,7 @@
 import type { Type } from '@angular/core';
 import type {
-  ActivatedRouteSnapshot,
-  RouterStateSnapshot,
+   ActivatedRouteSnapshot,
+   RouterStateSnapshot,
 } from '@angular/router';
 import type { RouterNavigationAction } from '@ngrx/router-store';
 import { ROUTER_NAVIGATION } from '@ngrx/router-store';
@@ -9,48 +9,48 @@ import type { Action } from '@ngrx/store';
 import type { Observable } from 'rxjs';
 import { isObservable, of } from 'rxjs';
 import {
-  catchError,
-  concatMap,
-  filter,
-  groupBy,
-  map,
-  mergeMap,
-  switchMap,
+   catchError,
+   concatMap,
+   filter,
+   groupBy,
+   map,
+   mergeMap,
+   switchMap,
 } from 'rxjs/operators';
 
 export interface PessimisticUpdateOpts<T extends Array<unknown>, A> {
-  run(a: A, ...slices: [...T]): Observable<Action> | Action | void;
-  onError(a: A, e: any): Observable<any> | any;
+   run(a: A, ...slices: [...T]): Observable<Action> | Action | void;
+   onError(a: A, e: any): Observable<any> | any;
 }
 
 export interface OptimisticUpdateOpts<T extends Array<unknown>, A> {
-  run(a: A, ...slices: [...T]): Observable<Action> | Action | void;
-  undoAction(a: A, e: any): Observable<Action> | Action;
+   run(a: A, ...slices: [...T]): Observable<Action> | Action | void;
+   undoAction(a: A, e: any): Observable<Action> | Action;
 }
 
 export interface FetchOpts<T extends Array<unknown>, A> {
-  id?(a: A, ...slices: [...T]): any;
-  run(a: A, ...slices: [...T]): Observable<Action> | Action | void;
-  onError?(a: A, e: any): Observable<any> | any;
+   id?(a: A, ...slices: [...T]): any;
+   run(a: A, ...slices: [...T]): Observable<Action> | Action | void;
+   onError?(a: A, e: any): Observable<any> | any;
 }
 
 export interface HandleNavigationOpts<T extends Array<unknown>> {
-  run(
-    a: ActivatedRouteSnapshot,
-    ...slices: [...T]
-  ): Observable<Action> | Action | void;
-  onError?(a: ActivatedRouteSnapshot, e: any): Observable<any> | any;
+   run(
+      a: ActivatedRouteSnapshot,
+      ...slices: [...T]
+   ): Observable<Action> | Action | void;
+   onError?(a: ActivatedRouteSnapshot, e: any): Observable<any> | any;
 }
 
 export type ActionOrActionWithStates<T extends Array<unknown>, A> =
-  | A
-  | [A, ...T];
+   | A
+   | [A, ...T];
 export type ActionOrActionWithState<T, A> = ActionOrActionWithStates<[T], A>;
 export type ActionStatesStream<T extends Array<unknown>, A> = Observable<
-  ActionOrActionWithStates<T, A>
+   ActionOrActionWithStates<T, A>
 >;
 export type ActionStateStream<T, A> = Observable<
-  ActionOrActionWithStates<[T], A>
+   ActionOrActionWithStates<[T], A>
 >;
 
 /**
@@ -111,14 +111,14 @@ export type ActionStateStream<T, A> = Observable<
  * @param opts
  */
 export function pessimisticUpdate<T extends Array<unknown>, A extends Action>(
-  opts: PessimisticUpdateOpts<T, A>
+   opts: PessimisticUpdateOpts<T, A>
 ) {
-  return (source: ActionStatesStream<T, A>): Observable<Action> => {
-    return source.pipe(
-      mapActionAndState(),
-      concatMap(runWithErrorHandling(opts.run, opts.onError))
-    );
-  };
+   return (source: ActionStatesStream<T, A>): Observable<Action> => {
+      return source.pipe(
+         mapActionAndState(),
+         concatMap(runWithErrorHandling(opts.run, opts.onError))
+      );
+   };
 }
 
 /**
@@ -180,14 +180,14 @@ export function pessimisticUpdate<T extends Array<unknown>, A extends Action>(
  * @param opts
  */
 export function optimisticUpdate<T extends Array<unknown>, A extends Action>(
-  opts: OptimisticUpdateOpts<T, A>
+   opts: OptimisticUpdateOpts<T, A>
 ) {
-  return (source: ActionStatesStream<T, A>): Observable<Action> => {
-    return source.pipe(
-      mapActionAndState(),
-      concatMap(runWithErrorHandling(opts.run, opts.undoAction))
-    );
-  };
+   return (source: ActionStatesStream<T, A>): Observable<Action> => {
+      return source.pipe(
+         mapActionAndState(),
+         concatMap(runWithErrorHandling(opts.run, opts.undoAction))
+      );
+   };
 }
 
 /**
@@ -269,29 +269,31 @@ export function optimisticUpdate<T extends Array<unknown>, A extends Action>(
  * @param opts
  */
 export function fetch<T extends Array<unknown>, A extends Action>(
-  opts: FetchOpts<T, A>
+   opts: FetchOpts<T, A>
 ) {
-  return (source: ActionStatesStream<T, A>): Observable<Action> => {
-    if (opts.id) {
-      const groupedFetches = source.pipe(
-        mapActionAndState(),
-        groupBy(([action, ...store]) => {
-          return opts.id(action, ...store);
-        })
-      );
+   return (source: ActionStatesStream<T, A>): Observable<Action> => {
+      if (opts.id) {
+         const groupedFetches = source.pipe(
+            mapActionAndState(),
+            groupBy(([action, ...store]) => {
+               return opts.id(action, ...store);
+            })
+         );
 
-      return groupedFetches.pipe(
-        mergeMap((pairs) =>
-          pairs.pipe(switchMap(runWithErrorHandling(opts.run, opts.onError)))
-        )
-      );
-    }
+         return groupedFetches.pipe(
+            mergeMap((pairs) =>
+               pairs.pipe(
+                  switchMap(runWithErrorHandling(opts.run, opts.onError))
+               )
+            )
+         );
+      }
 
-    return source.pipe(
-      mapActionAndState(),
-      concatMap(runWithErrorHandling(opts.run, opts.onError))
-    );
-  };
+      return source.pipe(
+         mapActionAndState(),
+         concatMap(runWithErrorHandling(opts.run, opts.onError))
+      );
+   };
 }
 
 /**
@@ -344,50 +346,52 @@ export function fetch<T extends Array<unknown>, A extends Action>(
  * @param opts
  */
 export function navigation<T extends Array<unknown>, A extends Action>(
-  component: Type<any>,
-  opts: HandleNavigationOpts<T>
+   component: Type<any>,
+   opts: HandleNavigationOpts<T>
 ) {
-  return (source: ActionStatesStream<T, A>) => {
-    const nav = source.pipe(
-      mapActionAndState(),
-      filter(([action]) => isStateSnapshot(action)),
-      map(([action, ...slices]) => {
-        if (!isStateSnapshot(action)) {
-          // Because of the above filter we'll never get here,
-          // but this properly type narrows `action`
-          return;
-        }
+   return (source: ActionStatesStream<T, A>) => {
+      const nav = source.pipe(
+         mapActionAndState(),
+         filter(([action]) => isStateSnapshot(action)),
+         map(([action, ...slices]) => {
+            if (!isStateSnapshot(action)) {
+               // Because of the above filter we'll never get here,
+               // but this properly type narrows `action`
+               return;
+            }
 
-        return [
-          findSnapshot(component, action.payload.routerState.root),
-          ...slices,
-        ] as [ActivatedRouteSnapshot, ...T];
-      }),
-      filter(([snapshot]) => !!snapshot)
-    );
+            return [
+               findSnapshot(component, action.payload.routerState.root),
+               ...slices,
+            ] as [ActivatedRouteSnapshot, ...T];
+         }),
+         filter(([snapshot]) => !!snapshot)
+      );
 
-    return nav.pipe(switchMap(runWithErrorHandling(opts.run, opts.onError)));
-  };
+      return nav.pipe(switchMap(runWithErrorHandling(opts.run, opts.onError)));
+   };
 }
 
 function isStateSnapshot(
-  action: any
+   action: any
 ): action is RouterNavigationAction<RouterStateSnapshot> {
-  return action.type === ROUTER_NAVIGATION;
+   return action.type === ROUTER_NAVIGATION;
 }
 
 function runWithErrorHandling<T extends Array<unknown>, A, R>(
-  run: (a: A, ...slices: [...T]) => Observable<R> | R | void,
-  onError: any
+   run: (a: A, ...slices: [...T]) => Observable<R> | R | void,
+   onError: any
 ) {
-  return ([action, ...slices]: [A, ...T]): Observable<R> => {
-    try {
-      const r = wrapIntoObservable(run(action, ...slices));
-      return r.pipe(catchError((e) => wrapIntoObservable(onError(action, e))));
-    } catch (e) {
-      return wrapIntoObservable(onError(action, e));
-    }
-  };
+   return ([action, ...slices]: [A, ...T]): Observable<R> => {
+      try {
+         const r = wrapIntoObservable(run(action, ...slices));
+         return r.pipe(
+            catchError((e) => wrapIntoObservable(onError(action, e)))
+         );
+      } catch (e) {
+         return wrapIntoObservable(onError(action, e));
+      }
+   };
 }
 
 /**
@@ -395,11 +399,11 @@ function runWithErrorHandling<T extends Array<unknown>, A, R>(
  * Observable<[Action, State]>
  */
 function mapActionAndState<T extends Array<unknown>, A>() {
-  return (source: Observable<ActionOrActionWithStates<T, A>>) => {
-    return source.pipe(
-      map((value) => normalizeActionAndState(value) as [A, ...T])
-    );
-  };
+   return (source: Observable<ActionOrActionWithStates<T, A>>) => {
+      return source.pipe(
+         map((value) => normalizeActionAndState(value) as [A, ...T])
+      );
+   };
 }
 
 /**
@@ -407,42 +411,42 @@ function mapActionAndState<T extends Array<unknown>, A>() {
  * into an array of action and slices (or undefined)
  */
 function normalizeActionAndState<T extends Array<unknown>, A>(
-  args: ActionOrActionWithStates<T, A>
+   args: ActionOrActionWithStates<T, A>
 ): [A, ...T] {
-  let action: A, slices: T;
+   let action: A, slices: T;
 
-  if (args instanceof Array) {
-    [action, ...slices] = args;
-  } else {
-    slices = [] as T;
-    action = args;
-  }
+   if (args instanceof Array) {
+      [action, ...slices] = args;
+   } else {
+      slices = [] as T;
+      action = args;
+   }
 
-  return [action, ...slices];
+   return [action, ...slices];
 }
 
 function findSnapshot(
-  component: Type<any>,
-  s: ActivatedRouteSnapshot
+   component: Type<any>,
+   s: ActivatedRouteSnapshot
 ): ActivatedRouteSnapshot {
-  if (s.routeConfig && s.routeConfig.component === component) {
-    return s;
-  }
-  for (const c of s.children) {
-    const ss = findSnapshot(component, c);
-    if (ss) {
-      return ss;
-    }
-  }
-  return null;
+   if (s.routeConfig && s.routeConfig.component === component) {
+      return s;
+   }
+   for (const c of s.children) {
+      const ss = findSnapshot(component, c);
+      if (ss) {
+         return ss;
+      }
+   }
+   return null;
 }
 
 function wrapIntoObservable<O>(obj: Observable<O> | O | void): Observable<O> {
-  if (isObservable(obj)) {
-    return obj;
-  } else if (!obj) {
-    return of();
-  } else {
-    return of(obj as O);
-  }
+   if (isObservable(obj)) {
+      return obj;
+   } else if (!obj) {
+      return of();
+   } else {
+      return of(obj as O);
+   }
 }

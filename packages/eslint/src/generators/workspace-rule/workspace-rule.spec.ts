@@ -5,57 +5,59 @@ import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { lintWorkspaceRuleGenerator } from './workspace-rule';
 
 describe('@nx/eslint:workspace-rule', () => {
-  let tree: Tree;
+   let tree: Tree;
 
-  beforeEach(async () => {
-    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-  });
+   beforeEach(async () => {
+      tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+   });
 
-  it('should generate the required files', async () => {
-    await lintWorkspaceRuleGenerator(tree, {
-      name: 'my-rule',
-      directory: 'rules',
-    });
+   it('should generate the required files', async () => {
+      await lintWorkspaceRuleGenerator(tree, {
+         name: 'my-rule',
+         directory: 'rules',
+      });
 
-    expect(
-      tree.read('tools/eslint-rules/rules/my-rule.ts', 'utf-8')
-    ).toMatchSnapshot();
+      expect(
+         tree.read('tools/eslint-rules/rules/my-rule.ts', 'utf-8')
+      ).toMatchSnapshot();
 
-    expect(
-      tree.read('tools/eslint-rules/rules/my-rule.spec.ts', 'utf-8')
-    ).toMatchSnapshot();
-  });
+      expect(
+         tree.read('tools/eslint-rules/rules/my-rule.spec.ts', 'utf-8')
+      ).toMatchSnapshot();
+   });
 
-  it('should update the plugin index.ts with the new rule', async () => {
-    await lintWorkspaceRuleGenerator(tree, {
-      name: 'my-rule',
-      directory: 'rules',
-    });
+   it('should update the plugin index.ts with the new rule', async () => {
+      await lintWorkspaceRuleGenerator(tree, {
+         name: 'my-rule',
+         directory: 'rules',
+      });
 
-    // NOTE: formatFiles() will have been run so the real formatting will look better than this snapshot
-    expect(tree.read('tools/eslint-rules/index.ts', 'utf-8')).toMatchSnapshot();
-  });
+      // NOTE: formatFiles() will have been run so the real formatting will look better than this snapshot
+      expect(
+         tree.read('tools/eslint-rules/index.ts', 'utf-8')
+      ).toMatchSnapshot();
+   });
 
-  it('should update the plugin index.ts with the new rule correctly, regardless of whether the existing rules config has a trailing comma', async () => {
-    // ------------------------------------------- NO EXISTING RULE
+   it('should update the plugin index.ts with the new rule correctly, regardless of whether the existing rules config has a trailing comma', async () => {
+      // ------------------------------------------- NO EXISTING RULE
 
-    tree.write(
-      'tools/eslint-rules/index.ts',
-      `
+      tree.write(
+         'tools/eslint-rules/index.ts',
+         `
       module.exports = {
         rules: {}
       };
     `
-    );
+      );
 
-    await lintWorkspaceRuleGenerator(tree, {
-      name: 'my-rule',
-      directory: 'rules',
-    });
+      await lintWorkspaceRuleGenerator(tree, {
+         name: 'my-rule',
+         directory: 'rules',
+      });
 
-    // NOTE: formatFiles() will have been run so the real formatting will look better than this snapshot
-    expect(tree.read('tools/eslint-rules/index.ts', 'utf-8'))
-      .toMatchInlineSnapshot(`
+      // NOTE: formatFiles() will have been run so the real formatting will look better than this snapshot
+      expect(tree.read('tools/eslint-rules/index.ts', 'utf-8'))
+         .toMatchInlineSnapshot(`
       "import { RULE_NAME as myRuleName, rule as myRule } from './rules/my-rule';
       /**
        * Import your custom workspace rules at the top of this file.
@@ -87,27 +89,27 @@ describe('@nx/eslint:workspace-rule', () => {
       "
     `);
 
-    // ------------------------------------------- EXISTING RULE, NO TRAILING COMMA
+      // ------------------------------------------- EXISTING RULE, NO TRAILING COMMA
 
-    tree.write(
-      'tools/eslint-rules/index.ts',
-      `
+      tree.write(
+         'tools/eslint-rules/index.ts',
+         `
       module.exports = {
         rules: {
           'existing-rule-no-comma': 'error'
         }
       };
     `
-    );
+      );
 
-    await lintWorkspaceRuleGenerator(tree, {
-      name: 'my-rule',
-      directory: 'rules',
-    });
+      await lintWorkspaceRuleGenerator(tree, {
+         name: 'my-rule',
+         directory: 'rules',
+      });
 
-    // NOTE: formatFiles() will have been run so the real formatting will look better than this snapshot
-    expect(tree.read('tools/eslint-rules/index.ts', 'utf-8'))
-      .toMatchInlineSnapshot(`
+      // NOTE: formatFiles() will have been run so the real formatting will look better than this snapshot
+      expect(tree.read('tools/eslint-rules/index.ts', 'utf-8'))
+         .toMatchInlineSnapshot(`
       "import { RULE_NAME as myRuleName, rule as myRule } from './rules/my-rule';
 
       module.exports = {
@@ -119,27 +121,27 @@ describe('@nx/eslint:workspace-rule', () => {
       "
     `);
 
-    // ------------------------------------------- EXISTING RULE, WITH TRAILING COMMA
+      // ------------------------------------------- EXISTING RULE, WITH TRAILING COMMA
 
-    tree.write(
-      'tools/eslint-rules/index.ts',
-      `
+      tree.write(
+         'tools/eslint-rules/index.ts',
+         `
       module.exports = {
         rules: {
           'existing-rule-with-comma': 'error',
         }
       };
     `
-    );
+      );
 
-    await lintWorkspaceRuleGenerator(tree, {
-      name: 'my-rule',
-      directory: 'rules',
-    });
+      await lintWorkspaceRuleGenerator(tree, {
+         name: 'my-rule',
+         directory: 'rules',
+      });
 
-    // NOTE: formatFiles() will have been run so the real formatting will look better than this snapshot
-    expect(tree.read('tools/eslint-rules/index.ts', 'utf-8'))
-      .toMatchInlineSnapshot(`
+      // NOTE: formatFiles() will have been run so the real formatting will look better than this snapshot
+      expect(tree.read('tools/eslint-rules/index.ts', 'utf-8'))
+         .toMatchInlineSnapshot(`
       "import { RULE_NAME as myRuleName, rule as myRule } from './rules/my-rule';
 
       module.exports = {
@@ -150,37 +152,40 @@ describe('@nx/eslint:workspace-rule', () => {
       };
       "
     `);
-  });
+   });
 
-  describe('--dir', () => {
-    it('should support creating the rule in a nested directory', async () => {
-      await lintWorkspaceRuleGenerator(tree, {
-        name: 'another-rule',
-        directory: 'some-dir',
+   describe('--dir', () => {
+      it('should support creating the rule in a nested directory', async () => {
+         await lintWorkspaceRuleGenerator(tree, {
+            name: 'another-rule',
+            directory: 'some-dir',
+         });
+
+         expect(
+            tree.read('tools/eslint-rules/some-dir/another-rule.ts', 'utf-8')
+         ).toMatchSnapshot();
+
+         expect(
+            tree.read(
+               'tools/eslint-rules/some-dir/another-rule.spec.ts',
+               'utf-8'
+            )
+         ).toMatchSnapshot();
       });
 
-      expect(
-        tree.read('tools/eslint-rules/some-dir/another-rule.ts', 'utf-8')
-      ).toMatchSnapshot();
+      it('should support creating the rule in a nested directory with multiple levels of nesting', async () => {
+         await lintWorkspaceRuleGenerator(tree, {
+            name: 'one-more-rule',
+            directory: 'a/b/c',
+         });
 
-      expect(
-        tree.read('tools/eslint-rules/some-dir/another-rule.spec.ts', 'utf-8')
-      ).toMatchSnapshot();
-    });
+         expect(
+            tree.read('tools/eslint-rules/a/b/c/one-more-rule.ts', 'utf-8')
+         ).toMatchSnapshot();
 
-    it('should support creating the rule in a nested directory with multiple levels of nesting', async () => {
-      await lintWorkspaceRuleGenerator(tree, {
-        name: 'one-more-rule',
-        directory: 'a/b/c',
+         expect(
+            tree.read('tools/eslint-rules/a/b/c/one-more-rule.spec.ts', 'utf-8')
+         ).toMatchSnapshot();
       });
-
-      expect(
-        tree.read('tools/eslint-rules/a/b/c/one-more-rule.ts', 'utf-8')
-      ).toMatchSnapshot();
-
-      expect(
-        tree.read('tools/eslint-rules/a/b/c/one-more-rule.spec.ts', 'utf-8')
-      ).toMatchSnapshot();
-    });
-  });
+   });
 });

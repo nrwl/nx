@@ -6,7 +6,7 @@ import { DeletedFileChange } from '../../file-utils';
 import { getTouchedProjectsFromProjectGlobChanges } from './project-glob-changes';
 
 describe('getTouchedProjectsFromProjectGlobChanges', () => {
-  it('empty', () => {});
+   it('empty', () => {});
 });
 
 // describe('getTouchedProjectsFromProjectGlobChanges', () => {

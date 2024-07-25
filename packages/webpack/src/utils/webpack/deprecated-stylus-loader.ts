@@ -3,8 +3,8 @@ import { logger } from '@nx/devkit';
 import * as stylusLoader from 'stylus-loader';
 // TOOD(v19): Remove this file and stylus support.
 export default function (source: string): string {
-  logger.warn(
-    `Stylus is support is deprecated and will be removed in Nx 20. We recommend that you migrate to Sass by renaming \`.styl\` files to \`.scss\` and ensuring that the content is valid Sass.`
-  );
-  return stylusLoader.call(this, source);
+   logger.warn(
+      `Stylus is support is deprecated and will be removed in Nx 20. We recommend that you migrate to Sass by renaming \`.styl\` files to \`.scss\` and ensuring that the content is valid Sass.`
+   );
+   return stylusLoader.call(this, source);
 }

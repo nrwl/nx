@@ -16,12 +16,12 @@ Keep all version numbers in the source package.json file and use semantic versio
 
 ```json
 {
-  "name": "my-package",
-  "version": "0.1.1",
-  "dependencies": {
-    "my-other-package": "^0.1.1",
-    "my-other-package-2": "1.2.0"
-  }
+   "name": "my-package",
+   "version": "0.1.1",
+   "dependencies": {
+      "my-other-package": "^0.1.1",
+      "my-other-package-2": "1.2.0"
+   }
 }
 ```
 
@@ -33,11 +33,11 @@ Keep all version numbers in the dist package.json file and use file or workspace
 
 ```json
 {
-  "name": "my-package",
-  "dependencies": {
-    "my-other-package": "file:../my-other-package",
-    "my-other-package-2": "workspace:*"
-  }
+   "name": "my-package",
+   "dependencies": {
+      "my-other-package": "file:../my-other-package",
+      "my-other-package-2": "workspace:*"
+   }
 }
 ```
 
@@ -45,12 +45,12 @@ and the dist package.json file, which will actually be published in the publish 
 
 ```json
 {
-  "name": "my-package",
-  "version": "0.1.1",
-  "dependencies": {
-    "my-other-package": "0.1.1",
-    "my-other-package-2": "1.2.0"
-  }
+   "name": "my-package",
+   "version": "0.1.1",
+   "dependencies": {
+      "my-other-package": "0.1.1",
+      "my-other-package-2": "1.2.0"
+   }
 }
 ```
 
@@ -60,20 +60,20 @@ Configure this behavior by adding the following configuration to the `nx.json` f
 
 ```jsonc {% fileName="nx.json" %}
 {
-  "release": {
-    "version": {
-      "generatorOptions": {
-        "packageRoot": "dist/packages/{projectName}", // path structure for your dist directory
-        "currentVersionResolver": "git-tag" // or "registry"
+   "release": {
+      "version": {
+         "generatorOptions": {
+            "packageRoot": "dist/packages/{projectName}", // path structure for your dist directory
+            "currentVersionResolver": "git-tag" // or "registry"
+         }
       }
-    }
-  },
-  "targetDefaults": {
-    "nx-release-publish": {
-      "options": {
-        "packageRoot": "dist/packages/{projectName}" // path structure for your dist directory
+   },
+   "targetDefaults": {
+      "nx-release-publish": {
+         "options": {
+            "packageRoot": "dist/packages/{projectName}" // path structure for your dist directory
+         }
       }
-    }
-  }
+   }
 }
 ```

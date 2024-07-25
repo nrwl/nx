@@ -1,5 +1,5 @@
 export interface ViteDevServerExecutorOptions {
-  buildTarget: string;
-  buildLibsFromSource?: boolean;
-  proxyConfig?: string;
+   buildTarget: string;
+   buildLibsFromSource?: boolean;
+   proxyConfig?: string;
 }

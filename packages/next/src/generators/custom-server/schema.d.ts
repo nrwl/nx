@@ -1,4 +1,4 @@
 export interface CustomServerSchema {
-  project: string;
-  compiler?: 'tsc' | 'swc';
+   project: string;
+   compiler?: 'tsc' | 'swc';
 }

@@ -1,8 +1,8 @@
 module.exports = {
-  plugins: {
-    tailwindcss: {
-      config: './graph/ui-theme/tailwind.config.js',
-    },
-    autoprefixer: {},
-  },
+   plugins: {
+      tailwindcss: {
+         config: './graph/ui-theme/tailwind.config.js',
+      },
+      autoprefixer: {},
+   },
 };

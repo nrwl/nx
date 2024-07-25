@@ -12,47 +12,47 @@ import { setupWorkspaceContext } from '../src/utils/workspace-context';
 import { logger } from '../src/utils/logger';
 
 (async () => {
-  const start = new Date();
-  try {
-    setupWorkspaceContext(workspaceRoot);
-    if (isMainNxPackage() && fileExists(join(workspaceRoot, 'nx.json'))) {
-      assertSupportedPlatform();
+   const start = new Date();
+   try {
+      setupWorkspaceContext(workspaceRoot);
+      if (isMainNxPackage() && fileExists(join(workspaceRoot, 'nx.json'))) {
+         assertSupportedPlatform();
 
-      try {
-        await daemonClient.stop();
-      } catch (e) {}
-      const tasks: Array<Promise<any>> = [
-        buildProjectGraphAndSourceMapsWithoutDaemon(),
-      ];
-      if (isNxCloudUsed(readNxJson())) {
-        tasks.push(verifyOrUpdateNxCloudClient(getCloudOptions()));
+         try {
+            await daemonClient.stop();
+         } catch (e) {}
+         const tasks: Array<Promise<any>> = [
+            buildProjectGraphAndSourceMapsWithoutDaemon(),
+         ];
+         if (isNxCloudUsed(readNxJson())) {
+            tasks.push(verifyOrUpdateNxCloudClient(getCloudOptions()));
+         }
+         await Promise.all(
+            tasks.map((promise) => {
+               return promise.catch((e) => {
+                  if (process.env.NX_VERBOSE_LOGGING === 'true') {
+                     console.warn(e);
+                  }
+               });
+            })
+         );
       }
-      await Promise.all(
-        tasks.map((promise) => {
-          return promise.catch((e) => {
-            if (process.env.NX_VERBOSE_LOGGING === 'true') {
-              console.warn(e);
-            }
-          });
-        })
+   } catch (e) {
+      logger.verbose(e);
+   } finally {
+      const end = new Date();
+      logger.verbose(
+         `Nx postinstall steps took ${end.getTime() - start.getTime()}ms`
       );
-    }
-  } catch (e) {
-    logger.verbose(e);
-  } finally {
-    const end = new Date();
-    logger.verbose(
-      `Nx postinstall steps took ${end.getTime() - start.getTime()}ms`
-    );
 
-    process.exit(0);
-  }
+      process.exit(0);
+   }
 })();
 
 function isMainNxPackage() {
-  const mainNxPath = require.resolve('nx', {
-    paths: [workspaceRoot],
-  });
-  const thisNxPath = require.resolve('nx');
-  return mainNxPath === thisNxPath;
+   const mainNxPath = require.resolve('nx', {
+      paths: [workspaceRoot],
+   });
+   const thisNxPath = require.resolve('nx');
+   return mainNxPath === thisNxPath;
 }

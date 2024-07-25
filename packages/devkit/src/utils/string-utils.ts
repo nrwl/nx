@@ -26,7 +26,7 @@ const STRING_UNDERSCORE_REGEXP_2 = /-|\s+/g;
  @return {String} the decamelized string.
  */
 export function decamelize(str: string): string {
-  return str.replace(STRING_DECAMELIZE_REGEXP, '$1_$2').toLowerCase();
+   return str.replace(STRING_DECAMELIZE_REGEXP, '$1_$2').toLowerCase();
 }
 
 /**
@@ -45,7 +45,7 @@ export function decamelize(str: string): string {
  @return {String} the dasherized string.
  */
 export function dasherize(str?: string): string {
-  return decamelize(str || '').replace(STRING_DASHERIZE_REGEXP, '-');
+   return decamelize(str || '').replace(STRING_DASHERIZE_REGEXP, '-');
 }
 
 /**
@@ -64,14 +64,14 @@ export function dasherize(str?: string): string {
  @return {String} the camelized string.
  */
 export function camelize(str: string): string {
-  return str
-    .replace(
-      STRING_CAMELIZE_REGEXP,
-      (_match: string, _separator: string, chr: string) => {
-        return chr ? chr.toUpperCase() : '';
-      }
-    )
-    .replace(/^([A-Z])/, (match: string) => match.toLowerCase());
+   return str
+      .replace(
+         STRING_CAMELIZE_REGEXP,
+         (_match: string, _separator: string, chr: string) => {
+            return chr ? chr.toUpperCase() : '';
+         }
+      )
+      .replace(/^([A-Z])/, (match: string) => match.toLowerCase());
 }
 
 /**
@@ -89,10 +89,10 @@ export function camelize(str: string): string {
  @return {String} the classified string
  */
 export function classify(str: string): string {
-  return str
-    .split('.')
-    .map((part) => capitalize(camelize(part)))
-    .join('.');
+   return str
+      .split('.')
+      .map((part) => capitalize(camelize(part)))
+      .join('.');
 }
 
 /**
@@ -111,10 +111,10 @@ export function classify(str: string): string {
  @return {String} the underscored string.
  */
 export function underscore(str: string): string {
-  return str
-    .replace(STRING_UNDERSCORE_REGEXP_1, '$1_$2')
-    .replace(STRING_UNDERSCORE_REGEXP_2, '_')
-    .toLowerCase();
+   return str
+      .replace(STRING_UNDERSCORE_REGEXP_1, '$1_$2')
+      .replace(STRING_UNDERSCORE_REGEXP_2, '_')
+      .toLowerCase();
 }
 
 /**
@@ -132,22 +132,22 @@ export function underscore(str: string): string {
  @return {String} The capitalized string.
  */
 export function capitalize(str: string): string {
-  return str.charAt(0).toUpperCase() + str.slice(1);
+   return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
 export function group(name: string, group: string | undefined): string {
-  return group ? `${group}/${name}` : name;
+   return group ? `${group}/${name}` : name;
 }
 
 export function featurePath(
-  group: boolean | undefined,
-  flat: boolean | undefined,
-  path: string,
-  name: string
+   group: boolean | undefined,
+   flat: boolean | undefined,
+   path: string,
+   name: string
 ): string {
-  if (group && !flat) {
-    return `../../${path}/${name}/`;
-  }
+   if (group && !flat) {
+      return `../../${path}/${name}/`;
+   }
 
-  return group ? `../${path}/` : './';
+   return group ? `../${path}/` : './';
 }

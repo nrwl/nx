@@ -101,17 +101,17 @@ By default, `@nx/js` uses [TypeScript Compiler (TSC)](https://www.typescriptlang
 
 Currently, `@nx/js` supports the following compilers:
 
-- [Speedy Web Compiler (SWC)](https://swc.rs)
+-  [Speedy Web Compiler (SWC)](https://swc.rs)
 
 ### SWC
 
-- Create a buildable library with `swc`
+-  Create a buildable library with `swc`
 
 ```shell
 nx g @nx/js:lib my-swc-lib --bundler=swc
 ```
 
-- Convert a `tsc` library to use `swc`
+-  Convert a `tsc` library to use `swc`
 
 ```shell
 nx g @nx/js:convert-to-swc my-buildable-lib

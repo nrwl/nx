@@ -1,19 +1,19 @@
 import ts = require('typescript');
 import {
-  addBlockToFlatConfigExport,
-  generateAst,
-  addImportToFlatConfig,
-  addCompatToFlatConfig,
-  removeOverridesFromLintConfig,
-  replaceOverride,
-  removePlugin,
-  removeCompatExtends,
+   addBlockToFlatConfigExport,
+   generateAst,
+   addImportToFlatConfig,
+   addCompatToFlatConfig,
+   removeOverridesFromLintConfig,
+   replaceOverride,
+   removePlugin,
+   removeCompatExtends,
 } from './ast-utils';
 
 describe('ast-utils', () => {
-  describe('addBlockToFlatConfigExport', () => {
-    it('should inject block to the end of the file', () => {
-      const content = `const baseConfig = require("../../eslint.config.js");
+   describe('addBlockToFlatConfigExport', () => {
+      it('should inject block to the end of the file', () => {
+         const content = `const baseConfig = require("../../eslint.config.js");
     module.exports = [
         ...baseConfig,
         {
@@ -25,16 +25,16 @@ describe('ast-utils', () => {
         },
         { ignores: ["my-lib/.cache/**/*"] },
     ];`;
-      const result = addBlockToFlatConfigExport(
-        content,
-        generateAst({
-          files: ['**/*.svg'],
-          rules: {
-            '@nx/do-something-with-svg': 'error',
-          },
-        })
-      );
-      expect(result).toMatchInlineSnapshot(`
+         const result = addBlockToFlatConfigExport(
+            content,
+            generateAst({
+               files: ['**/*.svg'],
+               rules: {
+                  '@nx/do-something-with-svg': 'error',
+               },
+            })
+         );
+         expect(result).toMatchInlineSnapshot(`
               "const baseConfig = require("../../eslint.config.js");
                   module.exports = [
                       ...baseConfig,
@@ -52,10 +52,10 @@ describe('ast-utils', () => {
               },
                   ];"
           `);
-    });
+      });
 
-    it('should inject spread to the beginning of the file', () => {
-      const content = `const baseConfig = require("../../eslint.config.js");
+      it('should inject spread to the beginning of the file', () => {
+         const content = `const baseConfig = require("../../eslint.config.js");
     module.exports = [
         ...baseConfig,
         {
@@ -67,12 +67,14 @@ describe('ast-utils', () => {
         },
         { ignores: ["my-lib/.cache/**/*"] },
     ];`;
-      const result = addBlockToFlatConfigExport(
-        content,
-        ts.factory.createSpreadElement(ts.factory.createIdentifier('config')),
-        { insertAtTheEnd: false }
-      );
-      expect(result).toMatchInlineSnapshot(`
+         const result = addBlockToFlatConfigExport(
+            content,
+            ts.factory.createSpreadElement(
+               ts.factory.createIdentifier('config')
+            ),
+            { insertAtTheEnd: false }
+         );
+         expect(result).toMatchInlineSnapshot(`
               "const baseConfig = require("../../eslint.config.js");
                   module.exports = [
               ...config,
@@ -87,12 +89,12 @@ describe('ast-utils', () => {
                       { ignores: ["my-lib/.cache/**/*"] },
                   ];"
           `);
-    });
-  });
+      });
+   });
 
-  describe('addImportToFlatConfig', () => {
-    it('should inject import if not found', () => {
-      const content = `const baseConfig = require("../../eslint.config.js");
+   describe('addImportToFlatConfig', () => {
+      it('should inject import if not found', () => {
+         const content = `const baseConfig = require("../../eslint.config.js");
     module.exports = [
         ...baseConfig,
         {
@@ -104,12 +106,12 @@ describe('ast-utils', () => {
         },
         { ignores: ["my-lib/.cache/**/*"] },
     ];`;
-      const result = addImportToFlatConfig(
-        content,
-        'varName',
-        '@myorg/awesome-config'
-      );
-      expect(result).toMatchInlineSnapshot(`
+         const result = addImportToFlatConfig(
+            content,
+            'varName',
+            '@myorg/awesome-config'
+         );
+         expect(result).toMatchInlineSnapshot(`
               "const varName = require("@myorg/awesome-config");
               const baseConfig = require("../../eslint.config.js");
                   module.exports = [
@@ -124,10 +126,10 @@ describe('ast-utils', () => {
                       { ignores: ["my-lib/.cache/**/*"] },
                   ];"
           `);
-    });
+      });
 
-    it('should update import if already found', () => {
-      const content = `const { varName } = require("@myorg/awesome-config");
+      it('should update import if already found', () => {
+         const content = `const { varName } = require("@myorg/awesome-config");
     const baseConfig = require("../../eslint.config.js");
     module.exports = [
         ...baseConfig,
@@ -140,12 +142,12 @@ describe('ast-utils', () => {
         },
         { ignores: ["my-lib/.cache/**/*"] },
     ];`;
-      const result = addImportToFlatConfig(
-        content,
-        ['otherName', 'someName'],
-        '@myorg/awesome-config'
-      );
-      expect(result).toMatchInlineSnapshot(`
+         const result = addImportToFlatConfig(
+            content,
+            ['otherName', 'someName'],
+            '@myorg/awesome-config'
+         );
+         expect(result).toMatchInlineSnapshot(`
               "const { varName, otherName, someName  } = require("@myorg/awesome-config");
                   const baseConfig = require("../../eslint.config.js");
                   module.exports = [
@@ -160,10 +162,10 @@ describe('ast-utils', () => {
                       { ignores: ["my-lib/.cache/**/*"] },
                   ];"
           `);
-    });
+      });
 
-    it('should not inject import if already exists', () => {
-      const content = `const { varName, otherName } = require("@myorg/awesome-config");
+      it('should not inject import if already exists', () => {
+         const content = `const { varName, otherName } = require("@myorg/awesome-config");
     const baseConfig = require("../../eslint.config.js");
     module.exports = [
         ...baseConfig,
@@ -176,16 +178,16 @@ describe('ast-utils', () => {
         },
         { ignores: ["my-lib/.cache/**/*"] },
     ];`;
-      const result = addImportToFlatConfig(
-        content,
-        ['otherName'],
-        '@myorg/awesome-config'
-      );
-      expect(result).toEqual(content);
-    });
+         const result = addImportToFlatConfig(
+            content,
+            ['otherName'],
+            '@myorg/awesome-config'
+         );
+         expect(result).toEqual(content);
+      });
 
-    it('should not update import if already exists', () => {
-      const content = `const varName = require("@myorg/awesome-config");
+      it('should not update import if already exists', () => {
+         const content = `const varName = require("@myorg/awesome-config");
     const baseConfig = require("../../eslint.config.js");
     module.exports = [
         ...baseConfig,
@@ -198,18 +200,18 @@ describe('ast-utils', () => {
         },
         { ignores: ["my-lib/.cache/**/*"] },
     ];`;
-      const result = addImportToFlatConfig(
-        content,
-        'varName',
-        '@myorg/awesome-config'
-      );
-      expect(result).toEqual(content);
-    });
-  });
+         const result = addImportToFlatConfig(
+            content,
+            'varName',
+            '@myorg/awesome-config'
+         );
+         expect(result).toEqual(content);
+      });
+   });
 
-  describe('addCompatToFlatConfig', () => {
-    it('should add compat to config', () => {
-      const content = `const baseConfig = require("../../eslint.config.js");
+   describe('addCompatToFlatConfig', () => {
+      it('should add compat to config', () => {
+         const content = `const baseConfig = require("../../eslint.config.js");
     module.exports = [
       ...baseConfig,
       {
@@ -221,8 +223,8 @@ describe('ast-utils', () => {
       },
       { ignores: ["my-lib/.cache/**/*"] },
     ];`;
-      const result = addCompatToFlatConfig(content);
-      expect(result).toMatchInlineSnapshot(`
+         const result = addCompatToFlatConfig(content);
+         expect(result).toMatchInlineSnapshot(`
         "const { FlatCompat } = require("@eslint/eslintrc");
         const js = require("@eslint/js");
         const baseConfig = require("../../eslint.config.js");
@@ -244,10 +246,10 @@ describe('ast-utils', () => {
               { ignores: ["my-lib/.cache/**/*"] },
             ];"
       `);
-    });
+      });
 
-    it('should add only partially compat to config if parts exist', () => {
-      const content = `const baseConfig = require("../../eslint.config.js");
+      it('should add only partially compat to config if parts exist', () => {
+         const content = `const baseConfig = require("../../eslint.config.js");
     const js = require("@eslint/js");
     module.exports = [
       ...baseConfig,
@@ -260,8 +262,8 @@ describe('ast-utils', () => {
       },
       { ignores: ["my-lib/.cache/**/*"] },
     ];`;
-      const result = addCompatToFlatConfig(content);
-      expect(result).toMatchInlineSnapshot(`
+         const result = addCompatToFlatConfig(content);
+         expect(result).toMatchInlineSnapshot(`
         "const { FlatCompat } = require("@eslint/eslintrc");
         const baseConfig = require("../../eslint.config.js");
             const js = require("@eslint/js");
@@ -283,10 +285,10 @@ describe('ast-utils', () => {
               { ignores: ["my-lib/.cache/**/*"] },
             ];"
       `);
-    });
+      });
 
-    it('should not add compat to config if exist', () => {
-      const content = `const FlatCompat = require("@eslint/eslintrc");
+      it('should not add compat to config if exist', () => {
+         const content = `const FlatCompat = require("@eslint/eslintrc");
     const baseConfig = require("../../eslint.config.js");
     const js = require("@eslint/js");
 
@@ -306,14 +308,14 @@ describe('ast-utils', () => {
       },
       { ignores: ["my-lib/.cache/**/*"] },
     ];`;
-      const result = addCompatToFlatConfig(content);
-      expect(result).toEqual(content);
-    });
-  });
+         const result = addCompatToFlatConfig(content);
+         expect(result).toEqual(content);
+      });
+   });
 
-  describe('removeOverridesFromLintConfig', () => {
-    it('should remove all rules from config', () => {
-      const content = `const FlatCompat = require("@eslint/eslintrc");
+   describe('removeOverridesFromLintConfig', () => {
+      it('should remove all rules from config', () => {
+         const content = `const FlatCompat = require("@eslint/eslintrc");
     const baseConfig = require("../../eslint.config.js");
     const js = require("@eslint/js");
 
@@ -351,8 +353,8 @@ describe('ast-utils', () => {
       })),
       { ignores: ["my-lib/.cache/**/*"] },
     ];`;
-      const result = removeOverridesFromLintConfig(content);
-      expect(result).toMatchInlineSnapshot(`
+         const result = removeOverridesFromLintConfig(content);
+         expect(result).toMatchInlineSnapshot(`
               "const FlatCompat = require("@eslint/eslintrc");
                   const baseConfig = require("../../eslint.config.js");
                   const js = require("@eslint/js");
@@ -367,10 +369,10 @@ describe('ast-utils', () => {
                     { ignores: ["my-lib/.cache/**/*"] },
                   ];"
           `);
-    });
+      });
 
-    it('should remove all rules from starting with first', () => {
-      const content = `const baseConfig = require("../../eslint.config.js");
+      it('should remove all rules from starting with first', () => {
+         const content = `const baseConfig = require("../../eslint.config.js");
 
     module.exports = [
       {
@@ -399,19 +401,19 @@ describe('ast-utils', () => {
         rules: {}
       }))
     ];`;
-      const result = removeOverridesFromLintConfig(content);
-      expect(result).toMatchInlineSnapshot(`
+         const result = removeOverridesFromLintConfig(content);
+         expect(result).toMatchInlineSnapshot(`
               "const baseConfig = require("../../eslint.config.js");
 
                   module.exports = [
                   ];"
           `);
-    });
-  });
+      });
+   });
 
-  describe('replaceOverride', () => {
-    it('should find and replace rules in override', () => {
-      const content = `const baseConfig = require("../../eslint.config.js");
+   describe('replaceOverride', () => {
+      it('should find and replace rules in override', () => {
+         const content = `const baseConfig = require("../../eslint.config.js");
 
     module.exports = [
       {
@@ -441,18 +443,18 @@ describe('ast-utils', () => {
       },
     ];`;
 
-      const result = replaceOverride(
-        content,
-        'my-lib',
-        (o) => o.files.includes('my-lib/**/*.ts'),
-        (o) => ({
-          ...o,
-          rules: {
-            'my-rule': 'error',
-          },
-        })
-      );
-      expect(result).toMatchInlineSnapshot(`
+         const result = replaceOverride(
+            content,
+            'my-lib',
+            (o) => o.files.includes('my-lib/**/*.ts'),
+            (o) => ({
+               ...o,
+               rules: {
+                  'my-rule': 'error',
+               },
+            })
+         );
+         expect(result).toMatchInlineSnapshot(`
         "const baseConfig = require("../../eslint.config.js");
 
             module.exports = [
@@ -485,10 +487,10 @@ describe('ast-utils', () => {
               },
             ];"
       `);
-    });
+      });
 
-    it('should append rules in override', () => {
-      const content = `const baseConfig = require("../../eslint.config.js");
+      it('should append rules in override', () => {
+         const content = `const baseConfig = require("../../eslint.config.js");
 
     module.exports = [
       {
@@ -511,19 +513,19 @@ describe('ast-utils', () => {
       },
     ];`;
 
-      const result = replaceOverride(
-        content,
-        'my-lib',
-        (o) => o.files.includes('my-lib/**/*.ts'),
-        (o) => ({
-          ...o,
-          rules: {
-            ...o.rules,
-            'my-new-rule': 'error',
-          },
-        })
-      );
-      expect(result).toMatchInlineSnapshot(`
+         const result = replaceOverride(
+            content,
+            'my-lib',
+            (o) => o.files.includes('my-lib/**/*.ts'),
+            (o) => ({
+               ...o,
+               rules: {
+                  ...o.rules,
+                  'my-new-rule': 'error',
+               },
+            })
+         );
+         expect(result).toMatchInlineSnapshot(`
         "const baseConfig = require("../../eslint.config.js");
 
             module.exports = [
@@ -548,10 +550,10 @@ describe('ast-utils', () => {
               },
             ];"
       `);
-    });
+      });
 
-    it('should work for compat overrides', () => {
-      const content = `const baseConfig = require("../../eslint.config.js");
+      it('should work for compat overrides', () => {
+         const content = `const baseConfig = require("../../eslint.config.js");
 
     module.exports = [
       ...compat.config({ extends: ["plugin:@nx/typescript"] }).map(config => ({
@@ -566,19 +568,19 @@ describe('ast-utils', () => {
       }),
     ];`;
 
-      const result = replaceOverride(
-        content,
-        'my-lib',
-        (o) => o.files.includes('my-lib/**/*.ts'),
-        (o) => ({
-          ...o,
-          rules: {
-            ...o.rules,
-            'my-new-rule': 'error',
-          },
-        })
-      );
-      expect(result).toMatchInlineSnapshot(`
+         const result = replaceOverride(
+            content,
+            'my-lib',
+            (o) => o.files.includes('my-lib/**/*.ts'),
+            (o) => ({
+               ...o,
+               rules: {
+                  ...o.rules,
+                  'my-new-rule': 'error',
+               },
+            })
+         );
+         expect(result).toMatchInlineSnapshot(`
         "const baseConfig = require("../../eslint.config.js");
 
             module.exports = [
@@ -595,12 +597,12 @@ describe('ast-utils', () => {
               }),
             ];"
       `);
-    });
-  });
+      });
+   });
 
-  describe('removePlugin', () => {
-    it('should remove plugins from config', () => {
-      const content = `const { FlatCompat } = require("@eslint/eslintrc");
+   describe('removePlugin', () => {
+      it('should remove plugins from config', () => {
+         const content = `const { FlatCompat } = require("@eslint/eslintrc");
       const nxEslintPlugin = require("@nx/eslint-plugin");
       const js = require("@eslint/js");
       const compat = new FlatCompat({
@@ -613,8 +615,8 @@ describe('ast-utils', () => {
         { ignores: ["something/else"] }
       ];`;
 
-      const result = removePlugin(content, '@nx', '@nx/eslint-plugin');
-      expect(result).toMatchInlineSnapshot(`
+         const result = removePlugin(content, '@nx', '@nx/eslint-plugin');
+         expect(result).toMatchInlineSnapshot(`
         "const { FlatCompat } = require("@eslint/eslintrc");
               const js = require("@eslint/js");
               const compat = new FlatCompat({
@@ -626,10 +628,10 @@ describe('ast-utils', () => {
                 { ignores: ["something/else"] }
               ];"
       `);
-    });
+      });
 
-    it('should remove single plugin from config', () => {
-      const content = `const { FlatCompat } = require("@eslint/eslintrc");
+      it('should remove single plugin from config', () => {
+         const content = `const { FlatCompat } = require("@eslint/eslintrc");
       const nxEslintPlugin = require("@nx/eslint-plugin");
       const otherPlugin = require("other/eslint-plugin");
       const js = require("@eslint/js");
@@ -643,8 +645,8 @@ describe('ast-utils', () => {
         { ignores: ["something/else"] }
       ];`;
 
-      const result = removePlugin(content, '@nx', '@nx/eslint-plugin');
-      expect(result).toMatchInlineSnapshot(`
+         const result = removePlugin(content, '@nx', '@nx/eslint-plugin');
+         expect(result).toMatchInlineSnapshot(`
         "const { FlatCompat } = require("@eslint/eslintrc");
               const otherPlugin = require("other/eslint-plugin");
               const js = require("@eslint/js");
@@ -658,10 +660,10 @@ describe('ast-utils', () => {
                 { ignores: ["something/else"] }
               ];"
       `);
-    });
+      });
 
-    it('should leave other properties in config', () => {
-      const content = `const { FlatCompat } = require("@eslint/eslintrc");
+      it('should leave other properties in config', () => {
+         const content = `const { FlatCompat } = require("@eslint/eslintrc");
       const nxEslintPlugin = require("@nx/eslint-plugin");
       const js = require("@eslint/js");
       const compat = new FlatCompat({
@@ -674,8 +676,8 @@ describe('ast-utils', () => {
         { ignores: ["something/else"] }
       ];`;
 
-      const result = removePlugin(content, '@nx', '@nx/eslint-plugin');
-      expect(result).toMatchInlineSnapshot(`
+         const result = removePlugin(content, '@nx', '@nx/eslint-plugin');
+         expect(result).toMatchInlineSnapshot(`
         "const { FlatCompat } = require("@eslint/eslintrc");
               const js = require("@eslint/js");
               const compat = new FlatCompat({
@@ -688,10 +690,10 @@ describe('ast-utils', () => {
                 { ignores: ["something/else"] }
               ];"
       `);
-    });
+      });
 
-    it('should remove single plugin from config array', () => {
-      const content = `const { FlatCompat } = require("@eslint/eslintrc");
+      it('should remove single plugin from config array', () => {
+         const content = `const { FlatCompat } = require("@eslint/eslintrc");
       const nxEslintPlugin = require("@nx/eslint-plugin");
       const js = require("@eslint/js");
       const compat = new FlatCompat({
@@ -704,8 +706,8 @@ describe('ast-utils', () => {
         { ignores: ["something/else"] }
       ];`;
 
-      const result = removePlugin(content, '@nx', '@nx/eslint-plugin');
-      expect(result).toMatchInlineSnapshot(`
+         const result = removePlugin(content, '@nx', '@nx/eslint-plugin');
+         expect(result).toMatchInlineSnapshot(`
         "const { FlatCompat } = require("@eslint/eslintrc");
               const js = require("@eslint/js");
               const compat = new FlatCompat({
@@ -718,10 +720,10 @@ describe('ast-utils', () => {
                 { ignores: ["something/else"] }
               ];"
       `);
-    });
+      });
 
-    it('should leave other fields in the object', () => {
-      const content = `const { FlatCompat } = require("@eslint/eslintrc");
+      it('should leave other fields in the object', () => {
+         const content = `const { FlatCompat } = require("@eslint/eslintrc");
       const nxEslintPlugin = require("@nx/eslint-plugin");
       const js = require("@eslint/js");
       const compat = new FlatCompat({
@@ -734,8 +736,8 @@ describe('ast-utils', () => {
         { ignores: ["something/else"] }
       ];`;
 
-      const result = removePlugin(content, '@nx', '@nx/eslint-plugin');
-      expect(result).toMatchInlineSnapshot(`
+         const result = removePlugin(content, '@nx', '@nx/eslint-plugin');
+         expect(result).toMatchInlineSnapshot(`
         "const { FlatCompat } = require("@eslint/eslintrc");
               const js = require("@eslint/js");
               const compat = new FlatCompat({
@@ -748,10 +750,10 @@ describe('ast-utils', () => {
                 { ignores: ["something/else"] }
               ];"
       `);
-    });
+      });
 
-    it('should remove entire plugin when array with single element', () => {
-      const content = `const { FlatCompat } = require("@eslint/eslintrc");
+      it('should remove entire plugin when array with single element', () => {
+         const content = `const { FlatCompat } = require("@eslint/eslintrc");
       const nxEslintPlugin = require("@nx/eslint-plugin");
       const js = require("@eslint/js");
       const compat = new FlatCompat({
@@ -764,8 +766,8 @@ describe('ast-utils', () => {
         { ignores: ["something/else"] }
       ];`;
 
-      const result = removePlugin(content, '@nx', '@nx/eslint-plugin');
-      expect(result).toMatchInlineSnapshot(`
+         const result = removePlugin(content, '@nx', '@nx/eslint-plugin');
+         expect(result).toMatchInlineSnapshot(`
         "const { FlatCompat } = require("@eslint/eslintrc");
               const js = require("@eslint/js");
               const compat = new FlatCompat({
@@ -777,12 +779,12 @@ describe('ast-utils', () => {
                 { ignores: ["something/else"] }
               ];"
       `);
-    });
-  });
+      });
+   });
 
-  describe('removeCompatExtends', () => {
-    it('should remove compat extends from config', () => {
-      const content = `const { FlatCompat } = require("@eslint/eslintrc");
+   describe('removeCompatExtends', () => {
+      it('should remove compat extends from config', () => {
+         const content = `const { FlatCompat } = require("@eslint/eslintrc");
       const nxEslintPlugin = require("@nx/eslint-plugin");
       const js = require("@eslint/js");
       const compat = new FlatCompat({
@@ -804,13 +806,13 @@ describe('ast-utils', () => {
         }))
       ];`;
 
-      const result = removeCompatExtends(content, [
-        'plugin:@nx/typescript',
-        'plugin:@nx/javascript',
-        'plugin:@nrwl/typescript',
-        'plugin:@nrwl/javascript',
-      ]);
-      expect(result).toMatchInlineSnapshot(`
+         const result = removeCompatExtends(content, [
+            'plugin:@nx/typescript',
+            'plugin:@nx/javascript',
+            'plugin:@nrwl/typescript',
+            'plugin:@nrwl/javascript',
+         ]);
+         expect(result).toMatchInlineSnapshot(`
         "const { FlatCompat } = require("@eslint/eslintrc");
               const nxEslintPlugin = require("@nx/eslint-plugin");
               const js = require("@eslint/js");
@@ -831,6 +833,6 @@ describe('ast-utils', () => {
                 }
               ];"
       `);
-    });
-  });
+      });
+   });
 });

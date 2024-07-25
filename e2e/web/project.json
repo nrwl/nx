@@ -1,9 +1,9 @@
 {
-  "name": "e2e-web",
-  "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "e2e/web",
-  "projectType": "application",
-  "implicitDependencies": ["web"],
-  "// targets": "to see all targets run: nx show project e2e-web --web",
-  "targets": {}
+   "name": "e2e-web",
+   "$schema": "../../node_modules/nx/schemas/project-schema.json",
+   "sourceRoot": "e2e/web",
+   "projectType": "application",
+   "implicitDependencies": ["web"],
+   "// targets": "to see all targets run: nx show project e2e-web --web",
+   "targets": {}
 }

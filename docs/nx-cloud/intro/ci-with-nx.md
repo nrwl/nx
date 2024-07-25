@@ -4,11 +4,11 @@ Implementing an efficient CI setup for monorepos - while crucial - can be challe
 
 ## Core Features
 
-- Test only the code that might have been [affected](/ci/features/affected) by a PR
-- Never run the same task on the same code twice with [remote caching](/ci/features/remote-cache)
-- Efficiently [distribute task execution across multiple machines](/ci/features/distribute-task-execution)
-- Quickly troubleshoot errors that occur in CI
-- Create a simple but powerful pipeline configuration that easily scales with your codebase
+-  Test only the code that might have been [affected](/ci/features/affected) by a PR
+-  Never run the same task on the same code twice with [remote caching](/ci/features/remote-cache)
+-  Efficiently [distribute task execution across multiple machines](/ci/features/distribute-task-execution)
+-  Quickly troubleshoot errors that occur in CI
+-  Create a simple but powerful pipeline configuration that easily scales with your codebase
 
 ## Try Nx Cloud Yourself!
 
@@ -57,8 +57,8 @@ npx nx g ci-workflow
 
 Connect on our channels and with the Nx Community to ask questions, get help and keep up to date with the latest news.
 
-- Reach out for [Enterprise Support](/enterprise)
-- Join our [Discord Community](https://go.nx.dev/community)
-- Subscribe to our [Youtube Channel](https://www.youtube.com/@nxdevtools)
-- Follow us on [Twitter](https://twitter.com/nxdevtools)
-- Subscribe [to our tech newsletter](https://go.nrwl.io/nx-newsletter)
+-  Reach out for [Enterprise Support](/enterprise)
+-  Join our [Discord Community](https://go.nx.dev/community)
+-  Subscribe to our [Youtube Channel](https://www.youtube.com/@nxdevtools)
+-  Follow us on [Twitter](https://twitter.com/nxdevtools)
+-  Subscribe [to our tech newsletter](https://go.nrwl.io/nx-newsletter)

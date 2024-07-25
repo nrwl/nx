@@ -5,8 +5,8 @@ if you are interested.
 
 ### Jump To
 
-- [Azure AD Config](#azure-active-directory-set-up)
-- [Okta Config](#okta-setup)
+-  [Azure AD Config](#azure-active-directory-set-up)
+-  [Okta Config](#okta-setup)
 
 ## Azure Active Directory Set-up
 
@@ -51,28 +51,28 @@ if you are interested.
 
    ![Step 10](/nx-cloud/enterprise/on-premise/images/saml/azure_10.png)
 
-10. Configure it as per below
+10.   Configure it as per below
 
-    1. **“Namespace”** needs to be blank
-    2. **“Name:”** needs to be “email”
-    3. See screenshot below. This is an important step, because Nx Cloud will expect the “email” property on each profile that logs in.
+      1. **“Namespace”** needs to be blank
+      2. **“Name:”** needs to be “email”
+      3. See screenshot below. This is an important step, because Nx Cloud will expect the “email” property on each profile that logs in.
 
-    ![Step 11](/nx-cloud/enterprise/on-premise/images/saml/azure_11.png)
+      ![Step 11](/nx-cloud/enterprise/on-premise/images/saml/azure_11.png)
 
-11. Download the certificate in **Base64**:
+11.   Download the certificate in **Base64**:
 
-    ![Step 12](/nx-cloud/enterprise/on-premise/images/saml/azure_12.png)
+      ![Step 12](/nx-cloud/enterprise/on-premise/images/saml/azure_12.png)
 
-12. Extract the downloaded certificate value as a one-line string:
-    1. `awk 'NF {sub(/\r/, ""); printf "%s\\n",$0;}' azure_cert_file.cer`
-    2. We’ll use this in a bit to initialize an environment variable
-13. Copy the Login URL:
+12.   Extract the downloaded certificate value as a one-line string:
+      1. `awk 'NF {sub(/\r/, ""); printf "%s\\n",$0;}' azure_cert_file.cer`
+      2. We’ll use this in a bit to initialize an environment variable
+13.   Copy the Login URL:
 
-    ![Step 13](/nx-cloud/enterprise/on-premise/images/saml/azure_13.png)
+      ![Step 13](/nx-cloud/enterprise/on-premise/images/saml/azure_13.png)
 
-14. Then add these two env vars to your Nx Cloud cluster secrets (see [Helm config](#helm-config) below):
-    1. `SAML_CERT=<your-cert-string-from-above>`
-    2. `SAML_ENTRY_POINT=<your-login-url-from-above>`
+14.   Then add these two env vars to your Nx Cloud cluster secrets (see [Helm config](#helm-config) below):
+      1. `SAML_CERT=<your-cert-string-from-above>`
+      2. `SAML_ENTRY_POINT=<your-login-url-from-above>`
 
 ## Okta Set-up
 
@@ -115,20 +115,20 @@ if you are interested.
 9. Extract the downloaded certificate value as a one-line string:
    1. `awk 'NF {sub(/\r/, ""); printf "%s\\n",$0;}' okta.cert`
    2. We will use this in a bit to initialize and environment variable
-10. Then view the ldP metadata:
+10.   Then view the ldP metadata:
 
-    ![Okta 9](/nx-cloud/enterprise/on-premise/images/saml/okta_9.png)
+      ![Okta 9](/nx-cloud/enterprise/on-premise/images/saml/okta_9.png)
 
-11. Then find the row similar to the below, and copy the highlighted URL (see screenshot as well):
+11.   Then find the row similar to the below, and copy the highlighted URL (see screenshot as well):
 
-    1. ```html
-       <md:SingleSignOnService
-         Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST"
-         Location="https://trial-xxxxx.okta.com/app/trial-xxxxx_nxcloudtest_1/xxxxxxxxx/sso/saml"
-       />
-       ```
+      1. ```html
+         <md:SingleSignOnService
+            Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST"
+            Location="https://trial-xxxxx.okta.com/app/trial-xxxxx_nxcloudtest_1/xxxxxxxxx/sso/saml"
+         />
+         ```
 
-    ![Okta 10](/nx-cloud/enterprise/on-premise/images/saml/okta_10.png)
+      ![Okta 10](/nx-cloud/enterprise/on-premise/images/saml/okta_10.png)
 
 ## Helm config
 

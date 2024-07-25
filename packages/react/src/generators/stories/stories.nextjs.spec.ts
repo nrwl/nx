@@ -10,13 +10,13 @@ import { applicationGenerator } from '@nx/next';
 import { Linter } from '@nx/eslint';
 
 describe('nextjs:stories for applications', () => {
-  let tree: Tree;
+   let tree: Tree;
 
-  beforeEach(async () => {
-    tree = await createTestUIApp('test-ui-app');
-    tree.write(
-      'test-ui-app/components/test.tsx',
-      `import './test.module.scss';
+   beforeEach(async () => {
+      tree = await createTestUIApp('test-ui-app');
+      tree.write(
+         'test-ui-app/components/test.tsx',
+         `import './test.module.scss';
 
       export interface TestProps {
         name: string;
@@ -30,70 +30,74 @@ describe('nextjs:stories for applications', () => {
 
       export default Test;
       `
-    );
-  });
+      );
+   });
 
-  it('should create the stories with interaction tests', async () => {
-    await storiesGenerator(tree, {
-      project: 'test-ui-app',
-    });
+   it('should create the stories with interaction tests', async () => {
+      await storiesGenerator(tree, {
+         project: 'test-ui-app',
+      });
 
-    expect(
-      tree.exists('test-ui-app/components/test.stories.tsx')
-    ).toMatchSnapshot();
+      expect(
+         tree.exists('test-ui-app/components/test.stories.tsx')
+      ).toMatchSnapshot();
 
-    const packageJson = JSON.parse(tree.read('package.json', 'utf-8'));
-    expect(
-      packageJson.devDependencies['@storybook/addon-interactions']
-    ).toBeDefined();
-    expect(packageJson.devDependencies['@storybook/test-runner']).toBeDefined();
-    expect(
-      packageJson.devDependencies['@storybook/testing-library']
-    ).toBeDefined();
-  });
+      const packageJson = JSON.parse(tree.read('package.json', 'utf-8'));
+      expect(
+         packageJson.devDependencies['@storybook/addon-interactions']
+      ).toBeDefined();
+      expect(
+         packageJson.devDependencies['@storybook/test-runner']
+      ).toBeDefined();
+      expect(
+         packageJson.devDependencies['@storybook/testing-library']
+      ).toBeDefined();
+   });
 
-  it('should create the stories without interaction tests', async () => {
-    await storiesGenerator(tree, {
-      project: 'test-ui-app',
-      interactionTests: false,
-    });
+   it('should create the stories without interaction tests', async () => {
+      await storiesGenerator(tree, {
+         project: 'test-ui-app',
+         interactionTests: false,
+      });
 
-    expect(
-      tree.exists('test-ui-app/components/test.stories.tsx')
-    ).toMatchSnapshot();
-    const packageJson = JSON.parse(tree.read('package.json', 'utf-8'));
-    expect(
-      packageJson.devDependencies['@storybook/addon-interactions']
-    ).toBeUndefined();
-    expect(
-      packageJson.devDependencies['@storybook/test-runner']
-    ).toBeUndefined();
-    expect(
-      packageJson.devDependencies['@storybook/testing-library']
-    ).toBeUndefined();
-  });
+      expect(
+         tree.exists('test-ui-app/components/test.stories.tsx')
+      ).toMatchSnapshot();
+      const packageJson = JSON.parse(tree.read('package.json', 'utf-8'));
+      expect(
+         packageJson.devDependencies['@storybook/addon-interactions']
+      ).toBeUndefined();
+      expect(
+         packageJson.devDependencies['@storybook/test-runner']
+      ).toBeUndefined();
+      expect(
+         packageJson.devDependencies['@storybook/testing-library']
+      ).toBeUndefined();
+   });
 
-  it('should ignore paths', async () => {
-    await storiesGenerator(tree, {
-      project: 'test-ui-app',
-      ignorePaths: ['test-ui-app/components/**'],
-    });
+   it('should ignore paths', async () => {
+      await storiesGenerator(tree, {
+         project: 'test-ui-app',
+         ignorePaths: ['test-ui-app/components/**'],
+      });
 
-    expect(tree.exists('test-ui-app/components/test.stories.tsx')).toBeFalsy();
-  });
+      expect(
+         tree.exists('test-ui-app/components/test.stories.tsx')
+      ).toBeFalsy();
+   });
 });
 
 export async function createTestUIApp(name: string): Promise<Tree> {
-  const tree = createTreeWithEmptyWorkspace();
-  await applicationGenerator(tree, {
-    e2eTestRunner: 'none',
-    linter: Linter.EsLint,
-    skipFormat: true,
-    style: 'css',
-    unitTestRunner: 'none',
-    name,
-    projectNameAndRootFormat: 'as-provided',
-  });
+   const tree = createTreeWithEmptyWorkspace();
+   await applicationGenerator(tree, {
+      e2eTestRunner: 'none',
+      linter: Linter.EsLint,
+      skipFormat: true,
+      style: 'css',
+      unitTestRunner: 'none',
+      name,
+      projectNameAndRootFormat: 'as-provided',
+   });
 
-  return tree;
+   return tree;
 }

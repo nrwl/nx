@@ -6,8 +6,8 @@ import { deleteDaemonJsonProcessCache } from '../cache';
 import type { Watcher } from '../../native';
 import { cleanupPlugins } from './plugins';
 import {
-  DaemonProjectGraphError,
-  ProjectGraphError,
+   DaemonProjectGraphError,
+   ProjectGraphError,
 } from '../../project-graph/error-types';
 
 export const SERVER_INACTIVITY_TIMEOUT_MS = 10800000 as const; // 10800000 ms = 3 hours
@@ -15,103 +15,103 @@ export const SERVER_INACTIVITY_TIMEOUT_MS = 10800000 as const; // 10800000 ms = 
 let watcherInstance: Watcher | undefined;
 
 export function storeWatcherInstance(instance: Watcher) {
-  watcherInstance = instance;
+   watcherInstance = instance;
 }
 
 export function getWatcherInstance() {
-  return watcherInstance;
+   return watcherInstance;
 }
 
 let outputWatcherInstance: Watcher | undefined;
 
 export function storeOutputWatcherInstance(instance: Watcher) {
-  outputWatcherInstance = instance;
+   outputWatcherInstance = instance;
 }
 
 export function getOutputWatcherInstance() {
-  return outputWatcherInstance;
+   return outputWatcherInstance;
 }
 
 interface HandleServerProcessTerminationParams {
-  server: Server;
-  reason: string;
+   server: Server;
+   reason: string;
 }
 
 export async function handleServerProcessTermination({
-  server,
-  reason,
+   server,
+   reason,
 }: HandleServerProcessTerminationParams) {
-  try {
-    server.close();
-    deleteDaemonJsonProcessCache();
-    cleanupPlugins();
+   try {
+      server.close();
+      deleteDaemonJsonProcessCache();
+      cleanupPlugins();
 
-    if (watcherInstance) {
-      await watcherInstance.stop();
-      serverLogger.watcherLog(
-        `Stopping the watcher for ${workspaceRoot} (sources)`
-      );
-    }
+      if (watcherInstance) {
+         await watcherInstance.stop();
+         serverLogger.watcherLog(
+            `Stopping the watcher for ${workspaceRoot} (sources)`
+         );
+      }
 
-    if (outputWatcherInstance) {
-      await outputWatcherInstance.stop();
-      serverLogger.watcherLog(
-        `Stopping the watcher for ${workspaceRoot} (outputs)`
-      );
-    }
+      if (outputWatcherInstance) {
+         await outputWatcherInstance.stop();
+         serverLogger.watcherLog(
+            `Stopping the watcher for ${workspaceRoot} (outputs)`
+         );
+      }
 
-    serverLogger.log(`Server stopped because: "${reason}"`);
-  } finally {
-    process.exit(0);
-  }
+      serverLogger.log(`Server stopped because: "${reason}"`);
+   } finally {
+      process.exit(0);
+   }
 }
 
 let serverInactivityTimerId: NodeJS.Timeout | undefined;
 
 export function resetInactivityTimeout(cb: () => void): void {
-  if (serverInactivityTimerId) {
-    clearTimeout(serverInactivityTimerId);
-  }
-  serverInactivityTimerId = setTimeout(cb, SERVER_INACTIVITY_TIMEOUT_MS);
+   if (serverInactivityTimerId) {
+      clearTimeout(serverInactivityTimerId);
+   }
+   serverInactivityTimerId = setTimeout(cb, SERVER_INACTIVITY_TIMEOUT_MS);
 }
 
 export function respondToClient(
-  socket: Socket,
-  response: string,
-  description: string
+   socket: Socket,
+   response: string,
+   description: string
 ) {
-  return new Promise(async (res) => {
-    if (description) {
-      serverLogger.requestLog(`Responding to the client.`, description);
-    }
-    socket.write(`${response}${String.fromCodePoint(4)}`, (err) => {
-      if (err) {
-        console.error(err);
+   return new Promise(async (res) => {
+      if (description) {
+         serverLogger.requestLog(`Responding to the client.`, description);
       }
-      serverLogger.log(`Done responding to the client`, description);
-      res(null);
-    });
-  });
+      socket.write(`${response}${String.fromCodePoint(4)}`, (err) => {
+         if (err) {
+            console.error(err);
+         }
+         serverLogger.log(`Done responding to the client`, description);
+         res(null);
+      });
+   });
 }
 
 export async function respondWithErrorAndExit(
-  socket: Socket,
-  description: string,
-  error: Error
+   socket: Socket,
+   description: string,
+   error: Error
 ) {
-  const normalizedError =
-    error instanceof DaemonProjectGraphError
-      ? ProjectGraphError.fromDaemonProjectGraphError(error)
-      : error;
+   const normalizedError =
+      error instanceof DaemonProjectGraphError
+         ? ProjectGraphError.fromDaemonProjectGraphError(error)
+         : error;
 
-  // print some extra stuff in the error message
-  serverLogger.requestLog(
-    `Responding to the client with an error.`,
-    description,
-    normalizedError.message
-  );
-  console.error(normalizedError.stack);
+   // print some extra stuff in the error message
+   serverLogger.requestLog(
+      `Responding to the client with an error.`,
+      description,
+      normalizedError.message
+   );
+   console.error(normalizedError.stack);
 
-  // Respond with the original error
-  await respondToClient(socket, serializeResult(error, null, null), null);
+   // Respond with the original error
+   await respondToClient(socket, serializeResult(error, null, null), null);
 }

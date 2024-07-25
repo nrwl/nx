@@ -2,18 +2,18 @@
 
 ```jsonc
 {
-  //...
-  "targets": {
-    //...
-    "build": {
-      "executor": "@nx/esbuild:esbuild",
-      "options": {
-        "main": "<app-root>",
-        "tsConfig": "<app-root>/tsconfig.app.json",
-        "outputPath": "dist/<app-root>"
+   //...
+   "targets": {
+      //...
+      "build": {
+         "executor": "@nx/esbuild:esbuild",
+         "options": {
+            "main": "<app-root>",
+            "tsConfig": "<app-root>/tsconfig.app.json",
+            "outputPath": "dist/<app-root>"
+         }
       }
-    }
-  }
+   }
 }
 ```
 

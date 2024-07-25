@@ -1,22 +1,22 @@
 {
-  "name": "react-lib-nonb-jest",
-  "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "root": "libs/react-lib-nonb-jest",
-  "sourceRoot": "libs/react-lib-nonb-jest/src",
-  "projectType": "library",
-  "targets": {
-    "lint": {
-      "executor": "@nx/eslint:lint",
-      "outputs": ["{options.outputFile}"]
-    },
-    "test": {
-      "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
-      "options": {
-        "jestConfig": "libs/react-lib-nonb-jest/jest.config.ts",
-        "passWithNoTests": true
+   "name": "react-lib-nonb-jest",
+   "$schema": "../../node_modules/nx/schemas/project-schema.json",
+   "root": "libs/react-lib-nonb-jest",
+   "sourceRoot": "libs/react-lib-nonb-jest/src",
+   "projectType": "library",
+   "targets": {
+      "lint": {
+         "executor": "@nx/eslint:lint",
+         "outputs": ["{options.outputFile}"]
+      },
+      "test": {
+         "executor": "@nx/jest:jest",
+         "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+         "options": {
+            "jestConfig": "libs/react-lib-nonb-jest/jest.config.ts",
+            "passWithNoTests": true
+         }
       }
-    }
-  },
-  "tags": []
+   },
+   "tags": []
 }

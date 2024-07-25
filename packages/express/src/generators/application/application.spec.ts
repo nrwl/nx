@@ -4,23 +4,23 @@ import { applicationGenerator } from './application';
 import { Schema } from './schema';
 
 describe('app', () => {
-  let appTree: Tree;
+   let appTree: Tree;
 
-  beforeEach(() => {
-    appTree = createTreeWithEmptyWorkspace();
-  });
+   beforeEach(() => {
+      appTree = createTreeWithEmptyWorkspace();
+   });
 
-  it('should generate files', async () => {
-    await applicationGenerator(appTree, {
-      name: 'my-node-app',
-      projectNameAndRootFormat: 'as-provided',
-    } as Schema);
+   it('should generate files', async () => {
+      await applicationGenerator(appTree, {
+         name: 'my-node-app',
+         projectNameAndRootFormat: 'as-provided',
+      } as Schema);
 
-    const mainFile = appTree.read('my-node-app/src/main.ts').toString();
-    expect(mainFile).toContain(`import express from 'express';`);
+      const mainFile = appTree.read('my-node-app/src/main.ts').toString();
+      expect(mainFile).toContain(`import express from 'express';`);
 
-    const tsconfig = readJson(appTree, 'my-node-app/tsconfig.json');
-    expect(tsconfig).toMatchInlineSnapshot(`
+      const tsconfig = readJson(appTree, 'my-node-app/tsconfig.json');
+      expect(tsconfig).toMatchInlineSnapshot(`
       {
         "compilerOptions": {
           "esModuleInterop": true,
@@ -39,8 +39,8 @@ describe('app', () => {
       }
     `);
 
-    const eslintrcJson = readJson(appTree, 'my-node-app/.eslintrc.json');
-    expect(eslintrcJson).toMatchInlineSnapshot(`
+      const eslintrcJson = readJson(appTree, 'my-node-app/.eslintrc.json');
+      expect(eslintrcJson).toMatchInlineSnapshot(`
       {
         "extends": [
           "../.eslintrc.json",
@@ -75,16 +75,16 @@ describe('app', () => {
         ],
       }
     `);
-  });
+   });
 
-  it('should add types to the tsconfig.app.json', async () => {
-    await applicationGenerator(appTree, {
-      name: 'my-node-app',
-      projectNameAndRootFormat: 'as-provided',
-    } as Schema);
-    const tsconfig = readJson(appTree, 'my-node-app/tsconfig.app.json');
-    expect(tsconfig.compilerOptions.types).toContain('express');
-    expect(tsconfig).toMatchInlineSnapshot(`
+   it('should add types to the tsconfig.app.json', async () => {
+      await applicationGenerator(appTree, {
+         name: 'my-node-app',
+         projectNameAndRootFormat: 'as-provided',
+      } as Schema);
+      const tsconfig = readJson(appTree, 'my-node-app/tsconfig.app.json');
+      expect(tsconfig.compilerOptions.types).toContain('express');
+      expect(tsconfig).toMatchInlineSnapshot(`
       {
         "compilerOptions": {
           "module": "commonjs",
@@ -105,36 +105,36 @@ describe('app', () => {
         ],
       }
     `);
-  });
+   });
 
-  describe('--js flag', () => {
-    it('should generate js files instead of ts files', async () => {
-      await applicationGenerator(appTree, {
-        name: 'my-node-app',
-        js: true,
-        projectNameAndRootFormat: 'as-provided',
-      } as Schema);
+   describe('--js flag', () => {
+      it('should generate js files instead of ts files', async () => {
+         await applicationGenerator(appTree, {
+            name: 'my-node-app',
+            js: true,
+            projectNameAndRootFormat: 'as-provided',
+         } as Schema);
 
-      expect(appTree.exists('my-node-app/src/main.js')).toBeTruthy();
-      expect(appTree.read('my-node-app/src/main.js').toString()).toContain(
-        `import express from 'express';`
-      );
+         expect(appTree.exists('my-node-app/src/main.js')).toBeTruthy();
+         expect(appTree.read('my-node-app/src/main.js').toString()).toContain(
+            `import express from 'express';`
+         );
 
-      const tsConfig = readJson(appTree, 'my-node-app/tsconfig.json');
-      expect(tsConfig.compilerOptions).toEqual({
-        allowJs: true,
-        esModuleInterop: true,
+         const tsConfig = readJson(appTree, 'my-node-app/tsconfig.json');
+         expect(tsConfig.compilerOptions).toEqual({
+            allowJs: true,
+            esModuleInterop: true,
+         });
+
+         const tsConfigApp = readJson(appTree, 'my-node-app/tsconfig.app.json');
+         expect(tsConfigApp.include).toEqual(['src/**/*.ts', 'src/**/*.js']);
+         expect(tsConfigApp.exclude).toEqual([
+            'jest.config.ts',
+            'src/**/*.spec.ts',
+            'src/**/*.test.ts',
+            'src/**/*.spec.js',
+            'src/**/*.test.js',
+         ]);
       });
-
-      const tsConfigApp = readJson(appTree, 'my-node-app/tsconfig.app.json');
-      expect(tsConfigApp.include).toEqual(['src/**/*.ts', 'src/**/*.js']);
-      expect(tsConfigApp.exclude).toEqual([
-        'jest.config.ts',
-        'src/**/*.spec.ts',
-        'src/**/*.test.ts',
-        'src/**/*.spec.js',
-        'src/**/*.test.js',
-      ]);
-    });
-  });
+   });
 });

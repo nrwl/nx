@@ -2,8 +2,8 @@ import { ViteBuildExecutorOptions } from '../executors/build/schema';
 import { ExecutorContext, getPackageManagerCommand } from '@nx/devkit';
 import { ViteDevServerExecutorOptions } from '../executors/dev-server/schema';
 import {
-  calculateProjectBuildableDependencies,
-  createTmpTsConfig,
+   calculateProjectBuildableDependencies,
+   createTmpTsConfig,
 } from '@nx/js/src/utils/buildable-libs-utils';
 import { getProjectTsConfigPath } from './options-utils';
 import { execSync } from 'node:child_process';
@@ -11,75 +11,75 @@ import { printDiagnostics, runTypeCheck } from '@nx/js';
 import { join } from 'path';
 
 export async function validateTypes(opts: {
-  workspaceRoot: string;
-  tsconfig: string;
-  isVueProject?: boolean;
+   workspaceRoot: string;
+   tsconfig: string;
+   isVueProject?: boolean;
 }): Promise<void> {
-  if (!opts.isVueProject) {
-    const result = await runTypeCheck({
-      workspaceRoot: opts.workspaceRoot,
-      tsConfigPath: opts.tsconfig.startsWith(opts.workspaceRoot)
-        ? opts.tsconfig
-        : join(opts.workspaceRoot, opts.tsconfig),
-      mode: 'noEmit',
-    });
+   if (!opts.isVueProject) {
+      const result = await runTypeCheck({
+         workspaceRoot: opts.workspaceRoot,
+         tsConfigPath: opts.tsconfig.startsWith(opts.workspaceRoot)
+            ? opts.tsconfig
+            : join(opts.workspaceRoot, opts.tsconfig),
+         mode: 'noEmit',
+      });
 
-    await printDiagnostics(result.errors, result.warnings);
+      await printDiagnostics(result.errors, result.warnings);
 
-    if (result.errors.length > 0) {
-      throw new Error('Found type errors. See above.');
-    }
-  } else {
-    const pm = getPackageManagerCommand();
-    const cp = execSync(
-      `${pm.exec} vue-tsc --noEmit -p ${opts.tsconfig} --composite false`,
-      {
-        cwd: opts.workspaceRoot,
-        stdio: 'inherit',
+      if (result.errors.length > 0) {
+         throw new Error('Found type errors. See above.');
       }
-    );
-  }
+   } else {
+      const pm = getPackageManagerCommand();
+      const cp = execSync(
+         `${pm.exec} vue-tsc --noEmit -p ${opts.tsconfig} --composite false`,
+         {
+            cwd: opts.workspaceRoot,
+            stdio: 'inherit',
+         }
+      );
+   }
 }
 
 export function createBuildableTsConfig(
-  projectRoot: string,
-  options: { tsConfig?: string; buildLibsFromSource?: boolean },
-  context: ExecutorContext
+   projectRoot: string,
+   options: { tsConfig?: string; buildLibsFromSource?: boolean },
+   context: ExecutorContext
 ) {
-  const tsConfig = options.tsConfig ?? getProjectTsConfigPath(projectRoot);
-  options['buildLibsFromSource'] ??= true;
+   const tsConfig = options.tsConfig ?? getProjectTsConfigPath(projectRoot);
+   options['buildLibsFromSource'] ??= true;
 
-  if (!options['buildLibsFromSource']) {
-    const { dependencies } = calculateProjectBuildableDependencies(
-      context.taskGraph,
-      context.projectGraph,
-      context.root,
-      context.projectName,
-      // When using incremental building and the serve target is called
-      // we need to get the deps for the 'build' target instead.
-      context.targetName === 'serve' ? 'build' : context.targetName,
-      context.configurationName
-    );
-    // This tsconfig is used via the Vite ts paths plugin.
-    // It can be also used by other user-defined Vite plugins (e.g. for creating type declaration files).
-    const tmpTsConfigPath = createTmpTsConfig(
-      tsConfig,
-      context.root,
-      projectRoot,
-      dependencies
-    );
-    process.env.NX_TSCONFIG_PATH = tmpTsConfigPath;
-    return tmpTsConfigPath;
-  }
-  return tsConfig;
+   if (!options['buildLibsFromSource']) {
+      const { dependencies } = calculateProjectBuildableDependencies(
+         context.taskGraph,
+         context.projectGraph,
+         context.root,
+         context.projectName,
+         // When using incremental building and the serve target is called
+         // we need to get the deps for the 'build' target instead.
+         context.targetName === 'serve' ? 'build' : context.targetName,
+         context.configurationName
+      );
+      // This tsconfig is used via the Vite ts paths plugin.
+      // It can be also used by other user-defined Vite plugins (e.g. for creating type declaration files).
+      const tmpTsConfigPath = createTmpTsConfig(
+         tsConfig,
+         context.root,
+         projectRoot,
+         dependencies
+      );
+      process.env.NX_TSCONFIG_PATH = tmpTsConfigPath;
+      return tmpTsConfigPath;
+   }
+   return tsConfig;
 }
 
 export function loadViteDynamicImport() {
-  return Function('return import("vite")')() as Promise<typeof import('vite')>;
+   return Function('return import("vite")')() as Promise<typeof import('vite')>;
 }
 
 export function loadVitestDynamicImport() {
-  return Function('return import("vitest/node")')() as Promise<
-    typeof import('vitest/node')
-  >;
+   return Function('return import("vitest/node")')() as Promise<
+      typeof import('vitest/node')
+   >;
 }

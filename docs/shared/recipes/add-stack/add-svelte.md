@@ -87,15 +87,15 @@ Create your `index.html` at the root with the following:
 ```html
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Acme</title>
-  </head>
-  <body>
-    <div id="app"></div>
-    <script type="module" src="./src/main.ts"></script>
-  </body>
+   <head>
+      <meta charset="UTF-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <title>Acme</title>
+   </head>
+   <body>
+      <div id="app"></div>
+      <script type="module" src="./src/main.ts"></script>
+   </body>
 </html>
 ```
 
@@ -105,7 +105,7 @@ Navigate to `src/index.ts` and change it to `src/main.ts` and add the following 
 import App from './App.svelte';
 
 const app = new App({
-  target: document.getElementById('app'),
+   target: document.getElementById('app'),
 });
 
 export default app;
@@ -130,9 +130,9 @@ Since we have a `.svelte` file, we'll need to tell typescript how to handle it. 
 
 ```ts {% fileName="src/svelte-shims.d.ts" %}
 declare module '*.svelte' {
-  import type { ComponentType } from 'svelte';
-  const component: ComponentType;
-  export default component;
+   import type { ComponentType } from 'svelte';
+   const component: ComponentType;
+   export default component;
 }
 ```
 
@@ -140,8 +140,8 @@ Alternatively, you could also extend the `tsconfig.json` file to use tsconfig/sv
 
 ```json {% fileName="tsconfig.json" %}
 {
-  "extends": "@tsconfig/svelte/tsconfig.json"
-  //... other configs
+   "extends": "@tsconfig/svelte/tsconfig.json"
+   //... other configs
 }
 ```
 
@@ -156,15 +156,15 @@ Navigate to `vite.config.ts` add `svelte` to your plugins.
 import { svelte } from '@sveltejs/vite-plugin-svelte';
 
 export default defineConfig({
-  plugins: [
-    //... other plugins
-    svelte(), // Add this line
-  ],
-  //...
-  server: {
-    port: 4200,
-    host: 'localhost',
-  },
+   plugins: [
+      //... other plugins
+      svelte(), // Add this line
+   ],
+   //...
+   server: {
+      port: 4200,
+      host: 'localhost',
+   },
 });
 ```
 
@@ -172,14 +172,14 @@ Change your `tsconfig.lib.json` to `tsconfig.app.json`. It should look like this
 
 ```json {% fileName="/tsconfig.app.json" %}
 {
-  "extends": "./tsconfig.json",
-  "compilerOptions": {
-    "outDir": "./dist/out-tsc",
-    "declaration": true,
-    "types": ["node"]
-  },
-  "include": ["src/**/*.ts", "src/**/*.svelte"],
-  "exclude": ["jest.config.ts", "src/**/*.spec.ts", "src/**/*.test.ts"]
+   "extends": "./tsconfig.json",
+   "compilerOptions": {
+      "outDir": "./dist/out-tsc",
+      "declaration": true,
+      "types": ["node"]
+   },
+   "include": ["src/**/*.ts", "src/**/*.svelte"],
+   "exclude": ["jest.config.ts", "src/**/*.spec.ts", "src/**/*.test.ts"]
 }
 ```
 
@@ -187,25 +187,25 @@ Navigate to `nx.json` it should contain the following:
 
 ```json {% fileName="/project.json" %}
 {
-  // ... other config
-  "plugins": [
-    {
-      "plugin": "@nx/eslint/plugin",
-      "options": {
-        "targetName": "lint"
+   // ... other config
+   "plugins": [
+      {
+         "plugin": "@nx/eslint/plugin",
+         "options": {
+            "targetName": "lint"
+         }
+      },
+      {
+         "plugin": "@nx/vite/plugin",
+         "options": {
+            "buildTargetName": "build",
+            "previewTargetName": "preview",
+            "testTargetName": "test",
+            "serveTargetName": "serve",
+            "serveStaticTargetName": "serve-static"
+         }
       }
-    },
-    {
-      "plugin": "@nx/vite/plugin",
-      "options": {
-        "buildTargetName": "build",
-        "previewTargetName": "preview",
-        "testTargetName": "test",
-        "serveTargetName": "serve",
-        "serveStaticTargetName": "serve-static"
-      }
-    }
-  ]
+   ]
 }
 ```
 
@@ -215,9 +215,9 @@ We also need to add a `svelte.config.js` file to the project root with the follo
 import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 
 export default {
-  // Consult https://svelte.dev/docs#compile-time-svelte-preprocess
-  // for more information about preprocessors
-  preprocess: vitePreprocess(),
+   // Consult https://svelte.dev/docs#compile-time-svelte-preprocess
+   // for more information about preprocessors
+   preprocess: vitePreprocess(),
 };
 ```
 
@@ -225,7 +225,7 @@ Update your `package.json` to include:
 
 ```json {% fileName="/package.json" %}
 {
-  "type": "module"
+   "type": "module"
 }
 ```
 
@@ -279,14 +279,14 @@ Update your project's `vite.config.ts` to include the following:
 
 ```ts
 export default defineConfig({
-  //... other config
-  resolve: {
-    alias: {
-      '@acme/counter': fileURLToPath(
-        new URL('/libs/counter/src/index.ts', import.meta.url)
-      ),
-    },
-  },
+   //... other config
+   resolve: {
+      alias: {
+         '@acme/counter': fileURLToPath(
+            new URL('/libs/counter/src/index.ts', import.meta.url)
+         ),
+      },
+   },
 });
 ```
 
@@ -320,6 +320,6 @@ To serve the application at `http://localhost:4200`.
 
 A larger example including libraries, test and more is available at [Nx Svelte Example](https://github.com/nrwl/nx-recipes/tree/main/svelte) on GitHub.
 
-- [Nx Vite Plugin](/nx-api/vite)
-- [Vite](https://vitejs.dev/)
-- [Svelte](https://svelte.dev/)
+-  [Nx Vite Plugin](/nx-api/vite)
+-  [Vite](https://vitejs.dev/)
+-  [Svelte](https://svelte.dev/)

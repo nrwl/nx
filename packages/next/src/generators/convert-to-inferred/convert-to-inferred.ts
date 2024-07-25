@@ -6,55 +6,55 @@ import { buildPostTargetTransformer } from './lib/build-post-target-transformer'
 import { servePosTargetTransformer } from './lib/serve-post-target-tranformer';
 
 interface Schema {
-  project?: string;
-  skipFormat?: boolean;
+   project?: string;
+   skipFormat?: boolean;
 }
 
 export async function convertToInferred(tree: Tree, options: Schema) {
-  const projectGraph = await createProjectGraphAsync();
-  const migrationLogs = new AggregatedLog();
+   const projectGraph = await createProjectGraphAsync();
+   const migrationLogs = new AggregatedLog();
 
-  const migratedProjects = await migrateProjectExecutorsToPluginV1(
-    tree,
-    projectGraph,
-    '@nx/next/plugin',
-    createNodes,
-    {
-      buildTargetName: 'build',
-      devTargetName: 'dev',
-      startTargetName: 'start',
-      serveStaticTargetName: 'serve-static',
-    },
-    [
+   const migratedProjects = await migrateProjectExecutorsToPluginV1(
+      tree,
+      projectGraph,
+      '@nx/next/plugin',
+      createNodes,
       {
-        executors: ['@nx/next:build'],
-        postTargetTransformer: buildPostTargetTransformer(migrationLogs),
-        targetPluginOptionMapper: (targetName) => ({
-          buildTargetName: targetName,
-        }),
+         buildTargetName: 'build',
+         devTargetName: 'dev',
+         startTargetName: 'start',
+         serveStaticTargetName: 'serve-static',
       },
-      {
-        executors: ['@nx/next:server'],
-        postTargetTransformer: servePosTargetTransformer(migrationLogs),
-        targetPluginOptionMapper: (targetName) => ({
-          devTargetName: targetName,
-        }),
-      },
-    ],
-    options.project
-  );
+      [
+         {
+            executors: ['@nx/next:build'],
+            postTargetTransformer: buildPostTargetTransformer(migrationLogs),
+            targetPluginOptionMapper: (targetName) => ({
+               buildTargetName: targetName,
+            }),
+         },
+         {
+            executors: ['@nx/next:server'],
+            postTargetTransformer: servePosTargetTransformer(migrationLogs),
+            targetPluginOptionMapper: (targetName) => ({
+               devTargetName: targetName,
+            }),
+         },
+      ],
+      options.project
+   );
 
-  if (migratedProjects.size === 0) {
-    throw new Error('Could not find any targets to migrate');
-  }
+   if (migratedProjects.size === 0) {
+      throw new Error('Could not find any targets to migrate');
+   }
 
-  if (!options.skipFormat) {
-    await formatFiles(tree);
-  }
+   if (!options.skipFormat) {
+      await formatFiles(tree);
+   }
 
-  return () => {
-    migrationLogs.flushLogs();
-  };
+   return () => {
+      migrationLogs.flushLogs();
+   };
 }
 
 export default convertToInferred;

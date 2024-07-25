@@ -9,11 +9,11 @@ import { NormalizedSchema } from '../schema';
  * - change target references
  */
 export function updateDefaultProject(tree: Tree, schema: NormalizedSchema) {
-  const nxJson = readNxJson(tree);
+   const nxJson = readNxJson(tree);
 
-  // update default project (if necessary)
-  if (nxJson.defaultProject && nxJson.defaultProject === schema.projectName) {
-    nxJson.defaultProject = schema.newProjectName;
-    updateNxJson(tree, nxJson);
-  }
+   // update default project (if necessary)
+   if (nxJson.defaultProject && nxJson.defaultProject === schema.projectName) {
+      nxJson.defaultProject = schema.newProjectName;
+      updateNxJson(tree, nxJson);
+   }
 }

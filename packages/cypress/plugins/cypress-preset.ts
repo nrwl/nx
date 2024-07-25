@@ -18,83 +18,83 @@ import type { InlineConfig } from 'vite';
 // import type * as Cypress from 'cypress';
 
 interface BaseCypressPreset {
-  videosFolder: string;
-  screenshotsFolder: string;
-  chromeWebSecurity: boolean;
+   videosFolder: string;
+   screenshotsFolder: string;
+   chromeWebSecurity: boolean;
 }
 
 export interface NxComponentTestingOptions {
-  /**
-   * the component testing target name.
-   * this is only when customized away from the default value of `component-test`
-   * @example 'component-test'
-   */
-  ctTargetName?: string;
-  buildTarget?: string;
-  bundler?: 'vite' | 'webpack';
-  compiler?: 'swc' | 'babel';
+   /**
+    * the component testing target name.
+    * this is only when customized away from the default value of `component-test`
+    * @example 'component-test'
+    */
+   ctTargetName?: string;
+   buildTarget?: string;
+   bundler?: 'vite' | 'webpack';
+   compiler?: 'swc' | 'babel';
 }
 
 // The bundler is only used while generating the component testing configuration
 // It cannot be changed after the configuration is generated
 export interface NxComponentTestingPresetOptions
-  extends Omit<NxComponentTestingOptions, 'bundler'> {}
+   extends Omit<NxComponentTestingOptions, 'bundler'> {}
 
 export function nxBaseCypressPreset(
-  pathToConfig: string,
-  options?: { testingType: 'component' | 'e2e' }
+   pathToConfig: string,
+   options?: { testingType: 'component' | 'e2e' }
 ): BaseCypressPreset {
-  // used to set babel settings for react CT.
-  process.env.NX_CYPRESS_COMPONENT_TEST =
-    options?.testingType === 'component' ? 'true' : 'false';
-  // prevent from placing path outside the root of the workspace
-  // if they pass in a file or directory
-  const normalizedPath = lstatSync(pathToConfig).isDirectory()
-    ? pathToConfig
-    : dirname(pathToConfig);
-  const projectPath = relative(workspaceRoot, normalizedPath);
-  const offset = relative(normalizedPath, workspaceRoot);
-  const videosFolder = join(offset, 'dist', 'cypress', projectPath, 'videos');
-  const screenshotsFolder = join(
-    offset,
-    'dist',
-    'cypress',
-    projectPath,
-    'screenshots'
-  );
+   // used to set babel settings for react CT.
+   process.env.NX_CYPRESS_COMPONENT_TEST =
+      options?.testingType === 'component' ? 'true' : 'false';
+   // prevent from placing path outside the root of the workspace
+   // if they pass in a file or directory
+   const normalizedPath = lstatSync(pathToConfig).isDirectory()
+      ? pathToConfig
+      : dirname(pathToConfig);
+   const projectPath = relative(workspaceRoot, normalizedPath);
+   const offset = relative(normalizedPath, workspaceRoot);
+   const videosFolder = join(offset, 'dist', 'cypress', projectPath, 'videos');
+   const screenshotsFolder = join(
+      offset,
+      'dist',
+      'cypress',
+      projectPath,
+      'screenshots'
+   );
 
-  return {
-    videosFolder,
-    screenshotsFolder,
-    chromeWebSecurity: false,
-  };
+   return {
+      videosFolder,
+      screenshotsFolder,
+      chromeWebSecurity: false,
+   };
 }
 
 function startWebServer(webServerCommand: string) {
-  const serverProcess = spawn(webServerCommand, {
-    cwd: workspaceRoot,
-    shell: true,
-    // Detaching the process on unix will create a process group, allowing us to kill it later
-    // Windows is fine so we leave it attached to this process
-    detached: process.platform !== 'win32',
-    stdio: 'inherit',
-  });
+   const serverProcess = spawn(webServerCommand, {
+      cwd: workspaceRoot,
+      shell: true,
+      // Detaching the process on unix will create a process group, allowing us to kill it later
+      // Windows is fine so we leave it attached to this process
+      detached: process.platform !== 'win32',
+      stdio: 'inherit',
+   });
 
-  return () => {
-    if (process.platform === 'win32') {
-      try {
-        execSync('taskkill /pid ' + serverProcess.pid + ' /T /F');
-      } catch (e) {
-        if (process.env.NX_VERBOSE_LOGGING === 'true') {
-          console.error(e);
-        }
+   return () => {
+      if (process.platform === 'win32') {
+         try {
+            execSync('taskkill /pid ' + serverProcess.pid + ' /T /F');
+         } catch (e) {
+            if (process.env.NX_VERBOSE_LOGGING === 'true') {
+               console.error(e);
+            }
+         }
+      } else {
+         // child.kill() does not work on linux
+         // process.kill will kill the whole process group on unix
+         process.kill(-serverProcess.pid, 'SIGKILL');
       }
-    } else {
-      // child.kill() does not work on linux
-      // process.kill will kill the whole process group on unix
-      process.kill(-serverProcess.pid, 'SIGKILL');
-    }
-  };
+   };
 }
 
 /**
@@ -113,168 +113,171 @@ function startWebServer(webServerCommand: string) {
  *
  */
 export function nxE2EPreset(
-  pathToConfig: string,
-  options?: NxCypressE2EPresetOptions
+   pathToConfig: string,
+   options?: NxCypressE2EPresetOptions
 ) {
-  const basePath = options?.cypressDir || 'src';
+   const basePath = options?.cypressDir || 'src';
 
-  const baseConfig: any /*Cypress.EndToEndConfigOptions & {
+   const baseConfig: any /*Cypress.EndToEndConfigOptions & {
     [NX_PLUGIN_OPTIONS]: unknown;
   }*/ = {
-    ...nxBaseCypressPreset(pathToConfig),
-    fileServerFolder: '.',
-    supportFile: `${basePath}/support/e2e.{js,ts}`,
-    specPattern: `${basePath}/**/*.cy.{js,jsx,ts,tsx}`,
-    fixturesFolder: `${basePath}/fixtures`,
+      ...nxBaseCypressPreset(pathToConfig),
+      fileServerFolder: '.',
+      supportFile: `${basePath}/support/e2e.{js,ts}`,
+      specPattern: `${basePath}/**/*.cy.{js,jsx,ts,tsx}`,
+      fixturesFolder: `${basePath}/fixtures`,
 
-    [NX_PLUGIN_OPTIONS]: {
-      webServerCommand: options?.webServerCommands?.default,
-      webServerCommands: options?.webServerCommands,
-      ciWebServerCommand: options?.ciWebServerCommand,
-    },
+      [NX_PLUGIN_OPTIONS]: {
+         webServerCommand: options?.webServerCommands?.default,
+         webServerCommands: options?.webServerCommands,
+         ciWebServerCommand: options?.ciWebServerCommand,
+      },
 
-    async setupNodeEvents(on, config) {
-      const webServerCommands =
-        config.env?.webServerCommands ?? options?.webServerCommands;
-      const webServerCommand =
-        config.env?.webServerCommand ?? webServerCommands?.default;
+      async setupNodeEvents(on, config) {
+         const webServerCommands =
+            config.env?.webServerCommands ?? options?.webServerCommands;
+         const webServerCommand =
+            config.env?.webServerCommand ?? webServerCommands?.default;
 
-      if (options?.bundler === 'vite') {
-        on('file:preprocessor', vitePreprocessor(options?.viteConfigOverrides));
-      }
-
-      if (!options?.webServerCommands) {
-        return;
-      }
-
-      if (!webServerCommand) {
-        return;
-      }
-      if (config.baseUrl && webServerCommand) {
-        if (await isServerUp(config.baseUrl)) {
-          if (
-            options?.webServerConfig?.reuseExistingServer === undefined
-              ? true
-              : options.webServerConfig.reuseExistingServer
-          ) {
-            console.log(
-              `Reusing the server already running on ${config.baseUrl}`
+         if (options?.bundler === 'vite') {
+            on(
+               'file:preprocessor',
+               vitePreprocessor(options?.viteConfigOverrides)
             );
+         }
+
+         if (!options?.webServerCommands) {
             return;
-          } else {
-            throw new Error(
-              `Web server is already running at ${config.baseUrl}`
-            );
-          }
-        }
-        const killWebServer = startWebServer(webServerCommand);
+         }
 
-        on('after:run', () => {
-          killWebServer();
-        });
-        await waitForServer(config.baseUrl, options.webServerConfig);
-      }
-    },
-  };
+         if (!webServerCommand) {
+            return;
+         }
+         if (config.baseUrl && webServerCommand) {
+            if (await isServerUp(config.baseUrl)) {
+               if (
+                  options?.webServerConfig?.reuseExistingServer === undefined
+                     ? true
+                     : options.webServerConfig.reuseExistingServer
+               ) {
+                  console.log(
+                     `Reusing the server already running on ${config.baseUrl}`
+                  );
+                  return;
+               } else {
+                  throw new Error(
+                     `Web server is already running at ${config.baseUrl}`
+                  );
+               }
+            }
+            const killWebServer = startWebServer(webServerCommand);
 
-  return baseConfig;
+            on('after:run', () => {
+               killWebServer();
+            });
+            await waitForServer(config.baseUrl, options.webServerConfig);
+         }
+      },
+   };
+
+   return baseConfig;
 }
 
 function waitForServer(
-  url: string,
-  webServerConfig: WebServerConfig
+   url: string,
+   webServerConfig: WebServerConfig
 ): Promise<void> {
-  return new Promise((resolve, reject) => {
-    let pollTimeout: NodeJS.Timeout | null;
-    const { protocol } = new URL(url);
+   return new Promise((resolve, reject) => {
+      let pollTimeout: NodeJS.Timeout | null;
+      const { protocol } = new URL(url);
 
-    const timeoutDuration = webServerConfig?.timeout ?? 60 * 1000;
-    const timeout = setTimeout(() => {
-      clearTimeout(pollTimeout);
-      reject(
-        new Error(
-          `Web server failed to start in ${timeoutDuration}ms. This can be configured in cypress.config.ts.`
-        )
-      );
-    }, timeoutDuration);
+      const timeoutDuration = webServerConfig?.timeout ?? 60 * 1000;
+      const timeout = setTimeout(() => {
+         clearTimeout(pollTimeout);
+         reject(
+            new Error(
+               `Web server failed to start in ${timeoutDuration}ms. This can be configured in cypress.config.ts.`
+            )
+         );
+      }, timeoutDuration);
 
-    const makeRequest = protocol === 'https:' ? httpsRequest : httpRequest;
+      const makeRequest = protocol === 'https:' ? httpsRequest : httpRequest;
 
-    function pollForServer() {
+      function pollForServer() {
+         const request = makeRequest(url, () => {
+            clearTimeout(timeout);
+            resolve();
+         });
+
+         request.on('error', () => {
+            pollTimeout = setTimeout(pollForServer, 100);
+         });
+
+         // Don't forget to end the request
+         request.end();
+      }
+
+      pollForServer();
+   });
+}
+
+function isServerUp(url: string) {
+   const { protocol } = new URL(url);
+   const makeRequest = protocol === 'https:' ? httpsRequest : httpRequest;
+
+   return new Promise((resolve) => {
       const request = makeRequest(url, () => {
-        clearTimeout(timeout);
-        resolve();
+         resolve(true);
       });
 
       request.on('error', () => {
-        pollTimeout = setTimeout(pollForServer, 100);
+         resolve(false);
       });
 
       // Don't forget to end the request
       request.end();
-    }
-
-    pollForServer();
-  });
-}
-
-function isServerUp(url: string) {
-  const { protocol } = new URL(url);
-  const makeRequest = protocol === 'https:' ? httpsRequest : httpRequest;
-
-  return new Promise((resolve) => {
-    const request = makeRequest(url, () => {
-      resolve(true);
-    });
-
-    request.on('error', () => {
-      resolve(false);
-    });
-
-    // Don't forget to end the request
-    request.end();
-  });
+   });
 }
 
 export interface WebServerConfig {
-  /**
-   * Timeout to wait for the webserver to start listening
-   */
-  timeout?: number;
-  /**
-   * Reuse an existing web server if it exists
-   * If this is false, an error will be thrown if the server is already running
-   */
-  reuseExistingServer?: boolean;
+   /**
+    * Timeout to wait for the webserver to start listening
+    */
+   timeout?: number;
+   /**
+    * Reuse an existing web server if it exists
+    * If this is false, an error will be thrown if the server is already running
+    */
+   reuseExistingServer?: boolean;
 }
 
 export type NxCypressE2EPresetOptions = {
-  bundler?: string;
-  /**
-   * The directory from the project root, where the cypress files (support, fixtures, specs) are located.
-   * i.e. 'cypress/' or 'src'
-   * default is 'src'
-   **/
-  cypressDir?: string;
+   bundler?: string;
+   /**
+    * The directory from the project root, where the cypress files (support, fixtures, specs) are located.
+    * i.e. 'cypress/' or 'src'
+    * default is 'src'
+    **/
+   cypressDir?: string;
 
-  /**
-   * A map of commandName -> command to start the web server for testing.
-   * Currently only default is read.
-   */
-  webServerCommands?: Record<string, string>;
+   /**
+    * A map of commandName -> command to start the web server for testing.
+    * Currently only default is read.
+    */
+   webServerCommands?: Record<string, string>;
 
-  /**
-   * A command to start the web server - used for e2e tests distributed by Nx.
-   */
-  ciWebServerCommand?: string;
+   /**
+    * A command to start the web server - used for e2e tests distributed by Nx.
+    */
+   ciWebServerCommand?: string;
 
-  /**
-   * Configures how the web server command is started and monitored.
-   */
-  webServerConfig?: WebServerConfig;
+   /**
+    * Configures how the web server command is started and monitored.
+    */
+   webServerConfig?: WebServerConfig;
 
-  /**
-   * Configure override inside the vite config
-   */
-  viteConfigOverrides?: InlineConfig;
+   /**
+    * Configure override inside the vite config
+    */
+   viteConfigOverrides?: InlineConfig;
 };

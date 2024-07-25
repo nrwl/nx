@@ -4,20 +4,20 @@ import type { PipeGeneratorOptions } from './pipe';
 import { pipeGenerator } from './pipe';
 
 describe('pipe generator', () => {
-  let tree: Tree;
-  const project = 'api';
-  const options: PipeGeneratorOptions = {
-    name: 'test',
-    project,
-    unitTestRunner: 'jest',
-  };
+   let tree: Tree;
+   const project = 'api';
+   const options: PipeGeneratorOptions = {
+      name: 'test',
+      project,
+      unitTestRunner: 'jest',
+   };
 
-  beforeEach(() => {
-    tree = createTreeWithNestApplication(project);
-    jest.clearAllMocks();
-  });
+   beforeEach(() => {
+      tree = createTreeWithNestApplication(project);
+      jest.clearAllMocks();
+   });
 
-  it('should run successfully', async () => {
-    await expect(pipeGenerator(tree, options)).resolves.not.toThrowError();
-  });
+   it('should run successfully', async () => {
+      await expect(pipeGenerator(tree, options)).resolves.not.toThrowError();
+   });
 });

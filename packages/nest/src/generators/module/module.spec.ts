@@ -4,19 +4,19 @@ import type { ModuleGeneratorOptions } from './module';
 import { moduleGenerator } from './module';
 
 describe('module generator', () => {
-  let tree: Tree;
-  const project = 'api';
-  const options: ModuleGeneratorOptions = {
-    name: 'test',
-    project,
-  };
+   let tree: Tree;
+   const project = 'api';
+   const options: ModuleGeneratorOptions = {
+      name: 'test',
+      project,
+   };
 
-  beforeEach(() => {
-    tree = createTreeWithNestApplication(project);
-    jest.clearAllMocks();
-  });
+   beforeEach(() => {
+      tree = createTreeWithNestApplication(project);
+      jest.clearAllMocks();
+   });
 
-  it('should run successfully', async () => {
-    await expect(moduleGenerator(tree, options)).resolves.not.toThrowError();
-  });
+   it('should run successfully', async () => {
+      await expect(moduleGenerator(tree, options)).resolves.not.toThrowError();
+   });
 });

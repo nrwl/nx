@@ -12,11 +12,11 @@ We're excited to introduce a new way to enhance your [Nuxt](https://nuxt.com/) d
 
 Using Nx with your Nuxt.js projects presents the following advantages:
 
-- **Monorepo Management**: Simplify the management of multiple projects within a single repository, facilitating code sharing and reducing overhead.
-- **Modular Development**: Break down your Nuxt app into manageable, independent modules that can be developed, tested, and deployed in isolation.
-- **Enhanced Caching**: Accelerate your development with Nx's intelligent caching, automatically configured for your Nuxt projects.
-- **Nx generators**: Nx provides generators for scaffolding new Nuxt applications, with support for Jest, Storybook, and e2e test generation with Cypress or Playwright.
-- **Automated upgrades**: Nx offers a set of migrators that help you upgrade your projects.
+-  **Monorepo Management**: Simplify the management of multiple projects within a single repository, facilitating code sharing and reducing overhead.
+-  **Modular Development**: Break down your Nuxt app into manageable, independent modules that can be developed, tested, and deployed in isolation.
+-  **Enhanced Caching**: Accelerate your development with Nx's intelligent caching, automatically configured for your Nuxt projects.
+-  **Nx generators**: Nx provides generators for scaffolding new Nuxt applications, with support for Jest, Storybook, and e2e test generation with Cypress or Playwright.
+-  **Automated upgrades**: Nx offers a set of migrators that help you upgrade your projects.
 
 ## Getting Started with Nx and Nuxt.js
 
@@ -57,9 +57,9 @@ Integrating Nx into an existing Nuxt.js project has never been easier, with the 
 
 When you run `nx init` in your existing Nuxt.js project, Nx does the following:
 
-- **Installs @nx/nuxt**: Adds the necessary Nx and @nx/nuxt dependencies to your project, enabling Nx's features while keeping your existing setup intact.
-- **Understands Existing Configurations**: Nx automatically recognizes your nuxt.config.js or nuxt.config.ts file, ensuring that all your custom configurations, scripts, and commands are preserved and utilized.
-- **Minimal Configuration**: Only a minimal `nx.json` file is added to your project. This file is used to configure the `@nx/nuxt` plugin if needed, but in most cases, your existing Nuxt.js configurations will suffice.
+-  **Installs @nx/nuxt**: Adds the necessary Nx and @nx/nuxt dependencies to your project, enabling Nx's features while keeping your existing setup intact.
+-  **Understands Existing Configurations**: Nx automatically recognizes your nuxt.config.js or nuxt.config.ts file, ensuring that all your custom configurations, scripts, and commands are preserved and utilized.
+-  **Minimal Configuration**: Only a minimal `nx.json` file is added to your project. This file is used to configure the `@nx/nuxt` plugin if needed, but in most cases, your existing Nuxt.js configurations will suffice.
 
 To begin the integration process, simply navigate to the root of your existing Nuxt.js project and run:
 
@@ -69,9 +69,9 @@ npx nx init
 
 This approach offers several key benefits for teams looking to adopt Nx:
 
-- **Zero Disruption**: Your project will continue to use its existing configurations, and the existing configuration entrypoint files. There's no need to learn new configuration syntaxes or reconfigure your project to start using Nx.
-- **Immediate Value**: Instantly gain access to Nx's powerful developer tools and build system, without significant changes to your project.
-- **Future Flexibility**: As your project grows, Nx is ready to scale with you. You can gradually adopt more Nx features and plugins over time, at a pace that suits your team.
+-  **Zero Disruption**: Your project will continue to use its existing configurations, and the existing configuration entrypoint files. There's no need to learn new configuration syntaxes or reconfigure your project to start using Nx.
+-  **Immediate Value**: Instantly gain access to Nx's powerful developer tools and build system, without significant changes to your project.
+-  **Future Flexibility**: As your project grows, Nx is ready to scale with you. You can gradually adopt more Nx features and plugins over time, at a pace that suits your team.
 
 ## Using Nx to run your Nuxt app
 
@@ -182,9 +182,9 @@ Whether you're starting a new Nuxt project or looking to enhance an existing one
 
 ## Learn more
 
-- [Nx Docs](/getting-started/intro)
-- [X / Twitter](https://twitter.com/nxdevtools) - [LinkedIn](https://www.linkedin.com/company/nrwl)
-- [Nx GitHub](https://github.com/nrwl/nx)
-- [Nx Community Discord](https://go.nx.dev/community)
-- [Nx Youtube Channel](https://www.youtube.com/@nxdevtools)
-- [Speed up your CI](https://nx.app)
+-  [Nx Docs](/getting-started/intro)
+-  [X / Twitter](https://twitter.com/nxdevtools) - [LinkedIn](https://www.linkedin.com/company/nrwl)
+-  [Nx GitHub](https://github.com/nrwl/nx)
+-  [Nx Community Discord](https://go.nx.dev/community)
+-  [Nx Youtube Channel](https://www.youtube.com/@nxdevtools)
+-  [Speed up your CI](https://nx.app)

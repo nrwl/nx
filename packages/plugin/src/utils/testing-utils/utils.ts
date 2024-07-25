@@ -1,12 +1,12 @@
 import {
-  copySync,
-  ensureDirSync,
-  readdirSync,
-  readFileSync,
-  removeSync,
-  renameSync,
-  statSync,
-  writeFileSync,
+   copySync,
+   ensureDirSync,
+   readdirSync,
+   readFileSync,
+   removeSync,
+   renameSync,
+   statSync,
+   writeFileSync,
 } from 'fs-extra';
 import { dirname, isAbsolute } from 'path';
 import { tmpFolder, tmpProjPath } from './paths';
@@ -21,13 +21,13 @@ export { directoryExists, fileExists };
  * @param modules a list of module names or scopes to copy
  */
 export function copyNodeModules(modules: string[]) {
-  modules.forEach((module) => {
-    removeSync(`${tmpProjPath()}/node_modules/${module}`);
-    copySync(
-      `./node_modules/${module}`,
-      `${tmpProjPath()}/node_modules/${module}`
-    );
-  });
+   modules.forEach((module) => {
+      removeSync(`${tmpProjPath()}/node_modules/${module}`);
+      copySync(
+         `./node_modules/${module}`,
+         `${tmpProjPath()}/node_modules/${module}`
+      );
+   });
 }
 
 /**
@@ -36,8 +36,8 @@ export function copyNodeModules(modules: string[]) {
  * @param output Output from an asynchronous command
  */
 export function expectTestsPass(output: { stdout: string; stderr: string }) {
-  expect(output.stderr).toContain('Ran all test suites');
-  expect(output.stderr).not.toContain('fail');
+   expect(output.stderr).toContain('Ran all test suites');
+   expect(output.stderr).not.toContain('fail');
 }
 
 // type callback =
@@ -51,18 +51,18 @@ export function expectTestsPass(output: { stdout: string; stderr: string }) {
  * @param content Content to replace the original content with
  */
 export function updateFile(
-  file: string,
-  content: string | ((originalFileContent: string) => string)
+   file: string,
+   content: string | ((originalFileContent: string) => string)
 ): void {
-  ensureDirSync(dirname(tmpProjPath(file)));
-  if (typeof content === 'string') {
-    writeFileSync(tmpProjPath(file), content);
-  } else {
-    writeFileSync(
-      tmpProjPath(file),
-      content(readFileSync(tmpProjPath(file)).toString())
-    );
-  }
+   ensureDirSync(dirname(tmpProjPath(file)));
+   if (typeof content === 'string') {
+      writeFileSync(tmpProjPath(file), content);
+   } else {
+      writeFileSync(
+         tmpProjPath(file),
+         content(readFileSync(tmpProjPath(file)).toString())
+      );
+   }
 }
 
 /**
@@ -71,8 +71,8 @@ export function updateFile(
  * @param newPath New path
  */
 export function renameFile(path: string, newPath: string): void {
-  ensureDirSync(dirname(tmpProjPath(newPath)));
-  renameSync(tmpProjPath(path), tmpProjPath(newPath));
+   ensureDirSync(dirname(tmpProjPath(newPath)));
+   renameSync(tmpProjPath(path), tmpProjPath(newPath));
 }
 
 /**
@@ -84,12 +84,12 @@ export function renameFile(path: string, newPath: string): void {
  * @usage `checkFileExists('file1', 'file2', '/var/user/file')`
  */
 export function checkFilesExist(...expectedPaths: string[]) {
-  expectedPaths.forEach((path) => {
-    const filePath = isAbsolute(path) ? path : tmpProjPath(path);
-    if (!exists(filePath)) {
-      throw new Error(`'${filePath}' does not exist`);
-    }
-  });
+   expectedPaths.forEach((path) => {
+      const filePath = isAbsolute(path) ? path : tmpProjPath(path);
+      if (!exists(filePath)) {
+         throw new Error(`'${filePath}' does not exist`);
+      }
+   });
 }
 
 /**
@@ -97,7 +97,7 @@ export function checkFilesExist(...expectedPaths: string[]) {
  * @param dirName Directory name within the e2e directory.
  */
 export function listFiles(dirName: string): string[] {
-  return readdirSync(tmpProjPath(dirName));
+   return readdirSync(tmpProjPath(dirName));
 }
 
 /**
@@ -106,10 +106,10 @@ export function listFiles(dirName: string): string[] {
  * @param options JSON parse options
  */
 export function readJson<T extends object = any>(
-  path: string,
-  options?: JsonParseOptions
+   path: string,
+   options?: JsonParseOptions
 ): T {
-  return parseJson<T>(readFile(path), options);
+   return parseJson<T>(readFile(path), options);
 }
 
 /**
@@ -117,33 +117,33 @@ export function readJson<T extends object = any>(
  * @param path Path to the file. Absolute or relative to the e2e directory.
  */
 export function readFile(path: string): string {
-  const filePath = isAbsolute(path) ? path : tmpProjPath(path);
-  return readFileSync(filePath, 'utf-8');
+   const filePath = isAbsolute(path) ? path : tmpProjPath(path);
+   return readFileSync(filePath, 'utf-8');
 }
 
 /**
  * Deletes the e2e directory
  */
 export function cleanup(): void {
-  removeSync(tmpProjPath());
+   removeSync(tmpProjPath());
 }
 
 /**
  * Remove the dist folder from the e2e directory
  */
 export function rmDist(): void {
-  removeSync(`${tmpProjPath()}/dist`);
+   removeSync(`${tmpProjPath()}/dist`);
 }
 
 export function removeTmpProject(project: string): void {
-  removeSync(`${tmpFolder()}/${project}`);
+   removeSync(`${tmpFolder()}/${project}`);
 }
 
 /**
  * Get the currend `cwd` in the process
  */
 export function getCwd(): string {
-  return process.cwd();
+   return process.cwd();
 }
 
 /**
@@ -151,7 +151,7 @@ export function getCwd(): string {
  * @param path Path to file or directory
  */
 export function exists(path: string): boolean {
-  return directoryExists(path) || fileExists(path);
+   return directoryExists(path) || fileExists(path);
 }
 
 /**
@@ -159,5 +159,5 @@ export function exists(path: string): boolean {
  * @param filePath Path to the file
  */
 export function getSize(filePath: string): number {
-  return statSync(filePath).size;
+   return statSync(filePath).size;
 }

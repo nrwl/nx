@@ -5,8 +5,8 @@ import { NxReactWebpackPlugin as _NxReactWebpackPlugin } from './plugins/nx-reac
 export const NxReactWebpackPlugin = _NxReactWebpackPlugin;
 
 export {
-  extraEslintDependencies,
-  extendReactEslintJson,
+   extraEslintDependencies,
+   extendReactEslintJson,
 } from './src/utils/lint';
 export { cssInJsDependenciesBabel } from './src/utils/styled';
 export { assertValidStyle } from './src/utils/assertion';

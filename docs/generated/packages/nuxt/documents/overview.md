@@ -9,7 +9,7 @@ The Nx plugin for [Nuxt](https://nuxt.com/).
 
 You can create a new workspace that uses Nuxt with one of the following commands:
 
-- Generate a new monorepo with a Nuxt app
+-  Generate a new monorepo with a Nuxt app
 
 ```shell
 npx create-nx-workspace@latest --preset=nuxt
@@ -33,12 +33,12 @@ This will install the correct version of `@nx/nuxt`.
 
 The `@nx/nuxt` plugin will create a task for any project that has an Nuxt configuration file present. Any of the following files will be recognized as an Nuxt configuration file:
 
-- `nuxt.config.js`
-- `nuxt.config.ts`
-- `nuxt.config.mjs`
-- `nuxt.config.mts`
-- `nuxt.config.cjs`
-- `nuxt.config.cts`
+-  `nuxt.config.js`
+-  `nuxt.config.ts`
+-  `nuxt.config.mjs`
+-  `nuxt.config.mts`
+-  `nuxt.config.cjs`
+-  `nuxt.config.cts`
 
 ### View Inferred Tasks
 
@@ -50,18 +50,18 @@ The `@nx/nuxt/plugin` is configured in the `plugins` array in `nx.json`.
 
 ```json {% fileName="nx.json" %}
 {
-  "plugins": [
-    {
-      "plugin": "@nx/nuxt/plugin",
-      "options": {
-        "buildTargetName": "build",
-        "testTargetName": "test",
-        "serveTargetName": "serve",
-        "buildStaticTargetName": "build-static",
-        "serveStaticTargetName": "serve-static"
+   "plugins": [
+      {
+         "plugin": "@nx/nuxt/plugin",
+         "options": {
+            "buildTargetName": "build",
+            "testTargetName": "test",
+            "serveTargetName": "serve",
+            "buildStaticTargetName": "build-static",
+            "serveStaticTargetName": "serve-static"
+         }
       }
-    }
-  ]
+   ]
 }
 ```
 

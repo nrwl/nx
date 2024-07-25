@@ -9,23 +9,23 @@ import { generateTestLibrary } from '../utils/testing';
 import { componentStoryGenerator } from './component-story';
 
 describe('componentStory generator', () => {
-  let tree: Tree;
-  const libName = 'ng-lib1';
-  const storyFile = `${libName}/src/lib/test-button/test-button.component.stories.ts`;
+   let tree: Tree;
+   const libName = 'ng-lib1';
+   const storyFile = `${libName}/src/lib/test-button/test-button.component.stories.ts`;
 
-  beforeEach(async () => {
-    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+   beforeEach(async () => {
+      tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
-    await generateTestLibrary(tree, { name: libName, skipFormat: true });
-    await componentGenerator(tree, {
-      name: 'test-button',
-      project: libName,
-      skipFormat: true,
-    });
+      await generateTestLibrary(tree, { name: libName, skipFormat: true });
+      await componentGenerator(tree, {
+         name: 'test-button',
+         project: libName,
+         skipFormat: true,
+      });
 
-    tree.write(
-      `${libName}/src/lib/test-button/test-button.component.ts`,
-      `import { Component, Input } from '@angular/core';
+      tree.write(
+         `${libName}/src/lib/test-button/test-button.component.ts`,
+         `import { Component, Input } from '@angular/core';
 
         export type ButtonStyle = 'default' | 'primary' | 'accent';
 
@@ -43,47 +43,47 @@ describe('componentStory generator', () => {
           @Input() anotherProp: any;
           @Input() anotherNeverProp: never;
         }`
-    );
-  });
+      );
+   });
 
-  it('should not generate the component stories file when it already exists', async () => {
-    jest.spyOn(storybookUtils, 'getComponentProps');
-    jest.spyOn(devkit, 'generateFiles');
-    tree.write(storyFile, '');
+   it('should not generate the component stories file when it already exists', async () => {
+      jest.spyOn(storybookUtils, 'getComponentProps');
+      jest.spyOn(devkit, 'generateFiles');
+      tree.write(storyFile, '');
 
-    await componentStoryGenerator(tree, {
-      componentFileName: 'test-button.component',
-      componentName: 'TestButtonComponent',
-      componentPath: `src/lib/test-button`,
-      projectPath: `${libName}`,
-      skipFormat: true,
-    });
+      await componentStoryGenerator(tree, {
+         componentFileName: 'test-button.component',
+         componentName: 'TestButtonComponent',
+         componentPath: `src/lib/test-button`,
+         projectPath: `${libName}`,
+         skipFormat: true,
+      });
 
-    expect(storybookUtils.getComponentProps).not.toHaveBeenCalled();
-    expect(devkit.generateFiles).not.toHaveBeenCalled();
-    expect(tree.read(storyFile, 'utf-8')).toBe('');
-  });
+      expect(storybookUtils.getComponentProps).not.toHaveBeenCalled();
+      expect(devkit.generateFiles).not.toHaveBeenCalled();
+      expect(tree.read(storyFile, 'utf-8')).toBe('');
+   });
 
-  it('should generate the component stories file', async () => {
-    await componentStoryGenerator(tree, {
-      componentFileName: 'test-button.component',
-      componentName: 'TestButtonComponent',
-      componentPath: `src/lib/test-button`,
-      projectPath: `${libName}`,
-      skipFormat: true,
-    });
+   it('should generate the component stories file', async () => {
+      await componentStoryGenerator(tree, {
+         componentFileName: 'test-button.component',
+         componentName: 'TestButtonComponent',
+         componentPath: `src/lib/test-button`,
+         projectPath: `${libName}`,
+         skipFormat: true,
+      });
 
-    expect(tree.exists(storyFile)).toBe(true);
-  });
+      expect(tree.exists(storyFile)).toBe(true);
+   });
 
-  it('should generate the right props', async () => {
-    await componentStoryGenerator(tree, {
-      componentFileName: 'test-button.component',
-      componentName: 'TestButtonComponent',
-      componentPath: `src/lib/test-button`,
-      projectPath: `${libName}`,
-    });
+   it('should generate the right props', async () => {
+      await componentStoryGenerator(tree, {
+         componentFileName: 'test-button.component',
+         componentName: 'TestButtonComponent',
+         componentPath: `src/lib/test-button`,
+         projectPath: `${libName}`,
+      });
 
-    expect(tree.read(storyFile).toString()).toMatchSnapshot();
-  });
+      expect(tree.read(storyFile).toString()).toMatchSnapshot();
+   });
 });

@@ -11,59 +11,59 @@ image: node:18
 
 # Creating template for DTE agents
 .dte-agent:
-  interruptible: true
-  cache:
-    key:
-      files:
-        - yarn.lock
-    paths:
-      - '.yarn-cache/'
-  script:
-    - yarn install --cache-folder .yarn-cache --prefer-offline --frozen-lockfile
-    - yarn nx-cloud start-agent
+   interruptible: true
+   cache:
+      key:
+         files:
+            - yarn.lock
+      paths:
+         - '.yarn-cache/'
+   script:
+      - yarn install --cache-folder .yarn-cache --prefer-offline --frozen-lockfile
+      - yarn nx-cloud start-agent
 
 # Creating template for a job running DTE (orchestrator)
 .base-pipeline:
-  interruptible: true
-  only:
-    - main
-    - merge_requests
-  cache:
-    key:
-      files:
-        - yarn.lock
-    paths:
-      - '.yarn-cache/'
-  before_script:
-    - yarn install --cache-folder .yarn-cache --prefer-offline --frozen-lockfile
-    - NX_HEAD=$CI_COMMIT_SHA
-    - NX_BASE=${CI_MERGE_REQUEST_DIFF_BASE_SHA:-$CI_COMMIT_BEFORE_SHA}
-    - NX_CLOUD_DISTRIBUTED_EXECUTION_AGENT_COUNT=3 # expected number of agents
+   interruptible: true
+   only:
+      - main
+      - merge_requests
+   cache:
+      key:
+         files:
+            - yarn.lock
+      paths:
+         - '.yarn-cache/'
+   before_script:
+      - yarn install --cache-folder .yarn-cache --prefer-offline --frozen-lockfile
+      - NX_HEAD=$CI_COMMIT_SHA
+      - NX_BASE=${CI_MERGE_REQUEST_DIFF_BASE_SHA:-$CI_COMMIT_BEFORE_SHA}
+      - NX_CLOUD_DISTRIBUTED_EXECUTION_AGENT_COUNT=3 # expected number of agents
 
-  artifacts:
-    expire_in: 5 days
-    paths:
-      - dist
+   artifacts:
+      expire_in: 5 days
+      paths:
+         - dist
 
 # Main job running DTE
 nx-dte:
-  stage: affected
-  extends: .base-pipeline
-  script:
-    - yarn nx-cloud start-ci-run --distribute-on="manual" --stop-agents-after=e2e-ci
-    - yarn nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD
-    - yarn nx affected --base=$NX_BASE --head=$NX_HEAD -t lint,test,build,e2e-ci --parallel=2
+   stage: affected
+   extends: .base-pipeline
+   script:
+      - yarn nx-cloud start-ci-run --distribute-on="manual" --stop-agents-after=e2e-ci
+      - yarn nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD
+      - yarn nx affected --base=$NX_BASE --head=$NX_HEAD -t lint,test,build,e2e-ci --parallel=2
 
 # Create as many agents as you want
 nx-dte-agent1:
-  extends: .dte-agent
-  stage: affected
+   extends: .dte-agent
+   stage: affected
 nx-dte-agent2:
-  extends: .dte-agent
-  stage: affected
+   extends: .dte-agent
+   stage: affected
 nx-dte-agent3:
-  extends: .dte-agent
-  stage: affected
+   extends: .dte-agent
+   stage: affected
 ```
 
 This configuration is setting up two types of jobs - a main job and three agent jobs.

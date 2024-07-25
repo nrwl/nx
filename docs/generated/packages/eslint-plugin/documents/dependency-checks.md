@@ -16,17 +16,17 @@ To set it up manually for existing libraries, you need to add the `dependency-ch
 
 ```jsonc {% fileName="<your-project-root>/.eslintrc.json" %}
 {
-  // ... more ESLint config here
-  "overrides": [
-    {
-      "files": ["*.json"],
-      "parser": "jsonc-eslint-parser",
-      "rules": {
-        "@nx/dependency-checks": "error"
+   // ... more ESLint config here
+   "overrides": [
+      {
+         "files": ["*.json"],
+         "parser": "jsonc-eslint-parser",
+         "rules": {
+            "@nx/dependency-checks": "error"
+         }
       }
-    }
-    // ... more ESLint overrides here
-  ]
+      // ... more ESLint overrides here
+   ]
 }
 ```
 
@@ -34,20 +34,20 @@ Additionally, you need to adjust your `lintFilePatterns` to include the project'
 
 ```jsonc {% fileName="<your-project-root>/project.json" %}
 {
-  // ... project.json config
-  "targets": {
-    // ... more targets
-    "lint": {
-      "executor": "@nx/eslint:lint",
-      "outputs": ["{options.outputFile}"],
-      "options": {
-        "lintFilePatterns": [
-          "libs/my-lib/**/*.{ts,tsx,js,jsx}",
-          "libs/my-lib/package.json" // add this line
-        ]
+   // ... project.json config
+   "targets": {
+      // ... more targets
+      "lint": {
+         "executor": "@nx/eslint:lint",
+         "outputs": ["{options.outputFile}"],
+         "options": {
+            "lintFilePatterns": [
+               "libs/my-lib/**/*.{ts,tsx,js,jsx}",
+               "libs/my-lib/package.json" // add this line
+            ]
+         }
       }
-    }
-  }
+   }
 }
 ```
 
@@ -57,19 +57,19 @@ Sometimes we intentionally want to add or remove a dependency from our `package.
 
 ```jsonc {% fileName=".eslintrc.json" %}
 {
-  "@nx/dependency-checks": [
-    "error",
-    {
-      "buildTargets": ["build", "custom-build"], // add non standard build target names
-      "checkMissingDependencies": true, // toggle to disable
-      "checkObsoleteDependencies": true, // toggle to disable
-      "checkVersionMismatches": true, // toggle to disable
-      "ignoredDependencies": ["lodash"], // these libs will be omitted from checks
-      "ignoredFiles": ["webpack.config.js", "eslint.config.js"], // list of files that should be skipped for check
-      "includeTransitiveDependencies": true, // collect dependencies transitively from children
-      "useLocalPathsForWorkspaceDependencies": true // toggle to disable
-    }
-  ]
+   "@nx/dependency-checks": [
+      "error",
+      {
+         "buildTargets": ["build", "custom-build"], // add non standard build target names
+         "checkMissingDependencies": true, // toggle to disable
+         "checkObsoleteDependencies": true, // toggle to disable
+         "checkVersionMismatches": true, // toggle to disable
+         "ignoredDependencies": ["lodash"], // these libs will be omitted from checks
+         "ignoredFiles": ["webpack.config.js", "eslint.config.js"], // list of files that should be skipped for check
+         "includeTransitiveDependencies": true, // collect dependencies transitively from children
+         "useLocalPathsForWorkspaceDependencies": true // toggle to disable
+      }
+   ]
 }
 ```
 

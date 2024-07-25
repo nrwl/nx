@@ -4,9 +4,9 @@
 
 ### Properties
 
-- [extends](../../devkit/documents/GeneratorsJson#extends): string
-- [generators](../../devkit/documents/GeneratorsJson#generators): Record<string, GeneratorsJsonEntry>
-- [schematics](../../devkit/documents/GeneratorsJson#schematics): Record<string, GeneratorsJsonEntry>
+-  [extends](../../devkit/documents/GeneratorsJson#extends): string
+-  [generators](../../devkit/documents/GeneratorsJson#generators): Record<string, GeneratorsJsonEntry>
+-  [schematics](../../devkit/documents/GeneratorsJson#schematics): Record<string, GeneratorsJsonEntry>
 
 ## Properties
 

@@ -4,11 +4,11 @@ import { dirname, join, relative } from 'node:path';
 import { defineConfig } from '@playwright/test';
 
 export interface NxPlaywrightOptions {
-  /**
-   * The directory where the e2e tests are located.
-   * @default './src'
-   **/
-  testDir?: string;
+   /**
+    * The directory where the e2e tests are located.
+    * @default './src'
+    **/
+   testDir?: string;
 }
 
 /**
@@ -34,49 +34,49 @@ export interface NxPlaywrightOptions {
  * @param options optional configuration options
  */
 export function nxE2EPreset(
-  pathToConfig: string,
-  options?: NxPlaywrightOptions
+   pathToConfig: string,
+   options?: NxPlaywrightOptions
 ) {
-  const normalizedPath = lstatSync(pathToConfig).isDirectory()
-    ? pathToConfig
-    : dirname(pathToConfig);
-  const projectPath = relative(workspaceRoot, normalizedPath);
-  const offset = relative(normalizedPath, workspaceRoot);
+   const normalizedPath = lstatSync(pathToConfig).isDirectory()
+      ? pathToConfig
+      : dirname(pathToConfig);
+   const projectPath = relative(workspaceRoot, normalizedPath);
+   const offset = relative(normalizedPath, workspaceRoot);
 
-  const testResultOuputDir = join(
-    offset,
-    'dist',
-    '.playwright',
-    projectPath,
-    'test-output'
-  );
-  const reporterOutputDir = join(
-    offset,
-    'dist',
-    '.playwright',
-    projectPath,
-    'playwright-report'
-  );
+   const testResultOuputDir = join(
+      offset,
+      'dist',
+      '.playwright',
+      projectPath,
+      'test-output'
+   );
+   const reporterOutputDir = join(
+      offset,
+      'dist',
+      '.playwright',
+      projectPath,
+      'playwright-report'
+   );
 
-  return defineConfig({
-    testDir: options?.testDir ?? './src',
-    outputDir: testResultOuputDir,
-    /* Run tests in files in parallel */
-    fullyParallel: true,
-    /* Fail the build on CI if you accidentally left test.only in the source code. */
-    forbidOnly: !!process.env.CI,
-    /* Retry on CI only */
-    retries: process.env.CI ? 2 : 0,
-    /* Opt out of parallel tests on CI. */
-    workers: process.env.CI ? 1 : undefined,
-    /* Reporter to use. See https://playwright.dev/docs/test-reporters */
-    reporter: [
-      [
-        'html',
-        {
-          outputFolder: reporterOutputDir,
-        },
+   return defineConfig({
+      testDir: options?.testDir ?? './src',
+      outputDir: testResultOuputDir,
+      /* Run tests in files in parallel */
+      fullyParallel: true,
+      /* Fail the build on CI if you accidentally left test.only in the source code. */
+      forbidOnly: !!process.env.CI,
+      /* Retry on CI only */
+      retries: process.env.CI ? 2 : 0,
+      /* Opt out of parallel tests on CI. */
+      workers: process.env.CI ? 1 : undefined,
+      /* Reporter to use. See https://playwright.dev/docs/test-reporters */
+      reporter: [
+         [
+            'html',
+            {
+               outputFolder: reporterOutputDir,
+            },
+         ],
       ],
-    ],
-  });
+   });
 }

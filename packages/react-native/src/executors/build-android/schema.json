@@ -1,81 +1,81 @@
 {
-  "version": 2,
-  "outputCapture": "direct-nodejs",
-  "cli": "nx",
-  "$id": "NxReactNativeBuildAndroid",
-  "$schema": "https://json-schema.org/schema",
-  "title": "Release Build for Android",
-  "description": "Build target options for Android.",
-  "type": "object",
-  "presets": [
-    {
-      "name": "Build Android for current device architecture",
-      "keys": ["activeArchOnly"]
-    },
-    {
-      "name": "Build Android without metro cache",
-      "keys": ["resetCache"]
-    },
-    {
-      "name": "Build Android with specific tasks",
-      "keys": ["tasks"]
-    },
-    {
-      "name": "Build Android with a specific mode",
-      "keys": ["mode"]
-    }
-  ],
-  "properties": {
-    "mode": {
-      "type": "string",
-      "description": "Specify your app's build variant",
-      "default": "debug",
-      "examples": ["debug", "release"],
-      "x-priority": "important"
-    },
-    "port": {
-      "type": "number",
-      "description": "The port where the packager server is listening on.",
-      "default": 8081
-    },
-    "tasks": {
-      "oneOf": [
-        { "type": "array", "items": { "type": "string" } },
-        { "type": "string" }
-      ],
-      "description": "Run custom Gradle tasks. By default it's \"assembleDebug\". Will override passed mode and variant arguments.",
-      "examples": [
-        "assembleDebug",
-        "assembleRelease",
-        "bundleDebug",
-        "bundleRelease",
-        "installDebug",
-        "installRelease"
-      ]
-    },
-    "activeArchOnly": {
-      "type": "boolean",
-      "description": "Build native libraries only for the current device architecture for debug builds.",
-      "default": false
-    },
-    "extraParams": {
-      "oneOf": [
-        { "type": "array", "items": { "type": "string" } },
-        { "type": "string" }
-      ],
-      "description": "Custom params passed to gradle build command",
-      "examples": ["-x lint -x test"]
-    },
-    "interactive": {
-      "type": "boolean",
-      "description": "Explicitly select build type and flavour to use before running a build"
-    },
-    "resetCache": {
-      "type": "boolean",
-      "description": "Resets metro cache.",
-      "default": false
-    }
-  },
-  "required": [],
-  "examplesFile": "../../../docs/build-android-examples.md"
+   "version": 2,
+   "outputCapture": "direct-nodejs",
+   "cli": "nx",
+   "$id": "NxReactNativeBuildAndroid",
+   "$schema": "https://json-schema.org/schema",
+   "title": "Release Build for Android",
+   "description": "Build target options for Android.",
+   "type": "object",
+   "presets": [
+      {
+         "name": "Build Android for current device architecture",
+         "keys": ["activeArchOnly"]
+      },
+      {
+         "name": "Build Android without metro cache",
+         "keys": ["resetCache"]
+      },
+      {
+         "name": "Build Android with specific tasks",
+         "keys": ["tasks"]
+      },
+      {
+         "name": "Build Android with a specific mode",
+         "keys": ["mode"]
+      }
+   ],
+   "properties": {
+      "mode": {
+         "type": "string",
+         "description": "Specify your app's build variant",
+         "default": "debug",
+         "examples": ["debug", "release"],
+         "x-priority": "important"
+      },
+      "port": {
+         "type": "number",
+         "description": "The port where the packager server is listening on.",
+         "default": 8081
+      },
+      "tasks": {
+         "oneOf": [
+            { "type": "array", "items": { "type": "string" } },
+            { "type": "string" }
+         ],
+         "description": "Run custom Gradle tasks. By default it's \"assembleDebug\". Will override passed mode and variant arguments.",
+         "examples": [
+            "assembleDebug",
+            "assembleRelease",
+            "bundleDebug",
+            "bundleRelease",
+            "installDebug",
+            "installRelease"
+         ]
+      },
+      "activeArchOnly": {
+         "type": "boolean",
+         "description": "Build native libraries only for the current device architecture for debug builds.",
+         "default": false
+      },
+      "extraParams": {
+         "oneOf": [
+            { "type": "array", "items": { "type": "string" } },
+            { "type": "string" }
+         ],
+         "description": "Custom params passed to gradle build command",
+         "examples": ["-x lint -x test"]
+      },
+      "interactive": {
+         "type": "boolean",
+         "description": "Explicitly select build type and flavour to use before running a build"
+      },
+      "resetCache": {
+         "type": "boolean",
+         "description": "Resets metro cache.",
+         "default": false
+      }
+   },
+   "required": [],
+   "examplesFile": "../../../docs/build-android-examples.md"
 }

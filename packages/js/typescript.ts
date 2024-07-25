@@ -1,5 +1,5 @@
 export {
-  createDependencies,
-  createNodes,
-  createNodesV2,
+   createDependencies,
+   createNodes,
+   createNodesV2,
 } from './src/plugins/typescript/plugin';

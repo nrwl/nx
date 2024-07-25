@@ -1,33 +1,33 @@
 import { parseJson, serializeJson } from './json';
 import type { JsonParseOptions, JsonSerializeOptions } from './json';
 import {
-  createReadStream,
-  createWriteStream,
-  PathLike,
-  readFileSync,
-  writeFileSync,
-  mkdirSync,
-  statSync,
-  existsSync,
+   createReadStream,
+   createWriteStream,
+   PathLike,
+   readFileSync,
+   writeFileSync,
+   mkdirSync,
+   statSync,
+   existsSync,
 } from 'fs';
 import { dirname } from 'path';
 import * as tar from 'tar-stream';
 import { createGunzip } from 'zlib';
 
 export interface JsonReadOptions extends JsonParseOptions {
-  /**
-   * mutable field recording whether JSON ends with new line
-   * @default false
-   */
-  endsWithNewline?: boolean;
+   /**
+    * mutable field recording whether JSON ends with new line
+    * @default false
+    */
+   endsWithNewline?: boolean;
 }
 
 export interface JsonWriteOptions extends JsonSerializeOptions {
-  /**
-   * whether to append new line at the end of JSON file
-   * @default false
-   */
-  appendNewLine?: boolean;
+   /**
+    * whether to append new line at the end of JSON file
+    * @default false
+    */
+   appendNewLine?: boolean;
 }
 
 /**
@@ -38,26 +38,26 @@ export interface JsonWriteOptions extends JsonSerializeOptions {
  * @returns Object the JSON content of the file represents
  */
 export function readJsonFile<T extends object = any>(
-  path: string,
-  options?: JsonReadOptions
+   path: string,
+   options?: JsonReadOptions
 ): T {
-  const content = readFileSync(path, 'utf-8');
-  if (options) {
-    options.endsWithNewline = content.charCodeAt(content.length - 1) === 10;
-  }
-  try {
-    return parseJson<T>(content, options);
-  } catch (e) {
-    e.message = e.message.replace('JSON', path);
-    throw e;
-  }
+   const content = readFileSync(path, 'utf-8');
+   if (options) {
+      options.endsWithNewline = content.charCodeAt(content.length - 1) === 10;
+   }
+   try {
+      return parseJson<T>(content, options);
+   } catch (e) {
+      e.message = e.message.replace('JSON', path);
+      throw e;
+   }
 }
 
 interface YamlReadOptions {
-  /**
-   * Compatibility with JSON.parse behaviour. If true, then duplicate keys in a mapping will override values rather than throwing an error.
-   */
-  json?: boolean;
+   /**
+    * Compatibility with JSON.parse behaviour. If true, then duplicate keys in a mapping will override values rather than throwing an error.
+    */
+   json?: boolean;
 }
 
 /**
@@ -67,12 +67,12 @@ interface YamlReadOptions {
  * @returns
  */
 export function readYamlFile<T extends object = any>(
-  path: string,
-  options?: YamlReadOptions
+   path: string,
+   options?: YamlReadOptions
 ): T {
-  const content = readFileSync(path, 'utf-8');
-  const { load } = require('@zkochan/js-yaml');
-  return load(content, { ...options, filename: path }) as T;
+   const content = readFileSync(path, 'utf-8');
+   const { load } = require('@zkochan/js-yaml');
+   return load(content, { ...options, filename: path }) as T;
 }
 
 /**
@@ -83,16 +83,16 @@ export function readYamlFile<T extends object = any>(
  * @param options JSON serialize options
  */
 export function writeJsonFile<T extends object = object>(
-  path: string,
-  data: T,
-  options?: JsonWriteOptions
+   path: string,
+   data: T,
+   options?: JsonWriteOptions
 ): void {
-  mkdirSync(dirname(path), { recursive: true });
-  const serializedJson = serializeJson(data, options);
-  const content = options?.appendNewLine
-    ? `${serializedJson}\n`
-    : serializedJson;
-  writeFileSync(path, content, { encoding: 'utf-8' });
+   mkdirSync(dirname(path), { recursive: true });
+   const serializedJson = serializeJson(data, options);
+   const content = options?.appendNewLine
+      ? `${serializedJson}\n`
+      : serializedJson;
+   writeFileSync(path, content, { encoding: 'utf-8' });
 }
 
 /**
@@ -100,11 +100,11 @@ export function writeJsonFile<T extends object = object>(
  * @param path Path to directory
  */
 export function directoryExists(path: PathLike): boolean {
-  try {
-    return statSync(path).isDirectory();
-  } catch {
-    return false;
-  }
+   try {
+      return statSync(path).isDirectory();
+   } catch {
+      return false;
+   }
 }
 
 /**
@@ -112,24 +112,24 @@ export function directoryExists(path: PathLike): boolean {
  * @param path Path to file
  */
 export function fileExists(path: PathLike): boolean {
-  try {
-    return statSync(path).isFile();
-  } catch {
-    return false;
-  }
+   try {
+      return statSync(path).isFile();
+   } catch {
+      return false;
+   }
 }
 
 export function createDirectory(path: PathLike) {
-  mkdirSync(path, { recursive: true });
+   mkdirSync(path, { recursive: true });
 }
 
 export function isRelativePath(path: string): boolean {
-  return (
-    path === '.' ||
-    path === '..' ||
-    path.startsWith('./') ||
-    path.startsWith('../')
-  );
+   return (
+      path === '.' ||
+      path === '..' ||
+      path.startsWith('./') ||
+      path.startsWith('../')
+   );
 }
 
 /**
@@ -140,44 +140,44 @@ export function isRelativePath(path: string): boolean {
  * @returns True if the file was extracted successfully, false otherwise.
  */
 export async function extractFileFromTarball(
-  tarballPath: string,
-  file: string,
-  destinationFilePath: string
+   tarballPath: string,
+   file: string,
+   destinationFilePath: string
 ) {
-  return new Promise<string>((resolve, reject) => {
-    mkdirSync(dirname(destinationFilePath), { recursive: true });
-    var tarExtractStream = tar.extract();
-    const destinationFileStream = createWriteStream(destinationFilePath);
+   return new Promise<string>((resolve, reject) => {
+      mkdirSync(dirname(destinationFilePath), { recursive: true });
+      var tarExtractStream = tar.extract();
+      const destinationFileStream = createWriteStream(destinationFilePath);
 
-    let isFileExtracted = false;
-    tarExtractStream.on('entry', function (header, stream, next) {
-      if (header.name === file) {
-        stream.pipe(destinationFileStream);
-        stream.on('end', () => {
-          isFileExtracted = true;
-        });
-        destinationFileStream.on('close', () => {
-          resolve(destinationFilePath);
-        });
-      }
+      let isFileExtracted = false;
+      tarExtractStream.on('entry', function (header, stream, next) {
+         if (header.name === file) {
+            stream.pipe(destinationFileStream);
+            stream.on('end', () => {
+               isFileExtracted = true;
+            });
+            destinationFileStream.on('close', () => {
+               resolve(destinationFilePath);
+            });
+         }
 
-      stream.on('end', function () {
-        next();
+         stream.on('end', function () {
+            next();
+         });
+
+         stream.resume();
       });
 
-      stream.resume();
-    });
+      tarExtractStream.on('finish', function () {
+         if (!isFileExtracted) {
+            reject();
+         }
+      });
 
-    tarExtractStream.on('finish', function () {
-      if (!isFileExtracted) {
-        reject();
-      }
-    });
-
-    createReadStream(tarballPath).pipe(createGunzip()).pipe(tarExtractStream);
-  });
+      createReadStream(tarballPath).pipe(createGunzip()).pipe(tarExtractStream);
+   });
 }
 
 export function readFileIfExisting(path: string) {
-  return existsSync(path) ? readFileSync(path, 'utf-8') : '';
+   return existsSync(path) ? readFileSync(path, 'utf-8') : '';
 }

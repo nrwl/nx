@@ -17,8 +17,8 @@ nx g @nx/vite:configuration
 
 When running this generator, you will be prompted to provide the following:
 
-- The `project`, as the name of the project you want to generate the configuration for.
-- The `uiFramework` you want to use. Supported values are: `react` and `none`.
+-  The `project`, as the name of the project you want to generate the configuration for.
+-  The `uiFramework` you want to use. Supported values are: `react` and `none`.
 
 You must provide a `project` and a `uiFramework` for the generator to work.
 
@@ -39,27 +39,27 @@ The list of executors for building, testing and serving that can be converted to
 
 ### Supported `build` executors
 
-- `@nxext/vite:build`
-- `@nx/js:babel`
-- `@nx/js:swc`
-- `@nx/rollup:rollup`
-- `@nx/webpack:webpack`
-- `@nx/web:rollup`
+-  `@nxext/vite:build`
+-  `@nx/js:babel`
+-  `@nx/js:swc`
+-  `@nx/rollup:rollup`
+-  `@nx/webpack:webpack`
+-  `@nx/web:rollup`
 
 ### Unsupported executors
 
-- `@nx/angular:ng-packagr-lite`
-- `@nx/angular:package`
-- `@nx/angular:webpack-browser`
-- `@angular-devkit/build-angular:browser`
-- `@angular-devkit/build-angular:dev-server`
-- `@nx/esbuild:esbuild`
-- `@nx/react-native:start`
-- `@nx/next:build`
-- `@nx/next:server`
-- `@nx/js:tsc`
-- any executor _not_ listed in the lists of "supported executors"
-- any project that does _not_ have a target for building, serving or testing
+-  `@nx/angular:ng-packagr-lite`
+-  `@nx/angular:package`
+-  `@nx/angular:webpack-browser`
+-  `@angular-devkit/build-angular:browser`
+-  `@angular-devkit/build-angular:dev-server`
+-  `@nx/esbuild:esbuild`
+-  `@nx/react-native:start`
+-  `@nx/next:build`
+-  `@nx/next:server`
+-  `@nx/js:tsc`
+-  any executor _not_ listed in the lists of "supported executors"
+-  any project that does _not_ have a target for building, serving or testing
 
 We **cannot** guarantee that projects using unsupported executors - _or any executor that is NOT listed in the list of "supported executors"_ - for either building, testing or serving will work correctly when converted to use Vite.
 

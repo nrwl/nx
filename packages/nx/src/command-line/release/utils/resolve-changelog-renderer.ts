@@ -5,26 +5,29 @@ import { interpolate } from '../../../tasks-runner/utils';
 import { workspaceRoot } from '../../../utils/workspace-root';
 
 export function resolveChangelogRenderer(
-  changelogRendererPath: string
+   changelogRendererPath: string
 ): ChangelogRenderer {
-  const interpolatedChangelogRendererPath = interpolate(changelogRendererPath, {
-    workspaceRoot,
-  });
+   const interpolatedChangelogRendererPath = interpolate(
+      changelogRendererPath,
+      {
+         workspaceRoot,
+      }
+   );
 
-  // Try and load the provided (or default) changelog renderer
-  let changelogRenderer: ChangelogRenderer;
-  let cleanupTranspiler = () => {};
-  try {
-    const rootTsconfigPath = getRootTsConfigPath();
-    if (rootTsconfigPath) {
-      cleanupTranspiler = registerTsProject(rootTsconfigPath);
-    }
-    const r = require(interpolatedChangelogRendererPath);
-    changelogRenderer = r.default || r;
-  } catch (err) {
-    throw err;
-  } finally {
-    cleanupTranspiler();
-  }
-  return changelogRenderer;
+   // Try and load the provided (or default) changelog renderer
+   let changelogRenderer: ChangelogRenderer;
+   let cleanupTranspiler = () => {};
+   try {
+      const rootTsconfigPath = getRootTsConfigPath();
+      if (rootTsconfigPath) {
+         cleanupTranspiler = registerTsProject(rootTsconfigPath);
+      }
+      const r = require(interpolatedChangelogRendererPath);
+      changelogRenderer = r.default || r;
+   } catch (err) {
+      throw err;
+   } finally {
+      cleanupTranspiler();
+   }
+   return changelogRenderer;
 }

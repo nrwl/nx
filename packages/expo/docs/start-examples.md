@@ -2,18 +2,18 @@
 
 ```json
 {
-  "name": "mobile",
-  //...
-  "targets": {
-    //...
-    "start": {
-      "executor": "@nx/expo:start",
-      "options": {
-        "port": 8081
+   "name": "mobile",
+   //...
+   "targets": {
+      //...
+      "start": {
+         "executor": "@nx/expo:start",
+         "options": {
+            "port": 8081
+         }
       }
-    }
-    //...
-  }
+      //...
+   }
 }
 ```
 

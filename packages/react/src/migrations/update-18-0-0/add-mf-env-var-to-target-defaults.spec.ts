@@ -3,25 +3,25 @@ import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { addProjectConfiguration, readNxJson, updateNxJson } from '@nx/devkit';
 
 describe('addMfEnvVarToTargetDefaults', () => {
-  it('should add the executor and input when it does not exist', async () => {
-    // ARRANGE
-    const tree = createTreeWithEmptyWorkspace();
-    addProjectConfiguration(tree, 'test', {
-      root: '',
-      targets: {
-        build: {
-          executor: '@nx/webpack:webpack',
-        },
-      },
-    });
-    tree.write('module-federation.config.ts', '');
+   it('should add the executor and input when it does not exist', async () => {
+      // ARRANGE
+      const tree = createTreeWithEmptyWorkspace();
+      addProjectConfiguration(tree, 'test', {
+         root: '',
+         targets: {
+            build: {
+               executor: '@nx/webpack:webpack',
+            },
+         },
+      });
+      tree.write('module-federation.config.ts', '');
 
-    // ACT
-    await addMfEnvVarToTargetDefaults(tree);
+      // ACT
+      await addMfEnvVarToTargetDefaults(tree);
 
-    // ASSERT
-    const nxJson = readNxJson(tree);
-    expect(nxJson.targetDefaults).toMatchInlineSnapshot(`
+      // ASSERT
+      const nxJson = readNxJson(tree);
+      expect(nxJson.targetDefaults).toMatchInlineSnapshot(`
       {
         "@nx/webpack:webpack": {
           "inputs": [
@@ -40,26 +40,26 @@ describe('addMfEnvVarToTargetDefaults', () => {
         },
       }
     `);
-  });
+   });
 
-  it('should not add the executor and input when no project uses it', async () => {
-    // ARRANGE
-    const tree = createTreeWithEmptyWorkspace();
-    addProjectConfiguration(tree, 'test', {
-      root: '',
-      targets: {
-        build: {
-          executor: '@nx/angular:module-federation-dev-server',
-        },
-      },
-    });
+   it('should not add the executor and input when no project uses it', async () => {
+      // ARRANGE
+      const tree = createTreeWithEmptyWorkspace();
+      addProjectConfiguration(tree, 'test', {
+         root: '',
+         targets: {
+            build: {
+               executor: '@nx/angular:module-federation-dev-server',
+            },
+         },
+      });
 
-    // ACT
-    await addMfEnvVarToTargetDefaults(tree);
+      // ACT
+      await addMfEnvVarToTargetDefaults(tree);
 
-    // ASSERT
-    const nxJson = readNxJson(tree);
-    expect(nxJson.targetDefaults).toMatchInlineSnapshot(`
+      // ASSERT
+      const nxJson = readNxJson(tree);
+      expect(nxJson.targetDefaults).toMatchInlineSnapshot(`
       {
         "build": {
           "cache": true,
@@ -69,41 +69,41 @@ describe('addMfEnvVarToTargetDefaults', () => {
         },
       }
     `);
-  });
+   });
 
-  it('should update the executor and input target default when it already exists', async () => {
-    // ARRANGE
-    const tree = createTreeWithEmptyWorkspace();
-    addProjectConfiguration(tree, 'test', {
-      root: '',
-      targets: {
-        build: {
-          executor: '@nx/webpack:webpack',
-        },
-      },
-    });
+   it('should update the executor and input target default when it already exists', async () => {
+      // ARRANGE
+      const tree = createTreeWithEmptyWorkspace();
+      addProjectConfiguration(tree, 'test', {
+         root: '',
+         targets: {
+            build: {
+               executor: '@nx/webpack:webpack',
+            },
+         },
+      });
 
-    tree.write('module-federation.config.ts', '');
+      tree.write('module-federation.config.ts', '');
 
-    let nxJson = readNxJson(tree);
-    nxJson = {
-      ...nxJson,
-      targetDefaults: {
-        ...nxJson.targetDefaults,
-        ['@nx/webpack:webpack']: {
-          inputs: ['^build'],
-        },
-      },
-    };
+      let nxJson = readNxJson(tree);
+      nxJson = {
+         ...nxJson,
+         targetDefaults: {
+            ...nxJson.targetDefaults,
+            ['@nx/webpack:webpack']: {
+               inputs: ['^build'],
+            },
+         },
+      };
 
-    updateNxJson(tree, nxJson);
+      updateNxJson(tree, nxJson);
 
-    // ACT
-    await addMfEnvVarToTargetDefaults(tree);
+      // ACT
+      await addMfEnvVarToTargetDefaults(tree);
 
-    // ASSERT
-    nxJson = readNxJson(tree);
-    expect(nxJson.targetDefaults).toMatchInlineSnapshot(`
+      // ASSERT
+      nxJson = readNxJson(tree);
+      expect(nxJson.targetDefaults).toMatchInlineSnapshot(`
       {
         "@nx/webpack:webpack": {
           "inputs": [
@@ -121,5 +121,5 @@ describe('addMfEnvVarToTargetDefaults', () => {
         },
       }
     `);
-  });
+   });
 });

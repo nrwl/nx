@@ -10,10 +10,10 @@ import { join } from 'path';
  * - .env.local
  */
 export function loadRootEnvFiles(root = workspaceRoot) {
-  for (const file of ['.local.env', '.env.local', '.env']) {
-    const myEnv = loadDotEnvFile({
-      path: join(root, file),
-    });
-    expand(myEnv);
-  }
+   for (const file of ['.local.env', '.env.local', '.env']) {
+      const myEnv = loadDotEnvFile({
+         path: join(root, file),
+      });
+      expand(myEnv);
+   }
 }

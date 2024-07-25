@@ -16,16 +16,16 @@ In this article, we’re going to recap all the things launched during Launch Nx
 
 ---
 
-- [Nx 18.0 && Project Crystal](#nx-180-project-crystal)
-  - [Project Crystal — By Juri Strumpflohner](#conference-talk-project-crystal)
-  - [Project Crystal + .NET in Action — By Craigory Coppola](#conference-talk-project-crystal-net-in-action)
-- [New Plugin: @nx/nuxt](#new-plugin-nxnuxt)
-- [Nx Agents](#nx-agents-launched)
-  - [Nx Agents Walkthrough: Effortlessly Fast CI Built for Monorepos — By Rares Matei](#conference-talk-nx-agents-walkthrough-effortlessly-fast-ci-built-for-monorepos)
-  - [Solving E2E Tests — By Altan Stalker](#conference-talk-solving-e2e-tests)
-- [Tusky](#tusky)
-- [Nx Release](#nx-release-is-stable)
-  - [Releasing Nx Release — By James Henry](#conference-talk-releasing-nx-release)
+-  [Nx 18.0 && Project Crystal](#nx-180-project-crystal)
+   -  [Project Crystal — By Juri Strumpflohner](#conference-talk-project-crystal)
+   -  [Project Crystal + .NET in Action — By Craigory Coppola](#conference-talk-project-crystal-net-in-action)
+-  [New Plugin: @nx/nuxt](#new-plugin-nxnuxt)
+-  [Nx Agents](#nx-agents-launched)
+   -  [Nx Agents Walkthrough: Effortlessly Fast CI Built for Monorepos — By Rares Matei](#conference-talk-nx-agents-walkthrough-effortlessly-fast-ci-built-for-monorepos)
+   -  [Solving E2E Tests — By Altan Stalker](#conference-talk-solving-e2e-tests)
+-  [Tusky](#tusky)
+-  [Nx Release](#nx-release-is-stable)
+   -  [Releasing Nx Release — By James Henry](#conference-talk-releasing-nx-release)
 
 ## Nx 18.0 && Project Crystal
 
@@ -141,8 +141,8 @@ That’s all for now folks! We’re just starting up a new iteration of developm
 
 ## Learn more
 
-- [Nx Docs](/getting-started/intro)
-- [Nx GitHub](https://github.com/nrwl/nx)
-- [Nx Official Discord Server](https://go.nx.dev/community)
-- [Nx Youtube Channel](https://www.youtube.com/@nxdevtools)
-- [Speed up your CI](https://nx.app/)
+-  [Nx Docs](/getting-started/intro)
+-  [Nx GitHub](https://github.com/nrwl/nx)
+-  [Nx Official Discord Server](https://go.nx.dev/community)
+-  [Nx Youtube Channel](https://www.youtube.com/@nxdevtools)
+-  [Speed up your CI](https://nx.app/)

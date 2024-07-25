@@ -11,20 +11,20 @@ import { existsSync, removeSync, symlinkSync } from 'fs-extra';
  * @param projectRoot path of app project root
  */
 export function ensureNodeModulesSymlink(
-  workspaceRoot: string,
-  projectRoot: string
+   workspaceRoot: string,
+   projectRoot: string
 ): void {
-  const worksapceNodeModulesPath = join(workspaceRoot, 'node_modules');
-  if (!existsSync(worksapceNodeModulesPath)) {
-    throw new Error(`Cannot find ${worksapceNodeModulesPath}`);
-  }
+   const worksapceNodeModulesPath = join(workspaceRoot, 'node_modules');
+   if (!existsSync(worksapceNodeModulesPath)) {
+      throw new Error(`Cannot find ${worksapceNodeModulesPath}`);
+   }
 
-  const appNodeModulesPath = join(workspaceRoot, projectRoot, 'node_modules');
-  // `mklink /D` requires admin privilege in Windows so we need to use junction
-  const symlinkType = platform() === 'win32' ? 'junction' : 'dir';
+   const appNodeModulesPath = join(workspaceRoot, projectRoot, 'node_modules');
+   // `mklink /D` requires admin privilege in Windows so we need to use junction
+   const symlinkType = platform() === 'win32' ? 'junction' : 'dir';
 
-  if (existsSync(appNodeModulesPath)) {
-    removeSync(appNodeModulesPath);
-  }
-  symlinkSync(worksapceNodeModulesPath, appNodeModulesPath, symlinkType);
+   if (existsSync(appNodeModulesPath)) {
+      removeSync(appNodeModulesPath);
+   }
+   symlinkSync(worksapceNodeModulesPath, appNodeModulesPath, symlinkType);
 }

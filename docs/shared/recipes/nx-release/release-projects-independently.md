@@ -32,9 +32,9 @@ For example, to generate the tags `release/pkg-1/1.1.0` and `release/pkg-2/1.2.1
 
 ```json nx.json
 {
-  "release": {
-    "releaseTagPattern": "release/{projectName}/{version}"
-  }
+   "release": {
+      "releaseTagPattern": "release/{projectName}/{version}"
+   }
 }
 ```
 
@@ -58,11 +58,11 @@ Nx Release will no longer generate and update a workspace level `CHANGELOG.md` f
 
 ```json nx.json
 {
-  "release": {
-    "changelog": {
-      "projectChangelogs": true
-    }
-  }
+   "release": {
+      "changelog": {
+         "projectChangelogs": true
+      }
+   }
 }
 ```
 

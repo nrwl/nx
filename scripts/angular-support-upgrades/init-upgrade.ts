@@ -20,34 +20,34 @@ const { hideBin } = require('yargs/helpers');
 const argv = yargs(hideBin(process.argv)).argv;
 
 if (
-  !argv.angularVersion &&
-  !argv.targetNxVersion &&
-  !argv.targetNxMigrationVersion
+   !argv.angularVersion &&
+   !argv.targetNxVersion &&
+   !argv.targetNxMigrationVersion
 ) {
-  throw new Error(
-    'You need to provide --angularVersion=(latest|next) and --targetNxVersion=versionString and --targetNxMigrationVersion=versionString'
-  );
+   throw new Error(
+      'You need to provide --angularVersion=(latest|next) and --targetNxVersion=versionString and --targetNxMigrationVersion=versionString'
+   );
 }
 
 async function run() {
-  const packageVersionMap = await fetchVersionsFromRegistry(
-    argv.angularVersion
-  );
-  await updatePackageJsonForAngular(packageVersionMap);
-  await buildMigrations(
-    packageVersionMap,
-    argv.targetNxVersion,
-    argv.targetNxMigrationVersion
-  );
-  updateVersionUtils(packageVersionMap);
+   const packageVersionMap = await fetchVersionsFromRegistry(
+      argv.angularVersion
+   );
+   await updatePackageJsonForAngular(packageVersionMap);
+   await buildMigrations(
+      packageVersionMap,
+      argv.targetNxVersion,
+      argv.targetNxMigrationVersion
+   );
+   updateVersionUtils(packageVersionMap);
 
-  console.log('⏳ - Installing packages...');
-  execSync('pnpm install', { stdio: 'inherit', encoding: 'utf8' });
-  console.log('✅ - Finished installing packages!');
+   console.log('⏳ - Installing packages...');
+   execSync('pnpm install', { stdio: 'inherit', encoding: 'utf8' });
+   console.log('✅ - Finished installing packages!');
 
-  console.log('⏳ - Formatting files...');
-  execSync('pnpm nx format', { stdio: 'inherit', encoding: 'utf8' });
-  console.log('✅ - Finished creating migrations!');
+   console.log('⏳ - Formatting files...');
+   execSync('pnpm nx format', { stdio: 'inherit', encoding: 'utf8' });
+   console.log('✅ - Finished creating migrations!');
 }
 
 run();

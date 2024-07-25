@@ -7,72 +7,72 @@ import type { NormalizedSchema } from '../schema';
 let tsModule: typeof import('typescript');
 
 export function convertComponentToScam(tree: Tree, options: NormalizedSchema) {
-  if (!tree.exists(options.filePath)) {
-    throw new Error(
-      `Couldn't find component at path ${options.filePath} to add SCAM setup.`
-    );
-  }
+   if (!tree.exists(options.filePath)) {
+      throw new Error(
+         `Couldn't find component at path ${options.filePath} to add SCAM setup.`
+      );
+   }
 
-  if (!tsModule) {
-    tsModule = ensureTypescript();
-  }
+   if (!tsModule) {
+      tsModule = ensureTypescript();
+   }
 
-  if (options.inlineScam) {
-    const currentComponentContents = tree.read(options.filePath, 'utf-8');
-    let source = tsModule.createSourceFile(
-      options.filePath,
-      currentComponentContents,
-      tsModule.ScriptTarget.Latest,
-      true
-    );
+   if (options.inlineScam) {
+      const currentComponentContents = tree.read(options.filePath, 'utf-8');
+      let source = tsModule.createSourceFile(
+         options.filePath,
+         currentComponentContents,
+         tsModule.ScriptTarget.Latest,
+         true
+      );
 
-    source = insertImport(
-      tree,
-      source,
-      options.filePath,
-      'NgModule',
-      '@angular/core'
-    );
-    source = insertImport(
-      tree,
-      source,
-      options.filePath,
-      'CommonModule',
-      '@angular/common'
-    );
+      source = insertImport(
+         tree,
+         source,
+         options.filePath,
+         'NgModule',
+         '@angular/core'
+      );
+      source = insertImport(
+         tree,
+         source,
+         options.filePath,
+         'CommonModule',
+         '@angular/common'
+      );
 
-    let updatedComponentSource = source.getText();
-    updatedComponentSource = `${updatedComponentSource}${getNgModuleDeclaration(
-      options.symbolName
-    )}`;
+      let updatedComponentSource = source.getText();
+      updatedComponentSource = `${updatedComponentSource}${getNgModuleDeclaration(
+         options.symbolName
+      )}`;
 
-    tree.write(options.filePath, updatedComponentSource);
-    return;
-  }
+      tree.write(options.filePath, updatedComponentSource);
+      return;
+   }
 
-  const moduleFilePath = joinPathFragments(
-    options.directory,
-    `${options.name}.module.ts`
-  );
+   const moduleFilePath = joinPathFragments(
+      options.directory,
+      `${options.name}.module.ts`
+   );
 
-  tree.write(
-    moduleFilePath,
-    getModuleFileContent(options.symbolName, options.fileName)
-  );
+   tree.write(
+      moduleFilePath,
+      getModuleFileContent(options.symbolName, options.fileName)
+   );
 }
 
 function getModuleFileContent(
-  componentClassName: string,
-  componentFileName: string
+   componentClassName: string,
+   componentFileName: string
 ): string {
-  return `import { NgModule } from '@angular/core';
+   return `import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ${componentClassName} } from './${componentFileName}';
 ${getNgModuleDeclaration(componentClassName)}`;
 }
 
 function getNgModuleDeclaration(componentClassName: string): string {
-  return `
+   return `
 @NgModule({
   imports: [CommonModule],
   declarations: [${componentClassName}],

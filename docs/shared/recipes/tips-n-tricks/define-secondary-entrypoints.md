@@ -4,12 +4,12 @@ If you have a package where you want people to be able to access more than just 
 
 ```json {% fileName="packages/my-lib/package.json" %}
 {
-  "exports": {
-    "./package.json": "./package.json",
-    ".": "./src/index.js",
-    "./foo": "./src/foo.js",
-    "./bar": "./src/bar.js"
-  }
+   "exports": {
+      "./package.json": "./package.json",
+      ".": "./src/index.js",
+      "./foo": "./src/foo.js",
+      "./bar": "./src/bar.js"
+   }
 }
 ```
 
@@ -32,22 +32,22 @@ If you're using the `@nx/js:tsc` executor, as of Nx 16.8, you can specify the `a
 
 ```jsonc {% fileName="packages/my-awesome-lib/package.json" %}
 {
-  "name": "my-awesome-lib",
-  "nx": {
-    "targets": {
-      "build": {
-        "executor": "@nx/js:tsc",
-        "options": {
-          "main": "packages/my-awesome-lib/src/index.ts",
-          "additionalEntryPoints": [
-            "packages/my-awesome-lib/src/foo.ts",
-            "packages/my-awesome-lib/src/bar.ts"
-          ],
-          "generateExportsField": true
-        }
+   "name": "my-awesome-lib",
+   "nx": {
+      "targets": {
+         "build": {
+            "executor": "@nx/js:tsc",
+            "options": {
+               "main": "packages/my-awesome-lib/src/index.ts",
+               "additionalEntryPoints": [
+                  "packages/my-awesome-lib/src/foo.ts",
+                  "packages/my-awesome-lib/src/bar.ts"
+               ],
+               "generateExportsField": true
+            }
+         }
       }
-    }
-  }
+   }
 }
 ```
 
@@ -56,20 +56,20 @@ If you're using the `@nx/js:tsc` executor, as of Nx 16.8, you can specify the `a
 
 ```jsonc {% fileName="packages/my-awesome-lib/project.json" %}
 {
-  "name": "my-awesome-lib",
-  "targets": {
-    "build": {
-      "executor": "@nx/js:tsc",
-      "options": {
-        "main": "packages/my-awesome-lib/src/index.ts",
-        "additionalEntryPoints": [
-          "packages/my-awesome-lib/src/foo.ts",
-          "packages/my-awesome-lib/src/bar.ts"
-        ],
-        "generateExportsField": true
+   "name": "my-awesome-lib",
+   "targets": {
+      "build": {
+         "executor": "@nx/js:tsc",
+         "options": {
+            "main": "packages/my-awesome-lib/src/index.ts",
+            "additionalEntryPoints": [
+               "packages/my-awesome-lib/src/foo.ts",
+               "packages/my-awesome-lib/src/bar.ts"
+            ],
+            "generateExportsField": true
+         }
       }
-    }
-  }
+   }
 }
 ```
 

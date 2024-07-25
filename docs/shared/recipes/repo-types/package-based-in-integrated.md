@@ -40,17 +40,17 @@ A typical set up where the `test` task depends on the `build` task could look li
 
 ```jsonc {% fileName="package.json"%}
 {
-  "scripts": {
-    "build": "tsc",
-    "test": "jest"
-  },
-  "nx": {
-    "targets": {
-      "test": {
-        "dependsOn": ["build"]
+   "scripts": {
+      "build": "tsc",
+      "test": "jest"
+   },
+   "nx": {
+      "targets": {
+         "test": {
+            "dependsOn": ["build"]
+         }
       }
-    }
-  }
+   }
 }
 ```
 
@@ -59,15 +59,15 @@ A typical set up where the `test` task depends on the `build` task could look li
 
 ```jsonc {% fileName="project.json"%}
 {
-  "targets": {
-    "build": {
-      "command": "tsc"
-    },
-    "test": {
-      "command": "jest",
-      "dependsOn": ["build"]
-    }
-  }
+   "targets": {
+      "build": {
+         "command": "tsc"
+      },
+      "test": {
+         "command": "jest",
+         "dependsOn": ["build"]
+      }
+   }
 }
 ```
 

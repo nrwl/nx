@@ -3,31 +3,31 @@ import { VideoLoop } from './video-loop.component';
 import { Schema } from '@markdoc/markdoc';
 
 export const terminalVideo: Schema = {
-  render: 'TerminalVideo',
-  attributes: {
-    src: {
-      type: 'String',
-      required: true,
-    },
-    alt: {
-      type: 'String',
-      required: true,
-    },
-  },
+   render: 'TerminalVideo',
+   attributes: {
+      src: {
+         type: 'String',
+         required: true,
+      },
+      alt: {
+         type: 'String',
+         required: true,
+      },
+   },
 };
 
 export function TerminalVideo({
-  src,
-  alt,
+   src,
+   alt,
 }: {
-  src: string;
-  alt: string;
+   src: string;
+   alt: string;
 }): JSX.Element {
-  return (
-    <TerminalShellWrapper>
-      <div className="overflow-x-auto">
-        <VideoLoop src={src} alt={alt}></VideoLoop>
-      </div>
-    </TerminalShellWrapper>
-  );
+   return (
+      <TerminalShellWrapper>
+         <div className="overflow-x-auto">
+            <VideoLoop src={src} alt={alt}></VideoLoop>
+         </div>
+      </TerminalShellWrapper>
+   );
 }

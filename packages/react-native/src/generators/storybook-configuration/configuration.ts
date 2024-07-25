@@ -3,13 +3,13 @@ import { storybookConfigurationGenerator as reactStorybookConfigurationGenerator
 import { StorybookConfigureSchema } from './schema';
 
 export function storybookConfigurationGenerator(
-  tree: Tree,
-  schema: StorybookConfigureSchema
+   tree: Tree,
+   schema: StorybookConfigureSchema
 ) {
-  return storybookConfigurationGeneratorInternal(tree, {
-    addPlugin: false,
-    ...schema,
-  });
+   return storybookConfigurationGeneratorInternal(tree, {
+      addPlugin: false,
+      ...schema,
+   });
 }
 
 /**
@@ -17,19 +17,19 @@ export function storybookConfigurationGenerator(
  * @TODO (@xiongemi): remove this generator for v19
  */
 export async function storybookConfigurationGeneratorInternal(
-  host: Tree,
-  schema: StorybookConfigureSchema
+   host: Tree,
+   schema: StorybookConfigureSchema
 ) {
-  logger.warn(
-    `Please run 'nx run @nx/react:storybook-configuration ${schema.project}' instead.`
-  );
-  const nxJson = readNxJson(host);
-  const addPluginDefault =
-    process.env.NX_ADD_PLUGINS !== 'false' &&
-    nxJson.useInferencePlugins !== false;
-  schema.addPlugin ??= addPluginDefault;
+   logger.warn(
+      `Please run 'nx run @nx/react:storybook-configuration ${schema.project}' instead.`
+   );
+   const nxJson = readNxJson(host);
+   const addPluginDefault =
+      process.env.NX_ADD_PLUGINS !== 'false' &&
+      nxJson.useInferencePlugins !== false;
+   schema.addPlugin ??= addPluginDefault;
 
-  return reactStorybookConfigurationGenerator(host, schema);
+   return reactStorybookConfigurationGenerator(host, schema);
 }
 
 export default storybookConfigurationGenerator;

@@ -1,9 +1,9 @@
 This executor is a drop-in replacement for the `@angular-devkit/build-angular:dev-server` builder provided by the Angular CLI. In addition to the features provided by the Angular CLI builder, the `@nx/angular:dev-server` executor also supports the following:
 
-- Serving applications with Vite when using the `@nx/angular:application` or `@nx/angular:browser-esbuild` executors to build them
-- Serving applications with webpack when using the `@nx/angular:webpack-browser` executor
-- Providing HTTP request middleware functions when the build target is using an esbuild-based executor
-- Incremental builds
+-  Serving applications with Vite when using the `@nx/angular:application` or `@nx/angular:browser-esbuild` executors to build them
+-  Serving applications with webpack when using the `@nx/angular:webpack-browser` executor
+-  Providing HTTP request middleware functions when the build target is using an esbuild-based executor
+-  Incremental builds
 
 ## Examples
 
@@ -40,9 +40,9 @@ Add the `serve` target using the `@nx/angular:dev-server` executor, set the `bui
 
 ```js {% fileName="apps/my-app/webpack.config.js" %}
 module.exports = (config) => {
-  // update the config with your custom configuration
+   // update the config with your custom configuration
 
-  return config;
+   return config;
 };
 ```
 
@@ -78,15 +78,15 @@ The executor accepts an `esbuildMidleware` option that allows you to provide HTT
 import type { IncomingMessage, ServerResponse } from 'node:http';
 
 const helloWorldMiddleware = (
-  req: IncomingMessage,
-  res: ServerResponse,
-  next: (err?: unknown) => void
+   req: IncomingMessage,
+   res: ServerResponse,
+   next: (err?: unknown) => void
 ) => {
-  if (req.url === '/hello-world') {
-    res.end('<h1>Hello World!</h1>');
-  } else {
-    next();
-  }
+   if (req.url === '/hello-world') {
+      res.end('<h1>Hello World!</h1>');
+   } else {
+      next();
+   }
 };
 
 export default helloWorldMiddleware;

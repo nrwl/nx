@@ -10,72 +10,72 @@ import { extname } from 'path';
  * @param determineRemoteUrl - The function used to lookup the URL of the served remote
  */
 export function mapRemotes(
-  remotes: Remotes,
-  remoteEntryExt: 'js' | 'mjs',
-  determineRemoteUrl: (remote: string) => string,
-  isRemoteGlobal = false
+   remotes: Remotes,
+   remoteEntryExt: 'js' | 'mjs',
+   determineRemoteUrl: (remote: string) => string,
+   isRemoteGlobal = false
 ): Record<string, string> {
-  const mappedRemotes = {};
+   const mappedRemotes = {};
 
-  for (const remote of remotes) {
-    if (Array.isArray(remote)) {
-      mappedRemotes[remote[0]] = handleArrayRemote(
-        remote,
-        remoteEntryExt,
-        isRemoteGlobal
-      );
-    } else if (typeof remote === 'string') {
-      mappedRemotes[remote] = handleStringRemote(
-        remote,
-        determineRemoteUrl,
-        isRemoteGlobal
-      );
-    }
-  }
+   for (const remote of remotes) {
+      if (Array.isArray(remote)) {
+         mappedRemotes[remote[0]] = handleArrayRemote(
+            remote,
+            remoteEntryExt,
+            isRemoteGlobal
+         );
+      } else if (typeof remote === 'string') {
+         mappedRemotes[remote] = handleStringRemote(
+            remote,
+            determineRemoteUrl,
+            isRemoteGlobal
+         );
+      }
+   }
 
-  return mappedRemotes;
+   return mappedRemotes;
 }
 
 // Helper function to deal with remotes that are arrays
 function handleArrayRemote(
-  remote: [string, string],
-  remoteEntryExt: 'js' | 'mjs',
-  isRemoteGlobal: boolean
+   remote: [string, string],
+   remoteEntryExt: 'js' | 'mjs',
+   isRemoteGlobal: boolean
 ): string {
-  const [remoteName, remoteLocation] = remote;
-  const remoteLocationExt = extname(remoteLocation);
+   const [remoteName, remoteLocation] = remote;
+   const remoteLocationExt = extname(remoteLocation);
 
-  // If remote location already has .js or .mjs extension
-  if (['.js', '.mjs'].includes(remoteLocationExt)) {
-    return remoteLocation;
-  }
+   // If remote location already has .js or .mjs extension
+   if (['.js', '.mjs'].includes(remoteLocationExt)) {
+      return remoteLocation;
+   }
 
-  const baseRemote = remoteLocation.endsWith('/')
-    ? remoteLocation.slice(0, -1)
-    : remoteLocation;
+   const baseRemote = remoteLocation.endsWith('/')
+      ? remoteLocation.slice(0, -1)
+      : remoteLocation;
 
-  const globalPrefix = isRemoteGlobal
-    ? `${remoteName.replace(/-/g, '_')}@`
-    : '';
+   const globalPrefix = isRemoteGlobal
+      ? `${remoteName.replace(/-/g, '_')}@`
+      : '';
 
-  // if the remote is defined with anything other than http then we assume it's a promise based remote
-  // In that case we should use what the user provides as the remote location
-  if (!remoteLocation.startsWith('promise new Promise')) {
-    return `${globalPrefix}${baseRemote}/remoteEntry.${remoteEntryExt}`;
-  } else {
-    return remoteLocation;
-  }
+   // if the remote is defined with anything other than http then we assume it's a promise based remote
+   // In that case we should use what the user provides as the remote location
+   if (!remoteLocation.startsWith('promise new Promise')) {
+      return `${globalPrefix}${baseRemote}/remoteEntry.${remoteEntryExt}`;
+   } else {
+      return remoteLocation;
+   }
 }
 
 // Helper function to deal with remotes that are strings
 function handleStringRemote(
-  remote: string,
-  determineRemoteUrl: (remote: string) => string,
-  isRemoteGlobal: boolean
+   remote: string,
+   determineRemoteUrl: (remote: string) => string,
+   isRemoteGlobal: boolean
 ): string {
-  const globalPrefix = isRemoteGlobal ? `${remote.replace(/-/g, '_')}@` : '';
+   const globalPrefix = isRemoteGlobal ? `${remote.replace(/-/g, '_')}@` : '';
 
-  return `${globalPrefix}${determineRemoteUrl(remote)}`;
+   return `${globalPrefix}${determineRemoteUrl(remote)}`;
 }
 
 /**
@@ -87,29 +87,29 @@ function handleStringRemote(
  * @param determineRemoteUrl - The function used to lookup the URL of the served remote
  */
 export function mapRemotesForSSR(
-  remotes: Remotes,
-  remoteEntryExt: 'js' | 'mjs',
-  determineRemoteUrl: (remote: string) => string
+   remotes: Remotes,
+   remoteEntryExt: 'js' | 'mjs',
+   determineRemoteUrl: (remote: string) => string
 ): Record<string, string> {
-  const mappedRemotes = {};
+   const mappedRemotes = {};
 
-  for (const remote of remotes) {
-    if (Array.isArray(remote)) {
-      const [remoteName, remoteLocation] = remote;
-      const remoteLocationExt = extname(remoteLocation);
-      mappedRemotes[remoteName] = `${remoteName}@${
-        ['.js', '.mjs'].includes(remoteLocationExt)
-          ? remoteLocation
-          : `${
-              remoteLocation.endsWith('/')
-                ? remoteLocation.slice(0, -1)
-                : remoteLocation
-            }/remoteEntry.${remoteEntryExt}`
-      }`;
-    } else if (typeof remote === 'string') {
-      mappedRemotes[remote] = `${remote}@${determineRemoteUrl(remote)}`;
-    }
-  }
+   for (const remote of remotes) {
+      if (Array.isArray(remote)) {
+         const [remoteName, remoteLocation] = remote;
+         const remoteLocationExt = extname(remoteLocation);
+         mappedRemotes[remoteName] = `${remoteName}@${
+            ['.js', '.mjs'].includes(remoteLocationExt)
+               ? remoteLocation
+               : `${
+                    remoteLocation.endsWith('/')
+                       ? remoteLocation.slice(0, -1)
+                       : remoteLocation
+                 }/remoteEntry.${remoteEntryExt}`
+         }`;
+      } else if (typeof remote === 'string') {
+         mappedRemotes[remote] = `${remote}@${determineRemoteUrl(remote)}`;
+      }
+   }
 
-  return mappedRemotes;
+   return mappedRemotes;
 }

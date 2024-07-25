@@ -47,13 +47,13 @@ The configuration lives in your `nx.json` file under the `"release"` section.
 
 ```jsonc {% fileName="nx.json" %}
 {
-  // ... more nx.json config
-  "release": {
-    // For example, configures nx release to target all projects
-    // except the one called "ignore-me"
-    "projects": ["*", "!ignore-me"]
-    // ... nx release config
-  }
+   // ... more nx.json config
+   "release": {
+      // For example, configures nx release to target all projects
+      // except the one called "ignore-me"
+      "projects": ["*", "!ignore-me"]
+      // ... nx release config
+   }
 }
 ```
 
@@ -63,31 +63,31 @@ Changelog render options can be passed as [an object](https://github.com/nrwl/nx
 
 ```jsonc {% fileName="nx.json" %}
 {
-  // ... more nx.json config
-  "release": {
-    "changelog": {
-      "projectChangelogs": {
-        "renderOptions": {
-          // Whether or not the commit authors should be added to the bottom of the changelog in a "Thank You" section.
-          "authors": true,
-          // Whether or not the commit references (such as commit and/or PR links) should be included in the changelog.
-          "commitReferences": true,
-          // Whether or not to include the date in the version title. It can be set to false to disable it, or true to enable with the default of (YYYY-MM-DD).
-          "versionTitleDate": true
-        }
-      },
-      "workspaceChangelog": {
-        "renderOptions": {
-          // Whether or not the commit authors should be added to the bottom of the changelog in a "Thank You" section.
-          "authors": true,
-          // Whether or not the commit references (such as commit and/or PR links) should be included in the changelog.
-          "commitReferences": true,
-          // Whether or not to include the date in the version title. It can be set to false to disable it, or true to enable with the default of (YYYY-MM-DD).
-          "versionTitleDate": true
-        }
+   // ... more nx.json config
+   "release": {
+      "changelog": {
+         "projectChangelogs": {
+            "renderOptions": {
+               // Whether or not the commit authors should be added to the bottom of the changelog in a "Thank You" section.
+               "authors": true,
+               // Whether or not the commit references (such as commit and/or PR links) should be included in the changelog.
+               "commitReferences": true,
+               // Whether or not to include the date in the version title. It can be set to false to disable it, or true to enable with the default of (YYYY-MM-DD).
+               "versionTitleDate": true
+            }
+         },
+         "workspaceChangelog": {
+            "renderOptions": {
+               // Whether or not the commit authors should be added to the bottom of the changelog in a "Thank You" section.
+               "authors": true,
+               // Whether or not the commit references (such as commit and/or PR links) should be included in the changelog.
+               "commitReferences": true,
+               // Whether or not to include the date in the version title. It can be set to false to disable it, or true to enable with the default of (YYYY-MM-DD).
+               "versionTitleDate": true
+            }
+         }
       }
-    }
-  }
+   }
 }
 ```
 
@@ -116,46 +116,46 @@ import { releaseChangelog, releasePublish, releaseVersion } from 'nx/release';
 import * as yargs from 'yargs';
 
 (async () => {
-  const options = await yargs
-    .version(false) // don't use the default meaning of version in yargs
-    .option('version', {
-      description:
-        'Explicit version specifier to use, if overriding conventional commits',
-      type: 'string',
-    })
-    .option('dryRun', {
-      alias: 'd',
-      description:
-        'Whether or not to perform a dry-run of the release process, defaults to true',
-      type: 'boolean',
-      default: true,
-    })
-    .option('verbose', {
-      description:
-        'Whether or not to enable verbose logging, defaults to false',
-      type: 'boolean',
-      default: false,
-    })
-    .parseAsync();
+   const options = await yargs
+      .version(false) // don't use the default meaning of version in yargs
+      .option('version', {
+         description:
+            'Explicit version specifier to use, if overriding conventional commits',
+         type: 'string',
+      })
+      .option('dryRun', {
+         alias: 'd',
+         description:
+            'Whether or not to perform a dry-run of the release process, defaults to true',
+         type: 'boolean',
+         default: true,
+      })
+      .option('verbose', {
+         description:
+            'Whether or not to enable verbose logging, defaults to false',
+         type: 'boolean',
+         default: false,
+      })
+      .parseAsync();
 
-  const { workspaceVersion, projectsVersionData } = await releaseVersion({
-    specifier: options.version,
-    dryRun: options.dryRun,
-    verbose: options.verbose,
-  });
+   const { workspaceVersion, projectsVersionData } = await releaseVersion({
+      specifier: options.version,
+      dryRun: options.dryRun,
+      verbose: options.verbose,
+   });
 
-  await releaseChangelog({
-    versionData: projectsVersionData,
-    version: workspaceVersion,
-    dryRun: options.dryRun,
-    verbose: options.verbose,
-  });
+   await releaseChangelog({
+      versionData: projectsVersionData,
+      version: workspaceVersion,
+      dryRun: options.dryRun,
+      verbose: options.verbose,
+   });
 
-  // The returned number value from releasePublish will be zero if all projects are published successfully, non-zero if not
-  const publishStatus = await releasePublish({
-    dryRun: options.dryRun,
-    verbose: options.verbose,
-  });
-  process.exit(publishStatus);
+   // The returned number value from releasePublish will be zero if all projects are published successfully, non-zero if not
+   const publishStatus = await releasePublish({
+      dryRun: options.dryRun,
+      verbose: options.verbose,
+   });
+   process.exit(publishStatus);
 })();
 ```

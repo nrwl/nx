@@ -6,6 +6,6 @@ If you would prefer to add all `package.json` files as projects, add the followi
 
 ```json {% filename="nx.json" %}
 {
-  "plugins": ["nx/plugins/package-json"]
+   "plugins": ["nx/plugins/package-json"]
 }
 ```

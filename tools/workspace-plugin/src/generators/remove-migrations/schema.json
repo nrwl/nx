@@ -1,13 +1,13 @@
 {
-  "$schema": "https://json-schema.org/schema",
-  "$id": "RemoveMigrations",
-  "title": "",
-  "type": "object",
-  "description": "A generator for removing old migrations.",
-  "properties": {
-    "v": {
-      "type": "number"
-    }
-  },
-  "required": []
+   "$schema": "https://json-schema.org/schema",
+   "$id": "RemoveMigrations",
+   "title": "",
+   "type": "object",
+   "description": "A generator for removing old migrations.",
+   "properties": {
+      "v": {
+         "type": "number"
+      }
+   },
+   "required": []
 }

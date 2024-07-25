@@ -17,7 +17,7 @@ This works in CSS files as well.
 
 ```css
 .logo {
-  background-image: url(./logo.png);
+   background-image: url(./logo.png);
 }
 ```
 
@@ -42,8 +42,8 @@ Note that if you are using Next.js, you have to opt into this behavior. To impor
 
 ```javascript
 module.exports = withNx({
-  nx: {
-    svgr: true,
-  },
+   nx: {
+      svgr: true,
+   },
 });
 ```

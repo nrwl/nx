@@ -1,141 +1,141 @@
 {
-  "name": "nx",
-  "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "packages/nx",
-  "projectType": "library",
-  "implicitDependencies": ["graph-client"],
-  "release": {
-    "version": {
-      "generator": "@nx/js:release-version"
-    }
-  },
-  "targets": {
-    "build-native-wasm": {
-      "cache": true,
-      "outputs": [
-        "{projectRoot}/src/native/*.wasm",
-        "{projectRoot}/src/native/*.js",
-        "{projectRoot}/src/native/*.cjs",
-        "{projectRoot}/src/native/*.mjs",
-        "{projectRoot}/src/native/index.d.ts"
-      ],
-      "executor": "@monodon/rust:napi",
-      "options": {
-        "target": "wasm32-wasip1-threads",
-        "dist": "packages/nx/src/native",
-        "jsFile": "native-bindings.js",
-        "release": true
+   "name": "nx",
+   "$schema": "../../node_modules/nx/schemas/project-schema.json",
+   "sourceRoot": "packages/nx",
+   "projectType": "library",
+   "implicitDependencies": ["graph-client"],
+   "release": {
+      "version": {
+         "generator": "@nx/js:release-version"
       }
-    },
-    "build-native": {
-      "outputs": [
-        "{projectRoot}/src/native/*.node",
-        "{projectRoot}/src/native/*.js",
-        "{projectRoot}/src/native/index.d.ts"
-      ],
-      "executor": "@monodon/rust:napi",
-      "options": {
-        "dist": "packages/nx/src/native",
-        "jsFile": "native-bindings.js",
-        "release": true
+   },
+   "targets": {
+      "build-native-wasm": {
+         "cache": true,
+         "outputs": [
+            "{projectRoot}/src/native/*.wasm",
+            "{projectRoot}/src/native/*.js",
+            "{projectRoot}/src/native/*.cjs",
+            "{projectRoot}/src/native/*.mjs",
+            "{projectRoot}/src/native/index.d.ts"
+         ],
+         "executor": "@monodon/rust:napi",
+         "options": {
+            "target": "wasm32-wasip1-threads",
+            "dist": "packages/nx/src/native",
+            "jsFile": "native-bindings.js",
+            "release": true
+         }
       },
-      "configurations": {
-        "local": {
-          "release": false
-        }
-      }
-    },
-    "copy-native-package-directories": {
-      "command": "node scripts/copy.js build/packages/nx/native-packages/* build/packages"
-    },
-    "artifacts": {
-      "dependsOn": ["copy-native-package-directories"],
-      "command": "pnpm napi artifacts --package-json-path build/packages/nx/package.json -d ./artifacts --npm-dir build/packages"
-    },
-    "build-base": {
-      "executor": "@nx/js:tsc",
-      "options": {
-        "main": "packages/nx/bin/nx.ts",
-        "assets": [
-          {
-            "input": "packages/nx",
-            "glob": ".npmignore",
-            "output": "/"
-          },
-          {
-            "input": "packages/nx",
-            "glob": "**/files/**",
-            "output": "/"
-          },
-          {
-            "input": "packages/nx",
-            "glob": "**/files/**/.gitkeep",
-            "output": "/"
-          },
-          {
-            "input": "packages/nx",
-            "glob": "**/*.json",
-            "ignore": [
-              "**/tsconfig*.json",
-              "**/project.json",
-              "**/__fixtures__/**"
+      "build-native": {
+         "outputs": [
+            "{projectRoot}/src/native/*.node",
+            "{projectRoot}/src/native/*.js",
+            "{projectRoot}/src/native/index.d.ts"
+         ],
+         "executor": "@monodon/rust:napi",
+         "options": {
+            "dist": "packages/nx/src/native",
+            "jsFile": "native-bindings.js",
+            "release": true
+         },
+         "configurations": {
+            "local": {
+               "release": false
+            }
+         }
+      },
+      "copy-native-package-directories": {
+         "command": "node scripts/copy.js build/packages/nx/native-packages/* build/packages"
+      },
+      "artifacts": {
+         "dependsOn": ["copy-native-package-directories"],
+         "command": "pnpm napi artifacts --package-json-path build/packages/nx/package.json -d ./artifacts --npm-dir build/packages"
+      },
+      "build-base": {
+         "executor": "@nx/js:tsc",
+         "options": {
+            "main": "packages/nx/bin/nx.ts",
+            "assets": [
+               {
+                  "input": "packages/nx",
+                  "glob": ".npmignore",
+                  "output": "/"
+               },
+               {
+                  "input": "packages/nx",
+                  "glob": "**/files/**",
+                  "output": "/"
+               },
+               {
+                  "input": "packages/nx",
+                  "glob": "**/files/**/.gitkeep",
+                  "output": "/"
+               },
+               {
+                  "input": "packages/nx",
+                  "glob": "**/*.json",
+                  "ignore": [
+                     "**/tsconfig*.json",
+                     "**/project.json",
+                     "**/__fixtures__/**"
+                  ],
+                  "output": "/"
+               },
+               {
+                  "input": "packages/nx",
+                  "glob": "**/*.{mjs,cjs,js,css,html,svg,wasm}",
+                  "ignore": ["**/jest.config.js"],
+                  "output": "/"
+               },
+               {
+                  "input": "packages/nx",
+                  "glob": "**/*.d.ts",
+                  "output": "/"
+               },
+               {
+                  "input": "",
+                  "glob": "LICENSE",
+                  "output": "/"
+               }
+            ]
+         }
+      },
+      "echo": {
+         "command": "echo hi"
+      },
+      "build": {
+         "dependsOn": ["^build-client", "build-base", "build-native"],
+         "inputs": [
+            "production",
+            "^production",
+            {
+               "dependentTasksOutputFiles": "**/*.node"
+            }
+         ],
+         "executor": "nx:run-commands",
+         "outputs": ["{workspaceRoot}/build/packages/nx"],
+         "options": {
+            "commands": [
+               {
+                  "command": "node ./scripts/copy-local-native.js nx"
+               },
+               {
+                  "command": "node ./scripts/copy-graph-client.js"
+               },
+               {
+                  "command": "node ./scripts/chmod build/packages/nx/bin/nx.js"
+               },
+               {
+                  "command": "node ./scripts/copy-readme.js nx"
+               }
             ],
-            "output": "/"
-          },
-          {
-            "input": "packages/nx",
-            "glob": "**/*.{mjs,cjs,js,css,html,svg,wasm}",
-            "ignore": ["**/jest.config.js"],
-            "output": "/"
-          },
-          {
-            "input": "packages/nx",
-            "glob": "**/*.d.ts",
-            "output": "/"
-          },
-          {
-            "input": "",
-            "glob": "LICENSE",
-            "output": "/"
-          }
-        ]
-      }
-    },
-    "echo": {
-      "command": "echo hi"
-    },
-    "build": {
-      "dependsOn": ["^build-client", "build-base", "build-native"],
-      "inputs": [
-        "production",
-        "^production",
-        {
-          "dependentTasksOutputFiles": "**/*.node"
-        }
-      ],
-      "executor": "nx:run-commands",
-      "outputs": ["{workspaceRoot}/build/packages/nx"],
-      "options": {
-        "commands": [
-          {
-            "command": "node ./scripts/copy-local-native.js nx"
-          },
-          {
-            "command": "node ./scripts/copy-graph-client.js"
-          },
-          {
-            "command": "node ./scripts/chmod build/packages/nx/bin/nx.js"
-          },
-          {
-            "command": "node ./scripts/copy-readme.js nx"
-          }
-        ],
-        "parallel": false
-      }
-    },
-    "add-extra-dependencies": {
-      "command": "node ./scripts/add-dependency-to-build.js nx @nrwl/tao"
-    },
-    "test-native": {}
-  }
+            "parallel": false
+         }
+      },
+      "add-extra-dependencies": {
+         "command": "node ./scripts/add-dependency-to-build.js nx @nrwl/tao"
+      },
+      "test-native": {}
+   }
 }

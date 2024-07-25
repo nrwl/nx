@@ -14,9 +14,9 @@ This command will install the correct version of Nx based on your Angular versio
 
 This will enable you to use the Nx CLI in your existing Angular CLI workspace while keeping your existing file structure in place. The following changes will be made in your repo to enable Nx:
 
-- The `nx`, `@nx/workspace` and `prettier` packages will be installed.
-- An `nx.json` file will be created in the root of your workspace.
-- For an Angular 14+ repo, the `angular.json` file is split into separate `project.json` files for each project.
+-  The `nx`, `@nx/workspace` and `prettier` packages will be installed.
+-  An `nx.json` file will be created in the root of your workspace.
+-  For an Angular 14+ repo, the `angular.json` file is split into separate `project.json` files for each project.
 
 **Note:** The changes will be slightly different for Angular 13 and lower.
 
@@ -30,12 +30,12 @@ npx nx@latest init --integrated
 
 The command applies the following changes to your workspace:
 
-- Installs the `nx`, `@nx/angular` and `@nx/workspace` packages.
-- Moves your applications into the `apps` folder, and updates the relevant file paths in your configuration files.
-- Moves your e2e suites into the `apps/<app name>-e2e` folder, and updates the relevant file paths in your configuration files.
-- Moves your libraries into the `libs` folder, and updates the relevant file paths in your configuration files.
-- Updates your `package.json` scripts to use `nx` instead of `ng`.
-- Splits your `angular.json` into `project.json` files for each project with updated paths.
+-  Installs the `nx`, `@nx/angular` and `@nx/workspace` packages.
+-  Moves your applications into the `apps` folder, and updates the relevant file paths in your configuration files.
+-  Moves your e2e suites into the `apps/<app name>-e2e` folder, and updates the relevant file paths in your configuration files.
+-  Moves your libraries into the `libs` folder, and updates the relevant file paths in your configuration files.
+-  Updates your `package.json` scripts to use `nx` instead of `ng`.
+-  Splits your `angular.json` into `project.json` files for each project with updated paths.
 
 After the changes are applied, your workspace file structure should look similar to the one below:
 
@@ -79,21 +79,21 @@ After the changes are applied, your workspace file structure should look similar
 
 The automated migration supports Angular CLI workspaces with a standard structure, configurations and features. It supports workspaces using the following executors (builders):
 
-- `@angular-devkit/build-angular:application`
-- `@angular-devkit/build-angular:browser`
-- `@angular-devkit/build-angular:browser-esbuild`
-- `@angular-devkit/build-angular:dev-server`
-- `@angular-devkit/build-angular:extract-i18n`
-- `@angular-devkit/build-angular:karma`
-- `@angular-devkit/build-angular:ng-packagr`
-- `@angular-devkit/build-angular:prerender`
-- `@angular-devkit/build-angular:protractor`
-- `@angular-devkit/build-angular:server`
-- `@angular-devkit/build-angular:ssr-dev-server`
-- `@angular-eslint/builder:lint`
-- `@cypress/schematic:cypress`
-- `@nguniversal/builders:prerender`
-- `@nguniversal/builders:ssr-dev-server`
+-  `@angular-devkit/build-angular:application`
+-  `@angular-devkit/build-angular:browser`
+-  `@angular-devkit/build-angular:browser-esbuild`
+-  `@angular-devkit/build-angular:dev-server`
+-  `@angular-devkit/build-angular:extract-i18n`
+-  `@angular-devkit/build-angular:karma`
+-  `@angular-devkit/build-angular:ng-packagr`
+-  `@angular-devkit/build-angular:prerender`
+-  `@angular-devkit/build-angular:protractor`
+-  `@angular-devkit/build-angular:server`
+-  `@angular-devkit/build-angular:ssr-dev-server`
+-  `@angular-eslint/builder:lint`
+-  `@cypress/schematic:cypress`
+-  `@nguniversal/builders:prerender`
+-  `@nguniversal/builders:ssr-dev-server`
 
 Support for other executors may be added in the future.
 
@@ -101,10 +101,10 @@ Support for other executors may be added in the future.
 
 Your workspace is now powered by Nx! You can verify that your application still runs as intended:
 
-- To serve, run `nx serve <app name>`.
-- To build, run `nx build <app name>`.
-- To run unit tests, run `nx test <app name>`.
-- To see your project graph, run `nx graph`.
+-  To serve, run `nx serve <app name>`.
+-  To build, run `nx build <app name>`.
+-  To run unit tests, run `nx test <app name>`.
+-  To see your project graph, run `nx graph`.
 
 > Your project graph will grow as you add and use more applications and libraries. You can add the `--watch` flag to `nx graph` to see the changes in-browser as you add them.
 
@@ -112,10 +112,10 @@ Your workspace is now powered by Nx! You can verify that your application still 
 
 This tutorial walked you through how Nx can improve the local development experience, but the biggest difference Nx makes is in CI. As repositories get bigger, making sure that the CI is fast, reliable and maintainable can get very challenging. Nx provides a solution.
 
-- Nx reduces wasted time in CI with the [`affected` command](/ci/features/affected).
-- Nx Replay's [remote caching](/ci/features/remote-cache) will reuse task artifacts from different CI executions making sure you will never run the same computation twice.
-- Nx Agents [efficiently distribute tasks across machines](/ci/concepts/parallelization-distribution) ensuring constant CI time regardless of the repository size. The right number of machines is allocated for each PR to ensure good performance without wasting compute.
-- Nx Atomizer [automatically splits](/ci/features/split-e2e-tasks) large e2e tests to distribute them across machines. Nx can also automatically [identify and rerun flaky e2e tests](/ci/features/flaky-tasks).
+-  Nx reduces wasted time in CI with the [`affected` command](/ci/features/affected).
+-  Nx Replay's [remote caching](/ci/features/remote-cache) will reuse task artifacts from different CI executions making sure you will never run the same computation twice.
+-  Nx Agents [efficiently distribute tasks across machines](/ci/concepts/parallelization-distribution) ensuring constant CI time regardless of the repository size. The right number of machines is allocated for each PR to ensure good performance without wasting compute.
+-  Nx Atomizer [automatically splits](/ci/features/split-e2e-tasks) large e2e tests to distribute them across machines. Nx can also automatically [identify and rerun flaky e2e tests](/ci/features/flaky-tasks).
 
 ### Connect to Nx Cloud
 
@@ -165,25 +165,25 @@ The key lines in the CI pipeline are:
 name: CI
 # ...
 jobs:
-  main:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      # This enables task distribution via Nx Cloud
-      # Run this command as early as possible, before dependencies are installed
-      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      # Connect your workspace by running "nx connect" and uncomment this
-      - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 20
-          cache: 'npm'
-      - run: npm ci --legacy-peer-deps
-      - uses: nrwl/nx-set-shas@v4
-      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-      - run: npx nx affected -t lint test build
+   main:
+      runs-on: ubuntu-latest
+      steps:
+         - uses: actions/checkout@v4
+           with:
+              fetch-depth: 0
+         # This enables task distribution via Nx Cloud
+         # Run this command as early as possible, before dependencies are installed
+         # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
+         # Connect your workspace by running "nx connect" and uncomment this
+         - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+         - uses: actions/setup-node@v3
+           with:
+              node-version: 20
+              cache: 'npm'
+         - run: npm ci --legacy-peer-deps
+         - uses: nrwl/nx-set-shas@v4
+         # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
+         - run: npx nx affected -t lint test build
 ```
 
 ### Open a Pull Request
@@ -206,19 +206,19 @@ The `See all runs` link goes to a page with the progress and results of tasks th
 
 For more information about how Nx can improve your CI pipeline, check out one of these detailed tutorials:
 
-- [Circle CI with Nx](/ci/intro/tutorials/circle)
-- [GitHub Actions with Nx](/ci/intro/tutorials/github-actions)
+-  [Circle CI with Nx](/ci/intro/tutorials/circle)
+-  [GitHub Actions with Nx](/ci/intro/tutorials/github-actions)
 
 ## Learn More
 
 Learn more about the advantages of Nx in the following guides:
 
-- [Using Cypress for e2e tests](/nx-api/cypress)
-- [Using Jest for unit tests](/nx-api/jest)
-- [Computation Caching](/concepts/how-caching-works)
-- [Rebuilding and Retesting What is Affected](/ci/features/affected)
-- [Integrate with Editors](/getting-started/editor-setup)
-- [Advanced Angular Micro Frontends with Dynamic Module Federation](/recipes/angular/dynamic-module-federation-with-angular)
+-  [Using Cypress for e2e tests](/nx-api/cypress)
+-  [Using Jest for unit tests](/nx-api/jest)
+-  [Computation Caching](/concepts/how-caching-works)
+-  [Rebuilding and Retesting What is Affected](/ci/features/affected)
+-  [Integrate with Editors](/getting-started/editor-setup)
+-  [Advanced Angular Micro Frontends with Dynamic Module Federation](/recipes/angular/dynamic-module-federation-with-angular)
 
 ## From Nx Console
 
@@ -226,8 +226,8 @@ Nx Console no longer supports the Angular CLI. Angular CLI users will receive a 
 
 If you're not ready to make the change yet, you can come back to this later:
 
-- If you're using Nx Console: open the Vs Code command palette and start typing "Convert Angular CLI to Nx Workspace".
-- Regardless of using Nx Console (or your IDE): run `npx nx init` from the root of your project.
+-  If you're using Nx Console: open the Vs Code command palette and start typing "Convert Angular CLI to Nx Workspace".
+-  Regardless of using Nx Console (or your IDE): run `npx nx init` from the root of your project.
 
 Once the script has run, commit the changes. Reverting this commit will effectively undo the changes made.
 

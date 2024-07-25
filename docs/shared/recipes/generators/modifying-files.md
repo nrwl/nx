@@ -16,14 +16,14 @@ The following example adds a `package.json` script that issues a friendly greeti
 import { updateJson } from '@nx/devkit';
 
 export default async function (tree: Tree, schema: any) {
-  updateJson(tree, 'package.json', (pkgJson) => {
-    // if scripts is undefined, set it to an empty object
-    pkgJson.scripts = pkgJson.scripts ?? {};
-    // add greet script
-    pkgJson.scripts.greet = 'echo "Hello!"';
-    // return modified JSON object
-    return pkgJson;
-  });
+   updateJson(tree, 'package.json', (pkgJson) => {
+      // if scripts is undefined, set it to an empty object
+      pkgJson.scripts = pkgJson.scripts ?? {};
+      // add greet script
+      pkgJson.scripts.greet = 'echo "Hello!"';
+      // return modified JSON object
+      return pkgJson;
+   });
 }
 ```
 
@@ -35,10 +35,10 @@ Let's say we want to replace any instance of `thomasEdison` with `nikolaTesla` i
 
 ```typescript
 export default async function (tree: Tree, schema: any) {
-  const filePath = `path/to/index.ts`;
-  const contents = tree.read(filePath).toString();
-  const newContents = contents.replace('thomasEdison', 'nikolaTesla');
-  tree.write(filePath, newContents);
+   const filePath = `path/to/index.ts`;
+   const contents = tree.read(filePath).toString();
+   const newContents = contents.replace('thomasEdison', 'nikolaTesla');
+   tree.write(filePath, newContents);
 }
 ```
 
@@ -46,10 +46,10 @@ This works, but only replaces the first instance of `thomasEdison`. To replace t
 
 ```typescript
 export default async function (tree: Tree, schema: any) {
-  const filePath = `path/to/index.ts`;
-  const contents = tree.read(filePath).toString();
-  const newContents = contents.replace(/thomasEdison/g, 'nikolaTesla');
-  tree.write(filePath, newContents);
+   const filePath = `path/to/index.ts`;
+   const contents = tree.read(filePath).toString();
+   const newContents = contents.replace(/thomasEdison/g, 'nikolaTesla');
+   tree.write(filePath, newContents);
 }
 ```
 
@@ -93,40 +93,40 @@ import { TypeReferenceNode } from 'typescript';
  * Run the callback on all files inside the specified path
  */
 function visitAllFiles(
-  tree: Tree,
-  path: string,
-  callback: (filePath: string) => void
+   tree: Tree,
+   path: string,
+   callback: (filePath: string) => void
 ) {
-  tree.children(path).forEach((fileName) => {
-    const filePath = `${path}/${fileName}`;
-    if (!tree.isFile(filePath)) {
-      visitAllFiles(tree, filePath, callback);
-    } else {
-      callback(filePath);
-    }
-  });
+   tree.children(path).forEach((fileName) => {
+      const filePath = `${path}/${fileName}`;
+      if (!tree.isFile(filePath)) {
+         visitAllFiles(tree, filePath, callback);
+      } else {
+         callback(filePath);
+      }
+   });
 }
 
 export default function (tree: Tree, schema: any) {
-  const sourceRoot = readProjectConfiguration(tree, schema.name).sourceRoot;
-  visitAllFiles(tree, sourceRoot, (filePath) => {
-    const fileEntry = tree.read(filePath);
-    const contents = fileEntry.toString();
+   const sourceRoot = readProjectConfiguration(tree, schema.name).sourceRoot;
+   visitAllFiles(tree, sourceRoot, (filePath) => {
+      const fileEntry = tree.read(filePath);
+      const contents = fileEntry.toString();
 
-    // Check each `TypeReference` node to see if we need to replace it
-    const newContents = tsquery.replace(contents, 'TypeReference', (node) => {
-      const trNode = node as TypeReferenceNode;
-      if (trNode.typeName.getText() === 'Array') {
-        const typeArgument = trNode.typeArguments[0];
-        return `${typeArgument.getText()}[]`;
+      // Check each `TypeReference` node to see if we need to replace it
+      const newContents = tsquery.replace(contents, 'TypeReference', (node) => {
+         const trNode = node as TypeReferenceNode;
+         if (trNode.typeName.getText() === 'Array') {
+            const typeArgument = trNode.typeArguments[0];
+            return `${typeArgument.getText()}[]`;
+         }
+         // return undefined does not replace anything
+      });
+
+      // only write the file if something has changed
+      if (newContents !== contents) {
+         tree.write(filePath, newContents);
       }
-      // return undefined does not replace anything
-    });
-
-    // only write the file if something has changed
-    if (newContents !== contents) {
-      tree.write(filePath, newContents);
-    }
-  });
+   });
 }
 ```

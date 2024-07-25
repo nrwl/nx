@@ -6,13 +6,13 @@ export { configurationGenerator };
 export const jestProjectGenerator = configurationGenerator;
 
 export {
-  addPropertyToJestConfig,
-  removePropertyFromJestConfig,
+   addPropertyToJestConfig,
+   removePropertyFromJestConfig,
 } from './src/utils/config/update-config';
 export { jestConfigObjectAst } from './src/utils/config/functions';
 export { jestInitGenerator } from './src/generators/init/init';
 export {
-  getJestProjects,
-  getJestProjectsAsync,
-  getNestedJestProjects,
+   getJestProjects,
+   getJestProjectsAsync,
+   getNestedJestProjects,
 } from './src/utils/config/get-jest-projects';

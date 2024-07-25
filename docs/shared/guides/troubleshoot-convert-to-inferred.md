@@ -40,11 +40,11 @@ To customize the output directory, set `distDir` in your Next.js config file.
 const configuration = process.env.NX_TASK_TARGET_CONFIGURATION || 'default';
 // ...
 const nextConfig = {
-  nx: {
-    ...options,
-  },
-  // Differentiate production and development builds. You can also use the `configuration` variable that will match the `--configuration` option passed to Nx.
-  distDir: process.env.NODE_ENV === 'production' ? 'dist' : 'dist-dev',
+   nx: {
+      ...options,
+   },
+   // Differentiate production and development builds. You can also use the `configuration` variable that will match the `--configuration` option passed to Nx.
+   distDir: process.env.NODE_ENV === 'production' ? 'dist' : 'dist-dev',
 };
 const plugins = [withNx];
 module.exports = composePlugins(...plugins)(nextConfig);
@@ -81,9 +81,9 @@ and `assetsBuildDirectory` and set it to the locations you want.
 ```ts
 // ...
 export default {
-  assetsBuildDirectory: '../../dist/apps/demo/public/build',
-  serverBuildPath: '../../dist/apps/demo/build/index.js',
-  // ...
+   assetsBuildDirectory: '../../dist/apps/demo/public/build',
+   serverBuildPath: '../../dist/apps/demo/build/index.js',
+   // ...
 };
 ```
 
@@ -109,11 +109,11 @@ directly.
 ```ts
 // ...
 const config: StorybookConfig = {
-  // ...
-  staticDirs:
-    process.env.NODE_ENV === 'production'
-      ? ['../static-prod']
-      : ['../static-dev'],
+   // ...
+   staticDirs:
+      process.env.NODE_ENV === 'production'
+         ? ['../static-prod']
+         : ['../static-dev'],
 };
 
 export default config;
@@ -128,9 +128,9 @@ For example, if you previously used this in `proxy.config.json`:
 
 ```json
 {
-  "/api/*": {
-    "target": "http://localhost:3333"
-  }
+   "/api/*": {
+      "target": "http://localhost:3333"
+   }
 }
 ```
 
@@ -138,15 +138,15 @@ Then, you will need to add this entry to your `vite.config.ts` file:
 
 ```ts
 export default defineConfig({
-  //...
-  server: {
-    // ...
-    proxy: {
-      '/api': {
-        target: 'http://localhost:3333',
+   //...
+   server: {
+      // ...
+      proxy: {
+         '/api': {
+            target: 'http://localhost:3333',
+         },
       },
-    },
-  },
+   },
 });
 ```
 
@@ -172,8 +172,8 @@ For example, if you previously added plugins using the configuration function.
 ```js
 // webpack.config.old.js
 modules.exports = (config) => {
-  config.plugins.push(new SomePlugin());
-  return config;
+   config.plugins.push(new SomePlugin());
+   return config;
 };
 ```
 
@@ -181,8 +181,8 @@ Then, we recommend that you move the plugin entry to the new configuration file,
 
 ```js
 module.exports = async () => ({
-  devServer: devServerOptions,
-  plugins: [new NxAppWebpackPlugin(pluginOptions), new SomePlugin()],
+   devServer: devServerOptions,
+   plugins: [new NxAppWebpackPlugin(pluginOptions), new SomePlugin()],
 });
 ```
 
@@ -191,21 +191,21 @@ follows.
 
 ```js
 module.exports = async () => ({
-  devServer: devServerOptions,
-  plugins: [
-    new NxAppWebpackPlugin(pluginOptions),
-    {
-      apply(compiler) {
-        const babelLoader = compiler.options.module.rules.find(
-          (rule) =>
-            rule &&
-            typeof rule !== 'string' &&
-            rule.loader?.toString().includes('babel-loader')
-        );
+   devServer: devServerOptions,
+   plugins: [
+      new NxAppWebpackPlugin(pluginOptions),
+      {
+         apply(compiler) {
+            const babelLoader = compiler.options.module.rules.find(
+               (rule) =>
+                  rule &&
+                  typeof rule !== 'string' &&
+                  rule.loader?.toString().includes('babel-loader')
+            );
 
-        // do something with `babelLoader...
+            // do something with `babelLoader...
+         },
       },
-    },
-  ],
+   ],
 });
 ```

@@ -6,11 +6,11 @@ The [`setupNodeEvents`](https://docs.cypress.io/guides/references/configuration#
 import { defineConfig } from 'cypress';
 
 export default defineConfig({
-  e2e: {
-    setupNodeEvents(on, config) {
-      // e2e testing node events setup code
-    },
-  },
+   e2e: {
+      setupNodeEvents(on, config) {
+         // e2e testing node events setup code
+      },
+   },
 });
 ```
 
@@ -21,25 +21,25 @@ import { defineConfig } from 'cypress';
 import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
 
 const preset = nxE2EPreset(__filename, {
-  cypressDir: 'src',
-  bundler: 'vite',
-  webServerCommands: {
-    default: 'nx run my-project:serve',
-    production: 'nx run my-project:preview',
-  },
-  ciWebServerCommand: 'nx run my-project:serve-static',
+   cypressDir: 'src',
+   bundler: 'vite',
+   webServerCommands: {
+      default: 'nx run my-project:serve',
+      production: 'nx run my-project:preview',
+   },
+   ciWebServerCommand: 'nx run my-project:serve-static',
 });
 
 export default defineConfig({
-  e2e: {
-    ...preset,
-    async setupNodeEvents(on, config) {
-      // This line sets up the web server as provided via `webServerCommands` and `ciWebServerCommand`
-      await preset.setupNodeEvents(on, config);
+   e2e: {
+      ...preset,
+      async setupNodeEvents(on, config) {
+         // This line sets up the web server as provided via `webServerCommands` and `ciWebServerCommand`
+         await preset.setupNodeEvents(on, config);
 
-      // Register your listeners here
-    },
-  },
+         // Register your listeners here
+      },
+   },
 });
 ```
 

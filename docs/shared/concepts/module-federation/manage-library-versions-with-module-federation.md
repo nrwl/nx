@@ -88,16 +88,16 @@ This would result in the following webpack config:
 
 ```js {% fileName="webpack.config.js" %}
 module.exports = {
-  plugins: [
-    new ModuleFederationPlugin({
-      // additional config
-      name: 'remote',
-      shared: {
-        react: { singleton: true, eager: true },
-        // acme/utils will not be shared
-      },
-    }),
-  ],
+   plugins: [
+      new ModuleFederationPlugin({
+         // additional config
+         name: 'remote',
+         shared: {
+            react: { singleton: true, eager: true },
+            // acme/utils will not be shared
+         },
+      }),
+   ],
 };
 ```
 
@@ -108,11 +108,11 @@ module.exports = {
 import { ModuleFederationConfig } from '@nx/webpack';
 
 const config: ModuleFederationConfig = {
-  name: 'remote',
-  exposes: {
-    './Module': './src/remote-entry.ts',
-  },
-  // By not declaring a shared function, all dependencies will be shared
+   name: 'remote',
+   exposes: {
+      './Module': './src/remote-entry.ts',
+   },
+   // By not declaring a shared function, all dependencies will be shared
 };
 export default config;
 ```
@@ -121,17 +121,17 @@ This would result in the following webpack config:
 
 ```js {% fileName="webpack.config.js" %}
 module.exports = {
-  // Additional config ignored for brevity
-  plugins: [
-    new ModuleFederationPlugin({
-      // ...
-      name: 'remote',
-      shared: {
-        react: { singleton: true, eager: true, version: '18.2.0' },
-        'acme/utils': { singleton: true, eager: true, version: '1.0.0' }, // <--- This version is determined by the logic discussed earlier
-      },
-    }),
-  ],
+   // Additional config ignored for brevity
+   plugins: [
+      new ModuleFederationPlugin({
+         // ...
+         name: 'remote',
+         shared: {
+            react: { singleton: true, eager: true, version: '18.2.0' },
+            'acme/utils': { singleton: true, eager: true, version: '1.0.0' }, // <--- This version is determined by the logic discussed earlier
+         },
+      }),
+   ],
 };
 ```
 
@@ -148,6 +148,6 @@ Here is a working example of how to opt in and out of sharing library versions:
 
 By taking advantage of **Nx**'s approach to managing library versions, you can:
 
-- Streamline the process of updating a library version behind a versoning scheme like SemVer.
-- Opt-in or out of sharing library versions with Module Federation based on your needs.
-- Reduce the download size of your application by sharing workspace libraries between remotes and hosts.
+-  Streamline the process of updating a library version behind a versoning scheme like SemVer.
+-  Opt-in or out of sharing library versions with Module Federation based on your needs.
+-  Reduce the download size of your application by sharing workspace libraries between remotes and hosts.

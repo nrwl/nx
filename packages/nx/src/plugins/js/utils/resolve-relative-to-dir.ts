@@ -3,11 +3,11 @@
  * require.resolve directly in jest https://github.com/jestjs/jest/issues/9543
  */
 export function resolveRelativeToDir(path: string, relativeToDir): string {
-  try {
-    return require.resolve(path, {
-      paths: [relativeToDir],
-    });
-  } catch {
-    return null;
-  }
+   try {
+      return require.resolve(path, {
+         paths: [relativeToDir],
+      });
+   } catch {
+      return null;
+   }
 }

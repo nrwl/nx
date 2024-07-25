@@ -34,10 +34,10 @@ The Storybook CLI (running through our generator) will prompt you to run some co
 You can say `yes` to these prompts, which are usually the following (there may be more or less, depending on your setup,
 and depending on the latest versions of the Storybook CLI - this code is NOT managed by Nx, but by Storybook):
 
-- `mainjsFramework`: It will try to add the `framework` field in your project's `.storybook/main.js|ts` file.
-- `eslintPlugin`: installs the `eslint-plugin-storybook`
-- `newFrameworks`: removes unused dependencies (eg. `@storybook/builder-webpack5`, `@storybook/manager-webpack5`, `@storybook/builder-vite`)
-- `autodocsTrue`: adds `autodocs: true` to your project's `.storybook/main.js|ts` file
+-  `mainjsFramework`: It will try to add the `framework` field in your project's `.storybook/main.js|ts` file.
+-  `eslintPlugin`: installs the `eslint-plugin-storybook`
+-  `newFrameworks`: removes unused dependencies (eg. `@storybook/builder-webpack5`, `@storybook/manager-webpack5`, `@storybook/builder-vite`)
+-  `autodocsTrue`: adds `autodocs: true` to your project's `.storybook/main.js|ts` file
 
 ### Check the result
 
@@ -49,12 +49,12 @@ Here is an example of a project-level `.storybook/main.js|ts` file for an Angula
 
 ```ts {% fileName="apps/my-angular-app/.storybook/main.js" %}
 const config = {
-  stories: ['../src/app/**/*.stories.@(js|jsx|ts|tsx|mdx)'],
-  addons: ['@storybook/addon-essentials'],
-  framework: {
-    name: '@storybook/angular',
-    options: {},
-  },
+   stories: ['../src/app/**/*.stories.@(js|jsx|ts|tsx|mdx)'],
+   addons: ['@storybook/addon-essentials'],
+   framework: {
+      name: '@storybook/angular',
+      options: {},
+   },
 };
 
 export default config;
@@ -66,16 +66,16 @@ Here is an example of a project-level `.storybook/main.js|ts` file for a React p
 
 ```ts {% fileName="apps/my-react-app/.storybook/main.js" %}
 const config = {
-  stories: ['../src/app/**/*.stories.@(js|jsx|ts|tsx|mdx)'],
-  addons: ['@storybook/addon-essentials'],
-  framework: {
-    name: '@storybook/react-vite',
-    options: {
-      builder: {
-        viteConfigPath: 'apps/rv1/vite.config.ts',
+   stories: ['../src/app/**/*.stories.@(js|jsx|ts|tsx|mdx)'],
+   addons: ['@storybook/addon-essentials'],
+   framework: {
+      name: '@storybook/react-vite',
+      options: {
+         builder: {
+            viteConfigPath: 'apps/rv1/vite.config.ts',
+         },
       },
-    },
-  },
+   },
 };
 
 export default config;
@@ -144,8 +144,8 @@ This script will upgrade your Storybook dependencies to the latest version, as e
 It prepares all your project-level `.storybook/main.js|ts` files, so that
 the Storybook automigration scripts can run successfully. This means that it makes the following adjustments to your files:
 
-- Remove the "`as StorybookConfig`" typecast from the `.storybook/main.ts` files, if you have any `.storybook/main.ts` files with typecast, since it is not needed any more
-- Remove the "`path.resolve`" calls from the Next.js Storybook configuration in project-level `.storybook/main.js|ts` files, if it exists, since it breaks the Storybook automigration scripts
+-  Remove the "`as StorybookConfig`" typecast from the `.storybook/main.ts` files, if you have any `.storybook/main.ts` files with typecast, since it is not needed any more
+-  Remove the "`path.resolve`" calls from the Next.js Storybook configuration in project-level `.storybook/main.js|ts` files, if it exists, since it breaks the Storybook automigration scripts
 
 ### Step 03
 
@@ -161,11 +161,11 @@ This script will make changes to your Storybook configuration files, and other c
 
 After the Storybook CLI automigrate scripts have run, some additional adjustments are made to your workspace, to make sure that everything is working as expected. These adjustments are as follows:
 
-- Remove the "`vite-tsconfig-paths`" plugin from the Storybook configuration files for Vite projects, since it's no longer needed in v7
-- Add the "`viteConfigPath`" option to the Storybook builder options for Vite projects, since now Storybook needs the path to the Vite config file
-- Change the import package for the `StorybookConfig` type to be framework specific (e.g. from `@storybook/common` to `@storybook/react-vite` for React projects using Vite)
-- Add the "`lit`" package to your workspace, if you are using Web Components
-- Remove the "`uiFramework`" option from your project's Storybook targets
+-  Remove the "`vite-tsconfig-paths`" plugin from the Storybook configuration files for Vite projects, since it's no longer needed in v7
+-  Add the "`viteConfigPath`" option to the Storybook builder options for Vite projects, since now Storybook needs the path to the Vite config file
+-  Change the import package for the `StorybookConfig` type to be framework specific (e.g. from `@storybook/common` to `@storybook/react-vite` for React projects using Vite)
+-  Add the "`lit`" package to your workspace, if you are using Web Components
+-  Remove the "`uiFramework`" option from your project's Storybook targets
 
 Our generator is based on the guide to migration using the Storybook CLI, sp please refer to the [Storybook 7 migration guide](https://chromatic-ui.notion.site/Storybook-7-migration-guide-dbf41fa347304eb2a5e9c69b34503937) for more information.
 

@@ -3,43 +3,43 @@ import { AggregatedLog } from '@nx/devkit/src/generators/plugin-migrations/aggre
 import { buildPostTargetTransformer } from './build-post-target-transformer';
 
 describe('buildPostTargetTransformer', () => {
-  describe('--react-vite', () => {
-    it('should migrate docsMode and staticDir to storybook config correctly', () => {
-      // ARRANGE
-      const tree = createTreeWithEmptyWorkspace();
+   describe('--react-vite', () => {
+      it('should migrate docsMode and staticDir to storybook config correctly', () => {
+         // ARRANGE
+         const tree = createTreeWithEmptyWorkspace();
 
-      const targetConfiguration = {
-        outputs: ['{options.outputDir}'],
-        options: {
-          outputDir: 'dist/storybook/myapp',
-          configDir: 'apps/myapp/.storybook',
-          docsMode: true,
-          staticDir: ['assets'],
-        },
-      };
+         const targetConfiguration = {
+            outputs: ['{options.outputDir}'],
+            options: {
+               outputDir: 'dist/storybook/myapp',
+               configDir: 'apps/myapp/.storybook',
+               docsMode: true,
+               staticDir: ['assets'],
+            },
+         };
 
-      const inferredTargetConfiguration = {
-        outputs: ['{projectRoot}/{options.outputDir}'],
-      };
+         const inferredTargetConfiguration = {
+            outputs: ['{projectRoot}/{options.outputDir}'],
+         };
 
-      const migrationLogs = new AggregatedLog();
+         const migrationLogs = new AggregatedLog();
 
-      tree.write(
-        'apps/myapp/.storybook/main.ts',
-        storybookConfigFileV17_ReactVite
-      );
+         tree.write(
+            'apps/myapp/.storybook/main.ts',
+            storybookConfigFileV17_ReactVite
+         );
 
-      // ACT
-      const target = buildPostTargetTransformer(migrationLogs)(
-        targetConfiguration,
-        tree,
-        { projectName: 'myapp', root: 'apps/myapp' },
-        inferredTargetConfiguration
-      );
+         // ACT
+         const target = buildPostTargetTransformer(migrationLogs)(
+            targetConfiguration,
+            tree,
+            { projectName: 'myapp', root: 'apps/myapp' },
+            inferredTargetConfiguration
+         );
 
-      // ASSERT
-      const configFile = tree.read('apps/myapp/.storybook/main.ts', 'utf-8');
-      expect(configFile).toMatchInlineSnapshot(`
+         // ASSERT
+         const configFile = tree.read('apps/myapp/.storybook/main.ts', 'utf-8');
+         expect(configFile).toMatchInlineSnapshot(`
         "import type { StorybookConfig } from '@storybook/react-vite';
           
           // These options were migrated by @nx/storybook:convert-to-inferred from the project.json file.
@@ -69,7 +69,7 @@ describe('buildPostTargetTransformer', () => {
 
         export default config;"
       `);
-      expect(target).toMatchInlineSnapshot(`
+         expect(target).toMatchInlineSnapshot(`
         {
           "options": {
             "config-dir": ".storybook",
@@ -81,56 +81,56 @@ describe('buildPostTargetTransformer', () => {
           ],
         }
       `);
-    });
+      });
 
-    it('should handle configurations correctly and migrate docsMode and staticDir to storybook config correctly', () => {
-      // ARRANGE
-      const tree = createTreeWithEmptyWorkspace();
+      it('should handle configurations correctly and migrate docsMode and staticDir to storybook config correctly', () => {
+         // ARRANGE
+         const tree = createTreeWithEmptyWorkspace();
 
-      const targetConfiguration = {
-        outputs: ['{options.outputDir}'],
-        options: {
-          outputDir: 'dist/storybook/myapp',
-          configDir: 'apps/myapp/.storybook',
-          docsMode: true,
-          staticDir: ['assets'],
-        },
-        configurations: {
-          dev: {
-            outputDir: 'dist/storybook/myapp/dev',
-            configDir: 'apps/myapp/dev/.storybook',
-            docsMode: false,
-            staticDir: ['dev/assets'],
-          },
-        },
-      };
+         const targetConfiguration = {
+            outputs: ['{options.outputDir}'],
+            options: {
+               outputDir: 'dist/storybook/myapp',
+               configDir: 'apps/myapp/.storybook',
+               docsMode: true,
+               staticDir: ['assets'],
+            },
+            configurations: {
+               dev: {
+                  outputDir: 'dist/storybook/myapp/dev',
+                  configDir: 'apps/myapp/dev/.storybook',
+                  docsMode: false,
+                  staticDir: ['dev/assets'],
+               },
+            },
+         };
 
-      const inferredTargetConfiguration = {
-        outputs: ['{projectRoot}/{options.outputDir}'],
-      };
+         const inferredTargetConfiguration = {
+            outputs: ['{projectRoot}/{options.outputDir}'],
+         };
 
-      const migrationLogs = new AggregatedLog();
+         const migrationLogs = new AggregatedLog();
 
-      tree.write(
-        'apps/myapp/.storybook/main.ts',
-        storybookConfigFileV17_ReactVite
-      );
-      tree.write(
-        'apps/myapp/dev/.storybook/main.ts',
-        storybookConfigFileV17_ReactVite
-      );
+         tree.write(
+            'apps/myapp/.storybook/main.ts',
+            storybookConfigFileV17_ReactVite
+         );
+         tree.write(
+            'apps/myapp/dev/.storybook/main.ts',
+            storybookConfigFileV17_ReactVite
+         );
 
-      // ACT
-      const target = buildPostTargetTransformer(migrationLogs)(
-        targetConfiguration,
-        tree,
-        { projectName: 'myapp', root: 'apps/myapp' },
-        inferredTargetConfiguration
-      );
+         // ACT
+         const target = buildPostTargetTransformer(migrationLogs)(
+            targetConfiguration,
+            tree,
+            { projectName: 'myapp', root: 'apps/myapp' },
+            inferredTargetConfiguration
+         );
 
-      // ASSERT
-      const configFile = tree.read('apps/myapp/.storybook/main.ts', 'utf-8');
-      expect(configFile).toMatchInlineSnapshot(`
+         // ASSERT
+         const configFile = tree.read('apps/myapp/.storybook/main.ts', 'utf-8');
+         expect(configFile).toMatchInlineSnapshot(`
         "import type { StorybookConfig } from '@storybook/react-vite';
           
           // These options were migrated by @nx/storybook:convert-to-inferred from the project.json file.
@@ -160,7 +160,7 @@ describe('buildPostTargetTransformer', () => {
 
         export default config;"
       `);
-      expect(target).toMatchInlineSnapshot(`
+         expect(target).toMatchInlineSnapshot(`
         {
           "configurations": {
             "dev": {
@@ -178,11 +178,11 @@ describe('buildPostTargetTransformer', () => {
           ],
         }
       `);
-      const devConfigFile = tree.read(
-        'apps/myapp/dev/.storybook/main.ts',
-        'utf-8'
-      );
-      expect(devConfigFile).toMatchInlineSnapshot(`
+         const devConfigFile = tree.read(
+            'apps/myapp/dev/.storybook/main.ts',
+            'utf-8'
+         );
+         expect(devConfigFile).toMatchInlineSnapshot(`
               "import type { StorybookConfig } from '@storybook/react-vite';
 
               const config: StorybookConfig = {staticDirs: options.staticDir,docs: { docsMode: options.docsMode },
@@ -200,46 +200,46 @@ describe('buildPostTargetTransformer', () => {
 
               export default config;"
           `);
-    });
-  });
+      });
+   });
 
-  describe('--vue-vite', () => {
-    it('should migrate docsMode and staticDir to storybook config correctly', () => {
-      // ARRANGE
-      const tree = createTreeWithEmptyWorkspace();
+   describe('--vue-vite', () => {
+      it('should migrate docsMode and staticDir to storybook config correctly', () => {
+         // ARRANGE
+         const tree = createTreeWithEmptyWorkspace();
 
-      const targetConfiguration = {
-        outputs: ['{options.outputDir}'],
-        options: {
-          outputDir: 'dist/storybook/myapp',
-          configDir: 'apps/myapp/.storybook',
-          docsMode: true,
-          staticDir: ['assets'],
-        },
-      };
+         const targetConfiguration = {
+            outputs: ['{options.outputDir}'],
+            options: {
+               outputDir: 'dist/storybook/myapp',
+               configDir: 'apps/myapp/.storybook',
+               docsMode: true,
+               staticDir: ['assets'],
+            },
+         };
 
-      const inferredTargetConfiguration = {
-        outputs: ['{projectRoot}/{options.outputDir}'],
-      };
+         const inferredTargetConfiguration = {
+            outputs: ['{projectRoot}/{options.outputDir}'],
+         };
 
-      const migrationLogs = new AggregatedLog();
+         const migrationLogs = new AggregatedLog();
 
-      tree.write(
-        'apps/myapp/.storybook/main.ts',
-        storybookConfigFileV17_VueVite
-      );
+         tree.write(
+            'apps/myapp/.storybook/main.ts',
+            storybookConfigFileV17_VueVite
+         );
 
-      // ACT
-      const target = buildPostTargetTransformer(migrationLogs)(
-        targetConfiguration,
-        tree,
-        { projectName: 'myapp', root: 'apps/myapp' },
-        inferredTargetConfiguration
-      );
+         // ACT
+         const target = buildPostTargetTransformer(migrationLogs)(
+            targetConfiguration,
+            tree,
+            { projectName: 'myapp', root: 'apps/myapp' },
+            inferredTargetConfiguration
+         );
 
-      // ASSERT
-      const configFile = tree.read('apps/myapp/.storybook/main.ts', 'utf-8');
-      expect(configFile).toMatchInlineSnapshot(`
+         // ASSERT
+         const configFile = tree.read('apps/myapp/.storybook/main.ts', 'utf-8');
+         expect(configFile).toMatchInlineSnapshot(`
         "import type { StorybookConfig } from '@storybook/vue3-vite';
           
           // These options were migrated by @nx/storybook:convert-to-inferred from the project.json file.
@@ -269,7 +269,7 @@ describe('buildPostTargetTransformer', () => {
 
         export default config;"
       `);
-      expect(target).toMatchInlineSnapshot(`
+         expect(target).toMatchInlineSnapshot(`
         {
           "options": {
             "config-dir": ".storybook",
@@ -281,56 +281,56 @@ describe('buildPostTargetTransformer', () => {
           ],
         }
       `);
-    });
+      });
 
-    it('should handle configurations correctly and migrate docsMode and staticDir to storybook config correctly', () => {
-      // ARRANGE
-      const tree = createTreeWithEmptyWorkspace();
+      it('should handle configurations correctly and migrate docsMode and staticDir to storybook config correctly', () => {
+         // ARRANGE
+         const tree = createTreeWithEmptyWorkspace();
 
-      const targetConfiguration = {
-        outputs: ['{options.outputDir}'],
-        options: {
-          outputDir: 'dist/storybook/myapp',
-          configDir: 'apps/myapp/.storybook',
-          docsMode: true,
-          staticDir: ['assets'],
-        },
-        configurations: {
-          dev: {
-            outputDir: 'dist/storybook/myapp/dev',
-            configDir: 'apps/myapp/dev/.storybook',
-            docsMode: false,
-            staticDir: ['dev/assets'],
-          },
-        },
-      };
+         const targetConfiguration = {
+            outputs: ['{options.outputDir}'],
+            options: {
+               outputDir: 'dist/storybook/myapp',
+               configDir: 'apps/myapp/.storybook',
+               docsMode: true,
+               staticDir: ['assets'],
+            },
+            configurations: {
+               dev: {
+                  outputDir: 'dist/storybook/myapp/dev',
+                  configDir: 'apps/myapp/dev/.storybook',
+                  docsMode: false,
+                  staticDir: ['dev/assets'],
+               },
+            },
+         };
 
-      const inferredTargetConfiguration = {
-        outputs: ['{projectRoot}/{options.outputDir}'],
-      };
+         const inferredTargetConfiguration = {
+            outputs: ['{projectRoot}/{options.outputDir}'],
+         };
 
-      const migrationLogs = new AggregatedLog();
+         const migrationLogs = new AggregatedLog();
 
-      tree.write(
-        'apps/myapp/.storybook/main.ts',
-        storybookConfigFileV17_VueVite
-      );
-      tree.write(
-        'apps/myapp/dev/.storybook/main.ts',
-        storybookConfigFileV17_VueVite
-      );
+         tree.write(
+            'apps/myapp/.storybook/main.ts',
+            storybookConfigFileV17_VueVite
+         );
+         tree.write(
+            'apps/myapp/dev/.storybook/main.ts',
+            storybookConfigFileV17_VueVite
+         );
 
-      // ACT
-      const target = buildPostTargetTransformer(migrationLogs)(
-        targetConfiguration,
-        tree,
-        { projectName: 'myapp', root: 'apps/myapp' },
-        inferredTargetConfiguration
-      );
+         // ACT
+         const target = buildPostTargetTransformer(migrationLogs)(
+            targetConfiguration,
+            tree,
+            { projectName: 'myapp', root: 'apps/myapp' },
+            inferredTargetConfiguration
+         );
 
-      // ASSERT
-      const configFile = tree.read('apps/myapp/.storybook/main.ts', 'utf-8');
-      expect(configFile).toMatchInlineSnapshot(`
+         // ASSERT
+         const configFile = tree.read('apps/myapp/.storybook/main.ts', 'utf-8');
+         expect(configFile).toMatchInlineSnapshot(`
         "import type { StorybookConfig } from '@storybook/vue3-vite';
           
           // These options were migrated by @nx/storybook:convert-to-inferred from the project.json file.
@@ -360,7 +360,7 @@ describe('buildPostTargetTransformer', () => {
 
         export default config;"
       `);
-      expect(target).toMatchInlineSnapshot(`
+         expect(target).toMatchInlineSnapshot(`
         {
           "configurations": {
             "dev": {
@@ -378,11 +378,11 @@ describe('buildPostTargetTransformer', () => {
           ],
         }
       `);
-      const devConfigFile = tree.read(
-        'apps/myapp/dev/.storybook/main.ts',
-        'utf-8'
-      );
-      expect(devConfigFile).toMatchInlineSnapshot(`
+         const devConfigFile = tree.read(
+            'apps/myapp/dev/.storybook/main.ts',
+            'utf-8'
+         );
+         expect(devConfigFile).toMatchInlineSnapshot(`
         "import type { StorybookConfig } from '@storybook/vue3-vite';
 
         const config: StorybookConfig = {staticDirs: options.staticDir,docs: { docsMode: options.docsMode },
@@ -400,46 +400,46 @@ describe('buildPostTargetTransformer', () => {
 
         export default config;"
       `);
-    });
-  });
+      });
+   });
 
-  describe('--react-webpack', () => {
-    it('should migrate docsMode and staticDir to storybook config correctly', () => {
-      // ARRANGE
-      const tree = createTreeWithEmptyWorkspace();
+   describe('--react-webpack', () => {
+      it('should migrate docsMode and staticDir to storybook config correctly', () => {
+         // ARRANGE
+         const tree = createTreeWithEmptyWorkspace();
 
-      const targetConfiguration = {
-        outputs: ['{options.outputDir}'],
-        options: {
-          outputDir: 'dist/storybook/myapp',
-          configDir: 'apps/myapp/.storybook',
-          docsMode: true,
-          staticDir: ['assets'],
-        },
-      };
+         const targetConfiguration = {
+            outputs: ['{options.outputDir}'],
+            options: {
+               outputDir: 'dist/storybook/myapp',
+               configDir: 'apps/myapp/.storybook',
+               docsMode: true,
+               staticDir: ['assets'],
+            },
+         };
 
-      const inferredTargetConfiguration = {
-        outputs: ['{projectRoot}/{options.outputDir}'],
-      };
+         const inferredTargetConfiguration = {
+            outputs: ['{projectRoot}/{options.outputDir}'],
+         };
 
-      const migrationLogs = new AggregatedLog();
+         const migrationLogs = new AggregatedLog();
 
-      tree.write(
-        'apps/myapp/.storybook/main.ts',
-        storybookConfigFileV17_ReactWebpack
-      );
+         tree.write(
+            'apps/myapp/.storybook/main.ts',
+            storybookConfigFileV17_ReactWebpack
+         );
 
-      // ACT
-      const target = buildPostTargetTransformer(migrationLogs)(
-        targetConfiguration,
-        tree,
-        { projectName: 'myapp', root: 'apps/myapp' },
-        inferredTargetConfiguration
-      );
+         // ACT
+         const target = buildPostTargetTransformer(migrationLogs)(
+            targetConfiguration,
+            tree,
+            { projectName: 'myapp', root: 'apps/myapp' },
+            inferredTargetConfiguration
+         );
 
-      // ASSERT
-      const configFile = tree.read('apps/myapp/.storybook/main.ts', 'utf-8');
-      expect(configFile).toMatchInlineSnapshot(`
+         // ASSERT
+         const configFile = tree.read('apps/myapp/.storybook/main.ts', 'utf-8');
+         expect(configFile).toMatchInlineSnapshot(`
         "import type { StorybookConfig } from '@storybook/react-webpack5';
           
           // These options were migrated by @nx/storybook:convert-to-inferred from the project.json file.
@@ -469,7 +469,7 @@ describe('buildPostTargetTransformer', () => {
 
         export default config;"
       `);
-      expect(target).toMatchInlineSnapshot(`
+         expect(target).toMatchInlineSnapshot(`
         {
           "options": {
             "config-dir": ".storybook",
@@ -481,56 +481,56 @@ describe('buildPostTargetTransformer', () => {
           ],
         }
       `);
-    });
+      });
 
-    it('should handle configurations correctly and migrate docsMode and staticDir to storybook config correctly', () => {
-      // ARRANGE
-      const tree = createTreeWithEmptyWorkspace();
+      it('should handle configurations correctly and migrate docsMode and staticDir to storybook config correctly', () => {
+         // ARRANGE
+         const tree = createTreeWithEmptyWorkspace();
 
-      const targetConfiguration = {
-        outputs: ['{options.outputDir}'],
-        options: {
-          outputDir: 'dist/storybook/myapp',
-          configDir: 'apps/myapp/.storybook',
-          docsMode: true,
-          staticDir: ['assets'],
-        },
-        configurations: {
-          dev: {
-            outputDir: 'dist/storybook/myapp/dev',
-            configDir: 'apps/myapp/dev/.storybook',
-            docsMode: false,
-            staticDir: ['dev/assets'],
-          },
-        },
-      };
+         const targetConfiguration = {
+            outputs: ['{options.outputDir}'],
+            options: {
+               outputDir: 'dist/storybook/myapp',
+               configDir: 'apps/myapp/.storybook',
+               docsMode: true,
+               staticDir: ['assets'],
+            },
+            configurations: {
+               dev: {
+                  outputDir: 'dist/storybook/myapp/dev',
+                  configDir: 'apps/myapp/dev/.storybook',
+                  docsMode: false,
+                  staticDir: ['dev/assets'],
+               },
+            },
+         };
 
-      const inferredTargetConfiguration = {
-        outputs: ['{projectRoot}/{options.outputDir}'],
-      };
+         const inferredTargetConfiguration = {
+            outputs: ['{projectRoot}/{options.outputDir}'],
+         };
 
-      const migrationLogs = new AggregatedLog();
+         const migrationLogs = new AggregatedLog();
 
-      tree.write(
-        'apps/myapp/.storybook/main.ts',
-        storybookConfigFileV17_ReactWebpack
-      );
-      tree.write(
-        'apps/myapp/dev/.storybook/main.ts',
-        storybookConfigFileV17_ReactWebpack
-      );
+         tree.write(
+            'apps/myapp/.storybook/main.ts',
+            storybookConfigFileV17_ReactWebpack
+         );
+         tree.write(
+            'apps/myapp/dev/.storybook/main.ts',
+            storybookConfigFileV17_ReactWebpack
+         );
 
-      // ACT
-      const target = buildPostTargetTransformer(migrationLogs)(
-        targetConfiguration,
-        tree,
-        { projectName: 'myapp', root: 'apps/myapp' },
-        inferredTargetConfiguration
-      );
+         // ACT
+         const target = buildPostTargetTransformer(migrationLogs)(
+            targetConfiguration,
+            tree,
+            { projectName: 'myapp', root: 'apps/myapp' },
+            inferredTargetConfiguration
+         );
 
-      // ASSERT
-      const configFile = tree.read('apps/myapp/.storybook/main.ts', 'utf-8');
-      expect(configFile).toMatchInlineSnapshot(`
+         // ASSERT
+         const configFile = tree.read('apps/myapp/.storybook/main.ts', 'utf-8');
+         expect(configFile).toMatchInlineSnapshot(`
         "import type { StorybookConfig } from '@storybook/react-webpack5';
           
           // These options were migrated by @nx/storybook:convert-to-inferred from the project.json file.
@@ -560,7 +560,7 @@ describe('buildPostTargetTransformer', () => {
 
         export default config;"
       `);
-      expect(target).toMatchInlineSnapshot(`
+         expect(target).toMatchInlineSnapshot(`
         {
           "configurations": {
             "dev": {
@@ -578,11 +578,11 @@ describe('buildPostTargetTransformer', () => {
           ],
         }
       `);
-      const devConfigFile = tree.read(
-        'apps/myapp/dev/.storybook/main.ts',
-        'utf-8'
-      );
-      expect(devConfigFile).toMatchInlineSnapshot(`
+         const devConfigFile = tree.read(
+            'apps/myapp/dev/.storybook/main.ts',
+            'utf-8'
+         );
+         expect(devConfigFile).toMatchInlineSnapshot(`
         "import type { StorybookConfig } from '@storybook/react-webpack5';
 
         const config: StorybookConfig = {staticDirs: options.staticDir,docs: { docsMode: options.docsMode },
@@ -600,8 +600,8 @@ describe('buildPostTargetTransformer', () => {
 
         export default config;"
       `);
-    });
-  });
+      });
+   });
 });
 
 const storybookConfigFileV17_ReactVite = `import type { StorybookConfig } from '@storybook/react-vite';

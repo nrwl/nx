@@ -14,6 +14,6 @@ Your answer should adhere to the following rules:
 - Do not use any external knowledge or make assumptions outside of the provided the documentation. 
 Remember, answer the question using ONLY the information provided in the documentation.
 `
-  .replace(/\s+/g, ' ')
-  .trim()}
+   .replace(/\s+/g, ' ')
+   .trim()}
 `;

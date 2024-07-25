@@ -7,13 +7,13 @@ The default changelog renderer for `nx release` generates a changelog entry for 
 
 ### 🚀 Features
 
-- **rule-tester:** check for missing placeholder data in the message ([#9039](https://github.com/typescript-eslint/typescript-eslint/pull/9039))
+-  **rule-tester:** check for missing placeholder data in the message ([#9039](https://github.com/typescript-eslint/typescript-eslint/pull/9039))
 
 ### ❤️ Thank You
 
-- Kirk Waiblinger
-- Sheetal Nandi
-- Vinccool96
+-  Kirk Waiblinger
+-  Sheetal Nandi
+-  Vinccool96
 ```
 
 ## Include All Metadata
@@ -22,18 +22,18 @@ There are a few options available to modify the default changelog renderer outpu
 
 ```json
 {
-  "release": {
-    "changelog": {
-      "projectChangelogs": {
-        "renderOptions": {
-          "authors": true,
-          "mapAuthorsToGitHubUsernames": true,
-          "commitReferences": true,
-          "versionTitleDate": true
-        }
+   "release": {
+      "changelog": {
+         "projectChangelogs": {
+            "renderOptions": {
+               "authors": true,
+               "mapAuthorsToGitHubUsernames": true,
+               "commitReferences": true,
+               "versionTitleDate": true
+            }
+         }
       }
-    }
-  }
+   }
 }
 ```
 
@@ -61,18 +61,18 @@ If you prefer a more minimalist changelog, you can set all the options to false,
 
 ```json
 {
-  "release": {
-    "changelog": {
-      "projectChangelogs": {
-        "renderOptions": {
-          "authors": false,
-          "mapAuthorsToGitHubUsernames": false,
-          "commitReferences": false,
-          "versionTitleDate": false
-        }
+   "release": {
+      "changelog": {
+         "projectChangelogs": {
+            "renderOptions": {
+               "authors": false,
+               "mapAuthorsToGitHubUsernames": false,
+               "commitReferences": false,
+               "versionTitleDate": false
+            }
+         }
       }
-    }
-  }
+   }
 }
 ```
 
@@ -83,5 +83,5 @@ Which will generate a changelog that looks similar to the following:
 
 ### 🚀 Features
 
-- **rule-tester:** check for missing placeholder data in the message
+-  **rule-tester:** check for missing placeholder data in the message
 ```

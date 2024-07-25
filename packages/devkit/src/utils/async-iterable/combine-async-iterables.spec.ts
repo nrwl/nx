@@ -4,185 +4,185 @@ import { eachValueFrom } from 'nx/src/adapter/rxjs-for-await';
 import { Subject } from 'rxjs';
 
 function delay(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 describe('combineAsyncIterables', () => {
-  it('should combine generators', async () => {
-    async function* a() {
-      await delay(20);
-      yield 'a';
-    }
+   it('should combine generators', async () => {
+      async function* a() {
+         await delay(20);
+         yield 'a';
+      }
 
-    async function* b() {
-      await delay(0);
-      yield 'b';
-    }
+      async function* b() {
+         await delay(0);
+         yield 'b';
+      }
 
-    const c = combineAsyncIterables(a(), b());
-    const results = [];
+      const c = combineAsyncIterables(a(), b());
+      const results = [];
 
-    for await (const x of c) {
-      results.push(x);
-    }
-
-    expect(results).toEqual(['b', 'a']);
-  });
-
-  it('should support .throw()', async () => {
-    async function* a() {
-      yield 1;
-      yield 2;
-    }
-
-    async function* b() {
-      yield 3;
-      yield 4;
-    }
-
-    const c = combineAsyncIterables(a(), b());
-    const results = [];
-
-    try {
       for await (const x of c) {
-        results.push(x);
-        await c.throw(new Error('oops'));
+         results.push(x);
       }
-    } catch (e) {
-      expect(e.message).toMatch(/oops/);
-      expect(results).toEqual([1]);
-    }
-  });
 
-  it('should support .return()', async () => {
-    async function* a() {
-      yield 1;
-      yield 2;
-    }
+      expect(results).toEqual(['b', 'a']);
+   });
 
-    async function* b() {
-      yield 3;
-      yield 4;
-    }
-
-    const c = combineAsyncIterables(a(), b());
-    const results = [];
-
-    for await (const x of c) {
-      results.push(x);
-      const { value: y } = await c.return(10);
-      results.push(y);
-    }
-
-    expect(results).toEqual([1, 10]);
-  });
-
-  it('should throw when one generator throws', async () => {
-    async function* a() {
-      await delay(20);
-      yield 'a';
-    }
-
-    async function* b() {
-      throw new Error('threw in b');
-    }
-
-    const c = combineAsyncIterables(a(), b());
-
-    async function* d() {
-      yield* c;
-    }
-
-    try {
-      for await (const x of d()) {
+   it('should support .throw()', async () => {
+      async function* a() {
+         yield 1;
+         yield 2;
       }
-      throw new Error('should not reach here');
-    } catch (e) {
-      expect(e.message).toMatch(/threw in b/);
-    }
-  });
 
-  it('should combine async iterables', async () => {
-    const a = createAsyncIterable<number>(({ next, done }) => {
-      next(1);
-      next(2);
-      next(3);
-      done();
-    });
-    const b = createAsyncIterable<number>(({ next, done }) => {
-      next(4);
-      next(5);
-      next(6);
-      done();
-    });
-
-    const c = combineAsyncIterables(a, b);
-
-    const results: number[] = [];
-    for await (const x of c) {
-      results.push(x);
-    }
-
-    expect(results).toEqual([1, 4, 2, 5, 3, 6]);
-  });
-
-  it('should throw error when an async iterable throws', async () => {
-    const a = createAsyncIterable<number>(({ next, done }) => {
-      next(1);
-      done();
-    });
-    const b = createAsyncIterable<number>(({ next, done }) => {
-      throw new Error('threw in b');
-    });
-
-    const c = combineAsyncIterables(a, b);
-
-    try {
-      for await (const _x of c) {
-        // nothing
+      async function* b() {
+         yield 3;
+         yield 4;
       }
-    } catch (e) {
-      expect(e.message).toMatch(/threw in b/);
-    }
-  });
 
-  it('should handle throws from combined iterator which uses combineAsyncIterable and eachValueFrom', async () => {
-    // ARRANGE
-    const subjectThatWontThrow = new Subject<string>();
-    const iter =
-      createCombinedAsyncIterableFromEachValueFrom(subjectThatWontThrow);
-    const subjectThatThrows = new Subject<string>();
-    const iter2 =
-      createCombinedAsyncIterableFromEachValueFrom(subjectThatThrows);
+      const c = combineAsyncIterables(a(), b());
+      const results = [];
 
-    // ACT
-    const c = combineAsyncIterables(iter, iter2);
-    subjectThatWontThrow.next('from test');
-    subjectThatThrows.next('from test');
-    subjectThatThrows.error('my error');
-
-    // ASSERT
-    try {
-      for await (const _x of c) {
-        // do nothing
+      try {
+         for await (const x of c) {
+            results.push(x);
+            await c.throw(new Error('oops'));
+         }
+      } catch (e) {
+         expect(e.message).toMatch(/oops/);
+         expect(results).toEqual([1]);
       }
-    } catch (e) {
-      expect(e).toMatch(/my error/);
-    }
-  });
+   });
+
+   it('should support .return()', async () => {
+      async function* a() {
+         yield 1;
+         yield 2;
+      }
+
+      async function* b() {
+         yield 3;
+         yield 4;
+      }
+
+      const c = combineAsyncIterables(a(), b());
+      const results = [];
+
+      for await (const x of c) {
+         results.push(x);
+         const { value: y } = await c.return(10);
+         results.push(y);
+      }
+
+      expect(results).toEqual([1, 10]);
+   });
+
+   it('should throw when one generator throws', async () => {
+      async function* a() {
+         await delay(20);
+         yield 'a';
+      }
+
+      async function* b() {
+         throw new Error('threw in b');
+      }
+
+      const c = combineAsyncIterables(a(), b());
+
+      async function* d() {
+         yield* c;
+      }
+
+      try {
+         for await (const x of d()) {
+         }
+         throw new Error('should not reach here');
+      } catch (e) {
+         expect(e.message).toMatch(/threw in b/);
+      }
+   });
+
+   it('should combine async iterables', async () => {
+      const a = createAsyncIterable<number>(({ next, done }) => {
+         next(1);
+         next(2);
+         next(3);
+         done();
+      });
+      const b = createAsyncIterable<number>(({ next, done }) => {
+         next(4);
+         next(5);
+         next(6);
+         done();
+      });
+
+      const c = combineAsyncIterables(a, b);
+
+      const results: number[] = [];
+      for await (const x of c) {
+         results.push(x);
+      }
+
+      expect(results).toEqual([1, 4, 2, 5, 3, 6]);
+   });
+
+   it('should throw error when an async iterable throws', async () => {
+      const a = createAsyncIterable<number>(({ next, done }) => {
+         next(1);
+         done();
+      });
+      const b = createAsyncIterable<number>(({ next, done }) => {
+         throw new Error('threw in b');
+      });
+
+      const c = combineAsyncIterables(a, b);
+
+      try {
+         for await (const _x of c) {
+            // nothing
+         }
+      } catch (e) {
+         expect(e.message).toMatch(/threw in b/);
+      }
+   });
+
+   it('should handle throws from combined iterator which uses combineAsyncIterable and eachValueFrom', async () => {
+      // ARRANGE
+      const subjectThatWontThrow = new Subject<string>();
+      const iter =
+         createCombinedAsyncIterableFromEachValueFrom(subjectThatWontThrow);
+      const subjectThatThrows = new Subject<string>();
+      const iter2 =
+         createCombinedAsyncIterableFromEachValueFrom(subjectThatThrows);
+
+      // ACT
+      const c = combineAsyncIterables(iter, iter2);
+      subjectThatWontThrow.next('from test');
+      subjectThatThrows.next('from test');
+      subjectThatThrows.error('my error');
+
+      // ASSERT
+      try {
+         for await (const _x of c) {
+            // do nothing
+         }
+      } catch (e) {
+         expect(e).toMatch(/my error/);
+      }
+   });
 });
 
 async function* createCombinedAsyncIterableFromEachValueFrom(
-  subject: Subject<string>
+   subject: Subject<string>
 ) {
-  async function* otherIterable() {
-    yield 'foo';
-    yield 'bar';
-    yield 'baz';
-  }
-  async function* fromEachValueFrom() {
-    return yield* eachValueFrom(subject.asObservable());
-  }
+   async function* otherIterable() {
+      yield 'foo';
+      yield 'bar';
+      yield 'baz';
+   }
+   async function* fromEachValueFrom() {
+      return yield* eachValueFrom(subject.asObservable());
+   }
 
-  return yield* combineAsyncIterables(otherIterable(), fromEachValueFrom());
+   return yield* combineAsyncIterables(otherIterable(), fromEachValueFrom());
 }

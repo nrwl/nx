@@ -12,36 +12,36 @@ import { tmpdir } from 'os';
 import { resolve } from 'path';
 
 export interface NgPackagrOptions extends NgPackagrOptionsBase {
-  tailwindConfig?: string;
+   tailwindConfig?: string;
 }
 
 export const NX_OPTIONS_TOKEN = new InjectionToken<NgPackagrOptions>(
-  `nx.v1.options`
+   `nx.v1.options`
 );
 
 export const nxProvideOptions = (
-  options: NgPackagrOptions = {}
+   options: NgPackagrOptions = {}
 ): ValueProvider => ({
-  provide: NX_OPTIONS_TOKEN,
-  useValue: normalizeOptions(options),
+   provide: NX_OPTIONS_TOKEN,
+   useValue: normalizeOptions(options),
 });
 
 export const NX_DEFAULT_OPTIONS_PROVIDER: Provider = nxProvideOptions();
 
 function normalizeOptions(options: NgPackagrOptions = {}) {
-  const ciEnv = process.env['CI'];
-  const isCI = ciEnv?.toLowerCase() === 'true' || ciEnv === '1';
-  const { cacheEnabled = !isCI, cacheDirectory = findCachePath() } = options;
+   const ciEnv = process.env['CI'];
+   const isCI = ciEnv?.toLowerCase() === 'true' || ciEnv === '1';
+   const { cacheEnabled = !isCI, cacheDirectory = findCachePath() } = options;
 
-  return {
-    ...options,
-    cacheEnabled,
-    cacheDirectory,
-  };
+   return {
+      ...options,
+      cacheEnabled,
+      cacheDirectory,
+   };
 }
 
 function findCachePath(): string {
-  const name = 'ng-packagr';
+   const name = 'ng-packagr';
 
-  return findCacheDirectory({ name }) || resolve(tmpdir(), name);
+   return findCacheDirectory({ name }) || resolve(tmpdir(), name);
 }

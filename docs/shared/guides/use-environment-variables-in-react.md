@@ -4,8 +4,8 @@
 
 In React applications using Vite (e.g. those using `@nx/vite:*` executors), Nx includes the following variables in the build process:
 
-- `NODE_ENV`
-- Variables prefixed with `VITE_`, such as `VITE_CUSTOM_VAR`
+-  `NODE_ENV`
+-  Variables prefixed with `VITE_`, such as `VITE_CUSTOM_VAR`
 
 You can read more about how to define environment variables in Vite [here](https://vitejs.dev/guide/env-and-mode.html).
 
@@ -57,8 +57,8 @@ You cannot interpolate environment variables into your `index.html` file for Rea
 In React applications (e.g. those using the `@nx/web:webpack` executor or an [inferred task](/concepts/inferred-tasks) that runs the Webpack CLI for building), Nx
 includes the following variables in the build process:
 
-- `NODE_ENV`
-- Variables prefixed with `NX_PUBLIC`, such as `NX_PUBLIC_CUSTOM_VAR` (when using the [NxWebpackPlugin](/recipes/webpack/webpack-plugins#nxwebpackplugin) or the [withNx](/recipes/webpack/webpack-plugins#withnx) plugins)
+-  `NODE_ENV`
+-  Variables prefixed with `NX_PUBLIC`, such as `NX_PUBLIC_CUSTOM_VAR` (when using the [NxWebpackPlugin](/recipes/webpack/webpack-plugins#nxwebpackplugin) or the [withNx](/recipes/webpack/webpack-plugins#withnx) plugins)
 
 Defining environment variables can vary between OSes. It's also important to know that this is temporary for the life of
 the shell session.
@@ -76,8 +76,8 @@ To interpolate an environment variable named `NX_PUBLIC_DOMAIN_NAME` into your `
 
 ```html {% fileName="index.html" %}
 <html>
-  <body>
-    <p>The domain name is %NX_PUBLIC_DOMAIN_NAME%.</p>
-  </body>
+   <body>
+      <p>The domain name is %NX_PUBLIC_DOMAIN_NAME%.</p>
+   </body>
 </html>
 ```

@@ -1,38 +1,38 @@
 {
-  "version": 2,
-  "outputCapture": "direct-nodejs",
-  "title": "Vite Dev Server",
-  "cli": "nx",
-  "description": "Starts a dev server using Vite.",
-  "type": "object",
-  "presets": [
-    {
-      "name": "Default minimum setup",
-      "keys": ["buildTarget"]
-    },
-    {
-      "name": "Using a Different Port",
-      "keys": ["buildTarget", "port"]
-    }
-  ],
-  "properties": {
-    "buildTarget": {
-      "type": "string",
-      "description": "Target which builds the application. Only used to retrieve the configuration as the dev-server does not build the code.",
-      "x-priority": "important"
-    },
-    "buildLibsFromSource": {
-      "type": "boolean",
-      "description": "Read buildable libraries from source instead of building them separately.",
-      "default": true
-    },
-    "proxyConfig": {
-      "type": "string",
-      "description": "Path to the proxy configuration file.",
-      "x-completion-type": "file"
-    }
-  },
-  "definitions": {},
-  "required": ["buildTarget"],
-  "examplesFile": "../../../docs/dev-server-examples.md"
+   "version": 2,
+   "outputCapture": "direct-nodejs",
+   "title": "Vite Dev Server",
+   "cli": "nx",
+   "description": "Starts a dev server using Vite.",
+   "type": "object",
+   "presets": [
+      {
+         "name": "Default minimum setup",
+         "keys": ["buildTarget"]
+      },
+      {
+         "name": "Using a Different Port",
+         "keys": ["buildTarget", "port"]
+      }
+   ],
+   "properties": {
+      "buildTarget": {
+         "type": "string",
+         "description": "Target which builds the application. Only used to retrieve the configuration as the dev-server does not build the code.",
+         "x-priority": "important"
+      },
+      "buildLibsFromSource": {
+         "type": "boolean",
+         "description": "Read buildable libraries from source instead of building them separately.",
+         "default": true
+      },
+      "proxyConfig": {
+         "type": "string",
+         "description": "Path to the proxy configuration file.",
+         "x-completion-type": "file"
+      }
+   },
+   "definitions": {},
+   "required": ["buildTarget"],
+   "examplesFile": "../../../docs/dev-server-examples.md"
 }

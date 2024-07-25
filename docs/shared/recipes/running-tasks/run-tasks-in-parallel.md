@@ -13,7 +13,7 @@ Note, you can also change the default in `nx.json`, like this:
 
 ```json {% fileName="nx.json"%}
 {
-  "parallel": 5
+   "parallel": 5
 }
 ```
 
@@ -22,14 +22,14 @@ Note, you can also change the default in `nx.json`, like this:
 
 ```json {% fileName="nx.json"%}
 {
-  "tasksRunnerOptions": {
-    "default": {
-      "runner": "nx/tasks-runners/default",
-      "options": {
-        "parallel": 5
+   "tasksRunnerOptions": {
+      "default": {
+         "runner": "nx/tasks-runners/default",
+         "options": {
+            "parallel": 5
+         }
       }
-    }
-  }
+   }
 }
 ```
 

@@ -33,11 +33,11 @@ my-nuxt-app
 
 Your new app will contain the following:
 
-- Two pages (home and about) under `pages`
-- A component (`NxWelcome`) under `components`
-- A `greet` API endpoint that returns a JSON response under `/api/greet`
-- Configuration for `vitest`
-- Your app's entrypoint (`app.vue`) will contain the navigation links to the home and about pages, and the `nuxt-page` component to display the contents of your pages.
+-  Two pages (home and about) under `pages`
+-  A component (`NxWelcome`) under `components`
+-  A `greet` API endpoint that returns a JSON response under `/api/greet`
+-  Configuration for `vitest`
+-  Your app's entrypoint (`app.vue`) will contain the navigation links to the home and about pages, and the `nuxt-page` component to display the contents of your pages.
 
 ## Examples
 

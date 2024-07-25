@@ -8,11 +8,11 @@ To enable automatic versioning via conventional commits, set the `release.versio
 
 ```json nx.json
 {
-  "release": {
-    "version": {
-      "conventionalCommits": true
-    }
-  }
+   "release": {
+      "version": {
+         "conventionalCommits": true
+      }
+   }
 }
 ```
 
@@ -20,8 +20,8 @@ To enable automatic versioning via conventional commits, set the `release.versio
 
 Nx Release will use the commit messages since the last release to determine the version bump. It will look at the type of each commit and determine the highest version bump from the following list:
 
-- 'feat' -> minor
-- 'fix' -> patch
+-  'feat' -> minor
+-  'fix' -> patch
 
 For example, if the git history looks like this:
 

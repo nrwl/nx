@@ -5,18 +5,18 @@ import { getEnvironmentConfig } from '@nx/graph/shared';
 let router;
 
 export function getRouter() {
-  if (!router) {
-    const environmentConfig = getEnvironmentConfig();
-    let routerCreate = createBrowserRouter;
-    if (
-      environmentConfig.localMode === 'build' ||
-      environmentConfig.environment === 'nx-console'
-    ) {
-      routerCreate = createHashRouter;
-    }
+   if (!router) {
+      const environmentConfig = getEnvironmentConfig();
+      let routerCreate = createBrowserRouter;
+      if (
+         environmentConfig.localMode === 'build' ||
+         environmentConfig.environment === 'nx-console'
+      ) {
+         routerCreate = createHashRouter;
+      }
 
-    router = routerCreate(getRoutesForEnvironment());
-  }
+      router = routerCreate(getRoutesForEnvironment());
+   }
 
-  return router;
+   return router;
 }

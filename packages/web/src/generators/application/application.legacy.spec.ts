@@ -9,40 +9,40 @@ import { applicationGenerator } from './application';
 //  which is v9 while we are testing for the new v10 version
 jest.mock('@nx/cypress/src/utils/cypress-version');
 jest.mock('@nx/devkit', () => {
-  return {
-    ...jest.requireActual('@nx/devkit'),
-    ensurePackage: jest.fn((pkg) => jest.requireActual(pkg)),
-  };
+   return {
+      ...jest.requireActual('@nx/devkit'),
+      ensurePackage: jest.fn((pkg) => jest.requireActual(pkg)),
+   };
 });
 describe('web app generator (legacy)', () => {
-  let tree: Tree;
-  let mockedInstalledCypressVersion: jest.Mock<
-    ReturnType<typeof installedCypressVersion>
-  > = installedCypressVersion as never;
+   let tree: Tree;
+   let mockedInstalledCypressVersion: jest.Mock<
+      ReturnType<typeof installedCypressVersion>
+   > = installedCypressVersion as never;
 
-  let originalEnv: string;
+   let originalEnv: string;
 
-  beforeEach(() => {
-    originalEnv = process.env.NX_ADD_PLUGINS;
-    process.env.NX_ADD_PLUGINS = 'false';
-  });
+   beforeEach(() => {
+      originalEnv = process.env.NX_ADD_PLUGINS;
+      process.env.NX_ADD_PLUGINS = 'false';
+   });
 
-  afterEach(() => {
-    process.env.NX_ADD_PLUGINS = originalEnv;
-  });
+   afterEach(() => {
+      process.env.NX_ADD_PLUGINS = originalEnv;
+   });
 
-  beforeEach(() => {
-    mockedInstalledCypressVersion.mockReturnValue(10);
-    tree = createTreeWithEmptyWorkspace();
-  });
+   beforeEach(() => {
+      mockedInstalledCypressVersion.mockReturnValue(10);
+      tree = createTreeWithEmptyWorkspace();
+   });
 
-  it('should setup webpack configuration', async () => {
-    await applicationGenerator(tree, {
-      name: 'my-app',
-      projectNameAndRootFormat: 'as-provided',
-    });
-    const project = readProjectConfiguration(tree, 'my-app');
-    expect(project).toMatchInlineSnapshot(`
+   it('should setup webpack configuration', async () => {
+      await applicationGenerator(tree, {
+         name: 'my-app',
+         projectNameAndRootFormat: 'as-provided',
+      });
+      const project = readProjectConfiguration(tree, 'my-app');
+      expect(project).toMatchInlineSnapshot(`
       {
         "$schema": "../node_modules/nx/schemas/project-schema.json",
         "name": "my-app",
@@ -119,8 +119,8 @@ describe('web app generator (legacy)', () => {
       }
     `);
 
-    const webpackConfig = tree.read('my-app/webpack.config.js', 'utf-8');
-    expect(webpackConfig).toMatchInlineSnapshot(`
+      const webpackConfig = tree.read('my-app/webpack.config.js', 'utf-8');
+      expect(webpackConfig).toMatchInlineSnapshot(`
       "const { composePlugins, withNx, withWeb } = require('@nx/webpack');
 
       // Nx plugins for webpack.
@@ -131,15 +131,15 @@ describe('web app generator (legacy)', () => {
       });
       "
     `);
-  });
+   });
 
-  it('should add targets for vite', async () => {
-    await applicationGenerator(tree, {
-      name: 'my-vite-app',
-      bundler: 'vite',
-    });
-    const projects = getProjects(tree);
-    expect(projects.get('my-vite-app')).toMatchInlineSnapshot(`
+   it('should add targets for vite', async () => {
+      await applicationGenerator(tree, {
+         name: 'my-vite-app',
+         bundler: 'vite',
+      });
+      const projects = getProjects(tree);
+      expect(projects.get('my-vite-app')).toMatchInlineSnapshot(`
       {
         "$schema": "../node_modules/nx/schemas/project-schema.json",
         "name": "my-vite-app",
@@ -213,5 +213,5 @@ describe('web app generator (legacy)', () => {
         },
       }
     `);
-  });
+   });
 });

@@ -71,105 +71,105 @@ Try playing around with a [fully interactive graph on a sample repo](https://nrw
 
 ```json
 {
-  "hash": "58420bb4002bb9b6914bdeb7808c77a591a089fc82aaee11e656d73b2735e3fa",
-  "projects": [
-    {
-      "name": "shared-product-state",
-      "type": "lib",
-      "data": {
-        "tags": ["scope:shared", "type:state"]
-      }
-    },
-    {
-      "name": "shared-product-types",
-      "type": "lib",
-      "data": {
-        "tags": ["type:types", "scope:shared"]
-      }
-    },
-    {
-      "name": "shared-product-data",
-      "type": "lib",
-      "data": {
-        "tags": ["type:data", "scope:shared"]
-      }
-    },
-    {
-      "name": "cart-cart-page",
-      "type": "lib",
-      "data": {
-        "tags": ["scope:cart", "type:feature"]
-      }
-    },
-    {
-      "name": "shared-styles",
-      "type": "lib",
-      "data": {
-        "tags": ["scope:shared", "type:styles"]
-      }
-    },
-    {
-      "name": "cart-e2e",
-      "type": "e2e",
-      "data": {
-        "tags": ["scope:cart", "type:e2e"]
-      }
-    },
-    {
-      "name": "cart",
-      "type": "app",
-      "data": {
-        "tags": ["type:app", "scope:cart"]
-      }
-    }
-  ],
-  "dependencies": {
-    "shared-product-state": [
+   "hash": "58420bb4002bb9b6914bdeb7808c77a591a089fc82aaee11e656d73b2735e3fa",
+   "projects": [
       {
-        "source": "shared-product-state",
-        "target": "shared-product-data",
-        "type": "static"
+         "name": "shared-product-state",
+         "type": "lib",
+         "data": {
+            "tags": ["scope:shared", "type:state"]
+         }
       },
       {
-        "source": "shared-product-state",
-        "target": "shared-product-types",
-        "type": "static"
-      }
-    ],
-    "shared-product-types": [],
-    "shared-product-data": [
+         "name": "shared-product-types",
+         "type": "lib",
+         "data": {
+            "tags": ["type:types", "scope:shared"]
+         }
+      },
       {
-        "source": "shared-product-data",
-        "target": "shared-product-types",
-        "type": "static"
-      }
-    ],
-    "shared-e2e-utils": [],
-    "cart-cart-page": [
+         "name": "shared-product-data",
+         "type": "lib",
+         "data": {
+            "tags": ["type:data", "scope:shared"]
+         }
+      },
       {
-        "source": "cart-cart-page",
-        "target": "shared-product-state",
-        "type": "static"
+         "name": "cart-cart-page",
+         "type": "lib",
+         "data": {
+            "tags": ["scope:cart", "type:feature"]
+         }
+      },
+      {
+         "name": "shared-styles",
+         "type": "lib",
+         "data": {
+            "tags": ["scope:shared", "type:styles"]
+         }
+      },
+      {
+         "name": "cart-e2e",
+         "type": "e2e",
+         "data": {
+            "tags": ["scope:cart", "type:e2e"]
+         }
+      },
+      {
+         "name": "cart",
+         "type": "app",
+         "data": {
+            "tags": ["type:app", "scope:cart"]
+         }
       }
-    ],
-    "shared-styles": [],
-    "cart-e2e": [
-      { "source": "cart-e2e", "target": "cart", "type": "implicit" }
-    ],
-    "cart": [
-      { "source": "cart", "target": "shared-styles", "type": "implicit" },
-      { "source": "cart", "target": "cart-cart-page", "type": "static" }
-    ]
-  },
-  "workspaceLayout": {
-    "appsDir": "apps",
-    "libsDir": "libs"
-  },
-  "affectedProjectIds": [],
-  "focus": null,
-  "groupByFolder": false,
-  "exclude": [],
-  "enableTooltips": true
+   ],
+   "dependencies": {
+      "shared-product-state": [
+         {
+            "source": "shared-product-state",
+            "target": "shared-product-data",
+            "type": "static"
+         },
+         {
+            "source": "shared-product-state",
+            "target": "shared-product-types",
+            "type": "static"
+         }
+      ],
+      "shared-product-types": [],
+      "shared-product-data": [
+         {
+            "source": "shared-product-data",
+            "target": "shared-product-types",
+            "type": "static"
+         }
+      ],
+      "shared-e2e-utils": [],
+      "cart-cart-page": [
+         {
+            "source": "cart-cart-page",
+            "target": "shared-product-state",
+            "type": "static"
+         }
+      ],
+      "shared-styles": [],
+      "cart-e2e": [
+         { "source": "cart-e2e", "target": "cart", "type": "implicit" }
+      ],
+      "cart": [
+         { "source": "cart", "target": "shared-styles", "type": "implicit" },
+         { "source": "cart", "target": "cart-cart-page", "type": "static" }
+      ]
+   },
+   "workspaceLayout": {
+      "appsDir": "apps",
+      "libsDir": "libs"
+   },
+   "affectedProjectIds": [],
+   "focus": null,
+   "groupByFolder": false,
+   "exclude": [],
+   "enableTooltips": true
 }
 ```
 
@@ -191,10 +191,10 @@ There is a floating action button in the bottom right of the project graph view 
 Sharing this image with other developers is a great way to express how a project fits into the workspace.
 Some moments which you may want to share these images are:
 
-- When providing a high-level overview of the workspace
-- When introducing new project(s) into the workspace
-- When changing how project(s) are related
-- To share which other projects are directly affected by changes you are making
+-  When providing a high-level overview of the workspace
+-  When introducing new project(s) into the workspace
+-  When changing how project(s) are related
+-  To share which other projects are directly affected by changes you are making
 
 ## Explore the Task Graph
 
@@ -208,8 +208,8 @@ nx affected --targets build --graph # View the graph for building the affected p
 
 Click on the nodes of this graph to see more information about the task such as:
 
-- Which executor was used to run the command
-- Which [inputs](/recipes/running-tasks/configure-inputs) are used to calculate the computation hash.
-- A link to see more details about the project which the task belongs to
+-  Which executor was used to run the command
+-  Which [inputs](/recipes/running-tasks/configure-inputs) are used to calculate the computation hash.
+-  A link to see more details about the project which the task belongs to
 
 Dependencies in this graph mean that Nx will need to wait for all task dependencies to complete successfully before running the task.

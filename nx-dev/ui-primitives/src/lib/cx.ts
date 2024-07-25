@@ -7,5 +7,5 @@ import { twMerge } from 'tailwind-merge';
  * resolves duplications and conflicts for TailwindCSS
  */
 export function cx(...inputs: classNames.ArgumentArray): string {
-  return twMerge(classNames(inputs));
+   return twMerge(classNames(inputs));
 }

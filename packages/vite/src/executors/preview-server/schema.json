@@ -1,37 +1,37 @@
 {
-  "$schema": "https://json-schema.org/schema",
-  "version": 2,
-  "cli": "nx",
-  "title": "Vite Preview Server",
-  "description": "Preview Server for Vite.",
-  "type": "object",
-  "presets": [
-    {
-      "name": "Default minimum setup",
-      "keys": ["buildTarget"]
-    },
-    {
-      "name": "Using a Different Port",
-      "keys": ["buildTarget", "port"]
-    }
-  ],
-  "properties": {
-    "buildTarget": {
-      "type": "string",
-      "description": "Target which builds the application."
-    },
-    "proxyConfig": {
-      "type": "string",
-      "description": "Path to the proxy configuration file.",
-      "x-completion-type": "file"
-    },
-    "staticFilePath": {
-      "type": "string",
-      "description": "Path where the build artifacts are located. If not provided then it will be infered from the buildTarget executor options as outputPath",
-      "x-completion-type": "directory"
-    }
-  },
-  "definitions": {},
-  "required": ["buildTarget"],
-  "examplesFile": "../../../docs/preview-server-examples.md"
+   "$schema": "https://json-schema.org/schema",
+   "version": 2,
+   "cli": "nx",
+   "title": "Vite Preview Server",
+   "description": "Preview Server for Vite.",
+   "type": "object",
+   "presets": [
+      {
+         "name": "Default minimum setup",
+         "keys": ["buildTarget"]
+      },
+      {
+         "name": "Using a Different Port",
+         "keys": ["buildTarget", "port"]
+      }
+   ],
+   "properties": {
+      "buildTarget": {
+         "type": "string",
+         "description": "Target which builds the application."
+      },
+      "proxyConfig": {
+         "type": "string",
+         "description": "Path to the proxy configuration file.",
+         "x-completion-type": "file"
+      },
+      "staticFilePath": {
+         "type": "string",
+         "description": "Path where the build artifacts are located. If not provided then it will be infered from the buildTarget executor options as outputPath",
+         "x-completion-type": "directory"
+      }
+   },
+   "definitions": {},
+   "required": ["buildTarget"],
+   "examplesFile": "../../../docs/preview-server-examples.md"
 }

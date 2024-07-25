@@ -1,35 +1,35 @@
 import {
-  addDependenciesToPackageJson,
-  formatFiles,
-  type Tree,
+   addDependenciesToPackageJson,
+   formatFiles,
+   type Tree,
 } from '@nx/devkit';
 import {
-  getInstalledPackageVersion,
-  getInstalledPackageVersionInfo,
+   getInstalledPackageVersion,
+   getInstalledPackageVersionInfo,
 } from '../../generators/utils/version-utils';
 
 export const typescriptEslintUtilsVersion = '^7.16.0';
 
 export default async function (tree: Tree) {
-  if (getInstalledPackageVersion(tree, '@typescript-eslint/utils')) {
-    return;
-  }
+   if (getInstalledPackageVersion(tree, '@typescript-eslint/utils')) {
+      return;
+   }
 
-  const eslintPluginVersionInfo =
-    getInstalledPackageVersionInfo(tree, '@angular-eslint/eslint-plugin') ??
-    getInstalledPackageVersionInfo(
+   const eslintPluginVersionInfo =
+      getInstalledPackageVersionInfo(tree, '@angular-eslint/eslint-plugin') ??
+      getInstalledPackageVersionInfo(
+         tree,
+         '@angular-eslint/eslint-plugin-template'
+      );
+   if (!eslintPluginVersionInfo || eslintPluginVersionInfo.major < 18) {
+      return;
+   }
+
+   addDependenciesToPackageJson(
       tree,
-      '@angular-eslint/eslint-plugin-template'
-    );
-  if (!eslintPluginVersionInfo || eslintPluginVersionInfo.major < 18) {
-    return;
-  }
+      {},
+      { '@typescript-eslint/utils': typescriptEslintUtilsVersion }
+   );
 
-  addDependenciesToPackageJson(
-    tree,
-    {},
-    { '@typescript-eslint/utils': typescriptEslintUtilsVersion }
-  );
-
-  await formatFiles(tree);
+   await formatFiles(tree);
 }

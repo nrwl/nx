@@ -6,19 +6,19 @@ To use AI in Nx Cloud, you need to enable AI features in your organization setti
 
 1. **Navigate to Organization Settings**:
 
-   - Go to your [Nx Cloud dashboard](https://cloud.nx.app/orgs?utm_source=nx.dev&utm_campaign=ai).
-   - Select your organization from the list.
-   - Access the settings by clicking on the settings icon.
+   -  Go to your [Nx Cloud dashboard](https://cloud.nx.app/orgs?utm_source=nx.dev&utm_campaign=ai).
+   -  Select your organization from the list.
+   -  Access the settings by clicking on the settings icon.
 
 2. **Enable AI Features**:
 
-   - In the settings menu, locate the **AI Features** section.
-   - Toggle the setting to **On**.
-     ![enable ai features](/nx-cloud/features/ai-features.png)
+   -  In the settings menu, locate the **AI Features** section.
+   -  Toggle the setting to **On**.
+      ![enable ai features](/nx-cloud/features/ai-features.png)
 
 3. **Accept AI Terms**:
-   - Once the AI features are enabled, a terms and conditions prompt will appear.
-   - Review and accept the terms and conditions related to AI usage to proceed.
+   -  Once the AI features are enabled, a terms and conditions prompt will appear.
+   -  Review and accept the terms and conditions related to AI usage to proceed.
 
 ### AI Driven Capabilities
 

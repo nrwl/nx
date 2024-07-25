@@ -1,4 +1,4 @@
 export type MoveImplOptions = {
-  oldProjectName: string;
-  newProjectName: string;
+   oldProjectName: string;
+   newProjectName: string;
 };

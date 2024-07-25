@@ -8,21 +8,21 @@ You can use the `enforce-module-boundaries` rule by adding it to your ESLint rul
 
 ```jsonc
 {
-  // ... more ESLint config here
-  "overrides": [
-    {
-      "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
-      "rules": {
-        "@nx/enforce-module-boundaries": [
-          "error",
-          {
-            // ...rule specific configuration
-          }
-        ]
+   // ... more ESLint config here
+   "overrides": [
+      {
+         "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
+         "rules": {
+            "@nx/enforce-module-boundaries": [
+               "error",
+               {
+                  // ...rule specific configuration
+               }
+            ]
+         }
       }
-    }
-    // ... more ESLint overrides here
-  ]
+      // ... more ESLint overrides here
+   ]
 }
 ```
 
@@ -53,9 +53,9 @@ The `depConstraints` is an array of objects representing the constraints defined
 
 Read more about the proper usage of this rule:
 
-- [Enforce Module Boundaries](/features/enforce-module-boundaries)
-- [Ban Dependencies with Certain Tags](/recipes/enforce-module-boundaries/ban-dependencies-with-tags)
-- [Tag in Multiple Dimensions](/recipes/enforce-module-boundaries/tag-multiple-dimensions)
-- [Ban External Imports](/recipes/enforce-module-boundaries/ban-external-imports)
-- [Tags Allow List](/recipes/enforce-module-boundaries/tags-allow-list)
-- [Taming Code Organization with Module Boundaries in Nx](https://blog.nrwl.io/mastering-the-project-boundaries-in-nx-f095852f5bf4)
+-  [Enforce Module Boundaries](/features/enforce-module-boundaries)
+-  [Ban Dependencies with Certain Tags](/recipes/enforce-module-boundaries/ban-dependencies-with-tags)
+-  [Tag in Multiple Dimensions](/recipes/enforce-module-boundaries/tag-multiple-dimensions)
+-  [Ban External Imports](/recipes/enforce-module-boundaries/ban-external-imports)
+-  [Tags Allow List](/recipes/enforce-module-boundaries/tags-allow-list)
+-  [Taming Code Organization with Module Boundaries in Nx](https://blog.nrwl.io/mastering-the-project-boundaries-in-nx-f095852f5bf4)

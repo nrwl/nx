@@ -28,7 +28,7 @@ import type { RollupOutput, RollupWatcher, WatcherOptions } from 'rollup';
 import type { InlineConfig } from 'vite';
 
 type CypressPreprocessor = (
-  file: Record<string, any>
+   file: Record<string, any>
 ) => string | Promise<string>;
 
 type BuildResult = RollupWatcher | RollupOutput | RollupOutput[];
@@ -41,81 +41,84 @@ const cache = new Map<string, string>();
  * Instead, use the nxE2EPreset(__filename, { bundler: 'vite' }) function instead.
  */
 function vitePreprocessor(
-  configOverrides: InlineConfig = {}
+   configOverrides: InlineConfig = {}
 ): CypressPreprocessor {
-  return async (file) => {
-    const { outputPath, filePath, shouldWatch } = file;
+   return async (file) => {
+      const { outputPath, filePath, shouldWatch } = file;
 
-    if (cache.has(filePath)) {
-      return cache.get(filePath);
-    }
-
-    const fileName = basename(outputPath);
-    const filenameWithoutExtension = basename(outputPath, extname(outputPath));
-
-    const defaultConfig: InlineConfig = {
-      logLevel: 'silent',
-      define: {
-        'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
-      },
-      build: {
-        emptyOutDir: false,
-        minify: false,
-        outDir: dirname(outputPath),
-        sourcemap: true,
-        write: true,
-        watch: getWatcherConfig(shouldWatch),
-        lib: {
-          entry: filePath,
-          fileName: () => fileName,
-          formats: ['umd'],
-          name: filenameWithoutExtension,
-        },
-      },
-    };
-
-    cache.set(filePath, outputPath);
-
-    const { build } = await (Function('return import("vite")')() as Promise<
-      typeof import('vite')
-    >);
-
-    const watcher = (await build({
-      ...defaultConfig,
-      ...configOverrides,
-    })) as BuildResult;
-
-    return new Promise((resolve, reject) => {
-      if (shouldWatch && isWatcher(watcher)) {
-        watcher.on('event', (event) => {
-          if (event.code === 'END') {
-            resolve(outputPath);
-            file.emit('rerun');
-          }
-
-          if (event.code === 'ERROR') {
-            console.error(event);
-            reject(new Error(event.error.message));
-          }
-        });
-
-        file.on('close', () => {
-          cache.delete(filePath);
-          watcher.close();
-        });
-      } else {
-        resolve(outputPath);
+      if (cache.has(filePath)) {
+         return cache.get(filePath);
       }
-    });
-  };
+
+      const fileName = basename(outputPath);
+      const filenameWithoutExtension = basename(
+         outputPath,
+         extname(outputPath)
+      );
+
+      const defaultConfig: InlineConfig = {
+         logLevel: 'silent',
+         define: {
+            'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
+         },
+         build: {
+            emptyOutDir: false,
+            minify: false,
+            outDir: dirname(outputPath),
+            sourcemap: true,
+            write: true,
+            watch: getWatcherConfig(shouldWatch),
+            lib: {
+               entry: filePath,
+               fileName: () => fileName,
+               formats: ['umd'],
+               name: filenameWithoutExtension,
+            },
+         },
+      };
+
+      cache.set(filePath, outputPath);
+
+      const { build } = await (Function('return import("vite")')() as Promise<
+         typeof import('vite')
+      >);
+
+      const watcher = (await build({
+         ...defaultConfig,
+         ...configOverrides,
+      })) as BuildResult;
+
+      return new Promise((resolve, reject) => {
+         if (shouldWatch && isWatcher(watcher)) {
+            watcher.on('event', (event) => {
+               if (event.code === 'END') {
+                  resolve(outputPath);
+                  file.emit('rerun');
+               }
+
+               if (event.code === 'ERROR') {
+                  console.error(event);
+                  reject(new Error(event.error.message));
+               }
+            });
+
+            file.on('close', () => {
+               cache.delete(filePath);
+               watcher.close();
+            });
+         } else {
+            resolve(outputPath);
+         }
+      });
+   };
 }
 
 function isWatcher(maybeWatcher: any): maybeWatcher is RollupWatcher {
-  return maybeWatcher.on !== undefined;
+   return maybeWatcher.on !== undefined;
 }
 
 function getWatcherConfig(shouldWatch: boolean): WatcherOptions | null {
-  return shouldWatch ? {} : null;
+   return shouldWatch ? {} : null;
 }
 
 export default vitePreprocessor;

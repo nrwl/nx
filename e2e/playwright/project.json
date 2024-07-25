@@ -1,9 +1,9 @@
 {
-  "name": "e2e-playwright",
-  "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "e2e/playwright",
-  "projectType": "application",
-  "implicitDependencies": ["playwright"],
-  "// targets": "to see all targets run: nx show project e2e-playwright --web",
-  "targets": {}
+   "name": "e2e-playwright",
+   "$schema": "../../node_modules/nx/schemas/project-schema.json",
+   "sourceRoot": "e2e/playwright",
+   "projectType": "application",
+   "implicitDependencies": ["playwright"],
+   "// targets": "to see all targets run: nx show project e2e-playwright --web",
+   "targets": {}
 }

@@ -7,10 +7,10 @@ import { StorybookStoriesSchema } from './schema';
  * TODO (@xiongemi): remove this generator for v19
  */
 export async function storiesGenerator(
-  host: Tree,
-  schema: StorybookStoriesSchema
+   host: Tree,
+   schema: StorybookStoriesSchema
 ) {
-  return reactStoriesGenerator(host, schema);
+   return reactStoriesGenerator(host, schema);
 }
 
 export default storiesGenerator;

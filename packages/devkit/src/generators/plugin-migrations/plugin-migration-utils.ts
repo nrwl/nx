@@ -56,153 +56,155 @@ import { interpolate } from 'nx/src/devkit-internals';
  * @param createdTarget The target created by the Plugin
  */
 export function deleteMatchingProperties(
-  targetToMigrate: object,
-  createdTarget: object
+   targetToMigrate: object,
+   createdTarget: object
 ): void {
-  for (const key in targetToMigrate) {
-    if (Array.isArray(targetToMigrate[key])) {
-      if (
-        targetToMigrate[key].every((v) => createdTarget[key]?.includes(v)) &&
-        targetToMigrate[key].length === createdTarget[key]?.length
+   for (const key in targetToMigrate) {
+      if (Array.isArray(targetToMigrate[key])) {
+         if (
+            targetToMigrate[key].every((v) =>
+               createdTarget[key]?.includes(v)
+            ) &&
+            targetToMigrate[key].length === createdTarget[key]?.length
+         ) {
+            delete targetToMigrate[key];
+         }
+      } else if (
+         typeof targetToMigrate[key] === 'object' &&
+         typeof createdTarget[key] === 'object'
       ) {
-        delete targetToMigrate[key];
+         deleteMatchingProperties(targetToMigrate[key], createdTarget[key]);
+      } else if (targetToMigrate[key] === createdTarget[key]) {
+         delete targetToMigrate[key];
       }
-    } else if (
-      typeof targetToMigrate[key] === 'object' &&
-      typeof createdTarget[key] === 'object'
-    ) {
-      deleteMatchingProperties(targetToMigrate[key], createdTarget[key]);
-    } else if (targetToMigrate[key] === createdTarget[key]) {
-      delete targetToMigrate[key];
-    }
-    if (
-      typeof targetToMigrate[key] === 'object' &&
-      Object.keys(targetToMigrate[key]).length === 0
-    ) {
-      delete targetToMigrate[key];
-    }
-  }
+      if (
+         typeof targetToMigrate[key] === 'object' &&
+         Object.keys(targetToMigrate[key]).length === 0
+      ) {
+         delete targetToMigrate[key];
+      }
+   }
 }
 
 export function processTargetOutputs(
-  target: TargetConfiguration,
-  renamedOutputOptions: Array<{ newName: string; oldName: string }>,
-  inferredTarget: TargetConfiguration,
-  projectDetails: { projectName: string; projectRoot: string }
+   target: TargetConfiguration,
+   renamedOutputOptions: Array<{ newName: string; oldName: string }>,
+   inferredTarget: TargetConfiguration,
+   projectDetails: { projectName: string; projectRoot: string }
 ): void {
-  const interpolatedInferredOutputs = (inferredTarget.outputs ?? []).map(
-    (output) =>
+   const interpolatedInferredOutputs = (inferredTarget.outputs ?? []).map(
+      (output) =>
+         interpolate(output, {
+            workspaceRoot: '',
+            projectRoot: projectDetails.projectRoot,
+            projectName: projectDetails.projectName,
+         })
+   );
+   const targetOutputs = (target.outputs ?? []).map((output) =>
+      updateOutput(output, renamedOutputOptions)
+   );
+   const interpolatedOutputs = targetOutputs.map((output) =>
       interpolate(output, {
-        workspaceRoot: '',
-        projectRoot: projectDetails.projectRoot,
-        projectName: projectDetails.projectName,
+         workspaceRoot: '',
+         projectRoot: projectDetails.projectRoot,
+         projectName: projectDetails.projectName,
       })
-  );
-  const targetOutputs = (target.outputs ?? []).map((output) =>
-    updateOutput(output, renamedOutputOptions)
-  );
-  const interpolatedOutputs = targetOutputs.map((output) =>
-    interpolate(output, {
-      workspaceRoot: '',
-      projectRoot: projectDetails.projectRoot,
-      projectName: projectDetails.projectName,
-    })
-  );
+   );
 
-  const shouldDelete = interpolatedOutputs.every((output) =>
-    interpolatedInferredOutputs.includes(output)
-  );
-  if (shouldDelete) {
-    // all existing outputs are already inferred
-    delete target.outputs;
-    return;
-  }
+   const shouldDelete = interpolatedOutputs.every((output) =>
+      interpolatedInferredOutputs.includes(output)
+   );
+   if (shouldDelete) {
+      // all existing outputs are already inferred
+      delete target.outputs;
+      return;
+   }
 
-  // move extra inferred outputs to the target outputs
-  for (let i = 0; i < interpolatedInferredOutputs.length; i++) {
-    if (!interpolatedOutputs.includes(interpolatedInferredOutputs[i])) {
-      targetOutputs.push(inferredTarget.outputs[i]);
-      interpolatedOutputs.push(interpolatedInferredOutputs[i]);
-    }
-  }
+   // move extra inferred outputs to the target outputs
+   for (let i = 0; i < interpolatedInferredOutputs.length; i++) {
+      if (!interpolatedOutputs.includes(interpolatedInferredOutputs[i])) {
+         targetOutputs.push(inferredTarget.outputs[i]);
+         interpolatedOutputs.push(interpolatedInferredOutputs[i]);
+      }
+   }
 
-  target.outputs = targetOutputs;
+   target.outputs = targetOutputs;
 }
 
 export function toProjectRelativePath(
-  path: string,
-  projectRoot: string
+   path: string,
+   projectRoot: string
 ): string {
-  if (projectRoot === '.') {
-    // workspace and project root are the same, we add a leading './' which is
-    // required by some tools (e.g. Jest)
-    return path.startsWith('.') ? path : `./${path}`;
-  }
+   if (projectRoot === '.') {
+      // workspace and project root are the same, we add a leading './' which is
+      // required by some tools (e.g. Jest)
+      return path.startsWith('.') ? path : `./${path}`;
+   }
 
-  const relativePath = relative(
-    resolve(workspaceRoot, projectRoot),
-    resolve(workspaceRoot, path)
-  );
+   const relativePath = relative(
+      resolve(workspaceRoot, projectRoot),
+      resolve(workspaceRoot, path)
+   );
 
-  return relativePath.startsWith('.') ? relativePath : `./${relativePath}`;
+   return relativePath.startsWith('.') ? relativePath : `./${relativePath}`;
 }
 
 function updateOutputRenamingOption(
-  output: string,
-  option: string,
-  previousName: string
+   output: string,
+   option: string,
+   previousName: string
 ): string {
-  const newOptionToken = `{options.${option}}`;
-  const oldOptionToken = `{options.${previousName}}`;
+   const newOptionToken = `{options.${option}}`;
+   const oldOptionToken = `{options.${previousName}}`;
 
-  if (
-    !output.startsWith('{workspaceRoot}') &&
-    !output.startsWith('{projectRoot}')
-  ) {
-    return `{projectRoot}/${output.replace(oldOptionToken, newOptionToken)}`;
-  }
+   if (
+      !output.startsWith('{workspaceRoot}') &&
+      !output.startsWith('{projectRoot}')
+   ) {
+      return `{projectRoot}/${output.replace(oldOptionToken, newOptionToken)}`;
+   }
 
-  if (
-    output.startsWith('{workspaceRoot}') &&
-    !output.startsWith('{workspaceRoot}/{projectRoot}')
-  ) {
-    return output
-      .replace('{workspaceRoot}', '{projectRoot}')
-      .replace(oldOptionToken, newOptionToken);
-  }
+   if (
+      output.startsWith('{workspaceRoot}') &&
+      !output.startsWith('{workspaceRoot}/{projectRoot}')
+   ) {
+      return output
+         .replace('{workspaceRoot}', '{projectRoot}')
+         .replace(oldOptionToken, newOptionToken);
+   }
 
-  return output.replace(oldOptionToken, newOptionToken);
+   return output.replace(oldOptionToken, newOptionToken);
 }
 
 function updateOutput(
-  output: string,
-  renamedOutputOptions: Array<{ newName: string; oldName: string }>
+   output: string,
+   renamedOutputOptions: Array<{ newName: string; oldName: string }>
 ): string {
-  if (!/{options\..*}/.test(output)) {
-    // output does not contain any option tokens
-    return output;
-  }
+   if (!/{options\..*}/.test(output)) {
+      // output does not contain any option tokens
+      return output;
+   }
 
-  for (const { newName, oldName } of renamedOutputOptions) {
-    const optionToken = `{options.${oldName}}`;
-    if (output.includes(optionToken)) {
-      return updateOutputRenamingOption(output, newName, oldName);
-    }
-  }
+   for (const { newName, oldName } of renamedOutputOptions) {
+      const optionToken = `{options.${oldName}}`;
+      if (output.includes(optionToken)) {
+         return updateOutputRenamingOption(output, newName, oldName);
+      }
+   }
 
-  if (
-    !output.startsWith('{workspaceRoot}') &&
-    !output.startsWith('{projectRoot}')
-  ) {
-    return `{projectRoot}/${output}`;
-  }
+   if (
+      !output.startsWith('{workspaceRoot}') &&
+      !output.startsWith('{projectRoot}')
+   ) {
+      return `{projectRoot}/${output}`;
+   }
 
-  if (
-    output.startsWith('{workspaceRoot}') &&
-    !output.startsWith('{workspaceRoot}/{projectRoot}')
-  ) {
-    return output.replace('{workspaceRoot}', '{projectRoot}');
-  }
+   if (
+      output.startsWith('{workspaceRoot}') &&
+      !output.startsWith('{workspaceRoot}/{projectRoot}')
+   ) {
+      return output.replace('{workspaceRoot}', '{projectRoot}');
+   }
 
-  return output;
+   return output;
 }

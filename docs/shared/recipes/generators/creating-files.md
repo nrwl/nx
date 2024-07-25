@@ -35,28 +35,28 @@ Next, update the `index.ts` file for the generator, and generate the new files.
 
 ```typescript {% fileName="index.ts" %}
 import {
-  Tree,
-  formatFiles,
-  installPackagesTask,
-  generateFiles,
-  joinPathFragments,
-  readProjectConfiguration,
+   Tree,
+   formatFiles,
+   installPackagesTask,
+   generateFiles,
+   joinPathFragments,
+   readProjectConfiguration,
 } from '@nx/devkit';
 import { libraryGenerator } from '@nx/js';
 
 export default async function (tree: Tree, schema: any) {
-  await libraryGenerator(tree, { name: schema.name });
-  const libraryRoot = readProjectConfiguration(tree, schema.name).root;
-  generateFiles(
-    tree, // the virtual file system
-    joinPathFragments(__dirname, './files'), // path to the file templates
-    libraryRoot, // destination path of the files
-    schema // config object to replace variable in file templates
-  );
-  await formatFiles(tree);
-  return () => {
-    installPackagesTask(tree);
-  };
+   await libraryGenerator(tree, { name: schema.name });
+   const libraryRoot = readProjectConfiguration(tree, schema.name).root;
+   generateFiles(
+      tree, // the virtual file system
+      joinPathFragments(__dirname, './files'), // path to the file templates
+      libraryRoot, // destination path of the files
+      schema // config object to replace variable in file templates
+   );
+   await formatFiles(tree);
+   return () => {
+      installPackagesTask(tree);
+   };
 }
 ```
 
@@ -107,9 +107,9 @@ By default, generators overwrite files when they already exist.
 
 You can customize this behaviour with an optional argument to `generateFiles` that can take one of three values:
 
-- `OverwriteStrategy.Overwrite` (default): all generated files are created and overwrite existing target files if any.
-- `OverwriteStrategy.KeepExisting`: generated files are created only when target file does not exist. Existing target files are kept as is.
-- `OverwriteStrategy.ThrowIfExisting`: if a target file already exists, an exception is thrown. Suitable when a pristine target environment is expected.
+-  `OverwriteStrategy.Overwrite` (default): all generated files are created and overwrite existing target files if any.
+-  `OverwriteStrategy.KeepExisting`: generated files are created only when target file does not exist. Existing target files are kept as is.
+-  `OverwriteStrategy.ThrowIfExisting`: if a target file already exists, an exception is thrown. Suitable when a pristine target environment is expected.
 
 ## EJS Syntax Quickstart
 
@@ -125,14 +125,14 @@ This is my <%= uppercase(name) %>
 ```typescript
 // typescript file
 function uppercase(val: string) {
-  return val.toUpperCase();
+   return val.toUpperCase();
 }
 
 // later
 
 generateFiles(tree, join(__dirname, './files'), libraryRoot, {
-  uppercase,
-  name: schema.name,
+   uppercase,
+   name: schema.name,
 });
 ```
 
@@ -152,7 +152,7 @@ This is the short version.
 ```typescript
 // typescript file
 generateFiles(tree, join(__dirname, './files'), libraryRoot, {
-  shortVersion: false,
-  numRepetitions: 3,
+   shortVersion: false,
+   numRepetitions: 3,
 });
 ```

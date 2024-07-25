@@ -3,16 +3,18 @@ import { ProjectGraphService } from './project-graph-data-service/get-project-gr
 import { AppConfig } from './app-config';
 
 export async function fetchProjectGraph(
-  projectGraphService: ProjectGraphService,
-  params: Readonly<Params<string>>,
-  appConfig: AppConfig
+   projectGraphService: ProjectGraphService,
+   params: Readonly<Params<string>>,
+   appConfig: AppConfig
 ) {
-  const selectedWorkspaceId =
-    params.selectedWorkspaceId ?? appConfig.defaultWorkspaceId;
+   const selectedWorkspaceId =
+      params.selectedWorkspaceId ?? appConfig.defaultWorkspaceId;
 
-  const projectInfo = appConfig.workspaces.find(
-    (graph) => graph.id === selectedWorkspaceId
-  );
+   const projectInfo = appConfig.workspaces.find(
+      (graph) => graph.id === selectedWorkspaceId
+   );
 
-  return await projectGraphService.getProjectGraph(projectInfo.projectGraphUrl);
+   return await projectGraphService.getProjectGraph(
+      projectInfo.projectGraphUrl
+   );
 }

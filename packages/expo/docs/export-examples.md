@@ -2,21 +2,21 @@
 
 ```json
 {
-  "name": "mobile",
-  //...
-  "targets": {
-    //...
-    "export": {
-      "executor": "@nx/expo:export",
-      "options": {
-        "outputs": ["{options.outputDir}"],
-        "platform": "all",
-        "outputDir": "dist/apps/mobile"
-      },
-      "dependsOn": ["sync-deps"]
-    }
-    //...
-  }
+   "name": "mobile",
+   //...
+   "targets": {
+      //...
+      "export": {
+         "executor": "@nx/expo:export",
+         "options": {
+            "outputs": ["{options.outputDir}"],
+            "platform": "all",
+            "outputDir": "dist/apps/mobile"
+         },
+         "dependsOn": ["sync-deps"]
+      }
+      //...
+   }
 }
 ```
 

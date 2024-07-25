@@ -38,9 +38,9 @@ registry=https://my-default-registry.com/
 
 With the above `.npmrc`, the following packages would be published to the specified registries:
 
-- `@my-scope/pkg-1` -> `https://my-custom-registry.com/`
-- `@other-scope/pkg-2` -> `https://my-other-registry.com/`
-- `pkg-3` -> `https://my-default-registry.com/`
+-  `@my-scope/pkg-1` -> `https://my-custom-registry.com/`
+-  `@other-scope/pkg-2` -> `https://my-other-registry.com/`
+-  `pkg-3` -> `https://my-default-registry.com/`
 
 ## Specify an Alternate Registry for a Single Package
 

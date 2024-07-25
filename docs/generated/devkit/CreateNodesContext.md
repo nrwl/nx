@@ -4,17 +4,17 @@ Context for [CreateNodesFunction](../../devkit/documents/CreateNodesFunction)
 
 ## Hierarchy
 
-- [`CreateNodesContextV2`](../../devkit/documents/CreateNodesContextV2)
+-  [`CreateNodesContextV2`](../../devkit/documents/CreateNodesContextV2)
 
-  ↳ **`CreateNodesContext`**
+   ↳ **`CreateNodesContext`**
 
 ## Table of contents
 
 ### Properties
 
-- [configFiles](../../devkit/documents/CreateNodesContext#configfiles): readonly string[]
-- [nxJsonConfiguration](../../devkit/documents/CreateNodesContext#nxjsonconfiguration): NxJsonConfiguration<string[] | "\*">
-- [workspaceRoot](../../devkit/documents/CreateNodesContext#workspaceroot): string
+-  [configFiles](../../devkit/documents/CreateNodesContext#configfiles): readonly string[]
+-  [nxJsonConfiguration](../../devkit/documents/CreateNodesContext#nxjsonconfiguration): NxJsonConfiguration<string[] | "\*">
+-  [workspaceRoot](../../devkit/documents/CreateNodesContext#workspaceroot): string
 
 ## Properties
 

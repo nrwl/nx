@@ -19,32 +19,32 @@ Throughout this recipe, the following project structure of a simple workspace wi
 
 ```json
 {
-  "projects": [
-    {
-      "name": "myreactapp",
-      "type": "app",
-      "data": {
-        "tags": []
+   "projects": [
+      {
+         "name": "myreactapp",
+         "type": "app",
+         "data": {
+            "tags": []
+         }
+      },
+      {
+         "name": "shared-ui",
+         "type": "lib",
+         "data": {
+            "tags": []
+         }
       }
-    },
-    {
-      "name": "shared-ui",
-      "type": "lib",
-      "data": {
-        "tags": []
-      }
-    }
-  ],
-  "dependencies": {
-    "myreactapp": [
-      { "source": "myreactapp", "target": "shared-ui", "type": "static" }
-    ],
-    "shared-ui": []
-  },
-  "workspaceLayout": { "appsDir": "", "libsDir": "" },
-  "affectedProjectIds": [],
-  "focus": null,
-  "groupByFolder": false
+   ],
+   "dependencies": {
+      "myreactapp": [
+         { "source": "myreactapp", "target": "shared-ui", "type": "static" }
+      ],
+      "shared-ui": []
+   },
+   "workspaceLayout": { "appsDir": "", "libsDir": "" },
+   "affectedProjectIds": [],
+   "focus": null,
+   "groupByFolder": false
 }
 ```
 
@@ -84,10 +84,10 @@ Be sure to [view the existing inputs](#viewing-the-inputs-of-a-task) and start f
 
 Inputs of a task are configured in the `inputs` array on the target. This can be done in several different places:
 
-- As of Nx 18, Nx Plugins often [infer inputs for tasks](/concepts/inferred-tasks) which run other tools.
-  - In doing so, they will also define some reasonable defaults for the `inputs` of those tasks.
-- The `inputs` array in the `targetDefaults` for a set of targets in `nx.json`.
-- The `inputs` array for a specific target in the project configuration file.
+-  As of Nx 18, Nx Plugins often [infer inputs for tasks](/concepts/inferred-tasks) which run other tools.
+   -  In doing so, they will also define some reasonable defaults for the `inputs` of those tasks.
+-  The `inputs` array in the `targetDefaults` for a set of targets in `nx.json`.
+-  The `inputs` array for a specific target in the project configuration file.
 
 {% callout title="Copy the existing inputs before modifying inputs for a task" %}
 To override the `inputs` of a task, start by copying over the entire array shown when [viewing the project details](#viewing-the-inputs-of-a-task) and then add/modify/remove inputs as needed.
@@ -101,11 +101,11 @@ As you configure `inputs`, keep the project details screen open and it will refr
 
 ```jsonc {% fileName="nx.json" highlightLines=[4] %}
 {
-  "targetDefaults": {
-    "build": {
-      "inputs": ["production", "^production"]
-    }
-  }
+   "targetDefaults": {
+      "build": {
+         "inputs": ["production", "^production"]
+      }
+   }
 }
 ```
 
@@ -123,12 +123,12 @@ Defining `inputs` of a target in `project.json` or `package.json` will apply onl
 
 ```jsonc {% fileName="apps/myreactapp/project.json" highlightLines=[5] %}
 {
-  "name": "myreactapp",
-  "targets": {
-    "build": {
-      "inputs": ["production", "^production"]
-    }
-  }
+   "name": "myreactapp",
+   "targets": {
+      "build": {
+         "inputs": ["production", "^production"]
+      }
+   }
 }
 ```
 
@@ -187,21 +187,21 @@ Given the above configurations, exclude the test and config files from the `prod
 
 ```jsonc {% fileName="nx.json" highlightLines=["4-8"] %}
 {
-  "namedInputs": {
-    "default": ["{projectRoot}/**/*", "sharedGlobals"],
-    "production": [
-      "default",
-      "!{projectRoot}/jest.config.ts",
-      "!{projectRoot}/**/?(*.)+(spec|test).ts"
-    ]
-  }
+   "namedInputs": {
+      "default": ["{projectRoot}/**/*", "sharedGlobals"],
+      "production": [
+         "default",
+         "!{projectRoot}/jest.config.ts",
+         "!{projectRoot}/**/?(*.)+(spec|test).ts"
+      ]
+   }
 }
 ```
 
 With the above named inputs, Nx will behave in the following way:
 
-- When only test files are changed, Nx will restore previous compilation results from the cache and re-run the tests for the projects containing the test files
-- When any production files are changed, Nx will re-run the tests for the project as well as any projects which depend on it
+-  When only test files are changed, Nx will restore previous compilation results from the cache and re-run the tests for the projects containing the test files
+-  When any production files are changed, Nx will re-run the tests for the project as well as any projects which depend on it
 
 ### Consider the Version of a Language for all Tasks
 
@@ -212,9 +212,9 @@ For example, to consider the version of Node.js in the hash of every task, add `
 
 ```jsonc {% fileName="nx.json" highlightLines=["4"] %}
 {
-  "namedInputs": {
-    "default": ["{projectRoot}/**/*", "sharedGlobals"],
-    "sharedGlobals": [{ "runtime": "node --version" }]
-  }
+   "namedInputs": {
+      "default": ["{projectRoot}/**/*", "sharedGlobals"],
+      "sharedGlobals": [{ "runtime": "node --version" }]
+   }
 }
 ```

@@ -1,8 +1,8 @@
 import { Tree, applyChangesToString, ChangeType, logger } from '@nx/devkit';
 import {
-  addOrUpdateProperty,
-  jestConfigObjectAst,
-  removeProperty,
+   addOrUpdateProperty,
+   jestConfigObjectAst,
+   removeProperty,
 } from './functions';
 
 /**
@@ -14,33 +14,33 @@ import {
  * @param options - set `valueAsString` option to true if the `value` being passed represents a string of the code that should be associated with the `propertyName`
  */
 export function addPropertyToJestConfig(
-  host: Tree,
-  path: string,
-  propertyName: string | string[],
-  value: unknown,
-  options: { valueAsString: boolean } = { valueAsString: false }
+   host: Tree,
+   path: string,
+   propertyName: string | string[],
+   value: unknown,
+   options: { valueAsString: boolean } = { valueAsString: false }
 ) {
-  if (!host.exists(path)) {
-    throw new Error(`Cannot find '${path}' in your workspace.`);
-  }
-  const { propertyString, properties } = parsePropertyName(propertyName);
-  try {
-    const configObject = jestConfigObjectAst(host.read(path, 'utf-8'));
-    addOrUpdateProperty(
-      host,
-      configObject,
-      properties,
-      options.valueAsString ? value : JSON.stringify(value),
-      path
-    );
-  } catch (e) {
-    logger.info(`NX Please manually update ${path}`);
-    logger.warn(
-      `Could not automatically add the following property to ${path}:`
-    );
-    logger.warn(`${propertyString}: ${JSON.stringify(value)}`);
-    logger.warn(`Error: ${e.message}`);
-  }
+   if (!host.exists(path)) {
+      throw new Error(`Cannot find '${path}' in your workspace.`);
+   }
+   const { propertyString, properties } = parsePropertyName(propertyName);
+   try {
+      const configObject = jestConfigObjectAst(host.read(path, 'utf-8'));
+      addOrUpdateProperty(
+         host,
+         configObject,
+         properties,
+         options.valueAsString ? value : JSON.stringify(value),
+         path
+      );
+   } catch (e) {
+      logger.info(`NX Please manually update ${path}`);
+      logger.warn(
+         `Could not automatically add the following property to ${path}:`
+      );
+      logger.warn(`${propertyString}: ${JSON.stringify(value)}`);
+      logger.warn(`Error: ${e.message}`);
+   }
 }
 
 /**
@@ -50,61 +50,62 @@ export function addPropertyToJestConfig(
  * @param propertyName - Property to remove. Can be dot delimited or an array to access deeply nested properties
  */
 export function removePropertyFromJestConfig(
-  host: Tree,
-  path: string,
-  propertyName: string | string[]
+   host: Tree,
+   path: string,
+   propertyName: string | string[]
 ) {
-  if (!host.exists(path)) {
-    throw new Error(`Cannot find '${path}' in your workspace.`);
-  }
+   if (!host.exists(path)) {
+      throw new Error(`Cannot find '${path}' in your workspace.`);
+   }
 
-  const { propertyString, properties } = parsePropertyName(propertyName);
+   const { propertyString, properties } = parsePropertyName(propertyName);
 
-  try {
-    const configObject = jestConfigObjectAst(host.read(path, 'utf-8'));
-    const propertyAssignment = removeProperty(configObject, properties);
+   try {
+      const configObject = jestConfigObjectAst(host.read(path, 'utf-8'));
+      const propertyAssignment = removeProperty(configObject, properties);
 
-    if (propertyAssignment) {
-      const file = host.read(path, 'utf-8');
-      const commaNeeded = file[propertyAssignment.end] === ',';
-      const updatedFile = applyChangesToString(file, [
-        {
-          type: ChangeType.Delete,
-          start: propertyAssignment.getStart(),
-          length: `${propertyAssignment.getText()}${commaNeeded ? ',' : ''}`
-            .length,
-        },
-      ]);
-      host.write(path, updatedFile);
-      return;
-    }
-  } catch (e) {
-    logger.info(`NX Please manually update ${path}`);
-    logger.warn(
-      `Could not automatically remove the '${propertyString}' property from ${path}:`
-    );
-  }
+      if (propertyAssignment) {
+         const file = host.read(path, 'utf-8');
+         const commaNeeded = file[propertyAssignment.end] === ',';
+         const updatedFile = applyChangesToString(file, [
+            {
+               type: ChangeType.Delete,
+               start: propertyAssignment.getStart(),
+               length: `${propertyAssignment.getText()}${
+                  commaNeeded ? ',' : ''
+               }`.length,
+            },
+         ]);
+         host.write(path, updatedFile);
+         return;
+      }
+   } catch (e) {
+      logger.info(`NX Please manually update ${path}`);
+      logger.warn(
+         `Could not automatically remove the '${propertyString}' property from ${path}:`
+      );
+   }
 }
 
 function parsePropertyName(propertyName: string | string[]) {
-  return {
-    properties: Array.isArray(propertyName)
-      ? propertyName
-      : propertyName.split('.'),
-    propertyString: Array.isArray(propertyName)
-      ? propertyName.join('.')
-      : propertyName,
-  };
+   return {
+      properties: Array.isArray(propertyName)
+         ? propertyName
+         : propertyName.split('.'),
+      propertyString: Array.isArray(propertyName)
+         ? propertyName.join('.')
+         : propertyName,
+   };
 }
 
 export function addImportStatementToJestConfig(
-  host: Tree,
-  path: string,
-  importStatement: string
+   host: Tree,
+   path: string,
+   importStatement: string
 ) {
-  const currentContents = host.read(path, 'utf-8');
-  const newContents = `${importStatement}
+   const currentContents = host.read(path, 'utf-8');
+   const newContents = `${importStatement}
   
 ${currentContents}`;
-  host.write(path, newContents);
+   host.write(path, newContents);
 }

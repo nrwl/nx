@@ -1,5 +1,5 @@
 export {
-  loadRemoteModule,
-  setRemoteDefinitions,
-  setRemoteUrlResolver,
+   loadRemoteModule,
+   setRemoteDefinitions,
+   setRemoteUrlResolver,
 } from './dynamic-federation';

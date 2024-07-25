@@ -1,5 +1,5 @@
 export function getInSourceVitestTestsTemplate(testContent: string) {
-  return `
+   return `
 if (import.meta.vitest) {
   // add tests related to your file here
   // For more information please visit the Vitest docs site here: https://vitest.dev/guide/in-source.html

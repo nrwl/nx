@@ -4,20 +4,22 @@ import type { ResolverGeneratorOptions } from './resolver';
 import { resolverGenerator } from './resolver';
 
 describe('resolver generator', () => {
-  let tree: Tree;
-  const project = 'api';
-  const options: ResolverGeneratorOptions = {
-    name: 'test',
-    project,
-    unitTestRunner: 'jest',
-  };
+   let tree: Tree;
+   const project = 'api';
+   const options: ResolverGeneratorOptions = {
+      name: 'test',
+      project,
+      unitTestRunner: 'jest',
+   };
 
-  beforeEach(() => {
-    tree = createTreeWithNestApplication(project);
-    jest.clearAllMocks();
-  });
+   beforeEach(() => {
+      tree = createTreeWithNestApplication(project);
+      jest.clearAllMocks();
+   });
 
-  it('should run successfully', async () => {
-    await expect(resolverGenerator(tree, options)).resolves.not.toThrowError();
-  });
+   it('should run successfully', async () => {
+      await expect(
+         resolverGenerator(tree, options)
+      ).resolves.not.toThrowError();
+   });
 });

@@ -2,10 +2,10 @@
 
 Nx Console editor extensions make your developer experience richer. The extensions
 
-- show [inferred tasks](/concepts/inferred-tasks) and help you invoke them
-- show what is cached and how the cache is configured
-- provide a visual UI for invoking generators
-- show dependencies between projects and tasks
+-  show [inferred tasks](/concepts/inferred-tasks) and help you invoke them
+-  show what is cached and how the cache is configured
+-  provide a visual UI for invoking generators
+-  show dependencies between projects and tasks
 
 ## Download
 
@@ -15,9 +15,9 @@ If you are using [VSCode](https://code.visualstudio.com/) or a [JetBrains IDE](h
 
 {% install-nx-console /%}
 
-- [Install from the VSCode Marketplace](https://marketplace.visualstudio.com/items?itemName=nrwl.angular-console)
-- [Install from the JetBrains Marketplace](https://plugins.jetbrains.com/plugin/21060-nx-console)
-- [Contribute on GitHub](https://github.com/nrwl/nx-console)
+-  [Install from the VSCode Marketplace](https://marketplace.visualstudio.com/items?itemName=nrwl.angular-console)
+-  [Install from the JetBrains Marketplace](https://plugins.jetbrains.com/plugin/21060-nx-console)
+-  [Contribute on GitHub](https://github.com/nrwl/nx-console)
 
 ![Nx Console screenshot](/shared/images/nx-console/nx-console-screenshot.webp)
 

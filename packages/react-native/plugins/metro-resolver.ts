@@ -14,72 +14,74 @@ import { workspaceRoot } from '@nx/devkit';
  * workspace root in order modules and assets to be registered and watched.
  */
 export function getResolveRequest(
-  extensions: string[],
-  exportsConditionNames: string[] = [],
-  mainFields: string[] = []
+   extensions: string[],
+   exportsConditionNames: string[] = [],
+   mainFields: string[] = []
 ) {
-  return function (
-    _context: any,
-    realModuleName: string,
-    platform: string | null
-  ) {
-    const debug = process.env.NX_REACT_NATIVE_DEBUG === 'true';
+   return function (
+      _context: any,
+      realModuleName: string,
+      platform: string | null
+   ) {
+      const debug = process.env.NX_REACT_NATIVE_DEBUG === 'true';
 
-    const { resolveRequest, ...context } = _context;
+      const { resolveRequest, ...context } = _context;
 
-    const resolvedPath =
-      resolveRequestFromContext(
-        resolveRequest,
-        _context,
-        realModuleName,
-        platform,
-        debug
-      ) ??
-      defaultMetroResolver(context, realModuleName, platform, debug) ??
-      tsconfigPathsResolver(
-        context,
-        extensions,
-        realModuleName,
-        platform,
-        debug
-      ) ??
-      pnpmResolver(
-        extensions,
-        context,
-        realModuleName,
-        debug,
-        exportsConditionNames,
-        mainFields
-      );
-    if (resolvedPath) {
-      return resolvedPath;
-    }
-    if (debug) {
-      console.log(
-        chalk.red(`[Nx] Unable to resolve with any resolver: ${realModuleName}`)
-      );
-    }
-    throw new Error(`Cannot resolve ${chalk.bold(realModuleName)}`);
-  };
+      const resolvedPath =
+         resolveRequestFromContext(
+            resolveRequest,
+            _context,
+            realModuleName,
+            platform,
+            debug
+         ) ??
+         defaultMetroResolver(context, realModuleName, platform, debug) ??
+         tsconfigPathsResolver(
+            context,
+            extensions,
+            realModuleName,
+            platform,
+            debug
+         ) ??
+         pnpmResolver(
+            extensions,
+            context,
+            realModuleName,
+            debug,
+            exportsConditionNames,
+            mainFields
+         );
+      if (resolvedPath) {
+         return resolvedPath;
+      }
+      if (debug) {
+         console.log(
+            chalk.red(
+               `[Nx] Unable to resolve with any resolver: ${realModuleName}`
+            )
+         );
+      }
+      throw new Error(`Cannot resolve ${chalk.bold(realModuleName)}`);
+   };
 }
 
 function resolveRequestFromContext(
-  resolveRequest: Function,
-  context: any,
-  realModuleName: string,
-  platform: string | null,
-  debug: boolean
+   resolveRequest: Function,
+   context: any,
+   realModuleName: string,
+   platform: string | null,
+   debug: boolean
 ) {
-  try {
-    return resolveRequest(context, realModuleName, platform);
-  } catch {
-    if (debug)
-      console.log(
-        chalk.cyan(
-          `[Nx] Unable to resolve with default resolveRequest: ${realModuleName}`
-        )
-      );
-  }
+   try {
+      return resolveRequest(context, realModuleName, platform);
+   } catch {
+      if (debug)
+         console.log(
+            chalk.cyan(
+               `[Nx] Unable to resolve with default resolveRequest: ${realModuleName}`
+            )
+         );
+   }
 }
 
 /**
@@ -87,21 +89,21 @@ function resolveRequestFromContext(
  * @returns path if resolved, else undefined
  */
 function defaultMetroResolver(
-  context: any,
-  realModuleName: string,
-  platform: string | null,
-  debug: boolean
+   context: any,
+   realModuleName: string,
+   platform: string | null,
+   debug: boolean
 ) {
-  try {
-    return metroResolver.resolve(context, realModuleName, platform);
-  } catch {
-    if (debug)
-      console.log(
-        chalk.cyan(
-          `[Nx] Unable to resolve with default Metro resolver: ${realModuleName}`
-        )
-      );
-  }
+   try {
+      return metroResolver.resolve(context, realModuleName, platform);
+   } catch {
+      if (debug)
+         console.log(
+            chalk.cyan(
+               `[Nx] Unable to resolve with default Metro resolver: ${realModuleName}`
+            )
+         );
+   }
 }
 
 /**
@@ -110,32 +112,32 @@ function defaultMetroResolver(
  * This pnpm resolver is inspired from https://github.com/vjpr/pnpm-react-native-example/blob/main/packages/pnpm-expo-helper/util/make-resolver.js
  */
 function pnpmResolver(
-  extensions: string[],
-  context: any,
-  realModuleName: string,
-  debug: boolean,
-  exportsConditionNames: string[] = [],
-  mainFields: string[] = []
+   extensions: string[],
+   context: any,
+   realModuleName: string,
+   debug: boolean,
+   exportsConditionNames: string[] = [],
+   mainFields: string[] = []
 ) {
-  try {
-    const pnpmResolve = getPnpmResolver(extensions);
-    const lookupStartPath = dirname(context.originModulePath);
-    const filePath = pnpmResolve.resolveSync(
-      {},
-      lookupStartPath,
-      realModuleName
-    );
-    if (filePath) {
-      return { type: 'sourceFile', filePath };
-    }
-  } catch {
-    if (debug)
-      console.log(
-        chalk.cyan(
-          `[Nx] Unable to resolve with default PNPM resolver: ${realModuleName}`
-        )
+   try {
+      const pnpmResolve = getPnpmResolver(extensions);
+      const lookupStartPath = dirname(context.originModulePath);
+      const filePath = pnpmResolve.resolveSync(
+         {},
+         lookupStartPath,
+         realModuleName
       );
-  }
+      if (filePath) {
+         return { type: 'sourceFile', filePath };
+      }
+   } catch {
+      if (debug)
+         console.log(
+            chalk.cyan(
+               `[Nx] Unable to resolve with default PNPM resolver: ${realModuleName}`
+            )
+         );
+   }
 }
 
 /**
@@ -143,35 +145,35 @@ function pnpmResolver(
  * @returns path if resolved, else undefined
  */
 function tsconfigPathsResolver(
-  context: any,
-  extensions: string[],
-  realModuleName: string,
-  platform: string | null,
-  debug: boolean
+   context: any,
+   extensions: string[],
+   realModuleName: string,
+   platform: string | null,
+   debug: boolean
 ) {
-  try {
-    const tsConfigPathMatcher = getMatcher(debug);
-    const match = tsConfigPathMatcher(
-      realModuleName,
-      undefined,
-      undefined,
-      extensions.map((ext) => `.${ext}`)
-    );
-    return metroResolver.resolve(context, match, platform);
-  } catch {
-    if (debug) {
-      console.log(
-        chalk.cyan(`[Nx] Failed to resolve ${chalk.bold(realModuleName)}`)
+   try {
+      const tsConfigPathMatcher = getMatcher(debug);
+      const match = tsConfigPathMatcher(
+         realModuleName,
+         undefined,
+         undefined,
+         extensions.map((ext) => `.${ext}`)
       );
-      console.log(
-        chalk.cyan(
-          `[Nx] The following tsconfig paths was used:\n:${chalk.bold(
-            JSON.stringify(paths, null, 2)
-          )}`
-        )
-      );
-    }
-  }
+      return metroResolver.resolve(context, match, platform);
+   } catch {
+      if (debug) {
+         console.log(
+            chalk.cyan(`[Nx] Failed to resolve ${chalk.bold(realModuleName)}`)
+         );
+         console.log(
+            chalk.cyan(
+               `[Nx] The following tsconfig paths was used:\n:${chalk.bold(
+                  JSON.stringify(paths, null, 2)
+               )}`
+            )
+         );
+      }
+   }
 }
 
 let matcher: MatchPath;
@@ -179,30 +181,32 @@ let absoluteBaseUrl: string;
 let paths: Record<string, string[]>;
 
 function getMatcher(debug: boolean) {
-  if (!matcher) {
-    const result = loadConfig();
-    if (result.resultType === 'success') {
-      absoluteBaseUrl = result.absoluteBaseUrl;
-      paths = result.paths;
-      if (debug) {
-        console.log(
-          chalk.cyan(`[Nx] Located tsconfig at ${chalk.bold(absoluteBaseUrl)}`)
-        );
-        console.log(
-          chalk.cyan(
-            `[Nx] Found the following paths:\n:${chalk.bold(
-              JSON.stringify(paths, null, 2)
-            )}`
-          )
-        );
+   if (!matcher) {
+      const result = loadConfig();
+      if (result.resultType === 'success') {
+         absoluteBaseUrl = result.absoluteBaseUrl;
+         paths = result.paths;
+         if (debug) {
+            console.log(
+               chalk.cyan(
+                  `[Nx] Located tsconfig at ${chalk.bold(absoluteBaseUrl)}`
+               )
+            );
+            console.log(
+               chalk.cyan(
+                  `[Nx] Found the following paths:\n:${chalk.bold(
+                     JSON.stringify(paths, null, 2)
+                  )}`
+               )
+            );
+         }
+         matcher = createMatchPath(absoluteBaseUrl, paths);
+      } else {
+         console.log(chalk.cyan(`[Nx] Failed to locate tsconfig}`));
+         throw new Error(`Could not load tsconfig for project`);
       }
-      matcher = createMatchPath(absoluteBaseUrl, paths);
-    } else {
-      console.log(chalk.cyan(`[Nx] Failed to locate tsconfig}`));
-      throw new Error(`Could not load tsconfig for project`);
-    }
-  }
-  return matcher;
+   }
+   return matcher;
 }
 
 /**
@@ -211,29 +215,29 @@ function getMatcher(debug: boolean) {
  */
 let resolver;
 function getPnpmResolver(
-  extensions: string[],
-  exportsConditionNames: string[] = [],
-  mainFields: string[] = []
+   extensions: string[],
+   exportsConditionNames: string[] = [],
+   mainFields: string[] = []
 ) {
-  if (!resolver) {
-    const fileSystem = new CachedInputFileSystem(fs, 4000);
-    resolver = ResolverFactory.createResolver({
-      fileSystem,
-      extensions: extensions.map((extension) => '.' + extension),
-      useSyncFileSystemCalls: true,
-      modules: [join(workspaceRoot, 'node_modules'), 'node_modules'],
-      conditionNames: [
-        'native',
-        'browser',
-        'require',
-        'default',
-        'react-native',
-        'node',
-        ...exportsConditionNames,
-      ],
-      mainFields: ['react-native', 'browser', 'main', ...mainFields],
-      aliasFields: ['browser'],
-    });
-  }
-  return resolver;
+   if (!resolver) {
+      const fileSystem = new CachedInputFileSystem(fs, 4000);
+      resolver = ResolverFactory.createResolver({
+         fileSystem,
+         extensions: extensions.map((extension) => '.' + extension),
+         useSyncFileSystemCalls: true,
+         modules: [join(workspaceRoot, 'node_modules'), 'node_modules'],
+         conditionNames: [
+            'native',
+            'browser',
+            'require',
+            'default',
+            'react-native',
+            'node',
+            ...exportsConditionNames,
+         ],
+         mainFields: ['react-native', 'browser', 'main', ...mainFields],
+         aliasFields: ['browser'],
+      });
+   }
+   return resolver;
 }

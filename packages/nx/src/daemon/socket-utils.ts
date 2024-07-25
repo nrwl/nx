@@ -13,34 +13,34 @@ export const isWindows = platform() === 'win32';
  * of OS differences between Unix domain sockets and named pipes.
  */
 export const getFullOsSocketPath = () =>
-  isWindows
-    ? '\\\\.\\pipe\\nx\\' + resolve(getDaemonSocketDir())
-    : resolve(getDaemonSocketDir());
+   isWindows
+      ? '\\\\.\\pipe\\nx\\' + resolve(getDaemonSocketDir())
+      : resolve(getDaemonSocketDir());
 
 export const getForkedProcessOsSocketPath = (id: string) => {
-  let path = resolve(join(getSocketDir(), 'fp' + id + '.sock'));
-  return isWindows ? '\\\\.\\pipe\\nx\\' + resolve(path) : resolve(path);
+   let path = resolve(join(getSocketDir(), 'fp' + id + '.sock'));
+   return isWindows ? '\\\\.\\pipe\\nx\\' + resolve(path) : resolve(path);
 };
 
 export const getPluginOsSocketPath = (id: string) => {
-  let path = resolve(join(getSocketDir(true), 'plugin' + id + '.sock'));
-  return isWindows ? '\\\\.\\pipe\\nx\\' + resolve(path) : resolve(path);
+   let path = resolve(join(getSocketDir(true), 'plugin' + id + '.sock'));
+   return isWindows ? '\\\\.\\pipe\\nx\\' + resolve(path) : resolve(path);
 };
 
 export function killSocketOrPath(): void {
-  try {
-    unlinkSync(getFullOsSocketPath());
-  } catch {}
+   try {
+      unlinkSync(getFullOsSocketPath());
+   } catch {}
 }
 
 // Prepare a serialized project graph result for sending over IPC from the server to the client
 export function serializeResult(
-  error: Error | null,
-  serializedProjectGraph: string | null,
-  serializedSourceMaps: string | null
+   error: Error | null,
+   serializedProjectGraph: string | null,
+   serializedSourceMaps: string | null
 ): string | null {
-  // We do not want to repeat work `JSON.stringify`ing an object containing the potentially large project graph so merge as strings
-  return `{ "error": ${JSON.stringify(
-    error ? createSerializableError(error) : error
-  )}, "projectGraph": ${serializedProjectGraph}, "sourceMaps": ${serializedSourceMaps} }`;
+   // We do not want to repeat work `JSON.stringify`ing an object containing the potentially large project graph so merge as strings
+   return `{ "error": ${JSON.stringify(
+      error ? createSerializableError(error) : error
+   )}, "projectGraph": ${serializedProjectGraph}, "sourceMaps": ${serializedSourceMaps} }`;
 }

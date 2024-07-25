@@ -14,130 +14,130 @@ import { nxPackagesApi } from '../../../lib/packages.api';
 import { tagsApi } from '../../../lib/tags.api';
 
 export default function Package({
-  overview,
-  menu,
-  pkg,
+   overview,
+   menu,
+   pkg,
 }: {
-  menu: MenuItem[];
-  overview: string;
-  pkg: ProcessedPackageMetadata;
+   menu: MenuItem[];
+   overview: string;
+   pkg: ProcessedPackageMetadata;
 }): JSX.Element {
-  const router = useRouter();
-  const { toggleNav, navIsOpen } = useNavToggle();
-  const wrapperElement = useRef(null);
+   const router = useRouter();
+   const { toggleNav, navIsOpen } = useNavToggle();
+   const wrapperElement = useRef(null);
 
-  useEffect(() => {
-    const handleRouteChange = (url: string) => {
-      if (url.includes('#')) return;
-      if (!wrapperElement) return;
+   useEffect(() => {
+      const handleRouteChange = (url: string) => {
+         if (url.includes('#')) return;
+         if (!wrapperElement) return;
 
-      (wrapperElement as any).current.scrollTo({
-        top: 0,
-        left: 0,
-        behavior: 'smooth',
-      });
-    };
+         (wrapperElement as any).current.scrollTo({
+            top: 0,
+            left: 0,
+            behavior: 'smooth',
+         });
+      };
 
-    router.events.on('routeChangeComplete', handleRouteChange);
-    return () => router.events.off('routeChangeComplete', handleRouteChange);
-  }, [router, wrapperElement]);
+      router.events.on('routeChangeComplete', handleRouteChange);
+      return () => router.events.off('routeChangeComplete', handleRouteChange);
+   }, [router, wrapperElement]);
 
-  const vm: { menu: Menu; package: ProcessedPackageMetadata } = {
-    menu: {
-      sections: sortCorePackagesFirst<MenuSection>(
-        getPackagesSections(menu),
-        'id'
-      ),
-    },
-    package: pkg,
-  };
+   const vm: { menu: Menu; package: ProcessedPackageMetadata } = {
+      menu: {
+         sections: sortCorePackagesFirst<MenuSection>(
+            getPackagesSections(menu),
+            'id'
+         ),
+      },
+      package: pkg,
+   };
 
-  /**
-   * Show either the docviewer or the package view depending on:
-   * - docviewer: it is a documentation document
-   * - packageviewer: it is package generated documentation
-   */
+   /**
+    * Show either the docviewer or the package view depending on:
+    * - docviewer: it is a documentation document
+    * - packageviewer: it is package generated documentation
+    */
 
-  return (
-    <div id="shell" className="flex h-full flex-col">
-      <div className="w-full flex-shrink-0">
-        <DocumentationHeader isNavOpen={navIsOpen} toggleNav={toggleNav} />
+   return (
+      <div id="shell" className="flex h-full flex-col">
+         <div className="w-full flex-shrink-0">
+            <DocumentationHeader isNavOpen={navIsOpen} toggleNav={toggleNav} />
+         </div>
+         <main
+            id="main"
+            role="main"
+            className="flex h-full flex-1 overflow-y-hidden"
+         >
+            <SidebarContainer
+               menu={vm.menu}
+               navIsOpen={navIsOpen}
+               toggleNav={toggleNav}
+            />
+            <div
+               ref={wrapperElement}
+               id="wrapper"
+               data-testid="wrapper"
+               className="relative flex flex-grow flex-col items-stretch justify-start overflow-y-scroll"
+            >
+               <PackageSchemaList pkg={vm.package} overview={overview} />
+            </div>
+         </main>
       </div>
-      <main
-        id="main"
-        role="main"
-        className="flex h-full flex-1 overflow-y-hidden"
-      >
-        <SidebarContainer
-          menu={vm.menu}
-          navIsOpen={navIsOpen}
-          toggleNav={toggleNav}
-        />
-        <div
-          ref={wrapperElement}
-          id="wrapper"
-          data-testid="wrapper"
-          className="relative flex flex-grow flex-col items-stretch justify-start overflow-y-scroll"
-        >
-          <PackageSchemaList pkg={vm.package} overview={overview} />
-        </div>
-      </main>
-    </div>
-  );
+   );
 }
 
 export const getStaticPaths: GetStaticPaths = () => {
-  return {
-    paths: [
-      ...nxPackagesApi.getStaticDocumentPaths().packages.map((x) => ({
-        params: { name: x.params.segments.slice(1)[0] },
-      })),
-    ],
-    fallback: 'blocking',
-  };
+   return {
+      paths: [
+         ...nxPackagesApi.getStaticDocumentPaths().packages.map((x) => ({
+            params: { name: x.params.segments.slice(1)[0] },
+         })),
+      ],
+      fallback: 'blocking',
+   };
 };
 
 function getData(packageName: string): {
-  menu: MenuItem[];
-  overview: string;
-  pkg: ProcessedPackageMetadata;
+   menu: MenuItem[];
+   overview: string;
+   pkg: ProcessedPackageMetadata;
 } {
-  const pkg = nxPackagesApi.getPackage([packageName]);
-  const documents = new DocumentsApi({
-    id: [packageName, 'documents'].join('-'),
-    manifest: nxPackagesApi.getPackageDocuments(packageName),
-    prefix: '',
-    publicDocsRoot: 'public/documentation',
-    tagsApi,
-  });
+   const pkg = nxPackagesApi.getPackage([packageName]);
+   const documents = new DocumentsApi({
+      id: [packageName, 'documents'].join('-'),
+      manifest: nxPackagesApi.getPackageDocuments(packageName),
+      prefix: '',
+      publicDocsRoot: 'public/documentation',
+      tagsApi,
+   });
 
-  let overview = '';
-  try {
-    overview = documents.getDocument([
-      'nx-api',
-      packageName,
-      'documents',
-      'overview',
-    ])['content'];
-  } catch (e) {
-    overview = pkg.description;
-  }
+   let overview = '';
+   try {
+      overview = documents.getDocument([
+         'nx-api',
+         packageName,
+         'documents',
+         'overview',
+      ])['content'];
+   } catch (e) {
+      overview = pkg.description;
+   }
 
-  return {
-    menu: menusApi.getMenu('nx-api', 'nx-api'),
-    overview: overview,
-    pkg,
-  };
+   return {
+      menu: menusApi.getMenu('nx-api', 'nx-api'),
+      overview: overview,
+      pkg,
+   };
 }
 export async function getStaticProps({ params }: { params: { name: string } }) {
-  try {
-    return { props: getData(params.name) };
-  } catch (e) {
-    return {
-      notFound: true,
-      props: {
-        statusCode: 404,
-      },
-    };
-  }
+   try {
+      return { props: getData(params.name) };
+   } catch (e) {
+      return {
+         notFound: true,
+         props: {
+            statusCode: 404,
+         },
+      };
+   }
 }

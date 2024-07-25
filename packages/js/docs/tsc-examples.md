@@ -7,22 +7,22 @@
 
 ```json {% fileName="libs/ts-lib/project.json" %}
 {
-  "build": {
-    "executor": "@nx/js:tsc",
-    "options": {
-      "outputPath": "dist/libs/ts-lib",
-      "main": "libs/ts-lib/src/index.ts",
-      "tsConfig": "libs/ts-lib/tsconfig.lib.json",
-      "assets": ["libs/ts-lib/*.md"],
-      "transformers": [
-        "@nestjs/swagger/plugin",
-        {
-          "name": "@automapper/classes/transformer-plugin",
-          "options": {}
-        }
-      ]
-    }
-  }
+   "build": {
+      "executor": "@nx/js:tsc",
+      "options": {
+         "outputPath": "dist/libs/ts-lib",
+         "main": "libs/ts-lib/src/index.ts",
+         "tsConfig": "libs/ts-lib/tsconfig.lib.json",
+         "assets": ["libs/ts-lib/*.md"],
+         "transformers": [
+            "@nestjs/swagger/plugin",
+            {
+               "name": "@automapper/classes/transformer-plugin",
+               "options": {}
+            }
+         ]
+      }
+   }
 }
 ```
 
@@ -33,16 +33,16 @@
 
 ```json {% fileName="libs/ts-lib/project.json" %}
 {
-  "build": {
-    "executor": "@nx/js:tsc",
-    "options": {
-      "outputPath": "dist/libs/ts-lib",
-      "main": "libs/ts-lib/src/index.ts",
-      "tsConfig": "libs/ts-lib/tsconfig.lib.json",
-      "assets": ["libs/ts-lib/*.md"],
-      "external": "all"
-    }
-  }
+   "build": {
+      "executor": "@nx/js:tsc",
+      "options": {
+         "outputPath": "dist/libs/ts-lib",
+         "main": "libs/ts-lib/src/index.ts",
+         "tsConfig": "libs/ts-lib/tsconfig.lib.json",
+         "assets": ["libs/ts-lib/*.md"],
+         "external": "all"
+      }
+   }
 }
 ```
 
@@ -54,16 +54,16 @@ npx nx build ts-lib --external=all
 
 ```json {% fileName="libs/ts-lib/project.json" %}
 {
-  "build": {
-    "executor": "@nx/js:tsc",
-    "options": {
-      "outputPath": "dist/libs/ts-lib",
-      "main": "libs/ts-lib/src/index.ts",
-      "tsConfig": "libs/ts-lib/tsconfig.lib.json",
-      "assets": ["libs/ts-lib/*.md"],
-      "external": "none"
-    }
-  }
+   "build": {
+      "executor": "@nx/js:tsc",
+      "options": {
+         "outputPath": "dist/libs/ts-lib",
+         "main": "libs/ts-lib/src/index.ts",
+         "tsConfig": "libs/ts-lib/tsconfig.lib.json",
+         "assets": ["libs/ts-lib/*.md"],
+         "external": "none"
+      }
+   }
 }
 ```
 
@@ -98,16 +98,16 @@ For optimal performance, you could set the `clean` option to `false`. Otherwise,
 
 ```json {% fileName="libs/ts-lib/project.json" %}
 {
-  "build": {
-    "executor": "@nx/js:tsc",
-    "options": {
-      "outputPath": "dist/libs/ts-lib",
-      "main": "libs/ts-lib/src/index.ts",
-      "tsConfig": "libs/ts-lib/tsconfig.lib.json",
-      "assets": ["libs/ts-lib/*.md"],
-      "clean": false
-    }
-  }
+   "build": {
+      "executor": "@nx/js:tsc",
+      "options": {
+         "outputPath": "dist/libs/ts-lib",
+         "main": "libs/ts-lib/src/index.ts",
+         "tsConfig": "libs/ts-lib/tsconfig.lib.json",
+         "assets": ["libs/ts-lib/*.md"],
+         "clean": false
+      }
+   }
 }
 ```
 

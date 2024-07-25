@@ -16,9 +16,9 @@ scripts. Each project usually has a set of scripts in the `package.json`:
 
 You can make these scripts faster by leveraging Nx's [caching capabilities](/features/cache-task-results). For example:
 
-- You change some spec files: in that case the `build` task can be cached and doesn't have to re-run.
-- You update your docs, changing a couple of markdown files: then there's no need to re-run builds, tests, linting on
-  your CI. All you might want to do is trigger the Docusaurus build.
+-  You change some spec files: in that case the `build` task can be cached and doesn't have to re-run.
+-  You update your docs, changing a couple of markdown files: then there's no need to re-run builds, tests, linting on
+   your CI. All you might want to do is trigger the Docusaurus build.
 
 Additionally, Nx also [speeds up your CI ⚡](#fast-ci) with [remote caching](/ci/features/remote-cache) and [distributed task execution](/ci/features/distribute-task-execution).
 
@@ -82,22 +82,22 @@ the Nx Plugins in `nx.json`:
 
 ```json {% fileName="nx.json" %}
 {
-  "plugins": [
-    {
-      "plugin": "@nx/eslint/plugin",
-      "options": {
-        "targetName": "eslint:lint"
+   "plugins": [
+      {
+         "plugin": "@nx/eslint/plugin",
+         "options": {
+            "targetName": "eslint:lint"
+         }
+      },
+      {
+         "plugin": "@nx/next/plugin",
+         "options": {
+            "buildTargetName": "next:build",
+            "devTargetName": "dev",
+            "startTargetName": "start"
+         }
       }
-    },
-    {
-      "plugin": "@nx/next/plugin",
-      "options": {
-        "buildTargetName": "next:build",
-        "devTargetName": "dev",
-        "startTargetName": "start"
-      }
-    }
-  ]
+   ]
 }
 ```
 
@@ -115,129 +115,135 @@ nx show project my-workspace --web
 
 ```json
 {
-  "project": {
-    "name": "my-workspace",
-    "data": {
-      "root": ".",
-      "targets": {
-        "eslint:lint": {
-          "cache": true,
-          "options": {
-            "cwd": ".",
-            "command": "eslint ./src"
-          },
-          "inputs": [
-            "default",
-            "{workspaceRoot}/.eslintrc",
-            "{workspaceRoot}/tools/eslint-rules/**/*",
-            {
-              "externalDependencies": ["eslint"]
-            }
-          ],
-          "executor": "nx:run-commands",
-          "configurations": {},
-          "metadata": {
-            "technologies": ["eslint"]
-          }
-        },
-        "next:build": {
-          "options": {
-            "cwd": ".",
-            "command": "next build"
-          },
-          "dependsOn": ["^build"],
-          "cache": true,
-          "inputs": [
-            "default",
-            "^default",
-            {
-              "externalDependencies": ["next"]
-            }
-          ],
-          "outputs": ["{projectRoot}/.next", "{projectRoot}/.next/!(cache)"],
-          "executor": "nx:run-commands",
-          "configurations": {},
-          "metadata": {
-            "technologies": ["next"]
-          }
-        },
-        "dev": {
-          "options": {
-            "cwd": ".",
-            "command": "next dev"
-          },
-          "executor": "nx:run-commands",
-          "configurations": {},
-          "metadata": {
-            "technologies": ["next"]
-          }
-        },
-        "start": {
-          "options": {
-            "cwd": ".",
-            "command": "next start"
-          },
-          "dependsOn": ["build"],
-          "executor": "nx:run-commands",
-          "configurations": {},
-          "metadata": {
-            "technologies": ["next"]
-          }
-        }
-      },
-      "sourceRoot": ".",
+   "project": {
       "name": "my-workspace",
-      "projectType": "library",
-      "implicitDependencies": [],
-      "tags": []
-    }
-  },
-  "sourceMap": {
-    "root": ["package.json", "nx/core/package-json-workspaces"],
-    "targets": ["package.json", "nx/core/package-json-workspaces"],
-    "targets.eslint:lint": [".eslintrc.json", "@nx/eslint/plugin"],
-    "targets.eslint:lint.command": [".eslintrc.json", "@nx/eslint/plugin"],
-    "targets.eslint:lint.cache": [".eslintrc.json", "@nx/eslint/plugin"],
-    "targets.eslint:lint.options": [".eslintrc.json", "@nx/eslint/plugin"],
-    "targets.eslint:lint.inputs": [".eslintrc.json", "@nx/eslint/plugin"],
-    "targets.eslint:lint.options.cwd": [".eslintrc.json", "@nx/eslint/plugin"],
-    "targets.next:build": ["next.config.js", "@nx/next/plugin"],
-    "targets.next:build.command": ["next.config.js", "@nx/next/plugin"],
-    "targets.next:build.options": ["next.config.js", "@nx/next/plugin"],
-    "targets.next:build.dependsOn": ["next.config.js", "@nx/next/plugin"],
-    "targets.next:build.cache": ["next.config.js", "@nx/next/plugin"],
-    "targets.next:build.inputs": ["next.config.js", "@nx/next/plugin"],
-    "targets.next:build.outputs": ["next.config.js", "@nx/next/plugin"],
-    "targets.next:build.options.cwd": ["next.config.js", "@nx/next/plugin"],
-    "targets.dev": ["next.config.js", "@nx/next/plugin"],
-    "targets.dev.command": ["next.config.js", "@nx/next/plugin"],
-    "targets.dev.options": ["next.config.js", "@nx/next/plugin"],
-    "targets.dev.options.cwd": ["next.config.js", "@nx/next/plugin"],
-    "targets.start": ["next.config.js", "@nx/next/plugin"],
-    "targets.start.command": ["next.config.js", "@nx/next/plugin"],
-    "targets.start.options": ["next.config.js", "@nx/next/plugin"],
-    "targets.start.dependsOn": ["next.config.js", "@nx/next/plugin"],
-    "targets.start.options.cwd": ["next.config.js", "@nx/next/plugin"],
-    "sourceRoot": ["package.json", "nx/core/package-json-workspaces"],
-    "name": ["package.json", "nx/core/package-json-workspaces"],
-    "projectType": ["package.json", "nx/core/package-json-workspaces"],
-    "targets.nx-release-publish": [
-      "package.json",
-      "nx/core/package-json-workspaces"
-    ],
-    "targets.nx-release-publish.dependsOn": [
-      "package.json",
-      "nx/core/package-json-workspaces"
-    ],
-    "targets.nx-release-publish.executor": [
-      "package.json",
-      "nx/core/package-json-workspaces"
-    ],
-    "targets.nx-release-publish.options": [
-      "package.json",
-      "nx/core/package-json-workspaces"
-    ]
-  }
+      "data": {
+         "root": ".",
+         "targets": {
+            "eslint:lint": {
+               "cache": true,
+               "options": {
+                  "cwd": ".",
+                  "command": "eslint ./src"
+               },
+               "inputs": [
+                  "default",
+                  "{workspaceRoot}/.eslintrc",
+                  "{workspaceRoot}/tools/eslint-rules/**/*",
+                  {
+                     "externalDependencies": ["eslint"]
+                  }
+               ],
+               "executor": "nx:run-commands",
+               "configurations": {},
+               "metadata": {
+                  "technologies": ["eslint"]
+               }
+            },
+            "next:build": {
+               "options": {
+                  "cwd": ".",
+                  "command": "next build"
+               },
+               "dependsOn": ["^build"],
+               "cache": true,
+               "inputs": [
+                  "default",
+                  "^default",
+                  {
+                     "externalDependencies": ["next"]
+                  }
+               ],
+               "outputs": [
+                  "{projectRoot}/.next",
+                  "{projectRoot}/.next/!(cache)"
+               ],
+               "executor": "nx:run-commands",
+               "configurations": {},
+               "metadata": {
+                  "technologies": ["next"]
+               }
+            },
+            "dev": {
+               "options": {
+                  "cwd": ".",
+                  "command": "next dev"
+               },
+               "executor": "nx:run-commands",
+               "configurations": {},
+               "metadata": {
+                  "technologies": ["next"]
+               }
+            },
+            "start": {
+               "options": {
+                  "cwd": ".",
+                  "command": "next start"
+               },
+               "dependsOn": ["build"],
+               "executor": "nx:run-commands",
+               "configurations": {},
+               "metadata": {
+                  "technologies": ["next"]
+               }
+            }
+         },
+         "sourceRoot": ".",
+         "name": "my-workspace",
+         "projectType": "library",
+         "implicitDependencies": [],
+         "tags": []
+      }
+   },
+   "sourceMap": {
+      "root": ["package.json", "nx/core/package-json-workspaces"],
+      "targets": ["package.json", "nx/core/package-json-workspaces"],
+      "targets.eslint:lint": [".eslintrc.json", "@nx/eslint/plugin"],
+      "targets.eslint:lint.command": [".eslintrc.json", "@nx/eslint/plugin"],
+      "targets.eslint:lint.cache": [".eslintrc.json", "@nx/eslint/plugin"],
+      "targets.eslint:lint.options": [".eslintrc.json", "@nx/eslint/plugin"],
+      "targets.eslint:lint.inputs": [".eslintrc.json", "@nx/eslint/plugin"],
+      "targets.eslint:lint.options.cwd": [
+         ".eslintrc.json",
+         "@nx/eslint/plugin"
+      ],
+      "targets.next:build": ["next.config.js", "@nx/next/plugin"],
+      "targets.next:build.command": ["next.config.js", "@nx/next/plugin"],
+      "targets.next:build.options": ["next.config.js", "@nx/next/plugin"],
+      "targets.next:build.dependsOn": ["next.config.js", "@nx/next/plugin"],
+      "targets.next:build.cache": ["next.config.js", "@nx/next/plugin"],
+      "targets.next:build.inputs": ["next.config.js", "@nx/next/plugin"],
+      "targets.next:build.outputs": ["next.config.js", "@nx/next/plugin"],
+      "targets.next:build.options.cwd": ["next.config.js", "@nx/next/plugin"],
+      "targets.dev": ["next.config.js", "@nx/next/plugin"],
+      "targets.dev.command": ["next.config.js", "@nx/next/plugin"],
+      "targets.dev.options": ["next.config.js", "@nx/next/plugin"],
+      "targets.dev.options.cwd": ["next.config.js", "@nx/next/plugin"],
+      "targets.start": ["next.config.js", "@nx/next/plugin"],
+      "targets.start.command": ["next.config.js", "@nx/next/plugin"],
+      "targets.start.options": ["next.config.js", "@nx/next/plugin"],
+      "targets.start.dependsOn": ["next.config.js", "@nx/next/plugin"],
+      "targets.start.options.cwd": ["next.config.js", "@nx/next/plugin"],
+      "sourceRoot": ["package.json", "nx/core/package-json-workspaces"],
+      "name": ["package.json", "nx/core/package-json-workspaces"],
+      "projectType": ["package.json", "nx/core/package-json-workspaces"],
+      "targets.nx-release-publish": [
+         "package.json",
+         "nx/core/package-json-workspaces"
+      ],
+      "targets.nx-release-publish.dependsOn": [
+         "package.json",
+         "nx/core/package-json-workspaces"
+      ],
+      "targets.nx-release-publish.executor": [
+         "package.json",
+         "nx/core/package-json-workspaces"
+      ],
+      "targets.nx-release-publish.options": [
+         "package.json",
+         "nx/core/package-json-workspaces"
+      ]
+   }
 }
 ```
 
@@ -290,10 +296,10 @@ by [customizing Nx Inputs](/recipes/running-tasks/configure-inputs) for each tas
 
 This tutorial walked you through how Nx can improve the local development experience, but the biggest difference Nx makes is in CI. As repositories get bigger, making sure that the CI is fast, reliable and maintainable can get very challenging. Nx provides a solution.
 
-- Nx reduces wasted time in CI with the [`affected` command](/ci/features/affected).
-- Nx Replay's [remote caching](/ci/features/remote-cache) will reuse task artifacts from different CI executions making sure you will never run the same computation twice.
-- Nx Agents [efficiently distribute tasks across machines](/ci/concepts/parallelization-distribution) ensuring constant CI time regardless of the repository size. The right number of machines is allocated for each PR to ensure good performance without wasting compute.
-- Nx Atomizer [automatically splits](/ci/features/split-e2e-tasks) large e2e tests to distribute them across machines. Nx can also automatically [identify and rerun flaky e2e tests](/ci/features/flaky-tasks).
+-  Nx reduces wasted time in CI with the [`affected` command](/ci/features/affected).
+-  Nx Replay's [remote caching](/ci/features/remote-cache) will reuse task artifacts from different CI executions making sure you will never run the same computation twice.
+-  Nx Agents [efficiently distribute tasks across machines](/ci/concepts/parallelization-distribution) ensuring constant CI time regardless of the repository size. The right number of machines is allocated for each PR to ensure good performance without wasting compute.
+-  Nx Atomizer [automatically splits](/ci/features/split-e2e-tasks) large e2e tests to distribute them across machines. Nx can also automatically [identify and rerun flaky e2e tests](/ci/features/flaky-tasks).
 
 ### Connect to Nx Cloud {% highlightColor="green" %}
 
@@ -343,25 +349,25 @@ The key lines in the CI pipeline are:
 name: CI
 # ...
 jobs:
-  main:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      # This enables task distribution via Nx Cloud
-      # Run this command as early as possible, before dependencies are installed
-      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      # Connect your workspace by running "nx connect" and uncomment this
-      - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 20
-          cache: 'npm'
-      - run: npm ci --legacy-peer-deps
-      - uses: nrwl/nx-set-shas@v4
-      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-      - run: npx nx affected -t lint test build
+   main:
+      runs-on: ubuntu-latest
+      steps:
+         - uses: actions/checkout@v4
+           with:
+              fetch-depth: 0
+         # This enables task distribution via Nx Cloud
+         # Run this command as early as possible, before dependencies are installed
+         # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
+         # Connect your workspace by running "nx connect" and uncomment this
+         - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+         - uses: actions/setup-node@v3
+           with:
+              node-version: 20
+              cache: 'npm'
+         - run: npm ci --legacy-peer-deps
+         - uses: nrwl/nx-set-shas@v4
+         # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
+         - run: npx nx affected -t lint test build
 ```
 
 ### Open a Pull Request {% highlightColor="green" %}
@@ -384,8 +390,8 @@ The `See all runs` link goes to a page with the progress and results of tasks th
 
 For more information about how Nx can improve your CI pipeline, check out one of these detailed tutorials:
 
-- [Circle CI with Nx](/ci/intro/tutorials/circle)
-- [GitHub Actions with Nx](/ci/intro/tutorials/github-actions)
+-  [Circle CI with Nx](/ci/intro/tutorials/circle)
+-  [GitHub Actions with Nx](/ci/intro/tutorials/github-actions)
 
 ## Learn More
 

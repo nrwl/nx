@@ -12,71 +12,71 @@ import { CommandGraph } from './command-graph';
  * @returns
  */
 const recursiveResolveDeps = (
-  projectGraph: ProjectGraph,
-  projectName: string,
-  resolved: Record<string, string[]>
+   projectGraph: ProjectGraph,
+   projectName: string,
+   resolved: Record<string, string[]>
 ) => {
-  if (projectGraph.dependencies[projectName].length === 0) {
-    // no deps - no resolve
-    resolved[projectName] = [];
-    return;
-  }
-  // if already resolved - just skip
-  if (resolved[projectName]) {
-    return resolved[projectName];
-  }
+   if (projectGraph.dependencies[projectName].length === 0) {
+      // no deps - no resolve
+      resolved[projectName] = [];
+      return;
+   }
+   // if already resolved - just skip
+   if (resolved[projectName]) {
+      return resolved[projectName];
+   }
 
-  // deps string list
-  const projectDeps = [
-    ...new Set(
-      projectGraph.dependencies[projectName]
-        .map((projectDep) => projectDep.target)
-        .filter((projectDep) => projectGraph.nodes[projectDep])
-    ).values(),
-  ];
+   // deps string list
+   const projectDeps = [
+      ...new Set(
+         projectGraph.dependencies[projectName]
+            .map((projectDep) => projectDep.target)
+            .filter((projectDep) => projectGraph.nodes[projectDep])
+      ).values(),
+   ];
 
-  // define
-  resolved[projectName] = projectDeps;
-  if (projectDeps.length > 0) {
-    for (const dep of projectDeps) {
-      recursiveResolveDeps(projectGraph, dep, resolved);
-    }
-  }
+   // define
+   resolved[projectName] = projectDeps;
+   if (projectDeps.length > 0) {
+      for (const dep of projectDeps) {
+         recursiveResolveDeps(projectGraph, dep, resolved);
+      }
+   }
 };
 
 export function createCommandGraph(
-  projectGraph: ProjectGraph,
-  projectNames: string[],
-  nxArgs: NxArgs
+   projectGraph: ProjectGraph,
+   projectNames: string[],
+   nxArgs: NxArgs
 ): CommandGraph {
-  const dependencies: Record<string, string[]> = {};
-  for (const projectName of projectNames) {
-    recursiveResolveDeps(projectGraph, projectName, dependencies);
-  }
-  const roots = Object.keys(dependencies).filter(
-    (d) => dependencies[d].length === 0
-  );
-  const commandGraph = {
-    dependencies,
-    roots,
-  };
+   const dependencies: Record<string, string[]> = {};
+   for (const projectName of projectNames) {
+      recursiveResolveDeps(projectGraph, projectName, dependencies);
+   }
+   const roots = Object.keys(dependencies).filter(
+      (d) => dependencies[d].length === 0
+   );
+   const commandGraph = {
+      dependencies,
+      roots,
+   };
 
-  const cycle = findCycle(commandGraph);
-  if (cycle) {
-    if (process.env.NX_IGNORE_CYCLES === 'true' || nxArgs.nxIgnoreCycles) {
-      output.warn({
-        title: `The command graph has a circular dependency`,
-        bodyLines: [`${cycle.join(' --> ')}`],
-      });
-      makeAcyclic(commandGraph);
-    } else {
-      output.error({
-        title: `Could not execute command because the project graph has a circular dependency`,
-        bodyLines: [`${cycle.join(' --> ')}`],
-      });
-      process.exit(1);
-    }
-  }
+   const cycle = findCycle(commandGraph);
+   if (cycle) {
+      if (process.env.NX_IGNORE_CYCLES === 'true' || nxArgs.nxIgnoreCycles) {
+         output.warn({
+            title: `The command graph has a circular dependency`,
+            bodyLines: [`${cycle.join(' --> ')}`],
+         });
+         makeAcyclic(commandGraph);
+      } else {
+         output.error({
+            title: `Could not execute command because the project graph has a circular dependency`,
+            bodyLines: [`${cycle.join(' --> ')}`],
+         });
+         process.exit(1);
+      }
+   }
 
-  return commandGraph;
+   return commandGraph;
 }

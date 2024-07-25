@@ -1,4 +1,4 @@
 {
-  "extends": ["@nx/rollup"],
-  "schematics": {}
+   "extends": ["@nx/rollup"],
+   "schematics": {}
 }

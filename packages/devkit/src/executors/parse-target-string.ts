@@ -1,8 +1,8 @@
 import {
-  ExecutorContext,
-  ProjectGraph,
-  readCachedProjectGraph,
-  Target,
+   ExecutorContext,
+   ProjectGraph,
+   readCachedProjectGraph,
+   Target,
 } from 'nx/src/devkit-exports';
 import { splitByColons, splitTarget } from 'nx/src/devkit-internals';
 
@@ -22,8 +22,8 @@ export function parseTargetString(targetString: string): Target;
  * @param targetString - target reference
  */
 export function parseTargetString(
-  targetString: string,
-  projectGraph: ProjectGraph
+   targetString: string,
+   projectGraph: ProjectGraph
 ): Target;
 /**
  * Parses a target string into {project, target, configuration}. Passing a full
@@ -37,49 +37,49 @@ export function parseTargetString(
  * ```
  */
 export function parseTargetString(
-  targetString: string,
-  ctx: ExecutorContext
+   targetString: string,
+   ctx: ExecutorContext
 ): Target;
 export function parseTargetString(
-  targetString: string,
-  projectGraphOrCtx?: ProjectGraph | ExecutorContext
+   targetString: string,
+   projectGraphOrCtx?: ProjectGraph | ExecutorContext
 ): Target {
-  let projectGraph =
-    projectGraphOrCtx && 'projectGraph' in projectGraphOrCtx
-      ? projectGraphOrCtx.projectGraph
-      : (projectGraphOrCtx as ProjectGraph);
+   let projectGraph =
+      projectGraphOrCtx && 'projectGraph' in projectGraphOrCtx
+         ? projectGraphOrCtx.projectGraph
+         : (projectGraphOrCtx as ProjectGraph);
 
-  if (!projectGraph) {
-    try {
-      projectGraph = readCachedProjectGraph();
-    } catch (e) {
-      projectGraph = { nodes: {} } as any;
-    }
-  }
+   if (!projectGraph) {
+      try {
+         projectGraph = readCachedProjectGraph();
+      } catch (e) {
+         projectGraph = { nodes: {} } as any;
+      }
+   }
 
-  const [maybeProject] = splitByColons(targetString);
-  if (
-    !projectGraph.nodes[maybeProject] &&
-    projectGraphOrCtx &&
-    'projectName' in projectGraphOrCtx &&
-    maybeProject !== projectGraphOrCtx.projectName
-  ) {
-    targetString = `${projectGraphOrCtx.projectName}:${targetString}`;
-  }
+   const [maybeProject] = splitByColons(targetString);
+   if (
+      !projectGraph.nodes[maybeProject] &&
+      projectGraphOrCtx &&
+      'projectName' in projectGraphOrCtx &&
+      maybeProject !== projectGraphOrCtx.projectName
+   ) {
+      targetString = `${projectGraphOrCtx.projectName}:${targetString}`;
+   }
 
-  const [project, target, configuration] = splitTarget(
-    targetString,
-    projectGraph
-  );
+   const [project, target, configuration] = splitTarget(
+      targetString,
+      projectGraph
+   );
 
-  if (!project || !target) {
-    throw new Error(`Invalid Target String: ${targetString}`);
-  }
-  return {
-    project,
-    target,
-    configuration,
-  };
+   if (!project || !target) {
+      throw new Error(`Invalid Target String: ${targetString}`);
+   }
+   return {
+      project,
+      target,
+      configuration,
+   };
 }
 
 /**
@@ -95,11 +95,11 @@ export function parseTargetString(
  * ```
  */
 export function targetToTargetString({
-  project,
-  target,
-  configuration,
+   project,
+   target,
+   configuration,
 }: Target): string {
-  return `${project}:${target.indexOf(':') > -1 ? `"${target}"` : target}${
-    configuration !== undefined ? ':' + configuration : ''
-  }`;
+   return `${project}:${target.indexOf(':') > -1 ? `"${target}"` : target}${
+      configuration !== undefined ? ':' + configuration : ''
+   }`;
 }

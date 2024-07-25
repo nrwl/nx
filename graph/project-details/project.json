@@ -1,8 +1,8 @@
 {
-  "name": "graph-project-details",
-  "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "graph/project-details/src",
-  "projectType": "library",
-  "tags": [],
-  "targets": {}
+   "name": "graph-project-details",
+   "$schema": "../../node_modules/nx/schemas/project-schema.json",
+   "sourceRoot": "graph/project-details/src",
+   "projectType": "library",
+   "tags": [],
+   "targets": {}
 }

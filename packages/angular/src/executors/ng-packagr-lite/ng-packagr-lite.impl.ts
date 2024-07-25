@@ -1,7 +1,7 @@
 import type { ExecutorContext } from '@nx/devkit';
 import {
-  createTmpTsConfig,
-  DependentBuildableProjectNode,
+   createTmpTsConfig,
+   DependentBuildableProjectNode,
 } from '@nx/js/src/utils/buildable-libs-utils';
 import { NgPackagr } from 'ng-packagr';
 import { join, resolve } from 'path';
@@ -11,33 +11,33 @@ import { parseRemappedTsConfigAndMergeDefaults } from '../utilities/typescript';
 import { getNgPackagrInstance } from './ng-packagr-adjustments/ng-packagr';
 
 async function initializeNgPackgrLite(
-  options: BuildAngularLibraryExecutorOptions,
-  context: ExecutorContext,
-  projectDependencies: DependentBuildableProjectNode[]
+   options: BuildAngularLibraryExecutorOptions,
+   context: ExecutorContext,
+   projectDependencies: DependentBuildableProjectNode[]
 ): Promise<NgPackagr> {
-  const ngPackagr = await getNgPackagrInstance(options);
-  ngPackagr.forProject(resolve(context.root, options.project));
+   const ngPackagr = await getNgPackagrInstance(options);
+   ngPackagr.forProject(resolve(context.root, options.project));
 
-  if (options.tsConfig) {
-    const remappedTsConfigFilePath = createTmpTsConfig(
-      join(context.root, options.tsConfig),
-      context.root,
-      context.projectsConfigurations.projects[context.projectName].root,
-      projectDependencies
-    );
-    const tsConfig = await parseRemappedTsConfigAndMergeDefaults(
-      context.root,
-      options.tsConfig,
-      remappedTsConfigFilePath
-    );
-    ngPackagr.withTsConfig(tsConfig);
-  }
+   if (options.tsConfig) {
+      const remappedTsConfigFilePath = createTmpTsConfig(
+         join(context.root, options.tsConfig),
+         context.root,
+         context.projectsConfigurations.projects[context.projectName].root,
+         projectDependencies
+      );
+      const tsConfig = await parseRemappedTsConfigAndMergeDefaults(
+         context.root,
+         options.tsConfig,
+         remappedTsConfigFilePath
+      );
+      ngPackagr.withTsConfig(tsConfig);
+   }
 
-  return ngPackagr;
+   return ngPackagr;
 }
 
 export const ngPackagrLiteExecutor = createLibraryExecutor(
-  initializeNgPackgrLite
+   initializeNgPackgrLite
 );
 
 export default ngPackagrLiteExecutor;

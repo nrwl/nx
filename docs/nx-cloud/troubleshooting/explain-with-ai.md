@@ -9,9 +9,9 @@ With the power of Nx Cloud, all explanations will be provided with additional co
 
 To use the "Explain with AI" feature, you need to [enable AI features for your organization](/ci/features/nx-cloud-ai).
 
-- For enterprise on-prem customers, this feature is not enabled by default. You need to explicitly [enable AI features through environment flags](#how-to-enable-ai-features-for-enterprise-onprem-installations).
-- For public cloud users, the AI feature is enabled automatically, [except for those in the EU due to regional restrictions](#regional-availability).
-- This feature is not available for hobby (free) plans on Nx Cloud.
+-  For enterprise on-prem customers, this feature is not enabled by default. You need to explicitly [enable AI features through environment flags](#how-to-enable-ai-features-for-enterprise-onprem-installations).
+-  For public cloud users, the AI feature is enabled automatically, [except for those in the EU due to regional restrictions](#regional-availability).
+-  This feature is not available for hobby (free) plans on Nx Cloud.
 
 ## How to Use
 
@@ -21,32 +21,32 @@ If you don't see the "Explain with AI" button, make sure that you are logged int
 
 1. **Access the Task**:
 
-   - First, navigate to the Nx Cloud dashboard and locate the task that failed.
-   - Click on the task to open the detailed view.
+   -  First, navigate to the Nx Cloud dashboard and locate the task that failed.
+   -  Click on the task to open the detailed view.
 
 2. **Initiate AI Explanation**:
 
-   - Within the task details, find the "Explain with AI" button.
-   - Click on this button to start the AI analysis.
-     ![explain with ai button](/nx-cloud/troubleshooting/explain-with-ai-1.png)
+   -  Within the task details, find the "Explain with AI" button.
+   -  Click on this button to start the AI analysis.
+      ![explain with ai button](/nx-cloud/troubleshooting/explain-with-ai-1.png)
 
 3. **Review the Explanation**:
 
-   - The AI will analyze the error log with additional context from the project task and provide a detailed explanation of the failure.
-   - It will also offer suggestions on how to resolve the issue.
-     ![explain response](/nx-cloud/troubleshooting/explain-with-ai-2.png)
+   -  The AI will analyze the error log with additional context from the project task and provide a detailed explanation of the failure.
+   -  It will also offer suggestions on how to resolve the issue.
+      ![explain response](/nx-cloud/troubleshooting/explain-with-ai-2.png)
 
 4. **Implement the Suggestions**:
 
-   - Go through the AI-generated suggestions carefully.
-   - Apply the recommended changes to your codebase.
+   -  Go through the AI-generated suggestions carefully.
+   -  Apply the recommended changes to your codebase.
 
 5. **Verify the Fix**:
 
-   - After making the changes, rerun the task to see if the issue is resolved.
+   -  After making the changes, rerun the task to see if the issue is resolved.
 
 6. **Mark answer as not helpful** (optional):
-   - If the suggested changes did not help you, click on "Set answer as not helpful". This allows us to continuously improve the responses.
+   -  If the suggested changes did not help you, click on "Set answer as not helpful". This allows us to continuously improve the responses.
 
 ## How to Enable AI Features for Enterprise On-Prem Installations
 

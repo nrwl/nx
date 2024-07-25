@@ -21,20 +21,20 @@ import { Tree, formatFiles, generateFiles } from '@nx/devkit';
 import * as path from 'path';
 
 interface Schema {
-  name: string;
-  skipFormat: boolean;
+   name: string;
+   skipFormat: boolean;
 }
 
 export default async function (tree: Tree, options: Schema) {
-  generateFiles(
-    tree,
-    path.join(__dirname, 'files'),
-    path.join('tools/generators', schema.name),
-    options
-  );
-  if (!schema.skipFormat) {
-    await formatFiles(tree);
-  }
+   generateFiles(
+      tree,
+      path.join(__dirname, 'files'),
+      path.join('tools/generators', schema.name),
+      options
+   );
+   if (!schema.skipFormat) {
+      await formatFiles(tree);
+   }
 }
 ```
 
@@ -42,47 +42,47 @@ The following is an analogous generator written as an Angular Schematic.
 
 ```typescript
 import {
-  apply,
-  branchAndMerge,
-  chain,
-  mergeWith,
-  Rule,
-  template,
-  url,
-  move,
+   apply,
+   branchAndMerge,
+   chain,
+   mergeWith,
+   Rule,
+   template,
+   url,
+   move,
 } from '@angular-devkit/schematics';
 import { formatFiles } from '@nx/workspace';
 import { toFileName } from '@nx/workspace';
 
 interface Schema {
-  name: string;
-  skipFormat: boolean;
+   name: string;
+   skipFormat: boolean;
 }
 
 export default function (options: Schema): Rule {
-  const templateSource = apply(url('./files'), [
-    template({
-      dot: '.',
-      tmpl: '',
-      ...(options as any),
-    }),
-    move('tools/generators'),
-  ]);
-  return chain([
-    branchAndMerge(chain([mergeWith(templateSource)])),
-    formatFiles(options),
-  ]);
+   const templateSource = apply(url('./files'), [
+      template({
+         dot: '.',
+         tmpl: '',
+         ...(options as any),
+      }),
+      move('tools/generators'),
+   ]);
+   return chain([
+      branchAndMerge(chain([mergeWith(templateSource)])),
+      formatFiles(options),
+   ]);
 }
 ```
 
 ### Notable Differences
 
-- Nx Devkit generators do not use partial application. An Angular Schematic returns a rule that is then invoked with a tree.
-- Nx Devkit generators do not use RxJS observables. Instead, you invoke the helpers directly, which makes them more debuggable. As you step through the generator you can see the tree being updated.
-- There are more affordances for commonly used operations. For instance, `chain([mergeWith(apply(url` is replaced with `generateFiles`)
-- Nx Devkit generators return a function that performs side effects. Angular Schematics have to create a custom task runner and register a task using it.
-- Nx Devkit generators are composed as any other JS function. You do need to go through a special resolution step (`externalSchematic`) that is required when using Angular Schematics.
-- No special utilities are needed to test Nx Devkit generators. Special utilities are needed to test Angular Schematics.
+-  Nx Devkit generators do not use partial application. An Angular Schematic returns a rule that is then invoked with a tree.
+-  Nx Devkit generators do not use RxJS observables. Instead, you invoke the helpers directly, which makes them more debuggable. As you step through the generator you can see the tree being updated.
+-  There are more affordances for commonly used operations. For instance, `chain([mergeWith(apply(url` is replaced with `generateFiles`)
+-  Nx Devkit generators return a function that performs side effects. Angular Schematics have to create a custom task runner and register a task using it.
+-  Nx Devkit generators are composed as any other JS function. You do need to go through a special resolution step (`externalSchematic`) that is required when using Angular Schematics.
+-  No special utilities are needed to test Nx Devkit generators. Special utilities are needed to test Angular Schematics.
 
 ### Conversions
 
@@ -103,7 +103,7 @@ First, you need to
 
 ```typescript
 export async function mygenerator(tree: Tree, options: Schema) {
-  // ...
+   // ...
 }
 export const mygeneratorSchematic = convertNxGenerator(mygenerator);
 ```
@@ -112,21 +112,21 @@ Then, you might need to register it in the `collections.json`:
 
 ```json
 {
-  "name": "Nx React",
-  "version": "0.1",
-  "extends": ["@nx/workspace"],
-  "schematics": {
-    "mygenerator": {
-      "factory": "./src/generators/mygenerator/mygenerator#mygeneratorSchematic",
-      "schema": "./src/generators/mygenerator/schema.json"
-    }
-  },
-  "generators": {
-    "init": {
-      "factory": "./src/generators/mygenerator/mygenerator#mygenerator",
-      "schema": "./src/generators/mygenerator/schema.json"
-    }
-  }
+   "name": "Nx React",
+   "version": "0.1",
+   "extends": ["@nx/workspace"],
+   "schematics": {
+      "mygenerator": {
+         "factory": "./src/generators/mygenerator/mygenerator#mygeneratorSchematic",
+         "schema": "./src/generators/mygenerator/schema.json"
+      }
+   },
+   "generators": {
+      "init": {
+         "factory": "./src/generators/mygenerator/mygenerator#mygenerator",
+         "schema": "./src/generators/mygenerator/schema.json"
+      }
+   }
 }
 ```
 
@@ -134,12 +134,12 @@ Then, you might need to register it in the `collections.json`:
 
 ```typescript
 export const libraryGenerator = wrapAngularDevkitSchematic(
-  '@schematics/angular',
-  'library'
+   '@schematics/angular',
+   'library'
 );
 
 export async function mygenerator(tree: Tree, options: Schema) {
-  await libraryGenerator(tree, options);
+   await libraryGenerator(tree, options);
 }
 ```
 
@@ -149,20 +149,20 @@ The following is an executor written using Nx Devkit:
 
 ```typescript
 interface Schema {
-  message: string;
-  allCaps: boolean;
+   message: string;
+   allCaps: boolean;
 }
 
 export default async function (
-  options: Schema,
-  context: ExecutorContext
+   options: Schema,
+   context: ExecutorContext
 ): Promise<{ success: true }> {
-  if (options.allCaps) {
-    console.log(options.message.toUpperCase());
-  } else {
-    console.log(options.message);
-  }
-  return { success: true };
+   if (options.allCaps) {
+      console.log(options.message.toUpperCase());
+   } else {
+      console.log(options.message);
+   }
+   return { success: true };
 }
 ```
 
@@ -170,27 +170,27 @@ The following is an analogous executor written as an Angular builder:
 
 ```typescript
 interface Schema {
-  message: string;
-  allCaps: boolean;
+   message: string;
+   allCaps: boolean;
 }
 export function run(
-  options: Schema,
-  context: BuilderContext
+   options: Schema,
+   context: BuilderContext
 ): Observable<{ success: true }> {
-  if (options.allCaps) {
-    console.log(options.message.toUpperCase());
-  } else {
-    console.log(options.message);
-  }
-  return of({ success: true });
+   if (options.allCaps) {
+      console.log(options.message.toUpperCase());
+   } else {
+      console.log(options.message);
+   }
+   return of({ success: true });
 }
 export default createBuilder<NextBuildBuilderOptions>(run);
 ```
 
 ### Notable Differences
 
-- Nx Devkit executors return a Promise (or async iterable). If you want, you can always convert an observable to a promise or an async iterable.
-- Nx Devkit executors do not have to be wrapped using `createBuilder`.
+-  Nx Devkit executors return a Promise (or async iterable). If you want, you can always convert an observable to a promise or an async iterable.
+-  Nx Devkit executors do not have to be wrapped using `createBuilder`.
 
 The schema files for both Nx Devkit executors and Angular Builders are the same. Nx can run both of them in the same way.
 

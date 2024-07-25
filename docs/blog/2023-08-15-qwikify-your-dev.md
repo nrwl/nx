@@ -19,19 +19,19 @@ In this blog post, we’ll explore how to combine the strengths of Nx and Qwik t
 
 **Table of Contents**
 
-- [Creating the Workspace](#creating-the-workspace)
-- [Generate the App](#generate-the-app)
-- [Generate a new Route](#generate-a-new-route)
-- [Build a Basic UI](#build-a-basic-ui)
-- [Generate a Library](#generate-a-library)
-- [Add a Qwik Context](#add-a-qwik-context)
-- [Using the Context](#using-the-context)
-- [Adding a `routeLoader$` to load data on Navigation](#adding-a-routeloader-to-load-data-on-navigation)
-- [Handle the Form Action to add todos](#handle-the-form-action-to-add-todos)
-- [Improve the Architecture](#improve-the-architecture)
-- [Conclusion](#conclusion)
-- [Further Reading](#further-reading)
-- [Learn more](#learn-more)
+-  [Creating the Workspace](#creating-the-workspace)
+-  [Generate the App](#generate-the-app)
+-  [Generate a new Route](#generate-a-new-route)
+-  [Build a Basic UI](#build-a-basic-ui)
+-  [Generate a Library](#generate-a-library)
+-  [Add a Qwik Context](#add-a-qwik-context)
+-  [Using the Context](#using-the-context)
+-  [Adding a `routeLoader$` to load data on Navigation](#adding-a-routeloader-to-load-data-on-navigation)
+-  [Handle the Form Action to add todos](#handle-the-form-action-to-add-todos)
+-  [Improve the Architecture](#improve-the-architecture)
+-  [Conclusion](#conclusion)
+-  [Further Reading](#further-reading)
+-  [Learn more](#learn-more)
 
 You can learn more about this integration in the video below:
 
@@ -93,7 +93,7 @@ The newly created file should look like this:
 import { component$ } from '@builder.io/qwik';
 
 export default component$(() => {
-  return <div>This is the todo</div>;
+   return <div>This is the todo</div>;
 });
 ```
 
@@ -114,21 +114,21 @@ import { component$ } from '@builder.io/qwik';
 import { Form } from '@builder.io/qwik-city';
 
 export default component$(() => {
-  return (
-    <div>
-      <h1>Todos</h1>
+   return (
       <div>
-        <label>
-          <input type="checkbox" /> {'My First Todo'}
-        </label>
+         <h1>Todos</h1>
+         <div>
+            <label>
+               <input type="checkbox" /> {'My First Todo'}
+            </label>
+         </div>
+         <Form>
+            <input type="hidden" name="id" value={1} />
+            <input type="text" name="message" />
+            <button type="submit">Add</button>
+         </Form>
       </div>
-      <Form>
-        <input type="hidden" name="id" value={1} />
-        <input type="text" name="message" />
-        <button type="submit">Add</button>
-      </Form>
-    </div>
-  );
+   );
 });
 ```
 
@@ -180,8 +180,8 @@ Create `libs/data-access/src/lib/api.ts` and add the following:
 
 ```ts {% fileName="libs/data-access/src/lib/api.ts" %}
 export interface Todo {
-  id: number;
-  message: string;
+   id: number;
+   message: string;
 }
 ```
 
@@ -189,27 +189,27 @@ Next, let’s create a new file `libs/data-access/src/lib/todo.context.tsx` and 
 
 ```tsx {% fileName="libs/data-access/src/lib/todo.context.tsx" %}
 import {
-  component$,
-  createContextId,
-  Slot,
-  useContextProvider,
-  useStore,
+   component$,
+   createContextId,
+   Slot,
+   useContextProvider,
+   useStore,
 } from '@builder.io/qwik';
 import { Todo } from './api';
 
 interface TodoStore {
-  todos: Todo[];
-  lastId: number;
+   todos: Todo[];
+   lastId: number;
 }
 
 export const TodoContext = createContextId<TodoStore>('todo.context');
 export const TodoContextProvider = component$(() => {
-  const todoStore = useStore<TodoStore>({
-    todos: [],
-    lastId: 0,
-  });
-  useContextProvider(TodoContext, todoStore);
-  return <Slot />;
+   const todoStore = useStore<TodoStore>({
+      todos: [],
+      lastId: 0,
+   });
+   useContextProvider(TodoContext, todoStore);
+   return <Slot />;
 });
 ```
 
@@ -226,37 +226,37 @@ Let’s update the root page to add our Context Provider. Open `apps/todo/src/ro
 ```tsx {% fileName="apps/todo/src/root.tsx" %}
 import { component$, useStyles$ } from '@builder.io/qwik';
 import {
-  QwikCityProvider,
-  RouterOutlet,
-  ServiceWorkerRegister,
+   QwikCityProvider,
+   RouterOutlet,
+   ServiceWorkerRegister,
 } from '@builder.io/qwik-city';
 import { RouterHead } from './components/router-head/router-head';
 import globalStyles from './global.css?inline';
 import { TodoContextProvider } from '@qwik-todo-app/data-access';
 
 export default component$(() => {
-  /**
-   * The root of a QwikCity site always start with the <QwikCityProvider> component,
-   * immediately followed by the document's <head> and <body>.
-   *
-   * Don't remove the `<head>` and `<body>` elements.
-   */
-  useStyles$(globalStyles);
-  return (
-    <QwikCityProvider>
-      <TodoContextProvider>
-        <head>
-          <meta charSet="utf-8" />
-          <link rel="manifest" href="/manifest.json" />
-          <RouterHead />
-        </head>
-        <body lang="en">
-          <RouterOutlet />
-          <ServiceWorkerRegister />
-        </body>
-      </TodoContextProvider>
-    </QwikCityProvider>
-  );
+   /**
+    * The root of a QwikCity site always start with the <QwikCityProvider> component,
+    * immediately followed by the document's <head> and <body>.
+    *
+    * Don't remove the `<head>` and `<body>` elements.
+    */
+   useStyles$(globalStyles);
+   return (
+      <QwikCityProvider>
+         <TodoContextProvider>
+            <head>
+               <meta charSet="utf-8" />
+               <link rel="manifest" href="/manifest.json" />
+               <RouterHead />
+            </head>
+            <body lang="en">
+               <RouterOutlet />
+               <ServiceWorkerRegister />
+            </body>
+         </TodoContextProvider>
+      </QwikCityProvider>
+   );
 });
 ```
 
@@ -277,24 +277,24 @@ import { Form } from '@builder.io/qwik-city';
 import { TodoContext } from '@qwik-todo-app/data-access';
 
 export default component$(() => {
-  const todoStore = useContext(TodoContext);
-  return (
-    <div>
-      <h1>Todos</h1>
-      {todoStore.todos.map((t) => (
-        <div key={`todo-${t.id}`}>
-          <label>
-            <input type="checkbox" /> {t.message}
-          </label>
-        </div>
-      ))}
-      <Form>
-        <input type="hidden" name="id" value={1} />
-        <input type="text" name="message" />
-        <button type="submit">Add</button>
-      </Form>
-    </div>
-  );
+   const todoStore = useContext(TodoContext);
+   return (
+      <div>
+         <h1>Todos</h1>
+         {todoStore.todos.map((t) => (
+            <div key={`todo-${t.id}`}>
+               <label>
+                  <input type="checkbox" /> {t.message}
+               </label>
+            </div>
+         ))}
+         <Form>
+            <input type="hidden" name="id" value={1} />
+            <input type="text" name="message" />
+            <button type="submit">Add</button>
+         </Form>
+      </div>
+   );
 });
 ```
 
@@ -314,37 +314,37 @@ We’ll start by updating our `libs/data-access/src/lib/api.ts` to add our in-me
 
 ```ts {% fileName="libs/data-access/src/lib/api.ts" %}
 export interface Todo {
-  id: number;
-  message: string;
+   id: number;
+   message: string;
 }
 
 interface DB {
-  store: Record<string, any[]>;
-  get: (storeName: string) => any[];
-  set: (storeName: string, value: any[]) => boolean;
-  add: (storeName: string, value: any) => boolean;
+   store: Record<string, any[]>;
+   get: (storeName: string) => any[];
+   set: (storeName: string, value: any[]) => boolean;
+   add: (storeName: string, value: any) => boolean;
 }
 export const db: DB = {
-  store: { todos: [] },
-  get(storeName) {
-    return db.store[storeName];
-  },
-  set(storeName, value) {
-    try {
-      db.store[storeName] = value;
-      return true;
-    } catch (e) {
-      return false;
-    }
-  },
-  add(storeName, value) {
-    try {
-      db.store[storeName].push(value);
-      return true;
-    } catch (e) {
-      return false;
-    }
-  },
+   store: { todos: [] },
+   get(storeName) {
+      return db.store[storeName];
+   },
+   set(storeName, value) {
+      try {
+         db.store[storeName] = value;
+         return true;
+      } catch (e) {
+         return false;
+      }
+   },
+   add(storeName, value) {
+      try {
+         db.store[storeName].push(value);
+         return true;
+      } catch (e) {
+         return false;
+      }
+   },
 };
 ```
 
@@ -358,51 +358,51 @@ import { Form, routeLoader$ } from '@builder.io/qwik-city';
 import { TodoContext, db } from '@qwik-todo-app/data-access';
 
 export const useGetTodos = routeLoader$(() => {
-  // A network request or db connection could be made here to fetch persisted todos
-  // For illustrative purposes, we're going to seed a rudimentary in-memory DB if it hasn't been already
-  // Then return the value from it
-  if (db.get('todos')?.length === 0) {
-    db.set('todos', [
-      {
-        id: 1,
-        message: 'First todo',
-      },
-    ]);
-  }
-  const todos: Todo[] = db.get('todos');
-  const lastId = [...todos].sort((a, b) => b.id - a.id)[0].id;
-  return { todos, lastId };
+   // A network request or db connection could be made here to fetch persisted todos
+   // For illustrative purposes, we're going to seed a rudimentary in-memory DB if it hasn't been already
+   // Then return the value from it
+   if (db.get('todos')?.length === 0) {
+      db.set('todos', [
+         {
+            id: 1,
+            message: 'First todo',
+         },
+      ]);
+   }
+   const todos: Todo[] = db.get('todos');
+   const lastId = [...todos].sort((a, b) => b.id - a.id)[0].id;
+   return { todos, lastId };
 });
 export default component$(() => {
-  const todoStore = useContext(TodoContext);
-  const persistedTodos = useGetTodos();
-  useTask$(({ track }) => {
-    track(() => persistedTodos.value);
-    if (persistedTodos.value) {
-      todoStore.todos = persistedTodos.value.todos;
-      todoStore.lastId =
-        todoStore.lastId > persistedTodos.value.lastId
-          ? todoStore.lastId
-          : persistedTodos.value.lastId;
-    }
-  });
-  return (
-    <div>
-      <h1>Todos</h1>
-      {todoStore.todos.map((t) => (
-        <div key={`todo-${t.id}`}>
-          <label>
-            <input type="checkbox" /> {t.message}
-          </label>
-        </div>
-      ))}
-      <Form>
-        <input type="hidden" name="id" value={1} />
-        <input type="text" name="message" />
-        <button type="submit">Add</button>
-      </Form>
-    </div>
-  );
+   const todoStore = useContext(TodoContext);
+   const persistedTodos = useGetTodos();
+   useTask$(({ track }) => {
+      track(() => persistedTodos.value);
+      if (persistedTodos.value) {
+         todoStore.todos = persistedTodos.value.todos;
+         todoStore.lastId =
+            todoStore.lastId > persistedTodos.value.lastId
+               ? todoStore.lastId
+               : persistedTodos.value.lastId;
+      }
+   });
+   return (
+      <div>
+         <h1>Todos</h1>
+         {todoStore.todos.map((t) => (
+            <div key={`todo-${t.id}`}>
+               <label>
+                  <input type="checkbox" /> {t.message}
+               </label>
+            </div>
+         ))}
+         <Form>
+            <input type="hidden" name="id" value={1} />
+            <input type="text" name="message" />
+            <button type="submit">Add</button>
+         </Form>
+      </div>
+   );
 });
 ```
 
@@ -422,64 +422,64 @@ import { Form, routeLoader$ } from '@builder.io/qwik-city';
 import { TodoContext, db } from '@qwik-todo-app/data-access';
 
 export const useGetTodos = routeLoader$(() => {
-  // A network request or db connection could be made here to fetch persisted todos
-  // For illustrative purposes, we're going to seed a rudimentary in-memory DB if it hasn't been already
-  // Then return the value from it
-  if (db.get('todos')?.length === 0) {
-    db.set('todos', [
-      {
-        id: 1,
-        message: 'First todo',
-      },
-    ]);
-  }
-  const todos: Todo[] = db.get('todos');
-  const lastId = [...todos].sort((a, b) => b.id - a.id)[0].id;
-  return { todos, lastId };
+   // A network request or db connection could be made here to fetch persisted todos
+   // For illustrative purposes, we're going to seed a rudimentary in-memory DB if it hasn't been already
+   // Then return the value from it
+   if (db.get('todos')?.length === 0) {
+      db.set('todos', [
+         {
+            id: 1,
+            message: 'First todo',
+         },
+      ]);
+   }
+   const todos: Todo[] = db.get('todos');
+   const lastId = [...todos].sort((a, b) => b.id - a.id)[0].id;
+   return { todos, lastId };
 });
 export const useAddTodo = routeAction$(
-  (todo: { id: string; message: string }) => {
-    const success = db.add('todos', {
-      id: parseInt(todo.id),
-      message: todo.message,
-    });
-    return { success };
-  },
-  zod$({ id: z.string(), message: z.string() })
+   (todo: { id: string; message: string }) => {
+      const success = db.add('todos', {
+         id: parseInt(todo.id),
+         message: todo.message,
+      });
+      return { success };
+   },
+   zod$({ id: z.string(), message: z.string() })
 );
 export default component$(() => {
-  const todoStore = useContext(TodoContext);
-  const persistedTodos = useGetTodos();
-  const addTodoAction = useAddTodo();
+   const todoStore = useContext(TodoContext);
+   const persistedTodos = useGetTodos();
+   const addTodoAction = useAddTodo();
 
-  useTask$(({ track }) => {
-    track(() => persistedTodos.value);
-    if (persistedTodos.value) {
-      todoStore.todos = persistedTodos.value.todos;
-      todoStore.lastId =
-        todoStore.lastId > persistedTodos.value.lastId
-          ? todoStore.lastId
-          : persistedTodos.value.lastId;
-    }
-  });
-  return (
-    <div>
-      <h1>Todos</h1>
-      {todoStore.todos.map((t) => (
-        <div key={`todo-${t.id}`}>
-          <label>
-            <input type="checkbox" /> {t.message}
-          </label>
-        </div>
-      ))}
-      <Form action={addTodoAction}>
-        <input type="hidden" name="id" value={todoStore.lastId + 1} />
-        <input type="text" name="message" />
-        <button type="submit">Add</button>
-      </Form>
-      {addTodoAction.value?.success && <p>Todo added!</p>}
-    </div>
-  );
+   useTask$(({ track }) => {
+      track(() => persistedTodos.value);
+      if (persistedTodos.value) {
+         todoStore.todos = persistedTodos.value.todos;
+         todoStore.lastId =
+            todoStore.lastId > persistedTodos.value.lastId
+               ? todoStore.lastId
+               : persistedTodos.value.lastId;
+      }
+   });
+   return (
+      <div>
+         <h1>Todos</h1>
+         {todoStore.todos.map((t) => (
+            <div key={`todo-${t.id}`}>
+               <label>
+                  <input type="checkbox" /> {t.message}
+               </label>
+            </div>
+         ))}
+         <Form action={addTodoAction}>
+            <input type="hidden" name="id" value={todoStore.lastId + 1} />
+            <input type="text" name="message" />
+            <button type="submit">Add</button>
+         </Form>
+         {addTodoAction.value?.success && <p>Todo added!</p>}
+      </div>
+   );
 });
 ```
 
@@ -495,27 +495,27 @@ To separate the logic, create a new file `libs/data-access/src/lib/todos.ts` and
 import { db, Todo } from './api';
 
 export function getTodos() {
-  // A network request or db connection could be made here to fetch persisted todos
-  // For illustrative purposes, we're going to seed a rudimentary in-memory DB if it hasn't been already
-  // Then return the value from it
-  if (db.get('todos')?.length === 0) {
-    db.set('todos', [
-      {
-        id: 1,
-        message: 'First todo',
-      },
-    ]);
-  }
-  const todos: Todo[] = db.get('todos');
-  const lastId = [...todos].sort((a, b) => b.id - a.id)[0].id;
-  return { todos, lastId };
+   // A network request or db connection could be made here to fetch persisted todos
+   // For illustrative purposes, we're going to seed a rudimentary in-memory DB if it hasn't been already
+   // Then return the value from it
+   if (db.get('todos')?.length === 0) {
+      db.set('todos', [
+         {
+            id: 1,
+            message: 'First todo',
+         },
+      ]);
+   }
+   const todos: Todo[] = db.get('todos');
+   const lastId = [...todos].sort((a, b) => b.id - a.id)[0].id;
+   return { todos, lastId };
 }
 export function addTodo(todo: { id: string; message: string }) {
-  const success = db.add('todos', {
-    id: parseInt(todo.id),
-    message: todo.message,
-  });
-  return { success };
+   const success = db.add('todos', {
+      id: parseInt(todo.id),
+      message: todo.message,
+   });
+   return { success };
 }
 ```
 
@@ -532,51 +532,51 @@ Finally, let’s update `apps/todo/src/routes/todo/index.tsx` to use our newly c
 ```tsx {% fileName="apps/todo/src/routes/todo/index.tsx" %}
 import { component$, useContext, useTask$ } from '@builder.io/qwik';
 import {
-  Form,
-  routeAction$,
-  routeLoader$,
-  z,
-  zod$,
+   Form,
+   routeAction$,
+   routeLoader$,
+   z,
+   zod$,
 } from '@builder.io/qwik-city';
 import { addTodo, getTodos, TodoContext } from '@acme/data-access';
 
 export const useGetTodos = routeLoader$(() => getTodos());
 export const useAddTodo = routeAction$(
-  (todo) => addTodo(todo),
-  zod$({ id: z.string(), message: z.string() })
+   (todo) => addTodo(todo),
+   zod$({ id: z.string(), message: z.string() })
 );
 export default component$(() => {
-  const todoStore = useContext(TodoContext);
-  const persistedTodos = useGetTodos();
-  const addTodoAction = useAddTodo();
-  useTask$(({ track }) => {
-    track(() => persistedTodos.value);
-    if (persistedTodos.value) {
-      todoStore.todos = persistedTodos.value.todos;
-      todoStore.lastId =
-        todoStore.lastId > persistedTodos.value.lastId
-          ? todoStore.lastId
-          : persistedTodos.value.lastId;
-    }
-  });
-  return (
-    <div>
-      <h1>Todos</h1>
-      {todoStore.todos.map((t) => (
-        <div key={`todo-${t.id}`}>
-          <label>
-            <input type="checkbox" /> {t.message}
-          </label>
-        </div>
-      ))}
-      <Form action={addTodoAction}>
-        <input type="hidden" name="id" value={todoStore.lastId + 1} />
-        <input type="text" name="message" />
-        <button type="submit">Add</button>
-      </Form>
-      {addTodoAction.value?.success && <p>Todo added!</p>}
-    </div>
-  );
+   const todoStore = useContext(TodoContext);
+   const persistedTodos = useGetTodos();
+   const addTodoAction = useAddTodo();
+   useTask$(({ track }) => {
+      track(() => persistedTodos.value);
+      if (persistedTodos.value) {
+         todoStore.todos = persistedTodos.value.todos;
+         todoStore.lastId =
+            todoStore.lastId > persistedTodos.value.lastId
+               ? todoStore.lastId
+               : persistedTodos.value.lastId;
+      }
+   });
+   return (
+      <div>
+         <h1>Todos</h1>
+         {todoStore.todos.map((t) => (
+            <div key={`todo-${t.id}`}>
+               <label>
+                  <input type="checkbox" /> {t.message}
+               </label>
+            </div>
+         ))}
+         <Form action={addTodoAction}>
+            <input type="hidden" name="id" value={todoStore.lastId + 1} />
+            <input type="text" name="message" />
+            <button type="submit">Add</button>
+         </Form>
+         {addTodoAction.value?.success && <p>Todo added!</p>}
+      </div>
+   );
 });
 ```
 
@@ -594,18 +594,18 @@ This journey through Qwik and Nx demonstrates how thoughtful architecture and th
 
 ## Further Reading
 
-- [Qwik](https://qwik.dev/)
-- [qwik-nx](https://github.com/qwikifiers/qwik-nx)
-- [Enforce Module Boundaries](/features/enforce-module-boundaries)
-- [Nx Core Concepts](/concepts)
+-  [Qwik](https://qwik.dev/)
+-  [qwik-nx](https://github.com/qwikifiers/qwik-nx)
+-  [Enforce Module Boundaries](/features/enforce-module-boundaries)
+-  [Nx Core Concepts](/concepts)
 
 ---
 
 ## Learn more
 
-- [Nx Docs](/getting-started/intro)
-- [X/Twitter](https://twitter.com/nxdevtools) -- [LinkedIn](https://www.linkedin.com/company/nrwl/)
-- [Nx GitHub](https://github.com/nrwl/nx)
-- [Nx Official Discord Server](https://go.nx.dev/community)
-- [Nx Youtube Channel](https://www.youtube.com/@nxdevtools)
-- [Speed up your CI](https://nx.app/)
+-  [Nx Docs](/getting-started/intro)
+-  [X/Twitter](https://twitter.com/nxdevtools) -- [LinkedIn](https://www.linkedin.com/company/nrwl/)
+-  [Nx GitHub](https://github.com/nrwl/nx)
+-  [Nx Official Discord Server](https://go.nx.dev/community)
+-  [Nx Youtube Channel](https://www.youtube.com/@nxdevtools)
+-  [Speed up your CI](https://nx.app/)

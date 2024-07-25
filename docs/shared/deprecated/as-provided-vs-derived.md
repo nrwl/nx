@@ -6,9 +6,9 @@ In the past, Nx had lots of logic to try and _derive_ the best place to put code
 
 Here are some of the issues with the `derived` behavior that are addressed with `as-provided`:
 
-- Some generators had multiple flags for the same thing: `directory`, `path`, etc. Going forward, we only use `--directory` across all generators.
-- Generators resolved the directory option inconsistently. Some resolved it relative to the workspace root while others resolved it relative to the project's source root. In the future, all generators will resolve the directory option relative to the current working directory. As such, your terminal's path autocomplete will work as expected and you can also `cd` right into the directory you want.
-- Nx transformed the provided names to `kebab-case`. In the future, the name will be taken as provided. This allows for users to deviate from the `kebab-case` directory structure. Nx also included the directory in the project name, which lead to verbose names such as `products-product-detail-page`. Now that Nx takes options as provided, names will be as simple as you would like. You can keep it simple for feature projects (.e.g. `home-page`), or name libraries based on their import path like `@my-org/design-system/buttons`. You can do a mix of both, or deviate from this completely. Note that projects still need to have unique names so you might encounter an error when the name you provide is not valid, but you can resolve the conflict however suits your workspace best.
+-  Some generators had multiple flags for the same thing: `directory`, `path`, etc. Going forward, we only use `--directory` across all generators.
+-  Generators resolved the directory option inconsistently. Some resolved it relative to the workspace root while others resolved it relative to the project's source root. In the future, all generators will resolve the directory option relative to the current working directory. As such, your terminal's path autocomplete will work as expected and you can also `cd` right into the directory you want.
+-  Nx transformed the provided names to `kebab-case`. In the future, the name will be taken as provided. This allows for users to deviate from the `kebab-case` directory structure. Nx also included the directory in the project name, which lead to verbose names such as `products-product-detail-page`. Now that Nx takes options as provided, names will be as simple as you would like. You can keep it simple for feature projects (.e.g. `home-page`), or name libraries based on their import path like `@my-org/design-system/buttons`. You can do a mix of both, or deviate from this completely. Note that projects still need to have unique names so you might encounter an error when the name you provide is not valid, but you can resolve the conflict however suits your workspace best.
 
 ## Using Nx Console
 
@@ -37,8 +37,8 @@ NX  Generating @nx/node:library
 
 There are two different kinds of generators that will prompt you to choose between `as-provided` and `derived`:
 
-- Project Generators (applications and libraries)
-- Other Code Generators (components and other code)
+-  Project Generators (applications and libraries)
+-  Other Code Generators (components and other code)
 
 Your intent is your intent. However, the commands you write and run are based on how you think Nx will act. Nx used to derive the location of your code, but Nx will not in the future. In the future for the reasons stated above, Nx will _only_ take options as provided so you should no longer expect Nx to derive the location. We know it will take time to get used to the new way Nx calculates generated code paths and names.
 
@@ -50,11 +50,11 @@ As of Nx 16.8.0, generating a project will prompt you to choose how Nx will calc
 
 This setting makes app or lib generators behave in the following way:
 
-- `nx g app my-app` creates a new application named `my-app` in the `/my-app` folder
-- `nx g lib my-lib` creates a new library named `my-lib` in the `/my-lib` folder
-- `cd apps/nested/my-app && nx g app my-app` creates a new application named `my-app` in the `/apps/nested/my-app` folder
-- `nx g app my-app --directory=apps/nested/my-app` creates a new application named `my-app` in the `/apps/nested/my-app` folder
-- `nx g lib my-lib --directory=libs/shared/ui/my-lib` creates a new library named `my-lib` in the `/libs/shared/ui/my-lib` folder
+-  `nx g app my-app` creates a new application named `my-app` in the `/my-app` folder
+-  `nx g lib my-lib` creates a new library named `my-lib` in the `/my-lib` folder
+-  `cd apps/nested/my-app && nx g app my-app` creates a new application named `my-app` in the `/apps/nested/my-app` folder
+-  `nx g app my-app --directory=apps/nested/my-app` creates a new application named `my-app` in the `/apps/nested/my-app` folder
+-  `nx g lib my-lib --directory=libs/shared/ui/my-lib` creates a new library named `my-lib` in the `/libs/shared/ui/my-lib` folder
 
 ### Use the Old `derived` Paths and Names
 
@@ -62,10 +62,10 @@ Choosing `derived` makes Nx behave the way it did before version 16.8.0. Nx will
 
 ```json
 {
-  "workspaceLayout": {
-    "appsDir": "demos",
-    "libsDir": "packages"
-  }
+   "workspaceLayout": {
+      "appsDir": "demos",
+      "libsDir": "packages"
+   }
 }
 ```
 
@@ -74,10 +74,10 @@ workspace root.
 
 This makes app or lib generators behave in the following way:
 
-- `nx g app my-app` creates a new application named `my-app` in the `/demos/my-app` folder
-- `nx g lib my-lib` creates a new library named `my-lib` in the `/packages/my-lib` folder
-- `nx g app my-app --directory=nested` creates a new application named `nested-my-app` in the `/demos/nested/my-app` folder
-- `nx g lib my-lib --directory=shared/ui` creates a new library named `shared-ui-my-lib` in the `/packages/shared/ui/my-lib` folder
+-  `nx g app my-app` creates a new application named `my-app` in the `/demos/my-app` folder
+-  `nx g lib my-lib` creates a new library named `my-lib` in the `/packages/my-lib` folder
+-  `nx g app my-app --directory=nested` creates a new application named `nested-my-app` in the `/demos/nested/my-app` folder
+-  `nx g lib my-lib --directory=shared/ui` creates a new library named `shared-ui-my-lib` in the `/packages/shared/ui/my-lib` folder
 
 If you accidentally generate a project in the wrong folder, use the [move generator](/nx-api/workspace/generators/move) to move it to the correct location.
 
@@ -89,10 +89,10 @@ As of Nx 17, code generators such as `component`, `service`, and others will pro
 
 This setting makes generators behave in the following way:
 
-- `nx g component my-component` creates a component in the root.
-- `cd apps/nested/my-app && nx g component my-component` creates a new component named `my-component` in the `/apps/nested/my-app` folder
-- `nx g component my-component --directory=apps/nested/my-app` creates a new component named `my-component` in the `/apps/nested/my-app` folder
-- `nx g component apps/nested/my-app/my-component` creates a new component named `my-component` in the `/apps/nested/my-app` folder
+-  `nx g component my-component` creates a component in the root.
+-  `cd apps/nested/my-app && nx g component my-component` creates a new component named `my-component` in the `/apps/nested/my-app` folder
+-  `nx g component my-component --directory=apps/nested/my-app` creates a new component named `my-component` in the `/apps/nested/my-app` folder
+-  `nx g component apps/nested/my-app/my-component` creates a new component named `my-component` in the `/apps/nested/my-app` folder
 
 {% callout type="note" title="Must generate inside a project" %}
 If the directory specified is not inside a project, an error will be thrown.
@@ -104,9 +104,9 @@ Choosing `derived` makes Nx behave the way it did before version 17. Nx will use
 
 This makes generators behave in the following way:
 
-- `nx g component my-component` creates a component in the default project.
-- `nx g component my-component --project=my-app` creates a new component named `my-component` in the `/apps/nested/my-app` folder
-- `nx g component apps/nested/my-app/my-component` creates a new component named `my-component` in the `/apps/nested/my-app` folder
+-  `nx g component my-component` creates a component in the default project.
+-  `nx g component my-component --project=my-app` creates a new component named `my-component` in the `/apps/nested/my-app` folder
+-  `nx g component apps/nested/my-app/my-component` creates a new component named `my-component` in the `/apps/nested/my-app` folder
 
 ## Writing Scripts
 

@@ -1,12 +1,12 @@
 ---
 title: 'run - CLI command'
 description: 'Run a target for a project
-  (e.g., nx run myapp:serve:production).
+   (e.g., nx run myapp:serve:production).
 
-  You can also use the infix notation to run a target:
-  (e.g., nx serve myapp --configuration=production)
+   You can also use the infix notation to run a target:
+   (e.g., nx serve myapp --configuration=production)
 
-  You can skip the use of Nx cache by using the --skip-nx-cache option.'
+   You can skip the use of Nx cache by using the --skip-nx-cache option.'
 ---
 
 # run

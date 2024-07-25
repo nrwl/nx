@@ -1,4 +1,4 @@
 {
-  "extends": ["@nx/storybook"],
-  "schematics": {}
+   "extends": ["@nx/storybook"],
+   "schematics": {}
 }

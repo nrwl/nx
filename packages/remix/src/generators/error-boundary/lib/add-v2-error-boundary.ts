@@ -4,13 +4,13 @@ import { insertStatementAfterImports } from '../../../utils/insert-statement-aft
 import type { ErrorBoundarySchema } from '../schema';
 
 export function addV2ErrorBoundary(tree: Tree, options: ErrorBoundarySchema) {
-  insertImport(tree, options.path, `useRouteError`, '@remix-run/react');
-  insertImport(tree, options.path, `isRouteErrorResponse`, '@remix-run/react');
+   insertImport(tree, options.path, `useRouteError`, '@remix-run/react');
+   insertImport(tree, options.path, `isRouteErrorResponse`, '@remix-run/react');
 
-  insertStatementAfterImports(
-    tree,
-    options.path,
-    stripIndents`
+   insertStatementAfterImports(
+      tree,
+      options.path,
+      stripIndents`
     export function ErrorBoundary() {
         const error = useRouteError();
 
@@ -37,5 +37,5 @@ export function addV2ErrorBoundary(tree: Tree, options: ErrorBoundarySchema) {
         }
     }
   `
-  );
+   );
 }

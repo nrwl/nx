@@ -9,10 +9,10 @@ The Nx plugin for [Vite](https://vitejs.dev/) and [Vitest](https://vitest.dev/).
 
 Why should you use this plugin?
 
-- Instant dev server start
-- Lightning fast Hot-Module Reloading
-- _Fast_ builds using Vite.
-- Vite-powered tests with smart and instant watch mode
+-  Instant dev server start
+-  Lightning fast Hot-Module Reloading
+-  _Fast_ builds using Vite.
+-  Vite-powered tests with smart and instant watch mode
 
 Read more about Vite and Vitest in the [Vite documentation](https://vitejs.dev/).
 
@@ -51,18 +51,18 @@ This will install the correct version of `@nx/vite`.
 
 The `@nx/vite` plugin will create a task for any project that has a Vite configuration file present. Any of the following files will be recognized as a Vite configuration file:
 
-- `vite.config.js`
-- `vite.config.ts`
-- `vite.config.mjs`
-- `vite.config.mts`
-- `vite.config.cjs`
-- `vite.config.cts`
-- `vitest.config.js`
-- `vitest.config.ts`
-- `vitest.config.mjs`
-- `vitest.config.mts`
-- `vitest.config.cjs`
-- `vitest.config.cts`
+-  `vite.config.js`
+-  `vite.config.ts`
+-  `vite.config.mjs`
+-  `vite.config.mts`
+-  `vite.config.cjs`
+-  `vite.config.cts`
+-  `vitest.config.js`
+-  `vitest.config.ts`
+-  `vitest.config.mjs`
+-  `vitest.config.mts`
+-  `vitest.config.cjs`
+-  `vitest.config.cts`
 
 ### View Inferred Tasks
 
@@ -74,18 +74,18 @@ The `@nx/vite/plugin` is configured in the `plugins` array in `nx.json`.
 
 ```json {% fileName="nx.json" %}
 {
-  "plugins": [
-    {
-      "plugin": "@nx/vite/plugin",
-      "options": {
-        "buildTargetName": "build",
-        "previewTargetName": "preview",
-        "testTargetName": "test",
-        "serveTargetName": "serve",
-        "serveStaticTargetName": "serve-static"
+   "plugins": [
+      {
+         "plugin": "@nx/vite/plugin",
+         "options": {
+            "buildTargetName": "build",
+            "previewTargetName": "preview",
+            "testTargetName": "test",
+            "serveTargetName": "serve",
+            "serveStaticTargetName": "serve-static"
+         }
       }
-    }
-  ]
+   ]
 }
 ```
 

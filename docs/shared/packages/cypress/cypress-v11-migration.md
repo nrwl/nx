@@ -13,8 +13,8 @@ nx g @nx/cypress:migrate-to-cypress-11
 In general, these are the steps taken to migrate your project:
 
 1. Migrates your existing `cypress.json` configuration to a new `cypress.config.ts` configuration file.
-   - The `pluginsFile` option has been replaced for `setupNodeEvents`. We will import the file and add it to
-     the `setupNodeEvents` config option. Double-check your plugins are working correctly.
+   -  The `pluginsFile` option has been replaced for `setupNodeEvents`. We will import the file and add it to
+      the `setupNodeEvents` config option. Double-check your plugins are working correctly.
 2. Rename all test files from `.spec.ts` to `.cy.ts`
 3. Rename the `support/index.ts` to `support/e2e.ts` and update any associated imports
 4. Rename the `integrations` folder to the `e2e` folder

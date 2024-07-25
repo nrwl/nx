@@ -8,67 +8,67 @@ Imagine the following project graph with these projects:
 
 ```json
 {
-  "projects": [
-    {
-      "type": "lib",
-      "name": "main-lib",
-      "data": {
-        "tags": []
-      }
-    },
-    {
-      "type": "lib",
-      "name": "lib",
-      "data": {
-        "tags": []
-      }
-    },
-    {
-      "type": "lib",
-      "name": "lib2",
-      "data": {
-        "tags": []
-      }
-    },
-    {
-      "type": "lib",
-      "name": "lib3",
-      "data": {
-        "tags": []
-      }
-    }
-  ],
-  "groupByFolder": false,
-  "dependencies": {
-    "main-lib": [
+   "projects": [
       {
-        "target": "lib",
-        "source": "main-lib",
-        "type": "direct"
+         "type": "lib",
+         "name": "main-lib",
+         "data": {
+            "tags": []
+         }
       },
       {
-        "target": "lib2",
-        "source": "main-lib",
-        "type": "direct"
+         "type": "lib",
+         "name": "lib",
+         "data": {
+            "tags": []
+         }
       },
       {
-        "target": "lib3",
-        "source": "main-lib",
-        "type": "direct"
+         "type": "lib",
+         "name": "lib2",
+         "data": {
+            "tags": []
+         }
+      },
+      {
+         "type": "lib",
+         "name": "lib3",
+         "data": {
+            "tags": []
+         }
       }
-    ],
-    "lib": [],
-    "lib2": [],
-    "lib3": []
-  },
-  "workspaceLayout": {
-    "appsDir": "apps",
-    "libsDir": "libs"
-  },
-  "affectedProjectIds": [],
-  "focus": null,
-  "groupByFolder": false,
-  "exclude": []
+   ],
+   "groupByFolder": false,
+   "dependencies": {
+      "main-lib": [
+         {
+            "target": "lib",
+            "source": "main-lib",
+            "type": "direct"
+         },
+         {
+            "target": "lib2",
+            "source": "main-lib",
+            "type": "direct"
+         },
+         {
+            "target": "lib3",
+            "source": "main-lib",
+            "type": "direct"
+         }
+      ],
+      "lib": [],
+      "lib2": [],
+      "lib3": []
+   },
+   "workspaceLayout": {
+      "appsDir": "apps",
+      "libsDir": "libs"
+   },
+   "affectedProjectIds": [],
+   "focus": null,
+   "groupByFolder": false,
+   "exclude": []
 }
 ```
 
@@ -98,8 +98,8 @@ If multiple packages change at the same time, Nx will run the callback for each 
 
 Nx will run the watch callback command with the `NX_PROJECT_NAME` and `NX_FILE_CHANGES` environment variables set.
 
-- `NX_PROJECT_NAME` will be the name of the project.
-- `NX_FILE_CHANGES` will be a list of files that changed formatted in stdin (ie, if `file1.txt`, and `file2.txt` change, `NX_FILE_CHANGES` will be `file1.txt file2.txt`. This allows you to pass the list of files to other commands that accept this format.)
+-  `NX_PROJECT_NAME` will be the name of the project.
+-  `NX_FILE_CHANGES` will be a list of files that changed formatted in stdin (ie, if `file1.txt`, and `file2.txt` change, `NX_FILE_CHANGES` will be `file1.txt file2.txt`. This allows you to pass the list of files to other commands that accept this format.)
 
 ### Running Nx watch with package managers
 

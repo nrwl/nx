@@ -7,13 +7,13 @@ import { join } from 'path';
  * @param tree
  */
 export default async function update(tree: Tree) {
-  const projects = getProjects(tree);
+   const projects = getProjects(tree);
 
-  for (const [_, config] of projects.entries()) {
-    if (config.targets?.['start']?.executor === '@nx/expo:start') {
-      if (tree.exists(join(config.root, 'webpack.config.js'))) {
-        tree.delete(join(config.root, 'webpack.config.js'));
+   for (const [_, config] of projects.entries()) {
+      if (config.targets?.['start']?.executor === '@nx/expo:start') {
+         if (tree.exists(join(config.root, 'webpack.config.js'))) {
+            tree.delete(join(config.root, 'webpack.config.js'));
+         }
       }
-    }
-  }
+   }
 }

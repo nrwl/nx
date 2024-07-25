@@ -112,44 +112,44 @@ A common way to automate publishing packages is via Github Actions. An example o
 name: Publish
 
 on:
-  push:
-    tags:
-      - v*.*.*
+   push:
+      tags:
+         - v*.*.*
 
 jobs:
-  test:
-    name: Publish
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      id-token: write # needed for provenance data generation
-    timeout-minutes: 10
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+   test:
+      name: Publish
+      runs-on: ubuntu-latest
+      permissions:
+         contents: read
+         id-token: write # needed for provenance data generation
+      timeout-minutes: 10
+      steps:
+         - name: Checkout repository
+           uses: actions/checkout@v4
+           with:
+              fetch-depth: 0
 
-      - name: Install Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          registry-url: https://registry.npmjs.org/
+         - name: Install Node
+           uses: actions/setup-node@v4
+           with:
+              node-version: 20
+              registry-url: https://registry.npmjs.org/
 
-      - name: Install dependencies
-        run: npm install
-        shell: bash
+         - name: Install dependencies
+           run: npm install
+           shell: bash
 
-      - name: Print Environment Info
-        run: npx nx report
-        shell: bash
+         - name: Print Environment Info
+           run: npx nx report
+           shell: bash
 
-      - name: Publish packages
-        run: npx nx release publish
-        shell: bash
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_ACCESS_TOKEN }}
-          NPM_CONFIG_PROVENANCE: true
+         - name: Publish packages
+           run: npx nx release publish
+           shell: bash
+           env:
+              NODE_AUTH_TOKEN: ${{ secrets.NPM_ACCESS_TOKEN }}
+              NPM_CONFIG_PROVENANCE: true
 ```
 
 This workflow will install node, install npm dependencies, then run `nx release publish` to publish the packages. It will run on every push to the repository that creates a tag that matches the pattern `v*.*.*`. A release process using this workflow is as follows:
@@ -189,12 +189,12 @@ To verify your packages with [npm provenance](https://docs.npmjs.com/generating-
 
 ```yaml
 jobs:
-  test:
-    name: Publish
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      id-token: write # needed for provenance data generation
+   test:
+      name: Publish
+      runs-on: ubuntu-latest
+      permissions:
+         contents: read
+         id-token: write # needed for provenance data generation
 ```
 
 ```yaml
@@ -202,8 +202,8 @@ jobs:
   run: npx nx release publish
   shell: bash
   env:
-    NODE_AUTH_TOKEN: ${{ secrets.NPM_ACCESS_TOKEN }}
-    NPM_CONFIG_PROVENANCE: true
+     NODE_AUTH_TOKEN: ${{ secrets.NPM_ACCESS_TOKEN }}
+     NPM_CONFIG_PROVENANCE: true
 ```
 
 [(See full workflow above)](#publish-in-github-actions)

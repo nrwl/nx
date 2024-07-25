@@ -9,83 +9,87 @@ const moduleExt = '.module.ts';
 const routingModuleExt = '-routing.module.ts';
 
 export function findModuleFromOptions(
-  tree: Tree,
-  options: NormalizedSchema,
-  projectRoot: string
+   tree: Tree,
+   options: NormalizedSchema,
+   projectRoot: string
 ): string {
-  if (!options.module) {
-    return normalizePath(findModule(tree, options.directory, projectRoot));
-  } else {
-    const modulePath = joinPathFragments(options.directory, options.module);
-    const componentPath = options.directory;
-    const moduleBaseName = basename(modulePath);
+   if (!options.module) {
+      return normalizePath(findModule(tree, options.directory, projectRoot));
+   } else {
+      const modulePath = joinPathFragments(options.directory, options.module);
+      const componentPath = options.directory;
+      const moduleBaseName = basename(modulePath);
 
-    const candidateSet = new Set<string>([options.directory]);
+      const candidateSet = new Set<string>([options.directory]);
 
-    const projectRootParent = dirname(projectRoot);
-    for (let dir = modulePath; dir !== projectRootParent; dir = dirname(dir)) {
-      candidateSet.add(dir);
-    }
-    for (let dir = componentPath; dir !== projectRoot; dir = dirname(dir)) {
-      candidateSet.add(dir);
-    }
-
-    const candidatesDirs = [...candidateSet].sort(
-      (a, b) => b.length - a.length
-    );
-    for (const c of candidatesDirs) {
-      const candidateFiles = [
-        '',
-        moduleBaseName,
-        `${moduleBaseName}.ts`,
-        `${moduleBaseName}${moduleExt}`,
-      ].map((x) => joinPathFragments(c, x));
-
-      for (const sc of candidateFiles) {
-        if (tree.isFile(sc)) {
-          return normalizePath(sc);
-        }
+      const projectRootParent = dirname(projectRoot);
+      for (
+         let dir = modulePath;
+         dir !== projectRootParent;
+         dir = dirname(dir)
+      ) {
+         candidateSet.add(dir);
       }
-    }
+      for (let dir = componentPath; dir !== projectRoot; dir = dirname(dir)) {
+         candidateSet.add(dir);
+      }
 
-    throw new Error(
-      `Specified module '${options.module}' does not exist.\n` +
-        `Looked in the following directories:\n    ${candidatesDirs.join(
-          '\n    '
-        )}`
-    );
-  }
+      const candidatesDirs = [...candidateSet].sort(
+         (a, b) => b.length - a.length
+      );
+      for (const c of candidatesDirs) {
+         const candidateFiles = [
+            '',
+            moduleBaseName,
+            `${moduleBaseName}.ts`,
+            `${moduleBaseName}${moduleExt}`,
+         ].map((x) => joinPathFragments(c, x));
+
+         for (const sc of candidateFiles) {
+            if (tree.isFile(sc)) {
+               return normalizePath(sc);
+            }
+         }
+      }
+
+      throw new Error(
+         `Specified module '${options.module}' does not exist.\n` +
+            `Looked in the following directories:\n    ${candidatesDirs.join(
+               '\n    '
+            )}`
+      );
+   }
 }
 
 function findModule(
-  tree: Tree,
-  generateDir: string,
-  projectRoot: string
+   tree: Tree,
+   generateDir: string,
+   projectRoot: string
 ): string {
-  let dir = generateDir;
-  const projectRootParent = dirname(projectRoot);
+   let dir = generateDir;
+   const projectRootParent = dirname(projectRoot);
 
-  while (dir !== projectRootParent) {
-    const allMatches = tree
-      .children(dir)
-      .map((path) => joinPathFragments(dir, path))
-      .filter((path) => tree.isFile(path) && path.endsWith(moduleExt));
-    const filteredMatches = allMatches.filter(
-      (path) => !path.endsWith(routingModuleExt)
-    );
-
-    if (filteredMatches.length == 1) {
-      return filteredMatches[0];
-    } else if (filteredMatches.length > 1) {
-      throw new Error(
-        "Found more than one candidate module to add the component to. Please specify which module the component should be added to by using the '--module' option."
+   while (dir !== projectRootParent) {
+      const allMatches = tree
+         .children(dir)
+         .map((path) => joinPathFragments(dir, path))
+         .filter((path) => tree.isFile(path) && path.endsWith(moduleExt));
+      const filteredMatches = allMatches.filter(
+         (path) => !path.endsWith(routingModuleExt)
       );
-    }
 
-    dir = dirname(dir);
-  }
+      if (filteredMatches.length == 1) {
+         return filteredMatches[0];
+      } else if (filteredMatches.length > 1) {
+         throw new Error(
+            "Found more than one candidate module to add the component to. Please specify which module the component should be added to by using the '--module' option."
+         );
+      }
 
-  throw new Error(
-    "Could not find a candidate module to add the component to. Please specify which module the component should be added to by using the '--module' option, or pass '--standalone' to generate a standalone component."
-  );
+      dir = dirname(dir);
+   }
+
+   throw new Error(
+      "Could not find a candidate module to add the component to. Please specify which module the component should be added to by using the '--module' option, or pass '--standalone' to generate a standalone component."
+   );
 }

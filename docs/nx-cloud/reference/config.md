@@ -7,7 +7,7 @@ The Nx Cloud runner is configured in `nx.json`.
 
 ```json
 {
-  "nxCloudAccessToken": "SOMETOKEN"
+   "nxCloudAccessToken": "SOMETOKEN"
 }
 ```
 
@@ -64,7 +64,7 @@ In `nx.json`, add the `nxCloudEncryptionKey` property. It will look something li
 
 ```json
 {
-  "nxCloudEncryptionKey": "cheddar"
+   "nxCloudEncryptionKey": "cheddar"
 }
 ```
 
@@ -74,16 +74,16 @@ In `nx.json`, locate the `taskRunnerOptions` property. Under its "options" prope
 
 ```json
 {
-  "tasksRunnerOptions": {
-    "default": {
-      "runner": "nx-cloud",
-      "options": {
-        "accessToken": "SOMETOKEN",
-        // Add the following property with your secret key
-        "encryptionKey": "cheddar"
+   "tasksRunnerOptions": {
+      "default": {
+         "runner": "nx-cloud",
+         "options": {
+            "accessToken": "SOMETOKEN",
+            // Add the following property with your secret key
+            "encryptionKey": "cheddar"
+         }
       }
-    }
-  }
+   }
 }
 ```
 
@@ -114,7 +114,7 @@ You must be on version `16.0.4` or later of `nx-cloud` or `@nrwl/nx-cloud` for t
 
 ```json
 {
-  // The following will cause all attempts to connect your workspace to Nx Cloud to fail
-  "neverConnectToCloud": true
+   // The following will cause all attempts to connect your workspace to Nx Cloud to fail
+   "neverConnectToCloud": true
 }
 ```

@@ -30,79 +30,79 @@ Take the following workspace where the `feature-cart` project is affected.
 
 ```json
 {
-  "projects": [
-    {
-      "type": "app",
-      "name": "fancy-app",
-      "data": {
-        "tags": []
-      }
-    },
-    {
-      "type": "app",
-      "name": "fancy-app-e2e",
-      "data": {
-        "tags": []
-      }
-    },
-    {
-      "type": "lib",
-      "name": "feature-user",
-      "data": {
-        "tags": []
-      }
-    },
-    {
-      "type": "lib",
-      "name": "feature-dashboard",
-      "data": {
-        "tags": []
-      }
-    },
-    {
-      "type": "lib",
-      "name": "feature-cart",
-      "data": {
-        "tags": []
-      }
-    }
-  ],
-  "groupByFolder": false,
-  "workspaceLayout": {
-    "appsDir": "apps",
-    "libsDir": "libs"
-  },
-  "dependencies": {
-    "fancy-app": [
+   "projects": [
       {
-        "target": "feature-user",
-        "source": "fancy-app",
-        "type": "static"
+         "type": "app",
+         "name": "fancy-app",
+         "data": {
+            "tags": []
+         }
       },
       {
-        "target": "feature-cart",
-        "source": "fancy-app",
-        "type": "static"
-      }
-    ],
-    "fancy-app-e2e": [
+         "type": "app",
+         "name": "fancy-app-e2e",
+         "data": {
+            "tags": []
+         }
+      },
       {
-        "target": "fancy-app",
-        "source": "fancy-app-e2e",
-        "type": "implicit"
-      }
-    ],
-    "feature-user": [
+         "type": "lib",
+         "name": "feature-user",
+         "data": {
+            "tags": []
+         }
+      },
       {
-        "target": "feature-dashboard",
-        "source": "feature-user",
-        "type": "direct"
+         "type": "lib",
+         "name": "feature-dashboard",
+         "data": {
+            "tags": []
+         }
+      },
+      {
+         "type": "lib",
+         "name": "feature-cart",
+         "data": {
+            "tags": []
+         }
       }
-    ],
-    "feature-cart": [],
-    "feature-dashboard": []
-  },
-  "affectedProjectIds": ["feature-cart", "fancy-app", "fancy-app-e2e"]
+   ],
+   "groupByFolder": false,
+   "workspaceLayout": {
+      "appsDir": "apps",
+      "libsDir": "libs"
+   },
+   "dependencies": {
+      "fancy-app": [
+         {
+            "target": "feature-user",
+            "source": "fancy-app",
+            "type": "static"
+         },
+         {
+            "target": "feature-cart",
+            "source": "fancy-app",
+            "type": "static"
+         }
+      ],
+      "fancy-app-e2e": [
+         {
+            "target": "fancy-app",
+            "source": "fancy-app-e2e",
+            "type": "implicit"
+         }
+      ],
+      "feature-user": [
+         {
+            "target": "feature-dashboard",
+            "source": "feature-user",
+            "type": "direct"
+         }
+      ],
+      "feature-cart": [],
+      "feature-dashboard": []
+   },
+   "affectedProjectIds": ["feature-cart", "fancy-app", "fancy-app-e2e"]
 }
 ```
 

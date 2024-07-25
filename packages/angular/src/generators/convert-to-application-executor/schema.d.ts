@@ -1,4 +1,4 @@
 export interface GeneratorOptions {
-  project?: string;
-  skipFormat?: boolean;
+   project?: string;
+   skipFormat?: boolean;
 }

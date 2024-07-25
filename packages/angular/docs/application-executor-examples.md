@@ -2,9 +2,9 @@ This executor is a drop-in replacement for the `@angular-devkit/build-angular:ap
 
 In addition to the features provided by the Angular CLI builder, the `@nx/angular:application` executor also supports the following:
 
-- Providing esbuild plugins
-- Providing a function to transform the application's `index.html` file
-- Incremental builds
+-  Providing esbuild plugins
+-  Providing a function to transform the application's `index.html` file
+-  Incremental builds
 
 {% callout type="check" title="Dev Server" %}
 The [`@nx/angular:dev-server` executor](/nx-api/angular/executors/dev-server) is required to serve your application when using the `@nx/angular:application` to build it. It is a drop-in replacement for the Angular CLI's `@angular-devkit/build-angular:dev-server` builder and ensures the application is correctly served with Vite when using the `@nx/angular:application` executor.
@@ -43,11 +43,11 @@ The executor accepts a `plugins` option that allows you to provide esbuild plugi
 
 ```ts {% fileName="apps/my-app/plugins/plugin1.js" %}
 const plugin1 = {
-  name: 'plugin1',
-  setup(build) {
-    const options = build.initialOptions;
-    options.define.PLUGIN1_TEXT = '"Value was provided at build time"';
-  },
+   name: 'plugin1',
+   setup(build) {
+      const options = build.initialOptions;
+      options.define.PLUGIN1_TEXT = '"Value was provided at build time"';
+   },
 };
 
 module.exports = plugin1;
@@ -55,13 +55,13 @@ module.exports = plugin1;
 
 ```ts {% fileName="apps/my-app/plugins/plugin2.js" %}
 function plugin2({ someOption }) {
-  return {
-    name: 'plugin2',
-    setup(build) {
-      const options = build.initialOptions;
-      options.define.PLUGIN2_TEXT = JSON.stringify(someOption);
-    },
-  };
+   return {
+      name: 'plugin2',
+      setup(build) {
+         const options = build.initialOptions;
+         options.define.PLUGIN2_TEXT = JSON.stringify(someOption);
+      },
+   };
 }
 
 module.exports = plugin2;
@@ -98,10 +98,10 @@ The executor accepts an `indexHtmlTransformer` option to provide a path to a fil
 
 ```ts {% fileName="apps/my-app/index-html.transformer.ts" %}
 export default function (indexContent: string) {
-  return indexContent.replace(
-    '<title>my-app</title>',
-    '<title>my-app (transformed)</title>'
-  );
+   return indexContent.replace(
+      '<title>my-app</title>',
+      '<title>my-app (transformed)</title>'
+   );
 }
 ```
 

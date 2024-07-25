@@ -8,22 +8,22 @@ description: This page contains examples for the @nx/next:serve executor.
 ```json
 //...
 {
-  "name": "acme",
-  "$schema": "node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": ".",
-  "projectType": "application",
-  "targets": {
-    //...
-    "serve": {
-      "executor": "@nx/next:server",
-      "defaultConfiguration": "production",
-      "options": {
-        "buildTarget": "acme:build",
-        "dev": true
+   "name": "acme",
+   "$schema": "node_modules/nx/schemas/project-schema.json",
+   "sourceRoot": ".",
+   "projectType": "application",
+   "targets": {
+      //...
+      "serve": {
+         "executor": "@nx/next:server",
+         "defaultConfiguration": "production",
+         "options": {
+            "buildTarget": "acme:build",
+            "dev": true
+         }
       }
-    }
-    //...
-  }
+      //...
+   }
 }
 ```
 

@@ -20,26 +20,26 @@ If we look at these two trivial examples, you can see that the repository with m
 
 ```json
 {
-  "hash": "85fd0561bd88f0bcd8703a9e9369592e2805f390d04982fb2401e700dc9ebc59",
-  "projects": [
-    {
-      "name": "project1",
-      "type": "lib",
-      "data": {
-        "tags": []
+   "hash": "85fd0561bd88f0bcd8703a9e9369592e2805f390d04982fb2401e700dc9ebc59",
+   "projects": [
+      {
+         "name": "project1",
+         "type": "lib",
+         "data": {
+            "tags": []
+         }
       }
-    }
-  ],
-  "dependencies": {
-    "project1": [],
-    "project2": [],
-    "project3": []
-  },
-  "workspaceLayout": { "appsDir": "apps", "libsDir": "libs" },
-  "affectedProjectIds": ["project1"],
-  "focus": null,
-  "groupByFolder": false,
-  "exclude": []
+   ],
+   "dependencies": {
+      "project1": [],
+      "project2": [],
+      "project3": []
+   },
+   "workspaceLayout": { "appsDir": "apps", "libsDir": "libs" },
+   "affectedProjectIds": ["project1"],
+   "focus": null,
+   "groupByFolder": false,
+   "exclude": []
 }
 ```
 
@@ -49,48 +49,48 @@ If we look at these two trivial examples, you can see that the repository with m
 
 ```json
 {
-  "hash": "85fd0561bd88f0bcd8703a9e9369592e2805f390d04982fb2401e700dc9ebc59",
-  "projects": [
-    {
-      "name": "project1",
-      "type": "lib",
-      "data": {
-        "tags": []
+   "hash": "85fd0561bd88f0bcd8703a9e9369592e2805f390d04982fb2401e700dc9ebc59",
+   "projects": [
+      {
+         "name": "project1",
+         "type": "lib",
+         "data": {
+            "tags": []
+         }
+      },
+      {
+         "name": "project2",
+         "type": "lib",
+         "data": {
+            "tags": []
+         }
+      },
+      {
+         "name": "project3",
+         "type": "lib",
+         "data": {
+            "tags": []
+         }
+      },
+      {
+         "name": "project4",
+         "type": "lib",
+         "data": {
+            "tags": []
+         }
       }
-    },
-    {
-      "name": "project2",
-      "type": "lib",
-      "data": {
-        "tags": []
-      }
-    },
-    {
-      "name": "project3",
-      "type": "lib",
-      "data": {
-        "tags": []
-      }
-    },
-    {
-      "name": "project4",
-      "type": "lib",
-      "data": {
-        "tags": []
-      }
-    }
-  ],
-  "dependencies": {
-    "project1": [],
-    "project2": [],
-    "project3": [],
-    "project4": []
-  },
-  "workspaceLayout": { "appsDir": "apps", "libsDir": "libs" },
-  "affectedProjectIds": ["project1"],
-  "focus": null,
-  "groupByFolder": false,
-  "exclude": []
+   ],
+   "dependencies": {
+      "project1": [],
+      "project2": [],
+      "project3": [],
+      "project4": []
+   },
+   "workspaceLayout": { "appsDir": "apps", "libsDir": "libs" },
+   "affectedProjectIds": ["project1"],
+   "focus": null,
+   "groupByFolder": false,
+   "exclude": []
 }
 ```
 
@@ -112,40 +112,40 @@ Consider the following example repo structures.
 
 ```json
 {
-  "hash": "85fd0561bd88f0bcd8703a9e9369592e2805f390d04982fb2401e700dc9ebc59",
-  "projects": [
-    {
-      "name": "project1",
-      "type": "lib",
-      "data": {
-        "tags": []
+   "hash": "85fd0561bd88f0bcd8703a9e9369592e2805f390d04982fb2401e700dc9ebc59",
+   "projects": [
+      {
+         "name": "project1",
+         "type": "lib",
+         "data": {
+            "tags": []
+         }
+      },
+      {
+         "name": "project2",
+         "type": "lib",
+         "data": {
+            "tags": []
+         }
+      },
+      {
+         "name": "project3",
+         "type": "lib",
+         "data": {
+            "tags": []
+         }
       }
-    },
-    {
-      "name": "project2",
-      "type": "lib",
-      "data": {
-        "tags": []
-      }
-    },
-    {
-      "name": "project3",
-      "type": "lib",
-      "data": {
-        "tags": []
-      }
-    }
-  ],
-  "dependencies": {
-    "project1": [{ "source": "project1", "target": "project2" }],
-    "project2": [{ "source": "project2", "target": "project3" }],
-    "project3": []
-  },
-  "workspaceLayout": { "appsDir": "apps", "libsDir": "libs" },
-  "affectedProjectIds": [],
-  "focus": null,
-  "groupByFolder": false,
-  "exclude": []
+   ],
+   "dependencies": {
+      "project1": [{ "source": "project1", "target": "project2" }],
+      "project2": [{ "source": "project2", "target": "project3" }],
+      "project3": []
+   },
+   "workspaceLayout": { "appsDir": "apps", "libsDir": "libs" },
+   "affectedProjectIds": [],
+   "focus": null,
+   "groupByFolder": false,
+   "exclude": []
 }
 ```
 
@@ -155,40 +155,40 @@ Consider the following example repo structures.
 
 ```json
 {
-  "hash": "85fd0561bd88f0bcd8703a9e9369592e2805f390d04982fb2401e700dc9ebc59",
-  "projects": [
-    {
-      "name": "project1",
-      "type": "lib",
-      "data": {
-        "tags": []
+   "hash": "85fd0561bd88f0bcd8703a9e9369592e2805f390d04982fb2401e700dc9ebc59",
+   "projects": [
+      {
+         "name": "project1",
+         "type": "lib",
+         "data": {
+            "tags": []
+         }
+      },
+      {
+         "name": "project2",
+         "type": "lib",
+         "data": {
+            "tags": []
+         }
+      },
+      {
+         "name": "project3",
+         "type": "lib",
+         "data": {
+            "tags": []
+         }
       }
-    },
-    {
-      "name": "project2",
-      "type": "lib",
-      "data": {
-        "tags": []
-      }
-    },
-    {
-      "name": "project3",
-      "type": "lib",
-      "data": {
-        "tags": []
-      }
-    }
-  ],
-  "dependencies": {
-    "project1": [{ "source": "project1", "target": "project3" }],
-    "project2": [{ "source": "project2", "target": "project3" }],
-    "project3": []
-  },
-  "workspaceLayout": { "appsDir": "apps", "libsDir": "libs" },
-  "affectedProjectIds": [],
-  "focus": null,
-  "groupByFolder": false,
-  "exclude": []
+   ],
+   "dependencies": {
+      "project1": [{ "source": "project1", "target": "project3" }],
+      "project2": [{ "source": "project2", "target": "project3" }],
+      "project3": []
+   },
+   "workspaceLayout": { "appsDir": "apps", "libsDir": "libs" },
+   "affectedProjectIds": [],
+   "focus": null,
+   "groupByFolder": false,
+   "exclude": []
 }
 ```
 
@@ -198,40 +198,40 @@ Consider the following example repo structures.
 
 ```json
 {
-  "hash": "85fd0561bd88f0bcd8703a9e9369592e2805f390d04982fb2401e700dc9ebc59",
-  "projects": [
-    {
-      "name": "project1",
-      "type": "lib",
-      "data": {
-        "tags": []
+   "hash": "85fd0561bd88f0bcd8703a9e9369592e2805f390d04982fb2401e700dc9ebc59",
+   "projects": [
+      {
+         "name": "project1",
+         "type": "lib",
+         "data": {
+            "tags": []
+         }
+      },
+      {
+         "name": "project2",
+         "type": "lib",
+         "data": {
+            "tags": []
+         }
+      },
+      {
+         "name": "project3",
+         "type": "lib",
+         "data": {
+            "tags": []
+         }
       }
-    },
-    {
-      "name": "project2",
-      "type": "lib",
-      "data": {
-        "tags": []
-      }
-    },
-    {
-      "name": "project3",
-      "type": "lib",
-      "data": {
-        "tags": []
-      }
-    }
-  ],
-  "dependencies": {
-    "project1": [],
-    "project2": [],
-    "project3": []
-  },
-  "workspaceLayout": { "appsDir": "apps", "libsDir": "libs" },
-  "affectedProjectIds": [],
-  "focus": null,
-  "groupByFolder": false,
-  "exclude": []
+   ],
+   "dependencies": {
+      "project1": [],
+      "project2": [],
+      "project3": []
+   },
+   "workspaceLayout": { "appsDir": "apps", "libsDir": "libs" },
+   "affectedProjectIds": [],
+   "focus": null,
+   "groupByFolder": false,
+   "exclude": []
 }
 ```
 
@@ -310,40 +310,40 @@ Take a look at the example below. The projects are setup in the suboptimal stack
 
 ```json
 {
-  "hash": "85fd0561bd88f0bcd8703a9e9369592e2805f390d04982fb2401e700dc9ebc59",
-  "projects": [
-    {
-      "name": "project1",
-      "type": "lib",
-      "data": {
-        "tags": []
+   "hash": "85fd0561bd88f0bcd8703a9e9369592e2805f390d04982fb2401e700dc9ebc59",
+   "projects": [
+      {
+         "name": "project1",
+         "type": "lib",
+         "data": {
+            "tags": []
+         }
+      },
+      {
+         "name": "project2",
+         "type": "lib",
+         "data": {
+            "tags": []
+         }
+      },
+      {
+         "name": "project3",
+         "type": "lib",
+         "data": {
+            "tags": []
+         }
       }
-    },
-    {
-      "name": "project2",
-      "type": "lib",
-      "data": {
-        "tags": []
-      }
-    },
-    {
-      "name": "project3",
-      "type": "lib",
-      "data": {
-        "tags": []
-      }
-    }
-  ],
-  "dependencies": {
-    "project1": [{ "source": "project1", "target": "project2" }],
-    "project2": [{ "source": "project2", "target": "project3" }],
-    "project3": []
-  },
-  "workspaceLayout": { "appsDir": "apps", "libsDir": "libs" },
-  "affectedProjectIds": ["project1", "project2", "project3"],
-  "focus": null,
-  "groupByFolder": false,
-  "exclude": []
+   ],
+   "dependencies": {
+      "project1": [{ "source": "project1", "target": "project2" }],
+      "project2": [{ "source": "project2", "target": "project3" }],
+      "project3": []
+   },
+   "workspaceLayout": { "appsDir": "apps", "libsDir": "libs" },
+   "affectedProjectIds": ["project1", "project2", "project3"],
+   "focus": null,
+   "groupByFolder": false,
+   "exclude": []
 }
 ```
 
@@ -353,40 +353,40 @@ Take a look at the example below. The projects are setup in the suboptimal stack
 
 ```json
 {
-  "hash": "85fd0561bd88f0bcd8703a9e9369592e2805f390d04982fb2401e700dc9ebc59",
-  "projects": [
-    {
-      "name": "project1 ↩︎",
-      "type": "lib",
-      "data": {
-        "tags": []
+   "hash": "85fd0561bd88f0bcd8703a9e9369592e2805f390d04982fb2401e700dc9ebc59",
+   "projects": [
+      {
+         "name": "project1 ↩︎",
+         "type": "lib",
+         "data": {
+            "tags": []
+         }
+      },
+      {
+         "name": "project2 ↩︎",
+         "type": "lib",
+         "data": {
+            "tags": []
+         }
+      },
+      {
+         "name": "project3 ✓",
+         "type": "lib",
+         "data": {
+            "tags": []
+         }
       }
-    },
-    {
-      "name": "project2 ↩︎",
-      "type": "lib",
-      "data": {
-        "tags": []
-      }
-    },
-    {
-      "name": "project3 ✓",
-      "type": "lib",
-      "data": {
-        "tags": []
-      }
-    }
-  ],
-  "dependencies": {
-    "project1 ↩︎": [{ "source": "project1 ↩︎", "target": "project2 ↩︎" }],
-    "project2 ↩︎": [{ "source": "project2 ↩︎", "target": "project3 ✓" }],
-    "project3 ✓": []
-  },
-  "workspaceLayout": { "appsDir": "apps", "libsDir": "libs" },
-  "affectedProjectIds": ["project1 ↩︎", "project2 ↩︎", "project3 ✓"],
-  "focus": null,
-  "groupByFolder": false,
-  "exclude": []
+   ],
+   "dependencies": {
+      "project1 ↩︎": [{ "source": "project1 ↩︎", "target": "project2 ↩︎" }],
+      "project2 ↩︎": [{ "source": "project2 ↩︎", "target": "project3 ✓" }],
+      "project3 ✓": []
+   },
+   "workspaceLayout": { "appsDir": "apps", "libsDir": "libs" },
+   "affectedProjectIds": ["project1 ↩︎", "project2 ↩︎", "project3 ✓"],
+   "focus": null,
+   "groupByFolder": false,
+   "exclude": []
 }
 ```
 

@@ -12,13 +12,13 @@ To enable GitHub release creation for your workspace, set `release.changelog.wor
 
 ```json
 {
-  "release": {
-    "changelog": {
-      "workspaceChangelog": {
-        "createRelease": "github"
+   "release": {
+      "changelog": {
+         "workspaceChangelog": {
+            "createRelease": "github"
+         }
       }
-    }
-  }
+   }
 }
 ```
 
@@ -32,14 +32,14 @@ Since GitHub releases contain the changelog, you may wish to disable the generat
 
 ```json
 {
-  "release": {
-    "changelog": {
-      "workspaceChangelog": {
-        "file": false,
-        "createRelease": "github"
+   "release": {
+      "changelog": {
+         "workspaceChangelog": {
+            "file": false,
+            "createRelease": "github"
+         }
       }
-    }
-  }
+   }
 }
 ```
 
@@ -51,13 +51,13 @@ Nx Release supports creating GitHub releases for project level changelogs as wel
 
 ```json
 {
-  "release": {
-    "changelog": {
-      "projectChangelogs": {
-        "createRelease": "github"
+   "release": {
+      "changelog": {
+         "projectChangelogs": {
+            "createRelease": "github"
+         }
       }
-    }
-  }
+   }
 }
 ```
 

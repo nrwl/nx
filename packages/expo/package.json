@@ -1,56 +1,56 @@
 {
-  "name": "@nx/expo",
-  "version": "0.0.1",
-  "private": false,
-  "description": "The Expo Plugin for Nx contains executors and generators for managing and developing an expo application within your workspace. For example, you can directly build for different target platforms as well as generate projects and publish your code.",
-  "keywords": [
-    "Monorepo",
-    "Expo",
-    "React",
-    "Web",
-    "Jest",
-    "Native",
-    "CLI",
-    "Mobile",
-    "Testing"
-  ],
-  "homepage": "https://nx.dev",
-  "bugs": {
-    "url": "https://github.com/nrwl/nx/issues"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/nrwl/nx.git",
-    "directory": "packages/expo"
-  },
-  "license": "MIT",
-  "author": "Victor Savkin",
-  "main": "./index",
-  "types": "index.d.ts",
-  "dependencies": {
-    "@nx/devkit": "file:../devkit",
-    "chalk": "^4.1.0",
-    "enhanced-resolve": "^5.8.3",
-    "fs-extra": "^11.1.0",
-    "metro-config": "~0.80.4",
-    "metro-resolver": "~0.80.4",
-    "node-fetch": "^2.6.7",
-    "tslib": "^2.3.0",
-    "tsconfig-paths": "^4.1.2",
-    "@nx/jest": "file:../jest",
-    "@nx/js": "file:../js",
-    "@nx/eslint": "file:../eslint",
-    "@nx/react": "file:../react",
-    "@nx/web": "file:../web",
-    "@nx/webpack": "file:../webpack"
-  },
-  "executors": "./executors.json",
-  "ng-update": {
-    "requirements": {},
-    "migrations": "./migrations.json"
-  },
-  "generators": "./generators.json",
-  "publishConfig": {
-    "access": "public"
-  }
+   "name": "@nx/expo",
+   "version": "0.0.1",
+   "private": false,
+   "description": "The Expo Plugin for Nx contains executors and generators for managing and developing an expo application within your workspace. For example, you can directly build for different target platforms as well as generate projects and publish your code.",
+   "keywords": [
+      "Monorepo",
+      "Expo",
+      "React",
+      "Web",
+      "Jest",
+      "Native",
+      "CLI",
+      "Mobile",
+      "Testing"
+   ],
+   "homepage": "https://nx.dev",
+   "bugs": {
+      "url": "https://github.com/nrwl/nx/issues"
+   },
+   "repository": {
+      "type": "git",
+      "url": "https://github.com/nrwl/nx.git",
+      "directory": "packages/expo"
+   },
+   "license": "MIT",
+   "author": "Victor Savkin",
+   "main": "./index",
+   "types": "index.d.ts",
+   "dependencies": {
+      "@nx/devkit": "file:../devkit",
+      "chalk": "^4.1.0",
+      "enhanced-resolve": "^5.8.3",
+      "fs-extra": "^11.1.0",
+      "metro-config": "~0.80.4",
+      "metro-resolver": "~0.80.4",
+      "node-fetch": "^2.6.7",
+      "tslib": "^2.3.0",
+      "tsconfig-paths": "^4.1.2",
+      "@nx/jest": "file:../jest",
+      "@nx/js": "file:../js",
+      "@nx/eslint": "file:../eslint",
+      "@nx/react": "file:../react",
+      "@nx/web": "file:../web",
+      "@nx/webpack": "file:../webpack"
+   },
+   "executors": "./executors.json",
+   "ng-update": {
+      "requirements": {},
+      "migrations": "./migrations.json"
+   },
+   "generators": "./generators.json",
+   "publishConfig": {
+      "access": "public"
+   }
 }

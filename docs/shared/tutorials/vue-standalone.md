@@ -9,11 +9,11 @@ In this tutorial you'll learn how to use Vue with Nx in a ["standalone" (non-mon
 
 What will you learn?
 
-- how to add Nx to a Vue project
-- how to run a single task (i.e. serve your app) or run multiple tasks in parallel
-- how to leverage code generators to scaffold components
-- how to modularize your codebase and impose architectural constraints for better maintainability
-- [how to speed up CI with Nx Cloud ⚡](#fast-ci)
+-  how to add Nx to a Vue project
+-  how to run a single task (i.e. serve your app) or run multiple tasks in parallel
+-  how to leverage code generators to scaffold components
+-  how to modularize your codebase and impose architectural constraints for better maintainability
+-  [how to speed up CI with Nx Cloud ⚡](#fast-ci)
 
 We'll start out this tutorial using Nx together with a Vue application generated with the default `npm create vue` command. Later, we'll add the `@nx/vue` plugin to show the nice enhancements that it can provide. [Visit our "Why Nx" page](/getting-started/why-nx) to learn more about plugins and what role they play in the Nx architecture.
 
@@ -86,11 +86,11 @@ This command sets up a Vue app that uses Typescript and is configured to use the
 
 The setup includes..
 
-- a new Vue application at the root of the Nx workspace (`src`)
-- a Playwright based set of e2e tests (`e2e/`)
-- Prettier preconfigured
-- ESLint preconfigured
-- Vitest preconfigured
+-  a new Vue application at the root of the Nx workspace (`src`)
+-  a Playwright based set of e2e tests (`e2e/`)
+-  Prettier preconfigured
+-  ESLint preconfigured
+-  Vitest preconfigured
 
 You can build the application with the following command:
 
@@ -102,8 +102,8 @@ npm run build
 
 Nx offers many features, but at its core, it is a task runner. Out of the box, it can:
 
-- [cache your tasks](/features/cache-task-results)
-- ensure those tasks are [run in the correct order](/features/run-tasks)
+-  [cache your tasks](/features/cache-task-results)
+-  ensure those tasks are [run in the correct order](/features/run-tasks)
 
 After the initial set up, you can incrementally add on other features that would be helpful in your organization.
 
@@ -117,16 +117,16 @@ This command will download the latest version of Nx and help set up your reposit
 
 First, the script will propose installing some plugins based on the packages that are being used in your repository.
 
-- Leave the plugins deselected so that we can explore what Nx provides without any plugins.
+-  Leave the plugins deselected so that we can explore what Nx provides without any plugins.
 
 Second, the script asks a series of questions to help set up caching for you.
 
-- `Which scripts are cacheable?` - Choose `test:e2e`, `build-only`, `type-check` and `lint`
-- `Does the "test:e2e" script create any outputs?` - Enter `playwright-report`
-- `Does the "build-only" script create any outputs?` - Enter `dist`
-- `Does the "type-check" script create any outputs?` - Enter nothing
-- `Does the "lint" script create any outputs?` - Enter nothing
-- `Would you like remote caching to make your build faster?` - Choose `Skip for now`.
+-  `Which scripts are cacheable?` - Choose `test:e2e`, `build-only`, `type-check` and `lint`
+-  `Does the "test:e2e" script create any outputs?` - Enter `playwright-report`
+-  `Does the "build-only" script create any outputs?` - Enter `dist`
+-  `Does the "type-check" script create any outputs?` - Enter nothing
+-  `Does the "lint" script create any outputs?` - Enter nothing
+-  `Would you like remote caching to make your build faster?` - Choose `Skip for now`.
 
 We'll enable Nx Cloud and add remote caching later in the tutorial.
 
@@ -142,24 +142,24 @@ During the `init` script, Nx also configured caching for these tasks. You can se
 
 ```json {% fileName="nx.json" %}
 {
-  "$schema": "./node_modules/nx/schemas/nx-schema.json",
-  "targetDefaults": {
-    "test:e2e": {
-      "outputs": ["{projectRoot}/playwright-report"],
-      "cache": true
-    },
-    "build-only": {
-      "outputs": ["{projectRoot}/dist"],
-      "cache": true
-    },
-    "type-check": {
-      "cache": true
-    },
-    "lint": {
-      "cache": true
-    }
-  },
-  "defaultBase": "main"
+   "$schema": "./node_modules/nx/schemas/nx-schema.json",
+   "targetDefaults": {
+      "test:e2e": {
+         "outputs": ["{projectRoot}/playwright-report"],
+         "cache": true
+      },
+      "build-only": {
+         "outputs": ["{projectRoot}/dist"],
+         "cache": true
+      },
+      "type-check": {
+         "cache": true
+      },
+      "lint": {
+         "cache": true
+      }
+   },
+   "defaultBase": "main"
 }
 ```
 
@@ -183,11 +183,11 @@ If you look at the `build` script in `package.json`, you'll notice that it is ac
 
 ```json {% fileName="package.json" %}
 {
-  "scripts": {
-    "build": "run-p type-check \"build-only {@}\" --",
-    "build-only": "vite build",
-    "type-check": "vue-tsc --build --force"
-  }
+   "scripts": {
+      "build": "run-p type-check \"build-only {@}\" --",
+      "build-only": "vite build",
+      "type-check": "vue-tsc --build --force"
+   }
 }
 ```
 
@@ -195,11 +195,11 @@ Instead of deciding ahead of time whether tasks need to be run in parallel or se
 
 ```json {% fileName="package.json" highlightLines=[3] %}
 {
-  "scripts": {
-    "build": "nx exec -- echo 'Ran type-check and build-only'",
-    "build-only": "vite build",
-    "type-check": "vue-tsc --build --force"
-  }
+   "scripts": {
+      "build": "nx exec -- echo 'Ran type-check and build-only'",
+      "build-only": "vite build",
+      "type-check": "vue-tsc --build --force"
+   }
 }
 ```
 
@@ -207,11 +207,11 @@ Since the `build` command itself doesn't do anything, we can replace it with an 
 
 ```json {% fileName="nx.json" highlightLines=["3-5"] %}
 {
-  "targetDefaults": {
-    "build": {
-      "dependsOn": ["type-check", "build-only"]
-    }
-  }
+   "targetDefaults": {
+      "build": {
+         "dependsOn": ["type-check", "build-only"]
+      }
+   }
 }
 ```
 
@@ -223,17 +223,17 @@ There's still one piece of functionality that was lost by this change. The `{@}`
 
 ```json {% fileName="nx.json" highlightLines=["6-9"] %}
 {
-  "targetDefaults": {
-    "build": {
-      "dependsOn": [
-        "type-check",
-        {
-          "target": "build-only",
-          "params": "forward"
-        }
-      ]
-    }
-  }
+   "targetDefaults": {
+      "build": {
+         "dependsOn": [
+            "type-check",
+            {
+               "target": "build-only",
+               "params": "forward"
+            }
+         ]
+      }
+   }
 }
 ```
 
@@ -278,10 +278,10 @@ You may remember that we defined the `outputs` property in `nx.json` when we wer
 
 Nx plugins can:
 
-- automatically configure caching for you, including inputs and outputs based on the underlying tooling configuration
-- create tasks for a project using the tooling configuration files
-- provide code generators to help scaffold out projects
-- automatically keep the tooling versions and configuration files up to date
+-  automatically configure caching for you, including inputs and outputs based on the underlying tooling configuration
+-  create tasks for a project using the tooling configuration files
+-  provide code generators to help scaffold out projects
+-  automatically keep the tooling versions and configuration files up to date
 
 For this tutorial, we'll just focus on the automatic caching configuration.
 
@@ -289,32 +289,32 @@ First, let's delete the `outputs` array for the `build-only` task in `nx.json` s
 
 ```json {% fileName="nx.json" %}
 {
-  "$schema": "./node_modules/nx/schemas/nx-schema.json",
-  "targetDefaults": {
-    "test:e2e": {
-      "outputs": ["{projectRoot}/playwright-report"],
-      "cache": true
-    },
-    "build": {
-      "dependsOn": [
-        "type-check",
-        {
-          "target": "build-only",
-          "params": "forward"
-        }
-      ]
-    },
-    "build-only": {
-      "cache": true
-    },
-    "type-check": {
-      "cache": true
-    },
-    "lint": {
-      "cache": true
-    }
-  },
-  "defaultBase": "main"
+   "$schema": "./node_modules/nx/schemas/nx-schema.json",
+   "targetDefaults": {
+      "test:e2e": {
+         "outputs": ["{projectRoot}/playwright-report"],
+         "cache": true
+      },
+      "build": {
+         "dependsOn": [
+            "type-check",
+            {
+               "target": "build-only",
+               "params": "forward"
+            }
+         ]
+      },
+      "build-only": {
+         "cache": true
+      },
+      "type-check": {
+         "cache": true
+      },
+      "lint": {
+         "cache": true
+      }
+   },
+   "defaultBase": "main"
 }
 ```
 
@@ -435,8 +435,8 @@ In the previous sections you learned about the basics of using Nx, running tasks
 
 But there's more to learn. You have two possibilities here:
 
-- [Jump to the next steps section](#next-steps) to find where to go from here or
-- keep reading and learn some more about what makes Nx unique when working with Vue.
+-  [Jump to the next steps section](#next-steps) to find where to go from here or
+-  keep reading and learn some more about what makes Nx unique when working with Vue.
 
 ## Modularize your Vue App with Local Libraries
 
@@ -461,11 +461,11 @@ When you develop your Vue application, usually all your logic sits in the `src` 
 
 Nx allows you to separate this logic into "local libraries". The main benefits include
 
-- better separation of concerns
-- better reusability
-- more explicit "APIs" between your "domain areas"
-- better scalability in CI by enabling independent test/lint/build commands for each library
-- better scalability in your teams by allowing different teams to work on separate libraries
+-  better separation of concerns
+-  better reusability
+-  more explicit "APIs" between your "domain areas"
+-  better scalability in CI by enabling independent test/lint/build commands for each library
+-  better scalability in your teams by allowing different teams to work on separate libraries
 
 ### Create a Local Library
 
@@ -485,9 +485,9 @@ We want the `lint` task for the root `vue-app` project to only lint the files fo
 
 ```json {% fileName="package.json" %}
 {
-  "scripts": {
-    "lint": "eslint src --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore"
-  }
+   "scripts": {
+      "lint": "eslint src --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore"
+   }
 }
 ```
 
@@ -498,24 +498,24 @@ Now we need to update the `.eslintrc.cjs` file to extend the `.eslintrc.base.jso
 require('@rushstack/eslint-patch/modern-module-resolution');
 
 module.exports = {
-  root: true,
-  extends: [
-    'plugin:vue/vue3-essential',
-    'eslint:recommended',
-    '@vue/eslint-config-typescript',
-    '@vue/eslint-config-prettier/skip-formatting',
-    './.eslintrc.base.json',
-  ],
-  ignorePatterns: ['!**/*'],
-  overrides: [
-    {
-      files: ['e2e/**/*.{test,spec}.{js,ts,jsx,tsx}'],
-      extends: ['plugin:playwright/recommended'],
-    },
-  ],
-  parserOptions: {
-    ecmaVersion: 'latest',
-  },
+   root: true,
+   extends: [
+      'plugin:vue/vue3-essential',
+      'eslint:recommended',
+      '@vue/eslint-config-typescript',
+      '@vue/eslint-config-prettier/skip-formatting',
+      './.eslintrc.base.json',
+   ],
+   ignorePatterns: ['!**/*'],
+   overrides: [
+      {
+         files: ['e2e/**/*.{test,spec}.{js,ts,jsx,tsx}'],
+         extends: ['plugin:playwright/recommended'],
+      },
+   ],
+   parserOptions: {
+      ecmaVersion: 'latest',
+   },
 };
 ```
 
@@ -525,33 +525,33 @@ To make sure that the build can correctly pull in code from libraries, we need t
 
 ```json {% fileName="tsconfig.app.json" highlightLines=[2] %}
 {
-  "extends": ["@vue/tsconfig/tsconfig.dom.json", "./tsconfig.base.json"],
-  "include": ["env.d.ts", "src/**/*", "src/**/*.vue"],
-  "exclude": ["src/**/__tests__/*"]
+   "extends": ["@vue/tsconfig/tsconfig.dom.json", "./tsconfig.base.json"],
+   "include": ["env.d.ts", "src/**/*", "src/**/*.vue"],
+   "exclude": ["src/**/__tests__/*"]
 }
 ```
 
 ```json {% fileName="tsconfig.vitest.json" highlightLines=[2] %}
 {
-  "extends": "./tsconfig.app.json",
-  "exclude": [],
-  "compilerOptions": {
-    "lib": [],
-    "types": ["node", "jsdom"]
-  }
+   "extends": "./tsconfig.app.json",
+   "exclude": [],
+   "compilerOptions": {
+      "lib": [],
+      "types": ["node", "jsdom"]
+   }
 }
 ```
 
 ```json {% fileName="tsconfig.base.json" highlightLines=["5-8"] %}
 {
-  "compileOnSave": false,
-  "compilerOptions": {
-    "baseUrl": ".",
-    "paths": {
-      "@/*": ["./src/*"],
-      "products": ["modules/products/src/index.ts"]
-    }
-  }
+   "compileOnSave": false,
+   "compilerOptions": {
+      "baseUrl": ".",
+      "paths": {
+         "@/*": ["./src/*"],
+         "products": ["modules/products/src/index.ts"]
+      }
+   }
 }
 ```
 
@@ -573,15 +573,15 @@ import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [vue(), vueJsx(), nxViteTsPaths()],
-  build: {
-    outDir: 'dist/vue-app',
-  },
-  resolve: {
-    alias: {
-      '@': fileURLToPath(new URL('./src', import.meta.url)),
-    },
-  },
+   plugins: [vue(), vueJsx(), nxViteTsPaths()],
+   build: {
+      outDir: 'dist/vue-app',
+   },
+   resolve: {
+      alias: {
+         '@': fileURLToPath(new URL('./src', import.meta.url)),
+      },
+   },
 });
 ```
 
@@ -641,10 +641,10 @@ Running the above commands should lead to the following directory structure:
 
 Each of these libraries
 
-- has a project details view where you can see the available tasks (e.g. running tests for just orders: `nx test orders`)
-- has its own `project.json` file where you can customize targets
-- has a dedicated `index.ts` file which is the "public API" of the library
-- is mapped in the `tsconfig.base.json` at the root of the workspace
+-  has a project details view where you can see the available tasks (e.g. running tests for just orders: `nx test orders`)
+-  has its own `project.json` file where you can customize targets
+-  has a dedicated `index.ts` file which is the "public API" of the library
+-  is mapped in the `tsconfig.base.json` at the root of the workspace
 
 ### Importing Libraries into the Vue Application
 
@@ -672,32 +672,32 @@ import { createRouter, createWebHistory } from 'vue-router';
 import HomeView from '../views/HomeView.vue';
 
 const router = createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL),
-  routes: [
-    {
-      path: '/',
-      name: 'home',
-      component: HomeView,
-    },
-    {
-      path: '/about',
-      name: 'about',
-      // route level code-splitting
-      // this generates a separate chunk (About.[hash].js) for this route
-      // which is lazy-loaded when the route is visited.
-      component: () => import('../views/AboutView.vue'),
-    },
-    {
-      path: '/products',
-      name: 'products',
-      component: () => import('products').then((m) => m.Products),
-    },
-    {
-      path: '/orders',
-      name: 'orders',
-      component: () => import('orders').then((m) => m.Orders),
-    },
-  ],
+   history: createWebHistory(import.meta.env.BASE_URL),
+   routes: [
+      {
+         path: '/',
+         name: 'home',
+         component: HomeView,
+      },
+      {
+         path: '/about',
+         name: 'about',
+         // route level code-splitting
+         // this generates a separate chunk (About.[hash].js) for this route
+         // which is lazy-loaded when the route is visited.
+         component: () => import('../views/AboutView.vue'),
+      },
+      {
+         path: '/products',
+         name: 'products',
+         component: () => import('products').then((m) => m.Products),
+      },
+      {
+         path: '/orders',
+         name: 'orders',
+         component: () => import('orders').then((m) => m.Orders),
+      },
+   ],
 });
 
 export default router;
@@ -755,50 +755,50 @@ You should be able to see something similar to the following in your browser (hi
 
 ```json
 {
-  "projects": [
-    {
-      "name": "vue-app",
-      "type": "app",
-      "data": {
-        "tags": []
-      }
-    },
-    {
-      "name": "ui",
-      "type": "lib",
-      "data": {
-        "tags": []
-      }
-    },
-    {
-      "name": "orders",
-      "type": "lib",
-      "data": {
-        "tags": []
-      }
-    },
+   "projects": [
+      {
+         "name": "vue-app",
+         "type": "app",
+         "data": {
+            "tags": []
+         }
+      },
+      {
+         "name": "ui",
+         "type": "lib",
+         "data": {
+            "tags": []
+         }
+      },
+      {
+         "name": "orders",
+         "type": "lib",
+         "data": {
+            "tags": []
+         }
+      },
 
-    {
-      "name": "products",
-      "type": "lib",
-      "data": {
-        "tags": []
+      {
+         "name": "products",
+         "type": "lib",
+         "data": {
+            "tags": []
+         }
       }
-    }
-  ],
-  "dependencies": {
-    "vue-app": [
-      { "source": "vue-app", "target": "orders", "type": "dynamic" },
-      { "source": "vue-app", "target": "products", "type": "dynamic" }
-    ],
-    "ui": [],
-    "orders": [],
-    "products": []
-  },
-  "workspaceLayout": { "appsDir": "", "libsDir": "" },
-  "affectedProjectIds": [],
-  "focus": null,
-  "groupByFolder": false
+   ],
+   "dependencies": {
+      "vue-app": [
+         { "source": "vue-app", "target": "orders", "type": "dynamic" },
+         { "source": "vue-app", "target": "products", "type": "dynamic" }
+      ],
+      "ui": [],
+      "orders": [],
+      "products": []
+   },
+   "workspaceLayout": { "appsDir": "", "libsDir": "" },
+   "affectedProjectIds": [],
+   "focus": null,
+   "groupByFolder": false
 }
 ```
 
@@ -814,14 +814,14 @@ Exercise for you: change the codebase so that `ui` is used by `orders` and `prod
 
 Once you modularize your codebase you want to make sure that the modules are not coupled to each other in an uncontrolled way. Here are some examples of how we might want to guard our small demo workspace:
 
-- we might want to allow `orders` to import from `shared-ui` but not the other way around
-- we might want to allow `orders` to import from `products` but not the other way around
-- we might want to allow all libraries to import the `shared-ui` components, but not the other way around
+-  we might want to allow `orders` to import from `shared-ui` but not the other way around
+-  we might want to allow `orders` to import from `products` but not the other way around
+-  we might want to allow all libraries to import the `shared-ui` components, but not the other way around
 
 When building these kinds of constraints you usually have two dimensions:
 
-- **type of project:** what is the type of your library. Example: "feature" library, "utility" library, "data-access" library, "ui" library (see [library types](/concepts/decisions/project-dependency-rules))
-- **scope (domain) of the project:** what domain area is covered by the project. Example: "orders", "products", "shared" ... this really depends on the type of product you're developing
+-  **type of project:** what is the type of your library. Example: "feature" library, "utility" library, "data-access" library, "ui" library (see [library types](/concepts/decisions/project-dependency-rules))
+-  **scope (domain) of the project:** what domain area is covered by the project. Example: "orders", "products", "shared" ... this really depends on the type of product you're developing
 
 Nx comes with a generic mechanism that allows you to assign "tags" to projects. "tags" are arbitrary strings you can assign to a project that can be used later when defining boundaries between projects. For example, go to the `project.json` of your `orders` library and assign the tags `type:feature` and `scope:orders` to it.
 
@@ -857,10 +857,10 @@ Notice how we assign `scope:shared` to our UI library because it is intended to 
 
 Next, let's come up with a set of rules based on these tags:
 
-- `type:feature` should be able to import from `type:feature` and `type:ui`
-- `type:ui` should only be able to import from `type:ui`
-- `scope:orders` should be able to import from `scope:orders`, `scope:shared` and `scope:products`
-- `scope:products` should be able to import from `scope:products` and `scope:shared`
+-  `type:feature` should be able to import from `type:feature` and `type:ui`
+-  `type:ui` should only be able to import from `type:ui`
+-  `scope:orders` should be able to import from `scope:orders`, `scope:shared` and `scope:products`
+-  `scope:products` should be able to import from `scope:products` and `scope:shared`
 
 To enforce the rules, Nx ships with a custom ESLint rule.
 
@@ -870,9 +870,9 @@ We want the `lint` task for the root `react-app` project to only lint the files 
 
 ```json {% fileName="package.json" %}
 {
-  "scripts": {
-    "lint": "eslint src --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore"
-  }
+   "scripts": {
+      "lint": "eslint src --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore"
+   }
 }
 ```
 
@@ -883,24 +883,24 @@ We need to update the `.eslintrc.cjs` file to extend the `.eslintrc.base.json` f
 require('@rushstack/eslint-patch/modern-module-resolution');
 
 module.exports = {
-  root: true,
-  extends: [
-    'plugin:vue/vue3-essential',
-    'eslint:recommended',
-    '@vue/eslint-config-typescript',
-    '@vue/eslint-config-prettier/skip-formatting',
-    './.eslintrc.base.json',
-  ],
-  ignorePatterns: ['!**/*'],
-  overrides: [
-    {
-      files: ['e2e/**/*.{test,spec}.{js,ts,jsx,tsx}'],
-      extends: ['plugin:playwright/recommended'],
-    },
-  ],
-  parserOptions: {
-    ecmaVersion: 'latest',
-  },
+   root: true,
+   extends: [
+      'plugin:vue/vue3-essential',
+      'eslint:recommended',
+      '@vue/eslint-config-typescript',
+      '@vue/eslint-config-prettier/skip-formatting',
+      './.eslintrc.base.json',
+   ],
+   ignorePatterns: ['!**/*'],
+   overrides: [
+      {
+         files: ['e2e/**/*.{test,spec}.{js,ts,jsx,tsx}'],
+         extends: ['plugin:playwright/recommended'],
+      },
+   ],
+   parserOptions: {
+      ecmaVersion: 'latest',
+   },
 };
 ```
 
@@ -1036,10 +1036,10 @@ Make sure you have completed the previous sections of this tutorial before start
 
 This tutorial walked you through how Nx can improve the local development experience, but the biggest difference Nx makes is in CI. As repositories get bigger, making sure that the CI is fast, reliable and maintainable can get very challenging. Nx provides a solution.
 
-- Nx reduces wasted time in CI with the [`affected` command](/ci/features/affected).
-- Nx Replay's [remote caching](/ci/features/remote-cache) will reuse task artifacts from different CI executions making sure you will never run the same computation twice.
-- Nx Agents [efficiently distribute tasks across machines](/ci/concepts/parallelization-distribution) ensuring constant CI time regardless of the repository size. The right number of machines is allocated for each PR to ensure good performance without wasting compute.
-- Nx Atomizer [automatically splits](/ci/features/split-e2e-tasks) large e2e tests to distribute them across machines. Nx can also automatically [identify and rerun flaky e2e tests](/ci/features/flaky-tasks).
+-  Nx reduces wasted time in CI with the [`affected` command](/ci/features/affected).
+-  Nx Replay's [remote caching](/ci/features/remote-cache) will reuse task artifacts from different CI executions making sure you will never run the same computation twice.
+-  Nx Agents [efficiently distribute tasks across machines](/ci/concepts/parallelization-distribution) ensuring constant CI time regardless of the repository size. The right number of machines is allocated for each PR to ensure good performance without wasting compute.
+-  Nx Atomizer [automatically splits](/ci/features/split-e2e-tasks) large e2e tests to distribute them across machines. Nx can also automatically [identify and rerun flaky e2e tests](/ci/features/flaky-tasks).
 
 ### Connect to Nx Cloud {% highlightColor="green" %}
 
@@ -1089,25 +1089,25 @@ The key lines in the CI pipeline are:
 name: CI
 # ...
 jobs:
-  main:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      # This enables task distribution via Nx Cloud
-      # Run this command as early as possible, before dependencies are installed
-      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      # Connect your workspace by running "nx connect" and uncomment this
-      - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 20
-          cache: 'npm'
-      - run: npm ci --legacy-peer-deps
-      - uses: nrwl/nx-set-shas@v4
-      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-      - run: npx nx affected -t lint test build
+   main:
+      runs-on: ubuntu-latest
+      steps:
+         - uses: actions/checkout@v4
+           with:
+              fetch-depth: 0
+         # This enables task distribution via Nx Cloud
+         # Run this command as early as possible, before dependencies are installed
+         # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
+         # Connect your workspace by running "nx connect" and uncomment this
+         - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+         - uses: actions/setup-node@v3
+           with:
+              node-version: 20
+              cache: 'npm'
+         - run: npm ci --legacy-peer-deps
+         - uses: nrwl/nx-set-shas@v4
+         # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
+         - run: npx nx affected -t lint test build
 ```
 
 ### Open a Pull Request {% highlightColor="green" %}
@@ -1130,14 +1130,14 @@ The `See all runs` link goes to a page with the progress and results of tasks th
 
 For more information about how Nx can improve your CI pipeline, check out one of these detailed tutorials:
 
-- [Circle CI with Nx](/ci/intro/tutorials/circle)
-- [GitHub Actions with Nx](/ci/intro/tutorials/github-actions)
+-  [Circle CI with Nx](/ci/intro/tutorials/circle)
+-  [GitHub Actions with Nx](/ci/intro/tutorials/github-actions)
 
 ## Next Steps
 
 Connect with the rest of the Nx community with these resources:
 
-- [Join the Official Nx Discord Server](https://go.nx.dev/community) to ask questions and find out the latest news about Nx.
-- [Follow Nx on Twitter](https://twitter.com/nxdevtools) to stay up to date with Nx news
-- [Read our Nx blog](/blog)
-- [Subscribe to our Youtube channel](https://www.youtube.com/@nxdevtools) for demos and Nx insights
+-  [Join the Official Nx Discord Server](https://go.nx.dev/community) to ask questions and find out the latest news about Nx.
+-  [Follow Nx on Twitter](https://twitter.com/nxdevtools) to stay up to date with Nx news
+-  [Read our Nx blog](/blog)
+-  [Subscribe to our Youtube channel](https://www.youtube.com/@nxdevtools) for demos and Nx insights

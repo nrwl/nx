@@ -8,22 +8,22 @@ See an example set up of it below:
 
 ```json
 {
-  "serve": {
-    "executor": "@nx/angular:module-federation-dev-server",
-    "configurations": {
-      "production": {
-        "buildTarget": "host:build:production"
+   "serve": {
+      "executor": "@nx/angular:module-federation-dev-server",
+      "configurations": {
+         "production": {
+            "buildTarget": "host:build:production"
+         },
+         "development": {
+            "buildTarget": "host:build:development"
+         }
       },
-      "development": {
-        "buildTarget": "host:build:development"
+      "defaultConfiguration": "development",
+      "options": {
+         "port": 4200,
+         "publicHost": "http://localhost:4200"
       }
-    },
-    "defaultConfiguration": "development",
-    "options": {
-      "port": 4200,
-      "publicHost": "http://localhost:4200"
-    }
-  }
+   }
 }
 ```
 
@@ -35,29 +35,29 @@ See an example set up of it below:
 
 ```json
 {
-  "serve-with-hmr-remotes": {
-    "executor": "@nx/angular:module-federation-dev-server",
-    "configurations": {
-      "production": {
-        "buildTarget": "host:build:production"
+   "serve-with-hmr-remotes": {
+      "executor": "@nx/angular:module-federation-dev-server",
+      "configurations": {
+         "production": {
+            "buildTarget": "host:build:production"
+         },
+         "development": {
+            "buildTarget": "host:build:development"
+         }
       },
-      "development": {
-        "buildTarget": "host:build:development"
+      "defaultConfiguration": "development",
+      "options": {
+         "port": 4200,
+         "publicHost": "http://localhost:4200",
+         "devRemotes": [
+            "remote1",
+            {
+               "remoteName": "remote2",
+               "configuration": "development"
+            }
+         ]
       }
-    },
-    "defaultConfiguration": "development",
-    "options": {
-      "port": 4200,
-      "publicHost": "http://localhost:4200",
-      "devRemotes": [
-        "remote1",
-        {
-          "remoteName": "remote2",
-          "configuration": "development"
-        }
-      ]
-    }
-  }
+   }
 }
 ```
 

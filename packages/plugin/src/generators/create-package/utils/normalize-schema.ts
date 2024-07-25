@@ -3,34 +3,34 @@ import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/pr
 import { CreatePackageSchema } from '../schema';
 
 export interface NormalizedSchema extends CreatePackageSchema {
-  bundler: 'swc' | 'tsc';
-  projectName: string;
-  projectRoot: string;
+   bundler: 'swc' | 'tsc';
+   projectName: string;
+   projectRoot: string;
 }
 
 export async function normalizeSchema(
-  host: Tree,
-  schema: CreatePackageSchema
+   host: Tree,
+   schema: CreatePackageSchema
 ): Promise<NormalizedSchema> {
-  const {
-    projectName,
-    names: projectNames,
-    projectRoot,
-    projectNameAndRootFormat,
-  } = await determineProjectNameAndRootOptions(host, {
-    name: schema.name,
-    projectType: 'library',
-    directory: schema.directory,
-    projectNameAndRootFormat: schema.projectNameAndRootFormat,
-    callingGenerator: '@nx/plugin:create-package',
-  });
-  schema.projectNameAndRootFormat = projectNameAndRootFormat;
+   const {
+      projectName,
+      names: projectNames,
+      projectRoot,
+      projectNameAndRootFormat,
+   } = await determineProjectNameAndRootOptions(host, {
+      name: schema.name,
+      projectType: 'library',
+      directory: schema.directory,
+      projectNameAndRootFormat: schema.projectNameAndRootFormat,
+      callingGenerator: '@nx/plugin:create-package',
+   });
+   schema.projectNameAndRootFormat = projectNameAndRootFormat;
 
-  return {
-    ...schema,
-    bundler: schema.compiler ?? 'tsc',
-    projectName,
-    projectRoot,
-    name: projectNames.projectSimpleName,
-  };
+   return {
+      ...schema,
+      bundler: schema.compiler ?? 'tsc',
+      projectName,
+      projectRoot,
+      name: projectNames.projectSimpleName,
+   };
 }

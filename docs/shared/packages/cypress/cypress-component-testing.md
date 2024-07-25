@@ -46,10 +46,10 @@ If you need to add additional configuration properties, you can spread the retur
 
 ```ts {%filename="cypress.config.ts"}
 export default defineConfig({
-  component: {
-    ...nxComponentTestingPreset(__filename),
-    // add your own config here
-  },
+   component: {
+      ...nxComponentTestingPreset(__filename),
+      // add your own config here
+   },
 });
 ```
 

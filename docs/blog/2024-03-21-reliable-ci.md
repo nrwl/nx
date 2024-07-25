@@ -42,16 +42,16 @@ To understand why the traditional CI execution model fails to handle failures, l
 
 Failures can be:
 
-- hard _(npm fails to install, nothing can run)_
-- soft _(a test takes a lot longer than it should because, perhaps, due to an out-of-memory issue)_
+-  hard _(npm fails to install, nothing can run)_
+-  soft _(a test takes a lot longer than it should because, perhaps, due to an out-of-memory issue)_
 
 Focusing on the latter is just as important as focusing on the former. **Slow CI is broken CI.**
 
 Tasks can fail:
 
-- legitimately _(a broken build)_
-- for external reasons _(npm install fails cause npm is down)_
-- for unknown reasons _(a flaky test)_
+-  legitimately _(a broken build)_
+-  for external reasons _(npm install fails cause npm is down)_
+-  for unknown reasons _(a flaky test)_
 
 **The traditional CI execution model doesn’t tolerate any of these failures.**
 
@@ -180,10 +180,10 @@ We also have a **Pro for Startups** plan which offers agents that are 3.5x cheap
 
 ## Learn more
 
-- [Nx Docs](/getting-started/intro)
-- [X / Twitter](https://twitter.com/nxdevtools)
-- [LinkedIn](https://www.linkedin.com/company/nrwl)
-- [Nx GitHub](https://github.com/nrwl/nx)
-- [Nx Community Discord](https://go.nx.dev/community)
-- [Nx Youtube Channel](https://www.youtube.com/@nxdevtools)
-- [Speed up your CI](https://nx.app)
+-  [Nx Docs](/getting-started/intro)
+-  [X / Twitter](https://twitter.com/nxdevtools)
+-  [LinkedIn](https://www.linkedin.com/company/nrwl)
+-  [Nx GitHub](https://github.com/nrwl/nx)
+-  [Nx Community Discord](https://go.nx.dev/community)
+-  [Nx Youtube Channel](https://www.youtube.com/@nxdevtools)
+-  [Speed up your CI](https://nx.app)

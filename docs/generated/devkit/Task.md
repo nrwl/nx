@@ -6,17 +6,17 @@ A representation of the invocation of an Executor
 
 ### Properties
 
-- [cache](../../devkit/documents/Task#cache): boolean
-- [endTime](../../devkit/documents/Task#endtime): number
-- [hash](../../devkit/documents/Task#hash): string
-- [hashDetails](../../devkit/documents/Task#hashdetails): Object
-- [id](../../devkit/documents/Task#id): string
-- [outputs](../../devkit/documents/Task#outputs): string[]
-- [overrides](../../devkit/documents/Task#overrides): any
-- [parallelism](../../devkit/documents/Task#parallelism): boolean
-- [projectRoot](../../devkit/documents/Task#projectroot): string
-- [startTime](../../devkit/documents/Task#starttime): number
-- [target](../../devkit/documents/Task#target): Object
+-  [cache](../../devkit/documents/Task#cache): boolean
+-  [endTime](../../devkit/documents/Task#endtime): number
+-  [hash](../../devkit/documents/Task#hash): string
+-  [hashDetails](../../devkit/documents/Task#hashdetails): Object
+-  [id](../../devkit/documents/Task#id): string
+-  [outputs](../../devkit/documents/Task#outputs): string[]
+-  [overrides](../../devkit/documents/Task#overrides): any
+-  [parallelism](../../devkit/documents/Task#parallelism): boolean
+-  [projectRoot](../../devkit/documents/Task#projectroot): string
+-  [startTime](../../devkit/documents/Task#starttime): number
+-  [target](../../devkit/documents/Task#target): Object
 
 ## Properties
 

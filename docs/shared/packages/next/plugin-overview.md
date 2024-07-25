@@ -7,9 +7,9 @@ When using Next.js in Nx, you get the out-of-the-box support for TypeScript, Cyp
 
 The Next.js plugin contains executors and generators for managing Next.js applications and libraries within an Nx workspace. It provides:
 
-- Scaffolding for creating, building, serving, linting, and testing Next.js applications.
-- Integration with building, serving, and exporting a Next.js application.
-- Integration with React libraries within the workspace.
+-  Scaffolding for creating, building, serving, linting, and testing Next.js applications.
+-  Integration with building, serving, and exporting a Next.js application.
+-  Integration with React libraries within the workspace.
 
 ## Setting up @nx/next
 
@@ -57,9 +57,9 @@ Since Nx 18, Nx plugins can infer tasks for your projects based on the configura
 
 The `@nx/next` plugin will create tasks for any project that has a Next.js configuration file preset. Any of the following files will be recognized as a Next.js configuration file:
 
-- `next.config.js`
-- `next.config.cjs`
-- `next.config.mjs`
+-  `next.config.js`
+-  `next.config.cjs`
+-  `next.config.mjs`
 
 ### View Inferred Tasks
 
@@ -71,24 +71,24 @@ The `@nx/next/plugin` is configured in the `plugins` array in `nx.json`.
 
 ```json {% fileName="nx.json" %}
 {
-  "plugins": [
-    {
-      "plugin": "@nx/next/plugin",
-      "options": {
-        "buildTargetName": "build",
-        "devTargetName": "dev",
-        "startTargetName": "start",
-        "serveStaticTargetName": "serve-static"
+   "plugins": [
+      {
+         "plugin": "@nx/next/plugin",
+         "options": {
+            "buildTargetName": "build",
+            "devTargetName": "dev",
+            "startTargetName": "start",
+            "serveStaticTargetName": "serve-static"
+         }
       }
-    }
-  ]
+   ]
 }
 ```
 
-- The `buildTargetName` option controls the name of Next.js' compilation task which compiles the application for production deployment. The default name is `build`.
-- The `devTargetName` option controls the name of Next.js' development serve task which starts the application in development mode. The default name is `dev`.
-- The `startTargetName` option controls the name of Next.js' production serve task which starts the application in production mode. The default name is `start`.
-- The `serveStaticTargetName` option controls the name of Next.js' static export task which exports the application to static HTML files. The default name is `serve-static`.
+-  The `buildTargetName` option controls the name of Next.js' compilation task which compiles the application for production deployment. The default name is `build`.
+-  The `devTargetName` option controls the name of Next.js' development serve task which starts the application in development mode. The default name is `dev`.
+-  The `startTargetName` option controls the name of Next.js' production serve task which starts the application in production mode. The default name is `start`.
+-  The `serveStaticTargetName` option controls the name of Next.js' static export task which exports the application to static HTML files. The default name is `serve-static`.
 
 ## Using @nx/next
 
@@ -104,9 +104,9 @@ nx g @nx/next:app my-new-app
 
 Nx allows you to create libraries with just one command. Some reasons you might want to create a library include:
 
-- Share code between applications
-- Publish a package to be used outside the monorepo
-- Better visualize the architecture using `nx graph`
+-  Share code between applications
+-  Publish a package to be used outside the monorepo
+-  Better visualize the architecture using `nx graph`
 
 To generate a new library run:
 
@@ -172,11 +172,11 @@ You can import a library called `my-new-lib` in your application as follows.
 import { MyNewLib } from '@<your nx workspace name>/my-new-lib';
 
 export function Index() {
-  return (
-    <MyNewLib>
-      <p>The main content</p>
-    </MyNewLib>
-  );
+   return (
+      <MyNewLib>
+         <p>The main content</p>
+      </MyNewLib>
+   );
 }
 
 export default Index;
@@ -246,10 +246,10 @@ Next.js applications can be statically exported by changing the output inside yo
 
 ```js {% fileName="apps/my-next-app/next.config.js" highlightLines=[5] %}
 const nextConfig = {
-  nx: {
-    svgr: false,
-  },
-  output: 'export',
+   nx: {
+      svgr: false,
+   },
+   output: 'export',
 };
 ```
 
@@ -303,5 +303,5 @@ You may know that the company behind Next.js, Vercel, has a great hosting platfo
 
 Here are other resources that you may find useful to learn more about Next.js and Nx.
 
-- **Blog post:** [Building a blog with Next.js and Nx Series](https://blog.nrwl.io/create-a-next-js-web-app-with-nx-bcf2ab54613) by Juri Strumpflohner
-- **Video tutorial:** [Typescript NX Monorepo with NextJS and Express](https://www.youtube.com/watch?v=WOfL5q2HznI) by Jack Herrington
+-  **Blog post:** [Building a blog with Next.js and Nx Series](https://blog.nrwl.io/create-a-next-js-web-app-with-nx-bcf2ab54613) by Juri Strumpflohner
+-  **Video tutorial:** [Typescript NX Monorepo with NextJS and Express](https://www.youtube.com/watch?v=WOfL5q2HznI) by Jack Herrington

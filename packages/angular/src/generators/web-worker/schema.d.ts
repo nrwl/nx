@@ -1,7 +1,7 @@
 export interface WebWorkerGeneratorOptions {
-  name: string;
-  project: string;
-  path?: string;
-  skipFormat?: boolean;
-  snippet?: boolean;
+   name: string;
+   project: string;
+   path?: string;
+   skipFormat?: boolean;
+   snippet?: boolean;
 }

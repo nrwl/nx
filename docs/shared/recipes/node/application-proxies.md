@@ -13,10 +13,10 @@ This command will generate and configure a `proxy.conf.json` file that will be u
 
 ```json {% fileName="/apps/my-react-app/proxy.conf.json" %}
 {
-  "/api": {
-    "target": "http://localhost:3000",
-    "secure": false
-  }
+   "/api": {
+      "target": "http://localhost:3000",
+      "secure": false
+   }
 }
 ```
 

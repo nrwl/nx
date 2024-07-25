@@ -1,10 +1,10 @@
 import type { GeneratorOptions, NormalizedGeneratorOptions } from '../schema';
 
 export function normalizeOptions(
-  options: GeneratorOptions
+   options: GeneratorOptions
 ): NormalizedGeneratorOptions {
-  return {
-    ...options,
-    buildTarget: options.buildTarget || 'build',
-  };
+   return {
+      ...options,
+      buildTarget: options.buildTarget || 'build',
+   };
 }

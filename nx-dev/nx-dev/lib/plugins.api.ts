@@ -3,9 +3,9 @@ import documents from '../public/documentation/generated/manifests/extending-nx.
 import { tagsApi } from './tags.api';
 
 export const nxPluginsApi = new DocumentsApi({
-  id: 'extending-nx',
-  manifest: documents,
-  prefix: '',
-  publicDocsRoot: 'public/documentation',
-  tagsApi,
+   id: 'extending-nx',
+   manifest: documents,
+   prefix: '',
+   publicDocsRoot: 'public/documentation',
+   tagsApi,
 });

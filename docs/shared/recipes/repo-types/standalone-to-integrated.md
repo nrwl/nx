@@ -34,10 +34,10 @@ For this recipe, we'll assume that the root-level app is named `my-app`. The hig
 
    ```jsonc {% fileName="nx.json" %}
    {
-     "workspaceLayout": {
-       "appsDir": "apps",
-       "libsDir": "libs"
-     }
+      "workspaceLayout": {
+         "appsDir": "apps",
+         "libsDir": "libs"
+      }
    }
    ```
 
@@ -90,21 +90,21 @@ For this recipe, we'll assume that the root-level app is named `my-app`. The hig
 
 8. Move the `/e2e/src` folder to `/apps/temp-e2e`, overwriting the folder already there
 9. For each config file in `apps/temp-e2e`, copy over the corresponding file from the root of the repo. Update the paths for these files in the same way you did for the `my-app` config files.
-10. Update the `/apps/temp-e2e/project.json` `implicitDependencies` to be `temp` instead of `my-app`
-11. Doublecheck that all the tasks defined in the `apps/temp-e2e/project.json` file still work.
+10.   Update the `/apps/temp-e2e/project.json` `implicitDependencies` to be `temp` instead of `my-app`
+11.   Doublecheck that all the tasks defined in the `apps/temp-e2e/project.json` file still work.
 
-    ```shell
-    nx lint temp-e2e
-    nx e2e temp-e2e
-    ```
+      ```shell
+      nx lint temp-e2e
+      nx e2e temp-e2e
+      ```
 
-12. Delete all the project specific config files in the root and under `e2e`
-13. Once the `project.json` file has been deleted in the root, rename `temp-e2e` to `my-app-e2e` and rename `temp` to `my-app`
+12.   Delete all the project specific config files in the root and under `e2e`
+13.   Once the `project.json` file has been deleted in the root, rename `temp-e2e` to `my-app-e2e` and rename `temp` to `my-app`
 
-    ```shell
-    nx g move --projectName=temp-e2e --destination=my-app-e2e
-    nx g move --projectName=temp --destination=my-app
-    ```
+      ```shell
+      nx g move --projectName=temp-e2e --destination=my-app-e2e
+      nx g move --projectName=temp --destination=my-app
+      ```
 
-14. Update the `defaultProject` in `nx.json` if needed
-15. Check again that all the tasks still work and that the `nx graph` displays what you expect.
+14.   Update the `defaultProject` in `nx.json` if needed
+15.   Check again that all the tasks still work and that the `nx graph` displays what you expect.

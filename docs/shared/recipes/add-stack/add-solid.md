@@ -70,11 +70,11 @@ The `@nx/web:app` generator will create some files that are unnecessary for our 
 
 The files and folders to be deleted are:
 
-- `apps/my-solid-app/public/`
-- `apps/my-solid-app/src/app/`
-- `apps/my-solid-app/src/main.ts`
-- `apps/my-solid-app/src/styles.css`
-- `apps/my-solid-app/.babelrc`
+-  `apps/my-solid-app/public/`
+-  `apps/my-solid-app/src/app/`
+-  `apps/my-solid-app/src/main.ts`
+-  `apps/my-solid-app/src/styles.css`
+-  `apps/my-solid-app/.babelrc`
 
 ### Turn the Application into a Solid Application
 
@@ -86,22 +86,22 @@ Now we'll create the files that are necessary to turn our application into a Sol
 import type { Component } from 'solid-js';
 
 const App: Component = () => {
-  return (
-    <div>
-      <header>
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          href="https://github.com/solidjs/solid"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn Solid Now
-        </a>
-      </header>
-    </div>
-  );
+   return (
+      <div>
+         <header>
+            <p>
+               Edit <code>src/App.tsx</code> and save to reload.
+            </p>
+            <a
+               href="https://github.com/solidjs/solid"
+               target="_blank"
+               rel="noopener noreferrer"
+            >
+               Learn Solid Now
+            </a>
+         </header>
+      </div>
+   );
 };
 
 export default App;
@@ -116,9 +116,9 @@ import App from './App';
 const root = document.getElementById('root');
 
 if (import.meta.env.DEV && !(root instanceof HTMLElement)) {
-  throw new Error(
-    'Root element not found. Did you forget to add it to your index.html? Or maybe the id attribute got misspelled?'
-  );
+   throw new Error(
+      'Root element not found. Did you forget to add it to your index.html? Or maybe the id attribute got misspelled?'
+   );
 }
 
 render(() => <App />, root!);
@@ -129,18 +129,18 @@ render(() => <App />, root!);
 ```html {% fileName="apps/my-solid-app/index.html" %}
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#000000" />
-    <title>Solid App</title>
-  </head>
-  <body>
-    <noscript>You need to enable JavaScript to run this app.</noscript>
-    <div id="root"></div>
+   <head>
+      <meta charset="utf-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1" />
+      <meta name="theme-color" content="#000000" />
+      <title>Solid App</title>
+   </head>
+   <body>
+      <noscript>You need to enable JavaScript to run this app.</noscript>
+      <div id="root"></div>
 
-    <script src="src/index.tsx" type="module"></script>
-  </body>
+      <script src="src/index.tsx" type="module"></script>
+   </body>
 </html>
 ```
 
@@ -153,80 +153,80 @@ import solidPlugin from 'vite-plugin-solid';
 import viteTsConfigPaths from 'vite-tsconfig-paths';
 
 export default defineConfig({
-  cacheDir: '../../node_modules/.vite/apps/my-solid-app',
+   cacheDir: '../../node_modules/.vite/apps/my-solid-app',
 
-  server: {
-    port: 3000,
-  },
+   server: {
+      port: 3000,
+   },
 
-  build: {
-    target: 'esnext',
-  },
+   build: {
+      target: 'esnext',
+   },
 
-  plugins: [
-    viteTsConfigPaths({
-      root: '../../',
-    }),
-    /*
+   plugins: [
+      viteTsConfigPaths({
+         root: '../../',
+      }),
+      /*
                                                                         Uncomment the following line to enable solid-devtools.
                                                                         For more info see https://github.com/thetarnav/solid-devtools/tree/main/packages/extension#readme
                                                                         */
-    // devtools(),
-    solidPlugin(),
-  ],
+      // devtools(),
+      solidPlugin(),
+   ],
 
-  // Uncomment this if you are using workers.
-  // worker: {
-  //  plugins: [
-  //    viteTsConfigPaths({
-  //      root: '../../',
-  //    }),
-  //  ],
-  // },
+   // Uncomment this if you are using workers.
+   // worker: {
+   //  plugins: [
+   //    viteTsConfigPaths({
+   //      root: '../../',
+   //    }),
+   //  ],
+   // },
 
-  test: {
-    globals: true,
-    cache: {
-      dir: '../../node_modules/.vitest/apps/my-solid-app',
-    },
-    environment: 'jsdom',
-    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-  },
+   test: {
+      globals: true,
+      cache: {
+         dir: '../../node_modules/.vitest/apps/my-solid-app',
+      },
+      environment: 'jsdom',
+      include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+   },
 });
 ```
 
 ```json {% fileName="apps/my-solid-app/tsconfig.json" %}
 {
-  "extends": "../../tsconfig.base.json",
-  "files": [],
-  "compilerOptions": {
-    "target": "ESNext",
-    "useDefineForClassFields": true,
-    "module": "ESNext",
-    "lib": ["ESNext", "DOM"],
-    "moduleResolution": "Node",
-    "jsx": "preserve",
-    "jsxImportSource": "solid-js",
-    "strict": true,
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "esModuleInterop": true,
-    "noEmit": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noImplicitReturns": true,
-    "skipLibCheck": true,
-    "types": ["vite/client", "vitest"]
-  },
-  "include": ["src"],
-  "references": [
-    {
-      "path": "./tsconfig.app.json"
-    },
-    {
-      "path": "./tsconfig.spec.json"
-    }
-  ]
+   "extends": "../../tsconfig.base.json",
+   "files": [],
+   "compilerOptions": {
+      "target": "ESNext",
+      "useDefineForClassFields": true,
+      "module": "ESNext",
+      "lib": ["ESNext", "DOM"],
+      "moduleResolution": "Node",
+      "jsx": "preserve",
+      "jsxImportSource": "solid-js",
+      "strict": true,
+      "resolveJsonModule": true,
+      "isolatedModules": true,
+      "esModuleInterop": true,
+      "noEmit": true,
+      "noUnusedLocals": true,
+      "noUnusedParameters": true,
+      "noImplicitReturns": true,
+      "skipLibCheck": true,
+      "types": ["vite/client", "vitest"]
+   },
+   "include": ["src"],
+   "references": [
+      {
+         "path": "./tsconfig.app.json"
+      },
+      {
+         "path": "./tsconfig.spec.json"
+      }
+   ]
 }
 ```
 
@@ -251,35 +251,35 @@ Rename `libs/my-lib/src/lib/my-lib.ts` -> `libs/my-lib/src/lib/my-lib.tsx`, then
 
 ```tsx {% fileName="libs/my-lib/src/lib/my-lib.tsx" %}
 export function MyLibComponent(props: { name: string }) {
-  return <h1>Hello {props.name} from MyLib</h1>;
+   return <h1>Hello {props.name} from MyLib</h1>;
 }
 ```
 
 ```json {% fileName="libs/my-lib/tsconfig.json" %}
 {
-  "extends": "../../tsconfig.base.json",
-  "compilerOptions": {
-    "module": "commonjs",
-    "forceConsistentCasingInFileNames": true,
-    "strict": true,
-    "noImplicitOverride": true,
-    "noPropertyAccessFromIndexSignature": true,
-    "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true,
-    "jsx": "preserve",
-    "jsxImportSource": "solid-js",
-    "types": ["vitest"]
-  },
-  "files": [],
-  "include": [],
-  "references": [
-    {
-      "path": "./tsconfig.lib.json"
-    },
-    {
-      "path": "./tsconfig.spec.json"
-    }
-  ]
+   "extends": "../../tsconfig.base.json",
+   "compilerOptions": {
+      "module": "commonjs",
+      "forceConsistentCasingInFileNames": true,
+      "strict": true,
+      "noImplicitOverride": true,
+      "noPropertyAccessFromIndexSignature": true,
+      "noImplicitReturns": true,
+      "noFallthroughCasesInSwitch": true,
+      "jsx": "preserve",
+      "jsxImportSource": "solid-js",
+      "types": ["vitest"]
+   },
+   "files": [],
+   "include": [],
+   "references": [
+      {
+         "path": "./tsconfig.lib.json"
+      },
+      {
+         "path": "./tsconfig.spec.json"
+      }
+   ]
 }
 ```
 
@@ -288,23 +288,23 @@ import type { Component } from 'solid-js';
 import { MyLibComponent } from '@acme/my-lib';
 
 const App: Component = () => {
-  return (
-    <div>
-      <header>
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <MyLibComponent name={'there'} />
-        <a
-          href="https://github.com/solidjs/solid"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn Solid Now
-        </a>
-      </header>
-    </div>
-  );
+   return (
+      <div>
+         <header>
+            <p>
+               Edit <code>src/App.tsx</code> and save to reload.
+            </p>
+            <MyLibComponent name={'there'} />
+            <a
+               href="https://github.com/solidjs/solid"
+               target="_blank"
+               rel="noopener noreferrer"
+            >
+               Learn Solid Now
+            </a>
+         </header>
+      </div>
+   );
 };
 
 export default App;
@@ -314,7 +314,7 @@ Now when you serve your application, you'll see the content from the library bei
 
 ## More Documentation
 
-- [@nx/vite](/nx-api/vite)
-- [@nx/js](/nx-api/js)
-- [@nx/web](/nx-api/web)
-- [Solid](https://www.solidjs.com/)
+-  [@nx/vite](/nx-api/vite)
+-  [@nx/js](/nx-api/js)
+-  [@nx/web](/nx-api/web)
+-  [Solid](https://www.solidjs.com/)

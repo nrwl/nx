@@ -1,17 +1,17 @@
 ---
 title: 'migrate - CLI command'
 description:
-  'Creates a migrations file or runs migrations from the migrations file.
-  - Migrate packages and create migrations.json (e.g., nx migrate @nx/workspace@latest)
-  - Run migrations (e.g., nx migrate --run-migrations=migrations.json). Use flag --if-exists to run migrations only if the migrations file exists.'
+   'Creates a migrations file or runs migrations from the migrations file.
+   - Migrate packages and create migrations.json (e.g., nx migrate @nx/workspace@latest)
+   - Run migrations (e.g., nx migrate --run-migrations=migrations.json). Use flag --if-exists to run migrations only if the migrations file exists.'
 ---
 
 # migrate
 
 Creates a migrations file or runs migrations from the migrations file.
 
-- Migrate packages and create migrations.json (e.g., nx migrate @nx/workspace@latest)
-- Run migrations (e.g., nx migrate --run-migrations=migrations.json). Use flag --if-exists to run migrations only if the migrations file exists.
+-  Migrate packages and create migrations.json (e.g., nx migrate @nx/workspace@latest)
+-  Run migrations (e.g., nx migrate --run-migrations=migrations.json). Use flag --if-exists to run migrations only if the migrations file exists.
 
 ## Usage
 

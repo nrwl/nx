@@ -70,15 +70,15 @@ Let’s look at the test target relying on its dependencies.
 
 ```json
 {
-  "test": {
-    "executor": "@nx/jest:jest",
-    "outputs": ["{workspaceRoot}/coverage/apps/app1"],
-    "dependsOn": ["^test"],
-    "options": {
-      "jestConfig": "apps/app1/jest.config.js",
-      "passWithNoTests": true
-    }
-  }
+   "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/apps/app1"],
+      "dependsOn": ["^test"],
+      "options": {
+         "jestConfig": "apps/app1/jest.config.js",
+         "passWithNoTests": true
+      }
+   }
 }
 ```
 
@@ -146,11 +146,11 @@ How does Nx do it?
 
 By default, the computation hash for say `nx test app1` includes:
 
-- All the source files of `app1` and `lib`
-- Relevant global configuration
-- Versions of external dependencies
-- [Runtime values provisioned by the user](/reference/inputs#runtime-inputs)
-- CLI Command flags
+-  All the source files of `app1` and `lib`
+-  Relevant global configuration
+-  Versions of external dependencies
+-  [Runtime values provisioned by the user](/reference/inputs#runtime-inputs)
+-  CLI Command flags
 
 ![computation-hashing](/shared/mental-model/computation-hashing.svg)
 
@@ -172,10 +172,10 @@ about it.
 Although conceptually this is fairly straightforward, Nx optimizes this to make this experience good for you. For
 instance, Nx:
 
-- Captures stdout and stderr to make sure the replayed output looks the same, including on Windows.
-- Minimizes the IO by remembering what files are replayed where.
-- Only shows relevant output when processing a large task graph.
-- Provides affordances for troubleshooting cache misses. And many other optimizations.
+-  Captures stdout and stderr to make sure the replayed output looks the same, including on Windows.
+-  Minimizes the IO by remembering what files are replayed where.
+-  Only shows relevant output when processing a large task graph.
+-  Provides affordances for troubleshooting cache misses. And many other optimizations.
 
 As your workspace grows, the task graph looks more like this:
 
@@ -208,8 +208,8 @@ it locally.
 
 ## In summary
 
-- Nx is able to analyze your source code to create a Project Graph.
-- Nx can use the project graph and information about projects’ targets to create a Task Graph.
-- Nx is able to perform code-change analysis to create the smallest task graph for your PR.
-- Nx supports computation caching to never execute the same computation twice. This computation cache is pluggable and
-  can be distributed.
+-  Nx is able to analyze your source code to create a Project Graph.
+-  Nx can use the project graph and information about projects’ targets to create a Task Graph.
+-  Nx is able to perform code-change analysis to create the smallest task graph for your PR.
+-  Nx supports computation caching to never execute the same computation twice. This computation cache is pluggable and
+   can be distributed.

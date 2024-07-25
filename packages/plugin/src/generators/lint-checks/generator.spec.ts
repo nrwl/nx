@@ -2,12 +2,12 @@ import 'nx/src/internal-testing-utils/mock-project-graph';
 
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import {
-  Tree,
-  readProjectConfiguration,
-  readJson,
-  updateJson,
-  joinPathFragments,
-  writeJson,
+   Tree,
+   readProjectConfiguration,
+   readJson,
+   updateJson,
+   joinPathFragments,
+   writeJson,
 } from '@nx/devkit';
 
 import type { Linter as ESLint } from 'eslint';
@@ -21,70 +21,70 @@ import executorGenerator from '../executor/executor';
 import { PackageJson } from 'nx/src/utils/package-json';
 
 describe('lint-checks generator', () => {
-  let tree: Tree;
+   let tree: Tree;
 
-  beforeEach(async () => {
-    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-    await pluginGenerator(tree, {
-      name: 'plugin',
-      importPath: '@acme/plugin',
-      compiler: 'tsc',
-      linter: Linter.EsLint,
-      skipFormat: false,
-      skipTsConfig: false,
-      skipLintChecks: true, // we manually call it s.t. we can update config files first
-      unitTestRunner: 'jest',
-    });
-    await generatorGenerator(tree, {
-      name: 'my-generator',
-      project: 'plugin',
-      unitTestRunner: 'jest',
-      skipLintChecks: true,
-    });
-    await executorGenerator(tree, {
-      name: 'my-executor',
-      project: 'plugin',
-      unitTestRunner: 'jest',
-      includeHasher: false,
-      skipLintChecks: true,
-    });
-  });
+   beforeEach(async () => {
+      tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+      await pluginGenerator(tree, {
+         name: 'plugin',
+         importPath: '@acme/plugin',
+         compiler: 'tsc',
+         linter: Linter.EsLint,
+         skipFormat: false,
+         skipTsConfig: false,
+         skipLintChecks: true, // we manually call it s.t. we can update config files first
+         unitTestRunner: 'jest',
+      });
+      await generatorGenerator(tree, {
+         name: 'my-generator',
+         project: 'plugin',
+         unitTestRunner: 'jest',
+         skipLintChecks: true,
+      });
+      await executorGenerator(tree, {
+         name: 'my-executor',
+         project: 'plugin',
+         unitTestRunner: 'jest',
+         includeHasher: false,
+         skipLintChecks: true,
+      });
+   });
 
-  it('should update configuration files for default plugin', async () => {
-    await generator(tree, { projectName: 'plugin' });
+   it('should update configuration files for default plugin', async () => {
+      await generator(tree, { projectName: 'plugin' });
 
-    const projectConfig = readProjectConfiguration(tree, 'plugin');
-    const eslintConfig: ESLint.Config = readJson(
-      tree,
-      `${projectConfig.root}/.eslintrc.json`
-    );
+      const projectConfig = readProjectConfiguration(tree, 'plugin');
+      const eslintConfig: ESLint.Config = readJson(
+         tree,
+         `${projectConfig.root}/.eslintrc.json`
+      );
 
-    expect(eslintConfig.overrides).toContainEqual(
-      expect.objectContaining({
-        files: expect.arrayContaining([
-          './executors.json',
-          './package.json',
-          './generators.json',
-        ]),
-        rules: {
-          '@nx/nx-plugin-checks': 'error',
-        },
-      })
-    );
-  });
+      expect(eslintConfig.overrides).toContainEqual(
+         expect.objectContaining({
+            files: expect.arrayContaining([
+               './executors.json',
+               './package.json',
+               './generators.json',
+            ]),
+            rules: {
+               '@nx/nx-plugin-checks': 'error',
+            },
+         })
+      );
+   });
 
-  it('should not duplicate configuration', async () => {
-    await generator(tree, { projectName: 'plugin' });
-    await generator(tree, { projectName: 'plugin' });
-    const projectConfig = readProjectConfiguration(tree, 'plugin');
-    const eslintConfig: ESLint.Config = readJson(
-      tree,
-      `${projectConfig.root}/.eslintrc.json`
-    );
+   it('should not duplicate configuration', async () => {
+      await generator(tree, { projectName: 'plugin' });
+      await generator(tree, { projectName: 'plugin' });
+      const projectConfig = readProjectConfiguration(tree, 'plugin');
+      const eslintConfig: ESLint.Config = readJson(
+         tree,
+         `${projectConfig.root}/.eslintrc.json`
+      );
 
-    expect(
-      eslintConfig.overrides.find((x) => '@nx/nx-plugin-checks' in x.rules)
-    ).toMatchInlineSnapshot(`
+      expect(
+         eslintConfig.overrides.find((x) => '@nx/nx-plugin-checks' in x.rules)
+      ).toMatchInlineSnapshot(`
       {
         "files": [
           "./package.json",
@@ -97,35 +97,35 @@ describe('lint-checks generator', () => {
         },
       }
     `);
-  });
+   });
 
-  it('should update configuration files for angular-style plugin', async () => {
-    const startingProjectConfig = readProjectConfiguration(tree, 'plugin');
-    updateJson(
-      tree,
-      joinPathFragments(startingProjectConfig.root, 'package.json'),
-      (json: PackageJson) => {
-        json.schematics = './collection.json';
-        delete json.generators;
-        json.builders = './builders.json';
-        delete json.executors;
-        json['ng-update'] = './migrations.json';
-        return json;
-      }
-    );
-    writeJson(
-      tree,
-      joinPathFragments(startingProjectConfig.root, 'migrations.json'),
-      {}
-    );
-    await generator(tree, { projectName: 'plugin' });
-    const projectConfig = readProjectConfiguration(tree, 'plugin');
-    const eslintConfig: ESLint.Config = readJson(
-      tree,
-      `${projectConfig.root}/.eslintrc.json`
-    );
+   it('should update configuration files for angular-style plugin', async () => {
+      const startingProjectConfig = readProjectConfiguration(tree, 'plugin');
+      updateJson(
+         tree,
+         joinPathFragments(startingProjectConfig.root, 'package.json'),
+         (json: PackageJson) => {
+            json.schematics = './collection.json';
+            delete json.generators;
+            json.builders = './builders.json';
+            delete json.executors;
+            json['ng-update'] = './migrations.json';
+            return json;
+         }
+      );
+      writeJson(
+         tree,
+         joinPathFragments(startingProjectConfig.root, 'migrations.json'),
+         {}
+      );
+      await generator(tree, { projectName: 'plugin' });
+      const projectConfig = readProjectConfiguration(tree, 'plugin');
+      const eslintConfig: ESLint.Config = readJson(
+         tree,
+         `${projectConfig.root}/.eslintrc.json`
+      );
 
-    expect(eslintConfig.overrides).toMatchInlineSnapshot(`
+      expect(eslintConfig.overrides).toMatchInlineSnapshot(`
       [
         {
           "files": [
@@ -173,5 +173,5 @@ describe('lint-checks generator', () => {
         },
       ]
     `);
-  });
+   });
 });

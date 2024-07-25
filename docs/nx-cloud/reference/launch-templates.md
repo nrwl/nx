@@ -27,8 +27,8 @@ Multiple launch templates can be useful for setting up different toolchains (rus
 
 ```yaml {% fileName=".nx/workflows/agents.yaml" %}
 launch-templates:
-  template-one:
-  template-two:
+   template-one:
+   template-two:
 ```
 
 ```
@@ -41,23 +41,23 @@ A launch template's `resource-class` defines the memory and vCPUs available to e
 
 ```yaml {% fileName=".nx/workflows/agents.yaml" %}
 launch-templates:
-  template-one:
-    resource-class: 'docker_linux_amd64/medium'
+   template-one:
+      resource-class: 'docker_linux_amd64/medium'
 ```
 
 The following resource classes are available:
 
-- `docker_linux_amd64/small`
-- `docker_linux_amd64/medium`
-- `docker_linux_amd64/medium+`
-- `docker_linux_amd64/large`
-- `docker_linux_amd64/large+`
-- `docker_linux_amd64/extra_large`
-- `docker_linux_amd64/extra_large+`
-- `docker_linux_arm64/medium`
-- `docker_linux_arm64/large`
-- `docker_linux_arm64/extra_large`
-- `windows/medium`
+-  `docker_linux_amd64/small`
+-  `docker_linux_amd64/medium`
+-  `docker_linux_amd64/medium+`
+-  `docker_linux_amd64/large`
+-  `docker_linux_amd64/large+`
+-  `docker_linux_amd64/extra_large`
+-  `docker_linux_amd64/extra_large+`
+-  `docker_linux_arm64/medium`
+-  `docker_linux_arm64/large`
+-  `docker_linux_arm64/extra_large`
+-  `windows/medium`
 
 See their detailed description and pricing at [nx.app/pricing](https://nx.app/pricing#plan-detail?sutm_source=nx.dev&utm_medium=launch-templates).
 
@@ -67,8 +67,8 @@ A launch template's `image` defines the available base software for the agent ma
 
 ```yaml {% fileName=".nx/workflows/agents.yaml" %}
 launch-templates:
-  template-one:
-    image: 'ubuntu22.04-node20.11-v9'
+   template-one:
+      image: 'ubuntu22.04-node20.11-v9'
 ```
 
 Nx Cloud provides the following images:
@@ -76,22 +76,22 @@ Nx Cloud provides the following images:
 > Changes added in previous images are included in newer images unless otherwise denoted
 > Images also have [go 1.22](https://go.dev/) installed
 
-- `ubuntu22.04-node20.11-v5`
-  - added elevated permission access via `sudo`
-- `ubuntu22.04-node20.11-v6`
+-  `ubuntu22.04-node20.11-v5`
+   -  added elevated permission access via `sudo`
+-  `ubuntu22.04-node20.11-v6`
 
-  - `corepack` is enabled by default
-  - default global package manager versions:
-    - `npm` v10
-    - `yarn` v1
-    - `pnpm` v8
-    - See how to install a [specific package manger version](#specific-package-manager-version)
+   -  `corepack` is enabled by default
+   -  default global package manager versions:
+      -  `npm` v10
+      -  `yarn` v1
+      -  `pnpm` v8
+      -  See how to install a [specific package manger version](#specific-package-manager-version)
 
-- `ubuntu22.04-node20.11-v7`
-  - added java version 17
-- `ubuntu22.04-node20.11-v9`
-  - added [nvm](https://github.com/nvm-sh/nvm)
-- `windows-2022`
+-  `ubuntu22.04-node20.11-v7`
+   -  added java version 17
+-  `ubuntu22.04-node20.11-v9`
+   -  added [nvm](https://github.com/nvm-sh/nvm)
+-  `windows-2022`
 
 > Note: Windows-based images can only run on Windows-based [resource classes](#launch-templatestemplate-nameresourceclass).
 
@@ -103,9 +103,9 @@ A launch template's `env` defines a `map` of environment variable names and valu
 
 ```yaml {% fileName=".nx/workflows/agents.yaml" %}
 launch-templates:
-  template-one:
-    env:
-      MY_ENV_VAR: 'my-var-value'
+   template-one:
+      env:
+         MY_ENV_VAR: 'my-var-value'
 ```
 
 ### `launch-templates.<template-name>.init-steps`
@@ -116,8 +116,8 @@ Typical `init-steps` perform actions such as checking out your workspace source 
 
 ```yaml {% fileName=".nx/workflows/agents.yaml" %}
 launch-templates:
-  template-one:
-    init-steps:
+   template-one:
+      init-steps:
 ```
 
 ### `launch-templates.<template-name>.init-steps[*].name`
@@ -126,9 +126,9 @@ An init-step's `name` is the label that will be reflected in the Nx Cloud UI. `n
 
 ```yaml {% fileName=".nx/workflows/agents.yaml" %}
 launch-templates:
-  template-one:
-    init-steps:
-      - name: 'My Helpful Step Name'
+   template-one:
+      init-steps:
+         - name: 'My Helpful Step Name'
 ```
 
 ### `launch-templates.<template-name>.init-steps[*].uses`
@@ -139,11 +139,11 @@ You can find the [list of Nx Cloud reusable steps here](https://github.com/nrwl/
 
 ```yaml {% fileName=".nx/workflows/agents.yaml" %}
 launch-templates:
-  template-one:
-    init-steps:
-      - uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/checkout/main.yaml'
-      - name: 'Install Node Modules'
-        uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/install-node-modules/main.yaml'
+   template-one:
+      init-steps:
+         - uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/checkout/main.yaml'
+         - name: 'Install Node Modules'
+           uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/install-node-modules/main.yaml'
 ```
 
 ### `launch-templates.<template-name>.init-steps[*].script`
@@ -152,12 +152,12 @@ When defined, allows an inline script to be run. **Cannot be used when `uses` is
 
 ```yaml {% fileName=".nx/workflows/agents.yaml" %}
 launch-templates:
-  template-one:
-    init-steps:
-      - name: 'Print Node Version and PATH'
-        script: |
-          node -v
-          echo $PATH
+   template-one:
+      init-steps:
+         - name: 'Print Node Version and PATH'
+           script: |
+              node -v
+              echo $PATH
 ```
 
 ### `launch-templates.<template-name>.init-steps[*].env`
@@ -166,13 +166,13 @@ An init-step's `env` is similar to the [`launch-template.<template-name>.env`](#
 
 ```yaml {% fileName=".nx/workflows/agents.yaml" %}
 launch-templates:
-  template-one:
-    init-steps:
-      - name: 'Print Env'
-        env:
-          MY_STEP_ENV: 'step-env-var'
-        script: |
-          echo $MY_STEP_ENV # prints "step-env-var"
+   template-one:
+      init-steps:
+         - name: 'Print Env'
+           env:
+              MY_STEP_ENV: 'step-env-var'
+           script: |
+              echo $MY_STEP_ENV # prints "step-env-var"
 ```
 
 ### `launch-templates.<template-name>.init-steps[*].inputs`
@@ -183,14 +183,14 @@ An init-step's `inputs` is defined by the step file in the [`launch-template.<te
 
 ```yaml {% fileName=".nx/workflows/agents.yaml" %}
 launch-templates:
-  template-one:
-    init-steps:
-      - name: Restore Node Modules Cache
-        uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/cache/main.yaml'
-        inputs:
-          env: 'package-lock.json|yarn.lock|pnpm-lock.yaml'
-          paths: 'node_modules'
-          base-branch: 'main'
+   template-one:
+      init-steps:
+         - name: Restore Node Modules Cache
+           uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/cache/main.yaml'
+           inputs:
+              env: 'package-lock.json|yarn.lock|pnpm-lock.yaml'
+              paths: 'node_modules'
+              base-branch: 'main'
 ```
 
 ## Full Example
@@ -199,129 +199,129 @@ This is an example of a launch template using all pre-built features:
 
 ```yaml {% fileName="./nx/workflows/agents.yaml" %}
 launch-templates:
-  # Custom template name, the name is referenced via --distribute-on="3 my-linux-medium-js"
-  # You can define as many templates as you need, commonly used to make different sizes or toolchains depending on your workspace needs
-  my-linux-medium-js:
-    # see the available resource list below
-    resource-class: 'docker_linux_amd64/medium'
-    # see the available image list below
-    image: 'ubuntu22.04-node20.11-v9'
-    # Define environment variables shared among all steps
-    env:
-      MY_ENV_VAR: shared
-      # list out steps to run on the agent before accepting tasks
-      # the agent will need a copy of the source code and dependencies installed
-    init-steps:
-      - name: Checkout
-        # using a reusable step in an external GitHub repo,
-        # this step is provided by Nx Cloud: https://github.com/nrwl/nx-cloud-workflows/tree/main/workflow-steps
-        uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/checkout/main.yaml'
-      - name: Restore Node Modules Cache
-        uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/cache/main.yaml'
-        # the cache step requires configuration via env vars
-        # https://github.com/nrwl/nx-cloud-workflows/tree/main/workflow-steps/cache#options
-        inputs:
-          env: 'package-lock.json|yarn.lock|pnpm-lock.yaml'
-          paths: 'node_modules'
-          base-branch: 'main'
-      - name: Restore Browser Binary Cache
-        uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/cache/main.yaml'
-        inputs:
-          env: 'package-lock.json|yarn.lock|pnpm-lock.yaml|"browsers"'
-          paths: |
-            '~/.cache/Cypress'
-            '~/.cache/ms-playwright'
-          base-branch: 'main'
-      - name: Install Node Modules
-        uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/install-node-modules/main.yaml'
-      - name: Install Browsers (if needed)
-        uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/install-browsers/main.yaml'
-        # You can also run a custom script to configure various things on the agent machine
-      - name: Run a custom script
-        script: |
-          git config --global user.email test@test.com
-          git config --global user.name "Test Test"
-      # You can also set any other env vars to be passed to the following steps
-      # by setting their value in the `$NX_CLOUD_ENV` file.
-      # Most commonly for redefining PATH for further steps
-      - name: Setting env
-        script: |
-          # Update PATH with custom value
-          echo "PATH=$HOME/my-folder:$PATH" >> $NX_CLOUD_ENV
-      - name: Print path from previous step
-        # will include my-folder
-        script: echo $PATH
-      - name: Define env var for a step
-        env:
-          MY_ENV_VAR: 'env-var-for-step'
-        # will print env-var-for-step
-        script: echo $MY_ENV_VAR
-      # after you're last step Nx Agents will start accepting tasks to process
-      # no need to manually start up the agent yourself
+   # Custom template name, the name is referenced via --distribute-on="3 my-linux-medium-js"
+   # You can define as many templates as you need, commonly used to make different sizes or toolchains depending on your workspace needs
+   my-linux-medium-js:
+      # see the available resource list below
+      resource-class: 'docker_linux_amd64/medium'
+      # see the available image list below
+      image: 'ubuntu22.04-node20.11-v9'
+      # Define environment variables shared among all steps
+      env:
+         MY_ENV_VAR: shared
+         # list out steps to run on the agent before accepting tasks
+         # the agent will need a copy of the source code and dependencies installed
+      init-steps:
+         - name: Checkout
+           # using a reusable step in an external GitHub repo,
+           # this step is provided by Nx Cloud: https://github.com/nrwl/nx-cloud-workflows/tree/main/workflow-steps
+           uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/checkout/main.yaml'
+         - name: Restore Node Modules Cache
+           uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/cache/main.yaml'
+           # the cache step requires configuration via env vars
+           # https://github.com/nrwl/nx-cloud-workflows/tree/main/workflow-steps/cache#options
+           inputs:
+              env: 'package-lock.json|yarn.lock|pnpm-lock.yaml'
+              paths: 'node_modules'
+              base-branch: 'main'
+         - name: Restore Browser Binary Cache
+           uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/cache/main.yaml'
+           inputs:
+              env: 'package-lock.json|yarn.lock|pnpm-lock.yaml|"browsers"'
+              paths: |
+                 '~/.cache/Cypress'
+                 '~/.cache/ms-playwright'
+              base-branch: 'main'
+         - name: Install Node Modules
+           uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/install-node-modules/main.yaml'
+         - name: Install Browsers (if needed)
+           uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/install-browsers/main.yaml'
+           # You can also run a custom script to configure various things on the agent machine
+         - name: Run a custom script
+           script: |
+              git config --global user.email test@test.com
+              git config --global user.name "Test Test"
+         # You can also set any other env vars to be passed to the following steps
+         # by setting their value in the `$NX_CLOUD_ENV` file.
+         # Most commonly for redefining PATH for further steps
+         - name: Setting env
+           script: |
+              # Update PATH with custom value
+              echo "PATH=$HOME/my-folder:$PATH" >> $NX_CLOUD_ENV
+         - name: Print path from previous step
+           # will include my-folder
+           script: echo $PATH
+         - name: Define env var for a step
+           env:
+              MY_ENV_VAR: 'env-var-for-step'
+           # will print env-var-for-step
+           script: echo $MY_ENV_VAR
+         # after you're last step Nx Agents will start accepting tasks to process
+         # no need to manually start up the agent yourself
 
-  # another template which does the same as above, but with a large resource class
-  # You're not required to define a template for every resource class, only define what you need!
-  my-linux-large-js:
-    resource-class: 'docker_linux_amd64/large'
-    image: 'ubuntu22.04-node20.11-v9'
-    env:
-      MY_ENV_VAR: shared
-    init-steps:
-      - name: Checkout
-        uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/checkout/main.yaml'
-      - name: Restore Node Modules Cache
-        uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/cache/main.yaml'
-        inputs:
-          env: 'package-lock.json|yarn.lock|pnpm-lock.yaml'
-          paths: 'node_modules'
-          base-branch: 'main'
-      - name: Restore Browser Binary Cache
-        uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/cache/main.yaml'
-        inputs:
-          env: 'package-lock.json|yarn.lock|pnpm-lock.yaml|"browsers"'
-          paths: |
-            '~/.cache/Cypress'
-            '~/.cache/ms-playwright'
-          base-branch: 'main'
-      - name: Install Node Modules
-        uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/install-node-modules/main.yaml'
-      - name: Install Browsers (if needed)
-        uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/install-browsers/main.yaml'
-      - name: Run a custom script
-        script: |
-          git config --global user.email test@test.com
-          git config --global user.name "Test Test"
-      - name: Setting env
-        script: |
-          echo "PATH=$HOME/my-folder:$PATH" >> $NX_CLOUD_ENV
-      - name: Print path from previous step
-        script: echo $PATH
-      - name: Define env var for a step
-        env:
-          MY_ENV_VAR: 'env-var-for-step'
-        script: echo $MY_ENV_VAR
-  # template that installs rust
-  my-linux-rust-large:
-    resource-class: 'docker_linux_amd64/large'
-    image: 'ubuntu22.04-node20.11-v9'
-    init-steps:
-      - name: Checkout
-        uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/checkout/main.yaml'
-      - name: Restore Node Modules Cache
-        uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/cache/main.yaml'
-        inputs:
-          env: 'package-lock.json|yarn.lock|pnpm-lock.yaml'
-          paths: 'node_modules'
-          base-branch: 'main'
-      - name: Install Node Modules
-        uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/install-node-modules/main.yaml'
-      - name: Install Rust
-        script: |
-          curl --proto '=https' --tlsv1.3 https://sh.rustup.rs -sSf | sh -s -- -y
-          source "$HOME/.cargo/env"
-          rustup toolchain install 1.70.0
-          # persist cargo bin into PATH
-          echo "PATH=$HOME/.cargo/bin:$PATH" >> $NX_CLOUD_ENV
+   # another template which does the same as above, but with a large resource class
+   # You're not required to define a template for every resource class, only define what you need!
+   my-linux-large-js:
+      resource-class: 'docker_linux_amd64/large'
+      image: 'ubuntu22.04-node20.11-v9'
+      env:
+         MY_ENV_VAR: shared
+      init-steps:
+         - name: Checkout
+           uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/checkout/main.yaml'
+         - name: Restore Node Modules Cache
+           uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/cache/main.yaml'
+           inputs:
+              env: 'package-lock.json|yarn.lock|pnpm-lock.yaml'
+              paths: 'node_modules'
+              base-branch: 'main'
+         - name: Restore Browser Binary Cache
+           uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/cache/main.yaml'
+           inputs:
+              env: 'package-lock.json|yarn.lock|pnpm-lock.yaml|"browsers"'
+              paths: |
+                 '~/.cache/Cypress'
+                 '~/.cache/ms-playwright'
+              base-branch: 'main'
+         - name: Install Node Modules
+           uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/install-node-modules/main.yaml'
+         - name: Install Browsers (if needed)
+           uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/install-browsers/main.yaml'
+         - name: Run a custom script
+           script: |
+              git config --global user.email test@test.com
+              git config --global user.name "Test Test"
+         - name: Setting env
+           script: |
+              echo "PATH=$HOME/my-folder:$PATH" >> $NX_CLOUD_ENV
+         - name: Print path from previous step
+           script: echo $PATH
+         - name: Define env var for a step
+           env:
+              MY_ENV_VAR: 'env-var-for-step'
+           script: echo $MY_ENV_VAR
+   # template that installs rust
+   my-linux-rust-large:
+      resource-class: 'docker_linux_amd64/large'
+      image: 'ubuntu22.04-node20.11-v9'
+      init-steps:
+         - name: Checkout
+           uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/checkout/main.yaml'
+         - name: Restore Node Modules Cache
+           uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/cache/main.yaml'
+           inputs:
+              env: 'package-lock.json|yarn.lock|pnpm-lock.yaml'
+              paths: 'node_modules'
+              base-branch: 'main'
+         - name: Install Node Modules
+           uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/install-node-modules/main.yaml'
+         - name: Install Rust
+           script: |
+              curl --proto '=https' --tlsv1.3 https://sh.rustup.rs -sSf | sh -s -- -y
+              source "$HOME/.cargo/env"
+              rustup toolchain install 1.70.0
+              # persist cargo bin into PATH
+              echo "PATH=$HOME/.cargo/bin:$PATH" >> $NX_CLOUD_ENV
 ```
 
 These templates can be used by passing the number of agents desired, and the template name via `--distribute-on` when starting your CI run.
@@ -374,16 +374,16 @@ Commonly used for redefining the `PATH` or setting options for tooling.
 
 ```yaml {% fileName="./nx/workflows/agents.yaml" %}
 launch-templates:
-  my-template-name:
-    init-steps:
-      - name: Set PATH
-        script: echo "PATH=$HOME/.cargo/bin:$PATH" >> $NX_CLOUD_ENV
-      - name: Check PATH
-        script: |
-          # now contains $HOME/.cargo/bin
-          echo $PATH 
-          # can invoke cargo directly because it's in the PATH now. 
-          cargo --version
+   my-template-name:
+      init-steps:
+         - name: Set PATH
+           script: echo "PATH=$HOME/.cargo/bin:$PATH" >> $NX_CLOUD_ENV
+         - name: Check PATH
+           script: |
+              # now contains $HOME/.cargo/bin
+              echo $PATH 
+              # can invoke cargo directly because it's in the PATH now. 
+              cargo --version
 ```
 
 ## Private NPM Registry
@@ -392,19 +392,19 @@ If your project consumes packages from a private registry, you'll have to set up
 
 ```yaml {% fileName=".nx/workflows/agents.yaml" %}
 launch-templates:
-  my-linux-medium-js:
-    resource-class: 'docker_linux_amd64/medium'
-    image: 'ubuntu22.04-node20.11-v9'
-    init-steps:
-      - name: Checkout
-        uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/checkout/main.yaml'
-      - name: Auth to Registry
-        script: |
-          # create .npmrc with @myorg scoped packages pointing to GH npm registry
-          echo "@myorg:registry=https://npm.pkg.github.com" >> .npmrc
-          echo "//npm.pkg.github.com/:_authToken=${SOME_AUTH_TOKEN}" >> .npmrc
-      - name: Install Node Modules
-        uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/install-node-modules/main.yaml'
+   my-linux-medium-js:
+      resource-class: 'docker_linux_amd64/medium'
+      image: 'ubuntu22.04-node20.11-v9'
+      init-steps:
+         - name: Checkout
+           uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/checkout/main.yaml'
+         - name: Auth to Registry
+           script: |
+              # create .npmrc with @myorg scoped packages pointing to GH npm registry
+              echo "@myorg:registry=https://npm.pkg.github.com" >> .npmrc
+              echo "//npm.pkg.github.com/:_authToken=${SOME_AUTH_TOKEN}" >> .npmrc
+         - name: Install Node Modules
+           uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/install-node-modules/main.yaml'
 ```
 
 Pass `SOME_AUTH_TOKEN` via `--with-env-vars`
@@ -425,20 +425,20 @@ Nx Cloud provides a [pre-built step to install a custom node version](https://gi
 
 ```yaml {% fileName=".nx/workflows/agents.yaml" %}
 launch-templates:
-  node-21:
-    resource-class: 'docker_linux_amd64/medium'
-    # note the image version of v9,
-    # earlier versions of the base image will not work
-    image: 'ubuntu22.04-node20.11-v9'
-    init-steps:
-      - name: Checkout
-        uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/checkout/main.yaml'
-      - name: Install Node
-        # note the step is only released as of v4 of the workflow steps
-        uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/install-node/main.yaml'
-        inputs:
-          # can omit value if a '.nvmrc' file is within the root of the repo
-          node_version: '21'
+   node-21:
+      resource-class: 'docker_linux_amd64/medium'
+      # note the image version of v9,
+      # earlier versions of the base image will not work
+      image: 'ubuntu22.04-node20.11-v9'
+      init-steps:
+         - name: Checkout
+           uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/checkout/main.yaml'
+         - name: Install Node
+           # note the step is only released as of v4 of the workflow steps
+           uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/install-node/main.yaml'
+           inputs:
+              # can omit value if a '.nvmrc' file is within the root of the repo
+              node_version: '21'
 ```
 
 {% /tab %}
@@ -454,28 +454,28 @@ The steps follow the general pattern of:
 
 ```yaml {% fileName=".nx/workflows/agents.yaml" %}
 launch-templates:
-  node-21:
-    resource-class: 'docker_linux_amd64/medium'
-    image: 'ubuntu22.04-node20.11-v9'
-    init-steps:
-      - name: Checkout
-        uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/checkout/main.yaml'
-      - name: Install nvm
-        script: |
-          # run nvm install script
-          curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
-          # source the updated profile to get the nvm command available
-          source ~/.profile
-          # install the needed version of node via nvm
-          nvm install 21.7.3
-          # echo the current path (which now includes the nvm-provided version of node) to NX_CLOUD_ENV
-          echo "PATH=$PATH" >> $NX_CLOUD_ENV
-      - name: Print node version
-        # confirm that the node version has changed
-        script: node -v
-      - name: Install Node Modules
-        uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/install-node-modules/main.yaml'
-      # Continue setup steps as needed
+   node-21:
+      resource-class: 'docker_linux_amd64/medium'
+      image: 'ubuntu22.04-node20.11-v9'
+      init-steps:
+         - name: Checkout
+           uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/checkout/main.yaml'
+         - name: Install nvm
+           script: |
+              # run nvm install script
+              curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+              # source the updated profile to get the nvm command available
+              source ~/.profile
+              # install the needed version of node via nvm
+              nvm install 21.7.3
+              # echo the current path (which now includes the nvm-provided version of node) to NX_CLOUD_ENV
+              echo "PATH=$PATH" >> $NX_CLOUD_ENV
+         - name: Print node version
+           # confirm that the node version has changed
+           script: node -v
+         - name: Install Node Modules
+           uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/install-node-modules/main.yaml'
+         # Continue setup steps as needed
 ```
 
 {% /tab %}
@@ -487,7 +487,7 @@ Nx Agents have [corepack enabled](https://nodejs.org/api/corepack.html#corepack)
 
 ```json {% fileName="package.json" %}
 {
-  "packageManager": "yarn@4.1.1"
+   "packageManager": "yarn@4.1.1"
 }
 ```
 
@@ -503,13 +503,13 @@ For example, you can install the [GitHub CLI](https://cli.github.com/) on the ag
 
 ```yaml {% fileName="./nx/workflows/agents.yaml" %}
 launch-templates:
-  my-linux-medium-js:
-    resource-class: 'docker_linux_amd64/medium'
-    image: 'ubuntu22.04-node20.11-v9'
-    init-steps:
-      - name: Install Extras
-        script: |
-          sudo apt install gh unzip zip -y
+   my-linux-medium-js:
+      resource-class: 'docker_linux_amd64/medium'
+      image: 'ubuntu22.04-node20.11-v9'
+      init-steps:
+         - name: Install Extras
+           script: |
+              sudo apt install gh unzip zip -y
 ```
 
 {% callout type="note" title="Installing without apt" %}
@@ -524,9 +524,9 @@ Here we define a `small`, `medium` and `large` distribution strategy:
 
 ```yaml {% fileName=".nx/workflows/dynamic-changesets.yaml" %}
 distribute-on:
-  small-changeset: 3 linux-medium-js
-  medium-changeset: 8 linux-medium-js
-  large-changeset: 12 linux-medium-js
+   small-changeset: 3 linux-medium-js
+   medium-changeset: 8 linux-medium-js
+   large-changeset: 12 linux-medium-js
 ```
 
 Then you can pass the path to the file to the `--distribute-on` parameter.
@@ -546,50 +546,50 @@ Exercise caution when printing out environment variables, they will be shown in 
 
 ```yaml {% fileName=".nx/workflows/agents.yaml" %}
 launch-templates:
-  my-linux-medium-js:
-    resource-class: 'docker_linux_amd64/medium'
-    image: 'ubuntu22.04-node20.11-v9'
-    env:
-      # enable verbose logging for all steps
-      NX_VERBOSE_LOGGING: true
-    init-steps:
-      - name: 'Debug: Print Nx Report'
-        script: |
-          nx report
-      - name: 'Debug: List Directory Contents'
-        script: |
-          echo $HOME
-          ls -la $HOME
-          output_dir=$HOME/dist
-          # if output directory exists list it's contents
-          if [ -d output_dir ]; then
-            ls -la $output_dir
-          else
-            echo "$output_dir does not exist"
-          fi
-      - name: 'Debug: Show File Contents'
-        script: |
-          cat $HOME/.profile
-      - name: 'Debug: Check For Checkout Files'
-        script: |
-          git diff
-      - name: 'Debug: Print Versions'
-        script: |
-          # note if you use yarn and try to run pnpm, corepack might throw an error at you
-          # saying you're using the wrong package manager, in that case just remove the usage of pnpm
-          echo "Versions:"
-          echo "Node: $(node -v)"
-          echo "NPM: $(npm -v)"
-          echo "Yarn: $(yarn -v)"
-          echo "PNPM: $(pnpm -v)"
-          echo "Golang: $(go version)"
-          echo "Java: $(javac --version)"
-          # add any other toolchain you want
-      - name: 'Debug: Print env'
-        script: |
-          # !!! DO NOT RUN THIS IF YOU HAVE PASSWORD/ACCESS TOKENS IN YOUR ENV VARS !!!
-          # this will print your env as plain text values to the terminal
-          env  
-          # This is a safer approach to prevent leaking tokens/passwords
-          echo "SOME_VALUE: $SOME_VALUE"
+   my-linux-medium-js:
+      resource-class: 'docker_linux_amd64/medium'
+      image: 'ubuntu22.04-node20.11-v9'
+      env:
+         # enable verbose logging for all steps
+         NX_VERBOSE_LOGGING: true
+      init-steps:
+         - name: 'Debug: Print Nx Report'
+           script: |
+              nx report
+         - name: 'Debug: List Directory Contents'
+           script: |
+              echo $HOME
+              ls -la $HOME
+              output_dir=$HOME/dist
+              # if output directory exists list it's contents
+              if [ -d output_dir ]; then
+                ls -la $output_dir
+              else
+                echo "$output_dir does not exist"
+              fi
+         - name: 'Debug: Show File Contents'
+           script: |
+              cat $HOME/.profile
+         - name: 'Debug: Check For Checkout Files'
+           script: |
+              git diff
+         - name: 'Debug: Print Versions'
+           script: |
+              # note if you use yarn and try to run pnpm, corepack might throw an error at you
+              # saying you're using the wrong package manager, in that case just remove the usage of pnpm
+              echo "Versions:"
+              echo "Node: $(node -v)"
+              echo "NPM: $(npm -v)"
+              echo "Yarn: $(yarn -v)"
+              echo "PNPM: $(pnpm -v)"
+              echo "Golang: $(go version)"
+              echo "Java: $(javac --version)"
+              # add any other toolchain you want
+         - name: 'Debug: Print env'
+           script: |
+              # !!! DO NOT RUN THIS IF YOU HAVE PASSWORD/ACCESS TOKENS IN YOUR ENV VARS !!!
+              # this will print your env as plain text values to the terminal
+              env  
+              # This is a safer approach to prevent leaking tokens/passwords
+              echo "SOME_VALUE: $SOME_VALUE"
 ```

@@ -6,12 +6,12 @@ Context for [CreateDependencies](../../devkit/documents/CreateDependencies)
 
 ### Properties
 
-- [externalNodes](../../devkit/documents/CreateDependenciesContext#externalnodes): Record<string, ProjectGraphExternalNode>
-- [fileMap](../../devkit/documents/CreateDependenciesContext#filemap): FileMap
-- [filesToProcess](../../devkit/documents/CreateDependenciesContext#filestoprocess): FileMap
-- [nxJsonConfiguration](../../devkit/documents/CreateDependenciesContext#nxjsonconfiguration): NxJsonConfiguration<string[] | "\*">
-- [projects](../../devkit/documents/CreateDependenciesContext#projects): Record<string, ProjectConfiguration>
-- [workspaceRoot](../../devkit/documents/CreateDependenciesContext#workspaceroot): string
+-  [externalNodes](../../devkit/documents/CreateDependenciesContext#externalnodes): Record<string, ProjectGraphExternalNode>
+-  [fileMap](../../devkit/documents/CreateDependenciesContext#filemap): FileMap
+-  [filesToProcess](../../devkit/documents/CreateDependenciesContext#filestoprocess): FileMap
+-  [nxJsonConfiguration](../../devkit/documents/CreateDependenciesContext#nxjsonconfiguration): NxJsonConfiguration<string[] | "\*">
+-  [projects](../../devkit/documents/CreateDependenciesContext#projects): Record<string, ProjectConfiguration>
+-  [workspaceRoot](../../devkit/documents/CreateDependenciesContext#workspaceroot): string
 
 ## Properties
 

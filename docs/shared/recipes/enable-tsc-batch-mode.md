@@ -24,16 +24,16 @@ For optimal performance, you could set the `clean` option to `false`. Otherwise,
 
 ```json {% fileName="libs/ts-lib/project.json" %}
 {
-  "build": {
-    "executor": "@nx/js:tsc",
-    "options": {
-      "outputPath": "dist/libs/ts-lib",
-      "main": "libs/ts-lib/src/index.ts",
-      "tsConfig": "libs/ts-lib/tsconfig.lib.json",
-      "assets": ["libs/ts-lib/*.md"],
-      "clean": false
-    }
-  }
+   "build": {
+      "executor": "@nx/js:tsc",
+      "options": {
+         "outputPath": "dist/libs/ts-lib",
+         "main": "libs/ts-lib/src/index.ts",
+         "tsConfig": "libs/ts-lib/tsconfig.lib.json",
+         "assets": ["libs/ts-lib/*.md"],
+         "clean": false
+      }
+   }
 }
 ```
 

@@ -1,9 +1,9 @@
 {
-  "name": "e2e-cypress",
-  "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "e2e/cypress",
-  "projectType": "application",
-  "implicitDependencies": ["cypress", "react"],
-  "// targets": "to see all targets run: nx show project e2e-cypress --web",
-  "targets": {}
+   "name": "e2e-cypress",
+   "$schema": "../../node_modules/nx/schemas/project-schema.json",
+   "sourceRoot": "e2e/cypress",
+   "projectType": "application",
+   "implicitDependencies": ["cypress", "react"],
+   "// targets": "to see all targets run: nx show project e2e-cypress --web",
+   "targets": {}
 }

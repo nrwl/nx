@@ -5,47 +5,47 @@ import { basename } from 'path';
 import { isBinaryPath } from '@nx/devkit/src/utils/binary-extensions';
 
 const eslintFileNames = [
-  '.eslintrc',
-  '.eslintrc.js',
-  '.eslintrc.cjs',
-  '.eslintrc.yaml',
-  '.eslintrc.yml',
-  '.eslintrc.json',
-  'eslint.config.js', // new format that requires `ESLINT_USE_FLAT_CONFIG=true`
+   '.eslintrc',
+   '.eslintrc.js',
+   '.eslintrc.cjs',
+   '.eslintrc.yaml',
+   '.eslintrc.yml',
+   '.eslintrc.json',
+   'eslint.config.js', // new format that requires `ESLINT_USE_FLAT_CONFIG=true`
 ];
 
 export default async function replacePackage(tree: Tree): Promise<void> {
-  await replaceNrwlPackageWithNxPackage(
-    tree,
-    '@nrwl/eslint-plugin-nx',
-    '@nx/eslint-plugin'
-  );
+   await replaceNrwlPackageWithNxPackage(
+      tree,
+      '@nrwl/eslint-plugin-nx',
+      '@nx/eslint-plugin'
+   );
 
-  /**
-   * Matches:
-   * * // eslint-disable-next-line @nrwl/nx/...
-   * * // eslint-disable-line @nrwl/nx/...
-   * * /* eslint-disable @nrwl/nx/...
-   */
-  const ignoreLineRegex = /(eslint-disable(?:(?:-next)?-line)?\s*)@nrwl\/nx/g;
-  visitNotIgnoredFiles(tree, '.', (path) => {
-    if (isBinaryPath(path)) {
-      return;
-    }
-
-    let contents = tree.read(path).toString();
-    if (eslintFileNames.includes(basename(path))) {
-      if (!contents.includes('@nrwl/nx')) {
-        return;
+   /**
+    * Matches:
+    * * // eslint-disable-next-line @nrwl/nx/...
+    * * // eslint-disable-line @nrwl/nx/...
+    * * /* eslint-disable @nrwl/nx/...
+    */
+   const ignoreLineRegex = /(eslint-disable(?:(?:-next)?-line)?\s*)@nrwl\/nx/g;
+   visitNotIgnoredFiles(tree, '.', (path) => {
+      if (isBinaryPath(path)) {
+         return;
       }
 
-      contents = contents.replace(new RegExp('@nrwl/nx', 'g'), '@nx');
-    }
-    if (ignoreLineRegex.test(contents)) {
-      contents = contents.replace(ignoreLineRegex, '$1@nx');
-    }
-    tree.write(path, contents);
-  });
+      let contents = tree.read(path).toString();
+      if (eslintFileNames.includes(basename(path))) {
+         if (!contents.includes('@nrwl/nx')) {
+            return;
+         }
 
-  await formatFiles(tree);
+         contents = contents.replace(new RegExp('@nrwl/nx', 'g'), '@nx');
+      }
+      if (ignoreLineRegex.test(contents)) {
+         contents = contents.replace(ignoreLineRegex, '$1@nx');
+      }
+      tree.write(path, contents);
+   });
+
+   await formatFiles(tree);
 }

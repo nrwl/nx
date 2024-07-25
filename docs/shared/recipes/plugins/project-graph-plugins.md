@@ -16,8 +16,8 @@ One of the best features of Nx the ability to construct the project graph automa
 
 Project graph plugins are able to add new nodes or dependencies to the project graph. This allows you to extend the project graph with new projects and dependencies. The API is defined by two exported members, which are described below:
 
-- [createNodes](#adding-new-nodes-to-the-project-graph): This tuple allows a plugin to tell Nx information about projects that are identified by a given file.
-- [createDependencies](#adding-new-dependencies-to-the-project-graph): This function allows a plugin to tell Nx about dependencies between projects.
+-  [createNodes](#adding-new-nodes-to-the-project-graph): This tuple allows a plugin to tell Nx information about projects that are identified by a given file.
+-  [createDependencies](#adding-new-dependencies-to-the-project-graph): This function allows a plugin to tell Nx about dependencies between projects.
 
 ## Adding Plugins to Workspace
 
@@ -44,10 +44,10 @@ If a plugin identifies a project that is already in the project graph, it will b
 
 Project nodes in the graph are considered to be the same if the project has the same root. If multiple plugins identify a project with the same root, the project will be merged. In doing so, the name that is already present in the graph is kept, and the properties below are shallowly merged. Any other properties are overwritten.
 
-- `targets`
-- `tags`
-- `implicitDependencies`
-- `generators`
+-  `targets`
+-  `tags`
+-  `implicitDependencies`
+-  `generators`
 
 Note: This is a shallow merge, so if you have a target with the same name in both plugins, the target from the second plugin will overwrite the target from the first plugin. Options, configurations, or any other properties within the target will be overwritten **_not_** merged.
 
@@ -57,17 +57,17 @@ A simplified version of Nx's built-in `project.json` plugin is shown below, whic
 
 ```typescript {% fileName="/my-plugin/index.ts" %}
 export const createNodes: CreateNodes = [
-  '**/project.json',
-  (projectConfigurationFile: string, opts, context: CreateNodesContext) => {
-    const projectConfiguration = readJsonFile(projectConfigurationFile);
-    const root = dirname(projectConfigurationFile);
+   '**/project.json',
+   (projectConfigurationFile: string, opts, context: CreateNodesContext) => {
+      const projectConfiguration = readJsonFile(projectConfigurationFile);
+      const root = dirname(projectConfigurationFile);
 
-    return {
-      projects: {
-        [root]: projectConfiguration,
-      },
-    };
-  },
+      return {
+         projects: {
+            [root]: projectConfiguration,
+         },
+      };
+   },
 ];
 ```
 
@@ -88,29 +88,29 @@ Most of Nx's first party plugins are written to add a target to a given project 
 
 ```typescript {% fileName="/my-plugin/index.ts" %}
 export const createNodes: CreateNodes = [
-  '**/tsconfig.json',
-  (fileName: string, opts, context: CreateNodesContext) => {
-    const root = dirname(fileName);
+   '**/tsconfig.json',
+   (fileName: string, opts, context: CreateNodesContext) => {
+      const root = dirname(fileName);
 
-    const isProject =
-      existsSync(join(root, 'project.json')) ||
-      existsSync(join(root, 'package.json'));
-    if (!isProject) {
-      return {};
-    }
+      const isProject =
+         existsSync(join(root, 'project.json')) ||
+         existsSync(join(root, 'package.json'));
+      if (!isProject) {
+         return {};
+      }
 
-    return {
-      projects: {
-        [root]: {
-          targets: {
-            build: {
-              command: `tsc -p ${fileName}`,
+      return {
+         projects: {
+            [root]: {
+               targets: {
+                  build: {
+                     command: `tsc -p ${fileName}`,
+                  },
+               },
             },
-          },
-        },
-      },
-    };
-  },
+         },
+      };
+   },
 ];
 ```
 
@@ -122,18 +122,18 @@ Nx considers two identified projects to be the same if and only if they have the
 
 The logic for merging project declarations is as follows:
 
-- `name`, `sourceRoot`, `projectType`, and any other top level properties which are a literal (e.g. not an array or object) are overwritten.
-- `tags` are merged and deduplicated.
-- `implicitDependencies` are merged, with dependencies from later plugins being appended to the end
-- `targets` are merged, with special logic for the targets inside of them:
-  - If the targets are deemed compatible (They use the same executor / command, or one of the two declarations does not specify an executor / command):
-    - The `executor` or `command` remains the same
-    - The `options` object is merged with the later plugin's options overwriting the earlier plugin's options. This is a shallow merge, so if a property is an object, the later plugin's object will overwrite the earlier plugin's object rather than merging the two.
-    - The `configurations` object is merged, with the later plugin's configurations overwriting the earlier plugin's configurations. The options for each configuration are merged in the same way as the top level options.
-    - `inputs` and `outputs` overwrite the earlier plugin's inputs and outputs.
-  - If the targets are not deemed compatible, the later plugin's target will overwrite the earlier plugin's target.
-- `generators` are merged. If both project configurations specify the same generator, those generators are merged.
-- `namedInputs` are merged. If both project configurations specify the same named input, the later plugin's named input will overwrite the earlier plugin's named input. This is what allows overriding a named input from a plugin that ran earlier (e.g. in project.json).
+-  `name`, `sourceRoot`, `projectType`, and any other top level properties which are a literal (e.g. not an array or object) are overwritten.
+-  `tags` are merged and deduplicated.
+-  `implicitDependencies` are merged, with dependencies from later plugins being appended to the end
+-  `targets` are merged, with special logic for the targets inside of them:
+   -  If the targets are deemed compatible (They use the same executor / command, or one of the two declarations does not specify an executor / command):
+      -  The `executor` or `command` remains the same
+      -  The `options` object is merged with the later plugin's options overwriting the earlier plugin's options. This is a shallow merge, so if a property is an object, the later plugin's object will overwrite the earlier plugin's object rather than merging the two.
+      -  The `configurations` object is merged, with the later plugin's configurations overwriting the earlier plugin's configurations. The options for each configuration are merged in the same way as the top level options.
+      -  `inputs` and `outputs` overwrite the earlier plugin's inputs and outputs.
+   -  If the targets are not deemed compatible, the later plugin's target will overwrite the earlier plugin's target.
+-  `generators` are merged. If both project configurations specify the same generator, those generators are merged.
+-  `namedInputs` are merged. If both project configurations specify the same named input, the later plugin's named input will overwrite the earlier plugin's named input. This is what allows overriding a named input from a plugin that ran earlier (e.g. in project.json).
 
 ### Adding External Nodes
 
@@ -149,8 +149,8 @@ The shape of the [`createDependencies`](/nx-api/devkit/documents/CreateDependenc
 
 ```typescript
 export type CreateDependencies<T> = (
-  opts: T,
-  context: CreateDependenciesContext
+   opts: T,
+   context: CreateDependenciesContext
 ) => CandidateDependency[] | Promise<CandidateDependency[]>;
 ```
 
@@ -162,9 +162,9 @@ Within the `CreateDependenciesContext`, you have access to the graph's external 
 
 The dependencies can be of three types:
 
-- Implicit
-- Static
-- Dynamic
+-  Implicit
+-  Static
+-  Dynamic
 
 ### Implicit Dependencies
 
@@ -219,36 +219,36 @@ A small plugin that recognizes dependencies to projects in the current workspace
 
 ```typescript {% fileName="/my-plugin/index.ts" %}
 export const createDependencies: CreateDependencies = (opts, ctx) => {
-  const packageJsonProjectMap = new Map();
-  const nxProjects = Object.values(ctx.projectsConfigurations);
-  const results = [];
-  for (const project of nxProjects) {
-    const maybePackageJsonPath = join(project.root, 'package.json');
-    if (existsSync(maybePackageJsonPath)) {
-      const json = JSON.parse(maybePackageJsonPath);
-      packageJsonProjectMap.set(json.name, project.name);
-    }
-  }
-  for (const project of nxProjects) {
-    const maybePackageJsonPath = join(project.root, 'package.json');
-    if (existsSync(maybePackageJsonPath)) {
-      const json = JSON.parse(maybePackageJsonPath);
-      const deps = [...Object.keys(json.dependencies)];
-      for (const dep of deps) {
-        if (packageJsonProjectMap.has(dep)) {
-          const newDependency = {
-            source: project,
-            target: packageJsonProjectMap.get(dep),
-            sourceFile: maybePackageJsonPath,
-            dependencyType: DependencyType.static,
-          };
-        }
-        validateDependency(newDependency, ctx);
-        results.push(newDependency);
+   const packageJsonProjectMap = new Map();
+   const nxProjects = Object.values(ctx.projectsConfigurations);
+   const results = [];
+   for (const project of nxProjects) {
+      const maybePackageJsonPath = join(project.root, 'package.json');
+      if (existsSync(maybePackageJsonPath)) {
+         const json = JSON.parse(maybePackageJsonPath);
+         packageJsonProjectMap.set(json.name, project.name);
       }
-    }
-  }
-  return results;
+   }
+   for (const project of nxProjects) {
+      const maybePackageJsonPath = join(project.root, 'package.json');
+      if (existsSync(maybePackageJsonPath)) {
+         const json = JSON.parse(maybePackageJsonPath);
+         const deps = [...Object.keys(json.dependencies)];
+         for (const dep of deps) {
+            if (packageJsonProjectMap.has(dep)) {
+               const newDependency = {
+                  source: project,
+                  target: packageJsonProjectMap.get(dep),
+                  sourceFile: maybePackageJsonPath,
+                  dependencyType: DependencyType.static,
+               };
+            }
+            validateDependency(newDependency, ctx);
+            results.push(newDependency);
+         }
+      }
+   }
+   return results;
 };
 ```
 
@@ -275,14 +275,14 @@ As an example, the below `nx.json` file specifies a plugin called `my-plugin` an
 
 ```json
 {
-  "plugins": [
-    {
-      "plugin": "my-plugin",
-      "options": {
-        "tagName": "plugin:my-plugin"
+   "plugins": [
+      {
+         "plugin": "my-plugin",
+         "options": {
+            "tagName": "plugin:my-plugin"
+         }
       }
-    }
-  ]
+   ]
 }
 ```
 
@@ -292,18 +292,18 @@ As an example, the below `nx.json` file specifies a plugin called `my-plugin` an
 type MyPluginOptions = { tagName: string };
 
 export const createNodes: CreateNodes<MyPluginOptions> = [
-  '**/project.json',
-  (fileName, opts, ctx) => {
-    const root = dirname(fileName);
+   '**/project.json',
+   (fileName, opts, ctx) => {
+      const root = dirname(fileName);
 
-    return {
-      projects: {
-        [root]: {
-          tags: opts.tagName ? [opts.tagName] : [],
-        },
-      },
-    };
-  },
+      return {
+         projects: {
+            [root]: {
+               tags: opts.tagName ? [opts.tagName] : [],
+            },
+         },
+      };
+   },
 ];
 ```
 

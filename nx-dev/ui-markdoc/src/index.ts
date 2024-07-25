@@ -1,10 +1,10 @@
 import {
-  Node,
-  parse,
-  RenderableTreeNode,
-  renderers,
-  Tokenizer,
-  transform,
+   Node,
+   parse,
+   RenderableTreeNode,
+   renderers,
+   Tokenizer,
+   transform,
 } from '@markdoc/markdoc';
 import { load as yamlLoad } from '@zkochan/js-yaml';
 import React, { ReactNode } from 'react';
@@ -36,10 +36,10 @@ import { persona, personas } from './lib/tags/personas.schema';
 import { ProjectDetails } from './lib/tags/project-details.component';
 import { projectDetails } from './lib/tags/project-details.schema';
 import {
-  ShortEmbeds,
-  shortEmbeds,
-  shortVideo,
-  ShortVideo,
+   ShortEmbeds,
+   shortEmbeds,
+   shortVideo,
+   ShortVideo,
 } from './lib/tags/short-embed';
 import { SideBySide } from './lib/tags/side-by-side.component';
 import { sideBySide } from './lib/tags/side-by-side.schema';
@@ -48,8 +48,8 @@ import { tab, tabs } from './lib/tags/tabs.schema';
 import { Tweet, tweet } from '@nx/nx-dev/ui-common';
 import { YouTube, youtube } from '@nx/nx-dev/ui-common';
 import {
-  TerminalVideo,
-  terminalVideo,
+   TerminalVideo,
+   terminalVideo,
 } from './lib/tags/terminal-video.component';
 import { VideoLink, videoLink } from './lib/tags/video-link.component';
 // import { SvgAnimation, svgAnimation } from './lib/tags/svg-animation.component';
@@ -62,114 +62,114 @@ import { FenceWrapper } from './lib/nodes/fence-wrapper.component';
 export { GithubRepository } from './lib/tags/github-repository.component';
 
 export const getMarkdocCustomConfig = (
-  documentFilePath: string
+   documentFilePath: string
 ): { config: any; components: any } => ({
-  config: {
-    nodes: {
-      fence,
-      heading,
-      image: getImageSchema(documentFilePath),
-      link,
-    },
-    tags: {
-      callout,
-      'call-to-action': callToAction,
-      card,
-      cards,
-      disclosure,
-      'link-card': linkCard,
-      'github-repository': githubRepository,
-      'stackblitz-button': stackblitzButton,
-      graph,
-      iframe,
-      'install-nx-console': installNxConsole,
-      persona,
-      personas,
-      'project-details': projectDetails,
-      pill,
-      'short-embeds': shortEmbeds,
-      'short-video': shortVideo,
-      'side-by-side': sideBySide,
-      tab,
-      tabs,
-      'terminal-video': terminalVideo,
-      tweet,
-      youtube,
-      'video-link': videoLink,
-      // 'svg-animation': svgAnimation,
-    },
-  },
-  components: {
-    Callout,
-    CallToAction,
-    Card,
-    Cards,
-    Disclosure,
-    LinkCard,
-    CustomLink,
-    FenceWrapper,
-    GithubRepository,
-    StackblitzButton,
-    Graph,
-    Heading,
-    Iframe,
-    InstallNxConsole,
-    Persona,
-    Personas,
-    ProjectDetails,
-    Pill,
-    ShortEmbeds,
-    ShortVideo,
-    SideBySide,
-    Tab,
-    Tabs,
-    TerminalVideo,
-    Tweet,
-    YouTube,
-    VideoLink,
-    // SvgAnimation,
-  },
+   config: {
+      nodes: {
+         fence,
+         heading,
+         image: getImageSchema(documentFilePath),
+         link,
+      },
+      tags: {
+         callout,
+         'call-to-action': callToAction,
+         card,
+         cards,
+         disclosure,
+         'link-card': linkCard,
+         'github-repository': githubRepository,
+         'stackblitz-button': stackblitzButton,
+         graph,
+         iframe,
+         'install-nx-console': installNxConsole,
+         persona,
+         personas,
+         'project-details': projectDetails,
+         pill,
+         'short-embeds': shortEmbeds,
+         'short-video': shortVideo,
+         'side-by-side': sideBySide,
+         tab,
+         tabs,
+         'terminal-video': terminalVideo,
+         tweet,
+         youtube,
+         'video-link': videoLink,
+         // 'svg-animation': svgAnimation,
+      },
+   },
+   components: {
+      Callout,
+      CallToAction,
+      Card,
+      Cards,
+      Disclosure,
+      LinkCard,
+      CustomLink,
+      FenceWrapper,
+      GithubRepository,
+      StackblitzButton,
+      Graph,
+      Heading,
+      Iframe,
+      InstallNxConsole,
+      Persona,
+      Personas,
+      ProjectDetails,
+      Pill,
+      ShortEmbeds,
+      ShortVideo,
+      SideBySide,
+      Tab,
+      Tabs,
+      TerminalVideo,
+      Tweet,
+      YouTube,
+      VideoLink,
+      // SvgAnimation,
+   },
 });
 
 const tokenizer = new Tokenizer({
-  // Per https://markdoc.dev/docs/syntax#comments this will be on by default in a future version
-  allowComments: true,
+   // Per https://markdoc.dev/docs/syntax#comments this will be on by default in a future version
+   allowComments: true,
 });
 
 const parseMarkdown: (markdown: string) => Node = (markdown) => {
-  const tokens = tokenizer.tokenize(markdown);
-  return parse(tokens);
+   const tokens = tokenizer.tokenize(markdown);
+   return parse(tokens);
 };
 
 export const extractFrontmatter = (
-  documentContent: string
+   documentContent: string
 ): Record<string, any> => {
-  const ast = parseMarkdown(documentContent);
-  const frontmatter = ast.attributes['frontmatter']
-    ? (yamlLoad(ast.attributes['frontmatter']) as Record<string, any>)
-    : {};
-  return frontmatter;
+   const ast = parseMarkdown(documentContent);
+   const frontmatter = ast.attributes['frontmatter']
+      ? (yamlLoad(ast.attributes['frontmatter']) as Record<string, any>)
+      : {};
+   return frontmatter;
 };
 
 export const renderMarkdown: (
-  documentContent: string,
-  options: { filePath: string }
+   documentContent: string,
+   options: { filePath: string }
 ) => {
-  metadata: Record<string, any>;
-  node: ReactNode;
-  treeNode: RenderableTreeNode;
+   metadata: Record<string, any>;
+   node: ReactNode;
+   treeNode: RenderableTreeNode;
 } = (documentContent, options = { filePath: '' }) => {
-  const ast = parseMarkdown(documentContent);
-  const configuration = getMarkdocCustomConfig(options.filePath);
-  const treeNode = transform(ast, configuration.config);
+   const ast = parseMarkdown(documentContent);
+   const configuration = getMarkdocCustomConfig(options.filePath);
+   const treeNode = transform(ast, configuration.config);
 
-  return {
-    metadata: ast.attributes['frontmatter']
-      ? (yamlLoad(ast.attributes['frontmatter']) as Record<string, any>)
-      : {},
-    node: renderers.react(transform(ast, configuration.config), React, {
-      components: configuration.components,
-    }),
-    treeNode,
-  };
+   return {
+      metadata: ast.attributes['frontmatter']
+         ? (yamlLoad(ast.attributes['frontmatter']) as Record<string, any>)
+         : {},
+      node: renderers.react(transform(ast, configuration.config), React, {
+         components: configuration.components,
+      }),
+      treeNode,
+   };
 };

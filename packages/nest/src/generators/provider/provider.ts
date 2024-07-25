@@ -1,52 +1,52 @@
 import type { Tree } from '@nx/devkit';
 import type {
-  NestGeneratorWithLanguageOption,
-  NestGeneratorWithTestOption,
-  NormalizedOptions,
+   NestGeneratorWithLanguageOption,
+   NestGeneratorWithTestOption,
+   NormalizedOptions,
 } from '../utils';
 import {
-  normalizeOptions,
-  runNestSchematic,
-  unitTestRunnerToSpec,
+   normalizeOptions,
+   runNestSchematic,
+   unitTestRunnerToSpec,
 } from '../utils';
 
 export type ProviderGeneratorOptions = NestGeneratorWithLanguageOption &
-  NestGeneratorWithTestOption;
+   NestGeneratorWithTestOption;
 
 export async function providerGenerator(
-  tree: Tree,
-  rawOptions: ProviderGeneratorOptions
+   tree: Tree,
+   rawOptions: ProviderGeneratorOptions
 ) {
-  await providerGeneratorInternal(tree, {
-    nameAndDirectoryFormat: 'derived',
-    ...rawOptions,
-  });
+   await providerGeneratorInternal(tree, {
+      nameAndDirectoryFormat: 'derived',
+      ...rawOptions,
+   });
 }
 
 export async function providerGeneratorInternal(
-  tree: Tree,
-  rawOptions: ProviderGeneratorOptions
+   tree: Tree,
+   rawOptions: ProviderGeneratorOptions
 ): Promise<any> {
-  const options = await normalizeProviderOptions(tree, rawOptions);
+   const options = await normalizeProviderOptions(tree, rawOptions);
 
-  return runNestSchematic(tree, 'provider', options);
+   return runNestSchematic(tree, 'provider', options);
 }
 
 export default providerGenerator;
 
 async function normalizeProviderOptions(
-  tree: Tree,
-  options: ProviderGeneratorOptions
+   tree: Tree,
+   options: ProviderGeneratorOptions
 ): Promise<NormalizedOptions> {
-  const normalizedOptions = await normalizeOptions(
-    tree,
-    'provider',
-    '@nx/nest:provider',
-    options
-  );
-  return {
-    ...normalizedOptions,
-    language: options.language,
-    spec: unitTestRunnerToSpec(options.unitTestRunner),
-  };
+   const normalizedOptions = await normalizeOptions(
+      tree,
+      'provider',
+      '@nx/nest:provider',
+      options
+   );
+   return {
+      ...normalizedOptions,
+      language: options.language,
+      spec: unitTestRunnerToSpec(options.unitTestRunner),
+   };
 }

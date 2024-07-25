@@ -63,8 +63,8 @@ Nx will reflect changes to the configuration or command-line arguments of your t
 
 In some cases, Nx plugins may not infer the outputs of a task as you expect, they can be configured in the `outputs` array on the target. This can be done in several different places:
 
-- The `outputs` array in the `targetDefaults` for a set of targets in `nx.json`.
-- The `outputs` array for a specific target in the project configuration file.
+-  The `outputs` array in the `targetDefaults` for a set of targets in `nx.json`.
+-  The `outputs` array for a specific target in the project configuration file.
 
 {% callout title="Copy the existing outputs before modifying outputs for a task" %}
 To override the `outputs` of a task, start by copying over the entire array shown when [viewing the project details](#viewing-the-outputs-of-a-task) and then add/modify/remove outputs as needed.
@@ -78,11 +78,11 @@ As you configure `outputs`, keep the project details screen open and it will ref
 
 ```jsonc {% fileName="nx.json" highlightLines=[4] %}
 {
-  "targetDefaults": {
-    "build": {
-      "outputs": ["{projectRoot}/dist"]
-    }
-  }
+   "targetDefaults": {
+      "build": {
+         "outputs": ["{projectRoot}/dist"]
+      }
+   }
 }
 ```
 
@@ -104,12 +104,12 @@ Defining `outputs` of a target in `project.json` or `package.json` will apply on
 
 ```jsonc {% fileName="apps/myreactapp/project.json" highlightLines=[5] %}
 {
-  "name": "myreactapp",
-  "targets": {
-    "build": {
-      "outputs": ["{projectRoot}/dist"]
-    }
-  }
+   "name": "myreactapp",
+   "targets": {
+      "build": {
+         "outputs": ["{projectRoot}/dist"]
+      }
+   }
 }
 ```
 

@@ -1,122 +1,122 @@
 import { NxJsonConfiguration } from '@nx/devkit';
 import {
-  cleanupProject,
-  newProject,
-  runCLI,
-  runCommandAsync,
-  uniq,
-  updateJson,
+   cleanupProject,
+   newProject,
+   runCLI,
+   runCommandAsync,
+   uniq,
+   updateJson,
 } from '@nx/e2e/utils';
 import { resetWorkspaceContext } from 'nx/src/utils/workspace-context';
 
 expect.addSnapshotSerializer({
-  serialize(str: string) {
-    return (
-      str
-        // Remove all output unique to specific projects to ensure deterministic snapshots
-        .replaceAll(/my-pkg-\d+/g, '{project-name}')
-        .replaceAll(
-          /integrity:\s*.*/g,
-          'integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
-        )
-        .replaceAll(/\b[0-9a-f]{40}\b/g, '{SHASUM}')
-        .replaceAll(/\d*B  index\.js/g, 'XXB  index.js')
-        .replaceAll(/\d*B  project\.json/g, 'XXB  project.json')
-        .replaceAll(/\d*B package\.json/g, 'XXXB package.json')
-        .replaceAll(/size:\s*\d*\s?B/g, 'size: XXXB')
-        .replaceAll(/\d*\.\d*\s?kB/g, 'XXX.XXX kb')
-        .replaceAll(/[a-fA-F0-9]{7}/g, '{COMMIT_SHA}')
-        .replaceAll(/Test @[\w\d]+/g, 'Test @{COMMIT_AUTHOR}')
-        // Normalize the version title date.
-        .replaceAll(/\(\d{4}-\d{2}-\d{2}\)/g, '(YYYY-MM-DD)')
-        // Normalize package manager specific logs
-        .replaceAll(/p?npm workspaces/g, '{PACKAGE_MANAGER_WORKSPACES}')
-        // We trim each line to reduce the chances of snapshot flakiness
-        .split('\n')
-        .map((r) => r.trim())
-        .join('\n')
-    );
-  },
-  test(val: string) {
-    return val != null && typeof val === 'string';
-  },
+   serialize(str: string) {
+      return (
+         str
+            // Remove all output unique to specific projects to ensure deterministic snapshots
+            .replaceAll(/my-pkg-\d+/g, '{project-name}')
+            .replaceAll(
+               /integrity:\s*.*/g,
+               'integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
+            )
+            .replaceAll(/\b[0-9a-f]{40}\b/g, '{SHASUM}')
+            .replaceAll(/\d*B  index\.js/g, 'XXB  index.js')
+            .replaceAll(/\d*B  project\.json/g, 'XXB  project.json')
+            .replaceAll(/\d*B package\.json/g, 'XXXB package.json')
+            .replaceAll(/size:\s*\d*\s?B/g, 'size: XXXB')
+            .replaceAll(/\d*\.\d*\s?kB/g, 'XXX.XXX kb')
+            .replaceAll(/[a-fA-F0-9]{7}/g, '{COMMIT_SHA}')
+            .replaceAll(/Test @[\w\d]+/g, 'Test @{COMMIT_AUTHOR}')
+            // Normalize the version title date.
+            .replaceAll(/\(\d{4}-\d{2}-\d{2}\)/g, '(YYYY-MM-DD)')
+            // Normalize package manager specific logs
+            .replaceAll(/p?npm workspaces/g, '{PACKAGE_MANAGER_WORKSPACES}')
+            // We trim each line to reduce the chances of snapshot flakiness
+            .split('\n')
+            .map((r) => r.trim())
+            .join('\n')
+      );
+   },
+   test(val: string) {
+      return val != null && typeof val === 'string';
+   },
 });
 
 const originalVerboseLoggingValue = process.env.NX_VERBOSE_LOGGING;
 
 describe('nx release circular dependencies', () => {
-  let pkg1: string;
-  let pkg2: string;
+   let pkg1: string;
+   let pkg2: string;
 
-  beforeAll(async () => {
-    newProject({
-      unsetProjectNameAndRootFormat: false,
-      packages: ['@nx/js'],
-    });
-
-    pkg1 = uniq('my-pkg-1');
-    runCLI(`generate @nx/workspace:npm-package ${pkg1}`);
-
-    pkg2 = uniq('my-pkg-2');
-    runCLI(`generate @nx/workspace:npm-package ${pkg2}`);
-
-    // Update pkg1 to be v1 and depend on pkg2
-    updateJson(`${pkg1}/package.json`, (json) => {
-      json.version = '1.0.0';
-      json.dependencies ??= {};
-      json.dependencies[`@proj/${pkg2}`] = '1.0.0';
-      return json;
-    });
-
-    // Update pkg2 to be v1 and depend on pkg1 (via devDependencies)
-    updateJson(`${pkg2}/package.json`, (json) => {
-      json.version = '1.0.0';
-      json.devDependencies ??= {};
-      json.devDependencies[`@proj/${pkg1}`] = '1.0.0';
-      return json;
-    });
-
-    await runCommandAsync(`git add .`);
-    await runCommandAsync(`git commit -m "chore: initial commit"`);
-
-    // Force verbose logging for release operations to ensure consistent snapshots
-    process.env.NX_VERBOSE_LOGGING = 'true';
-
-    // Ensure that the project graph is accurate (NXC-143)
-    runCLI('reset');
-    resetWorkspaceContext();
-    runCLI('reset');
-  }, 60000);
-
-  afterAll(() => {
-    // Restore original verbose logging value
-    process.env.NX_VERBOSE_LOGGING = originalVerboseLoggingValue;
-    cleanupProject();
-  });
-
-  describe('with fixed release groups and updateDependents never', () => {
-    it('should perform a release without any errors or duplication', async () => {
-      updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
-        nxJson.release = {
-          projectsRelationship: 'fixed',
-          version: {
-            generatorOptions: {
-              updateDependents: 'never',
-            },
-          },
-          changelog: {
-            // Enable project level changelogs for all examples
-            projectChangelogs: true,
-          },
-        };
-        return nxJson;
+   beforeAll(async () => {
+      newProject({
+         unsetProjectNameAndRootFormat: false,
+         packages: ['@nx/js'],
       });
 
-      const releaseOutput = runCLI(
-        `release major --verbose --first-release -y -d`
-      );
+      pkg1 = uniq('my-pkg-1');
+      runCLI(`generate @nx/workspace:npm-package ${pkg1}`);
 
-      expect(releaseOutput).toMatchInlineSnapshot(`
+      pkg2 = uniq('my-pkg-2');
+      runCLI(`generate @nx/workspace:npm-package ${pkg2}`);
+
+      // Update pkg1 to be v1 and depend on pkg2
+      updateJson(`${pkg1}/package.json`, (json) => {
+         json.version = '1.0.0';
+         json.dependencies ??= {};
+         json.dependencies[`@proj/${pkg2}`] = '1.0.0';
+         return json;
+      });
+
+      // Update pkg2 to be v1 and depend on pkg1 (via devDependencies)
+      updateJson(`${pkg2}/package.json`, (json) => {
+         json.version = '1.0.0';
+         json.devDependencies ??= {};
+         json.devDependencies[`@proj/${pkg1}`] = '1.0.0';
+         return json;
+      });
+
+      await runCommandAsync(`git add .`);
+      await runCommandAsync(`git commit -m "chore: initial commit"`);
+
+      // Force verbose logging for release operations to ensure consistent snapshots
+      process.env.NX_VERBOSE_LOGGING = 'true';
+
+      // Ensure that the project graph is accurate (NXC-143)
+      runCLI('reset');
+      resetWorkspaceContext();
+      runCLI('reset');
+   }, 60000);
+
+   afterAll(() => {
+      // Restore original verbose logging value
+      process.env.NX_VERBOSE_LOGGING = originalVerboseLoggingValue;
+      cleanupProject();
+   });
+
+   describe('with fixed release groups and updateDependents never', () => {
+      it('should perform a release without any errors or duplication', async () => {
+         updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
+            nxJson.release = {
+               projectsRelationship: 'fixed',
+               version: {
+                  generatorOptions: {
+                     updateDependents: 'never',
+                  },
+               },
+               changelog: {
+                  // Enable project level changelogs for all examples
+                  projectChangelogs: true,
+               },
+            };
+            return nxJson;
+         });
+
+         const releaseOutput = runCLI(
+            `release major --verbose --first-release -y -d`
+         );
+
+         expect(releaseOutput).toMatchInlineSnapshot(`
 
         NX   Running release version for project: {project-name}
 
@@ -276,32 +276,32 @@ describe('nx release circular dependencies', () => {
 
 
       `);
-    });
-  });
-
-  describe('with fixed release groups and updateDependents auto', () => {
-    it('should perform a release without any errors or duplication', async () => {
-      updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
-        nxJson.release = {
-          projectsRelationship: 'fixed',
-          version: {
-            generatorOptions: {
-              updateDependents: 'auto',
-            },
-          },
-          changelog: {
-            // Enable project level changelogs for all examples
-            projectChangelogs: true,
-          },
-        };
-        return nxJson;
       });
+   });
 
-      const releaseOutput = runCLI(
-        `release major --verbose --first-release -y -d`
-      );
+   describe('with fixed release groups and updateDependents auto', () => {
+      it('should perform a release without any errors or duplication', async () => {
+         updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
+            nxJson.release = {
+               projectsRelationship: 'fixed',
+               version: {
+                  generatorOptions: {
+                     updateDependents: 'auto',
+                  },
+               },
+               changelog: {
+                  // Enable project level changelogs for all examples
+                  projectChangelogs: true,
+               },
+            };
+            return nxJson;
+         });
 
-      expect(releaseOutput).toMatchInlineSnapshot(`
+         const releaseOutput = runCLI(
+            `release major --verbose --first-release -y -d`
+         );
+
+         expect(releaseOutput).toMatchInlineSnapshot(`
 
         NX   Running release version for project: {project-name}
 
@@ -461,32 +461,32 @@ describe('nx release circular dependencies', () => {
 
 
       `);
-    });
-  });
-
-  describe('with independent release groups and updateDependents never', () => {
-    it('should perform a release of all packages without any errors or duplication', async () => {
-      updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
-        nxJson.release = {
-          projectsRelationship: 'independent',
-          version: {
-            generatorOptions: {
-              updateDependents: 'never',
-            },
-          },
-          changelog: {
-            // Enable project level changelogs for all examples
-            projectChangelogs: true,
-          },
-        };
-        return nxJson;
       });
+   });
 
-      const releaseOutput = runCLI(
-        `release major --verbose --first-release -y -d`
-      );
+   describe('with independent release groups and updateDependents never', () => {
+      it('should perform a release of all packages without any errors or duplication', async () => {
+         updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
+            nxJson.release = {
+               projectsRelationship: 'independent',
+               version: {
+                  generatorOptions: {
+                     updateDependents: 'never',
+                  },
+               },
+               changelog: {
+                  // Enable project level changelogs for all examples
+                  projectChangelogs: true,
+               },
+            };
+            return nxJson;
+         });
 
-      expect(releaseOutput).toMatchInlineSnapshot(`
+         const releaseOutput = runCLI(
+            `release major --verbose --first-release -y -d`
+         );
+
+         expect(releaseOutput).toMatchInlineSnapshot(`
 
         NX   Running release version for project: {project-name}
 
@@ -647,31 +647,31 @@ describe('nx release circular dependencies', () => {
 
 
       `);
-    });
-
-    it('should perform a release of one package without any errors or duplication', async () => {
-      updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
-        nxJson.release = {
-          projectsRelationship: 'independent',
-          version: {
-            generatorOptions: {
-              updateDependents: 'never',
-            },
-          },
-          changelog: {
-            // Enable project level changelogs for all examples
-            projectChangelogs: true,
-          },
-        };
-        return nxJson;
       });
 
-      // Only release project 1
-      const releaseOutput = runCLI(
-        `release major --verbose --first-release -y -d --projects=${pkg1}`
-      );
+      it('should perform a release of one package without any errors or duplication', async () => {
+         updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
+            nxJson.release = {
+               projectsRelationship: 'independent',
+               version: {
+                  generatorOptions: {
+                     updateDependents: 'never',
+                  },
+               },
+               changelog: {
+                  // Enable project level changelogs for all examples
+                  projectChangelogs: true,
+               },
+            };
+            return nxJson;
+         });
 
-      expect(releaseOutput).toMatchInlineSnapshot(`
+         // Only release project 1
+         const releaseOutput = runCLI(
+            `release major --verbose --first-release -y -d --projects=${pkg1}`
+         );
+
+         expect(releaseOutput).toMatchInlineSnapshot(`
 
         NX   Your filter "{project-name}" matched the following projects:
 
@@ -784,32 +784,32 @@ describe('nx release circular dependencies', () => {
 
 
       `);
-    });
-  });
-
-  describe('with independent release groups and updateDependents auto', () => {
-    it('should perform a release of all packages without any errors or duplication', async () => {
-      updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
-        nxJson.release = {
-          projectsRelationship: 'independent',
-          version: {
-            generatorOptions: {
-              updateDependents: 'auto',
-            },
-          },
-          changelog: {
-            // Enable project level changelogs for all examples
-            projectChangelogs: true,
-          },
-        };
-        return nxJson;
       });
+   });
 
-      const releaseOutput = runCLI(
-        `release major --verbose --first-release -y -d`
-      );
+   describe('with independent release groups and updateDependents auto', () => {
+      it('should perform a release of all packages without any errors or duplication', async () => {
+         updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
+            nxJson.release = {
+               projectsRelationship: 'independent',
+               version: {
+                  generatorOptions: {
+                     updateDependents: 'auto',
+                  },
+               },
+               changelog: {
+                  // Enable project level changelogs for all examples
+                  projectChangelogs: true,
+               },
+            };
+            return nxJson;
+         });
 
-      expect(releaseOutput).toMatchInlineSnapshot(`
+         const releaseOutput = runCLI(
+            `release major --verbose --first-release -y -d`
+         );
+
+         expect(releaseOutput).toMatchInlineSnapshot(`
 
         NX   Running release version for project: {project-name}
 
@@ -970,31 +970,31 @@ describe('nx release circular dependencies', () => {
 
 
       `);
-    });
-
-    it('should perform a release of one package without any errors or duplication', async () => {
-      updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
-        nxJson.release = {
-          projectsRelationship: 'independent',
-          version: {
-            generatorOptions: {
-              updateDependents: 'auto',
-            },
-          },
-          changelog: {
-            // Enable project level changelogs for all examples
-            projectChangelogs: true,
-          },
-        };
-        return nxJson;
       });
 
-      // Only release project 1
-      const releaseOutput = runCLI(
-        `release major --verbose --first-release -y -d --projects=${pkg1}`
-      );
+      it('should perform a release of one package without any errors or duplication', async () => {
+         updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
+            nxJson.release = {
+               projectsRelationship: 'independent',
+               version: {
+                  generatorOptions: {
+                     updateDependents: 'auto',
+                  },
+               },
+               changelog: {
+                  // Enable project level changelogs for all examples
+                  projectChangelogs: true,
+               },
+            };
+            return nxJson;
+         });
 
-      expect(releaseOutput).toMatchInlineSnapshot(`
+         // Only release project 1
+         const releaseOutput = runCLI(
+            `release major --verbose --first-release -y -d --projects=${pkg1}`
+         );
+
+         expect(releaseOutput).toMatchInlineSnapshot(`
 
         NX   Your filter "{project-name}" matched the following projects:
 
@@ -1137,6 +1137,6 @@ describe('nx release circular dependencies', () => {
 
 
       `);
-    });
-  });
+      });
+   });
 });

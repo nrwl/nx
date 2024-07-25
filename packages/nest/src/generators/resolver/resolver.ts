@@ -1,52 +1,52 @@
 import type { Tree } from '@nx/devkit';
 import type {
-  NestGeneratorWithLanguageOption,
-  NestGeneratorWithTestOption,
-  NormalizedOptions,
+   NestGeneratorWithLanguageOption,
+   NestGeneratorWithTestOption,
+   NormalizedOptions,
 } from '../utils';
 import {
-  normalizeOptions,
-  runNestSchematic,
-  unitTestRunnerToSpec,
+   normalizeOptions,
+   runNestSchematic,
+   unitTestRunnerToSpec,
 } from '../utils';
 
 export type ResolverGeneratorOptions = NestGeneratorWithLanguageOption &
-  NestGeneratorWithTestOption;
+   NestGeneratorWithTestOption;
 
 export async function resolverGenerator(
-  tree: Tree,
-  rawOptions: ResolverGeneratorOptions
+   tree: Tree,
+   rawOptions: ResolverGeneratorOptions
 ) {
-  await resolverGeneratorInternal(tree, {
-    nameAndDirectoryFormat: 'derived',
-    ...rawOptions,
-  });
+   await resolverGeneratorInternal(tree, {
+      nameAndDirectoryFormat: 'derived',
+      ...rawOptions,
+   });
 }
 
 export async function resolverGeneratorInternal(
-  tree: Tree,
-  rawOptions: ResolverGeneratorOptions
+   tree: Tree,
+   rawOptions: ResolverGeneratorOptions
 ): Promise<any> {
-  const options = await normalizeResolverOptions(tree, rawOptions);
+   const options = await normalizeResolverOptions(tree, rawOptions);
 
-  return runNestSchematic(tree, 'resolver', options);
+   return runNestSchematic(tree, 'resolver', options);
 }
 
 export default resolverGenerator;
 
 async function normalizeResolverOptions(
-  tree: Tree,
-  options: ResolverGeneratorOptions
+   tree: Tree,
+   options: ResolverGeneratorOptions
 ): Promise<NormalizedOptions> {
-  const normalizedOptions = await normalizeOptions(
-    tree,
-    'resolver',
-    '@nx/nest:resolver',
-    options
-  );
-  return {
-    ...normalizedOptions,
-    language: options.language,
-    spec: unitTestRunnerToSpec(options.unitTestRunner),
-  };
+   const normalizedOptions = await normalizeOptions(
+      tree,
+      'resolver',
+      '@nx/nest:resolver',
+      options
+   );
+   return {
+      ...normalizedOptions,
+      language: options.language,
+      spec: unitTestRunnerToSpec(options.unitTestRunner),
+   };
 }

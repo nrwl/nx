@@ -17,42 +17,47 @@ import { stripIndents } from '@nx/devkit';
  * That way, when TSC or IDEs look for types, it will find them in the right place.
  */
 export function typeDefinitions(options: { projectRoot: string }) {
-  return {
-    name: 'dts-bundle',
-    async generateBundle(_opts: unknown, bundle: OutputBundle): Promise<void> {
-      for (const [name, file] of Object.entries(bundle)) {
-        if (
-          file.type === 'asset' ||
-          !file.isEntry ||
-          file.facadeModuleId == null
-        ) {
-          continue;
-        }
+   return {
+      name: 'dts-bundle',
+      async generateBundle(
+         _opts: unknown,
+         bundle: OutputBundle
+      ): Promise<void> {
+         for (const [name, file] of Object.entries(bundle)) {
+            if (
+               file.type === 'asset' ||
+               !file.isEntry ||
+               file.facadeModuleId == null
+            ) {
+               continue;
+            }
 
-        const hasDefaultExport = file.exports.includes('default');
-        const entrySourceFileName = relative(
-          options.projectRoot,
-          file.facadeModuleId
-        );
-        const entrySourceDtsName = entrySourceFileName.replace(
-          /\.[cm]?[jt]sx?$/,
-          ''
-        );
-        const dtsFileName = file.fileName.replace(/\.[cm]?js$/, '.d.ts');
-        const relativeSourceDtsName = JSON.stringify('./' + entrySourceDtsName);
-        const dtsFileSource = hasDefaultExport
-          ? stripIndents`
+            const hasDefaultExport = file.exports.includes('default');
+            const entrySourceFileName = relative(
+               options.projectRoot,
+               file.facadeModuleId
+            );
+            const entrySourceDtsName = entrySourceFileName.replace(
+               /\.[cm]?[jt]sx?$/,
+               ''
+            );
+            const dtsFileName = file.fileName.replace(/\.[cm]?js$/, '.d.ts');
+            const relativeSourceDtsName = JSON.stringify(
+               './' + entrySourceDtsName
+            );
+            const dtsFileSource = hasDefaultExport
+               ? stripIndents`
               export * from ${relativeSourceDtsName};
               export { default } from ${relativeSourceDtsName};
             `
-          : `export * from ${relativeSourceDtsName};\n`;
+               : `export * from ${relativeSourceDtsName};\n`;
 
-        this.emitFile({
-          type: 'asset',
-          fileName: dtsFileName,
-          source: dtsFileSource,
-        });
-      }
-    },
-  };
+            this.emitFile({
+               type: 'asset',
+               fileName: dtsFileName,
+               source: dtsFileSource,
+            });
+         }
+      },
+   };
 }

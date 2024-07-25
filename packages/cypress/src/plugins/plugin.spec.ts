@@ -8,71 +8,71 @@ import { join } from 'path';
 import { nxE2EPreset } from '../../plugins/cypress-preset';
 
 describe('@nx/cypress/plugin', () => {
-  let createNodesFunction = createNodesV2[1];
-  let context: CreateNodesContext;
-  let tempFs: TempFs;
+   let createNodesFunction = createNodesV2[1];
+   let context: CreateNodesContext;
+   let tempFs: TempFs;
 
-  beforeEach(async () => {
-    tempFs = new TempFs('cypress-plugin');
+   beforeEach(async () => {
+      tempFs = new TempFs('cypress-plugin');
 
-    await tempFs.createFiles({
-      'package.json': '{}',
-      'cypress.config.js': '',
-      'src/test.cy.ts': '',
-    });
-    context = {
-      nxJsonConfiguration: {
-        // These defaults should be overridden by plugin
-        targetDefaults: {
-          e2e: {
-            cache: false,
-            inputs: ['foo', '^foo'],
-          },
-        },
-        namedInputs: {
-          default: ['{projectRoot}/**/*'],
-          production: ['!{projectRoot}/**/*.spec.ts'],
-        },
-      },
-      workspaceRoot: tempFs.tempDir,
-      configFiles: [],
-    };
-  });
-
-  afterEach(() => {
-    jest.resetModules();
-    tempFs.cleanup();
-    tempFs = null;
-  });
-
-  afterAll(() => {
-    resetWorkspaceContext();
-  });
-
-  it('should add a target for e2e', async () => {
-    mockCypressConfig(
-      defineConfig({
-        e2e: {
-          ...nxE2EPreset('.', {
-            webServerCommands: {
-              default: 'nx run my-app:serve',
-              production: 'nx run my-app:serve:production',
+      await tempFs.createFiles({
+         'package.json': '{}',
+         'cypress.config.js': '',
+         'src/test.cy.ts': '',
+      });
+      context = {
+         nxJsonConfiguration: {
+            // These defaults should be overridden by plugin
+            targetDefaults: {
+               e2e: {
+                  cache: false,
+                  inputs: ['foo', '^foo'],
+               },
             },
-          }),
-          videosFolder: './dist/videos',
-          screenshotsFolder: './dist/screenshots',
-        },
-      })
-    );
-    const nodes = await createNodesFunction(
-      ['cypress.config.js'],
-      {
-        targetName: 'e2e',
-      },
-      context
-    );
+            namedInputs: {
+               default: ['{projectRoot}/**/*'],
+               production: ['!{projectRoot}/**/*.spec.ts'],
+            },
+         },
+         workspaceRoot: tempFs.tempDir,
+         configFiles: [],
+      };
+   });
 
-    expect(nodes).toMatchInlineSnapshot(`
+   afterEach(() => {
+      jest.resetModules();
+      tempFs.cleanup();
+      tempFs = null;
+   });
+
+   afterAll(() => {
+      resetWorkspaceContext();
+   });
+
+   it('should add a target for e2e', async () => {
+      mockCypressConfig(
+         defineConfig({
+            e2e: {
+               ...nxE2EPreset('.', {
+                  webServerCommands: {
+                     default: 'nx run my-app:serve',
+                     production: 'nx run my-app:serve:production',
+                  },
+               }),
+               videosFolder: './dist/videos',
+               screenshotsFolder: './dist/screenshots',
+            },
+         })
+      );
+      const nodes = await createNodesFunction(
+         ['cypress.config.js'],
+         {
+            targetName: 'e2e',
+         },
+         context
+      );
+
+      expect(nodes).toMatchInlineSnapshot(`
       [
         [
           "cypress.config.js",
@@ -151,30 +151,30 @@ describe('@nx/cypress/plugin', () => {
         ],
       ]
     `);
-  });
+   });
 
-  it('should add a target for component testing', async () => {
-    mockCypressConfig(
-      defineConfig({
-        component: {
-          videosFolder: './dist/videos',
-          screenshotsFolder: './dist/screenshots',
-          devServer: {
-            framework: 'create-react-app',
-            bundler: 'webpack',
-          },
-        },
-      })
-    );
-    const nodes = await createNodesFunction(
-      ['cypress.config.js'],
-      {
-        componentTestingTargetName: 'component-test',
-      },
-      context
-    );
+   it('should add a target for component testing', async () => {
+      mockCypressConfig(
+         defineConfig({
+            component: {
+               videosFolder: './dist/videos',
+               screenshotsFolder: './dist/screenshots',
+               devServer: {
+                  framework: 'create-react-app',
+                  bundler: 'webpack',
+               },
+            },
+         })
+      );
+      const nodes = await createNodesFunction(
+         ['cypress.config.js'],
+         {
+            componentTestingTargetName: 'component-test',
+         },
+         context
+      );
 
-    expect(nodes).toMatchInlineSnapshot(`
+      expect(nodes).toMatchInlineSnapshot(`
       [
         [
           "cypress.config.js",
@@ -247,34 +247,34 @@ describe('@nx/cypress/plugin', () => {
         ],
       ]
     `);
-  });
+   });
 
-  it('should use ciDevServerTarget to create additional configurations', async () => {
-    mockCypressConfig(
-      defineConfig({
-        e2e: {
-          ...nxE2EPreset(join(tempFs.tempDir, 'cypress.config.js'), {
-            webServerCommands: {
-              default: 'my-app:serve',
-              production: 'my-app:serve:production',
+   it('should use ciDevServerTarget to create additional configurations', async () => {
+      mockCypressConfig(
+         defineConfig({
+            e2e: {
+               ...nxE2EPreset(join(tempFs.tempDir, 'cypress.config.js'), {
+                  webServerCommands: {
+                     default: 'my-app:serve',
+                     production: 'my-app:serve:production',
+                  },
+                  ciWebServerCommand: 'my-app:serve-static',
+               }),
+               specPattern: '**/*.cy.ts',
+               videosFolder: './dist/videos',
+               screenshotsFolder: './dist/screenshots',
             },
-            ciWebServerCommand: 'my-app:serve-static',
-          }),
-          specPattern: '**/*.cy.ts',
-          videosFolder: './dist/videos',
-          screenshotsFolder: './dist/screenshots',
-        },
-      })
-    );
-    const nodes = await createNodesFunction(
-      ['cypress.config.js'],
-      {
-        componentTestingTargetName: 'component-test',
-      },
-      context
-    );
+         })
+      );
+      const nodes = await createNodesFunction(
+         ['cypress.config.js'],
+         {
+            componentTestingTargetName: 'component-test',
+         },
+         context
+      );
 
-    expect(nodes).toMatchInlineSnapshot(`
+      expect(nodes).toMatchInlineSnapshot(`
       [
         [
           "cypress.config.js",
@@ -437,21 +437,21 @@ describe('@nx/cypress/plugin', () => {
         ],
       ]
     `);
-  });
+   });
 
-  function mockCypressConfig(cypressConfig: Cypress.ConfigOptions) {
-    // This isn't JS, but all that really matters here
-    // is that the hash is different after updating the
-    // config file. The actual config read is mocked below.
-    tempFs.createFileSync('cypress.config.js', JSON.stringify(cypressConfig));
-    jest.mock(
-      join(tempFs.tempDir, 'cypress.config.js'),
-      () => ({
-        default: cypressConfig,
-      }),
-      {
-        virtual: true,
-      }
-    );
-  }
+   function mockCypressConfig(cypressConfig: Cypress.ConfigOptions) {
+      // This isn't JS, but all that really matters here
+      // is that the hash is different after updating the
+      // config file. The actual config read is mocked below.
+      tempFs.createFileSync('cypress.config.js', JSON.stringify(cypressConfig));
+      jest.mock(
+         join(tempFs.tempDir, 'cypress.config.js'),
+         () => ({
+            default: cypressConfig,
+         }),
+         {
+            virtual: true,
+         }
+      );
+   }
 });

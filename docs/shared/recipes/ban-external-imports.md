@@ -8,30 +8,30 @@ A common example of this is for backend projects that use NestJS and frontend pr
 
 ```jsonc {% fileName=".eslintrc.json" %}
 {
-  // ... more ESLint config here
+   // ... more ESLint config here
 
-  // @nx/enforce-module-boundaries should already exist at the top-level of your config
-  "@nx/enforce-module-boundaries": [
-    "error",
-    {
-      "allow": [],
-      // update depConstraints based on your tags
-      "depConstraints": [
-        // projects tagged with "frontend" can't import from "@nestjs/common"
-        {
-          "sourceTag": "frontend",
-          "bannedExternalImports": ["@nestjs/common"]
-        },
-        // projects tagged with "backend" can't import from "@angular/core"
-        {
-          "sourceTag": "backend",
-          "bannedExternalImports": ["@angular/core"]
-        }
-      ]
-    }
-  ]
+   // @nx/enforce-module-boundaries should already exist at the top-level of your config
+   "@nx/enforce-module-boundaries": [
+      "error",
+      {
+         "allow": [],
+         // update depConstraints based on your tags
+         "depConstraints": [
+            // projects tagged with "frontend" can't import from "@nestjs/common"
+            {
+               "sourceTag": "frontend",
+               "bannedExternalImports": ["@nestjs/common"]
+            },
+            // projects tagged with "backend" can't import from "@angular/core"
+            {
+               "sourceTag": "backend",
+               "bannedExternalImports": ["@angular/core"]
+            }
+         ]
+      }
+   ]
 
-  // ... more ESLint config here
+   // ... more ESLint config here
 }
 ```
 
@@ -39,24 +39,24 @@ Another common example is ensuring that util libraries stay framework-free by ba
 
 ```jsonc {% fileName=".eslintrc.json" %}
 {
-  // ... more ESLint config here
-  // @nx/enforce-module-boundaries should already exist at the top-level of your config
-  "@nx/enforce-module-boundaries": [
-    "error",
-    {
-      "allow": [],
-      // update depConstraints based on your tags
-      "depConstraints": [
-        // projects tagged with "type:util" can't import from "react" or related projects
-        {
-          "sourceTag": "type:util",
-          "bannedExternalImports": ["*react*"]
-        }
-      ]
-    }
-  ]
+   // ... more ESLint config here
+   // @nx/enforce-module-boundaries should already exist at the top-level of your config
+   "@nx/enforce-module-boundaries": [
+      "error",
+      {
+         "allow": [],
+         // update depConstraints based on your tags
+         "depConstraints": [
+            // projects tagged with "type:util" can't import from "react" or related projects
+            {
+               "sourceTag": "type:util",
+               "bannedExternalImports": ["*react*"]
+            }
+         ]
+      }
+   ]
 
-  // ... more ESLint config here
+   // ... more ESLint config here
 }
 ```
 

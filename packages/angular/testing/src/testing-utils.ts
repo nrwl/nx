@@ -16,7 +16,7 @@ import { first, toArray } from 'rxjs/operators';
  * ```
  */
 export function readAll<T>(o: Observable<T>): Promise<T[]> {
-  return o.pipe(toArray()).toPromise();
+   return o.pipe(toArray()).toPromise();
 }
 
 /**
@@ -34,5 +34,5 @@ export function readAll<T>(o: Observable<T>): Promise<T[]> {
  * ```
  */
 export function readFirst<T>(o: Observable<T>): Promise<T> {
-  return o.pipe(first()).toPromise();
+   return o.pipe(first()).toPromise();
 }

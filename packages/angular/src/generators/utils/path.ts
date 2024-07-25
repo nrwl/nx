@@ -2,16 +2,16 @@ import { joinPathFragments } from '@nx/devkit';
 import { basename, dirname, relative } from 'path';
 
 export function getRelativeImportToFile(
-  sourceFilePath: string,
-  targetFilePath: string
+   sourceFilePath: string,
+   targetFilePath: string
 ): string {
-  const relativeDirToTarget = relative(
-    dirname(sourceFilePath),
-    dirname(targetFilePath)
-  );
+   const relativeDirToTarget = relative(
+      dirname(sourceFilePath),
+      dirname(targetFilePath)
+   );
 
-  return `./${joinPathFragments(
-    relativeDirToTarget,
-    basename(targetFilePath, '.ts')
-  )}`;
+   return `./${joinPathFragments(
+      relativeDirToTarget,
+      basename(targetFilePath, '.ts')
+   )}`;
 }

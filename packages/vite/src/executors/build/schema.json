@@ -1,67 +1,67 @@
 {
-  "version": 2,
-  "outputCapture": "direct-nodejs",
-  "title": "Vite Prod Builder",
-  "cli": "nx",
-  "description": "Builds a Vite.js application for production.",
-  "type": "object",
-  "presets": [
-    {
-      "name": "Default minimum setup",
-      "keys": []
-    }
-  ],
-  "properties": {
-    "outputPath": {
-      "type": "string",
-      "description": "The output path of the generated files.",
-      "x-completion-type": "directory",
-      "x-priority": "important"
-    },
-    "buildLibsFromSource": {
-      "type": "boolean",
-      "description": "Read buildable libraries from source instead of building them separately.",
-      "default": true
-    },
-    "skipTypeCheck": {
-      "type": "boolean",
-      "description": "Skip type-checking via TypeScript. Skipping type-checking speeds up the build but type errors are not caught.",
-      "default": false
-    },
-    "tsConfig": {
-      "type": "string",
-      "description": "The path to custom tsconfig file for type-checking when skipTypeCheck is false. Required when tsconfig file is not at the projectRoot level.",
-      "x-completion-type": "file",
-      "x-completion-glob": "tsconfig.*.json"
-    },
-    "configFile": {
-      "type": "string",
-      "description": "The name of the Vite.js configuration file.",
-      "x-completion-type": "file",
-      "x-completion-glob": "vite.config.@(js|ts)"
-    },
-    "watch": {
-      "description": "Enable re-building when files change.",
-      "oneOf": [
-        {
-          "type": "boolean"
-        },
-        {
-          "type": "object"
-        }
-      ],
-      "default": false
-    },
-    "generatePackageJson": {
-      "description": "Generate a package.json for the build output.",
-      "type": "boolean"
-    },
-    "includeDevDependenciesInPackageJson": {
-      "description": "Include devDependencies in the generated package.json.",
-      "type": "boolean"
-    }
-  },
-  "definitions": {},
-  "required": [],
-  "examplesFile": "../../../docs/build-examples.md"
+   "version": 2,
+   "outputCapture": "direct-nodejs",
+   "title": "Vite Prod Builder",
+   "cli": "nx",
+   "description": "Builds a Vite.js application for production.",
+   "type": "object",
+   "presets": [
+      {
+         "name": "Default minimum setup",
+         "keys": []
+      }
+   ],
+   "properties": {
+      "outputPath": {
+         "type": "string",
+         "description": "The output path of the generated files.",
+         "x-completion-type": "directory",
+         "x-priority": "important"
+      },
+      "buildLibsFromSource": {
+         "type": "boolean",
+         "description": "Read buildable libraries from source instead of building them separately.",
+         "default": true
+      },
+      "skipTypeCheck": {
+         "type": "boolean",
+         "description": "Skip type-checking via TypeScript. Skipping type-checking speeds up the build but type errors are not caught.",
+         "default": false
+      },
+      "tsConfig": {
+         "type": "string",
+         "description": "The path to custom tsconfig file for type-checking when skipTypeCheck is false. Required when tsconfig file is not at the projectRoot level.",
+         "x-completion-type": "file",
+         "x-completion-glob": "tsconfig.*.json"
+      },
+      "configFile": {
+         "type": "string",
+         "description": "The name of the Vite.js configuration file.",
+         "x-completion-type": "file",
+         "x-completion-glob": "vite.config.@(js|ts)"
+      },
+      "watch": {
+         "description": "Enable re-building when files change.",
+         "oneOf": [
+            {
+               "type": "boolean"
+            },
+            {
+               "type": "object"
+            }
+         ],
+         "default": false
+      },
+      "generatePackageJson": {
+         "description": "Generate a package.json for the build output.",
+         "type": "boolean"
+      },
+      "includeDevDependenciesInPackageJson": {
+         "description": "Include devDependencies in the generated package.json.",
+         "type": "boolean"
+      }
+   },
+   "definitions": {},
+   "required": [],
+   "examplesFile": "../../../docs/build-examples.md"
 }

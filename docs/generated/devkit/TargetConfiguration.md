@@ -12,17 +12,17 @@ Target's configuration
 
 ### Properties
 
-- [cache](../../devkit/documents/TargetConfiguration#cache): boolean
-- [command](../../devkit/documents/TargetConfiguration#command): string
-- [configurations](../../devkit/documents/TargetConfiguration#configurations): Object
-- [defaultConfiguration](../../devkit/documents/TargetConfiguration#defaultconfiguration): string
-- [dependsOn](../../devkit/documents/TargetConfiguration#dependson): (string | TargetDependencyConfig)[]
-- [executor](../../devkit/documents/TargetConfiguration#executor): string
-- [inputs](../../devkit/documents/TargetConfiguration#inputs): (string | InputDefinition)[]
-- [metadata](../../devkit/documents/TargetConfiguration#metadata): TargetMetadata
-- [options](../../devkit/documents/TargetConfiguration#options): T
-- [outputs](../../devkit/documents/TargetConfiguration#outputs): string[]
-- [parallelism](../../devkit/documents/TargetConfiguration#parallelism): boolean
+-  [cache](../../devkit/documents/TargetConfiguration#cache): boolean
+-  [command](../../devkit/documents/TargetConfiguration#command): string
+-  [configurations](../../devkit/documents/TargetConfiguration#configurations): Object
+-  [defaultConfiguration](../../devkit/documents/TargetConfiguration#defaultconfiguration): string
+-  [dependsOn](../../devkit/documents/TargetConfiguration#dependson): (string | TargetDependencyConfig)[]
+-  [executor](../../devkit/documents/TargetConfiguration#executor): string
+-  [inputs](../../devkit/documents/TargetConfiguration#inputs): (string | InputDefinition)[]
+-  [metadata](../../devkit/documents/TargetConfiguration#metadata): TargetMetadata
+-  [options](../../devkit/documents/TargetConfiguration#options): T
+-  [outputs](../../devkit/documents/TargetConfiguration#outputs): string[]
+-  [parallelism](../../devkit/documents/TargetConfiguration#parallelism): boolean
 
 ## Properties
 

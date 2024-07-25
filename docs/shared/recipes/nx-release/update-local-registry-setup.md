@@ -15,22 +15,30 @@ import { startLocalRegistry } from '@nx/js/plugins/jest/local-registry';
 import { execFileSync } from 'child_process';
 
 export default async () => {
-  // local registry target to run
-  const localRegistryTarget = '@demo-plugin-1800/source:local-registry';
-  // storage folder for the local registry
-  const storage = './tmp/local-registry/storage';
+   // local registry target to run
+   const localRegistryTarget = '@demo-plugin-1800/source:local-registry';
+   // storage folder for the local registry
+   const storage = './tmp/local-registry/storage';
 
-  global.stopLocalRegistry = await startLocalRegistry({
-    localRegistryTarget,
-    storage,
-    verbose: false,
-  });
-  const nx = require.resolve('nx');
-  execFileSync(
-    nx,
-    ['run-many', '--targets', 'publish', '--ver', '0.0.0-e2e', '--tag', 'e2e'],
-    { env: process.env, stdio: 'inherit' }
-  );
+   global.stopLocalRegistry = await startLocalRegistry({
+      localRegistryTarget,
+      storage,
+      verbose: false,
+   });
+   const nx = require.resolve('nx');
+   execFileSync(
+      nx,
+      [
+         'run-many',
+         '--targets',
+         'publish',
+         '--ver',
+         '0.0.0-e2e',
+         '--tag',
+         'e2e',
+      ],
+      { env: process.env, stdio: 'inherit' }
+   );
 };
 ```
 
@@ -50,30 +58,30 @@ import { execFileSync } from 'child_process';
 import { releasePublish, releaseVersion } from 'nx/release';
 
 export default async () => {
-  // local registry target to run
-  const localRegistryTarget = '@demo-plugin-1800/source:local-registry';
-  // storage folder for the local registry
-  const storage = './tmp/local-registry/storage';
+   // local registry target to run
+   const localRegistryTarget = '@demo-plugin-1800/source:local-registry';
+   // storage folder for the local registry
+   const storage = './tmp/local-registry/storage';
 
-  global.stopLocalRegistry = await startLocalRegistry({
-    localRegistryTarget,
-    storage,
-    verbose: false,
-  });
+   global.stopLocalRegistry = await startLocalRegistry({
+      localRegistryTarget,
+      storage,
+      verbose: false,
+   });
 
-  await releaseVersion({
-    specifier: '0.0.0-e2e',
-    stageChanges: false,
-    gitCommit: false,
-    gitTag: false,
-    firstRelease: true,
-    generatorOptionsOverrides: {
-      skipLockFileUpdate: true,
-    },
-  });
-  await releasePublish({
-    tag: 'e2e',
-    firstRelease: true,
-  });
+   await releaseVersion({
+      specifier: '0.0.0-e2e',
+      stageChanges: false,
+      gitCommit: false,
+      gitTag: false,
+      firstRelease: true,
+      generatorOptionsOverrides: {
+         skipLockFileUpdate: true,
+      },
+   });
+   await releasePublish({
+      tag: 'e2e',
+      firstRelease: true,
+   });
 };
 ```

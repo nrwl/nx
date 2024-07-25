@@ -10,43 +10,43 @@ import routeGenerator from '../../route/route.impl';
 import { v2MetaGenerator } from './v2.impl';
 
 describe('meta v2', () => {
-  let tree: Tree;
+   let tree: Tree;
 
-  test.each([['apps/demo/app/routes/example.tsx', 'example', 'example.tsx']])(
-    'add meta using route path "%s"',
-    async (path) => {
-      tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-      tree.write('.gitignore', `/node_modules/dist`);
+   test.each([['apps/demo/app/routes/example.tsx', 'example', 'example.tsx']])(
+      'add meta using route path "%s"',
+      async (path) => {
+         tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+         tree.write('.gitignore', `/node_modules/dist`);
 
-      (remixConfigUtils.getRemixConfigValues as jest.Mock) = jest.fn(() =>
-        Promise.resolve({
-          ignoredRouteFiles: ['**/.*'],
-        })
-      );
+         (remixConfigUtils.getRemixConfigValues as jest.Mock) = jest.fn(() =>
+            Promise.resolve({
+               ignoredRouteFiles: ['**/.*'],
+            })
+         );
 
-      await applicationGenerator(tree, { name: 'demo' });
-      await routeGenerator(tree, {
-        path: 'example',
-        project: 'demo',
-        style: 'none',
-        loader: false,
-        action: false,
-        meta: false,
-        skipChecks: false,
-      });
+         await applicationGenerator(tree, { name: 'demo' });
+         await routeGenerator(tree, {
+            path: 'example',
+            project: 'demo',
+            style: 'none',
+            loader: false,
+            action: false,
+            meta: false,
+            skipChecks: false,
+         });
 
-      await v2MetaGenerator(tree, {
-        path,
-        project: 'demo',
-      });
+         await v2MetaGenerator(tree, {
+            path,
+            project: 'demo',
+         });
 
-      const content = tree.read('apps/demo/app/routes/example.tsx', 'utf-8');
-      expect(content).toMatch(
-        `import type { MetaFunction } from '@remix-run/node';`
-      );
+         const content = tree.read('apps/demo/app/routes/example.tsx', 'utf-8');
+         expect(content).toMatch(
+            `import type { MetaFunction } from '@remix-run/node';`
+         );
 
-      expect(content).toMatch(`export const meta: MetaFunction`);
-      expect(content).toMatch(`return [`);
-    }
-  );
+         expect(content).toMatch(`export const meta: MetaFunction`);
+         expect(content).toMatch(`return [`);
+      }
+   );
 });

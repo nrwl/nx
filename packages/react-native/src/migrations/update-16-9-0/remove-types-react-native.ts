@@ -1,7 +1,7 @@
 import {
-  formatFiles,
-  removeDependenciesFromPackageJson,
-  Tree,
+   formatFiles,
+   removeDependenciesFromPackageJson,
+   Tree,
 } from '@nx/devkit';
 
 /**
@@ -10,6 +10,6 @@ import {
  * @returns
  */
 export default async function update(tree: Tree) {
-  removeDependenciesFromPackageJson(tree, [], ['@types/react-native']);
-  await formatFiles(tree);
+   removeDependenciesFromPackageJson(tree, [], ['@types/react-native']);
+   await formatFiles(tree);
 }

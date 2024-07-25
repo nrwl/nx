@@ -54,9 +54,9 @@ This is the interface:
 
 ```typescript
 interface RemoteCache {
-  retrieve(hash: string, cachePath: string);
+   retrieve(hash: string, cachePath: string);
 
-  store(hash: string, cachePath: string);
+   store(hash: string, cachePath: string);
 }
 ```
 

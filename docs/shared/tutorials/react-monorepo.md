@@ -9,11 +9,11 @@ In this tutorial you'll learn how to use React with Nx in a [monorepo (integrate
 
 What will you learn?
 
-- how to create a new React application
-- how to run a single task (i.e. serve your app) or run multiple tasks in parallel
-- how to leverage code generators to scaffold components
-- how to modularize your codebase and impose architectural constraints for better maintainability
-- [how to speed up CI with Nx Cloud ⚡](#fast-ci)
+-  how to create a new React application
+-  how to run a single task (i.e. serve your app) or run multiple tasks in parallel
+-  how to leverage code generators to scaffold components
+-  how to modularize your codebase and impose architectural constraints for better maintainability
+-  [how to speed up CI with Nx Cloud ⚡](#fast-ci)
 
 {% callout type="info" title="Looking for a React standalone app?" %}
 Note, this tutorial sets up a repo with applications and libraries in their own subfolders. If you are looking for a React standalone app setup then check out our [React standalone app tutorial](/getting-started/tutorials/react-standalone-tutorial).
@@ -29,9 +29,9 @@ Nx Plugins are optional packages that extend the capabilities of Nx, catering to
 
 Features of an integrated monorepo:
 
-- [Install dependencies at the root by default](/concepts/decisions/dependency-management#single-version-policy)
-- [Scaffold new code with generators](/features/generate-code)
-- [Updates dependencies with automated migrations](/features/automate-updating-dependencies)
+-  [Install dependencies at the root by default](/concepts/decisions/dependency-management#single-version-policy)
+-  [Scaffold new code with generators](/features/generate-code)
+-  [Updates dependencies with automated migrations](/features/automate-updating-dependencies)
 
 Visit our ["Why Nx" page](/getting-started/why-nx) for more details.
 
@@ -98,11 +98,11 @@ Let's name the initial application `react-store`. In this tutorial we're going t
 
 The setup includes..
 
-- a new React application (`apps/react-store/`)
-- a Playwright based set of e2e tests (`apps/react-store-e2e/`)
-- Prettier preconfigured
-- ESLint preconfigured
-- Jest preconfigured
+-  a new React application (`apps/react-store/`)
+-  a Playwright based set of e2e tests (`apps/react-store-e2e/`)
+-  Prettier preconfigured
+-  ESLint preconfigured
+-  Jest preconfigured
 
 Typically, an integrated Nx workspace places application projects in the `apps` folder and library projects in the `libs` folder. Applications are encouraged to be as light-weight as possible so that more code is pushed into libraries and can be reused in other projects. This folder structure is just a suggestion and can be modified to suit your organization's needs.
 
@@ -136,77 +136,77 @@ npx nx show project react-store
 
 ```json
 {
-  "project": {
-    "name": "react-store",
-    "type": "app",
-    "data": {
-      "root": "apps/react-store",
-      "targets": {
-        "build": {
-          "options": {
-            "cwd": "apps/react-store",
-            "command": "vite build"
-          },
-          "cache": true,
-          "dependsOn": ["^build"],
-          "inputs": [
-            "production",
-            "^production",
-            {
-              "externalDependencies": ["vite"]
-            }
-          ],
-          "outputs": ["{workspaceRoot}/dist/apps/react-store"],
-          "executor": "nx:run-commands",
-          "configurations": {}
-        }
-      },
+   "project": {
       "name": "react-store",
-      "$schema": "../../node_modules/nx/schemas/project-schema.json",
-      "sourceRoot": "apps/react-store/src",
-      "projectType": "application",
-      "tags": [],
-      "implicitDependencies": []
-    }
-  },
-  "sourceMap": {
-    "root": ["apps/react-store/project.json", "nx/core/project-json"],
-    "targets": ["apps/react-store/project.json", "nx/core/project-json"],
-    "targets.build": ["apps/react-store/vite.config.ts", "@nx/vite/plugin"],
-    "targets.build.command": [
-      "apps/react-store/vite.config.ts",
-      "@nx/vite/plugin"
-    ],
-    "targets.build.options": [
-      "apps/react-store/vite.config.ts",
-      "@nx/vite/plugin"
-    ],
-    "targets.build.cache": [
-      "apps/react-store/vite.config.ts",
-      "@nx/vite/plugin"
-    ],
-    "targets.build.dependsOn": [
-      "apps/react-store/vite.config.ts",
-      "@nx/vite/plugin"
-    ],
-    "targets.build.inputs": [
-      "apps/react-store/vite.config.ts",
-      "@nx/vite/plugin"
-    ],
-    "targets.build.outputs": [
-      "apps/react-store/vite.config.ts",
-      "@nx/vite/plugin"
-    ],
-    "targets.build.options.cwd": [
-      "apps/react-store/vite.config.ts",
-      "@nx/vite/plugin"
-    ],
-    "name": ["apps/react-store/project.json", "nx/core/project-json"],
-    "$schema": ["apps/react-store/project.json", "nx/core/project-json"],
-    "sourceRoot": ["apps/react-store/project.json", "nx/core/project-json"],
-    "projectType": ["apps/react-store/project.json", "nx/core/project-json"],
-    "tags": ["apps/react-store/project.json", "nx/core/project-json"]
-  }
+      "type": "app",
+      "data": {
+         "root": "apps/react-store",
+         "targets": {
+            "build": {
+               "options": {
+                  "cwd": "apps/react-store",
+                  "command": "vite build"
+               },
+               "cache": true,
+               "dependsOn": ["^build"],
+               "inputs": [
+                  "production",
+                  "^production",
+                  {
+                     "externalDependencies": ["vite"]
+                  }
+               ],
+               "outputs": ["{workspaceRoot}/dist/apps/react-store"],
+               "executor": "nx:run-commands",
+               "configurations": {}
+            }
+         },
+         "name": "react-store",
+         "$schema": "../../node_modules/nx/schemas/project-schema.json",
+         "sourceRoot": "apps/react-store/src",
+         "projectType": "application",
+         "tags": [],
+         "implicitDependencies": []
+      }
+   },
+   "sourceMap": {
+      "root": ["apps/react-store/project.json", "nx/core/project-json"],
+      "targets": ["apps/react-store/project.json", "nx/core/project-json"],
+      "targets.build": ["apps/react-store/vite.config.ts", "@nx/vite/plugin"],
+      "targets.build.command": [
+         "apps/react-store/vite.config.ts",
+         "@nx/vite/plugin"
+      ],
+      "targets.build.options": [
+         "apps/react-store/vite.config.ts",
+         "@nx/vite/plugin"
+      ],
+      "targets.build.cache": [
+         "apps/react-store/vite.config.ts",
+         "@nx/vite/plugin"
+      ],
+      "targets.build.dependsOn": [
+         "apps/react-store/vite.config.ts",
+         "@nx/vite/plugin"
+      ],
+      "targets.build.inputs": [
+         "apps/react-store/vite.config.ts",
+         "@nx/vite/plugin"
+      ],
+      "targets.build.outputs": [
+         "apps/react-store/vite.config.ts",
+         "@nx/vite/plugin"
+      ],
+      "targets.build.options.cwd": [
+         "apps/react-store/vite.config.ts",
+         "@nx/vite/plugin"
+      ],
+      "name": ["apps/react-store/project.json", "nx/core/project-json"],
+      "$schema": ["apps/react-store/project.json", "nx/core/project-json"],
+      "sourceRoot": ["apps/react-store/project.json", "nx/core/project-json"],
+      "projectType": ["apps/react-store/project.json", "nx/core/project-json"],
+      "tags": ["apps/react-store/project.json", "nx/core/project-json"]
+   }
 }
 ```
 
@@ -216,11 +216,11 @@ If you expand the `build` task, you can see that it was created by the `@nx/vite
 
 ```ts {% fileName="apps/react-store/vite.config.ts" %}
 export default defineConfig({
-  // ...
-  build: {
-    outDir: './build/react-store',
-    // ...
-  },
+   // ...
+   build: {
+      outDir: './build/react-store',
+      // ...
+   },
 });
 ```
 
@@ -343,11 +343,11 @@ When you develop your React application, usually all your logic sits in the `app
 
 Nx allows you to separate this logic into "local libraries". The main benefits include
 
-- better separation of concerns
-- better reusability
-- more explicit "APIs" between your "domain areas"
-- better scalability in CI by enabling independent test/lint/build commands for each library
-- better scalability in your teams by allowing different teams to work on separate libraries
+-  better separation of concerns
+-  better reusability
+-  more explicit "APIs" between your "domain areas"
+-  better scalability in CI by enabling independent test/lint/build commands for each library
+-  better scalability in your teams by allowing different teams to work on separate libraries
 
 ### Creating Local Libraries
 
@@ -402,11 +402,11 @@ Running the above commands should lead to the following directory structure:
 
 Each of these libraries
 
-- has a project details view where you can see the available tasks (e.g. running tests for just orders: `npx nx test orders`)
-- has its own `project.json` file where you can customize targets
-- has the name you specified in the generate command; you can find the name in the corresponding `project.json` file
-- has a dedicated `index.ts` file which is the "public API" of the library
-- is mapped in the `tsconfig.base.json` at the root of the workspace
+-  has a project details view where you can see the available tasks (e.g. running tests for just orders: `npx nx test orders`)
+-  has its own `project.json` file where you can customize targets
+-  has the name you specified in the generate command; you can find the name in the corresponding `project.json` file
+-  has a dedicated `index.ts` file which is the "public API" of the library
+-  is mapped in the `tsconfig.base.json` at the root of the workspace
 
 ### Importing Libraries into the React Applications
 
@@ -472,15 +472,15 @@ import ReactDOM from 'react-dom/client';
 import App from './app/app';
 
 const root = ReactDOM.createRoot(
-  document.getElementById('root') as HTMLElement
+   document.getElementById('root') as HTMLElement
 );
 
 root.render(
-  <StrictMode>
-    <BrowserRouter>
-      <App />
-    </BrowserRouter>
-  </StrictMode>
+   <StrictMode>
+      <BrowserRouter>
+         <App />
+      </BrowserRouter>
+   </StrictMode>
 );
 ```
 
@@ -493,16 +493,16 @@ import { Route, Routes } from 'react-router-dom';
 import { Products } from '@react-monorepo/products';
 
 function Home() {
-  return <h1>Home</h1>;
+   return <h1>Home</h1>;
 }
 
 export function App() {
-  return (
-    <Routes>
-      <Route path="/" element={<Home />}></Route>
-      <Route path="/products" element={<Products />}></Route>
-    </Routes>
-  );
+   return (
+      <Routes>
+         <Route path="/" element={<Home />}></Route>
+         <Route path="/products" element={<Products />}></Route>
+      </Routes>
+   );
 }
 
 export default App;
@@ -514,7 +514,7 @@ Serving your app (`npx nx serve react-store`) and then navigating to `/products`
 
 Let's apply the same for our `orders` library.
 
-- import the `Orders` component from `libs/orders` into the `app.tsx` and render it via the routing mechanism whenever a user hits the `/orders` route
+-  import the `Orders` component from `libs/orders` into the `app.tsx` and render it via the routing mechanism whenever a user hits the `/orders` route
 
 In the end, your `app.tsx` should look similar to this:
 
@@ -524,17 +524,17 @@ import { Products } from '@react-monorepo/products';
 import { Orders } from '@react-monorepo/orders';
 
 function Home() {
-  return <h1>Home</h1>;
+   return <h1>Home</h1>;
 }
 
 export function App() {
-  return (
-    <Routes>
-      <Route path="/" element={<Home />}></Route>
-      <Route path="/products" element={<Products />}></Route>
-      <Route path="/orders" element={<Orders />}></Route>
-    </Routes>
-  );
+   return (
+      <Routes>
+         <Route path="/" element={<Home />}></Route>
+         <Route path="/products" element={<Products />}></Route>
+         <Route path="/orders" element={<Orders />}></Route>
+      </Routes>
+   );
 }
 
 export default App;
@@ -546,7 +546,7 @@ Let's also show products in the `inventory` app.
 import { Products } from '@react-monorepo/products';
 
 export function App() {
-  return <Products />;
+   return <Products />;
 }
 
 export default App;
@@ -570,84 +570,88 @@ You should be able to see something similar to the following in your browser.
 
 ```json
 {
-  "projects": [
-    {
-      "name": "react-store",
-      "type": "app",
-      "data": {
-        "tags": []
-      }
-    },
-    {
-      "name": "react-store-e2e",
-      "type": "e2e",
-      "data": {
-        "tags": []
-      }
-    },
-    {
-      "name": "inventory",
-      "type": "app",
-      "data": {
-        "tags": []
-      }
-    },
-    {
-      "name": "inventory-e2e",
-      "type": "e2e",
-      "data": {
-        "tags": []
-      }
-    },
-    {
-      "name": "shared-ui",
-      "type": "lib",
-      "data": {
-        "tags": []
-      }
-    },
-    {
-      "name": "orders",
-      "type": "lib",
-      "data": {
-        "tags": []
-      }
-    },
-
-    {
-      "name": "products",
-      "type": "lib",
-      "data": {
-        "tags": []
-      }
-    }
-  ],
-  "dependencies": {
-    "react-store": [
-      { "source": "react-store", "target": "orders", "type": "static" },
-      { "source": "react-store", "target": "products", "type": "static" }
-    ],
-    "react-store-e2e": [
+   "projects": [
       {
-        "source": "react-store-e2e",
-        "target": "react-store",
-        "type": "implicit"
+         "name": "react-store",
+         "type": "app",
+         "data": {
+            "tags": []
+         }
+      },
+      {
+         "name": "react-store-e2e",
+         "type": "e2e",
+         "data": {
+            "tags": []
+         }
+      },
+      {
+         "name": "inventory",
+         "type": "app",
+         "data": {
+            "tags": []
+         }
+      },
+      {
+         "name": "inventory-e2e",
+         "type": "e2e",
+         "data": {
+            "tags": []
+         }
+      },
+      {
+         "name": "shared-ui",
+         "type": "lib",
+         "data": {
+            "tags": []
+         }
+      },
+      {
+         "name": "orders",
+         "type": "lib",
+         "data": {
+            "tags": []
+         }
+      },
+
+      {
+         "name": "products",
+         "type": "lib",
+         "data": {
+            "tags": []
+         }
       }
-    ],
-    "inventory": [
-      { "source": "inventory", "target": "products", "type": "static" }
-    ],
-    "inventory-e2e": [
-      { "source": "inventory-e2e", "target": "inventory", "type": "implicit" }
-    ],
-    "shared-ui": [],
-    "orders": [],
-    "products": []
-  },
-  "workspaceLayout": { "appsDir": "", "libsDir": "" },
-  "affectedProjectIds": [],
-  "focus": null,
-  "groupByFolder": false
+   ],
+   "dependencies": {
+      "react-store": [
+         { "source": "react-store", "target": "orders", "type": "static" },
+         { "source": "react-store", "target": "products", "type": "static" }
+      ],
+      "react-store-e2e": [
+         {
+            "source": "react-store-e2e",
+            "target": "react-store",
+            "type": "implicit"
+         }
+      ],
+      "inventory": [
+         { "source": "inventory", "target": "products", "type": "static" }
+      ],
+      "inventory-e2e": [
+         {
+            "source": "inventory-e2e",
+            "target": "inventory",
+            "type": "implicit"
+         }
+      ],
+      "shared-ui": [],
+      "orders": [],
+      "products": []
+   },
+   "workspaceLayout": { "appsDir": "", "libsDir": "" },
+   "affectedProjectIds": [],
+   "focus": null,
+   "groupByFolder": false
 }
 ```
 
@@ -710,12 +714,12 @@ And then make a small change to the `products` library.
 import styles from './products.module.css';
 
 export function Products() {
-  return (
-    <div className={styles['container']}>
-      <h1>Welcome to Products!</h1>
-      <p>This is a change. 👋</p>
-    </div>
-  );
+   return (
+      <div className={styles['container']}>
+         <h1>Welcome to Products!</h1>
+         <p>This is a change. 👋</p>
+      </div>
+   );
 }
 
 export default Products;
@@ -739,90 +743,94 @@ npx nx graph --affected
 
 ```json
 {
-  "projects": [
-    {
-      "name": "react-store",
-      "type": "app",
-      "data": {
-        "tags": []
-      }
-    },
-    {
-      "name": "react-store-e2e",
-      "type": "e2e",
-      "data": {
-        "tags": []
-      }
-    },
-    {
-      "name": "inventory",
-      "type": "app",
-      "data": {
-        "tags": []
-      }
-    },
-    {
-      "name": "inventory-e2e",
-      "type": "e2e",
-      "data": {
-        "tags": []
-      }
-    },
-    {
-      "name": "shared-ui",
-      "type": "lib",
-      "data": {
-        "tags": []
-      }
-    },
-    {
-      "name": "orders",
-      "type": "lib",
-      "data": {
-        "tags": []
-      }
-    },
-
-    {
-      "name": "products",
-      "type": "lib",
-      "data": {
-        "tags": []
-      }
-    }
-  ],
-  "dependencies": {
-    "react-store": [
-      { "source": "react-store", "target": "orders", "type": "static" },
-      { "source": "react-store", "target": "products", "type": "static" }
-    ],
-    "react-store-e2e": [
+   "projects": [
       {
-        "source": "react-store-e2e",
-        "target": "react-store",
-        "type": "implicit"
+         "name": "react-store",
+         "type": "app",
+         "data": {
+            "tags": []
+         }
+      },
+      {
+         "name": "react-store-e2e",
+         "type": "e2e",
+         "data": {
+            "tags": []
+         }
+      },
+      {
+         "name": "inventory",
+         "type": "app",
+         "data": {
+            "tags": []
+         }
+      },
+      {
+         "name": "inventory-e2e",
+         "type": "e2e",
+         "data": {
+            "tags": []
+         }
+      },
+      {
+         "name": "shared-ui",
+         "type": "lib",
+         "data": {
+            "tags": []
+         }
+      },
+      {
+         "name": "orders",
+         "type": "lib",
+         "data": {
+            "tags": []
+         }
+      },
+
+      {
+         "name": "products",
+         "type": "lib",
+         "data": {
+            "tags": []
+         }
       }
-    ],
-    "inventory": [
-      { "source": "inventory", "target": "products", "type": "static" }
-    ],
-    "inventory-e2e": [
-      { "source": "inventory-e2e", "target": "inventory", "type": "implicit" }
-    ],
-    "shared-ui": [],
-    "orders": [],
-    "products": []
-  },
-  "workspaceLayout": { "appsDir": "", "libsDir": "" },
-  "affectedProjectIds": [
-    "products",
-    "inventory",
-    "inventory-e2e",
-    "react-store",
-    "react-store-e2e"
-  ],
-  "focus": null,
-  "groupByFolder": false
+   ],
+   "dependencies": {
+      "react-store": [
+         { "source": "react-store", "target": "orders", "type": "static" },
+         { "source": "react-store", "target": "products", "type": "static" }
+      ],
+      "react-store-e2e": [
+         {
+            "source": "react-store-e2e",
+            "target": "react-store",
+            "type": "implicit"
+         }
+      ],
+      "inventory": [
+         { "source": "inventory", "target": "products", "type": "static" }
+      ],
+      "inventory-e2e": [
+         {
+            "source": "inventory-e2e",
+            "target": "inventory",
+            "type": "implicit"
+         }
+      ],
+      "shared-ui": [],
+      "orders": [],
+      "products": []
+   },
+   "workspaceLayout": { "appsDir": "", "libsDir": "" },
+   "affectedProjectIds": [
+      "products",
+      "inventory",
+      "inventory-e2e",
+      "react-store",
+      "react-store-e2e"
+   ],
+   "focus": null,
+   "groupByFolder": false
 }
 ```
 
@@ -853,12 +861,12 @@ You can even create your own `deploy` task that sends the build output to your h
 
 ```json {% fileName="apps/react-store/project.json" %}
 {
-  "targets": {
-    "deploy": {
-      "dependsOn": ["build"],
-      "command": "netlify deploy --dir=dist/react-store"
-    }
-  }
+   "targets": {
+      "deploy": {
+         "dependsOn": ["build"],
+         "command": "netlify deploy --dir=dist/react-store"
+      }
+   }
 }
 ```
 
@@ -878,14 +886,14 @@ npx nx affected -t deploy
 
 Once you modularize your codebase you want to make sure that the libs are not coupled to each other in an uncontrolled way. Here are some examples of how we might want to guard our small demo workspace:
 
-- we might want to allow `orders` to import from `shared-ui` but not the other way around
-- we might want to allow `orders` to import from `products` but not the other way around
-- we might want to allow all libraries to import the `shared-ui` components, but not the other way around
+-  we might want to allow `orders` to import from `shared-ui` but not the other way around
+-  we might want to allow `orders` to import from `products` but not the other way around
+-  we might want to allow all libraries to import the `shared-ui` components, but not the other way around
 
 When building these kinds of constraints you usually have two dimensions:
 
-- **type of project:** what is the type of your library. Example: "feature" library, "utility" library, "data-access" library, "ui" library
-- **scope (domain) of the project:** what domain area is covered by the project. Example: "orders", "products", "shared" ... this really depends on the type of product you're developing
+-  **type of project:** what is the type of your library. Example: "feature" library, "utility" library, "data-access" library, "ui" library
+-  **scope (domain) of the project:** what domain area is covered by the project. Example: "orders", "products", "shared" ... this really depends on the type of product you're developing
 
 Nx comes with a generic mechanism that allows you to assign "tags" to projects. "tags" are arbitrary strings you can assign to a project that can be used later when defining boundaries between projects. For example, go to the `project.json` of your `orders` library and assign the tags `type:feature` and `scope:orders` to it.
 
@@ -918,10 +926,10 @@ Notice how we assign `scope:shared` to our UI library because it is intended to 
 
 Next, let's come up with a set of rules based on these tags:
 
-- `type:feature` should be able to import from `type:feature` and `type:ui`
-- `type:ui` should only be able to import from `type:ui`
-- `scope:orders` should be able to import from `scope:orders`, `scope:shared` and `scope:products`
-- `scope:products` should be able to import from `scope:products` and `scope:shared`
+-  `type:feature` should be able to import from `type:feature` and `type:ui`
+-  `type:ui` should only be able to import from `type:ui`
+-  `scope:orders` should be able to import from `scope:orders`, `scope:shared` and `scope:products`
+-  `scope:products` should be able to import from `scope:products` and `scope:shared`
 
 To enforce the rules, Nx ships with a custom ESLint rule. Open the `.eslintrc.base.json` at the root of the workspace and add the following `depConstraints` in the `@nx/enforce-module-boundaries` rule configuration:
 
@@ -981,12 +989,12 @@ import styles from './products.module.css';
 import { Orders } from '@react-monorepo/orders';
 
 export function Products() {
-  return (
-    <div className={styles['container']}>
-      <h1>Welcome to Products!</h1>
-      <p>This is a change. 👋</p>
-    </div>
-  );
+   return (
+      <div className={styles['container']}>
+         <h1>Welcome to Products!</h1>
+         <p>This is a change. 👋</p>
+      </div>
+   );
 }
 
 export default Products;
@@ -1039,10 +1047,10 @@ Make sure you have completed the previous sections of this tutorial before start
 
 This tutorial walked you through how Nx can improve the local development experience, but the biggest difference Nx makes is in CI. As repositories get bigger, making sure that the CI is fast, reliable and maintainable can get very challenging. Nx provides a solution.
 
-- Nx reduces wasted time in CI with the [`affected` command](/ci/features/affected).
-- Nx Replay's [remote caching](/ci/features/remote-cache) will reuse task artifacts from different CI executions making sure you will never run the same computation twice.
-- Nx Agents [efficiently distribute tasks across machines](/ci/concepts/parallelization-distribution) ensuring constant CI time regardless of the repository size. The right number of machines is allocated for each PR to ensure good performance without wasting compute.
-- Nx Atomizer [automatically splits](/ci/features/split-e2e-tasks) large e2e tests to distribute them across machines. Nx can also automatically [identify and rerun flaky e2e tests](/ci/features/flaky-tasks).
+-  Nx reduces wasted time in CI with the [`affected` command](/ci/features/affected).
+-  Nx Replay's [remote caching](/ci/features/remote-cache) will reuse task artifacts from different CI executions making sure you will never run the same computation twice.
+-  Nx Agents [efficiently distribute tasks across machines](/ci/concepts/parallelization-distribution) ensuring constant CI time regardless of the repository size. The right number of machines is allocated for each PR to ensure good performance without wasting compute.
+-  Nx Atomizer [automatically splits](/ci/features/split-e2e-tasks) large e2e tests to distribute them across machines. Nx can also automatically [identify and rerun flaky e2e tests](/ci/features/flaky-tasks).
 
 ### Connect to Nx Cloud {% highlightColor="green" %}
 
@@ -1078,25 +1086,25 @@ The key lines in the CI pipeline are:
 name: CI
 # ...
 jobs:
-  main:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      # This enables task distribution via Nx Cloud
-      # Run this command as early as possible, before dependencies are installed
-      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      # Connect your workspace by running "nx connect" and uncomment this
-      - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 20
-          cache: 'npm'
-      - run: npm ci --legacy-peer-deps
-      - uses: nrwl/nx-set-shas@v4
-      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-      - run: npx nx affected -t lint test build
+   main:
+      runs-on: ubuntu-latest
+      steps:
+         - uses: actions/checkout@v4
+           with:
+              fetch-depth: 0
+         # This enables task distribution via Nx Cloud
+         # Run this command as early as possible, before dependencies are installed
+         # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
+         # Connect your workspace by running "nx connect" and uncomment this
+         - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+         - uses: actions/setup-node@v3
+           with:
+              node-version: 20
+              cache: 'npm'
+         - run: npm ci --legacy-peer-deps
+         - uses: nrwl/nx-set-shas@v4
+         # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
+         - run: npx nx affected -t lint test build
 ```
 
 ### Open a Pull Request {% highlightColor="green" %}
@@ -1119,21 +1127,21 @@ The `See all runs` link goes to a page with the progress and results of tasks th
 
 For more information about how Nx can improve your CI pipeline, check out one of these detailed tutorials:
 
-- [Circle CI with Nx](/ci/intro/tutorials/circle)
-- [GitHub Actions with Nx](/ci/intro/tutorials/github-actions)
+-  [Circle CI with Nx](/ci/intro/tutorials/circle)
+-  [GitHub Actions with Nx](/ci/intro/tutorials/github-actions)
 
 ## Next Steps
 
 Here's some things you can dive into next:
 
-- Learn more about the [underlying mental model of Nx](/concepts/mental-model)
-- Learn how to [migrate your React app to Nx](/recipes/adopting-nx/adding-to-existing-project)
-- [Learn how to setup Tailwind](/recipes/react/using-tailwind-css-in-react)
-- [Setup Storybook for our shared UI library](/recipes/storybook/overview-react)
+-  Learn more about the [underlying mental model of Nx](/concepts/mental-model)
+-  Learn how to [migrate your React app to Nx](/recipes/adopting-nx/adding-to-existing-project)
+-  [Learn how to setup Tailwind](/recipes/react/using-tailwind-css-in-react)
+-  [Setup Storybook for our shared UI library](/recipes/storybook/overview-react)
 
 Also, make sure you
 
-- [Join the Official Nx Discord Server](https://go.nx.dev/community) to ask questions and find out the latest news about Nx.
-- [Follow Nx on Twitter](https://twitter.com/nxdevtools) to stay up to date with Nx news
-- [Read our Nx blog](/blog)
-- [Subscribe to our Youtube channel](https://www.youtube.com/@nxdevtools) for demos and Nx insights
+-  [Join the Official Nx Discord Server](https://go.nx.dev/community) to ask questions and find out the latest news about Nx.
+-  [Follow Nx on Twitter](https://twitter.com/nxdevtools) to stay up to date with Nx news
+-  [Read our Nx blog](/blog)
+-  [Subscribe to our Youtube channel](https://www.youtube.com/@nxdevtools) for demos and Nx insights

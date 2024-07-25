@@ -13,13 +13,13 @@ Nx now allows you to [customize your webpack configuration](/recipes/webpack/web
 
 You can create a new workspace that uses Webpack with one of the following commands:
 
-- Generate a new standalone React app set up with Webpack
+-  Generate a new standalone React app set up with Webpack
 
 ```shell
 npx create-nx-workspace@latest --preset=react-standalone --bundler=webpack
 ```
 
-- Generate a new React monorepo set up with Webpack
+-  Generate a new React monorepo set up with Webpack
 
 ```shell
 npx create-nx-workspace@latest --preset=react-monorepo --bundler=webpack
@@ -46,12 +46,12 @@ This will install the correct version of `@nx/webpack`.
 
 The `@nx/webpack` plugin will create a task for any project that has a Webpack configuration file present. Any of the following files will be recognized as a Webpack configuration file:
 
-- `webpack.config.js`
-- `webpack.config.ts`
-- `webpack.config.mjs`
-- `webpack.config.mts`
-- `webpack.config.cjs`
-- `webpack.config.cts`
+-  `webpack.config.js`
+-  `webpack.config.ts`
+-  `webpack.config.mjs`
+-  `webpack.config.mts`
+-  `webpack.config.cjs`
+-  `webpack.config.cts`
 
 ### View Inferred Tasks
 
@@ -63,17 +63,17 @@ The `@nx/webpack/plugin` is configured in the `plugins` array in `nx.json`.
 
 ```json {% fileName="nx.json" %}
 {
-  "plugins": [
-    {
-      "plugin": "@nx/webpack/plugin",
-      "options": {
-        "buildTargetName": "build",
-        "previewTargetName": "preview",
-        "serveTargetName": "serve",
-        "serveStaticTargetName": "serve-static"
+   "plugins": [
+      {
+         "plugin": "@nx/webpack/plugin",
+         "options": {
+            "buildTargetName": "build",
+            "previewTargetName": "preview",
+            "serveTargetName": "serve",
+            "serveStaticTargetName": "serve-static"
+         }
       }
-    }
-  ]
+   ]
 }
 ```
 

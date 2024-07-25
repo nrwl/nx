@@ -30,12 +30,12 @@ This will install the correct version of `@nx/storybook`.
 
 The `@nx/storybook` plugin will create a task for any project that has a Storybook configuration file present. Any of the following files will be recognized as a Storybook configuration file:
 
-- `.storybook/main.js`
-- `.storybook/main.ts`
-- `.storybook/main.cjs`
-- `.storybook/main.cts`
-- `.storybook/main.mjs`
-- `.storybook/main.mts`
+-  `.storybook/main.js`
+-  `.storybook/main.ts`
+-  `.storybook/main.cjs`
+-  `.storybook/main.cts`
+-  `.storybook/main.mjs`
+-  `.storybook/main.mts`
 
 ### View Inferred Tasks
 
@@ -47,17 +47,17 @@ The `@nx/storybook/plugin` is configured in the `plugins` array in `nx.json`.
 
 ```json {% fileName="nx.json" %}
 {
-  "plugins": [
-    {
-      "plugin": "@nx/storybook/plugin",
-      "options": {
-        "buildStorybookTargetName": "build-storybook",
-        "serveStorybookTargetName": "storybook",
-        "testStorybookTargetName": "test-storybook",
-        "staticStorybookTargetName": "static-storybook"
+   "plugins": [
+      {
+         "plugin": "@nx/storybook/plugin",
+         "options": {
+            "buildStorybookTargetName": "build-storybook",
+            "serveStorybookTargetName": "storybook",
+            "testStorybookTargetName": "test-storybook",
+            "staticStorybookTargetName": "static-storybook"
+         }
       }
-    }
-  ]
+   ]
 }
 ```
 
@@ -122,22 +122,22 @@ These framework-specific generators will also **generate stories** and interacti
 
 If you are NOT using a framework-specific generator (for [Angular](/nx-api/angular/generators/storybook-configuration), [React](/nx-api/react/generators/storybook-configuration), [React Native](/nx-api/react-native/generators/storybook-configuration), [Vue](/nx-api/vue/generators/storybook-configuration)), in the field `uiFramework` you must choose one of the following Storybook frameworks:
 
-- `@storybook/angular`
-- `@storybook/html-webpack5`
-- `@storybook/nextjs`
-- `@storybook/preact-webpack5`
-- `@storybook/react-webpack5`
-- `@storybook/react-vite`
-- `@storybook/server-webpack5`
-- `@storybook/svelte-webpack5`
-- `@storybook/svelte-vite`
-- `@storybook/sveltekit`
-- `@storybook/vue-webpack5`
-- `@storybook/vue-vite`
-- `@storybook/vue3-webpack5`
-- `@storybook/vue3-vite`
-- `@storybook/web-components-webpack5`
-- `@storybook/web-components-vite`
+-  `@storybook/angular`
+-  `@storybook/html-webpack5`
+-  `@storybook/nextjs`
+-  `@storybook/preact-webpack5`
+-  `@storybook/react-webpack5`
+-  `@storybook/react-vite`
+-  `@storybook/server-webpack5`
+-  `@storybook/svelte-webpack5`
+-  `@storybook/svelte-vite`
+-  `@storybook/sveltekit`
+-  `@storybook/vue-webpack5`
+-  `@storybook/vue-vite`
+-  `@storybook/vue3-webpack5`
+-  `@storybook/vue3-vite`
+-  `@storybook/web-components-webpack5`
+-  `@storybook/web-components-vite`
 
 Choosing one of these frameworks will have the following effects on your workspace:
 
@@ -244,9 +244,9 @@ You can read more about how to best set up documentation using Storybook for you
 
 You can find dedicated information for React and Angular:
 
-- [Set up Storybook for Angular Projects](/recipes/storybook/overview-angular)
-- [Set up Storybook for React Projects](/recipes/storybook/overview-react)
-- [Set up Storybook for Vue Projects](/recipes/storybook/overview-vue)
+-  [Set up Storybook for Angular Projects](/recipes/storybook/overview-angular)
+-  [Set up Storybook for React Projects](/recipes/storybook/overview-react)
+-  [Set up Storybook for Vue Projects](/recipes/storybook/overview-vue)
 
 You can find all Storybook-related Nx documentation in the [Storybook recipes section](/recipes/storybook).
 
@@ -256,5 +256,5 @@ For more on using Storybook, see the [official Storybook documentation](https://
 
 Here's more information on common migration scenarios for Storybook with Nx. For Storybook specific migrations that are not automatically handled by Nx please refer to the [official Storybook page](https://storybook.js.org/)
 
-- [Storybook 7 migration generator](/nx-api/storybook/generators/migrate-7)
-- [Storybook 7 setup guide](/nx-api/storybook/documents/storybook-7-setup)
+-  [Storybook 7 migration generator](/nx-api/storybook/generators/migrate-7)
+-  [Storybook 7 setup guide](/nx-api/storybook/documents/storybook-7-setup)

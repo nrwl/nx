@@ -4,19 +4,19 @@ import { major } from 'semver';
 export type VersionInfo = { major: number; version: string };
 
 export function getInstalledAngularVersionInfo(): VersionInfo | null {
-  return getInstalledPackageVersionInfo('@angular/core');
+   return getInstalledPackageVersionInfo('@angular/core');
 }
 
 export function getInstalledPackageVersionInfo(
-  pkgName: string
+   pkgName: string
 ): VersionInfo | null {
-  try {
-    const {
-      packageJson: { version },
-    } = readModulePackageJson(pkgName);
+   try {
+      const {
+         packageJson: { version },
+      } = readModulePackageJson(pkgName);
 
-    return { major: major(version), version };
-  } catch {
-    return null;
-  }
+      return { major: major(version), version };
+   } catch {
+      return null;
+   }
 }

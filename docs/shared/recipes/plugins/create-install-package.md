@@ -7,10 +7,10 @@ width="100%" /%}
 
 Starting a new project should be as seamless as possible. In the JavaScript ecosystem, the idea of bootstrapping a new project with a single command has become a must-have for providing a good DX. So much that all the major package managers have a dedicated feature already built-in: if you publish a package named `create-{x}`, it can be invoked via any of the following:
 
-- npx create-{x}
-- yarn create {x}
-- npm init {x}
-- pnpm init {x}
+-  npx create-{x}
+-  yarn create {x}
+-  npm init {x}
+-  pnpm init {x}
 
 These packages are used to set up a new project in some form.
 
@@ -42,8 +42,8 @@ nx g create-package create-my-plugin --project my-plugin
 
 You'll have 2 packages that are relevant in your workspace:
 
-- The create package (e.g. `create-my-plugin`)
-- The plugin package (e.g. `my-plugin`)
+-  The create package (e.g. `create-my-plugin`)
+-  The plugin package (e.g. `my-plugin`)
 
 Let's take a look at the code that was scaffolded out for your `create-my-plugin` package:
 
@@ -53,25 +53,25 @@ Let's take a look at the code that was scaffolded out for your `create-my-plugin
 import { createWorkspace } from 'create-nx-workspace';
 
 async function main() {
-  const name = process.argv[2]; // TODO: use libraries like yargs or enquirer to set your workspace name
-  if (!name) {
-    throw new Error('Please provide a name for the workspace');
-  }
+   const name = process.argv[2]; // TODO: use libraries like yargs or enquirer to set your workspace name
+   if (!name) {
+      throw new Error('Please provide a name for the workspace');
+   }
 
-  console.log(`Creating the workspace: ${name}`);
+   console.log(`Creating the workspace: ${name}`);
 
-  // This assumes "my-plugin" and "create-my-plugin" are at the same version
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const presetVersion = require('../package.json').version;
+   // This assumes "my-plugin" and "create-my-plugin" are at the same version
+   // eslint-disable-next-line @typescript-eslint/no-var-requires
+   const presetVersion = require('../package.json').version;
 
-  // TODO: update below to customize the workspace
-  const { directory } = await createWorkspace(`my-plugin@${presetVersion}`, {
-    name,
-    nxCloud: false,
-    packageManager: 'npm',
-  });
+   // TODO: update below to customize the workspace
+   const { directory } = await createWorkspace(`my-plugin@${presetVersion}`, {
+      name,
+      nxCloud: false,
+      packageManager: 'npm',
+   });
 
-  console.log(`Successfully created the workspace: ${directory}.`);
+   console.log(`Successfully created the workspace: ${directory}.`);
 }
 
 main();
@@ -83,9 +83,9 @@ Note the following code snippet:
 
 ```typescript
 const { directory } = await createWorkspace(`my-plugin@${presetVersion}`, {
-  name,
-  nxCloud: false,
-  packageManager: 'npm',
+   name,
+   nxCloud: false,
+   packageManager: 'npm',
 });
 ```
 
@@ -147,10 +147,10 @@ npx nx e2e my-plugin-e2e
 
 Have a look at some of the example tests that were generated for you. When running these tests,
 
-- the local registry will be started automatically
-- a new version of the packages will be deployed
-- then your test commands will be run (usually triggering processes that setup the workspace, just like the user would type into a command line interface)
-- once the test commands have finished, the local registry will be stopped again and cleaned up
+-  the local registry will be started automatically
+-  a new version of the packages will be deployed
+-  then your test commands will be run (usually triggering processes that setup the workspace, just like the user would type into a command line interface)
+-  once the test commands have finished, the local registry will be stopped again and cleaned up
 
 ## Publishing your create package
 
@@ -158,4 +158,4 @@ Your plugin and create package will both need to be published to NPM to be useab
 
 ## Further Reading
 
-- [Blog post: Create your own create-react-app CLI](https://blog.nrwl.io/create-your-own-create-react-app-cli-d1bf13904e35?sk=a156dddcf85223e7d3e57312955714ea)
+-  [Blog post: Create your own create-react-app CLI](https://blog.nrwl.io/create-your-own-create-react-app-cli-d1bf13904e35?sk=a156dddcf85223e7d3e57312955714ea)

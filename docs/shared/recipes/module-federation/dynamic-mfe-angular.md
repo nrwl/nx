@@ -12,19 +12,19 @@ This guide will walk through how the concept of “Build once, deploy everywhere
 
 The aim of this guide is three-fold. We want to be able to:
 
-- Set up a Micro Frontend with Static Module Federation
-- Transform an existing Static Module Federation setup to use Dynamic Federation
-- Generate a new Micro Frontend application that uses Dynamic Federation
+-  Set up a Micro Frontend with Static Module Federation
+-  Transform an existing Static Module Federation setup to use Dynamic Federation
+-  Generate a new Micro Frontend application that uses Dynamic Federation
 
 ## What we’ll build
 
 To achieve the aims, we will do the following:
 
-- Create a Static Federation Micro Frontend Architecture
-- Change the **Dashboard** application to use Dynamic Federation
-- Generate a new **Employee Dashboard** application that will use Dynamic Federation
-  - It should use the existing **Login** application.
-  - It should use a new **Todo** application.
+-  Create a Static Federation Micro Frontend Architecture
+-  Change the **Dashboard** application to use Dynamic Federation
+-  Generate a new **Employee Dashboard** application that will use Dynamic Federation
+   -  It should use the existing **Login** application.
+   -  It should use a new **Todo** application.
 
 ## Final Code
 
@@ -77,9 +77,9 @@ nx g @nx/angular:host apps/dashboard --prefix=ng-mf
 {% callout type="note" title="Running nx commands" %}
 The terminal examples in this guide will show `nx` being run as if it is installed globally. If you have not installed Nx globally (not required), you can use your package manager to run the `nx` local binary:
 
-- NPM: `npx nx ...`
-- Yarn: `yarn nx ...`
-- PNPM: `pnpm nx ...`
+-  NPM: `npx nx ...`
+-  Yarn: `yarn nx ...`
+-  PNPM: `pnpm nx ...`
 
 {% /callout %}
 
@@ -93,9 +93,9 @@ nx g @nx/angular:remote apps/login --prefix=ng-mf --host=dashboard
 
 Note how we provided the `--host=dashboard` option. This tells the generator that this remote application will be consumed by the **Dashboard** application. The generator performed the following changes to automatically link these two applications together:
 
-- Added the remote to the `apps/dashboard/module-federation.config.ts` file
-- Added a TypeScript path mapping to the root tsconfig file
-- Added a new route to the `apps/dashboard/src/app/app.routes.ts` file
+-  Added the remote to the `apps/dashboard/module-federation.config.ts` file
+-  Added a TypeScript path mapping to the root tsconfig file
+-  Added a new route to the `apps/dashboard/src/app/app.routes.ts` file
 
 ## What was generated?
 
@@ -103,14 +103,14 @@ Let's take a closer look after generating each application.
 
 For both applications, the generators did the following:
 
-- Created the standard Angular application files
-- Added a `module-federation.config.ts` file
-- Added a `webpack.config.ts` and `webpack.prod.config.ts`
-- Added a `src/bootstrap.ts` file
-- Moved the code that is normally in `src/main.ts` to `src/bootstrap.ts`
-- Changed `src/main.ts` to dynamically import `src/bootstrap.ts` _(this is required for the Module Federation to load versions of shared libraries correctly)_
-- Updated the `build` target in the `project.json` to use the `@nx/angular:webpack-browser` executor _(this is required to support passing a custom Webpack configuration to the Angular compiler)_
-- Updated the `serve` target to use `@nx/angular:dev-server` _(this is required as we first need Webpack to build the application with our custom Webpack configuration)_
+-  Created the standard Angular application files
+-  Added a `module-federation.config.ts` file
+-  Added a `webpack.config.ts` and `webpack.prod.config.ts`
+-  Added a `src/bootstrap.ts` file
+-  Moved the code that is normally in `src/main.ts` to `src/bootstrap.ts`
+-  Changed `src/main.ts` to dynamically import `src/bootstrap.ts` _(this is required for the Module Federation to load versions of shared libraries correctly)_
+-  Updated the `build` target in the `project.json` to use the `@nx/angular:webpack-browser` executor _(this is required to support passing a custom Webpack configuration to the Angular compiler)_
+-  Updated the `serve` target to use `@nx/angular:dev-server` _(this is required as we first need Webpack to build the application with our custom Webpack configuration)_
 
 The key differences reside within the configuration of the Module Federation Plugin within each application's `module-federation.config.ts`.
 
@@ -120,10 +120,10 @@ We can see the following in the **Login** micro frontend configuration:
 import { ModuleFederationConfig } from '@nx/webpack';
 
 const config: ModuleFederationConfig = {
-  name: 'login',
-  exposes: {
-    './Routes': 'apps/login/src/app/remote-entry/entry.routes.ts',
-  },
+   name: 'login',
+   exposes: {
+      './Routes': 'apps/login/src/app/remote-entry/entry.routes.ts',
+   },
 };
 
 export default config;
@@ -131,8 +131,8 @@ export default config;
 
 Taking a look at each property of the configuration in turn:
 
-- `name` is the name that Webpack assigns to the remote application. It **must** match the name of the project.
-- `exposes` is the list of source files that the remote application exposes to consuming shell applications for their own use.
+-  `name` is the name that Webpack assigns to the remote application. It **must** match the name of the project.
+-  `exposes` is the list of source files that the remote application exposes to consuming shell applications for their own use.
 
 This config is then used in the `webpack.config.ts` file:
 
@@ -149,8 +149,8 @@ We can see the following in the **Dashboard** micro frontend configuration:
 import { ModuleFederationConfig } from '@nx/webpack';
 
 const config: ModuleFederationConfig = {
-  name: 'dashboard',
-  remotes: ['login'],
+   name: 'dashboard',
+   remotes: ['login'],
 };
 
 export default config;
@@ -190,18 +190,18 @@ import { BehaviorSubject } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class UserService {
-  private isUserLoggedIn = new BehaviorSubject(false);
-  isUserLoggedIn$ = this.isUserLoggedIn.asObservable();
+   private isUserLoggedIn = new BehaviorSubject(false);
+   isUserLoggedIn$ = this.isUserLoggedIn.asObservable();
 
-  checkCredentials(username: string, password: string) {
-    if (username === 'demo' && password === 'demo') {
-      this.isUserLoggedIn.next(true);
-    }
-  }
+   checkCredentials(username: string, password: string) {
+      if (username === 'demo' && password === 'demo') {
+         this.isUserLoggedIn.next(true);
+      }
+   }
 
-  logout() {
-    this.isUserLoggedIn.next(false);
-  }
+   logout() {
+      this.isUserLoggedIn.next(false);
+   }
 }
 ```
 
@@ -223,56 +223,56 @@ import { FormsModule } from '@angular/forms';
 import { UserService } from '@ng-mf/data-access-user';
 
 @Component({
-  standalone: true,
-  imports: [CommonModule, FormsModule],
-  selector: 'ng-mf-login-entry',
-  template: `
-    <div class="login-app">
-      <form class="login-form" (ngSubmit)="login()">
-        <label>
-          Username:
-          <input type="text" name="username" [(ngModel)]="username" />
-        </label>
-        <label>
-          Password:
-          <input type="password" name="password" [(ngModel)]="password" />
-        </label>
-        <button type="submit">Login</button>
-      </form>
-      <div *ngIf="isLoggedIn$ | async">User is logged in!</div>
-    </div>
-  `,
-  styles: [
-    `
-      .login-app {
-        width: 30vw;
-        border: 2px dashed black;
-        padding: 8px;
-        margin: 0 auto;
-      }
-      .login-form {
-        display: flex;
-        align-items: center;
-        flex-direction: column;
-        margin: 0 auto;
-        padding: 8px;
-      }
-      label {
-        display: block;
-      }
-    `,
-  ],
+   standalone: true,
+   imports: [CommonModule, FormsModule],
+   selector: 'ng-mf-login-entry',
+   template: `
+      <div class="login-app">
+         <form class="login-form" (ngSubmit)="login()">
+            <label>
+               Username:
+               <input type="text" name="username" [(ngModel)]="username" />
+            </label>
+            <label>
+               Password:
+               <input type="password" name="password" [(ngModel)]="password" />
+            </label>
+            <button type="submit">Login</button>
+         </form>
+         <div *ngIf="isLoggedIn$ | async">User is logged in!</div>
+      </div>
+   `,
+   styles: [
+      `
+         .login-app {
+            width: 30vw;
+            border: 2px dashed black;
+            padding: 8px;
+            margin: 0 auto;
+         }
+         .login-form {
+            display: flex;
+            align-items: center;
+            flex-direction: column;
+            margin: 0 auto;
+            padding: 8px;
+         }
+         label {
+            display: block;
+         }
+      `,
+   ],
 })
 export class RemoteEntryComponent {
-  username = '';
-  password = '';
-  isLoggedIn$ = this.userService.isUserLoggedIn$;
+   username = '';
+   password = '';
+   isLoggedIn$ = this.userService.isUserLoggedIn$;
 
-  constructor(private userService: UserService) {}
+   constructor(private userService: UserService) {}
 
-  login() {
-    this.userService.checkCredentials(this.username, this.password);
-  }
+   login() {
+      this.userService.checkCredentials(this.username, this.password);
+   }
 }
 ```
 
@@ -314,36 +314,36 @@ import { UserService } from '@ng-mf/data-access-user';
 import { distinctUntilChanged } from 'rxjs/operators';
 
 @Component({
-  standalone: true,
-  imports: [CommonModule, RouterModule],
-  selector: 'ng-mf-root',
-  template: `
-    <div class="dashboard-nav">Admin Dashboard</div>
-    <div *ngIf="isLoggedIn$ | async; else signIn">
-      You are authenticated so you can see this content.
-    </div>
-    <ng-template #signIn><router-outlet></router-outlet></ng-template>
-  `,
+   standalone: true,
+   imports: [CommonModule, RouterModule],
+   selector: 'ng-mf-root',
+   template: `
+      <div class="dashboard-nav">Admin Dashboard</div>
+      <div *ngIf="isLoggedIn$ | async; else signIn">
+         You are authenticated so you can see this content.
+      </div>
+      <ng-template #signIn><router-outlet></router-outlet></ng-template>
+   `,
 })
 export class AppComponent implements OnInit {
-  isLoggedIn$ = this.userService.isUserLoggedIn$;
+   isLoggedIn$ = this.userService.isUserLoggedIn$;
 
-  constructor(private userService: UserService, private router: Router) {}
+   constructor(private userService: UserService, private router: Router) {}
 
-  ngOnInit() {
-    this.isLoggedIn$
-      .pipe(distinctUntilChanged())
-      .subscribe(async (loggedIn) => {
-        // Queue the navigation after initialNavigation blocking is completed
-        setTimeout(() => {
-          if (!loggedIn) {
-            this.router.navigateByUrl('login');
-          } else {
-            this.router.navigateByUrl('');
-          }
-        });
-      });
-  }
+   ngOnInit() {
+      this.isLoggedIn$
+         .pipe(distinctUntilChanged())
+         .subscribe(async (loggedIn) => {
+            // Queue the navigation after initialNavigation blocking is completed
+            setTimeout(() => {
+               if (!loggedIn) {
+                  this.router.navigateByUrl('login');
+               } else {
+                  this.router.navigateByUrl('');
+               }
+            });
+         });
+   }
 }
 ```
 
@@ -354,14 +354,14 @@ import { Route } from '@angular/router';
 import { AppComponent } from './app.component';
 
 export const appRoutes: Route[] = [
-  {
-    path: 'login',
-    loadChildren: () => import('login/Routes').then((m) => m.remoteRoutes),
-  },
-  {
-    path: '',
-    component: AppComponent,
-  },
+   {
+      path: 'login',
+      loadChildren: () => import('login/Routes').then((m) => m.remoteRoutes),
+   },
+   {
+      path: '',
+      component: AppComponent,
+   },
 ];
 ```
 
@@ -395,9 +395,9 @@ We want to change this so that the **Dashboard** application can make a network 
 
 There are 3 steps involved with this:
 
-- Make a network request to fetch the locations of the Remote applications _(the Remote Definitions)_.
-- Set the Remote Definitions so that webpack is aware of how to find the Remote applications when requested.
-- Change how we load the Remote applications so that webpack can fetch any required files correctly.
+-  Make a network request to fetch the locations of the Remote applications _(the Remote Definitions)_.
+-  Set the Remote Definitions so that webpack is aware of how to find the Remote applications when requested.
+-  Change how we load the Remote applications so that webpack can fetch any required files correctly.
 
 ### Fetch and Set the Remote Definitions
 
@@ -407,7 +407,7 @@ We’ll start by creating this file. Add a `module-federation.manifest.json` fil
 
 ```json {% fileName="apps/dashboard/src/assets/module-federation.manifest.json" %}
 {
-  "login": "http://localhost:4201"
+   "login": "http://localhost:4201"
 }
 ```
 
@@ -417,9 +417,9 @@ Next, open the `main.ts` file and replace it with the following:
 import { setRemoteDefinitions } from '@nx/angular/mf';
 
 fetch('/assets/module-federation.manifest.json')
-  .then((res) => res.json())
-  .then((definitions) => setRemoteDefinitions(definitions))
-  .then(() => import('./bootstrap').catch((err) => console.error(err)));
+   .then((res) => res.json())
+   .then((definitions) => setRemoteDefinitions(definitions))
+   .then(() => import('./bootstrap').catch((err) => console.error(err)));
 ```
 
 You’ll notice that we fetch the JSON file and provide its contents to the `setRemoteDefinitions` function we invoke next. This tells webpack where each of our remote applications has been deployed to!
@@ -434,8 +434,8 @@ Open the `module-federation.config.ts` file at the root of our `apps/dashboard/`
 import { ModuleFederationConfig } from '@nx/webpack';
 
 const config: ModuleFederationConfig = {
-  name: 'dashboard',
-  remotes: [],
+   name: 'dashboard',
+   remotes: [],
 };
 
 export default config;
@@ -449,15 +449,15 @@ import { loadRemoteModule } from '@nx/angular/mf';
 import { AppComponent } from './app.component';
 
 export const appRoutes: Route[] = [
-  {
-    path: 'login',
-    loadChildren: () =>
-      loadRemoteModule('login', './Routes').then((m) => m.remoteRoutes),
-  },
-  {
-    path: '',
-    component: AppComponent,
-  },
+   {
+      path: 'login',
+      loadChildren: () =>
+         loadRemoteModule('login', './Routes').then((m) => m.remoteRoutes),
+   },
+   {
+      path: '',
+      component: AppComponent,
+   },
 ];
 ```
 
@@ -495,11 +495,11 @@ nx g @nx/angular:host apps/employee --remotes=login --dynamic
 
 This will generate:
 
-- Angular application
-- Webpack Configuration _(webpack.config.ts)_
-- Module Federation Configuration _(module-federation.config.ts)_
-- Micro Frontend Manifest File _(module-federation.manifest.json)_
-- Changes to the bootstrap of application to fetch the Micro Frontend Manifest, set the Remote Definitions and load the **Login** application correctly
+-  Angular application
+-  Webpack Configuration _(webpack.config.ts)_
+-  Module Federation Configuration _(module-federation.config.ts)_
+-  Micro Frontend Manifest File _(module-federation.manifest.json)_
+-  Changes to the bootstrap of application to fetch the Micro Frontend Manifest, set the Remote Definitions and load the **Login** application correctly
 
 You should take a look at the files generated and see how the **Login** Remote application was added to the `module-federation.manifest.json` file and the slight changes to `main.ts` and `app.routes.ts` to load the Remotes dynamically.
 

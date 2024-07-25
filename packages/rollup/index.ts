@@ -7,8 +7,8 @@ export const rollupProjectGenerator = configurationGenerator;
 
 export * from './src/generators/init/init';
 export type {
-  AssetGlobPattern,
-  Globals,
-  RollupExecutorOptions,
+   AssetGlobPattern,
+   Globals,
+   RollupExecutorOptions,
 } from './src/executors/rollup/schema';
 export * from './src/executors/rollup/rollup.impl';

@@ -81,17 +81,17 @@ Let's say that your component code looks like this:
 
 ```typescript {% fileName="libs/feature/ui/src/lib/my-button/my-button.tsx" %}
 export interface MyButtonProps {
-  text: string;
-  padding: number;
-  disabled: boolean;
+   text: string;
+   padding: number;
+   disabled: boolean;
 }
 
 export function MyButton(props: MyButtonProps) {
-  return (
-    <button disabled={props.disabled} style={{ padding: props.padding }}>
-      {props.text}
-    </button>
-  );
+   return (
+      <button disabled={props.disabled} style={{ padding: props.padding }}>
+         {props.text}
+      </button>
+   );
 }
 
 export default MyButton;
@@ -108,30 +108,30 @@ import { within } from '@storybook/testing-library';
 import { expect } from '@storybook/jest';
 
 const meta: Meta<typeof MyButton> = {
-  component: MyButton,
-  title: 'MyButton',
+   component: MyButton,
+   title: 'MyButton',
 };
 export default meta;
 type Story = StoryObj<typeof MyButton>;
 
 export const Primary = {
-  args: {
-    text: '',
-    padding: 0,
-    disabled: false,
-  },
+   args: {
+      text: '',
+      padding: 0,
+      disabled: false,
+   },
 };
 
 export const Heading: Story = {
-  args: {
-    text: '',
-    padding: 0,
-    disabled: false,
-  },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    expect(canvas.getByText(/Welcome to MyButton!/gi)).toBeTruthy();
-  },
+   args: {
+      text: '',
+      padding: 0,
+      disabled: false,
+   },
+   play: async ({ canvasElement }) => {
+      const canvas = within(canvasElement);
+      expect(canvas.getByText(/Welcome to MyButton!/gi)).toBeTruthy();
+   },
 };
 ```
 
@@ -147,5 +147,5 @@ For more on using Storybook, see the [official Storybook documentation](https://
 
 Here's more information on common migration scenarios for Storybook with Nx. For Storybook specific migrations that are not automatically handled by Nx please refer to the [official Storybook page](https://storybook.js.org/)
 
-- [Set up Storybook version 7](/nx-api/storybook/documents/storybook-7-setup)
-- [Migrate to Storybook version 7](/nx-api/storybook/generators/migrate-7)
+-  [Set up Storybook version 7](/nx-api/storybook/documents/storybook-7-setup)
+-  [Migrate to Storybook version 7](/nx-api/storybook/generators/migrate-7)

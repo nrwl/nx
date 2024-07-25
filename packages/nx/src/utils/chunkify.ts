@@ -1,28 +1,28 @@
 const TERMINAL_SIZE = getMaxArgLength();
 
 export function chunkify(
-  target: string[],
-  maxChunkLength: number = TERMINAL_SIZE - 500
+   target: string[],
+   maxChunkLength: number = TERMINAL_SIZE - 500
 ): string[][] {
-  const chunks = [];
-  let currentChunk = [];
-  let currentChunkLength = 0;
-  for (const file of target) {
-    if (
-      // Prevent empty chunk if first file path is longer than maxChunkLength
-      currentChunk.length &&
-      // +1 accounts for the space between file names
-      currentChunkLength + file.length + 1 >= maxChunkLength
-    ) {
-      chunks.push(currentChunk);
-      currentChunk = [];
-      currentChunkLength = 0;
-    }
-    currentChunk.push(file);
-    currentChunkLength += file.length + 1;
-  }
-  chunks.push(currentChunk);
-  return chunks;
+   const chunks = [];
+   let currentChunk = [];
+   let currentChunkLength = 0;
+   for (const file of target) {
+      if (
+         // Prevent empty chunk if first file path is longer than maxChunkLength
+         currentChunk.length &&
+         // +1 accounts for the space between file names
+         currentChunkLength + file.length + 1 >= maxChunkLength
+      ) {
+         chunks.push(currentChunk);
+         currentChunk = [];
+         currentChunkLength = 0;
+      }
+      currentChunk.push(file);
+      currentChunkLength += file.length + 1;
+   }
+   chunks.push(currentChunk);
+   return chunks;
 }
 
 /**
@@ -35,12 +35,12 @@ export function chunkify(
  * Taken from: https://github.com/lint-staged/lint-staged/blob/adf50b00669f6aac2eeca25dd28ff86a9a3c2a48/lib/index.js#L21-L37
  */
 export function getMaxArgLength() {
-  switch (process.platform) {
-    case 'darwin':
-      return 262144;
-    case 'win32':
-      return 8191;
-    default:
-      return 131072;
-  }
+   switch (process.platform) {
+      case 'darwin':
+         return 262144;
+      case 'win32':
+         return 8191;
+      default:
+         return 131072;
+   }
 }

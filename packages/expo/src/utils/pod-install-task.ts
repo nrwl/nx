@@ -22,65 +22,65 @@ ${chalk.bold('sudo xcode-select --switch /Applications/Xcode.app')}
  * @returns resolve with 0 if not error, reject with error otherwise
  */
 export function runPodInstall(
-  iosDirectory: string,
-  install: boolean = true,
-  options: {
-    buildFolder?: string;
-    repoUpdate?: boolean;
-    deployment?: boolean;
-  } = {
-    buildFolder: './build',
-    repoUpdate: false,
-    deployment: false,
-  }
+   iosDirectory: string,
+   install: boolean = true,
+   options: {
+      buildFolder?: string;
+      repoUpdate?: boolean;
+      deployment?: boolean;
+   } = {
+      buildFolder: './build',
+      repoUpdate: false,
+      deployment: false,
+   }
 ): GeneratorCallback {
-  return () => {
-    if (platform() !== 'darwin') {
-      logger.info('Skipping `pod install` on non-darwin platform');
-      return;
-    }
+   return () => {
+      if (platform() !== 'darwin') {
+         logger.info('Skipping `pod install` on non-darwin platform');
+         return;
+      }
 
-    if (!install || !existsSync(join(iosDirectory, 'Podfile'))) {
-      logger.info('Skipping `pod install`');
-      return;
-    }
+      if (!install || !existsSync(join(iosDirectory, 'Podfile'))) {
+         logger.info('Skipping `pod install`');
+         return;
+      }
 
-    logger.info(`Running \`pod install\` from "${iosDirectory}"`);
+      logger.info(`Running \`pod install\` from "${iosDirectory}"`);
 
-    return podInstall(iosDirectory, options);
-  };
+      return podInstall(iosDirectory, options);
+   };
 }
 
 export function podInstall(
-  iosDirectory: string,
-  options: {
-    buildFolder?: string;
-    repoUpdate?: boolean;
-    deployment?: boolean;
-  } = {
-    buildFolder: './build',
-    repoUpdate: false,
-    deployment: false,
-  }
+   iosDirectory: string,
+   options: {
+      buildFolder?: string;
+      repoUpdate?: boolean;
+      deployment?: boolean;
+   } = {
+      buildFolder: './build',
+      repoUpdate: false,
+      deployment: false,
+   }
 ) {
-  try {
-    if (existsSync(join(iosDirectory, '.xcode.env'))) {
-      execSync('touch .xcode.env', {
-        cwd: iosDirectory,
-        stdio: 'inherit',
-      });
-    }
-    execSync(
-      `pod install ${options.repoUpdate ? '--repo-update' : ''} ${
-        options.deployment ? '--deployment' : ''
-      }`,
-      {
-        cwd: iosDirectory,
-        stdio: 'inherit',
+   try {
+      if (existsSync(join(iosDirectory, '.xcode.env'))) {
+         execSync('touch .xcode.env', {
+            cwd: iosDirectory,
+            stdio: 'inherit',
+         });
       }
-    );
-  } catch (e) {
-    logger.error(podInstallErrorMessage);
-    throw e;
-  }
+      execSync(
+         `pod install ${options.repoUpdate ? '--repo-update' : ''} ${
+            options.deployment ? '--deployment' : ''
+         }`,
+         {
+            cwd: iosDirectory,
+            stdio: 'inherit',
+         }
+      );
+   } catch (e) {
+      logger.error(podInstallErrorMessage);
+      throw e;
+   }
 }

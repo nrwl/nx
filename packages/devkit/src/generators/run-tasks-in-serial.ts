@@ -6,11 +6,11 @@ import type { GeneratorCallback } from 'nx/src/devkit-exports';
  * @param tasks The tasks to run in serial.
  */
 export function runTasksInSerial(
-  ...tasks: GeneratorCallback[]
+   ...tasks: GeneratorCallback[]
 ): GeneratorCallback {
-  return async () => {
-    for (const task of tasks) {
-      await task();
-    }
-  };
+   return async () => {
+      for (const task of tasks) {
+         await task();
+      }
+   };
 }

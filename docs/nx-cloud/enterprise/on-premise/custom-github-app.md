@@ -43,17 +43,17 @@ The following permissions are required for Nx Cloud to work:
 
 Repository permissions:
 
-- `Contents: Read & Write`
-- `Pull requests: Read & Write`
-- `Checks: Read Only`
-- `Commit Statuses: Read & Write`
-- `Issues: Read & Write`
-- `Metadata: Read Only`
+-  `Contents: Read & Write`
+-  `Pull requests: Read & Write`
+-  `Checks: Read Only`
+-  `Commit Statuses: Read & Write`
+-  `Issues: Read & Write`
+-  `Metadata: Read Only`
 
 Organization permissions:
 
-- `Administration: Read Only`
-- `Members: Read Only`
+-  `Administration: Read Only`
+-  `Members: Read Only`
 
 ## Configure Nx Cloud Installation
 
@@ -61,19 +61,19 @@ Organization permissions:
 
 ```yaml
 image:
-  tag: 'latest'
+   tag: 'latest'
 
 nxCloudAppURL: 'https://nx-cloud.myorg.com'
 
 github:
-  auth:
-    enabled: true
+   auth:
+      enabled: true
 
 secret:
-  name: 'cloudsecret'
-  githubAppClientId: 'NX_CLOUD_GITHUB_APP_CLIENT_ID'
-  githubAppClientSecret: 'NX_CLOUD_GITHUB_APP_CLIENT_SECRET'
-  githubAppId: 'NX_CLOUD_GITHUB_APP_APP_ID'
+   name: 'cloudsecret'
+   githubAppClientId: 'NX_CLOUD_GITHUB_APP_CLIENT_ID'
+   githubAppClientSecret: 'NX_CLOUD_GITHUB_APP_CLIENT_SECRET'
+   githubAppId: 'NX_CLOUD_GITHUB_APP_APP_ID'
 ```
 
 Note that the secret must contain `NX_CLOUD_GITHUB_APP_CLIENT_ID`, `NX_CLOUD_GITHUB_APP_APP_ID`, and `NX_CLOUD_GITHUB_APP_CLIENT_SECRET` (
@@ -83,9 +83,9 @@ see [Nx Cloud Helm Charts](https://github.com/nrwl/nx-cloud-helm) for more conte
 
 Provide the following env variables to the `nx-cloud-frontend` container:
 
-- `NX_CLOUD_GITHUB_APP_CLIENT_ID`
-- `NX_CLOUD_GITHUB_APP_CLIENT_SECRET`
-- `NX_CLOUD_GITHUB_APP_APP_ID`
+-  `NX_CLOUD_GITHUB_APP_CLIENT_ID`
+-  `NX_CLOUD_GITHUB_APP_CLIENT_SECRET`
+-  `NX_CLOUD_GITHUB_APP_APP_ID`
 
 {% callout title="Helm Chart Environment Variables" %}
 If you are using our Helm chart, you can find all the information you need about env variables in [the Helm chart repository](https://github.com/nrwl/nx-cloud-helm/blob/main/AUTH-GUIDE.md).

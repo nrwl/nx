@@ -6,8 +6,8 @@ Besides providing caching and task orchestration, Nx also helps incorporate nume
 
 When discussing configuration, it helps to categorize the configuration settings in two dimensions:
 
-- **Type** - The two different types we'll discuss are Nx configuration and tooling configuration. Tooling can be any framework or tool that you use in your repo (i.e. React, Jest, Playwright, Typescript, etc)
-- **Specificity** - There are two different levels of specificity: global and project-specific. Project-specific configuration is merged into and overwrites global configuration.
+-  **Type** - The two different types we'll discuss are Nx configuration and tooling configuration. Tooling can be any framework or tool that you use in your repo (i.e. React, Jest, Playwright, Typescript, etc)
+-  **Specificity** - There are two different levels of specificity: global and project-specific. Project-specific configuration is merged into and overwrites global configuration.
 
 For example, Jest has a global `/jest.config.ts` file and a project-specific `/apps/my-app/jest.config.ts` file that extends it.
 
@@ -44,5 +44,5 @@ repo/
 
 ## More Information
 
-- [Nx Configuration](/reference/nx-json)
-- [Project Configuration](/reference/project-configuration)
+-  [Nx Configuration](/reference/nx-json)
+-  [Project Configuration](/reference/project-configuration)

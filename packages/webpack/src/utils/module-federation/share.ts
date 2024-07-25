@@ -1,22 +1,22 @@
 import type {
-  SharedLibraryConfig,
-  SharedWorkspaceLibraryConfig,
-  WorkspaceLibrary,
+   SharedLibraryConfig,
+   SharedWorkspaceLibraryConfig,
+   WorkspaceLibrary,
 } from './models';
 import { AdditionalSharedConfig, SharedFunction } from './models';
 import { dirname, join, normalize } from 'path';
 import { readRootPackageJson } from './package-json';
 import { readTsPathMappings, getRootTsConfigPath } from './typescript';
 import {
-  collectPackageSecondaryEntryPoints,
-  collectWorkspaceLibrarySecondaryEntryPoints,
+   collectPackageSecondaryEntryPoints,
+   collectWorkspaceLibrarySecondaryEntryPoints,
 } from './secondary-entry-points';
 import {
-  type ProjectGraph,
-  workspaceRoot,
-  logger,
-  readJsonFile,
-  joinPathFragments,
+   type ProjectGraph,
+   workspaceRoot,
+   logger,
+   readJsonFile,
+   joinPathFragments,
 } from '@nx/devkit';
 import { existsSync } from 'fs';
 import type { PackageJson } from 'nx/src/utils/package-json';
@@ -29,127 +29,130 @@ import type { PackageJson } from 'nx/src/utils/package-json';
  * @param tsConfigPath - The path to TS Config File that contains the Path Mappings for the Libraries
  */
 export function shareWorkspaceLibraries(
-  workspaceLibs: WorkspaceLibrary[],
-  tsConfigPath = process.env.NX_TSCONFIG_PATH ?? getRootTsConfigPath()
+   workspaceLibs: WorkspaceLibrary[],
+   tsConfigPath = process.env.NX_TSCONFIG_PATH ?? getRootTsConfigPath()
 ): SharedWorkspaceLibraryConfig {
-  if (!workspaceLibs) {
-    return getEmptySharedLibrariesConfig();
-  }
+   if (!workspaceLibs) {
+      return getEmptySharedLibrariesConfig();
+   }
 
-  const tsconfigPathAliases = readTsPathMappings(tsConfigPath);
-  if (!Object.keys(tsconfigPathAliases).length) {
-    return getEmptySharedLibrariesConfig();
-  }
+   const tsconfigPathAliases = readTsPathMappings(tsConfigPath);
+   if (!Object.keys(tsconfigPathAliases).length) {
+      return getEmptySharedLibrariesConfig();
+   }
 
-  // Nested projects must come first, sort them as such
-  const sortedTsConfigPathAliases = {};
-  Object.keys(tsconfigPathAliases)
-    .sort((a, b) => {
-      return b.split('/').length - a.split('/').length;
-    })
-    .forEach(
-      (key) => (sortedTsConfigPathAliases[key] = tsconfigPathAliases[key])
-    );
-
-  const pathMappings: { name: string; path: string }[] = [];
-  for (const [key, paths] of Object.entries(sortedTsConfigPathAliases)) {
-    const library = workspaceLibs.find((lib) => lib.importKey === key);
-    if (!library) {
-      continue;
-    }
-
-    // This is for Angular Projects that use ng-package.json
-    // It will do nothing for React Projects
-    collectWorkspaceLibrarySecondaryEntryPoints(
-      library,
-      sortedTsConfigPathAliases
-    ).forEach(({ name, path }) =>
-      pathMappings.push({
-        name,
-        path,
+   // Nested projects must come first, sort them as such
+   const sortedTsConfigPathAliases = {};
+   Object.keys(tsconfigPathAliases)
+      .sort((a, b) => {
+         return b.split('/').length - a.split('/').length;
       })
-    );
+      .forEach(
+         (key) => (sortedTsConfigPathAliases[key] = tsconfigPathAliases[key])
+      );
 
-    pathMappings.push({
-      name: key,
-      path: normalize(join(workspaceRoot, paths[0])),
-    });
-  }
-
-  const webpack = require('webpack');
-
-  return {
-    getAliases: () =>
-      pathMappings.reduce(
-        (aliases, library) => ({ ...aliases, [library.name]: library.path }),
-        {}
-      ),
-    getLibraries: (
-      projectRoot: string,
-      eager?: boolean
-    ): Record<string, SharedLibraryConfig> => {
-      let pkgJson: PackageJson = null;
-      if (
-        projectRoot &&
-        existsSync(
-          joinPathFragments(workspaceRoot, projectRoot, 'package.json')
-        )
-      ) {
-        pkgJson = readJsonFile(
-          joinPathFragments(workspaceRoot, projectRoot, 'package.json')
-        );
+   const pathMappings: { name: string; path: string }[] = [];
+   for (const [key, paths] of Object.entries(sortedTsConfigPathAliases)) {
+      const library = workspaceLibs.find((lib) => lib.importKey === key);
+      if (!library) {
+         continue;
       }
-      return pathMappings.reduce((libraries, library) => {
-        // Check to see if the library version is declared in the app's package.json
-        let version = pkgJson?.dependencies?.[library.name];
-        if (!version && workspaceLibs.length > 0) {
-          const workspaceLib = workspaceLibs.find(
-            (lib) => lib.importKey === library.name
-          );
 
-          const libPackageJsonPath = workspaceLib
-            ? join(workspaceLib.root, 'package.json')
-            : null;
-          if (libPackageJsonPath && existsSync(libPackageJsonPath)) {
-            pkgJson = readJsonFile(libPackageJsonPath);
+      // This is for Angular Projects that use ng-package.json
+      // It will do nothing for React Projects
+      collectWorkspaceLibrarySecondaryEntryPoints(
+         library,
+         sortedTsConfigPathAliases
+      ).forEach(({ name, path }) =>
+         pathMappings.push({
+            name,
+            path,
+         })
+      );
 
-            if (pkgJson) {
-              version = pkgJson.version;
+      pathMappings.push({
+         name: key,
+         path: normalize(join(workspaceRoot, paths[0])),
+      });
+   }
+
+   const webpack = require('webpack');
+
+   return {
+      getAliases: () =>
+         pathMappings.reduce(
+            (aliases, library) => ({
+               ...aliases,
+               [library.name]: library.path,
+            }),
+            {}
+         ),
+      getLibraries: (
+         projectRoot: string,
+         eager?: boolean
+      ): Record<string, SharedLibraryConfig> => {
+         let pkgJson: PackageJson = null;
+         if (
+            projectRoot &&
+            existsSync(
+               joinPathFragments(workspaceRoot, projectRoot, 'package.json')
+            )
+         ) {
+            pkgJson = readJsonFile(
+               joinPathFragments(workspaceRoot, projectRoot, 'package.json')
+            );
+         }
+         return pathMappings.reduce((libraries, library) => {
+            // Check to see if the library version is declared in the app's package.json
+            let version = pkgJson?.dependencies?.[library.name];
+            if (!version && workspaceLibs.length > 0) {
+               const workspaceLib = workspaceLibs.find(
+                  (lib) => lib.importKey === library.name
+               );
+
+               const libPackageJsonPath = workspaceLib
+                  ? join(workspaceLib.root, 'package.json')
+                  : null;
+               if (libPackageJsonPath && existsSync(libPackageJsonPath)) {
+                  pkgJson = readJsonFile(libPackageJsonPath);
+
+                  if (pkgJson) {
+                     version = pkgJson.version;
+                  }
+               }
             }
-          }
-        }
 
-        return {
-          ...libraries,
-          [library.name]: {
-            ...(version
-              ? {
-                  requiredVersion: version,
-                  singleton: true,
-                }
-              : { requiredVersion: false }),
-            eager,
-          },
-        };
-      }, {} as Record<string, SharedLibraryConfig>);
-    },
-    getReplacementPlugin: () =>
-      new webpack.NormalModuleReplacementPlugin(/./, (req) => {
-        if (!req.request.startsWith('.')) {
-          return;
-        }
+            return {
+               ...libraries,
+               [library.name]: {
+                  ...(version
+                     ? {
+                          requiredVersion: version,
+                          singleton: true,
+                       }
+                     : { requiredVersion: false }),
+                  eager,
+               },
+            };
+         }, {} as Record<string, SharedLibraryConfig>);
+      },
+      getReplacementPlugin: () =>
+         new webpack.NormalModuleReplacementPlugin(/./, (req) => {
+            if (!req.request.startsWith('.')) {
+               return;
+            }
 
-        const from = req.context;
-        const to = normalize(join(req.context, req.request));
+            const from = req.context;
+            const to = normalize(join(req.context, req.request));
 
-        for (const library of pathMappings) {
-          const libFolder = normalize(dirname(library.path));
-          if (!from.startsWith(libFolder) && to.startsWith(libFolder)) {
-            req.request = library.name;
-          }
-        }
-      }),
-  };
+            for (const library of pathMappings) {
+               const libFolder = normalize(dirname(library.path));
+               if (!from.startsWith(libFolder) && to.startsWith(libFolder)) {
+                  req.request = library.name;
+               }
+            }
+         }),
+   };
 }
 
 /**
@@ -159,20 +162,20 @@ export function shareWorkspaceLibraries(
  * @param version - Version of the package to require by other apps in the Module Federation setup
  */
 export function getNpmPackageSharedConfig(
-  pkgName: string,
-  version: string
+   pkgName: string,
+   version: string
 ): SharedLibraryConfig | undefined {
-  if (!version) {
-    logger.warn(
-      `Could not find a version for "${pkgName}" in the root "package.json" ` +
-        'when collecting shared packages for the Module Federation setup. ' +
-        'The package will not be shared.'
-    );
+   if (!version) {
+      logger.warn(
+         `Could not find a version for "${pkgName}" in the root "package.json" ` +
+            'when collecting shared packages for the Module Federation setup. ' +
+            'The package will not be shared.'
+      );
 
-    return undefined;
-  }
+      return undefined;
+   }
 
-  return { singleton: true, strictVersion: true, requiredVersion: version };
+   return { singleton: true, strictVersion: true, requiredVersion: version };
 }
 
 /**
@@ -184,25 +187,25 @@ export function getNpmPackageSharedConfig(
  * @param packages - Array of package names as strings
  */
 export function sharePackages(
-  packages: string[]
+   packages: string[]
 ): Record<string, SharedLibraryConfig> {
-  const pkgJson = readRootPackageJson();
-  const allPackages: { name: string; version: string }[] = [];
-  packages.forEach((pkg) => {
-    const pkgVersion =
-      pkgJson.dependencies?.[pkg] ?? pkgJson.devDependencies?.[pkg];
-    allPackages.push({ name: pkg, version: pkgVersion });
-    collectPackageSecondaryEntryPoints(pkg, pkgVersion, allPackages);
-  });
+   const pkgJson = readRootPackageJson();
+   const allPackages: { name: string; version: string }[] = [];
+   packages.forEach((pkg) => {
+      const pkgVersion =
+         pkgJson.dependencies?.[pkg] ?? pkgJson.devDependencies?.[pkg];
+      allPackages.push({ name: pkg, version: pkgVersion });
+      collectPackageSecondaryEntryPoints(pkg, pkgVersion, allPackages);
+   });
 
-  return allPackages.reduce((shared, pkg) => {
-    const config = getNpmPackageSharedConfig(pkg.name, pkg.version);
-    if (config) {
-      shared[pkg.name] = config;
-    }
+   return allPackages.reduce((shared, pkg) => {
+      const config = getNpmPackageSharedConfig(pkg.name, pkg.version);
+      if (config) {
+         shared[pkg.name] = config;
+      }
 
-    return shared;
-  }, {} as Record<string, SharedLibraryConfig>);
+      return shared;
+   }, {} as Record<string, SharedLibraryConfig>);
 }
 
 /**
@@ -213,24 +216,24 @@ export function sharePackages(
  * @param sharedFn - The custom function to run
  */
 export function applySharedFunction(
-  sharedConfig: Record<string, SharedLibraryConfig>,
-  sharedFn: SharedFunction | undefined
+   sharedConfig: Record<string, SharedLibraryConfig>,
+   sharedFn: SharedFunction | undefined
 ): void {
-  if (!sharedFn) {
-    return;
-  }
+   if (!sharedFn) {
+      return;
+   }
 
-  for (const [libraryName, library] of Object.entries(sharedConfig)) {
-    const mappedDependency = sharedFn(libraryName, library);
-    if (mappedDependency === false) {
-      delete sharedConfig[libraryName];
-      continue;
-    } else if (!mappedDependency) {
-      continue;
-    }
+   for (const [libraryName, library] of Object.entries(sharedConfig)) {
+      const mappedDependency = sharedFn(libraryName, library);
+      if (mappedDependency === false) {
+         delete sharedConfig[libraryName];
+         continue;
+      } else if (!mappedDependency) {
+         continue;
+      }
 
-    sharedConfig[libraryName] = mappedDependency;
-  }
+      sharedConfig[libraryName] = mappedDependency;
+   }
 }
 
 /**
@@ -246,59 +249,59 @@ export function applySharedFunction(
  * @param projectGraph - The Nx project graph
  */
 export function applyAdditionalShared(
-  sharedConfig: Record<string, SharedLibraryConfig>,
-  additionalShared: AdditionalSharedConfig | undefined,
-  projectGraph: ProjectGraph
+   sharedConfig: Record<string, SharedLibraryConfig>,
+   additionalShared: AdditionalSharedConfig | undefined,
+   projectGraph: ProjectGraph
 ): void {
-  if (!additionalShared) {
-    return;
-  }
+   if (!additionalShared) {
+      return;
+   }
 
-  for (const shared of additionalShared) {
-    if (typeof shared === 'string') {
-      addStringDependencyToSharedConfig(sharedConfig, shared, projectGraph);
-    } else if (Array.isArray(shared)) {
-      sharedConfig[shared[0]] = shared[1];
-    } else if (typeof shared === 'object') {
-      sharedConfig[shared.libraryName] = shared.sharedConfig;
-    }
-  }
+   for (const shared of additionalShared) {
+      if (typeof shared === 'string') {
+         addStringDependencyToSharedConfig(sharedConfig, shared, projectGraph);
+      } else if (Array.isArray(shared)) {
+         sharedConfig[shared[0]] = shared[1];
+      } else if (typeof shared === 'object') {
+         sharedConfig[shared.libraryName] = shared.sharedConfig;
+      }
+   }
 }
 
 function addStringDependencyToSharedConfig(
-  sharedConfig: Record<string, SharedLibraryConfig>,
-  dependency: string,
-  projectGraph: ProjectGraph
+   sharedConfig: Record<string, SharedLibraryConfig>,
+   dependency: string,
+   projectGraph: ProjectGraph
 ): void {
-  if (projectGraph.nodes[dependency]) {
-    sharedConfig[dependency] = { requiredVersion: false };
-  } else if (projectGraph.externalNodes?.[`npm:${dependency}`]) {
-    const pkgJson = readRootPackageJson();
-    const config = getNpmPackageSharedConfig(
-      dependency,
-      pkgJson.dependencies?.[dependency] ??
-        pkgJson.devDependencies?.[dependency]
-    );
+   if (projectGraph.nodes[dependency]) {
+      sharedConfig[dependency] = { requiredVersion: false };
+   } else if (projectGraph.externalNodes?.[`npm:${dependency}`]) {
+      const pkgJson = readRootPackageJson();
+      const config = getNpmPackageSharedConfig(
+         dependency,
+         pkgJson.dependencies?.[dependency] ??
+            pkgJson.devDependencies?.[dependency]
+      );
 
-    if (!config) {
-      return;
-    }
+      if (!config) {
+         return;
+      }
 
-    sharedConfig[dependency] = config;
-  } else {
-    throw new Error(
-      `The specified dependency "${dependency}" in the additionalShared configuration does not exist in the project graph. ` +
-        `Please check your additionalShared configuration and make sure you are including valid workspace projects or npm packages.`
-    );
-  }
+      sharedConfig[dependency] = config;
+   } else {
+      throw new Error(
+         `The specified dependency "${dependency}" in the additionalShared configuration does not exist in the project graph. ` +
+            `Please check your additionalShared configuration and make sure you are including valid workspace projects or npm packages.`
+      );
+   }
 }
 
 function getEmptySharedLibrariesConfig() {
-  const webpack = require('webpack');
-  return {
-    getAliases: () => ({}),
-    getLibraries: () => ({}),
-    getReplacementPlugin: () =>
-      new webpack.NormalModuleReplacementPlugin(/./, () => {}),
-  };
+   const webpack = require('webpack');
+   return {
+      getAliases: () => ({}),
+      getLibraries: () => ({}),
+      getReplacementPlugin: () =>
+         new webpack.NormalModuleReplacementPlugin(/./, () => {}),
+   };
 }

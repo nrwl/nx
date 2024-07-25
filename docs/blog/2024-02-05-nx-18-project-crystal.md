@@ -11,15 +11,15 @@ Enhance, but don’t interfere! That’s the ideal! And this is how extensions w
 
 Table of Contents
 
-- [Adding Nx to an Existing Monorepo](#adding-nx-to-an-existing-monorepo)
-- [Project Crystal](#project-crystal)
-- [Project Crystal Plugins in an Nx Monorepo](#project-crystal-plugins-in-an-nx-monorepo)
-  - [Inferred Targets](#inferred-targets)
-  - [Visualizing Inferred Targets](#visualizing-inferred-targets)
-- [More Transparency and a Single Source of Truth](#more-transparency-and-a-single-source-of-truth)
-- [Enhancing existing Monorepos with Nx Plugins](#enhancing-existing-monorepos-with-nx-plugins)
-- [This is just the Beginning](#this-is-just-the-beginning)
-- [Learn more](#learn-more)
+-  [Adding Nx to an Existing Monorepo](#adding-nx-to-an-existing-monorepo)
+-  [Project Crystal](#project-crystal)
+-  [Project Crystal Plugins in an Nx Monorepo](#project-crystal-plugins-in-an-nx-monorepo)
+   -  [Inferred Targets](#inferred-targets)
+   -  [Visualizing Inferred Targets](#visualizing-inferred-targets)
+-  [More Transparency and a Single Source of Truth](#more-transparency-and-a-single-source-of-truth)
+-  [Enhancing existing Monorepos with Nx Plugins](#enhancing-existing-monorepos-with-nx-plugins)
+-  [This is just the Beginning](#this-is-just-the-beginning)
+-  [Learn more](#learn-more)
 
 ---
 
@@ -59,10 +59,10 @@ However, this is a balancing act. More abstraction and automation means more sup
 
 Some of the main objectives of Project Crystal are to...
 
-- make Nx plugins more transparent
-- reduce the amount of configuration required
-- allow Nx plugins to be drop-in enhancements in existing npm/yarn/pnpm monorepos
-- allow for a migration to an Nx plugin-powered monorepo
+-  make Nx plugins more transparent
+-  reduce the amount of configuration required
+-  allow Nx plugins to be drop-in enhancements in existing npm/yarn/pnpm monorepos
+-  allow for a migration to an Nx plugin-powered monorepo
 
 ## Project Crystal Plugins in an Nx Monorepo
 
@@ -78,12 +78,12 @@ npx create-nx-workspace myorg
 
 ```json {% fileName="project.json" }
 {
-  "name": "reactapp",
-  "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "apps/reactapp/src",
-  "projectType": "application",
-  "targets": {},
-  "tags": []
+   "name": "reactapp",
+   "$schema": "../../node_modules/nx/schemas/project-schema.json",
+   "sourceRoot": "apps/reactapp/src",
+   "projectType": "application",
+   "targets": {},
+   "tags": []
 }
 ```
 
@@ -181,8 +181,8 @@ We just released Project Crystal, so this is just the beginning of it. While we�
 
 ## Learn more
 
-- [Nx Docs](/getting-started/intro)
-- [Nx GitHub](https://github.com/nrwl/nx)
-- [Nx Official Discord Server](https://go.nx.dev/community)
-- [Nx Youtube Channel](https://www.youtube.com/@nxdevtools)
-- [Speed up your CI](https://nx.app/)
+-  [Nx Docs](/getting-started/intro)
+-  [Nx GitHub](https://github.com/nrwl/nx)
+-  [Nx Official Discord Server](https://go.nx.dev/community)
+-  [Nx Youtube Channel](https://www.youtube.com/@nxdevtools)
+-  [Speed up your CI](https://nx.app/)

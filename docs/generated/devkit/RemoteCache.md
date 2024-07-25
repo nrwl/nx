@@ -4,8 +4,8 @@
 
 ### Properties
 
-- [retrieve](../../devkit/documents/RemoteCache#retrieve): Function
-- [store](../../devkit/documents/RemoteCache#store): Function
+-  [retrieve](../../devkit/documents/RemoteCache#retrieve): Function
+-  [store](../../devkit/documents/RemoteCache#store): Function
 
 ## Properties
 

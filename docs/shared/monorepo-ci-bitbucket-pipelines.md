@@ -6,35 +6,35 @@ Below is an example of a Bitbucket Pipelines, building and testing only what is 
 image: node:20
 
 clone:
-  depth: full
+   depth: full
 
 pipelines:
-  pull-requests:
-    '**':
-      - step:
-          name: 'Build and test affected apps on Pull Requests'
-          script:
-            # This line enables distribution
-            # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "e2e-ci" targets have been requested
-            - npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
-            - npm ci
+   pull-requests:
+      '**':
+         - step:
+              name: 'Build and test affected apps on Pull Requests'
+              script:
+                 # This line enables distribution
+                 # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "e2e-ci" targets have been requested
+                 - npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
+                 - npm ci
 
-            - npx nx-cloud record -- nx format:check
-            - npx nx affected -t lint test build e2e-ci --base=origin/main
+                 - npx nx-cloud record -- nx format:check
+                 - npx nx affected -t lint test build e2e-ci --base=origin/main
 
-  branches:
-    main:
-      - step:
-          name: "Build and test affected apps on 'main' branch changes"
-          script:
-            - export NX_BRANCH=$BITBUCKET_BRANCH
-            # This line enables distribution
-            # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "e2e-ci" targets have been requested
-            # - npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
-            - npm ci
+   branches:
+      main:
+         - step:
+              name: "Build and test affected apps on 'main' branch changes"
+              script:
+                 - export NX_BRANCH=$BITBUCKET_BRANCH
+                 # This line enables distribution
+                 # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "e2e-ci" targets have been requested
+                 # - npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
+                 - npm ci
 
-            - npx nx-cloud record -- nx format:check
-            - npx nx affected -t lint test build e2e-ci --base=HEAD~1
+                 - npx nx-cloud record -- nx format:check
+                 - npx nx affected -t lint test build e2e-ci --base=HEAD~1
 ```
 
 The `pull-requests` and `main` jobs implement the CI workflow.

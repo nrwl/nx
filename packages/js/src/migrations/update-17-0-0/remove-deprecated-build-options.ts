@@ -1,8 +1,8 @@
 import {
-  formatFiles,
-  getProjects,
-  Tree,
-  updateProjectConfiguration,
+   formatFiles,
+   getProjects,
+   Tree,
+   updateProjectConfiguration,
 } from '@nx/devkit';
 
 /**
@@ -10,30 +10,30 @@ import {
  * @param tree
  */
 export default async function (tree: Tree) {
-  const projects = getProjects(tree);
+   const projects = getProjects(tree);
 
-  for (const [projectName, projectConfig] of projects) {
-    let shouldUpdate = false;
+   for (const [projectName, projectConfig] of projects) {
+      let shouldUpdate = false;
 
-    if (!projectConfig.targets) continue;
+      if (!projectConfig.targets) continue;
 
-    for (const target of Object.values(projectConfig.targets)) {
-      if (
-        target.executor?.startsWith('@nx/') &&
-        target.options &&
-        ('buildableProjectDepsInPackageJsonType' in target.options ||
-          'updateBuildableProjectDepsInPackageJson' in target.options)
-      ) {
-        delete target.options['buildableProjectDepsInPackageJsonType'];
-        delete target.options['updateBuildableProjectDepsInPackageJson'];
-        shouldUpdate = true;
+      for (const target of Object.values(projectConfig.targets)) {
+         if (
+            target.executor?.startsWith('@nx/') &&
+            target.options &&
+            ('buildableProjectDepsInPackageJsonType' in target.options ||
+               'updateBuildableProjectDepsInPackageJson' in target.options)
+         ) {
+            delete target.options['buildableProjectDepsInPackageJsonType'];
+            delete target.options['updateBuildableProjectDepsInPackageJson'];
+            shouldUpdate = true;
+         }
       }
-    }
 
-    if (shouldUpdate) {
-      updateProjectConfiguration(tree, projectName, projectConfig);
-    }
-  }
+      if (shouldUpdate) {
+         updateProjectConfiguration(tree, projectName, projectConfig);
+      }
+   }
 
-  await formatFiles(tree);
+   await formatFiles(tree);
 }

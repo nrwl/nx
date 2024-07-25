@@ -4,16 +4,16 @@ The `prebuild` command generates native code before a native app can compile.
 
 ```json
 {
-  "name": "mobile",
-  //...
-  "targets": {
-    //...
-    "prebuild": {
-      "executor": "@nx/expo:prebuild",
-      "options": {}
-    }
-    //...
-  }
+   "name": "mobile",
+   //...
+   "targets": {
+      //...
+      "prebuild": {
+         "executor": "@nx/expo:prebuild",
+         "options": {}
+      }
+      //...
+   }
 }
 ```
 

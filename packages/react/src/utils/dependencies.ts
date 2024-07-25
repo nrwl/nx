@@ -1,8 +1,8 @@
 export interface PackageDependencies {
-  dependencies: DependencyEntries;
-  devDependencies: DependencyEntries;
+   dependencies: DependencyEntries;
+   devDependencies: DependencyEntries;
 }
 
 export interface DependencyEntries {
-  [module: string]: string;
+   [module: string]: string;
 }

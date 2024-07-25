@@ -1,6 +1,6 @@
 export {
-  createNodes,
-  createNodesV2,
-  VitePluginOptions,
-  createDependencies,
+   createNodes,
+   createNodesV2,
+   VitePluginOptions,
+   createDependencies,
 } from './src/plugins/plugin';

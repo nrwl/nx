@@ -3,14 +3,14 @@ import { addV2ErrorBoundary, normalizeOptions } from './lib';
 import type { ErrorBoundarySchema } from './schema';
 
 export default async function errorBoundaryGenerator(
-  tree: Tree,
-  schema: ErrorBoundarySchema
+   tree: Tree,
+   schema: ErrorBoundarySchema
 ) {
-  const options = await normalizeOptions(tree, schema);
+   const options = await normalizeOptions(tree, schema);
 
-  addV2ErrorBoundary(tree, options);
+   addV2ErrorBoundary(tree, options);
 
-  if (!options.skipFormat) {
-    await formatFiles(tree);
-  }
+   if (!options.skipFormat) {
+      await formatFiles(tree);
+   }
 }

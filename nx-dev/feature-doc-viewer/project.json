@@ -1,8 +1,8 @@
 {
-  "name": "nx-dev-feature-doc-viewer",
-  "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "nx-dev/feature-doc-viewer/src",
-  "projectType": "library",
-  "targets": {},
-  "tags": ["scope:nx-dev", "type:feature"]
+   "name": "nx-dev-feature-doc-viewer",
+   "$schema": "../../node_modules/nx/schemas/project-schema.json",
+   "sourceRoot": "nx-dev/feature-doc-viewer/src",
+   "projectType": "library",
+   "targets": {},
+   "tags": ["scope:nx-dev", "type:feature"]
 }

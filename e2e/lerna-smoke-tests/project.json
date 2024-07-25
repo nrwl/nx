@@ -1,9 +1,9 @@
 {
-  "name": "e2e-lerna-smoke-tests",
-  "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "e2e/lerna-smoke-tests",
-  "projectType": "application",
-  "implicitDependencies": ["nx", "devkit"],
-  "// targets": "to see all targets run: nx show project e2e-lerna-smoke-tests --web",
-  "targets": {}
+   "name": "e2e-lerna-smoke-tests",
+   "$schema": "../../node_modules/nx/schemas/project-schema.json",
+   "sourceRoot": "e2e/lerna-smoke-tests",
+   "projectType": "application",
+   "implicitDependencies": ["nx", "devkit"],
+   "// targets": "to see all targets run: nx show project e2e-lerna-smoke-tests --web",
+   "targets": {}
 }

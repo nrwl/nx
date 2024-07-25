@@ -1,17 +1,17 @@
 import {
-  addDependenciesToPackageJson,
-  formatFiles,
-  GeneratorCallback,
-  joinPathFragments,
-  runTasksInSerial,
-  Tree,
+   addDependenciesToPackageJson,
+   formatFiles,
+   GeneratorCallback,
+   joinPathFragments,
+   runTasksInSerial,
+   Tree,
 } from '@nx/devkit';
 import { initGenerator as jsInitGenerator } from '@nx/js';
 import { setupTailwindGenerator } from '@nx/react';
 import {
-  testingLibraryReactVersion,
-  typesReactDomVersion,
-  typesReactVersion,
+   testingLibraryReactVersion,
+   typesReactDomVersion,
+   typesReactVersion,
 } from '@nx/react/src/utils/versions';
 
 import { normalizeOptions } from './lib/normalize-options';
@@ -32,96 +32,96 @@ import { tsLibVersion } from '../../utils/versions';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 
 export async function applicationGenerator(host: Tree, schema: Schema) {
-  return await applicationGeneratorInternal(host, {
-    addPlugin: false,
-    projectNameAndRootFormat: 'derived',
-    ...schema,
-  });
+   return await applicationGeneratorInternal(host, {
+      addPlugin: false,
+      projectNameAndRootFormat: 'derived',
+      ...schema,
+   });
 }
 
 export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
-  const tasks: GeneratorCallback[] = [];
-  const options = await normalizeOptions(host, schema);
+   const tasks: GeneratorCallback[] = [];
+   const options = await normalizeOptions(host, schema);
 
-  showPossibleWarnings(host, options);
+   showPossibleWarnings(host, options);
 
-  const jsInitTask = await jsInitGenerator(host, {
-    js: options.js,
-    skipPackageJson: options.skipPackageJson,
-    skipFormat: true,
-  });
-  tasks.push(jsInitTask);
+   const jsInitTask = await jsInitGenerator(host, {
+      js: options.js,
+      skipPackageJson: options.skipPackageJson,
+      skipFormat: true,
+   });
+   tasks.push(jsInitTask);
 
-  const nextTask = await nextInitGenerator(host, {
-    ...options,
-    skipFormat: true,
-  });
-  tasks.push(nextTask);
+   const nextTask = await nextInitGenerator(host, {
+      ...options,
+      skipFormat: true,
+   });
+   tasks.push(nextTask);
 
-  createApplicationFiles(host, options);
+   createApplicationFiles(host, options);
 
-  addProject(host, options);
+   addProject(host, options);
 
-  const e2eTask = await addE2e(host, options);
-  tasks.push(e2eTask);
+   const e2eTask = await addE2e(host, options);
+   tasks.push(e2eTask);
 
-  const jestTask = await addJest(host, options);
-  tasks.push(jestTask);
+   const jestTask = await addJest(host, options);
+   tasks.push(jestTask);
 
-  const lintTask = await addLinting(host, options);
-  tasks.push(lintTask);
+   const lintTask = await addLinting(host, options);
+   tasks.push(lintTask);
 
-  if (options.style === 'tailwind') {
-    const tailwindTask = await setupTailwindGenerator(host, {
-      project: options.projectName,
-    });
+   if (options.style === 'tailwind') {
+      const tailwindTask = await setupTailwindGenerator(host, {
+         project: options.projectName,
+      });
 
-    tasks.push(tailwindTask);
-  }
+      tasks.push(tailwindTask);
+   }
 
-  const styledTask = addStyleDependencies(host, {
-    style: options.style,
-    swc: !host.exists(joinPathFragments(options.appProjectRoot, '.babelrc')),
-  });
-  tasks.push(styledTask);
+   const styledTask = addStyleDependencies(host, {
+      style: options.style,
+      swc: !host.exists(joinPathFragments(options.appProjectRoot, '.babelrc')),
+   });
+   tasks.push(styledTask);
 
-  updateJestConfig(host, options);
-  updateCypressTsConfig(host, options);
-  setDefaults(host, options);
+   updateJestConfig(host, options);
+   updateCypressTsConfig(host, options);
+   setDefaults(host, options);
 
-  if (options.customServer) {
-    await customServerGenerator(host, {
-      project: options.projectName,
-      compiler: options.swc ? 'swc' : 'tsc',
-    });
-  }
+   if (options.customServer) {
+      await customServerGenerator(host, {
+         project: options.projectName,
+         compiler: options.swc ? 'swc' : 'tsc',
+      });
+   }
 
-  if (!options.skipPackageJson) {
-    const devDependencies: Record<string, string> = {
-      '@types/react': typesReactVersion,
-      '@types/react-dom': typesReactDomVersion,
-    };
+   if (!options.skipPackageJson) {
+      const devDependencies: Record<string, string> = {
+         '@types/react': typesReactVersion,
+         '@types/react-dom': typesReactDomVersion,
+      };
 
-    if (schema.unitTestRunner && schema.unitTestRunner !== 'none') {
-      devDependencies['@testing-library/react'] = testingLibraryReactVersion;
-    }
+      if (schema.unitTestRunner && schema.unitTestRunner !== 'none') {
+         devDependencies['@testing-library/react'] = testingLibraryReactVersion;
+      }
 
-    tasks.push(
-      addDependenciesToPackageJson(
-        host,
-        { tslib: tsLibVersion },
-        devDependencies
-      )
-    );
-  }
+      tasks.push(
+         addDependenciesToPackageJson(
+            host,
+            { tslib: tsLibVersion },
+            devDependencies
+         )
+      );
+   }
 
-  if (!options.skipFormat) {
-    await formatFiles(host);
-  }
+   if (!options.skipFormat) {
+      await formatFiles(host);
+   }
 
-  tasks.push(() => {
-    logShowProjectCommand(options.projectName);
-  });
+   tasks.push(() => {
+      logShowProjectCommand(options.projectName);
+   });
 
-  return runTasksInSerial(...tasks);
+   return runTasksInSerial(...tasks);
 }

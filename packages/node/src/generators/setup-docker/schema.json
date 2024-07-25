@@ -1,33 +1,33 @@
 {
-  "$schema": "https://json-schema.org/schema",
-  "cli": "nx",
-  "$id": "SchematicsNxSetupDocker",
-  "title": "Nx Node Docker Options Schema",
-  "description": "Nx Node Docker Options Schema.",
-  "type": "object",
-  "properties": {
-    "project": {
-      "description": "The name of the project",
-      "$default": {
-        "$source": "projectName"
+   "$schema": "https://json-schema.org/schema",
+   "cli": "nx",
+   "$id": "SchematicsNxSetupDocker",
+   "title": "Nx Node Docker Options Schema",
+   "description": "Nx Node Docker Options Schema.",
+   "type": "object",
+   "properties": {
+      "project": {
+         "description": "The name of the project",
+         "$default": {
+            "$source": "projectName"
+         },
+         "type": "string",
+         "x-prompt": "What project would you like to add a Dockerfile to?",
+         "x-priority": "important"
       },
-      "type": "string",
-      "x-prompt": "What project would you like to add a Dockerfile to?",
-      "x-priority": "important"
-    },
-    "targetName": {
-      "description": "The name of the target to create",
-      "type": "string",
-      "default": "docker-build"
-    },
-    "buildTargetName": {
-      "description": "The name of the build target",
-      "type": "string",
-      "default": "build"
-    },
-    "outputPath": {
-      "description": "The output path for the node application",
-      "type": "string"
-    }
-  }
+      "targetName": {
+         "description": "The name of the target to create",
+         "type": "string",
+         "default": "docker-build"
+      },
+      "buildTargetName": {
+         "description": "The name of the build target",
+         "type": "string",
+         "default": "build"
+      },
+      "outputPath": {
+         "description": "The output path for the node application",
+         "type": "string"
+      }
+   }
 }

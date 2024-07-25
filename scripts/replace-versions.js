@@ -11,8 +11,8 @@ const typescriptVersion = packageJson.devDependencies.typescript;
 const prettierVersion = packageJson.devDependencies.prettier;
 
 writeFileSync(
-  file,
-  originalContents
-    .replace(/TYPESCRIPT_VERSION/g, typescriptVersion)
-    .replace(/PRETTIER_VERSION/g, prettierVersion)
+   file,
+   originalContents
+      .replace(/TYPESCRIPT_VERSION/g, typescriptVersion)
+      .replace(/PRETTIER_VERSION/g, prettierVersion)
 );

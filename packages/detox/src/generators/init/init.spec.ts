@@ -5,18 +5,18 @@ import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { detoxInitGenerator } from './init';
 
 describe('init', () => {
-  let tree: Tree;
+   let tree: Tree;
 
-  beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
-  });
+   beforeEach(() => {
+      tree = createTreeWithEmptyWorkspace();
+   });
 
-  it('should add detox dependencies', async () => {
-    await detoxInitGenerator(tree, {
-      addPlugin: true,
-    });
-    const packageJson = readJson(tree, 'package.json');
-    expect(packageJson.devDependencies['@nx/detox']).toBeDefined();
-    expect(packageJson.devDependencies['detox']).toBeDefined();
-  });
+   it('should add detox dependencies', async () => {
+      await detoxInitGenerator(tree, {
+         addPlugin: true,
+      });
+      const packageJson = readJson(tree, 'package.json');
+      expect(packageJson.devDependencies['@nx/detox']).toBeDefined();
+      expect(packageJson.devDependencies['detox']).toBeDefined();
+   });
 });

@@ -32,9 +32,9 @@ Each project has targets configured to run an executor with a specific set of op
 
 Each executor definition has an `executor` property and, optionally, an `options` and a `configurations` property.
 
-- `executor` is a string of the form `[package name]:[executor name]`. For the `build` executor, the package name is `@nx/webpack` and the executor name is `webpack`.
-- `options` is an object that contains any configuration defaults for the executor. These options vary from executor to executor.
-- `configurations` allows you to create presets of options for different scenarios. All the configurations start with the properties defined in `options` as a baseline and then overwrite those options. In the example, there is a `production` configuration that overrides the default options to set `sourceMap` to `false`.
+-  `executor` is a string of the form `[package name]:[executor name]`. For the `build` executor, the package name is `@nx/webpack` and the executor name is `webpack`.
+-  `options` is an object that contains any configuration defaults for the executor. These options vary from executor to executor.
+-  `configurations` allows you to create presets of options for different scenarios. All the configurations start with the properties defined in `options` as a baseline and then overwrite those options. In the example, there is a `production` configuration that overrides the default options to set `sourceMap` to `false`.
 
 Once configured, you can run an executor the same way you would [run any target](/features/run-tasks):
 
@@ -51,15 +51,15 @@ If defining a new target that needs to run a single shell command, there is a sh
 
 ```jsonc {% fileName="project.json" %}
 {
-  "root": "apps/cart",
-  "sourceRoot": "apps/cart/src",
-  "projectType": "application",
-  "generators": {},
-  "targets": {
-    "echo": {
-      "command": "echo 'hello world'"
-    }
-  }
+   "root": "apps/cart",
+   "sourceRoot": "apps/cart/src",
+   "projectType": "application",
+   "generators": {},
+   "targets": {
+      "echo": {
+         "command": "echo 'hello world'"
+      }
+   }
 }
 ```
 
@@ -84,20 +84,20 @@ The `configurations` property provides extra sets of values that will be merged 
 
 ```json {% fileName="project.json" %}
 {
-  "build": {
-    "executor": "@nx/js:tsc",
-    "outputs": ["{workspaceRoot}/dist/libs/mylib"],
-    "dependsOn": ["^build"],
-    "options": {
-      "tsConfig": "libs/mylib/tsconfig.lib.json",
-      "main": "libs/mylib/src/main.ts"
-    },
-    "configurations": {
-      "production": {
-        "tsConfig": "libs/mylib/tsconfig-prod.lib.json"
+   "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{workspaceRoot}/dist/libs/mylib"],
+      "dependsOn": ["^build"],
+      "options": {
+         "tsConfig": "libs/mylib/tsconfig.lib.json",
+         "main": "libs/mylib/src/main.ts"
+      },
+      "configurations": {
+         "production": {
+            "tsConfig": "libs/mylib/tsconfig-prod.lib.json"
+         }
       }
-    }
-  }
+   }
 }
 ```
 
@@ -108,9 +108,9 @@ The following code snippet shows how the executor options get constructed:
 
 ```javascript
 require(`@nx/jest`).executors['jest']({
-  ...options,
-  ...selectedConfiguration,
-  ...commandLineArgs,
+   ...options,
+   ...selectedConfiguration,
+   ...commandLineArgs,
 }); // Pseudocode
 ```
 
@@ -124,21 +124,21 @@ For example, running e2e tests for multiple environments. By default it would ma
 
 ```json {% fileName="project.json" %}
 {
-  "e2e": {
-    "executor": "@nx/cypress:cypress",
-    "options": {
-      "cypressConfig": "apps/my-app-e2e/cypress.config.ts"
-    },
-    "configurations": {
-      "dev": {
-        "devServerTarget": "my-app:serve"
+   "e2e": {
+      "executor": "@nx/cypress:cypress",
+      "options": {
+         "cypressConfig": "apps/my-app-e2e/cypress.config.ts"
       },
-      "qa": {
-        "baseUrl": "https://some-internal-url.example.com"
-      }
-    },
-    "defaultConfiguration": "dev"
-  }
+      "configurations": {
+         "dev": {
+            "devServerTarget": "my-app:serve"
+         },
+         "qa": {
+            "baseUrl": "https://some-internal-url.example.com"
+         }
+      },
+      "defaultConfiguration": "dev"
+   }
 }
 ```
 

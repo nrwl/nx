@@ -1,15 +1,15 @@
 {
-  "name": "e2e-react-native",
-  "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "e2e/react-native",
-  "projectType": "application",
-  "implicitDependencies": ["react-native"],
-  "targets": {
-    "e2e-macos-ci--src/react-native-legacy.test.ts": {
-      "inputs": ["e2eInputs", "^production"]
-    },
-    "e2e-macos-ci--src/react-native.test.ts": {
-      "inputs": ["e2eInputs", "^production"]
-    }
-  }
+   "name": "e2e-react-native",
+   "$schema": "../../node_modules/nx/schemas/project-schema.json",
+   "sourceRoot": "e2e/react-native",
+   "projectType": "application",
+   "implicitDependencies": ["react-native"],
+   "targets": {
+      "e2e-macos-ci--src/react-native-legacy.test.ts": {
+         "inputs": ["e2eInputs", "^production"]
+      },
+      "e2e-macos-ci--src/react-native.test.ts": {
+         "inputs": ["e2eInputs", "^production"]
+      }
+   }
 }

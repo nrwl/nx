@@ -50,24 +50,24 @@ This part is copied from: [https://github.com/supabase-community/nextjs-openai-d
 
 ```js
 export function processMdxForSearch(content: string) {
-  // …
-  const mdTree = fromMarkdown(content, {});
-  const sectionTrees = splitTreeBy(mdTree, (node) => node.type === 'heading');
-  // …
-  const sections = sectionTrees.map((tree: any) => {
-    const [firstNode] = tree.children;
-    const heading =
-      firstNode.type === 'heading' ? toString(firstNode) : undefined;
-    return {
-      content: toMarkdown(tree),
-      heading,
-      slug,
-    };
-  });
-  return {
-    checksum,
-    sections,
-  };
+   // …
+   const mdTree = fromMarkdown(content, {});
+   const sectionTrees = splitTreeBy(mdTree, (node) => node.type === 'heading');
+   // …
+   const sections = sectionTrees.map((tree: any) => {
+      const [firstNode] = tree.children;
+      const heading =
+         firstNode.type === 'heading' ? toString(firstNode) : undefined;
+      return {
+         content: toMarkdown(tree),
+         heading,
+         slug,
+      };
+   });
+   return {
+      checksum,
+      sections,
+   };
 }
 ```
 
@@ -79,8 +79,8 @@ Ref in the code: [https://github.com/nrwl/nx/blob/76306f0bedc1297b64da6e58b4f7b9
 
 ```js
 const embeddingResponse = await openai.embeddings.create({
-  model: 'text-embedding-ada-002',
-  input,
+   model: 'text-embedding-ada-002',
+   input,
 });
 ```
 
@@ -96,17 +96,17 @@ Ref in code: [https://github.com/nrwl/nx/blob/master/tools/documentation/create-
 
 ```js
 const { data: pageSection } = await supabaseClient
-  .from('nods_page_section')
-  .insert({
-    page_id: page.id,
-    slug,
-    heading,
-    longer_heading,
-    content,
-    url_partial,
-    token_count,
-    embedding,
-  }); // …
+   .from('nods_page_section')
+   .insert({
+      page_id: page.id,
+      slug,
+      heading,
+      longer_heading,
+      content,
+      url_partial,
+      token_count,
+      embedding,
+   }); // …
 ```
 
 ## Step 2: User query analysis and search
@@ -117,10 +117,10 @@ Ref in code: [https://github.com/nrwl/nx/blob/76306f0bedc1297b64da6e58b4f7b9c397
 
 ```js
 const embeddingResponse: OpenAI.Embeddings.CreateEmbeddingResponse =
-  await openai.embeddings.create({
-    model: 'text-embedding-ada-002',
-    input: sanitizedQuery + getLastAssistantMessageContent(messages),
-  });
+   await openai.embeddings.create({
+      model: 'text-embedding-ada-002',
+      input: sanitizedQuery + getLastAssistantMessageContent(messages),
+   });
 ```
 
 The assistant compares the query embedding with these documentation embeddings to identify relevant sections. This comparison is essentially measuring how close the query’s vector is to the documentation vectors. The closer they are, the more related the content. The way this works is that it sends the user’s question embedding to Supabase, to a PostgreSQL function, which runs a vector comparison between the user’s question embedding and the stored embeddings in the table. The PostgreSQL function returns all the similar documentation chunks.
@@ -131,8 +131,8 @@ Ref in code: [https://github.com/nrwl/nx/blob/76306f0bedc1297b64da6e58b4f7b9c397
 
 ```js
 const { data: pageSections } = await supabaseClient.rpc('match_page_sections', {
-  embedding,
-  // …
+   embedding,
+   // …
 });
 ```
 
@@ -142,10 +142,10 @@ With the relevant sections (documentation chunks) identified and retrieved, GPT 
 
 This approach the AI is instructed to use (in the **prompt**) is the following:
 
-- Identify CLUES from the query and documentation.
-- Deduce REASONING based solely on the provided Nx Documentation.
-- EVALUATE its reasoning, ensuring alignment with Nx Documentation.
-- Rely on previous messages for contextual continuity.
+-  Identify CLUES from the query and documentation.
+-  Deduce REASONING based solely on the provided Nx Documentation.
+-  EVALUATE its reasoning, ensuring alignment with Nx Documentation.
+-  Rely on previous messages for contextual continuity.
 
 ### Ensuring Quality
 
@@ -307,9 +307,9 @@ This role, in the context of OpenAI’s chat models, is the response of the AI. 
 
 ## Learn more
 
-- [Nx Docs](/getting-started/intro)
-- [X/Twitter](https://twitter.com/nxdevtools) -- [LinkedIn](https://www.linkedin.com/company/nrwl/)
-- [Nx GitHub](https://github.com/nrwl/nx)
-- [Nx Official Discord Server](/community)
-- [Nx Youtube Channel](https://www.youtube.com/@nxdevtools)
-- [Speed up your CI](https://nx.app/)
+-  [Nx Docs](/getting-started/intro)
+-  [X/Twitter](https://twitter.com/nxdevtools) -- [LinkedIn](https://www.linkedin.com/company/nrwl/)
+-  [Nx GitHub](https://github.com/nrwl/nx)
+-  [Nx Official Discord Server](/community)
+-  [Nx Youtube Channel](https://www.youtube.com/@nxdevtools)
+-  [Speed up your CI](https://nx.app/)

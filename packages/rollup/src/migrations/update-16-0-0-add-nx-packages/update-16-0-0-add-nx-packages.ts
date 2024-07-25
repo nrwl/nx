@@ -2,7 +2,7 @@ import { Tree, formatFiles } from '@nx/devkit';
 import { replaceNrwlPackageWithNxPackage } from '@nx/devkit/src/utils/replace-package';
 
 export default async function replacePackage(tree: Tree): Promise<void> {
-  await replaceNrwlPackageWithNxPackage(tree, '@nrwl/rollup', '@nx/rollup');
+   await replaceNrwlPackageWithNxPackage(tree, '@nrwl/rollup', '@nx/rollup');
 
-  await formatFiles(tree);
+   await formatFiles(tree);
 }

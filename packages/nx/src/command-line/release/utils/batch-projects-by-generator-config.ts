@@ -7,39 +7,39 @@ import { ReleaseGroupWithName } from '../config/filter-release-groups';
  * within any given release group.
  */
 export function batchProjectsByGeneratorConfig(
-  projectGraph: ProjectGraph,
-  releaseGroup: ReleaseGroupWithName,
-  projectNamesToBatch: string[]
+   projectGraph: ProjectGraph,
+   releaseGroup: ReleaseGroupWithName,
+   projectNamesToBatch: string[]
 ) {
-  const configBatches = new Map<string, string[]>();
-  for (const projectName of projectNamesToBatch) {
-    const project = projectGraph.nodes[projectName];
-    const generator =
-      project.data.release?.version?.generator ||
-      releaseGroup.version.generator;
-    const generatorOptions = {
-      ...releaseGroup.version.generatorOptions,
-      ...project.data.release?.version?.generatorOptions,
-    };
+   const configBatches = new Map<string, string[]>();
+   for (const projectName of projectNamesToBatch) {
+      const project = projectGraph.nodes[projectName];
+      const generator =
+         project.data.release?.version?.generator ||
+         releaseGroup.version.generator;
+      const generatorOptions = {
+         ...releaseGroup.version.generatorOptions,
+         ...project.data.release?.version?.generatorOptions,
+      };
 
-    let found = false;
-    for (const [key, projects] of configBatches) {
-      const [existingGenerator, existingOptions] = JSON.parse(key);
-      if (
-        generator === existingGenerator &&
-        deepEquals(generatorOptions, existingOptions)
-      ) {
-        projects.push(projectName);
-        found = true;
-        break;
+      let found = false;
+      for (const [key, projects] of configBatches) {
+         const [existingGenerator, existingOptions] = JSON.parse(key);
+         if (
+            generator === existingGenerator &&
+            deepEquals(generatorOptions, existingOptions)
+         ) {
+            projects.push(projectName);
+            found = true;
+            break;
+         }
       }
-    }
 
-    if (!found) {
-      configBatches.set(JSON.stringify([generator, generatorOptions]), [
-        projectName,
-      ]);
-    }
-  }
-  return configBatches;
+      if (!found) {
+         configBatches.set(JSON.stringify([generator, generatorOptions]), [
+            projectName,
+         ]);
+      }
+   }
+   return configBatches;
 }

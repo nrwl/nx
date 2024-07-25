@@ -6,8 +6,8 @@ Deploying Node.js serverless functions to Netlify involves a few steps.
 
 Depending on your current situation, you can either
 
-- create a brand new project with the intention of solely hosting and deploying Netlify functions
-- adding Netlify functions to an existing project
+-  create a brand new project with the intention of solely hosting and deploying Netlify functions
+-  adding Netlify functions to an existing project
 
 Let's walk through both scenarios.
 
@@ -51,8 +51,8 @@ nx serve-functions
 
 Make sure you have a site configured on Netlify (skip if you have already). You have mostly two options:
 
-- either go to [app.netlify.com](https://app.netlify.com) and create a new site
-- use the Netlify CLI and run `npx netlify deploy` which will walk you through the process
+-  either go to [app.netlify.com](https://app.netlify.com) and create a new site
+-  use the Netlify CLI and run `npx netlify deploy` which will walk you through the process
 
 If you run `npx netlify deploy` in the workspace, the site ID will be automatically saved in the `.netlify/state.json` file. Alternatively adjust the `deploy-functions` in your `project.json` to include the `--site` flag:
 

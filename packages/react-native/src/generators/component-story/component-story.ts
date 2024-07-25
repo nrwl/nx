@@ -7,13 +7,13 @@ import { CreateComponentStoriesFileSchema } from './schema';
  * TODO (@xiongemi): remove this generator for v19
  */
 export async function componentStoryGenerator(
-  host: Tree,
-  schema: CreateComponentStoriesFileSchema
+   host: Tree,
+   schema: CreateComponentStoriesFileSchema
 ) {
-  logger.warn(
-    `Please run 'nx run @nx/react:component-story ${schema.project}' instead.`
-  );
-  return reactComponentStoryGenerator(host, schema);
+   logger.warn(
+      `Please run 'nx run @nx/react:component-story ${schema.project}' instead.`
+   );
+   return reactComponentStoryGenerator(host, schema);
 }
 
 export default componentStoryGenerator;

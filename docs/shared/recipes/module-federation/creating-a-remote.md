@@ -4,8 +4,8 @@ In the concept of Module Federation a `remote` is the term given to an applicati
 shared to and consumed by host applications.  
 This is the key difference between a `remote` and `host`.
 
-- A `remote` exposes modules that can be consumed
-- A `host` consumes exposed modules
+-  A `remote` exposes modules that can be consumed
+-  A `host` consumes exposed modules
 
 **Nx** includes first-class support for helping you to scaffold a Module Federation Architecture for your React and
 Angular application(s).
@@ -90,8 +90,8 @@ to specify that it can consume federated modules from this remote.
 import { ModuleFederationConfig } from '@nx/webpack';
 
 const config: ModuleFederationConfig = {
-  name: 'shell',
-  remotes: ['myremote'], // <-- add the name of your remote to the remotes array
+   name: 'shell',
+   remotes: ['myremote'], // <-- add the name of your remote to the remotes array
 };
 export default config;
 ```
@@ -102,8 +102,8 @@ export default config;
 
 ```typescript {% fileName="apps/react/shell/module-federation.config.js" %}
 module.exports = {
-  name: 'shell',
-  remotes: ['myremote'], // <-- add the name of your remote to the remotes array
+   name: 'shell',
+   remotes: ['myremote'], // <-- add the name of your remote to the remotes array
 };
 ```
 
@@ -203,8 +203,8 @@ nx build myremote
 
 The `remote` application is generated with two serve-like targets. These are:
 
-- serve
-- serve-static
+-  serve
+-  serve-static
 
 They can be run as usual with Nx:
 

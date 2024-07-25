@@ -1,4 +1,4 @@
 {
-  "extends": ["@nx/webpack"],
-  "schematics": {}
+   "extends": ["@nx/webpack"],
+   "schematics": {}
 }

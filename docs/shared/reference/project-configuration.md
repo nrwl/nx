@@ -16,40 +16,40 @@ nx show project myproject --web
 
 ```json
 {
-  "project": {
-    "name": "demo",
-    "data": {
-      "root": " packages/demo",
-      "projectType": "application",
-      "targets": {
-        "dev": {
-          "executor": "nx:run-commands",
-          "options": {
-            "command": "vite dev"
-          },
-          "metadata": {
-            "technologies": ["vite"]
-          }
-        },
-        "build": {
-          "executor": "nx:run-commands",
-          "inputs": ["production", "^production"],
-          "outputs": ["{projectRoot}/dist"],
-          "options": {
-            "command": "vite build"
-          },
-          "metadata": {
-            "technologies": ["vite"]
-          }
-        }
+   "project": {
+      "name": "demo",
+      "data": {
+         "root": " packages/demo",
+         "projectType": "application",
+         "targets": {
+            "dev": {
+               "executor": "nx:run-commands",
+               "options": {
+                  "command": "vite dev"
+               },
+               "metadata": {
+                  "technologies": ["vite"]
+               }
+            },
+            "build": {
+               "executor": "nx:run-commands",
+               "inputs": ["production", "^production"],
+               "outputs": ["{projectRoot}/dist"],
+               "options": {
+                  "command": "vite build"
+               },
+               "metadata": {
+                  "technologies": ["vite"]
+               }
+            }
+         }
       }
-    }
-  },
-  "sourceMap": {
-    "targets": ["packages/demo/vite.config.ts", "@nx/vite"],
-    "targets.dev": ["packages/demo/vite.config.ts", "@nx/vite"],
-    "targets.build": ["packages/demo/vite.config.ts", "@nx/vite"]
-  }
+   },
+   "sourceMap": {
+      "targets": ["packages/demo/vite.config.ts", "@nx/vite"],
+      "targets.dev": ["packages/demo/vite.config.ts", "@nx/vite"],
+      "targets.build": ["packages/demo/vite.config.ts", "@nx/vite"]
+   }
 }
 ```
 
@@ -69,11 +69,11 @@ The following configuration creates `build` and `test` targets for Nx.
 
 ```jsonc {% fileName="package.json" %}
 {
-  "name": "mylib",
-  "scripts": {
-    "test": "jest",
-    "build": "tsc -p tsconfig.lib.json" // the actual command here is arbitrary
-  }
+   "name": "mylib",
+   "scripts": {
+      "test": "jest",
+      "build": "tsc -p tsconfig.lib.json" // the actual command here is arbitrary
+   }
 }
 ```
 
@@ -82,21 +82,21 @@ The following configuration creates `build` and `test` targets for Nx.
 
 ```jsonc {% fileName="project.json" %}
 {
-  "root": "libs/mylib/",
-  "targets": {
-    "test": {
-      "executor": "@nx/jest:jest",
-      "options": {
-        /* ... */
+   "root": "libs/mylib/",
+   "targets": {
+      "test": {
+         "executor": "@nx/jest:jest",
+         "options": {
+            /* ... */
+         }
+      },
+      "build": {
+         "executor": "@nx/js:tsc",
+         "options": {
+            /* ... */
+         }
       }
-    },
-    "build": {
-      "executor": "@nx/js:tsc",
-      "options": {
-        /* ... */
-      }
-    }
-  }
+   }
 }
 ```
 
@@ -112,31 +112,31 @@ Below are some more complete examples of project configuration files. For a more
 
 ```jsonc {% fileName="package.json" lineGroups={ Orchestration:[14,17,19,22,25],Execution:[4,5,6],Caching:[9,10,11,12,15,16,20,21] } %}
 {
-  "name": "mylib",
-  "scripts": {
-    "test": "jest",
-    "build": "tsc -p tsconfig.lib.json", // the actual command here is arbitrary
-    "ignored": "exit 1"
-  },
-  "nx": {
-    "namedInputs": {
-      "default": ["{projectRoot}/**/*"],
-      "production": ["!{projectRoot}/**/*.spec.tsx"]
-    },
-    "targets": {
-      "build": {
-        "inputs": ["production", "^production"],
-        "outputs": ["{workspaceRoot}/dist/libs/mylib"],
-        "dependsOn": ["^build"]
+   "name": "mylib",
+   "scripts": {
+      "test": "jest",
+      "build": "tsc -p tsconfig.lib.json", // the actual command here is arbitrary
+      "ignored": "exit 1"
+   },
+   "nx": {
+      "namedInputs": {
+         "default": ["{projectRoot}/**/*"],
+         "production": ["!{projectRoot}/**/*.spec.tsx"]
       },
-      "test": {
-        "inputs": ["default", "^production"],
-        "outputs": [],
-        "dependsOn": ["build"]
-      }
-    },
-    "includedScripts": ["test", "build"] // If you want to limit the scripts Nx sees, you can specify a list here.
-  }
+      "targets": {
+         "build": {
+            "inputs": ["production", "^production"],
+            "outputs": ["{workspaceRoot}/dist/libs/mylib"],
+            "dependsOn": ["^build"]
+         },
+         "test": {
+            "inputs": ["default", "^production"],
+            "outputs": [],
+            "dependsOn": ["build"]
+         }
+      },
+      "includedScripts": ["test", "build"] // If you want to limit the scripts Nx sees, you can specify a list here.
+   }
 }
 ```
 
@@ -145,31 +145,31 @@ Below are some more complete examples of project configuration files. For a more
 
 ```json {% fileName="project.json" lineGroups={ "Orchestration": [5,6,12,15,19,22], "Execution": [12,16,17,19,22,23], "Caching": [7,8,9,10,13,14,20,21] } %}
 {
-  "root": "libs/mylib/",
-  "sourceRoot": "libs/mylib/src",
-  "projectType": "library",
-  "tags": ["scope:myteam"],
-  "implicitDependencies": ["anotherlib"],
-  "namedInputs": {
-    "default": ["{projectRoot}/**/*"],
-    "production": ["!{projectRoot}/**/*.spec.tsx"]
-  },
-  "targets": {
-    "test": {
-      "inputs": ["default", "^production"],
-      "outputs": [],
-      "dependsOn": ["build"],
-      "executor": "@nx/jest:jest",
-      "options": {}
-    },
-    "build": {
-      "inputs": ["production", "^production"],
-      "outputs": ["{workspaceRoot}/dist/libs/mylib"],
-      "dependsOn": ["^build"],
-      "executor": "@nx/js:tsc",
-      "options": {}
-    }
-  }
+   "root": "libs/mylib/",
+   "sourceRoot": "libs/mylib/src",
+   "projectType": "library",
+   "tags": ["scope:myteam"],
+   "implicitDependencies": ["anotherlib"],
+   "namedInputs": {
+      "default": ["{projectRoot}/**/*"],
+      "production": ["!{projectRoot}/**/*.spec.tsx"]
+   },
+   "targets": {
+      "test": {
+         "inputs": ["default", "^production"],
+         "outputs": [],
+         "dependsOn": ["build"],
+         "executor": "@nx/jest:jest",
+         "options": {}
+      },
+      "build": {
+         "inputs": ["production", "^production"],
+         "outputs": ["{workspaceRoot}/dist/libs/mylib"],
+         "dependsOn": ["^build"],
+         "executor": "@nx/js:tsc",
+         "options": {}
+      }
+   }
 }
 ```
 
@@ -186,11 +186,11 @@ In Nx 17 and higher, caching is configured by specifying `"cache": true` in a ta
 
 ```json {% fileName="project.json" %}
 {
-  "targets": {
-    "test": {
-      "cache": true
-    }
-  }
+   "targets": {
+      "test": {
+         "cache": true
+      }
+   }
 }
 ```
 
@@ -206,11 +206,11 @@ In Nx 19.5.0+, tasks can be configured to support parallelism or not. By default
 
 ```json {% fileName="project.json" %}
 {
-  "targets": {
-    "e2e": {
-      "parallelism": false
-    }
-  }
+   "targets": {
+      "e2e": {
+         "parallelism": false
+      }
+   }
 }
 ```
 
@@ -228,18 +228,18 @@ A typical set of inputs may look like this:
 
 ```jsonc {% fileName="" %}
 {
-  "namedInputs": {
-    "default": ["{projectRoot}/**/*"], // every file in the project
-    "production": ["default", "!{projectRoot}/**/*.spec.tsx"] // except test files
-  },
-  "targets": {
-    "build": {
-      "inputs": [
-        "production", // this project's production files
-        { "externalDependencies": ["vite"] } // the version of the vite package
-      ]
-    }
-  }
+   "namedInputs": {
+      "default": ["{projectRoot}/**/*"], // every file in the project
+      "production": ["default", "!{projectRoot}/**/*.spec.tsx"] // except test files
+   },
+   "targets": {
+      "build": {
+         "inputs": [
+            "production", // this project's production files
+            { "externalDependencies": ["vite"] } // the version of the vite package
+         ]
+      }
+   }
 }
 ```
 
@@ -256,10 +256,10 @@ This configuration is usually not needed. Nx comes with reasonable defaults (imp
 
 Specifically, by default, the following locations are cached for builds:
 
-- `{workspaceRoot}/dist/{projectRoot}`,
-- `{projectRoot}/build`,
-- `{projectRoot}/dist`,
-- `{projectRoot}/public`
+-  `{workspaceRoot}/dist/{projectRoot}`,
+-  `{projectRoot}/build`,
+-  `{projectRoot}/dist`,
+-  `{projectRoot}/public`
 
 {% cards %}
 {% card title="Configure Outputs for Task Caching" type="documentation" description="This recipes walks gives helpful tips to configure `outputs` for tasks" url="/recipes/running-tasks/configure-outputs" /%}
@@ -273,14 +273,14 @@ Usually, a target writes to a specific directory or a file. The following instru
 
 ```json
 {
-  "targets": {
-    "build": {
-      "outputs": [
-        "{workspaceRoot}/dist/libs/mylib",
-        "{workspaceRoot}/build/libs/mylib/main.js"
-      ]
-    }
-  }
+   "targets": {
+      "build": {
+         "outputs": [
+            "{workspaceRoot}/dist/libs/mylib",
+            "{workspaceRoot}/build/libs/mylib/main.js"
+         ]
+      }
+   }
 }
 ```
 
@@ -290,14 +290,14 @@ Sometimes, multiple targets might write to the same directory. When possible it 
 
 ```json
 {
-  "targets": {
-    "build-js": {
-      "outputs": ["{workspaceRoot}/dist/libs/mylib/js"]
-    },
-    "build-css": {
-      "outputs": ["{workspaceRoot}/dist/libs/mylib/css"]
-    }
-  }
+   "targets": {
+      "build-js": {
+         "outputs": ["{workspaceRoot}/dist/libs/mylib/js"]
+      },
+      "build-css": {
+         "outputs": ["{workspaceRoot}/dist/libs/mylib/css"]
+      }
+   }
 }
 ```
 
@@ -305,14 +305,14 @@ But if the above is not possible, globs (parsed by the [GlobSet](https://docs.rs
 
 ```json
 {
-  "targets": {
-    "build-js": {
-      "outputs": ["{workspaceRoot}/dist/libs/mylib/**/*.{js,map}"]
-    },
-    "build-css": {
-      "outputs": ["{workspaceRoot}/dist/libs/mylib/**/*.css"]
-    }
-  }
+   "targets": {
+      "build-js": {
+         "outputs": ["{workspaceRoot}/dist/libs/mylib/**/*.{js,map}"]
+      },
+      "build-css": {
+         "outputs": ["{workspaceRoot}/dist/libs/mylib/**/*.css"]
+      }
+   }
 }
 ```
 
@@ -320,14 +320,14 @@ More advanced patterns can be used to exclude files and folders in a single line
 
 ```json
 {
-  "targets": {
-    "build-js": {
-      "outputs": ["{workspaceRoot}/dist/libs/!(cache|.next)/**/*.{js,map}"]
-    },
-    "build-css": {
-      "outputs": ["{workspaceRoot}/dist/libs/mylib/**/!(secondary).css"]
-    }
-  }
+   "targets": {
+      "build-js": {
+         "outputs": ["{workspaceRoot}/dist/libs/!(cache|.next)/**/*.{js,map}"]
+      },
+      "build-css": {
+         "outputs": ["{workspaceRoot}/dist/libs/mylib/**/!(secondary).css"]
+      }
+   }
 }
 ```
 
@@ -337,14 +337,14 @@ Targets can depend on other targets. This is the relevant portion of the configu
 
 ```json
 {
-  "targets": {
-    "build": {
-      "dependsOn": ["^build"]
-    },
-    "test": {
-      "dependsOn": ["build"]
-    }
-  }
+   "targets": {
+      "build": {
+         "dependsOn": ["^build"]
+      },
+      "test": {
+         "dependsOn": ["build"]
+      }
+   }
 }
 ```
 
@@ -367,16 +367,16 @@ You can also express task dependencies with an object syntax:
 
 ```json
 {
-  "targets": {
-    "test": {
-      "dependsOn": [
-        {
-          "target": "build", // target name
-          "params": "ignore" // "forward" or "ignore", defaults to "ignore"
-        }
-      ]
-    }
-  }
+   "targets": {
+      "test": {
+         "dependsOn": [
+            {
+               "target": "build", // target name
+               "params": "ignore" // "forward" or "ignore", defaults to "ignore"
+            }
+         ]
+      }
+   }
 }
 ```
 
@@ -385,17 +385,17 @@ You can also express task dependencies with an object syntax:
 
 ```json
 {
-  "targets": {
-    "build": {
-      "dependsOn": [
-        {
-          "dependencies": true, // Run this target on all dependencies first
-          "target": "build", // target name
-          "params": "ignore" // "forward" or "ignore", defaults to "ignore"
-        }
-      ]
-    }
-  }
+   "targets": {
+      "build": {
+         "dependsOn": [
+            {
+               "dependencies": true, // Run this target on all dependencies first
+               "target": "build", // target name
+               "params": "ignore" // "forward" or "ignore", defaults to "ignore"
+            }
+         ]
+      }
+   }
 }
 ```
 
@@ -404,17 +404,17 @@ You can also express task dependencies with an object syntax:
 
 ```json
 {
-  "targets": {
-    "build": {
-      "dependsOn": [
-        {
-          "projects": ["my-app"], // Run build on "my-app" first
-          "target": "build", // target name
-          "params": "ignore" // "forward" or "ignore", defaults to "ignore"
-        }
-      ]
-    }
-  }
+   "targets": {
+      "build": {
+         "dependsOn": [
+            {
+               "projects": ["my-app"], // Run build on "my-app" first
+               "target": "build", // target name
+               "params": "ignore" // "forward" or "ignore", defaults to "ignore"
+            }
+         ]
+      }
+   }
 }
 ```
 
@@ -423,17 +423,17 @@ You can also express task dependencies with an object syntax:
 
 ```json
 {
-  "targets": {
-    "build": {
-      "dependsOn": [
-        {
-          "projects": "dependencies", // "dependencies" or "self"
-          "target": "build", // target name
-          "params": "ignore" // "forward" or "ignore", defaults to "ignore"
-        }
-      ]
-    }
-  }
+   "targets": {
+      "build": {
+         "dependsOn": [
+            {
+               "projects": "dependencies", // "dependencies" or "self"
+               "target": "build", // target name
+               "params": "ignore" // "forward" or "ignore", defaults to "ignore"
+            }
+         ]
+      }
+   }
 }
 ```
 
@@ -449,14 +449,14 @@ You can write the shorthand configuration above in the object syntax like this:
 
 ```json
 {
-  "targets": {
-    "build": {
-      "dependsOn": [{ "dependencies": true, "target": "build" }] // Run build on my dependencies first
-    },
-    "test": {
-      "dependsOn": [{ "target": "build" }] // Run build on myself first
-    }
-  }
+   "targets": {
+      "build": {
+         "dependsOn": [{ "dependencies": true, "target": "build" }] // Run build on my dependencies first
+      },
+      "test": {
+         "dependsOn": [{ "target": "build" }] // Run build on myself first
+      }
+   }
 }
 ```
 
@@ -465,14 +465,14 @@ You can write the shorthand configuration above in the object syntax like this:
 
 ```json
 {
-  "targets": {
-    "build": {
-      "dependsOn": [{ "projects": "dependencies", "target": "build" }]
-    },
-    "test": {
-      "dependsOn": [{ "projects": "self", "target": "build" }]
-    }
-  }
+   "targets": {
+      "build": {
+         "dependsOn": [{ "projects": "dependencies", "target": "build" }]
+      },
+      "test": {
+         "dependsOn": [{ "projects": "self", "target": "build" }]
+      }
+   }
 }
 ```
 
@@ -486,24 +486,32 @@ With the expanded syntax, you also have a third option available to configure ho
 
 ```json
 {
-  "targets": {
-    "build": {
-      // forward params passed to this target to the dependency targets
-      "dependsOn": [
-        { "projects": "{dependencies}", "target": "build", "params": "forward" }
-      ]
-    },
-    "test": {
-      // ignore params passed to this target, won't be forwarded to the dependency targets
-      "dependsOn": [
-        { "projects": "{dependencies}", "target": "build", "params": "ignore" }
-      ]
-    },
-    "lint": {
-      // ignore params passed to this target, won't be forwarded to the dependency targets
-      "dependsOn": [{ "projects": "{dependencies}", "target": "build" }]
-    }
-  }
+   "targets": {
+      "build": {
+         // forward params passed to this target to the dependency targets
+         "dependsOn": [
+            {
+               "projects": "{dependencies}",
+               "target": "build",
+               "params": "forward"
+            }
+         ]
+      },
+      "test": {
+         // ignore params passed to this target, won't be forwarded to the dependency targets
+         "dependsOn": [
+            {
+               "projects": "{dependencies}",
+               "target": "build",
+               "params": "ignore"
+            }
+         ]
+      },
+      "lint": {
+         // ignore params passed to this target, won't be forwarded to the dependency targets
+         "dependsOn": [{ "projects": "{dependencies}", "target": "build" }]
+      }
+   }
 }
 ```
 
@@ -512,24 +520,32 @@ With the expanded syntax, you also have a third option available to configure ho
 
 ```json
 {
-  "targets": {
-    "build": {
-      // forward params passed to this target to the dependency targets
-      "dependsOn": [
-        { "projects": "dependencies", "target": "build", "params": "forward" }
-      ]
-    },
-    "test": {
-      // ignore params passed to this target, won't be forwarded to the dependency targets
-      "dependsOn": [
-        { "projects": "dependencies", "target": "build", "params": "ignore" }
-      ]
-    },
-    "lint": {
-      // ignore params passed to this target, won't be forwarded to the dependency targets
-      "dependsOn": [{ "projects": "dependencies", "target": "build" }]
-    }
-  }
+   "targets": {
+      "build": {
+         // forward params passed to this target to the dependency targets
+         "dependsOn": [
+            {
+               "projects": "dependencies",
+               "target": "build",
+               "params": "forward"
+            }
+         ]
+      },
+      "test": {
+         // ignore params passed to this target, won't be forwarded to the dependency targets
+         "dependsOn": [
+            {
+               "projects": "dependencies",
+               "target": "build",
+               "params": "ignore"
+            }
+         ]
+      },
+      "lint": {
+         // ignore params passed to this target, won't be forwarded to the dependency targets
+         "dependsOn": [{ "projects": "dependencies", "target": "build" }]
+      }
+   }
 }
 ```
 
@@ -543,12 +559,12 @@ This also works when defining a relation for the target of the project itself us
 
 ```json
 {
-  "targets": {
-    "build": {
-      // forward params passed to this target to the project target
-      "dependsOn": [{ "target": "pre-build", "params": "forward" }]
-    }
-  }
+   "targets": {
+      "build": {
+         // forward params passed to this target to the project target
+         "dependsOn": [{ "target": "pre-build", "params": "forward" }]
+      }
+   }
 }
 ```
 
@@ -557,14 +573,14 @@ This also works when defining a relation for the target of the project itself us
 
 ```json
 {
-  "targets": {
-    "build": {
-      // forward params passed to this target to the project target
-      "dependsOn": [
-        { "projects": "self", "target": "pre-build", "params": "forward" }
-      ]
-    }
-  }
+   "targets": {
+      "build": {
+         // forward params passed to this target to the project target
+         "dependsOn": [
+            { "projects": "self", "target": "pre-build", "params": "forward" }
+         ]
+      }
+   }
 }
 ```
 
@@ -578,14 +594,14 @@ Additionally, when using the expanded object syntax, you can specify individual 
 
 ```json
 {
-  "targets": {
-    "build": {
-      // Run is-even:pre-build and is-odd:pre-build before this target
-      "dependsOn": [
-        { "projects": ["is-even", "is-odd"], "target": "pre-build" }
-      ]
-    }
-  }
+   "targets": {
+      "build": {
+         // Run is-even:pre-build and is-odd:pre-build before this target
+         "dependsOn": [
+            { "projects": ["is-even", "is-odd"], "target": "pre-build" }
+         ]
+      }
+   }
 }
 ```
 
@@ -601,14 +617,14 @@ To define what a task does, you must configure which command or executor will ru
 
 ```json
 {
-  "targets": {
-    "build": {
-      "options": {
-        "assetsInlineLimit": 2048,
-        "assetsDir": "static/assets"
+   "targets": {
+      "build": {
+         "options": {
+            "assetsInlineLimit": 2048,
+            "assetsDir": "static/assets"
+         }
       }
-    }
-  }
+   }
 }
 ```
 
@@ -618,14 +634,14 @@ In the case of an explicit target using an executor, you can specify the executo
 
 ```json
 {
-  "targets": {
-    "build": {
-      "executor": "@nx/js:tsc",
-      "options": {
-        "generateExportsField": true
+   "targets": {
+      "build": {
+         "executor": "@nx/js:tsc",
+         "options": {
+            "generateExportsField": true
+         }
       }
-    }
-  }
+   }
 }
 ```
 
@@ -642,10 +658,10 @@ You can annotate your projects with `tags` as follows:
 
 ```jsonc {% fileName="package.json" %}
 {
-  "name": "mylib",
-  "nx": {
-    "tags": ["scope:myteam"]
-  }
+   "name": "mylib",
+   "nx": {
+      "tags": ["scope:myteam"]
+   }
 }
 ```
 
@@ -654,8 +670,8 @@ You can annotate your projects with `tags` as follows:
 
 ```jsonc {% fileName="project.json" %}
 {
-  "root": "libs/mylib",
-  "tags": ["scope:myteam"]
+   "root": "libs/mylib",
+   "tags": ["scope:myteam"]
 }
 ```
 
@@ -674,10 +690,10 @@ Nx uses powerful source-code analysis to figure out your workspace's project gra
 
 ```jsonc {% fileName="package.json" %}
 {
-  "name": "mylib",
-  "nx": {
-    "implicitDependencies": ["anotherlib"]
-  }
+   "name": "mylib",
+   "nx": {
+      "implicitDependencies": ["anotherlib"]
+   }
 }
 ```
 
@@ -686,8 +702,8 @@ Nx uses powerful source-code analysis to figure out your workspace's project gra
 
 ```jsonc {% fileName="project.json" %}
 {
-  "root": "libs/mylib",
-  "implicitDependencies": ["anotherlib"]
+   "root": "libs/mylib",
+   "implicitDependencies": ["anotherlib"]
 }
 ```
 
@@ -761,15 +777,15 @@ If you only wish for some scripts to be used as Nx targets, you can specify them
 
 ```json {% filename="packages/my-library/package.json" }
 {
-  "name": "my-library",
-  "version": "0.0.1",
-  "scripts": {
-    "build": "tsc",
-    "postinstall": "node ./tasks/postinstall"
-  },
-  "nx": {
-    "includedScripts": ["build"]
-  }
+   "name": "my-library",
+   "version": "0.0.1",
+   "scripts": {
+      "build": "tsc",
+      "postinstall": "node ./tasks/postinstall"
+   },
+   "nx": {
+      "includedScripts": ["build"]
+   }
 }
 ```
 

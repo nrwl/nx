@@ -10,17 +10,17 @@ import type { NormalizedSchema } from '../schema';
  * @param schema The options provided to the schematic
  */
 export function checkDestination(
-  tree: Tree,
-  schema: NormalizedSchema,
-  providedDestination: string
+   tree: Tree,
+   schema: NormalizedSchema,
+   providedDestination: string
 ) {
-  const INVALID_DESTINATION = `Invalid destination: [${providedDestination}]`;
+   const INVALID_DESTINATION = `Invalid destination: [${providedDestination}]`;
 
-  if (providedDestination.includes('..')) {
-    throw new Error(`${INVALID_DESTINATION} - Please specify explicit path.`);
-  }
+   if (providedDestination.includes('..')) {
+      throw new Error(`${INVALID_DESTINATION} - Please specify explicit path.`);
+   }
 
-  if (tree.children(schema.relativeToRootDestination).length > 0) {
-    throw new Error(`${INVALID_DESTINATION} - Path is not empty.`);
-  }
+   if (tree.children(schema.relativeToRootDestination).length > 0) {
+      throw new Error(`${INVALID_DESTINATION} - Path is not empty.`);
+   }
 }

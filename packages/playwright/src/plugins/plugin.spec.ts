@@ -5,45 +5,45 @@ import { createNodesV2 } from './plugin';
 import { PlaywrightTestConfig } from '@playwright/test';
 
 describe('@nx/playwright/plugin', () => {
-  let createNodesFunction = createNodesV2[1];
-  let context: CreateNodesContext;
-  let tempFs: TempFs;
+   let createNodesFunction = createNodesV2[1];
+   let context: CreateNodesContext;
+   let tempFs: TempFs;
 
-  beforeEach(async () => {
-    tempFs = new TempFs('playwright-plugin');
-    await tempFs.createFiles({
-      'package.json': '{}',
-      'playwright.config.js': 'module.exports = {}',
-    });
+   beforeEach(async () => {
+      tempFs = new TempFs('playwright-plugin');
+      await tempFs.createFiles({
+         'package.json': '{}',
+         'playwright.config.js': 'module.exports = {}',
+      });
 
-    context = {
-      nxJsonConfiguration: {
-        namedInputs: {
-          default: ['{projectRoot}/**/*'],
-          production: ['!{projectRoot}/**/*.spec.ts'],
-        },
-      },
-      workspaceRoot: tempFs.tempDir,
-      configFiles: [],
-    };
-  });
+      context = {
+         nxJsonConfiguration: {
+            namedInputs: {
+               default: ['{projectRoot}/**/*'],
+               production: ['!{projectRoot}/**/*.spec.ts'],
+            },
+         },
+         workspaceRoot: tempFs.tempDir,
+         configFiles: [],
+      };
+   });
 
-  afterEach(() => {
-    // tempFs.cleanup();
-    jest.resetModules();
-  });
+   afterEach(() => {
+      // tempFs.cleanup();
+      jest.resetModules();
+   });
 
-  it('should create nodes with default playwright configuration', async () => {
-    await mockPlaywrightConfig(tempFs, {});
-    const results = await createNodesFunction(
-      ['playwright.config.js'],
-      {
-        targetName: 'e2e',
-      },
-      context
-    );
+   it('should create nodes with default playwright configuration', async () => {
+      await mockPlaywrightConfig(tempFs, {});
+      const results = await createNodesFunction(
+         ['playwright.config.js'],
+         {
+            targetName: 'e2e',
+         },
+         context
+      );
 
-    expect(results).toMatchInlineSnapshot(`
+      expect(results).toMatchInlineSnapshot(`
       [
         [
           "playwright.config.js",
@@ -133,25 +133,25 @@ describe('@nx/playwright/plugin', () => {
         ],
       ]
     `);
-  });
+   });
 
-  it('should create nodes with reporters configured', async () => {
-    await mockPlaywrightConfig(tempFs, {
-      reporter: [
-        ['list'],
-        ['json', { outputFile: 'test-results/report.json' }],
-        ['html', { outputFolder: 'test-results/html' }],
-      ],
-    });
-    const results = await createNodesFunction(
-      ['playwright.config.js'],
-      {
-        targetName: 'e2e',
-      },
-      context
-    );
+   it('should create nodes with reporters configured', async () => {
+      await mockPlaywrightConfig(tempFs, {
+         reporter: [
+            ['list'],
+            ['json', { outputFile: 'test-results/report.json' }],
+            ['html', { outputFolder: 'test-results/html' }],
+         ],
+      });
+      const results = await createNodesFunction(
+         ['playwright.config.js'],
+         {
+            targetName: 'e2e',
+         },
+         context
+      );
 
-    expect(results).toMatchInlineSnapshot(`
+      expect(results).toMatchInlineSnapshot(`
       [
         [
           "playwright.config.js",
@@ -247,35 +247,35 @@ describe('@nx/playwright/plugin', () => {
         ],
       ]
     `);
-  });
+   });
 
-  it('should create nodes for distributed CI', async () => {
-    await mockPlaywrightConfig(
-      tempFs,
-      `module.exports = {
+   it('should create nodes for distributed CI', async () => {
+      await mockPlaywrightConfig(
+         tempFs,
+         `module.exports = {
       testDir: 'tests',
       testIgnore: [/.*skip.*/, '**/ignored/**'],
     }`
-    );
-    await tempFs.createFiles({
-      'tests/run-me.spec.ts': '',
-      'tests/run-me-2.spec.ts': '',
-      'tests/skip-me.spec.ts': '',
-      'tests/ignored/run-me.spec.ts': '',
-      'not-tests/run-me.spec.ts': '',
-    });
+      );
+      await tempFs.createFiles({
+         'tests/run-me.spec.ts': '',
+         'tests/run-me-2.spec.ts': '',
+         'tests/skip-me.spec.ts': '',
+         'tests/ignored/run-me.spec.ts': '',
+         'not-tests/run-me.spec.ts': '',
+      });
 
-    const results = await createNodesFunction(
-      ['playwright.config.js'],
-      {
-        targetName: 'e2e',
-        ciTargetName: 'e2e-ci',
-      },
-      context
-    );
-    const project = results[0][1].projects['.'];
-    const { targets } = project;
-    expect(project.metadata.targetGroups).toMatchInlineSnapshot(`
+      const results = await createNodesFunction(
+         ['playwright.config.js'],
+         {
+            targetName: 'e2e',
+            ciTargetName: 'e2e-ci',
+         },
+         context
+      );
+      const project = results[0][1].projects['.'];
+      const { targets } = project;
+      expect(project.metadata.targetGroups).toMatchInlineSnapshot(`
       {
         "E2E (CI)": [
           "e2e-ci--tests/run-me-2.spec.ts",
@@ -284,7 +284,7 @@ describe('@nx/playwright/plugin', () => {
         ],
       }
     `);
-    expect(targets['e2e-ci']).toMatchInlineSnapshot(`
+      expect(targets['e2e-ci']).toMatchInlineSnapshot(`
       {
         "cache": true,
         "dependsOn": [
@@ -330,7 +330,7 @@ describe('@nx/playwright/plugin', () => {
         "parallelism": false,
       }
     `);
-    expect(targets['e2e-ci--tests/run-me.spec.ts']).toMatchInlineSnapshot(`
+      expect(targets['e2e-ci--tests/run-me.spec.ts']).toMatchInlineSnapshot(`
       {
         "cache": true,
         "command": "playwright test tests/run-me.spec.ts",
@@ -366,7 +366,7 @@ describe('@nx/playwright/plugin', () => {
         "parallelism": false,
       }
     `);
-    expect(targets['e2e-ci--tests/run-me-2.spec.ts']).toMatchInlineSnapshot(`
+      expect(targets['e2e-ci--tests/run-me-2.spec.ts']).toMatchInlineSnapshot(`
       {
         "cache": true,
         "command": "playwright test tests/run-me-2.spec.ts",
@@ -402,20 +402,20 @@ describe('@nx/playwright/plugin', () => {
         "parallelism": false,
       }
     `);
-    expect(targets['e2e-ci--tests/skip-me.spec.ts']).not.toBeDefined();
-    expect(targets['e2e-ci--tests/ignored/run-me.spec.ts']).not.toBeDefined();
-    expect(targets['e2e-ci--not-tests/run-me.spec.ts']).not.toBeDefined();
-  });
+      expect(targets['e2e-ci--tests/skip-me.spec.ts']).not.toBeDefined();
+      expect(targets['e2e-ci--tests/ignored/run-me.spec.ts']).not.toBeDefined();
+      expect(targets['e2e-ci--not-tests/run-me.spec.ts']).not.toBeDefined();
+   });
 });
 
 async function mockPlaywrightConfig(
-  tempFs: TempFs,
-  config: PlaywrightTestConfig | string
+   tempFs: TempFs,
+   config: PlaywrightTestConfig | string
 ) {
-  await tempFs.writeFile(
-    'playwright.config.js',
-    typeof config === 'string'
-      ? config
-      : `module.exports = ${JSON.stringify(config)}`
-  );
+   await tempFs.writeFile(
+      'playwright.config.js',
+      typeof config === 'string'
+         ? config
+         : `module.exports = ${JSON.stringify(config)}`
+   );
 }

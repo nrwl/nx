@@ -14,14 +14,14 @@ To set that up, edit the `api` app's `project.json` file:
 
 ```json {% fileName="/apps/api/project.json" %}
 {
-  "targets": {
-    "serve": {
-      "executor": "@nx/js:node",
-      "options": {
-        "waitUntilTargets": ["db:serve"]
+   "targets": {
+      "serve": {
+         "executor": "@nx/js:node",
+         "options": {
+            "waitUntilTargets": ["db:serve"]
+         }
       }
-    }
-  }
+   }
 }
 ```
 

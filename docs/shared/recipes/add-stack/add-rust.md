@@ -51,9 +51,9 @@ npx -y create-nx-workspace@latest acme --preset=@monodon/rust --packageManager=p
 
 Using the preset provided by `@monodon/rust` will:
 
-- Remove any unnecessary configuration files for working with Rust projects, such as `tsconfig.json` and `.prettierrc`
-- Remove unnecessary dependencies, such as `@nx/js`, as we're working with a Rust project
-- Add a root `Cargo.toml` to manage workspace members
+-  Remove any unnecessary configuration files for working with Rust projects, such as `tsconfig.json` and `.prettierrc`
+-  Remove unnecessary dependencies, such as `@nx/js`, as we're working with a Rust project
+-  Add a root `Cargo.toml` to manage workspace members
 
 ## Create the application
 
@@ -222,5 +222,5 @@ nx build myapp
 
 ## More Documentation
 
-- [Rust](https://www.rust-lang.org/)
-- [@monodon/rust](https://github.com/cammisuli/monodon/tree/main/packages/rust)
+-  [Rust](https://www.rust-lang.org/)
+-  [@monodon/rust](https://github.com/cammisuli/monodon/tree/main/packages/rust)

@@ -11,10 +11,10 @@ Let's say your root `package.json` looks like this:
 
 ```json {% fileName="package.json" %}
 {
-  "name": "myorg",
-  "scripts": {
-    "docs": "node ./generateDocsSite.js"
-  }
+   "name": "myorg",
+   "scripts": {
+      "docs": "node ./generateDocsSite.js"
+   }
 }
 ```
 
@@ -26,11 +26,11 @@ To make Nx aware of the root `package.json` scripts, add an `"nx": {}` property 
 
 ```json {% fileName="package.json" %}
 {
-  "name": "myorg",
-  "nx": {},
-  "scripts": {
-    "docs": "node ./generateDocsSite.js"
-  }
+   "name": "myorg",
+   "nx": {},
+   "scripts": {
+      "docs": "node ./generateDocsSite.js"
+   }
 }
 ```
 
@@ -60,23 +60,23 @@ Our fully configured example would look like this:
 
 ```jsonc {% fileName="package.json" %}
 {
-  "name": "myorg",
-  "nx": {
-    // Nx can't infer the project dependency from the docs script,
-    // so we manually create a dependency on the store app
-    "implicitDependencies": ["store"],
-    "targets": {
-      "docs": {
-        // generates docs from source code of all dependencies
-        "inputs": ["^production"],
-        // the docs site is created under /docs
-        "outputs": ["{workspaceRoot}/docs"]
+   "name": "myorg",
+   "nx": {
+      // Nx can't infer the project dependency from the docs script,
+      // so we manually create a dependency on the store app
+      "implicitDependencies": ["store"],
+      "targets": {
+         "docs": {
+            // generates docs from source code of all dependencies
+            "inputs": ["^production"],
+            // the docs site is created under /docs
+            "outputs": ["{workspaceRoot}/docs"]
+         }
       }
-    }
-  },
-  "scripts": {
-    "docs": "node ./generateDocsSite.js"
-  }
+   },
+   "scripts": {
+      "docs": "node ./generateDocsSite.js"
+   }
 }
 ```
 
@@ -104,11 +104,11 @@ You can keep using `npm run docs` instead of the new `npx nx docs` version and s
 
 ```json {% fileName="package.json" %}
 {
-  "name": "myorg",
-  "nx": {},
-  "scripts": {
-    "docs": "nx exec -- node ./generateDocsSite.js"
-  }
+   "name": "myorg",
+   "nx": {},
+   "scripts": {
+      "docs": "nx exec -- node ./generateDocsSite.js"
+   }
 }
 ```
 

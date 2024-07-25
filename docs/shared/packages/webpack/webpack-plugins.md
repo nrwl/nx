@@ -290,22 +290,23 @@ const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
 const { join } = require('path');
 
 module.exports = {
-  output: {
-    path: join(__dirname, '../../dist/apps/demo'),
-  },
-  devServer: {
-    port: 4200,
-  },
-  plugins: [
-    new NxAppWebpackPlugin({
-      main: './src/main.ts',
-      tsConfig: './tsconfig.app.json',
-      index: './src/index.html',
-      styles: ['./src/styles.css'],
-      outputHashing: process.env['NODE_ENV'] === 'production' ? 'all' : 'none',
-      optimization: process.env['NODE_ENV'] === 'production',
-    }),
-  ],
+   output: {
+      path: join(__dirname, '../../dist/apps/demo'),
+   },
+   devServer: {
+      port: 4200,
+   },
+   plugins: [
+      new NxAppWebpackPlugin({
+         main: './src/main.ts',
+         tsConfig: './tsconfig.app.json',
+         index: './src/index.html',
+         styles: ['./src/styles.css'],
+         outputHashing:
+            process.env['NODE_ENV'] === 'production' ? 'all' : 'none',
+         optimization: process.env['NODE_ENV'] === 'production',
+      }),
+   ],
 };
 ```
 
@@ -326,12 +327,12 @@ const { NxReactWebpackPlugin } = require('@nx/react/webpack-plugin');
 const { join } = require('path');
 
 module.exports = {
-  // ...
-  plugins: [
-    new NxReactWebpackPlugin({
-      svgr: false,
-    }),
-  ],
+   // ...
+   plugins: [
+      new NxReactWebpackPlugin({
+         svgr: false,
+      }),
+   ],
 };
 ```
 
@@ -346,12 +347,12 @@ The plugins are used in conjunction with `composePlugins` utility to generate a 
 const { composePlugins } = require('@nx/webpack');
 
 function myCustomPlugin() {
-  // `options` and `context` are the target options and
-  // `@nx/webpack:webpack` executor context respectively.
-  return (webpackConfig, { options, context }) => {
-    // Do something with the config.
-    return webpackConfig;
-  };
+   // `options` and `context` are the target options and
+   // `@nx/webpack:webpack` executor context respectively.
+   return (webpackConfig, { options, context }) => {
+      // Do something with the config.
+      return webpackConfig;
+   };
 }
 
 module.export = composePlugins(withNx(), withReact(), myCustomPlugin());
@@ -376,8 +377,8 @@ Disable type checks (useful to speed up builds).
 const { composePlugins, withNx } = require('@nx/webpack');
 
 module.exports = composePlugins(withNx(), (config) => {
-  // Further customize webpack config
-  return config;
+   // Further customize webpack config
+   return config;
 });
 ```
 
@@ -464,16 +465,16 @@ Enables the use of subresource integrity validation.
 const { composePlugins, withNx, withWeb } = require('@nx/webpack');
 
 module.exports = composePlugins(
-  // always pass withNx() first
-  withNx(),
-  // add web functionality
-  withWeb({
-    styles: ['my-app/src/styles.css'],
-  }),
-  (config) => {
-    // Further customize webpack config
-    return config;
-  }
+   // always pass withNx() first
+   withNx(),
+   // add web functionality
+   withWeb({
+      styles: ['my-app/src/styles.css'],
+   }),
+   (config) => {
+      // Further customize webpack config
+      return config;
+   }
 );
 ```
 
@@ -499,16 +500,16 @@ const { composePlugins, withNx } = require('@nx/webpack');
 const { withReact } = require('@nx/react');
 
 module.exports = composePlugins(
-  withNx(), // always pass withNx() first
-  withReact({
-    styles: ['my-app/src/styles.css'],
-    svgr: false,
-    postcssConfig: 'my-app/postcss',
-  }),
-  (config) => {
-    // Further customize webpack config
-    return config;
-  }
+   withNx(), // always pass withNx() first
+   withReact({
+      styles: ['my-app/src/styles.css'],
+      svgr: false,
+      postcssConfig: 'my-app/postcss',
+   }),
+   (config) => {
+      // Further customize webpack config
+      return config;
+   }
 );
 ```
 
@@ -570,10 +571,10 @@ Takes a library name and the
 current [share configuration](https://webpack.js.org/plugins/module-federation-plugin/#sharing-hints), and returns one
 of
 
-- `false` - Exclude this library from shared.
-- `undefined` - Keep Nx sharing defaults.
-- `SharedLibraryConfig` - Override Nx sharing defaults
-  with [custom configuration](https://webpack.js.org/plugins/module-federation-plugin/#sharing-hints).
+-  `false` - Exclude this library from shared.
+-  `undefined` - Keep Nx sharing defaults.
+-  `SharedLibraryConfig` - Override Nx sharing defaults
+   with [custom configuration](https://webpack.js.org/plugins/module-federation-plugin/#sharing-hints).
 
 ##### additionalShared
 
@@ -594,13 +595,13 @@ const { withReact, withModuleFederation } = require('@nx/react');
 const moduleFederationConfig = require('./module-federation.config');
 
 module.exports = composePlugins(
-  withNx(),
-  withReact(),
-  withModuleFederation(moduleFederationConfig),
-  (config) => {
-    // Further customize webpack config
-    return config;
-  }
+   withNx(),
+   withReact(),
+   withModuleFederation(moduleFederationConfig),
+   (config) => {
+      // Further customize webpack config
+      return config;
+   }
 );
 ```
 
@@ -609,8 +610,8 @@ module.exports = composePlugins(
 
 ```js
 const {
-  composePlugins,
-  withModuleFederation,
+   composePlugins,
+   withModuleFederation,
 } = require('@nx/angular/module-federation');
 
 // Host config
@@ -618,11 +619,11 @@ const {
 const moduleFederationConfig = require('./module-federation.config');
 
 module.exports = composePlugins(
-  withModuleFederation(moduleFederationConfig),
-  (config) => {
-    // Further customize webpack config
-    return config;
-  }
+   withModuleFederation(moduleFederationConfig),
+   (config) => {
+      // Further customize webpack config
+      return config;
+   }
 );
 ```
 
@@ -638,13 +639,13 @@ const { withReact, withModuleFederatioForSSRn } = require('@nx/react');
 const moduleFederationConfig = require('./module-federation.config');
 
 module.exports = composePlugins(
-  withNx(),
-  withReact(),
-  withModuleFederationForSSR(moduleFederationConfig),
-  (config) => {
-    // Further customize webpack config
-    return config;
-  }
+   withNx(),
+   withReact(),
+   withModuleFederationForSSR(moduleFederationConfig),
+   (config) => {
+      // Further customize webpack config
+      return config;
+   }
 );
 ```
 
@@ -653,8 +654,8 @@ module.exports = composePlugins(
 
 ```js
 const {
-  composePlugins,
-  withModuleFederationForSSR,
+   composePlugins,
+   withModuleFederationForSSR,
 } = require('@nx/angular/module-federation');
 
 // Host config
@@ -662,11 +663,11 @@ const {
 const moduleFederationConfig = require('./module-federation.config');
 
 module.exports = composePlugins(
-  withModuleFederationForSSR(moduleFederationConfig),
-  (config) => {
-    // Further customize webpack config
-    return config;
-  }
+   withModuleFederationForSSR(moduleFederationConfig),
+   (config) => {
+      // Further customize webpack config
+      return config;
+   }
 );
 ```
 

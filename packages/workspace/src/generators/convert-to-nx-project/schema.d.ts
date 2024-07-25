@@ -1,7 +1,7 @@
 export interface Schema {
-  project?: string;
-  all?: boolean;
+   project?: string;
+   all?: boolean;
 
-  reformat?: boolean;
-  skipFormat?: boolean;
+   reformat?: boolean;
+   skipFormat?: boolean;
 }

@@ -4,16 +4,16 @@ The `build-list` command allows to check the details of your Expo Application Se
 
 ```json
 {
-  "name": "mobile",
-  //...
-  "targets": {
-    //...
-    "build-list": {
-      "executor": "@nx/expo:build-list",
-      "options": {}
-    }
-    //...
-  }
+   "name": "mobile",
+   //...
+   "targets": {
+      //...
+      "build-list": {
+         "executor": "@nx/expo:build-list",
+         "options": {}
+      }
+      //...
+   }
 }
 ```
 

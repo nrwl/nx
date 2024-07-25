@@ -15,20 +15,20 @@ const code = `bootstrap({
 
 const indexOfPropertyName = 13; // Usually determined by analyzing an AST.
 const updatedCode = applyChangesToString(code, [
-  {
-    type: ChangeType.Insert,
-    index: indexOfPropertyName,
-    text: 'element',
-  },
-  {
-    type: ChangeType.Delete,
-    start: indexOfPropertyName,
-    length: 6,
-  },
+   {
+      type: ChangeType.Insert,
+      index: indexOfPropertyName,
+      text: 'element',
+   },
+   {
+      type: ChangeType.Delete,
+      start: indexOfPropertyName,
+      length: 6,
+   },
 ]);
 
 bootstrap({
-  element: document.querySelector('#app'),
+   element: document.querySelector('#app'),
 });
 ```
 

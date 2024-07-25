@@ -1,11 +1,11 @@
 import {
-  addProjectConfiguration,
-  formatFiles,
-  GeneratorCallback,
-  readNxJson,
-  runTasksInSerial,
-  toJS,
-  Tree,
+   addProjectConfiguration,
+   formatFiles,
+   GeneratorCallback,
+   readNxJson,
+   runTasksInSerial,
+   toJS,
+   Tree,
 } from '@nx/devkit';
 import { Linter } from '@nx/eslint';
 import { initGenerator as jsInitGenerator } from '@nx/js';
@@ -21,84 +21,84 @@ import { ensureDependencies } from '../../utils/ensure-dependencies';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 
 export function applicationGenerator(tree: Tree, options: Schema) {
-  return applicationGeneratorInternal(tree, { addPlugin: false, ...options });
+   return applicationGeneratorInternal(tree, { addPlugin: false, ...options });
 }
 
 export async function applicationGeneratorInternal(
-  tree: Tree,
-  _options: Schema
+   tree: Tree,
+   _options: Schema
 ): Promise<GeneratorCallback> {
-  const options = await normalizeOptions(tree, _options);
-  const nxJson = readNxJson(tree);
+   const options = await normalizeOptions(tree, _options);
+   const nxJson = readNxJson(tree);
 
-  options.addPlugin ??=
-    process.env.NX_ADD_PLUGINS !== 'false' &&
-    nxJson.useInferencePlugins !== false;
+   options.addPlugin ??=
+      process.env.NX_ADD_PLUGINS !== 'false' &&
+      nxJson.useInferencePlugins !== false;
 
-  const tasks: GeneratorCallback[] = [];
+   const tasks: GeneratorCallback[] = [];
 
-  addProjectConfiguration(tree, options.projectName, {
-    root: options.appProjectRoot,
-    projectType: 'application',
-    sourceRoot: `${options.appProjectRoot}/src`,
-    targets: {},
-  });
+   addProjectConfiguration(tree, options.projectName, {
+      root: options.appProjectRoot,
+      projectType: 'application',
+      sourceRoot: `${options.appProjectRoot}/src`,
+      targets: {},
+   });
 
-  tasks.push(
-    await jsInitGenerator(tree, {
-      ...options,
-      tsConfigName: options.rootProject
-        ? 'tsconfig.json'
-        : 'tsconfig.base.json',
-      skipFormat: true,
-    })
-  );
-  tasks.push(
-    await vueInitGenerator(tree, {
-      ...options,
-      skipFormat: true,
-    })
-  );
-  if (!options.skipPackageJson) {
-    tasks.push(ensureDependencies(tree, options));
-  }
+   tasks.push(
+      await jsInitGenerator(tree, {
+         ...options,
+         tsConfigName: options.rootProject
+            ? 'tsconfig.json'
+            : 'tsconfig.base.json',
+         skipFormat: true,
+      })
+   );
+   tasks.push(
+      await vueInitGenerator(tree, {
+         ...options,
+         skipFormat: true,
+      })
+   );
+   if (!options.skipPackageJson) {
+      tasks.push(ensureDependencies(tree, options));
+   }
 
-  if (!options.rootProject) {
-    extractTsConfigBase(tree);
-  }
+   if (!options.rootProject) {
+      extractTsConfigBase(tree);
+   }
 
-  createApplicationFiles(tree, options);
+   createApplicationFiles(tree, options);
 
-  tasks.push(
-    await addLinting(
-      tree,
-      {
-        name: options.projectName,
-        projectRoot: options.appProjectRoot,
-        linter: options.linter ?? Linter.EsLint,
-        unitTestRunner: options.unitTestRunner,
-        skipPackageJson: options.skipPackageJson,
-        setParserOptionsProject: options.setParserOptionsProject,
-        rootProject: options.rootProject,
-        addPlugin: options.addPlugin,
-      },
-      'app'
-    )
-  );
+   tasks.push(
+      await addLinting(
+         tree,
+         {
+            name: options.projectName,
+            projectRoot: options.appProjectRoot,
+            linter: options.linter ?? Linter.EsLint,
+            unitTestRunner: options.unitTestRunner,
+            skipPackageJson: options.skipPackageJson,
+            setParserOptionsProject: options.setParserOptionsProject,
+            rootProject: options.rootProject,
+            addPlugin: options.addPlugin,
+         },
+         'app'
+      )
+   );
 
-  tasks.push(await addVite(tree, options));
+   tasks.push(await addVite(tree, options));
 
-  tasks.push(await addE2e(tree, options));
+   tasks.push(await addE2e(tree, options));
 
-  if (options.js) toJS(tree);
+   if (options.js) toJS(tree);
 
-  if (!options.skipFormat) await formatFiles(tree);
+   if (!options.skipFormat) await formatFiles(tree);
 
-  tasks.push(() => {
-    logShowProjectCommand(options.projectName);
-  });
+   tasks.push(() => {
+      logShowProjectCommand(options.projectName);
+   });
 
-  return runTasksInSerial(...tasks);
+   return runTasksInSerial(...tasks);
 }
 
 export default applicationGenerator;

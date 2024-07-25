@@ -11,199 +11,199 @@ import * as ora from 'ora';
 import * as open from 'open';
 
 function printCloudConnectionDisabledMessage() {
-  output.error({
-    title: `Connections to Nx Cloud are disabled for this workspace`,
-    bodyLines: [
-      `This was an intentional decision by someone on your team.`,
-      `Nx Cloud cannot and will not be enabled.`,
-      ``,
-      `To allow connections to Nx Cloud again, remove the 'neverConnectToCloud'`,
-      `property in nx.json.`,
-    ],
-  });
+   output.error({
+      title: `Connections to Nx Cloud are disabled for this workspace`,
+      bodyLines: [
+         `This was an intentional decision by someone on your team.`,
+         `Nx Cloud cannot and will not be enabled.`,
+         ``,
+         `To allow connections to Nx Cloud again, remove the 'neverConnectToCloud'`,
+         `property in nx.json.`,
+      ],
+   });
 }
 
 function getRootPackageName(tree: Tree): string {
-  let packageJson;
-  try {
-    packageJson = readJson(tree, 'package.json');
-  } catch (e) {}
-  return packageJson?.name ?? 'my-workspace';
+   let packageJson;
+   try {
+      packageJson = readJson(tree, 'package.json');
+   } catch (e) {}
+   return packageJson?.name ?? 'my-workspace';
 }
 
 function getNxInitDate(): string | null {
-  try {
-    const nxInitIso = execSync(
-      'git log --diff-filter=A --follow --format=%aI -- nx.json | tail -1',
-      { stdio: 'pipe' }
-    )
-      .toString()
-      .trim();
-    const nxInitDate = new Date(nxInitIso);
-    return nxInitDate.toISOString();
-  } catch (e) {
-    return null;
-  }
+   try {
+      const nxInitIso = execSync(
+         'git log --diff-filter=A --follow --format=%aI -- nx.json | tail -1',
+         { stdio: 'pipe' }
+      )
+         .toString()
+         .trim();
+      const nxInitDate = new Date(nxInitIso);
+      return nxInitDate.toISOString();
+   } catch (e) {
+      return null;
+   }
 }
 
 async function createNxCloudWorkspace(
-  workspaceName: string,
-  installationSource: string,
-  nxInitDate: string | null
+   workspaceName: string,
+   installationSource: string,
+   nxInitDate: string | null
 ): Promise<{ token: string; url: string }> {
-  const apiUrl = getCloudUrl();
-  const response = await require('axios').post(
-    `${apiUrl}/nx-cloud/create-org-and-workspace`,
-    {
-      workspaceName,
-      installationSource,
-      nxInitDate,
-    }
-  );
+   const apiUrl = getCloudUrl();
+   const response = await require('axios').post(
+      `${apiUrl}/nx-cloud/create-org-and-workspace`,
+      {
+         workspaceName,
+         installationSource,
+         nxInitDate,
+      }
+   );
 
-  if (response.data.message) {
-    throw new Error(response.data.message);
-  }
+   if (response.data.message) {
+      throw new Error(response.data.message);
+   }
 
-  return response.data;
+   return response.data;
 }
 
 async function printSuccessMessage(
-  token: string | undefined,
-  installationSource: string,
-  usesGithub: boolean
+   token: string | undefined,
+   installationSource: string,
+   usesGithub: boolean
 ) {
-  const connectCloudUrl = await shortenedCloudUrl(
-    installationSource,
-    token,
-    usesGithub
-  );
+   const connectCloudUrl = await shortenedCloudUrl(
+      installationSource,
+      token,
+      usesGithub
+   );
 
-  if (installationSource === 'nx-connect' && usesGithub) {
-    try {
-      const cloudConnectSpinner = ora(
-        `Opening Nx Cloud ${connectCloudUrl} in your browser to connect your workspace.`
-      ).start();
-      await sleep(2000);
-      open(connectCloudUrl);
-      cloudConnectSpinner.succeed();
-    } catch (e) {
-      output.note({
-        title: `Your Nx Cloud workspace is ready.`,
-        bodyLines: [
-          `To claim it, connect it to your Nx Cloud account:`,
-          `- Go to the following URL to connect your workspace to Nx Cloud:`,
-          '',
-          `${connectCloudUrl}`,
-        ],
-      });
-    }
-  } else {
-    if (installationSource === 'create-nx-workspace') {
-      output.note({
-        title: `Your Nx Cloud workspace is ready.`,
-        bodyLines: [
-          `To claim it, connect it to your Nx Cloud account:`,
-          `- Push your repository to your git hosting provider.`,
-          `- Go to the following URL to connect your workspace to Nx Cloud:`,
-          '',
-          `${connectCloudUrl}`,
-        ],
-      });
-    } else {
-      output.note({
-        title: `Your Nx Cloud workspace is ready.`,
-        bodyLines: [
-          `To claim it, connect it to your Nx Cloud account:`,
-          `- Commit and push your changes.`,
-          `- Create a pull request for the changes.`,
-          `- Go to the following URL to connect your workspace to Nx Cloud:`,
-          '',
-          `${connectCloudUrl}`,
-        ],
-      });
-    }
-  }
+   if (installationSource === 'nx-connect' && usesGithub) {
+      try {
+         const cloudConnectSpinner = ora(
+            `Opening Nx Cloud ${connectCloudUrl} in your browser to connect your workspace.`
+         ).start();
+         await sleep(2000);
+         open(connectCloudUrl);
+         cloudConnectSpinner.succeed();
+      } catch (e) {
+         output.note({
+            title: `Your Nx Cloud workspace is ready.`,
+            bodyLines: [
+               `To claim it, connect it to your Nx Cloud account:`,
+               `- Go to the following URL to connect your workspace to Nx Cloud:`,
+               '',
+               `${connectCloudUrl}`,
+            ],
+         });
+      }
+   } else {
+      if (installationSource === 'create-nx-workspace') {
+         output.note({
+            title: `Your Nx Cloud workspace is ready.`,
+            bodyLines: [
+               `To claim it, connect it to your Nx Cloud account:`,
+               `- Push your repository to your git hosting provider.`,
+               `- Go to the following URL to connect your workspace to Nx Cloud:`,
+               '',
+               `${connectCloudUrl}`,
+            ],
+         });
+      } else {
+         output.note({
+            title: `Your Nx Cloud workspace is ready.`,
+            bodyLines: [
+               `To claim it, connect it to your Nx Cloud account:`,
+               `- Commit and push your changes.`,
+               `- Create a pull request for the changes.`,
+               `- Go to the following URL to connect your workspace to Nx Cloud:`,
+               '',
+               `${connectCloudUrl}`,
+            ],
+         });
+      }
+   }
 }
 
 interface ConnectToNxCloudOptions {
-  analytics?: boolean;
-  installationSource?: string;
-  hideFormatLogs?: boolean;
-  github?: boolean;
-  directory?: string;
+   analytics?: boolean;
+   installationSource?: string;
+   hideFormatLogs?: boolean;
+   github?: boolean;
+   directory?: string;
 }
 
 function addNxCloudOptionsToNxJson(
-  tree: Tree,
-  nxJson: NxJsonConfiguration,
-  token: string
+   tree: Tree,
+   nxJson: NxJsonConfiguration,
+   token: string
 ) {
-  nxJson ??= {
-    extends: 'nx/presets/npm.json',
-  };
-  nxJson.nxCloudAccessToken = token;
-  const overrideUrl = process.env.NX_CLOUD_API || process.env.NRWL_API;
-  if (overrideUrl) {
-    (nxJson as any).nxCloudUrl = overrideUrl;
-  }
-  updateNxJson(tree, nxJson);
+   nxJson ??= {
+      extends: 'nx/presets/npm.json',
+   };
+   nxJson.nxCloudAccessToken = token;
+   const overrideUrl = process.env.NX_CLOUD_API || process.env.NRWL_API;
+   if (overrideUrl) {
+      (nxJson as any).nxCloudUrl = overrideUrl;
+   }
+   updateNxJson(tree, nxJson);
 }
 
 export async function connectToNxCloud(
-  tree: Tree,
-  schema: ConnectToNxCloudOptions
+   tree: Tree,
+   schema: ConnectToNxCloudOptions
 ) {
-  schema.installationSource ??= 'user';
+   schema.installationSource ??= 'user';
 
-  const nxJson = readNxJson(tree) as
-    | null
-    | (NxJsonConfiguration & { neverConnectToCloud: boolean });
+   const nxJson = readNxJson(tree) as
+      | null
+      | (NxJsonConfiguration & { neverConnectToCloud: boolean });
 
-  if (nxJson?.neverConnectToCloud) {
-    return () => {
-      printCloudConnectionDisabledMessage();
-    };
-  } else {
-    const usesGithub = await repoUsesGithub(schema.github);
+   if (nxJson?.neverConnectToCloud) {
+      return () => {
+         printCloudConnectionDisabledMessage();
+      };
+   } else {
+      const usesGithub = await repoUsesGithub(schema.github);
 
-    let responseFromCreateNxCloudWorkspace:
-      | {
-          token: string;
-          url: string;
-        }
-      | undefined;
+      let responseFromCreateNxCloudWorkspace:
+         | {
+              token: string;
+              url: string;
+           }
+         | undefined;
 
-    // do NOT create Nx Cloud token (createNxCloudWorkspace)
-    // if user is using github and is running nx-connect
-    if (!(usesGithub && schema.installationSource === 'nx-connect')) {
-      responseFromCreateNxCloudWorkspace = await createNxCloudWorkspace(
-        getRootPackageName(tree),
-        schema.installationSource,
-        getNxInitDate()
-      );
+      // do NOT create Nx Cloud token (createNxCloudWorkspace)
+      // if user is using github and is running nx-connect
+      if (!(usesGithub && schema.installationSource === 'nx-connect')) {
+         responseFromCreateNxCloudWorkspace = await createNxCloudWorkspace(
+            getRootPackageName(tree),
+            schema.installationSource,
+            getNxInitDate()
+         );
 
-      addNxCloudOptionsToNxJson(
-        tree,
-        nxJson,
-        responseFromCreateNxCloudWorkspace?.token
-      );
+         addNxCloudOptionsToNxJson(
+            tree,
+            nxJson,
+            responseFromCreateNxCloudWorkspace?.token
+         );
 
-      await formatChangedFilesWithPrettierIfAvailable(tree, {
-        silent: schema.hideFormatLogs,
-      });
-    }
-    return async () =>
-      await printSuccessMessage(
-        responseFromCreateNxCloudWorkspace?.token,
-        schema.installationSource,
-        usesGithub
-      );
-  }
+         await formatChangedFilesWithPrettierIfAvailable(tree, {
+            silent: schema.hideFormatLogs,
+         });
+      }
+      return async () =>
+         await printSuccessMessage(
+            responseFromCreateNxCloudWorkspace?.token,
+            schema.installationSource,
+            usesGithub
+         );
+   }
 }
 
 function sleep(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 export default connectToNxCloud;

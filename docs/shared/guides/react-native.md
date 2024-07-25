@@ -96,9 +96,9 @@ npx nx run-ios mobile
 
 Try out other commands as well.
 
-- `nx lint mobile` to lint the application
-- `nx test mobile` to run unit test on the application using Jest
-- `nx sync-deps mobile` to sync app dependencies to its `package.json`.
+-  `nx lint mobile` to lint the application
+-  `nx test mobile` to run unit test on the application using Jest
+-  `nx sync-deps mobile` to sync app dependencies to its `package.json`.
 
 ### Release build
 
@@ -178,9 +178,9 @@ npx nx g @nx/react-native:app mobile --directory=apps/mobile
 
 Nx allows you to create libraries with just one command. Some reasons you might want to create a library include:
 
-- Share code between applications
-- Publish a package to be used outside the monorepo
-- Better visualize the architecture using `npx nx graph`
+-  Share code between applications
+-  Publish a package to be used outside the monorepo
+-  Better visualize the architecture using `npx nx graph`
 
 To generate a new library run:
 
@@ -219,8 +219,8 @@ happynrwl/
 
 Run:
 
-- `npx nx test shared-ui-layout` to test the library
-- `npx nx lint shared-ui-layout` to lint the library
+-  `npx nx test shared-ui-layout` to test the library
+-  `npx nx lint shared-ui-layout` to lint the library
 
 To generate a new component inside `shared-ui-layout` run:
 
@@ -253,11 +253,11 @@ import { SafeAreaView } from 'react-native';
 import { Layout } from '@happynrwl/shared-ui-layout';
 
 const App = () => {
-  return (
-    <SafeAreaView>
-      <Layout />
-    </SafeAreaView>
-  );
+   return (
+      <SafeAreaView>
+         <Layout />
+      </SafeAreaView>
+   );
 };
 
 export default App;

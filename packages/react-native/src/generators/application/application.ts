@@ -1,12 +1,12 @@
 import {
-  formatFiles,
-  GeneratorCallback,
-  joinPathFragments,
-  output,
-  readCachedProjectGraph,
-  readJson,
-  runTasksInSerial,
-  Tree,
+   formatFiles,
+   GeneratorCallback,
+   joinPathFragments,
+   output,
+   readCachedProjectGraph,
+   readJson,
+   runTasksInSerial,
+   Tree,
 } from '@nx/devkit';
 import { initGenerator as jsInitGenerator } from '@nx/js';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
@@ -28,113 +28,113 @@ import { syncDeps } from '../../executors/sync-deps/sync-deps.impl';
 import { PackageJson } from 'nx/src/utils/package-json';
 
 export async function reactNativeApplicationGenerator(
-  host: Tree,
-  schema: Schema
+   host: Tree,
+   schema: Schema
 ): Promise<GeneratorCallback> {
-  return await reactNativeApplicationGeneratorInternal(host, {
-    addPlugin: false,
-    projectNameAndRootFormat: 'derived',
-    ...schema,
-  });
+   return await reactNativeApplicationGeneratorInternal(host, {
+      addPlugin: false,
+      projectNameAndRootFormat: 'derived',
+      ...schema,
+   });
 }
 
 export async function reactNativeApplicationGeneratorInternal(
-  host: Tree,
-  schema: Schema
+   host: Tree,
+   schema: Schema
 ): Promise<GeneratorCallback> {
-  const options = await normalizeOptions(host, schema);
+   const options = await normalizeOptions(host, schema);
 
-  const tasks: GeneratorCallback[] = [];
-  const jsInitTask = await jsInitGenerator(host, {
-    ...schema,
-    skipFormat: true,
-  });
-  tasks.push(jsInitTask);
-  const initTask = await initGenerator(host, { ...options, skipFormat: true });
-  tasks.push(initTask);
+   const tasks: GeneratorCallback[] = [];
+   const jsInitTask = await jsInitGenerator(host, {
+      ...schema,
+      skipFormat: true,
+   });
+   tasks.push(jsInitTask);
+   const initTask = await initGenerator(host, { ...options, skipFormat: true });
+   tasks.push(initTask);
 
-  if (!options.skipPackageJson) {
-    tasks.push(ensureDependencies(host));
-  }
+   if (!options.skipPackageJson) {
+      tasks.push(ensureDependencies(host));
+   }
 
-  createApplicationFiles(host, options);
-  addProject(host, options);
+   createApplicationFiles(host, options);
+   addProject(host, options);
 
-  const lintTask = await addLinting(host, {
-    ...options,
-    projectRoot: options.appProjectRoot,
-    tsConfigPaths: [
-      joinPathFragments(options.appProjectRoot, 'tsconfig.app.json'),
-    ],
-  });
-  tasks.push(lintTask);
-
-  const jestTask = await addJest(
-    host,
-    options.unitTestRunner,
-    options.projectName,
-    options.appProjectRoot,
-    options.js,
-    options.skipPackageJson,
-    options.addPlugin
-  );
-  tasks.push(jestTask);
-
-  const webTask = await webConfigurationGenerator(host, {
-    ...options,
-    project: options.name,
-    skipFormat: true,
-  });
-  tasks.push(webTask);
-
-  const e2eTask = await addE2e(host, options);
-  tasks.push(e2eTask);
-
-  const chmodTaskGradlewTask = chmodAndroidGradlewFilesTask(
-    joinPathFragments(host.root, options.androidProjectRoot)
-  );
-  tasks.push(chmodTaskGradlewTask);
-
-  const podInstallTask = runPodInstall(
-    joinPathFragments(host.root, options.iosProjectRoot)
-  );
-  if (options.install) {
-    const projectPackageJsonPath = joinPathFragments(
-      options.appProjectRoot,
-      'package.json'
-    );
-
-    const workspacePackageJson = readJson<PackageJson>(host, 'package.json');
-    const projectPackageJson = readJson<PackageJson>(
-      host,
-      projectPackageJsonPath
-    );
-
-    await syncDeps(
-      options.name,
-      projectPackageJson,
-      projectPackageJsonPath,
-      workspacePackageJson
-    );
-    tasks.push(podInstallTask);
-  } else {
-    output.log({
-      title: 'Skip `pod install`',
-      bodyLines: [
-        `run 'nx run ${options.name}:pod-install' to install native modules before running iOS app`,
+   const lintTask = await addLinting(host, {
+      ...options,
+      projectRoot: options.appProjectRoot,
+      tsConfigPaths: [
+         joinPathFragments(options.appProjectRoot, 'tsconfig.app.json'),
       ],
-    });
-  }
+   });
+   tasks.push(lintTask);
 
-  if (!options.skipFormat) {
-    await formatFiles(host);
-  }
+   const jestTask = await addJest(
+      host,
+      options.unitTestRunner,
+      options.projectName,
+      options.appProjectRoot,
+      options.js,
+      options.skipPackageJson,
+      options.addPlugin
+   );
+   tasks.push(jestTask);
 
-  tasks.push(() => {
-    logShowProjectCommand(options.projectName);
-  });
+   const webTask = await webConfigurationGenerator(host, {
+      ...options,
+      project: options.name,
+      skipFormat: true,
+   });
+   tasks.push(webTask);
 
-  return runTasksInSerial(...tasks);
+   const e2eTask = await addE2e(host, options);
+   tasks.push(e2eTask);
+
+   const chmodTaskGradlewTask = chmodAndroidGradlewFilesTask(
+      joinPathFragments(host.root, options.androidProjectRoot)
+   );
+   tasks.push(chmodTaskGradlewTask);
+
+   const podInstallTask = runPodInstall(
+      joinPathFragments(host.root, options.iosProjectRoot)
+   );
+   if (options.install) {
+      const projectPackageJsonPath = joinPathFragments(
+         options.appProjectRoot,
+         'package.json'
+      );
+
+      const workspacePackageJson = readJson<PackageJson>(host, 'package.json');
+      const projectPackageJson = readJson<PackageJson>(
+         host,
+         projectPackageJsonPath
+      );
+
+      await syncDeps(
+         options.name,
+         projectPackageJson,
+         projectPackageJsonPath,
+         workspacePackageJson
+      );
+      tasks.push(podInstallTask);
+   } else {
+      output.log({
+         title: 'Skip `pod install`',
+         bodyLines: [
+            `run 'nx run ${options.name}:pod-install' to install native modules before running iOS app`,
+         ],
+      });
+   }
+
+   if (!options.skipFormat) {
+      await formatFiles(host);
+   }
+
+   tasks.push(() => {
+      logShowProjectCommand(options.projectName);
+   });
+
+   return runTasksInSerial(...tasks);
 }
 
 export default reactNativeApplicationGenerator;

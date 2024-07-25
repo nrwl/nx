@@ -62,4 +62,4 @@ nx g @nx/vue:lib my-lib
 
 ## More Documentation
 
-- [Vue Standalone Tutorial](/getting-started/tutorials/vue-standalone-tutorial)
+-  [Vue Standalone Tutorial](/getting-started/tutorials/vue-standalone-tutorial)

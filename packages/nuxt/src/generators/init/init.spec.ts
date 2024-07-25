@@ -5,34 +5,34 @@ import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { nuxtInitGenerator } from './init';
 
 describe('init', () => {
-  let tree: Tree;
+   let tree: Tree;
 
-  beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
-  });
+   beforeEach(() => {
+      tree = createTreeWithEmptyWorkspace();
+   });
 
-  it('should install required dependencies', async () => {
-    await nuxtInitGenerator(tree, {
-      skipFormat: false,
-    });
-    const packageJson = readJson(tree, 'package.json');
-    expect(packageJson).toMatchSnapshot();
-  });
+   it('should install required dependencies', async () => {
+      await nuxtInitGenerator(tree, {
+         skipFormat: false,
+      });
+      const packageJson = readJson(tree, 'package.json');
+      expect(packageJson).toMatchSnapshot();
+   });
 
-  beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
-  });
+   beforeEach(() => {
+      tree = createTreeWithEmptyWorkspace();
+   });
 
-  it('should not add targets', async () => {
-    await nuxtInitGenerator(tree, {
-      skipFormat: false,
-    });
-    const nxJson = readNxJson(tree);
-    expect(nxJson.plugins).toMatchObject([
-      {
-        options: { buildTargetName: 'build', serveTargetName: 'serve' },
-        plugin: '@nx/nuxt/plugin',
-      },
-    ]);
-  });
+   it('should not add targets', async () => {
+      await nuxtInitGenerator(tree, {
+         skipFormat: false,
+      });
+      const nxJson = readNxJson(tree);
+      expect(nxJson.plugins).toMatchObject([
+         {
+            options: { buildTargetName: 'build', serveTargetName: 'serve' },
+            plugin: '@nx/nuxt/plugin',
+         },
+      ]);
+   });
 });

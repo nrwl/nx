@@ -8,20 +8,20 @@ within an Nx workspace. It also enables using Angular Devkit builders and schema
 
 Among other things, it provides:
 
-- Integration with libraries such as:
-  - Cypress
-  - ESLint
-  - Jest
-  - Playwright
-  - Storybook
-- Generators to help scaffold code quickly, including:
-  - Micro Frontends
-  - Libraries, both internal to your codebase and publishable to npm
-  - Projects with Tailwind CSS
-- Executors providing extra capabilities on top of the Angular Devkit builders:
-  - Provide ESBuild plugins
-  - Provide custom webpack configurations
-- Utilities for automatic workspace refactoring
+-  Integration with libraries such as:
+   -  Cypress
+   -  ESLint
+   -  Jest
+   -  Playwright
+   -  Storybook
+-  Generators to help scaffold code quickly, including:
+   -  Micro Frontends
+   -  Libraries, both internal to your codebase and publishable to npm
+   -  Projects with Tailwind CSS
+-  Executors providing extra capabilities on top of the Angular Devkit builders:
+   -  Provide ESBuild plugins
+   -  Provide custom webpack configurations
+-  Utilities for automatic workspace refactoring
 
 {% callout type="note" title="Currently using the Angular CLI?" %}
 You can easily and mostly **automatically migrate from an Angular CLI** project to Nx! Learn
@@ -75,9 +75,9 @@ nx g @nx/angular:app appName
 
 By default, the application will be generated with:
 
-- ESLint as the linter.
-- Jest as the unit test runner.
-- Cypress as the E2E test runner.
+-  ESLint as the linter.
+-  Jest as the unit test runner.
+-  Cypress as the E2E test runner.
 
 We can then serve, build, test, lint, and run e2e tests on the application with the following commands:
 
@@ -99,8 +99,8 @@ nx g @nx/angular:lib libName
 
 By default, the library will be generated with:
 
-- ESLint as the linter.
-- Jest as the unit test runner.
+-  ESLint as the linter.
+-  Jest as the unit test runner.
 
 We can then test and lint the library with the following commands:
 
@@ -111,9 +111,9 @@ nx lint libName
 
 Read more about:
 
-- [Creating Libraries](/concepts/decisions/project-size)
-- [Library Types](/concepts/decisions/project-dependency-rules)
-- [Buildable and Publishable Libraries](/concepts/buildable-and-publishable-libraries)
+-  [Creating Libraries](/concepts/decisions/project-size)
+-  [Library Types](/concepts/decisions/project-dependency-rules)
+-  [Buildable and Publishable Libraries](/concepts/buildable-and-publishable-libraries)
 
 ### Fallback to `@schematics/angular`
 
@@ -127,8 +127,8 @@ nx g @nx/angular:service my-service
 
 ## More Documentation
 
-- [Angular Standalone Tutorial](/getting-started/tutorials/angular-standalone-tutorial)
-- [Angular Monorepo Tutorial](/getting-started/tutorials/angular-monorepo-tutorial)
-- [Migrating from the Angular CLI](/recipes/angular/migration/angular)
-- [Setup Module Federation with Angular and Nx](/concepts/module-federation/faster-builds-with-module-federation)
-- [Using Tailwind CSS with Angular projects](/recipes/angular/using-tailwind-css-with-angular-projects)
+-  [Angular Standalone Tutorial](/getting-started/tutorials/angular-standalone-tutorial)
+-  [Angular Monorepo Tutorial](/getting-started/tutorials/angular-monorepo-tutorial)
+-  [Migrating from the Angular CLI](/recipes/angular/migration/angular)
+-  [Setup Module Federation with Angular and Nx](/concepts/module-federation/faster-builds-with-module-federation)
+-  [Using Tailwind CSS with Angular projects](/recipes/angular/using-tailwind-css-with-angular-projects)

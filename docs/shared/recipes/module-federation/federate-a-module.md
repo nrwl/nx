@@ -28,7 +28,7 @@ Update the `hello.ts` file with the following code:
 
 ```typescript {% fileName="hello/src/lib/hello.ts" %}
 export default function hello(): string {
-  return 'Hello from Nx';
+   return 'Hello from Nx';
 }
 ```
 
@@ -65,7 +65,7 @@ If the remote provided does not exist (in this instance _greeting_), Nx will cre
 
 This command will:
 
-- Adds a module entry to the `greeting` remote module federation config file.
+-  Adds a module entry to the `greeting` remote module federation config file.
 
 {% tabs %}
 {%tab label="Typescript Config File"%}
@@ -74,11 +74,11 @@ This command will:
 import { ModuleFederationConfig } from '@nx/webpack';
 
 const config: ModuleFederationConfig = {
-  name: 'greeting',
-  exposes: {
-    './Module': './src/remote-entry.ts',
-    './Hello': 'hello/src/index.ts', // <-- this line was added,
-  },
+   name: 'greeting',
+   exposes: {
+      './Module': './src/remote-entry.ts',
+      './Hello': 'hello/src/index.ts', // <-- this line was added,
+   },
 };
 export default config;
 ```
@@ -88,25 +88,25 @@ export default config;
 
 ```javascript {% fileName="greeting/module-federation.config.js" %}
 module.exports = {
-  name: 'greeting',
-  exposes: {
-    './Module': './src/remote-entry.ts',
-    './Hello': 'hello/src/index.ts', // <-- this line was added
-  },
+   name: 'greeting',
+   exposes: {
+      './Module': './src/remote-entry.ts',
+      './Hello': 'hello/src/index.ts', // <-- this line was added
+   },
 };
 ```
 
 {% /tab %}
 {% /tabs %}
 
-- Adds a Typescript path mapping to the `greeting/Hello` module in your root TSConfig file.
+-  Adds a Typescript path mapping to the `greeting/Hello` module in your root TSConfig file.
 
 ```json {% fileName="/tsconfig.base.json" %}
 {
-  "paths": {
-    "greeting/Module": ["greeting/src/remote-entry.ts"],
-    "greeting/Hello": ["hello/src/index.ts"] // <-- this line was added
-  }
+   "paths": {
+      "greeting/Module": ["greeting/src/remote-entry.ts"],
+      "greeting/Hello": ["hello/src/index.ts"] // <-- this line was added
+   }
 }
 ```
 
@@ -121,8 +121,8 @@ Update the host application to use the federated module.
 import { ModuleFederationConfig } from '@nx/webpack';
 
 const config: ModuleFederationConfig = {
-  name: 'host',
-  remotes: ['greeting'], //  <-- Ensure that greeting remote is listed here
+   name: 'host',
+   remotes: ['greeting'], //  <-- Ensure that greeting remote is listed here
 };
 
 export default config;
@@ -133,8 +133,8 @@ export default config;
 
 ```javascript {% fileName="host/module-federation.config.js" %}
 module.exports = {
-  name: 'host',
-  remotes: ['greeting'], //  <-- Ensure that greeting remote is listed here
+   name: 'host',
+   remotes: ['greeting'], //  <-- Ensure that greeting remote is listed here
 };
 ```
 
@@ -145,7 +145,7 @@ module.exports = {
 import hello from 'greeting/Hello';
 
 export function App() {
-  return <div>{hello()}</div>;
+   return <div>{hello()}</div>;
 }
 
 export default App;

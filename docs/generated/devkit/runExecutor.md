@@ -9,22 +9,22 @@ that the params aren't parsed from the string, but instead provided parsed alrea
 
 Apart from that, it works the same way:
 
-- it will load the workspace configuration
-- it will resolve the target
-- it will load the executor and the schema
-- it will load the options for the appropriate configuration
-- it will run the validations and will set the default
-- and, of course, it will invoke the executor
+-  it will load the workspace configuration
+-  it will resolve the target
+-  it will load the executor and the schema
+-  it will load the options for the appropriate configuration
+-  it will run the validations and will set the default
+-  and, of course, it will invoke the executor
 
 Example:
 
 ```typescript
 for await (const s of await runExecutor(
-  { project: 'myproj', target: 'serve' },
-  { watch: true },
-  context
+   { project: 'myproj', target: 'serve' },
+   { watch: true },
+   context
 )) {
-  // s.success
+   // s.success
 }
 ```
 

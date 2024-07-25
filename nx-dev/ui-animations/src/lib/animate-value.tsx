@@ -13,39 +13,39 @@ import { useEffect, useRef, useState } from 'react';
  * @return {JSX.Element} - The JSX element representing the animated value with suffix.
  */
 export function AnimateValue({
-  num,
-  once = false,
-  suffix,
-  decimals = 0,
+   num,
+   once = false,
+   suffix,
+   decimals = 0,
 }: {
-  num: number;
-  once?: boolean;
-  suffix: string;
-  decimals?: number;
+   num: number;
+   once?: boolean;
+   suffix: string;
+   decimals?: number;
 }) {
-  const ref = useRef<HTMLSpanElement | null>(null);
-  const [isComplete, setIsComplete] = useState<boolean>(false);
-  const isInView = useInView(ref);
+   const ref = useRef<HTMLSpanElement | null>(null);
+   const [isComplete, setIsComplete] = useState<boolean>(false);
+   const isInView = useInView(ref);
 
-  useEffect(() => {
-    if (!isInView) return;
-    if (isComplete && once) return;
+   useEffect(() => {
+      if (!isInView) return;
+      if (isComplete && once) return;
 
-    animate(0, num, {
-      duration: 2.5,
-      onUpdate(value) {
-        if (!ref.current) return;
+      animate(0, num, {
+         duration: 2.5,
+         onUpdate(value) {
+            if (!ref.current) return;
 
-        ref.current.textContent = value.toFixed(decimals);
-      },
-    });
-    setIsComplete(true);
-  }, [num, decimals, isInView, once]);
+            ref.current.textContent = value.toFixed(decimals);
+         },
+      });
+      setIsComplete(true);
+   }, [num, decimals, isInView, once]);
 
-  return (
-    <span>
-      <span ref={ref}></span>
-      <span>{suffix}</span>
-    </span>
-  );
+   return (
+      <span>
+         <span ref={ref}></span>
+         <span>{suffix}</span>
+      </span>
+   );
 }

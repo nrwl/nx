@@ -1,52 +1,52 @@
 import type { Tree } from '@nx/devkit';
 import type {
-  NestGeneratorWithLanguageOption,
-  NestGeneratorWithTestOption,
-  NormalizedOptions,
+   NestGeneratorWithLanguageOption,
+   NestGeneratorWithTestOption,
+   NormalizedOptions,
 } from '../utils';
 import {
-  normalizeOptions,
-  runNestSchematic,
-  unitTestRunnerToSpec,
+   normalizeOptions,
+   runNestSchematic,
+   unitTestRunnerToSpec,
 } from '../utils';
 
 export type InterceptorGeneratorOptions = NestGeneratorWithLanguageOption &
-  NestGeneratorWithTestOption;
+   NestGeneratorWithTestOption;
 
 export async function interceptorGenerator(
-  tree: Tree,
-  rawOptions: InterceptorGeneratorOptions
+   tree: Tree,
+   rawOptions: InterceptorGeneratorOptions
 ) {
-  await interceptorGeneratorInternal(tree, {
-    nameAndDirectoryFormat: 'derived',
-    ...rawOptions,
-  });
+   await interceptorGeneratorInternal(tree, {
+      nameAndDirectoryFormat: 'derived',
+      ...rawOptions,
+   });
 }
 
 export async function interceptorGeneratorInternal(
-  tree: Tree,
-  rawOptions: InterceptorGeneratorOptions
+   tree: Tree,
+   rawOptions: InterceptorGeneratorOptions
 ): Promise<any> {
-  const options = await normalizeInterceptorOptions(tree, rawOptions);
+   const options = await normalizeInterceptorOptions(tree, rawOptions);
 
-  return runNestSchematic(tree, 'interceptor', options);
+   return runNestSchematic(tree, 'interceptor', options);
 }
 
 export default interceptorGenerator;
 
 async function normalizeInterceptorOptions(
-  tree: Tree,
-  options: InterceptorGeneratorOptions
+   tree: Tree,
+   options: InterceptorGeneratorOptions
 ): Promise<NormalizedOptions> {
-  const normalizedOptions = await normalizeOptions(
-    tree,
-    'interceptor',
-    '@nx/nest:interceptor',
-    options
-  );
-  return {
-    ...normalizedOptions,
-    language: options.language,
-    spec: unitTestRunnerToSpec(options.unitTestRunner),
-  };
+   const normalizedOptions = await normalizeOptions(
+      tree,
+      'interceptor',
+      '@nx/nest:interceptor',
+      options
+   );
+   return {
+      ...normalizedOptions,
+      language: options.language,
+      spec: unitTestRunnerToSpec(options.unitTestRunner),
+   };
 }

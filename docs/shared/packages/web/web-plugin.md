@@ -1,8 +1,8 @@
 The Nx Plugin for Web Components contains generators for managing Web Component applications and libraries within an Nx workspace. It provides:
 
-- Integration with libraries such as Jest, Cypress, and Storybook.
-- Scaffolding for creating buildable libraries that can be published to npm.
-- Utilities for automatic workspace refactoring.
+-  Integration with libraries such as Jest, Cypress, and Storybook.
+-  Scaffolding for creating buildable libraries that can be published to npm.
+-  Utilities for automatic workspace refactoring.
 
 ## Setting Up @nx/web
 
@@ -117,5 +117,5 @@ The library in `dist` is publishable to npm or a private registry.
 
 ## More Documentation
 
-- [Using Cypress](/nx-api/cypress)
-- [Using Jest](/nx-api/jest)
+-  [Using Cypress](/nx-api/cypress)
+-  [Using Jest](/nx-api/jest)

@@ -10,21 +10,21 @@ const dest = args[args.length - 1];
 const from = args.slice(0, args.length - 1);
 
 try {
-  mkdirSync(dest, {
-    recursive: true,
-  });
+   mkdirSync(dest, {
+      recursive: true,
+   });
 } catch {}
 for (const f of from) {
-  const matchingFiles = glob.sync(f, {
-    cwd: process.cwd(),
-    onlyDirectories: true,
-  });
+   const matchingFiles = glob.sync(f, {
+      cwd: process.cwd(),
+      onlyDirectories: true,
+   });
 
-  console.log(f, matchingFiles);
+   console.log(f, matchingFiles);
 
-  for (const file of matchingFiles) {
-    const destFile = join(dest, basename(file));
-    console.log(file, '=>', destFile);
-    copySync(file, destFile);
-  }
+   for (const file of matchingFiles) {
+      const destFile = join(dest, basename(file));
+      console.log(file, '=>', destFile);
+      copySync(file, destFile);
+   }
 }

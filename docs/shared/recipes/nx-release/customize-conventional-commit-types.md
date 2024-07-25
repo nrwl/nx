@@ -12,8 +12,8 @@ The conventional commits configuration is used in two different places within Nx
 
 When `release.version.conventionalCommits` is `true` in `nx.json`, Nx Release will use the commit messages since the last release to determine the version bump. It will look at the type of each commit and determine the highest version bump from the following list:
 
-- 'feat' -> minor
-- 'fix' -> patch
+-  'feat' -> minor
+-  'fix' -> patch
 
 For example, if the git history looks like this:
 
@@ -62,51 +62,51 @@ Commit types are configured in the `release.conventionalCommits.types` property 
 
 ```json {% fileName="nx.json" %}
 {
-  "release": {
-    "conventionalCommits": {
-      "types": {
-        // disable the fix type for versioning and in the changelog
-        "fix": false,
-        "docs": {
-          "semverBump": "patch",
-          "changelog": {
-            "hidden": false,
-            "title": "Documentation Changes"
-          }
-        },
-        "perf": {
-          "semverBump": "none",
-          // omitting "hidden" will default it to false
-          "changelog": {
-            "title": "Performance Improvements"
-          }
-        },
-        "deps": {
-          "semverBump": "minor",
-          // omitting "hidden" will default it to false
-          "changelog": {
-            "title": "Dependency Updates"
-          }
-        },
-        // unspecified semverBump will default to "patch"
-        "chore": {
-          // "changelog.hidden" defaults to true, but setting changelog: false
-          // is a shortcut for setting "changelog.hidden" to false.
-          "changelog": false
-        },
-        // unspecified semverBump will default to "patch"
-        "styles": {}
+   "release": {
+      "conventionalCommits": {
+         "types": {
+            // disable the fix type for versioning and in the changelog
+            "fix": false,
+            "docs": {
+               "semverBump": "patch",
+               "changelog": {
+                  "hidden": false,
+                  "title": "Documentation Changes"
+               }
+            },
+            "perf": {
+               "semverBump": "none",
+               // omitting "hidden" will default it to false
+               "changelog": {
+                  "title": "Performance Improvements"
+               }
+            },
+            "deps": {
+               "semverBump": "minor",
+               // omitting "hidden" will default it to false
+               "changelog": {
+                  "title": "Dependency Updates"
+               }
+            },
+            // unspecified semverBump will default to "patch"
+            "chore": {
+               // "changelog.hidden" defaults to true, but setting changelog: false
+               // is a shortcut for setting "changelog.hidden" to false.
+               "changelog": false
+            },
+            // unspecified semverBump will default to "patch"
+            "styles": {}
+         }
       }
-    }
-  }
+   }
 }
 ```
 
 In this example, the following types are configured:
 
-- The `fix` type has been fully disabled, so `fix` commits will not trigger a version bump and will not be included in the changelog.
-- The `docs` type will trigger a `patch` version bump and will have the "Documentation Changes" title in the changelog.
-- The `perf` type will NOT trigger a version bump and will have the "Performance Improvements" title in the changelog.
-- The `deps` type will trigger a `minor` version bump and will have the "Dependency Updates" title in the changelog.
-- The `chore` type will trigger a `patch` version bump, which is the default for if `versionBump` is not specified, and will not be included in the changelog.
-- The `styles` type will trigger a `patch` version bump, which is the default for if `versionBump` is not specified, and will be included in the changelog with the corresponding default title.
+-  The `fix` type has been fully disabled, so `fix` commits will not trigger a version bump and will not be included in the changelog.
+-  The `docs` type will trigger a `patch` version bump and will have the "Documentation Changes" title in the changelog.
+-  The `perf` type will NOT trigger a version bump and will have the "Performance Improvements" title in the changelog.
+-  The `deps` type will trigger a `minor` version bump and will have the "Dependency Updates" title in the changelog.
+-  The `chore` type will trigger a `patch` version bump, which is the default for if `versionBump` is not specified, and will not be included in the changelog.
+-  The `styles` type will trigger a `patch` version bump, which is the default for if `versionBump` is not specified, and will be included in the changelog with the corresponding default title.

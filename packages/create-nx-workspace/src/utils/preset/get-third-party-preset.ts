@@ -10,22 +10,22 @@ import { isKnownPreset } from './preset';
  * - throws an error if the preset is invalid.
  */
 export function getPackageNameFromThirdPartyPreset(
-  preset?: string
+   preset?: string
 ): string | undefined {
-  if (!preset || isKnownPreset(preset)) {
-    return;
-  }
-  // extract the package name from the preset
-  const packageName = preset.match(/.+@/)
-    ? preset[0] + preset.substring(1).split('@')[0]
-    : preset;
+   if (!preset || isKnownPreset(preset)) {
+      return;
+   }
+   // extract the package name from the preset
+   const packageName = preset.match(/.+@/)
+      ? preset[0] + preset.substring(1).split('@')[0]
+      : preset;
 
-  const validateResult = validateNpmPackage(packageName);
-  if (!validateResult.validForNewPackages) {
-    throw new Error(
-      `Invalid preset npm package ${packageName}. There was an error with the preset npm package you provided: ` +
-        (validateResult.errors ?? []).join('\n')
-    );
-  }
-  return packageName;
+   const validateResult = validateNpmPackage(packageName);
+   if (!validateResult.validForNewPackages) {
+      throw new Error(
+         `Invalid preset npm package ${packageName}. There was an error with the preset npm package you provided: ` +
+            (validateResult.errors ?? []).join('\n')
+      );
+   }
+   return packageName;
 }

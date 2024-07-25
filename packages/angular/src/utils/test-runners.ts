@@ -1,10 +1,10 @@
 export enum UnitTestRunner {
-  Jest = 'jest',
-  None = 'none',
+   Jest = 'jest',
+   None = 'none',
 }
 
 export enum E2eTestRunner {
-  Cypress = 'cypress',
-  Playwright = 'playwright',
-  None = 'none',
+   Cypress = 'cypress',
+   Playwright = 'playwright',
+   None = 'none',
 }

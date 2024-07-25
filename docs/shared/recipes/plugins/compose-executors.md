@@ -6,12 +6,12 @@ An executor is just a function, so you can import and invoke it directly, as fol
 import printAllCaps from 'print-all-caps';
 
 export default async function (
-  options: Schema,
-  context: ExecutorContext
+   options: Schema,
+   context: ExecutorContext
 ): Promise<{ success: true }> {
-  // do something before
-  await printAllCaps({ message: 'All caps' });
-  // do something after
+   // do something before
+   await printAllCaps({ message: 'All caps' });
+   // do something after
 }
 ```
 
@@ -19,14 +19,14 @@ This only works when you know what executor you want to invoke. Sometimes, howev
 
 ```json {% fileName="project.json" %}
 {
-  "e2e": {
-    "builder": "@nx/cypress:cypress",
-    "options": {
-      "cypressConfig": "apps/myapp-e2e/cypress.json",
-      "tsConfig": "apps/myapp-e2e/tsconfig.e2e.json",
-      "devServerTarget": "myapp:serve"
-    }
-  }
+   "e2e": {
+      "builder": "@nx/cypress:cypress",
+      "options": {
+         "cypressConfig": "apps/myapp-e2e/cypress.json",
+         "tsConfig": "apps/myapp-e2e/tsconfig.e2e.json",
+         "devServerTarget": "myapp:serve"
+      }
+   }
 }
 ```
 
@@ -34,26 +34,26 @@ In this case we need to invoke the target configured in devSeverTarget. We can d
 
 ```typescript
 async function* startDevServer(
-  opts: CypressExecutorOptions,
-  context: ExecutorContext
+   opts: CypressExecutorOptions,
+   context: ExecutorContext
 ) {
-  const { project, target, configuration } = parseTargetString(
-    opts.devServerTarget
-  );
-  for await (const output of await runExecutor<{
-    success: boolean;
-    baseUrl?: string;
-  }>(
-    { project, target, configuration },
-    {
-      watch: opts.watch,
-    },
-    context
-  )) {
-    if (!output.success && !opts.watch)
-      throw new Error('Could not compile application files');
-    yield opts.baseUrl || (output.baseUrl as string);
-  }
+   const { project, target, configuration } = parseTargetString(
+      opts.devServerTarget
+   );
+   for await (const output of await runExecutor<{
+      success: boolean;
+      baseUrl?: string;
+   }>(
+      { project, target, configuration },
+      {
+         watch: opts.watch,
+      },
+      context
+   )) {
+      if (!output.success && !opts.watch)
+         throw new Error('Could not compile application files');
+      yield opts.baseUrl || (output.baseUrl as string);
+   }
 }
 ```
 
@@ -81,7 +81,7 @@ You can convert `Observables` to a `Promise` with `toPromise`.
 import { of } from 'rxjs';
 
 export default async function (opts) {
-  return of({ success: true }).toPromise();
+   return of({ success: true }).toPromise();
 }
 ```
 
@@ -92,6 +92,6 @@ import { of } from 'rxjs';
 import { eachValueFrom } from 'rxjs-for-await';
 
 export default async function (opts) {
-  return eachValueFrom(of({ success: true }));
+   return eachValueFrom(of({ success: true }));
 }
 ```

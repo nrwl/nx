@@ -7,16 +7,16 @@
 
 ```json {% fileName="libs/ts-lib/project.json" %}
 {
-  "build": {
-    "executor": "@nx/js:swc",
-    "options": {
-      "outputPath": "dist/libs/ts-lib",
-      "main": "libs/ts-lib/src/index.ts",
-      "tsConfig": "libs/ts-lib/tsconfig.lib.json",
-      "assets": ["libs/ts-lib/*.md"],
-      "external": "all"
-    }
-  }
+   "build": {
+      "executor": "@nx/js:swc",
+      "options": {
+         "outputPath": "dist/libs/ts-lib",
+         "main": "libs/ts-lib/src/index.ts",
+         "tsConfig": "libs/ts-lib/tsconfig.lib.json",
+         "assets": ["libs/ts-lib/*.md"],
+         "external": "all"
+      }
+   }
 }
 ```
 
@@ -28,16 +28,16 @@ npx nx build ts-lib --external=all
 
 ```json {% fileName="libs/ts-lib/project.json" %}
 {
-  "build": {
-    "executor": "@nx/js:swc",
-    "options": {
-      "outputPath": "dist/libs/ts-lib",
-      "main": "libs/ts-lib/src/index.ts",
-      "tsConfig": "libs/ts-lib/tsconfig.lib.json",
-      "assets": ["libs/ts-lib/*.md"],
-      "external": "none"
-    }
-  }
+   "build": {
+      "executor": "@nx/js:swc",
+      "options": {
+         "outputPath": "dist/libs/ts-lib",
+         "main": "libs/ts-lib/src/index.ts",
+         "tsConfig": "libs/ts-lib/tsconfig.lib.json",
+         "assets": ["libs/ts-lib/*.md"],
+         "external": "none"
+      }
+   }
 }
 ```
 
@@ -52,21 +52,21 @@ npx nx build ts-lib --external=none
 
 ```json {% fileName="libs/ts-lib/project.json" %}
 {
-  "build": {
-    "executor": "@nx/js:swc",
-    "options": {
-      "outputPath": "dist/libs/ts-lib",
-      "main": "libs/ts-lib/src/index.ts",
-      "tsConfig": "libs/ts-lib/tsconfig.lib.json",
-      "assets": ["libs/ts-lib/*.md"],
-      "swcrc": "libs/ts-lib/.dev.swcrc"
-    },
-    "configurations": {
-      "production": {
-        "swcrc": "libs/ts-lib/.prod.swcrc"
+   "build": {
+      "executor": "@nx/js:swc",
+      "options": {
+         "outputPath": "dist/libs/ts-lib",
+         "main": "libs/ts-lib/src/index.ts",
+         "tsConfig": "libs/ts-lib/tsconfig.lib.json",
+         "assets": ["libs/ts-lib/*.md"],
+         "swcrc": "libs/ts-lib/.dev.swcrc"
+      },
+      "configurations": {
+         "production": {
+            "swcrc": "libs/ts-lib/.prod.swcrc"
+         }
       }
-    }
-  }
+   }
 }
 ```
 

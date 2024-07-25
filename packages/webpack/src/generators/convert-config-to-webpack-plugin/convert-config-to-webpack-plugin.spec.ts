@@ -1,76 +1,76 @@
 import {
-  ProjectConfiguration,
-  Tree,
-  addProjectConfiguration,
+   ProjectConfiguration,
+   Tree,
+   addProjectConfiguration,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import convertConfigToWebpackPluginGenerator from './convert-config-to-webpack-plugin';
 
 interface CreateProjectOptions {
-  name: string;
-  root: string;
-  targetName: string;
-  targetOptions: Record<string, unknown>;
-  additionalTargets?: Record<string, unknown>;
+   name: string;
+   root: string;
+   targetName: string;
+   targetOptions: Record<string, unknown>;
+   additionalTargets?: Record<string, unknown>;
 }
 
 const defaultOptions: CreateProjectOptions = {
-  name: 'my-app',
-  root: 'my-app',
-  targetName: 'build',
-  targetOptions: {},
+   name: 'my-app',
+   root: 'my-app',
+   targetName: 'build',
+   targetOptions: {},
 };
 
 function createProject(tree: Tree, options: Partial<CreateProjectOptions>) {
-  const projectOpts = {
-    ...defaultOptions,
-    ...options,
-    targetOptions: {
-      ...defaultOptions.targetOptions,
-      ...options?.targetOptions,
-    },
-  };
-  const project: ProjectConfiguration = {
-    name: projectOpts.name,
-    root: projectOpts.root,
-    targets: {
-      build: {
-        executor: '@nx/webpack:webpack',
-        options: {
-          webpackConfig: `${projectOpts.root}/webpack.config.js`,
-          ...projectOpts.targetOptions,
-        },
+   const projectOpts = {
+      ...defaultOptions,
+      ...options,
+      targetOptions: {
+         ...defaultOptions.targetOptions,
+         ...options?.targetOptions,
       },
-      ...options.additionalTargets,
-    },
-  };
+   };
+   const project: ProjectConfiguration = {
+      name: projectOpts.name,
+      root: projectOpts.root,
+      targets: {
+         build: {
+            executor: '@nx/webpack:webpack',
+            options: {
+               webpackConfig: `${projectOpts.root}/webpack.config.js`,
+               ...projectOpts.targetOptions,
+            },
+         },
+         ...options.additionalTargets,
+      },
+   };
 
-  addProjectConfiguration(tree, project.name, project);
+   addProjectConfiguration(tree, project.name, project);
 
-  return project;
+   return project;
 }
 
 describe('convertConfigToWebpackPluginGenerator', () => {
-  let tree: Tree;
+   let tree: Tree;
 
-  beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
-  });
+   beforeEach(() => {
+      tree = createTreeWithEmptyWorkspace();
+   });
 
-  it('should migrate the webpack config of the specified project', async () => {
-    const project = createProject(tree, {
-      name: 'my-app',
-      root: 'my-app',
-    });
+   it('should migrate the webpack config of the specified project', async () => {
+      const project = createProject(tree, {
+         name: 'my-app',
+         root: 'my-app',
+      });
 
-    createProject(tree, {
-      name: 'another-app',
-      root: 'another-app',
-    });
+      createProject(tree, {
+         name: 'another-app',
+         root: 'another-app',
+      });
 
-    tree.write(
-      'another-app/webpack.config.js',
-      `
+      tree.write(
+         'another-app/webpack.config.js',
+         `
       const { composePlugins, withNx } = require('@nx/webpack');
       const { withReact } = require('@nx/react');
 
@@ -87,11 +87,11 @@ describe('convertConfigToWebpackPluginGenerator', () => {
         }
       );
       `
-    );
+      );
 
-    tree.write(
-      `${project.name}/webpack.config.js`,
-      `
+      tree.write(
+         `${project.name}/webpack.config.js`,
+         `
       const { composePlugins, withNx } = require('@nx/webpack');
       const { withReact } = require('@nx/react');
 
@@ -108,13 +108,13 @@ describe('convertConfigToWebpackPluginGenerator', () => {
         }
       );
     `
-    );
+      );
 
-    await convertConfigToWebpackPluginGenerator(tree, {
-      project: project.name,
-    });
-    expect(tree.read(`${project.name}/webpack.config.js`, 'utf-8'))
-      .toMatchInlineSnapshot(`
+      await convertConfigToWebpackPluginGenerator(tree, {
+         project: project.name,
+      });
+      expect(tree.read(`${project.name}/webpack.config.js`, 'utf-8'))
+         .toMatchInlineSnapshot(`
       "const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
       const { NxReactWebpackPlugin } = require('@nx/react/webpack-plugin');
       const { useLegacyNxPlugin } = require('@nx/webpack');
@@ -145,8 +145,8 @@ describe('convertConfigToWebpackPluginGenerator', () => {
       "
     `);
 
-    expect(tree.read(`${project.name}/webpack.config.old.js`, 'utf-8'))
-      .toMatchInlineSnapshot(`
+      expect(tree.read(`${project.name}/webpack.config.old.js`, 'utf-8'))
+         .toMatchInlineSnapshot(`
       "const { composePlugins } = require('@nx/webpack');
       // Nx plugins for webpack.
       module.exports = composePlugins((config) => {
@@ -155,8 +155,8 @@ describe('convertConfigToWebpackPluginGenerator', () => {
       "
     `);
 
-    expect(tree.read(`another-app/webpack.config.js`, 'utf-8'))
-      .toMatchInlineSnapshot(`
+      expect(tree.read(`another-app/webpack.config.js`, 'utf-8'))
+         .toMatchInlineSnapshot(`
       "const { composePlugins, withNx } = require('@nx/webpack');
       const { withReact } = require('@nx/react');
 
@@ -175,19 +175,19 @@ describe('convertConfigToWebpackPluginGenerator', () => {
       "
     `);
 
-    expect(tree.exists(`${project.name}/webpack.config.old.js`)).toBe(true);
-    expect(tree.exists(`another-app/webpack.config.old.js`)).toBe(false);
-  });
+      expect(tree.exists(`${project.name}/webpack.config.old.js`)).toBe(true);
+      expect(tree.exists(`another-app/webpack.config.old.js`)).toBe(false);
+   });
 
-  it('should update project.json adding the standardWebpackConfigFunction option', async () => {
-    const project = createProject(tree, {
-      name: 'my-app',
-      root: 'my-app',
-    });
+   it('should update project.json adding the standardWebpackConfigFunction option', async () => {
+      const project = createProject(tree, {
+         name: 'my-app',
+         root: 'my-app',
+      });
 
-    tree.write(
-      `${project.name}/webpack.config.js`,
-      `
+      tree.write(
+         `${project.name}/webpack.config.js`,
+         `
       const { composePlugins, withNx } = require('@nx/webpack');
       const { withReact } = require('@nx/react');
 
@@ -204,14 +204,14 @@ describe('convertConfigToWebpackPluginGenerator', () => {
         }
       );
     `
-    );
+      );
 
-    await convertConfigToWebpackPluginGenerator(tree, {
-      project: project.name,
-    });
+      await convertConfigToWebpackPluginGenerator(tree, {
+         project: project.name,
+      });
 
-    expect(tree.read(`${project.name}/project.json`, 'utf-8'))
-      .toMatchInlineSnapshot(`
+      expect(tree.read(`${project.name}/project.json`, 'utf-8'))
+         .toMatchInlineSnapshot(`
       "{
         "name": "my-app",
         "$schema": "../node_modules/nx/schemas/project-schema.json",
@@ -227,91 +227,91 @@ describe('convertConfigToWebpackPluginGenerator', () => {
       }
       "
     `);
-  });
+   });
 
-  it('should throw an error if no projects are found', async () => {
-    const project = createProject(tree, {
-      name: 'my-app',
-      root: 'my-app',
-    });
+   it('should throw an error if no projects are found', async () => {
+      const project = createProject(tree, {
+         name: 'my-app',
+         root: 'my-app',
+      });
 
-    await expect(
-      convertConfigToWebpackPluginGenerator(tree, {
-        project: project.name,
-      })
-    ).rejects.toThrowError('Could not find any projects to migrate.');
-  });
+      await expect(
+         convertConfigToWebpackPluginGenerator(tree, {
+            project: project.name,
+         })
+      ).rejects.toThrowError('Could not find any projects to migrate.');
+   });
 
-  it('should not migrate a webpack config that does not use withNx', async () => {
-    const project = createProject(tree, {
-      name: 'my-app',
-      root: 'my-app',
-    });
+   it('should not migrate a webpack config that does not use withNx', async () => {
+      const project = createProject(tree, {
+         name: 'my-app',
+         root: 'my-app',
+      });
 
-    tree.write(`${project.name}/webpack.config.js`, `module.exports = {};`);
+      tree.write(`${project.name}/webpack.config.js`, `module.exports = {};`);
 
-    await expect(
-      convertConfigToWebpackPluginGenerator(tree, {
-        project: project.name,
-      })
-    ).rejects.toThrowError('Could not find any projects to migrate.');
+      await expect(
+         convertConfigToWebpackPluginGenerator(tree, {
+            project: project.name,
+         })
+      ).rejects.toThrowError('Could not find any projects to migrate.');
 
-    expect(
-      tree.read(`${project.name}/webpack.config.js`, 'utf-8')
-    ).toMatchInlineSnapshot(`"module.exports = {};"`);
-  });
+      expect(
+         tree.read(`${project.name}/webpack.config.js`, 'utf-8')
+      ).toMatchInlineSnapshot(`"module.exports = {};"`);
+   });
 
-  it('should throw an error if the project is using Module federation', async () => {
-    const project = createProject(tree, {
-      name: 'my-app',
-      root: 'my-app',
-      additionalTargets: {
-        serve: {
-          executor: '@nx/react:module-federation-dev-server',
-          options: {
-            buildTarget: 'my-app:build',
-          },
-        },
-      },
-    });
+   it('should throw an error if the project is using Module federation', async () => {
+      const project = createProject(tree, {
+         name: 'my-app',
+         root: 'my-app',
+         additionalTargets: {
+            serve: {
+               executor: '@nx/react:module-federation-dev-server',
+               options: {
+                  buildTarget: 'my-app:build',
+               },
+            },
+         },
+      });
 
-    await expect(
-      convertConfigToWebpackPluginGenerator(tree, { project: project.name })
-    ).rejects.toThrowError(
-      `The project ${project.name} is using Module Federation. At the moment, we don't support migrating projects that use Module Federation.`
-    );
-  });
+      await expect(
+         convertConfigToWebpackPluginGenerator(tree, { project: project.name })
+      ).rejects.toThrowError(
+         `The project ${project.name} is using Module Federation. At the moment, we don't support migrating projects that use Module Federation.`
+      );
+   });
 
-  it('should throw an error if the project is a Nest project', async () => {
-    const project = createProject(tree, {
-      name: 'my-app',
-      root: 'my-app',
-      additionalTargets: {
-        serve: {
-          executor: '@nx/js:node',
-          options: {
-            buildTarget: 'my-app:build',
-          },
-        },
-      },
-    });
+   it('should throw an error if the project is a Nest project', async () => {
+      const project = createProject(tree, {
+         name: 'my-app',
+         root: 'my-app',
+         additionalTargets: {
+            serve: {
+               executor: '@nx/js:node',
+               options: {
+                  buildTarget: 'my-app:build',
+               },
+            },
+         },
+      });
 
-    await expect(
-      convertConfigToWebpackPluginGenerator(tree, { project: project.name })
-    ).rejects.toThrowError(
-      `The project ${project.name} is using the '@nx/js:node' executor. At the moment, we do not support migrating such projects.`
-    );
-  });
+      await expect(
+         convertConfigToWebpackPluginGenerator(tree, { project: project.name })
+      ).rejects.toThrowError(
+         `The project ${project.name} is using the '@nx/js:node' executor. At the moment, we do not support migrating such projects.`
+      );
+   });
 
-  it('should not migrate a webpack config that is already using NxAppWebpackPlugin', async () => {
-    const project = createProject(tree, {
-      name: 'my-app',
-      root: 'my-app',
-    });
+   it('should not migrate a webpack config that is already using NxAppWebpackPlugin', async () => {
+      const project = createProject(tree, {
+         name: 'my-app',
+         root: 'my-app',
+      });
 
-    tree.write(
-      `${project.name}/webpack.config.js`,
-      `
+      tree.write(
+         `${project.name}/webpack.config.js`,
+         `
       const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
 
       module.exports = {
@@ -320,13 +320,13 @@ describe('convertConfigToWebpackPluginGenerator', () => {
         ],
       };
     `
-    );
+      );
 
-    await expect(
-      convertConfigToWebpackPluginGenerator(tree, { project: project.name })
-    ).rejects.toThrowError(`Could not find any projects to migrate.`);
-    expect(tree.read(`${project.name}/webpack.config.js`, 'utf-8'))
-      .toMatchInlineSnapshot(`
+      await expect(
+         convertConfigToWebpackPluginGenerator(tree, { project: project.name })
+      ).rejects.toThrowError(`Could not find any projects to migrate.`);
+      expect(tree.read(`${project.name}/webpack.config.js`, 'utf-8'))
+         .toMatchInlineSnapshot(`
       "
             const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
 
@@ -337,18 +337,18 @@ describe('convertConfigToWebpackPluginGenerator', () => {
             };
           "
     `);
-    expect(tree.exists(`${project.name}/webpack.config.old.js`)).toBe(false);
-  });
+      expect(tree.exists(`${project.name}/webpack.config.old.js`)).toBe(false);
+   });
 
-  it('should convert absolute options paths to relative paths during the conversion', async () => {
-    const project = createProject(tree, {
-      name: 'my-app',
-      root: 'apps/my-app',
-    });
+   it('should convert absolute options paths to relative paths during the conversion', async () => {
+      const project = createProject(tree, {
+         name: 'my-app',
+         root: 'apps/my-app',
+      });
 
-    tree.write(
-      `${project.root}/webpack.config.js`,
-      `
+      tree.write(
+         `${project.root}/webpack.config.js`,
+         `
       const { composePlugins, withNx } = require('@nx/webpack');
       const { withReact } = require('@nx/react');
 
@@ -381,13 +381,13 @@ describe('convertConfigToWebpackPluginGenerator', () => {
         }
       );
       `
-    );
+      );
 
-    await convertConfigToWebpackPluginGenerator(tree, {
-      project: project.name,
-    });
-    expect(tree.read(`${project.root}/webpack.config.js`, 'utf-8'))
-      .toMatchInlineSnapshot(`
+      await convertConfigToWebpackPluginGenerator(tree, {
+         project: project.name,
+      });
+      expect(tree.read(`${project.root}/webpack.config.js`, 'utf-8'))
+         .toMatchInlineSnapshot(`
       "const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
       const { NxReactWebpackPlugin } = require('@nx/react/webpack-plugin');
       const { useLegacyNxPlugin } = require('@nx/webpack');
@@ -433,5 +433,5 @@ describe('convertConfigToWebpackPluginGenerator', () => {
       });
       "
     `);
-  });
+   });
 });

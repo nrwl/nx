@@ -4,17 +4,17 @@ window.environment = 'release';
 window.useXstateInspect = false;
 
 window.appConfig = {
-  showDebugger: false,
-  showExperimentalFeatures: false,
-  workspaces: [
-    {
-      id: 'local',
-      label: 'local',
-      projectGraphUrl: 'assets/project-graphs/e2e.json',
-      taskGraphUrl: 'assets/task-graphs/e2e.json',
-      taskInputsUrl: 'assets/task-inputs/e2e.json',
-      sourceMapsUrl: 'assets/source-maps/e2e.json',
-    },
-  ],
-  defaultWorkspaceId: 'local',
+   showDebugger: false,
+   showExperimentalFeatures: false,
+   workspaces: [
+      {
+         id: 'local',
+         label: 'local',
+         projectGraphUrl: 'assets/project-graphs/e2e.json',
+         taskGraphUrl: 'assets/task-graphs/e2e.json',
+         taskInputsUrl: 'assets/task-inputs/e2e.json',
+         sourceMapsUrl: 'assets/source-maps/e2e.json',
+      },
+   ],
+   defaultWorkspaceId: 'local',
 };

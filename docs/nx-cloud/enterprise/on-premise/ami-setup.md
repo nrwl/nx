@@ -6,12 +6,12 @@
 2. Launch a new instance from that AMI
 3. Recommended instance type: `t3.2xlarge`
 4. You will need to SSH into the instance once it's created:
-   - Use an existing SSH key-pair that you already have installed locally.
-   - [Or create a new one and download the keys locally](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-key-pairs.html?icmpid=docs_ec2_console#having-ec2-create-your-key-pair)
-     - Then select your new SSH pair from the list
+   -  Use an existing SSH key-pair that you already have installed locally.
+   -  [Or create a new one and download the keys locally](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-key-pairs.html?icmpid=docs_ec2_console#having-ec2-create-your-key-pair)
+      -  Then select your new SSH pair from the list
 5. Networking:
-   - Allow the instance to receive HTTP and HTTPS traffic
-   - Allow SSH from your current IP
+   -  Allow the instance to receive HTTP and HTTPS traffic
+   -  Allow SSH from your current IP
 6. Leave the storage options as they are
 7. "Launch instance"
 8. Wait 10 minutes, then navigate to your instance's IP in the browser. You should see the Nx Cloud dashboard!
@@ -21,13 +21,13 @@
 ### Your Nx Cloud URL
 
 1. At this point, your instance will have a public IP accessible from the browser.
-   - You can consider this IP the URL of Nx Cloud, and proceed with the below steps and all will work fine!
+   -  You can consider this IP the URL of Nx Cloud, and proceed with the below steps and all will work fine!
 2. You might want, however, to add a Load Balancer in front of the instance, with an explicit domain (e.g. https://my-nxcloud.my-org.com).
-   - This is strongly recommended because you will be able to upgrade/restart/re-configure your Nx Cloud EC2 instance while keeping the Nx Cloud URL static.
-   - Create an [application load balancer](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/create-application-load-balancer.html)
-   - You will need to create a certificate for your domain to assign to the LB
-   - And you will need to target your EC2 instance from the LB
-   - You should now have a permanent domain pointing to your Nx Cloud instance
+   -  This is strongly recommended because you will be able to upgrade/restart/re-configure your Nx Cloud EC2 instance while keeping the Nx Cloud URL static.
+   -  Create an [application load balancer](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/create-application-load-balancer.html)
+   -  You will need to create a certificate for your domain to assign to the LB
+   -  And you will need to target your EC2 instance from the LB
+   -  You should now have a permanent domain pointing to your Nx Cloud instance
 
 Once you have your Nx Cloud URL proceed to the below steps!
 
@@ -42,8 +42,8 @@ Once you have your Nx Cloud URL proceed to the below steps!
 nxCloudAppURL: 'https://nx-cloud.on.my-domain.ca' # make sure no backslash is at the end
 
 secret:
-  # set your initial admin password for logging into the app
-  adminPassword: 'correcthorsebatterystaple'
+   # set your initial admin password for logging into the app
+   adminPassword: 'correcthorsebatterystaple'
 ```
 
 2. Apply the configuration:
@@ -54,8 +54,8 @@ scp -i ./<path-to-your-ssh-pem-file>.pem -r ./myconfiguration.yaml nx-cloud@<you
 
 That's it! After a few minutes, you should be able to log-in with:
 
-- username: `admin`
-- password: `<the-password-you-set-above>`
+-  username: `admin`
+-  password: `<the-password-you-set-above>`
 
 ### Applying the license
 
@@ -63,7 +63,7 @@ Once you log-in, you will see an organisation has been created for you.
 
 1. You can rename it or create a new organization.
 2. Navigate to your new organization's page and send us it's id
-   - It should look something like this: https://your-url.com/orgs/649f240f7fb955000c1fd10b/workspaces
+   -  It should look something like this: https://your-url.com/orgs/649f240f7fb955000c1fd10b/workspaces
 3. We will then give you a License Key which you can apply on your org's billing page
 
 ### Connecting to your instance
@@ -86,12 +86,12 @@ Although we have [a full guide here](https://github.com/nrwl/nx-cloud-helm/blob/
 
 You can optionally enable authentication using your preferred SSO provider:
 
-- GitHub
-- Bitbucket
-- GitLab
-- SAML (Okta, Azure AD etc.)
-- And even [Nx Agents](/ci/features/distribute-task-execution#distribute-task-execution-nx-agents)
-  - Follow [the guide here](https://github.com/nrwl/nx-cloud-helm/blob/main/agents-guide/AGENTS-GUIDE.md) for setting up an Nx Agents cluster
+-  GitHub
+-  Bitbucket
+-  GitLab
+-  SAML (Okta, Azure AD etc.)
+-  And even [Nx Agents](/ci/features/distribute-task-execution#distribute-task-execution-nx-agents)
+   -  Follow [the guide here](https://github.com/nrwl/nx-cloud-helm/blob/main/agents-guide/AGENTS-GUIDE.md) for setting up an Nx Agents cluster
 
 ```yaml
 # This is all you need to get the baseline of your nx-cloud instance configured!
@@ -133,29 +133,29 @@ nxCloudAppURL: 'https://nx-cloud.on.my-domain.ca' # make sure no backslash is at
 # store them within the application runtime, and scrub the plaintext ones from
 # the filesystem
 secret:
-  # set your initial admin password for logging into the app
-  # see here: https://nx.dev/ci/recipes/enterprise/on-premise/auth-single-admin
-  adminPassword: 'correcthorsebatterystaple'
+   # set your initial admin password for logging into the app
+   # see here: https://nx.dev/ci/recipes/enterprise/on-premise/auth-single-admin
+   adminPassword: 'correcthorsebatterystaple'
 
-  # If you want to enable GitHub Login, just provide your client id & secret, we handle the rest
-  # see here: https://nx.dev/ci/recipes/enterprise/on-premise/auth-github
-  githubAuthClientId: 'my_client_id'
-  githubAuthClientSecret: 'my_client_secret'
+   # If you want to enable GitHub Login, just provide your client id & secret, we handle the rest
+   # see here: https://nx.dev/ci/recipes/enterprise/on-premise/auth-github
+   githubAuthClientId: 'my_client_id'
+   githubAuthClientSecret: 'my_client_secret'
 
-  # The same goes for GitLab authentication
-  # see here: https://nx.dev/ci/recipes/enterprise/on-premise/auth-gitlab
-  # gitlabAppId: 'my_gitlab_app_id'
-  # gitlabAppSecret: 'my_gitlab_app_secret'
+   # The same goes for GitLab authentication
+   # see here: https://nx.dev/ci/recipes/enterprise/on-premise/auth-gitlab
+   # gitlabAppId: 'my_gitlab_app_id'
+   # gitlabAppSecret: 'my_gitlab_app_secret'
 
-  # Bitbucket too! If these are uncommented, BB auth is automatically enabled
-  # see here: https://nx.dev/ci/recipes/enterprise/on-premise/auth-bitbucket
-  # bitbucketAppId: 'bitbucket_app_id'
-  # bitbucketAppSecret: 'bitbucket_app_secret'
+   # Bitbucket too! If these are uncommented, BB auth is automatically enabled
+   # see here: https://nx.dev/ci/recipes/enterprise/on-premise/auth-bitbucket
+   # bitbucketAppId: 'bitbucket_app_id'
+   # bitbucketAppSecret: 'bitbucket_app_secret'
 
-  # SAML auth
-  # see here: https://nx.dev/ci/recipes/enterprise/on-premise/auth-saml
-  # samlEntryPoint: 'your_saml_entry_point'
-  # samlCert: 'saml_cert'
+   # SAML auth
+   # see here: https://nx.dev/ci/recipes/enterprise/on-premise/auth-saml
+   # samlEntryPoint: 'your_saml_entry_point'
+   # samlCert: 'saml_cert'
 ```
 
 ### Upgrades

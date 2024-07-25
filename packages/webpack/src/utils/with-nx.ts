@@ -13,39 +13,39 @@ export type WithNxOptions = Partial<NxAppWebpackPluginOptions>;
  * @returns {NxWebpackPlugin}
  */
 export function withNx(
-  pluginOptions: WithNxOptions = {}
+   pluginOptions: WithNxOptions = {}
 ): NxComposableWebpackPlugin {
-  return function configure(
-    config: Configuration,
-    { options, context }: NxWebpackExecutionContext
-  ): Configuration {
-    if (processed.has(config)) return config;
+   return function configure(
+      config: Configuration,
+      { options, context }: NxWebpackExecutionContext
+   ): Configuration {
+      if (processed.has(config)) return config;
 
-    applyBaseConfig(
-      {
-        ...options,
-        ...pluginOptions,
-        target: options.target ?? 'web',
-        assets: options.assets
-          ? options.assets
-          : pluginOptions.assets
-          ? normalizeAssets(
-              pluginOptions.assets,
-              options.root,
-              options.sourceRoot,
-              options.projectRoot
-            )
-          : [],
-        root: context.root,
-        projectName: context.projectName,
-        targetName: context.targetName,
-        configurationName: context.configurationName,
-        projectGraph: context.projectGraph,
-      },
-      config
-    );
+      applyBaseConfig(
+         {
+            ...options,
+            ...pluginOptions,
+            target: options.target ?? 'web',
+            assets: options.assets
+               ? options.assets
+               : pluginOptions.assets
+               ? normalizeAssets(
+                    pluginOptions.assets,
+                    options.root,
+                    options.sourceRoot,
+                    options.projectRoot
+                 )
+               : [],
+            root: context.root,
+            projectName: context.projectName,
+            targetName: context.targetName,
+            configurationName: context.configurationName,
+            projectGraph: context.projectGraph,
+         },
+         config
+      );
 
-    processed.add(config);
-    return config;
-  };
+      processed.add(config);
+      return config;
+   };
 }
