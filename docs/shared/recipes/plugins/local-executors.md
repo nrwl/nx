@@ -10,13 +10,13 @@ If you don't already have a local plugin, use Nx to generate one:
 
 ```shell {% skipRescope=true %}
 nx add @nx/plugin
-nx g @nx/plugin:plugin libs/my-plugin
+nx g @nx/plugin:plugin my-plugin --directory tools/my-plugin
 ```
 
 Use the Nx CLI to generate the initial files needed for your executor.
 
 ```shell
-nx generate @nx/plugin:executor echo --directory=libs/my-plugin/src/executors/echo
+nx generate @nx/plugin:executor echo --directory=tools/my-plugin/src/executors/echo
 ```
 
 After the command is finished, the executor is created in the plugin `executors` folder.
@@ -24,7 +24,7 @@ After the command is finished, the executor is created in the plugin `executors`
 ```text
 happynrwl/
 ├── apps/
-├── libs/
+├── tools/
 │   ├── my-plugin
 │   │   ├── src
 │   │   │   ├── executors
