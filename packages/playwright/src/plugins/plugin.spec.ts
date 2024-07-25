@@ -91,6 +91,7 @@ describe('@nx/playwright/plugin', () => {
                     "outputs": [
                       "{projectRoot}/test-results",
                     ],
+                    "parallelism": false,
                   },
                   "e2e-ci": {
                     "cache": true,
@@ -123,6 +124,7 @@ describe('@nx/playwright/plugin', () => {
                     "outputs": [
                       "{projectRoot}/test-results",
                     ],
+                    "parallelism": false,
                   },
                 },
               },
@@ -200,6 +202,7 @@ describe('@nx/playwright/plugin', () => {
                       "{projectRoot}/test-results/html",
                       "{projectRoot}/test-results",
                     ],
+                    "parallelism": false,
                   },
                   "e2e-ci": {
                     "cache": true,
@@ -235,6 +238,7 @@ describe('@nx/playwright/plugin', () => {
                       "{projectRoot}/test-results/html",
                       "{projectRoot}/test-results",
                     ],
+                    "parallelism": false,
                   },
                 },
               },
@@ -323,6 +327,7 @@ describe('@nx/playwright/plugin', () => {
         "outputs": [
           "{projectRoot}/test-results",
         ],
+        "parallelism": false,
       }
     `);
     expect(targets['e2e-ci--tests/run-me.spec.ts']).toMatchInlineSnapshot(`
@@ -358,6 +363,7 @@ describe('@nx/playwright/plugin', () => {
         "outputs": [
           "{projectRoot}/test-results",
         ],
+        "parallelism": false,
       }
     `);
     expect(targets['e2e-ci--tests/run-me-2.spec.ts']).toMatchInlineSnapshot(`
@@ -393,6 +399,7 @@ describe('@nx/playwright/plugin', () => {
         "outputs": [
           "{projectRoot}/test-results",
         ],
+        "parallelism": false,
       }
     `);
     expect(targets['e2e-ci--tests/skip-me.spec.ts']).not.toBeDefined();
