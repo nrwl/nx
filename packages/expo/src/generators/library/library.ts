@@ -32,7 +32,7 @@ import { NormalizedSchema, normalizeOptions } from './lib/normalize-options';
 import { Schema } from './schema';
 import { ensureDependencies } from '../../utils/ensure-dependencies';
 import { initRootBabelConfig } from '../../utils/init-root-babel-config';
-import { addBuildTargetDefaults } from '@nx/devkit/src/generators/add-build-target-defaults';
+import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 
 export async function expoLibraryGenerator(
