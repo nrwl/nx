@@ -261,8 +261,13 @@ export function getExports(
         options.projectRoot
       );
       const sourceFilePath = relativeDir + fileName;
-      const entryFilepath = sourceFilePath.replace(/^\.\/src\//, './');
+      const entryRelativeDir = relativeDir.replace(/^\.\/src\//, './');
+      const entryFilepath = entryRelativeDir + fileName;
       const isJsFile = jsRegex.test(fileExt);
+      if (isJsFile && fileName === 'index') {
+        const barrelEntry = entryRelativeDir.replace(/\/$/, '');
+        exports[barrelEntry] = sourceFilePath + options.fileExt;
+      }
       exports[isJsFile ? entryFilepath : entryFilepath + fileExt] =
         sourceFilePath + (isJsFile ? options.fileExt : fileExt);
     }
