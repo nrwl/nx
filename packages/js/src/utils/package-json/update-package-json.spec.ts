@@ -331,6 +331,37 @@ describe('getUpdatedPackageJsonContent', () => {
       },
     });
   });
+
+  it('should no override existing type', () => {
+    // Leave existing type untouched
+    expect(
+      getUpdatedPackageJsonContent(
+        {
+          name: 'test',
+          version: '0.0.1',
+          type: 'module',
+        },
+        {
+          main: 'proj/src/index.ts',
+          outputPath: 'dist/proj',
+          projectRoot: 'proj',
+          format: ['cjs'],
+          outputFileExtensionForCjs: '.cjs',
+          generateExportsField: true,
+        }
+      )
+    ).toEqual({
+      name: 'test',
+      main: './src/index.cjs',
+      types: './src/index.d.ts',
+      version: '0.0.1',
+      type: 'module',
+      exports: {
+        '.': './src/index.cjs',
+        './package.json': './package.json',
+      },
+    });
+  });
 });
 
 describe('updatePackageJson', () => {
