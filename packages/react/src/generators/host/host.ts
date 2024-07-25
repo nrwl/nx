@@ -1,4 +1,5 @@
 import {
+  addDependenciesToPackageJson,
   formatFiles,
   GeneratorCallback,
   joinPathFragments,
@@ -22,6 +23,7 @@ import { updateModuleFederationE2eProject } from './lib/update-module-federation
 import { NormalizedSchema, Schema } from './schema';
 import { addMfEnvToTargetDefaultInputs } from '../../utils/add-mf-env-to-inputs';
 import { isValidVariable } from '@nx/js';
+import { moduleFederationEnhancedVersion } from '../../utils/versions';
 
 export async function hostGenerator(
   host: Tree,
@@ -95,6 +97,7 @@ export async function hostGeneratorInternal(
         js: options.js,
         dynamic: options.dynamic,
         host: options.name,
+        skipPackageJson: options.skipPackageJson,
       });
       tasks.push(remoteTask);
       remotePort++;
@@ -136,6 +139,13 @@ export async function hostGeneratorInternal(
   }
 
   addMfEnvToTargetDefaultInputs(host);
+
+  const installTask = addDependenciesToPackageJson(
+    host,
+    {},
+    { '@module-federation/enhanced': moduleFederationEnhancedVersion }
+  );
+  tasks.push(installTask);
 
   if (!options.skipFormat) {
     await formatFiles(host);

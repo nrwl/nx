@@ -264,7 +264,6 @@ exports[`MF Remote App Generator --ssr should generate the correct files 11`] = 
       "extractLicenses": false,
       "optimization": false,
       "sourceMap": true,
-      "vendorChunk": true,
     },
     "production": {
       "outputHashing": "media",
@@ -482,7 +481,6 @@ exports[`MF Remote App Generator --ssr should generate the correct files when --
       "extractLicenses": false,
       "optimization": false,
       "sourceMap": true,
-      "vendorChunk": true,
     },
     "production": {
       "outputHashing": "media",

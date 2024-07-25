@@ -167,17 +167,14 @@ function writeTmpEntryWithRequireOverrides(
     tmpPath,
     `main-with-require-overrides.js`
   );
+  const mainFile = `./${path.join(
+    mainPathRelativeToDist,
+    `${mainFileName}${outExtension}`
+  )}`;
+
   writeFileSync(
     mainWithRequireOverridesInPath,
-    getRegisterFileContent(
-      project,
-      paths,
-      `./${path.join(
-        mainPathRelativeToDist,
-        `${mainFileName}${outExtension}`
-      )}`,
-      outExtension
-    )
+    getRegisterFileContent(project, paths, mainFile, outExtension)
   );
 
   let mainWithRequireOverridesOutPath: string;
@@ -286,12 +283,21 @@ function isFile(s) {
 }
 
 // Call the user-defined main.
-require('${mainFile}');
+module.exports = require('${mainFile}');
 `;
 }
 
 function getPrefixLength(pattern: string): number {
-  return pattern.substring(0, pattern.indexOf('*')).length;
+  const prefixIfWildcard = pattern.substring(0, pattern.indexOf('*')).length;
+  const prefixWithoutWildcard = pattern.substring(
+    0,
+    pattern.lastIndexOf('/')
+  ).length;
+  // if the pattern doesn't contain '*', then the length is always 0
+  // This causes issues when there are sub packages such as
+  // @nx/core
+  // @nx/core/testing
+  return prefixIfWildcard || prefixWithoutWildcard;
 }
 
 function getTsConfigCompilerPaths(context: ExecutorContext): {

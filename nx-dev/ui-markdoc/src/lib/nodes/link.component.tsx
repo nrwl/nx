@@ -6,6 +6,7 @@ export function CustomLink(props: any) {
 
   return (
     <Link
+      prefetch={false}
       {...props}
       passHref
       target={target}

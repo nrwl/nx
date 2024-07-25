@@ -4,17 +4,19 @@ import { TerminalShellWrapper } from './terminal-shell';
 export function TerminalOutput({
   content,
   command,
+  title,
   path,
   actionElement,
 }: {
   content: ReactNode;
   command: string;
+  title?: string;
   path: string;
   actionElement?: ReactNode;
 }): JSX.Element {
   const commandLines = command.split('\n').filter(Boolean);
   return (
-    <TerminalShellWrapper>
+    <TerminalShellWrapper title={title}>
       <div className="overflow-x-auto p-4 pt-2">
         <div className="items-left relative flex flex-col">
           {commandLines.map((line, index) => {

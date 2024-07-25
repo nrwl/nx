@@ -21,6 +21,8 @@ import { gt, valid } from 'semver';
 import { findInstalledPlugins } from '../../utils/plugins/installed-plugins';
 import { getNxRequirePaths } from '../../utils/installation-directory';
 import { NxJsonConfiguration, readNxJson } from '../../config/nx-json';
+import { ProjectGraph } from '../../config/project-graph';
+import { ProjectGraphError } from '../../project-graph/error-types';
 
 const nxPackageJson = readJsonFile<typeof import('../../../package.json')>(
   join(__dirname, '../../../package.json')
@@ -62,16 +64,23 @@ export async function reportHandler() {
     packageVersionsWeCareAbout,
     outOfSyncPackageGroup,
     projectGraphError,
+    nativeTarget,
   } = await getReportData();
 
-  const bodyLines = [
-    `Node   : ${process.versions.node}`,
-    `OS     : ${process.platform}-${process.arch}`,
-    `${pm.padEnd(7)}: ${pmVersion}`,
-    ``,
+  const fields = [
+    ['Node', process.versions.node],
+    ['OS', `${process.platform}-${process.arch}`],
+    ['Native Target', nativeTarget ?? 'Unavailable'],
+    [pm, pmVersion],
   ];
+  let padding = Math.max(...fields.map((f) => f[0].length));
+  const bodyLines = fields.map(
+    ([field, value]) => `${field.padEnd(padding)}  : ${value}`
+  );
 
-  let padding =
+  bodyLines.push('');
+
+  padding =
     Math.max(...packageVersionsWeCareAbout.map((x) => x.package.length)) + 1;
   packageVersionsWeCareAbout.forEach((p) => {
     bodyLines.push(
@@ -154,25 +163,19 @@ export interface ReportData {
     migrateTarget: string;
   };
   projectGraphError?: Error | null;
+  nativeTarget: string | null;
 }
 
 export async function getReportData(): Promise<ReportData> {
   const pm = detectPackageManager();
   const pmVersion = getPackageManagerVersion(pm);
 
+  const { graph, error: projectGraphError } = await tryGetProjectGraph();
+
   const nxJson = readNxJson();
-  const localPlugins = await findLocalPlugins(nxJson);
+  const localPlugins = await findLocalPlugins(graph, nxJson);
   const communityPlugins = findInstalledCommunityPlugins();
   const registeredPlugins = findRegisteredPluginsBeingUsed(nxJson);
-
-  let projectGraphError: Error | null = null;
-  if (isNativeAvailable()) {
-    try {
-      await createProjectGraphAsync();
-    } catch (e) {
-      projectGraphError = e;
-    }
-  }
 
   const packageVersionsWeCareAbout = findInstalledPackagesWeCareAbout();
   packageVersionsWeCareAbout.unshift({
@@ -188,6 +191,8 @@ export async function getReportData(): Promise<ReportData> {
 
   const outOfSyncPackageGroup = findMisalignedPackagesForPackage(nxPackageJson);
 
+  const native = isNativeAvailable();
+
   return {
     pm,
     pmVersion,
@@ -197,12 +202,31 @@ export async function getReportData(): Promise<ReportData> {
     packageVersionsWeCareAbout,
     outOfSyncPackageGroup,
     projectGraphError,
+    nativeTarget: native ? native.getBinaryTarget() : null,
   };
 }
 
-async function findLocalPlugins(nxJson: NxJsonConfiguration) {
+async function tryGetProjectGraph() {
   try {
-    const projectGraph = await createProjectGraphAsync({ exitOnError: true });
+    return { graph: await createProjectGraphAsync() };
+  } catch (error) {
+    if (error instanceof ProjectGraphError) {
+      return {
+        graph: error.getPartialProjectGraph(),
+        error: error,
+      };
+    }
+    return {
+      error,
+    };
+  }
+}
+
+async function findLocalPlugins(
+  projectGraph: ProjectGraph,
+  nxJson: NxJsonConfiguration
+) {
+  try {
     const localPlugins = await getLocalWorkspacePlugins(
       readProjectsConfigurationFromProjectGraph(projectGraph),
       nxJson
@@ -338,10 +362,9 @@ export function findInstalledPackagesWeCareAbout() {
   }));
 }
 
-function isNativeAvailable() {
+function isNativeAvailable(): typeof import('../../native') | false {
   try {
-    require('../../native');
-    return true;
+    return require('../../native');
   } catch {
     return false;
   }

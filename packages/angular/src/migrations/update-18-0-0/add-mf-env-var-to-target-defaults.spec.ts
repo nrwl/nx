@@ -29,7 +29,7 @@ describe('addMfEnvVarToTargetDefaults', () => {
             "production",
             "^production",
             {
-              "env": "NX_MF_DEV_SERVER_STATIC_REMOTES",
+              "env": "NX_MF_DEV_REMOTES",
             },
           ],
         },
@@ -109,7 +109,7 @@ describe('addMfEnvVarToTargetDefaults', () => {
           "inputs": [
             "^build",
             {
-              "env": "NX_MF_DEV_SERVER_STATIC_REMOTES",
+              "env": "NX_MF_DEV_REMOTES",
             },
           ],
         },

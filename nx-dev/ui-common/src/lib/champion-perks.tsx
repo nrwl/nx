@@ -33,12 +33,12 @@ export function ChampionPerks(): JSX.Element {
       <div className="mx-auto max-w-7xl px-4 sm:grid sm:grid-cols-2 sm:gap-8 sm:px-6 lg:px-8">
         <div>
           <header>
-            <SectionHeading as="h1" variant="title" id="nx-is-fast">
+            <SectionHeading as="h1" variant="subtitle" id="nx-is-fast">
               Interested in joining the Nx Champions program yourself?
             </SectionHeading>
             <SectionHeading
               as="p"
-              variant="display"
+              variant="title"
               id="nx-is-fast"
               className="mt-4"
             >

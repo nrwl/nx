@@ -176,6 +176,12 @@
       "type": "boolean",
       "description": "Whether the module federation configuration and webpack configuration files should use TS. When --js is used, this flag is ignored.",
       "default": true
+    },
+    "skipPackageJson": {
+      "description": "Do not add dependencies to `package.json`.",
+      "type": "boolean",
+      "default": false,
+      "x-priority": "internal"
     }
   },
   "required": ["name"],

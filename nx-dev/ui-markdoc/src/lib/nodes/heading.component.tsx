@@ -7,18 +7,30 @@ export function Heading({
   level = 1,
   children,
   className,
+  highlightColor,
 }: {
   id: string;
   level: number;
   children: ReactNode;
   className: string;
+  highlightColor?: 'green' | 'blue' | 'yellow' | 'red';
 }) {
   const Component: any = `h${level}`;
 
   return (
     <Component
       id={id}
-      className={['not-prose group', className].filter(Boolean).join(' ')}
+      className={[
+        'group',
+        highlightColor && 'xl:-ml-5 xl:border-l-4 xl:pl-4',
+        highlightColor === 'blue' && 'xl:border-blue-500',
+        highlightColor === 'green' && 'xl:border-green-500',
+        highlightColor === 'yellow' && 'xl:border-yellow-500',
+        highlightColor === 'red' && 'xl:border-red-500',
+        className,
+      ]
+        .filter(Boolean)
+        .join(' ')}
     >
       {children}
       <Link aria-hidden="true" href={`#${id}`}>

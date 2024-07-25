@@ -99,7 +99,7 @@
               "file": "shared/features/cache-task-results"
             },
             {
-              "name": "Explore your Workspace",
+              "name": "Explore Your Workspace",
               "id": "explore-graph",
               "tags": ["explore-graph"],
               "file": "shared/features/explore-graph"
@@ -178,14 +178,6 @@
                   "id": "flaky-tasks",
                   "file": "",
                   "path": "/ci/features/flaky-tasks",
-                  "isExternal": true
-                },
-                {
-                  "name": "Set up Nx Cloud On-Premise",
-                  "id": "on-premise",
-                  "description": "Set up Nx Cloud on machines that you control",
-                  "file": "",
-                  "path": "/ci/features/on-premise",
                   "isExternal": true
                 }
               ]
@@ -504,6 +496,11 @@
                   "name": "Deploying Next.js applications to Vercel",
                   "id": "deploy-nextjs-to-vercel",
                   "file": "shared/recipes/deployment/deploy-nextjs-to-vercel"
+                },
+                {
+                  "name": "React Compiler with Nx",
+                  "id": "react-compiler",
+                  "file": "shared/guides/react-compiler"
                 }
               ]
             },
@@ -1573,6 +1570,11 @@
               "file": "nx-cloud/intro/why-nx-cloud"
             },
             {
+              "name": "Connect to Nx Cloud",
+              "id": "connect-to-nx-cloud",
+              "file": "nx-cloud/intro/connect-to-cloud"
+            },
+            {
               "name": "Tutorials",
               "id": "tutorials",
               "description": "Tutorials setting up CI with Nx",
@@ -1617,6 +1619,12 @@
               "file": "shared/features/distribute-task-execution"
             },
             {
+              "name": "Nx Cloud AI",
+              "id": "nx-cloud-ai",
+              "description": "Learn how to enable AI features in Nx Cloud, and what features it enables",
+              "file": "nx-cloud/features/ai-features"
+            },
+            {
               "name": "Dynamically Allocate Agents",
               "description": "Learn how to dynamically allocate agents based on the size of a PR, keeping the balance of speed and cost.",
               "id": "dynamic-agents",
@@ -1633,13 +1641,6 @@
               "id": "flaky-tasks",
               "description": "Learn how Nx Cloud is able to automatically identify flaky tasks and re-run them for you.",
               "file": "nx-cloud/features/flaky-tasks"
-            },
-            {
-              "name": "Set up Nx Cloud On-Premise",
-              "description": "Set up Nx Cloud on machines that you control",
-              "id": "on-premise",
-              "tags": ["on-premise"],
-              "file": "nx-cloud/features/nx-enterprise-on-prem"
             }
           ]
         },
@@ -1684,11 +1685,6 @@
               "description": "Learn how to set up Nx Cloud for your workspace.",
               "tags": ["distribute-task-execution"],
               "itemList": [
-                {
-                  "name": "Connect Nx Cloud",
-                  "id": "connect-to-cloud",
-                  "file": "nx-cloud/recipes/connect-to-cloud"
-                },
                 {
                   "name": "Setting up Azure Pipelines",
                   "id": "monorepo-ci-azure",
@@ -1754,9 +1750,9 @@
                   "file": "nx-cloud/set-up/github"
                 },
                 {
-                  "name": "Enable Bitbucket Cloud PR Integration",
-                  "id": "bitbucket-cloud",
-                  "file": "nx-cloud/set-up/bitbucket-cloud"
+                  "name": "Enable Bitbucket PR Integration",
+                  "id": "bitbucket",
+                  "file": "nx-cloud/set-up/bitbucket"
                 },
                 {
                   "name": "Enable GitLab MR Integration",
@@ -1780,6 +1776,13 @@
                   "id": "on-premise",
                   "description": "Manage an on-premise installation of Nx Cloud",
                   "itemList": [
+                    {
+                      "name": "Set up Nx Cloud On-Premise",
+                      "description": "Set up Nx Cloud on machines that you control",
+                      "id": "on-premise",
+                      "tags": ["on-premise"],
+                      "file": "nx-cloud/features/nx-enterprise-on-prem"
+                    },
                     {
                       "name": "Authenticate with a Single Admin",
                       "id": "auth-single-admin",
@@ -1806,14 +1809,14 @@
                       "file": "nx-cloud/enterprise/on-premise/auth-bitbucket"
                     },
                     {
+                      "name": "Authenticate with BitBucket Data Center",
+                      "id": "auth-bitbucket-data-center",
+                      "file": "nx-cloud/enterprise/on-premise/auth-bitbucket-data-center"
+                    },
+                    {
                       "name": "Authenticate via SAML",
                       "id": "auth-saml",
                       "file": "nx-cloud/enterprise/on-premise/auth-saml"
-                    },
-                    {
-                      "name": "Authenticate via SAML on Managed Version",
-                      "id": "auth-saml-managed",
-                      "file": "nx-cloud/enterprise/on-premise/auth-saml-managed"
                     },
                     {
                       "name": "Advanced Configuration",
@@ -1932,6 +1935,11 @@
               "name": "CI Execution Failed",
               "id": "ci-execution-failed",
               "file": "nx-cloud/troubleshooting/ci-execution-failed"
+            },
+            {
+              "name": "Explain With AI",
+              "id": "explain-with-ai",
+              "file": "nx-cloud/troubleshooting/explain-with-ai"
             }
           ]
         }

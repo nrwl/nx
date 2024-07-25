@@ -58,9 +58,11 @@ function socketDirName() {
  * We try to create a socket file in a tmp dir, but if it doesn't work because
  * for instance we don't have permissions, we create it in DAEMON_DIR_FOR_CURRENT_WORKSPACE
  */
-export function getSocketDir() {
+export function getSocketDir(alreadyUnique = false) {
   try {
-    const dir = process.env.NX_DAEMON_SOCKET_DIR ?? socketDirName();
+    const dir =
+      process.env.NX_DAEMON_SOCKET_DIR ??
+      (alreadyUnique ? tmpdir : socketDirName());
     ensureDirSync(dir);
     return dir;
   } catch (e) {

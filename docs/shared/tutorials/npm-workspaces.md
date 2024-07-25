@@ -5,12 +5,16 @@ description: In this tutorial you'll add Nx to an existing NPM workspaces repo
 
 # NPM Workspaces Tutorial
 
-In this tutorial, you'll learn how to add Nx to a repository with an existing NPM workspaces setup. You'll see how Nx can provide immediate value with very little configuration and then you can gradually enable more features.
+In this tutorial, you'll learn how to add Nx to a repository with an existing [NPM workspaces](https://docs.npmjs.com/cli/using-npm/workspaces) setup.
 
-- Add Nx to the repository with a single command
-- Configure caching for your existing tasks
-- Configure a task pipeline
-- Use Nx Plugins to automatically configure caching
+What will you learn?
+
+- how to add Nx to the repository with a single command
+- how to configure caching for your tasks
+- how to configure a task pipeline
+- how to configure projects automatically with Nx Plugins
+- how to manage your releases with `nx release`
+- [how to speed up CI with Nx Cloud ⚡](#fast-ci)
 
 <!-- ## Final Source Code
 
@@ -27,10 +31,10 @@ title="Nx NPM Workspaces Tutorial Walkthrough"
 
 {% video-link link="https://youtu.be/ZA9K4iT3ANc?t=51" /%}
 
-To get started, check out [the sample repository](https://github.com/nrwl/tuskydesign) on your local machine:
+To get started, fork [the sample repository](https://github.com/nrwl/tuskydesign/fork) and clone it on your local machine:
 
 ```shell
-git clone https://github.com/nrwl/tuskydesign.git
+git clone https://github.com/<your-username>/tuskydesign.git
 ```
 
 The repository has two React packages (under `packages/buttons` and `packages/forms`) that are used in a `demo` application (located in `apps/demo`) that was designed to be used with the Vite CLI. The root `package.json` has a `workspaces` property that tells NPM how to find the projects in the repository.
@@ -56,35 +60,8 @@ Now let's try running some tasks. To lint the `demo` app, use the `lint` npm scr
 
 If you try to build the `demo` app, it will fail.
 
-```text {% command="npm run build -w @tuskdesign/demo" path="~/tuskydesigns" %}
-> @tuskdesign/demo@0.0.0 prebuild
-> npm run typecheck
-
-> @tuskdesign/demo@0.0.0 typecheck
-> tsc
-
-> @tuskdesign/demo@0.0.0 build
-> vite build
-
-vite v5.0.12 building for production...
-✓ 4 modules transformed.
-[commonjs--resolver] Failed to resolve entry for package "@tuskdesign/buttons". The package may have incorrect main/module/exports specified in its package.json.
-error during build:
+```text
 Error: Failed to resolve entry for package "@tuskdesign/buttons". The package may have incorrect main/module/exports specified in its package.json.
-    at packageEntryFailure (file:///Users/isaac/Documents/code/tuskydesign/node_modules/vite/dist/node/chunks/dep-9A4-l-43.js:29443:17)
-    at resolvePackageEntry (file:///Users/isaac/Documents/code/tuskydesign/node_modules/vite/dist/node/chunks/dep-9A4-l-43.js:29440:5)
-    at tryNodeResolve (file:///Users/isaac/Documents/code/tuskydesign/node_modules/vite/dist/node/chunks/dep-9A4-l-43.js:29210:20)
-    at Object.resolveId (file:///Users/isaac/Documents/code/tuskydesign/node_modules/vite/dist/node/chunks/dep-9A4-l-43.js:28978:28)
-    at file:///Users/isaac/Documents/code/tuskydesign/node_modules/vite/node_modules/rollup/dist/es/shared/node-entry.js:19579:40
-    at async PluginDriver.hookFirstAndGetPlugin (file:///Users/isaac/Documents/code/tuskydesign/node_modules/vite/node_modules/rollup/dist/es/shared/node-entry.js:19479:28)
-    at async resolveId (file:///Users/isaac/Documents/code/tuskydesign/node_modules/vite/node_modules/rollup/dist/es/shared/node-entry.js:18149:26)
-    at async ModuleLoader.resolveId (file:///Users/isaac/Documents/code/tuskydesign/node_modules/vite/node_modules/rollup/dist/es/shared/node-entry.js:18563:15)
-    at async Object.resolveId (file:///Users/isaac/Documents/code/tuskydesign/node_modules/vite/dist/node/chunks/dep-9A4-l-43.js:8141:10)
-    at async PluginDriver.hookFirstAndGetPlugin (file:///Users/isaac/Documents/code/tuskydesign/node_modules/vite/node_modules/rollup/dist/es/shared/node-entry.js:19479:28)
-npm ERR! Lifecycle script `build` failed with error:
-npm ERR! Error: command failed
-npm ERR!   in workspace: @tuskdesign/demo@0.0.0
-npm ERR!   at location: /Users/isaac/Documents/code/tuskydesign/apps/demo
 ```
 
 The `build` script fails because it needs the `buttons` and `forms` projects to be built first in order to work correctly. To do this, lets return to the root of the repository and run the `build` task for every project in the repo:
@@ -97,11 +74,13 @@ When the `buttons` and `forms` projects are built first, the `demo` app can buil
 
 Now that you have a basic understanding of the repository we're working with, let's see how Nx can help us.
 
-## Add Nx
+## Smart Monorepo
 
 {% video-link link="https://youtu.be/ZA9K4iT3ANc?t=170" /%}
 
 Nx offers many features, but at its core, it is a task runner. Out of the box, it can cache your tasks and ensure those tasks are run in the correct order. After the initial set up, you can incrementally add on other features that would be helpful in your organization.
+
+### Add Nx
 
 To enable Nx in your repository, run a single command:
 
@@ -121,43 +100,17 @@ Second, the script asks a series of questions to help set up caching for you.
 - `Which scripts are cacheable?` - Choose `typecheck`, `build` and `lint`
 - `Does the "typecheck" script create any outputs?` - Enter nothing
 - `Does the "build" script create any outputs?` - Enter `dist`
-- `Does the "lint" script create any outputs?` - Enter nothing
+- `Does the "lint" script creggggggate any outputs?` - Enter nothing
 - `Would you like remote caching to make your build faster?` - Choose `Skip for now`
 
-```text {% command="npx nx@latest init" path="~/tuskydesigns" %}
- NX   Recommended Plugins:
-
-Add these Nx plugins to integrate with the tools used in your workspace.
-
-✔ Which plugins would you like to add? · No items were selected
-
- NX   🐳 Nx initialization
-
- NX   🧑‍🔧 Please answer the following questions about the scripts found in your workspace in order to generate task runner configuration
-
-✔ Which scripts need to be run in order? (e.g. before building a project, dependent projects must be built) · build
-✔ Which scripts are cacheable? (Produce the same output given the same input, e.g. build, test and lint usually are, serve and start are not) · typecheck, build, lint
-✔ Does the "typecheck" script create any outputs? If not, leave blank, otherwise provide a path relative to a project root (e.g. dist, lib, build, coverage) ·
-✔ Does the "build" script create any outputs? If not, leave blank, otherwise provide a path relative to a project root (e.g. dist, lib, build, coverage) · dist
-✔ Does the "lint" script create any outputs? If not, leave blank, otherwise provide a path relative to a project root (e.g. dist, lib, build, coverage) ·
-✔ Would you like remote caching to make your build faster? · skip
-
- ...
-
- NX   👀 Explore Your Workspace
-
-Run "nx graph" to show the graph of the workspace. It will show tasks that you can run with Nx.
-Read this guide on exploring your workspace: https://nx.dev/features/explore-graph
-```
-
-## Explore Your Workspace
+### Explore Your Workspace
 
 {% video-link link="https://youtu.be/ZA9K4iT3ANc?t=250" /%}
 
 If you run `nx graph` as instructed, you'll see the dependencies between your projects.
 
 ```shell {% path="~/tuskydesigns" %}
-npx nx graph
+npx nx graph --focus=@tuskdesign/demo
 ```
 
 {% graph title="Tusk Design" height="200px" jsonFile="shared/tutorials/npm-workspaces-project-graph.json" %}
@@ -165,7 +118,7 @@ npx nx graph
 
 Nx uses this graph to determine the order tasks are run and enforce module boundaries. You can also leverage this graph to gain an accurate understanding of the architecture of your codebase. Part of what makes this graph invaluable is that it is derived directly from your codebase, so it will never become out of date.
 
-## Caching Pre-configured
+### Caching Pre-configured
 
 {% video-link link="https://youtu.be/ZA9K4iT3ANc?t=285" /%}
 
@@ -217,7 +170,7 @@ Nx read the output from the cache instead of running the command for 3 out of 3 
 
 You can see the same caching behavior working when you run `npx nx lint` or `npx nx typecheck`.
 
-## Use Task Pipelines
+### Use Task Pipelines
 
 {% video-link link="https://youtu.be/ZA9K4iT3ANc?t=358" /%}
 
@@ -239,6 +192,12 @@ This configuration means that if you run `build` on any project, Nx will first r
 npx nx graph
 ```
 
+Alternatively, you can pass the `--graph` option to the run command to inspect the task graph.
+
+```shell {% path="~/tuskydesigns" %}
+npx nx run @tuskdesign/demo:build --graph
+```
+
 {% graph height="200px" title="Build Task Pipeline" type="task" jsonFile="shared/tutorials/npm-workspaces-build-tasks1.json" %}
 {% /graph %}
 
@@ -254,7 +213,7 @@ Nx read the output from the cache instead of running the command for 3 out of 3 
 
 Not only does the build complete successfully, but it finishes instantly and the `packages/forms/dist` folder is put back in place thanks to the caching.
 
-## Create a Task Pipeline
+### Create a Task Pipeline
 
 {% video-link link="https://youtu.be/ZA9K4iT3ANc?t=450" /%}
 
@@ -282,7 +241,7 @@ You may have noticed in the `apps/demo/package.json` file, there is a `prebuild`
 
 The `dependsOn` line makes Nx run the `typecheck` task for the current project and the `build` task for any dependencies before running the current project's `build` task. Now `nx build` will run the `typecheck` task just like `npm run build` does.
 
-## Use Nx Plugins to Enhance Vite Tasks with Caching
+### Use Nx Plugins to Enhance Vite Tasks with Caching
 
 {% video-link link="https://youtu.be/ZA9K4iT3ANc?t=507" /%}
 
@@ -357,11 +316,15 @@ Now if you look at project details view again, you'll see that the `outputs` pro
 
 You can also add the `@nx/eslint` plugin to see how it infers `lint` tasks based on the ESLint configuration files.
 
-## Summary
+### Checkpoint
 
-After following this tutorial, the repository is still using all the same tools to run tasks, but now Nx runs those tasks in a smarter way. The tasks are efficiently cached so that there is no repeated work and the cache configuration settings are automatically synced with your tooling configuration files by Nx plugins. Also, any task dependencies are automatically executed whenever needed because we configured task pipelines for the projects.
+At this point, the repository is still using all the same tools to run tasks, but now Nx runs those tasks in a smarter way. The tasks are efficiently cached so that there is no repeated work and the cache configuration settings are automatically synced with your tooling configuration files by Nx plugins. Also, any task dependencies are automatically executed whenever needed because we configured task pipelines for the projects.
 
-The final task graph for `demo` app's `build` task looks like this:
+Open up the task graph for `demo` app's `build` task again to see the changes.
+
+```shell {% path="~/tuskydesigns" %}
+npx nx run @tuskdesign/demo:build --graph
+```
 
 {% graph height="200px" title="Build Task Pipeline" type="task" jsonFile="shared/tutorials/npm-workspaces-build-tasks2.json" %}
 {% /graph %}
@@ -398,68 +361,112 @@ nx release --first-release
 
 After this first release, you can remove the `--first-release` flag and just run `nx release --dry-run`. There is also a [dedicated feature page](/features/manage-releases) that goes into more detail about how to use the `nx release` command.
 
-## Set Up CI for Your NPM Workspace
+## Fast CI ⚡ {% highlightColor="green" %}
+
+{% callout type="check" title="Forked repository with Nx" %}
+Make sure you have completed the previous sections of this tutorial before starting this one. If you want a clean starting point, you can fork the [sample repository with Nx already added](https://github.com/nrwl/nx-recipes/tree/main/npm-workspaces).
+{% /callout %}
 
 {% video-link link="https://youtu.be/ZA9K4iT3ANc?t=821" /%}
 
-This tutorial walked you through how Nx can improve the local development experience, but the biggest difference Nx makes is in CI. As repositories get bigger, making sure that the CI is fast, reliable and maintainable can get very challenging. Nx provides a solution.
+So far in this tutorial you've seen how Nx improves the local development experience, but the biggest difference Nx makes is in CI. As repositories get bigger, making sure that the CI is fast, reliable and maintainable can get very challenging. Nx provides a solution.
 
 - Nx reduces wasted time in CI with the [`affected` command](/ci/features/affected).
 - Nx Replay's [remote caching](/ci/features/remote-cache) will reuse task artifacts from different CI executions making sure you will never run the same computation twice.
-- Nx Agents [efficiently distribute tasks across machines](/ci/concepts/parallelization-distribution) ensuring constant CI time regardless of the repository size. The right number of machines is allocated for each PR to ensure good performance without wasting compute.
+- Nx Agents [efficiently distribute tasks across machines](/ci/features/distribute-task-execution) ensuring constant CI time regardless of the repository size. The right number of machines is allocated for each PR to ensure good performance without wasting compute.
 - Nx Atomizer [automatically splits](/ci/features/split-e2e-tasks) large e2e tests to distribute them across machines. Nx can also automatically [identify and rerun flaky e2e tests](/ci/features/flaky-tasks).
 
-### Generate a CI Workflow
-
-If you are starting a new project, you can use the following command to generate a CI workflow file.
-
-```shell
-npx nx generate ci-workflow --ci=github
-```
-
-{% callout type="note" title="Choose your CI provider" %}
-You can choose `github`, `circleci`, `azure`, `bitbucket-pipelines`, or `gitlab` for the `ci` flag.
-{% /callout %}
-
-This generator creates a `.github/workflows/ci.yml` file that contains a CI pipeline that will run the `lint`, `test`, `build` and `e2e` tasks for projects that are affected by any given PR.
-
-The key line in the CI pipeline is:
-
-```yml
-- run: npx nx affected -t lint test build
-```
-
-### Connect to Nx Cloud
+### Connect to Nx Cloud {% highlightColor="green" %}
 
 Nx Cloud is a companion app for your CI system that provides remote caching, task distribution, e2e tests deflaking, better DX and more.
 
-To connect to Nx Cloud:
+Now that we're working on the CI pipeline, it is important for your changes to be pushed to a GitHub repository.
 
-- Commit and push your changes to GitHub
-- Go to [https://cloud.nx.app](https://cloud.nx.app), create an account, and connect your repository
+1. Commit your existing changes with `git add . && git commit -am "updates"`
+2. Push your changes to your forked GitHub repository with `git push`
 
-#### Connect to Nx Cloud Manually
-
-If you are not able to connect via the automated process at [nx.app](https://cloud.nx.app), you can connect your workspace manually by running:
+Now connect your repository to Nx Cloud with the following command:
 
 ```shell
 npx nx connect
 ```
 
-You will then need to merge your changes and connect to your workspace on [https://cloud.nx.app](https://cloud.nx.app).
+A browser window will open to register your repository in your [Nx Cloud](https://cloud.nx.app) account. The link is also printed to the terminal if the windows does not open, or you closed it before finishing the steps. The app will guide you to create a PR to enable Nx Cloud on your repository.
 
-### Enable a Distributed CI Pipeline
+![](/shared/tutorials/nx-cloud-github-connect.avif)
 
-The current CI pipeline runs on a single machine and can only handle small workspaces. To transform your CI into a CI that runs on multiple machines and can handle workspaces of any size, uncomment the `npx nx-cloud start-ci-run` line in the `.github/workflows/ci.yml` file.
+Once the PR is created, merge it into your main branch.
 
-```yml
-- run: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="e2e-ci"
+![](/shared/tutorials/github-cloud-pr-merged.avif)
+
+And make sure you pull the latest changes locally:
+
+```shell
+git pull
 ```
+
+You should now have an `nxCloudAccessToken` property specified in the `nx.json` file.
+
+### Create a CI Workflow {% highlightColor="green" %}
+
+Use the following command to generate a CI workflow file.
+
+```shell
+npx nx generate ci-workflow --ci=github
+```
+
+This generator creates a `.github/workflows/ci.yml` file that contains a CI pipeline that will run the `lint`, `test`, `build` and `e2e` tasks for projects that are affected by any given PR. Since we are using Nx Cloud, the pipeline will also [distribute tasks across multiple machines](/ci/features/distribute-task-execution) to ensure fast and reliable CI runs.
+
+The key lines in the CI pipeline are:
+
+```yml {% fileName=".github/workflows/ci.yml" highlightLines=["10-14", "21-22"] %}
+name: CI
+# ...
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      # This enables task distribution via Nx Cloud
+      # Run this command as early as possible, before dependencies are installed
+      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
+      # Connect your workspace by running "nx connect" and uncomment this
+      - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 20
+          cache: 'npm'
+      - run: npm ci --legacy-peer-deps
+      - uses: nrwl/nx-set-shas@v4
+      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
+      - run: npx nx affected -t lint test build
+```
+
+### Open a Pull Request {% highlightColor="green" %}
+
+Commit the changes and open a new PR on GitHub.
+
+```shell
+git add .
+git commit -m 'add CI workflow file'
+git push origin add-workflow
+```
+
+When you view the PR on GitHub, you will see a comment from Nx Cloud that reports on the status of the CI run.
+
+![Nx Cloud report](/shared/tutorials/github-pr-cloud-report.avif)
+
+The `See all runs` link goes to a page with the progress and results of tasks that were run in the CI pipeline.
+
+![Run details](/shared/tutorials/nx-cloud-run-details.avif)
 
 For more information about how Nx can improve your CI pipeline, check out one of these detailed tutorials:
 
 - [Circle CI with Nx](/ci/intro/tutorials/circle)
 - [GitHub Actions with Nx](/ci/intro/tutorials/github-actions)
+-
 
 ## Next Steps
 
@@ -467,5 +474,5 @@ Connect with the rest of the Nx community with these resources:
 
 - [Join the Official Nx Discord Server](https://go.nx.dev/community) to ask questions and find out the latest news about Nx.
 - [Follow Nx on Twitter](https://twitter.com/nxdevtools) to stay up to date with Nx news
-- [Read our Nx blog](https://blog.nrwl.io/)
+- [Read our Nx blog](/blog)
 - [Subscribe to our Youtube channel](https://www.youtube.com/@nxdevtools) for demos and Nx insights

@@ -540,14 +540,22 @@ async function startServer(
   environmentJs: string,
   host: string,
   port = 4211,
-  watchForchanges = true,
+  watchForChanges = true,
   affected: string[] = [],
   focus: string = null,
   groupByFolder: boolean = false,
   exclude: string[] = []
 ) {
   let unregisterFileWatcher: (() => void) | undefined;
-  if (watchForchanges) {
+
+  if (watchForChanges && !daemonClient.enabled()) {
+    output.warn({
+      title:
+        'Nx Daemon is not enabled. Graph will not refresh on file changes.',
+    });
+  }
+
+  if (watchForChanges && daemonClient.enabled()) {
     unregisterFileWatcher = await createFileWatcher();
   }
 
@@ -1212,6 +1220,6 @@ function getHelpTextFromTarget(
     throw new Error(`No help command found for ${projectName}:${targetName}`);
 
   return execSync(command, {
-    cwd: join(workspaceRoot, project.data.root),
+    cwd: target.options?.cwd ?? workspaceRoot,
   }).toString();
 }

@@ -95,7 +95,8 @@ export function getBasicNxCloudSection(items: MenuItem[]): MenuSection {
       .map((m) => {
         return {
           ...m,
-          disableCollapsible: !m.id.endsWith('tutorial'),
+          disableCollapsible:
+            !m.id.endsWith('tutorial') && !m.id.endsWith('concepts'),
         };
       }),
   };

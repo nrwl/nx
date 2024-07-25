@@ -20,7 +20,11 @@ function Hit({
   hit: InternalDocSearchHit | StoredDocSearchHit;
   children: ReactNode;
 }): JSX.Element {
-  return <Link href={hit.url}>{children}</Link>;
+  return (
+    <Link href={hit.url} prefetch={false}>
+      {children}
+    </Link>
+  );
 }
 
 export function AlgoliaSearch({

@@ -1,6 +1,6 @@
 # Adding Nx to your Existing Project
 
-Nx can be added to any type of project, not just monorepos. The main benefit is to get caching abilities for the package
+Nx can be added to any type of project, not just monorepos. A large benefit of Nx is its caching feature for package
 scripts. Each project usually has a set of scripts in the `package.json`:
 
 ```json {% fileName="package.json" %}
@@ -14,11 +14,13 @@ scripts. Each project usually has a set of scripts in the `package.json`:
 }
 ```
 
-You can make these scripts faster by leveraging Nx's caching capabilities. For example:
+You can make these scripts faster by leveraging Nx's [caching capabilities](/features/cache-task-results). For example:
 
 - You change some spec files: in that case the `build` task can be cached and doesn't have to re-run.
 - You update your docs, changing a couple of markdown files: then there's no need to re-run builds, tests, linting on
   your CI. All you might want to do is trigger the Docusaurus build.
+
+Additionally, Nx also [speeds up your CI ⚡](#fast-ci) with [remote caching](/ci/features/remote-cache) and [distributed task execution](/ci/features/distribute-task-execution).
 
 ## Install Nx on a Non-Monorepo Project
 
@@ -284,7 +286,7 @@ Now if you run `npm run test` or `nx test` twice, the results will be retrieved 
 this example are as cautious as possible, so you can significantly improve the value of the cache
 by [customizing Nx Inputs](/recipes/running-tasks/configure-inputs) for each task.
 
-## Set Up CI for Your Workspace
+## Fast CI ⚡ {% highlightColor="green" %}
 
 This tutorial walked you through how Nx can improve the local development experience, but the biggest difference Nx makes is in CI. As repositories get bigger, making sure that the CI is fast, reliable and maintainable can get very challenging. Nx provides a solution.
 
@@ -293,52 +295,92 @@ This tutorial walked you through how Nx can improve the local development experi
 - Nx Agents [efficiently distribute tasks across machines](/ci/concepts/parallelization-distribution) ensuring constant CI time regardless of the repository size. The right number of machines is allocated for each PR to ensure good performance without wasting compute.
 - Nx Atomizer [automatically splits](/ci/features/split-e2e-tasks) large e2e tests to distribute them across machines. Nx can also automatically [identify and rerun flaky e2e tests](/ci/features/flaky-tasks).
 
-### Generate a CI Workflow
-
-If you are starting a new project, you can use the following command to generate a CI workflow file.
-
-```shell
-npx nx generate ci-workflow --ci=github
-```
-
-{% callout type="note" title="Choose your CI provider" %}
-You can choose `github`, `circleci`, `azure`, `bitbucket-pipelines`, or `gitlab` for the `ci` flag.
-{% /callout %}
-
-This generator creates a `.github/workflows/ci.yml` file that contains a CI pipeline that will run the `lint`, `test`, `build` and `e2e` tasks for projects that are affected by any given PR.
-
-The key line in the CI pipeline is:
-
-```yml
-- run: npx nx affected -t lint test build e2e-ci
-```
-
-### Connect to Nx Cloud
+### Connect to Nx Cloud {% highlightColor="green" %}
 
 Nx Cloud is a companion app for your CI system that provides remote caching, task distribution, e2e tests deflaking, better DX and more.
 
-To connect to Nx Cloud:
+Now that we're working on the CI pipeline, it is important for your changes to be pushed to a GitHub repository.
 
-- Commit and push your changes
-- Go to [https://cloud.nx.app](https://cloud.nx.app), create an account, and connect your repository
+1. Commit your existing changes with `git add . && git commit -am "updates"`
+2. [Create a new GitHub repository](https://github.com/new)
+3. Follow GitHub's instructions to push your existing code to the repository
 
-#### Connect to Nx Cloud Manually
-
-If you are not able to connect via the automated process at [https://cloud.nx.app](https://cloud.nx.app), you can connect your workspace manually by running:
+Now connect your repository to Nx Cloud with the following command:
 
 ```shell
 npx nx connect
 ```
 
-You will then need to merge your changes and connect to your workspace on [https://cloud.nx.app](https://cloud.nx.app).
+A browser window will open to register your repository in your [Nx Cloud](https://cloud.nx.app) account. The link is also printed to the terminal if the windows does not open, or you closed it before finishing the steps. The app will guide you to create a PR to enable Nx Cloud on your repository.
 
-### Enable a Distributed CI Pipeline
+![](/shared/tutorials/nx-cloud-github-connect.avif)
 
-The current CI pipeline runs on a single machine and can only handle small workspaces. To transform your CI into a CI that runs on multiple machines and can handle workspaces of any size, uncomment the `npx nx-cloud start-ci-run` line in the `.github/workflows/ci.yml` file.
+Once the PR is created, merge it into your main branch.
 
-```yml
-- run: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="e2e-ci"
+![](/shared/tutorials/github-cloud-pr-merged.avif)
+
+And make sure you pull the latest changes locally:
+
+```shell
+git pull
 ```
+
+You should now have an `nxCloudAccessToken` property specified in the `nx.json` file.
+
+### Create a CI Workflow {% highlightColor="green" %}
+
+Use the following command to generate a CI workflow file.
+
+```shell
+npx nx generate ci-workflow --ci=github
+```
+
+This generator creates a `.github/workflows/ci.yml` file that contains a CI pipeline that will run the `lint`, `test`, `build` and `e2e` tasks for projects that are affected by any given PR. Since we are using Nx Cloud, the pipeline will also distribute tasks across multiple machines to ensure fast and reliable CI runs.
+
+The key lines in the CI pipeline are:
+
+```yml {% fileName=".github/workflows/ci.yml" highlightLines=["10-14", "21-22"] %}
+name: CI
+# ...
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      # This enables task distribution via Nx Cloud
+      # Run this command as early as possible, before dependencies are installed
+      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
+      # Connect your workspace by running "nx connect" and uncomment this
+      - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 20
+          cache: 'npm'
+      - run: npm ci --legacy-peer-deps
+      - uses: nrwl/nx-set-shas@v4
+      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
+      - run: npx nx affected -t lint test build
+```
+
+### Open a Pull Request {% highlightColor="green" %}
+
+Commit the changes and open a new PR on GitHub.
+
+```shell
+git add .
+git commit -m 'add CI workflow file'
+git push origin add-workflow
+```
+
+When you view the PR on GitHub, you will see a comment from Nx Cloud that reports on the status of the CI run.
+
+![Nx Cloud report](/shared/tutorials/github-pr-cloud-report.avif)
+
+The `See all runs` link goes to a page with the progress and results of tasks that were run in the CI pipeline.
+
+![Run details](/shared/tutorials/nx-cloud-run-details.avif)
 
 For more information about how Nx can improve your CI pipeline, check out one of these detailed tutorials:
 

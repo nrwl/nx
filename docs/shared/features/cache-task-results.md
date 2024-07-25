@@ -87,7 +87,7 @@ To achieve this, we can add an `inputs` and `outputs` definition globally for al
   "targetDefaults": {
     "build": {
       "inputs": ["{projectRoot}/**/*", "!{projectRoot}/**/*.md"],
-      "outputs": ["{workspaceRoot}/dist/{projectName"]
+      "outputs": ["{workspaceRoot}/dist/{projectName}"]
     }
   }
 }

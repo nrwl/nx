@@ -1,12 +1,11 @@
 /* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
 import type { TargetConfiguration } from '@nx/devkit';
-
 import { JsonCodeBlock } from '@nx/graph/ui-code-block';
+import { CopyToClipboardButton } from '@nx/graph/ui-components';
 import { useCallback, useContext, useEffect, useState } from 'react';
 import { FadingCollapsible } from './fading-collapsible';
 import { TargetConfigurationProperty } from './target-configuration-property';
-import { CopyToClipboard } from '../copy-to-clipboard/copy-to-clipboard';
 import { PropertyInfoTooltip, Tooltip } from '@nx/graph/ui-tooltips';
 import { TooltipTriggerText } from './tooltip-trigger-text';
 import { Pill } from '../pill';
@@ -53,10 +52,6 @@ export default function TargetConfigurationDetails({
   const [collapsed, setCollapsed] = useState(true);
   const { expandedTargets, toggleTarget } = useContext(ExpandedTargetsContext);
 
-  const handleCopyClick = async (copyText: string) => {
-    await window.navigator.clipboard.writeText(copyText);
-  };
-
   const handleCollapseToggle = useCallback(() => {
     if (toggleTarget) {
       toggleTarget(targetName);
@@ -79,9 +74,9 @@ export default function TargetConfigurationDetails({
     getDisplayHeaderFromTargetConfiguration(targetConfiguration);
   const configurations = targetConfiguration.configurations;
 
-  const shouldRenderOptions =
+  const shouldRenderOptions: boolean =
     options &&
-    (typeof options === 'object' ? Object.keys(options).length : true);
+    (typeof options === 'object' ? Object.keys(options).length > 0 : true);
 
   const shouldRenderConfigurations =
     configurations &&
@@ -110,10 +105,7 @@ export default function TargetConfigurationDetails({
         <div className="p-4 text-base">
           <div className="group mb-4">
             <h4 className="mb-4">
-              <TargetExecutorTitle
-                {...displayHeader}
-                handleCopyClick={handleCopyClick}
-              />
+              <TargetExecutorTitle {...displayHeader} />
             </h4>
             <p className="pl-5 font-mono">
               <TargetExecutor {...displayHeader} link={link}>
@@ -131,10 +123,7 @@ export default function TargetConfigurationDetails({
           {script && (
             <div className="group mb-4">
               <h4 className="mb-4">
-                <TargetExecutorTitle
-                  script={script}
-                  handleCopyClick={handleCopyClick}
-                />
+                <TargetExecutorTitle script={script} />
               </h4>
               <p className="pl-5 font-mono">
                 <TargetExecutor script={script} link={link}>
@@ -148,7 +137,7 @@ export default function TargetConfigurationDetails({
             </div>
           )}
 
-          {shouldRenderOptions ? (
+          {shouldRenderOptions || targetConfiguration.metadata?.help ? (
             <>
               <h4 className="mb-4">
                 <Tooltip
@@ -160,31 +149,34 @@ export default function TargetConfigurationDetails({
                   </span>
                 </Tooltip>
               </h4>
-              <div className="mb-4">
-                <FadingCollapsible>
-                  <JsonCodeBlock
-                    data={options}
-                    renderSource={(propertyName: string) => (
-                      <TargetSourceInfo
-                        className="flex min-w-0 pl-4"
-                        propertyKey={`targets.${targetName}.options.${propertyName}`}
-                        sourceMap={sourceMap}
-                      />
-                    )}
+              {shouldRenderOptions ? (
+                <div className="mb-4">
+                  <FadingCollapsible>
+                    <JsonCodeBlock
+                      data={options}
+                      copyTooltipText="Copy Options"
+                      renderSource={(propertyName: string) => (
+                        <TargetSourceInfo
+                          className="flex min-w-0 pl-4"
+                          propertyKey={`targets.${targetName}.options.${propertyName}`}
+                          sourceMap={sourceMap}
+                        />
+                      )}
+                    />
+                  </FadingCollapsible>
+                </div>
+              ) : null}
+              {targetConfiguration.metadata?.help && (
+                <div className="mb-4">
+                  <ShowOptionsHelp
+                    targetConfiguration={targetConfiguration}
+                    projectName={projectName}
+                    targetName={targetName}
                   />
-                </FadingCollapsible>
-              </div>
-              <div className="mb-4">
-                <ShowOptionsHelp
-                  targetConfiguration={targetConfiguration}
-                  projectName={projectName}
-                  targetName={targetName}
-                />
-              </div>
+                </div>
+              )}
             </>
-          ) : (
-            ''
-          )}
+          ) : null}
 
           {targetConfiguration.inputs && (
             <div className="group">
@@ -198,14 +190,11 @@ export default function TargetConfigurationDetails({
                   </span>
                 </Tooltip>
                 <span className="mb-1 ml-2 hidden group-hover:inline">
-                  <CopyToClipboard
-                    onCopy={() =>
-                      handleCopyClick(
-                        `"inputs": ${JSON.stringify(
-                          targetConfiguration.inputs
-                        )}`
-                      )
-                    }
+                  <CopyToClipboardButton
+                    text={`"inputs": ${JSON.stringify(
+                      targetConfiguration.inputs
+                    )}`}
+                    tooltipText="Copy Inputs"
                   />
                 </span>
               </h4>
@@ -239,14 +228,11 @@ export default function TargetConfigurationDetails({
                   </span>
                 </Tooltip>
                 <span className="mb-1 ml-2 hidden group-hover:inline">
-                  <CopyToClipboard
-                    onCopy={() =>
-                      handleCopyClick(
-                        `"outputs": ${JSON.stringify(
-                          targetConfiguration.outputs
-                        )}`
-                      )
-                    }
+                  <CopyToClipboardButton
+                    text={`"outputs": ${JSON.stringify(
+                      targetConfiguration.outputs
+                    )}`}
+                    tooltipText="Copy Outputs"
                   />
                 </span>
               </h4>
@@ -279,15 +265,12 @@ export default function TargetConfigurationDetails({
                     <TooltipTriggerText>Depends On</TooltipTriggerText>
                   </span>
                 </Tooltip>
-                <span className="inline pl-4 opacity-0 transition-opacity duration-150 ease-in-out group-hover/line:opacity-100">
-                  <CopyToClipboard
-                    onCopy={() =>
-                      handleCopyClick(
-                        `"dependsOn": ${JSON.stringify(
-                          targetConfiguration.dependsOn
-                        )}`
-                      )
-                    }
+                <span className="mb-1 ml-2 hidden group-hover:inline">
+                  <CopyToClipboardButton
+                    text={`"dependsOn": ${JSON.stringify(
+                      targetConfiguration.dependsOn
+                    )}`}
+                    tooltipText="Copy Depends On"
                   />
                 </span>
               </h4>
@@ -336,6 +319,7 @@ export default function TargetConfigurationDetails({
               <FadingCollapsible>
                 <JsonCodeBlock
                   data={targetConfiguration.configurations}
+                  copyTooltipText="Copy Configurations"
                   renderSource={(propertyName: string) => (
                     <TargetSourceInfo
                       className="flex min-w-0 pl-4"
@@ -346,9 +330,31 @@ export default function TargetConfigurationDetails({
                 />
               </FadingCollapsible>
             </>
-          ) : (
-            ''
-          )}
+          ) : null}
+
+          {targetConfiguration.parallelism === false ? (
+            <div className="group mb-4">
+              <h4 className="mb-4">
+                <Tooltip
+                  openAction="hover"
+                  content={(<PropertyInfoTooltip type="parallelism" />) as any}
+                >
+                  <span className="font-medium">
+                    <TooltipTriggerText>Parallelism</TooltipTriggerText>
+                  </span>
+                </Tooltip>
+              </h4>
+              <div className="group/line overflow-hidden whitespace-nowrap pl-5">
+                <TargetConfigurationProperty data={{ paralelism: false }}>
+                  <TargetSourceInfo
+                    className="min-w-0 flex-1 pl-4 opacity-0 transition-opacity duration-150 ease-in-out group-hover/line:opacity-100"
+                    propertyKey={`targets.${targetName}.parallelism`}
+                    sourceMap={sourceMap}
+                  />
+                </TargetConfigurationProperty>
+              </div>
+            </div>
+          ) : null}
         </div>
       )}
     </div>

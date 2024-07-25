@@ -175,7 +175,7 @@ jobs:
               sudo apt-get update
               sudo apt-get install gcc-arm-linux-gnueabihf -y
             build: |
-              pnpm nx run-many --target=build-native -- --target=armv7-unknown-linux-gnueabihf
+              CARGO_TARGET_ARMV7_UNKNOWN_LINUX_GNUEABIHF_LINKER=/usr/bin/arm-linux-gnueabihf-gcc pnpm nx run-many --target=build-native -- --target=armv7-unknown-linux-gnueabihf
           # Android (not needed)
           # - host: ubuntu-latest
           #   target: aarch64-linux-android
@@ -203,7 +203,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          repository: ${{ needs.resolve-required-data.outputs.repo }} 
+          repository: ${{ needs.resolve-required-data.outputs.repo }}
           ref: ${{ needs.resolve-required-data.outputs.ref }}
 
       - uses: pnpm/action-setup@v4
@@ -281,26 +281,28 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: bindings-${{ matrix.settings.target }}
-          path: packages/**/*.node
+          path: |
+            packages/**/*.node
+            packages/**/*.wasm
           if-no-files-found: error
 
   build-freebsd:
     needs: [resolve-required-data]
     if: ${{ github.repository_owner == 'nrwl' }}
-    runs-on: macos-13-large
+    runs-on: ubuntu-latest
     name: Build FreeBSD
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
         if: ${{ github.event_name != 'schedule' && !github.event.inputs.pr }}
         with:
-          repository: ${{ needs.resolve-required-data.outputs.repo }} 
+          repository: ${{ needs.resolve-required-data.outputs.repo }}
           ref: ${{ needs.resolve-required-data.outputs.ref }}
 
       - name: Build
         id: build
         if: ${{ github.event_name != 'schedule' && !github.event.inputs.pr }}
-        uses: cross-platform-actions/action@v0.22.0
+        uses: cross-platform-actions/action@v0.25.0
         env:
           DEBUG: napi:*
           RUSTUP_IO_THREADS: 1
@@ -308,14 +310,14 @@ jobs:
           PLAYWRIGHT_BROWSERS_PATH: 0
         with:
           operating_system: freebsd
-          version: '13.2'
+          version: '14.0'
           architecture: x86-64
           environment_variables: DEBUG RUSTUP_IO_THREADS CI NX_PREFER_TS_NODE PLAYWRIGHT_BROWSERS_PATH
           shell: bash
           run: |
             env
             whoami
-            sudo pkg install -y -f node libnghttp2 npm git
+            sudo pkg install -y -f node libnghttp2 www/npm git
             sudo npm install --location=global --ignore-scripts pnpm@8.15.7
             curl https://sh.rustup.rs -sSf --output rustup.sh
             sh rustup.sh -y --profile minimal --default-toolchain stable
@@ -331,8 +333,6 @@ jobs:
             whoami
             env
             freebsd-version
-            mkdir -p /Users/runner/work/_temp/_github_workflow
-            echo "{}" > /Users/runner/work/_temp/_github_workflow/event.json
             pnpm install --frozen-lockfile --ignore-scripts
             pnpm nx run-many --verbose --outputStyle stream --target=build-native -- --target=x86_64-unknown-freebsd
             pnpm nx reset
@@ -396,7 +396,8 @@ jobs:
       - name: List artifacts
         run: ls -R artifacts
         shell: bash
-
+      - name: Build Wasm
+        run: pnpm build:wasm
       - name: Publish
         env:
           VERSION: ${{ needs.resolve-required-data.outputs.version }}

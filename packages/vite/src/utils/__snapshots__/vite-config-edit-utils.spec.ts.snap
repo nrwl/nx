@@ -28,9 +28,6 @@ nxViteTsPaths()],build: {
       }
     },test: {
         globals: true,
-        cache: {
-          dir: '../node_modules/.vitest'
-        },
         environment: 'jsdom',
         include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
     },});
@@ -44,6 +41,7 @@ import { defineConfig } from 'vite';
     import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 
     export default defineConfig({
+    
       
     // Configuration for building your library.
     // See: https://vitejs.dev/guide/build.html#library-mode
@@ -61,15 +59,13 @@ import { defineConfig } from 'vite';
         // External packages that should not be bundled into your library.
         external: ['react', 'react-dom', 'react/jsx-runtime']
       }
-    },plugins: [react(),
+    },cacheDir: '../../node_modules/.vitest',
+      plugins: [react(),
 nxViteTsPaths(),
 ],
 
       test: {
         globals: true,
-        cache: {
-          dir: '../../node_modules/.vitest',
-        },
         environment: 'jsdom',
         include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
       },
@@ -102,15 +98,13 @@ import { defineConfig } from 'vite';
         // External packages that should not be bundled into your library.
         external: ['react', 'react-dom', 'react/jsx-runtime']
       }
-    },plugins: [react(),
+    },cacheDir: '../../node_modules/.vitest',
+      plugins: [react(),
 nxViteTsPaths(),
 ],
 
       test: {
         globals: true,
-        cache: {
-          dir: '../../node_modules/.vitest',
-        },
         environment: 'jsdom',
         include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
       },
@@ -144,9 +138,6 @@ import { defineConfig } from 'vite';
       }
     },test: {
         globals: true,
-        cache: {
-          dir: '../node_modules/.vitest'
-        },
         environment: 'jsdom',
         include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
     },
@@ -187,15 +178,13 @@ import { defineConfig } from 'vite';
     import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 
     export default defineConfig({
+      cacheDir: '../../node_modules/.vitest',
       plugins: [react(),
 nxViteTsPaths(),
 ],
 
       test: {
         globals: true,
-        cache: {
-          dir: '../../node_modules/.vitest',
-        },
         environment: 'jsdom',
         include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
       },
@@ -222,6 +211,7 @@ import { defineConfig } from 'vite';
     import { joinPathFragments } from '@nx/devkit';
 
     export default defineConfig({
+      cacheDir: '../../node_modules/.vitest',
       plugins: [dts({ entryRoot: 'src', tsConfigFilePath: joinPathFragments(__dirname, 'tsconfig.lib.json'), skipDiagnostics: true }),
 react(),
 nxViteTsPaths(),
@@ -247,9 +237,6 @@ nxViteTsPaths(),
     
       test: {
         globals: true,
-        cache: {
-          dir: '../../../node_modules/.vitest',
-        },
         environment: 'jsdom',
         include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
       },
@@ -271,7 +258,6 @@ nxViteTsPaths(),
       test: {
           'my': 'option',
 'globals': true,
-'cache': {"dir":"../node_modules/.vitest"},
 'environment': "jsdom",
 'include': ["src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"],
 

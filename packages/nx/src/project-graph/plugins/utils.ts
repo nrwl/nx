@@ -73,7 +73,9 @@ export async function createNodesFromFiles<T = unknown>(
           ...context,
           configFiles,
         });
-        results.push([file, value] as const);
+        if (value) {
+          results.push([file, value] as const);
+        }
       } catch (e) {
         errors.push([file, e] as const);
       }

@@ -28,6 +28,7 @@ import {
   AggregateCreateNodesError,
   isAggregateCreateNodesError,
 } from '../error-types';
+import { IS_WASM } from '../../native';
 
 export class LoadedNxPlugin {
   readonly name: string;
@@ -147,24 +148,29 @@ export const nxPluginCache: Map<
 export async function loadNxPlugins(
   plugins: PluginConfiguration[],
   root = workspaceRoot
-): Promise<[LoadedNxPlugin[], () => void]> {
-  const result: Promise<LoadedNxPlugin>[] = [];
+): Promise<readonly [LoadedNxPlugin[], () => void]> {
+  performance.mark('loadNxPlugins:start');
 
   const loadingMethod =
-    process.env.NX_ISOLATE_PLUGINS === 'true'
+    process.env.NX_ISOLATE_PLUGINS === 'true' ||
+    (!IS_WASM && process.env.NX_ISOLATE_PLUGINS !== 'false')
       ? loadNxPluginInIsolation
       : loadNxPlugin;
 
   plugins = await normalizePlugins(plugins, root);
 
-  const cleanupFunctions: Array<() => void> = [];
-  for (const plugin of plugins) {
-    const [loadedPluginPromise, cleanup] = await loadingMethod(plugin, root);
-    result.push(loadedPluginPromise);
-    cleanupFunctions.push(cleanup);
-  }
+  const result: Promise<LoadedNxPlugin>[] = new Array(plugins?.length);
 
-  return [
+  const cleanupFunctions: Array<() => void> = [];
+  await Promise.all(
+    plugins.map(async (plugin, idx) => {
+      const [loadedPluginPromise, cleanup] = await loadingMethod(plugin, root);
+      result[idx] = loadedPluginPromise;
+      cleanupFunctions.push(cleanup);
+    })
+  );
+
+  const ret = [
     await Promise.all(result),
     () => {
       for (const fn of cleanupFunctions) {
@@ -175,18 +181,19 @@ export async function loadNxPlugins(
       }
     },
   ] as const;
+  performance.mark('loadNxPlugins:end');
+  performance.measure(
+    'loadNxPlugins',
+    'loadNxPlugins:start',
+    'loadNxPlugins:end'
+  );
+  return ret;
 }
 
 async function normalizePlugins(plugins: PluginConfiguration[], root: string) {
   plugins ??= [];
 
   return [
-    // This plugin adds targets that we want to be able to overwrite
-    // in any user-land plugin, so it has to be first :).
-    join(
-      __dirname,
-      '../../plugins/project-json/build-nodes/package-json-next-to-project-json'
-    ),
     ...plugins,
     // Most of the nx core node plugins go on the end, s.t. it overwrites any other plugins
     ...(await getDefaultPlugins(root)),
@@ -196,11 +203,10 @@ async function normalizePlugins(plugins: PluginConfiguration[], root: string) {
 export async function getDefaultPlugins(root: string) {
   return [
     join(__dirname, '../../plugins/js'),
-    join(__dirname, '../../plugins/target-defaults/target-defaults-plugin'),
     ...(shouldMergeAngularProjects(root, false)
       ? [join(__dirname, '../../adapter/angular-json')]
       : []),
-    join(__dirname, '../../plugins/package-json-workspaces'),
+    join(__dirname, '../../plugins/package-json'),
     join(__dirname, '../../plugins/project-json/build-nodes/project-json'),
   ];
 }

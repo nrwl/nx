@@ -9,6 +9,7 @@
     "@nx/",
     "@angular-devkit",
     "@angular-eslint/",
+    "@module-federation/enhanced",
     "@schematics",
     "@phenomnomnominal/tsquery",
     "@typescript-eslint/",
@@ -21,11 +22,14 @@
     "tsconfig-paths",
     "semver",
     "webpack",
+    "express",
+    "http-proxy-middleware",
     "http-server",
     "magic-string",
     "enquirer",
     "find-cache-dir",
-    "piscina"
+    "piscina",
+    "webpack"
   ],
   "keepLifecycleScripts": true
 }

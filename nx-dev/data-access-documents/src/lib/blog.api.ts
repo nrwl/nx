@@ -20,6 +20,15 @@ export class BlogApi {
     }
   }
 
+  async getBlogTags(): Promise<string[]> {
+    const blogs = await this.getBlogs();
+    const tags = new Set<string>();
+    blogs.forEach((blog) => {
+      blog.tags.forEach((tag) => tags.add(tag));
+    });
+    return Array.from(tags);
+  }
+
   async getBlogs(): Promise<BlogPostDataEntry[]> {
     const files: string[] = await readdir(this.options.blogRoot);
     const authors = JSON.parse(

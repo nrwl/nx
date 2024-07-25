@@ -1,5 +1,35 @@
 # Enterprise Release Notes
 
+### 2406.29.1
+
+##### Full terminal outputs in the web app
+
+Due to storage constraints in Mongo, long terminal outputs were sometimes truncated when viewed in the UI. With this update we are now loading all terminal outputs directly
+from the storage bucket, removing the need to keep them in Mongo. You should now be able to view full, complete logs in the UI regardless of how large the output is.
+
+##### OpenShift fixes for Agents
+
+- the latest messagequeue image is now OpenShift ready
+  - to use, just update to the latest Helm version `0.15.6` and make sure you are not passing in an explicit tag for the messagequeue
+  - then use version `2406.29.1` for NxCloud. This should use the latest, OpenShift enabled messagequeue image
+- when running Agents on OpenShift, they run as a specific user with ID 1000
+  - to override this, make sure to set `NX_CLOUD_RUN_UNIX_PODS_AS_USER: <userId>` and `NX_CLOUD_RUN_UNIX_PODS_AS_GROUP: <groupId>` on the [workflow controller env vars](https://github.com/nrwl/nx-cloud-helm/blob/main/charts/nx-agents/values.yaml#L63)
+
+##### Full Bitbucket Data Center (on-prem)
+
+We now have full support for BitBucket Data Center (self-hosted):
+
+- VCS integration for posting comments with live updates about your CI runs
+- full agents integration
+- more info about each one of your commits on the NxCloud web app
+- you can even [set-up auth with BitBucket Data Center](/ci/recipes/enterprise/on-premise/auth-bitbucket-data-center#bitbucket-data-center-auth)
+
+##### Misc
+
+- easier workspace setup experience for new customers
+- the CIPE visualisation has been updated (elapsed task time)
+- general web app performance improvements
+
 ### 2405.02.15
 
 ##### Easy membership management via GitHub
@@ -286,7 +316,7 @@ This is one of our biggest Nx Cloud On-Prem releases. It also marks a change in 
 
 A few months ago we announced a complete re-design of the Nx Cloud UI! It's faster, easier to use and pleasant to look at! We're now bringing this to On-Prem users as well:
 
-You can read more about it in our [announcement blog post](https://blog.nrwl.io/nx-cloud-3-0-faster-more-efficient-modernized-36ac5ae33b86).
+You can read more about it in our [announcement blog post](/blog/nx-cloud-3-0-faster-more-efficient-modernized).
 
 ##### Pricing updates
 
@@ -310,7 +340,7 @@ We completely re-wrote our Task Distribution engine, which should result in much
 
 We've also added a new internal task queueing system, which should further improve the performance of DTE. While this is an implementation detail which will be automatically enabled in future releases, you can test it out today by setting [`enableMessageQueue: true`](https://github.com/nrwl/nx-cloud-helm/blob/main/charts/nx-cloud/values.yaml#L18) in your Helm config.
 
-You can read more about the recent DTE improvements in our [Nx Cloud 3.0 blog post](https://blog.nrwl.io/nx-cloud-3-0-faster-more-efficient-modernized-36ac5ae33b86).
+You can read more about the recent DTE improvements in our [Nx Cloud 3.0 blog post](/blog/nx-cloud-3-0-faster-more-efficient-modernized).
 
 ##### Misc updates
 

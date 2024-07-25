@@ -2,6 +2,7 @@ import { execFileSync, fork } from 'child_process';
 import * as chalk from 'chalk';
 import {
   ExecutorContext,
+  output,
   parseTargetString,
   readTargetOptions,
 } from '@nx/devkit';
@@ -184,9 +185,13 @@ export default async function* fileServerExecutor(
       }
     };
 
-    if (options.watch) {
-      const projectRoot =
-        context.projectsConfigurations.projects[context.projectName].root;
+    if (!daemonClient.enabled() && options.watch) {
+      output.warn({
+        title:
+          'Nx Daemon is not enabled. Static server is not watching for changes.',
+      });
+    }
+    if (daemonClient.enabled() && options.watch) {
       disposeWatch = await createFileWatcher(context.projectName, run);
     }
 

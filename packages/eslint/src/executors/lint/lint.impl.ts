@@ -200,6 +200,12 @@ Please see https://nx.dev/recipes/tips-n-tricks/eslint for full guidance on how 
     outputPrintInfo(totals);
   }
 
+  if (options.maxWarnings >= 0 && totals.warnings > options.maxWarnings) {
+    console.info(
+      `ESLint found too many warnings (maximum: ${options.maxWarnings}).`
+    );
+  }
+
   return {
     success:
       normalizedOptions.force ||

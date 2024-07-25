@@ -106,7 +106,7 @@ export interface PluginCreateMetadataResult {
       }
     | {
         success: false;
-        error: string;
+        error: Error;
         tx: string;
       };
 }

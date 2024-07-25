@@ -48,7 +48,7 @@ jobs:
 
       # Connect your workspace on nx.app and uncomment this to enable task distribution.
       # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "e2e-ci" targets have been requested
-      # - script: yarn nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="e2e-ci"
+      # - script: yarn nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
 
       - script: yarn install --frozen-lockfile
       - script: git branch --track main origin/main
@@ -56,7 +56,7 @@ jobs:
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - script: yarn nx-cloud record -- echo Hello World
-      - script: yarn nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) lint test build
+      - script: yarn nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) --targets lint test build
       - script: yarn nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) --parallel 1 e2e-ci
 ```
 

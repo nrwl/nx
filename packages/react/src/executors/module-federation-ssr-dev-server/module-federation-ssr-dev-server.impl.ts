@@ -120,6 +120,9 @@ export default async function* moduleFederationSsrDevServer(
     ? options.devRemotes
     : [options.devRemotes];
 
+  // Set NX_MF_DEV_REMOTES for the Nx Runtime Library Control Plugin
+  process.env.NX_MF_DEV_REMOTES = JSON.stringify(devServeApps);
+
   for (const app of knownRemotes) {
     const [appName] = Array.isArray(app) ? app : [app];
     const isDev = devServeApps.includes(appName);

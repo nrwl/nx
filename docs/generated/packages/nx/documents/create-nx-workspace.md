@@ -121,9 +121,9 @@ Generate a 'src/' directory for Next.js
 
 Type: `string`
 
-Choices: [yes, github, circleci, skip]
+Choices: [github, circleci, gitlab, azure, bitbucket-pipelines, skip, yes]
 
-Do you want Nx Cloud to make your CI fast?
+Which CI provider would you like to use?
 
 ### packageManager
 

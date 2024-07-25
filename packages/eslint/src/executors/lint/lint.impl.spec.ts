@@ -738,6 +738,38 @@ Please see https://nx.dev/recipes/tips-n-tricks/eslint for full guidance on how 
     expect(output.success).toBeTruthy();
   });
 
+  it('should be a failure if there are more warnings than the set maxWarnings', async () => {
+    mockReports = [
+      {
+        errorCount: 0,
+        warningCount: 4,
+        results: [],
+        usedDeprecatedRules: [],
+      },
+      {
+        errorCount: 0,
+        warningCount: 6,
+        results: [],
+        usedDeprecatedRules: [],
+      },
+    ];
+    setupMocks();
+    const output = await lintExecutor(
+      createValidRunBuilderOptions({
+        eslintConfig: './.eslintrc.json',
+        lintFilePatterns: ['includedFile1'],
+        format: 'json',
+        silent: true,
+        maxWarnings: 3,
+      }),
+      mockContext
+    );
+    expect(output.success).toBe(false);
+    expect(console.info).toHaveBeenCalledWith(
+      'ESLint found too many warnings (maximum: 3).'
+    );
+  });
+
   it('should be a success if there are errors but the force flag is true', async () => {
     mockReports = [
       {

@@ -1,13 +1,14 @@
 import { workspaceRoot } from '@nx/devkit';
 import { dirname, join, relative } from 'path';
-import { existsSync, lstatSync } from 'fs';
+import { lstatSync } from 'fs';
 
 import vitePreprocessor from '../src/plugins/preprocessor-vite';
 import { NX_PLUGIN_OPTIONS } from '../src/utils/constants';
 
-import { spawn } from 'child_process';
+import { execSync, spawn } from 'child_process';
 import { request as httpRequest } from 'http';
 import { request as httpsRequest } from 'https';
+import type { InlineConfig } from 'vite';
 
 // Importing the cypress type here causes the angular and next unit
 // tests to fail when transpiling, it seems like the cypress types are
@@ -81,7 +82,13 @@ function startWebServer(webServerCommand: string) {
 
   return () => {
     if (process.platform === 'win32') {
-      serverProcess.kill();
+      try {
+        execSync('taskkill /pid ' + serverProcess.pid + ' /T /F');
+      } catch (e) {
+        if (process.env.NX_VERBOSE_LOGGING === 'true') {
+          console.error(e);
+        }
+      }
     } else {
       // child.kill() does not work on linux
       // process.kill will kill the whole process group on unix
@@ -133,7 +140,7 @@ export function nxE2EPreset(
         config.env?.webServerCommand ?? webServerCommands?.default;
 
       if (options?.bundler === 'vite') {
-        on('file:preprocessor', vitePreprocessor());
+        on('file:preprocessor', vitePreprocessor(options?.viteConfigOverrides));
       }
 
       if (!options?.webServerCommands) {
@@ -265,4 +272,9 @@ export type NxCypressE2EPresetOptions = {
    * Configures how the web server command is started and monitored.
    */
   webServerConfig?: WebServerConfig;
+
+  /**
+   * Configure override inside the vite config
+   */
+  viteConfigOverrides?: InlineConfig;
 };

@@ -32,7 +32,7 @@ const pages: Array<{ title: string; path: string }> = [
   },
   {
     title: 'Running Nx Cloud Enterprise',
-    path: '/ci/features/on-premise',
+    path: '/ci/recipes/enterprise/on-premise/on-premise',
   },
   {
     title: 'Auth (Basic)',
@@ -51,8 +51,12 @@ const pages: Array<{ title: string; path: string }> = [
     path: '/ci/recipes/enterprise/on-premise/ami-setup',
   },
   {
-    title: 'BitBucket Auth',
+    title: 'BitBucket Cloud Auth',
     path: '/ci/recipes/enterprise/on-premise/auth-bitbucket',
+  },
+  {
+    title: 'BitBucket Data Center Auth',
+    path: '/ci/recipes/enterprise/on-premise/auth-bitbucket-data-center',
   },
   {
     title: 'SAML Auth',

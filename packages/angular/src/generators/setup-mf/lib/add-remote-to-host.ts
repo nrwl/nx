@@ -97,7 +97,7 @@ function addRemoteToStaticHost(
   const webpackAst = tsquery.ast(hostMFConfig);
   const mfRemotesNode = tsquery(
     webpackAst,
-    'Identifier[name=remotes] ~ ArrayLiteralExpression',
+    'ObjectLiteralExpression > PropertyAssignment:has(Identifier[name=remotes]) > ArrayLiteralExpression',
     { visitAllChildren: true }
   )[0] as ArrayLiteralExpression;
 
