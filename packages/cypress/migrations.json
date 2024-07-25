@@ -29,6 +29,12 @@
       "version": "18.1.0-beta.3",
       "description": "Update to Cypress ^13.6.6 if the workspace is using Cypress v13 to ensure workspaces don't use v13.6.5 which has an issue when verifying Cypress.",
       "implementation": "./src/migrations/update-18-1-0/update-cypress-version-13-6-6"
+    },
+    "add-e2e-ci-target-defaults": {
+      "cli": "nx",
+      "version": "19.5.4-beta.0",
+      "description": "Add ciTargetName for the @nx/cypress/plugin to targetDefaults with dependsOn:['^build'].",
+      "implementation": "./src/migrations/update-19-5-4/add-ci-target-name-target-default"
     }
   },
   "packageJsonUpdates": {
