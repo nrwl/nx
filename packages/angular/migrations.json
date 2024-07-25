@@ -2012,6 +2012,22 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "19.5.4-ngrx": {
+      "version": "19.5.4-beta.0",
+      "requires": {
+        "@angular/core": "^18.0.0"
+      },
+      "packages": {
+        "@ngrx/store": {
+          "version": "^18.0.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@ngrx/operators": {
+          "version": "^18.0.1",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }
