@@ -135,7 +135,10 @@ Learn all the details:
 
 ## Run Root-Level Tasks
 
-Sometimes you have tasks that apply to the entire codebase rather than to a single project. But you still want those tasks to go through the "Nx pipeline" in order to benefit from caching. You can define these in the root-level `package.json` as follows:
+Sometimes you have tasks that apply to the entire codebase rather than to a single project. But you still want those tasks to go through the "Nx pipeline" in order to benefit from caching. You can define these in the root-level `package.json` or `project.json` as follows:
+
+{% tabs %}
+{% tab label="package.json" %}
 
 ```json {% fileName="package.json" %}
 {
@@ -149,12 +152,6 @@ Sometimes you have tasks that apply to the entire codebase rather than to a sing
 
 > Note the `nx: {}` property on the `package.json`. This is necessary to inform Nx about this root-level project. The property can also be expanded to specify cache inputs and outputs.
 
-To invoke it, use:
-
-```shell
-npx nx docs
-```
-
 If you want Nx to cache the task, but prefer to use npm (or pnpm/yarn) to run the script (i.e. `npm run docs`) you can use the [nx exec](/nx-api/nx/documents/exec) command:
 
 ```json {% fileName="package.json" %}
@@ -165,6 +162,30 @@ If you want Nx to cache the task, but prefer to use npm (or pnpm/yarn) to run th
   },
   "nx": {}
 }
+```
+
+{% /tab %}
+{% tab label="project.json" %}
+
+```json {% fileName="project.json"%}
+{
+  "name": "myorg",
+  ...
+  "targets": {
+    "docs": {
+      "command": "node ./generateDocsSite.js"
+    }
+  }
+}
+```
+
+{% /tab %}
+{% /tabs %}
+
+To invoke the task, use:
+
+```shell
+npx nx docs
 ```
 
 Learn more about root-level tasks [in our dedicated recipe page](/recipes/running-tasks/root-level-scripts).
