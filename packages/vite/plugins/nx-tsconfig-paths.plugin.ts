@@ -66,6 +66,9 @@ export function nxViteTsPaths(options: nxViteTsPathsOptions = {}) {
 
   return {
     name: 'nx-vite-ts-paths',
+    // Ensure the resolveId aspect of the plugin is called before vite's internal resolver
+    // Otherwise, issues can arise with Yarn Workspaces and Pnpm Workspaces
+    enforce: 'pre',
     async configResolved(config: any) {
       projectRoot = config.root;
       const projectRootFromWorkspaceRoot = relative(workspaceRoot, projectRoot);
