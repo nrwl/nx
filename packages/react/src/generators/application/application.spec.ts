@@ -399,6 +399,19 @@ describe('app', () => {
     });
 
     expect(appTree.read('my-app/vite.config.ts', 'utf-8')).toMatchSnapshot();
+    expect(appTree.read('my-app/index.html', 'utf-8')).toContain('main.tsx');
+  });
+
+  it('should setup vite if bundler is vite (--js)', async () => {
+    await applicationGenerator(appTree, {
+      ...schema,
+      name: 'my-app',
+      bundler: 'vite',
+      js: true,
+    });
+
+    expect(appTree.read('my-app/index.html', 'utf-8')).toContain('main.jsx');
+    expect(appTree.exists('my-app/src/main.jsx')).toBeTruthy();
   });
 
   it('should setup the nx vite dev server builder if bundler is vite', async () => {

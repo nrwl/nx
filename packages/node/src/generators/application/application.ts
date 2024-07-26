@@ -134,8 +134,14 @@ function getServeConfig(options: NormalizedSchema): TargetConfiguration {
   return {
     executor: '@nx/js:node',
     defaultConfiguration: 'development',
+    // Run build, which includes dependency on "^build" by default, so the first run
+    // won't error out due to missing build artifacts.
+    dependsOn: ['build'],
     options: {
       buildTarget: `${options.name}:build`,
+      // Even though `false` is the default, set this option so users know it
+      // exists if they want to always run dependencies during each rebuild.
+      runBuildTargetDependencies: false,
     },
     configurations: {
       development: {
