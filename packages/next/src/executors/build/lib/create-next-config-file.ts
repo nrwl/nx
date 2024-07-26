@@ -124,7 +124,11 @@ export function getWithNxContent(
         index: getWithNxContextDeclaration.getStart(withNxSource),
         text: stripIndents`function getWithNxContext() {
           return {
-            workspaceRoot: '${workspaceRoot}',
+            workspaceRoot: '${
+              // For Windows, paths like C:\Users\foo\bar need to be written as C:\\Users\\foo\\bar,
+              // or else when the file is read back, the single "\" will be treated as an escape character.
+              workspaceRoot.replaceAll('\\', '\\\\')
+            }',
             libsDir: '${workspaceLayout().libsDir}'
           }
         }`,
