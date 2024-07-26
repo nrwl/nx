@@ -56,7 +56,7 @@ export function Faq(): JSX.Element {
     {
       question: 'Is there a plan for open source projects?',
       answer:
-        'Yes, we are happy to collaborate with open source projects. Please complete this form, and we will review your request and get back to you: https://nx.app/pricing/special-offer',
+        'Yes, we are happy to collaborate with open source projects. Please complete this form, and we will review your request and get back to you: https://nx.dev/pricing/special-offer',
     },
     {
       question: 'What payment methods do you accept?',
