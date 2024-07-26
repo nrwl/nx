@@ -30,6 +30,10 @@ We now have full support for BitBucket Data Center (self-hosted):
 - the CIPE visualisation has been updated (elapsed task time)
 - general web app performance improvements
 
+##### Breaking changes
+
+If you are using DTE, you will now need to pass the `--distribute-on="manual"` flag to your `npx nx-cloud start-ci-run` commands. 
+
 ### 2405.02.15
 
 ##### Easy membership management via GitHub
