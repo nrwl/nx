@@ -2,38 +2,49 @@
 title: Introducing Explain with AI
 slug: 'explain-with-ai'
 authors: ['Philip Fulcher']
-tags: [nx, nx-cloud, ai]
+tags: [nx, nx-cloud, ai, release]
 ---
 
-It's Friday, and you absolutely, positively have to deploy to production. But you can't get CI to pass your PR. What do you do? It's an inevitable part of your life as a developer, and you've built a collection of tools to deal with it: Google, MDN, Discord, ChatGPT. We've got one more tool to your toolbox: "Explain with AI" for Nx Cloud.
+It's Friday, and you absolutely, positively have to deploy to production. But you can't get CI to pass your PR. What do you do? It's an inevitable part of your life as a developer, and you've built a collection of tools to deal with it: Google, MDN, Discord, ChatGPT. We've got one more tool for your toolbox: **"Explain with AI" for [Nx Cloud](https://nx.dev/nx-cloud)**.
 
-"Explain with AI" is a new feature for all Nx Cloud Pro users that is going to help you troubleshoot those pesky failing tasks. Using the power of ChatGPT, we use the terminal output and other Nx task information to give you a suggested fix for any failing task. This means the suggestion has the context you need to get to the bottom of your failing task. Smash the "Explain with AI" button on any failing task to get back to work.
+## Your ticket to fast error debugging
 
-![](/blog/images/2024-07-29/explain-with-ai-1.png)
+"Explain with AI" is a new feature for all Nx Cloud Pro users that is going to help you troubleshoot those pesky failing tasks. Whenever you get an error message on CI, look for the "Explain with AI" button on the upper right-hand corner:
 
-_The "Explain with AI" button in the upper right-hand corner is your ticket to a fast answer._
+![Nx Cloud error log window](/blog/images/2024-07-29/explain-with-ai-1.avif)
 
-This is going to help you get to the bottom of the failing task more efficiently by keeping you in the same context longer. No more switching back and forth between a dozen tabs with different solutions. No more providing the right context for your masterfully written chat prompt. Get your suggested fix and get back to work.
+Once you hit that button, we collect the terminal output and other Nx task information and sprinkle some AI on top of it to give you a suggested fix. That should help you quickly get to the bottom of the issue and get back to work quickly.
+
+![Explain with AI explaining how to resolve the CI error](/blog/images/2024-07-29/explain-with-ai-2.avif)
+
+No more switching back and forth between a dozen tabs with different solutions. No more providing the right context for your masterfully written chat prompt. **Get your suggested fix and get back to work.**
 
 ## How can I start using this today?
 
-![](/blog/images/2024-07-29/ai-features.png)
+![](/blog/images/2024-07-29/ai-features.avif)
 
-"Explain with AI" requires enabling AI Features for your organization. You'll need to be a org admin to do this. Go to your org settings, and check out the Enable AI Features section. Maybe check with your boss first before accepting the AI terms of service.
+Here's how you get started:
+
+- **Step 1:** Go to your [Nx Cloud](https://cloud.nx.app/) organization settings
+- **Step 2:** Enable AI features
+- **Step 3:** Accept the Nx Cloud AI terms and conditions.
+- **Step 4:** You're all set ✨
+
+Note that you'll need to be an organization admin for your Nx Cloud workspace to enable AI features.
+
+### I want to try this, but I'm on the Hobby plan 🤔
+
+If you're currently on the Hobby plan, you can start a free Pro plan trial for 14 days to try it out on your own workspace. No, we don't ask for credit cards to start a trial, so feel free to experiment!
 
 ## I got a bad answer
 
-![](/blog/images/2024-07-29/bad-answer.png)
+![](/blog/images/2024-07-29/bad-answer.avif)
 
 "Explain with AI" isn't going to be 100% right, 100% of the time. If the suggested changes did not help you, click on "Set answer as not helpful". This allows us to continuously improve the responses.
 
-## I want to try this, but I'm on the Hobby plan
-
-You're in luck, try our Pro plan with a 14-day free trial. No credit card required.
-
 ## More to come!
 
-This is just the beginning of AI in Nx Cloud. Stay tuned for even more AI-powered tools to come!
+This is just the first of a series of AI-powered features that we're going to be rolling out to your workspaces. We've got some cool features in the works already, which we're going to **announce publicly during the [Monorepo World](https://monorepo.world) conference in October**! So stay tuned!
 
 ## Learn more
 
