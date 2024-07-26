@@ -23,7 +23,7 @@ import {
   updateFile,
   updateJson,
 } from '@nx/e2e/utils';
-import { exec, execSync } from 'child_process';
+import { execSync } from 'child_process';
 import * as http from 'http';
 import { getLockFileName } from '@nx/js';
 import { satisfies } from 'semver';
@@ -58,7 +58,7 @@ describe('Node Applications', () => {
   beforeAll(() => {
     originalEnvPort = process.env.PORT;
     newProject({
-      packages: ['@nx/node', '@nx/express', '@nx/nest'],
+      packages: ['@nx/node', '@nx/express', '@nx/nest', '@nx/webpack'],
     });
   });
 
@@ -339,6 +339,19 @@ module.exports = {
     await killPorts(port);
     await promisifiedTreeKill(p.pid, 'SIGKILL');
   }, 120000);
+
+  it('should generate a nest application with docker', async () => {
+    const nestapp = 'node-nest-docker-test';
+
+    runCLI(
+      `generate @nx/node:app ${nestapp} --project-name-and-root-format=as-provided --bundler=webpack --framework=nest --docker`
+    );
+
+    checkFilesExist(`${nestapp}/Dockerfile`);
+
+    const dockerFile = readFile(`${nestapp}/Dockerfile`);
+    expect(dockerFile).toMatchSnapshot();
+  });
 
   // TODO(crystal, @ndcunningham): how do we handle this now?
   // Revisit when NxWebpackPlugin({}) outputFilename is working.

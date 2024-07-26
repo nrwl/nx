@@ -396,9 +396,19 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
       ...options,
       skipFormat: true,
     });
+    tasks.push(nestTasks);
+
+    if (options.docker) {
+      const dockerTask = await setupDockerGenerator(tree, {
+        ...options,
+        project: options.name,
+        skipFormat: true,
+      });
+      tasks.push(dockerTask);
+    }
     return runTasksInSerial(
       ...[
-        nestTasks,
+        ...tasks,
         () => {
           logShowProjectCommand(options.name);
         },
