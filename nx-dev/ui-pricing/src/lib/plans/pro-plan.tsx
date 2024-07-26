@@ -21,7 +21,7 @@ export function ProPlan({
   url: string;
 }) {
   return (
-    <article className="rounded-xl py-4 ring-1 ring-slate-200 xl:py-6 dark:ring-slate-800">
+    <article className="rounded-xl bg-white py-4 ring-1 ring-slate-200 xl:py-6 dark:bg-slate-950 dark:ring-slate-800">
       <header className="flex items-center justify-between gap-x-4">
         <h3
           id="pro-plan"
