@@ -10,6 +10,7 @@ import {
   runE2ETests,
   uniq,
   updateFile,
+  updateJson,
 } from '@nx/e2e/utils';
 import { join } from 'path';
 
@@ -31,6 +32,7 @@ describe('Angular Module Federation', () => {
     const hostApp = uniq('app');
     const remoteApp1 = uniq('remote');
     const sharedLib = uniq('shared-lib');
+    const wildcardLib = uniq('wildcard-lib');
     const secondaryEntry = uniq('secondary');
     const hostPort = 4300;
     const remotePort = 4301;
@@ -61,11 +63,30 @@ describe('Angular Module Federation', () => {
     runCLI(
       `generate @nx/angular:library-secondary-entry-point --library=${sharedLib} --name=${secondaryEntry} --no-interactive`
     );
+
+    // Add a library that will be accessed via a wildcard in tspath mappings
+    runCLI(
+      `generate @nx/angular:library ${wildcardLib} --buildable --no-standalone --project-name-and-root-format=as-provided --no-interactive`
+    );
+
+    updateJson('tsconfig.base.json', (json) => {
+      delete json.compilerOptions.paths[`@${proj}/${wildcardLib}`];
+      json.compilerOptions.paths[`@${proj}/${wildcardLib}/*`] = [
+        `${wildcardLib}/src/lib/*`,
+      ];
+      return json;
+    });
+
     // update host & remote files to use shared library
     updateFile(
       `${hostApp}/src/app/app.module.ts`,
       `import { NgModule } from '@angular/core';
       import { BrowserModule } from '@angular/platform-browser';
+      import { ${
+        names(wildcardLib).className
+      }Module } from '@${proj}/${wildcardLib}/${
+        names(secondaryEntry).fileName
+      }.module';
       import { ${
         names(sharedLib).className
       }Module } from '@${proj}/${sharedLib}';
@@ -81,6 +102,7 @@ describe('Angular Module Federation', () => {
         imports: [
           BrowserModule,
           ${names(sharedLib).className}Module,
+          ${names(wildcardLib).className}Module,
           RouterModule.forRoot(
             [
               {
