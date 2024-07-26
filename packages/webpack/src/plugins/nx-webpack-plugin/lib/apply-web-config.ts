@@ -332,6 +332,7 @@ export function applyWebConfig(
 
   config.output = {
     ...config.output,
+    assetModuleFilename: '[name].[contenthash:20][ext]',
     crossOriginLoading: options.subresourceIntegrity
       ? ('anonymous' as const)
       : (false as const),
@@ -404,9 +405,6 @@ export function applyWebConfig(
             maxSize: 10_000, // 10 kB
           },
         },
-        generator: {
-          filename: `[name]${hashFormat.file}[ext]`,
-        },
       },
       // SVG: same as image but we need to separate it so it can be swapped for SVGR in the React plugin.
       {
@@ -417,17 +415,11 @@ export function applyWebConfig(
             maxSize: 10_000, // 10 kB
           },
         },
-        generator: {
-          filename: `[name]${hashFormat.file}[ext]`,
-        },
       },
       // Fonts: Emit separate file and export the URL.
       {
         test: /\.(eot|otf|ttf|woff|woff2)$/,
         type: 'asset/resource',
-        generator: {
-          filename: `[name]${hashFormat.file}[ext]`,
-        },
       },
       ...rules,
     ],
