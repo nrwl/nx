@@ -2,10 +2,11 @@
 title: Introducing Explain with AI
 slug: 'explain-with-ai'
 authors: ['Philip Fulcher']
+cover_image: '/blog/images/2024-07-29/explain-with-ai-header.avif'
 tags: [nx, nx-cloud, ai, release]
 ---
 
-It's Friday, and you absolutely, positively have to deploy to production. But you can't get CI to pass your PR. What do you do? It's an inevitable part of your life as a developer, and you've built a collection of tools to deal with it: Google, MDN, Discord, ChatGPT. We've got one more tool for your toolbox: **"Explain with AI" for [Nx Cloud](https://nx.dev/nx-cloud)**.
+It's Friday, and you absolutely, positively have to deploy to production. But you can't get CI to pass your PR. What do you do? It's an inevitable part of your life as a developer, and you've built a collection of tools to deal with it: Google, MDN, Discord, ChatGPT. We've got one more tool for your toolbox: **"Explain with AI" for [Nx Cloud](/nx-cloud)**.
 
 ## Your ticket to fast error debugging
 
@@ -21,7 +22,7 @@ No more switching back and forth between a dozen tabs with different solutions. 
 
 ## How can I start using this today?
 
-![](/blog/images/2024-07-29/ai-features.avif)
+![Nx Cloud organization settings section for enabling AI features](/blog/images/2024-07-29/ai-features.avif)
 
 Here's how you get started:
 
@@ -35,12 +36,6 @@ Note that you'll need to be an organization admin for your Nx Cloud workspace to
 ### I want to try this, but I'm on the Hobby plan 🤔
 
 If you're currently on the Hobby plan, you can start a free Pro plan trial for 14 days to try it out on your own workspace. No, we don't ask for credit cards to start a trial, so feel free to experiment!
-
-## I got a bad answer
-
-![](/blog/images/2024-07-29/bad-answer.avif)
-
-"Explain with AI" isn't going to be 100% right, 100% of the time. If the suggested changes did not help you, click on "Set answer as not helpful". This allows us to continuously improve the responses.
 
 ## More to come!
 
