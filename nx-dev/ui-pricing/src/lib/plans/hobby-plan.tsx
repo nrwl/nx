@@ -21,7 +21,7 @@ export function HobbyPlan({
   url: string;
 }) {
   return (
-    <article className="relative rounded-b-xl py-4 ring-1 ring-blue-500 xl:py-6 dark:ring-sky-500">
+    <article className="relative rounded-b-xl bg-white py-4 ring-1 ring-blue-500 xl:py-6 dark:bg-slate-950 dark:ring-sky-500">
       <h4
         id="no-credit-card-required"
         className="absolute -top-9 left-0 w-full rounded-t-2xl bg-blue-500 p-2 text-center text-sm font-medium text-white shadow-inner ring-1 ring-blue-500 dark:bg-sky-500 dark:ring-sky-500"
