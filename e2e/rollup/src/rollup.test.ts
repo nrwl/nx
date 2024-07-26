@@ -47,6 +47,7 @@ describe('Rollup Plugin', () => {
         module: './index.esm.js',
         import: './index.cjs.mjs',
         default: './index.cjs.js',
+        types: './index.esm.d.ts',
       },
       './package.json': './package.json',
     });
@@ -142,16 +143,19 @@ describe('Rollup Plugin', () => {
         module: './index.esm.js',
         import: './index.cjs.mjs',
         default: './index.cjs.js',
+        types: './index.esm.d.ts',
       },
       './bar': {
         module: './bar.esm.js',
         import: './bar.cjs.mjs',
         default: './bar.cjs.js',
+        types: './bar.esm.d.ts',
       },
       './foo': {
         module: './foo.esm.js',
         import: './foo.cjs.mjs',
         default: './foo.cjs.js',
+        types: './foo.esm.d.ts',
       },
     });
   });
