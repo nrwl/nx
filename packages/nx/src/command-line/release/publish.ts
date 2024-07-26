@@ -79,7 +79,9 @@ export async function releasePublish(
    * for dependencies, because that could cause projects outset of the filtered set to be published.
    */
   const shouldExcludeTaskDependencies =
-    _args.projects?.length > 0 || _args.groups?.length > 0;
+    _args.projects?.length > 0 ||
+    _args.groups?.length > 0 ||
+    args.excludeTaskDependencies;
 
   let overallExitStatus = 0;
 
