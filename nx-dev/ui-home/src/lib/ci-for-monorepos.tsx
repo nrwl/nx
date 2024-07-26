@@ -508,10 +508,10 @@ export function AiSection(): JSX.Element {
             AI for your CI
           </p>
           <p className="mt-2text-slate-600 dark:text-slate-400">
-            Identify and resolve task failures instantly with intelligent
-            explanations and actionable solutions. Set your desired CI run time,
-            and Nx Cloud will match it. Our <Strong>custom AI model</Strong>{' '}
-            analyzes your previous runs, then{' '}
+            Identify and <Strong> resolve task failures</Strong> instantly with
+            intelligent explanations and actionable solutions. Set your desired
+            CI run time, and Nx Cloud will match it. Our{' '}
+            <Strong>custom AI model</Strong> analyzes your previous runs, then{' '}
             <Strong>dynamically predicts and allocates</Strong> the optimal
             number of agents. The more you use it, the smarter it gets. Take the
             guesswork out of your work.
