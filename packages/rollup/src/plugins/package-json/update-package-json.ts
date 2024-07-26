@@ -102,6 +102,8 @@ export function updatePackageJson(
     }
   }
 
+  packageJson.types ??= packageJson.main.replace(/\.js$/, '.d.ts');
+
   writeJsonFile(
     join(workspaceRoot, options.outputPath, 'package.json'),
     packageJson
