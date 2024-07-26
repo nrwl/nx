@@ -430,7 +430,7 @@ All libraries that we generate automatically have aliases created in the root-le
 }
 ```
 
-Hence we can easily import them into other libraries and our Angular application. As an example, let's use the pre-generated `ProductsComponent` component from our `libs/products` library.
+Hence we can easily import them into other libraries and our React application. As an example, let's use the pre-generated `ProductsComponent` component from our `libs/products` library.
 
 You can see that the `Products` component is exported via the `index.ts` file of our `products` library so that other projects in the repository can use it. This is our public API with the rest of the workspace. Only export what's really necessary to be usable outside the library itself.
 
