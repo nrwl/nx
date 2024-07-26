@@ -117,9 +117,6 @@ export async function* tscExecutor(
             context.root
           ),
           format: [determineModuleFormatFromTsConfig(options.tsConfig)],
-          // As long as d.ts files match their .js counterparts, we don't need to emit them.
-          // TSC can match them correctly based on file names.
-          skipTypings: true,
         },
         context,
         target,
@@ -155,9 +152,6 @@ export async function* tscExecutor(
               options.additionalEntryPoints,
               context.root
             ),
-            // As long as d.ts files match their .js counterparts, we don't need to emit them.
-            // TSC can match them correctly based on file names.
-            skipTypings: true,
             format: [determineModuleFormatFromTsConfig(options.tsConfig)],
           },
           context,
