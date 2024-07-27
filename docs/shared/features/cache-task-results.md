@@ -112,6 +112,7 @@ To achieve this, we can add an `inputs` and `outputs` definition globally for al
 ```
 
 {% /tab %}
+{% /tabs %}
 
 Note, you only need to define output locations if they differ from the usual `dist` or `build` directory which Nx automatically recognizes.
 
