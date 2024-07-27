@@ -25,8 +25,7 @@ jobs:
       vmImage: 'ubuntu-latest'
     steps:
       - checkout: self
-        fetchDepth: 1
-
+        fetchDepth: 0
       # Set Azure Devops CLI default settings
       - bash: az devops configure --defaults organization=$(System.TeamFoundationCollectionUri) project=$(System.TeamProject)
         displayName: 'Set default Azure DevOps organization and project'
@@ -256,8 +255,7 @@ jobs:
       vmImage: 'ubuntu-latest'
     steps:
       - checkout: self
-        fetchDepth: 1
-
+        fetchDepth: 0
       # Set Azure Devops CLI default settings
       - bash: az devops configure --defaults organization=$(System.TeamFoundationCollectionUri) project=$(System.TeamProject)
         displayName: 'Set default Azure DevOps organization and project'
@@ -772,8 +770,7 @@ jobs:
       vmImage: 'ubuntu-latest'
     steps:
       - checkout: self
-        fetchDepth: 1
-
+        fetchDepth: 0
       # Set Azure Devops CLI default settings
       - bash: az devops configure --defaults organization=$(System.TeamFoundationCollectionUri) project=$(System.TeamProject)
         displayName: 'Set default Azure DevOps organization and project'
@@ -1047,8 +1044,7 @@ jobs:
       vmImage: 'ubuntu-latest'
     steps:
       - checkout: self
-        fetchDepth: 1
-
+        fetchDepth: 0
       # Set Azure Devops CLI default settings
       - bash: az devops configure --defaults organization=$(System.TeamFoundationCollectionUri) project=$(System.TeamProject)
         displayName: 'Set default Azure DevOps organization and project'

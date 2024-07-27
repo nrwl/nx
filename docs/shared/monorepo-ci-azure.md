@@ -27,7 +27,7 @@ jobs:
       vmImage: 'ubuntu-latest'
     steps:
       - checkout: self
-        fetchDepth: 1
+        fetchDepth: 0
         persistCredentials: true
 
       # Set Azure Devops CLI default settings

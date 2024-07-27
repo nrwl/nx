@@ -33,7 +33,7 @@ jobs:
       vmImage: 'ubuntu-latest'
     steps:
       - checkout: self
-        fetchDepth: 1
+        fetchDepth: 0
         persistCredentials: true
 
       - script: npm ci
@@ -59,7 +59,7 @@ jobs:
         env:
           AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)
 
-      - script: git fetch main:main --depth 1
+      - script: git branch --track main origin/main
       - script: npm ci
       - script: npx nx-cloud start-ci-run --distribute-on="manual" --stop-agents-after="e2e-ci"
       - script: npx nx-cloud record -- nx format:check --base=$(BASE_SHA) --head=$(HEAD_SHA)
