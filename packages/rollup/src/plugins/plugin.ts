@@ -1,6 +1,6 @@
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { basename, dirname, join } from 'path';
-import { existsSync, readdirSync } from 'fs';
+import { existsSync } from 'fs';
 import {
   type CreateDependencies,
   type CreateNodes,
@@ -15,6 +15,7 @@ import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash
 import { getLockFileName } from '@nx/js';
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { type RollupOptions } from 'rollup';
+import { projectFoundInRootPath } from '@nx/devkit/src/utils/project-found-in-root-path';
 
 const cachePath = join(workspaceDataDirectory, 'rollup.hash');
 const targetsCache = readTargetsCache();
@@ -47,13 +48,9 @@ export const createNodes: CreateNodes<RollupPluginOptions> = [
   '**/rollup.config.{js,cjs,mjs}',
   async (configFilePath, options, context) => {
     const projectRoot = dirname(configFilePath);
-    const fullyQualifiedProjectRoot = join(context.workspaceRoot, projectRoot);
-    // Do not create a project if package.json and project.json do not exist
-    const siblingFiles = readdirSync(fullyQualifiedProjectRoot);
-    if (
-      !siblingFiles.includes('package.json') &&
-      !siblingFiles.includes('project.json')
-    ) {
+
+    // Configurations will be generated only if project exists at projectRoot
+    if (!projectFoundInRootPath(projectRoot, context, ['tsconfig.json'])) {
       return {};
     }
 

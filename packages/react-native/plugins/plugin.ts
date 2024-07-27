@@ -12,10 +12,11 @@ import {
 import { dirname, join } from 'path';
 import { getLockFileName } from '@nx/js';
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
-import { existsSync, readdirSync } from 'fs';
+import { existsSync } from 'fs';
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
+import { projectFoundInRootPath } from '@nx/devkit/src/utils/project-found-in-root-path';
 
 export interface ReactNativePluginOptions {
   startTargetName?: string;
@@ -57,12 +58,8 @@ export const createNodes: CreateNodes<ReactNativePluginOptions> = [
     options = normalizeOptions(options);
     const projectRoot = dirname(configFilePath);
 
-    // Do not create a project if package.json or project.json or metro.config.js isn't there.
-    const siblingFiles = readdirSync(join(context.workspaceRoot, projectRoot));
-    if (
-      !siblingFiles.includes('package.json') ||
-      !siblingFiles.includes('metro.config.js')
-    ) {
+    // Configurations will be generated only if project exists at projectRoot
+    if (!projectFoundInRootPath(projectRoot, context, ['metro.config.js'])) {
       return {};
     }
     const appConfig = await getAppConfig(configFilePath, context);

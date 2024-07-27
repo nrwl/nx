@@ -4,7 +4,6 @@ import {
   createNodesFromFiles,
   CreateNodesV2,
   getPackageManagerCommand,
-  joinPathFragments,
   logger,
   normalizePath,
   NxJsonConfiguration,
@@ -16,7 +15,7 @@ import {
 import { dirname, isAbsolute, join, relative, resolve } from 'path';
 
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
-import { existsSync, readdirSync, readFileSync } from 'fs';
+import { existsSync, readFileSync } from 'fs';
 import { readConfig, replaceRootDirInPath } from 'jest-config';
 import jestResolve from 'jest-resolve';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
@@ -27,8 +26,8 @@ import {
 } from '@nx/devkit/src/utils/config-utils';
 import { getGlobPatternsFromPackageManagerWorkspaces } from 'nx/src/plugins/package-json';
 import { combineGlobPatterns } from 'nx/src/utils/globs';
-import { minimatch } from 'minimatch';
 import { hashObject } from 'nx/src/devkit-internals';
+import { projectFoundInRootPath } from '@nx/devkit/src/utils/project-found-in-root-path';
 
 const pmc = getPackageManagerCommand();
 
@@ -100,24 +99,9 @@ async function createNodesInternal(
     getGlobPatternsFromPackageManagerWorkspaces(context.workspaceRoot)
   );
 
-  // Do not create a project if package.json and project.json isn't there.
-  const siblingFiles = readdirSync(join(context.workspaceRoot, projectRoot));
-  if (
-    !siblingFiles.includes('package.json') &&
-    !siblingFiles.includes('project.json')
-  ) {
+  // Configurations will be generated only if project exists at projectRoot
+  if (!projectFoundInRootPath(projectRoot, context)) {
     return {};
-  } else if (
-    !siblingFiles.includes('project.json') &&
-    siblingFiles.includes('package.json')
-  ) {
-    const path = joinPathFragments(projectRoot, 'package.json');
-
-    const isPackageJsonProject = minimatch(path, packageManagerWorkspacesGlob);
-
-    if (!isPackageJsonProject) {
-      return {};
-    }
   }
 
   const jestConfigContent = readFileSync(
