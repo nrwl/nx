@@ -308,6 +308,9 @@ devDependencies:
   '@nx/eslint-plugin':
     specifier: 19.5.0-beta.5
     version: 19.5.0-beta.5(@swc-node/register@1.9.1)(@swc/core@1.5.7)(@types/node@18.19.8)(@typescript-eslint/parser@7.16.0)(eslint-config-prettier@9.1.0)(eslint@8.57.0)(nx@19.5.0-beta.5)(typescript@5.5.3)(verdaccio@5.31.0)
+  '@nx/graph':
+    specifier: 0.0.16
+    version: 0.0.16(@nx/devkit@19.5.0-beta.5)(nx@19.5.0-beta.5)(react-dom@18.3.1)(react@18.3.1)
   '@nx/jest':
     specifier: 19.5.0-beta.5
     version: 19.5.0-beta.5(@swc-node/register@1.9.1)(@swc/core@1.5.7)(@types/node@18.19.8)(nx@19.5.0-beta.5)(ts-node@10.9.1)(typescript@5.5.3)(verdaccio@5.31.0)
@@ -11587,6 +11590,23 @@ packages:
       - nx
       - supports-color
       - verdaccio
+    dev: true
+
+  /@nx/graph@0.0.16(@nx/devkit@19.5.0-beta.5)(nx@19.5.0-beta.5)(react-dom@18.3.1)(react@18.3.1):
+    resolution: {integrity: sha512-xDKyg3lC8oGUY89ZoKjGzVcSRAjArNc7hTL9DYnR3oLegcSy5YxZ2JnOhwo+HRiCXz20rRR8hJrUY7sMlj8iUw==}
+    peerDependencies:
+      '@nx/devkit': '>= 19 < 20'
+      nx: '>= 19 < 20'
+      react: '>= 18 < 19'
+      react-dom: '>= 18 < 19'
+    dependencies:
+      '@nx/devkit': 19.5.0-beta.5(nx@19.5.0-beta.5)
+      cytoscape: 3.23.0
+      cytoscape-dagre: 2.4.0(cytoscape@3.23.0)
+      cytoscape-popper: 2.0.0(cytoscape@3.23.0)
+      nx: 19.5.0-beta.5(@swc-node/register@1.9.1)(@swc/core@1.5.7)
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
     dev: true
 
   /@nx/jest@19.5.0-beta.5(@swc-node/register@1.9.1)(@swc/core@1.5.7)(@types/node@18.19.8)(nx@19.5.0-beta.5)(ts-node@10.9.1)(typescript@5.5.3)(verdaccio@5.31.0):

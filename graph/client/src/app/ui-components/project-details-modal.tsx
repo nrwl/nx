@@ -1,9 +1,8 @@
 /* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
 import { ProjectGraphClientResponse } from 'nx/src/command-line/graph/graph';
-// nx-ignore-next-line
-import { ProjectDetailsWrapper } from '@nx/graph/project-details';
 /* eslint-enable @nx/enforce-module-boundaries */
+import { ProjectDetailsWrapper } from '@nx/graph/project-details';
 import { useFloating } from '@floating-ui/react';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import { useEffect, useState } from 'react';

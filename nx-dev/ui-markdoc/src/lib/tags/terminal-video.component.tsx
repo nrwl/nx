@@ -1,6 +1,6 @@
-import { TerminalShellWrapper } from '@nx/nx-dev/ui-fence';
-import { VideoLoop } from './video-loop.component';
 import { Schema } from '@markdoc/markdoc';
+import dynamic from 'next/dynamic';
+import { VideoLoop } from './video-loop.component';
 
 export const terminalVideo: Schema = {
   render: 'TerminalVideo',
@@ -15,6 +15,13 @@ export const terminalVideo: Schema = {
     },
   },
 };
+
+const TerminalShellWrapper = dynamic(
+  async () => (await import('@nx/graph/ui-fence')).TerminalShellWrapper,
+  {
+    ssr: false,
+  }
+);
 
 export function TerminalVideo({
   src,
