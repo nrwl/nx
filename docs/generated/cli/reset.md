@@ -55,6 +55,12 @@ Type: `boolean`
 
 Clears the Nx cache directory. This will remove all local cache entries for tasks, but will not affect the remote cache.
 
+### onlyCloud
+
+Type: `boolean`
+
+Resets the Nx Cloud client. NOTE: Does not clear the remote cache.
+
 ### onlyDaemon
 
 Type: `boolean`

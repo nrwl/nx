@@ -126,7 +126,10 @@ function createVerdaccioOptions(
     options.port ??= 4873; // set default port if config is not provided
   }
   if (options.port) {
-    verdaccioArgs.push('--listen', options.port.toString());
+    const listenAddress = options.listenAddress
+      ? `${options.listenAddress}:${options.port.toString()}`
+      : options.port.toString();
+    verdaccioArgs.push('--listen', listenAddress);
   }
   return verdaccioArgs;
 }
@@ -138,59 +141,88 @@ function setupNpm(options: VerdaccioExecutorSchema) {
     return () => {};
   }
 
-  let npmRegistryPath: string;
+  let npmRegistryPaths: string[] = [];
+  const scopes: string[] = ['', ...(options.scopes || [])];
+
   try {
-    npmRegistryPath = execSync(
-      `npm config get registry --location ${options.location}`,
-      { env }
-    )
-      ?.toString()
-      ?.trim()
-      ?.replace('\u001b[2K\u001b[1G', ''); // strip out ansi codes
-    execSync(
-      `npm config set registry http://localhost:${options.port}/ --location ${options.location}`,
-      { env }
-    );
-    execSync(
-      `npm config set //localhost:${options.port}/:_authToken="secretVerdaccioToken" --location ${options.location}`,
-      { env }
-    );
-    logger.info(`Set npm registry to http://localhost:${options.port}/`);
+    scopes.forEach((scope) => {
+      const scopeName = scope ? `${scope}:` : '';
+      try {
+        npmRegistryPaths.push(
+          execSync(
+            `npm config get '${scopeName}registry' --location ${options.location}`,
+            { env }
+          )
+            ?.toString()
+            ?.trim()
+            ?.replace('\u001b[2K\u001b[1G', '') // strip out ansi codes
+        );
+        execSync(
+          `npm config set '${scopeName}registry' http://localhost:${options.port}/ --location ${options.location}`,
+          { env }
+        );
+
+        execSync(
+          `npm config set //localhost:${options.port}/:_authToken="secretVerdaccioToken" --location ${options.location}`,
+          { env }
+        );
+
+        logger.info(
+          `Set npm ${scopeName}registry to http://localhost:${options.port}/`
+        );
+      } catch (e) {
+        throw new Error(
+          `Failed to set npm ${scopeName}registry to http://localhost:${options.port}/: ${e.message}`
+        );
+      }
+    });
+
+    return () => {
+      try {
+        const currentNpmRegistryPath = execSync(
+          `npm config get registry --location ${options.location}`,
+          { env }
+        )
+          ?.toString()
+          ?.trim()
+          ?.replace('\u001b[2K\u001b[1G', ''); // strip out ansi codes
+        if (
+          npmRegistryPaths.length > 0 &&
+          currentNpmRegistryPath.includes('localhost')
+        ) {
+          scopes.forEach((scope, index) => {
+            const scopeName = scope ? `${scope}:` : '';
+
+            execSync(
+              `npm config set '${scopeName}registry' ${npmRegistryPaths[index]} --location ${options.location}`,
+              { env }
+            );
+            logger.info(
+              `Reset npm ${scopeName}registry to ${npmRegistryPaths[index]}`
+            );
+          });
+        } else {
+          execSync(
+            `npm config delete registry --location ${options.location}`,
+            {
+              env,
+            }
+          );
+          logger.info('Cleared custom npm registry');
+        }
+        execSync(
+          `npm config delete //localhost:${options.port}/:_authToken  --location ${options.location}`,
+          { env }
+        );
+      } catch (e) {
+        throw new Error(`Failed to reset npm registry: ${e.message}`);
+      }
+    };
   } catch (e) {
     throw new Error(
       `Failed to set npm registry to http://localhost:${options.port}/: ${e.message}`
     );
   }
-
-  return () => {
-    try {
-      const currentNpmRegistryPath = execSync(
-        `npm config get registry --location ${options.location}`,
-        { env }
-      )
-        ?.toString()
-        ?.trim()
-        ?.replace('\u001b[2K\u001b[1G', ''); // strip out ansi codes
-      if (npmRegistryPath && currentNpmRegistryPath.includes('localhost')) {
-        execSync(
-          `npm config set registry ${npmRegistryPath} --location ${options.location}`,
-          { env }
-        );
-        logger.info(`Reset npm registry to ${npmRegistryPath}`);
-      } else {
-        execSync(`npm config delete registry --location ${options.location}`, {
-          env,
-        });
-        logger.info('Cleared custom npm registry');
-      }
-      execSync(
-        `npm config delete //localhost:${options.port}/:_authToken  --location ${options.location}`,
-        { env }
-      );
-    } catch (e) {
-      throw new Error(`Failed to reset npm registry: ${e.message}`);
-    }
-  };
 }
 
 function getYarnUnsafeHttpWhitelist(isYarnV1: boolean) {
@@ -227,6 +259,8 @@ function setYarnUnsafeHttpWhitelist(
 
 function setupYarn(options: VerdaccioExecutorSchema) {
   let isYarnV1;
+  let yarnRegistryPaths: string[] = [];
+  const scopes: string[] = ['', ...(options.scopes || [])];
 
   try {
     isYarnV1 =
@@ -238,20 +272,28 @@ function setupYarn(options: VerdaccioExecutorSchema) {
   try {
     const registryConfigName = isYarnV1 ? 'registry' : 'npmRegistryServer';
 
-    const yarnRegistryPath = execSync(`yarn config get ${registryConfigName}`, {
-      env,
-    })
-      ?.toString()
-      ?.trim()
-      ?.replace('\u001b[2K\u001b[1G', ''); // strip out ansi codes
+    scopes.forEach((scope) => {
+      const scopeName = scope ? `${scope}:` : '';
 
-    execSync(
-      `yarn config set ${registryConfigName} http://localhost:${options.port}/` +
-        (options.location === 'user' ? ' --home' : ''),
-      { env }
-    );
+      yarnRegistryPaths.push(
+        execSync(`yarn config get ${scopeName}${registryConfigName}`, {
+          env,
+        })
+          ?.toString()
+          ?.trim()
+          ?.replace('\u001b[2K\u001b[1G', '') // strip out ansi codes
+      );
 
-    logger.info(`Set yarn registry to http://localhost:${options.port}/`);
+      execSync(
+        `yarn config set ${scopeName}${registryConfigName} http://localhost:${options.port}/` +
+          (options.location === 'user' ? ' --home' : ''),
+        { env }
+      );
+
+      logger.info(
+        `Set yarn ${scopeName}registry to http://localhost:${options.port}/`
+      );
+    });
 
     const currentWhitelist: Set<string> | null =
       getYarnUnsafeHttpWhitelist(isYarnV1);
@@ -277,15 +319,22 @@ function setupYarn(options: VerdaccioExecutorSchema) {
           ?.toString()
           ?.trim()
           ?.replace('\u001b[2K\u001b[1G', ''); // strip out ansi codes
-        if (yarnRegistryPath && currentYarnRegistryPath.includes('localhost')) {
-          execSync(
-            `yarn config set ${registryConfigName} ${yarnRegistryPath}` +
-              (options.location === 'user' ? ' --home' : ''),
-            { env }
-          );
-          logger.info(
-            `Reset yarn ${registryConfigName} to ${yarnRegistryPath}`
-          );
+        if (
+          yarnRegistryPaths.length > 0 &&
+          currentYarnRegistryPath.includes('localhost')
+        ) {
+          scopes.forEach((scope, index) => {
+            const scopeName = scope ? `${scope}:` : '';
+
+            execSync(
+              `yarn config set ${scopeName}${registryConfigName} ${yarnRegistryPaths[index]}` +
+                (options.location === 'user' ? ' --home' : ''),
+              { env }
+            );
+            logger.info(
+              `Reset yarn ${scopeName}${registryConfigName} to ${yarnRegistryPaths[index]}`
+            );
+          });
         } else {
           execSync(
             `yarn config ${

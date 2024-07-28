@@ -116,6 +116,8 @@ export interface FileSetInput {
 
 export declare export function findImports(projectFileMap: Record<string, Array<string>>): Array<ImportResult>
 
+export declare export function getBinaryTarget(): string
+
 /**
  * Expands the given outputs into a list of existing files.
  * This is used when hashing outputs

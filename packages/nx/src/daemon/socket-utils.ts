@@ -23,7 +23,7 @@ export const getForkedProcessOsSocketPath = (id: string) => {
 };
 
 export const getPluginOsSocketPath = (id: string) => {
-  let path = resolve(join(getSocketDir(), 'plugin' + id + '.sock'));
+  let path = resolve(join(getSocketDir(true), 'plugin' + id + '.sock'));
   return isWindows ? '\\\\.\\pipe\\nx\\' + resolve(path) : resolve(path);
 };
 

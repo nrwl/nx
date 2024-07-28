@@ -15,16 +15,26 @@
       "inputs": [
         {
           "input": "production",
-          "projects": [
-            "*",
-            "!nx-dev",
-            "!typedoc-theme",
-            "!tools-documentation-create-embeddings"
-          ]
+          "projects": ["tag:npm:public"]
+        }
+      ],
+      "dependsOn": [
+        {
+          "target": "build",
+          "projects": ["tag:npm:public"]
         }
       ],
       "command": "node ./scripts/local-registry/run-populate-storage.mjs",
       "outputs": ["{workspaceRoot}/build/local-registry/storage"]
+    },
+    "nx-release": {
+      "dependsOn": [
+        {
+          "target": "build",
+          "projects": ["tag:npm:public"]
+        }
+      ],
+      "command": "ts-node -P ./scripts/tsconfig.release.json ./scripts/nx-release"
     }
   }
 }

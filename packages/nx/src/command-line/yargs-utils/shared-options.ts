@@ -27,6 +27,7 @@ export interface RunOptions {
   dte: boolean;
   batch: boolean;
   useAgents: boolean;
+  excludeTaskDependencies: boolean;
 }
 
 export function withRunOptions<T>(yargs: Argv<T>): Argv<T & RunOptions> {
@@ -76,6 +77,11 @@ export function withRunOptions<T>(yargs: Argv<T>): Argv<T & RunOptions> {
     .options('skipNxCache', {
       describe:
         'Rerun the tasks even when the results are available in the cache',
+      type: 'boolean',
+      default: false,
+    })
+    .options('excludeTaskDependencies', {
+      describe: 'Skips running dependent tasks first',
       type: 'boolean',
       default: false,
     })

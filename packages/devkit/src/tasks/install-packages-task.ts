@@ -20,7 +20,7 @@ export function installPackagesTask(
   tree: Tree,
   alwaysRun: boolean = false,
   cwd: string = '',
-  packageManager: PackageManager = detectPackageManager(cwd)
+  packageManager: PackageManager = detectPackageManager(join(tree.root, cwd))
 ): void {
   if (
     !tree

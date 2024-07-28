@@ -372,6 +372,7 @@ module.exports.copy = nativeBinding.copy
 module.exports.EventType = nativeBinding.EventType
 module.exports.expandOutputs = nativeBinding.expandOutputs
 module.exports.findImports = nativeBinding.findImports
+module.exports.getBinaryTarget = nativeBinding.getBinaryTarget
 module.exports.getFilesForOutputs = nativeBinding.getFilesForOutputs
 module.exports.hashArray = nativeBinding.hashArray
 module.exports.hashFile = nativeBinding.hashFile

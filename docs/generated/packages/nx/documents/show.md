@@ -29,6 +29,12 @@ Show all projects with names starting with "api-". The "projects" option is usef
  nx show projects --projects api-*
 ```
 
+Show all projects with a tag starting with "ui-". The "projects" option is useful to see which projects would be selected by run-many:
+
+```shell
+ nx show projects --projects tag:ui-*
+```
+
 Show all projects with a serve target:
 
 ```shell

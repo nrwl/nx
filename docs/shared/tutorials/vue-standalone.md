@@ -7,12 +7,13 @@ description: In this tutorial you'll create a frontend-focused workspace with Nx
 
 In this tutorial you'll learn how to use Vue with Nx in a ["standalone" (non-monorepo) setup](/concepts/integrated-vs-package-based#standalone-applications). Not to be confused with the "Vue Standalone API", a standalone project in Nx is a non-monorepo setup where you have a single application at the root level.
 
-What are you going to learn?
+What will you learn?
 
 - how to add Nx to a Vue project
 - how to run a single task (i.e. serve your app) or run multiple tasks in parallel
 - how to leverage code generators to scaffold components
 - how to modularize your codebase and impose architectural constraints for better maintainability
+- [how to speed up CI with Nx Cloud ⚡](#fast-ci)
 
 We'll start out this tutorial using Nx together with a Vue application generated with the default `npm create vue` command. Later, we'll add the `@nx/vue` plugin to show the nice enhancements that it can provide. [Visit our "Why Nx" page](/getting-started/why-nx) to learn more about plugins and what role they play in the Nx architecture.
 
@@ -1027,7 +1028,11 @@ Learn more about how to [enforce module boundaries](/features/enforce-module-bou
 
 When you are ready to add another application to the repo, you'll probably want to move `myvueapp` to its own folder. To do this, you can run the [`convert-to-monorepo` generator](/nx-api/workspace/generators/convert-to-monorepo) or [manually move the configuration files](/recipes/tips-n-tricks/standalone-to-integrated).
 
-## Set Up CI for Your Vue App
+## Fast CI ⚡ {% highlightColor="green" %}
+
+{% callout type="check" title="Repository with Nx" %}
+Make sure you have completed the previous sections of this tutorial before starting this one. If you want a clean starting point, you can check out the [reference code](https://github.com/nrwl/nx-recipes/tree/main/vue-app) as a starting point.
+{% /callout %}
 
 This tutorial walked you through how Nx can improve the local development experience, but the biggest difference Nx makes is in CI. As repositories get bigger, making sure that the CI is fast, reliable and maintainable can get very challenging. Nx provides a solution.
 
@@ -1036,7 +1041,7 @@ This tutorial walked you through how Nx can improve the local development experi
 - Nx Agents [efficiently distribute tasks across machines](/ci/concepts/parallelization-distribution) ensuring constant CI time regardless of the repository size. The right number of machines is allocated for each PR to ensure good performance without wasting compute.
 - Nx Atomizer [automatically splits](/ci/features/split-e2e-tasks) large e2e tests to distribute them across machines. Nx can also automatically [identify and rerun flaky e2e tests](/ci/features/flaky-tasks).
 
-### Connect to Nx Cloud
+### Connect to Nx Cloud {% highlightColor="green" %}
 
 Nx Cloud is a companion app for your CI system that provides remote caching, task distribution, e2e tests deflaking, better DX and more.
 
@@ -1068,7 +1073,7 @@ git pull
 
 You should now have an `nxCloudAccessToken` property specified in the `nx.json` file.
 
-### Create a CI Workflow
+### Create a CI Workflow {% highlightColor="green" %}
 
 Use the following command to generate a CI workflow file.
 
@@ -1105,7 +1110,7 @@ jobs:
       - run: npx nx affected -t lint test build
 ```
 
-### Open a Pull Request
+### Open a Pull Request {% highlightColor="green" %}
 
 Commit the changes and open a new PR on GitHub.
 

@@ -167,7 +167,16 @@ impl HashPlanner {
                             let external_node_name =
                                 find_external_dependency_node_name(dep, &self.project_graph);
                             let Some(external_node_name) = external_node_name else {
-                                anyhow::bail!("The externalDependency '{dep}' for '{project_name}:{target_name}' could not be found")
+                                if self.project_graph.nodes.contains_key(dep) {
+                                    let deps = self.project_graph.dependencies.get(project_name);
+                                    if deps.is_some_and(|deps| deps.contains(dep)) {
+                                        anyhow::bail!("The externalDependency '{dep}' for '{project_name}:{target_name}' is not an external node and is already a dependency. Please remove it from the externalDependency inputs.")
+                                    } else {
+                                        anyhow::bail!("The externalDependency '{dep}' for '{project_name}:{target_name}' is not an external node. If you believe this is a dependency, add an implicitDependency to '{project_name}'")
+                                    }
+                                } else {
+                                    anyhow::bail!("The externalDependency '{dep}' for '{project_name}:{target_name}' could not be found")
+                                }
                             };
                             trace!(
                                 "Add External Instruction for External Input {external_node_name}: {}",

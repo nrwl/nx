@@ -78,7 +78,10 @@ export async function getOptions(
     configFile: viteConfigPath,
   };
 
-  return mergeConfig(resolved?.config?.['test'] ?? {}, settings);
+  return {
+    resolvedOptions: mergeConfig(resolved?.config?.['test'] ?? {}, settings),
+    plugins: resolved?.config?.plugins,
+  };
 }
 
 export function getOptionsAsArgv(obj: Record<string, any>): string[] {

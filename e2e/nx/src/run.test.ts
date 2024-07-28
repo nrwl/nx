@@ -254,6 +254,40 @@ describe('Nx Running Tests', () => {
       const output = runCLI(`echo ${mylib}`);
       expect(output).toContain('TWO');
     });
+
+    it('should not run dependencies if --no-dependencies is passed', () => {
+      const mylib = uniq('mylib');
+      runCLI(`generate @nx/js:lib ${mylib}`);
+
+      updateJson(`libs/${mylib}/project.json`, (c) => {
+        c.targets['one'] = {
+          executor: 'nx:run-commands',
+          options: {
+            command: 'echo ONE',
+          },
+        };
+        c.targets['two'] = {
+          executor: 'nx:run-commands',
+          options: {
+            command: 'echo TWO',
+          },
+          dependsOn: ['one'],
+        };
+        c.targets['three'] = {
+          executor: 'nx:run-commands',
+          options: {
+            command: 'echo THREE',
+          },
+          dependsOn: ['two'],
+        };
+        return c;
+      });
+
+      const output = runCLI(`one ${mylib} --no-deps`);
+      expect(output).toContain('ONE');
+      expect(output).not.toContain('TWO');
+      expect(output).not.toContain('THREE');
+    });
   });
 
   describe('Nx Bail', () => {

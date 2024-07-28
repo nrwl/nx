@@ -36,6 +36,7 @@ export interface NxArgs {
   nxIgnoreCycles?: boolean;
   type?: string;
   batch?: boolean;
+  excludeTaskDependencies?: boolean;
 }
 
 export function createOverrides(__overrides_unparsed__: string[] = []) {
@@ -177,25 +178,30 @@ export function splitArgsIntoNxArgsAndOverrides(
 
   normalizeNxArgsRunner(nxArgs, nxJson, options);
 
+  nxArgs['parallel'] = readParallelFromArgsAndEnv(args);
+
+  return { nxArgs, overrides } as any;
+}
+
+export function readParallelFromArgsAndEnv(args: { [k: string]: any }) {
   if (args['parallel'] === 'false' || args['parallel'] === false) {
-    nxArgs['parallel'] = 1;
+    return 1;
   } else if (
     args['parallel'] === 'true' ||
     args['parallel'] === true ||
     args['parallel'] === '' ||
-    process.env.NX_PARALLEL // dont require passing --parallel if NX_PARALLEL is set
+    // dont require passing --parallel if NX_PARALLEL is set, but allow overriding it
+    (process.env.NX_PARALLEL && args['parallel'] === undefined)
   ) {
-    nxArgs['parallel'] = Number(
-      nxArgs['maxParallel'] ||
-        nxArgs['max-parallel'] ||
+    return Number(
+      args['maxParallel'] ||
+        args['max-parallel'] ||
         process.env.NX_PARALLEL ||
         3
     );
   } else if (args['parallel'] !== undefined) {
-    nxArgs['parallel'] = Number(args['parallel']);
+    return Number(args['parallel']);
   }
-
-  return { nxArgs, overrides } as any;
 }
 
 function normalizeNxArgsRunner(
