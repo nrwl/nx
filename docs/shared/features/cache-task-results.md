@@ -1,8 +1,10 @@
 # Cache Task Results
 
-It's costly to rebuild and retest the same code over and over again. Nx has the most sophisticated and battle-tested computation caching system to make sure it never rebuilds the same code twice. It knows when the task you are about to run, has been executed before, so it can use the cache to restore the results of running that task.
+Rebuilding and retesting the same code repeatedly is costly. Nx offers a sophisticated and battle-tested computation caching system that ensures **code is never rebuilt twice**.
 
 If you want to learn more about the conceptual model behind Nx's caching, read [How Caching Works](/concepts/how-caching-works).
+
+## What gets cached?
 
 ## Define Cacheable Tasks
 
@@ -51,14 +53,14 @@ the same output. As an example, e2e test runs that hit the backend API cannot be
 the result of the test run.
 {% /callout %}
 
-Now, if you run a `build` task twice, the second time the operation will be instant because it is restored from the cache.
+Now, if you run a `build` task twice, the operation will be instant the second time because it is restored from the cache.
 
 {% terminal-video src="/documentation/shared/images/caching/cache-terminal-animation.mp4" alt="Video showing the terminal output of running a build command first without cache and then with cache. The 2nd run is almost instant, taking just 18ms" /%}
 
 Nx restores both
 
 - the terminal output
-- the files & artifacts created as a result of running the task (e.g. your `build` or `dist` directory)
+- The files and artifacts created from running the task (e.g., your `build` or `dist` directory)"
 
 Keep reading to learn how to fine-tune what gets cached.
 
@@ -124,19 +126,32 @@ The cache is stored in `.nx/cache` by default. You can also [change where the ca
 
 ## Enable Remote Caching
 
-You can enable remote caching (Nx Replay) by connecting to [Nx Cloud](/ci/features/remote-cache). To connect Nx to Nx Cloud, [create an account on cloud.nx.app](https://cloud.nx.app) and connect to your repository.
+Enable remote caching by connecting to [Nx Cloud](/nx-cloud):
+
+```shell
+npx nx connect
+```
 
 Learn more about [remote caching](/ci/features/remote-cache).
 
+## Troubleshooting Caching
+
+- debug cache misses
+- [turn off or skip the cache](/recipes/running-tasks/skipping-cache)
+- [change the cache location](/recipes/running-tasks/change-cache-location)
+- clear the local or remote cache
+
+---
+
 ## Turn off or Skip the Cache
 
-If you want to ignore the cache (both reads and writes), use the `--skip-nx-cache` flag:
+To ignore the cache (both reads and writes), use the `--skip-nx-cache` flag:
 
 ```shell
 nx build header --skip-nx-cache
 ```
 
-Alternatively if you want to disable caching for a particular task, just make sure it is not part [of the cached tasks](/features/cache-task-results#define-cacheable-tasks). If [you're using Nx Cloud](/ci/features/remote-cache#skipping-cloud-cache), you might want to use `--no-cloud` to skip remote caching.
+Alternatively, to disable caching for a specific task, ensure it is not part of the [cached tasks](/features/cache-task-results#define-cacheable-tasks). If [you're using Nx Cloud](/ci/features/remote-cache#skipping-cloud-cache), you can use `--no-cloud` to skip remote caching.
 
 ## Clear the Local Cache
 

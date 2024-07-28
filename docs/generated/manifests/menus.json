@@ -1091,14 +1091,6 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Change Cache Location",
-                "path": "/recipes/running-tasks/change-cache-location",
-                "id": "change-cache-location",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
                 "name": "Run Custom Commands",
                 "path": "/recipes/running-tasks/run-commands-executor",
                 "id": "run-commands-executor",
@@ -1142,6 +1134,22 @@
                 "name": "Reduce Repetitive Configuration",
                 "path": "/recipes/running-tasks/reduce-repetitive-configuration",
                 "id": "reduce-repetitive-configuration",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Change Cache Location",
+                "path": "/recipes/running-tasks/change-cache-location",
+                "id": "change-cache-location",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Skip Task Caching",
+                "path": "/recipes/running-tasks/skipping-cache",
+                "id": "skipping-cache",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -2081,14 +2089,6 @@
             "disableCollapsible": false
           },
           {
-            "name": "Change Cache Location",
-            "path": "/recipes/running-tasks/change-cache-location",
-            "id": "change-cache-location",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
             "name": "Run Custom Commands",
             "path": "/recipes/running-tasks/run-commands-executor",
             "id": "run-commands-executor",
@@ -2135,6 +2135,22 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
+          },
+          {
+            "name": "Change Cache Location",
+            "path": "/recipes/running-tasks/change-cache-location",
+            "id": "change-cache-location",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Skip Task Caching",
+            "path": "/recipes/running-tasks/skipping-cache",
+            "id": "skipping-cache",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -2159,14 +2175,6 @@
         "name": "Define a Task Pipeline",
         "path": "/recipes/running-tasks/defining-task-pipeline",
         "id": "defining-task-pipeline",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Change Cache Location",
-        "path": "/recipes/running-tasks/change-cache-location",
-        "id": "change-cache-location",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -2215,6 +2223,22 @@
         "name": "Reduce Repetitive Configuration",
         "path": "/recipes/running-tasks/reduce-repetitive-configuration",
         "id": "reduce-repetitive-configuration",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Change Cache Location",
+        "path": "/recipes/running-tasks/change-cache-location",
+        "id": "change-cache-location",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Skip Task Caching",
+        "path": "/recipes/running-tasks/skipping-cache",
+        "id": "skipping-cache",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
