@@ -381,11 +381,6 @@
                   "file": "shared/recipes/running-tasks/defining-task-pipeline"
                 },
                 {
-                  "name": "Change Cache Location",
-                  "id": "change-cache-location",
-                  "file": "shared/recipes/running-tasks/change-cache-location"
-                },
-                {
                   "name": "Run Custom Commands",
                   "id": "run-commands-executor",
                   "tags": ["run-tasks"],
@@ -420,6 +415,16 @@
                   "id": "reduce-repetitive-configuration",
                   "tags": [],
                   "file": "shared/recipes/running-tasks/reduce-repetitive-configuration"
+                },
+                {
+                  "name": "Change Cache Location",
+                  "id": "change-cache-location",
+                  "file": "shared/recipes/running-tasks/change-cache-location"
+                },
+                {
+                  "name": "Skip Task Caching",
+                  "id": "skipping-cache",
+                  "file": "shared/recipes/running-tasks/skipping-cache"
                 }
               ]
             },
