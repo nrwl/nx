@@ -131,7 +131,7 @@ describe('task planner', () => {
         type: 'lib',
         data: {
           root: 'libs/unrelated',
-          targets: { build: {} },
+          targets: { build: { inputs: ['default', '^default'] } },
         },
       });
       builder.addNode({
@@ -139,7 +139,7 @@ describe('task planner', () => {
         type: 'lib',
         data: {
           root: 'libs/tagged',
-          targets: { build: {} },
+          targets: { build: { inputs: ['default', '^default'] } },
           tags: ['some-tag'],
         },
       });
@@ -202,7 +202,9 @@ describe('task planner', () => {
       type: 'lib',
       data: {
         root: 'libs/parent',
-        targets: { build: { executor: 'unknown' } },
+        targets: {
+          build: { executor: 'unknown', inputs: ['default', '^default'] },
+        },
       },
     });
 
@@ -211,7 +213,9 @@ describe('task planner', () => {
       type: 'lib',
       data: {
         root: 'libs/child',
-        targets: { build: { executor: 'none' } },
+        targets: {
+          build: { executor: 'none', inputs: ['default', '^default'] },
+        },
       },
     });
     builder.addNode({
@@ -219,7 +223,9 @@ describe('task planner', () => {
       type: 'lib',
       data: {
         root: 'libs/grandchild',
-        targets: { build: { executor: 'none' } },
+        targets: {
+          build: { executor: 'none', inputs: ['default', '^default'] },
+        },
       },
     });
     builder.addStaticDependency('parent', 'child', '/filea.ts');
@@ -293,7 +299,9 @@ describe('task planner', () => {
         namedInputs: {
           prod: ['default'],
         },
-        targets: { build: { executor: 'unknown' } },
+        targets: {
+          build: { executor: 'unknown', inputs: ['default', '^default'] },
+        },
       },
     });
     builder.addStaticDependency('parent', 'child', 'libs/parent/filea.ts');
@@ -564,7 +572,12 @@ describe('task planner', () => {
       type: 'lib',
       data: {
         root: 'libs/parent',
-        targets: { build: { executor: 'nx:run-commands' } },
+        targets: {
+          build: {
+            executor: 'nx:run-commands',
+            inputs: ['default', '^default'],
+          },
+        },
       },
     });
     builder.addNode({
@@ -572,7 +585,12 @@ describe('task planner', () => {
       type: 'lib',
       data: {
         root: 'libs/child',
-        targets: { build: { executor: 'nx:run-commands' } },
+        targets: {
+          build: {
+            executor: 'nx:run-commands',
+            inputs: ['default', '^default'],
+          },
+        },
       },
     });
     builder.addStaticDependency('parent', 'child', '/filea.ts');
@@ -614,7 +632,12 @@ describe('task planner', () => {
       type: 'app',
       data: {
         root: 'apps/app',
-        targets: { build: { executor: 'nx:run-commands' } },
+        targets: {
+          build: {
+            executor: 'nx:run-commands',
+            inputs: ['default', '^default'],
+          },
+        },
       },
     });
     builder.addExternalNode({
