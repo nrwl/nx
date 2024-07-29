@@ -535,8 +535,7 @@ describe('app', () => {
   });
 
   describe('--e2e-test-runner playwright', () => {
-    // TODO(colum): Investigate why import('@nx/playwright/plugin') causes ESM issues for Jest
-    xit('should generate e2e-ci targetDefaults', async () => {
+    it('should generate e2e-ci targetDefaults', async () => {
       const name = uniq();
 
       await applicationGenerator(tree, {

@@ -311,9 +311,7 @@ describe('app', () => {
   });
 
   describe('playwright', () => {
-    // TODO(colum): importing the `@nx/playwright/plugin` results in Jest having issues with ESM
-    // That causes this test to fail. Need to investigate this more
-    xit('should create e2e app with e2e-ci targetDefaults', async () => {
+    it('should create e2e app with e2e-ci targetDefaults', async () => {
       await expoApplicationGenerator(appTree, {
         name: 'my-app',
         directory: 'my-dir',
