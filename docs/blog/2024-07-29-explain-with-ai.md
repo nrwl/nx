@@ -33,6 +33,10 @@ Here's how you get started:
 
 Note that you'll need to be an organization admin for your Nx Cloud workspace to enable AI features.
 
+{% call-to-action title="Log in to Nx Cloud" url="https://cloud.nx.app" icon="nxcloud" description="Enable AI features in your organization settings" %}
+Log in to Nx Cloud
+{% /call-to-action %}
+
 ### I want to try this, but I'm on the Hobby plan 🤔
 
 If you're currently on the Hobby plan, you can start a free Pro plan trial for 14 days to try it out on your own workspace. No, we don't ask for credit cards to start a trial, so feel free to experiment!
