@@ -593,11 +593,7 @@ function isExternalProjectReference(
     return true;
   }
 
-  while (currentPath !== dirname(currentPath)) {
-    if (currentPath === absoluteProjectRoot) {
-      // it's inside the project root, so it's an internal project reference
-      return false;
-    }
+  while (currentPath !== absoluteProjectRoot) {
     if (
       existsSync(join(currentPath, 'package.json')) ||
       existsSync(join(currentPath, 'project.json'))
@@ -608,7 +604,8 @@ function isExternalProjectReference(
     currentPath = dirname(currentPath);
   }
 
-  return currentPath !== absoluteProjectRoot;
+  // it's inside the project root, so it's an internal project reference
+  return false;
 }
 
 function getTsConfigDirName(tsConfigPath: string): string {
