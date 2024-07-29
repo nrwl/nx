@@ -19,7 +19,7 @@ import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { minimatch } from 'minimatch';
 import { existsSync, readdirSync, statSync } from 'node:fs';
-import { basename, dirname, join, relative } from 'node:path';
+import { basename, dirname, join, normalize, relative } from 'node:path';
 import { hashObject } from 'nx/src/hasher/file-hasher';
 // eslint-disable-next-line @typescript-eslint/no-restricted-imports
 import { getLockFileName } from 'nx/src/plugins/js/lock-file/lock-file';
@@ -58,7 +58,9 @@ interface NormalizedPluginOptions {
 type TscProjectResult = Pick<ProjectConfiguration, 'targets'>;
 
 function readTargetsCache(cachePath: string): Record<string, TscProjectResult> {
-  return existsSync(cachePath) ? readJsonFile(cachePath) : {};
+  return process.env.NX_CACHE_PROJECT_GRAPH !== 'false' && existsSync(cachePath)
+    ? readJsonFile(cachePath)
+    : {};
 }
 
 function writeTargetsToCache(
@@ -188,8 +190,9 @@ function buildTscTargets(
   // Typecheck target
   if (basename(configFilePath) === 'tsconfig.json' && options.typecheck) {
     internalProjectReferences = resolveInternalProjectReferences(
-      configFilePath,
-      tsConfig
+      tsConfig,
+      context.workspaceRoot,
+      projectRoot
     );
     const targetName = options.typecheck.targetName;
     if (!targets[targetName]) {
@@ -232,8 +235,9 @@ function buildTscTargets(
   // Build target
   if (options.build && basename(configFilePath) === options.build.configName) {
     internalProjectReferences ??= resolveInternalProjectReferences(
-      configFilePath,
-      tsConfig
+      tsConfig,
+      context.workspaceRoot,
+      projectRoot
     );
     const targetName = options.build.targetName;
 
@@ -284,9 +288,13 @@ function getInputs(
     [configFilePath, tsConfig],
     ...Object.entries(internalProjectReferences),
   ];
+  const absoluteProjectRoot = join(workspaceRoot, projectRoot);
   projectTsConfigFiles.forEach(([configPath, config]) => {
     configFiles.add(configPath);
-    (config.raw?.include ?? []).forEach((p: string) => includePaths.add(p));
+    const offset = relative(absoluteProjectRoot, dirname(configPath));
+    (config.raw?.include ?? []).forEach((p: string) =>
+      includePaths.add(join(offset, p))
+    );
 
     if (config.raw?.exclude) {
       /**
@@ -348,7 +356,14 @@ function getInputs(
     );
   }
 
-  if (hasExternalProjectReferences(configFilePath, tsConfig)) {
+  if (
+    hasExternalProjectReferences(
+      configFilePath,
+      tsConfig,
+      workspaceRoot,
+      projectRoot
+    )
+  ) {
     // Importing modules from a referenced project will load its output declaration files (d.ts)
     // https://www.typescriptlang.org/docs/handbook/project-references.html#what-is-a-project-reference
     inputs.push({ dependentTasksOutputFiles: '**/*.d.ts' });
@@ -484,15 +499,15 @@ function getExtendedConfigFiles(
 }
 
 function resolveInternalProjectReferences(
-  configFilePath: string,
   tsConfig: ParsedCommandLine,
+  workspaceRoot: string,
+  projectRoot: string,
   projectReferences: Record<string, ParsedCommandLine> = {}
 ): Record<string, ParsedCommandLine> {
   if (!tsConfig.projectReferences?.length) {
     return projectReferences;
   }
 
-  const basePath = getTsConfigBasePath(configFilePath);
   for (const ref of tsConfig.projectReferences) {
     let refConfigPath = ref.path;
     if (projectReferences[refConfigPath]) {
@@ -500,7 +515,7 @@ function resolveInternalProjectReferences(
       continue;
     }
 
-    if (isExternalProjectReference(refConfigPath, basePath)) {
+    if (isExternalProjectReference(refConfigPath, workspaceRoot, projectRoot)) {
       continue;
     }
 
@@ -511,8 +526,9 @@ function resolveInternalProjectReferences(
     projectReferences[refConfigPath] = refTsConfig;
 
     resolveInternalProjectReferences(
-      refConfigPath,
       refTsConfig,
+      workspaceRoot,
+      projectRoot,
       projectReferences
     );
   }
@@ -523,6 +539,8 @@ function resolveInternalProjectReferences(
 function hasExternalProjectReferences(
   tsConfigPath: string,
   tsConfig: ParsedCommandLine,
+  workspaceRoot: string,
+  projectRoot: string,
   seen = new Set<string>()
 ): boolean {
   if (!tsConfig.projectReferences?.length) {
@@ -530,7 +548,6 @@ function hasExternalProjectReferences(
   }
   seen.add(tsConfigPath);
 
-  const basePath = getTsConfigBasePath(tsConfigPath);
   for (const ref of tsConfig.projectReferences) {
     let refConfigPath = ref.path;
     if (seen.has(refConfigPath)) {
@@ -538,7 +555,7 @@ function hasExternalProjectReferences(
       continue;
     }
 
-    if (isExternalProjectReference(refConfigPath, basePath)) {
+    if (isExternalProjectReference(refConfigPath, workspaceRoot, projectRoot)) {
       return true;
     }
 
@@ -546,7 +563,13 @@ function hasExternalProjectReferences(
       refConfigPath = join(refConfigPath, 'tsconfig.json');
     }
     const refTsConfig = readCachedTsConfig(refConfigPath);
-    const result = hasExternalProjectReferences(refConfigPath, refTsConfig);
+    const result = hasExternalProjectReferences(
+      refConfigPath,
+      refTsConfig,
+      workspaceRoot,
+      projectRoot,
+      seen
+    );
 
     if (result) {
       return true;
@@ -558,27 +581,40 @@ function hasExternalProjectReferences(
 
 function isExternalProjectReference(
   refTsConfigPath: string,
-  basePath: string
+  workspaceRoot: string,
+  projectRoot: string
 ): boolean {
-  const refBasePath = getTsConfigBasePath(refTsConfigPath);
+  const absoluteProjectRoot = join(workspaceRoot, projectRoot);
 
-  // TODO: there could be internal project references in nested dirs (e.g.
-  // our storybook generator generates a nested `.storybook/tsconfig.json`),
-  // which would be considered an external project reference but it's not.
-  // We could instead check if the referenced tsconfig is outside the project
-  // root, but that would cause issues with standalone workspaces with nested
-  // projects.
-  return refBasePath !== basePath;
+  let currentPath = getTsConfigDirName(refTsConfigPath);
+
+  if (relative(absoluteProjectRoot, currentPath).startsWith('..')) {
+    // it's outside of the project root, so it's an external project reference
+    return true;
+  }
+
+  while (currentPath !== absoluteProjectRoot) {
+    if (
+      existsSync(join(currentPath, 'package.json')) ||
+      existsSync(join(currentPath, 'project.json'))
+    ) {
+      // it's inside a nested project root, so it's and external project reference
+      return true;
+    }
+    currentPath = dirname(currentPath);
+  }
+
+  // it's inside the project root, so it's an internal project reference
+  return false;
 }
 
-function getTsConfigBasePath(tsConfigPath: string): string {
-  return statSync(tsConfigPath).isFile() ? dirname(tsConfigPath) : tsConfigPath;
+function getTsConfigDirName(tsConfigPath: string): string {
+  return statSync(tsConfigPath).isFile()
+    ? dirname(tsConfigPath)
+    : normalize(tsConfigPath);
 }
 
-// TODO: we could probably persist this to disk to avoid reading the same
-// tsconfig files over multiple runs
 const tsConfigCache = new Map<string, ParsedCommandLine>();
-
 function readCachedTsConfig(tsConfigPath: string): ParsedCommandLine {
   const cacheKey = getTsConfigCacheKey(tsConfigPath);
 
