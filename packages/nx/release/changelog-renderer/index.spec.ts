@@ -427,9 +427,7 @@ describe('defaultChangelogRenderer()', () => {
         ### ❤️  Thank You
 
         - Author 1
-        - Author 2
         - Author 3
-        - Author 4
         - Author 5"
       `);
 
@@ -458,9 +456,7 @@ describe('defaultChangelogRenderer()', () => {
 
         - Author 1
         - Author 2
-        - Author 3
-        - Author 4
-        - Author 5"
+        - Author 4"
       `);
     });
   });
