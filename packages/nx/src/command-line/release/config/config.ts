@@ -173,6 +173,10 @@ export async function createNxReleaseConfig(
   };
 
   const defaultFixedReleaseTagPattern = 'v{version}';
+  /**
+   * TODO: in v20, make it so that this pattern is used by default when any custom groups are used
+   */
+  const defaultFixedGroupReleaseTagPattern = '{releaseGroupName}-v{version}';
   const defaultIndependentReleaseTagPattern = '{projectName}@{version}';
 
   const workspaceProjectsRelationship =
