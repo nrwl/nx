@@ -14,10 +14,12 @@ export function createApiAxiosInstance(options: CloudTaskRunnerOptions) {
   const baseUrl =
     process.env.NX_CLOUD_API || options.url || 'https://cloud.nx.app';
   const accessToken = ACCESS_TOKEN ? ACCESS_TOKEN : options.accessToken!;
+  const nxCloudId = options.nxCloudId;
 
-  if (!accessToken) {
+  // TODO(lourw): Update message with NxCloudId once it is supported
+  if (!accessToken && !nxCloudId) {
     throw new Error(
-      `Unable to authenticate. Either define accessToken in nx.json or set the NX_CLOUD_ACCESS_TOKEN env variable.`
+      `Unable to authenticate. Either define accessToken in nx.json or set the NX_CLOUD_ACCESS_TOKEN env variable. If you do not want to use Nx Cloud for this command, either set NX_NO_CLOUD=true, or pass the --no-cloud flag.`
     );
   }
 
