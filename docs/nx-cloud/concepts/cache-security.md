@@ -36,7 +36,7 @@ When an employee leaves a company, it is standard practice to change all the pas
 
 ### Skip the Cache When Creating a Deployment Artifact
 
-In order to guarantee that cache poisoning will never affect your end users, [skip the cache](/features/cache-task-results#turn-off-or-skip-the-cache) when creating build artifacts that will actually be deployed. Skipping the cache for this one CI run is a very small performance cost, but it gives you 100% confidence that cache poisoning will not be an issue for the end users.
+In order to guarantee that cache poisoning will never affect your end users, [skip the cache](/recipes/running-tasks/skipping-cache) when creating build artifacts that will actually be deployed. Skipping the cache for this one CI run is a very small performance cost, but it gives you 100% confidence that cache poisoning will not be an issue for the end users.
 
 ### Do Not Manually Share Your Local Cache
 
