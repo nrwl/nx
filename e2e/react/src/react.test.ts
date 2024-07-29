@@ -68,6 +68,8 @@ describe('React Applications', () => {
       const libName = uniq('lib');
       const libWithNoComponents = uniq('lib');
       const logoSvg = readFileSync(join(__dirname, 'logo.svg')).toString();
+      const blueSvg = `<?xml version="1.0"?><svg xmlns="http://www.w3.org/2000/svg" version="1.2" baseProfile="tiny" viewBox="0 0 30 30"><rect x="10" y="10" width="10" height="10" fill="blue"/></svg>`;
+      const redSvg = `<?xml version="1.0"?><svg xmlns="http://www.w3.org/2000/svg" version="1.2" baseProfile="tiny" viewBox="0 0 30 30"><rect x="10" y="10" width="10" height="10" fill="red"/></svg>`;
 
       runCLI(
         `generate @nx/react:app ${appName} --style=css --bundler=webpack --no-interactive --skipFormat`
@@ -92,11 +94,15 @@ describe('React Applications', () => {
       `
       );
 
+      updateFile(`apps/${appName}/src/app/blue/img.svg`, blueSvg); // ensure that same filenames do not conflict
+      updateFile(`apps/${appName}/src/app/red/img.svg`, redSvg); // ensure that same filenames do not conflict
       updateFile(`apps/${appName}/src/app/logo.svg`, logoSvg);
       updateFile(
         `apps/${appName}/src/app/app.tsx`,
         `
         import { ReactComponent as Logo } from './logo.svg';
+        import blue from './blue/img.svg';
+        import red from './red/img.svg';
         import logo from './logo.svg';
         import NxWelcome from './nx-welcome';
 
@@ -105,6 +111,8 @@ describe('React Applications', () => {
             <>
               <Logo />
               <img src={logo} alt="" />
+              <img src={blue} alt="" />
+              <img src={red} alt="" />
               <NxWelcome title="${appName}" />
             </>
           );
@@ -134,10 +142,7 @@ describe('React Applications', () => {
         checkSourceMap: true,
         checkStyles: true,
         checkLinter: true,
-        // TODO(caleb): Fix cypress tests
-        // /tmp/nx-e2e--1970-rQ4U0qBe6Nht/nx/proj1614306/dist/apps/app5172641/server/runtime.js:119
-        // if (typeof import.meta.url === "string") scriptUrl = import.meta.url
-        // SyntaxError: Cannot use 'import.meta' outside a module
+        // TODO(jack): check why Playwright tests are timing out in CI
         checkE2E: false,
       });
 
@@ -150,13 +155,10 @@ describe('React Applications', () => {
         checkSourceMap: false,
         checkStyles: false,
         checkLinter: false,
-        // TODO(caleb): Fix cypress tests
-        // /tmp/nx-e2e--1970-rQ4U0qBe6Nht/nx/proj1614306/dist/apps/app5172641/server/runtime.js:119
-        // if (typeof import.meta.url === "string") scriptUrl = import.meta.url
-        // SyntaxError: Cannot use 'import.meta' outside a module
+        // TODO(jack): check why Playwright tests are timing out in CI
         checkE2E: false,
       });
-    }, 500000);
+    }, 500_000);
 
     it('should generate app with routing', async () => {
       const appName = uniq('app');
@@ -532,7 +534,7 @@ async function testGeneratedApp(
 
   if (opts.checkE2E && runE2ETests()) {
     const e2eResults = runCLI(`e2e ${appName}-e2e`);
-    expect(e2eResults).toContain('All specs passed!');
+    expect(e2eResults).toContain('Successfully ran target e2e');
     expect(await killPorts()).toBeTruthy();
   }
 }

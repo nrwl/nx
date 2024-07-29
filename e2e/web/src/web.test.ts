@@ -5,6 +5,7 @@ import {
   createFile,
   isNotWindows,
   killPorts,
+  listFiles,
   newProject,
   readFile,
   runCLI,
@@ -79,22 +80,27 @@ describe('Web Components Applications', () => {
       'none'
     );
     runCLI(`build ${appName}`);
+    const images = listFiles(`dist/apps/${appName}`).filter((f) =>
+      f.endsWith('.png')
+    );
     checkFilesExist(
       `dist/apps/${appName}/index.html`,
       `dist/apps/${appName}/runtime.js`,
-      `dist/apps/${appName}/emitted.png`,
       `dist/apps/${appName}/main.js`,
       `dist/apps/${appName}/styles.css`
     );
-    checkFilesDoNotExist(`dist/apps/${appName}/inlined.png`);
+    expect(images.some((f) => f.startsWith('emitted.'))).toBe(true);
+    expect(images.some((f) => f.startsWith('inlined.'))).toBe(false);
 
     expect(readFile(`dist/apps/${appName}/main.js`)).toContain(
       'data:image/png;base64'
     );
     // Should not be a JS module but kept as a PNG
-    expect(readFile(`dist/apps/${appName}/emitted.png`)).not.toContain(
-      'export default'
-    );
+    expect(
+      readFile(
+        `dist/apps/${appName}/${images.find((f) => f.startsWith('emitted.'))}`
+      )
+    ).not.toContain('export default');
 
     expect(readFile(`dist/apps/${appName}/index.html`)).toContain(
       '<link rel="stylesheet" href="styles.css">'
