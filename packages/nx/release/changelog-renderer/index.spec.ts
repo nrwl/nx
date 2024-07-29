@@ -287,6 +287,178 @@ describe('defaultChangelogRenderer()', () => {
         - James Henry"
       `);
     });
+
+    it('should only include authors relevant to the specific project', async () => {
+      const changes: ChangelogChange[] = [
+        {
+          shortHash: '4130f65',
+          author: {
+            name: 'Author 1',
+            email: 'author-1@example.com',
+          },
+          body: '"\n\nM\tpackages/pkg-a/src/index.ts\nM\tpackages/pkg-b/src/index.ts\n"',
+          description: 'all packages fixed',
+          type: 'fix',
+          scope: '',
+          githubReferences: [
+            {
+              value: '4130f65',
+              type: 'hash',
+            },
+          ],
+          isBreaking: false,
+          revertedHashes: [],
+          affectedProjects: ['pkg-a', 'pkg-b'],
+        },
+        {
+          shortHash: '7dc5ec3',
+          author: {
+            name: 'Author 2',
+            email: 'author-2@example.com',
+          },
+          body: '"\n\nM\tpackages/pkg-b/src/index.ts\n"',
+          description: 'and another new capability',
+          type: 'feat',
+          scope: 'pkg-b',
+          githubReferences: [
+            {
+              value: '7dc5ec3',
+              type: 'hash',
+            },
+          ],
+          isBreaking: false,
+          revertedHashes: [],
+          affectedProjects: ['pkg-b'],
+        },
+        {
+          shortHash: 'd7a58a2',
+          author: {
+            name: 'Author 3',
+            email: 'author-3@example.com',
+          },
+          body: '"\n\nM\tpackages/pkg-a/src/index.ts\n"',
+          description: 'new hotness',
+          type: 'feat',
+          scope: 'pkg-a',
+          githubReferences: [
+            {
+              value: 'd7a58a2',
+              type: 'hash',
+            },
+          ],
+          isBreaking: false,
+          revertedHashes: [],
+          affectedProjects: ['pkg-a'],
+        },
+        {
+          shortHash: 'feace4a',
+          author: {
+            name: 'Author 4',
+            email: 'author-4@example.com',
+          },
+          body: '"\n\nM\tpackages/pkg-b/src/index.ts\n"',
+          description: 'brand new thing',
+          type: 'feat',
+          scope: 'pkg-b',
+          githubReferences: [
+            {
+              value: 'feace4a',
+              type: 'hash',
+            },
+          ],
+          isBreaking: false,
+          revertedHashes: [],
+          affectedProjects: ['pkg-b'],
+        },
+        {
+          shortHash: '6301405',
+          author: {
+            name: 'Author 5',
+            email: 'author-5@example.com',
+          },
+          body: '"\n\nM\tpackages/pkg-a/src/index.ts\n',
+          description: 'squashing bugs',
+          type: 'fix',
+          scope: 'pkg-a',
+          githubReferences: [
+            {
+              value: '6301405',
+              type: 'hash',
+            },
+          ],
+          isBreaking: false,
+          revertedHashes: [],
+          affectedProjects: ['pkg-a'],
+        },
+      ];
+
+      const otherOpts = {
+        projectGraph,
+        changes,
+        releaseVersion: 'v1.1.0',
+        entryWhenNoChanges: false as const,
+        changelogRenderOptions: {
+          authors: true,
+        },
+        conventionalCommitsConfig: DEFAULT_CONVENTIONAL_COMMITS_CONFIG,
+      };
+
+      expect(
+        await defaultChangelogRenderer({
+          ...otherOpts,
+          project: 'pkg-a',
+        })
+      ).toMatchInlineSnapshot(`
+        "## v1.1.0
+
+
+        ### 🚀 Features
+
+        - **pkg-a:** new hotness
+
+
+        ### 🩹 Fixes
+
+        - all packages fixed
+
+        - **pkg-a:** squashing bugs
+
+
+        ### ❤️  Thank You
+
+        - Author 1
+        - Author 3
+        - Author 5"
+      `);
+
+      expect(
+        await defaultChangelogRenderer({
+          ...otherOpts,
+          project: 'pkg-b',
+        })
+      ).toMatchInlineSnapshot(`
+        "## v1.1.0
+
+
+        ### 🚀 Features
+
+        - **pkg-b:** brand new thing
+
+        - **pkg-b:** and another new capability
+
+
+        ### 🩹 Fixes
+
+        - all packages fixed
+
+
+        ### ❤️  Thank You
+
+        - Author 1
+        - Author 2
+        - Author 4"
+      `);
+    });
   });
 
   describe('entryWhenNoChanges', () => {
