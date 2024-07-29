@@ -650,8 +650,12 @@ export function createNonNxProjectDirectory(
   );
 }
 
-export function uniq(prefix: string) {
-  return `${prefix}${Math.floor(Math.random() * 10000000)}`;
+export function uniq(prefix: string): string {
+  // We need to ensure that the length of the random section of the name is of consistent length to avoid flakiness in tests
+  const randomSevenDigitNumber = Math.floor(Math.random() * 10000000)
+    .toString()
+    .padStart(7, '0');
+  return `${prefix}${randomSevenDigitNumber}`;
 }
 
 // Useful in order to cleanup space during CI to prevent `No space left on device` exceptions
