@@ -440,6 +440,27 @@ You can also express task dependencies with an object syntax:
 {% /tab %}
 {% /tabs %}
 
+Starting from v19.5.0, wildcards can be used to define dependencies in the `dependsOn` field.
+
+```json
+{
+  "targets": {
+    "test": {
+      "dependsOn": [
+        {
+          "target": "build", // target name
+          "params": "ignore" // "forward" or "ignore", defaults to "ignore"
+        },
+        "build-*", // support for using wildcards in dependsOn, matches: "build-css", "build-js" targets of current project
+        "^build-*", // matches tasks: "build-css", "build-js" targets of dependencies
+        "*build-*", // matches tasks: "build-css", "build-js" as well as "task-with-build-in-middle" targets of current project
+        "^*build-*" // matches tasks: "build-css", "build-js" as well as "task-with-build-in-middle" targets of dependencies
+      ]
+    }
+  }
+}
+```
+
 #### Examples
 
 You can write the shorthand configuration above in the object syntax like this:
