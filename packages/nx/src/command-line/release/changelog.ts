@@ -497,7 +497,6 @@ export async function releaseChangelog(
             (
               await getLatestGitTagForPattern(releaseGroup.releaseTagPattern, {
                 projectName: project.name,
-                releaseGroupName: releaseGroup.name,
               })
             )?.tag;
 

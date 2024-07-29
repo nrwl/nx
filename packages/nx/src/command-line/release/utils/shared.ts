@@ -269,7 +269,6 @@ export function createGitTagValues(
       tags.push(
         interpolate(releaseGroup.releaseTagPattern, {
           version: projectVersionData.newVersion,
-          releaseGroupName: releaseGroup.name,
         })
       );
     }
