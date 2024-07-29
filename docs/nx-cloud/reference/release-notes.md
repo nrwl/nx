@@ -32,7 +32,7 @@ We now have full support for BitBucket Data Center (self-hosted):
 
 ##### Breaking changes
 
-If you are using DTE, you will now need to pass the `--distribute-on="manual"` flag to your `npx nx-cloud start-ci-run` commands. 
+If you are using DTE, you will now need to pass the `--distribute-on="manual"` flag to your `npx nx-cloud start-ci-run` commands.
 
 ### 2405.02.15
 
