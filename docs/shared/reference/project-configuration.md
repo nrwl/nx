@@ -431,13 +431,10 @@ Starting from v19.5.0, wildcards can be used to define dependencies in the `depe
           "target": "build", // target name
           "params": "ignore" // "forward" or "ignore", defaults to "ignore"
         },
-        "build-*", // support for using wildcards in dependsOn, matches: build-css, build-js and also then-build-something-else
-        "^build-*" // matches only build-css, build-js
+        "build-*", // support for using wildcards in dependsOn, matches: "build-css", "build-js" targets of dependencies
+        "*build-*" // matches tasks: "build-css", "build-js" as well as "task-with-build-in-middle" targets of dependencies.
       ]
     },
-    "build-css": {},
-    "build-js": {},
-    "then-build-something-else": {}
   }
 }
 ```
