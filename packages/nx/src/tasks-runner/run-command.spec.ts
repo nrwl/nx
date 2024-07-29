@@ -113,7 +113,7 @@ describe('getRunner', () => {
         nxCloudId: 'XXXX-XXX',
         nxCloudUrl: 'https://my-nx-cloud.app',
       }
-    )
+    );
 
     expect(tasksRunner).toEqual(nxCloudTasksRunnerShell);
     expect(runnerOptions).toMatchInlineSnapshot(`
@@ -122,7 +122,7 @@ describe('getRunner', () => {
         "url": "https://my-nx-cloud.app",
       }
     `);
-  })
+  });
 
   it('uses cloud runner when tasksRunnerOptions are not present and accessToken is set in env', () => {
     const { tasksRunner } = withEnvironmentVariables(

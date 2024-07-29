@@ -17,6 +17,21 @@ describe('connect-to-nx-cloud', () => {
       ).toBe(false);
     });
 
+    it('should say no if tasks runner options is undefined and nxCloudId is set', () => {
+      expect(
+        withEnvironmentVariables(
+          {
+            NX_ENABLE_LOGIN: 'true',
+          },
+          () =>
+            onlyDefaultRunnerIsUsed({
+              nxCloudId: 'xxxxxxx',
+              nxCloudUrl: 'https://my-nx-cloud.app',
+            })
+        )
+      ).toBe(false);
+    });
+
     it('should say no if cloud access token is in env', () => {
       const defaultRunnerUsed = withEnvironmentVariables(
         {
@@ -28,7 +43,7 @@ describe('connect-to-nx-cloud', () => {
       expect(defaultRunnerUsed).toBe(false);
     });
 
-    it('should say yes if tasks runner options is undefined and nxCloudAccessToken is not set', () => {
+    it('should say yes if tasks runner options is undefined and nxCloudAccessToken/nxCloudId is not set', () => {
       expect(
         withEnvironmentVariables(
           {
