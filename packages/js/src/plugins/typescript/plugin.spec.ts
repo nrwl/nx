@@ -620,6 +620,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "cwd": "libs/my-lib/nested-project",
                     },
                     "outputs": [],
+                    "syncGenerators": [
+                      "@nx/js:typescript-sync",
+                    ],
                   },
                 },
               },
@@ -1108,6 +1111,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{workspaceRoot}/dist/libs/my-lib/lib.tsbuildinfo",
                       "{workspaceRoot}/dist/out-tsc/libs/my-lib/specs",
                       "{workspaceRoot}/dist/out-tsc/libs/my-lib/cypress",
+                    ],
+                    "syncGenerators": [
+                      "@nx/js:typescript-sync",
                     ],
                   },
                 },
