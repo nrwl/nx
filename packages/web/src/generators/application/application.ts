@@ -37,7 +37,7 @@ import { webInitGenerator } from '../init/init';
 import { Schema } from './schema';
 import { getNpmScope } from '@nx/js/src/utils/package-json/get-npm-scope';
 import { hasWebpackPlugin } from '../../utils/has-webpack-plugin';
-import { addBuildTargetDefaults } from '@nx/devkit/src/generators/add-build-target-defaults';
+import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 import { VitePluginOptions } from '@nx/vite/src/plugins/plugin';
 import { WebpackPluginOptions } from '@nx/webpack/src/plugins/plugin';
