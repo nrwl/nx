@@ -34,7 +34,9 @@ if (isCI()) {
   (chalk as any).level = 0;
 }
 
-class CLIOutput {
+export class CLIOutput {
+  private outstream = this.real ? process.stdout : new FakeStdout();
+  constructor(private real = true) {}
   /**
    * Longer dash character which forms more of a continuous line when place side to side
    * with itself, unlike the standard dash character
@@ -64,7 +66,7 @@ class CLIOutput {
   dim = chalk.dim;
 
   private writeToStdOut(str: string) {
-    process.stdout.write(str);
+    this.outstream.write(str);
   }
 
   private writeOutputTitle({
@@ -192,6 +194,21 @@ class CLIOutput {
 
     this.addNewline();
   }
+
+  getOutput() {
+    return this.outstream.toString();
+  }
 }
 
 export const output = new CLIOutput();
+
+class FakeStdout {
+  private content = '';
+  write(str: string) {
+    this.content += str;
+  }
+
+  toString() {
+    return this.content;
+  }
+}

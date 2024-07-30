@@ -20,7 +20,6 @@ import { output } from 'create-nx-workspace/src/utils/output';
 import { NxCloud } from 'create-nx-workspace/src/utils/nx/nx-cloud';
 import type { PackageManager } from 'create-nx-workspace/src/utils/package-manager';
 import { showNxWarning } from 'create-nx-workspace/src/utils/nx/show-nx-warning';
-import { printNxCloudSuccessMessage } from 'create-nx-workspace/src/utils/nx/nx-cloud';
 import {
   messages,
   recordStat,
@@ -164,7 +163,7 @@ async function main(parsedArgs: yargs.Arguments<CreateNxPluginArguments>) {
   });
 
   if (parsedArgs.nxCloud && workspaceInfo.nxCloudInfo) {
-    printNxCloudSuccessMessage(workspaceInfo.nxCloudInfo);
+    console.log(workspaceInfo.nxCloudInfo);
   }
 }
 
