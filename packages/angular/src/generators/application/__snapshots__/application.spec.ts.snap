@@ -322,6 +322,92 @@ exports[`app --project-name-and-root-format=derived should generate correctly wh
 }
 `;
 
+exports[`app --project-name-and-root-format=derived should generate correctly when directory is provided: e2e tsconfig.json 1`] = `
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "forceConsistentCasingInFileNames": true,
+    "module": "commonjs",
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "outDir": "../../../dist/out-tsc",
+    "sourceMap": false,
+    "strict": true,
+    "types": [
+      "cypress",
+      "node",
+    ],
+  },
+  "extends": "../../../tsconfig.base.json",
+  "include": [
+    "**/*.ts",
+    "**/*.js",
+    "cypress.config.ts",
+    "**/*.cy.ts",
+    "**/*.cy.js",
+    "**/*.d.ts",
+  ],
+}
+`;
+
+exports[`app --project-name-and-root-format=derived should generate correctly when directory is provided: tsconfig.app.json 1`] = `
+{
+  "compilerOptions": {
+    "outDir": "../../../dist/out-tsc",
+    "types": [],
+  },
+  "exclude": [
+    "jest.config.ts",
+    "src/**/*.test.ts",
+    "src/**/*.spec.ts",
+  ],
+  "extends": "./tsconfig.json",
+  "files": [
+    "src/main.ts",
+  ],
+  "include": [
+    "src/**/*.d.ts",
+  ],
+}
+`;
+
+exports[`app --project-name-and-root-format=derived should generate correctly when directory is provided: tsconfig.json 1`] = `
+{
+  "angularCompilerOptions": {
+    "enableI18nLegacyMessageIdFormat": false,
+    "strictInjectionParameters": true,
+    "strictInputAccessModifiers": true,
+    "strictTemplates": true,
+  },
+  "compilerOptions": {
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "strict": true,
+    "target": "es2022",
+  },
+  "extends": "../../../tsconfig.base.json",
+  "files": [],
+  "include": [],
+  "references": [
+    {
+      "path": "./tsconfig.editor.json",
+    },
+    {
+      "path": "./tsconfig.app.json",
+    },
+    {
+      "path": "./tsconfig.spec.json",
+    },
+  ],
+}
+`;
+
 exports[`app --project-name-and-root-format=derived should generate correctly when no directory is provided 1`] = `
 {
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
@@ -435,6 +521,92 @@ exports[`app --project-name-and-root-format=derived should generate correctly wh
   "sourceRoot": "apps/my-app-e2e/src",
   "tags": [],
   "targets": {},
+}
+`;
+
+exports[`app --project-name-and-root-format=derived should generate correctly when no directory is provided: e2e tsconfig.json 1`] = `
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "forceConsistentCasingInFileNames": true,
+    "module": "commonjs",
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "outDir": "../../dist/out-tsc",
+    "sourceMap": false,
+    "strict": true,
+    "types": [
+      "cypress",
+      "node",
+    ],
+  },
+  "extends": "../../tsconfig.base.json",
+  "include": [
+    "**/*.ts",
+    "**/*.js",
+    "cypress.config.ts",
+    "**/*.cy.ts",
+    "**/*.cy.js",
+    "**/*.d.ts",
+  ],
+}
+`;
+
+exports[`app --project-name-and-root-format=derived should generate correctly when no directory is provided: tsconfig.app.json 1`] = `
+{
+  "compilerOptions": {
+    "outDir": "../../dist/out-tsc",
+    "types": [],
+  },
+  "exclude": [
+    "jest.config.ts",
+    "src/**/*.test.ts",
+    "src/**/*.spec.ts",
+  ],
+  "extends": "./tsconfig.json",
+  "files": [
+    "src/main.ts",
+  ],
+  "include": [
+    "src/**/*.d.ts",
+  ],
+}
+`;
+
+exports[`app --project-name-and-root-format=derived should generate correctly when no directory is provided: tsconfig.json 1`] = `
+{
+  "angularCompilerOptions": {
+    "enableI18nLegacyMessageIdFormat": false,
+    "strictInjectionParameters": true,
+    "strictInputAccessModifiers": true,
+    "strictTemplates": true,
+  },
+  "compilerOptions": {
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "strict": true,
+    "target": "es2022",
+  },
+  "extends": "../../tsconfig.base.json",
+  "files": [],
+  "include": [],
+  "references": [
+    {
+      "path": "./tsconfig.editor.json",
+    },
+    {
+      "path": "./tsconfig.app.json",
+    },
+    {
+      "path": "./tsconfig.spec.json",
+    },
+  ],
 }
 `;
 
@@ -592,6 +764,71 @@ export const appConfig: ApplicationConfig = {
   providers: [provideRouter(appRoutes) ]
 };
 "
+`;
+
+exports[`app --strict should enable strict type checking: app tsconfig.json 1`] = `
+{
+  "angularCompilerOptions": {
+    "enableI18nLegacyMessageIdFormat": false,
+    "strictInjectionParameters": true,
+    "strictInputAccessModifiers": true,
+    "strictTemplates": true,
+  },
+  "compilerOptions": {
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "strict": true,
+    "target": "es2022",
+  },
+  "extends": "../tsconfig.base.json",
+  "files": [],
+  "include": [],
+  "references": [
+    {
+      "path": "./tsconfig.editor.json",
+    },
+    {
+      "path": "./tsconfig.app.json",
+    },
+    {
+      "path": "./tsconfig.spec.json",
+    },
+  ],
+}
+`;
+
+exports[`app --strict should enable strict type checking: e2e tsconfig.json 1`] = `
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "forceConsistentCasingInFileNames": true,
+    "module": "commonjs",
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "outDir": "../dist/out-tsc",
+    "sourceMap": false,
+    "strict": true,
+    "types": [
+      "cypress",
+      "node",
+    ],
+  },
+  "extends": "../tsconfig.base.json",
+  "include": [
+    "**/*.ts",
+    "**/*.js",
+    "cypress.config.ts",
+    "**/*.cy.ts",
+    "**/*.cy.js",
+    "**/*.d.ts",
+  ],
+}
 `;
 
 exports[`app angular compat support should import "ApplicationConfig" from "@angular/platform-browser" 1`] = `
@@ -907,6 +1144,92 @@ exports[`app not nested should create project configs 2`] = `
   "sourceRoot": "my-app-e2e/src",
   "tags": [],
   "targets": {},
+}
+`;
+
+exports[`app not nested should generate files: e2e tsconfig.json 1`] = `
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "forceConsistentCasingInFileNames": true,
+    "module": "commonjs",
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "outDir": "../dist/out-tsc",
+    "sourceMap": false,
+    "strict": true,
+    "types": [
+      "cypress",
+      "node",
+    ],
+  },
+  "extends": "../tsconfig.base.json",
+  "include": [
+    "**/*.ts",
+    "**/*.js",
+    "cypress.config.ts",
+    "**/*.cy.ts",
+    "**/*.cy.js",
+    "**/*.d.ts",
+  ],
+}
+`;
+
+exports[`app not nested should generate files: tsconfig.app.json 1`] = `
+{
+  "compilerOptions": {
+    "outDir": "../dist/out-tsc",
+    "types": [],
+  },
+  "exclude": [
+    "jest.config.ts",
+    "src/**/*.test.ts",
+    "src/**/*.spec.ts",
+  ],
+  "extends": "./tsconfig.json",
+  "files": [
+    "src/main.ts",
+  ],
+  "include": [
+    "src/**/*.d.ts",
+  ],
+}
+`;
+
+exports[`app not nested should generate files: tsconfig.json 1`] = `
+{
+  "angularCompilerOptions": {
+    "enableI18nLegacyMessageIdFormat": false,
+    "strictInjectionParameters": true,
+    "strictInputAccessModifiers": true,
+    "strictTemplates": true,
+  },
+  "compilerOptions": {
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "strict": true,
+    "target": "es2022",
+  },
+  "extends": "../tsconfig.base.json",
+  "files": [],
+  "include": [],
+  "references": [
+    {
+      "path": "./tsconfig.editor.json",
+    },
+    {
+      "path": "./tsconfig.app.json",
+    },
+    {
+      "path": "./tsconfig.spec.json",
+    },
+  ],
 }
 `;
 
