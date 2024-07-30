@@ -93,6 +93,13 @@ export async function getCachedSyncGeneratorChanges(
   }
 }
 
+export function clearCachedSyncGeneratorChanges(generators: string[]): void {
+  log('clear cached sync generators changes', generators);
+  for (const generator of generators) {
+    syncGeneratorsCacheResultPromises.delete(generator);
+  }
+}
+
 export function collectAndScheduleSyncGenerators(
   projectGraph: ProjectGraph
 ): void {
@@ -168,13 +175,13 @@ function collectAllRegisteredSyncGenerators(projectGraph: ProjectGraph): void {
     log('nx.json hash is the same, not collecting global sync generators');
   }
 
-  const generators = new Set<string>([
+  const generators = new Set([
     ...registeredTaskSyncGenerators,
     ...registeredGlobalSyncGenerators,
   ]);
 
   if (!registeredSyncGenerators) {
-    registeredSyncGenerators = new Set(generators);
+    registeredSyncGenerators = generators;
     return;
   }
 

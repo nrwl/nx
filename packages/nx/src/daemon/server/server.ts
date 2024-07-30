@@ -97,6 +97,11 @@ import {
   isHandleUpdateContextFilesMessage,
 } from '../message-types/update-context-files';
 import { handleUpdateContextFiles } from './handle-update-context-files';
+import {
+  CLEAR_CACHED_SYNC_GENERATOR_CHANGES,
+  isHandleCachedClearSyncGeneratorChangesMessage,
+} from '../message-types/clear-cached-sync-generator-changes';
+import { handleClearCachedSyncGeneratorChanges } from './handle-clear-cached-sync-generator-changes';
 
 let performanceObserver: PerformanceObserver | undefined;
 let workspaceWatcherError: Error | undefined;
@@ -247,6 +252,10 @@ async function handleMessage(socket, data: string) {
   } else if (isHandleGetSyncGeneratorChangesMessage(payload)) {
     await handleResult(socket, GET_SYNC_GENERATOR_CHANGES, () =>
       handleGetSyncGeneratorChanges(payload.generators)
+    );
+  } else if (isHandleCachedClearSyncGeneratorChangesMessage(payload)) {
+    await handleResult(socket, CLEAR_CACHED_SYNC_GENERATOR_CHANGES, () =>
+      handleClearCachedSyncGeneratorChanges(payload.generators)
     );
   } else if (isHandleGetRegisteredSyncGeneratorsMessage(payload)) {
     await handleResult(socket, GET_REGISTERED_SYNC_GENERATORS, () =>

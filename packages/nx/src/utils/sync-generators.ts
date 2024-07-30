@@ -21,6 +21,14 @@ export async function getSyncGeneratorChanges(
   return await daemonClient.getSyncGeneratorChanges(generators);
 }
 
+export async function clearSyncGeneratorChanges(
+  generators: string[]
+): Promise<void> {
+  if (daemonClient.enabled()) {
+    await daemonClient.clearSyncGeneratorChanges(generators);
+  }
+}
+
 export async function collectAllRegisteredSyncGenerators(
   projectGraph: ProjectGraph
 ): Promise<string[]> {

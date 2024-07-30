@@ -21,7 +21,10 @@ import { isCI } from '../utils/is-ci';
 import { isNxCloudUsed } from '../utils/nx-cloud-utils';
 import { output } from '../utils/output';
 import { handleErrors } from '../utils/params';
-import { getSyncGeneratorChanges } from '../utils/sync-generators';
+import {
+  clearSyncGeneratorChanges,
+  getSyncGeneratorChanges,
+} from '../utils/sync-generators';
 import { updateContextWithChangedFiles } from '../utils/workspace-context';
 import { workspaceRoot } from '../utils/workspace-root';
 import { createTaskGraph } from './create-task-graph';
@@ -289,6 +292,8 @@ async function ensureWorkspaceIsInSyncAndGetGraphs(
 
     // Write changes to disk
     flushChanges(workspaceRoot, changes);
+    // clear cached changes for the applied sync generators
+    await clearSyncGeneratorChanges(syncGenerators);
     // Update the context files
     const { createdFiles, updatedFiles, deletedFiles } =
       splitFileChanges(changes);
