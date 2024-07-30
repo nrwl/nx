@@ -17,6 +17,7 @@ export interface NxReleaseArgs {
   projects?: string[];
   dryRun?: boolean;
   verbose?: boolean;
+  printConfig?: boolean | 'debug';
 }
 
 interface GitCommitAndTagOptions {
@@ -121,6 +122,21 @@ export const yargsReleaseCommand: CommandModule<
         type: 'boolean',
         describe:
           'Prints additional information about the commands (e.g., stack traces)',
+      })
+      // NOTE: The camel case format is required for the coerce() function to be called correctly. It still supports --print-config casing.
+      .option('printConfig', {
+        type: 'string',
+        describe:
+          'Print the resolved nx release configuration that would be used for the current command and then exit',
+        coerce: (val: string) => {
+          if (val === '') {
+            return true;
+          }
+          if (val === 'false') {
+            return false;
+          }
+          return val;
+        },
       })
       .check((argv) => {
         if (argv.groups && argv.projects) {
