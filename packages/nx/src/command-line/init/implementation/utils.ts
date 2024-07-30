@@ -2,7 +2,6 @@ import { execSync } from 'child_process';
 import { join } from 'path';
 
 import { NxJsonConfiguration } from '../../../config/nx-json';
-import { runNxSync } from '../../../utils/child-process';
 import {
   fileExists,
   readJsonFile,
@@ -17,6 +16,9 @@ import {
 import { joinPathFragments } from '../../../utils/path';
 import { nxVersion } from '../../../utils/versions';
 import { existsSync, readFileSync, writeFileSync } from 'fs';
+import { printSuccessMessage } from '../../../nx-cloud/generators/connect-to-nx-cloud/connect-to-nx-cloud';
+import { repoUsesGithub } from '../../../nx-cloud/utilities/url-shorten';
+import { connectWorkspaceToCloud } from '../../connect/connect-to-nx-cloud';
 
 export function createNxJsonFile(
   repoRoot: string,
@@ -141,22 +143,19 @@ export function runInstall(
   execSync(pmc.install, { stdio: [0, 1, 2], cwd: repoRoot });
 }
 
-export function initCloud(
-  repoRoot: string,
+export async function initCloud(
   installationSource:
+    | 'nx-init'
     | 'nx-init-angular'
     | 'nx-init-cra'
     | 'nx-init-monorepo'
     | 'nx-init-nest'
     | 'nx-init-npm-repo'
 ) {
-  runNxSync(
-    `g nx:connect-to-nx-cloud --installationSource=${installationSource} --quiet --no-interactive`,
-    {
-      stdio: [0, 1, 2],
-      cwd: repoRoot,
-    }
-  );
+  const token = await connectWorkspaceToCloud({
+    installationSource,
+  });
+  await printSuccessMessage(token, installationSource, await repoUsesGithub());
 }
 
 export function addVsCodeRecommendedExtensions(
