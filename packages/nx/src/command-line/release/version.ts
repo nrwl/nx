@@ -281,9 +281,10 @@ export async function releaseVersion(
       ...tree.listChanges().map((f) => f.path),
       ...additionalChangedFiles,
     ];
+    const deletedFiles = Array.from(additionalDeletedFiles);
 
     // No further actions are necessary in this scenario (e.g. if conventional commits detected no changes)
-    if (!changedFiles.length) {
+    if (!changedFiles.length && !deletedFiles.length) {
       return {
         // An overall workspace version cannot be relevant when filtering to independent projects
         workspaceVersion: undefined,
@@ -294,7 +295,7 @@ export async function releaseVersion(
     if (args.gitCommit ?? nxReleaseConfig.version.git.commit) {
       await commitChanges({
         changedFiles,
-        deletedFiles: Array.from(additionalDeletedFiles),
+        deletedFiles,
         isDryRun: !!args.dryRun,
         isVerbose: !!args.verbose,
         gitCommitMessages: createCommitMessageValues(
@@ -310,6 +311,7 @@ export async function releaseVersion(
       output.logSingleLine(`Staging changed files with git`);
       await gitAdd({
         changedFiles,
+        deletedFiles,
         dryRun: args.dryRun,
         verbose: args.verbose,
       });
