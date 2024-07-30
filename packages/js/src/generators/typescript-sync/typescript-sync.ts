@@ -2,6 +2,7 @@ import {
   createProjectGraphAsync,
   formatFiles,
   joinPathFragments,
+  logger,
   readJson,
   readNxJson,
   writeJson,
@@ -122,9 +123,11 @@ export async function syncGenerator(tree: Tree, options: SyncSchema) {
       'tsconfig.json'
     );
     if (!tree.exists(sourceProjectTsconfigPath)) {
-      console.warn(
-        `Skipping project "${name}" as there is no tsconfig.json file found in the project root "${sourceProjectNode.data.root}"`
-      );
+      if (process.env.NX_VERBOSE_LOGGING === 'true') {
+        logger.warn(
+          `Skipping project "${name}" as there is no tsconfig.json file found in the project root "${sourceProjectNode.data.root}".`
+        );
+      }
       continue;
     }
 
