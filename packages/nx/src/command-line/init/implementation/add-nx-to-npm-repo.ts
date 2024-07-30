@@ -97,6 +97,6 @@ export async function addNxToNpmRepo(options: Options) {
 
   if (useNxCloud) {
     output.log({ title: '🛠️ Setting up Nx Cloud' });
-    initCloud(repoRoot, 'nx-init-npm-repo');
+    await initCloud('nx-init-npm-repo');
   }
 }

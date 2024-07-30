@@ -140,7 +140,7 @@ export async function addNxToNest(options: Options, packageJson: PackageJson) {
 
   if (useNxCloud) {
     output.log({ title: '🛠️ Setting up Nx Cloud' });
-    initCloud(repoRoot, 'nx-init-nest');
+    await initCloud('nx-init-nest');
   }
 }
 

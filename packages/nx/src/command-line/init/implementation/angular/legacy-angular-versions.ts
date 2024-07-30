@@ -110,7 +110,7 @@ export async function getLegacyMigrationFunctionIfApplicable(
 
     if (useNxCloud) {
       output.log({ title: '🛠️ Setting up Nx Cloud' });
-      initCloud(repoRoot, 'nx-init-angular');
+      await initCloud('nx-init-angular');
     }
   };
 }
