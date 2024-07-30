@@ -160,7 +160,7 @@ async function generateEmbeddings() {
     type: 'boolean',
   }).argv;
 
-  const shouldRefresh = argv.refresh;
+  const shouldRefresh = true;
 
   if (!process.env.NX_NEXT_PUBLIC_SUPABASE_URL) {
     throw new Error(
