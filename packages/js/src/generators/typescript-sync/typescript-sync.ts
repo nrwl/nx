@@ -12,6 +12,7 @@ import {
   type Tree,
 } from '@nx/devkit';
 import { normalize, relative } from 'node:path/posix';
+import type { SyncGeneratorResult } from 'nx/src/utils/sync-generators';
 import {
   PLUGIN_NAME,
   type TscPluginOptions,
@@ -36,7 +37,10 @@ const COMMON_RUNTIME_TS_CONFIG_FILE_NAMES = [
   'tsconfig.runtime.json',
 ];
 
-export async function syncGenerator(tree: Tree, options: SyncSchema) {
+export async function syncGenerator(
+  tree: Tree,
+  options: SyncSchema
+): Promise<SyncGeneratorResult> {
   // Ensure that the plugin has been wired up in nx.json
   const nxJson = readNxJson(tree);
   const tscPluginConfig:
@@ -175,6 +179,11 @@ export async function syncGenerator(tree: Tree, options: SyncSchema) {
 
   if (hasChanges) {
     await formatFiles(tree);
+
+    return {
+      outOfSyncMessage:
+        'Based on the workspace project graph, some TypeScript configuration files are missing project references to the projects they depend on.',
+    };
   }
 }
 

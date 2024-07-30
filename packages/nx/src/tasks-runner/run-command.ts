@@ -24,6 +24,7 @@ import { handleErrors } from '../utils/params';
 import {
   clearSyncGeneratorChanges,
   getSyncGeneratorChanges,
+  type SyncGeneratorChangesResult,
 } from '../utils/sync-generators';
 import { updateContextWithChangedFiles } from '../utils/workspace-context';
 import { workspaceRoot } from '../utils/workspace-root';
@@ -253,9 +254,39 @@ async function ensureWorkspaceIsInSyncAndGetGraphs(
   }
 
   const syncGenerators = Array.from(uniqueSyncGenerators);
-  const changes = await getSyncGeneratorChanges(syncGenerators);
-  if (!changes.length) {
+  const results = await getSyncGeneratorChanges(syncGenerators);
+  if (!results.length) {
     // There are no changes to sync, workspace is up to date
+    return { projectGraph, taskGraph };
+  }
+
+  const resultDescriptions: string[] = [];
+  for (const result of results) {
+    let message = `${result.generatorName}: ${chalk.bold(
+      result.changes.length
+    )} file(s) out of sync`;
+    if (result.outOfSyncMessage) {
+      message += `\n${result.outOfSyncMessage}`;
+    }
+    resultDescriptions.push(message);
+  }
+
+  const errorTitle = 'The workspace is out of sync:';
+  const errorBodyLines = [
+    ...resultDescriptions,
+    '\nPlease run `nx sync` to sync the workspace configuration.',
+  ];
+
+  if (isCI()) {
+    throw new Error(`${errorTitle}\n${errorBodyLines.join('\n')}`);
+  }
+
+  if (!process.stdout.isTTY) {
+    output.warn({
+      title: errorTitle,
+      bodyLines: errorBodyLines,
+    });
+
     return { projectGraph, taskGraph };
   }
 
@@ -264,7 +295,7 @@ async function ensureWorkspaceIsInSyncAndGetGraphs(
     name: 'applyChanges',
     type: 'select',
     message:
-      'Your workspace configuration for the tasks is out of sync. Would you like to sync it?',
+      'The workspace configuration for the tasks is out of sync. Would you like to sync it?',
     choices: [
       {
         name: 'yes',
@@ -277,9 +308,9 @@ async function ensureWorkspaceIsInSyncAndGetGraphs(
     ],
     footer: () =>
       chalk.dim(
-        `\nThe tasks to run are configured to sync the workspace using the following generators: ${syncGenerators
-          .map((g) => `"${g}"`)
-          .join(', ')}.`
+        `\nThe sync generators associated with the tasks to run yielded the following changes:\n${resultDescriptions.join(
+          '\n'
+        )}`
       ),
   };
   const applySyncChanges = await prompt<{ applyChanges: 'yes' | 'no' }>([
@@ -287,16 +318,17 @@ async function ensureWorkspaceIsInSyncAndGetGraphs(
   ]).then(({ applyChanges }) => applyChanges === 'yes');
 
   if (applySyncChanges) {
-    const spinner = ora(`Syncing workspace configuration...`);
+    const spinner = ora('Syncing workspace configuration...');
     spinner.start();
+
+    const { changes, createdFiles, updatedFiles, deletedFiles } =
+      processSyncGeneratorResults(results);
 
     // Write changes to disk
     flushChanges(workspaceRoot, changes);
     // clear cached changes for the applied sync generators
     await clearSyncGeneratorChanges(syncGenerators);
     // Update the context files
-    const { createdFiles, updatedFiles, deletedFiles } =
-      splitFileChanges(changes);
     await updateContextWithChangedFiles(
       createdFiles,
       updatedFiles,
@@ -313,36 +345,37 @@ async function ensureWorkspaceIsInSyncAndGetGraphs(
       extraOptions
     );
 
-    spinner.succeed(`The workspace configuration was synced successfully!`);
+    spinner.succeed('The workspace configuration was synced successfully!');
   } else {
     output.warn({
-      title: 'The workspace is out of sync',
-      bodyLines: [
-        'This could lead to unexpected results or errors when running tasks.',
-        'You can fix this by manually running `nx sync`.',
-      ],
+      title: errorTitle,
+      bodyLines: errorBodyLines,
     });
   }
 
   return { projectGraph, taskGraph };
 }
 
-function splitFileChanges(changes: FileChange[]) {
+function processSyncGeneratorResults(results: SyncGeneratorChangesResult[]) {
+  const changes: FileChange[] = [];
   const createdFiles: string[] = [];
   const updatedFiles: string[] = [];
   const deletedFiles: string[] = [];
 
-  for (const change of changes) {
-    if (change.type === 'CREATE') {
-      createdFiles.push(change.path);
-    } else if (change.type === 'UPDATE') {
-      updatedFiles.push(change.path);
-    } else if (change.type === 'DELETE') {
-      deletedFiles.push(change.path);
+  for (const result of results) {
+    for (const change of result.changes) {
+      changes.push(change);
+      if (change.type === 'CREATE') {
+        createdFiles.push(change.path);
+      } else if (change.type === 'UPDATE') {
+        updatedFiles.push(change.path);
+      } else if (change.type === 'DELETE') {
+        deletedFiles.push(change.path);
+      }
     }
   }
 
-  return { createdFiles, updatedFiles, deletedFiles };
+  return { changes, createdFiles, updatedFiles, deletedFiles };
 }
 
 function setEnvVarsBasedOnArgs(nxArgs: NxArgs, loadDotEnvFiles: boolean) {
