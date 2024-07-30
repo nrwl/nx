@@ -8,6 +8,7 @@ import { mergeConfig } from 'vite';
 const config: StorybookConfig = {
   stories: ['../src/lib/**/*.stories.@(js|jsx|ts|tsx|mdx)'],
   addons: ['@storybook/addon-essentials'],
+
   framework: {
     name: '@storybook/react-vite',
     options: {},
@@ -17,6 +18,8 @@ const config: StorybookConfig = {
     mergeConfig(config, {
       plugins: [nxViteTsPaths()],
     }),
+
+  docs: {},
 };
 
 export default config;
