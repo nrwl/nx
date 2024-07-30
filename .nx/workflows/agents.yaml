@@ -15,7 +15,7 @@ launch-templates:
       - name: Cache restore
         uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/cache/main.yaml'
         inputs:
-          key: 'pnpm-lock.yaml'
+          key: 'pnpm-lock.yaml | nx.json | jest.config.ts'
           paths: |
             node_modules
             ~/.cache/Cypress
