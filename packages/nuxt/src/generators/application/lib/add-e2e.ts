@@ -45,7 +45,10 @@ export async function addE2e(host: Tree, options: NormalizedSchema) {
     const matchingPlugin = await findPluginForConfigFile(
       host,
       '@nx/nuxt/plugin',
-      joinPathFragments(options.appProjectRoot, 'app.json')
+      joinPathFragments(
+        options.appProjectRoot,
+        `nuxt.config.${options.js ? 'js' : 'ts'}`
+      )
     );
     if (matchingPlugin && typeof matchingPlugin !== 'string') {
       buildTarget = `^${
@@ -93,7 +96,10 @@ export async function addE2e(host: Tree, options: NormalizedSchema) {
     const matchingPlugin = await findPluginForConfigFile(
       host,
       '@nx/nuxt/plugin',
-      joinPathFragments(options.appProjectRoot, 'app.json')
+      joinPathFragments(
+        options.appProjectRoot,
+        `nuxt.config.${options.js ? 'js' : 'ts'}`
+      )
     );
     if (matchingPlugin && typeof matchingPlugin !== 'string') {
       buildTarget = `^${

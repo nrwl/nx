@@ -76,7 +76,7 @@ export async function addE2e(host: Tree, options: NormalizedSchema) {
         const matchingPlugin = await findPluginForConfigFile(
           host,
           '@nx/next/plugin',
-          joinPathFragments(options.appProjectRoot, 'app.json')
+          joinPathFragments(options.appProjectRoot, 'next.config.js')
         );
         if (matchingPlugin && typeof matchingPlugin !== 'string') {
           buildTarget = `^${
@@ -136,7 +136,7 @@ export async function addE2e(host: Tree, options: NormalizedSchema) {
         const matchingPlugin = await findPluginForConfigFile(
           host,
           '@nx/next/plugin',
-          joinPathFragments(options.appProjectRoot, 'app.json')
+          joinPathFragments(options.appProjectRoot, 'next.config.js')
         );
         if (matchingPlugin && typeof matchingPlugin !== 'string') {
           buildTarget = `^${
