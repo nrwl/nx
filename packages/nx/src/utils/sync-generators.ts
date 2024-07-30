@@ -1,24 +1,48 @@
 import { parseGeneratorString } from '../command-line/generate/generate';
 import { getGeneratorInformation } from '../command-line/generate/generator-utils';
+import type { GeneratorCallback } from '../config/misc-interfaces';
 import { readNxJson } from '../config/nx-json';
 import type { ProjectGraph } from '../config/project-graph';
 import type { ProjectConfiguration } from '../config/workspace-json-project-json';
 import { daemonClient } from '../daemon/client/client';
-import { FsTree, type FileChange } from '../generators/tree';
+import { FsTree, type FileChange, type Tree } from '../generators/tree';
 import {
   createProjectGraphAsync,
   readProjectsConfigurationFromProjectGraph,
 } from '../project-graph/project-graph';
 import { workspaceRoot } from './workspace-root';
 
+export type SyncGeneratorResult =
+  | void
+  | GeneratorCallback
+  | {
+      callback?: GeneratorCallback;
+      outOfSyncMessage?: string;
+    };
+
+export type SyncGenerator = (
+  tree: Tree,
+  options: unknown
+) => SyncGeneratorResult | Promise<SyncGeneratorResult>;
+
+export type SyncGeneratorChangesResult = {
+  changes: FileChange[];
+  generatorName: string;
+  outOfSyncMessage?: string;
+};
+
 export async function getSyncGeneratorChanges(
   generators: string[]
-): Promise<FileChange[]> {
+): Promise<SyncGeneratorChangesResult[]> {
+  let results: SyncGeneratorChangesResult[];
+
   if (!daemonClient.enabled()) {
-    return await runSyncGenerators(generators);
+    results = await runSyncGenerators(generators);
+  } else {
+    results = await daemonClient.getSyncGeneratorChanges(generators);
   }
 
-  return await daemonClient.getSyncGeneratorChanges(generators);
+  return results.filter((r) => r.changes.length > 0);
 }
 
 export async function clearSyncGeneratorChanges(
@@ -46,7 +70,7 @@ export async function runSyncGenerator(
   tree: FsTree,
   generatorSpecifier: string,
   projects: Record<string, ProjectConfiguration>
-): Promise<FileChange[]> {
+): Promise<SyncGeneratorChangesResult> {
   const { collection, generator } = parseGeneratorString(generatorSpecifier);
   const { implementationFactory } = getGeneratorInformation(
     collection,
@@ -54,10 +78,29 @@ export async function runSyncGenerator(
     workspaceRoot,
     projects
   );
-  const implementation = implementationFactory();
-  await implementation(tree, {});
+  const implementation = implementationFactory() as SyncGenerator;
+  const result = await implementation(tree, {});
 
-  return tree.listChanges();
+  let callback: GeneratorCallback | undefined;
+  let outOfSyncMessage: string | undefined;
+  if (result) {
+    if (typeof result === 'function') {
+      callback = result;
+    } else {
+      callback = result.callback;
+      outOfSyncMessage = result.outOfSyncMessage;
+    }
+  }
+
+  if (callback) {
+    await callback();
+  }
+
+  return {
+    changes: tree.listChanges(),
+    generatorName: generatorSpecifier,
+    outOfSyncMessage,
+  };
 }
 
 export function collectRegisteredTaskSyncGenerators(
@@ -102,14 +145,18 @@ export function collectRegisteredGlobalSyncGenerators(
   return globalSyncGenerators;
 }
 
-async function runSyncGenerators(generators: string[]): Promise<FileChange[]> {
+async function runSyncGenerators(
+  generators: string[]
+): Promise<SyncGeneratorChangesResult[]> {
   const tree = new FsTree(workspaceRoot, false, 'running sync generators');
   const projectGraph = await createProjectGraphAsync();
   const { projects } = readProjectsConfigurationFromProjectGraph(projectGraph);
 
+  const results: SyncGeneratorChangesResult[] = [];
   for (const generator of generators) {
-    await runSyncGenerator(tree, generator, projects);
+    const result = await runSyncGenerator(tree, generator, projects);
+    results.push(result);
   }
 
-  return tree.listChanges();
+  return results;
 }

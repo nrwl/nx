@@ -53,7 +53,7 @@ import {
   GET_SYNC_GENERATOR_CHANGES,
   type HandleGetSyncGeneratorChangesMessage,
 } from '../message-types/get-sync-generator-changes';
-import type { FileChange } from '../../generators/tree';
+import type { SyncGeneratorChangesResult } from '../../utils/sync-generators';
 import {
   GET_REGISTERED_SYNC_GENERATORS,
   type HandleGetRegisteredSyncGeneratorsMessage,
@@ -360,17 +360,23 @@ export class DaemonClient {
     return this.sendMessageToDaemon(message);
   }
 
-  async getSyncGeneratorChanges(generators: string[]): Promise<FileChange[]> {
+  async getSyncGeneratorChanges(
+    generators: string[]
+  ): Promise<SyncGeneratorChangesResult[]> {
     const message: HandleGetSyncGeneratorChangesMessage = {
       type: GET_SYNC_GENERATOR_CHANGES,
       generators,
     };
-    const changes = await this.sendToDaemonViaQueue(message);
-    for (const change of changes) {
-      // We need to convert the content back to a buffer
-      change.content = Buffer.from(change.content);
+    const results = (await this.sendToDaemonViaQueue(
+      message
+    )) as SyncGeneratorChangesResult[];
+    for (const result of results) {
+      for (const change of result.changes) {
+        // We need to convert the content back to a buffer
+        change.content = Buffer.from(change.content);
+      }
     }
-    return changes;
+    return results;
   }
 
   clearSyncGeneratorChanges(generators: string[]): Promise<void> {

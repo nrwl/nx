@@ -1,13 +1,14 @@
 import { readNxJson } from '../../config/nx-json';
 import type { ProjectGraph } from '../../config/project-graph';
 import type { ProjectConfiguration } from '../../config/workspace-json-project-json';
-import { FsTree, type FileChange } from '../../generators/tree';
+import { FsTree } from '../../generators/tree';
 import { hashArray } from '../../hasher/file-hasher';
 import { readProjectsConfigurationFromProjectGraph } from '../../project-graph/project-graph';
 import {
   collectRegisteredGlobalSyncGenerators,
   collectRegisteredTaskSyncGenerators,
   runSyncGenerator,
+  type SyncGeneratorChangesResult,
 } from '../../utils/sync-generators';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { serverLogger } from './logger';
@@ -15,7 +16,7 @@ import { getCachedSerializedProjectGraphPromise } from './project-graph-incremen
 
 const syncGeneratorsCacheResultPromises = new Map<
   string,
-  Promise<FileChange[]> | undefined
+  Promise<SyncGeneratorChangesResult>
 >();
 let registeredTaskSyncGenerators = new Set<string>();
 let registeredGlobalSyncGenerators = new Set<string>();
@@ -34,7 +35,7 @@ const log = (...messageParts: unknown[]) => {
 // TODO(leo): check conflicts and reuse the Tree where possible
 export async function getCachedSyncGeneratorChanges(
   generators: string[]
-): Promise<FileChange[]> {
+): Promise<SyncGeneratorChangesResult[]> {
   try {
     log('get sync generators changes on demand', generators);
     // this is invoked imperatively, so we clear any scheduled run
@@ -215,9 +216,9 @@ function runGenerator(
   // run the generator and cache the result
   syncGeneratorsCacheResultPromises.set(
     generator,
-    runSyncGenerator(tree, generator, projects).then((changes) => {
-      log(generator, 'changes:', changes.map((c) => c.path).join(', '));
-      return changes;
+    runSyncGenerator(tree, generator, projects).then((result) => {
+      log(generator, 'changes:', result.changes.map((c) => c.path).join(', '));
+      return result;
     })
   );
 }

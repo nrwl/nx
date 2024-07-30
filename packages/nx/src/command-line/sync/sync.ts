@@ -8,6 +8,7 @@ import {
 } from '../../utils/sync-generators';
 import { workspaceRoot } from '../../utils/workspace-root';
 import type { SyncOptions } from './command-object';
+import chalk = require('chalk');
 
 export function addHandler(options: SyncOptions): Promise<number> {
   if (options.verbose) {
@@ -20,26 +21,37 @@ export function addHandler(options: SyncOptions): Promise<number> {
     const syncGenerators = await collectAllRegisteredSyncGenerators(
       projectGraph
     );
-    const syncChanges = await getSyncGeneratorChanges(syncGenerators);
+    const results = await getSyncGeneratorChanges(syncGenerators);
 
-    if (!syncChanges.length) {
+    if (!results.length) {
       return 0;
     }
 
     if (options.check) {
+      const bodyLines: string[] = [];
+      for (const result of results) {
+        bodyLines.push(
+          `${result.generatorName}: ${chalk.bold(
+            result.changes.length
+          )} file(s) out of sync`
+        );
+        if (result.outOfSyncMessage) {
+          bodyLines.push(result.outOfSyncMessage);
+        }
+      }
+
       output.error({
         title: `The workspace is out of sync`,
-        bodyLines: [
-          `The following files must be updated:\n${syncChanges
-            .map((c) => c.path)
-            .join('\n')}`,
-        ],
+        bodyLines,
       });
 
       return 1;
     }
 
-    flushChanges(workspaceRoot, syncChanges);
+    flushChanges(
+      workspaceRoot,
+      results.flatMap((c) => c.changes)
+    );
 
     return 0;
   });
