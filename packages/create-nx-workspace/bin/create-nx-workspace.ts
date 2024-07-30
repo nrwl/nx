@@ -26,7 +26,6 @@ import {
   withPackageManager,
 } from '../src/internal-utils/yargs-options';
 import { showNxWarning } from '../src/utils/nx/show-nx-warning';
-import { printNxCloudSuccessMessage } from '../src/utils/nx/nx-cloud';
 import { messages, recordStat } from '../src/utils/nx/ab-testing';
 import { mapErrorToBodyLines } from '../src/utils/error-utils';
 import { existsSync } from 'fs';
@@ -233,7 +232,7 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
   });
 
   if (parsedArgs.nxCloud && workspaceInfo.nxCloudInfo) {
-    printNxCloudSuccessMessage(workspaceInfo.nxCloudInfo);
+    console.log(workspaceInfo.nxCloudInfo);
   }
 
   if (isKnownPreset(parsedArgs.preset)) {
