@@ -92,6 +92,11 @@ import {
   isHandleGetRegisteredSyncGeneratorsMessage,
 } from '../message-types/get-registered-sync-generators';
 import { handleGetRegisteredSyncGenerators } from './handle-get-registered-sync-generators';
+import {
+  UPDATE_CONTEXT_FILES,
+  isHandleUpdateContextFilesMessage,
+} from '../message-types/update-context-files';
+import { handleUpdateContextFiles } from './handle-update-context-files';
 
 let performanceObserver: PerformanceObserver | undefined;
 let workspaceWatcherError: Error | undefined;
@@ -246,6 +251,14 @@ async function handleMessage(socket, data: string) {
   } else if (isHandleGetRegisteredSyncGeneratorsMessage(payload)) {
     await handleResult(socket, GET_REGISTERED_SYNC_GENERATORS, () =>
       handleGetRegisteredSyncGenerators()
+    );
+  } else if (isHandleUpdateContextFilesMessage(payload)) {
+    await handleResult(socket, UPDATE_CONTEXT_FILES, () =>
+      handleUpdateContextFiles(
+        payload.createdFiles,
+        payload.updatedFiles,
+        payload.deletedFiles
+      )
     );
   } else {
     await respondWithErrorAndExit(

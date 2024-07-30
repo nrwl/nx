@@ -74,6 +74,25 @@ export async function hashWithWorkspaceContext(
   return daemonClient.hashGlob(globs, exclude);
 }
 
+export async function updateContextWithChangedFiles(
+  createdFiles: string[],
+  updatedFiles: string[],
+  deletedFiles: string[]
+) {
+  if (isOnDaemon() || !daemonClient.enabled()) {
+    return updateFilesInContext(
+      [...createdFiles, ...updatedFiles],
+      deletedFiles
+    );
+  }
+
+  return daemonClient.updateContextFiles(
+    createdFiles,
+    updatedFiles,
+    deletedFiles
+  );
+}
+
 export function updateFilesInContext(
   updatedFiles: string[],
   deletedFiles: string[]

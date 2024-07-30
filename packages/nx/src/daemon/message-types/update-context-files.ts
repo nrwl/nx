@@ -1,18 +1,19 @@
-export const GLOB = 'GLOB' as const;
+export const UPDATE_CONTEXT_FILES = 'UPDATE_CONTEXT_FILES' as const;
 
-export type HandleUpdateContextMessage = {
-  type: typeof GLOB;
+export type HandleUpdateContextFilesMessage = {
+  type: typeof UPDATE_CONTEXT_FILES;
+  createdFiles: string[];
   updatedFiles: string[];
   deletedFiles: string[];
 };
 
-export function isHandleUpdateContextMessage(
+export function isHandleUpdateContextFilesMessage(
   message: unknown
-): message is HandleUpdateContextMessage {
+): message is HandleUpdateContextFilesMessage {
   return (
     typeof message === 'object' &&
     message !== null &&
     'type' in message &&
-    message['type'] === GLOB
+    message['type'] === UPDATE_CONTEXT_FILES
   );
 }

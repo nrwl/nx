@@ -11,7 +11,7 @@ import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
 import { Task, TaskGraph } from '../config/task-graph';
 import { TargetDependencyConfig } from '../config/workspace-json-project-json';
 import { daemonClient } from '../daemon/client/client';
-import { flushChanges } from '../generators/tree';
+import { type FileChange, flushChanges } from '../generators/tree';
 import { createTaskHasher } from '../hasher/create-task-hasher';
 import { hashTasksThatDoNotDependOnOutputsOfOtherTasks } from '../hasher/hash-task';
 import { createProjectGraphAsync } from '../project-graph/project-graph';
@@ -22,6 +22,7 @@ import { isNxCloudUsed } from '../utils/nx-cloud-utils';
 import { output } from '../utils/output';
 import { handleErrors } from '../utils/params';
 import { getSyncGeneratorChanges } from '../utils/sync-generators';
+import { updateContextWithChangedFiles } from '../utils/workspace-context';
 import { workspaceRoot } from '../utils/workspace-root';
 import { createTaskGraph } from './create-task-graph';
 import { CompositeLifeCycle, LifeCycle } from './life-cycle';
@@ -284,6 +285,14 @@ async function ensureWorkspaceIsInSyncAndGetGraphs(
 
     // Write changes to disk
     flushChanges(workspaceRoot, changes);
+    // Update the context files
+    const { createdFiles, updatedFiles, deletedFiles } =
+      splitFileChanges(changes);
+    await updateContextWithChangedFiles(
+      createdFiles,
+      updatedFiles,
+      deletedFiles
+    );
     // Re-create project graph and task graph
     projectGraph = await createProjectGraphAsync();
     taskGraph = createTaskGraphAndRunValidations(
@@ -307,6 +316,24 @@ async function ensureWorkspaceIsInSyncAndGetGraphs(
   }
 
   return { projectGraph, taskGraph };
+}
+
+function splitFileChanges(changes: FileChange[]) {
+  const createdFiles: string[] = [];
+  const updatedFiles: string[] = [];
+  const deletedFiles: string[] = [];
+
+  for (const change of changes) {
+    if (change.type === 'CREATE') {
+      createdFiles.push(change.path);
+    } else if (change.type === 'UPDATE') {
+      updatedFiles.push(change.path);
+    } else if (change.type === 'DELETE') {
+      deletedFiles.push(change.path);
+    }
+  }
+
+  return { createdFiles, updatedFiles, deletedFiles };
 }
 
 function setEnvVarsBasedOnArgs(nxArgs: NxArgs, loadDotEnvFiles: boolean) {

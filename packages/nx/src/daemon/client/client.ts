@@ -56,8 +56,12 @@ import {
 import type { FileChange } from '../../generators/tree';
 import {
   GET_REGISTERED_SYNC_GENERATORS,
-  HandleGetRegisteredSyncGeneratorsMessage,
+  type HandleGetRegisteredSyncGeneratorsMessage,
 } from '../message-types/get-registered-sync-generators';
+import {
+  UPDATE_CONTEXT_FILES,
+  type HandleUpdateContextFilesMessage,
+} from '../message-types/update-context-files';
 
 const DAEMON_ENV_SETTINGS = {
   NX_PROJECT_GLOB_CACHE: 'false',
@@ -368,6 +372,20 @@ export class DaemonClient {
   getRegisteredSyncGenerators(): Promise<string[]> {
     const message: HandleGetRegisteredSyncGeneratorsMessage = {
       type: GET_REGISTERED_SYNC_GENERATORS,
+    };
+    return this.sendToDaemonViaQueue(message);
+  }
+
+  updateContextFiles(
+    createdFiles: string[],
+    updatedFiles: string[],
+    deletedFiles: string[]
+  ): Promise<void> {
+    const message: HandleUpdateContextFilesMessage = {
+      type: UPDATE_CONTEXT_FILES,
+      createdFiles,
+      updatedFiles,
+      deletedFiles,
     };
     return this.sendToDaemonViaQueue(message);
   }
