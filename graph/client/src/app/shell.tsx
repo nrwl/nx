@@ -19,7 +19,7 @@ import {
   usePoll,
 } from '@nx/graph/shared';
 import { Dropdown, Spinner } from '@nx/graph/ui-components';
-import { getSystemTheme, Theme, ThemePanel } from '@nx/graph/ui-theme';
+import { getSystemTheme, Theme, ThemePanel } from '@nx/graph-internal/ui-theme';
 import { Tooltip } from '@nx/graph/ui-tooltips';
 import classNames from 'classnames';
 import { useLayoutEffect, useState } from 'react';

@@ -73,6 +73,7 @@
     "@nx/esbuild": "19.5.0-beta.5",
     "@nx/eslint": "19.5.0-beta.5",
     "@nx/eslint-plugin": "19.5.0-beta.5",
+    "@nx/graph": "0.0.18",
     "@nx/jest": "19.5.0-beta.5",
     "@nx/js": "19.5.0-beta.5",
     "@nx/next": "19.5.0-beta.5",
@@ -381,10 +382,10 @@
       "documentation": {
         "cache": true,
         "inputs": [
-          "{workspaceRoot}/packages/**", 
+          "{workspaceRoot}/packages/**",
           "{workspaceRoot}/docs/**",
           "{workspaceRoot}/scripts/documentation/**",
-          "!{workspaceRoot}/docs/generated", 
+          "!{workspaceRoot}/docs/generated",
           "!{workspaceRoot}/packages/**/*.spec.ts",
           "!{workspaceRoot}/packages/**/project.json",
           "!{workspaceRoot}/packages/**/tsconfig.json",
@@ -394,7 +395,9 @@
           "!{workspaceRoot}/packages/**/.eslintrc.json"
         ]
       },
-      "outputs": ["{workspaceRoot}/docs/generated"]
+      "outputs": [
+        "{workspaceRoot}/docs/generated"
+      ]
     }
   },
   "packageManager": "pnpm@8.15.7"
