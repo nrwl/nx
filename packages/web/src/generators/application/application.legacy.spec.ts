@@ -179,6 +179,9 @@ describe('web app generator (legacy)', () => {
               },
             },
             "defaultConfiguration": "development",
+            "dependsOn": [
+              "build",
+            ],
             "executor": "@nx/vite:preview-server",
             "options": {
               "buildTarget": "my-vite-app:build",

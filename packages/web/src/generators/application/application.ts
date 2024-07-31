@@ -406,8 +406,8 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
       linter: options.linter,
       setParserOptionsProject: options.setParserOptionsProject,
       webServerCommand: `${getPackageManagerCommand().exec} nx ${
-        options.e2eWebServerTarget
-      } ${options.name}`,
+        options.projectName
+      }:${options.e2eWebServerTarget}`,
       webServerAddress: options.e2eWebServerAddress,
       addPlugin: options.addPlugin,
     });
@@ -493,6 +493,7 @@ async function normalizeOptions(
     nxJson.useInferencePlugins !== false;
   options.addPlugin ??= addPluginDefault;
 
+  let e2ePort = 4200;
   let e2eWebServerTarget = 'serve';
   if (options.addPlugin) {
     if (nxJson.plugins) {
@@ -500,11 +501,20 @@ async function normalizeOptions(
         if (
           options.bundler === 'vite' &&
           typeof plugin === 'object' &&
-          plugin.plugin === '@nx/vite/plugin' &&
-          (plugin.options as VitePluginOptions).serveTargetName
+          plugin.plugin === '@nx/vite/plugin'
         ) {
-          e2eWebServerTarget = (plugin.options as VitePluginOptions)
-            .serveTargetName;
+          e2eWebServerTarget =
+            options.e2eTestRunner === 'playwright'
+              ? (plugin.options as VitePluginOptions).previewTargetName ??
+                'preview'
+              : (plugin.options as VitePluginOptions).serveTargetName ??
+                'serve';
+          e2ePort =
+            e2eWebServerTarget ===
+              (plugin.options as VitePluginOptions)?.previewTargetName ||
+            e2eWebServerTarget === 'preview'
+              ? 4300
+              : e2ePort;
         } else if (
           options.bundler === 'webpack' &&
           typeof plugin === 'object' &&
@@ -518,7 +528,6 @@ async function normalizeOptions(
     }
   }
 
-  let e2ePort = 4200;
   if (
     nxJson.targetDefaults?.[e2eWebServerTarget] &&
     nxJson.targetDefaults?.[e2eWebServerTarget].options?.port

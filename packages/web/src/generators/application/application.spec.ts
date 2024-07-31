@@ -1,7 +1,12 @@
 import 'nx/src/internal-testing-utils/mock-project-graph';
 
 import { installedCypressVersion } from '@nx/cypress/src/utils/cypress-version';
-import { readProjectConfiguration, Tree } from '@nx/devkit';
+import {
+  readNxJson,
+  readProjectConfiguration,
+  Tree,
+  updateNxJson,
+} from '@nx/devkit';
 import { getProjects, readJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 
@@ -159,10 +164,22 @@ describe('app', () => {
     });
 
     it('should generate files if bundler is vite', async () => {
+      const nxJson = readNxJson(tree);
+      nxJson.plugins ??= [];
+      nxJson.plugins.push({
+        plugin: '@nx/vite/plugin',
+        options: {
+          buildTargetName: 'build',
+          previewTargetName: 'preview',
+        },
+      });
+      updateNxJson(tree, nxJson);
       await applicationGenerator(tree, {
         name: 'my-app',
         bundler: 'vite',
         projectNameAndRootFormat: 'as-provided',
+        e2eTestRunner: 'playwright',
+        addPlugin: true,
       });
       expect(tree.exists('my-app/src/main.ts')).toBeTruthy();
       expect(tree.exists('my-app/src/app/app.element.ts')).toBeTruthy();
@@ -179,13 +196,27 @@ describe('app', () => {
           path: './tsconfig.spec.json',
         },
       ]);
-      expect(tree.exists('my-app-e2e/playwright.config.ts')).toBeTruthy();
+      expect(
+        tree.read('my-app-e2e/playwright.config.ts', 'utf-8')
+      ).toMatchSnapshot();
       expect(tree.exists('my-app/index.html')).toBeTruthy();
       expect(tree.exists('my-app/vite.config.ts')).toBeTruthy();
       expect(tree.exists(`my-app/environments/environment.ts`)).toBeFalsy();
       expect(
         tree.exists(`my-app/environments/environment.prod.ts`)
       ).toBeFalsy();
+    });
+
+    it('should use serve target and port if bundler=vite, e2eTestRunner=playwright, addPlugin=false', async () => {
+      await applicationGenerator(tree, {
+        name: 'my-app',
+        bundler: 'vite',
+        projectNameAndRootFormat: 'as-provided',
+        e2eTestRunner: 'playwright',
+      });
+      expect(
+        tree.read('my-app-e2e/playwright.config.ts', 'utf-8')
+      ).toMatchSnapshot();
     });
 
     it('should extend from root tsconfig.json when no tsconfig.base.json', async () => {
