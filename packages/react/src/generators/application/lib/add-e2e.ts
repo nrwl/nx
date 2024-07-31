@@ -83,9 +83,9 @@ export async function addE2e(
         js: false,
         linter: options.linter,
         setParserOptionsProject: options.setParserOptionsProject,
-        webServerCommand: `${getPackageManagerCommand().exec} nx ${
-          options.e2eWebServerTarget
-        } ${options.name}`,
+        webServerCommand: `${getPackageManagerCommand().exec} nx run ${
+          options.projectName
+        }:${options.e2eWebServerTarget}`,
         webServerAddress: options.e2eWebServerAddress,
         rootProject: options.rootProject,
         addPlugin: options.addPlugin,

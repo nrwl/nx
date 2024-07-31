@@ -46,6 +46,8 @@ export async function normalizeOptions<T extends Schema = Schema>(
   options.rootProject = appProjectRoot === '.';
   options.projectNameAndRootFormat = projectNameAndRootFormat;
 
+  let e2ePort = options.devServerPort ?? 4200;
+
   let e2eWebServerTarget = 'serve';
   if (options.addPlugin) {
     if (nxJson.plugins) {
@@ -53,11 +55,20 @@ export async function normalizeOptions<T extends Schema = Schema>(
         if (
           options.bundler === 'vite' &&
           typeof plugin === 'object' &&
-          plugin.plugin === '@nx/vite/plugin' &&
-          (plugin.options as VitePluginOptions).serveTargetName
+          plugin.plugin === '@nx/vite/plugin'
         ) {
-          e2eWebServerTarget = (plugin.options as VitePluginOptions)
-            .serveTargetName;
+          e2eWebServerTarget =
+            options.e2eTestRunner === 'playwright'
+              ? (plugin.options as VitePluginOptions)?.previewTargetName ??
+                'preview'
+              : (plugin.options as VitePluginOptions)?.serveTargetName ??
+                'serve';
+          e2ePort =
+            e2eWebServerTarget ===
+              (plugin.options as VitePluginOptions)?.previewTargetName ||
+            e2eWebServerTarget === 'preview'
+              ? 4300
+              : e2ePort;
         } else if (
           options.bundler === 'webpack' &&
           typeof plugin === 'object' &&
@@ -71,7 +82,6 @@ export async function normalizeOptions<T extends Schema = Schema>(
     }
   }
 
-  let e2ePort = options.devServerPort ?? 4200;
   if (
     nxJson.targetDefaults?.[e2eWebServerTarget] &&
     nxJson.targetDefaults?.[e2eWebServerTarget].options?.port
