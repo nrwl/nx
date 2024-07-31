@@ -2,7 +2,7 @@ import type { Metadata, ResolvingMetadata } from 'next';
 import { blogApi } from '../../../lib/blog.api';
 import { BlogDetails } from '@nx/nx-dev/ui-blog';
 import { DefaultLayout } from '@nx/nx-dev/ui-common';
-import { parse } from 'path';
+
 interface BlogPostDetailProps {
   params: { slug: string };
 }
@@ -14,9 +14,6 @@ export async function generateMetadata(
   const post = await blogApi.getBlogPostBySlug(slug);
   const previousImages = (await parent).openGraph?.images ?? [];
 
-  const postCoverImage = post?.cover_image || 'nx-media';
-  const ogImage = `${parse(postCoverImage).name}.png`;
-
   return {
     title: `${post.title} | Nx Blog`,
     description: 'Latest news from the Nx & Nx Cloud core team',
@@ -26,11 +23,11 @@ export async function generateMetadata(
       description: post.description,
       images: [
         {
-          url: ogImage,
+          url: post.ogImage,
           width: 800,
           height: 421,
           alt: 'Nx: Smart, Fast and Extensible Build System',
-          type: 'image/png',
+          type: `image/${post.ogImageType}`,
         },
         ...previousImages,
       ],
