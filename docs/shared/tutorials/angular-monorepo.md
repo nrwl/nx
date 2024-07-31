@@ -520,7 +520,7 @@ You should be able to see something similar to the following in your browser.
     },
     {
       "name": "angular-store-e2e",
-      "type": "e2e",
+      "type": "app",
       "data": {
         "tags": []
       }
@@ -534,7 +534,7 @@ You should be able to see something similar to the following in your browser.
     },
     {
       "name": "inventory-e2e",
-      "type": "e2e",
+      "type": "app",
       "data": {
         "tags": []
       }
@@ -625,7 +625,7 @@ npx nx show project angular-store-e2e --web
 {
   "project": {
     "name": "angular-store-e2e",
-    "type": "e2e",
+    "type": "app",
     "data": {
       "metadata": {
         "targetGroups": {
@@ -947,7 +947,7 @@ npx nx graph --affected
     },
     {
       "name": "angular-store-e2e",
-      "type": "e2e",
+      "type": "app",
       "data": {
         "tags": []
       }
@@ -961,7 +961,7 @@ npx nx graph --affected
     },
     {
       "name": "inventory-e2e",
-      "type": "e2e",
+      "type": "app",
       "data": {
         "tags": []
       }

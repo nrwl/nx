@@ -217,7 +217,7 @@ nx show project e2e --web
 {
   "project": {
     "name": "e2e",
-    "type": "e2e",
+    "type": "app",
     "data": {
       "metadata": {
         "targetGroups": {
@@ -824,7 +824,7 @@ You should be able to see something similar to the following in your browser (hi
     },
     {
       "name": "e2e",
-      "type": "e2e",
+      "type": "app",
       "data": {
         "tags": []
       }
