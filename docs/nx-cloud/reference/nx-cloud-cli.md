@@ -1,5 +1,57 @@
 # `nx-cloud` CLI
 
+## npx nx-cloud login
+
+To provision a local personal access token to access Nx Cloud features run `npx nx-cloud login`. This will open your browser to the Nx Cloud application and after signing in will generate a personal access token and save it in a configuration file locally called `nxcloud.ini`.
+
+{% tabs %}
+{% tab label="macOS & Linux" %}
+
+We look for this file at the following locations:
+
+- `$XDG_CONFIG_HOME/nxcloud/nxcloud.ini`
+- `$HOME/config/nxcloud/nxcloud.ini`
+- `$HOME/.nxcloud.ini`
+
+If we don't find an existing config file, we create one at `$HOME/config/nxcloud/nxcloud.ini`
+
+{% /tab %}
+{% tab label="Windows" %}
+
+We look for this file within the `%LOCALAPPDATA%/nxcloud` directory and if it does not exist, we will create a new `nxcloud.ini` file there.
+
+{% /tab %}
+{% /tabs %}
+
+The format of this file is as follows:
+
+```ini
+[https://cloud\.nx\.app]
+personalAccessToken=SOME_ACCESS_TOKEN
+```
+
+If you have access to multiple instances of the Nx Cloud application (e.g. self-hosted Enterprise and our managed instance), each instance will be saved to this file under its URL.
+
+Our managed instance at [https://cloud.nx.app](https://cloud.nx.app) is the default. To provision a personal access token from an alternative instance of Nx Cloud pass the URL as a positional parameter, e.g.
+
+```bash
+npx nx-cloud login https://nx-cloud.my-domain.app
+```
+
+## npx nx-cloud configure
+
+To provision more than one personal access token for multiple contexts (e.g. home and work machines) you can use the personal access tokens page under your Nx Cloud profile. To save a personal access token to your local `nxcloud.ini` file without needing to edit the file yourself call `nx-cloud configure` like this:
+
+```bash
+npx nx-cloud configure --personalAccessToken=SOME_ACCESS_TOKEN
+```
+
+To configure multiple tokens for different instances of the Nx Cloud app, you can pass the URL as follows:
+
+```bash
+npx nx-cloud configure --personalAccessToken=SOME_ACCESS_TOKEN --nx-cloud-url=https://nx-cloud.my-domain.app
+```
+
 ## npx nx-cloud start-ci-run
 
 At the beginning of your main job, invoke `npx nx-cloud start-ci-run`. This tells Nx Cloud that the following series of
@@ -33,33 +85,11 @@ distribute-on:
   large-changeset: 10 linux-medium-js
 ```
 
-### --with-env-vars (Nx Agents Only)
+### --require-explicit-completion
 
-By default, invoking `npx nx-cloud start-ci-run` will take all environment variables prefixed with `NX_` and send them over to Nx Agents.
-This means that your access token, verbose logging configuration and other Nx-related environment variables will be the same on your
-main CI jobs and the Nx Agent machines.
-
-If you want to pass other environment variables from the main job to Nx Agents, you can do it as follows: `--with-env-vars="VAR1,VAR2"`.
-This will set `VAR1` and `VAR2` on Nx Agents to the same values set on the main job before any steps run.
-
-You can also pass `--with-env-vars="auto"` which will filter out all OS-specific environment variables and pass the rest to Nx Agents.
-
-{% callout type="warning" title="Use Caution With 'auto'" %}
-Using `--with-env-vars="auto"` will override any existing environment variables on the Nx Agent, some of which might be critical to the
-functionality of that machine. In case of unexpected issues on Nx Agents, try fallback to the explicit variable definition using `--with-env-vars="VAR1,VAR2,..."`.
-{% /callout %}
-
-Note: none of the values passed to Nx Agents are stored by Nx Cloud.
-
-### --use-dte-by-default
-
-By default, invoking `npx nx-cloud start-ci-run` will configure Nx to distribute all commands by default. You can
-disable this as follows: `npx nx-cloud start-ci-run --use-dte-by-default=false`.
-
-### --stop-agents-on-failure
-
-By default, a failure in one of the commands is going to terminate the whole CI run and will stop all the
-agents. You can disable this as follows: `npx nx-cloud start-ci-run --stop-agents-on-failure=false`.
+By default, Nx Cloud will monitor the main CI job and once it completes it will complete the associated CIPE object on the
+Nx Cloud side. You can disable this by passing `--require-explicit-completion`. In this case, you will have to add
+`npx nx-cloud complete-ci-run`.
 
 ### --stop-agents-after
 
@@ -92,11 +122,33 @@ Corrected example:
 - run: nx affected -t build
 ```
 
-### --require-explicit-completion
+### --stop-agents-on-failure
 
-By default, Nx Cloud will monitor the main CI job and once it completes it will complete the associated CIPE object on the
-Nx Cloud side. You can disable this by passing `--require-explicit-completion`. In this case, you will have to add
-`npx nx-cloud complete-ci-run`.
+By default, a failure in one of the commands is going to terminate the whole CI run and will stop all the
+agents. You can disable this as follows: `npx nx-cloud start-ci-run --stop-agents-on-failure=false`.
+
+### --use-dte-by-default
+
+By default, invoking `npx nx-cloud start-ci-run` will configure Nx to distribute all commands by default. You can
+disable this as follows: `npx nx-cloud start-ci-run --use-dte-by-default=false`.
+
+### --with-env-vars (Nx Agents Only)
+
+By default, invoking `npx nx-cloud start-ci-run` will take all environment variables prefixed with `NX_` and send them over to Nx Agents.
+This means that your access token, verbose logging configuration and other Nx-related environment variables will be the same on your
+main CI jobs and the Nx Agent machines.
+
+If you want to pass other environment variables from the main job to Nx Agents, you can do it as follows: `--with-env-vars="VAR1,VAR2"`.
+This will set `VAR1` and `VAR2` on Nx Agents to the same values set on the main job before any steps run.
+
+You can also pass `--with-env-vars="auto"` which will filter out all OS-specific environment variables and pass the rest to Nx Agents.
+
+{% callout type="warning" title="Use Caution With 'auto'" %}
+Using `--with-env-vars="auto"` will override any existing environment variables on the Nx Agent, some of which might be critical to the
+functionality of that machine. In case of unexpected issues on Nx Agents, try fallback to the explicit variable definition using `--with-env-vars="VAR1,VAR2,..."`.
+{% /callout %}
+
+Note: none of the values passed to Nx Agents are stored by Nx Cloud.
 
 ## Enabling/Disabling Distribution
 

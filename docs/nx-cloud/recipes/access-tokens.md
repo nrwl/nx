@@ -1,31 +1,31 @@
-# Nx CLI and Access Tokens
+# Nx CLI and CI Access Tokens
 
-The permissions and membership define what developers can access on [Nx Cloud](https://nx.app). They don't affect what happens when you run Nx commands locally or on CI. To manage that, you need to provision access tokens. To do that, go to Workspace Options / Manage Access Tokens.
+The permissions and membership define what developers can access on nx.app but they don't affect what happens when you run Nx commands in CI. To manage that, you need to provision CI access tokens in Workspace settings / Manage CI access tokens.
 
-## Types of Access Tokens
+## Access Types
 
 {% callout type="warning" title="Use Caution With Read-Write Tokens" %}
-Read-write tokens allow full write access to your remote cache. They should only be used in trusted environments. For instance, open source projects should only use read-write tokens as secrets configured for protected branches (e.g, main). Read-only tokens should be used in all other cases.
+Read-write tokens allow full write access to your remote cache. They should only be used in trusted environments.
 {% /callout %}
 
-There are currently two (2) types of Access Tokens for Nx Cloud's runner that you can use on your workspace. Both tokens support distributed task execution and allow Nx Cloud to store metadata about runs.
+There are currently two (2) types of CI Access Token for Nx Cloud's runner that you can use with your workspace. Both support distributed task execution and allow Nx Cloud to store metadata about runs.
 
 - `read-only`
 - `read-write`
 
-### Access Tokens: Read Only
+### Read Only Access
 
-The `read-only` access tokens will only read from the remote cache. Task results will not be stored in the remote cache for other developers to use.
+The `read-only` access tokens will only read from the remote cache. Task results will not be stored in the remote cache for other machines or CI pipelines to use.
 
-### Access Tokens: Read & Write
+### Read & Write Access
 
-The `read-write` access tokens allows task results to be stored in the remote cache for other developers to download and replay on their machines.
+The `read-write` access tokens allows task results to be stored in the remote cache for other other machines or CI pipelines to download and replay.
 
-## Setting Access Tokens
+## Setting CI Access Tokens
 
-Let's see how access tokens work.
+You can configure an access token in CI by setting the `NX_CLOUD_ACCESS_TOKEN` environment variable. `NX_CLOUD_ACCESS_TOKEN` takes precedence over any value in your `nx.json`.
 
-If you open your `nx.json`, you will see something like this:
+We do not recommend that you commit an access token to your repository but older versions of Nx do support this and if you open your `nx.json`, you may see something like this:
 
 {% tabs %}
 {% tab label="Nx >= 17" %}
@@ -40,7 +40,8 @@ If you open your `nx.json`, you will see something like this:
 {% tab label="Nx < 17" %}
 
 ```json
-"tasksRunnerOptions": {
+{
+  "tasksRunnerOptions": {
     "default": {
       "runner": "nx-cloud",
       "options": {
@@ -48,16 +49,15 @@ If you open your `nx.json`, you will see something like this:
       }
     }
   }
+}
 ```
 
 {% /tab %}
 {% /tabs %}
 
-If you remove the `nxCloudAccessToken` or `accessToken` property from the configuration, the runner will run all commands as if you were not connected to Nx Cloud. This essentially turns off Nx Cloud.
-
-## Setting a Different Access Token in CI
-
-You can also configure the access token by setting the `NX_CLOUD_ACCESS_TOKEN` environment variable. `NX_CLOUD_ACCESS_TOKEN` takes precedence over the `accessToken` property. It's common to have a read-only token stored in `nx.json` and a read-write token set via `NX_CLOUD_ACCESS_TOKEN` in CI.
+{% callout type="warning" title="Nx Cloud authentication is changing" %}
+From Nx 19.6 new workspaces are connected to Nx Cloud with a property called `nxCloudId` instead, and we recommend developers use [`nx-cloud login`](/ci/reference/nx-cloud-cli#npx-nxcloud-login) to provision their own local [personal access tokens](/ci/recipes/security/personal-access-tokens).
+{% /callout %}
 
 ## Using `nx-cloud.env`
 

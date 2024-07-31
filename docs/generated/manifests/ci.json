@@ -560,13 +560,24 @@
           },
           {
             "id": "access-tokens",
-            "name": "Access Tokens",
+            "name": "CI Access Tokens",
             "description": "",
             "mediaImage": "",
             "file": "nx-cloud/recipes/access-tokens",
             "itemList": [],
             "isExternal": false,
             "path": "/ci/recipes/security/access-tokens",
+            "tags": []
+          },
+          {
+            "id": "personal-access-tokens",
+            "name": "Personal Access Tokens",
+            "description": "",
+            "mediaImage": "",
+            "file": "nx-cloud/recipes/personal-access-tokens",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/ci/recipes/security/personal-access-tokens",
             "tags": []
           },
           {
@@ -1056,13 +1067,24 @@
       },
       {
         "id": "access-tokens",
-        "name": "Access Tokens",
+        "name": "CI Access Tokens",
         "description": "",
         "mediaImage": "",
         "file": "nx-cloud/recipes/access-tokens",
         "itemList": [],
         "isExternal": false,
         "path": "/ci/recipes/security/access-tokens",
+        "tags": []
+      },
+      {
+        "id": "personal-access-tokens",
+        "name": "Personal Access Tokens",
+        "description": "",
+        "mediaImage": "",
+        "file": "nx-cloud/recipes/personal-access-tokens",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/recipes/security/personal-access-tokens",
         "tags": []
       },
       {
@@ -1094,13 +1116,24 @@
   },
   "/ci/recipes/security/access-tokens": {
     "id": "access-tokens",
-    "name": "Access Tokens",
+    "name": "CI Access Tokens",
     "description": "",
     "mediaImage": "",
     "file": "nx-cloud/recipes/access-tokens",
     "itemList": [],
     "isExternal": false,
     "path": "/ci/recipes/security/access-tokens",
+    "tags": []
+  },
+  "/ci/recipes/security/personal-access-tokens": {
+    "id": "personal-access-tokens",
+    "name": "Personal Access Tokens",
+    "description": "",
+    "mediaImage": "",
+    "file": "nx-cloud/recipes/personal-access-tokens",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/recipes/security/personal-access-tokens",
     "tags": []
   },
   "/ci/recipes/security/encryption": {
