@@ -115,8 +115,12 @@
                       "required": ["target"],
                       "not": {
                         "anyOf": [
-                          { "required": ["projects"] },
-                          { "required": ["dependencies"] }
+                          {
+                            "required": ["projects"]
+                          },
+                          {
+                            "required": ["dependencies"]
+                          }
                         ]
                       }
                     }
@@ -138,6 +142,17 @@
             "type": "boolean",
             "default": true,
             "description": "Whether this target can be run in parallel with other tasks"
+          },
+          "metadata": {
+            "type": "object",
+            "description": "Metadata about the target",
+            "properties": {
+              "description": {
+                "type": "string",
+                "description": "A description of the target"
+              }
+            },
+            "additionalProperties": true
           }
         }
       }
@@ -153,6 +168,17 @@
       "items": {
         "type": "string"
       }
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Metadata about the project.",
+      "properties": {
+        "description": {
+          "type": "string",
+          "description": "A description of the project."
+        }
+      },
+      "additionalProperties": true
     },
     "release": {
       "type": "object",
@@ -205,7 +231,9 @@
                   {
                     "type": "array",
                     "description": "The projects that the targets belong to.",
-                    "items": { "type": "string" }
+                    "items": {
+                      "type": "string"
+                    }
                   }
                 ]
               },
@@ -229,8 +257,12 @@
                 "required": ["input"],
                 "not": {
                   "anyOf": [
-                    { "required": ["projects"] },
-                    { "required": ["dependencies"] }
+                    {
+                      "required": ["projects"]
+                    },
+                    {
+                      "required": ["dependencies"]
+                    }
                   ]
                 }
               }
@@ -262,7 +294,9 @@
             "properties": {
               "externalDependencies": {
                 "type": "array",
-                "items": { "type": "string" },
+                "items": {
+                  "type": "string"
+                },
                 "description": "The list of external dependencies that our target depends on for `nx:run-commands` and community plugins."
               }
             },

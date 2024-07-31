@@ -103,6 +103,25 @@ export default function TargetConfigurationDetails({
       {/* body */}
       {!collapsed && (
         <div className="p-4 text-base">
+          {targetConfiguration.metadata?.description && (
+            <div className="group mb-4">
+              <h4 className="mb-4">
+                <span className="font-medium">Description</span>
+                <span className="mb-1 ml-2 hidden group-hover:inline">
+                  <CopyToClipboardButton
+                    text={`"metadata": ${JSON.stringify({
+                      description: targetConfiguration.metadata?.description,
+                    })}`}
+                    tooltipText="Copy Description"
+                  />
+                </span>
+              </h4>
+              <p className="pl-5">
+                {targetConfiguration.metadata?.description}
+              </p>
+            </div>
+          )}
+
           <div className="group mb-4">
             <h4 className="mb-4">
               <TargetExecutorTitle {...displayHeader} />
