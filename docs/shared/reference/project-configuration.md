@@ -440,6 +440,27 @@ You can also express task dependencies with an object syntax:
 {% /tab %}
 {% /tabs %}
 
+Starting from v19.5.0, wildcards can be used to define dependencies in the `dependsOn` field.
+
+```json
+{
+  "targets": {
+    "test": {
+      "dependsOn": [
+        {
+          "target": "build", // target name
+          "params": "ignore" // "forward" or "ignore", defaults to "ignore"
+        },
+        "build-*", // support for using wildcards in dependsOn, matches: "build-css", "build-js" targets of current project
+        "^build-*", // matches tasks: "build-css", "build-js" targets of dependencies
+        "*build-*", // matches tasks: "build-css", "build-js" as well as "task-with-build-in-middle" targets of current project
+        "^*build-*" // matches tasks: "build-css", "build-js" as well as "task-with-build-in-middle" targets of dependencies
+      ]
+    }
+  }
+}
+```
+
 #### Examples
 
 You can write the shorthand configuration above in the object syntax like this:
@@ -629,6 +650,23 @@ In the case of an explicit target using an executor, you can specify the executo
 }
 ```
 
+### Target Metadata
+
+You can add additional metadata to be attached to a target. For example, you can provide a description stating what the
+target does:
+
+```jsonc {% fileName="project.json" %}
+{
+  "targets": {
+    "build": {
+      "metadata": {
+        "description": "Build the application for production"
+      }
+    }
+  }
+}
+```
+
 ## Project Metadata
 
 The following properties describe the project as a whole.
@@ -748,7 +786,21 @@ An implicit dependency could also be a glob pattern:
 {% /tab %}
 {% /tabs %}
 
-### Including package.json files as projects in the graph
+### Metadata
+
+You can add additional metadata to be attached to the project. For example, you can provide a description for your
+project:
+
+```jsonc {% fileName="project.json" %}
+{
+  "name": "admin",
+  "metadata": {
+    "description": "This is the admin application"
+  }
+}
+```
+
+## Including package.json files as projects in the graph
 
 Any `package.json` file that is referenced by the `workspaces` property in the root `package.json` file will be included as a project in the graph. If you are using Lerna, projects defined in `lerna.json` will be included. If you are using pnpm, projects defined in `pnpm-workspace.yml` will be included.
 

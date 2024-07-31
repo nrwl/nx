@@ -10,6 +10,7 @@ import { nxVersion } from '../../utils/versions';
 import {
   addDepsToPackageJson,
   createNxJsonFile,
+  initCloud,
   isMonorepo,
   printFinalMessage,
   runInstall,
@@ -126,13 +127,7 @@ export async function initHandler(options: InitArgs): Promise<void> {
 
   if (useNxCloud) {
     output.log({ title: '🛠️ Setting up Nx Cloud' });
-    execSync(
-      `${pmc.exec} nx g nx:connect-to-nx-cloud --installationSource=nx-init --quiet --hideFormatLogs --no-interactive`,
-      {
-        stdio: [0, 1, 2],
-        cwd: repoRoot,
-      }
-    );
+    await initCloud('nx-init');
   }
 
   printFinalMessage({

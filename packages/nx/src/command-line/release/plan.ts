@@ -15,6 +15,7 @@ import {
 } from './config/config';
 import { filterReleaseGroups } from './config/filter-release-groups';
 import { getVersionPlansAbsolutePath } from './config/version-plans';
+import { generateVersionPlanContent } from './utils/generate-version-plan-content';
 import { parseConventionalCommitsMessage } from './utils/git';
 import { printDiff } from './utils/print-changes';
 
@@ -136,7 +137,7 @@ export async function releasePlan(args: PlanOptions): Promise<string | number> {
   }
 
   const versionPlanMessage = args.message || (await promptForMessage());
-  const versionPlanFileContent = getVersionPlanFileContent(
+  const versionPlanFileContent = generateVersionPlanContent(
     versionPlanBumps,
     versionPlanMessage
   );
@@ -228,19 +229,4 @@ async function _promptForMessage(): Promise<string> {
     });
     process.exit(0);
   }
-}
-
-function getVersionPlanFileContent(
-  bumps: Record<string, string>,
-  message: string
-): string {
-  return `---
-${Object.entries(bumps)
-  .filter(([_, version]) => version !== 'none')
-  .map(([projectOrGroup, version]) => `${projectOrGroup}: ${version}`)
-  .join('\n')}
----
-
-${message}
-`;
 }

@@ -208,7 +208,7 @@ For instance, if my PR changes `lib10`, and we then run `nx affected -t test`, N
 You can also visualize the affected projects using the [Nx graph](/features/explore-graph). Simply run:
 
 ```shell
-nx affected:graph
+nx graph --affected
 ```
 
 ## Specify Which SHAs to Use to Calculate Affected Code
@@ -243,6 +243,22 @@ Nx provides two methods to exclude glob patterns (files and folders) from `affec
 
 - Glob patterns defined in your `.gitignore` file are ignored.
 - Glob patterns defined in an optional `.nxignore` file are ignored.
+
+## Marking Projects Affected by Dependency Updates
+
+By default, Nx will mark all projects as affected whenever your package manager's lock file changes. This behavior is a failsafe in case Nx misses a project that should be affected by a dependency update. If you'd like to opt in to a smarter behavior you can configure Nx to only mark projects as affected if they actually depend on the updated packages.
+
+```json {% fileName="nx.json" %}
+{
+  "pluginsConfig": {
+    "@nx/js": {
+      "projectsAffectedByDependencyUpdates": "auto"
+    }
+  }
+}
+```
+
+The flag `projectsAffectedByDependencyUpdates` can be set to `auto`, `all`, or an array that contains project specifiers. The default value is `all`.
 
 ## Not Using Git
 

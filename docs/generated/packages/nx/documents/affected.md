@@ -117,6 +117,14 @@ Type: `string`
 
 Exclude certain projects from being processed
 
+### excludeTaskDependencies
+
+Type: `boolean`
+
+Default: `false`
+
+Skips running dependent tasks first
+
 ### files
 
 Type: `string`

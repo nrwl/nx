@@ -8,9 +8,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
   let context: CreateNodesContext;
   let cwd = process.cwd();
   let tempFs: TempFs;
+  let originalCacheProjectGraph: string | undefined;
 
   beforeEach(() => {
-    tempFs = new TempFs('test');
+    tempFs = new TempFs('typescript-plugin');
     context = {
       nxJsonConfiguration: {
         namedInputs: {
@@ -22,12 +23,15 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       configFiles: [],
     };
     process.chdir(tempFs.tempDir);
+    originalCacheProjectGraph = process.env.NX_CACHE_PROJECT_GRAPH;
+    process.env.NX_CACHE_PROJECT_GRAPH = 'false';
   });
 
   afterEach(() => {
     jest.resetModules();
     tempFs.cleanup();
     process.chdir(cwd);
+    process.env.NX_CACHE_PROJECT_GRAPH = originalCacheProjectGraph;
   });
 
   it('should create nodes for root tsconfig.json files', async () => {
@@ -498,6 +502,8 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
             references: [
               { path: './tsconfig.lib.json' },
               { path: './tsconfig.spec.json' },
+              { path: './cypress/tsconfig.json' }, // internal project reference in a nested directory
+              { path: './nested-project/tsconfig.json' }, // external project reference in a nested directory
               { path: '../other-lib' }, // external project reference, it causes `dependentTasksOutputFiles` to be set
             ],
           }),
@@ -509,10 +515,18 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
             include: ['src/**/*.spec.ts'],
             references: [{ path: './tsconfig.lib.json' }],
           }),
+          'libs/my-lib/cypress/tsconfig.json': JSON.stringify({
+            include: ['**/*.ts', '../cypress.config.ts', '../**/*.cy.ts'],
+            references: [{ path: '../tsconfig.lib.json' }],
+          }),
+          'libs/my-lib/package.json': `{}`,
+          'libs/my-lib/nested-project/package.json': `{}`,
+          'libs/my-lib/nested-project/tsconfig.json': JSON.stringify({
+            include: ['lib/**/*.ts'], // different pattern that should not be included in my-lib because it's an external project reference
+          }),
           'libs/other-lib/tsconfig.json': JSON.stringify({
             include: ['**/*.ts'], // different pattern that should not be included because it's an external project
           }),
-          'libs/my-lib/package.json': `{}`,
         });
         expect(await invokeCreateNodesOnMatchingFiles(context, {}))
           .toMatchInlineSnapshot(`
@@ -531,8 +545,12 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/tsconfig.json",
                       "{projectRoot}/tsconfig.lib.json",
                       "{projectRoot}/tsconfig.spec.json",
+                      "{projectRoot}/cypress/tsconfig.json",
                       "{projectRoot}/src/**/*.ts",
                       "{projectRoot}/src/**/*.spec.ts",
+                      "{projectRoot}/cypress/**/*.ts",
+                      "{projectRoot}/cypress.config.ts",
+                      "{projectRoot}/**/*.cy.ts",
                       {
                         "dependentTasksOutputFiles": "**/*.d.ts",
                       },
@@ -544,6 +562,32 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     ],
                     "options": {
                       "cwd": "libs/my-lib",
+                    },
+                    "outputs": [],
+                  },
+                },
+              },
+              "libs/my-lib/nested-project": {
+                "projectType": "library",
+                "targets": {
+                  "typecheck": {
+                    "cache": true,
+                    "command": "tsc --build --emitDeclarationOnly --pretty --verbose",
+                    "dependsOn": [
+                      "^typecheck",
+                    ],
+                    "inputs": [
+                      "{projectRoot}/tsconfig.json",
+                      "{projectRoot}/lib/**/*.ts",
+                      "^production",
+                      {
+                        "externalDependencies": [
+                          "typescript",
+                        ],
+                      },
+                    ],
+                    "options": {
+                      "cwd": "libs/my-lib/nested-project",
                     },
                     "outputs": [],
                   },
@@ -950,6 +994,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
             references: [
               { path: './tsconfig.lib.json' },
               { path: './tsconfig.spec.json' },
+              { path: './cypress/tsconfig.json' }, // internal project reference in a nested directory
+              { path: './nested-project/tsconfig.json' }, // external project reference in a nested directory
+              { path: '../other-lib' }, // external project reference outside of the project root
             ],
           }),
           'libs/my-lib/tsconfig.lib.json': JSON.stringify({
@@ -961,7 +1008,24 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
             include: ['src/**/*.spec.ts'],
             references: [{ path: './tsconfig.lib.json' }],
           }),
+          'libs/my-lib/cypress/tsconfig.json': JSON.stringify({
+            compilerOptions: {
+              outDir: '../../../dist/out-tsc/libs/my-lib/cypress',
+            },
+            references: [{ path: '../tsconfig.lib.json' }],
+          }),
           'libs/my-lib/package.json': `{}`,
+          'libs/my-lib/nested-project/package.json': `{}`,
+          'libs/my-lib/nested-project/tsconfig.json': JSON.stringify({
+            compilerOptions: {
+              outDir: '../../../dist/out-tsc/libs/my-lib/nested-project', // different outDir that should not be included in my-lib because it's an external project reference
+            },
+          }),
+          'libs/other-lib/tsconfig.json': JSON.stringify({
+            compilerOptions: {
+              outDir: '../../dist/out-tsc/libs/other-lib', // different outDir that should not be included because it's an external project
+            },
+          }),
         });
         expect(await invokeCreateNodesOnMatchingFiles(context, {}))
           .toMatchInlineSnapshot(`
@@ -980,8 +1044,11 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/tsconfig.json",
                       "{projectRoot}/tsconfig.lib.json",
                       "{projectRoot}/tsconfig.spec.json",
+                      "{projectRoot}/cypress/tsconfig.json",
                       "{projectRoot}/src/**/*.spec.ts",
-                      "^production",
+                      {
+                        "dependentTasksOutputFiles": "**/*.d.ts",
+                      },
                       {
                         "externalDependencies": [
                           "typescript",
@@ -998,6 +1065,34 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{workspaceRoot}/dist/libs/my-lib/lib.d.ts.map",
                       "{workspaceRoot}/dist/libs/my-lib/lib.tsbuildinfo",
                       "{workspaceRoot}/dist/out-tsc/libs/my-lib/specs",
+                      "{workspaceRoot}/dist/out-tsc/libs/my-lib/cypress",
+                    ],
+                  },
+                },
+              },
+              "libs/my-lib/nested-project": {
+                "projectType": "library",
+                "targets": {
+                  "typecheck": {
+                    "cache": true,
+                    "command": "tsc --build --emitDeclarationOnly --pretty --verbose",
+                    "dependsOn": [
+                      "^typecheck",
+                    ],
+                    "inputs": [
+                      "production",
+                      "^production",
+                      {
+                        "externalDependencies": [
+                          "typescript",
+                        ],
+                      },
+                    ],
+                    "options": {
+                      "cwd": "libs/my-lib/nested-project",
+                    },
+                    "outputs": [
+                      "{workspaceRoot}/dist/out-tsc/libs/my-lib/nested-project",
                     ],
                   },
                 },

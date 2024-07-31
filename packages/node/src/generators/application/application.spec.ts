@@ -51,9 +51,13 @@ describe('app', () => {
                 },
               },
               "defaultConfiguration": "development",
+              "dependsOn": [
+                "build",
+              ],
               "executor": "@nx/js:node",
               "options": {
                 "buildTarget": "my-node-app:build",
+                "runBuildTargetDependencies": false,
               },
             },
           },
@@ -235,9 +239,13 @@ describe('app', () => {
                 },
               },
               "defaultConfiguration": "development",
+              "dependsOn": [
+                "build",
+              ],
               "executor": "@nx/js:node",
               "options": {
                 "buildTarget": "my-node-app:build",
+                "runBuildTargetDependencies": false,
               },
             },
           },

@@ -134,8 +134,14 @@ function getServeConfig(options: NormalizedSchema): TargetConfiguration {
   return {
     executor: '@nx/js:node',
     defaultConfiguration: 'development',
+    // Run build, which includes dependency on "^build" by default, so the first run
+    // won't error out due to missing build artifacts.
+    dependsOn: ['build'],
     options: {
       buildTarget: `${options.name}:build`,
+      // Even though `false` is the default, set this option so users know it
+      // exists if they want to always run dependencies during each rebuild.
+      runBuildTargetDependencies: false,
     },
     configurations: {
       development: {
@@ -390,9 +396,19 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
       ...options,
       skipFormat: true,
     });
+    tasks.push(nestTasks);
+
+    if (options.docker) {
+      const dockerTask = await setupDockerGenerator(tree, {
+        ...options,
+        project: options.name,
+        skipFormat: true,
+      });
+      tasks.push(dockerTask);
+    }
     return runTasksInSerial(
       ...[
-        nestTasks,
+        ...tasks,
         () => {
           logShowProjectCommand(options.name);
         },

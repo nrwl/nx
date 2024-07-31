@@ -1,7 +1,7 @@
 import { existsSync } from 'fs';
 import { dirname, join } from 'path';
 import {
-  InputDefinition,
+  ProjectConfiguration,
   ProjectMetadata,
   TargetConfiguration,
 } from '../config/workspace-json-project-json';
@@ -13,12 +13,8 @@ import {
   getPackageManagerCommand,
 } from './package-manager';
 
-export interface NxProjectPackageJsonConfiguration {
-  name?: string;
-  implicitDependencies?: string[];
-  tags?: string[];
-  namedInputs?: { [inputName: string]: (string | InputDefinition)[] };
-  targets?: Record<string, TargetConfiguration>;
+export interface NxProjectPackageJsonConfiguration
+  extends Partial<ProjectConfiguration> {
   includedScripts?: string[];
 }
 
