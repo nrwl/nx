@@ -309,8 +309,8 @@ devDependencies:
     specifier: 19.5.0-beta.5
     version: 19.5.0-beta.5(@swc-node/register@1.9.1)(@swc/core@1.5.7)(@types/node@18.19.8)(@typescript-eslint/parser@7.16.0)(eslint-config-prettier@9.1.0)(eslint@8.57.0)(nx@19.5.0-beta.5)(typescript@5.5.3)(verdaccio@5.31.0)
   '@nx/graph':
-    specifier: 0.0.18
-    version: 0.0.18(@nx/devkit@19.5.0-beta.5)(nx@19.5.0-beta.5)(react-dom@18.3.1)(react@18.3.1)
+    specifier: 0.0.19
+    version: 0.0.19(@nx/devkit@19.5.0-beta.5)(nx@19.5.0-beta.5)(react-dom@18.3.1)(react@18.3.1)
   '@nx/jest':
     specifier: 19.5.0-beta.5
     version: 19.5.0-beta.5(@swc-node/register@1.9.1)(@swc/core@1.5.7)(@types/node@18.19.8)(nx@19.5.0-beta.5)(ts-node@10.9.1)(typescript@5.5.3)(verdaccio@5.31.0)
@@ -11592,8 +11592,8 @@ packages:
       - verdaccio
     dev: true
 
-  /@nx/graph@0.0.18(@nx/devkit@19.5.0-beta.5)(nx@19.5.0-beta.5)(react-dom@18.3.1)(react@18.3.1):
-    resolution: {integrity: sha512-D77TQ0eA5sVBY4LGGXImHtAxoIBiBinNMdsljC0HLc6sIuVZFbcBWNiwI2Am8oAAUGzsSm3XtTX4SSEg2tss1A==}
+  /@nx/graph@0.0.19(@nx/devkit@19.5.0-beta.5)(nx@19.5.0-beta.5)(react-dom@18.3.1)(react@18.3.1):
+    resolution: {integrity: sha512-nyFZiCIZ318QhY8JtcixU/lSIT8vFVj/K0Ny+oknZ4VOAyFTgQnE4s1bvQAPz6yph2yhh3MW5w8XSvCXIMYIlA==}
     peerDependencies:
       '@nx/devkit': '>= 19 < 20'
       nx: '>= 19 < 20'
