@@ -133,10 +133,10 @@
     "@types/tmp": "^0.2.0",
     "@types/yargs": "^17.0.10",
     "@types/yarnpkg__lockfile": "^1.1.5",
-    "@typescript-eslint/eslint-plugin": "7.16.0",
-    "@typescript-eslint/parser": "7.16.0",
-    "@typescript-eslint/type-utils": "^7.16.0",
-    "@typescript-eslint/utils": "7.16.0",
+    "@typescript-eslint/eslint-plugin": "8.0.0",
+    "@typescript-eslint/parser": "8.0.0",
+    "@typescript-eslint/type-utils": "^8.0.0",
+    "@typescript-eslint/utils": "8.0.0",
     "@xstate/immer": "0.3.1",
     "@xstate/inspect": "0.7.0",
     "@xstate/react": "3.0.1",
@@ -381,10 +381,10 @@
       "documentation": {
         "cache": true,
         "inputs": [
-          "{workspaceRoot}/packages/**", 
+          "{workspaceRoot}/packages/**",
           "{workspaceRoot}/docs/**",
           "{workspaceRoot}/scripts/documentation/**",
-          "!{workspaceRoot}/docs/generated", 
+          "!{workspaceRoot}/docs/generated",
           "!{workspaceRoot}/packages/**/*.spec.ts",
           "!{workspaceRoot}/packages/**/project.json",
           "!{workspaceRoot}/packages/**/tsconfig.json",
@@ -394,7 +394,9 @@
           "!{workspaceRoot}/packages/**/.eslintrc.json"
         ]
       },
-      "outputs": ["{workspaceRoot}/docs/generated"]
+      "outputs": [
+        "{workspaceRoot}/docs/generated"
+      ]
     }
   },
   "packageManager": "pnpm@8.15.7"
