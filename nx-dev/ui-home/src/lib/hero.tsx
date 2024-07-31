@@ -69,7 +69,7 @@ export function Hero(): JSX.Element {
             <Strong>advanced CI capabilities</Strong> including caching and
             distribution.
           </SectionHeading>
-          <div className="mt-10 flex items-center justify-center gap-x-6">
+          <div className="mt-10 flex flex-col items-center justify-center gap-6 sm:flex-row">
             <ButtonLink
               href="/getting-started/intro?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_hero_get_started#try-nx-yourself"
               title="Get started"
@@ -86,6 +86,14 @@ export function Hero(): JSX.Element {
               size="default"
             >
               Learn about Nx on CI
+            </ButtonLink>
+            <ButtonLink
+              href="/contact?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_hero_get_started"
+              title="Get started"
+              variant="secondary"
+              size="default"
+            >
+              Contact us
             </ButtonLink>
           </div>
         </div>
