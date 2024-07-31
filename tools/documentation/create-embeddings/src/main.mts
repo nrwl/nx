@@ -160,7 +160,7 @@ async function generateEmbeddings() {
     type: 'boolean',
   }).argv;
 
-  const shouldRefresh = argv.refresh;
+  const shouldRefresh = true;
 
   if (!process.env.NX_NEXT_PUBLIC_SUPABASE_URL) {
     throw new Error(
@@ -513,7 +513,7 @@ function removeTitleDescriptionFromHeading(
   if (!inputString) {
     return null;
   }
-  const titleMatch = inputString.match(/title:\s*([^description]*)/);
+  const titleMatch = inputString.match(/title:\s*(.+?)(?=\s*description:)/);
   if (titleMatch) {
     const title = titleMatch[1].trim();
     return title.replace(`{% highlightColor="green" %}`, '').trim();
