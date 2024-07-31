@@ -87,6 +87,7 @@ jobs:
       NX_CI_EXECUTION_ENV: 'linux'
       NX_CLOUD_DTE_V2: 'true'
       NX_CLOUD_DTE_SUMMARY: 'true'
+      NX_CLOUD_NO_TIMEOUTS: 'true'
     steps:
       - checkout
       - nx/set-shas:
