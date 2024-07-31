@@ -310,6 +310,14 @@ export interface NxSyncConfiguration {
   generatorOptions?: {
     [generatorName: string]: Record<string, unknown>;
   };
+
+  /**
+   * Whether to automatically apply sync generator changes when running tasks.
+   * If not set, the user will be prompted.
+   * If set to `true`, the user will not be prompted and the changes will be applied.
+   * If set to `false`, the user will not be prompted and the changes will not be applied.
+   */
+  applyChanges?: boolean;
 }
 
 /**
