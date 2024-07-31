@@ -5,8 +5,9 @@ import {
   isWorkspacesEnabled,
   output,
 } from '@nx/devkit';
-import { execSync } from 'child_process';
+
 import { daemonClient } from 'nx/src/daemon/client/client';
+import { execSync } from 'child_process';
 // eslint-disable-next-line @typescript-eslint/no-restricted-imports
 import { getLockFileName } from 'nx/src/plugins/js/lock-file/lock-file';
 import { gte } from 'semver';
@@ -128,6 +129,8 @@ function execLockFileUpdate(
     const LARGE_BUFFER = 1024 * 1000000;
     execSync(command, {
       cwd,
+      stdio: 'inherit',
+      shell: 'true',
       maxBuffer: LARGE_BUFFER,
       env: {
         ...process.env,
