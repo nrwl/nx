@@ -20,11 +20,11 @@ In this article, we’re going to recap all the things launched during Launch Nx
   - [Project Crystal — By Juri Strumpflohner](#conference-talk-project-crystal)
   - [Project Crystal + .NET in Action — By Craigory Coppola](#conference-talk-project-crystal-net-in-action)
 - [New Plugin: @nx/nuxt](#new-plugin-nxnuxt)
-- [Nx Agents](#nx-agents-launched)
+- [Nx Agents](#nx-agents)
   - [Nx Agents Walkthrough: Effortlessly Fast CI Built for Monorepos — By Rares Matei](#conference-talk-nx-agents-walkthrough-effortlessly-fast-ci-built-for-monorepos)
   - [Solving E2E Tests — By Altan Stalker](#conference-talk-solving-e2e-tests)
 - [Tusky](#tusky)
-- [Nx Release](#nx-release-is-stable)
+- [Nx Release](#nx-release)
   - [Releasing Nx Release — By James Henry](#conference-talk-releasing-nx-release)
 
 ## Nx 18.0 && Project Crystal
@@ -64,7 +64,7 @@ Zack explains Nuxt and how to use the new plugin in this video:
 To add @nx/nuxt to your codebase, use the command:
 
 ```shell
-> nx add @nx/nuxt
+nx add @nx/nuxt
 ```
 
 Huge thanks to [Katerina](https://twitter.com/psybercity) for her work on the plugin, and Nuxt maintainer, [Daniel Roe](https://twitter.com/danielcroe), for helping to guide the project!
@@ -83,7 +83,7 @@ We’re very excited about Nx Agents because we think that in its current state,
 
 Be sure to also checkout the [blog post from Isaac on Nx Agents](/blog/fast-effortless-ci), including explanations of exclusive features like auto-detection and retrying for flaky tasks and automatically splitting lengthy end-to-end tests!
 
-You can [signup for Nx Agents NOW](https://nx.app/products/agents#content), and find out [more of the details in our docs](/ci/features/distribute-task-execution)!
+You can find out [more of the details in our docs](/ci/features/distribute-task-execution)!
 
 Rares and Altan are on the team building Nx Cloud, and during the conference, they dove deeper into some of these topics:
 
@@ -117,7 +117,7 @@ Tusky will also be able to provide organizational-level insights to your codebas
 
 Versioning and publishing packages is always a bit tricky. Mix in the added complexity of having multiple packages — sometimes with different versioning or publishing strategies — inside the same codebase, and things can get weird quick!
 
-For a long time, Nx has been purposefully versioning and publishing agnostic, but given our time spent as [stewards of Lerna](https://blog.nrwl.io/lerna-is-dead-long-live-lerna-61259f97dbd9) (the OG Javascript monorepo tool), we’ve been able to take alot of that experience and finally feel confident creating our own versioning and publishing implementation.
+For a long time, Nx has been purposefully versioning and publishing agnostic, but given our time spent as [stewards of Lerna](/blog/lerna-is-dead-long-live-lerna) (the OG Javascript monorepo tool), we’ve been able to take alot of that experience and finally feel confident creating our own versioning and publishing implementation.
 
 Therefore, we’ve been working on a new command to the Nx CLI: [nx release](/recipes/nx-release/get-started-with-nx-release#get-started-with-nx-release). We launched this on Friday of our Launch Nx week!
 
@@ -145,4 +145,4 @@ That’s all for now folks! We’re just starting up a new iteration of developm
 - [Nx GitHub](https://github.com/nrwl/nx)
 - [Nx Official Discord Server](https://go.nx.dev/community)
 - [Nx Youtube Channel](https://www.youtube.com/@nxdevtools)
-- [Speed up your CI](https://nx.app/)
+- [Speed up your CI](/nx-cloud)

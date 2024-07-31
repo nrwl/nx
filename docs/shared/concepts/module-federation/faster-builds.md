@@ -322,7 +322,7 @@ If, say, someone is working on `shop`, they will get the `cart` and `about` buil
 If you inspect the terminal output, you'll see something like this, even if you are on different machines.
 
 ```shell
-> nx run about:build:development  [existing outputs match the cache, left as is]
+nx run about:build:development  [existing outputs match the cache, left as is]
 
 (snip)
 

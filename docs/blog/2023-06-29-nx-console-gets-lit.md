@@ -26,11 +26,11 @@ If you’re curious to learn more about the rewrite and the motivations behind i
 
 ### A Short History of Nx Console
 
-Let’s go back in time: Nx Console has been around for a while. [It first launched in 2018](https://blog.nrwl.io/announcing-the-first-stable-release-of-angular-console-the-ui-for-the-angular-cli-bb19093a92d4?source=friends_link&sk=d955094b2cb872a130b47c8040ec820e) — then called Angular Console — as a standalone Electron app which let you run Angular schematics and builders from a graphical interface. Of course, it was built with Angular and looked something like this:
+Let’s go back in time: Nx Console has been around for a while. It first launched in 2018 — then called Angular Console — as a standalone Electron app which let you run Angular schematics and builders from a graphical interface. Of course, it was built with Angular and looked something like this:
 
 ![Screenshot of the original Angular Console electron app](/blog/images/2023-06-29/bodyimg1.webp)
 
-In 2019, [it was ported to a VSCode extension](https://blog.nrwl.io/brand-new-ui-custom-vscode-task-support-more-in-angular-console-9-0-5e4d3a109fb9?source=friends_link&sk=47fd72d5700b4cb3de09e559c5524ce5) with the now familiar UI and support for the standalone app was dropped.
+In 2019, it was ported to a VSCode extension with the now familiar UI and support for the standalone app was dropped.
 
 In 2020, support for the entire Nx ecosystem was added, it was renamed to Nx Console and an amazing transformation began: Today, Nx Console is much more than just a single form — it tightly integrates Nx into your IDE, gives you the overview of your projects that you need and puts your task-running just a click away.
 
@@ -44,7 +44,7 @@ In addition, we started questioning our usage of Angular. Angular is a great fra
 
 So, ultimately, **we decided to pull the plug and rewrite the entire thing in [Lit](https://lit.dev/).**
 
-Lit is a lightweight framework built on top of web components and “adds just what you need to be happy and productive: reactivity, declarative templates and a handful of thoughtful features to reduce boilerplate and make your job easier” (taken from their docs). We had used it before to [build the Nx Cloud view](https://blog.nrwl.io/nx-console-meets-nx-cloud-d45dc099dc5d?source=friends_link&sk=90215eb316ef332c1324f2d50cd3ad85) and were happy with the simple setup and great DX. So the decision to reuse it here was an easy one, since it allowed us to reuse code, build tooling and expertise. The rewrite also gave us the opportunity to improve the design for both supported IDEs and give the entire UI a clean, new coat of paint.
+Lit is a lightweight framework built on top of web components and “adds just what you need to be happy and productive: reactivity, declarative templates and a handful of thoughtful features to reduce boilerplate and make your job easier” (taken from their docs). We had used it before to [build the Nx Cloud view](/blog/nx-console-meets-nx-cloud) and were happy with the simple setup and great DX. So the decision to reuse it here was an easy one, since it allowed us to reuse code, build tooling and expertise. The rewrite also gave us the opportunity to improve the design for both supported IDEs and give the entire UI a clean, new coat of paint.
 
 ![Screenshot of the reworked generate ui](/blog/images/2023-06-29/bodyimg2.webp)
 
@@ -62,7 +62,7 @@ This architecture’s modularity meant we could quickly switch out the Generate 
 
 If you want to dive deeper, there are many more resources on the architecture of Nx Console and how it’s built:
 
-- [In-depth blog post about expanding to JetBrains IDEs](https://blog.nrwl.io/expanding-nx-console-to-jetbrains-ides-8a5b80fff2d7?source=friends_link&sk=967080ea30bdbf9f8132f098a2cdd188)
+- [In-depth blog post about expanding to JetBrains IDEs](/blog/expanding-nx-console-to-jetbrains-ides)
 - [Accompanying Youtube video by Zack DeRose](https://www.youtube.com/watch?v=xUTm6GDqwJM)
 - [The Power of Nx Console — talk by Jon Cammisuli](https://www.youtube.com/watch?v=3C_9g9kt2KM)
 
@@ -131,7 +131,7 @@ If you need to pass information up the DOM, you use normal events and you can se
 
 ### Communicating with the IDE — using Reactive Controllers
 
-To communicate with the host IDE, we were able to reuse almost all the logic from the previous UI (for more details, see [Communicating with IntelliJ](https://blog.nrwl.io/expanding-nx-console-to-jetbrains-ides-8a5b80fff2d7?source=friends_link&sk=967080ea30bdbf9f8132f098a2cdd188#d151) from the last blog post). Instead of a service that exposes observables that our component can consume, we used a [Reactive Controller](https://lit.dev/docs/composition/controllers/). Controllers are a neat feature of Lit — they hook into a component and can request DOM updates on their behalf. This eliminates the need for observable streams and subscriptions while keeping the communication code self-contained. Look at this example:
+To communicate with the host IDE, we were able to reuse almost all the logic from the previous UI (for more details, see [Communicating with IntelliJ](/blog/expanding-nx-console-to-jetbrains-ides) from the last blog post). Instead of a service that exposes observables that our component can consume, we used a [Reactive Controller](https://lit.dev/docs/composition/controllers/). Controllers are a neat feature of Lit — they hook into a component and can request DOM updates on their behalf. This eliminates the need for observable streams and subscriptions while keeping the communication code self-contained. Look at this example:
 
 ```ts {% fileName="main.ts" %}
 @customElement('root-element')
@@ -335,4 +335,4 @@ If the prettier UI and better performance haven’t convinced you, this surely w
 - [Nx GitHub](https://github.com/nrwl/nx)
 - [Nx Official Discord Server](https://go.nx.dev/community)
 - [Nx Youtube Channel](https://www.youtube.com/@nxdevtools)
-- [Speed up your CI](https://nx.app/)
+- [Speed up your CI](/nx-cloud)
