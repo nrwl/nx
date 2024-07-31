@@ -11,6 +11,8 @@ export type BlogPostDataEntry = {
   pinned?: boolean;
   filePath: string;
   slug: string;
+  ogImage: string;
+  ogImageType: string;
 };
 
 export type BlogAuthor = {
