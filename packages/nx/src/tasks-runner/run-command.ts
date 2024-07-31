@@ -24,6 +24,7 @@ import { handleErrors } from '../utils/params';
 import {
   clearSyncGeneratorChanges,
   getSyncGeneratorChanges,
+  syncGeneratorResultsToMessageLines,
   type SyncGeneratorChangesResult,
 } from '../utils/sync-generators';
 import { updateContextWithChangedFiles } from '../utils/workspace-context';
@@ -260,18 +261,8 @@ async function ensureWorkspaceIsInSyncAndGetGraphs(
     return { projectGraph, taskGraph };
   }
 
-  const resultDescriptions: string[] = [];
-  for (const result of results) {
-    let message = `${result.generatorName}: ${chalk.bold(
-      result.changes.length
-    )} file(s) out of sync`;
-    if (result.outOfSyncMessage) {
-      message += `\n${result.outOfSyncMessage}`;
-    }
-    resultDescriptions.push(message);
-  }
-
-  const errorTitle = 'The workspace is out of sync:';
+  const errorTitle = 'The workspace is out of sync';
+  const resultDescriptions = syncGeneratorResultsToMessageLines(results);
   const errorBodyLines = [
     ...resultDescriptions,
     '\nPlease run `nx sync` to sync the workspace configuration.',

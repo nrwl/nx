@@ -11,6 +11,7 @@ import {
   readProjectsConfigurationFromProjectGraph,
 } from '../project-graph/project-graph';
 import { workspaceRoot } from './workspace-root';
+import chalk = require('chalk');
 
 export type SyncGeneratorResult =
   | void
@@ -143,6 +144,25 @@ export function collectRegisteredGlobalSyncGenerators(
   }
 
   return globalSyncGenerators;
+}
+
+export function syncGeneratorResultsToMessageLines(
+  results: SyncGeneratorChangesResult[]
+): string[] {
+  const messageLines: string[] = [];
+
+  for (const result of results) {
+    messageLines.push(
+      `${chalk.bold(result.generatorName)}: ${chalk.bold(
+        result.changes.length
+      )} file(s) out of sync`
+    );
+    if (result.outOfSyncMessage) {
+      messageLines.push(result.outOfSyncMessage);
+    }
+  }
+
+  return messageLines;
 }
 
 async function runSyncGenerators(
