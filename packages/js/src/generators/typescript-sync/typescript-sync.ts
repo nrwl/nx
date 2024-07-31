@@ -199,10 +199,18 @@ function updateTsConfigReferences(
 ): boolean {
   const tsConfig = readJson<Tsconfig>(tree, tsConfigPath);
   // We have at least one dependency so we can safely set it to an empty array if not already set
-  tsConfig.references ??= [];
-  const referencesSet = new Set(
-    tsConfig.references.map((ref) => normalizeReferencePath(ref.path))
-  );
+  const references = [];
+  const originalReferencesSet = new Set();
+  const newReferencesSet = new Set();
+  for (const ref of tsConfig.references ?? []) {
+    const normalizedPath = normalizeReferencePath(ref.path);
+    originalReferencesSet.add(normalizedPath);
+    if (!ref.path.startsWith('../')) {
+      // we only keep the internal references, the external ones are dictated by the project dependencies
+      references.push(ref);
+      newReferencesSet.add(normalizeReferencePath(ref.path));
+    }
+  }
 
   let hasChanges = false;
   for (const dep of dependencies) {
@@ -232,14 +240,20 @@ function updateTsConfigReferences(
       }
     }
     const relativePathToTargetRoot = relative(projectRoot, referencePath);
-    if (!referencesSet.has(relativePathToTargetRoot)) {
+    if (!newReferencesSet.has(relativePathToTargetRoot)) {
+      newReferencesSet.add(relativePathToTargetRoot);
       // Make sure we unshift rather than push so that dependencies are built in the right order by TypeScript when it is run directly from the root of the workspace
-      tsConfig.references.unshift({ path: relativePathToTargetRoot });
+      references.unshift({ path: relativePathToTargetRoot });
+    }
+    if (!originalReferencesSet.has(relativePathToTargetRoot)) {
       hasChanges = true;
     }
   }
 
+  hasChanges ||= newReferencesSet.size !== originalReferencesSet.size;
+
   if (hasChanges) {
+    tsConfig.references = references;
     writeJson(tree, tsConfigPath, tsConfig);
   }
 
@@ -263,7 +277,7 @@ function collectProjectDependencies(
   for (const dep of projectGraph.dependencies[projectName]) {
     const targetProjectNode = projectGraph.nodes[dep.target];
     if (!targetProjectNode) {
-      // It's an external dependency
+      // It's an npm dependency
       continue;
     }
 

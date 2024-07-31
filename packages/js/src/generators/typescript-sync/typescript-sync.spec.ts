@@ -152,11 +152,17 @@ describe('syncGenerator()', () => {
         { path: '../a/tsconfig.lib.json' },
       ],
     });
-    const changesBeforeSyncing = tree.listChanges();
+    const changesBeforeSyncing = tree
+      .listChanges()
+      .map((c) => [c.path, c.type, c.content.toString('utf-8')]);
 
     await syncGenerator(tree, {});
 
-    expect(tree.listChanges()).toStrictEqual(changesBeforeSyncing);
+    expect(
+      tree
+        .listChanges()
+        .map((c) => [c.path, c.type, c.content.toString('utf-8')])
+    ).toStrictEqual(changesBeforeSyncing);
   });
 
   describe('root tsconfig.json', () => {
@@ -178,7 +184,7 @@ describe('syncGenerator()', () => {
       `);
     });
 
-    it('should respect existing project references in the tsconfig.json', async () => {
+    it('should respect existing internal project references in the tsconfig.json', async () => {
       writeJson(tree, 'tsconfig.json', {
         // Swapped order and additional manual reference
         references: [
@@ -187,19 +193,6 @@ describe('syncGenerator()', () => {
           { path: 'packages/c' },
         ],
       });
-      expect(readJson(tree, 'tsconfig.json').references).toMatchInlineSnapshot(`
-        [
-          {
-            "path": "./packages/b",
-          },
-          {
-            "path": "packages/a",
-          },
-          {
-            "path": "packages/c",
-          },
-        ]
-      `);
 
       await syncGenerator(tree, {});
 
@@ -238,22 +231,11 @@ describe('syncGenerator()', () => {
       `);
     });
 
-    it('should respect existing project references in the tsconfig.json', async () => {
+    it('should respect existing internal project references in the tsconfig.json', async () => {
       writeJson(tree, 'packages/b/tsconfig.json', {
         // Swapped order and additional manual reference
-        references: [{ path: '../some/thing' }, { path: '../../another/one' }],
+        references: [{ path: './some/thing' }, { path: './another/one' }],
       });
-      expect(readJson(tree, 'packages/b/tsconfig.json').references)
-        .toMatchInlineSnapshot(`
-        [
-          {
-            "path": "../some/thing",
-          },
-          {
-            "path": "../../another/one",
-          },
-        ]
-      `);
 
       await syncGenerator(tree, {});
 
@@ -265,10 +247,38 @@ describe('syncGenerator()', () => {
             "path": "../a",
           },
           {
-            "path": "../some/thing",
+            "path": "./some/thing",
           },
           {
-            "path": "../../another/one",
+            "path": "./another/one",
+          },
+        ]
+      `);
+    });
+
+    it('should prune existing external project references that are no longer dependencies', async () => {
+      writeJson(tree, 'packages/b/tsconfig.json', {
+        references: [
+          { path: './some/thing' },
+          { path: './another/one' },
+          { path: '../packages/c' }, // this is not a dependency, should be pruned
+        ],
+      });
+
+      await syncGenerator(tree, {});
+
+      const rootTsconfig = readJson(tree, 'packages/b/tsconfig.json');
+      // The dependency reference on "a" is added to the start of the array
+      expect(rootTsconfig.references).toMatchInlineSnapshot(`
+        [
+          {
+            "path": "../a",
+          },
+          {
+            "path": "./some/thing",
+          },
+          {
+            "path": "./another/one",
           },
         ]
       `);
