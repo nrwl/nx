@@ -21,7 +21,7 @@ launch-templates:
             ~/.cache/Cypress
             ~/.cache/ms-playwright
             ~/.pnpm-store
-          base-branch: 'master'
+          base_branch: 'master'
       - name: Install e2e deps
         script: |
           sudo apt-get update
