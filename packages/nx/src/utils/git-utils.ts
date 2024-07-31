@@ -3,7 +3,9 @@ import { logger } from '../devkit-exports';
 
 export function getGithubSlugOrNull(): string | null {
   try {
-    const gitRemote = execSync('git remote -v').toString();
+    const gitRemote = execSync('git remote -v', {
+      stdio: 'pipe',
+    }).toString();
     // If there are no remotes, we default to github
     if (!gitRemote || gitRemote.length === 0) {
       return 'github';

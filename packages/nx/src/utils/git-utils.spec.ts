@@ -21,7 +21,7 @@ describe('git utils tests', () => {
       const result = getGithubSlugOrNull();
 
       expect(result).toBe('origin-user/repo-name');
-      expect(execSync).toHaveBeenCalledWith('git remote -v');
+      expect(execSync).toHaveBeenCalledWith('git remote -v', { stdio: 'pipe' });
     });
 
     it('should return "github" if there are no remotes', () => {
@@ -30,7 +30,7 @@ describe('git utils tests', () => {
       const result = getGithubSlugOrNull();
 
       expect(result).toBe('github');
-      expect(execSync).toHaveBeenCalledWith('git remote -v');
+      expect(execSync).toHaveBeenCalledWith('git remote -v', { stdio: 'pipe' });
     });
 
     it('should return "github" if execSync throws an error', () => {
@@ -41,7 +41,7 @@ describe('git utils tests', () => {
       const result = getGithubSlugOrNull();
 
       expect(result).toBe('github');
-      expect(execSync).toHaveBeenCalledWith('git remote -v');
+      expect(execSync).toHaveBeenCalledWith('git remote -v', { stdio: 'pipe' });
     });
 
     it('should return the first github remote slug if no origin is present', () => {
@@ -53,7 +53,7 @@ describe('git utils tests', () => {
       const result = getGithubSlugOrNull();
 
       expect(result).toBe('upstream-user/repo-name');
-      expect(execSync).toHaveBeenCalledWith('git remote -v');
+      expect(execSync).toHaveBeenCalledWith('git remote -v', { stdio: 'pipe' });
     });
 
     it('should return null if remote is set up but not github', () => {
@@ -65,7 +65,7 @@ describe('git utils tests', () => {
       const result = getGithubSlugOrNull();
 
       expect(result).toBeNull();
-      expect(execSync).toHaveBeenCalledWith('git remote -v');
+      expect(execSync).toHaveBeenCalledWith('git remote -v', { stdio: 'pipe' });
     });
 
     it('should return the first github remote slug for HTTPS URLs', () => {
@@ -77,7 +77,7 @@ describe('git utils tests', () => {
       const result = getGithubSlugOrNull();
 
       expect(result).toBe('origin-user/repo-name');
-      expect(execSync).toHaveBeenCalledWith('git remote -v');
+      expect(execSync).toHaveBeenCalledWith('git remote -v', { stdio: 'pipe' });
     });
   });
 
