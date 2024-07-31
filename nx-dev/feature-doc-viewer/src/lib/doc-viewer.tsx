@@ -109,7 +109,7 @@ export function DocViewer({
                 ref={ref}
                 data-document="main"
                 className={cx(
-                  'prose prose-slate dark:prose-invert w-full max-w-none 2xl:max-w-4xl',
+                  'prose prose-lg prose-slate dark:prose-invert w-full max-w-none 2xl:max-w-4xl',
                   { 'xl:max-w-2xl': !hideTableOfContent }
                 )}
               >
