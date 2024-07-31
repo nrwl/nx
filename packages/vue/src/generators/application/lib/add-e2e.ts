@@ -73,10 +73,10 @@ export async function addE2e(
         js: false,
         linter: options.linter,
         setParserOptionsProject: options.setParserOptionsProject,
-        webServerCommand: `${getPackageManagerCommand().exec} nx serve ${
-          options.name
-        }`,
-        webServerAddress: 'http://localhost:4200',
+        webServerCommand: `${getPackageManagerCommand().exec} nx run ${
+          options.projectName
+        }:preview`,
+        webServerAddress: 'http://localhost:4300',
       });
     }
     case 'none':

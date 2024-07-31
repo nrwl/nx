@@ -1,7 +1,12 @@
 import 'nx/src/internal-testing-utils/mock-project-graph';
 
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { Tree, readProjectConfiguration } from '@nx/devkit';
+import {
+  Tree,
+  readProjectConfiguration,
+  readNxJson,
+  updateNxJson,
+} from '@nx/devkit';
 
 import { applicationGenerator } from './application';
 import { Schema } from './schema';
@@ -21,11 +26,28 @@ describe('application generator', () => {
   });
 
   it('should set up project correctly with given options', async () => {
-    await applicationGenerator(tree, { ...options, unitTestRunner: 'vitest' });
+    const nxJson = readNxJson(tree);
+    nxJson.plugins ??= [];
+    nxJson.plugins.push({
+      plugin: '@nx/vite/plugin',
+      options: {
+        buildTargetName: 'build',
+        previewTargetName: 'preview',
+      },
+    });
+    updateNxJson(tree, nxJson);
+    await applicationGenerator(tree, {
+      ...options,
+      unitTestRunner: 'vitest',
+      e2eTestRunner: 'playwright',
+    });
     expect(tree.read('.eslintrc.json', 'utf-8')).toMatchSnapshot();
     expect(tree.read('test/vite.config.ts', 'utf-8')).toMatchSnapshot();
     expect(tree.read('test/.eslintrc.json', 'utf-8')).toMatchSnapshot();
     expect(tree.read('test/src/app/App.spec.ts', 'utf-8')).toMatchSnapshot();
+    expect(
+      tree.read('test-e2e/playwright.config.ts', 'utf-8')
+    ).toMatchSnapshot();
     expect(listFiles(tree)).toMatchSnapshot();
   });
 
