@@ -163,6 +163,86 @@ describe('app', () => {
       expect(tree.exists('cool-app-e2e/playwright.config.ts')).toBeTruthy();
     });
 
+    it('should setup cypress e2e project correctly for vite', async () => {
+      await applicationGenerator(tree, {
+        name: 'cool-app',
+        e2eTestRunner: 'cypress',
+        unitTestRunner: 'none',
+        projectNameAndRootFormat: 'as-provided',
+        bundler: 'vite',
+        addPlugin: true,
+      });
+      expect(tree.read('cool-app-e2e/cypress.config.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
+
+        import { defineConfig } from 'cypress';
+
+        export default defineConfig({
+          e2e: {
+            ...nxE2EPreset(__filename, {
+              cypressDir: 'src',
+              bundler: 'vite',
+              webServerCommands: {
+                default: 'nx run cool-app:serve',
+                production: 'nx run cool-app:preview',
+              },
+              ciWebServerCommand: 'nx run cool-app:preview',
+              ciBaseUrl: 'http://localhost:4300',
+            }),
+            baseUrl: 'http://localhost:4200',
+          },
+        });
+        "
+      `);
+    });
+
+    it('should setup cypress e2e project correctly for webpack', async () => {
+      await applicationGenerator(tree, {
+        name: 'cool-app',
+        e2eTestRunner: 'cypress',
+        unitTestRunner: 'none',
+        projectNameAndRootFormat: 'as-provided',
+        bundler: 'webpack',
+        addPlugin: true,
+      });
+      expect(tree.read('cool-app-e2e/cypress.config.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
+
+        import { defineConfig } from 'cypress';
+
+        export default defineConfig({
+          e2e: {
+            ...nxE2EPreset(__filename, {
+              cypressDir: 'src',
+              webServerCommands: {
+                default: 'nx run cool-app:serve',
+                production: 'nx run cool-app:preview',
+              },
+              ciWebServerCommand: 'nx run cool-app:serve-static',
+            }),
+            baseUrl: 'http://localhost:4200',
+          },
+        });
+        "
+      `);
+    });
+
+    it('should setup playwright e2e project correctly for webpack', async () => {
+      await applicationGenerator(tree, {
+        name: 'cool-app',
+        e2eTestRunner: 'playwright',
+        unitTestRunner: 'none',
+        projectNameAndRootFormat: 'as-provided',
+        bundler: 'webpack',
+        addPlugin: true,
+      });
+      expect(
+        tree.read('cool-app-e2e/playwright.config.ts', 'utf-8')
+      ).toMatchSnapshot();
+    });
+
     it('should generate files if bundler is vite', async () => {
       const nxJson = readNxJson(tree);
       nxJson.plugins ??= [];

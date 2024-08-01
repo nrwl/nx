@@ -41,6 +41,7 @@ import { addBuildTargetDefaults } from '@nx/devkit/src/generators/add-build-targ
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 import { VitePluginOptions } from '@nx/vite/src/plugins/plugin';
 import { WebpackPluginOptions } from '@nx/webpack/src/plugins/plugin';
+import { hasVitePlugin } from '@nx/react/src/utils/has-vite-plugin';
 
 interface NormalizedSchema extends Schema {
   projectName: string;
@@ -49,6 +50,8 @@ interface NormalizedSchema extends Schema {
   e2eProjectRoot: string;
   e2eWebServerAddress: string;
   e2eWebServerTarget: string;
+  e2eCiWebServerTarget: string;
+  e2eCiBaseUrl: string;
   e2ePort: number;
   parsedTags: string[];
 }
@@ -365,6 +368,9 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
   }
 
   if (options.e2eTestRunner === 'cypress') {
+    const hasNxBuildPlugin =
+      (options.bundler === 'webpack' && hasWebpackPlugin(host)) ||
+      (options.bundler === 'vite' && hasVitePlugin(host));
     const { configurationGenerator } = ensurePackage<
       typeof import('@nx/cypress')
     >('@nx/cypress', nxVersion);
@@ -383,6 +389,16 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
       baseUrl: options.e2eWebServerAddress,
       directory: 'src',
       skipFormat: true,
+      webServerCommands: hasNxBuildPlugin
+        ? {
+            default: `nx run ${options.projectName}:${options.e2eWebServerTarget}`,
+            production: `nx run ${options.projectName}:preview`,
+          }
+        : undefined,
+      ciWebServerCommand: hasNxBuildPlugin
+        ? `nx run ${options.projectName}:${options.e2eCiWebServerTarget}`
+        : undefined,
+      ciBaseUrl: options.bundler === 'vite' ? options.e2eCiBaseUrl : undefined,
     });
     tasks.push(cypressTask);
   } else if (options.e2eTestRunner === 'playwright') {
@@ -407,8 +423,8 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
       setParserOptionsProject: options.setParserOptionsProject,
       webServerCommand: `${getPackageManagerCommand().exec} nx ${
         options.projectName
-      }:${options.e2eWebServerTarget}`,
-      webServerAddress: options.e2eWebServerAddress,
+      }:${options.e2eCiWebServerTarget}`,
+      webServerAddress: options.e2eCiBaseUrl,
       addPlugin: options.addPlugin,
     });
     tasks.push(playwrightTask);
@@ -494,7 +510,10 @@ async function normalizeOptions(
   options.addPlugin ??= addPluginDefault;
 
   let e2ePort = 4200;
+
   let e2eWebServerTarget = 'serve';
+  let e2eCiWebServerTarget =
+    options.bundler === 'vite' ? 'preview' : 'serve-static';
   if (options.addPlugin) {
     if (nxJson.plugins) {
       for (const plugin of nxJson.plugins) {
@@ -503,26 +522,29 @@ async function normalizeOptions(
           typeof plugin === 'object' &&
           plugin.plugin === '@nx/vite/plugin'
         ) {
+          e2eCiWebServerTarget =
+            (plugin.options as VitePluginOptions)?.previewTargetName ??
+            e2eCiWebServerTarget;
+
           e2eWebServerTarget =
-            options.e2eTestRunner === 'playwright'
-              ? (plugin.options as VitePluginOptions).previewTargetName ??
-                'preview'
-              : (plugin.options as VitePluginOptions).serveTargetName ??
-                'serve';
-          e2ePort =
-            e2eWebServerTarget ===
-              (plugin.options as VitePluginOptions)?.previewTargetName ||
-            e2eWebServerTarget === 'preview'
-              ? 4300
-              : e2ePort;
+            options.e2eTestRunner === 'cypress'
+              ? (plugin.options as VitePluginOptions)?.serveTargetName ??
+                'serve'
+              : e2eWebServerTarget;
         } else if (
           options.bundler === 'webpack' &&
           typeof plugin === 'object' &&
-          plugin.plugin === '@nx/webpack/plugin' &&
-          (plugin.options as WebpackPluginOptions).serveTargetName
+          plugin.plugin === '@nx/webpack/plugin'
         ) {
-          e2eWebServerTarget = (plugin.options as WebpackPluginOptions)
-            .serveTargetName;
+          e2eCiWebServerTarget =
+            (plugin.options as WebpackPluginOptions)?.serveStaticTargetName ??
+            e2eCiWebServerTarget;
+
+          e2eWebServerTarget =
+            options.e2eTestRunner === 'cypress'
+              ? (plugin.options as WebpackPluginOptions)?.serveTargetName ??
+                'serve'
+              : e2eWebServerTarget;
         }
       }
     }
@@ -538,6 +560,10 @@ async function normalizeOptions(
   const e2eProjectName = `${appProjectName}-e2e`;
   const e2eProjectRoot = `${appProjectRoot}-e2e`;
   const e2eWebServerAddress = `http://localhost:${e2ePort}`;
+  const e2eCiBaseUrl =
+    options.bundler === 'vite'
+      ? 'http://localhost:4300'
+      : `http://localhost:${e2ePort}`;
 
   const npmScope = getNpmScope(host);
 
@@ -563,6 +589,8 @@ async function normalizeOptions(
     e2eProjectName,
     e2eWebServerAddress,
     e2eWebServerTarget,
+    e2eCiWebServerTarget,
+    e2eCiBaseUrl,
     e2ePort,
     parsedTags,
   };

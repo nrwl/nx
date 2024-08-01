@@ -60,8 +60,10 @@ export async function addE2e(
             }
           : undefined,
         ciWebServerCommand: hasNxBuildPlugin
-          ? `nx run ${options.projectName}:serve-static`
+          ? `nx run ${options.projectName}:${options.e2eCiWebServerTarget}`
           : undefined,
+        ciBaseUrl:
+          options.bundler === 'vite' ? options.e2eCiBaseUrl : undefined,
       });
     }
     case 'playwright': {
@@ -85,8 +87,8 @@ export async function addE2e(
         setParserOptionsProject: options.setParserOptionsProject,
         webServerCommand: `${getPackageManagerCommand().exec} nx run ${
           options.projectName
-        }:${options.e2eWebServerTarget}`,
-        webServerAddress: options.e2eWebServerAddress,
+        }:${options.e2eCiWebServerTarget}`,
+        webServerAddress: options.e2eCiBaseUrl,
         rootProject: options.rootProject,
         addPlugin: options.addPlugin,
       });

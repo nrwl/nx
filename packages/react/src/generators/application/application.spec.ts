@@ -86,7 +86,7 @@ describe('app', () => {
             import { defineConfig } from 'cypress';
 
         export default defineConfig({
-          e2e: { ...nxE2EPreset(__filename, {"cypressDir":"src","bundler":"vite","webServerCommands":{"default":"nx run my-app:serve","production":"nx run my-app:preview"},"ciWebServerCommand":"nx run my-app:serve-static"}),
+          e2e: { ...nxE2EPreset(__filename, {"cypressDir":"src","bundler":"vite","webServerCommands":{"default":"nx run my-app:serve","production":"nx run my-app:preview"},"ciWebServerCommand":"nx run my-app:preview","ciBaseUrl":"http://localhost:4300"}),
         baseUrl: 'http://localhost:4200' }
         });
         "

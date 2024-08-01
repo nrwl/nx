@@ -49,6 +49,8 @@ export async function normalizeOptions<T extends Schema = Schema>(
   let e2ePort = options.devServerPort ?? 4200;
 
   let e2eWebServerTarget = 'serve';
+  let e2eCiWebServerTarget =
+    options.bundler === 'vite' ? 'preview' : 'serve-static';
   if (options.addPlugin) {
     if (nxJson.plugins) {
       for (const plugin of nxJson.plugins) {
@@ -57,26 +59,29 @@ export async function normalizeOptions<T extends Schema = Schema>(
           typeof plugin === 'object' &&
           plugin.plugin === '@nx/vite/plugin'
         ) {
+          e2eCiWebServerTarget =
+            (plugin.options as VitePluginOptions)?.previewTargetName ??
+            e2eCiWebServerTarget;
+
           e2eWebServerTarget =
-            options.e2eTestRunner === 'playwright'
-              ? (plugin.options as VitePluginOptions)?.previewTargetName ??
-                'preview'
-              : (plugin.options as VitePluginOptions)?.serveTargetName ??
-                'serve';
-          e2ePort =
-            e2eWebServerTarget ===
-              (plugin.options as VitePluginOptions)?.previewTargetName ||
-            e2eWebServerTarget === 'preview'
-              ? 4300
-              : e2ePort;
+            options.e2eTestRunner === 'cypress'
+              ? (plugin.options as VitePluginOptions)?.serveTargetName ??
+                'serve'
+              : e2eWebServerTarget;
         } else if (
           options.bundler === 'webpack' &&
           typeof plugin === 'object' &&
-          plugin.plugin === '@nx/webpack/plugin' &&
-          (plugin.options as WebpackPluginOptions).serveTargetName
+          plugin.plugin === '@nx/webpack/plugin'
         ) {
-          e2eWebServerTarget = (plugin.options as WebpackPluginOptions)
-            .serveTargetName;
+          e2eCiWebServerTarget =
+            (plugin.options as WebpackPluginOptions)?.serveStaticTargetName ??
+            e2eCiWebServerTarget;
+
+          e2eWebServerTarget =
+            options.e2eTestRunner === 'cypress'
+              ? (plugin.options as WebpackPluginOptions)?.serveTargetName ??
+                'serve'
+              : e2eWebServerTarget;
         }
       }
     }
@@ -92,6 +97,10 @@ export async function normalizeOptions<T extends Schema = Schema>(
   const e2eProjectName = options.rootProject ? 'e2e' : `${appProjectName}-e2e`;
   const e2eProjectRoot = options.rootProject ? 'e2e' : `${appProjectRoot}-e2e`;
   const e2eWebServerAddress = `http://localhost:${e2ePort}`;
+  const e2eCiBaseUrl =
+    options.bundler === 'vite'
+      ? 'http://localhost:4300'
+      : `http://localhost:${e2ePort}`;
 
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())
@@ -114,6 +123,8 @@ export async function normalizeOptions<T extends Schema = Schema>(
     e2eProjectRoot,
     e2eWebServerAddress,
     e2eWebServerTarget,
+    e2eCiWebServerTarget,
+    e2eCiBaseUrl,
     e2ePort,
     parsedTags,
     fileName,
