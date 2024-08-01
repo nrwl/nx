@@ -37,6 +37,7 @@ export function DocViewer({
     document.content.toString(),
     {
       filePath: document.filePath,
+      headingClass: 'scroll-mt-8',
     }
   );
 
