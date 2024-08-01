@@ -56,12 +56,13 @@ export async function connectToNxCloudIfExplicitlyAsked(
 }
 
 export async function connectWorkspaceToCloud(
-  options: ConnectToNxCloudOptions
+  options: ConnectToNxCloudOptions,
+  directory = workspaceRoot
 ) {
-  const tree = new FsTree(workspaceRoot, false, 'connect-to-nx-cloud');
+  const tree = new FsTree(directory, false, 'connect-to-nx-cloud');
   const accessToken = await connectToNxCloud(tree, options);
   tree.lock();
-  flushChanges(workspaceRoot, tree.listChanges());
+  flushChanges(directory, tree.listChanges());
   return accessToken;
 }
 
