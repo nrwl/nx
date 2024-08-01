@@ -421,7 +421,7 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
       js: false,
       linter: options.linter,
       setParserOptionsProject: options.setParserOptionsProject,
-      webServerCommand: `${getPackageManagerCommand().exec} nx ${
+      webServerCommand: `${getPackageManagerCommand().exec} nx run ${
         options.projectName
       }:${options.e2eCiWebServerTarget}`,
       webServerAddress: options.e2eCiBaseUrl,

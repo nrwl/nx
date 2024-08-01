@@ -32,7 +32,7 @@
     },
     "update-19-5-5-update-ci-webserver-for-vite": {
       "cli": "nx",
-      "version": "19-5-5-beta.0",
+      "version": "19.5.5-beta.0",
       "description": "Update ciWebServerCommand to use previewTargetName if Vite is detected for the application.",
       "implementation": "./src/migrations/update-19-5-5/update-ci-webserver-for-vite"
     }
