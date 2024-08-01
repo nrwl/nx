@@ -41,7 +41,7 @@ import { addBuildTargetDefaults } from '@nx/devkit/src/generators/add-build-targ
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 import { VitePluginOptions } from '@nx/vite/src/plugins/plugin';
 import { WebpackPluginOptions } from '@nx/webpack/src/plugins/plugin';
-import { hasVitePlugin } from '@nx/react/src/utils/has-vite-plugin';
+import { hasVitePlugin } from '../../utils/has-vite-plugin';
 
 interface NormalizedSchema extends Schema {
   projectName: string;
