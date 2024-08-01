@@ -131,6 +131,7 @@ export function nxE2EPreset(
       webServerCommand: options?.webServerCommands?.default,
       webServerCommands: options?.webServerCommands,
       ciWebServerCommand: options?.ciWebServerCommand,
+      ciBaseUrl: options?.ciBaseUrl,
     },
 
     async setupNodeEvents(on, config) {
@@ -267,6 +268,11 @@ export type NxCypressE2EPresetOptions = {
    * A command to start the web server - used for e2e tests distributed by Nx.
    */
   ciWebServerCommand?: string;
+
+  /**
+   * The url of the web server for ciWebServerCommand
+   */
+  ciBaseUrl?: string;
 
   /**
    * Configures how the web server command is started and monitored.
