@@ -28,8 +28,8 @@ dependencies:
     specifier: ^0.1.52
     version: 0.1.53
   '@nx/graph':
-    specifier: 0.0.27
-    version: 0.0.27(@nx/devkit@19.5.0-beta.5)(nx@19.5.0-beta.5)(react-dom@18.3.1)(react@18.3.1)
+    specifier: 0.0.41
+    version: 0.0.41(@nx/devkit@19.5.0-beta.5)(nx@19.5.0-beta.5)(react-dom@18.3.1)(react-router-dom@6.25.1)(react@18.3.1)
   '@react-spring/three':
     specifier: ^9.7.3
     version: 9.7.4(@react-three/fiber@8.16.8)(react@18.3.1)(three@0.166.1)
@@ -5738,14 +5738,12 @@ packages:
     resolution: {integrity: sha512-8GrTWmoFhm5BsMZOTHeGD2/0FLKLQQHvO/ZmQga4tKempYRLz8aqJGqXVuQgisnMObq2YZ2SgkwctN1LOOxcqA==}
     dependencies:
       '@floating-ui/utils': 0.2.5
-    dev: true
 
   /@floating-ui/dom@1.6.8:
     resolution: {integrity: sha512-kx62rP19VZ767Q653wsP1XZCGIirkE09E0QUGNYTM/ttbbQHqcGPdSfWFxUyyNLc/W6aoJRBajOSXhP6GXjC0Q==}
     dependencies:
       '@floating-ui/core': 1.6.5
       '@floating-ui/utils': 0.2.5
-    dev: true
 
   /@floating-ui/react-dom@2.1.1(react-dom@18.3.1)(react@18.3.1):
     resolution: {integrity: sha512-4h84MJt3CHrtG18mGsXuLCHMrug49d7DFkU0RMIyshRveBeyV2hmV/pDaF2Uxtu8kgq5r46llp5E5FQiR0K2Yg==}
@@ -5756,7 +5754,6 @@ packages:
       '@floating-ui/dom': 1.6.8
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
-    dev: true
 
   /@floating-ui/react@0.26.6(react-dom@18.3.1)(react@18.3.1):
     resolution: {integrity: sha512-FFDAuSlRwb8CY4/VvYio/wwk/0339B257yRpKwNOjcHWNYL/fgjl1KUvT3K6ZZ4WDbBWYc7Km4ITMuPZrS8omg==}
@@ -5769,11 +5766,9 @@ packages:
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
       tabbable: 6.2.0
-    dev: true
 
   /@floating-ui/utils@0.2.5:
     resolution: {integrity: sha512-sTcG+QZ6fdEUObICavU+aB3Mp8HY4n14wYHdxK4fXjPmv3PXZZeY5RaguJmGyeH/CJQhX3fqKUtS4qc1LoHwhQ==}
-    dev: true
 
   /@headlessui/react@1.7.19(react-dom@18.3.1)(react@18.3.1):
     resolution: {integrity: sha512-Ll+8q3OlMJfJbAKM/+/Y2q6PPYbryqNTXDbryx7SXLIDamkF6iQFbriYHga0dY44PvDhvvBWCx1Xj4U5+G4hOw==}
@@ -8681,21 +8676,29 @@ packages:
       - verdaccio
     dev: true
 
-  /@nx/graph@0.0.27(@nx/devkit@19.5.0-beta.5)(nx@19.5.0-beta.5)(react-dom@18.3.1)(react@18.3.1):
-    resolution: {integrity: sha512-x99R12LXF9HEMevk+xPTkM2w/snj2fZygywG2bNWo4sXzqkoQo5hVXDTy21aFhh6yJ/SXfou0OSd1sHwA71fFw==}
+  /@nx/graph@0.0.41(@nx/devkit@19.5.0-beta.5)(nx@19.5.0-beta.5)(react-dom@18.3.1)(react-router-dom@6.25.1)(react@18.3.1):
+    resolution: {integrity: sha512-ksWF+WhHNv9jZ4ZpuzlLaipBGLnop96StfgRGOJuE5kaIkfPLAOHa50GsNqzROYT/pfxi6xUsyjCUqDFFCKwYQ==}
     peerDependencies:
       '@nx/devkit': '>= 19 < 20'
       nx: '>= 19 < 20'
       react: '>= 18 < 19'
       react-dom: '>= 18 < 19'
+      react-router-dom: '>= 6 < 7'
     dependencies:
+      '@floating-ui/react': 0.26.6(react-dom@18.3.1)(react@18.3.1)
+      '@headlessui/react': 1.7.19(react-dom@18.3.1)(react@18.3.1)
+      '@heroicons/react': 2.1.5(react@18.3.1)
       '@nx/devkit': 19.5.0-beta.5(nx@19.5.0-beta.5)
+      classnames: 2.5.1
       cytoscape: 3.30.1
       cytoscape-dagre: 2.5.0(cytoscape@3.30.1)
       cytoscape-popper: 2.0.0(cytoscape@3.30.1)
       nx: 19.5.0-beta.5(@swc-node/register@1.9.1)(@swc/core@1.5.7)
       react: 18.3.1
+      react-copy-to-clipboard: 5.1.0(react@18.3.1)
       react-dom: 18.3.1(react@18.3.1)
+      react-router-dom: 6.25.1(react-dom@18.3.1)(react@18.3.1)
+      tailwind-merge: 2.4.0
     dev: false
 
   /@nx/jest@19.5.0-beta.5(@swc-node/register@1.9.1)(@swc/core@1.5.7)(@types/node@18.19.8)(nx@19.5.0-beta.5)(ts-node@10.9.1)(typescript@5.5.4)(verdaccio@5.32.0):
@@ -10987,7 +10990,6 @@ packages:
   /@remix-run/router@1.18.0:
     resolution: {integrity: sha512-L3jkqmqoSVBVKHfpGZmLrex0lxR5SucGA0sUfFzGctehw+S/ggL9L/0NnC5mw6P8HUWpFZ3nQw3cRApjjWx9Sw==}
     engines: {node: '>=14.0.0'}
-    dev: true
 
   /@remix-run/server-runtime@2.10.3(typescript@5.5.4):
     resolution: {integrity: sha512-vUl5jONUI6Lj0ICg9FSRFhoPzQdZ/7dpT1m7ID13DF5BEeF3t/9uCJS61XXWgQ/JEu7YRiwvZiwSRTrgM7zeWw==}
@@ -29114,7 +29116,6 @@ packages:
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
       react-router: 6.25.1(react@18.3.1)
-    dev: true
 
   /react-router@6.25.0(react@18.3.1):
     resolution: {integrity: sha512-bziKjCcDbcxgWS9WlWFcQIVZ2vJHnCP6DGpQDT0l+0PFDasfJKgzf9CM22eTyhFsZkjk8ApCdKjJwKtzqH80jQ==}
@@ -29134,7 +29135,6 @@ packages:
     dependencies:
       '@remix-run/router': 1.18.0
       react: 18.3.1
-    dev: true
 
   /react-style-singleton@2.2.1(@types/react@18.3.1)(react@18.3.1):
     resolution: {integrity: sha512-ZWj0fHEMyWkHzKYUr2Bs/4zU6XLmq9HsgBURm7g5pAVfyn49DgUiNgY2d4lXRlYSiCif9YBGpQleewkcqddc7g==}
@@ -31319,7 +31319,6 @@ packages:
 
   /tabbable@6.2.0:
     resolution: {integrity: sha512-Cat63mxsVJlzYvN51JmVXIgNoUokrIaT2zLclCXjRd8boZ0004U4KCs/sToJ75C6sdlByWxpYnb5Boif1VSFew==}
-    dev: true
 
   /tailwind-merge@2.4.0:
     resolution: {integrity: sha512-49AwoOQNKdqKPd9CViyH5wJoSKsCDjUlzL8DxuGp3P1FsGY36NJDAa18jLZcaHAUUuTj+JB8IAo8zWgBNvBF7A==}
