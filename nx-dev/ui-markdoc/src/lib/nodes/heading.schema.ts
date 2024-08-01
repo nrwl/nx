@@ -41,7 +41,7 @@ export function generateID(
     .replace(/\s+/g, '-');
 }
 
-export const heading: Schema = {
+export const getHeadingSchema = (headingClass: string): Schema => ({
   render: 'Heading',
   children: ['inline'],
   attributes: {
@@ -58,8 +58,8 @@ export const heading: Schema = {
     return new Tag(
       this.render,
       // `h${node.attributes['level']}`,
-      { ...attributes, id },
+      { ...attributes, id, className: headingClass },
       children
     );
   },
-};
+});
