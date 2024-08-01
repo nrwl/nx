@@ -274,9 +274,10 @@ const cleanupRegisteredPaths = registerTsProject('./tsconfig.base.json');
 import { yourFancyFunction } from '@some-org/my-util-library';
 export default async function () {
   yourFancyFunction();
+
+  // make sure to run the clean up!
+  cleanupRegisteredPaths();
 }
-// make sure to run the clean up!
-cleanupRegisteredPaths();
 ```
 
 If you're using `@swc/jest` and a global setup/teardown file, you have to set the `noInterop: false` and use dynamic imports within the setup function:
