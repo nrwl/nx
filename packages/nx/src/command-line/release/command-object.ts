@@ -129,7 +129,9 @@ export const yargsReleaseCommand: CommandModule<
           );
         }
         const nxJson = readNxJson();
+        // @ts-expect-error
         if (argv.groups?.length) {
+          // @ts-expect-error
           for (const group of argv.groups) {
             if (!nxJson.release?.groups?.[group]) {
               throw new Error(
