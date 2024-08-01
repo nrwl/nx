@@ -64,10 +64,8 @@ export async function normalizeOptions<T extends Schema = Schema>(
             e2eCiWebServerTarget;
 
           e2eWebServerTarget =
-            options.e2eTestRunner === 'cypress'
-              ? (plugin.options as VitePluginOptions)?.serveTargetName ??
-                'serve'
-              : e2eWebServerTarget;
+            (plugin.options as VitePluginOptions)?.serveTargetName ??
+            e2eWebServerTarget;
         } else if (
           options.bundler === 'webpack' &&
           typeof plugin === 'object' &&
@@ -78,10 +76,8 @@ export async function normalizeOptions<T extends Schema = Schema>(
             e2eCiWebServerTarget;
 
           e2eWebServerTarget =
-            options.e2eTestRunner === 'cypress'
-              ? (plugin.options as WebpackPluginOptions)?.serveTargetName ??
-                'serve'
-              : e2eWebServerTarget;
+            (plugin.options as WebpackPluginOptions)?.serveTargetName ??
+            e2eWebServerTarget;
         }
       }
     }
