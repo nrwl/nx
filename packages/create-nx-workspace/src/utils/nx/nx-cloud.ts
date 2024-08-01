@@ -21,11 +21,14 @@ export async function setupNxCloud(
       // nx-ignore-next-line
     )) as typeof import('nx/src/command-line/connect/connect-to-nx-cloud');
 
-    const accessToken = await connectWorkspaceToCloud({
-      installationSource: 'create-nx-workspace',
-      directory,
-      github: useGitHub,
-    });
+    const accessToken = await connectWorkspaceToCloud(
+      {
+        installationSource: 'create-nx-workspace',
+        directory,
+        github: useGitHub,
+      },
+      directory
+    );
 
     nxCloudSpinner.succeed('Nx Cloud has been set up successfully');
     return accessToken;
