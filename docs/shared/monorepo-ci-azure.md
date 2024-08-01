@@ -28,6 +28,8 @@ jobs:
     steps:
       - checkout: self
         fetchDepth: 0
+        persistCredentials: true
+
       # Set Azure Devops CLI default settings
       - bash: az devops configure --defaults organization=$(System.TeamFoundationCollectionUri) project=$(System.TeamProject)
         displayName: 'Set default Azure DevOps organization and project'

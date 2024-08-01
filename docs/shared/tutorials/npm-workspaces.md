@@ -363,11 +363,11 @@ After this first release, you can remove the `--first-release` flag and just run
 
 ## Fast CI ⚡ {% highlightColor="green" %}
 
+{% video-link link="https://youtu.be/ZA9K4iT3ANc?t=821" /%}
+
 {% callout type="check" title="Forked repository with Nx" %}
 Make sure you have completed the previous sections of this tutorial before starting this one. If you want a clean starting point, you can fork the [sample repository with Nx already added](https://github.com/nrwl/nx-recipes/tree/main/npm-workspaces).
 {% /callout %}
-
-{% video-link link="https://youtu.be/ZA9K4iT3ANc?t=821" /%}
 
 So far in this tutorial you've seen how Nx improves the local development experience, but the biggest difference Nx makes is in CI. As repositories get bigger, making sure that the CI is fast, reliable and maintainable can get very challenging. Nx provides a solution.
 

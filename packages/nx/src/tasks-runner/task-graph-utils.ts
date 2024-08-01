@@ -99,7 +99,7 @@ export function validateNoAtomizedTasks(
     `Please enable Nx Cloud or use the slower ${nonAtomizedTasks.join(
       ','
     )} task${nonAtomizedTasks.length > 1 ? 's' : ''}.`,
-    'Learn more at https://nx.dev/ci/features/split-e2e-tasks#use-atomizer-only-with-nx-cloud-distribution',
+    'Learn more at https://nx.dev/ci/features/split-e2e-tasks#nx-cloud-is-required-to-run-atomized-tasks',
   ];
 
   if (atomizedRootTasks.length === 1) {
