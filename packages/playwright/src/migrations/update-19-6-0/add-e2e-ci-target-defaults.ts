@@ -14,10 +14,10 @@ import {
   retrieveProjectConfigurations,
 } from 'nx/src/devkit-internals';
 import { tsquery } from '@phenomnomnominal/tsquery';
-import { type CypressPluginOptions } from '../../plugins/plugin';
+import { type PlaywrightPluginOptions } from '../../plugins/plugin';
 
 export default async function addE2eCiTargetDefaults(tree: Tree) {
-  const pluginName = '@nx/cypress/plugin';
+  const pluginName = '@nx/playwright/plugin';
   const graph = await createProjectGraphAsync();
   const nxJson = readNxJson(tree);
   const matchingPluginRegistrations = nxJson.plugins?.filter((p) =>
@@ -26,7 +26,7 @@ export default async function addE2eCiTargetDefaults(tree: Tree) {
 
   const {
     createNodesV2,
-  }: { createNodesV2: CreateNodesV2<CypressPluginOptions> } = await import(
+  }: { createNodesV2: CreateNodesV2<PlaywrightPluginOptions> } = await import(
     pluginName
   );
 
@@ -52,13 +52,10 @@ export default async function addE2eCiTargetDefaults(tree: Tree) {
 
     for (const configFile of projectConfigs.matchingProjectFiles) {
       const configFileContents = tree.read(configFile, 'utf-8');
-      if (!configFileContents.includes('ciWebServerCommand')) {
-        continue;
-      }
 
       const ast = tsquery.ast(configFileContents);
       const CI_WEBSERVER_COMMAND_SELECTOR =
-        'ObjectLiteralExpression PropertyAssignment:has(Identifier[name=ciWebServerCommand]) > StringLiteral';
+        'PropertyAssignment:has(Identifier[name=webServer]) PropertyAssignment:has(Identifier[name=command]) > StringLiteral';
       const nodes = tsquery(ast, CI_WEBSERVER_COMMAND_SELECTOR, {
         visitAllChildren: true,
       });
@@ -66,26 +63,45 @@ export default async function addE2eCiTargetDefaults(tree: Tree) {
         continue;
       }
       const ciWebServerCommand = nodes[0].getText();
-      const NX_TARGET_REGEX = "(?<=nx run )[^']+";
-      const matches = ciWebServerCommand.match(NX_TARGET_REGEX);
-      if (!matches) {
-        continue;
+      let serveStaticProject: string;
+      let serveStaticTarget: string;
+      let serveStaticConfiguration: string;
+      if (ciWebServerCommand.includes('nx run')) {
+        const NX_TARGET_REGEX = "(?<=nx run )[^']+";
+        const matches = ciWebServerCommand.match(NX_TARGET_REGEX);
+        if (!matches) {
+          continue;
+        }
+        const targetString = matches[0];
+        const { project, target, configuration } = parseTargetString(
+          targetString,
+          graph
+        );
+        serveStaticProject = project;
+        serveStaticTarget = target;
+        serveStaticConfiguration = configuration;
+      } else {
+        const NX_PROJECT_REGEX = 'nx\\s+([^ ]+)\\s+([^ ]+)';
+        const matches = ciWebServerCommand.match(NX_PROJECT_REGEX);
+        if (!matches) {
+          return;
+        }
+        serveStaticTarget = matches[1];
+        serveStaticProject = matches[2];
       }
-      const targetString = matches[0];
-      const { project, target, configuration } = parseTargetString(
-        targetString,
-        graph
-      );
 
-      const serveStaticTarget = graph.nodes[project].data.targets[target];
+      const resolvedServeStaticTarget =
+        graph.nodes[serveStaticProject].data.targets[serveStaticTarget];
+
       let resolvedBuildTarget: string;
-      if (serveStaticTarget.dependsOn) {
-        resolvedBuildTarget = serveStaticTarget.dependsOn.join(',');
+      if (resolvedServeStaticTarget.dependsOn) {
+        resolvedBuildTarget = resolvedServeStaticTarget.dependsOn.join(',');
       } else {
         resolvedBuildTarget =
-          (configuration
-            ? serveStaticTarget.configurations[configuration].buildTarget
-            : serveStaticTarget.options.buildTarget) ?? 'build';
+          (serveStaticConfiguration
+            ? resolvedServeStaticTarget.configurations[serveStaticConfiguration]
+                .buildTarget
+            : resolvedServeStaticTarget.options.buildTarget) ?? 'build';
       }
 
       const buildTarget = `^${resolvedBuildTarget}`;
@@ -93,6 +109,4 @@ export default async function addE2eCiTargetDefaults(tree: Tree) {
       await _addE2eCiTargetDefaults(tree, pluginName, buildTarget, configFile);
     }
   }
-
-  await formatFiles(tree);
 }
