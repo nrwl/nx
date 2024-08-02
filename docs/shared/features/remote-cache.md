@@ -1,87 +1,71 @@
 # Use Remote Caching (Nx Replay)
 
-By default Nx [caches task computations locally](/features/cache-task-results). However, to benefit from the cache across your team and in particular on CI, the computation cache can also be distributed across multiple machines.
-
-The **Nx Replay** feature of Nx Cloud is a fast, secure and zero-config implementation of remote caching.
+Repeatedly rebuilding and retesting the same code is costly — not just in terms of wasted resources, but also in terms of developer time. To solve this, Nx includes a sophisticated computation caching system that ensures **code is never rebuilt twice**, saving you both time and resources.
 
 ![Diagram showing Teika sharing his cache with CI, Kimiko and James](/shared/images/dte/distributed-caching.svg)
 
-In this diagram, Teika runs the build once on his machine, then CI, Kimiko and James can use the cached artifact from Teika instead of re-executing the same work.
+By default, Nx [caches task computations locally](/features/cache-task-results), but the biggest benefit comes from **sharing this cache across your team and in CI**.
 
-## Setting Up Nx Cloud
+- **Zero config** and **secure** by default
+- Drastically **speeds up task execution times** during local development, and more critically in CI
+- **Saves money on CI/CD costs** by reducing the number of tasks that need to be executed (we observed 30-70% faster CI & half the cost)
 
-To use **Nx Replay** you need to connect your workspace to Nx Cloud. See the [connect to Nx Cloud recipe](/ci/intro/connect-to-nx-cloud).
+Nx **restores terminal output, along with the files and artifacts** created from running the task (e.g., your build or dist directory). If you want to learn more about the conceptual model behind Nx's caching, read [How Caching Works](/concepts/how-caching-works).
 
-## See Remote Caching in Action
+## Configure Remote Caching
 
-To see the remote cache in action, run:
+To use **Nx Replay**, you need to connect your workspace to Nx Cloud.
 
-```{% command="nx build header && nx reset && nx build header"%}
-> nx run header:build
-
-> header@0.0.0 build
-> rimraf dist && rollup --config
-
-src/index.tsx → dist...
-created dist in 786ms
-
-—————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-
-NX   Successfully ran target build for project header (2s)
-
-See logs and investigate cache misses at https://cloud.nx.app/runs/k0HDHACpL8
-
-NX   Resetting the Nx workspace cache and stopping the Nx Daemon.
-
-This might take a few minutes.
-
-NX   Daemon Server - Stopped
-
-NX   Successfully reset the Nx workspace.
-
-
-> nx run header:build  [remote cache]
-
-
-> header@0.0.0 build
-> rimraf dist && rollup --config
-
-
-src/index.tsx → dist...
-created dist in 786ms
-
-—————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-
-NX   Successfully ran target build for project header (664ms)
-
-Nx read the output from the cache instead of running the command for 1 out of 1 tasks.
-
-Nx Cloud made it possible to reuse header: https://nx.app/runs/P0X6ZGTkqZ
+```shell
+npx nx connect
 ```
 
-## Benefits of Nx Replay
+See the [connect to Nx Cloud recipe](/ci/intro/connect-to-nx-cloud) for all the details.
 
-There are two ways that Nx Replay directly benefits your organization.
+## Why use Remote Caching (Nx Replay)?
 
-### 1. Speed Up CI Pipelines for Modified PRs
+Nx Replay directly benefits your organization by:
 
-The first time a PR goes through the CI pipeline, the [affected](/ci/features/affected) command provides most of the time savings. The `affected` command compares the PR against the `main` branch and only runs tasks for projects that could have been affected by the code changes. Unfortunately, all the projects affected by the first CI pipeline for a PR will continue to be affected by all future commits to that PR. This is because `affected` compares the current commit with the `main` branch every time.
+- **Speeding up CI pipelines:** With Nx Replay, tasks that have already been executed in a PR’s initial CI pipeline run can **reuse cached results in subsequent runs**. This reduces the need to re-run unaffected tasks, significantly speeding up the CI process for modified PRs. This benefit complements the [affected command](/ci/features/affected), which optimizes pipelines by only running tasks for projects that could be impacted by code changes.
 
-With Nx Replay enabled, any tasks that were run during the first pipeline and not affected by the second commit would reuse the cached results from the first pipeline instead of re-running the task. This gives subsequent pipeline runs a mechanism similar to affected that will [reduce the wasted time in CI](/ci/concepts/reduce-waste).
+- **Boosting local developer efficiency:** Depending on [how cache permissions](/ci/recipes/security/access-tokens) are set for your workspace, developers can reuse cached results from CI on their local machines. As a result, tasks like builds and tests can complete instantly if they were already executed in CI. This accelerates developer workflows without any extra steps required.
 
-### 2. Reuse Cached Results from CI on Developer Machines
+- **Enabling Nx Agents:** Nx Replay is crucial for [Nx Agents](/ci/features/distribute-task-execution) to function efficiently. Nx Agents leverage remote caching as a **transport mechanism** for transferring task artifacts between machines as it distributes tasks. When a task depends on another task that may have been executed on a different agent, Nx Replay ensures the necessary artifacts are transferred seamlessly. This allows each agent to execute only its assigned tasks while relying on cached results for dependencies, ensuring tasks run only once and are shared across all agents. [Learn more about Nx Agents](/ci/features/distribute-task-execution).
 
-If a task has been executed in CI, a developer running that same task locally can reuse the task result instead of actually running the task. Here are a couple common scenarios where this happens:
+## What gets stored?
 
-1. A developer pulls the latest code from `main` and rebuilds an application. The build finishes instantly and they're ready to start working.
-2. A developer checks out someone else's PR branch to help troubleshoot a problem. They run the tests and all the successful tests finish instantly. They can focus their debugging time on the few tests that are still failing.
+Nx Cloud stores the following:
 
-The best part about Nx Replay is that developers will experience the benefits of it without needing to remember to use it. Some of their tasks will just finish much faster than they normally do.
+- **Terminal output:** The terminal output generated when running a task. This includes logs, warnings, and errors.
+- **Task artifacts:** The output files of a task defined in the [`outputs` property of your project configuration](/recipes/running-tasks/configure-outputs). For example, the build output, test results, or linting reports.
+- **Hash:** The hash of the inputs to the computation. The inputs include the source code, runtime values, and command line arguments. Note that the hash is included in the cache, but the actual inputs are not.
 
-## Nx Replay Enables Nx Agents
+Learn more about [how caching works](/concepts/how-caching-works#what-is-cached).
 
-One more indirect benefit of Nx Replay is that it is critical to the way [Nx Agents](/ci/features/distribute-task-execution) is built. Nx Agents relies heavily on the remote cache in order to ensure that all task artifacts are present on the agent machines where they are needed. Each agent can naively run the dependencies for the tasks it is assigned and rely on Nx Replay to retrieve the cached tasks results for those tasks. Nx Replay ensures that each task will only run on one agent and the results of that task will be shared with every agent that needs them.
+## Security in Remote Caching
 
-## Skipping Cloud Cache
+Since we work with many large corporations (including banks, insurance companies, and governments), we take security very seriously. Nx Cloud provides several features to ensure your data remains safe and secure:
 
-Similar to how `--skip-nx-cache` will instruct Nx not to use the local cache, passing `--no-cloud` will tell Nx not to use the remote cache from Nx Cloud.
+- **Immutability:** Each cache entry is immutable, meaning once an entry is created, it cannot be altered. This ensures that cached results cannot be tampered with by malicious parties, preventing the injection of vulnerabilities into your build process.
+
+- **Access Control via Tokens:** Nx Cloud allows you to [control who can read from and write to the cache](/ci/recipes/security/access-tokens). For example, you can configure these settings to restrict cache write access to your CI pipeline while allowing all developers to only read.
+
+- **End-to-End Encryption:** Nx Cloud supports end-to-end encryption to protect your data. Task artifacts are encrypted before being sent to the remote cache and decrypted when retrieved. This ensures that even if someone gains access to Nx Cloud servers, they cannot view your stored artifacts. For more details, visit the [encryption documentation](/ci/recipes/security/encryption).
+
+- **Nx Enterprise (Self-Hosting and EU Regions):** For organizations with specific compliance or data residency requirements, Nx Enterprise offers the option to self-host Nx Cloud on your own infrastructure. Additionally, you can choose to host in EU regions, ensuring that your data complies with regional data protection laws. This is available to our [Nx Enterprise customers](/enterprise).
+
+- **SOC Certification:** Nx and Nx Cloud are SOC Type 1 and Type 2 certified, providing an additional layer of assurance that your data is handled according to industry-standard security practices. For more details, you can visit our [security page](https://security.nx.app).
+
+### Configure Caching Access
+
+Caching access can be restricted in terms of read/write access. You can configure this in your [Nx Cloud dashboard](https://nx.app). Learn more about it [here](/ci/recipes/security/access-tokens).
+
+## FAQ
+
+### What if the remote cache is offline?
+
+Nx Replay automatically syncs the remote cache to the local cache folder. As such, if the remote cache is not available, it will automatically fall back to the local cache or just run the task if it is not cached.
+
+### Skipping Cloud Cache
+
+To learn more about how to temporarily skip task caching, head over to [our corresponding docs page](/recipes/running-tasks/skipping-cache#skip-remote-caching-from-nx-cloud).
