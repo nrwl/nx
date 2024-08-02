@@ -1,6 +1,6 @@
 import { CreateWorkspaceOptions } from './create-workspace-options';
 import { output } from './utils/output';
-import { getOnboardingInfo, setupNxCloud } from './utils/nx/nx-cloud';
+import { getOnboardingInfo, readNxCloudToken } from './utils/nx/nx-cloud';
 import { createSandbox } from './create-sandbox';
 import { createEmptyWorkspace } from './create-empty-workspace';
 import { createPreset } from './create-preset';
@@ -54,7 +54,7 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
   let connectUrl: string | undefined;
   let nxCloudInfo: string | undefined;
   if (nxCloud !== 'skip') {
-    const token = await setupNxCloud(directory, nxCloud, useGitHub);
+    const token = readNxCloudToken(directory) as string;
 
     if (nxCloud !== 'yes') {
       await setupCI(directory, nxCloud, packageManager);
