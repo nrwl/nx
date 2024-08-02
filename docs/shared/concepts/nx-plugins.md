@@ -23,5 +23,5 @@ For example, plugins can accomplish the following:
 {% cards %}
 {% card title="Official Plugins" description="The API documentation for Nx Plugins maintained by the Nx core team" type="documentation" url="/nx-api" /%}
 {% card title="Community Plugins" description="Browse the plugin registry to discover plugins created by the community" type="documentation" url="/plugin-registry" /%}
-{% card title="Build Your Own Plugin" description="Build your own plugin to use internally or share with the community" type="documentation" url="/extending-nx/tutorials/create-plugin" /%}
+{% card title="Build Your Own Plugin" description="Build your own plugin to use internally or share with the community" type="documentation" url="/extending-nx/tutorials/organization-specific-plugin" /%}
 {% /cards %}

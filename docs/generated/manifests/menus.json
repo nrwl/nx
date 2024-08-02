@@ -4922,7 +4922,7 @@
         "isExternal": false,
         "children": [
           {
-            "name": "Getting Started with Plugins",
+            "name": "Extending Nx with Plugins",
             "path": "/extending-nx/intro/getting-started",
             "id": "getting-started",
             "isExternal": false,
@@ -4933,7 +4933,7 @@
         "disableCollapsible": false
       },
       {
-        "name": "Getting Started with Plugins",
+        "name": "Extending Nx with Plugins",
         "path": "/extending-nx/intro/getting-started",
         "id": "getting-started",
         "isExternal": false,
@@ -4947,9 +4947,9 @@
         "isExternal": false,
         "children": [
           {
-            "name": "Create a Local Plugin",
-            "path": "/extending-nx/tutorials/create-plugin",
-            "id": "create-plugin",
+            "name": "Enforce Organizational Best Practices",
+            "path": "/extending-nx/tutorials/organization-specific-plugin",
+            "id": "organization-specific-plugin",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -4966,9 +4966,9 @@
         "disableCollapsible": false
       },
       {
-        "name": "Create a Local Plugin",
-        "path": "/extending-nx/tutorials/create-plugin",
-        "id": "create-plugin",
+        "name": "Enforce Organizational Best Practices",
+        "path": "/extending-nx/tutorials/organization-specific-plugin",
+        "id": "organization-specific-plugin",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -5068,7 +5068,7 @@
             "disableCollapsible": false
           },
           {
-            "name": "Modify the Project Graph",
+            "name": "Infer Tasks or Projects",
             "path": "/extending-nx/recipes/project-graph-plugins",
             "id": "project-graph-plugins",
             "isExternal": false,
@@ -5159,7 +5159,7 @@
         "disableCollapsible": false
       },
       {
-        "name": "Modify the Project Graph",
+        "name": "Infer Tasks or Projects",
         "path": "/extending-nx/recipes/project-graph-plugins",
         "id": "project-graph-plugins",
         "isExternal": false,

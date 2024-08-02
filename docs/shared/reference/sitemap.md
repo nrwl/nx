@@ -225,9 +225,9 @@
 - Extending-nx
 
   - [Intro](/extending-nx/intro)
-    - [Getting Started with Plugins](/extending-nx/intro/getting-started)
+    - [Extending Nx with Plugins](/extending-nx/intro/getting-started)
   - [5 Min Tutorials](/extending-nx/tutorials)
-    - [Create a Local Plugin](/extending-nx/tutorials/create-plugin)
+    - [Enforce Organizational Best Practices](/extending-nx/tutorials/organization-specific-plugin)
     - [Maintain a Published Plugin](/extending-nx/tutorials/publish-plugin)
   - [Recipes](/extending-nx/recipes)
     - [Write a Simple Executor](/extending-nx/recipes/local-executors)
@@ -240,7 +240,7 @@
     - [Write a Migration](/extending-nx/recipes/migration-generators)
     - [Create a Preset](/extending-nx/recipes/create-preset)
     - [Create an Install Package](/extending-nx/recipes/create-install-package)
-    - [Modify the Project Graph](/extending-nx/recipes/project-graph-plugins)
+    - [Infer Tasks or Projects](/extending-nx/recipes/project-graph-plugins)
 
 - Ci
 

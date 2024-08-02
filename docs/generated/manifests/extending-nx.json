@@ -8,7 +8,7 @@
     "itemList": [
       {
         "id": "getting-started",
-        "name": "Getting Started with Plugins",
+        "name": "Extending Nx with Plugins",
         "description": "Learn how to extend Nx by creating and releasing your own Nx plugin.",
         "mediaImage": "",
         "file": "shared/plugins/intro",
@@ -24,7 +24,7 @@
   },
   "/extending-nx/intro/getting-started": {
     "id": "getting-started",
-    "name": "Getting Started with Plugins",
+    "name": "Extending Nx with Plugins",
     "description": "Learn how to extend Nx by creating and releasing your own Nx plugin.",
     "mediaImage": "",
     "file": "shared/plugins/intro",
@@ -41,14 +41,14 @@
     "file": "",
     "itemList": [
       {
-        "id": "create-plugin",
-        "name": "Create a Local Plugin",
+        "id": "organization-specific-plugin",
+        "name": "Enforce Organizational Best Practices",
         "description": "",
         "mediaImage": "",
-        "file": "shared/plugins/create-plugin",
+        "file": "shared/plugins/organization-specific-plugin",
         "itemList": [],
         "isExternal": false,
-        "path": "/extending-nx/tutorials/create-plugin",
+        "path": "/extending-nx/tutorials/organization-specific-plugin",
         "tags": []
       },
       {
@@ -67,15 +67,15 @@
     "path": "/extending-nx/tutorials",
     "tags": []
   },
-  "/extending-nx/tutorials/create-plugin": {
-    "id": "create-plugin",
-    "name": "Create a Local Plugin",
+  "/extending-nx/tutorials/organization-specific-plugin": {
+    "id": "organization-specific-plugin",
+    "name": "Enforce Organizational Best Practices",
     "description": "",
     "mediaImage": "",
-    "file": "shared/plugins/create-plugin",
+    "file": "shared/plugins/organization-specific-plugin",
     "itemList": [],
     "isExternal": false,
-    "path": "/extending-nx/tutorials/create-plugin",
+    "path": "/extending-nx/tutorials/organization-specific-plugin",
     "tags": []
   },
   "/extending-nx/tutorials/publish-plugin": {
@@ -208,7 +208,7 @@
       },
       {
         "id": "project-graph-plugins",
-        "name": "Modify the Project Graph",
+        "name": "Infer Tasks or Projects",
         "description": "",
         "mediaImage": "",
         "file": "shared/recipes/plugins/project-graph-plugins",
@@ -334,7 +334,7 @@
   },
   "/extending-nx/recipes/project-graph-plugins": {
     "id": "project-graph-plugins",
-    "name": "Modify the Project Graph",
+    "name": "Infer Tasks or Projects",
     "description": "",
     "mediaImage": "",
     "file": "shared/recipes/plugins/project-graph-plugins",
