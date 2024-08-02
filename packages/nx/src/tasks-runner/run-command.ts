@@ -263,21 +263,50 @@ async function ensureWorkspaceIsInSyncAndGetGraphs(
     return { projectGraph, taskGraph };
   }
 
-  const errorTitle = 'The workspace is out of sync';
-  const resultDescriptions = syncGeneratorResultsToMessageLines(results);
-  const errorBodyLines = [
-    ...resultDescriptions,
-    '\nYou can run `nx sync` to get you workspace up to date or you can set `sync.applyChanges` to `true` in your `nx.json` to apply the changes automatically when running tasks.',
-  ];
+  const outOfSyncTitle = 'The workspace is out of sync';
+  const resultBodyLines = syncGeneratorResultsToMessageLines(results);
+  const fixMessage =
+    'You can manually run `nx sync` to update your workspace or you can set `sync.applyChanges` to `true` in your `nx.json` to apply the changes automatically when running tasks.';
+  const willErrorOnCiMessage = 'Please note that this will be an error on CI.';
 
-  if (isCI()) {
-    throw new Error(`${errorTitle}\n${errorBodyLines.join('\n')}`);
+  if (isCI() || !process.stdout.isTTY) {
+    // If the user is running in CI or is running in a non-TTY environment we
+    // throw an error to stop the execution of the tasks.
+    throw new Error(
+      `${outOfSyncTitle}\n${resultBodyLines.join('\n')}\n${fixMessage}`
+    );
   }
 
-  const applyChanges = await shouldApplySyncGeneratorChanges(
-    nxJson,
-    resultDescriptions
-  );
+  if (nxJson.sync?.applyChanges === false) {
+    // If the user has set `sync.applyChanges` to `false` in their `nx.json`
+    // we don't prompt the them and just log a warning informing them that
+    // the workspace is out of sync and they have it set to not apply changes
+    // automatically.
+    output.warn({
+      title: outOfSyncTitle,
+      bodyLines: [
+        ...resultBodyLines,
+        'Your workspace is set to not apply changes automatically (`sync.applyChanges` is set to `false` in your `nx.json`).',
+        willErrorOnCiMessage,
+        fixMessage,
+      ],
+    });
+    return { projectGraph, taskGraph };
+  }
+
+  output.warn({
+    title: outOfSyncTitle,
+    bodyLines: [
+      ...resultBodyLines,
+      nxJson.sync?.applyChanges === true
+        ? 'Proceeding to sync the changes automatically (`sync.applyChanges` is set to `true` in your `nx.json`).'
+        : willErrorOnCiMessage,
+    ],
+  });
+
+  const applyChanges =
+    nxJson.sync?.applyChanges === true ||
+    (await promptForApplyingSyncGeneratorChanges());
 
   if (applyChanges) {
     const spinner = ora('Syncing workspace configuration...');
@@ -307,11 +336,24 @@ async function ensureWorkspaceIsInSyncAndGetGraphs(
       extraOptions
     );
 
-    spinner.succeed('The workspace configuration was synced successfully!');
+    if (nxJson.sync?.applyChanges === true) {
+      spinner.succeed(`The workspace configuration was synced successfully!
+
+Please make sure to commit the changes to your repository or this will error on CI.`);
+    } else {
+      // The user was prompted and we already logged a message about erroring on CI
+      // so here we just tell them to commit the changes.
+      spinner.succeed(`The workspace configuration was synced successfully!
+
+Please make sure to commit the changes to your repository.`);
+    }
   } else {
     output.warn({
-      title: errorTitle,
-      bodyLines: errorBodyLines,
+      title: 'Syncing the workspace configuration was skipped',
+      bodyLines: [
+        'This could lead to unexpected results or errors when running tasks.',
+        fixMessage,
+      ],
     });
   }
 
@@ -340,42 +382,25 @@ function processSyncGeneratorResults(results: SyncGeneratorChangesResult[]) {
   return { changes, createdFiles, updatedFiles, deletedFiles };
 }
 
-async function shouldApplySyncGeneratorChanges(
-  nxJson: NxJsonConfiguration,
-  resultDescriptions: string[]
-): Promise<boolean> {
-  const applyChanges = nxJson.sync?.applyChanges;
-  if (applyChanges !== undefined) {
-    // user has explicitly set applyChanges, don't prompt
-    return applyChanges;
-  }
-
-  if (!process.stdout.isTTY) {
-    // non-interactive mode, don't prompt and don't apply changes
-    return false;
-  }
-
-  output.addNewline();
+async function promptForApplyingSyncGeneratorChanges(): Promise<boolean> {
   const promptConfig = {
     name: 'applyChanges',
     type: 'select',
     message:
-      'The workspace configuration for the tasks is out of sync. Would you like to sync it?',
+      'Would you like to sync the changes to get your worskpace up to date?',
     choices: [
       {
         name: 'yes',
-        message: 'Yes, sync changes and run the tasks',
+        message: 'Yes, sync the changes and run the tasks',
       },
       {
         name: 'no',
-        message: 'No, run the tasks without syncing changes',
+        message: 'No, run the tasks without syncing the changes',
       },
     ],
     footer: () =>
       chalk.dim(
-        `\nThe sync generators associated with the tasks to run yielded the following changes:\n${resultDescriptions.join(
-          '\n'
-        )}`
+        '\nYou can skip this prompt by setting the `sync.applyChanges` option in your `nx.json`.'
       ),
   };
 
