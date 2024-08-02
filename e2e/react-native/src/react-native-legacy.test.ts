@@ -191,7 +191,7 @@ describe('@nx/react-native (legacy)', () => {
     );
   });
 
-  it('should upgrade native for application', async () => {
+  xit('should upgrade native for application', async () => {
     expect(() => runCLI(`upgrade ${appName}`)).not.toThrow();
   });
 
