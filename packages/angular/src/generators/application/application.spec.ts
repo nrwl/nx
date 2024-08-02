@@ -695,6 +695,70 @@ describe('app', () => {
       });
     });
 
+    describe('vitest', () => {
+      it.skip('🚧 should generate vite.config.ts', async () => {
+        await generateApp(appTree, 'my-app', {
+          unitTestRunner: UnitTestRunner.Vitest,
+        });
+
+        expect(appTree.read('my-app/vite.config.ts')).toMatchSnapshot();
+      });
+
+      it.skip('🚧 should generate vitest.config.ts', async () => {
+        await generateApp(appTree, 'my-app', {
+          unitTestRunner: UnitTestRunner.Vitest,
+        });
+
+        expect(appTree.read('my-app/vitest.config.ts')).toMatchSnapshot();
+      });
+
+      it.skip('🚧 should generate src/test-setup.ts', async () => {
+        await generateApp(appTree, 'my-app', {
+          unitTestRunner: UnitTestRunner.Vitest,
+        });
+
+        expect(appTree.read('my-app/src/test-setup.ts')).toMatchSnapshot();
+      });
+
+      it.skip('🚧 should add tsconfig.spec.json', async () => {
+        await generateApp(appTree, 'my-app', {
+          unitTestRunner: UnitTestRunner.Vitest,
+        });
+
+        expect(appTree.read('my-app/tsconfig.spec.json')).toMatchSnapshot();
+      });
+
+      it.skip('🚧 should add a reference to tsconfig.spec.json in tsconfig.json', async () => {
+        await generateApp(appTree, 'my-app', {
+          unitTestRunner: UnitTestRunner.Vitest,
+        });
+
+        const { references } = readJson(appTree, 'my-app/tsconfig.json');
+        expect(references).toContainEqual({
+          path: './tsconfig.spec.json',
+        });
+      });
+
+      it.skip('🚧 should add @nx/vite dependency', async () => {
+        await generateApp(appTree, 'my-app', {
+          unitTestRunner: UnitTestRunner.Vitest,
+        });
+
+        const { devDependencies } = readJson(appTree, 'my-app/package.json');
+        expect(devDependencies['@nx/vite']).toBeDefined();
+      });
+
+      it.skip('🚧 should add vitest-angular', async () => {
+        await generateApp(appTree, 'my-app', {
+          unitTestRunner: UnitTestRunner.Vitest,
+        });
+
+        const { devDependencies } = readJson(appTree, 'my-app/package.json');
+        expect(devDependencies['@analogjs/vite-plugin-angular']).toBeDefined();
+        expect(devDependencies['@analogjs/vitest-angular']).toBeDefined();
+      });
+    });
+
     describe('none', () => {
       it('should not generate test configuration', async () => {
         await generateApp(appTree, 'my-app', {
