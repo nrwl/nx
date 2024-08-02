@@ -34,7 +34,7 @@ export class Cache {
     if (shouldSpawnProcess) {
       const scriptPath = require.resolve('./remove-old-cache-records.js');
       try {
-        const p = spawn('node', [scriptPath, `"${this.cachePath}"`], {
+        const p = spawn('node', [scriptPath, `${this.cachePath}`], {
           stdio: 'ignore',
           detached: true,
           shell: false,
