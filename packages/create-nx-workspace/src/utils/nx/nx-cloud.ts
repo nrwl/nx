@@ -1,53 +1,23 @@
-import * as ora from 'ora';
-import { CLIOutput, output } from '../output';
-import { mapErrorToBodyLines } from '../error-utils';
+import { CLIOutput } from '../output';
 import { getMessageFactory } from './messages';
+import * as ora from 'ora';
 
 export type NxCloud = 'yes' | 'github' | 'circleci' | 'skip';
 
-export async function setupNxCloud(
-  directory: string,
-  nxCloud: NxCloud,
-  useGitHub?: boolean
-) {
-  const nxCloudSpinner = ora(`Setting up Nx Cloud`).start();
-  try {
-    // nx-ignore-next-line
-    const { connectWorkspaceToCloud } = require(require.resolve(
-      'nx/src/command-line/connect/connect-to-nx-cloud',
-      {
-        paths: [directory],
-      }
-      // nx-ignore-next-line
-    )) as typeof import('nx/src/command-line/connect/connect-to-nx-cloud');
-
-    const accessToken = await connectWorkspaceToCloud(
-      {
-        installationSource: 'create-nx-workspace',
-        directory,
-        github: useGitHub,
-      },
-      directory
-    );
-
-    nxCloudSpinner.succeed('Nx Cloud has been set up successfully');
-    return accessToken;
-  } catch (e) {
-    nxCloudSpinner.fail();
-
-    if (e instanceof Error) {
-      output.error({
-        title: `Failed to setup Nx Cloud`,
-        bodyLines: mapErrorToBodyLines(e),
-      });
-    } else {
-      console.error(e);
+export function readNxCloudToken(directory: string) {
+  const nxCloudSpinner = ora(`Checking Nx Cloud setup`).start();
+  // nx-ignore-next-line
+  const { getCloudOptions } = require(require.resolve(
+    'nx/src/nx-cloud/utilities/get-cloud-options',
+    {
+      paths: [directory],
     }
+    // nx-ignore-next-line
+  )) as typeof import('nx/src/nx-cloud/utilities/get-cloud-options');
 
-    process.exit(1);
-  } finally {
-    nxCloudSpinner.stop();
-  }
+  const { accessToken } = getCloudOptions(directory);
+  nxCloudSpinner.succeed('Nx Cloud has been set up successfully');
+  return accessToken;
 }
 
 export async function getOnboardingInfo(
