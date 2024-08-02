@@ -28,6 +28,7 @@ Nx.json configuration
 - [implicitDependencies](../../devkit/documents/NxJsonConfiguration#implicitdependencies): ImplicitDependencyEntry<T>
 - [installation](../../devkit/documents/NxJsonConfiguration#installation): NxInstallationConfiguration
 - [namedInputs](../../devkit/documents/NxJsonConfiguration#namedinputs): Object
+- [neverConnectToCloud](../../devkit/documents/NxJsonConfiguration#neverconnecttocloud): boolean
 - [nxCloudAccessToken](../../devkit/documents/NxJsonConfiguration#nxcloudaccesstoken): string
 - [nxCloudEncryptionKey](../../devkit/documents/NxJsonConfiguration#nxcloudencryptionkey): string
 - [nxCloudUrl](../../devkit/documents/NxJsonConfiguration#nxcloudurl): string
@@ -160,6 +161,14 @@ Named inputs targets can refer to reduce duplication
 #### Index signature
 
 ▪ [inputName: `string`]: (`string` \| `InputDefinition`)[]
+
+---
+
+### neverConnectToCloud
+
+• `Optional` **neverConnectToCloud**: `boolean`
+
+Set this to false to disable connection to Nx Cloud
 
 ---
 

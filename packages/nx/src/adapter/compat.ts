@@ -77,6 +77,7 @@ export const allowedWorkspaceExtensions = [
   'cacheDirectory',
   'useDaemonProcess',
   'useInferencePlugins',
+  'neverConnectToCloud',
 ] as const;
 
 if (!patched) {

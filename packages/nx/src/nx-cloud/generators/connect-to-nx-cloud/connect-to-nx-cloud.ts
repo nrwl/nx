@@ -1,15 +1,16 @@
 import { execSync } from 'child_process';
 import { output } from '../../../utils/output';
 import { Tree } from '../../../generators/tree';
-import { readJson } from '../../../generators/utils/json';
+import { readJson, updateJson } from '../../../generators/utils/json';
 import { NxJsonConfiguration } from '../../../config/nx-json';
-import { readNxJson, updateNxJson } from '../../../generators/utils/nx-json';
+import { readNxJson } from '../../../generators/utils/nx-json';
 import { formatChangedFilesWithPrettierIfAvailable } from '../../../generators/internal-utils/format-changed-files-with-prettier-if-available';
 import {
   repoUsesGithub,
   createNxCloudOnboardingURL,
 } from '../../utilities/url-shorten';
 import { getCloudUrl } from '../../utilities/get-cloud-options';
+import { join } from 'path';
 
 function printCloudConnectionDisabledMessage() {
   output.error({
@@ -103,29 +104,33 @@ export interface ConnectToNxCloudOptions {
 
 function addNxCloudOptionsToNxJson(
   tree: Tree,
-  nxJson: NxJsonConfiguration,
-  token: string
+  token: string,
+  directory: string = tree.root
 ) {
-  nxJson ??= {
-    extends: 'nx/presets/npm.json',
-  };
-  nxJson.nxCloudAccessToken = token;
-  const overrideUrl = process.env.NX_CLOUD_API || process.env.NRWL_API;
-  if (overrideUrl) {
-    (nxJson as any).nxCloudUrl = overrideUrl;
+  const nxJsonPath = join(directory, 'nx.json');
+  if (tree.exists(nxJsonPath)) {
+    updateJson<NxJsonConfiguration>(
+      tree,
+      join(directory, 'nx.json'),
+      (nxJson) => {
+        const overrideUrl = process.env.NX_CLOUD_API || process.env.NRWL_API;
+        if (overrideUrl) {
+          nxJson.nxCloudUrl = overrideUrl;
+        }
+        nxJson.nxCloudAccessToken = token;
+
+        return nxJson;
+      }
+    );
   }
-  updateNxJson(tree, nxJson);
 }
 
 export async function connectToNxCloud(
   tree: Tree,
-  schema: ConnectToNxCloudOptions
+  schema: ConnectToNxCloudOptions,
+  nxJson = readNxJson(tree)
 ): Promise<string> {
   schema.installationSource ??= 'user';
-
-  const nxJson = readNxJson(tree) as
-    | null
-    | (NxJsonConfiguration & { neverConnectToCloud: boolean });
 
   if (nxJson?.neverConnectToCloud) {
     printCloudConnectionDisabledMessage();
@@ -150,8 +155,8 @@ export async function connectToNxCloud(
 
       addNxCloudOptionsToNxJson(
         tree,
-        nxJson,
-        responseFromCreateNxCloudWorkspace?.token
+        responseFromCreateNxCloudWorkspace?.token,
+        schema.directory
       );
 
       await formatChangedFilesWithPrettierIfAvailable(tree, {
