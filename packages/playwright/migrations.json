@@ -12,11 +12,11 @@
       "description": "Remove invalid baseUrl option from @nx/playwright:playwright targets in project.json.",
       "implementation": "./src/migrations/update-18-1-0/remove-baseUrl-from-project-json"
     },
-    "19-5-5-use-serve-static-preview-for-command": {
+    "19-6-0-use-serve-static-preview-for-command": {
       "cli": "nx",
-      "version": "19.5.5-beta.0",
+      "version": "19.6.0-beta.0",
       "description": "Use serve-static or preview for webServerCommand.",
-      "implementation": "./src/migrations/update-19-5-5/use-serve-static-preview-for-command"
+      "implementation": "./src/migrations/update-19-6-0/use-serve-static-preview-for-command"
     }
   }
 }
