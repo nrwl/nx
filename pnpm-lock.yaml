@@ -383,6 +383,9 @@ devDependencies:
   '@storybook/addon-essentials':
     specifier: 7.5.3
     version: 7.5.3(@types/react-dom@18.3.0)(@types/react@18.3.1)(react-dom@18.3.1)(react@18.3.1)
+  '@storybook/addon-interactions':
+    specifier: 7.5.3
+    version: 7.5.3(@types/react-dom@18.3.0)(@types/react@18.3.1)(react-dom@18.3.1)(react@18.3.1)
   '@storybook/core-server':
     specifier: 7.5.3
     version: 7.5.3
@@ -750,8 +753,8 @@ devDependencies:
     specifier: ^4.0.2
     version: 4.0.2(webpack@5.88.0)
   lines-and-columns:
-    specifier: ~2.0.3
-    version: 2.0.4
+    specifier: 2.0.3
+    version: 2.0.3
   loader-utils:
     specifier: 2.0.3
     version: 2.0.3
@@ -6201,6 +6204,17 @@ packages:
       write-file-atomic: 4.0.2
     transitivePeerDependencies:
       - supports-color
+    dev: true
+
+  /@jest/types@27.5.1:
+    resolution: {integrity: sha512-Cx46iJ9QpwQTjIdq5VJu2QTMMs3QlEjI0x1QbBP5W1+nMzyc2XmimiRR/CbX9TO0cPTeUlxWMOu8mslYsJ8DEw==}
+    engines: {node: ^10.13.0 || ^12.13.0 || ^14.15.0 || >=15.0.0}
+    dependencies:
+      '@types/istanbul-lib-coverage': 2.0.6
+      '@types/istanbul-reports': 3.0.4
+      '@types/node': 18.19.8
+      '@types/yargs': 16.0.9
+      chalk: 4.1.2
     dev: true
 
   /@jest/types@29.6.3:
@@ -11749,6 +11763,39 @@ packages:
       '@storybook/preview-api': 7.5.3
     dev: true
 
+  /@storybook/addon-interactions@7.5.3(@types/react-dom@18.3.0)(@types/react@18.3.1)(react-dom@18.3.1)(react@18.3.1):
+    resolution: {integrity: sha512-gD3cU8sYSM/mdbA9ooYIb4c689JkDsJbZ17vfYJ5RjNkSmqKehybdpZOfkj27sVIyFtmscSi75t+pzK4Pv4rZw==}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0 || ^18.0.0
+      react-dom: ^16.8.0 || ^17.0.0 || ^18.0.0
+    peerDependenciesMeta:
+      react:
+        optional: true
+      react-dom:
+        optional: true
+    dependencies:
+      '@storybook/client-logger': 7.5.3
+      '@storybook/components': 7.5.3(@types/react-dom@18.3.0)(@types/react@18.3.1)(react-dom@18.3.1)(react@18.3.1)
+      '@storybook/core-common': 7.5.3
+      '@storybook/core-events': 7.5.3
+      '@storybook/global': 5.0.0
+      '@storybook/instrumenter': 7.5.3
+      '@storybook/manager-api': 7.5.3(react-dom@18.3.1)(react@18.3.1)
+      '@storybook/preview-api': 7.5.3
+      '@storybook/theming': 7.5.3(react-dom@18.3.1)(react@18.3.1)
+      '@storybook/types': 7.5.3
+      jest-mock: 27.5.1
+      polished: 4.3.1
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
+      ts-dedent: 2.2.0
+    transitivePeerDependencies:
+      - '@types/react'
+      - '@types/react-dom'
+      - encoding
+      - supports-color
+    dev: true
+
   /@storybook/addon-measure@7.5.3(@types/react-dom@18.3.0)(@types/react@18.3.1)(react-dom@18.3.1)(react@18.3.1):
     resolution: {integrity: sha512-fun9BqUTGXgcMpcbX9wUowGDkjCL8oKasZbjp/MvGM3vPTM6HQdwzHTLJGPBnmJ1xK92NhwFRs0BrQX6uF1yrg==}
     peerDependencies:
@@ -12291,6 +12338,16 @@ packages:
 
   /@storybook/global@5.0.0:
     resolution: {integrity: sha512-FcOqPAXACP0I3oJ/ws6/rrPT9WGhu915Cg8D02a9YxLo0DE9zI+a9A5gRGvmQ09fiWPukqI8ZAEoQEdWUKMQdQ==}
+    dev: true
+
+  /@storybook/instrumenter@7.5.3:
+    resolution: {integrity: sha512-p6b+/6ohTCKxWn00bXT8KBqVjXUOxeILnJtLlG83USLQCpI+XVkpmK57HYuydqEwy/1XjG+4S4ntPk9VVz3u7w==}
+    dependencies:
+      '@storybook/channels': 7.5.3
+      '@storybook/client-logger': 7.5.3
+      '@storybook/core-events': 7.5.3
+      '@storybook/global': 5.0.0
+      '@storybook/preview-api': 7.5.3
     dev: true
 
   /@storybook/manager-api@7.5.3(react-dom@18.3.1)(react@18.3.1):
@@ -13868,6 +13925,12 @@ packages:
 
   /@types/yargs-parser@21.0.3:
     resolution: {integrity: sha512-I4q9QU9MQv4oEOz4tAHJtNz1cwuLxn2F3xcc2iV5WdqLPpUnj30aUuxt1mAxYTG+oe8CZMV/+6rU4S4gRDzqtQ==}
+    dev: true
+
+  /@types/yargs@16.0.9:
+    resolution: {integrity: sha512-tHhzvkFXZQeTECenFoRljLBYPZJ7jAVxqqtEI0qTLOmuultnFp4I9yKE17vTuhf7BkhCu7I4XuemPgikDVuYqA==}
+    dependencies:
+      '@types/yargs-parser': 21.0.3
     dev: true
 
   /@types/yargs@17.0.32:
@@ -22915,6 +22978,14 @@ packages:
       stack-utils: 2.0.6
     dev: true
 
+  /jest-mock@27.5.1:
+    resolution: {integrity: sha512-K4jKbY1d4ENhbrG2zuPWaQBvDly+iZ2yAW+T1fATN78hc0sInwn7wZB8XtlNnvHug5RMwV897Xm4LqmPM4e2Og==}
+    engines: {node: ^10.13.0 || ^12.13.0 || ^14.15.0 || >=15.0.0}
+    dependencies:
+      '@jest/types': 27.5.1
+      '@types/node': 18.19.8
+    dev: true
+
   /jest-mock@29.7.0:
     resolution: {integrity: sha512-ITOMZn+UkYS4ZFh83xYAOzWStloNzJFO2s8DWrE4lhtGD+AorgnbkiKERe4wQVBydIGPx059g6riW5Btp6Llnw==}
     engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
@@ -23671,8 +23742,8 @@ packages:
   /lines-and-columns@1.2.4:
     resolution: {integrity: sha512-7ylylesZQ/PV29jhEDl3Ufjo6ZX7gCqJr5F7PKrqc93v7fzSymt1BpwEU8nAUXs8qzzvqhbjhK5QZg6Mt/HkBg==}
 
-  /lines-and-columns@2.0.4:
-    resolution: {integrity: sha512-wM1+Z03eypVAVUCE7QdSqpVIvelbOakn1M0bPDoA4SGWPx3sNDVUiMo3L6To6WWGClB7VyXnhQ4Sn7gxiJbE6A==}
+  /lines-and-columns@2.0.3:
+    resolution: {integrity: sha512-cNOjgCnLB+FnvWWtyRTzmB3POJ+cXxTA81LoW7u8JdmhfXzriropYwpjShnz1QLLWsQwY7nIxoDmcPTwphDK9w==}
     engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
 
   /listenercount@1.0.1:
@@ -26066,7 +26137,7 @@ packages:
       ignore: 5.3.1
       jest-diff: 29.7.0
       jsonc-parser: 3.2.0
-      lines-and-columns: 2.0.4
+      lines-and-columns: 2.0.3
       minimatch: 9.0.3
       node-machine-id: 1.1.12
       npm-run-path: 4.0.1
@@ -26130,7 +26201,7 @@ packages:
       ignore: 5.3.1
       jest-diff: 29.7.0
       jsonc-parser: 3.2.0
-      lines-and-columns: 2.0.4
+      lines-and-columns: 2.0.3
       minimatch: 9.0.3
       node-machine-id: 1.1.12
       npm-run-path: 4.0.1
