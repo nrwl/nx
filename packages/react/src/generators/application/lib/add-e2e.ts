@@ -16,19 +16,18 @@ export async function addE2e(
   tree: Tree,
   options: NormalizedSchema
 ): Promise<GeneratorCallback> {
+  const hasNxBuildPlugin =
+    (options.bundler === 'webpack' && hasWebpackPlugin(tree)) ||
+    (options.bundler === 'vite' && hasVitePlugin(tree));
+  if (!hasNxBuildPlugin) {
+    await webStaticServeGenerator(tree, {
+      buildTarget: `${options.projectName}:build`,
+      targetName: 'serve-static',
+      spa: true,
+    });
+  }
   switch (options.e2eTestRunner) {
     case 'cypress': {
-      const hasNxBuildPlugin =
-        (options.bundler === 'webpack' && hasWebpackPlugin(tree)) ||
-        (options.bundler === 'vite' && hasVitePlugin(tree));
-      if (!hasNxBuildPlugin) {
-        await webStaticServeGenerator(tree, {
-          buildTarget: `${options.projectName}:build`,
-          targetName: 'serve-static',
-          spa: true,
-        });
-      }
-
       const { configurationGenerator } = ensurePackage<
         typeof import('@nx/cypress')
       >('@nx/cypress', nxVersion);

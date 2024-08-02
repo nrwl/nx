@@ -106,6 +106,16 @@ describe('web app generator (legacy)', () => {
               "buildTarget": "my-app:build",
             },
           },
+          "serve-static": {
+            "dependsOn": [
+              "build",
+            ],
+            "executor": "@nx/web:file-server",
+            "options": {
+              "buildTarget": "my-app:build",
+              "spa": true,
+            },
+          },
           "test": {
             "executor": "@nx/jest:jest",
             "options": {
@@ -202,6 +212,16 @@ describe('web app generator (legacy)', () => {
             "executor": "@nx/vite:dev-server",
             "options": {
               "buildTarget": "my-vite-app:build",
+            },
+          },
+          "serve-static": {
+            "dependsOn": [
+              "build",
+            ],
+            "executor": "@nx/web:file-server",
+            "options": {
+              "buildTarget": "my-vite-app:build",
+              "spa": true,
             },
           },
           "test": {

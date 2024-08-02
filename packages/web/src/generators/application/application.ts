@@ -42,6 +42,7 @@ import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-com
 import { VitePluginOptions } from '@nx/vite/src/plugins/plugin';
 import { WebpackPluginOptions } from '@nx/webpack/src/plugins/plugin';
 import { hasVitePlugin } from '../../utils/has-vite-plugin';
+import staticServeConfiguration from '../static-serve/static-serve-configuration';
 
 interface NormalizedSchema extends Schema {
   projectName: string;
@@ -367,10 +368,16 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
     tasks.push(lintTask);
   }
 
+  const hasNxBuildPlugin =
+    (options.bundler === 'webpack' && hasWebpackPlugin(host)) ||
+    (options.bundler === 'vite' && hasVitePlugin(host));
+  if (!hasNxBuildPlugin) {
+    await staticServeConfiguration(host, {
+      buildTarget: `${options.projectName}:build`,
+      spa: true,
+    });
+  }
   if (options.e2eTestRunner === 'cypress') {
-    const hasNxBuildPlugin =
-      (options.bundler === 'webpack' && hasWebpackPlugin(host)) ||
-      (options.bundler === 'vite' && hasVitePlugin(host));
     const { configurationGenerator } = ensurePackage<
       typeof import('@nx/cypress')
     >('@nx/cypress', nxVersion);

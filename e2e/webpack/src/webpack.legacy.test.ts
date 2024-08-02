@@ -113,17 +113,17 @@ describe('Webpack Plugin (legacy)', () => {
     updateFile(
       `${appName}/src/main.ts`,
       `
-      document.querySelector('proj-root').innerHTML = '<h1>Welcome</h1>';
+      document.querySelector('proj-root')!.innerHTML = '<h1>Welcome</h1>';
     `
     );
     updateFile(
       `${appName}/webpack.config.js`,
       `
       const { join } = require('path');
-        const {NxWebpackPlugin} = require('@nx/webpack');
+        const {NxAppWebpackPlugin} = require('@nx/webpack/app-plugin');
         module.exports = {
           output: {
-            path: join(__dirname, '../dist/app9524918'),
+            path: join(__dirname, '../dist/${appName}'),
           },
           plugins: [
             new NxAppWebpackPlugin({
