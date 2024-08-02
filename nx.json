@@ -133,6 +133,11 @@
     "e2e-ci": {
       "inputs": ["e2eInputs", "^production"]
     },
+    "e2e-macos-local": {
+      "cache": true,
+      "inputs": ["e2eInputs", "^production"],
+      "parallelism": false
+    },
     "e2e-macos-ci": {
       "inputs": ["e2eInputs", "^production"]
     },
@@ -216,7 +221,7 @@
       "plugin": "@nx/jest/plugin",
       "include": ["e2e/detox/**/*", "e2e/react-native/**/*", "e2e/expo/**/*"],
       "options": {
-        "targetName": "e2e-local",
+        "targetName": "e2e-macos-local",
         "ciTargetName": "e2e-macos-ci"
       }
     }
