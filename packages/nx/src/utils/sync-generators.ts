@@ -153,13 +153,18 @@ export function syncGeneratorResultsToMessageLines(
 
   for (const result of results) {
     messageLines.push(
-      `${chalk.bold(result.generatorName)}: ${chalk.bold(
-        result.changes.length
-      )} file(s) out of sync`
+      `The ${chalk.bold(
+        result.generatorName
+      )} sync generator identified ${chalk.bold(result.changes.length)} file${
+        result.changes.length === 1 ? '' : 's'
+      } in the workspace that ${
+        result.changes.length === 1 ? 'is' : 'are'
+      } out of sync${result.outOfSyncMessage ? ':' : '.'}`
     );
     if (result.outOfSyncMessage) {
       messageLines.push(result.outOfSyncMessage);
     }
+    messageLines.push('');
   }
 
   return messageLines;
