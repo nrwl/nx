@@ -191,6 +191,7 @@ describe('@nx/react-native (legacy)', () => {
     );
   });
 
+  // TODO(@xiongemi): Look into this test failing on macos
   xit('should upgrade native for application', async () => {
     expect(() => runCLI(`upgrade ${appName}`)).not.toThrow();
   });
