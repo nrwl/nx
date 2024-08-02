@@ -100,7 +100,7 @@ Second, the script asks a series of questions to help set up caching for you.
 - `Which scripts are cacheable?` - Choose `typecheck`, `build` and `lint`
 - `Does the "typecheck" script create any outputs?` - Enter nothing
 - `Does the "build" script create any outputs?` - Enter `dist`
-- `Does the "lint" script creggggggate any outputs?` - Enter nothing
+- `Does the "lint" script create any outputs?` - Enter nothing
 - `Would you like remote caching to make your build faster?` - Choose `Skip for now`
 
 ### Explore Your Workspace
