@@ -14,6 +14,7 @@ import { Preset } from '../utils/presets';
 import { deduceDefaultBase } from '../../utilities/default-base';
 import { NormalizedSchema } from './new';
 import { connectToNxCloud } from 'nx/src/nx-cloud/generators/connect-to-nx-cloud/connect-to-nx-cloud';
+import { createNxCloudOnboardingURL } from 'nx/src/nx-cloud/utilities/url-shorten';
 
 type PresetInfo = {
   generateAppCmd?: string;
@@ -176,7 +177,6 @@ export async function generateWorkspaceFiles(
     tree.root
   );
   options = normalizeOptions(options);
-  createReadme(tree, options);
   createFiles(tree, options);
   const nxJson = createNxJson(tree, options);
 
@@ -192,6 +192,8 @@ export async function generateWorkspaceFiles(
           nxJson
         )
       : null;
+
+  await createReadme(tree, options, token);
 
   const [packageMajor] = packageManagerVersion.split('.');
   if (options.packageManager === 'pnpm' && +packageMajor >= 7) {
@@ -287,9 +289,10 @@ function createFiles(tree: Tree, options: NormalizedSchema) {
   });
 }
 
-function createReadme(
+async function createReadme(
   tree: Tree,
-  { name, appName, directory, preset }: NormalizedSchema
+  { name, appName, directory, preset, nxCloud }: NormalizedSchema,
+  nxCloudToken?: string
 ) {
   const formattedNames = names(name);
 
@@ -298,6 +301,10 @@ function createReadme(
     package: '',
     generateLibCmd: null,
   };
+
+  const nxCloudOnboardingUrl = nxCloudToken
+    ? await createNxCloudOnboardingURL('readme', nxCloudToken)
+    : null;
 
   generateFiles(tree, join(__dirname, './files-readme'), directory, {
     formattedNames,
@@ -313,6 +320,8 @@ function createReadme(
         ? 'dev'
         : 'serve',
     name,
+    nxCloud,
+    nxCloudOnboardingUrl,
   });
 }
 
