@@ -505,12 +505,12 @@ function mergeCreateNodesResults(
   return { projectRootMap, externalNodes, rootMap, configurationSourceMaps };
 }
 
-function findMatchingConfigFiles(
+export function findMatchingConfigFiles(
   projectFiles: string[],
   pattern: string,
   include: string[],
   exclude: string[]
-) {
+): string[] {
   const matchingConfigFiles: string[] = [];
 
   for (const file of projectFiles) {

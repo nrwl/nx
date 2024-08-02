@@ -25,6 +25,9 @@ describe('Static serve configuration generator', () => {
     expect(readProjectConfiguration(tree, 'react-app').targets['serve-static'])
       .toMatchInlineSnapshot(`
       {
+        "dependsOn": [
+          "build",
+        ],
         "executor": "@nx/web:file-server",
         "options": {
           "buildTarget": "react-app:build",
@@ -40,6 +43,9 @@ describe('Static serve configuration generator', () => {
       readProjectConfiguration(tree, 'angular-app').targets['serve-static']
     ).toMatchInlineSnapshot(`
       {
+        "dependsOn": [
+          "build",
+        ],
         "executor": "@nx/web:file-server",
         "options": {
           "buildTarget": "angular-app:build",
@@ -54,6 +60,9 @@ describe('Static serve configuration generator', () => {
     expect(readProjectConfiguration(tree, 'storybook').targets['serve-static'])
       .toMatchInlineSnapshot(`
       {
+        "dependsOn": [
+          "build-storybook",
+        ],
         "executor": "@nx/web:file-server",
         "options": {
           "buildTarget": "storybook:build-storybook",
@@ -75,6 +84,9 @@ describe('Static serve configuration generator', () => {
       readProjectConfiguration(tree, 'react-app').targets['serve-static-custom']
     ).toMatchInlineSnapshot(`
       {
+        "dependsOn": [
+          "build",
+        ],
         "executor": "@nx/web:file-server",
         "options": {
           "buildTarget": "react-app:build",
@@ -101,6 +113,9 @@ describe('Static serve configuration generator', () => {
       readProjectConfiguration(tree, 'angular-app').targets['serve-static']
     ).toMatchInlineSnapshot(`
       {
+        "dependsOn": [
+          "build",
+        ],
         "executor": "@nx/web:file-server",
         "options": {
           "buildTarget": "angular-app:build",
