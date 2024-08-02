@@ -15,14 +15,24 @@ export async function addE2e(
   tree: Tree,
   options: NormalizedSchema
 ): Promise<GeneratorCallback> {
+  const nxJson = readNxJson(tree);
+  const hasPlugin = nxJson.plugins?.find((p) =>
+    typeof p === 'string'
+      ? p === '@nx/vite/plugin'
+      : p.plugin === '@nx/vite/plugin'
+  );
+  const e2eWebServerTarget = hasPlugin
+    ? typeof hasPlugin === 'string'
+      ? 'serve'
+      : (hasPlugin.options as any)?.serveTargetName ?? 'serve'
+    : 'serve';
+  const e2eCiWebServerTarget = hasPlugin
+    ? typeof hasPlugin === 'string'
+      ? 'preview'
+      : (hasPlugin.options as any)?.previewTargetName ?? 'preview'
+    : 'preview';
   switch (options.e2eTestRunner) {
     case 'cypress': {
-      const nxJson = readNxJson(tree);
-      const hasPlugin = nxJson.plugins?.some((p) =>
-        typeof p === 'string'
-          ? p === '@nx/vite/plugin'
-          : p.plugin === '@nx/vite/plugin'
-      );
       if (!hasPlugin) {
         await webStaticServeGenerator(tree, {
           buildTarget: `${options.projectName}:build`,
@@ -48,9 +58,17 @@ export async function addE2e(
         directory: 'src',
         bundler: 'vite',
         skipFormat: true,
-        devServerTarget: `${options.projectName}:serve`,
+        devServerTarget: `${options.projectName}:${e2eWebServerTarget}`,
         baseUrl: 'http://localhost:4200',
         jsx: true,
+        webServerCommands: hasPlugin
+          ? {
+              default: `nx run ${options.projectName}:${e2eWebServerTarget}`,
+              production: `nx run ${options.projectName}:preview`,
+            }
+          : undefined,
+        ciWebServerCommand: `nx run ${options.projectName}:${e2eCiWebServerTarget}`,
+        ciBaseUrl: 'http://localhost:4300',
       });
     }
     case 'playwright': {
@@ -73,10 +91,10 @@ export async function addE2e(
         js: false,
         linter: options.linter,
         setParserOptionsProject: options.setParserOptionsProject,
-        webServerCommand: `${getPackageManagerCommand().exec} nx serve ${
-          options.name
-        }`,
-        webServerAddress: 'http://localhost:4200',
+        webServerCommand: `${getPackageManagerCommand().exec} nx run ${
+          options.projectName
+        }:${e2eCiWebServerTarget}`,
+        webServerAddress: 'http://localhost:4300',
       });
     }
     case 'none':

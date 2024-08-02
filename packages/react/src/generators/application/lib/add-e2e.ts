@@ -16,19 +16,18 @@ export async function addE2e(
   tree: Tree,
   options: NormalizedSchema
 ): Promise<GeneratorCallback> {
+  const hasNxBuildPlugin =
+    (options.bundler === 'webpack' && hasWebpackPlugin(tree)) ||
+    (options.bundler === 'vite' && hasVitePlugin(tree));
+  if (!hasNxBuildPlugin) {
+    await webStaticServeGenerator(tree, {
+      buildTarget: `${options.projectName}:build`,
+      targetName: 'serve-static',
+      spa: true,
+    });
+  }
   switch (options.e2eTestRunner) {
     case 'cypress': {
-      const hasNxBuildPlugin =
-        (options.bundler === 'webpack' && hasWebpackPlugin(tree)) ||
-        (options.bundler === 'vite' && hasVitePlugin(tree));
-      if (!hasNxBuildPlugin) {
-        await webStaticServeGenerator(tree, {
-          buildTarget: `${options.projectName}:build`,
-          targetName: 'serve-static',
-          spa: true,
-        });
-      }
-
       const { configurationGenerator } = ensurePackage<
         typeof import('@nx/cypress')
       >('@nx/cypress', nxVersion);
@@ -60,8 +59,10 @@ export async function addE2e(
             }
           : undefined,
         ciWebServerCommand: hasNxBuildPlugin
-          ? `nx run ${options.projectName}:serve-static`
+          ? `nx run ${options.projectName}:${options.e2eCiWebServerTarget}`
           : undefined,
+        ciBaseUrl:
+          options.bundler === 'vite' ? options.e2eCiBaseUrl : undefined,
       });
     }
     case 'playwright': {
@@ -83,10 +84,10 @@ export async function addE2e(
         js: false,
         linter: options.linter,
         setParserOptionsProject: options.setParserOptionsProject,
-        webServerCommand: `${getPackageManagerCommand().exec} nx ${
-          options.e2eWebServerTarget
-        } ${options.name}`,
-        webServerAddress: options.e2eWebServerAddress,
+        webServerCommand: `${getPackageManagerCommand().exec} nx run ${
+          options.projectName
+        }:${options.e2eCiWebServerTarget}`,
+        webServerAddress: options.e2eCiBaseUrl,
         rootProject: options.rootProject,
         addPlugin: options.addPlugin,
       });
