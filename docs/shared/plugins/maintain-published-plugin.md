@@ -1,6 +1,11 @@
 # Maintain a Published Plugins
 
-To create a plugin, see the [create a local plugin tutorial](/extending-nx/tutorials/create-plugin).
+To create a plugin, run `npx create-nx-plugin` or add a plugin project to an existing repository with:
+
+```shell
+npx nx add @nx/plugin
+npx nx g @nx/plugin:plugin <plugin-name>
+```
 
 ## Publish your Nx Plugin
 

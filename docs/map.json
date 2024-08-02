@@ -1451,7 +1451,7 @@
           "description": "Learn about plugins.",
           "itemList": [
             {
-              "name": "Getting Started with Plugins",
+              "name": "Extending Nx with Plugins",
               "id": "getting-started",
               "description": "Learn how to extend Nx by creating and releasing your own Nx plugin.",
               "file": "shared/plugins/intro"
@@ -1464,9 +1464,9 @@
           "description": "Get started with plugins",
           "itemList": [
             {
-              "name": "Create a Local Plugin",
-              "id": "create-plugin",
-              "file": "shared/plugins/create-plugin"
+              "name": "Enforce Organizational Best Practices",
+              "id": "organization-specific-plugin",
+              "file": "shared/plugins/organization-specific-plugin"
             },
             {
               "name": "Maintain a Published Plugin",
@@ -1541,7 +1541,7 @@
               "file": "shared/recipes/plugins/create-install-package"
             },
             {
-              "name": "Modify the Project Graph",
+              "name": "Infer Tasks or Projects",
               "id": "project-graph-plugins",
               "tags": [
                 "create-your-own-plugin",
