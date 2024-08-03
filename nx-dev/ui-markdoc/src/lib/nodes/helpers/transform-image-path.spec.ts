@@ -10,8 +10,12 @@ describe('transformImagePath', () => {
     expect(transform('./test.png')).toEqual(
       sep + join('documentation', 'shared', 'using-nx', 'test.png')
     );
-    expect(transform('../test.png')).toEqual(sep + join('documentation', 'shared', 'test.png'));
-    expect(transform('../../test.png')).toEqual(sep + join('documentation', 'test.png'));
+    expect(transform('../test.png')).toEqual(
+      sep + join('documentation', 'shared', 'test.png')
+    );
+    expect(transform('../../test.png')).toEqual(
+      sep + join('documentation', 'test.png')
+    );
   });
 
   it('should transform absolute paths', () => {
