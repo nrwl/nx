@@ -31,7 +31,11 @@ export function listPlugins(
     if (p.projectInference) {
       capabilities.push('project-inference');
     }
-    bodyLines.push(`${chalk.bold(p.name)} (${capabilities.join()})`);
+    bodyLines.push(
+      `${chalk.bold(p.name)} ${
+        capabilities.length >= 1 ? `(${capabilities.join(', ')})` : ''
+      }`
+    );
   }
 
   output.log({
