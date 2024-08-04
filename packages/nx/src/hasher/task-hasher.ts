@@ -257,15 +257,6 @@ export type ExpandedDepsOutput = {
   transitive?: boolean;
 };
 export type ExpandedInput = ExpandedSelfInput | ExpandedDepsOutput;
-const DEFAULT_INPUTS: ReadonlyArray<InputDefinition> = [
-  {
-    fileset: '{projectRoot}/**/*',
-  },
-  {
-    dependencies: true,
-    input: 'default',
-  },
-];
 
 export function getNamedInputs(
   nxJson: NxJsonConfiguration,
@@ -286,10 +277,9 @@ export function getTargetInputs(
   const namedInputs = getNamedInputs(nxJson, projectNode);
 
   const targetData = projectNode.data.targets[target];
-  const targetDefaults = (nxJson.targetDefaults || {})[target];
 
   const inputs = splitInputsIntoSelfAndDependencies(
-    targetData.inputs || targetDefaults?.inputs || DEFAULT_INPUTS,
+    targetData.inputs || [],
     namedInputs
   );
 
@@ -318,12 +308,9 @@ export function getInputs(
   const projectNode = projectGraph.nodes[task.target.project];
   const namedInputs = getNamedInputs(nxJson, projectNode);
   const targetData = projectNode.data.targets[task.target.target];
-  const targetDefaults = (nxJson.targetDefaults || {})[task.target.target];
+
   const { selfInputs, depsInputs, depsOutputs, projectInputs } =
-    splitInputsIntoSelfAndDependencies(
-      targetData.inputs || targetDefaults?.inputs || (DEFAULT_INPUTS as any),
-      namedInputs
-    );
+    splitInputsIntoSelfAndDependencies(targetData.inputs || [], namedInputs);
   return { selfInputs, depsInputs, depsOutputs, projectInputs };
 }
 

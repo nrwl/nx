@@ -1721,6 +1721,10 @@ describe('project-configuration-utils', () => {
         {
           "configurations": {},
           "executor": "nx:run-commands",
+          "inputs": [
+            "default",
+            "^default",
+          ],
           "options": {
             "command": "echo a @ libs/a",
           },

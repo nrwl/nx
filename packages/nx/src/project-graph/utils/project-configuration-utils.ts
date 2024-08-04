@@ -660,6 +660,11 @@ function normalizeTargets(
       );
     }
 
+    // If needed, Add default inputs to the target
+    if (project.targets[targetName].inputs === undefined) {
+      project.targets[targetName].inputs = ['default', '^default'];
+    }
+
     if (
       // If the target has no executor or command, it doesn't do anything
       !project.targets[targetName].executor &&

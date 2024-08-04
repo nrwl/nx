@@ -50,7 +50,7 @@ exports[`TaskHasher hashTarget should hash entire subtree in a deterministic way
     "command": "81188892120010785",
     "implicitDeps": {},
     "nodes": {
-      "appA:ProjectConfiguration": "8474322003863204060",
+      "appA:ProjectConfiguration": "8020240204716051943",
       "appA:TsConfig": "8767608672024750088",
       "appA:{projectRoot}/**/*": "3244421341483603138",
       "npm:@nx/webpack": "$@nx/webpack0.0.0$",
@@ -63,7 +63,7 @@ exports[`TaskHasher hashTarget should hash entire subtree in a deterministic way
     },
     "runtime": {},
   },
-  "value": "12756041818139421941",
+  "value": "10061935165255291051",
 }
 `;
 
@@ -73,7 +73,7 @@ exports[`TaskHasher hashTarget should hash entire subtree in a deterministic way
     "command": "9096392622609675764",
     "implicitDeps": {},
     "nodes": {
-      "appB:ProjectConfiguration": "17724470359684527282",
+      "appB:ProjectConfiguration": "14244903177352411531",
       "appB:TsConfig": "8767608672024750088",
       "appB:{projectRoot}/**/*": "3244421341483603138",
       "npm:@nx/webpack": "$@nx/webpack0.0.0$",
@@ -86,7 +86,7 @@ exports[`TaskHasher hashTarget should hash entire subtree in a deterministic way
     },
     "runtime": {},
   },
-  "value": "15326312070983573452",
+  "value": "9331219699616510374",
 }
 `;
 
@@ -96,9 +96,9 @@ exports[`TaskHasher hashTarget should hash entire subtree of dependencies 1`] = 
     "command": "14389236043839781668",
     "implicitDeps": {},
     "nodes": {
+      "app:": "3244421341483603138",
       "app:ProjectConfiguration": "12026883044296863450",
       "app:TsConfig": "8767608672024750088",
-      "app:{projectRoot}/**/*": "3244421341483603138",
       "npm:@nx/devkit": "$nx/devkit16$",
       "npm:@nx/webpack": "$nx/webpack16$",
       "npm:nx": "$nx16$",
@@ -119,9 +119,9 @@ exports[`TaskHasher hashTarget should hash executor dependencies of @nx packages
     "command": "14389236043839781668",
     "implicitDeps": {},
     "nodes": {
+      "app:": "3244421341483603138",
       "app:ProjectConfiguration": "12026883044296863450",
       "app:TsConfig": "8767608672024750088",
-      "app:{projectRoot}/**/*": "3244421341483603138",
       "npm:@nx/webpack": "16.0.0",
       "{workspaceRoot}/.gitignore": "3244421341483603138",
       "{workspaceRoot}/.nxignore": "3244421341483603138",
@@ -229,9 +229,9 @@ exports[`TaskHasher should be able to include only a part of the base tsconfig 1
     "implicitDeps": {},
     "nodes": {
       "AllExternalDependencies": "3244421341483603138",
+      "parent:": "8263681721738113012",
       "parent:ProjectConfiguration": "18166168584521190546",
       "parent:TsConfig": "4035819825874039301",
-      "parent:{projectRoot}/**/*": "8263681721738113012",
       "runtime:echo runtime123": "29846575039086708",
       "runtime:echo runtime456": "9687767313975325934",
       "{workspaceRoot}/.gitignore": "3244421341483603138",
@@ -281,7 +281,7 @@ exports[`TaskHasher should hash missing dependent npm project versions 1`] = `
     "implicitDeps": {},
     "nodes": {
       "AllExternalDependencies": "9871338282813031846",
-      "app:ProjectConfiguration": "8128657069648957137",
+      "app:ProjectConfiguration": "11678306773223999817",
       "app:TsConfig": "8767608672024750088",
       "app:{projectRoot}/**/*": "9104199730100321982",
       "npm:react": "17.0.0",
@@ -291,7 +291,7 @@ exports[`TaskHasher should hash missing dependent npm project versions 1`] = `
     },
     "runtime": {},
   },
-  "value": "69684997513271647",
+  "value": "3219007003310426268",
 }
 `;
 
@@ -365,7 +365,7 @@ exports[`TaskHasher should hash npm project versions 1`] = `
     "implicitDeps": {},
     "nodes": {
       "AllExternalDependencies": "9871338282813031846",
-      "app:ProjectConfiguration": "8128657069648957137",
+      "app:ProjectConfiguration": "11678306773223999817",
       "app:TsConfig": "8767608672024750088",
       "app:{projectRoot}/**/*": "9104199730100321982",
       "npm:react": "17.0.0",
@@ -375,7 +375,7 @@ exports[`TaskHasher should hash npm project versions 1`] = `
     },
     "runtime": {},
   },
-  "value": "69684997513271647",
+  "value": "3219007003310426268",
 }
 `;
 
@@ -386,10 +386,10 @@ exports[`TaskHasher should hash task where the project has dependencies 1`] = `
     "implicitDeps": {},
     "nodes": {
       "AllExternalDependencies": "3244421341483603138",
-      "child:ProjectConfiguration": "8876282510060012181",
+      "child:ProjectConfiguration": "14605719201326100306",
       "child:TsConfig": "8767608672024750088",
       "child:{projectRoot}/**/*": "5484012818475684626",
-      "parent:ProjectConfiguration": "1818520398670323053",
+      "parent:ProjectConfiguration": "8560533991408599983",
       "parent:TsConfig": "8767608672024750088",
       "parent:{projectRoot}/**/*": "14822394489351823627",
       "{workspaceRoot}/.gitignore": "3244421341483603138",
@@ -398,7 +398,7 @@ exports[`TaskHasher should hash task where the project has dependencies 1`] = `
     },
     "runtime": {},
   },
-  "value": "10890020828938010310",
+  "value": "5055776090597198340",
 }
 `;
 
@@ -409,10 +409,10 @@ exports[`TaskHasher should hash tasks where the project graph has circular depen
     "implicitDeps": {},
     "nodes": {
       "AllExternalDependencies": "3244421341483603138",
-      "child:ProjectConfiguration": "9892649345820140726",
+      "child:ProjectConfiguration": "8294402459420729769",
       "child:TsConfig": "8767608672024750088",
       "child:{projectRoot}/**/*": "8973015561538144423",
-      "parent:ProjectConfiguration": "18166168584521190546",
+      "parent:ProjectConfiguration": "11326995063002379654",
       "parent:TsConfig": "8767608672024750088",
       "parent:{projectRoot}/**/*": "9104199730100321982",
       "{workspaceRoot}/.gitignore": "3244421341483603138",
@@ -421,7 +421,7 @@ exports[`TaskHasher should hash tasks where the project graph has circular depen
     },
     "runtime": {},
   },
-  "value": "9112654928859037831",
+  "value": "5856541215150566377",
 }
 `;
 
@@ -432,10 +432,10 @@ exports[`TaskHasher should hash tasks where the project graph has circular depen
     "implicitDeps": {},
     "nodes": {
       "AllExternalDependencies": "3244421341483603138",
-      "child:ProjectConfiguration": "9892649345820140726",
+      "child:ProjectConfiguration": "8294402459420729769",
       "child:TsConfig": "8767608672024750088",
       "child:{projectRoot}/**/*": "8973015561538144423",
-      "parent:ProjectConfiguration": "18166168584521190546",
+      "parent:ProjectConfiguration": "11326995063002379654",
       "parent:TsConfig": "8767608672024750088",
       "parent:{projectRoot}/**/*": "9104199730100321982",
       "{workspaceRoot}/.gitignore": "3244421341483603138",
@@ -444,29 +444,6 @@ exports[`TaskHasher should hash tasks where the project graph has circular depen
     },
     "runtime": {},
   },
-  "value": "144123652661336112",
-}
-`;
-
-exports[`TaskHasher should use targetDefaults from nx.json 1`] = `
-{
-  "details": {
-    "command": "4062279404379299270",
-    "implicitDeps": {},
-    "nodes": {
-      "AllExternalDependencies": "3244421341483603138",
-      "child:!{projectRoot}/**/*.spec.ts": "17508782620731849000",
-      "child:ProjectConfiguration": "9892649345820140726",
-      "child:TsConfig": "8767608672024750088",
-      "parent:!{projectRoot}/**/*.spec.ts": "17962802443644575456",
-      "parent:ProjectConfiguration": "18166168584521190546",
-      "parent:TsConfig": "8767608672024750088",
-      "{workspaceRoot}/.gitignore": "3244421341483603138",
-      "{workspaceRoot}/.nxignore": "3244421341483603138",
-      "{workspaceRoot}/nx.json": "8942239360311677987",
-    },
-    "runtime": {},
-  },
-  "value": "5596126261759417547",
+  "value": "16848684779148547495",
 }
 `;

@@ -162,7 +162,9 @@ describe('TaskHasher', () => {
             type: 'lib',
             data: {
               root: 'libs/parent',
-              targets: { build: { executor: 'unknown' } },
+              targets: {
+                build: { executor: 'unknown', inputs: ['default', '^default'] },
+              },
             },
           },
           child: {
@@ -170,7 +172,7 @@ describe('TaskHasher', () => {
             type: 'lib',
             data: {
               root: 'libs/child',
-              targets: { build: {} },
+              targets: { build: { inputs: ['default', '^default'] } },
             },
           },
         },
@@ -514,95 +516,6 @@ describe('TaskHasher', () => {
     expect(childHash).toMatchSnapshot();
   });
 
-  it('should use targetDefaults from nx.json', async () => {
-    const hasher = new InProcessTaskHasher(
-      {
-        parent: [
-          { file: 'libs/parent/filea.ts', hash: 'a.hash' },
-          { file: 'libs/parent/filea.spec.ts', hash: 'a.spec.hash' },
-        ],
-        child: [
-          { file: 'libs/child/fileb.ts', hash: 'b.hash' },
-          { file: 'libs/child/fileb.spec.ts', hash: 'b.spec.hash' },
-        ],
-      },
-      allWorkspaceFiles,
-      {
-        nodes: {
-          parent: {
-            name: 'parent',
-            type: 'lib',
-            data: {
-              root: 'libs/parent',
-              targets: {
-                build: { executor: 'nx:run-commands' },
-              },
-            },
-          },
-          child: {
-            name: 'child',
-            type: 'lib',
-            data: {
-              root: 'libs/child',
-              targets: { build: { executor: 'nx:run-commands' } },
-            },
-          },
-        },
-        dependencies: {
-          parent: [{ source: 'parent', target: 'child', type: 'static' }],
-        },
-        externalNodes: {},
-      },
-
-      {
-        namedInputs: {
-          prod: ['!{projectRoot}/**/*.spec.ts'],
-        },
-        targetDefaults: {
-          build: {
-            inputs: ['prod', '^prod'],
-          },
-        },
-      } as any,
-      null,
-      {}
-    );
-
-    const hash = await hasher.hashTask(
-      {
-        target: { project: 'parent', target: 'build' },
-        id: 'parent-build',
-        overrides: { prop: 'prop-value' },
-        outputs: [],
-        parallelism: true,
-      },
-      {
-        roots: ['child-build'],
-        tasks: {
-          'parent-build': {
-            id: 'parent-build',
-            target: { project: 'parent', target: 'build' },
-            overrides: {},
-            outputs: [],
-            parallelism: true,
-          },
-          'child-build': {
-            id: 'child-build',
-            target: { project: 'child', target: 'build' },
-            overrides: {},
-            outputs: [],
-            parallelism: true,
-          },
-        },
-        dependencies: {
-          'parent-build': ['child-build'],
-        },
-      },
-      {}
-    );
-    expect(hash).toMatchSnapshot();
-  });
-
   it('should be able to include only a part of the base tsconfig', async () => {
     const hasher = new InProcessTaskHasher(
       {
@@ -675,7 +588,12 @@ describe('TaskHasher', () => {
             type: 'lib',
             data: {
               root: 'libs/parent',
-              targets: { build: { executor: 'nx:run-commands' } },
+              targets: {
+                build: {
+                  executor: 'nx:run-commands',
+                  inputs: ['default', '^default'],
+                },
+              },
             },
           },
           child: {
@@ -683,7 +601,12 @@ describe('TaskHasher', () => {
             type: 'lib',
             data: {
               root: 'libs/child',
-              targets: { build: { executor: 'nx:run-commands' } },
+              targets: {
+                build: {
+                  executor: 'nx:run-commands',
+                  inputs: ['default', '^default'],
+                },
+              },
             },
           },
         },
@@ -827,7 +750,12 @@ describe('TaskHasher', () => {
             type: 'app',
             data: {
               root: 'apps/app',
-              targets: { build: { executor: 'nx:run-commands' } },
+              targets: {
+                build: {
+                  executor: 'nx:run-commands',
+                  inputs: ['default', '^default'],
+                },
+              },
             },
           },
         },
@@ -893,7 +821,12 @@ describe('TaskHasher', () => {
             type: 'app',
             data: {
               root: 'apps/app',
-              targets: { build: { executor: 'nx:run-commands' } },
+              targets: {
+                build: {
+                  executor: 'nx:run-commands',
+                  inputs: ['default', '^default'],
+                },
+              },
             },
           },
         },
@@ -1272,7 +1205,12 @@ describe('TaskHasher', () => {
                 type: 'app',
                 data: {
                   root: 'apps/appA',
-                  targets: { build: { executor: '@nx/webpack:webpack' } },
+                  targets: {
+                    build: {
+                      executor: '@nx/webpack:webpack',
+                      inputs: ['default', '^default'],
+                    },
+                  },
                 },
               },
               appB: {
@@ -1280,7 +1218,12 @@ describe('TaskHasher', () => {
                 type: 'app',
                 data: {
                   root: 'apps/appB',
-                  targets: { build: { executor: '@nx/webpack:webpack' } },
+                  targets: {
+                    build: {
+                      executor: '@nx/webpack:webpack',
+                      inputs: ['default', '^default'],
+                    },
+                  },
                 },
               },
             },
