@@ -33,7 +33,7 @@ export function listPlugins(
     }
     bodyLines.push(
       `${chalk.bold(p.name)} ${
-        capabilities.length >= 1 ? `(${capabilities.join(', ')})` : ''
+        capabilities.length >= 1 ? `(${capabilities.join()})` : ''
       }`
     );
   }
