@@ -77,6 +77,7 @@ getTestBed().initTestEnvironment(
     project: options.name,
     newProject: true,
     uiFramework: 'angular',
+    includeVitest: true,
     testEnvironment: 'jsdom',
   });
 }
