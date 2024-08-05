@@ -6,6 +6,7 @@ import {
   readJson,
   readNxJson,
   writeJson,
+  normalizePath,
 } from '@nx/devkit';
 import { relative } from 'node:path';
 import { PLUGIN_NAME, TscPluginOptions } from '../../plugins/typescript/plugin';
@@ -103,9 +104,8 @@ export async function syncGenerator(tree: Tree, options: SyncSchema) {
       sourceTsconfig.references = sourceTsconfig.references || [];
 
       // Ensure the project reference for the target is set
-      const relativePathToTargetRoot = relative(
-        sourceProjectNode.data.root,
-        targetProjectNode.data.root
+      const relativePathToTargetRoot = normalizePath(
+        relative(sourceProjectNode.data.root, targetProjectNode.data.root)
       );
       if (
         !sourceTsconfig.references.some(

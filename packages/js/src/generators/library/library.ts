@@ -251,7 +251,10 @@ async function addProject(tree: Tree, options: NormalizedSchema) {
     }
 
     if (options.publishable) {
-      const packageRoot = join(defaultOutputDirectory, '{projectRoot}');
+      const packageRoot = joinPathFragments(
+        defaultOutputDirectory,
+        '{projectRoot}'
+      );
 
       projectConfiguration.targets ??= {};
       projectConfiguration.targets['nx-release-publish'] = {
