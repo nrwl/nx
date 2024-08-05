@@ -1,3 +1,4 @@
+import { performance } from 'perf_hooks';
 import { parseGeneratorString } from '../command-line/generate/generate';
 import { getGeneratorInformation } from '../command-line/generate/generator-utils';
 import type { GeneratorCallback } from '../config/misc-interfaces';
@@ -35,6 +36,7 @@ export type SyncGeneratorChangesResult = {
 export async function getSyncGeneratorChanges(
   generators: string[]
 ): Promise<SyncGeneratorChangesResult[]> {
+  performance.mark('get-sync-generators-changes:start');
   let results: SyncGeneratorChangesResult[];
 
   if (!daemonClient.enabled()) {
@@ -42,6 +44,13 @@ export async function getSyncGeneratorChanges(
   } else {
     results = await daemonClient.getSyncGeneratorChanges(generators);
   }
+
+  performance.mark('get-sync-generators-changes:end');
+  performance.measure(
+    'get-sync-generators-changes',
+    'get-sync-generators-changes:start',
+    'get-sync-generators-changes:end'
+  );
 
   return results.filter((r) => r.changes.length > 0);
 }
@@ -72,6 +81,7 @@ export async function runSyncGenerator(
   generatorSpecifier: string,
   projects: Record<string, ProjectConfiguration>
 ): Promise<SyncGeneratorChangesResult> {
+  performance.mark(`run-sync-generator:${generatorSpecifier}:start`);
   const { collection, generator } = parseGeneratorString(generatorSpecifier);
   const { implementationFactory } = getGeneratorInformation(
     collection,
@@ -96,6 +106,13 @@ export async function runSyncGenerator(
   if (callback) {
     await callback();
   }
+
+  performance.mark(`run-sync-generator:${generatorSpecifier}:end`);
+  performance.measure(
+    `run-sync-generator:${generatorSpecifier}`,
+    `run-sync-generator:${generatorSpecifier}:start`,
+    `run-sync-generator:${generatorSpecifier}:end`
+  );
 
   return {
     changes: tree.listChanges(),
