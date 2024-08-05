@@ -3,11 +3,7 @@ import {
   ensurePackage,
   type Tree,
 } from '@nx/devkit';
-import {
-  analogVitePluginAngular,
-  analogVitestAngular,
-  nxVersion,
-} from '../../utils/versions';
+import { analogVitestAngular, nxVersion } from '../../utils/versions';
 
 export type AddVitestOptions = {
   name: string;
@@ -28,7 +24,7 @@ export async function addVitest(
       {},
       {
         '@analogjs/vitest-angular': analogVitestAngular,
-        '@analogjs/vite-plugin-angular': analogVitePluginAngular,
+        '@analogjs/vite-plugin-angular': analogVitestAngular,
       },
       undefined,
       true
