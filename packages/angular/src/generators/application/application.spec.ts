@@ -714,12 +714,14 @@ describe('app', () => {
         ).toMatchSnapshot();
       });
 
-      it.skip('🚧 should generate src/test-setup.ts', async () => {
+      it('should generate src/test-setup.ts', async () => {
         await generateApp(appTree, 'my-app', {
           unitTestRunner: UnitTestRunner.Vitest,
         });
 
-        expect(appTree.read('my-app/src/test-setup.ts')).toMatchSnapshot();
+        expect(
+          appTree.read('my-app/src/test-setup.ts', 'utf-8')
+        ).toMatchSnapshot();
       });
 
       it.skip('🚧 should add tsconfig.spec.json', async () => {
