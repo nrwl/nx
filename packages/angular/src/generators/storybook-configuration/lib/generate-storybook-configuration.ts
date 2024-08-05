@@ -12,9 +12,7 @@ export async function generateStorybookConfiguration(
   return await configurationGenerator(tree, {
     project: options.project,
     uiFramework: '@storybook/angular',
-    configureCypress: options.configureCypress,
     linter: options.linter,
-    cypressDirectory: options.cypressDirectory,
     tsConfiguration: options.tsConfiguration,
     interactionTests: options.interactionTests,
     configureStaticServe: options.configureStaticServe,
