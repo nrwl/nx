@@ -1,6 +1,7 @@
 import {
   addDependenciesToPackageJson,
   ensurePackage,
+  joinPathFragments,
   type Tree,
 } from '@nx/devkit';
 import { analogVitestAngular, nxVersion } from '../../utils/versions';
@@ -47,6 +48,30 @@ export async function addVitest(
     },
     true
   );
+
+  const setupFile = joinPathFragments(
+    options.projectRoot,
+    'src',
+    'test-setup.ts'
+  );
+  if (!tree.exists(setupFile)) {
+    tree.write(
+      setupFile,
+      `import '@analogjs/vitest-angular/setup-zone';
+
+import {
+  BrowserDynamicTestingModule,
+  platformBrowserDynamicTesting,
+} from '@angular/platform-browser-dynamic/testing';
+import { getTestBed } from '@angular/core/testing';
+
+getTestBed().initTestEnvironment(
+  BrowserDynamicTestingModule,
+  platformBrowserDynamicTesting()
+);
+`
+    );
+  }
 
   await viteConfigurationGenerator(tree, {
     project: options.name,
