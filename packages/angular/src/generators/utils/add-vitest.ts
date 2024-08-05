@@ -31,9 +31,23 @@ export async function addVitest(
     );
   }
 
-  const { viteConfigurationGenerator } = ensurePackage<
+  const { createOrEditViteConfig, viteConfigurationGenerator } = ensurePackage<
     typeof import('@nx/vite')
   >('@nx/vite', nxVersion);
+
+  createOrEditViteConfig(
+    tree,
+    {
+      project: options.name,
+      includeLib: false,
+      includeVitest: true,
+      inSourceTests: false,
+      imports: [`import angular from '@analogjs/vite-plugin-angular';`],
+      plugins: ['angular()'],
+    },
+    true
+  );
+
   await viteConfigurationGenerator(tree, {
     project: options.name,
     newProject: true,

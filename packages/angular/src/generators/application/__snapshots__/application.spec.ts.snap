@@ -831,6 +831,39 @@ exports[`app --strict should enable strict type checking: e2e tsconfig.json 1`] 
 }
 `;
 
+exports[`app --unit-test-runner vitest should generate vite.config.ts 1`] = `
+"/// <reference types='vitest' />
+import { defineConfig } from 'vite';
+import angular from '@analogjs/vite-plugin-angular';
+import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+
+export default defineConfig({
+  root: __dirname,
+  cacheDir: '../node_modules/.vite/my-app',
+
+  plugins: [angular(), nxViteTsPaths()],
+
+  // Uncomment this if you are using workers.
+  // worker: {
+  //  plugins: [ nxViteTsPaths() ],
+  // },
+
+  test: {
+    watch: false,
+    globals: true,
+    environment: 'jsdom',
+    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+
+    reporters: ['default'],
+    coverage: {
+      reportsDirectory: '../coverage/my-app',
+      provider: 'v8',
+    },
+  },
+});
+"
+`;
+
 exports[`app angular compat support should import "ApplicationConfig" from "@angular/platform-browser" 1`] = `
 "import { ApplicationConfig } from '@angular/core';
 import { provideRouter } from '@angular/router';
