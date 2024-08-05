@@ -31,16 +31,16 @@ function checkDependenciesInstalled(
   };
 
   if (schema.addPlugin) {
-    let storybook7VersionToInstall = storybookVersion;
+    let storybookVersionToInstall = storybookVersion;
     if (
       storybookMajorVersion() >= 7 &&
       getInstalledStorybookVersion() &&
       gte(getInstalledStorybookVersion(), '7.0.0')
     ) {
-      storybook7VersionToInstall = getInstalledStorybookVersion();
+      storybookVersionToInstall = getInstalledStorybookVersion();
     }
 
-    devDependencies['storybook'] = storybook7VersionToInstall;
+    devDependencies['storybook'] = storybookVersionToInstall;
   }
 
   return addDependenciesToPackageJson(
