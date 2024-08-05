@@ -747,21 +747,21 @@ describe('app', () => {
         });
       });
 
-      it.skip('🚧 should add @nx/vite dependency', async () => {
+      it('should add @nx/vite dependency', async () => {
         await generateApp(appTree, 'my-app', {
           unitTestRunner: UnitTestRunner.Vitest,
         });
 
-        const { devDependencies } = readJson(appTree, 'my-app/package.json');
+        const { devDependencies } = readJson(appTree, 'package.json');
         expect(devDependencies['@nx/vite']).toBeDefined();
       });
 
-      it.skip('🚧 should add vitest-angular', async () => {
+      it('should add vitest-angular', async () => {
         await generateApp(appTree, 'my-app', {
           unitTestRunner: UnitTestRunner.Vitest,
         });
 
-        const { devDependencies } = readJson(appTree, 'my-app/package.json');
+        const { devDependencies } = readJson(appTree, 'package.json');
         expect(devDependencies['@analogjs/vite-plugin-angular']).toBeDefined();
         expect(devDependencies['@analogjs/vitest-angular']).toBeDefined();
       });
