@@ -716,7 +716,7 @@ describe('app', () => {
         ).toMatchSnapshot();
       });
 
-      it.skip('🚧 should add tsconfig.spec.json', async () => {
+      it('should add tsconfig.spec.json', async () => {
         await generateApp(appTree, 'my-app', {
           unitTestRunner: UnitTestRunner.Vitest,
         });
@@ -726,7 +726,7 @@ describe('app', () => {
         ).toMatchSnapshot();
       });
 
-      it.skip('🚧 should add a reference to tsconfig.spec.json in tsconfig.json', async () => {
+      it('should add a reference to tsconfig.spec.json in tsconfig.json', async () => {
         await generateApp(appTree, 'my-app', {
           unitTestRunner: UnitTestRunner.Vitest,
         });
