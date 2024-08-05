@@ -24,6 +24,10 @@ export default async function addE2eCiTargetDefaults(tree: Tree) {
     typeof p === 'string' ? p === pluginName : p.plugin === pluginName
   );
 
+  if (!matchingPluginRegistrations) {
+    return;
+  }
+
   const {
     createNodesV2,
   }: { createNodesV2: CreateNodesV2<CypressPluginOptions> } = await import(
