@@ -184,6 +184,32 @@ You can run unit test for a library with the following command:
 nx test my-nest-lib
 ```
 
+## Using CLI Plugins
+
+Nest supports the use of various CLI plugins to enhance the development experience. Plugins can be configured via **transformers** property in NxWebpackPlugin.
+As an example, to set up a [Swagger plugin](https://docs.nestjs.com/openapi/cli-plugin), modify the Nest application's Webpack configuration as follows:
+
+```javascript
+const { NxWebpackPlugin } = require('@nx/webpack');
+
+module.exports = {
+  // ...
+  plugins: [
+    new NxWebpackPlugin({
+      // ...
+      transformers: [
+        {
+          name: '@nestjs/swagger/plugin',
+          options: {
+            dtoFileNameSuffix: ['.dto.ts', '.entity.ts'],
+          },
+        },
+      ],
+    }),
+  ],
+};
+```
+
 ## More Documentation
 
 - [Using Jest](/nx-api/jest)
