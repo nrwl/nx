@@ -704,20 +704,14 @@ describe('app', () => {
     });
 
     describe('vitest', () => {
-      it.skip('🚧 should generate vite.config.ts', async () => {
+      it('should generate vite.config.ts', async () => {
         await generateApp(appTree, 'my-app', {
           unitTestRunner: UnitTestRunner.Vitest,
         });
 
-        expect(appTree.read('my-app/vite.config.ts')).toMatchSnapshot();
-      });
-
-      it.skip('🚧 should generate vitest.config.ts', async () => {
-        await generateApp(appTree, 'my-app', {
-          unitTestRunner: UnitTestRunner.Vitest,
-        });
-
-        expect(appTree.read('my-app/vitest.config.ts')).toMatchSnapshot();
+        expect(
+          appTree.read('my-app/vite.config.ts', 'utf-8')
+        ).toMatchSnapshot();
       });
 
       it.skip('🚧 should generate src/test-setup.ts', async () => {
@@ -733,7 +727,9 @@ describe('app', () => {
           unitTestRunner: UnitTestRunner.Vitest,
         });
 
-        expect(appTree.read('my-app/tsconfig.spec.json')).toMatchSnapshot();
+        expect(
+          appTree.read('my-app/tsconfig.spec.json', 'utf-8')
+        ).toMatchSnapshot();
       });
 
       it.skip('🚧 should add a reference to tsconfig.spec.json in tsconfig.json', async () => {
