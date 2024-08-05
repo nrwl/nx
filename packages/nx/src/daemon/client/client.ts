@@ -372,8 +372,10 @@ export class DaemonClient {
     )) as SyncGeneratorChangesResult[];
     for (const result of results) {
       for (const change of result.changes) {
-        // We need to convert the content back to a buffer
-        change.content = Buffer.from(change.content);
+        if (change.content) {
+          // We need to convert the content back to a buffer
+          change.content = Buffer.from(change.content);
+        }
       }
     }
     return results;

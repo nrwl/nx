@@ -1,7 +1,6 @@
 import { performance } from 'perf_hooks';
 import { parseGeneratorString } from '../command-line/generate/generate';
 import { getGeneratorInformation } from '../command-line/generate/generator-utils';
-import type { GeneratorCallback } from '../config/misc-interfaces';
 import { readNxJson } from '../config/nx-json';
 import type { ProjectGraph } from '../config/project-graph';
 import type { ProjectConfiguration } from '../config/workspace-json-project-json';
@@ -14,18 +13,10 @@ import {
 import { workspaceRoot } from './workspace-root';
 import chalk = require('chalk');
 
-export type SyncGeneratorResult =
-  | void
-  | GeneratorCallback
-  | {
-      callback?: GeneratorCallback;
-      outOfSyncMessage?: string;
-    };
-
 export type SyncGenerator = (
   tree: Tree,
   options: unknown
-) => SyncGeneratorResult | Promise<SyncGeneratorResult>;
+) => void | string | Promise<void | string>;
 
 export type SyncGeneratorChangesResult = {
   changes: FileChange[];
@@ -92,21 +83,6 @@ export async function runSyncGenerator(
   const implementation = implementationFactory() as SyncGenerator;
   const result = await implementation(tree, {});
 
-  let callback: GeneratorCallback | undefined;
-  let outOfSyncMessage: string | undefined;
-  if (result) {
-    if (typeof result === 'function') {
-      callback = result;
-    } else {
-      callback = result.callback;
-      outOfSyncMessage = result.outOfSyncMessage;
-    }
-  }
-
-  if (callback) {
-    await callback();
-  }
-
   performance.mark(`run-sync-generator:${generatorSpecifier}:end`);
   performance.measure(
     `run-sync-generator:${generatorSpecifier}`,
@@ -117,7 +93,7 @@ export async function runSyncGenerator(
   return {
     changes: tree.listChanges(),
     generatorName: generatorSpecifier,
-    outOfSyncMessage,
+    outOfSyncMessage: typeof result === 'string' ? result : undefined,
   };
 }
 
