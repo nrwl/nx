@@ -424,14 +424,6 @@ function getAllFilesWithItemList(data): WalkEntry[] {
         // the path is the relative path to the file within the nx repo
         // the url_partial is the relative path to the file within the docs site - under nx.dev
 
-        // there's an error in `tags.json` where the path is incorrect
-        if (item.file.includes('generated/packages/generated/packages')) {
-          item.file = item.file.replace(
-            'generated/packages/generated/packages',
-            'generated/packages'
-          );
-        }
-
         files.push({ path: `docs/${item.file}.md`, url_partial: item.path });
         if (!identityMap[item.id]) {
           identityMap = { ...identityMap, [item.id]: item };
