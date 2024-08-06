@@ -347,6 +347,7 @@ export interface ViteConfigFileOptions {
   imports?: string[];
   plugins?: string[];
   coverageProvider?: 'v8' | 'istanbul' | 'custom';
+  setupFile?: string;
 }
 
 export function createOrEditViteConfig(
@@ -437,6 +438,7 @@ export function createOrEditViteConfig(
     globals: true,
     environment: '${options.testEnvironment ?? 'jsdom'}',
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    ${options.setupFile ? `setupFiles: ['${options.setupFile}'],` : ''}
     ${
       options.inSourceTests
         ? `includeSource: ['src/**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],`
