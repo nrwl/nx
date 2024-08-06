@@ -29,9 +29,8 @@ We can classify plugins in three groups based on the purpose of the plugin. To g
 {% cards cols="2" %}
 
 {% card title="Organization Specific Plugin" description="Enforce best practices for the repository" url="/extending-nx/tutorials/organization-specific-plugin" /%}
-{% card title="Maintain a Published Plugin" description="Share your plugin with the community" url="/extending-nx/tutorials/publish-plugin" /%}
+{% card title="Tooling Plugin" description="Easily integrate a tool into an Nx workspace" url="/extending-nx/tutorials/tooling-plugin" /%}
 
-<!-- {% card title="Tooling Plugin" description="Easily integrate a tool into an Nx workspace" url="/features/generate-code" /%}
-{% card title="Repository Structure Plugin" description="Set up and maintain a particular structure for the entire repository" url="/concepts/inferred-tasks" /%} -->
+<!-- {% card title="Repository Structure Plugin" description="Set up and maintain a particular structure for the entire repository" url="/concepts/inferred-tasks" /%} -->
 
 {% /cards %}

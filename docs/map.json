@@ -1470,8 +1470,8 @@
             },
             {
               "name": "Maintain a Published Plugin",
-              "id": "publish-plugin",
-              "file": "shared/plugins/maintain-published-plugin"
+              "id": "tooling-plugin",
+              "file": "shared/plugins/tooling-plugin"
             }
           ]
         },

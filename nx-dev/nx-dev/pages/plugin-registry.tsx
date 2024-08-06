@@ -130,7 +130,7 @@ export default function Browse(props: BrowseProps): JSX.Element {
                     Are you a plugin author? You can{' '}
                     <a
                       className="underline"
-                      href="/extending-nx/tutorials/publish-plugin#list-your-nx-plugin"
+                      href="/extending-nx/tutorials/tooling-plugin#list-your-nx-plugin"
                     >
                       add your plugin to the registry
                     </a>{' '}
