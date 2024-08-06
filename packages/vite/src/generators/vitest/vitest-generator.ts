@@ -144,6 +144,8 @@ function updateTsConfig(
   options: VitestGeneratorSchema,
   projectRoot: string
 ) {
+  const setupFile = tryFindSetupFile(tree, projectRoot);
+
   if (tree.exists(joinPathFragments(projectRoot, 'tsconfig.spec.json'))) {
     updateJson(
       tree,
@@ -157,6 +159,11 @@ function updateTsConfig(
             json.compilerOptions.types = ['vitest'];
           }
         }
+
+        if (setupFile) {
+          json.files = [...(json.files ?? []), setupFile];
+        }
+
         return json;
       }
     );
@@ -194,29 +201,21 @@ function updateTsConfig(
     );
   }
 
-  if (options.inSourceTests) {
-    const tsconfigLibPath = joinPathFragments(projectRoot, 'tsconfig.lib.json');
-    const tsconfigAppPath = joinPathFragments(projectRoot, 'tsconfig.app.json');
-    if (tree.exists(tsconfigLibPath)) {
-      updateJson(
-        tree,
-        joinPathFragments(projectRoot, 'tsconfig.lib.json'),
-        (json) => {
-          (json.compilerOptions.types ??= []).push('vitest/importMeta');
-          return json;
-        }
-      );
-    } else if (tree.exists(tsconfigAppPath)) {
-      updateJson(
-        tree,
-        joinPathFragments(projectRoot, 'tsconfig.app.json'),
-        (json) => {
-          (json.compilerOptions.types ??= []).push('vitest/importMeta');
-          return json;
-        }
-      );
-    }
+  const tsconfigLibPath = joinPathFragments(projectRoot, 'tsconfig.lib.json');
+  const tsconfigAppPath = joinPathFragments(projectRoot, 'tsconfig.app.json');
+  if (tree.exists(tsconfigLibPath)) {
+    updateMainTsconfig(tree, tsconfigLibPath, {
+      inSourceTests: options.inSourceTests,
+      setupFile,
+    });
+  } else if (tree.exists(tsconfigAppPath)) {
+    updateMainTsconfig(tree, tsconfigAppPath, {
+      inSourceTests: options.inSourceTests,
+      setupFile,
+    });
+  }
 
+  if (options.inSourceTests) {
     addTsLibDependencies(tree);
   }
 }
@@ -251,6 +250,29 @@ function getCoverageProviderDependency(
         '@vitest/coverage-v8': vitestCoverageV8Version,
       };
   }
+}
+
+function tryFindSetupFile(tree: Tree, projectRoot: string) {
+  const setupFile = joinPathFragments('src', 'test-setup.ts');
+  if (tree.exists(joinPathFragments(projectRoot, setupFile))) {
+    return setupFile;
+  }
+}
+
+function updateMainTsconfig(
+  tree: Tree,
+  tsconfigPath: string,
+  { inSourceTests, setupFile }: { inSourceTests: boolean; setupFile?: string }
+) {
+  updateJson(tree, tsconfigPath, (json) => {
+    if (inSourceTests) {
+      (json.compilerOptions.types ??= []).push('vitest/importMeta');
+    }
+    if (setupFile) {
+      (json.exclude ??= []).push(setupFile);
+    }
+    return json;
+  });
 }
 
 export default vitestGenerator;

@@ -6,7 +6,6 @@ import {
   readProjectConfiguration,
   TargetConfiguration,
   Tree,
-  updateJson,
   updateProjectConfiguration,
   writeJson,
 } from '@nx/devkit';
@@ -539,22 +538,6 @@ export function createOrEditViteConfig(
       });`;
 
   tree.write(viteConfigPath, viteConfigContent);
-
-  updateJson(
-    tree,
-    joinPathFragments(projectRoot, 'tsconfig.spec.json'),
-    (tsConfig) => {
-      tsConfig.files = [...(tsConfig.files ?? []), options.setupFile];
-      return tsConfig;
-    }
-  );
-
-  const tsConfigFile =
-    projectType === 'application' ? 'tsconfig.app.json' : 'tsconfig.lib.json';
-  updateJson(tree, joinPathFragments(projectRoot, tsConfigFile), (tsConfig) => {
-    tsConfig.exclude = [...(tsConfig.exclude ?? []), options.setupFile];
-    return tsConfig;
-  });
 }
 
 export function normalizeViteConfigFilePathWithTree(

@@ -40,29 +40,6 @@ export async function addVitest(
   const relativeTestSetupPath = joinPathFragments('src', 'test-setup.ts');
   const isEsmImplicit = readJson(tree, 'package.json').type === 'module';
 
-  await viteConfigurationGenerator(tree, {
-    project: options.name,
-    newProject: true,
-    uiFramework: 'angular',
-    includeVitest: true,
-    testEnvironment: 'jsdom',
-  });
-
-  createOrEditViteConfig(
-    tree,
-    {
-      project: options.name,
-      includeLib: false,
-      includeVitest: true,
-      inSourceTests: false,
-      imports: [`import angular from '@analogjs/vite-plugin-angular'`],
-      plugins: ['angular()'],
-      setupFile: relativeTestSetupPath,
-      useEsmExtension: !isEsmImplicit,
-    },
-    true
-  );
-
   const setupFile = joinPathFragments(
     options.projectRoot,
     relativeTestSetupPath
@@ -83,6 +60,29 @@ getTestBed().initTestEnvironment(
   platformBrowserDynamicTesting()
 );
 `
+    );
+
+    await viteConfigurationGenerator(tree, {
+      project: options.name,
+      newProject: true,
+      uiFramework: 'angular',
+      includeVitest: true,
+      testEnvironment: 'jsdom',
+    });
+
+    createOrEditViteConfig(
+      tree,
+      {
+        project: options.name,
+        includeLib: false,
+        includeVitest: true,
+        inSourceTests: false,
+        imports: [`import angular from '@analogjs/vite-plugin-angular'`],
+        plugins: ['angular()'],
+        setupFile: relativeTestSetupPath,
+        useEsmExtension: !isEsmImplicit,
+      },
+      true
     );
   }
 }
