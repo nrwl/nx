@@ -105,7 +105,7 @@ export interface ConnectToNxCloudOptions {
 function addNxCloudOptionsToNxJson(
   tree: Tree,
   token: string,
-  directory: string = tree.root
+  directory: string = ''
 ) {
   const nxJsonPath = join(directory, 'nx.json');
   if (tree.exists(nxJsonPath)) {
@@ -173,4 +173,11 @@ export async function connectToNxCloud(
   }
 }
 
-export default connectToNxCloud;
+async function connectToNxCloudGenerator(
+  tree: Tree,
+  options: ConnectToNxCloudOptions
+) {
+  await connectToNxCloud(tree, options);
+}
+
+export default connectToNxCloudGenerator;
