@@ -1,4 +1,5 @@
 import {
+  formatFiles,
   getPackageManagerCommand,
   installPackagesTask,
   joinPathFragments,
@@ -34,6 +35,8 @@ interface Schema {
   e2eTestRunner?: 'cypress' | 'playwright' | 'detox' | 'jest' | 'none';
   ssr?: boolean;
   prefix?: string;
+  useGitHub?: boolean;
+  nxCloud?: 'yes' | 'skip' | 'circleci' | 'github';
 }
 
 export interface NormalizedSchema extends Schema {
@@ -45,9 +48,11 @@ export async function newGenerator(tree: Tree, opts: Schema) {
   const options = normalizeOptions(opts);
   validateOptions(options, tree);
 
-  await generateWorkspaceFiles(tree, { ...options, nxCloud: undefined } as any);
+  await generateWorkspaceFiles(tree, options);
 
   addPresetDependencies(tree, options);
+
+  await formatFiles(tree);
 
   return async () => {
     if (!options.skipInstall) {

@@ -445,6 +445,11 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
    * Set this to false to disable adding inference plugins when generating new projects
    */
   useInferencePlugins?: boolean;
+
+  /**
+   * Set this to false to disable connection to Nx Cloud
+   */
+  neverConnectToCloud?: boolean;
 }
 
 export type PluginConfiguration = string | ExpandedPluginConfiguration;

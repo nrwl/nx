@@ -183,11 +183,15 @@ function generateTags(manifests: Manifest[]) {
         Object.values(item.documents).forEach(
           (documentMetadata: DocumentMetadata) => {
             documentMetadata.tags.forEach((t: string) => {
+              const filePath = documentMetadata.file.startsWith(
+                'generated/packages'
+              )
+                ? documentMetadata.file
+                : ['generated', 'packages', documentMetadata.file].join('/');
+
               const tagData = {
                 description: documentMetadata.description,
-                file: ['generated', 'packages', documentMetadata.file].join(
-                  '/'
-                ),
+                file: filePath,
                 id: documentMetadata.id,
                 name: documentMetadata.name,
                 path: documentMetadata.path,

@@ -249,10 +249,11 @@ manually.
 ## What does `withModuleFederation` do?
 
 In the previous section, we saw `withModuleFederation` used in the webpack config. This function is an abstraction on
-top of webpack's `ModuleFederationPlugin` with some Nx-specific behavior.
+top of `@module-federation/enhanced` with some Nx-specific behavior.
 
 - All libraries (npm and workspace) are shared singletons by default, so you don't manually configure them.
 - Remotes are referenced by name only, since Nx knows which ports each remote is running on (in development mode).
+- Access to the latest features of Module Federation (such as RuntimePlugins). Learn more at [module-federation.io](https://module-federation.io).
 
 With Nx, the developer experience (DX) when working with Module Federation matches more closely to development on a SPA.
 You don't have to worry about managing a bunch of configuration, and most things just work out of the box.

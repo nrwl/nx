@@ -1,5 +1,4 @@
 import {
-  formatFiles,
   generateFiles,
   getPackageManagerVersion,
   names,
@@ -14,6 +13,7 @@ import { join } from 'path';
 import { Preset } from '../utils/presets';
 import { deduceDefaultBase } from '../../utilities/default-base';
 import { NormalizedSchema } from './new';
+import { connectToNxCloud } from 'nx/src/nx-cloud/generators/connect-to-nx-cloud/connect-to-nx-cloud';
 
 export async function generateWorkspaceFiles(
   tree: Tree,
@@ -31,7 +31,20 @@ export async function generateWorkspaceFiles(
   options = normalizeOptions(options);
   createReadme(tree, options);
   createFiles(tree, options);
-  createNxJson(tree, options);
+  const nxJson = createNxJson(tree, options);
+
+  const token =
+    options.nxCloud !== 'skip'
+      ? await connectToNxCloud(
+          tree,
+          {
+            installationSource: 'create-nx-workspace',
+            directory: options.directory,
+            github: options.useGitHub,
+          },
+          nxJson
+        )
+      : null;
 
   const [packageMajor] = packageManagerVersion.split('.');
   if (options.packageManager === 'pnpm' && +packageMajor >= 7) {
@@ -47,7 +60,7 @@ export async function generateWorkspaceFiles(
   addNpmScripts(tree, options);
   setUpWorkspacesInPackageJson(tree, options);
 
-  await formatFiles(tree);
+  return token;
 }
 
 function setPresetProperty(tree: Tree, options: NormalizedSchema) {
@@ -96,6 +109,8 @@ function createNxJson(
   }
 
   writeJson<NxJsonConfiguration>(tree, join(directory, 'nx.json'), nxJson);
+
+  return nxJson;
 }
 
 function createFiles(tree: Tree, options: NormalizedSchema) {
@@ -217,6 +232,7 @@ function normalizeOptions(options: NormalizedSchema) {
     name,
     ...options,
     defaultBase,
+    nxCloud: options.nxCloud ?? 'skip',
   };
 }
 

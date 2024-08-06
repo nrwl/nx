@@ -71,6 +71,10 @@ export async function connectToNxCloudCommand(
 ): Promise<boolean> {
   const nxJson = readNxJson();
 
+  const installationSource = process.env.NX_CONSOLE
+    ? 'nx-console'
+    : 'nx-connect';
+
   if (isNxCloudUsed(nxJson)) {
     const token =
       process.env.NX_CLOUD_ACCESS_TOKEN || nxJson.nxCloudAccessToken;
@@ -80,7 +84,7 @@ export async function connectToNxCloudCommand(
       );
     }
     const connectCloudUrl = await createNxCloudOnboardingURL(
-      'nx-connect',
+      installationSource,
       token
     );
     output.log({
@@ -96,7 +100,7 @@ export async function connectToNxCloudCommand(
     return false;
   }
   const token = await connectWorkspaceToCloud({
-    installationSource: command ?? 'nx-connect',
+    installationSource: command ?? installationSource,
   });
 
   const connectCloudUrl = await createNxCloudOnboardingURL('nx-connect', token);
