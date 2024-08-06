@@ -4956,8 +4956,8 @@
           },
           {
             "name": "Maintain a Published Plugin",
-            "path": "/extending-nx/tutorials/publish-plugin",
-            "id": "publish-plugin",
+            "path": "/extending-nx/tutorials/tooling-plugin",
+            "id": "tooling-plugin",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -4975,8 +4975,8 @@
       },
       {
         "name": "Maintain a Published Plugin",
-        "path": "/extending-nx/tutorials/publish-plugin",
-        "id": "publish-plugin",
+        "path": "/extending-nx/tutorials/tooling-plugin",
+        "id": "tooling-plugin",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false

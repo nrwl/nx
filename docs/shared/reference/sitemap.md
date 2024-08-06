@@ -228,7 +228,7 @@
     - [Extending Nx with Plugins](/extending-nx/intro/getting-started)
   - [5 Min Tutorials](/extending-nx/tutorials)
     - [Enforce Organizational Best Practices](/extending-nx/tutorials/organization-specific-plugin)
-    - [Maintain a Published Plugin](/extending-nx/tutorials/publish-plugin)
+    - [Maintain a Published Plugin](/extending-nx/tutorials/tooling-plugin)
   - [Recipes](/extending-nx/recipes)
     - [Write a Simple Executor](/extending-nx/recipes/local-executors)
     - [Compose Executors](/extending-nx/recipes/compose-executors)

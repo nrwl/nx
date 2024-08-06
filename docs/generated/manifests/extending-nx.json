@@ -52,14 +52,14 @@
         "tags": []
       },
       {
-        "id": "publish-plugin",
+        "id": "tooling-plugin",
         "name": "Maintain a Published Plugin",
         "description": "",
         "mediaImage": "",
-        "file": "shared/plugins/maintain-published-plugin",
+        "file": "shared/plugins/tooling-plugin",
         "itemList": [],
         "isExternal": false,
-        "path": "/extending-nx/tutorials/publish-plugin",
+        "path": "/extending-nx/tutorials/tooling-plugin",
         "tags": []
       }
     ],
@@ -78,15 +78,15 @@
     "path": "/extending-nx/tutorials/organization-specific-plugin",
     "tags": []
   },
-  "/extending-nx/tutorials/publish-plugin": {
-    "id": "publish-plugin",
+  "/extending-nx/tutorials/tooling-plugin": {
+    "id": "tooling-plugin",
     "name": "Maintain a Published Plugin",
     "description": "",
     "mediaImage": "",
-    "file": "shared/plugins/maintain-published-plugin",
+    "file": "shared/plugins/tooling-plugin",
     "itemList": [],
     "isExternal": false,
-    "path": "/extending-nx/tutorials/publish-plugin",
+    "path": "/extending-nx/tutorials/tooling-plugin",
     "tags": []
   },
   "/extending-nx/recipes": {
