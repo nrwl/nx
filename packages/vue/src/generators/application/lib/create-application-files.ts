@@ -6,9 +6,26 @@ import { createTsConfig } from '../../../utils/create-ts-config';
 import { NormalizedSchema } from '../schema';
 
 export function createApplicationFiles(tree: Tree, options: NormalizedSchema) {
+  const nxWelcomePath = {
+    claimed: '../files/nx-welcome/claimed',
+    'not-configured': '../files/nx-welcome/not-configured',
+    unclaimed: '../files/nx-welcome/unclaimed',
+  }[options.onBoardingStatus];
+
   generateFiles(
     tree,
     path.join(__dirname, '../files/common'),
+    options.appProjectRoot,
+    {
+      ...options,
+      offsetFromRoot: offsetFromRoot(options.appProjectRoot),
+      title: options.projectName,
+    }
+  );
+
+  generateFiles(
+    tree,
+    path.join(__dirname, nxWelcomePath),
     options.appProjectRoot,
     {
       ...options,
