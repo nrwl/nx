@@ -397,6 +397,9 @@
             "accessToken": {
               "type": "string"
             },
+            "nxCloudId": {
+              "type": "string"
+            },
             "captureStderr": {
               "type": "boolean",
               "description": "Defines whether the cache captures stderr or just stdout."
