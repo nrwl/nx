@@ -50,11 +50,6 @@ export async function createFiles(
   };
 
   const angularAppType = options.rootProject ? 'standalone' : 'ng-module';
-  const nxWelcomePath = {
-    unclaimed: `../files/nx-welcome/unclaimed/${angularAppType}`,
-    claimed: `../files/nx-welcome/claimed/${angularAppType}`,
-    'not-configured': `../files/nx-welcome/not-configured/${angularAppType}`,
-  }[options.onBoardingStatus];
 
   generateFiles(
     tree,
@@ -97,7 +92,12 @@ export async function createFiles(
 
   generateFiles(
     tree,
-    joinPathFragments(__dirname, nxWelcomePath),
+    joinPathFragments(
+      __dirname,
+      '../files/nx-welcome',
+      options.onBoardingStatus,
+      angularAppType
+    ),
     options.appProjectRoot,
     substitutions
   );
