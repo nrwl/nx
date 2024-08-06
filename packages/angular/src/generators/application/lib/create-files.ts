@@ -42,8 +42,19 @@ export async function createFiles(
     disableModernClassFieldsBehavior,
     useEventCoalescing: angularMajorVersion >= 18,
     useRouterTestingModule: angularMajorVersion < 18,
+    connectCloudUrl: options.connectCloudUrl,
+    tutorialUrl: options.rootProject
+      ? 'https://nx.dev/getting-started/tutorials/angular-standalone-tutorial?utm_source=nx-project'
+      : 'https://nx.dev/getting-started/tutorials/angular-monorepo-tutorial?utm_source=nx-project',
     tpl: '',
   };
+
+  const angularAppType = options.rootProject ? 'standalone' : 'ng-module';
+  const nxWelcomePath = {
+    unclaimed: `../files/nx-welcome/unclaimed/${angularAppType}`,
+    claimed: `../files/nx-welcome/claimed/${angularAppType}`,
+    'not-configured': `../files/nx-welcome/not-configured/${angularAppType}`,
+  }[options.onBoardingStatus];
 
   generateFiles(
     tree,
@@ -83,6 +94,13 @@ export async function createFiles(
       substitutions
     );
   }
+
+  generateFiles(
+    tree,
+    joinPathFragments(__dirname, nxWelcomePath),
+    options.appProjectRoot,
+    substitutions
+  );
 
   updateProjectRootTsConfig(
     tree,

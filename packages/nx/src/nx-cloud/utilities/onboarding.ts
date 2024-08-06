@@ -21,7 +21,7 @@ export async function getNxCloudAppOnBoardingUrl(token: string) {
     return null;
   }
   const onboardingUrl = await createNxCloudOnboardingURL(
-    'create-nx-app',
+    'create-nx-project',
     token
   );
   return onboardingUrl;

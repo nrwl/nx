@@ -70,7 +70,7 @@ import { CommonModule } from '@angular/common';
         color: rgba(229, 231, 235, 1);
         font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
           'Liberation Mono', 'Courier New', monospace;
-        overflow: scroll;
+        overflow: auto;
         padding: 0.5rem 0.75rem;
       }
       .shadow {
@@ -161,9 +161,13 @@ import { CommonModule } from '@angular/common';
       #middle-content {
         align-items: flex-start;
         display: grid;
-        gap: 4rem;
         grid-template-columns: 1fr;
         margin-top: 3.5rem;
+      }
+      #middle-content #middle-left-content {
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
       }
       #learning-materials {
         padding: 2.5rem 2rem;
@@ -206,7 +210,6 @@ import { CommonModule } from '@angular/common';
           opacity, box-shadow, transform, filter, backdrop-filter,
           -webkit-backdrop-filter;
         transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-        transition-duration: 150ms;
       }
       .list-item-link > span > span {
         color: rgba(107, 114, 128, 1);
@@ -219,7 +222,6 @@ import { CommonModule } from '@angular/common';
           opacity, box-shadow, transform, filter, backdrop-filter,
           -webkit-backdrop-filter;
         transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-        transition-duration: 150ms;
       }
       .list-item-link svg:last-child {
         height: 1rem;
@@ -230,18 +232,16 @@ import { CommonModule } from '@angular/common';
       }
       .list-item-link:hover {
         color: rgba(255, 255, 255, 1);
-        background-color: hsla(162, 47%, 50%, 1);
+        background-color: hsla(162, 55%, 33%, 1);
       }
-      .list-item-link:hover > span {
-      }
+
       .list-item-link:hover > span > span {
         color: rgba(243, 244, 246, 1);
       }
       .list-item-link:hover svg:last-child {
         transform: translateX(0.25rem);
       }
-      #other-links {
-      }
+
       .button-pill {
         padding: 1.5rem 2rem;
         margin-bottom: 2rem;
@@ -338,16 +338,16 @@ import { CommonModule } from '@angular/common';
         margin-top: 1rem;
       }
       #nx-cloud a {
-        color: rgba(107, 114, 128, 1);
-        display: block;
-        font-size: 0.875rem;
-        line-height: 1.25rem;
+        border-radius: 0.75rem;
+        color: white;
+        background-color: hsla(214, 62%, 21%, 1);
+        display: inline-block;
         margin-top: 1.5rem;
-        text-align: right;
+        padding: 0.5rem 1rem;
+        text-align:left;
+        text-decoration: inherit;
       }
-      #nx-cloud a:hover {
-        text-decoration: underline;
-      }
+
       #commands {
         padding: 2.5rem 2rem;
         margin-top: 3.5rem;
@@ -423,6 +423,7 @@ import { CommonModule } from '@angular/common';
         }
         #middle-content {
           grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 4rem
         }
       }
     </style>
@@ -471,6 +472,7 @@ import { CommonModule } from '@angular/common';
         </div>
         <!--  MIDDLE CONTENT  -->
         <div id="middle-content">
+        <div id="middle-left-content">
           <div id="learning-materials" class="rounded shadow">
             <h2>Learning materials</h2>
             <a href="https://nx.dev/getting-started/intro?utm_source=nx-project" target="_blank" rel="noreferrer" class="list-item-link">
@@ -505,7 +507,7 @@ import { CommonModule } from '@angular/common';
                 />
               </svg>
             </a>
-            <a href="https://nx.dev/blog/?utm_source=nx-project" target="_blank" rel="noreferrer" class="list-item-link">
+            <a href="https://nx.dev/blog?utm_source=nx-project" target="_blank" rel="noreferrer" class="list-item-link">
               <svg
                 fill="none"
                 stroke="currentColor"
@@ -567,7 +569,7 @@ import { CommonModule } from '@angular/common';
                 />
               </svg>
             </a>
-            <a href="https://nx.dev/angular-tutorial/1-code-generation?utm_source=nx-project" target="_blank" rel="noreferrer" class="list-item-link">
+            <a href="<%= tutorialUrl %>" target="_blank" rel="noreferrer" class="list-item-link">
               <svg
                 fill="none"
                 stroke="currentColor"
@@ -599,41 +601,22 @@ import { CommonModule } from '@angular/common';
                 />
               </svg>
             </a>
-            <a href="https://nxplaybook.com/?utm_source=nx-project" target="_blank" rel="noreferrer" class="list-item-link">
+            </div>
+            <a id="nx-repo" class="button-pill rounded shadow" href="https://github.com/nrwl/nx?utm_source=nx-project" target="_blank" rel="noreferrer">
               <svg
-                fill="none"
-                stroke="currentColor"
+                fill="currentColor"
+                role="img"
                 viewBox="0 0 24 24"
                 xmlns="http://www.w3.org/2000/svg"
               >
-                <path d="M12 14l9-5-9-5-9 5 9 5z" />
                 <path
-                  d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"
-                />
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222"
+                  d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"
                 />
               </svg>
               <span>
-                Video courses
-                <span> Nx custom courses </span>
+                Nx is open source
+                <span> Love Nx? Give us a star! </span>
               </span>
-              <svg
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M9 5l7 7-7 7"
-                />
-              </svg>
             </a>
           </div>
           <div id="other-links">
@@ -698,35 +681,88 @@ import { CommonModule } from '@angular/common';
                   </span>
                 </h2>
               </div>
-              <p>
-                You can activate distributed tasks executions and caching by
-                running:
-              </p>
-              <pre>nx connect</pre>
-              <a href="https://nx.app/?utm_source=nx-project" target="_blank" rel="noreferrer"> What is Nx Cloud? </a>
+                <p>
+                  Your workspace is connected to Nx Cloud.
+                </p>
+                <a
+                  href="https://nx.dev/ci/intro/ci-with-nx#learn-about-nx-on-ci"
+                  target="_blank"
+                  rel="noreferrer"
+                > Learn about Nx on CI
+                </a>
             </div>
-            <a id="nx-repo" class="button-pill rounded shadow" href="https://github.com/nrwl/nx?utm_source=nx-project" target="_blank" rel="noreferrer">
+          </div>
+        </div>
+        <!--  COMMANDS  -->
+                <div id="commands" class="rounded shadow">
+          <h2>Next steps</h2>
+          <p>Here are some things you can do with Nx:</p>
+          <details>
+            <summary>
               <svg
-                fill="currentColor"
-                role="img"
+                fill="none"
+                stroke="currentColor"
                 viewBox="0 0 24 24"
                 xmlns="http://www.w3.org/2000/svg"
               >
                 <path
-                  d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
                 />
               </svg>
-              <span>
-                Nx is open source
-                <span> Love Nx? Give us a star! </span>
-              </span>
-            </a>
-          </div>
-        </div>
-        <!--  COMMANDS  -->
-        <div id="commands" class="rounded shadow">
-          <h2>Next steps</h2>
-          <p>Here are some things you can do with Nx:</p>
+              Build, test and lint your app
+            </summary>
+            <pre><span># Build</span>
+nx build 
+<span># Test</span>
+nx test 
+<span># Lint</span>
+nx lint 
+<span># Run them together!</span>
+nx run-many -t build test lint</pre>
+          </details>
+          <details>
+            <summary>
+              <svg
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                />
+              </svg>
+              View project details
+            </summary>
+            <pre>nx show project <%= appName %></pre>
+          </details>
+
+          <details>
+            <summary>
+              <svg
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                />
+              </svg>
+              View interactive project graph
+            </summary>
+            <pre>nx graph</pre>
+          </details>
+
           <details>
             <summary>
               <svg
@@ -748,68 +784,6 @@ import { CommonModule } from '@angular/common';
 nx g &#64;nx/angular:lib ui
 <span># Add a component</span>
 nx g &#64;nx/angular:component ui/src/lib/button</pre>
-          </details>
-          <details>
-            <summary>
-              <svg
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                />
-              </svg>
-              View project details
-            </summary>
-            <pre>nx show project <%= appName %> --web</pre>
-          </details>
-          <details>
-            <summary>
-              <svg
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                />
-              </svg>
-              View interactive project graph
-            </summary>
-            <pre>nx graph</pre>
-          </details>
-          <details>
-            <summary>
-              <svg
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                />
-              </svg>
-              Run affected commands
-            </summary>
-            <pre><span># see what&apos;s been affected by changes</span>
-nx affected:graph
-<span># run tests for current changes</span>
-nx affected:test
-<span># run e2e tests for current changes</span>
-nx affected:e2e</pre>
           </details>
         </div>
         <p id="love">
