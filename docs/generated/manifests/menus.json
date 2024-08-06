@@ -1923,6 +1923,14 @@
                 "disableCollapsible": false
               },
               {
+                "name": "Customize Conventional Commit Types",
+                "path": "/recipes/nx-release/customize-conventional-commit-types",
+                "id": "customize-conventional-commit-types",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
                 "name": "Configure Custom Registries",
                 "path": "/recipes/nx-release/configure-custom-registries",
                 "id": "configure-custom-registries",
@@ -1958,14 +1966,6 @@
                 "name": "Update Your Local Registry Setup to use Nx Release",
                 "path": "/recipes/nx-release/update-local-registry-setup",
                 "id": "update-local-registry-setup",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Customize Conventional Commit Types",
-                "path": "/recipes/nx-release/customize-conventional-commit-types",
-                "id": "customize-conventional-commit-types",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -3626,6 +3626,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Customize Conventional Commit Types",
+            "path": "/recipes/nx-release/customize-conventional-commit-types",
+            "id": "customize-conventional-commit-types",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Configure Custom Registries",
             "path": "/recipes/nx-release/configure-custom-registries",
             "id": "configure-custom-registries",
@@ -3661,14 +3669,6 @@
             "name": "Update Your Local Registry Setup to use Nx Release",
             "path": "/recipes/nx-release/update-local-registry-setup",
             "id": "update-local-registry-setup",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Customize Conventional Commit Types",
-            "path": "/recipes/nx-release/customize-conventional-commit-types",
-            "id": "customize-conventional-commit-types",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -3717,6 +3717,14 @@
         "disableCollapsible": false
       },
       {
+        "name": "Customize Conventional Commit Types",
+        "path": "/recipes/nx-release/customize-conventional-commit-types",
+        "id": "customize-conventional-commit-types",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
         "name": "Configure Custom Registries",
         "path": "/recipes/nx-release/configure-custom-registries",
         "id": "configure-custom-registries",
@@ -3752,14 +3760,6 @@
         "name": "Update Your Local Registry Setup to use Nx Release",
         "path": "/recipes/nx-release/update-local-registry-setup",
         "id": "update-local-registry-setup",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Customize Conventional Commit Types",
-        "path": "/recipes/nx-release/customize-conventional-commit-types",
-        "id": "customize-conventional-commit-types",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
