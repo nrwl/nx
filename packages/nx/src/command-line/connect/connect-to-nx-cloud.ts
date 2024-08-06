@@ -29,7 +29,10 @@ export function onlyDefaultRunnerIsUsed(nxJson: NxJsonConfiguration) {
     // No tasks runner options OR no default runner defined:
     // - If access token defined, uses cloud runner
     // - If no access token defined, uses default
-    return !(nxJson.nxCloudAccessToken ?? process.env.NX_CLOUD_ACCESS_TOKEN);
+    return (
+      !(nxJson.nxCloudAccessToken ?? process.env.NX_CLOUD_ACCESS_TOKEN) &&
+      !nxJson.nxCloudId
+    );
   }
 
   return defaultRunner === 'nx/tasks-runners/default';

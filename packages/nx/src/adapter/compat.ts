@@ -71,6 +71,7 @@ export const allowedWorkspaceExtensions = [
   'installation',
   'release',
   'nxCloudAccessToken',
+  'nxCloudId',
   'nxCloudUrl',
   'nxCloudEncryptionKey',
   'parallel',
