@@ -4,7 +4,6 @@ import {
   joinPathFragments,
   readJson,
   type Tree,
-  updateJson,
 } from '@nx/devkit';
 import { analogVitestAngular, nxVersion } from '../../utils/versions';
 
@@ -40,6 +39,14 @@ export async function addVitest(
 
   const relativeTestSetupPath = joinPathFragments('src', 'test-setup.ts');
   const isEsmImplicit = readJson(tree, 'package.json').type === 'module';
+
+  await viteConfigurationGenerator(tree, {
+    project: options.name,
+    newProject: true,
+    uiFramework: 'angular',
+    includeVitest: true,
+    testEnvironment: 'jsdom',
+  });
 
   createOrEditViteConfig(
     tree,
@@ -78,30 +85,4 @@ getTestBed().initTestEnvironment(
 `
     );
   }
-
-  await viteConfigurationGenerator(tree, {
-    project: options.name,
-    newProject: true,
-    uiFramework: 'angular',
-    includeVitest: true,
-    testEnvironment: 'jsdom',
-  });
-
-  updateJson(
-    tree,
-    joinPathFragments(options.projectRoot, 'tsconfig.spec.json'),
-    (tsConfig) => {
-      tsConfig.files = [...(tsConfig.files ?? []), relativeTestSetupPath];
-      return tsConfig;
-    }
-  );
-
-  updateJson(
-    tree,
-    joinPathFragments(options.projectRoot, 'tsconfig.app.json'),
-    (tsConfig) => {
-      tsConfig.exclude = [...(tsConfig.exclude ?? []), relativeTestSetupPath];
-      return tsConfig;
-    }
-  );
 }

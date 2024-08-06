@@ -706,6 +706,7 @@ describe('app', () => {
     describe('vitest', () => {
       it('should generate vite.config.mts', async () => {
         await generateApp(appTree, 'my-app', {
+          skipFormat: false,
           unitTestRunner: UnitTestRunner.Vitest,
         });
 
@@ -780,6 +781,7 @@ describe('app', () => {
         }));
 
         await generateApp(appTree, 'my-app', {
+          skipFormat: false,
           unitTestRunner: UnitTestRunner.Vitest,
         });
 
