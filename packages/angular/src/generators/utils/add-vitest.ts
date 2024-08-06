@@ -95,4 +95,13 @@ getTestBed().initTestEnvironment(
       return tsConfig;
     }
   );
+
+  updateJson(
+    tree,
+    joinPathFragments(options.projectRoot, 'tsconfig.app.json'),
+    (tsConfig) => {
+      tsConfig.exclude = [...(tsConfig.exclude ?? []), relativeTestSetupPath];
+      return tsConfig;
+    }
+  );
 }

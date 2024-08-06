@@ -724,6 +724,15 @@ describe('app', () => {
         ).toMatchSnapshot();
       });
 
+      it('should exclude src/test-setup.ts in tsconfig.app.json', async () => {
+        await generateApp(appTree, 'my-app', {
+          unitTestRunner: UnitTestRunner.Vitest,
+        });
+
+        const tsConfig = readJson(appTree, 'my-app/tsconfig.app.json');
+        expect(tsConfig.exclude).toContain('src/test-setup.ts');
+      });
+
       it('should add tsconfig.spec.json', async () => {
         await generateApp(appTree, 'my-app', {
           unitTestRunner: UnitTestRunner.Vitest,
