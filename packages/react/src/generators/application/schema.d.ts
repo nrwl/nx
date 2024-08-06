@@ -29,6 +29,7 @@ export interface Schema {
   bundler?: 'webpack' | 'vite' | 'rspack';
   minimal?: boolean;
   addPlugin?: boolean;
+  nxCloudToken?: string;
 }
 
 export interface NormalizedSchema<T extends Schema = Schema> extends T {
@@ -47,4 +48,6 @@ export interface NormalizedSchema<T extends Schema = Schema> extends T {
   hasStyles: boolean;
   unitTestRunner: 'jest' | 'vitest' | 'none';
   addPlugin?: boolean;
+  onBoardingStatus?: NxCloudOnBoardingStatus;
+  connectCloudUrl?: string;
 }

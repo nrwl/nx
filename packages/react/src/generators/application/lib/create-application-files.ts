@@ -140,11 +140,21 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
   }
 
   if (!options.minimal) {
+    const nxWelcomePath: string = {
+      claimed: '../files/nx-welcome/claimed',
+      unclaimed: '../files/nx-welcome/unclaimed',
+      'not-configured': '../files/nx-welcome/not-configured',
+    }[options.onBoardingStatus];
+
+    const tutorialUrl = options.rootProject
+      ? 'https://nx.dev/getting-started/tutorials/react-standalone-tutorial'
+      : 'https://nx.dev/react-tutorial/1-code-generation?utm_source=nx-project';
+
     generateFiles(
       host,
-      join(__dirname, '../files/nx-welcome'),
+      join(__dirname, nxWelcomePath),
       options.appProjectRoot,
-      templateVariables
+      { ...templateVariables, tutorialUrl }
     );
   }
 
