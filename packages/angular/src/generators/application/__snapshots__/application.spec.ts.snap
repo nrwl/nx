@@ -880,7 +880,41 @@ getTestBed().initTestEnvironment(
 "
 `;
 
-exports[`app --unit-test-runner vitest should generate vite.config.ts 1`] = `
+exports[`app --unit-test-runner vitest should generate vite.config.mts 1`] = `
+"/// <reference types='vitest' />
+import { defineConfig } from 'vite';
+import angular from '@analogjs/vite-plugin-angular';
+import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+
+export default defineConfig({
+  root: __dirname,
+  cacheDir: '../node_modules/.vite/my-app',
+
+  plugins: [angular(), nxViteTsPaths()],
+
+  // Uncomment this if you are using workers.
+  // worker: {
+  //  plugins: [ nxViteTsPaths() ],
+  // },
+
+  test: {
+    watch: false,
+    globals: true,
+    environment: 'jsdom',
+    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    setupFiles: ['src/test-setup.ts'],
+
+    reporters: ['default'],
+    coverage: {
+      reportsDirectory: '../coverage/my-app',
+      provider: 'v8',
+    },
+  },
+});
+"
+`;
+
+exports[`app --unit-test-runner vitest should generate vite.config.ts if package type is module 1`] = `
 "/// <reference types='vitest' />
 import { defineConfig } from 'vite';
 import angular from '@analogjs/vite-plugin-angular';
