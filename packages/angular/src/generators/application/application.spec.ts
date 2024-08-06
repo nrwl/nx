@@ -704,13 +704,13 @@ describe('app', () => {
     });
 
     describe('vitest', () => {
-      it('should generate vite.config.ts', async () => {
+      it('should generate vite.config.mts', async () => {
         await generateApp(appTree, 'my-app', {
           unitTestRunner: UnitTestRunner.Vitest,
         });
 
         expect(
-          appTree.read('my-app/vite.config.ts', 'utf-8')
+          appTree.read('my-app/vite.config.mts', 'utf-8')
         ).toMatchSnapshot();
       });
 
@@ -762,6 +762,21 @@ describe('app', () => {
         const { devDependencies } = readJson(appTree, 'package.json');
         expect(devDependencies['@analogjs/vite-plugin-angular']).toBeDefined();
         expect(devDependencies['@analogjs/vitest-angular']).toBeDefined();
+      });
+
+      it('should generate vite.config.ts if package type is module', async () => {
+        updateJson(appTree, 'package.json', (json) => ({
+          ...json,
+          type: 'module',
+        }));
+
+        await generateApp(appTree, 'my-app', {
+          unitTestRunner: UnitTestRunner.Vitest,
+        });
+
+        expect(
+          appTree.read('my-app/vite.config.ts', 'utf-8')
+        ).toMatchSnapshot();
       });
     });
 

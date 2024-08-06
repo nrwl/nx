@@ -348,6 +348,7 @@ export interface ViteConfigFileOptions {
   plugins?: string[];
   coverageProvider?: 'v8' | 'istanbul' | 'custom';
   setupFile?: string;
+  useEsmExtension?: boolean;
 }
 
 export function createOrEditViteConfig(
@@ -359,9 +360,10 @@ export function createOrEditViteConfig(
 ) {
   const { root: projectRoot } = readProjectConfiguration(tree, options.project);
 
+  const extension = options.useEsmExtension ? 'mts' : 'ts';
   const viteConfigPath = vitestFileName
-    ? `${projectRoot}/vitest.config.ts`
-    : `${projectRoot}/vite.config.ts`;
+    ? `${projectRoot}/vitest.config.${extension}`
+    : `${projectRoot}/vite.config.${extension}`;
 
   const buildOutDir =
     projectRoot === '.'
