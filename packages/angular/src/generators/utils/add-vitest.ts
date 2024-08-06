@@ -3,6 +3,7 @@ import {
   ensurePackage,
   joinPathFragments,
   type Tree,
+  updateJson,
 } from '@nx/devkit';
 import { analogVitestAngular, nxVersion } from '../../utils/versions';
 
@@ -36,6 +37,8 @@ export async function addVitest(
     typeof import('@nx/vite')
   >('@nx/vite', nxVersion);
 
+  const relativeTestSetupPath = joinPathFragments('src', 'test-setup.ts');
+
   createOrEditViteConfig(
     tree,
     {
@@ -43,16 +46,16 @@ export async function addVitest(
       includeLib: false,
       includeVitest: true,
       inSourceTests: false,
-      imports: [`import angular from '@analogjs/vite-plugin-angular';`],
+      imports: [`import angular from '@analogjs/vite-plugin-angular'`],
       plugins: ['angular()'],
+      setupFile: relativeTestSetupPath,
     },
     true
   );
 
   const setupFile = joinPathFragments(
     options.projectRoot,
-    'src',
-    'test-setup.ts'
+    relativeTestSetupPath
   );
   if (!tree.exists(setupFile)) {
     tree.write(
@@ -80,4 +83,13 @@ getTestBed().initTestEnvironment(
     includeVitest: true,
     testEnvironment: 'jsdom',
   });
+
+  updateJson(
+    tree,
+    joinPathFragments(options.projectRoot, 'tsconfig.spec.json'),
+    (tsConfig) => {
+      tsConfig.files = [...(tsConfig.files ?? []), relativeTestSetupPath];
+      return tsConfig;
+    }
+  );
 }
