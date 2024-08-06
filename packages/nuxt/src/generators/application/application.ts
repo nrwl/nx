@@ -39,16 +39,14 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
 
   const projectOffsetFromRoot = offsetFromRoot(options.appProjectRoot);
 
-  if (!options.onBoardingStatus) {
-    options.onBoardingStatus = await getNxCloudOnBoardingStatus(
-      tree,
+  options.onBoardingStatus = await getNxCloudOnBoardingStatus(
+    tree,
+    options.nxCloudToken
+  );
+  if (options.onBoardingStatus === 'unclaimed') {
+    options.connectCloudUrl = await getNxCloudAppOnBoardingUrl(
       options.nxCloudToken
     );
-    if (options.onBoardingStatus === 'unclaimed') {
-      options.connectCloudUrl = await getNxCloudAppOnBoardingUrl(
-        options.nxCloudToken
-      );
-    }
   }
 
   const jsInitTask = await jsInitGenerator(tree, {

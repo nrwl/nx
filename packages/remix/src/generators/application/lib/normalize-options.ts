@@ -3,6 +3,7 @@ import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/pr
 import { type NxRemixGeneratorSchema } from '../schema';
 import { Linter } from '@nx/eslint';
 import { RemixPluginOptions } from '../../../plugins/plugin';
+import type { NxCloudOnBoardingStatus } from 'nx/src/nx-cloud/models/onboarding-status';
 
 export interface NormalizedSchema extends NxRemixGeneratorSchema {
   projectName: string;
@@ -13,6 +14,8 @@ export interface NormalizedSchema extends NxRemixGeneratorSchema {
   e2eWebServerTarget: string;
   e2ePort: number;
   parsedTags: string[];
+  onBoardingStatus?: NxCloudOnBoardingStatus;
+  connectCloudUrl?: string;
 }
 
 export async function normalizeOptions(

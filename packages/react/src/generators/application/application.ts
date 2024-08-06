@@ -151,16 +151,14 @@ export async function applicationGeneratorInternal(
     extractTsConfigBase(host);
   }
 
-  if (!options.onBoardingStatus) {
-    options.onBoardingStatus = await getNxCloudOnBoardingStatus(
-      host,
+  options.onBoardingStatus = await getNxCloudOnBoardingStatus(
+    host,
+    options.nxCloudToken
+  );
+  if (options.onBoardingStatus === 'unclaimed') {
+    options.connectCloudUrl = await getNxCloudAppOnBoardingUrl(
       options.nxCloudToken
     );
-    if (options.onBoardingStatus === 'unclaimed') {
-      options.connectCloudUrl = await getNxCloudAppOnBoardingUrl(
-        options.nxCloudToken
-      );
-    }
   }
 
   createApplicationFiles(host, options);

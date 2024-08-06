@@ -36,6 +36,10 @@ import { initGenerator as jsInitGenerator } from '@nx/js';
 import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 import { updateJestTestMatch } from '../../utils/testing-config-utils';
+import {
+  getNxCloudAppOnBoardingUrl,
+  getNxCloudOnBoardingStatus,
+} from 'nx/src/nx-cloud/utilities/onboarding';
 
 export function remixApplicationGenerator(
   tree: Tree,
@@ -110,6 +114,16 @@ export async function remixApplicationGeneratorInternal(
       : {},
   });
 
+  options.onBoardingStatus = await getNxCloudOnBoardingStatus(
+    tree,
+    options.nxCloudToken
+  );
+  if (options.onBoardingStatus === 'unclaimed') {
+    options.connectCloudUrl = await getNxCloudAppOnBoardingUrl(
+      options.nxCloudToken
+    );
+  }
+
   const installTask = updateDependencies(tree);
   tasks.push(installTask);
 
@@ -130,6 +144,17 @@ export async function remixApplicationGeneratorInternal(
   generateFiles(
     tree,
     joinPathFragments(__dirname, 'files/common'),
+    options.projectRoot,
+    vars
+  );
+
+  generateFiles(
+    tree,
+    joinPathFragments(
+      __dirname,
+      './files/nx-welcome',
+      options.onBoardingStatus
+    ),
     options.projectRoot,
     vars
   );
