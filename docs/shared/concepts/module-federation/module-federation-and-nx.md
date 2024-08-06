@@ -2,6 +2,15 @@
 
 Module Federation is a technique that allows developers to share code and resources across multiple applications. It has become more popular in recent years since the addition of the [ModuleFederationPlugin](https://webpack.js.org/plugins/module-federation-plugin/) in [Webpack](https://webpack.js.org).
 
+{% callout type="note" title="Nx uses @module-federation/enhanced" %}
+As of Nx 19.5, our Module Federation support is provided by the [@module-federation/enhanced](https://npmjs.com/@module-federation/enhanced) package.
+This package is owned and maintained by [Zack Jackson](https://x.com/ScriptedAlchemy), the creator of Module Federation, and the [ByteDance](https://x.com/ByteDanceTalk) team.
+
+Using this package for Nx's Module Federation support keeps our support aligned with the latest improvements, features and bug fixes for Module Federation.
+
+You can learn more about Module Federation Enhanced on their [docs](https://module-federation.io/).
+{% /callout %}
+
 An increasing number of enterprise applications have started to adopt Module Federation to help them develop and scale their applications quickly, while reducing some overhead in sharing code between teams.
 
 Nx added out-of-the-box support for Module Federation with Webpack to make it more approachable, less complex and leverage some unique benefits that can only be realised in a monorepo.
