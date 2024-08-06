@@ -83,7 +83,9 @@ export function processMdxForSearch(content: string): ProcessedMdx {
     const [firstNode] = tree.children;
 
     const heading =
-      firstNode.type === 'heading' ? toString(firstNode) : undefined;
+      firstNode.type === 'heading'
+        ? removeTitleDescriptionFromHeading(toString(firstNode))
+        : undefined;
     const slug = heading ? slugger.slug(heading) : undefined;
 
     return {
@@ -320,28 +322,29 @@ async function generateEmbeddings() {
 
           const longer_heading =
             source !== 'community-plugins'
-              ? createLongerHeading(heading, url_partial)
+              ? removeTitleDescriptionFromHeading(
+                  createLongerHeading(heading, url_partial)
+                )
               : heading;
 
-          const { error: insertPageSectionError, data: pageSection } =
-            await supabaseClient
-              .from('nods_page_section')
-              .insert({
-                page_id: page.id,
-                slug,
-                heading:
-                  heading?.length && heading !== null && heading !== 'null'
-                    ? heading
-                    : longer_heading,
-                longer_heading,
-                content,
-                url_partial,
-                token_count: embeddingResponse.usage.total_tokens,
-                embedding: responseData.embedding,
-              })
-              .select()
-              .limit(1)
-              .single();
+          const { error: insertPageSectionError } = await supabaseClient
+            .from('nods_page_section')
+            .insert({
+              page_id: page.id,
+              slug,
+              heading:
+                heading?.length && heading !== null && heading !== 'null'
+                  ? heading
+                  : longer_heading,
+              longer_heading,
+              content,
+              url_partial,
+              token_count: embeddingResponse.usage.total_tokens,
+              embedding: responseData.embedding,
+            })
+            .select()
+            .limit(1)
+            .single();
 
           if (insertPageSectionError) {
             throw insertPageSectionError;
@@ -420,6 +423,7 @@ function getAllFilesWithItemList(data): WalkEntry[] {
       if (item.file && item.file.length > 0) {
         // the path is the relative path to the file within the nx repo
         // the url_partial is the relative path to the file within the docs site - under nx.dev
+
         files.push({ path: `docs/${item.file}.md`, url_partial: item.path });
         if (!identityMap[item.id]) {
           identityMap = { ...identityMap, [item.id]: item };
@@ -486,6 +490,28 @@ function createMarkdownForCommunityPlugins(): {
       url: plugin.url,
     };
   });
+}
+
+function removeTitleDescriptionFromHeading(
+  inputString?: string
+): string | null {
+  /**
+   * Heading node can be like this:
+   * title: 'Angular Monorepo Tutorial - Part 1: Code Generation'
+   * description: In this tutorial you'll create a frontend-focused workspace with Nx.
+   *
+   * We only want to keep the title part.
+   */
+  if (!inputString) {
+    return null;
+  }
+  const titleMatch = inputString.match(/title:\s*(.+?)(?=\s*description:)/);
+  if (titleMatch) {
+    const title = titleMatch[1].trim();
+    return title.replace(`{% highlightColor="green" %}`, '').trim();
+  } else {
+    return inputString.replace(`{% highlightColor="green" %}`, '').trim();
+  }
 }
 
 async function main() {
