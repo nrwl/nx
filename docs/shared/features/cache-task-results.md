@@ -56,7 +56,7 @@ the result of the test run.
 
 ## Enable Remote Caching
 
-By default, Nx caches task results locally. Most of the benefits from caching come on CI, where you can **share the cache between different runs**. To enable remote caching connect your workspace to [Nx Cloud](/nx-cloud) by running the following command:
+By default, Nx caches task results locally. The biggest benefit of caching comes from using remote caching in CI, where you can **share the cache between different runs**. To enable remote caching, connect your workspace to [Nx Cloud](/nx-cloud) by running the following command:
 
 ```shell
 npx nx connect
