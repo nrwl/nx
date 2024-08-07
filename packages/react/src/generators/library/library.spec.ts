@@ -70,6 +70,7 @@ describe('lib', () => {
   it('should add vite types to tsconfigs', async () => {
     await libraryGenerator(tree, {
       ...defaultSchema,
+      skipFormat: false,
       bundler: 'vite',
       unitTestRunner: 'vitest',
     });

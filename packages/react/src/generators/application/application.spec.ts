@@ -49,6 +49,7 @@ describe('app', () => {
     it('should add vite types to tsconfigs', async () => {
       await applicationGenerator(appTree, {
         ...schema,
+        skipFormat: false,
         bundler: 'vite',
         unitTestRunner: 'vitest',
       });
@@ -120,6 +121,7 @@ describe('app', () => {
     it('should use preview vite types to tsconfigs', async () => {
       await applicationGenerator(appTree, {
         ...schema,
+        skipFormat: false,
         bundler: 'vite',
         unitTestRunner: 'vitest',
       });

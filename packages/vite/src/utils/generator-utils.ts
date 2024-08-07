@@ -443,12 +443,12 @@ export function createOrEditViteConfig(
     globals: true,
     environment: '${options.testEnvironment ?? 'jsdom'}',
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-    ${options.setupFile ? `setupFiles: ['${options.setupFile}'],` : ''}
+    ${options.setupFile ? `setupFiles: ['${options.setupFile}'],` : ''}\
     ${
       options.inSourceTests
         ? `includeSource: ['src/**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],`
         : ''
-    }
+    }\
     reporters: ['default'],
     coverage: {
       reportsDirectory: '${reportsDirectory}',
