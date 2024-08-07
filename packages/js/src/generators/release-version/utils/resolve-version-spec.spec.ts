@@ -1,5 +1,5 @@
-import { join } from 'path';
 import { resolveVersionSpec } from './resolve-version-spec';
+import { joinPathFragments } from 'nx/src/utils/path';
 
 describe('resolveVersionSpec()', () => {
   it('should work for specific name and spec', () => {
@@ -67,7 +67,7 @@ describe('resolveVersionSpec()', () => {
         'file:../projectB',
         '/packages/projectB'
       )
-    ).toEqual(expect.stringContaining(join('/packages/projectB')));
+    ).toEqual(expect.stringContaining(joinPathFragments('/packages/projectB')));
   });
 
   it('should work for a yarn classic style link reference', async () => {
@@ -78,6 +78,6 @@ describe('resolveVersionSpec()', () => {
         'link:../projectB',
         '/packages/projectB'
       )
-    ).toEqual(expect.stringContaining(join('/packages/projectB')));
+    ).toEqual(expect.stringContaining(joinPathFragments('/packages/projectB')));
   });
 });

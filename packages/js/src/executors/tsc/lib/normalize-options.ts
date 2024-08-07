@@ -1,4 +1,4 @@
-import { join, resolve } from 'path';
+import { resolve } from 'path';
 import type {
   ExecutorOptions,
   NormalizedExecutorOptions,
@@ -7,6 +7,7 @@ import {
   FileInputOutput,
   assetGlobsToFiles,
 } from '../../../utils/assets/assets';
+import { joinPathFragments } from 'nx/src/utils/path';
 
 export function normalizeOptions(
   options: ExecutorOptions,
@@ -14,10 +15,10 @@ export function normalizeOptions(
   sourceRoot: string,
   projectRoot: string
 ): NormalizedExecutorOptions {
-  const outputPath = join(contextRoot, options.outputPath);
+  const outputPath = joinPathFragments(contextRoot, options.outputPath);
   const rootDir = options.rootDir
-    ? join(contextRoot, options.rootDir)
-    : join(contextRoot, projectRoot);
+    ? joinPathFragments(contextRoot, options.rootDir)
+    : joinPathFragments(contextRoot, projectRoot);
 
   if (options.watch == null) {
     options.watch = false;
@@ -50,7 +51,7 @@ export function normalizeOptions(
     projectRoot,
     files,
     outputPath,
-    tsConfig: join(contextRoot, options.tsConfig),
+    tsConfig: joinPathFragments(contextRoot, options.tsConfig),
     rootDir,
     mainOutputPath: resolve(
       outputPath,

@@ -135,7 +135,7 @@ Valid values are: ${validReleaseVersionPrefixes
         );
       }
 
-      const packageJsonPath = join(packageRoot, 'package.json');
+      const packageJsonPath = joinPathFragments(packageRoot, 'package.json');
 
       const color = getColor(projectName);
       const log = (msg: string) => {
