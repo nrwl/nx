@@ -416,6 +416,12 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
   nxCloudAccessToken?: string;
 
   /**
+   * If specified Nx will use nx-cloud by default with the given cloud id.
+   * To use a different runner that accepts a cloud id, define it in {@link tasksRunnerOptions}
+   */
+  nxCloudId?: string;
+
+  /**
    * Specifies the url pointing to an instance of nx cloud. Used for remote
    * caching and displaying run links.
    */
@@ -445,6 +451,11 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
    * Set this to false to disable adding inference plugins when generating new projects
    */
   useInferencePlugins?: boolean;
+
+  /**
+   * Set this to false to disable connection to Nx Cloud
+   */
+  neverConnectToCloud?: boolean;
 }
 
 export type PluginConfiguration = string | ExpandedPluginConfiguration;

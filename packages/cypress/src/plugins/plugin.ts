@@ -257,6 +257,8 @@ async function buildCypressTargets(
         excludeSpecPatterns
       );
 
+      const ciBaseUrl = pluginPresetOptions?.ciBaseUrl;
+
       const dependsOn: TargetConfiguration['dependsOn'] = [];
       const outputs = getOutputs(projectRoot, cypressConfig, 'e2e');
       const inputs = getInputs(namedInputs);
@@ -273,7 +275,9 @@ async function buildCypressTargets(
           outputs,
           inputs,
           cache: true,
-          command: `cypress run --env webServerCommand="${ciWebServerCommand}" --spec ${relativeSpecFilePath}`,
+          command: `cypress run --env webServerCommand="${ciWebServerCommand}" --spec ${relativeSpecFilePath}${
+            ciBaseUrl ? ` --config='{"baseUrl": "${ciBaseUrl}"}'` : ''
+          }`,
           options: {
             cwd: projectRoot,
           },

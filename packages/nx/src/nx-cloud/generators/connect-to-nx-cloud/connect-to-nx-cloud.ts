@@ -1,15 +1,16 @@
 import { execSync } from 'child_process';
 import { output } from '../../../utils/output';
 import { Tree } from '../../../generators/tree';
-import { readJson } from '../../../generators/utils/json';
+import { readJson, updateJson } from '../../../generators/utils/json';
 import { NxJsonConfiguration } from '../../../config/nx-json';
-import { readNxJson, updateNxJson } from '../../../generators/utils/nx-json';
+import { readNxJson } from '../../../generators/utils/nx-json';
 import { formatChangedFilesWithPrettierIfAvailable } from '../../../generators/internal-utils/format-changed-files-with-prettier-if-available';
 import {
   repoUsesGithub,
   createNxCloudOnboardingURL,
 } from '../../utilities/url-shorten';
 import { getCloudUrl } from '../../utilities/get-cloud-options';
+import { join } from 'path';
 
 function printCloudConnectionDisabledMessage() {
   output.error({
@@ -47,7 +48,7 @@ function getNxInitDate(): string | null {
   }
 }
 
-async function createNxCloudWorkspace(
+async function createNxCloudWorkspaceV1(
   workspaceName: string,
   installationSource: string,
   nxInitDate: string | null
@@ -55,6 +56,28 @@ async function createNxCloudWorkspace(
   const apiUrl = getCloudUrl();
   const response = await require('axios').post(
     `${apiUrl}/nx-cloud/create-org-and-workspace`,
+    {
+      workspaceName,
+      installationSource,
+      nxInitDate,
+    }
+  );
+
+  if (response.data.message) {
+    throw new Error(response.data.message);
+  }
+
+  return response.data;
+}
+
+async function createNxCloudWorkspaceV2(
+  workspaceName: string,
+  installationSource: string,
+  nxInitDate: string | null
+): Promise<{ nxCloudId: string; url: string }> {
+  const apiUrl = getCloudUrl();
+  const response = await require('axios').post(
+    `${apiUrl}/nx-cloud/v2/create-org-and-workspace`,
     {
       workspaceName,
       installationSource,
@@ -103,29 +126,56 @@ export interface ConnectToNxCloudOptions {
 
 function addNxCloudOptionsToNxJson(
   tree: Tree,
-  nxJson: NxJsonConfiguration,
-  token: string
+  token: string,
+  directory: string = ''
 ) {
-  nxJson ??= {
-    extends: 'nx/presets/npm.json',
-  };
-  nxJson.nxCloudAccessToken = token;
-  const overrideUrl = process.env.NX_CLOUD_API || process.env.NRWL_API;
-  if (overrideUrl) {
-    (nxJson as any).nxCloudUrl = overrideUrl;
+  const nxJsonPath = join(directory, 'nx.json');
+  if (tree.exists(nxJsonPath)) {
+    updateJson<NxJsonConfiguration>(
+      tree,
+      join(directory, 'nx.json'),
+      (nxJson) => {
+        const overrideUrl = process.env.NX_CLOUD_API || process.env.NRWL_API;
+        if (overrideUrl) {
+          nxJson.nxCloudUrl = overrideUrl;
+        }
+        nxJson.nxCloudAccessToken = token;
+
+        return nxJson;
+      }
+    );
   }
-  updateNxJson(tree, nxJson);
+}
+
+function addNxCloudIdToNxJson(
+  tree: Tree,
+  nxCloudId: string,
+  directory: string = tree.root
+) {
+  const nxJsonPath = join(directory, 'nx.json');
+  if (tree.exists(nxJsonPath)) {
+    updateJson<NxJsonConfiguration>(
+      tree,
+      join(directory, 'nx.json'),
+      (nxJson) => {
+        const overrideUrl = process.env.NX_CLOUD_API || process.env.NRWL_API;
+        if (overrideUrl) {
+          nxJson.nxCloudUrl = overrideUrl;
+        }
+        nxJson.nxCloudId = nxCloudId;
+
+        return nxJson;
+      }
+    );
+  }
 }
 
 export async function connectToNxCloud(
   tree: Tree,
-  schema: ConnectToNxCloudOptions
+  schema: ConnectToNxCloudOptions,
+  nxJson = readNxJson(tree)
 ): Promise<string> {
   schema.installationSource ??= 'user';
-
-  const nxJson = readNxJson(tree) as
-    | null
-    | (NxJsonConfiguration & { neverConnectToCloud: boolean });
 
   if (nxJson?.neverConnectToCloud) {
     printCloudConnectionDisabledMessage();
@@ -133,33 +183,65 @@ export async function connectToNxCloud(
   } else {
     const usesGithub = schema.github ?? (await repoUsesGithub(schema.github));
 
-    let responseFromCreateNxCloudWorkspace:
+    let responseFromCreateNxCloudWorkspaceV1:
       | {
           token: string;
+        }
+      | undefined;
+
+    let responseFromCreateNxCloudWorkspaceV2:
+      | {
+          nxCloudId: string;
         }
       | undefined;
 
     // do NOT create Nx Cloud token (createNxCloudWorkspace)
     // if user is using github and is running nx-connect
     if (!(usesGithub && schema.installationSource === 'nx-connect')) {
-      responseFromCreateNxCloudWorkspace = await createNxCloudWorkspace(
-        getRootPackageName(tree),
-        schema.installationSource,
-        getNxInitDate()
-      );
+      if (process.env.NX_ENABLE_LOGIN === 'true') {
+        responseFromCreateNxCloudWorkspaceV2 = await createNxCloudWorkspaceV2(
+          getRootPackageName(tree),
+          schema.installationSource,
+          getNxInitDate()
+        );
 
-      addNxCloudOptionsToNxJson(
-        tree,
-        nxJson,
-        responseFromCreateNxCloudWorkspace?.token
-      );
+        addNxCloudIdToNxJson(
+          tree,
+          responseFromCreateNxCloudWorkspaceV2?.nxCloudId,
+          schema.directory
+        );
 
-      await formatChangedFilesWithPrettierIfAvailable(tree, {
-        silent: schema.hideFormatLogs,
-      });
-      return responseFromCreateNxCloudWorkspace.token;
+        await formatChangedFilesWithPrettierIfAvailable(tree, {
+          silent: schema.hideFormatLogs,
+        });
+        return responseFromCreateNxCloudWorkspaceV2.nxCloudId;
+      } else {
+        responseFromCreateNxCloudWorkspaceV1 = await createNxCloudWorkspaceV1(
+          getRootPackageName(tree),
+          schema.installationSource,
+          getNxInitDate()
+        );
+
+        addNxCloudOptionsToNxJson(
+          tree,
+          responseFromCreateNxCloudWorkspaceV1?.token,
+          schema.directory
+        );
+
+        await formatChangedFilesWithPrettierIfAvailable(tree, {
+          silent: schema.hideFormatLogs,
+        });
+        return responseFromCreateNxCloudWorkspaceV1.token;
+      }
     }
   }
 }
 
-export default connectToNxCloud;
+async function connectToNxCloudGenerator(
+  tree: Tree,
+  options: ConnectToNxCloudOptions
+) {
+  await connectToNxCloud(tree, options);
+}
+
+export default connectToNxCloudGenerator;

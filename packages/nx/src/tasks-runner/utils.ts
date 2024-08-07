@@ -113,8 +113,27 @@ export function expandDependencyConfigSyntaxSugar(
 const patternResultCache = new WeakMap<
   string[],
   // Map< Pattern, Dependency Configs >
-  Map<string, NormalizedTargetDependencyConfig[]>
+  Map<string, string[]>
 >();
+
+function findMatchingTargets(pattern: string, allTargetNames: string[]) {
+  let cache = patternResultCache.get(allTargetNames);
+  if (!cache) {
+    cache = new Map();
+    patternResultCache.set(allTargetNames, cache);
+  }
+
+  const cachedResult = cache.get(pattern);
+  if (cachedResult) {
+    return cachedResult;
+  }
+
+  const matcher = minimatch.filter(pattern);
+
+  const matchingTargets = allTargetNames.filter((t) => matcher(t));
+  cache.set(pattern, matchingTargets);
+  return matchingTargets;
+}
 
 export function expandWildcardTargetConfiguration(
   dependencyConfig: NormalizedTargetDependencyConfig,
@@ -123,26 +142,17 @@ export function expandWildcardTargetConfiguration(
   if (!isGlobPattern(dependencyConfig.target)) {
     return [dependencyConfig];
   }
-  let cache = patternResultCache.get(allTargetNames);
-  if (!cache) {
-    cache = new Map();
-    patternResultCache.set(allTargetNames, cache);
-  }
-  const cachedResult = cache.get(dependencyConfig.target);
-  if (cachedResult) {
-    return cachedResult;
-  }
 
-  const matcher = minimatch.filter(dependencyConfig.target);
+  const matchingTargets = findMatchingTargets(
+    dependencyConfig.target,
+    allTargetNames
+  );
 
-  const matchingTargets = allTargetNames.filter((t) => matcher(t));
-
-  const result = matchingTargets.map((t) => ({
-    ...dependencyConfig,
+  return matchingTargets.map((t) => ({
     target: t,
+    projects: dependencyConfig.projects,
+    dependencies: dependencyConfig.dependencies,
   }));
-  cache.set(dependencyConfig.target, result);
-  return result;
 }
 
 export function readProjectAndTargetFromTargetString(

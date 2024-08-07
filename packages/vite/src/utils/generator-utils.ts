@@ -204,6 +204,7 @@ export function addPreviewTarget(
 
   // Adds a preview target.
   project.targets.preview = {
+    dependsOn: ['build'],
     executor: '@nx/vite:preview-server',
     defaultConfiguration: 'development',
     options: previewOptions,

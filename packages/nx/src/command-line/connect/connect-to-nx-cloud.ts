@@ -29,7 +29,10 @@ export function onlyDefaultRunnerIsUsed(nxJson: NxJsonConfiguration) {
     // No tasks runner options OR no default runner defined:
     // - If access token defined, uses cloud runner
     // - If no access token defined, uses default
-    return !(nxJson.nxCloudAccessToken ?? process.env.NX_CLOUD_ACCESS_TOKEN);
+    return (
+      !(nxJson.nxCloudAccessToken ?? process.env.NX_CLOUD_ACCESS_TOKEN) &&
+      !nxJson.nxCloudId
+    );
   }
 
   return defaultRunner === 'nx/tasks-runners/default';
@@ -56,12 +59,13 @@ export async function connectToNxCloudIfExplicitlyAsked(
 }
 
 export async function connectWorkspaceToCloud(
-  options: ConnectToNxCloudOptions
+  options: ConnectToNxCloudOptions,
+  directory = workspaceRoot
 ) {
-  const tree = new FsTree(workspaceRoot, false, 'connect-to-nx-cloud');
+  const tree = new FsTree(directory, false, 'connect-to-nx-cloud');
   const accessToken = await connectToNxCloud(tree, options);
   tree.lock();
-  flushChanges(workspaceRoot, tree.listChanges());
+  flushChanges(directory, tree.listChanges());
   return accessToken;
 }
 
@@ -69,6 +73,10 @@ export async function connectToNxCloudCommand(
   command?: string
 ): Promise<boolean> {
   const nxJson = readNxJson();
+
+  const installationSource = process.env.NX_CONSOLE
+    ? 'nx-console'
+    : 'nx-connect';
 
   if (isNxCloudUsed(nxJson)) {
     const token =
@@ -79,7 +87,7 @@ export async function connectToNxCloudCommand(
       );
     }
     const connectCloudUrl = await createNxCloudOnboardingURL(
-      'nx-connect',
+      installationSource,
       token
     );
     output.log({
@@ -95,7 +103,7 @@ export async function connectToNxCloudCommand(
     return false;
   }
   const token = await connectWorkspaceToCloud({
-    installationSource: command ?? 'nx-connect',
+    installationSource: command ?? installationSource,
   });
 
   const connectCloudUrl = await createNxCloudOnboardingURL('nx-connect', token);

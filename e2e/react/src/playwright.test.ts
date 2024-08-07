@@ -18,7 +18,7 @@ describe('React Playwright e2e tests', () => {
       packages: ['@nx/react'],
     });
     runCLI(
-      `generate @nx/react:app ${appName} --e2eTestRunner=playwright --projectNameAndRootFormat=as-provided --no-interactive`
+      `generate @nx/react:app ${appName} --e2eTestRunner=playwright --bundler=vite --projectNameAndRootFormat=as-provided --no-interactive`
     );
   });
 

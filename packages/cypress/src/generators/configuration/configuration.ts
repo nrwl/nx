@@ -47,6 +47,7 @@ export interface CypressE2EConfigSchema {
 
   webServerCommands?: Record<string, string>;
   ciWebServerCommand?: string;
+  ciBaseUrl?: string;
   addPlugin?: boolean;
 }
 
@@ -218,10 +219,12 @@ async function addFiles(
     let webServerCommands: Record<string, string>;
 
     let ciWebServerCommand: string;
+    let ciBaseUrl: string;
 
     if (hasPlugin && options.webServerCommands && options.ciWebServerCommand) {
       webServerCommands = options.webServerCommands;
       ciWebServerCommand = options.ciWebServerCommand;
+      ciBaseUrl = options.ciBaseUrl;
     } else if (hasPlugin && options.devServerTarget) {
       webServerCommands = {};
 
@@ -253,6 +256,7 @@ async function addFiles(
         bundler: options.bundler === 'vite' ? 'vite' : undefined,
         webServerCommands,
         ciWebServerCommand: ciWebServerCommand,
+        ciBaseUrl,
       },
       options.baseUrl
     );
