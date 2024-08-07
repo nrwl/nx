@@ -138,7 +138,7 @@ Learn more [about configuring inputs including `namedInputs`](/recipes/running-t
 
 ## Configure Caching Automatically
 
-When using [Nx plugins](/concepts/nx-plugins), many caching configurations are handled automatically, saving you the effort of manual setup. **Nx plugins can [automatically infer tasks](/concepts/inferred-tasks) and configure caching** based on your underlying tooling configuration files.
+When using [Nx plugins](/concepts/nx-plugins), many tasks have caching configured automatically, saving you the effort of manual setup. **Nx plugins can [automatically infer tasks](/concepts/inferred-tasks) and configure caching** based on your underlying tooling configuration files.
 
 For example, if you add the `@nx/vite` plugin using the following command...
 
