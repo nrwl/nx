@@ -8,6 +8,7 @@ import { JestExecutorOptions } from './schema';
 import { Config } from '@jest/types';
 import {
   ExecutorContext,
+  logger,
   stripIndents,
   TaskGraph,
   workspaceRoot,
@@ -63,7 +64,7 @@ export async function jestConfigParser(
   const config: Config.Argv = {
     ...extraArgs,
     $0: undefined,
-    _: [],
+    _: options._ ?? [],
     config: options.config,
     coverage: options.codeCoverage,
     bail: options.bail,
@@ -113,6 +114,11 @@ export async function jestConfigParser(
   }
 
   if (options.testFile) {
+    if (config._.length > 0) {
+      logger.warn(
+        'You should not use both --testFile and a positional argument. They are equivalent'
+      );
+    }
     config._.push(options.testFile);
   }
 
