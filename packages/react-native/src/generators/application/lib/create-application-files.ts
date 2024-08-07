@@ -13,6 +13,22 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
       options.appProjectRoot
     ),
   });
+
+  generateFiles(
+    host,
+    join(__dirname, `../files/nx-welcome/${options.onBoardingStatus}`),
+    options.appProjectRoot,
+    {
+      ...options,
+      entryFileIos: 'src/main',
+      offsetFromRoot: offsetFromRoot(options.appProjectRoot),
+      rootTsConfigPath: getRelativePathToRootTsConfig(
+        host,
+        options.appProjectRoot
+      ),
+    }
+  );
+
   if (options.unitTestRunner === 'none') {
     host.delete(join(options.appProjectRoot, `/src/app/App.spec.tsx`));
   }

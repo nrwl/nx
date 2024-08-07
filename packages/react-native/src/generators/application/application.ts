@@ -26,6 +26,10 @@ import { Schema } from './schema';
 import { ensureDependencies } from '../../utils/ensure-dependencies';
 import { syncDeps } from '../../executors/sync-deps/sync-deps.impl';
 import { PackageJson } from 'nx/src/utils/package-json';
+import {
+  getNxCloudAppOnBoardingUrl,
+  getNxCloudOnBoardingStatus,
+} from 'nx/src/nx-cloud/utilities/onboarding';
 
 export async function reactNativeApplicationGenerator(
   host: Tree,
@@ -55,6 +59,16 @@ export async function reactNativeApplicationGeneratorInternal(
 
   if (!options.skipPackageJson) {
     tasks.push(ensureDependencies(host));
+  }
+
+  options.onBoardingStatus = await getNxCloudOnBoardingStatus(
+    host,
+    options.nxCloudToken
+  );
+  if (options.onBoardingStatus === 'unclaimed') {
+    options.connectCloudUrl = await getNxCloudAppOnBoardingUrl(
+      options.nxCloudToken
+    );
   }
 
   createApplicationFiles(host, options);
