@@ -79,18 +79,23 @@ export async function updateContextWithChangedFiles(
   updatedFiles: string[],
   deletedFiles: string[]
 ) {
-  if (isOnDaemon() || !daemonClient.enabled()) {
-    return updateFilesInContext(
-      [...createdFiles, ...updatedFiles],
+  if (!daemonClient.enabled()) {
+    updateFilesInContext([...createdFiles, ...updatedFiles], deletedFiles);
+  } else if (isOnDaemon()) {
+    // make sure to only import this when running on the daemon
+    const { addUpdatedAndDeletedFiles } = await import(
+      '../daemon/server/project-graph-incremental-recomputation'
+    );
+    // update files for the incremental graph recomputation on the daemon
+    addUpdatedAndDeletedFiles(createdFiles, updatedFiles, deletedFiles);
+  } else {
+    // daemon is enabled but we are not running on it, ask the daemon to update the context
+    await daemonClient.updateWorkspaceContext(
+      createdFiles,
+      updatedFiles,
       deletedFiles
     );
   }
-
-  return daemonClient.updateContextFiles(
-    createdFiles,
-    updatedFiles,
-    deletedFiles
-  );
 }
 
 export function updateFilesInContext(

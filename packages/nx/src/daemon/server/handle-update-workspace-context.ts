@@ -1,7 +1,7 @@
 import { addUpdatedAndDeletedFiles } from './project-graph-incremental-recomputation';
 import type { HandlerResult } from './server';
 
-export async function handleUpdateContextFiles(
+export async function handleUpdateWorkspaceContext(
   createdFiles: string[],
   updatedFiles: string[],
   deletedFiles: string[]

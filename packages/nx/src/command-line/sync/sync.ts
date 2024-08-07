@@ -1,13 +1,12 @@
-import { flushChanges } from '../../generators/tree';
 import { createProjectGraphAsync } from '../../project-graph/project-graph';
 import { output } from '../../utils/output';
 import { handleErrors } from '../../utils/params';
 import {
   collectAllRegisteredSyncGenerators,
+  flushSyncGeneratorChanges,
   getSyncGeneratorChanges,
   syncGeneratorResultsToMessageLines,
 } from '../../utils/sync-generators';
-import { workspaceRoot } from '../../utils/workspace-root';
 import type { SyncOptions } from './command-object';
 
 export function addHandler(options: SyncOptions): Promise<number> {
@@ -36,10 +35,7 @@ export function addHandler(options: SyncOptions): Promise<number> {
       return 1;
     }
 
-    flushChanges(
-      workspaceRoot,
-      results.flatMap((c) => c.changes)
-    );
+    await flushSyncGeneratorChanges(results);
 
     return 0;
   });

@@ -434,7 +434,7 @@ async function resetInternalStateIfNxDepsMissing() {
 }
 
 function notifyProjectGraphRecomputationListeners(projectGraph: ProjectGraph) {
-  for (let listener of projectGraphRecomputationListeners) {
+  for (const listener of projectGraphRecomputationListeners) {
     listener(projectGraph);
   }
 }
