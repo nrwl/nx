@@ -18,12 +18,30 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
   };
   const packageManager = detectPackageManager(host.root);
   const packageLockFile = packageManagerLockFile[packageManager];
-  generateFiles(host, join(__dirname, '../files'), options.appProjectRoot, {
-    ...options,
-    offsetFromRoot: offsetFromRoot(options.appProjectRoot),
-    packageManager,
-    packageLockFile,
-  });
+  generateFiles(
+    host,
+    join(__dirname, '../files/base'),
+    options.appProjectRoot,
+    {
+      ...options,
+      offsetFromRoot: offsetFromRoot(options.appProjectRoot),
+      packageManager,
+      packageLockFile,
+    }
+  );
+
+  generateFiles(
+    host,
+    join(__dirname, `../files/nx-welcome/${options.onBoardingStatus}`),
+    options.appProjectRoot,
+    {
+      ...options,
+      offsetFromRoot: offsetFromRoot(options.appProjectRoot),
+      packageManager,
+      packageLockFile,
+    }
+  );
+
   if (options.unitTestRunner === 'none') {
     host.delete(join(options.appProjectRoot, `App.spec.tsx`));
   }

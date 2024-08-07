@@ -195,7 +195,6 @@ async function createPreset(tree: Tree, options: Schema) {
       src: options.nextSrcDir,
       e2eTestRunner: options.e2eTestRunner ?? 'playwright',
       addPlugin,
-      nxCloudToken: options.nxCloudToken,
     });
   } else if (options.preset === Preset.NextJsStandalone) {
     const { applicationGenerator: nextApplicationGenerator } = require('@nx' +
@@ -211,7 +210,6 @@ async function createPreset(tree: Tree, options: Schema) {
       e2eTestRunner: options.e2eTestRunner ?? 'playwright',
       rootProject: true,
       addPlugin,
-      nxCloudToken: options.nxCloudToken,
     });
   } else if (options.preset === Preset.WebComponents) {
     const { applicationGenerator: webApplicationGenerator } = require('@nx' +
