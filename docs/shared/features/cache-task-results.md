@@ -160,7 +160,7 @@ Alternatively, you can view these directly in your editor by installing [Nx Cons
 
 Learn more details about [Nx plugins](/concepts/nx-plugins) and [inferred tasks](/concepts/inferred-tasks).
 
-## Troubleshooting Caching
+## Troubleshoot Cache Settings
 
 Caching is hard. If you run into issues, check out the following resources:
 
