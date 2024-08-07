@@ -25,6 +25,11 @@ export interface VersionPlan extends VersionPlanFile {
 
 export interface GroupVersionPlan extends VersionPlan {
   groupVersionBump: ReleaseType;
+  /**
+   * Will not be set if the group name was the trigger, otherwise will be a list of
+   * all the individual project names explicitly found in the version plan file.
+   */
+  triggeredByProjects?: string[];
 }
 
 export interface ProjectsVersionPlan extends VersionPlan {
@@ -54,7 +59,7 @@ export async function readRawVersionPlans(): Promise<RawVersionPlan[]> {
       relativePath: join(versionPlansDirectory, versionPlanFile),
       fileName: versionPlanFile,
       content: parsedContent.attributes,
-      message: getSingleLineMessage(parsedContent.body),
+      message: parsedContent.body,
       createdOnMs: versionPlanStats.birthtimeMs,
     });
   }
@@ -74,6 +79,12 @@ export function setVersionPlansOnGroups(
   const isDefaultGroup = isDefault(releaseGroups);
 
   for (const rawVersionPlan of rawVersionPlans) {
+    if (!rawVersionPlan.message) {
+      throw new Error(
+        `Please add a changelog message to version plan: '${rawVersionPlan.fileName}'`
+      );
+    }
+
     for (const [key, value] of Object.entries(rawVersionPlan.content)) {
       if (groupsByName.has(key)) {
         const group = groupsByName.get(key);
@@ -232,6 +243,8 @@ export function setVersionPlansOnGroups(
                   `Found a version bump for project '${key}' in '${rawVersionPlan.fileName}' that conflicts with another project's version bump in the same release group '${groupForProject.name}'. When the group is in fixed versioning mode, all projects' version bumps within the same group must match.`
                 );
               }
+            } else {
+              existingPlan.triggeredByProjects.push(key);
             }
           } else {
             groupForProject.versionPlans.push(<GroupVersionPlan>{
@@ -241,7 +254,9 @@ export function setVersionPlansOnGroups(
               createdOnMs: rawVersionPlan.createdOnMs,
               message: rawVersionPlan.message,
               // This is a fixed group, so the version bump is for the group, even if a project within it was specified
+              // but we track the projects that triggered the version bump so that we can accurately produce changelog entries.
               groupVersionBump: value,
+              triggeredByProjects: [key],
             });
           }
         }
@@ -272,9 +287,4 @@ export function getVersionPlansAbsolutePath() {
 
 function isReleaseType(value: string): value is ReleaseType {
   return RELEASE_TYPES.includes(value as ReleaseType);
-}
-
-// changelog messages may only be a single line long, so ignore anything else
-function getSingleLineMessage(message: string) {
-  return message.trim().split('\n')[0];
 }
