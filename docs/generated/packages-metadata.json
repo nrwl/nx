@@ -1946,17 +1946,6 @@
         "path": "nx/documents/add",
         "tags": [],
         "originalFilePath": "generated/cli/add"
-      },
-      {
-        "id": "sync",
-        "name": "sync",
-        "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-        "file": "generated/packages/nx/documents/sync",
-        "itemList": [],
-        "isExternal": false,
-        "path": "nx/documents/sync",
-        "tags": [],
-        "originalFilePath": "generated/cli/sync"
       }
     ],
     "executors": [

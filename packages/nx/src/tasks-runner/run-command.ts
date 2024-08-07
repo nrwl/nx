@@ -11,7 +11,6 @@ import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
 import { Task, TaskGraph } from '../config/task-graph';
 import { TargetDependencyConfig } from '../config/workspace-json-project-json';
 import { daemonClient } from '../daemon/client/client';
-import { type FileChange, flushChanges } from '../generators/tree';
 import { createTaskHasher } from '../hasher/create-task-hasher';
 import { hashTasksThatDoNotDependOnOutputsOfOtherTasks } from '../hasher/hash-task';
 import { createProjectGraphAsync } from '../project-graph/project-graph';
@@ -22,12 +21,10 @@ import { isNxCloudUsed } from '../utils/nx-cloud-utils';
 import { output } from '../utils/output';
 import { handleErrors } from '../utils/params';
 import {
-  clearSyncGeneratorChanges,
+  flushSyncGeneratorChanges,
   getSyncGeneratorChanges,
   syncGeneratorResultsToMessageLines,
-  type SyncGeneratorChangesResult,
 } from '../utils/sync-generators';
-import { updateContextWithChangedFiles } from '../utils/workspace-context';
 import { workspaceRoot } from '../utils/workspace-root';
 import { createTaskGraph } from './create-task-graph';
 import { CompositeLifeCycle, LifeCycle } from './life-cycle';
@@ -312,19 +309,9 @@ async function ensureWorkspaceIsInSyncAndGetGraphs(
     const spinner = ora('Syncing workspace configuration...');
     spinner.start();
 
-    const { changes, createdFiles, updatedFiles, deletedFiles } =
-      processSyncGeneratorResults(results);
+    // Flush sync generator changes to disk
+    await flushSyncGeneratorChanges(results);
 
-    // Write changes to disk
-    flushChanges(workspaceRoot, changes);
-    // clear cached changes for the applied sync generators
-    await clearSyncGeneratorChanges(syncGenerators);
-    // Update the context files
-    await updateContextWithChangedFiles(
-      createdFiles,
-      updatedFiles,
-      deletedFiles
-    );
     // Re-create project graph and task graph
     projectGraph = await createProjectGraphAsync();
     taskGraph = createTaskGraphAndRunValidations(
@@ -358,28 +345,6 @@ Please make sure to commit the changes to your repository.`);
   }
 
   return { projectGraph, taskGraph };
-}
-
-function processSyncGeneratorResults(results: SyncGeneratorChangesResult[]) {
-  const changes: FileChange[] = [];
-  const createdFiles: string[] = [];
-  const updatedFiles: string[] = [];
-  const deletedFiles: string[] = [];
-
-  for (const result of results) {
-    for (const change of result.changes) {
-      changes.push(change);
-      if (change.type === 'CREATE') {
-        createdFiles.push(change.path);
-      } else if (change.type === 'UPDATE') {
-        updatedFiles.push(change.path);
-      } else if (change.type === 'DELETE') {
-        deletedFiles.push(change.path);
-      }
-    }
-  }
-
-  return { changes, createdFiles, updatedFiles, deletedFiles };
 }
 
 async function promptForApplyingSyncGeneratorChanges(): Promise<boolean> {

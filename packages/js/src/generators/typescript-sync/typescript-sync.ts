@@ -11,12 +11,12 @@ import {
   type ProjectGraphProjectNode,
   type Tree,
 } from '@nx/devkit';
-import { normalize, relative } from 'node:path/posix';
+import { dirname, normalize, relative } from 'node:path/posix';
+import type { SyncGeneratorResult } from 'nx/src/utils/sync-generators';
 import {
   PLUGIN_NAME,
   type TscPluginOptions,
 } from '../../plugins/typescript/plugin';
-import type { SyncSchema } from './schema';
 
 interface Tsconfig {
   references?: Array<{ path: string }>;
@@ -36,10 +36,7 @@ const COMMON_RUNTIME_TS_CONFIG_FILE_NAMES = [
   'tsconfig.runtime.json',
 ];
 
-export async function syncGenerator(
-  tree: Tree,
-  options: SyncSchema
-): Promise<string | void> {
+export async function syncGenerator(tree: Tree): Promise<SyncGeneratorResult> {
   // Ensure that the plugin has been wired up in nx.json
   const nxJson = readNxJson(tree);
   const tscPluginConfig:
@@ -66,9 +63,11 @@ export async function syncGenerator(
 
   const rootTsconfig = readJson<Tsconfig>(tree, rootTsconfigPath);
   const projectGraph = await createProjectGraphAsync();
+  const projectRoots = new Set<string>();
 
   const tsconfigProjectNodeValues = Object.values(projectGraph.nodes).filter(
     (node) => {
+      projectRoots.add(node.data.root);
       const projectTsconfigPath = joinPathFragments(
         node.data.root,
         'tsconfig.json'
@@ -84,24 +83,35 @@ export async function syncGenerator(
   let hasChanges = false;
 
   if (tsconfigProjectNodeValues.length > 0) {
-    // Similarly, don't write to the file if there are no changes to avoid
-    // unnecessary changes due to JSON serialization
-    let hasRootTsconfigChanges = false;
-    // Sync the root tsconfig references from the project graph (do not destroy existing references)
-    rootTsconfig.references = rootTsconfig.references || [];
-    const referencesSet = new Set(
-      rootTsconfig.references.map((ref) => normalizeReferencePath(ref.path))
-    );
+    const referencesSet = new Set();
+    for (const ref of rootTsconfig.references ?? []) {
+      // reference path is relative to the tsconfig file
+      const resolvedRefPath = getTsConfigPathFromReferencePath(
+        tree,
+        rootTsconfigPath,
+        ref.path
+      );
+      if (tree.exists(resolvedRefPath)) {
+        // we only keep the references that still exist
+        referencesSet.add(normalizeReferencePath(ref.path));
+      } else {
+        hasChanges = true;
+      }
+    }
+
     for (const node of tsconfigProjectNodeValues) {
       const normalizedPath = normalizeReferencePath(node.data.root);
       // Skip the root tsconfig itself
       if (node.data.root !== '.' && !referencesSet.has(normalizedPath)) {
-        rootTsconfig.references.push({ path: `./${normalizedPath}` });
-        hasChanges = hasRootTsconfigChanges = true;
+        referencesSet.add(normalizedPath);
+        hasChanges = true;
       }
     }
 
-    if (hasRootTsconfigChanges) {
+    if (hasChanges) {
+      rootTsconfig.references = Array.from(referencesSet).map((ref) => ({
+        path: `./${ref}`,
+      }));
       writeJson(tree, rootTsconfigPath, rootTsconfig);
     }
   }
@@ -113,7 +123,11 @@ export async function syncGenerator(
 
   const collectedDependencies = new Map<string, ProjectGraphProjectNode[]>();
   for (const [name, data] of Object.entries(projectGraph.dependencies)) {
-    if (name.startsWith('npm:') || !data.length) {
+    if (
+      !projectGraph.nodes[name] ||
+      projectGraph.nodes[name].data.root === '.' ||
+      !data.length
+    ) {
       continue;
     }
 
@@ -161,6 +175,7 @@ export async function syncGenerator(
           runtimeTsConfigPath,
           dependencies,
           sourceProjectNode.data.root,
+          projectRoots,
           runtimeTsConfigFileName,
           runtimeTsConfigFileNames
         ) || hasChanges;
@@ -172,14 +187,18 @@ export async function syncGenerator(
         tree,
         sourceProjectTsconfigPath,
         dependencies,
-        sourceProjectNode.data.root
+        sourceProjectNode.data.root,
+        projectRoots
       ) || hasChanges;
   }
 
   if (hasChanges) {
     await formatFiles(tree);
 
-    return 'Based on the workspace project graph, some TypeScript configuration files are missing project references to the projects they depend on.';
+    return {
+      outOfSyncMessage:
+        'Based on the workspace project graph, some TypeScript configuration files are missing project references to the projects they depend on.',
+    };
   }
 }
 
@@ -190,6 +209,7 @@ function updateTsConfigReferences(
   tsConfigPath: string,
   dependencies: ProjectGraphProjectNode[],
   projectRoot: string,
+  projectRoots: Set<string>,
   runtimeTsConfigFileName?: string,
   possibleRuntimeTsConfigFileNames?: string[]
 ): boolean {
@@ -201,10 +221,23 @@ function updateTsConfigReferences(
   for (const ref of tsConfig.references ?? []) {
     const normalizedPath = normalizeReferencePath(ref.path);
     originalReferencesSet.add(normalizedPath);
-    if (!ref.path.startsWith('../')) {
-      // we only keep the internal references, the external ones are dictated by the project dependencies
+    // reference path is relative to the tsconfig file
+    const resolvedRefPath = getTsConfigPathFromReferencePath(
+      tree,
+      tsConfigPath,
+      ref.path
+    );
+    if (
+      isInternalProjectReference(
+        tree,
+        resolvedRefPath,
+        projectRoot,
+        projectRoots
+      )
+    ) {
+      // we keep all internal references
       references.push(ref);
-      newReferencesSet.add(normalizeReferencePath(ref.path));
+      newReferencesSet.add(normalizedPath);
     }
   }
 
@@ -256,6 +289,8 @@ function updateTsConfigReferences(
   return hasChanges;
 }
 
+// TODO(leo): follow up with the TypeScript team to confirm if we really need
+// to reference transitive dependencies.
 // Collect the dependencies of a project recursively sorted from root to leaf
 function collectProjectDependencies(
   tree: Tree,
@@ -286,6 +321,10 @@ function collectProjectDependencies(
       collectedDependencies.get(projectName).push(targetProjectNode);
     }
 
+    if (process.env.NX_DISABLE_TS_SYNC_TRANSITIVE_DEPENDENCIES === 'true') {
+      continue;
+    }
+
     // Recursively get the dependencies of the target project
     const transitiveDependencies = collectProjectDependencies(
       tree,
@@ -312,4 +351,50 @@ function normalizeReferencePath(path: string): string {
   return normalize(path)
     .replace(/\/tsconfig.json$/, '')
     .replace(/^\.\//, '');
+}
+
+function isInternalProjectReference(
+  tree: Tree,
+  refTsConfigPath: string,
+  projectRoot: string,
+  projectRoots: Set<string>
+): boolean {
+  let currentPath = getTsConfigDirName(tree, refTsConfigPath);
+
+  if (relative(projectRoot, currentPath).startsWith('..')) {
+    // it's outside of the project root, so it's an external project reference
+    return false;
+  }
+
+  while (currentPath !== projectRoot) {
+    if (projectRoots.has(currentPath)) {
+      // it's inside a nested project root, so it's and external project reference
+      return false;
+    }
+    currentPath = dirname(currentPath);
+  }
+
+  // it's inside the project root, so it's an internal project reference
+  return true;
+}
+
+function getTsConfigDirName(tree: Tree, tsConfigPath: string): string {
+  return tree.isFile(tsConfigPath)
+    ? dirname(tsConfigPath)
+    : normalize(tsConfigPath);
+}
+
+function getTsConfigPathFromReferencePath(
+  tree: Tree,
+  ownerTsConfigPath: string,
+  referencePath: string
+): string {
+  const resolvedRefPath = joinPathFragments(
+    dirname(ownerTsConfigPath),
+    referencePath
+  );
+
+  return tree.isFile(resolvedRefPath)
+    ? resolvedRefPath
+    : joinPathFragments(resolvedRefPath, 'tsconfig.json');
 }

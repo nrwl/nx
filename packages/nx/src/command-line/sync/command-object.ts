@@ -10,8 +10,7 @@ export const yargsSyncCommand: CommandModule<
   SyncOptions
 > = {
   command: 'sync',
-  describe:
-    'Sync the workspace configuration by running the registered sync generators.',
+  describe: false,
   builder: (yargs) =>
     yargs
       .option('check', {

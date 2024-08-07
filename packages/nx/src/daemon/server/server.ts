@@ -93,15 +93,15 @@ import {
 } from '../message-types/get-registered-sync-generators';
 import { handleGetRegisteredSyncGenerators } from './handle-get-registered-sync-generators';
 import {
-  UPDATE_CONTEXT_FILES,
-  isHandleUpdateContextFilesMessage,
-} from '../message-types/update-context-files';
-import { handleUpdateContextFiles } from './handle-update-context-files';
+  UPDATE_WORKSPACE_CONTEXT,
+  isHandleUpdateWorkspaceContextMessage,
+} from '../message-types/update-workspace-context';
+import { handleUpdateWorkspaceContext } from './handle-update-workspace-context';
 import {
-  CLEAR_CACHED_SYNC_GENERATOR_CHANGES,
-  isHandleCachedClearSyncGeneratorChangesMessage,
-} from '../message-types/clear-cached-sync-generator-changes';
-import { handleClearCachedSyncGeneratorChanges } from './handle-clear-cached-sync-generator-changes';
+  FLUSH_SYNC_GENERATOR_CHANGES_TO_DISK,
+  isHandleFlushSyncGeneratorChangesToDiskMessage,
+} from '../message-types/flush-sync-generator-changes-to-disk';
+import { handleFlushSyncGeneratorChangesToDisk } from './handle-flush-sync-generator-changes-to-disk';
 
 let performanceObserver: PerformanceObserver | undefined;
 let workspaceWatcherError: Error | undefined;
@@ -253,17 +253,17 @@ async function handleMessage(socket, data: string) {
     await handleResult(socket, GET_SYNC_GENERATOR_CHANGES, () =>
       handleGetSyncGeneratorChanges(payload.generators)
     );
-  } else if (isHandleCachedClearSyncGeneratorChangesMessage(payload)) {
-    await handleResult(socket, CLEAR_CACHED_SYNC_GENERATOR_CHANGES, () =>
-      handleClearCachedSyncGeneratorChanges(payload.generators)
+  } else if (isHandleFlushSyncGeneratorChangesToDiskMessage(payload)) {
+    await handleResult(socket, FLUSH_SYNC_GENERATOR_CHANGES_TO_DISK, () =>
+      handleFlushSyncGeneratorChangesToDisk(payload.generators)
     );
   } else if (isHandleGetRegisteredSyncGeneratorsMessage(payload)) {
     await handleResult(socket, GET_REGISTERED_SYNC_GENERATORS, () =>
       handleGetRegisteredSyncGenerators()
     );
-  } else if (isHandleUpdateContextFilesMessage(payload)) {
-    await handleResult(socket, UPDATE_CONTEXT_FILES, () =>
-      handleUpdateContextFiles(
+  } else if (isHandleUpdateWorkspaceContextMessage(payload)) {
+    await handleResult(socket, UPDATE_WORKSPACE_CONTEXT, () =>
+      handleUpdateWorkspaceContext(
         payload.createdFiles,
         payload.updatedFiles,
         payload.deletedFiles

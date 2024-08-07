@@ -7,6 +7,7 @@ import { readProjectsConfigurationFromProjectGraph } from '../../project-graph/p
 import {
   collectRegisteredGlobalSyncGenerators,
   collectRegisteredTaskSyncGenerators,
+  flushSyncGeneratorChanges,
   runSyncGenerator,
   type SyncGeneratorChangesResult,
 } from '../../utils/sync-generators';
@@ -94,11 +95,18 @@ export async function getCachedSyncGeneratorChanges(
   }
 }
 
-export function clearCachedSyncGeneratorChanges(generators: string[]): void {
-  log('clear cached sync generators changes', generators);
+export async function flushSyncGeneratorChangesToDisk(
+  generators: string[]
+): Promise<void> {
+  log('flush sync generators changes', generators);
+
+  const results = await getCachedSyncGeneratorChanges(generators);
+
   for (const generator of generators) {
     syncGeneratorsCacheResultPromises.delete(generator);
   }
+
+  await flushSyncGeneratorChanges(results);
 }
 
 export function collectAndScheduleSyncGenerators(

@@ -59,13 +59,13 @@ import {
   type HandleGetRegisteredSyncGeneratorsMessage,
 } from '../message-types/get-registered-sync-generators';
 import {
-  UPDATE_CONTEXT_FILES,
-  type HandleUpdateContextFilesMessage,
-} from '../message-types/update-context-files';
+  UPDATE_WORKSPACE_CONTEXT,
+  type HandleUpdateWorkspaceContextMessage,
+} from '../message-types/update-workspace-context';
 import {
-  CLEAR_CACHED_SYNC_GENERATOR_CHANGES,
-  type HandleCachedClearSyncGeneratorChangesMessage,
-} from '../message-types/clear-cached-sync-generator-changes';
+  FLUSH_SYNC_GENERATOR_CHANGES_TO_DISK,
+  type HandleFlushSyncGeneratorChangesToDiskMessage,
+} from '../message-types/flush-sync-generator-changes-to-disk';
 
 const DAEMON_ENV_SETTINGS = {
   NX_PROJECT_GLOB_CACHE: 'false',
@@ -360,30 +360,19 @@ export class DaemonClient {
     return this.sendMessageToDaemon(message);
   }
 
-  async getSyncGeneratorChanges(
+  getSyncGeneratorChanges(
     generators: string[]
   ): Promise<SyncGeneratorChangesResult[]> {
     const message: HandleGetSyncGeneratorChangesMessage = {
       type: GET_SYNC_GENERATOR_CHANGES,
       generators,
     };
-    const results = (await this.sendToDaemonViaQueue(
-      message
-    )) as SyncGeneratorChangesResult[];
-    for (const result of results) {
-      for (const change of result.changes) {
-        if (change.content) {
-          // We need to convert the content back to a buffer
-          change.content = Buffer.from(change.content);
-        }
-      }
-    }
-    return results;
+    return this.sendToDaemonViaQueue(message);
   }
 
-  clearSyncGeneratorChanges(generators: string[]): Promise<void> {
-    const message: HandleCachedClearSyncGeneratorChangesMessage = {
-      type: CLEAR_CACHED_SYNC_GENERATOR_CHANGES,
+  flushSyncGeneratorChangesToDisk(generators: string[]): Promise<void> {
+    const message: HandleFlushSyncGeneratorChangesToDiskMessage = {
+      type: FLUSH_SYNC_GENERATOR_CHANGES_TO_DISK,
       generators,
     };
     return this.sendToDaemonViaQueue(message);
@@ -396,13 +385,13 @@ export class DaemonClient {
     return this.sendToDaemonViaQueue(message);
   }
 
-  updateContextFiles(
+  updateWorkspaceContext(
     createdFiles: string[],
     updatedFiles: string[],
     deletedFiles: string[]
   ): Promise<void> {
-    const message: HandleUpdateContextFilesMessage = {
-      type: UPDATE_CONTEXT_FILES,
+    const message: HandleUpdateWorkspaceContextMessage = {
+      type: UPDATE_WORKSPACE_CONTEXT,
       createdFiles,
       updatedFiles,
       deletedFiles,

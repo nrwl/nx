@@ -22,23 +22,24 @@ describe('syncGenerator()', () => {
   function addProject(
     name: string,
     dependencies: string[] = [],
-    extraRuntimeTsConfigs: string[] = []
+    extraRuntimeTsConfigs: string[] = [],
+    root: string = `packages/${name}`
   ) {
     projectGraph.nodes[name] = {
       name,
       type: 'lib',
-      data: { root: `packages/${name}` },
+      data: { root },
     };
     projectGraph.dependencies[name] = dependencies.map((dep) => ({
       type: 'static',
       source: name,
       target: dep,
     }));
-    writeJson(tree, `packages/${name}/tsconfig.json`, {});
+    writeJson(tree, `${root}/tsconfig.json`, {});
     for (const runtimeTsConfigFileName of extraRuntimeTsConfigs) {
-      writeJson(tree, `packages/${name}/${runtimeTsConfigFileName}`, {});
+      writeJson(tree, `${root}/${runtimeTsConfigFileName}`, {});
     }
-    writeJson(tree, `packages/${name}/package.json`, {
+    writeJson(tree, `${root}/package.json`, {
       name: name,
       version: '0.0.0',
       dependencies: dependencies.reduce(
@@ -74,7 +75,7 @@ describe('syncGenerator()', () => {
     nxJson.plugins = nxJson.plugins.filter((p) => p !== '@nx/js/typescript');
     writeJson(tree, 'nx.json', nxJson);
 
-    await expect(syncGenerator(tree, {})).rejects.toMatchInlineSnapshot(
+    await expect(syncGenerator(tree)).rejects.toMatchInlineSnapshot(
       `[Error: The @nx/js/typescript plugin must be added to the "plugins" array in nx.json before syncing tsconfigs]`
     );
   });
@@ -82,7 +83,7 @@ describe('syncGenerator()', () => {
   it('should error if there is no root tsconfig.json', async () => {
     tree.delete('tsconfig.json');
 
-    await expect(syncGenerator(tree, {})).rejects.toMatchInlineSnapshot(
+    await expect(syncGenerator(tree)).rejects.toMatchInlineSnapshot(
       `[Error: A "tsconfig.json" file must exist in the workspace root.]`
     );
   });
@@ -156,7 +157,7 @@ describe('syncGenerator()', () => {
       .listChanges()
       .map((c) => [c.path, c.type, c.content.toString('utf-8')]);
 
-    await syncGenerator(tree, {});
+    await syncGenerator(tree);
 
     expect(
       tree
@@ -169,7 +170,7 @@ describe('syncGenerator()', () => {
     it('should sync project references to the tsconfig.json', async () => {
       expect(readJson(tree, 'tsconfig.json').references).toBeUndefined();
 
-      await syncGenerator(tree, {});
+      await syncGenerator(tree);
 
       const rootTsconfig = readJson(tree, 'tsconfig.json');
       expect(rootTsconfig.references).toMatchInlineSnapshot(`
@@ -184,17 +185,19 @@ describe('syncGenerator()', () => {
       `);
     });
 
-    it('should respect existing internal project references in the tsconfig.json', async () => {
+    it('should respect existing project references and discard non-existing ones in the tsconfig.json', async () => {
       writeJson(tree, 'tsconfig.json', {
         // Swapped order and additional manual reference
         references: [
           { path: './packages/b' },
-          { path: 'packages/a' },
-          { path: 'packages/c' },
+          { path: './packages/a' },
+          { path: './packages/c' }, // existing extra reference to a tsconfig.json file in a non-project directory
+          { path: './packages/d' }, // non-existing reference
         ],
       });
+      writeJson(tree, 'packages/c/tsconfig.json', {});
 
-      await syncGenerator(tree, {});
+      await syncGenerator(tree);
 
       const rootTsconfig = readJson(tree, 'tsconfig.json');
       expect(rootTsconfig.references).toMatchInlineSnapshot(`
@@ -203,10 +206,10 @@ describe('syncGenerator()', () => {
             "path": "./packages/b",
           },
           {
-            "path": "packages/a",
+            "path": "./packages/a",
           },
           {
-            "path": "packages/c",
+            "path": "./packages/c",
           },
         ]
       `);
@@ -219,7 +222,7 @@ describe('syncGenerator()', () => {
         readJson(tree, 'packages/b/tsconfig.json').references
       ).toBeUndefined();
 
-      await syncGenerator(tree, {});
+      await syncGenerator(tree);
 
       expect(readJson(tree, 'packages/b/tsconfig.json').references)
         .toMatchInlineSnapshot(`
@@ -234,10 +237,15 @@ describe('syncGenerator()', () => {
     it('should respect existing internal project references in the tsconfig.json', async () => {
       writeJson(tree, 'packages/b/tsconfig.json', {
         // Swapped order and additional manual reference
-        references: [{ path: './some/thing' }, { path: './another/one' }],
+        references: [
+          { path: './some/thing' },
+          { path: './another/one' },
+          { path: './nested/project1' }, // external nested project reference that's not a dependency
+        ],
       });
+      addProject('project1', [], [], 'packages/b/nested/project1');
 
-      await syncGenerator(tree, {});
+      await syncGenerator(tree);
 
       const rootTsconfig = readJson(tree, 'packages/b/tsconfig.json');
       // The dependency reference on "a" is added to the start of the array
@@ -265,7 +273,7 @@ describe('syncGenerator()', () => {
         ],
       });
 
-      await syncGenerator(tree, {});
+      await syncGenerator(tree);
 
       const rootTsconfig = readJson(tree, 'packages/b/tsconfig.json');
       // The dependency reference on "a" is added to the start of the array
@@ -293,7 +301,7 @@ describe('syncGenerator()', () => {
       addProject('d', ['b', 'a']);
       addProject('e', ['d']);
 
-      await syncGenerator(tree, {});
+      await syncGenerator(tree);
 
       expect(
         readJson(tree, 'packages/a/tsconfig.json').references
@@ -359,7 +367,7 @@ describe('syncGenerator()', () => {
           writeJson(tree, `packages/a/${runtimeTsConfigFileName}`, {});
           writeJson(tree, `packages/b/${runtimeTsConfigFileName}`, {});
 
-          await syncGenerator(tree, {});
+          await syncGenerator(tree);
 
           expect(readJson(tree, 'packages/b/tsconfig.json').references)
             .toMatchInlineSnapshot(`
@@ -386,7 +394,7 @@ describe('syncGenerator()', () => {
         writeJson(tree, 'packages/b/tsconfig.cjs.json', {});
         writeJson(tree, 'packages/b/tsconfig.esm.json', {});
 
-        await syncGenerator(tree, {});
+        await syncGenerator(tree);
 
         expect(readJson(tree, 'packages/b/tsconfig.json').references)
           .toMatchInlineSnapshot(`
@@ -422,7 +430,7 @@ describe('syncGenerator()', () => {
         addProject('e', ['c'], ['tsconfig.cjs.json', 'tsconfig.esm.json']);
         addProject('f', ['c'], ['tsconfig.runtime.json']);
 
-        await syncGenerator(tree, {});
+        await syncGenerator(tree);
 
         // b
         expect(readJson(tree, 'packages/b/tsconfig.json').references)
@@ -594,7 +602,7 @@ describe('syncGenerator()', () => {
           addProject('d', ['b', 'a'], [runtimeTsConfigFileName]);
           addProject('e', ['d'], [runtimeTsConfigFileName]);
 
-          await syncGenerator(tree, {});
+          await syncGenerator(tree);
 
           expect(
             readJson(tree, 'packages/a/tsconfig.json').references
@@ -707,7 +715,7 @@ describe('syncGenerator()', () => {
         writeJson(tree, 'packages/b/tsconfig.custom.json', {});
         writeJson(tree, 'packages/b/tsconfig.spec.json', {});
 
-        await syncGenerator(tree, {});
+        await syncGenerator(tree);
 
         // assert that tsconfig.json and tsconfig.lib.json files have been updated
         expect(readJson(tree, 'packages/b/tsconfig.json').references)
@@ -750,7 +758,7 @@ describe('syncGenerator()', () => {
         writeJson(tree, 'packages/a/tsconfig.custom.json', {});
         writeJson(tree, 'packages/b/tsconfig.custom.json', {});
 
-        await syncGenerator(tree, {});
+        await syncGenerator(tree);
 
         expect(readJson(tree, 'packages/b/tsconfig.json').references)
           .toMatchInlineSnapshot(`
@@ -788,7 +796,7 @@ describe('syncGenerator()', () => {
         writeJson(tree, 'packages/b/tsconfig.custom-cjs.json', {});
         writeJson(tree, 'packages/b/tsconfig.custom-esm.json', {});
 
-        await syncGenerator(tree, {});
+        await syncGenerator(tree);
 
         expect(readJson(tree, 'packages/b/tsconfig.json').references)
           .toMatchInlineSnapshot(`
@@ -847,7 +855,7 @@ describe('syncGenerator()', () => {
         );
         addProject('f', ['c'], ['tsconfig.custom-runtime.json']);
 
-        await syncGenerator(tree, {});
+        await syncGenerator(tree);
 
         // b
         expect(readJson(tree, 'packages/b/tsconfig.json').references)
@@ -1021,7 +1029,7 @@ describe('syncGenerator()', () => {
         addProject('d', ['b', 'a'], ['tsconfig.custom.json']);
         addProject('e', ['d'], ['tsconfig.custom.json']);
 
-        await syncGenerator(tree, {});
+        await syncGenerator(tree);
 
         expect(
           readJson(tree, 'packages/a/tsconfig.json').references
@@ -1138,7 +1146,7 @@ describe('syncGenerator()', () => {
         writeJson(tree, 'packages/b/tsconfig.lib.json', {});
         writeJson(tree, 'packages/b/tsconfig.spec.json', {});
 
-        await syncGenerator(tree, {});
+        await syncGenerator(tree);
 
         // assert that tsconfig.json and tsconfig.custom.json files have been updated
         expect(readJson(tree, 'packages/b/tsconfig.json').references)

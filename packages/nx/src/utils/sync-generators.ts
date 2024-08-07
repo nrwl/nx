@@ -1,26 +1,39 @@
 import { performance } from 'perf_hooks';
 import { parseGeneratorString } from '../command-line/generate/generate';
 import { getGeneratorInformation } from '../command-line/generate/generator-utils';
+import type { GeneratorCallback } from '../config/misc-interfaces';
 import { readNxJson } from '../config/nx-json';
 import type { ProjectGraph } from '../config/project-graph';
 import type { ProjectConfiguration } from '../config/workspace-json-project-json';
 import { daemonClient } from '../daemon/client/client';
-import { FsTree, type FileChange, type Tree } from '../generators/tree';
+import { isOnDaemon } from '../daemon/is-on-daemon';
+import {
+  flushChanges,
+  FsTree,
+  type FileChange,
+  type Tree,
+} from '../generators/tree';
 import {
   createProjectGraphAsync,
   readProjectsConfigurationFromProjectGraph,
 } from '../project-graph/project-graph';
+import { updateContextWithChangedFiles } from './workspace-context';
 import { workspaceRoot } from './workspace-root';
 import chalk = require('chalk');
 
+export type SyncGeneratorResult = void | {
+  callback?: GeneratorCallback;
+  outOfSyncMessage?: string;
+};
+
 export type SyncGenerator = (
-  tree: Tree,
-  options: unknown
-) => void | string | Promise<void | string>;
+  tree: Tree
+) => SyncGeneratorResult | Promise<SyncGeneratorResult>;
 
 export type SyncGeneratorChangesResult = {
   changes: FileChange[];
   generatorName: string;
+  callback?: GeneratorCallback;
   outOfSyncMessage?: string;
 };
 
@@ -46,11 +59,15 @@ export async function getSyncGeneratorChanges(
   return results.filter((r) => r.changes.length > 0);
 }
 
-export async function clearSyncGeneratorChanges(
-  generators: string[]
+export async function flushSyncGeneratorChanges(
+  results: SyncGeneratorChangesResult[]
 ): Promise<void> {
-  if (daemonClient.enabled()) {
-    await daemonClient.clearSyncGeneratorChanges(generators);
+  if (isOnDaemon() || !daemonClient.enabled()) {
+    await flushSyncGeneratorChangesToDisk(results);
+  } else {
+    await daemonClient.flushSyncGeneratorChangesToDisk(
+      results.map((r) => r.generatorName)
+    );
   }
 }
 
@@ -81,7 +98,14 @@ export async function runSyncGenerator(
     projects
   );
   const implementation = implementationFactory() as SyncGenerator;
-  const result = await implementation(tree, {});
+  const result = await implementation(tree);
+
+  let callback: GeneratorCallback | undefined;
+  let outOfSyncMessage: string | undefined;
+  if (result && typeof result === 'object') {
+    callback = result.callback;
+    outOfSyncMessage = result.outOfSyncMessage;
+  }
 
   performance.mark(`run-sync-generator:${generatorSpecifier}:end`);
   performance.measure(
@@ -93,7 +117,8 @@ export async function runSyncGenerator(
   return {
     changes: tree.listChanges(),
     generatorName: generatorSpecifier,
-    outOfSyncMessage: typeof result === 'string' ? result : undefined,
+    callback,
+    outOfSyncMessage,
   };
 }
 
@@ -177,4 +202,57 @@ async function runSyncGenerators(
   }
 
   return results;
+}
+
+async function flushSyncGeneratorChangesToDisk(
+  results: SyncGeneratorChangesResult[]
+): Promise<void> {
+  performance.mark('flush-sync-generator-changes-to-disk:start');
+  const { changes, createdFiles, updatedFiles, deletedFiles, callbacks } =
+    processSyncGeneratorResults(results);
+  // Write changes to disk
+  flushChanges(workspaceRoot, changes);
+
+  // Run the callbacks
+  if (callbacks.length) {
+    for (const callback of callbacks) {
+      await callback();
+    }
+  }
+
+  // Update the context files
+  await updateContextWithChangedFiles(createdFiles, updatedFiles, deletedFiles);
+  performance.mark('flush-sync-generator-changes-to-disk:end');
+  performance.measure(
+    'flush sync generator changes to disk',
+    'flush-sync-generator-changes-to-disk:start',
+    'flush-sync-generator-changes-to-disk:end'
+  );
+}
+
+function processSyncGeneratorResults(results: SyncGeneratorChangesResult[]) {
+  const changes: FileChange[] = [];
+  const createdFiles: string[] = [];
+  const updatedFiles: string[] = [];
+  const deletedFiles: string[] = [];
+  const callbacks: GeneratorCallback[] = [];
+
+  for (const result of results) {
+    if (result.callback) {
+      callbacks.push(result.callback);
+    }
+
+    for (const change of result.changes) {
+      changes.push(change);
+      if (change.type === 'CREATE') {
+        createdFiles.push(change.path);
+      } else if (change.type === 'UPDATE') {
+        updatedFiles.push(change.path);
+      } else if (change.type === 'DELETE') {
+        deletedFiles.push(change.path);
+      }
+    }
+  }
+
+  return { changes, createdFiles, updatedFiles, deletedFiles, callbacks };
 }
