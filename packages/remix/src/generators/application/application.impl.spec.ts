@@ -1,6 +1,6 @@
 import 'nx/src/internal-testing-utils/mock-project-graph';
 
-import { joinPathFragments, readJson, type Tree } from '@nx/devkit';
+import { joinPathFragments, readJson, readNxJson, type Tree } from '@nx/devkit';
 import * as devkit from '@nx/devkit';
 import { ProjectNameAndRootFormat } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
@@ -129,6 +129,14 @@ describe('Remix Application', () => {
         expectTargetsToBeCorrect(tree, '.');
 
         expect(tree.read('e2e/cypress.config.ts', 'utf-8')).toMatchSnapshot();
+        expect(readNxJson(tree).targetDefaults['e2e-ci--**/*'])
+          .toMatchInlineSnapshot(`
+          {
+            "dependsOn": [
+              "^build",
+            ],
+          }
+        `);
       });
     });
 
@@ -148,6 +156,14 @@ describe('Remix Application', () => {
       expectTargetsToBeCorrect(tree, '.');
 
       expect(tree.read('e2e/playwright.config.ts', 'utf-8')).toMatchSnapshot();
+      expect(readNxJson(tree).targetDefaults['e2e-ci--**/*'])
+        .toMatchInlineSnapshot(`
+          {
+            "dependsOn": [
+              "^build",
+            ],
+          }
+        `);
     });
   });
 

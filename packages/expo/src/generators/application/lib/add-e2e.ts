@@ -4,12 +4,15 @@ import {
   ensurePackage,
   getPackageManagerCommand,
   joinPathFragments,
+  readNxJson,
 } from '@nx/devkit';
 import { webStaticServeGenerator } from '@nx/web';
 
 import { nxVersion } from '../../../utils/versions';
 import { hasExpoPlugin } from '../../../utils/has-expo-plugin';
 import { NormalizedSchema } from './normalize-options';
+import { addE2eCiTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
+import { findPluginForConfigFile } from '@nx/devkit/src/utils/find-plugin-for-config-file';
 
 export async function addE2e(
   tree: Tree,
@@ -18,8 +21,7 @@ export async function addE2e(
   const hasPlugin = hasExpoPlugin(tree);
   switch (options.e2eTestRunner) {
     case 'cypress': {
-      const hasNxExpoPlugin = hasExpoPlugin(tree);
-      if (!hasNxExpoPlugin) {
+      if (!hasPlugin) {
         await webStaticServeGenerator(tree, {
           buildTarget: `${options.projectName}:export`,
           targetName: 'serve-static',
@@ -39,7 +41,7 @@ export async function addE2e(
         tags: [],
       });
 
-      return await configurationGenerator(tree, {
+      const e2eTask = await configurationGenerator(tree, {
         ...options,
         project: options.e2eProjectName,
         directory: 'src',
@@ -49,12 +51,46 @@ export async function addE2e(
         devServerTarget: `${options.projectName}:${options.e2eWebServerTarget}`,
         port: options.e2ePort,
         baseUrl: options.e2eWebServerAddress,
-        ciWebServerCommand: hasNxExpoPlugin
+        ciWebServerCommand: hasPlugin
           ? `nx run ${options.projectName}:serve-static`
           : undefined,
         jsx: true,
         rootProject: options.rootProject,
       });
+
+      if (
+        options.addPlugin ||
+        readNxJson(tree).plugins?.find((p) =>
+          typeof p === 'string'
+            ? p === '@nx/cypress/plugin'
+            : p.plugin === '@nx/cypress/plugin'
+        )
+      ) {
+        let buildTarget = '^export';
+        if (hasPlugin) {
+          const matchingExpoPlugin = await findPluginForConfigFile(
+            tree,
+            '@nx/expo/plugin',
+            joinPathFragments(options.appProjectRoot, 'app.json')
+          );
+          if (matchingExpoPlugin && typeof matchingExpoPlugin !== 'string') {
+            buildTarget = `^${
+              (matchingExpoPlugin.options as any)?.exportTargetName ?? 'export'
+            }`;
+          }
+        }
+        await addE2eCiTargetDefaults(
+          tree,
+          '@nx/cypress/plugin',
+          buildTarget,
+          joinPathFragments(
+            options.e2eProjectRoot,
+            `cypress.config.${options.js ? 'js' : 'ts'}`
+          )
+        );
+      }
+
+      return e2eTask;
     }
     case 'playwright': {
       const { configurationGenerator } = ensurePackage<
@@ -67,7 +103,8 @@ export async function addE2e(
         targets: {},
         implicitDependencies: [options.projectName],
       });
-      return configurationGenerator(tree, {
+
+      const e2eTask = await configurationGenerator(tree, {
         project: options.e2eProjectName,
         skipFormat: true,
         skipPackageJson: options.skipPackageJson,
@@ -80,7 +117,39 @@ export async function addE2e(
         } ${options.name}`,
         webServerAddress: options.e2eWebServerAddress,
         rootProject: options.rootProject,
+        addPlugin: options.addPlugin,
       });
+
+      if (
+        options.addPlugin ||
+        readNxJson(tree).plugins?.find((p) =>
+          typeof p === 'string'
+            ? p === '@nx/playwright/plugin'
+            : p.plugin === '@nx/playwright/plugin'
+        )
+      ) {
+        let buildTarget = '^export';
+        if (hasPlugin) {
+          const matchingExpoPlugin = await findPluginForConfigFile(
+            tree,
+            '@nx/expo/plugin',
+            joinPathFragments(options.appProjectRoot, 'app.json')
+          );
+          if (matchingExpoPlugin && typeof matchingExpoPlugin !== 'string') {
+            buildTarget = `^${
+              (matchingExpoPlugin.options as any)?.exportTargetName ?? 'export'
+            }`;
+          }
+        }
+        await addE2eCiTargetDefaults(
+          tree,
+          '@nx/playwright/plugin',
+          buildTarget,
+          joinPathFragments(options.e2eProjectRoot, `playwright.config.ts`)
+        );
+      }
+
+      return e2eTask;
     }
     case 'detox':
       const { detoxApplicationGenerator } = ensurePackage<

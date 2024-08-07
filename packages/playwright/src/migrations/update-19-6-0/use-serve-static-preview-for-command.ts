@@ -8,6 +8,7 @@ import {
   visitNotIgnoredFiles,
 } from '@nx/devkit';
 import { tsquery } from '@phenomnomnominal/tsquery';
+import addE2eCiTargetDefaults from './add-e2e-ci-target-defaults';
 
 export default async function (tree: Tree) {
   const graph = await createProjectGraphAsync();
@@ -138,5 +139,6 @@ export default async function (tree: Tree) {
     }
   });
 
+  await addE2eCiTargetDefaults(tree);
   await formatFiles(tree);
 }
