@@ -49,6 +49,8 @@ export async function releaseVersionGenerator(
   tree: Tree,
   options: ReleaseVersionGeneratorSchema
 ): Promise<ReleaseVersionGeneratorResult> {
+  let logger: ProjectLogger | undefined;
+
   try {
     const versionData: VersionData = {};
 
@@ -148,7 +150,7 @@ To fix this you will either need to add a package.json file at that location, or
       }
 
       const color = getColor(projectName);
-      const logger = new ProjectLogger(projectName, color);
+      logger = new ProjectLogger(projectName, color);
 
       const packageJson = readJson(tree, packageJsonPath);
       logger.buffer(
@@ -875,6 +877,9 @@ To fix this you will either need to add a package.json file at that location, or
       },
     };
   } catch (e: any) {
+    // Flush any pending logs before printing the error to make troubleshooting easier
+    logger?.flush();
+
     if (process.env.NX_VERBOSE_LOGGING === 'true') {
       output.error({
         title: e.message,
