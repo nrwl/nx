@@ -4,7 +4,9 @@ import { output } from '../output';
 
 export function checkGitVersion(): string | null | undefined {
   try {
-    let gitVersionOutput = execSync('git --version').toString().trim();
+    let gitVersionOutput = execSync('git --version', { windowsHide: true })
+      .toString()
+      .trim();
     return gitVersionOutput.match(/[0-9]+\.[0-9]+\.+[0-9]+/)?.[0];
   } catch {
     return null;
