@@ -2,7 +2,7 @@ import * as chalk from 'chalk';
 import { prompt } from 'enquirer';
 import { removeSync } from 'fs-extra';
 import { readFileSync, writeFileSync } from 'node:fs';
-import { valid } from 'semver';
+import { ReleaseType, valid } from 'semver';
 import { dirSync } from 'tmp';
 import type { DependencyBump } from '../../../release/changelog-renderer';
 import {
@@ -54,7 +54,6 @@ import {
   gitPush,
   gitTag,
   parseCommits,
-  parseConventionalCommitsMessage,
 } from './utils/git';
 import { createOrUpdateGithubRelease, getGitHubRepoSlug } from './utils/github';
 import { launchEditor } from './utils/launch-editor';
@@ -103,15 +102,19 @@ type PostGitTask = (latestCommit: string) => Promise<void>;
 export const releaseChangelogCLIHandler = (args: ChangelogOptions) =>
   handleErrors(args.verbose, () => releaseChangelog(args));
 
-function semverBumpToReleaseType(bump: string): {
+function versionPlanSemverReleaseTypeToChangelogType(bump: ReleaseType): {
   type: 'fix' | 'feat';
   isBreaking: boolean;
 } {
   switch (bump) {
+    case 'premajor':
     case 'major':
       return { type: 'feat', isBreaking: true };
+    case 'preminor':
     case 'minor':
       return { type: 'feat', isBreaking: false };
+    case 'prerelease':
+    case 'prepatch':
     case 'patch':
       return { type: 'fix', isBreaking: false };
     default:
@@ -283,7 +286,9 @@ export async function releaseChangelog(
         const versionPlans = releaseGroup.versionPlans as GroupVersionPlan[];
         workspaceChangelogChanges = versionPlans
           .flatMap((vp) => {
-            const releaseType = semverBumpToReleaseType(vp.groupVersionBump);
+            const releaseType = versionPlanSemverReleaseTypeToChangelogType(
+              vp.groupVersionBump
+            );
             const changes: ChangelogChange | ChangelogChange[] =
               !vp.triggeredByProjects
                 ? {
@@ -495,7 +500,8 @@ export async function releaseChangelog(
               if (!bumpForProject) {
                 return null;
               }
-              const releaseType = semverBumpToReleaseType(bumpForProject);
+              const releaseType =
+                versionPlanSemverReleaseTypeToChangelogType(bumpForProject);
               return {
                 type: releaseType.type,
                 scope: project.name,
@@ -634,7 +640,9 @@ export async function releaseChangelog(
       if (releaseGroup.versionPlans) {
         changes = (releaseGroup.versionPlans as GroupVersionPlan[])
           .flatMap((vp) => {
-            const releaseType = semverBumpToReleaseType(vp.groupVersionBump);
+            const releaseType = versionPlanSemverReleaseTypeToChangelogType(
+              vp.groupVersionBump
+            );
             const changes: ChangelogChange | ChangelogChange[] =
               !vp.triggeredByProjects
                 ? {
