@@ -2535,6 +2535,15 @@
         "originalFilePath": "/packages/react-native/src/generators/web-configuration/schema.json",
         "path": "react-native/generators/web-configuration",
         "type": "generator"
+      },
+      {
+        "description": "Convert existing React Native project(s) using `@nx/react-native:*` executors to use `@nx/react-native/plugin`. Defaults to migrating all projects. Pass '--project' to migrate only one target.",
+        "file": "generated/packages/react-native/generators/convert-to-inferred.json",
+        "hidden": false,
+        "name": "convert-to-inferred",
+        "originalFilePath": "/packages/react-native/src/generators/convert-to-inferred/schema.json",
+        "path": "react-native/generators/convert-to-inferred",
+        "type": "generator"
       }
     ],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",

@@ -628,6 +628,7 @@
       - [stories](/nx-api/react-native/generators/stories)
       - [upgrade-native](/nx-api/react-native/generators/upgrade-native)
       - [web-configuration](/nx-api/react-native/generators/web-configuration)
+      - [convert-to-inferred](/nx-api/react-native/generators/convert-to-inferred)
   - [remix](/nx-api/remix)
     - [documents](/nx-api/remix/documents)
       - [Overview](/nx-api/remix/documents/overview)
