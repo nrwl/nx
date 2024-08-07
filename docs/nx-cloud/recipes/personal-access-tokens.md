@@ -1,10 +1,14 @@
 # Nx Cloud and Personal Access Tokens
 
-From Nx 19.6 repositories are connected to Nx Cloud via a property in `nx.json` called `nxCloudId`. By default this value allows anyone who clones the repository `read-only` access to Nx Cloud features for that workspace. These permissions can be updated in the workspace settings. To disallow access to anonymous users or allow `read-write` access to known users it is required that all users provision their own personal access token. To do that they need to use [`nx-cloud login`](/ci/reference/nx-cloud-cli#npx-nxcloud-login).
+From Nx 19.6 repositories are connected to Nx Cloud via a property in `nx.json` called `nxCloudId`. By default this value allows anyone who clones the repository `read-only` access to Nx Cloud features for that workspace. These permissions can be updated in the workspace settings. To disallow access to anonymous users or allow `read-write` access to known users it is required that all users provision their own personal access token. To do that they need to use [`npx nx-cloud login`](/ci/reference/nx-cloud-cli#npx-nxcloud-login).
+
+{% callout type="warning" title="Personal Access Tokens require the `nxCloudId` field in `nx.json`" %}
+Ensure that you have the `nxCloudId` property in your `nx.json` file to connect to Nx Cloud with a Personal Access Token. If you have been using `nxCloudAccessToken`, you can convert it to `nxCloudId` by running [`npx nx-cloud convert-to-nx-cloud-id`](/ci/reference/nx-cloud-cli#npx-nxcloud-converttonxcloudid).
+{% /callout %}
 
 ## Personal Access Tokens (PATs)
 
-When you run [`nx-cloud login`](/ci/reference/nx-cloud-cli#npx-nxcloud-login) you will be directed to the Nx Cloud app where you will be required to create an account and login. A new personal access token will be provisioned and saved in a local configuration file in your home folder (the location of this will be displayed when login is complete and varies depending on OS).
+When you run [`npx nx-cloud login`](/ci/reference/nx-cloud-cli#npx-nxcloud-login) you will be directed to the Nx Cloud app where you will be required to create an account and login. A new personal access token will be provisioned and saved in a local configuration file in your home folder (the location of this will be displayed when login is complete and varies depending on OS).
 
 ## Permissions
 

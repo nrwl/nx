@@ -52,16 +52,20 @@ To configure multiple tokens for different instances of the Nx Cloud app, you ca
 npx nx-cloud configure --personalAccessToken=SOME_ACCESS_TOKEN --nx-cloud-url=https://nx-cloud.my-domain.app
 ```
 
+## npx nx-cloud convert-to-nx-cloud-id
+
+When logging into Nx Cloud with a [Personal Access Token](/ci/recipes/security/personal-access-tokens), your `nx.json` file needs to include the `nxCloudId` property, which acts as a unique identifier for your workspace. If you have been using the previous `nxCloudAccessToken` to connect, simply run `npx nx-cloud convert-to-nx-cloud-id` to automatically update your configuration to use `nxCloudId`.
+
 ## npx nx-cloud start-ci-run
 
 At the beginning of your main job, invoke `npx nx-cloud start-ci-run`. This tells Nx Cloud that the following series of
 command correspond to the same CI run.
 
 {% callout type="warning" title="Do not run start-ci-run locally" %}
-`nx-cloud start-ci-run` generates a temporary marker file that can cause a local Nx repo to behave as if it is a part of a CI run. This can cause strange behavior like Nx commands timing out or throwing unexpected errors.
-To discourage this from happening, this command will run a check to see if it is running in a CI environment. You can bypass this check with `nx-cloud start-ci-run --force`.
+`npx nx-cloud start-ci-run` generates a temporary marker file that can cause a local Nx repo to behave as if it is a part of a CI run. This can cause strange behavior like Nx commands timing out or throwing unexpected errors.
+To discourage this from happening, this command will run a check to see if it is running in a CI environment. You can bypass this check with `npx nx-cloud start-ci-run --force`.
 
-If you accidentally run this command locally, remove all generated marker files with `nx-cloud cleanup`.
+If you accidentally run this command locally, remove all generated marker files with `npx nx-cloud cleanup`.
 {% /callout %}
 
 You can configure your CI run by passing the following flags:
