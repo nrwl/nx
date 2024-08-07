@@ -148,7 +148,7 @@ npx nx add @nx/vite
 
 ...it automatically detects your `vite.config.ts` file, infers the tasks you'd be able to run, such as `build`, and **automatically configures the cache settings** for these tasks as well as the [task pipeline](/concepts/task-pipeline-configuration) (e.g., triggering dependent builds).
 
-This means **you don't need to manually specify cacheable operations for Vite tasks** and the cache setting such as input and outputs are always in sync with the `vite.config.ts` file.
+This means **you don't need to manually specify cacheable operations for Vite tasks** and the cache setting such as inputs and outputs are always in sync with the `vite.config.ts` file.
 
 To view the task settings that have been automatically configured by a plugin, use the following command:
 
