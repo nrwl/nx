@@ -5,7 +5,7 @@ Rebuilding and retesting the same code repeatedly is costly. Nx offers a sophist
 - drastically **speeds up your task execution times** while developing locally and even more [in CI](/ci/features/remote-cache)
 - **saves you money on CI/CD costs** by reducing the number of tasks that need to be executed
 
-Nx **restores the terminal output, along with the files and artifacts** created from running the task (e.g., your build or dist directory). If you want to learn more about the conceptual model behind Nx's caching, read [How Caching Works](/concepts/how-caching-works).
+Nx **restores both the terminal output and the files** created from running the task (e.g., your build or dist directory). If you want to learn more about the conceptual model behind Nx's caching, read [How Caching Works](/concepts/how-caching-works).
 
 ## Define Cacheable Tasks
 
