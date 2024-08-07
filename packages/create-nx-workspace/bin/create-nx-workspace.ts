@@ -228,6 +228,7 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
     meta: [
       messages.codeOfSelectedPromptMessage('setupCI'),
       messages.codeOfSelectedPromptMessage('setupNxCloud'),
+      parsedArgs.nxCloud,
     ],
   });
 

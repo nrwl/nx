@@ -1,4 +1,9 @@
-import { DependencyType, ProjectGraph } from '../config/project-graph';
+import {
+  DependencyType,
+  ProjectGraph,
+  ProjectGraphProjectNode,
+} from '../config/project-graph';
+import { ProjectConfiguration } from '../config/workspace-json-project-json';
 import { createTaskGraph } from './create-task-graph';
 
 describe('createTaskGraph', () => {
@@ -1677,4 +1682,311 @@ describe('createTaskGraph', () => {
       'lib3:build',
     ]);
   });
+
+  it('should handle multiple dependsOn task groups', () => {
+    const taskGraph = createTaskGraph(
+      {
+        nodes: {
+          a: {
+            name: 'a',
+            type: 'app',
+            data: {
+              root: 'a-root',
+              targets: {
+                deploy: {
+                  executor: 'nx:run-commands',
+                  dependsOn: [{ target: 'build' }],
+                },
+                build: {
+                  executor: 'nx:run-commands',
+                  dependsOn: [{ target: 'compile' }],
+                },
+                compile: {
+                  executor: 'nx:run-commands',
+                  dependsOn: ['^compile'],
+                },
+              },
+            },
+          },
+          b: {
+            name: 'b',
+            type: 'lib',
+            data: {
+              root: 'b-root',
+              targets: {
+                deploy: {
+                  executor: 'nx:run-commands',
+                  dependsOn: [{ target: 'build' }],
+                },
+                build: {
+                  executor: 'nx:run-commands',
+                  dependsOn: [{ target: 'compile' }],
+                },
+                compile: {
+                  executor: 'nx:run-commands',
+                  dependsOn: ['^compile'],
+                },
+              },
+            },
+          },
+          c: {
+            name: 'c',
+            type: 'lib',
+            data: {
+              root: 'c-root',
+              targets: {
+                deploy: {
+                  executor: 'nx:run-commands',
+                  dependsOn: [{ target: 'build' }],
+                },
+                build: {
+                  executor: 'nx:run-commands',
+                  dependsOn: [{ target: 'compile' }],
+                },
+                compile: {
+                  executor: 'nx:run-commands',
+                  dependsOn: ['^compile'],
+                },
+              },
+            },
+          },
+          d: {
+            name: 'd',
+            type: 'lib',
+            data: {
+              root: 'd-root',
+              targets: {
+                deploy: {
+                  executor: 'nx:run-commands',
+                  dependsOn: [{ target: 'build' }],
+                },
+                build: {
+                  executor: 'nx:run-commands',
+                  dependsOn: [{ target: 'compile' }],
+                },
+                compile: {
+                  executor: 'nx:run-commands',
+                  dependsOn: ['^compile'],
+                },
+              },
+            },
+          },
+        },
+        dependencies: {
+          a: [],
+          b: [
+            {
+              source: 'b',
+              target: 'd',
+              type: 'static',
+            },
+          ],
+          c: [
+            {
+              source: 'c',
+              target: 'd',
+              type: 'static',
+            },
+          ],
+          d: [],
+        },
+      },
+      {},
+      ['a', 'b'],
+      ['deploy'],
+      null,
+      {}
+    );
+
+    expect(taskGraph.dependencies['a:deploy']).toEqual(['a:build']);
+    expect(taskGraph.dependencies['a:build']).toEqual(['a:compile']);
+    expect(taskGraph.dependencies['a:compile']).toEqual([]);
+    expect(taskGraph.dependencies['b:deploy']).toEqual(['b:build']);
+    expect(taskGraph.dependencies['b:build']).toEqual(['b:compile']);
+    expect(taskGraph.dependencies['b:compile']).toEqual(['d:compile']);
+    expect(taskGraph.dependencies['d:compile']).toEqual([]);
+  });
+
+  it('should handle deep dependsOn groups', () => {
+    const taskGraph = createTaskGraph(
+      new GraphBuilder()
+        .addProjectConfiguration({
+          name: 'app-1',
+          targets: {
+            deploy: {
+              executor: 'foo',
+              dependsOn: ['build'],
+            },
+            build: {
+              executor: 'foo',
+              dependsOn: ['^build', 'codegen'],
+            },
+            codegen: {
+              executor: 'foo',
+            },
+          },
+        })
+        .addProjectConfiguration({
+          name: 'app-2',
+          targets: {
+            deploy: {
+              executor: 'foo',
+              dependsOn: ['build'],
+            },
+            build: {
+              executor: 'foo',
+              dependsOn: [
+                '^build',
+                {
+                  target: 'codegen',
+                  params: 'forward',
+                },
+              ],
+            },
+            codegen: {
+              executor: 'foo',
+            },
+          },
+        })
+        .addProjectConfiguration({
+          name: 'app-3',
+          targets: {
+            deploy: {
+              executor: 'foo',
+              dependsOn: ['build'],
+            },
+            build: {
+              executor: 'foo',
+              dependsOn: [
+                '^build',
+                {
+                  target: 'codegen',
+                  params: 'forward',
+                },
+              ],
+            },
+            codegen: {
+              executor: 'foo',
+            },
+          },
+        })
+        .addProjectConfiguration({
+          name: 'lib-1',
+          targets: {
+            build: {
+              executor: 'foo',
+              dependsOn: ['^build', 'codegen'],
+            },
+            codegen: {
+              executor: 'foo',
+            },
+          },
+        })
+        .addProjectConfiguration({
+          name: 'lib-2',
+          targets: {
+            build: {
+              executor: 'foo',
+              dependsOn: ['^build', 'codegen'],
+            },
+            codegen: {
+              executor: 'foo',
+            },
+          },
+        })
+        .addDependencies({
+          'app-1': ['lib-1'],
+          'app-2': ['lib-2'],
+          'app-3': ['lib-2'],
+          'lib-1': ['lib-2'],
+          'lib-2': [],
+        })
+        .build(),
+      {},
+      ['app-1', 'app-2', 'app-3'],
+      ['deploy', 'test'],
+      null,
+      {},
+      false
+    );
+
+    expect(taskGraph.dependencies).toMatchInlineSnapshot(`
+      {
+        "app-1:build": [
+          "lib-1:build",
+          "app-1:codegen",
+        ],
+        "app-1:codegen": [],
+        "app-1:deploy": [
+          "app-1:build",
+        ],
+        "app-2:build": [
+          "lib-2:build",
+          "app-2:codegen",
+        ],
+        "app-2:codegen": [],
+        "app-2:deploy": [
+          "app-2:build",
+        ],
+        "app-3:build": [
+          "lib-2:build",
+          "app-3:codegen",
+        ],
+        "app-3:codegen": [],
+        "app-3:deploy": [
+          "app-3:build",
+        ],
+        "lib-1:build": [
+          "lib-2:build",
+          "lib-1:codegen",
+        ],
+        "lib-1:codegen": [],
+        "lib-2:build": [
+          "lib-2:codegen",
+        ],
+        "lib-2:codegen": [],
+      }
+    `);
+  });
 });
+
+class GraphBuilder {
+  nodes: Record<string, ProjectGraphProjectNode> = {};
+  deps: Record<string, string[]> = {};
+
+  addProjectConfiguration(
+    project: Omit<ProjectConfiguration, 'root'>,
+    type?: ProjectGraph['nodes'][string]['type']
+  ) {
+    const t = type ?? 'lib';
+    this.nodes[project.name] = {
+      name: project.name,
+      type: t,
+      data: { ...project, root: `${t}/${project.name}` },
+    };
+    return this;
+  }
+
+  addDependencies(deps: Record<string, string[]>) {
+    for (const source of Object.keys(deps)) {
+      if (!this.deps[source]) {
+        this.deps[source] = [];
+      }
+      this.deps[source].push(...deps[source]);
+    }
+    return this;
+  }
+
+  build(): ProjectGraph {
+    return {
+      nodes: this.nodes,
+      dependencies: Object.fromEntries(
+        Object.entries(this.deps).map(([k, v]) => [
+          k,
+          v.map((d) => ({ source: k, target: d, type: 'static' })),
+        ])
+      ),
+      externalNodes: {},
+    };
+  }
+}

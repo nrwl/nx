@@ -31,6 +31,7 @@ Nx.json configuration
 - [neverConnectToCloud](../../devkit/documents/NxJsonConfiguration#neverconnecttocloud): boolean
 - [nxCloudAccessToken](../../devkit/documents/NxJsonConfiguration#nxcloudaccesstoken): string
 - [nxCloudEncryptionKey](../../devkit/documents/NxJsonConfiguration#nxcloudencryptionkey): string
+- [nxCloudId](../../devkit/documents/NxJsonConfiguration#nxcloudid): string
 - [nxCloudUrl](../../devkit/documents/NxJsonConfiguration#nxcloudurl): string
 - [parallel](../../devkit/documents/NxJsonConfiguration#parallel): number
 - [plugins](../../devkit/documents/NxJsonConfiguration#plugins): PluginConfiguration[]
@@ -186,6 +187,15 @@ To use a different runner that accepts an access token, define it in [tasksRunne
 • `Optional` **nxCloudEncryptionKey**: `string`
 
 Specifies the encryption key used to encrypt artifacts data before sending it to nx cloud.
+
+---
+
+### nxCloudId
+
+• `Optional` **nxCloudId**: `string`
+
+If specified Nx will use nx-cloud by default with the given cloud id.
+To use a different runner that accepts a cloud id, define it in [tasksRunnerOptions](../../devkit/documents/NxJsonConfiguration#tasksrunneroptions)
 
 ---
 

@@ -23,6 +23,7 @@ export interface CloudTaskRunnerOptions extends DefaultTasksRunnerOptions {
   url?: string;
   useLightClient?: boolean;
   clientVersion?: string;
+  nxCloudId?: string;
 }
 
 export const nxCloudTasksRunnerShell: TasksRunner<

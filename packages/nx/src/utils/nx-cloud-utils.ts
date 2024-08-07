@@ -4,6 +4,7 @@ export function isNxCloudUsed(nxJson: NxJsonConfiguration): boolean {
   return (
     !!process.env.NX_CLOUD_ACCESS_TOKEN ||
     !!nxJson.nxCloudAccessToken ||
+    !!nxJson.nxCloudId ||
     !!Object.values(nxJson.tasksRunnerOptions ?? {}).find(
       (r) => r.runner == '@nrwl/nx-cloud' || r.runner == 'nx-cloud'
     )
@@ -16,7 +17,8 @@ export function getNxCloudUrl(nxJson: NxJsonConfiguration): string {
   );
   if (
     !cloudRunner &&
-    !(nxJson.nxCloudAccessToken || process.env.NX_CLOUD_ACCESS_TOKEN)
+    !(nxJson.nxCloudAccessToken || process.env.NX_CLOUD_ACCESS_TOKEN) &&
+    !nxJson.nxCloudId
   )
     throw new Error('nx-cloud runner not found in nx.json');
   return cloudRunner?.options?.url ?? nxJson.nxCloudUrl ?? 'https://nx.app';

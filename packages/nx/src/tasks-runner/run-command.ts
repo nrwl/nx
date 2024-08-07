@@ -490,7 +490,9 @@ function getTasksRunnerPath(
     // No runner prop in tasks runner options, check if access token is set.
     nxJson.tasksRunnerOptions?.[runner]?.options?.accessToken ||
     // Cloud access token specified in env var.
-    process.env.NX_CLOUD_ACCESS_TOKEN;
+    process.env.NX_CLOUD_ACCESS_TOKEN ||
+    // Nx Cloud Id specified in nxJson
+    nxJson.nxCloudId;
 
   return isCloudRunner ? 'nx-cloud' : require.resolve('./default-tasks-runner');
 }
@@ -520,6 +522,10 @@ export function getRunnerOptions(
   // leaving it as is for now.
   if (nxJson.nxCloudAccessToken && isCloudDefault) {
     result.accessToken ??= nxJson.nxCloudAccessToken;
+  }
+
+  if (nxJson.nxCloudId && isCloudDefault) {
+    result.nxCloudId ??= nxJson.nxCloudId;
   }
 
   if (nxJson.nxCloudUrl && isCloudDefault) {

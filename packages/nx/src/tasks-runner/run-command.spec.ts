@@ -106,6 +106,24 @@ describe('getRunner', () => {
     `);
   });
 
+  it('uses cloud runner when tasksRunnerOptions are not present and nxCloudId is specified', () => {
+    const { tasksRunner, runnerOptions } = getRunner(
+      {},
+      {
+        nxCloudId: 'XXXX-XXX',
+        nxCloudUrl: 'https://my-nx-cloud.app',
+      }
+    );
+
+    expect(tasksRunner).toEqual(nxCloudTasksRunnerShell);
+    expect(runnerOptions).toMatchInlineSnapshot(`
+      {
+        "nxCloudId": "XXXX-XXX",
+        "url": "https://my-nx-cloud.app",
+      }
+    `);
+  });
+
   it('uses cloud runner when tasksRunnerOptions are not present and accessToken is set in env', () => {
     const { tasksRunner } = withEnvironmentVariables(
       {
