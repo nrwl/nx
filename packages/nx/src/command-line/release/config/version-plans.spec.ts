@@ -75,7 +75,8 @@ describe('version-plans', () => {
               pkg1: patch,
             },
             fileName: plan1.md,
-            message: This is a change to just package 1,
+            message: This is a change to just package 1
+        ,
             relativePath: .nx/version-plans/plan1.md,
           },
           {
@@ -85,7 +86,8 @@ describe('version-plans', () => {
               pkg2: patch,
             },
             fileName: plan2.md,
-            message: This is a change to package 1 and package 2,
+            message: This is a change to package 1 and package 2
+        ,
             relativePath: .nx/version-plans/plan2.md,
           },
           {
@@ -95,7 +97,10 @@ describe('version-plans', () => {
               pkg4: minor,
             },
             fileName: plan3.md,
-            message: This is a change to packages 3 and 4,
+            message: This is a change to packages 3 and 4
+
+        ...and it includes multiple lines of text
+        ,
             relativePath: .nx/version-plans/plan3.md,
           },
           {
@@ -107,7 +112,8 @@ describe('version-plans', () => {
               pkg6: preminor,
             },
             fileName: plan4.md,
-            message: This is a change to packages 3, 4, 5, and 6,
+            message: This is a change to packages 3, 4, 5, and 6
+        ,
             relativePath: .nx/version-plans/plan4.md,
           },
           {
@@ -116,7 +122,8 @@ describe('version-plans', () => {
               fixed-group-1: minor,
             },
             fileName: plan5.md,
-            message: This is a change to fixed-group-1,
+            message: This is a change to fixed-group-1
+        ,
             relativePath: .nx/version-plans/plan5.md,
           },
           {
@@ -127,7 +134,8 @@ describe('version-plans', () => {
               pkg3: major,
             },
             fileName: plan6.md,
-            message: This is a major change to fixed-group-1 and pkg3 and a minor change to fixed-group-2,
+            message: This is a major change to fixed-group-1 and pkg3 and a minor change to fixed-group-2
+        ,
             relativePath: .nx/version-plans/plan6.md,
           },
         ]
@@ -786,6 +794,11 @@ describe('version-plans', () => {
                     groupVersionBump: patch,
                     message: plan1 message,
                     relativePath: .nx/version-plans/plan1.md,
+                    triggeredByProjects: [
+                      pkg1,
+                      pkg2,
+                      pkg3,
+                    ],
                   },
                   {
                     absolutePath: <workspace-root>/version-plans/plan2.md,
@@ -794,6 +807,11 @@ describe('version-plans', () => {
                     groupVersionBump: minor,
                     message: plan2 message,
                     relativePath: .nx/version-plans/plan2.md,
+                    triggeredByProjects: [
+                      pkg1,
+                      pkg2,
+                      pkg3,
+                    ],
                   },
                 ],
               },
@@ -1005,6 +1023,9 @@ describe('version-plans', () => {
                     groupVersionBump: minor,
                     message: plan2 message,
                     relativePath: .nx/version-plans/plan2.md,
+                    triggeredByProjects: [
+                      pkg1,
+                    ],
                   },
                 ],
               },
@@ -1026,6 +1047,9 @@ describe('version-plans', () => {
                     groupVersionBump: minor,
                     message: plan2 message,
                     relativePath: .nx/version-plans/plan2.md,
+                    triggeredByProjects: [
+                      pkg2,
+                    ],
                   },
                 ],
               },
@@ -1047,6 +1071,9 @@ describe('version-plans', () => {
                     groupVersionBump: minor,
                     message: plan2 message,
                     relativePath: .nx/version-plans/plan2.md,
+                    triggeredByProjects: [
+                      pkg3,
+                    ],
                   },
                 ],
               },

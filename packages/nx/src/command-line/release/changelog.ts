@@ -2,7 +2,7 @@ import * as chalk from 'chalk';
 import { prompt } from 'enquirer';
 import { removeSync } from 'fs-extra';
 import { readFileSync, writeFileSync } from 'node:fs';
-import { valid } from 'semver';
+import { ReleaseType, valid } from 'semver';
 import { dirSync } from 'tmp';
 import type { DependencyBump } from '../../../release/changelog-renderer';
 import {
@@ -56,7 +56,6 @@ import {
   gitPush,
   gitTag,
   parseCommits,
-  parseConventionalCommitsMessage,
 } from './utils/git';
 import { createOrUpdateGithubRelease, getGitHubRepoSlug } from './utils/github';
 import { launchEditor } from './utils/launch-editor';
@@ -281,30 +280,37 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
         const releaseGroup = releaseGroups[0];
         if (releaseGroup.projectsRelationship === 'fixed') {
           const versionPlans = releaseGroup.versionPlans as GroupVersionPlan[];
-          workspaceChangelogChanges = filterHiddenChanges(
-            versionPlans
-              .map((vp) => {
-                const parsedMessage = parseConventionalCommitsMessage(
-                  vp.message
-                );
-
-                // only properly formatted conventional commits messages will be included in the changelog
-                if (!parsedMessage) {
-                  return null;
-                }
-
-                return <ChangelogChange>{
-                  type: parsedMessage.type,
-                  scope: parsedMessage.scope,
-                  description: parsedMessage.description,
-                  body: '',
-                  isBreaking: parsedMessage.breaking,
-                  githubReferences: [],
-                };
-              })
-              .filter(Boolean),
-            nxReleaseConfig.conventionalCommits
-          );
+          workspaceChangelogChanges = versionPlans
+            .flatMap((vp) => {
+              const releaseType = versionPlanSemverReleaseTypeToChangelogType(
+                vp.groupVersionBump
+              );
+              const changes: ChangelogChange | ChangelogChange[] =
+                !vp.triggeredByProjects
+                  ? {
+                      type: releaseType.type,
+                      scope: '',
+                      description: vp.message,
+                      body: '',
+                      isBreaking: releaseType.isBreaking,
+                      githubReferences: [],
+                      affectedProjects: '*',
+                    }
+                  : vp.triggeredByProjects.map((project) => {
+                      return {
+                        type: releaseType.type,
+                        scope: project,
+                        description: vp.message,
+                        body: '',
+                        // TODO: what about github references?
+                        isBreaking: releaseType.isBreaking,
+                        githubReferences: [],
+                        affectedProjects: [project],
+                      };
+                    });
+              return changes;
+            })
+            .filter(Boolean);
         }
       }
     } else {
@@ -485,31 +491,26 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
           let commits: GitCommit[];
 
           if (releaseGroup.versionPlans) {
-            changes = filterHiddenChanges(
-              (releaseGroup.versionPlans as ProjectsVersionPlan[])
-                .map((vp) => {
-                  const parsedMessage = parseConventionalCommitsMessage(
-                    vp.message
-                  );
-
-                  // only properly formatted conventional commits messages will be included in the changelog
-                  if (!parsedMessage) {
-                    return null;
-                  }
-
-                  return {
-                    type: parsedMessage.type,
-                    scope: parsedMessage.scope,
-                    description: parsedMessage.description,
-                    body: '',
-                    isBreaking: parsedMessage.breaking,
-                    affectedProjects: Object.keys(vp.projectVersionBumps),
-                    githubReferences: [],
-                  };
-                })
-                .filter(Boolean),
-              nxReleaseConfig.conventionalCommits
-            );
+            changes = (releaseGroup.versionPlans as ProjectsVersionPlan[])
+              .map((vp) => {
+                const bumpForProject = vp.projectVersionBumps[project.name];
+                if (!bumpForProject) {
+                  return null;
+                }
+                const releaseType =
+                  versionPlanSemverReleaseTypeToChangelogType(bumpForProject);
+                return {
+                  type: releaseType.type,
+                  scope: project.name,
+                  description: vp.message,
+                  body: '',
+                  isBreaking: releaseType.isBreaking,
+                  affectedProjects: Object.keys(vp.projectVersionBumps),
+                  // TODO: can we include github references when using version plans?
+                  githubReferences: [],
+                };
+              })
+              .filter(Boolean);
           } else {
             let fromRef =
               args.from ||
@@ -637,31 +638,37 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
         // TODO: remove this after the changelog renderer is refactored to remove coupling with git commits
         let commits: GitCommit[] = [];
         if (releaseGroup.versionPlans) {
-          changes = filterHiddenChanges(
-            (releaseGroup.versionPlans as GroupVersionPlan[])
-              .map((vp) => {
-                const parsedMessage = parseConventionalCommitsMessage(
-                  vp.message
-                );
-
-                // only properly formatted conventional commits messages will be included in the changelog
-                if (!parsedMessage) {
-                  return null;
-                }
-
-                return <ChangelogChange>{
-                  type: parsedMessage.type,
-                  scope: parsedMessage.scope,
-                  description: parsedMessage.description,
-                  body: '',
-                  isBreaking: parsedMessage.breaking,
-                  githubReferences: [],
-                  affectedProjects: '*',
-                };
-              })
-              .filter(Boolean),
-            nxReleaseConfig.conventionalCommits
-          );
+          changes = (releaseGroup.versionPlans as GroupVersionPlan[])
+            .flatMap((vp) => {
+              const releaseType = versionPlanSemverReleaseTypeToChangelogType(
+                vp.groupVersionBump
+              );
+              const changes: ChangelogChange | ChangelogChange[] =
+                !vp.triggeredByProjects
+                  ? {
+                      type: releaseType.type,
+                      scope: '',
+                      description: vp.message,
+                      body: '',
+                      isBreaking: releaseType.isBreaking,
+                      githubReferences: [],
+                      affectedProjects: '*',
+                    }
+                  : vp.triggeredByProjects.map((project) => {
+                      return {
+                        type: releaseType.type,
+                        scope: project,
+                        description: vp.message,
+                        body: '',
+                        // TODO: what about github references?
+                        isBreaking: releaseType.isBreaking,
+                        githubReferences: [],
+                        affectedProjects: [project],
+                      };
+                    });
+              return changes;
+            })
+            .filter(Boolean);
         } else {
           let fromRef =
             args.from ||
@@ -1407,4 +1414,24 @@ function createFileToProjectMap(
     }
   }
   return fileToProjectMap;
+}
+
+function versionPlanSemverReleaseTypeToChangelogType(bump: ReleaseType): {
+  type: 'fix' | 'feat';
+  isBreaking: boolean;
+} {
+  switch (bump) {
+    case 'premajor':
+    case 'major':
+      return { type: 'feat', isBreaking: true };
+    case 'preminor':
+    case 'minor':
+      return { type: 'feat', isBreaking: false };
+    case 'prerelease':
+    case 'prepatch':
+    case 'patch':
+      return { type: 'fix', isBreaking: false };
+    default:
+      throw new Error(`Invalid semver bump type: ${bump}`);
+  }
 }

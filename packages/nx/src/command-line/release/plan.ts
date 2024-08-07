@@ -1,7 +1,8 @@
 import { prompt } from 'enquirer';
-import { ensureDir, writeFile } from 'fs-extra';
-import { join } from 'path';
+import { ensureDir, readFileSync, writeFile, writeFileSync } from 'fs-extra';
+import { join } from 'node:path';
 import { RELEASE_TYPES } from 'semver';
+import { dirSync } from 'tmp';
 import { NxReleaseConfiguration, readNxJson } from '../../config/nx-json';
 import { createProjectFileMapUsingProjectGraph } from '../../project-graph/file-map-utils';
 import { createProjectGraphAsync } from '../../project-graph/project-graph';
@@ -13,13 +14,13 @@ import {
   createNxReleaseConfig,
   handleNxReleaseConfigError,
 } from './config/config';
+import { deepMergeJson } from './config/deep-merge-json';
 import { filterReleaseGroups } from './config/filter-release-groups';
 import { getVersionPlansAbsolutePath } from './config/version-plans';
 import { generateVersionPlanContent } from './utils/generate-version-plan-content';
-import { parseConventionalCommitsMessage } from './utils/git';
+import { launchEditor } from './utils/launch-editor';
 import { printDiff } from './utils/print-changes';
 import { printConfigAndExit } from './utils/print-config';
-import { deepMergeJson } from './config/deep-merge-json';
 
 export const releasePlanCLIHandler = (args: PlanOptions) =>
   handleErrors(args.verbose, () => createAPI({})(args));
@@ -79,26 +80,6 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
       }
     };
 
-    if (args.message) {
-      const message = parseConventionalCommitsMessage(args.message);
-      if (!message) {
-        output.error({
-          title: 'Changelog message is not in conventional commits format.',
-          bodyLines: [
-            'Please ensure your message is in the form of:',
-            '  type(optional scope): description',
-            '',
-            'For example:',
-            '  feat(pkg-b): add new feature',
-            '  fix(pkg-a): correct a bug',
-            '  chore: update build process',
-            '  fix(core)!: breaking change in core package',
-          ],
-        });
-        process.exit(1);
-      }
-    }
-
     if (releaseGroups[0].name === IMPLICIT_DEFAULT_RELEASE_GROUP) {
       const group = releaseGroups[0];
       if (group.projectsRelationship === 'independent') {
@@ -153,12 +134,14 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
       return 0;
     }
 
-    const versionPlanMessage = args.message || (await promptForMessage());
+    const versionPlanName = `version-plan-${new Date().getTime()}`;
+    const versionPlanMessage =
+      args.message || (await promptForMessage(versionPlanName));
     const versionPlanFileContent = generateVersionPlanContent(
       versionPlanBumps,
       versionPlanMessage
     );
-    const versionPlanFileName = `version-plan-${new Date().getTime()}.md`;
+    const versionPlanFileName = `${versionPlanName}.md`;
 
     if (args.dryRun) {
       output.logSingleLine(
@@ -202,47 +185,49 @@ async function promptForVersion(message: string): Promise<string> {
   }
 }
 
-async function promptForMessage(): Promise<string> {
+async function promptForMessage(versionPlanName: string): Promise<string> {
   let message: string;
   do {
-    message = await _promptForMessage();
+    message = await _promptForMessage(versionPlanName);
   } while (!message);
   return message;
 }
 
-// TODO: support non-conventional commits messages (will require significant changelog renderer changes)
-async function _promptForMessage(): Promise<string> {
+async function _promptForMessage(versionPlanName: string): Promise<string> {
   try {
     const reply = await prompt<{ message: string }>([
       {
         name: 'message',
         message:
-          'What changelog message would you like associated with this change?',
+          'What changelog message would you like associated with this change? (Leave blank to open an external editor for multi-line messages/easier editing)',
         type: 'input',
       },
     ]);
 
-    const conventionalCommitsMessage = parseConventionalCommitsMessage(
-      reply.message
-    );
-    if (!conventionalCommitsMessage) {
-      output.warn({
-        title: 'Changelog message is not in conventional commits format.',
-        bodyLines: [
-          'Please ensure your message is in the form of:',
-          '  type(optional scope): description',
-          '',
-          'For example:',
-          '  feat(pkg-b): add new feature',
-          '  fix(pkg-a): correct a bug',
-          '  chore: update build process',
-          '  fix(core)!: breaking change in core package',
-        ],
-      });
-      return null;
+    let message = reply.message.trim();
+
+    if (!message.length) {
+      const tmpDir = dirSync().name;
+      const messageFilePath = join(
+        tmpDir,
+        `DRAFT_MESSAGE__${versionPlanName}.md`
+      );
+      writeFileSync(messageFilePath, '');
+      await launchEditor(messageFilePath);
+      message = readFileSync(messageFilePath, 'utf-8');
     }
 
-    return reply.message;
+    message = message.trim();
+
+    if (!message) {
+      output.warn({
+        title:
+          'A changelog message is required in order to create the version plan file',
+        bodyLines: [],
+      });
+    }
+
+    return message;
   } catch (e) {
     output.log({
       title: 'Cancelled version plan creation.',

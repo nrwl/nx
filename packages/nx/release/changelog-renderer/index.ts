@@ -404,13 +404,29 @@ function formatChange(
   changelogRenderOptions: DefaultChangelogRenderOptions,
   repoSlug?: RepoSlug
 ): string {
+  let description = change.description;
+  let extraLines = [];
+  let extraLinesStr = '';
+  if (description.includes('\n')) {
+    [description, ...extraLines] = description.split('\n');
+    // Align the extra lines with the start of the description for better readability
+    const indentation = '  ';
+    extraLinesStr = extraLines
+      .filter((l) => l.trim().length > 0)
+      .map((l) => `${indentation}${l}`)
+      .join('\n');
+  }
+
   let changeLine =
     '- ' +
     (change.isBreaking ? '⚠️  ' : '') +
     (change.scope ? `**${change.scope.trim()}:** ` : '') +
-    change.description;
+    description;
   if (repoSlug && changelogRenderOptions.commitReferences) {
     changeLine += formatReferences(change.githubReferences, repoSlug);
+  }
+  if (extraLinesStr) {
+    changeLine += '\n\n' + extraLinesStr;
   }
   return changeLine;
 }
