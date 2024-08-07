@@ -29,4 +29,28 @@ describe('generateVersionPlanContent()', () => {
       "
     `);
   });
+
+  it('should work without a message', () => {
+    expect(generateVersionPlanContent({ proj: '1.0.0' }, ''))
+      .toMatchInlineSnapshot(`
+      "---
+      proj: 1.0.0
+      ---
+      "
+    `);
+  });
+
+  it('should work with multi-line messages', () => {
+    expect(generateVersionPlanContent({ proj: '1.0.0' }, 'foo\nbar\nbaz'))
+      .toMatchInlineSnapshot(`
+      "---
+      proj: 1.0.0
+      ---
+
+      foo
+      bar
+      baz
+      "
+    `);
+  });
 });
