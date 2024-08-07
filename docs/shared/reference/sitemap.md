@@ -436,6 +436,7 @@
       - [application](/nx-api/expo/generators/application)
       - [library](/nx-api/expo/generators/library)
       - [component](/nx-api/expo/generators/component)
+      - [convert-to-inferred](/nx-api/expo/generators/convert-to-inferred)
   - [express](/nx-api/express)
     - [documents](/nx-api/express/documents)
       - [Overview](/nx-api/express/documents/overview)

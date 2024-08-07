@@ -991,6 +991,15 @@
         "originalFilePath": "/packages/expo/src/generators/component/schema.json",
         "path": "/nx-api/expo/generators/component",
         "type": "generator"
+      },
+      "/nx-api/expo/generators/convert-to-inferred": {
+        "description": "Convert existing Expo project(s) using `@nx/expo:*` executors to use `@nx/expo/plugin`. Defaults to migrating all projects. Pass '--project' to migrate only one target.",
+        "file": "generated/packages/expo/generators/convert-to-inferred.json",
+        "hidden": false,
+        "name": "convert-to-inferred",
+        "originalFilePath": "/packages/expo/src/generators/convert-to-inferred/schema.json",
+        "path": "/nx-api/expo/generators/convert-to-inferred",
+        "type": "generator"
       }
     },
     "path": "/nx-api/expo"
