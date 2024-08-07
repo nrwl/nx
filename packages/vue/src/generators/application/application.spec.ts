@@ -40,6 +40,7 @@ describe('application generator', () => {
       ...options,
       unitTestRunner: 'vitest',
       e2eTestRunner: 'playwright',
+      addPlugin: true,
     });
     expect(tree.read('.eslintrc.json', 'utf-8')).toMatchSnapshot();
     expect(tree.read('test/vite.config.ts', 'utf-8')).toMatchSnapshot();
@@ -49,6 +50,14 @@ describe('application generator', () => {
       tree.read('test-e2e/playwright.config.ts', 'utf-8')
     ).toMatchSnapshot();
     expect(listFiles(tree)).toMatchSnapshot();
+    expect(readNxJson(tree).targetDefaults['e2e-ci--**/*'])
+      .toMatchInlineSnapshot(`
+      {
+        "dependsOn": [
+          "^build",
+        ],
+      }
+    `);
   });
 
   it('should set up project correctly for cypress', async () => {

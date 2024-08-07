@@ -11,6 +11,8 @@ import { Linter } from '@nx/eslint';
 import { nxVersion } from '../../../utils/versions';
 import { NormalizedSchema } from './normalize-options';
 import { webStaticServeGenerator } from '@nx/web';
+import { findPluginForConfigFile } from '@nx/devkit/src/utils/find-plugin-for-config-file';
+import { addE2eCiTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
 
 export async function addE2e(host: Tree, options: NormalizedSchema) {
   const nxJson = readNxJson(host);
@@ -42,7 +44,7 @@ export async function addE2e(host: Tree, options: NormalizedSchema) {
       implicitDependencies: [options.projectName],
     });
 
-    return configurationGenerator(host, {
+    const e2eTask = await configurationGenerator(host, {
       ...options,
       linter: Linter.EsLint,
       project: options.e2eProjectName,
@@ -60,6 +62,40 @@ export async function addE2e(host: Tree, options: NormalizedSchema) {
         ? `nx run ${options.projectName}:serve-static`
         : undefined,
     });
+
+    if (
+      options.addPlugin ||
+      readNxJson(host).plugins?.find((p) =>
+        typeof p === 'string'
+          ? p === '@nx/cypress/plugin'
+          : p.plugin === '@nx/cypress/plugin'
+      )
+    ) {
+      let buildTarget = '^build';
+      if (hasPlugin) {
+        const matchingPlugin = await findPluginForConfigFile(
+          host,
+          '@nx/next/plugin',
+          joinPathFragments(options.appProjectRoot, 'next.config.js')
+        );
+        if (matchingPlugin && typeof matchingPlugin !== 'string') {
+          buildTarget = `^${
+            (matchingPlugin.options as any)?.buildTargetName ?? 'build'
+          }`;
+        }
+      }
+      await addE2eCiTargetDefaults(
+        host,
+        '@nx/cypress/plugin',
+        buildTarget,
+        joinPathFragments(
+          options.e2eProjectRoot,
+          `cypress.config.${options.js ? 'js' : 'ts'}`
+        )
+      );
+    }
+
+    return e2eTask;
   } else if (options.e2eTestRunner === 'playwright') {
     const { configurationGenerator } = ensurePackage<
       typeof import('@nx/playwright')
@@ -71,7 +107,7 @@ export async function addE2e(host: Tree, options: NormalizedSchema) {
       tags: [],
       implicitDependencies: [options.projectName],
     });
-    return configurationGenerator(host, {
+    const e2eTask = await configurationGenerator(host, {
       rootProject: options.rootProject,
       project: options.e2eProjectName,
       skipFormat: true,
@@ -86,6 +122,37 @@ export async function addE2e(host: Tree, options: NormalizedSchema) {
       } ${options.projectName}`,
       addPlugin: options.addPlugin,
     });
+
+    if (
+      options.addPlugin ||
+      readNxJson(host).plugins?.find((p) =>
+        typeof p === 'string'
+          ? p === '@nx/playwright/plugin'
+          : p.plugin === '@nx/playwright/plugin'
+      )
+    ) {
+      let buildTarget = '^build';
+      if (hasPlugin) {
+        const matchingPlugin = await findPluginForConfigFile(
+          host,
+          '@nx/next/plugin',
+          joinPathFragments(options.appProjectRoot, 'next.config.js')
+        );
+        if (matchingPlugin && typeof matchingPlugin !== 'string') {
+          buildTarget = `^${
+            (matchingPlugin.options as any)?.buildTargetName ?? 'build'
+          }`;
+        }
+      }
+      await addE2eCiTargetDefaults(
+        host,
+        '@nx/playwright/plugin',
+        buildTarget,
+        joinPathFragments(options.e2eProjectRoot, `playwright.config.ts`)
+      );
+    }
+
+    return e2eTask;
   }
   return () => {};
 }

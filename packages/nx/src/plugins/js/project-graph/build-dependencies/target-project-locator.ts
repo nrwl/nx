@@ -188,9 +188,14 @@ export class TargetProjectLocator {
 
       const version = clean(externalPackageJson.version);
       const npmProjectKey = `npm:${externalPackageJson.name}@${version}`;
-      const matchingExternalNode = this.npmProjects[npmProjectKey];
+      let matchingExternalNode = this.npmProjects[npmProjectKey];
       if (!matchingExternalNode) {
-        return null;
+        // check if it's a package alias, where the resolved package key is used as the version
+        const aliasNpmProjectKey = `npm:${packageName}@${npmProjectKey}`;
+        matchingExternalNode = this.npmProjects[aliasNpmProjectKey];
+        if (!matchingExternalNode) {
+          return null;
+        }
       }
 
       this.npmResolutionCache.set(

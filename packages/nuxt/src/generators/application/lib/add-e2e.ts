@@ -7,6 +7,8 @@ import {
 } from '@nx/devkit';
 import { nxVersion } from '../../../utils/versions';
 import { NormalizedSchema } from '../schema';
+import { findPluginForConfigFile } from '@nx/devkit/src/utils/find-plugin-for-config-file';
+import { addE2eCiTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
 
 export async function addE2e(host: Tree, options: NormalizedSchema) {
   if (options.e2eTestRunner === 'cypress') {
@@ -21,7 +23,7 @@ export async function addE2e(host: Tree, options: NormalizedSchema) {
       tags: [],
       implicitDependencies: [options.projectName],
     });
-    return await configurationGenerator(host, {
+    const e2eTask = await configurationGenerator(host, {
       ...options,
       project: options.e2eProjectName,
       directory: 'src',
@@ -38,6 +40,33 @@ export async function addE2e(host: Tree, options: NormalizedSchema) {
       jsx: true,
       addPlugin: true,
     });
+
+    let buildTarget = '^build-static';
+    const matchingPlugin = await findPluginForConfigFile(
+      host,
+      '@nx/nuxt/plugin',
+      joinPathFragments(
+        options.appProjectRoot,
+        `nuxt.config.${options.js ? 'js' : 'ts'}`
+      )
+    );
+    if (matchingPlugin && typeof matchingPlugin !== 'string') {
+      buildTarget = `^${
+        (matchingPlugin.options as any)?.buildStaticTargetName ?? 'build-static'
+      }`;
+    }
+
+    await addE2eCiTargetDefaults(
+      host,
+      '@nx/cypress/plugin',
+      buildTarget,
+      joinPathFragments(
+        options.e2eProjectRoot,
+        `cypress.config.${options.js ? 'js' : 'ts'}`
+      )
+    );
+
+    return e2eTask;
   } else if (options.e2eTestRunner === 'playwright') {
     const { configurationGenerator } = ensurePackage<
       typeof import('@nx/playwright')
@@ -48,7 +77,7 @@ export async function addE2e(host: Tree, options: NormalizedSchema) {
       targets: {},
       implicitDependencies: [options.projectName],
     });
-    return configurationGenerator(host, {
+    const e2eTask = await configurationGenerator(host, {
       project: options.e2eProjectName,
       skipFormat: true,
       skipPackageJson: options.skipPackageJson,
@@ -62,6 +91,30 @@ export async function addE2e(host: Tree, options: NormalizedSchema) {
       } ${options.projectName}`,
       addPlugin: true,
     });
+
+    let buildTarget = '^build-static';
+    const matchingPlugin = await findPluginForConfigFile(
+      host,
+      '@nx/nuxt/plugin',
+      joinPathFragments(
+        options.appProjectRoot,
+        `nuxt.config.${options.js ? 'js' : 'ts'}`
+      )
+    );
+    if (matchingPlugin && typeof matchingPlugin !== 'string') {
+      buildTarget = `^${
+        (matchingPlugin.options as any)?.buildStaticTargetName ?? 'build-static'
+      }`;
+    }
+
+    await addE2eCiTargetDefaults(
+      host,
+      '@nx/playwright/plugin',
+      buildTarget,
+      joinPathFragments(options.e2eProjectRoot, `playwright.config.ts`)
+    );
+
+    return e2eTask;
   }
   return () => {};
 }
