@@ -89,6 +89,11 @@ export interface ReleaseVersionGeneratorSchema {
    * This is only applicable to independently released projects.
    */
   updateDependents?: 'never' | 'auto';
+  /**
+   * Whether or not to completely omit project logs when that project has no applicable changes. This can be useful for
+   * large monorepos which have a large number of projects, especially when only a subset are released together.
+   */
+  logUnchangedProjects?: boolean;
 }
 
 export interface NxReleaseVersionResult {
