@@ -1,5 +1,6 @@
 import { Server } from 'net';
 import { handleServerProcessTermination } from './shutdown-utils';
+import { openSockets } from './server';
 
 export async function handleRequestShutdown(
   server: Server,
@@ -16,6 +17,7 @@ export async function handleRequestShutdown(
       await handleServerProcessTermination({
         server,
         reason: 'Request to shutdown',
+        sockets: openSockets,
       });
     }, 0);
     return {

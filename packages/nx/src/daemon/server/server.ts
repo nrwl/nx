@@ -76,6 +76,8 @@ import {
 } from '../message-types/task-history';
 import { handleGetTaskHistoryForHashes } from './handle-get-task-history';
 import { handleWriteTaskRunsToHistory } from './handle-write-task-runs-to-history';
+import { isHandleForceShutdownMessage } from '../message-types/force-shutdown';
+import { handleForceShutdown } from './handle-force-shutdown';
 
 let performanceObserver: PerformanceObserver | undefined;
 let workspaceWatcherError: Error | undefined;
@@ -90,9 +92,11 @@ export type HandlerResult = {
 };
 
 let numberOfOpenConnections = 0;
+export const openSockets: Set<Socket> = new Set();
 
 const server = createServer(async (socket) => {
   numberOfOpenConnections += 1;
+  openSockets.add(socket);
   serverLogger.log(
     `Established a connection. Number of open connections: ${numberOfOpenConnections}`
   );
@@ -119,6 +123,7 @@ const server = createServer(async (socket) => {
 
   socket.on('close', () => {
     numberOfOpenConnections -= 1;
+    openSockets.delete(socket);
     serverLogger.log(
       `Closed a connection. Number of open connections: ${numberOfOpenConnections}`
     );
@@ -216,6 +221,10 @@ async function handleMessage(socket, data: string) {
     await handleResult(socket, 'WRITE_TASK_RUNS_TO_HISTORY', () =>
       handleWriteTaskRunsToHistory(payload.taskRuns)
     );
+  } else if (isHandleForceShutdownMessage(payload)) {
+    await handleResult(socket, 'FORCE_SHUTDOWN', () =>
+      handleForceShutdown(server)
+    );
   } else {
     await respondWithErrorAndExit(
       socket,
@@ -256,6 +265,7 @@ function handleInactivityTimeout() {
     handleServerProcessTermination({
       server,
       reason: `${SERVER_INACTIVITY_TIMEOUT_MS}ms of inactivity`,
+      sockets: openSockets,
     });
   }
 }
@@ -266,18 +276,21 @@ function registerProcessTerminationListeners() {
       handleServerProcessTermination({
         server,
         reason: 'received process SIGINT',
+        sockets: openSockets,
       })
     )
     .on('SIGTERM', () =>
       handleServerProcessTermination({
         server,
         reason: 'received process SIGTERM',
+        sockets: openSockets,
       })
     )
     .on('SIGHUP', () =>
       handleServerProcessTermination({
         server,
         reason: 'received process SIGHUP',
+        sockets: openSockets,
       })
     );
 }
@@ -352,6 +365,7 @@ const handleWorkspaceChanges: FileWatcherCallback = async (
       await handleServerProcessTermination({
         server,
         reason: outdatedReason,
+        sockets: openSockets,
       });
       return;
     }
