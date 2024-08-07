@@ -203,6 +203,7 @@ export function getPackageManagerVersion(
     version = execSync(`${packageManager} --version`, {
       cwd,
       encoding: 'utf-8',
+      windowsHide: true,
     }).trim();
   } catch {
     if (existsSync(join(cwd, 'package.json'))) {
@@ -411,7 +412,10 @@ export async function resolvePackageVersionUsingInstallation(
 
   try {
     const pmc = getPackageManagerCommand();
-    await execAsync(`${pmc.add} ${packageName}@${version}`, { cwd: dir });
+    await execAsync(`${pmc.add} ${packageName}@${version}`, {
+      cwd: dir,
+      windowsHide: true,
+    });
 
     const { packageJson } = readModulePackageJson(packageName, [dir]);
 
@@ -441,7 +445,9 @@ export async function packageRegistryView(
     pm = 'npm';
   }
 
-  const { stdout } = await execAsync(`${pm} view ${pkg}@${version} ${args}`);
+  const { stdout } = await execAsync(`${pm} view ${pkg}@${version} ${args}`, {
+    windowsHide: true,
+  });
   return stdout.toString().trim();
 }
 
@@ -464,7 +470,10 @@ export async function packageRegistryPack(
     pm = 'npm';
   }
 
-  const { stdout } = await execAsync(`${pm} pack ${pkg}@${version}`, { cwd });
+  const { stdout } = await execAsync(`${pm} pack ${pkg}@${version}`, {
+    cwd,
+    windowsHide: true,
+  });
 
   const tarballPath = stdout.trim();
   return { tarballPath };
