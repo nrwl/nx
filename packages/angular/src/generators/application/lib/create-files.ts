@@ -43,13 +43,13 @@ export async function createFiles(
     useEventCoalescing: angularMajorVersion >= 18,
     useRouterTestingModule: angularMajorVersion < 18,
     connectCloudUrl: options.connectCloudUrl,
-    tutorialUrl: options.rootProject
+    tutorialUrl: options.standalone
       ? 'https://nx.dev/getting-started/tutorials/angular-standalone-tutorial?utm_source=nx-project'
       : 'https://nx.dev/getting-started/tutorials/angular-monorepo-tutorial?utm_source=nx-project',
     tpl: '',
   };
 
-  const angularAppType = options.rootProject ? 'standalone' : 'ng-module';
+  const angularAppType = options.standalone ? 'standalone' : 'ng-module';
 
   generateFiles(
     tree,
