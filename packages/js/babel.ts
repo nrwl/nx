@@ -45,6 +45,33 @@ module.exports = function (api: any, options: NxWebBabelPresetOptions = {}) {
     );
   }
 
+  const plugins = [
+    !isNxPackage
+      ? [
+          require.resolve('@babel/plugin-transform-runtime'),
+          {
+            corejs: false,
+            helpers: true,
+            regenerator: true,
+            useESModules: isModern,
+            absoluteRuntime: dirname(
+              require.resolve('@babel/runtime/package.json')
+            ),
+          },
+        ]
+      : null,
+    require.resolve('babel-plugin-macros'),
+    emitDecoratorMetadata
+      ? require.resolve('babel-plugin-transform-typescript-metadata')
+      : undefined,
+    // Must use legacy decorators to remain compatible with TypeScript.
+    [
+      require.resolve('@babel/plugin-proposal-decorators'),
+      options.decorators ?? { legacy: true },
+    ],
+    [require.resolve('@babel/plugin-transform-class-properties'), { loose }],
+  ].filter(Boolean);
+
   return {
     presets: [
       // Support module/nomodule pattern.
@@ -64,32 +91,7 @@ module.exports = function (api: any, options: NxWebBabelPresetOptions = {}) {
         },
       ],
     ],
-    plugins: [
-      !isNxPackage
-        ? [
-            require.resolve('@babel/plugin-transform-runtime'),
-            {
-              corejs: false,
-              helpers: true,
-              regenerator: true,
-              useESModules: isModern,
-              absoluteRuntime: dirname(
-                require.resolve('@babel/runtime/package.json')
-              ),
-            },
-          ]
-        : null,
-      require.resolve('babel-plugin-macros'),
-      emitDecoratorMetadata
-        ? require.resolve('babel-plugin-transform-typescript-metadata')
-        : undefined,
-      // Must use legacy decorators to remain compatible with TypeScript.
-      [
-        require.resolve('@babel/plugin-proposal-decorators'),
-        options.decorators ?? { legacy: true },
-      ],
-      [require.resolve('@babel/plugin-transform-class-properties'), { loose }],
-    ].filter(Boolean),
+    plugins,
     overrides: [
       // Convert `const enum` to `enum`. The former cannot be supported by babel
       // but at least we can get it to not error out.
