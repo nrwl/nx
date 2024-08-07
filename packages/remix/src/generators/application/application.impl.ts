@@ -33,7 +33,7 @@ import { NxRemixGeneratorSchema } from './schema';
 import { updateDependencies } from '../utils/update-dependencies';
 import initGenerator from '../init/init';
 import { initGenerator as jsInitGenerator } from '@nx/js';
-import { addBuildTargetDefaults } from '@nx/devkit/src/generators/add-build-target-defaults';
+import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 import { updateJestTestMatch } from '../../utils/testing-config-utils';
 
