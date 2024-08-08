@@ -13,6 +13,11 @@ export type BlogPostDataEntry = {
   slug: string;
   ogImage: string;
   ogImageType: string;
+  podcastYoutubeId?: string;
+  podcastSpotifyId?: string;
+  amazonUrl?: string;
+  appleUrl?: string;
+  iHeartUrl?: string;
 };
 
 export type BlogAuthor = {
