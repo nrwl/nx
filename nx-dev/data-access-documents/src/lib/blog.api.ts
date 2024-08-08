@@ -68,6 +68,11 @@ export class BlogApi {
         ogImageType: type,
         filePath,
         slug,
+        podcastYoutubeId: frontmatter.podcastYoutubeId,
+        podcastSpotifyId: frontmatter.podcastSpotifyId,
+        iHeartUrl: frontmatter.iHeartUrl,
+        appleUrl: frontmatter.appleUrl,
+        amazonUrl: frontmatter.amazonUrl,
       };
       const isDevelopment = process.env.NODE_ENV === 'development';
       const shouldIncludePost = !frontmatter.draft || isDevelopment;
@@ -113,6 +118,11 @@ export class BlogApi {
         ogImageType: type,
         filePath,
         slug,
+        podcastYoutubeId: frontmatter.podcastYoutubeId,
+        podcastSpotifyId: frontmatter.podcastSpotifyId,
+        iHeartUrl: frontmatter.iHeartUrl,
+        appleUrl: frontmatter.applePodcastsUrl,
+        amazonUrl: frontmatter.amazonUrl,
       };
 
       if (!frontmatter.draft || process.env.NODE_ENV === 'development') {
