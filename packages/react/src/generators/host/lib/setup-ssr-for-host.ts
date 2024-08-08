@@ -34,6 +34,7 @@ export async function setupSsrForHost(
     {
       ...options,
       static: !options?.dynamic,
+      port: Number(options?.devServerPort) || 4200,
       remotes: defaultRemoteManifest.map(({ name, port }) => {
         return {
           ...names(name),

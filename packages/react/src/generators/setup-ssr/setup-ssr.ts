@@ -216,6 +216,7 @@ export async function setupSsrGenerator(tree: Tree, options: Schema) {
 
   generateFiles(tree, join(__dirname, 'files'), projectRoot, {
     tmpl: '',
+    port: Number(options?.serverPort) || 4200,
     extraInclude:
       options.extraInclude?.length > 0
         ? `"${options.extraInclude.join('", "')}",`
