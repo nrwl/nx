@@ -58,6 +58,23 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "19.3.0": {
+      "version": "19.3.0-beta.0",
+      "packages": {
+        "@rspack/core": {
+          "version": "^0.7.5",
+          "alwaysAddToPackageJson": false
+        },
+        "@rspack/dev-server": {
+          "version": "^0.7.5",
+          "alwaysAddToPackageJson": false
+        },
+        "@rspack/plugin-minify": {
+          "version": "^0.7.5",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   },
   "version": "0.1"
