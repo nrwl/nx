@@ -2,7 +2,7 @@ import type { StorybookConfig } from '<%= uiFramework %>';
 <% if (usesVite && !viteConfigFilePath) { %>
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { mergeConfig } from 'vite';
-<% } %>
+<% } %><% if (uiFramework === '@storybook/vue3-vite' && !viteConfigFilePath) { %>import vue from '@vitejs/plugin-vue'<% } %>
 
 const config: StorybookConfig = {
   stories: [
@@ -43,7 +43,7 @@ const config: StorybookConfig = {
   },<% } %><% if (usesVite && !viteConfigFilePath) { %>
   viteFinal: async (config) =>
     mergeConfig(config, {
-      plugins: [nxViteTsPaths()],
+      plugins: [<% if(uiFramework === '@storybook/vue3-vite') { %>vue(), <% } %>nxViteTsPaths()],
     }),
   <% } %>
 };
