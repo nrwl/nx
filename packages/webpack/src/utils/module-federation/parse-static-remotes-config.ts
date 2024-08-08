@@ -34,3 +34,25 @@ export function parseStaticRemotesConfig(
 
   return { remotes: staticRemotes, config };
 }
+
+export function parseStaticSsrRemotesConfig(
+  staticRemotes: string[] | undefined,
+  context: ExecutorContext
+): StaticRemotesConfig {
+  if (!staticRemotes?.length) {
+    return { remotes: [], config: undefined };
+  }
+  const config: Record<string, StaticRemoteConfig> = {};
+  for (const app of staticRemotes) {
+    const outputPath = context.projectGraph.nodes[app].data.targets['build']
+      .options.outputPath as string;
+    const basePath = dirname(outputPath); // dist/checkout/browser -> checkout
+    const urlSegment =
+      basename(outputPath) === 'browser' ? basePath : basename(outputPath); // we do not want to have browser in the url
+    const port =
+      context.projectGraph.nodes[app].data.targets['serve'].options.port;
+    config[app] = { basePath, outputPath, urlSegment, port };
+  }
+
+  return { remotes: staticRemotes, config };
+}

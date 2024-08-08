@@ -8,4 +8,7 @@ export interface WebSsrDevServerOptions {
   port: number;
   browserTargetOptions: TargetOptions;
   serverTargetOptions: TargetOptions;
+  ssl?: boolean;
+  sslKey?: string;
+  sslCert?: string;
 }

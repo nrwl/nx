@@ -26,7 +26,7 @@ export function getFunctionDeterminateRemoteUrl(isServer: boolean = false) {
       ? JSON.parse(process.env.NX_MF_DEV_SERVER_STATIC_REMOTES)
       : undefined;
     if (mappedStaticRemotesFromEnv && mappedStaticRemotesFromEnv[remote]) {
-      return `${mappedStaticRemotesFromEnv[remote]}/${remoteEntry}`;
+      return `${mappedStaticRemotesFromEnv[remote]}/remoteEntry.js`;
     }
 
     let remoteConfiguration = null;

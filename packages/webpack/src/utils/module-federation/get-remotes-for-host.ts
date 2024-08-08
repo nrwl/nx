@@ -139,7 +139,8 @@ export function getRemotes(
             context.projectGraph.nodes[r].data.targets['serve'].options.port
         ),
       ] as number[])
-    ) + 1;
+    ) +
+    (remotesToSkip.size + 1);
 
   return {
     staticRemotes,
