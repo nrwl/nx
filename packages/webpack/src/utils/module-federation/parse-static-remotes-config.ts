@@ -48,7 +48,9 @@ export function parseStaticSsrRemotesConfig(
       .options.outputPath as string;
     const basePath = dirname(outputPath); // dist/checkout/browser -> checkout
     const urlSegment =
-      basename(outputPath) === 'browser' ? basePath : basename(outputPath); // we do not want to have browser in the url
+      basename(outputPath) === 'browser'
+        ? basename(basePath)
+        : basename(outputPath); // we do not want to have /browser in the url
     const port =
       context.projectGraph.nodes[app].data.targets['serve'].options.port;
     config[app] = { basePath, outputPath, urlSegment, port };
