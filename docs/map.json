@@ -2112,6 +2112,11 @@
               "name": "add",
               "id": "add",
               "file": "generated/cli/add"
+            },
+            {
+              "name": "login",
+              "id": "login",
+              "file": "generated/cli/login"
             }
           ]
         },
