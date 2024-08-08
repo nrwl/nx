@@ -41,8 +41,6 @@ export function BlogDetails({ post }: BlogDetailsProps) {
     year: 'numeric',
   });
 
-  console.log('post', post);
-
   return (
     <main id="main" role="main" className="w-full py-8">
       <div className="mx-auto mb-8 flex max-w-screen-xl justify-between px-4 lg:px-8">
