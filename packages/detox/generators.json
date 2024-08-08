@@ -15,6 +15,11 @@
       "aliases": ["app"],
       "x-type": "application",
       "description": "Create a Detox application."
+    },
+    "convert-to-inferred": {
+      "factory": "./src/generators/convert-to-inferred/convert-to-inferred",
+      "schema": "./src/generators/convert-to-inferred/schema.json",
+      "description": "Convert existing Detox project(s) using `@nx/detox:*` executors to use `@nx/detox/plugin`. Defaults to migrating all projects. Pass '--project' to migrate only one target."
     }
   }
 }

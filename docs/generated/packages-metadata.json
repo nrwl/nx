@@ -598,6 +598,15 @@
         "originalFilePath": "/packages/detox/src/generators/application/schema.json",
         "path": "detox/generators/application",
         "type": "generator"
+      },
+      {
+        "description": "Convert existing Detox project(s) using `@nx/detox:*` executors to use `@nx/detox/plugin`. Defaults to migrating all projects. Pass '--project' to migrate only one target.",
+        "file": "generated/packages/detox/generators/convert-to-inferred.json",
+        "hidden": false,
+        "name": "convert-to-inferred",
+        "originalFilePath": "/packages/detox/src/generators/convert-to-inferred/schema.json",
+        "path": "detox/generators/convert-to-inferred",
+        "type": "generator"
       }
     ],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",

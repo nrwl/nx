@@ -387,6 +387,7 @@
     - [generators](/nx-api/detox/generators)
       - [init](/nx-api/detox/generators/init)
       - [application](/nx-api/detox/generators/application)
+      - [convert-to-inferred](/nx-api/detox/generators/convert-to-inferred)
   - [devkit](/nx-api/devkit)
     - [documents](/nx-api/devkit/documents)
       - [Overview](/nx-api/devkit/documents/nx_devkit)
