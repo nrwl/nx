@@ -271,7 +271,7 @@
     "source-map": "0.7.3",
     "source-map-loader": "^5.0.0",
     "source-map-support": "0.5.19",
-    "storybook": "^8.2.6",
+    "storybook": "^8.2.8",
     "storybook-dark-mode": "^4.0.2",
     "style-loader": "^3.3.0",
     "tar-stream": "~2.2.0",
