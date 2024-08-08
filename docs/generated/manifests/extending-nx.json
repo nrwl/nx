@@ -53,7 +53,7 @@
       },
       {
         "id": "tooling-plugin",
-        "name": "Maintain a Published Plugin",
+        "name": "Create a Tooling Plugin",
         "description": "",
         "mediaImage": "",
         "file": "shared/plugins/tooling-plugin",
@@ -80,7 +80,7 @@
   },
   "/extending-nx/tutorials/tooling-plugin": {
     "id": "tooling-plugin",
-    "name": "Maintain a Published Plugin",
+    "name": "Create a Tooling Plugin",
     "description": "",
     "mediaImage": "",
     "file": "shared/plugins/tooling-plugin",

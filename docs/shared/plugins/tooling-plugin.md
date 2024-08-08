@@ -167,7 +167,6 @@ To test your inferred task, you can update the `nx.json` file and create a `bann
 With this in place, you can run the following command and see the `cfonts` command in action:
 
 ```text {% command="npx nx banner" %}
-❯ nx banner
 
 > nx run nx-cfonts:banner
 
@@ -442,31 +441,11 @@ In order to use your plugin in other workspaces or share it with the community, 
 2. Follow the prompts from npm.
 3. That's it!
 
-After that, you can then install your plugin like any other npm package -
-
-{% tabs %}
-{% tab label="npm" %}
+After that, you can then install your plugin like any other Nx plugin -
 
 ```shell
-npm add -D nx-cfonts
+nx add nx-cfonts
 ```
-
-{% /tab %}
-{% tab label="yarn" %}
-
-```shell
-yarn add -D nx-cfonts
-```
-
-{% /tab %}
-{% tab label="pnpm" %}
-
-```shell
-pnpm add -D nx-cfonts
-```
-
-{% /tab %}
-{% /tabs %}
 
 ## List your Nx Plugin
 
