@@ -220,8 +220,9 @@ function withNx(
           _nextConfig.nx?.fileReplacements
             ? joinPathFragments(workspaceRoot, projectDirectory)
             : workspaceRoot,
-          _nextConfig.nx?.assets || options.assets,
-          _nextConfig.nx?.fileReplacements || options.fileReplacements
+          projectDirectory,
+          _nextConfig.nx?.fileReplacements || options.fileReplacements,
+          _nextConfig.nx?.assets || options.assets
         )(userWebpackConfig ? userWebpackConfig(a, b) : a, b);
 
       return nextConfig;
