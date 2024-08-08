@@ -4955,7 +4955,7 @@
             "disableCollapsible": false
           },
           {
-            "name": "Maintain a Published Plugin",
+            "name": "Create a Tooling Plugin",
             "path": "/extending-nx/tutorials/tooling-plugin",
             "id": "tooling-plugin",
             "isExternal": false,
@@ -4974,7 +4974,7 @@
         "disableCollapsible": false
       },
       {
-        "name": "Maintain a Published Plugin",
+        "name": "Create a Tooling Plugin",
         "path": "/extending-nx/tutorials/tooling-plugin",
         "id": "tooling-plugin",
         "isExternal": false,

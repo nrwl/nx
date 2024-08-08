@@ -1469,7 +1469,7 @@
               "file": "shared/plugins/organization-specific-plugin"
             },
             {
-              "name": "Maintain a Published Plugin",
+              "name": "Create a Tooling Plugin",
               "id": "tooling-plugin",
               "file": "shared/plugins/tooling-plugin"
             }
