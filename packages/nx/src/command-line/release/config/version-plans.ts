@@ -67,7 +67,7 @@ export async function readRawVersionPlans(): Promise<RawVersionPlan[]> {
   return versionPlans;
 }
 
-export function setVersionPlansOnGroups(
+export function setResolvedVersionPlansOnGroups(
   rawVersionPlans: RawVersionPlan[],
   releaseGroups: ReleaseGroupWithName[],
   allProjectNamesInWorkspace: string[]
@@ -89,7 +89,7 @@ export function setVersionPlansOnGroups(
       if (groupsByName.has(key)) {
         const group = groupsByName.get(key);
 
-        if (!group.versionPlans) {
+        if (!group.resolvedVersionPlans) {
           if (isDefaultGroup) {
             throw new Error(
               `Found a version bump in '${rawVersionPlan.fileName}' but version plans are not enabled.`
@@ -134,7 +134,7 @@ export function setVersionPlansOnGroups(
         }
 
         const existingPlan = <GroupVersionPlan>(
-          group.versionPlans.find(
+          group.resolvedVersionPlans.find(
             (plan) => plan.fileName === rawVersionPlan.fileName
           )
         );
@@ -151,7 +151,7 @@ export function setVersionPlansOnGroups(
             }
           }
         } else {
-          group.versionPlans.push(<GroupVersionPlan>{
+          group.resolvedVersionPlans.push(<GroupVersionPlan>{
             absolutePath: rawVersionPlan.absolutePath,
             relativePath: rawVersionPlan.relativePath,
             fileName: rawVersionPlan.fileName,
@@ -182,7 +182,7 @@ export function setVersionPlansOnGroups(
           }
         }
 
-        if (!groupForProject.versionPlans) {
+        if (!groupForProject.resolvedVersionPlans) {
           if (isDefaultGroup) {
             throw new Error(
               `Found a version bump for project '${key}' in '${rawVersionPlan.fileName}' but version plans are not enabled.`
@@ -206,14 +206,14 @@ export function setVersionPlansOnGroups(
 
         if (groupForProject.projectsRelationship === 'independent') {
           const existingPlan = <ProjectsVersionPlan>(
-            groupForProject.versionPlans.find(
+            groupForProject.resolvedVersionPlans.find(
               (plan) => plan.fileName === rawVersionPlan.fileName
             )
           );
           if (existingPlan) {
             existingPlan.projectVersionBumps[key] = value;
           } else {
-            groupForProject.versionPlans.push(<ProjectsVersionPlan>{
+            groupForProject.resolvedVersionPlans.push(<ProjectsVersionPlan>{
               absolutePath: rawVersionPlan.absolutePath,
               relativePath: rawVersionPlan.relativePath,
               fileName: rawVersionPlan.fileName,
@@ -226,7 +226,7 @@ export function setVersionPlansOnGroups(
           }
         } else {
           const existingPlan = <GroupVersionPlan>(
-            groupForProject.versionPlans.find(
+            groupForProject.resolvedVersionPlans.find(
               (plan) => plan.fileName === rawVersionPlan.fileName
             )
           );
@@ -247,7 +247,7 @@ export function setVersionPlansOnGroups(
               existingPlan.triggeredByProjects.push(key);
             }
           } else {
-            groupForProject.versionPlans.push(<GroupVersionPlan>{
+            groupForProject.resolvedVersionPlans.push(<GroupVersionPlan>{
               absolutePath: rawVersionPlan.absolutePath,
               relativePath: rawVersionPlan.relativePath,
               fileName: rawVersionPlan.fileName,
@@ -266,8 +266,8 @@ export function setVersionPlansOnGroups(
 
   // Order the plans from newest to oldest
   releaseGroups.forEach((group) => {
-    if (group.versionPlans) {
-      group.versionPlans.sort((a, b) => b.createdOnMs - a.createdOnMs);
+    if (group.resolvedVersionPlans) {
+      group.resolvedVersionPlans.sort((a, b) => b.createdOnMs - a.createdOnMs);
     }
   });
 

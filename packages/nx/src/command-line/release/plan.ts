@@ -44,7 +44,7 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
     const { error: configError, nxReleaseConfig } = await createNxReleaseConfig(
       projectGraph,
       await createProjectFileMapUsingProjectGraph(projectGraph),
-      nxJson.release
+      userProvidedReleaseConfig
     );
     if (configError) {
       return await handleNxReleaseConfigError(configError);

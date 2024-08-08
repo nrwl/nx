@@ -119,53 +119,7 @@ export function splitArgsIntoNxArgsAndOverrides(
         ],
       });
     }
-
-    // Allow setting base and head via environment variables (lower priority then direct command arguments)
-    if (!nxArgs.base && process.env.NX_BASE) {
-      nxArgs.base = process.env.NX_BASE;
-      if (options.printWarnings) {
-        output.note({
-          title: `No explicit --base argument provided, but found environment variable NX_BASE so using its value as the affected base: ${output.bold(
-            `${nxArgs.base}`
-          )}`,
-        });
-      }
-    }
-    if (!nxArgs.head && process.env.NX_HEAD) {
-      nxArgs.head = process.env.NX_HEAD;
-      if (options.printWarnings) {
-        output.note({
-          title: `No explicit --head argument provided, but found environment variable NX_HEAD so using its value as the affected head: ${output.bold(
-            `${nxArgs.head}`
-          )}`,
-        });
-      }
-    }
-
-    if (!nxArgs.base) {
-      nxArgs.base =
-        nxJson.defaultBase ?? nxJson.affected?.defaultBase ?? 'main';
-
-      // No user-provided arguments to set the affected criteria, so inform the user of the defaults being used
-      if (
-        options.printWarnings &&
-        !nxArgs.head &&
-        !nxArgs.files &&
-        !nxArgs.uncommitted &&
-        !nxArgs.untracked &&
-        !nxArgs.all
-      ) {
-        output.note({
-          title: `Affected criteria defaulted to --base=${output.bold(
-            `${nxArgs.base}`
-          )} --head=${output.bold('HEAD')}`,
-        });
-      }
-    }
-
-    if (nxArgs.base) {
-      nxArgs.base = getMergeBase(nxArgs.base, nxArgs.head);
-    }
+    applyNxBaseAndHead(nxArgs, nxJson, options.printWarnings);
   }
 
   if (typeof args.exclude === 'string') {
@@ -181,6 +135,58 @@ export function splitArgsIntoNxArgsAndOverrides(
   nxArgs['parallel'] = readParallelFromArgsAndEnv(args);
 
   return { nxArgs, overrides } as any;
+}
+
+export function applyNxBaseAndHead(
+  nxArgs: NxArgs,
+  nxJson: NxJsonConfiguration,
+  printWarnings: boolean
+) {
+  // Allow setting base and head via environment variables (lower priority than direct command arguments)
+  if (!nxArgs.base && process.env.NX_BASE) {
+    nxArgs.base = process.env.NX_BASE;
+    if (printWarnings) {
+      output.note({
+        title: `No explicit --base argument provided, but found environment variable NX_BASE so using its value as the affected base: ${output.bold(
+          `${nxArgs.base}`
+        )}`,
+      });
+    }
+  }
+  if (!nxArgs.head && process.env.NX_HEAD) {
+    nxArgs.head = process.env.NX_HEAD;
+    if (printWarnings) {
+      output.note({
+        title: `No explicit --head argument provided, but found environment variable NX_HEAD so using its value as the affected head: ${output.bold(
+          `${nxArgs.head}`
+        )}`,
+      });
+    }
+  }
+
+  if (!nxArgs.base) {
+    nxArgs.base = nxJson.defaultBase ?? nxJson.affected?.defaultBase ?? 'main';
+
+    // No user-provided arguments to set the affected criteria, so inform the user of the defaults being used
+    if (
+      printWarnings &&
+      !nxArgs.head &&
+      !nxArgs.files &&
+      !nxArgs.uncommitted &&
+      !nxArgs.untracked &&
+      !nxArgs.all
+    ) {
+      output.note({
+        title: `Affected criteria defaulted to --base=${output.bold(
+          `${nxArgs.base}`
+        )} --head=${output.bold('HEAD')}`,
+      });
+    }
+  }
+
+  if (nxArgs.base) {
+    nxArgs.base = getMergeBase(nxArgs.base, nxArgs.head);
+  }
 }
 
 export function readParallelFromArgsAndEnv(args: { [k: string]: any }) {

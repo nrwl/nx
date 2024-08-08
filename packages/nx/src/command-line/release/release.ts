@@ -19,7 +19,7 @@ import { deepMergeJson } from './config/deep-merge-json';
 import { filterReleaseGroups } from './config/filter-release-groups';
 import {
   readRawVersionPlans,
-  setVersionPlansOnGroups,
+  setResolvedVersionPlansOnGroups,
 } from './config/version-plans';
 import { createAPI as createReleasePublishAPI } from './publish';
 import { getCommitHash, gitAdd, gitCommit, gitPush, gitTag } from './utils/git';
@@ -135,7 +135,7 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
       process.exit(1);
     }
     const rawVersionPlans = await readRawVersionPlans();
-    setVersionPlansOnGroups(
+    setResolvedVersionPlansOnGroups(
       rawVersionPlans,
       releaseGroups,
       Object.keys(projectGraph.nodes)
@@ -143,7 +143,7 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
 
     const planFiles = new Set<string>();
     releaseGroups.forEach((group) => {
-      if (group.versionPlans) {
+      if (group.resolvedVersionPlans) {
         if (group.name === IMPLICIT_DEFAULT_RELEASE_GROUP) {
           output.logSingleLine(`Removing version plan files`);
         } else {
@@ -151,7 +151,7 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
             `Removing version plan files for group ${group.name}`
           );
         }
-        group.versionPlans.forEach((plan) => {
+        group.resolvedVersionPlans.forEach((plan) => {
           if (!args.dryRun) {
             removeSync(plan.absolutePath);
             if (args.verbose) {

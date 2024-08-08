@@ -174,6 +174,14 @@ export interface NxReleaseConventionalCommitsConfiguration {
   >;
 }
 
+export interface NxReleaseVersionPlansConfiguration {
+  /**
+   * Changes to files matching any of these optional patterns will be excluded from the affected project logic within the `nx release plan:check`
+   * command. This is useful for ignoring files that are not relevant to the versioning process, such as documentation or configuration files.
+   */
+  ignorePatternsForPlanCheck?: string[];
+}
+
 export interface NxReleaseConfiguration {
   /**
    * Shorthand for amending the projects which will be included in the implicit default release group (all projects by default).
@@ -223,7 +231,7 @@ export interface NxReleaseConfiguration {
        * Enables using version plans as a specifier source for versioning and
        * to determine changes for changelog generation.
        */
-      versionPlans?: boolean;
+      versionPlans?: NxReleaseVersionPlansConfiguration | boolean;
     }
   >;
   /**
@@ -295,7 +303,7 @@ export interface NxReleaseConfiguration {
    * Enables using version plans as a specifier source for versioning and
    * to determine changes for changelog generation.
    */
-  versionPlans?: boolean;
+  versionPlans?: NxReleaseVersionPlansConfiguration | boolean;
 }
 
 /**

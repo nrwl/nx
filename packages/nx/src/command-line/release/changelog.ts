@@ -43,7 +43,7 @@ import {
   GroupVersionPlan,
   ProjectsVersionPlan,
   readRawVersionPlans,
-  setVersionPlansOnGroups,
+  setResolvedVersionPlansOnGroups,
 } from './config/version-plans';
 import {
   GitCommit,
@@ -179,7 +179,7 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
       process.exit(1);
     }
     const rawVersionPlans = await readRawVersionPlans();
-    setVersionPlansOnGroups(
+    setResolvedVersionPlansOnGroups(
       rawVersionPlans,
       releaseGroups,
       Object.keys(projectGraph.nodes)
@@ -274,12 +274,13 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
 
     // If there are multiple release groups, we'll just skip the workspace changelog anyway.
     const versionPlansEnabledForWorkspaceChangelog =
-      releaseGroups[0].versionPlans;
+      releaseGroups[0].resolvedVersionPlans;
     if (versionPlansEnabledForWorkspaceChangelog) {
       if (releaseGroups.length === 1) {
         const releaseGroup = releaseGroups[0];
         if (releaseGroup.projectsRelationship === 'fixed') {
-          const versionPlans = releaseGroup.versionPlans as GroupVersionPlan[];
+          const versionPlans =
+            releaseGroup.resolvedVersionPlans as GroupVersionPlan[];
           workspaceChangelogChanges = versionPlans
             .flatMap((vp) => {
               const releaseType = versionPlanSemverReleaseTypeToChangelogType(
@@ -490,8 +491,10 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
           // TODO: remove this after the changelog renderer is refactored to remove coupling with git commits
           let commits: GitCommit[];
 
-          if (releaseGroup.versionPlans) {
-            changes = (releaseGroup.versionPlans as ProjectsVersionPlan[])
+          if (releaseGroup.resolvedVersionPlans) {
+            changes = (
+              releaseGroup.resolvedVersionPlans as ProjectsVersionPlan[]
+            )
               .map((vp) => {
                 const bumpForProject = vp.projectVersionBumps[project.name];
                 if (!bumpForProject) {
@@ -637,8 +640,8 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
         let changes: ChangelogChange[] = [];
         // TODO: remove this after the changelog renderer is refactored to remove coupling with git commits
         let commits: GitCommit[] = [];
-        if (releaseGroup.versionPlans) {
-          changes = (releaseGroup.versionPlans as GroupVersionPlan[])
+        if (releaseGroup.resolvedVersionPlans) {
+          changes = (releaseGroup.resolvedVersionPlans as GroupVersionPlan[])
             .flatMap((vp) => {
               const releaseType = versionPlanSemverReleaseTypeToChangelogType(
                 vp.groupVersionBump
@@ -918,8 +921,8 @@ async function applyChangesAndExit(
   if (args.deleteVersionPlans && !args.dryRun) {
     const planFiles = new Set<string>();
     releaseGroups.forEach((group) => {
-      if (group.versionPlans) {
-        group.versionPlans.forEach((plan) => {
+      if (group.resolvedVersionPlans) {
+        group.resolvedVersionPlans.forEach((plan) => {
           removeSync(plan.absolutePath);
           planFiles.add(plan.relativePath);
         });
