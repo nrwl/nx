@@ -19,17 +19,17 @@
   "generators": "./generators.json",
   "executors": "./executors.json",
   "dependencies": {
-    "@nx/js": "^19.2.3",
-    "@nx/devkit": "^19.2.3",
+    "@nx/js": "^19.5.7",
+    "@nx/devkit": "^19.5.7",
     "@phenomnomnominal/tsquery": "~5.0.1",
     "less-loader": "11.1.0",
     "license-webpack-plugin": "^4.0.2",
     "sass-loader": "^12.2.0",
     "stylus-loader": "^7.1.0",
-    "@nx/eslint": "^19.2.3",
-    "@rspack/core": "^0.6.1",
-    "@rspack/plugin-react-refresh": "^0.6.1",
-    "@rspack/plugin-minify": "^0.6.1"
+    "@nx/eslint": "^19.5.7",
+    "@rspack/core": "^0.7.5",
+    "@rspack/plugin-react-refresh": "^0.7.5",
+    "@rspack/plugin-minify": "^0.7.5"
   },
   "nx-migrations": {
     "migrations": "./migrations.json"
