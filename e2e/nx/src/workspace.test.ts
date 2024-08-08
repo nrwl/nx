@@ -18,12 +18,22 @@ import { join } from 'path';
 
 let proj: string;
 
+let originalEslintUseFlatConfigVal: string | undefined;
+beforeAll(() => {
+  // Opt into legacy .eslintrc config format for these tests
+  originalEslintUseFlatConfigVal = process.env.ESLINT_USE_FLAT_CONFIG;
+  process.env.ESLINT_USE_FLAT_CONFIG = 'false';
+});
+afterAll(() => {
+  process.env.ESLINT_USE_FLAT_CONFIG = originalEslintUseFlatConfigVal;
+});
+
 describe('@nx/workspace:convert-to-monorepo', () => {
   beforeEach(() => {
     proj = newProject({ packages: ['@nx/react', '@nx/js'] });
   });
 
-  afterEach(() => cleanupProject());
+  afterAll(() => cleanupProject());
 
   it('should be convert a standalone vite and playwright react project to a monorepo', async () => {
     const reactApp = uniq('reactapp');

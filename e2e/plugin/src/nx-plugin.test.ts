@@ -24,12 +24,19 @@ import {
 
 describe('Nx Plugin', () => {
   let workspaceName: string;
+  let originalEslintUseFlatConfigVal: string | undefined;
 
   beforeAll(() => {
+    // Opt into legacy .eslintrc config format for these tests
+    originalEslintUseFlatConfigVal = process.env.ESLINT_USE_FLAT_CONFIG;
+    process.env.ESLINT_USE_FLAT_CONFIG = 'false';
     workspaceName = newProject();
   });
 
-  afterAll(() => cleanupProject());
+  afterAll(() => {
+    cleanupProject();
+    process.env.ESLINT_USE_FLAT_CONFIG = originalEslintUseFlatConfigVal;
+  });
 
   it('should be able to generate a Nx Plugin ', async () => {
     const plugin = uniq('plugin');

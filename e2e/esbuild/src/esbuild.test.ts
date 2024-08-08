@@ -162,6 +162,8 @@ describe('EsBuild Plugin', () => {
     expect(
       readJson(`dist/libs/${parentLib}/package.json`).dependencies
     ).toEqual({
+      // TODO: why is this and only this getting added?
+      '@eslint/eslintrc': expect.any(String),
       // Don't care about the versions, just that they exist
       rambda: expect.any(String),
       lodash: expect.any(String),

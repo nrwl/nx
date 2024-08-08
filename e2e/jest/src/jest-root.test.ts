@@ -4,6 +4,16 @@ describe('Jest root projects', () => {
   const myapp = uniq('myapp');
   const mylib = uniq('mylib');
 
+  let originalEslintUseFlatConfigVal: string | undefined;
+  beforeAll(() => {
+    // Opt into legacy .eslintrc config format for these tests
+    originalEslintUseFlatConfigVal = process.env.ESLINT_USE_FLAT_CONFIG;
+    process.env.ESLINT_USE_FLAT_CONFIG = 'false';
+  });
+  afterAll(() => {
+    process.env.ESLINT_USE_FLAT_CONFIG = originalEslintUseFlatConfigVal;
+  });
+
   describe('angular', () => {
     beforeAll(() => {
       newProject({

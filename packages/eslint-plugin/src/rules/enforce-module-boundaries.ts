@@ -88,7 +88,6 @@ export default ESLintUtils.RuleCreator(
     type: 'suggestion',
     docs: {
       description: `Ensure that module boundaries are respected within the monorepo`,
-      recommended: 'recommended',
     },
     fixable: 'code',
     schema: [

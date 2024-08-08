@@ -14,8 +14,17 @@ import {
 import { join } from 'path';
 
 describe('Extra Nx Misc Tests', () => {
-  beforeAll(() => newProject({ packages: ['@nx/web', '@nx/js', '@nx/react'] }));
-  afterAll(() => cleanupProject());
+  let originalEslintUseFlatConfigVal: string | undefined;
+  beforeAll(() => {
+    // Opt into legacy .eslintrc config format for these tests
+    originalEslintUseFlatConfigVal = process.env.ESLINT_USE_FLAT_CONFIG;
+    process.env.ESLINT_USE_FLAT_CONFIG = 'false';
+    newProject({ packages: ['@nx/web', '@nx/js', '@nx/react'] });
+  });
+  afterAll(() => {
+    process.env.ESLINT_USE_FLAT_CONFIG = originalEslintUseFlatConfigVal;
+    cleanupProject();
+  });
 
   describe('Output Style', () => {
     it('should stream output', async () => {

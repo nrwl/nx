@@ -1,6 +1,6 @@
 import type { ESLint } from 'eslint';
 import { isFlatConfig } from '../../../utils/config-file';
-import { resolveESLintClass } from '../../../utils/resolve-eslint-class';
+import { resolveESLintClassSync } from '../../../utils/resolve-eslint-class';
 import type { Schema } from '../schema';
 
 export async function resolveAndInstantiateESLint(
@@ -14,7 +14,7 @@ export async function resolveAndInstantiateESLint(
       'When using the new Flat Config with ESLint, all configs must be named eslint.config.js or eslint.config.cjs and .eslintrc files may not be used. See https://eslint.org/docs/latest/use/configure/configuration-files'
     );
   }
-  const ESLint = await resolveESLintClass(useFlatConfig);
+  const ESLint = resolveESLintClassSync(useFlatConfig);
 
   const eslintOptions: ESLint.Options = {
     overrideConfigFile: eslintConfigPath,

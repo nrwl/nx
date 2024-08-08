@@ -10,8 +10,12 @@ import {
 
 describe('Nuxt Plugin', () => {
   const app = uniq('app');
+  let originalEslintUseFlatConfigVal: string | undefined;
 
   beforeAll(() => {
+    // Opt into legacy .eslintrc config format for these tests
+    originalEslintUseFlatConfigVal = process.env.ESLINT_USE_FLAT_CONFIG;
+    process.env.ESLINT_USE_FLAT_CONFIG = 'false';
     newProject({
       packages: ['@nx/nuxt'],
       unsetProjectNameAndRootFormat: false,
@@ -27,6 +31,7 @@ describe('Nuxt Plugin', () => {
   afterAll(() => {
     killPorts();
     cleanupProject();
+    process.env.ESLINT_USE_FLAT_CONFIG = originalEslintUseFlatConfigVal;
   });
 
   it('should build application', async () => {

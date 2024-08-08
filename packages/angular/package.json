@@ -48,7 +48,7 @@
   },
   "dependencies": {
     "@phenomnomnominal/tsquery": "~5.0.1",
-    "@typescript-eslint/type-utils": "^7.16.0",
+    "@typescript-eslint/type-utils": "^8.0.0",
     "chalk": "^4.1.0",
     "find-cache-dir": "^3.3.2",
     "magic-string": "~0.30.2",

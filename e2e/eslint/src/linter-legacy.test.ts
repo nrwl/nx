@@ -14,6 +14,16 @@ import {
 } from '@nx/e2e/utils';
 
 describe('Linter (legacy)', () => {
+  let originalEslintUseFlatConfigVal: string | undefined;
+  beforeAll(() => {
+    // Opt into legacy .eslintrc config format for these tests
+    originalEslintUseFlatConfigVal = process.env.ESLINT_USE_FLAT_CONFIG;
+    process.env.ESLINT_USE_FLAT_CONFIG = 'false';
+  });
+  afterAll(() => {
+    process.env.ESLINT_USE_FLAT_CONFIG = originalEslintUseFlatConfigVal;
+  });
+
   describe('Integrated', () => {
     const myapp = uniq('myapp');
     const mylib = uniq('mylib');
