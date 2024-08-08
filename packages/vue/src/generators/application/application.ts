@@ -19,10 +19,6 @@ import { addVite } from './lib/add-vite';
 import { extractTsConfigBase } from '../../utils/create-ts-config';
 import { ensureDependencies } from '../../utils/ensure-dependencies';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
-import {
-  getNxCloudAppOnBoardingUrl,
-  getNxCloudOnBoardingStatus,
-} from 'nx/src/nx-cloud/utilities/onboarding';
 
 export function applicationGenerator(tree: Tree, options: Schema) {
   return applicationGeneratorInternal(tree, { addPlugin: false, ...options });
@@ -71,17 +67,7 @@ export async function applicationGeneratorInternal(
     extractTsConfigBase(tree);
   }
 
-  options.onBoardingStatus = await getNxCloudOnBoardingStatus(
-    tree,
-    options.nxCloudToken
-  );
-  if (options.onBoardingStatus === 'unclaimed') {
-    options.connectCloudUrl = await getNxCloudAppOnBoardingUrl(
-      options.nxCloudToken
-    );
-  }
-
-  createApplicationFiles(tree, options);
+  await createApplicationFiles(tree, options);
 
   tasks.push(
     await addLinting(

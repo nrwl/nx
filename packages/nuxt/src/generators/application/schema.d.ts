@@ -1,6 +1,5 @@
 import type { ProjectNameAndRootFormat } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import type { Linter } from '@nx/eslint';
-import type { NxCloudOnBoardingStatus } from 'nx/src/nx-cloud/models/onboarding-status';
 
 export interface Schema {
   name: string;
@@ -28,6 +27,4 @@ export interface NormalizedSchema extends Schema {
   e2eWebServerTarget: string;
   e2ePort: number;
   parsedTags: string[];
-  onBoardingStatus?: NxCloudOnBoardingStatus;
-  connectCloudUrl?: string;
 }

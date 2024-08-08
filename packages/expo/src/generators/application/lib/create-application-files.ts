@@ -8,8 +8,15 @@ import {
 } from '@nx/devkit';
 import { join } from 'path';
 import { NormalizedSchema } from './normalize-options';
+import {
+  getNxCloudAppOnBoardingUrl,
+  createNxCloudOnboardingURLForWelcomeApp,
+} from 'nx/src/nx-cloud/utilities/onboarding';
 
-export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
+export async function createApplicationFiles(
+  host: Tree,
+  options: NormalizedSchema
+) {
   const packageManagerLockFile: Record<PackageManager, string> = {
     npm: 'package-lock.json',
     yarn: 'yarn.lock',
@@ -18,6 +25,16 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
   };
   const packageManager = detectPackageManager(host.root);
   const packageLockFile = packageManagerLockFile[packageManager];
+
+  const onBoardingStatus = await createNxCloudOnboardingURLForWelcomeApp(
+    host,
+    options.nxCloudToken
+  );
+
+  const connectCloudUrl =
+    onBoardingStatus === 'unclaimed' &&
+    (await getNxCloudAppOnBoardingUrl(options.nxCloudToken));
+
   generateFiles(
     host,
     join(__dirname, '../files/base'),
@@ -32,10 +49,11 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
 
   generateFiles(
     host,
-    join(__dirname, `../files/nx-welcome/${options.onBoardingStatus}`),
+    join(__dirname, `../files/nx-welcome/${onBoardingStatus}`),
     options.appProjectRoot,
     {
       ...options,
+      connectCloudUrl,
       offsetFromRoot: offsetFromRoot(options.appProjectRoot),
       packageManager,
       packageLockFile,

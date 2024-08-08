@@ -27,10 +27,6 @@ import {
 } from './lib';
 import type { Schema } from './schema';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
-import {
-  getNxCloudOnBoardingStatus,
-  getNxCloudAppOnBoardingUrl,
-} from 'nx/src/nx-cloud/utilities/onboarding';
 
 export async function applicationGenerator(
   tree: Tree,
@@ -62,16 +58,6 @@ export async function applicationGeneratorInternal(
 
   if (!options.skipPackageJson) {
     ensureAngularDependencies(tree);
-  }
-
-  options.onBoardingStatus = await getNxCloudOnBoardingStatus(
-    tree,
-    options.nxCloudToken
-  );
-  if (options.onBoardingStatus === 'unclaimed') {
-    options.connectCloudUrl = await getNxCloudAppOnBoardingUrl(
-      options.nxCloudToken
-    );
   }
 
   createProject(tree, options);

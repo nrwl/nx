@@ -20,10 +20,6 @@ import { Schema } from './schema';
 import { ensureDependencies } from '../../utils/ensure-dependencies';
 import { initRootBabelConfig } from '../../utils/init-root-babel-config';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
-import {
-  getNxCloudAppOnBoardingUrl,
-  getNxCloudOnBoardingStatus,
-} from 'nx/src/nx-cloud/utilities/onboarding';
 
 export async function expoApplicationGenerator(
   host: Tree,
@@ -48,16 +44,6 @@ export async function expoApplicationGeneratorInternal(
     skipFormat: true,
   });
 
-  options.onBoardingStatus = await getNxCloudOnBoardingStatus(
-    host,
-    options.nxCloudToken
-  );
-  if (options.onBoardingStatus === 'unclaimed') {
-    options.connectCloudUrl = await getNxCloudAppOnBoardingUrl(
-      options.nxCloudToken
-    );
-  }
-
   tasks.push(jsInitTask);
   const initTask = await initGenerator(host, { ...options, skipFormat: true });
   tasks.push(initTask);
@@ -66,7 +52,7 @@ export async function expoApplicationGeneratorInternal(
   }
   initRootBabelConfig(host);
 
-  createApplicationFiles(host, options);
+  await createApplicationFiles(host, options);
   addProject(host, options);
 
   const lintTask = await addLinting(host, {

@@ -17,6 +17,4 @@ export interface NormalizedSchema extends Schema {
   e2ePort: number;
   parsedTags: string[];
   outputPath: string;
-  onBoardingStatus?: NxCloudOnBoardingStatus;
-  connectCloudUrl?: string;
 }

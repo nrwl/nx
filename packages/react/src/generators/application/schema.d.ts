@@ -1,7 +1,6 @@
 import type { ProjectNameAndRootFormat } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import type { Linter } from '@nx/eslint';
 import type { SupportedStyles } from '../../../typings/style';
-import type { NxCloudOnBoardingStatus } from 'nx/src/nx-cloud/models/onboarding-status';
 
 export interface Schema {
   name: string;
@@ -49,6 +48,4 @@ export interface NormalizedSchema<T extends Schema = Schema> extends T {
   hasStyles: boolean;
   unitTestRunner: 'jest' | 'vitest' | 'none';
   addPlugin?: boolean;
-  onBoardingStatus?: NxCloudOnBoardingStatus;
-  connectCloudUrl?: string;
 }

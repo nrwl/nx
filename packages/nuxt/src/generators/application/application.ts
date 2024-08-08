@@ -29,7 +29,7 @@ import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-com
 import { execSync } from 'node:child_process';
 import {
   getNxCloudAppOnBoardingUrl,
-  getNxCloudOnBoardingStatus,
+  createNxCloudOnboardingURLForWelcomeApp,
 } from 'nx/src/nx-cloud/utilities/onboarding';
 
 export async function applicationGenerator(tree: Tree, schema: Schema) {
@@ -39,15 +39,14 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
 
   const projectOffsetFromRoot = offsetFromRoot(options.appProjectRoot);
 
-  options.onBoardingStatus = await getNxCloudOnBoardingStatus(
+  const onBoardingStatus = await createNxCloudOnboardingURLForWelcomeApp(
     tree,
     options.nxCloudToken
   );
-  if (options.onBoardingStatus === 'unclaimed') {
-    options.connectCloudUrl = await getNxCloudAppOnBoardingUrl(
-      options.nxCloudToken
-    );
-  }
+
+  const connectCloudUrl =
+    onBoardingStatus === 'unclaimed' &&
+    (await getNxCloudAppOnBoardingUrl(options.nxCloudToken));
 
   const jsInitTask = await jsInitGenerator(tree, {
     ...schema,
@@ -82,14 +81,11 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
 
   generateFiles(
     tree,
-    joinPathFragments(
-      __dirname,
-      './files/nx-welcome',
-      options.onBoardingStatus
-    ),
+    joinPathFragments(__dirname, './files/nx-welcome', onBoardingStatus),
     options.appProjectRoot,
     {
       ...options,
+      connectCloudUrl,
       offsetFromRoot: projectOffsetFromRoot,
       title: options.projectName,
       dot: '.',

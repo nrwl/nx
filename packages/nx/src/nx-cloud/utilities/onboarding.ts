@@ -5,7 +5,7 @@ import { isWorkspaceClaimed } from './is-workspace-claimed';
 import { createNxCloudOnboardingURL } from './url-shorten';
 import { getRunnerOptions } from '../../tasks-runner/run-command';
 
-export async function getNxCloudOnBoardingStatus(
+export async function createNxCloudOnboardingURLForWelcomeApp(
   tree: Tree,
   token?: string
 ): Promise<NxCloudOnBoardingStatus> {
@@ -21,7 +21,7 @@ export async function getNxCloudAppOnBoardingUrl(token: string) {
     return null;
   }
   const onboardingUrl = await createNxCloudOnboardingURL(
-    'create-nx-project',
+    'nx-welcome-app',
     token
   );
   return onboardingUrl;

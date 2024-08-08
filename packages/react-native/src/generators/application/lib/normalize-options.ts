@@ -3,7 +3,6 @@ import { VitePluginOptions } from '@nx/vite/src/plugins/plugin';
 import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { Schema } from '../schema';
 import { ReactNativePluginOptions } from '../../../../plugins/plugin';
-import type { NxCloudOnBoardingStatus } from 'nx/src/nx-cloud/models/onboarding-status';
 
 export interface NormalizedSchema extends Schema {
   className: string; // app name in class case
@@ -21,8 +20,6 @@ export interface NormalizedSchema extends Schema {
   e2eWebServerAddress: string;
   e2eWebServerTarget: string;
   e2ePort: number;
-  onBoardingStatus?: NxCloudOnBoardingStatus;
-  connectCloudUrl?: string;
 }
 
 export async function normalizeOptions(

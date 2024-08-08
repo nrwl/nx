@@ -43,10 +43,6 @@ import {
 import { initGenerator as jsInitGenerator } from '@nx/js';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 import { setupTailwindGenerator } from '../setup-tailwind/setup-tailwind';
-import {
-  getNxCloudOnBoardingStatus,
-  getNxCloudAppOnBoardingUrl,
-} from 'nx/src/nx-cloud/utilities/onboarding';
 
 async function addLinting(host: Tree, options: NormalizedSchema) {
   const tasks: GeneratorCallback[] = [];
@@ -151,17 +147,7 @@ export async function applicationGeneratorInternal(
     extractTsConfigBase(host);
   }
 
-  options.onBoardingStatus = await getNxCloudOnBoardingStatus(
-    host,
-    options.nxCloudToken
-  );
-  if (options.onBoardingStatus === 'unclaimed') {
-    options.connectCloudUrl = await getNxCloudAppOnBoardingUrl(
-      options.nxCloudToken
-    );
-  }
-
-  createApplicationFiles(host, options);
+  await createApplicationFiles(host, options);
   addProject(host, options);
 
   if (options.style === 'tailwind') {

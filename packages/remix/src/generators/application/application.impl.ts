@@ -38,7 +38,7 @@ import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-com
 import { updateJestTestMatch } from '../../utils/testing-config-utils';
 import {
   getNxCloudAppOnBoardingUrl,
-  getNxCloudOnBoardingStatus,
+  createNxCloudOnboardingURLForWelcomeApp,
 } from 'nx/src/nx-cloud/utilities/onboarding';
 
 export function remixApplicationGenerator(
@@ -114,18 +114,17 @@ export async function remixApplicationGeneratorInternal(
       : {},
   });
 
-  options.onBoardingStatus = await getNxCloudOnBoardingStatus(
+  const installTask = updateDependencies(tree);
+  tasks.push(installTask);
+
+  const onBoardingStatus = await createNxCloudOnboardingURLForWelcomeApp(
     tree,
     options.nxCloudToken
   );
-  if (options.onBoardingStatus === 'unclaimed') {
-    options.connectCloudUrl = await getNxCloudAppOnBoardingUrl(
-      options.nxCloudToken
-    );
-  }
 
-  const installTask = updateDependencies(tree);
-  tasks.push(installTask);
+  const connectCloudUrl =
+    onBoardingStatus === 'unclaimed' &&
+    (await getNxCloudAppOnBoardingUrl(options.nxCloudToken));
 
   const vars = {
     ...options,
@@ -150,13 +149,9 @@ export async function remixApplicationGeneratorInternal(
 
   generateFiles(
     tree,
-    joinPathFragments(
-      __dirname,
-      './files/nx-welcome',
-      options.onBoardingStatus
-    ),
+    joinPathFragments(__dirname, './files/nx-welcome', onBoardingStatus),
     options.projectRoot,
-    vars
+    { ...vars, connectCloudUrl }
   );
 
   if (options.rootProject) {

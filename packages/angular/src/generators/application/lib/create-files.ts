@@ -7,6 +7,10 @@ import { validateHtmlSelector } from '../../utils/selector';
 import { updateProjectRootTsConfig } from '../../utils/update-project-root-tsconfig';
 import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
 import type { NormalizedSchema } from './normalized-schema';
+import {
+  getNxCloudAppOnBoardingUrl,
+  createNxCloudOnboardingURLForWelcomeApp,
+} from 'nx/src/nx-cloud/utilities/onboarding';
 
 export async function createFiles(
   tree: Tree,
@@ -23,6 +27,15 @@ export async function createFiles(
   validateHtmlSelector(rootSelector);
   const nxWelcomeSelector = `${options.prefix}-nx-welcome`;
   validateHtmlSelector(nxWelcomeSelector);
+
+  const onBoardingStatus = await createNxCloudOnboardingURLForWelcomeApp(
+    tree,
+    options.nxCloudToken
+  );
+
+  const connectCloudUrl =
+    onBoardingStatus === 'unclaimed' &&
+    (await getNxCloudAppOnBoardingUrl(options.nxCloudToken));
 
   const substitutions = {
     rootSelector,
@@ -42,7 +55,7 @@ export async function createFiles(
     disableModernClassFieldsBehavior,
     useEventCoalescing: angularMajorVersion >= 18,
     useRouterTestingModule: angularMajorVersion < 18,
-    connectCloudUrl: options.connectCloudUrl,
+    connectCloudUrl,
     tutorialUrl: options.standalone
       ? 'https://nx.dev/getting-started/tutorials/angular-standalone-tutorial?utm_source=nx-project'
       : 'https://nx.dev/getting-started/tutorials/angular-monorepo-tutorial?utm_source=nx-project',
@@ -95,7 +108,7 @@ export async function createFiles(
     joinPathFragments(
       __dirname,
       '../files/nx-welcome',
-      options.onBoardingStatus,
+      onBoardingStatus,
       angularAppType
     ),
     options.appProjectRoot,
