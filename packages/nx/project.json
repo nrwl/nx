@@ -12,6 +12,7 @@
   "targets": {
     "build-native-wasm": {
       "cache": true,
+      "inputs": ["native"],
       "outputs": [
         "{projectRoot}/src/native/*.wasm",
         "{projectRoot}/src/native/*.js",

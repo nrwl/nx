@@ -46,7 +46,7 @@ export async function reactNativeInitGeneratorInternal(
       createNodes,
       {
         startTargetName: ['start', 'react-native:start', 'react-native-start'],
-        upgradeTargetname: [
+        upgradeTargetName: [
           'update',
           'react-native:update',
           'react-native-update',

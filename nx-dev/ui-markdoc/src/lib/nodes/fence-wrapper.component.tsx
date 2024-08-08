@@ -34,7 +34,7 @@ export function FenceWrapper(props: FenceProps) {
   };
 
   return (
-    <div className="my-8 w-full">
+    <div className="w-full">
       <Fence {...modifiedProps} />
     </div>
   );

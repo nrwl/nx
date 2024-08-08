@@ -211,20 +211,22 @@ async function buildJestTargets(
 
   let metadata: ProjectConfiguration['metadata'];
   if (options?.ciTargetName) {
-    // Resolve the version of `jest-runtime` that `jest` is using.
-    const jestPath = require.resolve('jest');
-    const jest = require(jestPath) as typeof import('jest');
     // nx-ignore-next-line
-    const { default: Runtime } = require(require.resolve('jest-runtime', {
-      paths: [dirname(jestPath)],
-      // nx-ignore-next-line
-    })) as typeof import('jest-runtime');
+    const { default: Runtime } = requireJestUtil<typeof import('jest-runtime')>(
+      'jest-runtime',
+      projectRoot,
+      context
+    );
 
     const jestContext = await Runtime.createContext(config.projectConfig, {
       maxWorkers: 1,
       watchman: false,
     });
 
+    const jest = require(resolveJestPath(
+      projectRoot,
+      context
+    )) as typeof import('jest');
     const source = new jest.SearchSource(jestContext);
 
     const specs = await source.getTestPaths(config.globalConfig);
@@ -402,4 +404,32 @@ function normalizeOptions(options: JestPluginOptions): JestPluginOptions {
   options ??= {};
   options.targetName ??= 'test';
   return options;
+}
+
+let resolvedJestPaths: Record<string, string>;
+function resolveJestPath(
+  projectRoot: string,
+  context: CreateNodesContext
+): string {
+  resolvedJestPaths ??= {};
+  if (resolvedJestPaths[projectRoot]) {
+    return resolvedJestPaths[projectRoot];
+  }
+
+  return require.resolve('jest', {
+    paths: [projectRoot, context.workspaceRoot, __dirname],
+  });
+}
+
+/**
+ * Resolves a jest util package version that `jest` is using.
+ */
+function requireJestUtil<T>(
+  packageName: string,
+  projectRoot: string,
+  context: CreateNodesContext
+): T {
+  const jestPath = resolveJestPath(projectRoot, context);
+
+  return require(require.resolve(packageName, { paths: [dirname(jestPath)] }));
 }

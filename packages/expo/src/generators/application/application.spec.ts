@@ -139,7 +139,7 @@ describe('app', () => {
           binaryPath:
             '../my-dir/ios/build/Build/Products/Debug-iphonesimulator/MyApp.app',
           build:
-            "cd ../my-dir/ios && xcodebuild -workspace MyApp.xcworkspace -scheme MyApp -configuration Debug -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 14' -derivedDataPath ./build -quiet",
+            "cd ../my-dir/ios && xcodebuild -workspace MyApp.xcworkspace -scheme MyApp -configuration Debug -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 15 Plus' -derivedDataPath ./build -quiet",
           type: 'ios.app',
         },
         'ios.local': {
@@ -152,7 +152,7 @@ describe('app', () => {
           binaryPath:
             '../my-dir/ios/build/Build/Products/Release-iphonesimulator/MyApp.app',
           build:
-            "cd ../my-dir/ios && xcodebuild -workspace MyApp.xcworkspace -scheme MyApp -configuration Release -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 14' -derivedDataPath ./build -quiet",
+            "cd ../my-dir/ios && xcodebuild -workspace MyApp.xcworkspace -scheme MyApp -configuration Release -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 15 Plus' -derivedDataPath ./build -quiet",
           type: 'ios.app',
         },
       });
@@ -200,7 +200,7 @@ describe('app', () => {
           binaryPath:
             '../my-app/ios/build/Build/Products/Debug-iphonesimulator/MyApp.app',
           build:
-            "cd ../my-app/ios && xcodebuild -workspace MyApp.xcworkspace -scheme MyApp -configuration Debug -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 14' -derivedDataPath ./build -quiet",
+            "cd ../my-app/ios && xcodebuild -workspace MyApp.xcworkspace -scheme MyApp -configuration Debug -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 15 Plus' -derivedDataPath ./build -quiet",
           type: 'ios.app',
         },
         'ios.local': {
@@ -213,7 +213,7 @@ describe('app', () => {
           binaryPath:
             '../my-app/ios/build/Build/Products/Release-iphonesimulator/MyApp.app',
           build:
-            "cd ../my-app/ios && xcodebuild -workspace MyApp.xcworkspace -scheme MyApp -configuration Release -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 14' -derivedDataPath ./build -quiet",
+            "cd ../my-app/ios && xcodebuild -workspace MyApp.xcworkspace -scheme MyApp -configuration Release -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 15 Plus' -derivedDataPath ./build -quiet",
           type: 'ios.app',
         },
       });
@@ -264,7 +264,7 @@ describe('app', () => {
           binaryPath:
             '../my-app/ios/build/Build/Products/Debug-iphonesimulator/MyApp.app',
           build:
-            "cd ../my-app/ios && xcodebuild -workspace MyApp.xcworkspace -scheme MyApp -configuration Debug -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 14' -derivedDataPath ./build -quiet",
+            "cd ../my-app/ios && xcodebuild -workspace MyApp.xcworkspace -scheme MyApp -configuration Debug -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 15 Plus' -derivedDataPath ./build -quiet",
           type: 'ios.app',
         },
         'ios.local': {
@@ -277,7 +277,7 @@ describe('app', () => {
           binaryPath:
             '../my-app/ios/build/Build/Products/Release-iphonesimulator/MyApp.app',
           build:
-            "cd ../my-app/ios && xcodebuild -workspace MyApp.xcworkspace -scheme MyApp -configuration Release -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 14' -derivedDataPath ./build -quiet",
+            "cd ../my-app/ios && xcodebuild -workspace MyApp.xcworkspace -scheme MyApp -configuration Release -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 15 Plus' -derivedDataPath ./build -quiet",
           type: 'ios.app',
         },
       });
