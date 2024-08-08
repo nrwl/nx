@@ -45,6 +45,43 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "19.6.0": {
+      "version": "19.6.0-beta.1",
+      "packages": {
+        "jest": {
+          "version": "~29.7.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/jest": {
+          "version": "~29.5.12",
+          "alwaysAddToPackageJson": false
+        },
+        "expect": {
+          "version": "~29.7.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@jest/globals": {
+          "version": "~29.7.0",
+          "alwaysAddToPackageJson": false
+        },
+        "jest-jasmine2": {
+          "version": "~29.7.0",
+          "alwaysAddToPackageJson": false
+        },
+        "jest-environment-jsdom": {
+          "version": "~29.7.0",
+          "alwaysAddToPackageJson": false
+        },
+        "ts-jest": {
+          "version": "~29.2.4",
+          "alwaysAddToPackageJson": false
+        },
+        "babel-jest": {
+          "version": "~29.7.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }
