@@ -97,6 +97,7 @@
     "@rollup/plugin-url": "^8.0.2",
     "@schematics/angular": "~18.1.0",
     "@storybook/addon-essentials": "^8.2.8",
+    "@storybook/addon-interactions": "^8.2.8",
     "@storybook/core-server": "^8.2.8",
     "@storybook/react": "^8.2.8",
     "@storybook/react-vite": "^8.2.8",
