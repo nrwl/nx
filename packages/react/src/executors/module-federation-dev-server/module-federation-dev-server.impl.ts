@@ -193,10 +193,6 @@ async function buildStaticRemotes(
     }`;
   }
 
-  process.env.NX_MF_DEV_SERVER_STATIC_REMOTES = JSON.stringify(
-    mappedLocationOfRemotes
-  );
-
   await new Promise<void>((res, rej) => {
     const staticProcess = fork(
       nxBin,

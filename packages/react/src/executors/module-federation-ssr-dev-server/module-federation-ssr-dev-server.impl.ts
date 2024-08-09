@@ -19,7 +19,7 @@ import {
   createAsyncIterable,
 } from '@nx/devkit/src/utils/async-iterable';
 import { fork } from 'child_process';
-import { cpSync, createWriteStream, existsSync } from 'fs';
+import { cp, cpSync, createWriteStream, existsSync, watch } from 'fs';
 
 import {
   parseStaticSsrRemotesConfig,
@@ -27,7 +27,7 @@ import {
 } from '@nx/webpack/src/utils/module-federation/parse-static-remotes-config';
 import fileServerExecutor from '@nx/web/src/executors/file-server/file-server.impl';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
-import { startRemoteProxies } from '@nx/webpack/src/utils/module-federation/start-remote-proxies';
+import { startSsrRemoteProxies } from '@nx/webpack/src/utils/module-federation/start-ssr-remote-proxies';
 import { waitForPortOpen } from '@nx/web/src/utils/wait-for-port-open';
 
 type ModuleFederationDevServerOptions = WebSsrDevServerOptions & {
@@ -41,7 +41,6 @@ type ModuleFederationDevServerOptions = WebSsrDevServerOptions & {
 
   skipRemotes?: string[];
   host: string;
-  static?: boolean;
   pathToManifestFile?: string;
   staticRemotesPort?: number;
   parallel?: number;
@@ -70,6 +69,7 @@ function startSsrStaticRemotesFileServer(
   const commonOutputDirectory = join(workspaceRoot, 'tmp/static-remotes');
   for (const app of ssrStaticRemotesConfig.remotes) {
     const remoteConfig = ssrStaticRemotesConfig.config[app];
+
     cpSync(
       remoteConfig.outputPath,
       join(commonOutputDirectory, remoteConfig.urlSegment),
@@ -104,8 +104,7 @@ function startSsrStaticRemotesFileServer(
 async function startRemotes(
   remotes: string[],
   context: ExecutorContext,
-  options: ModuleFederationDevServerOptions,
-  target: 'serve' | 'server-static' = 'serve'
+  options: ModuleFederationDevServerOptions
 ) {
   const remoteIters: AsyncIterable<{ success: boolean }>[] = [];
 
@@ -122,22 +121,14 @@ async function startRemotes(
         ...(options.sslKey ? { sslKey: options.sslKey } : {}),
       };
 
-      const overrides =
-        target === 'serve'
-          ? {
-              watch: true,
-              ...defaultOverrides,
-            }
-          : { ...defaultOverrides };
-
       remoteIters.push(
         await runExecutor(
           {
             project: app,
-            target,
+            target: 'serve',
             configuration: configurationOverride ?? context.configurationName,
           },
-          overrides,
+          { watch: true, ...defaultOverrides },
           context
         )
       );
@@ -168,15 +159,13 @@ async function buildSsrStaticRemotes(
       staticRemotesConfig.config[remoteApp].urlSegment
     }`;
   }
-  process.env.NX_MF_DEV_SERVER_STATIC_REMOTES =
-    JSON.stringify(mapLocationOfRemotes);
 
   await new Promise<void>((resolve) => {
     const childProcess = fork(
       nxBin,
       [
         'run-many',
-        '--target=build',
+        '--target=server',
         '--projects',
         staticRemotesConfig.remotes.join(','),
         ...(context.configurationName
@@ -210,7 +199,7 @@ async function buildSsrStaticRemotes(
         logger.log(stdoutString);
       }
 
-      if (stdoutString.includes('Successfully ran target build')) {
+      if (stdoutString.includes('Successfully ran target server')) {
         childProcess.stdout.removeAllListeners('data');
         logger.info(
           `Nx Built ${staticRemotesConfig.remotes.length} static remotes.`
@@ -231,19 +220,7 @@ export default async function* moduleFederationSsrDevServer(
 ) {
   // Force Node to resolve to look for the nx binary that is inside node_modules
   const nxBin = require.resolve('nx/bin/nx');
-  let iter: any = options.static
-    ? fileServerExecutor(
-        {
-          ...options,
-          parallel: false,
-          withDeps: false,
-          spa: false,
-          cors: true,
-          cacheSeconds: -1,
-        },
-        context
-      )
-    : ssrDevServerExecutor(options, context);
+  let iter: any = ssrDevServerExecutor(options, context);
   const projectConfig =
     context.projectsConfigurations.projects[context.projectName];
   const buildOptions = getBuildOptions(options.browserTarget, context);
@@ -316,8 +293,7 @@ export default async function* moduleFederationSsrDevServer(
   const devRemoteIters = await startRemotes(
     remotes.devRemotes,
     context,
-    options,
-    'serve'
+    options
   );
 
   const staticRemotesIter = startSsrStaticRemotesFileServer(
@@ -326,7 +302,7 @@ export default async function* moduleFederationSsrDevServer(
     options
   );
 
-  startRemoteProxies(staticRemotesConfig, mappedLocationsOfStaticRemotes);
+  startSsrRemoteProxies(staticRemotesConfig, mappedLocationsOfStaticRemotes);
 
   return yield* combineAsyncIterables(
     iter,

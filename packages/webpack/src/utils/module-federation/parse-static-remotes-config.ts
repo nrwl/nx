@@ -7,7 +7,6 @@ export type StaticRemoteConfig = {
   urlSegment: string;
   port: number;
 };
-
 export type StaticRemotesConfig = {
   remotes: string[];
   config: Record<string, StaticRemoteConfig> | undefined;
@@ -44,13 +43,11 @@ export function parseStaticSsrRemotesConfig(
   }
   const config: Record<string, StaticRemoteConfig> = {};
   for (const app of staticRemotes) {
-    const outputPath = context.projectGraph.nodes[app].data.targets['build']
-      .options.outputPath as string;
-    const basePath = dirname(outputPath); // dist/checkout/browser -> checkout
-    const urlSegment =
-      basename(outputPath) === 'browser'
-        ? basename(basePath)
-        : basename(outputPath); // we do not want to have /browser in the url
+    const outputPath = dirname(
+      context.projectGraph.nodes[app].data.targets['build'].options.outputPath // dist/checkout/browser -> checkout
+    ) as string;
+    const basePath = dirname(outputPath); // dist/checkout -> dist
+    const urlSegment = basename(outputPath); // dist/checkout -> checkout
     const port =
       context.projectGraph.nodes[app].data.targets['serve'].options.port;
     config[app] = { basePath, outputPath, urlSegment, port };
