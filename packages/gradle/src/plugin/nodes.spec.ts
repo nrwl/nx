@@ -91,7 +91,7 @@ describe('@nx/gradle/plugin', () => {
                     "cache": true,
                     "command": "./gradlew proj:test",
                     "dependsOn": [
-                      "classes",
+                      "testClasses",
                     ],
                     "inputs": [
                       "default",
@@ -171,7 +171,7 @@ describe('@nx/gradle/plugin', () => {
                     "cache": true,
                     "command": "./gradlew proj:test",
                     "dependsOn": [
-                      "classes",
+                      "testClasses",
                     ],
                     "inputs": [
                       "default",
@@ -277,7 +277,7 @@ describe('@nx/gradle/plugin', () => {
                       "cache": false,
                       "command": "./gradlew proj:test",
                       "dependsOn": [
-                        "classes",
+                        "testClasses",
                       ],
                       "inputs": [
                         "default",
@@ -345,7 +345,7 @@ describe('@nx/gradle/plugin', () => {
                       "cache": true,
                       "command": "./gradlew proj:test --tests aTest",
                       "dependsOn": [
-                        "classes",
+                        "testClasses",
                       ],
                       "inputs": [
                         "default",
@@ -372,7 +372,7 @@ describe('@nx/gradle/plugin', () => {
                       "cache": true,
                       "command": "./gradlew proj:test --tests bTest",
                       "dependsOn": [
-                        "classes",
+                        "testClasses",
                       ],
                       "inputs": [
                         "default",
@@ -399,7 +399,7 @@ describe('@nx/gradle/plugin', () => {
                       "cache": true,
                       "command": "./gradlew proj:test --tests cTests",
                       "dependsOn": [
-                        "classes",
+                        "testClasses",
                       ],
                       "inputs": [
                         "default",
