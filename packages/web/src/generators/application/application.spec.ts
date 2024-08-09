@@ -1,7 +1,12 @@
 import 'nx/src/internal-testing-utils/mock-project-graph';
 
 import { installedCypressVersion } from '@nx/cypress/src/utils/cypress-version';
-import { readProjectConfiguration, Tree } from '@nx/devkit';
+import {
+  readNxJson,
+  readProjectConfiguration,
+  Tree,
+  updateNxJson,
+} from '@nx/devkit';
 import { getProjects, readJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 
@@ -38,6 +43,14 @@ describe('app', () => {
       expect(readProjectConfiguration(tree, 'my-app-e2e').root).toEqual(
         'my-app-e2e'
       );
+      expect(readNxJson(tree).targetDefaults['e2e-ci--**/*'])
+        .toMatchInlineSnapshot(`
+        {
+          "dependsOn": [
+            "^build",
+          ],
+        }
+      `);
     }, 60_000);
 
     it('should update tags and implicit dependencies', async () => {
@@ -158,11 +171,103 @@ describe('app', () => {
       expect(tree.exists('cool-app-e2e/playwright.config.ts')).toBeTruthy();
     });
 
+    it('should setup cypress e2e project correctly for vite', async () => {
+      await applicationGenerator(tree, {
+        name: 'cool-app',
+        e2eTestRunner: 'cypress',
+        unitTestRunner: 'none',
+        projectNameAndRootFormat: 'as-provided',
+        bundler: 'vite',
+        addPlugin: true,
+      });
+      expect(tree.read('cool-app-e2e/cypress.config.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
+
+        import { defineConfig } from 'cypress';
+
+        export default defineConfig({
+          e2e: {
+            ...nxE2EPreset(__filename, {
+              cypressDir: 'src',
+              bundler: 'vite',
+              webServerCommands: {
+                default: 'nx run cool-app:serve',
+                production: 'nx run cool-app:preview',
+              },
+              ciWebServerCommand: 'nx run cool-app:preview',
+              ciBaseUrl: 'http://localhost:4300',
+            }),
+            baseUrl: 'http://localhost:4200',
+          },
+        });
+        "
+      `);
+    });
+
+    it('should setup cypress e2e project correctly for webpack', async () => {
+      await applicationGenerator(tree, {
+        name: 'cool-app',
+        e2eTestRunner: 'cypress',
+        unitTestRunner: 'none',
+        projectNameAndRootFormat: 'as-provided',
+        bundler: 'webpack',
+        addPlugin: true,
+      });
+      expect(tree.read('cool-app-e2e/cypress.config.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
+
+        import { defineConfig } from 'cypress';
+
+        export default defineConfig({
+          e2e: {
+            ...nxE2EPreset(__filename, {
+              cypressDir: 'src',
+              webServerCommands: {
+                default: 'nx run cool-app:serve',
+                production: 'nx run cool-app:preview',
+              },
+              ciWebServerCommand: 'nx run cool-app:serve-static',
+            }),
+            baseUrl: 'http://localhost:4200',
+          },
+        });
+        "
+      `);
+    });
+
+    it('should setup playwright e2e project correctly for webpack', async () => {
+      await applicationGenerator(tree, {
+        name: 'cool-app',
+        e2eTestRunner: 'playwright',
+        unitTestRunner: 'none',
+        projectNameAndRootFormat: 'as-provided',
+        bundler: 'webpack',
+        addPlugin: true,
+      });
+      expect(
+        tree.read('cool-app-e2e/playwright.config.ts', 'utf-8')
+      ).toMatchSnapshot();
+    });
+
     it('should generate files if bundler is vite', async () => {
+      const nxJson = readNxJson(tree);
+      nxJson.plugins ??= [];
+      nxJson.plugins.push({
+        plugin: '@nx/vite/plugin',
+        options: {
+          buildTargetName: 'build',
+          previewTargetName: 'preview',
+        },
+      });
+      updateNxJson(tree, nxJson);
       await applicationGenerator(tree, {
         name: 'my-app',
         bundler: 'vite',
         projectNameAndRootFormat: 'as-provided',
+        e2eTestRunner: 'playwright',
+        addPlugin: true,
       });
       expect(tree.exists('my-app/src/main.ts')).toBeTruthy();
       expect(tree.exists('my-app/src/app/app.element.ts')).toBeTruthy();
@@ -179,13 +284,27 @@ describe('app', () => {
           path: './tsconfig.spec.json',
         },
       ]);
-      expect(tree.exists('my-app-e2e/playwright.config.ts')).toBeTruthy();
+      expect(
+        tree.read('my-app-e2e/playwright.config.ts', 'utf-8')
+      ).toMatchSnapshot();
       expect(tree.exists('my-app/index.html')).toBeTruthy();
       expect(tree.exists('my-app/vite.config.ts')).toBeTruthy();
       expect(tree.exists(`my-app/environments/environment.ts`)).toBeFalsy();
       expect(
         tree.exists(`my-app/environments/environment.prod.ts`)
       ).toBeFalsy();
+    });
+
+    it('should use serve target and port if bundler=vite, e2eTestRunner=playwright, addPlugin=false', async () => {
+      await applicationGenerator(tree, {
+        name: 'my-app',
+        bundler: 'vite',
+        projectNameAndRootFormat: 'as-provided',
+        e2eTestRunner: 'playwright',
+      });
+      expect(
+        tree.read('my-app-e2e/playwright.config.ts', 'utf-8')
+      ).toMatchSnapshot();
     });
 
     it('should extend from root tsconfig.json when no tsconfig.base.json', async () => {

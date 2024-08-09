@@ -1489,17 +1489,6 @@
             "tags": ["run-tasks"]
           },
           {
-            "id": "change-cache-location",
-            "name": "Change Cache Location",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/recipes/running-tasks/change-cache-location",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/running-tasks/change-cache-location",
-            "tags": []
-          },
-          {
             "id": "run-commands-executor",
             "name": "Run Custom Commands",
             "description": "",
@@ -1563,6 +1552,28 @@
             "itemList": [],
             "isExternal": false,
             "path": "/recipes/running-tasks/reduce-repetitive-configuration",
+            "tags": []
+          },
+          {
+            "id": "change-cache-location",
+            "name": "Change Cache Location",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/recipes/running-tasks/change-cache-location",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/running-tasks/change-cache-location",
+            "tags": []
+          },
+          {
+            "id": "skipping-cache",
+            "name": "Skip Task Caching",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/recipes/running-tasks/skipping-cache",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/running-tasks/skipping-cache",
             "tags": []
           }
         ],
@@ -2627,6 +2638,17 @@
             "tags": ["nx-release"]
           },
           {
+            "id": "customize-conventional-commit-types",
+            "name": "Customize Conventional Commit Types",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/recipes/nx-release/customize-conventional-commit-types",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/nx-release/customize-conventional-commit-types",
+            "tags": ["nx-release"]
+          },
+          {
             "id": "configure-custom-registries",
             "name": "Configure Custom Registries",
             "description": "",
@@ -2679,17 +2701,6 @@
             "itemList": [],
             "isExternal": false,
             "path": "/recipes/nx-release/update-local-registry-setup",
-            "tags": ["nx-release"]
-          },
-          {
-            "id": "customize-conventional-commit-types",
-            "name": "Customize Conventional Commit Types",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/recipes/nx-release/customize-conventional-commit-types",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/nx-release/customize-conventional-commit-types",
             "tags": ["nx-release"]
           },
           {
@@ -2844,17 +2855,6 @@
         "tags": ["run-tasks"]
       },
       {
-        "id": "change-cache-location",
-        "name": "Change Cache Location",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/recipes/running-tasks/change-cache-location",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/running-tasks/change-cache-location",
-        "tags": []
-      },
-      {
         "id": "run-commands-executor",
         "name": "Run Custom Commands",
         "description": "",
@@ -2919,6 +2919,28 @@
         "isExternal": false,
         "path": "/recipes/running-tasks/reduce-repetitive-configuration",
         "tags": []
+      },
+      {
+        "id": "change-cache-location",
+        "name": "Change Cache Location",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/running-tasks/change-cache-location",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/running-tasks/change-cache-location",
+        "tags": []
+      },
+      {
+        "id": "skipping-cache",
+        "name": "Skip Task Caching",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/running-tasks/skipping-cache",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/running-tasks/skipping-cache",
+        "tags": []
       }
     ],
     "isExternal": false,
@@ -2957,17 +2979,6 @@
     "isExternal": false,
     "path": "/recipes/running-tasks/defining-task-pipeline",
     "tags": ["run-tasks"]
-  },
-  "/recipes/running-tasks/change-cache-location": {
-    "id": "change-cache-location",
-    "name": "Change Cache Location",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/recipes/running-tasks/change-cache-location",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/running-tasks/change-cache-location",
-    "tags": []
   },
   "/recipes/running-tasks/run-commands-executor": {
     "id": "run-commands-executor",
@@ -3033,6 +3044,28 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/running-tasks/reduce-repetitive-configuration",
+    "tags": []
+  },
+  "/recipes/running-tasks/change-cache-location": {
+    "id": "change-cache-location",
+    "name": "Change Cache Location",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/running-tasks/change-cache-location",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/running-tasks/change-cache-location",
+    "tags": []
+  },
+  "/recipes/running-tasks/skipping-cache": {
+    "id": "skipping-cache",
+    "name": "Skip Task Caching",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/running-tasks/skipping-cache",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/running-tasks/skipping-cache",
     "tags": []
   },
   "/recipes/adopting-nx": {
@@ -4962,6 +4995,17 @@
         "tags": ["nx-release"]
       },
       {
+        "id": "customize-conventional-commit-types",
+        "name": "Customize Conventional Commit Types",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/nx-release/customize-conventional-commit-types",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/nx-release/customize-conventional-commit-types",
+        "tags": ["nx-release"]
+      },
+      {
         "id": "configure-custom-registries",
         "name": "Configure Custom Registries",
         "description": "",
@@ -5014,17 +5058,6 @@
         "itemList": [],
         "isExternal": false,
         "path": "/recipes/nx-release/update-local-registry-setup",
-        "tags": ["nx-release"]
-      },
-      {
-        "id": "customize-conventional-commit-types",
-        "name": "Customize Conventional Commit Types",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/recipes/nx-release/customize-conventional-commit-types",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/nx-release/customize-conventional-commit-types",
         "tags": ["nx-release"]
       },
       {
@@ -5087,6 +5120,17 @@
     "path": "/recipes/nx-release/automatically-version-with-conventional-commits",
     "tags": ["nx-release"]
   },
+  "/recipes/nx-release/customize-conventional-commit-types": {
+    "id": "customize-conventional-commit-types",
+    "name": "Customize Conventional Commit Types",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/nx-release/customize-conventional-commit-types",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/nx-release/customize-conventional-commit-types",
+    "tags": ["nx-release"]
+  },
   "/recipes/nx-release/configure-custom-registries": {
     "id": "configure-custom-registries",
     "name": "Configure Custom Registries",
@@ -5140,17 +5184,6 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/nx-release/update-local-registry-setup",
-    "tags": ["nx-release"]
-  },
-  "/recipes/nx-release/customize-conventional-commit-types": {
-    "id": "customize-conventional-commit-types",
-    "name": "Customize Conventional Commit Types",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/recipes/nx-release/customize-conventional-commit-types",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/nx-release/customize-conventional-commit-types",
     "tags": ["nx-release"]
   },
   "/recipes/nx-release/configure-changelog-format": {

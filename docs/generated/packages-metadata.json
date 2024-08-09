@@ -598,6 +598,15 @@
         "originalFilePath": "/packages/detox/src/generators/application/schema.json",
         "path": "detox/generators/application",
         "type": "generator"
+      },
+      {
+        "description": "Convert existing Detox project(s) using `@nx/detox:*` executors to use `@nx/detox/plugin`. Defaults to migrating all projects. Pass '--project' to migrate only one target.",
+        "file": "generated/packages/detox/generators/convert-to-inferred.json",
+        "hidden": false,
+        "name": "convert-to-inferred",
+        "originalFilePath": "/packages/detox/src/generators/convert-to-inferred/schema.json",
+        "path": "detox/generators/convert-to-inferred",
+        "type": "generator"
       }
     ],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
@@ -976,6 +985,15 @@
         "name": "component",
         "originalFilePath": "/packages/expo/src/generators/component/schema.json",
         "path": "expo/generators/component",
+        "type": "generator"
+      },
+      {
+        "description": "Convert existing Expo project(s) using `@nx/expo:*` executors to use `@nx/expo/plugin`. Defaults to migrating all projects. Pass '--project' to migrate only one target.",
+        "file": "generated/packages/expo/generators/convert-to-inferred.json",
+        "hidden": false,
+        "name": "convert-to-inferred",
+        "originalFilePath": "/packages/expo/src/generators/convert-to-inferred/schema.json",
+        "path": "expo/generators/convert-to-inferred",
         "type": "generator"
       }
     ],
@@ -2525,6 +2543,15 @@
         "name": "web-configuration",
         "originalFilePath": "/packages/react-native/src/generators/web-configuration/schema.json",
         "path": "react-native/generators/web-configuration",
+        "type": "generator"
+      },
+      {
+        "description": "Convert existing React Native project(s) using `@nx/react-native:*` executors to use `@nx/react-native/plugin`. Defaults to migrating all projects. Pass '--project' to migrate only one target.",
+        "file": "generated/packages/react-native/generators/convert-to-inferred.json",
+        "hidden": false,
+        "name": "convert-to-inferred",
+        "originalFilePath": "/packages/react-native/src/generators/convert-to-inferred/schema.json",
+        "path": "react-native/generators/convert-to-inferred",
         "type": "generator"
       }
     ],

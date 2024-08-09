@@ -58,6 +58,20 @@ const server = createServer((socket) => {
             };
           }
         },
+        shutdown: async () => {
+          // Stops accepting new connections, but existing connections are
+          // not closed immediately.
+          server.close(() => {
+            try {
+              unlinkSync(socketPath);
+            } catch (e) {}
+            process.exit(0);
+          });
+          // Closes existing connection.
+          socket.end();
+          // Destroys the socket once it's fully closed.
+          socket.destroySoon();
+        },
         createNodes: async ({ configFiles, context, tx }) => {
           try {
             const result = await plugin.createNodes[1](configFiles, context);

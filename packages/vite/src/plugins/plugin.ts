@@ -193,7 +193,10 @@ async function buildViteTargets(
     // If running in library mode, then there is nothing to serve.
     if (!viteConfig.build?.lib) {
       targets[options.serveTargetName] = serveTarget(projectRoot);
-      targets[options.previewTargetName] = previewTarget(projectRoot);
+      targets[options.previewTargetName] = previewTarget(
+        projectRoot,
+        options.buildTargetName
+      );
       targets[options.serveStaticTargetName] = serveStaticTarget(options) as {};
     }
   }
@@ -272,9 +275,10 @@ function serveTarget(projectRoot: string) {
   return targetConfig;
 }
 
-function previewTarget(projectRoot: string) {
+function previewTarget(projectRoot: string, buildTargetName) {
   const targetConfig: TargetConfiguration = {
     command: `vite preview`,
+    dependsOn: [buildTargetName],
     options: {
       cwd: joinPathFragments(projectRoot),
     },

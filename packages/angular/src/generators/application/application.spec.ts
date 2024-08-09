@@ -569,7 +569,8 @@ describe('app', () => {
       it('should add eslint plugin and no lint target to e2e project', async () => {
         await generateApp(appTree, 'my-app', { linter: Linter.EsLint });
 
-        expect(readNxJson(appTree).plugins).toMatchInlineSnapshot(`
+        const nxJson = readNxJson(appTree);
+        expect(nxJson.plugins).toMatchInlineSnapshot(`
           [
             {
               "options": {
@@ -587,6 +588,13 @@ describe('app', () => {
               "plugin": "@nx/eslint/plugin",
             },
           ]
+        `);
+        expect(nxJson.targetDefaults['e2e-ci--**/*']).toMatchInlineSnapshot(`
+          {
+            "dependsOn": [
+              "^build",
+            ],
+          }
         `);
         expect(
           readProjectConfiguration(appTree, 'my-app-e2e').targets.lint

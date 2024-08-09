@@ -22,7 +22,15 @@ const cleanupFunctions = new Set<() => void>();
 
 const pluginNames = new Map<ChildProcess, string>();
 
-const MAX_MESSAGE_WAIT = 1000 * 60 * 5; // 5 minutes
+const PLUGIN_TIMEOUT_HINT_TEXT =
+  'As a last resort, you can set NX_PLUGIN_NO_TIMEOUTS=true to bypass this timeout.';
+
+const MINUTES = 10;
+
+const MAX_MESSAGE_WAIT =
+  process.env.NX_PLUGIN_NO_TIMEOUTS === 'true'
+    ? undefined
+    : 1000 * 60 * MINUTES; // 10 minutes
 
 interface PendingPromise {
   promise: Promise<unknown>;
@@ -53,8 +61,8 @@ export async function loadRemoteNxPlugin(
 
   const cleanupFunction = () => {
     worker.off('exit', exitHandler);
+    shutdownPluginWorker(socket);
     socket.destroy();
-    shutdownPluginWorker(worker);
     nxPluginWorkerCache.delete(cacheKey);
   };
 
@@ -67,9 +75,15 @@ export async function loadRemoteNxPlugin(
     });
     // logger.verbose(`[plugin-worker] started worker: ${worker.pid}`);
 
-    const loadTimeout = setTimeout(() => {
-      rej(new Error('Plugin worker timed out when loading plugin:' + plugin));
-    }, MAX_MESSAGE_WAIT);
+    const loadTimeout = MAX_MESSAGE_WAIT
+      ? setTimeout(() => {
+          rej(
+            new Error(
+              `Loading "${plugin}" timed out after ${MINUTES} minutes. ${PLUGIN_TIMEOUT_HINT_TEXT}`
+            )
+          );
+        }, MAX_MESSAGE_WAIT)
+      : undefined;
 
     socket.on(
       'data',
@@ -78,7 +92,7 @@ export async function loadRemoteNxPlugin(
           worker,
           pendingPromises,
           (val) => {
-            clearTimeout(loadTimeout);
+            if (loadTimeout) clearTimeout(loadTimeout);
             res(val);
           },
           rej,
@@ -94,13 +108,8 @@ export async function loadRemoteNxPlugin(
   return [pluginPromise, cleanupFunction];
 }
 
-function shutdownPluginWorker(worker: ChildProcess) {
-  // Clears the plugin cache so no refs to the workers are held
-  nxPluginCache.clear();
-
-  // logger.verbose(`[plugin-pool] starting worker shutdown`);
-
-  worker.kill('SIGINT');
+function shutdownPluginWorker(socket: Socket) {
+  sendMessageOverSocket(socket, { type: 'shutdown', payload: {} });
 }
 
 /**
@@ -144,12 +153,20 @@ function createWorkerHandler(
                   (configFiles, ctx) => {
                     const tx =
                       pluginName + worker.pid + ':createNodes:' + txId++;
-                    return registerPendingPromise(tx, pending, () => {
-                      sendMessageOverSocket(socket, {
-                        type: 'createNodes',
-                        payload: { configFiles, context: ctx, tx },
-                      });
-                    });
+                    return registerPendingPromise(
+                      tx,
+                      pending,
+                      () => {
+                        sendMessageOverSocket(socket, {
+                          type: 'createNodes',
+                          payload: { configFiles, context: ctx, tx },
+                        });
+                      },
+                      {
+                        plugin: pluginName,
+                        operation: 'createNodes',
+                      }
+                    );
                   },
                 ]
               : undefined,
@@ -157,36 +174,60 @@ function createWorkerHandler(
               ? (ctx) => {
                   const tx =
                     pluginName + worker.pid + ':createDependencies:' + txId++;
-                  return registerPendingPromise(tx, pending, () => {
-                    sendMessageOverSocket(socket, {
-                      type: 'createDependencies',
-                      payload: { context: ctx, tx },
-                    });
-                  });
+                  return registerPendingPromise(
+                    tx,
+                    pending,
+                    () => {
+                      sendMessageOverSocket(socket, {
+                        type: 'createDependencies',
+                        payload: { context: ctx, tx },
+                      });
+                    },
+                    {
+                      plugin: pluginName,
+                      operation: 'createDependencies',
+                    }
+                  );
                 }
               : undefined,
             processProjectGraph: result.hasProcessProjectGraph
               ? (graph, ctx) => {
                   const tx =
                     pluginName + worker.pid + ':processProjectGraph:' + txId++;
-                  return registerPendingPromise(tx, pending, () => {
-                    sendMessageOverSocket(socket, {
-                      type: 'processProjectGraph',
-                      payload: { graph, ctx, tx },
-                    });
-                  });
+                  return registerPendingPromise(
+                    tx,
+                    pending,
+                    () => {
+                      sendMessageOverSocket(socket, {
+                        type: 'processProjectGraph',
+                        payload: { graph, ctx, tx },
+                      });
+                    },
+                    {
+                      operation: 'processProjectGraph',
+                      plugin: pluginName,
+                    }
+                  );
                 }
               : undefined,
             createMetadata: result.hasCreateMetadata
               ? (graph, ctx) => {
                   const tx =
                     pluginName + worker.pid + ':createMetadata:' + txId++;
-                  return registerPendingPromise(tx, pending, () => {
-                    sendMessageOverSocket(socket, {
-                      type: 'createMetadata',
-                      payload: { graph, context: ctx, tx },
-                    });
-                  });
+                  return registerPendingPromise(
+                    tx,
+                    pending,
+                    () => {
+                      sendMessageOverSocket(socket, {
+                        type: 'createMetadata',
+                        payload: { graph, context: ctx, tx },
+                      });
+                    },
+                    {
+                      plugin: pluginName,
+                      operation: 'createMetadata',
+                    }
+                  );
                 }
               : undefined,
           });
@@ -249,6 +290,7 @@ function createWorkerExitHandler(
 
 let cleanedUp = false;
 const exitHandler = () => {
+  nxPluginCache.clear();
   for (const fn of cleanupFunctions) {
     fn();
   }
@@ -265,7 +307,11 @@ process.on('SIGTERM', exitHandler);
 function registerPendingPromise(
   tx: string,
   pending: Map<string, PendingPromise>,
-  callback: () => void
+  callback: () => void,
+  context: {
+    plugin: string;
+    operation: string;
+  }
 ): Promise<any> {
   let resolver, rejector, timeout;
 
@@ -273,14 +319,20 @@ function registerPendingPromise(
     rejector = rej;
     resolver = res;
 
-    timeout = setTimeout(() => {
-      rej(new Error(`Plugin worker timed out when processing message ${tx}`));
-    }, MAX_MESSAGE_WAIT);
+    timeout = MAX_MESSAGE_WAIT
+      ? setTimeout(() => {
+          rej(
+            new Error(
+              `${context.plugin} timed out after ${MINUTES} minutes during ${context.operation}. ${PLUGIN_TIMEOUT_HINT_TEXT}`
+            )
+          );
+        }, MAX_MESSAGE_WAIT)
+      : undefined;
 
     callback();
   }).finally(() => {
     pending.delete(tx);
-    clearTimeout(timeout);
+    if (timeout) clearTimeout(timeout);
   });
 
   pending.set(tx, {

@@ -32,6 +32,11 @@
       "version": "17.3.0-beta.0",
       "description": "Move the vitest coverage thresholds in their own object if exists and add reporters.",
       "implementation": "./src/migrations/update-17-3-0/vitest-coverage-and-reporters"
+    },
+    "update-19-6-0-add-depends-on-for-preview-server": {
+      "version": "19.6.0-beta.0",
+      "description": "Add dependsOn: [build] to preview targets using preview-server",
+      "implementation": "./src/migrations/update-19-6-0/add-depends-on-for-preview"
     }
   },
   "packageJsonUpdates": {

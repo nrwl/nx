@@ -96,6 +96,14 @@ describe('TargetProjectLocator', () => {
           name: '@proj/proj123-base',
           version: '1.0.0',
         }),
+        './node_modules/lodash/package.json': JSON.stringify({
+          name: 'lodash',
+          version: '3.0.0',
+        }),
+        './node_modules/lodash-4/package.json': JSON.stringify({
+          name: 'lodash',
+          version: '4.0.0',
+        }),
       };
       vol.fromJSON(fsJson, '/root');
       projects = {
@@ -261,6 +269,22 @@ describe('TargetProjectLocator', () => {
           data: {
             version: '1.0.0',
             packageName: '@proj/proj123-base',
+          },
+        },
+        'npm:lodash': {
+          name: 'npm:lodash',
+          type: 'npm',
+          data: {
+            version: '3.0.0',
+            packageName: 'lodash',
+          },
+        },
+        'npm:lodash-4': {
+          name: 'npm:lodash-4',
+          type: 'npm',
+          data: {
+            packageName: 'lodash-4',
+            version: 'npm:lodash@4.0.0',
           },
         },
       };
@@ -453,6 +477,20 @@ describe('TargetProjectLocator', () => {
         'libs/proj/index.ts'
       );
       expect(proj5).toEqual('proj5');
+    });
+
+    it('should be able to resolve packages alises', () => {
+      const lodash = targetProjectLocator.findProjectFromImport(
+        'lodash',
+        'libs/proj/index.ts'
+      );
+      expect(lodash).toEqual('npm:lodash');
+
+      const lodash4 = targetProjectLocator.findProjectFromImport(
+        'lodash-4',
+        'libs/proj/index.ts'
+      );
+      expect(lodash4).toEqual('npm:lodash-4');
     });
   });
 

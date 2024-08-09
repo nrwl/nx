@@ -32,6 +32,7 @@ export async function generateMetadata({ post }: BlogDetailsProps) {
 export function BlogDetails({ post }: BlogDetailsProps) {
   const { node } = renderMarkdown(post.content, {
     filePath: post.filePath ?? '',
+    headingClass: 'scroll-mt-20',
   });
 
   const formattedDate = new Date(post.date).toLocaleDateString('en-US', {
