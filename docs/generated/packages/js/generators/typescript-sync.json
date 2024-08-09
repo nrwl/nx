@@ -1,6 +1,6 @@
 {
-  "name": "sync",
-  "factory": "./src/generators/sync/sync#syncGenerator",
+  "name": "typescript-sync",
+  "factory": "./src/generators/typescript-sync/typescript-sync",
   "schema": {
     "$schema": "https://json-schema.org/schema",
     "$id": "action",
@@ -11,9 +11,10 @@
     "presets": []
   },
   "description": "Synchronize TypeScript project references based on the project graph",
+  "alias": ["sync"],
   "hidden": true,
-  "implementation": "/packages/js/src/generators/sync/sync#syncGenerator.ts",
+  "implementation": "/packages/js/src/generators/typescript-sync/typescript-sync.ts",
   "aliases": [],
-  "path": "/packages/js/src/generators/sync/schema.json",
+  "path": "/packages/js/src/generators/typescript-sync/schema.json",
   "type": "generator"
 }

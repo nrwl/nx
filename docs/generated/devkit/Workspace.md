@@ -36,6 +36,7 @@ use ProjectsConfigurations or NxJsonConfiguration
 - [pluginsConfig](../../devkit/documents/Workspace#pluginsconfig): Record<string, Record<string, unknown>>
 - [projects](../../devkit/documents/Workspace#projects): Record<string, ProjectConfiguration>
 - [release](../../devkit/documents/Workspace#release): NxReleaseConfiguration
+- [sync](../../devkit/documents/Workspace#sync): NxSyncConfiguration
 - [targetDefaults](../../devkit/documents/Workspace#targetdefaults): TargetDefaults
 - [tasksRunnerOptions](../../devkit/documents/Workspace#tasksrunneroptions): Object
 - [useDaemonProcess](../../devkit/documents/Workspace#usedaemonprocess): boolean
@@ -325,6 +326,18 @@ Configuration for `nx release` (versioning and publishing of applications and li
 #### Inherited from
 
 [NxJsonConfiguration](../../devkit/documents/NxJsonConfiguration).[release](../../devkit/documents/NxJsonConfiguration#release)
+
+---
+
+### sync
+
+• `Optional` **sync**: `NxSyncConfiguration`
+
+Configuration for the `nx sync` command.
+
+#### Inherited from
+
+[NxJsonConfiguration](../../devkit/documents/NxJsonConfiguration).[sync](../../devkit/documents/NxJsonConfiguration#sync)
 
 ---
 

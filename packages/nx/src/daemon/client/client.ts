@@ -49,6 +49,23 @@ import {
   HandleWriteTaskRunsToHistoryMessage,
 } from '../message-types/task-history';
 import { FORCE_SHUTDOWN } from '../message-types/force-shutdown';
+import {
+  GET_SYNC_GENERATOR_CHANGES,
+  type HandleGetSyncGeneratorChangesMessage,
+} from '../message-types/get-sync-generator-changes';
+import type { SyncGeneratorChangesResult } from '../../utils/sync-generators';
+import {
+  GET_REGISTERED_SYNC_GENERATORS,
+  type HandleGetRegisteredSyncGeneratorsMessage,
+} from '../message-types/get-registered-sync-generators';
+import {
+  UPDATE_WORKSPACE_CONTEXT,
+  type HandleUpdateWorkspaceContextMessage,
+} from '../message-types/update-workspace-context';
+import {
+  FLUSH_SYNC_GENERATOR_CHANGES_TO_DISK,
+  type HandleFlushSyncGeneratorChangesToDiskMessage,
+} from '../message-types/flush-sync-generator-changes-to-disk';
 
 const DAEMON_ENV_SETTINGS = {
   NX_PROJECT_GLOB_CACHE: 'false',
@@ -341,6 +358,45 @@ export class DaemonClient {
       taskRuns,
     };
     return this.sendMessageToDaemon(message);
+  }
+
+  getSyncGeneratorChanges(
+    generators: string[]
+  ): Promise<SyncGeneratorChangesResult[]> {
+    const message: HandleGetSyncGeneratorChangesMessage = {
+      type: GET_SYNC_GENERATOR_CHANGES,
+      generators,
+    };
+    return this.sendToDaemonViaQueue(message);
+  }
+
+  flushSyncGeneratorChangesToDisk(generators: string[]): Promise<void> {
+    const message: HandleFlushSyncGeneratorChangesToDiskMessage = {
+      type: FLUSH_SYNC_GENERATOR_CHANGES_TO_DISK,
+      generators,
+    };
+    return this.sendToDaemonViaQueue(message);
+  }
+
+  getRegisteredSyncGenerators(): Promise<string[]> {
+    const message: HandleGetRegisteredSyncGeneratorsMessage = {
+      type: GET_REGISTERED_SYNC_GENERATORS,
+    };
+    return this.sendToDaemonViaQueue(message);
+  }
+
+  updateWorkspaceContext(
+    createdFiles: string[],
+    updatedFiles: string[],
+    deletedFiles: string[]
+  ): Promise<void> {
+    const message: HandleUpdateWorkspaceContextMessage = {
+      type: UPDATE_WORKSPACE_CONTEXT,
+      createdFiles,
+      updatedFiles,
+      deletedFiles,
+    };
+    return this.sendToDaemonViaQueue(message);
   }
 
   async isServerAvailable(): Promise<boolean> {

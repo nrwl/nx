@@ -74,6 +74,30 @@ export async function hashWithWorkspaceContext(
   return daemonClient.hashGlob(globs, exclude);
 }
 
+export async function updateContextWithChangedFiles(
+  createdFiles: string[],
+  updatedFiles: string[],
+  deletedFiles: string[]
+) {
+  if (!daemonClient.enabled()) {
+    updateFilesInContext([...createdFiles, ...updatedFiles], deletedFiles);
+  } else if (isOnDaemon()) {
+    // make sure to only import this when running on the daemon
+    const { addUpdatedAndDeletedFiles } = await import(
+      '../daemon/server/project-graph-incremental-recomputation'
+    );
+    // update files for the incremental graph recomputation on the daemon
+    addUpdatedAndDeletedFiles(createdFiles, updatedFiles, deletedFiles);
+  } else {
+    // daemon is enabled but we are not running on it, ask the daemon to update the context
+    await daemonClient.updateWorkspaceContext(
+      createdFiles,
+      updatedFiles,
+      deletedFiles
+    );
+  }
+}
+
 export function updateFilesInContext(
   updatedFiles: string[],
   deletedFiles: string[]
