@@ -31,35 +31,32 @@ The command below uses the `as-provided` directory flag behavior, which is the d
 NX  Generating @nx/remix:application
 
 ✔ What unit test runner should be used? · vitest
+✔ Which E2E test runner would you like to use? · playwright
 
-CREATE apps/myapp/project.json
 UPDATE package.json
+UPDATE nx.json
+CREATE apps/myapp/project.json
 CREATE apps/myapp/README.md
+CREATE apps/myapp/app/nx-welcome.tsx
 CREATE apps/myapp/app/root.tsx
 CREATE apps/myapp/app/routes/_index.tsx
 CREATE apps/myapp/public/favicon.ico
 CREATE apps/myapp/remix.config.js
 CREATE apps/myapp/remix.env.d.ts
+CREATE apps/myapp/tests/routes/_index.spec.tsx
+CREATE apps/myapp/tsconfig.app.json
 CREATE apps/myapp/tsconfig.json
 CREATE apps/myapp/.gitignore
 CREATE apps/myapp/package.json
-UPDATE nx.json
-CREATE tsconfig.base.json
-CREATE .prettierrc
-CREATE .prettierignore
-UPDATE .vscode/extensions.json
-CREATE apps/myapp/vite.config.ts
 CREATE apps/myapp/tsconfig.spec.json
+CREATE apps/myapp/vitest.config.ts
 CREATE apps/myapp/test-setup.ts
-CREATE apps/myapp-e2e/cypress.config.ts
-CREATE apps/myapp-e2e/src/e2e/app.cy.ts
-CREATE apps/myapp-e2e/src/fixtures/example.json
-CREATE apps/myapp-e2e/src/support/commands.ts
-CREATE apps/myapp-e2e/src/support/e2e.ts
-CREATE apps/myapp-e2e/tsconfig.json
+CREATE apps/myapp/.eslintrc.json
+CREATE apps/myapp/.eslintignore
 CREATE apps/myapp-e2e/project.json
-CREATE .eslintrc.json
-CREATE .eslintignore
+CREATE apps/myapp-e2e/src/example.spec.ts
+CREATE apps/myapp-e2e/playwright.config.ts
+CREATE apps/myapp-e2e/tsconfig.json
 CREATE apps/myapp-e2e/.eslintrc.json
 ```
 
