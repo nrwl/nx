@@ -269,7 +269,7 @@
       "description": "",
       "file": "shared/recipes/plugins/project-graph-plugins",
       "id": "project-graph-plugins",
-      "name": "Modify the Project Graph",
+      "name": "Infer Tasks or Projects",
       "path": "/extending-nx/recipes/project-graph-plugins"
     },
     {
@@ -589,7 +589,7 @@
       "description": "",
       "file": "shared/recipes/plugins/project-graph-plugins",
       "id": "project-graph-plugins",
-      "name": "Modify the Project Graph",
+      "name": "Infer Tasks or Projects",
       "path": "/extending-nx/recipes/project-graph-plugins"
     }
   ],
@@ -626,7 +626,7 @@
       "description": "",
       "file": "shared/recipes/plugins/project-graph-plugins",
       "id": "project-graph-plugins",
-      "name": "Modify the Project Graph",
+      "name": "Infer Tasks or Projects",
       "path": "/extending-nx/recipes/project-graph-plugins"
     },
     {

@@ -9,7 +9,7 @@ Nx is a powerful open-source build system that provides tools and techniques for
 - **Cache Locally & Remotely**: With [local](/features/cache-task-results) and [remote caching](/ci/features/remote-cache), Nx prevents unnecessary re-runs of tasks, saving you valuable dev time.
 - **Split E2E Tests and Rerun Flaky Tests**: Nx [automatically splits](/ci/features/split-e2e-tasks) large e2e tests to distribute them across VMs. Nx can also automatically [identify and rerun flaky e2e tests](/ci/features/flaky-tasks).
 - **Automate Dependency Updates**: if you leverage [Nx plugins](/concepts/nx-plugins) you gain additional features such as [code generation](/features/generate-code) and tools to [automatically upgrade](features/automate-updating-dependencies) your codebase and dependencies.
-- **Make it Your Own**: Nx is highly customizable and extensible. Fine-tune it by [creating your own plugins](/extending-nx/intro/getting-started) and optionally [share them with the community](/extending-nx/tutorials/publish-plugin#publish-your-nx-plugin).
+- **Make it Your Own**: Nx is highly customizable and extensible. Fine-tune it by [creating a plugin for your organization](/extending-nx/tutorials/organization-specific-plugin) or [creating a tooling plugin](/extending-nx/tutorials/tooling-plugin).
 
 <!-- - **Monorepo and Single Projects**: Nx supports both, monorepos as well as single-project (standalone) workspaces. -->
 

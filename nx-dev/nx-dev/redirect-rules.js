@@ -805,7 +805,11 @@ const nested5minuteTutorialUrls = {
 
 const pluginUrls = {
   '/plugin-features/create-your-own-plugin':
-    '/extending-nx/tutorials/create-plugin',
+    '/extending-nx/tutorials/organization-specific-plugin',
+  '/extending-nx/tutorials/create-plugin':
+    '/extending-nx/tutorials/organization-specific-plugin',
+  '/extending-nx/tutorials/publish-plugin':
+    '/extending-nx/tutorials/tooling-plugin',
   '/recipes/advanced-plugins': '/extending-nx/recipes',
   '/recipes/advanced-plugins/create-preset':
     '/extending-nx/recipes/create-preset',
