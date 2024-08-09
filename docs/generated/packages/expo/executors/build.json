@@ -68,6 +68,22 @@
         "type": "string",
         "description": "Submit on build complete using the submit profile with provided name",
         "examples": ["production", "development", "preview"]
+      },
+      "message": {
+        "type": "string",
+        "description": "A short message describing the build",
+        "examples": ["My message"]
+      },
+      "buildLoggerLevel": {
+        "type": "string",
+        "description": "The level of logs to output during the build process.",
+        "enum": ["trace", "debug", "info", "warn", "error", "fatal"],
+        "default": "info"
+      },
+      "freezeCredentials": {
+        "type": "boolean",
+        "description": "Prevent the build from updating credentials in non-interactive mode",
+        "default": false
       }
     },
     "required": []

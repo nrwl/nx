@@ -129,8 +129,7 @@ function buildExpoTargets(
       executor: `@nx/expo:prebuild`,
     },
     [options.buildTargetName]: {
-      command: `eas build`,
-      options: { cwd: projectRoot },
+      executor: `@nx/expo:build`,
     },
     [options.submitTargetName]: {
       command: `eas submit`,

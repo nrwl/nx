@@ -12,7 +12,6 @@
     "react-native-web": "*"
   },
   "scripts": {
-    "eas-build-pre-install": "cd <%= offsetFromRoot %> && node tools/scripts/eas-build-pre-install.mjs . <%= appProjectRoot %> && cp <%= packageLockFile %> <%= appProjectRoot %>",
     "eas-build-post-install": "cd <%= offsetFromRoot %> && node tools/scripts/eas-build-post-install.mjs . <%= appProjectRoot %>"
   }
 }
