@@ -7,9 +7,13 @@ import {
   getSyncGeneratorChanges,
   syncGeneratorResultsToMessageLines,
 } from '../../utils/sync-generators';
-import type { SyncOptions } from './command-object';
+import type { SyncArgs } from './command-object';
 
-export function addHandler(options: SyncOptions): Promise<number> {
+interface SyncOptions extends SyncArgs {
+  check?: boolean;
+}
+
+export function syncHandler(options: SyncOptions): Promise<number> {
   if (options.verbose) {
     process.env.NX_VERBOSE_LOGGING = 'true';
   }
