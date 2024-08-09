@@ -1772,6 +1772,28 @@ describe('lib', () => {
     });
   });
 
+  describe('--unit-test-runner', () => {
+    /* Cf. packages/angular/src/generators/application/application.spec.ts  */
+    it('should generate vitest files as for app', async () => {
+      await runLibraryGeneratorWithOpts({
+        unitTestRunner: UnitTestRunner.Vitest,
+      });
+
+      expect(tree.exists('my-lib/vite.config.mts')).toBe(true);
+      expect(tree.exists('my-lib/tsconfig.spec.json')).toBe(true);
+      expect(tree.exists('my-lib/src/test-setup.ts')).toBe(true);
+    });
+
+    it('should exclude src/test-setup.ts in tsconfig.lib.json', async () => {
+      await runLibraryGeneratorWithOpts({
+        unitTestRunner: UnitTestRunner.Vitest,
+      });
+
+      const tsConfig = readJson(tree, 'my-lib/tsconfig.lib.json');
+      expect(tsConfig.exclude).toContain('src/test-setup.ts');
+    });
+  });
+
   describe('angular compat support', () => {
     beforeEach(() => {
       updateJson(tree, 'package.json', (json) => ({

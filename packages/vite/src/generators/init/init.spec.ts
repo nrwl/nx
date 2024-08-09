@@ -73,6 +73,7 @@ describe('@nx/vite:init', () => {
               "default",
               "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
               "!{projectRoot}/tsconfig.spec.json",
+              "!{projectRoot}/src/test-setup.[jt]s",
             ],
           },
           "plugins": [
