@@ -28,7 +28,7 @@ import {
   DaemonProjectGraphError,
   ProjectGraphError,
 } from '../../project-graph/error-types';
-import { IS_WASM, NxWorkspaceFiles } from '../../native';
+import { IS_WASM, NxWorkspaceFiles, TaskRun } from '../../native';
 import { HandleGlobMessage } from '../message-types/glob';
 import {
   GET_NX_WORKSPACE_FILES,
@@ -43,10 +43,11 @@ import {
   HandleGetFilesInDirectoryMessage,
 } from '../message-types/get-files-in-directory';
 import { HASH_GLOB, HandleHashGlobMessage } from '../message-types/hash-glob';
-import { TaskRun } from '../../utils/task-history';
 import {
-  HandleGetTaskHistoryForHashesMessage,
-  HandleWriteTaskRunsToHistoryMessage,
+  GET_FLAKY_TASKS,
+  HandleGetFlakyTasks,
+  HandleRecordTaskRunsMessage,
+  RECORD_TASK_RUNS,
 } from '../message-types/task-history';
 
 const DAEMON_ENV_SETTINGS = {
@@ -323,20 +324,18 @@ export class DaemonClient {
     return this.sendToDaemonViaQueue(message);
   }
 
-  getTaskHistoryForHashes(hashes: string[]): Promise<{
-    [hash: string]: TaskRun[];
-  }> {
-    const message: HandleGetTaskHistoryForHashesMessage = {
-      type: 'GET_TASK_HISTORY_FOR_HASHES',
+  getFlakyTasks(hashes: string[]): Promise<string[]> {
+    const message: HandleGetFlakyTasks = {
+      type: GET_FLAKY_TASKS,
       hashes,
     };
 
     return this.sendToDaemonViaQueue(message);
   }
 
-  writeTaskRunsToHistory(taskRuns: TaskRun[]): Promise<void> {
-    const message: HandleWriteTaskRunsToHistoryMessage = {
-      type: 'WRITE_TASK_RUNS_TO_HISTORY',
+  recordTaskRuns(taskRuns: TaskRun[]): Promise<void> {
+    const message: HandleRecordTaskRunsMessage = {
+      type: RECORD_TASK_RUNS,
       taskRuns,
     };
     return this.sendMessageToDaemon(message);

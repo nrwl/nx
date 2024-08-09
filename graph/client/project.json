@@ -31,6 +31,7 @@
       }
     },
     "build-client": {
+      "dependsOn": ["nx:build-native"],
       "configurations": {
         "dev": {},
         "nx-console": {},

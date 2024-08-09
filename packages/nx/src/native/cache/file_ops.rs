@@ -13,10 +13,14 @@ pub fn remove(src: String) -> anyhow::Result<()> {
 
 #[napi]
 pub fn copy(src: String, dest: String) -> anyhow::Result<()> {
-    let dest: PathBuf = dest.into();
+    _copy(src, dest)
+}
+
+pub fn _copy<P>(src: P, dest: P) -> anyhow::Result<()> where P: AsRef<Path> {
+    let dest: PathBuf = dest.as_ref().into();
     let dest_parent = dest.parent().unwrap_or(&dest);
 
-    let src: PathBuf = src.into();
+    let src: PathBuf = src.as_ref().into();
 
     if !dest_parent.exists() {
         fs::create_dir_all(dest_parent)?;

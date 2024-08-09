@@ -115,7 +115,7 @@ jobs:
           fi
 
   build:
-    needs: [resolve-required-data]
+    needs: [ resolve-required-data ]
     if: ${{ github.repository_owner == 'nrwl' }}
     strategy:
       fail-fast: false
@@ -287,7 +287,7 @@ jobs:
           if-no-files-found: error
 
   build-freebsd:
-    needs: [resolve-required-data]
+    needs: [ resolve-required-data ]
     if: ${{ github.repository_owner == 'nrwl' }}
     runs-on: ubuntu-latest
     name: Build FreeBSD
@@ -397,7 +397,10 @@ jobs:
         run: ls -R artifacts
         shell: bash
       - name: Build Wasm
-        run: pnpm build:wasm
+        run: |
+          wget https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-23/wasi-sdk-23.0-x86_64-linux.tar.gz
+          tar -xvf wasi-sdk-23.0-x86_64-linux.tar.gz
+          pnpm build:wasm
       - name: Publish
         env:
           VERSION: ${{ needs.resolve-required-data.outputs.version }}
@@ -437,7 +440,7 @@ jobs:
   pr_failure_comment:
     # Run this job if it is a PR release, running on the nrwl origin, and any of the required jobs failed
     if: ${{ github.repository_owner == 'nrwl' && github.event.inputs.pr && always() && contains(needs.*.result, 'failure') }}
-    needs: [resolve-required-data, build, build-freebsd, publish]
+    needs: [ resolve-required-data, build, build-freebsd, publish ]
     name: (PR Release Failure Only) Create comment for failed PR release
     runs-on: ubuntu-latest
     steps:

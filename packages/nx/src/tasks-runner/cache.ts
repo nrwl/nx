@@ -4,9 +4,11 @@ import { join } from 'path';
 import { performance } from 'perf_hooks';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
 import { spawn } from 'child_process';
-import { cacheDir } from '../utils/cache-directory';
+import { cacheDir, workspaceDataDirectory } from '../utils/cache-directory';
 import { Task } from '../config/task-graph';
 import { machineId } from 'node-machine-id';
+import { NxCache } from '../native';
+import { getDbConnection } from '../utils/db-connection';
 
 export type CachedResult = {
   terminalOutput: string;
@@ -85,7 +87,10 @@ export class Cache {
     outputs: string[],
     code: number
   ) {
-    return this.tryAndRetry(async () => {
+    return tryAndRetry(async () => {
+      /**
+       * This is the directory with the cached artifacts
+       */
       const td = join(this.cachePath, task.hash);
       const tdCommit = join(this.cachePath, `${task.hash}.commit`);
 
@@ -135,7 +140,7 @@ export class Cache {
     cachedResult: CachedResult,
     outputs: string[]
   ) {
-    return this.tryAndRetry(async () => {
+    return tryAndRetry(async () => {
       const expandedOutputs = await this.expandOutputsInCache(
         outputs,
         cachedResult
@@ -273,26 +278,92 @@ export class Cache {
     mkdirSync(path, { recursive: true });
     return path;
   }
+}
 
-  private tryAndRetry<T>(fn: () => Promise<T>): Promise<T> {
-    let attempts = 0;
-    const baseTimeout = 5;
-    // Generate a random number between 2 and 4 to raise to the power of attempts
-    const baseExponent = Math.random() * 2 + 2;
-    const _try = async () => {
-      try {
-        attempts++;
-        return await fn();
-      } catch (e) {
-        // Max time is 5 * 4^3 = 20480ms
-        if (attempts === 6) {
-          // After enough attempts, throw the error
-          throw e;
-        }
-        await new Promise((res) => setTimeout(res, baseExponent ** attempts));
-        return await _try();
-      }
-    };
-    return _try();
+export class DbCache {
+  private cache = new NxCache(workspaceRoot, cacheDir, getDbConnection());
+
+  constructor(private readonly options: DefaultTasksRunnerOptions) {}
+
+  async get(task: Task): Promise<CachedResult | null> {
+    const res = this.cache.get(task.hash);
+
+    if (res) {
+      return {
+        ...res,
+        remote: false,
+      };
+    } else if (this.options.remoteCache) {
+      // didn't find it locally but we have a remote cache
+      // attempt remote cache
+      await this.options.remoteCache.retrieve(
+        task.hash,
+        this.cache.cacheDirectory
+      );
+
+      const res = this.cache.getFromCacheDirectory(task.hash);
+
+      return res
+        ? {
+            ...res,
+            remote: true,
+          }
+        : null;
+    } else {
+      return null;
+    }
   }
+
+  async put(
+    task: Task,
+    terminalOutput: string | null,
+    outputs: string[],
+    code: number
+  ) {
+    return tryAndRetry(async () => {
+      this.cache.put(task.hash, terminalOutput, outputs, code);
+
+      if (this.options.remoteCache) {
+        await this.options.remoteCache.store(
+          task.hash,
+          this.cache.cacheDirectory
+        );
+      }
+    });
+  }
+
+  copyFilesFromCache(_: string, cachedResult: CachedResult, outputs: string[]) {
+    return tryAndRetry(async () =>
+      this.cache.copyFilesFromCache(cachedResult, outputs)
+    );
+  }
+
+  removeOldCacheRecords() {
+    return this.cache.removeOldCacheRecords();
+  }
+
+  temporaryOutputPath(task: Task) {
+    return this.cache.getTaskOutputsPath(task.hash);
+  }
+}
+
+function tryAndRetry<T>(fn: () => Promise<T>): Promise<T> {
+  let attempts = 0;
+  // Generate a random number between 2 and 4 to raise to the power of attempts
+  const baseExponent = Math.random() * 2 + 2;
+  const _try = async () => {
+    try {
+      attempts++;
+      return await fn();
+    } catch (e) {
+      // Max time is 5 * 4^3 = 20480ms
+      if (attempts === 6) {
+        // After enough attempts, throw the error
+        throw e;
+      }
+      await new Promise((res) => setTimeout(res, baseExponent ** attempts));
+      return await _try();
+    }
+  };
+  return _try();
 }

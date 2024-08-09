@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use tracing::trace;
 
 use crate::native::glob::{build_glob_set, contains_glob_pattern};
@@ -6,10 +6,17 @@ use crate::native::utils::Normalize;
 use crate::native::walker::nx_walker_sync;
 
 #[napi]
+pub fn expand_outputs(directory: String, entries: Vec<String>) -> anyhow::Result<Vec<String>> {
+    _expand_outputs(directory, entries)
+}
+
 /// Expands the given entries into a list of existing directories and files.
 /// This is used for copying outputs to and from the cache
-pub fn expand_outputs(directory: String, entries: Vec<String>) -> anyhow::Result<Vec<String>> {
-    let directory: PathBuf = directory.into();
+pub fn _expand_outputs<P>(directory: P, entries: Vec<String>) -> anyhow::Result<Vec<String>>
+where
+    P: AsRef<Path>,
+{
+    let directory: PathBuf = directory.as_ref().into();
 
     let has_glob_pattern = entries.iter().any(|entry| contains_glob_pattern(entry));
 

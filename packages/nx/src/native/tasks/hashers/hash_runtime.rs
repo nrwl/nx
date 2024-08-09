@@ -48,7 +48,7 @@ pub fn hash_runtime(
 }
 
 #[cfg(target_os = "windows")]
-fn create_command_builder() -> Command {
+pub fn create_command_builder() -> Command {
     let comspec = std::env::var("COMSPEC");
     let shell = comspec
         .as_ref()
@@ -61,7 +61,7 @@ fn create_command_builder() -> Command {
 }
 
 #[cfg(not(target_os = "windows"))]
-fn create_command_builder() -> Command {
+pub fn create_command_builder() -> Command {
     let mut command = Command::new("sh");
     command.arg("-c");
     command

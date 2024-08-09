@@ -15,3 +15,5 @@ pub mod workspace;
 pub mod pseudo_terminal;
 #[cfg(not(target_arch = "wasm32"))]
 pub mod watch;
+mod db;
+mod machine_id;

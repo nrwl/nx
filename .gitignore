@@ -22,6 +22,7 @@ jest.debug.config.js
 /graph/client/src/assets/generated-source-maps
 /nx-dev/nx-dev/public/documentation
 /nx-dev/nx-dev/public/images/open-graph
+**/tests/temp-db
 
 # Issues scraper creates these files, stored by github's cache
 /scripts/issues-scraper/cached
@@ -58,3 +59,4 @@ out
 .rustup/
 target
 *.wasm
+/wasi-sdk*

@@ -71,11 +71,13 @@ import { handleGetFilesInDirectory } from './handle-get-files-in-directory';
 import { HASH_GLOB, isHandleHashGlobMessage } from '../message-types/hash-glob';
 import { handleHashGlob } from './handle-hash-glob';
 import {
-  isHandleGetTaskHistoryForHashesMessage,
+  isHandleGetFlakyTasksMessage,
   isHandleWriteTaskRunsToHistoryMessage,
 } from '../message-types/task-history';
-import { handleGetTaskHistoryForHashes } from './handle-get-task-history';
-import { handleWriteTaskRunsToHistory } from './handle-write-task-runs-to-history';
+import {
+  handleRecordTaskRuns,
+  handleGetFlakyTasks,
+} from './handle-task-history';
 
 let performanceObserver: PerformanceObserver | undefined;
 let workspaceWatcherError: Error | undefined;
@@ -208,13 +210,13 @@ async function handleMessage(socket, data: string) {
     await handleResult(socket, HASH_GLOB, () =>
       handleHashGlob(payload.globs, payload.exclude)
     );
-  } else if (isHandleGetTaskHistoryForHashesMessage(payload)) {
+  } else if (isHandleGetFlakyTasksMessage(payload)) {
     await handleResult(socket, 'GET_TASK_HISTORY_FOR_HASHES', () =>
-      handleGetTaskHistoryForHashes(payload.hashes)
+      handleGetFlakyTasks(payload.hashes)
     );
   } else if (isHandleWriteTaskRunsToHistoryMessage(payload)) {
     await handleResult(socket, 'WRITE_TASK_RUNS_TO_HISTORY', () =>
-      handleWriteTaskRunsToHistory(payload.taskRuns)
+      handleRecordTaskRuns(payload.taskRuns)
     );
   } else {
     await respondWithErrorAndExit(
