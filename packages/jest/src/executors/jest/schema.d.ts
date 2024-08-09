@@ -5,6 +5,10 @@ export interface JestExecutorOptions {
   logHeapUsage?: boolean;
   detectLeaks?: boolean;
   jestConfig: string;
+  /**
+   * A single positional argument is the equivalent of setting --testFile
+   */
+  _?: string[];
   testFile?: string;
   /**
    * @deprecated set in the jest config file instead

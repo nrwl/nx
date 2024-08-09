@@ -295,6 +295,22 @@ describe('Jest Executor', () => {
       );
     });
 
+    it('should support setting a positional argument', async () => {
+      await jestExecutor(
+        {
+          jestConfig: './jest.config.ts',
+          _: ['jest.impl.spec.ts'],
+        },
+        mockContext
+      );
+      expect(runCLI).toHaveBeenCalledWith(
+        expect.objectContaining({
+          _: ['jest.impl.spec.ts'],
+        }),
+        ['/root/jest.config.ts']
+      );
+    });
+
     describe('when the jest config file has been modified', () => {
       beforeAll(() => {
         jest.doMock(

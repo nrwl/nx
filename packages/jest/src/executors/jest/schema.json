@@ -51,6 +51,13 @@
       "x-completion-type": "file",
       "x-completion-glob": "jest.config@(.js|.ts)"
     },
+    "_": {
+      "type": "array",
+      "description": "The name of the file to test as a single positional argument. Equivalent to `--testFile`.",
+      "items": {
+        "type": "string"
+      }
+    },
     "testFile": {
       "description": "The name of the file to test.",
       "type": "string"
