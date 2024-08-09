@@ -14,8 +14,10 @@ export default async function* storybookExecutor(
   success: boolean;
   info?: { port: number; baseUrl?: string };
 }> {
-  const storybook7 = storybookMajorVersion() >= 7;
-  if (!storybook7) {
+  const sbVersion = storybookMajorVersion();
+  const sbLessThan7 = sbVersion < 7 && sbVersion > 0;
+
+  if (sbLessThan7) {
     throw pleaseUpgrade();
   }
   storybookConfigExistsCheck(options.configDir, context.projectName);
