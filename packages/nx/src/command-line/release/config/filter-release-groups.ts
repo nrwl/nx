@@ -4,12 +4,9 @@ import { output } from '../../../utils/output';
 import { IMPLICIT_DEFAULT_RELEASE_GROUP, NxReleaseConfig } from './config';
 import { GroupVersionPlan, ProjectsVersionPlan } from './version-plans';
 
-export type ReleaseGroupWithName = Omit<
-  NxReleaseConfig['groups'][string],
-  'versionPlans'
-> & {
+export type ReleaseGroupWithName = NxReleaseConfig['groups'][string] & {
   name: string;
-  versionPlans: (ProjectsVersionPlan | GroupVersionPlan)[] | false;
+  resolvedVersionPlans: (ProjectsVersionPlan | GroupVersionPlan)[] | false;
 };
 
 export function filterReleaseGroups(
@@ -28,7 +25,7 @@ export function filterReleaseGroups(
     return {
       ...group,
       name,
-      versionPlans: group.versionPlans ? [] : false,
+      resolvedVersionPlans: group.versionPlans ? [] : false,
     };
   });
 

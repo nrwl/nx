@@ -6,7 +6,7 @@ import { ReleaseGroupWithName } from './filter-release-groups';
 import {
   RawVersionPlan,
   readRawVersionPlans,
-  setVersionPlansOnGroups,
+  setResolvedVersionPlansOnGroups,
 } from './version-plans';
 
 expect.addSnapshotSerializer({
@@ -143,7 +143,7 @@ describe('version-plans', () => {
     });
   });
 
-  describe('setVersionPlansOnGroups', () => {
+  describe('setResolvedVersionPlansOnGroups', () => {
     describe('error cases', () => {
       describe('for default group', () => {
         describe('when bump "key" is a group name', () => {
@@ -163,14 +163,14 @@ describe('version-plans', () => {
               releaseGroup({
                 name: IMPLICIT_DEFAULT_RELEASE_GROUP,
                 projects: [],
-                versionPlans: false,
+                resolvedVersionPlans: false,
                 projectsRelationship: 'fixed',
               }),
             ];
             const allProjectNamesInWorkspace: string[] = ['pkg1'];
 
             expect(() =>
-              setVersionPlansOnGroups(
+              setResolvedVersionPlansOnGroups(
                 rawVersionPlans,
                 releaseGroups,
                 allProjectNamesInWorkspace
@@ -194,14 +194,14 @@ describe('version-plans', () => {
               releaseGroup({
                 name: IMPLICIT_DEFAULT_RELEASE_GROUP,
                 projects: ['pkg1'],
-                versionPlans: [],
+                resolvedVersionPlans: [],
                 projectsRelationship: 'independent',
               }),
             ];
             const allProjectNamesInWorkspace: string[] = ['pkg1'];
 
             expect(() =>
-              setVersionPlansOnGroups(
+              setResolvedVersionPlansOnGroups(
                 rawVersionPlans,
                 releaseGroups,
                 allProjectNamesInWorkspace
@@ -225,14 +225,14 @@ describe('version-plans', () => {
               releaseGroup({
                 name: IMPLICIT_DEFAULT_RELEASE_GROUP,
                 projects: ['pkg1'],
-                versionPlans: [],
+                resolvedVersionPlans: [],
                 projectsRelationship: 'fixed',
               }),
             ];
             const allProjectNamesInWorkspace: string[] = ['pkg1'];
 
             expect(() =>
-              setVersionPlansOnGroups(
+              setResolvedVersionPlansOnGroups(
                 rawVersionPlans,
                 releaseGroups,
                 allProjectNamesInWorkspace
@@ -257,14 +257,14 @@ describe('version-plans', () => {
               releaseGroup({
                 name: IMPLICIT_DEFAULT_RELEASE_GROUP,
                 projects: ['pkg1'],
-                versionPlans: [],
+                resolvedVersionPlans: [],
                 projectsRelationship: 'fixed',
               }),
             ];
             const allProjectNamesInWorkspace: string[] = ['pkg1'];
 
             expect(() =>
-              setVersionPlansOnGroups(
+              setResolvedVersionPlansOnGroups(
                 rawVersionPlans,
                 releaseGroups,
                 allProjectNamesInWorkspace
@@ -290,14 +290,14 @@ describe('version-plans', () => {
               releaseGroup({
                 name: IMPLICIT_DEFAULT_RELEASE_GROUP,
                 projects: ['pkg1'],
-                versionPlans: [],
+                resolvedVersionPlans: [],
                 projectsRelationship: 'fixed',
               }),
             ];
             const allProjectNamesInWorkspace: string[] = [];
 
             expect(() =>
-              setVersionPlansOnGroups(
+              setResolvedVersionPlansOnGroups(
                 rawVersionPlans,
                 releaseGroups,
                 allProjectNamesInWorkspace
@@ -321,14 +321,14 @@ describe('version-plans', () => {
               releaseGroup({
                 name: IMPLICIT_DEFAULT_RELEASE_GROUP,
                 projects: ['pkg1'],
-                versionPlans: false,
+                resolvedVersionPlans: false,
                 projectsRelationship: 'fixed',
               }),
             ];
             const allProjectNamesInWorkspace: string[] = ['pkg1'];
 
             expect(() =>
-              setVersionPlansOnGroups(
+              setResolvedVersionPlansOnGroups(
                 rawVersionPlans,
                 releaseGroups,
                 allProjectNamesInWorkspace
@@ -352,14 +352,14 @@ describe('version-plans', () => {
               releaseGroup({
                 name: IMPLICIT_DEFAULT_RELEASE_GROUP,
                 projects: ['pkg1'],
-                versionPlans: [],
+                resolvedVersionPlans: [],
                 projectsRelationship: 'fixed',
               }),
             ];
             const allProjectNamesInWorkspace: string[] = ['pkg1', 'pkg2'];
 
             expect(() =>
-              setVersionPlansOnGroups(
+              setResolvedVersionPlansOnGroups(
                 rawVersionPlans,
                 releaseGroups,
                 allProjectNamesInWorkspace
@@ -383,14 +383,14 @@ describe('version-plans', () => {
               releaseGroup({
                 name: IMPLICIT_DEFAULT_RELEASE_GROUP,
                 projects: ['pkg1'],
-                versionPlans: [],
+                resolvedVersionPlans: [],
                 projectsRelationship: 'fixed',
               }),
             ];
             const allProjectNamesInWorkspace: string[] = ['pkg1'];
 
             expect(() =>
-              setVersionPlansOnGroups(
+              setResolvedVersionPlansOnGroups(
                 rawVersionPlans,
                 releaseGroups,
                 allProjectNamesInWorkspace
@@ -415,14 +415,14 @@ describe('version-plans', () => {
               releaseGroup({
                 name: IMPLICIT_DEFAULT_RELEASE_GROUP,
                 projects: ['pkg1', 'pkg2'],
-                versionPlans: [],
+                resolvedVersionPlans: [],
                 projectsRelationship: 'fixed',
               }),
             ];
             const allProjectNamesInWorkspace: string[] = ['pkg1', 'pkg2'];
 
             expect(() =>
-              setVersionPlansOnGroups(
+              setResolvedVersionPlansOnGroups(
                 rawVersionPlans,
                 releaseGroups,
                 allProjectNamesInWorkspace
@@ -450,14 +450,14 @@ describe('version-plans', () => {
               releaseGroup({
                 name: 'group1',
                 projects: ['pkg1'],
-                versionPlans: false,
+                resolvedVersionPlans: false,
                 projectsRelationship: 'fixed',
               }),
             ];
             const allProjectNamesInWorkspace: string[] = ['pkg1'];
 
             expect(() =>
-              setVersionPlansOnGroups(
+              setResolvedVersionPlansOnGroups(
                 rawVersionPlans,
                 releaseGroups,
                 allProjectNamesInWorkspace
@@ -481,14 +481,14 @@ describe('version-plans', () => {
               releaseGroup({
                 name: 'group1',
                 projects: ['pkg1'],
-                versionPlans: [],
+                resolvedVersionPlans: [],
                 projectsRelationship: 'independent',
               }),
             ];
             const allProjectNamesInWorkspace: string[] = ['pkg1'];
 
             expect(() =>
-              setVersionPlansOnGroups(
+              setResolvedVersionPlansOnGroups(
                 rawVersionPlans,
                 releaseGroups,
                 allProjectNamesInWorkspace
@@ -512,14 +512,14 @@ describe('version-plans', () => {
               releaseGroup({
                 name: 'group1',
                 projects: ['pkg1'],
-                versionPlans: [],
+                resolvedVersionPlans: [],
                 projectsRelationship: 'fixed',
               }),
             ];
             const allProjectNamesInWorkspace: string[] = ['pkg1'];
 
             expect(() =>
-              setVersionPlansOnGroups(
+              setResolvedVersionPlansOnGroups(
                 rawVersionPlans,
                 releaseGroups,
                 allProjectNamesInWorkspace
@@ -544,14 +544,14 @@ describe('version-plans', () => {
               releaseGroup({
                 name: 'group1',
                 projects: ['pkg1'],
-                versionPlans: [],
+                resolvedVersionPlans: [],
                 projectsRelationship: 'fixed',
               }),
             ];
             const allProjectNamesInWorkspace: string[] = ['pkg1'];
 
             expect(() =>
-              setVersionPlansOnGroups(
+              setResolvedVersionPlansOnGroups(
                 rawVersionPlans,
                 releaseGroups,
                 allProjectNamesInWorkspace
@@ -577,20 +577,20 @@ describe('version-plans', () => {
               releaseGroup({
                 name: 'group1',
                 projects: ['pkg1'],
-                versionPlans: [],
+                resolvedVersionPlans: [],
                 projectsRelationship: 'fixed',
               }),
               releaseGroup({
                 name: 'group2',
                 projects: ['pkg2'],
-                versionPlans: false,
+                resolvedVersionPlans: false,
                 projectsRelationship: 'fixed',
               }),
             ];
             const allProjectNamesInWorkspace: string[] = ['pkg1', 'pkg2'];
 
             expect(() =>
-              setVersionPlansOnGroups(
+              setResolvedVersionPlansOnGroups(
                 rawVersionPlans,
                 releaseGroups,
                 allProjectNamesInWorkspace
@@ -614,14 +614,14 @@ describe('version-plans', () => {
               releaseGroup({
                 name: 'group1',
                 projects: ['pkg1'],
-                versionPlans: [],
+                resolvedVersionPlans: [],
                 projectsRelationship: 'fixed',
               }),
             ];
             const allProjectNamesInWorkspace: string[] = [];
 
             expect(() =>
-              setVersionPlansOnGroups(
+              setResolvedVersionPlansOnGroups(
                 rawVersionPlans,
                 releaseGroups,
                 allProjectNamesInWorkspace
@@ -645,13 +645,13 @@ describe('version-plans', () => {
               releaseGroup({
                 name: 'group1',
                 projects: ['pkg1'],
-                versionPlans: [],
+                resolvedVersionPlans: [],
                 projectsRelationship: 'fixed',
               }),
               releaseGroup({
                 name: 'group2',
                 projects: ['pkg2'],
-                versionPlans: [],
+                resolvedVersionPlans: [],
                 projectsRelationship: 'fixed',
               }),
             ];
@@ -662,7 +662,7 @@ describe('version-plans', () => {
             ];
 
             expect(() =>
-              setVersionPlansOnGroups(
+              setResolvedVersionPlansOnGroups(
                 rawVersionPlans,
                 releaseGroups,
                 allProjectNamesInWorkspace
@@ -686,14 +686,14 @@ describe('version-plans', () => {
               releaseGroup({
                 name: 'group1',
                 projects: ['pkg1'],
-                versionPlans: [],
+                resolvedVersionPlans: [],
                 projectsRelationship: 'fixed',
               }),
             ];
             const allProjectNamesInWorkspace: string[] = ['pkg1'];
 
             expect(() =>
-              setVersionPlansOnGroups(
+              setResolvedVersionPlansOnGroups(
                 rawVersionPlans,
                 releaseGroups,
                 allProjectNamesInWorkspace
@@ -718,14 +718,14 @@ describe('version-plans', () => {
               releaseGroup({
                 name: 'group1',
                 projects: ['pkg1', 'pkg2'],
-                versionPlans: [],
+                resolvedVersionPlans: [],
                 projectsRelationship: 'fixed',
               }),
             ];
             const allProjectNamesInWorkspace: string[] = ['pkg1', 'pkg2'];
 
             expect(() =>
-              setVersionPlansOnGroups(
+              setResolvedVersionPlansOnGroups(
                 rawVersionPlans,
                 releaseGroups,
                 allProjectNamesInWorkspace
@@ -767,7 +767,7 @@ describe('version-plans', () => {
             releaseGroup({
               name: IMPLICIT_DEFAULT_RELEASE_GROUP,
               projects: ['pkg1', 'pkg2', 'pkg3'],
-              versionPlans: [],
+              resolvedVersionPlans: [],
               projectsRelationship: 'fixed',
             }),
           ];
@@ -775,7 +775,7 @@ describe('version-plans', () => {
 
           expect(
             peelResultFromGroups(
-              setVersionPlansOnGroups(
+              setResolvedVersionPlansOnGroups(
                 rawVersionPlans,
                 releaseGroups,
                 allProjectNamesInWorkspace
@@ -786,7 +786,7 @@ describe('version-plans', () => {
             [
               {
                 name: __default__,
-                versionPlans: [
+                resolvedVersionPlans: [
                   {
                     absolutePath: <workspace-root>/version-plans/plan1.md,
                     createdOnMs: 20,
@@ -853,7 +853,7 @@ describe('version-plans', () => {
             releaseGroup({
               name: IMPLICIT_DEFAULT_RELEASE_GROUP,
               projects: ['pkg1', 'pkg2', 'pkg3'],
-              versionPlans: [],
+              resolvedVersionPlans: [],
               projectsRelationship: 'independent',
             }),
           ];
@@ -861,7 +861,7 @@ describe('version-plans', () => {
 
           expect(
             peelResultFromGroups(
-              setVersionPlansOnGroups(
+              setResolvedVersionPlansOnGroups(
                 rawVersionPlans,
                 releaseGroups,
                 allProjectNamesInWorkspace
@@ -871,7 +871,7 @@ describe('version-plans', () => {
             [
               {
                 name: __default__,
-                versionPlans: [
+                resolvedVersionPlans: [
                   {
                     absolutePath: <workspace-root>/version-plans/plan3.md,
                     createdOnMs: 23,
@@ -951,31 +951,31 @@ describe('version-plans', () => {
             releaseGroup({
               name: 'group1',
               projects: ['pkg1'],
-              versionPlans: [],
+              resolvedVersionPlans: [],
               projectsRelationship: 'fixed',
             }),
             releaseGroup({
               name: 'group2',
               projects: ['pkg2'],
-              versionPlans: [],
+              resolvedVersionPlans: [],
               projectsRelationship: 'fixed',
             }),
             releaseGroup({
               name: 'group3',
               projects: ['pkg3'],
-              versionPlans: [],
+              resolvedVersionPlans: [],
               projectsRelationship: 'fixed',
             }),
             releaseGroup({
               name: 'group4',
               projects: ['pkg4', 'pkg5'],
-              versionPlans: [],
+              resolvedVersionPlans: [],
               projectsRelationship: 'independent',
             }),
             releaseGroup({
               name: 'group5',
               projects: ['pkg6'],
-              versionPlans: false,
+              resolvedVersionPlans: false,
               projectsRelationship: 'fixed',
             }),
           ];
@@ -989,7 +989,7 @@ describe('version-plans', () => {
 
           expect(
             peelResultFromGroups(
-              setVersionPlansOnGroups(
+              setResolvedVersionPlansOnGroups(
                 rawVersionPlans,
                 releaseGroups,
                 allProjectNamesInWorkspace
@@ -999,7 +999,7 @@ describe('version-plans', () => {
             [
               {
                 name: group1,
-                versionPlans: [
+                resolvedVersionPlans: [
                   {
                     absolutePath: <workspace-root>/version-plans/plan3.md,
                     createdOnMs: 26,
@@ -1031,7 +1031,7 @@ describe('version-plans', () => {
               },
               {
                 name: group2,
-                versionPlans: [
+                resolvedVersionPlans: [
                   {
                     absolutePath: <workspace-root>/version-plans/plan3.md,
                     createdOnMs: 26,
@@ -1055,7 +1055,7 @@ describe('version-plans', () => {
               },
               {
                 name: group3,
-                versionPlans: [
+                resolvedVersionPlans: [
                   {
                     absolutePath: <workspace-root>/version-plans/plan1.md,
                     createdOnMs: 25,
@@ -1079,7 +1079,7 @@ describe('version-plans', () => {
               },
               {
                 name: group4,
-                versionPlans: [
+                resolvedVersionPlans: [
                   {
                     absolutePath: <workspace-root>/version-plans/plan3.md,
                     createdOnMs: 26,
@@ -1105,7 +1105,7 @@ describe('version-plans', () => {
               },
               {
                 name: group5,
-                versionPlans: false,
+                resolvedVersionPlans: false,
               },
             ]
           `);
@@ -1145,10 +1145,10 @@ function releaseGroup(
 
 function peelResultFromGroups(releaseGroups: ReleaseGroupWithName[]): {
   name: string;
-  versionPlans: ReleaseGroupWithName['versionPlans'];
+  resolvedVersionPlans: ReleaseGroupWithName['resolvedVersionPlans'];
 }[] {
   return releaseGroups.map((g) => ({
     name: g.name,
-    versionPlans: g.versionPlans,
+    resolvedVersionPlans: g.resolvedVersionPlans,
   }));
 }

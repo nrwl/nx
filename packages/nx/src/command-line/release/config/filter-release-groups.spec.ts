@@ -160,6 +160,7 @@ describe('filterReleaseGroups()', () => {
             ],
             "projectsRelationship": "fixed",
             "releaseTagPattern": "",
+            "resolvedVersionPlans": false,
             "version": {
               "conventionalCommits": false,
               "generator": "",
@@ -175,6 +176,7 @@ describe('filterReleaseGroups()', () => {
             ],
             "projectsRelationship": "fixed",
             "releaseTagPattern": "",
+            "resolvedVersionPlans": false,
             "version": {
               "conventionalCommits": false,
               "generator": "",
@@ -194,6 +196,7 @@ describe('filterReleaseGroups()', () => {
             ],
             "projectsRelationship": "fixed",
             "releaseTagPattern": "",
+            "resolvedVersionPlans": false,
             "version": {
               "conventionalCommits": false,
               "generator": "",
@@ -211,6 +214,7 @@ describe('filterReleaseGroups()', () => {
             ],
             "projectsRelationship": "fixed",
             "releaseTagPattern": "",
+            "resolvedVersionPlans": false,
             "version": {
               "conventionalCommits": false,
               "generator": "",
@@ -331,6 +335,7 @@ describe('filterReleaseGroups()', () => {
             ],
             "projectsRelationship": "independent",
             "releaseTagPattern": "",
+            "resolvedVersionPlans": false,
             "version": {
               "conventionalCommits": false,
               "generator": "",
@@ -350,6 +355,7 @@ describe('filterReleaseGroups()', () => {
             ],
             "projectsRelationship": "independent",
             "releaseTagPattern": "",
+            "resolvedVersionPlans": false,
             "version": {
               "conventionalCommits": false,
               "generator": "",
@@ -419,6 +425,7 @@ describe('filterReleaseGroups()', () => {
             ],
             "projectsRelationship": "fixed",
             "releaseTagPattern": "",
+            "resolvedVersionPlans": false,
             "version": {
               "conventionalCommits": false,
               "generator": "",
@@ -438,6 +445,7 @@ describe('filterReleaseGroups()', () => {
             ],
             "projectsRelationship": "fixed",
             "releaseTagPattern": "",
+            "resolvedVersionPlans": false,
             "version": {
               "conventionalCommits": false,
               "generator": "",
