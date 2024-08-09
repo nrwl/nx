@@ -61,8 +61,8 @@ export async function loadRemoteNxPlugin(
 
   const cleanupFunction = () => {
     worker.off('exit', exitHandler);
+    shutdownPluginWorker(socket);
     socket.destroy();
-    shutdownPluginWorker(worker);
     nxPluginWorkerCache.delete(cacheKey);
   };
 
@@ -108,13 +108,8 @@ export async function loadRemoteNxPlugin(
   return [pluginPromise, cleanupFunction];
 }
 
-function shutdownPluginWorker(worker: ChildProcess) {
-  // Clears the plugin cache so no refs to the workers are held
-  nxPluginCache.clear();
-
-  // logger.verbose(`[plugin-pool] starting worker shutdown`);
-
-  worker.kill('SIGINT');
+function shutdownPluginWorker(socket: Socket) {
+  sendMessageOverSocket(socket, { type: 'shutdown', payload: {} });
 }
 
 /**
@@ -295,6 +290,7 @@ function createWorkerExitHandler(
 
 let cleanedUp = false;
 const exitHandler = () => {
+  nxPluginCache.clear();
   for (const fn of cleanupFunctions) {
     fn();
   }

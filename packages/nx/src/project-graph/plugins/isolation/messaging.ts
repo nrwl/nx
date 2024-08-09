@@ -135,8 +135,14 @@ export interface PluginWorkerProcessProjectGraphResult {
       };
 }
 
+export interface PluginWorkerShutdownMessage {
+  type: 'shutdown';
+  payload: {};
+}
+
 export type PluginWorkerMessage =
   | PluginWorkerLoadMessage
+  | PluginWorkerShutdownMessage
   | PluginWorkerCreateNodesMessage
   | PluginCreateDependenciesMessage
   | PluginWorkerProcessProjectGraphMessage
@@ -162,6 +168,7 @@ export function isPluginWorkerMessage(
       'createDependencies',
       'processProjectGraph',
       'createMetadata',
+      'shutdown',
     ].includes(message.type)
   );
 }

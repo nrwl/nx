@@ -20,7 +20,7 @@ import { hasNxJson, NxJsonConfiguration } from '../../config/nx-json';
 import { readNxJson } from '../../config/configuration';
 import { PromisedBasedQueue } from '../../utils/promised-based-queue';
 import { DaemonSocketMessenger, Message } from './daemon-socket-messenger';
-import { safelyCleanUpExistingProcess } from '../cache';
+import { waitForDaemonToExitAndCleanupProcessJson } from '../cache';
 import { Hash } from '../../hasher/task-hasher';
 import { Task, TaskGraph } from '../../config/task-graph';
 import { ConfigurationSourceMaps } from '../../project-graph/utils/project-configuration-utils';
@@ -48,6 +48,7 @@ import {
   HandleGetTaskHistoryForHashesMessage,
   HandleWriteTaskRunsToHistoryMessage,
 } from '../message-types/task-history';
+import { FORCE_SHUTDOWN } from '../message-types/force-shutdown';
 
 const DAEMON_ENV_SETTINGS = {
   NX_PROJECT_GLOB_CACHE: 'false',
@@ -439,7 +440,10 @@ export class DaemonClient {
     } else if (this._daemonStatus == DaemonStatus.CONNECTING) {
       await this._waitForDaemonReady;
     }
-
+    // An open promise isn't enough to keep the event loop
+    // alive, so we set a timeout here and clear it when we hear
+    // back
+    const keepAlive = setTimeout(() => {}, 10 * 60 * 1000);
     return new Promise((resolve, reject) => {
       performance.mark('sendMessageToDaemon-start');
 
@@ -448,6 +452,8 @@ export class DaemonClient {
       this.currentReject = reject;
 
       this.socketMessenger.sendMessage(message);
+    }).finally(() => {
+      clearTimeout(keepAlive);
     });
   }
 
@@ -541,7 +547,8 @@ export class DaemonClient {
 
   async stop(): Promise<void> {
     try {
-      await safelyCleanUpExistingProcess();
+      await this.sendMessageToDaemon({ type: FORCE_SHUTDOWN });
+      await waitForDaemonToExitAndCleanupProcessJson();
     } catch (err) {
       output.error({
         title:
