@@ -87,11 +87,12 @@ jobs:
       NX_CI_EXECUTION_ENV: 'linux'
       NX_CLOUD_DTE_V2: 'true'
       NX_CLOUD_DTE_SUMMARY: 'true'
+      NX_VERBOSE_LOGGING: 'true'
     steps:
       - checkout
       - nx/set-shas:
           main-branch-name: 'master'
-      - run: npx nx-cloud@latest start-ci-run --distribute-on=".nx/workflows/dynamic-changesets.yaml" --stop-agents-after="e2e"
+      - run: npx nx-cloud@latest start-ci-run --distribute-on="auto linux-medium" --stop-agents-after="e2e"
       - run:
           command: |
             sudo apt-get update
