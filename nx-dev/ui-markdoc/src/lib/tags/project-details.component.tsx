@@ -1,6 +1,6 @@
 'use client';
 import { JSX, ReactElement, useEffect, useState } from 'react';
-import { ProjectDetails as ProjectDetailsUi } from '@nx/graph/ui-project-details';
+import { ProjectDetails as ProjectDetailsUi } from '@nx/graph-internal/ui-project-details';
 import { ExpandedTargetsProvider } from '@nx/graph/shared';
 
 export function Loading() {

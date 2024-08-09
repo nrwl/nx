@@ -37,15 +37,14 @@
       "@nx/express": ["packages/express"],
       "@nx/gradle": ["packages/gradle/src/index.ts"],
       "@nx/gradle/*": ["packages/gradle/*"],
-      "@nx/graph/project-details": ["graph/project-details/src/index.ts"],
-      "@nx/graph/shared": ["graph/shared/src/index.ts"],
-      "@nx/graph/ui-code-block": ["graph/ui-code-block/src/index.ts"],
-      "@nx/graph/ui-components": ["graph/ui-components/src/index.ts"],
-      "@nx/graph/ui-graph": ["graph/ui-graph/src/index.ts"],
-      "@nx/graph/ui-icons": ["graph/ui-icons/src/index.ts"],
-      "@nx/graph/ui-project-details": ["graph/ui-project-details/src/index.ts"],
-      "@nx/graph/ui-theme": ["graph/ui-theme/src/index.ts"],
-      "@nx/graph/ui-tooltips": ["graph/ui-tooltips/src/index.ts"],
+      "@nx/graph-internal/project-details": [
+        "graph/project-details/src/index.ts"
+      ],
+      "@nx/graph-internal/ui-code-block": ["graph/ui-code-block/src/index.ts"],
+      "@nx/graph-internal/ui-project-details": [
+        "graph/ui-project-details/src/index.ts"
+      ],
+      "@nx/graph-internal/ui-theme": ["graph/ui-theme/src/index.ts"],
       "@nx/jest": ["packages/jest"],
       "@nx/jest/*": ["packages/jest/*"],
       "@nx/js": ["packages/js/src/index.ts"],

@@ -3,7 +3,7 @@ import {
   getEnvironmentConfig,
   getProjectGraphDataService,
 } from '@nx/graph/shared';
-import { selectValueByThemeStatic } from '@nx/graph/ui-theme';
+import { selectValueByThemeStatic } from '@nx/graph-internal/ui-theme';
 
 let graphService: GraphService;
 

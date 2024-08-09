@@ -4,6 +4,8 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { TooltipButton, TooltipLinkButton } from '@nx/graph/ui-tooltips';
 import { FlagIcon, MapPinIcon } from '@heroicons/react/24/solid';
 import { useRouteConstructor } from '@nx/graph/shared';
+import { useProjectGraphSelector } from '../feature-projects/hooks/use-project-graph-selector';
+import { compositeGraphEnabledSelector } from '../feature-projects/machines/selectors';
 
 export function ProjectNodeActions({ id }: ProjectNodeToolTipProps) {
   const projectGraphService = getProjectGraphService();
@@ -12,11 +14,12 @@ export function ProjectNodeActions({ id }: ProjectNodeToolTipProps) {
   const routeConstructor = useRouteConstructor();
   const navigate = useNavigate();
   const encodedId = encodeURIComponent(id);
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [, setSearchParams] = useSearchParams();
 
   function onProjectDetails() {
     setSearchParams({ projectDetails: id });
   }
+
   function onExclude() {
     projectGraphService.send({
       type: 'deselectProject',
@@ -45,6 +48,7 @@ export function ProjectNodeActions({ id }: ProjectNodeToolTipProps) {
         Focus
       </TooltipLinkButton>
       <TooltipButton onClick={onExclude}>Exclude</TooltipButton>
+
       {!start ? (
         <TooltipButton
           className="flex flex-row items-center"
