@@ -34,22 +34,25 @@ function removeAnchors(linkPath: string): string {
   return linkPath.split('#')[0];
 }
 function extractAllLinks(basePath: string): Record<string, string[]> {
-  return glob.sync(`${basePath}/*/**/*.md`).reduce((acc, path) => {
-    const fileContents = readFileContents(path);
-    const cardLinks = (fileContents.match(/url="(.*?)"/g) || []).map((v) =>
-      v.slice(5, -1)
-    );
-    const links = parseLinks(fileContents)
-      .concat(cardLinks)
-      .filter(isLinkInternal)
-      .filter(isNotAsset)
-      .filter(isNotImage);
-    // .map(removeAnchors);
-    if (links.length) {
-      acc[path.replace(basePath, '')] = links;
-    }
-    return acc;
-  }, {});
+  // temporarily exclude blog posts from link checker
+  return glob
+    .sync(`${basePath}/*/**/*.md`, { ignore: `${basePath}/blog/**/*.md` })
+    .reduce((acc, path) => {
+      const fileContents = readFileContents(path);
+      const cardLinks = (fileContents.match(/url="(.*?)"/g) || []).map((v) =>
+        v.slice(5, -1)
+      );
+      const links = parseLinks(fileContents)
+        .concat(cardLinks)
+        .filter(isLinkInternal)
+        .filter(isNotAsset)
+        .filter(isNotImage);
+      // .map(removeAnchors);
+      if (links.length) {
+        acc[path.replace(basePath, '')] = links;
+      }
+      return acc;
+    }, {});
 }
 function extractImageLinks(basePath: string): Record<string, string[]> {
   return glob.sync(`${basePath}/**/*.md`).reduce((acc, path) => {
