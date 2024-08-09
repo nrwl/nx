@@ -4,6 +4,7 @@ import {
   generateFiles,
   joinPathFragments,
   readProjectConfiguration,
+  logger,
 } from '@nx/devkit';
 import { getComponentProps } from '../utils/storybook-ast/storybook-inputs';
 import { getArgsDefaultValue } from './lib/get-args-default-value';
@@ -14,6 +15,9 @@ export async function componentCypressSpecGenerator(
   tree: Tree,
   options: ComponentCypressSpecGeneratorOptions
 ): Promise<void> {
+  logger.warn(
+    `This will be removed in Nx 21. Prefer Storybook Interaction Tests.`
+  );
   const {
     cypressProject,
     projectName,

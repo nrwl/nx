@@ -1,6 +1,5 @@
 import 'nx/src/internal-testing-utils/mock-project-graph';
 
-import { installedCypressVersion } from '@nx/cypress/src/utils/cypress-version';
 import type { Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { componentGenerator } from '../component/component';
@@ -9,21 +8,11 @@ import { generateTestApplication } from '../utils/testing';
 import { angularStoriesGenerator } from './stories';
 import { stripIndents } from '@nx/devkit';
 
-// need to mock cypress otherwise it'll use the nx installed version from package.json
-//  which is v9 while we are testing for the new v10 version
-jest.mock('@nx/cypress/src/utils/cypress-version');
-
-// TODO(katerina): Nx 19 -> remove Cypress
-
 describe('angularStories generator: applications', () => {
   let tree: Tree;
   const appName = 'test-app';
-  let mockedInstalledCypressVersion: jest.Mock<
-    ReturnType<typeof installedCypressVersion>
-  > = installedCypressVersion as never;
 
   beforeEach(async () => {
-    mockedInstalledCypressVersion.mockReturnValue(10);
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     await generateTestApplication(tree, {
       name: appName,

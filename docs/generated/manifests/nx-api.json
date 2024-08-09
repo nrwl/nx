@@ -2929,6 +2929,15 @@
         "originalFilePath": "/packages/storybook/src/generators/migrate-7/schema.json",
         "path": "/nx-api/storybook/generators/migrate-7",
         "type": "generator"
+      },
+      "/nx-api/storybook/generators/migrate-8": {
+        "description": "Migrate to Storybook version 8.",
+        "file": "generated/packages/storybook/generators/migrate-8.json",
+        "hidden": false,
+        "name": "migrate-8",
+        "originalFilePath": "/packages/storybook/src/generators/migrate-8/schema.json",
+        "path": "/nx-api/storybook/generators/migrate-8",
+        "type": "generator"
       }
     },
     "path": "/nx-api/storybook"

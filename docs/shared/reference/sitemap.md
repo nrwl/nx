@@ -675,6 +675,7 @@
       - [cypress-project](/nx-api/storybook/generators/cypress-project)
       - [convert-to-inferred](/nx-api/storybook/generators/convert-to-inferred)
       - [migrate-7](/nx-api/storybook/generators/migrate-7)
+      - [migrate-8](/nx-api/storybook/generators/migrate-8)
   - [tao](/nx-api/tao)
   - [vite](/nx-api/vite)
     - [documents](/nx-api/vite/documents)

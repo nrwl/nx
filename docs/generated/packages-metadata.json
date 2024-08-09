@@ -2899,6 +2899,15 @@
         "originalFilePath": "/packages/storybook/src/generators/migrate-7/schema.json",
         "path": "storybook/generators/migrate-7",
         "type": "generator"
+      },
+      {
+        "description": "Migrate to Storybook version 8.",
+        "file": "generated/packages/storybook/generators/migrate-8.json",
+        "hidden": false,
+        "name": "migrate-8",
+        "originalFilePath": "/packages/storybook/src/generators/migrate-8/schema.json",
+        "path": "storybook/generators/migrate-8",
+        "type": "generator"
       }
     ],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",

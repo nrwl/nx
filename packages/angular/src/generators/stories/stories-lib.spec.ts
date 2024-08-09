@@ -1,6 +1,5 @@
 import 'nx/src/internal-testing-utils/mock-project-graph';
 
-import { installedCypressVersion } from '@nx/cypress/src/utils/cypress-version';
 import { Tree } from '@nx/devkit';
 import { writeJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
@@ -13,20 +12,8 @@ import {
 } from '../utils/testing';
 import { angularStoriesGenerator } from './stories';
 
-// need to mock cypress otherwise it'll use the nx installed version from package.json
-//  which is v9 while we are testing for the new v10 version
-jest.mock('@nx/cypress/src/utils/cypress-version');
-// TODO(katerina): Nx 19 -> remove Cypress
-
 describe('angularStories generator: libraries', () => {
   const libName = 'test-ui-lib';
-  let mockedInstalledCypressVersion: jest.Mock<
-    ReturnType<typeof installedCypressVersion>
-  > = installedCypressVersion as never;
-
-  beforeEach(() => {
-    mockedInstalledCypressVersion.mockReturnValue(10);
-  });
 
   describe('Stories for empty Angular library', () => {
     let tree: Tree;
