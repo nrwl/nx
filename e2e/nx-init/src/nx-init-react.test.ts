@@ -21,8 +21,12 @@ import {
 
 describe('nx init (for React - legacy)', () => {
   let pmc: ReturnType<typeof getPackageManagerCommand>;
+  let originalEslintUseFlatConfigVal: string | undefined;
 
   beforeAll(() => {
+    // Opt into legacy .eslintrc config format for these tests
+    originalEslintUseFlatConfigVal = process.env.ESLINT_USE_FLAT_CONFIG;
+    process.env.ESLINT_USE_FLAT_CONFIG = 'false';
     pmc = getPackageManagerCommand({
       packageManager: getSelectedPackageManager(),
     });
@@ -31,6 +35,7 @@ describe('nx init (for React - legacy)', () => {
   });
 
   afterAll(() => {
+    process.env.ESLINT_USE_FLAT_CONFIG = originalEslintUseFlatConfigVal;
     delete process.env.NX_ADD_PLUGINS;
   });
 

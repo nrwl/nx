@@ -12,8 +12,17 @@ import {
 } from '@nx/e2e/utils';
 
 describe('Rollup Plugin', () => {
-  beforeAll(() => newProject({ packages: ['@nx/rollup', '@nx/js'] }));
-  afterAll(() => cleanupProject());
+  let originalEslintUseFlatConfigVal: string | undefined;
+  beforeAll(() => {
+    // Opt into legacy .eslintrc config format for these tests
+    originalEslintUseFlatConfigVal = process.env.ESLINT_USE_FLAT_CONFIG;
+    process.env.ESLINT_USE_FLAT_CONFIG = 'false';
+    newProject({ packages: ['@nx/rollup', '@nx/js'] });
+  });
+  afterAll(() => {
+    cleanupProject();
+    process.env.ESLINT_USE_FLAT_CONFIG = originalEslintUseFlatConfigVal;
+  });
 
   it('should be able to setup project to build node programs with rollup and different compilers', async () => {
     const myPkg = uniq('my-pkg');

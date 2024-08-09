@@ -11,6 +11,16 @@ import {
 
 const TEN_MINS_MS = 600_000;
 
+let originalEslintUseFlatConfigVal: string | undefined;
+beforeAll(() => {
+  // Opt into legacy .eslintrc config format for these tests
+  originalEslintUseFlatConfigVal = process.env.ESLINT_USE_FLAT_CONFIG;
+  process.env.ESLINT_USE_FLAT_CONFIG = 'false';
+});
+afterAll(() => {
+  process.env.ESLINT_USE_FLAT_CONFIG = originalEslintUseFlatConfigVal;
+});
+
 describe('Playwright E2E Test runner', () => {
   const pmc = getPackageManagerCommand({
     packageManager: getSelectedPackageManager(),

@@ -25,7 +25,7 @@ import {
   ESLINT_CONFIG_FILENAMES,
   isFlatConfig,
 } from '../utils/config-file';
-import { resolveESLintClass } from '../utils/resolve-eslint-class';
+import { resolveESLintClassSync } from '../utils/resolve-eslint-class';
 
 const pmc = getPackageManagerCommand();
 
@@ -96,7 +96,7 @@ const internalCreateNodes = async (
   ).sort((a, b) => (a !== b && isSubDir(a, b) ? -1 : 1));
   const excludePatterns = dedupedProjectRoots.map((root) => `${root}/**/*`);
 
-  const ESLint = await resolveESLintClass(isFlatConfig(configFilePath));
+  const ESLint = resolveESLintClassSync(isFlatConfig(configFilePath));
   const eslintVersion = ESLint.version;
 
   const projects: CreateNodesResult['projects'] = {};
@@ -182,7 +182,7 @@ const internalCreateNodesV2 = async (
 ): Promise<CreateNodesResult> => {
   const configDir = dirname(configFilePath);
 
-  const ESLint = await resolveESLintClass(isFlatConfig(configFilePath));
+  const ESLint = resolveESLintClassSync(isFlatConfig(configFilePath));
   const eslintVersion = ESLint.version;
 
   const projects: CreateNodesResult['projects'] = {};

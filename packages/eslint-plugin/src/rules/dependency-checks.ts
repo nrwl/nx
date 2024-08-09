@@ -47,7 +47,6 @@ export default ESLintUtils.RuleCreator(
     type: 'suggestion',
     docs: {
       description: `Checks dependencies in project's package.json for version mismatches`,
-      recommended: 'recommended',
     },
     fixable: 'code',
     schema: [

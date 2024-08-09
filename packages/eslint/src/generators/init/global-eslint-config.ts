@@ -92,6 +92,24 @@ export const getGlobalEsLintConfiguration = (
   return config;
 };
 
+// // @ts-check
+
+// const eslint = require('@eslint/js');
+// const tseslint = require('typescript-eslint');
+
+// module.exports = tseslint.config(
+//   {
+//     files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
+//     extends: [eslint.configs.recommended, ...tseslint.configs.recommended],
+//     rules: {},
+//   },
+//   {
+//     files: ['**/eslint.config.js'],
+//     rules: {
+//       '@typescript-eslint/no-require-imports': 'off',
+//     },
+//   }
+// );
 export const getGlobalFlatEslintConfiguration = (
   unitTestRunner?: string,
   rootProject?: boolean

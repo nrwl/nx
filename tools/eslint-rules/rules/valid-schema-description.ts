@@ -1,7 +1,7 @@
 import { ESLintUtils } from '@typescript-eslint/utils';
 import type { AST } from 'jsonc-eslint-parser';
 
-// NOTE: The rule will be available in ESLint configs as "@nrwl/nx/workspace/valid-schema-description"
+// NOTE: The rule will be available in ESLint configs as "@nx/workspace/valid-schema-description"
 export const RULE_NAME = 'valid-schema-description';
 
 export const rule = ESLintUtils.RuleCreator(() => __filename)({
@@ -10,7 +10,6 @@ export const rule = ESLintUtils.RuleCreator(() => __filename)({
     type: 'problem',
     docs: {
       description: `Ensures that nx schemas contain valid descriptions in order to provide consistent --help output for commands`,
-      recommended: 'recommended',
     },
     fixable: 'code',
     schema: [],

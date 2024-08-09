@@ -15,8 +15,13 @@ import { createFileSync } from 'fs-extra';
 
 describe('Storybook generators and executors for standalone workspaces - using React + Vite', () => {
   const appName = uniq('react');
+  let originalEslintUseFlatConfigVal: string | undefined;
 
   beforeAll(() => {
+    // Opt into legacy .eslintrc config format for these tests
+    originalEslintUseFlatConfigVal = process.env.ESLINT_USE_FLAT_CONFIG;
+    process.env.ESLINT_USE_FLAT_CONFIG = 'false';
+
     // create a workspace with a single react app at the root
     runCreateWorkspace(appName, {
       preset: 'react-standalone',
@@ -36,6 +41,7 @@ describe('Storybook generators and executors for standalone workspaces - using R
 
   afterAll(() => {
     cleanupProject();
+    process.env.ESLINT_USE_FLAT_CONFIG = originalEslintUseFlatConfigVal;
   });
 
   describe('Storybook generated files', () => {

@@ -7,14 +7,19 @@ import {
   uniq,
 } from '@nx/e2e/utils';
 
-let proj: string;
-
 describe('@nx/workspace:convert-to-monorepo', () => {
-  beforeEach(() => {
-    proj = newProject({ packages: ['@nx/react', '@nx/js'] });
+  let originalEslintUseFlatConfigVal: string | undefined;
+  beforeAll(() => {
+    // Opt into legacy .eslintrc config format for these tests
+    originalEslintUseFlatConfigVal = process.env.ESLINT_USE_FLAT_CONFIG;
+    process.env.ESLINT_USE_FLAT_CONFIG = 'false';
+    newProject({ packages: ['@nx/react', '@nx/js'] });
   });
 
-  afterEach(() => cleanupProject());
+  afterAll(() => {
+    process.env.ESLINT_USE_FLAT_CONFIG = originalEslintUseFlatConfigVal;
+    cleanupProject();
+  });
 
   it('should convert a standalone webpack and jest react project to a monorepo (legacy)', async () => {
     const reactApp = uniq('reactapp');
