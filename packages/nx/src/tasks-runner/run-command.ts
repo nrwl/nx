@@ -306,7 +306,7 @@ async function ensureWorkspaceIsInSyncAndGetGraphs(
     (await promptForApplyingSyncGeneratorChanges());
 
   if (applyChanges) {
-    const spinner = ora('Syncing workspace configuration...');
+    const spinner = ora('Syncing the workspace...');
     spinner.start();
 
     // Flush sync generator changes to disk
@@ -324,19 +324,19 @@ async function ensureWorkspaceIsInSyncAndGetGraphs(
     );
 
     if (nxJson.sync?.applyChanges === true) {
-      spinner.succeed(`The workspace configuration was synced successfully!
+      spinner.succeed(`The workspace was synced successfully!
 
 Please make sure to commit the changes to your repository or this will error on CI.`);
     } else {
       // The user was prompted and we already logged a message about erroring on CI
       // so here we just tell them to commit the changes.
-      spinner.succeed(`The workspace configuration was synced successfully!
+      spinner.succeed(`The workspace was synced successfully!
 
 Please make sure to commit the changes to your repository.`);
     }
   } else {
     output.warn({
-      title: 'Syncing the workspace configuration was skipped',
+      title: 'Syncing the workspace was skipped',
       bodyLines: [
         'This could lead to unexpected results or errors when running tasks.',
         fixMessage,

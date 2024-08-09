@@ -49,15 +49,19 @@ export async function getCachedSyncGeneratorChanges(
     // reset the wait time
     waitPeriod = 100;
 
-    let projects: Record<string, ProjectConfiguration>;
+    let projects: Record<string, ProjectConfiguration> | null;
+    let errored = false;
     const getProjectsConfigurations = async () => {
-      if (projects) {
+      if (projects || errored) {
         return projects;
       }
 
-      const { projectGraph } = await getCachedSerializedProjectGraphPromise();
-      projects =
-        readProjectsConfigurationFromProjectGraph(projectGraph).projects;
+      const { projectGraph, error } =
+        await getCachedSerializedProjectGraphPromise();
+      projects = projectGraph
+        ? readProjectsConfigurationFromProjectGraph(projectGraph).projects
+        : null;
+      errored = error !== undefined;
 
       return projects;
     };
@@ -65,17 +69,35 @@ export async function getCachedSyncGeneratorChanges(
     return (
       await Promise.all(
         generators.map(async (generator) => {
-          if (scheduledGenerators.has(generator)) {
-            log(generator, 'already scheduled, running it now');
-            // it's scheduled to run, so there are pending changes, run it
-            runGenerator(generator, await getProjectsConfigurations());
-          } else if (!syncGeneratorsCacheResultPromises.has(generator)) {
-            log(
-              generator,
-              'not scheduled and no cached result, running it now'
-            );
+          if (
+            scheduledGenerators.has(generator) ||
+            !syncGeneratorsCacheResultPromises.has(generator)
+          ) {
+            // it's scheduled to run (there are pending changes to process) or
             // it's not scheduled and there's no cached result, so run it
-            runGenerator(generator, await getProjectsConfigurations());
+            const projects = await getProjectsConfigurations();
+            if (projects) {
+              log(generator, 'already scheduled or not cached, running it now');
+              runGenerator(generator, projects);
+            } else {
+              log(
+                generator,
+                'already scheduled or not cached, project graph errored'
+              );
+              /**
+               * This should never happen. This is invoked imperatively, and by
+               * the time it is invoked, the project graph would have already
+               * been requested. If it errored, it would have been reported and
+               * this wouldn't have been invoked. We handle it just in case.
+               *
+               * Since the project graph would be reported by the relevant
+               * handlers separately, we just ignore the error, don't cache
+               * any result and return an empty result, the next time this is
+               * invoked the process will repeat until it eventually recovers
+               * when the project graph is fixed.
+               */
+              return Promise.resolve({ changes: [], generatorName: generator });
+            }
           } else {
             log(
               generator,
@@ -112,6 +134,12 @@ export async function flushSyncGeneratorChangesToDisk(
 export function collectAndScheduleSyncGenerators(
   projectGraph: ProjectGraph
 ): void {
+  if (!projectGraph) {
+    // If the project graph is not available, we can't collect and schedule
+    // sync generators. The project graph error will be reported separately.
+    return;
+  }
+
   log('collect registered sync generators');
   collectAllRegisteredSyncGenerators(projectGraph);
 
