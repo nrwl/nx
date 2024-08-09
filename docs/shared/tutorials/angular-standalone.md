@@ -211,7 +211,7 @@ Nx identifies available tasks for your project from [tooling configuration files
 nx show project e2e --web
 ```
 
-{% project-details title="Project Details View" height="100px" %}
+{% project-details title="Project Details View" %}
 
 ```json
 {

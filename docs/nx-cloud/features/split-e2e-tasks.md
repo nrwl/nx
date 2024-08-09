@@ -55,7 +55,7 @@ You can view the available tasks for your project in the project detail view:
 nx show project myproject-e2e --web
 ```
 
-{% project-details title="Project Details View" height="100px" %}
+{% project-details title="Project Details View" %}
 
 ```json
 {

@@ -71,6 +71,7 @@ export const TargetConfigurationDetailsHeader = ({
           ? 'border-b bg-slate-50 dark:border-slate-700/60 dark:bg-slate-800'
           : ''
       )}
+      id={`target-${targetName}`}
       onClick={collapsable ? toggleCollapse : undefined}
     >
       <div className="flex items-center justify-between gap-4">

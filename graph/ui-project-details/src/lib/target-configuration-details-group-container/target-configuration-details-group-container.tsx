@@ -15,7 +15,10 @@ export function TargetConfigurationGroupContainer({
     return null;
   }
   return (
-    <div className="mb-4 w-full">
+    <div
+      id={`target-group-container-${targetGroupName}`}
+      className="mb-4 w-full"
+    >
       <TargetConfigurationGroupHeader
         targetGroupName={targetGroupName}
         targetsNumber={targetsNumber}
