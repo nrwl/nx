@@ -1,10 +1,32 @@
+import { createNxCloudOnboardingURL } from 'nx/src/nx-cloud/utilities/url-shorten';
+
+jest.mock(
+  'nx/src/nx-cloud/generators/connect-to-nx-cloud/connect-to-nx-cloud',
+  () => ({
+    ...jest.requireActual(
+      'nx/src/nx-cloud/generators/connect-to-nx-cloud/connect-to-nx-cloud'
+    ),
+    connectToNxCloud: async () => {
+      return 'TEST_NX_CLOUD_TOKEN';
+    },
+  })
+);
+jest.mock('nx/src/nx-cloud/utilities/url-shorten', () => ({
+  ...jest.requireActual('nx/src/nx-cloud/utilities/url-shorten'),
+  createNxCloudOnboardingURL: async (source, token) => {
+    return `https://test.nx.app/connect?source=${source}&token=${token}`;
+  },
+}));
+
 import type { NxJsonConfiguration, Tree } from '@nx/devkit';
-import { readJson } from '@nx/devkit';
+import { formatFiles, readJson } from '@nx/devkit';
 import Ajv from 'ajv';
 import { generateWorkspaceFiles } from './generate-workspace-files';
 import { createTree } from '@nx/devkit/testing';
 import { Preset } from '../utils/presets';
 import * as nxSchema from 'nx/schemas/nx-schema.json';
+import { mkdirSync, writeFileSync } from 'fs';
+import { join } from 'path';
 
 describe('@nx/workspace:generateWorkspaceFiles', () => {
   let tree: Tree;
@@ -28,41 +50,54 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
   });
 
   describe('README.md', () => {
-    it.each(Object.keys(Preset))(
-      'should be created for %s preset',
-      async (preset) => {
-        let appName;
-        if (
-          [
-            Preset.ReactMonorepo,
-            Preset.ReactStandalone,
-            Preset.VueMonorepo,
-            Preset.VueStandalone,
-            Preset.Nuxt,
-            Preset.NuxtStandalone,
-            Preset.AngularMonorepo,
-            Preset.AngularStandalone,
-            Preset.Nest,
-            Preset.NextJs,
-            Preset.WebComponents,
-            Preset.Express,
-            Preset.NodeStandalone,
-            Preset.NextJsStandalone,
-            Preset.TsStandalone,
-          ].includes(Preset[preset])
-        ) {
-          appName = 'app1';
-        }
+    describe.each(['github', 'yes', 'skip'] as const)(
+      'Nx Cloud (%s)',
+      (nxCloud) => {
+        it.each(Object.keys(Preset))(
+          'should be created for %s preset',
+          async (preset) => {
+            let appName;
+            if (
+              [
+                Preset.ReactMonorepo,
+                Preset.ReactStandalone,
+                Preset.VueMonorepo,
+                Preset.VueStandalone,
+                Preset.Nuxt,
+                Preset.NuxtStandalone,
+                Preset.AngularMonorepo,
+                Preset.AngularStandalone,
+                Preset.Nest,
+                Preset.NextJs,
+                Preset.WebComponents,
+                Preset.Express,
+                Preset.NodeStandalone,
+                Preset.NextJsStandalone,
+                Preset.TsStandalone,
+              ].includes(Preset[preset])
+            ) {
+              appName = 'app1';
+            }
 
-        await generateWorkspaceFiles(tree, {
-          name: 'proj',
-          directory: 'proj',
-          preset: Preset[preset],
-          defaultBase: 'main',
-          appName,
-          isCustomPreset: false,
-        });
-        expect(tree.read('proj/README.md', 'utf-8')).toMatchSnapshot();
+            await generateWorkspaceFiles(tree, {
+              name: 'proj',
+              directory: 'proj',
+              preset: Preset[preset],
+              defaultBase: 'main',
+              appName,
+              isCustomPreset: false,
+              nxCloud: nxCloud,
+            });
+            await formatFiles(tree);
+            const dir = join(__dirname, 'tmp', `${preset}-${nxCloud}`);
+            mkdirSync(dir, { recursive: true });
+            writeFileSync(
+              join(dir, 'README.md'),
+              tree.read('proj/README.md', 'utf-8')
+            );
+            expect(tree.read('proj/README.md', 'utf-8')).toMatchSnapshot();
+          }
+        );
       }
     );
     it('should be created for custom plugins', async () => {
