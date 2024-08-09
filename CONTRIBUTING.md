@@ -49,15 +49,33 @@ The repo comes with a preconfigured `devcontainer.json` file (located in `.devco
 
 If you open the repo in [Github Codespace](https://github.com/features/codespaces), it will also leverage this config file, to setup the codespace, with the same required tools.
 
+> 💡 **Troubleshooting**
+>
+> If you are having issues when running Nx commands like `build`, `test`... related to the version of `GLIBC`,
+> it probably means the version that is installed on the devcontainer, **is outdated** compare to the minimum version required by Nx tools.
+>
+> You can check currently installed version by running the following command, in a terminal within the container:
+>
+> `ldd --version`
+>
+> Then, try updating the base image used in [devcontainer.json](.devcontainer/devcontainer.json) and rebuild it, to see if it solved the issue.
+>
+> Current base image is `"mcr.microsoft.com/devcontainers/typescript-node:20-bookworm"` which is based on `Debian-12 (bookworm)`,
+> which comes with `GLIBC v2.36` pre-installed (Nx tools currenlty requires `GLIBC v2.33` or higher).
+
 ## Building the Project
 
-> Nx uses Rust to build native bindings for Node. Please make sure that you have Rust installed via [rustup.rs](https://rustup.rs)
-> If you have VSCode + Docker, this can be automated for you, see [section](#development-workstation-setup) above
+> 💡 Nx uses `Rust` to build native bindings for Node. Please make sure that you have Rust installed via [rustup.rs](https://rustup.rs)
+> If you have `VSCode` + `Docker`, this can be automated for you, see [section](#development-workstation-setup) above
 
 After cloning the project to your machine, to install the dependencies, run:
 
 ```bash
-pnpm i
+pnpm install
+
+// or prefer...
+
+pnpm install --frozen-lockfile // if you haven't changed any dependency
 ```
 
 To build all the packages, run:

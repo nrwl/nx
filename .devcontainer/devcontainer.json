@@ -3,31 +3,46 @@
 {
   "name": "NxDevContainer",
   // Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
-  "build": {
-    // Path is relative to the devcontainer.json file.
-    "dockerfile": "Dockerfile"
-  },
+
+  // Starting from a base image that already contains GLIBC v2.33 or higher (required by Nx)
+  // Try a more recent distribution, if your are having build issues related to GLIBC version
+  // Here we use 'bookworm', which is based on `Debian-12`, which comes with `GLIBC v2.36`
+  // (Nx tools currenlty requires `GLIBC v2.33` or higher)
+  "image": "mcr.microsoft.com/devcontainers/typescript-node:20-bookworm",
+
   "features": {
     "ghcr.io/devcontainers/features/rust:1": {}
   },
+
   // Use 'forwardPorts' to make a list of ports inside the container available locally.
   // 4211 = nx graph port
-  "forwardPorts": [4211],
+  // 4873 = verdaccio (local npm registry) port
+  "forwardPorts": [4211, 4873],
+
   // Use 'postCreateCommand' to run commands after the container is created.
   "postCreateCommand": "./.devcontainer/postCreateCommand.sh",
+
   // Configure tool-specific properties.
   "customizations": {
     "vscode": {
       "extensions": [
         "nrwl.angular-console",
         "firsttris.vscode-jest-runner",
-        "eamodio.gitlens"
+        "eamodio.gitlens",
+        "mhutchie.git-graph",
+        "mutantdino.resourcemonitor" // to monitor cpu, memory usage from the dev container
       ],
       "settings": {
-        "debug.javascript.autoAttachFilter": "onlyWithFlag" // workaround for that issue: https://github.com/microsoft/vscode-js-debug/issues/374#issuecomment-622239998
+        "debug.javascript.autoAttachFilter": "disabled" // workaround for that issue: https://github.com/microsoft/vscode-js-debug/issues/374#issuecomment-622239998
       }
     }
-  }
+  },
+
+  // To improve disk performances when installing node modules
+  // See https://code.visualstudio.com/remote/advancedcontainers/improve-performance
+  "mounts": [
+    "source=${localWorkspaceFolderBasename}-node_modules,target=${containerWorkspaceFolder}/node_modules,type=volume"
+  ],
   // Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
-  // "remoteUser": "root"
+  "remoteUser": "root"
 }
