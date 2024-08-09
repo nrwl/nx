@@ -1,3 +1,4 @@
+import { NxCloudOnBoardingStatus } from 'nx/src/nx-cloud/models/onboarding-status';
 import { E2eTestRunner, UnitTestRunner } from '../../../utils/test-runners';
 import type { Schema } from '../schema';
 import { Linter } from '@nx/eslint';

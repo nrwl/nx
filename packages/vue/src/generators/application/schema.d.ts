@@ -19,6 +19,7 @@ export interface Schema {
   skipPackageJson?: boolean;
   rootProject?: boolean;
   addPlugin?: boolean;
+  nxCloudToken?: string;
 }
 
 export interface NormalizedSchema extends Schema {

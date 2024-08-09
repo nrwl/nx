@@ -20,4 +20,5 @@ export interface Schema {
   install: boolean; // default is true
   skipPackageJson?: boolean; //default is false
   addPlugin?: boolean;
+  nxCloudToken?: string;
 }

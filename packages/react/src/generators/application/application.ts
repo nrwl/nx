@@ -147,7 +147,7 @@ export async function applicationGeneratorInternal(
     extractTsConfigBase(host);
   }
 
-  createApplicationFiles(host, options);
+  await createApplicationFiles(host, options);
   addProject(host, options);
 
   if (options.style === 'tailwind') {

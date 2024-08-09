@@ -82,6 +82,7 @@ export function generatePreset(host: Tree, opts: NormalizedSchema) {
         : null,
       opts.ssr ? `--ssr` : null,
       opts.prefix !== undefined ? `--prefix=${opts.prefix}` : null,
+      opts.nxCloudToken ? `--nxCloudToken=${opts.nxCloudToken}` : null,
     ].filter((e) => !!e);
   }
 }

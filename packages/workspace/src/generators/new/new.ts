@@ -42,13 +42,14 @@ interface Schema {
 export interface NormalizedSchema extends Schema {
   presetVersion?: string;
   isCustomPreset: boolean;
+  nxCloudToken?: string;
 }
 
 export async function newGenerator(tree: Tree, opts: Schema) {
   const options = normalizeOptions(opts);
   validateOptions(options, tree);
 
-  await generateWorkspaceFiles(tree, options);
+  options.nxCloudToken = await generateWorkspaceFiles(tree, options);
 
   addPresetDependencies(tree, options);
 
