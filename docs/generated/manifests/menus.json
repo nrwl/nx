@@ -5566,9 +5566,17 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Access Tokens",
+                "name": "CI Access Tokens",
                 "path": "/ci/recipes/security/access-tokens",
                 "id": "access-tokens",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Personal Access Tokens",
+                "path": "/ci/recipes/security/personal-access-tokens",
+                "id": "personal-access-tokens",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -5928,9 +5936,17 @@
             "disableCollapsible": false
           },
           {
-            "name": "Access Tokens",
+            "name": "CI Access Tokens",
             "path": "/ci/recipes/security/access-tokens",
             "id": "access-tokens",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Personal Access Tokens",
+            "path": "/ci/recipes/security/personal-access-tokens",
+            "id": "personal-access-tokens",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -5955,9 +5971,17 @@
         "disableCollapsible": false
       },
       {
-        "name": "Access Tokens",
+        "name": "CI Access Tokens",
         "path": "/ci/recipes/security/access-tokens",
         "id": "access-tokens",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Personal Access Tokens",
+        "path": "/ci/recipes/security/personal-access-tokens",
+        "id": "personal-access-tokens",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
