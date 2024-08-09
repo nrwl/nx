@@ -33,4 +33,4 @@ jobs:
       - ...
 ```
 
-Now PRs that affect a small percentage of the repo will run on 1 agent, mid-size PRs will use 6 agents and large PRs will use 10 agents. This feature helps save costs on the smaller PRs while maintaining the high performance necessary for large PRs.
+Now PRs that affect a small percentage of the repo will run on 3 agent, mid-size PRs will use 6 agents and large PRs will use 10 agents. This feature helps save costs on the smaller PRs while maintaining the high performance necessary for large PRs.
