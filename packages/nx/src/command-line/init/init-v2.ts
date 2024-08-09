@@ -51,7 +51,7 @@ export async function initHandler(options: InitArgs): Promise<void> {
     generateDotNxSetup(version);
     const { plugins } = await detectPlugins();
     plugins.forEach((plugin) => {
-      execSync(`./nx add ${plugin}`, {
+      runNxSync(`add ${plugin}`, {
         stdio: 'inherit',
       });
     });
