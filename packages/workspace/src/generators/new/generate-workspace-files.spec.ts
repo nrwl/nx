@@ -104,6 +104,8 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
         },
       }
     `);
+    // VS Code uses a deprecationMessage keyword that is not supported by ajv.
+    ajv.addKeyword('deprecationMessage');
     const validateNxJson = ajv.compile(nxSchema);
     expect(validateNxJson(nxJson)).toEqual(true);
   });
