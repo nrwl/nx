@@ -17,8 +17,15 @@ import { WithReactOptions } from '../../../../plugins/with-react';
 import { hasWebpackPlugin } from '../../../utils/has-webpack-plugin';
 import { NormalizedSchema } from '../schema';
 import { getAppTests } from './get-app-tests';
+import {
+  getNxCloudAppOnBoardingUrl,
+  createNxCloudOnboardingURLForWelcomeApp,
+} from 'nx/src/nx-cloud/utilities/onboarding';
 
-export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
+export async function createApplicationFiles(
+  host: Tree,
+  options: NormalizedSchema
+) {
   let styleSolutionSpecificAppFiles: string;
   if (options.styledModule && options.style !== 'styled-jsx') {
     styleSolutionSpecificAppFiles = '../files/style-styled-module';
@@ -33,6 +40,15 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
   } else {
     styleSolutionSpecificAppFiles = '../files/style-css-module';
   }
+
+  const onBoardingStatus = await createNxCloudOnboardingURLForWelcomeApp(
+    host,
+    options.nxCloudToken
+  );
+
+  const connectCloudUrl =
+    onBoardingStatus === 'unclaimed' &&
+    (await getNxCloudAppOnBoardingUrl(options.nxCloudToken));
 
   const relativePathToRootTsConfig = getRelativePathToRootTsConfig(
     host,
@@ -140,11 +156,15 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
   }
 
   if (!options.minimal) {
+    const tutorialUrl = options.rootProject
+      ? 'https://nx.dev/getting-started/tutorials/react-standalone-tutorial'
+      : 'https://nx.dev/react-tutorial/1-code-generation?utm_source=nx-project';
+
     generateFiles(
       host,
-      join(__dirname, '../files/nx-welcome'),
+      join(__dirname, '../files/nx-welcome', onBoardingStatus),
       options.appProjectRoot,
-      templateVariables
+      { ...templateVariables, connectCloudUrl, tutorialUrl }
     );
   }
 

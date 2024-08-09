@@ -67,7 +67,7 @@ export async function applicationGeneratorInternal(
     extractTsConfigBase(tree);
   }
 
-  createApplicationFiles(tree, options);
+  await createApplicationFiles(tree, options);
 
   tasks.push(
     await addLinting(
