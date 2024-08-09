@@ -1,5 +1,10 @@
 # Enterprise Release Notes
 
+### 2406.29.1.patch1
+
+- Fix an issue with specifying custom AWS credentials in Minio instances
+- Fix an issue with removing pending invites
+
 ### 2406.29.1
 
 ##### Full terminal outputs in the web app
