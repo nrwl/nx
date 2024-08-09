@@ -1,32 +1,43 @@
 import type { CommandModule } from 'yargs';
 
-export interface SyncOptions {
-  check?: boolean;
+export interface SyncArgs {
   verbose?: boolean;
 }
 
 export const yargsSyncCommand: CommandModule<
   Record<string, unknown>,
-  SyncOptions
+  SyncArgs
 > = {
   command: 'sync',
   describe: false,
   builder: (yargs) =>
-    yargs
-      .option('check', {
-        type: 'boolean',
-        description: 'Check if the workspace is in sync without making changes',
-      })
-      .option('verbose', {
-        type: 'boolean',
-        description:
-          'Prints additional information about the commands (e.g., stack traces)',
-      })
-      .example(
-        '$0 --check',
-        'Check if the workspace is in sync without making changes. It throws an error and exits with a non-zero status code if the workspace is not in sync'
-      ) as any,
+    yargs.option('verbose', {
+      type: 'boolean',
+      description:
+        'Prints additional information about the commands (e.g., stack traces)',
+    }),
   handler: async (args) => {
-    process.exit(await import('./sync').then((m) => m.addHandler(args)));
+    process.exit(await import('./sync').then((m) => m.syncHandler(args)));
+  },
+};
+
+export const yargsSyncCheckCommand: CommandModule<
+  Record<string, unknown>,
+  SyncArgs
+> = {
+  command: 'sync:check',
+  describe: false,
+  builder: (yargs) =>
+    yargs.option('verbose', {
+      type: 'boolean',
+      description:
+        'Prints additional information about the commands (e.g., stack traces)',
+    }),
+  handler: async (args) => {
+    process.exit(
+      await import('./sync').then((m) =>
+        m.syncHandler({ ...args, check: true })
+      )
+    );
   },
 };
