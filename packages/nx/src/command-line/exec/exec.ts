@@ -1,4 +1,4 @@
-import { execSync } from 'child_process';
+import { execSync, spawnSync } from 'child_process';
 import { join } from 'path';
 import { exit } from 'process';
 import * as yargs from 'yargs-parser';
@@ -46,11 +46,10 @@ export async function nxExecCommand(
 
   // NX is already running
   if (process.env.NX_TASK_TARGET_PROJECT) {
-    const command = scriptArgV
-      .reduce((cmd, arg) => cmd + `"${arg}" `, '')
-      .trim();
-    execSync(command, {
+    const command = scriptArgV.join(' ').trim();
+    spawnSync(command, {
       stdio: 'inherit',
+      shell: true,
       env: {
         ...process.env,
         NX_PROJECT_NAME: process.env.NX_TASK_TARGET_PROJECT,
@@ -93,9 +92,10 @@ async function runScriptAsNxTarget(
     nxArgs
   );
   projectsToRun.forEach((projectName) => {
-    const command = argv.reduce((cmd, arg) => cmd + `"${arg}" `, '').trim();
-    execSync(command, {
+    const command = argv.join(' ').trim();
+    spawnSync(command, {
       stdio: 'inherit',
+      shell: true,
       env: {
         ...process.env,
         NX_PROJECT_NAME: projectGraph.nodes?.[projectName]?.name,
