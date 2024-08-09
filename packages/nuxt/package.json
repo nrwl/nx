@@ -35,7 +35,8 @@
     "@nx/js": "file:../js",
     "@nx/eslint": "file:../eslint",
     "@nx/vue": "file:../vue",
-    "@nx/vite": "file:../vite"
+    "@nx/vite": "file:../vite",
+    "@phenomnomnominal/tsquery": "~5.0.1"
   },
   "peerDependencies": {},
   "publishConfig": {
