@@ -143,9 +143,19 @@ export function newProject({
     }
     projName = name;
 
+    const copyStart = performance.mark('copy:start');
     const projectDirectory = tmpProjPath();
     copySync(`${tmpBackupProjPath()}`, `${projectDirectory}`);
+    const copyEnd = performance.mark('copy:end');
+    const copyMeasure = performance.measure(
+      'copy',
+      copyStart.name,
+      copyEnd.name
+    );
 
+    const alwaysPackageInstallStart = performance.mark(
+      'alwaysPackageInstall:start'
+    );
     const dependencies = readJsonFile(
       `${projectDirectory}/package.json`
     ).devDependencies;
@@ -163,6 +173,14 @@ export function newProject({
         encoding: 'utf-8',
       });
     }
+    const alwaysPackageInstallEnd = performance.mark(
+      'alwaysPackageInstall:end'
+    );
+    const alwaysPackageInstallMeasure = performance.measure(
+      'alwaysPackageInstall',
+      alwaysPackageInstallStart.name,
+      alwaysPackageInstallEnd.name
+    );
 
     const newProjectEnd = performance.mark('new-project:end');
     const perfMeasure = performance.measure(
@@ -171,7 +189,7 @@ export function newProject({
       newProjectEnd.name
     );
 
-    if (isVerbose()) {
+    if (true) {
       logInfo(
         `NX`,
         `E2E created a project: ${projectDirectory} in ${
@@ -189,7 +207,11 @@ ${
                 packageInstallMeasure.duration / 1000
               } seconds\n`
             : ''
-        }`
+        }
+            alwaysPackageInstall: ${
+              alwaysPackageInstallMeasure.duration / 1000
+            } seconds
+            copy: ${copyMeasure.duration / 1000} seconds`
       );
     }
 
