@@ -11,7 +11,6 @@ export const yargsGenerateCommand: CommandModule = {
   handler: async (args) => {
     // Remove the command from the args
     args._ = args._.slice(1);
-
     process.exit(await (await import('./generate')).generate(getCwd(), args));
   },
 };

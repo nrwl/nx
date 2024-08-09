@@ -1946,6 +1946,17 @@
         "path": "nx/documents/add",
         "tags": [],
         "originalFilePath": "generated/cli/add"
+      },
+      {
+        "id": "login",
+        "name": "login",
+        "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+        "file": "generated/packages/nx/documents/login",
+        "itemList": [],
+        "isExternal": false,
+        "path": "nx/documents/login",
+        "tags": [],
+        "originalFilePath": "generated/cli/login"
       }
     ],
     "executors": [

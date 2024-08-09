@@ -36,6 +36,7 @@ import { yargsWatchCommand } from './watch/command-object';
 import { yargsResetCommand } from './reset/command-object';
 import { yargsReleaseCommand } from './release/command-object';
 import { yargsAddCommand } from './add/command-object';
+import { yargsLoginCommand } from './login/command-object';
 import {
   yargsPrintAffectedCommand,
   yargsAffectedGraphCommand,
@@ -89,6 +90,7 @@ export const commandsObject = yargs
   .command(yargsViewLogsCommand)
   .command(yargsWatchCommand)
   .command(yargsNxInfixCommand)
+  .command(yargsLoginCommand)
   .scriptName('nx')
   .help()
   // NOTE: we handle --version in nx.ts, this just tells yargs that the option exists
