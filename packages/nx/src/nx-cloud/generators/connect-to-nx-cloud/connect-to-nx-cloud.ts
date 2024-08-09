@@ -150,7 +150,7 @@ function addNxCloudOptionsToNxJson(
 function addNxCloudIdToNxJson(
   tree: Tree,
   nxCloudId: string,
-  directory: string = tree.root
+  directory: string = ''
 ) {
   const nxJsonPath = join(directory, 'nx.json');
   if (tree.exists(nxJsonPath)) {
