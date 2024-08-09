@@ -40,8 +40,6 @@ Also, here are some recipes that give you more details based on the technology s
 {% link-card title="Migrate from Angular CLI" appearance="small" url="/recipes/angular/migration/angular" icon="angular" /%}
 
 {% /cards %}
-{% /tab %}
-{% /tabs %}
 
 ## Learn Nx
 
