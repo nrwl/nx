@@ -56,3 +56,13 @@ function isMainNxPackage() {
   const thisNxPath = require.resolve('nx');
   return mainNxPath === thisNxPath;
 }
+
+process.on('uncaughtException', (e) => {
+  logger.verbose(e);
+  process.exit(0);
+});
+
+process.on('unhandledRejection', (e) => {
+  logger.verbose(e);
+  process.exit(0);
+});
