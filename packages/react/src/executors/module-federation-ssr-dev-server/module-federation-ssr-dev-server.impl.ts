@@ -19,12 +19,13 @@ import {
   createAsyncIterable,
 } from '@nx/devkit/src/utils/async-iterable';
 import { fork } from 'child_process';
-import { cp, cpSync, createWriteStream, existsSync, watch } from 'fs';
+import { cpSync, createWriteStream, existsSync } from 'fs';
 
 import {
   parseStaticSsrRemotesConfig,
   type StaticRemotesConfig,
 } from '@nx/webpack/src/utils/module-federation/parse-static-remotes-config';
+
 import fileServerExecutor from '@nx/web/src/executors/file-server/file-server.impl';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { startSsrRemoteProxies } from '@nx/webpack/src/utils/module-federation/start-ssr-remote-proxies';

@@ -9,8 +9,8 @@ export function startSsrRemoteProxies(
   const { createProxyMiddleware } = require('http-proxy-middleware');
   logger.info(`NX Starting static remotes proxies...`);
   const express = require('express');
-  const expressProxy: Express = express();
   for (const app of staticRemotesConfig.remotes) {
+    const expressProxy: Express = express();
     /**
      * SSR remotes have two output paths: one for the browser and one for the server.
      * We need to handle paths for both of them.
@@ -23,7 +23,6 @@ export function startSsrRemoteProxies(
         target: `${mappedLocationsOfRemotes[app]}`,
         changeOrigin: true,
         pathRewrite: (path) => {
-          console.log(path);
           if (path.includes('/server')) {
             return path;
           } else {
