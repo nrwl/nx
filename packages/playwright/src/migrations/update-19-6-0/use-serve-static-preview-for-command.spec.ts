@@ -1,7 +1,8 @@
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { ProjectGraph, type Tree } from '@nx/devkit';
+import { ProjectGraph, readNxJson, type Tree, updateNxJson } from '@nx/devkit';
 import useServeStaticPreviewForCommand from './use-serve-static-preview-for-command';
 import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
+import { join } from 'path';
 
 let projectGraph: ProjectGraph;
 jest.mock('@nx/devkit', () => ({
@@ -28,6 +29,7 @@ describe('useServeStaticPreviewForCommand', () => {
 
   afterEach(() => {
     tempFs.reset();
+    jest.resetModules();
   });
 
   it('should update when it does not use serve-static for non-vite', async () => {
@@ -69,8 +71,72 @@ describe('useServeStaticPreviewForCommand', () => {
       "
     `);
   });
+
+  it('should use the serveStaticTargetName in the nx.json', async () => {
+    // ARRANGE
+    const nxJson = readNxJson(tree);
+    nxJson.plugins ??= [];
+    nxJson.plugins.push({
+      plugin: '@nx/webpack/plugin',
+      options: {
+        serveStaticTargetName: 'webpack:serve-static',
+      },
+    });
+    updateNxJson(tree, nxJson);
+    addProject(tree, tempFs, { noVite: true });
+    mockWebpackConfig({
+      output: {
+        path: 'dist/foo',
+      },
+    });
+
+    // ACT
+    await useServeStaticPreviewForCommand(tree);
+
+    // ASSERT
+    expect(tree.read('app-e2e/playwright.config.ts', 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "import { defineConfig, devices } from '@playwright/test';
+      import { nxE2EPreset } from '@nx/playwright/preset';
+
+      import { workspaceRoot } from '@nx/devkit';
+
+      const baseURL = process.env['BASE_URL'] || 'http://localhost:4200';
+
+      export default defineConfig({
+        ...nxE2EPreset(__filename, { testDir: './src' }),
+        use: {
+          baseURL,
+          trace: 'on-first-retry',
+        },
+        webServer: {
+          command: 'npx nx run app:webpack:serve-static',
+          url: 'http://localhost:4200',
+          reuseExistingServer: !process.env.CI,
+          cwd: workspaceRoot,
+        },
+        projects: [
+          {
+            name: 'chromium',
+            use: { ...devices['Desktop Chrome'] },
+          },
+        ],
+      });
+      "
+    `);
+  });
+
   it('should update when it does not use preview for vite', async () => {
     // ARRANGE
+    const nxJson = readNxJson(tree);
+    nxJson.plugins ??= [];
+    nxJson.plugins.push({
+      plugin: '@nx/vite/plugin',
+      options: {
+        previewTargetName: 'vite:preview',
+      },
+    });
+    updateNxJson(tree, nxJson);
     addProject(tree, tempFs);
 
     // ACT
@@ -93,7 +159,7 @@ describe('useServeStaticPreviewForCommand', () => {
           trace: 'on-first-retry',
         },
         webServer: {
-          command: 'npx nx run app:preview',
+          command: 'npx nx run app:vite:preview',
           url: 'http://localhost:4300',
           reuseExistingServer: !process.env.CI,
           cwd: workspaceRoot,
@@ -108,10 +174,66 @@ describe('useServeStaticPreviewForCommand', () => {
       "
     `);
   });
+
+  it('should not replace the full command', async () => {
+    // ARRANGE
+    const nxJson = readNxJson(tree);
+    nxJson.plugins ??= [];
+    nxJson.plugins.push({
+      plugin: '@nx/vite/plugin',
+      options: {
+        previewTargetName: 'vite:preview',
+      },
+    });
+    updateNxJson(tree, nxJson);
+    addProject(tree, tempFs, { hasAdditionalCommand: true });
+
+    // ACT
+    await useServeStaticPreviewForCommand(tree);
+
+    // ASSERT
+    expect(tree.read('app-e2e/playwright.config.ts', 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "import { defineConfig, devices } from '@playwright/test';
+      import { nxE2EPreset } from '@nx/playwright/preset';
+
+      import { workspaceRoot } from '@nx/devkit';
+
+      const baseURL = process.env['BASE_URL'] || 'http://localhost:4300';
+
+      export default defineConfig({
+        ...nxE2EPreset(__filename, { testDir: './src' }),
+        use: {
+          baseURL,
+          trace: 'on-first-retry',
+        },
+        webServer: {
+          command: 'echo "start" && npx nx run app:vite:preview',
+          url: 'http://localhost:4300',
+          reuseExistingServer: !process.env.CI,
+          cwd: workspaceRoot,
+        },
+        projects: [
+          {
+            name: 'chromium',
+            use: { ...devices['Desktop Chrome'] },
+          },
+        ],
+      });
+      "
+    `);
+  });
+
+  function mockWebpackConfig(config: any) {
+    jest.mock(join(tempFs.tempDir, 'app/webpack.config.ts'), () => config, {
+      virtual: true,
+    });
+  }
 });
 
 const basePlaywrightConfig = (
-  appName: string
+  appName: string,
+  hasAdditionalCommand?: boolean
 ) => `import { defineConfig, devices } from '@playwright/test';
 import { nxE2EPreset } from '@nx/playwright/preset';
 
@@ -126,7 +248,9 @@ export default defineConfig({
     trace: 'on-first-retry',
   },
   webServer: {
-    command: 'npx nx run ${appName}:serve',
+    command: '${
+      hasAdditionalCommand ? 'echo "start" && ' : ''
+    }npx nx run ${appName}:serve',
     url: 'http://localhost:4200',
     reuseExistingServer: !process.env.CI,
     cwd: workspaceRoot,
@@ -174,6 +298,7 @@ function addProject(
   tempFs: TempFs,
   overrides: {
     noVite?: boolean;
+    hasAdditionalCommand?: boolean;
   } = {}
 ) {
   const appProjectConfig = {
@@ -193,20 +318,36 @@ function addProject(
   if (!overrides.noVite) {
     tree.write(`app/vite.config.ts`, viteConfig);
   } else {
-    tree.write(`app/webpack.config.ts`, ``);
+    tree.write(
+      `app/webpack.config.ts`,
+      `module.exports = {output: {
+        path: 'dist/foo',
+      }}`
+    );
   }
 
   tree.write(`app/project.json`, JSON.stringify(appProjectConfig));
-  tree.write(`app-e2e/playwright.config.ts`, basePlaywrightConfig('app'));
+  tree.write(
+    `app-e2e/playwright.config.ts`,
+    basePlaywrightConfig('app', overrides.hasAdditionalCommand)
+  );
   tree.write(`app-e2e/project.json`, JSON.stringify(e2eProjectConfig));
   if (!overrides.noVite) {
-    tempFs.createFile(`app/vite.config.ts`, viteConfig);
+    tempFs.createFileSync(`app/vite.config.ts`, viteConfig);
   } else {
-    tempFs.createFile(`app/webpack.config.ts`, ``);
+    tempFs.createFileSync(
+      `app/webpack.config.ts`,
+      `module.exports = {output: {
+        path: 'dist/foo',
+      }}`
+    );
   }
   tempFs.createFilesSync({
     [`app/project.json`]: JSON.stringify(appProjectConfig),
-    [`app-e2e/playwright.config.ts`]: basePlaywrightConfig('app'),
+    [`app-e2e/playwright.config.ts`]: basePlaywrightConfig(
+      'app',
+      overrides.hasAdditionalCommand
+    ),
     [`app-e2e/project.json`]: JSON.stringify(e2eProjectConfig),
   });
 
