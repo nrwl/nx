@@ -31,7 +31,7 @@ import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { startSsrRemoteProxies } from '@nx/webpack/src/utils/module-federation/start-ssr-remote-proxies';
 import { waitForPortOpen } from '@nx/web/src/utils/wait-for-port-open';
 
-type ModuleFederationDevServerOptions = WebSsrDevServerOptions & {
+type ModuleFederationSsrDevServerOptions = WebSsrDevServerOptions & {
   devRemotes?: (
     | string
     | {
@@ -47,6 +47,17 @@ type ModuleFederationDevServerOptions = WebSsrDevServerOptions & {
   parallel?: number;
 };
 
+function normalizeOptions(
+  options: ModuleFederationSsrDevServerOptions
+): ModuleFederationSsrDevServerOptions {
+  return {
+    ...options,
+    ssl: options.ssl ?? false,
+    sslCert: options.sslCert ? join(workspaceRoot, options.sslCert) : undefined,
+    sslKey: options.sslKey ? join(workspaceRoot, options.sslKey) : undefined,
+  };
+}
+
 function getBuildOptions(buildTarget: string, context: ExecutorContext) {
   const target = parseTargetString(buildTarget, context);
 
@@ -60,7 +71,7 @@ function getBuildOptions(buildTarget: string, context: ExecutorContext) {
 function startSsrStaticRemotesFileServer(
   ssrStaticRemotesConfig: StaticRemotesConfig,
   context: ExecutorContext,
-  options: ModuleFederationDevServerOptions
+  options: ModuleFederationSsrDevServerOptions
 ) {
   if (ssrStaticRemotesConfig.remotes.length === 0) {
     return;
@@ -105,11 +116,18 @@ function startSsrStaticRemotesFileServer(
 async function startRemotes(
   remotes: string[],
   context: ExecutorContext,
-  options: ModuleFederationDevServerOptions
+  options: ModuleFederationSsrDevServerOptions
 ) {
   const remoteIters: AsyncIterable<{ success: boolean }>[] = [];
-
+  const target = 'serve';
   for (const app of remotes) {
+    const remoteProjectServeTarget =
+      context.projectGraph.nodes[app].data.targets[target];
+    const isUsingModuleFederationSsrDevServerExecutor =
+      remoteProjectServeTarget.executor.includes(
+        'module-federation-ssr-dev-server'
+      );
+
     const configurationOverride = options.devRemotes?.find(
       (remote): remote is { remoteName: string; configuration: string } =>
         typeof remote !== 'string' && remote.remoteName === app
@@ -122,14 +140,22 @@ async function startRemotes(
         ...(options.sslKey ? { sslKey: options.sslKey } : {}),
       };
 
+      const overrides = {
+        watch: true,
+        ...defaultOverrides,
+        ...(isUsingModuleFederationSsrDevServerExecutor
+          ? { isInitialHost: false }
+          : {}),
+      };
+
       remoteIters.push(
         await runExecutor(
           {
             project: app,
-            target: 'serve',
+            target,
             configuration: configurationOverride ?? context.configurationName,
           },
-          { watch: true, ...defaultOverrides },
+          overrides,
           context
         )
       );
@@ -142,7 +168,7 @@ async function buildSsrStaticRemotes(
   staticRemotesConfig: StaticRemotesConfig,
   nxBin,
   context: ExecutorContext,
-  options: ModuleFederationDevServerOptions
+  options: ModuleFederationSsrDevServerOptions
 ) {
   if (!staticRemotesConfig.remotes.length) {
     return;
@@ -216,9 +242,10 @@ async function buildSsrStaticRemotes(
 }
 
 export default async function* moduleFederationSsrDevServer(
-  options: ModuleFederationDevServerOptions,
+  ssrDevServerOptions: ModuleFederationSsrDevServerOptions,
   context: ExecutorContext
 ) {
+  const options = normalizeOptions(ssrDevServerOptions);
   // Force Node to resolve to look for the nx binary that is inside node_modules
   const nxBin = require.resolve('nx/bin/nx');
   let iter: any = ssrDevServerExecutor(options, context);
@@ -248,6 +275,10 @@ export default async function* moduleFederationSsrDevServer(
       );
     }
     pathToManifestFile = userPathToManifestFile;
+  }
+
+  if (!options.isInitialHost) {
+    return yield* iter;
   }
 
   const moduleFederationConfig = getModuleFederationConfig(
@@ -303,7 +334,16 @@ export default async function* moduleFederationSsrDevServer(
     options
   );
 
-  startSsrRemoteProxies(staticRemotesConfig, mappedLocationsOfStaticRemotes);
+  startSsrRemoteProxies(
+    staticRemotesConfig,
+    mappedLocationsOfStaticRemotes,
+    options.ssl
+      ? {
+          pathToCert: options.sslCert,
+          pathToKey: options.sslKey,
+        }
+      : undefined
+  );
 
   return yield* combineAsyncIterables(
     iter,
@@ -311,6 +351,11 @@ export default async function* moduleFederationSsrDevServer(
     ...(staticRemotesIter ? [staticRemotesIter] : []),
     createAsyncIterable<{ success: true; baseUrl: string }>(
       async ({ next, done }) => {
+        if (!options.isInitialHost) {
+          done();
+          return;
+        }
+
         if (remotes.remotePorts.length === 0) {
           done();
           return;

@@ -176,7 +176,7 @@ export async function setupSsrGenerator(tree: Tree, options: Schema) {
       },
     },
     serve: {
-      executor: '@nx/react:module-federation-ssr-dev-server',
+      executor: '@nx/webpack:ssr-dev-server',
       defaultConfiguration: 'development',
       options: {
         browserTarget: `${options.project}:build:development`,

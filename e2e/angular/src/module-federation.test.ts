@@ -25,7 +25,7 @@ describe('Angular Module Federation', () => {
     process.env.NX_E2E_VERBOSE_LOGGING = 'true';
   });
   afterAll(() => {
-    // cleanupProject();
+    cleanupProject();
     process.env.NX_E2E_VERBOSE_LOGGING = oldVerboseLoggingValue;
   });
 

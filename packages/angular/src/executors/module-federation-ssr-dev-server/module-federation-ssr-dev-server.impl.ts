@@ -1,12 +1,7 @@
-import {
-  type ExecutorContext,
-  readCachedProjectGraph,
-  logger,
-} from '@nx/devkit';
+import { type ExecutorContext, logger } from '@nx/devkit';
 import { existsSync } from 'fs';
 import { readProjectsConfigurationFromProjectGraph } from 'nx/src/project-graph/project-graph';
 import { extname, join } from 'path';
-import { getInstalledAngularVersionInfo } from '../../executors/utilities/angular-version-utils';
 import {
   getDynamicMfManifestFile,
   validateDevRemotes,
@@ -121,6 +116,9 @@ export async function* moduleFederationSsrDevServerExecutor(
     options
   );
 
+  // Set NX_MF_DEV_REMOTES for the Nx Runtime Library Control Plugin
+  process.env.NX_MF_DEV_REMOTES = JSON.stringify(options.devRemotes);
+
   const devRemotes = await startRemotes(
     remotes.devRemotes,
     workspaceProjects,
@@ -134,7 +132,13 @@ export async function* moduleFederationSsrDevServerExecutor(
     options
   );
 
-  startSsrRemoteProxies(staticRemotesConfig, mappedLocationsOfStaticRemotes);
+  startSsrRemoteProxies(
+    staticRemotesConfig,
+    mappedLocationsOfStaticRemotes,
+    options.ssl
+      ? { pathToCert: options.sslCert, pathToKey: options.sslKey }
+      : undefined
+  );
 
   const removeBaseUrlEmission = (iter: AsyncIterable<unknown>) =>
     mapAsyncIterable(iter, (v) => ({

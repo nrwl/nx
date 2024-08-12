@@ -1,4 +1,6 @@
-import { Schema } from '../schema';
+import { workspaceRoot } from '@nx/devkit';
+import type { Schema } from '../schema';
+import { join } from 'path';
 
 export function normalizeOptions(options: Schema): Schema {
   const devServeRemotes = !options.devRemotes
@@ -10,6 +12,8 @@ export function normalizeOptions(options: Schema): Schema {
   return {
     ...options,
     devRemotes: devServeRemotes,
-    isInitialHost: options.isInitialHost ?? options.host === undefined,
+    ssl: options.ssl ?? false,
+    sslCert: options.sslCert ? join(workspaceRoot, options.sslCert) : undefined,
+    sslKey: options.sslKey ? join(workspaceRoot, options.sslKey) : undefined,
   };
 }

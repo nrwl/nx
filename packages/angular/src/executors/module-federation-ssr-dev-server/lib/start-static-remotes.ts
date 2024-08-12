@@ -2,7 +2,7 @@ import { type ExecutorContext, workspaceRoot } from '@nx/devkit';
 import { type Schema } from '../schema';
 import fileServerExecutor from '@nx/web/src/executors/file-server/file-server.impl';
 import { join } from 'path';
-import { cpSync } from 'fs';
+import { cpSync, rmSync } from 'fs';
 import type { StaticRemotesConfig } from '@nx/webpack/src/utils/module-federation/parse-static-remotes-config';
 
 export function startStaticRemotes(
@@ -46,6 +46,5 @@ export function startStaticRemotes(
     },
     context
   );
-
   return staticRemotesIter;
 }

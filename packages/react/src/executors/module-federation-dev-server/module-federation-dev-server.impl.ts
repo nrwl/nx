@@ -20,10 +20,8 @@ import {
 import { waitForPortOpen } from '@nx/web/src/utils/wait-for-port-open';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { fork } from 'node:child_process';
-import { join } from 'node:path';
-import { cpSync, createWriteStream } from 'node:fs';
-import { existsSync } from 'fs';
-import { extname } from 'path';
+import { cpSync, existsSync, createWriteStream } from 'fs';
+import { join, extname } from 'path';
 import { startRemoteProxies } from '@nx/webpack/src/utils/module-federation/start-remote-proxies';
 import {
   parseStaticRemotesConfig,
@@ -111,6 +109,7 @@ function startStaticRemotesFileServer(
     },
     context
   );
+
   return staticRemotesIter;
 }
 

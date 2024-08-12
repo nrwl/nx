@@ -11,4 +11,5 @@ export interface WebSsrDevServerOptions {
   ssl?: boolean;
   sslKey?: string;
   sslCert?: string;
+  isInitialHost?: boolean;
 }
