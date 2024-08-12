@@ -74,6 +74,9 @@ export type PlanOptions = NxReleaseArgs & {
 export type PlanCheckOptions = BaseNxReleaseArgs & {
   base?: string;
   head?: string;
+  files?: string;
+  uncommitted?: boolean;
+  untracked?: boolean;
 };
 
 export type ReleaseOptions = NxReleaseArgs &

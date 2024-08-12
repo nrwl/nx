@@ -1,16 +1,12 @@
 import { NxReleaseConfiguration, readNxJson } from '../../config/nx-json';
 import { getTouchedProjects } from '../../project-graph/affected/locators/workspace-projects';
 import { createProjectFileMapUsingProjectGraph } from '../../project-graph/file-map-utils';
-import {
-  calculateFileChanges,
-  defaultReadFileAtRevision,
-} from '../../project-graph/file-utils';
+import { calculateFileChanges } from '../../project-graph/file-utils';
 import { createProjectGraphAsync } from '../../project-graph/project-graph';
 import { allFileData } from '../../utils/all-file-data';
 import {
-  applyNxBaseAndHead,
-  NxArgs,
   parseFiles,
+  splitArgsIntoNxArgsAndOverrides,
 } from '../../utils/command-line-utils';
 import { getIgnoreObject } from '../../utils/ignore';
 import { output } from '../../utils/output';
@@ -24,7 +20,6 @@ import {
 import { deepMergeJson } from './config/deep-merge-json';
 import { filterReleaseGroups } from './config/filter-release-groups';
 import {
-  ProjectsVersionPlan,
   readRawVersionPlans,
   setResolvedVersionPlansOnGroups,
 } from './config/version-plans';
@@ -98,16 +93,23 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
       Object.keys(projectGraph.nodes)
     );
 
-    // Resolve the final values for base and head to use when resolving the changes to consider
-    applyNxBaseAndHead(args, nxJson, args.verbose);
+    // Resolve the final values for base, head etc to use when resolving the changes to consider
+    const { nxArgs } = splitArgsIntoNxArgsAndOverrides(
+      args,
+      'affected',
+      {
+        printWarnings: args.verbose,
+      },
+      nxJson
+    );
 
-    const changedFiles = parseFiles(args).files;
-    if (args.verbose) {
+    const changedFiles = parseFiles(nxArgs).files;
+    if (nxArgs.verbose) {
       if (changedFiles.length) {
         output.log({
           title: `Changed files based on resolved "base" (${
-            (args as NxArgs).base
-          }) and "head" (${(args as NxArgs).head ?? 'HEAD'})`,
+            nxArgs.base
+          }) and "head" (${nxArgs.head ?? 'HEAD'})`,
           bodyLines: changedFiles.map((file) => `  - ${file}`),
         });
       } else {
@@ -200,8 +202,8 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
           calculateFileChanges(
             changedFiles,
             resolvedAllFileData,
-            args,
-            defaultReadFileAtRevision,
+            nxArgs,
+            undefined,
             ignore
           ),
           projectGraph.nodes
@@ -310,7 +312,7 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
           '',
           'Please use `nx release plan` to generate missing version plans, or adjust your "versionPlans.ignorePatternsForPlanCheck" config stop certain files from affecting the projects for the purposes of this command.',
         ];
-        if (!args.verbose) {
+        if (!nxArgs.verbose) {
           bodyLines.push('', NOTE_ABOUT_VERBOSE_LOGGING);
         }
         output.error({
@@ -328,7 +330,7 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
     }
 
     const bodyLines = [];
-    if (!args.verbose) {
+    if (!nxArgs.verbose) {
       bodyLines.push(NOTE_ABOUT_VERBOSE_LOGGING);
     }
     output.success({
