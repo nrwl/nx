@@ -29,6 +29,7 @@ export interface Schema {
   bundler?: 'webpack' | 'vite' | 'rspack';
   minimal?: boolean;
   addPlugin?: boolean;
+  nxCloudToken?: string;
 }
 
 export interface NormalizedSchema<T extends Schema = Schema> extends T {

@@ -57,7 +57,7 @@ export async function reactNativeApplicationGeneratorInternal(
     tasks.push(ensureDependencies(host));
   }
 
-  createApplicationFiles(host, options);
+  await createApplicationFiles(host, options);
   addProject(host, options);
 
   const lintTask = await addLinting(host, {

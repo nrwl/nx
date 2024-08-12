@@ -174,7 +174,7 @@ export interface NxReleaseConventionalCommitsConfiguration {
   >;
 }
 
-interface NxReleaseConfiguration {
+export interface NxReleaseConfiguration {
   /**
    * Shorthand for amending the projects which will be included in the implicit default release group (all projects by default).
    * @note Only one of `projects` or `groups` can be specified, the cannot be used together.

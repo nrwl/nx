@@ -38,6 +38,7 @@ async function createPreset(tree: Tree, options: Schema) {
       bundler: options.bundler,
       ssr: options.ssr,
       prefix: options.prefix,
+      nxCloudToken: options.nxCloudToken,
     });
   } else if (options.preset === Preset.AngularStandalone) {
     const {
@@ -57,6 +58,7 @@ async function createPreset(tree: Tree, options: Schema) {
       bundler: options.bundler,
       ssr: options.ssr,
       prefix: options.prefix,
+      nxCloudToken: options.nxCloudToken,
     });
   } else if (options.preset === Preset.ReactMonorepo) {
     const { applicationGenerator: reactApplicationGenerator } = require('@nx' +
@@ -71,6 +73,7 @@ async function createPreset(tree: Tree, options: Schema) {
       bundler: options.bundler ?? 'webpack',
       e2eTestRunner: options.e2eTestRunner ?? 'playwright',
       addPlugin,
+      nxCloudToken: options.nxCloudToken,
     });
   } else if (options.preset === Preset.ReactStandalone) {
     const { applicationGenerator: reactApplicationGenerator } = require('@nx' +
@@ -87,6 +90,7 @@ async function createPreset(tree: Tree, options: Schema) {
       e2eTestRunner: options.e2eTestRunner ?? 'playwright',
       unitTestRunner: options.bundler === 'vite' ? 'vitest' : 'jest',
       addPlugin,
+      nxCloudToken: options.nxCloudToken,
     });
   } else if (options.preset === Preset.RemixMonorepo) {
     const { applicationGenerator: remixApplicationGenerator } = require('@nx' +
@@ -100,6 +104,7 @@ async function createPreset(tree: Tree, options: Schema) {
       e2eTestRunner: options.e2eTestRunner ?? 'playwright',
       unitTestRunner: 'vitest',
       addPlugin,
+      nxCloudToken: options.nxCloudToken,
     });
   } else if (options.preset === Preset.RemixStandalone) {
     const { applicationGenerator: remixApplicationGenerator } = require('@nx' +
@@ -114,6 +119,7 @@ async function createPreset(tree: Tree, options: Schema) {
       rootProject: true,
       unitTestRunner: 'vitest',
       addPlugin,
+      nxCloudToken: options.nxCloudToken,
     });
   } else if (options.preset === Preset.VueMonorepo) {
     const { applicationGenerator: vueApplicationGenerator } = require('@nx' +
@@ -127,6 +133,7 @@ async function createPreset(tree: Tree, options: Schema) {
       linter: options.linter,
       e2eTestRunner: options.e2eTestRunner ?? 'playwright',
       addPlugin,
+      nxCloudToken: options.nxCloudToken,
     });
   } else if (options.preset === Preset.VueStandalone) {
     const { applicationGenerator: vueApplicationGenerator } = require('@nx' +
@@ -142,6 +149,7 @@ async function createPreset(tree: Tree, options: Schema) {
       e2eTestRunner: options.e2eTestRunner ?? 'playwright',
       unitTestRunner: 'vitest',
       addPlugin,
+      nxCloudToken: options.nxCloudToken,
     });
   } else if (options.preset === Preset.Nuxt) {
     const { applicationGenerator: nuxtApplicationGenerator } = require('@nx' +
@@ -155,6 +163,7 @@ async function createPreset(tree: Tree, options: Schema) {
       linter: options.linter,
       e2eTestRunner: options.e2eTestRunner ?? 'playwright',
       addPlugin,
+      nxCloudToken: options.nxCloudToken,
     });
   } else if (options.preset === Preset.NuxtStandalone) {
     const { applicationGenerator: nuxtApplicationGenerator } = require('@nx' +
@@ -170,6 +179,7 @@ async function createPreset(tree: Tree, options: Schema) {
       e2eTestRunner: options.e2eTestRunner ?? 'playwright',
       unitTestRunner: 'vitest',
       addPlugin,
+      nxCloudToken: options.nxCloudToken,
     });
   } else if (options.preset === Preset.NextJs) {
     const { applicationGenerator: nextApplicationGenerator } = require('@nx' +
@@ -214,6 +224,7 @@ async function createPreset(tree: Tree, options: Schema) {
       bundler: 'vite',
       e2eTestRunner: options.e2eTestRunner ?? 'playwright',
       addPlugin,
+      nxCloudToken: options.nxCloudToken,
     });
   } else if (options.preset === Preset.Nest) {
     const { applicationGenerator: nestApplicationGenerator } = require('@nx' +
@@ -249,6 +260,7 @@ async function createPreset(tree: Tree, options: Schema) {
       linter: options.linter,
       e2eTestRunner: options.e2eTestRunner ?? 'detox',
       addPlugin,
+      nxCloudToken: options.nxCloudToken,
     });
   } else if (options.preset === Preset.Expo) {
     const { expoApplicationGenerator } = require('@nx' + '/expo');
@@ -259,6 +271,7 @@ async function createPreset(tree: Tree, options: Schema) {
       linter: options.linter,
       e2eTestRunner: options.e2eTestRunner ?? 'detox',
       addPlugin,
+      nxCloudToken: options.nxCloudToken,
     });
   } else if (options.preset === Preset.TS) {
     const { initGenerator } = require('@nx' + '/js');

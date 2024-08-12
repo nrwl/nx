@@ -12,7 +12,7 @@ import { addSwcConfig } from '../../utils/swc/add-swc-config';
 import { addSwcDependencies } from '../../utils/swc/add-swc-dependencies';
 import { nxVersion } from '../../utils/versions';
 import { SetupBuildGeneratorSchema } from './schema';
-import { addBuildTargetDefaults } from '@nx/devkit/src/generators/add-build-target-defaults';
+import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
 
 export async function setupBuildGenerator(
   tree: Tree,

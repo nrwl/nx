@@ -23,6 +23,9 @@
       "{projectRoot}/**/Cargo.*",
       {
         "runtime": "node -p '`${process.platform}_${process.arch}`'"
+      },
+      {
+        "externalDependencies": ["npm:@monodon/rust", "npm:@napi-rs/cli"]
       }
     ],
     "e2eInputs": [

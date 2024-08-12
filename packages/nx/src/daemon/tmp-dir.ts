@@ -61,9 +61,11 @@ function socketDirName() {
 export function getSocketDir(alreadyUnique = false) {
   try {
     const dir =
+      process.env.NX_SOCKET_DIR ??
       process.env.NX_DAEMON_SOCKET_DIR ??
       (alreadyUnique ? tmpdir : socketDirName());
     ensureDirSync(dir);
+
     return dir;
   } catch (e) {
     return DAEMON_DIR_FOR_CURRENT_WORKSPACE;

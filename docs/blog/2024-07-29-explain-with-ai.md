@@ -12,7 +12,7 @@ It's Friday, and you absolutely, positively have to deploy to production. But yo
 
 "Explain with AI" is a new feature for all Nx Cloud Pro users that is going to help you troubleshoot those pesky failing tasks. Whenever you get an error message on CI, look for the "Explain with AI" button on the upper right-hand corner:
 
-![Nx Cloud error log window](/blog/images/2024-07-29/explain-with-ai-1.avif)
+![Explain with AI button](/blog/images/2024-07-29/explain-with-ai-button.avif)
 
 Once you hit that button, we collect the terminal output and other Nx task information and sprinkle some AI on top of it to give you a suggested fix. That should help you quickly get to the bottom of the issue and get back to work quickly.
 

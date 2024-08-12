@@ -381,11 +381,6 @@
                   "file": "shared/recipes/running-tasks/defining-task-pipeline"
                 },
                 {
-                  "name": "Change Cache Location",
-                  "id": "change-cache-location",
-                  "file": "shared/recipes/running-tasks/change-cache-location"
-                },
-                {
                   "name": "Run Custom Commands",
                   "id": "run-commands-executor",
                   "tags": ["run-tasks"],
@@ -420,6 +415,16 @@
                   "id": "reduce-repetitive-configuration",
                   "tags": [],
                   "file": "shared/recipes/running-tasks/reduce-repetitive-configuration"
+                },
+                {
+                  "name": "Change Cache Location",
+                  "id": "change-cache-location",
+                  "file": "shared/recipes/running-tasks/change-cache-location"
+                },
+                {
+                  "name": "Skip Task Caching",
+                  "id": "skipping-cache",
+                  "file": "shared/recipes/running-tasks/skipping-cache"
                 }
               ]
             },
@@ -999,6 +1004,12 @@
                   "file": "shared/recipes/nx-release/automatically-version-with-conventional-commits"
                 },
                 {
+                  "name": "Customize Conventional Commit Types",
+                  "id": "customize-conventional-commit-types",
+                  "tags": ["nx-release"],
+                  "file": "shared/recipes/nx-release/customize-conventional-commit-types"
+                },
+                {
                   "name": "Configure Custom Registries",
                   "id": "configure-custom-registries",
                   "tags": ["nx-release"],
@@ -1027,12 +1038,6 @@
                   "id": "update-local-registry-setup",
                   "tags": ["nx-release"],
                   "file": "shared/recipes/nx-release/update-local-registry-setup"
-                },
-                {
-                  "name": "Customize Conventional Commit Types",
-                  "id": "customize-conventional-commit-types",
-                  "tags": ["nx-release"],
-                  "file": "shared/recipes/nx-release/customize-conventional-commit-types"
                 },
                 {
                   "name": "Configure Changelog Format",

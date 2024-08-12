@@ -2,7 +2,7 @@ export function generateVersionPlanContent(
   bumps: Record<string, string>,
   message: string
 ): string {
-  return `---
+  const frontMatter = `---
 ${Object.entries(bumps)
   .filter(([_, version]) => version !== 'none')
   .map(([projectOrGroup, version]) => {
@@ -15,7 +15,7 @@ ${Object.entries(bumps)
   })
   .join('\n')}
 ---
-
-${message}
 `;
+
+  return `${frontMatter}${message ? `\n${message}\n` : ''}`;
 }

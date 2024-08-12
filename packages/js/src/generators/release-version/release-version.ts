@@ -49,6 +49,8 @@ export async function releaseVersionGenerator(
   tree: Tree,
   options: ReleaseVersionGeneratorSchema
 ): Promise<ReleaseVersionGeneratorResult> {
+  let logger: ProjectLogger | undefined;
+
   try {
     const versionData: VersionData = {};
 
@@ -126,6 +128,9 @@ Valid values are: ${validReleaseVersionPrefixes
       dryRun?: boolean
     ) => Promise<string[]>)[] = [];
 
+    // If the user has set the logUnchangedProjects option to false, we will not print any logs for projects that have no changes.
+    const logUnchangedProjects = options.logUnchangedProjects ?? true;
+
     for (const project of projects) {
       const projectName = project.name;
       const packageRoot = projectNameToPackageRootMap.get(projectName);
@@ -136,12 +141,6 @@ Valid values are: ${validReleaseVersionPrefixes
       }
 
       const packageJsonPath = join(packageRoot, 'package.json');
-
-      const color = getColor(projectName);
-      const log = (msg: string) => {
-        console.log(color.instance.bold(projectName) + ' ' + msg);
-      };
-
       if (!tree.exists(packageJsonPath)) {
         throw new Error(
           `The project "${projectName}" does not have a package.json available at ${packageJsonPath}.
@@ -150,14 +149,11 @@ To fix this you will either need to add a package.json file at that location, or
         );
       }
 
-      output.logSingleLine(
-        `Running release version for project: ${color.instance.bold(
-          project.name
-        )}`
-      );
+      const color = getColor(projectName);
+      logger = new ProjectLogger(projectName, color);
 
       const packageJson = readJson(tree, packageJsonPath);
-      log(
+      logger.buffer(
         `🔍 Reading data for package "${packageJson.name}" from ${packageJsonPath}`
       );
 
@@ -227,14 +223,14 @@ To fix this you will either need to add a package.json file at that location, or
 
               spinner.stop();
 
-              log(
+              logger.buffer(
                 `📄 Resolved the current version as ${currentVersion} for tag "${tag}" from registry ${registry}`
               );
             } catch (e) {
               spinner.stop();
 
               if (options.fallbackCurrentVersionResolver === 'disk') {
-                log(
+                logger.buffer(
                   `📄 Unable to resolve the current version from the registry ${registry}. Falling back to the version on disk of ${currentVersionFromDisk}`
                 );
                 currentVersion = currentVersionFromDisk;
@@ -247,11 +243,11 @@ To fix this you will either need to add a package.json file at that location, or
             }
           } else {
             if (currentVersionResolvedFromFallback) {
-              log(
+              logger.buffer(
                 `📄 Using the current version ${currentVersion} already resolved from disk fallback.`
               );
             } else {
-              log(
+              logger.buffer(
                 `📄 Using the current version ${currentVersion} already resolved from the registry ${registry}`
               );
             }
@@ -265,7 +261,7 @@ To fix this you will either need to add a package.json file at that location, or
               `Unable to determine the current version for project "${project.name}" from ${packageJsonPath}`
             );
           }
-          log(
+          logger.buffer(
             `📄 Resolved the current version as ${currentVersion} from ${packageJsonPath}`
           );
           break;
@@ -284,7 +280,7 @@ To fix this you will either need to add a package.json file at that location, or
             );
             if (!latestMatchingGitTag) {
               if (options.fallbackCurrentVersionResolver === 'disk') {
-                log(
+                logger.buffer(
                   `📄 Unable to resolve the current version from git tag using pattern "${releaseTagPattern}". Falling back to the version on disk of ${currentVersionFromDisk}`
                 );
                 currentVersion = currentVersionFromDisk;
@@ -296,17 +292,17 @@ To fix this you will either need to add a package.json file at that location, or
               }
             } else {
               currentVersion = latestMatchingGitTag.extractedVersion;
-              log(
+              logger.buffer(
                 `📄 Resolved the current version as ${currentVersion} from git tag "${latestMatchingGitTag.tag}".`
               );
             }
           } else {
             if (currentVersionResolvedFromFallback) {
-              log(
+              logger.buffer(
                 `📄 Using the current version ${currentVersion} already resolved from disk fallback.`
               );
             } else {
-              log(
+              logger.buffer(
                 // In this code path we know that latestMatchingGitTag is defined, because we are not relying on the fallbackCurrentVersionResolver, so we can safely use the non-null assertion operator
                 `📄 Using the current version ${currentVersion} already resolved from git tag "${
                   latestMatchingGitTag!.tag
@@ -323,7 +319,9 @@ To fix this you will either need to add a package.json file at that location, or
       }
 
       if (options.specifier) {
-        log(`📄 Using the provided version specifier "${options.specifier}".`);
+        logger.buffer(
+          `📄 Using the provided version specifier "${options.specifier}".`
+        );
         // The user is forcibly overriding whatever specifierSource they had otherwise set by imperatively providing a specifier
         options.specifierSource = 'prompt';
       }
@@ -385,12 +383,12 @@ To fix this you will either need to add a package.json file at that location, or
               if (projectToDependencyBumps.has(projectName)) {
                 // No applicable changes to the project directly by the user, but one or more dependencies have been bumped and updateDependents is enabled
                 specifier = updateDependentsBump;
-                log(
+                logger.buffer(
                   `📄 Resolved the specifier as "${specifier}" because "release.version.generatorOptions.updateDependents" is enabled`
                 );
                 break;
               }
-              log(
+              logger.buffer(
                 `🚫 No changes were detected using git history and the conventional commits standard.`
               );
               break;
@@ -402,7 +400,7 @@ To fix this you will either need to add a package.json file at that location, or
             // Users must manually graduate from a prerelease to a release by providing an explicit specifier.
             if (prerelease(currentVersion ?? '')) {
               specifier = 'prerelease';
-              log(
+              logger.buffer(
                 `📄 Resolved the specifier as "${specifier}" since the current version is a prerelease.`
               );
             } else {
@@ -411,7 +409,7 @@ To fix this you will either need to add a package.json file at that location, or
                 specifier = `pre${specifier}`;
                 extraText = `, combined with your given preid "${options.preid}"`;
               }
-              log(
+              logger.buffer(
                 `📄 Resolved the specifier as "${specifier}" using git history and the conventional commits standard${extraText}.`
               );
             }
@@ -508,15 +506,17 @@ To fix this you will either need to add a package.json file at that location, or
               ) {
                 // No applicable changes to the project directly by the user, but one or more dependencies have been bumped and updateDependents is enabled
                 specifier = updateDependentsBump;
-                log(
+                logger.buffer(
                   `📄 Resolved the specifier as "${specifier}" because "release.version.generatorOptions.updateDependents" is enabled`
                 );
               } else {
                 specifier = null;
-                log(`🚫 No changes were detected within version plans.`);
+                logger.buffer(
+                  `🚫 No changes were detected within version plans.`
+                );
               }
             } else {
-              log(
+              logger.buffer(
                 `📄 Resolved the specifier as "${specifier}" using version plans.`
               );
             }
@@ -636,7 +636,7 @@ To fix this you will either need to add a package.json file at that location, or
             .map((dependentProject) => `${indent}- ${dependentProject.source}`)
             .join('\n')}`;
           logMsg += `\n${indent}=> You can adjust this behavior by setting \`version.generatorOptions.updateDependents\` to "auto"`;
-          log(logMsg);
+          logger.buffer(logMsg);
         }
       }
 
@@ -656,9 +656,13 @@ To fix this you will either need to add a package.json file at that location, or
       };
 
       if (!specifier) {
-        log(
+        logger.buffer(
           `🚫 Skipping versioning "${packageJson.name}" as no changes were detected.`
         );
+        // Print the buffered logs for this unchanged project, as long as the user has not explicitly disabled this behavior
+        if (logUnchangedProjects) {
+          logger.flush();
+        }
         continue;
       }
 
@@ -674,7 +678,9 @@ To fix this you will either need to add a package.json file at that location, or
         version: newVersion,
       });
 
-      log(`✍️  New version ${newVersion} written to ${packageJsonPath}`);
+      logger.buffer(
+        `✍️  New version ${newVersion} written to ${packageJsonPath}`
+      );
 
       if (allDependentProjects.length > 0) {
         const totalProjectsToUpdate =
@@ -685,7 +691,7 @@ To fix this you will either need to add a package.json file at that location, or
               circularDependencies.size / 2
             : dependentProjectsInCurrentBatch.length;
         if (totalProjectsToUpdate > 0) {
-          log(
+          logger.buffer(
             `✍️  Applying new version ${newVersion} to ${totalProjectsToUpdate} ${
               totalProjectsToUpdate > 1
                 ? 'packages which depend'
@@ -843,6 +849,9 @@ To fix this you will either need to add a package.json file at that location, or
             : updateDependentsBump,
         });
       }
+
+      // Print the logs that have been buffered for this project
+      logger.flush();
     }
 
     /**
@@ -868,6 +877,9 @@ To fix this you will either need to add a package.json file at that location, or
       },
     };
   } catch (e: any) {
+    // Flush any pending logs before printing the error to make troubleshooting easier
+    logger?.flush();
+
     if (process.env.NX_VERBOSE_LOGGING === 'true') {
       output.error({
         title: e.message,
@@ -924,4 +936,28 @@ function getColor(projectName: string) {
   const colorIndex = code % colors.length;
 
   return colors[colorIndex];
+}
+
+class ProjectLogger {
+  private logs: string[] = [];
+
+  constructor(
+    private projectName: string,
+    private color: (typeof colors)[number]
+  ) {}
+
+  buffer(msg: string) {
+    this.logs.push(msg);
+  }
+
+  flush() {
+    output.logSingleLine(
+      `Running release version for project: ${this.color.instance.bold(
+        this.projectName
+      )}`
+    );
+    this.logs.forEach((msg) => {
+      console.log(this.color.instance.bold(this.projectName) + ' ' + msg);
+    });
+  }
 }
