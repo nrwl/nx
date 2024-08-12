@@ -86,8 +86,11 @@ export default async function addE2eCiTargetDefaults(tree: Tree) {
         graph.nodes[project].data.root === dirname(configFile);
 
       const serveStaticTarget = graph.nodes[project].data.targets[target];
+      if (!serveStaticTarget) {
+        continue;
+      }
       let resolvedBuildTarget: string;
-      if (serveStaticTarget.dependsOn) {
+      if (serveStaticTarget?.dependsOn) {
         resolvedBuildTarget = serveStaticTarget.dependsOn.join(',');
       } else {
         resolvedBuildTarget =
