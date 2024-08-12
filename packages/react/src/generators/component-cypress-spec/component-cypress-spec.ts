@@ -3,7 +3,6 @@ import {
   generateFiles,
   getProjects,
   joinPathFragments,
-  logger,
   Tree,
 } from '@nx/devkit';
 import { basename, join } from 'path';
@@ -29,9 +28,6 @@ export async function componentCypressGenerator(
   host: Tree,
   schema: CreateComponentSpecFileSchema
 ) {
-  logger.warn(
-    `This will be removed in Nx 21. Prefer Storybook Interaction Tests.`
-  );
   createComponentSpecFile(host, schema);
 
   if (!schema.skipFormat) {

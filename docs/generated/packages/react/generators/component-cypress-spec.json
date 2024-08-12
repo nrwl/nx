@@ -7,7 +7,6 @@
     "$id": "NxReactComponentCypressSpec",
     "title": "Create component Cypress spec",
     "description": "Create a Cypress spec for a UI component that has a story.",
-    "x-deprecated": "This will be removed in Nx 21. Prefer Storybook Interaction Tests.",
     "type": "object",
     "properties": {
       "project": {
