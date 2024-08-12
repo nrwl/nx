@@ -4,7 +4,6 @@
   "type": "object",
   "cli": "nx",
   "description": "Creates a Cypress spec for a UI component that has a story.",
-  "x-deprecated": "This will be removed in Nx 21. Prefer Storybook Interaction Tests.",
   "properties": {
     "projectName": {
       "type": "string",
