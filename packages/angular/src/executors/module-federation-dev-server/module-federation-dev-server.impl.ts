@@ -156,7 +156,16 @@ export async function* moduleFederationDevServerExecutor(
     options
   );
 
-  startRemoteProxies(staticRemotesConfig, mappedLocationsOfStaticRemotes);
+  startRemoteProxies(
+    staticRemotesConfig,
+    mappedLocationsOfStaticRemotes,
+    options.ssl
+      ? {
+          pathToCert: options.sslCert,
+          pathToKey: options.sslKey,
+        }
+      : undefined
+  );
 
   const removeBaseUrlEmission = (iter: AsyncIterable<unknown>) =>
     mapAsyncIterable(iter, (v) => ({

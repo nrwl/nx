@@ -365,7 +365,16 @@ export default async function* moduleFederationDevServer(
     options
   );
 
-  startRemoteProxies(staticRemotesConfig, mappedLocationsOfStaticRemotes);
+  startRemoteProxies(
+    staticRemotesConfig,
+    mappedLocationsOfStaticRemotes,
+    options.ssl
+      ? {
+          pathToCert: join(workspaceRoot, options.sslCert),
+          pathToKey: join(workspaceRoot, options.sslKey),
+        }
+      : undefined
+  );
 
   return yield* combineAsyncIterables(
     currIter,
