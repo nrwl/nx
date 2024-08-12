@@ -6,8 +6,8 @@ import { mergeConfig } from 'vite';
 const config = {
   stories: [
     <% if(uiFramework === '@storybook/angular' && projectType === 'library') { %>
-    '../**/*.stories.@(js|jsx|ts|tsx|mdx)' <% } else { %>
-    '../<%= projectDirectory %>/**/*.stories.@(js|jsx|ts|tsx|mdx)'
+    '../**/*.@(mdx|stories.@(js|jsx|ts|tsx))' <% } else { %>
+    '../<%= projectDirectory %>/**/*.@(mdx|stories.@(js|jsx|ts|tsx))'
   <% } %>],
   addons: ['@storybook/addon-essentials' <% if(interactionTests) { %>, '@storybook/addon-interactions' <% } %><% if(uiFramework === '@storybook/react-webpack5') { %>, '@nx/react/plugins/storybook' <% } %>],
   framework: {
