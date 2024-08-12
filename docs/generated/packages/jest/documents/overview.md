@@ -161,6 +161,16 @@ To run Jest tests via nx use
 nx test frontend
 ```
 
+### Testing Specific Files
+
+Using a single positional argument or the `--testFile` flag will run all test files matching the regex. For more info check out the [Jest documentation](https://jestjs.io/docs/cli#jest-regexfortestfiles).
+
+```shell
+nx test frontend HomePage.tsx
+# or
+nx test frontend --testFile HomePage.tsx
+```
+
 ### Watching for Changes
 
 Using the `--watch` flag will run the tests whenever a file changes.
