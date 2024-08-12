@@ -5,6 +5,7 @@ import { formatFiles, readNxJson, Tree, updateNxJson } from '@nx/devkit';
  */
 export default async function update(tree: Tree) {
   const nxJson = readNxJson(tree);
+  if (!nxJson.plugins) return;
   let updated = false;
   for (const plugin of nxJson.plugins) {
     if (typeof plugin === 'string') continue;

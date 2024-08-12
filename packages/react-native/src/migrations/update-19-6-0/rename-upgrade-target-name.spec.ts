@@ -9,6 +9,10 @@ describe('rename-upgrade-target-name', () => {
     tree = createTreeWithEmptyWorkspace();
   });
 
+  it('should skip if no plugins', async () => {
+    expect(update(tree)).resolves.not.toThrow();
+  });
+
   it('should fix upgrade target name option', async () => {
     const nxJson = readNxJson(tree);
     nxJson.plugins = [
