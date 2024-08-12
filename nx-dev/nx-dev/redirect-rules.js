@@ -1125,6 +1125,11 @@ const blogPosts = {
     '/blog/nx-cloud-3-0-faster-more-efficient-modernized',
 };
 
+const featurePagesUpdate = {
+  '/ci/troubleshooting/explain-with-ai': '/ci/features/explain-with-ai',
+  '/ci/features/ai-features': '/ci/concepts/ai-features',
+};
+
 /**
  * Public export API
  */
@@ -1156,4 +1161,5 @@ module.exports = {
   troubleshootingOutOfRecipes,
   blogPosts,
   decisionsSection,
+  featurePagesUpdate,
 };
