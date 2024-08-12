@@ -5413,9 +5413,17 @@
             "disableCollapsible": false
           },
           {
-            "name": "Nx Cloud AI",
-            "path": "/ci/features/nx-cloud-ai",
-            "id": "nx-cloud-ai",
+            "name": "Automatically Split E2E Tasks (Atomizer)",
+            "path": "/ci/features/split-e2e-tasks",
+            "id": "split-e2e-tasks",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Identify and Re-run Flaky Tasks",
+            "path": "/ci/features/flaky-tasks",
+            "id": "flaky-tasks",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -5429,17 +5437,9 @@
             "disableCollapsible": false
           },
           {
-            "name": "Automatically Split E2E Tasks (Atomizer)",
-            "path": "/ci/features/split-e2e-tasks",
-            "id": "split-e2e-tasks",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Identify and Re-run Flaky Tasks",
-            "path": "/ci/features/flaky-tasks",
-            "id": "flaky-tasks",
+            "name": "Explain With AI",
+            "path": "/ci/features/explain-with-ai",
+            "id": "explain-with-ai",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -5472,9 +5472,17 @@
         "disableCollapsible": false
       },
       {
-        "name": "Nx Cloud AI",
-        "path": "/ci/features/nx-cloud-ai",
-        "id": "nx-cloud-ai",
+        "name": "Automatically Split E2E Tasks (Atomizer)",
+        "path": "/ci/features/split-e2e-tasks",
+        "id": "split-e2e-tasks",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Identify and Re-run Flaky Tasks",
+        "path": "/ci/features/flaky-tasks",
+        "id": "flaky-tasks",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -5488,17 +5496,9 @@
         "disableCollapsible": false
       },
       {
-        "name": "Automatically Split E2E Tasks (Atomizer)",
-        "path": "/ci/features/split-e2e-tasks",
-        "id": "split-e2e-tasks",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Identify and Re-run Flaky Tasks",
-        "path": "/ci/features/flaky-tasks",
-        "id": "flaky-tasks",
+        "name": "Explain With AI",
+        "path": "/ci/features/explain-with-ai",
+        "id": "explain-with-ai",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -5540,6 +5540,14 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
+          },
+          {
+            "name": "Nx Cloud AI",
+            "path": "/ci/concepts/nx-cloud-ai",
+            "id": "nx-cloud-ai",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -5572,6 +5580,14 @@
         "name": "Cache Security",
         "path": "/ci/concepts/cache-security",
         "id": "cache-security",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Nx Cloud AI",
+        "path": "/ci/concepts/nx-cloud-ai",
+        "id": "nx-cloud-ai",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -6719,14 +6735,6 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
-          },
-          {
-            "name": "Explain With AI",
-            "path": "/ci/troubleshooting/explain-with-ai",
-            "id": "explain-with-ai",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -6735,14 +6743,6 @@
         "name": "CI Execution Failed",
         "path": "/ci/troubleshooting/ci-execution-failed",
         "id": "ci-execution-failed",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Explain With AI",
-        "path": "/ci/troubleshooting/explain-with-ai",
-        "id": "explain-with-ai",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false

@@ -1648,18 +1648,6 @@
               "file": "shared/features/distribute-task-execution"
             },
             {
-              "name": "Nx Cloud AI",
-              "id": "nx-cloud-ai",
-              "description": "Learn how to enable AI features in Nx Cloud, and what features it enables",
-              "file": "nx-cloud/features/ai-features"
-            },
-            {
-              "name": "Dynamically Allocate Agents",
-              "description": "Learn how to dynamically allocate agents based on the size of a PR, keeping the balance of speed and cost.",
-              "id": "dynamic-agents",
-              "file": "nx-cloud/features/dynamic-agents"
-            },
-            {
               "name": "Automatically Split E2E Tasks (Atomizer)",
               "id": "split-e2e-tasks",
               "description": "Learn how Nx can automatically split e2e tests into fine-grained chunks for a much better distribution on Nx Agents.",
@@ -1670,6 +1658,17 @@
               "id": "flaky-tasks",
               "description": "Learn how Nx Cloud is able to automatically identify flaky tasks and re-run them for you.",
               "file": "nx-cloud/features/flaky-tasks"
+            },
+            {
+              "name": "Dynamically Allocate Agents",
+              "description": "Learn how to dynamically allocate agents based on the size of a PR, keeping the balance of speed and cost.",
+              "id": "dynamic-agents",
+              "file": "nx-cloud/features/dynamic-agents"
+            },
+            {
+              "name": "Explain With AI",
+              "id": "explain-with-ai",
+              "file": "nx-cloud/features/explain-with-ai"
             }
           ]
         },
@@ -1700,6 +1699,12 @@
               "name": "Cache Security",
               "id": "cache-security",
               "file": "nx-cloud/concepts/cache-security"
+            },
+            {
+              "name": "Nx Cloud AI",
+              "id": "nx-cloud-ai",
+              "description": "Learn how to enable AI features in Nx Cloud, and what features it enables",
+              "file": "nx-cloud/concepts/ai-features"
             }
           ]
         },
@@ -1964,11 +1969,6 @@
               "name": "CI Execution Failed",
               "id": "ci-execution-failed",
               "file": "nx-cloud/troubleshooting/ci-execution-failed"
-            },
-            {
-              "name": "Explain With AI",
-              "id": "explain-with-ai",
-              "file": "nx-cloud/troubleshooting/explain-with-ai"
             }
           ]
         }

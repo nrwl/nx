@@ -518,7 +518,7 @@ export function AiSection(): JSX.Element {
           </p>
           <div className="mt-4 flex items-center">
             <Link
-              href="/ci/features/nx-cloud-ai#?utm_source=homepage&utm_medium=website&utm_campaign=homepage_links&utm_content=cta_ci_for_monorepos"
+              href="/ci/concepts/nx-cloud-ai?utm_source=homepage&utm_medium=website&utm_campaign=homepage_links&utm_content=cta_ci_for_monorepos"
               title="Add AI to your CI with Nx Cloud"
               prefetch={false}
               className="group font-semibold leading-6 text-slate-950 dark:text-white"
