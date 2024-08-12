@@ -21,6 +21,7 @@ export async function withModuleFederationForSSR(
     config.target = false;
     config.output.uniqueName = options.name;
     config.optimization = {
+      ...(config.optimization ?? {}),
       runtimeChunk: false,
     };
 
