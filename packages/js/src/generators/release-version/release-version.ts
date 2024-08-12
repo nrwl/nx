@@ -463,7 +463,8 @@ To fix this you will either need to add a package.json file at that location, or
 
             if (options.releaseGroup.projectsRelationship === 'independent') {
               specifier = (
-                options.releaseGroup.versionPlans as ProjectsVersionPlan[]
+                options.releaseGroup
+                  .resolvedVersionPlans as ProjectsVersionPlan[]
               ).reduce((spec: ReleaseType, plan: ProjectsVersionPlan) => {
                 if (!spec) {
                   return plan.projectVersionBumps[projectName];
@@ -482,7 +483,7 @@ To fix this you will either need to add a package.json file at that location, or
               }, null);
             } else {
               specifier = (
-                options.releaseGroup.versionPlans as GroupVersionPlan[]
+                options.releaseGroup.resolvedVersionPlans as GroupVersionPlan[]
               ).reduce((spec: ReleaseType, plan: GroupVersionPlan) => {
                 if (!spec) {
                   return plan.groupVersionBump;
@@ -522,7 +523,7 @@ To fix this you will either need to add a package.json file at that location, or
             }
 
             if (options.deleteVersionPlans) {
-              options.releaseGroup.versionPlans.forEach((p) => {
+              (options.releaseGroup.resolvedVersionPlans || []).forEach((p) => {
                 deleteVersionPlanCallbacks.push(async (dryRun?: boolean) => {
                   if (!dryRun) {
                     await remove(p.absolutePath);
@@ -599,14 +600,14 @@ To fix this you will either need to add a package.json file at that location, or
 
         // For version-plans, we don't just need to consider the current batch of projects, but also the ones that are actually being updated as part of the plan file(s)
         if (isInCurrentBatch && options.specifierSource === 'version-plans') {
-          isInCurrentBatch = (options.releaseGroup.versionPlans || []).some(
-            (plan) => {
-              if ('projectVersionBumps' in plan) {
-                return plan.projectVersionBumps[dependentProject.source];
-              }
-              return true;
+          isInCurrentBatch = (
+            options.releaseGroup.resolvedVersionPlans || []
+          ).some((plan) => {
+            if ('projectVersionBumps' in plan) {
+              return plan.projectVersionBumps[dependentProject.source];
             }
-          );
+            return true;
+          });
         }
 
         if (!isInCurrentBatch) {

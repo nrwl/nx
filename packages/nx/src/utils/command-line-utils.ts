@@ -120,7 +120,7 @@ export function splitArgsIntoNxArgsAndOverrides(
       });
     }
 
-    // Allow setting base and head via environment variables (lower priority then direct command arguments)
+    // Allow setting base and head via environment variables (lower priority than direct command arguments)
     if (!nxArgs.base && process.env.NX_BASE) {
       nxArgs.base = process.env.NX_BASE;
       if (options.printWarnings) {

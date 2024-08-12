@@ -186,8 +186,15 @@
                 "type": "string"
               },
               "versionPlans": {
-                "type": "boolean",
-                "description": "Enables using version plans as a specifier source for versioning and to determine changes for changelog generation."
+                "oneOf": [
+                  {
+                    "$ref": "#/definitions/NxReleaseVersionPlansConfiguration"
+                  },
+                  {
+                    "type": "boolean",
+                    "description": "Enables using version plans as a specifier source for versioning and to determine changes for changelog generation."
+                  }
+                ]
               }
             },
             "required": ["projects"]
@@ -239,8 +246,15 @@
           "$ref": "#/definitions/NxReleaseVersionConfiguration"
         },
         "versionPlans": {
-          "type": "boolean",
-          "description": "Enables using version plans as a specifier source for versioning and to determine changes for changelog generation."
+          "oneOf": [
+            {
+              "$ref": "#/definitions/NxReleaseVersionPlansConfiguration"
+            },
+            {
+              "type": "boolean",
+              "description": "Enables using version plans as a specifier source for versioning and to determine changes for changelog generation."
+            }
+          ]
         },
         "releaseTagPattern": {
           "type": "string"
@@ -695,6 +709,18 @@
         },
         "renderOptions": {
           "$ref": "#/definitions/ChangelogRenderOptions"
+        }
+      }
+    },
+    "NxReleaseVersionPlansConfiguration": {
+      "type": "object",
+      "properties": {
+        "ignorePatternsForPlanCheck": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Changes to files matching any of these optional patterns will be excluded from the affected project logic within the `nx release plan:check` command. This is useful for ignoring files that are not relevant to the versioning process, such as documentation or configuration files."
         }
       }
     },
