@@ -3,7 +3,7 @@ title: Storybook 8 Migration Generator Examples
 description: This page contains examples for the @nx/storybook:migrate-8 generator.
 ---
 
-Storybook 8 is a major release that brings a lot of new features and improvements. You can read more about it in the [Storybook 8.0.0 release article](https://storybook.js.org/blog/storybook-8/). Apart from the new features and improvements it introduces, it also brings some breaking changes. You can read more about them in the [Storybook 7 migration docs](https://github.com/storybookjs/storybook/blob/next/MIGRATION.md#from-version-65x-to-700) and the [Storybook 7.0.0 migration guide](https://storybook.js.org/docs/react/migration-guide).
+Storybook 8 is a major release that brings a lot of new features and improvements. You can read more about it in the [Storybook 8.0.0 release article](https://storybook.js.org/blog/storybook-8/). Apart from the new features and improvements it introduces, it also brings some breaking changes. You can read more about them in the [Storybook 8 migration docs](https://github.com/storybookjs/storybook/blob/next/MIGRATION.md#from-version-7x-to-800) and the [Storybook 8.0.0 migration guide](https://storybook.js.org/docs/react/migration-guide).
 
 You can now migrate your existing Nx workspace with Storybook configuration to use Storybook version 8. To help you, Nx offers the `@nx/storybook:migrate-8` generator. This generator will help you migrate your existing Storybook setup to version 8.
 
@@ -41,11 +41,11 @@ Once the generator finishes, and the Storybook CLI automigration scripts have ru
 
 #### Full example for Angular projects
 
-Here is an example of a project-level `.storybook/main.js|ts` file for an Angular project that has been migrated to Storybook version 7:
+Here is an example of a project-level `.storybook/main.js|ts` file for an Angular project that has been migrated to Storybook version 8:
 
 ```ts {% fileName="apps/my-angular-app/.storybook/main.js" %}
 const config = {
-  stories: ['../src/app/**/*.stories.@(js|jsx|ts|tsx|mdx)'],
+  stories: ['../src/app/**/*.@(mdx|stories.@(js|jsx|ts|tsx)'],
   addons: ['@storybook/addon-essentials'],
   framework: {
     name: '@storybook/angular',
@@ -58,11 +58,11 @@ export default config;
 
 #### Full example for React projects with Vite
 
-Here is an example of a project-level `.storybook/main.js|ts` file for a React project using Vite that has been migrated to Storybook version 7:
+Here is an example of a project-level `.storybook/main.js|ts` file for a React project using Vite that has been migrated to Storybook version 8:
 
 ```ts {% fileName="apps/my-react-app/.storybook/main.js" %}
 const config = {
-  stories: ['../src/app/**/*.stories.@(js|jsx|ts|tsx|mdx)'],
+  stories: ['../src/app/**/*.@(mdx|stories.@(js|jsx|ts|tsx)'],
   addons: ['@storybook/addon-essentials'],
   framework: {
     name: '@storybook/react-vite',
