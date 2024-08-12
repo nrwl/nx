@@ -298,6 +298,28 @@ export interface NxReleaseConfiguration {
   versionPlans?: boolean;
 }
 
+export interface NxSyncConfiguration {
+  /**
+   * List of workspace-wide sync generators to be run (not attached to targets).
+   */
+  globalGenerators?: string[];
+
+  /**
+   * Options for the sync generators.
+   */
+  generatorOptions?: {
+    [generatorName: string]: Record<string, unknown>;
+  };
+
+  /**
+   * Whether to automatically apply sync generator changes when running tasks.
+   * If not set, the user will be prompted.
+   * If set to `true`, the user will not be prompted and the changes will be applied.
+   * If set to `false`, the user will not be prompted and the changes will not be applied.
+   */
+  applyChanges?: boolean;
+}
+
 /**
  * Nx.json configuration
  *
@@ -456,6 +478,11 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
    * Set this to false to disable connection to Nx Cloud
    */
   neverConnectToCloud?: boolean;
+
+  /**
+   * Configuration for the `nx sync` command.
+   */
+  sync?: NxSyncConfiguration;
 }
 
 export type PluginConfiguration = string | ExpandedPluginConfiguration;

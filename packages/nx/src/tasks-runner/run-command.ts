@@ -1,3 +1,5 @@
+import { prompt } from 'enquirer';
+import * as ora from 'ora';
 import { join } from 'path';
 import {
   NxJsonConfiguration,
@@ -11,12 +13,18 @@ import { TargetDependencyConfig } from '../config/workspace-json-project-json';
 import { daemonClient } from '../daemon/client/client';
 import { createTaskHasher } from '../hasher/create-task-hasher';
 import { hashTasksThatDoNotDependOnOutputsOfOtherTasks } from '../hasher/hash-task';
+import { createProjectGraphAsync } from '../project-graph/project-graph';
 import { NxArgs } from '../utils/command-line-utils';
 import { isRelativePath } from '../utils/fileutils';
 import { isCI } from '../utils/is-ci';
 import { isNxCloudUsed } from '../utils/nx-cloud-utils';
 import { output } from '../utils/output';
 import { handleErrors } from '../utils/params';
+import {
+  flushSyncGeneratorChanges,
+  getSyncGeneratorChanges,
+  syncGeneratorResultsToMessageLines,
+} from '../utils/sync-generators';
 import { workspaceRoot } from '../utils/workspace-root';
 import { createTaskGraph } from './create-task-graph';
 import { CompositeLifeCycle, LifeCycle } from './life-cycle';
@@ -35,6 +43,7 @@ import {
 } from './task-graph-utils';
 import { TasksRunner, TaskStatus } from './tasks-runner';
 import { shouldStreamOutput } from './utils';
+import chalk = require('chalk');
 
 async function getTerminalOutputLifeCycle(
   initiatingProject: string,
@@ -146,7 +155,7 @@ function createTaskGraphAndRunValidations(
 
 export async function runCommand(
   projectsToRun: ProjectGraphProjectNode[],
-  projectGraph: ProjectGraph,
+  currentProjectGraph: ProjectGraph,
   { nxJson }: { nxJson: NxJsonConfiguration },
   nxArgs: NxArgs,
   overrides: any,
@@ -159,14 +168,16 @@ export async function runCommand(
     async () => {
       const projectNames = projectsToRun.map((t) => t.name);
 
-      const taskGraph = createTaskGraphAndRunValidations(
-        projectGraph,
-        extraTargetDependencies ?? {},
-        projectNames,
-        nxArgs,
-        overrides,
-        extraOptions
-      );
+      const { projectGraph, taskGraph } =
+        await ensureWorkspaceIsInSyncAndGetGraphs(
+          currentProjectGraph,
+          nxJson,
+          projectNames,
+          nxArgs,
+          overrides,
+          extraTargetDependencies,
+          extraOptions
+        );
       const tasks = Object.values(taskGraph.tasks);
 
       const { lifeCycle, renderIsDone } = await getTerminalOutputLifeCycle(
@@ -196,6 +207,171 @@ export async function runCommand(
   );
 
   return status;
+}
+
+async function ensureWorkspaceIsInSyncAndGetGraphs(
+  projectGraph: ProjectGraph,
+  nxJson: NxJsonConfiguration,
+  projectNames: string[],
+  nxArgs: NxArgs,
+  overrides: any,
+  extraTargetDependencies: Record<string, (TargetDependencyConfig | string)[]>,
+  extraOptions: { excludeTaskDependencies: boolean; loadDotEnvFiles: boolean }
+): Promise<{
+  projectGraph: ProjectGraph;
+  taskGraph: TaskGraph;
+}> {
+  let taskGraph = createTaskGraphAndRunValidations(
+    projectGraph,
+    extraTargetDependencies ?? {},
+    projectNames,
+    nxArgs,
+    overrides,
+    extraOptions
+  );
+
+  if (process.env.NX_ENABLE_SYNC_GENERATORS !== 'true') {
+    return { projectGraph, taskGraph };
+  }
+
+  // collect unique syncGenerators from the tasks
+  const uniqueSyncGenerators = new Set<string>();
+  for (const { target } of Object.values(taskGraph.tasks)) {
+    const { syncGenerators } =
+      projectGraph.nodes[target.project].data.targets[target.target];
+    if (!syncGenerators) {
+      continue;
+    }
+
+    for (const generator of syncGenerators) {
+      uniqueSyncGenerators.add(generator);
+    }
+  }
+
+  if (!uniqueSyncGenerators.size) {
+    // There are no sync generators registered in the tasks to run
+    return { projectGraph, taskGraph };
+  }
+
+  const syncGenerators = Array.from(uniqueSyncGenerators);
+  const results = await getSyncGeneratorChanges(syncGenerators);
+  if (!results.length) {
+    // There are no changes to sync, workspace is up to date
+    return { projectGraph, taskGraph };
+  }
+
+  const outOfSyncTitle = 'The workspace is out of sync';
+  const resultBodyLines = syncGeneratorResultsToMessageLines(results);
+  const fixMessage =
+    'You can manually run `nx sync` to update your workspace or you can set `sync.applyChanges` to `true` in your `nx.json` to apply the changes automatically when running tasks.';
+  const willErrorOnCiMessage = 'Please note that this will be an error on CI.';
+
+  if (isCI() || !process.stdout.isTTY) {
+    // If the user is running in CI or is running in a non-TTY environment we
+    // throw an error to stop the execution of the tasks.
+    throw new Error(
+      `${outOfSyncTitle}\n${resultBodyLines.join('\n')}\n${fixMessage}`
+    );
+  }
+
+  if (nxJson.sync?.applyChanges === false) {
+    // If the user has set `sync.applyChanges` to `false` in their `nx.json`
+    // we don't prompt the them and just log a warning informing them that
+    // the workspace is out of sync and they have it set to not apply changes
+    // automatically.
+    output.warn({
+      title: outOfSyncTitle,
+      bodyLines: [
+        ...resultBodyLines,
+        'Your workspace is set to not apply changes automatically (`sync.applyChanges` is set to `false` in your `nx.json`).',
+        willErrorOnCiMessage,
+        fixMessage,
+      ],
+    });
+    return { projectGraph, taskGraph };
+  }
+
+  output.warn({
+    title: outOfSyncTitle,
+    bodyLines: [
+      ...resultBodyLines,
+      nxJson.sync?.applyChanges === true
+        ? 'Proceeding to sync the changes automatically (`sync.applyChanges` is set to `true` in your `nx.json`).'
+        : willErrorOnCiMessage,
+    ],
+  });
+
+  const applyChanges =
+    nxJson.sync?.applyChanges === true ||
+    (await promptForApplyingSyncGeneratorChanges());
+
+  if (applyChanges) {
+    const spinner = ora('Syncing the workspace...');
+    spinner.start();
+
+    // Flush sync generator changes to disk
+    await flushSyncGeneratorChanges(results);
+
+    // Re-create project graph and task graph
+    projectGraph = await createProjectGraphAsync();
+    taskGraph = createTaskGraphAndRunValidations(
+      projectGraph,
+      extraTargetDependencies ?? {},
+      projectNames,
+      nxArgs,
+      overrides,
+      extraOptions
+    );
+
+    if (nxJson.sync?.applyChanges === true) {
+      spinner.succeed(`The workspace was synced successfully!
+
+Please make sure to commit the changes to your repository or this will error on CI.`);
+    } else {
+      // The user was prompted and we already logged a message about erroring on CI
+      // so here we just tell them to commit the changes.
+      spinner.succeed(`The workspace was synced successfully!
+
+Please make sure to commit the changes to your repository.`);
+    }
+  } else {
+    output.warn({
+      title: 'Syncing the workspace was skipped',
+      bodyLines: [
+        'This could lead to unexpected results or errors when running tasks.',
+        fixMessage,
+      ],
+    });
+  }
+
+  return { projectGraph, taskGraph };
+}
+
+async function promptForApplyingSyncGeneratorChanges(): Promise<boolean> {
+  const promptConfig = {
+    name: 'applyChanges',
+    type: 'select',
+    message:
+      'Would you like to sync the changes to get your worskpace up to date?',
+    choices: [
+      {
+        name: 'yes',
+        message: 'Yes, sync the changes and run the tasks',
+      },
+      {
+        name: 'no',
+        message: 'No, run the tasks without syncing the changes',
+      },
+    ],
+    footer: () =>
+      chalk.dim(
+        '\nYou can skip this prompt by setting the `sync.applyChanges` option in your `nx.json`.'
+      ),
+  };
+
+  return await prompt<{ applyChanges: 'yes' | 'no' }>([promptConfig]).then(
+    ({ applyChanges }) => applyChanges === 'yes'
+  );
 }
 
 function setEnvVarsBasedOnArgs(nxArgs: NxArgs, loadDotEnvFiles: boolean) {

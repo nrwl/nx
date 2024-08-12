@@ -1283,13 +1283,13 @@
         "path": "/nx-api/js/generators/setup-build",
         "type": "generator"
       },
-      "/nx-api/js/generators/sync": {
+      "/nx-api/js/generators/typescript-sync": {
         "description": "Synchronize TypeScript project references based on the project graph",
-        "file": "generated/packages/js/generators/sync.json",
+        "file": "generated/packages/js/generators/typescript-sync.json",
         "hidden": true,
-        "name": "sync",
-        "originalFilePath": "/packages/js/src/generators/sync/schema.json",
-        "path": "/nx-api/js/generators/sync",
+        "name": "typescript-sync",
+        "originalFilePath": "/packages/js/src/generators/typescript-sync/schema.json",
+        "path": "/nx-api/js/generators/typescript-sync",
         "type": "generator"
       }
     },
