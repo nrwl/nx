@@ -89,6 +89,43 @@ describe('add-e2e-ci-target-defaults', () => {
     `);
   });
 
+  it('should add the targetDefaults with the correct buildTarget when the e2e project depends on itself', async () => {
+    // ARRANGE
+    const nxJson = readNxJson(tree);
+    nxJson.plugins = [
+      {
+        plugin: '@nx/cypress/plugin',
+        options: {
+          targetName: 'e2e',
+          ciTargetName: 'e2e-ci',
+        },
+      },
+    ];
+    updateNxJson(tree, nxJson);
+
+    addSelfDependentProject(tree, tempFs);
+
+    // ACT
+    await addE2eCiTargetDefaults(tree);
+
+    // ASSERT
+    expect(readNxJson(tree).targetDefaults).toMatchInlineSnapshot(`
+      {
+        "build": {
+          "cache": true,
+        },
+        "e2e-ci--**/*": {
+          "dependsOn": [
+            "build",
+          ],
+        },
+        "lint": {
+          "cache": true,
+        },
+      }
+    `);
+  });
+
   it('should add the targetDefaults with the correct ciTargetNames and buildTargets when there is more than one plugin', async () => {
     // ARRANGE
     const nxJson = readNxJson(tree);
@@ -360,6 +397,59 @@ export default defineConfig({
       targets: {
         e2e: {},
         [overrides.ciTargetName]: {},
+      },
+    },
+  };
+}
+
+function addSelfDependentProject(tree: Tree, tempFs: TempFs) {
+  const appProjectConfig = {
+    name: 'app-e2e',
+    root: 'app-e2e',
+    sourceRoot: `app-e2e/src`,
+    projectType: 'application',
+  };
+
+  const cypressConfig = `import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
+
+import { defineConfig } from 'cypress';
+
+export default defineConfig({
+  e2e: {
+    ...nxE2EPreset(__filename, {
+      cypressDir: 'src',
+      bundler: 'vite',
+      webServerCommands: {
+        default: 'nx run app-e2e:serve',
+        production: 'nx run app-e2e:preview',
+      },
+      ciWebServerCommand: 'nx run app-e2e:serve-static',
+  }
+    }),
+    baseUrl: 'http://localhost:4200',
+  },
+});
+`;
+
+  tree.write(`app-e2e/project.json`, JSON.stringify(appProjectConfig));
+  tree.write(`app-e2e/cypress.config.ts`, cypressConfig);
+
+  tempFs.createFilesSync({
+    [`app-e2e/project.json`]: JSON.stringify(appProjectConfig),
+    [`app-e2e/cypress.config.ts`]: cypressConfig,
+  });
+
+  projectGraph.nodes['app-e2e'] = {
+    name: 'app-e2e',
+    type: 'app',
+    data: {
+      projectType: 'application',
+      root: 'app-e2e',
+      targets: {
+        build: {},
+        'serve-static': {
+          dependsOn: ['build'],
+        },
       },
     },
   };
