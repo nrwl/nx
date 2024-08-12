@@ -66,7 +66,7 @@ function startSsrStaticRemotesFileServer(
     return;
   }
 
-  // The directories are usually generated with /browser suffixes so we need to copy them to a common directory
+  // The directories are usually generated with /browser and /server suffixes so we need to copy them to a common directory
   const commonOutputDirectory = join(workspaceRoot, 'tmp/static-remotes');
   for (const app of ssrStaticRemotesConfig.remotes) {
     const remoteConfig = ssrStaticRemotesConfig.config[app];

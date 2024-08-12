@@ -1,7 +1,8 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema",
   "title": "Module Federation SSR Dev Server Target",
-  "description": "Serves host [Module Federation](https://module-federation.io/) applications ([webpack](https://webpack.js.org/)-based) that use SSR allowing to specify which remote applications should be served with the host.",
+  "outputCapture": "direct-nodejs",
+  "description": "The module-federation-ssr-dev-server executor is reserved exclusively for use with host SSR Module Federation applications. It allows the user to specify which remote applications should be served with the host.",
   "type": "object",
   "properties": {
     "browserTarget": {
@@ -63,7 +64,24 @@
     "devRemotes": {
       "type": "array",
       "items": {
-        "type": "string"
+        "oneOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "remoteName": {
+                "type": "string"
+              },
+              "configuration": {
+                "type": "string"
+              }
+            },
+            "required": ["remoteName"],
+            "additionalProperties": false
+          }
+        ]
       },
       "description": "List of remote applications to run in development mode (i.e. using serve target).",
       "x-priority": "important"
@@ -83,6 +101,20 @@
     "pathToManifestFile": {
       "type": "string",
       "description": "Path to a Module Federation manifest file (e.g. `my/path/to/module-federation.manifest.json`) containing the dynamic remote applications relative to the workspace root."
+    },
+    "isInitialHost": {
+      "type": "boolean",
+      "description": "Whether the host that is running this executor is the first in the project tree to do so.",
+      "default": true,
+      "x-priority": "internal"
+    },
+    "parallel": {
+      "type": "number",
+      "description": "Max number of parallel processes for building static remotes"
+    },
+    "staticRemotesPort": {
+      "type": "number",
+      "description": "The port at which to serve the file-server for the static remotes."
     }
   },
   "additionalProperties": false,
