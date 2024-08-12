@@ -61,7 +61,7 @@ export function isWorkspacesEnabled(
     return existsSync(join(root, 'pnpm-workspace.yaml'));
   }
 
-  // yarn and pnpm both use the same 'workspaces' property in package.json
+  // yarn and npm both use the same 'workspaces' property in package.json
   const packageJson: PackageJson = readPackageJson();
   return !!packageJson?.workspaces;
 }

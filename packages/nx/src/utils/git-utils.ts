@@ -1,5 +1,162 @@
-import { execSync } from 'child_process';
+import { exec, ExecOptions, execSync, ExecSyncOptions } from 'child_process';
 import { logger } from '../devkit-exports';
+import { dirname, join } from 'path';
+
+const SQUASH_EDITOR = join(__dirname, 'squash.js');
+
+function execAsync(command: string, execOptions: ExecOptions) {
+  return new Promise<string>((res, rej) => {
+    exec(command, execOptions, (err, stdout, stderr) => {
+      if (err) {
+        return rej(err);
+      }
+      res(stdout);
+    });
+  });
+}
+
+export async function cloneFromUpstream(
+  url: string,
+  destination: string,
+  { originName } = { originName: 'origin' }
+) {
+  await execAsync(
+    `git clone ${url} ${destination} --depth 1 --origin ${originName}`,
+    {
+      cwd: dirname(destination),
+    }
+  );
+
+  return new GitRepository(destination);
+}
+
+export class GitRepository {
+  public root = this.getGitRootPath(this.directory);
+  constructor(private directory: string) {}
+
+  getGitRootPath(cwd: string) {
+    return execSync('git rev-parse --show-toplevel', {
+      cwd,
+    })
+      .toString()
+      .trim();
+  }
+
+  addFetchRemote(remoteName: string, branch: string) {
+    return this.execAsync(
+      `git config --add remote.${remoteName}.fetch "+refs/heads/${branch}:refs/remotes/${remoteName}/${branch}"`
+    );
+  }
+
+  private execAsync(command: string) {
+    return execAsync(command, {
+      cwd: this.root,
+    });
+  }
+
+  async showStat() {
+    return await this.execAsync(`git show --stat`);
+  }
+
+  async listBranches() {
+    return (await this.execAsync(`git ls-remote --heads --quiet`))
+      .trim()
+      .split('\n')
+      .map((s) =>
+        s
+          .trim()
+          .substring(s.indexOf('\t') + 1)
+          .replace('refs/heads/', '')
+      );
+  }
+
+  async getGitFiles(path: string) {
+    return (await this.execAsync(`git ls-files ${path}`))
+      .trim()
+      .split('\n')
+      .map((s) => s.trim())
+      .filter(Boolean);
+  }
+
+  async reset(ref: string) {
+    return this.execAsync(`git reset ${ref} --hard`);
+  }
+
+  async squashLastTwoCommits() {
+    return this.execAsync(
+      `git -c core.editor="node ${SQUASH_EDITOR}" rebase --interactive --no-autosquash HEAD~2`
+    );
+  }
+
+  async mergeUnrelatedHistories(ref: string, message: string) {
+    return this.execAsync(
+      `git merge ${ref} -X ours --allow-unrelated-histories -m "${message}"`
+    );
+  }
+  async fetch(remote: string, ref?: string) {
+    return this.execAsync(`git fetch ${remote}${ref ? ` ${ref}` : ''}`);
+  }
+
+  async checkout(
+    branch: string,
+    opts: {
+      new: boolean;
+      base: string;
+    }
+  ) {
+    return this.execAsync(
+      `git checkout ${opts.new ? '-b ' : ' '}${branch}${
+        opts.base ? ' ' + opts.base : ''
+      }`
+    );
+  }
+
+  async move(path: string, destination: string) {
+    return this.execAsync(`git mv ${path} ${destination}`);
+  }
+
+  async push(ref: string, remoteName: string) {
+    return this.execAsync(`git push -u -f ${remoteName} ${ref}`);
+  }
+
+  async commit(message: string) {
+    return this.execAsync(`git commit -am "${message}"`);
+  }
+  async amendCommit() {
+    return this.execAsync(`git commit --amend -a --no-edit`);
+  }
+
+  deleteGitRemote(name: string) {
+    return this.execAsync(`git remote rm ${name}`);
+  }
+
+  deleteBranch(branch: string) {
+    return this.execAsync(`git branch -D ${branch}`);
+  }
+
+  addGitRemote(name: string, url: string) {
+    return this.execAsync(`git remote add ${name} ${url}`);
+  }
+}
+
+/**
+ * This is used by the squash editor script to update the rebase file.
+ */
+export function updateRebaseFile(contents: string): string {
+  const lines = contents.split('\n');
+  const lastCommitIndex = lines.findIndex((line) => line === '') - 1;
+
+  lines[lastCommitIndex] = lines[lastCommitIndex].replace('pick', 'fixup');
+  return lines.join('\n');
+}
+
+export function fetchGitRemote(
+  name: string,
+  branch: string,
+  execOptions: ExecSyncOptions
+) {
+  return execSync(`git fetch ${name} ${branch} --depth 1`, execOptions);
+}
 
 export function getGithubSlugOrNull(): string | null {
   try {
