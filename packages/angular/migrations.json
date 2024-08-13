@@ -413,6 +413,12 @@
       },
       "description": "Update the @angular/cli package version to ~18.1.0.",
       "factory": "./src/migrations/update-19-5-0/update-angular-cli"
+    },
+    "update-19-6-0": {
+      "cli": "nx",
+      "version": "19.6.0-beta.4",
+      "description": "Ensure Module Federation DTS is turned off by default.",
+      "factory": "./src/migrations/update-19-6-0/turn-off-dts-by-default"
     }
   },
   "packageJsonUpdates": {
