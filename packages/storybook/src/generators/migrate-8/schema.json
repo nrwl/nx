@@ -17,7 +17,7 @@
     },
     "noUpgrade": {
       "type": "boolean",
-      "description": "Skip upgrading Storybook packages. Only use this option if you are already on version 7, and you do not want the latest beta.",
+      "description": "Skip upgrading Storybook packages. Only use this option if you are already on version 8, and you do not want the latest beta.",
       "default": false
     }
   },
