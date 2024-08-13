@@ -19,5 +19,10 @@ function withDaemonOptions(yargs: Argv): Argv {
     .option('stop', {
       type: 'boolean',
       default: false,
+    })
+    .option('stream', {
+      type: 'boolean',
+      default: false,
+      description: 'Stream the logs from the daemon process',
     });
 }

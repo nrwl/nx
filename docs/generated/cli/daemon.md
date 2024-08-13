@@ -35,6 +35,14 @@ Type: `boolean`
 
 Default: `false`
 
+### stream
+
+Type: `boolean`
+
+Default: `false`
+
+Stream the logs from the daemon process
+
 ### version
 
 Type: `boolean`

@@ -2,6 +2,7 @@ import type { Arguments } from 'yargs';
 import { DAEMON_OUTPUT_LOG_FILE } from '../../daemon/tmp-dir';
 import { output } from '../../utils/output';
 import { generateDaemonHelpOutput } from '../../daemon/client/generate-help-output';
+import { streamLogs } from '../../daemon/client/stream-logs';
 
 export async function daemonHandler(args: Arguments) {
   if (args.start) {
@@ -19,6 +20,8 @@ export async function daemonHandler(args: Arguments) {
     const { daemonClient } = await import('../../daemon/client/client');
     await daemonClient.stop();
     output.log({ title: 'Daemon Server - Stopped' });
+  } else if (args.stream) {
+    streamLogs(true);
   } else {
     console.log(generateDaemonHelpOutput());
   }

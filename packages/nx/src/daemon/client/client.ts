@@ -66,6 +66,7 @@ import {
   FLUSH_SYNC_GENERATOR_CHANGES_TO_DISK,
   type HandleFlushSyncGeneratorChangesToDiskMessage,
 } from '../message-types/flush-sync-generator-changes-to-disk';
+import { streamLogs } from './stream-logs';
 
 const DAEMON_ENV_SETTINGS = {
   NX_PROJECT_GLOB_CACHE: 'false',
@@ -484,6 +485,10 @@ export class DaemonClient {
   }
 
   private async sendMessageToDaemon(message: Message): Promise<any> {
+    if (process.env.NX_DAEMON_STREAM_LOGS) {
+      streamLogs();
+    }
+
     if (this._daemonStatus == DaemonStatus.DISCONNECTED) {
       this._daemonStatus = DaemonStatus.CONNECTING;
 
