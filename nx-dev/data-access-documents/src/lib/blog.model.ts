@@ -15,9 +15,9 @@ export type BlogPostDataEntry = {
   ogImageType: string;
   podcastYoutubeId?: string;
   podcastSpotifyId?: string;
-  amazonUrl?: string;
-  appleUrl?: string;
-  iHeartUrl?: string;
+  podcastAmazonUrl?: string;
+  podcastAppleUrl?: string;
+  podcastIHeartUrl?: string;
 };
 
 export type BlogAuthor = {

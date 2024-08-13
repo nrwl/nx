@@ -71,9 +71,9 @@ export function BlogDetails({ post }: BlogDetailsProps) {
             <EpisodePlayer
               podcastYoutubeId={post.podcastYoutubeId}
               podcastSpotifyId={post.podcastSpotifyId}
-              amazonUrl={post.amazonUrl}
-              appleUrl={post.appleUrl}
-              iHeartUrl={post.iHeartUrl}
+              amazonUrl={post.podcastAmazonUrl}
+              appleUrl={post.podcastAppleUrl}
+              iHeartUrl={post.podcastIHeartUrl}
             />
           </div>
         ) : (
