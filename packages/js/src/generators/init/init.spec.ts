@@ -8,6 +8,9 @@ describe('js init generator', () => {
 
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace();
+    // Remove files that should be part of the init generator
+    tree.delete('tsconfig.base.json');
+    tree.delete('.prettierrc');
   });
 
   it('should install prettier package', async () => {
@@ -116,5 +119,24 @@ describe('js init generator', () => {
     expect(packageJson.devDependencies['typescript']).not.toBe(
       typescriptVersion
     );
+  });
+
+  it('should support skipping base tsconfig file', async () => {
+    await init(tree, {
+      addTsConfigBase: false,
+    });
+
+    expect(tree.exists('tsconfig.base.json')).toBeFalsy();
+  });
+
+  it('should support skipping prettier setup', async () => {
+    await init(tree, {
+      setUpPrettier: false,
+    });
+
+    const packageJson = readJson(tree, 'package.json');
+    expect(packageJson.devDependencies['prettier']).toBeUndefined();
+    expect(tree.exists('.prettierignore')).toBeFalsy();
+    expect(tree.exists('.prettierrc')).toBeFalsy();
   });
 });
