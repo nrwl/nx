@@ -7,7 +7,7 @@ export default async function (tree: Tree) {
   visitNotIgnoredFiles(tree, '', (path) => {
     const webpackConfigGlob = '**/webpack*.config*.{js,ts,mjs,cjs}';
     const result = minimatch(path, webpackConfigGlob);
-    if (!minimatch(path, webpackConfigGlob)) {
+    if (!result) {
       return;
     }
     let webpackConfigContents = tree.read(path, 'utf-8');
