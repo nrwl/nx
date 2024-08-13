@@ -37,14 +37,6 @@ export function EpisodePlayer({
             loading="lazy"
             key="audio"
           ></iframe>
-          <div className="mb-4 mt-8">
-            <PlatformLinks
-              amazonUrl={amazonUrl}
-              appleUrl={appleUrl}
-              iHeartUrl={iHeartUrl}
-              podcastSpotifyId={podcastSpotifyId}
-            />
-          </div>
         </>
       ) : (
         <iframe
@@ -60,19 +52,31 @@ export function EpisodePlayer({
           key="video"
         ></iframe>
       )}
-      <div className="flex flex-wrap gap-6 sm:gap-4">
-        <button
-          className="space-x-4 whitespace-nowrap rounded-md border border-slate-300 bg-white px-4 py-2 text-lg font-medium text-slate-700 shadow-sm transition focus:ring-offset-2 group-hover:bg-slate-50 group-focus:ring-2 group-focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:group-hover:bg-slate-700 dark:group-focus:ring-sky-500"
-          onClick={() => setViewType(getOpposite(viewType))}
-        >
-          Switch to {getOpposite(viewType) === 'audio' ? 'Audio' : 'Video'}
-        </button>
-        <Link
-          className="space-x-4 whitespace-nowrap rounded-md border border-slate-300 bg-white px-4 py-2 text-lg font-medium text-slate-700 shadow-sm transition focus:ring-offset-2 group-hover:bg-slate-50 group-focus:ring-2 group-focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:group-hover:bg-slate-700 dark:group-focus:ring-sky-500"
-          href="/podcast"
-        >
-          More Podcasts
-        </Link>
+      <div className="container my-1 flex">
+        <div className="basis-1/2">
+          {viewType === 'audio' && (
+            <PlatformLinks
+              amazonUrl={amazonUrl}
+              appleUrl={appleUrl}
+              iHeartUrl={iHeartUrl}
+              podcastSpotifyId={podcastSpotifyId}
+            />
+          )}
+        </div>
+        <div className="flex basis-1/2 flex-wrap justify-end gap-6 sm:gap-4">
+          <button
+            className="flex shrink-0 items-center gap-2 text-slate-400 hover:text-slate-800 dark:text-slate-600 dark:hover:text-slate-200"
+            onClick={() => setViewType(getOpposite(viewType))}
+          >
+            Switch to {getOpposite(viewType) === 'audio' ? 'Audio' : 'Video'}
+          </button>
+          <Link
+            className="flex shrink-0 items-center gap-2 text-slate-400 hover:text-slate-800 dark:text-slate-600 dark:hover:text-slate-200"
+            href="/podcast"
+          >
+            More Podcasts
+          </Link>
+        </div>
       </div>
     </div>
   );
@@ -128,7 +132,7 @@ export function PlatformLinks({
                 rel="noopener noreferrer"
                 className="flex h-full w-full items-center justify-center"
               >
-                <platform.icon className="h-8 w-8 shrink-0" />
+                <platform.icon className="h-6 w-6 shrink-0" />
               </a>
             </li>
           );
