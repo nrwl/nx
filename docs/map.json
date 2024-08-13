@@ -1459,7 +1459,7 @@
           ]
         },
         {
-          "name": "5 Min Tutorials",
+          "name": "Tutorials",
           "id": "tutorials",
           "description": "Get started with plugins",
           "itemList": [
@@ -1480,18 +1480,6 @@
           "id": "recipes",
           "description": "Focused instructions to complete a specific task",
           "itemList": [
-            {
-              "name": "Write a Simple Executor",
-              "id": "local-executors",
-              "tags": [],
-              "file": "shared/recipes/plugins/local-executors"
-            },
-            {
-              "name": "Compose Executors",
-              "id": "compose-executors",
-              "tags": [],
-              "file": "shared/recipes/plugins/compose-executors"
-            },
             {
               "name": "Write a Simple Generator",
               "id": "local-generators",
@@ -1529,6 +1517,18 @@
               "file": "shared/recipes/plugins/migration-generators"
             },
             {
+              "name": "Write a Simple Executor",
+              "id": "local-executors",
+              "tags": [],
+              "file": "shared/recipes/plugins/local-executors"
+            },
+            {
+              "name": "Compose Executors",
+              "id": "compose-executors",
+              "tags": [],
+              "file": "shared/recipes/plugins/compose-executors"
+            },
+            {
               "name": "Create a Preset",
               "id": "create-preset",
               "tags": ["create-your-own-plugin"],
@@ -1549,6 +1549,12 @@
                 "inferred-tasks"
               ],
               "file": "shared/recipes/plugins/project-graph-plugins"
+            },
+            {
+              "name": "Publish a Plugin",
+              "id": "publish-plugin",
+              "tags": ["create-your-own-plugin"],
+              "file": "shared/recipes/plugins/publish-plugin"
             }
           ]
         }

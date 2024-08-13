@@ -4941,7 +4941,7 @@
         "disableCollapsible": false
       },
       {
-        "name": "5 Min Tutorials",
+        "name": "Tutorials",
         "path": "/extending-nx/tutorials",
         "id": "tutorials",
         "isExternal": false,
@@ -4987,22 +4987,6 @@
         "id": "recipes",
         "isExternal": false,
         "children": [
-          {
-            "name": "Write a Simple Executor",
-            "path": "/extending-nx/recipes/local-executors",
-            "id": "local-executors",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Compose Executors",
-            "path": "/extending-nx/recipes/compose-executors",
-            "id": "compose-executors",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
           {
             "name": "Write a Simple Generator",
             "path": "/extending-nx/recipes/local-generators",
@@ -5052,6 +5036,22 @@
             "disableCollapsible": false
           },
           {
+            "name": "Write a Simple Executor",
+            "path": "/extending-nx/recipes/local-executors",
+            "id": "local-executors",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Compose Executors",
+            "path": "/extending-nx/recipes/compose-executors",
+            "id": "compose-executors",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Create a Preset",
             "path": "/extending-nx/recipes/create-preset",
             "id": "create-preset",
@@ -5074,24 +5074,16 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
+          },
+          {
+            "name": "Publish a Plugin",
+            "path": "/extending-nx/recipes/publish-plugin",
+            "id": "publish-plugin",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
           }
         ],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Write a Simple Executor",
-        "path": "/extending-nx/recipes/local-executors",
-        "id": "local-executors",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Compose Executors",
-        "path": "/extending-nx/recipes/compose-executors",
-        "id": "compose-executors",
-        "isExternal": false,
-        "children": [],
         "disableCollapsible": false
       },
       {
@@ -5143,6 +5135,22 @@
         "disableCollapsible": false
       },
       {
+        "name": "Write a Simple Executor",
+        "path": "/extending-nx/recipes/local-executors",
+        "id": "local-executors",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Compose Executors",
+        "path": "/extending-nx/recipes/compose-executors",
+        "id": "compose-executors",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
         "name": "Create a Preset",
         "path": "/extending-nx/recipes/create-preset",
         "id": "create-preset",
@@ -5162,6 +5170,14 @@
         "name": "Infer Tasks or Projects",
         "path": "/extending-nx/recipes/project-graph-plugins",
         "id": "project-graph-plugins",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Publish a Plugin",
+        "path": "/extending-nx/recipes/publish-plugin",
+        "id": "publish-plugin",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false

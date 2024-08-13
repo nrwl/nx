@@ -27,7 +27,7 @@ npx nx g @nx/plugin:plugin recommended --directory=tools/recommended
 
 This will create a `my-plugin` project that contains all your plugin code.
 
-## Create a Library Generator
+## Create a Domain Library Generator
 
 To create a new generator run:
 
@@ -73,12 +73,18 @@ Remove the `--dry-run` flag to actually create a new project.
 
 The `schema.d.ts` file contains all the options that the generator supports. By default, it includes only a `name` option. Let's add a directory option to pass on to the `@nx/react` generator.
 
+{% tabs %}
+{% tab label="schema.d.ts" %}
+
 ```ts {% fileName="tools/recommended/src/generators/library/schema.d.ts" %}
 export interface LibraryGeneratorSchema {
   name: string;
   directory?: string;
 }
 ```
+
+{% /tab %}
+{% tab label="schema.json" %}
 
 ```json {% fileName="tools/recommended/src/generators/library/schema.json" %}
 {
@@ -105,6 +111,9 @@ export interface LibraryGeneratorSchema {
 }
 ```
 
+{% /tab %}
+{% /tabs %}
+
 {% callout type="note" title="More details" %}
 The `schema.d.ts` file is used for type checking inside the implementation file. It should match the properties in `schema.json`.
 {% /callout %}
@@ -119,6 +128,9 @@ npx nx g @myorg/recommended:library test-library --directory=nested/directory/te
 
 It can be helpful to tag a library with a scope that matches the application it should be associated with. With these tags in place, you can [set up rules](/features/enforce-module-boundaries) for how projects can depend on each other. For our repository, let's say the scopes can be `store`, `api` or `shared` and the default directory structure should match the chosen scope. We can update the generator to encourage developers to maintain this structure.
 
+{% tabs %}
+{% tab label="schema.d.ts" %}
+
 ```ts {% fileName="tools/recommended/src/generators/library/schema.d.ts" %}
 export interface LibraryGeneratorSchema {
   name: string;
@@ -126,6 +138,9 @@ export interface LibraryGeneratorSchema {
   directory?: string;
 }
 ```
+
+{% /tab %}
+{% tab label="schema.json" %}
 
 ```json {% fileName="tools/recommended/src/generators/library/schema.json" %}
 {
@@ -175,6 +190,9 @@ export interface LibraryGeneratorSchema {
 }
 ```
 
+{% /tab %}
+{% tab label="generator.ts" %}
+
 ```ts {% fileName="tools/recommended/src/generators/library/generator.ts" %}
 import { Tree } from '@nx/devkit';
 import { Linter } from '@nx/eslint';
@@ -198,6 +216,9 @@ export async function libraryGenerator(
 
 export default libraryGenerator;
 ```
+
+{% /tab %}
+{% /tabs %}
 
 We can check that the scope logic is being applied correctly by running the generator again and specifying a scope.
 

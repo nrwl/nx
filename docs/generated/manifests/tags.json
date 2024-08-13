@@ -630,6 +630,13 @@
       "path": "/extending-nx/recipes/project-graph-plugins"
     },
     {
+      "description": "",
+      "file": "shared/recipes/plugins/publish-plugin",
+      "id": "publish-plugin",
+      "name": "Publish a Plugin",
+      "path": "/extending-nx/recipes/publish-plugin"
+    },
+    {
       "description": "The Nx Plugin for Angular contains executors, generators, and utilities for managing Angular applications and libraries within an Nx workspace. It provides: \n\n- Integration with libraries such as Storybook, Jest, ESLint, Tailwind CSS, Playwright and Cypress. \n\n- Generators to help scaffold code quickly (like: Micro Frontends, Libraries, both internal to your codebase and publishable to npm) \n\n- Single Component Application Modules (SCAMs) \n\n- NgRx helpers. \n\n- Utilities for automatic workspace refactoring.",
       "file": "generated/packages/angular/documents/nx-devkit-angular-devkit",
       "id": "nx-devkit-angular-devkit",

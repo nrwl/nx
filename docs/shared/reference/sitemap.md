@@ -226,21 +226,22 @@
 
   - [Intro](/extending-nx/intro)
     - [Extending Nx with Plugins](/extending-nx/intro/getting-started)
-  - [5 Min Tutorials](/extending-nx/tutorials)
+  - [Tutorials](/extending-nx/tutorials)
     - [Enforce Organizational Best Practices](/extending-nx/tutorials/organization-specific-plugin)
     - [Create a Tooling Plugin](/extending-nx/tutorials/tooling-plugin)
   - [Recipes](/extending-nx/recipes)
-    - [Write a Simple Executor](/extending-nx/recipes/local-executors)
-    - [Compose Executors](/extending-nx/recipes/compose-executors)
     - [Write a Simple Generator](/extending-nx/recipes/local-generators)
     - [Compose Generators](/extending-nx/recipes/composing-generators)
     - [Provide Options for Generators](/extending-nx/recipes/generator-options)
     - [Create Files](/extending-nx/recipes/creating-files)
     - [Modify Files](/extending-nx/recipes/modifying-files)
     - [Write a Migration](/extending-nx/recipes/migration-generators)
+    - [Write a Simple Executor](/extending-nx/recipes/local-executors)
+    - [Compose Executors](/extending-nx/recipes/compose-executors)
     - [Create a Preset](/extending-nx/recipes/create-preset)
     - [Create an Install Package](/extending-nx/recipes/create-install-package)
     - [Infer Tasks or Projects](/extending-nx/recipes/project-graph-plugins)
+    - [Publish a Plugin](/extending-nx/recipes/publish-plugin)
 
 - Ci
 
