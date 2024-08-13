@@ -889,7 +889,7 @@
         },
         "@storybook/addon-interactions": {
           "version": "^8.2.8",
-          "alwaysAddToPackageJson": false
+          "alwaysAddToPackageJson": true
         },
         "storybook": {
           "version": "^8.2.8",

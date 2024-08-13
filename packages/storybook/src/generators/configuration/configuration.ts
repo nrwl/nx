@@ -62,7 +62,7 @@ export async function configurationGeneratorInternal(
   rawSchema: StorybookConfigureSchema
 ) {
   const storybookMajor = storybookMajorVersion();
-  if (storybookMajor === 6) {
+  if (storybookMajor > 0 && storybookMajor === 6) {
     throw new Error(pleaseUpgrade());
   } else if (storybookMajor === 7) {
     logger.warn(

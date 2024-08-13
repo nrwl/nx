@@ -12,7 +12,7 @@ export default async function buildStorybookExecutor(
 ) {
   storybookConfigExistsCheck(options.configDir, context.projectName);
   const storybookMajor = storybookMajorVersion();
-  if (storybookMajor <= 6) {
+  if (storybookMajor > 0 && storybookMajor <= 6) {
     throw pleaseUpgrade();
   } else if (storybookMajor === 7) {
     logger.warn(
