@@ -221,7 +221,12 @@ async function flushSyncGeneratorChangesToDisk(
   }
 
   // Update the context files
-  await updateContextWithChangedFiles(createdFiles, updatedFiles, deletedFiles);
+  await updateContextWithChangedFiles(
+    workspaceRoot,
+    createdFiles,
+    updatedFiles,
+    deletedFiles
+  );
   performance.mark('flush-sync-generator-changes-to-disk:end');
   performance.measure(
     'flush sync generator changes to disk',

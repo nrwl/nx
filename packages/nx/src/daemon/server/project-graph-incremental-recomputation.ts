@@ -236,7 +236,11 @@ async function processFilesAndCreateAndSerializeProjectGraph(
     performance.mark('hash-watched-changes-start');
     const updatedFiles = [...collectedUpdatedFiles.values()];
     const deletedFiles = [...collectedDeletedFiles.values()];
-    let updatedFileHashes = updateFilesInContext(updatedFiles, deletedFiles);
+    let updatedFileHashes = updateFilesInContext(
+      workspaceRoot,
+      updatedFiles,
+      deletedFiles
+    );
     performance.mark('hash-watched-changes-end');
     performance.measure(
       'hash changed files from watcher',
