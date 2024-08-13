@@ -127,7 +127,14 @@ describe('nx init (for React - legacy)', () => {
     const craToNxOutput = runCommand(
       `${
         pmc.runUninstalledPackage
-      } nx@${getPublishedVersion()} init --no-interactive --vite=false`
+      } nx@${getPublishedVersion()} init --no-interactive --vite=false`,
+      {
+        env: {
+          ...process.env,
+          // TODO: craco does not support ESLint v9 https://github.com/dilanx/craco/issues/543
+          ESLINT_USE_FLAT_CONFIG: 'false',
+        },
+      }
     );
 
     expect(craToNxOutput).toContain('🎉 Done!');

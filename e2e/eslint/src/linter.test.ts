@@ -15,6 +15,16 @@ import {
 import * as ts from 'typescript';
 
 describe('Linter', () => {
+  let originalEslintUseFlatConfigVal: string | undefined;
+  beforeAll(() => {
+    // Opt into legacy .eslintrc config format for these tests
+    originalEslintUseFlatConfigVal = process.env.ESLINT_USE_FLAT_CONFIG;
+    process.env.ESLINT_USE_FLAT_CONFIG = 'false';
+  });
+  afterAll(() => {
+    process.env.ESLINT_USE_FLAT_CONFIG = originalEslintUseFlatConfigVal;
+  });
+
   describe('Integrated', () => {
     const myapp = uniq('myapp');
     const mylib = uniq('mylib');
@@ -532,8 +542,15 @@ describe('Linter', () => {
     });
 
     describe('flat config', () => {
+      let envVar: string | undefined;
       beforeAll(() => {
         runCLI(`generate @nx/eslint:convert-to-flat-config`);
+        envVar = process.env.ESLINT_USE_FLAT_CONFIG;
+        // Now that we have converted the existing configs to flat config we need to clear the explicitly set env var to allow it to infer things from the root config file type
+        delete process.env.ESLINT_USE_FLAT_CONFIG;
+      });
+      afterAll(() => {
+        process.env.ESLINT_USE_FLAT_CONFIG = envVar;
       });
 
       it('should generate new projects using flat config', () => {

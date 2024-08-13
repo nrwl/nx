@@ -1,6 +1,7 @@
 import { Linter } from 'eslint';
 import {
   addBlockToFlatConfigExport,
+  addCompatToFlatConfig,
   addImportToFlatConfig,
   addPluginsToExportsBlock,
   createNodeList,
@@ -96,7 +97,7 @@ export const getGlobalFlatEslintConfiguration = (
   unitTestRunner?: string,
   rootProject?: boolean
 ): string => {
-  const nodeList = createNodeList(new Map(), [], true);
+  const nodeList = createNodeList(new Map(), []);
   let content = stringifyNodeList(nodeList);
   content = addImportToFlatConfig(content, 'nxPlugin', '@nx/eslint-plugin');
   content = addPluginsToExportsBlock(content, [
@@ -129,6 +130,8 @@ export const getGlobalFlatEslintConfiguration = (
       ignores: ['.nx'],
     })
   );
+
+  content = addCompatToFlatConfig(content);
 
   return content;
 };

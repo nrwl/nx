@@ -14,14 +14,17 @@ import {
 } from '@nx/e2e/utils';
 
 describe('Linter (legacy)', () => {
-  describe('Integrated', () => {
+  describe('Integrated (eslintrc config)', () => {
+    let originalEslintUseFlatConfigVal: string | undefined;
     const myapp = uniq('myapp');
     const mylib = uniq('mylib');
 
-    let projScope;
-
     beforeAll(() => {
-      projScope = newProject({
+      // Opt into legacy .eslintrc config format for these tests
+      originalEslintUseFlatConfigVal = process.env.ESLINT_USE_FLAT_CONFIG;
+      process.env.ESLINT_USE_FLAT_CONFIG = 'false';
+
+      newProject({
         packages: ['@nx/react', '@nx/js', '@nx/eslint'],
       });
       runCLI(`generate @nx/react:app ${myapp} --tags=validtag`, {
@@ -31,7 +34,10 @@ describe('Linter (legacy)', () => {
         env: { NX_ADD_PLUGINS: 'false' },
       });
     });
-    afterAll(() => cleanupProject());
+    afterAll(() => {
+      process.env.ESLINT_USE_FLAT_CONFIG = originalEslintUseFlatConfigVal;
+      cleanupProject();
+    });
 
     describe('linting errors', () => {
       let defaultEslintrc;
@@ -93,8 +99,18 @@ describe('Linter (legacy)', () => {
     });
   });
 
-  describe('Flat config', () => {
+  describe('eslintrc convert to flat config', () => {
+    let originalEslintUseFlatConfigVal: string | undefined;
     const packageManager = getSelectedPackageManager() || 'pnpm';
+
+    beforeAll(() => {
+      // Opt into legacy .eslintrc config format for these tests
+      originalEslintUseFlatConfigVal = process.env.ESLINT_USE_FLAT_CONFIG;
+      process.env.ESLINT_USE_FLAT_CONFIG = 'false';
+    });
+    afterAll(() => {
+      process.env.ESLINT_USE_FLAT_CONFIG = originalEslintUseFlatConfigVal;
+    });
 
     beforeEach(() => {
       process.env.NX_ADD_PLUGINS = 'false';

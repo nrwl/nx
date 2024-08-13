@@ -2,9 +2,9 @@
 
 exports[`convert-to-flat-config generator should add env configuration 1`] = `
 "const { FlatCompat } = require('@eslint/eslintrc');
+const js = require('@eslint/js');
 const nxEslintPlugin = require('@nx/eslint-plugin');
 const globals = require('globals');
-const js = require('@eslint/js');
 
 const compat = new FlatCompat({
   baseDirectory: __dirname,
@@ -52,9 +52,9 @@ module.exports = [
 
 exports[`convert-to-flat-config generator should add global and env configuration 1`] = `
 "const { FlatCompat } = require('@eslint/eslintrc');
+const js = require('@eslint/js');
 const nxEslintPlugin = require('@nx/eslint-plugin');
 const globals = require('globals');
-const js = require('@eslint/js');
 
 const compat = new FlatCompat({
   baseDirectory: __dirname,
@@ -106,8 +106,8 @@ module.exports = [
 
 exports[`convert-to-flat-config generator should add global configuration 1`] = `
 "const { FlatCompat } = require('@eslint/eslintrc');
-const nxEslintPlugin = require('@nx/eslint-plugin');
 const js = require('@eslint/js');
+const nxEslintPlugin = require('@nx/eslint-plugin');
 
 const compat = new FlatCompat({
   baseDirectory: __dirname,
@@ -155,8 +155,8 @@ module.exports = [
 
 exports[`convert-to-flat-config generator should add global eslintignores 1`] = `
 "const { FlatCompat } = require('@eslint/eslintrc');
-const nxEslintPlugin = require('@nx/eslint-plugin');
 const js = require('@eslint/js');
+const nxEslintPlugin = require('@nx/eslint-plugin');
 
 const compat = new FlatCompat({
   baseDirectory: __dirname,
@@ -204,9 +204,9 @@ module.exports = [
 
 exports[`convert-to-flat-config generator should add parser 1`] = `
 "const { FlatCompat } = require('@eslint/eslintrc');
+const js = require('@eslint/js');
 const nxEslintPlugin = require('@nx/eslint-plugin');
 const typescriptEslintParser = require('@typescript-eslint/parser');
-const js = require('@eslint/js');
 
 const compat = new FlatCompat({
   baseDirectory: __dirname,
@@ -254,11 +254,11 @@ module.exports = [
 
 exports[`convert-to-flat-config generator should add plugins 1`] = `
 "const { FlatCompat } = require('@eslint/eslintrc');
+const js = require('@eslint/js');
 const eslintPluginImport = require('eslint-plugin-import');
 const eslintPluginSingleName = require('eslint-plugin-single-name');
 const scopeEslintPluginWithName = require('@scope/eslint-plugin-with-name');
 const justScopeEslintPlugin = require('@just-scope/eslint-plugin');
-const js = require('@eslint/js');
 
 const compat = new FlatCompat({
   baseDirectory: __dirname,
@@ -312,8 +312,8 @@ module.exports = [
 
 exports[`convert-to-flat-config generator should add settings 1`] = `
 "const { FlatCompat } = require('@eslint/eslintrc');
-const nxEslintPlugin = require('@nx/eslint-plugin');
 const js = require('@eslint/js');
+const nxEslintPlugin = require('@nx/eslint-plugin');
 
 const compat = new FlatCompat({
   baseDirectory: __dirname,
@@ -361,8 +361,8 @@ module.exports = [
 
 exports[`convert-to-flat-config generator should convert json successfully 1`] = `
 "const { FlatCompat } = require('@eslint/eslintrc');
-const nxEslintPlugin = require('@nx/eslint-plugin');
 const js = require('@eslint/js');
+const nxEslintPlugin = require('@nx/eslint-plugin');
 
 const compat = new FlatCompat({
   baseDirectory: __dirname,
@@ -430,8 +430,8 @@ module.exports = [
 
 exports[`convert-to-flat-config generator should convert yaml successfully 1`] = `
 "const { FlatCompat } = require('@eslint/eslintrc');
-const nxEslintPlugin = require('@nx/eslint-plugin');
 const js = require('@eslint/js');
+const nxEslintPlugin = require('@nx/eslint-plugin');
 
 const compat = new FlatCompat({
   baseDirectory: __dirname,
@@ -499,8 +499,8 @@ module.exports = [
 
 exports[`convert-to-flat-config generator should convert yml successfully 1`] = `
 "const { FlatCompat } = require('@eslint/eslintrc');
-const nxEslintPlugin = require('@nx/eslint-plugin');
 const js = require('@eslint/js');
+const nxEslintPlugin = require('@nx/eslint-plugin');
 
 const compat = new FlatCompat({
   baseDirectory: __dirname,

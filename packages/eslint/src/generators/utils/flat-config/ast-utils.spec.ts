@@ -1,16 +1,148 @@
 import ts = require('typescript');
 import {
   addBlockToFlatConfigExport,
-  generateAst,
-  addImportToFlatConfig,
   addCompatToFlatConfig,
-  removeOverridesFromLintConfig,
-  replaceOverride,
-  removePlugin,
+  addImportToFlatConfig,
+  generateAst,
+  generateFlatOverride,
   removeCompatExtends,
+  removeOverridesFromLintConfig,
+  removePlugin,
+  replaceOverride,
 } from './ast-utils';
 
 describe('ast-utils', () => {
+  describe('generateFlatOverride', () => {
+    it('should create appropriate ASTs for a flat config entries based on the provided legacy eslintrc JSON override data', () => {
+      // It's easier to review the stringified result of the AST than the AST itself
+      const printer = ts.createPrinter();
+      const getOutput = (input: any) => {
+        const ast = generateFlatOverride(input);
+        return printer.printNode(
+          ts.EmitHint.Unspecified,
+          ast,
+          ts.createSourceFile('test.ts', '', ts.ScriptTarget.Latest)
+        );
+      };
+
+      expect(getOutput({})).toMatchInlineSnapshot(`"{}"`);
+
+      // It should apply rules directly
+      expect(
+        getOutput({
+          rules: {
+            a: 'error',
+            b: 'off',
+            c: [
+              'error',
+              {
+                some: {
+                  rich: ['config', 'options'],
+                },
+              },
+            ],
+          },
+        })
+      ).toMatchInlineSnapshot(`
+        "{
+            rules: {
+                a: "error",
+                b: "off",
+                c: [
+                    "error",
+                    { some: { rich: [
+                                "config",
+                                "options"
+                            ] } }
+                ]
+            }
+        }"
+      `);
+
+      // It should normalize and apply files as an array
+      expect(
+        getOutput({
+          files: '*.ts', //  old single * syntax should be replaced by **/*
+        })
+      ).toMatchInlineSnapshot(`
+        "{
+            files: ["**/*.ts"]
+        }"
+      `);
+
+      expect(
+        getOutput({
+          // It should not only nest the parser in languageOptions, but also wrap it in a require call because parsers are passed by reference in flat config
+          parser: 'jsonc-eslint-parser',
+        })
+      ).toMatchInlineSnapshot(`
+        "{
+            languageOptions: { parser: require("jsonc-eslint-parser") }
+        }"
+      `);
+
+      expect(
+        getOutput({
+          // It should nest parserOptions in languageOptions
+          parserOptions: {
+            foo: 'bar',
+          },
+        })
+      ).toMatchInlineSnapshot(`
+        "{
+            languageOptions: { parserOptions: { foo: "bar" } }
+        }"
+      `);
+
+      // It should add the compat tooling for extends, and spread the rules object to allow for easier editing by users
+      expect(getOutput({ extends: ['plugin:@nx/typescript'] }))
+        .toMatchInlineSnapshot(`
+        "...compat.config({ extends: ["plugin:@nx/typescript"] }).map(config => ({
+            ...config,
+            rules: {
+                ...config.rules
+            }
+        }))"
+      `);
+
+      // It should add the compat tooling for plugins, and spread the rules object to allow for easier editing by users
+      expect(getOutput({ plugins: ['@nx/eslint-plugin'] }))
+        .toMatchInlineSnapshot(`
+        "...compat.config({ plugins: ["@nx/eslint-plugin"] }).map(config => ({
+            ...config,
+            rules: {
+                ...config.rules
+            }
+        }))"
+      `);
+
+      // It should add the compat tooling for env, and spread the rules object to allow for easier editing by users
+      expect(getOutput({ env: { jest: true } })).toMatchInlineSnapshot(`
+        "...compat.config({ env: { jest: true } }).map(config => ({
+            ...config,
+            rules: {
+                ...config.rules
+            }
+        }))"
+      `);
+
+      // Files for the compat tooling should be added appropriately
+      expect(getOutput({ env: { jest: true }, files: ['*.ts', '*.tsx'] }))
+        .toMatchInlineSnapshot(`
+        "...compat.config({ env: { jest: true } }).map(config => ({
+            ...config,
+            files: [
+                "**/*.ts",
+                "**/*.tsx"
+            ],
+            rules: {
+                ...config.rules
+            }
+        }))"
+      `);
+    });
+  });
+
   describe('addBlockToFlatConfigExport', () => {
     it('should inject block to the end of the file', () => {
       const content = `const baseConfig = require("../../eslint.config.js");
@@ -228,10 +360,9 @@ describe('ast-utils', () => {
         const baseConfig = require("../../eslint.config.js");
            
         const compat = new FlatCompat({
-              baseDirectory: __dirname,
-              recommendedConfig: js.configs.recommended,
-            });
-          
+          baseDirectory: __dirname,
+          recommendedConfig: js.configs.recommended,
+        });
          module.exports = [
               ...baseConfig,
               {
@@ -267,10 +398,9 @@ describe('ast-utils', () => {
             const js = require("@eslint/js");
            
         const compat = new FlatCompat({
-              baseDirectory: __dirname,
-              recommendedConfig: js.configs.recommended,
-            });
-          
+          baseDirectory: __dirname,
+          recommendedConfig: js.configs.recommended,
+        });
          module.exports = [
               ...baseConfig,
               {

@@ -197,7 +197,9 @@ function createEsLintConfiguration(
   const pathToRootConfig = extendedRootConfig
     ? `${offsetFromRoot(projectConfig.root)}${extendedRootConfig}`
     : undefined;
-  const addDependencyChecks = isBuildableLibraryProject(projectConfig);
+  const addDependencyChecks =
+    options.addPackageJsonDependencyChecks ||
+    isBuildableLibraryProject(projectConfig);
 
   const overrides: Linter.ConfigOverride<Linter.RulesRecord>[] = [
     {
@@ -236,10 +238,7 @@ function createEsLintConfiguration(
     },
   ];
 
-  if (
-    options.addPackageJsonDependencyChecks ||
-    isBuildableLibraryProject(projectConfig)
-  ) {
+  if (addDependencyChecks) {
     overrides.push({
       files: ['*.json'],
       parser: 'jsonc-eslint-parser',
@@ -250,7 +249,6 @@ function createEsLintConfiguration(
   }
 
   if (useFlatConfig(tree)) {
-    const isCompatNeeded = addDependencyChecks;
     const nodes = [];
     const importMap = new Map();
     if (extendedRootConfig) {
@@ -260,7 +258,7 @@ function createEsLintConfiguration(
     overrides.forEach((override) => {
       nodes.push(generateFlatOverride(override));
     });
-    const nodeList = createNodeList(importMap, nodes, isCompatNeeded);
+    const nodeList = createNodeList(importMap, nodes);
     const content = stringifyNodeList(nodeList);
     tree.write(join(projectConfig.root, 'eslint.config.js'), content);
   } else {

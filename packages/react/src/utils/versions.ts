@@ -38,7 +38,7 @@ export const reactTestRendererVersion = '18.2.0';
 
 export const eslintPluginImportVersion = '2.27.5';
 export const eslintPluginJsxA11yVersion = '6.7.1';
-export const eslintPluginReactVersion = '7.32.2';
+export const eslintPluginReactVersion = '7.35.0';
 export const eslintPluginReactHooksVersion = '4.6.0';
 
 export const babelPluginStyledComponentsVersion = '1.10.7';

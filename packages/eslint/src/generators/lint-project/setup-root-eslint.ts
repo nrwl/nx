@@ -4,12 +4,18 @@ import {
   type GeneratorCallback,
   type Tree,
 } from '@nx/devkit';
+import { useFlatConfig } from '../../utils/flat-config';
 import {
+  eslint9__eslintVersion,
+  eslint9__typescriptESLintVersion,
   eslintConfigPrettierVersion,
   nxVersion,
   typescriptESLintVersion,
 } from '../../utils/versions';
-import { getGlobalEsLintConfiguration } from '../init/global-eslint-config';
+import {
+  getGlobalEsLintConfiguration,
+  getGlobalFlatEslintConfiguration,
+} from '../init/global-eslint-config';
 import { findEslintFile } from '../utils/eslint-file';
 
 export type SetupRootEsLintOptions = {
@@ -26,7 +32,13 @@ export function setupRootEsLint(
   if (rootEslintFile) {
     return () => {};
   }
+  if (!useFlatConfig(tree)) {
+    return setUpLegacyRootEslintRc(tree, options);
+  }
+  return setUpRootFlatConfig(tree, options);
+}
 
+function setUpLegacyRootEslintRc(tree: Tree, options: SetupRootEsLintOptions) {
   writeJson(
     tree,
     '.eslintrc.json',
@@ -52,6 +64,30 @@ export function setupRootEsLint(
           '@typescript-eslint/parser': typescriptESLintVersion,
           '@typescript-eslint/eslint-plugin': typescriptESLintVersion,
           'eslint-config-prettier': eslintConfigPrettierVersion,
+        }
+      )
+    : () => {};
+}
+
+function setUpRootFlatConfig(tree: Tree, options: SetupRootEsLintOptions) {
+  tree.write(
+    'eslint.config.js',
+    getGlobalFlatEslintConfiguration(
+      options.unitTestRunner,
+      options.rootProject
+    )
+  );
+
+  return !options.skipPackageJson
+    ? addDependenciesToPackageJson(
+        tree,
+        {},
+        {
+          '@eslint/js': eslint9__eslintVersion,
+          '@nx/eslint-plugin': nxVersion,
+          eslint: eslint9__eslintVersion,
+          'eslint-config-prettier': eslintConfigPrettierVersion,
+          'typescript-eslint': eslint9__typescriptESLintVersion,
         }
       )
     : () => {};

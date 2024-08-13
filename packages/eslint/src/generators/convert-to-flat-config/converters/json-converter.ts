@@ -2,6 +2,7 @@ import { Tree, names } from '@nx/devkit';
 import { ESLint } from 'eslint';
 import * as ts from 'typescript';
 import {
+  addCompatToFlatConfig,
   createNodeList,
   generateAst,
   generateFlatOverride,
@@ -181,14 +182,14 @@ export function convertEslintJsonToFlatConfig(
   }
 
   // create the node list and print it to new file
-  const nodeList = createNodeList(
-    importsMap,
-    exportElements,
-    isFlatCompatNeeded
-  );
+  const nodeList = createNodeList(importsMap, exportElements);
+  let content = stringifyNodeList(nodeList);
+  if (isFlatCompatNeeded) {
+    content = addCompatToFlatConfig(content);
+  }
 
   return {
-    content: stringifyNodeList(nodeList),
+    content,
     addESLintRC: isFlatCompatNeeded,
     addESLintJS: isESLintJSNeeded,
   };

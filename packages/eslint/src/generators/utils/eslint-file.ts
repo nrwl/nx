@@ -1,3 +1,4 @@
+import type { Tree } from '@nx/devkit';
 import {
   joinPathFragments,
   names,
@@ -5,10 +6,14 @@ import {
   readJson,
   updateJson,
 } from '@nx/devkit';
-import type { Tree } from '@nx/devkit';
 import type { Linter } from 'eslint';
 import {
-  flatConfigEslintFilename,
+  baseEsLintConfigFile,
+  baseEsLintFlatConfigFile,
+  ESLINT_CONFIG_FILENAMES,
+} from '../../utils/config-file';
+import {
+  getRootESLintFlatConfigFilename,
   useFlatConfig,
 } from '../../utils/flat-config';
 import {
@@ -20,16 +25,12 @@ import {
   generateFlatOverride,
   generatePluginExtendsElement,
   hasOverride,
+  overrideNeedsCompat,
   removeOverridesFromLintConfig,
   replaceOverride,
 } from './flat-config/ast-utils';
-import ts = require('typescript');
 import { mapFilePath } from './flat-config/path-utils';
-import {
-  baseEsLintConfigFile,
-  baseEsLintFlatConfigFile,
-  ESLINT_CONFIG_FILENAMES,
-} from '../../utils/config-file';
+import ts = require('typescript');
 
 export function findEslintFile(
   tree: Tree,
@@ -177,11 +178,11 @@ export function addOverrideToLintConfig(
   if (useFlatConfig(tree)) {
     const fileName = joinPathFragments(
       root,
-      isBase ? baseEsLintFlatConfigFile : flatConfigEslintFilename(tree)
+      isBase ? baseEsLintFlatConfigFile : getRootESLintFlatConfigFilename(tree)
     );
     const flatOverride = generateFlatOverride(override);
     let content = tree.read(fileName, 'utf8');
-    // we will be using compat here so we need to make sure it's added
+    // Check if the provided override using legacy eslintrc properties or plugins, if so we need to add compat
     if (overrideNeedsCompat(override)) {
       content = addCompatToFlatConfig(content);
     }
@@ -206,14 +207,6 @@ export function addOverrideToLintConfig(
   }
 }
 
-function overrideNeedsCompat(
-  override: Linter.ConfigOverride<Linter.RulesRecord>
-) {
-  return (
-    override.env || override.extends || override.plugins || override.parser
-  );
-}
-
 export function updateOverrideInLintConfig(
   tree: Tree,
   root: string,
@@ -223,7 +216,10 @@ export function updateOverrideInLintConfig(
   ) => Linter.ConfigOverride<Linter.RulesRecord>
 ) {
   if (useFlatConfig(tree)) {
-    const fileName = joinPathFragments(root, flatConfigEslintFilename(tree));
+    const fileName = joinPathFragments(
+      root,
+      getRootESLintFlatConfigFilename(tree)
+    );
     let content = tree.read(fileName, 'utf8');
     content = replaceOverride(content, root, lookup, update);
     tree.write(fileName, content);
@@ -265,7 +261,7 @@ export function lintConfigHasOverride(
   if (useFlatConfig(tree)) {
     const fileName = joinPathFragments(
       root,
-      isBase ? baseEsLintFlatConfigFile : flatConfigEslintFilename(tree)
+      isBase ? baseEsLintFlatConfigFile : getRootESLintFlatConfigFilename(tree)
     );
     const content = tree.read(fileName, 'utf8');
     return hasOverride(content, lookup);
@@ -285,9 +281,12 @@ export function replaceOverridesInLintConfig(
   overrides: Linter.ConfigOverride<Linter.RulesRecord>[]
 ) {
   if (useFlatConfig(tree)) {
-    const fileName = joinPathFragments(root, flatConfigEslintFilename(tree));
+    const fileName = joinPathFragments(
+      root,
+      getRootESLintFlatConfigFilename(tree)
+    );
     let content = tree.read(fileName, 'utf8');
-    // we will be using compat here so we need to make sure it's added
+    // Check if any of the provided overrides using legacy eslintrc properties or plugins, if so we need to add compat
     if (overrides.some(overrideNeedsCompat)) {
       content = addCompatToFlatConfig(content);
     }
@@ -314,7 +313,10 @@ export function addExtendsToLintConfig(
 ) {
   const plugins = Array.isArray(plugin) ? plugin : [plugin];
   if (useFlatConfig(tree)) {
-    const fileName = joinPathFragments(root, flatConfigEslintFilename(tree));
+    const fileName = joinPathFragments(
+      root,
+      getRootESLintFlatConfigFilename(tree)
+    );
     const pluginExtends = generatePluginExtendsElement(plugins);
     let content = tree.read(fileName, 'utf8');
     content = addCompatToFlatConfig(content);
@@ -344,7 +346,10 @@ export function addPluginsToLintConfig(
 ) {
   const plugins = Array.isArray(plugin) ? plugin : [plugin];
   if (useFlatConfig(tree)) {
-    const fileName = joinPathFragments(root, flatConfigEslintFilename(tree));
+    const fileName = joinPathFragments(
+      root,
+      getRootESLintFlatConfigFilename(tree)
+    );
     let content = tree.read(fileName, 'utf8');
     const mappedPlugins: { name: string; varName: string; imp: string }[] = [];
     plugins.forEach((name) => {
@@ -372,7 +377,10 @@ export function addIgnoresToLintConfig(
   ignorePatterns: string[]
 ) {
   if (useFlatConfig(tree)) {
-    const fileName = joinPathFragments(root, flatConfigEslintFilename(tree));
+    const fileName = joinPathFragments(
+      root,
+      getRootESLintFlatConfigFilename(tree)
+    );
     const block = generateAst<ts.ObjectLiteralExpression>({
       ignores: ignorePatterns.map((path) => mapFilePath(path)),
     });

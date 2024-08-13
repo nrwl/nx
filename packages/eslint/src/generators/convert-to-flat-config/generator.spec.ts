@@ -147,8 +147,8 @@ describe('convert-to-flat-config generator', () => {
 
     expect(tree.read('eslint.config.js', 'utf-8')).toMatchInlineSnapshot(`
       "const { FlatCompat } = require('@eslint/eslintrc');
-      const nxEslintPlugin = require('@nx/eslint-plugin');
       const js = require('@eslint/js');
+      const nxEslintPlugin = require('@nx/eslint-plugin');
 
       const compat = new FlatCompat({
         baseDirectory: __dirname,
@@ -392,8 +392,8 @@ describe('convert-to-flat-config generator', () => {
 
     expect(tree.read('eslint.config.js', 'utf-8')).toMatchInlineSnapshot(`
       "const { FlatCompat } = require('@eslint/eslintrc');
-      const nxEslintPlugin = require('@nx/eslint-plugin');
       const js = require('@eslint/js');
+      const nxEslintPlugin = require('@nx/eslint-plugin');
 
       const compat = new FlatCompat({
         baseDirectory: __dirname,

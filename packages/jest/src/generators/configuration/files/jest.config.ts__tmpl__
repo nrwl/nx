@@ -1,4 +1,3 @@
-/* eslint-disable */
 <% if(js){ %>module.exports =<% } else{ %>export default<% } %> {
   displayName: '<%= project %>',
   preset: '<%= offsetFromRoot %>jest.preset.<%= presetExt %>',<% if(setupFile !== 'none') { %>

@@ -1,12 +1,16 @@
 import { Tree } from 'nx/src/generators/tree';
-import { lintProjectGenerator, Linter, LinterType } from '@nx/eslint';
+import { Linter, LinterType, lintProjectGenerator } from '@nx/eslint';
 import { joinPathFragments } from 'nx/src/utils/path';
 import {
-  GeneratorCallback,
   addDependenciesToPackageJson,
+  GeneratorCallback,
   runTasksInSerial,
-  updateJson,
 } from '@nx/devkit';
+import {
+  addExtendsToLintConfig,
+  addIgnoresToLintConfig,
+  isEslintConfigSupported,
+} from '@nx/eslint/src/generators/utils/eslint-file';
 import { editEslintConfigFiles } from '@nx/vue';
 import { nuxtEslintConfigVersion } from './versions';
 
@@ -35,28 +39,16 @@ export async function addLinting(
 
     editEslintConfigFiles(host, options.projectRoot);
 
-    updateJson(
-      host,
-      joinPathFragments(options.projectRoot, '.eslintrc.json'),
-      (json) => {
-        const {
-          extends: pluginExtends,
-          ignorePatterns: pluginIgnorePatters,
-          ...config
-        } = json;
-
-        return {
-          extends: ['@nuxt/eslint-config', ...(pluginExtends || [])],
-          ignorePatterns: [
-            ...(pluginIgnorePatters || []),
-            '.nuxt/**',
-            '.output/**',
-            'node_modules',
-          ],
-          ...config,
-        };
-      }
-    );
+    if (isEslintConfigSupported(host, options.projectRoot)) {
+      addExtendsToLintConfig(host, options.projectRoot, [
+        '@nuxt/eslint-config',
+      ]);
+      addIgnoresToLintConfig(host, options.projectRoot, [
+        '.nuxt/**',
+        '.output/**',
+        'node_modules',
+      ]);
+    }
 
     const installTask = addDependenciesToPackageJson(
       host,
