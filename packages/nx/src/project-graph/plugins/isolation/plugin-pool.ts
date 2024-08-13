@@ -400,7 +400,7 @@ async function startPluginWorker() {
           worker,
           socket,
         });
-      } else if (attempts > 1000) {
+      } else if (attempts > 5000) {
         // daemon fails to start, the process probably exited
         // we print the logs and exit the client
         reject('Failed to start plugin worker.');
