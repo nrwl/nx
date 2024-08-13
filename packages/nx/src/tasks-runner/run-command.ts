@@ -230,10 +230,6 @@ async function ensureWorkspaceIsInSyncAndGetGraphs(
     extraOptions
   );
 
-  if (process.env.NX_ENABLE_SYNC_GENERATORS !== 'true') {
-    return { projectGraph, taskGraph };
-  }
-
   // collect unique syncGenerators from the tasks
   const uniqueSyncGenerators = new Set<string>();
   for (const { target } of Object.values(taskGraph.tasks)) {
