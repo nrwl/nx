@@ -45,6 +45,10 @@ type ModuleFederationSsrDevServerOptions = WebSsrDevServerOptions & {
   pathToManifestFile?: string;
   staticRemotesPort?: number;
   parallel?: number;
+  ssl?: boolean;
+  sslKey?: string;
+  sslCert?: string;
+  isInitialHost?: boolean;
 };
 
 function normalizeOptions(
