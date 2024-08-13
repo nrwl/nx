@@ -254,7 +254,12 @@ exports[`Host App Generator --ssr should generate the correct files 6`] = `
 exports[`Host App Generator --ssr should generate the correct files 7`] = `
 "const { withModuleFederationForSSR } = require('@nx/angular/module-federation');
 const config = require('./module-federation.config');
-module.exports = withModuleFederationForSSR(config);
+/**
+ * DTS Plugin is disabled in Nx Workspaces as Nx already provides Typing support Module Federation
+ * The DTS Plugin can be enabled by setting dts: true
+ * Learn more about the DTS Plugin here: https://module-federation.io/configure/dts.html
+ */
+module.exports = withModuleFederationForSSR(config, { dts: false });
 "
 `;
 
@@ -438,7 +443,12 @@ exports[`Host App Generator --ssr should generate the correct files for standalo
 exports[`Host App Generator --ssr should generate the correct files for standalone 6`] = `
 "const { withModuleFederationForSSR } = require('@nx/angular/module-federation');
 const config = require('./module-federation.config');
-module.exports = withModuleFederationForSSR(config);
+/**
+ * DTS Plugin is disabled in Nx Workspaces as Nx already provides Typing support Module Federation
+ * The DTS Plugin can be enabled by setting dts: true
+ * Learn more about the DTS Plugin here: https://module-federation.io/configure/dts.html
+ */
+module.exports = withModuleFederationForSSR(config, { dts: false });
 "
 `;
 
@@ -653,7 +663,12 @@ exports[`Host App Generator --ssr should generate the correct files for standalo
 "import { withModuleFederationForSSR } from '@nx/angular/module-federation';
 import config from './module-federation.config';
 
-export default withModuleFederationForSSR(config);
+/**
+ * DTS Plugin is disabled in Nx Workspaces as Nx already provides Typing support Module Federation
+ * The DTS Plugin can be enabled by setting dts: true
+ * Learn more about the DTS Plugin here: https://module-federation.io/configure/dts.html
+ */
+export default withModuleFederationForSSR(config, { dts: false });
 "
 `;
 
@@ -883,7 +898,12 @@ exports[`Host App Generator --ssr should generate the correct files when --types
 "import { withModuleFederationForSSR } from '@nx/angular/module-federation';
 import config from './module-federation.config';
 
-export default withModuleFederationForSSR(config);
+/**
+ * DTS Plugin is disabled in Nx Workspaces as Nx already provides Typing support Module Federation
+ * The DTS Plugin can be enabled by setting dts: true
+ * Learn more about the DTS Plugin here: https://module-federation.io/configure/dts.html
+ */
+export default withModuleFederationForSSR(config, { dts: false });
 "
 `;
 
@@ -948,14 +968,26 @@ exports[`Host App Generator --ssr should generate the correct files when --types
 exports[`Host App Generator should generate a host app with a remote 1`] = `
 "const { withModuleFederation } = require('@nx/angular/module-federation');
 const config = require('./module-federation.config');
-module.exports = withModuleFederation(config);
+
+/**
+ * DTS Plugin is disabled in Nx Workspaces as Nx already provides Typing support Module Federation
+ * The DTS Plugin can be enabled by setting dts: true
+ * Learn more about the DTS Plugin here: https://module-federation.io/configure/dts.html
+ */
+module.exports = withModuleFederation(config, { dts: false });
 "
 `;
 
 exports[`Host App Generator should generate a host app with a remote 2`] = `
 "const { withModuleFederation } = require('@nx/angular/module-federation');
 const config = require('./module-federation.config');
-module.exports = withModuleFederation(config);
+
+/**
+ * DTS Plugin is disabled in Nx Workspaces as Nx already provides Typing support Module Federation
+ * The DTS Plugin can be enabled by setting dts: true
+ * Learn more about the DTS Plugin here: https://module-federation.io/configure/dts.html
+ */
+module.exports = withModuleFederation(config, { dts: false });
 "
 `;
 
@@ -963,7 +995,12 @@ exports[`Host App Generator should generate a host app with a remote when --type
 "import { withModuleFederation } from '@nx/angular/module-federation';
 import config from './module-federation.config';
 
-export default withModuleFederation(config);
+/**
+ * DTS Plugin is disabled in Nx Workspaces as Nx already provides Typing support Module Federation
+ * The DTS Plugin can be enabled by setting dts: true
+ * Learn more about the DTS Plugin here: https://module-federation.io/configure/dts.html
+ */
+export default withModuleFederation(config, { dts: false });
 "
 `;
 
@@ -971,14 +1008,25 @@ exports[`Host App Generator should generate a host app with a remote when --type
 "import { withModuleFederation } from '@nx/angular/module-federation';
 import config from './module-federation.config';
 
-export default withModuleFederation(config);
+/**
+ * DTS Plugin is disabled in Nx Workspaces as Nx already provides Typing support Module Federation
+ * The DTS Plugin can be enabled by setting dts: true
+ * Learn more about the DTS Plugin here: https://module-federation.io/configure/dts.html
+ */
+export default withModuleFederation(config, { dts: false });
 "
 `;
 
 exports[`Host App Generator should generate a host app with no remotes 1`] = `
 "const { withModuleFederation } = require('@nx/angular/module-federation');
 const config = require('./module-federation.config');
-module.exports = withModuleFederation(config);
+
+/**
+ * DTS Plugin is disabled in Nx Workspaces as Nx already provides Typing support Module Federation
+ * The DTS Plugin can be enabled by setting dts: true
+ * Learn more about the DTS Plugin here: https://module-federation.io/configure/dts.html
+ */
+module.exports = withModuleFederation(config, { dts: false });
 "
 `;
 
@@ -986,7 +1034,12 @@ exports[`Host App Generator should generate a host app with no remotes when --ty
 "import { withModuleFederation } from '@nx/angular/module-federation';
 import config from './module-federation.config';
 
-export default withModuleFederation(config);
+/**
+ * DTS Plugin is disabled in Nx Workspaces as Nx already provides Typing support Module Federation
+ * The DTS Plugin can be enabled by setting dts: true
+ * Learn more about the DTS Plugin here: https://module-federation.io/configure/dts.html
+ */
+export default withModuleFederation(config, { dts: false });
 "
 `;
 
