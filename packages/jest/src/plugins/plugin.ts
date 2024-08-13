@@ -429,9 +429,11 @@ function resolveJestPath(projectRoot: string, workspaceRoot: string): string {
     return resolvedJestPaths[projectRoot];
   }
 
-  return require.resolve('jest', {
+  resolvedJestPaths[projectRoot] = require.resolve('jest', {
     paths: [projectRoot, workspaceRoot, __dirname],
   });
+
+  return resolvedJestPaths[projectRoot];
 }
 
 /**
