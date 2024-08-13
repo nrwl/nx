@@ -20,7 +20,7 @@ export function PodcastListItem({ podcast, episode }: PodcastListItemProps) {
       prefetch={false}
     >
       <span className="w-1/2 flex-none text-balance text-slate-500 sm:w-8/12 dark:text-white">
-        Episode {episode}: {podcast.title}
+        {podcast.title}
       </span>
       <span className="hidden w-2/12 flex-none sm:inline-block">
         <time dateTime={podcast.date}>{formattedDate}</time>

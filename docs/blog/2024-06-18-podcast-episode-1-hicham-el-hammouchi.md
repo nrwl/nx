@@ -6,9 +6,9 @@ tags: [podcast]
 cover_image: /blog/images/2024-06-18/ep-1-hicham.png
 podcastYoutubeId: 8iiLB_2djZ8
 podcastSpotifyId: 24yagCNpu9EGj0fCwSDQkj
-amazonUrl: https://music.amazon.com/podcasts/a221fdad-36fd-4695-a5b4-038d7b99d284/episodes/899a2e4c-2e56-4dfa-a3e3-e69eb216f2b0/the-enterprise-software-podcast-by-nx-the-enterprise-software-podcast-by-nx-1-hicham-el-hamouchi
-appleUrl: https://podcasters.spotify.com/pod/show/enterprise-software/episodes/The-Enterprise-Software-Podcast-By-Nx-1--Hicham-El-Hamouchi-e2l0302
-iHeartUrl: https://www.iheart.com/podcast/269-the-enterprise-software-po-186891508/episode/the-enterprise-software-podcast-by-nx-186891511/
+podcastAmazonUrl: https://music.amazon.com/podcasts/a221fdad-36fd-4695-a5b4-038d7b99d284/episodes/899a2e4c-2e56-4dfa-a3e3-e69eb216f2b0/the-enterprise-software-podcast-by-nx-the-enterprise-software-podcast-by-nx-1-hicham-el-hamouchi
+podcastAppleUrl: https://podcasters.spotify.com/pod/show/enterprise-software/episodes/The-Enterprise-Software-Podcast-By-Nx-1--Hicham-El-Hamouchi-e2l0302
+podcastIHeartUrl: https://www.iheart.com/podcast/269-the-enterprise-software-po-186891508/episode/the-enterprise-software-podcast-by-nx-186891511/
 ---
 
 In this episode, Zack DeRose from Nx chats with Hicham El Hammouchi, a veteran in enterprise software. Hicham dives into his background, sharing his career journey and the wealth of experience he's gathered along the way.
