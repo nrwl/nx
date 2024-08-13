@@ -75,12 +75,17 @@ export async function hashWithWorkspaceContext(
 }
 
 export async function updateContextWithChangedFiles(
+  workspaceRoot: string,
   createdFiles: string[],
   updatedFiles: string[],
   deletedFiles: string[]
 ) {
   if (!daemonClient.enabled()) {
-    updateFilesInContext([...createdFiles, ...updatedFiles], deletedFiles);
+    updateFilesInContext(
+      workspaceRoot,
+      [...createdFiles, ...updatedFiles],
+      deletedFiles
+    );
   } else if (isOnDaemon()) {
     // make sure to only import this when running on the daemon
     const { addUpdatedAndDeletedFiles } = await import(
@@ -99,9 +104,11 @@ export async function updateContextWithChangedFiles(
 }
 
 export function updateFilesInContext(
+  workspaceRoot: string,
   updatedFiles: string[],
   deletedFiles: string[]
 ) {
+  ensureContextAvailable(workspaceRoot);
   return workspaceContext?.incrementalUpdate(updatedFiles, deletedFiles);
 }
 
