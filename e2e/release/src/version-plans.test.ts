@@ -139,7 +139,7 @@ Here is another line in the message.
       `git commit -m "chore: add version plans for fixed and independent groups"`
     );
 
-    const result = runCLI('release --verbose', {
+    const result = runCLI('release --verbose --skip-publish', {
       silenceError: true,
     });
 
@@ -597,7 +597,7 @@ Update packages in both groups with a mix #2
     // dry-run should not remove the version plan
     expect(exists(join(versionPlansDir, 'bump-mixed1.md'))).toBeTruthy();
 
-    const result2 = runCLI('release --verbose', {
+    const result2 = runCLI('release --verbose --skip-publish', {
       silenceError: true,
     });
 
@@ -815,7 +815,7 @@ Update packages in both groups with a mix #2
       `git commit -m "chore: add version plans for fixed and independent groups again"`
     );
 
-    const releaseResult = runCLI('release major --verbose', {
+    const releaseResult = runCLI('release major --verbose --skip-publish', {
       silenceError: true,
     });
 
