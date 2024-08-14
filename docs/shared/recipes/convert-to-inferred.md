@@ -1,10 +1,11 @@
 # Migrate to Inferred Tasks (Project Crystal)
 
-In this recipe, you'll learn how to migrate an existing Nx workspace from using executors in `project.json` to using [inferred tasks](/concepts/inferred-tasks)(Project Crystal).
+In this recipe, you'll learn how to migrate an existing Nx workspace from using executors in `project.json` to using [inferred tasks](/concepts/inferred-tasks).
 
-There main benefits of migrating to inferred tasks are
+The main benefits of migrating to inferred tasks are
 
 - reducing the amount of configuration needed in `project.json`
+- inferring the correct cache settings based on the tool configuration files
 - [splitting tasks (Atomizer)](/ci/features/split-e2e-tasks) for plugins that support it
 
 {% youtube
@@ -18,12 +19,12 @@ For the best experience, we recommend that you [migrate](/features/automate-upda
 npx nx migrate latest
 ```
 
-## Migrating a Plugin
+## Migrate a Plugin
 
-Most of the official plugins come with the `convert-to-inferred` generator. This generator will
+Most of the official plugins come with a `convert-to-inferred` generator. This generator will
 
 - register the inference plugin in the `plugins` section of `nx.json`
-- migrate executor options into the tooling's configuration files (where applicable)
+- migrate executor options into the tool's configuration files (where applicable)
 - clean up `project.json` to remove targets and options that are unnecessary
 
 To get started, run `nx g convert-to-inferred`, and you'll be prompted to choose a plugin to migrate.
@@ -38,14 +39,14 @@ None of the above
 ```
 
 {% callout type="note" title="Third-party plugins" %}
-For third-party plugins to provide `convert-to-inferred` generators, you should pick the `None of the above` option and type in the name of the package manually. Alternatively, you can also provide the package explicitly with `nx g <plugin>:convert-to-inferred`.
+For third-party plugins that provide `convert-to-inferred` generators, you should pick the `None of the above` option and type in the name of the package manually. Alternatively, you can also provide the package explicitly with `nx g <plugin>:convert-to-inferred`.
 {% /callout %}
 
 We recommend that you migrate the plugins one at a time, and check that the configurations are correct before continuing to the next plugin. If you only want to try it on a single project, pass the `--project` option.
 
-## Understanding a Migration
+## Understand the Migration Process
 
-The `convert-to-inferred` generator removes usages of executors from the corresponding plugin. For example, if `@nx/vite` is migrated, then usages of [`@nx/vite:build`](/nx-api/vite/executors/build), [`@nx/vite:dev-server`](/nx-api/vite/executors/dev-server), [`@nx/vite:preview-server`](/nx-api/vite/executors/preview-server), and [`@nx/vite:test`](/nx-api/vite/executors/test) executors will be removed.
+The `convert-to-inferred` generator removes uses of executors from the corresponding plugin. For example, if `@nx/vite` is migrated, then uses of [`@nx/vite:build`](/nx-api/vite/executors/build), [`@nx/vite:dev-server`](/nx-api/vite/executors/dev-server), [`@nx/vite:preview-server`](/nx-api/vite/executors/preview-server), and [`@nx/vite:test`](/nx-api/vite/executors/test) executors will be removed.
 
 Target and configuration names are maintained for each project in their `project.json` files. A target may be removed from `project.json` if everything is inferred--that is, options and configurations are not customized. To get the full project details (including all inferred tasks), run:
 
@@ -53,7 +54,7 @@ Target and configuration names are maintained for each project in their `project
 npx nx show project <project-name>
 ```
 
-For example, if we migrated the `@nx/vite` plugin for a single app (i.e. `nx g @nx/vite:convert-to-inferred --project demo`), then running `nx show project demo` will a screen similar to the following.
+For example, if we migrated the `@nx/vite` plugin for a single app (i.e. `nx g @nx/vite:convert-to-inferred --project demo`), then running `nx show project demo` will show a screen similar to the following.
 
 {% project-details title="Test" height="100px" %}
 
@@ -92,7 +93,7 @@ For example, if we migrated the `@nx/vite` plugin for a single app (i.e. `nx g @
 
 {% /project-details %}
 
-You'll notice that the `serve` and `build` are running the [Vite CLI](https://vitejs.dev/guide/cli.html) and there are no references to Nx executors. Since the targets directly invoke the Vite CLI, any options that may be passed to it can be passed via Nx commands. e.g. `nx serve demo --cors --port 8888` enables CORs and uses port `8888` using [Vite CLI options](https://vitejs.dev/guide/cli.html#options)
+You'll notice that the `serve` and `build` tasks are running the [Vite CLI](https://vitejs.dev/guide/cli.html) and there are no references to Nx executors. Since the targets directly invoke the Vite CLI, any options that may be passed to it can be passed via Nx commands. e.g. `nx serve demo --cors --port 8888` enables CORs and uses port `8888` using [Vite CLI options](https://vitejs.dev/guide/cli.html#options)
 The same CLI setup applies to other plugins as well.
 
 - `@nx/cypess` calls the [Cypress CLI](https://docs.cypress.io/guides/guides/command-line)
@@ -101,6 +102,8 @@ The same CLI setup applies to other plugins as well.
 - etc.
 
 Read the recipe on [passing args to commands](/recipes/running-tasks/pass-args-to-commands) for more information.
+
+### Configuration File Changes
 
 There may also be changes to the configuration files used by the underlying tool. The changes come with comments to explain them, and may also provide next steps for you to take. One common change is to add support for different configuration options. For example, if we have an existing Vite app with the following build target:
 
@@ -145,7 +148,9 @@ export default defineConfig({
 });
 ```
 
-The configuration changes ensure that passing `--configuration` still work for the target. Differences in options can be added to `configValues` file, and the right value is determined using the `NX_TASK_TARGET_CONFIGURATION` [environment variable](/reference/environment-variables). Again, there may be other types of changes so read the comments to understand them.
+The configuration changes ensure that passing `--configuration` still work for the target. Differences in options can be added to the `configValues` object, and the right value is determined using the `NX_TASK_TARGET_CONFIGURATION` [environment variable](/reference/environment-variables). Again, there may be other types of changes so read the comments to understand them.
+
+### Register the Plugin with Nx
 
 Lastly, you can inspect the `nx.json` file to see a new `plugins` entry. For `@nx/vite`, there should be an entry like this:
 
@@ -164,7 +169,7 @@ Lastly, you can inspect the `nx.json` file to see a new `plugins` entry. For `@n
 
 You may change the target name options to change how Nx adds them to the project. For example, if you use `"serveTargetName": "dev"` then you would run `nx dev demo` rather than `nx serve demo` for your Vite project.
 
-## Verifying a Migration
+## Verify the Migration
 
 The migrations maintain the same targets and configurations for each project, thus to verify it you should run the affected targets.
 
@@ -177,9 +182,9 @@ For example
 
 Remember that the target names are defined in the plugin configuration in `nx.json`.
 
-Make sure that the tasks are all passing before migrating the next plugin.
+Make sure that the tasks are all passing before migrating another plugin.
 
-## Enabling Atomizer (task splitting)
+## Enable Atomizer (task splitting)
 
 These plugins come with the [Atomizer](/ci/features/split-e2e-tasks) feature.
 
@@ -190,52 +195,9 @@ These plugins come with the [Atomizer](/ci/features/split-e2e-tasks) feature.
 
 The Atomizer splits potentially slow tasks into separate tasks per file. This feature along with [task distribution](/ci/features/distribute-task-execution) can speed up CI by distributing the split tasks among many agents.
 
-To enable Atomizer, make sure that you are [connected to Nx Cloud](/ci/intro/connect-to-nx-cloud), and that you have distribution enabled in CI. If you have not used Nx Cloud before, then get started with this command:
+To enable Atomizer, make sure that you are [connected to Nx Cloud](/ci/intro/connect-to-nx-cloud), and that you have distribution enabled in CI. Some plugins require extra configuration to enable Atomizer, so check the [individual plugin documentation page](/nx-api) for more details.
 
-```shell
-npx nx connect
-```
-
-If you have Nx Cloud set up already, then make sure that `nx-cloud start-ci-run` is present in the CI pipeline and that `--distribute-on` option is set.
-
-For example, for GitHub actions, the following line enables distribution.
-
-```yaml {% fileName=".github/workflows/ci.yml" highlightLines=[19]%}
-name: CI
-# ...
-jobs:
-  main:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - uses: pnpm/action-setup@v2
-        with:
-          version: 8
-
-      # This enables task distribution via Nx Cloud
-      # Run this command as early as possible, before dependencies are installed
-      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      # Connect your workspace by running "nx connect" and uncomment this
-      - run: pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
-
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 20
-          cache: 'pnpm'
-
-      - run: pnpm install --frozen-lockfile
-      - uses: nrwl/nx-set-shas@v4
-
-      # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
-      # - run: pnpm exec nx-cloud record -- echo Hello World
-      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-      - run: pnpm exec nx affected -t lint test build
-```
-
-If you use a different CI provider, check out the [other recipes for setting up CI](/ci/recipes/set-up).
+{% call-to-action title="Connect to Nx Cloud" icon="nxcloud" description="Enable task distribution and Atomizer" url="/enterprise" /%}
 
 ## Troubleshooting
 
