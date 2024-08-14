@@ -2,13 +2,12 @@
 
 Every repository has a unique set of conventions and best practices that developers need to learn in order to write code that integrates well with the rest of the code base. It is important to document those best practices, but developers don't always read the documentation and even if they have read the documentation, they don't consistently follow the documentation every time they perform a task. Nx allows you to encode these best practices in code generators that have been tailored to your specific repository.
 
-Here are some examples of best practices that you may want to enforce in your repository:
+In this tutorial, we will create a generator that helps enforce the follow best practices:
 
-- Every project in this repository should use Jest for unit tests and Playwright for E2E tests.
+- Every project in this repository should use Vitest for unit tests.
 - Every project in this repository should be tagged with a `scope:*` tag that is chosen from the list of available scopes.
-- Every new route should be registered in the main application and be configured in the same way.
-
-In this tutorial, we'll walk through creating a plugin that extends the existing `@nx/react` plugin's `library` generator to restrict the options for the generator to only the options that make sense for the organization and sets the tags based on the scope chosen for the library.
+- Projects should be placed in folders that match the scope that they are assigned.
+- Vitest should clear mocks before running tests.
 
 ## Get Started
 
@@ -25,9 +24,9 @@ npx nx add @nx/plugin
 npx nx g @nx/plugin:plugin recommended --directory=tools/recommended
 ```
 
-This will create a `my-plugin` project that contains all your plugin code.
+This will create a `recommended` project that contains all your plugin code.
 
-## Create a Domain Library Generator
+## Create a Customized Library Generator
 
 To create a new generator run:
 
@@ -47,19 +46,23 @@ export async function libraryGenerator(
   tree: Tree,
   options: LibraryGeneratorSchema
 ) {
-  await reactLibraryGenerator(tree, {
+  const callbackAfterFilesUpdated = await reactLibraryGenerator(tree, {
     ...options,
     projectNameAndRootFormat: 'as-provided',
     linter: Linter.EsLint,
     style: 'css',
     unitTestRunner: 'vitest',
   });
+
+  return callbackAfterFilesUpdated;
 }
 
 export default libraryGenerator;
 ```
 
 Notice how this generator is calling the `@nx/react` plugin's `library` generator with a predetermined list of options. This helps developers to always create projects with the recommended settings.
+
+We're returning the `callbackAfterFilesUpdated` function because the `@nx/react:library` generator sometimes needs to install packages from NPM after the file system has been updated by the generator. You can provide your own callback function instead, if you have tasks that rely on actual files being present.
 
 To try out the generator in dry-run mode, use the following command:
 
@@ -117,6 +120,10 @@ export interface LibraryGeneratorSchema {
 {% callout type="note" title="More details" %}
 The `schema.d.ts` file is used for type checking inside the implementation file. It should match the properties in `schema.json`.
 {% /callout %}
+
+The schema files not only provide structure to the CLI, but also allow [Nx Console](/getting-started/editor-setup) to show an accurate UI for the generator.
+
+![Nx Console UI for the library generator](/shared/plugins/generator-options-ui.png)
 
 Notice how we made the `description` argument optional in both the JSON and type files. If we call the generator without passing a directory, the project will be created in a directory with same name as the project. We can test the changes to the generator with the following command:
 
@@ -203,7 +210,7 @@ export async function libraryGenerator(
   tree: Tree,
   options: LibraryGeneratorSchema
 ) {
-  await reactLibraryGenerator(tree, {
+  const callbackAfterFilesUpdated = await reactLibraryGenerator(tree, {
     ...options,
     tags: `scope:${options.scope}`,
     directory: options.directory || `${options.scope}/${options.name}`,
@@ -212,6 +219,8 @@ export async function libraryGenerator(
     style: 'css',
     unitTestRunner: 'vitest',
   });
+
+  return callbackAfterFilesUpdated;
 }
 
 export default libraryGenerator;
@@ -235,7 +244,7 @@ You can also use your Nx plugin to configure how your tasks are run. Usually, or
 Let's update our library generator to set the `clearMocks` property to `true` in the `vitest` configuration. First we'll run the `reactLibraryGenerator` and then we'll modify the created files.
 
 ```ts {% fileName="tools/recommended/src/generators/library/generator.ts" %}
-import { formatFiles, Tree } from '@nx/devkit';
+import { formatFiles, Tree, runTasksInSerial } from '@nx/devkit';
 import { Linter } from '@nx/eslint';
 import { libraryGenerator as reactLibraryGenerator } from '@nx/react';
 import { LibraryGeneratorSchema } from './schema';
@@ -245,18 +254,30 @@ export async function libraryGenerator(
   options: LibraryGeneratorSchema
 ) {
   const directory = options.directory || `${options.scope}/${options.name}`;
-  await reactLibraryGenerator(tree, {
-    ...options,
-    tags: `scope:${options.scope}`,
-    directory,
-    projectNameAndRootFormat: 'as-provided',
-    linter: Linter.EsLint,
-    style: 'css',
-    unitTestRunner: 'vitest',
-  });
 
+  const tasks = [];
+  tasks.push(
+    await reactLibraryGenerator(tree, {
+      ...options,
+      tags: `scope:${options.scope}`,
+      directory,
+      projectNameAndRootFormat: 'as-provided',
+      linter: Linter.EsLint,
+      style: 'css',
+      unitTestRunner: 'vitest',
+    })
+  );
+
+  updateViteConfiguration(tree, directory);
+  await formatFiles(tree);
+
+  return runTasksInSerial(...tasks);
+}
+
+function updateViteConfiguration(tree, directory) {
   // Read the vite configuration file
-  let viteConfiguration = tree.read(`${directory}/vite.config.ts`).toString();
+  let viteConfiguration =
+    tree.read(`${directory}/vite.config.ts`)?.toString() || '';
 
   // Modify the configuration
   // This is done with a naive search and replace, but could be done in a more robust way using AST nodes.
@@ -267,14 +288,19 @@ export async function libraryGenerator(
 
   // Write the modified configuration back to the file
   tree.write(`${directory}/vite.config.ts`, viteConfiguration);
-
-  await formatFiles(tree);
 }
 
 export default libraryGenerator;
 ```
 
-Let's check to make sure that the `clearMocks` property is set correctly by the generator. First, we'll commit our changes so far. Then, we'll run the generator without the `--dry-run` flag so we can inspect the file contents.
+We updated the generator to use some new helper functions from the Nx devkit. Here are a few functions you may find useful. See the [full API reference](/nx-api/devkit/documents/nx_devkit) for all the options.
+
+- [`runTasksInSerial`](/nx-api/devkit/documents/runTasksInSerial) - Allows you to collect many callbacks and return them all at the end of the generator.
+- [`formatFiles`](/nx-api/devkit/documents/formatFiles) - Run Prettier on the repository
+- [`readProjectConfiguration`](/nx-api/devkit/documents/readProjectConfiguration) - Get the calculated project configuration for a single project
+- [`updateNxJson`](/nx-api/devkit/documents/updateNxJson) - Update the `nx.json` file
+
+Now let's check to make sure that the `clearMocks` property is set correctly by the generator. First, we'll commit our changes so far. Then, we'll run the generator without the `--dry-run` flag so we can inspect the file contents.
 
 ```shell
 git add .
@@ -282,73 +308,18 @@ git commit -am "library generator"
 npx nx g @myorg/recommended:library store-test --scope=store
 ```
 
-## Update Generators
+## Next Steps
 
-As the repository grows, your recommended best practices will change as well. You can update your generator and any new projects will immediately be up to date, but the existing projects take a little more work to migrate to the latest recommendations. You could globally make a change, but typically, a single developer will not know enough about every application in order to be confident that the changes did not introduce problems. Instead, you can make a generator that can make the suggested updates on a per-project basis and then ask the developers for those applications to run the generator and double-check that their app still runs correctly.
+Now that we have a working library generator, here are some more topics you may want to investigate.
 
-Let's make a generator that changes the Vitest coverage provider from `v8` to `istanbul`.
-
-```shell
-npx nx generate @nx/plugin:generator vitest-coverage-istanbul --directory="tools/recommended/src/generators/vitest-coverage-istanbul"
-```
-
-Now let's update the generator code:
-
-```ts {% fileName="tools/recommended/src/generators/vitest-coverage-istanbul/generator.ts" %}
-import { formatFiles, readProjectConfiguration, Tree } from '@nx/devkit';
-import { VitestCoverageIstanbulGeneratorSchema } from './schema';
-
-export async function vitestCoverageIstanbulGenerator(
-  tree: Tree,
-  options: VitestCoverageIstanbulGeneratorSchema
-) {
-  const projectConfig = readProjectConfiguration(tree, options.name);
-  if (!projectConfig) {
-    throw new Error(`No project found with the name ${options.name}`);
-  }
-
-  let viteConfiguration =
-    tree.read(`${projectConfig.root}/vite.config.ts`)?.toString() || '';
-  viteConfiguration = viteConfiguration.replace(
-    `provider: 'v8',`,
-    `provider: 'istanbul',`
-  );
-  tree.write(`${projectConfig.root}/vite.config.ts`, viteConfiguration);
-
-  await formatFiles(tree);
-}
-
-export default vitestCoverageIstanbulGenerator;
-```
-
-And we can update the schema file so that Nx Console will give a dropdown of available projects for the `name` option when running the generator in the UI:
-
-```json {% fileName="tools/recommended/src/generators/vitest-coverage-istanbul/schema.json" %}
-{
-  "$schema": "https://json-schema.org/schema",
-  "$id": "VitestCoverageIstanbul",
-  "title": "",
-  "type": "object",
-  "properties": {
-    "name": {
-      "type": "string",
-      "description": "The project to be updated",
-      "$default": {
-        "$source": "projectName"
-      }
-    }
-  },
-  "required": ["name"]
-}
-```
-
-Now we just need a developer on each team to run this generator and verify that everything still works.
+- [Generate files](/extending-nx/recipes/creating-files) from EJS templates
+- [Modify files](/extending-nx/recipes/modifying-files) with string replacement or AST transformations
 
 ## Encourage Adoption
 
 Once you have a set of generators in place in your organization's plugin, the rest of the work is all communication. Let your developers know that the plugin is available and encourage them to use it. These are the most important points to communicate to your developers:
 
-- Whenever there are multiple plugins that provide a generator with the same name, use the `@myorg/recommended` version
+- Whenever there are multiple plugins that provide a generator with the same name, use the `recommended` version
 - If there are repetitive or error prone processes that they identify, ask the plugin team to write a generator for that process
 
 Now you can go through all the README files in the repository and replace any multiple step instructions with a single line calling a generator.
