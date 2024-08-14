@@ -58,6 +58,15 @@ export default async function (tree: Tree) {
         }
         existingOverrideNode = node;
       }
+      const DTS_PROPERTY_SELECTOR = 'PropertyAssignment > Identifier[name=dts]';
+      const dtsPropertyNode = tsquery(
+        existingOverrideNode,
+        DTS_PROPERTY_SELECTOR
+      );
+      if (dtsPropertyNode.length) {
+        // dts already exists, do nothing
+        return;
+      }
 
       const newOverrides = `{ dts: false, ${existingOverrideNode
         .getText()

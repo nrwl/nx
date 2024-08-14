@@ -166,6 +166,52 @@ describe('turnOffDtsByDefault', () => {
         "
       `);
     });
+
+    it('should not update the webpack.config file to set {dts: false} when it exists in that object and the config is an object with an object', async () => {
+      // ARRANGE
+      const tree = createTreeWithEmptyWorkspace();
+      tree.write(
+        'app/webpack.config.server.ts',
+        `import { withModuleFederation } from '@nx/react/module-federation';
+      export default composePlugins(withNx(), withReact(), withModuleFederation({remotes: {"remote1": "something"}}, {dts: true, runtimePlugins: {foo: "bar"}}));`
+      );
+      tree.write(
+        'app/webpack.config.server.js',
+        `const { withModuleFederation } = require('@nx/react/module-federation');
+      module.exports = composePlugins(withNx(), withReact(), withModuleFederation({remotes: {"remote1": "something"}}, {dts: true, runtimePlugins: {foo: "bar"}}));`
+      );
+
+      // ACT
+      await turnOffDtsByDefault(tree);
+
+      // ASSERT
+      expect(tree.read('app/webpack.config.server.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "import { withModuleFederation } from '@nx/react/module-federation';
+        export default composePlugins(
+          withNx(),
+          withReact(),
+          withModuleFederation(
+            { remotes: { remote1: 'something' } },
+            { dts: true, runtimePlugins: { foo: 'bar' } }
+          )
+        );
+        "
+      `);
+      expect(tree.read('app/webpack.config.server.js', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "const { withModuleFederation } = require('@nx/react/module-federation');
+        module.exports = composePlugins(
+          withNx(),
+          withReact(),
+          withModuleFederation(
+            { remotes: { remote1: 'something' } },
+            { dts: true, runtimePlugins: { foo: 'bar' } }
+          )
+        );
+        "
+      `);
+    });
   });
   describe('withModuleFederationForSSR', () => {
     it('should update the webpack.config file to set {dts: false}', async () => {
