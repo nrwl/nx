@@ -2,58 +2,68 @@
 
 Nx Plugins can be used to easily integrate a tool or framework into an Nx repository. If there is no plugin available for your favorite tool or framework, you can write your own.
 
-In this tutorial, we'll create a plugin that helps to integrate the [cfonts]() npm package. `cfonts` is a tool for displaying text in your terminal using a variety of interesting fonts. We'll call our plugin `nx-cfonts`.
+In this tutorial, we'll create a plugin that helps to integrate the [Astro]() framework. `Astro` is a JavaScript web framework optimized for building fast, content-driven websites. We'll call our plugin `nx-astro`.
 
 To create a plugin in a brand new repository, use the `create-nx-plugin` command:
 
 ```shell
-npx create-nx-plugin nx-cfonts
+npx create-nx-plugin nx-astro
 ```
+
+Skip the `create-*` package prompt, since we won't be creating a preset.
 
 ## Understand Tooling Configuration Files
 
 When integrating your tool into an Nx repository, you first need to have a clear understanding of how your tool works. Pay special attention to all the possible formats for configuration files, so that your plugin can process any valid configuration options.
 
-For our `nx-cfonts` plugin, we'll create our own configuration file format in a `banner.json` file. This file will have two properties: `message` and `font`. `message` is a required property that controls what text will be displayed by the `cfonts` command. `font` is an optional property that controls what font is used to display the message.
+For our `nx-astro` plugin, we'll read information from the `astro.config.mjs` or `astro.config.ts` file. We'll mainly be interested in the `srcDir`, `publicDir` and `outDir` properties specified in the `defineConfig` object. `srcDir` and `publicDir` define input files that are used in the build process and `outDir` defines what the build output will be created.
 
-```json {% fileName="banner.json" %}
-{
-  "message": "Hello world!",
-  "font": "block"
-}
+```js {% fileName="astro.config.mjs" %}
+import { defineConfig } from 'astro/config';
+
+// https://astro.build/config
+export default defineConfig({
+  srcDir: './src',
+  publicDir: './public',
+  outDir: './dist',
+});
 ```
 
 ## Create an Inferred Task
 
 The easiest way for people integrate your tool into their repository is for them to use inferred tasks. When leveraging inferred tasks, all your users need to do is install your plugin and the tool configuration file to their projects. Your plugin will take care of registering tasks with Nx and setting up the correct caching settings.
 
-Once the inferred task logic is written, we want to be able to automatically create a task for any project that has a `banner.json` file defined in the root of the project. We'll name the task based on our plugin configuration in the `nx.json` file:
+Once the inferred task logic is written, we want to be able to automatically create a task for any project that has a `astro.config.*` file defined in the root of the project. We'll name the task based on our plugin configuration in the `nx.json` file:
 
 ```json {% fileName="nx.json" %}
 {
   "plugins": [
     {
-      "plugin": "nx-cfonts",
+      "plugin": "nx-astro",
       "options": {
-        "targetName": "banner"
+        "buildTargetName": "build",
+        "devTargetName": "dev"
       }
     }
   ]
 }
 ```
 
-If the `banner.json` for a project looks like our example in the previous section, then the inferred `banner` task that you see in the project detail view should look like this:
+If the `astro.config.mjs` for a project looks like our example in the previous section, then the inferred `build` task that you see in the project detail view should look like this:
 
 ```json
 {
-  "command": "cfonts \"Hello world!\" --font block",
+  "command": "astro build",
   "cache": true,
   "inputs": [
-    "{projectRoot}/banner.json",
+    "{projectRoot}/astro.config.mjs",
+    "{projectRoot}/src/**/*",
+    "{projectRoot}/public/**/*",
     {
-      "externalDependencies": ["cfonts"]
+      "externalDependencies": ["astro"]
     }
-  ]
+  ],
+  "outputs": ["{projectRoot}/dist"]
 }
 ```
 
@@ -64,22 +74,24 @@ import {
   CreateNodesV2,
   TargetConfiguration,
   createNodesFromFiles,
+  joinPathFragments,
   readJsonFile,
 } from '@nx/devkit';
-import { readdirSync } from 'fs';
+import { readdirSync, readFileSync } from 'fs';
 import { dirname, join, resolve } from 'path';
 
 // Expected format of the plugin options defined in nx.json
-export interface BannerPluginOptions {
-  targetName?: string;
+export interface AstroPluginOptions {
+  buildTargetName?: string;
+  devTargetName?: string;
 }
 
 // File glob to find all the configuration files for this plugin
-const bannerGlob = '**/banner.json';
+const astroConfigGlob = '**/astro.config.{mjs,ts}';
 
 // Entry function that Nx calls to modify the graph
-export const createNodesV2: CreateNodesV2<BannerPluginOptions> = [
-  bannerGlob,
+export const createNodesV2: CreateNodesV2<AstroPluginOptions> = [
+  astroConfigGlob,
   async (configFiles, options, context) => {
     return await createNodesFromFiles(
       (configFile, options, context) =>
@@ -90,9 +102,6 @@ export const createNodesV2: CreateNodesV2<BannerPluginOptions> = [
     );
   },
 ];
-
-// Possible CLI options that could be defined in the banner.json and need to be based as arguments to the terminal command
-const POSSIBLE_OPTIONS = ['font'];
 
 async function createNodesInternal(configFilePath, options, context) {
   const projectRoot = dirname(configFilePath);
@@ -106,28 +115,45 @@ async function createNodesInternal(configFilePath, options, context) {
     return {};
   }
 
-  // Contents of the banner.json file
-  const bannerConfigContent = readJsonFile(
+  // Contents of the astro config file
+  const astroConfigContent = readFileSync(
     resolve(context.workspaceRoot, configFilePath)
-  );
+  ).toString();
 
-  // cfonts arguments to be passed to the terminal as a string
-  const cliOptions = POSSIBLE_OPTIONS.filter(
-    (option) => bannerConfigContent[option]
-  )
-    .map((option) => `--${option} ${bannerConfigContent[option]}`)
-    .join(' ');
+  // Read config values using Regex.
+  // There are better ways to read config values, but this works for the tutorial
+  function getConfigValue(propertyName: string, defaultValue: string) {
+    const result = new RegExp(`${propertyName}: '(.*)'`).exec(
+      astroConfigContent
+    );
+    if (result && result[1]) {
+      return result[1];
+    }
+    return defaultValue;
+  }
+
+  const srcDir = getConfigValue('srcDir', './src');
+  const publicDir = getConfigValue('publicDir', './public');
+  const outDir = getConfigValue('outDir', './dist');
 
   // Inferred task final output
-  const target: TargetConfiguration = {
-    command: `cfonts "${bannerConfigContent.message}" ${cliOptions}`,
+  const buildTarget: TargetConfiguration = {
+    command: `astro build`,
+    options: { cwd: projectRoot },
     cache: true,
     inputs: [
-      '{projectRoot}/banner.json',
+      '{projectRoot}/astro.config.mjs',
+      joinPathFragments('{projectRoot}', srcDir, '**', '*'),
+      joinPathFragments('{projectRoot}', publicDir, '**', '*'),
       {
-        externalDependencies: ['cfonts'],
+        externalDependencies: ['astro'],
       },
     ],
+    outputs: [`{projectRoot}/${outDir}`],
+  };
+  const devTarget: TargetConfiguration = {
+    command: `astro dev`,
+    options: { cwd: projectRoot },
   };
 
   // Project configuration to be merged into the rest of the Nx configuration
@@ -135,7 +161,8 @@ async function createNodesInternal(configFilePath, options, context) {
     projects: {
       [projectRoot]: {
         targets: {
-          [options.targetName]: target,
+          [options.buildTargetName]: buildTarget,
+          [options.devTargetName]: devTarget,
         },
       },
     },
@@ -143,70 +170,15 @@ async function createNodesInternal(configFilePath, options, context) {
 }
 ```
 
-To test your inferred task, you can update the `nx.json` file and create a `banner.json` file in the root:
-
-{% tabs %}
-{% tab label="nx.json" %}
-
-```json {% fileName="nx.json" %}
-{
-  "plugins": [
-    {
-      "plugin": "nx-cfonts",
-      "options": {
-        "targetName": "banner"
-      }
-    }
-  ]
-}
-```
-
-{% /tab %}
-{% tab label="banner.json" %}
-
-```json {% fileName="banner.json" %}
-{
-  "message": "Hello Nx"
-}
-```
-
-{% /tab %}
-{% /tabs %}
-
-With this in place, you can run the following command and see the `cfonts` command in action:
-
-```text {% command="npx nx banner" %}
-
-> nx run nx-cfonts:banner
-
-> cfonts "Hello Nx"
-
-
-
- ██╗  ██╗ ███████╗ ██╗      ██╗       ██████╗      ███╗   ██╗ ██╗  ██╗
- ██║  ██║ ██╔════╝ ██║      ██║      ██╔═══██╗     ████╗  ██║ ╚██╗██╔╝
- ███████║ █████╗   ██║      ██║      ██║   ██║     ██╔██╗ ██║  ╚███╔╝
- ██╔══██║ ██╔══╝   ██║      ██║      ██║   ██║     ██║╚██╗██║  ██╔██╗
- ██║  ██║ ███████╗ ███████╗ ███████╗ ╚██████╔╝     ██║ ╚████║ ██╔╝ ██╗
- ╚═╝  ╚═╝ ╚══════╝ ╚══════╝ ╚══════╝  ╚═════╝      ╚═╝  ╚═══╝ ╚═╝  ╚═╝
-
-
-
-—————————————————————————————————————————————————————————————
- NX   Successfully ran target banner for project nx-cfonts (394ms)
-```
-
-{% callout type="note" title="Infer projects" %}
-You can also use the `createNodesV2` function to infer projects. For more information about that, read the [Infer Tasks or Projects guide](/extending-nx/recipes/project-graph-plugins)
-{% /callout %}
+We'll test out this inferred task a little later in the tutorial.
 
 Inferred tasks work well for getting users started using your tool quickly, but you can also provide users with [executors](/extending-nx/recipes/local-executors), which are another way of encapsulating a task script for easy use in an Nx workspace. Unlike inferred tasks, executors require users to explicitly configure them for each project that will use the task.
 
 ## Create an Init Generator
 
-You'll want to create generators to automate the common coding tasks for developers that use your tool. The most obvious coding task is the initial setup of the plugin. We'll create an `init` generator to automatically register the `nx-cfonts` plugin and start inferring tasks.
+You'll want to create generators to automate the common coding tasks for developers that use your tool. The most obvious coding task is the initial setup of the plugin. We'll create an `init` generator to automatically register the `nx-astro` plugin and start inferring tasks.
 
-If you create a generator named `init`, Nx will automatically run that generator when someone installs your plugin with the `nx add nx-cfonts` command. This generator should provide a good default set up for using your plugin. In our case, we need to register the plugin in the `nx.json` file.
+If you create a generator named `init`, Nx will automatically run that generator when someone installs your plugin with the `nx add nx-astro` command. This generator should provide a good default set up for using your plugin. In our case, we need to register the plugin in the `nx.json` file.
 
 To create the generator run the following command:
 
@@ -221,9 +193,9 @@ import { formatFiles, readNxJson, Tree, updateNxJson } from '@nx/devkit';
 import { InitGeneratorSchema } from './schema';
 
 export async function initGenerator(tree: Tree, options: InitGeneratorSchema) {
-  const nxJson = readNxJson(tree);
+  const nxJson = readNxJson(tree) || {};
   const hasPlugin = nxJson.plugins?.some((p) =>
-    typeof p === 'string' ? p === 'nx-cfonts' : p.plugin === 'nx-cfonts'
+    typeof p === 'string' ? p === 'nx-astro' : p.plugin === 'nx-astro'
   );
   if (!hasPlugin) {
     if (!nxJson.plugins) {
@@ -232,9 +204,10 @@ export async function initGenerator(tree: Tree, options: InitGeneratorSchema) {
     nxJson.plugins = [
       ...nxJson.plugins,
       {
-        plugin: 'nx-cfonts',
+        plugin: 'nx-astro',
         options: {
-          targetName: 'banner',
+          buildTargetName: 'build',
+          devTargetName: 'dev',
         },
       },
     ];
@@ -248,33 +221,208 @@ export default initGenerator;
 
 This will automatically add the plugin configuration to the `nx.json` file if the plugin is not already registered.
 
-## Create a Migration Generator
+We need to remove the generated `name` option from the generator schema files so that the `init` generator can be executed without passing any arguments.
 
-Eventually, your tool will introduce some breaking change. You can make this breaking change be a non-issue for your plugin users by providing a migration generator that automatically makes the code change during the update process.
+{% tabs %}
+{% tab label="schema.d.ts" %}
 
-Let's say in the latest version of our plugin, the `font` property in `banner.json` is no longer optional. Let's write a migration generator that automatically sets the `font` property to `block` if it isn't set.
-
-Create the migration with the following command:
-
-```shell
-npx nx g migration --packageVersion=0.0.2 --directory=src/migrations/update-0.0.2
+```ts {% fileName="src/generators/init/schema.d.ts" %}
+export interface InitGeneratorSchema {}
 ```
 
-This will create a migration generator that runs whenever a user updates to version `0.0.2` of your plugin. We'll use the `visitNotIgnoredFiles` utility to look through all the files in the repository and then selectively make changes to `banner.json` files.
+{% /tab %}
+{% tab label="schema.json" %}
 
-```ts {% fileName="src/migrations/update-0.0.2/update-0.0.2.ts" %}
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import { readJson, Tree, visitNotIgnoredFiles } from '@nx/devkit';
-
-export default function update(tree: Tree) {
-  visitNotIgnoredFiles(tree, '/', (path) => {
-    if (path.endsWith('banner.json')) {
-      const bannerConfig = readJson(tree, path);
-      if (!bannerConfig.font) {
-        bannerConfig.font = 'block';
-        tree.write(path, JSON.stringify(bannerConfig));
-      }
-    }
-  });
+```json {% fileName="src/generators/init/schema.json" %}
+{
+  "$schema": "https://json-schema.org/schema",
+  "$id": "Init",
+  "title": "",
+  "type": "object",
+  "properties": {},
+  "required": []
 }
 ```
+
+{% /tab %}
+{% /tabs %}
+
+## Create an Application Generator
+
+Let's make one more generator to automatically create a simple Astro application. First we'll create the generator:
+
+```shell
+npx nx g generator application --directory=src/generators/application
+```
+
+Then we'll update the `generator.ts` file to define the generator functionality:
+
+```ts {% fileName="src/generators/application/generator.ts" %}
+import {
+  addProjectConfiguration,
+  formatFiles,
+  generateFiles,
+  Tree,
+} from '@nx/devkit';
+import * as path from 'path';
+import { ApplicationGeneratorSchema } from './schema';
+
+export async function applicationGenerator(
+  tree: Tree,
+  options: ApplicationGeneratorSchema
+) {
+  const projectRoot = `${options.name}`;
+  addProjectConfiguration(tree, options.name, {
+    root: projectRoot,
+    projectType: 'application',
+    sourceRoot: `${projectRoot}/src`,
+    targets: {},
+  });
+  generateFiles(tree, path.join(__dirname, 'files'), projectRoot, options);
+  await formatFiles(tree);
+}
+
+export default applicationGenerator;
+```
+
+The `generateFiles` function will use the template files in the `files` folder to add files to the generated project.
+
+{% tabs %}
+{% tab label="package.json__templ__" %}
+
+```json {% fileName="src/generators/application/files/package.json__templ__" %}
+{
+  "name": "<%= name %>",
+  "dependencies": {}
+}
+```
+
+{% /tab %}
+{% tab label="astro.config.mjs" %}
+
+```js {% fileName="src/generators/application/files/astro.config.mjs" %}
+import { defineConfig } from 'astro/config';
+
+// https://astro.build/config
+export default defineConfig({});
+```
+
+{% /tab %}
+{% tab label="index.astro" %}
+
+```{% fileName="src/generators/application/files/src/pages/index.astro" %}
+---
+// Welcome to Astro! Everything between these triple-dash code fences
+// is your "component frontmatter". It never runs in the browser.
+console.log('This runs in your terminal, not the browser!');
+---
+<!-- Below is your "component template." It's just HTML, but with
+    some magic sprinkled in to help you build great templates. -->
+<html>
+  <body>
+    <h1>Hello, World!</h1>
+  </body>
+</html>
+<style>
+  h1 {
+    color: orange;
+  }
+</style>
+```
+
+{% /tab %}
+{% tab label="robots.txt" %}
+
+```json {% fileName="src/generators/application/files/public/robots.txt" %}
+# Example: Allow all bots to scan and index your site.
+# Full syntax: https://developers.google.com/search/docs/advanced/robots/create-robots-txt
+User-agent: *
+Allow: /
+```
+
+{% /tab %}
+{% /tabs %}
+
+The generator options in the schema files can be left unchanged.
+
+## Test Your Plugin
+
+The plugin is generated with a default e2e test (`e2e/src/nx-astro.spec.ts`) that:
+
+1. Launches a local npm registry with Verdaccio
+2. Publishes the current version of the `nx-astro` plugin to the local registry
+3. Creates an empty Nx workspace
+4. Installs `nx-astro` in the Nx workspace
+
+Let's update the e2e tests to make sure that the inferred tasks are working correctly. We'll update the `beforeAll` function to use `nx add` to add the `nx-astro` plugin and call our `application` generator.
+
+```ts {% fileName="e2e/src/nx-astro.spec.ts" %}
+beforeAll(() => {
+  projectDirectory = createTestProject();
+
+  // The plugin has been built and published to a local registry in the jest globalSetup
+  // Install the plugin built with the latest source code into the test repo
+  execSync('npx nx add nx-astro@e2e', {
+    cwd: projectDirectory,
+    stdio: 'inherit',
+    env: process.env,
+  });
+  execSync('npx nx g nx-astro:application my-lib', {
+    cwd: projectDirectory,
+    stdio: 'inherit',
+    env: process.env,
+  });
+});
+```
+
+Now we can add a new test that verifies the inferred task configuration:
+
+```ts {% fileName="e2e/src/nx-astro.spec.ts" %}
+it('should infer tasks', () => {
+  const projectDetails = JSON.parse(
+    execSync('nx show project my-lib --json', {
+      cwd: projectDirectory,
+    }).toString()
+  );
+
+  expect(projectDetails).toMatchObject({
+    name: 'my-lib',
+    root: 'my-lib',
+    sourceRoot: 'my-lib/src',
+    targets: {
+      build: {
+        cache: true,
+        executor: 'nx:run-commands',
+        inputs: [
+          '{projectRoot}/astro.config.mjs',
+          '{projectRoot}/src/**/*',
+          '{projectRoot}/public/**/*',
+          {
+            externalDependencies: ['astro'],
+          },
+        ],
+        options: {
+          command: 'astro build',
+          cwd: 'my-lib',
+        },
+        outputs: ['{projectRoot}/./dist'],
+      },
+      dev: {
+        executor: 'nx:run-commands',
+        options: {
+          command: 'astro dev',
+          cwd: 'my-lib',
+        },
+      },
+    },
+  });
+});
+```
+
+## Next Steps
+
+Now that you have a working plugin, here are a few other topics you may want to investigate:
+
+- [Publish your Nx plugin](/extending-nx/recipes/publish-plugin) to npm and the Nx plugin registry
+- [Write migration generators](/extending-nx/recipes/migration-generators) to automatically account for breaking changes
+- [Create a preset](/extending-nx/recipes/create-preset) to scaffold out an entire new repository
