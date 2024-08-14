@@ -436,6 +436,7 @@ function resolveJestPath(projectRoot: string, workspaceRoot: string): string {
   return resolvedJestPaths[projectRoot];
 }
 
+let resolvedJestCorePaths: Record<string, string>;
 /**
  * Resolves a jest util package version that `jest` is using.
  */
@@ -446,5 +447,15 @@ function requireJestUtil<T>(
 ): T {
   const jestPath = resolveJestPath(projectRoot, workspaceRoot);
 
-  return require(require.resolve(packageName, { paths: [dirname(jestPath)] }));
+  resolvedJestCorePaths ??= {};
+  if (!resolvedJestCorePaths[jestPath]) {
+    // nx-ignore-next-line
+    resolvedJestCorePaths[jestPath] = require.resolve('@jest/core', {
+      paths: [dirname(jestPath)],
+    });
+  }
+
+  return require(require.resolve(packageName, {
+    paths: [dirname(resolvedJestCorePaths[jestPath])],
+  }));
 }
