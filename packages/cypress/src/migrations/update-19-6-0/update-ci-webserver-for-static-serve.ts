@@ -101,12 +101,17 @@ export default async function (tree: Tree) {
           '@nx/webpack/plugin',
           pathToWebpackConfig
         );
-        const serveStaticTargetName = matchingWebpackPlugin
-          ? typeof matchingWebpackPlugin === 'string'
+
+        // Do not migrate project if no webpack plugin handles the config file
+        if (!matchingWebpackPlugin) {
+          continue;
+        }
+
+        const serveStaticTargetName =
+          typeof matchingWebpackPlugin === 'string'
             ? 'serve-static'
             : (matchingWebpackPlugin.options as any)?.serveStaticTargetName ??
-              'serve-static'
-          : 'serve-static';
+              'serve-static';
 
         const newCommand = ciWebServerCommand.replace(
           /nx.*[^"']/,
