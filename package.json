@@ -132,7 +132,7 @@
     "@types/semver": "^7.5.2",
     "@types/tar-stream": "^2.2.2",
     "@types/tmp": "^0.2.0",
-    "@types/yargs": "^17.0.10",
+    "@types/yargs": "17.0.10",
     "@types/yarnpkg__lockfile": "^1.1.5",
     "@typescript-eslint/eslint-plugin": "7.16.0",
     "@typescript-eslint/parser": "7.16.0",
@@ -301,7 +301,7 @@
     "webpack-sources": "^3.2.3",
     "webpack-subresource-integrity": "^5.1.0",
     "xstate": "4.34.0",
-    "yargs": "^17.6.2",
+    "yargs": "17.6.2",
     "yargs-parser": "21.1.1"
   },
   "author": "Victor Savkin",

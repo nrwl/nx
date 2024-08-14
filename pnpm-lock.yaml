@@ -486,7 +486,7 @@ devDependencies:
     specifier: ^0.2.0
     version: 0.2.3
   '@types/yargs':
-    specifier: ^17.0.10
+    specifier: 17.0.10
     version: 17.0.10
   '@types/yarnpkg__lockfile':
     specifier: ^1.1.5
@@ -990,8 +990,8 @@ devDependencies:
     specifier: 4.34.0
     version: 4.34.0
   yargs:
-    specifier: ^17.6.2
-    version: 17.7.2
+    specifier: 17.6.2
+    version: 17.6.2
   yargs-parser:
     specifier: 21.1.1
     version: 21.1.1
@@ -1634,7 +1634,7 @@ packages:
       semver: 7.6.2
       tslib: 2.6.3
       typescript: 5.5.3
-      yargs: 17.7.2
+      yargs: 17.6.2
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -25230,7 +25230,7 @@ packages:
       jest-config: 29.7.0(@types/node@18.19.8)(ts-node@10.9.1)
       jest-util: 29.7.0
       jest-validate: 29.7.0
-      yargs: 17.7.2
+      yargs: 17.6.2
     transitivePeerDependencies:
       - '@types/node'
       - babel-plugin-macros
@@ -27355,7 +27355,7 @@ packages:
       strip-ansi: 6.0.1
       throat: 5.0.0
       ws: 7.5.9
-      yargs: 17.7.2
+      yargs: 17.6.2
     transitivePeerDependencies:
       - bufferutil
       - encoding
@@ -28856,7 +28856,7 @@ packages:
       tmp: 0.2.3
       tsconfig-paths: 4.2.0
       tslib: 2.6.3
-      yargs: 17.7.2
+      yargs: 17.6.2
       yargs-parser: 21.1.1
     optionalDependencies:
       '@nx/nx-darwin-arm64': 19.3.1
@@ -28921,7 +28921,7 @@ packages:
       tmp: 0.2.3
       tsconfig-paths: 4.2.0
       tslib: 2.6.3
-      yargs: 17.7.2
+      yargs: 17.6.2
       yargs-parser: 21.1.1
     optionalDependencies:
       '@nx/nx-darwin-arm64': 19.6.0-beta.6
@@ -32295,7 +32295,7 @@ packages:
       picomatch: 2.3.1
       rollup: 4.14.3
       source-map: 0.7.4
-      yargs: 17.7.2
+      yargs: 17.6.2
     dev: true
 
   /rollup-plugin-visualizer@5.12.0(rollup@4.18.0):
@@ -32312,7 +32312,7 @@ packages:
       picomatch: 2.3.1
       rollup: 4.18.0
       source-map: 0.7.4
-      yargs: 17.7.2
+      yargs: 17.6.2
     dev: true
 
   /rollup-pluginutils@2.8.2:
@@ -36986,6 +36986,19 @@ packages:
       string-width: 4.2.3
       y18n: 5.0.8
       yargs-parser: 20.2.9
+    dev: true
+
+  /yargs@17.6.2:
+    resolution: {integrity: sha512-1/9UrdHjDZc0eOU0HxOHoS78C69UD3JRMvzlJ7S79S2nTaWRA/whGCTV8o9e/N/1Va9YIV7Q4sOxD8VV4pCWOw==}
+    engines: {node: '>=12'}
+    dependencies:
+      cliui: 8.0.1
+      escalade: 3.1.1
+      get-caller-file: 2.0.5
+      require-directory: 2.1.1
+      string-width: 4.2.3
+      y18n: 5.0.8
+      yargs-parser: 21.1.1
     dev: true
 
   /yargs@17.7.2:
