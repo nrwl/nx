@@ -269,6 +269,12 @@
                   "file": "shared/concepts/module-federation/module-federation-and-nx"
                 },
                 {
+                  "name": "Nx Module Federation Technical Overview",
+                  "id": "nx-module-federation-technical-overview",
+                  "tags": ["module-federation", "angular", "react"],
+                  "file": "shared/concepts/module-federation/nx-module-federation-technical-overview"
+                },
+                {
                   "name": "Faster Builds with Module Federation",
                   "id": "faster-builds-with-module-federation",
                   "tags": ["module-federation", "angular", "react"],

@@ -36,6 +36,7 @@
     - [Buildable and Publishable Libraries](/concepts/buildable-and-publishable-libraries)
     - [Module Federation](/concepts/module-federation)
       - [Module Federation and Nx](/concepts/module-federation/module-federation-and-nx)
+      - [Nx Module Federation Technical Overview](/concepts/module-federation/nx-module-federation-technical-overview)
       - [Faster Builds with Module Federation](/concepts/module-federation/faster-builds-with-module-federation)
       - [Micro Frontend Architecture](/concepts/module-federation/micro-frontend-architecture)
       - [Manage Library Versions with Module Federation](/concepts/module-federation/manage-library-versions-with-module-federation)

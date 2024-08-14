@@ -653,6 +653,14 @@
                 "disableCollapsible": false
               },
               {
+                "name": "Nx Module Federation Technical Overview",
+                "path": "/concepts/module-federation/nx-module-federation-technical-overview",
+                "id": "nx-module-federation-technical-overview",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
                 "name": "Faster Builds with Module Federation",
                 "path": "/concepts/module-federation/faster-builds-with-module-federation",
                 "id": "faster-builds-with-module-federation",
@@ -850,6 +858,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Nx Module Federation Technical Overview",
+            "path": "/concepts/module-federation/nx-module-federation-technical-overview",
+            "id": "nx-module-federation-technical-overview",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Faster Builds with Module Federation",
             "path": "/concepts/module-federation/faster-builds-with-module-federation",
             "id": "faster-builds-with-module-federation",
@@ -880,6 +896,14 @@
         "name": "Module Federation and Nx",
         "path": "/concepts/module-federation/module-federation-and-nx",
         "id": "module-federation-and-nx",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Nx Module Federation Technical Overview",
+        "path": "/concepts/module-federation/nx-module-federation-technical-overview",
+        "id": "nx-module-federation-technical-overview",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
