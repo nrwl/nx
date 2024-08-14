@@ -91,13 +91,18 @@ export default async function (tree: Tree) {
       joinPathFragments(graph.nodes[project].data.root, 'webpack.config.js'),
     ].find((p) => tree.exists(p));
 
-    collectedProjects.push({
-      projectName: project,
-      configFile: pathToWebpackConfig ?? pathToViteConfig,
-      configFileType: pathToWebpackConfig ? 'webpack' : 'vite',
-      playwrightConfigFile: path,
-      commandValueNode,
-    });
+    const configFile = pathToWebpackConfig ?? pathToViteConfig;
+
+    // Only migrate projects that have a webpack or vite config file
+    if (configFile) {
+      collectedProjects.push({
+        projectName: project,
+        configFile,
+        configFileType: pathToWebpackConfig ? 'webpack' : 'vite',
+        playwrightConfigFile: path,
+        commandValueNode,
+      });
+    }
   });
 
   for (const projectToMigrate of collectedProjects) {
