@@ -1065,6 +1065,12 @@
               "description": "Other recipes you will find useful.",
               "itemList": [
                 {
+                  "name": "Migrate to Inferred Tasks (Project Crystal)",
+                  "id": "convert-to-inferred",
+                  "tags": [],
+                  "file": "shared/recipes/convert-to-inferred"
+                },
+                {
                   "name": "Rescope Packages from @nrwl to @nx",
                   "id": "rescope",
                   "tags": [],

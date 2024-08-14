@@ -2771,6 +2771,17 @@
         "file": "",
         "itemList": [
           {
+            "id": "convert-to-inferred",
+            "name": "Migrate to Inferred Tasks (Project Crystal)",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/recipes/convert-to-inferred",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/other/convert-to-inferred",
+            "tags": []
+          },
+          {
             "id": "rescope",
             "name": "Rescope Packages from @nrwl to @nx",
             "description": "",
@@ -5249,6 +5260,17 @@
     "file": "",
     "itemList": [
       {
+        "id": "convert-to-inferred",
+        "name": "Migrate to Inferred Tasks (Project Crystal)",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/convert-to-inferred",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/other/convert-to-inferred",
+        "tags": []
+      },
+      {
         "id": "rescope",
         "name": "Rescope Packages from @nrwl to @nx",
         "description": "",
@@ -5262,6 +5284,17 @@
     ],
     "isExternal": false,
     "path": "/recipes/other",
+    "tags": []
+  },
+  "/recipes/other/convert-to-inferred": {
+    "id": "convert-to-inferred",
+    "name": "Migrate to Inferred Tasks (Project Crystal)",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/convert-to-inferred",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/other/convert-to-inferred",
     "tags": []
   },
   "/recipes/other/rescope": {

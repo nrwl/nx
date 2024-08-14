@@ -2028,6 +2028,14 @@
             "isExternal": false,
             "children": [
               {
+                "name": "Migrate to Inferred Tasks (Project Crystal)",
+                "path": "/recipes/other/convert-to-inferred",
+                "id": "convert-to-inferred",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
                 "name": "Rescope Packages from @nrwl to @nx",
                 "path": "/recipes/other/rescope",
                 "id": "rescope",
@@ -3835,6 +3843,14 @@
         "isExternal": false,
         "children": [
           {
+            "name": "Migrate to Inferred Tasks (Project Crystal)",
+            "path": "/recipes/other/convert-to-inferred",
+            "id": "convert-to-inferred",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Rescope Packages from @nrwl to @nx",
             "path": "/recipes/other/rescope",
             "id": "rescope",
@@ -3843,6 +3859,14 @@
             "disableCollapsible": false
           }
         ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Migrate to Inferred Tasks (Project Crystal)",
+        "path": "/recipes/other/convert-to-inferred",
+        "id": "convert-to-inferred",
+        "isExternal": false,
+        "children": [],
         "disableCollapsible": false
       },
       {

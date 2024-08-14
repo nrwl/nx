@@ -168,6 +168,7 @@
       - [Configure Changelog Format](/recipes/nx-release/configure-changelog-format)
       - [Publish a Custom Dist Directory](/recipes/nx-release/publish-custom-dist-directory)
     - [Other](/recipes/other)
+      - [Migrate to Inferred Tasks (Project Crystal)](/recipes/other/convert-to-inferred)
       - [Rescope Packages from @nrwl to @nx](/recipes/other/rescope)
       - [Troubleshoot Nx Console Issues](/recipes/nx-console/console-troubleshooting)
   - [Showcase](/showcase)
