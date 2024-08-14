@@ -3,7 +3,8 @@
   "cli": "nx",
   "$id": "NxReactComponentCypressSpec",
   "title": "Create component Cypress spec",
-  "description": "Create a Cypress spec for a UI component that has a story.",
+  "description": "Create a Storybook Cypress spec for a UI component that has a story.",
+  "x-deprecated": "Use interactionTests instead. This option will be removed in v20.",
   "type": "object",
   "properties": {
     "project": {

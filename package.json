@@ -96,12 +96,13 @@
     "@rollup/plugin-node-resolve": "^15.2.3",
     "@rollup/plugin-url": "^8.0.2",
     "@schematics/angular": "~18.1.0",
-    "@storybook/addon-essentials": "7.5.3",
-    "@storybook/core-server": "7.5.3",
-    "@storybook/react": "7.5.3",
-    "@storybook/react-vite": "7.5.3",
-    "@storybook/react-webpack5": "7.5.3",
-    "@storybook/types": "^7.1.1",
+    "@storybook/addon-essentials": "^8.2.8",
+    "@storybook/addon-interactions": "^8.2.8",
+    "@storybook/core-server": "^8.2.8",
+    "@storybook/react": "^8.2.8",
+    "@storybook/react-vite": "^8.2.8",
+    "@storybook/react-webpack5": "^8.2.8",
+    "@storybook/types": "^8.2.8",
     "@supabase/supabase-js": "^2.26.0",
     "@svgr/rollup": "^8.1.0",
     "@svgr/webpack": "^8.0.1",
@@ -179,7 +180,7 @@
     "eslint-plugin-playwright": "^0.15.3",
     "eslint-plugin-react": "7.32.2",
     "eslint-plugin-react-hooks": "4.6.0",
-    "eslint-plugin-storybook": "^0.6.12",
+    "eslint-plugin-storybook": "^0.8.0",
     "express": "^4.19.2",
     "fast-xml-parser": "^4.2.7",
     "figures": "3.2.0",
@@ -270,7 +271,8 @@
     "source-map": "0.7.3",
     "source-map-loader": "^5.0.0",
     "source-map-support": "0.5.19",
-    "storybook-dark-mode": "^3.0.0",
+    "storybook": "^8.2.8",
+    "storybook-dark-mode": "^4.0.2",
     "style-loader": "^3.3.0",
     "tar-stream": "~2.2.0",
     "tcp-port-used": "^1.0.2",
@@ -381,10 +383,10 @@
       "documentation": {
         "cache": true,
         "inputs": [
-          "{workspaceRoot}/packages/**", 
+          "{workspaceRoot}/packages/**",
           "{workspaceRoot}/docs/**",
           "{workspaceRoot}/scripts/documentation/**",
-          "!{workspaceRoot}/docs/generated", 
+          "!{workspaceRoot}/docs/generated",
           "!{workspaceRoot}/packages/**/*.spec.ts",
           "!{workspaceRoot}/packages/**/project.json",
           "!{workspaceRoot}/packages/**/tsconfig.json",
@@ -394,7 +396,9 @@
           "!{workspaceRoot}/packages/**/.eslintrc.json"
         ]
       },
-      "outputs": ["{workspaceRoot}/docs/generated"]
+      "outputs": [
+        "{workspaceRoot}/docs/generated"
+      ]
     }
   },
   "packageManager": "pnpm@8.15.7"

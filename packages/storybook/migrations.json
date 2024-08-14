@@ -23,6 +23,12 @@
       "version": "16.5.0-beta.0",
       "description": "Move .storybook/tsconfig.json to tsconfig.storybook.json for non-Angular projects.",
       "factory": "./src/migrations/update-16-5-0/move-storybook-tsconfig"
+    },
+    "update-19-6-0-add-nx-packages": {
+      "cli": "nx",
+      "version": "19.6.0-beta.0",
+      "description": "Update workspace to use Storybook v8",
+      "implementation": "./src/migrations/update-19-6-0/update-sb-8"
     }
   },
   "packageJsonUpdates": {
@@ -859,6 +865,35 @@
         "core-js": {
           "version": "3.36.1",
           "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "19.6.0": {
+      "version": "19.6.0-beta.1",
+      "packages": {
+        "@storybook/core-server": {
+          "version": "^8.2.8",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/angular": {
+          "version": "^8.2.8",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/react": {
+          "version": "^8.2.8",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/addon-essentials": {
+          "version": "^8.2.8",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/addon-interactions": {
+          "version": "^8.2.8",
+          "alwaysAddToPackageJson": true
+        },
+        "storybook": {
+          "version": "^8.2.8",
+          "alwaysAddToPackageJson": true
         }
       }
     }

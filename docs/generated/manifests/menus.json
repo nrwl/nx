@@ -9620,6 +9620,14 @@
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
+              },
+              {
+                "id": "migrate-8",
+                "path": "/nx-api/storybook/generators/migrate-8",
+                "name": "migrate-8",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
               }
             ],
             "isExternal": false,
