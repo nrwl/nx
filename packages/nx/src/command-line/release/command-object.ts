@@ -81,6 +81,7 @@ export type PlanCheckOptions = BaseNxReleaseArgs & {
 
 export type ReleaseOptions = NxReleaseArgs &
   FirstReleaseArgs & {
+    specifier?: string;
     yes?: boolean;
     skipPublish?: boolean;
   };

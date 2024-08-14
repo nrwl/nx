@@ -94,6 +94,18 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
       });
     }
 
+    const rawVersionPlans = await readRawVersionPlans();
+
+    if (args.specifier && rawVersionPlans.length > 0) {
+      output.error({
+        title: `A specifier option cannot be provided when using version plans.`,
+        bodyLines: [
+          `To override this behavior, use the Nx Release programmatic API directly (https://nx.dev/features/manage-releases#using-the-programmatic-api-for-nx-release).`,
+        ],
+      });
+      process.exit(1);
+    }
+
     // These properties must never be undefined as this command should
     // always explicitly override the git operations of the subcommands.
     const shouldCommit = userProvidedReleaseConfig.git?.commit ?? true;
@@ -134,7 +146,7 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
       output.error(filterError);
       process.exit(1);
     }
-    const rawVersionPlans = await readRawVersionPlans();
+
     setResolvedVersionPlansOnGroups(
       rawVersionPlans,
       releaseGroups,

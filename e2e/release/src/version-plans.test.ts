@@ -767,4 +767,146 @@ Update packages in both groups with a mix #2
 
     expect(readdirSync(versionPlansDir)).toEqual([]);
   });
+
+  it('version command should bypass version plans when a specifier is passed', async () => {
+    updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
+      nxJson.release = {
+        groups: {
+          'fixed-group': {
+            projects: [pkg1, pkg2],
+            releaseTagPattern: 'v{version}',
+          },
+          'independent-group': {
+            projects: [pkg3, pkg4, pkg5],
+            projectsRelationship: 'independent',
+            releaseTagPattern: '{projectName}@{version}',
+          },
+        },
+        version: {
+          generatorOptions: {
+            specifierSource: 'version-plans',
+          },
+        },
+        changelog: {
+          projectChangelogs: true,
+        },
+        versionPlans: true,
+      };
+      return nxJson;
+    });
+
+    runCLI(
+      'release plan minor -g fixed-group -m "Update the fixed packages with another minor release." --verbose',
+      {
+        silenceError: true,
+      }
+    );
+
+    runCLI(
+      'release plan minor -g independent-group -m "Update the independent packages with another minor release." --verbose',
+      {
+        silenceError: true,
+      }
+    );
+
+    const versionPlansDir = tmpProjPath('.nx/version-plans');
+    await runCommandAsync(`git add ${versionPlansDir}`);
+    await runCommandAsync(
+      `git commit -m "chore: add version plans for fixed and independent groups again"`
+    );
+
+    const releaseResult = runCLI('release major --verbose', {
+      silenceError: true,
+    });
+
+    expect(releaseResult).toMatchInlineSnapshot(`
+      NX   A specifier option cannot be provided when using version plans.
+
+      To override this behavior, use the Nx Release programmatic API directly (https://nx.dev/features/manage-releases#using-the-programmatic-api-for-nx-release).
+    `);
+
+    const versionResult = runCLI('release version major --verbose', {
+      silenceError: true,
+    });
+
+    expect(versionResult).toMatchInlineSnapshot(`
+      Skipping version plan discovery as a specifier was provided
+
+      NX   Running release version for project: {project-name}
+
+      {project-name} 🔍 Reading data for package "@proj/{project-name}" from {project-name}/package.json
+      {project-name} 📄 Resolved the current version as 0.0.0 from {project-name}/package.json
+      {project-name} 📄 Using the provided version specifier "major".
+      {project-name} ✍️  New version 1.0.0 written to {project-name}/package.json
+
+      NX   Running release version for project: {project-name}
+
+      {project-name} 🔍 Reading data for package "@proj/{project-name}" from {project-name}/package.json
+      {project-name} 📄 Resolved the current version as 0.0.0 from {project-name}/package.json
+      {project-name} 📄 Using the provided version specifier "major".
+      {project-name} ✍️  New version 1.0.0 written to {project-name}/package.json
+
+      NX   Running release version for project: {project-name}
+
+      {project-name} 🔍 Reading data for package "@proj/{project-name}" from {project-name}/package.json
+      {project-name} 📄 Resolved the current version as 0.0.0 from {project-name}/package.json
+      {project-name} 📄 Using the provided version specifier "major".
+      {project-name} ✍️  New version 1.0.0 written to {project-name}/package.json
+
+      NX   Running release version for project: {project-name}
+
+      {project-name} 🔍 Reading data for package "@proj/{project-name}" from {project-name}/package.json
+      {project-name} 📄 Resolved the current version as 0.0.0 from {project-name}/package.json
+      {project-name} 📄 Using the provided version specifier "major".
+      {project-name} ✍️  New version 1.0.0 written to {project-name}/package.json
+
+      NX   Running release version for project: {project-name}
+
+      {project-name} 🔍 Reading data for package "@proj/{project-name}" from {project-name}/package.json
+      {project-name} 📄 Resolved the current version as 0.0.0 from {project-name}/package.json
+      {project-name} 📄 Using the provided version specifier "major".
+      {project-name} ✍️  New version 1.0.0 written to {project-name}/package.json
+
+
+      "name": "@proj/{project-name}",
+      -   "version": "0.0.0",
+      +   "version": "1.0.0",
+      "scripts": {
+
+
+      "name": "@proj/{project-name}",
+      -   "version": "0.0.0",
+      +   "version": "1.0.0",
+      "scripts": {
+
+
+      "name": "@proj/{project-name}",
+      -   "version": "0.0.0",
+      +   "version": "1.0.0",
+      "scripts": {
+
+
+      "name": "@proj/{project-name}",
+      -   "version": "0.0.0",
+      +   "version": "1.0.0",
+      "scripts": {
+
+
+      "name": "@proj/{project-name}",
+      -   "version": "0.0.0",
+      +   "version": "1.0.0",
+      "scripts": {
+
+
+      Skipped lock file update because npm workspaces are not enabled.
+
+      Skipped lock file update because npm workspaces are not enabled.
+
+      NX   Staging changed files with git
+
+      Staging files in git with the following command:
+      git add {project-name}/package.json {project-name}/package.json {project-name}/package.json {project-name}/package.json {project-name}/package.json
+
+    `);
+  });
 });
