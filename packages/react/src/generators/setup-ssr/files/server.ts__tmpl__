@@ -8,7 +8,7 @@ const port = process.env['PORT'] || <%= port %>;
 const app = express();
 
 const browserDist = path.join(process.cwd(), '<%= browserBuildOutputPath %>');
-const indexPath =path.join(browserDist, 'index.html');
+const indexPath = path.join(browserDist, 'index.html');
 
 app.use(cors());
 
