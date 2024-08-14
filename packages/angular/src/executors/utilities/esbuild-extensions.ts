@@ -1,6 +1,12 @@
 import { registerTsProject } from '@nx/js/src/internal';
-import type { Plugin } from 'esbuild';
 import { loadModule } from './module-loader';
+
+// This is a workaround to make sure we use the same esbuild version as the
+// Angular DevKit uses. This is only used internally to load the plugins and
+// forward them to the Angular DevKit builders.
+type Plugin = Parameters<
+  typeof import('@angular-devkit/build-angular').buildApplication
+>[2]['codePlugins'][number];
 
 export type PluginSpec = {
   path: string;
