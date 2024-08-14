@@ -1,17 +1,22 @@
 import { useSyncExternalStore } from 'use-sync-external-store/shim';
-import { getTooltipService } from '../machines/get-services';
+import {
+  getProjectGraphService,
+  getTooltipService,
+} from '../machines/get-services';
 import {
   CompositeNodeTooltip,
+  CompositeNodeTooltipActions,
+  NodeTooltipAction,
   ProjectEdgeNodeTooltip,
   ProjectNodeToolTip,
+  ProjectNodeTooltipActions,
   TaskNodeTooltip,
   Tooltip,
 } from '@nx/graph/ui-tooltips';
-import { ProjectNodeActions } from './project-node-actions';
 import { TaskNodeActions } from './task-node-actions';
 import { getExternalApiService, useRouteConstructor } from '@nx/graph/shared';
 import { useNavigate } from 'react-router-dom';
-import { CompositeNodeActions } from './composite-node-actions';
+import { useCallback } from 'react';
 
 const tooltipService = getTooltipService();
 
@@ -19,10 +24,71 @@ export function TooltipDisplay() {
   const navigate = useNavigate();
   const routeConstructor = useRouteConstructor();
   const externalApiService = getExternalApiService();
+  const projectGraphService = getProjectGraphService();
 
   const currentTooltip = useSyncExternalStore(
     (callback) => tooltipService.subscribe(callback),
     () => tooltipService.currentTooltip
+  );
+
+  const onAction = useCallback(
+    (action: NodeTooltipAction) => {
+      switch (action.type) {
+        case 'expand-node':
+          projectGraphService.send({
+            type: 'expandCompositeNode',
+            id: action.id,
+          });
+          break;
+        case 'focus-node': {
+          const to =
+            action.tooltipNodeType === 'compositeNode'
+              ? routeConstructor(
+                  {
+                    pathname: `/projects`,
+                    search: `?composite=true&compositeContext=${action.id}`,
+                  },
+                  false
+                )
+              : routeConstructor(`/projects/${action.id}`, true);
+          navigate(to);
+          break;
+        }
+        case 'collapse-node':
+          projectGraphService.send({
+            type: 'collapseCompositeNode',
+            id: action.id,
+          });
+
+          break;
+        case 'exclude-node':
+          projectGraphService.send({
+            type: 'deselectProject',
+            projectName:
+              action.tooltipNodeType === 'projectNode'
+                ? action.rawId
+                : action.id,
+          });
+          if (action.tooltipNodeType === 'projectNode') {
+            navigate(routeConstructor('/projects', true));
+          }
+          break;
+        case 'start-trace':
+          navigate(routeConstructor(`/projects/trace/${action.id}`, true));
+          break;
+        case 'end-trace': {
+          const { start } = projectGraphService.getSnapshot().context.tracing;
+          navigate(
+            routeConstructor(
+              `/projects/trace/${encodeURIComponent(start)}/${action.id}`,
+              true
+            )
+          );
+          break;
+        }
+      }
+    },
+    [projectGraphService, navigate, routeConstructor]
   );
 
   let tooltipToRender;
@@ -61,13 +127,19 @@ export function TooltipDisplay() {
           {...currentTooltip.props}
           openConfigCallback={onConfigClick}
         >
-          <ProjectNodeActions {...currentTooltip.props} />
+          <ProjectNodeTooltipActions
+            onAction={onAction}
+            {...currentTooltip.props}
+          />
         </ProjectNodeToolTip>
       );
     } else if (currentTooltip.type === 'compositeNode') {
       tooltipToRender = (
         <CompositeNodeTooltip {...currentTooltip.props}>
-          <CompositeNodeActions {...currentTooltip.props} />
+          <CompositeNodeTooltipActions
+            onAction={onAction}
+            {...currentTooltip.props}
+          />
         </CompositeNodeTooltip>
       );
     } else if (currentTooltip.type === 'projectEdge') {
