@@ -32,7 +32,7 @@ describe('useServeStaticPreviewForCommand', () => {
     jest.resetModules();
   });
 
-  it('should update when it does not use serve-static for non-vite', async () => {
+  it('should not assume a default if it cannot find a plugin or executor', async () => {
     // ARRANGE
     addProject(tree, tempFs, { noVite: true });
 
@@ -56,7 +56,7 @@ describe('useServeStaticPreviewForCommand', () => {
           trace: 'on-first-retry',
         },
         webServer: {
-          command: 'npx nx run app:serve-static',
+          command: 'npx nx run app:serve',
           url: 'http://localhost:4200',
           reuseExistingServer: !process.env.CI,
           cwd: workspaceRoot,
@@ -224,6 +224,49 @@ describe('useServeStaticPreviewForCommand', () => {
     `);
   });
 
+  it('should update command to be target name for preview executor', async () => {
+    // ARRANGE
+    addProject(tree, tempFs, {
+      hasAdditionalCommand: true,
+      usesExecutors: true,
+    });
+
+    // ACT
+    await useServeStaticPreviewForCommand(tree);
+
+    // ASSERT
+    expect(tree.read('app-e2e/playwright.config.ts', 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "import { defineConfig, devices } from '@playwright/test';
+      import { nxE2EPreset } from '@nx/playwright/preset';
+
+      import { workspaceRoot } from '@nx/devkit';
+
+      const baseURL = process.env['BASE_URL'] || 'http://localhost:4300';
+
+      export default defineConfig({
+        ...nxE2EPreset(__filename, { testDir: './src' }),
+        use: {
+          baseURL,
+          trace: 'on-first-retry',
+        },
+        webServer: {
+          command: 'echo "start" && npx nx run app:test-serve-static',
+          url: 'http://localhost:4300',
+          reuseExistingServer: !process.env.CI,
+          cwd: workspaceRoot,
+        },
+        projects: [
+          {
+            name: 'chromium',
+            use: { ...devices['Desktop Chrome'] },
+          },
+        ],
+      });
+      "
+    `);
+  });
+
   function mockWebpackConfig(config: any) {
     jest.mock(join(tempFs.tempDir, 'app/webpack.config.ts'), () => config, {
       virtual: true,
@@ -299,6 +342,7 @@ function addProject(
   overrides: {
     noVite?: boolean;
     hasAdditionalCommand?: boolean;
+    usesExecutors?: boolean;
   } = {}
 ) {
   const appProjectConfig = {
@@ -306,6 +350,17 @@ function addProject(
     root: 'app',
     sourceRoot: `${'app'}/src`,
     projectType: 'application',
+    ...(overrides.usesExecutors
+      ? {
+          targets: {
+            'test-serve-static': {
+              executor: overrides.noVite
+                ? '@nx/web:file-server'
+                : '@nx/vite:preview-server',
+            },
+          },
+        }
+      : {}),
   };
 
   const e2eProjectConfig = {
@@ -357,7 +412,18 @@ function addProject(
     data: {
       projectType: 'application',
       root: 'app',
-      targets: {},
+      targets: {
+        ...(overrides.usesExecutors
+          ? {
+              'test-serve-static': {
+                dependsOn: ['build'],
+                executor: overrides.noVite
+                  ? '@nx/web:file-server'
+                  : '@nx/vite:preview-server',
+              },
+            }
+          : {}),
+      },
     },
   };
 
