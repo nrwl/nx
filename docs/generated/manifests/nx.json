@@ -889,6 +889,17 @@
             "tags": ["module-federation", "angular", "react"]
           },
           {
+            "id": "nx-module-federation-technical-overview",
+            "name": "Nx Module Federation Technical Overview",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/concepts/module-federation/nx-module-federation-technical-overview",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/concepts/module-federation/nx-module-federation-technical-overview",
+            "tags": ["module-federation", "angular", "react"]
+          },
+          {
             "id": "faster-builds-with-module-federation",
             "name": "Faster Builds with Module Federation",
             "description": "",
@@ -1160,6 +1171,17 @@
         "tags": ["module-federation", "angular", "react"]
       },
       {
+        "id": "nx-module-federation-technical-overview",
+        "name": "Nx Module Federation Technical Overview",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/concepts/module-federation/nx-module-federation-technical-overview",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/concepts/module-federation/nx-module-federation-technical-overview",
+        "tags": ["module-federation", "angular", "react"]
+      },
+      {
         "id": "faster-builds-with-module-federation",
         "name": "Faster Builds with Module Federation",
         "description": "",
@@ -1206,6 +1228,17 @@
     "itemList": [],
     "isExternal": false,
     "path": "/concepts/module-federation/module-federation-and-nx",
+    "tags": ["module-federation", "angular", "react"]
+  },
+  "/concepts/module-federation/nx-module-federation-technical-overview": {
+    "id": "nx-module-federation-technical-overview",
+    "name": "Nx Module Federation Technical Overview",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/concepts/module-federation/nx-module-federation-technical-overview",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/concepts/module-federation/nx-module-federation-technical-overview",
     "tags": ["module-federation", "angular", "react"]
   },
   "/concepts/module-federation/faster-builds-with-module-federation": {
