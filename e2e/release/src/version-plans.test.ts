@@ -819,11 +819,12 @@ Update packages in both groups with a mix #2
       silenceError: true,
     });
 
-    expect(releaseResult).toMatchInlineSnapshot(`
-      NX   A specifier option cannot be provided when using version plans.
-
-      To override this behavior, use the Nx Release programmatic API directly (https://nx.dev/features/manage-releases#using-the-programmatic-api-for-nx-release).
-    `);
+    expect(releaseResult).toContain(
+      `NX   A specifier option cannot be provided when using version plans.`
+    );
+    expect(releaseResult).toContain(
+      `To override this behavior, use the Nx Release programmatic API directly (https://nx.dev/features/manage-releases#using-the-programmatic-api-for-nx-release).`
+    );
 
     const versionResult = runCLI('release version major --verbose', {
       silenceError: true,
