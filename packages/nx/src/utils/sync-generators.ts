@@ -182,7 +182,6 @@ export function syncGeneratorResultsToMessageLines(
     if (result.outOfSyncMessage) {
       messageLines.push(result.outOfSyncMessage);
     }
-    messageLines.push('');
   }
 
   return messageLines;
