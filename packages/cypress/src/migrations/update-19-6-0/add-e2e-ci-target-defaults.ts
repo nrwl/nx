@@ -15,6 +15,7 @@ import {
 } from 'nx/src/devkit-internals';
 import { tsquery } from '@phenomnomnominal/tsquery';
 import { type CypressPluginOptions } from '../../plugins/plugin';
+import { dirname } from 'path';
 
 export default async function addE2eCiTargetDefaults(tree: Tree) {
   const pluginName = '@nx/cypress/plugin';
@@ -81,9 +82,15 @@ export default async function addE2eCiTargetDefaults(tree: Tree) {
         graph
       );
 
+      const targetDependsOnSelf =
+        graph.nodes[project].data.root === dirname(configFile);
+
       const serveStaticTarget = graph.nodes[project].data.targets[target];
+      if (!serveStaticTarget) {
+        continue;
+      }
       let resolvedBuildTarget: string;
-      if (serveStaticTarget.dependsOn) {
+      if (serveStaticTarget?.dependsOn) {
         resolvedBuildTarget = serveStaticTarget.dependsOn.join(',');
       } else {
         resolvedBuildTarget =
@@ -92,7 +99,9 @@ export default async function addE2eCiTargetDefaults(tree: Tree) {
             : serveStaticTarget.options.buildTarget) ?? 'build';
       }
 
-      const buildTarget = `^${resolvedBuildTarget}`;
+      const buildTarget = `${
+        targetDependsOnSelf ? '' : '^'
+      }${resolvedBuildTarget}`;
 
       await _addE2eCiTargetDefaults(tree, pluginName, buildTarget, configFile);
     }

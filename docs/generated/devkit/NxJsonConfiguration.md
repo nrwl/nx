@@ -37,6 +37,7 @@ Nx.json configuration
 - [plugins](../../devkit/documents/NxJsonConfiguration#plugins): PluginConfiguration[]
 - [pluginsConfig](../../devkit/documents/NxJsonConfiguration#pluginsconfig): Record<string, Record<string, unknown>>
 - [release](../../devkit/documents/NxJsonConfiguration#release): NxReleaseConfiguration
+- [sync](../../devkit/documents/NxJsonConfiguration#sync): NxSyncConfiguration
 - [targetDefaults](../../devkit/documents/NxJsonConfiguration#targetdefaults): TargetDefaults
 - [tasksRunnerOptions](../../devkit/documents/NxJsonConfiguration#tasksrunneroptions): Object
 - [useDaemonProcess](../../devkit/documents/NxJsonConfiguration#usedaemonprocess): boolean
@@ -237,6 +238,14 @@ Configuration for Nx Plugins
 • `Optional` **release**: `NxReleaseConfiguration`
 
 Configuration for `nx release` (versioning and publishing of applications and libraries)
+
+---
+
+### sync
+
+• `Optional` **sync**: `NxSyncConfiguration`
+
+Configuration for the `nx sync` command.
 
 ---
 

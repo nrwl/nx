@@ -1,4 +1,4 @@
-import updateCiWebserverForVite from './update-ci-webserver-for-vite';
+import updateCiWebserverForVite from './update-ci-webserver-for-static-serve';
 import {
   type Tree,
   type ProjectGraph,
@@ -35,7 +35,7 @@ describe('updateCiWebserverForVite', () => {
     tempFs.reset();
   });
 
-  it('should do nothing if vite is not found for application', async () => {
+  it('should update to serve-static target for webpack', async () => {
     // ARRANGE
     const nxJson = readNxJson(tree);
     nxJson.plugins = [
@@ -44,6 +44,12 @@ describe('updateCiWebserverForVite', () => {
         options: {
           targetName: 'e2e',
           ciTargetName: 'e2e-ci',
+        },
+      },
+      {
+        plugin: '@nx/webpack/plugin',
+        options: {
+          serveStaticTargetName: 'webpack:serve-static',
         },
       },
     ];
@@ -73,7 +79,81 @@ describe('updateCiWebserverForVite', () => {
               default: 'nx run app:serve',
               production: 'nx run app:preview',
             },
-            ciWebServerCommand: 'nx run app:serve-static',
+            ciWebServerCommand: 'nx run app:webpack:serve-static',
+          }),
+          baseUrl: 'http://localhost:4200',
+        },
+      });
+      "
+    `);
+  });
+
+  it('should not update the full command to serve-static target for webpack', async () => {
+    // ARRANGE
+    const nxJson = readNxJson(tree);
+    nxJson.plugins = [
+      {
+        plugin: '@nx/cypress/plugin',
+        options: {
+          targetName: 'e2e',
+          ciTargetName: 'e2e-ci',
+        },
+      },
+      {
+        plugin: '@nx/webpack/plugin',
+        options: {
+          serveStaticTargetName: 'webpack:serve-static',
+        },
+      },
+    ];
+    updateNxJson(tree, nxJson);
+
+    addProject(tree, tempFs, {
+      buildTargetName: 'build',
+      ciTargetName: 'e2e-ci',
+      appName: 'app',
+      noVite: true,
+    });
+
+    tree.write(
+      'app-e2e/cypress.config.ts',
+      `import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
+import { defineConfig } from 'cypress';
+export default defineConfig({
+  e2e: {
+    ...nxE2EPreset(__filename, {
+      cypressDir: 'src',
+      bundler: 'vite',
+      webServerCommands: {
+        default: 'nx run app:serve',
+        production: 'nx run app:preview',
+      },
+      ciWebServerCommand: 'echo "start" && nx run app:serve',
+    }),
+    baseUrl: 'http://localhost:4200',
+  },
+});
+`
+    );
+
+    // ACT
+    await updateCiWebserverForVite(tree);
+
+    // ASSERT
+    expect(tree.read('app-e2e/cypress.config.ts', 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
+      import { defineConfig } from 'cypress';
+      export default defineConfig({
+        e2e: {
+          ...nxE2EPreset(__filename, {
+            cypressDir: 'src',
+            bundler: 'vite',
+            webServerCommands: {
+              default: 'nx run app:serve',
+              production: 'nx run app:preview',
+            },
+            ciWebServerCommand: 'echo "start" && nx run app:webpack:serve-static',
           }),
           baseUrl: 'http://localhost:4200',
         },
@@ -200,7 +280,7 @@ export default defineConfig({
       },
       ${
         !overrides.noCi
-          ? `ciWebServerCommand: 'nx run ${overrides.appName}:serve-static',`
+          ? `ciWebServerCommand: 'nx run ${overrides.appName}:serve',`
           : ''
       }
     }),
@@ -211,6 +291,11 @@ export default defineConfig({
 
   if (!overrides.noVite) {
     tree.write(`${overrides.appName}/vite.config.ts`, viteConfig);
+  } else {
+    tree.write(
+      `${overrides.appName}/webpack.config.ts`,
+      `module.exports = {output: 'dist/foo'}`
+    );
   }
   tree.write(
     `${overrides.appName}/project.json`,
@@ -223,6 +308,11 @@ export default defineConfig({
   );
   if (!overrides.noVite) {
     tempFs.createFile(`${overrides.appName}/vite.config.ts`, viteConfig);
+  } else {
+    tempFs.createFile(
+      `${overrides.appName}/webpack.config.ts`,
+      `module.exports = {output: 'dist/foo'}`
+    );
   }
   tempFs.createFilesSync({
     [`${overrides.appName}/project.json`]: JSON.stringify(appProjectConfig),

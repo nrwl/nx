@@ -20,6 +20,7 @@ import {
   yargsFormatWriteCommand,
 } from './format/command-object';
 import { yargsGenerateCommand } from './generate/command-object';
+import { yargsImportCommand } from './import/command-object';
 import { yargsInitCommand } from './init/command-object';
 import { yargsListCommand } from './list/command-object';
 import {
@@ -40,6 +41,7 @@ import {
   yargsPrintAffectedCommand,
   yargsAffectedGraphCommand,
 } from './deprecated/command-objects';
+import { yargsSyncCheckCommand, yargsSyncCommand } from './sync/command-object';
 
 // Ensure that the output takes up the available width of the terminal.
 yargs.wrap(yargs.terminalWidth());
@@ -73,6 +75,7 @@ export const commandsObject = yargs
   .command(yargsFormatCheckCommand)
   .command(yargsFormatWriteCommand)
   .command(yargsGenerateCommand)
+  .command(yargsImportCommand)
   .command(yargsInitCommand)
   .command(yargsInternalMigrateCommand)
   .command(yargsListCommand)
@@ -86,6 +89,8 @@ export const commandsObject = yargs
   .command(yargsRunCommand)
   .command(yargsRunManyCommand)
   .command(yargsShowCommand)
+  .command(yargsSyncCommand)
+  .command(yargsSyncCheckCommand)
   .command(yargsViewLogsCommand)
   .command(yargsWatchCommand)
   .command(yargsNxInfixCommand)

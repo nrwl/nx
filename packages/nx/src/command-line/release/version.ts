@@ -37,7 +37,7 @@ import {
 } from './config/filter-release-groups';
 import {
   readRawVersionPlans,
-  setVersionPlansOnGroups,
+  setResolvedVersionPlansOnGroups,
 } from './config/version-plans';
 import { batchProjectsByGeneratorConfig } from './utils/batch-projects-by-generator-config';
 import { gitAdd, gitTag } from './utils/git';
@@ -190,7 +190,7 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
       process.exit(1);
     }
     const rawVersionPlans = await readRawVersionPlans();
-    setVersionPlansOnGroups(
+    setResolvedVersionPlansOnGroups(
       rawVersionPlans,
       releaseGroups,
       Object.keys(projectGraph.nodes)

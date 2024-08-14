@@ -18,6 +18,7 @@ import {
 import { ConfigurationResult } from 'nx/src/project-graph/utils/project-configuration-utils';
 import { tsquery } from '@phenomnomnominal/tsquery';
 import { CypressPluginOptions } from '../../plugins/plugin';
+import addE2ECiTargetDefaults from './add-e2e-ci-target-defaults';
 
 export default async function (tree: Tree) {
   const pluginName = '@nx/cypress/plugin';
@@ -85,38 +86,73 @@ export default async function (tree: Tree) {
         joinPathFragments(graph.nodes[project].data.root, 'vite.config.js'),
       ].find((p) => tree.exists(p));
 
-      if (!pathToViteConfig) {
+      const pathToWebpackConfig = [
+        joinPathFragments(graph.nodes[project].data.root, 'webpack.config.ts'),
+        joinPathFragments(graph.nodes[project].data.root, 'webpack.config.js'),
+      ].find((p) => tree.exists(p));
+
+      if (!pathToViteConfig && !pathToWebpackConfig) {
         continue;
       }
 
-      const viteConfigContents = tree.read(pathToViteConfig, 'utf-8');
-      if (!viteConfigContents.includes('preview:')) {
-        continue;
-      }
+      if (pathToWebpackConfig) {
+        const matchingWebpackPlugin = await findPluginForConfigFile(
+          tree,
+          '@nx/webpack/plugin',
+          pathToWebpackConfig
+        );
+        const serveStaticTargetName = matchingWebpackPlugin
+          ? typeof matchingWebpackPlugin === 'string'
+            ? 'serve-static'
+            : (matchingWebpackPlugin.options as any)?.serveStaticTargetName ??
+              'serve-static'
+          : 'serve-static';
 
-      const matchingVitePlugin = await findPluginForConfigFile(
-        tree,
-        '@nx/vite/plugin',
-        pathToViteConfig
-      );
-      const previewTargetName = matchingVitePlugin
-        ? typeof matchingVitePlugin === 'string'
-          ? 'preview'
-          : (matchingVitePlugin.options as any)?.previewTargetName ?? 'preview'
-        : 'preview';
+        const newCommand = ciWebServerCommand.replace(
+          /nx.*[^"']/,
+          `nx run ${project}:${serveStaticTargetName}`
+        );
+        tree.write(
+          configFile,
+          `${configFileContents.slice(
+            0,
+            nodes[0].getStart()
+          )}${newCommand}${configFileContents.slice(nodes[0].getEnd())}`
+        );
+      } else if (pathToViteConfig) {
+        const viteConfigContents = tree.read(pathToViteConfig, 'utf-8');
+        if (!viteConfigContents.includes('preview:')) {
+          continue;
+        }
 
-      tree.write(
-        configFile,
-        `${configFileContents.slice(
-          0,
-          nodes[0].getStart()
-        )}'nx run ${project}:${previewTargetName}',
+        const matchingVitePlugin = await findPluginForConfigFile(
+          tree,
+          '@nx/vite/plugin',
+          pathToViteConfig
+        );
+        const previewTargetName = matchingVitePlugin
+          ? typeof matchingVitePlugin === 'string'
+            ? 'preview'
+            : (matchingVitePlugin.options as any)?.previewTargetName ??
+              'preview'
+          : 'preview';
+
+        const newCommand = ciWebServerCommand.replace(
+          /nx.*[^"']/,
+          `nx run ${project}:${previewTargetName}`
+        );
+        tree.write(
+          configFile,
+          `${configFileContents.slice(0, nodes[0].getStart())}${newCommand},
       ciBaseUrl: "http://localhost:4300"${configFileContents.slice(
         nodes[0].getEnd()
       )}`
-      );
+        );
+      }
     }
   }
+
+  await addE2ECiTargetDefaults(tree);
 
   await formatFiles(tree);
 }

@@ -260,7 +260,8 @@ export async function createNxReleaseConfig(
         ? defaultIndependentReleaseTagPattern
         : defaultFixedReleaseTagPattern),
     conventionalCommits: DEFAULT_CONVENTIONAL_COMMITS_CONFIG,
-    versionPlans: false,
+    versionPlans: (userConfig.versionPlans ||
+      false) as NxReleaseConfig['versionPlans'],
   };
 
   const groupProjectsRelationship =
@@ -340,7 +341,8 @@ export async function createNxReleaseConfig(
   );
 
   const rootVersionPlansConfig: NxReleaseConfig['versionPlans'] =
-    userConfig.versionPlans ?? WORKSPACE_DEFAULTS.versionPlans;
+    (userConfig.versionPlans ??
+      WORKSPACE_DEFAULTS.versionPlans) as NxReleaseConfig['versionPlans'];
 
   const rootConventionalCommitsConfig: NxReleaseConfig['conventionalCommits'] =
     deepMergeDefaults(

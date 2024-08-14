@@ -1,7 +1,6 @@
 import {
   type Tree,
   type CreateNodesV2,
-  formatFiles,
   readNxJson,
   createProjectGraphAsync,
   parseTargetString,
@@ -15,6 +14,7 @@ import {
 } from 'nx/src/devkit-internals';
 import { tsquery } from '@phenomnomnominal/tsquery';
 import { type PlaywrightPluginOptions } from '../../plugins/plugin';
+import { dirname } from 'path';
 
 export default async function addE2eCiTargetDefaults(tree: Tree) {
   const pluginName = '@nx/playwright/plugin';
@@ -96,7 +96,9 @@ export default async function addE2eCiTargetDefaults(tree: Tree) {
 
       const resolvedServeStaticTarget =
         graph.nodes[serveStaticProject].data.targets[serveStaticTarget];
-
+      if (!resolvedServeStaticTarget) {
+        continue;
+      }
       let resolvedBuildTarget: string;
       if (resolvedServeStaticTarget.dependsOn) {
         resolvedBuildTarget = resolvedServeStaticTarget.dependsOn.join(',');
@@ -108,7 +110,11 @@ export default async function addE2eCiTargetDefaults(tree: Tree) {
             : resolvedServeStaticTarget.options.buildTarget) ?? 'build';
       }
 
-      const buildTarget = `^${resolvedBuildTarget}`;
+      const targetDependsOnSelf =
+        graph.nodes[serveStaticProject].data.root === dirname(configFile);
+      const buildTarget = `${
+        targetDependsOnSelf ? '' : '^'
+      }${resolvedBuildTarget}`;
 
       await _addE2eCiTargetDefaults(tree, pluginName, buildTarget, configFile);
     }
