@@ -369,7 +369,7 @@ async function promptForApplyingSyncGeneratorChanges(): Promise<boolean> {
     return await prompt<{ applyChanges: 'yes' | 'no' }>([promptConfig]).then(
       ({ applyChanges }) => applyChanges === 'yes'
     );
-  } catch (e) {
+  } catch {
     process.exit(1);
   }
 }
