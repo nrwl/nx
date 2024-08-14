@@ -197,7 +197,7 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
         Object.keys(projectGraph.nodes)
       );
     } else {
-      if (args.verbose) {
+      if (args.verbose && releaseGroups.some((g) => !!g.versionPlans)) {
         console.log(
           `Skipping version plan discovery as a specifier was provided`
         );

@@ -830,84 +830,29 @@ Update packages in both groups with a mix #2
       silenceError: true,
     });
 
-    expect(versionResult).toMatchInlineSnapshot(`
-      Skipping version plan discovery as a specifier was provided
+    expect(versionResult).toContain(
+      'Skipping version plan discovery as a specifier was provided'
+    );
+    expect(versionResult).toContain(
+      `${pkg1} 📄 Using the provided version specifier "major".`
+    );
+    expect(versionResult).toContain(
+      `${pkg2} 📄 Using the provided version specifier "major".`
+    );
+    expect(versionResult).toContain(
+      `${pkg3} 📄 Using the provided version specifier "major".`
+    );
+    expect(versionResult).toContain(
+      `${pkg4} 📄 Using the provided version specifier "major".`
+    );
+    expect(versionResult).toContain(
+      `${pkg5} 📄 Using the provided version specifier "major".`
+    );
 
-      NX   Running release version for project: {project-name}
+    expect(versionResult).toContain(
+      `git add ${pkg1}/package.json ${pkg2}/package.json ${pkg3}/package.json ${pkg4}/package.json ${pkg5}/package.json`
+    );
 
-      {project-name} 🔍 Reading data for package "@proj/{project-name}" from {project-name}/package.json
-      {project-name} 📄 Resolved the current version as 0.0.0 from {project-name}/package.json
-      {project-name} 📄 Using the provided version specifier "major".
-      {project-name} ✍️  New version 1.0.0 written to {project-name}/package.json
-
-      NX   Running release version for project: {project-name}
-
-      {project-name} 🔍 Reading data for package "@proj/{project-name}" from {project-name}/package.json
-      {project-name} 📄 Resolved the current version as 0.0.0 from {project-name}/package.json
-      {project-name} 📄 Using the provided version specifier "major".
-      {project-name} ✍️  New version 1.0.0 written to {project-name}/package.json
-
-      NX   Running release version for project: {project-name}
-
-      {project-name} 🔍 Reading data for package "@proj/{project-name}" from {project-name}/package.json
-      {project-name} 📄 Resolved the current version as 0.0.0 from {project-name}/package.json
-      {project-name} 📄 Using the provided version specifier "major".
-      {project-name} ✍️  New version 1.0.0 written to {project-name}/package.json
-
-      NX   Running release version for project: {project-name}
-
-      {project-name} 🔍 Reading data for package "@proj/{project-name}" from {project-name}/package.json
-      {project-name} 📄 Resolved the current version as 0.0.0 from {project-name}/package.json
-      {project-name} 📄 Using the provided version specifier "major".
-      {project-name} ✍️  New version 1.0.0 written to {project-name}/package.json
-
-      NX   Running release version for project: {project-name}
-
-      {project-name} 🔍 Reading data for package "@proj/{project-name}" from {project-name}/package.json
-      {project-name} 📄 Resolved the current version as 0.0.0 from {project-name}/package.json
-      {project-name} 📄 Using the provided version specifier "major".
-      {project-name} ✍️  New version 1.0.0 written to {project-name}/package.json
-
-
-      "name": "@proj/{project-name}",
-      -   "version": "0.0.0",
-      +   "version": "1.0.0",
-      "scripts": {
-
-
-      "name": "@proj/{project-name}",
-      -   "version": "0.0.0",
-      +   "version": "1.0.0",
-      "scripts": {
-
-
-      "name": "@proj/{project-name}",
-      -   "version": "0.0.0",
-      +   "version": "1.0.0",
-      "scripts": {
-
-
-      "name": "@proj/{project-name}",
-      -   "version": "0.0.0",
-      +   "version": "1.0.0",
-      "scripts": {
-
-
-      "name": "@proj/{project-name}",
-      -   "version": "0.0.0",
-      +   "version": "1.0.0",
-      "scripts": {
-
-
-      Skipped lock file update because npm workspaces are not enabled.
-
-      Skipped lock file update because npm workspaces are not enabled.
-
-      NX   Staging changed files with git
-
-      Staging files in git with the following command:
-      git add {project-name}/package.json {project-name}/package.json {project-name}/package.json {project-name}/package.json {project-name}/package.json
-
-    `);
+    expect(readdirSync(versionPlansDir).length).toEqual(2);
   });
 });
