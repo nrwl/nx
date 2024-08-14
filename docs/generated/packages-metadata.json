@@ -94,6 +94,15 @@
         "type": "executor"
       },
       {
+        "description": "The module-federation-ssr-dev-server executor is reserved exclusively for use with host SSR Module Federation applications. It allows the user to specify which remote applications should be served with the host.",
+        "file": "generated/packages/angular/executors/module-federation-dev-ssr.json",
+        "hidden": false,
+        "name": "module-federation-dev-ssr",
+        "originalFilePath": "/packages/angular/src/executors/module-federation-ssr-dev-server/schema.json",
+        "path": "angular/executors/module-federation-dev-ssr",
+        "type": "executor"
+      },
+      {
         "description": "Builds an Angular application using [esbuild](https://esbuild.github.io/) with integrated SSR and prerendering capabilities. _Note: this is only supported in Angular versions >= 17.0.0_.",
         "file": "generated/packages/angular/executors/application.json",
         "hidden": false,
@@ -136,15 +145,6 @@
         "name": "webpack-server",
         "originalFilePath": "/packages/angular/src/builders/webpack-server/schema.json",
         "path": "angular/executors/webpack-server",
-        "type": "executor"
-      },
-      {
-        "description": "Serves host [Module Federation](https://module-federation.io/) applications ([webpack](https://webpack.js.org/)-based) that use SSR allowing to specify which remote applications should be served with the host.",
-        "file": "generated/packages/angular/executors/module-federation-dev-ssr.json",
-        "hidden": false,
-        "name": "module-federation-dev-ssr",
-        "originalFilePath": "/packages/angular/src/builders/module-federation-dev-ssr/schema.json",
-        "path": "angular/executors/module-federation-dev-ssr",
         "type": "executor"
       }
     ],
