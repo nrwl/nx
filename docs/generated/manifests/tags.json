@@ -492,6 +492,13 @@
     },
     {
       "description": "",
+      "file": "shared/recipes/nx-release/file-based-versioning-version-plans",
+      "id": "file-based-versioning-version-plans",
+      "name": "File Based Versioning (Version Plans)",
+      "path": "/recipes/nx-release/file-based-versioning-version-plans"
+    },
+    {
+      "description": "",
       "file": "shared/recipes/nx-release/configure-custom-registries",
       "id": "configure-custom-registries",
       "name": "Configure Custom Registries",

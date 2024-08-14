@@ -1010,6 +1010,12 @@
                   "file": "shared/recipes/nx-release/customize-conventional-commit-types"
                 },
                 {
+                  "name": "File Based Versioning (Version Plans)",
+                  "id": "file-based-versioning-version-plans",
+                  "tags": ["nx-release"],
+                  "file": "shared/recipes/nx-release/file-based-versioning-version-plans"
+                },
+                {
                   "name": "Configure Custom Registries",
                   "id": "configure-custom-registries",
                   "tags": ["nx-release"],
