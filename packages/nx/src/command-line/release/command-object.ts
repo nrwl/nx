@@ -353,7 +353,7 @@ const planCommand: CommandModule<NxReleaseArgs, PlanOptions> = {
   // Hidden for now until the feature is more stable
   describe: false,
   builder: (yargs) =>
-    yargs
+    withAffectedOptions(yargs)
       .positional('bump', {
         type: 'string',
         describe: 'Semver keyword to use for the selected release group.',

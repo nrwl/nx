@@ -6,6 +6,11 @@ import { dirSync } from 'tmp';
 import { NxReleaseConfiguration, readNxJson } from '../../config/nx-json';
 import { createProjectFileMapUsingProjectGraph } from '../../project-graph/file-map-utils';
 import { createProjectGraphAsync } from '../../project-graph/project-graph';
+import { allFileData } from '../../utils/all-file-data';
+import {
+  parseFiles,
+  splitArgsIntoNxArgsAndOverrides,
+} from '../../utils/command-line-utils';
 import { output } from '../../utils/output';
 import { handleErrors } from '../../utils/params';
 import { PlanOptions } from './command-object';
@@ -18,6 +23,7 @@ import { deepMergeJson } from './config/deep-merge-json';
 import { filterReleaseGroups } from './config/filter-release-groups';
 import { getVersionPlansAbsolutePath } from './config/version-plans';
 import { generateVersionPlanContent } from './utils/generate-version-plan-content';
+import { createGetTouchedProjectsForGroup } from './utils/get-touched-projects-for-group';
 import { launchEditor } from './utils/launch-editor';
 import { printDiff } from './utils/print-changes';
 import { printConfigAndExit } from './utils/print-config';
@@ -69,6 +75,16 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
       process.exit(1);
     }
 
+    // Resolve the final values for base, head etc to use when resolving the changes to consider
+    const { nxArgs } = splitArgsIntoNxArgsAndOverrides(
+      args,
+      'affected',
+      {
+        printWarnings: args.verbose,
+      },
+      nxJson
+    );
+
     const versionPlanBumps: Record<string, string> = {};
     const setBumpIfNotNone = (projectOrGroup: string, version: string) => {
       if (version !== 'none') {
@@ -99,9 +115,38 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
         );
       }
     } else {
+      const changedFiles = parseFiles(nxArgs).files;
+      if (nxArgs.verbose) {
+        if (changedFiles.length) {
+          output.log({
+            title: `Changed files based on resolved "base" (${
+              nxArgs.base
+            }) and "head" (${nxArgs.head ?? 'HEAD'})`,
+            bodyLines: changedFiles.map((file) => `  - ${file}`),
+          });
+        } else {
+          output.warn({
+            title: 'No changed files found based on resolved "base" and "head"',
+          });
+        }
+      }
+      const resolvedAllFileData = await allFileData();
+      const getTouchedProjectsForGroup = createGetTouchedProjectsForGroup(
+        nxArgs,
+        projectGraph,
+        changedFiles,
+        resolvedAllFileData
+      );
+
       for (const group of releaseGroups) {
+        const touchedProjects = await getTouchedProjectsForGroup(group);
+
+        if (!touchedProjects.length) {
+          continue;
+        }
+
         if (group.projectsRelationship === 'independent') {
-          for (const project of releaseGroupToFilteredProjects.get(group)) {
+          for (const project of touchedProjects) {
             setBumpIfNotNone(
               project,
               args.bump ||
