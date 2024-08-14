@@ -23,7 +23,7 @@ import { defineConfig, devices } from '@playwright/test';
  */
 
 // For CI, you may want to set BASE_URL to the deployed application.
-const baseURL = process.env['BASE_URL'] || 'http://localhost:4300';
+const baseURL = process.env['BASE_URL'] || 'http://localhost:4200';
 
 /**
  * See https://playwright.dev/docs/test-configuration.
@@ -53,8 +53,8 @@ export default defineConfig({
   },
   /* Run your local dev server before starting the tests */
   webServer: {
-    command: 'pnpm exec nx run nx-dev:preview',
-    url: 'http://localhost:4300',
+    command: 'pnpm exec nx run nx-dev:start',
+    url: 'http://localhost:4200',
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
   },
