@@ -25,7 +25,7 @@ async function generate() {
     await generateCnwDocumentation(commandsOutputDirectory);
     await generateCliDocumentation(commandsOutputDirectory);
 
-    generateDevkitDocumentation();
+    await generateDevkitDocumentation();
     await generatePackageSchemas();
 
     await generateManifests(workspaceRoot);
