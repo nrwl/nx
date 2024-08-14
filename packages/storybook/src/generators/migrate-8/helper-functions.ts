@@ -1,28 +1,22 @@
 import {
-  applyChangesToString,
-  ChangeType,
   generateFiles,
   getPackageManagerCommand,
-  joinPathFragments,
   output,
   readProjectConfiguration,
   Tree,
-  updateProjectConfiguration,
   workspaceRoot,
+  visitNotIgnoredFiles,
+  joinPathFragments,
+  readJson,
 } from '@nx/devkit';
 import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
-import { tsquery } from '@phenomnomnominal/tsquery';
-import ts = require('typescript');
-import * as fs from 'fs';
 import { fileExists } from 'nx/src/utils/fileutils';
 import { readFileSync } from 'fs';
-import { join } from 'path';
+import { dirname, join } from 'path';
 
 export function onlyShowGuide(storybookProjects: {
   [key: string]: {
     configDir: string;
-    uiFramework: string;
-    viteConfigFilePath?: string;
   };
 }) {
   const pm = getPackageManagerCommand();
@@ -47,63 +41,50 @@ export function onlyShowGuide(storybookProjects: {
   });
 }
 
-export function normalizeViteConfigFilePathWithTree(
-  tree: Tree,
-  projectRoot: string,
-  configFile?: string
-): string {
-  return configFile && tree.exists(configFile)
-    ? configFile
-    : tree.exists(joinPathFragments(`${projectRoot}/vite.config.ts`))
-    ? joinPathFragments(`${projectRoot}/vite.config.ts`)
-    : tree.exists(joinPathFragments(`${projectRoot}/vite.config.js`))
-    ? joinPathFragments(`${projectRoot}/vite.config.js`)
-    : undefined;
-}
-
 export function getAllStorybookInfo(tree: Tree): {
   [key: string]: {
     configDir: string;
-    uiFramework: string;
-    viteConfigFilePath?: string;
   };
 } {
-  const allStorybookDirs = {};
-  forEachExecutorOptions(
-    tree,
-    '@nx/storybook:build',
-    (options, projectName) => {
-      if (projectName && options?.['configDir']) {
-        const projectConfiguration = readProjectConfiguration(
-          tree,
-          projectName
-        );
+  const allStorybookDirs: { [key: string]: { configDir: string } } = {};
 
-        allStorybookDirs[projectName] = {
-          configDir: options?.['configDir'],
-          uiFramework: options?.['uiFramework'],
-          viteConfigFilePath: normalizeViteConfigFilePathWithTree(
-            tree,
-            projectConfiguration.root,
-            projectConfiguration.targets?.build?.options?.configFile
-          ),
-        };
-      }
+  visitNotIgnoredFiles(tree, '', (storybookConfigPath) => {
+    if (
+      !storybookConfigPath.endsWith('.storybook/main.ts') &&
+      !storybookConfigPath.endsWith('.storybook/main.js')
+    ) {
+      return;
     }
-  );
+    const storybookConfigDir = dirname(storybookConfigPath);
 
-  forEachExecutorOptions(
-    tree,
-    '@storybook/angular:build-storybook',
-    (options, projectName) => {
-      if (projectName && options?.['configDir']) {
-        allStorybookDirs[projectName] = {
-          configDir: options?.['configDir'],
-          uiFramework: '@storybook/angular',
-        };
-      }
+    let projectRoot = '';
+    if (storybookConfigPath.includes('/.storybook')) {
+      projectRoot = storybookConfigDir.replace('/.storybook', '');
+    } else {
+      projectRoot = storybookConfigDir.replace('.storybook', '');
     }
-  );
+
+    if (projectRoot === '') {
+      projectRoot = '.';
+    }
+
+    const packageOrProjectJson = [
+      joinPathFragments(projectRoot, 'package.json'),
+      joinPathFragments(projectRoot, 'project.json'),
+    ].find((p) => tree.exists(p));
+    if (!packageOrProjectJson) {
+      return;
+    }
+
+    const projectName = readJson(tree, packageOrProjectJson)?.name;
+    if (!projectName) {
+      return;
+    }
+    allStorybookDirs[projectName] = {
+      configDir: storybookConfigDir,
+    };
+  });
+
   return allStorybookDirs;
 }
 
@@ -115,8 +96,6 @@ export function handleMigrationResult(
   allStorybookProjects: {
     [key: string]: {
       configDir: string;
-      uiFramework: string;
-      viteConfigFilePath?: string;
     };
   }
 ): { successfulProjects: {}; failedProjects: {} } {

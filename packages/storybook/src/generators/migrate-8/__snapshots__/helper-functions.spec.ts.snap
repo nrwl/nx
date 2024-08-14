@@ -4,46 +4,33 @@ exports[`Helper functions for the Storybook 8 migration generator getAllStoryboo
 {
   "nextapp": {
     "configDir": "apps/nextapp/.storybook",
-    "uiFramework": "@storybook/react",
-    "viteConfigFilePath": undefined,
   },
   "nextapp-ts": {
     "configDir": "apps/nextapp-ts/.storybook",
-    "uiFramework": "@storybook/react",
-    "viteConfigFilePath": undefined,
   },
   "ngapp": {
     "configDir": "apps/ngapp/.storybook",
-    "uiFramework": "@storybook/angular",
   },
   "ngapp-ts": {
     "configDir": "apps/ngapp-ts/.storybook",
-    "uiFramework": "@storybook/angular",
+  },
+  "plugin-app": {
+    "configDir": "plugin-apps/plugin/.storybook",
   },
   "rv1": {
     "configDir": "apps/rv1/.storybook",
-    "uiFramework": "@storybook/react",
-    "viteConfigFilePath": "apps/rv1/vite.config.js",
   },
   "rv2-ts": {
     "configDir": "apps/rv2-ts/.storybook",
-    "uiFramework": "@storybook/react",
-    "viteConfigFilePath": "apps/rv2-ts/vite.config.ts",
   },
   "rw1": {
     "configDir": "apps/rw1/.storybook",
-    "uiFramework": "@storybook/react",
-    "viteConfigFilePath": undefined,
   },
   "wv1": {
     "configDir": "apps/wv1/.storybook",
-    "uiFramework": "@storybook/web-components",
-    "viteConfigFilePath": "apps/wv1/vite.config.ts",
   },
   "ww1": {
     "configDir": "apps/ww1/.storybook",
-    "uiFramework": "@storybook/web-components",
-    "viteConfigFilePath": undefined,
   },
 }
 `;

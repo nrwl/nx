@@ -50,8 +50,6 @@ export function callAutomigrate(
   allStorybookProjects: {
     [key: string]: {
       configDir: string;
-      uiFramework: string;
-      viteConfigFilePath?: string;
     };
   },
   schema: Schema

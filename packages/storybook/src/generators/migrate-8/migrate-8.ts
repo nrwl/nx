@@ -27,8 +27,6 @@ export async function migrate8Generator(tree: Tree, schema: Schema) {
   const allStorybookProjects: {
     [key: string]: {
       configDir: string;
-      uiFramework: string;
-      viteConfigFilePath?: string;
     };
   } = getAllStorybookInfo(tree);
 

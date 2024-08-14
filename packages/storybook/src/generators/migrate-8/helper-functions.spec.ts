@@ -46,13 +46,14 @@ describe('Helper functions for the Storybook 8 migration generator', () => {
             'Run the following commands for each Storybook project:',
             `${pm.exec} storybook@latest automigrate --config-dir apps/nextapp/.storybook`,
             `${pm.exec} storybook@latest automigrate --config-dir apps/nextapp-ts/.storybook`,
+            `${pm.exec} storybook@latest automigrate --config-dir apps/ngapp/.storybook`,
+            `${pm.exec} storybook@latest automigrate --config-dir apps/ngapp-ts/.storybook`,
             `${pm.exec} storybook@latest automigrate --config-dir apps/rv1/.storybook`,
             `${pm.exec} storybook@latest automigrate --config-dir apps/rv2-ts/.storybook`,
             `${pm.exec} storybook@latest automigrate --config-dir apps/rw1/.storybook`,
             `${pm.exec} storybook@latest automigrate --config-dir apps/wv1/.storybook`,
             `${pm.exec} storybook@latest automigrate --config-dir apps/ww1/.storybook`,
-            `${pm.exec} storybook@latest automigrate --config-dir apps/ngapp/.storybook`,
-            `${pm.exec} storybook@latest automigrate --config-dir apps/ngapp-ts/.storybook`,
+            `${pm.exec} storybook@latest automigrate --config-dir plugin-apps/plugin/.storybook`,
             '',
           ],
           title: 'Storybook 8 Migration Guide',
@@ -87,6 +88,8 @@ export function addAllProjectsToWorkspace(tree: Tree) {
   }
   writeMainJs(tree);
   writeViteConfig(tree);
+
+  addPluginProjects(tree);
 }
 
 function writeViteConfig(tree: Tree) {
@@ -216,5 +219,173 @@ function writeMainJs(tree: Tree) {
 
     module.exports = config;
   `
+  );
+
+  tree.write(
+    `apps/rw1/.storybook/main.js`,
+    `
+    const path = require('path');
+
+    module.exports = {
+      core: { builder: 'webpack5' },
+      stories: [
+        '../components/**/*.stories.mdx',
+        '../components/**/*.stories.@(js|jsx|ts|tsx)',
+      ],
+      addons: [
+        '@storybook/addon-essentials',
+        '@nx/react/plugins/storybook',
+        'storybook-addon-swc',
+        {
+          name: 'storybook-addon-next',
+          options: {
+            nextConfigPath: path.resolve(__dirname, '../next.config.js'),
+          },
+        },
+      ],
+    };
+  `
+  );
+  tree.write(
+    `apps/wv1/.storybook/main.js`,
+    `
+    const path = require('path');
+
+    module.exports = {
+      core: { builder: 'webpack5' },
+      stories: [
+        '../components/**/*.stories.mdx',
+        '../components/**/*.stories.@(js|jsx|ts|tsx)',
+      ],
+      addons: [
+        '@storybook/addon-essentials',
+        '@nx/react/plugins/storybook',
+        'storybook-addon-swc',
+        {
+          name: 'storybook-addon-next',
+          options: {
+            nextConfigPath: path.resolve(__dirname, '../next.config.js'),
+          },
+        },
+      ],
+    };
+  `
+  );
+  tree.write(
+    `apps/ww1/.storybook/main.js`,
+    `
+    const path = require('path');
+
+    module.exports = {
+      core: { builder: 'webpack5' },
+      stories: [
+        '../components/**/*.stories.mdx',
+        '../components/**/*.stories.@(js|jsx|ts|tsx)',
+      ],
+      addons: [
+        '@storybook/addon-essentials',
+        '@nx/react/plugins/storybook',
+        'storybook-addon-swc',
+        {
+          name: 'storybook-addon-next',
+          options: {
+            nextConfigPath: path.resolve(__dirname, '../next.config.js'),
+          },
+        },
+      ],
+    };
+  `
+  );
+  tree.write(
+    `apps/ngapp/.storybook/main.js`,
+    `
+    const path = require('path');
+
+    module.exports = {
+      core: { builder: 'webpack5' },
+      stories: [
+        '../components/**/*.stories.mdx',
+        '../components/**/*.stories.@(js|jsx|ts|tsx)',
+      ],
+      addons: [
+        '@storybook/addon-essentials',
+        '@nx/react/plugins/storybook',
+        'storybook-addon-swc',
+        {
+          name: 'storybook-addon-next',
+          options: {
+            nextConfigPath: path.resolve(__dirname, '../next.config.js'),
+          },
+        },
+      ],
+    };
+  `
+  );
+
+  tree.write(
+    `apps/ngapp-ts/.storybook/main.ts`,
+    `
+    const path = require('path');
+
+    module.exports = {
+      core: { builder: 'webpack5' },
+      stories: [
+        '../components/**/*.stories.mdx',
+        '../components/**/*.stories.@(js|jsx|ts|tsx)',
+      ],
+      addons: [
+        '@storybook/addon-essentials',
+        '@nx/react/plugins/storybook',
+        'storybook-addon-swc',
+        {
+          name: 'storybook-addon-next',
+          options: {
+            nextConfigPath: path.resolve(__dirname, '../next.config.js'),
+          },
+        },
+      ],
+    };
+  `
+  );
+}
+
+function addPluginProjects(tree: Tree) {
+  tree.write(
+    `plugin-apps/plugin/.storybook/main.ts`,
+    `
+    import type { StorybookConfig } from '@storybook/core-common';
+    import path from 'path';
+
+    const config: StorybookConfig = {
+      core: { builder: 'webpack5' },
+      stories: [
+        '../components/**/*.stories.mdx',
+        '../components/**/*.stories.@(js|jsx|ts|tsx)',
+      ],
+      addons: [
+        '@storybook/addon-essentials',
+        '@nx/react/plugins/storybook',
+        'storybook-addon-swc',
+        {
+          name: 'storybook-addon-next',
+          options: {
+            nextConfigPath: path.resolve(__dirname, '../next.config.js'),
+          },
+        },
+      ],
+    } as StorybookConfig;
+
+    module.exports = config;
+  `
+  );
+  tree.write(
+    `plugin-apps/plugin/project.json`,
+    JSON.stringify({
+      name: 'plugin-app',
+      root: 'plugin-apps/plugin',
+      sourceRoot: 'plugin-apps/plugin/src',
+      type: 'application',
+      targets: {},
+    })
   );
 }
