@@ -171,6 +171,7 @@ export class BlogApi {
     if (!imagePath) {
       return { image: defaultImage, type: defaultType };
     }
+
     const { ext } = parse(imagePath);
 
     if (!allowedExtensions.includes(ext)) {
@@ -190,10 +191,14 @@ export class BlogApi {
       }
 
       return {
-        image: imagePath.replace(ext, foundExt),
+        image: join('documentation', imagePath.replace(ext, foundExt)),
         type: foundExt.replace('.', ''),
       };
     }
-    return { image: imagePath, type: ext.replace('.', '') };
+
+    return {
+      image: join('documentation', imagePath),
+      type: ext.replace('.', ''),
+    };
   }
 }
