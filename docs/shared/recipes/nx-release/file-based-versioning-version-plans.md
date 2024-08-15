@@ -4,7 +4,7 @@ Tools such as Changesets and Beachball helped popularize the concept of tracking
 
 Nx release supports file based versioning as a first class use-case through a feature called "version plans". The idea behind the name is that you are creating a _plan_ to version; a plan which will be _applied_ sometime in the future when you actually invoke the `nx release` CLI or programmatic API. Therefore you can think about version plans as having two main processes: creating version plans and applying version plans. We will cover both in this recipe, but first we need to enable the feature itself.
 
-## Enabling Version Plans
+## Enable Version Plans
 
 To enable version plans as a feature in your workspace, set `release.versionPlans` to `true` in `nx.json`:
 
@@ -21,13 +21,13 @@ To enable version plans as a feature in your workspace, set `release.versionPlan
 
 You can also enable or disable this for specific release groups by setting the property at the group level if you don't want to apply it to all matching projects in your workspace.
 
-## Creating Version Plans
+## Create Version Plans
 
 Version plan files live in the `.nx/version-plans/` directory within your workspace (which needs to be tracked by git, so ensure that you are not ignoring the whole `.nx` directory, and instead only the `.nx/workspace-data` and `.nx/cache` directories).
 
 The files themselves are written in markdown (`.md` files) and contain Front Matter YAML metadata at the top of the file. The Front Matter YAML section is denoted via triple dashes `---` at the start and end of the section. For example:
 
-```md
+```md {% fileName=".nx/version-plans/version-plan-1723732065047.md" %}
 ---
 #
 # FRONT MATTER YAML HERE
@@ -41,7 +41,7 @@ The files themselves are written in markdown (`.md` files) and contain Front Mat
 #
 ```
 
-We leverage the Front Matter YAML section to store a mapping of project or release group names to desired semver bump types. The general markdown section represents the description of the change(s) made that will be used in any relevant `CHANGELOG.md` files that are generated later a release time.
+We leverage the Front Matter YAML section to store a mapping of project or release group names to desired semver bump types. The general markdown section represents the description of the change(s) made that will be used in any relevant `CHANGELOG.md` files that are generated later at release time.
 
 For example, the following Front Matter YAML section specifies that the `my-app` project should have a `minor` version bump and describes the changes (again, note that there are no constraints on the format of the description, it can contain multiple lines, paragraphs etc):
 
@@ -57,7 +57,7 @@ A new paragraph describing the change in greater detail. All of this will be inc
 
 Any number of different projects and different desired semver bumps can be combined within a single version plan file (which represents one change and therefore changelog entry, if applicable). For example:
 
-```md
+```md {% fileName=".nx/version-plans/version-plan-1723732065047.md" %}
 ---
 my-app: minor
 my-lib: patch
@@ -79,7 +79,7 @@ nx release plan
 
 When you run this command you will receive a series of interactive prompts which guide you through the process of creating a version plan file. It will generate a unique name for you and ensure it is written to the correct location.
 
-## Applying Version Plans at release time
+## Apply Version Plans at Release Time
 
 Using version plans does not change how versioning, changelog generation and publishing is invoked, you can still use the `nx release` CLI or programmatic API as you would for any other versioning strategy.
 
@@ -87,7 +87,7 @@ The only difference is that Nx release will know to reference your version plan 
 
 When you run `nx release` or use the programmatic API, Nx will look for version plan files in the `.nx/version-plans/` directory and apply the desired version bumps to the projects and release groups specified in the Front Matter YAML section of each file. If a project or release group is not found, an error will be thrown and the release will not proceed. Once a particular version plan has been applied it will be deleted from the `.nx/version-plans/` directory so that it does not inadvertently get applied again in the future. The deleted file will be staged and committed alongside your other changed files that were modified directly as part of the release command (depending on your Nx release configuration).
 
-## Ensuring that Version Plans exist for relevant changes
+## Ensure That Version Plans Exist for Relevant Changes
 
 When making changes to your codebase and using version plans as your versioning strategy it is likely that you will want to ensure that a version plan file exists for the changes you are making.
 
@@ -97,11 +97,11 @@ Attempting to keep track of this manually as a part of pull request reviews can 
 nx release plan:check
 ```
 
-Running this command will analyze the changed files (supporting the same options you may be familiar from `nx affected`, such as `--base`, `--head`, `--files`, `--uncommitted`, etc) and then determine which projects have been "touched" as a result. Note that it is specifically touched projects, and not affected in this case, because only directly changed projects are relevant for versioning. The side-effects of versioning independently released dependents are handled by the release process itself (controllable via the `version.generatorOptions.updatedDependents` option).
+Running this command will analyze the changed files (supporting the same options you may be familiar with from `nx affected`, such as `--base`, `--head`, `--files`, `--uncommitted`, etc) and then determine which projects have been "touched" as a result. Note that it is specifically touched projects, and not affected in this case, because only directly changed projects are relevant for versioning. The side-effects of versioning independently released dependents are handled by the release process itself (controllable via the `version.generatorOptions.updatedDependents` option).
 
 Nx release will compare the touched projects to the projects and release groups that are specified in the version plan files in the `.nx/version-plans/` directory. If a version plan file does not exist, the command will print an error message and return a non-zero exit code, which can be used to fail CI builds or other automation.
 
-By default, all files that have changed are considered, but you may not want all files under a project to be able to require a version plan be created for them. For example, you may wish to ignore test only files from consideration from this check. The way you can achieve this is by setting version plans to be a configuration object instead of a boolean, and set the `"ignorePatternsForPlanCheck"` property to an array of glob patterns that should be ignored when checking for version plans. For example:
+By default, all files that have changed are considered, but you may not want all files under a project to require a version plan be created for them. For example, you may wish to ignore test only files from consideration from this check. The way you can achieve this is by setting version plans to be a configuration object instead of a boolean, and set the `"ignorePatternsForPlanCheck"` property to an array of glob patterns that should be ignored when checking for version plans. For example:
 
 ````jsonc
 {
