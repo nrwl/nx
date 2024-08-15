@@ -4,7 +4,8 @@ export async function getViteWebServerInfo(
   tree: Tree,
   projectName: string,
   configFilePath: string,
-  isPluginBeingAdded: boolean
+  isPluginBeingAdded: boolean,
+  e2ePortOverride?: number
 ) {
   return getE2EWebServerInfo(
     tree,
@@ -18,7 +19,7 @@ export async function getViteWebServerInfo(
     {
       defaultServeTargetName: 'serve',
       defaultServeStaticTargetName: 'preview',
-      defaultE2EWebServerAddress: 'http://localhost:4200',
+      defaultE2EWebServerAddress: `http://localhost:${e2ePortOverride ?? 4200}`,
       defaultE2ECiBaseUrl: 'http://localhost:4300',
     },
     isPluginBeingAdded
