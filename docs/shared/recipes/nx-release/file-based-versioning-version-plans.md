@@ -45,7 +45,7 @@ We leverage the Front Matter YAML section to store a mapping of project or relea
 
 For example, the following Front Matter YAML section specifies that the `my-app` project should have a `minor` version bump and describes the changes (again, note that there are no constraints on the format of the description, it can contain multiple lines, paragraphs etc):
 
-```md
+```md {% fileName=".nx/version-plans/version-plan-1723732065047.md" %}
 ---
 my-app: minor
 ---
