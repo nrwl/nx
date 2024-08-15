@@ -158,6 +158,9 @@ export function fetchGitRemote(
   return execSync(`git fetch ${name} ${branch} --depth 1`, execOptions);
 }
 
+/**
+ * This is currently duplicated in Nx Console. Please let @MaxKless know if you make changes here.
+ */
 export function getGithubSlugOrNull(): string | null {
   try {
     const gitRemote = execSync('git remote -v', {
