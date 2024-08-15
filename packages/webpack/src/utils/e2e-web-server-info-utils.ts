@@ -1,6 +1,6 @@
 import { type Tree, getE2EWebServerInfo, readNxJson } from '@nx/devkit';
 
-export async function getWebpackWebServerInfo(
+export async function getWebpackE2EWebServerInfo(
   tree: Tree,
   projectName: string,
   configFilePath: string,
@@ -31,6 +31,7 @@ export async function getWebpackWebServerInfo(
       defaultServeStaticTargetName: 'serve-static',
       defaultE2EWebServerAddress: `http://localhost:${e2ePort}`,
       defaultE2ECiBaseUrl: 'http://localhost:4200',
+      defaultE2EPort: e2ePort,
     },
     isPluginBeingAdded
   );

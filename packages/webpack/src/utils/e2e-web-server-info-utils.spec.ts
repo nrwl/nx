@@ -1,9 +1,9 @@
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { type Tree, readNxJson, updateNxJson } from 'nx/src/devkit-exports';
 import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
-import { getWebpackWebServerInfo } from './e2e-web-server-info-utils';
+import { getWebpackE2EWebServerInfo } from './e2e-web-server-info-utils';
 
-describe('getWebpackWebServerInfo', () => {
+describe('getWebpackE2EWebServerInfo', () => {
   let tree: Tree;
   let tempFs: TempFs;
   beforeEach(() => {
@@ -27,7 +27,7 @@ describe('getWebpackWebServerInfo', () => {
     updateNxJson(tree, nxJson);
 
     // ACT
-    const e2eWebServerInfo = await getWebpackWebServerInfo(
+    const e2eWebServerInfo = await getWebpackE2EWebServerInfo(
       tree,
       'app',
       'app/webpack.config.ts',
@@ -52,7 +52,7 @@ describe('getWebpackWebServerInfo', () => {
     updateNxJson(tree, nxJson);
 
     // ACT
-    const e2eWebServerInfo = await getWebpackWebServerInfo(
+    const e2eWebServerInfo = await getWebpackE2EWebServerInfo(
       tree,
       'app',
       'app/webpack.config.ts',
@@ -84,7 +84,7 @@ describe('getWebpackWebServerInfo', () => {
     updateNxJson(tree, nxJson);
 
     // ACT
-    const e2eWebServerInfo = await getWebpackWebServerInfo(
+    const e2eWebServerInfo = await getWebpackE2EWebServerInfo(
       tree,
       'app',
       'app/webpack.config.ts',
@@ -125,7 +125,7 @@ describe('getWebpackWebServerInfo', () => {
     updateNxJson(tree, nxJson);
 
     // ACT
-    const e2eWebServerInfo = await getWebpackWebServerInfo(
+    const e2eWebServerInfo = await getWebpackE2EWebServerInfo(
       tree,
       'app',
       'app/webpack.config.ts',
