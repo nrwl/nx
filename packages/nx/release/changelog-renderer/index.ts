@@ -118,10 +118,12 @@ const defaultChangelogRenderer: ChangelogRenderer = async ({
     }
   }
 
+  let relevantChanges = changes;
+
   // workspace root level changelog
   if (project === null) {
     // No changes for the workspace
-    if (changes.length === 0) {
+    if (relevantChanges.length === 0) {
       if (dependencyBumps?.length) {
         applyAdditionalDependencyBumps({
           markdownLines,
@@ -143,7 +145,7 @@ const defaultChangelogRenderer: ChangelogRenderer = async ({
     }
 
     const typeGroups: Record<string, ChangelogChange[]> = groupBy(
-      changes,
+      relevantChanges,
       'type'
     );
 
@@ -197,7 +199,7 @@ const defaultChangelogRenderer: ChangelogRenderer = async ({
     }
   } else {
     // project level changelog
-    const relevantChanges = changes.filter(
+    relevantChanges = relevantChanges.filter(
       (c) =>
         c.affectedProjects &&
         (c.affectedProjects === '*' || c.affectedProjects.includes(project))
@@ -279,7 +281,7 @@ const defaultChangelogRenderer: ChangelogRenderer = async ({
 
   if (changelogRenderOptions.authors) {
     const _authors = new Map<string, { email: Set<string>; github?: string }>();
-    for (const change of changes) {
+    for (const change of relevantChanges) {
       if (!change.author) {
         continue;
       }
@@ -402,13 +404,29 @@ function formatChange(
   changelogRenderOptions: DefaultChangelogRenderOptions,
   repoSlug?: RepoSlug
 ): string {
+  let description = change.description;
+  let extraLines = [];
+  let extraLinesStr = '';
+  if (description.includes('\n')) {
+    [description, ...extraLines] = description.split('\n');
+    // Align the extra lines with the start of the description for better readability
+    const indentation = '  ';
+    extraLinesStr = extraLines
+      .filter((l) => l.trim().length > 0)
+      .map((l) => `${indentation}${l}`)
+      .join('\n');
+  }
+
   let changeLine =
     '- ' +
     (change.isBreaking ? '⚠️  ' : '') +
     (change.scope ? `**${change.scope.trim()}:** ` : '') +
-    change.description;
+    description;
   if (repoSlug && changelogRenderOptions.commitReferences) {
     changeLine += formatReferences(change.githubReferences, repoSlug);
+  }
+  if (extraLinesStr) {
+    changeLine += '\n\n' + extraLinesStr;
   }
   return changeLine;
 }

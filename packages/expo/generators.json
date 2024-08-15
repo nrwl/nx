@@ -28,6 +28,11 @@
       "schema": "./src/generators/component/schema.json",
       "description": "Create a component",
       "aliases": ["c"]
+    },
+    "convert-to-inferred": {
+      "factory": "./src/generators/convert-to-inferred/convert-to-inferred",
+      "schema": "./src/generators/convert-to-inferred/schema.json",
+      "description": "Convert existing Expo project(s) using `@nx/expo:*` executors to use `@nx/expo/plugin`. Defaults to migrating all projects. Pass '--project' to migrate only one target."
     }
   }
 }

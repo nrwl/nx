@@ -2,10 +2,14 @@ import { logger } from '../../devkit-exports';
 import { getGithubSlugOrNull } from '../../utils/git-utils';
 import { getCloudUrl } from './get-cloud-options';
 
-export async function shortenedCloudUrl(
-  installationSource: string,
+/**
+ * This is currently duplicated in Nx Console. Please let @MaxKless know if you make changes here.
+ */
+export async function createNxCloudOnboardingURL(
+  onboardingSource: string,
   accessToken?: string,
-  usesGithub?: boolean
+  usesGithub?: boolean,
+  meta?: string
 ) {
   const githubSlug = getGithubSlugOrNull();
 
@@ -29,7 +33,7 @@ export async function shortenedCloudUrl(
     return apiUrl;
   }
 
-  const source = getSource(installationSource);
+  const source = getSource(onboardingSource);
 
   try {
     const response = await require('axios').post(
@@ -39,6 +43,7 @@ export async function shortenedCloudUrl(
         source,
         accessToken: usesGithub ? null : accessToken,
         selectedRepositoryName: githubSlug === 'github' ? null : githubSlug,
+        meta,
       }
     );
 
@@ -87,15 +92,13 @@ export async function repoUsesGithub(
 
 function getSource(
   installationSource: string
-): 'nx-init' | 'nx-connect' | 'create-nx-workspace' | 'other' {
+): 'nx-init' | 'nx-connect' | string {
   if (installationSource.includes('nx-init')) {
     return 'nx-init';
   } else if (installationSource.includes('nx-connect')) {
     return 'nx-connect';
-  } else if (installationSource.includes('create-nx-workspace')) {
-    return 'create-nx-workspace';
   } else {
-    return 'other';
+    return installationSource;
   }
 }
 

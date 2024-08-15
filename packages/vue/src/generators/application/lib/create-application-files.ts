@@ -4,14 +4,42 @@ import { getRelativePathToRootTsConfig } from '@nx/js';
 
 import { createTsConfig } from '../../../utils/create-ts-config';
 import { NormalizedSchema } from '../schema';
+import {
+  getNxCloudAppOnBoardingUrl,
+  createNxCloudOnboardingURLForWelcomeApp,
+} from 'nx/src/nx-cloud/utilities/onboarding';
 
-export function createApplicationFiles(tree: Tree, options: NormalizedSchema) {
+export async function createApplicationFiles(
+  tree: Tree,
+  options: NormalizedSchema
+) {
+  const onBoardingStatus = await createNxCloudOnboardingURLForWelcomeApp(
+    tree,
+    options.nxCloudToken
+  );
+
+  const connectCloudUrl =
+    onBoardingStatus === 'unclaimed' &&
+    (await getNxCloudAppOnBoardingUrl(options.nxCloudToken));
+
   generateFiles(
     tree,
     path.join(__dirname, '../files/common'),
     options.appProjectRoot,
     {
       ...options,
+      offsetFromRoot: offsetFromRoot(options.appProjectRoot),
+      title: options.projectName,
+    }
+  );
+
+  generateFiles(
+    tree,
+    path.join(__dirname, '../files/nx-welcome', onBoardingStatus),
+    options.appProjectRoot,
+    {
+      ...options,
+      connectCloudUrl,
       offsetFromRoot: offsetFromRoot(options.appProjectRoot),
       title: options.projectName,
     }

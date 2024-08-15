@@ -59,7 +59,7 @@ The following resource classes are available:
 - `docker_linux_arm64/extra_large`
 - `windows/medium`
 
-See their detailed description and pricing at [nx.app/pricing](https://nx.app/pricing#plan-detail?sutm_source=nx.dev&utm_medium=launch-templates).
+See their detailed description and pricing at [nx.dev/pricing](/pricing#plan-detail?sutm_source=nx.dev&utm_medium=launch-templates).
 
 ### `launch-templates.<template-name>.image`
 
@@ -190,7 +190,7 @@ launch-templates:
         inputs:
           env: 'package-lock.json|yarn.lock|pnpm-lock.yaml'
           paths: 'node_modules'
-          base-branch: 'main'
+          base_branch: 'main'
 ```
 
 ## Full Example
@@ -223,7 +223,7 @@ launch-templates:
         inputs:
           env: 'package-lock.json|yarn.lock|pnpm-lock.yaml'
           paths: 'node_modules'
-          base-branch: 'main'
+          base_branch: 'main'
       - name: Restore Browser Binary Cache
         uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/cache/main.yaml'
         inputs:
@@ -231,7 +231,7 @@ launch-templates:
           paths: |
             '~/.cache/Cypress'
             '~/.cache/ms-playwright'
-          base-branch: 'main'
+          base_branch: 'main'
       - name: Install Node Modules
         uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/install-node-modules/main.yaml'
       - name: Install Browsers (if needed)
@@ -274,7 +274,7 @@ launch-templates:
         inputs:
           env: 'package-lock.json|yarn.lock|pnpm-lock.yaml'
           paths: 'node_modules'
-          base-branch: 'main'
+          base_branch: 'main'
       - name: Restore Browser Binary Cache
         uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/cache/main.yaml'
         inputs:
@@ -282,7 +282,7 @@ launch-templates:
           paths: |
             '~/.cache/Cypress'
             '~/.cache/ms-playwright'
-          base-branch: 'main'
+          base_branch: 'main'
       - name: Install Node Modules
         uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/install-node-modules/main.yaml'
       - name: Install Browsers (if needed)
@@ -312,7 +312,7 @@ launch-templates:
         inputs:
           env: 'package-lock.json|yarn.lock|pnpm-lock.yaml'
           paths: 'node_modules'
-          base-branch: 'main'
+          base_branch: 'main'
       - name: Install Node Modules
         uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/install-node-modules/main.yaml'
       - name: Install Rust

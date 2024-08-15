@@ -212,14 +212,15 @@ export function createCommitMessageValues(
 
     // One entry for the whole group for fixed groups
     const projectVersionData = versionData[releaseGroupProjectNames[0]]; // all at the same version, so we can just pick the first one
-    const releaseVersion = new ReleaseVersion({
-      version: projectVersionData.newVersion,
-      releaseTagPattern: releaseGroup.releaseTagPattern,
-    });
-
-    commitMessageValues.push(
-      `- release-group: ${releaseGroup.name} ${releaseVersion.rawVersion}`
-    );
+    if (projectVersionData.newVersion !== null) {
+      const releaseVersion = new ReleaseVersion({
+        version: projectVersionData.newVersion,
+        releaseTagPattern: releaseGroup.releaseTagPattern,
+      });
+      commitMessageValues.push(
+        `- release-group: ${releaseGroup.name} ${releaseVersion.rawVersion}`
+      );
+    }
   }
 
   return commitMessageValues;
@@ -269,6 +270,7 @@ export function createGitTagValues(
       tags.push(
         interpolate(releaseGroup.releaseTagPattern, {
           version: projectVersionData.newVersion,
+          releaseGroupName: releaseGroup.name,
         })
       );
     }

@@ -9,6 +9,7 @@ import {
   joinPathFragments,
   names,
   offsetFromRoot,
+  type PluginConfiguration,
   readNxJson,
   readProjectConfiguration,
   runTasksInSerial,
@@ -37,10 +38,15 @@ import { webInitGenerator } from '../init/init';
 import { Schema } from './schema';
 import { getNpmScope } from '@nx/js/src/utils/package-json/get-npm-scope';
 import { hasWebpackPlugin } from '../../utils/has-webpack-plugin';
-import { addBuildTargetDefaults } from '@nx/devkit/src/generators/add-build-target-defaults';
+import {
+  addBuildTargetDefaults,
+  addE2eCiTargetDefaults,
+} from '@nx/devkit/src/generators/target-defaults-utils';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 import { VitePluginOptions } from '@nx/vite/src/plugins/plugin';
 import { WebpackPluginOptions } from '@nx/webpack/src/plugins/plugin';
+import staticServeConfiguration from '../static-serve/static-serve-configuration';
+import { findPluginForConfigFile } from '@nx/devkit/src/utils/find-plugin-for-config-file';
 
 interface NormalizedSchema extends Schema {
   projectName: string;
@@ -49,6 +55,8 @@ interface NormalizedSchema extends Schema {
   e2eProjectRoot: string;
   e2eWebServerAddress: string;
   e2eWebServerTarget: string;
+  e2eCiWebServerTarget: string;
+  e2eCiBaseUrl: string;
   e2ePort: number;
   parsedTags: string[];
 }
@@ -364,6 +372,25 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
     tasks.push(lintTask);
   }
 
+  const nxJson = readNxJson(host);
+  let hasPlugin: PluginConfiguration | undefined;
+  let buildPlugin: string;
+  let buildConfigFile: string;
+  if (options.bundler === 'webpack' || options.bundler === 'vite') {
+    buildPlugin = `@nx/${options.bundler}/plugin`;
+    buildConfigFile =
+      options.bundler === 'webpack' ? 'webpack.config.js' : `vite.config.ts`;
+    hasPlugin = nxJson.plugins?.find((p) =>
+      typeof p === 'string' ? p === buildPlugin : p.plugin === buildPlugin
+    );
+  }
+
+  if (!hasPlugin) {
+    await staticServeConfiguration(host, {
+      buildTarget: `${options.projectName}:build`,
+      spa: true,
+    });
+  }
   if (options.e2eTestRunner === 'cypress') {
     const { configurationGenerator } = ensurePackage<
       typeof import('@nx/cypress')
@@ -383,7 +410,47 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
       baseUrl: options.e2eWebServerAddress,
       directory: 'src',
       skipFormat: true,
+      webServerCommands: hasPlugin
+        ? {
+            default: `nx run ${options.projectName}:${options.e2eWebServerTarget}`,
+            production: `nx run ${options.projectName}:preview`,
+          }
+        : undefined,
+      ciWebServerCommand: hasPlugin
+        ? `nx run ${options.projectName}:${options.e2eCiWebServerTarget}`
+        : undefined,
+      ciBaseUrl: options.bundler === 'vite' ? options.e2eCiBaseUrl : undefined,
     });
+
+    if (
+      options.addPlugin ||
+      readNxJson(host).plugins?.find((p) =>
+        typeof p === 'string'
+          ? p === '@nx/cypress/plugin'
+          : p.plugin === '@nx/cypress/plugin'
+      )
+    ) {
+      let buildTarget = '^build';
+      if (hasPlugin) {
+        const matchingPlugin = await findPluginForConfigFile(
+          host,
+          buildPlugin,
+          joinPathFragments(options.appProjectRoot, buildConfigFile)
+        );
+        if (matchingPlugin && typeof matchingPlugin !== 'string') {
+          buildTarget = `^${
+            (matchingPlugin.options as any)?.buildTargetName ?? 'build'
+          }`;
+        }
+      }
+      await addE2eCiTargetDefaults(
+        host,
+        '@nx/cypress/plugin',
+        buildTarget,
+        joinPathFragments(options.e2eProjectRoot, `cypress.config.ts`)
+      );
+    }
+
     tasks.push(cypressTask);
   } else if (options.e2eTestRunner === 'playwright') {
     const { configurationGenerator: playwrightConfigGenerator } = ensurePackage<
@@ -405,12 +472,42 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
       js: false,
       linter: options.linter,
       setParserOptionsProject: options.setParserOptionsProject,
-      webServerCommand: `${getPackageManagerCommand().exec} nx ${
-        options.e2eWebServerTarget
-      } ${options.name}`,
-      webServerAddress: options.e2eWebServerAddress,
+      webServerCommand: `${getPackageManagerCommand().exec} nx run ${
+        options.projectName
+      }:${options.e2eCiWebServerTarget}`,
+      webServerAddress: options.e2eCiBaseUrl,
       addPlugin: options.addPlugin,
     });
+
+    if (
+      options.addPlugin ||
+      readNxJson(host).plugins?.find((p) =>
+        typeof p === 'string'
+          ? p === '@nx/playwright/plugin'
+          : p.plugin === '@nx/playwright/plugin'
+      )
+    ) {
+      let buildTarget = '^build';
+      if (hasPlugin) {
+        const matchingPlugin = await findPluginForConfigFile(
+          host,
+          buildPlugin,
+          joinPathFragments(options.appProjectRoot, buildConfigFile)
+        );
+        if (matchingPlugin && typeof matchingPlugin !== 'string') {
+          buildTarget = `^${
+            (matchingPlugin.options as any)?.buildTargetName ?? 'build'
+          }`;
+        }
+      }
+      await addE2eCiTargetDefaults(
+        host,
+        '@nx/playwright/plugin',
+        buildTarget,
+        joinPathFragments(options.e2eProjectRoot, `playwright.config.ts`)
+      );
+    }
+
     tasks.push(playwrightTask);
   }
   if (options.unitTestRunner === 'jest') {
@@ -493,32 +590,43 @@ async function normalizeOptions(
     nxJson.useInferencePlugins !== false;
   options.addPlugin ??= addPluginDefault;
 
+  let e2ePort = 4200;
+
   let e2eWebServerTarget = 'serve';
+  let e2eCiWebServerTarget =
+    options.bundler === 'vite' ? 'preview' : 'serve-static';
   if (options.addPlugin) {
     if (nxJson.plugins) {
       for (const plugin of nxJson.plugins) {
         if (
           options.bundler === 'vite' &&
           typeof plugin === 'object' &&
-          plugin.plugin === '@nx/vite/plugin' &&
-          (plugin.options as VitePluginOptions).serveTargetName
+          plugin.plugin === '@nx/vite/plugin'
         ) {
-          e2eWebServerTarget = (plugin.options as VitePluginOptions)
-            .serveTargetName;
+          e2eCiWebServerTarget =
+            (plugin.options as VitePluginOptions)?.previewTargetName ??
+            e2eCiWebServerTarget;
+
+          e2eWebServerTarget =
+            (plugin.options as VitePluginOptions)?.serveTargetName ??
+            e2eWebServerTarget;
         } else if (
           options.bundler === 'webpack' &&
           typeof plugin === 'object' &&
-          plugin.plugin === '@nx/webpack/plugin' &&
-          (plugin.options as WebpackPluginOptions).serveTargetName
+          plugin.plugin === '@nx/webpack/plugin'
         ) {
-          e2eWebServerTarget = (plugin.options as WebpackPluginOptions)
-            .serveTargetName;
+          e2eCiWebServerTarget =
+            (plugin.options as WebpackPluginOptions)?.serveStaticTargetName ??
+            e2eCiWebServerTarget;
+
+          e2eWebServerTarget =
+            (plugin.options as WebpackPluginOptions)?.serveTargetName ??
+            e2eWebServerTarget;
         }
       }
     }
   }
 
-  let e2ePort = 4200;
   if (
     nxJson.targetDefaults?.[e2eWebServerTarget] &&
     nxJson.targetDefaults?.[e2eWebServerTarget].options?.port
@@ -529,6 +637,10 @@ async function normalizeOptions(
   const e2eProjectName = `${appProjectName}-e2e`;
   const e2eProjectRoot = `${appProjectRoot}-e2e`;
   const e2eWebServerAddress = `http://localhost:${e2ePort}`;
+  const e2eCiBaseUrl =
+    options.bundler === 'vite'
+      ? 'http://localhost:4300'
+      : `http://localhost:${e2ePort}`;
 
   const npmScope = getNpmScope(host);
 
@@ -554,6 +666,8 @@ async function normalizeOptions(
     e2eProjectName,
     e2eWebServerAddress,
     e2eWebServerTarget,
+    e2eCiWebServerTarget,
+    e2eCiBaseUrl,
     e2ePort,
     parsedTags,
   };

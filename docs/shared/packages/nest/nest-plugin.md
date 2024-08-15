@@ -150,6 +150,46 @@ You can lint a library with the following command:
 nx lint my-nest-lib
 ```
 
+### Unit Test
+
+You can run unit test for an application with the following command:
+
+```shell
+nx test my-nest-app
+```
+
+You can run unit test for a library with the following command:
+
+```shell
+nx test my-nest-lib
+```
+
+## Using CLI Plugins
+
+Nest supports the use of various CLI plugins to enhance the development experience. Plugins can be configured via **transformers** property in NxWebpackPlugin.
+As an example, to set up a [Swagger plugin](https://docs.nestjs.com/openapi/cli-plugin), modify the Nest application's Webpack configuration as follows:
+
+```javascript
+const { NxWebpackPlugin } = require('@nx/webpack');
+
+module.exports = {
+  // ...
+  plugins: [
+    new NxWebpackPlugin({
+      // ...
+      transformers: [
+        {
+          name: '@nestjs/swagger/plugin',
+          options: {
+            dtoFileNameSuffix: ['.dto.ts', '.entity.ts'],
+          },
+        },
+      ],
+    }),
+  ],
+};
+```
+
 ## Deployment
 
 Ensuring a smooth and reliable deployment of a Nest.js application in a production environment requires careful planning and the right strategy. Depending on your specific needs and infrastructure, you can choose from several deployment approaches. Below are four commonly used methods:
@@ -169,20 +209,6 @@ Ensuring a smooth and reliable deployment of a Nest.js application in a producti
 {% callout type="note" title="Bundling Dependencies" %}
 Bundling dependencies is typically not recommended for Node applications.
 {% /callout %}
-
-### Unit Test
-
-You can run unit test for an application with the following command:
-
-```shell
-nx test my-nest-app
-```
-
-You can run unit test for a library with the following command:
-
-```shell
-nx test my-nest-lib
-```
 
 ## More Documentation
 

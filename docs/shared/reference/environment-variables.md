@@ -31,6 +31,8 @@ The following environment variables are ones that you can set to change the beha
 | NX_MIGRATE_CLI_VERSION            | string  | The version of Nx to use for running the `nx migrate` command. If not set, it defaults to `latest`.                                                                                                                            |
 | NX_LOAD_DOT_ENV_FILES             | boolean | If set to 'false', Nx will not load any environment files (e.g. `.local.env`, `.env.local`)                                                                                                                                    |
 | NX_NATIVE_FILE_CACHE_DIRECTORY    | string  | The cache for native `.node` files is stored under a global temp directory by default. Set this variable to use a different directory. This is interpreted as an absolute path.                                                |
+| NX_PLUGIN_NO_TIMEOUTS             | boolean | If set to `true`, plugin operations will not timeout                                                                                                                                                                           |
+| NX_SOCKET_DIRECTORY               | string  | Sets the directory that Nx will use when creating sockets to communicate with child processes. May be needed if the derived socket path is too long.                                                                           |
 
 Nx will set the following environment variables so they can be accessible within the process even outside of executors and generators.
 

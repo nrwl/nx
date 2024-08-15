@@ -380,6 +380,11 @@
     "url": "https://github.com/spaceribs/spaceribs/tree/main/packages/nx-betterer"
   },
   {
+    "name": "@nx-extensions/helm",
+    "description": "Nx plugin providing comprehensive support for Helm charts, including generation, packaging, and publishing capabilities.",
+    "url": "https://github.com/marcolongol/nx-extensions/tree/main/packages/helm"
+  },
+  {
     "name": "@nx-tools/nx-container",
     "description": "Nx plugin to build OCI containers with Docker, Podman or Kaniko.",
     "url": "https://github.com/gperdomor/nx-tools/tree/main/packages/nx-container"
@@ -488,5 +493,10 @@
     "name": "@huge-nx/conventions",
     "description": "Plugin to generate and manage Nx workspaces by adhering to established workspace conventions.",
     "url": "https://github.com/jogelin/huge-nx"
+  },
+  {
+    "name": "nx-github-pages",
+    "description": "A small Nx plugin to make deploying static projects to GitHub Pages easy.",
+    "url": "https://github.com/agentender/nx-github-pages"
   }
 ]

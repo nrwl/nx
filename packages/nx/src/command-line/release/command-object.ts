@@ -1,22 +1,28 @@
 import { Argv, CommandModule, showHelp } from 'yargs';
 import { readNxJson } from '../../config/nx-json';
+import { readParallelFromArgsAndEnv } from '../../utils/command-line-utils';
 import { logger } from '../../utils/logger';
 import {
   OutputStyle,
   RunManyOptions,
   parseCSV,
+  withAffectedOptions,
   withOutputStyleOption,
   withOverrides,
   withRunManyOptions,
 } from '../yargs-utils/shared-options';
 import { VersionData } from './utils/shared';
-import { readParallelFromArgsAndEnv } from '../../utils/command-line-utils';
 
-export interface NxReleaseArgs {
+// Implemented by every command and subcommand
+export interface BaseNxReleaseArgs {
+  verbose?: boolean;
+  printConfig?: boolean | 'debug';
+}
+
+export interface NxReleaseArgs extends BaseNxReleaseArgs {
   groups?: string[];
   projects?: string[];
   dryRun?: boolean;
-  verbose?: boolean;
 }
 
 interface GitCommitAndTagOptions {
@@ -65,8 +71,17 @@ export type PlanOptions = NxReleaseArgs & {
   message?: string;
 };
 
+export type PlanCheckOptions = BaseNxReleaseArgs & {
+  base?: string;
+  head?: string;
+  files?: string;
+  uncommitted?: boolean;
+  untracked?: boolean;
+};
+
 export type ReleaseOptions = NxReleaseArgs &
   FirstReleaseArgs & {
+    specifier?: string;
     yes?: boolean;
     skipPublish?: boolean;
   };
@@ -93,6 +108,7 @@ export const yargsReleaseCommand: CommandModule<
       .command(changelogCommand)
       .command(publishCommand)
       .command(planCommand)
+      .command(planCheckCommand)
       .demandCommand()
       // Error on typos/mistyped CLI args, there is no reason to support arbitrary unknown args for these commands
       .strictOptions()
@@ -121,6 +137,21 @@ export const yargsReleaseCommand: CommandModule<
         type: 'boolean',
         describe:
           'Prints additional information about the commands (e.g., stack traces)',
+      })
+      // NOTE: The camel case format is required for the coerce() function to be called correctly. It still supports --print-config casing.
+      .option('printConfig', {
+        type: 'string',
+        describe:
+          'Print the resolved nx release configuration that would be used for the current command and then exit',
+        coerce: (val: string) => {
+          if (val === '') {
+            return true;
+          }
+          if (val === 'false') {
+            return false;
+          }
+          return val;
+        },
       })
       .check((argv) => {
         if (argv.groups && argv.projects) {
@@ -321,6 +352,7 @@ const publishCommand: CommandModule<NxReleaseArgs, PublishOptions> = {
 const planCommand: CommandModule<NxReleaseArgs, PlanOptions> = {
   command: 'plan [bump]',
   aliases: ['pl'],
+  // TODO: Remove this when docs are added
   // Create a plan to pick a new version and generate a changelog entry.
   // Hidden for now until the feature is more stable
   describe: false,
@@ -351,6 +383,20 @@ const planCommand: CommandModule<NxReleaseArgs, PlanOptions> = {
       logger.warn(`\nNOTE: The "dryRun" flag means no changes were made.`);
     }
 
+    process.exit(result);
+  },
+};
+
+const planCheckCommand: CommandModule<NxReleaseArgs, PlanCheckOptions> = {
+  command: 'plan:check',
+  // TODO: Remove this when docs are added
+  // Create a plan to pick a new version and generate a changelog entry.
+  // Hidden for now until the feature is more stable
+  describe: false,
+  builder: (yargs) => withAffectedOptions(yargs),
+  handler: async (args) => {
+    const release = await import('./plan-check');
+    const result = await release.releasePlanCheckCLIHandler(args);
     process.exit(result);
   },
 };

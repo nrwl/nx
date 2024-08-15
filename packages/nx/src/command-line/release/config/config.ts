@@ -173,6 +173,10 @@ export async function createNxReleaseConfig(
   };
 
   const defaultFixedReleaseTagPattern = 'v{version}';
+  /**
+   * TODO: in v20, make it so that this pattern is used by default when any custom groups are used
+   */
+  const defaultFixedGroupReleaseTagPattern = '{releaseGroupName}-v{version}';
   const defaultIndependentReleaseTagPattern = '{projectName}@{version}';
 
   const workspaceProjectsRelationship =
@@ -256,7 +260,8 @@ export async function createNxReleaseConfig(
         ? defaultIndependentReleaseTagPattern
         : defaultFixedReleaseTagPattern),
     conventionalCommits: DEFAULT_CONVENTIONAL_COMMITS_CONFIG,
-    versionPlans: false,
+    versionPlans: (userConfig.versionPlans ||
+      false) as NxReleaseConfig['versionPlans'],
   };
 
   const groupProjectsRelationship =
@@ -336,7 +341,8 @@ export async function createNxReleaseConfig(
   );
 
   const rootVersionPlansConfig: NxReleaseConfig['versionPlans'] =
-    userConfig.versionPlans ?? WORKSPACE_DEFAULTS.versionPlans;
+    (userConfig.versionPlans ??
+      WORKSPACE_DEFAULTS.versionPlans) as NxReleaseConfig['versionPlans'];
 
   const rootConventionalCommitsConfig: NxReleaseConfig['conventionalCommits'] =
     deepMergeDefaults(

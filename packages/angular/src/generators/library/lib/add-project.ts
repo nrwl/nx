@@ -2,7 +2,7 @@ import type { Tree } from '@nx/devkit';
 import { addProjectConfiguration, joinPathFragments } from '@nx/devkit';
 import type { AngularProjectConfiguration } from '../../../utils/types';
 import type { NormalizedSchema } from './normalized-schema';
-import { addBuildTargetDefaults } from '@nx/devkit/src/generators/add-build-target-defaults';
+import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
 
 export function addProject(
   tree: Tree,

@@ -14,7 +14,6 @@ import {
   stripIndents,
   updateJson,
   updateProjectConfiguration,
-  visitNotIgnoredFiles,
   writeJson,
 } from '@nx/devkit';
 import { Linter, lintProjectGenerator } from '@nx/eslint';
@@ -373,7 +372,7 @@ export class E2eMigrator extends ProjectMigrator<SupportedTargets> {
     );
 
     // replace the generated source with the project source
-    visitNotIgnoredFiles(this.tree, this.project.newSourceRoot, (filePath) => {
+    this.visitFiles(this.project.newSourceRoot, (filePath) => {
       this.tree.delete(filePath);
     });
     this.moveDir(

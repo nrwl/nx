@@ -1,6 +1,6 @@
 # Nx CLI and Access Tokens
 
-The permissions and membership define what developers can access on nx.app. They don't affect what happens when you run Nx commands locally or on CI. To manage that, you need to provision access tokens. To do that, go to Workspace Options / Manage Access Tokens.
+The permissions and membership define what developers can access on [Nx Cloud](https://nx.app). They don't affect what happens when you run Nx commands locally or on CI. To manage that, you need to provision access tokens. To do that, go to Workspace Options / Manage Access Tokens.
 
 ## Types of Access Tokens
 

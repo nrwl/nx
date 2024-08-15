@@ -3,6 +3,7 @@ import { Popover, Transition } from '@headlessui/react';
 import { CheckIcon, InformationCircleIcon } from '@heroicons/react/24/outline';
 import { ButtonLink } from '@nx/nx-dev/ui-common';
 import { Fragment } from 'react';
+import Link from 'next/link';
 
 const features = [
   '300k credits included',
@@ -21,7 +22,7 @@ export function ProPlan({
   url: string;
 }) {
   return (
-    <article className="rounded-xl py-4 ring-1 ring-slate-200 xl:py-6 dark:ring-slate-800">
+    <article className="rounded-xl bg-white py-4 ring-1 ring-slate-200 xl:py-6 dark:bg-slate-950 dark:ring-slate-800">
       <header className="flex items-center justify-between gap-x-4">
         <h3
           id="pro-plan"
@@ -93,6 +94,24 @@ export function ProPlan({
             {feature}
           </li>
         ))}
+        <li className="flex gap-x-3">
+          <CheckIcon
+            className="h-6 w-5 flex-none text-blue-600 dark:text-sky-600"
+            aria-hidden="true"
+          />
+          <p>
+            <Link
+              href="/ci/troubleshooting/explain-with-ai"
+              title="Learn more about Explain with AI"
+              prefetch={false}
+              className="font-medium text-slate-700 underline dark:text-slate-300"
+            >
+              Explain with AI
+            </Link>
+            : provide detailed explanations and insights for failed task
+            outputs.
+          </p>
+        </li>
       </ul>
     </article>
   );

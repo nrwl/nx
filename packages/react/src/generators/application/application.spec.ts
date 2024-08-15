@@ -69,6 +69,78 @@ describe('app', () => {
         '@nx/react/typings/cssmodule.d.ts',
         '@nx/react/typings/image.d.ts',
       ]);
+      expect(appTree.read('my-app/vite.config.ts', 'utf-8')).toMatchSnapshot();
+    });
+
+    it('should setup cypress correctly for vite', async () => {
+      await applicationGenerator(appTree, {
+        ...schema,
+        bundler: 'vite',
+        unitTestRunner: 'vitest',
+        addPlugin: true,
+      });
+      expect(appTree.read('my-app-e2e/cypress.config.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
+            
+            import { defineConfig } from 'cypress';
+
+        export default defineConfig({
+          e2e: { ...nxE2EPreset(__filename, {"cypressDir":"src","bundler":"vite","webServerCommands":{"default":"nx run my-app:serve","production":"nx run my-app:preview"},"ciWebServerCommand":"nx run my-app:preview","ciBaseUrl":"http://localhost:4300"}),
+        baseUrl: 'http://localhost:4200' }
+        });
+        "
+      `);
+    });
+
+    it('should setup playwright correctly for vite', async () => {
+      const nxJson = readNxJson(appTree);
+      nxJson.plugins ??= [];
+      nxJson.plugins.push({
+        plugin: '@nx/vite/plugin',
+        options: {
+          buildTargetName: 'build',
+          previewTargetName: 'preview',
+        },
+      });
+      updateNxJson(appTree, nxJson);
+
+      await applicationGenerator(appTree, {
+        ...schema,
+        bundler: 'vite',
+        unitTestRunner: 'vitest',
+        e2eTestRunner: 'playwright',
+        addPlugin: true,
+      });
+      expect(
+        appTree.read('my-app-e2e/playwright.config.ts', 'utf-8')
+      ).toMatchSnapshot();
+    });
+
+    it('should use preview vite types to tsconfigs', async () => {
+      await applicationGenerator(appTree, {
+        ...schema,
+        bundler: 'vite',
+        unitTestRunner: 'vitest',
+      });
+      const tsconfigApp = readJson(appTree, 'my-app/tsconfig.app.json');
+      expect(tsconfigApp.compilerOptions.types).toEqual([
+        'node',
+        '@nx/react/typings/cssmodule.d.ts',
+        '@nx/react/typings/image.d.ts',
+        'vite/client',
+      ]);
+      const tsconfigSpec = readJson(appTree, 'my-app/tsconfig.spec.json');
+      expect(tsconfigSpec.compilerOptions.types).toEqual([
+        'vitest/globals',
+        'vitest/importMeta',
+        'vite/client',
+        'node',
+        'vitest',
+        '@nx/react/typings/cssmodule.d.ts',
+        '@nx/react/typings/image.d.ts',
+      ]);
+      expect(appTree.read('my-app/vite.config.ts', 'utf-8')).toMatchSnapshot();
     });
 
     it('should not overwrite default project if already set', async () => {
@@ -1011,6 +1083,101 @@ describe('app', () => {
         "dependsOn": [
           "^build",
         ],
+      }
+    `);
+  });
+
+  it('should add e2e-ci targetDefaults to nxJson when addPlugin=true with playwright', async () => {
+    // ARRANGE
+    const tree = createTreeWithEmptyWorkspace();
+    let nxJson = readNxJson(tree);
+    delete nxJson.targetDefaults;
+    updateNxJson(tree, nxJson);
+
+    // ACT
+    await applicationGenerator(tree, {
+      name: 'myapp',
+      addPlugin: true,
+      linter: Linter.None,
+      style: 'none',
+      e2eTestRunner: 'playwright',
+    });
+
+    // ASSERT
+    nxJson = readNxJson(tree);
+    expect(nxJson.targetDefaults).toMatchInlineSnapshot(`
+      {
+        "e2e-ci--**/*": {
+          "dependsOn": [
+            "^build",
+          ],
+        },
+      }
+    `);
+  });
+
+  it('should add e2e-ci targetDefaults to nxJson when addPlugin=true with cypress', async () => {
+    // ARRANGE
+    const tree = createTreeWithEmptyWorkspace();
+    let nxJson = readNxJson(tree);
+    delete nxJson.targetDefaults;
+    updateNxJson(tree, nxJson);
+
+    // ACT
+    await applicationGenerator(tree, {
+      name: 'myapp',
+      addPlugin: true,
+      linter: Linter.None,
+      style: 'none',
+      e2eTestRunner: 'cypress',
+    });
+
+    // ASSERT
+    nxJson = readNxJson(tree);
+    expect(nxJson.targetDefaults).toMatchInlineSnapshot(`
+      {
+        "e2e-ci--**/*": {
+          "dependsOn": [
+            "^build",
+          ],
+        },
+      }
+    `);
+  });
+
+  it('should add e2e-ci targetDefaults to nxJson when addPlugin=true with cypress and use the defined webpack buildTargetName', async () => {
+    // ARRANGE
+    const tree = createTreeWithEmptyWorkspace();
+    let nxJson = readNxJson(tree);
+    delete nxJson.targetDefaults;
+    nxJson.plugins ??= [];
+    nxJson.plugins.push({
+      plugin: '@nx/webpack/plugin',
+      options: {
+        buildTargetName: 'build-base',
+      },
+    });
+    updateNxJson(tree, nxJson);
+
+    // ACT
+    await applicationGenerator(tree, {
+      name: 'myapp',
+      addPlugin: true,
+      linter: Linter.None,
+      style: 'none',
+      bundler: 'webpack',
+      e2eTestRunner: 'cypress',
+    });
+
+    // ASSERT
+    nxJson = readNxJson(tree);
+    expect(nxJson.targetDefaults).toMatchInlineSnapshot(`
+      {
+        "e2e-ci--**/*": {
+          "dependsOn": [
+            "^build-base",
+          ],
+        },
       }
     `);
   });

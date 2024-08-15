@@ -174,7 +174,15 @@ export interface NxReleaseConventionalCommitsConfiguration {
   >;
 }
 
-interface NxReleaseConfiguration {
+export interface NxReleaseVersionPlansConfiguration {
+  /**
+   * Changes to files matching any of these optional patterns will be excluded from the affected project logic within the `nx release plan:check`
+   * command. This is useful for ignoring files that are not relevant to the versioning process, such as documentation or configuration files.
+   */
+  ignorePatternsForPlanCheck?: string[];
+}
+
+export interface NxReleaseConfiguration {
   /**
    * Shorthand for amending the projects which will be included in the implicit default release group (all projects by default).
    * @note Only one of `projects` or `groups` can be specified, the cannot be used together.
@@ -223,7 +231,7 @@ interface NxReleaseConfiguration {
        * Enables using version plans as a specifier source for versioning and
        * to determine changes for changelog generation.
        */
-      versionPlans?: boolean;
+      versionPlans?: NxReleaseVersionPlansConfiguration | boolean;
     }
   >;
   /**
@@ -295,7 +303,29 @@ interface NxReleaseConfiguration {
    * Enables using version plans as a specifier source for versioning and
    * to determine changes for changelog generation.
    */
-  versionPlans?: boolean;
+  versionPlans?: NxReleaseVersionPlansConfiguration | boolean;
+}
+
+export interface NxSyncConfiguration {
+  /**
+   * List of workspace-wide sync generators to be run (not attached to targets).
+   */
+  globalGenerators?: string[];
+
+  /**
+   * Options for the sync generators.
+   */
+  generatorOptions?: {
+    [generatorName: string]: Record<string, unknown>;
+  };
+
+  /**
+   * Whether to automatically apply sync generator changes when running tasks.
+   * If not set, the user will be prompted.
+   * If set to `true`, the user will not be prompted and the changes will be applied.
+   * If set to `false`, the user will not be prompted and the changes will not be applied.
+   */
+  applyChanges?: boolean;
 }
 
 /**
@@ -416,6 +446,12 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
   nxCloudAccessToken?: string;
 
   /**
+   * If specified Nx will use nx-cloud by default with the given cloud id.
+   * To use a different runner that accepts a cloud id, define it in {@link tasksRunnerOptions}
+   */
+  nxCloudId?: string;
+
+  /**
    * Specifies the url pointing to an instance of nx cloud. Used for remote
    * caching and displaying run links.
    */
@@ -445,6 +481,16 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
    * Set this to false to disable adding inference plugins when generating new projects
    */
   useInferencePlugins?: boolean;
+
+  /**
+   * Set this to false to disable connection to Nx Cloud
+   */
+  neverConnectToCloud?: boolean;
+
+  /**
+   * Configuration for the `nx sync` command.
+   */
+  sync?: NxSyncConfiguration;
 }
 
 export type PluginConfiguration = string | ExpandedPluginConfiguration;

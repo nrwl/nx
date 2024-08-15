@@ -1,12 +1,14 @@
 import {
   expandDependencyConfigSyntaxSugar,
+  expandWildcardTargetConfiguration,
   getDependencyConfigs,
   getOutputsForTargetAndConfiguration,
   interpolate,
   transformLegacyOutputs,
   validateOutputs,
 } from './utils';
-import { ProjectGraphProjectNode } from '../config/project-graph';
+import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
+import { ProjectConfiguration } from '../config/workspace-json-project-json';
 
 describe('utils', () => {
   function getNode(build): ProjectGraphProjectNode {
@@ -619,6 +621,137 @@ describe('utils', () => {
         },
       ]);
     });
+
+    it('should support multiple dependsOn chains', () => {
+      const graph = new GraphBuilder()
+        .addProjectConfiguration({
+          name: 'foo',
+          targets: {
+            build: {
+              dependsOn: ['build:one'],
+            },
+            'build:one': {
+              dependsOn: [{ target: 'build:two' }],
+            },
+            'build:two': {},
+          },
+        })
+        .addProjectConfiguration({
+          name: 'bar',
+          targets: {
+            build: {
+              dependsOn: ['build:one'],
+            },
+            'build:one': {
+              dependsOn: [{ target: 'build:two' }],
+            },
+            'build:two': {},
+          },
+        })
+        .build();
+
+      const getTargetDependencies = (project: string, target: string) =>
+        getDependencyConfigs(
+          {
+            project,
+            target,
+          },
+          {},
+          graph,
+          ['build', 'build:one', 'build:two']
+        );
+
+      expect(getTargetDependencies('foo', 'build')).toEqual([
+        {
+          target: 'build:one',
+          projects: ['foo'],
+        },
+      ]);
+
+      expect(getTargetDependencies('foo', 'build:one')).toEqual([
+        {
+          target: 'build:two',
+          projects: ['foo'],
+        },
+      ]);
+
+      expect(getTargetDependencies('foo', 'build:two')).toEqual([]);
+
+      expect(getTargetDependencies('bar', 'build')).toEqual([
+        {
+          target: 'build:one',
+          projects: ['bar'],
+        },
+      ]);
+
+      expect(getTargetDependencies('bar', 'build:one')).toEqual([
+        {
+          target: 'build:two',
+          projects: ['bar'],
+        },
+      ]);
+
+      expect(getTargetDependencies('bar', 'build:two')).toEqual([]);
+    });
+  });
+
+  describe('expandWildcardDependencies', () => {
+    it('should expand wildcard dependencies', () => {
+      const allTargets = ['build', 'build:test', 'build:prod', 'build:dev'];
+      const results = expandWildcardTargetConfiguration(
+        {
+          target: 'build*',
+          projects: ['a'],
+        },
+        allTargets
+      );
+
+      expect(results).toEqual([
+        {
+          target: 'build',
+          projects: ['a'],
+        },
+        {
+          target: 'build:test',
+          projects: ['a'],
+        },
+        {
+          target: 'build:prod',
+          projects: ['a'],
+        },
+        {
+          target: 'build:dev',
+          projects: ['a'],
+        },
+      ]);
+
+      const results2 = expandWildcardTargetConfiguration(
+        {
+          target: 'build*',
+          projects: ['b'],
+        },
+        allTargets
+      );
+
+      expect(results2).toEqual([
+        {
+          target: 'build',
+          projects: ['b'],
+        },
+        {
+          target: 'build:test',
+          projects: ['b'],
+        },
+        {
+          target: 'build:prod',
+          projects: ['b'],
+        },
+        {
+          target: 'build:dev',
+          projects: ['b'],
+        },
+      ]);
+    });
   });
 
   describe('validateOutputs', () => {
@@ -641,3 +774,28 @@ describe('utils', () => {
     });
   });
 });
+
+class GraphBuilder {
+  nodes: Record<string, ProjectGraphProjectNode> = {};
+
+  addProjectConfiguration(
+    project: Omit<ProjectConfiguration, 'root'>,
+    type?: ProjectGraph['nodes'][string]['type']
+  ) {
+    const t = type ?? 'lib';
+    this.nodes[project.name] = {
+      name: project.name,
+      type: t,
+      data: { ...project, root: `${t}/${project.name}` },
+    };
+    return this;
+  }
+
+  build(): ProjectGraph {
+    return {
+      nodes: this.nodes,
+      dependencies: {},
+      externalNodes: {},
+    };
+  }
+}

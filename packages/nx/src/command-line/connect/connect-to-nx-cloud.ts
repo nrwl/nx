@@ -1,8 +1,11 @@
 import { output } from '../../utils/output';
 import { readNxJson } from '../../config/configuration';
 import { FsTree, flushChanges } from '../../generators/tree';
-import { connectToNxCloud } from '../../nx-cloud/generators/connect-to-nx-cloud/connect-to-nx-cloud';
-import { shortenedCloudUrl } from '../../nx-cloud/utilities/url-shorten';
+import {
+  connectToNxCloud,
+  ConnectToNxCloudOptions,
+} from '../../nx-cloud/generators/connect-to-nx-cloud/connect-to-nx-cloud';
+import { createNxCloudOnboardingURL } from '../../nx-cloud/utilities/url-shorten';
 import { isNxCloudUsed } from '../../utils/nx-cloud-utils';
 import { runNxSync } from '../../utils/child-process';
 import { NxJsonConfiguration } from '../../config/nx-json';
@@ -16,6 +19,8 @@ import {
 import { nxVersion } from '../../utils/versions';
 import { workspaceRoot } from '../../utils/workspace-root';
 import chalk = require('chalk');
+import * as ora from 'ora';
+import * as open from 'open';
 
 export function onlyDefaultRunnerIsUsed(nxJson: NxJsonConfiguration) {
   const defaultRunner = nxJson.tasksRunnerOptions?.default?.runner;
@@ -24,7 +29,10 @@ export function onlyDefaultRunnerIsUsed(nxJson: NxJsonConfiguration) {
     // No tasks runner options OR no default runner defined:
     // - If access token defined, uses cloud runner
     // - If no access token defined, uses default
-    return !(nxJson.nxCloudAccessToken ?? process.env.NX_CLOUD_ACCESS_TOKEN);
+    return (
+      !(nxJson.nxCloudAccessToken ?? process.env.NX_CLOUD_ACCESS_TOKEN) &&
+      !nxJson.nxCloudId
+    );
   }
 
   return defaultRunner === 'nx/tasks-runners/default';
@@ -50,10 +58,25 @@ export async function connectToNxCloudIfExplicitlyAsked(
   }
 }
 
+export async function connectWorkspaceToCloud(
+  options: ConnectToNxCloudOptions,
+  directory = workspaceRoot
+) {
+  const tree = new FsTree(directory, false, 'connect-to-nx-cloud');
+  const accessToken = await connectToNxCloud(tree, options);
+  tree.lock();
+  flushChanges(directory, tree.listChanges());
+  return accessToken;
+}
+
 export async function connectToNxCloudCommand(
   command?: string
 ): Promise<boolean> {
   const nxJson = readNxJson();
+
+  const installationSource = process.env.NX_CONSOLE
+    ? 'nx-console'
+    : 'nx-connect';
 
   if (isNxCloudUsed(nxJson)) {
     const token =
@@ -63,7 +86,10 @@ export async function connectToNxCloudCommand(
         `Unable to authenticate. Either define accessToken in nx.json or set the NX_CLOUD_ACCESS_TOKEN env variable.`
       );
     }
-    const connectCloudUrl = await shortenedCloudUrl('nx-connect', token);
+    const connectCloudUrl = await createNxCloudOnboardingURL(
+      installationSource,
+      token
+    );
     output.log({
       title: '✔ This workspace already has Nx Cloud set up',
       bodyLines: [
@@ -76,16 +102,35 @@ export async function connectToNxCloudCommand(
 
     return false;
   }
-
-  const tree = new FsTree(workspaceRoot, false, 'connect-to-nx-cloud');
-  const callback = await connectToNxCloud(tree, {
-    installationSource: command ?? 'nx-connect',
+  const token = await connectWorkspaceToCloud({
+    installationSource: command ?? installationSource,
   });
-  tree.lock();
-  flushChanges(workspaceRoot, tree.listChanges());
-  await callback();
+
+  const connectCloudUrl = await createNxCloudOnboardingURL('nx-connect', token);
+  try {
+    const cloudConnectSpinner = ora(
+      `Opening Nx Cloud ${connectCloudUrl} in your browser to connect your workspace.`
+    ).start();
+    await sleep(2000);
+    await open(connectCloudUrl);
+    cloudConnectSpinner.succeed();
+  } catch (e) {
+    output.note({
+      title: `Your Nx Cloud workspace is ready.`,
+      bodyLines: [
+        `To claim it, connect it to your Nx Cloud account:`,
+        `- Go to the following URL to connect your workspace to Nx Cloud:`,
+        '',
+        `${connectCloudUrl}`,
+      ],
+    });
+  }
 
   return true;
+}
+
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 export async function connectExistingRepoToNxCloudPrompt(

@@ -514,11 +514,11 @@ function buildEslintTargets(
 
 function normalizeOptions(options: EslintPluginOptions): EslintPluginOptions {
   const normalizedOptions: EslintPluginOptions = {
-    targetName: options.targetName ?? 'lint',
+    targetName: options?.targetName ?? 'lint',
   };
 
   // Normalize user input for extensions (strip leading . characters)
-  if (Array.isArray(options.extensions)) {
+  if (Array.isArray(options?.extensions)) {
     normalizedOptions.extensions = options.extensions.map((f) =>
       f.replace(/^\.+/, '')
     );

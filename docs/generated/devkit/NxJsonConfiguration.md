@@ -28,13 +28,16 @@ Nx.json configuration
 - [implicitDependencies](../../devkit/documents/NxJsonConfiguration#implicitdependencies): ImplicitDependencyEntry<T>
 - [installation](../../devkit/documents/NxJsonConfiguration#installation): NxInstallationConfiguration
 - [namedInputs](../../devkit/documents/NxJsonConfiguration#namedinputs): Object
+- [neverConnectToCloud](../../devkit/documents/NxJsonConfiguration#neverconnecttocloud): boolean
 - [nxCloudAccessToken](../../devkit/documents/NxJsonConfiguration#nxcloudaccesstoken): string
 - [nxCloudEncryptionKey](../../devkit/documents/NxJsonConfiguration#nxcloudencryptionkey): string
+- [nxCloudId](../../devkit/documents/NxJsonConfiguration#nxcloudid): string
 - [nxCloudUrl](../../devkit/documents/NxJsonConfiguration#nxcloudurl): string
 - [parallel](../../devkit/documents/NxJsonConfiguration#parallel): number
 - [plugins](../../devkit/documents/NxJsonConfiguration#plugins): PluginConfiguration[]
 - [pluginsConfig](../../devkit/documents/NxJsonConfiguration#pluginsconfig): Record<string, Record<string, unknown>>
 - [release](../../devkit/documents/NxJsonConfiguration#release): NxReleaseConfiguration
+- [sync](../../devkit/documents/NxJsonConfiguration#sync): NxSyncConfiguration
 - [targetDefaults](../../devkit/documents/NxJsonConfiguration#targetdefaults): TargetDefaults
 - [tasksRunnerOptions](../../devkit/documents/NxJsonConfiguration#tasksrunneroptions): Object
 - [useDaemonProcess](../../devkit/documents/NxJsonConfiguration#usedaemonprocess): boolean
@@ -163,6 +166,14 @@ Named inputs targets can refer to reduce duplication
 
 ---
 
+### neverConnectToCloud
+
+• `Optional` **neverConnectToCloud**: `boolean`
+
+Set this to false to disable connection to Nx Cloud
+
+---
+
 ### nxCloudAccessToken
 
 • `Optional` **nxCloudAccessToken**: `string`
@@ -177,6 +188,15 @@ To use a different runner that accepts an access token, define it in [tasksRunne
 • `Optional` **nxCloudEncryptionKey**: `string`
 
 Specifies the encryption key used to encrypt artifacts data before sending it to nx cloud.
+
+---
+
+### nxCloudId
+
+• `Optional` **nxCloudId**: `string`
+
+If specified Nx will use nx-cloud by default with the given cloud id.
+To use a different runner that accepts a cloud id, define it in [tasksRunnerOptions](../../devkit/documents/NxJsonConfiguration#tasksrunneroptions)
 
 ---
 
@@ -218,6 +238,14 @@ Configuration for Nx Plugins
 • `Optional` **release**: `NxReleaseConfiguration`
 
 Configuration for `nx release` (versioning and publishing of applications and libraries)
+
+---
+
+### sync
+
+• `Optional` **sync**: `NxSyncConfiguration`
+
+Configuration for the `nx sync` command.
 
 ---
 

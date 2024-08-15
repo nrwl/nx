@@ -20,7 +20,7 @@ import { hasNxJson, NxJsonConfiguration } from '../../config/nx-json';
 import { readNxJson } from '../../config/configuration';
 import { PromisedBasedQueue } from '../../utils/promised-based-queue';
 import { DaemonSocketMessenger, Message } from './daemon-socket-messenger';
-import { safelyCleanUpExistingProcess } from '../cache';
+import { waitForDaemonToExitAndCleanupProcessJson } from '../cache';
 import { Hash } from '../../hasher/task-hasher';
 import { Task, TaskGraph } from '../../config/task-graph';
 import { ConfigurationSourceMaps } from '../../project-graph/utils/project-configuration-utils';
@@ -48,6 +48,24 @@ import {
   HandleGetTaskHistoryForHashesMessage,
   HandleWriteTaskRunsToHistoryMessage,
 } from '../message-types/task-history';
+import { FORCE_SHUTDOWN } from '../message-types/force-shutdown';
+import {
+  GET_SYNC_GENERATOR_CHANGES,
+  type HandleGetSyncGeneratorChangesMessage,
+} from '../message-types/get-sync-generator-changes';
+import type { SyncGeneratorChangesResult } from '../../utils/sync-generators';
+import {
+  GET_REGISTERED_SYNC_GENERATORS,
+  type HandleGetRegisteredSyncGeneratorsMessage,
+} from '../message-types/get-registered-sync-generators';
+import {
+  UPDATE_WORKSPACE_CONTEXT,
+  type HandleUpdateWorkspaceContextMessage,
+} from '../message-types/update-workspace-context';
+import {
+  FLUSH_SYNC_GENERATOR_CHANGES_TO_DISK,
+  type HandleFlushSyncGeneratorChangesToDiskMessage,
+} from '../message-types/flush-sync-generator-changes-to-disk';
 
 const DAEMON_ENV_SETTINGS = {
   NX_PROJECT_GLOB_CACHE: 'false',
@@ -342,6 +360,45 @@ export class DaemonClient {
     return this.sendMessageToDaemon(message);
   }
 
+  getSyncGeneratorChanges(
+    generators: string[]
+  ): Promise<SyncGeneratorChangesResult[]> {
+    const message: HandleGetSyncGeneratorChangesMessage = {
+      type: GET_SYNC_GENERATOR_CHANGES,
+      generators,
+    };
+    return this.sendToDaemonViaQueue(message);
+  }
+
+  flushSyncGeneratorChangesToDisk(generators: string[]): Promise<void> {
+    const message: HandleFlushSyncGeneratorChangesToDiskMessage = {
+      type: FLUSH_SYNC_GENERATOR_CHANGES_TO_DISK,
+      generators,
+    };
+    return this.sendToDaemonViaQueue(message);
+  }
+
+  getRegisteredSyncGenerators(): Promise<string[]> {
+    const message: HandleGetRegisteredSyncGeneratorsMessage = {
+      type: GET_REGISTERED_SYNC_GENERATORS,
+    };
+    return this.sendToDaemonViaQueue(message);
+  }
+
+  updateWorkspaceContext(
+    createdFiles: string[],
+    updatedFiles: string[],
+    deletedFiles: string[]
+  ): Promise<void> {
+    const message: HandleUpdateWorkspaceContextMessage = {
+      type: UPDATE_WORKSPACE_CONTEXT,
+      createdFiles,
+      updatedFiles,
+      deletedFiles,
+    };
+    return this.sendToDaemonViaQueue(message);
+  }
+
   async isServerAvailable(): Promise<boolean> {
     return new Promise((resolve) => {
       try {
@@ -439,7 +496,10 @@ export class DaemonClient {
     } else if (this._daemonStatus == DaemonStatus.CONNECTING) {
       await this._waitForDaemonReady;
     }
-
+    // An open promise isn't enough to keep the event loop
+    // alive, so we set a timeout here and clear it when we hear
+    // back
+    const keepAlive = setTimeout(() => {}, 10 * 60 * 1000);
     return new Promise((resolve, reject) => {
       performance.mark('sendMessageToDaemon-start');
 
@@ -448,6 +508,8 @@ export class DaemonClient {
       this.currentReject = reject;
 
       this.socketMessenger.sendMessage(message);
+    }).finally(() => {
+      clearTimeout(keepAlive);
     });
   }
 
@@ -541,7 +603,8 @@ export class DaemonClient {
 
   async stop(): Promise<void> {
     try {
-      await safelyCleanUpExistingProcess();
+      await this.sendMessageToDaemon({ type: FORCE_SHUTDOWN });
+      await waitForDaemonToExitAndCleanupProcessJson();
     } catch (err) {
       output.error({
         title:

@@ -4,6 +4,7 @@ import {
   ensurePackage,
   getPackageManagerCommand,
   joinPathFragments,
+  readNxJson,
 } from '@nx/devkit';
 import { webStaticServeGenerator } from '@nx/web';
 
@@ -11,24 +12,25 @@ import { nxVersion } from '../../../utils/versions';
 import { hasWebpackPlugin } from '../../../utils/has-webpack-plugin';
 import { hasVitePlugin } from '../../../utils/has-vite-plugin';
 import { NormalizedSchema } from '../schema';
+import { findPluginForConfigFile } from '@nx/devkit/src/utils/find-plugin-for-config-file';
+import { addE2eCiTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
 
 export async function addE2e(
   tree: Tree,
   options: NormalizedSchema
 ): Promise<GeneratorCallback> {
+  const hasNxBuildPlugin =
+    (options.bundler === 'webpack' && hasWebpackPlugin(tree)) ||
+    (options.bundler === 'vite' && hasVitePlugin(tree));
+  if (!hasNxBuildPlugin) {
+    await webStaticServeGenerator(tree, {
+      buildTarget: `${options.projectName}:build`,
+      targetName: 'serve-static',
+      spa: true,
+    });
+  }
   switch (options.e2eTestRunner) {
     case 'cypress': {
-      const hasNxBuildPlugin =
-        (options.bundler === 'webpack' && hasWebpackPlugin(tree)) ||
-        (options.bundler === 'vite' && hasVitePlugin(tree));
-      if (!hasNxBuildPlugin) {
-        await webStaticServeGenerator(tree, {
-          buildTarget: `${options.projectName}:build`,
-          targetName: 'serve-static',
-          spa: true,
-        });
-      }
-
       const { configurationGenerator } = ensurePackage<
         typeof import('@nx/cypress')
       >('@nx/cypress', nxVersion);
@@ -42,7 +44,7 @@ export async function addE2e(
         tags: [],
       });
 
-      return await configurationGenerator(tree, {
+      const e2eTask = await configurationGenerator(tree, {
         ...options,
         project: options.e2eProjectName,
         directory: 'src',
@@ -60,9 +62,51 @@ export async function addE2e(
             }
           : undefined,
         ciWebServerCommand: hasNxBuildPlugin
-          ? `nx run ${options.projectName}:serve-static`
+          ? `nx run ${options.projectName}:${options.e2eCiWebServerTarget}`
           : undefined,
+        ciBaseUrl:
+          options.bundler === 'vite' ? options.e2eCiBaseUrl : undefined,
       });
+
+      if (
+        options.addPlugin ||
+        readNxJson(tree).plugins?.find((p) =>
+          typeof p === 'string'
+            ? p === '@nx/cypress/plugin'
+            : p.plugin === '@nx/cypress/plugin'
+        )
+      ) {
+        let buildTarget = '^build';
+        if (hasNxBuildPlugin) {
+          const configFile =
+            options.bundler === 'webpack'
+              ? 'webpack.config.js'
+              : options.bundler === 'vite'
+              ? `vite.config.${options.js ? 'js' : 'ts'}`
+              : 'webpack.config.js';
+          const matchingPlugin = await findPluginForConfigFile(
+            tree,
+            `@nx/${options.bundler}/plugin`,
+            joinPathFragments(options.appProjectRoot, configFile)
+          );
+          if (matchingPlugin && typeof matchingPlugin !== 'string') {
+            buildTarget = `^${
+              (matchingPlugin.options as any)?.buildTargetName ?? 'build'
+            }`;
+          }
+        }
+        await addE2eCiTargetDefaults(
+          tree,
+          '@nx/cypress/plugin',
+          buildTarget,
+          joinPathFragments(
+            options.e2eProjectRoot,
+            `cypress.config.${options.js ? 'js' : 'ts'}`
+          )
+        );
+      }
+
+      return e2eTask;
     }
     case 'playwright': {
       const { configurationGenerator } = ensurePackage<
@@ -75,7 +119,7 @@ export async function addE2e(
         targets: {},
         implicitDependencies: [options.projectName],
       });
-      return configurationGenerator(tree, {
+      const e2eTask = await configurationGenerator(tree, {
         project: options.e2eProjectName,
         skipFormat: true,
         skipPackageJson: options.skipPackageJson,
@@ -83,13 +127,50 @@ export async function addE2e(
         js: false,
         linter: options.linter,
         setParserOptionsProject: options.setParserOptionsProject,
-        webServerCommand: `${getPackageManagerCommand().exec} nx ${
-          options.e2eWebServerTarget
-        } ${options.name}`,
-        webServerAddress: options.e2eWebServerAddress,
+        webServerCommand: `${getPackageManagerCommand().exec} nx run ${
+          options.projectName
+        }:${options.e2eCiWebServerTarget}`,
+        webServerAddress: options.e2eCiBaseUrl,
         rootProject: options.rootProject,
         addPlugin: options.addPlugin,
       });
+
+      if (
+        options.addPlugin ||
+        readNxJson(tree).plugins?.find((p) =>
+          typeof p === 'string'
+            ? p === '@nx/playwright/plugin'
+            : p.plugin === '@nx/playwright/plugin'
+        )
+      ) {
+        let buildTarget = '^build';
+        if (hasNxBuildPlugin) {
+          const configFile =
+            options.bundler === 'webpack'
+              ? 'webpack.config.js'
+              : options.bundler === 'vite'
+              ? `vite.config.${options.js ? 'js' : 'ts'}`
+              : 'webpack.config.js';
+          const matchingPlugin = await findPluginForConfigFile(
+            tree,
+            `@nx/${options.bundler}/plugin`,
+            joinPathFragments(options.appProjectRoot, configFile)
+          );
+          if (matchingPlugin && typeof matchingPlugin !== 'string') {
+            buildTarget = `^${
+              (matchingPlugin.options as any)?.buildTargetName ?? 'build'
+            }`;
+          }
+        }
+        await addE2eCiTargetDefaults(
+          tree,
+          '@nx/playwright/plugin',
+          buildTarget,
+          joinPathFragments(options.e2eProjectRoot, `playwright.config.ts`)
+        );
+      }
+
+      return e2eTask;
     }
     case 'none':
     default:

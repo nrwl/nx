@@ -1,5 +1,10 @@
 # Enterprise Release Notes
 
+### 2406.29.1.patch1
+
+- Fix an issue with specifying custom AWS credentials in Minio instances
+- Fix an issue with removing pending invites
+
 ### 2406.29.1
 
 ##### Full terminal outputs in the web app
@@ -29,6 +34,10 @@ We now have full support for BitBucket Data Center (self-hosted):
 - easier workspace setup experience for new customers
 - the CIPE visualisation has been updated (elapsed task time)
 - general web app performance improvements
+
+##### Breaking changes
+
+If you are using DTE, you will now need to pass the `--distribute-on="manual"` flag to your `npx nx-cloud start-ci-run` commands.
 
 ### 2405.02.15
 

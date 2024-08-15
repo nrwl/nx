@@ -186,8 +186,15 @@
                 "type": "string"
               },
               "versionPlans": {
-                "type": "boolean",
-                "description": "Enables using version plans as a specifier source for versioning and to determine changes for changelog generation."
+                "oneOf": [
+                  {
+                    "$ref": "#/definitions/NxReleaseVersionPlansConfiguration"
+                  },
+                  {
+                    "type": "boolean",
+                    "description": "Enables using version plans as a specifier source for versioning and to determine changes for changelog generation."
+                  }
+                ]
               }
             },
             "required": ["projects"]
@@ -239,13 +246,45 @@
           "$ref": "#/definitions/NxReleaseVersionConfiguration"
         },
         "versionPlans": {
-          "type": "boolean",
-          "description": "Enables using version plans as a specifier source for versioning and to determine changes for changelog generation."
+          "oneOf": [
+            {
+              "$ref": "#/definitions/NxReleaseVersionPlansConfiguration"
+            },
+            {
+              "type": "boolean",
+              "description": "Enables using version plans as a specifier source for versioning and to determine changes for changelog generation."
+            }
+          ]
         },
         "releaseTagPattern": {
           "type": "string"
         }
       }
+    },
+    "sync": {
+      "type": "object",
+      "description": "Configuration for the `nx sync` command",
+      "properties": {
+        "globalGenerators": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "List of workspace-wide sync generators to be run (not attached to targets)"
+        },
+        "generatorOptions": {
+          "type": "object",
+          "description": "Options for the sync generators.",
+          "additionalProperties": {
+            "type": "object"
+          }
+        },
+        "applyChanges": {
+          "type": "boolean",
+          "description": "Whether to automatically apply sync generator changes when running tasks. If not set, the user will be prompted. If set to `true`, the user will not be prompted and the changes will be applied. If set to `false`, the user will not be prompted and the changes will not be applied."
+        }
+      },
+      "additionalProperties": false
     }
   },
   "definitions": {
@@ -395,6 +434,9 @@
           "description": "Default options for the runner.",
           "properties": {
             "accessToken": {
+              "type": "string"
+            },
+            "nxCloudId": {
               "type": "string"
             },
             "captureStderr": {
@@ -667,6 +709,18 @@
         },
         "renderOptions": {
           "$ref": "#/definitions/ChangelogRenderOptions"
+        }
+      }
+    },
+    "NxReleaseVersionPlansConfiguration": {
+      "type": "object",
+      "properties": {
+        "ignorePatternsForPlanCheck": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Changes to files matching any of these optional patterns will be excluded from the affected project logic within the `nx release plan:check` command. This is useful for ignoring files that are not relevant to the versioning process, such as documentation or configuration files."
         }
       }
     },

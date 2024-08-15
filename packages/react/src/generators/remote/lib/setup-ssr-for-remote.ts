@@ -30,6 +30,7 @@ export async function setupSsrForRemote(
     project.root,
     {
       ...options,
+      port: Number(options?.devServerPort) || 4200,
       appName,
       tmpl: '',
       browserBuildOutputPath: project.targets.build.options.outputPath,

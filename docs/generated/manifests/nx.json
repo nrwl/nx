@@ -889,6 +889,17 @@
             "tags": ["module-federation", "angular", "react"]
           },
           {
+            "id": "nx-module-federation-technical-overview",
+            "name": "Nx Module Federation Technical Overview",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/concepts/module-federation/nx-module-federation-technical-overview",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/concepts/module-federation/nx-module-federation-technical-overview",
+            "tags": ["module-federation", "angular", "react"]
+          },
+          {
             "id": "faster-builds-with-module-federation",
             "name": "Faster Builds with Module Federation",
             "description": "",
@@ -1160,6 +1171,17 @@
         "tags": ["module-federation", "angular", "react"]
       },
       {
+        "id": "nx-module-federation-technical-overview",
+        "name": "Nx Module Federation Technical Overview",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/concepts/module-federation/nx-module-federation-technical-overview",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/concepts/module-federation/nx-module-federation-technical-overview",
+        "tags": ["module-federation", "angular", "react"]
+      },
+      {
         "id": "faster-builds-with-module-federation",
         "name": "Faster Builds with Module Federation",
         "description": "",
@@ -1206,6 +1228,17 @@
     "itemList": [],
     "isExternal": false,
     "path": "/concepts/module-federation/module-federation-and-nx",
+    "tags": ["module-federation", "angular", "react"]
+  },
+  "/concepts/module-federation/nx-module-federation-technical-overview": {
+    "id": "nx-module-federation-technical-overview",
+    "name": "Nx Module Federation Technical Overview",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/concepts/module-federation/nx-module-federation-technical-overview",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/concepts/module-federation/nx-module-federation-technical-overview",
     "tags": ["module-federation", "angular", "react"]
   },
   "/concepts/module-federation/faster-builds-with-module-federation": {
@@ -1489,17 +1522,6 @@
             "tags": ["run-tasks"]
           },
           {
-            "id": "change-cache-location",
-            "name": "Change Cache Location",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/recipes/running-tasks/change-cache-location",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/running-tasks/change-cache-location",
-            "tags": []
-          },
-          {
             "id": "run-commands-executor",
             "name": "Run Custom Commands",
             "description": "",
@@ -1564,6 +1586,39 @@
             "isExternal": false,
             "path": "/recipes/running-tasks/reduce-repetitive-configuration",
             "tags": []
+          },
+          {
+            "id": "change-cache-location",
+            "name": "Change Cache Location",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/recipes/running-tasks/change-cache-location",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/running-tasks/change-cache-location",
+            "tags": []
+          },
+          {
+            "id": "skipping-cache",
+            "name": "Skip Task Caching",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/recipes/running-tasks/skipping-cache",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/running-tasks/skipping-cache",
+            "tags": []
+          },
+          {
+            "id": "convert-to-inferred",
+            "name": "Migrate to Inferred Tasks (Project Crystal)",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/recipes/running-tasks/convert-to-inferred",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/running-tasks/convert-to-inferred",
+            "tags": ["inferred-tasks", "automate-updating-dependencies"]
           }
         ],
         "isExternal": false,
@@ -2627,6 +2682,28 @@
             "tags": ["nx-release"]
           },
           {
+            "id": "customize-conventional-commit-types",
+            "name": "Customize Conventional Commit Types",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/recipes/nx-release/customize-conventional-commit-types",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/nx-release/customize-conventional-commit-types",
+            "tags": ["nx-release"]
+          },
+          {
+            "id": "file-based-versioning-version-plans",
+            "name": "File Based Versioning (Version Plans)",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/recipes/nx-release/file-based-versioning-version-plans",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/nx-release/file-based-versioning-version-plans",
+            "tags": ["nx-release"]
+          },
+          {
             "id": "configure-custom-registries",
             "name": "Configure Custom Registries",
             "description": "",
@@ -2679,17 +2756,6 @@
             "itemList": [],
             "isExternal": false,
             "path": "/recipes/nx-release/update-local-registry-setup",
-            "tags": ["nx-release"]
-          },
-          {
-            "id": "customize-conventional-commit-types",
-            "name": "Customize Conventional Commit Types",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/recipes/nx-release/customize-conventional-commit-types",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/nx-release/customize-conventional-commit-types",
             "tags": ["nx-release"]
           },
           {
@@ -2844,17 +2910,6 @@
         "tags": ["run-tasks"]
       },
       {
-        "id": "change-cache-location",
-        "name": "Change Cache Location",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/recipes/running-tasks/change-cache-location",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/running-tasks/change-cache-location",
-        "tags": []
-      },
-      {
         "id": "run-commands-executor",
         "name": "Run Custom Commands",
         "description": "",
@@ -2919,6 +2974,39 @@
         "isExternal": false,
         "path": "/recipes/running-tasks/reduce-repetitive-configuration",
         "tags": []
+      },
+      {
+        "id": "change-cache-location",
+        "name": "Change Cache Location",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/running-tasks/change-cache-location",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/running-tasks/change-cache-location",
+        "tags": []
+      },
+      {
+        "id": "skipping-cache",
+        "name": "Skip Task Caching",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/running-tasks/skipping-cache",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/running-tasks/skipping-cache",
+        "tags": []
+      },
+      {
+        "id": "convert-to-inferred",
+        "name": "Migrate to Inferred Tasks (Project Crystal)",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/running-tasks/convert-to-inferred",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/running-tasks/convert-to-inferred",
+        "tags": ["inferred-tasks", "automate-updating-dependencies"]
       }
     ],
     "isExternal": false,
@@ -2957,17 +3045,6 @@
     "isExternal": false,
     "path": "/recipes/running-tasks/defining-task-pipeline",
     "tags": ["run-tasks"]
-  },
-  "/recipes/running-tasks/change-cache-location": {
-    "id": "change-cache-location",
-    "name": "Change Cache Location",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/recipes/running-tasks/change-cache-location",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/running-tasks/change-cache-location",
-    "tags": []
   },
   "/recipes/running-tasks/run-commands-executor": {
     "id": "run-commands-executor",
@@ -3034,6 +3111,39 @@
     "isExternal": false,
     "path": "/recipes/running-tasks/reduce-repetitive-configuration",
     "tags": []
+  },
+  "/recipes/running-tasks/change-cache-location": {
+    "id": "change-cache-location",
+    "name": "Change Cache Location",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/running-tasks/change-cache-location",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/running-tasks/change-cache-location",
+    "tags": []
+  },
+  "/recipes/running-tasks/skipping-cache": {
+    "id": "skipping-cache",
+    "name": "Skip Task Caching",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/running-tasks/skipping-cache",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/running-tasks/skipping-cache",
+    "tags": []
+  },
+  "/recipes/running-tasks/convert-to-inferred": {
+    "id": "convert-to-inferred",
+    "name": "Migrate to Inferred Tasks (Project Crystal)",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/running-tasks/convert-to-inferred",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/running-tasks/convert-to-inferred",
+    "tags": ["inferred-tasks", "automate-updating-dependencies"]
   },
   "/recipes/adopting-nx": {
     "id": "adopting-nx",
@@ -4962,6 +5072,28 @@
         "tags": ["nx-release"]
       },
       {
+        "id": "customize-conventional-commit-types",
+        "name": "Customize Conventional Commit Types",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/nx-release/customize-conventional-commit-types",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/nx-release/customize-conventional-commit-types",
+        "tags": ["nx-release"]
+      },
+      {
+        "id": "file-based-versioning-version-plans",
+        "name": "File Based Versioning (Version Plans)",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/nx-release/file-based-versioning-version-plans",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/nx-release/file-based-versioning-version-plans",
+        "tags": ["nx-release"]
+      },
+      {
         "id": "configure-custom-registries",
         "name": "Configure Custom Registries",
         "description": "",
@@ -5014,17 +5146,6 @@
         "itemList": [],
         "isExternal": false,
         "path": "/recipes/nx-release/update-local-registry-setup",
-        "tags": ["nx-release"]
-      },
-      {
-        "id": "customize-conventional-commit-types",
-        "name": "Customize Conventional Commit Types",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/recipes/nx-release/customize-conventional-commit-types",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/nx-release/customize-conventional-commit-types",
         "tags": ["nx-release"]
       },
       {
@@ -5087,6 +5208,28 @@
     "path": "/recipes/nx-release/automatically-version-with-conventional-commits",
     "tags": ["nx-release"]
   },
+  "/recipes/nx-release/customize-conventional-commit-types": {
+    "id": "customize-conventional-commit-types",
+    "name": "Customize Conventional Commit Types",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/nx-release/customize-conventional-commit-types",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/nx-release/customize-conventional-commit-types",
+    "tags": ["nx-release"]
+  },
+  "/recipes/nx-release/file-based-versioning-version-plans": {
+    "id": "file-based-versioning-version-plans",
+    "name": "File Based Versioning (Version Plans)",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/nx-release/file-based-versioning-version-plans",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/nx-release/file-based-versioning-version-plans",
+    "tags": ["nx-release"]
+  },
   "/recipes/nx-release/configure-custom-registries": {
     "id": "configure-custom-registries",
     "name": "Configure Custom Registries",
@@ -5140,17 +5283,6 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/nx-release/update-local-registry-setup",
-    "tags": ["nx-release"]
-  },
-  "/recipes/nx-release/customize-conventional-commit-types": {
-    "id": "customize-conventional-commit-types",
-    "name": "Customize Conventional Commit Types",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/recipes/nx-release/customize-conventional-commit-types",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/nx-release/customize-conventional-commit-types",
     "tags": ["nx-release"]
   },
   "/recipes/nx-release/configure-changelog-format": {

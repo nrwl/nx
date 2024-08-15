@@ -36,6 +36,7 @@ export interface NxArgs {
   nxIgnoreCycles?: boolean;
   type?: string;
   batch?: boolean;
+  excludeTaskDependencies?: boolean;
 }
 
 export function createOverrides(__overrides_unparsed__: string[] = []) {
@@ -53,6 +54,10 @@ export function createOverrides(__overrides_unparsed__: string[] = []) {
 
   overrides.__overrides_unparsed__ = __overrides_unparsed__;
   return overrides;
+}
+
+export function getBaseRef(nxJson: NxJsonConfiguration) {
+  return nxJson.defaultBase ?? nxJson.affected?.defaultBase ?? 'main';
 }
 
 export function splitArgsIntoNxArgsAndOverrides(
@@ -119,7 +124,7 @@ export function splitArgsIntoNxArgsAndOverrides(
       });
     }
 
-    // Allow setting base and head via environment variables (lower priority then direct command arguments)
+    // Allow setting base and head via environment variables (lower priority than direct command arguments)
     if (!nxArgs.base && process.env.NX_BASE) {
       nxArgs.base = process.env.NX_BASE;
       if (options.printWarnings) {
@@ -142,8 +147,7 @@ export function splitArgsIntoNxArgsAndOverrides(
     }
 
     if (!nxArgs.base) {
-      nxArgs.base =
-        nxJson.defaultBase ?? nxJson.affected?.defaultBase ?? 'main';
+      nxArgs.base = getBaseRef(nxJson);
 
       // No user-provided arguments to set the affected criteria, so inform the user of the defaults being used
       if (

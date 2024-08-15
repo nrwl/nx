@@ -38,33 +38,40 @@ export async function writeDaemonJsonProcessCache(
   await writeJson(serverProcessJsonPath, daemonJson);
 }
 
+export async function waitForDaemonToExitAndCleanupProcessJson(): Promise<void> {
+  const daemonProcessJson = await readDaemonProcessJsonCache();
+  if (daemonProcessJson && daemonProcessJson.processId) {
+    await new Promise<void>((resolve, reject) => {
+      let count = 0;
+      const interval = setInterval(() => {
+        try {
+          // sending a signal 0 to a process checks if the process is running instead of actually killing it
+          process.kill(daemonProcessJson.processId, 0);
+        } catch (e) {
+          clearInterval(interval);
+          resolve();
+        }
+        if ((count += 1) > 200) {
+          clearInterval(interval);
+          reject(
+            `Daemon process ${daemonProcessJson.processId} didn't exit after 2 seconds.`
+          );
+        }
+      }, 10);
+    });
+    deleteDaemonJsonProcessCache();
+  }
+}
+
 export async function safelyCleanUpExistingProcess(): Promise<void> {
   const daemonProcessJson = await readDaemonProcessJsonCache();
   if (daemonProcessJson && daemonProcessJson.processId) {
     try {
       process.kill(daemonProcessJson.processId);
       // we wait for the process to actually shut down before returning
-      await new Promise<void>((resolve, reject) => {
-        let count = 0;
-        const interval = setInterval(() => {
-          try {
-            // sending a signal 0 to a process checks if the process is running instead of actually killing it
-            process.kill(daemonProcessJson.processId, 0);
-          } catch (e) {
-            clearInterval(interval);
-            resolve();
-          }
-          if ((count += 1) > 200) {
-            clearInterval(interval);
-            reject(
-              `Daemon process ${daemonProcessJson.processId} didn't exit after 2 seconds.`
-            );
-          }
-        }, 10);
-      });
+      await waitForDaemonToExitAndCleanupProcessJson();
     } catch {}
   }
-  deleteDaemonJsonProcessCache();
 }
 
 // Must be sync for the help output use case

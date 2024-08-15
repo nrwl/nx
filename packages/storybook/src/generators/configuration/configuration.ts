@@ -61,8 +61,13 @@ export async function configurationGeneratorInternal(
   tree: Tree,
   rawSchema: StorybookConfigureSchema
 ) {
-  if (storybookMajorVersion() === 6) {
+  const storybookMajor = storybookMajorVersion();
+  if (storybookMajor > 0 && storybookMajor === 6) {
     throw new Error(pleaseUpgrade());
+  } else if (storybookMajor === 7) {
+    logger.warn(
+      `Support for Storybook 7 is deprecated. Please upgrade to Storybook 8. See https://nx.dev/nx-api/storybook/generators/migrate-8 for more details.`
+    );
   }
 
   const schema = normalizeSchema(tree, rawSchema);

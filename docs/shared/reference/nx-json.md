@@ -132,6 +132,8 @@ Target defaults provide ways to set common options for a particular target in yo
 - `` `${executor}` ``
 - `` `${targetName}` `` (if the configuration specifies the executor, this needs to match the target's executor as well)
 
+Additionally, if there is not a match for either of the above, we look for other keys that may match the target name via a glob pattern. For example, a key in the target defaults that looks like `e2e-ci--**/*` would match all of the targets created by a task atomizer plugin.
+
 Target defaults matching the executor takes precedence over those matching the target name. If we find a target default for a given target, we use it as the base for that target's configuration.
 
 {% callout type="warning" title="Beware" %}
@@ -307,6 +309,26 @@ If multiple targets with the same name run different commands (or use different 
 
 For more details on how to pass args to the underlying command see the [Pass Args to Commands recipe](/recipes/running-tasks/pass-args-to-commands).
 
+### Task Atomizer Configuration
+
+Task Atomizer plugins create several targets with a similar pattern. For example, the `@nx/cypress` plugin creates a top level `e2e-ci` target and a target for each test file that looks like `e2e-ci--test/my/test.spec.ts`. To avoid having to write a target default for each of these targets, you can use a glob pattern in the target default key.
+
+```json {% fileName="nx.json" %}
+{
+  "targetDefaults": {
+    "e2e-ci--**/*": {
+      "options": {
+        "headless": true
+      }
+    }
+  }
+}
+```
+
+{% callout type="info" title="Pattern Matching" %}
+Nx uses glob patterns for matching against the target name. This means that the `**/*` pattern above is required because the target name contains a `/`. If your target name does not contain a `/`, you can use a simpler pattern like `e2e-ci-*`.
+{% /callout %}
+
 ## Release
 
 The `release` property in `nx.json` configures the `nx release` command. It is an optional property, as `nx release` is capable of working with zero config, but when present it is used to configure the versioning, changelog, and publishing phases of the release process.
@@ -347,7 +369,7 @@ The `projectsRelationship` property tells Nx whether to release projects indepen
 
 Optionally override the git/release tag pattern to use. This field is the source of truth for changelog generation and release tagging, as well as for conventional commits parsing.
 
-It supports interpolating the version as `{version}` and (if releasing independently or forcing project level version control system releases) the project name as `{projectName}` within the string.
+It supports interpolating the version as `{version}` and (if releasing independently or forcing project level version control system releases) the project name as `{projectName}` within the string. When using release groups in which the member projects are versioned together, you can also leverage `{releaseGroupName}` and it will be interpolated appropriately in the commit/tag that gets created for that release group.
 
 The default `"releaseTagPattern"` for fixed/unified releases is: `v{version}`
 

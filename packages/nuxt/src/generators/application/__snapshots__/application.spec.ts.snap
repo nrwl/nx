@@ -10,6 +10,14 @@ exports[`app generated files content - as-provided - my-app general application 
 .cache"
 `;
 
+exports[`app generated files content - as-provided - my-app general application should add the nuxt and vitest plugins 1`] = `
+{
+  "dependsOn": [
+    "^build-static",
+  ],
+}
+`;
+
 exports[`app generated files content - as-provided - my-app general application should configure eslint correctly 1`] = `
 "{
   "extends": ["@nuxt/eslint-config", "../.eslintrc.json"],
@@ -180,13 +188,13 @@ exports[`app generated files content - as-provided - my-app general application 
   "my-app/.npmrc",
   "my-app/nuxt.config.ts",
   "my-app/src/app.vue",
-  "my-app/src/components/NxWelcome.vue",
   "my-app/src/pages/about.vue",
   "my-app/src/pages/index.vue",
   "my-app/src/public/.gitkeep",
   "my-app/src/public/favicon.ico",
   "my-app/src/server/api/greet.ts",
   "my-app/src/server/tsconfig.json",
+  "my-app/src/components/NxWelcome.vue",
   "my-app/tsconfig.app.json",
   "my-app/tsconfig.json",
   ".gitignore",
@@ -339,6 +347,14 @@ exports[`app generated files content - as-provided - myApp general application s
 .nuxt
 .nitro
 .cache"
+`;
+
+exports[`app generated files content - as-provided - myApp general application should add the nuxt and vitest plugins 1`] = `
+{
+  "dependsOn": [
+    "^build-static",
+  ],
+}
 `;
 
 exports[`app generated files content - as-provided - myApp general application should configure eslint correctly 1`] = `
@@ -511,13 +527,13 @@ exports[`app generated files content - as-provided - myApp general application s
   "myApp/.npmrc",
   "myApp/nuxt.config.ts",
   "myApp/src/app.vue",
-  "myApp/src/components/NxWelcome.vue",
   "myApp/src/pages/about.vue",
   "myApp/src/pages/index.vue",
   "myApp/src/public/.gitkeep",
   "myApp/src/public/favicon.ico",
   "myApp/src/server/api/greet.ts",
   "myApp/src/server/tsconfig.json",
+  "myApp/src/components/NxWelcome.vue",
   "myApp/tsconfig.app.json",
   "myApp/tsconfig.json",
   ".gitignore",

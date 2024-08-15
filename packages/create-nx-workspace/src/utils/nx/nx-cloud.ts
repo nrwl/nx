@@ -1,68 +1,58 @@
+import { CLIOutput } from '../output';
+import { getMessageFactory } from './messages';
 import * as ora from 'ora';
-import { execAndWait } from '../child-process-utils';
-import { output } from '../output';
-import { getPackageManagerCommand, PackageManager } from '../package-manager';
-import { mapErrorToBodyLines } from '../error-utils';
 
 export type NxCloud = 'yes' | 'github' | 'circleci' | 'skip';
 
-export async function setupNxCloud(
-  directory: string,
-  packageManager: PackageManager,
-  nxCloud: NxCloud,
-  useGitHub?: boolean
-) {
-  const nxCloudSpinner = ora(`Setting up Nx Cloud`).start();
-  try {
-    const pmc = getPackageManagerCommand(packageManager);
-    const res = await execAndWait(
-      `${
-        pmc.exec
-      } nx g nx:connect-to-nx-cloud --installationSource=create-nx-workspace --directory=${directory} ${
-        useGitHub ? '--github' : ''
-      } --no-interactive`,
-      directory
-    );
-
-    if (nxCloud !== 'yes') {
-      nxCloudSpinner.succeed(
-        'CI workflow with Nx Cloud has been generated successfully'
-      );
-    } else {
-      nxCloudSpinner.succeed('Nx Cloud has been set up successfully');
+export function readNxCloudToken(directory: string) {
+  const nxCloudSpinner = ora(`Checking Nx Cloud setup`).start();
+  // nx-ignore-next-line
+  const { getCloudOptions } = require(require.resolve(
+    'nx/src/nx-cloud/utilities/get-cloud-options',
+    {
+      paths: [directory],
     }
-    return res;
-  } catch (e) {
-    nxCloudSpinner.fail();
+    // nx-ignore-next-line
+  )) as typeof import('nx/src/nx-cloud/utilities/get-cloud-options');
 
-    if (e instanceof Error) {
-      output.error({
-        title: `Failed to setup Nx Cloud`,
-        bodyLines: mapErrorToBodyLines(e),
-      });
-    } else {
-      console.error(e);
-    }
-
-    process.exit(1);
-  } finally {
-    nxCloudSpinner.stop();
-  }
+  const { accessToken } = getCloudOptions(directory);
+  nxCloudSpinner.succeed('Nx Cloud has been set up successfully');
+  return accessToken;
 }
 
-export function printNxCloudSuccessMessage(nxCloudOut: string) {
-  // remove leading Nx carret and any new lines
-  const logContent = nxCloudOut.split('NX   ')[1];
-  const indexOfTitleEnd = logContent.indexOf('\n');
-  const title = logContent.slice(0, logContent.indexOf('\n')).trim();
-  const bodyLines = logContent
-    .slice(indexOfTitleEnd)
-    .replace(/^\n*/, '') // remove leading new lines
-    .replace(/\n*$/, '') // remove trailing new lines
-    .split('\n')
-    .map((r) => r.trim());
-  output.warn({
-    title,
-    bodyLines,
-  });
+export async function getOnboardingInfo(
+  nxCloud: NxCloud,
+  token: string,
+  directory: string,
+  useGithub?: boolean
+) {
+  // nx-ignore-next-line
+  const { createNxCloudOnboardingURL } = require(require.resolve(
+    'nx/src/nx-cloud/utilities/url-shorten',
+    {
+      paths: [directory],
+    }
+    // nx-ignore-next-line
+  )) as typeof import('nx/src/nx-cloud/utilities/url-shorten');
+
+  const source =
+    nxCloud === 'yes'
+      ? 'create-nx-workspace-success-cache-setup'
+      : 'create-nx-workspace-success-ci-setup';
+  const { code, createMessage } = getMessageFactory(source);
+  const connectCloudUrl = await createNxCloudOnboardingURL(
+    source,
+    token,
+    useGithub ??
+      (nxCloud === 'yes' || nxCloud === 'github' || nxCloud === 'circleci'),
+    code
+  );
+  const out = new CLIOutput(false);
+  const message = createMessage(connectCloudUrl);
+  if (message.type === 'success') {
+    out.success(message);
+  } else {
+    out.warn(message);
+  }
+  return { output: out.getOutput(), connectCloudUrl };
 }

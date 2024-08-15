@@ -25,7 +25,7 @@ import {
   type ProjectNameAndRootOptions,
 } from '@nx/devkit/src/generators/project-name-and-root-utils';
 
-import { addBuildTargetDefaults } from '@nx/devkit/src/generators/add-build-target-defaults';
+import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 import { findMatchingProjects } from 'nx/src/utils/find-matching-projects';
 import { type PackageJson } from 'nx/src/utils/package-json';

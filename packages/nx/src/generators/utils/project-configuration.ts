@@ -1,10 +1,7 @@
 import { minimatch } from 'minimatch';
-import { basename, join, relative } from 'path';
+import { basename, dirname, join, relative } from 'path';
 
-import {
-  buildProjectConfigurationFromPackageJson,
-  getGlobPatternsFromPackageManagerWorkspaces,
-} from '../../plugins/package-json';
+import { getGlobPatternsFromPackageManagerWorkspaces } from '../../plugins/package-json';
 import { buildProjectFromProjectJson } from '../../plugins/project-json/build-nodes/project-json';
 import { renamePropertyWithStableKeys } from '../../adapter/angular-json';
 import {
@@ -23,6 +20,7 @@ import { readJson, writeJson } from './json';
 import { readNxJson } from './nx-json';
 
 import type { Tree } from '../tree';
+import { toProjectName } from '../../config/to-project-name';
 
 export { readNxJson, updateNxJson } from './nx-json';
 
@@ -82,17 +80,73 @@ export function updateProjectConfiguration(
   projectName: string,
   projectConfiguration: ProjectConfiguration
 ): void {
+  if (
+    tree.exists(joinPathFragments(projectConfiguration.root, 'project.json'))
+  ) {
+    updateProjectConfigurationInProjectJson(
+      tree,
+      projectName,
+      projectConfiguration
+    );
+  } else if (
+    tree.exists(joinPathFragments(projectConfiguration.root, 'package.json'))
+  ) {
+    updateProjectConfigurationInPackageJson(
+      tree,
+      projectName,
+      projectConfiguration
+    );
+  } else {
+    throw new Error(
+      `Cannot update Project ${projectName} at ${projectConfiguration.root}. It either doesn't exist yet, or may not use project.json for configuration. Use \`addProjectConfiguration()\` instead if you want to create a new project.`
+    );
+  }
+}
+
+function updateProjectConfigurationInPackageJson(
+  tree: Tree,
+  projectName: string,
+  projectConfiguration: ProjectConfiguration
+) {
+  const packageJsonFile = joinPathFragments(
+    projectConfiguration.root,
+    'package.json'
+  );
+
+  const packageJson = readJson<PackageJson>(tree, packageJsonFile);
+
+  if (packageJson.name === projectConfiguration.name ?? projectName) {
+    delete projectConfiguration.name;
+  }
+
+  if (
+    projectConfiguration.targets &&
+    !Object.keys(projectConfiguration.targets).length
+  ) {
+    delete projectConfiguration.targets;
+  }
+
+  packageJson.nx = {
+    ...packageJson.nx,
+    ...projectConfiguration,
+    root: undefined,
+  };
+
+  writeJson(tree, packageJsonFile, packageJson);
+}
+
+function updateProjectConfigurationInProjectJson(
+  tree: Tree,
+  projectName: string,
+  projectConfiguration: ProjectConfiguration
+) {
   const projectConfigFile = joinPathFragments(
     projectConfiguration.root,
     'project.json'
   );
 
-  if (!tree.exists(projectConfigFile)) {
-    throw new Error(
-      `Cannot update Project ${projectName} at ${projectConfiguration.root}. It either doesn't exist yet, or may not use project.json for configuration. Use \`addProjectConfiguration()\` instead if you want to create a new project.`
-    );
-  }
   handleEmptyTargets(projectName, projectConfiguration);
+
   writeJson(tree, projectConfigFile, {
     name: projectConfiguration.name ?? projectName,
     $schema: getRelativeProjectJsonSchemaPath(tree, projectConfiguration),
@@ -215,21 +269,22 @@ function readAndCombineAllProjectConfigurations(tree: Tree): {
       );
     } else if (basename(projectFile) === 'package.json') {
       const packageJson = readJson<PackageJson>(tree, projectFile);
-      const config = buildProjectConfigurationFromPackageJson(
-        packageJson,
-        tree.root,
-        projectFile,
-        readNxJson(tree)
-      );
+
+      // We don't want to have all of the extra inferred stuff in here, as
+      // when generators update the project they shouldn't inline that stuff.
+      // so rather than using `buildProjectFromPackageJson` and stripping it out
+      // we are going to build the config manually.
+      const config = {
+        root: dirname(projectFile),
+        name: packageJson.name ?? toProjectName(projectFile),
+        ...packageJson.nx,
+      };
       if (!rootMap[config.root]) {
         mergeProjectConfigurationIntoRootMap(
           rootMap,
           // Inferred targets, tags, etc don't show up when running generators
           // This is to help avoid running into issues when trying to update the workspace
-          {
-            name: config.name,
-            root: config.root,
-          },
+          config,
           undefined,
           undefined,
           true

@@ -20,10 +20,8 @@ import {
 import { waitForPortOpen } from '@nx/web/src/utils/wait-for-port-open';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { fork } from 'node:child_process';
-import { join } from 'node:path';
-import { cpSync, createWriteStream } from 'node:fs';
-import { existsSync } from 'fs';
-import { extname } from 'path';
+import { cpSync, existsSync, createWriteStream } from 'fs';
+import { join, extname } from 'path';
 import { startRemoteProxies } from '@nx/webpack/src/utils/module-federation/start-remote-proxies';
 import {
   parseStaticRemotesConfig,
@@ -111,6 +109,7 @@ function startStaticRemotesFileServer(
     },
     context
   );
+
   return staticRemotesIter;
 }
 
@@ -192,10 +191,6 @@ async function buildStaticRemotes(
       staticRemotesConfig.config[app].urlSegment
     }`;
   }
-
-  process.env.NX_MF_DEV_SERVER_STATIC_REMOTES = JSON.stringify(
-    mappedLocationOfRemotes
-  );
 
   await new Promise<void>((res, rej) => {
     const staticProcess = fork(
@@ -365,7 +360,16 @@ export default async function* moduleFederationDevServer(
     options
   );
 
-  startRemoteProxies(staticRemotesConfig, mappedLocationsOfStaticRemotes);
+  startRemoteProxies(
+    staticRemotesConfig,
+    mappedLocationsOfStaticRemotes,
+    options.ssl
+      ? {
+          pathToCert: join(workspaceRoot, options.sslCert),
+          pathToKey: join(workspaceRoot, options.sslKey),
+        }
+      : undefined
+  );
 
   return yield* combineAsyncIterables(
     currIter,

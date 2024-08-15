@@ -53,6 +53,11 @@
       "factory": "./src/generators/web-configuration/web-configuration#webConfigurationGenerator",
       "schema": "./src/generators/web-configuration/schema.json",
       "description": "Set up web configuration for a React Native app"
+    },
+    "convert-to-inferred": {
+      "factory": "./src/generators/convert-to-inferred/convert-to-inferred",
+      "schema": "./src/generators/convert-to-inferred/schema.json",
+      "description": "Convert existing React Native project(s) using `@nx/react-native:*` executors to use `@nx/react-native/plugin`. Defaults to migrating all projects. Pass '--project' to migrate only one target."
     }
   }
 }

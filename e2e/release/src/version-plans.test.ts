@@ -114,7 +114,7 @@ describe('nx release version plans', () => {
     await ensureDir(versionPlansDir);
 
     runCLI(
-      'release plan minor -g fixed-group -m "feat: Update the fixed packages with a minor release." --verbose',
+      'release plan minor -g fixed-group -m "Update the fixed packages with a minor release." --verbose',
       {
         silenceError: true,
       }
@@ -128,7 +128,9 @@ ${pkg4}: preminor
 ${pkg5}: prerelease
 ---
 
-feat: Update the independent packages with a patch, preminor, and prerelease.
+Update the independent packages with a patch, preminor, and prerelease.
+
+Here is another line in the message.
 `
     );
 
@@ -137,7 +139,7 @@ feat: Update the independent packages with a patch, preminor, and prerelease.
       `git commit -m "chore: add version plans for fixed and independent groups"`
     );
 
-    const result = runCLI('release --verbose', {
+    const result = runCLI('release --verbose --skip-publish', {
       silenceError: true,
     });
 
@@ -193,9 +195,11 @@ feat: Update the independent packages with a patch, preminor, and prerelease.
 + ## 0.0.1 (YYYY-MM-DD)
 +
 +
-+ ### 🚀 Features
++ ### 🩹 Fixes
 +
-+ - Update the independent packages with a patch, preminor, and prerelease.`
++ - **${pkg3}:** Update the independent packages with a patch, preminor, and prerelease.
++
++   Here is another line in the message.`
     );
 
     expect(resultWithoutDate).toContain(
@@ -207,7 +211,9 @@ feat: Update the independent packages with a patch, preminor, and prerelease.
 +
 + ### 🚀 Features
 +
-+ - Update the independent packages with a patch, preminor, and prerelease.`
++ - **${pkg4}:** Update the independent packages with a patch, preminor, and prerelease.
++
++   Here is another line in the message.`
     );
 
     expect(resultWithoutDate).toContain(
@@ -217,9 +223,11 @@ feat: Update the independent packages with a patch, preminor, and prerelease.
 + ## 0.0.1-0 (YYYY-MM-DD)
 +
 +
-+ ### 🚀 Features
++ ### 🩹 Fixes
 +
-+ - Update the independent packages with a patch, preminor, and prerelease.`
++ - **${pkg5}:** Update the independent packages with a patch, preminor, and prerelease.
++
++   Here is another line in the message.`
     );
 
     await writeFile(
@@ -229,7 +237,7 @@ ${pkg1}: minor
 ${pkg3}: patch
 ---
 
-fix: Update packages in both groups with a bug fix
+Update packages in both groups with a mix #1
 `
     );
     await writeFile(
@@ -240,7 +248,7 @@ ${pkg4}: preminor
 ${pkg5}: patch
 ---
 
-feat: Update packages in both groups with a feat
+Update packages in both groups with a mix #2
 `
     );
 
@@ -291,12 +299,12 @@ feat: Update packages in both groups with a feat
 +
 + ### 🚀 Features
 +
-+ - Update packages in both groups with a feat
++ - **${pkg1}:** Update packages in both groups with a mix #1
 +
 +
 + ### 🩹 Fixes
 +
-+ - Update packages in both groups with a bug fix`
++ - Update packages in both groups with a mix #2`
     );
     expect(result2WithoutDate).toContain(
       `NX   Generating an entry in ${pkg2}/CHANGELOG.md for v0.2.0
@@ -306,14 +314,9 @@ feat: Update packages in both groups with a feat
 + ## 0.2.0 (YYYY-MM-DD)
 +
 +
-+ ### 🚀 Features
-+
-+ - Update packages in both groups with a feat
-+
-+
 + ### 🩹 Fixes
 +
-+ - Update packages in both groups with a bug fix
++ - Update packages in both groups with a mix #2
 `
     );
     expect(result2WithoutDate).toContain(
@@ -326,7 +329,7 @@ feat: Update packages in both groups with a feat
 +
 + ### 🩹 Fixes
 +
-+ - Update packages in both groups with a bug fix`
++ - **${pkg3}:** Update packages in both groups with a mix #1`
     );
 
     expect(result2WithoutDate).toContain(
@@ -339,7 +342,7 @@ feat: Update packages in both groups with a feat
 +
 + ### 🚀 Features
 +
-+ - Update packages in both groups with a feat`
++ - **${pkg4}:** Update packages in both groups with a mix #2`
     );
 
     expect(result2WithoutDate).toContain(
@@ -350,9 +353,9 @@ feat: Update packages in both groups with a feat
 + ## 0.0.1 (YYYY-MM-DD)
 +
 +
-+ ### 🚀 Features
++ ### 🩹 Fixes
 +
-+ - Update packages in both groups with a feat`
++ - **${pkg5}:** Update packages in both groups with a mix #2`
     );
 
     expect(exists(join(versionPlansDir, 'bump-mixed1.md'))).toBeFalsy();
@@ -394,7 +397,7 @@ feat: Update packages in both groups with a feat
 fixed-group: minor
 ---
 
-feat: Update the fixed packages with a minor release.
+Update the fixed packages with a minor release.
 `
     );
 
@@ -406,7 +409,7 @@ ${pkg4}: preminor
 ${pkg5}: prerelease
 ---
 
-feat: Update the independent packages with a patch, preminor, and prerelease.
+Update the independent packages with a patch, preminor, and prerelease.
 `
     );
 
@@ -530,9 +533,9 @@ const yargs = require('yargs');
 + ## 0.0.1 (YYYY-MM-DD)
 +
 +
-+ ### 🚀 Features
++ ### 🩹 Fixes
 +
-+ - Update the independent packages with a patch, preminor, and prerelease.`
++ - **${pkg3}:** Update the independent packages with a patch, preminor, and prerelease.`
     );
 
     expect(resultWithoutDate).toContain(
@@ -544,7 +547,7 @@ const yargs = require('yargs');
 +
 + ### 🚀 Features
 +
-+ - Update the independent packages with a patch, preminor, and prerelease.`
++ - **${pkg4}:** Update the independent packages with a patch, preminor, and prerelease.`
     );
 
     expect(resultWithoutDate).toContain(
@@ -554,9 +557,9 @@ const yargs = require('yargs');
 + ## 0.0.1-0 (YYYY-MM-DD)
 +
 +
-+ ### 🚀 Features
++ ### 🩹 Fixes
 +
-+ - Update the independent packages with a patch, preminor, and prerelease.`
++ - **${pkg5}:** Update the independent packages with a patch, preminor, and prerelease.`
     );
 
     expect(exists(join(versionPlansDir, 'bump-fixed.md'))).toBeFalsy();
@@ -569,8 +572,8 @@ ${pkg1}: minor
 ${pkg3}: patch
 ---
 
-fix: Update packages in both groups with a bug fix
-`
+Update packages in both groups with a mix #1
+  `
     );
     await writeFile(
       join(versionPlansDir, 'bump-mixed2.md'),
@@ -580,8 +583,8 @@ ${pkg4}: preminor
 ${pkg5}: patch
 ---
 
-feat: Update packages in both groups with a feat
-`
+Update packages in both groups with a mix #2
+  `
     );
 
     await runCommandAsync(`git add ${join(versionPlansDir, 'bump-mixed1.md')}`);
@@ -594,7 +597,7 @@ feat: Update packages in both groups with a feat
     // dry-run should not remove the version plan
     expect(exists(join(versionPlansDir, 'bump-mixed1.md'))).toBeTruthy();
 
-    const result2 = runCLI('release --verbose', {
+    const result2 = runCLI('release --verbose --skip-publish', {
       silenceError: true,
     });
 
@@ -631,12 +634,12 @@ feat: Update packages in both groups with a feat
 +
 + ### 🚀 Features
 +
-+ - Update packages in both groups with a feat
++ - **${pkg1}:** Update packages in both groups with a mix #1
 +
 +
 + ### 🩹 Fixes
 +
-+ - Update packages in both groups with a bug fix`
++ - Update packages in both groups with a mix #2`
     );
     expect(result2WithoutDate).toContain(
       `NX   Generating an entry in ${pkg2}/CHANGELOG.md for v0.2.0
@@ -646,14 +649,9 @@ feat: Update packages in both groups with a feat
 + ## 0.2.0 (YYYY-MM-DD)
 +
 +
-+ ### 🚀 Features
-+
-+ - Update packages in both groups with a feat
-+
-+
 + ### 🩹 Fixes
 +
-+ - Update packages in both groups with a bug fix
++ - Update packages in both groups with a mix #2
 `
     );
     expect(result2WithoutDate).toContain(
@@ -666,7 +664,7 @@ feat: Update packages in both groups with a feat
 +
 + ### 🩹 Fixes
 +
-+ - Update packages in both groups with a bug fix`
++ - **${pkg3}:** Update packages in both groups with a mix #1`
     );
 
     expect(result2WithoutDate).toContain(
@@ -679,7 +677,7 @@ feat: Update packages in both groups with a feat
 +
 + ### 🚀 Features
 +
-+ - Update packages in both groups with a feat`
++ - **${pkg4}:** Update packages in both groups with a mix #2`
     );
 
     expect(result2WithoutDate).toContain(
@@ -690,9 +688,9 @@ feat: Update packages in both groups with a feat
 + ## 0.0.1 (YYYY-MM-DD)
 +
 +
-+ ### 🚀 Features
++ ### 🩹 Fixes
 +
-+ - Update packages in both groups with a feat`
++ - **${pkg5}:** Update packages in both groups with a mix #2`
     );
 
     expect(exists(join(versionPlansDir, 'bump-mixed1.md'))).toBeFalsy();
@@ -715,7 +713,7 @@ feat: Update packages in both groups with a feat
     await ensureDir(versionPlansDir);
 
     runCLI(
-      'release plan minor -m "feat: Update the fixed packages with a minor release." --verbose',
+      'release plan minor -m "Update the fixed packages with a minor release." --verbose',
       {
         silenceError: true,
       }
@@ -768,5 +766,93 @@ feat: Update packages in both groups with a feat
     );
 
     expect(readdirSync(versionPlansDir)).toEqual([]);
+  });
+
+  it('version command should bypass version plans when a specifier is passed', async () => {
+    updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
+      nxJson.release = {
+        groups: {
+          'fixed-group': {
+            projects: [pkg1, pkg2],
+            releaseTagPattern: 'v{version}',
+          },
+          'independent-group': {
+            projects: [pkg3, pkg4, pkg5],
+            projectsRelationship: 'independent',
+            releaseTagPattern: '{projectName}@{version}',
+          },
+        },
+        version: {
+          generatorOptions: {
+            specifierSource: 'version-plans',
+          },
+        },
+        changelog: {
+          projectChangelogs: true,
+        },
+        versionPlans: true,
+      };
+      return nxJson;
+    });
+
+    runCLI(
+      'release plan minor -g fixed-group -m "Update the fixed packages with another minor release." --verbose',
+      {
+        silenceError: true,
+      }
+    );
+
+    runCLI(
+      'release plan minor -g independent-group -m "Update the independent packages with another minor release." --verbose',
+      {
+        silenceError: true,
+      }
+    );
+
+    const versionPlansDir = tmpProjPath('.nx/version-plans');
+    await runCommandAsync(`git add ${versionPlansDir}`);
+    await runCommandAsync(
+      `git commit -m "chore: add version plans for fixed and independent groups again"`
+    );
+
+    const releaseResult = runCLI('release major --verbose --skip-publish', {
+      silenceError: true,
+    });
+
+    expect(releaseResult).toContain(
+      `NX   A specifier option cannot be provided when using version plans.`
+    );
+    expect(releaseResult).toContain(
+      `To override this behavior, use the Nx Release programmatic API directly (https://nx.dev/features/manage-releases#using-the-programmatic-api-for-nx-release).`
+    );
+
+    const versionResult = runCLI('release version major --verbose', {
+      silenceError: true,
+    });
+
+    expect(versionResult).toContain(
+      'Skipping version plan discovery as a specifier was provided'
+    );
+    expect(versionResult).toContain(
+      `${pkg1} 📄 Using the provided version specifier "major".`
+    );
+    expect(versionResult).toContain(
+      `${pkg2} 📄 Using the provided version specifier "major".`
+    );
+    expect(versionResult).toContain(
+      `${pkg3} 📄 Using the provided version specifier "major".`
+    );
+    expect(versionResult).toContain(
+      `${pkg4} 📄 Using the provided version specifier "major".`
+    );
+    expect(versionResult).toContain(
+      `${pkg5} 📄 Using the provided version specifier "major".`
+    );
+
+    expect(versionResult).toContain(
+      `git add ${pkg1}/package.json ${pkg2}/package.json ${pkg3}/package.json ${pkg4}/package.json ${pkg5}/package.json`
+    );
+
+    expect(readdirSync(versionPlansDir).length).toEqual(2);
   });
 });

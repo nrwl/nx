@@ -37,6 +37,12 @@ Type: `boolean`
 
 Show help
 
+### printConfig
+
+Type: `string`
+
+Print the resolved nx release configuration that would be used for the current command and then exit
+
 ### projects
 
 Type: `string`
@@ -308,6 +314,14 @@ Default: `true`
 Type: `string`
 
 Exclude certain projects from being processed
+
+##### excludeTaskDependencies
+
+Type: `boolean`
+
+Default: `false`
+
+Skips running dependent tasks first
 
 ##### first-release
 

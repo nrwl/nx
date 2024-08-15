@@ -54,7 +54,6 @@ export type ActionStateStream<T, A> = Observable<
 >;
 
 /**
- *
  * @whatItDoes Handles pessimistic updates (updating the server first).
  *
  * Updating the server, when implemented naively, suffers from race conditions and poor error handling.
@@ -109,6 +108,8 @@ export type ActionStateStream<T, A> = Observable<
  * ```
  *
  * @param opts
+ *
+ * @deprecated This will be removed in Nx v21. Import `pessimisticUpdate` from `@ngrx/router-store/data-persistence` instead.
  */
 export function pessimisticUpdate<T extends Array<unknown>, A extends Action>(
   opts: PessimisticUpdateOpts<T, A>
@@ -122,7 +123,6 @@ export function pessimisticUpdate<T extends Array<unknown>, A extends Action>(
 }
 
 /**
- *
  * @whatItDoes Handles optimistic updates (updating the client first).
  *
  * It runs all fetches in order, which removes race conditions and forces the developer to handle errors.
@@ -178,6 +178,8 @@ export function pessimisticUpdate<T extends Array<unknown>, A extends Action>(
  * ```
  *
  * @param opts
+ *
+ * @deprecated This will be removed in Nx v21. Import `optimisticUpdate` from `@ngrx/router-store/data-persistence` instead.
  */
 export function optimisticUpdate<T extends Array<unknown>, A extends Action>(
   opts: OptimisticUpdateOpts<T, A>
@@ -191,7 +193,6 @@ export function optimisticUpdate<T extends Array<unknown>, A extends Action>(
 }
 
 /**
- *
  * @whatItDoes Handles data fetching.
  *
  * Data fetching implemented naively suffers from race conditions and poor error handling.
@@ -267,6 +268,8 @@ export function optimisticUpdate<T extends Array<unknown>, A extends Action>(
  * In addition, if there are multiple requests for Todo 1 scheduled, it will only run the last one.
  *
  * @param opts
+ *
+ * @deprecated This will be removed in Nx v21. Import `fetch` from `@ngrx/router-store/data-persistence` instead.
  */
 export function fetch<T extends Array<unknown>, A extends Action>(
   opts: FetchOpts<T, A>
@@ -342,6 +345,8 @@ export function fetch<T extends Array<unknown>, A extends Action>(
  *
  * @param component
  * @param opts
+ *
+ * @deprecated This will be removed in Nx v21. Import `navigation` from `@ngrx/router-store/data-persistence` instead.
  */
 export function navigation<T extends Array<unknown>, A extends Action>(
   component: Type<any>,

@@ -2,6 +2,7 @@ import { Linter } from '@nx/eslint';
 
 export interface StorybookConfigurationSchema {
   project: string;
+  interactionTests?: boolean;
   configureCypress: boolean;
   generateStories?: boolean;
   generateCypressSpecs?: boolean;

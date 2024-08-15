@@ -29,6 +29,7 @@ export interface Schema {
   bundler?: 'webpack' | 'vite' | 'rspack';
   minimal?: boolean;
   addPlugin?: boolean;
+  nxCloudToken?: string;
 }
 
 export interface NormalizedSchema<T extends Schema = Schema> extends T {
@@ -38,6 +39,8 @@ export interface NormalizedSchema<T extends Schema = Schema> extends T {
   e2eProjectRoot: string;
   e2eWebServerAddress: string;
   e2eWebServerTarget: string;
+  e2eCiWebServerTarget: string;
+  e2eCiBaseUrl: string;
   e2ePort: number;
   parsedTags: string[];
   fileName: string;

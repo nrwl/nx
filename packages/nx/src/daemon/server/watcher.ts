@@ -12,6 +12,7 @@ import {
 import { platform } from 'os';
 import { getDaemonProcessIdSync, serverProcessJsonPath } from '../cache';
 import type { WatchEvent } from '../../native';
+import { openSockets } from './server';
 
 const ALWAYS_IGNORE = [
   ...getAlwaysIgnore(workspaceRoot),
@@ -44,6 +45,7 @@ export async function watchWorkspace(server: Server, cb: FileWatcherCallback) {
         handleServerProcessTermination({
           server,
           reason: 'this process is no longer the current daemon (native)',
+          sockets: openSockets,
         });
       }
 
@@ -53,6 +55,7 @@ export async function watchWorkspace(server: Server, cb: FileWatcherCallback) {
           server,
           reason:
             'Stopping the daemon the set of ignored files changed (native)',
+          sockets: openSockets,
         });
       }
     }

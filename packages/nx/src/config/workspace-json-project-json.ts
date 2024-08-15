@@ -236,4 +236,10 @@ export interface TargetConfiguration<T = any> {
    * Default is true
    */
   parallelism?: boolean;
+
+  /**
+   * List of generators to run before the target to ensure the workspace
+   * is up to date.
+   */
+  syncGenerators?: string[];
 }

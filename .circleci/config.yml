@@ -91,7 +91,7 @@ jobs:
       - checkout
       - nx/set-shas:
           main-branch-name: 'master'
-      - run: npx nx-cloud@next start-ci-run --distribute-on=".nx/workflows/dynamic-changesets.yaml" --stop-agents-after="e2e"
+      - run: npx nx-cloud@latest start-ci-run --distribute-on="auto linux-medium" --stop-agents-after="e2e"
       - run:
           command: |
             sudo apt-get update
@@ -160,7 +160,7 @@ jobs:
           command: |
             HAS_CHANGED=$(node ./scripts/check-react-native-changes.js $NX_BASE $NX_HEAD);
             if $HAS_CHANGED; then
-              pnpm nx affected -t e2e-macos-ci --parallel=1 --base=$NX_BASE --head=$NX_HEAD
+              pnpm nx affected -t e2e-macos-local --parallel=1 --base=$NX_BASE --head=$NX_HEAD
             else
               echo "Skip E2E tests for macOS as there are no changes in React Native projects."
             fi

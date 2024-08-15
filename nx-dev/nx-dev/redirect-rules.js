@@ -421,6 +421,8 @@ const nxCloudUrls = {
     '/ci/recipes/source-control-integration/bitbucket',
   '/nx-cloud/recipes/source-control-integration/bitbucket-cloud':
     '/ci/recipes/source-control-integration/bitbucket',
+  '/ci/recipes/source-control-integration/bitbucket-cloud':
+    '/ci/recipes/source-control-integration/bitbucket',
   '/nx-cloud/set-up/gitlab':
     '/nx-cloud/recipes/source-control-integration/gitlab',
   '/core-features/remote-cache': '/ci/features/remote-cache',
@@ -803,7 +805,11 @@ const nested5minuteTutorialUrls = {
 
 const pluginUrls = {
   '/plugin-features/create-your-own-plugin':
-    '/extending-nx/tutorials/create-plugin',
+    '/extending-nx/tutorials/organization-specific-plugin',
+  '/extending-nx/tutorials/create-plugin':
+    '/extending-nx/tutorials/organization-specific-plugin',
+  '/extending-nx/tutorials/publish-plugin':
+    '/extending-nx/tutorials/tooling-plugin',
   '/recipes/advanced-plugins': '/extending-nx/recipes',
   '/recipes/advanced-plugins/create-preset':
     '/extending-nx/recipes/create-preset',

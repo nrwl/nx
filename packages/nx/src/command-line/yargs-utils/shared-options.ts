@@ -27,6 +27,7 @@ export interface RunOptions {
   dte: boolean;
   batch: boolean;
   useAgents: boolean;
+  excludeTaskDependencies: boolean;
 }
 
 export function withRunOptions<T>(yargs: Argv<T>): Argv<T & RunOptions> {
@@ -79,6 +80,11 @@ export function withRunOptions<T>(yargs: Argv<T>): Argv<T & RunOptions> {
       type: 'boolean',
       default: false,
     })
+    .options('excludeTaskDependencies', {
+      describe: 'Skips running dependent tasks first',
+      type: 'boolean',
+      default: false,
+    })
     .options('cloud', {
       type: 'boolean',
       hidden: true,
@@ -118,7 +124,7 @@ export function withConfiguration(yargs: Argv) {
   });
 }
 
-export function withVerbose(yargs: Argv) {
+export function withVerbose<T>(yargs: Argv<T>) {
   return yargs
     .option('verbose', {
       describe:

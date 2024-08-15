@@ -212,7 +212,12 @@ function withNx(
 
       const userWebpackConfig = nextConfig.webpack;
 
-      const { createWebpackConfig } = require('@nx/next/src/utils/config');
+      const { createWebpackConfig } = require(require.resolve(
+        '@nx/next/src/utils/config',
+        {
+          paths: [workspaceRoot],
+        }
+      )) as typeof import('@nx/next/src/utils/config');
       // If we have file replacements or assets, inside of the next config we pass the workspaceRoot as a join of the workspaceRoot and the projectDirectory
       // Because the file replacements and assets are relative to the projectRoot, not the workspaceRoot
       nextConfig.webpack = (a, b) =>
@@ -220,8 +225,9 @@ function withNx(
           _nextConfig.nx?.fileReplacements
             ? joinPathFragments(workspaceRoot, projectDirectory)
             : workspaceRoot,
-          _nextConfig.nx?.assets || options.assets,
-          _nextConfig.nx?.fileReplacements || options.fileReplacements
+          projectDirectory,
+          _nextConfig.nx?.fileReplacements || options.fileReplacements,
+          _nextConfig.nx?.assets || options.assets
         )(userWebpackConfig ? userWebpackConfig(a, b) : a, b);
 
       return nextConfig;

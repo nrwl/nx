@@ -1,6 +1,6 @@
 import { CreateWorkspaceOptions } from './create-workspace-options';
 import { output } from './utils/output';
-import { setupNxCloud } from './utils/nx/nx-cloud';
+import { getOnboardingInfo, readNxCloudToken } from './utils/nx/nx-cloud';
 import { createSandbox } from './create-sandbox';
 import { createEmptyWorkspace } from './create-empty-workspace';
 import { createPreset } from './create-preset';
@@ -51,31 +51,27 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
     );
   }
 
-  let nxCloudInstallRes;
+  let connectUrl: string | undefined;
+  let nxCloudInfo: string | undefined;
   if (nxCloud !== 'skip') {
-    nxCloudInstallRes = await setupNxCloud(
-      directory,
-      packageManager,
-      nxCloud,
-      useGitHub
-    );
+    const token = readNxCloudToken(directory) as string;
 
     if (nxCloud !== 'yes') {
-      await setupCI(
-        directory,
-        nxCloud,
-        packageManager,
-        nxCloudInstallRes?.code === 0
-      );
+      await setupCI(directory, nxCloud, packageManager);
     }
+
+    const { connectCloudUrl, output } = await getOnboardingInfo(
+      nxCloud,
+      token,
+      directory,
+      useGitHub
+    );
+    connectUrl = connectCloudUrl;
+    nxCloudInfo = output;
   }
 
   if (!skipGit) {
     try {
-      let connectUrl;
-      if (nxCloudInstallRes?.code === 0) {
-        connectUrl = extractConnectUrl(nxCloudInstallRes?.stdout);
-      }
       await initializeGitRepo(directory, { defaultBase, commit, connectUrl });
     } catch (e) {
       if (e instanceof Error) {
@@ -90,7 +86,7 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
   }
 
   return {
-    nxCloudInfo: nxCloudInstallRes?.stdout,
+    nxCloudInfo,
     directory,
   };
 }

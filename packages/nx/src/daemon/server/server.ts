@@ -33,7 +33,10 @@ import {
   disableOutputsTracking,
   processFileChangesInOutputs,
 } from './outputs-tracking';
-import { addUpdatedAndDeletedFiles } from './project-graph-incremental-recomputation';
+import {
+  addUpdatedAndDeletedFiles,
+  registerProjectGraphRecomputationListener,
+} from './project-graph-incremental-recomputation';
 import {
   getOutputWatcherInstance,
   getWatcherInstance,
@@ -76,6 +79,29 @@ import {
 } from '../message-types/task-history';
 import { handleGetTaskHistoryForHashes } from './handle-get-task-history';
 import { handleWriteTaskRunsToHistory } from './handle-write-task-runs-to-history';
+import { isHandleForceShutdownMessage } from '../message-types/force-shutdown';
+import { handleForceShutdown } from './handle-force-shutdown';
+import {
+  GET_SYNC_GENERATOR_CHANGES,
+  isHandleGetSyncGeneratorChangesMessage,
+} from '../message-types/get-sync-generator-changes';
+import { handleGetSyncGeneratorChanges } from './handle-get-sync-generator-changes';
+import { collectAndScheduleSyncGenerators } from './sync-generators';
+import {
+  GET_REGISTERED_SYNC_GENERATORS,
+  isHandleGetRegisteredSyncGeneratorsMessage,
+} from '../message-types/get-registered-sync-generators';
+import { handleGetRegisteredSyncGenerators } from './handle-get-registered-sync-generators';
+import {
+  UPDATE_WORKSPACE_CONTEXT,
+  isHandleUpdateWorkspaceContextMessage,
+} from '../message-types/update-workspace-context';
+import { handleUpdateWorkspaceContext } from './handle-update-workspace-context';
+import {
+  FLUSH_SYNC_GENERATOR_CHANGES_TO_DISK,
+  isHandleFlushSyncGeneratorChangesToDiskMessage,
+} from '../message-types/flush-sync-generator-changes-to-disk';
+import { handleFlushSyncGeneratorChangesToDisk } from './handle-flush-sync-generator-changes-to-disk';
 
 let performanceObserver: PerformanceObserver | undefined;
 let workspaceWatcherError: Error | undefined;
@@ -90,9 +116,11 @@ export type HandlerResult = {
 };
 
 let numberOfOpenConnections = 0;
+export const openSockets: Set<Socket> = new Set();
 
 const server = createServer(async (socket) => {
   numberOfOpenConnections += 1;
+  openSockets.add(socket);
   serverLogger.log(
     `Established a connection. Number of open connections: ${numberOfOpenConnections}`
   );
@@ -119,6 +147,7 @@ const server = createServer(async (socket) => {
 
   socket.on('close', () => {
     numberOfOpenConnections -= 1;
+    openSockets.delete(socket);
     serverLogger.log(
       `Closed a connection. Number of open connections: ${numberOfOpenConnections}`
     );
@@ -216,6 +245,30 @@ async function handleMessage(socket, data: string) {
     await handleResult(socket, 'WRITE_TASK_RUNS_TO_HISTORY', () =>
       handleWriteTaskRunsToHistory(payload.taskRuns)
     );
+  } else if (isHandleForceShutdownMessage(payload)) {
+    await handleResult(socket, 'FORCE_SHUTDOWN', () =>
+      handleForceShutdown(server)
+    );
+  } else if (isHandleGetSyncGeneratorChangesMessage(payload)) {
+    await handleResult(socket, GET_SYNC_GENERATOR_CHANGES, () =>
+      handleGetSyncGeneratorChanges(payload.generators)
+    );
+  } else if (isHandleFlushSyncGeneratorChangesToDiskMessage(payload)) {
+    await handleResult(socket, FLUSH_SYNC_GENERATOR_CHANGES_TO_DISK, () =>
+      handleFlushSyncGeneratorChangesToDisk(payload.generators)
+    );
+  } else if (isHandleGetRegisteredSyncGeneratorsMessage(payload)) {
+    await handleResult(socket, GET_REGISTERED_SYNC_GENERATORS, () =>
+      handleGetRegisteredSyncGenerators()
+    );
+  } else if (isHandleUpdateWorkspaceContextMessage(payload)) {
+    await handleResult(socket, UPDATE_WORKSPACE_CONTEXT, () =>
+      handleUpdateWorkspaceContext(
+        payload.createdFiles,
+        payload.updatedFiles,
+        payload.deletedFiles
+      )
+    );
   } else {
     await respondWithErrorAndExit(
       socket,
@@ -256,6 +309,7 @@ function handleInactivityTimeout() {
     handleServerProcessTermination({
       server,
       reason: `${SERVER_INACTIVITY_TIMEOUT_MS}ms of inactivity`,
+      sockets: openSockets,
     });
   }
 }
@@ -266,18 +320,21 @@ function registerProcessTerminationListeners() {
       handleServerProcessTermination({
         server,
         reason: 'received process SIGINT',
+        sockets: openSockets,
       })
     )
     .on('SIGTERM', () =>
       handleServerProcessTermination({
         server,
         reason: 'received process SIGTERM',
+        sockets: openSockets,
       })
     )
     .on('SIGHUP', () =>
       handleServerProcessTermination({
         server,
         reason: 'received process SIGHUP',
+        sockets: openSockets,
       })
     );
 }
@@ -352,6 +409,7 @@ const handleWorkspaceChanges: FileWatcherCallback = async (
       await handleServerProcessTermination({
         server,
         reason: outdatedReason,
+        sockets: openSockets,
       });
       return;
     }
@@ -467,6 +525,13 @@ export async function startServer(): Promise<Server> {
               await watchOutputFiles(handleOutputsChanges)
             );
           }
+
+          // listen for project graph recomputation events to collect and schedule sync generators
+          registerProjectGraphRecomputationListener(
+            collectAndScheduleSyncGenerators
+          );
+          // trigger an initial project graph recomputation
+          addUpdatedAndDeletedFiles([], [], []);
 
           return resolve(server);
         } catch (err) {
