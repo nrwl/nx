@@ -1,4 +1,4 @@
-import { type Tree, getE2EWebServerInfo } from '@nx/devkit';
+import { type Tree, getE2EWebServerInfo, readNxJson } from '@nx/devkit';
 
 export async function getViteWebServerInfo(
   tree: Tree,
@@ -7,6 +7,16 @@ export async function getViteWebServerInfo(
   isPluginBeingAdded: boolean,
   e2ePortOverride?: number
 ) {
+  const nxJson = readNxJson(tree);
+  let e2ePort = e2ePortOverride ?? 4200;
+
+  if (
+    nxJson.targetDefaults?.['serve'] &&
+    nxJson.targetDefaults?.['serve'].options?.port
+  ) {
+    e2ePort = nxJson.targetDefaults?.['serve'].options?.port;
+  }
+
   return getE2EWebServerInfo(
     tree,
     projectName,
@@ -19,8 +29,9 @@ export async function getViteWebServerInfo(
     {
       defaultServeTargetName: 'serve',
       defaultServeStaticTargetName: 'preview',
-      defaultE2EWebServerAddress: `http://localhost:${e2ePortOverride ?? 4200}`,
+      defaultE2EWebServerAddress: `http://localhost:${e2ePort}`,
       defaultE2ECiBaseUrl: 'http://localhost:4300',
+      defaultE2EPort: e2ePort,
     },
     isPluginBeingAdded
   );

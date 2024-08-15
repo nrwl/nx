@@ -1,4 +1,8 @@
-import { type Tree, getPackageManagerCommand } from 'nx/src/devkit-exports';
+import {
+  type Tree,
+  getPackageManagerCommand,
+  readNxJson,
+} from 'nx/src/devkit-exports';
 import type { PackageManagerCommands } from 'nx/src/utils/package-manager';
 import { findPluginForConfigFile } from '../utils/find-plugin-for-config-file';
 
@@ -7,6 +11,7 @@ interface E2EWebServerDefaultValues {
   defaultServeStaticTargetName: string;
   defaultE2EWebServerAddress: string;
   defaultE2ECiBaseUrl: string;
+  defaultE2EPort: number;
 }
 
 interface E2EWebServerPluginOptions {
@@ -74,8 +79,33 @@ async function getE2EWebServerInfoForPlugin(
     };
   }
 
+  const nxJson = readNxJson(tree);
+  let e2ePort = defaultValues.defaultE2EPort ?? 4200;
+
+  if (
+    nxJson.targetDefaults?.[
+      foundPlugin.options[pluginOptions.serveTargetName] ??
+        defaultValues.defaultServeTargetName
+    ] &&
+    nxJson.targetDefaults?.[
+      foundPlugin.options[pluginOptions.serveTargetName] ??
+        defaultValues.defaultServeTargetName
+    ].options?.port
+  ) {
+    e2ePort =
+      nxJson.targetDefaults?.[
+        foundPlugin.options[pluginOptions.serveTargetName] ??
+          defaultValues.defaultServeTargetName
+      ].options?.port;
+  }
+
+  const e2eWebServerAddress = defaultValues.defaultE2EWebServerAddress.replace(
+    /:\d+/,
+    `:${e2ePort}`
+  );
+
   return {
-    e2eWebServerAddress: defaultValues.defaultE2EWebServerAddress,
+    e2eWebServerAddress,
     e2eWebServerCommand: `${pm.exec} nx run ${projectName}:${
       foundPlugin.options[pluginOptions.serveTargetName] ??
       defaultValues.defaultServeTargetName
