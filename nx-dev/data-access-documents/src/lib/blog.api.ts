@@ -68,6 +68,11 @@ export class BlogApi {
         ogImageType: type,
         filePath,
         slug,
+        podcastYoutubeId: frontmatter.podcastYoutubeId,
+        podcastSpotifyId: frontmatter.podcastSpotifyId,
+        podcastIHeartUrl: frontmatter.podcastIHeartUrl,
+        podcastAppleUrl: frontmatter.podcastAppleUrl,
+        podcastAmazonUrl: frontmatter.podcastAmazonUrl,
       };
       const isDevelopment = process.env.NODE_ENV === 'development';
       const shouldIncludePost = !frontmatter.draft || isDevelopment;
