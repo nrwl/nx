@@ -1,5 +1,6 @@
 export * from './src/utils/versions';
 export * from './src/utils/generator-utils';
+export * from './src/utils/e2e-web-server-info-utils';
 export { type ViteConfigurationGeneratorSchema } from './src/generators/configuration/schema';
 export { viteConfigurationGenerator } from './src/generators/configuration/configuration';
 export { type VitestGeneratorSchema } from './src/generators/vitest/schema';
