@@ -1,9 +1,9 @@
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { type Tree, readNxJson, updateNxJson } from 'nx/src/devkit-exports';
 import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
-import { getViteWebServerInfo } from './e2e-web-server-info-utils';
+import { getViteE2EWebServerInfo } from './e2e-web-server-info-utils';
 
-describe('getViteWebServerInfo', () => {
+describe('getViteE2EWebServerInfo', () => {
   let tree: Tree;
   let tempFs: TempFs;
   beforeEach(() => {
@@ -27,7 +27,7 @@ describe('getViteWebServerInfo', () => {
     updateNxJson(tree, nxJson);
 
     // ACT
-    const e2eWebServerInfo = await getViteWebServerInfo(
+    const e2eWebServerInfo = await getViteE2EWebServerInfo(
       tree,
       'app',
       'app/vite.config.ts',
@@ -52,7 +52,7 @@ describe('getViteWebServerInfo', () => {
     updateNxJson(tree, nxJson);
 
     // ACT
-    const e2eWebServerInfo = await getViteWebServerInfo(
+    const e2eWebServerInfo = await getViteE2EWebServerInfo(
       tree,
       'app',
       'app/vite.config.ts',
@@ -84,7 +84,7 @@ describe('getViteWebServerInfo', () => {
     updateNxJson(tree, nxJson);
 
     // ACT
-    const e2eWebServerInfo = await getViteWebServerInfo(
+    const e2eWebServerInfo = await getViteE2EWebServerInfo(
       tree,
       'app',
       'app/vite.config.ts',
@@ -125,7 +125,7 @@ describe('getViteWebServerInfo', () => {
     updateNxJson(tree, nxJson);
 
     // ACT
-    const e2eWebServerInfo = await getViteWebServerInfo(
+    const e2eWebServerInfo = await getViteE2EWebServerInfo(
       tree,
       'app',
       'app/vite.config.ts',
