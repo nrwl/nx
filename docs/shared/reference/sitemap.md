@@ -161,6 +161,7 @@
       - [Release Projects Independently](/recipes/nx-release/release-projects-independently)
       - [Automatically Version with Conventional Commits](/recipes/nx-release/automatically-version-with-conventional-commits)
       - [Customize Conventional Commit Types](/recipes/nx-release/customize-conventional-commit-types)
+      - [File Based Versioning (Version Plans)](/recipes/nx-release/file-based-versioning-version-plans)
       - [Configure Custom Registries](/recipes/nx-release/configure-custom-registries)
       - [Publish in CI/CD](/recipes/nx-release/publish-in-ci-cd)
       - [Automate GitHub Releases](/recipes/nx-release/automate-github-releases)
