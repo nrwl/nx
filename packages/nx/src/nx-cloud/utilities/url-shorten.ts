@@ -2,6 +2,9 @@ import { logger } from '../../devkit-exports';
 import { getGithubSlugOrNull } from '../../utils/git-utils';
 import { getCloudUrl } from './get-cloud-options';
 
+/**
+ * This is currently duplicated in Nx Console. Please let @MaxKless know if you make changes here.
+ */
 export async function createNxCloudOnboardingURL(
   onboardingSource: string,
   accessToken?: string,
