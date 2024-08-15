@@ -172,6 +172,7 @@ rust-toolchain @nrwl/nx-native-reviewers
 /CONTRIBUTING.md @FrozenPandaz @isaacplmann
 /CODE_OF_CONDUCT.md @FrozenPandaz @isaacplmann
 /CODEOWNERS @FrozenPandaz @AgentEnder
+/packages/nx/src/nx-cloud/utilities/url-shorten.ts @MaxKless
 
 # Scripts
 /scripts/documentation @nrwl/nx-docs-reviewers
