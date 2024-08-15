@@ -41,6 +41,14 @@ export { runTasksInSerial } from './src/generators/run-tasks-in-serial';
  */
 export { visitNotIgnoredFiles } from './src/generators/visit-not-ignored-files';
 
+/**
+ * @category Generators
+ */
+export {
+  getE2EWebServerInfo,
+  type E2EWebServerDetails,
+} from './src/generators/e2e-web-server-info-utils';
+
 export {
   parseTargetString,
   targetToTargetString,
