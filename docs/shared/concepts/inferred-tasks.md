@@ -74,14 +74,12 @@ More details about how to override task configuration is available in these reci
 
 ## Existing Nx Workspaces
 
-If you have an existing Nx Workspace and upgrade to the latest Nx version, a migration will automatically add `useInferencePlugins` to `false` in `nx.json`. This property allows you to continue to use Nx without inferred tasks.
+If you have an existing Nx Workspace and upgrade to the latest Nx version, a migration will automatically set `useInferencePlugins` to `false` in `nx.json`. This property allows you to continue to use Nx without inferred tasks.
 
 When `useInferencePlugins` is `false`:
 
 1. A newly generated project will have all targets defined with executors - not with inferred tasks.
 2. Running `nx add @nx/some-plugin` will not create a plugin entry for `@nx/some-plugin` in the `nx.json` file. (So that plugin will not create inferred tasks.)
-
-We are working on creating migrations for existing workspaces to start switching to inferred tasks, where desired.
 
 If you want to **migrate** your projects to use inferred tasks, follow the recipe for [migrating to inferred tasks](/recipes/running-tasks/convert-to-inferred).
 
