@@ -1,58 +1,108 @@
-# Getting Started with Plugins
+# Extending Nx with Plugins
 
-Nx plugins contain [generators](/features/generate-code) and [executors](/concepts/executors-and-configurations) that extend the capabilities of an Nx workspace. They can be shared as npm packages or referenced locally within the same repo.
+Nx's core functionality focuses on task running and understanding your project and task graph. Nx plugins leverage that functionality to enforce best practices, seamlessly integrate tooling and allow developers to get up and running quickly.
 
-{% cards cols="4" %}
+As your repository grows, you'll discover more reasons to create your own plugin
 
-{% link-card title="Use a Plugin" url="#use-a-plugin" /%}
-{% link-card title="Create a Plugin" url="#create-a-local-plugin" /%}
-{% link-card title="Maintain a Published Plugin" url="#maintain-a-published-plugin" /%}
-{% link-card title="Advanced Plugins" url="#advanced-plugins" /%}
+- You can help encourage your coworkers to consistently follow best practices by creating [code generators](/features/generate-code) that are custom built for your repository.
+- You can remove duplicate configuration and ensure accurate caching settings by writing your own [inferred tasks](/concepts/inferred-tasks).
+- For organizations with multiple monorepos, you can encourage consistency across repositories by providing a repository [preset](/extending-nx/recipes/create-preset) and writing [migrations](/extending-nx/recipes/migration-generators) that will help keep every project in sync.
+- You can write a plugin that integrates a tool or framework into Nx and then [share your plugin](/extending-nx/recipes/publish-plugin) with the broader community.
 
-{% /cards %}
+## Create Your Own Plugin
 
-## Use a Plugin
+Get started developing your own plugin with a few terminal commands:
 
-Nx plugins help you scaffold new projects, pre-configure tooling, follow best practices, and modularize your codebase.
+{% side-by-side %}
 
-{% cards cols="3" %}
+```shell {% title="Create a plugin in a new workspace" %}
+npx create-nx-plugin my-plugin
+```
 
-{% card title="Browse Existing Plugins" description="Find a plugin to use" url="/plugin-registry" /%}
-{% card title="Use Task Executors" description="Run operations on your code" url="/concepts/executors-and-configurations" /%}
-{% card title="Generate Code" description="Create or modify code" url="/features/generate-code" /%}
+```shell {% title="Add a plugin to an existing workspace" %}
+npx nx add @nx/plugin
+npx nx g plugin my-plugin
+```
 
-{% /cards %}
+{% /side-by-side %}
 
-## Create a Local Plugin
+## Learn by Doing
 
-Local plugins allow you to automate repository specific tasks and enforce best practices (e.g., generating projects or components, running third-party tools).
+You can follow along with one of the step by step tutorials below that is focused on a particular use-case. These tutorials expect you to already have the following skills:
 
-{% cards cols="3" %}
-
-{% card title="Create a Plugin" description="Set up a new plugin" url="/extending-nx/tutorials/create-plugin" /%}
-{% card title="Local Generators" description="Add a generator to your plugin" url="/extending-nx/recipes/local-generators" /%}
-{% card title="Local Executors" description="Add an executor to your plugin" url="/extending-nx/recipes/local-executors" /%}
-
-{% /cards %}
-
-## Maintain a Published Plugin
-
-If your plugin has functionality that would be useful in more than just your repo, you can publish it to npm and register it on the nx.dev site for others to find.
+- [Run tasks](/features/run-tasks) with Nx and configure Nx to [infers tasks for you](/concepts/inferred-tasks)
+- [Use code generators](/features/generate-code)
+- Understand the [project graph](/features/explore-graph)
+- Write [TypeScript](https://www.typescriptlang.org/) code
 
 {% cards cols="2" %}
 
-{% card title="Share Your Plugin" description="Submit your plugin to the Nx plugin registry" url="/extending-nx/tutorials/publish-plugin" /%}
-{% card title="Migration Generators" description="Update repos when you introduce breaking changes" url="/extending-nx/recipes/migration-generators" /%}
+{% link-card title="Enforce Best Practices in Your Repository" type="tutorial" url="/extending-nx/tutorials/organization-specific-plugin" icon="office" /%}
+{% link-card title="Integrate a Tool Into an Nx Repository" type="tutorial" url="/extending-nx/tutorials/tooling-plugin" icon="tool" /%}
 
 {% /cards %}
 
-## Advanced Plugins
+## Create Your First Code Generator
 
-You can also hook into the way Nx works and modify it to suit your needs
+Wire up a new generator with this terminal command:
 
-{% cards cols="2" %}
+```shell
+npx nx g generator library-with-readme --directory=my-plugin/src/generators/library-with-readme
+```
 
-{% card title="Scaffold a New Workspace" description="Set up a new repo" url="/extending-nx/recipes/create-preset" /%}
-{% card title="Project Graph Plugins" description="Modify the Nx graph" url="/extending-nx/recipes/project-graph-plugins" /%}
+### Understand the Generator Functionality
 
-{% /cards %}
+This command will register the generator in the plugin's `generators.json` file and create some default generator code in the `library-with-readme` folder. The `libraryWithReadmeGenerator` function in the `generator.ts` file is where the generator functionality is defined.
+
+```typescript {% fileName="my-plugin/src/generators/library-with-readme/generator.ts" %}
+export async function libraryWithReadmeGenerator(
+  tree: Tree,
+  options: LibraryWithReadmeGeneratorSchema
+) {
+  const projectRoot = `libs/${options.name}`;
+  addProjectConfiguration(tree, options.name, {
+    root: projectRoot,
+    projectType: 'library',
+    sourceRoot: `${projectRoot}/src`,
+    targets: {},
+  });
+  generateFiles(tree, path.join(__dirname, 'files'), projectRoot, options);
+  await formatFiles(tree);
+}
+```
+
+This generator calls the following functions:
+
+- `addProjectConfiguration` - Create a new project configured for TypeScript code.
+- `generateFiles` - Create files in the new project based on the template files in the `files` folder.
+- `formatFiles` - Format the newly created files with Prettier.
+
+You can find more helper functions in the [Nx Devkit reference documentation](/nx-api/devkit/documents/nx_devkit).
+
+### Create a README Template File
+
+We can remove the generated `index.ts.template` file and add our own `README.md.template` file in the `files` folder.
+
+```typescript {% fileName="my-plugin/src/generators/library-with-readme/files/README.md.template" %}
+# <%= name %>
+
+This was generated by the `library-with-readme` generator!
+```
+
+The template files that are used in the `generateFiles` function can inject variables and functionality using the EJS syntax. Our README template will replace `<%= name %>` with the name specified in the generator. Read more about the EJS syntax in the [creating files with a generator recipe](/extending-nx/recipes/creating-files).
+
+### Run Your Generator
+
+You can test your generator in dry-run mode with the following command:
+
+```shell
+npx nx g my-plugin:library-with-readme mylib --dry-run
+```
+
+If you're happy with the files that are generated, you can actually run the generator by removing the `--dry-run` flag.
+
+## Next Steps
+
+- [Browse the plugin registry](/plugin-registry) to find one that suits your needs.
+- [Sign up for Nx Enterprise](/enterprise) to get dedicated support from Nx team members.
+- [Collaborate on the Nx Discord](https://go.nx.dev/community) to work with other plugin authors.
