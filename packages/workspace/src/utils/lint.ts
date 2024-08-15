@@ -1,3 +1,6 @@
+/*
+ * @deprecated Use LinterType instead
+ */
 export const enum Linter {
   EsLint = 'eslint',
   None = 'none',
