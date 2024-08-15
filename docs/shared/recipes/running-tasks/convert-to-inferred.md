@@ -197,7 +197,7 @@ The Atomizer splits potentially slow tasks into separate tasks per file. This fe
 
 To enable Atomizer, make sure that you are [connected to Nx Cloud](/ci/intro/connect-to-nx-cloud), and that you have distribution enabled in CI. Some plugins require extra configuration to enable Atomizer, so check the [individual plugin documentation page](/nx-api) for more details.
 
-{% call-to-action title="Connect to Nx Cloud" icon="nxcloud" description="Enable task distribution and Atomizer" url="/enterprise" /%}
+{% call-to-action title="Connect to Nx Cloud" icon="nxcloud" description="Enable task distribution and Atomizer" url="/ci/intro/connect-to-nx-cloud" /%}
 
 ## Troubleshooting
 
