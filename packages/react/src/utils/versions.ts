@@ -11,6 +11,7 @@ export const babelLoaderVersion = '^9.1.2';
 export const typesReactVersion = '18.3.1';
 export const typesReactDomVersion = '18.3.0';
 export const typesReactIsVersion = '18.3.0';
+export const reactViteVersion = '^4.2.0';
 
 export const typesNodeVersion = '18.16.9';
 
