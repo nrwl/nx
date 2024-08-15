@@ -355,6 +355,13 @@
     },
     {
       "description": "",
+      "file": "shared/recipes/running-tasks/convert-to-inferred",
+      "id": "convert-to-inferred",
+      "name": "Migrate to Inferred Tasks (Project Crystal)",
+      "path": "/recipes/running-tasks/convert-to-inferred"
+    },
+    {
+      "description": "",
       "file": "shared/recipes/tips-n-tricks/keep-nx-versions-in-sync",
       "id": "keep-nx-versions-in-sync",
       "name": "Keep Nx Versions in Sync",
@@ -584,6 +591,13 @@
       "id": "inferred-tasks",
       "name": "Inferred Tasks",
       "path": "/concepts/inferred-tasks"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/running-tasks/convert-to-inferred",
+      "id": "convert-to-inferred",
+      "name": "Migrate to Inferred Tasks (Project Crystal)",
+      "path": "/recipes/running-tasks/convert-to-inferred"
     },
     {
       "description": "",
