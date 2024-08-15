@@ -431,6 +431,12 @@
                   "name": "Skip Task Caching",
                   "id": "skipping-cache",
                   "file": "shared/recipes/running-tasks/skipping-cache"
+                },
+                {
+                  "name": "Migrate to Inferred Tasks (Project Crystal)",
+                  "id": "convert-to-inferred",
+                  "tags": ["inferred-tasks", "automate-updating-dependencies"],
+                  "file": "shared/recipes/running-tasks/convert-to-inferred"
                 }
               ]
             },
