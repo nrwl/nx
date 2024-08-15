@@ -244,7 +244,7 @@ export class NodeTaskHasherImpl implements TaskHasherImpl {
     const result: PartialHash[] = [];
     for (const { dependentTasksOutputFiles, transitive } of depsOutputs) {
       result.push(
-        ...(await this.hashDepOuputs(
+        ...(await this.hashDepOutputs(
           task,
           dependentTasksOutputFiles,
           taskGraph,
@@ -255,7 +255,7 @@ export class NodeTaskHasherImpl implements TaskHasherImpl {
     return result;
   }
 
-  private async hashDepOuputs(
+  private async hashDepOutputs(
     task: Task,
     dependentTasksOutputFiles: string,
     taskGraph: TaskGraph,
@@ -267,6 +267,10 @@ export class NodeTaskHasherImpl implements TaskHasherImpl {
     }
 
     const partialHashes: PartialHash[] = [];
+    const _dependentTasksOutputFiles = dependentTasksOutputFiles
+      .replace('{workspaceRoot}', workspaceRoot)
+      .replace('{projectRoot}', task.projectRoot ?? '')
+      .replace('{projectName}', task.target.project);
     for (const d of taskGraph.dependencies[task.id]) {
       const childTask = taskGraph.tasks[d];
       const outputs = getOutputsForTargetAndConfiguration(
@@ -279,8 +283,8 @@ export class NodeTaskHasherImpl implements TaskHasherImpl {
       const outputFiles = getFilesForOutputs(workspaceRoot, outputs);
       const filteredFiles = outputFiles.filter(
         (p) =>
-          p === dependentTasksOutputFiles ||
-          minimatch(p, dependentTasksOutputFiles, { dot: true })
+          p === _dependentTasksOutputFiles ||
+          minimatch(p, _dependentTasksOutputFiles, { dot: true })
       );
       const hashDetails = {};
       const hashes: string[] = [];
@@ -294,14 +298,14 @@ export class NodeTaskHasherImpl implements TaskHasherImpl {
       partialHashes.push({
         value: hash,
         details: {
-          [`${dependentTasksOutputFiles}:${outputs.join(',')}`]: hash,
+          [`${_dependentTasksOutputFiles}:${outputs.join(',')}`]: hash,
         },
       });
       if (transitive) {
         partialHashes.push(
-          ...(await this.hashDepOuputs(
+          ...(await this.hashDepOutputs(
             childTask,
-            dependentTasksOutputFiles,
+            _dependentTasksOutputFiles,
             taskGraph,
             transitive
           ))
