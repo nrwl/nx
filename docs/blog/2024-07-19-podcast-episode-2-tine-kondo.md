@@ -11,7 +11,7 @@ podcastAppleUrl: https://podcasts.apple.com/us/podcast/the-enterprise-software-p
 podcastIHeartUrl: https://www.iheart.com/podcast/269-the-enterprise-software-po-186891508/episode/the-enterprise-software-podcast-by-nx-197335640/
 ---
 
-In this episode, welcome Nx Champion and Nx Expert, Tine Kindo. Our discussion highlights how Nx is poised to make an impact in the Java space.
+In this episode, welcome Nx Champion and Nx Expert, Tine Kondo. Our discussion highlights how Nx is poised to make an impact in the Java space.
 
 We touch on the difficulties larger organizations face when merging PRs in a timely manner, emphasizing how a monorepo alleviates the headache of coordinating multiple PRs across various repositories, and share firsthand experiences and frustrations with traditional multi-repo setups, underscoring the benefits of a unified approach.
 
