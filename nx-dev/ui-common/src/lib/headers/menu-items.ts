@@ -13,6 +13,8 @@ import {
   UserGroupIcon,
   ComputerDesktopIcon,
   GlobeAltIcon,
+  MicrophoneIcon,
+  VideoCameraIcon,
 } from '@heroicons/react/24/outline';
 import { FC, SVGProps } from 'react';
 import { DiscordIcon } from '../discord-icon';
@@ -173,6 +175,22 @@ export const learnItems: MenuItem[] = [
     isHighlight: false,
   },
   {
+    name: 'Podcasts',
+    description: null,
+    href: '/podcast',
+    icon: MicrophoneIcon,
+    isNew: false,
+    isHighlight: false,
+  },
+  {
+    name: 'Webinars',
+    description: null,
+    href: 'https://go.nx.dev/webinar',
+    icon: ComputerDesktopIcon,
+    isNew: false,
+    isHighlight: false,
+  },
+  {
     name: 'Video tutorials',
     description: null,
     href: 'https://www.youtube.com/@nxdevtools',
@@ -215,10 +233,10 @@ export const eventItems: MenuItem[] = [
     isHighlight: false,
   },
   {
-    name: 'Webinars',
+    name: 'Live Streams',
     description: null,
-    href: 'https://go.nx.dev/webinar',
-    icon: ComputerDesktopIcon,
+    href: 'https://www.youtube.com/@nxdevtools/streams',
+    icon: VideoCameraIcon,
     isNew: false,
     isHighlight: false,
   },
