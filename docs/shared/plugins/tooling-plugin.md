@@ -49,7 +49,7 @@ Once the inferred task logic is written, we want to be able to automatically cre
 }
 ```
 
-If the `astro.config.mjs` for a project looks like our example in the previous section, then the inferred `build` task that you see in the project detail view should look like this:
+If the `astro.config.mjs` for a project looks like our example in the previous section, then the inferred configuration for the `build` task should look like this:
 
 ```json
 {
@@ -172,7 +172,7 @@ async function createNodesInternal(configFilePath, options, context) {
 
 We'll test out this inferred task a little later in the tutorial.
 
-Inferred tasks work well for getting users started using your tool quickly, but you can also provide users with [executors](/extending-nx/recipes/local-executors), which are another way of encapsulating a task script for easy use in an Nx workspace. Unlike inferred tasks, executors require users to explicitly configure them for each project that will use the task.
+Inferred tasks work well for getting users started using your tool quickly, but you can also provide users with [executors](/extending-nx/recipes/local-executors), which are another way of encapsulating a task script for easy use in an Nx workspace. Without inferred tasks, executors must be explicitly configured for each task.
 
 ## Create an Init Generator
 
