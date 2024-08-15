@@ -77,10 +77,12 @@ async function getE2EWebServerInfoForPlugin(
   return {
     e2eWebServerAddress: defaultValues.defaultE2EWebServerAddress,
     e2eWebServerCommand: `${pm.exec} nx run ${projectName}:${
-      foundPlugin.options[pluginOptions.serveTargetName]
+      foundPlugin.options[pluginOptions.serveTargetName] ??
+      defaultValues.defaultServeTargetName
     }`,
     e2eCiWebServerCommand: `${pm.exec} nx run ${projectName}:${
-      foundPlugin.options[pluginOptions.serveStaticTargetName]
+      foundPlugin.options[pluginOptions.serveStaticTargetName] ??
+      defaultValues.defaultServeStaticTargetName
     }`,
     e2eCiBaseUrl: defaultValues.defaultE2ECiBaseUrl,
   };
