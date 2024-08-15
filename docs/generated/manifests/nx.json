@@ -1608,6 +1608,17 @@
             "isExternal": false,
             "path": "/recipes/running-tasks/skipping-cache",
             "tags": []
+          },
+          {
+            "id": "convert-to-inferred",
+            "name": "Migrate to Inferred Tasks (Project Crystal)",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/recipes/running-tasks/convert-to-inferred",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/running-tasks/convert-to-inferred",
+            "tags": ["inferred-tasks", "automate-updating-dependencies"]
           }
         ],
         "isExternal": false,
@@ -2974,6 +2985,17 @@
         "isExternal": false,
         "path": "/recipes/running-tasks/skipping-cache",
         "tags": []
+      },
+      {
+        "id": "convert-to-inferred",
+        "name": "Migrate to Inferred Tasks (Project Crystal)",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/running-tasks/convert-to-inferred",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/running-tasks/convert-to-inferred",
+        "tags": ["inferred-tasks", "automate-updating-dependencies"]
       }
     ],
     "isExternal": false,
@@ -3100,6 +3122,17 @@
     "isExternal": false,
     "path": "/recipes/running-tasks/skipping-cache",
     "tags": []
+  },
+  "/recipes/running-tasks/convert-to-inferred": {
+    "id": "convert-to-inferred",
+    "name": "Migrate to Inferred Tasks (Project Crystal)",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/running-tasks/convert-to-inferred",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/running-tasks/convert-to-inferred",
+    "tags": ["inferred-tasks", "automate-updating-dependencies"]
   },
   "/recipes/adopting-nx": {
     "id": "adopting-nx",

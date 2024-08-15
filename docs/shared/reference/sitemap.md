@@ -64,6 +64,7 @@
       - [Reduce Repetitive Configuration](/recipes/running-tasks/reduce-repetitive-configuration)
       - [Change Cache Location](/recipes/running-tasks/change-cache-location)
       - [Skip Task Caching](/recipes/running-tasks/skipping-cache)
+      - [Migrate to Inferred Tasks (Project Crystal)](/recipes/running-tasks/convert-to-inferred)
     - [Adopting Nx](/recipes/adopting-nx)
       - [NPM/Yarn/PNPM workspaces](/recipes/adopting-nx/adding-to-monorepo)
       - [Migrate From Turborepo](/recipes/adopting-nx/from-turborepo)

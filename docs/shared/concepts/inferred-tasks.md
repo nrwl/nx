@@ -74,15 +74,13 @@ More details about how to override task configuration is available in these reci
 
 ## Existing Nx Workspaces
 
-If you have an existing Nx Workspace and upgrade to Nx 18, the migration generator will automatically add `NX_ADD_PLUGINS=false` to your `.env` file. This environment variable allows you to continue to use Nx without inferred tasks. Alternatively, you can set the `useInferencePlugins` property to `false` in `nx.json`.
+If you have an existing Nx Workspace and upgrade to the latest Nx version, a migration will automatically set `useInferencePlugins` to `false` in `nx.json`. This property allows you to continue to use Nx without inferred tasks.
 
-We are working on creating migrations for existing workspaces to start switching to inferred tasks, where desired.
-
-When `NX_ADD_PLUGINS` or `useInferencePlugins` is `false`:
+When `useInferencePlugins` is `false`:
 
 1. A newly generated project will have all targets defined with executors - not with inferred tasks.
 2. Running `nx add @nx/some-plugin` will not create a plugin entry for `@nx/some-plugin` in the `nx.json` file. (So that plugin will not create inferred tasks.)
 
-If your `.env` file is ignored by git, ensure that everyone in your organization sets `NX_ADD_PLUGINS=false`. This could be done by updating a shared `.env` file or setting the environment variable in everyone's `.bashrc` file.
+If you want to **migrate** your projects to use inferred tasks, follow the recipe for [migrating to inferred tasks](/recipes/running-tasks/convert-to-inferred).
 
 Even once a repository has fully embraced inferred tasks, `project.json` and executors will still be useful. The `project.json` file is needed to modify inferred task options and to define tasks that can not be inferred. Some executors perform tasks that can not be accomplished by running a tool directly from the command line (i.e. [TypeScript batch mode](/recipes/tips-n-tricks/enable-tsc-batch-mode)).
