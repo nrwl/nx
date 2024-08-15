@@ -67,7 +67,7 @@ export function HobbyPlan({
           />
           <p>
             <Link
-              href="/products/replay#content"
+              href="/ci/features/remote-cache"
               title="Learn more about Nx Replay"
               prefetch={false}
               className="font-medium text-slate-700 underline dark:text-slate-300"
@@ -84,7 +84,7 @@ export function HobbyPlan({
           />
           <p>
             <Link
-              href="/products/agents#content"
+              href="/ci/features/agents"
               title="Learn more about Nx Agents"
               prefetch={false}
               className="font-medium text-slate-700 underline dark:text-slate-300"
@@ -92,24 +92,6 @@ export function HobbyPlan({
               Nx Agents
             </Link>
             : native task distribution solution for CI{' '}
-          </p>
-        </li>
-        <li className="flex gap-x-3">
-          <CheckIcon
-            className="h-6 w-5 flex-none text-blue-600 dark:text-sky-600"
-            aria-hidden="true"
-          />
-          <p>
-            <Link
-              href="https://nx.app/products/workflows#content?utm_source=nx.dev"
-              title="Learn more about Nx Workflows"
-              prefetch={false}
-              className="font-medium text-slate-700 underline dark:text-slate-300"
-            >
-              Nx Workflows
-            </Link>
-            : full CI replacement{' '}
-            <span className="text-xs italic">(Coming Soon)</span>
           </p>
         </li>
         {features.map((feature) => (
