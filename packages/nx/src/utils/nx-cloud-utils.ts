@@ -5,6 +5,7 @@ export function isNxCloudUsed(nxJson: NxJsonConfiguration): boolean {
     !!process.env.NX_CLOUD_ACCESS_TOKEN ||
     !!nxJson.nxCloudAccessToken ||
     !!nxJson.nxCloudId ||
+    !!nxJson.nxCloudUrl ||
     !!Object.values(nxJson.tasksRunnerOptions ?? {}).find(
       (r) => r.runner == '@nrwl/nx-cloud' || r.runner == 'nx-cloud'
     )
