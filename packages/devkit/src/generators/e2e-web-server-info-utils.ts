@@ -26,6 +26,7 @@ export interface E2EWebServerDetails {
   e2eWebServerCommand: string;
   e2eCiWebServerCommand: string;
   e2eCiBaseUrl: string;
+  e2eDevServerTarget: string;
 }
 
 export async function getE2EWebServerInfo(
@@ -50,6 +51,7 @@ export async function getE2EWebServerInfo(
       e2eWebServerCommand: `${pm.exec} nx run ${projectName}:${defaultValues.defaultServeTargetName}`,
       e2eCiWebServerCommand: `${pm.exec} nx run ${projectName}:${defaultValues.defaultServeStaticTargetName}`,
       e2eCiBaseUrl: defaultValues.defaultE2ECiBaseUrl,
+      e2eDevServerTarget: `${projectName}:${defaultValues.defaultServeTargetName}`,
     };
   }
 }
@@ -76,6 +78,7 @@ async function getE2EWebServerInfoForPlugin(
       e2eWebServerCommand: `${pm.exec} nx run ${projectName}:${defaultValues.defaultServeTargetName}`,
       e2eCiWebServerCommand: `${pm.exec} nx run ${projectName}:${defaultValues.defaultServeStaticTargetName}`,
       e2eCiBaseUrl: defaultValues.defaultE2ECiBaseUrl,
+      e2eDevServerTarget: `${projectName}:${defaultValues.defaultServeTargetName}`,
     };
   }
 
@@ -115,5 +118,9 @@ async function getE2EWebServerInfoForPlugin(
       defaultValues.defaultServeStaticTargetName
     }`,
     e2eCiBaseUrl: defaultValues.defaultE2ECiBaseUrl,
+    e2eDevServerTarget: `${projectName}:${
+      foundPlugin.options[pluginOptions.serveTargetName] ??
+      defaultValues.defaultServeTargetName
+    }`,
   };
 }
