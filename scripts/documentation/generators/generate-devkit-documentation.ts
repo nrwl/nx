@@ -1,9 +1,10 @@
 import * as chalk from 'chalk';
+import * as typedoc from 'typedoc';
 import { execSync, ExecSyncOptions } from 'child_process';
-import { readFileSync, writeFileSync } from 'fs';
+import { cpSync, readFileSync, rmSync, unlinkSync, writeFileSync } from 'fs';
 import { join } from 'path';
 
-export function generateDevkitDocumentation() {
+export async function generateDevkitDocumentation() {
   console.log(`\n${chalk.blue('i')} Generating Documentation for Devkit\n`);
 
   const execSyncOptions: ExecSyncOptions = {
@@ -11,14 +12,18 @@ export function generateDevkitDocumentation() {
     // stdio: process.env.CI === 'true' ? 'inherit' : 'ignore',
   };
 
-  execSync(
-    'nx build devkit && nx build typedoc-theme && rm -rf node_modules/@nx/typedoc-theme && cp -R dist/typedoc-theme node_modules/@nx/typedoc-theme',
-    execSyncOptions
-  );
+  execSync('nx run-many -t build -p devkit,typedoc-theme', execSyncOptions);
 
-  execSync(
-    'cp packages/devkit/tsconfig.lib.json build/packages/devkit/tsconfig.lib.json',
-    execSyncOptions
+  rmSync('node_modules/@nx/typedoc-theme', { recursive: true, force: true });
+
+  cpSync('dist/typedoc-theme', 'node_modules/@nx/typedoc-theme', {
+    recursive: true,
+  });
+
+  cpSync(
+    'packages/devkit/tsconfig.lib.json',
+    'build/packages/devkit/tsconfig.lib.json',
+    { recursive: true }
   );
 
   writeFileSync(
@@ -31,16 +36,42 @@ export function generateDevkitDocumentation() {
       )
   );
 
-  execSync(
-    `rm -rf docs/generated/devkit && pnpm typedoc build/packages/devkit/index.d.ts --tsconfig build/packages/devkit/tsconfig.lib.json --out ./docs/generated/devkit --plugin typedoc-plugin-markdown --plugin @nx/typedoc-theme --hideBreadcrumbs true --disableSources --allReflectionsHaveOwnDocument --publicPath ../../devkit/ --theme nx-markdown-theme --excludePrivate --readme none`,
-    execSyncOptions
-  );
-  execSync(
-    `pnpm typedoc build/packages/devkit/ngcli-adapter.d.ts --tsconfig build/packages/devkit/tsconfig.lib.json --out ./docs/generated/devkit/ngcli_adapter --plugin typedoc-plugin-markdown --plugin @nx/typedoc-theme --hideBreadcrumbs true --disableSources --allReflectionsHaveOwnDocument --publicPath ../../devkit/ngcli_adapter/ --theme nx-markdown-theme --readme none`,
-    execSyncOptions
-  );
-  execSync(`rm -rf build/packages/devkit/tsconfig.lib.json`, execSyncOptions);
-  execSync(`rm -rf docs/generated/devkit/.nojekyll`, execSyncOptions);
+  rmSync('docs/generated/devkit', { recursive: true, force: true });
+
+  const commonTypedocOptions: Partial<typedoc.TypeDocOptions> & {
+    [key: string]: unknown;
+  } = {
+    plugin: ['typedoc-plugin-markdown', '@nx/typedoc-theme'],
+    disableSources: true,
+    theme: 'nx-markdown-theme',
+    readme: 'none',
+    hideBreadcrumbs: true,
+    allReflectionsHaveOwnDocument: true,
+  } as const;
+
+  await runTypedoc({
+    ...commonTypedocOptions,
+    entryPoints: ['build/packages/devkit/index.d.ts'],
+    tsconfig: 'build/packages/devkit/tsconfig.lib.json',
+    out: 'docs/generated/devkit',
+    excludePrivate: true,
+    publicPath: '../../devkit/',
+  });
+
+  await runTypedoc({
+    ...commonTypedocOptions,
+    entryPoints: ['build/packages/devkit/ngcli-adapter.d.ts'],
+    tsconfig: 'build/packages/devkit/tsconfig.lib.json',
+    out: 'docs/generated/devkit/ngcli_adapter',
+    publicPath: '../../devkit/ngcli_adapter/',
+  });
+
+  rmSync('build/packages/devkit/tsconfig.lib.json', {
+    recursive: true,
+    force: true,
+  });
+  rmSync('docs/generated/devkit/.nojekyll', { recursive: true, force: true });
+
   execSync(
     `pnpm prettier docs/generated/devkit --write --config ${join(
       __dirname,
@@ -51,4 +82,22 @@ export function generateDevkitDocumentation() {
     )}`,
     execSyncOptions
   );
+}
+
+async function runTypedoc(
+  options: Partial<typedoc.TypeDocOptions> & { [key: string]: unknown }
+) {
+  const app = await typedoc.Application.bootstrapWithPlugins(
+    options as Partial<typedoc.TypeDocOptions>,
+    [
+      new typedoc.TypeDocReader(),
+      new typedoc.PackageJsonReader(),
+      new typedoc.TSConfigReader(),
+    ]
+  );
+  const project = await app.convert();
+  if (!project) {
+    throw new Error('Failed to convert the project');
+  }
+  await app.generateDocs(project, app.options.getValue('out'));
 }
