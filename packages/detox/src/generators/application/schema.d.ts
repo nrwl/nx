@@ -1,5 +1,5 @@
 import type { ProjectNameAndRootFormat } from '@nx/devkit/src/generators/project-name-and-root-utils';
-import type { Linter } from '@nx/eslint';
+import type { Linter, LinterType } from '@nx/eslint';
 
 export interface Schema {
   appProject: string; // name of the project app to be tested (directory + app name in kebab class)
@@ -8,7 +8,7 @@ export interface Schema {
   e2eDirectory?: string; // the directory where e2e app going to be located
   projectNameAndRootFormat?: ProjectNameAndRootFormat;
   e2eName: string; // name of the e2e app
-  linter?: Linter;
+  linter?: Linter | LinterType;
   js?: boolean;
   skipFormat?: boolean;
   setParserOptionsProject?: boolean;
