@@ -86,7 +86,7 @@ The `targetName`, `ciTargetName`, `componentTestingTargetName`, and `open-cypres
 
 ### Splitting E2E tasks by file
 
-The `@nx/cypress/plugin` will automatically split your e2e tasks by file. You can read more about this feature [here](/ci/features/split-e2e-tasks).
+The `@nx/cypress/plugin` will automatically split your e2e tasks by file. You can read more about the Atomizer feature [here](/ci/features/split-e2e-tasks).
 
 To enable e2e task splitting, make sure there is a `ciWebServerCommand` property set in your `cypress.config.ts` file. It will look something like this:
 

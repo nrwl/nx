@@ -80,7 +80,7 @@ Once a Gradle configuration file has been identified, the targets are created wi
 
 ### Splitting E2E Tests
 
-The `@nx/gradle` plugin will automatically split your e2e tasks by file if you provide a `ciTargetName`. You can read more about this feature [here](/ci/features/split-e2e-tasks). This will create a target with that name which can be used in CI to run the tests for each file in a distributed fashion.
+The `@nx/gradle` plugin will automatically split your e2e tasks by file if you provide a `ciTargetName`. You can read more about the Atomizer feature [here](/ci/features/split-e2e-tasks). This will create a target with that name which can be used in CI to run the tests for each file in a distributed fashion.
 
 ```json {% fileName="nx.json" highlightLines=[6] %}
 {
