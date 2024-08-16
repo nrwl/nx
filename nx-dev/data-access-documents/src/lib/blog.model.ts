@@ -11,8 +11,11 @@ export type BlogPostDataEntry = {
   pinned?: boolean;
   filePath: string;
   slug: string;
-  ogImage: string;
-  ogImageType: string;
+  podcastYoutubeId?: string;
+  podcastSpotifyId?: string;
+  podcastAmazonUrl?: string;
+  podcastAppleUrl?: string;
+  podcastIHeartUrl?: string;
 };
 
 export type BlogAuthor = {

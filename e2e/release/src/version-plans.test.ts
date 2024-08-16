@@ -139,7 +139,7 @@ Here is another line in the message.
       `git commit -m "chore: add version plans for fixed and independent groups"`
     );
 
-    const result = runCLI('release --verbose', {
+    const result = runCLI('release --verbose --skip-publish', {
       silenceError: true,
     });
 
@@ -597,7 +597,7 @@ Update packages in both groups with a mix #2
     // dry-run should not remove the version plan
     expect(exists(join(versionPlansDir, 'bump-mixed1.md'))).toBeTruthy();
 
-    const result2 = runCLI('release --verbose', {
+    const result2 = runCLI('release --verbose --skip-publish', {
       silenceError: true,
     });
 
@@ -766,5 +766,93 @@ Update packages in both groups with a mix #2
     );
 
     expect(readdirSync(versionPlansDir)).toEqual([]);
+  });
+
+  it('version command should bypass version plans when a specifier is passed', async () => {
+    updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
+      nxJson.release = {
+        groups: {
+          'fixed-group': {
+            projects: [pkg1, pkg2],
+            releaseTagPattern: 'v{version}',
+          },
+          'independent-group': {
+            projects: [pkg3, pkg4, pkg5],
+            projectsRelationship: 'independent',
+            releaseTagPattern: '{projectName}@{version}',
+          },
+        },
+        version: {
+          generatorOptions: {
+            specifierSource: 'version-plans',
+          },
+        },
+        changelog: {
+          projectChangelogs: true,
+        },
+        versionPlans: true,
+      };
+      return nxJson;
+    });
+
+    runCLI(
+      'release plan minor -g fixed-group -m "Update the fixed packages with another minor release." --verbose',
+      {
+        silenceError: true,
+      }
+    );
+
+    runCLI(
+      'release plan minor -g independent-group -m "Update the independent packages with another minor release." --verbose',
+      {
+        silenceError: true,
+      }
+    );
+
+    const versionPlansDir = tmpProjPath('.nx/version-plans');
+    await runCommandAsync(`git add ${versionPlansDir}`);
+    await runCommandAsync(
+      `git commit -m "chore: add version plans for fixed and independent groups again"`
+    );
+
+    const releaseResult = runCLI('release major --verbose --skip-publish', {
+      silenceError: true,
+    });
+
+    expect(releaseResult).toContain(
+      `NX   A specifier option cannot be provided when using version plans.`
+    );
+    expect(releaseResult).toContain(
+      `To override this behavior, use the Nx Release programmatic API directly (https://nx.dev/features/manage-releases#using-the-programmatic-api-for-nx-release).`
+    );
+
+    const versionResult = runCLI('release version major --verbose', {
+      silenceError: true,
+    });
+
+    expect(versionResult).toContain(
+      'Skipping version plan discovery as a specifier was provided'
+    );
+    expect(versionResult).toContain(
+      `${pkg1} 📄 Using the provided version specifier "major".`
+    );
+    expect(versionResult).toContain(
+      `${pkg2} 📄 Using the provided version specifier "major".`
+    );
+    expect(versionResult).toContain(
+      `${pkg3} 📄 Using the provided version specifier "major".`
+    );
+    expect(versionResult).toContain(
+      `${pkg4} 📄 Using the provided version specifier "major".`
+    );
+    expect(versionResult).toContain(
+      `${pkg5} 📄 Using the provided version specifier "major".`
+    );
+
+    expect(versionResult).toContain(
+      `git add ${pkg1}/package.json ${pkg2}/package.json ${pkg3}/package.json ${pkg4}/package.json ${pkg5}/package.json`
+    );
+
+    expect(readdirSync(versionPlansDir).length).toEqual(2);
   });
 });

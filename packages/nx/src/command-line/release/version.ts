@@ -189,12 +189,20 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
       output.error(filterError);
       process.exit(1);
     }
-    const rawVersionPlans = await readRawVersionPlans();
-    setResolvedVersionPlansOnGroups(
-      rawVersionPlans,
-      releaseGroups,
-      Object.keys(projectGraph.nodes)
-    );
+    if (!args.specifier) {
+      const rawVersionPlans = await readRawVersionPlans();
+      setResolvedVersionPlansOnGroups(
+        rawVersionPlans,
+        releaseGroups,
+        Object.keys(projectGraph.nodes)
+      );
+    } else {
+      if (args.verbose && releaseGroups.some((g) => !!g.versionPlans)) {
+        console.log(
+          `Skipping version plan discovery as a specifier was provided`
+        );
+      }
+    }
 
     if (args.deleteVersionPlans === undefined) {
       // default to not delete version plans after versioning as they may be needed for changelog generation

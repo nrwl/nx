@@ -98,6 +98,15 @@
         "path": "/nx-api/angular/executors/module-federation-dev-server",
         "type": "executor"
       },
+      "/nx-api/angular/executors/module-federation-dev-ssr": {
+        "description": "The module-federation-ssr-dev-server executor is reserved exclusively for use with host SSR Module Federation applications. It allows the user to specify which remote applications should be served with the host.",
+        "file": "generated/packages/angular/executors/module-federation-dev-ssr.json",
+        "hidden": false,
+        "name": "module-federation-dev-ssr",
+        "originalFilePath": "/packages/angular/src/executors/module-federation-ssr-dev-server/schema.json",
+        "path": "/nx-api/angular/executors/module-federation-dev-ssr",
+        "type": "executor"
+      },
       "/nx-api/angular/executors/application": {
         "description": "Builds an Angular application using [esbuild](https://esbuild.github.io/) with integrated SSR and prerendering capabilities. _Note: this is only supported in Angular versions >= 17.0.0_.",
         "file": "generated/packages/angular/executors/application.json",
@@ -141,15 +150,6 @@
         "name": "webpack-server",
         "originalFilePath": "/packages/angular/src/builders/webpack-server/schema.json",
         "path": "/nx-api/angular/executors/webpack-server",
-        "type": "executor"
-      },
-      "/nx-api/angular/executors/module-federation-dev-ssr": {
-        "description": "Serves host [Module Federation](https://module-federation.io/) applications ([webpack](https://webpack.js.org/)-based) that use SSR allowing to specify which remote applications should be served with the host.",
-        "file": "generated/packages/angular/executors/module-federation-dev-ssr.json",
-        "hidden": false,
-        "name": "module-federation-dev-ssr",
-        "originalFilePath": "/packages/angular/src/builders/module-federation-dev-ssr/schema.json",
-        "path": "/nx-api/angular/executors/module-federation-dev-ssr",
         "type": "executor"
       }
     },
@@ -2928,6 +2928,15 @@
         "name": "migrate-7",
         "originalFilePath": "/packages/storybook/src/generators/migrate-7/schema.json",
         "path": "/nx-api/storybook/generators/migrate-7",
+        "type": "generator"
+      },
+      "/nx-api/storybook/generators/migrate-8": {
+        "description": "Migrate to Storybook version 8.",
+        "file": "generated/packages/storybook/generators/migrate-8.json",
+        "hidden": false,
+        "name": "migrate-8",
+        "originalFilePath": "/packages/storybook/src/generators/migrate-8/schema.json",
+        "path": "/nx-api/storybook/generators/migrate-8",
         "type": "generator"
       }
     },

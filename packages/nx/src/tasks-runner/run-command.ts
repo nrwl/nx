@@ -257,7 +257,7 @@ async function ensureWorkspaceIsInSyncAndGetGraphs(
   }
 
   const outOfSyncTitle = 'The workspace is out of sync';
-  const resultBodyLines = syncGeneratorResultsToMessageLines(results);
+  const resultBodyLines = [...syncGeneratorResultsToMessageLines(results), ''];
   const fixMessage =
     'You can manually run `nx sync` to update your workspace or you can set `sync.applyChanges` to `true` in your `nx.json` to apply the changes automatically when running tasks.';
   const willErrorOnCiMessage = 'Please note that this will be an error on CI.';
@@ -344,30 +344,34 @@ Please make sure to commit the changes to your repository.`);
 }
 
 async function promptForApplyingSyncGeneratorChanges(): Promise<boolean> {
-  const promptConfig = {
-    name: 'applyChanges',
-    type: 'select',
-    message:
-      'Would you like to sync the changes to get your worskpace up to date?',
-    choices: [
-      {
-        name: 'yes',
-        message: 'Yes, sync the changes and run the tasks',
-      },
-      {
-        name: 'no',
-        message: 'No, run the tasks without syncing the changes',
-      },
-    ],
-    footer: () =>
-      chalk.dim(
-        '\nYou can skip this prompt by setting the `sync.applyChanges` option in your `nx.json`.'
-      ),
-  };
+  try {
+    const promptConfig = {
+      name: 'applyChanges',
+      type: 'select',
+      message:
+        'Would you like to sync the changes to get your worskpace up to date?',
+      choices: [
+        {
+          name: 'yes',
+          message: 'Yes, sync the changes and run the tasks',
+        },
+        {
+          name: 'no',
+          message: 'No, run the tasks without syncing the changes',
+        },
+      ],
+      footer: () =>
+        chalk.dim(
+          '\nYou can skip this prompt by setting the `sync.applyChanges` option in your `nx.json`.'
+        ),
+    };
 
-  return await prompt<{ applyChanges: 'yes' | 'no' }>([promptConfig]).then(
-    ({ applyChanges }) => applyChanges === 'yes'
-  );
+    return await prompt<{ applyChanges: 'yes' | 'no' }>([promptConfig]).then(
+      ({ applyChanges }) => applyChanges === 'yes'
+    );
+  } catch {
+    process.exit(1);
+  }
 }
 
 function setEnvVarsBasedOnArgs(nxArgs: NxArgs, loadDotEnvFiles: boolean) {

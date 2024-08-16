@@ -1,44 +1,16 @@
-# Maintain a Published Plugins
-
-To create a plugin, see the [create a local plugin tutorial](/extending-nx/tutorials/create-plugin).
-
-## Publish your Nx Plugin
+# Publish your Nx Plugin
 
 In order to use your plugin in other workspaces or share it with the community, you will need to publish it to an npm registry. To publish your plugin follow these steps:
 
-1. `nx publish my-plugin --ver=1.0.0` which automatically builds `my-plugin`
+1. `nx nx-release-publish nx-cfonts`
 2. Follow the prompts from npm.
 3. That's it!
 
-{% callout type="warning" title="Version bump" %}
-Currently you will have to modify the `package.json` version by yourself or with a tool.
-{% /callout %}
-
-After that, you can then install your plugin like any other npm package -
-
-{% tabs %}
-{% tab label="npm" %}
+After that, you can then install your plugin like any other Nx plugin -
 
 ```shell
-npm add -D @my-org/my-plugin
+nx add nx-cfonts
 ```
-
-{% /tab %}
-{% tab label="yarn" %}
-
-```shell
-yarn add -D @my-org/my-plugin
-```
-
-{% /tab %}
-{% tab label="pnpm" %}
-
-```shell
-pnpm add -D @my-org/my-plugin
-```
-
-{% /tab %}
-{% /tabs %}
 
 ## List your Nx Plugin
 
@@ -72,7 +44,3 @@ Once those criteria are met, you can submit your plugin by following the steps b
 > The `yarn submit-plugin` command automatically opens the GitHub pull request process with the correct template.
 
 We will then verify the plugin, offer suggestions or merge the pull request!
-
-## Write Migrations
-
-Once other repos are using your plugin, it would help them if you write migrations to automatically update their configuration files whenever you make breaking changes. Read the [migration generators guide](/extending-nx/recipes/migration-generators) to find out how.

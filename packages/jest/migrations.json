@@ -73,10 +73,6 @@
           "version": "~29.7.0",
           "alwaysAddToPackageJson": false
         },
-        "ts-jest": {
-          "version": "~29.2.4",
-          "alwaysAddToPackageJson": false
-        },
         "babel-jest": {
           "version": "~29.7.0",
           "alwaysAddToPackageJson": false

@@ -1,4 +1,4 @@
-import { readFileSync, readdirSync, accessSync, constants } from 'fs';
+import { readFileSync, accessSync, constants } from 'fs';
 import { join, basename, parse, resolve } from 'path';
 import { extractFrontmatter } from '@nx/nx-dev/ui-markdoc';
 import { sortPosts } from './blog.util';
@@ -19,7 +19,6 @@ export class BlogApi {
       throw new Error('public blog root cannot be undefined');
     }
   }
-
   async getBlogTags(): Promise<string[]> {
     const blogs = await this.getBlogs();
     const tags = new Set<string>();
@@ -28,8 +27,15 @@ export class BlogApi {
     });
     return Array.from(tags);
   }
+  async getBlogs(
+    filterFn?: (post: BlogPostDataEntry) => boolean
+  ): Promise<BlogPostDataEntry[]> {
+    return await this.getAllBlogs(filterFn);
+  }
 
-  async getBlogs(): Promise<BlogPostDataEntry[]> {
+  async getAllBlogs(
+    filterFn?: (post: BlogPostDataEntry) => boolean
+  ): Promise<BlogPostDataEntry[]> {
     const files: string[] = await readdir(this.options.blogRoot);
     const authors = JSON.parse(
       readFileSync(join(this.options.blogRoot, 'authors.json'), 'utf8')
@@ -62,66 +68,22 @@ export class BlogApi {
         ogImageType: type,
         filePath,
         slug,
+        podcastYoutubeId: frontmatter.podcastYoutubeId,
+        podcastSpotifyId: frontmatter.podcastSpotifyId,
+        podcastIHeartUrl: frontmatter.podcastIHeartUrl,
+        podcastAppleUrl: frontmatter.podcastAppleUrl,
+        podcastAmazonUrl: frontmatter.podcastAmazonUrl,
       };
-      if (!frontmatter.draft || process.env.NODE_ENV === 'development') {
+      const isDevelopment = process.env.NODE_ENV === 'development';
+      const shouldIncludePost = !frontmatter.draft || isDevelopment;
+
+      if (shouldIncludePost && (!filterFn || filterFn(post))) {
         allPosts.push(post);
       }
     }
     return sortPosts(allPosts);
   }
 
-  getBlogPosts(): BlogPostDataEntry[] {
-    const files: string[] = readdirSync(this.options.blogRoot);
-    const authors = JSON.parse(
-      readFileSync(join(this.options.blogRoot, 'authors.json'), 'utf8')
-    );
-    const allPosts: BlogPostDataEntry[] = [];
-
-    for (const file of files) {
-      const filePath = join(this.options.blogRoot, file);
-      // filter out directories (e.g. images)
-      if (!filePath.endsWith('.md')) continue;
-
-      const content = readFileSync(filePath, 'utf8');
-      const frontmatter = extractFrontmatter(content);
-      const slug = this.calculateSlug(filePath, frontmatter);
-      const { image, type } = this.determineOgImage(frontmatter.cover_image);
-      const post = {
-        content,
-        title: frontmatter.title ?? null,
-        description: frontmatter.description ?? null,
-        authors: authors.filter((author) =>
-          frontmatter.authors.includes(author.name)
-        ),
-        date: this.calculateDate(file, frontmatter),
-        cover_image: frontmatter.cover_image
-          ? `/documentation${frontmatter.cover_image}` // Match the prefix used by markdown parser
-          : null,
-        tags: frontmatter.tags ?? [],
-        reposts: frontmatter.reposts ?? [],
-        pinned: frontmatter.pinned ?? false,
-        ogImage: image,
-        ogImageType: type,
-        filePath,
-        slug,
-      };
-
-      if (!frontmatter.draft || process.env.NODE_ENV === 'development') {
-        allPosts.push(post);
-      }
-    }
-
-    return sortPosts(allPosts);
-  }
-
-  getBlogPost(slug: string): BlogPostDataEntry {
-    const blogs = this.getBlogPosts();
-    const blog = blogs.find((b) => b.slug === slug);
-    if (!blog) {
-      throw new Error(`Could not find blog post with slug: ${slug}`);
-    }
-    return blog;
-  }
   // Optimize this so we don't read the FS multiple times
   async getBlogPostBySlug(
     slug: string | null
@@ -171,6 +133,7 @@ export class BlogApi {
     if (!imagePath) {
       return { image: defaultImage, type: defaultType };
     }
+
     const { ext } = parse(imagePath);
 
     if (!allowedExtensions.includes(ext)) {
@@ -190,10 +153,14 @@ export class BlogApi {
       }
 
       return {
-        image: imagePath.replace(ext, foundExt),
+        image: join('documentation', imagePath.replace(ext, foundExt)),
         type: foundExt.replace('.', ''),
       };
     }
-    return { image: imagePath, type: ext.replace('.', '') };
+
+    return {
+      image: join('documentation', imagePath),
+      type: ext.replace('.', ''),
+    };
   }
 }
