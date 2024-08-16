@@ -49,7 +49,10 @@ export function buildEsbuildOptions(
   };
 
   if (options.platform === 'browser') {
-    esbuildOptions.define = getClientEnvironment();
+    esbuildOptions.define = {
+      ...getClientEnvironment(),
+      ...options.userDefinedBuildOptions?.define,
+    };
   }
 
   if (!esbuildOptions.outfile && !esbuildOptions.outdir) {
