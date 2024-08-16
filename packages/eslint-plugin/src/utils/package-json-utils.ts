@@ -1,7 +1,6 @@
 import { readJsonFile } from '@nx/devkit';
 import { existsSync } from 'fs';
-import { PackageJson } from 'nx/src/utils/package-json';
-import { isTerminalRun } from './runtime-lint-utils';
+import type { PackageJson } from 'nx/src/utils/package-json';
 
 export function getAllDependencies(
   packageJson: PackageJson
@@ -15,23 +14,13 @@ export function getAllDependencies(
 }
 
 export function getProductionDependencies(
-  packageJsonPath: string
+  packageJson: PackageJson
 ): Record<string, string> {
-  if (
-    !globalThis.projPackageJsonDeps ||
-    !globalThis.projPackageJsonDeps[packageJsonPath] ||
-    !isTerminalRun()
-  ) {
-    const packageJson = getPackageJson(packageJsonPath);
-    globalThis.projPackageJsonDeps = globalThis.projPackageJsonDeps || {};
-    globalThis.projPackageJsonDeps[packageJsonPath] = {
-      ...packageJson.dependencies,
-      ...packageJson.peerDependencies,
-      ...packageJson.optionalDependencies,
-    };
-  }
-
-  return globalThis.projPackageJsonDeps[packageJsonPath];
+  return {
+    ...packageJson.dependencies,
+    ...packageJson.peerDependencies,
+    ...packageJson.optionalDependencies,
+  };
 }
 
 export function getPackageJson(path: string): PackageJson {
