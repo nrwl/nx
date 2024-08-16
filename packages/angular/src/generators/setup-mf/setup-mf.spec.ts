@@ -3,13 +3,14 @@ import 'nx/src/internal-testing-utils/mock-project-graph';
 import {
   readJson,
   readProjectConfiguration,
-  Tree,
   updateJson,
+  type Tree,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { E2eTestRunner } from '../../utils/test-runners';
+import { nxVersion } from '../../utils/versions';
 import { generateTestApplication } from '../utils/testing';
 import { setupMf } from './setup-mf';
-import { E2eTestRunner } from '../../utils/test-runners';
 
 describe('Init MF', () => {
   let tree: Tree;
@@ -758,6 +759,42 @@ describe('Init MF', () => {
       });
       "
     `);
+  });
+
+  it('should move the @nx/angular plugin to dependencies when --mfType=host', async () => {
+    updateJson(tree, 'package.json', (json) => ({
+      ...json,
+      devDependencies: {
+        ...json.devDependencies,
+        '@nx/angular': nxVersion,
+      },
+    }));
+
+    await setupMf(tree, { appName: 'app1', mfType: 'host' });
+
+    const { devDependencies, dependencies } = readJson(tree, 'package.json');
+    expect(devDependencies['@nx/angular']).toBeUndefined();
+    expect(dependencies['@nx/angular']).toBe(nxVersion);
+  });
+
+  it('should move the @nx/angular plugin to dependencies when --federationType=dynamic', async () => {
+    updateJson(tree, 'package.json', (json) => ({
+      ...json,
+      devDependencies: {
+        ...json.devDependencies,
+        '@nx/angular': nxVersion,
+      },
+    }));
+
+    await setupMf(tree, {
+      appName: 'app1',
+      mfType: 'remote',
+      federationType: 'dynamic',
+    });
+
+    const { devDependencies, dependencies } = readJson(tree, 'package.json');
+    expect(devDependencies['@nx/angular']).toBeUndefined();
+    expect(dependencies['@nx/angular']).toBe(nxVersion);
   });
 
   describe('angular compat support', () => {
