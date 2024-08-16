@@ -18,7 +18,7 @@ export async function withModuleFederationForSSR(
     });
 
   return (config) => {
-    config.target = false;
+    config.target = 'async-node';
     config.output.uniqueName = options.name;
     config.optimization = {
       ...(config.optimization ?? {}),
@@ -35,10 +35,6 @@ export async function withModuleFederationForSSR(
           shared: {
             ...sharedDependencies,
           },
-          library: {
-            type: 'commonjs-module',
-          },
-          isServer: true,
           /**
            * Apply user-defined config overrides
            */
@@ -52,7 +48,10 @@ export async function withModuleFederationForSSR(
                     '@nx/webpack/src/utils/module-federation/plugins/runtime-library-control.plugin.js'
                   ),
                 ]
-              : configOverride?.runtimePlugins,
+              : [
+                  ...(configOverride?.runtimePlugins ?? []),
+                  require.resolve('@module-federation/node/runtimePlugin'),
+                ],
         },
         {}
       ),
