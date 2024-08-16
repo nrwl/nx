@@ -20,6 +20,7 @@ import { useMemo } from 'react';
 import { menusApi } from '../../lib/menus.api';
 import { useNavToggle } from '../../lib/navigation-toggle.effect';
 import { nxPackagesApi } from '../../lib/packages.api';
+import { ScrollableContent } from '@nx/ui-scrollable-content';
 
 export default function Packages({
   packages,
@@ -97,11 +98,7 @@ export default function Packages({
             navIsOpen={navIsOpen}
             toggleNav={toggleNav}
           />
-          <div
-            id="wrapper"
-            data-testid="wrapper"
-            className="relative flex flex-grow flex-col items-stretch justify-start overflow-y-scroll"
-          >
+          <ScrollableContent>
             <div className="mx-auto w-full grow items-stretch px-4 sm:px-6 lg:px-8 2xl:max-w-6xl">
               <div id="content-wrapper" className="w-full flex-auto flex-col">
                 <div className="mb-6 pt-8">
@@ -152,7 +149,7 @@ export default function Packages({
               </div>
             </div>
             <Footer />
-          </div>
+          </ScrollableContent>
         </main>
       </div>
     </>

@@ -129,6 +129,9 @@
       "@nx/storybook": ["packages/storybook"],
       "@nx/storybook/*": ["packages/storybook/*"],
       "@nx/typedoc-theme": ["typedoc-theme/src/index.ts"],
+      "@nx/ui-scrollable-content": [
+        "nx-dev/ui-scrollable-content/src/index.ts"
+      ],
       "@nx/vite": ["packages/vite"],
       "@nx/vite/*": ["packages/vite/*"],
       "@nx/vue": ["packages/vue"],
