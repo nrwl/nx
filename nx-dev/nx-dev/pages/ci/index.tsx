@@ -4,13 +4,12 @@ import { ProcessedDocument, RelatedDocument } from '@nx/nx-dev/models-document';
 import { Menu, MenuItem } from '@nx/nx-dev/models-menu';
 import { DocumentationHeader, SidebarContainer } from '@nx/nx-dev/ui-common';
 import { GetStaticProps } from 'next';
-import { useRouter } from 'next/router';
-import { useEffect, useRef } from 'react';
 import { ciApi } from '../../lib/ci.api';
 import { menusApi } from '../../lib/menus.api';
 import { useNavToggle } from '../../lib/navigation-toggle.effect';
 import { tagsApi } from '../../lib/tags.api';
 import { fetchGithubStarCount } from '../../lib/githubStars.api';
+import { ScrollableContent } from '@nx/ui-scrollable-content';
 
 export default function CloudRoot({
   document,
@@ -23,25 +22,7 @@ export default function CloudRoot({
   relatedDocuments: RelatedDocument[];
   widgetData: { githubStarsCount: number };
 }) {
-  const router = useRouter();
   const { toggleNav, navIsOpen } = useNavToggle();
-  const wrapperElement = useRef(null);
-
-  useEffect(() => {
-    const handleRouteChange = (url: string) => {
-      if (url.includes('#')) return;
-      if (!wrapperElement) return;
-
-      (wrapperElement as any).current.scrollTo({
-        top: 0,
-        left: 0,
-        behavior: 'smooth',
-      });
-    };
-
-    router.events.on('routeChangeComplete', handleRouteChange);
-    return () => router.events.off('routeChangeComplete', handleRouteChange);
-  }, [router, wrapperElement]);
 
   const vm: {
     document: ProcessedDocument;
@@ -70,18 +51,13 @@ export default function CloudRoot({
           navIsOpen={navIsOpen}
           toggleNav={toggleNav}
         />
-        <div
-          ref={wrapperElement}
-          id="wrapper"
-          data-testid="wrapper"
-          className="relative flex flex-grow flex-col items-stretch justify-start overflow-y-scroll"
-        >
+        <ScrollableContent resetScrollOnNavigation={true}>
           <DocViewer
             document={document}
             relatedDocuments={vm.relatedDocuments}
             widgetData={widgetData}
           />
-        </div>
+        </ScrollableContent>
       </main>
     </div>
   );
