@@ -8,7 +8,6 @@ import { satisfies } from 'semver';
 import {
   getAllDependencies,
   getPackageJson,
-  getProductionDependencies,
 } from '../utils/package-json-utils';
 import { readProjectGraph } from '../utils/project-graph-utils';
 import {
@@ -152,14 +151,13 @@ export default ESLintUtils.RuleCreator(
     );
     const expectedDependencyNames = Object.keys(npmDependencies);
 
-    const projPackageJsonPath = join(
-      workspaceRoot,
-      sourceProject.data.root,
-      'package.json'
-    );
+    const packageJson = JSON.parse(context.sourceCode.getText());
+    const projPackageJsonDeps = {
+      ...packageJson.dependencies,
+      ...packageJson.peerDependencies,
+      ...packageJson.optionalDependencies,
+    };
 
-    const projPackageJsonDeps: Record<string, string> =
-      getProductionDependencies(projPackageJsonPath);
     const rootPackageJsonDeps = getAllDependencies(rootPackageJson);
 
     function validateMissingDependencies(node: AST.JSONProperty) {

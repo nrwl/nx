@@ -478,13 +478,21 @@ describe('Linter', () => {
             `import { names } from '@nx/devkit';\n\n` +
             content.replace(/=> .*;/, `=> names('${mylib}').className;`)
         );
+        // intentionally set an obsolete dependency
+        updateJson(`libs/${mylib}/package.json`, (json) => {
+          json.dependencies['@nx/js'] = nxVersion;
+          return json;
+        });
 
-        // output should now report missing dependency
+        // output should now report missing dependency and obsolete dependency
         out = runCLI(`lint ${mylib}`, { silenceError: true });
         expect(out).toContain('they are missing');
         expect(out).toContain('@nx/devkit');
+        expect(out).toContain(
+          `The "@nx/js" package is not used by "${mylib}" project`
+        );
 
-        // should fix the missing dependency issue
+        // should fix the missing and obsolete dependency issues
         out = runCLI(`lint ${mylib} --fix`, { silenceError: true });
         expect(out).toContain(
           `Successfully ran target lint for project ${mylib}`
