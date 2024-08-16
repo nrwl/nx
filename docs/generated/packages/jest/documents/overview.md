@@ -70,7 +70,7 @@ within the same workspace. In this case, you can configure the `@nx/jest/plugin`
 ### Splitting E2E Tests
 
 If Jest is used to run E2E tests, you can enable [splitting the tasks](/ci/features/split-e2e-tasks) by file to get
-improved caching, distribution, and retrying flaky tests. Enable this, by providing a `ciTargetName`. This will create a
+improved caching, distribution, and retrying flaky tests. Enable this Atomizer feature by providing a `ciTargetName`. This will create a
 target with that name which can be used in CI to run the tests for each file in a distributed fashion.
 
 ```json {% fileName="nx.json" %}
