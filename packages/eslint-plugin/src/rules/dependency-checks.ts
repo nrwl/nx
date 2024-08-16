@@ -8,6 +8,7 @@ import { satisfies } from 'semver';
 import {
   getAllDependencies,
   getPackageJson,
+  getProductionDependencies,
 } from '../utils/package-json-utils';
 import { readProjectGraph } from '../utils/project-graph-utils';
 import {
@@ -152,11 +153,7 @@ export default ESLintUtils.RuleCreator(
     const expectedDependencyNames = Object.keys(npmDependencies);
 
     const packageJson = JSON.parse(context.sourceCode.getText());
-    const projPackageJsonDeps = {
-      ...packageJson.dependencies,
-      ...packageJson.peerDependencies,
-      ...packageJson.optionalDependencies,
-    };
+    const projPackageJsonDeps = getProductionDependencies(packageJson);
 
     const rootPackageJsonDeps = getAllDependencies(rootPackageJson);
 
