@@ -112,7 +112,7 @@ export class GitRepository {
   }
 
   async move(path: string, destination: string) {
-    return this.execAsync(`git mv ${path} ${destination}`);
+    return this.execAsync(`git mv "${path}" "${destination}"`);
   }
 
   async push(ref: string, remoteName: string) {

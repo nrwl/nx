@@ -84,7 +84,9 @@ export async function prepareSourceRepo(
         await rm(destinationInSource, {
           recursive: true,
         });
-        await gitClient.commit('chore(repo): prepare for import');
+        await gitClient.commit(
+          `chore(repo): move ${source} to ${relativeDestination} to prepare to be imported`
+        );
         needsSquash = true;
       } catch {}
 
@@ -118,7 +120,9 @@ export async function prepareSourceRepo(
         });
       }
     }
-    await gitClient.commit('chore(repo): prepare for import 2');
+    await gitClient.commit(
+      `chore(repo): move ${source} to ${relativeDestination} to prepare to be imported`
+    );
     if (needsSquash) {
       await gitClient.squashLastTwoCommits();
     }
