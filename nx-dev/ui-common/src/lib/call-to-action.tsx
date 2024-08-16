@@ -9,7 +9,7 @@ export interface CTAProps {
 export function CallToAction({
   mainActionTitle = 'Get started with Nx',
   mainActionLinkText = 'Get started',
-  mainActionLink = '/docs',
+  mainActionLink = '/getting-started/intro',
 }: CTAProps): JSX.Element {
   return (
     <section className="relative isolate px-6 py-32 sm:py-40 lg:px-8">
