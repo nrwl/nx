@@ -188,7 +188,7 @@ launch-templates:
       - name: Restore Node Modules Cache
         uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/cache/main.yaml'
         inputs:
-          env: 'package-lock.json|yarn.lock|pnpm-lock.yaml'
+          key: 'package-lock.json|yarn.lock|pnpm-lock.yaml'
           paths: 'node_modules'
           base_branch: 'main'
 ```
@@ -221,13 +221,13 @@ launch-templates:
         # the cache step requires configuration via env vars
         # https://github.com/nrwl/nx-cloud-workflows/tree/main/workflow-steps/cache#options
         inputs:
-          env: 'package-lock.json|yarn.lock|pnpm-lock.yaml'
+          key: 'package-lock.json|yarn.lock|pnpm-lock.yaml'
           paths: 'node_modules'
           base_branch: 'main'
       - name: Restore Browser Binary Cache
         uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/cache/main.yaml'
         inputs:
-          env: 'package-lock.json|yarn.lock|pnpm-lock.yaml|"browsers"'
+          key: 'package-lock.json|yarn.lock|pnpm-lock.yaml|"browsers"'
           paths: |
             '~/.cache/Cypress'
             '~/.cache/ms-playwright'
@@ -272,13 +272,13 @@ launch-templates:
       - name: Restore Node Modules Cache
         uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/cache/main.yaml'
         inputs:
-          env: 'package-lock.json|yarn.lock|pnpm-lock.yaml'
+          key: 'package-lock.json|yarn.lock|pnpm-lock.yaml'
           paths: 'node_modules'
           base_branch: 'main'
       - name: Restore Browser Binary Cache
         uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/cache/main.yaml'
         inputs:
-          env: 'package-lock.json|yarn.lock|pnpm-lock.yaml|"browsers"'
+          key: 'package-lock.json|yarn.lock|pnpm-lock.yaml|"browsers"'
           paths: |
             '~/.cache/Cypress'
             '~/.cache/ms-playwright'
@@ -310,7 +310,7 @@ launch-templates:
       - name: Restore Node Modules Cache
         uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/cache/main.yaml'
         inputs:
-          env: 'package-lock.json|yarn.lock|pnpm-lock.yaml'
+          key: 'package-lock.json|yarn.lock|pnpm-lock.yaml'
           paths: 'node_modules'
           base_branch: 'main'
       - name: Install Node Modules
