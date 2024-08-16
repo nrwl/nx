@@ -536,7 +536,7 @@ export function PlanTable(): JSX.Element {
                 Explain with AI
               </span>
               : provide detailed explanations and insights for failed task
-              outputs.
+              outputs
             </th>
             <td className="border-l border-t border-slate-200 px-2 py-1.5 md:px-3 lg:px-4 lg:py-2.5 dark:border-slate-800">
               <XMarkIcon className="h-6 w-5 flex-none" aria-hidden="true" />
