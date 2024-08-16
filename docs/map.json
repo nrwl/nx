@@ -431,6 +431,12 @@
                   "name": "Skip Task Caching",
                   "id": "skipping-cache",
                   "file": "shared/recipes/running-tasks/skipping-cache"
+                },
+                {
+                  "name": "Migrate to Inferred Tasks (Project Crystal)",
+                  "id": "convert-to-inferred",
+                  "tags": ["inferred-tasks", "automate-updating-dependencies"],
+                  "file": "shared/recipes/running-tasks/convert-to-inferred"
                 }
               ]
             },
@@ -1016,6 +1022,12 @@
                   "file": "shared/recipes/nx-release/customize-conventional-commit-types"
                 },
                 {
+                  "name": "File Based Versioning (Version Plans)",
+                  "id": "file-based-versioning-version-plans",
+                  "tags": ["nx-release"],
+                  "file": "shared/recipes/nx-release/file-based-versioning-version-plans"
+                },
+                {
                   "name": "Configure Custom Registries",
                   "id": "configure-custom-registries",
                   "tags": ["nx-release"],
@@ -1457,7 +1469,7 @@
           "description": "Learn about plugins.",
           "itemList": [
             {
-              "name": "Getting Started with Plugins",
+              "name": "Extending Nx with Plugins",
               "id": "getting-started",
               "description": "Learn how to extend Nx by creating and releasing your own Nx plugin.",
               "file": "shared/plugins/intro"
@@ -1465,19 +1477,19 @@
           ]
         },
         {
-          "name": "5 Min Tutorials",
+          "name": "Tutorials",
           "id": "tutorials",
           "description": "Get started with plugins",
           "itemList": [
             {
-              "name": "Create a Local Plugin",
-              "id": "create-plugin",
-              "file": "shared/plugins/create-plugin"
+              "name": "Enforce Organizational Best Practices",
+              "id": "organization-specific-plugin",
+              "file": "shared/plugins/organization-specific-plugin"
             },
             {
-              "name": "Maintain a Published Plugin",
-              "id": "publish-plugin",
-              "file": "shared/plugins/maintain-published-plugin"
+              "name": "Create a Tooling Plugin",
+              "id": "tooling-plugin",
+              "file": "shared/plugins/tooling-plugin"
             }
           ]
         },
@@ -1486,18 +1498,6 @@
           "id": "recipes",
           "description": "Focused instructions to complete a specific task",
           "itemList": [
-            {
-              "name": "Write a Simple Executor",
-              "id": "local-executors",
-              "tags": [],
-              "file": "shared/recipes/plugins/local-executors"
-            },
-            {
-              "name": "Compose Executors",
-              "id": "compose-executors",
-              "tags": [],
-              "file": "shared/recipes/plugins/compose-executors"
-            },
             {
               "name": "Write a Simple Generator",
               "id": "local-generators",
@@ -1535,6 +1535,18 @@
               "file": "shared/recipes/plugins/migration-generators"
             },
             {
+              "name": "Write a Simple Executor",
+              "id": "local-executors",
+              "tags": [],
+              "file": "shared/recipes/plugins/local-executors"
+            },
+            {
+              "name": "Compose Executors",
+              "id": "compose-executors",
+              "tags": [],
+              "file": "shared/recipes/plugins/compose-executors"
+            },
+            {
               "name": "Create a Preset",
               "id": "create-preset",
               "tags": ["create-your-own-plugin"],
@@ -1547,7 +1559,7 @@
               "file": "shared/recipes/plugins/create-install-package"
             },
             {
-              "name": "Modify the Project Graph",
+              "name": "Infer Tasks or Projects",
               "id": "project-graph-plugins",
               "tags": [
                 "create-your-own-plugin",
@@ -1555,6 +1567,12 @@
                 "inferred-tasks"
               ],
               "file": "shared/recipes/plugins/project-graph-plugins"
+            },
+            {
+              "name": "Publish a Plugin",
+              "id": "publish-plugin",
+              "tags": ["create-your-own-plugin"],
+              "file": "shared/recipes/plugins/publish-plugin"
             }
           ]
         }

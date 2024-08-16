@@ -5,6 +5,7 @@ import {
   getPackageManagerCommand,
   joinPathFragments,
   parseTargetString,
+  ProjectGraph,
   readNxJson,
   type Tree,
   visitNotIgnoredFiles,
@@ -91,13 +92,18 @@ export default async function (tree: Tree) {
       joinPathFragments(graph.nodes[project].data.root, 'webpack.config.js'),
     ].find((p) => tree.exists(p));
 
-    collectedProjects.push({
-      projectName: project,
-      configFile: pathToWebpackConfig ?? pathToViteConfig,
-      configFileType: pathToWebpackConfig ? 'webpack' : 'vite',
-      playwrightConfigFile: path,
-      commandValueNode,
-    });
+    const configFile = pathToWebpackConfig ?? pathToViteConfig;
+
+    // Only migrate projects that have a webpack or vite config file
+    if (configFile) {
+      collectedProjects.push({
+        projectName: project,
+        configFile,
+        configFileType: pathToWebpackConfig ? 'webpack' : 'vite',
+        playwrightConfigFile: path,
+        commandValueNode,
+      });
+    }
   });
 
   for (const projectToMigrate of collectedProjects) {
@@ -105,22 +111,36 @@ export default async function (tree: Tree) {
       projectToMigrate.playwrightConfigFile,
       'utf-8'
     );
-    const targetName = await getServeStaticTargetNameForConfigFile(
-      tree,
-      projectToMigrate.configFileType === 'webpack'
-        ? '@nx/webpack/plugin'
-        : '@nx/vite/plugin',
-      projectToMigrate.configFile,
-      projectToMigrate.configFileType === 'webpack'
-        ? 'serve-static'
-        : 'preview',
-      projectToMigrate.configFileType === 'webpack'
-        ? 'serveStaticTargetName'
-        : 'previewTargetName',
-      projectToMigrate.configFileType === 'webpack'
-        ? webpackCreateNodesV2
-        : viteCreateNodesV2
-    );
+    const targetName =
+      (await getServeStaticTargetNameForConfigFile(
+        tree,
+        projectToMigrate.configFileType === 'webpack'
+          ? '@nx/webpack/plugin'
+          : '@nx/vite/plugin',
+        projectToMigrate.configFile,
+        projectToMigrate.configFileType === 'webpack'
+          ? 'serve-static'
+          : 'preview',
+        projectToMigrate.configFileType === 'webpack'
+          ? 'serveStaticTargetName'
+          : 'previewTargetName',
+        projectToMigrate.configFileType === 'webpack'
+          ? webpackCreateNodesV2
+          : viteCreateNodesV2
+      )) ??
+      getServeStaticLikeTarget(
+        tree,
+        graph,
+        projectToMigrate.projectName,
+        projectToMigrate.configFileType === 'webpack'
+          ? '@nx/web:file-server'
+          : '@nx/vite:preview-server'
+      );
+
+    if (!targetName) {
+      continue;
+    }
+
     const oldCommand = projectToMigrate.commandValueNode.getText();
     const newCommand = oldCommand.replace(
       /nx.*[^"']/,
@@ -220,10 +240,10 @@ async function getServeStaticTargetNameForConfigFile<T>(
   );
 
   if (!matchingPluginRegistrations) {
-    return defaultTargetName;
+    return undefined;
   }
 
-  let targetName = defaultTargetName;
+  let targetName = undefined;
   for (const plugin of matchingPluginRegistrations) {
     let projectConfigs: ConfigurationResult;
     try {
@@ -253,4 +273,23 @@ async function getServeStaticTargetNameForConfigFile<T>(
     }
   }
   return targetName;
+}
+
+function getServeStaticLikeTarget(
+  tree: Tree,
+  graph: ProjectGraph,
+  projectName: string,
+  executorName: string
+) {
+  if (!graph.nodes[projectName]?.data?.targets) {
+    return;
+  }
+
+  for (const [targetName, targetOptions] of Object.entries(
+    graph.nodes[projectName].data.targets
+  )) {
+    if (targetOptions.executor && targetOptions.executor === executorName) {
+      return targetName;
+    }
+  }
 }

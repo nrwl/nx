@@ -8,6 +8,7 @@ import {
   PluginConfiguration,
   CreateNodes,
   formatFiles,
+  type ProjectGraph,
 } from '@nx/devkit';
 import {
   retrieveProjectConfigurations,
@@ -27,6 +28,10 @@ export default async function (tree: Tree) {
   const matchingPluginRegistrations = nxJson.plugins?.filter((p) =>
     typeof p === 'string' ? p === pluginName : p.plugin === pluginName
   );
+
+  if (!matchingPluginRegistrations?.length) {
+    return;
+  }
 
   const {
     createNodesV2,
@@ -106,7 +111,16 @@ export default async function (tree: Tree) {
             ? 'serve-static'
             : (matchingWebpackPlugin.options as any)?.serveStaticTargetName ??
               'serve-static'
-          : 'serve-static';
+          : getServeStaticLikeTarget(
+              tree,
+              graph,
+              project,
+              '@nx/web:file-server'
+            ) ?? undefined;
+
+        if (!serveStaticTargetName) {
+          continue;
+        }
 
         const newCommand = ciWebServerCommand.replace(
           /nx.*[^"']/,
@@ -135,7 +149,16 @@ export default async function (tree: Tree) {
             ? 'preview'
             : (matchingVitePlugin.options as any)?.previewTargetName ??
               'preview'
-          : 'preview';
+          : getServeStaticLikeTarget(
+              tree,
+              graph,
+              project,
+              '@nx/vite:preview-server'
+            ) ?? undefined;
+
+        if (!previewTargetName) {
+          continue;
+        }
 
         const newCommand = ciWebServerCommand.replace(
           /nx.*[^"']/,
@@ -196,6 +219,25 @@ async function findPluginForConfigFile(
       if (matchingConfigFile.length) {
         return plugin;
       }
+    }
+  }
+}
+
+function getServeStaticLikeTarget(
+  tree: Tree,
+  graph: ProjectGraph,
+  projectName: string,
+  executorName: string
+) {
+  if (!graph.nodes[projectName]?.data?.targets) {
+    return;
+  }
+
+  for (const [targetName, targetOptions] of Object.entries(
+    graph.nodes[projectName].data.targets
+  )) {
+    if (targetOptions.executor && targetOptions.executor === executorName) {
+      return targetName;
     }
   }
 }

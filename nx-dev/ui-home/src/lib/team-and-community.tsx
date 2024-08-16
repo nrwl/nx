@@ -66,7 +66,7 @@ export function TeamAndCommunity(): JSX.Element {
             <div className="group/item relative flex items-center gap-2 rounded-xl border border-slate-100 p-4 transition hover:text-slate-950 dark:border-slate-800/60 dark:hover:text-white">
               <DocumentIcon aria-hidden="true" className="size-6 shrink-0" />
               <Link
-                href="/docs?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_team_and_community"
+                href="/getting-started/intro?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_team_and_community"
                 className="grow text-base"
                 prefetch={false}
               >

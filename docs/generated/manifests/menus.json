@@ -1177,6 +1177,14 @@
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
+              },
+              {
+                "name": "Migrate to Inferred Tasks (Project Crystal)",
+                "path": "/recipes/running-tasks/convert-to-inferred",
+                "id": "convert-to-inferred",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
               }
             ],
             "disableCollapsible": false
@@ -1963,6 +1971,14 @@
                 "disableCollapsible": false
               },
               {
+                "name": "File Based Versioning (Version Plans)",
+                "path": "/recipes/nx-release/file-based-versioning-version-plans",
+                "id": "file-based-versioning-version-plans",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
                 "name": "Configure Custom Registries",
                 "path": "/recipes/nx-release/configure-custom-registries",
                 "id": "configure-custom-registries",
@@ -2175,6 +2191,14 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
+          },
+          {
+            "name": "Migrate to Inferred Tasks (Project Crystal)",
+            "path": "/recipes/running-tasks/convert-to-inferred",
+            "id": "convert-to-inferred",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -2263,6 +2287,14 @@
         "name": "Skip Task Caching",
         "path": "/recipes/running-tasks/skipping-cache",
         "id": "skipping-cache",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Migrate to Inferred Tasks (Project Crystal)",
+        "path": "/recipes/running-tasks/convert-to-inferred",
+        "id": "convert-to-inferred",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -3682,6 +3714,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "File Based Versioning (Version Plans)",
+            "path": "/recipes/nx-release/file-based-versioning-version-plans",
+            "id": "file-based-versioning-version-plans",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Configure Custom Registries",
             "path": "/recipes/nx-release/configure-custom-registries",
             "id": "configure-custom-registries",
@@ -3768,6 +3808,14 @@
         "name": "Customize Conventional Commit Types",
         "path": "/recipes/nx-release/customize-conventional-commit-types",
         "id": "customize-conventional-commit-types",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "File Based Versioning (Version Plans)",
+        "path": "/recipes/nx-release/file-based-versioning-version-plans",
+        "id": "file-based-versioning-version-plans",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -4946,7 +4994,7 @@
         "isExternal": false,
         "children": [
           {
-            "name": "Getting Started with Plugins",
+            "name": "Extending Nx with Plugins",
             "path": "/extending-nx/intro/getting-started",
             "id": "getting-started",
             "isExternal": false,
@@ -4957,7 +5005,7 @@
         "disableCollapsible": false
       },
       {
-        "name": "Getting Started with Plugins",
+        "name": "Extending Nx with Plugins",
         "path": "/extending-nx/intro/getting-started",
         "id": "getting-started",
         "isExternal": false,
@@ -4965,23 +5013,23 @@
         "disableCollapsible": false
       },
       {
-        "name": "5 Min Tutorials",
+        "name": "Tutorials",
         "path": "/extending-nx/tutorials",
         "id": "tutorials",
         "isExternal": false,
         "children": [
           {
-            "name": "Create a Local Plugin",
-            "path": "/extending-nx/tutorials/create-plugin",
-            "id": "create-plugin",
+            "name": "Enforce Organizational Best Practices",
+            "path": "/extending-nx/tutorials/organization-specific-plugin",
+            "id": "organization-specific-plugin",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
           },
           {
-            "name": "Maintain a Published Plugin",
-            "path": "/extending-nx/tutorials/publish-plugin",
-            "id": "publish-plugin",
+            "name": "Create a Tooling Plugin",
+            "path": "/extending-nx/tutorials/tooling-plugin",
+            "id": "tooling-plugin",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -4990,17 +5038,17 @@
         "disableCollapsible": false
       },
       {
-        "name": "Create a Local Plugin",
-        "path": "/extending-nx/tutorials/create-plugin",
-        "id": "create-plugin",
+        "name": "Enforce Organizational Best Practices",
+        "path": "/extending-nx/tutorials/organization-specific-plugin",
+        "id": "organization-specific-plugin",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
       },
       {
-        "name": "Maintain a Published Plugin",
-        "path": "/extending-nx/tutorials/publish-plugin",
-        "id": "publish-plugin",
+        "name": "Create a Tooling Plugin",
+        "path": "/extending-nx/tutorials/tooling-plugin",
+        "id": "tooling-plugin",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -5011,22 +5059,6 @@
         "id": "recipes",
         "isExternal": false,
         "children": [
-          {
-            "name": "Write a Simple Executor",
-            "path": "/extending-nx/recipes/local-executors",
-            "id": "local-executors",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Compose Executors",
-            "path": "/extending-nx/recipes/compose-executors",
-            "id": "compose-executors",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
           {
             "name": "Write a Simple Generator",
             "path": "/extending-nx/recipes/local-generators",
@@ -5076,6 +5108,22 @@
             "disableCollapsible": false
           },
           {
+            "name": "Write a Simple Executor",
+            "path": "/extending-nx/recipes/local-executors",
+            "id": "local-executors",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Compose Executors",
+            "path": "/extending-nx/recipes/compose-executors",
+            "id": "compose-executors",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Create a Preset",
             "path": "/extending-nx/recipes/create-preset",
             "id": "create-preset",
@@ -5092,30 +5140,22 @@
             "disableCollapsible": false
           },
           {
-            "name": "Modify the Project Graph",
+            "name": "Infer Tasks or Projects",
             "path": "/extending-nx/recipes/project-graph-plugins",
             "id": "project-graph-plugins",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
+          },
+          {
+            "name": "Publish a Plugin",
+            "path": "/extending-nx/recipes/publish-plugin",
+            "id": "publish-plugin",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
           }
         ],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Write a Simple Executor",
-        "path": "/extending-nx/recipes/local-executors",
-        "id": "local-executors",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Compose Executors",
-        "path": "/extending-nx/recipes/compose-executors",
-        "id": "compose-executors",
-        "isExternal": false,
-        "children": [],
         "disableCollapsible": false
       },
       {
@@ -5167,6 +5207,22 @@
         "disableCollapsible": false
       },
       {
+        "name": "Write a Simple Executor",
+        "path": "/extending-nx/recipes/local-executors",
+        "id": "local-executors",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Compose Executors",
+        "path": "/extending-nx/recipes/compose-executors",
+        "id": "compose-executors",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
         "name": "Create a Preset",
         "path": "/extending-nx/recipes/create-preset",
         "id": "create-preset",
@@ -5183,9 +5239,17 @@
         "disableCollapsible": false
       },
       {
-        "name": "Modify the Project Graph",
+        "name": "Infer Tasks or Projects",
         "path": "/extending-nx/recipes/project-graph-plugins",
         "id": "project-graph-plugins",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Publish a Plugin",
+        "path": "/extending-nx/recipes/publish-plugin",
+        "id": "publish-plugin",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false

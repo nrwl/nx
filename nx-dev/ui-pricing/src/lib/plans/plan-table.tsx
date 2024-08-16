@@ -495,16 +495,15 @@ export function PlanTable(): JSX.Element {
               <span className="sr-only">yes</span>
             </td>
           </tr>
-          <tr className="bg-slate-50/40 text-sm transition hover:bg-slate-50/60 dark:bg-slate-800/40 dark:hover:bg-slate-800/60">
+          <tr className="text-sm transition hover:bg-slate-50/60 dark:hover:bg-slate-800/60">
             <th
               className="min-w-[124px] border-l border-t border-slate-200 px-2 py-1.5 text-left font-normal leading-tight md:min-w-[180px] md:p-2 md:px-3 lg:w-[325px] lg:px-4 lg:py-2.5 lg:pl-8 dark:border-slate-800"
               scope="row"
             >
               <span className="font-medium text-slate-700 dark:text-slate-300">
-                Nx Workflows
+                Nx Replay
               </span>
-              : full CI replacement{' '}
-              <span className="text-xs italic">(Coming Soon)</span>
+              : remote caching
             </th>
             <td className="border-l border-t border-slate-200 px-2 py-1.5 md:px-3 lg:px-4 lg:py-2.5 dark:border-slate-800">
               <CheckIcon
@@ -534,16 +533,14 @@ export function PlanTable(): JSX.Element {
               scope="row"
             >
               <span className="font-medium text-slate-700 dark:text-slate-300">
-                Nx Replay
+                Explain with AI
               </span>
-              : Remote Caching
+              : provide detailed explanations and insights for failed task
+              outputs
             </th>
             <td className="border-l border-t border-slate-200 px-2 py-1.5 md:px-3 lg:px-4 lg:py-2.5 dark:border-slate-800">
-              <CheckIcon
-                className="h-6 w-5 flex-none text-blue-600 dark:text-sky-600"
-                aria-hidden="true"
-              />
-              <span className="sr-only">yes</span>
+              <XMarkIcon className="h-6 w-5 flex-none" aria-hidden="true" />
+              <span className="sr-only">no</span>
             </td>
             <td className="border-l border-t border-slate-200 px-2 py-1.5 md:px-3 lg:px-4 lg:py-2.5 dark:border-slate-800">
               <CheckIcon

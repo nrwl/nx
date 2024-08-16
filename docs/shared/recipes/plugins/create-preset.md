@@ -13,7 +13,7 @@ title="Develop a Nx Preset for your Nx Plugin"
 
 At its core, a preset is a special [generator](/features/generate-code) that is shipped as part of an Nx Plugin package.
 
-All first-party Nx presets are built into Nx itself, but you can [create your own plugin](/extending-nx/intro/getting-started) and create a generator with the magic name: `preset`. Once you've [published your plugin](/extending-nx/tutorials/publish-plugin) on npm, you can now run the `create-nx-workspace` command with the preset option set to the name of your published package.
+All first-party Nx presets are built into Nx itself, but you can [create your own plugin](/extending-nx/intro/getting-started) and create a generator with the magic name: `preset`. Once you've [published your plugin](/extending-nx/tutorials/tooling-plugin) on npm, you can now run the `create-nx-workspace` command with the preset option set to the name of your published package.
 
 To use a concrete example, let's look at the [`qwik-nx`](https://www.npmjs.com/package/qwik-nx) Nx community plugin. They include a [preset generator](https://github.com/qwikifiers/qwik-nx/tree/main/packages/qwik-nx/src/generators/preset) that you can use to create a new Nx workspace with Qwik support.
 

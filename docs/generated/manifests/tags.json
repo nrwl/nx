@@ -269,7 +269,7 @@
       "description": "",
       "file": "shared/recipes/plugins/project-graph-plugins",
       "id": "project-graph-plugins",
-      "name": "Modify the Project Graph",
+      "name": "Infer Tasks or Projects",
       "path": "/extending-nx/recipes/project-graph-plugins"
     },
     {
@@ -352,6 +352,13 @@
       "id": "automate-updating-dependencies",
       "name": "Automate Updating Dependencies",
       "path": "/features/automate-updating-dependencies"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/running-tasks/convert-to-inferred",
+      "id": "convert-to-inferred",
+      "name": "Migrate to Inferred Tasks (Project Crystal)",
+      "path": "/recipes/running-tasks/convert-to-inferred"
     },
     {
       "description": "",
@@ -492,6 +499,13 @@
     },
     {
       "description": "",
+      "file": "shared/recipes/nx-release/file-based-versioning-version-plans",
+      "id": "file-based-versioning-version-plans",
+      "name": "File Based Versioning (Version Plans)",
+      "path": "/recipes/nx-release/file-based-versioning-version-plans"
+    },
+    {
+      "description": "",
       "file": "shared/recipes/nx-release/configure-custom-registries",
       "id": "configure-custom-registries",
       "name": "Configure Custom Registries",
@@ -587,9 +601,16 @@
     },
     {
       "description": "",
+      "file": "shared/recipes/running-tasks/convert-to-inferred",
+      "id": "convert-to-inferred",
+      "name": "Migrate to Inferred Tasks (Project Crystal)",
+      "path": "/recipes/running-tasks/convert-to-inferred"
+    },
+    {
+      "description": "",
       "file": "shared/recipes/plugins/project-graph-plugins",
       "id": "project-graph-plugins",
-      "name": "Modify the Project Graph",
+      "name": "Infer Tasks or Projects",
       "path": "/extending-nx/recipes/project-graph-plugins"
     }
   ],
@@ -626,8 +647,15 @@
       "description": "",
       "file": "shared/recipes/plugins/project-graph-plugins",
       "id": "project-graph-plugins",
-      "name": "Modify the Project Graph",
+      "name": "Infer Tasks or Projects",
       "path": "/extending-nx/recipes/project-graph-plugins"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/plugins/publish-plugin",
+      "id": "publish-plugin",
+      "name": "Publish a Plugin",
+      "path": "/extending-nx/recipes/publish-plugin"
     },
     {
       "description": "The Nx Plugin for Angular contains executors, generators, and utilities for managing Angular applications and libraries within an Nx workspace. It provides: \n\n- Integration with libraries such as Storybook, Jest, ESLint, Tailwind CSS, Playwright and Cypress. \n\n- Generators to help scaffold code quickly (like: Micro Frontends, Libraries, both internal to your codebase and publishable to npm) \n\n- Single Component Application Modules (SCAMs) \n\n- NgRx helpers. \n\n- Utilities for automatic workspace refactoring.",

@@ -1,4 +1,4 @@
-import updateCiWebserverForVite from './update-ci-webserver-for-static-serve';
+import updateCiWebserverForStaticServe from './update-ci-webserver-for-static-serve';
 import {
   type Tree,
   type ProjectGraph,
@@ -16,7 +16,7 @@ jest.mock('@nx/devkit', () => ({
   }),
 }));
 
-describe('updateCiWebserverForVite', () => {
+describe('update-ci-webserver-for-static-serve migration', () => {
   let tree: Tree;
   let tempFs: TempFs;
 
@@ -33,6 +33,21 @@ describe('updateCiWebserverForVite', () => {
 
   afterEach(() => {
     tempFs.reset();
+  });
+
+  it('should not error when there are no plugin registrations', async () => {
+    const nxJson = readNxJson(tree);
+    // ensure there are no plugins
+    delete nxJson.plugins;
+    updateNxJson(tree, nxJson);
+    addProject(tree, tempFs, {
+      buildTargetName: 'build',
+      ciTargetName: 'e2e-ci',
+      appName: 'app',
+      noVite: true,
+    });
+
+    await expect(updateCiWebserverForStaticServe(tree)).resolves.not.toThrow();
   });
 
   it('should update to serve-static target for webpack', async () => {
@@ -63,7 +78,7 @@ describe('updateCiWebserverForVite', () => {
     });
 
     // ACT
-    await updateCiWebserverForVite(tree);
+    await updateCiWebserverForStaticServe(tree);
 
     // ASSERT
     expect(tree.read('app-e2e/cypress.config.ts', 'utf-8'))
@@ -137,7 +152,7 @@ export default defineConfig({
     );
 
     // ACT
-    await updateCiWebserverForVite(tree);
+    await updateCiWebserverForStaticServe(tree);
 
     // ASSERT
     expect(tree.read('app-e2e/cypress.config.ts', 'utf-8'))
@@ -186,7 +201,7 @@ export default defineConfig({
     addProject(tree, tempFs);
 
     // ACT
-    await updateCiWebserverForVite(tree);
+    await updateCiWebserverForStaticServe(tree);
 
     // ASSERT
     expect(tree.read('app-e2e/cypress.config.ts', 'utf-8'))
@@ -211,6 +226,54 @@ export default defineConfig({
       "
     `);
   });
+
+  it('should use @nx/vite:preview-server executor target value if it exists when no plugins are found', async () => {
+    // ARRANGE
+    const nxJson = readNxJson(tree);
+    nxJson.plugins = [
+      {
+        plugin: '@nx/cypress/plugin',
+        options: {
+          targetName: 'e2e',
+          ciTargetName: 'e2e-ci',
+        },
+      },
+    ];
+    updateNxJson(tree, nxJson);
+
+    addProject(tree, tempFs, {
+      appName: 'app',
+      ciTargetName: 'e2e-ci',
+      buildTargetName: 'build',
+      usesExecutors: true,
+    });
+
+    // ACT
+    await updateCiWebserverForStaticServe(tree);
+
+    // ASSERT
+    expect(tree.read('app-e2e/cypress.config.ts', 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
+      import { defineConfig } from 'cypress';
+      export default defineConfig({
+        e2e: {
+          ...nxE2EPreset(__filename, {
+            cypressDir: 'src',
+            bundler: 'vite',
+            webServerCommands: {
+              default: 'nx run app:serve',
+              production: 'nx run app:preview',
+            },
+            ciWebServerCommand: 'nx run app:test-serve-static',
+            ciBaseUrl: 'http://localhost:4300',
+          }),
+          baseUrl: 'http://localhost:4200',
+        },
+      });
+      "
+    `);
+  });
 });
 
 function addProject(
@@ -222,6 +285,7 @@ function addProject(
     appName: string;
     noCi?: boolean;
     noVite?: boolean;
+    usesExecutors?: boolean;
   } = { ciTargetName: 'e2e-ci', buildTargetName: 'build', appName: 'app' }
 ) {
   const appProjectConfig = {
@@ -229,6 +293,17 @@ function addProject(
     root: overrides.appName,
     sourceRoot: `${overrides.appName}/src`,
     projectType: 'application',
+    ...(overrides.usesExecutors
+      ? {
+          targets: {
+            'test-serve-static': {
+              executor: overrides.noVite
+                ? '@nx/web:file-server'
+                : '@nx/vite:preview-server',
+            },
+          },
+        }
+      : {}),
   };
   const viteConfig = `/// <reference types='vitest' />
 import { defineConfig } from 'vite';
@@ -327,12 +402,29 @@ export default defineConfig({
       projectType: 'application',
       root: overrides.appName,
       targets: {
-        [overrides.buildTargetName]: {},
-        'serve-static': {
-          options: {
-            buildTarget: overrides.buildTargetName,
-          },
-        },
+        ...(overrides.usesExecutors
+          ? {
+              'test-serve-static': {
+                executor: overrides.noVite
+                  ? '@nx/web:file-server'
+                  : '@nx/vite:preview-server',
+                dependsOn: [overrides.buildTargetName],
+              },
+              [overrides.buildTargetName]: {},
+              'serve-static': {
+                options: {
+                  buildTarget: overrides.buildTargetName,
+                },
+              },
+            }
+          : {
+              [overrides.buildTargetName]: {},
+              'serve-static': {
+                options: {
+                  buildTarget: overrides.buildTargetName,
+                },
+              },
+            }),
       },
     },
   };

@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { BlogAuthors } from './authors';
 import { ChevronLeftIcon } from '@heroicons/react/24/outline';
 import { renderMarkdown } from '@nx/nx-dev/ui-markdoc';
+import { EpisodePlayer } from './episode-player';
 
 export interface BlogDetailsProps {
   post: BlogPostDataEntry;
@@ -65,16 +66,28 @@ export function BlogDetails({ post }: BlogDetailsProps) {
             {post.title}
           </h1>
         </header>
-        {post.cover_image && (
-          <div className="mx-auto mb-16 aspect-[1.7] w-full max-w-screen-md">
-            <Image
-              className="h-full w-full object-cover md:rounded-md"
-              src={post.cover_image}
-              alt={post.title}
-              width={1400}
-              height={735}
+        {post.podcastYoutubeId && post.podcastSpotifyId ? (
+          <div className="mx-auto mb-16 w-full max-w-screen-md">
+            <EpisodePlayer
+              podcastYoutubeId={post.podcastYoutubeId}
+              podcastSpotifyId={post.podcastSpotifyId}
+              amazonUrl={post.podcastAmazonUrl}
+              appleUrl={post.podcastAppleUrl}
+              iHeartUrl={post.podcastIHeartUrl}
             />
           </div>
+        ) : (
+          post.cover_image && (
+            <div className="mx-auto mb-16 aspect-[1.7] w-full max-w-screen-md">
+              <Image
+                className="h-full w-full object-cover md:rounded-md"
+                src={post.cover_image}
+                alt={post.title}
+                width={1400}
+                height={735}
+              />
+            </div>
+          )
         )}
         <div className="mx-auto min-w-0 max-w-3xl flex-auto px-4 pb-24 lg:px-0 lg:pb-16">
           <div className="relative">

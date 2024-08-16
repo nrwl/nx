@@ -1,5 +1,6 @@
 import { CheckIcon } from '@heroicons/react/24/outline';
 import { ButtonLink } from '@nx/nx-dev/ui-common';
+import Link from 'next/link';
 
 const features = [
   'White glove onboarding',
@@ -64,6 +65,24 @@ export function EnterprisePlan({
             {feature}
           </li>
         ))}
+        <li className="flex gap-x-3">
+          <CheckIcon
+            className="h-6 w-5 flex-none text-blue-600 dark:text-sky-600"
+            aria-hidden="true"
+          />
+          <p>
+            <Link
+              href="/ci/troubleshooting/explain-with-ai"
+              title="Learn more about Explain with AI"
+              prefetch={false}
+              className="font-medium text-slate-700 underline dark:text-slate-300"
+            >
+              Explain with AI
+            </Link>
+            : provide detailed explanations and insights for failed task
+            outputs.
+          </p>
+        </li>
       </ul>
     </article>
   );
