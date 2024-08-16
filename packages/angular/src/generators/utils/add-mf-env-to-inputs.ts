@@ -11,6 +11,7 @@ export function addMfEnvToTargetDefaultInputs(tree: Tree) {
     'production',
     '^production',
   ];
+  nxJson.targetDefaults[webpackExecutor].dependsOn ??= ['^build'];
 
   let mfEnvVarExists = false;
   for (const input of nxJson.targetDefaults[webpackExecutor].inputs) {
