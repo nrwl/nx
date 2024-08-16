@@ -1,4 +1,4 @@
-import updateCiWebserverForVite from './update-ci-webserver-for-static-serve';
+import updateCiWebserverForStaticServe from './update-ci-webserver-for-static-serve';
 import {
   type Tree,
   type ProjectGraph,
@@ -16,7 +16,7 @@ jest.mock('@nx/devkit', () => ({
   }),
 }));
 
-describe('updateCiWebserverForVite', () => {
+describe('update-ci-webserver-for-static-serve migration', () => {
   let tree: Tree;
   let tempFs: TempFs;
 
@@ -33,6 +33,21 @@ describe('updateCiWebserverForVite', () => {
 
   afterEach(() => {
     tempFs.reset();
+  });
+
+  it('should not error when there are no plugin registrations', async () => {
+    const nxJson = readNxJson(tree);
+    // ensure there are no plugins
+    delete nxJson.plugins;
+    updateNxJson(tree, nxJson);
+    addProject(tree, tempFs, {
+      buildTargetName: 'build',
+      ciTargetName: 'e2e-ci',
+      appName: 'app',
+      noVite: true,
+    });
+
+    await expect(updateCiWebserverForStaticServe(tree)).resolves.not.toThrow();
   });
 
   it('should update to serve-static target for webpack', async () => {
@@ -63,7 +78,7 @@ describe('updateCiWebserverForVite', () => {
     });
 
     // ACT
-    await updateCiWebserverForVite(tree);
+    await updateCiWebserverForStaticServe(tree);
 
     // ASSERT
     expect(tree.read('app-e2e/cypress.config.ts', 'utf-8'))
@@ -137,7 +152,7 @@ export default defineConfig({
     );
 
     // ACT
-    await updateCiWebserverForVite(tree);
+    await updateCiWebserverForStaticServe(tree);
 
     // ASSERT
     expect(tree.read('app-e2e/cypress.config.ts', 'utf-8'))
@@ -186,7 +201,7 @@ export default defineConfig({
     addProject(tree, tempFs);
 
     // ACT
-    await updateCiWebserverForVite(tree);
+    await updateCiWebserverForStaticServe(tree);
 
     // ASSERT
     expect(tree.read('app-e2e/cypress.config.ts', 'utf-8'))
@@ -234,7 +249,7 @@ export default defineConfig({
     });
 
     // ACT
-    await updateCiWebserverForVite(tree);
+    await updateCiWebserverForStaticServe(tree);
 
     // ASSERT
     expect(tree.read('app-e2e/cypress.config.ts', 'utf-8'))

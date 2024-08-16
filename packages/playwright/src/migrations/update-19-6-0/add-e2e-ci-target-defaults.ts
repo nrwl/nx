@@ -66,7 +66,7 @@ export default async function addE2eCiTargetDefaults(tree: Tree) {
       if (!nodes.length) {
         continue;
       }
-      const ciWebServerCommand = nodes[0].getText();
+      const ciWebServerCommand = nodes[0].getText().replace(/['"]/g, '');
       let serveStaticProject: string;
       let serveStaticTarget: string;
       let serveStaticConfiguration: string;
@@ -95,7 +95,7 @@ export default async function addE2eCiTargetDefaults(tree: Tree) {
       }
 
       const resolvedServeStaticTarget =
-        graph.nodes[serveStaticProject].data.targets[serveStaticTarget];
+        graph.nodes[serveStaticProject]?.data?.targets?.[serveStaticTarget];
       if (!resolvedServeStaticTarget) {
         continue;
       }

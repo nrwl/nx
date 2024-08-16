@@ -89,6 +89,74 @@ describe('add-e2e-ci-target-defaults', () => {
     `);
   });
 
+  it.each`
+    webServerCommand
+    ${`'npx nx run app:serve-static'`}
+    ${`"npx nx run app:serve-static"`}
+    ${`'npx nx serve-static app'`}
+    ${`"npx nx serve-static app"`}
+  `(
+    'should handle the webServerCommand $webServerCommand',
+    async ({ webServerCommand }) => {
+      const nxJson = readNxJson(tree);
+      nxJson.plugins = [
+        {
+          plugin: '@nx/playwright/plugin',
+          options: { targetName: 'e2e', ciTargetName: 'e2e-ci' },
+        },
+      ];
+      updateNxJson(tree, nxJson);
+      addProject(tree, tempFs);
+      tree.write(
+        `app-e2e/playwright.config.ts`,
+        `import { defineConfig, devices } from '@playwright/test';
+import { nxE2EPreset } from '@nx/playwright/preset';
+
+import { workspaceRoot } from '@nx/devkit';
+
+const baseURL = process.env['BASE_URL'] || 'http://localhost:4200';
+
+export default defineConfig({
+  ...nxE2EPreset(__filename, { testDir: './src' }),
+  use: {
+    baseURL,
+    trace: 'on-first-retry',
+  },
+  webServer: {
+    command: ${webServerCommand},
+    url: 'http://localhost:4200',
+    reuseExistingServer: !process.env.CI,
+    cwd: workspaceRoot,
+  },
+  projects: [
+    {
+      name: 'chromium',
+      use: { ...devices['Desktop Chrome'] },
+    },
+  ],
+});`
+      );
+
+      await addE2eCiTargetDefaults(tree);
+
+      expect(readNxJson(tree).targetDefaults).toMatchInlineSnapshot(`
+      {
+        "build": {
+          "cache": true,
+        },
+        "e2e-ci--**/*": {
+          "dependsOn": [
+            "^build",
+          ],
+        },
+        "lint": {
+          "cache": true,
+        },
+      }
+    `);
+    }
+  );
+
   it('should add the targetDefaults with the correct ciTargetNames and buildTargets when there is more than one plugin', async () => {
     // ARRANGE
     const nxJson = readNxJson(tree);
