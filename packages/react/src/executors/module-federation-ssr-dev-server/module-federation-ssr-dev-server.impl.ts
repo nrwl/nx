@@ -78,7 +78,10 @@ function startSsrStaticRemotesFileServer(
   options: ModuleFederationSsrDevServerOptions
 ) {
   if (ssrStaticRemotesConfig.remotes.length === 0) {
-    return;
+    return createAsyncIterable(({ next, done }) => {
+      next({ success: true });
+      done();
+    });
   }
 
   // The directories are usually generated with /browser and /server suffixes so we need to copy them to a common directory
@@ -353,9 +356,8 @@ export default async function* moduleFederationSsrDevServer(
   );
 
   return yield* combineAsyncIterables(
-    iter,
+    staticRemotesIter,
     ...devRemoteIters,
-    ...(staticRemotesIter ? [staticRemotesIter] : []),
     createAsyncIterable<{ success: true; baseUrl: string }>(
       async ({ next, done }) => {
         if (!options.isInitialHost) {
@@ -404,4 +406,6 @@ export default async function* moduleFederationSsrDevServer(
       }
     )
   );
+
+  return yield* iter;
 }
