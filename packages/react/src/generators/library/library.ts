@@ -173,7 +173,11 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
           "'react-dom'",
           "'react/jsx-runtime'",
         ],
-        imports: [`import react from '@vitejs/plugin-react'`],
+        imports: [
+          options.compiler === 'swc'
+            ? `import react from '@vitejs/plugin-react-swc'`
+            : `import react from '@vitejs/plugin-react'`,
+        ],
         plugins: ['react()'],
       },
       true
