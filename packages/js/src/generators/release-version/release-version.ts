@@ -140,7 +140,7 @@ Valid values are: ${validReleaseVersionPrefixes
         );
       }
 
-      const packageJsonPath = join(packageRoot, 'package.json');
+      const packageJsonPath = joinPathFragments(packageRoot, 'package.json');
       if (!tree.exists(packageJsonPath)) {
         throw new Error(
           `The project "${projectName}" does not have a package.json available at ${packageJsonPath}.
@@ -830,7 +830,7 @@ To fix this you will either need to add a package.json file at that location, or
             `The project "${dependencyProjectName}" does not have a packageRoot available. Please report this issue on https://github.com/nrwl/nx`
           );
         }
-        const dependencyPackageJsonPath = join(
+        const dependencyPackageJsonPath = joinPathFragments(
           dependencyPackageRoot,
           'package.json'
         );
