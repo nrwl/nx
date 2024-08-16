@@ -172,13 +172,18 @@ export async function* nodeExecutor(
             task.childProcess.stderr.on('data', handleStdErr);
             task.childProcess.once('exit', (code) => {
               task.childProcess.off('data', handleStdErr);
-              if (options.watch && !task.killed) {
+              if (
+                options.watch &&
+                !task.killed &&
+                // SIGINT should exist the process rather than watch for changes.
+                code !== 130
+              ) {
                 logger.info(
                   `NX Process exited with code ${code}, waiting for changes to restart...`
                 );
               }
-              if (!options.watch) {
-                if (code !== 0) {
+              if (!options.watch || code === 130) {
+                if (code !== 0 && code !== 130) {
                   error(new Error(`Process exited with code ${code}`));
                 } else {
                   done();
