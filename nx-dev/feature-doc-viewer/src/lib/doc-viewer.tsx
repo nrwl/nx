@@ -72,14 +72,14 @@ export function DocViewer({
         title={vm.title + ' | Nx'}
         description={
           vm.description ??
-          'Nx is a build system with built-in tooling and advanced CI capabilities. It helps you maintain and scale monorepos, both locally and on CI.'
+          'Nx is a build system, optimized for monorepos, with plugins for popular frameworks and tools and advanced CI capabilities including caching and distribution.'
         }
         openGraph={{
           url: 'https://nx.dev' + router.asPath,
           title: vm.title,
           description:
             vm.description ??
-            'Nx is a build system with built-in tooling and advanced CI capabilities. It helps you maintain and scale monorepos, both locally and on CI.',
+            'Nx is a build system, optimized for monorepos, with plugins for popular frameworks and tools and advanced CI capabilities including caching and distribution.',
           images: [
             {
               url: `https://nx.dev/images/open-graph/${router.asPath
