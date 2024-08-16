@@ -1,11 +1,13 @@
-import type { Tree } from '@nx/devkit';
 import {
   addDependenciesToPackageJson,
   formatFiles,
   readProjectConfiguration,
+  type Tree,
 } from '@nx/devkit';
-import type { Schema } from './schema';
-
+import {
+  moduleFederationEnhancedVersion,
+  nxVersion,
+} from '../../utils/versions';
 import {
   addCypressOnErrorWorkaround,
   addRemoteEntry,
@@ -14,18 +16,16 @@ import {
   fixBootstrap,
   generateWebpackConfig,
   getRemotesWithPorts,
+  moveAngularPluginToDependencies,
   normalizeOptions,
   removeDeadCodeFromRemote,
   setupHostIfDynamic,
-  setupTspathForRemote,
   setupServeTarget,
+  setupTspathForRemote,
   updateHostAppRoutes,
   updateTsConfig,
 } from './lib';
-import {
-  moduleFederationEnhancedVersion,
-  nxVersion,
-} from '../../utils/versions';
+import type { Schema } from './schema';
 
 export async function setupMf(tree: Tree, rawOptions: Schema) {
   const options = normalizeOptions(tree, rawOptions);
@@ -87,6 +87,15 @@ export async function setupMf(tree: Tree, rawOptions: Schema) {
   }
 
   fixBootstrap(tree, projectConfig.root, options);
+
+  if (options.mfType === 'host' || options.federationType === 'dynamic') {
+    /**
+     * Host applications and dynamic federation applications generate runtime
+     * code that depends on the @nx/angular plugin. Ensure that the plugin is
+     * in the production dependencies.
+     */
+    moveAngularPluginToDependencies(tree);
+  }
 
   if (!options.skipE2E) {
     addCypressOnErrorWorkaround(tree, options);

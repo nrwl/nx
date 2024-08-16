@@ -73,6 +73,15 @@ export * from './lib/customers/zipari';
 export * from './lib/editors/jetbrains';
 export * from './lib/editors/visual-studio-code';
 
+// OTHERS
+export * from './lib/monorepo-world';
+
+// PODCASTS
+export * from './lib/podcasts/amazon-music';
+export * from './lib/podcasts/apple-podcasts';
+export * from './lib/podcasts/i-heart-radio';
+export * from './lib/podcasts/spotify';
+
 // PRODUCTS
 export * from './lib/products';
 
@@ -119,9 +128,3 @@ export * from './lib/technologies/vite';
 export * from './lib/technologies/vitest';
 export * from './lib/technologies/vue';
 export * from './lib/technologies/webpack';
-
-// PODCASTS
-export * from './lib/podcasts/amazon-music';
-export * from './lib/podcasts/apple-podcasts';
-export * from './lib/podcasts/i-heart-radio';
-export * from './lib/podcasts/spotify';
