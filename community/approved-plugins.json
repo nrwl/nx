@@ -498,5 +498,10 @@
     "name": "nx-github-pages",
     "description": "A small Nx plugin to make deploying static projects to GitHub Pages easy.",
     "url": "https://github.com/agentender/nx-github-pages"
+  },
+  {
+    "name": "@nxextensions/nx-firebase",
+    "description": "An Nx plugin to detect and start firebase emulators in CI and E2E",
+    "url": "https://github.com/DuncanMcPherson/nx-tools/tree/master/packages/nx-firebase"
   }
 ]
