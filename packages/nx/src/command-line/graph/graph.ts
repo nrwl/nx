@@ -1155,7 +1155,7 @@ function expandInputs(
   };
 }
 
-interface GraphJsonResponse {
+export interface GraphJsonResponse {
   tasks?: TaskGraph;
   taskPlans?: Record<string, string[]>;
   graph: ProjectGraph;
