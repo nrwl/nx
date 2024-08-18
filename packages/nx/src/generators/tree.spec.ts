@@ -393,9 +393,9 @@ describe('tree', () => {
 
         expect(tree.children('parent')).toEqual([
           'child',
+          'new-child',
           'parent-file-with-write-options.txt',
           'parent-file.txt',
-          'new-child',
         ]);
         expect(tree.children('parent/child')).toEqual([
           'child-file.txt',
