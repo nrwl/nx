@@ -90,6 +90,18 @@ There are also some quirks if this command is ran with a package manager. [Find 
 
 {% /callout %}
 
+{% callout type="note" title="Windows" %}
+
+If you're running this command on Windows Powershell (not WSL), the environment variables need to be wrapped in `%`.
+
+For example:
+
+```shell
+nx watch --all -- nx run %NX_PROJECT_NAME%:build
+```
+
+{% /callout %}
+
 Now every time a package changes, Nx will run the build.
 
 If multiple packages change at the same time, Nx will run the callback for each changed project. Then if additional changes happen while a command is in progress, Nx will batch those changes, and execute them once the current command completes.
@@ -126,18 +138,6 @@ yarn nx -- watch --all -- echo \$NX_PROJECT_NAME
 ```shell
 npx -c 'nx watch --all -- echo \$NX_PROJECT_NAME'
 ```
-
-{% callout type="note" title="Windows" %}
-
-If you're running these commands on Windows Powershell (not WSL), the environment variables need to be wrapped in `%`.
-
-For example:
-
-```shell
-yarn nx -- watch --all -- echo %NX_PROJECT_NAME%
-```
-
-{% /callout %}
 
 ## Additional Use Cases
 
