@@ -6,7 +6,7 @@
   testEnvironment: '<%= testEnvironment %>',<% } %>
   coverageDirectory: '<%= offsetFromRoot %>coverage/<%= projectRoot %>',
   transform: {
-    '^.+\\.(ts|mjs|js|html)$': [
+    '^.+\\.(ts|mts|cts|js|mjs|cjs|html)$': [
       'jest-preset-angular',
       {
         tsconfig: '<rootDir>/tsconfig.spec.json',
@@ -21,7 +21,7 @@
     'jest-preset-angular/build/serializers/html-comment',
   ]<% } %><% if(rootProject){ %>,
   testMatch: [
-    '<rootDir>/src/**/__tests__/**/*.[jt]s?(x)',
-    '<rootDir>/src/**/*(*.)@(spec|test).[jt]s?(x)',
+    '<rootDir>/src/**/__tests__/**/*.?([mc])[jt]s?(x)',
+    '<rootDir>/src/**/*(*.)@(spec|test).?([mc])[jt]s?(x)',
   ],<% } %>
 };

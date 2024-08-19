@@ -1,6 +1,6 @@
 export const nxVersion = require('../../package.json').version;
-export const jestVersion = '^29.7.0';
-export const babelJestVersion = '^29.7.0';
+export const jestVersion = '^30.0.0-alpha.6';
+export const babelJestVersion = '^30.0.0-alpha.6';
 export const jestTypesVersion = '^29.5.12';
 export const tsJestVersion = '^29.1.0';
 export const tslibVersion = '^2.3.0';

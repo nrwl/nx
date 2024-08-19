@@ -23,7 +23,7 @@ describe('ngrx-feature-store', () => {
           parent,
           skipFormat: true,
         })
-      ).rejects.toThrowError(
+      ).rejects.toThrow(
         `Parent does not exist: feature-module/src/lib/feature-module.module.ts.`
       );
     });
@@ -333,9 +333,7 @@ describe('ngrx-feature-store', () => {
           parent,
           skipFormat: true,
         })
-      ).rejects.toThrowError(
-        `Parent does not exist: feature/src/lib/lib.routes.ts`
-      );
+      ).rejects.toThrow(`Parent does not exist: feature/src/lib/lib.routes.ts`);
     });
 
     it('should update package.json', async () => {

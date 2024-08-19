@@ -1125,9 +1125,7 @@ describe('lib', () => {
           publishable: true,
           importPath: '@myorg/lib',
         })
-      ).rejects.toThrowError(
-        'You already have a library using the import path'
-      );
+      ).rejects.toThrow('You already have a library using the import path');
     });
 
     it('should fail if no importPath has been used', async () => {
@@ -1136,7 +1134,7 @@ describe('lib', () => {
         runLibraryGeneratorWithOpts({
           publishable: true,
         })
-      ).rejects.toThrowError(
+      ).rejects.toThrow(
         'For publishable libs you have to provide a proper "--importPath"'
       );
     });

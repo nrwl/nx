@@ -458,7 +458,7 @@ describe('app', () => {
     });
 
     expect(tree.read(`${name}/jest.config.ts`, 'utf-8')).toContain(
-      `moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],`
+      `moduleFileExtensions: ['ts', 'mts', 'cts', 'tsx', 'js', 'mjs', 'cjs', 'jsx'],`
     );
   });
 

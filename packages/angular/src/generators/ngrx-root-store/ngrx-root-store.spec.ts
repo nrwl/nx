@@ -19,7 +19,7 @@ describe('NgRxRootStoreGenerator', () => {
           name: '',
           skipFormat: true,
         })
-      ).rejects.toThrowError();
+      ).rejects.toThrow();
     });
 
     it('should error when minimal false, but name is undefined or falsy', async () => {
@@ -35,7 +35,7 @@ describe('NgRxRootStoreGenerator', () => {
           name: undefined,
           skipFormat: true,
         })
-      ).rejects.toThrowError();
+      ).rejects.toThrow();
     });
 
     it('should add an empty root module when --minimal=true', async () => {
@@ -242,7 +242,7 @@ describe('NgRxRootStoreGenerator', () => {
           name: '',
           skipFormat: true,
         })
-      ).rejects.toThrowError();
+      ).rejects.toThrow();
     });
 
     it('should error when minimal false, but name is undefined or falsy', async () => {
@@ -258,7 +258,7 @@ describe('NgRxRootStoreGenerator', () => {
           name: undefined,
           skipFormat: true,
         })
-      ).rejects.toThrowError();
+      ).rejects.toThrow();
     });
 
     it('should add an empty root module when --minimal=true', async () => {

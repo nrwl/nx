@@ -122,7 +122,7 @@ describe('Nx Running Tests', () => {
       expect(success).toContain('0');
       expect(success).toContain('1');
 
-      expect(() => runCLI(`counter ${myapp} --result=false`)).toThrowError();
+      expect(() => runCLI(`counter ${myapp} --result=false`)).toThrow();
     });
 
     it('should run npm scripts', async () => {

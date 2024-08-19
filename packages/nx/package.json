@@ -54,7 +54,7 @@
     "front-matter": "^4.0.2",
     "fs-extra": "^11.1.0",
     "ignore": "^5.0.4",
-    "jest-diff": "^29.4.1",
+    "jest-diff": "^30.0.0-alpha.6",
     "jsonc-parser": "3.2.0",
     "lines-and-columns": "~2.0.3",
     "minimatch": "9.0.3",

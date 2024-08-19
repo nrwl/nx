@@ -5,12 +5,12 @@
   setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],<% } %><% if(testEnvironment) { %>
   testEnvironment: '<%= testEnvironment %>',<% } %><% if(skipSerializers){ %>
   transform: {
-    <% if (supportTsx){ %>'^.+\\.[tj]sx?$'<% } else { %>'^.+\\.[tj]s$'<% } %>: <% if (transformerOptions) { %>['<%= transformer %>', <%- transformerOptions %>]<% } else { %>'<%= transformer %>'<% } %>
+    <% if (supportTsx){ %>'^.+\\.[mc]?[tj]sx?$'<% } else { %>'^.+\\.[mc]?[tj]s$'<% } %>: <% if (transformerOptions) { %>['<%= transformer %>', <%- transformerOptions %>]<% } else { %>'<%= transformer %>'<% } %>
   },
-  <% if (supportTsx) { %>moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],<% } else { %>moduleFileExtensions: ['ts', 'js', 'html'],<% } %><% } %>
+  <% if (supportTsx) { %>moduleFileExtensions: ['ts', 'mts', 'cts', 'tsx', 'js', 'mjs', 'cjs', 'jsx'],<% } else { %>moduleFileExtensions: ['ts', 'mts', 'cts', 'js', 'mjs', 'cjs', 'html'],<% } %><% } %>
   coverageDirectory: '<%= offsetFromRoot %>coverage/<%= projectRoot %>'<% if(rootProject){ %>,
   testMatch: [
-    '<rootDir>/src/**/__tests__/**/*.[jt]s?(x)',
-    '<rootDir>/src/**/*(*.)@(spec|test).[jt]s?(x)',
+    '<rootDir>/src/**/__tests__/**/*.?([mc])[jt]s?(x)',
+    '<rootDir>/src/**/*(*.)@(spec|test).?([mc])[jt]s?(x)',
   ],<% } %>
 };

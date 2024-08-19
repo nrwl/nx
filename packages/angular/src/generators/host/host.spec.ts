@@ -670,6 +670,6 @@ describe('Host App Generator', () => {
         unitTestRunner: UnitTestRunner.None,
         typescriptConfiguration: false,
       })
-    ).rejects.toThrowError(`Invalid remote name provided: ${remote}.`);
+    ).rejects.toThrow(`Invalid remote name provided: ${remote}.`);
   });
 });

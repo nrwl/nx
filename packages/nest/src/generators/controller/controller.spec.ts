@@ -18,8 +18,6 @@ describe('controller generator', () => {
   });
 
   it('should run successfully', async () => {
-    await expect(
-      controllerGenerator(tree, options)
-    ).resolves.not.toThrowError();
+    await expect(controllerGenerator(tree, options)).resolves.not.toThrow();
   });
 });

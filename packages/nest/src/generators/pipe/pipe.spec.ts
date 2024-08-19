@@ -18,6 +18,6 @@ describe('pipe generator', () => {
   });
 
   it('should run successfully', async () => {
-    await expect(pipeGenerator(tree, options)).resolves.not.toThrowError();
+    await expect(pipeGenerator(tree, options)).resolves.not.toThrow();
   });
 });

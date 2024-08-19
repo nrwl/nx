@@ -216,7 +216,7 @@ describe('jestProject', () => {
       } as JestProjectSchema);
       const jestConfig = jestConfigObject(tree, 'libs/lib1/jest.config.ts');
       expect(jestConfig.transform).toEqual({
-        '^.+\\.[tj]sx?$': [
+        '^.+\\.[mc]?[tj]sx?$': [
           'ts-jest',
           { tsconfig: '<rootDir>/tsconfig.spec.json' },
         ],
@@ -232,8 +232,12 @@ describe('jestProject', () => {
       const jestConfig = jestConfigObject(tree, 'libs/lib1/jest.config.ts');
       expect(jestConfig.moduleFileExtensions).toEqual([
         'ts',
+        'mts',
+        'cts',
         'tsx',
         'js',
+        'mjs',
+        'cjs',
         'jsx',
       ]);
     });
@@ -363,8 +367,8 @@ describe('jestProject', () => {
           preset: './jest.preset.js',
           coverageDirectory: './coverage/my-project',
           testMatch: [
-            '<rootDir>/src/**/__tests__/**/*.[jt]s?(x)',
-            '<rootDir>/src/**/*(*.)@(spec|test).[jt]s?(x)',
+            '<rootDir>/src/**/__tests__/**/*.?([mc])[jt]s?(x)',
+            '<rootDir>/src/**/*(*.)@(spec|test).?([mc])[jt]s?(x)',
           ],
         };
         "
@@ -395,8 +399,8 @@ describe('jestProject', () => {
           preset: './jest.preset.js',
           coverageDirectory: './coverage/my-project',
           testMatch: [
-            '<rootDir>/src/**/__tests__/**/*.[jt]s?(x)',
-            '<rootDir>/src/**/*(*.)@(spec|test).[jt]s?(x)',
+            '<rootDir>/src/**/__tests__/**/*.?([mc])[jt]s?(x)',
+            '<rootDir>/src/**/*(*.)@(spec|test).?([mc])[jt]s?(x)',
           ],
         };
         "

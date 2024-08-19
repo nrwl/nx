@@ -169,7 +169,7 @@ describe('package-manager', () => {
         throw new Error('Command failed');
       });
       jest.spyOn(fileUtils, 'readJsonFile').mockReturnValueOnce({});
-      expect(() => getPackageManagerVersion('npm')).toThrowError();
+      expect(() => getPackageManagerVersion('npm')).toThrow();
     });
 
     it('should throw an error if packageManager in package.json does not match detected pacakge manager', () => {
@@ -179,7 +179,7 @@ describe('package-manager', () => {
       jest
         .spyOn(fileUtils, 'readJsonFile')
         .mockReturnValueOnce({ packageManager: 'npm@6.32.4' });
-      expect(() => getPackageManagerVersion('yarn')).toThrowError();
+      expect(() => getPackageManagerVersion('yarn')).toThrow();
     });
   });
 

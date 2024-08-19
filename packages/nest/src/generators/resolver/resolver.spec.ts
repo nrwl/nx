@@ -18,6 +18,6 @@ describe('resolver generator', () => {
   });
 
   it('should run successfully', async () => {
-    await expect(resolverGenerator(tree, options)).resolves.not.toThrowError();
+    await expect(resolverGenerator(tree, options)).resolves.not.toThrow();
   });
 });

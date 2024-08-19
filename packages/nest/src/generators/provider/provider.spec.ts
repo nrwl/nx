@@ -18,6 +18,6 @@ describe('provider generator', () => {
   });
 
   it('should run successfully', async () => {
-    await expect(providerGenerator(tree, options)).resolves.not.toThrowError();
+    await expect(providerGenerator(tree, options)).resolves.not.toThrow();
   });
 });

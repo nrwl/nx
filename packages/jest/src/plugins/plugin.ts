@@ -27,7 +27,6 @@ import { getGlobPatternsFromPackageManagerWorkspaces } from 'nx/src/plugins/pack
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { combineGlobPatterns } from 'nx/src/utils/globs';
 import { dirname, isAbsolute, join, relative, resolve } from 'path';
-import { getInstalledJestMajorVersion } from '../utils/version-utils';
 
 const pmc = getPackageManagerCommand();
 
@@ -233,13 +232,10 @@ async function buildJestTargets(
       context.workspaceRoot
     )) as typeof import('jest');
     const source = new jest.SearchSource(jestContext);
-
-    const jestVersion = getInstalledJestMajorVersion()!;
-    const specs =
-      jestVersion >= 30
-        ? // @ts-expect-error Jest 30+ expects the project config as the second argument
-          await source.getTestPaths(config.globalConfig, config.projectConfig)
-        : await source.getTestPaths(config.globalConfig);
+    const specs = await source.getTestPaths(
+      config.globalConfig,
+      config.projectConfig
+    );
 
     const testPaths = new Set(specs.tests.map(({ path }) => path));
 

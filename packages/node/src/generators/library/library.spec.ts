@@ -446,9 +446,9 @@ describe('lib', () => {
           preset: '../jest.preset.js',
           testEnvironment: 'node',
           transform: {
-            '^.+\\\\.[tj]s$': 'babel-jest',
+            '^.+\\\\.[mc]?[tj]s$': 'babel-jest',
           },
-          moduleFileExtensions: ['ts', 'js', 'html'],
+          moduleFileExtensions: ['ts', 'mts', 'cts', 'js', 'mjs', 'cjs', 'html'],
           coverageDirectory: '../coverage/my-lib',
         };
         "

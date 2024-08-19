@@ -329,9 +329,12 @@ export default {
   displayName: 'test',
   preset: '../jest.preset.js',
   transform: {
-    '^.+\\\\.[tj]sx?$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.spec.json' }],
+    '^.+\\\\.[mc]?[tj]sx?$': [
+      'ts-jest',
+      { tsconfig: '<rootDir>/tsconfig.spec.json' },
+    ],
   },
-  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
+  moduleFileExtensions: ['ts', 'mts', 'cts', 'tsx', 'js', 'mjs', 'cjs', 'jsx'],
   coverageDirectory: '../coverage/test',
 };
 "
@@ -840,9 +843,12 @@ export default {
   displayName: 'test',
   preset: '../../jest.preset.js',
   transform: {
-    '^.+\\\\.[tj]sx?$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.spec.json' }],
+    '^.+\\\\.[mc]?[tj]sx?$': [
+      'ts-jest',
+      { tsconfig: '<rootDir>/tsconfig.spec.json' },
+    ],
   },
-  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
+  moduleFileExtensions: ['ts', 'mts', 'cts', 'tsx', 'js', 'mjs', 'cjs', 'jsx'],
   coverageDirectory: '../../coverage/apps/test',
 };
 "
@@ -1135,9 +1141,12 @@ export default {
   displayName: 'test',
   preset: './jest.preset.cjs',
   transform: {
-    '^.+\\\\.[tj]sx?$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.spec.json' }],
+    '^.+\\\\.[mc]?[tj]sx?$': [
+      'ts-jest',
+      { tsconfig: '<rootDir>/tsconfig.spec.json' },
+    ],
   },
-  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
+  moduleFileExtensions: ['ts', 'mts', 'cts', 'tsx', 'js', 'mjs', 'cjs', 'jsx'],
   coverageDirectory: './coverage/test',
   testMatch: [
     '<rootDir>/tests/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}',

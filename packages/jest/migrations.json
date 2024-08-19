@@ -16,6 +16,16 @@
       "version": "17.1.0-beta.2",
       "description": "Move jest executor options to nx.json targetDefaults",
       "implementation": "./src/migrations/update-17-1-0/move-options-to-target-defaults"
+    },
+    "rename-test-path-pattern": {
+      "version": "19.7.0-beta.0",
+      "description": "Rename CLI option `testPathPattern` to `testPathPatterns`",
+      "implementation": "./src/migrations/update-19-7-0/rename-test-path-pattern"
+    },
+    "replace-removed-matcher-aliases": {
+      "version": "19.7.0-beta.0",
+      "description": "Replace removed matcher aliases in Jest v30 with their corresponding matcher",
+      "implementation": "./src/migrations/update-19-7-0/replace-removed-matcher-aliases"
     }
   },
   "packageJsonUpdates": {
@@ -75,6 +85,47 @@
         },
         "babel-jest": {
           "version": "~29.7.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "19.7.0": {
+      "version": "19.7.0-beta.0",
+      "packages": {
+        "jest": {
+          "version": "~30.0.0-alpha.6",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/jest": {
+          "version": "~29.5.12",
+          "alwaysAddToPackageJson": false
+        },
+        "expect": {
+          "version": "~30.0.0-alpha.6",
+          "alwaysAddToPackageJson": false
+        },
+        "@jest/globals": {
+          "version": "~30.0.0-alpha.6",
+          "alwaysAddToPackageJson": false
+        },
+        "jest-jasmine2": {
+          "version": "~30.0.0-alpha.6",
+          "alwaysAddToPackageJson": false
+        },
+        "jest-environment-jsdom": {
+          "version": "~30.0.0-alpha.6",
+          "alwaysAddToPackageJson": false
+        },
+        "jest-environment-node": {
+          "version": "~30.0.0-alpha.6",
+          "alwaysAddToPackageJson": false
+        },
+        "ts-jest": {
+          "version": "~29.2.4",
+          "alwaysAddToPackageJson": false
+        },
+        "babel-jest": {
+          "version": "~30.0.0-alpha.6",
           "alwaysAddToPackageJson": false
         }
       }

@@ -84,7 +84,7 @@ describe('project graph utils', () => {
     it('should throw an error if the project does not exist', () => {
       expect(() =>
         getSourceDirOfDependentProjects('non-existent-app', projGraph)
-      ).toThrowError();
+      ).toThrow();
     });
 
     describe('Given there is implicit library with no sourceRoot', () => {

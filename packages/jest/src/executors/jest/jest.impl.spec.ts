@@ -22,7 +22,7 @@ import { JestExecutorOptions } from './schema';
 describe('Jest Executor', () => {
   let mockContext: ExecutorContext;
   const defaultOptions: Omit<JestExecutorOptions, 'jestConfig'> = {
-    testPathPattern: [],
+    testPathPatterns: [],
   };
 
   beforeEach(async () => {
@@ -90,7 +90,7 @@ describe('Jest Executor', () => {
       expect(runCLI).toHaveBeenCalledWith(
         expect.objectContaining({
           _: [],
-          testPathPattern: [],
+          testPathPatterns: [],
           watch: false,
         }),
         ['/root/jest.config.ts']
@@ -111,7 +111,7 @@ describe('Jest Executor', () => {
       expect(runCLI).toHaveBeenCalledWith(
         expect.objectContaining({
           _: [],
-          testPathPattern: [],
+          testPathPatterns: [],
           watch: false,
           group: 'core',
         }),
@@ -127,7 +127,7 @@ describe('Jest Executor', () => {
           codeCoverage: false,
           runInBand: true,
           testNamePattern: 'should load',
-          testPathPattern: ['/test/path'],
+          testPathPatterns: ['/test/path'],
           colors: false,
           reporters: ['/test/path'],
           verbose: false,
@@ -144,7 +144,7 @@ describe('Jest Executor', () => {
           coverage: false,
           runInBand: true,
           testNamePattern: 'should load',
-          testPathPattern: ['/test/path'],
+          testPathPatterns: ['/test/path'],
           colors: false,
           reporters: ['/test/path'],
           verbose: false,
@@ -177,7 +177,7 @@ describe('Jest Executor', () => {
           findRelatedTests: true,
           runInBand: true,
           testNamePattern: 'should load',
-          testPathPattern: [],
+          testPathPatterns: [],
           watch: false,
         }),
         ['/root/jest.config.ts']
@@ -205,7 +205,7 @@ describe('Jest Executor', () => {
           silent: true,
           testNamePattern: 'test',
           testPathIgnorePatterns: ['/test/path/|/tests/e2e/'],
-          testPathPattern: ['/test/path'],
+          testPathPatterns: ['/test/path'],
           colors: false,
           reporters: ['/test/path'],
           verbose: false,
@@ -239,7 +239,7 @@ describe('Jest Executor', () => {
           silent: true,
           testNamePattern: 'test',
           testPathIgnorePatterns: ['/test/path/|/tests/e2e/'],
-          testPathPattern: ['/test/path'],
+          testPathPatterns: ['/test/path'],
           colors: false,
           verbose: false,
           reporters: ['/test/path'],
@@ -268,7 +268,7 @@ describe('Jest Executor', () => {
         {
           _: [],
           maxWorkers: '50%',
-          testPathPattern: [],
+          testPathPatterns: [],
         },
         ['/root/jest.config.ts']
       );
@@ -288,7 +288,7 @@ describe('Jest Executor', () => {
         expect.objectContaining({
           _: [],
           setupFilesAfterEnv: ['/root/test-setup.ts'],
-          testPathPattern: [],
+          testPathPatterns: [],
           watch: false,
         }),
         ['/root/jest.config.ts']
@@ -324,7 +324,7 @@ describe('Jest Executor', () => {
           expect.objectContaining({
             _: [],
             setupFilesAfterEnv: ['/root/test-setup.ts'],
-            testPathPattern: [],
+            testPathPatterns: [],
             watch: false,
           }),
           ['/root/jest.config.ts']
@@ -356,7 +356,7 @@ describe('Jest Executor', () => {
         expect(runCLI).toHaveBeenCalledWith(
           expect.objectContaining({
             _: [],
-            testPathPattern: [],
+            testPathPatterns: [],
             watch: false,
           }),
           ['/root/jest.config.ts']
@@ -391,7 +391,7 @@ describe('Jest Executor', () => {
       expect(runCLI).toHaveBeenCalledWith(
         expect.objectContaining({
           _: [],
-          testPathPattern: [],
+          testPathPatterns: [],
           watch: false,
         }),
         ['/root/jest.config.ts']

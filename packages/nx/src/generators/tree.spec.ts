@@ -518,7 +518,7 @@ describe('tree', () => {
         const filePath = 'root-file.txt';
         tree.delete(filePath);
 
-        expect(() => tree.changePermissions(filePath, '755')).toThrowError(
+        expect(() => tree.changePermissions(filePath, '755')).toThrow(
           `Cannot change permissions of deleted file ${filePath}.`
         );
       });
@@ -526,7 +526,7 @@ describe('tree', () => {
       it('should throw when the file does not exist', () => {
         const filePath = 'non-existent-file.txt';
 
-        expect(() => tree.changePermissions(filePath, '755')).toThrowError(
+        expect(() => tree.changePermissions(filePath, '755')).toThrow(
           `Cannot change permissions of non-existing file ${filePath}.`
         );
       });
@@ -534,7 +534,7 @@ describe('tree', () => {
       it('should throw when the path provided is not a file', () => {
         const dirPath = 'parent';
 
-        expect(() => tree.changePermissions(dirPath, '755')).toThrowError(
+        expect(() => tree.changePermissions(dirPath, '755')).toThrow(
           `Cannot change permissions of non-file ${dirPath}.`
         );
       });

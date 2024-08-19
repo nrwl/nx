@@ -17,6 +17,6 @@ describe('module generator', () => {
   });
 
   it('should run successfully', async () => {
-    await expect(moduleGenerator(tree, options)).resolves.not.toThrowError();
+    await expect(moduleGenerator(tree, options)).resolves.not.toThrow();
   });
 });

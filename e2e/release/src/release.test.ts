@@ -480,17 +480,17 @@ ${JSON.stringify(
       execSync(
         `npm view @proj/${pkg1}@next version --registry=${customRegistryUrl}`
       )
-    ).toThrowError(/npm ERR! code E404/);
+    ).toThrow(/npm ERR! code E404/);
     expect(() =>
       execSync(
         `npm view @proj/${pkg2}@next version --registry=${customRegistryUrl}`
       )
-    ).toThrowError(/npm ERR! code E404/);
+    ).toThrow(/npm ERR! code E404/);
     expect(() =>
       execSync(
         `npm view @proj/${pkg3}@next version --registry=${customRegistryUrl}`
       )
-    ).toThrowError(/npm ERR! code E404/);
+    ).toThrow(/npm ERR! code E404/);
 
     // Actually publish to the custom registry (not e2e registry), and a custom dist tag of "next"
     const publishOutput3 = runCLI(publishToNext);

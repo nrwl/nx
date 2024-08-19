@@ -18,8 +18,6 @@ describe('interceptor generator', () => {
   });
 
   it('should run successfully', async () => {
-    await expect(
-      interceptorGenerator(tree, options)
-    ).resolves.not.toThrowError();
+    await expect(interceptorGenerator(tree, options)).resolves.not.toThrow();
   });
 });

@@ -223,7 +223,7 @@ describe('nx release - private JS packages', () => {
     ).toEqual('999.9.9');
 
     // The private package should have never been published
-    expect(() => execSync(`npm view @proj/${privatePkg} version`)).toThrowError(
+    expect(() => execSync(`npm view @proj/${privatePkg} version`)).toThrow(
       /npm ERR! code E404/
     );
   }, 500000);
@@ -311,7 +311,7 @@ describe('nx release - private JS packages', () => {
     ).toEqual('999.9.10');
 
     // The private package should have never been published
-    expect(() => execSync(`npm view @proj/${privatePkg} version`)).toThrowError(
+    expect(() => execSync(`npm view @proj/${privatePkg} version`)).toThrow(
       /npm ERR! code E404/
     );
   }, 500000);

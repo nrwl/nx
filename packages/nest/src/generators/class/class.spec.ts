@@ -18,6 +18,6 @@ describe('class generator', () => {
   });
 
   it('should run successfully', async () => {
-    await expect(classGenerator(tree, options)).resolves.not.toThrowError();
+    await expect(classGenerator(tree, options)).resolves.not.toThrow();
   });
 });

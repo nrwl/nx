@@ -18,6 +18,6 @@ describe('resource generator', () => {
   });
 
   it('should run successfully', async () => {
-    await expect(resourceGenerator(tree, options)).resolves.not.toThrowError();
+    await expect(resourceGenerator(tree, options)).resolves.not.toThrow();
   });
 });

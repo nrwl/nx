@@ -17,6 +17,6 @@ describe('interface generator', () => {
   });
 
   it('should run successfully', async () => {
-    await expect(interfaceGenerator(tree, options)).resolves.not.toThrowError();
+    await expect(interfaceGenerator(tree, options)).resolves.not.toThrow();
   });
 });

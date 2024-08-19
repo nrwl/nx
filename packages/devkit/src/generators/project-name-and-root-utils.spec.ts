@@ -310,7 +310,7 @@ describe('determineProjectNameAndRootOptions', () => {
           projectNameAndRootFormat: 'as-provided',
           callingGenerator: '',
         })
-      ).rejects.toThrowError();
+      ).rejects.toThrow();
     });
 
     it('should handle providing a path as the project name when format is "as-provided"', async () => {
@@ -443,7 +443,7 @@ describe('determineProjectNameAndRootOptions', () => {
           projectNameAndRootFormat: 'derived',
           callingGenerator: '',
         })
-      ).rejects.toThrowError();
+      ).rejects.toThrow();
     });
 
     it('should return the derived project name and directory for root projects', async () => {
@@ -729,7 +729,7 @@ describe('determineProjectNameAndRootOptions', () => {
           projectNameAndRootFormat: 'as-provided',
           callingGenerator: '',
         })
-      ).rejects.toThrowError();
+      ).rejects.toThrow();
     });
 
     it('should handle providing a path as the project name when format is "as-provided"', async () => {
@@ -883,7 +883,7 @@ describe('determineProjectNameAndRootOptions', () => {
           projectNameAndRootFormat: 'derived',
           callingGenerator: '',
         })
-      ).rejects.toThrowError();
+      ).rejects.toThrow();
     });
 
     it('should return the derived project name and directory for root projects', async () => {

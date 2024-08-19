@@ -310,6 +310,6 @@ describe('remote generator', () => {
         projectNameAndRootFormat: 'as-provided',
         typescriptConfiguration: true,
       })
-    ).rejects.toThrowError(`Invalid remote name provided: ${name}.`);
+    ).rejects.toThrow(`Invalid remote name provided: ${name}.`);
   });
 });

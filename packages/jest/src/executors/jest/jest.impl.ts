@@ -84,7 +84,7 @@ export async function jestConfigParser(
     silent: options.silent,
     testLocationInResults: options.testLocationInResults,
     testNamePattern: options.testNamePattern,
-    testPathPattern: options.testPathPattern,
+    testPathPatterns: options.testPathPatterns,
     testPathIgnorePatterns: options.testPathIgnorePatterns,
     testTimeout: options.testTimeout,
     colors: options.colors,

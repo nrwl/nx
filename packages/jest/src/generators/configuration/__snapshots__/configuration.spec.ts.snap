@@ -6,7 +6,7 @@ export default {
   displayName: 'lib1',
   preset: '../../jest.preset.js',
   transform: {
-    '^.+\\\\.[tj]sx?$': [
+    '^.+\\\\.[mc]?[tj]sx?$': [
       '@swc/jest',
       {
         jsc: {
@@ -16,7 +16,7 @@ export default {
       },
     ],
   },
-  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
+  moduleFileExtensions: ['ts', 'mts', 'cts', 'tsx', 'js', 'mjs', 'cjs', 'jsx'],
   coverageDirectory: '../../coverage/libs/lib1',
 };
 "
@@ -28,9 +28,9 @@ export default {
   displayName: 'lib1',
   preset: '../../jest.preset.js',
   transform: {
-    '^.+\\\\.[tj]sx?$': 'babel-jest',
+    '^.+\\\\.[mc]?[tj]sx?$': 'babel-jest',
   },
-  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
+  moduleFileExtensions: ['ts', 'mts', 'cts', 'tsx', 'js', 'mjs', 'cjs', 'jsx'],
   coverageDirectory: '../../coverage/libs/lib1',
 };
 "
@@ -42,9 +42,9 @@ export default {
   displayName: 'lib1',
   preset: '../../jest.preset.js',
   transform: {
-    '^.+\\\\.[tj]s$': 'babel-jest',
+    '^.+\\\\.[mc]?[tj]s$': 'babel-jest',
   },
-  moduleFileExtensions: ['ts', 'js', 'html'],
+  moduleFileExtensions: ['ts', 'mts', 'cts', 'js', 'mjs', 'cjs', 'html'],
   coverageDirectory: '../../coverage/libs/lib1',
 };
 "
@@ -58,7 +58,7 @@ export default {
   setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
   coverageDirectory: '../../coverage/libs/lib1',
   transform: {
-    '^.+\\\\.(ts|mjs|js|html)$': [
+    '^.+\\\\.(ts|mts|cts|js|mjs|cjs|html)$': [
       'jest-preset-angular',
       {
         tsconfig: '<rootDir>/tsconfig.spec.json',
@@ -94,7 +94,7 @@ export default {
   setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
   coverageDirectory: '../../coverage/libs/lib1',
   transform: {
-    '^.+\\\\.(ts|mjs|js|html)$': [
+    '^.+\\\\.(ts|mts|cts|js|mjs|cjs|html)$': [
       'jest-preset-angular',
       {
         tsconfig: '<rootDir>/tsconfig.spec.json',
