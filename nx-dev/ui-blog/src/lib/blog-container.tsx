@@ -19,6 +19,7 @@ export interface BlogContainerProps {
   blogPosts: BlogPostDataEntry[];
   tags: string[];
 }
+
 let ALL_TOPICS = [
   {
     label: 'All',
@@ -63,6 +64,17 @@ let ALL_TOPICS = [
     heading: 'Tutorials',
   },
 ];
+
+// first five blog posts contain potentially pinned plus the last published ones. They
+// should be sorted by date (not just all pinned first)
+export function sortFirstFivePosts(
+  posts: BlogPostDataEntry[]
+): BlogPostDataEntry[] {
+  return posts
+    .slice(0, 5)
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+}
+
 export function BlogContainer({ blogPosts, tags }: BlogContainerProps) {
   const searchParams = useSearchParams();
   const [filteredList, setFilteredList] = useState(blogPosts);
@@ -94,9 +106,7 @@ export function BlogContainer({ blogPosts, tags }: BlogContainerProps) {
   );
 
   function updateBlogPosts() {
-    setFirstFiveBlogs(
-      filteredList.slice(0, filteredList.length > 5 ? 5 : filteredList.length)
-    );
+    setFirstFiveBlogs(sortFirstFivePosts(filteredList));
     setRemainingBlogs(filteredList.length > 5 ? filteredList.slice(5) : []);
   }
 
@@ -138,7 +148,7 @@ function initializeFilters(
   const filterBy = searchParams.get('filterBy');
 
   const defaultState = {
-    initialFirstFive: blogPosts.slice(0, 5),
+    initialFirstFive: sortFirstFivePosts(blogPosts),
     initialRest: blogPosts.slice(5),
     initialSelectedFilterHeading: 'All Blogs',
     initialSelectedFilter: 'All',
@@ -153,7 +163,7 @@ function initializeFilters(
   const initialFilter = ALL_TOPICS.find((filter) => filter.value === filterBy);
 
   return {
-    initialFirstFive: result.slice(0, 5),
+    initialFirstFive: sortFirstFivePosts(result),
     initialRest: result.length > 5 ? result.slice(5) : [],
     initialSelectedFilterHeading: initialFilter?.heading || 'All Blogs',
     initialSelectedFilter: initialFilter?.value || 'All',
