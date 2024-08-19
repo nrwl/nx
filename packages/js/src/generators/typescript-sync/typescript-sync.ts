@@ -14,6 +14,12 @@ import { applyEdits, modify } from 'jsonc-parser';
 import { dirname, normalize, relative } from 'node:path/posix';
 import type { SyncGeneratorResult } from 'nx/src/utils/sync-generators';
 import {
+  parseJsonConfigFileContent,
+  readConfigFile,
+  sys,
+  System,
+} from 'typescript';
+import {
   PLUGIN_NAME,
   type TscPluginOptions,
 } from '../../plugins/typescript/plugin';
@@ -75,6 +81,16 @@ export async function syncGenerator(tree: Tree): Promise<SyncGeneratorResult> {
       return tree.exists(projectTsconfigPath);
     }
   );
+
+  const tsSysFromTree: System = {
+    ...sys,
+    readFile(path, encoding: BufferEncoding = 'utf-8') {
+      if (tree.exists(path)) {
+        return tree.read(path, encoding);
+      }
+      return sys.readFile(path, encoding);
+    },
+  };
 
   // Track if any changes were made to the tsconfig files. We check the changes
   // made by this generator to know if the TS config is out of sync with the
@@ -172,6 +188,7 @@ export async function syncGenerator(tree: Tree): Promise<SyncGeneratorResult> {
       hasChanges =
         updateTsConfigReferences(
           tree,
+          tsSysFromTree,
           runtimeTsConfigPath,
           dependencies,
           sourceProjectNode.data.root,
@@ -185,6 +202,7 @@ export async function syncGenerator(tree: Tree): Promise<SyncGeneratorResult> {
     hasChanges =
       updateTsConfigReferences(
         tree,
+        tsSysFromTree,
         sourceProjectTsconfigPath,
         dependencies,
         sourceProjectNode.data.root,
@@ -206,6 +224,7 @@ export default syncGenerator;
 
 function updateTsConfigReferences(
   tree: Tree,
+  sys: System,
   tsConfigPath: string,
   dependencies: ProjectGraphProjectNode[],
   projectRoot: string,
@@ -251,6 +270,10 @@ function updateTsConfigReferences(
         runtimeTsConfigFileName
       );
       if (tree.exists(runtimeTsConfigPath)) {
+        // Check composite is true in the dependency runtime tsconfig file before proceeding
+        if (!hasCompositeEnabled(sys, runtimeTsConfigPath)) {
+          continue;
+        }
         referencePath = runtimeTsConfigPath;
       } else {
         // Check for other possible runtime tsconfig file names
@@ -262,10 +285,24 @@ function updateTsConfigReferences(
             possibleRuntimeTsConfigFileName
           );
           if (tree.exists(possibleRuntimeTsConfigPath)) {
+            // Check composite is true in the dependency runtime tsconfig file before proceeding
+            if (!hasCompositeEnabled(sys, possibleRuntimeTsConfigPath)) {
+              continue;
+            }
             referencePath = possibleRuntimeTsConfigPath;
             break;
           }
         }
+      }
+    } else {
+      // Check composite is true in the dependency tsconfig.json file before proceeding
+      if (
+        !hasCompositeEnabled(
+          sys,
+          joinPathFragments(dep.data.root, 'tsconfig.json')
+        )
+      ) {
+        continue;
       }
     }
     const relativePathToTargetRoot = relative(projectRoot, referencePath);
@@ -412,4 +449,13 @@ function patchTsconfigJsonReferences(
   const updatedJsonContents = applyEdits(jsonContents, edits);
   // The final contents will be formatted by formatFiles() later
   tree.write(tsconfigPath, updatedJsonContents);
+}
+
+function hasCompositeEnabled(sys: System, tsconfigPath: string): boolean {
+  const parsed = parseJsonConfigFileContent(
+    readConfigFile(tsconfigPath, sys.readFile).config,
+    sys,
+    dirname(tsconfigPath)
+  );
+  return parsed.options.composite === true;
 }
