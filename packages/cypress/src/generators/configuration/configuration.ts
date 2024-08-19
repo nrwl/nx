@@ -21,7 +21,7 @@ import {
   getRelativePathToRootTsConfig,
   initGenerator as jsInitGenerator,
 } from '@nx/js';
-import { Linter } from '@nx/eslint';
+import { Linter, LinterType } from '@nx/eslint';
 import { join } from 'path';
 import { addLinterToCyProject } from '../../utils/add-linter';
 import { addDefaultE2EConfig } from '../../utils/config';
@@ -40,7 +40,7 @@ export interface CypressE2EConfigSchema {
   skipPackageJson?: boolean;
   bundler?: 'webpack' | 'vite' | 'none';
   devServerTarget?: string;
-  linter?: Linter;
+  linter?: Linter | LinterType;
   port?: number | 'cypress-auto';
   jsx?: boolean;
   rootProject?: boolean;

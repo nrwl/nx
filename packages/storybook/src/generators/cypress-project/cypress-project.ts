@@ -13,7 +13,7 @@ import {
   updateJson,
   updateProjectConfiguration,
 } from '@nx/devkit';
-import { Linter } from '@nx/eslint';
+import { Linter, LinterType } from '@nx/eslint';
 import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { join } from 'path';
 
@@ -24,7 +24,7 @@ export interface CypressConfigureSchema {
   name: string;
   js?: boolean;
   directory?: string;
-  linter: Linter;
+  linter: Linter | LinterType;
   standaloneConfig?: boolean;
   ciTargetName?: string;
   skipFormat?: boolean;
