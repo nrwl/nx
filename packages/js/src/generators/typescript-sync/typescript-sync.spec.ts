@@ -916,13 +916,11 @@ describe('syncGenerator()', () => {
             },
           }
         );
-        expect(readJson(tree, 'packages/b/tsconfig.spec.json')).toStrictEqual(
-          {
-            compilerOptions: {
-              composite: true,
-            },
-          }
-        );
+        expect(readJson(tree, 'packages/b/tsconfig.spec.json')).toStrictEqual({
+          compilerOptions: {
+            composite: true,
+          },
+        });
       });
     });
 
@@ -1408,20 +1406,16 @@ describe('syncGenerator()', () => {
           ]
         `);
         // assert that tsconfig.lib.json and tsconfig.spec.json files have not been updated
-        expect(readJson(tree, 'packages/b/tsconfig.lib.json')).toStrictEqual(
-          {
-            compilerOptions: {
-              composite: true,
-            },
-          }
-        );
-        expect(readJson(tree, 'packages/b/tsconfig.spec.json')).toStrictEqual(
-          {
-            compilerOptions: {
-              composite: true,
-            },
-          }
-        );
+        expect(readJson(tree, 'packages/b/tsconfig.lib.json')).toStrictEqual({
+          compilerOptions: {
+            composite: true,
+          },
+        });
+        expect(readJson(tree, 'packages/b/tsconfig.spec.json')).toStrictEqual({
+          compilerOptions: {
+            composite: true,
+          },
+        });
       });
     });
   });
