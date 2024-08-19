@@ -19,7 +19,7 @@ export async function* vitestExecutor(
   // Allows ESM to be required in CJS modules. Vite will be published as ESM in the future.
   const { startVitest } = await loadVitestDynamicImport();
 
-  const { resolvedOptions, plugins } =
+  const resolvedOptions =
     (await getOptions(options, context, projectRoot)) ?? {};
 
   const watch = resolvedOptions['watch'] === true;
@@ -37,8 +37,7 @@ export async function* vitestExecutor(
   const ctx = await startVitest(
     resolvedOptions['mode'] ?? 'test',
     cliFilters,
-    resolvedOptions,
-    { plugins }
+    resolvedOptions
   );
 
   let hasErrors = false;
