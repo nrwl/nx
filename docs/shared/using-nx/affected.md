@@ -1,16 +1,6 @@
 # Run Only Tasks Affected by a PR
 
-As your workspace grows, re-testing, re-building and re-linting all projects becomes too slow. To address this Nx implements code change analysis to determine the minimum set of projects that were affected by the change. How does this work?
-
-```shell
-nx affected -t <task>
-```
-
-When you run `nx affected -t test`, Nx uses Git to determine the files you changed in your PR, it will look at the nature of
-change (what exactly did you update in those files), and it uses this to determine the list of projects in the workspace
-that can be affected by this change. It then runs the `run-many` command with that list.
-
-For instance, if my PR changes `lib10`, and we then run `nx affected -t test`, Nx leverages the project graph to determine all the projects that depend on `lib10`, marks them as "affected" and runs `test` on just that subset of projects.
+As your workspace grows, re-testing, re-building and re-linting all projects becomes too slow. To address this, Nx is able to determine the minimum set of projects that were affected by the change, and **only run tasks on those projects**. This drastically improves the speed of your CI and the amount of compute that needs to be run, even before other features like [remote caching](/ci/features/remote-cache) and [distributed task execution](/ci/features/distribute-task-execution) are taken into account.
 
 {% graph title="Making a change in lib10 only affects a sub-part of the project graph" height="400px" %}
 
@@ -203,7 +193,21 @@ For instance, if my PR changes `lib10`, and we then run `nx affected -t test`, N
 
 {% /graph %}
 
-## Visualize Affected Projects
+## Using Nx Affected Commands
+
+To leverage this feature, use the following command when running your tasks, in particular on CI:
+
+```shell
+nx affected -t <task>
+```
+
+When you run `nx affected -t test`, Nx will
+
+- use Git to determine the files you changed in your PR
+- use the [project graph](/features/explore-graph) to determine which projects the files belong to
+- determine which projects depend on the projects you modified
+
+Once the projects are identified, Nx runs the tasks you specified on that subset of projects.
 
 You can also visualize the affected projects using the [Nx graph](/features/explore-graph). Simply run:
 
@@ -211,15 +215,24 @@ You can also visualize the affected projects using the [Nx graph](/features/expl
 nx graph --affected
 ```
 
-## Specify Which SHAs to Use to Calculate Affected Code
+## Just using Affected Might not be Enough
+
+Using `nx affected` is a powerful tool to cut down the amount of compute that needs to be run. However, this might not be sufficient to significantly speed up your CI pipeline. For example:
+
+- If you're modifying a **project that is being used by a large portion** of your monorepo projects, you might end up running tasks for almost all the projects in the workspace.
+- If you have a set of 10 projects affected by a PR and you continue making changes, you will **always end up running tasks for those 10 projects**. The set of affected projects doesn't change but is always calculated with respect to your last successful run on the main branch.
+
+This is why Nx Affected is best paired with [remote caching](/ci/features/remote-cache) and [distributed task execution](/ci/features/distribute-task-execution).
+
+## Configure Affected on CI
 
 To understand which projects are affected, Nx uses the Git history and the [project graph](/features/explore-graph). Git knows which files changed, and the Nx project graph knows which projects those files belong to.
 
 The affected command takes a `base` and `head` commit. The default `base` is your `main` branch and the default `head` is your current file system. This is generally what you want when developing locally, but in CI, you need to customize these values.
 
 ```shell
-nx affected:build --base=origin/main --head=$PR_BRANCH_NAME # where PR_BRANCH_NAME is defined by your CI system
-nx affected:build --base=origin/main~1 --head=origin/main # rerun what is affected by the last commit in main
+nx affected -t build --base=origin/main --head=$PR_BRANCH_NAME # where PR_BRANCH_NAME is defined by your CI system
+nx affected -t build --base=origin/main~1 --head=origin/main # rerun what is affected by the last commit in main
 ```
 
 You can also set the base and head SHAs as env variables:
@@ -229,7 +242,9 @@ NX_BASE=origin/main~1
 NX_HEAD=origin/main
 ```
 
-Typically, you want to set the base SHA not the most recent commit on the `main` branch, but rather that latest commit that successfully passed in CI. In other words, in order to be certain that the repo is in a good state, we need to check all the changes that have happened since the last time the repo was in a good state. Depending on your CI provider this might differ:
+**The recommmended approach is to set the base SHA to the latest successful commit** on the `main` branch. This ensures that all changes since the last successful CI run are accounted for.
+
+Depending on your CI provider this might differ:
 
 - [Get last successful commit for Azure Pipelines](/ci/recipes/set-up/monorepo-ci-azure#get-the-commit-of-the-last-successful-build)
 - [Get last successful commit for GitHub Actions](/ci/recipes/set-up/monorepo-ci-github-actions#get-the-commit-of-the-last-successful-build)
