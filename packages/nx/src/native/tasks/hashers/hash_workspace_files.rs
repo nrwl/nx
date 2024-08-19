@@ -8,37 +8,55 @@ use crate::native::types::FileData;
 use crate::native::{glob::build_glob_set, hasher::hash};
 
 pub fn hash_workspace_files(
-    workspace_file_set: &str,
+    workspace_file_sets: &[String],
     all_workspace_files: &[FileData],
     cache: Arc<DashMap<String, String>>,
 ) -> Result<String> {
-    let file_set = workspace_file_set.strip_prefix("{workspaceRoot}/");
+    let globs: Vec<String> = workspace_file_sets
+        .iter()
+        .inspect(|&x| trace!("Workspace file set: {}", x))
+        .filter_map(|x| {
+            let is_negative = x.starts_with("!");
+            let x = if is_negative { &x[1..] } else { x };
+            let fileset: Option<&str> = x.strip_prefix("{workspaceRoot}/");
+            if let Some(fileset) = fileset {
+                if is_negative {
+                    Some(format!("!{}", fileset))
+                } else {
+                    Some(fileset.to_string())
+                }
+            } else {
+                warn!(
+                    "{x} does not start with {}. This will throw an error in Nx 20.",
+                    "{workspaceRoot}/"
+                );
+                None
+            }
+        })
+        .collect();
 
-    let Some(file_set) = file_set else {
-        warn!(
-            "{workspace_file_set} does not start with {}. This will throw an error in Nx 20.",
-            "{workspaceRoot}/"
-        );
+    if globs.is_empty() {
         return Ok(hash(b""));
-    };
+    }
 
-    if let Some(cache_results) = cache.get(file_set) {
+    let cache_key = globs.join(",");
+    if let Some(cache_results) = cache.get(&cache_key) {
         return Ok(cache_results.clone());
     }
 
-    let glob = build_glob_set(&[file_set])?;
+    let glob = build_glob_set(&globs)?;
 
     let mut hasher = xxhash_rust::xxh3::Xxh3::new();
     for file in all_workspace_files
         .iter()
         .filter(|file| glob.is_match(&file.file))
     {
-        trace!("{:?} was found with glob {:?}", file.file, file_set);
+        trace!("{:?} was found with glob {:?}", file.file, globs);
         hasher.update(file.hash.as_bytes());
     }
     let hashed_value = hasher.digest().to_string();
 
-    cache.insert(file_set.to_string(), hashed_value.clone());
+    cache.insert(cache_key.to_string(), hashed_value.clone());
     Ok(hashed_value)
 }
 
@@ -52,8 +70,12 @@ mod test {
 
     #[test]
     fn invalid_workspace_input_is_just_empty_hash() {
-        let result =
-            hash_workspace_files("packages/{package}", &[], Arc::new(DashMap::new())).unwrap();
+        let result = hash_workspace_files(
+            &["packages/{package}".to_string()],
+            &[],
+            Arc::new(DashMap::new()),
+        )
+        .unwrap();
         assert_eq!(result, hash(b""));
     }
 
@@ -76,7 +98,7 @@ mod test {
             hash: "abc".into(),
         };
         let result = hash_workspace_files(
-            "{workspaceRoot}/.gitignore",
+            &["{workspaceRoot}/.gitignore".to_string()],
             &[
                 gitignore_file.clone(),
                 nxignore_file.clone(),

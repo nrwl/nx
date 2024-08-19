@@ -12,6 +12,7 @@ use napi::bindgen_prelude::External;
 use napi::{Env, JsExternal};
 use rayon::prelude::*;
 use std::collections::HashMap;
+use std::iter;
 use tracing::trace;
 
 use crate::native::tasks::inputs::{
@@ -71,11 +72,11 @@ impl HashPlanner {
                 let mut inputs: Vec<HashInstruction> = target
                     .unwrap_or(vec![])
                     .into_iter()
-                    .chain(vec![
-                        HashInstruction::WorkspaceFileSet("{workspaceRoot}/nx.json".to_string()),
-                        HashInstruction::WorkspaceFileSet("{workspaceRoot}/.gitignore".to_string()),
-                        HashInstruction::WorkspaceFileSet("{workspaceRoot}/.nxignore".to_string()),
-                    ])
+                    .chain(vec![HashInstruction::WorkspaceFileSet(vec![
+                        "{workspaceRoot}/nx.json".to_string(),
+                        "{workspaceRoot}/.gitignore".to_string(),
+                        "{workspaceRoot}/.nxignore".to_string(),
+                    ])])
                     .chain(self_inputs)
                     .collect();
 
@@ -335,7 +336,7 @@ impl HashPlanner {
 
         project_file_set_inputs
             .into_iter()
-            .chain(workspace_file_set_inputs)
+            .chain(iter::once(workspace_file_set_inputs))
             .chain(runtime_and_env_inputs)
             .collect()
     }
@@ -430,9 +431,6 @@ fn project_file_set_inputs(project_name: &str, file_sets: Vec<&str>) -> Vec<Hash
     ]
 }
 
-fn workspace_file_set_inputs(file_sets: Vec<&str>) -> Vec<HashInstruction> {
-    file_sets
-        .into_iter()
-        .map(|s| HashInstruction::WorkspaceFileSet(s.to_string()))
-        .collect()
+fn workspace_file_set_inputs(file_sets: Vec<&str>) -> HashInstruction {
+    HashInstruction::WorkspaceFileSet(file_sets.iter().map(|f| f.to_string()).collect())
 }

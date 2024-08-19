@@ -32,7 +32,7 @@ pub struct TaskGraph {
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub enum HashInstruction {
-    WorkspaceFileSet(String),
+    WorkspaceFileSet(Vec<String>),
     Runtime(String),
     Environment(String),
     ProjectFileSet(String, Vec<String>),
@@ -73,7 +73,7 @@ impl fmt::Display for HashInstruction {
                 HashInstruction::ProjectFileSet(project_name, file_set) => {
                     format!("{project_name}:{}", file_set.join(","))
                 }
-                HashInstruction::WorkspaceFileSet(file_set) => file_set.to_string(),
+                HashInstruction::WorkspaceFileSet(file_set) => format!("workspace:{:?}", file_set),
                 HashInstruction::Runtime(runtime) => format!("runtime:{}", runtime),
                 HashInstruction::Environment(env) => format!("env:{}", env),
                 HashInstruction::TaskOutput(task_output, dep_outputs) => {
