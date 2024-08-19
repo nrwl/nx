@@ -6,7 +6,7 @@ import { mergeConfig } from 'vite';
 
 const config: StorybookConfig = {
   stories: [
-    <% if(uiFramework === '@storybook/angular' && projectType === 'library') { %>
+    <% if((uiFramework === '@storybook/angular' && projectType === 'library') || uiFramework === '@storybook/nextjs') { %>
     '../**/*.@(mdx|stories.@(js|jsx|ts|tsx))' <% } else { %>
     '../<%= projectDirectory %>/**/*.@(mdx|stories.@(js|jsx|ts|tsx))'
   <% } %>],
