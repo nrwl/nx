@@ -49,9 +49,7 @@ The `@nx/webpack` plugin will create a task for any project that has a Webpack c
 - `webpack.config.js`
 - `webpack.config.ts`
 - `webpack.config.mjs`
-- `webpack.config.mts`
 - `webpack.config.cjs`
-- `webpack.config.cts`
 
 ### View Inferred Tasks
 
