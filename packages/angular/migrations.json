@@ -2110,6 +2110,18 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "19.6.1-ngrx": {
+      "version": "19.6.1-beta.0",
+      "requires": {
+        "@angular/core": "^18.0.0"
+      },
+      "packages": {
+        "@ngrx/store": {
+          "version": "^18.0.2",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }
