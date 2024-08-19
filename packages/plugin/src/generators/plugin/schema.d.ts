@@ -1,5 +1,5 @@
 import type { ProjectNameAndRootFormat } from '@nx/devkit/src/generators/project-name-and-root-utils';
-import type { Linter } from '@nx/eslint';
+import type { Linter, LinterType } from '@nx/eslint';
 
 export interface Schema {
   name: string;
@@ -12,7 +12,7 @@ export interface Schema {
   e2eTestRunner?: 'jest' | 'none';
   tags?: string;
   unitTestRunner: 'jest' | 'none';
-  linter: Linter;
+  linter: Linter | LinterType;
   setParserOptionsProject?: boolean;
   compiler: 'swc' | 'tsc';
   rootProject?: boolean;

@@ -6,7 +6,7 @@ import {
   runTasksInSerial,
   Tree,
 } from '@nx/devkit';
-import { Linter, lintProjectGenerator } from '@nx/eslint';
+import { Linter, LinterType, lintProjectGenerator } from '@nx/eslint';
 import { installedCypressVersion } from './cypress-version';
 import { eslintPluginCypressVersion } from './versions';
 import {
@@ -24,7 +24,7 @@ import {
 
 export interface CyLinterOptions {
   project: string;
-  linter: Linter;
+  linter: Linter | LinterType;
   setParserOptionsProject?: boolean;
   skipPackageJson?: boolean;
   rootProject?: boolean;

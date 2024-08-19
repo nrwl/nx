@@ -16,7 +16,7 @@ import {
   writeJson,
 } from '@nx/devkit';
 
-import { Linter as LinterEnum } from '../utils/linter';
+import { Linter as LinterEnum, LinterType } from '../utils/linter';
 import { findEslintFile } from '../utils/eslint-file';
 import { join } from 'path';
 import { lintInitGenerator } from '../init/init';
@@ -39,7 +39,7 @@ import { setupRootEsLint } from './setup-root-eslint';
 
 interface LintProjectOptions {
   project: string;
-  linter?: LinterEnum;
+  linter?: LinterEnum | LinterType;
   eslintFilePatterns?: string[];
   tsConfigPaths?: string[];
   skipFormat: boolean;
