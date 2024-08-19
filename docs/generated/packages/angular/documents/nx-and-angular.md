@@ -232,6 +232,15 @@ nx g [package]:ng-add
 ```
 
 {% /tab %}
+
+{% tab label="bun" %}
+
+```shell
+bun add [package]
+nx g [package]:ng-add
+```
+
+{% /tab %}
 {% /tabs %}
 
 Replace `[package]` with the package name you're trying to add.

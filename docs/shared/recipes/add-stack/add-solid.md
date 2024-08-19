@@ -51,6 +51,16 @@ nx add @nx/web
 ```
 
 {% /tab %}
+
+{% tab label="bun" %}
+
+```shell
+bun add solid-js
+bun add -D solid-devtools vite-plugin-solid vite-tsconfig-paths
+nx add @nx/web
+```
+
+{% /tab %}
 {% /tabs %}
 
 ## Create an Application
