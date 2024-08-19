@@ -35,9 +35,17 @@ describe('syncGenerator()', () => {
       source: name,
       target: dep,
     }));
-    writeJson(tree, `${root}/tsconfig.json`, {});
+    writeJson(tree, `${root}/tsconfig.json`, {
+      compilerOptions: {
+        composite: true,
+      },
+    });
     for (const runtimeTsConfigFileName of extraRuntimeTsConfigs) {
-      writeJson(tree, `${root}/${runtimeTsConfigFileName}`, {});
+      writeJson(tree, `${root}/${runtimeTsConfigFileName}`, {
+        compilerOptions: {
+          composite: true,
+        },
+      });
     }
     writeJson(tree, `${root}/package.json`, {
       name: name,
@@ -62,8 +70,16 @@ describe('syncGenerator()', () => {
     });
 
     // Root tsconfigs
-    writeJson(tree, 'tsconfig.json', {});
-    writeJson(tree, 'tsconfig.options.json', { compilerOptions: {} });
+    writeJson(tree, 'tsconfig.json', {
+      compilerOptions: {
+        composite: true,
+      },
+    });
+    writeJson(tree, 'tsconfig.options.json', {
+      compilerOptions: {
+        composite: true,
+      },
+    });
 
     // b => a
     addProject('a');
@@ -107,11 +123,18 @@ describe('syncGenerator()', () => {
         { path: './packages/d' },
       ],
     }));
-    writeJson(tree, 'packages/a/tsconfig.lib.json', {});
+    writeJson(tree, 'packages/a/tsconfig.lib.json', {
+      compilerOptions: {
+        composite: true,
+      },
+    });
     // unformatted tsconfig.json to test that it doesn't get picked up as a change
     tree.write(
       'packages/b/tsconfig.json',
       `{
+      "compilerOptions": {
+        "composite": true,
+      },
             "references": [     { "path": "../a" }
 ]}`
     );
@@ -119,6 +142,9 @@ describe('syncGenerator()', () => {
     tree.write(
       'packages/b/tsconfig.lib.json',
       `{
+      "compilerOptions": {
+        "composite": true,
+      },
             "references": [     { "path": "../a/tsconfig.lib.json" }
 ]}`
     );
@@ -127,6 +153,9 @@ describe('syncGenerator()', () => {
       references: [{ path: '../b' }, { path: '../a' }],
     }));
     writeJson(tree, 'packages/c/tsconfig.lib.json', {
+      compilerOptions: {
+        composite: true,
+      },
       references: [
         { path: '../b/tsconfig.lib.json' },
         { path: '../a/tsconfig.lib.json' },
@@ -137,6 +166,9 @@ describe('syncGenerator()', () => {
       references: [{ path: '../b' }, { path: '../a' }],
     }));
     writeJson(tree, 'packages/d/tsconfig.lib.json', {
+      compilerOptions: {
+        composite: true,
+      },
       references: [
         { path: '../b/tsconfig.lib.json' },
         { path: '../a/tsconfig.lib.json' },
@@ -147,6 +179,9 @@ describe('syncGenerator()', () => {
       references: [{ path: '../b' }, { path: '../d' }, { path: '../a' }],
     }));
     writeJson(tree, 'packages/e/tsconfig.lib.json', {
+      compilerOptions: {
+        composite: true,
+      },
       references: [
         { path: '../b/tsconfig.lib.json' },
         { path: '../d/tsconfig.lib.json' },
@@ -187,6 +222,9 @@ describe('syncGenerator()', () => {
 
     it('should respect existing project references and discard non-existing ones in the tsconfig.json', async () => {
       writeJson(tree, 'tsconfig.json', {
+        compilerOptions: {
+          composite: true,
+        },
         // Swapped order and additional manual reference
         references: [
           { path: './packages/b' },
@@ -195,7 +233,11 @@ describe('syncGenerator()', () => {
           { path: './packages/d' }, // non-existing reference
         ],
       });
-      writeJson(tree, 'packages/c/tsconfig.json', {});
+      writeJson(tree, 'packages/c/tsconfig.json', {
+        compilerOptions: {
+          composite: true,
+        },
+      });
 
       await syncGenerator(tree);
 
@@ -212,6 +254,36 @@ describe('syncGenerator()', () => {
             "path": "./packages/c",
           },
         ]
+      `);
+    });
+
+    it('should leave comments outside of references untouched in the tsconfig.json when patching', async () => {
+      tree.write(
+        'tsconfig.json',
+        `{
+  // This is a top level comment
+  "compilerOptions": {
+    "composite": true,
+    // This is a nested comment
+    "target": "es5"
+  }
+}
+`
+      );
+
+      await syncGenerator(tree);
+
+      expect(tree.read('tsconfig.json').toString('utf-8'))
+        .toMatchInlineSnapshot(`
+        "{
+          // This is a top level comment
+          "compilerOptions": {
+            // This is a nested comment
+            "target": "es5"
+          },
+          "references": [{ "path": "./packages/a" }, { "path": "./packages/b" }]
+        }
+        "
       `);
     });
   });
@@ -349,6 +421,39 @@ describe('syncGenerator()', () => {
             "path": "../d",
           },
         ]
+      `);
+    });
+
+    it('should leave comments outside of references untouched in the tsconfig.json when patching', async () => {
+      addProject('foo', ['bar'], ['tsconfig.build.json']);
+      addProject('bar', [], ['tsconfig.build.json']);
+
+      tree.write(
+        'packages/foo/tsconfig.build.json',
+        `{
+  // This is a top level comment
+  "compilerOptions": {
+    // This is a nested comment
+    "target": "es5",
+  },
+  "references": []
+}
+      `
+      );
+
+      await syncGenerator(tree);
+
+      expect(tree.read('packages/foo/tsconfig.build.json').toString('utf-8'))
+        .toMatchInlineSnapshot(`
+        "{
+          // This is a top level comment
+          "compilerOptions": {
+            // This is a nested comment
+            "target": "es5"
+          },
+          "references": [{ "path": "../bar/tsconfig.build.json" }]
+        }
+        "
       `);
     });
 

@@ -5,12 +5,12 @@ import {
   logger,
   readJson,
   readNxJson,
-  writeJson,
   type ExpandedPluginConfiguration,
   type ProjectGraph,
   type ProjectGraphProjectNode,
   type Tree,
 } from '@nx/devkit';
+import { applyEdits, modify } from 'jsonc-parser';
 import { dirname, normalize, relative } from 'node:path/posix';
 import type { SyncGeneratorResult } from 'nx/src/utils/sync-generators';
 import {
@@ -109,10 +109,10 @@ export async function syncGenerator(tree: Tree): Promise<SyncGeneratorResult> {
     }
 
     if (hasChanges) {
-      rootTsconfig.references = Array.from(referencesSet).map((ref) => ({
+      const updatedReferences = Array.from(referencesSet).map((ref) => ({
         path: `./${ref}`,
       }));
-      writeJson(tree, rootTsconfigPath, rootTsconfig);
+      patchTsconfigJsonReferences(tree, rootTsconfigPath, updatedReferences);
     }
   }
 
@@ -282,8 +282,7 @@ function updateTsConfigReferences(
   hasChanges ||= newReferencesSet.size !== originalReferencesSet.size;
 
   if (hasChanges) {
-    tsConfig.references = references;
-    writeJson(tree, tsConfigPath, tsConfig);
+    patchTsconfigJsonReferences(tree, tsConfigPath, references);
   }
 
   return hasChanges;
@@ -397,4 +396,20 @@ function getTsConfigPathFromReferencePath(
   return tree.isFile(resolvedRefPath)
     ? resolvedRefPath
     : joinPathFragments(resolvedRefPath, 'tsconfig.json');
+}
+
+/**
+ * Minimally patch just the "references" property within the tsconfig file at a given path.
+ * This allows comments in other sections of the file to remain intact when syncing is run.
+ */
+function patchTsconfigJsonReferences(
+  tree: Tree,
+  tsconfigPath: string,
+  updatedReferences: { path: string }[]
+) {
+  const jsonContents = tree.read(tsconfigPath).toString();
+  const edits = modify(jsonContents, ['references'], updatedReferences, {});
+  const updatedJsonContents = applyEdits(jsonContents, edits);
+  // The final contents will be formatted by formatFiles() later
+  tree.write(tsconfigPath, updatedJsonContents);
 }
