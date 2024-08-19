@@ -78,6 +78,15 @@ nx add @nx/vite @nx/js
 ```
 
 {% /tab %}
+
+{% tab label="bun" %}
+
+```shell
+bun add -D vitest vite svelte svelte-check @sveltejs/vite-plugin-svelte
+nx add @nx/vite @nx/js
+```
+
+{% /tab %}
 {% /tabs %}
 
 ## Create the application
