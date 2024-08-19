@@ -33,6 +33,7 @@ You can use the `enforce-module-boundaries` rule by adding it to your ESLint rul
 | allow                              | _Array<string>_ | _[]_    | List of imports that should be allowed without any checks                                                                                                          |
 | allowCircularSelfDependency        | _boolean_       | _false_ | Disable check for self circular dependency when project imports from itself via alias path                                                                         |
 | banTransitiveDependencies          | _boolean_       | _false_ | Ban import of dependencies that were not specified in the root or project's `package.json`                                                                         |
+| circularCheckProjectsExeceptions   | _Array<string>_ | _[]_    | List of projects that should be skipped from `Circular dependencies` checks, including the self-circular dependency check. E.g. `['feature-project-a', 'myapp']`   |
 | checkDynamicDependenciesExceptions | _Array<string>_ | _[]_    | List of imports that should be skipped for `Imports of lazy-loaded libraries forbidden` checks. E.g. `['@myorg/lazy-project/component/*', '@myorg/other-project']` |
 | checkNestedExternalImports         | _boolean_       | _false_ | Enable to enforce the check for banned external imports in the nested packages. Check [Dependency constraits](#dependency-constraits) for more information         |
 | enforceBuildableLibDependency      | _boolean_       | _false_ | Enable to restrict the buildable libs from importing non-buildable libraries                                                                                       |
@@ -40,7 +41,7 @@ You can use the `enforce-module-boundaries` rule by adding it to your ESLint rul
 
 ### Dependency constraints
 
-The `depConstraints` is an array of objects representing the constraints defined between source and target projects. A constraint must include `sourceTag` or `allSourceTags`. The constraints are applied with **AND** logical operation - for given `source` project the resulting constraints would be **all** that match its tags.
+The `depConstraints` is an array of objects representing the constraints defined between source and target projects. A constraint must include `sourceTag` or `allSourceTags`. The constraints are applied with **AND** logical operation - for a given `source` project the resulting constraints would be **all** that match its tags.
 
 | Property                 | Type            | Description                                                                        |
 | ------------------------ | --------------- | ---------------------------------------------------------------------------------- |

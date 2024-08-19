@@ -56,6 +56,7 @@ type Options = [
     depConstraints: DepConstraint[];
     enforceBuildableLibDependency: boolean;
     allowCircularSelfDependency: boolean;
+    circularCheckProjectsExeceptions: string[];
     checkDynamicDependenciesExceptions: string[];
     banTransitiveDependencies: boolean;
     checkNestedExternalImports: boolean;
@@ -98,6 +99,10 @@ export default ESLintUtils.RuleCreator(
           enforceBuildableLibDependency: { type: 'boolean' },
           allowCircularSelfDependency: { type: 'boolean' },
           checkDynamicDependenciesExceptions: {
+            type: 'array',
+            items: { type: 'string' },
+          },
+          circularCheckProjectsExeceptions: {
             type: 'array',
             items: { type: 'string' },
           },
@@ -194,6 +199,7 @@ export default ESLintUtils.RuleCreator(
       enforceBuildableLibDependency: false,
       allowCircularSelfDependency: false,
       checkDynamicDependenciesExceptions: [],
+      circularCheckProjectsExeceptions: [],
       banTransitiveDependencies: false,
       checkNestedExternalImports: false,
     },
@@ -208,6 +214,7 @@ export default ESLintUtils.RuleCreator(
         enforceBuildableLibDependency,
         allowCircularSelfDependency,
         checkDynamicDependenciesExceptions,
+        circularCheckProjectsExeceptions,
         banTransitiveDependencies,
         checkNestedExternalImports,
       },
@@ -383,7 +390,10 @@ export default ESLintUtils.RuleCreator(
 
       // we only allow relative paths within the same project
       // and if it's not a secondary entrypoint in an angular lib
-      if (sourceProject === targetProject) {
+      if (
+        sourceProject === targetProject &&
+        !circularCheckProjectsExeceptions.includes(sourceProject.name)
+      ) {
         if (
           !allowCircularSelfDependency &&
           !isRelativePath(imp) &&
@@ -509,7 +519,13 @@ export default ESLintUtils.RuleCreator(
         sourceProject,
         targetProject
       );
-      if (circularPath.length !== 0) {
+      if (
+        circularPath.length !== 0 &&
+        (circularCheckProjectsExeceptions.length === 0 ||
+          !circularPath.find((p) =>
+            circularCheckProjectsExeceptions.includes(p.name)
+          ))
+      ) {
         const circularFilePath = findFilesInCircularPath(
           projectFileMap,
           circularPath
