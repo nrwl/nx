@@ -1,8 +1,17 @@
-import { Argv } from 'yargs';
+import { Argv, ParserConfigurationOptions } from 'yargs';
 
 interface ExcludeOptions {
   exclude: string[];
 }
+
+export const defaultYargsParserConfiguration: Partial<ParserConfigurationOptions> =
+  {
+    'strip-dashed': true,
+    'unknown-options-as-args': true,
+    'populate--': true,
+    'parse-numbers': false,
+    'parse-positional-numbers': false,
+  };
 
 export function withExcludeOption(yargs: Argv): Argv<ExcludeOptions> {
   return yargs.option('exclude', {
@@ -151,11 +160,7 @@ export function withBatch(yargs: Argv) {
 
 export function withAffectedOptions(yargs: Argv) {
   return withExcludeOption(yargs)
-    .parserConfiguration({
-      'strip-dashed': true,
-      'unknown-options-as-args': true,
-      'populate--': true,
-    })
+    .parserConfiguration(defaultYargsParserConfiguration)
     .option('files', {
       describe:
         'Change the way Nx is calculating the affected command by providing directly changed files, list of files delimited by commas or spaces',
@@ -210,11 +215,7 @@ export function withRunManyOptions<T>(
   yargs: Argv<T>
 ): Argv<T & RunManyOptions> {
   return withRunOptions(yargs)
-    .parserConfiguration({
-      'strip-dashed': true,
-      'unknown-options-as-args': true,
-      'populate--': true,
-    })
+    .parserConfiguration(defaultYargsParserConfiguration)
     .option('projects', {
       type: 'string',
       alias: 'p',
@@ -287,11 +288,7 @@ export function withRunOneOptions(yargs: Argv) {
   const res = withRunOptions(
     withOutputStyleOption(withConfiguration(yargs), allOutputStyles)
   )
-    .parserConfiguration({
-      'strip-dashed': true,
-      'unknown-options-as-args': true,
-      'populate--': true,
-    })
+    .parserConfiguration(defaultYargsParserConfiguration)
     .option('project', {
       describe: 'Target project',
       type: 'string',
