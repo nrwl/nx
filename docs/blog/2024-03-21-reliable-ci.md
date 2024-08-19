@@ -4,6 +4,7 @@ slug: 'reliable-ci-a-new-execution-model-fixing-both-flakiness-and-slowness'
 authors: [Victor Savkin]
 cover_image: '/blog/images/2024-03-21/featured_img.png'
 tags: [nx, nx-cloud, releases]
+pinned: true
 ---
 
 The proverbial slow and flaky CI isn’t the failure of the developers or even the testing tools. It’s the failure of the CI execution model we relied on for the last 20 years.
