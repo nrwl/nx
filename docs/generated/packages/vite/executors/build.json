@@ -50,6 +50,10 @@
       "includeDevDependenciesInPackageJson": {
         "description": "Include devDependencies in the generated package.json.",
         "type": "boolean"
+      },
+      "skipPackageManager": {
+        "type": "boolean",
+        "description": "Do not add a `packageManager` entry to the generated package.json file. Only works in conjunction with `generatePackageJson` option."
       }
     },
     "definitions": {},

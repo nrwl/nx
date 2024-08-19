@@ -28,18 +28,19 @@ export interface FileReplacement {
 }
 
 export interface NextBuildBuilderOptions {
-  outputPath: string;
-  fileReplacements: FileReplacement[];
   assets?: any[];
-  nextConfig?: string;
   buildLibsFromSource?: boolean;
-  includeDevDependenciesInPackageJson?: boolean;
-  generateLockfile?: boolean;
-  watch?: boolean;
   debug?: boolean;
-  profile?: boolean;
   experimentalAppOnly?: boolean;
   experimentalBuildMode?: 'compile' | 'generate';
+  fileReplacements: FileReplacement[];
+  generateLockfile?: boolean;
+  includeDevDependenciesInPackageJson?: boolean;
+  nextConfig?: string;
+  outputPath: string;
+  profile?: boolean;
+  skipPackageManager?: boolean;
+  watch?: boolean;
 }
 
 export interface NextServeBuilderOptions {
