@@ -127,6 +127,7 @@ export function withNx(
           // Cannot be joined with workspace root now, but will be handled by @nx/rollup/plugin.
           options.outputPath
         : join(workspaceRoot, options.outputPath),
+      sourcemap: options.sourceMap,
     }));
   }
 
