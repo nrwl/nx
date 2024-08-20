@@ -16,12 +16,7 @@ interface SyncOptions extends SyncArgs {
 }
 
 export function syncHandler(options: SyncOptions): Promise<number> {
-  if (options.verbose) {
-    process.env.NX_VERBOSE_LOGGING = 'true';
-  }
-  const isVerbose = process.env.NX_VERBOSE_LOGGING === 'true';
-
-  return handleErrors(isVerbose, async () => {
+  return handleErrors(options.verbose, async () => {
     const projectGraph = await createProjectGraphAsync();
     const syncGenerators = await collectAllRegisteredSyncGenerators(
       projectGraph

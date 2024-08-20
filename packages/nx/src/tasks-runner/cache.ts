@@ -52,7 +52,7 @@ export class Cache {
       try {
         this._currentMachineId = await machineId();
       } catch (e) {
-        if (process.env.NX_VERBOSE_LOGGING == 'true') {
+        if (process.env.NX_VERBOSE_LOGGING === 'true') {
           console.log(`Unable to get machineId. Error: ${e.message}`);
         }
         this._currentMachineId = '';

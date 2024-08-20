@@ -10,6 +10,7 @@ import {
   withOutputStyleOption,
   withOverrides,
   withRunManyOptions,
+  withVerbose,
 } from '../yargs-utils/shared-options';
 import { VersionData } from './utils/shared';
 
@@ -102,7 +103,7 @@ export const yargsReleaseCommand: CommandModule<
   describe:
     'Orchestrate versioning and publishing of applications and libraries',
   builder: (yargs) =>
-    yargs
+    withVerbose(yargs)
       .command(releaseCommand)
       .command(versionCommand)
       .command(changelogCommand)
@@ -132,11 +133,6 @@ export const yargsReleaseCommand: CommandModule<
         alias: 'd',
         type: 'boolean',
         default: false,
-      })
-      .option('verbose', {
-        type: 'boolean',
-        describe:
-          'Prints additional information about the commands (e.g., stack traces)',
       })
       // NOTE: The camel case format is required for the coerce() function to be called correctly. It still supports --print-config casing.
       .option('printConfig', {

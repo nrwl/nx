@@ -132,10 +132,6 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
       overrideReleaseConfig ?? {}
     );
 
-    if (args.verbose) {
-      process.env.NX_VERBOSE_LOGGING = 'true';
-    }
-
     // Apply default configuration to any optional user configuration
     const { error: configError, nxReleaseConfig } = await createNxReleaseConfig(
       projectGraph,
