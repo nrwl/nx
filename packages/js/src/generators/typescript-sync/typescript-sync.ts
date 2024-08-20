@@ -261,7 +261,7 @@ function readRawTsconfigContents(
   if (!rawTsconfigContentsCache.has(tsconfigPath)) {
     rawTsconfigContentsCache.set(
       tsconfigPath,
-      tree.read(tsconfigPath, 'utf-8').toString()
+      tree.read(tsconfigPath, 'utf-8')
     );
   }
   return rawTsconfigContentsCache.get(tsconfigPath);

@@ -289,7 +289,7 @@ describe('syncGenerator()', () => {
     });
 
     it('should not add a reference if the internally referenced tsconfig.json does not have composite: true', async () => {
-      // Delete composite from a, causing it to now show up in the final tsconfig.json snapshot
+      // Delete composite from a, causing it to not show up in the final tsconfig.json snapshot
       writeJson(tree, 'packages/a/tsconfig.json', {
         compilerOptions: {},
       });
@@ -490,7 +490,7 @@ describe('syncGenerator()', () => {
       addProject('foo', ['bar'], ['tsconfig.build.json']);
       addProject('bar', [], ['tsconfig.build.json']);
 
-      // Delete composite from bar, causing it to now show up in the final tsconfig.json snapshots below
+      // Delete composite from bar, causing it to not show up in the final tsconfig.json snapshots below
       writeJson(tree, 'packages/bar/tsconfig.json', {
         compilerOptions: {},
       });
