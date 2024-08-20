@@ -13,12 +13,7 @@ import {
 import { applyEdits, modify } from 'jsonc-parser';
 import { dirname, normalize, relative } from 'node:path/posix';
 import type { SyncGeneratorResult } from 'nx/src/utils/sync-generators';
-import {
-  parseJsonConfigFileContent,
-  readConfigFile,
-  sys,
-  System,
-} from 'typescript';
+import * as ts from 'typescript';
 import {
   PLUGIN_NAME,
   type TscPluginOptions,
@@ -82,13 +77,13 @@ export async function syncGenerator(tree: Tree): Promise<SyncGeneratorResult> {
     }
   );
 
-  const tsSysFromTree: System = {
-    ...sys,
+  const tsSysFromTree: ts.System = {
+    ...ts.sys,
     readFile(path, encoding: BufferEncoding = 'utf-8') {
       if (tree.exists(path)) {
         return tree.read(path, encoding);
       }
-      return sys.readFile(path, encoding);
+      return ts.sys.readFile(path, encoding);
     },
   };
 
@@ -99,7 +94,7 @@ export async function syncGenerator(tree: Tree): Promise<SyncGeneratorResult> {
   let hasChanges = false;
 
   if (tsconfigProjectNodeValues.length > 0) {
-    const referencesSet = new Set();
+    const referencesSet = new Set<string>();
     for (const ref of rootTsconfig.references ?? []) {
       // reference path is relative to the tsconfig file
       const resolvedRefPath = getTsConfigPathFromReferencePath(
@@ -125,9 +120,17 @@ export async function syncGenerator(tree: Tree): Promise<SyncGeneratorResult> {
     }
 
     if (hasChanges) {
-      const updatedReferences = Array.from(referencesSet).map((ref) => ({
-        path: `./${ref}`,
-      }));
+      const updatedReferences = Array.from(referencesSet)
+        // Check composite is true in the internal reference before proceeding
+        .filter((ref) =>
+          hasCompositeEnabled(
+            tsSysFromTree,
+            joinPathFragments(ref, 'tsconfig.json')
+          )
+        )
+        .map((ref) => ({
+          path: `./${ref}`,
+        }));
       patchTsconfigJsonReferences(tree, rootTsconfigPath, updatedReferences);
     }
   }
@@ -224,7 +227,7 @@ export default syncGenerator;
 
 function updateTsConfigReferences(
   tree: Tree,
-  sys: System,
+  tsSysFromTree: ts.System,
   tsConfigPath: string,
   dependencies: ProjectGraphProjectNode[],
   projectRoot: string,
@@ -271,7 +274,7 @@ function updateTsConfigReferences(
       );
       if (tree.exists(runtimeTsConfigPath)) {
         // Check composite is true in the dependency runtime tsconfig file before proceeding
-        if (!hasCompositeEnabled(sys, runtimeTsConfigPath)) {
+        if (!hasCompositeEnabled(tsSysFromTree, runtimeTsConfigPath)) {
           continue;
         }
         referencePath = runtimeTsConfigPath;
@@ -286,7 +289,9 @@ function updateTsConfigReferences(
           );
           if (tree.exists(possibleRuntimeTsConfigPath)) {
             // Check composite is true in the dependency runtime tsconfig file before proceeding
-            if (!hasCompositeEnabled(sys, possibleRuntimeTsConfigPath)) {
+            if (
+              !hasCompositeEnabled(tsSysFromTree, possibleRuntimeTsConfigPath)
+            ) {
               continue;
             }
             referencePath = possibleRuntimeTsConfigPath;
@@ -298,7 +303,7 @@ function updateTsConfigReferences(
       // Check composite is true in the dependency tsconfig.json file before proceeding
       if (
         !hasCompositeEnabled(
-          sys,
+          tsSysFromTree,
           joinPathFragments(dep.data.root, 'tsconfig.json')
         )
       ) {
@@ -451,10 +456,13 @@ function patchTsconfigJsonReferences(
   tree.write(tsconfigPath, updatedJsonContents);
 }
 
-function hasCompositeEnabled(sys: System, tsconfigPath: string): boolean {
-  const parsed = parseJsonConfigFileContent(
-    readConfigFile(tsconfigPath, sys.readFile).config,
-    sys,
+function hasCompositeEnabled(
+  tsSysFromTree: ts.System,
+  tsconfigPath: string
+): boolean {
+  const parsed = ts.parseJsonConfigFileContent(
+    ts.readConfigFile(tsconfigPath, tsSysFromTree.readFile).config,
+    tsSysFromTree,
     dirname(tsconfigPath)
   );
   return parsed.options.composite === true;

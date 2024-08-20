@@ -287,6 +287,26 @@ describe('syncGenerator()', () => {
         "
       `);
     });
+
+    it('should not add a reference if the internally referenced tsconfig.json does not have composite: true', async () => {
+      // Delete composite from a, causing it to now show up in the final tsconfig.json snapshot
+      writeJson(tree, 'packages/a/tsconfig.json', {
+        compilerOptions: {},
+      });
+
+      await syncGenerator(tree);
+
+      expect(tree.read('tsconfig.json').toString('utf-8'))
+        .toMatchInlineSnapshot(`
+        "{
+          "compilerOptions": {
+            "composite": true
+          },
+          "references": [{ "path": "./packages/b" }]
+        }
+        "
+      `);
+    });
   });
 
   describe('project level tsconfig.json', () => {
@@ -461,6 +481,43 @@ describe('syncGenerator()', () => {
             "target": "es5"
           },
           "references": [{ "path": "../bar/tsconfig.build.json" }]
+        }
+        "
+      `);
+    });
+
+    it('should not add a reference if the dependency tsconfig.json does not have composite: true', async () => {
+      addProject('foo', ['bar'], ['tsconfig.build.json']);
+      addProject('bar', [], ['tsconfig.build.json']);
+
+      // Delete composite from bar, causing it to now show up in the final tsconfig.json snapshots below
+      writeJson(tree, 'packages/bar/tsconfig.json', {
+        compilerOptions: {},
+      });
+
+      await syncGenerator(tree);
+
+      expect(tree.read('tsconfig.json').toString('utf-8'))
+        .toMatchInlineSnapshot(`
+        "{
+          "compilerOptions": {
+            "composite": true
+          },
+          "references": [
+            { "path": "./packages/a" },
+            { "path": "./packages/b" },
+            { "path": "./packages/foo" }
+          ]
+        }
+        "
+      `);
+
+      expect(tree.read('packages/foo/tsconfig.json').toString('utf-8'))
+        .toMatchInlineSnapshot(`
+        "{
+          "compilerOptions": {
+            "composite": true
+          }
         }
         "
       `);
