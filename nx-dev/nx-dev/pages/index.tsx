@@ -19,7 +19,7 @@ export default function Index(): JSX.Element {
           url: 'https://nx.dev',
           title: 'Nx: Smart Monorepos · Fast CI',
           description:
-            'Nx is a build system with built-in tooling and advanced CI capabilities. It helps you maintain and scale monorepos, both locally and on CI.',
+            'Nx is a build system, optimized for monorepos, with plugins for popular frameworks and tools and advanced CI capabilities including caching and distribution.',
           images: [
             {
               url: 'https://nx.dev/socials/nx-media.png',
