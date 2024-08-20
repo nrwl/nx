@@ -63,14 +63,26 @@ export async function syncGenerator(tree: Tree): Promise<SyncGeneratorResult> {
       `A "tsconfig.json" file must exist in the workspace root in order to use this sync generator.`
     );
   }
-
   const rawTsconfigContentsCache = new Map<string, string>();
-  const stringifiedRootJsonContents = readRawTsconfigContents(
-    tree,
-    rawTsconfigContentsCache,
+  const tsSysFromTree: ts.System = {
+    ...ts.sys,
+    readFile(path) {
+      return readRawTsconfigContents(tree, rawTsconfigContentsCache, path);
+    },
+  };
+
+  const parsedRootTsconfig = parseTsconfigUsingTS(
+    tsSysFromTree,
     rootTsconfigPath
   );
-  const rootTsconfig = parseJson<Tsconfig>(stringifiedRootJsonContents);
+  if (!isSolutionConfig(parsedRootTsconfig)) {
+    throw new Error(
+      `The workspace root tsconfig.json must be a "solution" style config, with no "files" of its own to check. All files should be referenced indirectly by "references" instead. Set "files": [] and "references": [] at the top level of the config.`
+    );
+  }
+
+  const rootTsconfig = parsedRootTsconfig.raw as Tsconfig;
+
   const projectGraph = await createProjectGraphAsync();
   const projectRoots = new Set<string>();
   const tsconfigHasCompositeEnabledCache = new Map<string, boolean>();
@@ -89,13 +101,6 @@ export async function syncGenerator(tree: Tree): Promise<SyncGeneratorResult> {
       );
     }
   );
-
-  const tsSysFromTree: ts.System = {
-    ...ts.sys,
-    readFile(path) {
-      return readRawTsconfigContents(tree, rawTsconfigContentsCache, path);
-    },
-  };
 
   // Track if any changes were made to the tsconfig files. We check the changes
   // made by this generator to know if the TS config is out of sync with the
@@ -130,18 +135,9 @@ export async function syncGenerator(tree: Tree): Promise<SyncGeneratorResult> {
     }
 
     if (hasChanges) {
-      const updatedReferences = Array.from(referencesSet)
-        // Check composite is true in the internal reference before proceeding
-        .filter((ref) =>
-          hasCompositeEnabled(
-            tsSysFromTree,
-            tsconfigHasCompositeEnabledCache,
-            joinPathFragments(ref, 'tsconfig.json')
-          )
-        )
-        .map((ref) => ({
-          path: `./${ref}`,
-        }));
+      const updatedReferences = Array.from(referencesSet).map((ref) => ({
+        path: `./${ref}`,
+      }));
       patchTsconfigJsonReferences(
         tree,
         rawTsconfigContentsCache,
@@ -293,12 +289,9 @@ function updateTsConfigReferences(
   runtimeTsConfigFileName?: string,
   possibleRuntimeTsConfigFileNames?: string[]
 ): boolean {
-  const stringifiedJsonContents = readRawTsconfigContents(
-    tree,
-    rawTsconfigContentsCache,
-    tsConfigPath
-  );
-  const tsConfig = parseJson<Tsconfig>(stringifiedJsonContents);
+  const parsedTsconfig = parseTsconfigUsingTS(tsSysFromTree, tsConfigPath);
+  const tsConfig = parsedTsconfig.raw as Tsconfig;
+  const isSolutionTsConfig = isSolutionConfig(parsedTsconfig);
 
   // We have at least one dependency so we can safely set it to an empty array if not already set
   const references = [];
@@ -338,8 +331,10 @@ function updateTsConfigReferences(
         runtimeTsConfigFileName
       );
       if (tsconfigExists(tree, rawTsconfigContentsCache, runtimeTsConfigPath)) {
-        // Check composite is true in the dependency runtime tsconfig file before proceeding
+        // Check composite is true in the dependency runtime tsconfig file before proceeding,
+        // unless the project being updated is a solution tsconfig
         if (
+          !isSolutionTsConfig &&
           !hasCompositeEnabled(
             tsSysFromTree,
             tsconfigHasCompositeEnabledCache,
@@ -366,7 +361,9 @@ function updateTsConfigReferences(
             )
           ) {
             // Check composite is true in the dependency runtime tsconfig file before proceeding
+            // unless the project being updated is a solution tsconfig
             if (
+              !isSolutionTsConfig &&
               !hasCompositeEnabled(
                 tsSysFromTree,
                 tsconfigHasCompositeEnabledCache,
@@ -382,7 +379,9 @@ function updateTsConfigReferences(
       }
     } else {
       // Check composite is true in the dependency tsconfig.json file before proceeding
+      // unless the project being updated is a solution tsconfig
       if (
+        !isSolutionTsConfig &&
         !hasCompositeEnabled(
           tsSysFromTree,
           tsconfigHasCompositeEnabledCache,
@@ -572,13 +571,33 @@ function hasCompositeEnabled(
   tsconfigPath: string
 ): boolean {
   if (!tsconfigHasCompositeEnabledCache.has(tsconfigPath)) {
-    const parsed = ts.parseJsonConfigFileContent(
-      ts.readConfigFile(tsconfigPath, tsSysFromTree.readFile).config,
-      tsSysFromTree,
-      dirname(tsconfigPath)
-    );
+    const parsed = parseTsconfigUsingTS(tsSysFromTree, tsconfigPath);
     const enabledVal = parsed.options.composite === true;
     tsconfigHasCompositeEnabledCache.set(tsconfigPath, enabledVal);
   }
   return tsconfigHasCompositeEnabledCache.get(tsconfigPath);
+}
+
+function parseTsconfigUsingTS(
+  tsSysFromTree: ts.System,
+  tsconfigPath: string
+): ts.ParsedCommandLine {
+  return ts.parseJsonConfigFileContent(
+    ts.readConfigFile(tsconfigPath, tsSysFromTree.readFile).config,
+    tsSysFromTree,
+    dirname(tsconfigPath)
+  );
+}
+
+/**
+ * The TS Team informed us that "solution" configs are currently not well documented, but a first class
+ * use-case. They are tsconfigs without files of their own, but with references to other tsconfigs.
+ *
+ * By design, they can reference by composite and non composite projects.
+ */
+function isSolutionConfig(config: ts.ParsedCommandLine) {
+  return (
+    !config.fileNames.length &&
+    Object.hasOwnProperty.call(config.raw, 'references')
+  );
 }

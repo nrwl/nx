@@ -69,11 +69,10 @@ describe('syncGenerator()', () => {
       plugins: ['@nx/js/typescript'],
     });
 
-    // Root tsconfigs
+    // Root tsconfig, must be solution style with empty files array and references array
     writeJson(tree, 'tsconfig.json', {
-      compilerOptions: {
-        composite: true,
-      },
+      files: [],
+      references: [],
     });
     writeJson(tree, 'tsconfig.options.json', {
       compilerOptions: {
@@ -101,6 +100,41 @@ describe('syncGenerator()', () => {
 
     await expect(syncGenerator(tree)).rejects.toMatchInlineSnapshot(
       `[Error: A "tsconfig.json" file must exist in the workspace root in order to use this sync generator.]`
+    );
+  });
+
+  it('should error if the root tsconfig.json is not a solution style config', async () => {
+    const errorSnapshot = `[Error: The workspace root tsconfig.json must be a "solution" style config, with no "files" of its own to check. All files should be referenced indirectly by "references" instead. Set "files": [] and "references": [] at the top level of the config.]`;
+
+    // Missing files and references arrays
+    writeJson(tree, 'tsconfig.json', {});
+    await expect(syncGenerator(tree)).rejects.toMatchInlineSnapshot(
+      errorSnapshot
+    );
+
+    // Missing files array
+    writeJson(tree, 'tsconfig.json', {
+      references: [],
+    });
+    await expect(syncGenerator(tree)).rejects.toMatchInlineSnapshot(
+      errorSnapshot
+    );
+
+    // files array is not empty
+    writeJson(tree, 'tsconfig.json', {
+      files: ['src/index.ts'],
+      references: [],
+    });
+    await expect(syncGenerator(tree)).rejects.toMatchInlineSnapshot(
+      errorSnapshot
+    );
+
+    // Missing references array
+    writeJson(tree, 'tsconfig.json', {
+      files: [],
+    });
+    await expect(syncGenerator(tree)).rejects.toMatchInlineSnapshot(
+      errorSnapshot
     );
   });
 
@@ -203,7 +237,7 @@ describe('syncGenerator()', () => {
 
   describe('root tsconfig.json', () => {
     it('should sync project references to the tsconfig.json', async () => {
-      expect(readJson(tree, 'tsconfig.json').references).toBeUndefined();
+      expect(readJson(tree, 'tsconfig.json').references).toEqual([]);
 
       await syncGenerator(tree);
 
@@ -225,6 +259,7 @@ describe('syncGenerator()', () => {
         compilerOptions: {
           composite: true,
         },
+        files: [],
         // Swapped order and additional manual reference
         references: [
           { path: './packages/b' },
@@ -266,7 +301,9 @@ describe('syncGenerator()', () => {
     "composite": true,
     // This is a nested comment
     "target": "es5"
-  }
+  },
+  "files": [],
+  "references": []
 }
 `
       );
@@ -282,27 +319,8 @@ describe('syncGenerator()', () => {
             // This is a nested comment
             "target": "es5"
           },
+          "files": [],
           "references": [{ "path": "./packages/a" }, { "path": "./packages/b" }]
-        }
-        "
-      `);
-    });
-
-    it('should not add a reference if the internally referenced tsconfig.json does not have composite: true', async () => {
-      // Delete composite from a, causing it to not show up in the final tsconfig.json snapshot
-      writeJson(tree, 'packages/a/tsconfig.json', {
-        compilerOptions: {},
-      });
-
-      await syncGenerator(tree);
-
-      expect(tree.read('tsconfig.json').toString('utf-8'))
-        .toMatchInlineSnapshot(`
-        "{
-          "compilerOptions": {
-            "composite": true
-          },
-          "references": [{ "path": "./packages/b" }]
         }
         "
       `);
@@ -486,31 +504,32 @@ describe('syncGenerator()', () => {
       `);
     });
 
-    it('should not add a reference if the dependency tsconfig.json does not have composite: true', async () => {
+    it('should not add a reference if the dependency tsconfig.json does not have composite: true (if the project tsconfig is not a solution config)', async () => {
       addProject('foo', ['bar'], ['tsconfig.build.json']);
       addProject('bar', [], ['tsconfig.build.json']);
 
-      // Delete composite from bar, causing it to not show up in the final tsconfig.json snapshots below
-      writeJson(tree, 'packages/bar/tsconfig.json', {
-        compilerOptions: {},
-      });
+      const originalFooTsconfig = readJson(tree, 'packages/foo/tsconfig.json');
 
       await syncGenerator(tree);
 
-      expect(tree.read('tsconfig.json').toString('utf-8'))
+      expect(tree.read('packages/foo/tsconfig.json').toString('utf-8'))
         .toMatchInlineSnapshot(`
         "{
           "compilerOptions": {
             "composite": true
           },
-          "references": [
-            { "path": "./packages/a" },
-            { "path": "./packages/b" },
-            { "path": "./packages/foo" }
-          ]
+          "references": [{ "path": "../bar" }]
         }
         "
       `);
+
+      // Restore original foo tsconfig.json
+      writeJson(tree, 'packages/foo/tsconfig.json', originalFooTsconfig);
+
+      // Delete composite from bar, causing it to not show up in the final tsconfig.json snapshot below
+      writeJson(tree, 'packages/bar/tsconfig.json', {
+        compilerOptions: {},
+      });
 
       expect(tree.read('packages/foo/tsconfig.json').toString('utf-8'))
         .toMatchInlineSnapshot(`
@@ -518,6 +537,23 @@ describe('syncGenerator()', () => {
           "compilerOptions": {
             "composite": true
           }
+        }
+        "
+      `);
+
+      // Make foo tsconfig.json a solution style config, allowing bar to be referenced despite not having composite: true
+      writeJson(tree, 'packages/foo/tsconfig.json', {
+        files: [],
+        references: [],
+      });
+
+      await syncGenerator(tree);
+
+      expect(tree.read('packages/foo/tsconfig.json').toString('utf-8'))
+        .toMatchInlineSnapshot(`
+        "{
+          "files": [],
+          "references": [{ "path": "../bar" }]
         }
         "
       `);
