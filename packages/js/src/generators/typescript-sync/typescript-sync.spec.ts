@@ -100,7 +100,7 @@ describe('syncGenerator()', () => {
     tree.delete('tsconfig.json');
 
     await expect(syncGenerator(tree)).rejects.toMatchInlineSnapshot(
-      `[Error: A "tsconfig.json" file must exist in the workspace root.]`
+      `[Error: A "tsconfig.json" file must exist in the workspace root in order to use this sync generator.]`
     );
   });
 
