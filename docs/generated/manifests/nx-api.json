@@ -1978,6 +1978,17 @@
         "path": "/nx-api/nx/documents/login",
         "tags": [],
         "originalFilePath": "generated/cli/login"
+      },
+      "/nx-api/nx/documents/logout": {
+        "id": "logout",
+        "name": "logout",
+        "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+        "file": "generated/packages/nx/documents/logout",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-api/nx/documents/logout",
+        "tags": [],
+        "originalFilePath": "generated/cli/logout"
       }
     },
     "root": "/packages/nx",

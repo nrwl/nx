@@ -2117,6 +2117,11 @@
               "name": "login",
               "id": "login",
               "file": "generated/cli/login"
+            },
+            {
+              "name": "logout",
+              "id": "logout",
+              "file": "generated/cli/logout"
             }
           ]
         },
