@@ -462,6 +462,14 @@ pnpm add react-router-dom
 ```
 
 {% /tab %}
+
+{% tab label="bun" %}
+
+```shell
+bun add react-router-dom
+```
+
+{% /tab %}
 {% /tabs %}
 
 Configure it in the `main.tsx`.

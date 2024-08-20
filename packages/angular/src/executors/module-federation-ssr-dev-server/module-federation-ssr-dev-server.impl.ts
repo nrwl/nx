@@ -123,7 +123,10 @@ export async function* moduleFederationSsrDevServerExecutor(
   );
 
   // Set NX_MF_DEV_REMOTES for the Nx Runtime Library Control Plugin
-  process.env.NX_MF_DEV_REMOTES = JSON.stringify(options.devRemotes);
+  process.env.NX_MF_DEV_REMOTES = JSON.stringify([
+    ...(options.devRemotes ?? []),
+    project.name,
+  ]);
 
   const devRemotes = await startRemotes(
     remotes.devRemotes,

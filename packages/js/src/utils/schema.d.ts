@@ -2,7 +2,7 @@ import type { ProjectNameAndRootFormat } from '@nx/devkit/src/generators/project
 import type { AssetGlob, FileInputOutput } from './assets/assets';
 import { TransformerEntry } from './typescript/types';
 // nx-ignore-next-line
-const { Linter } = require('@nx/eslint'); // use require to import to avoid circular dependency
+const { Linter, LinterType } = require('@nx/eslint'); // use require to import to avoid circular dependency
 
 export type Compiler = 'tsc' | 'swc';
 export type Bundler = 'swc' | 'tsc' | 'rollup' | 'vite' | 'esbuild' | 'none';
@@ -17,7 +17,7 @@ export interface LibraryGeneratorSchema {
   skipPackageJson?: boolean;
   includeBabelRc?: boolean;
   unitTestRunner?: 'jest' | 'vitest' | 'none';
-  linter?: Linter;
+  linter?: Linter | LinterType;
   testEnvironment?: 'jsdom' | 'node';
   importPath?: string;
   js?: boolean;

@@ -1,5 +1,5 @@
 import { Tree } from 'nx/src/generators/tree';
-import { lintProjectGenerator, Linter } from '@nx/eslint';
+import { lintProjectGenerator, Linter, LinterType } from '@nx/eslint';
 import { joinPathFragments } from 'nx/src/utils/path';
 import {
   GeneratorCallback,
@@ -13,7 +13,7 @@ import { nuxtEslintConfigVersion } from './versions';
 export async function addLinting(
   host: Tree,
   options: {
-    linter: Linter;
+    linter: Linter | LinterType;
     projectName: string;
     projectRoot: string;
     unitTestRunner?: 'vitest' | 'none';

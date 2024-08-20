@@ -75,13 +75,10 @@ export async function getOptions(
     // This should not be needed as it's going to be set in vite.config.ts
     // but leaving it here in case someone did not migrate correctly
     root: resolved.config.root ?? root,
-    configFile: viteConfigPath,
+    config: viteConfigPath,
   };
 
-  return {
-    resolvedOptions: mergeConfig(resolved?.config?.['test'] ?? {}, settings),
-    plugins: resolved?.config?.plugins,
-  };
+  return mergeConfig(resolved?.config?.['test'] ?? {}, settings);
 }
 
 export function getOptionsAsArgv(obj: Record<string, any>): string[] {
