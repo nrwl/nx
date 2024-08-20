@@ -239,6 +239,10 @@
         "type": "boolean",
         "description": "Generates a `package.json` and pruned lock file with the project's `node_module` dependencies populated for installing in a container. If a `package.json` exists in the project's directory, it will be reused with dependencies populated."
       },
+      "skipPackageManager": {
+        "type": "boolean",
+        "description": "Do not add a `packageManager` entry to the generated package.json file. Only works in conjunction with `generatePackageJson` option."
+      },
       "transformers": {
         "type": "array",
         "description": "List of TypeScript Compiler Transfomers Plugins.",

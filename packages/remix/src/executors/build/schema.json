@@ -28,6 +28,10 @@
       "description": "Generate a lockfile (e.g. package-lock.json) that matches the workspace lockfile to ensure package versions match.",
       "default": false
     },
+    "skipPackageManager": {
+      "type": "boolean",
+      "description": "Do not add a `packageManager` entry to the generated package.json file. Only works in conjunction with `generatePackageJson` option."
+    },
     "sourcemap": {
       "type": "boolean",
       "description": "Generate source maps for production.",

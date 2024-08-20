@@ -697,6 +697,39 @@ describe('createPackageJson', () => {
       });
     });
 
+    it('should support skipping packageManager entry', () => {
+      spies.push(
+        jest
+          .spyOn(fs, 'existsSync')
+          .mockImplementation(
+            (path) =>
+              path === 'libs/lib1/package.json' || path === 'package.json'
+          )
+      );
+      spies.push(
+        jest
+          .spyOn(fileutilsModule, 'readJsonFile')
+          .mockImplementation((path) => {
+            if (path === 'package.json') {
+              return {
+                ...rootPackageJson(),
+                packageManager: 'yarn',
+              };
+            }
+            if (path === 'libs/lib1/package.json') {
+              return projectPackageJson();
+            }
+          })
+      );
+
+      expect(
+        createPackageJson('lib1', graph, {
+          root: '',
+          skipPackageManager: true,
+        }).packageManager
+      ).toBeUndefined();
+    });
+
     it('should replace packageManager if not in sync with root and show warning', () => {
       spies.push(
         jest.spyOn(fs, 'existsSync').mockImplementation((path) => {
