@@ -121,12 +121,17 @@ function withNx(
     const { PHASE_PRODUCTION_SERVER, PHASE_DEVELOPMENT_SERVER } = await import(
       'next/constants'
     );
-    // Two scenarios where we want to skip graph creation:
+    // Three scenarios where we want to skip graph creation:
     // 1. Running production server means the build is already done so we just need to start the Next.js server.
     // 2. During graph creation (i.e. create nodes), we won't have a graph to read, and it is not needed anyway since it's a build-time concern.
+    // 3. Running outside of Nx, we don't have a graph to read.
     //
     // NOTE: Avoid any `require(...)` or `import(...)` statements here. Development dependencies are not available at production runtime.
-    if (PHASE_PRODUCTION_SERVER === phase || global.NX_GRAPH_CREATION) {
+    if (
+      PHASE_PRODUCTION_SERVER === phase ||
+      global.NX_GRAPH_CREATION ||
+      !process.env.NX_TASK_TARGET_TARGET
+    ) {
       const { nx, ...validNextConfig } = _nextConfig;
       return {
         distDir: '.next',
