@@ -12,7 +12,7 @@ Each source will [overwrite the previous source](/recipes/running-tasks/pass-arg
 nx show project myproject --web
 ```
 
-{% project-details title="Project Details View" height="100px" %}
+{% project-details title="Project Details View" %}
 
 ```json
 {
