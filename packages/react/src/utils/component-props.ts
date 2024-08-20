@@ -1,6 +1,6 @@
 import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 import type * as ts from 'typescript';
-import { getComponentPropsInterface } from './ast-utils';
+import { parseComponentPropsInfo } from './ast-utils';
 
 let tsModule: typeof import('typescript');
 
@@ -16,18 +16,19 @@ export function getArgsDefaultValue(property: ts.SyntaxKind): string {
   };
 
   const resolvedValue = typeNameToDefault[property];
-  if (typeof resolvedValue === undefined) {
+  if (resolvedValue === undefined) {
     return "''";
   } else {
     return resolvedValue;
   }
 }
 
-export function getDefaultsForComponent(
+export function getComponentPropDefaults(
   sourceFile: ts.SourceFile,
   cmpDeclaration: ts.Node
 ): {
-  propsTypeName: string;
+  propsTypeName: string | null;
+  inlineTypeString: string | null;
   props: {
     name: string;
     defaultValue: any;
@@ -41,9 +42,11 @@ export function getDefaultsForComponent(
   if (!tsModule) {
     tsModule = ensureTypescript();
   }
-  const propsInterface = getComponentPropsInterface(sourceFile, cmpDeclaration);
+
+  const info = parseComponentPropsInfo(sourceFile, cmpDeclaration);
 
   let propsTypeName: string = null;
+  let inlineTypeString: string = null;
   let props: {
     name: string;
     defaultValue: any;
@@ -54,25 +57,35 @@ export function getDefaultsForComponent(
     actionText: string;
   }[] = [];
 
-  if (propsInterface) {
-    propsTypeName = propsInterface.name.text;
-    props = propsInterface.members.map((member: ts.PropertySignature) => {
-      if (member.type.kind === tsModule.SyntaxKind.FunctionType) {
-        argTypes.push({
-          name: (member.name as ts.Identifier).text,
-          type: 'action',
-          actionText: `${(member.name as ts.Identifier).text} executed!`,
-        });
+  if (info) {
+    propsTypeName = info.propsTypeName;
+    inlineTypeString = info.inlineTypeString;
+    props = info.props.map((member) => {
+      if (tsModule.isPropertySignature(member)) {
+        if (member.type.kind === tsModule.SyntaxKind.FunctionType) {
+          argTypes.push({
+            name: member.name.getText(),
+            type: 'action',
+            actionText: `${member.name.getText()} executed!`,
+          });
+        } else {
+          return {
+            name: member.name.getText(),
+            defaultValue: getArgsDefaultValue(member.type.kind),
+          };
+        }
       } else {
+        // it's a binding element, which doesn't have a type, e.g.:
+        // const Cmp = ({ a, b }) => {}
         return {
-          name: (member.name as ts.Identifier).text,
-          defaultValue: getArgsDefaultValue(member.type.kind),
+          name: member.name.getText(),
+          defaultValue: getArgsDefaultValue(member.kind),
         };
       }
     });
     props = props.filter((p) => p && p.defaultValue !== undefined);
   }
-  return { propsTypeName, props, argTypes };
+  return { propsTypeName, inlineTypeString, props, argTypes };
 }
 
 export function getImportForType(sourceFile: ts.SourceFile, typeName: string) {

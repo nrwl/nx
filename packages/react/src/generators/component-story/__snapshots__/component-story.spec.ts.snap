@@ -721,6 +721,42 @@ export const Primary = {
   args: {
     name: '',
     displayAge: false,
+    style: '',
+  },
+};
+
+export const Heading: Story = {
+  args: {
+    name: '',
+    displayAge: false,
+    style: '',
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    expect(canvas.getByText(/Welcome to Test!/gi)).toBeTruthy();
+  },
+};
+"
+`;
+
+exports[`react:component-story default setup component with props should setup controls based on the component destructured props defined in an inline literal type 1`] = `
+"import type { Meta, StoryObj } from '@storybook/react';
+import { Test } from './test-ui-lib';
+
+import { within } from '@storybook/testing-library';
+import { expect } from '@storybook/jest';
+
+const meta: Meta<typeof Test> = {
+  component: Test,
+  title: 'Test',
+};
+export default meta;
+type Story = StoryObj<typeof Test>;
+
+export const Primary = {
+  args: {
+    name: '',
+    displayAge: false,
   },
 };
 
@@ -737,7 +773,109 @@ export const Heading: Story = {
 "
 `;
 
-exports[`react:component-story default setup component with props should setup controls based on the component props 1`] = `
+exports[`react:component-story default setup component with props should setup controls based on the component destructured props without type 1`] = `
+"import type { Meta, StoryObj } from '@storybook/react';
+import { Test } from './test-ui-lib';
+
+import { within } from '@storybook/testing-library';
+import { expect } from '@storybook/jest';
+
+const meta: Meta<typeof Test> = {
+  component: Test,
+  title: 'Test',
+};
+export default meta;
+type Story = StoryObj<typeof Test>;
+
+export const Primary = {
+  args: {
+    name: '',
+    displayAge: '',
+  },
+};
+
+export const Heading: Story = {
+  args: {
+    name: '',
+    displayAge: '',
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    expect(canvas.getByText(/Welcome to Test!/gi)).toBeTruthy();
+  },
+};
+"
+`;
+
+exports[`react:component-story default setup component with props should setup controls based on the component props defined in a literal type 1`] = `
+"import type { Meta, StoryObj } from '@storybook/react';
+import { Test } from './test-ui-lib';
+
+import { within } from '@storybook/testing-library';
+import { expect } from '@storybook/jest';
+
+const meta: Meta<typeof Test> = {
+  component: Test,
+  title: 'Test',
+};
+export default meta;
+type Story = StoryObj<typeof Test>;
+
+export const Primary = {
+  args: {
+    name: '',
+    displayAge: false,
+  },
+};
+
+export const Heading: Story = {
+  args: {
+    name: '',
+    displayAge: false,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    expect(canvas.getByText(/Welcome to Test!/gi)).toBeTruthy();
+  },
+};
+"
+`;
+
+exports[`react:component-story default setup component with props should setup controls based on the component props defined in an inline literal type 1`] = `
+"import type { Meta, StoryObj } from '@storybook/react';
+import { Test } from './test-ui-lib';
+
+import { within } from '@storybook/testing-library';
+import { expect } from '@storybook/jest';
+
+const meta: Meta<typeof Test> = {
+  component: Test,
+  title: 'Test',
+};
+export default meta;
+type Story = StoryObj<typeof Test>;
+
+export const Primary = {
+  args: {
+    name: '',
+    displayAge: false,
+  },
+};
+
+export const Heading: Story = {
+  args: {
+    name: '',
+    displayAge: false,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    expect(canvas.getByText(/Welcome to Test!/gi)).toBeTruthy();
+  },
+};
+"
+`;
+
+exports[`react:component-story default setup component with props should setup controls based on the component props defined in an interface 1`] = `
 "import type { Meta, StoryObj } from '@storybook/react';
 import { Test } from './test-ui-lib';
 
