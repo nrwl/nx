@@ -252,7 +252,11 @@ export function processProjectReports(
             if (tasksFileLines[i + 1] === dashes) {
               const type = line.substring(0, line.length - ' tasks'.length);
               i++;
-              while (tasksFileLines[++i] !== '') {
+              while (
+                tasksFileLines[++i] !== '' &&
+                i < tasksFileLines.length &&
+                tasksFileLines[i]?.includes(' - ')
+              ) {
                 const [taskName] = tasksFileLines[i].split(' - ');
                 taskTypeMap.set(taskName, type);
               }
