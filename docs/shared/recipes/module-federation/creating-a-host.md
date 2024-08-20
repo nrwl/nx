@@ -2,19 +2,18 @@
 
 A `host` is the term within [Module Federation](https://module-federation.io/docs/en/mf-docs/0.2/getting-started/) given
 to an application that loads and consumes federated modules
-from `remotes`. At build time, these modules do not exist and are instead fetched via network request and executed at
+from `remotes`. At build time, these modules do not exist and are instead fetched via a network request and executed at
 runtime. It can be likened to a modern-day approach to iframes.  
 A host can be configured to know the location of the federated modules at build time _(called Static Federation)_ or it
 can employ a mechanism to discover the location of the federated modules at runtime, usually on startup _(called Dynamic
 Federation)_.
 
 **Nx** includes first-class support for helping you to scaffold a Module Federation Architecture for your React and
-Angular application(
-s).
+Angular application(s).
 
 ## Generating a Host
 
-To generate just a host application in your workspace, run the following command:
+To generate only a host application in your workspace, run the following command:
 
 {% tabs %}
 {% tab label="React" %}
@@ -255,10 +254,21 @@ simple as running:
 nx serve shell
 ```
 
+When you serve your `host`, Nx will discover any dependent remote applications that are also in the workspace and serve them statically. To learn more about check out our in-depth breakdown of [what happens when you serve your host](/concepts/module-federation/nx-module-federation-technical-overview#what-happens-when-you-serve-your-host).
+
 ## Building your Host
 
 In the same vein, you can build your host by running:
 
 ```shell
 nx build shell
+```
+
+To support [Independent Deployability](/concepts/module-federation/module-federation-and-nx#independent-deployability) `host` applications do not have `implicitDependencies` set in their `project.json`. If you want to build all your `remotes` when you build your `host`, add `implicitDependencies` to your `host`'s `project.json` with each `remote` listed:
+
+```json
+{
+  ...,
+  "implicitDependencies": ["remote-one", "remote-two"]
+}
 ```
