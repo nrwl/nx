@@ -22,6 +22,7 @@ import { typeDefinitions } from '@nx/js/src/plugins/rollup/type-definitions';
 
 import { analyze } from '../analyze';
 import { swc } from '../swc';
+import { tsConfigPaths } from '../tsconfig-paths';
 import { generatePackageJson } from '../package-json/generate-package-json';
 import { getProjectNode } from './get-project-node';
 import { deleteOutput } from '../delete-output';
@@ -32,8 +33,8 @@ import { PackageJson } from 'nx/src/utils/package-json';
 // These use require because the ES import isn't correct.
 const commonjs = require('@rollup/plugin-commonjs');
 const image = require('@rollup/plugin-image');
-
 const json = require('@rollup/plugin-json');
+const typescript = require('@rollup/plugin-typescript');
 const copy = require('rollup-plugin-copy');
 const postcss = require('rollup-plugin-postcss');
 
@@ -191,18 +192,17 @@ export function withNx(
       }),
       image(),
       json(),
-      // Needed to generate type definitions, even if we're using babel or swc.
-      require('rollup-plugin-typescript2')({
-        check: !options.skipTypeCheck,
-        tsconfig: options.tsConfig,
-        tsconfigOverride: {
-          compilerOptions: createTsCompilerOptions(
-            projectRoot,
-            tsConfig,
-            options,
-            dependencies
-          ),
-        },
+      typescript({
+        tsconfig: join(workspaceRoot, options.tsConfig),
+        compilerOptions: createTsCompilerOptions(
+          projectRoot,
+          tsConfig,
+          options,
+          dependencies
+        ),
+      }),
+      tsConfigPaths({
+        tsConfig: join(workspaceRoot, options.tsConfig),
       }),
       typeDefinitions({
         projectRoot,
@@ -292,9 +292,13 @@ function createTsCompilerOptions(
     dependencies ?? []
   );
   const compilerOptions = {
+    outDir: join(workspaceRoot, options.outputPath),
+    sourceMap: !!options.sourceMap,
+    noEmitOnError: !!options.skipTypeCheck,
     rootDir: projectRoot,
     allowJs: options.allowJs,
-    declaration: true,
+    // TODO(jack): Need to roll up d.ts files.
+    declaration: false,
     paths: compilerOptionPaths,
   };
   if (config.options.module === ts.ModuleKind.CommonJS) {
