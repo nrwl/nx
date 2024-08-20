@@ -65,6 +65,7 @@ export async function syncGenerator(tree: Tree): Promise<SyncGeneratorResult> {
   const rootTsconfig = readJson<Tsconfig>(tree, rootTsconfigPath);
   const projectGraph = await createProjectGraphAsync();
   const projectRoots = new Set<string>();
+  const tsconfigHasCompositeEnabledCache = new Map<string, boolean>();
 
   const tsconfigProjectNodeValues = Object.values(projectGraph.nodes).filter(
     (node) => {
@@ -125,6 +126,7 @@ export async function syncGenerator(tree: Tree): Promise<SyncGeneratorResult> {
         .filter((ref) =>
           hasCompositeEnabled(
             tsSysFromTree,
+            tsconfigHasCompositeEnabledCache,
             joinPathFragments(ref, 'tsconfig.json')
           )
         )
@@ -192,6 +194,7 @@ export async function syncGenerator(tree: Tree): Promise<SyncGeneratorResult> {
         updateTsConfigReferences(
           tree,
           tsSysFromTree,
+          tsconfigHasCompositeEnabledCache,
           runtimeTsConfigPath,
           dependencies,
           sourceProjectNode.data.root,
@@ -206,6 +209,7 @@ export async function syncGenerator(tree: Tree): Promise<SyncGeneratorResult> {
       updateTsConfigReferences(
         tree,
         tsSysFromTree,
+        tsconfigHasCompositeEnabledCache,
         sourceProjectTsconfigPath,
         dependencies,
         sourceProjectNode.data.root,
@@ -228,6 +232,7 @@ export default syncGenerator;
 function updateTsConfigReferences(
   tree: Tree,
   tsSysFromTree: ts.System,
+  tsconfigHasCompositeEnabledCache: Map<string, boolean>,
   tsConfigPath: string,
   dependencies: ProjectGraphProjectNode[],
   projectRoot: string,
@@ -274,7 +279,13 @@ function updateTsConfigReferences(
       );
       if (tree.exists(runtimeTsConfigPath)) {
         // Check composite is true in the dependency runtime tsconfig file before proceeding
-        if (!hasCompositeEnabled(tsSysFromTree, runtimeTsConfigPath)) {
+        if (
+          !hasCompositeEnabled(
+            tsSysFromTree,
+            tsconfigHasCompositeEnabledCache,
+            runtimeTsConfigPath
+          )
+        ) {
           continue;
         }
         referencePath = runtimeTsConfigPath;
@@ -290,7 +301,11 @@ function updateTsConfigReferences(
           if (tree.exists(possibleRuntimeTsConfigPath)) {
             // Check composite is true in the dependency runtime tsconfig file before proceeding
             if (
-              !hasCompositeEnabled(tsSysFromTree, possibleRuntimeTsConfigPath)
+              !hasCompositeEnabled(
+                tsSysFromTree,
+                tsconfigHasCompositeEnabledCache,
+                possibleRuntimeTsConfigPath
+              )
             ) {
               continue;
             }
@@ -304,6 +319,7 @@ function updateTsConfigReferences(
       if (
         !hasCompositeEnabled(
           tsSysFromTree,
+          tsconfigHasCompositeEnabledCache,
           joinPathFragments(dep.data.root, 'tsconfig.json')
         )
       ) {
@@ -458,12 +474,17 @@ function patchTsconfigJsonReferences(
 
 function hasCompositeEnabled(
   tsSysFromTree: ts.System,
+  tsconfigHasCompositeEnabledCache: Map<string, boolean>,
   tsconfigPath: string
 ): boolean {
-  const parsed = ts.parseJsonConfigFileContent(
-    ts.readConfigFile(tsconfigPath, tsSysFromTree.readFile).config,
-    tsSysFromTree,
-    dirname(tsconfigPath)
-  );
-  return parsed.options.composite === true;
+  if (!tsconfigHasCompositeEnabledCache.has(tsconfigPath)) {
+    const parsed = ts.parseJsonConfigFileContent(
+      ts.readConfigFile(tsconfigPath, tsSysFromTree.readFile).config,
+      tsSysFromTree,
+      dirname(tsconfigPath)
+    );
+    const enabledVal = parsed.options.composite === true;
+    tsconfigHasCompositeEnabledCache.set(tsconfigPath, enabledVal);
+  }
+  return tsconfigHasCompositeEnabledCache.get(tsconfigPath);
 }
