@@ -1,5 +1,5 @@
 import type { ProjectNameAndRootFormat } from '@nx/devkit/src/generators/project-name-and-root-utils';
-import type { Linter } from '@nx/eslint';
+import type { Linter, LinterType } from '@nx/eslint';
 
 /**
  * Same as the @nx/react library schema, except it removes keys: style, component, routing, appProject
@@ -13,7 +13,7 @@ export interface Schema {
   tags?: string;
   pascalCaseFiles?: boolean;
   unitTestRunner: 'jest' | 'none';
-  linter: Linter;
+  linter: Linter | LinterType;
   publishable?: boolean;
   buildable?: boolean;
   importPath?: string;

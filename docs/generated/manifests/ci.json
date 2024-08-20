@@ -208,28 +208,6 @@
         "tags": []
       },
       {
-        "id": "nx-cloud-ai",
-        "name": "Nx Cloud AI",
-        "description": "Learn how to enable AI features in Nx Cloud, and what features it enables",
-        "mediaImage": "",
-        "file": "nx-cloud/features/ai-features",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/ci/features/nx-cloud-ai",
-        "tags": []
-      },
-      {
-        "id": "dynamic-agents",
-        "name": "Dynamically Allocate Agents",
-        "description": "Learn how to dynamically allocate agents based on the size of a PR, keeping the balance of speed and cost.",
-        "mediaImage": "",
-        "file": "nx-cloud/features/dynamic-agents",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/ci/features/dynamic-agents",
-        "tags": []
-      },
-      {
         "id": "split-e2e-tasks",
         "name": "Automatically Split E2E Tasks (Atomizer)",
         "description": "Learn how Nx can automatically split e2e tests into fine-grained chunks for a much better distribution on Nx Agents.",
@@ -249,6 +227,28 @@
         "itemList": [],
         "isExternal": false,
         "path": "/ci/features/flaky-tasks",
+        "tags": []
+      },
+      {
+        "id": "dynamic-agents",
+        "name": "Dynamically Allocate Agents",
+        "description": "Learn how to dynamically allocate agents based on the size of a PR, keeping the balance of speed and cost.",
+        "mediaImage": "",
+        "file": "nx-cloud/features/dynamic-agents",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/features/dynamic-agents",
+        "tags": []
+      },
+      {
+        "id": "explain-with-ai",
+        "name": "Explain With AI",
+        "description": "",
+        "mediaImage": "",
+        "file": "nx-cloud/features/explain-with-ai",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/features/explain-with-ai",
         "tags": []
       }
     ],
@@ -289,28 +289,6 @@
     "path": "/ci/features/distribute-task-execution",
     "tags": []
   },
-  "/ci/features/nx-cloud-ai": {
-    "id": "nx-cloud-ai",
-    "name": "Nx Cloud AI",
-    "description": "Learn how to enable AI features in Nx Cloud, and what features it enables",
-    "mediaImage": "",
-    "file": "nx-cloud/features/ai-features",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/ci/features/nx-cloud-ai",
-    "tags": []
-  },
-  "/ci/features/dynamic-agents": {
-    "id": "dynamic-agents",
-    "name": "Dynamically Allocate Agents",
-    "description": "Learn how to dynamically allocate agents based on the size of a PR, keeping the balance of speed and cost.",
-    "mediaImage": "",
-    "file": "nx-cloud/features/dynamic-agents",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/ci/features/dynamic-agents",
-    "tags": []
-  },
   "/ci/features/split-e2e-tasks": {
     "id": "split-e2e-tasks",
     "name": "Automatically Split E2E Tasks (Atomizer)",
@@ -331,6 +309,28 @@
     "itemList": [],
     "isExternal": false,
     "path": "/ci/features/flaky-tasks",
+    "tags": []
+  },
+  "/ci/features/dynamic-agents": {
+    "id": "dynamic-agents",
+    "name": "Dynamically Allocate Agents",
+    "description": "Learn how to dynamically allocate agents based on the size of a PR, keeping the balance of speed and cost.",
+    "mediaImage": "",
+    "file": "nx-cloud/features/dynamic-agents",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/features/dynamic-agents",
+    "tags": []
+  },
+  "/ci/features/explain-with-ai": {
+    "id": "explain-with-ai",
+    "name": "Explain With AI",
+    "description": "",
+    "mediaImage": "",
+    "file": "nx-cloud/features/explain-with-ai",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/features/explain-with-ai",
     "tags": []
   },
   "/ci/concepts": {
@@ -383,6 +383,17 @@
         "isExternal": false,
         "path": "/ci/concepts/cache-security",
         "tags": []
+      },
+      {
+        "id": "nx-cloud-ai",
+        "name": "Nx Cloud AI",
+        "description": "Learn how to enable AI features in Nx Cloud, and what features it enables",
+        "mediaImage": "",
+        "file": "nx-cloud/concepts/ai-features",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/concepts/nx-cloud-ai",
+        "tags": []
       }
     ],
     "isExternal": false,
@@ -431,6 +442,17 @@
     "itemList": [],
     "isExternal": false,
     "path": "/ci/concepts/cache-security",
+    "tags": []
+  },
+  "/ci/concepts/nx-cloud-ai": {
+    "id": "nx-cloud-ai",
+    "name": "Nx Cloud AI",
+    "description": "Learn how to enable AI features in Nx Cloud, and what features it enables",
+    "mediaImage": "",
+    "file": "nx-cloud/concepts/ai-features",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/concepts/nx-cloud-ai",
     "tags": []
   },
   "/ci/recipes": {
@@ -1997,17 +2019,6 @@
         "isExternal": false,
         "path": "/ci/troubleshooting/ci-execution-failed",
         "tags": []
-      },
-      {
-        "id": "explain-with-ai",
-        "name": "Explain With AI",
-        "description": "",
-        "mediaImage": "",
-        "file": "nx-cloud/troubleshooting/explain-with-ai",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/ci/troubleshooting/explain-with-ai",
-        "tags": []
       }
     ],
     "isExternal": false,
@@ -2023,17 +2034,6 @@
     "itemList": [],
     "isExternal": false,
     "path": "/ci/troubleshooting/ci-execution-failed",
-    "tags": []
-  },
-  "/ci/troubleshooting/explain-with-ai": {
-    "id": "explain-with-ai",
-    "name": "Explain With AI",
-    "description": "",
-    "mediaImage": "",
-    "file": "nx-cloud/troubleshooting/explain-with-ai",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/ci/troubleshooting/explain-with-ai",
     "tags": []
   }
 }

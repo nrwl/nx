@@ -127,9 +127,12 @@ export async function* moduleFederationDevServerExecutor(
   options.staticRemotesPort ??= remotes.staticRemotePort;
 
   // Set NX_MF_DEV_REMOTES for the Nx Runtime Library Control Plugin
-  process.env.NX_MF_DEV_REMOTES = JSON.stringify(
-    remotes.devRemotes.map((r) => (typeof r === 'string' ? r : r.remoteName))
-  );
+  process.env.NX_MF_DEV_REMOTES = JSON.stringify([
+    ...(remotes.devRemotes.map((r) =>
+      typeof r === 'string' ? r : r.remoteName
+    ) ?? []),
+    project.name,
+  ]);
 
   const staticRemotesConfig = parseStaticRemotesConfig(
     [...remotes.staticRemotes, ...remotes.dynamicRemotes],

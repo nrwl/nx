@@ -29,6 +29,7 @@ export const createDependencies: CreateDependencies = async (
     gradleFileToGradleProjectMap,
     gradleProjectToProjectName,
     buildFileToDepsMap,
+    gradleProjectToChildProjects,
   } = getCurrentGradleReport();
   const dependencies: Set<RawProjectGraphDependency> = new Set();
 
@@ -47,6 +48,18 @@ export const createDependencies: CreateDependencies = async (
         dependencies
       );
     }
+    gradleProjectToChildProjects.get(gradleProject)?.forEach((childProject) => {
+      if (childProject) {
+        const dependency: RawProjectGraphDependency = {
+          source: projectName as string,
+          target: childProject,
+          type: DependencyType.static,
+          sourceFile: gradleFile,
+        };
+        validateDependency(dependency, context);
+        dependencies.add(dependency);
+      }
+    });
   }
 
   const gradleDependenciesEnd = performance.mark('gradleDependencies:end');

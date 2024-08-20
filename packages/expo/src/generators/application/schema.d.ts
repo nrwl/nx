@@ -1,5 +1,5 @@
 import type { ProjectNameAndRootFormat } from '@nx/devkit/src/generators/project-name-and-root-utils';
-import type { Linter } from '@nx/eslint';
+import type { Linter, LinterType } from '@nx/eslint';
 
 export interface Schema {
   name: string;
@@ -13,7 +13,7 @@ export interface Schema {
   pascalCaseFiles?: boolean;
   classComponent?: boolean;
   js: boolean; // default is false
-  linter: Linter; // default is eslint
+  linter: Linter | LinterType; // default is eslint
   setParserOptionsProject?: boolean; // default is false
   e2eTestRunner: 'cypress' | 'playwright' | 'detox' | 'none'; // default is playwright
   standaloneConfig?: boolean;

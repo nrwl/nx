@@ -38,6 +38,7 @@ export function createPackageJson(
     root?: string;
     isProduction?: boolean;
     helperDependencies?: string[];
+    skipPackageManager?: boolean;
   } = {},
   fileMap: ProjectFileMap = null
 ): PackageJson {
@@ -181,7 +182,7 @@ export function createPackageJson(
     packageJson.peerDependenciesMeta
   );
 
-  if (rootPackageJson.packageManager) {
+  if (rootPackageJson.packageManager && !options.skipPackageManager) {
     if (
       packageJson.packageManager &&
       packageJson.packageManager !== rootPackageJson.packageManager

@@ -1,5 +1,5 @@
 import type { ProjectNameAndRootFormat } from '@nx/devkit/src/generators/project-name-and-root-utils';
-import type { Linter } from '@nx/eslint';
+import type { Linter, LinterType } from '@nx/eslint';
 
 export interface Schema {
   name: string;
@@ -13,7 +13,7 @@ export interface Schema {
   pascalCaseFiles?: boolean;
   classComponent?: boolean;
   js?: boolean;
-  linter: Linter;
+  linter: Linter | LinterType;
   setParserOptionsProject?: boolean;
   e2eTestRunner: 'cypress' | 'playwright' | 'detox' | 'none'; // default is cypress
   bundler: 'webpack' | 'vite'; // default is webpack

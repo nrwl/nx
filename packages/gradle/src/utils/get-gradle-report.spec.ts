@@ -24,4 +24,16 @@ describe('processProjectReports', () => {
       Object.keys(Object.fromEntries(report.gradleProjectToTasksTypeMap))
     ).toEqual(['', ':app', ':list', ':utilities']);
   });
+
+  it('should process properties report with child projects', () => {
+    const report = processProjectReports([
+      '> Task :propertyReport',
+      `See the report at: file://${__dirname}/__mocks__/gradle-properties-report-child-projects.txt`,
+    ]);
+    expect(report.gradleProjectToProjectName.get('')).toEqual('My Application');
+    expect(report.gradleProjectToChildProjects.get('')).toEqual([
+      'app',
+      'mylibrary',
+    ]);
+  });
 });

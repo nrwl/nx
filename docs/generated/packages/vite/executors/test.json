@@ -11,7 +11,7 @@
     "properties": {
       "configFile": {
         "type": "string",
-        "description": "The path to the local vitest config",
+        "description": "The path to the local vitest config, relative to the workspace root.",
         "x-completion-type": "file",
         "x-completion-glob": "@(vitest|vite).config@(.js|.ts)",
         "aliases": ["config"]

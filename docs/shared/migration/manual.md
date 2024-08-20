@@ -34,6 +34,13 @@ pnpm add -D nx@latest
 ```
 
 {% /tab %}
+{% tab label="bun" %}
+
+```shell
+bun add -D nx@latest
+```
+
+{% /tab %}
 {% /tabs %}
 
 ## Create a Basic `nx.json` File

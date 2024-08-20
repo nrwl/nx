@@ -21,7 +21,7 @@ import { addPropertyToJestConfig, configurationGenerator } from '@nx/jest';
 import { getRelativePathToRootTsConfig } from '@nx/js';
 import { setupVerdaccio } from '@nx/js/src/generators/setup-verdaccio/generator';
 import { addLocalRegistryScripts } from '@nx/js/src/utils/add-local-registry-scripts';
-import { Linter, lintProjectGenerator } from '@nx/eslint';
+import { Linter, LinterType, lintProjectGenerator } from '@nx/eslint';
 import { join } from 'path';
 import type { Schema } from './schema';
 
@@ -29,7 +29,7 @@ interface NormalizedSchema extends Schema {
   projectRoot: string;
   projectName: string;
   pluginPropertyName: string;
-  linter: Linter;
+  linter: Linter | LinterType;
 }
 
 async function normalizeOptions(

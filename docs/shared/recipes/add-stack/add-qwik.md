@@ -45,6 +45,14 @@ pnpm add -D qwik-nx
 ```
 
 {% /tab %}
+
+{% tab label="bun" %}
+
+```shell
+bun add -D qwik-nx
+```
+
+{% /tab %}
 {% /tabs %}
 
 {% callout type="note" title="Nx Version Compatibility" %}

@@ -126,6 +126,7 @@ export async function* viteBuildExecutor(
         target: context.targetName,
         root: context.root,
         isProduction: !options.includeDevDependenciesInPackageJson, // By default we remove devDependencies since this is a production build.
+        skipPackageManager: options.skipPackageManager,
       }
     );
 
