@@ -61,6 +61,10 @@
         "default": false,
         "x-priority": "internal"
       },
+      "skipPackageManager": {
+        "type": "boolean",
+        "description": "Do not add a `packageManager` entry to the generated package.json file."
+      },
       "debug": {
         "type": "boolean",
         "description": "Enable Next.js debug build logging"
