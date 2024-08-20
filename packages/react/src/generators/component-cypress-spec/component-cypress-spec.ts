@@ -10,7 +10,7 @@ import type * as ts from 'typescript';
 import {
   findExportDeclarationsForJsx,
   getComponentNode,
-  getComponentPropsInterface,
+  parseComponentPropsInfo,
 } from '../../utils/ast-utils';
 import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 
@@ -47,7 +47,7 @@ export function getArgsDefaultValue(property: ts.SyntaxKind): string {
   };
 
   const resolvedValue = typeNameToDefault[property];
-  if (typeof resolvedValue === undefined) {
+  if (resolvedValue === undefined) {
     return '';
   } else if (typeof resolvedValue === 'string') {
     return resolvedValue.replace(/\s/g, '+');
@@ -138,18 +138,24 @@ function findPropsAndGenerateFileForCypress(
   js: boolean,
   fromNodeArray?: boolean
 ) {
-  const propsInterface = getComponentPropsInterface(sourceFile, cmpDeclaration);
+  const info = parseComponentPropsInfo(sourceFile, cmpDeclaration);
 
   let props: {
     name: string;
     defaultValue: any;
   }[] = [];
 
-  if (propsInterface) {
-    props = propsInterface.members.map((member: ts.PropertySignature) => {
+  if (info) {
+    if (!tsModule) {
+      tsModule = ensureTypescript();
+    }
+
+    props = info.props.map((member) => {
       return {
         name: (member.name as ts.Identifier).text,
-        defaultValue: getArgsDefaultValue(member.type.kind),
+        defaultValue: tsModule.isBindingElement(member)
+          ? getArgsDefaultValue(member.kind)
+          : getArgsDefaultValue(member.type.kind),
       };
     });
   }
