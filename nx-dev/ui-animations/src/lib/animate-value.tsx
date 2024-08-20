@@ -1,5 +1,6 @@
 import { animate, useInView } from 'framer-motion';
 import { useEffect, useRef, useState } from 'react';
+import { usePrefersReducedMotion } from './prefers-reduced-motion';
 
 /**
  * Animates a value and renders it with a specified suffix.
@@ -26,13 +27,14 @@ export function AnimateValue({
   const ref = useRef<HTMLSpanElement | null>(null);
   const [isComplete, setIsComplete] = useState<boolean>(false);
   const isInView = useInView(ref);
+  const shouldReduceMotion = usePrefersReducedMotion();
 
   useEffect(() => {
     if (!isInView) return;
     if (isComplete && once) return;
 
     animate(0, num, {
-      duration: 2.5,
+      duration: shouldReduceMotion ? 0 : 2.5,
       onUpdate(value) {
         if (!ref.current) return;
 
