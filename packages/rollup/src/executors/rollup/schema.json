@@ -147,6 +147,10 @@
       "type": "boolean",
       "description": "Prevents 'type' field from being added to compiled package.json file. Use this if you are having an issue with this field.",
       "default": false
+    },
+    "sourceMap": {
+      "description": "Output sourcemaps.",
+      "type": "boolean"
     }
   },
   "required": ["tsConfig", "main", "outputPath"],
