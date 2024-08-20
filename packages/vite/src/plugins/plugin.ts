@@ -21,6 +21,7 @@ import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { getLockFileName } from '@nx/js';
 import { loadViteDynamicImport } from '../utils/executor-utils';
 import { hashObject } from 'nx/src/hasher/file-hasher';
+import { minimatch } from 'minimatch';
 
 const pmc = getPackageManagerCommand();
 
@@ -30,6 +31,7 @@ export interface VitePluginOptions {
   serveTargetName?: string;
   previewTargetName?: string;
   serveStaticTargetName?: string;
+  typecheckTargetName?: string;
 }
 
 type ViteTargets = Pick<ProjectConfiguration, 'targets' | 'metadata'>;
@@ -97,6 +99,9 @@ async function createNodesInternal(
     return {};
   }
 
+  const tsConfigFiles =
+    siblingFiles.filter((p) => minimatch(p, 'tsconfig*{.json,.*.json}')) ?? [];
+
   const normalizedOptions = normalizeOptions(options);
 
   // We do not want to alter how the hash is calculated, so appending the config file path to the hash
@@ -113,6 +118,7 @@ async function createNodesInternal(
     configFilePath,
     projectRoot,
     normalizedOptions,
+    tsConfigFiles,
     context
   );
   targetsCache[hash] ??= viteTargets;
@@ -141,6 +147,7 @@ async function buildViteTargets(
   configFilePath: string,
   projectRoot: string,
   options: VitePluginOptions,
+  tsConfigFiles: string[],
   context: CreateNodesContext
 ): Promise<ViteTargets & { isLibrary: boolean }> {
   const absoluteConfigFilePath = joinPathFragments(
@@ -196,6 +203,29 @@ async function buildViteTargets(
       );
       targets[options.serveStaticTargetName] = serveStaticTarget(options) as {};
     }
+  }
+
+  if (tsConfigFiles.length) {
+    const tsconfigToUse = tsConfigFiles.includes('tsconfig.lib.json')
+      ? 'tsconfig.lib.json'
+      : tsConfigFiles[0];
+    targets[options.typecheckTargetName] = {
+      cache: true,
+      inputs: ['production', '^production'],
+      command: 'tsc --noEmit',
+      options: { cwd: joinPathFragments(projectRoot) },
+      metadata: {
+        description: `Run Typechecking`,
+        help: {
+          command: `${pmc.exec} tsc --help -p ${tsconfigToUse}`,
+          example: {
+            options: {
+              noEmit: true,
+            },
+          },
+        },
+      },
+    };
   }
 
   // if file is vitest.config or vite.config has definition for test, create target for test
@@ -420,5 +450,6 @@ function normalizeOptions(options: VitePluginOptions): VitePluginOptions {
   options.previewTargetName ??= 'preview';
   options.testTargetName ??= 'test';
   options.serveStaticTargetName ??= 'serve-static';
+  options.typecheckTargetName ??= 'typecheck';
   return options;
 }

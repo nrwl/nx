@@ -47,6 +47,28 @@ exports[`@nx/vite/plugin root project should create nodes 1`] = `
                 "{projectRoot}/coverage",
               ],
             },
+            "typecheck": {
+              "cache": true,
+              "command": "tsc --noEmit",
+              "inputs": [
+                "production",
+                "^production",
+              ],
+              "metadata": {
+                "description": "Run Typechecking",
+                "help": {
+                  "command": "npx tsc --help -p tsconfig.lib.json",
+                  "example": {
+                    "options": {
+                      "noEmit": true,
+                    },
+                  },
+                },
+              },
+              "options": {
+                "cwd": ".",
+              },
+            },
           },
         },
       },
