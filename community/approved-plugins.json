@@ -501,7 +501,7 @@
   },
   {
     "name":"@scobru/scaffold-eth-nx",
-    "description": "Plugin to generate Scaffold-Eth instance in your NX monorepo."
+    "description": "Plugin to generate Scaffold-Eth instance in your NX monorepo.",
     "url": "https://github.com/scobru/scaffold-eth-nx"
   }
 ]
