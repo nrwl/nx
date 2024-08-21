@@ -439,10 +439,10 @@ export async function applyProjectMetadata(
   const errors: CreateMetadataError[] = [];
 
   const promises = plugins.map(async (plugin) => {
-    if (isNxPluginV2(plugin) && plugin.createMetadata) {
+    if (plugin.createMetadata) {
       performance.mark(`${plugin.name}:createMetadata - start`);
       try {
-        const metadata = await plugin.createMetadata(graph, undefined, context);
+        const metadata = await plugin.createMetadata(graph, context);
         results.push({ metadata, pluginName: plugin.name });
       } catch (e) {
         errors.push(new CreateMetadataError(e, plugin.name));
