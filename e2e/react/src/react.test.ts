@@ -63,7 +63,7 @@ describe('React Applications', () => {
       }
     }, 250_000);
 
-    // TODO: failing because of eslint-plugin-import with eslint v9 - https://github.com/import-js/eslint-plugin-import/issues/2948
+    // TODO(eslint): failing because of eslint-plugin-import with eslint v9 - https://github.com/import-js/eslint-plugin-import/issues/2948
     xit('should be able to generate a react app + lib (with CSR and SSR)', async () => {
       const appName = uniq('app');
       const libName = uniq('lib');
@@ -177,7 +177,7 @@ describe('React Applications', () => {
       ]);
     }, 250_000);
 
-    // TODO: failing because of eslint-plugin-import with eslint v9 - https://github.com/import-js/eslint-plugin-import/issues/2948
+    // TODO(eslint): failing because of eslint-plugin-import with eslint v9 - https://github.com/import-js/eslint-plugin-import/issues/2948
     xit('should be able to add a redux slice', async () => {
       const appName = uniq('app');
       const libName = uniq('lib');

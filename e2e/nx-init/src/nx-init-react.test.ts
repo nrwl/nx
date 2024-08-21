@@ -131,7 +131,7 @@ describe('nx init (for React - legacy)', () => {
       {
         env: {
           ...process.env,
-          // TODO: craco does not support ESLint v9 https://github.com/dilanx/craco/issues/543
+          // TODO(eslint): craco does not support ESLint v9 https://github.com/dilanx/craco/issues/543
           ESLINT_USE_FLAT_CONFIG: 'false',
         },
       }

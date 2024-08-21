@@ -158,7 +158,7 @@ export const yargsReleaseCommand: CommandModule<
           );
         }
         const nxJson = readNxJson();
-        // TODO: address this type error and figure out why e2e and local do not agree
+        // TODO(eslint): address this type error and figure out why e2e and local do not agree
         const groups = argv.groups as any;
         if (groups?.length) {
           for (const group of groups) {
