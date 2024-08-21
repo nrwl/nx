@@ -94,7 +94,7 @@ jobs:
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - run: pnpm exec nx-cloud record -- echo Hello World
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-      - run: pnpm exec nx affected -t lint test build
+      - run: pnpm exec nx affected -t lint test build e2e-ci
 ```
 
 The [`nx affected` command](/ci/features/affected) will run the specified tasks only for projects that have been affected by a particular PR, which can save a lot of time as repositories grow larger.
@@ -189,7 +189,7 @@ The affected command and Nx Replay help speed up the average CI time, but there 
 
 The Nx Agents feature
 
-- takes a command (e.g. `run-many -t build lint test e2e-ci`) and splits it into individual tasks which it then distributes across multiple agents
+- takes a command (e.g. `nx affected -t build lint test e2e-ci`) and splits it into individual tasks which it then distributes across multiple agents
 - distributes tasks by considering the dependencies between them; e.g. if `e2e-ci` depends on `build`, Nx Cloud will make sure that `build` is executed before `e2e-ci`; it does this across machines
 - distributes tasks to optimize for CPU processing time and reduce idle time by taking into account historical data about how long each task takes to run
 - collects the results and logs of all the tasks and presents them in a single view
@@ -229,7 +229,7 @@ jobs:
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - run: pnpm exec nx-cloud record -- echo Hello World
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-      - run: pnpm exec nx affected -t lint test build
+      - run: pnpm exec nx affected -t lint test build e2e-ci
 ```
 
 We recommend you add this line right after you check out the repo, before installing node modules.
