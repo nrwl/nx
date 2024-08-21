@@ -132,9 +132,9 @@ export function withVerbose<T>(yargs: Argv<T>) {
       type: 'boolean',
     })
     .middleware((args) => {
-      if (args.verbose) {
-        process.env.NX_VERBOSE_LOGGING = 'true';
-      }
+      args.verbose ??= process.env.NX_VERBOSE_LOGGING === 'true';
+      // If NX_VERBOSE_LOGGING=false and --verbose is passed, we want to set it to true favoring the arg
+      process.env.NX_VERBOSE_LOGGING = args.verbose.toString();
     });
 }
 

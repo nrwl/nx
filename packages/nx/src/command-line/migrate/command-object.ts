@@ -10,6 +10,7 @@ import {
 } from '../../utils/package-manager';
 import { writeJsonFile } from '../../utils/fileutils';
 import { workspaceRoot } from '../../utils/workspace-root';
+import { withVerbose } from '../yargs-utils/shared-options';
 
 export const yargsMigrateCommand: CommandModule = {
   command: 'migrate [packageAndVersion]',
@@ -39,7 +40,7 @@ export const yargsInternalMigrateCommand: CommandModule = {
 function withMigrationOptions(yargs: Argv) {
   const defaultCommitPrefix = 'chore: [nx migration] ';
 
-  return yargs
+  return withVerbose(yargs)
     .positional('packageAndVersion', {
       describe: `The target package and version (e.g, @nx/workspace@16.0.0)`,
       type: 'string',
@@ -178,7 +179,7 @@ function nxCliPath() {
     console.error(
       `Failed to install the ${version} version of the migration script. Using the current version.`
     );
-    if (process.env.NX_VERBOSE_LOGGING) {
+    if (process.env.NX_VERBOSE_LOGGING === 'true') {
       console.error(e);
     }
     return null;

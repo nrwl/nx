@@ -1636,10 +1636,6 @@ export async function migrate(
   args: { [k: string]: any },
   rawArgs: string[]
 ) {
-  if (args['verbose']) {
-    process.env.NX_VERBOSE_LOGGING = 'true';
-  }
-
   await daemonClient.stop();
 
   return handleErrors(process.env.NX_VERBOSE_LOGGING === 'true', async () => {

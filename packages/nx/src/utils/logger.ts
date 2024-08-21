@@ -32,7 +32,7 @@ export const logger = {
     console.error(...s);
   },
   verbose: (...s) => {
-    if (process.env.NX_VERBOSE_LOGGING) {
+    if (process.env.NX_VERBOSE_LOGGING === 'true') {
       console.log(...s);
     }
   },

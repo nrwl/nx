@@ -54,10 +54,6 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
       overrideReleaseConfig ?? {}
     );
 
-    if (args.verbose) {
-      process.env.NX_VERBOSE_LOGGING = 'true';
-    }
-
     const hasVersionGitConfig =
       Object.keys(userProvidedReleaseConfig.version?.git ?? {}).length > 0;
     const hasChangelogGitConfig =
