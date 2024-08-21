@@ -8,3 +8,4 @@ export const typescriptESLintVersion = '^7.16.0';
 // Updated linting stack for ESLint v9, typescript-eslint v8
 export const eslint9__typescriptESLintVersion = '^8.0.0';
 export const eslint9__eslintVersion = '^9.8.0';
+export const eslintCompat = '^1.1.1';

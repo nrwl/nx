@@ -40,9 +40,10 @@ export async function addLinting(
     editEslintConfigFiles(host, options.projectRoot);
 
     if (isEslintConfigSupported(host, options.projectRoot)) {
-      addExtendsToLintConfig(host, options.projectRoot, [
+      const addExtendsTask = addExtendsToLintConfig(host, options.projectRoot, [
         '@nuxt/eslint-config',
       ]);
+      tasks.push(addExtendsTask);
       addIgnoresToLintConfig(host, options.projectRoot, [
         '.nuxt/**',
         '.output/**',

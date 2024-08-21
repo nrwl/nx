@@ -39,11 +39,16 @@ export async function addLinting(
   );
 
   if (options.linter === Linter.EsLint && isEslintConfigSupported(host)) {
-    addExtendsToLintConfig(host, options.appProjectRoot, [
-      'plugin:@nx/react-typescript',
-      'next',
-      'next/core-web-vitals',
-    ]);
+    const addExtendsTask = addExtendsToLintConfig(
+      host,
+      options.appProjectRoot,
+      [
+        'plugin:@nx/react-typescript',
+        { name: 'next', needCompatFixup: true },
+        { name: 'next/core-web-vitals', needCompatFixup: true },
+      ]
+    );
+    tasks.push(addExtendsTask);
 
     updateOverrideInLintConfig(
       host,

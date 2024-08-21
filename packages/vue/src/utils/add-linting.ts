@@ -1,7 +1,11 @@
 import { Tree } from 'nx/src/generators/tree';
 import { Linter, LinterType, lintProjectGenerator } from '@nx/eslint';
 import { joinPathFragments } from 'nx/src/utils/path';
-import { addDependenciesToPackageJson, runTasksInSerial } from '@nx/devkit';
+import {
+  addDependenciesToPackageJson,
+  GeneratorCallback,
+  runTasksInSerial,
+} from '@nx/devkit';
 import { extraEslintDependencies } from './lint';
 import {
   addExtendsToLintConfig,
@@ -27,6 +31,7 @@ export async function addLinting(
   projectType: 'lib' | 'app'
 ) {
   if (options.linter === Linter.EsLint) {
+    const tasks: GeneratorCallback[] = [];
     const lintTask = await lintProjectGenerator(host, {
       linter: options.linter,
       project: options.name,
@@ -39,13 +44,15 @@ export async function addLinting(
       rootProject: options.rootProject,
       addPlugin: options.addPlugin,
     });
+    tasks.push(lintTask);
 
-    addExtendsToLintConfig(host, options.projectRoot, [
+    const addExtendsTask = addExtendsToLintConfig(host, options.projectRoot, [
       'plugin:vue/vue3-essential',
       'eslint:recommended',
       '@vue/eslint-config-typescript',
       '@vue/eslint-config-prettier/skip-formatting',
     ]);
+    tasks.push(addExtendsTask);
     editEslintConfigFiles(host, options.projectRoot);
 
     let installTask = () => {};
@@ -56,8 +63,9 @@ export async function addLinting(
         extraEslintDependencies.devDependencies
       );
     }
+    tasks.push(installTask);
 
-    return runTasksInSerial(lintTask, installTask);
+    return runTasksInSerial(...tasks);
   } else {
     return () => {};
   }

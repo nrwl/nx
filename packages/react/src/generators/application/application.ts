@@ -62,7 +62,12 @@ async function addLinting(host: Tree, options: NormalizedSchema) {
     tasks.push(lintTask);
 
     if (isEslintConfigSupported(host)) {
-      addExtendsToLintConfig(host, options.appProjectRoot, 'plugin:@nx/react');
+      const addExtendsTask = addExtendsToLintConfig(
+        host,
+        options.appProjectRoot,
+        'plugin:@nx/react'
+      );
+      tasks.push(addExtendsTask);
     }
 
     if (!options.skipPackageJson) {

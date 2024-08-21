@@ -1,7 +1,11 @@
 import { Tree } from 'nx/src/generators/tree';
 import { Linter, lintProjectGenerator } from '@nx/eslint';
 import { joinPathFragments } from 'nx/src/utils/path';
-import { addDependenciesToPackageJson, runTasksInSerial } from '@nx/devkit';
+import {
+  addDependenciesToPackageJson,
+  GeneratorCallback,
+  runTasksInSerial,
+} from '@nx/devkit';
 
 import { NormalizedSchema } from '../schema';
 import { extraEslintDependencies } from '../../../utils/lint';
@@ -12,6 +16,7 @@ import {
 
 export async function addLinting(host: Tree, options: NormalizedSchema) {
   if (options.linter === Linter.EsLint) {
+    const tasks: GeneratorCallback[] = [];
     const lintTask = await lintProjectGenerator(host, {
       linter: options.linter,
       project: options.name,
@@ -24,9 +29,15 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
       setParserOptionsProject: options.setParserOptionsProject,
       addPlugin: options.addPlugin,
     });
+    tasks.push(lintTask);
 
     if (isEslintConfigSupported(host)) {
-      addExtendsToLintConfig(host, options.projectRoot, 'plugin:@nx/react');
+      const addExtendsTask = addExtendsToLintConfig(
+        host,
+        options.projectRoot,
+        'plugin:@nx/react'
+      );
+      tasks.push(addExtendsTask);
     }
 
     let installTask = () => {};
@@ -36,9 +47,10 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
         extraEslintDependencies.dependencies,
         extraEslintDependencies.devDependencies
       );
+      tasks.push(installTask);
     }
 
-    return runTasksInSerial(lintTask, installTask);
+    return runTasksInSerial(...tasks);
   } else {
     return () => {};
   }

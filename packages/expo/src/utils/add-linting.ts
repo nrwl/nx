@@ -40,7 +40,12 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
   tasks.push(lintTask);
 
   if (isEslintConfigSupported(host)) {
-    addExtendsToLintConfig(host, options.projectRoot, 'plugin:@nx/react');
+    const addExtendsTask = addExtendsToLintConfig(
+      host,
+      options.projectRoot,
+      'plugin:@nx/react'
+    );
+    tasks.push(addExtendsTask);
     addIgnoresToLintConfig(host, options.projectRoot, [
       '.expo',
       'web-build',

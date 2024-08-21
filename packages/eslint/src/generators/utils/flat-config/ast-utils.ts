@@ -601,7 +601,7 @@ export function addPluginsToExportsBlock(
 /**
  * Adds compat if missing to flat config
  */
-export function addCompatToFlatConfig(content: string) {
+export function addFlatCompatToFlatConfig(content: string) {
   let result = content;
   result = addImportToFlatConfig(result, 'js', '@eslint/js');
   if (result.includes('const compat = new FlatCompat')) {
@@ -680,6 +680,27 @@ export function generatePluginExtendsElement(
       ),
       undefined,
       plugins.map((plugin) => ts.factory.createStringLiteral(plugin))
+    )
+  );
+}
+
+export function generatePluginExtendsElementWithCompatFixup(
+  plugin: string
+): ts.SpreadElement {
+  return ts.factory.createSpreadElement(
+    ts.factory.createCallExpression(
+      ts.factory.createIdentifier('fixupConfigRules'),
+      undefined,
+      [
+        ts.factory.createCallExpression(
+          ts.factory.createPropertyAccessExpression(
+            ts.factory.createIdentifier('compat'),
+            ts.factory.createIdentifier('extends')
+          ),
+          undefined,
+          [ts.factory.createStringLiteral(plugin)]
+        ),
+      ]
     )
   );
 }

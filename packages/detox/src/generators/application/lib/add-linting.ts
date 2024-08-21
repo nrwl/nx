@@ -1,6 +1,7 @@
 import { Linter, lintProjectGenerator } from '@nx/eslint';
 import {
   addDependenciesToPackageJson,
+  GeneratorCallback,
   joinPathFragments,
   runTasksInSerial,
   Tree,
@@ -17,6 +18,7 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
     return () => {};
   }
 
+  const tasks: GeneratorCallback[] = [];
   const lintTask = await lintProjectGenerator(host, {
     linter: options.linter,
     project: options.e2eProjectName,
@@ -26,9 +28,15 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
     skipFormat: true,
     addPlugin: options.addPlugin,
   });
+  tasks.push(lintTask);
 
   if (isEslintConfigSupported(host)) {
-    addExtendsToLintConfig(host, options.e2eProjectRoot, 'plugin:@nx/react');
+    const addExtendsTask = addExtendsToLintConfig(
+      host,
+      options.e2eProjectRoot,
+      'plugin:@nx/react'
+    );
+    tasks.push(addExtendsTask);
   }
 
   const installTask = addDependenciesToPackageJson(
@@ -36,6 +44,7 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
     extraEslintDependencies.dependencies,
     extraEslintDependencies.devDependencies
   );
+  tasks.push(installTask);
 
-  return runTasksInSerial(lintTask, installTask);
+  return runTasksInSerial(...tasks);
 }

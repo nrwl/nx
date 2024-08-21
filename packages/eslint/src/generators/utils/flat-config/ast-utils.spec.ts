@@ -1,10 +1,11 @@
 import ts = require('typescript');
 import {
   addBlockToFlatConfigExport,
-  addCompatToFlatConfig,
+  addFlatCompatToFlatConfig,
   addImportToFlatConfig,
   generateAst,
   generateFlatOverride,
+  generatePluginExtendsElementWithCompatFixup,
   removeCompatExtends,
   removeOverridesFromLintConfig,
   removePlugin,
@@ -12,17 +13,22 @@ import {
 } from './ast-utils';
 
 describe('ast-utils', () => {
+  const printer = ts.createPrinter();
+
+  function printTsNode(node: ts.Node) {
+    return printer.printNode(
+      ts.EmitHint.Unspecified,
+      node,
+      ts.createSourceFile('test.ts', '', ts.ScriptTarget.Latest)
+    );
+  }
+
   describe('generateFlatOverride', () => {
     it('should create appropriate ASTs for a flat config entries based on the provided legacy eslintrc JSON override data', () => {
       // It's easier to review the stringified result of the AST than the AST itself
-      const printer = ts.createPrinter();
       const getOutput = (input: any) => {
         const ast = generateFlatOverride(input);
-        return printer.printNode(
-          ts.EmitHint.Unspecified,
-          ast,
-          ts.createSourceFile('test.ts', '', ts.ScriptTarget.Latest)
-        );
+        return printTsNode(ast);
       };
 
       expect(getOutput({})).toMatchInlineSnapshot(`"{}"`);
@@ -353,7 +359,7 @@ describe('ast-utils', () => {
       },
       { ignores: ["my-lib/.cache/**/*"] },
     ];`;
-      const result = addCompatToFlatConfig(content);
+      const result = addFlatCompatToFlatConfig(content);
       expect(result).toMatchInlineSnapshot(`
         "const { FlatCompat } = require("@eslint/eslintrc");
         const js = require("@eslint/js");
@@ -391,7 +397,7 @@ describe('ast-utils', () => {
       },
       { ignores: ["my-lib/.cache/**/*"] },
     ];`;
-      const result = addCompatToFlatConfig(content);
+      const result = addFlatCompatToFlatConfig(content);
       expect(result).toMatchInlineSnapshot(`
         "const { FlatCompat } = require("@eslint/eslintrc");
         const baseConfig = require("../../eslint.config.js");
@@ -436,7 +442,7 @@ describe('ast-utils', () => {
       },
       { ignores: ["my-lib/.cache/**/*"] },
     ];`;
-      const result = addCompatToFlatConfig(content);
+      const result = addFlatCompatToFlatConfig(content);
       expect(result).toEqual(content);
     });
   });
@@ -961,6 +967,16 @@ describe('ast-utils', () => {
                 }
               ];"
       `);
+    });
+  });
+
+  describe('generatePluginExtendsElementWithCompatFixup', () => {
+    it('should return spread element with fixupConfigRules call wrapping the extended plugin', () => {
+      const result = generatePluginExtendsElementWithCompatFixup('my-plugin');
+
+      expect(printTsNode(result)).toMatchInlineSnapshot(
+        `"...fixupConfigRules(compat.extends("my-plugin"))"`
+      );
     });
   });
 });

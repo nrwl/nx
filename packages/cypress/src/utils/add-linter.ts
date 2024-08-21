@@ -95,11 +95,12 @@ export async function addLinterToCyProject(
       overrides.push(typeScriptOverride);
       overrides.push(javaScriptOverride);
     }
-    addExtendsToLintConfig(
+    const addExtendsTask = addExtendsToLintConfig(
       tree,
       projectConfig.root,
       'plugin:cypress/recommended'
     );
+    tasks.push(addExtendsTask);
     const cyVersion = installedCypressVersion();
     /**
      * We need this override because we enabled allowJS in the tsconfig to allow for JS based Cypress tests.

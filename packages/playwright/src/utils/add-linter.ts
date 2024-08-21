@@ -76,11 +76,12 @@ export async function addLinterToPlaywrightProject(
     isEslintConfigSupported(tree, projectConfig.root) ||
     isEslintConfigSupported(tree)
   ) {
-    addExtendsToLintConfig(
+    const addExtendsTask = addExtendsToLintConfig(
       tree,
       projectConfig.root,
       'plugin:playwright/recommended'
     );
+    tasks.push(addExtendsTask);
     if (options.rootProject) {
       addPluginsToLintConfig(tree, projectConfig.root, '@nx');
       addOverrideToLintConfig(tree, projectConfig.root, javaScriptOverride);

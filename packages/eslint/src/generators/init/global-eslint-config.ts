@@ -1,7 +1,7 @@
 import { Linter } from 'eslint';
 import {
   addBlockToFlatConfigExport,
-  addCompatToFlatConfig,
+  addFlatCompatToFlatConfig,
   addImportToFlatConfig,
   addPluginsToExportsBlock,
   createNodeList,
@@ -131,7 +131,7 @@ export const getGlobalFlatEslintConfiguration = (
     })
   );
 
-  content = addCompatToFlatConfig(content);
+  content = addFlatCompatToFlatConfig(content);
 
   return content;
 };
