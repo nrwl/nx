@@ -125,11 +125,12 @@ npx nx local-registry
 Note, after terminating the terminal window where the `nx local-registry` command is running (e.g. using `CTRL+c` or `CMD+c`) the registry will be stopped, previously installed packages will be cleaned up and the npm/yarn/pnpm registries will be restored to their original state, pointing to the real NPM servers again.
 {% /callout %}
 
-Next, you can **publish** your packages to your new local registry. All of the generated packages have a `nx-release-publish` target that is configured to publish whatever is in your `build` output folder, so you can simply run:
+Next, you can **publish** your packages to your new local registry. All of the generated packages can use `nx release` to publish whatever is in your `build` output folder, so you can simply run:
 
 ```shell
 npx nx run-many --targets build
-npx nx run-many --targets nx-release-publish
+npx nx release version 1.0.0
+npx nx release publish --tag latest
 ```
 
 Once the packages are published, you should be able to test the behavior of your "create package" as follows:
