@@ -321,17 +321,16 @@ export function addExtendsToLintConfig(
     | Array<string | { name: string; needCompatFixup: boolean }>
 ): GeneratorCallback {
   if (useFlatConfig(tree)) {
-    // assume eslint version is 9 if not found, as it's what we'd be generating by default
-    const eslintVersion =
-      getInstalledEslintVersion(tree) ?? eslint9__eslintVersion;
-    const isEslintV9 = gte(eslintVersion, '9.0.0');
     const pluginExtends: ts.SpreadElement[] = [];
     const fileName = joinPathFragments(
       root,
       getRootESLintFlatConfigFilename(tree)
     );
     let shouldImportEslintCompat = false;
-    if (isEslintV9) {
+    // assume eslint version is 9 if not found, as it's what we'd be generating by default
+    const eslintVersion =
+      getInstalledEslintVersion(tree) ?? eslint9__eslintVersion;
+    if (gte(eslintVersion, '9.0.0')) {
       // eslint v9 requires the incompatible plugins to be wrapped with a helper from @eslint/compat
       const plugins = (Array.isArray(plugin) ? plugin : [plugin]).map((p) =>
         typeof p === 'string' ? { name: p, needCompatFixup: false } : p
@@ -386,7 +385,7 @@ export function addExtendsToLintConfig(
     }
     tree.write(fileName, content);
 
-    if (isEslintV9) {
+    if (shouldImportEslintCompat) {
       return addDependenciesToPackageJson(
         tree,
         {},
