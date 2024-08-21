@@ -282,15 +282,13 @@ describe('EsBuild Plugin', () => {
       `
     );
 
-    runCLI(
-      `build ${declarationPkg} --declaration=true --declarationRootDir='libs/${declarationPkg}/src'`
-    );
+    runCLI(`build ${declarationPkg} --declaration=true`);
 
     checkFilesExist(
       `dist/libs/${declarationPkg}/index.cjs`,
-      `dist/libs/${declarationPkg}/index.d.ts`,
-      `dist/libs/${declarationPkg}/lib/${declarationPkg}.d.ts`,
-      `dist/libs/${declarationPkg}/lib/testDir/sub.d.ts`
+      `dist/libs/${declarationPkg}/src/index.d.ts`,
+      `dist/libs/${declarationPkg}/src/lib/${declarationPkg}.d.ts`,
+      `dist/libs/${declarationPkg}/src/lib/testDir/sub.d.ts`
     );
 
     expect(runCommand(`node dist/libs/${declarationPkg}`)).toMatch(
