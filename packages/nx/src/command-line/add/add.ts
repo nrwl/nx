@@ -17,12 +17,7 @@ import type { AddOptions } from './command-object';
 import { normalizeVersionForNxJson } from '../init/implementation/dot-nx/add-nx-scripts';
 
 export function addHandler(options: AddOptions): Promise<number> {
-  if (options.verbose) {
-    process.env.NX_VERBOSE_LOGGING = 'true';
-  }
-  const isVerbose = process.env.NX_VERBOSE_LOGGING === 'true';
-
-  return handleErrors(isVerbose, async () => {
+  return handleErrors(options.verbose, async () => {
     output.addNewline();
 
     const [pkgName, version] = parsePackageSpecifier(options.packageSpecifier);

@@ -17,7 +17,7 @@ export function assertSupportedPlatform() {
         `The Nx CLI could not find or load the native binary for your supported platform (${process.platform}-${process.arch}).`,
         'This likely means that optional dependencies were not installed correctly, or your system is missing some system dependencies.',
       ];
-      if (process.env.NX_VERBOSE_LOGGING == 'true') {
+      if (process.env.NX_VERBOSE_LOGGING === 'true') {
         bodyLines.push('', 'Additional error information:', e.message);
       }
     } else {

@@ -149,6 +149,12 @@ Type: `string`
 
 Use the provided versions for packages instead of the ones calculated by the migrator (e.g., --to="@nx/react@16.0.0,@nx/js@16.0.0")
 
+### verbose
+
+Type: `boolean`
+
+Prints additional information about the commands (e.g., stack traces)
+
 ### version
 
 Type: `boolean`
