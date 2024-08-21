@@ -479,7 +479,7 @@ describe('TargetProjectLocator', () => {
       expect(proj5).toEqual('proj5');
     });
 
-    it('should be able to resolve packages alises', () => {
+    it('should be able to resolve packages aliases', () => {
       const lodash = targetProjectLocator.findProjectFromImport(
         'lodash',
         'libs/proj/index.ts'
@@ -897,6 +897,85 @@ describe('TargetProjectLocator', () => {
         'libs/proj/index.ts'
       );
       expect(result).toEqual('npm:@json2csv/plainjs');
+    });
+  });
+
+  describe('findNpmProjectFromImport', () => {
+    it('should resolve external node when the version does not match its own package.json (i.e. git remote) ', () => {
+      const projects = {
+        proj: {
+          name: 'proj',
+          type: 'lib' as const,
+          data: {
+            root: 'proj',
+          },
+        },
+      };
+      const npmProjects = {
+        'npm:foo': {
+          name: 'npm:foo' as const,
+          type: 'npm' as const,
+          data: {
+            version:
+              'git+ssh://git@github.com/example/foo.git#6f4b450fc642abba540535f0755c990b42a16026',
+            packageName: 'foo',
+          },
+        },
+      };
+
+      const targetProjectLocator = new TargetProjectLocator(
+        projects,
+        npmProjects,
+        new Map()
+      );
+      targetProjectLocator['readPackageJson'] = () => ({
+        name: 'foo',
+        version: '0.0.1',
+      });
+      const result = targetProjectLocator.findNpmProjectFromImport(
+        'lodash',
+        'proj/index.ts'
+      );
+
+      expect(result).toEqual('npm:foo');
+    });
+
+    it('should resolve a specific version of external node', () => {
+      const projects = {
+        proj: {
+          name: 'proj',
+          type: 'lib' as const,
+          data: {
+            root: 'proj',
+          },
+        },
+      };
+      const npmProjects = {
+        'npm:foo@0.0.1': {
+          name: 'npm:foo@0.0.1' as const,
+          type: 'npm' as const,
+          data: {
+            version: '0.0.1',
+            packageName: 'foo',
+          },
+        },
+      };
+
+      const targetProjectLocator = new TargetProjectLocator(
+        projects,
+        npmProjects,
+        new Map()
+      );
+      targetProjectLocator['readPackageJson'] = () => ({
+        name: 'foo',
+        version: '0.0.1',
+      });
+      const result = targetProjectLocator.findNpmProjectFromImport(
+        'lodash',
+        'proj/index.ts'
+      );
+
+      expect(result).toEqual('npm:foo@0.0.1');
     });
   });
 });
