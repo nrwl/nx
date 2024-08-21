@@ -26,6 +26,23 @@ export declare class ImportResult {
   staticImportExpressions: Array<string>
 }
 
+export declare class NxCache {
+  cacheDirectory: string
+  constructor(workspaceRoot: string, cachePath: string, dbConnection: ExternalObject<Connection>)
+  get(hash: string): CachedResult | null
+  put(hash: string, terminalOutput: string, outputs: Array<string>, code: number): void
+  applyRemoteCacheResults(hash: string, result: CachedResult): void
+  getTaskOutputsPath(hash: string): string
+  copyFilesFromCache(cachedResult: CachedResult, outputs: Array<string>): void
+  removeOldCacheRecords(): void
+}
+
+export declare class NxTaskHistory {
+  constructor(db: ExternalObject<Connection>)
+  recordTaskRuns(taskRuns: Array<TaskRun>): void
+  getFlakyTasks(hashes: Array<string>): Array<string>
+}
+
 export declare class RustPseudoTerminal {
   constructor()
   runCommand(command: string, commandDir?: string | undefined | null, jsEnv?: Record<string, string> | undefined | null, execArgv?: Array<string> | undefined | null, quiet?: boolean | undefined | null, tty?: boolean | undefined | null): ChildProcess
@@ -34,6 +51,11 @@ export declare class RustPseudoTerminal {
    * this makes it possible to be backwards compatible with the old implementation
    */
   fork(id: string, forkScript: string, pseudoIpcPath: string, commandDir: string | undefined | null, jsEnv: Record<string, string> | undefined | null, execArgv: Array<string> | undefined | null, quiet: boolean): ChildProcess
+}
+
+export declare class TaskDetails {
+  constructor(db: ExternalObject<Connection>)
+  recordTaskDetails(tasks: Array<HashedTask>): void
 }
 
 export declare class TaskHasher {
@@ -67,6 +89,14 @@ export declare class WorkspaceContext {
   getFilesInDirectory(directory: string): Array<string>
 }
 
+export interface CachedResult {
+  code: number
+  terminalOutput: string
+  outputsPath: string
+}
+
+export declare export function connectToNxDb(cacheDir: string, nxVersion: string): ExternalObject<Connection>
+
 export declare export function copy(src: string, dest: string): void
 
 export interface DepsOutputsInput {
@@ -84,10 +114,6 @@ export declare const enum EventType {
   create = 'create'
 }
 
-/**
- * Expands the given entries into a list of existing directories and files.
- * This is used for copying outputs to and from the cache
- */
 export declare export function expandOutputs(directory: string, entries: Array<string>): Array<string>
 
 export interface ExternalDependenciesInput {
@@ -129,6 +155,13 @@ export declare export function hashArray(input: Array<string>): string
 export interface HashDetails {
   value: string
   details: Record<string, string>
+}
+
+export interface HashedTask {
+  hash: string
+  project: string
+  target: string
+  configuration?: string
 }
 
 export interface HasherOptions {
@@ -201,6 +234,14 @@ export interface TaskGraph {
   roots: Array<string>
   tasks: Record<string, Task>
   dependencies: Record<string, Array<string>>
+}
+
+export interface TaskRun {
+  hash: string
+  status: string
+  code: number
+  start: number
+  end: number
 }
 
 export interface TaskTarget {
