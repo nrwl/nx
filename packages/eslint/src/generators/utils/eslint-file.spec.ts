@@ -204,6 +204,7 @@ module.exports = [
         .toMatchInlineSnapshot(`
         "const { FlatCompat } = require("@eslint/eslintrc");
         const js = require("@eslint/js");
+        const { fixupConfigRules } = require("@eslint/compat");
         const baseConfig = require("../../eslint.config.js");
 
         const compat = new FlatCompat({
@@ -265,6 +266,7 @@ module.exports = [
         .toMatchInlineSnapshot(`
         "const { FlatCompat } = require("@eslint/eslintrc");
         const js = require("@eslint/js");
+        const { fixupConfigRules } = require("@eslint/compat");
         const baseConfig = require("../../eslint.config.js");
 
         const compat = new FlatCompat({
