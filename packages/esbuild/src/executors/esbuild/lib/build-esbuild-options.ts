@@ -6,11 +6,13 @@ import {
   joinPathFragments,
   normalizePath,
   ProjectGraphProjectNode,
+  workspaceRoot,
 } from '@nx/devkit';
 
 import { getClientEnvironment } from '../../../utils/environment-variables';
 import { NormalizedEsBuildExecutorOptions } from '../schema';
 import { getEntryPoints } from '../../../utils/get-entry-points';
+import { join, relative } from 'path';
 
 const ESM_FILE_EXTENSION = '.js';
 const CJS_FILE_EXTENSION = '.cjs';
@@ -38,7 +40,7 @@ export function buildEsbuildOptions(
     platform: options.platform,
     target: options.target,
     metafile: options.metafile,
-    tsconfig: options.tsConfig,
+    tsconfig: relative(process.cwd(), join(context.root, options.tsConfig)),
     sourcemap:
       (options.sourcemap ?? options.userDefinedBuildOptions?.sourcemap) ||
       false,
