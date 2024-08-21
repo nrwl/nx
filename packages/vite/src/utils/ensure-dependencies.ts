@@ -14,7 +14,7 @@ import {
 } from './versions';
 
 export type EnsureDependenciesOptions = {
-  uiFramework: 'angular' | 'react' | 'none';
+  uiFramework: 'react' | 'none';
   compiler?: 'babel' | 'swc';
   includeLib?: boolean;
   testEnvironment?: 'node' | 'jsdom' | 'happy-dom' | 'edge-runtime' | string;
