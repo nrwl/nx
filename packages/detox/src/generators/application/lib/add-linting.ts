@@ -34,7 +34,7 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
     const addExtendsTask = addExtendsToLintConfig(
       host,
       options.e2eProjectRoot,
-      'plugin:@nx/react'
+      { name: 'plugin:@nx/react', needCompatFixup: true }
     );
     tasks.push(addExtendsTask);
   }

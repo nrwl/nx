@@ -9,8 +9,7 @@ import {
 
 let proj: string;
 
-// TODO(eslint): failing because of eslint-plugin-import with eslint v9 - https://github.com/import-js/eslint-plugin-import/issues/2948
-xdescribe('@nx/workspace:convert-to-monorepo', () => {
+describe('@nx/workspace:convert-to-monorepo', () => {
   beforeEach(() => {
     proj = newProject({ packages: ['@nx/react', '@nx/js'] });
   });

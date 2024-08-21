@@ -32,11 +32,10 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
     tasks.push(lintTask);
 
     if (isEslintConfigSupported(host)) {
-      const addExtendsTask = addExtendsToLintConfig(
-        host,
-        options.projectRoot,
-        'plugin:@nx/react'
-      );
+      const addExtendsTask = addExtendsToLintConfig(host, options.projectRoot, {
+        name: 'plugin:@nx/react',
+        needCompatFixup: true,
+      });
       tasks.push(addExtendsTask);
     }
 
