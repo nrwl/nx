@@ -123,7 +123,7 @@ export class DbCache {
         return nxCloudClient.remoteCache;
       } else {
         // old nx cloud instance
-        return RemoteCacheV2.fromCacheV1(this.options.nxCloudRemoteCache);
+        return await RemoteCacheV2.fromCacheV1(this.options.nxCloudRemoteCache);
       }
     } else {
       return null;
