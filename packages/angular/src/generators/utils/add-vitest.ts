@@ -19,8 +19,6 @@ export async function addVitest(
   options: AddVitestOptions
 ): Promise<void> {
   if (!options.skipPackageJson) {
-    process.env.npm_config_legacy_peer_deps ??= 'true';
-
     addDependenciesToPackageJson(
       tree,
       {},
