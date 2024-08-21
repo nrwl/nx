@@ -1,6 +1,6 @@
 export interface VitestGeneratorSchema {
   project: string;
-  uiFramework: 'angular' | 'react' | 'none';
+  uiFramework: 'react' | 'none';
   coverageProvider: 'v8' | 'istanbul' | 'custom';
   inSourceTests?: boolean;
   skipViteConfig?: boolean;

@@ -1,5 +1,5 @@
 export interface ViteConfigurationGeneratorSchema {
-  uiFramework: 'angular' | 'react' | 'none';
+  uiFramework: 'react' | 'none';
   compiler?: 'babel' | 'swc';
   project: string;
   newProject?: boolean;
