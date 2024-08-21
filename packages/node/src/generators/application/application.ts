@@ -79,6 +79,7 @@ function getWebpackBuildConfig(
         options.appProjectRoot,
         'webpack.config.js'
       ),
+      generatePackageJson: true,
     },
     configurations: {
       development: {},

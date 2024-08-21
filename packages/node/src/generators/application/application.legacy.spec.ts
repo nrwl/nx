@@ -42,6 +42,7 @@ describe('node app generator (legacy)', () => {
             "my-node-app/src/assets",
           ],
           "compiler": "tsc",
+          "generatePackageJson": true,
           "main": "my-node-app/src/main.ts",
           "outputPath": "dist/my-node-app",
           "target": "node",
