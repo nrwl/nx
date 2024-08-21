@@ -14,7 +14,7 @@ Nx **restores terminal output, along with the files and artifacts** created from
 
 ## Configure Remote Caching
 
-To use **Nx Replay**, you need to connect your workspace to Nx Cloud.
+To use **Nx Replay**, you need to connect your workspace to Nx Cloud (if you haven't already).
 
 ```shell
 npx nx connect
