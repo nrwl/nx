@@ -73,7 +73,8 @@ impl fmt::Display for HashInstruction {
                 HashInstruction::ProjectFileSet(project_name, file_set) => {
                     format!("{project_name}:{}", file_set.join(","))
                 }
-                HashInstruction::WorkspaceFileSet(file_set) => format!("workspace:{:?}", file_set),
+                HashInstruction::WorkspaceFileSet(file_set) =>
+                    format!("workspace:[{}]", file_set.join(",")),
                 HashInstruction::Runtime(runtime) => format!("runtime:{}", runtime),
                 HashInstruction::Environment(env) => format!("env:{}", env),
                 HashInstruction::TaskOutput(task_output, dep_outputs) => {

@@ -47,13 +47,15 @@ pub fn hash_workspace_files(
     let glob = build_glob_set(&globs)?;
 
     let mut hasher = xxhash_rust::xxh3::Xxh3::new();
+    let mut hashes: Vec<String> = Vec::new();
     for file in all_workspace_files
         .iter()
         .filter(|file| glob.is_match(&file.file))
     {
         trace!("{:?} was found with glob {:?}", file.file, globs);
-        hasher.update(file.hash.as_bytes());
+        hashes.push(file.hash.clone())
     }
+    hasher.update(hashes.join(",").as_bytes());
     let hashed_value = hasher.digest().to_string();
 
     cache.insert(cache_key.to_string(), hashed_value.clone());

@@ -12,7 +12,6 @@ use napi::bindgen_prelude::External;
 use napi::{Env, JsExternal};
 use rayon::prelude::*;
 use std::collections::HashMap;
-use std::iter;
 use tracing::trace;
 
 use crate::native::tasks::inputs::{
@@ -327,7 +326,11 @@ impl HashPlanner {
             });
 
         let project_file_set_inputs = project_file_set_inputs(project_name, project_file_sets);
-        let workspace_file_set_inputs = workspace_file_set_inputs(workspace_file_sets);
+        // let workspace_file_set_inputs = workspace_file_set_inputs(workspace_file_sets);
+        let workspace_file_set_inputs = match workspace_file_sets.is_empty() {
+            true => vec![],
+            false => vec![workspace_file_set_inputs(workspace_file_sets)],
+        };
         let runtime_and_env_inputs = self_inputs.iter().filter_map(|i| match i {
             Input::Runtime(runtime) => Some(HashInstruction::Runtime(runtime.to_string())),
             Input::Environment(env) => Some(HashInstruction::Environment(env.to_string())),
@@ -336,7 +339,7 @@ impl HashPlanner {
 
         project_file_set_inputs
             .into_iter()
-            .chain(iter::once(workspace_file_set_inputs))
+            .chain(workspace_file_set_inputs)
             .chain(runtime_and_env_inputs)
             .collect()
     }

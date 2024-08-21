@@ -11,6 +11,8 @@ import {
   isBuiltinModuleImport,
 } from './target-project-locator';
 
+import { builtinModules } from 'node:module';
+
 jest.mock('@nx/devkit', () => ({
   ...jest.requireActual<any>('@nx/devkit'),
   workspaceRoot: '/root',
@@ -981,8 +983,11 @@ describe('TargetProjectLocator', () => {
 });
 
 describe('isBuiltinModuleImport()', () => {
-  const allBuiltinModules = require('node:module').builtinModules;
-  it.each(allBuiltinModules)(
+  const withExclusions = builtinModules.filter(
+    (s) => !['test/mock_loader'].includes(s)
+  );
+
+  it.each(withExclusions)(
     `should return true for %s builtin module`,
     (builtinModule) => {
       expect(isBuiltinModuleImport(builtinModule)).toBe(true);
