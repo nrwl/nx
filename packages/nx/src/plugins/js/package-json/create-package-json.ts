@@ -39,6 +39,7 @@ export function createPackageJson(
     isProduction?: boolean;
     helperDependencies?: string[];
     skipPackageManager?: boolean;
+    skipOverrides?: boolean;
   } = {},
   fileMap: ProjectFileMap = null
 ): PackageJson {
@@ -197,6 +198,34 @@ export function createPackageJson(
     }
     packageJson.packageManager = rootPackageJson.packageManager;
   }
+
+  // region Overrides/Resolutions
+
+  // npm
+  if (rootPackageJson.overrides && !options.skipOverrides) {
+    packageJson.overrides = {
+      ...rootPackageJson.overrides,
+      ...packageJson.overrides,
+    };
+  }
+
+  // pnpm
+  if (rootPackageJson.pnpm?.overrides && !options.skipOverrides) {
+    packageJson.pnpm ??= {};
+    packageJson.pnpm.overrides = {
+      ...rootPackageJson.pnpm.overrides,
+      ...packageJson.pnpm.overrides,
+    };
+  }
+
+  // yarn
+  if (rootPackageJson.resolutions && !options.skipOverrides) {
+    packageJson.resolutions = {
+      ...rootPackageJson.resolutions,
+      ...packageJson.resolutions,
+    };
+  }
+  // endregion Overrides/Resolutions
 
   return packageJson;
 }

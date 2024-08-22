@@ -168,6 +168,10 @@ export interface NxAppWebpackPluginOptions {
    */
   scripts?: Array<ExtraEntryPointClass | string>;
   /**
+   * Do not add a `overrides` and `resolutions` entries to the generated package.json file. Only works in conjunction with `generatePackageJson` option.
+   */
+  skipOverrides?: boolean;
+  /**
    * Do not add a `packageManager` entry to the generated package.json file. Only works in conjunction with `generatePackageJson` option.
    */
   skipPackageManager?: boolean;
