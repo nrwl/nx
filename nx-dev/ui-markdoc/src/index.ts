@@ -19,8 +19,6 @@ import { CallToAction } from './lib/tags/call-to-action.component';
 import { callToAction } from './lib/tags/call-to-action.schema';
 import { Card, Cards, LinkCard } from './lib/tags/cards.component';
 import { card, cards, linkCard } from './lib/tags/cards.schema';
-import { Disclosure } from './lib/tags/disclosure.component';
-import { disclosure } from './lib/tags/disclosure.schema';
 import { GithubRepository } from './lib/tags/github-repository.component';
 import { githubRepository } from './lib/tags/github-repository.schema';
 import { StackblitzButton } from './lib/tags/stackblitz-button.component';
@@ -78,7 +76,6 @@ export const getMarkdocCustomConfig = (
       'call-to-action': callToAction,
       card,
       cards,
-      disclosure,
       'link-card': linkCard,
       'github-repository': githubRepository,
       'stackblitz-button': stackblitzButton,
@@ -107,7 +104,6 @@ export const getMarkdocCustomConfig = (
     CallToAction,
     Card,
     Cards,
-    Disclosure,
     LinkCard,
     CustomLink,
     FenceWrapper,
