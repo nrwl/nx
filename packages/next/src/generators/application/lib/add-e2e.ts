@@ -1,6 +1,7 @@
 import {
   addProjectConfiguration,
   ensurePackage,
+  getE2EWebServerInfo,
   getPackageManagerCommand,
   joinPathFragments,
   readNxJson,
@@ -20,6 +21,13 @@ export async function addE2e(host: Tree, options: NormalizedSchema) {
     typeof p === 'string'
       ? p === '@nx/next/plugin'
       : p.plugin === '@nx/next/plugin'
+  );
+
+  const e2eWebServerInfo = await getNextE2EWebServerInfo(
+    host,
+    options.projectName,
+    joinPathFragments(options.appProjectRoot, 'next.config.js'),
+    options.addPlugin
   );
 
   if (options.e2eTestRunner === 'cypress') {
@@ -50,17 +58,16 @@ export async function addE2e(host: Tree, options: NormalizedSchema) {
       project: options.e2eProjectName,
       directory: 'src',
       skipFormat: true,
-      devServerTarget: `${options.projectName}:${options.e2eWebServerTarget}`,
-      baseUrl: options.e2eWebServerAddress,
+      devServerTarget: e2eWebServerInfo.e2eDevServerTarget,
+      baseUrl: e2eWebServerInfo.e2eWebServerAddress,
       jsx: true,
       webServerCommands: hasPlugin
         ? {
-            default: `nx run ${options.projectName}:${options.e2eWebServerTarget}`,
+            default: e2eWebServerInfo.e2eWebServerCommand,
           }
         : undefined,
-      ciWebServerCommand: hasPlugin
-        ? `nx run ${options.projectName}:serve-static`
-        : undefined,
+      ciWebServerCommand: e2eWebServerInfo.e2eCiWebServerCommand,
+      ciBaseUrl: e2eWebServerInfo.e2eCiBaseUrl,
     });
 
     if (
@@ -116,10 +123,8 @@ export async function addE2e(host: Tree, options: NormalizedSchema) {
       js: false,
       linter: options.linter,
       setParserOptionsProject: options.setParserOptionsProject,
-      webServerAddress: `http://127.0.0.1:${options.e2ePort}`,
-      webServerCommand: `${getPackageManagerCommand().exec} nx ${
-        options.e2eWebServerTarget
-      } ${options.projectName}`,
+      webServerAddress: e2eWebServerInfo.e2eCiBaseUrl,
+      webServerCommand: e2eWebServerInfo.e2eCiWebServerCommand,
       addPlugin: options.addPlugin,
     });
 
@@ -155,4 +160,42 @@ export async function addE2e(host: Tree, options: NormalizedSchema) {
     return e2eTask;
   }
   return () => {};
+}
+
+async function getNextE2EWebServerInfo(
+  tree: Tree,
+  projectName: string,
+  configFilePath: string,
+  isPluginBeingAdded: boolean
+) {
+  const nxJson = readNxJson(tree);
+  let e2ePort = 4200;
+
+  const defaultServeTarget = isPluginBeingAdded ? 'dev' : 'serve';
+
+  if (
+    nxJson.targetDefaults?.[defaultServeTarget] &&
+    nxJson.targetDefaults?.[defaultServeTarget].options?.port
+  ) {
+    e2ePort = nxJson.targetDefaults?.[defaultServeTarget].options?.port;
+  }
+
+  return getE2EWebServerInfo(
+    tree,
+    projectName,
+    {
+      plugin: '@nx/next/plugin',
+      serveTargetName: 'devTargetName',
+      serveStaticTargetName: 'serveStaticTargetName',
+      configFilePath,
+    },
+    {
+      defaultServeTargetName: defaultServeTarget,
+      defaultServeStaticTargetName: 'serve-static',
+      defaultE2EWebServerAddress: `http://127.0.0.1:${e2ePort}`,
+      defaultE2ECiBaseUrl: 'http://localhost:4200',
+      defaultE2EPort: e2ePort,
+    },
+    isPluginBeingAdded
+  );
 }
