@@ -49,7 +49,7 @@ export async function normalizeOptions(
   return {
     ...options,
     unitTestRunner: options.unitTestRunner || 'jest',
-    e2eTestRunner: options.e2eTestRunner,
+    e2eTestRunner: options.e2eTestRunner || 'none',
     name: projectNames.projectSimpleName,
     className,
     lowerCaseName: className.toLowerCase(),
