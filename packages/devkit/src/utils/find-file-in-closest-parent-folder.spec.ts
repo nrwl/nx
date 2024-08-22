@@ -1,5 +1,5 @@
 import { createTreeWithEmptyWorkspace } from 'nx/src/devkit-testing-exports';
-import { findFileInClosestParentFolder } from '@nx/devkit/src/utils/find-file-in-closest-parent.folder';
+import { findFileInClosestParentFolder } from '@nx/devkit/src/utils/find-file-in-closest-parent-folder';
 
 describe(findFileInClosestParentFolder.name, () => {
   it.each([
