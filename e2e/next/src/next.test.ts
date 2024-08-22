@@ -82,8 +82,7 @@ describe('Next.js Applications', () => {
     }).not.toThrow();
   }, 300_000);
 
-  // TODO(eslint): failing because of eslint-plugin-import with eslint v9 - https://github.com/import-js/eslint-plugin-import/issues/2948
-  xit('should support --js flag', async () => {
+  it('should support --js flag', async () => {
     const appName = uniq('app');
 
     runCLI(
