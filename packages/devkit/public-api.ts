@@ -116,4 +116,4 @@ export { moveFilesToNewDirectory } from './src/utils/move-dir';
 /**
  * @category Utils
  */
-export { findFileInClosestParentFolder } from './src/utils/find-file-in-closest-parent.folder';
+export { findFileInClosestParentFolder } from './src/utils/find-file-in-closest-parent-folder';
