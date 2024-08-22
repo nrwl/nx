@@ -21,6 +21,7 @@ import {
 } from '../utils/ast-utils';
 import {
   checkCircularPath,
+  circularPathHasPair,
   findFilesInCircularPath,
   findFilesWithDynamicImports,
 } from '../utils/graph-utils';
@@ -56,7 +57,7 @@ type Options = [
     depConstraints: DepConstraint[];
     enforceBuildableLibDependency: boolean;
     allowCircularSelfDependency: boolean;
-    circularCheckProjectsExeceptions: string[];
+    excludeCircularDependencyPairs: Array<[string, string]>;
     checkDynamicDependenciesExceptions: string[];
     banTransitiveDependencies: boolean;
     checkNestedExternalImports: boolean;
@@ -102,9 +103,14 @@ export default ESLintUtils.RuleCreator(
             type: 'array',
             items: { type: 'string' },
           },
-          circularCheckProjectsExeceptions: {
+          excludeCircularDependencyPairs: {
             type: 'array',
-            items: { type: 'string' },
+            items: {
+              type: 'array',
+              items: { type: 'string' },
+              minItems: 2,
+              maxItems: 2,
+            },
           },
           banTransitiveDependencies: { type: 'boolean' },
           checkNestedExternalImports: { type: 'boolean' },
@@ -199,7 +205,7 @@ export default ESLintUtils.RuleCreator(
       enforceBuildableLibDependency: false,
       allowCircularSelfDependency: false,
       checkDynamicDependenciesExceptions: [],
-      circularCheckProjectsExeceptions: [],
+      excludeCircularDependencyPairs: [],
       banTransitiveDependencies: false,
       checkNestedExternalImports: false,
     },
@@ -214,7 +220,7 @@ export default ESLintUtils.RuleCreator(
         enforceBuildableLibDependency,
         allowCircularSelfDependency,
         checkDynamicDependenciesExceptions,
-        circularCheckProjectsExeceptions,
+        excludeCircularDependencyPairs,
         banTransitiveDependencies,
         checkNestedExternalImports,
       },
@@ -392,7 +398,10 @@ export default ESLintUtils.RuleCreator(
       // and if it's not a secondary entrypoint in an angular lib
       if (
         sourceProject === targetProject &&
-        !circularCheckProjectsExeceptions.includes(sourceProject.name)
+        !circularPathHasPair(
+          [sourceProject, targetProject],
+          excludeCircularDependencyPairs
+        )
       ) {
         if (
           !allowCircularSelfDependency &&
@@ -521,10 +530,7 @@ export default ESLintUtils.RuleCreator(
       );
       if (
         circularPath.length !== 0 &&
-        (circularCheckProjectsExeceptions.length === 0 ||
-          !circularPath.find((p) =>
-            circularCheckProjectsExeceptions.includes(p.name)
-          ))
+        !circularPathHasPair(circularPath, excludeCircularDependencyPairs)
       ) {
         const circularFilePath = findFilesInCircularPath(
           projectFileMap,

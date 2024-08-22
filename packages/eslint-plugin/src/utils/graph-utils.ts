@@ -141,6 +141,28 @@ export function checkCircularPath(
   return getPath(graph, targetProject.name, sourceProject.name);
 }
 
+export function circularPathHasPair(
+  circularPath: ProjectGraphProjectNode[],
+  pairs: Array<[string, string]>
+): boolean {
+  if (pairs.length === 0) return false;
+  if (circularPath.length < 2) return false;
+
+  for (let i = 0; i < circularPath.length - 1; i++) {
+    for (let j = 0; j < pairs.length; j++) {
+      const pair = pairs[j];
+      if (
+        (circularPath[i].name === pair[0] || pair[0] === '*') &&
+        (circularPath[i + 1].name === pair[1] || pair[1] === '*')
+      ) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
 export function findFilesInCircularPath(
   projectFileMap: ProjectFileMap,
   circularPath: ProjectGraphProjectNode[]
