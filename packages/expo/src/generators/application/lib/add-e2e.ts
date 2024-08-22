@@ -1,4 +1,4 @@
-import type { GeneratorCallback, Tree } from '@nx/devkit';
+import { GeneratorCallback, getE2EWebServerInfo, Tree } from '@nx/devkit';
 import {
   addProjectConfiguration,
   ensurePackage,
@@ -19,15 +19,22 @@ export async function addE2e(
   options: NormalizedSchema
 ): Promise<GeneratorCallback> {
   const hasPlugin = hasExpoPlugin(tree);
+  if (!hasPlugin) {
+    await webStaticServeGenerator(tree, {
+      buildTarget: `${options.projectName}:export`,
+      targetName: 'serve-static',
+    });
+  }
+
+  const e2eWebServerInfo = await getExpoE2EWebServerInfo(
+    tree,
+    options.projectName,
+    joinPathFragments(options.appProjectRoot, 'app.json'),
+    options.addPlugin
+  );
+
   switch (options.e2eTestRunner) {
     case 'cypress': {
-      if (!hasPlugin) {
-        await webStaticServeGenerator(tree, {
-          buildTarget: `${options.projectName}:export`,
-          targetName: 'serve-static',
-        });
-      }
-
       const { configurationGenerator } = ensurePackage<
         typeof import('@nx/cypress')
       >('@nx/cypress', nxVersion);
@@ -48,12 +55,14 @@ export async function addE2e(
         // the name and root are already normalized, instruct the generator to use them as is
         bundler: 'none',
         skipFormat: true,
-        devServerTarget: `${options.projectName}:${options.e2eWebServerTarget}`,
-        port: options.e2ePort,
-        baseUrl: options.e2eWebServerAddress,
-        ciWebServerCommand: hasPlugin
-          ? `nx run ${options.projectName}:serve-static`
-          : undefined,
+        devServerTarget: e2eWebServerInfo.e2eDevServerTarget,
+        baseUrl: e2eWebServerInfo.e2eWebServerAddress,
+        ciWebServerCommand: e2eWebServerInfo.e2eCiWebServerCommand,
+        webServerCommands: {
+          default: e2eWebServerInfo.e2eWebServerCommand,
+          production: e2eWebServerInfo.e2eCiWebServerCommand,
+        },
+        ciBaseUrl: e2eWebServerInfo.e2eCiBaseUrl,
         jsx: true,
         rootProject: options.rootProject,
       });
@@ -112,10 +121,8 @@ export async function addE2e(
         js: false,
         linter: options.linter,
         setParserOptionsProject: options.setParserOptionsProject,
-        webServerCommand: `${getPackageManagerCommand().exec} nx ${
-          options.e2eWebServerTarget
-        } ${options.name}`,
-        webServerAddress: options.e2eWebServerAddress,
+        webServerCommand: e2eWebServerInfo.e2eCiWebServerCommand,
+        webServerAddress: e2eWebServerInfo.e2eCiBaseUrl,
         rootProject: options.rootProject,
         addPlugin: options.addPlugin,
       });
@@ -171,4 +178,40 @@ export async function addE2e(
     default:
       return () => {};
   }
+}
+
+async function getExpoE2EWebServerInfo(
+  tree: Tree,
+  projectName: string,
+  configFilePath: string,
+  isPluginBeingAdded: boolean
+) {
+  const nxJson = readNxJson(tree);
+  let e2ePort = isPluginBeingAdded ? 8081 : 4200;
+
+  if (
+    nxJson.targetDefaults?.['serve'] &&
+    nxJson.targetDefaults?.['serve'].options?.port
+  ) {
+    e2ePort = nxJson.targetDefaults?.['serve'].options?.port;
+  }
+
+  return getE2EWebServerInfo(
+    tree,
+    projectName,
+    {
+      plugin: '@nx/expo/plugin',
+      serveTargetName: 'serveTargetName',
+      serveStaticTargetName: 'serveTargetName',
+      configFilePath,
+    },
+    {
+      defaultServeTargetName: 'serve',
+      defaultServeStaticTargetName: 'serve-static',
+      defaultE2EWebServerAddress: `http://localhost:${e2ePort}`,
+      defaultE2ECiBaseUrl: 'http://localhost:4200',
+      defaultE2EPort: e2ePort,
+    },
+    isPluginBeingAdded
+  );
 }
