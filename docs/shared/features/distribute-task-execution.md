@@ -10,6 +10,7 @@ title="Nx Agents Walkthrough"
 - [Dynamically allocate the number and size of agents](/ci/features/dynamic-agents) based on the size of the PR
 - [Re-run flaky tasks](/ci/features/flaky-tasks) automatically whenever they fail in CI
 - Automatically [split large e2e tasks](/ci/features/split-e2e-tasks) into smaller tasks that can be distributed more efficiently
+- testing cIPE from forks
 
 ## Making a Distributed CI Pipeline Is Hard
 
