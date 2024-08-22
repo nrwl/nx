@@ -1,5 +1,5 @@
 import { installedCypressVersion } from '@nx/cypress/src/utils/cypress-version';
-import type { Tree } from '@nx/devkit';
+import { Tree, writeJson } from '@nx/devkit';
 import * as devkit from '@nx/devkit';
 import {
   NxJsonConfiguration,
@@ -775,6 +775,22 @@ describe('app', () => {
       });
 
       it('should generate vite.config.ts if package type is module', async () => {
+        writeJson(appTree, 'my-app/package.json', {
+          name: 'my-app',
+          type: 'module',
+        });
+
+        await generateApp(appTree, 'my-app', {
+          skipFormat: false,
+          unitTestRunner: UnitTestRunner.Vitest,
+        });
+
+        expect(
+          appTree.read('my-app/vite.config.ts', 'utf-8')
+        ).toMatchSnapshot();
+      });
+
+      it('should generate vite.config.ts if workspace package type is module', async () => {
         updateJson(appTree, 'package.json', (json) => ({
           ...json,
           type: 'module',
