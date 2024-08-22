@@ -169,7 +169,7 @@ async function getNextE2EWebServerInfo(
   isPluginBeingAdded: boolean
 ) {
   const nxJson = readNxJson(tree);
-  let e2ePort = 4200;
+  let e2ePort = isPluginBeingAdded ? 3000 : 4200;
 
   const defaultServeTarget = isPluginBeingAdded ? 'dev' : 'serve';
 
@@ -193,7 +193,7 @@ async function getNextE2EWebServerInfo(
       defaultServeTargetName: defaultServeTarget,
       defaultServeStaticTargetName: 'serve-static',
       defaultE2EWebServerAddress: `http://127.0.0.1:${e2ePort}`,
-      defaultE2ECiBaseUrl: 'http://localhost:4200',
+      defaultE2ECiBaseUrl: `http://localhost:${e2ePort}`,
       defaultE2EPort: e2ePort,
     },
     isPluginBeingAdded
