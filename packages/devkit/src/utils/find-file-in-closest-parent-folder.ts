@@ -9,15 +9,11 @@ import { dirname } from 'path';
  * @param path The path relative to the workspace root to start searching from.
  * @param fileName The name of the file to search for.
  */
-export function findFileInClosestParentFolder({
-  tree,
-  path,
-  fileName,
-}: {
-  tree: Tree;
-  path: string;
-  fileName: string;
-}): string | null {
+export function findFileInClosestParentFolder(
+  tree: Tree,
+  path: string,
+  fileName: string
+): string | null {
   while (true) {
     const filePath = join(path, fileName);
     if (tree.exists(filePath)) {

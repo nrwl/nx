@@ -1,17 +1,16 @@
 # Function: findFileInClosestParentFolder
 
-▸ **findFileInClosestParentFolder**(`«destructured»`): `string` \| `null`
+▸ **findFileInClosestParentFolder**(`tree`, `path`, `fileName`): `string` \| `null`
 
 Find a file in the closest parent folder.
 
 #### Parameters
 
-| Name             | Type                                  |
-| :--------------- | :------------------------------------ |
-| `«destructured»` | `Object`                              |
-| › `fileName`     | `string`                              |
-| › `path`         | `string`                              |
-| › `tree`         | [`Tree`](../../devkit/documents/Tree) |
+| Name       | Type                                  | Description                                                      |
+| :--------- | :------------------------------------ | :--------------------------------------------------------------- |
+| `tree`     | [`Tree`](../../devkit/documents/Tree) |                                                                  |
+| `path`     | `string`                              | The path relative to the workspace root to start searching from. |
+| `fileName` | `string`                              | The name of the file to search for.                              |
 
 #### Returns
 

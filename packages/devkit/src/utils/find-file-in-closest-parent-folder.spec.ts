@@ -39,11 +39,7 @@ describe(findFileInClosestParentFolder.name, () => {
     }
 
     expect(
-      findFileInClosestParentFolder({
-        tree,
-        path: 'libs/my-lib',
-        fileName: 'my.config.ts',
-      })
+      findFileInClosestParentFolder(tree, 'libs/my-lib', 'my.config.ts')
     ).toBe(expectedFile);
   });
 
@@ -53,11 +49,7 @@ describe(findFileInClosestParentFolder.name, () => {
     tree.write('../package.json', '{}');
 
     expect(
-      findFileInClosestParentFolder({
-        tree,
-        path: 'libs/my-lib',
-        fileName: 'my.config.ts',
-      })
+      findFileInClosestParentFolder(tree, 'libs/my-lib', 'my.config.ts')
     ).toBeNull();
   });
 });
