@@ -1,6 +1,7 @@
 import {
   addDependenciesToPackageJson,
   ensurePackage,
+  findFileInClosestParentFolder,
   joinPathFragments,
   readJson,
   type Tree,
@@ -36,7 +37,12 @@ export async function addVitest(
   >('@nx/vite', nxVersion);
 
   const relativeTestSetupPath = joinPathFragments('src', 'test-setup.ts');
-  const isEsmImplicit = readJson(tree, 'package.json').type === 'module';
+  const packageJsonPath = findFileInClosestParentFolder({
+    tree,
+    path: options.projectRoot,
+    fileName: 'package.json',
+  });
+  const isEsmImplicit = readJson(tree, packageJsonPath).type === 'module';
 
   const setupFile = joinPathFragments(
     options.projectRoot,
