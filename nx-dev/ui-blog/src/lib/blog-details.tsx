@@ -5,6 +5,7 @@ import { BlogAuthors } from './authors';
 import { ChevronLeftIcon } from '@heroicons/react/24/outline';
 import { renderMarkdown } from '@nx/nx-dev/ui-markdoc';
 import { EpisodePlayer } from './episode-player';
+import { YouTube } from '@nx/nx-dev/ui-common';
 
 export interface BlogDetailsProps {
   post: BlogPostDataEntry;
@@ -74,6 +75,14 @@ export function BlogDetails({ post }: BlogDetailsProps) {
               amazonUrl={post.podcastAmazonUrl}
               appleUrl={post.podcastAppleUrl}
               iHeartUrl={post.podcastIHeartUrl}
+            />
+          </div>
+        ) : post.youtubeUrl ? (
+          <div className="mx-auto mb-16 w-full max-w-screen-md">
+            <YouTube
+              src={post.youtubeUrl}
+              title={post.title}
+              caption={post.description}
             />
           </div>
         ) : (
