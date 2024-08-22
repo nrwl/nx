@@ -148,7 +148,8 @@ describe('Build React applications and libraries with Vite', () => {
     checkFilesExist(
       `dist/libs/${nonBuildableLib}/index.d.ts`,
       `dist/libs/${nonBuildableLib}/index.js`,
-      `dist/libs/${nonBuildableLib}/index.mjs`
+      `dist/libs/${nonBuildableLib}/index.mjs`,
+      `dist/libs/${nonBuildableLib}/README.md`
     );
   }, 300_000);
 
