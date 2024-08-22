@@ -779,6 +779,227 @@ describe('createPackageJson', () => {
         /Package Manager Mismatch/
       );
     });
+
+    it('should add overrides (pnpm)', () => {
+      spies.push(
+        jest
+          .spyOn(fs, 'existsSync')
+          .mockImplementation(
+            (path) =>
+              path === 'libs/lib1/package.json' ||
+              path === 'apps/app1/package.json' ||
+              path === 'package.json'
+          )
+      );
+      spies.push(
+        jest
+          .spyOn(fileutilsModule, 'readJsonFile')
+          .mockImplementation((path) => {
+            if (path === 'package.json') {
+              return {
+                ...rootPackageJson(),
+                pnpm: {
+                  overrides: {
+                    foo: '1.0.0',
+                  },
+                },
+              };
+            }
+            if (path === 'libs/lib1/package.json') {
+              return projectPackageJson();
+            }
+            if (path === 'apps/app1/package.json') {
+              return {
+                ...projectPackageJson(),
+                pnpm: {
+                  overrides: {
+                    foo: '2.0.0',
+                    bar: '1.0.0',
+                  },
+                },
+              };
+            }
+          })
+      );
+
+      expect(
+        createPackageJson('lib1', graph, {
+          root: '',
+        })
+      ).toEqual({
+        dependencies: {
+          random: '1.0.0',
+          typescript: '^4.8.4',
+        },
+        name: 'other-name',
+        version: '1.2.3',
+        pnpm: {
+          overrides: {
+            foo: '1.0.0',
+          },
+        },
+      });
+      expect(
+        createPackageJson('app1', graph, {
+          root: '',
+        })
+      ).toEqual({
+        dependencies: {
+          random: '1.0.0',
+          typescript: '^4.8.4',
+        },
+        name: 'other-name',
+        version: '1.2.3',
+        pnpm: {
+          overrides: {
+            foo: '2.0.0',
+            bar: '1.0.0',
+          },
+        },
+      });
+    });
+
+    it('should add overrides (npm)', () => {
+      spies.push(
+        jest
+          .spyOn(fs, 'existsSync')
+          .mockImplementation(
+            (path) =>
+              path === 'libs/lib1/package.json' ||
+              path === 'apps/app1/package.json' ||
+              path === 'package.json'
+          )
+      );
+      spies.push(
+        jest
+          .spyOn(fileutilsModule, 'readJsonFile')
+          .mockImplementation((path) => {
+            if (path === 'package.json') {
+              return {
+                ...rootPackageJson(),
+                overrides: {
+                  foo: '1.0.0',
+                },
+              };
+            }
+            if (path === 'libs/lib1/package.json') {
+              return projectPackageJson();
+            }
+            if (path === 'apps/app1/package.json') {
+              return {
+                ...projectPackageJson(),
+                overrides: {
+                  foo: '2.0.0',
+                  bar: '1.0.0',
+                },
+              };
+            }
+          })
+      );
+
+      expect(
+        createPackageJson('lib1', graph, {
+          root: '',
+        })
+      ).toEqual({
+        dependencies: {
+          random: '1.0.0',
+          typescript: '^4.8.4',
+        },
+        name: 'other-name',
+        version: '1.2.3',
+        overrides: {
+          foo: '1.0.0',
+        },
+      });
+      expect(
+        createPackageJson('app1', graph, {
+          root: '',
+        })
+      ).toEqual({
+        dependencies: {
+          random: '1.0.0',
+          typescript: '^4.8.4',
+        },
+        name: 'other-name',
+        version: '1.2.3',
+        overrides: {
+          foo: '2.0.0',
+          bar: '1.0.0',
+        },
+      });
+    });
+
+    it('should add resolutions (yarn)', () => {
+      spies.push(
+        jest
+          .spyOn(fs, 'existsSync')
+          .mockImplementation(
+            (path) =>
+              path === 'libs/lib1/package.json' ||
+              path === 'apps/app1/package.json' ||
+              path === 'package.json'
+          )
+      );
+      spies.push(
+        jest
+          .spyOn(fileutilsModule, 'readJsonFile')
+          .mockImplementation((path) => {
+            if (path === 'package.json') {
+              return {
+                ...rootPackageJson(),
+                resolutions: {
+                  foo: '1.0.0',
+                },
+              };
+            }
+            if (path === 'libs/lib1/package.json') {
+              return projectPackageJson();
+            }
+            if (path === 'apps/app1/package.json') {
+              return {
+                ...projectPackageJson(),
+                resolutions: {
+                  foo: '2.0.0',
+                  bar: '1.0.0',
+                },
+              };
+            }
+          })
+      );
+
+      expect(
+        createPackageJson('lib1', graph, {
+          root: '',
+        })
+      ).toEqual({
+        dependencies: {
+          random: '1.0.0',
+          typescript: '^4.8.4',
+        },
+        name: 'other-name',
+        version: '1.2.3',
+        resolutions: {
+          foo: '1.0.0',
+        },
+      });
+      expect(
+        createPackageJson('app1', graph, {
+          root: '',
+        })
+      ).toEqual({
+        dependencies: {
+          random: '1.0.0',
+          typescript: '^4.8.4',
+        },
+        name: 'other-name',
+        version: '1.2.3',
+        resolutions: {
+          foo: '2.0.0',
+          bar: '1.0.0',
+        },
+      });
+    });
   });
 });
 

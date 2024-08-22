@@ -39,6 +39,7 @@ export interface NextBuildBuilderOptions {
   nextConfig?: string;
   outputPath: string;
   profile?: boolean;
+  skipOverrides?: boolean;
   skipPackageManager?: boolean;
   watch?: boolean;
 }
