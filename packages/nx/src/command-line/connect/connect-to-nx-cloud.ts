@@ -80,7 +80,9 @@ export async function connectToNxCloudCommand(
 
   if (isNxCloudUsed(nxJson)) {
     const token =
-      process.env.NX_CLOUD_ACCESS_TOKEN || nxJson.nxCloudAccessToken;
+      process.env.NX_CLOUD_ACCESS_TOKEN ||
+      nxJson.nxCloudAccessToken ||
+      nxJson.nxCloudId;
     if (!token) {
       throw new Error(
         `Unable to authenticate. Either define accessToken in nx.json or set the NX_CLOUD_ACCESS_TOKEN env variable.`
@@ -94,9 +96,9 @@ export async function connectToNxCloudCommand(
       title: '✔ This workspace already has Nx Cloud set up',
       bodyLines: [
         'If you have not done so already, connect your workspace to your Nx Cloud account:',
-        `- Connect with Nx Cloud at: 
-      
-        ${connectCloudUrl}`,
+        '- Connect with Nx Cloud at:',
+        '',
+        `${connectCloudUrl}`,
       ],
     });
 
