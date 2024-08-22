@@ -251,7 +251,7 @@ If we don't use the `nx affected` command in CI, no matter how our repo is struc
 
 Note that the 50% chance of any project being modified is an arbitrary number. If we had picked a lower chance of being modified all the expected values would decrease as well. Every repository is different, but this illustrates that a flatter structure will help speed up your CI pipeline.
 
-{% disclosure title="The Math Behind the Expected Number of Affected Projects" %}
+{% callout title="The Math Behind the Expected Number of Affected Projects" type="deepdive" %}
 
 **Definitions:**
 
@@ -290,7 +290,7 @@ Note that the 50% chance of any project being modified is an arbitrary number. I
 **Expected Number of Affected Projects:**  
 ℙa(1) + ℙa(2) + ℙa(3) = 0.5 + 0.5 + 0.5 = 1.5
 
-{% /disclosure %}
+{% /callout %}
 
 ## Reduce Wasted Time with Remote Caching
 

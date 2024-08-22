@@ -33,8 +33,8 @@ distribute-on:
   large-changeset: 10 linux-medium-js
 ```
 
-{% callout type="note" title="How is the size of the PR determined?" %}
-To determine the size of the PR, Nx Cloud calculates the ratio between the number of [affected projects](/ci/features/affected) and the total number of projects in the workspace. It then categorizes it as small, medium, or large.
+{% callout type="deepdive" title="How is the size of the PR determined?" %}
+To determine the size of the PR, Nx Cloud calculates the relationship between the number of [affected projects](/ci/features/affected) and the total number of projects in the workspace. It then assigns it to one of the three categories: small, medium, or large.
 {% /callout %}
 
 You can then reference it in your CI pipeline configuration:
