@@ -1,6 +1,7 @@
 import {
   addDependenciesToPackageJson,
   addProjectConfiguration,
+  E2EWebServerDetails,
   ensurePackage,
   formatFiles,
   generateFiles,
@@ -53,11 +54,6 @@ interface NormalizedSchema extends Schema {
   appProjectRoot: string;
   e2eProjectName: string;
   e2eProjectRoot: string;
-  e2eWebServerAddress: string;
-  e2eWebServerTarget: string;
-  e2eCiWebServerTarget: string;
-  e2eCiBaseUrl: string;
-  e2ePort: number;
   parsedTags: string[];
 }
 
@@ -391,6 +387,43 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
       spa: true,
     });
   }
+
+  let e2eWebServerInfo: E2EWebServerDetails = {
+    e2eWebServerAddress: `http://localhost:4200`,
+    e2eWebServerCommand: `${getPackageManagerCommand().exec} nx run ${
+      options.projectName
+    }:serve`,
+    e2eCiWebServerCommand: `${getPackageManagerCommand().exec} nx run ${
+      options.projectName
+    }:serve-static`,
+    e2eCiBaseUrl: `http://localhost:4200`,
+    e2eDevServerTarget: `${options.projectName}:serve`,
+  };
+
+  if (options.bundler === 'webpack') {
+    const { getWebpackE2EWebServerInfo } = ensurePackage<
+      typeof import('@nx/webpack')
+    >('@nx/webpack', nxVersion);
+    e2eWebServerInfo = await getWebpackE2EWebServerInfo(
+      host,
+      options.projectName,
+      joinPathFragments(options.appProjectRoot, `webpack.config.js`),
+      options.addPlugin,
+      4200
+    );
+  } else if (options.bundler === 'vite') {
+    const { getViteE2EWebServerInfo } = ensurePackage<
+      typeof import('@nx/vite')
+    >('@nx/vite', nxVersion);
+    e2eWebServerInfo = await getViteE2EWebServerInfo(
+      host,
+      options.projectName,
+      joinPathFragments(options.appProjectRoot, `vite.config.ts`),
+      options.addPlugin,
+      4200
+    );
+  }
+
   if (options.e2eTestRunner === 'cypress') {
     const { configurationGenerator } = ensurePackage<
       typeof import('@nx/cypress')
@@ -406,20 +439,20 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
     const cypressTask = await configurationGenerator(host, {
       ...options,
       project: options.e2eProjectName,
-      devServerTarget: `${options.projectName}:${options.e2eWebServerTarget}`,
-      baseUrl: options.e2eWebServerAddress,
+      devServerTarget: e2eWebServerInfo.e2eDevServerTarget,
+      baseUrl: e2eWebServerInfo.e2eWebServerAddress,
       directory: 'src',
       skipFormat: true,
       webServerCommands: hasPlugin
         ? {
-            default: `nx run ${options.projectName}:${options.e2eWebServerTarget}`,
-            production: `nx run ${options.projectName}:preview`,
+            default: e2eWebServerInfo.e2eWebServerCommand,
+            production: e2eWebServerInfo.e2eCiWebServerCommand,
           }
         : undefined,
       ciWebServerCommand: hasPlugin
-        ? `nx run ${options.projectName}:${options.e2eCiWebServerTarget}`
+        ? e2eWebServerInfo.e2eCiWebServerCommand
         : undefined,
-      ciBaseUrl: options.bundler === 'vite' ? options.e2eCiBaseUrl : undefined,
+      ciBaseUrl: e2eWebServerInfo.e2eCiBaseUrl,
     });
 
     if (
@@ -472,10 +505,8 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
       js: false,
       linter: options.linter,
       setParserOptionsProject: options.setParserOptionsProject,
-      webServerCommand: `${getPackageManagerCommand().exec} nx run ${
-        options.projectName
-      }:${options.e2eCiWebServerTarget}`,
-      webServerAddress: options.e2eCiBaseUrl,
+      webServerCommand: e2eWebServerInfo.e2eCiWebServerCommand,
+      webServerAddress: e2eWebServerInfo.e2eCiBaseUrl,
       addPlugin: options.addPlugin,
     });
 
@@ -590,57 +621,8 @@ async function normalizeOptions(
     nxJson.useInferencePlugins !== false;
   options.addPlugin ??= addPluginDefault;
 
-  let e2ePort = 4200;
-
-  let e2eWebServerTarget = 'serve';
-  let e2eCiWebServerTarget =
-    options.bundler === 'vite' ? 'preview' : 'serve-static';
-  if (options.addPlugin) {
-    if (nxJson.plugins) {
-      for (const plugin of nxJson.plugins) {
-        if (
-          options.bundler === 'vite' &&
-          typeof plugin === 'object' &&
-          plugin.plugin === '@nx/vite/plugin'
-        ) {
-          e2eCiWebServerTarget =
-            (plugin.options as VitePluginOptions)?.previewTargetName ??
-            e2eCiWebServerTarget;
-
-          e2eWebServerTarget =
-            (plugin.options as VitePluginOptions)?.serveTargetName ??
-            e2eWebServerTarget;
-        } else if (
-          options.bundler === 'webpack' &&
-          typeof plugin === 'object' &&
-          plugin.plugin === '@nx/webpack/plugin'
-        ) {
-          e2eCiWebServerTarget =
-            (plugin.options as WebpackPluginOptions)?.serveStaticTargetName ??
-            e2eCiWebServerTarget;
-
-          e2eWebServerTarget =
-            (plugin.options as WebpackPluginOptions)?.serveTargetName ??
-            e2eWebServerTarget;
-        }
-      }
-    }
-  }
-
-  if (
-    nxJson.targetDefaults?.[e2eWebServerTarget] &&
-    nxJson.targetDefaults?.[e2eWebServerTarget].options?.port
-  ) {
-    e2ePort = nxJson.targetDefaults?.[e2eWebServerTarget].options?.port;
-  }
-
   const e2eProjectName = `${appProjectName}-e2e`;
   const e2eProjectRoot = `${appProjectRoot}-e2e`;
-  const e2eWebServerAddress = `http://localhost:${e2ePort}`;
-  const e2eCiBaseUrl =
-    options.bundler === 'vite'
-      ? 'http://localhost:4300'
-      : `http://localhost:${e2ePort}`;
 
   const npmScope = getNpmScope(host);
 
@@ -664,11 +646,6 @@ async function normalizeOptions(
     appProjectRoot,
     e2eProjectRoot,
     e2eProjectName,
-    e2eWebServerAddress,
-    e2eWebServerTarget,
-    e2eCiWebServerTarget,
-    e2eCiBaseUrl,
-    e2ePort,
     parsedTags,
   };
 }
