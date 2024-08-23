@@ -26,6 +26,7 @@
     "license-webpack-plugin": "^4.0.2",
     "sass-loader": "^12.2.0",
     "stylus-loader": "^7.1.0",
+    "postcss-loader": "^8.1.1",
     "@nx/eslint": "^19.5.7",
     "@rspack/core": "^0.7.5",
     "@rspack/plugin-react-refresh": "^0.7.5",
