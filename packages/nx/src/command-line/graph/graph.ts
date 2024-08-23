@@ -1155,9 +1155,21 @@ function expandInputs(
   };
 }
 
-interface GraphJsonResponse {
+/**
+ * The data type that `nx graph --file graph.json` or `nx build --graph graph.json` contains
+ */
+export interface GraphJson {
+  /**
+   * A graph of tasks populated with `nx build --graph`
+   */
   tasks?: TaskGraph;
+  /**
+   * The plans for hashing a task in the task graph
+   */
   taskPlans?: Record<string, string[]>;
+  /**
+   * The project graph
+   */
   graph: ProjectGraph;
 }
 
@@ -1166,8 +1178,8 @@ async function createJsonOutput(
   rawGraph: ProjectGraph,
   projects: string[],
   targets?: string[]
-): Promise<GraphJsonResponse> {
-  const response: GraphJsonResponse = {
+): Promise<GraphJson> {
+  const response: GraphJson = {
     graph: prunedGraph,
   };
 
