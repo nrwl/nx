@@ -1155,7 +1155,7 @@ function expandInputs(
   };
 }
 
-export interface GraphJsonResponse {
+export interface GraphJson {
   tasks?: TaskGraph;
   taskPlans?: Record<string, string[]>;
   graph: ProjectGraph;
@@ -1166,8 +1166,8 @@ async function createJsonOutput(
   rawGraph: ProjectGraph,
   projects: string[],
   targets?: string[]
-): Promise<GraphJsonResponse> {
-  const response: GraphJsonResponse = {
+): Promise<GraphJson> {
+  const response: GraphJson = {
     graph: prunedGraph,
   };
 
