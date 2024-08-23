@@ -54,7 +54,7 @@ impl Watcher {
         }
 
         Watcher {
-            origin: if cfg!(window) {
+            origin: if cfg!(windows) {
                 origin.replace('/', "\\")
             } else {
                 origin
