@@ -1609,10 +1609,10 @@ Violation detected in:
     expect(failures.length).toBe(0);
   });
 
-  it('should ignore detected absolute path within project if excludeCircularDependencyPairs matches the project', () => {
+  it('should ignore detected absolute path within project if ignoredCircularDependencies matches the project', () => {
     const failures = runRule(
       {
-        excludeCircularDependencyPairs: [['mylibName', 'mylibName']],
+        ignoredCircularDependencies: [['mylibName', 'mylibName']],
       },
       `${process.cwd()}/proj/libs/mylib/src/main.ts`,
       `
@@ -1668,7 +1668,6 @@ Violation detected in:
         myappName: [createFile(`apps/myapp/src/index.ts`)],
       }
     );
-    console.log(failures);
     expect(failures.length).toBe(0);
   });
 
@@ -1844,10 +1843,10 @@ Circular file chain:
     expect(failures[1].message).toEqual(message);
   });
 
-  it('should not error when circular dependency detected (indirect) if excludeCircularDependencyPairs matches link in chain', () => {
+  it('should not error when circular dependency detected (indirect) if ignoredCircularDependencies matches link in chain', () => {
     const failures = runRule(
       {
-        excludeCircularDependencyPairs: [['anotherlibName', 'mylibName']],
+        ignoredCircularDependencies: [['anotherlibName', 'mylibName']],
       },
       `${process.cwd()}/proj/libs/mylib/src/main.ts`,
       `
@@ -1933,14 +1932,13 @@ Circular file chain:
         myappName: [createFile(`apps/myapp/index.ts`)],
       }
     );
-    console.log(failures);
     expect(failures.length).toEqual(0);
   });
 
-  it('should not error when circular dependency detected (indirect) if excludeCircularDependencyPairs matches link in chain (second member catch all)', () => {
+  it('should not error when circular dependency detected (indirect) if ignoredCircularDependencies matches link in chain (second member catch all)', () => {
     const failures = runRule(
       {
-        excludeCircularDependencyPairs: [['anotherlibName', '*']],
+        ignoredCircularDependencies: [['anotherlibName', '*']],
       },
       `${process.cwd()}/proj/libs/mylib/src/main.ts`,
       `
@@ -2026,14 +2024,13 @@ Circular file chain:
         myappName: [createFile(`apps/myapp/index.ts`)],
       }
     );
-    console.log(failures);
     expect(failures.length).toEqual(0);
   });
 
-  it('should not error when circular dependency detected (indirect) if excludeCircularDependencyPairs matches link in chain (first member catch all)', () => {
+  it('should not error when circular dependency detected (indirect) if ignoredCircularDependencies matches link in chain (first member catch all)', () => {
     const failures = runRule(
       {
-        excludeCircularDependencyPairs: [['*', 'mylibName']],
+        ignoredCircularDependencies: [['*', 'mylibName']],
       },
       `${process.cwd()}/proj/libs/mylib/src/main.ts`,
       `
@@ -2119,7 +2116,6 @@ Circular file chain:
         myappName: [createFile(`apps/myapp/index.ts`)],
       }
     );
-    console.log(failures);
     expect(failures.length).toEqual(0);
   });
 

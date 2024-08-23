@@ -22,6 +22,7 @@ import {
 import {
   checkCircularPath,
   circularPathHasPair,
+  expandIgnoredCircularDependencies,
   findFilesInCircularPath,
   findFilesWithDynamicImports,
 } from '../utils/graph-utils';
@@ -57,7 +58,7 @@ type Options = [
     depConstraints: DepConstraint[];
     enforceBuildableLibDependency: boolean;
     allowCircularSelfDependency: boolean;
-    excludeCircularDependencyPairs: Array<[string, string]>;
+    ignoredCircularDependencies: Array<[string, string]>;
     checkDynamicDependenciesExceptions: string[];
     banTransitiveDependencies: boolean;
     checkNestedExternalImports: boolean;
@@ -103,7 +104,7 @@ export default ESLintUtils.RuleCreator(
             type: 'array',
             items: { type: 'string' },
           },
-          excludeCircularDependencyPairs: {
+          ignoredCircularDependencies: {
             type: 'array',
             items: {
               type: 'array',
@@ -205,7 +206,7 @@ export default ESLintUtils.RuleCreator(
       enforceBuildableLibDependency: false,
       allowCircularSelfDependency: false,
       checkDynamicDependenciesExceptions: [],
-      excludeCircularDependencyPairs: [],
+      ignoredCircularDependencies: [],
       banTransitiveDependencies: false,
       checkNestedExternalImports: false,
     },
@@ -220,7 +221,7 @@ export default ESLintUtils.RuleCreator(
         enforceBuildableLibDependency,
         allowCircularSelfDependency,
         checkDynamicDependenciesExceptions,
-        excludeCircularDependencyPairs,
+        ignoredCircularDependencies,
         banTransitiveDependencies,
         checkNestedExternalImports,
       },
@@ -246,6 +247,12 @@ export default ESLintUtils.RuleCreator(
     }
 
     const workspaceLayout = (global as any).workspaceLayout;
+
+    const expandedIgnoreCircularDependencies =
+      expandIgnoredCircularDependencies(
+        ignoredCircularDependencies,
+        projectGraph
+      );
 
     function run(
       node:
@@ -400,7 +407,7 @@ export default ESLintUtils.RuleCreator(
         sourceProject === targetProject &&
         !circularPathHasPair(
           [sourceProject, targetProject],
-          excludeCircularDependencyPairs
+          expandedIgnoreCircularDependencies
         )
       ) {
         if (
@@ -530,7 +537,7 @@ export default ESLintUtils.RuleCreator(
       );
       if (
         circularPath.length !== 0 &&
-        !circularPathHasPair(circularPath, excludeCircularDependencyPairs)
+        !circularPathHasPair(circularPath, expandedIgnoreCircularDependencies)
       ) {
         const circularFilePath = findFilesInCircularPath(
           projectFileMap,

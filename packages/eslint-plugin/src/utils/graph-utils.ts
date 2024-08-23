@@ -9,6 +9,7 @@ import {
   fileDataDepTarget,
   fileDataDepType,
 } from 'nx/src/config/project-graph';
+import { findMatchingProjects } from 'nx/src/utils/find-matching-projects';
 
 interface Reach {
   graph: ProjectGraph;
@@ -143,20 +144,17 @@ export function checkCircularPath(
 
 export function circularPathHasPair(
   circularPath: ProjectGraphProjectNode[],
-  pairs: Array<[string, string]>
+  ignored: Map<string, Set<string>>
 ): boolean {
-  if (pairs.length === 0) return false;
   if (circularPath.length < 2) return false;
 
   for (let i = 0; i < circularPath.length - 1; i++) {
-    for (let j = 0; j < pairs.length; j++) {
-      const pair = pairs[j];
-      if (
-        (circularPath[i].name === pair[0] || pair[0] === '*') &&
-        (circularPath[i + 1].name === pair[1] || pair[1] === '*')
-      ) {
-        return true;
-      }
+    const dependencyIsIgnored = ignored
+      .get(circularPath[i].name)
+      ?.has(circularPath[i + 1].name);
+
+    if (dependencyIsIgnored) {
+      return true;
     }
   }
 
@@ -205,4 +203,40 @@ export function findFilesWithDynamicImports(
   });
 
   return files;
+}
+
+export function expandIgnoredCircularDependencies(
+  ignoredCircularDependencies: Array<[string, string]>,
+  projectGraph: ProjectGraph
+) {
+  const allowed = new Map<string, Set<string>>();
+
+  for (const [a, b] of ignoredCircularDependencies) {
+    const setA = new Set(findMatchingProjects([a], projectGraph.nodes));
+    const setB = new Set(findMatchingProjects([b], projectGraph.nodes));
+
+    for (const projectA of setA) {
+      if (!allowed.has(projectA)) {
+        allowed.set(projectA, new Set<string>());
+      }
+      const currentSetA = allowed.get(projectA);
+
+      for (const projectB of setB) {
+        currentSetA.add(projectB);
+      }
+    }
+
+    for (const projectB of setB) {
+      if (!allowed.has(projectB)) {
+        allowed.set(projectB, new Set<string>());
+      }
+      const currentSetB = allowed.get(projectB);
+
+      for (const projectA of setA) {
+        currentSetB.add(projectA);
+      }
+    }
+  }
+
+  return allowed;
 }
