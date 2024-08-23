@@ -37,6 +37,11 @@ export function computeEmbedURL(youtubeURL: string) {
     return 'https://www.youtube.com/embed/' + match[1];
   }
 
+  match = youtubeURL.match(/youtube\.com\/live\/([a-zA-Z0-9_-]+)/);
+  if (match && match[1]) {
+    return 'https://www.youtube.com/embed/' + match[1];
+  }
+
   // Check for 'https://youtu.be/' format
   match = youtubeURL.match(/youtu\.be\/([a-zA-Z0-9_-]+)/);
   if (match && match[1]) {
@@ -50,7 +55,7 @@ export function YouTube(props: {
   title: string;
   caption: string;
   src: string;
-  width: string;
+  width?: string;
 }): JSX.Element {
   return (
     <div className="text-center">
