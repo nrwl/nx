@@ -131,10 +131,13 @@ export class DaemonClient {
       // CI=true,env=undefined => no daemon
       // CI=true,env=false => no daemon
       // CI=true,env=true => daemon
+
+      // docker=true,env=undefined => no daemon
+      // docker=true,env=false => no daemon
+      // docker=true,env=true => daemon
       // WASM => no daemon because file watching does not work
       if (
-        (isCI() && env !== 'true') ||
-        isDocker() ||
+        ((isCI() || isDocker()) && env !== 'true') ||
         isDaemonDisabled() ||
         nxJsonIsNotPresent() ||
         (useDaemonProcessOption === undefined && env === 'false') ||
