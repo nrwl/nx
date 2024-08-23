@@ -341,6 +341,7 @@
     "framer-motion": "^11.3.0",
     "front-matter": "^4.0.2",
     "glob": "7.1.4",
+    "googleapis": "^142.0.0",
     "history": "^5.3.0",
     "json-schema-to-typescript": "^10.1.5",
     "jsonpointer": "^5.0.0",
