@@ -61,6 +61,7 @@ executor to `@nx/angular:dev-server` as shown below:
   ...
   "targets": {
     "build": {
+      "dependsOn": ["^build"],
       "executor": "@nx/angular:webpack-browser",
       "outputs": [
         "{options.outputPath}"
@@ -90,6 +91,19 @@ executor to `@nx/angular:dev-server` as shown below:
   }
 },
 ```
+
+{% callout type="note" title="Add Executor to Target Defaults" %}
+If you'd like to avoid adding `"dependsOn": ["^build"]` to every application in your workspace that uses `@nx/angular:webpack-browser` you can add it to the `"targetDefaults"` section of the `nx.json`:
+
+```json
+"targetDefaults": {
+  "@nx/angular:webpack-browser": {
+    "dependsOn": ["^build"]
+  }
+}
+```
+
+{% /callout %}
 
 ## Running and serving incremental builds
 
