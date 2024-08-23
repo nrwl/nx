@@ -28,8 +28,8 @@ dependencies:
     specifier: ^0.1.52
     version: 0.1.52
   '@nx/graph':
-    specifier: 0.0.1-alpha.11
-    version: 0.0.1-alpha.11(@nx/devkit@19.7.0-beta.1)(nx@19.7.0-beta.1)(react-dom@18.3.1)(react-router-dom@6.23.1)(react@18.3.1)
+    specifier: 0.0.1-alpha.13
+    version: 0.0.1-alpha.13(@nx/devkit@19.7.0-beta.1)(nx@19.7.0-beta.1)(react-dom@18.3.1)(react-router-dom@6.23.1)(react@18.3.1)
   '@react-spring/three':
     specifier: ^9.7.3
     version: 9.7.3(@react-three/fiber@8.16.8)(react@18.3.1)(three@0.166.1)
@@ -12858,8 +12858,8 @@ packages:
       - verdaccio
     dev: true
 
-  /@nx/graph@0.0.1-alpha.11(@nx/devkit@19.7.0-beta.1)(nx@19.7.0-beta.1)(react-dom@18.3.1)(react-router-dom@6.23.1)(react@18.3.1):
-    resolution: {integrity: sha512-MseBRHsVmQGa6nEXCaicStwRZpACBGPKDKGJj9XIRdeqruVQynexjcku7yHIvSGatamrL/GzAAqTzHDbMv4o2w==}
+  /@nx/graph@0.0.1-alpha.13(@nx/devkit@19.7.0-beta.1)(nx@19.7.0-beta.1)(react-dom@18.3.1)(react-router-dom@6.23.1)(react@18.3.1):
+    resolution: {integrity: sha512-sNWhHix9CykuzVUBBsUBOSvTx+OrAen/r9qNZhxNhmGsvmAySIgL5yElShwBGjy09n4AiaCWek+ovkhYb2h9KQ==}
     peerDependencies:
       '@nx/devkit': '>= 19 < 20'
       nx: '>= 19 < 20'
