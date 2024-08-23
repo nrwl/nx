@@ -1155,9 +1155,21 @@ function expandInputs(
   };
 }
 
+/**
+ * The data type that `nx graph --file graph.json` or `nx build --graph graph.json` contains
+ */
 export interface GraphJson {
+  /**
+   * A graph of tasks populated with `nx build --graph`
+   */
   tasks?: TaskGraph;
+  /**
+   * The plans for hashing a task in the task graph
+   */
   taskPlans?: Record<string, string[]>;
+  /**
+   * The project graph
+   */
   graph: ProjectGraph;
 }
 
