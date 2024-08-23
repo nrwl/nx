@@ -11,6 +11,12 @@
       "version": "17.2.1-beta.0",
       "description": "Add webpack.config.js file when webpackConfig is not defined",
       "implementation": "./src/migrations/update-17-2-1/webpack-config-setup"
+    },
+    "update-19-6-3-proxy-config": {
+      "cli": "nx",
+      "version": "19.6.3-beta.0",
+      "description": "Migrate proxy config files to match new format from webpack-dev-server v5.",
+      "implementation": "./src/migrations/update-19-6-3/proxy-config"
     }
   },
   "packageJsonUpdates": {
