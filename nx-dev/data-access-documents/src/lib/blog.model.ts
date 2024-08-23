@@ -11,6 +11,7 @@ export type BlogPostDataEntry = {
   pinned?: boolean;
   filePath: string;
   slug: string;
+  youtubeUrl?: string;
   podcastYoutubeId?: string;
   podcastSpotifyId?: string;
   podcastAmazonUrl?: string;
