@@ -134,7 +134,7 @@ Nx identifies available tasks for your project from [tooling configuration files
 npx nx show project react-store
 ```
 
-{% project-details title="Project Details View (Simplified)" height="100px" %}
+{% project-details title="Project Details View (Simplified)" %}
 
 ```json
 {
@@ -459,6 +459,14 @@ yarn add react-router-dom
 
 ```shell
 pnpm add react-router-dom
+```
+
+{% /tab %}
+
+{% tab label="bun" %}
+
+```shell
+bun add react-router-dom
 ```
 
 {% /tab %}

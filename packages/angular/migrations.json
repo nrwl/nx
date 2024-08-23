@@ -428,6 +428,12 @@
       },
       "description": "Update the @angular/cli package version to ~18.2.0.",
       "factory": "./src/migrations/update-19-6-0/update-angular-cli"
+    },
+    "update-19-6-1-ensure-module-federation-target-defaults": {
+      "cli": "nx",
+      "version": "19.6.1-beta.0",
+      "description": "Ensure Target Defaults are set correctly for Module Federation.",
+      "factory": "./src/migrations/update-19-6-1/ensure-depends-on-for-mf"
     }
   },
   "packageJsonUpdates": {
@@ -2101,6 +2107,18 @@
         },
         "ng-packagr": {
           "version": "~18.2.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "19.6.1-ngrx": {
+      "version": "19.6.1-beta.0",
+      "requires": {
+        "@angular/core": "^18.0.0"
+      },
+      "packages": {
+        "@ngrx/store": {
+          "version": "^18.0.2",
           "alwaysAddToPackageJson": false
         }
       }

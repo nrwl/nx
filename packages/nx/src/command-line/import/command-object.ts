@@ -37,12 +37,9 @@ export const yargsImportCommand: CommandModule = {
       'import'
     ),
   handler: async (args) => {
-    const exitCode = await handleErrors(
-      (args.verbose as boolean) ?? process.env.NX_VERBOSE_LOGGING === 'true',
-      async () => {
-        return (await import('./import')).importHandler(args as any);
-      }
-    );
+    const exitCode = await handleErrors(args.verbose as boolean, async () => {
+      return (await import('./import')).importHandler(args as any);
+    });
     process.exit(exitCode);
   },
 };

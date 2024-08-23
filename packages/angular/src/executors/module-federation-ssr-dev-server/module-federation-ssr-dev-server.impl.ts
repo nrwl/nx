@@ -25,7 +25,7 @@ import { createBuilderContext } from 'nx/src/adapter/ngcli-adapter';
 import { normalizeOptions } from './lib/normalize-options';
 import { waitForPortOpen } from '@nx/web/src/utils/wait-for-port-open';
 import { startSsrRemoteProxies } from '@nx/webpack/src/utils/module-federation/start-ssr-remote-proxies';
-import { executeDevServerBuilder } from '../../builders/dev-server/dev-server.impl';
+import { getInstalledAngularVersionInfo } from '../utilities/angular-version-utils';
 
 export async function* moduleFederationSsrDevServerExecutor(
   schema: Schema,
@@ -34,8 +34,14 @@ export async function* moduleFederationSsrDevServerExecutor(
   const nxBin = require.resolve('nx/bin/nx');
   const options = normalizeOptions(schema);
 
+  const { major: angularMajorVersion } = getInstalledAngularVersionInfo();
+  const { executeSSRDevServerBuilder } =
+    angularMajorVersion >= 17
+      ? require('@angular-devkit/build-angular')
+      : require('@nguniversal/builders');
+
   const currIter = eachValueFrom(
-    executeDevServerBuilder(
+    executeSSRDevServerBuilder(
       options,
       await createBuilderContext(
         {
@@ -117,7 +123,10 @@ export async function* moduleFederationSsrDevServerExecutor(
   );
 
   // Set NX_MF_DEV_REMOTES for the Nx Runtime Library Control Plugin
-  process.env.NX_MF_DEV_REMOTES = JSON.stringify(options.devRemotes);
+  process.env.NX_MF_DEV_REMOTES = JSON.stringify([
+    ...(options.devRemotes ?? []),
+    project.name,
+  ]);
 
   const devRemotes = await startRemotes(
     remotes.devRemotes,

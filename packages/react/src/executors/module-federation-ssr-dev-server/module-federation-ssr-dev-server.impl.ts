@@ -310,9 +310,12 @@ export default async function* moduleFederationSsrDevServer(
 
   options.staticRemotesPort ??= remotes.staticRemotePort;
 
-  process.env.NX_MF_DEV_REMOTES = JSON.stringify(
-    remotes.devRemotes.map((r) => (typeof r === 'string' ? r : r.remoteName))
-  );
+  process.env.NX_MF_DEV_REMOTES = JSON.stringify([
+    ...(remotes.devRemotes.map((r) =>
+      typeof r === 'string' ? r : r.remoteName
+    ) ?? []),
+    projectConfig.name,
+  ]);
 
   const staticRemotesConfig = parseStaticSsrRemotesConfig(
     [...remotes.staticRemotes, ...remotes.dynamicRemotes],

@@ -302,12 +302,7 @@ export function printGenHelp(
 }
 
 export async function generate(cwd: string, args: { [k: string]: any }) {
-  if (args['verbose']) {
-    process.env.NX_VERBOSE_LOGGING = 'true';
-  }
-  const verbose = process.env.NX_VERBOSE_LOGGING === 'true';
-
-  return handleErrors(verbose, async () => {
+  return handleErrors(args.verbose, async () => {
     const nxJsonConfiguration = readNxJson();
     const projectGraph = await createProjectGraphAsync();
     const projectsConfigurations =
@@ -369,7 +364,7 @@ export async function generate(cwd: string, args: { [k: string]: any }) {
         nxJsonConfiguration
       ),
       relative(workspaceRoot, cwd),
-      verbose
+      args.verbose
     );
 
     if (
@@ -382,7 +377,7 @@ export async function generate(cwd: string, args: { [k: string]: any }) {
     ) {
       const host = new FsTree(
         workspaceRoot,
-        verbose,
+        args.verbose,
         `generating (${opts.collectionName}:${normalizedGeneratorName})`
       );
       const implementation = implementationFactory();
@@ -418,7 +413,7 @@ export async function generate(cwd: string, args: { [k: string]: any }) {
           generatorOptions: combinedOpts,
         },
         projectsConfigurations.projects,
-        verbose
+        args.verbose
       );
     }
   });

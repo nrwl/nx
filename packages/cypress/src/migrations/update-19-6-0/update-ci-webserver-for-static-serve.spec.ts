@@ -1,4 +1,4 @@
-import updateCiWebserverForVite from './update-ci-webserver-for-static-serve';
+import updateCiWebserverForStaticServe from './update-ci-webserver-for-static-serve';
 import {
   type Tree,
   type ProjectGraph,
@@ -16,7 +16,7 @@ jest.mock('@nx/devkit', () => ({
   }),
 }));
 
-describe('updateCiWebserverForVite', () => {
+describe('update-ci-webserver-for-static-serve migration', () => {
   let tree: Tree;
   let tempFs: TempFs;
 
@@ -33,6 +33,22 @@ describe('updateCiWebserverForVite', () => {
 
   afterEach(() => {
     tempFs.reset();
+  });
+
+  it('should not error when there are no plugin registrations', async () => {
+    const nxJson = readNxJson(tree);
+    // ensure there are no plugins
+    delete nxJson.plugins;
+    updateNxJson(tree, nxJson);
+    addProject(tree, tempFs, {
+      buildTargetName: 'build',
+      ciTargetName: 'e2e-ci',
+      appName: 'app',
+      noVite: true,
+      ciWebServerCommand: 'nx run app:serve',
+    });
+
+    await expect(updateCiWebserverForStaticServe(tree)).resolves.not.toThrow();
   });
 
   it('should update to serve-static target for webpack', async () => {
@@ -60,10 +76,11 @@ describe('updateCiWebserverForVite', () => {
       ciTargetName: 'e2e-ci',
       appName: 'app',
       noVite: true,
+      ciWebServerCommand: 'nx run app:serve',
     });
 
     // ACT
-    await updateCiWebserverForVite(tree);
+    await updateCiWebserverForStaticServe(tree);
 
     // ASSERT
     expect(tree.read('app-e2e/cypress.config.ts', 'utf-8'))
@@ -80,80 +97,6 @@ describe('updateCiWebserverForVite', () => {
               production: 'nx run app:preview',
             },
             ciWebServerCommand: 'nx run app:webpack:serve-static',
-          }),
-          baseUrl: 'http://localhost:4200',
-        },
-      });
-      "
-    `);
-  });
-
-  it('should not update the full command to serve-static target for webpack', async () => {
-    // ARRANGE
-    const nxJson = readNxJson(tree);
-    nxJson.plugins = [
-      {
-        plugin: '@nx/cypress/plugin',
-        options: {
-          targetName: 'e2e',
-          ciTargetName: 'e2e-ci',
-        },
-      },
-      {
-        plugin: '@nx/webpack/plugin',
-        options: {
-          serveStaticTargetName: 'webpack:serve-static',
-        },
-      },
-    ];
-    updateNxJson(tree, nxJson);
-
-    addProject(tree, tempFs, {
-      buildTargetName: 'build',
-      ciTargetName: 'e2e-ci',
-      appName: 'app',
-      noVite: true,
-    });
-
-    tree.write(
-      'app-e2e/cypress.config.ts',
-      `import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
-import { defineConfig } from 'cypress';
-export default defineConfig({
-  e2e: {
-    ...nxE2EPreset(__filename, {
-      cypressDir: 'src',
-      bundler: 'vite',
-      webServerCommands: {
-        default: 'nx run app:serve',
-        production: 'nx run app:preview',
-      },
-      ciWebServerCommand: 'echo "start" && nx run app:serve',
-    }),
-    baseUrl: 'http://localhost:4200',
-  },
-});
-`
-    );
-
-    // ACT
-    await updateCiWebserverForVite(tree);
-
-    // ASSERT
-    expect(tree.read('app-e2e/cypress.config.ts', 'utf-8'))
-      .toMatchInlineSnapshot(`
-      "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
-      import { defineConfig } from 'cypress';
-      export default defineConfig({
-        e2e: {
-          ...nxE2EPreset(__filename, {
-            cypressDir: 'src',
-            bundler: 'vite',
-            webServerCommands: {
-              default: 'nx run app:serve',
-              production: 'nx run app:preview',
-            },
-            ciWebServerCommand: 'echo "start" && nx run app:webpack:serve-static',
           }),
           baseUrl: 'http://localhost:4200',
         },
@@ -186,7 +129,7 @@ export default defineConfig({
     addProject(tree, tempFs);
 
     // ACT
-    await updateCiWebserverForVite(tree);
+    await updateCiWebserverForStaticServe(tree);
 
     // ASSERT
     expect(tree.read('app-e2e/cypress.config.ts', 'utf-8'))
@@ -212,6 +155,135 @@ export default defineConfig({
     `);
   });
 
+  it.each`
+    ciWebServerCommand                                         | expectedCommand
+    ${'echo "start" && nx run app:serve'}                      | ${'echo "start" && nx run app:static-serve'}
+    ${'echo "start" && nx run app:serve:prod'}                 | ${'echo "start" && nx run app:static-serve'}
+    ${'echo "start" && nx run app:serve --configuration=prod'} | ${'echo "start" && nx run app:static-serve'}
+    ${'echo "start" && nx run app:serve --port 4200'}          | ${'echo "start" && nx run app:static-serve --port=4200'}
+    ${'echo "start" && nx run app:serve --port=4200'}          | ${'echo "start" && nx run app:static-serve --port=4200'}
+    ${'echo "start" && nx serve app'}                          | ${'echo "start" && nx run app:static-serve'}
+    ${'echo "start" && nx serve app --configuration=prod'}     | ${'echo "start" && nx run app:static-serve'}
+    ${'echo "start" && nx serve app --port 4200'}              | ${'echo "start" && nx run app:static-serve --port=4200'}
+    ${'echo "start" && nx serve app --port=4200'}              | ${'echo "start" && nx run app:static-serve --port=4200'}
+  `(
+    'should replace "$ciWebServerCommand" with "$expectedCommand" when using webpack',
+    async ({ ciWebServerCommand, expectedCommand }) => {
+      const nxJson = readNxJson(tree);
+      nxJson.plugins = [
+        {
+          plugin: '@nx/cypress/plugin',
+          options: {
+            targetName: 'e2e',
+            ciTargetName: 'e2e-ci',
+          },
+        },
+        {
+          plugin: '@nx/webpack/plugin',
+          options: {
+            serveStaticTargetName: 'static-serve',
+          },
+        },
+      ];
+      updateNxJson(tree, nxJson);
+      addProject(tree, tempFs, {
+        buildTargetName: 'build',
+        ciTargetName: 'e2e-ci',
+        appName: 'app',
+        noVite: true,
+        ciWebServerCommand,
+      });
+
+      await updateCiWebserverForStaticServe(tree);
+
+      expect(tree.read('app-e2e/cypress.config.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+      "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
+      import { defineConfig } from 'cypress';
+      export default defineConfig({
+        e2e: {
+          ...nxE2EPreset(__filename, {
+            cypressDir: 'src',
+            bundler: 'vite',
+            webServerCommands: {
+              default: 'nx run app:serve',
+              production: 'nx run app:preview',
+            },
+            ciWebServerCommand: '${expectedCommand}',
+          }),
+          baseUrl: 'http://localhost:4200',
+        },
+      });
+      "
+    `);
+    }
+  );
+
+  it.each`
+    ciWebServerCommand                                         | expectedCommand                                     | expectedUrl
+    ${'echo "start" && nx run app:serve'}                      | ${'echo "start" && nx run app:preview'}             | ${'http://localhost:4300'}
+    ${'echo "start" && nx run app:serve:prod'}                 | ${'echo "start" && nx run app:preview'}             | ${'http://localhost:4300'}
+    ${'echo "start" && nx run app:serve --configuration=prod'} | ${'echo "start" && nx run app:preview'}             | ${'http://localhost:4300'}
+    ${'echo "start" && nx run app:serve --port 4200'}          | ${'echo "start" && nx run app:preview --port=4200'} | ${'http://localhost:4200'}
+    ${'echo "start" && nx run app:serve --port=4200'}          | ${'echo "start" && nx run app:preview --port=4200'} | ${'http://localhost:4200'}
+    ${'echo "start" && nx serve app'}                          | ${'echo "start" && nx run app:preview'}             | ${'http://localhost:4300'}
+    ${'echo "start" && nx serve app --configuration=prod'}     | ${'echo "start" && nx run app:preview'}             | ${'http://localhost:4300'}
+    ${'echo "start" && nx serve app --port 4200'}              | ${'echo "start" && nx run app:preview --port=4200'} | ${'http://localhost:4200'}
+    ${'echo "start" && nx serve app --port=4200'}              | ${'echo "start" && nx run app:preview --port=4200'} | ${'http://localhost:4200'}
+  `(
+    'should replace "$ciWebServerCommand" with "$expectedCommand" when using vite',
+    async ({ ciWebServerCommand, expectedCommand, expectedUrl }) => {
+      const nxJson = readNxJson(tree);
+      nxJson.plugins = [
+        {
+          plugin: '@nx/cypress/plugin',
+          options: {
+            targetName: 'e2e',
+            ciTargetName: 'e2e-ci',
+          },
+        },
+        {
+          plugin: '@nx/vite/plugin',
+          options: {
+            buildTargetName: 'build',
+            previewTargetName: 'preview',
+          },
+        },
+      ];
+      updateNxJson(tree, nxJson);
+      addProject(tree, tempFs, {
+        buildTargetName: 'build',
+        ciTargetName: 'e2e-ci',
+        appName: 'app',
+        ciWebServerCommand,
+      });
+
+      await updateCiWebserverForStaticServe(tree);
+
+      expect(tree.read('app-e2e/cypress.config.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+      "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
+      import { defineConfig } from 'cypress';
+      export default defineConfig({
+        e2e: {
+          ...nxE2EPreset(__filename, {
+            cypressDir: 'src',
+            bundler: 'vite',
+            webServerCommands: {
+              default: 'nx run app:serve',
+              production: 'nx run app:preview',
+            },
+            ciWebServerCommand: '${expectedCommand}',
+            ciBaseUrl: '${expectedUrl}',
+          }),
+          baseUrl: 'http://localhost:4200',
+        },
+      });
+      "
+    `);
+    }
+  );
+
   it('should use @nx/vite:preview-server executor target value if it exists when no plugins are found', async () => {
     // ARRANGE
     const nxJson = readNxJson(tree);
@@ -231,10 +303,11 @@ export default defineConfig({
       ciTargetName: 'e2e-ci',
       buildTargetName: 'build',
       usesExecutors: true,
+      ciWebServerCommand: 'nx run app:serve',
     });
 
     // ACT
-    await updateCiWebserverForVite(tree);
+    await updateCiWebserverForStaticServe(tree);
 
     // ASSERT
     expect(tree.read('app-e2e/cypress.config.ts', 'utf-8'))
@@ -268,10 +341,15 @@ function addProject(
     ciTargetName: string;
     buildTargetName: string;
     appName: string;
-    noCi?: boolean;
+    ciWebServerCommand: string;
     noVite?: boolean;
     usesExecutors?: boolean;
-  } = { ciTargetName: 'e2e-ci', buildTargetName: 'build', appName: 'app' }
+  } = {
+    ciTargetName: 'e2e-ci',
+    buildTargetName: 'build',
+    appName: 'app',
+    ciWebServerCommand: 'nx run app:serve',
+  }
 ) {
   const appProjectConfig = {
     name: overrides.appName,
@@ -339,8 +417,8 @@ export default defineConfig({
         production: 'nx run ${overrides.appName}:preview',
       },
       ${
-        !overrides.noCi
-          ? `ciWebServerCommand: 'nx run ${overrides.appName}:serve',`
+        overrides.ciWebServerCommand
+          ? `ciWebServerCommand: '${overrides.ciWebServerCommand}',`
           : ''
       }
     }),

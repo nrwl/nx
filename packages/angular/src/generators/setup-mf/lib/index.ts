@@ -5,6 +5,7 @@ export * from './change-build-target';
 export * from './fix-bootstrap';
 export * from './generate-config';
 export * from './get-remotes-with-ports';
+export * from './move-angular-plugin-to-dependencies';
 export * from './normalize-options';
 export * from './update-tsconfig';
 export * from './setup-host-if-dynamic';

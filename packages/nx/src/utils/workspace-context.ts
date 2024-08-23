@@ -1,6 +1,6 @@
 import type { NxWorkspaceFilesExternals, WorkspaceContext } from '../native';
 import { performance } from 'perf_hooks';
-import { cacheDirectoryForWorkspace } from './cache-directory';
+import { workspaceDataDirectoryForWorkspace } from './cache-directory';
 import { isOnDaemon } from '../daemon/is-on-daemon';
 import { daemonClient } from '../daemon/client/client';
 
@@ -12,7 +12,7 @@ export function setupWorkspaceContext(workspaceRoot: string) {
   performance.mark('workspace-context');
   workspaceContext = new WorkspaceContext(
     workspaceRoot,
-    cacheDirectoryForWorkspace(workspaceRoot)
+    workspaceDataDirectoryForWorkspace(workspaceRoot)
   );
   performance.mark('workspace-context:end');
   performance.measure(

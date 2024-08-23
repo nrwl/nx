@@ -7,6 +7,7 @@ import {
   Variants,
 } from 'framer-motion';
 import { ReactNode, useRef } from 'react';
+import { usePrefersReducedMotion } from './prefers-reduced-motion';
 
 interface BlurFadeProps {
   children: ReactNode;
@@ -62,6 +63,12 @@ export function BlurFade({
     visible: { y: -yOffset, opacity: 1, filter: `blur(0px)` },
   };
   const combinedVariants = variant || defaultVariants;
+
+  const shouldReduceMotion = usePrefersReducedMotion();
+  if (shouldReduceMotion) {
+    return;
+  }
+
   return (
     <AnimatePresence>
       <motion.div

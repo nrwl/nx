@@ -1,5 +1,5 @@
 import type { ProjectNameAndRootFormat } from '@nx/devkit/src/generators/project-name-and-root-utils';
-import type { Linter } from '@nx/eslint';
+import type { Linter, LinterType } from '@nx/eslint';
 import type { E2eTestRunner, UnitTestRunner } from '../../utils/test-runners';
 import type { Styles } from '../utils/types';
 
@@ -16,7 +16,7 @@ export interface Schema {
   directory?: string;
   projectNameAndRootFormat?: ProjectNameAndRootFormat;
   tags?: string;
-  linter?: Linter;
+  linter?: Linter | LinterType;
   unitTestRunner?: UnitTestRunner;
   e2eTestRunner?: E2eTestRunner;
   backendProject?: string;

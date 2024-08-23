@@ -1,5 +1,10 @@
 import * as ts from 'typescript';
-import { ExecutorContext, isDaemonEnabled, output } from '@nx/devkit';
+import {
+  ExecutorContext,
+  isDaemonEnabled,
+  joinPathFragments,
+  output,
+} from '@nx/devkit';
 import type { TypeScriptCompilationOptions } from '@nx/workspace/src/utilities/typescript/compilation';
 import { CopyAssetsHandler } from '../../utils/assets/copy-assets-handler';
 import { checkDependencies } from '../../utils/check-dependencies';
@@ -41,11 +46,11 @@ export function createTypeScriptCompilationOptions(
   context: ExecutorContext
 ): TypeScriptCompilationOptions {
   return {
-    outputPath: normalizedOptions.outputPath,
+    outputPath: joinPathFragments(normalizedOptions.outputPath),
     projectName: context.projectName,
     projectRoot: normalizedOptions.projectRoot,
-    rootDir: normalizedOptions.rootDir,
-    tsConfig: normalizedOptions.tsConfig,
+    rootDir: joinPathFragments(normalizedOptions.rootDir),
+    tsConfig: joinPathFragments(normalizedOptions.tsConfig),
     watch: normalizedOptions.watch,
     deleteOutputPath: normalizedOptions.clean,
     getCustomTransformers: getCustomTrasformersFactory(

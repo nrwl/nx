@@ -79,6 +79,7 @@ function getWebpackBuildConfig(
         options.appProjectRoot,
         'webpack.config.js'
       ),
+      generatePackageJson: true,
     },
     configurations: {
       development: {},
@@ -278,6 +279,10 @@ function addProxy(tree: Tree, options: NormalizedSchema) {
     }
 
     updateProjectConfiguration(tree, options.frontendProject, projectConfig);
+  } else {
+    logger.warn(
+      `Skip updating proxy for frontend project "${options.frontendProject}" since "serve" target is not found in project.json. For more information, see: https://nx.dev/recipes/node/application-proxies.`
+    );
   }
 }
 

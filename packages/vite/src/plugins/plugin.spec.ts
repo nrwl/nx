@@ -41,6 +41,7 @@ describe('@nx/vite/plugin', () => {
 
     afterEach(() => {
       jest.resetModules();
+      tempFs.cleanup();
     });
 
     it('should create nodes', async () => {
@@ -113,6 +114,7 @@ describe('@nx/vite/plugin', () => {
 
     afterEach(() => {
       jest.resetModules();
+      tempFs.cleanup();
     });
 
     it('should create nodes', async () => {
@@ -171,8 +173,152 @@ describe('@nx/vite/plugin', () => {
       );
 
       expect(nodes).toMatchSnapshot();
+      tempFs.cleanup();
+    });
+    it('should not exclude serve and preview targets when vite.config.ts is in library mode when user has defined a server config', async () => {
+      const tempFs = new TempFs('test-exclude');
+      (loadViteDynamicImport as jest.Mock).mockResolvedValue({
+        resolveConfig: jest.fn().mockResolvedValue({
+          build: {
+            lib: {
+              entry: 'index.ts',
+              name: 'my-lib',
+            },
+          },
+          server: {},
+        }),
+      }),
+        (context = {
+          configFiles: [],
+          nxJsonConfiguration: {
+            namedInputs: {
+              default: ['{projectRoot}/**/*'],
+              production: ['!{projectRoot}/**/*.spec.ts'],
+            },
+          },
+          workspaceRoot: tempFs.tempDir,
+        });
+      tempFs.createFileSync(
+        'my-lib/project.json',
+        JSON.stringify({ name: 'my-lib' })
+      );
+      tempFs.createFileSync('my-lib/vite.config.ts', '');
 
-      jest.resetModules();
+      const nodes = await createNodesFunction(
+        ['my-lib/vite.config.ts'],
+        {
+          buildTargetName: 'build',
+          serveTargetName: 'serve',
+          previewTargetName: 'preview',
+        },
+        context
+      );
+
+      expect(nodes).toMatchInlineSnapshot(`
+        [
+          [
+            "my-lib/vite.config.ts",
+            {
+              "projects": {
+                "my-lib": {
+                  "metadata": {},
+                  "projectType": "library",
+                  "root": "my-lib",
+                  "targets": {
+                    "build": {
+                      "cache": true,
+                      "command": "vite build",
+                      "dependsOn": [
+                        "^build",
+                      ],
+                      "inputs": [
+                        "production",
+                        "^production",
+                        {
+                          "externalDependencies": [
+                            "vite",
+                          ],
+                        },
+                      ],
+                      "metadata": {
+                        "description": "Run Vite build",
+                        "help": {
+                          "command": "npx vite build --help",
+                          "example": {
+                            "options": {
+                              "manifest": "manifest.json",
+                              "sourcemap": true,
+                            },
+                          },
+                        },
+                        "technologies": [
+                          "vite",
+                        ],
+                      },
+                      "options": {
+                        "cwd": "my-lib",
+                      },
+                      "outputs": [
+                        "{workspaceRoot}/dist/{projectRoot}",
+                      ],
+                    },
+                    "preview": {
+                      "command": "vite preview",
+                      "dependsOn": [
+                        "build",
+                      ],
+                      "metadata": {
+                        "description": "Locally preview Vite production build",
+                        "help": {
+                          "command": "npx vite preview --help",
+                          "example": {
+                            "options": {
+                              "port": 3000,
+                            },
+                          },
+                        },
+                        "technologies": [
+                          "vite",
+                        ],
+                      },
+                      "options": {
+                        "cwd": "my-lib",
+                      },
+                    },
+                    "serve": {
+                      "command": "vite serve",
+                      "metadata": {
+                        "description": "Starts Vite dev server",
+                        "help": {
+                          "command": "npx vite --help",
+                          "example": {
+                            "options": {
+                              "port": 3000,
+                            },
+                          },
+                        },
+                        "technologies": [
+                          "vite",
+                        ],
+                      },
+                      "options": {
+                        "cwd": "my-lib",
+                      },
+                    },
+                    "serve-static": {
+                      "executor": "@nx/web:file-server",
+                      "options": {
+                        "buildTarget": "build",
+                        "spa": true,
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          ],
+        ]
+      `);
     });
   });
 });

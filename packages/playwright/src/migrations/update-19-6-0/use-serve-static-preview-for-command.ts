@@ -2,7 +2,6 @@ import {
   CreateNodesV2,
   createProjectGraphAsync,
   formatFiles,
-  getPackageManagerCommand,
   joinPathFragments,
   parseTargetString,
   ProjectGraph,
@@ -16,14 +15,8 @@ import type { ConfigurationResult } from 'nx/src/project-graph/utils/project-con
 import { LoadedNxPlugin } from 'nx/src/project-graph/plugins/internal-api';
 import { retrieveProjectConfigurations } from 'nx/src/project-graph/utils/retrieve-workspace-files';
 import { ProjectConfigurationsError } from 'nx/src/project-graph/error-types';
-import {
-  WebpackPluginOptions,
-  createNodesV2 as webpackCreateNodesV2,
-} from '@nx/webpack/src/plugins/plugin';
-import {
-  VitePluginOptions,
-  createNodesV2 as viteCreateNodesV2,
-} from '@nx/vite/plugin';
+import { createNodesV2 as webpackCreateNodesV2 } from '@nx/webpack/src/plugins/plugin';
+import { createNodesV2 as viteCreateNodesV2 } from '@nx/vite/plugin';
 import type { Node } from 'typescript';
 
 export default async function (tree: Tree) {
@@ -35,6 +28,7 @@ export default async function (tree: Tree) {
     configFileType: 'webpack' | 'vite';
     playwrightConfigFile: string;
     commandValueNode: Node;
+    portFlagValue: string | undefined;
   }[] = [];
   visitNotIgnoredFiles(tree, '', async (path) => {
     if (!path.endsWith('playwright.config.ts')) {
@@ -56,13 +50,15 @@ export default async function (tree: Tree) {
     const commandValueNode = nodes[0];
     const command = commandValueNode.getText();
     let project: string;
+    let portFlagValue: string | undefined;
     if (command.includes('nx run')) {
-      const NX_RUN_TARGET_REGEX = "(?<=nx run )[^']+";
+      const NX_RUN_TARGET_REGEX =
+        /(?<=nx run )([^' ]+)(?: [^']*--port[= ](\d+))?/;
       const matches = command.match(NX_RUN_TARGET_REGEX);
       if (!matches) {
         return;
       }
-      const targetString = matches[0];
+      const targetString = matches[1];
       const parsedTargetString = parseTargetString(targetString, graph);
 
       if (
@@ -73,13 +69,20 @@ export default async function (tree: Tree) {
       }
 
       project = parsedTargetString.project;
+      portFlagValue = matches[2];
     } else {
-      const NX_PROJECT_REGEX = "(?<=nx [^ ]+ )[^']+";
+      const NX_PROJECT_REGEX =
+        /(?<=nx [^ ]+ )([^' ]+)(?: [^']*--port[= ](\d+))?/;
       const matches = command.match(NX_PROJECT_REGEX);
       if (!matches) {
         return;
       }
-      project = matches[0];
+      project = matches[1];
+      portFlagValue = matches[2];
+    }
+
+    if (!project || !graph.nodes[project]) {
+      return;
     }
 
     const pathToViteConfig = [
@@ -102,6 +105,7 @@ export default async function (tree: Tree) {
         configFileType: pathToWebpackConfig ? 'webpack' : 'vite',
         playwrightConfigFile: path,
         commandValueNode,
+        portFlagValue,
       });
     }
   });
@@ -144,7 +148,11 @@ export default async function (tree: Tree) {
     const oldCommand = projectToMigrate.commandValueNode.getText();
     const newCommand = oldCommand.replace(
       /nx.*[^"']/,
-      `nx run ${projectToMigrate.projectName}:${targetName}`
+      `nx run ${projectToMigrate.projectName}:${targetName}${
+        projectToMigrate.portFlagValue
+          ? ` --port=${projectToMigrate.portFlagValue}`
+          : ''
+      }`
     );
     if (projectToMigrate.configFileType === 'webpack') {
       tree.write(
@@ -181,9 +189,11 @@ export default async function (tree: Tree) {
         return;
       }
 
+      const serverUrl = `http://localhost:${
+        projectToMigrate.portFlagValue ?? '4300'
+      }`;
       const baseUrlNode = baseUrlNodes[0];
-      const newBaseUrlVariableDeclaration =
-        "baseURL = process.env['BASE_URL'] || 'http://localhost:4300';";
+      const newBaseUrlVariableDeclaration = `baseURL = process.env['BASE_URL'] || '${serverUrl}';`;
       tree.write(
         projectToMigrate.playwrightConfigFile,
         `${playwrightConfigFileContents.slice(
@@ -209,7 +219,7 @@ export default async function (tree: Tree) {
       }
 
       const webServerUrlNode = webServerUrlNodes[0];
-      const newWebServerUrl = "'http://localhost:4300'";
+      const newWebServerUrl = `'${serverUrl}'`;
       tree.write(
         projectToMigrate.playwrightConfigFile,
         `${playwrightConfigFileContents.slice(

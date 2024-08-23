@@ -8,7 +8,11 @@ import {
 
 describe('updatePaths', () => {
   const deps: DependentBuildableProjectNode[] = [
-    { name: '@proj/lib', node: {} as any, outputs: ['dist/libs/lib'] },
+    {
+      name: '@proj/lib',
+      node: { data: { root: 'libs/lib' } } as any,
+      outputs: ['dist/libs/lib'],
+    },
   ];
 
   it('should add path', () => {
@@ -30,7 +34,11 @@ describe('updatePaths', () => {
     updatePaths(deps, paths);
     expect(paths).toEqual({
       '@proj/lib': ['dist/libs/lib'],
-      '@proj/lib/sub': ['dist/libs/lib/sub'],
+      '@proj/lib/sub': [
+        'dist/libs/lib/sub',
+        'dist/libs/lib/sub/src/index',
+        'dist/libs/lib/sub/src/index.ts',
+      ],
     });
   });
 });

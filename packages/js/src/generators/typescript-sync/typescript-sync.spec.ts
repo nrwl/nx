@@ -35,9 +35,17 @@ describe('syncGenerator()', () => {
       source: name,
       target: dep,
     }));
-    writeJson(tree, `${root}/tsconfig.json`, {});
+    writeJson(tree, `${root}/tsconfig.json`, {
+      compilerOptions: {
+        composite: true,
+      },
+    });
     for (const runtimeTsConfigFileName of extraRuntimeTsConfigs) {
-      writeJson(tree, `${root}/${runtimeTsConfigFileName}`, {});
+      writeJson(tree, `${root}/${runtimeTsConfigFileName}`, {
+        compilerOptions: {
+          composite: true,
+        },
+      });
     }
     writeJson(tree, `${root}/package.json`, {
       name: name,
@@ -62,8 +70,16 @@ describe('syncGenerator()', () => {
     });
 
     // Root tsconfigs
-    writeJson(tree, 'tsconfig.json', {});
-    writeJson(tree, 'tsconfig.options.json', { compilerOptions: {} });
+    writeJson(tree, 'tsconfig.json', {
+      compilerOptions: {
+        composite: true,
+      },
+    });
+    writeJson(tree, 'tsconfig.options.json', {
+      compilerOptions: {
+        composite: true,
+      },
+    });
 
     // b => a
     addProject('a');
@@ -84,7 +100,7 @@ describe('syncGenerator()', () => {
     tree.delete('tsconfig.json');
 
     await expect(syncGenerator(tree)).rejects.toMatchInlineSnapshot(
-      `[Error: A "tsconfig.json" file must exist in the workspace root.]`
+      `[Error: A "tsconfig.json" file must exist in the workspace root in order to use this sync generator.]`
     );
   });
 
@@ -107,11 +123,18 @@ describe('syncGenerator()', () => {
         { path: './packages/d' },
       ],
     }));
-    writeJson(tree, 'packages/a/tsconfig.lib.json', {});
+    writeJson(tree, 'packages/a/tsconfig.lib.json', {
+      compilerOptions: {
+        composite: true,
+      },
+    });
     // unformatted tsconfig.json to test that it doesn't get picked up as a change
     tree.write(
       'packages/b/tsconfig.json',
       `{
+      "compilerOptions": {
+        "composite": true,
+      },
             "references": [     { "path": "../a" }
 ]}`
     );
@@ -119,6 +142,9 @@ describe('syncGenerator()', () => {
     tree.write(
       'packages/b/tsconfig.lib.json',
       `{
+      "compilerOptions": {
+        "composite": true,
+      },
             "references": [     { "path": "../a/tsconfig.lib.json" }
 ]}`
     );
@@ -127,6 +153,9 @@ describe('syncGenerator()', () => {
       references: [{ path: '../b' }, { path: '../a' }],
     }));
     writeJson(tree, 'packages/c/tsconfig.lib.json', {
+      compilerOptions: {
+        composite: true,
+      },
       references: [
         { path: '../b/tsconfig.lib.json' },
         { path: '../a/tsconfig.lib.json' },
@@ -137,6 +166,9 @@ describe('syncGenerator()', () => {
       references: [{ path: '../b' }, { path: '../a' }],
     }));
     writeJson(tree, 'packages/d/tsconfig.lib.json', {
+      compilerOptions: {
+        composite: true,
+      },
       references: [
         { path: '../b/tsconfig.lib.json' },
         { path: '../a/tsconfig.lib.json' },
@@ -147,6 +179,9 @@ describe('syncGenerator()', () => {
       references: [{ path: '../b' }, { path: '../d' }, { path: '../a' }],
     }));
     writeJson(tree, 'packages/e/tsconfig.lib.json', {
+      compilerOptions: {
+        composite: true,
+      },
       references: [
         { path: '../b/tsconfig.lib.json' },
         { path: '../d/tsconfig.lib.json' },
@@ -187,6 +222,9 @@ describe('syncGenerator()', () => {
 
     it('should respect existing project references and discard non-existing ones in the tsconfig.json', async () => {
       writeJson(tree, 'tsconfig.json', {
+        compilerOptions: {
+          composite: true,
+        },
         // Swapped order and additional manual reference
         references: [
           { path: './packages/b' },
@@ -195,7 +233,11 @@ describe('syncGenerator()', () => {
           { path: './packages/d' }, // non-existing reference
         ],
       });
-      writeJson(tree, 'packages/c/tsconfig.json', {});
+      writeJson(tree, 'packages/c/tsconfig.json', {
+        compilerOptions: {
+          composite: true,
+        },
+      });
 
       await syncGenerator(tree);
 
@@ -212,6 +254,57 @@ describe('syncGenerator()', () => {
             "path": "./packages/c",
           },
         ]
+      `);
+    });
+
+    it('should leave comments outside of references untouched in the tsconfig.json when patching', async () => {
+      tree.write(
+        'tsconfig.json',
+        `{
+  // This is a top level comment
+  "compilerOptions": {
+    "composite": true,
+    // This is a nested comment
+    "target": "es5"
+  }
+}
+`
+      );
+
+      await syncGenerator(tree);
+
+      expect(tree.read('tsconfig.json').toString('utf-8'))
+        .toMatchInlineSnapshot(`
+        "{
+          // This is a top level comment
+          "compilerOptions": {
+            "composite": true,
+            // This is a nested comment
+            "target": "es5"
+          },
+          "references": [{ "path": "./packages/a" }, { "path": "./packages/b" }]
+        }
+        "
+      `);
+    });
+
+    it('should not add a reference if the internally referenced tsconfig.json does not have composite: true', async () => {
+      // Delete composite from a, causing it to not show up in the final tsconfig.json snapshot
+      writeJson(tree, 'packages/a/tsconfig.json', {
+        compilerOptions: {},
+      });
+
+      await syncGenerator(tree);
+
+      expect(tree.read('tsconfig.json').toString('utf-8'))
+        .toMatchInlineSnapshot(`
+        "{
+          "compilerOptions": {
+            "composite": true
+          },
+          "references": [{ "path": "./packages/b" }]
+        }
+        "
       `);
     });
   });
@@ -236,6 +329,9 @@ describe('syncGenerator()', () => {
 
     it('should respect existing internal project references in the tsconfig.json', async () => {
       writeJson(tree, 'packages/b/tsconfig.json', {
+        compilerOptions: {
+          composite: true,
+        },
         // Swapped order and additional manual reference
         references: [
           { path: './some/thing' },
@@ -266,6 +362,9 @@ describe('syncGenerator()', () => {
 
     it('should prune existing external project references that are no longer dependencies', async () => {
       writeJson(tree, 'packages/b/tsconfig.json', {
+        compilerOptions: {
+          composite: true,
+        },
         references: [
           { path: './some/thing' },
           { path: './another/one' },
@@ -352,6 +451,78 @@ describe('syncGenerator()', () => {
       `);
     });
 
+    it('should leave comments outside of references untouched in the tsconfig.json when patching', async () => {
+      addProject('foo', ['bar'], ['tsconfig.build.json']);
+      addProject('bar', [], ['tsconfig.build.json']);
+
+      tree.write(
+        'packages/foo/tsconfig.build.json',
+        `{
+  // This is a top level comment
+  "compilerOptions": {
+    "composite": true,
+    // This is a nested comment
+    "target": "es5",
+  },
+  "references": []
+}
+      `
+      );
+
+      await syncGenerator(tree);
+
+      expect(tree.read('packages/foo/tsconfig.build.json').toString('utf-8'))
+        .toMatchInlineSnapshot(`
+        "{
+          // This is a top level comment
+          "compilerOptions": {
+            "composite": true,
+            // This is a nested comment
+            "target": "es5"
+          },
+          "references": [{ "path": "../bar/tsconfig.build.json" }]
+        }
+        "
+      `);
+    });
+
+    it('should not add a reference if the dependency tsconfig.json does not have composite: true', async () => {
+      addProject('foo', ['bar'], ['tsconfig.build.json']);
+      addProject('bar', [], ['tsconfig.build.json']);
+
+      // Delete composite from bar, causing it to not show up in the final tsconfig.json snapshots below
+      writeJson(tree, 'packages/bar/tsconfig.json', {
+        compilerOptions: {},
+      });
+
+      await syncGenerator(tree);
+
+      expect(tree.read('tsconfig.json').toString('utf-8'))
+        .toMatchInlineSnapshot(`
+        "{
+          "compilerOptions": {
+            "composite": true
+          },
+          "references": [
+            { "path": "./packages/a" },
+            { "path": "./packages/b" },
+            { "path": "./packages/foo" }
+          ]
+        }
+        "
+      `);
+
+      expect(tree.read('packages/foo/tsconfig.json').toString('utf-8'))
+        .toMatchInlineSnapshot(`
+        "{
+          "compilerOptions": {
+            "composite": true
+          }
+        }
+        "
+      `);
+    });
+
     describe('without custom sync generator options', () => {
       it.each`
         runtimeTsConfigFileName
@@ -364,8 +535,16 @@ describe('syncGenerator()', () => {
       `(
         'should sync project references to $runtimeTsConfigFileName files',
         async ({ runtimeTsConfigFileName }) => {
-          writeJson(tree, `packages/a/${runtimeTsConfigFileName}`, {});
-          writeJson(tree, `packages/b/${runtimeTsConfigFileName}`, {});
+          writeJson(tree, `packages/a/${runtimeTsConfigFileName}`, {
+            compilerOptions: {
+              composite: true,
+            },
+          });
+          writeJson(tree, `packages/b/${runtimeTsConfigFileName}`, {
+            compilerOptions: {
+              composite: true,
+            },
+          });
 
           await syncGenerator(tree);
 
@@ -390,9 +569,21 @@ describe('syncGenerator()', () => {
       );
 
       it('should sync project references to multiple runtime tsconfig files', async () => {
-        writeJson(tree, 'packages/a/tsconfig.lib.json', {});
-        writeJson(tree, 'packages/b/tsconfig.cjs.json', {});
-        writeJson(tree, 'packages/b/tsconfig.esm.json', {});
+        writeJson(tree, 'packages/a/tsconfig.lib.json', {
+          compilerOptions: {
+            composite: true,
+          },
+        });
+        writeJson(tree, 'packages/b/tsconfig.cjs.json', {
+          compilerOptions: {
+            composite: true,
+          },
+        });
+        writeJson(tree, 'packages/b/tsconfig.esm.json', {
+          compilerOptions: {
+            composite: true,
+          },
+        });
 
         await syncGenerator(tree);
 
@@ -423,8 +614,16 @@ describe('syncGenerator()', () => {
       });
 
       it('should sync project references to different runtime tsconfig files', async () => {
-        writeJson(tree, 'packages/a/tsconfig.lib.json', {});
-        writeJson(tree, 'packages/b/tsconfig.build.json', {});
+        writeJson(tree, 'packages/a/tsconfig.lib.json', {
+          compilerOptions: {
+            composite: true,
+          },
+        });
+        writeJson(tree, 'packages/b/tsconfig.build.json', {
+          compilerOptions: {
+            composite: true,
+          },
+        });
         addProject('c', ['b'], ['tsconfig.cjs.json', 'tsconfig.esm.json']);
         addProject('d', ['b', 'a'], ['tsconfig.runtime.json']);
         addProject('e', ['c'], ['tsconfig.cjs.json', 'tsconfig.esm.json']);
@@ -592,8 +791,16 @@ describe('syncGenerator()', () => {
       `(
         'should collect transitive dependencies and sync project references to $runtimeTsConfigFileName files',
         async ({ runtimeTsConfigFileName }) => {
-          writeJson(tree, `packages/a/${runtimeTsConfigFileName}`, {});
-          writeJson(tree, `packages/b/${runtimeTsConfigFileName}`, {});
+          writeJson(tree, `packages/a/${runtimeTsConfigFileName}`, {
+            compilerOptions: {
+              composite: true,
+            },
+          });
+          writeJson(tree, `packages/b/${runtimeTsConfigFileName}`, {
+            compilerOptions: {
+              composite: true,
+            },
+          });
           // c => b => a
           // d => b => a
           //   => a
@@ -706,14 +913,38 @@ describe('syncGenerator()', () => {
       );
 
       it('should not make changes to non-default runtime tsconfig files', async () => {
-        writeJson(tree, 'packages/a/tsconfig.lib.json', {});
-        writeJson(tree, 'packages/a/tsconfig.custom.json', {});
-        writeJson(tree, 'packages/a/tsconfig.spec.json', {});
+        writeJson(tree, 'packages/a/tsconfig.lib.json', {
+          compilerOptions: {
+            composite: true,
+          },
+        });
+        writeJson(tree, 'packages/a/tsconfig.custom.json', {
+          compilerOptions: {
+            composite: true,
+          },
+        });
+        writeJson(tree, 'packages/a/tsconfig.spec.json', {
+          compilerOptions: {
+            composite: true,
+          },
+        });
         // default runtime tsconfig that should be updated
-        writeJson(tree, 'packages/b/tsconfig.lib.json', {});
+        writeJson(tree, 'packages/b/tsconfig.lib.json', {
+          compilerOptions: {
+            composite: true,
+          },
+        });
         // non-default runtime tsconfig files that should not be updated
-        writeJson(tree, 'packages/b/tsconfig.custom.json', {});
-        writeJson(tree, 'packages/b/tsconfig.spec.json', {});
+        writeJson(tree, 'packages/b/tsconfig.custom.json', {
+          compilerOptions: {
+            composite: true,
+          },
+        });
+        writeJson(tree, 'packages/b/tsconfig.spec.json', {
+          compilerOptions: {
+            composite: true,
+          },
+        });
 
         await syncGenerator(tree);
 
@@ -736,11 +967,17 @@ describe('syncGenerator()', () => {
         `);
         // assert that tsconfig.lib.json and tsconfig.spec.json files have not been updated
         expect(readJson(tree, 'packages/b/tsconfig.custom.json')).toStrictEqual(
-          {}
+          {
+            compilerOptions: {
+              composite: true,
+            },
+          }
         );
-        expect(readJson(tree, 'packages/b/tsconfig.spec.json')).toStrictEqual(
-          {}
-        );
+        expect(readJson(tree, 'packages/b/tsconfig.spec.json')).toStrictEqual({
+          compilerOptions: {
+            composite: true,
+          },
+        });
       });
     });
 
@@ -755,8 +992,16 @@ describe('syncGenerator()', () => {
           },
         };
         updateNxJson(tree, nxJson);
-        writeJson(tree, 'packages/a/tsconfig.custom.json', {});
-        writeJson(tree, 'packages/b/tsconfig.custom.json', {});
+        writeJson(tree, 'packages/a/tsconfig.custom.json', {
+          compilerOptions: {
+            composite: true,
+          },
+        });
+        writeJson(tree, 'packages/b/tsconfig.custom.json', {
+          compilerOptions: {
+            composite: true,
+          },
+        });
 
         await syncGenerator(tree);
 
@@ -792,9 +1037,21 @@ describe('syncGenerator()', () => {
           },
         };
         updateNxJson(tree, nxJson);
-        writeJson(tree, 'packages/a/tsconfig.custom.json', {});
-        writeJson(tree, 'packages/b/tsconfig.custom-cjs.json', {});
-        writeJson(tree, 'packages/b/tsconfig.custom-esm.json', {});
+        writeJson(tree, 'packages/a/tsconfig.custom.json', {
+          compilerOptions: {
+            composite: true,
+          },
+        });
+        writeJson(tree, 'packages/b/tsconfig.custom-cjs.json', {
+          compilerOptions: {
+            composite: true,
+          },
+        });
+        writeJson(tree, 'packages/b/tsconfig.custom-esm.json', {
+          compilerOptions: {
+            composite: true,
+          },
+        });
 
         await syncGenerator(tree);
 
@@ -840,8 +1097,16 @@ describe('syncGenerator()', () => {
           },
         };
         updateNxJson(tree, nxJson);
-        writeJson(tree, 'packages/a/tsconfig.custom.json', {});
-        writeJson(tree, 'packages/b/tsconfig.custom-build.json', {});
+        writeJson(tree, 'packages/a/tsconfig.custom.json', {
+          compilerOptions: {
+            composite: true,
+          },
+        });
+        writeJson(tree, 'packages/b/tsconfig.custom-build.json', {
+          compilerOptions: {
+            composite: true,
+          },
+        });
         addProject(
           'c',
           ['b'],
@@ -1019,8 +1284,16 @@ describe('syncGenerator()', () => {
           },
         };
         updateNxJson(tree, nxJson);
-        writeJson(tree, 'packages/a/tsconfig.custom.json', {});
-        writeJson(tree, 'packages/b/tsconfig.custom.json', {});
+        writeJson(tree, 'packages/a/tsconfig.custom.json', {
+          compilerOptions: {
+            composite: true,
+          },
+        });
+        writeJson(tree, 'packages/b/tsconfig.custom.json', {
+          compilerOptions: {
+            composite: true,
+          },
+        });
         // c => b => a
         // d => b => a
         //   => a
@@ -1137,14 +1410,38 @@ describe('syncGenerator()', () => {
           },
         };
         updateNxJson(tree, nxJson);
-        writeJson(tree, 'packages/a/tsconfig.custom.json', {});
-        writeJson(tree, 'packages/a/tsconfig.lib.json', {});
-        writeJson(tree, 'packages/a/tsconfig.spec.json', {});
+        writeJson(tree, 'packages/a/tsconfig.custom.json', {
+          compilerOptions: {
+            composite: true,
+          },
+        });
+        writeJson(tree, 'packages/a/tsconfig.lib.json', {
+          compilerOptions: {
+            composite: true,
+          },
+        });
+        writeJson(tree, 'packages/a/tsconfig.spec.json', {
+          compilerOptions: {
+            composite: true,
+          },
+        });
         // non-default runtime tsconfig that should be updated because is in the configured list
-        writeJson(tree, 'packages/b/tsconfig.custom.json', {});
+        writeJson(tree, 'packages/b/tsconfig.custom.json', {
+          compilerOptions: {
+            composite: true,
+          },
+        });
         // default runtime tsconfig that shouldn't be updated because is not in the configured list
-        writeJson(tree, 'packages/b/tsconfig.lib.json', {});
-        writeJson(tree, 'packages/b/tsconfig.spec.json', {});
+        writeJson(tree, 'packages/b/tsconfig.lib.json', {
+          compilerOptions: {
+            composite: true,
+          },
+        });
+        writeJson(tree, 'packages/b/tsconfig.spec.json', {
+          compilerOptions: {
+            composite: true,
+          },
+        });
 
         await syncGenerator(tree);
 
@@ -1166,12 +1463,16 @@ describe('syncGenerator()', () => {
           ]
         `);
         // assert that tsconfig.lib.json and tsconfig.spec.json files have not been updated
-        expect(readJson(tree, 'packages/b/tsconfig.lib.json')).toStrictEqual(
-          {}
-        );
-        expect(readJson(tree, 'packages/b/tsconfig.spec.json')).toStrictEqual(
-          {}
-        );
+        expect(readJson(tree, 'packages/b/tsconfig.lib.json')).toStrictEqual({
+          compilerOptions: {
+            composite: true,
+          },
+        });
+        expect(readJson(tree, 'packages/b/tsconfig.spec.json')).toStrictEqual({
+          compilerOptions: {
+            composite: true,
+          },
+        });
       });
     });
   });

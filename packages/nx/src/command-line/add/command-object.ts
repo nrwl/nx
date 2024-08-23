@@ -1,5 +1,5 @@
 import { CommandModule } from 'yargs';
-import { withOverrides } from '../yargs-utils/shared-options';
+import { withOverrides, withVerbose } from '../yargs-utils/shared-options';
 
 export interface AddOptions {
   packageSpecifier: string;
@@ -15,7 +15,7 @@ export const yargsAddCommand: CommandModule<
   command: 'add <packageSpecifier>',
   describe: 'Install a plugin and initialize it.',
   builder: (yargs) =>
-    yargs
+    withVerbose(yargs)
       .parserConfiguration({
         'strip-dashed': true,
         'unknown-options-as-args': true,
@@ -29,11 +29,6 @@ export const yargsAddCommand: CommandModule<
         type: 'boolean',
         description:
           'Update `package.json` scripts with inferred targets. Defaults to `true` when the package is a core Nx plugin',
-      })
-      .option('verbose', {
-        type: 'boolean',
-        description:
-          'Prints additional information about the commands (e.g., stack traces)',
       })
       .example(
         '$0 add @nx/react',

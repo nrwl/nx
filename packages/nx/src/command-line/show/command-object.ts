@@ -124,13 +124,10 @@ const showProjectsCommand: CommandModule<NxShowArgs, ShowProjectsOptions> = {
         'Show affected projects in the workspace, excluding end-to-end projects'
       ) as any,
   handler: async (args) => {
-    const exitCode = await handleErrors(
-      args.verbose ?? process.env.NX_VERBOSE_LOGGING === 'true',
-      async () => {
-        const { showProjectsHandler } = await import('./projects');
-        await showProjectsHandler(args);
-      }
-    );
+    const exitCode = await handleErrors(args.verbose as boolean, async () => {
+      const { showProjectsHandler } = await import('./projects');
+      await showProjectsHandler(args);
+    });
     process.exit(exitCode);
   },
 };
@@ -178,13 +175,10 @@ const showProjectCommand: CommandModule<NxShowArgs, ShowProjectOptions> = {
         'View project information for my-app in the browser'
       ),
   handler: async (args) => {
-    const exitCode = await handleErrors(
-      args.verbose ?? process.env.NX_VERBOSE_LOGGING === 'true',
-      async () => {
-        const { showProjectHandler } = await import('./project');
-        await showProjectHandler(args);
-      }
-    );
+    const exitCode = await handleErrors(args.verbose as boolean, async () => {
+      const { showProjectHandler } = await import('./project');
+      await showProjectHandler(args);
+    });
     process.exit(exitCode);
   },
 };

@@ -26,6 +26,7 @@ export interface GradleReport {
   gradleFileToOutputDirsMap: Map<string, Map<string, string>>;
   gradleProjectToTasksTypeMap: Map<string, Map<string, string>>;
   gradleProjectToProjectName: Map<string, string>;
+  gradleProjectToChildProjects: Map<string, string[]>;
 }
 
 let gradleReportCache: GradleReport;
@@ -133,6 +134,10 @@ export function processProjectReports(
    * e.g. {build.gradle.kts: { projectReportDir: '' testReportDir: '' }}
    */
   const gradleFileToOutputDirsMap = new Map<string, Map<string, string>>();
+  /**
+   * Map of Gradle Project to its child projects
+   */
+  const gradleProjectToChildProjects = new Map<string, string[]>();
 
   let index = 0;
   while (index < projectReportLines.length) {
@@ -181,6 +186,13 @@ export function processProjectReports(
           }
           if (line.startsWith('buildDir: ')) {
             absBuildDirPath = line.substring('buildDir: '.length);
+          }
+          if (line.startsWith('childProjects: ')) {
+            const childProjects = line.substring('childProjects: {'.length); // remove curly braces {} around childProjects
+            gradleProjectToChildProjects.set(
+              gradleProject,
+              childProjects.split(',').map((c) => c.trim().split('=')[0]) // e.g. get project name from text like "app=project ':app', mylibrary=project ':mylibrary'"
+            );
           }
           if (line.includes('Dir: ')) {
             const [dirName, dirPath] = line.split(': ');
@@ -240,7 +252,11 @@ export function processProjectReports(
             if (tasksFileLines[i + 1] === dashes) {
               const type = line.substring(0, line.length - ' tasks'.length);
               i++;
-              while (tasksFileLines[++i] !== '') {
+              while (
+                tasksFileLines[++i] !== '' &&
+                i < tasksFileLines.length &&
+                tasksFileLines[i]?.includes(' - ')
+              ) {
                 const [taskName] = tasksFileLines[i].split(' - ');
                 taskTypeMap.set(taskName, type);
               }
@@ -260,5 +276,6 @@ export function processProjectReports(
     gradleFileToOutputDirsMap,
     gradleProjectToTasksTypeMap,
     gradleProjectToProjectName,
+    gradleProjectToChildProjects,
   };
 }

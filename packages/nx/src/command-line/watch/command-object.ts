@@ -1,7 +1,7 @@
 import { Argv, CommandModule } from 'yargs';
 import { WatchArguments } from './watch';
 import { linkToNxDevAndExamples } from '../yargs-utils/documentation';
-import { parseCSV } from '../yargs-utils/shared-options';
+import { parseCSV, withVerbose } from '../yargs-utils/shared-options';
 
 export const yargsWatchCommand: CommandModule = {
   command: 'watch',
@@ -13,7 +13,7 @@ export const yargsWatchCommand: CommandModule = {
 };
 
 function withWatchOptions(yargs: Argv) {
-  return yargs
+  return withVerbose(yargs)
     .parserConfiguration({
       'strip-dashed': true,
       'populate--': true,

@@ -54,10 +54,6 @@ export async function affected(
     nxJson
   );
 
-  if (nxArgs.verbose) {
-    process.env.NX_VERBOSE_LOGGING = 'true';
-  }
-
   await connectToNxCloudIfExplicitlyAsked(nxArgs);
 
   const projectGraph = await createProjectGraphAsync({ exitOnError: true });

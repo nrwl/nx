@@ -22,7 +22,7 @@ import {
 } from './lib/build-esbuild-options';
 import { getExtraDependencies } from './lib/get-extra-dependencies';
 import { DependentBuildableProjectNode } from '@nx/js/src/utils/buildable-libs-utils';
-import { join } from 'path';
+import { join, relative } from 'path';
 
 const BUILD_WATCH_FAILED = `[ ${chalk.red(
   'watch'
@@ -57,6 +57,7 @@ export async function* esbuildExecutor(
           node: externalNode,
         });
       }
+      return acc;
       return acc;
     }, []);
 
@@ -210,6 +211,7 @@ function getTypeCheckOptions(
   context: ExecutorContext
 ) {
   const { watch, tsConfig, outputPath } = options;
+  const projectRoot = context.projectGraph.nodes[context.projectName].data.root;
 
   const typeCheckOptions: TypeCheckOptions = {
     ...(options.declaration
@@ -220,9 +222,10 @@ function getTypeCheckOptions(
       : {
           mode: 'noEmit',
         }),
-    tsConfigPath: tsConfig,
+    tsConfigPath: relative(process.cwd(), join(context.root, tsConfig)),
     workspaceRoot: context.root,
     rootDir: options.declarationRootDir ?? context.root,
+    projectRoot,
   };
 
   if (watch) {

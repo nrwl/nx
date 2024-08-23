@@ -11,7 +11,7 @@ You could manually address these problems by splitting your e2e tests into small
 
 ## Set up
 
-To enable atomized tasks, you need to turn on [inferred tasks](/concepts/inferred-tasks#existing-nx-workspaces) for the [@nx/cypress](/nx-api/cypress#splitting-e2e-tasks-by-file), [@nx/playwright](/nx-api/playwright#splitting-e2e-tasks-by-file), [@nx/jest](/nx-api/jest#splitting-e2e-tests) or [@nx/gradle](/nx-api/gradle) plugins. Run this command to set up inferred tasks:
+To enable atomized tasks, you need to turn on [inferred tasks](/concepts/inferred-tasks#existing-nx-workspaces) for the [@nx/cypress](/nx-api/cypress#splitting-e2e-tasks-by-file), [@nx/playwright](/nx-api/playwright#splitting-e2e-tests), [@nx/jest](/nx-api/jest#splitting-e2e-tests) or [@nx/gradle](/nx-api/gradle#splitting-e2e-tests) plugins. Run this command to set up inferred tasks:
 
 {% tabs %}
 {% tab label="Cypress" %}
@@ -55,7 +55,7 @@ You can view the available tasks for your project in the project detail view:
 nx show project myproject-e2e --web
 ```
 
-{% project-details title="Project Details View" height="100px" %}
+{% project-details title="Project Details View" %}
 
 ```json
 {

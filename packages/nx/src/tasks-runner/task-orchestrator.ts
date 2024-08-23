@@ -5,7 +5,7 @@ import { writeFileSync } from 'fs';
 import { TaskHasher } from '../hasher/task-hasher';
 import runCommandsImpl from '../executors/run-commands/run-commands.impl';
 import { ForkedProcessTaskRunner } from './forked-process-task-runner';
-import { Cache } from './cache';
+import { Cache, DbCache } from './cache';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
 import { TaskStatus } from './tasks-runner';
 import {
@@ -31,9 +31,19 @@ import {
 import { workspaceRoot } from '../utils/workspace-root';
 import { output } from '../utils/output';
 import { combineOptionsForExecutor } from '../utils/params';
+import { isNxCloudUsed } from '../utils/nx-cloud-utils';
+import { readNxJson } from '../config/nx-json';
 
 export class TaskOrchestrator {
-  private cache = new Cache(this.options);
+  private cache =
+    process.env.NX_DB_CACHE === 'true'
+      ? new DbCache({
+          // Remove this in Nx 21
+          nxCloudRemoteCache: isNxCloudUsed(readNxJson())
+            ? this.options.remoteCache
+            : null,
+        })
+      : new Cache(this.options);
   private forkedProcessTaskRunner = new ForkedProcessTaskRunner(this.options);
 
   private tasksSchedule = new TasksSchedule(

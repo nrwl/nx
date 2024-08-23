@@ -152,14 +152,9 @@ export default ESLintUtils.RuleCreator(
     );
     const expectedDependencyNames = Object.keys(npmDependencies);
 
-    const projPackageJsonPath = join(
-      workspaceRoot,
-      sourceProject.data.root,
-      'package.json'
-    );
+    const packageJson = JSON.parse(context.sourceCode.getText());
+    const projPackageJsonDeps = getProductionDependencies(packageJson);
 
-    const projPackageJsonDeps: Record<string, string> =
-      getProductionDependencies(projPackageJsonPath);
     const rootPackageJsonDeps = getAllDependencies(rootPackageJson);
 
     function validateMissingDependencies(node: AST.JSONProperty) {

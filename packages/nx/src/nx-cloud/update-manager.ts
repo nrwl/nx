@@ -18,6 +18,7 @@ import * as tar from 'tar-stream';
 import { cacheDir } from '../utils/cache-directory';
 import { createHash } from 'crypto';
 import { TasksRunner } from '../tasks-runner/tasks-runner';
+import { RemoteCacheV2 } from '../tasks-runner/default-tasks-runner';
 
 interface CloudBundleInstall {
   version: string;
@@ -55,6 +56,7 @@ export interface NxCloudClient {
   configureLightClientRequire: () => (paths: string[]) => void;
   commands: Record<string, () => Promise<void>>;
   nxCloudTasksRunner: TasksRunner<CloudTaskRunnerOptions>;
+  remoteCache: RemoteCacheV2;
 }
 export async function verifyOrUpdateNxCloudClient(
   options: CloudTaskRunnerOptions

@@ -14,7 +14,7 @@ const features = [
       "Debug task errors on your CI pipeline directly in your pipeline's UI.",
     icon: CodeBracketIcon,
     isAvailable: true,
-    link: '/ci/troubleshooting/explain-with-ai#explain-with-ai-betautm_source=nx.app&utm_campaign=ai-section',
+    link: '/ci/features/explain-with-ai#explain-with-ai-betautm_source=nx.app&utm_campaign=ai-section',
   },
   {
     name: 'Dynamic Nx Agent sizing',

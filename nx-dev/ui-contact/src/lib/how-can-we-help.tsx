@@ -23,7 +23,7 @@ export function HowCanWeHelp(): JSX.Element {
                 className="h-5 w-5 shrink-0"
               />
               <h3 className="text-xl font-medium text-slate-700 dark:text-slate-300">
-                Sales
+                Talk to Sales
               </h3>
             </div>
             <p className="mt-4">
@@ -47,7 +47,7 @@ export function HowCanWeHelp(): JSX.Element {
                 className="h-5 w-5 shrink-0"
               />
               <h3 className="text-xl font-medium text-slate-700 dark:text-slate-300">
-                Engineers
+                Learn more about Nx Cloud
               </h3>
             </div>
             <p className="mt-4">

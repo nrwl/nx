@@ -28,7 +28,7 @@ import {
   DaemonProjectGraphError,
   ProjectGraphError,
 } from '../../project-graph/error-types';
-import { IS_WASM, NxWorkspaceFiles } from '../../native';
+import { IS_WASM, NxWorkspaceFiles, TaskRun } from '../../native';
 import { HandleGlobMessage } from '../message-types/glob';
 import {
   GET_NX_WORKSPACE_FILES,
@@ -43,10 +43,11 @@ import {
   HandleGetFilesInDirectoryMessage,
 } from '../message-types/get-files-in-directory';
 import { HASH_GLOB, HandleHashGlobMessage } from '../message-types/hash-glob';
-import { TaskRun } from '../../utils/task-history';
 import {
-  HandleGetTaskHistoryForHashesMessage,
-  HandleWriteTaskRunsToHistoryMessage,
+  GET_FLAKY_TASKS,
+  HandleGetFlakyTasks,
+  HandleRecordTaskRunsMessage,
+  RECORD_TASK_RUNS,
 } from '../message-types/task-history';
 import { FORCE_SHUTDOWN } from '../message-types/force-shutdown';
 import {
@@ -130,10 +131,13 @@ export class DaemonClient {
       // CI=true,env=undefined => no daemon
       // CI=true,env=false => no daemon
       // CI=true,env=true => daemon
+
+      // docker=true,env=undefined => no daemon
+      // docker=true,env=false => no daemon
+      // docker=true,env=true => daemon
       // WASM => no daemon because file watching does not work
       if (
-        (isCI() && env !== 'true') ||
-        isDocker() ||
+        ((isCI() || isDocker()) && env !== 'true') ||
         isDaemonDisabled() ||
         nxJsonIsNotPresent() ||
         (useDaemonProcessOption === undefined && env === 'false') ||
@@ -341,20 +345,18 @@ export class DaemonClient {
     return this.sendToDaemonViaQueue(message);
   }
 
-  getTaskHistoryForHashes(hashes: string[]): Promise<{
-    [hash: string]: TaskRun[];
-  }> {
-    const message: HandleGetTaskHistoryForHashesMessage = {
-      type: 'GET_TASK_HISTORY_FOR_HASHES',
+  getFlakyTasks(hashes: string[]): Promise<string[]> {
+    const message: HandleGetFlakyTasks = {
+      type: GET_FLAKY_TASKS,
       hashes,
     };
 
     return this.sendToDaemonViaQueue(message);
   }
 
-  writeTaskRunsToHistory(taskRuns: TaskRun[]): Promise<void> {
-    const message: HandleWriteTaskRunsToHistoryMessage = {
-      type: 'WRITE_TASK_RUNS_TO_HISTORY',
+  recordTaskRuns(taskRuns: TaskRun[]): Promise<void> {
+    const message: HandleRecordTaskRunsMessage = {
+      type: RECORD_TASK_RUNS,
       taskRuns,
     };
     return this.sendMessageToDaemon(message);

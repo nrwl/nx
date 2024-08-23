@@ -364,10 +364,14 @@ if (!nativeBinding) {
 module.exports.ChildProcess = nativeBinding.ChildProcess
 module.exports.HashPlanner = nativeBinding.HashPlanner
 module.exports.ImportResult = nativeBinding.ImportResult
+module.exports.NxCache = nativeBinding.NxCache
+module.exports.NxTaskHistory = nativeBinding.NxTaskHistory
 module.exports.RustPseudoTerminal = nativeBinding.RustPseudoTerminal
+module.exports.TaskDetails = nativeBinding.TaskDetails
 module.exports.TaskHasher = nativeBinding.TaskHasher
 module.exports.Watcher = nativeBinding.Watcher
 module.exports.WorkspaceContext = nativeBinding.WorkspaceContext
+module.exports.connectToNxDb = nativeBinding.connectToNxDb
 module.exports.copy = nativeBinding.copy
 module.exports.EventType = nativeBinding.EventType
 module.exports.expandOutputs = nativeBinding.expandOutputs

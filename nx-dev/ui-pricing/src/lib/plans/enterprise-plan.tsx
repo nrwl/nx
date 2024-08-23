@@ -72,7 +72,7 @@ export function EnterprisePlan({
           />
           <p>
             <Link
-              href="/ci/troubleshooting/explain-with-ai"
+              href="/ci/features/explain-with-ai"
               title="Learn more about Explain with AI"
               prefetch={false}
               className="font-medium text-slate-700 underline dark:text-slate-300"
