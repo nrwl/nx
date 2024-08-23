@@ -915,23 +915,23 @@ async function determinePackageBasedOrIntegratedOrStandalone(): Promise<
     {
       type: 'autocomplete',
       name: 'workspaceType',
-      message: `Package-based monorepo, integrated monorepo, or standalone project?`,
+      message: 'npm/yarn monorepo, Nx monorepo, or standalone project?',
       initial: 0,
       choices: [
         {
           name: 'package-based',
           message:
-            'Package-based Monorepo:     Nx makes it fast, but lets you run things your way.',
+            'Package-based Monorepo:     Use a npm/yarn workspace, but have Nx manage the build',
         },
         {
           name: 'integrated',
           message:
-            'Integrated Monorepo:        Nx creates a monorepo that contains multiple projects.',
+            'Integrated Monorepo:        Use Nx as the workspace manager and build tools',
         },
         {
           name: 'standalone',
           message:
-            'Standalone:                 Nx creates a single project and makes it fast.',
+            'Standalone:                 Create a single project and use Nx build tools',
         },
       ],
     },
