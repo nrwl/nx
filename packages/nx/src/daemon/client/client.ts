@@ -611,7 +611,7 @@ export class DaemonClient {
       output.error({
         title:
           err?.message ||
-          'Something unexpected went wrong when stopping the server',
+          'Something unexpected went wrong when stopping the daemon server',
       });
     }
 
