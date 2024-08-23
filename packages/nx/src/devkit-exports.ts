@@ -159,6 +159,8 @@ export type {
   ProjectGraphProcessorContext,
 } from './config/project-graph';
 
+export type { GraphJson } from './command-line/graph/graph';
+
 /**
  * @category Project Graph
  */
