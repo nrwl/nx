@@ -49,6 +49,13 @@ export function withWeb(opts: WithWebOptions = {}) {
             type: opts?.cssModules ? 'css/module' : undefined,
           },
           {
+            test: /\.css$/,
+            type: 'css',
+            use: [{
+              loader: require.resolve('postcss-loader'),
+            }]
+          },
+          {
             test: /\.scss$|\.sass$/,
             type: opts?.cssModules ? 'css/module' : undefined,
             use: [
