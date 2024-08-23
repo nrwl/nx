@@ -69,7 +69,7 @@ getTestBed().initTestEnvironment(
     await viteConfigurationGenerator(tree, {
       project: options.name,
       newProject: true,
-      uiFramework: 'angular',
+      uiFramework: 'none',
       includeVitest: true,
       testEnvironment: 'jsdom',
     });
