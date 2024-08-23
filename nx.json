@@ -179,6 +179,7 @@
   },
   "plugins": [
     "@monodon/rust",
+    "@nx/powerpack-owners",
     {
       "plugin": "@nx/playwright/plugin",
       "options": {
@@ -229,6 +230,16 @@
       }
     }
   ],
+  "owners": {
+    "outputPath": "CODEOWNERS",
+    "patterns": [
+      {
+        "description": "Test owners",
+        "files": ["**/.eslintrc.json"],
+        "owners": ["@JamesHenry"]
+      }
+    ]
+  },
   "nxCloudId": "62d013ea0852fe0a2df74438",
   "nxCloudUrl": "https://staging.nx.app",
   "parallel": 1,

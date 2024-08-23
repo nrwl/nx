@@ -320,6 +320,9 @@ devDependencies:
   '@nx/playwright':
     specifier: 19.7.0-beta.1
     version: 19.7.0-beta.1(@playwright/test@1.36.1)(@swc-node/register@1.9.1)(@swc/core@1.5.7)(@types/node@18.19.8)(@zkochan/js-yaml@0.0.7)(esbuild@0.19.5)(eslint@8.57.0)(html-webpack-plugin@5.5.0)(nx@19.7.0-beta.1)(typescript@5.5.3)(verdaccio@5.31.0)(vite@5.0.8)(vitest@1.3.1)(webpack-cli@5.1.4)
+  '@nx/powerpack-owners':
+    specifier: 0.0.1-alpha.4
+    version: 0.0.1-alpha.4(@nx/devkit@19.7.0-beta.1)(nx@19.7.0-beta.1)
   '@nx/react':
     specifier: 19.7.0-beta.1
     version: 19.7.0-beta.1(@swc-node/register@1.9.1)(@swc/core@1.5.7)(@types/node@18.19.8)(@zkochan/js-yaml@0.0.7)(eslint@8.57.0)(nx@19.7.0-beta.1)(typescript@5.5.3)(verdaccio@5.31.0)(webpack@5.88.0)
@@ -377,6 +380,9 @@ devDependencies:
   '@schematics/angular':
     specifier: ~18.2.0
     version: 18.2.0
+  '@shikijs/transformers':
+    specifier: ^1.14.1
+    version: 1.14.1
   '@storybook/addon-essentials':
     specifier: ^8.2.8
     version: 8.2.9(storybook@8.2.9)
@@ -890,6 +896,9 @@ devDependencies:
   semver:
     specifier: ^7.5.3
     version: 7.5.3
+  shiki:
+    specifier: ^1.14.1
+    version: 1.14.1
   source-map:
     specifier: 0.7.3
     version: 0.7.3
@@ -13312,6 +13321,17 @@ packages:
       - webpack-cli
     dev: true
 
+  /@nx/powerpack-owners@0.0.1-alpha.4(@nx/devkit@19.7.0-beta.1)(nx@19.7.0-beta.1):
+    resolution: {integrity: sha512-v61yefNYb5pWU8e2HeYjs+hQQQAGLCMlFLyq70sQj0CtIcnzQKaFolCcy2rJtDa0z3beDm/+KWYQakySJrG3fA==}
+    peerDependencies:
+      '@nx/devkit': '>= 19 < 20'
+      nx: '>= 19 < 20'
+    dependencies:
+      '@nx/devkit': 19.7.0-beta.1(nx@19.7.0-beta.1)
+      minimatch: 3.1.2
+      nx: 19.7.0-beta.1(@swc-node/register@1.9.1)(@swc/core@1.5.7)
+    dev: true
+
   /@nx/react@19.7.0-beta.1(@swc-node/register@1.9.1)(@swc/core@1.5.7)(@types/node@18.19.8)(@zkochan/js-yaml@0.0.7)(eslint@8.57.0)(nx@19.7.0-beta.1)(typescript@5.5.3)(verdaccio@5.31.0)(webpack@5.88.0):
     resolution: {integrity: sha512-b+ixcIvPsiglqhoH/8lm3PFyohuu1FrK2oHR1MmnFOAP9xQZ/tQe8JM5s3mRGk+ElNWJsozIRwT/MrAV9L2qcw==}
     dependencies:
@@ -15232,6 +15252,18 @@ packages:
       jsonc-parser: 3.3.1
     transitivePeerDependencies:
       - chokidar
+    dev: true
+
+  /@shikijs/core@1.14.1:
+    resolution: {integrity: sha512-KyHIIpKNaT20FtFPFjCQB5WVSTpLR/n+jQXhWHWVUMm9MaOaG9BGOG0MSyt7yA4+Lm+4c9rTc03tt3nYzeYSfw==}
+    dependencies:
+      '@types/hast': 3.0.4
+    dev: true
+
+  /@shikijs/transformers@1.14.1:
+    resolution: {integrity: sha512-JJqL8QBVCJh3L61jqqEXgFq1cTycwjcGj7aSmqOEsbxnETM9hRlaB74QuXvY/fVJNjbNt8nvWo0VwAXKvMSLRg==}
+    dependencies:
+      shiki: 1.14.1
     dev: true
 
   /@sigstore/bundle@2.1.1:
@@ -34437,6 +34469,13 @@ packages:
       jsonc-parser: 3.2.0
       vscode-oniguruma: 1.7.0
       vscode-textmate: 8.0.0
+    dev: true
+
+  /shiki@1.14.1:
+    resolution: {integrity: sha512-FujAN40NEejeXdzPt+3sZ3F2dx1U24BY2XTY01+MG8mbxCiA2XukXdcbyMyLAHJ/1AUUnQd1tZlvIjefWWEJeA==}
+    dependencies:
+      '@shikijs/core': 1.14.1
+      '@types/hast': 3.0.4
     dev: true
 
   /side-channel@1.0.4:
