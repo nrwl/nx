@@ -71,11 +71,11 @@ impl HashPlanner {
                 let mut inputs: Vec<HashInstruction> = target
                     .unwrap_or(vec![])
                     .into_iter()
-                    .chain(vec![
-                        HashInstruction::WorkspaceFileSet("{workspaceRoot}/nx.json".to_string()),
-                        HashInstruction::WorkspaceFileSet("{workspaceRoot}/.gitignore".to_string()),
-                        HashInstruction::WorkspaceFileSet("{workspaceRoot}/.nxignore".to_string()),
-                    ])
+                    .chain(vec![HashInstruction::WorkspaceFileSet(vec![
+                        "{workspaceRoot}/nx.json".to_string(),
+                        "{workspaceRoot}/.gitignore".to_string(),
+                        "{workspaceRoot}/.nxignore".to_string(),
+                    ])])
                     .chain(self_inputs)
                     .collect();
 
@@ -326,7 +326,11 @@ impl HashPlanner {
             });
 
         let project_file_set_inputs = project_file_set_inputs(project_name, project_file_sets);
-        let workspace_file_set_inputs = workspace_file_set_inputs(workspace_file_sets);
+        // let workspace_file_set_inputs = workspace_file_set_inputs(workspace_file_sets);
+        let workspace_file_set_inputs = match workspace_file_sets.is_empty() {
+            true => vec![],
+            false => vec![workspace_file_set_inputs(workspace_file_sets)],
+        };
         let runtime_and_env_inputs = self_inputs.iter().filter_map(|i| match i {
             Input::Runtime(runtime) => Some(HashInstruction::Runtime(runtime.to_string())),
             Input::Environment(env) => Some(HashInstruction::Environment(env.to_string())),
@@ -430,9 +434,6 @@ fn project_file_set_inputs(project_name: &str, file_sets: Vec<&str>) -> Vec<Hash
     ]
 }
 
-fn workspace_file_set_inputs(file_sets: Vec<&str>) -> Vec<HashInstruction> {
-    file_sets
-        .into_iter()
-        .map(|s| HashInstruction::WorkspaceFileSet(s.to_string()))
-        .collect()
+fn workspace_file_set_inputs(file_sets: Vec<&str>) -> HashInstruction {
+    HashInstruction::WorkspaceFileSet(file_sets.iter().map(|f| f.to_string()).collect())
 }

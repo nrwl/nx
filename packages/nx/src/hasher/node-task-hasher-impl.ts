@@ -499,10 +499,10 @@ export class NodeTaskHasherImpl implements TaskHasherImpl {
       this.hashProjectFileset(projectName, projectFilesets),
       this.hashProjectConfig(projectName),
       this.hashTsConfig(projectName),
-      ...[
-        ...workspaceFilesets,
-        ...this.legacyFilesetInputs.map((r) => r.fileset),
-      ].map((fileset) => this.hashRootFileset(fileset)),
+      ...(workspaceFilesets.length
+        ? [this.hashRootFilesets(workspaceFilesets)]
+        : []),
+      this.hashRootFilesets(this.legacyFilesetInputs.map((r) => r.fileset)),
       ...[...notFilesets, ...this.legacyRuntimeInputs].map((r) =>
         r['runtime']
           ? this.hashRuntime(env, r['runtime'])
@@ -538,23 +538,45 @@ export class NodeTaskHasherImpl implements TaskHasherImpl {
     return Promise.all(partialHashes).then((hashes) => hashes.flat());
   }
 
-  private async hashRootFileset(fileset: string): Promise<PartialHash> {
-    const mapKey = fileset;
-    const withoutWorkspaceRoot = fileset.substring(16);
+  private async hashRootFilesets(filesets: string[]): Promise<PartialHash> {
+    const mapKey = `workspace:[${filesets.join(',')}]`;
     if (!this.filesetHashes[mapKey]) {
       this.filesetHashes[mapKey] = new Promise(async (res) => {
         const parts = [];
-        const matchingFile = this.allWorkspaceFiles.find(
-          (t) => t.file === withoutWorkspaceRoot
-        );
-        if (matchingFile) {
-          parts.push(matchingFile.hash);
-        } else {
-          this.allWorkspaceFiles
-            .filter((f) => minimatch(f.file, withoutWorkspaceRoot))
-            .forEach((f) => {
-              parts.push(f.hash);
-            });
+        const negativePatterns = [];
+        const positivePatterns = [];
+        for (const fileset of filesets) {
+          if (fileset.startsWith('!')) {
+            negativePatterns.push(fileset.substring(17));
+          } else {
+            positivePatterns.push(fileset.substring(16));
+          }
+        }
+        for (const fileset of positivePatterns) {
+          const withoutWorkspaceRoot = fileset;
+          // Used to shortcut minimatch if not necessary
+          const matchingFile = this.allWorkspaceFiles.find(
+            (t) => t.file === withoutWorkspaceRoot
+          );
+          // shortcut because there is a direct match
+          if (matchingFile) {
+            if (
+              !negativePatterns.some((p) => minimatch(matchingFile.file, p))
+            ) {
+              parts.push(matchingFile.hash);
+            }
+            // No direct match, check if pattern matched
+          } else {
+            this.allWorkspaceFiles
+              .filter(
+                (f) =>
+                  minimatch(f.file, withoutWorkspaceRoot) &&
+                  !negativePatterns.some((p) => minimatch(f.file, p))
+              )
+              .forEach((f) => {
+                parts.push(f.hash);
+              });
+          }
         }
         const value = hashArray(parts);
         res({
