@@ -37,7 +37,7 @@ The official slogan: "a smart, fast and extensible build system". Does that mean
 
 Monorepo support is built into Nx's DNA. You can use Nx..
 
-**Light-weight and incrementally** by leveraging it's powerful task scheduler. This is especially interesting if you already have a yarn/npm/pnpm workspace based monorepo setup and you want to enhance its capabilities. If you happen to use [Lerna](https://lerna.js.org) you might want to [read this](https://blog.nrwl.io/lerna-5-1-new-website-new-guides-new-lerna-example-repo-distributed-caching-support-and-speed-64d66410bec7?source=friends_link&sk=fc349af13ce1935a7ca149b4f3c123c3).
+**Light-weight and incrementally** by leveraging it's powerful task scheduler. This is especially interesting if you already have a yarn/npm/pnpm workspace based monorepo setup and you want to enhance its capabilities. If you happen to use [Lerna](https://lerna.js.org) you might want to [read this](/blog/lerna-5-1-new-website-new-guides-new-lerna-example-repo-distributed-caching-support-and-speed).
 
 Here's an example for showing the lightweight setup of Nx, by incrementally adding it to an existing Yarn workspaces monorepo:
 

@@ -79,10 +79,6 @@ The current focus of the Angular team is to make Ivy fully backwards-compatible.
 
 The Ivy renderer brings a lot of goodness to Angular. It makes the framework faster, smaller, and simpler. Ivy also makes Angular more flexible by adding the dynamism, which we can use to do metaprogramming, implement higher-order components and mixins.
 
-![](/blog/images/2018-12-07/1*9McDGpqiVh3sZ_CK74sxXw.avif)
-
 ### Victor Savkin is a co-founder of Nx. We help companies develop like Google since 2016.
-
-![](/blog/images/2018-12-07/0*4HpWdaQEPIQr1EDw.avif)
 
 _If you liked this, follow_ [_@victorsavkin_](http://twitter.com/victorsavkin) _to read more about monorepos, Nx, Angular, and React._

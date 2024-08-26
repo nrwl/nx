@@ -315,11 +315,12 @@ Here is my e2e test to check whether it displays the heading:
 For my component, I added `testID` in order to be queried by e2e tests:
 
 ```html
-<SafeAreaView testID='search-page'>
+<SafeAreaView testID="search-page">
   ...
-  <Headline testID='heading'>
+  <Headline testID="heading">
     Studio Ghibli Search Engine
-  </Headline>
+  </Headline></SafeAreaView
+>
 ```
 
 For example, my app has a flow that users can search text like `totoro` and go to the film details:

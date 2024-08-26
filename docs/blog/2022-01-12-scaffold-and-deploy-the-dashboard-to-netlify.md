@@ -140,7 +140,6 @@ Clicking on the URL will take you to your deployed application. It’s that easy
 
 Your Dashboard application has been deployed and is ready to be modified to consume the remote applications that we will build in the next article! Keep an eye on our blog and Twitter pages to be notified when it gets released. You can find links to these below.
 
-Blog: [https://blog.nrwl.io/](https://blog.nrwl.io/)  
-NxDevTools’ Twitter: [https://twitter.com/NxDevTools](https://twitter.com/NxDevTools)  
-Nrwl’s Twitter: [https://twitter.com/nrwl_io](https://twitter.com/nrwl_io)  
+Blog: [https://nx/dev/blog/](/blog)  
+Nx on Twitter: [https://twitter.com/NxDevTools](https://twitter.com/NxDevTools)  
 Colum Ferry’s Twitter: [https://twitter.com/FerryColum](https://twitter.com/FerryColum)

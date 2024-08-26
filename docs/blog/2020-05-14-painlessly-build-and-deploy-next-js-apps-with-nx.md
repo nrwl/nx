@@ -227,14 +227,3 @@ nx g @nrwl/node:app backend
 The `generate` commands above now have a package prefixed before the schematic name. In our previous examples we relied on the workspace’s default schematic (i.e. `@nrwl/next` so we could leave the package out). These packages are Nx plugins, and there are officially maintained ones, as well as some blessed community plugins. For more information on plugins you can run `nx list`, and read the [plugins docs](/plugin-registry).
 
 Another useful feature of Nx is the ability to visualize your project dependency graph by running the `nx dep-graph` command.
-
-## Nx Resources
-
-- Get our [**free Nx workspaces course on youtube**](https://youtu.be/2mYLe9Kp9VM)**!**
-- **Purchase our** **premium video course on advanced practices for Nx workspaces:** [**here!**](https://nxplaybook.com/p/advanced-nx-workspaces)
-
-![](/blog/images/2020-05-14/0*a8DFg8YzZUCajyip.avif)
-
-![](/blog/images/2020-05-14/0*O6F9Rz6kOKakFvtO.avif)
-
-![](/blog/images/2020-05-14/0*wh7tSiv_Iiw1McNu.avif)

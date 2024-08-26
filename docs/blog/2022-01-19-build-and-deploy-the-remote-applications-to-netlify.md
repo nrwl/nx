@@ -249,7 +249,6 @@ With that, our Login app is complete!
 
 In this article, we built and deployed our two remote applications! This sets us up for the next article where we will use Module Federation with our Dashboard application to remotely fetch the exposed modules from our remote apps and compose them into a single system.
 
-Blog: [https://blog.nrwl.io/](https://blog.nrwl.io/)  
-NxDevTools’ Twitter: [https://twitter.com/NxDevTools](https://twitter.com/NxDevTools)  
-Nrwl’s Twitter: [https://twitter.com/nrwl_io](https://twitter.com/nrwl_io)  
+Blog: [https://nx/dev/blog/](/blog)  
+Nx on Twitter: [https://twitter.com/NxDevTools](https://twitter.com/NxDevTools)  
 Colum Ferry’s Twitter: [https://twitter.com/FerryColum](https://twitter.com/FerryColum)

@@ -102,10 +102,6 @@ Angular Elements is no longer an Angular labs project. It’s stable and can be 
 
 The Ivy renderer, which should become available soon, benefits custom elements in two ways. First, it will make elements a lot smaller, which is great for the CMS/public site scenario. Second, it will make Angular compilation more flexible, which would make the API of creating an Angular element a lot simpler to use. Stay tuned — The unofficial plan is that Ivy renderer will become the default renderer in a minor release of Angular 7!
 
-![](/blog/images/2018-11-05/1*3KcN8XEiOGRurVItKG2Eiw.avif)
-
 ### Victor Savkin is a co-founder of Nx. We help companies develop like Google since 2016.
-
-![](/blog/images/2018-11-05/0*4HpWdaQEPIQr1EDw.avif)
 
 _If you liked this, follow_ [_@victorsavkin_](http://twitter.com/victorsavkin) _to read more about monorepos, Nx, Angular, and React._

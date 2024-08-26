@@ -179,16 +179,4 @@ Browse to [http://localhost:4200](http://localhost:4200) and see the results of 
 
 - [Documentation](https://graphql-code-generator.com/)
 
-![](/blog/images/2020-01-30/0*aUAuxd9gGYwLucIf.avif)
-
-_If you liked this, follow [\_Nx_](https://www.twitter.com/NxDevtools) _on Twitter!_
-
-![](/blog/images/2020-01-30/1*50Rm4UKy8obM0C8y_UyVoA.avif)
-
-[Get our new course at nxplaybook.com!](https://nxplaybook.com/)
-
-![](/blog/images/2020-01-30/0*H0xRddASFjKW4K2j.avif)
-
-```
-
-```
+If you liked this, follow [Nx](https://www.twitter.com/NxDevtools) on Twitter!

@@ -43,8 +43,8 @@ To add a new test suite for your project in the Nx Ecosystem CI, you would need 
 The first step is to import the necessary modules and types from `utils.ts` and `types.ts` at the top of your file:
 
 ```typescript
-import { runInRepo } from '../utils'
-import { RunOptions } from '../types'
+import { runInRepo } from '../utils';
+import { RunOptions } from '../types';
 ```
 
 `RunOptions` is a type that represents the options for running a test suite. It includes properties such as the repository to test, the branch to use, and the commands to run for building, testing, and performing e2e tests (all optional).

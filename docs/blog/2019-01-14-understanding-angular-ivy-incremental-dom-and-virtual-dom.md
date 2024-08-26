@@ -82,10 +82,6 @@ Angular has always been about using html and templates (a few years ago I wrote 
 
 Given this, plus the tree shakability and memory footprint of incremental DOM, I think it was the right choice to use incremental DOM as the foundation of the new rendering engine.
 
-![](/blog/images/2019-01-14/0*m1IN8FG0qRCUBohc.avif)
-
 ### Victor Savkin is a co-founder of Nrwl. We help companies develop like Google, Facebook, and Microsoft since 2016. We provide consulting, engineering and tools.
-
-![](/blog/images/2019-01-14/0*Num3x4vfVXNoDs7v.avif)
 
 _If you liked this, follow_ [_@victorsavkin_](http://twitter.com/victorsavkin) _to read more about monorepos, Nx, Angular, and React._

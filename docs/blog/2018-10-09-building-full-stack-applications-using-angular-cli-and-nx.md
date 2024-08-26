@@ -264,6 +264,4 @@ If you find all the generate, serve, build commands a bit intimidating, you aren
 
 ### Victor Savkin is a co-founder of Nrwl. We help companies develop like Google since 2016. We provide consulting, engineering and tools.
 
-![](/blog/images/2018-10-09/0*NSLFXiKLN4PAjCOW.avif)
-
 _If you liked this, follow_ [_@victorsavkin_](http://twitter.com/victorsavkin) _to read more about monorepos, Nx, Angular, and React._

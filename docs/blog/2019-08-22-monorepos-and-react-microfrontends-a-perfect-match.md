@@ -157,5 +157,3 @@ In this article we showed that, contrary to what may have seemed paradoxical, mo
 Using a monorepo can benefit your team in ways outside of the realm of microfrontends as well.
 
 **Jason Jean is a Senior Angular Engineer at Nx**
-
-![](/blog/images/2019-08-22/1*pbElIZt9YeORNw8m142z6w.avif)

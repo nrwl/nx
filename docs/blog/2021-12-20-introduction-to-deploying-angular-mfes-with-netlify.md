@@ -99,7 +99,6 @@ We’re in an excellent position now to build out and deploy each application in
 
 The following article in this series will focus on scaffolding our MFE-ready Dashboard application and deploying it to Netlify. Keep an eye on our blog and Twitter pages to be notified when it gets released. You can find links to these below.
 
-Blog: [https://blog.nrwl.io/](https://blog.nrwl.io/)  
-NxDevTools’ Twitter: [https://twitter.com/NxDevTools](https://twitter.com/NxDevTools)  
-Nrwl’s Twitter: [https://twitter.com/nrwl_io](https://twitter.com/nrwl_io)  
+Blog: [https://nx/dev/blog/](/blog)  
+Nx on Twitter: [https://twitter.com/NxDevTools](https://twitter.com/NxDevTools)  
 Colum Ferry’s Twitter: [https://twitter.com/FerryColum](https://twitter.com/FerryColum)

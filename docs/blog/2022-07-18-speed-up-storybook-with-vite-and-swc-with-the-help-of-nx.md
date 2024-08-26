@@ -80,7 +80,7 @@ Storybook supports SWC using the [`storybook-addon-swc`](https://storybook.js.or
 
 The steps you need to follow to switch to SWC are the following:
 
-1\.  Install the addon:
+1\. Install the addon:
 
 ```shell
 yarn add -D storybook-addon-swc

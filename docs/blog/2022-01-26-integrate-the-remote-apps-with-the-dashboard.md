@@ -135,8 +135,8 @@ We can use
 
 You can read more on Module Federation and Micro Frontends with Angular in [Manfred Steyer](https://twitter.com/ManfredSteyer)’s articles series: [https://www.angulararchitects.io/en/aktuelles/the-microfrontend-revolution-module-federation-in-webpack-5/](https://www.angulararchitects.io/en/aktuelles/the-microfrontend-revolution-module-federation-in-webpack-5/)
 
-If you have enjoyed this series, check out the links below to stay informed of any future content!  
-Blog: [https://blog.nrwl.io/](https://blog.nrwl.io/)  
-NxDevTools’ Twitter: [https://twitter.com/NxDevTools](https://twitter.com/NxDevTools)  
-Nrwl’s Twitter: [https://twitter.com/nrwl_io](https://twitter.com/nrwl_io)  
+If you have enjoyed this series, check out the links below to stay informed of any future content!
+
+Blog: [https://nx/dev/blog/](/blog)  
+Nx on Twitter: [https://twitter.com/NxDevTools](https://twitter.com/NxDevTools)  
 Colum Ferry’s Twitter: [https://twitter.com/FerryColum](https://twitter.com/FerryColum)
