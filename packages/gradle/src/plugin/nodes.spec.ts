@@ -34,6 +34,9 @@ describe('@nx/gradle/plugin', () => {
         ['proj', new Map([['test', 'Verification']])],
       ]),
       gradleProjectToProjectName: new Map<string, string>([['proj', 'proj']]),
+      gradleProjectNameToProjectRootMap: new Map<string, string>([
+        ['proj', 'proj'],
+      ]),
       gradleProjectToChildProjects: new Map<string, string[]>(),
     };
     cwd = process.cwd();
@@ -136,6 +139,9 @@ describe('@nx/gradle/plugin', () => {
         ['proj', new Map([['test', 'Verification']])],
       ]),
       gradleProjectToProjectName: new Map<string, string>([['proj', 'proj']]),
+      gradleProjectNameToProjectRootMap: new Map<string, string>([
+        ['proj', 'proj'],
+      ]),
       gradleProjectToChildProjects: new Map<string, string[]>(),
     };
     await tempFs.createFiles({
@@ -218,6 +224,9 @@ describe('@nx/gradle/plugin', () => {
           ['proj', new Map([['test', 'Test']])],
         ]),
         gradleProjectToProjectName: new Map<string, string>([['proj', 'proj']]),
+        gradleProjectNameToProjectRootMap: new Map<string, string>([
+          ['proj', 'proj'],
+        ]),
         gradleProjectToChildProjects: new Map<string, string[]>(),
       };
       await tempFs.createFiles({
