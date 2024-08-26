@@ -1064,8 +1064,10 @@ function expandInputs(
   const externalInputs: string[] = [];
   const otherInputs: string[] = [];
   inputs.forEach((input) => {
-    if (input.startsWith('{workspaceRoot}')) {
-      workspaceRootInputs.push(input);
+    // grouped workspace inputs look like workspace:[pattern,otherPattern]
+    if (input.startsWith('workspace:[')) {
+      const inputs = input.substring(11, input.length - 1).split(',');
+      workspaceRootInputs.push(...inputs);
       return;
     }
     const maybeProjectName = input.split(':')[0];
@@ -1088,24 +1090,9 @@ function expandInputs(
     }
   });
 
-  const workspaceRootsExpanded: string[] = workspaceRootInputs.flatMap(
-    (input) => {
-      const matches = [];
-      const withoutWorkspaceRoot = input.substring(16);
-      const matchingFile = allWorkspaceFiles.find(
-        (t) => t.file === withoutWorkspaceRoot
-      );
-      if (matchingFile) {
-        matches.push(matchingFile.file);
-      } else {
-        allWorkspaceFiles
-          .filter((f) => minimatch(f.file, withoutWorkspaceRoot))
-          .forEach((f) => {
-            matches.push(f.file);
-          });
-      }
-      return matches;
-    }
+  const workspaceRootsExpanded: string[] = getExpandedWorkspaceRoots(
+    workspaceRootInputs,
+    allWorkspaceFiles
   );
 
   const otherInputsExpanded = otherInputs.map((input) => {
@@ -1171,6 +1158,43 @@ export interface GraphJson {
    * The project graph
    */
   graph: ProjectGraph;
+}
+
+function getExpandedWorkspaceRoots(
+  workspaceRootInputs: string[],
+  allWorkspaceFiles: FileData[]
+) {
+  const workspaceRootsExpanded: string[] = [];
+  const negativeWRPatterns = [];
+  const positiveWRPatterns = [];
+  for (const fileset of workspaceRootInputs) {
+    if (fileset.startsWith('!')) {
+      negativeWRPatterns.push(fileset.substring(17));
+    } else {
+      positiveWRPatterns.push(fileset.substring(16));
+    }
+  }
+  for (const pattern of positiveWRPatterns) {
+    const matchingFile = allWorkspaceFiles.find((t) => t.file === pattern);
+    if (
+      matchingFile &&
+      !negativeWRPatterns.some((p) => minimatch(matchingFile.file, p))
+    ) {
+      workspaceRootsExpanded.push(matchingFile.file);
+    } else {
+      allWorkspaceFiles
+        .filter(
+          (f) =>
+            minimatch(f.file, pattern) &&
+            !negativeWRPatterns.some((p) => minimatch(f.file, p))
+        )
+        .forEach((f) => {
+          workspaceRootsExpanded.push(f.file);
+        });
+    }
+  }
+  workspaceRootsExpanded.sort();
+  return workspaceRootsExpanded;
 }
 
 async function createJsonOutput(
