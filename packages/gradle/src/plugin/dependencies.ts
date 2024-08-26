@@ -7,7 +7,7 @@ import {
   validateDependency,
 } from '@nx/devkit';
 import { readFileSync } from 'node:fs';
-import { basename } from 'node:path';
+import { basename, dirname } from 'node:path';
 
 import {
   GRADLE_BUILD_FILES,
@@ -27,7 +27,7 @@ export const createDependencies: CreateDependencies = async (
   const gradleDependenciesStart = performance.mark('gradleDependencies:start');
   const {
     gradleFileToGradleProjectMap,
-    gradleProjectToProjectName,
+    gradleProjectNameToProjectRootMap,
     buildFileToDepsMap,
     gradleProjectToChildProjects,
   } = getCurrentGradleReport();
@@ -35,13 +35,13 @@ export const createDependencies: CreateDependencies = async (
 
   for (const gradleFile of gradleFiles) {
     const gradleProject = gradleFileToGradleProjectMap.get(gradleFile);
-    const projectName = gradleProjectToProjectName.get(gradleProject);
+    const projectName = context.projects[dirname(gradleFile)].name;
     const depsFile = buildFileToDepsMap.get(gradleFile);
 
     if (projectName && depsFile) {
       processGradleDependencies(
         depsFile,
-        gradleProjectToProjectName,
+        gradleProjectNameToProjectRootMap,
         projectName,
         gradleFile,
         context,
@@ -88,7 +88,7 @@ function findGradleFiles(fileMap: FileMap): string[] {
 
 export function processGradleDependencies(
   depsFile: string,
-  gradleProjectToProjectName: Map<string, string>,
+  gradleProjectNameToProjectRoot: Map<string, string>,
   sourceProjectName: string,
   gradleFile: string,
   context: CreateDependenciesContext,
@@ -122,9 +122,10 @@ export function processGradleDependencies(
           const [_, projectName] = dep.split('-> project');
           gradleProjectName = projectName.trim();
         }
-        const target = gradleProjectToProjectName.get(
+        const targetProjectRoot = gradleProjectNameToProjectRoot.get(
           gradleProjectName
         ) as string;
+        const target = context.projects[targetProjectRoot]?.name;
         if (target) {
           const dependency: RawProjectGraphDependency = {
             source: sourceProjectName,

@@ -11,6 +11,7 @@ import { combineGlobPatterns } from 'nx/src/utils/globs';
 
 import { execGradleAsync } from './exec-gradle';
 import { hashWithWorkspaceContext } from 'nx/src/utils/workspace-context';
+import { dirname } from 'path';
 
 export const fileSeparator = process.platform.startsWith('win')
   ? 'file:///'
@@ -26,6 +27,7 @@ export interface GradleReport {
   gradleFileToOutputDirsMap: Map<string, Map<string, string>>;
   gradleProjectToTasksTypeMap: Map<string, Map<string, string>>;
   gradleProjectToProjectName: Map<string, string>;
+  gradleProjectNameToProjectRootMap: Map<string, string>;
   gradleProjectToChildProjects: Map<string, string[]>;
 }
 
@@ -125,6 +127,7 @@ export function processProjectReports(
    */
   const gradleProjectToTasksTypeMap = new Map<string, Map<string, string>>();
   const gradleProjectToProjectName = new Map<string, string>();
+  const gradleProjectNameToProjectRootMap = new Map<string, string>();
   /**
    * Map of buildFile to dependencies report path
    */
@@ -225,6 +228,7 @@ export function processProjectReports(
         gradleFileToOutputDirsMap.set(buildFile, outputDirMap);
         gradleFileToGradleProjectMap.set(buildFile, gradleProject);
         gradleProjectToProjectName.set(gradleProject, projectName);
+        gradleProjectNameToProjectRootMap.set(projectName, dirname(buildFile));
       }
       if (line.endsWith('taskReport')) {
         const gradleProject = line.substring(
@@ -276,6 +280,7 @@ export function processProjectReports(
     gradleFileToOutputDirsMap,
     gradleProjectToTasksTypeMap,
     gradleProjectToProjectName,
+    gradleProjectNameToProjectRootMap,
     gradleProjectToChildProjects,
   };
 }
