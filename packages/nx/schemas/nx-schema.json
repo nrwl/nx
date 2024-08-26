@@ -282,6 +282,13 @@
         "applyChanges": {
           "type": "boolean",
           "description": "Whether to automatically apply sync generator changes when running tasks. If not set, the user will be prompted. If set to `true`, the user will not be prompted and the changes will be applied. If set to `false`, the user will not be prompted and the changes will not be applied."
+        },
+        "disabledTaskSyncGenerators": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "List of registered task sync generators to disable."
         }
       },
       "additionalProperties": false
