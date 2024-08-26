@@ -29,6 +29,7 @@ import { showNxWarning } from '../src/utils/nx/show-nx-warning';
 import { messages, recordStat } from '../src/utils/nx/ab-testing';
 import { mapErrorToBodyLines } from '../src/utils/error-utils';
 import { existsSync } from 'fs';
+import { detectInvokedPackageManager } from '../src/utils/package-manager';
 
 interface BaseArguments extends CreateWorkspaceOptions {
   preset: Preset;
@@ -909,29 +910,30 @@ async function determineNodeOptions(
 async function determinePackageBasedOrIntegratedOrStandalone(): Promise<
   'package-based' | 'integrated' | 'standalone'
 > {
+  const pkgMgmt = detectInvokedPackageManager();
+
   const { workspaceType } = await enquirer.prompt<{
     workspaceType: 'standalone' | 'integrated' | 'package-based';
   }>([
     {
       type: 'autocomplete',
       name: 'workspaceType',
-      message: 'npm/yarn monorepo, Nx monorepo, or standalone project?',
+      message: `${pkgMgmt} monorepo, Nx monorepo, or standalone project?`,
       initial: 0,
       choices: [
         {
           name: 'package-based',
-          message:
-            'Package-based Monorepo:     Use a npm/yarn workspace, but have Nx manage the build',
+          message: `Package-based Monorepo:     Creates a workspace that uses ${pkgMgmt} convenstions`,
         },
         {
           name: 'integrated',
           message:
-            'Integrated Monorepo:        Use Nx as the workspace manager and build tools',
+            'Integrated Monorepo:        Creates a workspace that uses path aliases for connecting packages',
         },
         {
           name: 'standalone',
           message:
-            'Standalone:                 Create a single project and use Nx build tools',
+            'Standalone:                 Creates  a workspace for a single project',
         },
       ],
     },
