@@ -7,13 +7,12 @@ import {
   ensurePackage,
   getPackageManagerCommand,
   readNxJson,
-  E2EWebServerDetails,
-  getE2EWebServerInfo,
 } from '@nx/devkit';
 import { type NormalizedSchema } from './normalize-options';
 import { getPackageVersion } from '../../../utils/versions';
 import { findPluginForConfigFile } from '@nx/devkit/src/utils/find-plugin-for-config-file';
 import { addE2eCiTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
+import { getE2EWebServerInfo } from '@nx/devkit/src/generators/e2e-web-server-info-utils';
 
 export async function addE2E(tree: Tree, options: NormalizedSchema) {
   const hasRemixPlugin = readNxJson(tree).plugins?.find((p) =>

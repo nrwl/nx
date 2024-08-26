@@ -1,4 +1,4 @@
-import { E2EWebServerDetails, getE2EWebServerInfo, Tree } from '@nx/devkit';
+import { Tree } from '@nx/devkit';
 import {
   addDependenciesToPackageJson,
   addProjectConfiguration,

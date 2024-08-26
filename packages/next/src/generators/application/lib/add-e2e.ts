@@ -1,7 +1,6 @@
 import {
   addProjectConfiguration,
   ensurePackage,
-  getE2EWebServerInfo,
   getPackageManagerCommand,
   joinPathFragments,
   readNxJson,
@@ -14,6 +13,7 @@ import { NormalizedSchema } from './normalize-options';
 import { webStaticServeGenerator } from '@nx/web';
 import { findPluginForConfigFile } from '@nx/devkit/src/utils/find-plugin-for-config-file';
 import { addE2eCiTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
+import { getE2EWebServerInfo } from '@nx/devkit/src/generators/e2e-web-server-info-utils';
 
 export async function addE2e(host: Tree, options: NormalizedSchema) {
   const nxJson = readNxJson(host);

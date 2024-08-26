@@ -1,4 +1,4 @@
-import { GeneratorCallback, getE2EWebServerInfo, Tree } from '@nx/devkit';
+import { GeneratorCallback, Tree } from '@nx/devkit';
 import {
   addProjectConfiguration,
   ensurePackage,
@@ -13,6 +13,7 @@ import { hasExpoPlugin } from '../../../utils/has-expo-plugin';
 import { NormalizedSchema } from './normalize-options';
 import { addE2eCiTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
 import { findPluginForConfigFile } from '@nx/devkit/src/utils/find-plugin-for-config-file';
+import { getE2EWebServerInfo } from '@nx/devkit/src/generators/e2e-web-server-info-utils';
 
 export async function addE2e(
   tree: Tree,

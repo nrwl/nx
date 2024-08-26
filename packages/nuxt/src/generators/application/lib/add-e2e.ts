@@ -1,12 +1,12 @@
 import {
   addProjectConfiguration,
   ensurePackage,
-  getE2EWebServerInfo,
   getPackageManagerCommand,
   joinPathFragments,
   readNxJson,
   Tree,
 } from '@nx/devkit';
+import { getE2EWebServerInfo } from '@nx/devkit/src/generators/e2e-web-server-info-utils';
 import { nxVersion } from '../../../utils/versions';
 import { NormalizedSchema } from '../schema';
 import { findPluginForConfigFile } from '@nx/devkit/src/utils/find-plugin-for-config-file';
@@ -19,8 +19,7 @@ export async function addE2e(host: Tree, options: NormalizedSchema) {
     joinPathFragments(
       options.appProjectRoot,
       `nuxt.config.${options.js ? 'js' : 'ts'}`
-    ),
-    true
+    )
   );
   if (options.e2eTestRunner === 'cypress') {
     const { configurationGenerator } = ensurePackage<
@@ -130,8 +129,7 @@ export async function addE2e(host: Tree, options: NormalizedSchema) {
 async function getNuxtE2EWebServerInfo(
   tree: Tree,
   projectName: string,
-  configFilePath: string,
-  isPluginBeingAdded: boolean
+  configFilePath: string
 ) {
   const nxJson = readNxJson(tree);
   let e2ePort = 4200;
@@ -159,6 +157,6 @@ async function getNuxtE2EWebServerInfo(
       defaultE2ECiBaseUrl: 'http://localhost:4200',
       defaultE2EPort: e2ePort,
     },
-    isPluginBeingAdded
+    true
   );
 }

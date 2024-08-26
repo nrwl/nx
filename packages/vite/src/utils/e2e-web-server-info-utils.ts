@@ -1,4 +1,5 @@
-import { type Tree, getE2EWebServerInfo, readNxJson } from '@nx/devkit';
+import { type Tree, readNxJson } from '@nx/devkit';
+import { getE2EWebServerInfo } from '@nx/devkit/src/generators/e2e-web-server-info-utils';
 
 export async function getViteE2EWebServerInfo(
   tree: Tree,
