@@ -1,7 +1,6 @@
 import {
   addDependenciesToPackageJson,
   addProjectConfiguration,
-  E2EWebServerDetails,
   ensurePackage,
   formatFiles,
   generateFiles,
@@ -48,6 +47,7 @@ import { VitePluginOptions } from '@nx/vite/src/plugins/plugin';
 import { WebpackPluginOptions } from '@nx/webpack/src/plugins/plugin';
 import staticServeConfiguration from '../static-serve/static-serve-configuration';
 import { findPluginForConfigFile } from '@nx/devkit/src/utils/find-plugin-for-config-file';
+import { E2EWebServerDetails } from '@nx/devkit/src/generators/e2e-web-server-info-utils';
 
 interface NormalizedSchema extends Schema {
   projectName: string;

@@ -13,6 +13,7 @@ import { nxVersion } from '../../../utils/versions';
 import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
 import type { NormalizedSchema } from './normalized-schema';
 import { addE2eCiTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
+import { E2EWebServerDetails } from '@nx/devkit/src/generators/e2e-web-server-info-utils';
 
 export async function addE2e(tree: Tree, options: NormalizedSchema) {
   // since e2e are separate projects, default to adding plugins
@@ -155,7 +156,7 @@ function getAngularE2EWebServerInfo(
     e2eCiWebServerCommand: `${pm.exec} nx run ${projectName}:serve-static`,
     e2eWebServerCommand: `${pm.exec} nx run ${projectName}:serve`,
     e2eWebServerAddress: `http://localhost:${e2ePort}`,
-    e2eDevServerTarget: 'serve',
+    e2eDevServerTarget: `${projectName}:serve`,
     e2ePort,
   };
 }

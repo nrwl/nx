@@ -1,4 +1,4 @@
-import type { E2EWebServerDetails, GeneratorCallback, Tree } from '@nx/devkit';
+import type { GeneratorCallback, Tree } from '@nx/devkit';
 import {
   addProjectConfiguration,
   ensurePackage,
@@ -14,6 +14,7 @@ import { hasVitePlugin } from '../../../utils/has-vite-plugin';
 import { NormalizedSchema } from '../schema';
 import { findPluginForConfigFile } from '@nx/devkit/src/utils/find-plugin-for-config-file';
 import { addE2eCiTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
+import { E2EWebServerDetails } from '@nx/devkit/src/generators/e2e-web-server-info-utils';
 
 export async function addE2e(
   tree: Tree,
