@@ -1,11 +1,11 @@
 ---
 title: 'logout - CLI command'
-description: 'Logout from Nx Cloud by removing a personal access token from your local machine. The personal access token will be revoked from Nx Cloud and you will need to login again to regain access to Nx Cloud.'
+description: 'Logout from Nx Cloud'
 ---
 
 # logout
 
-Logout from Nx Cloud by removing a personal access token from your local machine. The personal access token will be revoked from Nx Cloud and you will need to login again to regain access to Nx Cloud.
+Logout from Nx Cloud
 
 ## Usage
 

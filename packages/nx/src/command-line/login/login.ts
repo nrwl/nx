@@ -12,13 +12,9 @@ export function loginHandler(args: LoginArgs): Promise<number> {
     process.env.NX_CLOUD_API = args.nxCloudUrl;
   }
 
-  return handleErrors(
-    (args.verbose as boolean) ?? process.env.NX_VERBOSE_LOGGING === 'true',
-    async () => {
-      const nxCloudClient = (
-        await verifyOrUpdateNxCloudClient(getCloudOptions())
-      ).nxCloudClient;
-      await nxCloudClient.commands.login();
-    }
-  );
+  return handleErrors(args.verbose, async () => {
+    const nxCloudClient = (await verifyOrUpdateNxCloudClient(getCloudOptions()))
+      .nxCloudClient;
+    await nxCloudClient.commands.login();
+  });
 }

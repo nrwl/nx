@@ -19,7 +19,7 @@ export function createApiAxiosInstance(options: CloudTaskRunnerOptions) {
   // TODO(lourw): Update message with NxCloudId once it is supported
   if (!accessToken && !nxCloudId) {
     throw new Error(
-      `Unable to authenticate. Please connect your workspace to Nx Cloud to define a valid Nx Cloud ID. If you are in a CI context, please set the NX_CLOUD_ACCESS_TOKEN environment variable or define an access token in your nx.json.`
+      `Unable to authenticate. If you are connecting to Nx Cloud locally, set an Nx Cloud ID in your nx.json with "nx connect". If you are in a CI context, please set the NX_CLOUD_ACCESS_TOKEN environment variable or define an access token in your nx.json.`
     );
   }
 

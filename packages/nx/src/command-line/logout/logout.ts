@@ -7,13 +7,9 @@ export interface LogoutArgs {
 }
 
 export function logoutHandler(args: LogoutArgs): Promise<number> {
-  return handleErrors(
-    (args.verbose as boolean) ?? process.env.NX_VERBOSE_LOGGING === 'true',
-    async () => {
-      const nxCloudClient = (
-        await verifyOrUpdateNxCloudClient(getCloudOptions())
-      ).nxCloudClient;
-      await nxCloudClient.commands.logout();
-    }
-  );
+  return handleErrors(args.verbose, async () => {
+    const nxCloudClient = (await verifyOrUpdateNxCloudClient(getCloudOptions()))
+      .nxCloudClient;
+    await nxCloudClient.commands.logout();
+  });
 }

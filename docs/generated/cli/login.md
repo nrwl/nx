@@ -1,11 +1,11 @@
 ---
 title: 'login - CLI command'
-description: 'Login to Nx Cloud by generating a personal access token and saving it to your local machine.'
+description: 'Login to Nx Cloud'
 ---
 
 # login
 
-Login to Nx Cloud by generating a personal access token and saving it to your local machine.
+Login to Nx Cloud
 
 ## Usage
 
