@@ -555,7 +555,9 @@ async function determineReactOptions(
     e2eTestRunner = await determineE2eTestRunner(parsedArgs);
   } else if (
     preset === Preset.RemixMonorepo ||
-    preset === Preset.RemixStandalone
+    preset === Preset.RemixStandalone ||
+    preset === Preset.ReactNative ||
+    preset === Preset.Expo
   ) {
     e2eTestRunner = await determineE2eTestRunner(parsedArgs);
   }
