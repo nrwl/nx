@@ -80,7 +80,8 @@ export class TaskOrchestrator {
     private readonly taskGraph: TaskGraph,
     private readonly options: DefaultTasksRunnerOptions,
     private readonly bail: boolean,
-    private readonly daemon: DaemonClient
+    private readonly daemon: DaemonClient,
+    private readonly outputStyle: string
   ) {}
 
   async run() {
@@ -360,7 +361,10 @@ export class TaskOrchestrator {
     const pipeOutput = await this.pipeOutputCapture(task);
     // obtain metadata
     const temporaryOutputPath = this.cache.temporaryOutputPath(task);
-    const streamOutput = shouldStreamOutput(task, this.initiatingProject);
+    const streamOutput =
+      this.outputStyle === 'static'
+        ? false
+        : shouldStreamOutput(task, this.initiatingProject);
 
     let env = pipeOutput
       ? getEnvVariablesForTask(
