@@ -76,11 +76,11 @@ SWC (speedy web compiler) is a compiler written in Rust that can be used for bot
 
 [Here is a repo with the changes](https://github.com/mandarini/nx-storybook-vite-swc/commit/cc8adc5f2f20ef2ab120902f77906856b37a8cae).
 
-Storybook supports SWC using the `[storybook-addon-swc](https://storybook.js.org/addons/storybook-addon-swc)` addon. If you want to use SWC with Storybook, please read the [documentation](https://storybook.js.org/addons/storybook-addon-swc).
+Storybook supports SWC using the [`storybook-addon-swc`](https://storybook.js.org/addons/storybook-addon-swc) addon. If you want to use SWC with Storybook, please read the [documentation](https://storybook.js.org/addons/storybook-addon-swc).
 
 The steps you need to follow to switch to SWC are the following:
 
-1.  Install the addon:
+1\.  Install the addon:
 
 ```shell
 yarn add -D storybook-addon-swc
@@ -88,7 +88,7 @@ yarn add -D storybook-addon-swc
 
 or
 
-```
+```shell
 npm i -D storybook-addon-swc
 ```
 
@@ -98,7 +98,7 @@ npm i -D storybook-addon-swc
 
 [Here is a repo with the changes](https://github.com/mandarini/nx-storybook-vite-swc/commit/59174c2c05018485898ab0b959c1387372a7480d).
 
-If you’re using Next.js, you should also add the `[storybook-addon-next](https://storybook.js.org/addons/storybook-addon-next)`. You can read more in the [documentation](https://storybook.js.org/addons/storybook-addon-next).
+If you’re using Next.js, you should also add the [`storybook-addon-next`](https://storybook.js.org/addons/storybook-addon-next). You can read more in the [documentation](https://storybook.js.org/addons/storybook-addon-next).
 
 Here are the steps you can follow to add this addon:
 

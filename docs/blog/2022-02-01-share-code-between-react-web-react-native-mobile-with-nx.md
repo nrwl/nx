@@ -99,7 +99,7 @@ yarn add @react-navigation/native @react-navigation/native-stack react-native-pa
 
 ### Storage
 
-For the React Web app, we use [redux-persist](https://github.com/rt2zz/redux-persist), which persists the redux store in `[localstorage](https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage)`. However, `localstorage` is not supported by React Native.
+For the React Web app, we use [redux-persist](https://github.com/rt2zz/redux-persist), which persists the redux store in [`localstorage`](https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage). However, `localstorage` is not supported by React Native.
 
 For the web, the variable `persistConfig` passed to persistStore from redux-persist is:
 
@@ -112,7 +112,7 @@ import **storage** from 'redux-persist/lib/storage'; const persistConfig = {
   };
 ```
 
-However, for the mobile, we need to install the library `[@react-native-async-storage/async-storage](https://github.com/react-native-async-storage/async-storage)`:
+However, for the mobile, we need to install the library [`@react-native-async-storage/async-storage`](https://github.com/react-native-async-storage/async-storage):
 
 ```shell
 **_# npm_**

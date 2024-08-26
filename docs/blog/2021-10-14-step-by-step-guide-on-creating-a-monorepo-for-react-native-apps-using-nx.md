@@ -489,7 +489,7 @@ export default App;
 
 In the `libs/ui/src/lib/zodiac-sign-list/zodiac-sign-list.tsx`, you need to trigger navigation when the list item got pressed.
 
-Below code uses `[useNavigation](https://reactnavigation.org/docs/use-navigation/)` hook from [React Navigation](https://reactnavigation.org/) library. When the list item got pressed, it is going to call `navigation.navigate(‘Horoscope Card’)` to navigate the `horoscope-card` component you created above.
+Below code uses [`useNavigation`](https://reactnavigation.org/docs/use-navigation/) hook from [React Navigation](https://reactnavigation.org/) library. When the list item got pressed, it is going to call `navigation.navigate(‘Horoscope Card’)` to navigate the `horoscope-card` component you created above.
 
 [https://gist.github.com/xiongemi/c78c719e70aa4948b98e68033d7fe4a3](https://gist.github.com/xiongemi/c78c719e70aa4948b98e68033d7fe4a3)
 

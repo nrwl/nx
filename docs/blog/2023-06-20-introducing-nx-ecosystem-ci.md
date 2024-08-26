@@ -38,11 +38,11 @@ At its core, the Nx Ecosystem CI is a set of command-line tools that run tests f
 
 ### Adding a new test suite
 
-To add a new test suite for your project in the Nx Ecosystem CI, you would need to create a new file under the tests directory. The name of this file should reflect the suite it represents, for example, `[nx-rspack.ts](https://github.com/nrwl/nx-ecosystem-ci/blob/main/tests/nx-rspack.ts)` .
+To add a new test suite for your project in the Nx Ecosystem CI, you would need to create a new file under the tests directory. The name of this file should reflect the suite it represents, for example, [`nx-rspack.ts`](https://github.com/nrwl/nx-ecosystem-ci/blob/main/tests/nx-rspack.ts) .
 
 The first step is to import the necessary modules and types from `utils.ts` and `types.ts` at the top of your file:
 
-```
+```typescript
 import { runInRepo } from '../utils'
 import { RunOptions } from '../types'
 ```

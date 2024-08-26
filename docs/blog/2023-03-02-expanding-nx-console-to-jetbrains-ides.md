@@ -78,7 +78,7 @@ communicates via json rpc.
 
 With the Language Server Protocol, there are certain methods that are called between the IDE and the language server,
 such as
-`[textDocument/completion](https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#textDocument_completion)`
+[`textDocument/completion`](https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#textDocument_completion)
 that must be implemented.
 
 When the `nxls` does Language Server Protocol related things (like autocomplete), it uses the local workspace copy of Nx
@@ -91,7 +91,7 @@ actually part of the Language Server Protocol. These requests are what allows us
 allow us to quickly iterate.
 
 One of these custom requests is
-`[nx/workspace](https://github.com/nrwl/nx-console/blob/756fdfb545de413436193227d273d078628d7829/libs/language-server/types/src/index.ts#L18-L23)`.
+[`nx/workspace`](https://github.com/nrwl/nx-console/blob/756fdfb545de413436193227d273d078628d7829/libs/language-server/types/src/index.ts#L18-L23).
 Calling this endpoint gives us the same information that you can find when you run `nx graph --file=output.json`. (Plus
 a little more information that is needed for IDEs 🙂)
 
@@ -145,7 +145,7 @@ Naturally, these aspects had to be refactored out in order to accommodate a new 
 ## Communicating with IntelliJ
 
 First, we ripped out all VSCode-specific code from the main component and moved it to a separate
-`[ide-communication.service.ts](https://github.com/nrwl/nx-console/blob/f7de7f9d1f7ae5f59b0605b2e54ef28e6325e839/libs/generate-ui/feature-task-execution-form/src/lib/ide-communication/ide-communication.service.ts#L91)`.
+[`ide-communication.service.ts`](https://github.com/nrwl/nx-console/blob/f7de7f9d1f7ae5f59b0605b2e54ef28e6325e839/libs/generate-ui/feature-task-execution-form/src/lib/ide-communication/ide-communication.service.ts#L91).
 Communication with the host IDE is now done via one of two methods:
 
 - for VSCode, we continue to use the straightforward (
@@ -159,8 +159,8 @@ The service uses whatever API it finds to send and receive messages, with the re
 structure of the messages is identical between VSCode and IntelliJ. The fact that the Typescript-based VSCode extension
 natively understands JSON is a nice upside, since we can just pass around objects between the browser and extension
 without having to convert anything. For the Kotlin-based IntelliJ plugin, this needs an additional de-/serialization
-step, which is easily done with `[kotlinx.serialization](https://github.com/Kotlin/kotlinx.serialization)` or
-`[gson](https://github.com/google/gson)`.
+step, which is easily done with [`kotlinx.serialization`](https://github.com/Kotlin/kotlinx.serialization) or
+[`gson`](https://github.com/google/gson).
 
 ## Adapting Styling
 
@@ -202,7 +202,7 @@ host apps and libraries in any language. With the newly released [**_Encapsulate
 The codebase contains both Typescript code for the VSCode extension and Kotlin code for the IntelliJ plugin. Currently,
 all the Kotlin code resides in a single app. Targets defined in `project.json` are available that wrap different gradle
 tasks like running a development instance, building or formatting the plugin using the
-`[nx:run-commands](/packages/nx/executors/run-commands)` executor.  
+[`nx:run-commands`](/packages/nx/executors/run-commands) executor.  
 Since the plugin depends on artifacts provided by other Nx apps (namely the `nxls` and `generate-ui`), we have also
 created gradle tasks that call Nx to build these dependencies under the hood. This roundabout way of calling one tool
 from the other (and back again) could definitely be improved and we might look into having a more straightforward

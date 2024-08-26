@@ -236,7 +236,7 @@ jest.mock('@react-navigation/native', () => {
 
 ### SyntaxError: Unexpected token ‘export’
 
-I got this error when using a library with ECMAScript Module (ESM), such as `[udid](https://github.com/uuidjs/uuid)`:
+I got this error when using a library with ECMAScript Module (ESM), such as [`udid`](https://github.com/uuidjs/uuid):
 
 ```
  /Users/emilyxiong/Code/nx-expo-monorepo/node_modules/uuid/dist/esm-browser/index.js:1

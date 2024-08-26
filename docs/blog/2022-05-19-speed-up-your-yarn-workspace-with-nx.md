@@ -13,7 +13,7 @@ For this example workspace, there are 3 Expo applications:
 
 - managed: Expo [managed](https://docs.expo.dev/introduction/managed-vs-bare/#managed-workflow) app
 - ejected: Expo [bare](https://docs.expo.dev/introduction/managed-vs-bare/#bare-workflow) app
-- with-sentry: Expo managed app with `[sentry-expo](https://github.com/expo/sentry-expo)` integrated
+- with-sentry: Expo managed app with [`sentry-expo`](https://github.com/expo/sentry-expo) integrated
 
 When you run the app, each app will just have a text in the middle of the screen:
 
@@ -171,7 +171,7 @@ blog post on “[Taming Code Organization with Module Boundaries in Nx](/blog/ma
 
 ## Distributed Task Execution
 
-Nx also comes with an`[affected](https://nx.dev/using-nx/affected)` command: instead of running the command against all
+Nx also comes with an [`affected`](https://nx.dev/using-nx/affected) command: instead of running the command against all
 apps and libraries, it will only run the command against the one that got “affected” by a change.
 
 For example, if you made no code change and run the command:
@@ -219,7 +219,7 @@ The `affected` command is a powerful tool that further reduces your build, test 
 
 ## Easy Updating
 
-Another powerful command Nx has to offer is `[migrate](https://nx.dev/cli/migrate#migrate)`.
+Another powerful command Nx has to offer is [`migrate`](https://nx.dev/cli/migrate#migrate).
 
 By running command `yarn nx migrate latest`, it would automatically update to the latest versions of all frameworks and
 tools. For example, for an Expo workspace, if you want to upgrade the Expo version, you may need to upgrade React

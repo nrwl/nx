@@ -101,7 +101,7 @@ There are trade-offs between speed versus confidence when it comes to unit versu
 
 ## Building for production using esbuild
 
-Now that we have our production-ready app, let’s examine how Nx handles the build process using `[esbuild](<https://esbuild.github.io/>)`.
+Now that we have our production-ready app, let’s examine how Nx handles the build process using [`esbuild`](<https://esbuild.github.io/>).
 
 `esbuild` is a bundler written in Go that is extremely fast — it is much faster than other bundlers like webpack and parcel, but that may change in the future as other tools make their own speed improvements.
 
@@ -112,7 +112,7 @@ $ npx nx build # aliased to npm build
 > nx run api:build
 
 
-——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————— >
+—————————————————————————————————————————————————————
 
 NX Successfully ran target build for project api (2s)
 

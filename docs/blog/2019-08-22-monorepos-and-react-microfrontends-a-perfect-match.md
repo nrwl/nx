@@ -64,19 +64,19 @@ yarn install
 
 With all of our dependencies installed, we can now run `yarn start cart` to start our cart microfrontend. The project will be built and served so we can view it at [localhost:4200/cart](http://localhost:4200/cart).
 
-Next, let us make a simple change to our cart frontend to go through what working on such a team would feel like. The team would like to display “Cart” as the title in the header. We can do this by setting the `title` attribute on our `<nx-example-header />` element in `[apps/cart/src/app/app.tsx](https://github.com/nrwl/nx-examples/blob/c4a5f8d9550f036b3b51f40ce320f4993adba020/apps/cart/src/app/app.tsx#L11)` and we will see the change in our browser after saving.
+Next, let us make a simple change to our cart frontend to go through what working on such a team would feel like. The team would like to display “Cart” as the title in the header. We can do this by setting the `title` attribute on our `<nx-example-header />` element in [`apps/cart/src/app/app.tsx`](https://github.com/nrwl/nx-examples/blob/c4a5f8d9550f036b3b51f40ce320f4993adba020/apps/cart/src/app/app.tsx#L11), and we will see the change in our browser after saving.
 
 ![](/blog/images/2019-08-22/1*F8qHwmSjeXXO1tpOGkMyRw.avif)
 _Running application with changes_
 
-Now that we have made our change, let us write a unit test for it. We can add the following test to `[apps/cart/src/app/app.spec.tsx](https://github.com/nrwl/nx-examples/blob/c4a5f8d9550f036b3b51f40ce320f4993adba020/apps/cart/src/app/app.spec.tsx#L20)`:
+Now that we have made our change, let us write a unit test for it. We can add the following test to [`apps/cart/src/app/app.spec.tsx`](https://github.com/nrwl/nx-examples/blob/c4a5f8d9550f036b3b51f40ce320f4993adba020/apps/cart/src/app/app.spec.tsx#L20):
 
 ![](/blog/images/2019-08-22/1*uQXSFBSmVcgGQHarXJDjIg.avif)
 _Code for added unit test_
 
 We can run the test by running `yarn test cart`. Our new test and the other tests in our cart frontend succeed.
 
-Next, let us verify that our change works end-to-end by adding a Cypress test. Add the following to `[apps/cart-e2e/src/integration/app.spec.ts](https://github.com/nrwl/nx-examples/blob/c4a5f8d9550f036b3b51f40ce320f4993adba020/apps/cart-e2e/src/integration/app.spec.ts#L8)`:
+Next, let us verify that our change works end-to-end by adding a Cypress test. Add the following to [`apps/cart-e2e/src/integration/app.spec.ts`](https://github.com/nrwl/nx-examples/blob/c4a5f8d9550f036b3b51f40ce320f4993adba020/apps/cart-e2e/src/integration/app.spec.ts#L8):
 
 ![](/blog/images/2019-08-22/1*IZAhlD7YFQCwVlmnHAmLWg.avif)
 _Code for added e2e test_

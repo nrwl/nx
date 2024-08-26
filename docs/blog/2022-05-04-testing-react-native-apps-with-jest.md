@@ -296,7 +296,7 @@ nx test-android <your app-e2e> --prod
 - Test framework: [Detox](https://github.com/wix/Detox)
 - Test runner: [jest](https://jestjs.io/)
 
-To setup [Detox iOS env](https://github.com/wix/Detox/blob/master/docs/Introduction.iOSDevEnv.md), you need to install Install `[applesimutils](https://github.com/wix/AppleSimulatorUtils)`:
+To setup [Detox iOS env](https://github.com/wix/Detox/blob/master/docs/Introduction.iOSDevEnv.md), you need to install Install [`applesimutils`](https://github.com/wix/AppleSimulatorUtils)`:
 
 ```
 brew tap wix/brew
@@ -314,9 +314,12 @@ Here is my e2e test to check whether it displays the heading:
 
 For my component, I added `testID` in order to be queried by e2e tests:
 
-```
-<SafeAreaView testID="search-page">
-...<Headline testID="heading">Studio Ghibli Search Engine</Headline>
+```html
+<SafeAreaView testID='search-page'>
+  ...
+  <Headline testID='heading'>
+    Studio Ghibli Search Engine
+  </Headline>
 ```
 
 For example, my app has a flow that users can search text like `totoro` and go to the film details:

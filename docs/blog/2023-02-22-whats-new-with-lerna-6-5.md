@@ -29,7 +29,7 @@ Since Nx took over in Lerna 4, we’ve added a brand new site to refresh the Ler
 
 ![](/blog/images/2023-02-22/0*3GKvhzStrTwq7re5.avif)
 
-The top of our priorities for Lerna 5 was to resolve all vulnerabilities and outdated dependencies facing Lerna. We went on to make Lerna faster by allowing users to [opt into Nx’s task caching inside of Lerna with the new](https://github.com/lerna/lerna/tree/main/packages/lerna/src/commands/add-caching#readme) `[lerna add-caching](https://github.com/lerna/lerna/tree/main/packages/lerna/src/commands/add-caching#readme)` [command](https://github.com/lerna/lerna/tree/main/packages/lerna/src/commands/add-caching#readme), and [add support for distributed caching to share task results amongst your organization in Lerna with Nx Cloud](https://lerna.js.org/docs/features/share-your-cache).
+The top of our priorities for Lerna 5 was to resolve all vulnerabilities and outdated dependencies facing Lerna. We went on to make Lerna faster by allowing users to [opt into Nx’s task caching inside of Lerna with the new `lerna add-caching` command](https://github.com/lerna/lerna/tree/main/packages/lerna/src/commands/add-caching#readme), and [add support for distributed caching to share task results amongst your organization in Lerna with Nx Cloud](https://lerna.js.org/docs/features/share-your-cache).
 
 We were proud to go on to launch [Lerna 6](/blog/lerna-reborn-whats-new-in-v6) last October, where we began focusing on further improving Lerna’s feature set — focusing specifically on its unique strengths: versioning and publishing.
 
@@ -53,7 +53,7 @@ Now let’s jump into the newest Lerna 6.5 features!
 
 “Idempotent” is a word used to describe an operation you can perform any number of times, and the resulting state is the same as if you had only run the operation once.
 
-The `[lerna publish](https://github.com/lerna/lerna/tree/main/libs/commands/publish#readme)` [command](https://github.com/lerna/lerna/tree/main/libs/commands/publish#readme) is a beneficial tool for quickly publishing multiple packages from your workspace:
+The [`lerna publish` command](https://github.com/lerna/lerna/tree/main/libs/commands/publish#readme) is a beneficial tool for quickly publishing multiple packages from your workspace:
 
 - Running `lerna publish` by itself will version and publish all packages in the workspace since your latest release
 - Running `lerna publish from-git` will publish all projects tagged in the latest commit
@@ -73,17 +73,17 @@ Learn more [here](https://github.com/lerna/lerna/pull/3527).
 
 ## New `--include-private` Option Added To `lerna publish`
 
-[Npm supports a](https://docs.npmjs.com/cli/v9/configuring-npm/package-json#private) `["private": true](https://docs.npmjs.com/cli/v9/configuring-npm/package-json#private)` [configuration](https://docs.npmjs.com/cli/v9/configuring-npm/package-json#private) as a way of preventing the publication of a library that is private.
+[Npm supports a `["private": true]` configuration](https://docs.npmjs.com/cli/v9/configuring-npm/package-json#private) as a way of preventing the publication of a library that is private.
 
-```
-> lerna publish from-git --include-private my-private-package
+```shell
+lerna publish from-git --include-private my-private-package
 ```
 
-Running `lerna publish` with this new `[--include-private](https://github.com/lerna/lerna/tree/main/libs/commands/publish#--include-private)` option (as above) will strip this `"private": true` configuration from the `package.json` of the packages listed in the command.
+Running `lerna publish` with this new [`--include-private`](https://github.com/lerna/lerna/tree/main/libs/commands/publish#--include-private) option (as above) will strip this `"private": true` configuration from the `package.json` of the packages listed in the command.
 
 This new option is beneficial for the use case where you’d like to run e2e for a package that will eventually be public but is currently private to prevent getting published too soon.
 
-You can find more information on this change \[here\](([https://github.com/lerna/lerna/pull/3503](https://github.com/lerna/lerna/pull/3503)).
+You can find more information on this change [here](https://github.com/lerna/lerna/pull/3503).
 
 ## Massive Refactor
 

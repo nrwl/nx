@@ -175,7 +175,7 @@ Nx now generates stories using [Component Storybook Format 3 (CSF3)](https://sto
 
 As the Storybook doc mentions, CSF3 _reduces boilerplate code and improves ergonomics. This makes stories more concise, faster to write and easier to maintain._
 
-You can migrate your existing stories in your Nx workspace to CSF3 using the [Storybook](https://storybook.js.org/blog/storybook-csf3-is-here/#upgrade-to-csf3-today) `[csf-2-to-3](https://storybook.js.org/blog/storybook-csf3-is-here/#upgrade-to-csf3-today)` [migrator](https://storybook.js.org/blog/storybook-csf3-is-here/#upgrade-to-csf3-today):
+You can migrate your existing stories in your Nx workspace to CSF3 using the Storybook [`csf-2-to-3` migrator](https://storybook.js.org/blog/storybook-csf3-is-here/#upgrade-to-csf3-today):
 
 ```shell
 npx storybook@next migrate csf-2-to-3 --glob="**/*.stories.ts"`
