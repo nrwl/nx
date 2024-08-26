@@ -8,6 +8,7 @@ import { InvokeRunnerTerminalOutputLifeCycle } from './life-cycles/invoke-runner
 import { performance } from 'perf_hooks';
 import { getOutputs } from './utils';
 import { loadRootEnvFiles } from '../utils/dotenv';
+import { TaskResult } from './life-cycle';
 
 export async function initTasksRunner(nxArgs: NxArgs) {
   performance.mark('init-local');
@@ -22,7 +23,11 @@ export async function initTasksRunner(nxArgs: NxArgs) {
     invoke: async (opts: {
       tasks: Task[];
       parallel: number;
-    }): Promise<{ status: number; taskGraph: TaskGraph }> => {
+    }): Promise<{
+      status: number;
+      taskGraph: TaskGraph;
+      taskResults: Record<string, TaskResult>;
+    }> => {
       performance.mark('code-loading:end');
 
       // TODO: This polyfills the outputs if someone doesn't pass a task with outputs. Remove this in Nx 20
@@ -60,6 +65,7 @@ export async function initTasksRunner(nxArgs: NxArgs) {
       return {
         status,
         taskGraph,
+        taskResults: lifeCycle.getTaskResults(),
       };
     },
   };
