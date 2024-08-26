@@ -68,6 +68,7 @@ export class BlogApi {
         ogImageType: type,
         filePath,
         slug,
+        youtubeUrl: frontmatter.youtubeUrl,
         podcastYoutubeId: frontmatter.podcastYoutubeId,
         podcastSpotifyId: frontmatter.podcastSpotifyId,
         podcastIHeartUrl: frontmatter.podcastIHeartUrl,

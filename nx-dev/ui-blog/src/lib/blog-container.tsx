@@ -13,6 +13,7 @@ import {
   AcademicCapIcon,
   ChatBubbleOvalLeftEllipsisIcon,
   ListBulletIcon,
+  VideoCameraIcon,
 } from '@heroicons/react/24/outline';
 
 export interface BlogContainerProps {
@@ -62,6 +63,12 @@ let ALL_TOPICS = [
     icon: AcademicCapIcon,
     value: 'tutorial',
     heading: 'Tutorials',
+  },
+  {
+    label: 'Livestreams',
+    icon: VideoCameraIcon,
+    value: 'livestream',
+    heading: 'Livestreams',
   },
 ];
 
