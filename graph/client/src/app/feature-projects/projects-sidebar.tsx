@@ -7,8 +7,6 @@ import { useProjectGraphSelector } from './hooks/use-project-graph-selector';
 import { TracingAlgorithmType } from './machines/interfaces';
 import {
   collapseEdgesSelector,
-  compositeContextSelector,
-  compositeGraphEnabledSelector,
   focusedProjectNameSelector,
   getTracingInfo,
   groupByFolderSelector,
@@ -42,8 +40,6 @@ import {
 } from 'react-router-dom';
 import { useCurrentPath } from '../hooks/use-current-path';
 import { ProjectDetailsModal } from '../ui-components/project-details-modal';
-import { CompositeGraphPanel } from './panels/composite-graph-panel';
-import { CompositeContextPanel } from '../ui-components/composite-context-panel';
 
 export function ProjectsSidebar(): JSX.Element {
   const environmentConfig = useEnvironmentConfig();
@@ -57,10 +53,6 @@ export function ProjectsSidebar(): JSX.Element {
   );
   const groupByFolder = useProjectGraphSelector(groupByFolderSelector);
   const collapseEdges = useProjectGraphSelector(collapseEdgesSelector);
-  const compositeGraphEnabled = useProjectGraphSelector(
-    compositeGraphEnabledSelector
-  );
-  const compositeContext = useProjectGraphSelector(compositeContextSelector);
 
   const isTracing = projectGraphService.getSnapshot().matches('tracing');
   const tracingInfo = useProjectGraphSelector(getTracingInfo);
@@ -81,16 +73,6 @@ export function ProjectsSidebar(): JSX.Element {
   function resetFocus() {
     projectGraphService.send({ type: 'unfocusProject' });
     navigate(routeConstructor('/projects', true));
-  }
-
-  function resetCompositeContext() {
-    navigate(
-      routeConstructor(
-        { pathname: '/projects', search: `?composite=true` },
-        false
-      ),
-      { replace: true }
-    );
   }
 
   function showAllProjects() {
@@ -139,17 +121,6 @@ export function ProjectsSidebar(): JSX.Element {
         currentSearchParams.set('collapseEdges', 'true');
       } else {
         currentSearchParams.delete('collapseEdges');
-      }
-      return currentSearchParams;
-    });
-  }
-
-  function compositeGraphEnabledChanged(checked: boolean) {
-    setSearchParams((currentSearchParams) => {
-      if (checked) {
-        currentSearchParams.set('composite', 'true');
-      } else {
-        currentSearchParams.delete('composite');
       }
       return currentSearchParams;
     });
@@ -280,20 +251,6 @@ export function ProjectsSidebar(): JSX.Element {
       });
     }
 
-    if (searchParams.has('composite')) {
-      projectGraphService.send({
-        type: 'enableCompositeGraph',
-        context: searchParams.get('compositeContext'),
-      });
-    } else if (
-      !searchParams.has('composite') &&
-      compositeGraphEnabled === true
-    ) {
-      projectGraphService.send({
-        type: 'disableCompositeGraph',
-      });
-    }
-
     if (searchParams.has('searchDepth')) {
       const parsedValue = parseInt(searchParams.get('searchDepth'), 10);
 
@@ -372,13 +329,6 @@ export function ProjectsSidebar(): JSX.Element {
     <>
       <ProjectDetailsModal />
 
-      {compositeContext ? (
-        <CompositeContextPanel
-          compositeContext={compositeContext}
-          reset={resetCompositeContext}
-        />
-      ) : null}
-
       {focusedProject ? (
         <FocusedPanel
           focusedLabel={focusedProject}
@@ -436,10 +386,6 @@ export function ProjectsSidebar(): JSX.Element {
               collapseEdges={collapseEdges}
               collapseEdgesChanged={collapseEdgesChanged}
             ></CollapseEdgesPanel>
-            <CompositeGraphPanel
-              compositeEnabled={compositeGraphEnabled}
-              compositeEnabledChanged={compositeGraphEnabledChanged}
-            ></CompositeGraphPanel>
           </div>
         </ExperimentalFeature>
       </div>
