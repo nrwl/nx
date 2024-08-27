@@ -5,16 +5,16 @@ The Nx Cloud runner is configured in `nx.json`.
 {% tabs %}
 {% tab label="Nx >= 19.7" %}
 
-```json
+```json {% fileName="nx.json" %}
 {
   "nxCloudId": "SOMEID"
 }
 ```
 
 {% /tab %}
-{% tab label="Nx < 19.6" %}
+{% tab label="Nx <= 19.6" %}
 
-```json
+```json {% fileName="nx.json" %}"
 "tasksRunnerOptions": {
     "default": {
       "runner": "nx-cloud",
@@ -23,6 +23,16 @@ The Nx Cloud runner is configured in `nx.json`.
       }
     }
   }
+```
+
+To utilize personal access tokens and Nx Cloud ID with Nx <= 19.6, the nx-cloud npm package is also required to be installed in your workspaces `package.json`.
+
+```json {% fileName="package.json" %}"
+{
+  "devDependencies": {
+    "nx-cloud": "latest"
+  }
+}
 ```
 
 {% /tab %}
