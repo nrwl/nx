@@ -2,17 +2,13 @@ import {
   checkFilesExist,
   cleanupProject,
   createFile,
-  e2eConsoleLogger,
-  isWindows,
   newProject,
   runCLI,
-  runCommand,
-  tmpProjPath,
   uniq,
   updateFile,
 } from '@nx/e2e/utils';
-import { execSync } from 'child_process';
-import { resolve } from 'path';
+
+import { createGradleProject } from './utils/create-gradle-project';
 
 describe('Gradle', () => {
   describe.each([{ type: 'kotlin' }, { type: 'groovy' }])(
@@ -22,6 +18,7 @@ describe('Gradle', () => {
       beforeAll(() => {
         newProject();
         createGradleProject(gradleProjectName, type);
+        runCLI(`add @nx/gradle`);
       });
       afterAll(() => cleanupProject());
 
@@ -101,33 +98,3 @@ dependencies {
     }
   );
 });
-
-function createGradleProject(
-  projectName: string,
-  type: 'kotlin' | 'groovy' = 'kotlin'
-) {
-  e2eConsoleLogger(`Using java version: ${execSync('java -version')}`);
-  const gradleCommand = isWindows()
-    ? resolve(`${__dirname}/../gradlew.bat`)
-    : resolve(`${__dirname}/../gradlew`);
-  e2eConsoleLogger(
-    'Using gradle version: ' +
-      execSync(`${gradleCommand} --version`, {
-        cwd: tmpProjPath(),
-      })
-  );
-  e2eConsoleLogger(
-    execSync(`${gradleCommand} help --task :init`, {
-      cwd: tmpProjPath(),
-    }).toString()
-  );
-  e2eConsoleLogger(
-    runCommand(
-      `${gradleCommand} init --type ${type}-application --dsl ${type} --project-name ${projectName} --package gradleProject --no-incubating --split-project`,
-      {
-        cwd: tmpProjPath(),
-      }
-    )
-  );
-  runCLI(`add @nx/gradle`);
-}
