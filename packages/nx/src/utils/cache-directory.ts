@@ -71,6 +71,7 @@ export const cacheDir = cacheDirectory(
   workspaceRoot,
   readCacheDirectoryProperty(workspaceRoot)
 );
+export const defaultCacheDir = defaultCacheDirectory(workspaceRoot);
 
 export function cacheDirectoryForWorkspace(workspaceRoot: string) {
   return cacheDirectory(

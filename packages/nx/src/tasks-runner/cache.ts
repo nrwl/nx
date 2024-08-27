@@ -8,7 +8,11 @@ import {
   RemoteCacheV2,
 } from './default-tasks-runner';
 import { spawn } from 'child_process';
-import { cacheDir } from '../utils/cache-directory';
+import {
+  cacheDir,
+  defaultCacheDir,
+  workspaceDataDirectory,
+} from '../utils/cache-directory';
 import { Task } from '../config/task-graph';
 import { machineId } from 'node-machine-id';
 import { NxCache, CachedResult as NativeCacheResult } from '../native';
@@ -39,6 +43,8 @@ export function getCache(options: DefaultTasksRunnerOptions) {
 
 export class DbCache {
   private cache = new NxCache(workspaceRoot, cacheDir, getDbConnection());
+  private fallbackDbCache: NxCache | null = null;
+
   private remoteCache: RemoteCacheV2 | null;
   private remoteCachePromise: Promise<RemoteCacheV2>;
 
@@ -46,7 +52,28 @@ export class DbCache {
     this.remoteCache = await this.getRemoteCache();
   }
 
-  constructor(private readonly options: { nxCloudRemoteCache: RemoteCache }) {}
+  constructor(private readonly options: { nxCloudRemoteCache: RemoteCache }) {
+    // User has customized the cache directory - this could be because they
+    // are using a shared cache in the custom directory. The db cache is not
+    // stored in the cache directory, and is keyed by machine ID so they would
+    // hit issues. If we detect this, we can create a fallback db cache in the
+    // custom directory, and check if the entries are there when the main db
+    // cache misses.
+    if (cacheDir !== defaultCacheDir && !this.cache.checkCacheFsInSync()) {
+      if (/* { TODO: INSERT HAS POWERPACK CHECK HERE } */ true) {
+        this.fallbackDbCache = new NxCache(
+          workspaceRoot,
+          cacheDir,
+          getDbConnection({
+            dbName: 'shared',
+            directory: cacheDir,
+          })
+        );
+      } else {
+        throw new Error(/* TODO: Add nx.dev link explaining cache + powerpack */);
+      }
+    }
+  }
 
   async get(task: Task): Promise<CachedResult | null> {
     const res = this.cache.get(task.hash);
@@ -56,6 +83,14 @@ export class DbCache {
         ...res,
         remote: false,
       };
+    } else if (this.fallbackDbCache) {
+      const sharedRes = this.fallbackDbCache.get(task.hash);
+      if (sharedRes) {
+        return {
+          ...sharedRes,
+          remote: false,
+        };
+      }
     }
     await this.setup();
     if (this.remoteCache) {
@@ -93,6 +128,10 @@ export class DbCache {
   ) {
     return tryAndRetry(async () => {
       this.cache.put(task.hash, terminalOutput, outputs, code);
+
+      if (this.fallbackDbCache) {
+        this.fallbackDbCache.put(task.hash, terminalOutput, outputs, code);
+      }
 
       await this.setup();
       if (this.remoteCache) {

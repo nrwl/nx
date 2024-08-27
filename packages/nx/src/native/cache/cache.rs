@@ -4,12 +4,12 @@ use std::time::Instant;
 
 use fs_extra::remove_items;
 use napi::bindgen_prelude::*;
+use regex::Regex;
 use rusqlite::{params, Connection, OptionalExtension};
 use tracing::trace;
 
 use crate::native::cache::expand_outputs::_expand_outputs;
 use crate::native::cache::file_ops::_copy;
-use crate::native::machine_id::get_machine_id;
 use crate::native::utils::Normalize;
 
 #[napi(object)]
@@ -36,8 +36,7 @@ impl NxCache {
         cache_path: String,
         db_connection: External<Connection>,
     ) -> anyhow::Result<Self> {
-        let machine_id = get_machine_id();
-        let cache_path = PathBuf::from(&cache_path).join(machine_id);
+        let cache_path = PathBuf::from(&cache_path);
 
         create_dir_all(&cache_path)?;
         create_dir_all(cache_path.join("terminalOutputs"))?;
@@ -143,7 +142,11 @@ impl NxCache {
     }
 
     #[napi]
-    pub fn apply_remote_cache_results(&self, hash: String, result: CachedResult) -> anyhow::Result<()> {
+    pub fn apply_remote_cache_results(
+        &self,
+        hash: String,
+        result: CachedResult,
+    ) -> anyhow::Result<()> {
         let terminal_output = result.terminal_output;
         write(self.get_task_outputs_path(hash.clone()), terminal_output)?;
 
@@ -153,14 +156,13 @@ impl NxCache {
     }
 
     fn get_task_outputs_path_internal(&self, hash: &str) -> PathBuf {
-        self.cache_path
-            .join("terminalOutputs")
-            .join(hash)
+        self.cache_path.join("terminalOutputs").join(hash)
     }
 
     #[napi]
     pub fn get_task_outputs_path(&self, hash: String) -> String {
-        self.get_task_outputs_path_internal(&hash).to_normalized_string()
+        self.get_task_outputs_path_internal(&hash)
+            .to_normalized_string()
     }
 
     fn record_to_cache(&self, hash: String, code: i16) -> anyhow::Result<()> {
@@ -192,11 +194,12 @@ impl NxCache {
                 .as_slice(),
         )?;
 
-        trace!("Copying Files from Cache {:?} -> {:?}", &outputs_path, &self.workspace_root);
-        _copy(
-            outputs_path,
-            &self.workspace_root,
-        )?;
+        trace!(
+            "Copying Files from Cache {:?} -> {:?}",
+            &outputs_path,
+            &self.workspace_root
+        );
+        _copy(outputs_path, &self.workspace_root)?;
 
         Ok(())
     }
@@ -223,5 +226,38 @@ impl NxCache {
         remove_items(&outdated_cache)?;
 
         Ok(())
+    }
+
+    #[napi]
+    pub fn check_cache_fs_in_sync(&self) -> anyhow::Result<bool> {
+        // Checks that the number of cache records in the database
+        // matches the number of cache directories on the filesystem.
+        // If they don't match, it means that the cache is out of sync.
+        let cache_records = self
+            .db
+            .query_row("SELECT COUNT(*) FROM cache_outputs", [], |row| {
+                let count: i64 = row.get(0)?;
+                Ok(count)
+            })?;
+        let hash_regex = Regex::new(r"^\d+$").expect("Hash regex is invalid");
+        let fs_entries = std::fs::read_dir(&self.cache_path)
+            .map_err(anyhow::Error::from)?
+            // Cache entries are directories, that name is a hash (numerical string)
+            .filter(|entry| {
+                entry
+                    .as_ref()
+                    .map(|entry| {
+                        entry.file_type().map(|ft| ft.is_dir()).unwrap_or(false)
+                            && entry
+                                .file_name()
+                                .to_str()
+                                .map(|name| hash_regex.is_match(name))
+                                .unwrap_or(false)
+                    })
+                    .unwrap_or(false)
+            })
+            .count() as i64;
+
+        Ok(cache_records == fs_entries)
     }
 }
