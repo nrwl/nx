@@ -35,6 +35,15 @@ exports[`@nx/remix/plugin non-root project should create nodes 1`] = `
             "cwd": "my-app",
           },
         },
+        "serve-static": {
+          "command": "remix-serve build/index.js",
+          "dependsOn": [
+            "build",
+          ],
+          "options": {
+            "cwd": "my-app",
+          },
+        },
         "start": {
           "command": "remix-serve build/index.js",
           "dependsOn": [
@@ -106,6 +115,15 @@ exports[`@nx/remix/plugin root project should create nodes 1`] = `
         },
         "dev": {
           "command": "remix dev --manual",
+          "options": {
+            "cwd": ".",
+          },
+        },
+        "serve-static": {
+          "command": "remix-serve build/index.js",
+          "dependsOn": [
+            "build",
+          ],
           "options": {
             "cwd": ".",
           },

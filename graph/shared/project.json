@@ -1,8 +1,0 @@
-{
-  "name": "graph-shared",
-  "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "graph/shared/src",
-  "projectType": "library",
-  "tags": [],
-  "targets": {}
-}
