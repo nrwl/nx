@@ -206,18 +206,19 @@ async function buildViteTargets(
   }
 
   if (tsConfigFiles.length) {
-    const tsconfigToUse = tsConfigFiles.includes('tsconfig.lib.json')
-      ? 'tsconfig.lib.json'
-      : tsConfigFiles[0];
+    const tsConfigToUse =
+      ['tsconfig.app.json', 'tsconfig.lib.json', 'tsconfig.json'].find((t) =>
+        tsConfigFiles.includes(t)
+      ) ?? tsConfigFiles[0];
     targets[options.typecheckTargetName] = {
       cache: true,
       inputs: ['production', '^production'],
-      command: 'tsc --noEmit',
+      command: `tsc --noEmit -p ${tsConfigToUse}`,
       options: { cwd: joinPathFragments(projectRoot) },
       metadata: {
         description: `Run Typechecking`,
         help: {
-          command: `${pmc.exec} tsc --help -p ${tsconfigToUse}`,
+          command: `${pmc.exec} tsc --help -p ${tsConfigToUse}`,
           example: {
             options: {
               noEmit: true,
