@@ -33,6 +33,7 @@ export const unselectedStateConfig: ProjectGraphStateNodeConfig = {
             workspaceLayout: ctx.workspaceLayout,
             groupByFolder: ctx.groupByFolder,
             selectedProjects: ctx.selectedProjects,
+            composite: ctx.compositeGraph,
           }),
           {
             to: (context) => context.graphActor,

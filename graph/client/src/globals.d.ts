@@ -5,7 +5,7 @@ import type {
   ProjectGraphClientResponse,
   TaskGraphClientResponse,
 } from 'nx/src/command-line/graph/graph';
-import { AppConfig, ExternalApi } from '@nx/graph/shared';
+import type { AppConfig, ExternalApi } from '@nx/graph/shared';
 
 export declare global {
   interface Window {
