@@ -17,6 +17,7 @@ import { isNxCloudUsed } from '../utils/nx-cloud-utils';
 import { readNxJson } from '../config/nx-json';
 import { verifyOrUpdateNxCloudClient } from '../nx-cloud/update-manager';
 import { getCloudOptions } from '../nx-cloud/utilities/get-cloud-options';
+import { isCI } from '../utils/is-ci';
 
 export type CachedResult = {
   terminalOutput: string;
@@ -40,6 +41,7 @@ export function getCache(options: DefaultTasksRunnerOptions) {
 
 export class DbCache {
   private cache = new NxCache(workspaceRoot, cacheDir, getDbConnection());
+
   private remoteCache: RemoteCacheV2 | null;
   private remoteCachePromise: Promise<RemoteCacheV2>;
 
@@ -47,7 +49,19 @@ export class DbCache {
     this.remoteCache = await this.getRemoteCache();
   }
 
-  constructor(private readonly options: { nxCloudRemoteCache: RemoteCache }) {}
+  constructor(private readonly options: { nxCloudRemoteCache: RemoteCache }) {
+    // User has customized the cache directory - this could be because they
+    // are using a shared cache in the custom directory. The db cache is not
+    // stored in the cache directory, and is keyed by machine ID so they would
+    // hit issues. If we detect this, we can create a fallback db cache in the
+    // custom directory, and check if the entries are there when the main db
+    // cache misses.
+    if (isCI() && !this.cache.checkCacheFsInSync()) {
+      if (/* { TODO: INSERT DOES NOT HAVE POWERPACK CHECK HERE } */ true) {
+        throw new Error(/* TODO: Add nx.dev link explaining cache + powerpack */);
+      }
+    }
+  }
 
   async get(task: Task): Promise<CachedResult | null> {
     const res = this.cache.get(task.hash);

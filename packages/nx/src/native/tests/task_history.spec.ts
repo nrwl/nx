@@ -17,7 +17,9 @@ describe('NxTaskHistory', () => {
       force: true,
     });
 
-    const dbConnection = getDbConnection(join(__dirname, 'temp-db'));
+    const dbConnection = getDbConnection({
+      directory: join(__dirname, 'temp-db'),
+    });
     taskHistory = new NxTaskHistory(dbConnection);
     taskDetails = new TaskDetails(dbConnection);
 
