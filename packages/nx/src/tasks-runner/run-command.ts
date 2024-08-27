@@ -658,6 +658,15 @@ function getTasksRunnerPath(
   let modulePath: string = nxJson.tasksRunnerOptions?.[runner]?.runner;
 
   if (modulePath) {
+    if (
+      modulePath &&
+      modulePath !== 'nx-cloud' &&
+      !modulePath.startsWith('@nx/powerpack')
+    ) {
+      console.warn(
+        'Support for custom tasks runner is deprecated and will be removed in Nx 21. More news will be shared soon, stay tuned. 📺'
+      );
+    }
     if (isRelativePath(modulePath)) {
       return join(workspaceRoot, modulePath);
     }
