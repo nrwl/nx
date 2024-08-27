@@ -283,13 +283,8 @@ function CompositeNodeListItem({
       <div className="flex items-center">
         <Link
           to={routeConstructor(
-            {
-              pathname: `/projects`,
-              search: `?composite=true&compositeContext=${encodeURIComponent(
-                compositeNode.id
-              )}`,
-            },
-            false
+            { pathname: `/projects`, search: `?composite=${compositeNode.id}` },
+            true
           )}
           className="mr-1 flex items-center rounded-md border-slate-300 bg-white p-1 font-medium text-slate-500 shadow-sm ring-1 ring-slate-200 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400 dark:ring-slate-600 hover:dark:bg-slate-700"
           title="Focus on this node"
@@ -339,8 +334,6 @@ function CompositeNodeList({
 }: {
   compositeNodes: CompositeNode[];
 }) {
-  const projectGraphService = getProjectGraphService();
-
   if (compositeNodes.length === 0) {
     return <p>No composite nodes</p>;
   }
