@@ -97,7 +97,7 @@ export async function remixApplicationGeneratorInternal(
               cwd: options.projectRoot,
             },
           },
-          ['static-serve']: {
+          ['serve-static']: {
             dependsOn: ['build'],
             command: `remix-serve build/index.js`,
             options: {

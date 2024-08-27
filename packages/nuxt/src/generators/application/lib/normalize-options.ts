@@ -32,30 +32,9 @@ export async function normalizeOptions(
   options.projectNameAndRootFormat = projectNameAndRootFormat;
 
   const nxJson = readNxJson(host);
-  let e2eWebServerTarget = 'serve';
-  if (nxJson.plugins) {
-    for (const plugin of nxJson.plugins) {
-      if (
-        typeof plugin === 'object' &&
-        plugin.plugin === '@nx/nuxt/plugin' &&
-        (plugin.options as NuxtPluginOptions).serveTargetName
-      ) {
-        e2eWebServerTarget = (plugin.options as NuxtPluginOptions)
-          .serveTargetName;
-      }
-    }
-  }
 
-  let e2ePort = 4200;
-  if (
-    nxJson.targetDefaults?.[e2eWebServerTarget] &&
-    nxJson.targetDefaults?.[e2eWebServerTarget].options?.port
-  ) {
-    e2ePort = nxJson.targetDefaults?.[e2eWebServerTarget].options?.port;
-  }
   const e2eProjectName = options.rootProject ? 'e2e' : `${appProjectName}-e2e`;
   const e2eProjectRoot = options.rootProject ? 'e2e' : `${appProjectRoot}-e2e`;
-  const e2eWebServerAddress = `http://localhost:${e2ePort}`;
 
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())
@@ -68,9 +47,6 @@ export async function normalizeOptions(
     appProjectRoot,
     e2eProjectName,
     e2eProjectRoot,
-    e2eWebServerAddress,
-    e2eWebServerTarget,
-    e2ePort,
     parsedTags,
     style: options.style ?? 'none',
   } as NormalizedSchema;

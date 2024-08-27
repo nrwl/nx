@@ -14,6 +14,7 @@ import { hasVitePlugin } from '../../../utils/has-vite-plugin';
 import { NormalizedSchema } from '../schema';
 import { findPluginForConfigFile } from '@nx/devkit/src/utils/find-plugin-for-config-file';
 import { addE2eCiTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
+import { E2EWebServerDetails } from '@nx/devkit/src/generators/e2e-web-server-info-utils';
 
 export async function addE2e(
   tree: Tree,
@@ -22,6 +23,49 @@ export async function addE2e(
   const hasNxBuildPlugin =
     (options.bundler === 'webpack' && hasWebpackPlugin(tree)) ||
     (options.bundler === 'vite' && hasVitePlugin(tree));
+
+  let e2eWebServerInfo: E2EWebServerDetails = {
+    e2eWebServerAddress: `http://localhost:${options.devServerPort ?? 4200}`,
+    e2eWebServerCommand: `${getPackageManagerCommand().exec} nx run ${
+      options.projectName
+    }:serve`,
+    e2eCiWebServerCommand: `${getPackageManagerCommand().exec} nx run ${
+      options.projectName
+    }:serve-static`,
+    e2eCiBaseUrl: `http://localhost:4200`,
+    e2eDevServerTarget: `${options.projectName}:serve`,
+  };
+
+  if (options.bundler === 'webpack') {
+    const { getWebpackE2EWebServerInfo } = ensurePackage<
+      typeof import('@nx/webpack')
+    >('@nx/webpack', nxVersion);
+    e2eWebServerInfo = await getWebpackE2EWebServerInfo(
+      tree,
+      options.projectName,
+      joinPathFragments(
+        options.appProjectRoot,
+        `webpack.config.${options.js ? 'js' : 'ts'}`
+      ),
+      options.addPlugin,
+      options.devServerPort ?? 4200
+    );
+  } else if (options.bundler === 'vite') {
+    const { getViteE2EWebServerInfo } = ensurePackage<
+      typeof import('@nx/vite')
+    >('@nx/vite', nxVersion);
+    e2eWebServerInfo = await getViteE2EWebServerInfo(
+      tree,
+      options.projectName,
+      joinPathFragments(
+        options.appProjectRoot,
+        `vite.config.${options.js ? 'js' : 'ts'}`
+      ),
+      options.addPlugin,
+      options.devServerPort ?? 4200
+    );
+  }
+
   if (!hasNxBuildPlugin) {
     await webStaticServeGenerator(tree, {
       buildTarget: `${options.projectName}:build`,
@@ -51,21 +95,20 @@ export async function addE2e(
         // the name and root are already normalized, instruct the generator to use them as is
         bundler: options.bundler === 'rspack' ? 'webpack' : options.bundler,
         skipFormat: true,
-        devServerTarget: `${options.projectName}:${options.e2eWebServerTarget}`,
-        baseUrl: options.e2eWebServerAddress,
+        devServerTarget: e2eWebServerInfo.e2eDevServerTarget,
+        baseUrl: e2eWebServerInfo.e2eWebServerAddress,
         jsx: true,
         rootProject: options.rootProject,
         webServerCommands: hasNxBuildPlugin
           ? {
-              default: `nx run ${options.projectName}:${options.e2eWebServerTarget}`,
-              production: `nx run ${options.projectName}:preview`,
+              default: e2eWebServerInfo.e2eWebServerCommand,
+              production: e2eWebServerInfo.e2eCiWebServerCommand,
             }
           : undefined,
         ciWebServerCommand: hasNxBuildPlugin
-          ? `nx run ${options.projectName}:${options.e2eCiWebServerTarget}`
+          ? e2eWebServerInfo.e2eCiWebServerCommand
           : undefined,
-        ciBaseUrl:
-          options.bundler === 'vite' ? options.e2eCiBaseUrl : undefined,
+        ciBaseUrl: e2eWebServerInfo.e2eCiBaseUrl,
       });
 
       if (
@@ -127,10 +170,8 @@ export async function addE2e(
         js: false,
         linter: options.linter,
         setParserOptionsProject: options.setParserOptionsProject,
-        webServerCommand: `${getPackageManagerCommand().exec} nx run ${
-          options.projectName
-        }:${options.e2eCiWebServerTarget}`,
-        webServerAddress: options.e2eCiBaseUrl,
+        webServerCommand: e2eWebServerInfo.e2eCiWebServerCommand,
+        webServerAddress: e2eWebServerInfo.e2eCiBaseUrl,
         rootProject: options.rootProject,
         addPlugin: options.addPlugin,
       });

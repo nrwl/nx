@@ -45,7 +45,11 @@ export interface RemixPluginOptions {
   devTargetName?: string;
   startTargetName?: string;
   typecheckTargetName?: string;
+  /**
+   * @deprecated Use serveStaticTargetName instead. This option will be removed in Nx 21.
+   */
   staticServeTargetName?: string;
+  serveStaticTargetName?: string;
 }
 
 export const createNodes: CreateNodes<RemixPluginOptions> = [
@@ -116,7 +120,13 @@ async function buildRemixTargets(
     serverBuildPath,
     options.buildTargetName
   );
+  // TODO(colum): Remove for Nx 21
   targets[options.staticServeTargetName] = startTarget(
+    projectRoot,
+    serverBuildPath,
+    options.buildTargetName
+  );
+  targets[options.serveStaticTargetName] = startTarget(
     projectRoot,
     serverBuildPath,
     options.buildTargetName
@@ -233,7 +243,9 @@ function normalizeOptions(options: RemixPluginOptions) {
   options.devTargetName ??= 'dev';
   options.startTargetName ??= 'start';
   options.typecheckTargetName ??= 'typecheck';
+  // TODO(colum): remove for Nx 21
   options.staticServeTargetName ??= 'static-serve';
+  options.serveStaticTargetName ??= 'serve-static';
 
   return options;
 }

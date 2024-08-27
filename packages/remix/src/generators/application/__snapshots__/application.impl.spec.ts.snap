@@ -153,7 +153,12 @@ export default defineConfig({
   e2e: {
     ...nxE2EPreset(__filename, {
       cypressDir: 'src',
-      webServerCommands: { default: 'nx run test:dev:development' },
+      webServerCommands: {
+        default: 'npx nx run test:dev',
+        production: 'npx nx run test:serve-static',
+      },
+      ciWebServerCommand: 'npx nx run test:serve-static',
+      ciBaseUrl: 'http://localhost:3000',
     }),
     baseUrl: 'http://localhost:3000',
   },
@@ -189,7 +194,7 @@ export default defineConfig({
   },
   /* Run your local dev server before starting the tests */
   webServer: {
-    command: 'npx nx dev test',
+    command: 'npx nx run test:serve-static',
     url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
     cwd: workspaceRoot,
@@ -664,7 +669,12 @@ export default defineConfig({
   e2e: {
     ...nxE2EPreset(__filename, {
       cypressDir: 'src',
-      webServerCommands: { default: 'nx run test:dev:development' },
+      webServerCommands: {
+        default: 'npx nx run test:dev',
+        production: 'npx nx run test:serve-static',
+      },
+      ciWebServerCommand: 'npx nx run test:serve-static',
+      ciBaseUrl: 'http://localhost:3000',
     }),
     baseUrl: 'http://localhost:3000',
   },
@@ -700,7 +710,7 @@ export default defineConfig({
   },
   /* Run your local dev server before starting the tests */
   webServer: {
-    command: 'npx nx dev test',
+    command: 'npx nx run test:serve-static',
     url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
     cwd: workspaceRoot,
@@ -1031,7 +1041,12 @@ export default defineConfig({
   e2e: {
     ...nxE2EPreset(__filename, {
       cypressDir: 'src',
-      webServerCommands: { default: 'nx run test:dev:development' },
+      webServerCommands: {
+        default: 'npx nx run test:dev',
+        production: 'npx nx run test:serve-static',
+      },
+      ciWebServerCommand: 'npx nx run test:serve-static',
+      ciBaseUrl: 'http://localhost:3000',
     }),
     baseUrl: 'http://localhost:3000',
   },
@@ -1431,7 +1446,7 @@ export default defineConfig({
   },
   /* Run your local dev server before starting the tests */
   webServer: {
-    command: 'npx nx dev test',
+    command: 'npx nx run test:serve-static',
     url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
     cwd: workspaceRoot,

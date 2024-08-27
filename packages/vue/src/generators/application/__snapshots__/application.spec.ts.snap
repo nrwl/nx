@@ -140,10 +140,10 @@ export default defineConfig({
       cypressDir: 'src',
       bundler: 'vite',
       webServerCommands: {
-        default: 'nx run test:serve',
-        production: 'nx run test:preview',
+        default: 'npx nx run test:serve',
+        production: 'npx nx run test:preview',
       },
-      ciWebServerCommand: 'nx run test:preview',
+      ciWebServerCommand: 'npx nx run test:preview',
       ciBaseUrl: 'http://localhost:4300',
     }),
     baseUrl: 'http://localhost:4200',
