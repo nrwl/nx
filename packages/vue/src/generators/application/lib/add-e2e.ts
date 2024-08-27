@@ -23,16 +23,21 @@ export async function addE2e(
       ? p === '@nx/vite/plugin'
       : p.plugin === '@nx/vite/plugin'
   );
-  const e2eWebServerTarget = hasPlugin
-    ? typeof hasPlugin === 'string'
-      ? 'serve'
-      : (hasPlugin.options as any)?.serveTargetName ?? 'serve'
-    : 'serve';
-  const e2eCiWebServerTarget = hasPlugin
-    ? typeof hasPlugin === 'string'
-      ? 'preview'
-      : (hasPlugin.options as any)?.previewTargetName ?? 'preview'
-    : 'preview';
+  const { getViteE2EWebServerInfo } = ensurePackage<typeof import('@nx/vite')>(
+    '@nx/vite',
+    nxVersion
+  );
+  const e2eWebServerInfo = await getViteE2EWebServerInfo(
+    tree,
+    options.projectName,
+    joinPathFragments(
+      options.appProjectRoot,
+      `vite.config.${options.js ? 'js' : 'ts'}`
+    ),
+    options.addPlugin,
+    options.devServerPort ?? 4200
+  );
+
   switch (options.e2eTestRunner) {
     case 'cypress': {
       if (!hasPlugin) {
@@ -60,17 +65,17 @@ export async function addE2e(
         directory: 'src',
         bundler: 'vite',
         skipFormat: true,
-        devServerTarget: `${options.projectName}:${e2eWebServerTarget}`,
-        baseUrl: 'http://localhost:4200',
+        devServerTarget: e2eWebServerInfo.e2eDevServerTarget,
+        baseUrl: e2eWebServerInfo.e2eWebServerAddress,
         jsx: true,
         webServerCommands: hasPlugin
           ? {
-              default: `nx run ${options.projectName}:${e2eWebServerTarget}`,
-              production: `nx run ${options.projectName}:preview`,
+              default: e2eWebServerInfo.e2eWebServerCommand,
+              production: e2eWebServerInfo.e2eCiWebServerCommand,
             }
           : undefined,
-        ciWebServerCommand: `nx run ${options.projectName}:${e2eCiWebServerTarget}`,
-        ciBaseUrl: 'http://localhost:4300',
+        ciWebServerCommand: e2eWebServerInfo.e2eCiWebServerCommand,
+        ciBaseUrl: e2eWebServerInfo.e2eCiBaseUrl,
       });
 
       if (
@@ -130,10 +135,8 @@ export async function addE2e(
         js: false,
         linter: options.linter,
         setParserOptionsProject: options.setParserOptionsProject,
-        webServerCommand: `${getPackageManagerCommand().exec} nx run ${
-          options.projectName
-        }:${e2eCiWebServerTarget}`,
-        webServerAddress: 'http://localhost:4300',
+        webServerCommand: e2eWebServerInfo.e2eCiWebServerCommand,
+        webServerAddress: e2eWebServerInfo.e2eCiBaseUrl,
       });
 
       if (

@@ -12,9 +12,6 @@ export interface NormalizedSchema extends Schema {
   appProjectSourceRoot: string;
   e2eProjectName: string;
   e2eProjectRoot: string;
-  e2eWebServerAddress: string;
-  e2eWebServerTarget: string;
-  e2ePort: number;
   parsedTags: string[];
   outputPath: string;
 }

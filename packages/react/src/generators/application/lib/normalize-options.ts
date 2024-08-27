@@ -46,57 +46,8 @@ export async function normalizeOptions<T extends Schema = Schema>(
   options.rootProject = appProjectRoot === '.';
   options.projectNameAndRootFormat = projectNameAndRootFormat;
 
-  let e2ePort = options.devServerPort ?? 4200;
-
-  let e2eWebServerTarget = 'serve';
-  let e2eCiWebServerTarget =
-    options.bundler === 'vite' ? 'preview' : 'serve-static';
-  if (options.addPlugin) {
-    if (nxJson.plugins) {
-      for (const plugin of nxJson.plugins) {
-        if (
-          options.bundler === 'vite' &&
-          typeof plugin === 'object' &&
-          plugin.plugin === '@nx/vite/plugin'
-        ) {
-          e2eCiWebServerTarget =
-            (plugin.options as VitePluginOptions)?.previewTargetName ??
-            e2eCiWebServerTarget;
-
-          e2eWebServerTarget =
-            (plugin.options as VitePluginOptions)?.serveTargetName ??
-            e2eWebServerTarget;
-        } else if (
-          options.bundler === 'webpack' &&
-          typeof plugin === 'object' &&
-          plugin.plugin === '@nx/webpack/plugin'
-        ) {
-          e2eCiWebServerTarget =
-            (plugin.options as WebpackPluginOptions)?.serveStaticTargetName ??
-            e2eCiWebServerTarget;
-
-          e2eWebServerTarget =
-            (plugin.options as WebpackPluginOptions)?.serveTargetName ??
-            e2eWebServerTarget;
-        }
-      }
-    }
-  }
-
-  if (
-    nxJson.targetDefaults?.[e2eWebServerTarget] &&
-    nxJson.targetDefaults?.[e2eWebServerTarget].options?.port
-  ) {
-    e2ePort = nxJson.targetDefaults?.[e2eWebServerTarget].options?.port;
-  }
-
   const e2eProjectName = options.rootProject ? 'e2e' : `${appProjectName}-e2e`;
   const e2eProjectRoot = options.rootProject ? 'e2e' : `${appProjectRoot}-e2e`;
-  const e2eWebServerAddress = `http://localhost:${e2ePort}`;
-  const e2eCiBaseUrl =
-    options.bundler === 'vite'
-      ? 'http://localhost:4300'
-      : `http://localhost:${e2ePort}`;
 
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())
@@ -117,11 +68,6 @@ export async function normalizeOptions<T extends Schema = Schema>(
     appProjectRoot,
     e2eProjectName,
     e2eProjectRoot,
-    e2eWebServerAddress,
-    e2eWebServerTarget,
-    e2eCiWebServerTarget,
-    e2eCiBaseUrl,
-    e2ePort,
     parsedTags,
     fileName,
     styledModule,
