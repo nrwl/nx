@@ -2,8 +2,6 @@ import { exec, ExecOptions, execSync, ExecSyncOptions } from 'child_process';
 import { logger } from '../devkit-exports';
 import { dirname, join } from 'path';
 
-const SQUASH_EDITOR = join(__dirname, 'squash.js');
-
 function execAsync(command: string, execOptions: ExecOptions) {
   return new Promise<string>((res, rej) => {
     exec(command, execOptions, (err, stdout, stderr) => {
@@ -18,10 +16,14 @@ function execAsync(command: string, execOptions: ExecOptions) {
 export async function cloneFromUpstream(
   url: string,
   destination: string,
-  { originName } = { originName: 'origin' }
+  { originName, depth }: { originName: string; depth?: number } = {
+    originName: 'origin',
+  }
 ) {
   await execAsync(
-    `git clone ${url} ${destination} --depth 1 --origin ${originName}`,
+    `git clone ${url} ${destination} ${
+      depth ? `--depth ${depth}` : ''
+    } --origin ${originName}`,
     {
       cwd: dirname(destination),
     }
@@ -42,8 +44,8 @@ export class GitRepository {
       .trim();
   }
 
-  addFetchRemote(remoteName: string, branch: string) {
-    return this.execAsync(
+  async addFetchRemote(remoteName: string, branch: string) {
+    return await this.execAsync(
       `git config --add remote.${remoteName}.fetch "+refs/heads/${branch}:refs/remotes/${remoteName}/${branch}"`
     );
   }
@@ -79,22 +81,16 @@ export class GitRepository {
   }
 
   async reset(ref: string) {
-    return this.execAsync(`git reset ${ref} --hard`);
-  }
-
-  async squashLastTwoCommits() {
-    return this.execAsync(
-      `git -c core.editor="node ${SQUASH_EDITOR}" rebase --interactive --no-autosquash HEAD~2`
-    );
+    return await this.execAsync(`git reset ${ref} --hard`);
   }
 
   async mergeUnrelatedHistories(ref: string, message: string) {
-    return this.execAsync(
+    return await this.execAsync(
       `git merge ${ref} -X ours --allow-unrelated-histories -m "${message}"`
     );
   }
   async fetch(remote: string, ref?: string) {
-    return this.execAsync(`git fetch ${remote}${ref ? ` ${ref}` : ''}`);
+    return await this.execAsync(`git fetch ${remote}${ref ? ` ${ref}` : ''}`);
   }
 
   async checkout(
@@ -104,7 +100,7 @@ export class GitRepository {
       base: string;
     }
   ) {
-    return this.execAsync(
+    return await this.execAsync(
       `git checkout ${opts.new ? '-b ' : ' '}${branch}${
         opts.base ? ' ' + opts.base : ''
       }`
@@ -112,30 +108,34 @@ export class GitRepository {
   }
 
   async move(path: string, destination: string) {
-    return this.execAsync(`git mv "${path}" "${destination}"`);
+    return await this.execAsync(`git mv "${path}" "${destination}"`);
   }
 
   async push(ref: string, remoteName: string) {
-    return this.execAsync(`git push -u -f ${remoteName} ${ref}`);
+    return await this.execAsync(`git push -u -f ${remoteName} ${ref}`);
   }
 
   async commit(message: string) {
-    return this.execAsync(`git commit -am "${message}"`);
+    return await this.execAsync(`git commit -am "${message}"`);
   }
   async amendCommit() {
-    return this.execAsync(`git commit --amend -a --no-edit`);
+    return await this.execAsync(`git commit --amend -a --no-edit`);
   }
 
-  deleteGitRemote(name: string) {
-    return this.execAsync(`git remote rm ${name}`);
+  async deleteGitRemote(name: string) {
+    return await this.execAsync(`git remote rm ${name}`);
   }
 
-  deleteBranch(branch: string) {
-    return this.execAsync(`git branch -D ${branch}`);
+  async addGitRemote(name: string, url: string) {
+    return await this.execAsync(`git remote add ${name} ${url}`);
   }
 
-  addGitRemote(name: string, url: string) {
-    return this.execAsync(`git remote add ${name} ${url}`);
+  async filterBranch(subdirectory: string, branchName: string) {
+    // We need non-ASCII file names to not be quoted, or else filter-branch will exclude them.
+    await this.execAsync(`git config core.quotepath false`);
+    return await this.execAsync(
+      `git filter-branch --subdirectory-filter ${subdirectory} -- ${branchName}`
+    );
   }
 }
 
@@ -148,14 +148,6 @@ export function updateRebaseFile(contents: string): string {
 
   lines[lastCommitIndex] = lines[lastCommitIndex].replace('pick', 'fixup');
   return lines.join('\n');
-}
-
-export function fetchGitRemote(
-  name: string,
-  branch: string,
-  execOptions: ExecSyncOptions
-) {
-  return execSync(`git fetch ${name} ${branch} --depth 1`, execOptions);
 }
 
 /**

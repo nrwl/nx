@@ -28,6 +28,11 @@ export const yargsImportCommand: CommandModule = {
             type: 'string',
             description: 'The branch from the source repository to import',
           })
+          .option('depth', {
+            type: 'number',
+            description:
+              'The depth to clone the source repository (limit this for faster git clone)',
+          })
           .option('interactive', {
             type: 'boolean',
             description: 'Interactive mode',

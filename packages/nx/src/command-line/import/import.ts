@@ -41,6 +41,10 @@ export interface ImportOptions {
    * The directory in the destination repo to import into
    */
   destination: string;
+  /**
+   * The depth to clone the source repository (limit this for faster clone times)
+   */
+  depth: number;
 
   verbose: boolean;
   interactive: boolean;
@@ -101,6 +105,7 @@ export async function importHandler(options: ImportOptions) {
   try {
     sourceGitClient = await cloneFromUpstream(sourceRemoteUrl, sourceRepoPath, {
       originName: importRemoteName,
+      depth: options.depth,
     });
   } catch (e) {
     spinner.fail(`Failed to clone ${sourceRemoteUrl} into ${sourceRepoPath}`);
@@ -149,6 +154,7 @@ export async function importHandler(options: ImportOptions) {
           name: 'destination',
           message: 'Where in this workspace should the code be imported into?',
           required: true,
+          initial: source ? source : undefined,
         },
       ])
     ).destination;
