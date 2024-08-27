@@ -60,7 +60,7 @@ npx nx-cloud configure --personalAccessToken=SOME_ACCESS_TOKEN --nx-cloud-url=ht
 
 When logging into Nx Cloud with a [Personal Access Token](/ci/recipes/security/personal-access-tokens), your `nx.json` file needs to include the `nxCloudId` property, which acts as a unique identifier for your workspace. If you have been using the previous `nxCloudAccessToken` to connect, simply run `npx nx-cloud convert-to-nx-cloud-id` to automatically update your configuration to use `nxCloudId`.
 
-If you are connecting to Nx Cloud with a workspace that is version 19.6 or lower, this command will also install the latest version of the Nx Cloud npm package and add it into your `package.json`. Only Nx versions 19.7 and higher natively support the `nxCloudId` property natively in the `nx.json` file; for versions 19.6 and lower, the Nx Cloud npm package will be needed to use that property.
+If you are connecting to Nx Cloud with a workspace that is version 19.6 or lower, this command will also install the latest version of the Nx Cloud npm package and add it into your `package.json`. Only Nx versions 19.7 and higher natively support the `nxCloudId` property in the `nx.json` file; for versions 19.6 and lower, the Nx Cloud npm package will be needed to use that property.
 
 ## npx nx-cloud start-ci-run
 
@@ -97,7 +97,7 @@ distribute-on:
 
 ### --require-explicit-completion
 
-By default, Nx Cloud will monitor the main CI job and once it completes it will complete the associated CIPE object on the
+By default, Nx Cloud will monitor the main CI job and once that completes it will complete the associated CIPE object on the
 Nx Cloud side. You can disable this by passing `--require-explicit-completion`. In this case, you will have to add
 `npx nx-cloud complete-ci-run`.
 

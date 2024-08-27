@@ -56,7 +56,7 @@ We do not recommend that you commit an access token to your repository but older
 {% /tabs %}
 
 {% callout type="warning" title="Nx Cloud authentication is changing" %}
-From Nx 19.6 new workspaces are connected to Nx Cloud with a property called `nxCloudId` instead, and we recommend developers use [`nx-cloud login`](/ci/reference/nx-cloud-cli#npx-nxcloud-login) to provision their own local [personal access tokens](/ci/recipes/security/personal-access-tokens).
+From Nx 19.7 new workspaces are connected to Nx Cloud with a property called `nxCloudId` instead, and we recommend developers use [`nx-cloud login`](/ci/reference/nx-cloud-cli#npx-nxcloud-login) to provision their own local [personal access tokens](/ci/recipes/security/personal-access-tokens).
 {% /callout %}
 
 ## Using `nx-cloud.env`
