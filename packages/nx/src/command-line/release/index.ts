@@ -21,20 +21,27 @@ const defaultClient = new ReleaseClient({});
 /**
  * @public
  */
-export const releaseChangelog =
-  defaultClient.releaseChangelog.bind(defaultClient);
+export const releaseChangelog = defaultClient.releaseChangelog.bind(
+  defaultClient
+) as typeof defaultClient.releaseChangelog;
 
 /**
  * @public
  */
-export const releasePublish = defaultClient.releasePublish.bind(defaultClient);
+export const releasePublish = defaultClient.releasePublish.bind(
+  defaultClient
+) as typeof defaultClient.releasePublish;
 
 /**
  * @public
  */
-export const releaseVersion = defaultClient.releaseVersion.bind(defaultClient);
+export const releaseVersion = defaultClient.releaseVersion.bind(
+  defaultClient
+) as typeof defaultClient.releaseVersion;
 
 /**
  * @public
  */
-export const release = defaultClient.release.bind(defaultClient);
+export const release = defaultClient.release.bind(
+  defaultClient
+) as typeof defaultClient.release;
