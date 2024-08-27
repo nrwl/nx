@@ -6,6 +6,32 @@ From Nx 19.6 repositories are connected to Nx Cloud via a property in `nx.json` 
 Ensure that you have the `nxCloudId` property in your `nx.json` file to connect to Nx Cloud with a Personal Access Token. If you have been using `nxCloudAccessToken`, you can convert it to `nxCloudId` by running [`npx nx-cloud convert-to-nx-cloud-id`](/ci/reference/nx-cloud-cli#npx-nxcloud-converttonxcloudid).
 {% /callout %}
 
+{% tabs %}
+{% tab label="Nx >= 19.7" %}
+
+```json
+{
+  "nxCloudId": "SOMEID"
+}
+```
+
+{% /tab %}
+{% tab label="Nx < 19.6" %}
+
+```json
+"tasksRunnerOptions": {
+    "default": {
+      "runner": "nx-cloud",
+      "options": {
+        "nxCloudId": "SOMEID"
+      }
+    }
+  }
+```
+
+{% /tab %}
+{% /tabs %}
+
 ## Personal Access Tokens (PATs)
 
 When you run [`npx nx-cloud login`](/ci/reference/nx-cloud-cli#npx-nxcloud-login) you will be directed to the Nx Cloud app where you will be required to create an account and login. A new personal access token will be provisioned and saved in a local configuration file in your home folder (the location of this will be displayed when login is complete and varies depending on OS).

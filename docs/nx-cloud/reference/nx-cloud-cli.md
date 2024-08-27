@@ -38,6 +38,10 @@ Our managed instance at [https://cloud.nx.app](https://cloud.nx.app) is the defa
 npx nx-cloud login https://nx-cloud.my-domain.app
 ```
 
+## npx nx-cloud logout
+
+To revoke a personal access token from your local environment, run `npx nx-cloud logout`. This will remove the personal access token from the locally initialized configuration file and also invalidate the token from the Nx Cloud application. You will be prompted to remove a single token or all tokens from your local environment.
+
 ## npx nx-cloud configure
 
 To provision more than one personal access token for multiple contexts (e.g. home and work machines) you can use the personal access tokens page under your Nx Cloud profile. To save a personal access token to your local `nxcloud.ini` file without needing to edit the file yourself call `nx-cloud configure` like this:
@@ -55,6 +59,8 @@ npx nx-cloud configure --personalAccessToken=SOME_ACCESS_TOKEN --nx-cloud-url=ht
 ## npx nx-cloud convert-to-nx-cloud-id
 
 When logging into Nx Cloud with a [Personal Access Token](/ci/recipes/security/personal-access-tokens), your `nx.json` file needs to include the `nxCloudId` property, which acts as a unique identifier for your workspace. If you have been using the previous `nxCloudAccessToken` to connect, simply run `npx nx-cloud convert-to-nx-cloud-id` to automatically update your configuration to use `nxCloudId`.
+
+If you are connecting to Nx Cloud with a workspace that is version 19.6 or lower, this command will also install the latest version of the Nx Cloud npm package and add it into your `package.json`. Only Nx versions 19.7 and higher natively support the `nxCloudId` property natively in the `nx.json` file; for versions 19.6 and lower, the Nx Cloud npm package will be needed to use that property.
 
 ## npx nx-cloud start-ci-run
 

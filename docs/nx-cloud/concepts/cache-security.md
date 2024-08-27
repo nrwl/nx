@@ -22,9 +22,15 @@ If a malicious actor were able to modify the cache and those output files were t
 
 In order to keep your cache secure, there are a few steps we recommend you take:
 
-### Specify a Read-Only Token in `nx.json`
+### Use Personal Access Tokens to Provide Fine-Grained Access Control for Local Development
 
-The [token you specify](/ci/recipes/security/access-tokens) for the `nxCloudAccessToken` property in `nx.json` is visible to anyone who can view your codebase. If this token was a read-write token someone who doesn't even have permission to create a PR could still add entries to the remote cache, which would then be used on other developer's machines and in CI.
+When you use a [personal access token](/ci/recipes/security/personal-access-tokens) to connect to Nx Cloud, you can control the level of access that your developers have to the cache only after they authenticate by logging in. By default, all personal access tokens have read-only access to the cache. If you need to give a developer write access to the cache, you can do so in the workspace settings of the Nx Cloud UI.
+
+You can strengthen your workspace security further by revoking all access to the cache for non-authenticated users. This is done by changing the ID Access Level in your workspace settings. By default this is set to `Read-Only`, but you can change it to `None` to prevent all read access to the cache.
+
+### Avoid using CI Access Tokens in `nx.json`
+
+The [token you specify](/ci/recipes/security/access-tokens) for the `nxCloudAccessToken` property in `nx.json` is visible to anyone who can view your codebase. If this token was a read-write token someone who doesn't even have permission to create a PR could still add entries to the remote cache, which would then be used on other developer's machines and in CI. We recommend you restrict CI Access Tokens for CI use only and rely on using [personal access token](/ci/recipes/security/personal-access-tokens) instead for local development instead.
 
 ### Use a Read-Write Token in CI
 

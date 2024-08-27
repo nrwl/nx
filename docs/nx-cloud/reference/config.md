@@ -3,6 +3,37 @@
 The Nx Cloud runner is configured in `nx.json`.
 
 {% tabs %}
+{% tab label="Nx >= 19.7" %}
+
+```json
+{
+  "nxCloudId": "SOMEID"
+}
+```
+
+{% /tab %}
+{% tab label="Nx < 19.6" %}
+
+```json
+"tasksRunnerOptions": {
+    "default": {
+      "runner": "nx-cloud",
+      "options": {
+        "nxCloudId": "SOMEID"
+      }
+    }
+  }
+```
+
+{% /tab %}
+{% /tabs %}
+
+## CI Access Tokens
+
+CI Access Tokens are used in CI environments to provide read-write privileges for pipelines. They should not be committed to source control and should instead be exposed as CI environment secrets.  
+You can configure CI Access Tokens as environment variables (`NX_CLOUD_AUTH_TOKEN` and `NX_CLOUD_ACCESS_TOKEN` are aliases of each other) or define them in `nx.json` as follows:
+
+{% tabs %}
 {% tab label="Nx >= 17" %}
 
 ```json
@@ -49,10 +80,6 @@ This can be useful for debugging unexpected cache misses, and issues with on-pre
 `NX_VERBOSE_LOGGING=true` will also print detailed information about distributed task execution, such as what commands were sent where, etc.
 
 `NX_VERBOSE_LOGGING` is often enabled in CI globally while debugging your CI setups.
-
-## Access Tokens
-
-`NX_CLOUD_AUTH_TOKEN` and `NX_CLOUD_ACCESS_TOKEN` are aliases of each other. This configuration allows you to override the access token set in `nx.json`. It is often enabled in CI to provide read-write privileges where only a read token is committed to the workspace's `nx.json`.
 
 ## Enabling End-to-End Encryption
 
