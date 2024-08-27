@@ -41,17 +41,16 @@ export function TooltipDisplay() {
           });
           break;
         case 'focus-node': {
-          const to =
-            action.tooltipNodeType === 'compositeNode'
-              ? routeConstructor(
-                  {
-                    pathname: `/projects`,
-                    search: `?composite=true&compositeContext=${action.id}`,
-                  },
-                  false
-                )
-              : routeConstructor(`/projects/${action.id}`, true);
-          navigate(to);
+          if (action.tooltipNodeType === 'compositeNode') {
+            navigate(
+              routeConstructor(
+                { pathname: `/projects`, search: `?composite=${action.id}` },
+                true
+              )
+            );
+          } else {
+            navigate(routeConstructor(`/projects/${action.id}`, true));
+          }
           break;
         }
         case 'collapse-node':
