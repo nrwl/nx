@@ -24,11 +24,17 @@ describe('processGradleDependencies', () => {
       'app',
       {
         projects: {
-          'utilities/number-utils': {
+          'number-utils': {
+            root: 'utilities/number-utils',
             name: 'number-utils',
           },
-          'utilities/string-utils': {
+          'string-utils': {
+            root: 'utilities/string-utils',
             name: 'string-utils',
+          },
+          utilities: {
+            root: 'utilities',
+            name: 'utilities',
           },
         },
       } as any,
@@ -68,13 +74,16 @@ describe('processGradleDependencies', () => {
       'app',
       {
         projects: {
-          'utilities/number-utils': {
+          'number-utils': {
+            root: 'utilities/number-utils',
             name: 'number-utils',
           },
-          'utilities/string-utils': {
+          'string-utils': {
+            root: 'utilities/string-utils',
             name: 'string-utils',
           },
           utilities: {
+            root: 'utilities',
             name: 'utilities',
           },
         },
