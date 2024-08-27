@@ -35,7 +35,9 @@ export const createDependencies: CreateDependencies = async (
 
   for (const gradleFile of gradleFiles) {
     const gradleProject = gradleFileToGradleProjectMap.get(gradleFile);
-    const projectName = context.projects[dirname(gradleFile)].name;
+    const projectName = Object.values(context.projects).find(
+      (project) => project.root === dirname(gradleFile)
+    )?.name;
     const depsFile = buildFileToDepsMap.get(gradleFile);
 
     if (projectName && depsFile) {
@@ -125,11 +127,13 @@ export function processGradleDependencies(
         const targetProjectRoot = gradleProjectNameToProjectRoot.get(
           gradleProjectName
         ) as string;
-        const target = context.projects[targetProjectRoot]?.name;
-        if (target) {
+        const targetProjectName = Object.values(context.projects).find(
+          (project) => project.root === targetProjectRoot
+        )?.name;
+        if (targetProjectName) {
           const dependency: RawProjectGraphDependency = {
             source: sourceProjectName,
-            target,
+            target: targetProjectName,
             type: DependencyType.static,
             sourceFile: gradleFile,
           };
