@@ -94,7 +94,7 @@ export async function importHandler(options: ImportOptions) {
 
   const sourceRepoPath = join(tempImportDirectory, 'repo');
   const spinner = createSpinner(
-    `Cloning ${sourceRemoteUrl} into a temporary directory: ${sourceRepoPath}`
+    `Cloning ${sourceRemoteUrl} into a temporary directory: ${sourceRepoPath} (Hint: use --depth to limit the clone depth for faster clone times)`
   ).start();
   try {
     await rm(tempImportDirectory, { recursive: true });

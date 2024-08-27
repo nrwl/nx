@@ -130,6 +130,23 @@ export class GitRepository {
     return await this.execAsync(`git remote add ${name} ${url}`);
   }
 
+  async hasFilterRepoInstalled() {
+    try {
+      await this.execAsync(`git filter-repo --help`);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  // git-filter-repo is much faster than filter-branch, but needs to be installed by user
+  // Use `hasFilterRepoInstalled` to check if it's installed
+  async filterRepo(subdirectory: string) {
+    return await this.execAsync(
+      `git filter-repo -f --subdirectory-filter ${subdirectory}`
+    );
+  }
+
   async filterBranch(subdirectory: string, branchName: string) {
     // We need non-ASCII file names to not be quoted, or else filter-branch will exclude them.
     await this.execAsync(`git config core.quotepath false`);

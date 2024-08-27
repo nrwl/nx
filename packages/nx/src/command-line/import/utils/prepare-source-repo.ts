@@ -33,10 +33,17 @@ export async function prepareSourceRepo(
   );
 
   if (relativeSourceDir !== '') {
-    spinner.start(
-      `Filtering git history to only include files in ${relativeSourceDir}`
-    );
-    await gitClient.filterBranch(relativeSourceDir, tempImportBranch);
+    if (await gitClient.hasFilterRepoInstalled()) {
+      spinner.start(
+        `Filtering git history to only include files in ${relativeSourceDir}`
+      );
+      await gitClient.filterRepo(relativeSourceDir);
+    } else {
+      spinner.start(
+        `Filtering git history to only include files in ${relativeSourceDir} (this might take a few minutes -- install git-filter-repo for faster performance)`
+      );
+      await gitClient.filterBranch(relativeSourceDir, tempImportBranch);
+    }
     spinner.succeed(
       `Filtered git history to only include files in ${relativeSourceDir}`
     );

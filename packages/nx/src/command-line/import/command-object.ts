@@ -5,7 +5,7 @@ import { handleErrors } from '../../utils/params';
 
 export const yargsImportCommand: CommandModule = {
   command: 'import [sourceRemoteUrl] [destination]',
-  describe: false,
+  describe: `Import a project into the current workspace. Install git-filter-repo for faster imports (https://github.com/newren/git-filter-repo).`,
   builder: (yargs) =>
     linkToNxDevAndExamples(
       withVerbose(
