@@ -35,6 +35,7 @@ export declare class NxCache {
   getTaskOutputsPath(hash: string): string
   copyFilesFromCache(cachedResult: CachedResult, outputs: Array<string>): void
   removeOldCacheRecords(): void
+  checkCacheFsInSync(): boolean
 }
 
 export declare class NxTaskHistory {
@@ -96,7 +97,7 @@ export interface CachedResult {
   outputsPath: string
 }
 
-export declare export function connectToNxDb(cacheDir: string, nxVersion: string): ExternalObject<Connection>
+export declare export function connectToNxDb(cacheDir: string, nxVersion: string, dbName?: string | undefined | null): ExternalObject<Connection>
 
 export declare export function copy(src: string, dest: string): void
 
