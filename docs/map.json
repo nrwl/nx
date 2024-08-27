@@ -1224,10 +1224,8 @@
           "itemList": [
             {
               "name": "Commands",
-              "id": "commands",
-              "file": "",
-              "path": "/nx-api/nx",
-              "isExternal": true
+              "id": "nx-commands",
+              "file": "shared/reference/commands"
             },
             {
               "name": "Nx Configuration",

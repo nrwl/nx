@@ -195,6 +195,7 @@
       - [Large Repo and Caching](/showcase/benchmarks/caching)
       - [Large Repo and DTE](/showcase/benchmarks/dte)
   - [Reference](/reference)
+    - [Commands](/reference/nx-commands)
     - [Nx Configuration](/reference/nx-json)
     - [Project Configuration](/reference/project-configuration)
     - [Inputs and Named Inputs](/reference/inputs)
