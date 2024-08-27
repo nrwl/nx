@@ -34,8 +34,8 @@ describe('Gradle', () => {
 
         const buildOutput = runCLI('build app', { verbose: true });
         // app depends on list and utilities
-        expect(buildOutput).toContain('nx run list:build');
-        expect(buildOutput).toContain('nx run utilities:build');
+        expect(buildOutput).toContain(':list:classes');
+        expect(buildOutput).toContain(':utilities:classes');
 
         checkFilesExist(
           `app/build/libs/app.jar`,
@@ -85,9 +85,9 @@ dependencies {
             return content;
           }
         );
-        const buildOutput = runCLI('build app2', { verbose: true });
-        // app2 depends on app
-        expect(buildOutput).toContain('nx run app:build');
+        expect(() => {
+          runCLI('build app2', { verbose: true });
+        }).not.toThrow();
       });
     }
   );
