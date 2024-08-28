@@ -107,7 +107,7 @@ nx connect
 
 {% cards %}
 {% link-card title="nx connect" type="Reference" url="/nx-api/nx/documents/connect-to-nx-cloud" /%}
-{% link-card title="Connect to Nx Cloud" type="Feature" url="/ci/intro/connect" /%}
+{% link-card title="Connect to Nx Cloud" type="Feature" url="/ci/intro/connect-to-nx-cloud" /%}
 {% /cards %}
 
 ### format
@@ -250,7 +250,7 @@ nx graph
 ```
 
 {% cards %}
-{% link-card title="nx graph" type="Reference" url="/nx-api/nx/documents/graph" /%}
+{% link-card title="nx graph" type="Reference" url="/nx-api/nx/documents/dep-graph" /%}
 {% link-card title="Explore Your Workspace" type="Recipe" url="/features/explore-graph" /%}
 {% /cards %}
 
