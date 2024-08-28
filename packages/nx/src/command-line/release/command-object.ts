@@ -158,10 +158,8 @@ export const yargsReleaseCommand: CommandModule<
           );
         }
         const nxJson = readNxJson();
-        // TODO(eslint): address this type error and figure out why e2e and local do not agree
-        const groups = argv.groups as any;
-        if (groups?.length) {
-          for (const group of groups) {
+        if (argv.groups?.length) {
+          for (const group of argv.groups) {
             if (!nxJson.release?.groups?.[group]) {
               throw new Error(
                 `The specified release group "${group}" was not found in nx.json`

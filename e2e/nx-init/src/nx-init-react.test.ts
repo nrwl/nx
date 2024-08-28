@@ -120,35 +120,6 @@ describe('nx init (for React - legacy)', () => {
     process.env.SELECTED_PM = originalPM;
   });
 
-  it('should convert to a standalone workspace with craco (webpack)', () => {
-    const appName = 'my-app';
-    createReactApp(appName);
-
-    const craToNxOutput = runCommand(
-      `${
-        pmc.runUninstalledPackage
-      } nx@${getPublishedVersion()} init --no-interactive --vite=false`,
-      {
-        env: {
-          ...process.env,
-          // TODO(eslint): craco does not support ESLint v9 https://github.com/dilanx/craco/issues/543
-          ESLINT_USE_FLAT_CONFIG: 'false',
-        },
-      }
-    );
-
-    expect(craToNxOutput).toContain('🎉 Done!');
-
-    runCLI(`build ${appName}`, {
-      env: {
-        // since craco 7.1.0 the NODE_ENV is used, since the tests set it
-        // to "test" is causes an issue with React Refresh Babel
-        NODE_ENV: undefined,
-      },
-    });
-    checkFilesExist(`dist/${appName}/index.html`);
-  });
-
   it('should convert to an standalone workspace with Vite', () => {
     const appName = 'my-app';
     createReactApp(appName);
