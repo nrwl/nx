@@ -2,8 +2,9 @@ import { performance } from 'perf_hooks';
 import { parseGeneratorString } from '../command-line/generate/generate';
 import { getGeneratorInformation } from '../command-line/generate/generator-utils';
 import type { GeneratorCallback } from '../config/misc-interfaces';
-import { readNxJson } from '../config/nx-json';
+import { readNxJson, type NxJsonConfiguration } from '../config/nx-json';
 import type { ProjectGraph } from '../config/project-graph';
+import type { TaskGraph } from '../config/task-graph';
 import type { ProjectConfiguration } from '../config/workspace-json-project-json';
 import { daemonClient } from '../daemon/client/client';
 import { isOnDaemon } from '../daemon/is-on-daemon';
@@ -72,11 +73,12 @@ export async function flushSyncGeneratorChanges(
 }
 
 export async function collectAllRegisteredSyncGenerators(
-  projectGraph: ProjectGraph
+  projectGraph: ProjectGraph,
+  nxJson: NxJsonConfiguration
 ): Promise<string[]> {
   if (!daemonClient.enabled()) {
     return [
-      ...collectRegisteredTaskSyncGenerators(projectGraph),
+      ...collectEnabledTaskSyncGeneratorsFromProjectGraph(projectGraph, nxJson),
       ...collectRegisteredGlobalSyncGenerators(),
     ];
   }
@@ -122,10 +124,14 @@ export async function runSyncGenerator(
   };
 }
 
-export function collectRegisteredTaskSyncGenerators(
-  projectGraph: ProjectGraph
+export function collectEnabledTaskSyncGeneratorsFromProjectGraph(
+  projectGraph: ProjectGraph,
+  nxJson: NxJsonConfiguration
 ): Set<string> {
   const taskSyncGenerators = new Set<string>();
+  const disabledTaskSyncGenerators = new Set(
+    nxJson.sync?.disabledTaskSyncGenerators ?? []
+  );
 
   for (const {
     data: { targets },
@@ -135,11 +141,46 @@ export function collectRegisteredTaskSyncGenerators(
     }
 
     for (const target of Object.values(targets)) {
-      if (!target.syncGenerators) {
+      if (!target.syncGenerators?.length) {
         continue;
       }
 
       for (const generator of target.syncGenerators) {
+        if (
+          !disabledTaskSyncGenerators.has(generator) &&
+          !taskSyncGenerators.has(generator)
+        ) {
+          taskSyncGenerators.add(generator);
+        }
+      }
+    }
+  }
+
+  return taskSyncGenerators;
+}
+
+export function collectEnabledTaskSyncGeneratorsFromTaskGraph(
+  taskGraph: TaskGraph,
+  projectGraph: ProjectGraph,
+  nxJson: NxJsonConfiguration
+): Set<string> {
+  const taskSyncGenerators = new Set<string>();
+  const disabledTaskSyncGenerators = new Set(
+    nxJson.sync?.disabledTaskSyncGenerators ?? []
+  );
+
+  for (const { target } of Object.values(taskGraph.tasks)) {
+    const { syncGenerators } =
+      projectGraph.nodes[target.project].data.targets[target.target];
+    if (!syncGenerators?.length) {
+      continue;
+    }
+
+    for (const generator of syncGenerators) {
+      if (
+        !disabledTaskSyncGenerators.has(generator) &&
+        !taskSyncGenerators.has(generator)
+      ) {
         taskSyncGenerators.add(generator);
       }
     }

@@ -635,9 +635,6 @@ function normalizeTargets(
   sourceMaps: ConfigurationSourceMaps,
   nxJsonConfiguration: NxJsonConfiguration<'*' | string[]>
 ) {
-  const disabledTaskSyncGenerators = new Set(
-    nxJsonConfiguration.sync?.disabledTaskSyncGenerators ?? []
-  );
   for (const targetName in project.targets) {
     project.targets[targetName] = normalizeTarget(
       project.targets[targetName],
@@ -681,17 +678,6 @@ function normalizeTargets(
         // we can remove it.
         delete project.targets[targetName];
       }
-    }
-
-    if (
-      disabledTaskSyncGenerators.size &&
-      project.targets[targetName].syncGenerators?.length
-    ) {
-      project.targets[targetName].syncGenerators = project.targets[
-        targetName
-      ].syncGenerators.filter(
-        (syncGenerator) => !disabledTaskSyncGenerators.has(syncGenerator)
-      );
     }
   }
 }

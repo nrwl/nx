@@ -1,4 +1,5 @@
 import * as ora from 'ora';
+import { readNxJson } from '../../config/nx-json';
 import { createProjectGraphAsync } from '../../project-graph/project-graph';
 import { output } from '../../utils/output';
 import { handleErrors } from '../../utils/params';
@@ -18,9 +19,22 @@ interface SyncOptions extends SyncArgs {
 export function syncHandler(options: SyncOptions): Promise<number> {
   return handleErrors(options.verbose, async () => {
     const projectGraph = await createProjectGraphAsync();
+    const nxJson = readNxJson();
     const syncGenerators = await collectAllRegisteredSyncGenerators(
-      projectGraph
+      projectGraph,
+      nxJson
     );
+
+    if (!syncGenerators.length) {
+      output.success({
+        title: options.check
+          ? 'The workspace is up to date'
+          : 'The workspace is already up to date',
+        bodyLines: ['There are no sync generators to run.'],
+      });
+      return 0;
+    }
+
     const results = await getSyncGeneratorChanges(syncGenerators);
 
     if (!results.length) {

@@ -5,8 +5,8 @@ import { FsTree } from '../../generators/tree';
 import { hashArray } from '../../hasher/file-hasher';
 import { readProjectsConfigurationFromProjectGraph } from '../../project-graph/project-graph';
 import {
+  collectEnabledTaskSyncGeneratorsFromProjectGraph,
   collectRegisteredGlobalSyncGenerators,
-  collectRegisteredTaskSyncGenerators,
   flushSyncGeneratorChanges,
   runSyncGenerator,
   type SyncGeneratorChangesResult,
@@ -28,6 +28,7 @@ let registeredSyncGenerators: Set<string> | undefined;
 let scheduledTimeoutId: NodeJS.Timeout | undefined;
 let storedProjectGraphHash: string | undefined;
 let storedNxJsonHash: string | undefined;
+let storedDisabledTaskSyncGeneratorsHash: string | undefined;
 
 const log = (...messageParts: unknown[]) => {
   serverLogger.log('[SYNC]:', ...messageParts);
@@ -146,6 +147,12 @@ export function collectAndScheduleSyncGenerators(
   // a change imply we need to re-run all the generators
   // make sure to schedule all the collected generators
   scheduledGenerators.clear();
+
+  if (!registeredSyncGenerators.size) {
+    // there are no generators to run
+    return;
+  }
+
   for (const generator of registeredSyncGenerators) {
     scheduledGenerators.add(generator);
   }
@@ -193,16 +200,23 @@ export async function getCachedRegisteredSyncGenerators(): Promise<string[]> {
 }
 
 function collectAllRegisteredSyncGenerators(projectGraph: ProjectGraph): void {
+  const nxJson = readNxJson();
   const projectGraphHash = hashProjectGraph(projectGraph);
-  if (storedProjectGraphHash !== projectGraphHash) {
+  const disabledTaskSyncGeneratorsHash = hashArray(
+    nxJson.sync?.disabledTaskSyncGenerators?.sort() ?? []
+  );
+  if (
+    projectGraphHash !== storedProjectGraphHash ||
+    disabledTaskSyncGeneratorsHash !== storedDisabledTaskSyncGeneratorsHash
+  ) {
     storedProjectGraphHash = projectGraphHash;
+    storedDisabledTaskSyncGeneratorsHash = disabledTaskSyncGeneratorsHash;
     registeredTaskSyncGenerators =
-      collectRegisteredTaskSyncGenerators(projectGraph);
+      collectEnabledTaskSyncGeneratorsFromProjectGraph(projectGraph, nxJson);
   } else {
     log('project graph hash is the same, not collecting task sync generators');
   }
 
-  const nxJson = readNxJson();
   const nxJsonHash = hashArray(nxJson.sync?.globalGenerators?.sort() ?? []);
   if (storedNxJsonHash !== nxJsonHash) {
     storedNxJsonHash = nxJsonHash;
