@@ -1,11 +1,14 @@
 import {
   createProjectGraphAsync,
+  formatFiles,
   output,
   readNxJson,
   readProjectsConfigurationFromProjectGraph,
   Tree,
   workspaceRoot,
 } from '@nx/devkit';
+import { NoTargetsToMigrateError } from '@nx/devkit/src/generators/plugin-migrations/executor-to-plugin-migrator';
+import { all } from 'cypress/types/bluebird';
 import { prompt } from 'enquirer';
 import {
   GeneratorInformation,
@@ -16,21 +19,19 @@ import { findInstalledPlugins } from 'nx/src/utils/plugins/installed-plugins';
 interface Schema {
   project?: string;
   skipFormat?: boolean;
-  exclude?: string[];
 }
 
 export async function convertToInferredGenerator(tree: Tree, options: Schema) {
-  const generatorChoices = await getPossibleConvertToInferredGenerators(
-    options
-  );
+  const generatorChoices = await getPossibleConvertToInferredGenerators();
+  const allChoices = Array.from(generatorChoices.keys());
 
   const result = (
     await prompt<{ generatorsToRun: string[] }>({
       type: 'multiselect',
       name: 'generatorsToRun',
       message: 'Which convert-to-inferred generators should be run?',
-      choices: Array.from(generatorChoices.keys()),
-      initial: getInitialGeneratorChoices(generatorChoices, tree, options),
+      choices: allChoices,
+      initial: allChoices,
       validate: (result: string[]) => {
         if (result.length === 0) {
           return 'Please select at least one convert-to-inferred generator to run';
@@ -48,40 +49,41 @@ export async function convertToInferredGenerator(tree: Tree, options: Schema) {
   }
 
   for (const generatorName of result) {
-    output.log({
-      title: `Running ${generatorName}`,
-    });
     try {
       const generator = generatorChoices.get(generatorName);
       if (generator) {
         const generatorFactory = generator.implementationFactory();
-        await generatorFactory(tree, {
+        const callback = await generatorFactory(tree, {
           project: options.project,
           skipFormat: options.skipFormat,
         });
+        if (callback) {
+          await callback();
+        }
+        output.success({
+          title: `${generatorName} - Success`,
+        });
       }
     } catch (e) {
-      const collection =
-        generatorChoices.get(generatorName)?.resolvedCollectionName;
-      output.error({
-        title: `Failed to run ${generatorName}`,
-        bodyLines: [
-          e,
-          `To rerun this generator without the ${generatorName} generator, use nx g @nx/workspace:convert-to-inferred ${
-            options.project ? `--project=${options.project}` : ''
-          } --exclude=${
-            options.exclude
-              ? [...options.exclude, collection].join(', ')
-              : collection
-          }`,
-        ],
-      });
-      return;
+      if (e instanceof NoTargetsToMigrateError) {
+        output.note({
+          title: `${generatorName} - Skipped (No targets to migrate)`,
+        });
+      } else {
+        output.error({
+          title: `${generatorName} - Failed`,
+        });
+        throw e;
+      }
     }
+  }
+
+  if (!options.skipFormat) {
+    await formatFiles(tree);
   }
 }
 
-async function getPossibleConvertToInferredGenerators(options: Schema) {
+async function getPossibleConvertToInferredGenerators() {
   const installedCollections = Array.from(
     new Set(findInstalledPlugins().map((x) => x.name))
   );
@@ -102,8 +104,7 @@ async function getPossibleConvertToInferredGenerators(options: Schema) {
       );
       if (
         generator.generatorConfiguration.hidden ||
-        generator.generatorConfiguration['x-deprecated'] ||
-        options.exclude?.includes(generator.resolvedCollectionName)
+        generator.generatorConfiguration['x-deprecated']
       ) {
         continue;
       }
@@ -118,42 +119,6 @@ async function getPossibleConvertToInferredGenerators(options: Schema) {
   }
 
   return choices;
-}
-
-function getInitialGeneratorChoices(
-  choices: Map<string, GeneratorInformation>,
-  tree: Tree,
-  options: Schema
-) {
-  // if a project is specified, we assume the user wants fine-grained contorl over which generators to run
-  // in this case we won't include any generators by default
-  if (options.project) {
-    return [];
-  }
-  // we want to exclude generators from the default if they already have a plugin registered in nx.json
-  // in that case, they're probably already using inferred targets
-  const nxJson = readNxJson(tree);
-
-  const collectionsWithRegisteredPlugins: Set<string> = new Set();
-
-  for (const plugin of nxJson.plugins ?? []) {
-    if (typeof plugin === 'object') {
-      collectionsWithRegisteredPlugins.add(
-        plugin.plugin.replace('/plugin', '')
-      );
-    }
-  }
-
-  const initialChoices = new Set();
-  for (const [generatorName, generator] of choices) {
-    if (
-      !collectionsWithRegisteredPlugins.has(generator.resolvedCollectionName)
-    ) {
-      initialChoices.add(generatorName);
-    }
-  }
-
-  return Array.from(initialChoices);
 }
 
 export default convertToInferredGenerator;

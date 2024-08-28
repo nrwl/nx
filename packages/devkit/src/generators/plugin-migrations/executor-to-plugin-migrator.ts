@@ -336,6 +336,12 @@ class ExecutorToPluginMigrator<T> {
   }
 }
 
+export class NoTargetsToMigrateError extends Error {
+  constructor() {
+    super('Could not find any targets to migrate.');
+  }
+}
+
 export async function migrateProjectExecutorsToPlugin<T>(
   tree: Tree,
   projectGraph: ProjectGraph,
