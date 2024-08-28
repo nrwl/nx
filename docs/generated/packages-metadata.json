@@ -3418,6 +3418,15 @@
         "originalFilePath": "/packages/workspace/src/generators/ci-workflow/schema.json",
         "path": "workspace/generators/ci-workflow",
         "type": "generator"
+      },
+      {
+        "description": "convert-to-inferred generator",
+        "file": "generated/packages/workspace/generators/convert-to-inferred.json",
+        "hidden": false,
+        "name": "convert-to-inferred",
+        "originalFilePath": "/packages/workspace/src/generators/convert-to-inferred/schema.json",
+        "path": "workspace/generators/convert-to-inferred",
+        "type": "generator"
       }
     ],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",

@@ -3454,6 +3454,15 @@
         "originalFilePath": "/packages/workspace/src/generators/ci-workflow/schema.json",
         "path": "/nx-api/workspace/generators/ci-workflow",
         "type": "generator"
+      },
+      "/nx-api/workspace/generators/convert-to-inferred": {
+        "description": "convert-to-inferred generator",
+        "file": "generated/packages/workspace/generators/convert-to-inferred.json",
+        "hidden": false,
+        "name": "convert-to-inferred",
+        "originalFilePath": "/packages/workspace/src/generators/convert-to-inferred/schema.json",
+        "path": "/nx-api/workspace/generators/convert-to-inferred",
+        "type": "generator"
       }
     },
     "path": "/nx-api/workspace"

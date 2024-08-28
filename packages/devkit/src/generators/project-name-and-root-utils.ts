@@ -156,7 +156,7 @@ async function determineFormat(
   }
 
   const result = await prompt<{ format: ProjectNameAndRootFormat }>({
-    type: 'select',
+    type: 'array',
     name: 'format',
     message:
       'What should be the project name and where should it be generated?',
@@ -171,7 +171,7 @@ async function determineFormat(
       },
     ],
     initial: 0,
-  }).then(({ format }) =>
+  } as any).then(({ format }) =>
     format === asProvidedSelectedValue ? 'as-provided' : 'derived'
   );
 

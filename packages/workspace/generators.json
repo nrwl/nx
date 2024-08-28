@@ -54,6 +54,11 @@
       "factory": "./src/generators/ci-workflow/ci-workflow#ciWorkflowGenerator",
       "schema": "./src/generators/ci-workflow/schema.json",
       "description": "Generate a CI workflow."
+    },
+    "convert-to-inferred": {
+      "factory": "./src/generators/convert-to-inferred/generator",
+      "schema": "./src/generators/convert-to-inferred/schema.json",
+      "description": "convert-to-inferred generator"
     }
   }
 }

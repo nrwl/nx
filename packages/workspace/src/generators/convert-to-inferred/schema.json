@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/schema",
+  "$id": "ConvertToInferred",
+  "title": "",
+  "type": "object",
+  "properties": {
+    "project": {
+      "type": "string",
+      "description": "The project to convert to use inferred targets.",
+      "x-priority": "important"
+    },
+    "exclude": {
+      "type": "array",
+      "description": "List of plugins whose convert-to-inferred generators should not be run.",
+      "items": {
+        "type": "string"
+      }
+    },
+    "skipFormat": {
+      "type": "boolean",
+      "description": "Whether to format files.",
+      "default": false
+    }
+  }
+}
