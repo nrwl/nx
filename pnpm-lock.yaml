@@ -1015,9 +1015,6 @@ importers:
       webpack-node-externals:
         specifier: ^3.0.0
         version: 3.0.0
-      webpack-sources:
-        specifier: ^3.2.3
-        version: 3.2.3
       webpack-subresource-integrity:
         specifier: ^5.1.0
         version: 5.1.0(html-webpack-plugin@5.5.0(webpack@5.88.0))(webpack@5.88.0)

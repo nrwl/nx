@@ -311,7 +311,6 @@
     "webpack-dev-server": "5.0.4",
     "webpack-merge": "^5.8.0",
     "webpack-node-externals": "^3.0.0",
-    "webpack-sources": "^3.2.3",
     "webpack-subresource-integrity": "^5.1.0",
     "xstate": "4.34.0",
     "yaml": "^2.6.0",
