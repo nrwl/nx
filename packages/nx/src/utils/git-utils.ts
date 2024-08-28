@@ -1,6 +1,6 @@
-import { exec, ExecOptions, execSync, ExecSyncOptions } from 'child_process';
+import { exec, ExecOptions, execSync } from 'child_process';
+import { dirname, posix, sep } from 'path';
 import { logger } from '../devkit-exports';
-import { dirname, join } from 'path';
 
 function execAsync(command: string, execOptions: ExecOptions) {
   return new Promise<string>((res, rej) => {
@@ -26,6 +26,7 @@ export async function cloneFromUpstream(
     } --origin ${originName}`,
     {
       cwd: dirname(destination),
+      maxBuffer: 10 * 1024 * 1024,
     }
   );
 
@@ -50,12 +51,6 @@ export class GitRepository {
     );
   }
 
-  private execAsync(command: string) {
-    return execAsync(command, {
-      cwd: this.root,
-    });
-  }
-
   async showStat() {
     return await this.execAsync(`git show --stat`);
   }
@@ -73,9 +68,11 @@ export class GitRepository {
   }
 
   async getGitFiles(path: string) {
-    return (await this.execAsync(`git ls-files ${path}`))
+    // Use -z to return file names exactly as they are stored in git, separated by NULL (\x00) character.
+    // This avoids problems with special characters in file names.
+    return (await this.execAsync(`git ls-files -z ${path}`))
       .trim()
-      .split('\n')
+      .split('\x00')
       .map((s) => s.trim())
       .filter(Boolean);
   }
@@ -108,7 +105,11 @@ export class GitRepository {
   }
 
   async move(path: string, destination: string) {
-    return await this.execAsync(`git mv '${path}' '${destination}'`);
+    // If source is not found, the -k prevents the command from failing.
+    // This could happen with special characters, although they should be mostly handled.
+    return await this.execAsync(
+      `git mv -k ${this.quotePath(path)} ${this.quotePath(destination)}`
+    );
   }
 
   async push(ref: string, remoteName: string) {
@@ -142,29 +143,41 @@ export class GitRepository {
   // git-filter-repo is much faster than filter-branch, but needs to be installed by user
   // Use `hasFilterRepoInstalled` to check if it's installed
   async filterRepo(subdirectory: string) {
+    // filter-repo requires POSIX path to work
+    const posixPath = subdirectory.split(sep).join(posix.sep);
     return await this.execAsync(
-      `git filter-repo -f --subdirectory-filter ${subdirectory}`
+      `git filter-repo -f --subdirectory-filter ${this.quotePath(posixPath)}`
     );
   }
 
   async filterBranch(subdirectory: string, branchName: string) {
+    // filter-repo requires POSIX path to work
+    const posixPath = subdirectory.split(sep).join(posix.sep);
     // We need non-ASCII file names to not be quoted, or else filter-branch will exclude them.
     await this.execAsync(`git config core.quotepath false`);
     return await this.execAsync(
-      `git filter-branch --subdirectory-filter ${subdirectory} -- ${branchName}`
+      `git filter-branch --subdirectory-filter ${this.quotePath(
+        posixPath
+      )} -- ${branchName}`
     );
   }
-}
 
-/**
- * This is used by the squash editor script to update the rebase file.
- */
-export function updateRebaseFile(contents: string): string {
-  const lines = contents.split('\n');
-  const lastCommitIndex = lines.findIndex((line) => line === '') - 1;
+  private execAsync(command: string) {
+    return execAsync(command, {
+      cwd: this.root,
+      maxBuffer: 10 * 1024 * 1024,
+    });
+  }
 
-  lines[lastCommitIndex] = lines[lastCommitIndex].replace('pick', 'fixup');
-  return lines.join('\n');
+  private quotePath(path: string) {
+    return process.platform === 'win32'
+      ? // Windows/CMD only understands double-quotes, single-quotes are treated as part of the file name
+        // Bash and other shells will substitute `$` in file names with a variable value.
+        `"${path}"`
+      : // e.g. `git mv "$$file.txt" "libs/a/$$file.txt"` will not work since `$$` is swapped with the PID of the last process.
+        // Using single-quotes prevents this substitution.
+        `'${path}'`;
+  }
 }
 
 /**

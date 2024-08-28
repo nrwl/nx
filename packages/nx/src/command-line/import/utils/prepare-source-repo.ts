@@ -60,12 +60,7 @@ export async function prepareSourceRepo(
     });
   } catch {}
   await mkdir(destinationInSource, { recursive: true });
-  const gitignores = new Set<string>();
   for (const file of files) {
-    if (basename(file) === '.gitignore') {
-      gitignores.add(file);
-      continue;
-    }
     spinner.start(
       `Moving files and git history to ${destinationInSource}: ${file}`
     );
@@ -85,18 +80,7 @@ export async function prepareSourceRepo(
     `chore(repo): move ${source} to ${relativeDestination} to prepare to be imported`
   );
 
-  for (const gitignore of gitignores) {
-    await gitClient.move(gitignore, join(destinationInSource, gitignore));
-  }
-
   await gitClient.amendCommit();
-
-  for (const gitignore of gitignores) {
-    await copyFile(
-      join(destinationInSource, gitignore),
-      join(gitClient.root, gitignore)
-    );
-  }
 
   spinner.succeed(
     `${sourceRemoteUrl} has been prepared to be imported into this workspace on a temporary branch: ${tempImportBranch} in ${gitClient.root}`
