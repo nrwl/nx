@@ -241,16 +241,16 @@ describe('EsBuild Plugin', () => {
     updateFile(
       `libs/${myPkg}/src/index.ts`,
       `
-      console.log(process.env['NX_CLOUD_ENCRYPTION_KEY']);
-      console.log(process.env['NX_CLOUD_ACCESS_TOKEN']);
+      console.log(process.env['NX_SOME_SECRET']);
+      console.log(process.env['NX_SOME_TOKEN']);
       console.log(process.env['NX_PUBLIC_TEST']);
       `
     );
 
     runCLI(`build ${myPkg} --platform=browser`, {
       env: {
-        NX_CLOUD_ENCRYPTION_KEY: 'secret',
-        NX_CLOUD_ACCESS_TOKEN: 'secret',
+        NX_SOME_SECRET: 'secret',
+        NX_SOME_TOKEN: 'secret',
         NX_PUBLIC_TEST: 'foobar',
       },
     });
