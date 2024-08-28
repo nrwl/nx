@@ -929,6 +929,135 @@ export function generateFlatOverride(
   );
 }
 
+export function generateFlatConfigObject(config: {
+  files: string[];
+  rules?: Linter.RulesRecord;
+  plugin?: {
+    importPath: string;
+    configVar: string;
+    configPath: string;
+  };
+}): ts.ObjectLiteralExpression | ts.SpreadElement {
+  const { files, rules = {}, plugin } = config;
+
+  if (!plugin) {
+    /**
+     * {
+     *   files: [...],
+     *   rules: {<...rules>}
+     * }
+     */
+    return ts.factory.createObjectLiteralExpression(
+      [
+        ts.factory.createPropertyAssignment(
+          ts.factory.createIdentifier('files'),
+          ts.factory.createArrayLiteralExpression(
+            files.map((file) => ts.factory.createStringLiteral(file)),
+            false
+          )
+        ),
+        ts.factory.createPropertyAssignment(
+          ts.factory.createIdentifier('rules'),
+          generateAst(rules)
+        ),
+      ],
+      true
+    );
+  }
+
+  const identifiers = plugin.configPath.split('.');
+
+  let configMapPropertyAccessExpression: ts.PropertyAccessExpression;
+  if (identifiers.length === 1) {
+    configMapPropertyAccessExpression =
+      ts.factory.createPropertyAccessExpression(
+        ts.factory.createIdentifier(identifiers[0]),
+        ts.factory.createIdentifier('map')
+      );
+  } else {
+    configMapPropertyAccessExpression =
+      ts.factory.createPropertyAccessExpression(
+        ts.factory.createIdentifier(identifiers[0]),
+        ts.factory.createIdentifier(identifiers[1])
+      );
+    identifiers.slice(2).forEach((identifier) => {
+      configMapPropertyAccessExpression =
+        ts.factory.createPropertyAccessExpression(
+          configMapPropertyAccessExpression,
+          ts.factory.createIdentifier(identifier)
+        );
+    });
+    configMapPropertyAccessExpression =
+      ts.factory.createPropertyAccessExpression(
+        configMapPropertyAccessExpression,
+        ts.factory.createIdentifier('map')
+      );
+  }
+
+  /**
+   * {
+   *   ...<plugin.configPath>.map(config => ({
+   *     ...config,
+   *     files: [...],
+   *     rules: {
+   *       ...config.rules,
+   *       <...rules>
+   *     }
+   *   }))
+   * }
+   */
+  return ts.factory.createSpreadElement(
+    ts.factory.createCallExpression(
+      configMapPropertyAccessExpression,
+      undefined,
+      [
+        ts.factory.createArrowFunction(
+          undefined,
+          undefined,
+          [
+            ts.factory.createParameterDeclaration(
+              undefined,
+              undefined,
+              ts.factory.createIdentifier('config')
+            ),
+          ],
+          undefined,
+          ts.factory.createToken(ts.SyntaxKind.EqualsGreaterThanToken),
+          ts.factory.createParenthesizedExpression(
+            ts.factory.createObjectLiteralExpression(
+              [
+                ts.factory.createSpreadAssignment(
+                  ts.factory.createIdentifier('config')
+                ),
+                ts.factory.createPropertyAssignment(
+                  ts.factory.createIdentifier('files'),
+                  generateAst(files)
+                ),
+                ts.factory.createPropertyAssignment(
+                  ts.factory.createIdentifier('rules'),
+                  ts.factory.createObjectLiteralExpression(
+                    [
+                      ts.factory.createSpreadAssignment(
+                        ts.factory.createPropertyAccessExpression(
+                          ts.factory.createIdentifier('config'),
+                          ts.factory.createIdentifier('rules')
+                        )
+                      ),
+                      ...generatePropertyAssignmentsFromObjectEntries(rules),
+                    ],
+                    true
+                  )
+                ),
+              ],
+              true
+            )
+          )
+        ),
+      ]
+    )
+  );
+}
+
 export function mapFilePaths(
   override: Linter.ConfigOverride<Linter.RulesRecord>
 ) {
@@ -983,21 +1112,10 @@ export function generateAst<T>(
   }
   if (typeof input === 'object') {
     return ts.factory.createObjectLiteralExpression(
-      Object.entries(input)
-        .filter(([_, value]) => value !== undefined)
-        .map(([key, value]) => {
-          const original = ts.factory.createPropertyAssignment(
-            isValidKey(key) ? key : ts.factory.createStringLiteral(key),
-            generateAst<ts.Expression>(value, propertyAssignmentReplacer)
-          );
-          if (
-            propertyAssignmentReplacer &&
-            key === propertyAssignmentReplacer.keyToMatch
-          ) {
-            return propertyAssignmentReplacer.replacer(original);
-          }
-          return original;
-        }),
+      generatePropertyAssignmentsFromObjectEntries(
+        input,
+        propertyAssignmentReplacer
+      ),
       Object.keys(input).length > 1 // multiline only if more than one property
     ) as T;
   }
@@ -1012,6 +1130,32 @@ export function generateAst<T>(
   }
   // since we are parsing JSON, this should never happen
   throw new Error(`Unknown type: ${typeof input} `);
+}
+
+function generatePropertyAssignmentsFromObjectEntries(
+  input: object,
+  propertyAssignmentReplacer?: {
+    keyToMatch: string;
+    replacer: (
+      propertyAssignment: ts.PropertyAssignment
+    ) => ts.PropertyAssignment;
+  }
+): ts.PropertyAssignment[] {
+  return Object.entries(input)
+    .filter(([_, value]) => value !== undefined)
+    .map(([key, value]) => {
+      const original = ts.factory.createPropertyAssignment(
+        isValidKey(key) ? key : ts.factory.createStringLiteral(key),
+        generateAst<ts.Expression>(value, propertyAssignmentReplacer)
+      );
+      if (
+        propertyAssignmentReplacer &&
+        key === propertyAssignmentReplacer.keyToMatch
+      ) {
+        return propertyAssignmentReplacer.replacer(original);
+      }
+      return original;
+    });
 }
 
 function isValidKey(key: string): boolean {

@@ -7,6 +7,7 @@ import {
   createNodeList,
   generateAst,
   generateFlatOverride,
+  generateFlatConfigObject,
   stringifyNodeList,
 } from '../utils/flat-config/ast-utils';
 
@@ -22,6 +23,16 @@ export const typeScriptOverride = {
    * extend things from if they needed to
    */
   rules: {},
+};
+
+export const typescriptFlatConfigObjectMetadata = {
+  files: ['*.ts', '*.tsx'],
+  rules: {},
+  plugin: {
+    importPath: '@nx/eslint-plugin/typescript',
+    configVar: 'nxTypescriptPlugin',
+    configPath: 'nxTypescriptPlugin.configs.typescript',
+  },
 };
 
 /**
@@ -93,7 +104,7 @@ export const getGlobalEsLintConfiguration = (
   return config;
 };
 
-export const getGlobalFlatEslintConfiguration = (
+export const getGlobalFlatEslintConfiguration1 = (
   unitTestRunner?: string,
   rootProject?: boolean
 ): string => {
@@ -121,6 +132,55 @@ export const getGlobalFlatEslintConfiguration = (
     content = addBlockToFlatConfigExport(
       content,
       generateFlatOverride(jestOverride)
+    );
+  }
+  // add ignore for .nx folder
+  content = addBlockToFlatConfigExport(
+    content,
+    generateAst({
+      ignores: ['.nx'],
+    })
+  );
+
+  content = addFlatCompatToFlatConfig(content);
+
+  return content;
+};
+
+// TODO(leo): take ESLint version into account to do the old logic vs the new one
+export const getGlobalFlatEslintConfiguration = (
+  unitTestRunner?: string,
+  rootProject?: boolean
+): string => {
+  const nodeList = createNodeList(new Map(), []);
+  let content = stringifyNodeList(nodeList);
+  content = addImportToFlatConfig(content, 'nxPlugin', '@nx/eslint-plugin');
+  content = addPluginsToExportsBlock(content, [
+    { name: '@nx', varName: 'nxPlugin', imp: '@nx/eslint-plugin' },
+  ]);
+  if (!rootProject) {
+    content = addBlockToFlatConfigExport(
+      content,
+      generateFlatConfigObject(moduleBoundariesOverride)
+    );
+  }
+  content = addImportToFlatConfig(
+    content,
+    typescriptFlatConfigObjectMetadata.plugin!.configVar,
+    typescriptFlatConfigObjectMetadata.plugin!.importPath
+  );
+  content = addBlockToFlatConfigExport(
+    content,
+    generateFlatConfigObject(typescriptFlatConfigObjectMetadata)
+  );
+  content = addBlockToFlatConfigExport(
+    content,
+    generateFlatConfigObject(javaScriptOverride)
+  );
+  if (unitTestRunner === 'jest') {
+    content = addBlockToFlatConfigExport(
+      content,
+      generateFlatConfigObject(jestOverride)
     );
   }
   // add ignore for .nx folder
