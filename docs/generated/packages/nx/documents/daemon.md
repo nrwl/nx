@@ -15,28 +15,9 @@ nx daemon
 
 Install `nx` globally to invoke the command directly using `nx`, or use `npx nx`, `yarn nx`, or `pnpm nx`.
 
-## Options
-
-### help
-
-Type: `boolean`
-
-Show help
-
-### start
-
-Type: `boolean`
-
-Default: `false`
-
-### stop
-
-Type: `boolean`
-
-Default: `false`
-
-### version
-
-Type: `boolean`
-
-Show version number
+| Option      | Type    | Description         |
+| ----------- | ------- | ------------------- |
+| `--help`    | boolean | Show help           |
+| `--start`   | boolean | (Default: `false`)  |
+| `--stop`    | boolean | (Default: `false`)  |
+| `--version` | boolean | Show version number |
