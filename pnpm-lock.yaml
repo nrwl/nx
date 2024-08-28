@@ -60,9 +60,6 @@ importers:
       '@types/three':
         specifier: ^0.166.0
         version: 0.166.0
-      '@widgetbot/react-embed':
-        specifier: ^1.9.0
-        version: 1.9.0(react@18.3.1)
       '@yarnpkg/lockfile':
         specifier: ^1.1.0
         version: 1.1.0
@@ -7600,14 +7597,6 @@ packages:
       webpack-dev-server:
         optional: true
 
-  '@widgetbot/embed-api@1.2.15':
-    resolution: {integrity: sha512-Uj83i7LxP/fZrMQ3RodB6CNX2qFVHO9Ue2ElJU6IC10sjy4np5420qRcILGhSiWXzrhgagE2bR7AVh89NC0pRg==}
-
-  '@widgetbot/react-embed@1.9.0':
-    resolution: {integrity: sha512-+Qgqy7lwLy++lIiHmSsgxUjwcX80iFIHR0QJpKq4W82ePUmq4bTuxvUbxcE+VQH5IjNrWaydGNR8zROV5vUQsA==}
-    peerDependencies:
-      react: '>= 15'
-
   '@xstate/immer@0.3.1':
     resolution: {integrity: sha512-YE+KY08IjEEmXo6XKKpeSGW4j9LfcXw+5JVixLLUO3fWQ3M95joWJ40VtGzx0w0zQSzoCNk8NgfvwWBGSbIaTA==}
     peerDependencies:
@@ -8990,12 +8979,6 @@ packages:
   cronstrue@2.50.0:
     resolution: {integrity: sha512-ULYhWIonJzlScCCQrPUG5uMXzXxSixty4djud9SS37DoNxDdkeRocxzHuAo4ImRBUK+mAuU5X9TSwEDccnnuPg==}
     hasBin: true
-
-  cross-domain-safe-weakmap@1.0.29:
-    resolution: {integrity: sha512-VLoUgf2SXnf3+na8NfeUFV59TRZkIJqCIATaMdbhccgtnTlSnHXkyTRwokngEGYdQXx8JbHT9GDYitgR2sdjuA==}
-
-  cross-domain-utils@2.0.38:
-    resolution: {integrity: sha512-zZfi3+2EIR9l4chrEiXI2xFleyacsJf8YMLR1eJ0Veb5FTMXeJ3DpxDjZkto2FhL/g717WSELqbptNSo85UJDw==}
 
   cross-env@7.0.3:
     resolution: {integrity: sha512-+/HKd6EgcQCJGh2PSjZuUitQBQynKor4wrFbRg4DtAgS1aWO+gU52xpH7M9ScGgXSYmAVS9bIJ8EzuaGw0oNAw==}
@@ -13671,9 +13654,6 @@ packages:
     resolution: {integrity: sha512-d7Uw+eZoloe0EHDIYoe+bQ5WXnGMOpmiZFTuMWCwpjzzkL2nTjcKiAk4hh8TjnGye2TwWOk3UXucZ+3rbmBa8Q==}
     engines: {node: '>= 0.4'}
 
-  post-robot@8.0.32:
-    resolution: {integrity: sha512-PMOdDAt3pyuKUxZcTzdcXXFxLqkdeLpRlcCQl7QAJpI+e7J1YHH+PfC7KAbcL8hRVQ1LknQYGoirbA1/eO/a1g==}
-
   postcss-attribute-case-insensitive@5.0.2:
     resolution: {integrity: sha512-XIidXV8fDr0kKt28vqki84fRK8VW8eTuIa4PChv2MqKuT6C9UjmSKzen6KaWhWEoYvwxFCa7n/tC1SZ3tyq4SQ==}
     engines: {node: ^12 || ^14 || >=16}
@@ -17416,9 +17396,6 @@ packages:
   yoctocolors-cjs@2.1.2:
     resolution: {integrity: sha512-cYVsTjKl8b+FrnidjibDWskAv7UKOfcwaVZdp/it9n1s9fU3IkgDbhdIRKCW4JDsAlECJY0ytoVPT3sK6kideA==}
     engines: {node: '>=18'}
-
-  zalgo-promise@1.0.48:
-    resolution: {integrity: sha512-LLHANmdm53+MucY9aOFIggzYtUdkSBFxUsy4glTTQYNyK6B3uCPWTbfiGvSrEvLojw0mSzyFJ1/RRLv+QMNdzQ==}
 
   zhead@2.2.4:
     resolution: {integrity: sha512-8F0OI5dpWIA5IGG5NHUg9staDwz/ZPxZtvGVf01j7vHqSyZ0raHY+78atOVxRqb73AotX22uV1pXt3gYSstGag==}
@@ -25815,15 +25792,6 @@ snapshots:
     optionalDependencies:
       webpack-dev-server: 5.0.4(bufferutil@4.0.7)(webpack-cli@5.1.4)(webpack@5.88.0)
 
-  '@widgetbot/embed-api@1.2.15':
-    dependencies:
-      post-robot: 8.0.32
-
-  '@widgetbot/react-embed@1.9.0(react@18.3.1)':
-    dependencies:
-      '@widgetbot/embed-api': 1.2.15
-      react: 18.3.1
-
   '@xstate/immer@0.3.1(immer@9.0.21)(xstate@4.34.0)':
     dependencies:
       immer: 9.0.21
@@ -27472,14 +27440,6 @@ snapshots:
   croner@8.1.1: {}
 
   cronstrue@2.50.0: {}
-
-  cross-domain-safe-weakmap@1.0.29:
-    dependencies:
-      cross-domain-utils: 2.0.38
-
-  cross-domain-utils@2.0.38:
-    dependencies:
-      zalgo-promise: 1.0.48
 
   cross-env@7.0.3:
     dependencies:
@@ -33692,12 +33652,6 @@ snapshots:
 
   possible-typed-array-names@1.0.0: {}
 
-  post-robot@8.0.32:
-    dependencies:
-      cross-domain-safe-weakmap: 1.0.29
-      cross-domain-utils: 2.0.38
-      zalgo-promise: 1.0.48
-
   postcss-attribute-case-insensitive@5.0.2(postcss@8.4.38):
     dependencies:
       postcss: 8.4.38
@@ -37930,8 +37884,6 @@ snapshots:
   yocto-queue@1.1.1: {}
 
   yoctocolors-cjs@2.1.2: {}
-
-  zalgo-promise@1.0.48: {}
 
   zhead@2.2.4: {}
 
