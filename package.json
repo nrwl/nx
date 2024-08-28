@@ -370,7 +370,6 @@
     "react-dom": "18.3.1",
     "react-syntax-highlighter": "^15.5.0",
     "regenerator-runtime": "0.13.7",
-    "send": "0.17.1",
     "shadergradient": "^1.2.14",
     "string-width": "^4.2.3",
     "tailwind-merge": "^2.4.0",

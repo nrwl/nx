@@ -138,9 +138,6 @@ importers:
       regenerator-runtime:
         specifier: 0.13.7
         version: 0.13.7
-      send:
-        specifier: 0.17.1
-        version: 0.17.1
       shadergradient:
         specifier: ^1.2.14
         version: 1.2.14(@react-spring/three@9.7.4(@react-three/fiber@8.17.7(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(three@0.166.1))(react@18.3.1)(three@0.166.1))(@react-three/drei@9.112.0(@react-three/fiber@8.17.7(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(three@0.166.1))(@types/react@18.3.1)(@types/three@0.166.0)(immer@9.0.21)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(three@0.166.1))(@react-three/fiber@8.17.7(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(three@0.166.1))(react@18.3.1)(three@0.166.1)
@@ -9486,9 +9483,6 @@ packages:
   destr@2.0.3:
     resolution: {integrity: sha512-2N3BOUU4gYMpTP24s5rF5iP7BDr7uNTCs4ozw3kf/eKfvWSIu93GEBi5m427YoyJoeOzQ5smuu4nNAPGb8idSQ==}
 
-  destroy@1.0.4:
-    resolution: {integrity: sha512-3NdhDuEXnfun/z7x9GOElY49LoqVHoGScmOKwmxhsS8N5Y+Z8KyPPDnaSzqWgYt/ji4mqwfTS34Htrk0zPIXVg==}
-
   destroy@1.2.0:
     resolution: {integrity: sha512-2sJGJTaXIIaR1w4iJSNoN0hnMY7Gpc/n8D4qSCJw8QqFWXf7cuAgnEHxBpweaVcPevC2l3KpjYCx3NypQQgaJg==}
     engines: {node: '>= 0.8', npm: 1.2.8000 || >= 1.4.16}
@@ -10962,10 +10956,6 @@ packages:
 
   http-errors@1.6.3:
     resolution: {integrity: sha512-lks+lVC8dgGyh97jxvxeYTWQFvh4uw4yC12gVl63Cg30sjPX4wuGcdkICVXDAESr6OJGjqGA8Iz5mkeN6zlD7A==}
-    engines: {node: '>= 0.6'}
-
-  http-errors@1.7.3:
-    resolution: {integrity: sha512-ZTTX0MWrsQ2ZAhA1cejAwDLycFsd7I7nVtnkT3Ol0aqodaKW+0CTZDQ1uBv5whptCnc8e8HeRRJxRs0kmm/Qfw==}
     engines: {node: '>= 0.6'}
 
   http-errors@1.8.1:
@@ -12813,9 +12803,6 @@ packages:
 
   ms@2.0.0:
     resolution: {integrity: sha512-Tpp60P6IUJDTuOq/5Z8cdskzJujfwqfOTkrwIwj7IRISpnkJnT6SyJ4PCPnGMoFjC9ddhal5KVIYtAt97ix05A==}
-
-  ms@2.1.1:
-    resolution: {integrity: sha512-tgp+dl5cGk28utYktBsrFqA7HKgrhgPsg6Z/EfhWI4gl1Hwq8B/GmY/0oXZ6nF8hDVesS/FpnYaD/kOWhYQvyg==}
 
   ms@2.1.2:
     resolution: {integrity: sha512-sGkPx+VjMtmA6MX27oA4FBFELFCZZ4S4XqeGOXCv68tT+jb3vk/RyaKWP0PTKyWtmLSM0b+adUTEvbs1PEaH2w==}
@@ -15311,10 +15298,6 @@ packages:
     engines: {node: '>=10'}
     hasBin: true
 
-  send@0.17.1:
-    resolution: {integrity: sha512-BsVKsiGcQMFwT8UxypobUKyv7irCNRHk1T0G680vk88yf6LBByGcZJOTJCrTP2xVN6yI+XjPJcNuE3V4fT9sAg==}
-    engines: {node: '>= 0.8.0'}
-
   send@0.18.0:
     resolution: {integrity: sha512-qqWzuOjSFOuqPjFe4NOsMLafToQQwBSOEpS+FwEt3A2V3vKubTquT3vmLTQpFgMXp8AlFWFuP1qKaJZOtPpVXg==}
     engines: {node: '>= 0.8.0'}
@@ -15374,9 +15357,6 @@ packages:
 
   setprototypeof@1.1.0:
     resolution: {integrity: sha512-BvE/TwpZX4FXExxOxZyRGQQv651MSwmWKZGqvmPcRIjDqWub67kTKuIMx43cZZrS/cBBzwBcNDWoFxt2XEFIpQ==}
-
-  setprototypeof@1.1.1:
-    resolution: {integrity: sha512-JvdAWfbXeIGaZ9cILp38HntZSFSo3mWg6xGcJJsd+d4aRMOqauag1C63dJfDw7OaMYwEbHMOxEZ1lqVRYP2OAw==}
 
   setprototypeof@1.2.0:
     resolution: {integrity: sha512-E5LDX7Wrp85Kil5bhZv46j8jOeboKq5JMmYM3gVGdGH8xFpPWXUMsNrlODCrkoxMEeNi/XZIwuRvY4XNwYMJpw==}
@@ -16151,10 +16131,6 @@ packages:
 
   toggle-selection@1.0.6:
     resolution: {integrity: sha512-BiZS+C1OS8g/q2RRbJmy59xpyghNBqrr6k5L/uKBGRsTfxmu3ffiRnd8mlGPUVayg8pvfi5urfnu8TU7DVOkLQ==}
-
-  toidentifier@1.0.0:
-    resolution: {integrity: sha512-yaOH/Pk/VEhBWWTlhI+qXxDFXlejDGcQipMlyxda9nthulaxLZUNcUqFxokp0vcYnvteJln5FNQDRrxj3YcbVw==}
-    engines: {node: '>=0.6'}
 
   toidentifier@1.0.1:
     resolution: {integrity: sha512-o5sSPKEkg/DIQNmH43V0/uerLrpzVedkUh8tGNvaeXpfpuwjKenlSox/2O/BTlZUtEe+JG7s5YhEz608PlAHRA==}
@@ -28025,8 +28001,6 @@ snapshots:
 
   destr@2.0.3: {}
 
-  destroy@1.0.4: {}
-
   destroy@1.2.0: {}
 
   detect-gpu@5.0.48:
@@ -30077,14 +30051,6 @@ snapshots:
       inherits: 2.0.3
       setprototypeof: 1.1.0
       statuses: 1.5.0
-
-  http-errors@1.7.3:
-    dependencies:
-      depd: 1.1.2
-      inherits: 2.0.4
-      setprototypeof: 1.1.1
-      statuses: 1.5.0
-      toidentifier: 1.0.0
 
   http-errors@1.8.1:
     dependencies:
@@ -32555,8 +32521,6 @@ snapshots:
   mrmime@2.0.0: {}
 
   ms@2.0.0: {}
-
-  ms@2.1.1: {}
 
   ms@2.1.2: {}
 
@@ -35458,24 +35422,6 @@ snapshots:
 
   semver@7.6.3: {}
 
-  send@0.17.1:
-    dependencies:
-      debug: 2.6.9
-      depd: 1.1.2
-      destroy: 1.0.4
-      encodeurl: 1.0.2
-      escape-html: 1.0.3
-      etag: 1.8.1
-      fresh: 0.5.2
-      http-errors: 1.7.3
-      mime: 1.6.0
-      ms: 2.1.1
-      on-finished: 2.3.0
-      range-parser: 1.2.1
-      statuses: 1.5.0
-    transitivePeerDependencies:
-      - supports-color
-
   send@0.18.0:
     dependencies:
       debug: 2.6.9
@@ -35584,8 +35530,6 @@ snapshots:
       get-uv-event-loop-napi-h: 1.0.6
 
   setprototypeof@1.1.0: {}
-
-  setprototypeof@1.1.1: {}
 
   setprototypeof@1.2.0: {}
 
@@ -36497,8 +36441,6 @@ snapshots:
       is-number: 7.0.0
 
   toggle-selection@1.0.6: {}
-
-  toidentifier@1.0.0: {}
 
   toidentifier@1.0.1: {}
 
