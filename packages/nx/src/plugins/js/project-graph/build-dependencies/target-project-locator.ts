@@ -34,6 +34,13 @@ const defaultNpmResolutionCache: NpmResolutionCache = new Map();
 const builtInModuleSet = new Set<string>([
   ...builtinModules,
   ...builtinModules.map((x) => `node:${x}`),
+  // These are missing in the builtinModules list
+  // See: https://github.com/nodejs/node/issues/42785
+  // TODO(v20): We should be safe to use `isBuiltin` function instead of keep the set here (https://nodejs.org/api/module.html#moduleisbuiltinmodulename)
+  'test',
+  'node:test',
+  'node:sea',
+  'node:sqlite',
 ]);
 
 export function isBuiltinModuleImport(importExpr: string): boolean {
@@ -364,7 +371,7 @@ export class TargetProjectLocator {
         packageJsonPath ?? resolveRelativeToDir(packageName, relativeToDir);
       let dir = dirname(pathOfFileInPackage);
 
-      while (dir !== parse(dir).root) {
+      while (dir !== dirname(dir)) {
         const packageJsonPath = join(dir, 'package.json');
         try {
           const parsedPackageJson = readJsonFile(packageJsonPath);
