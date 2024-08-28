@@ -305,7 +305,6 @@
     "typescript-eslint": "^8.13.0",
     "unist-builder": "^4.0.0",
     "unzipper": "^0.10.11",
-    "url-loader": "^4.1.1",
     "use-sync-external-store": "^1.2.0",
     "verdaccio": "^5.30.0",
     "vite": "5.0.8",
