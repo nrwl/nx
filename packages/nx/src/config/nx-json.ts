@@ -321,11 +321,16 @@ export interface NxSyncConfiguration {
 
   /**
    * Whether to automatically apply sync generator changes when running tasks.
-   * If not set, the user will be prompted.
+   * If not set, the user will be prompted in interactive mode.
    * If set to `true`, the user will not be prompted and the changes will be applied.
    * If set to `false`, the user will not be prompted and the changes will not be applied.
    */
   applyChanges?: boolean;
+
+  /**
+   * List of registered task sync generators to disable.
+   */
+  disabledTaskSyncGenerators?: string[];
 }
 
 /**

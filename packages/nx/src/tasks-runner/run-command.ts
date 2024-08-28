@@ -21,6 +21,7 @@ import { isNxCloudUsed } from '../utils/nx-cloud-utils';
 import { output } from '../utils/output';
 import { handleErrors } from '../utils/params';
 import {
+  collectEnabledTaskSyncGeneratorsFromTaskGraph,
   flushSyncGeneratorChanges,
   getSyncGeneratorChanges,
   syncGeneratorResultsToMessageLines,
@@ -233,18 +234,11 @@ async function ensureWorkspaceIsInSyncAndGetGraphs(
   );
 
   // collect unique syncGenerators from the tasks
-  const uniqueSyncGenerators = new Set<string>();
-  for (const { target } of Object.values(taskGraph.tasks)) {
-    const { syncGenerators } =
-      projectGraph.nodes[target.project].data.targets[target.target];
-    if (!syncGenerators) {
-      continue;
-    }
-
-    for (const generator of syncGenerators) {
-      uniqueSyncGenerators.add(generator);
-    }
-  }
+  const uniqueSyncGenerators = collectEnabledTaskSyncGeneratorsFromTaskGraph(
+    taskGraph,
+    projectGraph,
+    nxJson
+  );
 
   if (!uniqueSyncGenerators.size) {
     // There are no sync generators registered in the tasks to run
