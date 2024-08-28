@@ -56,7 +56,7 @@ export interface NxCloudClient {
   configureLightClientRequire: () => (paths: string[]) => void;
   commands: Record<string, () => Promise<void>>;
   nxCloudTasksRunner: TasksRunner<CloudTaskRunnerOptions>;
-  remoteCache: RemoteCacheV2;
+  getRemoteCache: () => RemoteCacheV2;
 }
 export async function verifyOrUpdateNxCloudClient(
   options: CloudTaskRunnerOptions
