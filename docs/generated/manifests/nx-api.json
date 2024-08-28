@@ -3455,13 +3455,13 @@
         "path": "/nx-api/workspace/generators/ci-workflow",
         "type": "generator"
       },
-      "/nx-api/workspace/generators/convert-to-inferred": {
-        "description": "convert-to-inferred generator",
-        "file": "generated/packages/workspace/generators/convert-to-inferred.json",
+      "/nx-api/workspace/generators/infer-targets": {
+        "description": "Convert Nx projects to use inferred targets.",
+        "file": "generated/packages/workspace/generators/infer-targets.json",
         "hidden": false,
-        "name": "convert-to-inferred",
-        "originalFilePath": "/packages/workspace/src/generators/convert-to-inferred/schema.json",
-        "path": "/nx-api/workspace/generators/convert-to-inferred",
+        "name": "infer-targets",
+        "originalFilePath": "/packages/workspace/src/generators/infer-targets/schema.json",
+        "path": "/nx-api/workspace/generators/infer-targets",
         "type": "generator"
       }
     },

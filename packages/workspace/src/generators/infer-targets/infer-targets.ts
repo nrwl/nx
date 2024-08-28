@@ -21,22 +21,20 @@ interface Schema {
 }
 
 export async function convertToInferredGenerator(tree: Tree, options: Schema) {
-  const generatorChoices = await getPossibleConvertToInferredGenerators();
+  const generatorCollectionChoices =
+    await getPossibleConvertToInferredGenerators();
   let generatorsToRun: string[];
 
-  if (process.argv.includes('--no-interactive')) {
-    generatorsToRun = Array.from(generatorChoices.keys());
-  } else if (options.plugins && options.plugins.length > 0) {
-    generatorsToRun = Array.from(generatorChoices.values())
+  if (options.plugins && options.plugins.filter((p) => !!p).length > 0) {
+    generatorsToRun = Array.from(generatorCollectionChoices.values())
       .filter((generator) =>
         options.plugins.includes(generator.resolvedCollectionName)
       )
-      .map(
-        (generator) =>
-          `${generator.resolvedCollectionName}:${generator.normalizedGeneratorName}`
-      );
+      .map((generator) => generator.resolvedCollectionName);
+  } else if (process.argv.includes('--no-interactive')) {
+    generatorsToRun = Array.from(generatorCollectionChoices.keys());
   } else {
-    const allChoices = Array.from(generatorChoices.keys());
+    const allChoices = Array.from(generatorCollectionChoices.keys());
 
     generatorsToRun = (
       await prompt<{ generatorsToRun: string[] }>({
@@ -47,7 +45,7 @@ export async function convertToInferredGenerator(tree: Tree, options: Schema) {
         initial: allChoices,
         validate: (result: string[]) => {
           if (result.length === 0) {
-            return 'Please select at least one convert-to-inferred generator to run';
+            return 'Please select at least one plugin.';
           }
           return true;
         },
@@ -57,14 +55,14 @@ export async function convertToInferredGenerator(tree: Tree, options: Schema) {
 
   if (generatorsToRun.length === 0) {
     output.error({
-      title: 'Please select at least one convert-to-inferred generator to run',
+      title: 'Please select at least one plugin.',
     });
     return;
   }
 
-  for (const generatorName of generatorsToRun) {
+  for (const generatorCollection of generatorsToRun) {
     try {
-      const generator = generatorChoices.get(generatorName);
+      const generator = generatorCollectionChoices.get(generatorCollection);
       if (generator) {
         const generatorFactory = generator.implementationFactory();
         const callback = await generatorFactory(tree, {
@@ -75,17 +73,17 @@ export async function convertToInferredGenerator(tree: Tree, options: Schema) {
           await callback();
         }
         output.success({
-          title: `${generatorName} - Success`,
+          title: `${generatorCollection}:convert-to-inferred - Success`,
         });
       }
     } catch (e) {
       if (e instanceof NoTargetsToMigrateError) {
         output.note({
-          title: `${generatorName} - Skipped (No targets to migrate)`,
+          title: `${generatorCollection}:convert-to-inferred - Skipped (No targets to migrate)`,
         });
       } else {
         output.error({
-          title: `${generatorName} - Failed`,
+          title: `${generatorCollection}:convert-to-inferred - Failed`,
         });
         throw e;
       }
@@ -122,11 +120,8 @@ async function getPossibleConvertToInferredGenerators() {
       ) {
         continue;
       }
-      const generatorName = `${generator.resolvedCollectionName}:${generator.normalizedGeneratorName}`;
-      if (generatorName === '@nx/workspace:convert-to-inferred') {
-        continue;
-      }
-      choices.set(generatorName, generator);
+
+      choices.set(generator.resolvedCollectionName, generator);
     } catch {
       // this just means that no convert-to-inferred generator exists for a given collection, ignore
     }

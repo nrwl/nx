@@ -55,10 +55,10 @@
       "schema": "./src/generators/ci-workflow/schema.json",
       "description": "Generate a CI workflow."
     },
-    "convert-many-to-inferred": {
-      "factory": "./src/generators/convert-many-to-inferred/convert-many-to-inferred",
-      "schema": "./src/generators/convert-many-to-inferred/schema.json",
-      "description": "convert-to-inferred generator"
+    "infer-targets": {
+      "factory": "./src/generators/infer-targets/infer-targets",
+      "schema": "./src/generators/infer-targets/schema.json",
+      "description": "Convert Nx projects to use inferred targets."
     }
   }
 }

@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/schema",
-  "$id": "ConvertManyToInferred",
+  "$id": "InferTargets",
   "title": "",
   "type": "object",
   "properties": {
