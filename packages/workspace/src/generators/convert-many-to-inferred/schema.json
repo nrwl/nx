@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/schema",
-  "$id": "ConvertToInferred",
+  "$id": "ConvertManyToInferred",
   "title": "",
   "type": "object",
   "properties": {
@@ -8,6 +8,13 @@
       "type": "string",
       "description": "The project to convert to use inferred targets.",
       "x-priority": "important"
+    },
+    "plugins": {
+      "type": "array",
+      "description": "Which plugins' convert-to-inferred generators to look for. For example @nx/eslint or @nx/jest",
+      "items": {
+        "type": "string"
+      }
     },
     "skipFormat": {
       "type": "boolean",

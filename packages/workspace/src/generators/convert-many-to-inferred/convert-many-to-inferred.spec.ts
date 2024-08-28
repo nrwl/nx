@@ -1,7 +1,7 @@
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { Tree, readProjectConfiguration } from '@nx/devkit';
 
-import { convertToInferredGenerator } from './generator';
+import { convertToInferredGenerator } from './convert-many-to-inferred';
 import { ConvertToInferredGeneratorSchema } from './schema';
 
 describe('convert-to-inferred generator', () => {

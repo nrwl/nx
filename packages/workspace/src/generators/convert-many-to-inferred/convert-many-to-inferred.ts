@@ -2,13 +2,11 @@ import {
   createProjectGraphAsync,
   formatFiles,
   output,
-  readNxJson,
   readProjectsConfigurationFromProjectGraph,
   Tree,
   workspaceRoot,
 } from '@nx/devkit';
 import { NoTargetsToMigrateError } from '@nx/devkit/src/generators/plugin-migrations/executor-to-plugin-migrator';
-import { all } from 'cypress/types/bluebird';
 import { prompt } from 'enquirer';
 import {
   GeneratorInformation,
@@ -18,37 +16,53 @@ import { findInstalledPlugins } from 'nx/src/utils/plugins/installed-plugins';
 
 interface Schema {
   project?: string;
+  plugins?: string[];
   skipFormat?: boolean;
 }
 
 export async function convertToInferredGenerator(tree: Tree, options: Schema) {
   const generatorChoices = await getPossibleConvertToInferredGenerators();
-  const allChoices = Array.from(generatorChoices.keys());
+  let generatorsToRun: string[];
 
-  const result = (
-    await prompt<{ generatorsToRun: string[] }>({
-      type: 'multiselect',
-      name: 'generatorsToRun',
-      message: 'Which convert-to-inferred generators should be run?',
-      choices: allChoices,
-      initial: allChoices,
-      validate: (result: string[]) => {
-        if (result.length === 0) {
-          return 'Please select at least one convert-to-inferred generator to run';
-        }
-        return true;
-      },
-    } as any)
-  ).generatorsToRun;
+  if (process.argv.includes('--no-interactive')) {
+    generatorsToRun = Array.from(generatorChoices.keys());
+  } else if (options.plugins && options.plugins.length > 0) {
+    generatorsToRun = Array.from(generatorChoices.values())
+      .filter((generator) =>
+        options.plugins.includes(generator.resolvedCollectionName)
+      )
+      .map(
+        (generator) =>
+          `${generator.resolvedCollectionName}:${generator.normalizedGeneratorName}`
+      );
+  } else {
+    const allChoices = Array.from(generatorChoices.keys());
 
-  if (result.length === 0) {
+    generatorsToRun = (
+      await prompt<{ generatorsToRun: string[] }>({
+        type: 'multiselect',
+        name: 'generatorsToRun',
+        message: 'Which convert-to-inferred generators should be run?',
+        choices: allChoices,
+        initial: allChoices,
+        validate: (result: string[]) => {
+          if (result.length === 0) {
+            return 'Please select at least one convert-to-inferred generator to run';
+          }
+          return true;
+        },
+      } as any)
+    ).generatorsToRun;
+  }
+
+  if (generatorsToRun.length === 0) {
     output.error({
       title: 'Please select at least one convert-to-inferred generator to run',
     });
     return;
   }
 
-  for (const generatorName of result) {
+  for (const generatorName of generatorsToRun) {
     try {
       const generator = generatorChoices.get(generatorName);
       if (generator) {
