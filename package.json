@@ -281,7 +281,6 @@
     "sass": "1.55.0",
     "sass-loader": "^12.2.0",
     "semver": "^7.6.3",
-    "source-map": "0.7.3",
     "source-map-loader": "^5.0.0",
     "source-map-support": "0.5.19",
     "storybook": "^8.4.6",

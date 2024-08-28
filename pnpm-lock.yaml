@@ -916,9 +916,6 @@ importers:
       semver:
         specifier: ^7.6.3
         version: 7.6.3
-      source-map:
-        specifier: 0.7.3
-        version: 0.7.3
       source-map-loader:
         specifier: ^5.0.0
         version: 5.0.0(webpack@5.88.0)
