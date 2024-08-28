@@ -372,7 +372,6 @@
     "tailwindcss": "3.4.4",
     "three": "^0.166.1",
     "tslib": "^2.3.0",
-    "weak-napi": "^2.0.2",
     "webpack-cli": "^5.1.4"
   },
   "resolutions": {
