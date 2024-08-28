@@ -276,8 +276,10 @@ export async function* nodeExecutor(
             } else if (err) {
               logger.error(`Watch error: ${err?.message ?? 'Unknown'}`);
             } else {
-              logger.info(`NX File change detected. Restarting...`);
-              await runBuild();
+              if (options.watch) {
+                logger.info(`NX File change detected. Restarting...`);
+                await runBuild();
+              }
             }
           }
         );
