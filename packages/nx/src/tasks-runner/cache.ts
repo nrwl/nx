@@ -119,8 +119,8 @@ export class DbCache {
     if (isNxCloudUsed(nxJson)) {
       const options = getCloudOptions();
       const { nxCloudClient } = await verifyOrUpdateNxCloudClient(options);
-      if (nxCloudClient.remoteCache) {
-        return nxCloudClient.remoteCache;
+      if (nxCloudClient.getRemoteCache) {
+        return nxCloudClient.getRemoteCache();
       } else {
         // old nx cloud instance
         return await RemoteCacheV2.fromCacheV1(this.options.nxCloudRemoteCache);
