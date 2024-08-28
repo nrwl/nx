@@ -54,7 +54,7 @@ import {
   GET_SYNC_GENERATOR_CHANGES,
   type HandleGetSyncGeneratorChangesMessage,
 } from '../message-types/get-sync-generator-changes';
-import type { SyncGeneratorChangesResult } from '../../utils/sync-generators';
+import type { SyncGeneratorRunResult } from '../../utils/sync-generators';
 import {
   GET_REGISTERED_SYNC_GENERATORS,
   type HandleGetRegisteredSyncGeneratorsMessage,
@@ -364,7 +364,7 @@ export class DaemonClient {
 
   getSyncGeneratorChanges(
     generators: string[]
-  ): Promise<SyncGeneratorChangesResult[]> {
+  ): Promise<SyncGeneratorRunResult[]> {
     const message: HandleGetSyncGeneratorChangesMessage = {
       type: GET_SYNC_GENERATOR_CHANGES,
       generators,

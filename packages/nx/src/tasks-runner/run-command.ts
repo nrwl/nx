@@ -13,6 +13,7 @@ import { TargetDependencyConfig } from '../config/workspace-json-project-json';
 import { daemonClient } from '../daemon/client/client';
 import { createTaskHasher } from '../hasher/create-task-hasher';
 import { hashTasksThatDoNotDependOnOutputsOfOtherTasks } from '../hasher/hash-task';
+import { IS_WASM } from '../native';
 import { createProjectGraphAsync } from '../project-graph/project-graph';
 import { NxArgs } from '../utils/command-line-utils';
 import { isRelativePath } from '../utils/fileutils';
@@ -23,8 +24,10 @@ import { handleErrors } from '../utils/params';
 import {
   collectEnabledTaskSyncGeneratorsFromTaskGraph,
   flushSyncGeneratorChanges,
+  getFailedSyncGeneratorsFixMessageLines,
   getSyncGeneratorChanges,
-  syncGeneratorResultsToMessageLines,
+  getSyncGeneratorSuccessResultsMessageLines,
+  processSyncGeneratorResultErrors,
 } from '../utils/sync-generators';
 import { workspaceRoot } from '../utils/workspace-root';
 import { createTaskGraph } from './create-task-graph';
@@ -46,7 +49,6 @@ import {
 import { TasksRunner, TaskStatus } from './tasks-runner';
 import { shouldStreamOutput } from './utils';
 import chalk = require('chalk');
-import { IS_WASM } from '../native';
 
 async function getTerminalOutputLifeCycle(
   initiatingProject: string,
@@ -256,18 +258,54 @@ async function ensureWorkspaceIsInSyncAndGetGraphs(
     return { projectGraph, taskGraph };
   }
 
+  const {
+    failedGeneratorsCount,
+    areAllResultsFailures,
+    anySyncGeneratorsFailed,
+  } = processSyncGeneratorResultErrors(results);
+  const failedSyncGeneratorsFixMessageLines =
+    getFailedSyncGeneratorsFixMessageLines(results, nxArgs.verbose);
+
+  if (areAllResultsFailures) {
+    output.warn({
+      title: `The workspace might be out of sync because ${
+        failedGeneratorsCount === 1
+          ? 'a sync generator'
+          : 'some sync generators'
+      } failed to run`,
+      bodyLines: failedSyncGeneratorsFixMessageLines,
+    });
+
+    // if all sync generators failed to run there's nothing to sync, we just let the tasks run
+    return { projectGraph, taskGraph };
+  }
+
   const outOfSyncTitle = 'The workspace is out of sync';
-  const resultBodyLines = [...syncGeneratorResultsToMessageLines(results), ''];
+  const resultBodyLines = [
+    ...getSyncGeneratorSuccessResultsMessageLines(results),
+    '',
+  ];
   const fixMessage =
-    'You can manually run `nx sync` to update your workspace or you can set `sync.applyChanges` to `true` in your `nx.json` to apply the changes automatically when running tasks in interactive environments.';
-  const willErrorOnCiMessage = 'Please note that this will be an error on CI.';
+    'You can manually run `nx sync` to update your workspace with the identified changes or you can set `sync.applyChanges` to `true` in your `nx.json` to apply the changes automatically when running tasks in interactive environments.';
+  const willErrorOnCiMessage =
+    'Please note that having the workspace out of sync will result in an error on CI.';
 
   if (isCI() || !process.stdout.isTTY) {
     // If the user is running in CI or is running in a non-TTY environment we
     // throw an error to stop the execution of the tasks.
-    throw new Error(
-      `${outOfSyncTitle}\n${resultBodyLines.join('\n')}\n${fixMessage}`
-    );
+    let errorMessage = `${outOfSyncTitle}\n${resultBodyLines.join(
+      '\n'
+    )}\n${fixMessage}`;
+
+    if (anySyncGeneratorsFailed) {
+      errorMessage += `\n\nAdditionally, ${
+        failedGeneratorsCount === 1
+          ? 'a sync generator'
+          : 'some sync generators'
+      } failed to run:\n\n${failedSyncGeneratorsFixMessageLines.join('\n')}`;
+    }
+
+    throw new Error(errorMessage);
   }
 
   if (nxJson.sync?.applyChanges === false) {
@@ -284,6 +322,17 @@ async function ensureWorkspaceIsInSyncAndGetGraphs(
         fixMessage,
       ],
     });
+
+    if (anySyncGeneratorsFailed) {
+      output.warn({
+        title:
+          failedGeneratorsCount === 1
+            ? 'A sync generator failed to run'
+            : 'Some sync generators failed to run',
+        bodyLines: failedSyncGeneratorsFixMessageLines,
+      });
+    }
+
     return { projectGraph, taskGraph };
   }
 
@@ -305,8 +354,23 @@ async function ensureWorkspaceIsInSyncAndGetGraphs(
     const spinner = ora('Syncing the workspace...');
     spinner.start();
 
-    // Flush sync generator changes to disk
-    await flushSyncGeneratorChanges(results);
+    try {
+      // Flush sync generator changes to disk
+      await flushSyncGeneratorChanges(results);
+    } catch (e) {
+      spinner.fail();
+      output.error({
+        title: 'Failed to sync the workspace',
+        bodyLines: [
+          'Syncing the workspace failed with the following error:',
+          '',
+          e.message,
+          ...(nxArgs.verbose ? [`\n${e.stack}`] : []),
+        ],
+      });
+
+      return { projectGraph, taskGraph };
+    }
 
     // Re-create project graph and task graph
     projectGraph = await createProjectGraphAsync();
@@ -330,12 +394,35 @@ Please make sure to commit the changes to your repository or this will error on 
 
 Please make sure to commit the changes to your repository.`);
     }
+
+    if (anySyncGeneratorsFailed) {
+      output.warn({
+        title: `The workspace might still be out of sync because ${
+          failedGeneratorsCount === 1
+            ? 'a sync generator'
+            : 'some sync generators'
+        } failed to run`,
+        bodyLines: failedSyncGeneratorsFixMessageLines,
+      });
+    }
   } else {
     output.warn({
       title: 'Syncing the workspace was skipped',
       bodyLines: [
         'This could lead to unexpected results or errors when running tasks.',
         fixMessage,
+        ...(anySyncGeneratorsFailed
+          ? [
+              '',
+              `Additionally, ${
+                failedGeneratorsCount === 1
+                  ? 'a sync generator'
+                  : 'some sync generators'
+              } failed to run:`,
+              '',
+              ...failedSyncGeneratorsFixMessageLines,
+            ]
+          : []),
       ],
     });
   }

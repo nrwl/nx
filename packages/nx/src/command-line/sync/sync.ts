@@ -6,8 +6,10 @@ import { handleErrors } from '../../utils/params';
 import {
   collectAllRegisteredSyncGenerators,
   flushSyncGeneratorChanges,
+  getFailedSyncGeneratorsFixMessageLines,
   getSyncGeneratorChanges,
-  syncGeneratorResultsToMessageLines,
+  getSyncGeneratorSuccessResultsMessageLines,
+  processSyncGeneratorResultErrors,
 } from '../../utils/sync-generators';
 import type { SyncArgs } from './command-object';
 import chalk = require('chalk');
@@ -52,29 +54,88 @@ export function syncHandler(options: SyncOptions): Promise<number> {
       return 0;
     }
 
+    const {
+      failedGeneratorsCount,
+      areAllResultsFailures,
+      anySyncGeneratorsFailed,
+    } = processSyncGeneratorResultErrors(results);
+    const failedSyncGeneratorsFixMessageLines =
+      getFailedSyncGeneratorsFixMessageLines(results, options.verbose);
+
+    if (areAllResultsFailures) {
+      // if all sync generators failed to run we can't say for sure if the workspace is out of sync
+      // because they could have failed due to a bug, so we print a warning and exit with code 0
+      output.warn({
+        title: `The workspace might be out of sync because ${
+          failedGeneratorsCount === 1
+            ? 'a sync generator'
+            : 'some sync generators'
+        } failed to run`,
+        bodyLines: failedSyncGeneratorsFixMessageLines,
+      });
+
+      return 0;
+    }
+
+    const resultBodyLines = getSyncGeneratorSuccessResultsMessageLines(results);
     if (options.check) {
       output.error({
-        title: `The workspace is out of sync`,
-        bodyLines: syncGeneratorResultsToMessageLines(results),
+        title: 'The workspace is out of sync',
+        bodyLines: resultBodyLines,
       });
+
+      if (anySyncGeneratorsFailed) {
+        output.warn({
+          title:
+            failedGeneratorsCount === 1
+              ? 'A sync generator failed to run'
+              : 'Some sync generators failed to run',
+          bodyLines: failedSyncGeneratorsFixMessageLines,
+        });
+      }
 
       return 1;
     }
 
     output.warn({
-      title: `The workspace is out of sync`,
-      bodyLines: syncGeneratorResultsToMessageLines(results),
+      title: 'The workspace is out of sync',
+      bodyLines: resultBodyLines,
     });
 
     const spinner = ora('Syncing the workspace...');
     spinner.start();
 
-    await flushSyncGeneratorChanges(results);
+    try {
+      await flushSyncGeneratorChanges(results);
+    } catch (e) {
+      spinner.fail();
+      output.error({
+        title: 'Failed to sync the workspace',
+        bodyLines: [
+          'Syncing the workspace failed with the following error:',
+          '',
+          e.message,
+          ...(options.verbose ? [`\n${e.stack}`] : []),
+        ],
+      });
+
+      return 1;
+    }
 
     spinner.succeed(`The workspace was synced successfully!
 
-Please make sure to commit the changes to your repository.
-`);
+Please make sure to commit the changes to your repository.`);
+
+    if (anySyncGeneratorsFailed) {
+      output.warn({
+        title: `The workspace might still be out of sync because ${
+          failedGeneratorsCount === 1
+            ? 'a sync generator'
+            : 'some sync generators'
+        } failed to run`,
+        bodyLines: failedSyncGeneratorsFixMessageLines,
+      });
+    }
 
     return 0;
   });

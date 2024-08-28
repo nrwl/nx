@@ -31,18 +31,27 @@ export type SyncGenerator = (
   tree: Tree
 ) => SyncGeneratorResult | Promise<SyncGeneratorResult>;
 
-export type SyncGeneratorChangesResult = {
-  changes: FileChange[];
+export type SyncGeneratorRunSuccessResult = {
   generatorName: string;
+  changes: FileChange[];
   callback?: GeneratorCallback;
   outOfSyncMessage?: string;
 };
 
+export type SyncGeneratorRunErrorResult = {
+  generatorName: string;
+  error: Error;
+};
+
+export type SyncGeneratorRunResult =
+  | SyncGeneratorRunSuccessResult
+  | SyncGeneratorRunErrorResult;
+
 export async function getSyncGeneratorChanges(
   generators: string[]
-): Promise<SyncGeneratorChangesResult[]> {
+): Promise<SyncGeneratorRunResult[]> {
   performance.mark('get-sync-generators-changes:start');
-  let results: SyncGeneratorChangesResult[];
+  let results: SyncGeneratorRunResult[];
 
   if (!daemonClient.enabled()) {
     results = await runSyncGenerators(generators);
@@ -57,11 +66,11 @@ export async function getSyncGeneratorChanges(
     'get-sync-generators-changes:end'
   );
 
-  return results.filter((r) => r.changes.length > 0);
+  return results.filter((r) => ('error' in r ? true : r.changes.length > 0));
 }
 
 export async function flushSyncGeneratorChanges(
-  results: SyncGeneratorChangesResult[]
+  results: SyncGeneratorRunResult[]
 ): Promise<void> {
   if (isOnDaemon() || !daemonClient.enabled()) {
     await flushSyncGeneratorChangesToDisk(results);
@@ -90,38 +99,45 @@ export async function runSyncGenerator(
   tree: Tree,
   generatorSpecifier: string,
   projects: Record<string, ProjectConfiguration>
-): Promise<SyncGeneratorChangesResult> {
-  performance.mark(`run-sync-generator:${generatorSpecifier}:start`);
-  const { collection, generator } = parseGeneratorString(generatorSpecifier);
-  const { implementationFactory } = getGeneratorInformation(
-    collection,
-    generator,
-    workspaceRoot,
-    projects
-  );
-  const implementation = implementationFactory() as SyncGenerator;
-  const result = await implementation(tree);
+): Promise<SyncGeneratorRunResult> {
+  try {
+    performance.mark(`run-sync-generator:${generatorSpecifier}:start`);
+    const { collection, generator } = parseGeneratorString(generatorSpecifier);
+    const { implementationFactory } = getGeneratorInformation(
+      collection,
+      generator,
+      workspaceRoot,
+      projects
+    );
+    const implementation = implementationFactory() as SyncGenerator;
+    const result = await implementation(tree);
 
-  let callback: GeneratorCallback | undefined;
-  let outOfSyncMessage: string | undefined;
-  if (result && typeof result === 'object') {
-    callback = result.callback;
-    outOfSyncMessage = result.outOfSyncMessage;
+    let callback: GeneratorCallback | undefined;
+    let outOfSyncMessage: string | undefined;
+    if (result && typeof result === 'object') {
+      callback = result.callback;
+      outOfSyncMessage = result.outOfSyncMessage;
+    }
+
+    performance.mark(`run-sync-generator:${generatorSpecifier}:end`);
+    performance.measure(
+      `run-sync-generator:${generatorSpecifier}`,
+      `run-sync-generator:${generatorSpecifier}:start`,
+      `run-sync-generator:${generatorSpecifier}:end`
+    );
+
+    return {
+      changes: tree.listChanges(),
+      generatorName: generatorSpecifier,
+      callback,
+      outOfSyncMessage,
+    };
+  } catch (e) {
+    return {
+      generatorName: generatorSpecifier,
+      error: e,
+    };
   }
-
-  performance.mark(`run-sync-generator:${generatorSpecifier}:end`);
-  performance.measure(
-    `run-sync-generator:${generatorSpecifier}`,
-    `run-sync-generator:${generatorSpecifier}:start`,
-    `run-sync-generator:${generatorSpecifier}:end`
-  );
-
-  return {
-    changes: tree.listChanges(),
-    generatorName: generatorSpecifier,
-    callback,
-    outOfSyncMessage,
-  };
 }
 
 export function collectEnabledTaskSyncGeneratorsFromProjectGraph(
@@ -205,12 +221,16 @@ export function collectRegisteredGlobalSyncGenerators(
   return globalSyncGenerators;
 }
 
-export function syncGeneratorResultsToMessageLines(
-  results: SyncGeneratorChangesResult[]
+export function getSyncGeneratorSuccessResultsMessageLines(
+  results: SyncGeneratorRunResult[]
 ): string[] {
   const messageLines: string[] = [];
 
   for (const result of results) {
+    if ('error' in result) {
+      continue;
+    }
+
     messageLines.push(
       `The ${chalk.bold(
         result.generatorName
@@ -228,14 +248,74 @@ export function syncGeneratorResultsToMessageLines(
   return messageLines;
 }
 
+export function getFailedSyncGeneratorsFixMessageLines(
+  results: SyncGeneratorRunResult[],
+  verbose: boolean
+): string[] {
+  const messageLines: string[] = [];
+  let errorCount = 0;
+  for (const result of results) {
+    if ('error' in result) {
+      messageLines.push(
+        `The ${chalk.bold(
+          result.generatorName
+        )} sync generator failed to run with the following error:
+${chalk.bold(result.error.message)}${
+          verbose && result.error.stack ? '\n' + result.error.stack : ''
+        }`
+      );
+      errorCount++;
+    }
+  }
+
+  if (errorCount === 1) {
+    messageLines.push(
+      '',
+      'Please take the following actions to fix the failed sync generator:',
+      '  - Check if the error is caused by an issue in your source code (e.g. wrong configuration, missing dependencies/files, etc.).',
+      '  - Check if the error has already been reported in the repository owning the failing sync generator. If not, please file a new issue.',
+      '  - While the issue is addressed, you could disable the failing sync generator by adding it to the `sync.disabledTaskSyncGenerators` array in your `nx.json`.'
+    );
+  } else if (errorCount > 1) {
+    messageLines.push(
+      '',
+      'Please take the following actions to fix the failed sync generators:',
+      '  - Check if the errors are caused by an issue in your source code (e.g. wrong configuration, missing dependencies/files, etc.).',
+      '  - Check if the errors have already been reported in the repositories owning the failing sync generators. If not, please file new issues for them.',
+      '  - While the issues are addressed, you could disable the failing sync generators by adding them to the `sync.disabledTaskSyncGenerators` array in your `nx.json`.'
+    );
+  }
+
+  return messageLines;
+}
+
+export function processSyncGeneratorResultErrors(
+  results: SyncGeneratorRunResult[]
+) {
+  let failedGeneratorsCount = 0;
+  for (const result of results) {
+    if ('error' in result) {
+      failedGeneratorsCount++;
+    }
+  }
+  const areAllResultsFailures = failedGeneratorsCount === results.length;
+  const anySyncGeneratorsFailed = failedGeneratorsCount > 0;
+
+  return {
+    failedGeneratorsCount,
+    areAllResultsFailures,
+    anySyncGeneratorsFailed,
+  };
+}
+
 async function runSyncGenerators(
   generators: string[]
-): Promise<SyncGeneratorChangesResult[]> {
+): Promise<SyncGeneratorRunResult[]> {
   const tree = new FsTree(workspaceRoot, false, 'running sync generators');
   const projectGraph = await createProjectGraphAsync();
   const { projects } = readProjectsConfigurationFromProjectGraph(projectGraph);
 
-  const results: SyncGeneratorChangesResult[] = [];
+  const results: SyncGeneratorRunResult[] = [];
   for (const generator of generators) {
     const result = await runSyncGenerator(tree, generator, projects);
     results.push(result);
@@ -245,11 +325,11 @@ async function runSyncGenerators(
 }
 
 async function flushSyncGeneratorChangesToDisk(
-  results: SyncGeneratorChangesResult[]
+  results: SyncGeneratorRunResult[]
 ): Promise<void> {
   performance.mark('flush-sync-generator-changes-to-disk:start');
   const { changes, createdFiles, updatedFiles, deletedFiles, callbacks } =
-    processSyncGeneratorResults(results);
+    processSyncGeneratorResultChanges(results);
   // Write changes to disk
   flushChanges(workspaceRoot, changes);
 
@@ -275,7 +355,7 @@ async function flushSyncGeneratorChangesToDisk(
   );
 }
 
-function processSyncGeneratorResults(results: SyncGeneratorChangesResult[]) {
+function processSyncGeneratorResultChanges(results: SyncGeneratorRunResult[]) {
   const changes: FileChange[] = [];
   const createdFiles: string[] = [];
   const updatedFiles: string[] = [];
@@ -283,6 +363,10 @@ function processSyncGeneratorResults(results: SyncGeneratorChangesResult[]) {
   const callbacks: GeneratorCallback[] = [];
 
   for (const result of results) {
+    if ('error' in result) {
+      continue;
+    }
+
     if (result.callback) {
       callbacks.push(result.callback);
     }
