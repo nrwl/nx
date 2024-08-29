@@ -1,6 +1,6 @@
 import * as createSpinner from 'ora';
-import { basename, dirname, join, relative } from 'path';
-import { copyFile, mkdir, rm } from 'node:fs/promises';
+import { dirname, join, relative } from 'path';
+import { mkdir, rm } from 'node:fs/promises';
 import { GitRepository } from '../../../utils/git-utils';
 
 export async function prepareSourceRepo(
@@ -9,24 +9,11 @@ export async function prepareSourceRepo(
   source: string,
   relativeDestination: string,
   tempImportBranch: string,
-  sourceRemoteUrl: string,
-  originName: string
+  sourceRemoteUrl: string
 ) {
   const spinner = createSpinner().start(
     `Fetching ${ref} from ${sourceRemoteUrl}`
   );
-  await gitClient.addFetchRemote(originName, ref);
-  await gitClient.fetch(originName, ref);
-  spinner.succeed(`Fetched ${ref} from ${sourceRemoteUrl}`);
-  spinner.start(
-    `Checking out a temporary branch, ${tempImportBranch} based on ${ref}`
-  );
-  await gitClient.checkout(tempImportBranch, {
-    new: true,
-    base: `${originName}/${ref}`,
-  });
-
-  spinner.succeed(`Created a ${tempImportBranch} branch based on ${ref}`);
   const relativeSourceDir = relative(
     gitClient.root,
     join(gitClient.root, source)

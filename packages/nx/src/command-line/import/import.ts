@@ -163,6 +163,23 @@ export async function importHandler(options: ImportOptions) {
   const absSource = join(sourceRepoPath, source);
   const absDestination = join(process.cwd(), destination);
 
+  const destinationGitClient = new GitRepository(process.cwd());
+  await assertDestinationEmpty(destinationGitClient, absDestination);
+
+  const tempImportBranch = getTempImportBranch(ref);
+  await sourceGitClient.addFetchRemote(importRemoteName, ref);
+  await sourceGitClient.fetch(importRemoteName, ref);
+  spinner.succeed(`Fetched ${ref} from ${sourceRemoteUrl}`);
+  spinner.start(
+    `Checking out a temporary branch, ${tempImportBranch} based on ${ref}`
+  );
+  await sourceGitClient.checkout(tempImportBranch, {
+    new: true,
+    base: `${importRemoteName}/${ref}`,
+  });
+
+  spinner.succeed(`Created a ${tempImportBranch} branch based on ${ref}`);
+
   try {
     await stat(absSource);
   } catch (e) {
@@ -170,11 +187,6 @@ export async function importHandler(options: ImportOptions) {
       `The source directory ${source} does not exist in ${sourceRemoteUrl}. Please double check to make sure it exists.`
     );
   }
-
-  const destinationGitClient = new GitRepository(process.cwd());
-  await assertDestinationEmpty(destinationGitClient, absDestination);
-
-  const tempImportBranch = getTempImportBranch(ref);
 
   const packageManager = detectPackageManager(workspaceRoot);
 
@@ -192,8 +204,7 @@ export async function importHandler(options: ImportOptions) {
     source,
     relativeDestination,
     tempImportBranch,
-    sourceRemoteUrl,
-    importRemoteName
+    sourceRemoteUrl
   );
 
   await createTemporaryRemote(
