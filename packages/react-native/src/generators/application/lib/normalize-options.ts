@@ -7,7 +7,7 @@ import { ReactNativePluginOptions } from '../../../../plugins/plugin';
 export interface NormalizedSchema extends Schema {
   className: string; // app name in class case
   fileName: string; // app name in file class
-  projectName: string; // directory + app name in kebab case
+  projectName: string; // directory + app name, case based on user input
   appProjectRoot: string; // app directory path
   lowerCaseName: string; // app name in lower case
   iosProjectRoot: string;
@@ -47,7 +47,7 @@ export async function normalizeOptions(
   const androidProjectRoot = joinPathFragments(appProjectRoot, 'android');
   const rootProject = appProjectRoot === '.';
 
-  const e2eProjectName = rootProject ? 'e2e' : `${fileName}-e2e`;
+  const e2eProjectName = rootProject ? 'e2e' : `${appProjectName}-e2e`;
   const e2eProjectRoot = rootProject ? 'e2e' : `${appProjectRoot}-e2e`;
 
   const parsedTags = options.tags
