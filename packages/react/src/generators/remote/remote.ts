@@ -45,8 +45,12 @@ export function addModuleFederationFiles(
   );
 
   const pathToModuleFederationFiles = options.typescriptConfiguration
-    ? 'module-federation-ts'
-    : 'module-federation';
+    ? `${
+        options.bundler === 'rspack' ? 'rspack-' : 'webpack-'
+      }module-federation-ts`
+    : `${
+        options.bundler === 'rspack' ? 'rspack-' : 'webpack-'
+      }module-federation`;
 
   generateFiles(
     host,
@@ -56,16 +60,18 @@ export function addModuleFederationFiles(
   );
 
   if (options.typescriptConfiguration) {
-    const pathToWebpackConfig = joinPathFragments(
+    const pathToBundlerConfig = joinPathFragments(
       options.appProjectRoot,
-      'webpack.config.js'
+      options.bundler === 'rspack' ? 'rspack.config.js' : 'webpack.config.js'
     );
     const pathToWebpackProdConfig = joinPathFragments(
       options.appProjectRoot,
-      'webpack.config.prod.js'
+      options.bundler === 'rspack'
+        ? 'rspack.config.prod.js'
+        : 'webpack.config.prod.js'
     );
-    if (host.exists(pathToWebpackConfig)) {
-      host.delete(pathToWebpackConfig);
+    if (host.exists(pathToBundlerConfig)) {
+      host.delete(pathToBundlerConfig);
     }
     if (host.exists(pathToWebpackProdConfig)) {
       host.delete(pathToWebpackProdConfig);
@@ -92,6 +98,7 @@ export async function remoteGeneratorInternal(host: Tree, schema: Schema) {
     dynamic: schema.dynamic ?? false,
     // TODO(colum): remove when MF works with Crystal
     addPlugin: false,
+    bundler: schema.bundler ?? 'rspack',
   };
 
   if (options.dynamic) {
@@ -107,8 +114,6 @@ export async function remoteGeneratorInternal(host: Tree, schema: Schema) {
 
   const initAppTask = await applicationGenerator(host, {
     ...options,
-    // Only webpack works with module federation for now.
-    bundler: 'webpack',
     skipFormat: true,
   });
   tasks.push(initAppTask);
@@ -145,10 +150,17 @@ export async function remoteGeneratorInternal(host: Tree, schema: Schema) {
     tasks.push(setupSsrForRemoteTask);
 
     const projectConfig = readProjectConfiguration(host, options.projectName);
-    projectConfig.targets.server.options.webpackConfig = joinPathFragments(
-      projectConfig.root,
-      `webpack.server.config.${options.typescriptConfiguration ? 'ts' : 'js'}`
-    );
+    if (options.bundler === 'rspack') {
+      projectConfig.targets.server.options.rspackConfig = joinPathFragments(
+        projectConfig.root,
+        `rspack.server.config.${options.typescriptConfiguration ? 'ts' : 'js'}`
+      );
+    } else {
+      projectConfig.targets.server.options.webpackConfig = joinPathFragments(
+        projectConfig.root,
+        `webpack.server.config.${options.typescriptConfiguration ? 'ts' : 'js'}`
+      );
+    }
     updateProjectConfiguration(host, options.projectName, projectConfig);
   }
   if (!options.setParserOptionsProject) {
