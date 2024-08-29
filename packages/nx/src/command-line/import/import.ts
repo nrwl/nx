@@ -94,7 +94,7 @@ export async function importHandler(options: ImportOptions) {
 
   const sourceRepoPath = join(tempImportDirectory, 'repo');
   const spinner = createSpinner(
-    `Cloning ${sourceRemoteUrl} into a temporary directory: ${sourceRepoPath} (Hint: use --depth to limit the clone depth for faster clone times)`
+    `Cloning ${sourceRemoteUrl} into a temporary directory: ${sourceRepoPath} (Use --depth to limit commit history and speed up clone times)`
   ).start();
   try {
     await rm(tempImportDirectory, { recursive: true });
@@ -114,6 +114,9 @@ export async function importHandler(options: ImportOptions) {
     throw new Error(errorMessage);
   }
   spinner.succeed(`Cloned into ${sourceRepoPath}`);
+
+  // Detecting the package manager before preparing the source repo for import.
+  const sourcePackageManager = detectPackageManager(sourceGitClient.root);
 
   if (!ref) {
     const branchChoices = await sourceGitClient.listBranches();
@@ -237,7 +240,6 @@ export async function importHandler(options: ImportOptions) {
     options.interactive
   );
 
-  const sourcePackageManager = detectPackageManager(sourceGitClient.root);
   if (packageManager !== sourcePackageManager) {
     output.warn({
       title: `Mismatched package managers`,
@@ -281,17 +283,17 @@ export async function importHandler(options: ImportOptions) {
     }
   }
 
+  console.log(await destinationGitClient.showStat());
+
   if (installFailed) {
     const pmc = getPackageManagerCommand(packageManager);
     output.warn({
-      title: `The import was successful, but the install failed.`,
+      title: `The import was successful, but the install failed`,
       bodyLines: [
-        `You may need to run "${pmc.install} install" manually to resolve the issue.`,
+        `You may need to run "${pmc.install}" manually to resolve the issue. The error is logged above.`,
       ],
     });
   }
-
-  console.log(await destinationGitClient.showStat());
 
   output.log({
     title: `Merging these changes into ${getBaseRef(nxJson)}`,
