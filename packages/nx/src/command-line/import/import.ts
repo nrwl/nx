@@ -305,6 +305,18 @@ export async function importHandler(options: ImportOptions) {
 
   await warnOnMissingWorkspacesEntry(packageManager, pmc, relativeDestination);
 
+  // When only a subdirectory is imported, there might be devDependencies in the root package.json file
+  // that needs to be ported over as well.
+  if (ref) {
+    output.log({
+      title: `Check root dependencies`,
+      bodyLines: [
+        `"dependencies" and "devDependencies" are not imported from the source repository (${sourceRemoteUrl}).`,
+        `You may need to add some of those dependencies to this workspace in order to run tasks successfully.`,
+      ],
+    });
+  }
+
   output.log({
     title: `Merging these changes into ${getBaseRef(nxJson)}`,
     bodyLines: [
