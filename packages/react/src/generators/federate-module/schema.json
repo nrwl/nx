@@ -81,7 +81,7 @@
       "description": "The bundler to use.",
       "type": "string",
       "enum": ["rspack", "webpack"],
-      "default": "rspack",
+      "default": "rspack"
     }
   },
   "required": ["name", "path", "remote"],
