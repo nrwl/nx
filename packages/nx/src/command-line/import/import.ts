@@ -378,6 +378,12 @@ async function warnOnMissingWorkspacesEntry(
               `Add \`"workspaces": ["${pkgPath}"]\` to package.json and run "${pmc.install}".`,
               `See: https://yarnpkg.com/features/workspaces`,
             ]
+          : pm === 'bun'
+          ? [
+              `We recommend enabling Bun workspaces to install dependencies for the imported project.`,
+              `Add \`"workspaces": ["${pkgPath}"]\` to package.json and run "${pmc.install}".`,
+              `See: https://bun.sh/docs/install/workspaces`,
+            ]
           : [
               `We recommend enabling PNPM workspaces to install dependencies for the imported project.`,
               `Add the following entry to to pnpm-workspace.yaml and run "${pmc.install}":`,
@@ -389,13 +395,13 @@ async function warnOnMissingWorkspacesEntry(
     // Check if the new package is included in existing workspaces entries. If not, warn the user.
     let workspaces: string[] | null = null;
 
-    if (pm === 'npm' || pm === 'yarn') {
+    if (pm === 'npm' || pm === 'yarn' || pm === 'bun') {
       const packageJson = readPackageJson();
       workspaces = packageJson.workspaces;
     } else if (pm === 'pnpm') {
       const yamlPath = join(workspaceRoot, 'pnpm-workspace.yaml');
       if (existsSync(yamlPath)) {
-        const yamlContent = await fsp.readFile('utf-8');
+        const yamlContent = await fsp.readFile(yamlPath, 'utf-8');
         const yaml = yamlLoad(yamlContent);
         workspaces = yaml.packages;
       }
@@ -408,7 +414,7 @@ async function warnOnMissingWorkspacesEntry(
         output.warn({
           title: `Project missing in workspaces`,
           bodyLines:
-            pm === 'npm' || pm === 'yarn'
+            pm === 'npm' || pm === 'yarn' || pm === 'bun'
               ? [
                   `The imported project (${pkgPath}) is missing the "workspaces" field in package.json.`,
                   `Add "${pkgsDir}/*" to workspaces run "${pmc.install}".`,
