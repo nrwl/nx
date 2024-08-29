@@ -26,7 +26,7 @@ export async function withModuleFederationForSSR(
     };
 
     config.plugins.push(
-      new (require('@module-federation/node').UniversalFederationPlugin)(
+      new (require('@module-federation/enhanced').ModuleFederationPlugin)(
         {
           name: options.name,
           filename: 'remoteEntry.js',
@@ -52,6 +52,7 @@ export async function withModuleFederationForSSR(
                   ...(configOverride?.runtimePlugins ?? []),
                   require.resolve('@module-federation/node/runtimePlugin'),
                 ],
+          virtualRuntimeEntry: true,
         },
         {}
       ),

@@ -66,6 +66,7 @@ export async function withModuleFederation(
                   ),
                 ]
               : configOverride?.runtimePlugins,
+          virtualRuntimeEntry: true,
         }),
         sharedLibraries.getReplacementPlugin(),
       ],

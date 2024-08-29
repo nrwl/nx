@@ -248,11 +248,11 @@ importers:
         specifier: ^29.4.1
         version: 29.6.3
       '@module-federation/enhanced':
-        specifier: ~0.2.3
-        version: 0.2.3(bufferutil@4.0.7)(typescript@5.5.3)(utf-8-validate@5.0.10)(webpack@5.88.0(@swc/core@1.5.7(@swc/helpers@0.5.11))(esbuild@0.19.5)(webpack-cli@5.1.4))
+        specifier: ~0.6.0
+        version: 0.6.0(bufferutil@4.0.7)(typescript@5.5.3)(utf-8-validate@5.0.10)(webpack@5.88.0(@swc/core@1.5.7(@swc/helpers@0.5.11))(esbuild@0.19.5)(webpack-cli@5.1.4))
       '@module-federation/sdk':
-        specifier: ~0.2.4
-        version: 0.2.8
+        specifier: ~0.6.0
+        version: 0.6.0
       '@monodon/rust':
         specifier: 2.0.0-beta.1
         version: 2.0.0-beta.1(@napi-rs/cli@3.0.0-alpha.56(@emnapi/runtime@1.1.0)(emnapi@1.2.0(node-addon-api@7.1.0)))(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.7)(typescript@5.5.3))(@swc/core@1.5.7(@swc/helpers@0.5.11))
@@ -4896,11 +4896,23 @@ packages:
   '@module-federation/bridge-react-webpack-plugin@0.2.3':
     resolution: {integrity: sha512-RpFoo25kMaGkQpbwOhcYuF9cDNdo7FTFm6LceBbje8CkVaX8ekR9foXvKYoykbmCi/SbLw0WcXnq7/5y0UZ4nQ==}
 
+  '@module-federation/bridge-react-webpack-plugin@0.6.0':
+    resolution: {integrity: sha512-xxW/U0ESgVnl795YPBwC9OY0IU0Pcxxz3ynJga6m1XguNBbR0ra91vzHvaJssYGBlQ4TLh+S2FgRBUHAjh85tQ==}
+
   '@module-federation/dts-plugin@0.2.3':
     resolution: {integrity: sha512-8QWWdspNNmGuCqiyGf1UiFxIt99TDFoajnK52IiJXnC6DsTjb2lHvHcw01NTJUwmfvxWUbwUjcGPSGeta3861Q==}
     peerDependencies:
       typescript: ^4.9.0 || ^5.0.0
       vue-tsc: ^1.0.24
+    peerDependenciesMeta:
+      vue-tsc:
+        optional: true
+
+  '@module-federation/dts-plugin@0.6.0':
+    resolution: {integrity: sha512-qOQBi0V9s3k9mhX9Xd90V0SsqQj0okOTYH/ooUvk3OdirSGAlJYRrCX+zss1bRf07wM4ofwCDQxSqc4iT9S2rA==}
+    peerDependencies:
+      typescript: ^4.9.0 || ^5.0.0
+      vue-tsc: '>=1.0.24'
     peerDependenciesMeta:
       vue-tsc:
         optional: true
@@ -4919,20 +4931,57 @@ packages:
       webpack:
         optional: true
 
+  '@module-federation/enhanced@0.6.0':
+    resolution: {integrity: sha512-VGANRZH3qZJ2HqVUCebVsvsbRwiMQztvYBK9LSglYcZ5Dte87bpD40zAt3rIGBKI7h7fSMMz6U8xrtrBNwe2zw==}
+    peerDependencies:
+      typescript: ^4.9.0 || ^5.0.0
+      vue-tsc: '>=1.0.24'
+      webpack: ^5.0.0
+    peerDependenciesMeta:
+      typescript:
+        optional: true
+      vue-tsc:
+        optional: true
+      webpack:
+        optional: true
+
   '@module-federation/managers@0.2.3':
     resolution: {integrity: sha512-GqNMkUiK4GbAu3emrwVPtP8BzG4lCX+O9kMUUw6LQ8ZDhjOCr+McvDOSgvWLZ89aB+rLPRtnz3fOT6pdUAa+oA==}
+
+  '@module-federation/managers@0.6.0':
+    resolution: {integrity: sha512-r7yIXAyk0HRdXnM6kTdGb/zm1bKTd8/k+tCMc4pwHllWmnLJdMxNW4ylLIVs2Zy+cG4f6JwF2HrVkVtbyAAYFQ==}
 
   '@module-federation/manifest@0.2.3':
     resolution: {integrity: sha512-TFrjNhsMkSOE4TADJt6kOaKfQ4uugQg4kFlocjAnxN5JHj5rTo/r9lSxtWeoeS2GMli9ifTFgECndmShpz3QcQ==}
 
+  '@module-federation/manifest@0.6.0':
+    resolution: {integrity: sha512-yGIWnLjjWL0KdVZ/bJhRKRJeFWp7X2LEeyMg/51y52LP7KYYWibIN7YK0IPsPqAfFH2XJgDMJ4iVHUZaaL9AEA==}
+
   '@module-federation/rspack@0.2.3':
     resolution: {integrity: sha512-9n9SHiJvFOV/GHuLEF2xWwyg6SGsLu5g/onulpJ2dpkY57ZLPDRprEKoBsOZfz+dp/PWBUOt0YxHcl934hcF8Q==}
+
+  '@module-federation/rspack@0.6.0':
+    resolution: {integrity: sha512-Qfd8xPKnPIJUu7CtWHkFXYZLYeR991Kz39y5I7N4Vuj9ZEAUIYGMwYv5bYSa+gquEmm4O91/FmmMDiK5WvzkCw==}
+    peerDependencies:
+      typescript: ^4.9.0 || ^5.0.0
+      vue-tsc: '>=1.0.24'
+    peerDependenciesMeta:
+      typescript:
+        optional: true
+      vue-tsc:
+        optional: true
 
   '@module-federation/runtime-tools@0.2.3':
     resolution: {integrity: sha512-capN8CVTCEqNAjnl102girrkevczoQfnQYyiYC4WuyKsg7+LUqfirIe1Eiyv6VSE2UgvOTZDnqvervA6rBOlmg==}
 
+  '@module-federation/runtime-tools@0.6.0':
+    resolution: {integrity: sha512-VB/umcooJx8dSrhv0sGy74LR2Od6xZLCs1tu+Zs5HsnUfbmPc0WNUc+nHn4evp5nHl17HOreQL3Q3c3vrQpbWg==}
+
   '@module-federation/runtime@0.2.3':
     resolution: {integrity: sha512-N+ZxBUb1mkmfO9XT1BwgYQgShtUTlijHbukqQ4afFka5lRAT+ayC7RKfHJLz0HbuexKPCmPBDfdmCnErR5WyTQ==}
+
+  '@module-federation/runtime@0.6.0':
+    resolution: {integrity: sha512-48GqtmJd3xvbrJwvf3Gl8wE1KTxGLflH7VSs73nNiAMUcK24qTrQAwvbZWzmD3sGuTV8wM0Nd5w+mKoQ/bi6Ng==}
 
   '@module-federation/sdk@0.2.3':
     resolution: {integrity: sha512-W9zrPchLocyCBc/B8CW21akcfJXLl++9xBe1L1EtgxZGfj/xwHt0GcBWE/y+QGvYTL2a1iZjwscbftbUhxgxXg==}
@@ -4940,11 +4989,20 @@ packages:
   '@module-federation/sdk@0.2.8':
     resolution: {integrity: sha512-eGMnJxdRDgt6dtMv8gkAlzEbTPWVHb3AHUNUG0w56wcbIF0RHC6kmvpHpSQyq4DVGWv3U4g/ZiH5BvBlqEelDQ==}
 
+  '@module-federation/sdk@0.6.0':
+    resolution: {integrity: sha512-yaT3dAnAdoNu+bBJnatFSVhTFSARRPuYor8Gd5Q2FIJhsQwyECC7gtNrgEcvt3sU9L44EdfnWeHwCT/tuKQADw==}
+
   '@module-federation/third-party-dts-extractor@0.2.3':
     resolution: {integrity: sha512-/J1KIOYT071MBHE78JaZR+rngpOFOv/16MLIc5Qg4ckl1HdojLa4nZ+o2N6atRGDE2nX6hJFFTCeGXkBC7TQhg==}
 
+  '@module-federation/third-party-dts-extractor@0.6.0':
+    resolution: {integrity: sha512-VVIrirO80wKdL0OIiumIijX2rAvAv5J3ji5/1t06tYAGdnpNydoYlDcpcnv5sCnAHLb8IkM8hG3uF8n0tTEKfw==}
+
   '@module-federation/webpack-bundler-runtime@0.2.3':
     resolution: {integrity: sha512-L/jt2uJ+8dwYiyn9GxryzDR6tr/Wk8rpgvelM2EBeLIhu7YxCHSmSjQYhw3BTux9zZIr47d1K9fGjBFsVRd/SQ==}
+
+  '@module-federation/webpack-bundler-runtime@0.6.0':
+    resolution: {integrity: sha512-qwOSpSk3RgHZDH79j8S1JBg93UjhVPQsrH4BIklRXhs8nL1+6kDQuP+hP+OPzsE29BNfyiX6WnbR6KQ2ksigUA==}
 
   '@mole-inc/bin-wrapper@8.0.1':
     resolution: {integrity: sha512-sTGoeZnjI8N4KS+sW2AN95gDBErhAguvkw/tWdCjeM8bvxpz5lqrnd0vOJABA1A+Ic3zED7PYoLP/RANLgVotA==}
@@ -7704,6 +7762,9 @@ packages:
   '@types/semver@7.5.2':
     resolution: {integrity: sha512-7aqorHYgdNO4DM36stTiGO3DvKoex9TQRwsJU6vMaFGyqpBA1MNZkz+PG3gaNUPpTAOYhT1WR7M1JyA3fbS9Cw==}
 
+  '@types/semver@7.5.8':
+    resolution: {integrity: sha512-I8EUhyrgfLrcTkzV3TSsGyl1tSuPrEDzr0yd5m90UgNxQkyDXULk3b6MlQqTCpZpNtWe1K0hzclnZkTcLBe2UQ==}
+
   '@types/send@0.17.4':
     resolution: {integrity: sha512-x2EM6TJOybec7c52BX0ZspPodMsQUd5L6PRwOunVyVUhXiBSKf3AezDL8Dgvgt5o0UfKNfuA0eMLr2wLT4AiBA==}
 
@@ -9607,6 +9668,10 @@ packages:
 
   cookies@0.8.0:
     resolution: {integrity: sha512-8aPsApQfebXnuI+537McwYsDtjVxGm8gTIzQI3FDW6t5t/DAhERxtnbEPN/8RX+uZthoz4eCOgloXaE5cYyNow==}
+    engines: {node: '>= 0.8'}
+
+  cookies@0.9.1:
+    resolution: {integrity: sha512-TG2hpqe4ELx54QER/S3HQ9SRVnQnGBtKUz5bLQWtYAQ+o6GpgMs6sYUvaiJjVxb+UXwhRhAEP3m7LbsIZ77Hmw==}
     engines: {node: '>= 0.8'}
 
   copy-anything@2.0.6:
@@ -12823,8 +12888,16 @@ packages:
     resolution: {integrity: sha512-K9XqjmEDStGX09v3oxR7t5uPRy0jqJdvodHa6wxWTHrTfDq0WUNnYTOOUZN6g8OM8oZQXprQASbiIXG2Ez8ehA==}
     engines: {node: '>= 4'}
 
+  koa-convert@2.0.0:
+    resolution: {integrity: sha512-asOvN6bFlSnxewce2e/DK3p4tltyfC4VM7ZwuTuepI7dEQVcvpyFuBcEARu1+Hxg8DIwytce2n7jrZtRlPrARA==}
+    engines: {node: '>= 10'}
+
   koa@2.11.0:
     resolution: {integrity: sha512-EpR9dElBTDlaDgyhDMiLkXrPwp6ZqgAIBvhhmxQ9XN4TFgW+gEz6tkcsNI6BnUbUftrKDjVFj4lW2/J2aNBMMA==}
+    engines: {node: ^4.8.4 || ^6.10.1 || ^7.10.1 || >= 8.1.4}
+
+  koa@2.15.3:
+    resolution: {integrity: sha512-j/8tY9j5t+GVMLeioLaxweJiKUayFhlGqNTzf2ZGwL0ZCQijd2RLHK0SLW5Tsko8YyyqCZC2cojIb0/s62qTAg==}
     engines: {node: ^4.8.4 || ^6.10.1 || ^7.10.1 || >= 8.1.4}
 
   kolorist@1.8.0:
@@ -24090,7 +24163,7 @@ snapshots:
       nopt: 5.0.0
       npmlog: 5.0.1
       rimraf: 3.0.2
-      semver: 7.6.2
+      semver: 7.6.3
       tar: 6.2.0
     transitivePeerDependencies:
       - encoding
@@ -24136,6 +24209,12 @@ snapshots:
     dependencies:
       '@module-federation/sdk': 0.2.3
 
+  '@module-federation/bridge-react-webpack-plugin@0.6.0':
+    dependencies:
+      '@module-federation/sdk': 0.6.0
+      '@types/semver': 7.5.8
+      semver: 7.6.3
+
   '@module-federation/dts-plugin@0.2.3(bufferutil@4.0.7)(typescript@5.5.3)(utf-8-validate@5.0.10)':
     dependencies:
       '@module-federation/managers': 0.2.3
@@ -24148,6 +24227,30 @@ snapshots:
       fs-extra: 9.1.0
       isomorphic-ws: 5.0.0(ws@8.17.1(bufferutil@4.0.7)(utf-8-validate@5.0.10))
       koa: 2.11.0
+      lodash.clonedeepwith: 4.5.0
+      log4js: 6.9.1
+      node-schedule: 2.1.1
+      rambda: 9.2.1
+      typescript: 5.5.3
+      ws: 8.17.1(bufferutil@4.0.7)(utf-8-validate@5.0.10)
+    transitivePeerDependencies:
+      - bufferutil
+      - debug
+      - supports-color
+      - utf-8-validate
+
+  '@module-federation/dts-plugin@0.6.0(bufferutil@4.0.7)(typescript@5.5.3)(utf-8-validate@5.0.10)':
+    dependencies:
+      '@module-federation/managers': 0.6.0
+      '@module-federation/sdk': 0.6.0
+      '@module-federation/third-party-dts-extractor': 0.6.0
+      adm-zip: 0.5.14
+      ansi-colors: 4.1.3
+      axios: 1.7.5
+      chalk: 3.0.0
+      fs-extra: 9.1.0
+      isomorphic-ws: 5.0.0(ws@8.17.1(bufferutil@4.0.7)(utf-8-validate@5.0.10))
+      koa: 2.15.3
       lodash.clonedeepwith: 4.5.0
       log4js: 6.9.1
       node-schedule: 2.1.1
@@ -24180,9 +24283,35 @@ snapshots:
       - supports-color
       - utf-8-validate
 
+  '@module-federation/enhanced@0.6.0(bufferutil@4.0.7)(typescript@5.5.3)(utf-8-validate@5.0.10)(webpack@5.88.0(@swc/core@1.5.7(@swc/helpers@0.5.11))(esbuild@0.19.5)(webpack-cli@5.1.4))':
+    dependencies:
+      '@module-federation/bridge-react-webpack-plugin': 0.6.0
+      '@module-federation/dts-plugin': 0.6.0(bufferutil@4.0.7)(typescript@5.5.3)(utf-8-validate@5.0.10)
+      '@module-federation/managers': 0.6.0
+      '@module-federation/manifest': 0.6.0(bufferutil@4.0.7)(typescript@5.5.3)(utf-8-validate@5.0.10)
+      '@module-federation/rspack': 0.6.0(bufferutil@4.0.7)(typescript@5.5.3)(utf-8-validate@5.0.10)
+      '@module-federation/runtime-tools': 0.6.0
+      '@module-federation/sdk': 0.6.0
+      btoa: 1.2.1
+      upath: 2.0.1
+    optionalDependencies:
+      typescript: 5.5.3
+      webpack: 5.88.0(@swc/core@1.5.7(@swc/helpers@0.5.11))(esbuild@0.19.5)(webpack-cli@5.1.4)
+    transitivePeerDependencies:
+      - bufferutil
+      - debug
+      - supports-color
+      - utf-8-validate
+
   '@module-federation/managers@0.2.3':
     dependencies:
       '@module-federation/sdk': 0.2.3
+      find-pkg: 2.0.0
+      fs-extra: 9.1.0
+
+  '@module-federation/managers@0.6.0':
+    dependencies:
+      '@module-federation/sdk': 0.6.0
       find-pkg: 2.0.0
       fs-extra: 9.1.0
 
@@ -24191,6 +24320,21 @@ snapshots:
       '@module-federation/dts-plugin': 0.2.3(bufferutil@4.0.7)(typescript@5.5.3)(utf-8-validate@5.0.10)
       '@module-federation/managers': 0.2.3
       '@module-federation/sdk': 0.2.3
+      chalk: 3.0.0
+      find-pkg: 2.0.0
+    transitivePeerDependencies:
+      - bufferutil
+      - debug
+      - supports-color
+      - typescript
+      - utf-8-validate
+      - vue-tsc
+
+  '@module-federation/manifest@0.6.0(bufferutil@4.0.7)(typescript@5.5.3)(utf-8-validate@5.0.10)':
+    dependencies:
+      '@module-federation/dts-plugin': 0.6.0(bufferutil@4.0.7)(typescript@5.5.3)(utf-8-validate@5.0.10)
+      '@module-federation/managers': 0.6.0
+      '@module-federation/sdk': 0.6.0
       chalk: 3.0.0
       find-pkg: 2.0.0
     transitivePeerDependencies:
@@ -24217,20 +24361,53 @@ snapshots:
       - utf-8-validate
       - vue-tsc
 
+  '@module-federation/rspack@0.6.0(bufferutil@4.0.7)(typescript@5.5.3)(utf-8-validate@5.0.10)':
+    dependencies:
+      '@module-federation/bridge-react-webpack-plugin': 0.6.0
+      '@module-federation/dts-plugin': 0.6.0(bufferutil@4.0.7)(typescript@5.5.3)(utf-8-validate@5.0.10)
+      '@module-federation/managers': 0.6.0
+      '@module-federation/manifest': 0.6.0(bufferutil@4.0.7)(typescript@5.5.3)(utf-8-validate@5.0.10)
+      '@module-federation/runtime-tools': 0.6.0
+      '@module-federation/sdk': 0.6.0
+    optionalDependencies:
+      typescript: 5.5.3
+    transitivePeerDependencies:
+      - bufferutil
+      - debug
+      - supports-color
+      - utf-8-validate
+
   '@module-federation/runtime-tools@0.2.3':
     dependencies:
       '@module-federation/runtime': 0.2.3
       '@module-federation/webpack-bundler-runtime': 0.2.3
 
+  '@module-federation/runtime-tools@0.6.0':
+    dependencies:
+      '@module-federation/runtime': 0.6.0
+      '@module-federation/webpack-bundler-runtime': 0.6.0
+
   '@module-federation/runtime@0.2.3':
     dependencies:
       '@module-federation/sdk': 0.2.3
+
+  '@module-federation/runtime@0.6.0':
+    dependencies:
+      '@module-federation/sdk': 0.6.0
 
   '@module-federation/sdk@0.2.3': {}
 
   '@module-federation/sdk@0.2.8': {}
 
+  '@module-federation/sdk@0.6.0': {}
+
   '@module-federation/third-party-dts-extractor@0.2.3':
+    dependencies:
+      find-pkg: 2.0.0
+      fs-extra: 9.1.0
+      resolve: 1.22.8
+
+  '@module-federation/third-party-dts-extractor@0.6.0':
     dependencies:
       find-pkg: 2.0.0
       fs-extra: 9.1.0
@@ -24240,6 +24417,11 @@ snapshots:
     dependencies:
       '@module-federation/runtime': 0.2.3
       '@module-federation/sdk': 0.2.3
+
+  '@module-federation/webpack-bundler-runtime@0.6.0':
+    dependencies:
+      '@module-federation/runtime': 0.6.0
+      '@module-federation/sdk': 0.6.0
 
   '@mole-inc/bin-wrapper@8.0.1':
     dependencies:
@@ -24769,7 +24951,7 @@ snapshots:
   '@npmcli/fs@2.1.2':
     dependencies:
       '@gar/promisify': 1.1.3
-      semver: 7.6.2
+      semver: 7.6.3
 
   '@npmcli/fs@3.1.0':
     dependencies:
@@ -25211,7 +25393,7 @@ snapshots:
       pkg-types: 1.0.3
       prompts: 2.4.2
       rc9: 2.1.1
-      semver: 7.6.2
+      semver: 7.6.3
 
   '@nuxt/devtools@1.0.8(bufferutil@4.0.7)(nuxt@3.10.0(@parcel/watcher@2.4.0)(@types/node@18.19.8)(bufferutil@4.0.7)(encoding@0.1.13)(eslint@8.57.0)(less@4.1.3)(optionator@0.9.3)(rollup@4.14.3)(sass@1.55.0)(stylus@0.59.0)(terser@5.31.6)(typescript@5.5.3)(utf-8-validate@5.0.10)(vite@5.0.8(@types/node@18.19.8)(less@4.1.3)(sass@1.55.0)(stylus@0.59.0)(terser@5.31.6)))(rollup@4.14.3)(utf-8-validate@5.0.10)(vite@5.0.8(@types/node@18.19.8)(less@4.1.3)(sass@1.55.0)(stylus@0.59.0)(terser@5.31.6))':
     dependencies:
@@ -28215,6 +28397,8 @@ snapshots:
 
   '@types/semver@7.5.2': {}
 
+  '@types/semver@7.5.8': {}
+
   '@types/send@0.17.4':
     dependencies:
       '@types/mime': 1.3.5
@@ -28388,7 +28572,7 @@ snapshots:
       debug: 4.3.4(supports-color@8.1.1)
       globby: 11.1.0
       is-glob: 4.0.3
-      semver: 7.6.2
+      semver: 7.6.3
       tsutils: 3.21.0(typescript@5.5.3)
     optionalDependencies:
       typescript: 5.5.3
@@ -30114,7 +30298,7 @@ snapshots:
 
   builtins@5.0.1:
     dependencies:
-      semver: 7.6.2
+      semver: 7.6.3
 
   bundle-name@4.1.0:
     dependencies:
@@ -30748,6 +30932,11 @@ snapshots:
   cookie@0.6.0: {}
 
   cookies@0.8.0:
+    dependencies:
+      depd: 2.0.0
+      keygrip: 1.1.0
+
+  cookies@0.9.1:
     dependencies:
       depd: 2.0.0
       keygrip: 1.1.0
@@ -34254,7 +34443,7 @@ snapshots:
       '@babel/parser': 7.24.7
       '@istanbuljs/schema': 0.1.3
       istanbul-lib-coverage: 3.2.0
-      semver: 7.6.2
+      semver: 7.6.3
     transitivePeerDependencies:
       - supports-color
 
@@ -34947,7 +35136,7 @@ snapshots:
       jws: 3.2.2
       lodash: 4.17.21
       ms: 2.1.3
-      semver: 7.6.2
+      semver: 7.6.3
 
   jsonwebtoken@9.0.2:
     dependencies:
@@ -35025,6 +35214,11 @@ snapshots:
       co: 4.6.0
       koa-compose: 3.2.1
 
+  koa-convert@2.0.0:
+    dependencies:
+      co: 4.6.0
+      koa-compose: 4.1.0
+
   koa@2.11.0:
     dependencies:
       accepts: 1.3.8
@@ -35045,6 +35239,34 @@ snapshots:
       is-generator-function: 1.0.10
       koa-compose: 4.1.0
       koa-convert: 1.2.0
+      on-finished: 2.4.1
+      only: 0.0.2
+      parseurl: 1.3.3
+      statuses: 1.5.0
+      type-is: 1.6.18
+      vary: 1.1.2
+    transitivePeerDependencies:
+      - supports-color
+
+  koa@2.15.3:
+    dependencies:
+      accepts: 1.3.8
+      cache-content-type: 1.0.1
+      content-disposition: 0.5.4
+      content-type: 1.0.5
+      cookies: 0.9.1
+      debug: 4.3.4(supports-color@8.1.1)
+      delegates: 1.0.0
+      depd: 2.0.0
+      destroy: 1.2.0
+      encodeurl: 1.0.2
+      escape-html: 1.0.3
+      fresh: 0.5.2
+      http-assert: 1.5.0
+      http-errors: 1.8.1
+      is-generator-function: 1.0.10
+      koa-compose: 4.1.0
+      koa-convert: 2.0.0
       on-finished: 2.4.1
       only: 0.0.2
       parseurl: 1.3.3
@@ -36573,7 +36795,7 @@ snapshots:
       nopt: 6.0.0
       npmlog: 6.0.2
       rimraf: 3.0.2
-      semver: 7.6.2
+      semver: 7.6.3
       tar: 6.2.0
       which: 2.0.2
     transitivePeerDependencies:
@@ -36640,7 +36862,7 @@ snapshots:
     dependencies:
       hosted-git-info: 7.0.0
       is-core-module: 2.13.1
-      semver: 7.6.2
+      semver: 7.6.3
       validate-npm-package-license: 3.0.4
 
   normalize-path@3.0.0: {}
@@ -36665,7 +36887,7 @@ snapshots:
     dependencies:
       hosted-git-info: 6.1.1
       proc-log: 3.0.0
-      semver: 7.6.2
+      semver: 7.6.3
       validate-npm-package-name: 5.0.0
 
   npm-package-arg@11.0.1:
@@ -36691,14 +36913,14 @@ snapshots:
       npm-install-checks: 6.0.0
       npm-normalize-package-bin: 3.0.0
       npm-package-arg: 10.1.0
-      semver: 7.6.2
+      semver: 7.6.3
 
   npm-pick-manifest@9.0.1:
     dependencies:
       npm-install-checks: 6.0.0
       npm-normalize-package-bin: 3.0.0
       npm-package-arg: 11.0.1
-      semver: 7.6.2
+      semver: 7.6.3
 
   npm-pick-manifest@9.1.0:
     dependencies:
@@ -41198,7 +41420,7 @@ snapshots:
       fast-glob: 3.2.7
       fs-extra: 11.2.0
       npm-run-path: 4.0.1
-      semver: 7.6.2
+      semver: 7.6.3
       strip-ansi: 6.0.1
       tiny-invariant: 1.3.1
       vite: 5.0.12(@types/node@18.19.8)(less@4.1.3)(sass@1.55.0)(stylus@0.59.0)(terser@5.31.6)
@@ -41337,7 +41559,7 @@ snapshots:
   vscode-languageclient@7.0.0:
     dependencies:
       minimatch: 3.1.2
-      semver: 7.6.2
+      semver: 7.6.3
       vscode-languageserver-protocol: 3.16.0
 
   vscode-languageserver-protocol@3.16.0:
