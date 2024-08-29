@@ -105,10 +105,8 @@ export class GitRepository {
   }
 
   async move(path: string, destination: string) {
-    // If source is not found, the -k prevents the command from failing.
-    // This could happen with special characters, although they should be mostly handled.
     return await this.execAsync(
-      `git mv -k ${this.quotePath(path)} ${this.quotePath(destination)}`
+      `git mv ${this.quotePath(path)} ${this.quotePath(destination)}`
     );
   }
 
