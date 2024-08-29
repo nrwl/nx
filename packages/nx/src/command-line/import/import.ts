@@ -1,4 +1,8 @@
-import { join, relative, resolve } from 'path';
+import { dirname, join, relative, resolve } from 'path';
+import { minimatch } from 'minimatch';
+import { existsSync, promises as fsp } from 'node:fs';
+import * as chalk from 'chalk';
+import { load as yamlLoad } from '@zkochan/js-yaml';
 import { cloneFromUpstream, GitRepository } from '../../utils/git-utils';
 import { stat, mkdir, rm } from 'node:fs/promises';
 import { tmpdir } from 'tmp';
@@ -11,6 +15,9 @@ import { workspaceRoot } from '../../utils/workspace-root';
 import {
   detectPackageManager,
   getPackageManagerCommand,
+  isWorkspacesEnabled,
+  PackageManager,
+  PackageManagerCommands,
 } from '../../utils/package-manager';
 import { resetWorkspaceContext } from '../../utils/workspace-context';
 import { runInstall } from '../init/implementation/utils';
@@ -21,6 +28,7 @@ import {
   getPackagesInPackageManagerWorkspace,
   needsInstall,
 } from './utils/needs-install';
+import { readPackageJson } from '../../project-graph/file-utils';
 
 const importRemoteName = '__tmp_nx_import__';
 
@@ -295,6 +303,8 @@ export async function importHandler(options: ImportOptions) {
     });
   }
 
+  await warnOnMissingWorkspacesEntry(packageManager, pmc, relativeDestination);
+
   output.log({
     title: `Merging these changes into ${getBaseRef(nxJson)}`,
     bodyLines: [
@@ -331,4 +341,72 @@ async function createTemporaryRemote(
   } catch {}
   await destinationGitClient.addGitRemote(remoteName, sourceRemoteUrl);
   await destinationGitClient.fetch(remoteName);
+}
+
+// If the user imports a project that isn't in NPM/Yarn/PNPM workspaces, then its dependencies
+// will not be installed. We should warn users and provide instructions on how to fix this.
+async function warnOnMissingWorkspacesEntry(
+  pm: PackageManager,
+  pmc: PackageManagerCommands,
+  pkgPath: string
+) {
+  if (!isWorkspacesEnabled(pm, workspaceRoot)) {
+    output.warn({
+      title: `Missing workspaces in package.json`,
+      bodyLines:
+        pm === 'npm'
+          ? [
+              `We recommend enabling NPM workspaces to install dependencies for the imported project.`,
+              `Add \`"workspaces": ["${pkgPath}"]\` to package.json and run "${pmc.install}".`,
+              `See: https://docs.npmjs.com/cli/using-npm/workspaces`,
+            ]
+          : pm === 'yarn'
+          ? [
+              `We recommend enabling Yarn workspaces to install dependencies for the imported project.`,
+              `Add \`"workspaces": ["${pkgPath}"]\` to package.json and run "${pmc.install}".`,
+              `See: https://yarnpkg.com/features/workspaces`,
+            ]
+          : [
+              `We recommend enabling PNPM workspaces to install dependencies for the imported project.`,
+              `Add the following entry to to pnpm-workspace.yaml and run "${pmc.install}":`,
+              chalk.bold(`packages:\n  - '${pkgPath}'`),
+              `See: https://pnpm.io/workspaces`,
+            ],
+    });
+  } else {
+    // Check if the new package is included in existing workspaces entries. If not, warn the user.
+    let workspaces: string[] | null = null;
+
+    if (pm === 'npm' || pm === 'yarn') {
+      const packageJson = readPackageJson();
+      workspaces = packageJson.workspaces;
+    } else if (pm === 'pnpm') {
+      const yamlPath = join(workspaceRoot, 'pnpm-workspace.yaml');
+      if (existsSync(yamlPath)) {
+        const yamlContent = await fsp.readFile('utf-8');
+        const yaml = yamlLoad(yamlContent);
+        workspaces = yaml.packages;
+      }
+    }
+
+    if (workspaces) {
+      const isPkgIncluded = workspaces.some((w) => minimatch(pkgPath, w));
+      if (!isPkgIncluded) {
+        const pkgsDir = dirname(pkgPath);
+        output.warn({
+          title: `Project missing in workspaces`,
+          bodyLines:
+            pm === 'npm' || pm === 'yarn'
+              ? [
+                  `The imported project (${pkgPath}) is missing the "workspaces" field in package.json.`,
+                  `Add "${pkgsDir}/*" to workspaces run "${pmc.install}".`,
+                ]
+              : [
+                  `The imported project (${pkgPath}) is missing the "packages" field in pnpm-workspaces.yaml.`,
+                  `Add "${pkgsDir}/*" to packages run "${pmc.install}".`,
+                ],
+        });
+      }
+    }
+  }
 }
