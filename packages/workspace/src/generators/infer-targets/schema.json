@@ -3,6 +3,7 @@
   "$id": "InferTargets",
   "title": "",
   "type": "object",
+  "description": "Convert Nx projects to use inferred targets.",
   "properties": {
     "project": {
       "type": "string",

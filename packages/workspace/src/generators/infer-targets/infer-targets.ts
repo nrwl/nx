@@ -23,8 +23,15 @@ interface Schema {
 export async function convertToInferredGenerator(tree: Tree, options: Schema) {
   const generatorCollectionChoices =
     await getPossibleConvertToInferredGenerators();
-  let generatorsToRun: string[];
 
+  if (generatorCollectionChoices.size === 0) {
+    output.error({
+      title:
+        'No convert-to-inferred generators found. You can install plugins using nx add.',
+    });
+    return;
+  }
+  let generatorsToRun: string[];
   if (options.plugins && options.plugins.filter((p) => !!p).length > 0) {
     generatorsToRun = Array.from(generatorCollectionChoices.values())
       .filter((generator) =>
