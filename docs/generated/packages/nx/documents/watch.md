@@ -35,6 +35,8 @@ Watch all projects (including newly created projects) in the workspace:
  nx watch --all -- echo \$NX_PROJECT_NAME
 ```
 
+## Options
+
 | Option                       | Type    | Description                                                                 |
 | ---------------------------- | ------- | --------------------------------------------------------------------------- |
 | `--all`                      | boolean | Watch all projects.                                                         |

@@ -77,6 +77,8 @@ Create a dedicated commit for each successfully completed migration. You can cus
  nx migrate --run-migrations --create-commits
 ```
 
+## Options
+
 | Option                       | Type    | Description                                                                                                                          |
 | ---------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------ |
 | `--commitPrefix`             | string  | Commit prefix to apply to the commit for each migration, when --create-commits is enabled (Default: `chore: [nx migration] `)        |

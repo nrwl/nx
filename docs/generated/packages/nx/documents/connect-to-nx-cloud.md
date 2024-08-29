@@ -15,6 +15,8 @@ nx connect
 
 Install `nx` globally to invoke the command directly using `nx`, or use `npx nx`, `yarn nx`, or `pnpm nx`.
 
+## Options
+
 | Option            | Type    | Description                                                                              |
 | ----------------- | ------- | ---------------------------------------------------------------------------------------- |
 | `--generateToken` | boolean | Explicitly asks for a token to be created, do not override existing tokens from Nx Cloud |

@@ -3,6 +3,7 @@ import { outputFileSync } from 'fs-extra';
 import {
   bold,
   code,
+  h2,
   lines as mdLines,
   strikethrough,
   table,
@@ -277,5 +278,5 @@ export function generateOptionsMarkdown(
         items.push({ name, type, description });
       });
   }
-  return table(items, fields);
+  return h2('Options', table(items, fields));
 }

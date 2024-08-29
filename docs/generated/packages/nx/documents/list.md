@@ -29,6 +29,8 @@ List the generators and executors available in the `@nx/web` plugin if it is ins
  nx list @nx/web
 ```
 
+## Options
+
 | Option      | Type    | Description                              |
 | ----------- | ------- | ---------------------------------------- |
 | `--help`    | boolean | Show help                                |

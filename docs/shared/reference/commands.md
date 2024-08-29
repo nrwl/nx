@@ -32,7 +32,7 @@ nx init
 
 {% cards cols="2" mdCols="4" smCols="2" %}
 
-{% link-card title="nx init" type="Reference" url="/nx-api/nx/documents/init" /%}
+{% link-card title="nx init" type="API Reference" url="/nx-api/nx/documents/init" /%}
 {% link-card title="Add to Existing Monorepo" type="Recipe" url="/recipes/adopting-nx/adding-to-monorepo" /%}
 {% link-card title="Add to Any Project" type="Recipe" url="/recipes/adopting-nx/adding-to-existing-project" /%}
 {% link-card title="Migrate from Angular CLI" type="Recipe" url="/recipes/angular/migration/angular" /%}
@@ -49,8 +49,8 @@ nx add my-plugin
 
 {% cards %}
 
-{% link-card title="nx add" type="Reference" url="/nx-api/nx/documents/add" /%}
-{% link-card title="Plugin Registry" type="Reference" url="/nx-api/nx/documents/generate" /%}
+{% link-card title="nx add" type="API Reference" url="/nx-api/nx/documents/add" /%}
+{% link-card title="Plugin Registry" type="Reference" url="/plugin-registry" /%}
 
 {% /cards %}
 
@@ -63,7 +63,7 @@ nx generate @nx/react:component my-component
 ```
 
 {% cards %}
-{% link-card title="nx generate" type="Reference" url="/nx-api/nx/documents/generate" /%}
+{% link-card title="nx generate" type="API Reference" url="/nx-api/nx/documents/generate" /%}
 {% link-card title="Generate Code" type="Feature" url="/features/generate-code" /%}
 {% /cards %}
 
@@ -77,7 +77,7 @@ nx migrate --run-migrations
 ```
 
 {% cards %}
-{% link-card title="nx migrate" type="Reference" url="/nx-api/nx/documents/migrate" /%}
+{% link-card title="nx migrate" type="API Reference" url="/nx-api/nx/documents/migrate" /%}
 {% link-card title="Automate Updating Dependencies" type="Feature" url="/features/automate-updating-dependencies" /%}
 {% /cards %}
 
@@ -94,7 +94,7 @@ nx repair
 ```
 
 {% cards %}
-{% link-card title="nx repair" type="Reference" url="/nx-api/nx/documents/repair" /%}
+{% link-card title="nx repair" type="API Reference" url="/nx-api/nx/documents/repair" /%}
 {% /cards %}
 
 ### connect
@@ -106,7 +106,7 @@ nx connect
 ```
 
 {% cards %}
-{% link-card title="nx connect" type="Reference" url="/nx-api/nx/documents/connect-to-nx-cloud" /%}
+{% link-card title="nx connect" type="API Reference" url="/nx-api/nx/documents/connect-to-nx-cloud" /%}
 {% link-card title="Connect to Nx Cloud" type="Feature" url="/ci/intro/connect-to-nx-cloud" /%}
 {% /cards %}
 
@@ -120,8 +120,8 @@ nx format:check
 ```
 
 {% cards %}
-{% link-card title="nx format" type="Reference" url="/nx-api/nx/documents/format-write" /%}
-{% link-card title="nx format:check" type="Reference" url="/nx-api/nx/documents/format-check" /%}
+{% link-card title="nx format" type="API Reference" url="/nx-api/nx/documents/format-write" /%}
+{% link-card title="nx format:check" type="API Reference" url="/nx-api/nx/documents/format-check" /%}
 {% /cards %}
 
 ## Run Tasks
@@ -138,7 +138,7 @@ nx build my-app
 ```
 
 {% cards %}
-{% link-card title="nx run" type="Reference" url="/nx-api/nx/documents/run" /%}
+{% link-card title="nx run" type="API Reference" url="/nx-api/nx/documents/run" /%}
 {% link-card title="Run Tasks" type="Feature" url="/features/run-tasks" /%}
 {% /cards %}
 
@@ -151,7 +151,7 @@ nx run-many --target=build
 ```
 
 {% cards %}
-{% link-card title="nx run-many" type="Reference" url="/nx-api/nx/documents/run-many" /%}
+{% link-card title="nx run-many" type="API Reference" url="/nx-api/nx/documents/run-many" /%}
 {% link-card title="Run Tasks" type="Feature" url="/features/run-tasks" /%}
 {% /cards %}
 
@@ -164,7 +164,7 @@ nx affected --target=build
 ```
 
 {% cards %}
-{% link-card title="nx affected" type="Reference" url="/nx-api/nx/documents/affected" /%}
+{% link-card title="nx affected" type="API Reference" url="/nx-api/nx/documents/affected" /%}
 {% link-card title="Run Only Tasks Affected by a PR" type="Feature" url="/ci/features/affected" /%}
 {% /cards %}
 
@@ -181,7 +181,7 @@ Executes any command as if it was a target on the project
 ```
 
 {% cards %}
-{% link-card title="nx exec" type="Reference" url="/nx-api/nx/documents/exec" /%}
+{% link-card title="nx exec" type="API Reference" url="/nx-api/nx/documents/exec" /%}
 {% link-card title="Run Root Level NPM Scripts with Nx" type="Recipe" url="/recipes/running-tasks/root-level-scripts#run-rootlevel-npm-scripts-with-nx" /%}
 {% /cards %}
 
@@ -194,7 +194,7 @@ nx watch --projects=assets -- nx build assets
 ```
 
 {% cards %}
-{% link-card title="nx watch" type="Reference" url="/nx-api/nx/documents/watch" /%}
+{% link-card title="nx watch" type="API Reference" url="/nx-api/nx/documents/watch" /%}
 {% link-card title="Workspace Watching" type="Recipe" url="/recipes/running-tasks/workspace-watching" /%}
 {% /cards %}
 
@@ -209,7 +209,7 @@ nx release publish
 ```
 
 {% cards %}
-{% link-card title="nx release" type="Reference" url="/nx-api/nx/documents/release" /%}
+{% link-card title="nx release" type="API Reference" url="/nx-api/nx/documents/release" /%}
 {% link-card title="Manage Releases" type="Feature" url="/features/manage-releases" /%}
 {% /cards %}
 
@@ -222,7 +222,7 @@ nx reset
 ```
 
 {% cards %}
-{% link-card title="nx reset" type="Reference" url="/nx-api/nx/documents/reset" /%}
+{% link-card title="nx reset" type="API Reference" url="/nx-api/nx/documents/reset" /%}
 {% /cards %}
 
 ## Display Information
@@ -237,7 +237,7 @@ nx show project my-app
 ```
 
 {% cards %}
-{% link-card title="nx show" type="Reference" url="/nx-api/nx/documents/show" /%}
+{% link-card title="nx show" type="API Reference" url="/nx-api/nx/documents/show" /%}
 {% link-card title="Explore Projects in Your Workspace" type="Recipe" url="/features/explore-graph#explore-projects-in-your-workspace" /%}
 {% /cards %}
 
@@ -250,7 +250,7 @@ nx graph
 ```
 
 {% cards %}
-{% link-card title="nx graph" type="Reference" url="/nx-api/nx/documents/dep-graph" /%}
+{% link-card title="nx graph" type="API Reference" url="/nx-api/nx/documents/dep-graph" /%}
 {% link-card title="Explore Your Workspace" type="Recipe" url="/features/explore-graph" /%}
 {% /cards %}
 
@@ -264,7 +264,7 @@ nx list my-plugin
 ```
 
 {% cards %}
-{% link-card title="nx list" type="Reference" url="/nx-api/nx/documents/list" /%}
+{% link-card title="nx list" type="API Reference" url="/nx-api/nx/documents/list" /%}
 {% /cards %}
 
 ### report
@@ -276,7 +276,7 @@ nx report
 ```
 
 {% cards %}
-{% link-card title="nx report" type="Reference" url="/nx-api/nx/documents/report" /%}
+{% link-card title="nx report" type="API Reference" url="/nx-api/nx/documents/report" /%}
 {% /cards %}
 
 ### daemon
@@ -288,7 +288,7 @@ nx daemon
 ```
 
 {% cards %}
-{% link-card title="nx daemon" type="Reference" url="/nx-api/nx/documents/daemon" /%}
+{% link-card title="nx daemon" type="API Reference" url="/nx-api/nx/documents/daemon" /%}
 {% link-card title="Nx Daemon" type="Concept" url="/concepts/nx-daemon" /%}
 {% /cards %}
 
@@ -303,7 +303,7 @@ npx create-nx-workspace
 ```
 
 {% cards %}
-{% link-card title="create-nx-workspace" type="Reference" url="/nx-api/nx/documents/create-nx-workspace" /%}
+{% link-card title="create-nx-workspace" type="API Reference" url="/nx-api/nx/documents/create-nx-workspace" /%}
 {% /cards %}
 
 ### create-nx-plugin

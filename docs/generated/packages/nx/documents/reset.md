@@ -41,6 +41,8 @@ Clears the workspace data directory. Used by Nx to store cached data about the c
  nx reset --only-workspace-data
 ```
 
+## Options
+
 | Option                | Type    | Description                                                                                                                                    |
 | --------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
 | `--help`              | boolean | Show help                                                                                                                                      |

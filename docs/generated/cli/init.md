@@ -15,6 +15,8 @@ nx init
 
 Install `nx` globally to invoke the command directly using `nx`, or use `npx nx`, `yarn nx`, or `pnpm nx`.
 
+## Options
+
 | Option                   | Type    | Description                                                                                         |
 | ------------------------ | ------- | --------------------------------------------------------------------------------------------------- |
 | `--help`                 | boolean | Show help                                                                                           |

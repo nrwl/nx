@@ -83,6 +83,8 @@ Opens a web browser to explore the configuration of "my-app":
  nx show project my-app --web
 ```
 
+## Options
+
 | Shared Option | Type    | Description         |
 | ------------- | ------- | ------------------- |
 | `--help`      | boolean | Show help           |
@@ -98,6 +100,8 @@ Show a list of projects in the workspace
 ```shell
 nx show projects
 ```
+
+## Options
 
 | Option          | Type                | Description                                                                                                                            |
 | --------------- | ------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
@@ -123,6 +127,8 @@ Shows resolved project configuration for a given project.
 ```shell
 nx show project <projectName>
 ```
+
+## Options
 
 | Option          | Type    | Description                                                           |
 | --------------- | ------- | --------------------------------------------------------------------- |

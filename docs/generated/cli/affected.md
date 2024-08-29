@@ -83,6 +83,8 @@ Print the task graph to the console:
  nx affected -t=build --graph=stdout
 ```
 
+## Options
+
 | Option      | Type    | Description                               |
 | ----------- | ------- | ----------------------------------------- |
 | ~~`--all`~~ | boolean | **Deprecated:** Use `nx run-many` instead |

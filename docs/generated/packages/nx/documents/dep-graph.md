@@ -71,6 +71,8 @@ Watch for changes to project graph and update in-browser:
  nx graph --watch
 ```
 
+## Options
+
 | Option            | Type                | Description                                                                                                                            |
 | ----------------- | ------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
 | `--affected`      | boolean             | Highlight affected projects                                                                                                            |
