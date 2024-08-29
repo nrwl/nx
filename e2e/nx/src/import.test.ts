@@ -8,7 +8,7 @@ import {
   updateFile,
   e2eCwd,
 } from '@nx/e2e/utils';
-import { mkdirSync, rmdirSync } from 'fs';
+import { writeFileSync, mkdirSync, rmdirSync } from 'fs';
 import { execSync } from 'node:child_process';
 import { join } from 'path';
 
@@ -85,5 +85,55 @@ describe('Nx Import', () => {
       'projects/vite-app/src/App.tsx'
     );
     runCLI(`vite:build created-vite-app`);
+  });
+
+  it('should be able to import two directories from same repo', () => {
+    // Setup repo with two packages: a and b
+    const repoPath = join(tempImportE2ERoot, 'repo');
+    mkdirSync(repoPath, { recursive: true });
+    writeFileSync(join(repoPath, 'README.md'), `# Repo`);
+    execSync(`git init`, {
+      cwd: repoPath,
+    });
+    execSync(`git add .`, {
+      cwd: repoPath,
+    });
+    execSync(`git commit -am "initial commit"`, {
+      cwd: repoPath,
+    });
+    execSync(`git checkout -b main`, {
+      cwd: repoPath,
+    });
+    mkdirSync(join(repoPath, 'packages/a'), { recursive: true });
+    writeFileSync(join(repoPath, 'packages/a/README.md'), `# A`);
+    execSync(`git add packages/a`, {
+      cwd: repoPath,
+    });
+    execSync(`git commit -m "add package a"`, {
+      cwd: repoPath,
+    });
+    mkdirSync(join(repoPath, 'packages/b'), { recursive: true });
+    writeFileSync(join(repoPath, 'packages/b/README.md'), `# B`);
+    execSync(`git add packages/b`, {
+      cwd: repoPath,
+    });
+    execSync(`git commit -m "add package b"`, {
+      cwd: repoPath,
+    });
+
+    runCLI(
+      `import ${repoPath} packages/a --ref main --source packages/a --no-interactive`,
+      {
+        verbose: true,
+      }
+    );
+    runCLI(
+      `import ${repoPath} packages/b --ref main --source packages/b --no-interactive`,
+      {
+        verbose: true,
+      }
+    );
+
+    checkFilesExist('packages/a/README.md', 'packages/b/README.md');
   });
 });
