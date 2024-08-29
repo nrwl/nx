@@ -17,6 +17,14 @@ import { readFileSync } from 'fs';
 import type { BatchResults } from 'nx/src/tasks-runner/batch/batch-messages';
 process.env.NODE_ENV ??= 'test';
 
+function injectExtraArgsToProcessArgv(extraArgs) {
+  if (typeof extraArgs === 'object') {
+    for (const arg in extraArgs) {
+      process.argv.push(`--${arg}=${extraArgs[arg]}`);
+    }
+  }
+}
+
 export async function jestExecutor(
   options: JestExecutorOptions,
   context: ExecutorContext
@@ -26,9 +34,9 @@ export async function jestExecutor(
   process.env.TS_NODE_COMPILER_OPTIONS ??= '{"moduleResolution":"node10"}';
 
   const config = await jestConfigParser(options, context);
+  injectExtraArgsToProcessArgv(config.extraArgs);
 
   const { results } = await runCLI(config, [options.jestConfig]);
-
   return { success: results.success };
 }
 
@@ -100,6 +108,10 @@ export async function jestConfigParser(
     watchAll: options.watchAll,
     randomize: options.randomize,
   };
+
+  if (Object.keys(extraArgs).length > 0) {
+    config['extraArgs'] = extraArgs;
+  }
 
   if (!multiProjects) {
     options.jestConfig = path.resolve(context.root, options.jestConfig);
