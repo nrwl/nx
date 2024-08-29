@@ -212,7 +212,11 @@ async function buildViteTargets(
       ) ?? tsConfigFiles[0];
     targets[options.typecheckTargetName] = {
       cache: true,
-      inputs: ['production', '^production'],
+      inputs: [
+        'production',
+        '^production',
+        { externalDependencies: ['typescript'] },
+      ],
       command: `tsc --noEmit -p ${tsConfigToUse}`,
       options: { cwd: joinPathFragments(projectRoot) },
       metadata: {
