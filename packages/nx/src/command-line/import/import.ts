@@ -237,19 +237,58 @@ export async function importHandler(options: ImportOptions) {
     options.interactive
   );
 
-  if (plugins.length > 0) {
-    output.log({ title: 'Installing Plugins' });
-    installPlugins(workspaceRoot, plugins, pmc, updatePackageScripts);
-
-    await destinationGitClient.amendCommit();
-  } else if (await needsInstall(packageManager, originalPackageWorkspaces)) {
-    output.log({
-      title: 'Installing dependencies for imported code',
+  const sourcePackageManager = detectPackageManager(sourceGitClient.root);
+  if (packageManager !== sourcePackageManager) {
+    output.warn({
+      title: `Mismatched package managers`,
+      bodyLines: [
+        `The source repository is using a different package manager (${sourcePackageManager}) than this workspace (${packageManager}).`,
+        `This could lead to install issues due to discrepancies in "package.json" features.`,
+      ],
     });
+  }
 
-    runInstall(workspaceRoot, getPackageManagerCommand(packageManager));
+  // If install fails, we should continue since the errors could be resolved later.
+  let installFailed = false;
+  if (plugins.length > 0) {
+    try {
+      output.log({ title: 'Installing Plugins' });
+      installPlugins(workspaceRoot, plugins, pmc, updatePackageScripts);
 
-    await destinationGitClient.amendCommit();
+      await destinationGitClient.amendCommit();
+    } catch (e) {
+      installFailed = true;
+      output.error({
+        title: `Install failed: ${e.message || 'Unknown error'}`,
+        bodyLines: [e.stack],
+      });
+    }
+  } else if (await needsInstall(packageManager, originalPackageWorkspaces)) {
+    try {
+      output.log({
+        title: 'Installing dependencies for imported code',
+      });
+
+      runInstall(workspaceRoot, getPackageManagerCommand(packageManager));
+
+      await destinationGitClient.amendCommit();
+    } catch (e) {
+      installFailed = true;
+      output.error({
+        title: `Install failed: ${e.message || 'Unknown error'}`,
+        bodyLines: [e.stack],
+      });
+    }
+  }
+
+  if (installFailed) {
+    const pmc = getPackageManagerCommand(packageManager);
+    output.warn({
+      title: `The import was successful, but the install failed.`,
+      bodyLines: [
+        `You may need to run "${pmc.install} install" manually to resolve the issue.`,
+      ],
+    });
   }
 
   console.log(await destinationGitClient.showStat());
