@@ -3,7 +3,6 @@ import {
   GeneratorCallback,
   joinPathFragments,
   output,
-  readCachedProjectGraph,
   readJson,
   runTasksInSerial,
   Tree,
