@@ -85,7 +85,7 @@ export async function collectAllRegisteredSyncGenerators(
 }
 
 export async function runSyncGenerator(
-  tree: FsTree,
+  tree: Tree,
   generatorSpecifier: string,
   projects: Record<string, ProjectConfiguration>
 ): Promise<SyncGeneratorChangesResult> {
