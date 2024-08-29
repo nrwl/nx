@@ -3,7 +3,7 @@ import { withVerbose } from '../../command-line/yargs-utils/shared-options';
 
 export const yargsLoginCommand: CommandModule = {
   command: 'login [nxCloudUrl]',
-  describe: 'Login to Nx Cloud',
+  describe: false,
   builder: (yargs) =>
     withVerbose(
       yargs.positional('nxCloudUrl', {

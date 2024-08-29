@@ -8712,22 +8712,6 @@
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
-              },
-              {
-                "name": "login",
-                "path": "/nx-api/nx/documents/login",
-                "id": "login",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "logout",
-                "path": "/nx-api/nx/documents/logout",
-                "id": "logout",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
               }
             ],
             "isExternal": false,
