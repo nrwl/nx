@@ -5,7 +5,7 @@ import {
   code,
   lines as mdLines,
   strikethrough,
-  table
+  table,
 } from 'markdown-factory';
 import { join } from 'path';
 import { format, resolveConfig } from 'prettier';
