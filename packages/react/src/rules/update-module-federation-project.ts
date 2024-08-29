@@ -31,6 +31,7 @@ export function updateModuleFederationProject(
       rspackConfig: `${options.appProjectRoot}/rspack.config.${
         options.typescriptConfiguration && !options.js ? 'ts' : 'js'
       }`,
+      target: 'web',
     };
 
     projectConfig.targets.build.configurations.production = {

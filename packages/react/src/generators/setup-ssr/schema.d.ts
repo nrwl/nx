@@ -4,4 +4,5 @@ export interface Schema {
   serverPort?: number;
   skipFormat?: boolean;
   extraInclude?: string[];
+  bundler?: 'rspack' | 'webpack';
 }
