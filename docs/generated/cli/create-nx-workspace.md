@@ -44,3 +44,34 @@ Install `create-nx-workspace` globally to invoke the command directly, or use `n
 | `--useGitHub`      | boolean                                                                       | Will you be using GitHub as your git hosting provider? (Default: `false`)                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | `--version`        | boolean                                                                       | Show version number                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | `--workspaceType`  | `integrated`, `package-based`, `standalone`                                   | The type of workspace to create                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+
+## Presets
+
+| Preset             | Description                                                                             |
+| ------------------ | --------------------------------------------------------------------------------------- |
+| angular            | Allows you to choose between the angular-standalone or angular-monorepo presets         |
+| angular-monorepo   | An Angular monorepo                                                                     |
+| angular-standalone | A single Angular application                                                            |
+| apps               | A basic integrated style repository starting with no projects                           |
+| expo               | A monorepo with an Expo application                                                     |
+| express            | A monorepo with an Express application                                                  |
+| nest               | A monorepo with a Nest application                                                      |
+| next               | A Next monorepo                                                                         |
+| nextjs-standalone  | A single Next application                                                               |
+| node-monorepo      | A Node monorepo                                                                         |
+| node-standalone    | A single Node application                                                               |
+| npm                | A repository configured with NPM Workspaces using a package-based style.                |
+| nuxt               | A Nuxt monorepo                                                                         |
+| nuxt-standalone    | A single Nuxt application                                                               |
+| react              | Allows you to choose between the react-standalone or react-monorepo presets             |
+| react-monorepo     | A React monorepo                                                                        |
+| react-native       | A monorepo with a React Native application                                              |
+| react-standalone   | A single React application                                                              |
+| remix-monorepo     | A Remix monorepo                                                                        |
+| remix-standalone   | A single Remix application                                                              |
+| ts                 | A basic integrated style repository starting with TypeScript configured but no projects |
+| ts-standalone      | A single TypeScript application                                                         |
+| vue                | Allows you to choose between the vue-standalone or vue-monorepo presets                 |
+| vue-monorepo       | A Vue monorepo                                                                          |
+| vue-standalone     | A single Vue application                                                                |
+| web-components     | An integrated style repository with an application configured to use web components     |

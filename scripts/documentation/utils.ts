@@ -1,17 +1,15 @@
+import { MenuItem } from '@nx/nx-dev/models-menu';
 import { outputFileSync } from 'fs-extra';
 import {
   bold,
-  h,
+  code,
   lines as mdLines,
   strikethrough,
-  code,
-  table,
-  TableField,
+  table
 } from 'markdown-factory';
 import { join } from 'path';
 import { format, resolveConfig } from 'prettier';
-import { MenuItem } from '@nx/nx-dev/models-menu';
-import yargs, { CommandModule } from 'yargs';
+import { CommandModule } from 'yargs';
 
 const stripAnsi = require('strip-ansi');
 const importFresh = require('import-fresh');
