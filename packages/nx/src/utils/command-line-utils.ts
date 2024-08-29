@@ -56,8 +56,17 @@ export function createOverrides(__overrides_unparsed__: string[] = []) {
   return overrides;
 }
 
-export function getBaseRef(nxJson: NxJsonConfiguration) {
-  return nxJson.defaultBase ?? nxJson.affected?.defaultBase ?? 'main';
+export function getBaseRef(nxJson: NxJsonConfiguration, head?: string) {
+  try {
+    const baseRes = execSync(`git rev-parse ${head ? `${head}~1` : 'HEAD~1'}`, {
+      encoding: 'utf-8',
+    });
+    return (
+      nxJson.defaultBase ?? nxJson.affected?.defaultBase ?? baseRes ?? 'main'
+    );
+  } catch {
+    return undefined;
+  }
 }
 
 export function splitArgsIntoNxArgsAndOverrides(
@@ -147,7 +156,7 @@ export function splitArgsIntoNxArgsAndOverrides(
     }
 
     if (!nxArgs.base) {
-      nxArgs.base = getBaseRef(nxJson);
+      nxArgs.base = getBaseRef(nxJson, nxArgs.head);
 
       // No user-provided arguments to set the affected criteria, so inform the user of the defaults being used
       if (
@@ -288,6 +297,16 @@ export function parseFiles(options: NxArgs): { files: string[] } {
         ])
       ),
     };
+  } else if (head && !base) {
+    return {
+      files: Array.from(
+        new Set([
+          ...getAllFilesOfFirstCommit(head),
+          ...getUncommittedFiles(),
+          ...getUntrackedFiles(),
+        ])
+      ),
+    };
   }
 }
 
@@ -327,6 +346,10 @@ function getFilesUsingBaseAndHead(base: string, head: string): string[] {
   return parseGitOutput(
     `git diff --name-only --no-renames --relative "${base}" "${head}"`
   );
+}
+
+function getAllFilesOfFirstCommit(head: string): string[] {
+  return parseGitOutput(`git --no-pager show --name-only "${head}"`);
 }
 
 function parseGitOutput(command: string): string[] {
