@@ -54,8 +54,12 @@ export function addModuleFederationFiles(
   );
 
   const pathToModuleFederationFiles = options.typescriptConfiguration
-    ? 'module-federation-ts'
-    : 'module-federation';
+    ? `${
+        options.bundler === 'rspack' ? 'rspack-' : 'webpack-'
+      }module-federation-ts`
+    : `${
+        options.bundler === 'rspack' ? 'rspack-' : 'webpack-'
+      }module-federation`;
   // New entry file is created here.
   generateFiles(
     host,
@@ -70,22 +74,29 @@ export function addModuleFederationFiles(
     }
   }
 
-  function processWebpackConfig(options, host, fileName) {
-    const pathToWebpackConfig = joinPathFragments(
+  function processBundlerConfigFile(options, host, fileName) {
+    const pathToBundlerConfig = joinPathFragments(
       options.appProjectRoot,
       fileName
     );
-    deleteFileIfExists(host, pathToWebpackConfig);
+    deleteFileIfExists(host, pathToBundlerConfig);
   }
 
   if (options.typescriptConfiguration) {
-    processWebpackConfig(options, host, 'webpack.config.js');
-    processWebpackConfig(options, host, 'webpack.config.prod.js');
+    if (options.bundler === 'rspack') {
+      processBundlerConfigFile(options, host, 'rspack.config.js');
+      processBundlerConfigFile(options, host, 'rspack.config.prod.js');
+    } else {
+      processBundlerConfigFile(options, host, 'webpack.config.js');
+      processBundlerConfigFile(options, host, 'webpack.config.prod.js');
+    }
   }
 
   if (options.dynamic) {
-    processWebpackConfig(options, host, 'webpack.config.prod.js');
-    processWebpackConfig(options, host, 'webpack.config.prod.ts');
+    processBundlerConfigFile(options, host, 'webpack.config.prod.js');
+    processBundlerConfigFile(options, host, 'webpack.config.prod.ts');
+    processBundlerConfigFile(options, host, 'rspack.config.prod.js');
+    processBundlerConfigFile(options, host, 'rspack.config.prod.ts');
     if (!host.exists(pathToMFManifest)) {
       host.write(
         pathToMFManifest,

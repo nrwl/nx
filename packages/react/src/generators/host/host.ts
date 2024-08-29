@@ -49,6 +49,7 @@ export async function hostGeneratorInternal(
     dynamic: schema.dynamic ?? false,
     // TODO(colum): remove when MF works with Crystal
     addPlugin: false,
+    bundler: schema.bundler ?? 'rspack',
   };
 
   // Check to see if remotes are provided and also check if --dynamic is provided
@@ -68,8 +69,6 @@ export async function hostGeneratorInternal(
     ...options,
     // The target use-case is loading remotes as child routes, thus always enable routing.
     routing: true,
-    // Only webpack works with module federation for now.
-    bundler: 'webpack',
     skipFormat: true,
   });
   tasks.push(initTask);
@@ -98,6 +97,7 @@ export async function hostGeneratorInternal(
         dynamic: options.dynamic,
         host: options.name,
         skipPackageJson: options.skipPackageJson,
+        bundler: options.bundler,
       });
       tasks.push(remoteTask);
       remotePort++;
@@ -125,10 +125,17 @@ export async function hostGeneratorInternal(
     tasks.push(setupSsrForHostTask);
 
     const projectConfig = readProjectConfiguration(host, options.projectName);
-    projectConfig.targets.server.options.webpackConfig = joinPathFragments(
-      projectConfig.root,
-      `webpack.server.config.${options.typescriptConfiguration ? 'ts' : 'js'}`
-    );
+    if (options.bundler === 'rspack') {
+      projectConfig.targets.server.options.webpackConfig = joinPathFragments(
+        projectConfig.root,
+        `rspack.server.config.${options.typescriptConfiguration ? 'ts' : 'js'}`
+      );
+    } else {
+      projectConfig.targets.server.options.webpackConfig = joinPathFragments(
+        projectConfig.root,
+        `webpack.server.config.${options.typescriptConfiguration ? 'ts' : 'js'}`
+      );
+    }
     updateProjectConfiguration(host, options.projectName, projectConfig);
   }
 
