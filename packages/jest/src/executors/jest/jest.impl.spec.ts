@@ -127,6 +127,7 @@ describe('Jest Executor', () => {
         },
         mockContext
       );
+      expect(process.argv).toContain('--group=core');
       expect(runCLI).toHaveBeenCalledWith(
         expect.objectContaining({
           _: [],
@@ -136,6 +137,7 @@ describe('Jest Executor', () => {
         }),
         ['/root/jest.config.js']
       );
+      process.argv.pop(); // clean extra arg.
     });
 
     it('should send appropriate options to jestCLI when testFile is specified', async () => {
