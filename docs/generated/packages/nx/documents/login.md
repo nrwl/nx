@@ -17,26 +17,9 @@ Install `nx` globally to invoke the command directly using `nx`, or use `npx nx`
 
 ## Options
 
-### help
-
-Type: `boolean`
-
-Show help
-
-### nxCloudUrl
-
-Type: `string`
-
-The Nx Cloud URL of the instance you are trying to connect to. If no positional argument is provided, this command will connect to https://cloud.nx.app.
-
-### verbose
-
-Type: `boolean`
-
-Prints additional information about the commands (e.g., stack traces)
-
-### version
-
-Type: `boolean`
-
-Show version number
+| Option         | Type    | Description                                                                                                                                              |
+| -------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--help`       | boolean | Show help                                                                                                                                                |
+| `--nxCloudUrl` | string  | The Nx Cloud URL of the instance you are trying to connect to. If no positional argument is provided, this command will connect to https://cloud.nx.app. |
+| `--verbose`    | boolean | Prints additional information about the commands (e.g., stack traces)                                                                                    |
+| `--version`    | boolean | Show version number                                                                                                                                      |
