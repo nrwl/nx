@@ -26,7 +26,10 @@ export function createGetTouchedProjectsForGroup(
   >();
 
   return async function getTouchedProjectsForGroup(
-    releaseGroup: ReleaseGroupWithName
+    releaseGroup: ReleaseGroupWithName,
+    // We don't access releaseGroups.projects directly, because we need to take the --projects filter into account
+    releaseGroupFilteredProjectNames: string[],
+    hasProjectsFilter: boolean
   ): Promise<string[]> {
     // The current release group doesn't leverage version plans
     if (!releaseGroup.versionPlans) {
@@ -83,12 +86,15 @@ export function createGetTouchedProjectsForGroup(
       );
     }
 
-    const touchedProjectsUnderReleaseGroup = releaseGroup.projects.filter(
-      (project) => touchedProjects[project]
-    );
+    const touchedProjectsUnderReleaseGroup =
+      releaseGroupFilteredProjectNames.filter(
+        (project) => touchedProjects[project]
+      );
     if (touchedProjectsUnderReleaseGroup.length) {
       output.log({
-        title: `Touched projects based on changed files${
+        title: `Touched projects${
+          hasProjectsFilter ? ` (after --projects filter applied)` : ''
+        } based on changed files${
           releaseGroup.name !== IMPLICIT_DEFAULT_RELEASE_GROUP
             ? ` under release group "${releaseGroup.name}"`
             : ''
@@ -103,7 +109,9 @@ export function createGetTouchedProjectsForGroup(
       });
     } else {
       output.log({
-        title: `No touched projects found based on changed files${
+        title: `No touched projects${
+          hasProjectsFilter ? ` (after --projects filter applied)` : ''
+        } found based on changed files${
           typeof releaseGroup.versionPlans !== 'boolean' &&
           Array.isArray(releaseGroup.versionPlans.ignorePatternsForPlanCheck) &&
           releaseGroup.versionPlans.ignorePatternsForPlanCheck.length

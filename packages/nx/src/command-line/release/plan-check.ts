@@ -53,15 +53,10 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
       });
     }
 
-    const {
-      error: filterError,
-      releaseGroups,
-      releaseGroupToFilteredProjects,
-    } = filterReleaseGroups(
+    // No filtering is applied here, as we want to consider all release groups for plan:check
+    const { error: filterError, releaseGroups } = filterReleaseGroups(
       projectGraph,
-      nxReleaseConfig,
-      args.projects,
-      args.groups
+      nxReleaseConfig
     );
     if (filterError) {
       output.error(filterError);
@@ -155,7 +150,10 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
       }
 
       const touchedProjectsUnderReleaseGroup = await getTouchedProjectsForGroup(
-        releaseGroup
+        releaseGroup,
+        // We do not take any --projects or --groups filtering into account for plan:check
+        releaseGroup.projects,
+        false
       );
 
       const projectsInResolvedVersionPlans: Record<
