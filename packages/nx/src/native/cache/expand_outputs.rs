@@ -2,8 +2,9 @@ use std::path::{Path, PathBuf};
 use tracing::trace;
 
 use crate::native::glob::{build_glob_set, contains_glob_pattern};
+use crate::native::logger::enable_logger;
 use crate::native::utils::Normalize;
-use crate::native::walker::nx_walker_sync;
+use crate::native::walker::{nx_walker, nx_walker_sync};
 
 #[napi]
 pub fn expand_outputs(directory: String, entries: Vec<String>) -> anyhow::Result<Vec<String>> {
@@ -77,6 +78,8 @@ pub fn get_files_for_outputs(
     directory: String,
     entries: Vec<String>,
 ) -> anyhow::Result<Vec<String>> {
+    enable_logger();
+
     let directory: PathBuf = directory.into();
 
     let mut globs: Vec<String> = vec![];
@@ -86,7 +89,9 @@ pub fn get_files_for_outputs(
         let path = directory.join(&entry);
 
         if !path.exists() {
-            globs.push(entry);
+            if contains_glob_pattern(&entry) {
+                globs.push(entry);
+            }
         } else if path.is_dir() {
             directories.push(entry);
         } else {
@@ -96,14 +101,20 @@ pub fn get_files_for_outputs(
 
     if !globs.is_empty() {
         // todo(jcammisuli): optimize this as nx_walker_sync is very slow on the root directory. We need to change this to only search smaller directories
+        // Traverse up the path to find a directory
+        // Iterate through the globs and boil it down to directories (hopefully not the root) to walk
+        // Disallow {workspaceRoot}/**/dist/apps/*.txt because it would be slow. Throw an error.
+        // Use the is_glob() function on the parent until it is not a glob instead of exists
+
         let glob_set = build_glob_set(&globs)?;
-        let found_paths = nx_walker_sync(&directory, None).filter_map(|path| {
-            if glob_set.is_match(&path) {
-                Some(path.to_normalized_string())
+        trace!("walking directory: {:?}", directory);
+        let found_paths: Vec<String> = nx_walker(&directory, false).filter_map(|file| {
+            if glob_set.is_match(&file.full_path) {
+                Some(file.normalized_path)
             } else {
                 None
             }
-        });
+        }).collect();
 
         files.extend(found_paths);
     }
