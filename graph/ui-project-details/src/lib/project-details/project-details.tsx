@@ -12,6 +12,10 @@ import { Pill } from '../pill';
 import { TargetTechnologies } from '../target-technologies/target-technologies';
 import { TargetConfigurationGroupList } from '../target-configuration-details-group-list/target-configuration-details-group-list';
 
+import { ExpandedTargetsProvider} from '@nx/graph/shared'
+
+export {ExpandedTargetsProvider}
+
 export interface ProjectDetailsProps {
   project: ProjectGraphProjectNode;
   sourceMap: Record<string, string[]>;
@@ -45,8 +49,6 @@ export const ProjectDetails = ({
   viewInProjectGraphPosition = 'top',
   connectedToCloud,
 }: ProjectDetailsProps) => {
-  console.log(project)
-  console.log(sourceMap)
   const projectData = project.data;
   const isCompact = variant === 'compact';
 

@@ -14,6 +14,7 @@ module.exports = {
       disableDotRule: true,
     },
   },
+ 
   resolve: {
     alias: {
       react: 'preact/compat',
@@ -32,13 +33,7 @@ module.exports = {
       scripts: [],
       assets: getAssets(process.env.NX_TASK_TARGET_CONFIGURATION),
       webpackConfig: './webpack.config.js',
-      outputHashing: 'none',
-      additionalEntryPoints: [
-        {
-          entryName: 'pdv',
-          entryPath: 'graph/client/src/pdv.tsx',
-        },
-      ],
+      outputHashing: 'none'
     }),
     new NxReactWebpackPlugin({
       svgr: false,

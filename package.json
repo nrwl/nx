@@ -329,6 +329,7 @@
     "@types/license-checker": "^25.0.3",
     "@types/minimatch": "^5.1.2",
     "@types/three": "^0.166.0",
+    "@vitejs/plugin-react": "^4.3.1",
     "@widgetbot/react-embed": "^1.9.0",
     "@yarnpkg/lockfile": "^1.1.0",
     "@yarnpkg/parsers": "3.0.0-rc.46",
