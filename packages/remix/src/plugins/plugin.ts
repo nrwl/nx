@@ -19,8 +19,9 @@ import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
 import { getLockFileName } from '@nx/js';
 import { type AppConfig } from '@remix-run/dev';
-import { dirname, join } from 'path';
-import { existsSync, readdirSync } from 'fs';
+import { dirname, isAbsolute, join, relative } from 'path';
+import { existsSync, readdirSync, readFileSync } from 'fs';
+import { loadViteDynamicImport } from '@nx/vite/src/utils/executor-utils';
 
 export interface RemixPluginOptions {
   buildTargetName?: string;
@@ -99,14 +100,20 @@ async function createNodesInternal(
   const siblingFiles = readdirSync(fullyQualifiedProjectRoot);
   if (
     !siblingFiles.includes('package.json') &&
-    !siblingFiles.includes('project.json') &&
-    !siblingFiles.includes('vite.config.ts') &&
-    !siblingFiles.includes('vite.config.js')
+    !siblingFiles.includes('project.json')
   ) {
     return {};
   }
 
   options = normalizeOptions(options);
+
+  const remixCompiler = determineIsRemixVite(
+    configFilePath,
+    context.workspaceRoot
+  );
+  if (remixCompiler === RemixCompiler.IsNotRemix) {
+    return {};
+  }
 
   const hash = await calculateHashForCreateNodes(
     projectRoot,
@@ -119,7 +126,8 @@ async function createNodesInternal(
     projectRoot,
     options,
     context,
-    siblingFiles
+    siblingFiles,
+    remixCompiler
   );
 
   const { targets, metadata } = targetsCache[hash];
@@ -142,11 +150,17 @@ async function buildRemixTargets(
   projectRoot: string,
   options: RemixPluginOptions,
   context: CreateNodesContext,
-  siblingFiles: string[]
+  siblingFiles: string[],
+  remixCompiler: RemixCompiler
 ) {
   const namedInputs = getNamedInputs(projectRoot, context);
   const { buildDirectory, assetsBuildDirectory, serverBuildPath } =
-    await getBuildPaths(configFilePath, context.workspaceRoot);
+    await getBuildPaths(
+      configFilePath,
+      projectRoot,
+      context.workspaceRoot,
+      remixCompiler
+    );
 
   const targets: Record<string, TargetConfiguration> = {};
   targets[options.buildTargetName] = buildTarget(
@@ -154,24 +168,32 @@ async function buildRemixTargets(
     projectRoot,
     buildDirectory,
     assetsBuildDirectory,
-    namedInputs
+    namedInputs,
+    remixCompiler
   );
-  targets[options.devTargetName] = devTarget(serverBuildPath, projectRoot);
+  targets[options.devTargetName] = devTarget(
+    serverBuildPath,
+    projectRoot,
+    remixCompiler
+  );
   targets[options.startTargetName] = startTarget(
     projectRoot,
     serverBuildPath,
-    options.buildTargetName
+    options.buildTargetName,
+    remixCompiler
   );
   // TODO(colum): Remove for Nx 21
   targets[options.staticServeTargetName] = startTarget(
     projectRoot,
     serverBuildPath,
-    options.buildTargetName
+    options.buildTargetName,
+    remixCompiler
   );
   targets[options.serveStaticTargetName] = startTarget(
     projectRoot,
     serverBuildPath,
-    options.buildTargetName
+    options.buildTargetName,
+    remixCompiler
   );
   targets[options.typecheckTargetName] = typecheckTarget(
     projectRoot,
@@ -187,7 +209,8 @@ function buildTarget(
   projectRoot: string,
   buildDirectory: string,
   assetsBuildDirectory: string,
-  namedInputs: { [inputName: string]: any[] }
+  namedInputs: { [inputName: string]: any[] },
+  remixCompiler: RemixCompiler
 ): TargetConfiguration {
   const serverBuildOutputPath =
     projectRoot === '.'
@@ -199,6 +222,11 @@ function buildTarget(
       ? joinPathFragments(`{workspaceRoot}`, assetsBuildDirectory)
       : joinPathFragments(`{workspaceRoot}`, projectRoot, assetsBuildDirectory);
 
+  const outputs =
+    remixCompiler === RemixCompiler.IsVte
+      ? [buildDirectory]
+      : [serverBuildOutputPath, assetsBuildOutputPath];
+
   return {
     cache: true,
     dependsOn: [`^${buildTargetName}`],
@@ -208,18 +236,25 @@ function buildTarget(
         : ['default', '^default']),
       { externalDependencies: ['@remix-run/dev'] },
     ],
-    outputs: [serverBuildOutputPath, assetsBuildOutputPath],
-    command: 'remix build',
+    outputs,
+    command:
+      remixCompiler === RemixCompiler.IsVte
+        ? 'remix vite:build'
+        : 'remix build',
     options: { cwd: projectRoot },
   };
 }
 
 function devTarget(
   serverBuildPath: string,
-  projectRoot: string
+  projectRoot: string,
+  remixCompiler: RemixCompiler
 ): TargetConfiguration {
   return {
-    command: 'remix dev --manual',
+    command:
+      remixCompiler === RemixCompiler.IsVte
+        ? 'remix vite:dev'
+        : 'remix dev --manual',
     options: { cwd: projectRoot },
   };
 }
@@ -227,11 +262,19 @@ function devTarget(
 function startTarget(
   projectRoot: string,
   serverBuildPath: string,
-  buildTargetName: string
+  buildTargetName: string,
+  remixCompiler: RemixCompiler
 ): TargetConfiguration {
+  let serverPath = serverBuildPath;
+  if (remixCompiler === RemixCompiler.IsVte) {
+    if (serverBuildPath === 'build') {
+      serverPath = `${serverBuildPath}/server/index.js`;
+    }
+  }
+
   return {
     dependsOn: [buildTargetName],
-    command: `remix-serve ${serverBuildPath}`,
+    command: `remix-serve ${serverPath}`,
     options: {
       cwd: projectRoot,
     },
@@ -264,19 +307,45 @@ function typecheckTarget(
 
 async function getBuildPaths(
   configFilePath: string,
-  workspaceRoot: string
+  projectRoot: string,
+  workspaceRoot: string,
+  remixCompiler: RemixCompiler
 ): Promise<{
   buildDirectory: string;
-  assetsBuildDirectory: string;
-  serverBuildPath: string;
+  assetsBuildDirectory?: string;
+  serverBuildPath?: string;
 }> {
   const configPath = join(workspaceRoot, configFilePath);
-  let appConfig = await loadConfigFile<AppConfig>(configPath);
-  return {
-    buildDirectory: 'build',
-    serverBuildPath: appConfig.serverBuildPath ?? 'build/index.js',
-    assetsBuildDirectory: appConfig.assetsBuildDirectory ?? 'public/build',
-  };
+  if (remixCompiler === RemixCompiler.IsClassic) {
+    let appConfig = await loadConfigFile<AppConfig>(configPath);
+    return {
+      buildDirectory: 'build',
+      serverBuildPath: appConfig.serverBuildPath ?? 'build/index.js',
+      assetsBuildDirectory: appConfig.assetsBuildDirectory ?? 'public/build',
+    };
+  } else {
+    // Workaround for the `build$3 is not a function` error that we sometimes see in agents.
+    // This should be removed later once we address the issue properly
+    try {
+      const importEsbuild = () => new Function('return import("esbuild")')();
+      await importEsbuild();
+    } catch {
+      // do nothing
+    }
+    const { resolveConfig } = await loadViteDynamicImport();
+    const viteBuildConfig = await resolveConfig(
+      {
+        configFile: configPath,
+        mode: 'development',
+      },
+      'build'
+    );
+
+    return {
+      buildDirectory: viteBuildConfig.build?.outDir ?? 'build',
+      serverBuildPath: viteBuildConfig.build?.outDir ?? 'build',
+    };
+  }
 }
 
 function normalizeOptions(options: RemixPluginOptions) {
@@ -290,4 +359,29 @@ function normalizeOptions(options: RemixPluginOptions) {
   options.serveStaticTargetName ??= 'serve-static';
 
   return options;
+}
+
+function determineIsRemixVite(configFilePath: string, workspaceRoot: string) {
+  if (configFilePath.includes('remix.config')) {
+    return RemixCompiler.IsClassic;
+  }
+
+  const fileContents = readFileSync(
+    join(workspaceRoot, configFilePath),
+    'utf8'
+  );
+  if (
+    fileContents.includes('@remix-run/dev') &&
+    (fileContents.includes('vitePlugin()') || fileContents.includes('remix()'))
+  ) {
+    return RemixCompiler.IsVte;
+  } else {
+    return RemixCompiler.IsNotRemix;
+  }
+}
+
+enum RemixCompiler {
+  IsClassic = 1,
+  IsVte = 2,
+  IsNotRemix = 3,
 }
