@@ -111,10 +111,9 @@ describe('nx release version plans', () => {
     });
 
     const versionPlansDir = tmpProjPath('.nx/version-plans');
-    await ensureDir(versionPlansDir);
 
     runCLI(
-      'release plan minor -g fixed-group -m "Update the fixed packages with a minor release." --verbose',
+      'release plan minor -g fixed-group -m "Update the fixed packages with a minor release." --verbose --only-touched=false',
       {
         silenceError: true,
       }
@@ -713,7 +712,7 @@ Update packages in both groups with a mix #2
     await ensureDir(versionPlansDir);
 
     runCLI(
-      'release plan minor -m "Update the fixed packages with a minor release." --verbose',
+      'release plan minor -m "Update the fixed packages with a minor release." --verbose --only-touched=false',
       {
         silenceError: true,
       }
@@ -796,14 +795,14 @@ Update packages in both groups with a mix #2
     });
 
     runCLI(
-      'release plan minor -g fixed-group -m "Update the fixed packages with another minor release." --verbose',
+      'release plan minor -g fixed-group -m "Update the fixed packages with another minor release." --verbose --only-touched=false',
       {
         silenceError: true,
       }
     );
 
     runCLI(
-      'release plan minor -g independent-group -m "Update the independent packages with another minor release." --verbose',
+      'release plan minor -g independent-group -m "Update the independent packages with another minor release." --verbose --only-touched=false',
       {
         silenceError: true,
       }

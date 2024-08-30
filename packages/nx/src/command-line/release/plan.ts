@@ -15,12 +15,15 @@ import { output } from '../../utils/output';
 import { handleErrors } from '../../utils/params';
 import { PlanOptions } from './command-object';
 import {
-  IMPLICIT_DEFAULT_RELEASE_GROUP,
   createNxReleaseConfig,
   handleNxReleaseConfigError,
+  IMPLICIT_DEFAULT_RELEASE_GROUP,
 } from './config/config';
 import { deepMergeJson } from './config/deep-merge-json';
-import { filterReleaseGroups } from './config/filter-release-groups';
+import {
+  filterReleaseGroups,
+  ReleaseGroupWithName,
+} from './config/filter-release-groups';
 import { getVersionPlansAbsolutePath } from './config/version-plans';
 import { generateVersionPlanContent } from './utils/generate-version-plan-content';
 import { createGetTouchedProjectsForGroup } from './utils/get-touched-projects-for-group';
@@ -130,23 +133,31 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
           });
         }
       }
-      const resolvedAllFileData = await allFileData();
-      const getTouchedProjectsForGroup = createGetTouchedProjectsForGroup(
-        nxArgs,
-        projectGraph,
-        changedFiles,
-        resolvedAllFileData
-      );
+
+      let getProjectsToVersionForGroup: (
+        releaseGroup: ReleaseGroupWithName
+      ) => Promise<string[]> = async (releaseGroup: ReleaseGroupWithName) =>
+        Array.from(releaseGroupToFilteredProjects.get(releaseGroup));
+      if (args.onlyTouched) {
+        const resolvedAllFileData = await allFileData();
+
+        getProjectsToVersionForGroup = createGetTouchedProjectsForGroup(
+          nxArgs,
+          projectGraph,
+          changedFiles,
+          resolvedAllFileData
+        );
+      }
 
       for (const group of releaseGroups) {
-        const touchedProjects = await getTouchedProjectsForGroup(group);
+        const projects = await getProjectsToVersionForGroup(group);
 
-        if (!touchedProjects.length) {
+        if (!projects.length) {
           continue;
         }
 
         if (group.projectsRelationship === 'independent') {
-          for (const project of touchedProjects) {
+          for (const project of projects) {
             setBumpIfNotNone(
               project,
               args.bump ||
@@ -168,9 +179,18 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
     }
 
     if (!Object.keys(versionPlanBumps).length) {
+      let bodyLines: string[] = [];
+      if (args.onlyTouched) {
+        bodyLines = [
+          'This might be because no projects have been changed, or projects you expected to release have not been touched',
+          'To include all projects, not just those that have been changed, pass --only-touched=false',
+          'Alternatively, you can specify alternate --base and --head refs to include only changes from certain commits',
+        ];
+      }
       output.warn({
         title:
           'No version bumps were selected so no version plan file was created.',
+        bodyLines,
       });
       return 0;
     }
