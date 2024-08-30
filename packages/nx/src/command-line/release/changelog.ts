@@ -919,7 +919,18 @@ async function applyChangesAndExit(
     releaseGroups.forEach((group) => {
       if (group.resolvedVersionPlans) {
         group.resolvedVersionPlans.forEach((plan) => {
-          removeSync(plan.absolutePath);
+          if (!args.dryRun) {
+            removeSync(plan.absolutePath);
+            if (args.verbose) {
+              console.log(`Removing ${plan.relativePath}`);
+            }
+          } else {
+            if (args.verbose) {
+              console.log(
+                `Would remove ${plan.relativePath}, but --dry-run was set`
+              );
+            }
+          }
           planFiles.add(plan.relativePath);
         });
       }
