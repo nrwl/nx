@@ -41,7 +41,7 @@ describe('Normalize Options', () => {
   });
 
   it('should normalize options with name in camel case', async () => {
-    addProjectConfiguration(appTree, 'my-app', {
+    addProjectConfiguration(appTree, 'myApp', {
       root: 'apps/my-app',
       targets: {},
     });
@@ -73,8 +73,8 @@ describe('Normalize Options', () => {
     });
     const schema: Schema = {
       framework: 'react-native',
-      e2eName: 'myAppE2e',
-      appProject: 'myApp',
+      e2eName: 'my-app-e2e',
+      appProject: 'my-app',
       appDisplayName: 'app display name',
     };
     const options = await normalizeOptions(appTree, schema);
@@ -86,7 +86,7 @@ describe('Normalize Options', () => {
       appFileName: 'my-app',
       appRoot: 'apps/my-app',
       e2eName: 'my-app-e2e',
-      appProject: 'myApp',
+      appProject: 'my-app',
       e2eProjectName: 'my-app-e2e',
       e2eProjectRoot: 'apps/my-app-e2e',
       framework: 'react-native',
