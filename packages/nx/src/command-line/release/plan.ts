@@ -114,6 +114,9 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
 
     // Changed files are only relevant if considering touched projects
     let changedFiles: string[] = [];
+    let getProjectsToVersionForGroup:
+      | ReturnType<typeof createGetTouchedProjectsForGroup>
+      | undefined;
     if (args.onlyTouched) {
       changedFiles = parseFiles(nxArgs).files;
       if (nxArgs.verbose) {
@@ -130,6 +133,13 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
           });
         }
       }
+      const resolvedAllFileData = await allFileData();
+      getProjectsToVersionForGroup = createGetTouchedProjectsForGroup(
+        nxArgs,
+        projectGraph,
+        changedFiles,
+        resolvedAllFileData
+      );
     }
 
     if (args.projects?.length) {
@@ -143,14 +153,10 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
         );
         let applicableProjects = releaseGroupProjectNames;
 
-        if (args.onlyTouched) {
-          const resolvedAllFileData = await allFileData();
-          const getProjectsToVersionForGroup = createGetTouchedProjectsForGroup(
-            nxArgs,
-            projectGraph,
-            changedFiles,
-            resolvedAllFileData
-          );
+        if (
+          args.onlyTouched &&
+          typeof getProjectsToVersionForGroup === 'function'
+        ) {
           applicableProjects = await getProjectsToVersionForGroup(
             releaseGroup,
             releaseGroupProjectNames,
@@ -203,14 +209,10 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
       const releaseGroupName = releaseGroup.name;
       let applicableProjects = releaseGroup.projects;
 
-      if (args.onlyTouched) {
-        const resolvedAllFileData = await allFileData();
-        const getProjectsToVersionForGroup = createGetTouchedProjectsForGroup(
-          nxArgs,
-          projectGraph,
-          changedFiles,
-          resolvedAllFileData
-        );
+      if (
+        args.onlyTouched &&
+        typeof getProjectsToVersionForGroup === 'function'
+      ) {
         applicableProjects = await getProjectsToVersionForGroup(
           releaseGroup,
           releaseGroup.projects,
