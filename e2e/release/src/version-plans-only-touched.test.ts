@@ -130,9 +130,10 @@ describe('nx release version plans only touched', () => {
 
       NX   No version bumps were selected so no version plan file was created.
 
-        This might be because no projects have been changed, or projects you expected to release have not been touched
-        To include all projects, not just those that have been changed, pass --only-touched=false
-        Alternatively, you can specify alternate --base and --head refs to include only changes from certain commits
+      This might be because no projects have been changed, or projects you expected to release have not been touched
+      To include all projects, not just those that have been changed, pass --only-touched=false
+      Alternatively, you can specify alternate --base and --head refs to include only changes from certain commits
+
 
     `);
 
