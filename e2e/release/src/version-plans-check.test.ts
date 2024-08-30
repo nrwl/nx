@@ -144,7 +144,9 @@ describe('nx release version plans check command', () => {
     });
 
     // Create a version plan
-    runCLI(`release plan minor --message "This is an awesome change"`);
+    runCLI(
+      `release plan minor --message "This is an awesome change" --only-touched=false`
+    );
 
     // it should show information about the pending bumps and print a success message
     expect(runCLI('release plan:check')).toMatchInlineSnapshot(`
@@ -318,7 +320,7 @@ describe('nx release version plans check command', () => {
 
     // create a version plan which references fixed-group directly by name
     runCLI(
-      `release plan patch --message "A change for fixed-group" -g fixed-group`
+      `release plan patch --message "A change for fixed-group" -g fixed-group --only-touched=false`
     );
 
     // it should provide logs about the pending bump for fixed-group
