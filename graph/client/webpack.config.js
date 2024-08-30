@@ -33,6 +33,12 @@ module.exports = {
       assets: getAssets(process.env.NX_TASK_TARGET_CONFIGURATION),
       webpackConfig: './webpack.config.js',
       outputHashing: 'none',
+      additionalEntryPoints: [
+        {
+          entryName: 'pdv',
+          entryPath: 'graph/client/src/pdv.tsx',
+        },
+      ],
     }),
     new NxReactWebpackPlugin({
       svgr: false,

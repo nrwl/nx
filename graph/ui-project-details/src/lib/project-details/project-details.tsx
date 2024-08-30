@@ -45,6 +45,8 @@ export const ProjectDetails = ({
   viewInProjectGraphPosition = 'top',
   connectedToCloud,
 }: ProjectDetailsProps) => {
+  console.log(project)
+  console.log(sourceMap)
   const projectData = project.data;
   const isCompact = variant === 'compact';
 
