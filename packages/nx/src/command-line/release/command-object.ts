@@ -70,6 +70,7 @@ export type PublishOptions = NxReleaseArgs &
 export type PlanOptions = NxReleaseArgs & {
   bump?: string;
   message?: string;
+  onlyTouched?: boolean;
 };
 
 export type PlanCheckOptions = BaseNxReleaseArgs & {
@@ -353,7 +354,7 @@ const planCommand: CommandModule<NxReleaseArgs, PlanOptions> = {
   // Hidden for now until the feature is more stable
   describe: false,
   builder: (yargs) =>
-    yargs
+    withAffectedOptions(yargs)
       .positional('bump', {
         type: 'string',
         describe: 'Semver keyword to use for the selected release group.',
@@ -371,6 +372,12 @@ const planCommand: CommandModule<NxReleaseArgs, PlanOptions> = {
         type: 'string',
         alias: 'm',
         describe: 'Custom message to use for the changelog entry',
+      })
+      .option('onlyTouched', {
+        type: 'boolean',
+        describe:
+          'Only include projects that have been affected by the current changes',
+        default: true,
       }),
   handler: async (args) => {
     const release = await import('./plan');
