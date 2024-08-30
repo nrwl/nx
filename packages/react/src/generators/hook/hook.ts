@@ -26,13 +26,6 @@ interface NormalizedSchema extends Schema {
 }
 
 export async function hookGenerator(host: Tree, schema: Schema) {
-  return hookGeneratorInternal(host, {
-    nameAndDirectoryFormat: 'derived',
-    ...schema,
-  });
-}
-
-export async function hookGeneratorInternal(host: Tree, schema: Schema) {
   const options = await normalizeOptions(host, schema);
 
   createFiles(host, options);
@@ -106,23 +99,15 @@ async function normalizeOptions(
   assertValidOptions(options);
 
   const {
-    artifactName: name,
-    directory: _directory,
+    directory,
     fileName: _fileName,
     nameAndDirectoryFormat,
     project: projectName,
   } = await determineArtifactNameAndDirectoryOptions(host, {
-    artifactType: 'hook',
-    callingGenerator: '@nx/react:hook',
     name: options.name,
     directory: options.directory,
-    derivedDirectory: options.directory,
-    flat: options.flat,
     nameAndDirectoryFormat: options.nameAndDirectoryFormat,
-    project: options.project,
     fileExtension: 'tsx',
-    pascalCaseFile: options.pascalCaseFiles,
-    pascalCaseDirectory: options.pascalCaseDirectory,
   });
 
   let base = _fileName;
@@ -151,21 +136,6 @@ async function normalizeOptions(
     logger.warn(
       `The "--export" option should not be used with applications and will do nothing.`
     );
-  }
-
-  // Support legacy behavior of derived directory to prefix with `use-`.
-  let directory = _directory;
-  if (nameAndDirectoryFormat === 'derived') {
-    const parts = directory.split('/');
-    parts.pop();
-    if (!options.flat) {
-      parts.push(
-        options.pascalCaseDirectory
-          ? 'use'.concat(className)
-          : 'use-'.concat(fileName)
-      );
-    }
-    directory = parts.join('/');
   }
 
   return {

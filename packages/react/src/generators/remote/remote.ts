@@ -89,16 +89,9 @@ export function addModuleFederationFiles(
 }
 
 export async function remoteGenerator(host: Tree, schema: Schema) {
-  return await remoteGeneratorInternal(host, {
-    projectNameAndRootFormat: 'derived',
-    ...schema,
-  });
-}
-
-export async function remoteGeneratorInternal(host: Tree, schema: Schema) {
   const tasks: GeneratorCallback[] = [];
   const options: NormalizedSchema<Schema> = {
-    ...(await normalizeOptions<Schema>(host, schema, '@nx/react:remote')),
+    ...(await normalizeOptions<Schema>(host, schema)),
     // when js is set to true, we want to use the js configuration
     js: schema.js ?? false,
     typescriptConfiguration: schema.js

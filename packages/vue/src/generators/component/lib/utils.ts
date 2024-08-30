@@ -26,17 +26,10 @@ export async function normalizeOptions(
     filePath,
     project: projectName,
   } = await determineArtifactNameAndDirectoryOptions(host, {
-    artifactType: 'component',
-    callingGenerator: '@nx/vue:component',
     name: options.name,
     directory: options.directory,
-    derivedDirectory: options.directory,
-    flat: options.flat,
     nameAndDirectoryFormat: options.nameAndDirectoryFormat,
-    project: options.project,
     fileExtension: 'vue',
-    pascalCaseFile: options.pascalCaseFiles,
-    pascalCaseDirectory: options.pascalCaseDirectory,
   });
 
   let { className } = names(fileName);

@@ -1,6 +1,6 @@
 {
   "name": "migration",
-  "factory": "./src/generators/migration/migration#migrationGeneratorInternal",
+  "factory": "./src/generators/migration/migration",
   "schema": {
     "$schema": "https://json-schema.org/schema",
     "cli": "nx",
@@ -66,7 +66,7 @@
     "presets": []
   },
   "description": "Create a migration for an Nx Plugin.",
-  "implementation": "/packages/plugin/src/generators/migration/migration#migrationGeneratorInternal.ts",
+  "implementation": "/packages/plugin/src/generators/migration/migration.ts",
   "aliases": [],
   "hidden": false,
   "path": "/packages/plugin/src/generators/migration/schema.json",

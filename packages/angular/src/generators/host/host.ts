@@ -15,14 +15,7 @@ import type { Schema } from './schema';
 import { addMfEnvToTargetDefaultInputs } from '../utils/add-mf-env-to-inputs';
 import { isValidVariable } from '@nx/js';
 
-export async function host(tree: Tree, options: Schema) {
-  return await hostInternal(tree, {
-    projectNameAndRootFormat: 'derived',
-    ...options,
-  });
-}
-
-export async function hostInternal(tree: Tree, schema: Schema) {
+export async function host(tree: Tree, schema: Schema) {
   const { typescriptConfiguration = true, ...options }: Schema = schema;
   options.standalone = options.standalone ?? true;
 
@@ -60,7 +53,6 @@ export async function hostInternal(tree: Tree, schema: Schema) {
       projectType: 'application',
       directory: options.directory,
       projectNameAndRootFormat: options.projectNameAndRootFormat,
-      callingGenerator: '@nx/angular:host',
     });
   options.projectNameAndRootFormat = projectNameAndRootFormat;
 

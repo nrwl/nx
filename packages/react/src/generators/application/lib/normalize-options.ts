@@ -20,8 +20,7 @@ export function normalizeProjectName(options: Schema) {
 
 export async function normalizeOptions<T extends Schema = Schema>(
   host: Tree,
-  options: Schema,
-  callingGenerator = '@nx/react:application'
+  options: Schema
 ): Promise<NormalizedSchema<T>> {
   const {
     projectName: appProjectName,
@@ -33,7 +32,6 @@ export async function normalizeOptions<T extends Schema = Schema>(
     directory: options.directory,
     projectNameAndRootFormat: options.projectNameAndRootFormat,
     rootProject: options.rootProject,
-    callingGenerator,
   });
 
   const nxJson = readNxJson(host);

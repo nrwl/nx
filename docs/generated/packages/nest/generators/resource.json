@@ -1,6 +1,6 @@
 {
   "name": "resource",
-  "factory": "./src/generators/resource/resource#resourceGeneratorInternal",
+  "factory": "./src/generators/resource/resource",
   "schema": {
     "$schema": "https://json-schema.org/schema",
     "$id": "NxNestResourceGenerator",
@@ -101,7 +101,7 @@
     "presets": []
   },
   "description": "Run the `resource` NestJS generator with Nx project support.",
-  "implementation": "/packages/nest/src/generators/resource/resource#resourceGeneratorInternal.ts",
+  "implementation": "/packages/nest/src/generators/resource/resource.ts",
   "aliases": [],
   "hidden": false,
   "path": "/packages/nest/src/generators/resource/schema.json",

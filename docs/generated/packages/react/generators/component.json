@@ -1,6 +1,6 @@
 {
   "name": "component",
-  "factory": "./src/generators/component/component#componentGeneratorInternal",
+  "factory": "./src/generators/component/component",
   "schema": {
     "$schema": "https://json-schema.org/schema",
     "cli": "nx",
@@ -143,7 +143,7 @@
   },
   "description": "Create a React component.",
   "aliases": ["c"],
-  "implementation": "/packages/react/src/generators/component/component#componentGeneratorInternal.ts",
+  "implementation": "/packages/react/src/generators/component/component.ts",
   "hidden": false,
   "path": "/packages/react/src/generators/component/schema.json",
   "type": "generator"

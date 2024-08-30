@@ -1,6 +1,6 @@
 {
   "name": "component",
-  "factory": "./src/generators/component/component#componentGeneratorInternal",
+  "factory": "./src/generators/component/component",
   "schema": {
     "$schema": "https://json-schema.org/schema",
     "cli": "nx",
@@ -104,7 +104,7 @@
   "aliases": ["c"],
   "x-type": "component",
   "description": "Create a Vue component.",
-  "implementation": "/packages/vue/src/generators/component/component#componentGeneratorInternal.ts",
+  "implementation": "/packages/vue/src/generators/component/component.ts",
   "hidden": false,
   "path": "/packages/vue/src/generators/component/schema.json",
   "type": "generator"

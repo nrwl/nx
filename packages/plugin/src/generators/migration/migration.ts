@@ -36,14 +36,10 @@ async function normalizeOptions(
 
   const { project, fileName, artifactName, filePath, directory } =
     await determineArtifactNameAndDirectoryOptions(tree, {
-      artifactType: 'migration',
-      callingGenerator: '@nx/plugin:migration',
       name: name,
       nameAndDirectoryFormat: options.nameAndDirectoryFormat,
-      project: options.project,
       directory: options.directory,
       fileName: name,
-      derivedDirectory: 'migrations',
     });
 
   const { className, propertyName } = names(artifactName);
@@ -167,14 +163,7 @@ function updateProjectConfig(host: Tree, options: NormalizedSchema) {
   }
 }
 
-export async function migrationGenerator(tree: Tree, rawOptions: Schema) {
-  await migrationGeneratorInternal(tree, {
-    nameAndDirectoryFormat: 'derived',
-    ...rawOptions,
-  });
-}
-
-export async function migrationGeneratorInternal(host: Tree, schema: Schema) {
+export async function migrationGenerator(host: Tree, schema: Schema) {
   const options = await normalizeOptions(host, schema);
 
   addFiles(host, options);

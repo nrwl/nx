@@ -14,7 +14,6 @@ export async function normalizeRemoteName(
       projectType: 'application',
       directory: options.directory,
       projectNameAndRootFormat: options.projectNameAndRootFormat,
-      callingGenerator: '@nx/react:host',
     }
   );
 
@@ -25,10 +24,6 @@ export function normalizeRemoteDirectory(
   remote: string,
   options: NormalizedSchema
 ) {
-  if (options.projectNameAndRootFormat === 'derived' || !options.directory) {
-    return options.directory;
-  }
-
   /**
    * With the `as-provided` format, the provided directory would be the root
    * of the host application. Append the remote name to the host parent

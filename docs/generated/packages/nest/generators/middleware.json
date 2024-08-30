@@ -1,6 +1,6 @@
 {
   "name": "middleware",
-  "factory": "./src/generators/middleware/middleware#middlewareGeneratorInternal",
+  "factory": "./src/generators/middleware/middleware",
   "schema": {
     "$schema": "https://json-schema.org/schema",
     "$id": "NxNestMiddlewareGenerator",
@@ -61,7 +61,7 @@
     "presets": []
   },
   "description": "Run the `middleware` NestJS generator with Nx project support.",
-  "implementation": "/packages/nest/src/generators/middleware/middleware#middlewareGeneratorInternal.ts",
+  "implementation": "/packages/nest/src/generators/middleware/middleware.ts",
   "aliases": [],
   "hidden": false,
   "path": "/packages/nest/src/generators/middleware/schema.json",

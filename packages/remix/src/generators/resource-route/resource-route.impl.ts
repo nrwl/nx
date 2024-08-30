@@ -14,11 +14,8 @@ export default async function (tree: Tree, options: RemixRouteSchema) {
     directory,
     project: projectName,
   } = await determineArtifactNameAndDirectoryOptions(tree, {
-    artifactType: 'resource-route',
-    callingGenerator: '@nx/remix:resource-route',
     name: options.path.replace(/^\//, '').replace(/\/$/, ''),
     nameAndDirectoryFormat: options.nameAndDirectoryFormat,
-    project: options.project,
   });
 
   if (!options.skipChecks && checkRoutePathForErrors(options.path)) {

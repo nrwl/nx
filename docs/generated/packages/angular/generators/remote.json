@@ -1,6 +1,6 @@
 {
   "name": "remote",
-  "factory": "./src/generators/remote/remote#remoteInternal",
+  "factory": "./src/generators/remote/remote",
   "schema": {
     "$schema": "https://json-schema.org/schema",
     "$id": "NxMFRemote",
@@ -176,7 +176,7 @@
   },
   "x-type": "application",
   "description": "Generate a Remote Angular Module Federation Application.",
-  "implementation": "/packages/angular/src/generators/remote/remote#remoteInternal.ts",
+  "implementation": "/packages/angular/src/generators/remote/remote.ts",
   "aliases": [],
   "hidden": false,
   "path": "/packages/angular/src/generators/remote/schema.json",

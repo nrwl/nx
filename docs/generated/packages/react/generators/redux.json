@@ -1,6 +1,6 @@
 {
   "name": "redux",
-  "factory": "./src/generators/redux/redux#reduxGeneratorInternal",
+  "factory": "./src/generators/redux/redux",
   "schema": {
     "$schema": "https://json-schema.org/schema",
     "cli": "nx",
@@ -50,7 +50,7 @@
   },
   "description": "Create a Redux slice for a project.",
   "aliases": ["slice"],
-  "implementation": "/packages/react/src/generators/redux/redux#reduxGeneratorInternal.ts",
+  "implementation": "/packages/react/src/generators/redux/redux.ts",
   "hidden": false,
   "path": "/packages/react/src/generators/redux/schema.json",
   "type": "generator"

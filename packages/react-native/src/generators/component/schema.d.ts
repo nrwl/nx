@@ -1,3 +1,5 @@
+import type { NameAndDirectoryFormat } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
+
 /**
  * Same as the @nx/react library schema, except it removes keys: style, routing, globalCss
  */
@@ -20,5 +22,5 @@ export interface Schema {
    * @deprecated Provide the `name` in pascal-case and use the `as-provided` format. This option will be removed in Nx v19.
    */
   flat?: boolean;
-  nameAndDirectoryFormat?: 'as-provided' | 'derived';
+  nameAndDirectoryFormat?: NameAndDirectoryFormat;
 }

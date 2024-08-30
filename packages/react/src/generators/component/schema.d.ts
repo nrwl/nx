@@ -1,3 +1,4 @@
+import type { NameAndDirectoryFormat } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
 import { SupportedStyles } from '../../../typings/style';
 
 export interface Schema {
@@ -29,7 +30,7 @@ export interface Schema {
   fileName?: string;
   inSourceTests?: boolean;
   skipFormat?: boolean;
-  nameAndDirectoryFormat?: 'as-provided' | 'derived';
+  nameAndDirectoryFormat?: NameAndDirectoryFormat;
   // Used by other wrapping generators to preserve previous behavior
   // e.g. @nx/next:component
   derivedDirectory?: string;

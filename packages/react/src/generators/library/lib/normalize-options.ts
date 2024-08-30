@@ -25,7 +25,6 @@ export async function normalizeOptions(
     directory: options.directory,
     importPath: options.importPath,
     projectNameAndRootFormat: options.projectNameAndRootFormat,
-    callingGenerator: '@nx/react:library',
   });
   const nxJson = readNxJson(host);
   const addPlugin =

@@ -24,11 +24,8 @@ export default async function (tree: Tree, options: RemixRouteSchema) {
     directory,
     project: projectName,
   } = await determineArtifactNameAndDirectoryOptions(tree, {
-    artifactType: 'route',
-    callingGenerator: '@nx/remix:route',
     name: options.path.replace(/^\//, '').replace(/\/$/, ''),
     nameAndDirectoryFormat: options.nameAndDirectoryFormat,
-    project: options.project,
   });
 
   const project = readProjectConfiguration(tree, projectName);

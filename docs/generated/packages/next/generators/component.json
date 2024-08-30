@@ -1,6 +1,6 @@
 {
   "name": "component",
-  "factory": "./src/generators/component/component#componentGeneratorInternal",
+  "factory": "./src/generators/component/component",
   "schema": {
     "$schema": "https://json-schema.org/schema",
     "cli": "nx",
@@ -117,7 +117,7 @@
     "presets": []
   },
   "description": "Create a component.",
-  "implementation": "/packages/next/src/generators/component/component#componentGeneratorInternal.ts",
+  "implementation": "/packages/next/src/generators/component/component.ts",
   "aliases": [],
   "hidden": false,
   "path": "/packages/next/src/generators/component/schema.json",

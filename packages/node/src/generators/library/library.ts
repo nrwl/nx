@@ -35,7 +35,6 @@ export interface NormalizedSchema extends Schema {
 export async function libraryGenerator(tree: Tree, schema: Schema) {
   return await libraryGeneratorInternal(tree, {
     addPlugin: false,
-    projectNameAndRootFormat: 'derived',
     ...schema,
   });
 }
@@ -99,7 +98,6 @@ async function normalizeOptions(
     directory: options.directory,
     importPath: options.importPath,
     projectNameAndRootFormat: options.projectNameAndRootFormat,
-    callingGenerator: '@nx/node:library',
   });
   options.projectNameAndRootFormat = projectNameAndRootFormat;
 

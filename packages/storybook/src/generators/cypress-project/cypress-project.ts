@@ -14,7 +14,10 @@ import {
   updateProjectConfiguration,
 } from '@nx/devkit';
 import { Linter, LinterType } from '@nx/eslint';
-import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
+import {
+  determineProjectNameAndRootOptions,
+  type ProjectNameAndRootFormat,
+} from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { join } from 'path';
 
 import { safeFileDelete } from '../../utils/utilities';
@@ -28,20 +31,10 @@ export interface CypressConfigureSchema {
   standaloneConfig?: boolean;
   ciTargetName?: string;
   skipFormat?: boolean;
-  projectNameAndRootFormat?: 'as-provided' | 'derived';
+  projectNameAndRootFormat?: ProjectNameAndRootFormat;
 }
 
 export async function cypressProjectGenerator(
-  tree: Tree,
-  schema: CypressConfigureSchema
-) {
-  return await cypressProjectGeneratorInternal(tree, {
-    projectNameAndRootFormat: 'derived',
-    ...schema,
-  });
-}
-
-export async function cypressProjectGeneratorInternal(
   tree: Tree,
   schema: CypressConfigureSchema
 ) {
@@ -60,7 +53,6 @@ export async function cypressProjectGeneratorInternal(
       projectType: 'application',
       directory: schema.directory,
       projectNameAndRootFormat: schema.projectNameAndRootFormat,
-      callingGenerator: '@nx/storybook:cypress-project',
     }
   );
   const libConfig = readProjectConfiguration(tree, schema.name);

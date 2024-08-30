@@ -56,9 +56,6 @@ export async function libraryGenerator(
 ) {
   return await libraryGeneratorInternal(tree, {
     addPlugin: false,
-    // provide a default projectNameAndRootFormat to avoid breaking changes
-    // to external generators invoking this one
-    projectNameAndRootFormat: 'derived',
     ...schema,
   });
 }
@@ -723,7 +720,6 @@ async function normalizeOptions(
     importPath: options.importPath,
     projectNameAndRootFormat: options.projectNameAndRootFormat,
     rootProject: options.rootProject,
-    callingGenerator: '@nx/js:library',
   });
   options.rootProject = projectRoot === '.';
   const fileName = getCaseAwareFileName({

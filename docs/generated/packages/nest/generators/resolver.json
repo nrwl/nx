@@ -1,6 +1,6 @@
 {
   "name": "resolver",
-  "factory": "./src/generators/resolver/resolver#resolverGeneratorInternal",
+  "factory": "./src/generators/resolver/resolver",
   "schema": {
     "$schema": "https://json-schema.org/schema",
     "$id": "NxNestResolverGenerator",
@@ -61,7 +61,7 @@
     "presets": []
   },
   "description": "Run the `resolver` NestJS generator with Nx project support.",
-  "implementation": "/packages/nest/src/generators/resolver/resolver#resolverGeneratorInternal.ts",
+  "implementation": "/packages/nest/src/generators/resolver/resolver.ts",
   "aliases": [],
   "hidden": false,
   "path": "/packages/nest/src/generators/resolver/schema.json",

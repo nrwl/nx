@@ -57,7 +57,6 @@ async function normalizeOptions(
             ? projectName
             : `${options.projectDirectory}-e2e`,
         projectNameAndRootFormat: `as-provided`,
-        callingGenerator: '@nx/plugin:e2e-project',
       }
     );
     projectRoot = projectNameAndRootOptions.projectRoot;
@@ -187,7 +186,6 @@ async function addLintingToApplication(
 export async function e2eProjectGenerator(host: Tree, schema: Schema) {
   return await e2eProjectGeneratorInternal(host, {
     addPlugin: false,
-    projectNameAndRootFormat: 'derived',
     ...schema,
   });
 }

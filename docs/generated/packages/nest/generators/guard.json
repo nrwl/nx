@@ -1,6 +1,6 @@
 {
   "name": "guard",
-  "factory": "./src/generators/guard/guard#guardGeneratorInternal",
+  "factory": "./src/generators/guard/guard",
   "schema": {
     "$schema": "https://json-schema.org/schema",
     "$id": "NxNestGuardGenerator",
@@ -61,7 +61,7 @@
     "presets": []
   },
   "description": "Run the `guard` NestJS generator with Nx project support.",
-  "implementation": "/packages/nest/src/generators/guard/guard#guardGeneratorInternal.ts",
+  "implementation": "/packages/nest/src/generators/guard/guard.ts",
   "aliases": [],
   "hidden": false,
   "path": "/packages/nest/src/generators/guard/schema.json",

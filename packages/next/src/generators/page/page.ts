@@ -11,19 +11,12 @@ import { addStyleDependencies } from '../../utils/styles';
 import { Schema } from './schema';
 import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
 
-export async function pageGenerator(host: Tree, schema: Schema) {
-  return pageGeneratorInternal(host, {
-    nameAndDirectoryFormat: 'derived',
-    ...schema,
-  });
-}
-
 /*
  * This schematic is basically the React component one, but for Next we need
  * extra dependencies for css, sass, less style options, and make sure
  * it is under `pages` folder.
  */
-export async function pageGeneratorInternal(host: Tree, schema: Schema) {
+export async function pageGenerator(host: Tree, schema: Schema) {
   const options = await normalizeOptions(host, schema);
   const componentTask = await reactComponentGenerator(host, {
     ...options,
@@ -71,8 +64,6 @@ async function normalizeOptions(host: Tree, options: Schema) {
     // Get the project name first so we can determine the router directory
     const { project: determinedProjectName } =
       await determineArtifactNameAndDirectoryOptions(host, {
-        artifactType: 'page',
-        callingGenerator: '@nx/next:page',
         name: options.name,
         directory: options.directory,
       });
@@ -90,20 +81,14 @@ async function normalizeOptions(host: Tree, options: Schema) {
   }
 
   const {
-    artifactName: name,
     project: projectName,
     fileName,
     directory,
   } = await determineArtifactNameAndDirectoryOptions(host, {
-    artifactType: 'page',
-    callingGenerator: '@nx/next:page',
     name: options.name,
     fileName: isAppRouter ? 'page' : 'index',
     directory: options.directory,
-    derivedDirectory,
-    flat: options.flat,
     nameAndDirectoryFormat: options.nameAndDirectoryFormat,
-    project: options.project,
     fileExtension: 'tsx',
   });
   return {

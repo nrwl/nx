@@ -1,6 +1,6 @@
 {
   "name": "component",
-  "factory": "./src/generators/component/component#expoComponentGeneratorInternal",
+  "factory": "./src/generators/component/component",
   "schema": {
     "cli": "nx",
     "$id": "NxExpoComponent",
@@ -89,7 +89,7 @@
   },
   "description": "Create a component",
   "aliases": ["c"],
-  "implementation": "/packages/expo/src/generators/component/component#expoComponentGeneratorInternal.ts",
+  "implementation": "/packages/expo/src/generators/component/component.ts",
   "hidden": false,
   "path": "/packages/expo/src/generators/component/schema.json",
   "type": "generator"

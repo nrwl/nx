@@ -151,14 +151,10 @@ async function normalizeOptions(
 ): Promise<NormalizedSchema> {
   const { project, artifactName, filePath, directory } =
     await determineArtifactNameAndDirectoryOptions(tree, {
-      artifactType: 'executor',
-      callingGenerator: '@nx/plugin:executor',
       name: options.name,
       nameAndDirectoryFormat: options.nameAndDirectoryFormat,
-      project: options.project,
       directory: options.directory,
       fileName: 'executor',
-      derivedDirectory: 'executors',
     });
 
   const { className, propertyName } = names(artifactName);
@@ -184,14 +180,7 @@ async function normalizeOptions(
   };
 }
 
-export async function executorGenerator(tree: Tree, rawOptions: Schema) {
-  await executorGeneratorInternal(tree, {
-    nameAndDirectoryFormat: 'derived',
-    ...rawOptions,
-  });
-}
-
-export async function executorGeneratorInternal(host: Tree, schema: Schema) {
+export async function executorGenerator(host: Tree, schema: Schema) {
   const options = await normalizeOptions(host, schema);
 
   addFiles(host, options);

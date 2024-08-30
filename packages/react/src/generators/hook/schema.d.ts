@@ -1,3 +1,5 @@
+import type { NameAndDirectoryFormat } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
+
 export interface Schema {
   name: string;
   /**
@@ -20,5 +22,5 @@ export interface Schema {
    */
   flat?: boolean;
   js?: boolean;
-  nameAndDirectoryFormat?: 'as-provided' | 'derived';
+  nameAndDirectoryFormat?: NameAndDirectoryFormat;
 }

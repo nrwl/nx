@@ -1,6 +1,6 @@
 {
   "name": "component",
-  "factory": "./src/generators/component/component#componentGeneratorInternal",
+  "factory": "./src/generators/component/component",
   "schema": {
     "$schema": "http://json-schema.org/draft-07/schema",
     "$id": "SchematicsAngularComponent",
@@ -137,7 +137,7 @@
   },
   "aliases": ["c"],
   "description": "Generate an Angular Component.",
-  "implementation": "/packages/angular/src/generators/component/component#componentGeneratorInternal.ts",
+  "implementation": "/packages/angular/src/generators/component/component.ts",
   "hidden": false,
   "path": "/packages/angular/src/generators/component/schema.json",
   "type": "generator"

@@ -1,6 +1,6 @@
 {
   "name": "remote",
-  "factory": "./src/generators/remote/remote#remoteGeneratorInternal",
+  "factory": "./src/generators/remote/remote",
   "schema": {
     "$schema": "https://json-schema.org/schema",
     "$id": "GeneratorReactRemote",
@@ -192,7 +192,7 @@
   },
   "x-type": "application",
   "description": "Generate a remote react application",
-  "implementation": "/packages/react/src/generators/remote/remote#remoteGeneratorInternal.ts",
+  "implementation": "/packages/react/src/generators/remote/remote.ts",
   "aliases": [],
   "hidden": false,
   "path": "/packages/react/src/generators/remote/schema.json",

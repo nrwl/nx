@@ -10,7 +10,10 @@ import type { SupportedStyles } from '@nx/react';
 import { componentGenerator as reactComponentGenerator } from '@nx/react';
 
 import { addStyleDependencies } from '../../utils/styles';
-import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
+import {
+  determineArtifactNameAndDirectoryOptions,
+  type NameAndDirectoryFormat,
+} from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
 
 interface Schema {
   name: string;
@@ -32,7 +35,7 @@ interface Schema {
    * @deprecated Provide the `directory` in pascal-case and use the `as-provided` format. This option will be removed in Nx v19.
    */
   pascalCaseDirectory?: boolean;
-  nameAndDirectoryFormat?: 'as-provided' | 'derived';
+  nameAndDirectoryFormat?: NameAndDirectoryFormat;
   skipFormat?: boolean;
 }
 
@@ -49,34 +52,20 @@ function maybeGetDerivedDirectory(host: Tree, options: Schema): string {
     : undefined;
 }
 
-export async function componentGenerator(host: Tree, schema: Schema) {
-  return componentGeneratorInternal(host, {
-    nameAndDirectoryFormat: 'derived',
-    ...schema,
-  });
-}
-
 /*
  * This schematic is basically the React one, but for Next we need
  * extra dependencies for css, sass, less style options.
  */
-export async function componentGeneratorInternal(host: Tree, options: Schema) {
+export async function componentGenerator(host: Tree, options: Schema) {
   const {
     artifactName: name,
     directory,
     project: projectName,
   } = await determineArtifactNameAndDirectoryOptions(host, {
-    artifactType: 'component',
-    callingGenerator: '@nx/next:component',
     name: options.name,
     directory: options.directory,
-    derivedDirectory: maybeGetDerivedDirectory(host, options),
-    flat: options.flat,
     nameAndDirectoryFormat: options.nameAndDirectoryFormat,
-    project: options.project,
     fileExtension: 'tsx',
-    pascalCaseFile: options.pascalCaseFiles,
-    pascalCaseDirectory: options.pascalCaseDirectory,
   });
 
   const componentInstall = await reactComponentGenerator(host, {

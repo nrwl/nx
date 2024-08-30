@@ -32,14 +32,10 @@ async function normalizeOptions(
 ): Promise<NormalizedSchema> {
   const { project, fileName, artifactName, filePath, directory } =
     await determineArtifactNameAndDirectoryOptions(tree, {
-      artifactType: 'generator',
-      callingGenerator: '@nx/plugin:generator',
       name: options.name,
       nameAndDirectoryFormat: options.nameAndDirectoryFormat,
-      project: options.project,
       directory: options.directory,
       fileName: 'generator',
-      derivedDirectory: 'generators',
     });
 
   const { className, propertyName } = names(artifactName);
@@ -174,14 +170,7 @@ async function updateGeneratorJson(host: Tree, options: NormalizedSchema) {
   });
 }
 
-export async function generatorGenerator(tree: Tree, rawOptions: Schema) {
-  await generatorGeneratorInternal(tree, {
-    nameAndDirectoryFormat: 'derived',
-    ...rawOptions,
-  });
-}
-
-export async function generatorGeneratorInternal(host: Tree, schema: Schema) {
+export async function generatorGenerator(host: Tree, schema: Schema) {
   const options = await normalizeOptions(host, schema);
   if (hasGenerator(host, options.project, options.name)) {
     throw new Error(`Generator ${options.name} already exists.`);

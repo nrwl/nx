@@ -1,6 +1,6 @@
 {
   "name": "host",
-  "factory": "./src/generators/host/host#hostGeneratorInternal",
+  "factory": "./src/generators/host/host",
   "schema": {
     "$schema": "https://json-schema.org/schema",
     "$id": "GeneratorReactHost",
@@ -193,7 +193,7 @@
   },
   "x-type": "application",
   "description": "Generate a host react application",
-  "implementation": "/packages/react/src/generators/host/host#hostGeneratorInternal.ts",
+  "implementation": "/packages/react/src/generators/host/host.ts",
   "aliases": [],
   "hidden": false,
   "path": "/packages/react/src/generators/host/schema.json",

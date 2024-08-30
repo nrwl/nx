@@ -1,6 +1,6 @@
 {
   "name": "hook",
-  "factory": "./src/generators/hook/hook#hookGeneratorInternal",
+  "factory": "./src/generators/hook/hook",
   "schema": {
     "$schema": "https://json-schema.org/schema",
     "cli": "nx",
@@ -83,7 +83,7 @@
   },
   "description": "Create a hook.",
   "aliases": ["c"],
-  "implementation": "/packages/react/src/generators/hook/hook#hookGeneratorInternal.ts",
+  "implementation": "/packages/react/src/generators/hook/hook.ts",
   "hidden": false,
   "path": "/packages/react/src/generators/hook/schema.json",
   "type": "generator"

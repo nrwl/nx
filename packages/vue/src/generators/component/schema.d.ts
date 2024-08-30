@@ -1,3 +1,5 @@
+import type { NameAndDirectoryFormat } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
+
 export interface ComponentGeneratorSchema {
   name: string;
   skipTests?: boolean;
@@ -8,7 +10,7 @@ export interface ComponentGeneratorSchema {
   fileName?: string;
   inSourceTests?: boolean;
   skipFormat?: boolean;
-  nameAndDirectoryFormat?: 'as-provided' | 'derived';
+  nameAndDirectoryFormat?: NameAndDirectoryFormat;
 
   /**
    * @deprecated Provide the `directory` option instead and use the `as-provided` format. It will be removed in Nx v20.
