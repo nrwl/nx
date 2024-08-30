@@ -21,7 +21,7 @@ import { getLockFileName } from '@nx/js';
 import { type AppConfig } from '@remix-run/dev';
 import { dirname, isAbsolute, join, relative } from 'path';
 import { existsSync, readdirSync, readFileSync } from 'fs';
-import { loadViteDynamicImport } from '@nx/vite/src/utils/executor-utils';
+import { loadViteDynamicImport } from '../utils/executor-utils';
 
 export interface RemixPluginOptions {
   buildTargetName?: string;
@@ -56,7 +56,7 @@ export const createDependencies: CreateDependencies = () => {
   return [];
 };
 
-const remixConfigGlob = '**/{remix|vite}.config.{js,cjs,mjs}';
+const remixConfigGlob = '**/{remix,vite}.config.{js,cjs,mjs}';
 
 export const createNodesV2: CreateNodesV2<RemixPluginOptions> = [
   remixConfigGlob,
@@ -111,16 +111,16 @@ async function createNodesInternal(
     configFilePath,
     context.workspaceRoot
   );
+
   if (remixCompiler === RemixCompiler.IsNotRemix) {
     return {};
   }
 
-  const hash = await calculateHashForCreateNodes(
-    projectRoot,
-    options,
-    context,
-    [getLockFileName(detectPackageManager(context.workspaceRoot))]
-  );
+  const hash =
+    (await calculateHashForCreateNodes(projectRoot, options, context, [
+      getLockFileName(detectPackageManager(context.workspaceRoot)),
+    ])) + configFilePath;
+
   targetsCache[hash] ??= await buildRemixTargets(
     configFilePath,
     projectRoot,
@@ -201,7 +201,7 @@ async function buildRemixTargets(
     siblingFiles
   );
 
-  return targets;
+  return { targets, metadata: {} };
 }
 
 function buildTarget(
@@ -224,7 +224,11 @@ function buildTarget(
 
   const outputs =
     remixCompiler === RemixCompiler.IsVte
-      ? [buildDirectory]
+      ? [
+          projectRoot === '.'
+            ? joinPathFragments(`{workspaceRoot}`, buildDirectory)
+            : joinPathFragments(`{workspaceRoot}`, projectRoot, buildDirectory),
+        ]
       : [serverBuildOutputPath, assetsBuildOutputPath];
 
   return {
@@ -344,6 +348,7 @@ async function getBuildPaths(
     return {
       buildDirectory: viteBuildConfig.build?.outDir ?? 'build',
       serverBuildPath: viteBuildConfig.build?.outDir ?? 'build',
+      assetsBuildDirectory: 'build/client',
     };
   }
 }

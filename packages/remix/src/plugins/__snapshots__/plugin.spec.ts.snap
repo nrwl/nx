@@ -1,169 +1,359 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`@nx/remix/plugin non-root project should create nodes 1`] = `
-{
-  "projects": {
-    "my-app": {
-      "root": "my-app",
-      "targets": {
-        "build": {
-          "cache": true,
-          "command": "remix build",
-          "dependsOn": [
-            "^build",
-          ],
-          "inputs": [
-            "production",
-            "^production",
-            {
-              "externalDependencies": [
-                "@remix-run/dev",
+exports[`@nx/remix/plugin Remix Classic Compiler non-root project should create nodes 1`] = `
+[
+  [
+    "my-app/remix.config.cjs",
+    {
+      "projects": {
+        "my-app": {
+          "metadata": {},
+          "root": "my-app",
+          "targets": {
+            "build": {
+              "cache": true,
+              "command": "remix build",
+              "dependsOn": [
+                "^build",
+              ],
+              "inputs": [
+                "production",
+                "^production",
+                {
+                  "externalDependencies": [
+                    "@remix-run/dev",
+                  ],
+                },
+              ],
+              "options": {
+                "cwd": "my-app",
+              },
+              "outputs": [
+                "{workspaceRoot}/my-app/build",
+                "{workspaceRoot}/my-app/public/build",
               ],
             },
-          ],
-          "options": {
-            "cwd": "my-app",
-          },
-          "outputs": [
-            "{workspaceRoot}/my-app/build",
-            "{workspaceRoot}/my-app/public/build",
-          ],
-        },
-        "dev": {
-          "command": "remix dev --manual",
-          "options": {
-            "cwd": "my-app",
-          },
-        },
-        "serve-static": {
-          "command": "remix-serve build/index.js",
-          "dependsOn": [
-            "build",
-          ],
-          "options": {
-            "cwd": "my-app",
-          },
-        },
-        "start": {
-          "command": "remix-serve build/index.js",
-          "dependsOn": [
-            "build",
-          ],
-          "options": {
-            "cwd": "my-app",
-          },
-        },
-        "static-serve": {
-          "command": "remix-serve build/index.js",
-          "dependsOn": [
-            "build",
-          ],
-          "options": {
-            "cwd": "my-app",
-          },
-        },
-        "tsc": {
-          "cache": true,
-          "command": "tsc",
-          "inputs": [
-            "production",
-            "^production",
-            {
-              "externalDependencies": [
-                "typescript",
-              ],
+            "dev": {
+              "command": "remix dev --manual",
+              "options": {
+                "cwd": "my-app",
+              },
             },
-          ],
-          "options": {
-            "cwd": "my-app",
+            "serve-static": {
+              "command": "remix-serve build/index.js",
+              "dependsOn": [
+                "build",
+              ],
+              "options": {
+                "cwd": "my-app",
+              },
+            },
+            "start": {
+              "command": "remix-serve build/index.js",
+              "dependsOn": [
+                "build",
+              ],
+              "options": {
+                "cwd": "my-app",
+              },
+            },
+            "static-serve": {
+              "command": "remix-serve build/index.js",
+              "dependsOn": [
+                "build",
+              ],
+              "options": {
+                "cwd": "my-app",
+              },
+            },
+            "tsc": {
+              "cache": true,
+              "command": "tsc",
+              "inputs": [
+                "production",
+                "^production",
+                {
+                  "externalDependencies": [
+                    "typescript",
+                  ],
+                },
+              ],
+              "options": {
+                "cwd": "my-app",
+              },
+            },
           },
         },
       },
     },
-  },
-}
+  ],
+]
 `;
 
-exports[`@nx/remix/plugin root project should create nodes 1`] = `
-{
-  "projects": {
-    ".": {
-      "root": ".",
-      "targets": {
-        "build": {
-          "cache": true,
-          "command": "remix build",
-          "dependsOn": [
-            "^build",
-          ],
-          "inputs": [
-            "production",
-            "^production",
-            {
-              "externalDependencies": [
-                "@remix-run/dev",
+exports[`@nx/remix/plugin Remix Classic Compiler root project should create nodes 1`] = `
+[
+  [
+    "remix.config.cjs",
+    {
+      "projects": {
+        ".": {
+          "metadata": {},
+          "root": ".",
+          "targets": {
+            "build": {
+              "cache": true,
+              "command": "remix build",
+              "dependsOn": [
+                "^build",
+              ],
+              "inputs": [
+                "production",
+                "^production",
+                {
+                  "externalDependencies": [
+                    "@remix-run/dev",
+                  ],
+                },
+              ],
+              "options": {
+                "cwd": ".",
+              },
+              "outputs": [
+                "{workspaceRoot}/build",
+                "{workspaceRoot}/public/build",
               ],
             },
-          ],
-          "options": {
-            "cwd": ".",
-          },
-          "outputs": [
-            "{workspaceRoot}/build",
-            "{workspaceRoot}/public/build",
-          ],
-        },
-        "dev": {
-          "command": "remix dev --manual",
-          "options": {
-            "cwd": ".",
-          },
-        },
-        "serve-static": {
-          "command": "remix-serve build/index.js",
-          "dependsOn": [
-            "build",
-          ],
-          "options": {
-            "cwd": ".",
-          },
-        },
-        "start": {
-          "command": "remix-serve build/index.js",
-          "dependsOn": [
-            "build",
-          ],
-          "options": {
-            "cwd": ".",
-          },
-        },
-        "static-serve": {
-          "command": "remix-serve build/index.js",
-          "dependsOn": [
-            "build",
-          ],
-          "options": {
-            "cwd": ".",
-          },
-        },
-        "typecheck": {
-          "cache": true,
-          "command": "tsc",
-          "inputs": [
-            "production",
-            "^production",
-            {
-              "externalDependencies": [
-                "typescript",
-              ],
+            "dev": {
+              "command": "remix dev --manual",
+              "options": {
+                "cwd": ".",
+              },
             },
-          ],
-          "options": {
-            "cwd": ".",
+            "serve-static": {
+              "command": "remix-serve build/index.js",
+              "dependsOn": [
+                "build",
+              ],
+              "options": {
+                "cwd": ".",
+              },
+            },
+            "start": {
+              "command": "remix-serve build/index.js",
+              "dependsOn": [
+                "build",
+              ],
+              "options": {
+                "cwd": ".",
+              },
+            },
+            "static-serve": {
+              "command": "remix-serve build/index.js",
+              "dependsOn": [
+                "build",
+              ],
+              "options": {
+                "cwd": ".",
+              },
+            },
+            "typecheck": {
+              "cache": true,
+              "command": "tsc",
+              "inputs": [
+                "production",
+                "^production",
+                {
+                  "externalDependencies": [
+                    "typescript",
+                  ],
+                },
+              ],
+              "options": {
+                "cwd": ".",
+              },
+            },
           },
         },
       },
     },
-  },
-}
+  ],
+]
+`;
+
+exports[`@nx/remix/plugin Remix Vite Compiler non-root project should create nodes 1`] = `
+[
+  [
+    "my-app/vite.config.js",
+    {
+      "projects": {
+        "my-app": {
+          "metadata": {},
+          "root": "my-app",
+          "targets": {
+            "build": {
+              "cache": true,
+              "command": "remix vite:build",
+              "dependsOn": [
+                "^build",
+              ],
+              "inputs": [
+                "production",
+                "^production",
+                {
+                  "externalDependencies": [
+                    "@remix-run/dev",
+                  ],
+                },
+              ],
+              "options": {
+                "cwd": "my-app",
+              },
+              "outputs": [
+                "{workspaceRoot}/my-app/build",
+              ],
+            },
+            "dev": {
+              "command": "remix vite:dev",
+              "options": {
+                "cwd": "my-app",
+              },
+            },
+            "serve-static": {
+              "command": "remix-serve build/server/index.js",
+              "dependsOn": [
+                "build",
+              ],
+              "options": {
+                "cwd": "my-app",
+              },
+            },
+            "start": {
+              "command": "remix-serve build/server/index.js",
+              "dependsOn": [
+                "build",
+              ],
+              "options": {
+                "cwd": "my-app",
+              },
+            },
+            "static-serve": {
+              "command": "remix-serve build/server/index.js",
+              "dependsOn": [
+                "build",
+              ],
+              "options": {
+                "cwd": "my-app",
+              },
+            },
+            "tsc": {
+              "cache": true,
+              "command": "tsc",
+              "inputs": [
+                "production",
+                "^production",
+                {
+                  "externalDependencies": [
+                    "typescript",
+                  ],
+                },
+              ],
+              "options": {
+                "cwd": "my-app",
+              },
+            },
+          },
+        },
+      },
+    },
+  ],
+]
+`;
+
+exports[`@nx/remix/plugin Remix Vite Compiler root project should create nodes 1`] = `
+[
+  [
+    "vite.config.js",
+    {
+      "projects": {
+        ".": {
+          "metadata": {},
+          "root": ".",
+          "targets": {
+            "build": {
+              "cache": true,
+              "command": "remix vite:build",
+              "dependsOn": [
+                "^build",
+              ],
+              "inputs": [
+                "production",
+                "^production",
+                {
+                  "externalDependencies": [
+                    "@remix-run/dev",
+                  ],
+                },
+              ],
+              "options": {
+                "cwd": ".",
+              },
+              "outputs": [
+                "{workspaceRoot}/build",
+              ],
+            },
+            "dev": {
+              "command": "remix vite:dev",
+              "options": {
+                "cwd": ".",
+              },
+            },
+            "serve-static": {
+              "command": "remix-serve build/server/index.js",
+              "dependsOn": [
+                "build",
+              ],
+              "options": {
+                "cwd": ".",
+              },
+            },
+            "start": {
+              "command": "remix-serve build/server/index.js",
+              "dependsOn": [
+                "build",
+              ],
+              "options": {
+                "cwd": ".",
+              },
+            },
+            "static-serve": {
+              "command": "remix-serve build/server/index.js",
+              "dependsOn": [
+                "build",
+              ],
+              "options": {
+                "cwd": ".",
+              },
+            },
+            "typecheck": {
+              "cache": true,
+              "command": "tsc",
+              "inputs": [
+                "production",
+                "^production",
+                {
+                  "externalDependencies": [
+                    "typescript",
+                  ],
+                },
+              ],
+              "options": {
+                "cwd": ".",
+              },
+            },
+          },
+        },
+      },
+    },
+  ],
+]
 `;
