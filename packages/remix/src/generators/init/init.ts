@@ -8,10 +8,10 @@ import {
   createProjectGraphAsync,
 } from '@nx/devkit';
 import {
-  addPluginV1,
+  addPlugin,
   generateCombinations,
 } from '@nx/devkit/src/utils/add-plugin';
-import { createNodes } from '../../plugins/plugin';
+import { createNodesV2 } from '../../plugins/plugin';
 import { nxVersion, remixVersion } from '../../utils/versions';
 import { type Schema } from './schema';
 
@@ -44,11 +44,11 @@ export async function remixInitGeneratorInternal(tree: Tree, options: Schema) {
     nxJson.useInferencePlugins !== false;
   options.addPlugin ??= addPluginDefault;
   if (options.addPlugin) {
-    await addPluginV1(
+    await addPlugin(
       tree,
       await createProjectGraphAsync(),
       '@nx/remix/plugin',
-      createNodes,
+      createNodesV2,
       {
         startTargetName: ['start', 'remix:start', 'remix-start'],
         buildTargetName: ['build', 'remix:build', 'remix-build'],
