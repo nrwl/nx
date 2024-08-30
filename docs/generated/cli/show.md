@@ -83,25 +83,13 @@ Opens a web browser to explore the configuration of "my-app":
  nx show project my-app --web
 ```
 
-## Shared Options
+## Options
 
-### help
-
-Type: `boolean`
-
-Show help
-
-### json
-
-Type: `boolean`
-
-Output JSON
-
-### version
-
-Type: `boolean`
-
-Show version number
+| Shared Option | Type    | Description         |
+| ------------- | ------- | ------------------- |
+| `--help`      | boolean | Show help           |
+| `--json`      | boolean | Output JSON         |
+| `--version`   | boolean | Show version number |
 
 ## Subcommands
 
@@ -113,93 +101,24 @@ Show a list of projects in the workspace
 nx show projects
 ```
 
-#### Options
+## Options
 
-##### affected
-
-Type: `boolean`
-
-Show only affected projects
-
-##### base
-
-Type: `string`
-
-Base of the current branch (usually main)
-
-##### exclude
-
-Type: `string`
-
-Exclude certain projects from being processed
-
-##### files
-
-Type: `string`
-
-Change the way Nx is calculating the affected command by providing directly changed files, list of files delimited by commas or spaces
-
-##### head
-
-Type: `string`
-
-Latest commit of the current branch (usually HEAD)
-
-##### help
-
-Type: `boolean`
-
-Show help
-
-##### projects
-
-Type: `string`
-
-Show only projects that match a given pattern.
-
-##### sep
-
-Type: `string`
-
-Outputs projects with the specified seperator
-
-##### type
-
-Type: `string`
-
-Choices: [app, lib, e2e]
-
-Select only projects of the given type
-
-##### uncommitted
-
-Type: `boolean`
-
-Uncommitted changes
-
-##### untracked
-
-Type: `boolean`
-
-Untracked changes
-
-##### verbose
-
-Type: `boolean`
-
-Prints additional information about the commands (e.g., stack traces)
-
-##### version
-
-Type: `boolean`
-
-Show version number
-
-##### withTarget
-
-Type: `string`
-
-Show only projects that have a specific target
+| Option          | Type                | Description                                                                                                                            |
+| --------------- | ------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `--affected`    | boolean             | Show only affected projects                                                                                                            |
+| `--base`        | string              | Base of the current branch (usually main)                                                                                              |
+| `--exclude`     | string              | Exclude certain projects from being processed                                                                                          |
+| `--files`       | string              | Change the way Nx is calculating the affected command by providing directly changed files, list of files delimited by commas or spaces |
+| `--head`        | string              | Latest commit of the current branch (usually HEAD)                                                                                     |
+| `--help`        | boolean             | Show help                                                                                                                              |
+| `--projects`    | string              | Show only projects that match a given pattern.                                                                                         |
+| `--sep`         | string              | Outputs projects with the specified seperator                                                                                          |
+| `--type`        | `app`, `lib`, `e2e` | Select only projects of the given type                                                                                                 |
+| `--uncommitted` | boolean             | Uncommitted changes                                                                                                                    |
+| `--untracked`   | boolean             | Untracked changes                                                                                                                      |
+| `--verbose`     | boolean             | Prints additional information about the commands (e.g., stack traces)                                                                  |
+| `--version`     | boolean             | Show version number                                                                                                                    |
+| `--withTarget`  | string              | Show only projects that have a specific target                                                                                         |
 
 ### project
 
@@ -209,40 +128,13 @@ Shows resolved project configuration for a given project.
 nx show project <projectName>
 ```
 
-#### Options
+## Options
 
-##### help
-
-Type: `boolean`
-
-Show help
-
-##### open
-
-Type: `boolean`
-
-Set to false to prevent the browser from opening when using --web
-
-##### projectName
-
-Type: `string`
-
-Which project should be viewed?
-
-##### verbose
-
-Type: `boolean`
-
-Prints additional information about the commands (e.g., stack traces)
-
-##### version
-
-Type: `boolean`
-
-Show version number
-
-##### web
-
-Type: `boolean`
-
-Show project details in the browser. (default when interactive)
+| Option          | Type    | Description                                                           |
+| --------------- | ------- | --------------------------------------------------------------------- |
+| `--help`        | boolean | Show help                                                             |
+| `--open`        | boolean | Set to false to prevent the browser from opening when using --web     |
+| `--projectName` | string  | Which project should be viewed?                                       |
+| `--verbose`     | boolean | Prints additional information about the commands (e.g., stack traces) |
+| `--version`     | boolean | Show version number                                                   |
+| `--web`         | boolean | Show project details in the browser. (default when interactive)       |

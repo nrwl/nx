@@ -4410,9 +4410,9 @@
         "children": [
           {
             "name": "Commands",
-            "path": "/nx-api/nx",
-            "id": "commands",
-            "isExternal": true,
+            "path": "/reference/nx-commands",
+            "id": "nx-commands",
+            "isExternal": false,
             "children": [],
             "disableCollapsible": false
           },
@@ -4477,9 +4477,9 @@
       },
       {
         "name": "Commands",
-        "path": "/nx-api/nx",
-        "id": "commands",
-        "isExternal": true,
+        "path": "/reference/nx-commands",
+        "id": "nx-commands",
+        "isExternal": false,
         "children": [],
         "disableCollapsible": false
       },

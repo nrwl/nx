@@ -6036,14 +6036,14 @@
     "file": "",
     "itemList": [
       {
-        "id": "commands",
+        "id": "nx-commands",
         "name": "Commands",
         "description": "",
         "mediaImage": "",
-        "file": "",
+        "file": "shared/reference/commands",
         "itemList": [],
-        "isExternal": true,
-        "path": "/nx-api/nx",
+        "isExternal": false,
+        "path": "/reference/nx-commands",
         "tags": []
       },
       {
@@ -6128,15 +6128,15 @@
     "path": "/reference",
     "tags": []
   },
-  "/nx-api/nx": {
-    "id": "commands",
+  "/reference/nx-commands": {
+    "id": "nx-commands",
     "name": "Commands",
     "description": "",
     "mediaImage": "",
-    "file": "",
+    "file": "shared/reference/commands",
     "itemList": [],
-    "isExternal": true,
-    "path": "/nx-api/nx",
+    "isExternal": false,
+    "path": "/reference/nx-commands",
     "tags": []
   },
   "/reference/nx-json": {
