@@ -499,6 +499,11 @@
             "type": "object"
           }
         },
+        "parallelism": {
+          "type": "boolean",
+          "default": true,
+          "description": "Whether this target can be run in parallel with other tasks"
+        },
         "inputs": {
           "$ref": "#/definitions/inputs"
         },
