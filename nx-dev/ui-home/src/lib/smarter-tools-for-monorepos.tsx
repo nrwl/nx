@@ -431,7 +431,7 @@ export function SmarterToolsForMonorepos(): JSX.Element {
                   JetBrains
                 </Link>
                 <FitText className="text-slate-950 dark:text-white">
-                  Editors support
+                  Editor Integration
                 </FitText>
                 <Link
                   href="/getting-started/editor-setup?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
@@ -1076,10 +1076,10 @@ export function SmarterToolsForMonorepos(): JSX.Element {
               </ButtonLink>
               <ButtonLink
                 href="/getting-started/editor-setup?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
-                title="Nx editor support"
+                title="Nx editor integration"
                 variant="secondary"
               >
-                See editors support
+                See editor integration
               </ButtonLink>
             </div>
           </div>
