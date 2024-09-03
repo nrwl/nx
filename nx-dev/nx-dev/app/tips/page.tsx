@@ -34,7 +34,7 @@ async function getTips() {
 
 export default async function TipsIndex() {
   const tips = await getTips();
-  
+
   return (
     <DefaultLayout>
       <TipsContainer tips={tips} />

@@ -26,30 +26,30 @@ export function TipsContainer({ tips }: TipsContainerProps) {
   return (
     <main id="main" role="main" className="w-full py-8">
       <div className="mx-auto w-full max-w-[1088px] px-8">
-        <div className="text-center mb-12">
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100 sm:text-4xl md:text-5xl">
+        <div className="mb-12 text-center">
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl md:text-5xl dark:text-slate-100">
             Nx Tips
           </h1>
-          <p className="mt-3 text-xl text-slate-500 dark:text-slate-400 sm:mt-4">
+          <p className="mt-3 text-xl text-slate-500 sm:mt-4 dark:text-slate-400">
             Bite-sized Nx wisdom to supercharge your dev game
           </p>
         </div>
-        
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
           {tips.map((tip) => (
-            <div 
-              key={tip.id} 
-              className="flex flex-col items-center p-4 border border-slate-200 dark:border-slate-700 rounded-lg shadow-sm transition-all duration-300 ease-in-out hover:shadow-md hover:-translate-y-1 cursor-pointer"
+            <div
+              key={tip.id}
+              className="flex cursor-pointer flex-col items-center rounded-lg border border-slate-200 p-4 shadow-sm transition-all duration-300 ease-in-out hover:-translate-y-1 hover:shadow-md dark:border-slate-700"
               onClick={() => handleTipClick(tip)}
             >
-              <div className="w-full aspect-video mb-4 overflow-hidden rounded-lg">
+              <div className="mb-4 aspect-video w-full overflow-hidden rounded-lg">
                 <img
                   src={tip.thumbnailUrl}
                   alt={tip.title}
-                  className="w-full h-full object-cover"
+                  className="h-full w-full object-cover"
                 />
               </div>
-              <h3 className="text-sm font-medium text-slate-900 dark:text-slate-100 text-center">
+              <h3 className="text-center text-sm font-medium text-slate-900 dark:text-slate-100">
                 {tip.title}
               </h3>
             </div>
@@ -57,10 +57,7 @@ export function TipsContainer({ tips }: TipsContainerProps) {
         </div>
       </div>
       {selectedTip && (
-        <VideoPopup
-          videoId={selectedTip.id}
-          onClose={handleClosePopup}
-        />
+        <VideoPopup videoId={selectedTip.id} onClose={handleClosePopup} />
       )}
     </main>
   );
