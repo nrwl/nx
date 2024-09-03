@@ -1,5 +1,10 @@
 # Explain with AI (beta)
 
+{% youtube
+src="https://youtu.be/g2m9cHp-O-Q"
+title="Explain with AI"
+ /%}
+
 "Explain with AI" helps you understand complex errors more quickly by providing AI-powered error resolution steps. This is made possible by using additional context from Nx targets and metadata, allowing for more accurate and relevant responses.
 
 ![explain with ai](/nx-cloud/features/explain-with-ai.avif)
