@@ -371,7 +371,7 @@ describe('nx release conventional commits config', () => {
       - ⚠️  **{project-name}:** this is a breaking change
 
 
-      #### ⚠️  Breaking Changes
+      ### ⚠️  Breaking Changes
 
       - ⚠️  **{project-name}:** this is a breaking change
     `);
