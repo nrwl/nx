@@ -187,8 +187,8 @@ export function readTargetsFromPackageJson(packageJson: PackageJson) {
    * package based repos.
    */
   if (!isPrivate && !res['nx-release-publish']) {
-    res['nx-release-publish'] = {
-      dependsOn: ['^nx-release-publish'],
+    res['nx-release-publish'] = {      
+      // dependsOn: ['^nx-release-publish'],
       executor: '@nx/js:release-publish',
       options: {},
     };
