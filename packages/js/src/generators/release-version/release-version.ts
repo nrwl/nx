@@ -1,7 +1,10 @@
 import {
+  PackageManager,
   ProjectGraphProjectNode,
   Tree,
+  detectPackageManager,
   formatFiles,
+  getPackageManagerVersion,
   joinPathFragments,
   output,
   readJson,
@@ -35,7 +38,7 @@ import {
 } from 'nx/src/command-line/release/version';
 import { interpolate } from 'nx/src/tasks-runner/utils';
 import * as ora from 'ora';
-import { ReleaseType, gt, inc, prerelease } from 'semver';
+import { ReleaseType, gt, inc, lt, prerelease } from 'semver';
 import { parseRegistryOptions } from '../../utils/npm-config';
 import { ReleaseVersionGeneratorSchema } from './schema';
 import {
@@ -723,6 +726,28 @@ To fix this you will either need to add a package.json file at that location, or
           const currentDependencyVersion =
             json[dependentProject.dependencyCollection][dependencyPackageName];
 
+          // Depending on the package manager, locally linked packages could reference packages with `"private": true` and no version field at all
+          const currentPackageVersion = json.version ?? null;
+          if (
+            !currentPackageVersion &&
+            isLocallyLinkedPackageVersion(currentDependencyVersion)
+          ) {
+            if (forceVersionBump) {
+              // Look up any dependent projects from the transitiveLocalPackageDependents list
+              const transitiveDependentProjects =
+                transitiveLocalPackageDependents.filter(
+                  (localPackageDependency) =>
+                    localPackageDependency.target === dependentProject.source
+                );
+              versionData[dependentProject.source] = {
+                currentVersion: currentPackageVersion,
+                newVersion: currentDependencyVersion,
+                dependentProjects: transitiveDependentProjects,
+              };
+            }
+            return json;
+          }
+
           // For auto, we infer the prefix based on the current version of the dependent
           if (versionPrefix === 'auto') {
             versionPrefix = ''; // we don't want to end up printing auto
@@ -743,7 +768,6 @@ To fix this you will either need to add a package.json file at that location, or
 
           // Bump the dependent's version if applicable and record it in the version data
           if (forceVersionBump) {
-            const currentPackageVersion = json.version;
             const newPackageVersion = deriveNewSemverVersion(
               currentPackageVersion,
               forceVersionBump,
@@ -961,4 +985,43 @@ class ProjectLogger {
       console.log(this.color.instance.bold(this.projectName) + ' ' + msg);
     });
   }
+}
+
+let pm: PackageManager | undefined;
+let pmVersion: string | undefined;
+
+const localPackageProtocols = [
+  'file:', // all package managers
+  'workspace:', // not npm
+  'portal:', // modern yarn only
+];
+
+function isLocallyLinkedPackageVersion(version: string): boolean {
+  // Not using a supported local protocol
+  if (!localPackageProtocols.some((protocol) => version.startsWith(protocol))) {
+    return false;
+  }
+  // Supported by all package managers
+  if (version.startsWith('file:')) {
+    return true;
+  }
+  // Determine specific package manager in use
+  if (!pm) {
+    pm = detectPackageManager();
+    pmVersion = getPackageManagerVersion(pm);
+  }
+  if (pm === 'npm' && version.startsWith('workspace:')) {
+    throw new Error(
+      `The "workspace:" protocol is not yet supported by npm (https://github.com/npm/rfcs/issues/765). Please ensure you have a valid setup according to your package manager before attempting to release packages.`
+    );
+  }
+  if (
+    version.startsWith('portal:') &&
+    (pm !== 'yarn' || lt(pmVersion, '2.0.0'))
+  ) {
+    throw new Error(
+      `The "portal:" protocol is only supported by yarn@2.0.0 and above. Please ensure you have a valid setup according to your package manager before attempting to release packages.`
+    );
+  }
+  return true;
 }

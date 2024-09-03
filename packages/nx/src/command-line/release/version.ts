@@ -187,10 +187,11 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
     }
     if (!args.specifier) {
       const rawVersionPlans = await readRawVersionPlans();
-      setResolvedVersionPlansOnGroups(
+      await setResolvedVersionPlansOnGroups(
         rawVersionPlans,
         releaseGroups,
-        Object.keys(projectGraph.nodes)
+        Object.keys(projectGraph.nodes),
+        args.verbose
       );
     } else {
       if (args.verbose && releaseGroups.some((g) => !!g.versionPlans)) {

@@ -143,10 +143,11 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
       process.exit(1);
     }
 
-    setResolvedVersionPlansOnGroups(
+    await setResolvedVersionPlansOnGroups(
       rawVersionPlans,
       releaseGroups,
-      Object.keys(projectGraph.nodes)
+      Object.keys(projectGraph.nodes),
+      args.verbose
     );
 
     const planFiles = new Set<string>();
