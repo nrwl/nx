@@ -368,7 +368,7 @@ describe('syncGenerator()', () => {
         references: [
           { path: './some/thing' },
           { path: './another/one' },
-          { path: '../packages/c' }, // this is not a dependency, should be pruned
+          { path: '../c' }, // this is not a dependency, should be pruned
         ],
       });
 
@@ -386,6 +386,95 @@ describe('syncGenerator()', () => {
           },
           {
             "path": "./another/one",
+          },
+        ]
+      `);
+    });
+
+    it('should not prune existing external project references that are not dependencies but are ignored', async () => {
+      writeJson(tree, 'packages/b/tsconfig.json', {
+        compilerOptions: {
+          composite: true,
+        },
+        references: [
+          { path: './some/thing' },
+          { path: './another/one' },
+          { path: '../../some-path/dir' }, // this is not a dependency but it's ignored, should not be pruned
+          { path: '../c' }, // this is not a dependency and it's not ignored, should be pruned
+        ],
+      });
+      tree.write('some-path/dir/tsconfig.json', '{}');
+      tree.write('.gitignore', 'some-path/dir');
+
+      await syncGenerator(tree);
+
+      const rootTsconfig = readJson(tree, 'packages/b/tsconfig.json');
+      // The dependency reference on "a" is added to the start of the array
+      expect(rootTsconfig.references).toMatchInlineSnapshot(`
+        [
+          {
+            "path": "../a",
+          },
+          {
+            "path": "./some/thing",
+          },
+          {
+            "path": "./another/one",
+          },
+          {
+            "path": "../../some-path/dir",
+          },
+        ]
+      `);
+    });
+
+    it('should not prune stale project references from projects included in `nx.sync.ignoredReferences`', async () => {
+      const nxJson = readNxJson(tree);
+      nxJson.sync = {
+        generatorOptions: {
+          '@nx/js:typescript-sync': {
+            projectsToKeepStaleReferences: ['b'],
+          },
+        },
+      };
+      updateNxJson(tree, nxJson);
+      writeJson(tree, 'packages/b/tsconfig.json', {
+        compilerOptions: {
+          composite: true,
+        },
+        references: [
+          { path: './some/thing' },
+          { path: './another/one' },
+          // this is not a dependency and it's not ignored, it would normally be pruned,
+          // but it's included in `nx.sync.ignoredReferences`, so we don't prune it
+          { path: '../c' },
+        ],
+        nx: {
+          sync: {
+            ignoredReferences: ['../c'],
+          },
+        },
+      });
+      tree.write('some-path/dir/tsconfig.json', '{}');
+      tree.write('.gitignore', 'some-path/dir');
+
+      await syncGenerator(tree);
+
+      const rootTsconfig = readJson(tree, 'packages/b/tsconfig.json');
+      // The dependency reference on "a" is added to the start of the array
+      expect(rootTsconfig.references).toMatchInlineSnapshot(`
+        [
+          {
+            "path": "../a",
+          },
+          {
+            "path": "./some/thing",
+          },
+          {
+            "path": "./another/one",
+          },
+          {
+            "path": "../c",
           },
         ]
       `);
