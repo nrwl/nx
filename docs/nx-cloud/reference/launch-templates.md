@@ -190,7 +190,7 @@ launch-templates:
         inputs:
           key: 'package-lock.json|yarn.lock|pnpm-lock.yaml'
           paths: 'node_modules'
-          base_branch: 'main'
+          base-branch: 'main'
 ```
 
 ## Full Example
@@ -223,7 +223,7 @@ launch-templates:
         inputs:
           key: 'package-lock.json|yarn.lock|pnpm-lock.yaml'
           paths: 'node_modules'
-          base_branch: 'main'
+          base-branch: 'main'
       - name: Restore Browser Binary Cache
         uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/cache/main.yaml'
         inputs:
@@ -231,7 +231,7 @@ launch-templates:
           paths: |
             '~/.cache/Cypress'
             '~/.cache/ms-playwright'
-          base_branch: 'main'
+          base-branch: 'main'
       - name: Install Node Modules
         uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/install-node-modules/main.yaml'
       - name: Install Browsers (if needed)
@@ -274,7 +274,7 @@ launch-templates:
         inputs:
           key: 'package-lock.json|yarn.lock|pnpm-lock.yaml'
           paths: 'node_modules'
-          base_branch: 'main'
+          base-branch: 'main'
       - name: Restore Browser Binary Cache
         uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/cache/main.yaml'
         inputs:
@@ -282,7 +282,7 @@ launch-templates:
           paths: |
             '~/.cache/Cypress'
             '~/.cache/ms-playwright'
-          base_branch: 'main'
+          base-branch: 'main'
       - name: Install Node Modules
         uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/install-node-modules/main.yaml'
       - name: Install Browsers (if needed)
@@ -312,7 +312,7 @@ launch-templates:
         inputs:
           key: 'package-lock.json|yarn.lock|pnpm-lock.yaml'
           paths: 'node_modules'
-          base_branch: 'main'
+          base-branch: 'main'
       - name: Install Node Modules
         uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/install-node-modules/main.yaml'
       - name: Install Rust
