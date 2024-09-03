@@ -69,6 +69,7 @@
       - [NPM/Yarn/PNPM workspaces](/recipes/adopting-nx/adding-to-monorepo)
       - [Migrate From Turborepo](/recipes/adopting-nx/from-turborepo)
       - [Add to any Project](/recipes/adopting-nx/adding-to-existing-project)
+      - [Import an Existing Project into an Nx Workspace](/recipes/adopting-nx/import-project)
       - [Preserving Git Histories](/recipes/adopting-nx/preserving-git-histories)
       - [Manual migration](/recipes/adopting-nx/manual)
     - [React](/recipes/react)
