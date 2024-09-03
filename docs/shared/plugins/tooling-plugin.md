@@ -71,7 +71,7 @@ To create an inferred task, we need to export a `createNodesV2` function from th
 
 ```ts {% fileName="src/index.ts" %}
 import {
-  CreateNodesContext,
+  CreateNodesContextV2,
   CreateNodesV2,
   TargetConfiguration,
   createNodesFromFiles,
@@ -106,7 +106,7 @@ export const createNodesV2: CreateNodesV2<AstroPluginOptions> = [
 async function createNodesInternal(
   configFilePath: string,
   options: AstroPluginOptions,
-  context: CreateNodesContext
+  context: CreateNodesContextV2
 ) {
   const projectRoot = dirname(configFilePath);
 
