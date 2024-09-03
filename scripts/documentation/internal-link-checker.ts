@@ -65,7 +65,7 @@ function extractImageLinks(basePath: string): Record<string, string[]> {
   return glob.sync(`${basePath}/**/*.md`).reduce((acc, path) => {
     const fileContents = readFileContents(path);
     const imageLinks = Array.from(
-      fileContents.matchAll(/!\[.*?\]\((.*?)\)/g)
+      fileContents.matchAll(/!\[.*?\]\((.*?)[ "|\)]/g)
     ).map((matches) => decodeURI(matches[1]));
     if (imageLinks.length) {
       acc[path.replace(basePath, '')] = imageLinks;

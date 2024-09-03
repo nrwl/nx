@@ -6,8 +6,6 @@ cover_image: '/blog/images/2018-11-05/1*5bxmfkHU6iEBjFk7_ml0-w.png'
 tags: [nx]
 ---
 
-![](/blog/images/2018-11-05/1*3KcN8XEiOGRurVItKG2Eiw.avif)
-
 **From Day 1 the Angular team at Google had the goal of building the world’s preeminent next-generation framework on top of web standards.** As a corollary to that larger mission, we had countless meetings with the folks from the Chrome team to figure out how to handle custom elements in the best possible way.
 
 Not many realize it, but a lot of Angular features that we built at Google were designed to handle custom elements. For instance, the famous square-bracket-binding syntax allows the framework to distinguish between properties and attributes.
@@ -102,6 +100,6 @@ Angular Elements is no longer an Angular labs project. It’s stable and can be 
 
 The Ivy renderer, which should become available soon, benefits custom elements in two ways. First, it will make elements a lot smaller, which is great for the CMS/public site scenario. Second, it will make Angular compilation more flexible, which would make the API of creating an Angular element a lot simpler to use. Stay tuned — The unofficial plan is that Ivy renderer will become the default renderer in a minor release of Angular 7!
 
-### Victor Savkin is a co-founder of Nx. We help companies develop like Google since 2016.
+_Victor Savkin is a co-founder of Nx. We help companies develop like Google since 2016._
 
 _If you liked this, follow_ [_@victorsavkin_](http://twitter.com/victorsavkin) _to read more about monorepos, Nx, Angular, and React._

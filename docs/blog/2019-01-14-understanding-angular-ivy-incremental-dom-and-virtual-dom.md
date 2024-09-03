@@ -6,8 +6,6 @@ cover_image: '/blog/images/2019-01-14/1*wl1I1WxI70Zoc3Hs9G101g.png'
 tags: [nx]
 ---
 
-![](/blog/images/2019-01-14/1*9McDGpqiVh3sZ_CK74sxXw.avif)
-
 Here at [Nrwl](/company), we’ve been sharing a lot of insights about Angular Ivy, as there is anticipation about what it will enable us and our clients to do. Angular Ivy is a new Angular renderer, which is radically different from anything we have seen in mainstream frameworks, because it uses incremental DOM.
 
 **What is incremental DOM? How is it different from virtual DOM?**
@@ -82,6 +80,6 @@ Angular has always been about using html and templates (a few years ago I wrote 
 
 Given this, plus the tree shakability and memory footprint of incremental DOM, I think it was the right choice to use incremental DOM as the foundation of the new rendering engine.
 
-### Victor Savkin is a co-founder of Nrwl. We help companies develop like Google, Facebook, and Microsoft since 2016. We provide consulting, engineering and tools.
+_Victor Savkin is a co-founder of Nrwl. We help companies develop like Google, Facebook, and Microsoft since 2016. We provide consulting, engineering and tools._
 
 _If you liked this, follow_ [_@victorsavkin_](http://twitter.com/victorsavkin) _to read more about monorepos, Nx, Angular, and React._

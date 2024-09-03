@@ -66,27 +66,23 @@ With all of our dependencies installed, we can now run `yarn start cart` to star
 
 Next, let us make a simple change to our cart frontend to go through what working on such a team would feel like. The team would like to display “Cart” as the title in the header. We can do this by setting the `title` attribute on our `<nx-example-header />` element in [`apps/cart/src/app/app.tsx`](https://github.com/nrwl/nx-examples/blob/c4a5f8d9550f036b3b51f40ce320f4993adba020/apps/cart/src/app/app.tsx#L11), and we will see the change in our browser after saving.
 
-![](/blog/images/2019-08-22/1*F8qHwmSjeXXO1tpOGkMyRw.avif)
-_Running application with changes_
+![](/blog/images/2019-08-22/1*F8qHwmSjeXXO1tpOGkMyRw.avif "Running application with changes")
 
 Now that we have made our change, let us write a unit test for it. We can add the following test to [`apps/cart/src/app/app.spec.tsx`](https://github.com/nrwl/nx-examples/blob/c4a5f8d9550f036b3b51f40ce320f4993adba020/apps/cart/src/app/app.spec.tsx#L20):
 
-![](/blog/images/2019-08-22/1*uQXSFBSmVcgGQHarXJDjIg.avif)
-_Code for added unit test_
+![](/blog/images/2019-08-22/1*uQXSFBSmVcgGQHarXJDjIg.avif "Code for added unit test")
 
 We can run the test by running `yarn test cart`. Our new test and the other tests in our cart frontend succeed.
 
 Next, let us verify that our change works end-to-end by adding a Cypress test. Add the following to [`apps/cart-e2e/src/integration/app.spec.ts`](https://github.com/nrwl/nx-examples/blob/c4a5f8d9550f036b3b51f40ce320f4993adba020/apps/cart-e2e/src/integration/app.spec.ts#L8):
 
-![](/blog/images/2019-08-22/1*IZAhlD7YFQCwVlmnHAmLWg.avif)
-_Code for added e2e test_
+![](/blog/images/2019-08-22/1*IZAhlD7YFQCwVlmnHAmLWg.avif "Code for added e2e test")
 
 Then we can run `yarn e2e cart-e2e` to run the e2e tests. Our new test and the other tests for our cart frontend succeed. Congratulations, we have successfully implemented our feature!
 
 Lastly, let us deploy our new feature. If we run `yarn nx run cart:deploy` our cart application will be deployed to [Netlify](https://www.netlify.com/)! [See the latest version running here](https://nrwl-nx-examples-cart.netlify.com/cart).
 
-![](/blog/images/2019-08-22/0*HG31a-HQ9tO6Rt3P.avif)
-_Application being deployed_
+![](/blog/images/2019-08-22/0*HG31a-HQ9tO6Rt3P.avif "Application being deployed")
 
 Throughout the implementation and deployment of this feature, we were able to work on the cart frontend in total isolation from other parts of the repository. Working with the cart frontend is just as easy as if it resided in its own dedicated repository. Therefore, we have our fully compliant microfrontend within a monorepo!
 

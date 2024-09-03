@@ -17,8 +17,6 @@ I’m excited about all of these. But deep down the thing I’m excited about th
 
 **Ivy makes Angular dynamic. It enables metaprogramming, and makes things like mixins and higher-order components trivial to implement.**
 
-![](/blog/images/2018-12-07/1*9McDGpqiVh3sZ_CK74sxXw.avif)
-
 ## How to Use Ivy to Do Metaprogramming
 
 Let’s take an example: reading data from the NgRx store. Right now, we would implement it like this:
@@ -79,6 +77,6 @@ The current focus of the Angular team is to make Ivy fully backwards-compatible.
 
 The Ivy renderer brings a lot of goodness to Angular. It makes the framework faster, smaller, and simpler. Ivy also makes Angular more flexible by adding the dynamism, which we can use to do metaprogramming, implement higher-order components and mixins.
 
-### Victor Savkin is a co-founder of Nx. We help companies develop like Google since 2016.
+_Victor Savkin is a co-founder of Nx. We help companies develop like Google since 2016._
 
 _If you liked this, follow_ [_@victorsavkin_](http://twitter.com/victorsavkin) _to read more about monorepos, Nx, Angular, and React._

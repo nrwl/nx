@@ -8,9 +8,7 @@ tags: [nx]
 
 _Victor Savkin is a co-founder of Nrwl. We help companies develop like Google since 2016. We provide consulting, engineering and tools._
 
-![](/blog/images/2018-10-09/1*TigvMknUeSYC2BWKvnDCTw.avif)
-
-Nrwl Nx made building multiple Angular applications that share code easy. It cut the time of creating a shared library from days to minutes. But what about sharing code between the backend and the frontend? Our latest release of NX was built with this use case in mind and makes it easy. In this article we explore how we can use Nx to build multiple Angular applications, in combination with their API services, out of reusable libraries.
+Nx made building multiple Angular applications that share code easy. It cut the time of creating a shared library from days to minutes. But what about sharing code between the backend and the frontend? Our latest release of NX was built with this use case in mind and makes it easy. In this article we explore how we can use Nx to build multiple Angular applications, in combination with their API services, out of reusable libraries.
 
 ## Seeing is Believing
 
@@ -262,6 +260,6 @@ If you find all the generate, serve, build commands a bit intimidating, you aren
 
 **In collaboration with the Angular team, we put together a tool called Angular Console — the UI for the Angular CLI. It’s a great way to use the Angular CLI and Nx, and to learn about advanced features and flags these powerful tools provide.**
 
-### Victor Savkin is a co-founder of Nrwl. We help companies develop like Google since 2016. We provide consulting, engineering and tools.
+_Victor Savkin is a co-founder of Nx. We help companies develop like Google since 2016. We provide consulting, engineering and tools._
 
 _If you liked this, follow_ [_@victorsavkin_](http://twitter.com/victorsavkin) _to read more about monorepos, Nx, Angular, and React._
