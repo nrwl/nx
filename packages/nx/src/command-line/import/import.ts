@@ -36,7 +36,7 @@ export interface ImportOptions {
   /**
    * The remote URL of the repository to import
    */
-  sourceRemoteUrl: string;
+  sourceRepository: string;
   /**
    * The branch or reference to import
    */
@@ -44,11 +44,11 @@ export interface ImportOptions {
   /**
    * The directory in the source repo to import
    */
-  source: string;
+  sourceProjectPath: string;
   /**
    * The directory in the destination repo to import into
    */
-  destination: string;
+  destinationProjectPath: string;
   /**
    * The depth to clone the source repository (limit this for faster clone times)
    */
@@ -59,50 +59,50 @@ export interface ImportOptions {
 }
 
 export async function importHandler(options: ImportOptions) {
-  let { sourceRemoteUrl, ref, source, destination } = options;
+  let { sourceRepository, ref, sourceProjectPath, destinationProjectPath } =
+    options;
 
   output.log({
     title:
-      'Nx will walk you through the process of importing code from another repository into this workspace:',
+      'Nx will walk you through the process of importing code from the source repository into this repository:',
     bodyLines: [
-      `1. Nx will clone the other repository into a temporary directory`,
-      `2. Code to be imported will be moved to the same directory it will be imported into on a temporary branch`,
-      `3. The code will be merged into the current branch in this workspace`,
-      `4. Nx will recommend plugins to integrate tools used in the imported code with Nx`,
-      `5. The code will be successfully imported into this workspace`,
+      `1. Nx will clone the source repository into a temporary directory`,
+      `2. The project code from the sourceProjectPath will be moved to the destinationProjectPath on a temporary branch in this repository`,
+      `3. The temporary branch will be merged into the current branch in this repository`,
+      `4. Nx will recommend plugins to integrate any new tools used in the imported code`,
       '',
-      `Git history will be preserved during this process`,
+      `Git history will be preserved during this process as long as you MERGE these changes. Do NOT squash and do NOT rebase the changes when merging branches.  If you would like to UNDO these changes, run "git reset HEAD~1 --hard"`,
     ],
   });
 
   const tempImportDirectory = join(tmpdir, 'nx-import');
 
-  if (!sourceRemoteUrl) {
-    sourceRemoteUrl = (
-      await prompt<{ sourceRemoteUrl: string }>([
+  if (!sourceRepository) {
+    sourceRepository = (
+      await prompt<{ sourceRepository: string }>([
         {
           type: 'input',
-          name: 'sourceRemoteUrl',
+          name: 'sourceRepository',
           message:
             'What is the URL of the repository you want to import? (This can be a local git repository or a git remote URL)',
           required: true,
         },
       ])
-    ).sourceRemoteUrl;
+    ).sourceRepository;
   }
 
   try {
-    const maybeLocalDirectory = await stat(sourceRemoteUrl);
+    const maybeLocalDirectory = await stat(sourceRepository);
     if (maybeLocalDirectory.isDirectory()) {
-      sourceRemoteUrl = resolve(sourceRemoteUrl);
+      sourceRepository = resolve(sourceRepository);
     }
   } catch (e) {
     // It's a remote url
   }
 
-  const sourceRepoPath = join(tempImportDirectory, 'repo');
+  const sourceTempRepoPath = join(tempImportDirectory, 'repo');
   const spinner = createSpinner(
-    `Cloning ${sourceRemoteUrl} into a temporary directory: ${sourceRepoPath} (Use --depth to limit commit history and speed up clone times)`
+    `Cloning ${sourceRepository} into a temporary directory: ${sourceTempRepoPath} (Use --depth to limit commit history and speed up clone times)`
   ).start();
   try {
     await rm(tempImportDirectory, { recursive: true });
@@ -111,17 +111,23 @@ export async function importHandler(options: ImportOptions) {
 
   let sourceGitClient: GitRepository;
   try {
-    sourceGitClient = await cloneFromUpstream(sourceRemoteUrl, sourceRepoPath, {
-      originName: importRemoteName,
-      depth: options.depth,
-    });
+    sourceGitClient = await cloneFromUpstream(
+      sourceRepository,
+      sourceTempRepoPath,
+      {
+        originName: importRemoteName,
+        depth: options.depth,
+      }
+    );
   } catch (e) {
-    spinner.fail(`Failed to clone ${sourceRemoteUrl} into ${sourceRepoPath}`);
-    let errorMessage = `Failed to clone ${sourceRemoteUrl} into ${sourceRepoPath}. Please double check the remote and try again.\n${e.message}`;
+    spinner.fail(
+      `Failed to clone ${sourceRepository} into ${sourceTempRepoPath}`
+    );
+    let errorMessage = `Failed to clone ${sourceRepository} into ${sourceTempRepoPath}. Please double check the remote and try again.\n${e.message}`;
 
     throw new Error(errorMessage);
   }
-  spinner.succeed(`Cloned into ${sourceRepoPath}`);
+  spinner.succeed(`Cloned into ${sourceTempRepoPath}`);
 
   // Detecting the package manager before preparing the source repo for import.
   const sourcePackageManager = detectPackageManager(sourceGitClient.root);
@@ -145,8 +151,8 @@ export async function importHandler(options: ImportOptions) {
     ).ref;
   }
 
-  if (!source) {
-    source = (
+  if (!sourceProjectPath) {
+    sourceProjectPath = (
       await prompt<{ source: string }>([
         {
           type: 'input',
@@ -157,22 +163,22 @@ export async function importHandler(options: ImportOptions) {
     ).source;
   }
 
-  if (!destination) {
-    destination = (
+  if (!destinationProjectPath) {
+    destinationProjectPath = (
       await prompt<{ destination: string }>([
         {
           type: 'input',
           name: 'destination',
           message: 'Where in this workspace should the code be imported into?',
           required: true,
-          initial: source ? source : undefined,
+          initial: sourceProjectPath ? sourceProjectPath : undefined,
         },
       ])
     ).destination;
   }
 
-  const absSource = join(sourceRepoPath, source);
-  const absDestination = join(process.cwd(), destination);
+  const absSource = join(sourceTempRepoPath, sourceProjectPath);
+  const absDestination = join(process.cwd(), destinationProjectPath);
 
   const destinationGitClient = new GitRepository(process.cwd());
   await assertDestinationEmpty(destinationGitClient, absDestination);
@@ -180,7 +186,7 @@ export async function importHandler(options: ImportOptions) {
   const tempImportBranch = getTempImportBranch(ref);
   await sourceGitClient.addFetchRemote(importRemoteName, ref);
   await sourceGitClient.fetch(importRemoteName, ref);
-  spinner.succeed(`Fetched ${ref} from ${sourceRemoteUrl}`);
+  spinner.succeed(`Fetched ${ref} from ${sourceRepository}`);
   spinner.start(
     `Checking out a temporary branch, ${tempImportBranch} based on ${ref}`
   );
@@ -195,7 +201,7 @@ export async function importHandler(options: ImportOptions) {
     await stat(absSource);
   } catch (e) {
     throw new Error(
-      `The source directory ${source} does not exist in ${sourceRemoteUrl}. Please double check to make sure it exists.`
+      `The source directory ${sourceProjectPath} does not exist in ${sourceRepository}. Please double check to make sure it exists.`
     );
   }
 
@@ -212,23 +218,23 @@ export async function importHandler(options: ImportOptions) {
   await prepareSourceRepo(
     sourceGitClient,
     ref,
-    source,
+    sourceProjectPath,
     relativeDestination,
     tempImportBranch,
-    sourceRemoteUrl
+    sourceRepository
   );
 
   await createTemporaryRemote(
     destinationGitClient,
-    join(sourceRepoPath, '.git'),
+    join(sourceTempRepoPath, '.git'),
     importRemoteName
   );
 
   await mergeRemoteSource(
     destinationGitClient,
-    sourceRemoteUrl,
+    sourceRepository,
     tempImportBranch,
-    destination,
+    destinationProjectPath,
     importRemoteName,
     ref
   );
@@ -311,7 +317,7 @@ export async function importHandler(options: ImportOptions) {
     output.log({
       title: `Check root dependencies`,
       bodyLines: [
-        `"dependencies" and "devDependencies" are not imported from the source repository (${sourceRemoteUrl}).`,
+        `"dependencies" and "devDependencies" are not imported from the source repository (${sourceRepository}).`,
         `You may need to add some of those dependencies to this workspace in order to run tasks successfully.`,
       ],
     });
