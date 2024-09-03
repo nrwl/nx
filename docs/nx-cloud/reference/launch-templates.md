@@ -229,8 +229,8 @@ launch-templates:
         inputs:
           key: 'package-lock.json|yarn.lock|pnpm-lock.yaml|"browsers"'
           paths: |
-            '~/.cache/Cypress'
-            '~/.cache/ms-playwright'
+            '../.cache/Cypress'
+            '../.cache/ms-playwright'
           base-branch: 'main'
       - name: Install Node Modules
         uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/install-node-modules/main.yaml'
@@ -280,8 +280,8 @@ launch-templates:
         inputs:
           key: 'package-lock.json|yarn.lock|pnpm-lock.yaml|"browsers"'
           paths: |
-            '~/.cache/Cypress'
-            '~/.cache/ms-playwright'
+            '../.cache/Cypress'
+            '../.cache/ms-playwright'
           base-branch: 'main'
       - name: Install Node Modules
         uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/install-node-modules/main.yaml'
