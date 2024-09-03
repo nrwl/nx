@@ -46,7 +46,7 @@ Nx can help with the process of moving an existing project into an Nx repository
 
 {% /side-by-side %}
 
-In this example, the source repository contains a single application while the destination repository is already a monorepo. The `nx import` command uses the following syntax:
+In this example, the source repository contains a single application while the destination repository is already a monorepo. You can also import a project from a sub-directory of the source repository (if the source repository is a monorepo, for instance). The `nx import` command uses the following syntax:
 
 ```shell
 nx import [sourceRepository] [destinationProjectPath]
@@ -58,8 +58,12 @@ Make sure to run `nx import` from the **destination repository**, like this:
 
 ```
 
+```{% command="nx import https://github.com/myorg/inventory-app.git apps/inventory" path="~/myorg" %}
+
+```
+
 {% callout type="note" title="Source Repository Local or Remote" %}
-The sourceRepository argument for `nx import` can be either a local file path to the source git repository on your local machine or a git url to the hosted git repository.
+The sourceRepository argument for `nx import` can be either a local file path to the source git repository on your local machine or a git URL to the hosted git repository.
 {% /callout %}
 
 The `nx import` command will:
@@ -74,11 +78,9 @@ Every code base is different, so you will still need to manually:
 
 ## Manage Dependencies
 
-If both repositories are managed with npm workspaces, the imported project should have all its required dependencies defined in its `package.json` file that is moved over. You'll need to make sure that the destination repository includes the `destinationProjectPath` in the `workspaces` defined in the root `package.json`.
+If both repositories are managed with npm workspaces, the imported project will have all its required dependencies defined in its `package.json` file that is moved over. You'll need to make sure that the destination repository includes the `destinationProjectPath` in the `workspaces` defined in the root `package.json`.
 
-If the destination repository is enforcing a single version policy, you'll need to identify all the required dependencies of the imported project and merge those dependencies into the root `package.json` of the destination repository.
-
-If there are significant version conflicts between the imported project and the destination repository, it is often simpler to first align the dependency versions in the separate repositories and then initiate the import process.
+If the destination repository is enforcing a single version policy, you'll need to identify all the required dependencies of the imported project and merge those dependencies into the root `package.json` of the destination repository. If there are significant version conflicts between the imported project and the destination repository, it may be simpler to enable npm workspaces temporarily so that merging dependency conflicts can happen in a separate PR.
 
 ## Migrate External Code and Configuration
 
