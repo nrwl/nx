@@ -34,9 +34,12 @@ export class TipsApi {
         maxResults: 50, // Adjust this number as needed
       });
 
-      console.log('API Response:', JSON.stringify(videosResponse.data, null, 2));
+      // console.log('API Response:', JSON.stringify(videosResponse.data, null, 2));
 
-      if (!videosResponse.data.items || videosResponse.data.items.length === 0) {
+      if (
+        !videosResponse.data.items ||
+        videosResponse.data.items.length === 0
+      ) {
         console.warn('No videos found for the specified channel');
         return [];
       }

@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react';
+import ReactDOM from 'react-dom';
 
 interface VideoPopupProps {
   videoId: string;
@@ -10,7 +11,11 @@ export function VideoPopup({ videoId, onClose }: VideoPopupProps) {
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (popupRef.current && event.target instanceof Node && !popupRef.current.contains(event.target)) {
+      if (
+        popupRef.current &&
+        event.target instanceof Node &&
+        !popupRef.current.contains(event.target)
+      ) {
         onClose();
       }
     };
@@ -25,12 +30,16 @@ export function VideoPopup({ videoId, onClose }: VideoPopupProps) {
     };
   }, [onClose]);
 
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div ref={popupRef} className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden">
-        <div className="relative pt-[56.25%] w-[80vw] max-w-[800px]">
+  // Render the popup using a portal
+  return ReactDOM.createPortal(
+    <div className="fixed inset-0 z-[6] flex items-center justify-center bg-black bg-opacity-50">
+      <div
+        ref={popupRef}
+        className="overflow-hidden rounded-lg bg-white shadow-lg dark:bg-gray-800"
+      >
+        <div className="relative w-[80vw] max-w-[800px] pt-[56.25%]">
           <iframe
-            className="absolute top-0 left-0 w-full h-full"
+            className="absolute left-0 top-0 h-full w-full"
             src={`https://www.youtube.com/embed/${videoId}?autoplay=1`}
             title="YouTube video player"
             frameBorder="0"
@@ -39,6 +48,7 @@ export function VideoPopup({ videoId, onClose }: VideoPopupProps) {
           ></iframe>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body // Mount the popup at the top level of the DOM
   );
 }
