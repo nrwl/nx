@@ -1,9 +1,9 @@
-export const dynamic = 'force-static';
-
-import type { Metadata } from 'next';
 import { tipsApi } from '../../lib/tips.api';
 import { TipsContainer } from '@nx/nx-dev/ui-tips';
 import { DefaultLayout } from '@nx/nx-dev/ui-common';
+import type { Metadata } from 'next';
+
+export const dynamic = 'force-static';
 
 export const metadata: Metadata = {
   title: 'Nx Tips - Quick Insights for Nx Users',
