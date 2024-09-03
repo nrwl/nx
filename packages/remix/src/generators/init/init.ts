@@ -58,6 +58,11 @@ export async function remixInitGeneratorInternal(tree: Tree, options: Schema) {
           'remix:typecheck',
           'remix-typecheck',
         ],
+        serveStaticTargetName: [
+          'serve-static',
+          'vite:serve-static',
+          'vite-serve-static',
+        ],
       },
       options.updatePackageScripts
     );
