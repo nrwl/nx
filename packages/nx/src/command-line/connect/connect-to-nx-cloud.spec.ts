@@ -21,7 +21,7 @@ describe('connect-to-nx-cloud', () => {
       expect(
         withEnvironmentVariables(
           {
-            NX_CLOUD_ACCESS_TOKEN: null,
+            NX_ENABLE_LOGIN: null,
           },
           () =>
             onlyDefaultRunnerIsUsed({
