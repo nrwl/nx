@@ -1,5 +1,7 @@
 # Run Tasks
 
+{% youtube src="https://youtu.be/aEdfYiA5U34" title="Run tasks with Nx" /%}
+
 In a monorepo setup, you don't just run tasks for a single project; you might have hundreds to manage. To help with this, Nx provides a powerful task runner that allows you to:
 
 - easily **run multiple targets** for multiple projects **in parallel**
