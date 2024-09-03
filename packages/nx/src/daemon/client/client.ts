@@ -28,7 +28,7 @@ import {
   DaemonProjectGraphError,
   ProjectGraphError,
 } from '../../project-graph/error-types';
-import { IS_WASM, NxWorkspaceFiles, TaskRun } from '../../native';
+import { IS_WASM, NxWorkspaceFiles, TaskRun, TaskTarget } from '../../native';
 import { HandleGlobMessage } from '../message-types/glob';
 import {
   GET_NX_WORKSPACE_FILES,
@@ -44,7 +44,9 @@ import {
 } from '../message-types/get-files-in-directory';
 import { HASH_GLOB, HandleHashGlobMessage } from '../message-types/hash-glob';
 import {
+  GET_ESTIMATED_TASK_TIMINGS,
   GET_FLAKY_TASKS,
+  HandleGetEstimatedTaskTimings,
   HandleGetFlakyTasks,
   HandleRecordTaskRunsMessage,
   RECORD_TASK_RUNS,
@@ -349,6 +351,15 @@ export class DaemonClient {
     const message: HandleGetFlakyTasks = {
       type: GET_FLAKY_TASKS,
       hashes,
+    };
+
+    return this.sendToDaemonViaQueue(message);
+  }
+
+  async getEstimatedTaskTimings(targets: TaskTarget[]) {
+    const message: HandleGetEstimatedTaskTimings = {
+      type: GET_ESTIMATED_TASK_TIMINGS,
+      targets,
     };
 
     return this.sendToDaemonViaQueue(message);

@@ -1,8 +1,11 @@
 use std::rc::Rc;
+use std::collections::HashMap;
 
 use napi::bindgen_prelude::*;
 use rusqlite::vtab::array;
 use rusqlite::{params, types::Value, Connection};
+
+use crate::native::tasks::types::TaskTarget;
 
 #[napi(object)]
 pub struct TaskRun {
@@ -93,5 +96,40 @@ impl NxTaskHistory {
             .query_map([values], |row| row.get(0))?
             .map(|r| r.map_err(anyhow::Error::from))
             .collect()
+    }
+
+    #[napi]
+    pub fn get_estimated_task_timings(&self, targets: Vec<TaskTarget>) -> anyhow::Result<HashMap<String, i64>> {
+        let values = Rc::new(
+            targets
+                .iter()
+                .map(|t| Value::from(
+                    match &t.configuration {
+                        Some(configuration) => format!("{}:{}:{}", t.project, t.target, configuration),
+                        _ => format!("{}:{}", t.project, t.target)
+                    }
+                ))
+                .collect::<Vec<Value>>(),
+        );
+
+        let durations = self.db
+            .prepare(
+                "
+                SELECT CONCAT_WS(':', project, target, configuration) AS target_string, AVG(end - start) AS duration
+                    FROM task_history
+                        JOIN task_details ON task_history.hash = task_details.hash
+                    WHERE target_string in rarray(?1)
+                    GROUP BY target_string
+                ",
+            )?
+            .query_map([values], |row| {
+                let target_string: String = row.get(0)?;
+                let duration: i64 = row.get(1)?;
+                Ok((target_string, duration))
+            })?
+            .filter_map(|result| result.ok())
+            .collect();
+
+        Ok(durations)
     }
 }

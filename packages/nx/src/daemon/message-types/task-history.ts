@@ -1,10 +1,16 @@
-import type { TaskRun } from '../../native';
+import { TaskRun, TaskTarget } from '../../native';
 
 export const GET_FLAKY_TASKS = 'GET_FLAKY_TASKS' as const;
+export const GET_ESTIMATED_TASK_TIMINGS = 'GET_ESTIMATED_TASK_TIMINGS' as const;
 
 export type HandleGetFlakyTasks = {
   type: typeof GET_FLAKY_TASKS;
   hashes: string[];
+};
+
+export type HandleGetEstimatedTaskTimings = {
+  type: typeof GET_ESTIMATED_TASK_TIMINGS;
+  targets: TaskTarget[];
 };
 
 export function isHandleGetFlakyTasksMessage(
