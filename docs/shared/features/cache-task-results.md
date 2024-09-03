@@ -1,5 +1,7 @@
 # Cache Task Results
 
+{% youtube src="https://youtu.be/o-6jb78uuP0" title="Remote Caching with Nx Replay" /%}
+
 Rebuilding and retesting the same code repeatedly is costly. Nx offers a sophisticated and battle-tested computation caching system that ensures **code is never rebuilt twice**. This:
 
 - drastically **speeds up your task execution times** while developing locally and even more [in CI](/ci/features/remote-cache)
