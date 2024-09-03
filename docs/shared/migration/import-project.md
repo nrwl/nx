@@ -52,14 +52,11 @@ In this example, the source repository contains a single application while the d
 nx import [sourceRepository] [destinationProjectPath]
 ```
 
-Make sure to run `nx import` from the **destination repository**, like this:
+Make sure to run `nx import` from the **destination repository**, like one of these commands:
 
-```{% command="nx import ../inventory-app apps/inventory" path="~/myorg" %}
-
-```
-
-```{% command="nx import https://github.com/myorg/inventory-app.git apps/inventory" path="~/myorg" %}
-
+```shell {% path="~/myorg" %}
+nx import ../inventory-app apps/inventory
+nx import https://github.com/myorg/inventory-app.git apps/inventory
 ```
 
 {% callout type="note" title="Source Repository Local or Remote" %}

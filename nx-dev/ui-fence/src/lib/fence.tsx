@@ -39,7 +39,7 @@ function CodeWrapper(options: {
     options.language === 'shell' ? (
       <TerminalOutput
         command={options.children}
-        path=""
+        path={options.path}
         title={options.title}
         content={null}
       />
