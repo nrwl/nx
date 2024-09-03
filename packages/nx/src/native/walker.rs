@@ -171,7 +171,7 @@ where
     let mut walker = WalkBuilder::new(&directory);
     walker.require_git(false);
     walker.hidden(false);
-    walker.git_ignore(!use_ignores);
+    walker.git_ignore(use_ignores);
     if use_ignores {
         walker.add_custom_ignore_filename(".nxignore");
     }
