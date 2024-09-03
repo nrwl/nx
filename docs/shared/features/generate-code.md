@@ -1,5 +1,7 @@
 # Generate Code
 
+{% youtube src="https://youtu.be/hSM6MgWOYr8" title="Generate Code" /%}
+
 Code generators are like automation scripts designed to streamline your workflow. Essentially, they are TypeScript functions that accept parameters and help boost your productivity by:
 
 - Allowing you to **scaffold new projects** or **augment existing projects** with new features, like [adding Storybook support](/nx-api/storybook#generating-storybook-configuration)
