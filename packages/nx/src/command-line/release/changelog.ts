@@ -56,6 +56,7 @@ import {
   gitPush,
   gitTag,
   parseCommits,
+  parseGitCommit,
 } from './utils/git';
 import { createOrUpdateGithubRelease, getGitHubRepoSlug } from './utils/github';
 import { launchEditor } from './utils/launch-editor';
@@ -95,6 +96,7 @@ export interface ChangelogChange {
   body?: string;
   isBreaking?: boolean;
   githubReferences?: Reference[];
+  // TODO(v20): This should be an array of one or more authors (Co-authored-by is supported at the commit level and should have been supported here)
   author?: { name: string; email: string };
   shortHash?: string;
   revertedHashes?: string[];
@@ -175,10 +177,11 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
       process.exit(1);
     }
     const rawVersionPlans = await readRawVersionPlans();
-    setResolvedVersionPlansOnGroups(
+    await setResolvedVersionPlansOnGroups(
       rawVersionPlans,
       releaseGroups,
-      Object.keys(projectGraph.nodes)
+      Object.keys(projectGraph.nodes),
+      args.verbose
     );
 
     if (args.deleteVersionPlans === undefined) {
@@ -282,6 +285,15 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
               const releaseType = versionPlanSemverReleaseTypeToChangelogType(
                 vp.groupVersionBump
               );
+              let githubReferences = [];
+              let author = undefined;
+              const parsedCommit = vp.commit
+                ? parseGitCommit(vp.commit, true)
+                : null;
+              if (parsedCommit) {
+                githubReferences = parsedCommit.references;
+                author = parsedCommit.author;
+              }
               const changes: ChangelogChange | ChangelogChange[] =
                 !vp.triggeredByProjects
                   ? {
@@ -290,7 +302,8 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
                       description: vp.message,
                       body: '',
                       isBreaking: releaseType.isBreaking,
-                      githubReferences: [],
+                      githubReferences,
+                      author,
                       affectedProjects: '*',
                     }
                   : vp.triggeredByProjects.map((project) => {
@@ -299,9 +312,9 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
                         scope: project,
                         description: vp.message,
                         body: '',
-                        // TODO: what about github references?
                         isBreaking: releaseType.isBreaking,
-                        githubReferences: [],
+                        githubReferences,
+                        author,
                         affectedProjects: [project],
                       };
                     });
@@ -498,6 +511,15 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
                 }
                 const releaseType =
                   versionPlanSemverReleaseTypeToChangelogType(bumpForProject);
+                let githubReferences = [];
+                let author = undefined;
+                const parsedCommit = vp.commit
+                  ? parseGitCommit(vp.commit, true)
+                  : null;
+                if (parsedCommit) {
+                  githubReferences = parsedCommit.references;
+                  author = parsedCommit.author;
+                }
                 return {
                   type: releaseType.type,
                   scope: project.name,
@@ -505,8 +527,8 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
                   body: '',
                   isBreaking: releaseType.isBreaking,
                   affectedProjects: Object.keys(vp.projectVersionBumps),
-                  // TODO: can we include github references when using version plans?
-                  githubReferences: [],
+                  githubReferences,
+                  author,
                 };
               })
               .filter(Boolean);
@@ -642,6 +664,15 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
               const releaseType = versionPlanSemverReleaseTypeToChangelogType(
                 vp.groupVersionBump
               );
+              let githubReferences = [];
+              let author = undefined;
+              const parsedCommit = vp.commit
+                ? parseGitCommit(vp.commit, true)
+                : null;
+              if (parsedCommit) {
+                githubReferences = parsedCommit.references;
+                author = parsedCommit.author;
+              }
               const changes: ChangelogChange | ChangelogChange[] =
                 !vp.triggeredByProjects
                   ? {
@@ -650,7 +681,8 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
                       description: vp.message,
                       body: '',
                       isBreaking: releaseType.isBreaking,
-                      githubReferences: [],
+                      githubReferences,
+                      author,
                       affectedProjects: '*',
                     }
                   : vp.triggeredByProjects.map((project) => {
@@ -659,9 +691,9 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
                         scope: project,
                         description: vp.message,
                         body: '',
-                        // TODO: what about github references?
                         isBreaking: releaseType.isBreaking,
-                        githubReferences: [],
+                        githubReferences,
+                        author,
                         affectedProjects: [project],
                       };
                     });
@@ -1239,7 +1271,9 @@ async function generateChangelogForProjects({
             })
           : false,
       changelogRenderOptions: config.renderOptions,
-      conventionalCommitsConfig: nxReleaseConfig.conventionalCommits,
+      conventionalCommitsConfig: releaseGroup.versionPlans
+        ? null
+        : nxReleaseConfig.conventionalCommits,
       dependencyBumps: projectToAdditionalDependencyBumps.get(project.name),
     });
 

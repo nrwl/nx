@@ -73,6 +73,10 @@ describe('nx release version plans', () => {
     pkg5 = uniq('my-pkg-5');
     runCLI(`generate @nx/workspace:npm-package ${pkg5}`);
 
+    // Normalize git committer information so it is deterministic in snapshots
+    await runCommandAsync(`git config user.email "test@test.com"`);
+    await runCommandAsync(`git config user.name "Test"`);
+
     await runCommandAsync(`git add .`);
     await runCommandAsync(`git commit -m "chore: initial commit"`);
     await runCommandAsync(`git tag -a v0.0.0 -m "v0.0.0"`);
@@ -174,7 +178,12 @@ Here is another line in the message.
 +
 + ### 🚀 Features
 +
-+ - Update the fixed packages with a minor release.`
++ - Update the fixed packages with a minor release.
++
++
++ ### ❤️  Thank You
++
++ - Test`
     );
     expect(resultWithoutDate).toContain(
       `NX   Generating an entry in ${pkg2}/CHANGELOG.md for v0.1.0
@@ -185,7 +194,12 @@ Here is another line in the message.
 +
 + ### 🚀 Features
 +
-+ - Update the fixed packages with a minor release.`
++ - Update the fixed packages with a minor release.
++
++
++ ### ❤️  Thank You
++
++ - Test`
     );
     expect(resultWithoutDate).toContain(
       `NX   Generating an entry in ${pkg3}/CHANGELOG.md for ${pkg3}@0.0.1
@@ -196,9 +210,14 @@ Here is another line in the message.
 +
 + ### 🩹 Fixes
 +
-+ - **${pkg3}:** Update the independent packages with a patch, preminor, and prerelease.
++ - Update the independent packages with a patch, preminor, and prerelease.
 +
-+   Here is another line in the message.`
++   Here is another line in the message.
++
++
++ ### ❤️  Thank You
++
++ - Test`
     );
 
     expect(resultWithoutDate).toContain(
@@ -210,9 +229,14 @@ Here is another line in the message.
 +
 + ### 🚀 Features
 +
-+ - **${pkg4}:** Update the independent packages with a patch, preminor, and prerelease.
++ - Update the independent packages with a patch, preminor, and prerelease.
 +
-+   Here is another line in the message.`
++   Here is another line in the message.
++
++
++ ### ❤️  Thank You
++
++ - Test`
     );
 
     expect(resultWithoutDate).toContain(
@@ -224,9 +248,14 @@ Here is another line in the message.
 +
 + ### 🩹 Fixes
 +
-+ - **${pkg5}:** Update the independent packages with a patch, preminor, and prerelease.
++ - Update the independent packages with a patch, preminor, and prerelease.
 +
-+   Here is another line in the message.`
++   Here is another line in the message.
++
++
++ ### ❤️  Thank You
++
++ - Test`
     );
 
     await writeFile(
@@ -298,12 +327,17 @@ Update packages in both groups with a mix #2
 +
 + ### 🚀 Features
 +
-+ - **${pkg1}:** Update packages in both groups with a mix #1
++ - Update packages in both groups with a mix #1
 +
 +
 + ### 🩹 Fixes
 +
-+ - Update packages in both groups with a mix #2`
++ - Update packages in both groups with a mix #2
++
++
++ ### ❤️  Thank You
++
++ - Test`
     );
     expect(result2WithoutDate).toContain(
       `NX   Generating an entry in ${pkg2}/CHANGELOG.md for v0.2.0
@@ -316,6 +350,11 @@ Update packages in both groups with a mix #2
 + ### 🩹 Fixes
 +
 + - Update packages in both groups with a mix #2
++
++
++ ### ❤️  Thank You
++
++ - Test
 `
     );
     expect(result2WithoutDate).toContain(
@@ -328,7 +367,12 @@ Update packages in both groups with a mix #2
 +
 + ### 🩹 Fixes
 +
-+ - **${pkg3}:** Update packages in both groups with a mix #1`
++ - Update packages in both groups with a mix #1
++
++
++ ### ❤️  Thank You
++
++ - Test`
     );
 
     expect(result2WithoutDate).toContain(
@@ -341,7 +385,12 @@ Update packages in both groups with a mix #2
 +
 + ### 🚀 Features
 +
-+ - **${pkg4}:** Update packages in both groups with a mix #2`
++ - Update packages in both groups with a mix #2
++
++
++ ### ❤️  Thank You
++
++ - Test`
     );
 
     expect(result2WithoutDate).toContain(
@@ -354,7 +403,12 @@ Update packages in both groups with a mix #2
 +
 + ### 🩹 Fixes
 +
-+ - **${pkg5}:** Update packages in both groups with a mix #2`
++ - Update packages in both groups with a mix #2
++
++
++ ### ❤️  Thank You
++
++ - Test`
     );
 
     expect(exists(join(versionPlansDir, 'bump-mixed1.md'))).toBeFalsy();
@@ -512,7 +566,12 @@ const yargs = require('yargs');
 +
 + ### 🚀 Features
 +
-+ - Update the fixed packages with a minor release.`
++ - Update the fixed packages with a minor release.
++
++
++ ### ❤️  Thank You
++
++ - Test`
     );
     expect(resultWithoutDate).toContain(
       `NX   Generating an entry in ${pkg2}/CHANGELOG.md for v0.1.0
@@ -523,7 +582,12 @@ const yargs = require('yargs');
 +
 + ### 🚀 Features
 +
-+ - Update the fixed packages with a minor release.`
++ - Update the fixed packages with a minor release.
++
++
++ ### ❤️  Thank You
++
++ - Test`
     );
     expect(resultWithoutDate).toContain(
       `NX   Generating an entry in ${pkg3}/CHANGELOG.md for ${pkg3}@0.0.1
@@ -534,7 +598,12 @@ const yargs = require('yargs');
 +
 + ### 🩹 Fixes
 +
-+ - **${pkg3}:** Update the independent packages with a patch, preminor, and prerelease.`
++ - Update the independent packages with a patch, preminor, and prerelease.
++
++
++ ### ❤️  Thank You
++
++ - Test`
     );
 
     expect(resultWithoutDate).toContain(
@@ -546,7 +615,12 @@ const yargs = require('yargs');
 +
 + ### 🚀 Features
 +
-+ - **${pkg4}:** Update the independent packages with a patch, preminor, and prerelease.`
++ - Update the independent packages with a patch, preminor, and prerelease.
++
++
++ ### ❤️  Thank You
++
++ - Test`
     );
 
     expect(resultWithoutDate).toContain(
@@ -558,7 +632,12 @@ const yargs = require('yargs');
 +
 + ### 🩹 Fixes
 +
-+ - **${pkg5}:** Update the independent packages with a patch, preminor, and prerelease.`
++ - Update the independent packages with a patch, preminor, and prerelease.
++
++
++ ### ❤️  Thank You
++
++ - Test`
     );
 
     expect(exists(join(versionPlansDir, 'bump-fixed.md'))).toBeFalsy();
@@ -633,12 +712,17 @@ Update packages in both groups with a mix #2
 +
 + ### 🚀 Features
 +
-+ - **${pkg1}:** Update packages in both groups with a mix #1
++ - Update packages in both groups with a mix #1
 +
 +
 + ### 🩹 Fixes
 +
-+ - Update packages in both groups with a mix #2`
++ - Update packages in both groups with a mix #2
++
++
++ ### ❤️  Thank You
++
++ - Test`
     );
     expect(result2WithoutDate).toContain(
       `NX   Generating an entry in ${pkg2}/CHANGELOG.md for v0.2.0
@@ -651,6 +735,11 @@ Update packages in both groups with a mix #2
 + ### 🩹 Fixes
 +
 + - Update packages in both groups with a mix #2
++
++
++ ### ❤️  Thank You
++
++ - Test
 `
     );
     expect(result2WithoutDate).toContain(
@@ -663,7 +752,12 @@ Update packages in both groups with a mix #2
 +
 + ### 🩹 Fixes
 +
-+ - **${pkg3}:** Update packages in both groups with a mix #1`
++ - Update packages in both groups with a mix #1
++
++
++ ### ❤️  Thank You
++
++ - Test`
     );
 
     expect(result2WithoutDate).toContain(
@@ -676,7 +770,12 @@ Update packages in both groups with a mix #2
 +
 + ### 🚀 Features
 +
-+ - **${pkg4}:** Update packages in both groups with a mix #2`
++ - Update packages in both groups with a mix #2
++
++
++ ### ❤️  Thank You
++
++ - Test`
     );
 
     expect(result2WithoutDate).toContain(
@@ -689,7 +788,12 @@ Update packages in both groups with a mix #2
 +
 + ### 🩹 Fixes
 +
-+ - **${pkg5}:** Update packages in both groups with a mix #2`
++ - Update packages in both groups with a mix #2
++
++
++ ### ❤️  Thank You
++
++ - Test`
     );
 
     expect(exists(join(versionPlansDir, 'bump-mixed1.md'))).toBeFalsy();

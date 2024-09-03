@@ -403,6 +403,35 @@ export function parseConventionalCommitsMessage(message: string): {
   };
 }
 
+function extractReferencesFromCommitMessage(
+  message: string,
+  shortHash: string
+): Reference[] {
+  const references: Reference[] = [];
+  for (const m of message.matchAll(PullRequestRE)) {
+    references.push({ type: 'pull-request', value: m[1] });
+  }
+  for (const m of message.matchAll(IssueRE)) {
+    if (!references.some((i) => i.value === m[1])) {
+      references.push({ type: 'issue', value: m[1] });
+    }
+  }
+  references.push({ value: shortHash, type: 'hash' });
+  return references;
+}
+
+function getAllAuthorsForCommit(commit: RawGitCommit): GitCommitAuthor[] {
+  const authors: GitCommitAuthor[] = [commit.author];
+  // Additional authors can be specified in the commit body (depending on the VCS provider)
+  for (const match of commit.body.matchAll(CoAuthoredByRegex)) {
+    authors.push({
+      name: (match.groups.name || '').trim(),
+      email: (match.groups.email || '').trim(),
+    });
+  }
+  return authors;
+}
+
 // https://www.conventionalcommits.org/en/v1.0.0/
 // https://regex101.com/r/FSfNvA/1
 const ConventionalCommitRegex =
@@ -413,7 +442,32 @@ const IssueRE = /(#\d+)/gm;
 const ChangedFileRegex = /(A|M|D|R\d*|C\d*)\t([^\t\n]*)\t?(.*)?/gm;
 const RevertHashRE = /This reverts commit (?<hash>[\da-f]{40})./gm;
 
-export function parseGitCommit(commit: RawGitCommit): GitCommit | null {
+export function parseGitCommit(
+  commit: RawGitCommit,
+  isVersionPlanCommit = false
+): GitCommit | null {
+  // For version plans, we do not require conventional commits and therefore cannot extract data based on that format
+  if (isVersionPlanCommit) {
+    return {
+      ...commit,
+      description: commit.message,
+      type: '',
+      scope: '',
+      references: extractReferencesFromCommitMessage(
+        commit.message,
+        commit.shortHash
+      ),
+      // The commit message is not the source of truth for a breaking (major) change in version plans, so the value is not relevant
+      // TODO(v20): Make the current GitCommit interface more clearly tied to conventional commits
+      isBreaking: false,
+      authors: getAllAuthorsForCommit(commit),
+      // Not applicable to version plans
+      affectedFiles: [],
+      // Not applicable, a version plan cannot have been added in a commit that also reverts another commit
+      revertedHashes: [],
+    };
+  }
+
   const parsedMessage = parseConventionalCommitsMessage(commit.message);
   if (!parsedMessage) {
     return null;
@@ -425,16 +479,10 @@ export function parseGitCommit(commit: RawGitCommit): GitCommit | null {
   let description = parsedMessage.description;
 
   // Extract references from message
-  const references: Reference[] = [];
-  for (const m of description.matchAll(PullRequestRE)) {
-    references.push({ type: 'pull-request', value: m[1] });
-  }
-  for (const m of description.matchAll(IssueRE)) {
-    if (!references.some((i) => i.value === m[1])) {
-      references.push({ type: 'issue', value: m[1] });
-    }
-  }
-  references.push({ value: commit.shortHash, type: 'hash' });
+  const references = extractReferencesFromCommitMessage(
+    description,
+    commit.shortHash
+  );
 
   // Remove references and normalize
   description = description.replace(PullRequestRE, '').trim();
@@ -452,13 +500,7 @@ export function parseGitCommit(commit: RawGitCommit): GitCommit | null {
   }
 
   // Find all authors
-  const authors: GitCommitAuthor[] = [commit.author];
-  for (const match of commit.body.matchAll(CoAuthoredByRegex)) {
-    authors.push({
-      name: (match.groups.name || '').trim(),
-      email: (match.groups.email || '').trim(),
-    });
-  }
+  const authors = getAllAuthorsForCommit(commit);
 
   // Extract file changes from commit body
   const affectedFiles = Array.from(
