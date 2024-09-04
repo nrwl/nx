@@ -1,12 +1,12 @@
+use ignore::WalkBuilder;
 use std::fmt::Debug;
 use std::path::{Path, PathBuf};
-use ignore::{WalkBuilder};
 
 use crate::native::glob::build_glob_set;
 
+use crate::native::logger::enable_logger;
 use crate::native::utils::{get_mod_time, Normalize};
 use walkdir::WalkDir;
-use crate::native::logger::enable_logger;
 
 #[derive(PartialEq, Debug, Ord, PartialOrd, Eq, Clone)]
 pub struct NxFile {
@@ -141,7 +141,7 @@ where
                 normalized_path: file_path.to_normalized_string(),
                 mod_time: get_mod_time(&metadata),
             })
-                .ok();
+            .ok();
 
             Continue
         })
@@ -155,7 +155,7 @@ where
 
 fn create_walker<P>(directory: P, use_ignores: bool) -> WalkBuilder
 where
-    P: AsRef<Path>
+    P: AsRef<Path>,
 {
     let directory: PathBuf = directory.as_ref().into();
 
@@ -166,7 +166,7 @@ where
         "**/.nx/workspace-data",
         "**/.yarn/cache",
     ])
-        .expect("These static ignores always build");
+    .expect("These static ignores always build");
 
     let mut walker = WalkBuilder::new(&directory);
     walker.require_git(false);

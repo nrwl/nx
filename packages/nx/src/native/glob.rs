@@ -123,6 +123,8 @@ pub(crate) fn contains_glob_pattern(value: &str) -> bool {
         || value.contains(')')
 }
 
+pub(crate) use glob_transform::partition_glob;
+
 #[cfg(test)]
 mod test {
     use super::*;

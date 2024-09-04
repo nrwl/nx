@@ -13,6 +13,7 @@ import {
 } from '../../tasks-runner/utils';
 import { updateJson } from '../../generators/utils/json';
 import { PackageJson } from '../../utils/package-json';
+import { getTransformableOutputs } from 'nx/src/native';
 
 export default async function (tree: Tree) {
   // If the workspace doesn't have a nx.json, don't make any changes
@@ -28,10 +29,13 @@ export default async function (tree: Tree) {
         continue;
       }
 
-      try {
-        validateOutputs(target.outputs);
-      } catch (e) {
-        target.outputs = transformLegacyOutputs(project.root, e);
+      const transformableOutputs = getTransformableOutputs(target.outputs);
+      if (transformableOutputs.length) {
+        target.outputs = transformLegacyOutputs(
+          project.root,
+          target.outputs,
+          new Set(transformableOutputs)
+        );
       }
     }
     try {
@@ -44,10 +48,15 @@ export default async function (tree: Tree) {
           (json) => {
             for (const target of Object.values(json.nx?.targets ?? {})) {
               if (target.outputs) {
-                try {
-                  validateOutputs(target.outputs);
-                } catch (e) {
-                  target.outputs = transformLegacyOutputs(project.root, e);
+                const transformableOutputs = getTransformableOutputs(
+                  target.outputs
+                );
+                if (transformableOutputs.length) {
+                  target.outputs = transformLegacyOutputs(
+                    project.root,
+                    target.outputs,
+                    new Set(transformableOutputs)
+                  );
                 }
               }
             }
@@ -64,10 +73,13 @@ export default async function (tree: Tree) {
       if (!target.outputs) {
         continue;
       }
-      try {
-        validateOutputs(target.outputs);
-      } catch (e: any) {
-        target.outputs = transformLegacyOutputs('{projectRoot}', e);
+      const transformableOutputs = getTransformableOutputs(target.outputs);
+      if (transformableOutputs.length) {
+        target.outputs = transformLegacyOutputs(
+          '{projectRoot}',
+          target.outputs,
+          new Set(transformableOutputs)
+        );
       }
     }
 

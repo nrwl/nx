@@ -1,7 +1,8 @@
+use hashbrown::HashMap;
 use std::path::{Path, PathBuf};
 use tracing::trace;
 
-use crate::native::glob::{build_glob_set, contains_glob_pattern};
+use crate::native::glob::{build_glob_set, contains_glob_pattern, partition_glob};
 use crate::native::logger::enable_logger;
 use crate::native::utils::Normalize;
 use crate::native::walker::{nx_walker, nx_walker_sync};
@@ -71,6 +72,22 @@ where
     Ok(found_paths)
 }
 
+fn partition_globs_into_map(globs: Vec<String>) -> HashMap<String, Vec<String>> {
+    globs
+        .iter()
+        .map(|glob| partition_glob(glob))
+        // Right now we have an iterator where each item is (root: String, patterns: String[]).
+        // We want a singular root, with the patterns mapped to it.
+        .fold(
+            HashMap::<String, Vec<String>>::new(),
+            |mut map, (root, patterns)| {
+                let entry = map.entry(root).or_insert(vec![]);
+                entry.extend(patterns);
+                map
+            },
+        )
+}
+
 #[napi]
 /// Expands the given outputs into a list of existing files.
 /// This is used when hashing outputs
@@ -100,23 +117,34 @@ pub fn get_files_for_outputs(
     }
 
     if !globs.is_empty() {
-        // todo(jcammisuli): optimize this as nx_walker_sync is very slow on the root directory. We need to change this to only search smaller directories
-        // Traverse up the path to find a directory
-        // Iterate through the globs and boil it down to directories (hopefully not the root) to walk
-        // Disallow {workspaceRoot}/**/dist/apps/*.txt because it would be slow. Throw an error.
-        // Use the is_glob() function on the parent until it is not a glob instead of exists
+        let partitioned_globs = partition_globs_into_map(globs);
+        println!("partitioned_globs: {:?}", partitioned_globs);
+        for (root, patterns) in partitioned_globs {
+            let root_path = directory.join(&root);
+            let glob_set = build_glob_set(&patterns)?;
+            trace!("walking directory: {:?}", root_path);
+            println!("walking directory: {:?}", root_path);
 
-        let glob_set = build_glob_set(&globs)?;
-        trace!("walking directory: {:?}", directory);
-        let found_paths: Vec<String> = nx_walker(&directory, false).filter_map(|file| {
-            if glob_set.is_match(&file.full_path) {
-                Some(file.normalized_path)
-            } else {
-                None
-            }
-        }).collect();
+            let found_paths: Vec<String> = nx_walker(&root_path, false)
+                .filter_map(|file| {
+                    println!("file: {}", &file.normalized_path);
+                    println!("matches: {}", glob_set.is_match(&file.normalized_path));
+                    if glob_set.is_match(&file.normalized_path) {
+                        Some(
+                            // root_path contains full directory,
+                            // root is only the leading dirs from glob
+                            PathBuf::from(&root)
+                                .join(&file.normalized_path)
+                                .to_normalized_string(),
+                        )
+                    } else {
+                        None
+                    }
+                })
+                .collect();
 
-        files.extend(found_paths);
+            files.extend(found_paths);
+        }
     }
 
     if !directories.is_empty() {
@@ -229,6 +257,26 @@ mod test {
                 "apps/web/.next/content-file",
                 "apps/web/.next/static",
                 "apps/web/.next/static/contents"
+            ]
+        );
+    }
+
+    #[test]
+    fn should_get_files_for_outputs_with_glob() {
+        let temp = setup_fs();
+        let entries = vec![
+            "packages/nx/src/native/*.node".to_string(),
+            "folder/nested-folder".to_string(),
+            "test.txt".to_string(),
+        ];
+        let mut result = get_files_for_outputs(temp.display().to_string(), entries).unwrap();
+        result.sort();
+        assert_eq!(
+            result,
+            vec![
+                "folder/nested-folder",
+                "packages/nx/src/native/nx.darwin-arm64.node",
+                "test.txt"
             ]
         );
     }

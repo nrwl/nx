@@ -3,14 +3,15 @@ use crate::native::glob::glob_parser::parse_glob;
 use itertools::Itertools;
 use std::collections::HashSet;
 
+use super::contains_glob_pattern;
+
 #[derive(Debug)]
 enum GlobType {
     Negative(String),
     Positive(String),
 }
 
-pub fn convert_glob(glob: &str) -> anyhow::Result<Vec<String>> {
-    let (negated, parsed) = parse_glob(glob)?;
+fn convert_glob_segments(negated: bool, parsed: Vec<Vec<GlobGroup>>) -> Vec<String> {
     let mut built_segments: Vec<Vec<GlobType>> = Vec::new();
     for (index, glob_segment) in parsed.iter().enumerate() {
         let is_last = index == parsed.len() - 1;
@@ -58,7 +59,12 @@ pub fn convert_glob(glob: &str) -> anyhow::Result<Vec<String>> {
         .into_iter()
         .collect::<Vec<_>>();
     globs.sort();
-    Ok(globs)
+    globs
+}
+
+pub fn convert_glob(glob: &str) -> anyhow::Result<Vec<String>> {
+    let (negated, parsed) = parse_glob(glob)?;
+    Ok(convert_glob_segments(negated, parsed))
 }
 
 fn build_segment(
@@ -105,6 +111,42 @@ fn build_segment(
     } else {
         vec![GlobType::Positive(existing.to_string())]
     }
+}
+
+fn remove_first<T>(vec: &mut Vec<T>) -> Option<T> {
+    if vec.is_empty() {
+        return None;
+    }
+    Some(vec.remove(0))
+}
+
+pub fn partition_glob(glob: &str) -> (String, Vec<String>) {
+    let (negated, mut groups) = parse_glob(glob).unwrap();
+    // Partition glob into leading directories and patterns that should be matched
+    let mut leading_dir_segments: Vec<String> = vec![];
+    let mut pattern_segments = vec![];
+    while let Some(group) = remove_first(&mut groups) {
+        if group.is_empty() {
+            continue;
+        }
+        match &group[0] {
+            GlobGroup::NonSpecial(value) => {
+                if !contains_glob_pattern(&value) && pattern_segments.is_empty() {
+                    leading_dir_segments.push(value.to_string());
+                } else {
+                    pattern_segments.push(group);
+                }
+            }
+            _ => {
+                pattern_segments.push(group);
+            }
+        }
+    }
+
+    (
+        leading_dir_segments.join("/"),
+        convert_glob_segments(negated, pattern_segments),
+    )
 }
 
 #[cfg(test)]
@@ -232,5 +274,26 @@ mod test {
                 "libs/**/spec.ts.snap"
             ]
         );
+    }
+
+    #[test]
+    fn should_partition_glob_with_leading_dirs() {
+        let (leading_dirs, globs) = super::partition_glob("dist/app/**/!(README|LICENSE).(js|ts)");
+        assert_eq!(leading_dirs, "dist/app");
+        assert_eq!(globs, ["!**/{README,LICENSE}.{js,ts}", "**/*.{js,ts}",]);
+    }
+
+    #[test]
+    fn should_partition_glob_with_leading_dirs_and_simple_patterns() {
+        let (leading_dirs, globs) = super::partition_glob("dist/app/**/*.css");
+        assert_eq!(leading_dirs, "dist/app");
+        assert_eq!(globs, ["**/*.css"]);
+    }
+
+    #[test]
+    fn should_partition_glob_with_leading_dirs_and_no_patterns() {
+        let (leading_dirs, globs) = super::partition_glob("dist/app/");
+        assert_eq!(leading_dirs, "dist/app");
+        assert_eq!(globs, [] as [String; 0]);
     }
 }
