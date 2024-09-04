@@ -64,6 +64,7 @@ export type PublishOptions = NxReleaseArgs &
   Partial<RunManyOptions> & { outputStyle?: OutputStyle } & FirstReleaseArgs & {
     registry?: string;
     tag?: string;
+    access?: string;
     otp?: number;
   };
 
@@ -328,6 +329,12 @@ const publishCommand: CommandModule<NxReleaseArgs, PublishOptions> = {
           type: 'string',
           description: 'The distribution tag to apply to the published package',
         })
+        .option('access', {
+          type: 'string',
+          choices: ['public', 'restricted'],
+          description:
+            'Overrides the access level of the published package. Unscoped packages cannot be set to restricted. See the npm publish documentation for more information.',
+        })
         .option('otp', {
           type: 'number',
           description:
@@ -349,10 +356,8 @@ const publishCommand: CommandModule<NxReleaseArgs, PublishOptions> = {
 const planCommand: CommandModule<NxReleaseArgs, PlanOptions> = {
   command: 'plan [bump]',
   aliases: ['pl'],
-  // TODO: Remove this when docs are added
-  // Create a plan to pick a new version and generate a changelog entry.
-  // Hidden for now until the feature is more stable
-  describe: false,
+  describe:
+    'Create a version plan file to specify the desired semver bump for one or more projects or groups, as well as the relevant changelog entry',
   builder: (yargs) =>
     withAffectedOptions(yargs)
       .positional('bump', {
@@ -392,10 +397,8 @@ const planCommand: CommandModule<NxReleaseArgs, PlanOptions> = {
 
 const planCheckCommand: CommandModule<NxReleaseArgs, PlanCheckOptions> = {
   command: 'plan:check',
-  // TODO: Remove this when docs are added
-  // Create a plan to pick a new version and generate a changelog entry.
-  // Hidden for now until the feature is more stable
-  describe: false,
+  describe:
+    'Ensure that all touched projects have an applicable version plan created for them',
   builder: (yargs) => withAffectedOptions(yargs),
   handler: async (args) => {
     const release = await import('./plan-check');
