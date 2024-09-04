@@ -29,4 +29,4 @@ Install `nx` globally to invoke the command directly using `nx`, or use `npx nx`
 | `--projects`      | string  | Projects to format (comma/space delimited).                                                                                            |
 | `--uncommitted`   | boolean | Uncommitted changes                                                                                                                    |
 | `--untracked`     | boolean | Untracked changes                                                                                                                      |
-| `--version`       | boolean | Show version number                                                                                                                    |
+| `--version`       | boolean | Show version number.                                                                                                                   |

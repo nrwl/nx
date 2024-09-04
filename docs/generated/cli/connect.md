@@ -22,4 +22,4 @@ Install `nx` globally to invoke the command directly using `nx`, or use `npx nx`
 | `--generateToken` | boolean | Explicitly asks for a token to be created, do not override existing tokens from Nx Cloud. |
 | `--help`          | boolean | Show help                                                                                 |
 | `--verbose`       | boolean | Prints additional information about the commands (e.g., stack traces)                     |
-| `--version`       | boolean | Show version number                                                                       |
+| `--version`       | boolean | Show version number.                                                                      |

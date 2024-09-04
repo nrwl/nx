@@ -92,6 +92,6 @@ Watch for changes to project graph and update in-browser:
 | `--uncommitted`   | boolean             | Uncommitted changes                                                                                                                    |
 | `--untracked`     | boolean             | Untracked changes                                                                                                                      |
 | `--verbose`       | boolean             | Prints additional information about the commands (e.g., stack traces)                                                                  |
-| `--version`       | boolean             | Show version number                                                                                                                    |
+| `--version`       | boolean             | Show version number.                                                                                                                   |
 | `--view`          | `projects`, `tasks` | Choose whether to view the projects or task graph. (Default: `projects`)                                                               |
 | `--watch`         | boolean             | Watch for changes to project graph and update in-browser. (Default: `true`)                                                            |

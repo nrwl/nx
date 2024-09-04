@@ -44,4 +44,4 @@ Watch all projects (including newly created projects) in the workspace:
 | `--includeDependentProjects` | boolean | When watching selected projects, include dependent projects as well.        |
 | `--projects`                 | string  | Projects to watch (comma/space delimited).                                  |
 | `--verbose`                  | boolean | Run watch mode in verbose mode, where commands are logged before execution. |
-| `--version`                  | boolean | Show version number                                                         |
+| `--version`                  | boolean | Show version number.                                                        |

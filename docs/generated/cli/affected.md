@@ -110,4 +110,4 @@ Print the task graph to the console:
 | `--uncommitted` | boolean | Uncommitted changes |
 | `--untracked` | boolean | Untracked changes |
 | `--verbose` | boolean | Prints additional information about the commands (e.g., stack traces) |
-| `--version` | boolean | Show version number |
+| `--version` | boolean | Show version number. |

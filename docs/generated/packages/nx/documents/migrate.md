@@ -92,4 +92,4 @@ Create a dedicated commit for each successfully completed migration. You can cus
 | `--runMigrations`            | string  | Execute migrations from a file (when the file isn't provided, execute migrations from migrations.json).                               |
 | `--to`                       | string  | Use the provided versions for packages instead of the ones calculated by the migrator (e.g., --to="@nx/react@16.0.0,@nx/js@16.0.0").  |
 | `--verbose`                  | boolean | Prints additional information about the commands (e.g., stack traces)                                                                 |
-| `--version`                  | boolean | Show version number                                                                                                                   |
+| `--version`                  | boolean | Show version number.                                                                                                                  |

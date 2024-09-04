@@ -85,11 +85,11 @@ Opens a web browser to explore the configuration of "my-app":
 
 ## Options
 
-| Shared Option | Type    | Description         |
-| ------------- | ------- | ------------------- |
-| `--help`      | boolean | Show help           |
-| `--json`      | boolean | Output JSON.        |
-| `--version`   | boolean | Show version number |
+| Shared Option | Type    | Description          |
+| ------------- | ------- | -------------------- |
+| `--help`      | boolean | Show help            |
+| `--json`      | boolean | Output JSON.         |
+| `--version`   | boolean | Show version number. |
 
 ## Subcommands
 
@@ -117,7 +117,7 @@ nx show projects
 | `--uncommitted` | boolean             | Uncommitted changes                                                                                                                    |
 | `--untracked`   | boolean             | Untracked changes                                                                                                                      |
 | `--verbose`     | boolean             | Prints additional information about the commands (e.g., stack traces)                                                                  |
-| `--version`     | boolean             | Show version number                                                                                                                    |
+| `--version`     | boolean             | Show version number.                                                                                                                   |
 | `--withTarget`  | string              | Show only projects that have a specific target.                                                                                        |
 
 ### project
@@ -136,5 +136,5 @@ nx show project <projectName>
 | `--open`        | boolean | Set to false to prevent the browser from opening when using --web.    |
 | `--projectName` | string  | Which project should be viewed?.                                      |
 | `--verbose`     | boolean | Prints additional information about the commands (e.g., stack traces) |
-| `--version`     | boolean | Show version number                                                   |
+| `--version`     | boolean | Show version number.                                                  |
 | `--web`         | boolean | Show project details in the browser. (default when interactive).      |
