@@ -43,25 +43,36 @@ export const rule = ESLintUtils.RuleCreator(() => __filename)({
         !context.physicalFilename.endsWith('examples.ts') &&
         // Ignore spec files
         !context.physicalFilename.endsWith('.spec.ts')
-      )
+      ) &&
+      !context.physicalFilename.includes('packages/create-nx-workspace')
     ) {
       return {};
     }
 
     return {
-      'Property > :matches(Identifier[name="describe"], Identifier[name="description"])':
+      'Property > :matches(Identifier[name="describe"], Identifier[name="description"], TaggedTemplateExpression)':
         (node: TSESTree.Identifier) => {
           const propertyNode = node.parent as TSESTree.Property;
-          const propertyValue = ASTUtils.getStringIfConstant(
-            propertyNode.value
-          );
-          // String description already ends with a . character
+          const simplePropertyValue =
+            propertyNode.value.type === 'Literal' &&
+            typeof propertyNode.value.value === 'boolean'
+              ? ASTUtils.getStringIfConstant(propertyNode.value)
+              : null;
+
+          let stringToCheck = simplePropertyValue;
+          if (!stringToCheck) {
+            if (propertyNode.value.type === 'TaggedTemplateExpression') {
+              stringToCheck = propertyNode.value.quasi.quasis[0].value.raw;
+            }
+          }
+
+          // String description already ends with a . character (or some other form of punctuation)
           if (
-            (propertyNode.value.type === 'Literal' &&
-              typeof propertyNode.value.value === 'boolean') ||
-            !propertyValue ||
+            !stringToCheck ||
             // Call trim() to avoid issues with trailing whitespace
-            propertyValue.trim().endsWith('.')
+            stringToCheck.trim().endsWith('.') ||
+            stringToCheck.trim().endsWith('!') ||
+            stringToCheck.trim().endsWith('?')
           ) {
             return;
           }
