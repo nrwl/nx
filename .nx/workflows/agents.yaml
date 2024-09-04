@@ -1,6 +1,6 @@
 launch-templates:
   linux-medium:
-    resource-class: 'docker_linux_amd64/medium+'
+    resource-class: 'docker_linux_amd64/large+'
     image: 'ubuntu22.04-node20.11-v10'
     env:
       GIT_AUTHOR_EMAIL: test@test.com
@@ -9,6 +9,7 @@ launch-templates:
       GIT_COMMITTER_NAME: Test
       SELECTED_PM: 'pnpm'
       NPM_CONFIG_PREFIX: '/home/workflows/.npm-global'
+      NODE_OPTIONS="--max-old-space-size=10240"
     init-steps:
       - name: Checkout
         uses: 'nrwl/nx-cloud-workflows/v4/workflow-steps/checkout/main.yaml'
