@@ -11,7 +11,7 @@ import { spawn } from 'child_process';
 import { cacheDir } from '../utils/cache-directory';
 import { Task } from '../config/task-graph';
 import { machineId } from 'node-machine-id';
-import { NxCache } from '../native';
+import { NxCache, CachedResult as NativeCacheResult } from '../native';
 import { getDbConnection } from '../utils/db-connection';
 import { isNxCloudUsed } from '../utils/nx-cloud-utils';
 import { readNxJson } from '../config/nx-json';
@@ -25,6 +25,17 @@ export type CachedResult = {
   remote: boolean;
 };
 export type TaskWithCachedResult = { task: Task; cachedResult: CachedResult };
+
+export function getCache(options: DefaultTasksRunnerOptions) {
+  return process.env.NX_DB_CACHE === 'true'
+    ? new DbCache({
+        // Remove this in Nx 21
+        nxCloudRemoteCache: isNxCloudUsed(readNxJson())
+          ? options.remoteCache
+          : null,
+      })
+    : new Cache(options);
+}
 
 export class DbCache {
   private cache = new NxCache(workspaceRoot, cacheDir, getDbConnection());
@@ -56,7 +67,7 @@ export class DbCache {
       );
 
       if (res) {
-        this.cache.applyRemoteCacheResults(task.hash, res);
+        this.applyRemoteCacheResults(task.hash, res);
 
         return {
           ...res,
@@ -68,6 +79,10 @@ export class DbCache {
     } else {
       return null;
     }
+  }
+
+  private applyRemoteCacheResults(hash: string, res: NativeCacheResult) {
+    return this.cache.applyRemoteCacheResults(hash, res);
   }
 
   async put(
