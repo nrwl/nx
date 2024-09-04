@@ -22,6 +22,7 @@ export function addMfEnvToTargetDefaultInputs(tree: Tree) {
   }
   if (!mfEnvVarExists) {
     nxJson.targetDefaults[webpackExecutor].inputs.push({ env: mfEnvVar });
-    updateNxJson(tree, nxJson);
   }
+  nxJson.targetDefaults[webpackExecutor].cache = true;
+  updateNxJson(tree, nxJson);
 }
