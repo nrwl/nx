@@ -1,7 +1,9 @@
 import type { Mode } from '@rspack/core';
+
 export interface RspackExecutorSchema {
   target: 'web' | 'node';
   main: string;
+  index?: string;
   tsConfig: string;
   typeCheck?: boolean;
   outputPath: string;
@@ -9,9 +11,11 @@ export interface RspackExecutorSchema {
   indexHtml?: string;
   mode?: Mode;
   watch?: boolean;
+  baseHref?: string;
+  deployUrl?: string;
 
   rspackConfig: string;
-  optimization?: boolean;
+  optimization?: boolean | OptimizationOptions;
   sourceMap?: boolean | string;
   assets?: any[];
   extractLicenses?: boolean;
@@ -22,4 +26,9 @@ export interface RspackExecutorSchema {
 export interface FileReplacement {
   replace: string;
   with: string;
+}
+
+export interface OptimizationOptions {
+  scripts: boolean;
+  styles: boolean;
 }
