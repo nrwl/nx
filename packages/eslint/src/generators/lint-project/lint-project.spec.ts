@@ -42,7 +42,58 @@ describe('@nx/eslint:lint-project', () => {
     });
   });
 
-  it('should generate a eslint config and configure the target in project configuration', async () => {
+  it('should generate a flat eslint base config', async () => {
+    const originalEslintUseFlatConfig = process.env.ESLINT_USE_FLAT_CONFIG;
+    process.env.ESLINT_USE_FLAT_CONFIG = 'true';
+
+    await lintProjectGenerator(tree, {
+      ...defaultOptions,
+      linter: Linter.EsLint,
+      project: 'test-lib',
+      setParserOptionsProject: false,
+    });
+
+    expect(tree.read('eslint.config.js', 'utf-8')).toMatchInlineSnapshot(`
+      "const nx = require('@nx/eslint-plugin');
+
+      module.exports = [
+        ...nx.configs['flat/base'],
+        ...nx.configs['flat/typescript'],
+        ...nx.configs['flat/javascript'],
+        {
+          files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
+          rules: {
+            '@nx/enforce-module-boundaries': [
+              'error',
+              {
+                enforceBuildableLibDependency: true,
+                allow: [],
+                depConstraints: [
+                  {
+                    sourceTag: '*',
+                    onlyDependOnLibsWithTags: ['*'],
+                  },
+                ],
+              },
+            ],
+          },
+        },
+        {
+          files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
+          // Add your rule overrides here
+          rules: {},
+        },
+      ];
+      "
+    `);
+
+    process.env.ESLINT_USE_FLAT_CONFIG = originalEslintUseFlatConfig;
+  });
+
+  it('should generate a eslint config (legacy)', async () => {
+    const originalEslintUseFlatConfig = process.env.ESLINT_USE_FLAT_CONFIG;
+    process.env.ESLINT_USE_FLAT_CONFIG = 'false';
+
     await lintProjectGenerator(tree, {
       ...defaultOptions,
       linter: Linter.EsLint,
@@ -72,6 +123,8 @@ describe('@nx/eslint:lint-project', () => {
       }
       "
     `);
+
+    process.env.ESLINT_USE_FLAT_CONFIG = originalEslintUseFlatConfig;
   });
 
   it('should generate a project config with lintFilePatterns if provided', async () => {

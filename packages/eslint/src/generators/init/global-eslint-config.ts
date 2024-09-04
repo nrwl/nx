@@ -1,13 +1,10 @@
 import { Linter } from 'eslint';
 import {
   addBlockToFlatConfigExport,
-  addFlatCompatToFlatConfig,
   addImportToFlatConfig,
-  addPluginsToExportsBlock,
   createNodeList,
-  generateAst,
   generateFlatOverride,
-  generateFlatConfigObject,
+  generateFlatPredefinedConfig,
   stringifyNodeList,
 } from '../utils/flat-config/ast-utils';
 
@@ -23,16 +20,6 @@ export const typeScriptOverride = {
    * extend things from if they needed to
    */
   rules: {},
-};
-
-export const typescriptFlatConfigObjectMetadata = {
-  files: ['*.ts', '*.tsx'],
-  rules: {},
-  plugin: {
-    importPath: '@nx/eslint-plugin/typescript',
-    configVar: 'nxTypescriptPlugin',
-    configPath: 'nxTypescriptPlugin.configs.typescript',
-  },
 };
 
 /**
@@ -104,94 +91,50 @@ export const getGlobalEsLintConfiguration = (
   return config;
 };
 
-export const getGlobalFlatEslintConfiguration1 = (
-  unitTestRunner?: string,
-  rootProject?: boolean
-): string => {
-  const nodeList = createNodeList(new Map(), []);
-  let content = stringifyNodeList(nodeList);
-  content = addImportToFlatConfig(content, 'nxPlugin', '@nx/eslint-plugin');
-  content = addPluginsToExportsBlock(content, [
-    { name: '@nx', varName: 'nxPlugin', imp: '@nx/eslint-plugin' },
-  ]);
-  if (!rootProject) {
-    content = addBlockToFlatConfigExport(
-      content,
-      generateFlatOverride(moduleBoundariesOverride)
-    );
-  }
-  content = addBlockToFlatConfigExport(
-    content,
-    generateFlatOverride(typeScriptOverride)
-  );
-  content = addBlockToFlatConfigExport(
-    content,
-    generateFlatOverride(javaScriptOverride)
-  );
-  if (unitTestRunner === 'jest') {
-    content = addBlockToFlatConfigExport(
-      content,
-      generateFlatOverride(jestOverride)
-    );
-  }
-  // add ignore for .nx folder
-  content = addBlockToFlatConfigExport(
-    content,
-    generateAst({
-      ignores: ['.nx'],
-    })
-  );
-
-  content = addFlatCompatToFlatConfig(content);
-
-  return content;
-};
-
-// TODO(leo): take ESLint version into account to do the old logic vs the new one
+// TODO(eslint): take ESLint version into account to do the old logic vs the new one
 export const getGlobalFlatEslintConfiguration = (
   unitTestRunner?: string,
   rootProject?: boolean
 ): string => {
   const nodeList = createNodeList(new Map(), []);
   let content = stringifyNodeList(nodeList);
-  content = addImportToFlatConfig(content, 'nxPlugin', '@nx/eslint-plugin');
-  content = addPluginsToExportsBlock(content, [
-    { name: '@nx', varName: 'nxPlugin', imp: '@nx/eslint-plugin' },
-  ]);
-  if (!rootProject) {
-    content = addBlockToFlatConfigExport(
-      content,
-      generateFlatConfigObject(moduleBoundariesOverride)
-    );
-  }
-  content = addImportToFlatConfig(
+  content = addImportToFlatConfig(content, 'nx', '@nx/eslint-plugin');
+
+  content = addBlockToFlatConfigExport(
     content,
-    typescriptFlatConfigObjectMetadata.plugin!.configVar,
-    typescriptFlatConfigObjectMetadata.plugin!.importPath
+    generateFlatPredefinedConfig('flat/base'),
+    { insertAtTheEnd: false }
   );
   content = addBlockToFlatConfigExport(
     content,
-    generateFlatConfigObject(typescriptFlatConfigObjectMetadata)
+    generateFlatPredefinedConfig('flat/typescript')
   );
   content = addBlockToFlatConfigExport(
     content,
-    generateFlatConfigObject(javaScriptOverride)
+    generateFlatPredefinedConfig('flat/javascript')
   );
+  // TODO(jack): Is this even needed?
   if (unitTestRunner === 'jest') {
     content = addBlockToFlatConfigExport(
       content,
-      generateFlatConfigObject(jestOverride)
+      generateFlatPredefinedConfig('flat/jest')
     );
   }
-  // add ignore for .nx folder
+
+  if (!rootProject) {
+    content = addBlockToFlatConfigExport(
+      content,
+      generateFlatOverride(moduleBoundariesOverride)
+    );
+  }
+
   content = addBlockToFlatConfigExport(
     content,
-    generateAst({
-      ignores: ['.nx'],
+    generateFlatOverride({
+      files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
+      rules: {},
     })
   );
-
-  content = addFlatCompatToFlatConfig(content);
 
   return content;
 };

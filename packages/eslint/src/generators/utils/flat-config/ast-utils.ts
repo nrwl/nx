@@ -1,8 +1,8 @@
 import {
-  ChangeType,
-  StringChange,
   applyChangesToString,
+  ChangeType,
   parseJson,
+  StringChange,
 } from '@nx/devkit';
 import { Linter } from 'eslint';
 import * as ts from 'typescript';
@@ -169,9 +169,9 @@ export function replaceOverride(
           start,
           length: end - start,
         });
-        const updatedData = update(data);
+        let updatedData = update(data);
         if (updatedData) {
-          mapFilePaths(updatedData);
+          updatedData = mapFilePaths(updatedData);
           changes.push({
             type: ChangeType.Insert,
             index: start,
@@ -795,9 +795,9 @@ export function overrideNeedsCompat(
  * based on a given legacy eslintrc JSON override object
  */
 export function generateFlatOverride(
-  override: Linter.ConfigOverride<Linter.RulesRecord>
+  _override: Linter.ConfigOverride<Linter.RulesRecord>
 ): ts.ObjectLiteralExpression | ts.SpreadElement {
-  mapFilePaths(override);
+  const override = mapFilePaths(_override);
 
   // We do not need the compat tooling for this override
   if (!overrideNeedsCompat(override)) {
@@ -841,16 +841,36 @@ export function generateFlatOverride(
     }
 
     return generateAst(flatConfigOverride, {
-      keyToMatch: 'parser',
-      replacer: () => {
-        return ts.factory.createPropertyAssignment(
-          'parser',
-          ts.factory.createCallExpression(
-            ts.factory.createIdentifier('require'),
-            undefined,
-            [ts.factory.createStringLiteral(override.parser)]
-          )
-        );
+      keyToMatch: /^(parser|rules)$/,
+      replacer: (propertyAssignment, propertyName) => {
+        if (propertyName === 'rules') {
+          // Add comment that user can override rules if there are no overrides.
+          if (
+            ts.isObjectLiteralExpression(propertyAssignment.initializer) &&
+            propertyAssignment.initializer.properties.length === 0
+          ) {
+            return ts.addSyntheticLeadingComment(
+              ts.factory.createPropertyAssignment(
+                propertyAssignment.name,
+                ts.factory.createObjectLiteralExpression([])
+              ),
+
+              ts.SyntaxKind.SingleLineCommentTrivia,
+              ' Add your rule overrides here'
+            );
+          }
+          return propertyAssignment;
+        } else {
+          // Change parser to require statement.
+          return ts.factory.createPropertyAssignment(
+            'parser',
+            ts.factory.createCallExpression(
+              ts.factory.createIdentifier('require'),
+              undefined,
+              [ts.factory.createStringLiteral(override.parser)]
+            )
+          );
+        }
       },
     });
   }
@@ -929,138 +949,26 @@ export function generateFlatOverride(
   );
 }
 
-export function generateFlatConfigObject(config: {
-  files: string[];
-  rules?: Linter.RulesRecord;
-  plugin?: {
-    importPath: string;
-    configVar: string;
-    configPath: string;
-  };
-}): ts.ObjectLiteralExpression | ts.SpreadElement {
-  const { files, rules = {}, plugin } = config;
-
-  if (!plugin) {
-    /**
-     * {
-     *   files: [...],
-     *   rules: {<...rules>}
-     * }
-     */
-    return ts.factory.createObjectLiteralExpression(
-      [
-        ts.factory.createPropertyAssignment(
-          ts.factory.createIdentifier('files'),
-          ts.factory.createArrayLiteralExpression(
-            files.map((file) => ts.factory.createStringLiteral(file)),
-            false
-          )
-        ),
-        ts.factory.createPropertyAssignment(
-          ts.factory.createIdentifier('rules'),
-          generateAst(rules)
-        ),
-      ],
-      true
-    );
-  }
-
-  const identifiers = plugin.configPath.split('.');
-
-  let configMapPropertyAccessExpression: ts.PropertyAccessExpression;
-  if (identifiers.length === 1) {
-    configMapPropertyAccessExpression =
-      ts.factory.createPropertyAccessExpression(
-        ts.factory.createIdentifier(identifiers[0]),
-        ts.factory.createIdentifier('map')
-      );
-  } else {
-    configMapPropertyAccessExpression =
-      ts.factory.createPropertyAccessExpression(
-        ts.factory.createIdentifier(identifiers[0]),
-        ts.factory.createIdentifier(identifiers[1])
-      );
-    identifiers.slice(2).forEach((identifier) => {
-      configMapPropertyAccessExpression =
-        ts.factory.createPropertyAccessExpression(
-          configMapPropertyAccessExpression,
-          ts.factory.createIdentifier(identifier)
-        );
-    });
-    configMapPropertyAccessExpression =
-      ts.factory.createPropertyAccessExpression(
-        configMapPropertyAccessExpression,
-        ts.factory.createIdentifier('map')
-      );
-  }
-
-  /**
-   * {
-   *   ...<plugin.configPath>.map(config => ({
-   *     ...config,
-   *     files: [...],
-   *     rules: {
-   *       ...config.rules,
-   *       <...rules>
-   *     }
-   *   }))
-   * }
-   */
+export function generateFlatPredefinedConfig(
+  predefinedConfigName: string
+): ts.ObjectLiteralExpression | ts.SpreadElement {
   return ts.factory.createSpreadElement(
-    ts.factory.createCallExpression(
-      configMapPropertyAccessExpression,
-      undefined,
-      [
-        ts.factory.createArrowFunction(
-          undefined,
-          undefined,
-          [
-            ts.factory.createParameterDeclaration(
-              undefined,
-              undefined,
-              ts.factory.createIdentifier('config')
-            ),
-          ],
-          undefined,
-          ts.factory.createToken(ts.SyntaxKind.EqualsGreaterThanToken),
-          ts.factory.createParenthesizedExpression(
-            ts.factory.createObjectLiteralExpression(
-              [
-                ts.factory.createSpreadAssignment(
-                  ts.factory.createIdentifier('config')
-                ),
-                ts.factory.createPropertyAssignment(
-                  ts.factory.createIdentifier('files'),
-                  generateAst(files)
-                ),
-                ts.factory.createPropertyAssignment(
-                  ts.factory.createIdentifier('rules'),
-                  ts.factory.createObjectLiteralExpression(
-                    [
-                      ts.factory.createSpreadAssignment(
-                        ts.factory.createPropertyAccessExpression(
-                          ts.factory.createIdentifier('config'),
-                          ts.factory.createIdentifier('rules')
-                        )
-                      ),
-                      ...generatePropertyAssignmentsFromObjectEntries(rules),
-                    ],
-                    true
-                  )
-                ),
-              ],
-              true
-            )
-          )
-        ),
-      ]
+    ts.factory.createElementAccessExpression(
+      ts.factory.createPropertyAccessExpression(
+        ts.factory.createIdentifier('nx'),
+        ts.factory.createIdentifier('configs')
+      ),
+      ts.factory.createStringLiteral(predefinedConfigName)
     )
   );
 }
 
 export function mapFilePaths(
-  override: Linter.ConfigOverride<Linter.RulesRecord>
+  _override: Linter.ConfigOverride<Linter.RulesRecord>
 ) {
+  const override: Linter.ConfigOverride<Linter.RulesRecord> = {
+    ..._override,
+  };
   if (override.files) {
     override.files = Array.isArray(override.files)
       ? override.files
@@ -1075,6 +983,7 @@ export function mapFilePaths(
       mapFilePath(file)
     );
   }
+  return override;
 }
 
 function addTSObjectProperty(
@@ -1093,9 +1002,10 @@ function addTSObjectProperty(
 export function generateAst<T>(
   input: unknown,
   propertyAssignmentReplacer?: {
-    keyToMatch: string;
+    keyToMatch: RegExp | string;
     replacer: (
-      propertyAssignment: ts.PropertyAssignment
+      propertyAssignment: ts.PropertyAssignment,
+      propertyName: string
     ) => ts.PropertyAssignment;
   }
 ): T {
@@ -1135,9 +1045,10 @@ export function generateAst<T>(
 function generatePropertyAssignmentsFromObjectEntries(
   input: object,
   propertyAssignmentReplacer?: {
-    keyToMatch: string;
+    keyToMatch: RegExp | string;
     replacer: (
-      propertyAssignment: ts.PropertyAssignment
+      propertyAssignment: ts.PropertyAssignment,
+      propertyName: string
     ) => ts.PropertyAssignment;
   }
 ): ts.PropertyAssignment[] {
@@ -1150,9 +1061,11 @@ function generatePropertyAssignmentsFromObjectEntries(
       );
       if (
         propertyAssignmentReplacer &&
-        key === propertyAssignmentReplacer.keyToMatch
+        (typeof propertyAssignmentReplacer.keyToMatch === 'string'
+          ? key === propertyAssignmentReplacer.keyToMatch
+          : propertyAssignmentReplacer.keyToMatch.test(key))
       ) {
-        return propertyAssignmentReplacer.replacer(original);
+        return propertyAssignmentReplacer.replacer(original, key);
       }
       return original;
     });
