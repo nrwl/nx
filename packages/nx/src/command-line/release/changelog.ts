@@ -946,7 +946,7 @@ async function applyChangesAndExit(
   const changedFiles: string[] = changes.map((f) => f.path);
 
   let deletedFiles: string[] = [];
-  if (args.deleteVersionPlans && !args.dryRun) {
+  if (args.deleteVersionPlans) {
     const planFiles = new Set<string>();
     releaseGroups.forEach((group) => {
       if (group.resolvedVersionPlans) {

@@ -229,6 +229,19 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "19.7.0": {
+      "version": "19.7.0-beta.0",
+      "packages": {
+        "@module-federation/enhanced": {
+          "version": "~0.6.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@module-federation/node": {
+          "version": "~2.5.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }

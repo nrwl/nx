@@ -174,6 +174,9 @@ async function runPublishOnProjects(
   if (args.otp) {
     overrides.otp = args.otp;
   }
+  if (args.access) {
+    overrides.access = args.access;
+  }
   if (args.dryRun) {
     overrides.dryRun = args.dryRun;
     /**
