@@ -72,7 +72,7 @@ function getBuildOptions(buildTarget: string, context: ExecutorContext) {
   };
 }
 
-function startSsrStaticRemotesFileServer(
+async function* startSsrStaticRemotesFileServer(
   ssrStaticRemotesConfig: StaticRemotesConfig,
   context: ExecutorContext,
   options: ModuleFederationSsrDevServerOptions
@@ -80,10 +80,8 @@ function startSsrStaticRemotesFileServer(
   | AsyncGenerator<{ success: boolean; baseUrl?: string }>
   | AsyncIterable<{ success: boolean; baseUrl?: string }> {
   if (ssrStaticRemotesConfig.remotes.length === 0) {
-    return createAsyncIterable(({ next, done }) => {
-      next({ success: true });
-      done();
-    });
+    yield { success: true };
+    return;
   }
 
   // The directories are usually generated with /browser and /server suffixes so we need to copy them to a common directory
@@ -119,7 +117,7 @@ function startSsrStaticRemotesFileServer(
     context
   );
 
-  return staticRemotesIter;
+  yield* staticRemotesIter;
 }
 
 async function startRemotes(
