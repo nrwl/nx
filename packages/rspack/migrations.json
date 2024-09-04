@@ -75,6 +75,23 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "19.7.0": {
+      "version": "19.7.0-beta.1",
+      "packages": {
+        "@rspack/core": {
+          "version": "^1.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@rspack/dev-server": {
+          "version": "^1.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@rspack/plugin-react-refresh": {
+          "version": "^1.0.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   },
   "version": "0.1"

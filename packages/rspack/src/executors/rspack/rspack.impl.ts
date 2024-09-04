@@ -1,12 +1,12 @@
 import { ExecutorContext, logger } from '@nx/devkit';
 import { createAsyncIterable } from '@nx/devkit/src/utils/async-iterable';
+import { printDiagnostics, runTypeCheck } from '@nx/js';
 import { Compiler, MultiCompiler, MultiStats, Stats } from '@rspack/core';
 import { rmSync } from 'fs';
 import * as path from 'path';
 import { createCompiler, isMultiCompiler } from '../../utils/create-compiler';
 import { isMode } from '../../utils/mode-utils';
 import { RspackExecutorSchema } from './schema';
-import { printDiagnostics, runTypeCheck } from '@nx/js';
 
 export default async function* runExecutor(
   options: RspackExecutorSchema,
@@ -27,7 +27,7 @@ export default async function* runExecutor(
     force: true,
     recursive: true,
   });
-  
+
   const compiler = await createCompiler(options, context);
 
   const iterable = createAsyncIterable<{
@@ -49,7 +49,7 @@ export default async function* runExecutor(
             return;
           }
 
-					const statsOptions = getStatsOptions(compiler);
+          const statsOptions = getStatsOptions(compiler);
           const printedStats = stats.toString(statsOptions);
           // Avoid extra empty line when `stats: 'none'`
           if (printedStats) {
@@ -114,13 +114,12 @@ function registerCleanupCallback(callback: () => void) {
   process.on('exit', wrapped);
 }
 
-
 async function executeTypeCheck(
   options: RspackExecutorSchema,
   context: ExecutorContext
 ) {
   const projectConfiguration =
-  context.projectsConfigurations!.projects[context.projectName!];
+    context.projectGraph.nodes[context.projectName].data;
   const result = await runTypeCheck({
     workspaceRoot: path.resolve(projectConfiguration.root),
     tsConfigPath: options.tsConfig,
@@ -136,10 +135,12 @@ async function executeTypeCheck(
 
 function getStatsOptions(compiler: Compiler | MultiCompiler) {
   return isMultiCompiler(compiler)
-  ? {
-      children: compiler.compilers.map(compiler => compiler.options ? compiler.options.stats : undefined)
-    }
-  : compiler.options
-  ? compiler.options.stats
-  : undefined;
+    ? {
+        children: compiler.compilers.map((compiler) =>
+          compiler.options ? compiler.options.stats : undefined
+        ),
+      }
+    : compiler.options
+    ? compiler.options.stats
+    : undefined;
 }

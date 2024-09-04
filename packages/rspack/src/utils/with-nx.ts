@@ -5,8 +5,10 @@ import {
   RspackPluginInstance,
   rspack,
 } from '@rspack/core';
+import { existsSync, readFileSync } from 'fs';
 import { LicenseWebpackPlugin } from 'license-webpack-plugin';
 import * as path from 'path';
+import { join } from 'path';
 import { GeneratePackageJsonPlugin } from '../plugins/generate-package-json-plugin';
 import { getCopyPatterns } from './get-copy-patterns';
 import { SharedConfigContext } from './model';
@@ -33,6 +35,22 @@ export function withNx(_opts = {}) {
 
     const plugins = config.plugins ?? [];
     if (options.extractLicenses) {
+      /**
+       * Needed to prevent an issue with Rspack and Workspaces where the
+       * workspace's root package.json file is added to the dependency tree
+       */
+      let rootPackageJsonName;
+      const pathToRootPackageJson = join(context.root, 'package.json');
+      if (existsSync(pathToRootPackageJson)) {
+        try {
+          const rootPackageJson = JSON.parse(
+            readFileSync(pathToRootPackageJson, 'utf-8')
+          );
+          rootPackageJsonName = rootPackageJson.name;
+        } catch {
+          // do nothing
+        }
+      }
       plugins.push(
         new LicenseWebpackPlugin({
           stats: {
@@ -40,6 +58,16 @@ export function withNx(_opts = {}) {
             errors: false,
           },
           outputFilename: `3rdpartylicenses.txt`,
+          /**
+           * Needed to prevent an issue with Rspack and Workspaces where the
+           * workspace's root package.json file is added to the dependency tree
+           */
+          excludedPackageTest: (packageName) => {
+            if (!rootPackageJsonName) {
+              return false;
+            }
+            return packageName === rootPackageJsonName;
+          },
         }) as unknown as RspackPluginInstance
       );
     }
@@ -59,12 +87,14 @@ export function withNx(_opts = {}) {
       );
     }
 
-    plugins.push(new rspack.CopyRspackPlugin({
-      patterns: getCopyPatterns(
-        normalizeAssets(options.assets, context.root, sourceRoot)
-      ),
-    }));
-    plugins.push(new rspack.ProgressPlugin())
+    plugins.push(
+      new rspack.CopyRspackPlugin({
+        patterns: getCopyPatterns(
+          normalizeAssets(options.assets, context.root, sourceRoot)
+        ),
+      })
+    );
+    plugins.push(new rspack.ProgressPlugin());
 
     options.fileReplacements.forEach((item) => {
       alias[item.replace] = item.with;
@@ -89,18 +119,17 @@ export function withNx(_opts = {}) {
       ...config,
       target: options.target,
       mode: options.mode,
-      context: context.root,
+      entry: {},
+      context: join(
+        context.root,
+        context.projectGraph.nodes[context.projectName].data.root
+      ),
       devtool:
         options.sourceMap === 'hidden'
           ? ('hidden-source-map' as const)
           : options.sourceMap
           ? ('source-map' as const)
           : (false as const),
-      entry: {
-        main: {
-          import: [path.join(context.root, options.main)],
-        },
-      },
       output: {
         path: path.join(context.root, options.outputPath),
         publicPath: '/',
@@ -126,8 +155,9 @@ export function withNx(_opts = {}) {
             : '[name][ext]',
       },
       devServer: {
-        port: 4200,
-        hot: true,
+        ...(config.devServer ?? {}),
+        port: config.devServer?.port ?? 4200,
+        hot: config.devServer?.hot ?? true,
       } as any,
       module: {
         rules: [
@@ -153,18 +183,18 @@ export function withNx(_opts = {}) {
               jsc: {
                 parser: {
                   syntax: 'typescript',
-                  decorators: true
+                  decorators: true,
                 },
                 transform: {
                   legacyDecorator: true,
-                  decoratorMetadata: true
+                  decoratorMetadata: true,
                 },
                 externalHelpers: true,
               },
             },
             type: 'javascript/auto',
           },
-        ]
+        ],
       },
       plugins: plugins,
       resolve: {
@@ -173,7 +203,7 @@ export function withNx(_opts = {}) {
         // once I can reproduce a small example repo with rspack only.
         alias,
         // We need to define the extensions that rspack can resolve
-        extensions: ["...", ".ts", ".tsx", ".jsx"]
+        extensions: ['...', '.ts', '.tsx', '.jsx'],
         // tsConfigPath: path.join(context.root, options.tsConfig),
       },
       infrastructureLogging: {
@@ -186,6 +216,13 @@ export function withNx(_opts = {}) {
         preset: 'normal',
       },
     };
+
+    const mainEntry = options.main
+      ? options.outputFileName
+        ? path.parse(options.outputFileName).name
+        : 'main'
+      : 'main';
+    updated.entry[mainEntry] = path.resolve(context.root, options.main);
 
     return updated;
   };
