@@ -233,6 +233,10 @@ async function ensureWorkspaceIsInSyncAndGetGraphs(
     extraOptions
   );
 
+  if (nxArgs.skipSync) {
+    return { projectGraph, taskGraph };
+  }
+
   // collect unique syncGenerators from the tasks
   const uniqueSyncGenerators = collectEnabledTaskSyncGeneratorsFromTaskGraph(
     taskGraph,
@@ -255,7 +259,7 @@ async function ensureWorkspaceIsInSyncAndGetGraphs(
   const outOfSyncTitle = 'The workspace is out of sync';
   const resultBodyLines = [...syncGeneratorResultsToMessageLines(results), ''];
   const fixMessage =
-    'You can manually run `nx sync` to update your workspace or you can set `sync.applyChanges` to `true` in your `nx.json` to apply the changes automatically when running tasks.';
+    'You can manually run `nx sync` to update your workspace or you can set `sync.applyChanges` to `true` in your `nx.json` to apply the changes automatically when running tasks in interactive environments.';
   const willErrorOnCiMessage = 'Please note that this will be an error on CI.';
 
   if (isCI() || !process.stdout.isTTY) {
