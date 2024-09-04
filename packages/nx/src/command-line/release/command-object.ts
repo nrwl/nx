@@ -277,7 +277,8 @@ const changelogCommand: CommandModule<NxReleaseArgs, ChangelogOptions> = {
           })
           .option('to', {
             type: 'string',
-            description: 'The git reference to use as the end of the changelog.',
+            description:
+              'The git reference to use as the end of the changelog.',
             default: 'HEAD',
           })
           .option('interactive', {
@@ -327,7 +328,8 @@ const publishCommand: CommandModule<NxReleaseArgs, PublishOptions> = {
         })
         .option('tag', {
           type: 'string',
-          description: 'The distribution tag to apply to the published package.',
+          description:
+            'The distribution tag to apply to the published package.',
         })
         .option('access', {
           type: 'string',
