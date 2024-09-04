@@ -1,6 +1,6 @@
 use std::rc::Rc;
 use std::collections::HashMap;
-
+use itertools::Itertools;
 use napi::bindgen_prelude::*;
 use rusqlite::vtab::array;
 use rusqlite::{params, types::Value, Connection};
@@ -99,7 +99,7 @@ impl NxTaskHistory {
     }
 
     #[napi]
-    pub fn get_estimated_task_timings(&self, targets: Vec<TaskTarget>) -> anyhow::Result<HashMap<String, i64>> {
+    pub fn get_estimated_task_timings(&self, targets: Vec<TaskTarget>) -> anyhow::Result<HashMap<String, f64>> {
         let values = Rc::new(
             targets
                 .iter()
@@ -112,7 +112,7 @@ impl NxTaskHistory {
                 .collect::<Vec<Value>>(),
         );
 
-        let durations = self.db
+        self.db
             .prepare(
                 "
                 SELECT CONCAT_WS(':', project, target, configuration) AS target_string, AVG(end - start) AS duration
@@ -124,12 +124,10 @@ impl NxTaskHistory {
             )?
             .query_map([values], |row| {
                 let target_string: String = row.get(0)?;
-                let duration: i64 = row.get(1)?;
+                let duration: f64 = row.get(1)?;
                 Ok((target_string, duration))
             })?
-            .filter_map(|result| result.ok())
-            .collect();
-
-        Ok(durations)
+            .map(|r| r.map_err(anyhow::Error::from))
+            .collect()
     }
 }
