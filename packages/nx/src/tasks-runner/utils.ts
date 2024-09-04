@@ -18,7 +18,10 @@ import { readProjectsConfigurationFromProjectGraph } from '../project-graph/proj
 import { findMatchingProjects } from '../utils/find-matching-projects';
 import { minimatch } from 'minimatch';
 import { isGlobPattern } from '../utils/globs';
-import { validateOutputs as nativeValidateOutputs } from '../native';
+import {
+  getTransformableOutputs,
+  validateOutputs as nativeValidateOutputs,
+} from '../native';
 
 export type NormalizedTargetDependencyConfig = TargetDependencyConfig & {
   projects: string[];
@@ -257,11 +260,11 @@ export function validateOutputs(outputs: string[]) {
   nativeValidateOutputs(outputs);
 }
 
-export function transformLegacyOutputs(
-  projectRoot: string,
-  outputs: string[],
-  transformableOutputs: Set<string>
-) {
+export function transformLegacyOutputs(projectRoot: string, outputs: string[]) {
+  const transformableOutputs = new Set(getTransformableOutputs(outputs));
+  if (transformableOutputs.size === 0) {
+    return outputs;
+  }
   return outputs.map((output) => {
     if (!transformableOutputs.has(output)) {
       return output;

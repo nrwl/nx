@@ -113,23 +113,15 @@ fn build_segment(
     }
 }
 
-fn remove_first<T>(vec: &mut Vec<T>) -> Option<T> {
-    if vec.is_empty() {
-        return None;
-    }
-    Some(vec.remove(0))
-}
-
 pub fn partition_glob(glob: &str) -> (String, Vec<String>) {
-    let (negated, mut groups) = parse_glob(glob).unwrap();
+    let (negated, groups) = parse_glob(glob).unwrap();
     // Partition glob into leading directories and patterns that should be matched
     let mut leading_dir_segments: Vec<String> = vec![];
     let mut pattern_segments = vec![];
-    while let Some(group) = remove_first(&mut groups) {
-        if group.is_empty() {
-            continue;
-        }
-        match &group[0] {
+    groups
+        .into_iter()
+        .filter(|group| !group.is_empty())
+        .for_each(|group| match &group[0] {
             GlobGroup::NonSpecial(value) => {
                 if !contains_glob_pattern(&value) && pattern_segments.is_empty() {
                     leading_dir_segments.push(value.to_string());
@@ -140,8 +132,7 @@ pub fn partition_glob(glob: &str) -> (String, Vec<String>) {
             _ => {
                 pattern_segments.push(group);
             }
-        }
-    }
+        });
 
     (
         leading_dir_segments.join("/"),

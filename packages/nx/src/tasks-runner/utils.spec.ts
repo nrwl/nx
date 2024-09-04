@@ -405,31 +405,27 @@ describe('utils', () => {
   describe('transformLegacyOutputs', () => {
     it('should prefix paths with {workspaceRoot}', () => {
       const outputs = ['dist'];
-      const result = transformLegacyOutputs(
-        'myapp',
-        outputs,
-        new Set(['dist'])
-      );
+      const result = transformLegacyOutputs('myapp', outputs);
       expect(result).toEqual(['{workspaceRoot}/dist']);
     });
 
     it('should prefix unix-absolute paths with {workspaceRoot}', () => {
       const outputs = ['/dist'];
-      const result = transformLegacyOutputs('myapp', outputs, new Set(outputs));
+      const result = transformLegacyOutputs('myapp', outputs);
       expect(result).toEqual(['{workspaceRoot}/dist']);
     });
   });
 
   it('should prefix relative paths with {projectRoot}', () => {
     const outputs = ['./dist'];
-    const result = transformLegacyOutputs('myapp', outputs, new Set(outputs));
+    const result = transformLegacyOutputs('myapp', outputs);
     expect(result).toEqual(['{projectRoot}/dist']);
   });
 
   it('should prefix paths within the project with {projectRoot}', () => {
     const outputs = ['myapp/dist'];
 
-    const result = transformLegacyOutputs('myapp', outputs, new Set(outputs));
+    const result = transformLegacyOutputs('myapp', outputs);
     expect(result).toEqual(['{projectRoot}/dist']);
   });
 

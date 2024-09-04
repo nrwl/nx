@@ -1,6 +1,6 @@
 mod glob_group;
 mod glob_parser;
-mod glob_transform;
+pub mod glob_transform;
 
 use crate::native::glob::glob_transform::convert_glob;
 use globset::{GlobBuilder, GlobSet, GlobSetBuilder};
@@ -122,8 +122,6 @@ pub(crate) fn contains_glob_pattern(value: &str) -> bool {
         || value.contains('(')
         || value.contains(')')
 }
-
-pub(crate) use glob_transform::partition_glob;
 
 #[cfg(test)]
 mod test {

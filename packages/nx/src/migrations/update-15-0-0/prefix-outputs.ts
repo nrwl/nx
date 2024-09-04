@@ -13,7 +13,6 @@ import {
 } from '../../tasks-runner/utils';
 import { updateJson } from '../../generators/utils/json';
 import { PackageJson } from '../../utils/package-json';
-import { getTransformableOutputs } from 'nx/src/native';
 
 export default async function (tree: Tree) {
   // If the workspace doesn't have a nx.json, don't make any changes
@@ -29,14 +28,7 @@ export default async function (tree: Tree) {
         continue;
       }
 
-      const transformableOutputs = getTransformableOutputs(target.outputs);
-      if (transformableOutputs.length) {
-        target.outputs = transformLegacyOutputs(
-          project.root,
-          target.outputs,
-          new Set(transformableOutputs)
-        );
-      }
+      target.outputs = transformLegacyOutputs(project.root, target.outputs);
     }
     try {
       updateProjectConfiguration(tree, projectName, project);
@@ -48,16 +40,10 @@ export default async function (tree: Tree) {
           (json) => {
             for (const target of Object.values(json.nx?.targets ?? {})) {
               if (target.outputs) {
-                const transformableOutputs = getTransformableOutputs(
+                target.outputs = transformLegacyOutputs(
+                  project.root,
                   target.outputs
                 );
-                if (transformableOutputs.length) {
-                  target.outputs = transformLegacyOutputs(
-                    project.root,
-                    target.outputs,
-                    new Set(transformableOutputs)
-                  );
-                }
               }
             }
 
@@ -73,14 +59,7 @@ export default async function (tree: Tree) {
       if (!target.outputs) {
         continue;
       }
-      const transformableOutputs = getTransformableOutputs(target.outputs);
-      if (transformableOutputs.length) {
-        target.outputs = transformLegacyOutputs(
-          '{projectRoot}',
-          target.outputs,
-          new Set(transformableOutputs)
-        );
-      }
+      target.outputs = transformLegacyOutputs('{projectRoot}', target.outputs);
     }
 
     updateNxJson(tree, nxJson);

@@ -2,7 +2,7 @@ use hashbrown::HashMap;
 use std::path::{Path, PathBuf};
 use tracing::trace;
 
-use crate::native::glob::{build_glob_set, contains_glob_pattern, partition_glob};
+use crate::native::glob::{build_glob_set, contains_glob_pattern, glob_transform::partition_glob};
 use crate::native::logger::enable_logger;
 use crate::native::utils::Normalize;
 use crate::native::walker::{nx_walker, nx_walker_sync};
@@ -118,17 +118,13 @@ pub fn get_files_for_outputs(
 
     if !globs.is_empty() {
         let partitioned_globs = partition_globs_into_map(globs);
-        println!("partitioned_globs: {:?}", partitioned_globs);
         for (root, patterns) in partitioned_globs {
             let root_path = directory.join(&root);
             let glob_set = build_glob_set(&patterns)?;
             trace!("walking directory: {:?}", root_path);
-            println!("walking directory: {:?}", root_path);
 
             let found_paths: Vec<String> = nx_walker(&root_path, false)
                 .filter_map(|file| {
-                    println!("file: {}", &file.normalized_path);
-                    println!("matches: {}", glob_set.is_match(&file.normalized_path));
                     if glob_set.is_match(&file.normalized_path) {
                         Some(
                             // root_path contains full directory,
@@ -151,11 +147,11 @@ pub fn get_files_for_outputs(
         for dir in directories {
             let dir = PathBuf::from(dir);
             let dir_path = directory.join(&dir);
-            let files_in_dir = nx_walker_sync(&dir_path, None).filter_map(|e| {
-                let path = dir_path.join(&e);
+            let files_in_dir = nx_walker(&dir_path, false).filter_map(|e| {
+                let path = dir_path.join(&e.normalized_path);
 
                 if path.is_file() {
-                    Some(dir.join(e).to_normalized_string())
+                    Some(dir.join(e.normalized_path).to_normalized_string())
                 } else {
                     None
                 }
