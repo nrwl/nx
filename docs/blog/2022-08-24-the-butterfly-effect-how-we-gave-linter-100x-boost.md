@@ -20,6 +20,19 @@ At a first glimpse, nothing seemed off. The code was logical, didn’t have unne
 
 The code looked like this (we replaced some functions with pseudo-code for simplicity):
 
+```typescript
+const allReachableProjects = Object.keys(graph.nodes).filter(
+  pathExistsBetweenSourceAndNode && graph.dependencies[project]
+);
+
+const externalDependencies = allReachableProjects
+  .map((project) => graph.dependencies[project].filter(isDependencyExternal))
+  .filter((deps) => deps.length)
+  .flat(1);
+
+return Array.from(new Set(externalDependencies));
+```
+
 We filtered all the nodes reachable from our `source` node that had dependencies. We then further mapped each of those projects to arrays of their external dependencies, filtered out those that didn't have any external dependencies, and finally flattened the two-dimensional array to a plain array.
 
 The last line — `Array.from(new Set(…))` uses the above-mentioned trick to filter out duplicates.
@@ -34,6 +47,37 @@ This leads to a **hidden inner loop**. What initially looked like a single loop,
 To avoid this, we used `for` loops with `Array.push`. We start with an empty `reachableProjects` array, and every time project satisfies the condition, we push it to our array. We applied the same logic to `externalDependencies`. Instead of a `map`, `filter`, and `flat`, we use loops and `if` conditions. We introduce a hash table to ensure no duplicates in our resulting collection. Once we add the project to the array, we mark it in our hash table with `true`, so we can quickly check if we have added it already.
 
 This is what the resulting code looked like:
+
+```typescript
+if (!graph.externalNodes) {
+  return [];
+}
+const reachableProjects = [];
+const projects = Object.keys(graph.nodes);
+for (let i = 0; i < projects.length; i++) {
+  if (pathExistsBetweenSourceAndNode) {
+    reachableProjects.push(projects[i]);
+  }
+}
+const externalDependencies = [];
+const externalDependenciesMap = {};
+for (let i = 0; i < reachableProjects.length; i++) {
+  const dependencies = graph.dependencies[reachableProjects[i]];
+  if (dependencies) {
+    for (let d = 0; d < dependencies.length; d++) {
+      const dependency = dependencies[d];
+      if (
+        graph.externalNodes[dependency.target] &&
+        !externalDependenciesMap[dependency.target]
+      ) {
+        externalDependencies.push(dependency);
+        externalDependenciesMap[dependency.target] = true;
+      }
+    }
+  }
+}
+return externalDependencies;
+```
 
 The benchmark showed a **2–3% slowdown**, significantly better than the **initial 20%**. Combined with an optional toggle, this was now acceptable. The success with improving performance motivated us to check the remaining rule code and see if we can apply a similar approach elsewhere.
 
@@ -50,11 +94,75 @@ The graph was already improved earlier for linting and used a slightly more inge
 
 Before:
 
+```typescript
+{
+  "nodes": {
+    "project-a": {
+      // ... other fields
+      "data": {
+        // ... other fields
+        "files": [
+          { "file": "packages/project-a/a.ts", "hash": "...", "ext": "ts" },
+          // ...
+        ]
+      }
+    },
+    // ... other projects
+  },
+  "externalNodes: { ... }
+  "dependencies": [...]
+}
+```
+
 After (notice the files section):
+
+```typescript
+{
+  "nodes": {
+    "project-a": {
+      // ... other fields
+      "data": {
+        // ... other fields
+        "files": {
+          "packages/project-a/a": { "file": "packages/project-a/a.ts", "hash": "...", "ext": "ts" },
+            // ...
+        }
+      }
+    },
+    // ... other projects
+  },
+  "externalNodes: { ... }
+  "dependencies": [...]
+}
+```
 
 Unfortunately, while this gave great results if your monorepo consisted of a **large monolith** app and several small additional libraries, importing from the last project in the graph in a monorepo with **hundreds of projects** was still very slow. We would iterate through all the projects repeatedly and check which project contained that file.
 
 The solution was simple. Instead of modifying the files section of each project from array to lookup table, we added a new field to the graph that contained a table with all the files’ paths, each pointing to its parent project:
+
+```typescript
+{
+  "nodes": {
+    "project-a": {
+      // ... other fields
+      "data": {
+        // ... other fields
+        "files": [
+          { "file": "packages/project-a/a.ts", "hash": "...", "ext": "ts" },
+          // ...
+        ]
+      }
+    },
+    // ... other projects
+  },
+  "externalNodes: { ... }
+  "dependencies": [...],
+  "allFiles": {
+    "packages/project-a/a": "project-a",
+    // ...
+  }
+}
+```
 
 ## Forgotten O(n²) spread
 
@@ -71,6 +179,52 @@ So that couldn’t have been it. Also, the matrix was only generated once and us
 
 The code looked like this:
 
+```typescript
+
+function buildMatrix(graph) {
+  const dependencies = graph.dependencies;
+  const nodes = Object.keys(graph.nodes);
+  const adjList = {};
+  const matrix = {};
+
+  const initMatrixValues = nodes.reduce((acc, value) => {
+    return { ...acc, [value]: false };
+  }, {});
+
+  for (let i = 0; i < nodes.length; i++) {
+    const v = nodes[i];
+    adjList[v] = [];
+    matrix[v] = { ...initMatrixValues };
+  });
+
+  for (let proj in dependencies) {
+    for (let dep of dependencies[proj]) {
+      if (graph.nodes[dep.target]) {
+        adjList[proj].push(dep.target);
+      }
+    }
+  }
+
+  const traverse = (s: string, v: string) => {
+    matrix[s][v] = true;
+    for (let adj of adjList[v]) {
+      if (matrix[s][adj] === false) {
+        traverse(s, adj);
+      }
+    }
+  };
+
+  nodes.forEach((v) => {
+    traverse(v, v);
+  });
+
+  return {
+    matrix,
+    adjList,
+  };
+}
+```
+
 As you might have learned in this article, using `reduce` isn't the smartest thing to do when you care about performance, so our first step was to replace `reduce` with `for` loop + `Array.push`. We then focused on the usual suspect - the recursion in the `traverse` function. But all potential improvements failed to make a difference. So we again added `console.time` to establish what was going on. It turned out, that the problematic line was `matrix[v] = { ...initMatrixValues }`. So what was going on there?
 
 We first create an `initMatrixValues` object, a default hash map where the project name points to `false`. We then loop through the nodes and set the values in the **matrix** where each project points to a copy of the `initMatrixValues`. This seemed like a good idea.
@@ -78,6 +232,20 @@ We first create an `initMatrixValues` object, a default hash map where the proje
 Unfortunately, we forgot that spreading the object iterates through all its members, effectively making **another inner loop** in the forEach. It also creates a temporary object each step and copies all the members to the new object every step of the way. You guessed right — this adds another loop, effectively giving **O(n³)** complexity.
 
 The first step in the optimization was to generate matrix values for every node in an inner loop instead of spreading the prebuilt one.
+
+```typescript
+for (let i = 0; i < nodes.length; i++) {
+  const node = nodes[i];
+  adjList[node] = [];
+
+  const initMatrixValues = {};
+  for (let j = 0; j < nodes.length; j++) {
+    initMatrixValues[nodes[j]] = false;
+  });
+
+  matrix[node] = { ...initMatrixValues };
+});
+```
 
 And then **Stefan**, who helped with the performance investigation, had a **brilliant revelation** — we explicitly use `false` to mark that there is no connection between two nodes. Still, we could also assume that no value means there is no connection. Instead of generating an object with pre-filled nodes with an explicit false value, we could start with an empty object. This finally brought us to an ideal **O(n)** and gave us **100x improvement** in the original run (the function itself is exponentially faster, as seen in [this benchmark](https://jsbench.me/pvl5tmriuh/2)).
 
@@ -90,6 +258,8 @@ for (let i = 0; i < nodes.length; i++) {
   matrix[node] = {};
 }
 ```
+
+{% tweet url="https://twitter.com/meeroslav/status/1550058325236191232" %}
 
 ## Conclusion
 
