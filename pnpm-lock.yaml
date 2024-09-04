@@ -31,8 +31,8 @@ importers:
         specifier: ^0.1.52
         version: 0.1.52
       '@nx/graph':
-        specifier: 0.0.1-alpha.13
-        version: 0.0.1-alpha.13(@nx/devkit@19.7.0-beta.1(nx@19.7.0-beta.1(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.7)(typescript@5.5.3))(@swc/core@1.5.7(@swc/helpers@0.5.11))))(nx@19.7.0-beta.1(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.7)(typescript@5.5.3))(@swc/core@1.5.7(@swc/helpers@0.5.11)))(react-dom@18.3.1(react@18.3.1))(react-router-dom@6.23.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)
+        specifier: 0.0.1-alpha.15
+        version: 0.0.1-alpha.15(@nx/devkit@19.7.0-beta.1(nx@19.7.0-beta.1(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.7)(typescript@5.5.3))(@swc/core@1.5.7(@swc/helpers@0.5.11))))(nx@19.7.0-beta.1(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.7)(typescript@5.5.3))(@swc/core@1.5.7(@swc/helpers@0.5.11)))(react-dom@18.3.1(react@18.3.1))(react-router-dom@6.23.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)
       '@react-spring/three':
         specifier: ^9.7.3
         version: 9.7.3(@react-three/fiber@8.16.8(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(three@0.166.1))(react@18.3.1)(three@0.166.1)
@@ -5832,8 +5832,8 @@ packages:
       '@zkochan/js-yaml':
         optional: true
 
-  '@nx/graph@0.0.1-alpha.13':
-    resolution: {integrity: sha512-sNWhHix9CykuzVUBBsUBOSvTx+OrAen/r9qNZhxNhmGsvmAySIgL5yElShwBGjy09n4AiaCWek+ovkhYb2h9KQ==}
+  '@nx/graph@0.0.1-alpha.15':
+    resolution: {integrity: sha512-wwotjQcUCz46NknyvZ99Pi0qpvVul6Maa1Y+bvcd6SUgrpmbfW/zyMQejlyq+iKufZCTJv/iiDUIKZEKvvVRjw==}
     peerDependencies:
       '@nx/devkit': '>= 19 < 20'
       nx: '>= 19 < 20'
@@ -25752,7 +25752,7 @@ snapshots:
       - supports-color
       - verdaccio
 
-  '@nx/graph@0.0.1-alpha.13(@nx/devkit@19.7.0-beta.1(nx@19.7.0-beta.1(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.7)(typescript@5.5.3))(@swc/core@1.5.7(@swc/helpers@0.5.11))))(nx@19.7.0-beta.1(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.7)(typescript@5.5.3))(@swc/core@1.5.7(@swc/helpers@0.5.11)))(react-dom@18.3.1(react@18.3.1))(react-router-dom@6.23.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)':
+  '@nx/graph@0.0.1-alpha.15(@nx/devkit@19.7.0-beta.1(nx@19.7.0-beta.1(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.7)(typescript@5.5.3))(@swc/core@1.5.7(@swc/helpers@0.5.11))))(nx@19.7.0-beta.1(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.7)(typescript@5.5.3))(@swc/core@1.5.7(@swc/helpers@0.5.11)))(react-dom@18.3.1(react@18.3.1))(react-router-dom@6.23.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)':
     dependencies:
       '@floating-ui/react': 0.26.6(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@headlessui/react': 1.7.19(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
