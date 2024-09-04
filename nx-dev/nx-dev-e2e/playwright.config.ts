@@ -57,7 +57,6 @@ export default defineConfig({
     url: 'http://localhost:4200',
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
-    stdout: 'pipe',
   },
   projects: [
     {
