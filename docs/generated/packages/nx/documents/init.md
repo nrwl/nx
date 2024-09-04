@@ -19,7 +19,7 @@ Install `nx` globally to invoke the command directly using `nx`, or use `npx nx`
 
 | Option                   | Type    | Description                                                                                         |
 | ------------------------ | ------- | --------------------------------------------------------------------------------------------------- |
-| `--help`                 | boolean | Show help                                                                                           |
+| `--help`                 | boolean | Show help.                                                                                          |
 | `--interactive`          | boolean | When false disables interactive input prompts for options. (Default: `true`)                        |
 | `--nxCloud`              | boolean | Set up distributed caching with Nx Cloud.                                                           |
 | `--useDotNxInstallation` | boolean | Initialize an Nx workspace setup in the .nx directory of the current repository. (Default: `false`) |

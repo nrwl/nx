@@ -19,7 +19,7 @@ Install `nx` globally to invoke the command directly using `nx`, or use `npx nx`
 
 | Option      | Type    | Description          |
 | ----------- | ------- | -------------------- |
-| `--help`    | boolean | Show help            |
+| `--help`    | boolean | Show help.           |
 | `--start`   | boolean | (Default: `false`)   |
 | `--stop`    | boolean | (Default: `false`)   |
 | `--version` | boolean | Show version number. |

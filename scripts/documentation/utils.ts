@@ -276,11 +276,12 @@ export function generateOptionsMarkdown(
           )}\`)`;
         }
         if (
-          option.name === 'version' &&
-          option.description === 'Show version number'
+          (option.name === 'version' &&
+            option.description === 'Show version number') ||
+          (option.name === 'help' && option.description === 'Show help')
         ) {
           // Add . to the end of the built-in description for consistency with our other descriptions
-          description = 'Show version number.';
+          description = `${description}.`;
         }
         items.push({ name, type, description });
       });

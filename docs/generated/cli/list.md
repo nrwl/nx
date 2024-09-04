@@ -33,6 +33,6 @@ List the generators and executors available in the `@nx/web` plugin if it is ins
 
 | Option      | Type    | Description                               |
 | ----------- | ------- | ----------------------------------------- |
-| `--help`    | boolean | Show help                                 |
+| `--help`    | boolean | Show help.                                |
 | `--plugin`  | string  | The name of an installed plugin to query. |
 | `--version` | boolean | Show version number.                      |

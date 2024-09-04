@@ -45,7 +45,7 @@ Clears the workspace data directory. Used by Nx to store cached data about the c
 
 | Option                | Type    | Description                                                                                                                                     |
 | --------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| `--help`              | boolean | Show help                                                                                                                                       |
+| `--help`              | boolean | Show help.                                                                                                                                      |
 | `--onlyCache`         | boolean | Clears the Nx cache directory. This will remove all local cache entries for tasks, but will not affect the remote cache.                        |
 | `--onlyCloud`         | boolean | Resets the Nx Cloud client. NOTE: Does not clear the remote cache.                                                                              |
 | `--onlyDaemon`        | boolean | Stops the Nx Daemon, it will be restarted fresh when the next Nx command is run.                                                                |
