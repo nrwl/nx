@@ -193,7 +193,7 @@ export async function gitAdd({
       if (isFileIgnored) {
         ignoredFiles.push(f);
         // git add will fail if trying to add an untracked file that doesn't exist
-      } else if (changedTrackedFiles.has(f)) {
+      } else if (changedTrackedFiles.has(f) || dryRun) {
         filesToAdd.push(f);
       }
     }
