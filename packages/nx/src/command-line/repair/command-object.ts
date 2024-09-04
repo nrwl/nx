@@ -13,7 +13,7 @@ export const yargsRepairCommand: CommandModule = {
 
     If your repository has only ever updated to newer versions of Nx with
     \`nx migrate\`, running \`nx repair\` should do nothing.
-  `,
+  .`,
   builder: (yargs) => linkToNxDevAndExamples(withVerbose(yargs), 'repair'),
   handler: async (args: ArgumentsCamelCase<{ verbose: boolean }>) =>
     process.exit(await (await import('./repair')).repair(args)),

@@ -6,7 +6,7 @@ import { withVerbose } from '../yargs-utils/shared-options';
 export const yargsConnectCommand: CommandModule = {
   command: 'connect',
   aliases: ['connect-to-nx-cloud'],
-  describe: `Connect workspace to Nx Cloud`,
+  describe: `Connect workspace to Nx Cloud.`,
   builder: (yargs) =>
     linkToNxDevAndExamples(withConnectOptions(yargs), 'connect-to-nx-cloud'),
   handler: async (args: any) => {
@@ -26,7 +26,7 @@ function withConnectOptions(yargs: Argv) {
   return withVerbose(yargs).option('generateToken', {
     type: 'boolean',
     description:
-      'Explicitly asks for a token to be created, do not override existing tokens from Nx Cloud',
+      'Explicitly asks for a token to be created, do not override existing tokens from Nx Cloud.',
   });
 }
 
