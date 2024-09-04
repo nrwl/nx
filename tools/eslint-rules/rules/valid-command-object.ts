@@ -51,7 +51,8 @@ export const rule = ESLintUtils.RuleCreator(() => __filename)({
             (propertyNode.value.type === 'Literal' &&
               typeof propertyNode.value.value === 'boolean') ||
             !propertyValue ||
-            propertyValue.endsWith('.')
+            // Call trim() to avoid issues with trailing whitespace
+            propertyValue.trim().endsWith('.')
           ) {
             return;
           }
