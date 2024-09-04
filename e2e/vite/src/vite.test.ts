@@ -7,6 +7,7 @@ import {
   runCommandUntil,
   uniq,
   updateFile,
+  updateJson,
 } from '@nx/e2e/utils';
 import { ChildProcess } from 'child_process';
 import { names } from '@nx/devkit';
@@ -157,6 +158,32 @@ describe('@nx/vite/plugin', () => {
       if (process && process.pid) {
         await killProcessAndPorts(process.pid, port);
       }
+    });
+
+    it('should support importing .js and .css files in tsconfig path', () => {
+      const mylib = uniq('mylib');
+      runCLI(
+        `generate @nx/react:library ${mylib} --bundler=none --unitTestRunner=vitest --directory=libs/${mylib} --project-name-and-root-format=as-provided`
+      );
+      updateFile(`libs/${mylib}/src/styles.css`, `.foo {}`);
+      updateFile(`libs/${mylib}/src/foo.mts`, `export const foo = 'foo';`);
+      updateFile(
+        `libs/${mylib}/src/foo.spec.ts`,
+        `
+          import styles from '~/styles.css?inline';
+          import { foo } from '~/foo.mjs';
+          test('should work', () => {
+            expect(styles).toBeDefined();
+            expect(foo).toBeDefined();
+          });
+        `
+      );
+      updateJson('tsconfig.base.json', (json) => {
+        json.compilerOptions.paths['~/*'] = [`libs/${mylib}/src/*`];
+        return json;
+      });
+
+      expect(() => runCLI(`test ${mylib}`)).not.toThrow();
     });
   });
 
