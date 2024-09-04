@@ -55,7 +55,7 @@ export const rule = ESLintUtils.RuleCreator(() => __filename)({
           const propertyNode = node.parent as TSESTree.Property;
           const simplePropertyValue =
             propertyNode.value.type === 'Literal' &&
-            typeof propertyNode.value.value === 'boolean'
+            typeof propertyNode.value.value !== 'boolean'
               ? ASTUtils.getStringIfConstant(propertyNode.value)
               : null;
 
