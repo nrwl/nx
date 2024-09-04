@@ -1,11 +1,11 @@
 ---
 title: 'report - CLI command'
-description: 'Reports useful version numbers to copy into the Nx issue template'
+description: 'Reports useful version numbers to copy into the Nx issue template.'
 ---
 
 # report
 
-Reports useful version numbers to copy into the Nx issue template
+Reports useful version numbers to copy into the Nx issue template.
 
 ## Usage
 

@@ -1,11 +1,11 @@
 ---
 title: 'watch - CLI command'
-description: 'Watch for changes within projects, and execute commands'
+description: 'Watch for changes within projects, and execute commands.'
 ---
 
 # watch
 
-Watch for changes within projects, and execute commands
+Watch for changes within projects, and execute commands.
 
 ## Usage
 

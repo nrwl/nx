@@ -1,11 +1,11 @@
 ---
 title: 'affected - CLI command'
-description: 'Run target for affected projects'
+description: 'Run target for affected projects.'
 ---
 
 # affected
 
-Run target for affected projects
+Run target for affected projects.
 
 ## Usage
 

@@ -1,11 +1,11 @@
 ---
 title: 'daemon - CLI command'
-description: 'Prints information about the Nx Daemon process or starts a daemon process'
+description: 'Prints information about the Nx Daemon process or starts a daemon process.'
 ---
 
 # daemon
 
-Prints information about the Nx Daemon process or starts a daemon process
+Prints information about the Nx Daemon process or starts a daemon process.
 
 ## Usage
 
