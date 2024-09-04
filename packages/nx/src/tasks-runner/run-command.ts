@@ -25,6 +25,7 @@ import {
   collectEnabledTaskSyncGeneratorsFromTaskGraph,
   flushSyncGeneratorChanges,
   getFailedSyncGeneratorsFixMessageLines,
+  getFlushFailureMessageLines,
   getSyncGeneratorChanges,
   getSyncGeneratorSuccessResultsMessageLines,
   processSyncGeneratorResultErrors,
@@ -265,26 +266,8 @@ async function ensureWorkspaceIsInSyncAndGetGraphs(
   } = processSyncGeneratorResultErrors(results);
   const failedSyncGeneratorsFixMessageLines =
     getFailedSyncGeneratorsFixMessageLines(results, nxArgs.verbose);
-
-  if (areAllResultsFailures) {
-    output.warn({
-      title: `The workspace might be out of sync because ${
-        failedGeneratorsCount === 1
-          ? 'a sync generator'
-          : 'some sync generators'
-      } failed to run`,
-      bodyLines: failedSyncGeneratorsFixMessageLines,
-    });
-
-    // if all sync generators failed to run there's nothing to sync, we just let the tasks run
-    return { projectGraph, taskGraph };
-  }
-
   const outOfSyncTitle = 'The workspace is out of sync';
-  const resultBodyLines = [
-    ...getSyncGeneratorSuccessResultsMessageLines(results),
-    '',
-  ];
+  const resultBodyLines = getSyncGeneratorSuccessResultsMessageLines(results);
   const fixMessage =
     'You can manually run `nx sync` to update your workspace with the identified changes or you can set `sync.applyChanges` to `true` in your `nx.json` to apply the changes automatically when running tasks in interactive environments.';
   const willErrorOnCiMessage =
@@ -293,19 +276,49 @@ async function ensureWorkspaceIsInSyncAndGetGraphs(
   if (isCI() || !process.stdout.isTTY) {
     // If the user is running in CI or is running in a non-TTY environment we
     // throw an error to stop the execution of the tasks.
-    let errorMessage = `${outOfSyncTitle}\n${resultBodyLines.join(
-      '\n'
-    )}\n${fixMessage}`;
+    if (areAllResultsFailures) {
+      output.error({
+        title: `The workspace is probably out of sync because ${
+          failedGeneratorsCount === 1
+            ? 'a sync generator'
+            : 'some sync generators'
+        } failed to run`,
+        bodyLines: failedSyncGeneratorsFixMessageLines,
+      });
+    } else {
+      output.error({
+        title: outOfSyncTitle,
+        bodyLines: [...resultBodyLines, '', fixMessage],
+      });
 
-    if (anySyncGeneratorsFailed) {
-      errorMessage += `\n\nAdditionally, ${
+      if (anySyncGeneratorsFailed) {
+        output.error({
+          title:
+            failedGeneratorsCount === 1
+              ? 'A sync generator failed to run'
+              : 'Some sync generators failed to run',
+          bodyLines: failedSyncGeneratorsFixMessageLines,
+        });
+      }
+    }
+
+    process.exit(1);
+  }
+
+  if (areAllResultsFailures) {
+    output.warn({
+      title: `The workspace is probably out of sync because ${
         failedGeneratorsCount === 1
           ? 'a sync generator'
           : 'some sync generators'
-      } failed to run:\n\n${failedSyncGeneratorsFixMessageLines.join('\n')}`;
-    }
+      } failed to run`,
+      bodyLines: failedSyncGeneratorsFixMessageLines,
+    });
 
-    throw new Error(errorMessage);
+    await confirmRunningTasksWithSyncFailures();
+
+    // if all sync generators failed to run there's nothing to sync, we just let the tasks run
+    return { projectGraph, taskGraph };
   }
 
   if (nxJson.sync?.applyChanges === false) {
@@ -317,7 +330,8 @@ async function ensureWorkspaceIsInSyncAndGetGraphs(
       title: outOfSyncTitle,
       bodyLines: [
         ...resultBodyLines,
-        'Your workspace is set to not apply changes automatically (`sync.applyChanges` is set to `false` in your `nx.json`).',
+        '',
+        'Your workspace is set to not apply the identified changes automatically (`sync.applyChanges` is set to `false` in your `nx.json`).',
         willErrorOnCiMessage,
         fixMessage,
       ],
@@ -331,6 +345,8 @@ async function ensureWorkspaceIsInSyncAndGetGraphs(
             : 'Some sync generators failed to run',
         bodyLines: failedSyncGeneratorsFixMessageLines,
       });
+
+      await confirmRunningTasksWithSyncFailures();
     }
 
     return { projectGraph, taskGraph };
@@ -340,8 +356,9 @@ async function ensureWorkspaceIsInSyncAndGetGraphs(
     title: outOfSyncTitle,
     bodyLines: [
       ...resultBodyLines,
+      '',
       nxJson.sync?.applyChanges === true
-        ? 'Proceeding to sync the changes automatically (`sync.applyChanges` is set to `true` in your `nx.json`).'
+        ? 'Proceeding to sync the identified changes automatically (`sync.applyChanges` is set to `true` in your `nx.json`).'
         : willErrorOnCiMessage,
     ],
   });
@@ -354,22 +371,24 @@ async function ensureWorkspaceIsInSyncAndGetGraphs(
     const spinner = ora('Syncing the workspace...');
     spinner.start();
 
-    try {
-      // Flush sync generator changes to disk
-      await flushSyncGeneratorChanges(results);
-    } catch (e) {
+    // Flush sync generator changes to disk
+    const flushResult = await flushSyncGeneratorChanges(results);
+
+    if ('generatorFailures' in flushResult) {
       spinner.fail();
       output.error({
         title: 'Failed to sync the workspace',
         bodyLines: [
-          'Syncing the workspace failed with the following error:',
-          '',
-          e.message,
-          ...(nxArgs.verbose ? [`\n${e.stack}`] : []),
+          ...getFlushFailureMessageLines(flushResult, nxArgs.verbose),
+          ...(flushResult.generalFailure
+            ? [
+                'If needed, you can run the tasks with the `--skip-sync` flag to disable syncing.',
+              ]
+            : []),
         ],
       });
 
-      return { projectGraph, taskGraph };
+      await confirmRunningTasksWithSyncFailures();
     }
 
     // Re-create project graph and task graph
@@ -383,48 +402,52 @@ async function ensureWorkspaceIsInSyncAndGetGraphs(
       extraOptions
     );
 
-    if (nxJson.sync?.applyChanges === true) {
-      spinner.succeed(`The workspace was synced successfully!
-
-Please make sure to commit the changes to your repository or this will error on CI.`);
-    } else {
-      // The user was prompted and we already logged a message about erroring on CI
-      // so here we just tell them to commit the changes.
-      spinner.succeed(`The workspace was synced successfully!
-
-Please make sure to commit the changes to your repository.`);
-    }
+    const successTitle = anySyncGeneratorsFailed
+      ? // the identified changes were synced successfully, but the workspace
+        // is still not up to date, which we'll mention next
+        'The identified changes were synced successfully!'
+      : // the workspace is fully up to date
+        'The workspace was synced successfully!';
+    const successSubtitle =
+      nxJson.sync?.applyChanges === true
+        ? 'Please make sure to commit the changes to your repository or this will error on CI.'
+        : // The user was prompted and we already logged a message about erroring on CI
+          // so here we just tell them to commit the changes.
+          'Please make sure to commit the changes to your repository.';
+    spinner.succeed(`${successTitle}\n\n${successSubtitle}`);
 
     if (anySyncGeneratorsFailed) {
       output.warn({
-        title: `The workspace might still be out of sync because ${
+        title: `The workspace is probably still out of sync because ${
           failedGeneratorsCount === 1
             ? 'a sync generator'
             : 'some sync generators'
         } failed to run`,
         bodyLines: failedSyncGeneratorsFixMessageLines,
       });
+
+      await confirmRunningTasksWithSyncFailures();
     }
   } else {
-    output.warn({
-      title: 'Syncing the workspace was skipped',
-      bodyLines: [
-        'This could lead to unexpected results or errors when running tasks.',
-        fixMessage,
-        ...(anySyncGeneratorsFailed
-          ? [
-              '',
-              `Additionally, ${
-                failedGeneratorsCount === 1
-                  ? 'a sync generator'
-                  : 'some sync generators'
-              } failed to run:`,
-              '',
-              ...failedSyncGeneratorsFixMessageLines,
-            ]
-          : []),
-      ],
-    });
+    if (anySyncGeneratorsFailed) {
+      output.warn({
+        title:
+          failedGeneratorsCount === 1
+            ? 'A sync generator failed to report the sync status'
+            : 'Some sync generators failed to report the sync status',
+        bodyLines: failedSyncGeneratorsFixMessageLines,
+      });
+
+      await confirmRunningTasksWithSyncFailures();
+    } else {
+      output.warn({
+        title: 'Syncing the workspace was skipped',
+        bodyLines: [
+          'This could lead to unexpected results or errors when running tasks.',
+          fixMessage,
+        ],
+      });
+    }
   }
 
   return { projectGraph, taskGraph };
@@ -436,7 +459,7 @@ async function promptForApplyingSyncGeneratorChanges(): Promise<boolean> {
       name: 'applyChanges',
       type: 'select',
       message:
-        'Would you like to sync the changes to get your worskpace up to date?',
+        'Would you like to sync the identified changes to get your worskpace up to date?',
       choices: [
         {
           name: 'yes',
@@ -456,6 +479,41 @@ async function promptForApplyingSyncGeneratorChanges(): Promise<boolean> {
     return await prompt<{ applyChanges: 'yes' | 'no' }>([promptConfig]).then(
       ({ applyChanges }) => applyChanges === 'yes'
     );
+  } catch {
+    process.exit(1);
+  }
+}
+
+async function confirmRunningTasksWithSyncFailures(): Promise<void> {
+  try {
+    const promptConfig = {
+      name: 'runTasks',
+      type: 'select',
+      message:
+        'Would you like to ignore the sync failures and continue running the tasks?',
+      choices: [
+        {
+          name: 'yes',
+          message: 'Yes, ignore the failures and run the tasks',
+        },
+        {
+          name: 'no',
+          message: `No, don't run the tasks`,
+        },
+      ],
+      footer: () =>
+        chalk.dim(
+          `\nWhen running on CI and there are sync failures, the tasks won't run. Addressing the errors above is highly recommended to prevent failures in CI.`
+        ),
+    };
+
+    const runTasks = await prompt<{ runTasks: 'yes' | 'no' }>([
+      promptConfig,
+    ]).then(({ runTasks }) => runTasks === 'yes');
+
+    if (!runTasks) {
+      process.exit(1);
+    }
   } catch {
     process.exit(1);
   }

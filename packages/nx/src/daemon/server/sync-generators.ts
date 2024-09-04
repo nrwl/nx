@@ -9,6 +9,7 @@ import {
   collectRegisteredGlobalSyncGenerators,
   flushSyncGeneratorChanges,
   runSyncGenerator,
+  type FlushSyncGeneratorChangesResult,
   type SyncGeneratorRunResult,
   type SyncGeneratorRunSuccessResult,
 } from '../../utils/sync-generators';
@@ -71,7 +72,7 @@ export async function getCachedSyncGeneratorChanges(
 
 export async function flushSyncGeneratorChangesToDisk(
   generators: string[]
-): Promise<void> {
+): Promise<FlushSyncGeneratorChangesResult> {
   log('flush sync generators changes', generators);
 
   const results = await getCachedSyncGeneratorChanges(generators);
@@ -80,7 +81,7 @@ export async function flushSyncGeneratorChangesToDisk(
     syncGeneratorsCacheResultPromises.delete(generator);
   }
 
-  await flushSyncGeneratorChanges(results);
+  return await flushSyncGeneratorChanges(results);
 }
 
 export function collectAndScheduleSyncGenerators(

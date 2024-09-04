@@ -38,14 +38,33 @@ export type SyncGeneratorRunSuccessResult = {
   outOfSyncMessage?: string;
 };
 
+// Error is not serializable, so we use a simple object instead
+type SerializableSimpleError = {
+  message: string;
+  stack: string | undefined;
+};
+
 export type SyncGeneratorRunErrorResult = {
   generatorName: string;
-  error: Error;
+  error: SerializableSimpleError;
 };
 
 export type SyncGeneratorRunResult =
   | SyncGeneratorRunSuccessResult
   | SyncGeneratorRunErrorResult;
+
+type FlushSyncGeneratorChangesSuccess = { success: true };
+type FlushSyncGeneratorFailure = {
+  generator: string;
+  error: SerializableSimpleError;
+};
+type FlushSyncGeneratorChangesFailure = {
+  generatorFailures: FlushSyncGeneratorFailure[];
+  generalFailure?: SerializableSimpleError;
+};
+export type FlushSyncGeneratorChangesResult =
+  | FlushSyncGeneratorChangesSuccess
+  | FlushSyncGeneratorChangesFailure;
 
 export async function getSyncGeneratorChanges(
   generators: string[]
@@ -71,14 +90,14 @@ export async function getSyncGeneratorChanges(
 
 export async function flushSyncGeneratorChanges(
   results: SyncGeneratorRunResult[]
-): Promise<void> {
+): Promise<FlushSyncGeneratorChangesResult> {
   if (isOnDaemon() || !daemonClient.enabled()) {
-    await flushSyncGeneratorChangesToDisk(results);
-  } else {
-    await daemonClient.flushSyncGeneratorChangesToDisk(
-      results.map((r) => r.generatorName)
-    );
+    return await flushSyncGeneratorChangesToDisk(results);
   }
+
+  return await daemonClient.flushSyncGeneratorChangesToDisk(
+    results.map((r) => r.generatorName)
+  );
 }
 
 export async function collectAllRegisteredSyncGenerators(
@@ -135,7 +154,7 @@ export async function runSyncGenerator(
   } catch (e) {
     return {
       generatorName: generatorSpecifier,
-      error: e,
+      error: { message: e.message, stack: e.stack },
     };
   }
 }
@@ -253,36 +272,70 @@ export function getFailedSyncGeneratorsFixMessageLines(
   verbose: boolean
 ): string[] {
   const messageLines: string[] = [];
-  let errorCount = 0;
+  const generators: string[] = [];
   for (const result of results) {
     if ('error' in result) {
       messageLines.push(
         `The ${chalk.bold(
           result.generatorName
-        )} sync generator failed to run with the following error:
+        )} sync generator reported the following error:
 ${chalk.bold(result.error.message)}${
           verbose && result.error.stack ? '\n' + result.error.stack : ''
         }`
       );
-      errorCount++;
+      generators.push(result.generatorName);
     }
   }
 
-  if (errorCount === 1) {
+  messageLines.push(
+    ...getFailedSyncGeneratorsMessageLines(generators, verbose)
+  );
+
+  return messageLines;
+}
+
+export function getFlushFailureMessageLines(
+  result: FlushSyncGeneratorChangesFailure,
+  verbose: boolean
+): string[] {
+  const messageLines: string[] = [];
+  const generators: string[] = [];
+  for (const failure of result.generatorFailures) {
     messageLines.push(
-      '',
-      'Please take the following actions to fix the failed sync generator:',
-      '  - Check if the error is caused by an issue in your source code (e.g. wrong configuration, missing dependencies/files, etc.).',
-      '  - Check if the error has already been reported in the repository owning the failing sync generator. If not, please file a new issue.',
-      '  - While the issue is addressed, you could disable the failing sync generator by adding it to the `sync.disabledTaskSyncGenerators` array in your `nx.json`.'
+      `The ${chalk.bold(
+        failure.generator
+      )} sync generator failed to apply its changes with the following error:
+${chalk.bold(failure.error.message)}${
+        verbose && failure.error.stack ? '\n' + failure.error.stack : ''
+      }`
     );
-  } else if (errorCount > 1) {
+    generators.push(failure.generator);
+  }
+
+  messageLines.push(
+    ...getFailedSyncGeneratorsMessageLines(generators, verbose)
+  );
+
+  if (result.generalFailure) {
+    if (messageLines.length > 0) {
+      messageLines.push('');
+      messageLines.push('Additionally, an unexpected error occurred:');
+    } else {
+      messageLines.push('An unexpected error occurred:');
+    }
+
     messageLines.push(
-      '',
-      'Please take the following actions to fix the failed sync generators:',
-      '  - Check if the errors are caused by an issue in your source code (e.g. wrong configuration, missing dependencies/files, etc.).',
-      '  - Check if the errors have already been reported in the repositories owning the failing sync generators. If not, please file new issues for them.',
-      '  - While the issues are addressed, you could disable the failing sync generators by adding them to the `sync.disabledTaskSyncGenerators` array in your `nx.json`.'
+      ...[
+        '',
+        result.generalFailure.message,
+        ...(verbose && !!result.generalFailure.stack
+          ? [`\n${result.generalFailure.stack}`]
+          : []),
+        '',
+        verbose
+          ? 'Please report the error at: https://github.com/nrwl/nx/issues/new/choose'
+          : 'Please run with `--verbose` and report the error at: https://github.com/nrwl/nx/issues/new/choose',
+      ]
     );
   }
 
@@ -326,53 +379,20 @@ async function runSyncGenerators(
 
 async function flushSyncGeneratorChangesToDisk(
   results: SyncGeneratorRunResult[]
-): Promise<void> {
+): Promise<FlushSyncGeneratorChangesResult> {
   performance.mark('flush-sync-generator-changes-to-disk:start');
-  const { changes, createdFiles, updatedFiles, deletedFiles, callbacks } =
-    processSyncGeneratorResultChanges(results);
-  // Write changes to disk
-  flushChanges(workspaceRoot, changes);
 
-  // Run the callbacks
-  if (callbacks.length) {
-    for (const callback of callbacks) {
-      await callback();
-    }
-  }
-
-  // Update the context files
-  await updateContextWithChangedFiles(
-    workspaceRoot,
-    createdFiles,
-    updatedFiles,
-    deletedFiles
-  );
-  performance.mark('flush-sync-generator-changes-to-disk:end');
-  performance.measure(
-    'flush sync generator changes to disk',
-    'flush-sync-generator-changes-to-disk:start',
-    'flush-sync-generator-changes-to-disk:end'
-  );
-}
-
-function processSyncGeneratorResultChanges(results: SyncGeneratorRunResult[]) {
-  const changes: FileChange[] = [];
   const createdFiles: string[] = [];
   const updatedFiles: string[] = [];
   const deletedFiles: string[] = [];
-  const callbacks: GeneratorCallback[] = [];
+  const generatorFailures: FlushSyncGeneratorFailure[] = [];
 
   for (const result of results) {
     if ('error' in result) {
       continue;
     }
 
-    if (result.callback) {
-      callbacks.push(result.callback);
-    }
-
     for (const change of result.changes) {
-      changes.push(change);
       if (change.type === 'CREATE') {
         createdFiles.push(change.path);
       } else if (change.type === 'UPDATE') {
@@ -381,7 +401,72 @@ function processSyncGeneratorResultChanges(results: SyncGeneratorRunResult[]) {
         deletedFiles.push(change.path);
       }
     }
+
+    try {
+      // Write changes to disk
+      flushChanges(workspaceRoot, result.changes);
+      // Run the callback
+      if (result.callback) {
+        await result.callback();
+      }
+    } catch (e) {
+      generatorFailures.push({
+        generator: result.generatorName,
+        error: { message: e.message, stack: e.stack },
+      });
+    }
   }
 
-  return { changes, createdFiles, updatedFiles, deletedFiles, callbacks };
+  try {
+    // Update the context files
+    await updateContextWithChangedFiles(
+      workspaceRoot,
+      createdFiles,
+      updatedFiles,
+      deletedFiles
+    );
+    performance.mark('flush-sync-generator-changes-to-disk:end');
+    performance.measure(
+      'flush sync generator changes to disk',
+      'flush-sync-generator-changes-to-disk:start',
+      'flush-sync-generator-changes-to-disk:end'
+    );
+  } catch (e) {
+    return {
+      generatorFailures,
+      generalFailure: { message: e.message, stack: e.stack },
+    };
+  }
+
+  return generatorFailures.length > 0
+    ? { generatorFailures }
+    : { success: true };
+}
+
+function getFailedSyncGeneratorsMessageLines(
+  generators: string[],
+  verbose: boolean
+): string[] {
+  const messageLines: string[] = [];
+
+  if (generators.length === 1) {
+    messageLines.push(
+      '',
+      verbose
+        ? 'Please check the error above and address the issue.'
+        : 'Please check the error above and address the issue. You can provide the `--verbose` flag to get more details.',
+      `If needed, you can disable the failing sync generator by setting \`sync.disabledTaskSyncGenerators: ["${generators[0]}"]\` in your \`nx.json\`.`
+    );
+  } else if (generators.length > 1) {
+    const generatorsString = generators.map((g) => `"${g}"`).join(', ');
+    messageLines.push(
+      '',
+      verbose
+        ? 'Please check the errors above and address the issues.'
+        : 'Please check the errors above and address the issues. You can provide the `--verbose` flag to get more details.',
+      `If needed, you can disable the failing sync generators by setting \`sync.disabledTaskSyncGenerators: [${generatorsString}]\` in your \`nx.json\`.`
+    );
+  }
+
+  return messageLines;
 }

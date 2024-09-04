@@ -54,7 +54,10 @@ import {
   GET_SYNC_GENERATOR_CHANGES,
   type HandleGetSyncGeneratorChangesMessage,
 } from '../message-types/get-sync-generator-changes';
-import type { SyncGeneratorRunResult } from '../../utils/sync-generators';
+import type {
+  FlushSyncGeneratorChangesResult,
+  SyncGeneratorRunResult,
+} from '../../utils/sync-generators';
 import {
   GET_REGISTERED_SYNC_GENERATORS,
   type HandleGetRegisteredSyncGeneratorsMessage,
@@ -372,7 +375,9 @@ export class DaemonClient {
     return this.sendToDaemonViaQueue(message);
   }
 
-  flushSyncGeneratorChangesToDisk(generators: string[]): Promise<void> {
+  flushSyncGeneratorChangesToDisk(
+    generators: string[]
+  ): Promise<FlushSyncGeneratorChangesResult> {
     const message: HandleFlushSyncGeneratorChangesToDiskMessage = {
       type: FLUSH_SYNC_GENERATOR_CHANGES_TO_DISK,
       generators,

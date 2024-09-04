@@ -7,6 +7,7 @@ import {
   collectAllRegisteredSyncGenerators,
   flushSyncGeneratorChanges,
   getFailedSyncGeneratorsFixMessageLines,
+  getFlushFailureMessageLines,
   getSyncGeneratorChanges,
   getSyncGeneratorSuccessResultsMessageLines,
   processSyncGeneratorResultErrors,
@@ -65,8 +66,8 @@ export function syncHandler(options: SyncOptions): Promise<number> {
     if (areAllResultsFailures) {
       // if all sync generators failed to run we can't say for sure if the workspace is out of sync
       // because they could have failed due to a bug, so we print a warning and exit with code 0
-      output.warn({
-        title: `The workspace might be out of sync because ${
+      output.error({
+        title: `The workspace is probably out of sync because ${
           failedGeneratorsCount === 1
             ? 'a sync generator'
             : 'some sync generators'
@@ -74,7 +75,7 @@ export function syncHandler(options: SyncOptions): Promise<number> {
         bodyLines: failedSyncGeneratorsFixMessageLines,
       });
 
-      return 0;
+      return 1;
     }
 
     const resultBodyLines = getSyncGeneratorSuccessResultsMessageLines(results);
@@ -85,7 +86,7 @@ export function syncHandler(options: SyncOptions): Promise<number> {
       });
 
       if (anySyncGeneratorsFailed) {
-        output.warn({
+        output.error({
           title:
             failedGeneratorsCount === 1
               ? 'A sync generator failed to run'
@@ -106,7 +107,17 @@ export function syncHandler(options: SyncOptions): Promise<number> {
     spinner.start();
 
     try {
-      await flushSyncGeneratorChanges(results);
+      const flushResult = await flushSyncGeneratorChanges(results);
+
+      if ('generatorFailures' in flushResult) {
+        spinner.fail();
+        output.error({
+          title: 'Failed to sync the workspace',
+          bodyLines: getFlushFailureMessageLines(flushResult, options.verbose),
+        });
+
+        return 1;
+      }
     } catch (e) {
       spinner.fail();
       output.error({
@@ -115,26 +126,36 @@ export function syncHandler(options: SyncOptions): Promise<number> {
           'Syncing the workspace failed with the following error:',
           '',
           e.message,
-          ...(options.verbose ? [`\n${e.stack}`] : []),
+          ...(options.verbose && !!e.stack ? [`\n${e.stack}`] : []),
+          '',
+          'Please make sure to run with `--verbose` and report the error at: https://github.com/nrwl/nx/issues/new/choose',
         ],
       });
 
       return 1;
     }
 
-    spinner.succeed(`The workspace was synced successfully!
-
-Please make sure to commit the changes to your repository.`);
+    const successTitle = anySyncGeneratorsFailed
+      ? // the identified changes were synced successfully, but the workspace
+        // is still not up to date, which we'll mention next
+        'The identified changes were synced successfully!'
+      : // the workspace is fully up to date
+        'The workspace was synced successfully!';
+    const successSubtitle =
+      'Please make sure to commit the changes to your repository.';
+    spinner.succeed(`${successTitle}\n\n${successSubtitle}`);
 
     if (anySyncGeneratorsFailed) {
-      output.warn({
-        title: `The workspace might still be out of sync because ${
+      output.error({
+        title: `The workspace is probably still out of sync because ${
           failedGeneratorsCount === 1
             ? 'a sync generator'
             : 'some sync generators'
         } failed to run`,
         bodyLines: failedSyncGeneratorsFixMessageLines,
       });
+
+      return 1;
     }
 
     return 0;
