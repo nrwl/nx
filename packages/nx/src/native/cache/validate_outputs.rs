@@ -63,3 +63,16 @@ pub fn get_transformable_outputs(outputs: Vec<String>) -> Vec<String> {
         .filter(|output| is_missing_prefix(output))
         .collect()
 }
+
+#[cfg(test)]
+mod test {
+    use super::is_missing_prefix;
+
+    #[test]
+    fn test_is_missing_prefix() {
+        assert!(is_missing_prefix("dist"));
+        assert!(is_missing_prefix("!dist"));
+        assert!(!is_missing_prefix("{workspaceRoot}/dist"));
+        assert!(!is_missing_prefix("!{workspaceRoot}/dist"));
+    }
+}

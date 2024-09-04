@@ -291,7 +291,7 @@ function normalizeOutputPath(projectRoot: string): string | undefined {
   if (projectRoot === '.') {
     return `{projectRoot}/storybook-static`;
   } else {
-    return `{workspaceRoot}/{projectRoot}/storybook-static`;
+    return `{projectRoot}/storybook-static`;
   }
 }
 
