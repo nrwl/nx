@@ -16,5 +16,4 @@ mod machine_id;
 pub mod pseudo_terminal;
 #[cfg(not(target_arch = "wasm32"))]
 pub mod watch;
-#[cfg(not(target_arch = "wasm32"))]
 pub mod db;

@@ -49,6 +49,7 @@ export class TaskOrchestrator {
   private tasksSchedule = new TasksSchedule(
     this.projectGraph,
     this.taskGraph,
+    null,
     this.options
   );
 
