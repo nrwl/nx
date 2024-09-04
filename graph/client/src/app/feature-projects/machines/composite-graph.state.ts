@@ -34,6 +34,43 @@ export const compositeGraphStateConfig: ProjectGraphStateNodeConfig = {
     }),
   ],
   on: {
+    selectAll: {
+      actions: [
+        assign((ctx, event) => {
+          if (event.type !== 'selectAll') return;
+          ctx.compositeGraph.enabled = true;
+          ctx.compositeGraph.context = null;
+        }),
+        send((ctx) => ({
+          type: 'enableCompositeGraph',
+          context: ctx.compositeGraph.context,
+        })),
+      ],
+    },
+    deselectAll: {
+      actions: [
+        assign((ctx, event) => {
+          if (event.type !== 'deselectAll') return;
+          ctx.compositeGraph.enabled = true;
+        }),
+        send(
+          () => ({
+            type: 'notifyGraphHideAllProjects',
+          }),
+          { to: (context) => context.graphActor }
+        ),
+      ],
+    },
+    selectAffected: {
+      actions: [
+        send(
+          () => ({
+            type: 'notifyGraphShowAffectedProjects',
+          }),
+          { to: (context) => context.graphActor }
+        ),
+      ],
+    },
     focusProject: {
       actions: [
         assign((ctx, event) => {
@@ -112,6 +149,7 @@ export const compositeGraphStateConfig: ProjectGraphStateNodeConfig = {
           if (event.type !== 'enableCompositeGraph') return;
           ctx.compositeGraph.enabled = true;
           ctx.compositeGraph.context = event.context || undefined;
+          ctx.focusedProject = null;
         }),
         send(
           (ctx, event) => ({
