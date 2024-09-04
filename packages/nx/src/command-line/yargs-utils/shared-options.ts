@@ -13,7 +13,7 @@ export const defaultYargsParserConfiguration: Partial<ParserConfigurationOptions
     'parse-positional-numbers': false,
   };
 
-export function withExcludeOption(yargs: Argv): Argv<ExcludeOptions> {
+export function withExcludeOption<T>(yargs: Argv<T>): Argv<T & ExcludeOptions> {
   return yargs.option('exclude', {
     describe: 'Exclude certain projects from being processed',
     type: 'string',
@@ -37,6 +37,7 @@ export interface RunOptions {
   batch: boolean;
   useAgents: boolean;
   excludeTaskDependencies: boolean;
+  skipSync: boolean;
 }
 
 export function withRunOptions<T>(yargs: Argv<T>): Argv<T & RunOptions> {
@@ -94,6 +95,11 @@ export function withRunOptions<T>(yargs: Argv<T>): Argv<T & RunOptions> {
       type: 'boolean',
       default: false,
     })
+    .option('skipSync', {
+      type: 'boolean',
+      // TODO(leo): add description and make it visible once it is stable
+      hidden: true,
+    })
     .options('cloud', {
       type: 'boolean',
       hidden: true,
@@ -106,7 +112,7 @@ export function withRunOptions<T>(yargs: Argv<T>): Argv<T & RunOptions> {
       type: 'boolean',
       hidden: true,
       alias: 'agents',
-    }) as Argv<Omit<RunOptions, 'exclude' | 'batch'>> as any;
+    }) as Argv<Omit<RunOptions, 'batch'>> as any;
 }
 
 export function withTargetAndConfigurationOption(
