@@ -13,6 +13,7 @@ import {
   addExtendsToLintConfig,
   addOverrideToLintConfig,
   addPluginsToLintConfig,
+  addPredefinedConfigToFlatLintConfig,
   findEslintFile,
   isEslintConfigSupported,
   replaceOverridesInLintConfig,
@@ -21,6 +22,7 @@ import {
   javaScriptOverride,
   typeScriptOverride,
 } from '@nx/eslint/src/generators/init/global-eslint-config';
+import { useFlatConfig } from '@nx/eslint/src/utils/flat-config';
 
 export interface CyLinterOptions {
   project: string;
@@ -95,12 +97,23 @@ export async function addLinterToCyProject(
       overrides.push(typeScriptOverride);
       overrides.push(javaScriptOverride);
     }
-    const addExtendsTask = addExtendsToLintConfig(
-      tree,
-      projectConfig.root,
-      'plugin:cypress/recommended'
-    );
-    tasks.push(addExtendsTask);
+    if (useFlatConfig(tree)) {
+      addPredefinedConfigToFlatLintConfig(
+        tree,
+        projectConfig.root,
+        'recommended',
+        'cypress',
+        'eslint-plugin-cypress/flat',
+        false
+      );
+    } else {
+      const addExtendsTask = addExtendsToLintConfig(
+        tree,
+        projectConfig.root,
+        'plugin:cypress/recommended'
+      );
+      tasks.push(addExtendsTask);
+    }
     const cyVersion = installedCypressVersion();
     /**
      * We need this override because we enabled allowJS in the tsconfig to allow for JS based Cypress tests.

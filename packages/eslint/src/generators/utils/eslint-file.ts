@@ -418,7 +418,10 @@ export function addExtendsToLintConfig(
 export function addPredefinedConfigToFlatLintConfig(
   tree: Tree,
   root: string,
-  predefinedConfigName: `flat/${string}`
+  predefinedConfigName: string,
+  moduleName = 'nx',
+  moduleImportPath = '@nx/eslint-plugin',
+  spread = true
 ): void {
   if (!useFlatConfig(tree))
     throw new Error('Predefined configs can only be used with flat configs');
@@ -429,10 +432,10 @@ export function addPredefinedConfigToFlatLintConfig(
   );
 
   let content = tree.read(fileName, 'utf8');
-  content = addImportToFlatConfig(content, 'nx', '@nx/eslint-plugin');
+  content = addImportToFlatConfig(content, moduleName, moduleImportPath);
   content = addBlockToFlatConfigExport(
     content,
-    generateFlatPredefinedConfig(predefinedConfigName)
+    generateFlatPredefinedConfig(predefinedConfigName, moduleName, spread)
   );
 
   tree.write(fileName, content);

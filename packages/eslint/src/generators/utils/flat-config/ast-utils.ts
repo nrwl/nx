@@ -950,17 +950,19 @@ export function generateFlatOverride(
 }
 
 export function generateFlatPredefinedConfig(
-  predefinedConfigName: `flat/${string}`
-): ts.ObjectLiteralExpression | ts.SpreadElement {
-  return ts.factory.createSpreadElement(
-    ts.factory.createElementAccessExpression(
-      ts.factory.createPropertyAccessExpression(
-        ts.factory.createIdentifier('nx'),
-        ts.factory.createIdentifier('configs')
-      ),
-      ts.factory.createStringLiteral(predefinedConfigName)
-    )
+  predefinedConfigName: string,
+  moduleName = 'nx',
+  spread = true
+): ts.ObjectLiteralExpression | ts.SpreadElement | ts.ElementAccessExpression {
+  const node = ts.factory.createElementAccessExpression(
+    ts.factory.createPropertyAccessExpression(
+      ts.factory.createIdentifier(moduleName),
+      ts.factory.createIdentifier('configs')
+    ),
+    ts.factory.createStringLiteral(predefinedConfigName)
   );
+
+  return spread ? ts.factory.createSpreadElement(node) : node;
 }
 
 export function mapFilePaths(
