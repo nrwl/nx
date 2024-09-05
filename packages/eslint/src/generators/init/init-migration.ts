@@ -59,7 +59,7 @@ export function migrateConfigToMonorepoStyle(
         tree.exists('eslint.config.js')
           ? 'eslint.base.config.js'
           : 'eslint.config.js',
-        getGlobalFlatEslintConfiguration(unitTestRunner)
+        getGlobalFlatEslintConfiguration()
       );
     } else {
       const eslintFile = findEslintFile(tree, '.');

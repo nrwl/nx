@@ -129,8 +129,8 @@ export function replaceOverride(
   root: string,
   lookup: (override: Linter.ConfigOverride<Linter.RulesRecord>) => boolean,
   update?: (
-    override: Linter.ConfigOverride<Linter.RulesRecord>
-  ) => Linter.ConfigOverride<Linter.RulesRecord>
+    override: Partial<Linter.ConfigOverride<Linter.RulesRecord>>
+  ) => Partial<Linter.ConfigOverride<Linter.RulesRecord>>
 ): string {
   const source = ts.createSourceFile(
     '',
@@ -785,7 +785,7 @@ function convertGlobPattern(pattern: string): string {
 const keysToCopy = ['settings', 'rules', 'processor'];
 
 export function overrideNeedsCompat(
-  override: Linter.ConfigOverride<Linter.RulesRecord>
+  override: Partial<Linter.ConfigOverride<Linter.RulesRecord>>
 ) {
   return override.env || override.extends || override.plugins;
 }
@@ -795,7 +795,7 @@ export function overrideNeedsCompat(
  * based on a given legacy eslintrc JSON override object
  */
 export function generateFlatOverride(
-  _override: Linter.ConfigOverride<Linter.RulesRecord>
+  _override: Partial<Linter.ConfigOverride<Linter.RulesRecord>>
 ): ts.ObjectLiteralExpression | ts.SpreadElement {
   const override = mapFilePaths(_override);
 
@@ -856,7 +856,7 @@ export function generateFlatOverride(
               ),
 
               ts.SyntaxKind.SingleLineCommentTrivia,
-              ' Add your rule overrides here'
+              ' Override or add rules here'
             );
           }
           return propertyAssignment;
@@ -950,7 +950,7 @@ export function generateFlatOverride(
 }
 
 export function generateFlatPredefinedConfig(
-  predefinedConfigName: string
+  predefinedConfigName: `flat/${string}`
 ): ts.ObjectLiteralExpression | ts.SpreadElement {
   return ts.factory.createSpreadElement(
     ts.factory.createElementAccessExpression(
@@ -964,9 +964,9 @@ export function generateFlatPredefinedConfig(
 }
 
 export function mapFilePaths(
-  _override: Linter.ConfigOverride<Linter.RulesRecord>
+  _override: Partial<Linter.ConfigOverride<Linter.RulesRecord>>
 ) {
-  const override: Linter.ConfigOverride<Linter.RulesRecord> = {
+  const override: Partial<Linter.ConfigOverride<Linter.RulesRecord>> = {
     ..._override,
   };
   if (override.files) {

@@ -91,9 +91,7 @@ export const getGlobalEsLintConfiguration = (
   return config;
 };
 
-// TODO(eslint): take ESLint version into account to do the old logic vs the new one
 export const getGlobalFlatEslintConfiguration = (
-  unitTestRunner?: string,
   rootProject?: boolean
 ): string => {
   const nodeList = createNodeList(new Map(), []);
@@ -113,13 +111,6 @@ export const getGlobalFlatEslintConfiguration = (
     content,
     generateFlatPredefinedConfig('flat/javascript')
   );
-  // TODO(jack): Is this even needed?
-  if (unitTestRunner === 'jest') {
-    content = addBlockToFlatConfigExport(
-      content,
-      generateFlatPredefinedConfig('flat/jest')
-    );
-  }
 
   if (!rootProject) {
     content = addBlockToFlatConfigExport(
@@ -131,7 +122,6 @@ export const getGlobalFlatEslintConfiguration = (
   content = addBlockToFlatConfigExport(
     content,
     generateFlatOverride({
-      files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
       rules: {},
     })
   );

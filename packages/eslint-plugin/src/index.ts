@@ -63,9 +63,6 @@ module.exports = {
     get ['flat/angular-template']() {
       return require('./flat-configs/angular-template').default;
     },
-    get ['flat/jest']() {
-      return require('./flat-configs/jest').default;
-    },
   },
   rules: {
     [enforceModuleBoundariesRuleName]: enforceModuleBoundaries,

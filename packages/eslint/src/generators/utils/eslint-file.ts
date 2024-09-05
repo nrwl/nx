@@ -1,12 +1,12 @@
 import {
   addDependenciesToPackageJson,
+  type GeneratorCallback,
   joinPathFragments,
   names,
   offsetFromRoot,
   readJson,
-  updateJson,
-  type GeneratorCallback,
   type Tree,
+  updateJson,
 } from '@nx/devkit';
 import type { Linter } from 'eslint';
 import { gte } from 'semver';
@@ -28,6 +28,7 @@ import {
   addPluginsToExportsBlock,
   generateAst,
   generateFlatOverride,
+  generateFlatPredefinedConfig,
   generatePluginExtendsElement,
   generatePluginExtendsElementWithCompatFixup,
   hasOverride,
@@ -174,7 +175,7 @@ function offsetFilePath(
 export function addOverrideToLintConfig(
   tree: Tree,
   root: string,
-  override: Linter.ConfigOverride<Linter.RulesRecord>,
+  override: Partial<Linter.ConfigOverride<Linter.RulesRecord>>,
   options: { insertAtTheEnd?: boolean; checkBaseConfig?: boolean } = {
     insertAtTheEnd: true,
   }
@@ -412,6 +413,29 @@ export function addExtendsToLintConfig(
 
     return () => {};
   }
+}
+
+export function addPredefinedConfigToFlatLintConfig(
+  tree: Tree,
+  root: string,
+  predefinedConfigName: `flat/${string}`
+): void {
+  if (!useFlatConfig(tree))
+    throw new Error('Predefined configs can only be used with flat configs');
+
+  const fileName = joinPathFragments(
+    root,
+    getRootESLintFlatConfigFilename(tree)
+  );
+
+  let content = tree.read(fileName, 'utf8');
+  content = addImportToFlatConfig(content, 'nx', '@nx/eslint-plugin');
+  content = addBlockToFlatConfigExport(
+    content,
+    generateFlatPredefinedConfig(predefinedConfigName)
+  );
+
+  tree.write(fileName, content);
 }
 
 export function addPluginsToLintConfig(
