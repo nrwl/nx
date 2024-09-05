@@ -14,6 +14,8 @@ Meanwhile, [Next.js](https://nextjs.org/) is a super cool meta-framework that is
 
 In this post, we’ll show you how to easily build Next.js Apps with Nx!
 
+---
+
 One of the major benefits of the Next.js framework is how much you get out of the box, with zero configuration.
 
 For example, to create a new app and serve a new app you can simply run:
@@ -42,10 +44,10 @@ yarn add --dev @zeit/next-sass
 
 Then update the `next.config.js` file as follows.
 
-```
+```js
 const withSass = require('@zeit/next-sass');
 module.exports = withSass({
-  cssModules: true // assuming you want css modules :)
+  cssModules: true, // assuming you want css modules :)
 });
 ```
 
@@ -69,7 +71,7 @@ npx create-nx-workspace my-workspace \
 
 The command above will create a new Nx workspace. We can run the demo app in development mode as follows.
 
-```
+```shell
 cd my-workspace
 nx serve demo
 ```
@@ -84,7 +86,7 @@ Navigating to `http://localhost:4200` will show the generated app.
 
 You can also create new pages by running the `generate` command.
 
-```
+```shell
 # Or just `nx g` for short
 nx generate page About --project=demo --style=scss
 ```
@@ -93,7 +95,7 @@ This tells Nx to add a new `apps/demo/pages/about.tsx` component to the `demo` p
 
 The same thing goes for new components.
 
-```
+```shell
 nx g component PartyPopper --project=demo  --style=scss
 ```
 
@@ -101,17 +103,13 @@ This will generate the component under the `apps/demo/components/party-popper/` 
 
 Let’s update our `PartyPopper` component and use it in the `About` page. Update your code as follows.
 
-**apps/demo/components/party-popper/party-popper.tsx**:
-
-```
+```tsx {% fileName="apps/demo/components/party-popper/party-popper.tsx" /%}
 import React from 'react';
 export const PartyPopper = () => <span>🎉</span>;
 export default PartyPopper;
 ```
 
-**apps/demo/pages/about.tsx**:
-
-```
+```tsx {% fileName="apps/demo/pages/about.tsx" /%}
 import React from 'react';
 import PartPopper from '../components/party-popper/party-popper';
 const About = () => {
@@ -146,7 +144,7 @@ First, will need to [Heroku CLI](https://devcenter.heroku.com/categories/command
 
 Secondly, you’ll need to login to your account, and create a new app.
 
-```
+```shell
 heroku login
 heroku apps:create [appName]
 ```
@@ -155,9 +153,7 @@ You’ll need to replace `[appName]` with your own unique name (e.g. `my-awesome
 
 Next, let’s also create a `Dockerfile` for the project so we can use Heroku’s container support.
 
-**apps/demo/Dockerfile**:
-
-```shell
+```dockerfile {% fileName="apps/demo/Dockerfile" /%}
 FROM node:12-alpine
 WORKDIR /app
 COPY .next ./.next
@@ -168,7 +164,7 @@ CMD yarn next start -p $PORT
 
 Then we can add our deployment command as follows:
 
-```
+```shell
 nx g [@nrwl/workspace](http://twitter.com/nrwl/workspace):run-commands deploy \
   --project demo \
   --command "cd dist/apps/demo && cp ../../../apps/demo/Dockerfile . && heroku container:login && heroku container:push web -a \[appName\] && heroku container:release web -a \[appName\]"
@@ -180,7 +176,7 @@ I choose to chain the commands into a single one using `&&`. You can also extrac
 
 And finally, we can run the production build and deploy.
 
-```
+```shell
 nx build demo
 nx deploy demo
 ```
@@ -203,7 +199,7 @@ There are many benefits of using a monorepo; including code sharing, tooling con
 
 Imagine that you have two Next apps with a common UI library, and an express backend. Your workspace stucture may look something like this:
 
-```
+```text
 apps/
   backend/
   intranet-portal/

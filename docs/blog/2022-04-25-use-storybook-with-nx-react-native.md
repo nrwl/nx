@@ -99,7 +99,7 @@ Then just run the command to start your app, you should see the storybook for yo
 
 ## Troubleshooting
 
-### **Error: Couldn’t find a navigation object**
+### Error: Couldn’t find a navigation object
 
 If you are using the library `@react-navigation/native` and you are using hooks like `useNavigtion` and `useRoute` inside your component, you are likely to get the below error:
 
@@ -167,7 +167,7 @@ const NavigationDecorator = (story) => {
 };
 ```
 
-### **Error: Could not find “store”**
+### Error: Could not find “store”
 
 If you are using Redux store and your component is stateful and connected to the store, you are likely to get the below error:
 
@@ -218,7 +218,7 @@ storiesOf('PeopleListItem', module)
   .add('Primary', () => <PeopleListItem people={mockPeopleEntity} />);
 ```
 
-### **Error: Actions must be plain objects**
+### Error: Actions must be plain objects
 
 If you use an async action (for example, an action created using `createAsyncThunk` from `@reduxjs/toolkit`), you would likely run into the below error: Actions must be plain objects.
 

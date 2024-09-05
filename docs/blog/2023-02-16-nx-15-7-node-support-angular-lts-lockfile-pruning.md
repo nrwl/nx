@@ -8,7 +8,7 @@ tags: [nx, release]
 
 Here’s all you need to know about our latest Nx release.
 
-### **Table of Contents**
+### Table of Contents
 
 · [10k Subscribers on Youtube](#10k-subscribers-on-youtube)  
 · [Updates to our Nx Plugin Guides](#updates-to-our-nx-plugin-guides)  
@@ -21,7 +21,7 @@ Here’s all you need to know about our latest Nx release.
 · [How to Update Nx](#how-to-update-nx)  
 · [Coming up](#coming-up)
 
-### **Prefer a video? We’ve got you covered!**
+### Prefer a video? We’ve got you covered!
 
 {% youtube src="https://www.youtube.com/watch?v=IStJODzZSoc" /%}
 

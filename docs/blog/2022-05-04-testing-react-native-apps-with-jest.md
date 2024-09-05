@@ -84,7 +84,7 @@ The first time running the unit tests is unlikely to pass. There are usually a f
 
 ## Troubleshooting
 
-### **Error: Jest failed to parse a file**
+### Error: Jest failed to parse a file
 
 If you are using libraries such as `react-native-paper` or `@react-navigation/native`, you are likely to run into the below error:
 
@@ -119,7 +119,7 @@ jest.mock(
 );
 ```
 
-### **Error: Is your component inside a screen in a navigator?**
+### Error: Is your component inside a screen in a navigator?
 
 If you use `@react-navigation` library for navigation, and inside your component, there are hooks from this library like `useNavigation` and `useRoute`, you are likely to get this error:
 
@@ -145,7 +145,7 @@ jest.mock('@react-navigation/native', () => {
 });
 ```
 
-### **Error: Could not find “store”**
+### Error: Could not find “store”
 
 If your component is a smart component that uses Redux Store, you are going to get this error when testing that component:
 

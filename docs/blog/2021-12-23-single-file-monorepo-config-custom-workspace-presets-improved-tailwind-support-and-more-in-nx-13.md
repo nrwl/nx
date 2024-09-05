@@ -39,6 +39,8 @@ npx create-nx-workspace --preset=your-npm-package-name
 
 Nicholas Cunningham just joined Nrwl and already implemented this new Nx feature! In the following video, [Juri Strumpflohner](https://twitter.com/juristr) walks you through the process of creating a new Nx Plugin with a custom preset.
 
+{% youtube src="https://www.youtube.com/watch?v=yGUrF0-uqaU" /%}
+
 This allows you to enhance the initial experience for new workspaces directly for your organization, and allows the Nx Plugin community to offer more tailored experiences. Please try out the new feature and [let us know](https://github.com/nrwl/nx) how we can improve it!
 
 ## Dedicated TypeScript and JavaScript support with @nrwl/js
@@ -49,6 +51,8 @@ This is particularly useful if you have framework-agnostic TS/JS packages within
 
 Read all the details on [our new TypeScript guide](/getting-started/intro) or check out the video walkthrough below.
 
+{% youtube src="https://www.youtube.com/watch?v=-OmQ-PaSY5M" /%}
+
 ## Improved Tailwind support for Angular 💅
 
 ![](/blog/images/2021-12-23/0*1yacozydc1muZ74G.avif)
@@ -56,7 +60,7 @@ _Tailwind Logo_
 
 Tailwind is a utility-first CSS framework packed with classes that can be composed to build any design, directly in your markup. If you’ve used Tailwind with Angular applications previously, it's supported out of the box with Nx. We’re continually looking to improve the developer experience of using Tailwind in Angular applications and libraries. We already added support to the Angular plugin for Nx, and have added a new generator to configure Tailwind in **existing** apps and buildable/publishable libs, allowing you to set up and configure Tailwind without manual steps. The ability to configure new apps and libs is also supported, with support for Tailwind V2 and the latest V3 release.
 
-```
+```shell
 nx g @nrwl/angular:app my-app --addTailwind
 ```
 
@@ -75,13 +79,13 @@ Read more about Angular and Tailwind in our [docs](/nx-api/angular/generators/se
 
 Updating Nx is done with the following command, and will update your Nx workspace dependencies and code to the latest version:
 
-```
+```shell
 nx migrate latest
 ```
 
 After updating your dependencies, run any necessary migrations.
 
-```
+```shell
 nx migrate --run-migrations
 ```
 

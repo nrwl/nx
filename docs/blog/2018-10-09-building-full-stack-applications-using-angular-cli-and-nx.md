@@ -18,11 +18,13 @@ Often, when writing about Nx, we talk about the benefits of monorepos, dependenc
 
 After we have installed [Nx](/getting-started/intro), let’s create a new workspace.
 
-`create-nx-workspace myorg`
+```shell
+create-nx-workspace myorg
+```
 
 Nx is just an extension for the Angular CLI, so `create-nx-workspace` simple runs `ng new myorg --collection=@nrwl/schematics` and handles common pitfalls of using global npm packages. This command will create an empty workspace for us.
 
-```
+```text
 apps/
 libs/
 tools/
@@ -42,7 +44,7 @@ The apps and libs folders contain all the projects in the workspace.
 
 Say we are tasked with building an app for managing tickets. We can start by generating the app, like this: `ng g app tuskdesk`
 
-```
+```text
 apps/
   tuskdesk/
     src/
@@ -76,7 +78,7 @@ Now, imagine we also need to create the admin UI for managing tickets. We decide
 
 `ng g app tuskdesk-admin`
 
-```
+```text
 apps/
   tuskdesk/
   tuskdesk-e2e/
@@ -93,7 +95,43 @@ tslint.json
 
 To make things a bit more interesting, let’s say the two apps have a similar shell component.
 
+```typescript
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'myorg-shell',
+  template: `
+    <h1>Tuskdesk app!</h1>
+    <div>
+      <a href="learn-more">Learn more about Tuskdesk</a>
+      <a href="learn-more-about-myorg">Learn more about MyOrg</a>
+      Copyright stuff is in here as well.
+    </div>
+  `,
+  styles: [],
+})
+export class ShellComponent {}
+```
+
 and
+
+```typescript
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'myorg-shell',
+  template: `
+    <h1>Tuskdesk admin app!</h1>
+    <div>
+      <a href="learn-more">Learn more about Tuskdesk</a>
+      <a href="learn-more-about-myorg">Learn more about MyOrg</a>
+      Copyright stuff is in here as well.
+    </div>
+  `,
+  styles: [],
+})
+export class ShellComponent {}
+```
 
 The example is contrived, but illustrates an important point. It’s not uncommon to have basically the same component (or any piece of code) that is used in multiple contexts and apps.
 
@@ -105,8 +143,12 @@ The example is contrived, but illustrates an important point. It’s not uncommo
 
 In Nx, we share code by using libs. So let’s create one called `ui-shell`.
 
+```shell
+ng g lib ui-shell
 ```
-ng g lib ui-shellapps/
+
+```text
+apps/
   tuskdesk/
   tuskdesk-e2e/
   tuskdesk-admin/
@@ -133,7 +175,27 @@ tslint.json
 
 Let’s generalize our component, and move it into `ui-shell`.
 
+```typescript
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'myorg-shell',
+  template: `
+    <h1>{{ title }}</h1>
+    <div>
+      <a href="learn-more">Learn more about Tuskdesk</a>
+      <a href="learn-more-about-myorg">Learn more about Myorg</a>
+      Copyright stuff is in here as well.
+    </div>
+  `,
+  styles: [],
+})
+export class ShellComponent {
+  @Input() title: string;
+}
 ```
+
+```text
 apps/
   tuskdesk/
   tuskdesk-e2e/
@@ -162,11 +224,54 @@ tslint.json
 
 Finally, we can update both the applications by importing the `ui-shell` lib and using the component.
 
+```typescript
+import { BrowserModule } from '@angular/platform-browser';
+import { NgModule } from '@angular/core';
+
+import { AppComponent } from './app.component';
+import { NxModule } from '@nrwl/nx';
+import { UiShellModule } from '@myorg/ui-shell';
+
+@NgModule({
+  declarations: [AppComponent],
+  imports: [BrowserModule, NxModule.forRoot(), UiShellModule],
+  providers: [],
+  bootstrap: [AppComponent],
+})
+export class AppModule {}
+```
+
 Extracting this component took just a few minutes, and we can apply the whole refactoring in a single commit. Everything in the repository will always be consistent: before the refactoring and after the refactoring.
 
 ## Talking to APIs
 
 But real-world applications don’t live in isolation — they need APIs to talk to. Let’s sketch something out.
+
+```typescript
+interface Ticket {
+  id: number;
+  title: string;
+}
+
+@Component({
+  selector: 'myorg-root',
+  template: `
+    <myorg-shell title="Tuskdesk App"></myorg-shell>
+    <ul>
+      <li *ngFor="let t of tickets | async">
+        {{ t.title }}
+      </li>
+    </ul>
+  `,
+})
+export class AppComponent {
+  tickets: Observable<Ticket[]>;
+
+  constructor(http: HttpModule) {
+    this.tickets = http.get('/api/tickets');
+  }
+}
+```
 
 Developing APIs in an Nx Workspace was always possible, but prior to Nx 6.4 it required a lot of manual setup, so few did it. Nx 6.4 changed that (Thank you, Jason Jean, for implementing this).
 
@@ -176,8 +281,12 @@ Nx uses Karma by default to test Angular applications and libraries. This isn’
 
 Now, let’s create a node application for the API.
 
+```shell
+ng g node-app api
 ```
-ng g node-app apiapps/
+
+```text
+apps/
   tuskdesk/
   tuskdesk-e2e/
   tuskdesk-admin/
@@ -204,6 +313,40 @@ tslint.json
 
 And update `main.ts` to sketch out a simple service returning tickets.
 
+```typescript
+import * as express from 'express';
+
+const app = express();
+
+interface Ticket {
+  id: number;
+  title: string;
+}
+
+const tickets: Ticket[] = [
+  {
+    id: 1,
+    title: 'Login page is broken',
+  },
+  {
+    id: 2,
+    title: 'Everything is broken',
+  },
+];
+
+app.get('/api/tickets', (req, res) => {
+  res.send(JSON.stringify(tickets));
+});
+
+const port = 3333;
+app.listen(port, (err) => {
+  if (err) {
+    console.error(err);
+  }
+  console.log(`Listening at http://localhost:${port}`);
+});
+```
+
 After configuring the proxy (see [here](https://github.com/angular/angular-cli/blob/master/docs/documentation/stories/proxy.md)), we can launch both the API (`ng serve api`) and the app (`ng serve tuskdesk`). At this point we will see our application displaying the data.
 
 We have a problem though. We defined `Ticket` twice: once on the frontend, once on the backend. This duplication will inevitably result in the two interfaces going out of sync, which means that runtime errors will creep in. We need to share this interface.
@@ -212,8 +355,12 @@ We have a problem though. We defined `Ticket` twice: once on the frontend, once 
 
 ## Sharing Libs Between Frontend and Backend
 
+```shell
+ng g lib data — no-module — unit-test-runner=jest
 ```
-ng g lib data — no-module — unit-test-runner=jestapps/
+
+```text
+apps/
   tuskdesk/
   tuskdesk-e2e/
   tuskdesk-admin/
@@ -231,6 +378,56 @@ tslint.json
 ```
 
 Now, we can move the `Ticket` interface into the data lib and update the frontend and the backend.
+
+```typescript {% fileName="app.component.ts" /%}
+import { Component } from '@angular/core';
+import { Observable } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
+import { Ticket } from '@myorg/data';
+
+@Component({
+  selector: 'myorg-root',
+  templateUrl: './app.component.html',
+  styleUrls: ['./app.component.css'],
+})
+export class AppComponent {
+  tickets: Observable<Ticket[]>;
+
+  constructor(http: HttpClient) {
+    this.tickets = http.get<Ticket[]>('/api/tickets');
+  }
+}
+```
+
+```typescript {% fileName="main.ts" /%}
+import * as express from 'express';
+import { Ticket } from '@myorg/data';
+
+const app = express();
+
+const tickets: Ticket[] = [
+  {
+    id: 1,
+    title: 'Login page is broken',
+  },
+  {
+    id: 2,
+    title: 'Everything is broken',
+  },
+];
+
+app.get('/api/tickets', (req, res) => {
+  res.send(JSON.stringify(tickets));
+});
+
+const port = 3333;
+app.listen(port, (err) => {
+  if (err) {
+    console.error(err);
+  }
+  console.log(`Listening at http://localhost:${port}`);
+});
+```
 
 ## Nx is Smart
 
@@ -259,6 +456,8 @@ You can also find the full implementation of this example [in this repository.](
 If you find all the generate, serve, build commands a bit intimidating, you aren’t the only one. How can you remember all these flags? You don’t have to.
 
 **In collaboration with the Angular team, we put together a tool called Angular Console — the UI for the Angular CLI. It’s a great way to use the Angular CLI and Nx, and to learn about advanced features and flags these powerful tools provide.**
+
+{% youtube src="https://www.youtube.com/watch?v=d2K2Cp8BJx0" /%}
 
 _Victor Savkin is a co-founder of Nx. We help companies develop like Google since 2016. We provide consulting, engineering and tools._
 

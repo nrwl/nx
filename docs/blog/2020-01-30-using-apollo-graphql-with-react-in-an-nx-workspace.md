@@ -31,13 +31,21 @@ npx create-nx-workspace nx-apollo-react-example
 
 When prompted, answer the prompts as follows:
 
+```shell
+npx create-nx-workspace nx-apollo-react-example
+? What to create in the new workspace react [a workspace with a
+single React application]
+? Application name                    nx-apollo
+? Default stylesheet format           CSS
+```
+
 ![](/blog/images/2020-01-30/1*17U-yzBfoMgkFpuawnmUnw.avif)
 
 ## Create GraphQL API
 
 Use the NestJS framework to create your GraphQL API. First, add NestJS to your Nx workspace and create an application:
 
-```
+```shell
 npm install --save-dev @nrwl/nest
 nx generate @nrwl/nest:application api
 ```
@@ -46,17 +54,53 @@ When prompted for a directory, press enter. This will place the api application 
 
 Once the application is created, install the GraphQL modules needed for Nest
 
-```
+```shell
 npm install @nestjs/graphql apollo-server-express graphql-tools graphql
 ```
 
 You need a GraphQL schema to create the API, so write a very simple one with a single query and a single mutation. Create a file named `schema.graphql` in the `api` application:
 
+```graphql {% fileName="apps/api/src/app/schema.graphql" /%}
+type Set {
+  id: Int!
+  name: String
+  year: Int
+  numParts: Int
+}
+
+type Query {
+  allSets: [Set]
+}
+
+type Mutation {
+  addSet(name: String, year: String, numParts: Int): Set
+}
+```
+
 Import the `GraphQLModule` and use that schema in NestJS.
+
+```typescript {% fileName="apps/api/src/app/app.module.ts" /%}
+import { Module } from '@nestjs/common';
+import { GraphQLModule } from '@nestjs/graphql';
+
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
+
+@Module({
+  imports: [
+    GraphQLModule.forRoot({
+      typePaths: ['./**/*.graphql'],
+    }),
+  ],
+  controllers: [AppController],
+  providers: [AppService],
+})
+export class AppModule {}
+```
 
 This is already enough to see some progress when you run the `api` application.
 
-```
+```shell
 npm start api
 ```
 
@@ -64,9 +108,96 @@ When the application is running, bring up the GraphQL Playground in your browser
 
 Here you can inspect your GraphQL schema as well as submit queries. The queries don’t return anything right now because no data has been provided. You need a resolver to do that. Create a new file in your `api` project called `set.resolver.ts`. Then add this code:
 
+```typescript {% fileName="apps/api/src/app/set.resolver.ts" /%}
+import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
+
+export interface SetEntity {
+  id: number;
+  name: string;
+  numParts: number;
+  year: string;
+}
+
+@Resolver('Set')
+export class SetResolver {
+  private sets: SetEntity[] = [
+    {
+      id: 1,
+      name: 'Voltron',
+      numParts: 2300,
+      year: '2019',
+    },
+    {
+      id: 2,
+      name: 'Ship in a Bottle',
+      numParts: 900,
+      year: '2019',
+    },
+  ];
+
+  @Query('allSets')
+  getAllSets(): SetEntity[] {
+    return this.sets;
+  }
+
+  @Mutation()
+  addSet(
+    @Args('name') name: string,
+    @Args('year') year: string,
+    @Args('numParts') numParts: number
+  ) {
+    const newSet = {
+      id: this.sets.length + 1,
+      name,
+      year,
+      numParts: +numParts,
+    };
+
+    this.sets.push(newSet);
+
+    return newSet;
+  }
+}
+```
+
 This is a very simple resolver that holds data in memory. It returns the current contents of the sets array for the `allSets` query and allows users to add a new set using the `addSet` mutation. Add this resolver to the providers array in your app module:
 
+```typescript {% fileName="apps/api/src/app/app.module.ts" /%}
+import { Module } from '@nestjs/common';
+import { GraphQLModule } from '@nestjs/graphql';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
+import { SetResolver } from './set.resolver';
+
+@Module({
+  imports: [
+    GraphQLModule.forRoot({
+      typePaths: ['./**/*.graphql'],
+    }),
+  ],
+  controllers: [AppController],
+  providers: [AppService, SetResolver],
+})
+export class AppModule {}
+```
+
 Go back to your GraphQL Playground and see if your queries return any data now. Try a query and a mutation:
+
+```graphql
+query allSets {
+  allSets {
+    id
+    name
+    numParts
+  }
+}
+
+mutation addSet {
+  addSet(name: "My New Set", numParts: 200, year: "2020") {
+    id
+  }
+}
+```
 
 Now that the API is working, you’re ready to build a frontend to access this.
 
@@ -76,11 +207,30 @@ Now that the API is working, you’re ready to build a frontend to access this.
 
 The Apollo client makes it easy to consume your GraphQL API. Install the react version of the client:
 
-```
+```shell
 npm install apollo-boost @apollo/react-hooks graphql
 ```
 
 Modify your `app.tsx` to provide the Apollo Client:
+
+```typescript {% fileName="apps/nx-apollo/src/app/app.tsx" /%}
+import { ApolloProvider } from '@apollo/react-hooks';
+import ApolloClient from 'apollo-boost';
+import React from 'react';
+import './app.css';
+
+const client = new ApolloClient({
+  uri: 'http://localhost:3333/graphql',
+});
+
+const App = () => (
+  <ApolloProvider client={client}>
+    <h1>My Lego Sets</h1>
+  </ApolloProvider>
+);
+
+export default App;
+```
 
 ## Create React libraries
 
@@ -88,7 +238,7 @@ Nx helps you break down your code into well-organized libraries for consumption 
 
 To create the described libraries, run these commands:
 
-```
+```shell
 nx generate @nrwl/react:library data-access --style css
 nx generate @nrwl/react:library feature-sets --style css
 ```
@@ -99,10 +249,8 @@ nx generate @nrwl/react:library feature-sets --style css
 
 A tool called GraphQL Code Generator makes the development of your data-access library faster. As always, install dependencies first:
 
-```
-
+```shell
 npm install --save-dev @graphql-codegen/cli @graphql-codegen/typescript-operations @graphql-codegen/typescript-react-apollo
-
 ```
 
 You need to create some GraphQL queries and mutations for the frontend to consume. Create a folder named `graphql` in your `data-access` library with a file inside called `operations.graphql`:
@@ -131,10 +279,8 @@ To make these available to consumers, export them in the `index.ts` of the `data
 
 You now have everything needed to start building your React components. Create two components: a list of Lego sets and a form to add a Lego set. Use the Nx CLI to scaffold these:
 
-```
-
+```shell
 nx generate @nrwl/react:component --name=SetList --export --project=feature-sets --style=cssnx generate @nrwl/react:component --name=SetForm --export --project=feature-sets --style=css
-
 ```
 
 In the `SetList` component, add the following:
@@ -163,7 +309,7 @@ Browse to [http://localhost:4200](http://localhost:4200) and see the results of 
 
 ## Further Reading
 
-### **Read this blog for an Angular Example:**
+### Read this blog for an Angular Example:
 
 - [Using Apollo GraphQL with Angular in an Nx Workspace](/blog/using-apollo-graphql-with-angular-in-an-nx-workspace)
 

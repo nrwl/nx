@@ -24,6 +24,29 @@ Prior to custom elements, frameworks could whitelist known elements and attribut
 
 The `@angular/elements` package makes it possible. With it, you can publish angular components as custom elements. This is how you do it.
 
+```typescript
+import { BrowserModule } from '@angular/platform-browser';
+import { NgModule, Injector } from '@angular/core';
+import { createCustomElement } from '@angular/elements';
+
+import { HelloComponent } from './hello.component';
+
+@NgModule({
+  declarations: [AppComponent],
+  imports: [BrowserModule],
+  providers: [],
+  entryComponents: [HelloComponent],
+})
+export class AppModule {
+  constructor(injector: Injector) {
+    const el = createCustomElement(HelloComponent, { injector });
+    customElements.define('nrwl-hello', el);
+  }
+
+  ngDoBootstrap() {}
+}
+```
+
 As you can see, we added our component to the `entryComponents` array and then use `createCustomElement` function to create the element out of it. You’ll also note that we did not include the `bootstrap` array within our `NgModule` configuration, and we overrode the `ngDoBootstrap` lifecycle hook with an empty method.
 
 Once we have the custom element, we add it to the custom elements registry by using the `define` method. We can then include the app on the page and instantiate the element by adding this to the DOM:
@@ -55,6 +78,23 @@ Seemingly every other application we look at contains a requirement for some kin
 If your requirements allow you to configure the dashboard using JSON, you could write an interpreter component that will assemble the dashboard at runtime using `DynamicComponentLoader`.
 
 This, however, doesn’t work for more advanced scenarios. If you have a CMS allowing agents to author custom HTML containing Angular elements, the above approach will break down. **In AngularJS we could use** `**$compile**` **for that, with Angular elements, we can use the browser itself by simply injecting some HTML:**
+
+```typescript
+@Component({
+  template: ` <div #dynamic></div> `,
+})
+class DynamicContentCompoent {
+  @ViewChild('#dynamic') el: ElementRef;
+
+  constructor(private loader: CmsTemplateLoader) {}
+
+  afterViewInit() {
+    this.el.nativeElement.innerHtml = sanitize(
+      this.loader.loadDynamicTemplate()
+    );
+  }
+}
+```
 
 ### Reason 4: Upgrading from AngularJS to Angular
 

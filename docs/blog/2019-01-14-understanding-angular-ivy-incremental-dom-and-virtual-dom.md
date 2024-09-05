@@ -1,5 +1,5 @@
 ---
-title: '**Understanding Angular Ivy: Incremental DOM and Virtual DOM**'
+title: 'Understanding Angular Ivy: Incremental DOM and Virtual DOM'
 slug: 'understanding-angular-ivy-incremental-dom-and-virtual-dom'
 authors: ['Victor Savkin']
 cover_image: '/blog/images/2019-01-14/1*wl1I1WxI70Zoc3Hs9G101g.png'
@@ -33,7 +33,55 @@ _Every component gets compiled into a series of instructions. These instructions
 
 For instance, the following component:
 
+```typescript
+@Component({
+  selector: 'todos-cmp',
+  template: `
+    <div *ngFor="let t of todos | async">
+      {{ t.description }}
+    </div>
+  `,
+})
+class TodosComponent {
+  todos: Observable<Todo[]> = this.store.pipe(select('todos'));
+  constructor(private store: Store<AppState>) {}
+}
+```
+
 Will be compiled into:
+
+```javascript
+var TodosComponent = /** @class */ (function () {
+  function TodosComponent(store) {
+    this.store = store;
+    this.todos = this.store.pipe(select('todos'));
+  }
+
+  TodosComponent.ngComponentDef = defineComponent({
+    type: TodosComponent,
+    selectors: [['todos-cmp']],
+    factory: function TodosComponent_Factory(t) {
+      return new (t || TodosComponent)(directiveInject(Store));
+    },
+    consts: 2,
+    vars: 3,
+    template: function TodosComponent_Template(rf, ctx) {
+      if (rf & 1) {
+        // create dom
+        pipe(1, 'async');
+        template(0, TodosComponent_div_Template_0, 2, 1, null, _c0);
+      }
+      if (rf & 2) {
+        // update dom
+        elementProperty(0, 'ngForOf', bind(pipeBind1(1, 1, ctx.todos)));
+      }
+    },
+    encapsulation: 2,
+  });
+
+  return TodosComponent;
+})();
+```
 
 The template function contains the instructions rendering and updating the DOM. Note that the instructions aren’t interpreted by the framework’s rendering engine. **They are the rendering engine.**
 

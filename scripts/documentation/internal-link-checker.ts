@@ -236,7 +236,13 @@ function fixBlogTableOfContents(basePath: string) {
 const anchorUrls = ['nx.json', 'ci.json', 'extending-nx.json'].flatMap(
   (manifestFileName) => readApiJson(manifestFileName)
 );
-const ignoreAnchorUrls = ['/nx-api', '/blog', '/pricing', '/conf', '/ci/reference'];
+const ignoreAnchorUrls = [
+  '/nx-api',
+  '/blog',
+  '/pricing',
+  '/conf',
+  '/ci/reference',
+];
 
 let errors: Array<{ file: string; link: string; redirectsTo?: string }> = [];
 const localLinkErrors: Array<{ file: string; link: string }> = [];

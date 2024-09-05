@@ -21,11 +21,63 @@ I’m excited about all of these. But deep down the thing I’m excited about th
 
 Let’s take an example: reading data from the NgRx store. Right now, we would implement it like this:
 
+```typescript
+@Component({
+  selector: 'todos-cmp',
+  template: `
+    <div *ngFor="let t of todos | async">
+      {{ t.description }}
+    </div>
+  `,
+})
+class TodosComponent {
+  todos: Observable<Todo[]> = this.store.pipe(select('todos'));
+  constructor(private store: Store<AppState>) {}
+}
+```
+
 To see how we can use Ivy to do metaprogramming, let’s see what this component is compiled into.
+
+```javascript
+var TodosComponent = /** @class */ (function () {
+  function TodosComponent(store) {
+    this.store = store;
+    this.todos = this.store.pipe(select('todos'));
+  }
+
+  TodosComponent.ngComponentDef = defineComponent({
+    type: TodosComponent,
+    selectors: [['todos-cmp']],
+    factory: function TodosComponent_Factory(t) {
+      return new (t || TodosComponent)(directiveInject(Store));
+    },
+    consts: 2,
+    vars: 3,
+    template: function TodosComponent_Template(rf, ctx) {
+      if (rf & 1) {
+        pipe(1, 'async');
+        template(0, TodosComponent_div_Template_0, 2, 1, null, _c0);
+      }
+      if (rf & 2) {
+        elementProperty(0, 'ngForOf', bind(pipeBind1(1, 1, ctx.todos)));
+      }
+    },
+    encapsulation: 2,
+  });
+
+  return TodosComponent;
+})();
+```
 
 One could write a whole post about this data structure and how Angular uses it. One could also write a series of posts on how the compiler uses the incremental DOM technique to render templates into sets of instructions. Those are interesting topics, but not the topics of this post.
 
 In this post, let’s focus on the factory part of the data structure:
+
+```javascript
+factory: function TodosComponent_Factory(t) {
+  return new (t || TodosComponent)(directiveInject(Store));
+},
+```
 
 Angular will use the factory function to create a `TodosComponent`. `directiveInject` will walk up the node injector tree (think of walking up the DOM) trying to find the `Store` service. If it cannot find it, it will walk the module injector tree.
 
@@ -33,7 +85,39 @@ Angular will use the factory function to create a `TodosComponent`. `directiveIn
 
 Angular will use `ngComponentDef` when instantiating and rendering the component, at runtime. This means that we can write a decorator modifying this data structure.
 
+```javascript
+function FromStore(config: { [k: string]: string }) {
+  return (clazz: any) => {
+    const originalFactory = clazz.ngComponentDef.factory;
+    clazz.ngComponentDef.factory = () => {
+      const cmp = originalFactory(clazz.ngComponentDef.type);
+      const store = directiveInject(Store);
+      Object.keys(config).forEach((key: string) => {
+        cmp[key] = store.pipe(select(config[key]));
+      });
+      return cmp;
+    };
+  };
+}
+```
+
 We can then apply to our component class, as follows:
+
+```typescript
+
+@Component({
+  selector: 'todos-cmp',
+  template: `
+    <div *ngFor="let t of todos|async">
+        {{t.description}}
+    </div>
+  `
+})
+@FromStore({todos: 'todos’})
+class TodosComponent {
+    todos: Observable<Todo[]>;
+}
+```
 
 This works but with a big caveat — **it breaks tree shaking**. Why? Because the trees shaker will treat `FromStore` as a side-effectful function. We know that `FromStore` changes only `TodosComponent` itself, but the tree shaker has no way of knowing that. This is a big problem. After all, better tree shaking is one of the key advantages of the Ivy renderer.
 
@@ -43,7 +127,55 @@ This works but with a big caveat — **it breaks tree shaking**. Why? Because th
 
 The solution is to define a function that takes the `ComponentDef` and adds the behavior to it
 
+```typescript
+function fromStore(config: { [k: string]: string }) {
+  return (def: ComponentDef<any>) => {
+    const originalFactory = def.factory; // original factory creating a component
+    def.factory = () => {
+      const cmp = originalFactory(def.type); // component instance
+      const store = directiveInject(TodoStore); // using DI to get the store
+      config.forEach((key: string) => {
+        cmp[key] = store.pipe(select(config[key]));
+      });
+      return cmp; // return the patched component
+    };
+  };
+}
+```
+
 This function will need to added to the `ngComponentRef` property.
+
+```javascript
+var TodosComponent = /** @class */ (function () {
+  function TodosComponent(store) {
+    this.store = store;
+    this.todos = this.store.pipe(select('todos'));
+  }
+
+  TodosComponent.ngComponentDef = defineComponent({
+    type: TodosComponent,
+    selectors: [['todos-cmp']],
+    factory: function TodosComponent_Factory(t) {
+      return new (t || TodosComponent)(directiveInject(Store));
+    },
+    consts: 2,
+    vars: 3,
+    template: function TodosComponent_Template(rf, ctx) {
+      if (rf & 1) {
+        pipe(1, 'async');
+        template(0, TodosComponent_div_Template_0, 2, 1, null, _c0);
+      }
+      if (rf & 2) {
+        elementProperty(0, 'ngForOf', bind(pipeBind1(1, 1, ctx.todos)));
+      }
+    },
+    encapsulation: 2,
+    features: [fromStore({ todos })], // <---------------------- Add it here
+  });
+
+  return TodosComponent;
+})();
+```
 
 The array of features serve the same purpose as the decorator we defined above. It allows us to modify the `ngComponentDef` data structure, with one important difference: it doesn’t break tree shaking.
 
@@ -51,9 +183,26 @@ Why are we adding the `fromStore` into compiled code?
 
 The Ivy renderer itself supports features, but the compiler turning `@Component` into `ngComponentDef` doesn’t. So, as of know, we cannot add it to the component decorator, but the following API (or something similar) should become available:
 
+```typescript
+@Component({
+  selector: 'todos-cmp',
+  template: `
+    <div *ngFor="let t of todos | async">
+      {{ t.description }}
+    </div>
+  `,
+  features: [fromStore({ todos: 'todos' })],
+})
+class TodosComponent {
+  todos: Observable<Todo[]>;
+}
+```
+
 ### HOCs and Mixins
 
 Using this capability, and also the ability to generate templates on the fly, we can easily write a feature wrapping a component into another component, or mixing behavior into existing components. In other words, Ivy makes higher-order components and mixins not just possible but easy.
+
+{% youtube src="https://www.youtube.com/watch?v=-dJolYw8tnk" /%}
 
 ## Why Use Metaprogramming
 

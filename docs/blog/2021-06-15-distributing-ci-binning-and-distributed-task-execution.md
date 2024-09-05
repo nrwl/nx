@@ -26,7 +26,7 @@ We at Nrwl helped many large companies distribute CI using different variations 
 
 ## Issues with Binning
 
-### **Binning doesn’t partition the work in the optimal way.**
+### Binning doesn’t partition the work in the optimal way.
 
 First, you cannot partition tasks into bins without knowing how long every task takes. Most binning solutions collect timings (including the one in the Azure example above) which works imperfectly.
 
@@ -34,13 +34,13 @@ Second, when using binning you split tasks of the same type: some agents run tes
 
 Additionally, you have to clone the repo and restore installed dependencies three times, consequently: once for planning, once for testing, and once for deployment. If this step takes 3 minutes, you have a 9-minute setup cost.
 
-### **Binning splits semantic commands into many chunks.**
+### Binning splits semantic commands into many chunks.
 
 If you partition your tests into five bins, you have five agents with separate log files. When some of them fail, you have to go through all the logs to see what has happened. Even though this is not a deal-breaker, in a large workspace with dozens of agents executing every CI run, this becomes a real issue.
 
 More importantly, you often need all the file outputs for a given target on the same machine to do post-processing. For instance, **you can run the tests on 5 agents, but you need all the coverage reports in the same place to combine them and send them to SonarQube.** Doing this is challenging.
 
-### **Binning doesn’t work for builds.**
+### Binning doesn’t work for builds.
 
 Any time you run a command in a monorepo, Nx creates a task graph, which it then executes.
 
@@ -54,7 +54,7 @@ In this example, the Child 1 and Child 2 libraries have to be built first. Paren
 
 That’s why you often see tool authors talking about distributing tests and not builds. **Distributing tests is relatively straightforward. Distributing builds is hard.**
 
-### **Binning complicates CI/CD Setup.**
+### Binning complicates CI/CD Setup.
 
 Maintaining a CI setup that uses binning is often an ongoing effort. Because you don’t have a proper coordinator, your CI has to be the coordinator, which complicates things.
 
@@ -66,11 +66,57 @@ We at Nrwl are in the business of helping companies use monorepos, so we have be
 
 This is an example CircleCI configuration that runs all commands on a single agent.
 
+```yaml
+jobs:
+  main:
+    environment:
+    steps:
+      - setup # clones the repo and runs npm install
+      - run: npx nx affected --target=test --parallel --maxParallel=3
+      - run: npx nx affected --target=lint --parallel --maxParallel=3
+      - run: npx nx affected --target=e2e
+      - run: npx nx affected --target=build
+workflows:
+  PR:
+    jobs:
+      - main
+```
+
 Now use DTE to run the commands using 3 separate agents.
+
+```yaml
+jobs:
+  main:
+    environment:
+      NX_CLOUD_DISTRIBUTED_EXECUTION: "true"
+    steps:
+      - setup
+      - run: npx nx affected --target=test --parallel --maxParallel=3
+      - run: npx nx affected --target=lint --parallel --maxParallel=3
+      - run: npx nx affected --target=e2e
+      - run: npx nx affected --target=build
+      - run: npx nx-cloud stop-all-agents
+  agent:
+    steps:
+      - setup
+      - run:
+          name: Agent
+          command: npx nx-cloud start-agent
+workflows:
+  PR:
+    jobs:
+      - agent
+        name: agent1
+      - agent
+        name: agent2
+      - agent
+        name: agent3
+      - main
+```
 
 As you can see there is not much that changed. We added the agent job, registered it 3 times, added the `NX_CLOUD_DISTRIBUTED_EXECUTION` env variable, and added an extra step to stop all the agents. That is it.
 
-**What happens when it runs** `**nx affected --build**`**?**
+**What happens when it runs `nx affected --build`?**
 
 ![](/blog/images/2021-06-15/0*XISTgZIBj5ZZ3Sp7.avif)
 
@@ -86,13 +132,13 @@ After `nx affected --build` completes, the main job has the built artifacts and 
 
 Let’s reexamine the issues above to see how we addressed them.
 
-### **Nx Cloud partitions the work in the optimal way.**
+### Nx Cloud partitions the work in the optimal way.
 
 In theory every agent could pull one task at a time to partition things evenly, but it doesn’t work well in practice. The network overhead can add up for very small tasks, and it’s often faster to run several tasks in parallel because of the batching capabilities Nx has.
 
 As you run commands in your repo, Nx Cloud collects the timings and uses those to partition the work into well-sized batches, such that if one agent is slow, the CI isn’t blocked. Agents also run tasks of different types (tests/lints), so the pool of agents is shared evenly.
 
-### **Nx Cloud does not split commands.**
+### Nx Cloud does not split commands.
 
 To stress one more time the main job contains all the terminal outputs and all the files from all the tasks that ran on the agents, as if it ran locally. There is one place to look for errors. The created Nx Cloud run will contain all the information from all the agents.
 
@@ -100,13 +146,13 @@ To stress one more time the main job contains all the terminal outputs and all t
 
 **Finally, because all the files are copied into the main job, you can combine any outputs in post-processing steps, in exactly the same way you did it before enabling distribution.**
 
-### **Nx Cloud distributes builds.**
+### Nx Cloud distributes builds.
 
 **Nx Cloud is a proper coordinator and it can process any task graph**. An Nx Cloud agent asks for tasks to execute. The Nx Cloud service looks at the commands currently running and will see if there are any tasks that have no unfulfilled dependencies. If there are some, the Nx Cloud service will use the collected timings to create a well-size batch of tasks that it will send to the agent.
 
 The agent sees if it has all the files required to run those tasks (`dist` folders from previous tasks). And if it doesn’t, it downloads them. When it’s done running the task, it lets the Nx Cloud service know to “unblock” other tasks in the graph. At the same time, the Nx Cloud service sends the created files and terminal outputs to the main job.
 
-### **Nx Cloud does not require you to rewrite the CI setup.**
+### Nx Cloud does not require you to rewrite the CI setup.
 
 As you saw above, the CI setup, by and large, remained the same. And nothing had to change in the workspace itself. For instance, the `npx nx affected --target=test --parallel --maxParallel=3` command looks exactly the same. The meaning of `--max-parallel` changes its meaning from run up to 3 test tasks on the main job to run up to 3 test tasks on each agent.
 

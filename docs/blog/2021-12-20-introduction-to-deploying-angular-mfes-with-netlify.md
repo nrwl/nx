@@ -19,6 +19,8 @@ This series of articles will aim to showcase the process of scaffolding and depl
 
 Here is a short video introducing this series of articles and showcasing what we’ll build.
 
+{% youtube src="https://www.youtube.com/watch?v=lERVHun0ZMQ" /%}
+
 It’s a pretty straightforward system consisting of three independently deployed applications, with one composing the other two into a complete system, taking full advantage of [Module Federation](https://webpack.js.org/concepts/module-federation/) to do so.
 
 **We’ll build:**
@@ -74,7 +76,7 @@ yarn add @nrwl/angular
 
 Let’s commit it to our repository.
 
-```
+```shell
 git commit -am “chore: add nrwl angular dep”
 ```
 

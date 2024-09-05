@@ -69,7 +69,7 @@ You can find more options for querying elements on the official React Native Tes
 
 However, unit tests do not always pass. Here are some common errors I ran into and how to resolve them.
 
-### **Error: AsyncStorage is null.**
+### Error: AsyncStorage is null.
 
 I am using the library `@react-native-async-storage/async-storage`, and I got the below error when running unit testing:
 

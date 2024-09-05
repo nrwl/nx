@@ -244,7 +244,7 @@ export default App;
 
 [EAS Build](https://docs.expo.dev/build/introduction/) is a hosted service for building app binaries for your Expo and React Native projects. To set up EAS locally:
 
-### **1\. Install EAS CLI**
+### 1. Install EAS CLI
 
 EAS CLI is the command-line app to interact with EAS services in the terminal. To install it, run the command:
 
@@ -252,7 +252,7 @@ EAS CLI is the command-line app to interact with EAS services in the terminal. T
 npm install -g eas-cli
 ```
 
-### 2\. Login To EAS
+### 2. Login To EAS
 
 If you are not logged in, run the command:
 
@@ -260,7 +260,7 @@ If you are not logged in, run the command:
 eas login
 ```
 
-### 3\. Build the Apps
+### 3. Build the Apps
 
 After the EAS setup, you can build apps by running the command:
 

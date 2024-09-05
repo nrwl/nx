@@ -18,6 +18,35 @@ But the code organization is just one piece of the puzzle. The physical organiza
 
 When you generate the first project in your workspace using one of our generators, one of the things you get for free is the full linter setup. The linter is preconfigured with a default ruleset that includes a set of best practices. Alongside the standard set of rules, the initial generated configuration includes a setup for `enforce-module-boundaries` rule.
 
+```json5 {% fileName=".eslintrc.json" /%}
+{
+  // ... default ESLint config here
+
+  overrides: [
+    {
+      files: ['*.ts', '*.tsx', '*.js', '*.jsx'],
+      rules: {
+        '@nrwl/nx/enforce-module-boundaries': [
+          'error',
+          {
+            allow: [],
+            depConstraints: [
+              {
+                sourceTag: '*',
+                onlyDependOnLibsWithTags: ['*'],
+              },
+            ],
+            enforceBuildableLibDependency: true,
+          },
+        ],
+      },
+    },
+
+    // ... more ESLint overrides here
+  ],
+}
+```
+
 Let’s dissect what each of these properties does.
 
 The `allow` array acts as a whitelist listing the import definitions that should be omitted from further checks. You can read more about it in the **Overriding the overrides** section below.
@@ -27,6 +56,22 @@ The `depConstraints` section is the one you will be spending most time fine-tuni
 > Note, the wildcard only applies to libraries. Applications and E2E applications cannot be imported. It wouldn’t make any sense. If you want to combine applications, you should use the [micro-frontends](/recipes/angular/dynamic-module-federation-with-angular) approach with the module federation.
 
 The circular dependency chains such as `lib A -> lib B -> lib C -> lib A` are also not allowed. The self circular dependency (when lib imports from a named alias of itself), while not recommended, can be overridden by setting the flag `allowCircularSelfDependency` to true.
+
+```json5 {% fileName=".eslintrc.json" /%}
+// ... more ESLint config here
+
+"@nrwl/nx/enforce-module-boundaries": [
+  "error",
+  {
+    "allowCircularSelfDependency": true,
+    "depConstraints": [
+      // ...list of constraints
+    ]
+  }
+]
+
+// ... more ESLint config here
+```
 
 Finally, the flag `enforceBuildableLibDependency` prevents us from importing a non-buildable library into a buildable one. You can read more on what buildable libraries are used for in [our docs](/concepts/buildable-and-publishable-libraries).
 
@@ -54,6 +99,14 @@ Let’s define the types of projects. We will use the following tags:
 
 Your changed project configuration should now have the tags section defined.
 
+```json5 {% fileName="project.json" /%}
+{
+  // ... more project configuration here
+
+  tags: ['type:app'],
+}
+```
+
 Your enhanced graph will now look similar to this:
 
 ![](/blog/images/2021-12-17/1*kTiRazA4qhZ7kD-lGgGyjg.avif)
@@ -62,6 +115,35 @@ _Graph with type tags set_
 The above list of library types is not complete. You might add specific ones for E2E projects or UI component libraries. Using the naming format `type:*` is just a suggestion. Consider this being a hashtag on your favorite social app. You can use any prefix or format you feel fitting. The important thing is that it's readable and intuitive to all the members of your team.
 
 Now, that we have marked all of our projects, we can continue to define the rules in the root `.eslintrc.json.`
+
+```json5 {% fileName=".eslintrc.json" /%}
+{
+  // ... more ESLint config here
+
+  '@nrwl/nx/enforce-module-boundaries': [
+    'error',
+    {
+      // update depConstraints based on your tags
+      depConstraints: [
+        {
+          sourceTag: 'type:app',
+          onlyDependOnLibsWithTags: ['type:feature', 'type:util'],
+        },
+        {
+          sourceTag: 'type:feature',
+          onlyDependOnLibsWithTags: ['type:feature', 'type:util'],
+        },
+        {
+          sourceTag: 'type:util',
+          onlyDependOnLibsWithTags: ['type:util'],
+        },
+      ],
+    },
+  ],
+
+  // ... more ESLint config here
+}
+```
 
 ## Adding a second dimension
 
@@ -84,13 +166,103 @@ _Full project graph with two-dimensional tags_
 
 Let us now define our missing rules!
 
+```json5 {% fileName=".eslintrc.json" /%}
+{
+  // ... more ESLint config here
+
+  '@nrwl/nx/enforce-module-boundaries': [
+    'error',
+    {
+      // update depConstraints based on your tags
+      depConstraints: [
+        // ...previous project type related rules
+        {
+          sourceTag: 'scope:store',
+          onlyDependOnLibsWithTags: [
+            'scope:store',
+            'scope:shared',
+            'scope:core',
+          ],
+        },
+        {
+          sourceTag: 'scope:admin',
+          onlyDependOnLibsWithTags: [
+            'scope:admin',
+            'scope:shared',
+            'scope:core',
+          ],
+        },
+        {
+          sourceTag: 'scope:core',
+          onlyDependOnLibsWithTags: ['scope:shared'],
+        },
+        {
+          sourceTag: 'scope:shared',
+          onlyDependOnLibsWithTags: ['scope:shared'],
+        },
+      ],
+    },
+  ],
+
+  // ... more ESLint config here
+}
+```
+
 ## Fine-grained external dependencies
 
 You may want to constrain what external packages a project may import. In our example above, we want to make sure projects in the `scope:store` does not import any angular packages, and projects from the `scope:admin` do not import any react library. You can ban these imports using `bannedExternalImports` property in your dependency constraints configuration.
 
 We can now enhance our rule configuration by providing additional information.
 
-Using the wildcard `*****` to match multiple projects e.g. `react*` we can save ourselves the effort of manually specifying every single project we want to ban.
+```json5 {% fileName=".eslintrc.json" /%}
+{
+  // ... more ESLint config here
+
+  '@nrwl/nx/enforce-module-boundaries': [
+    'error',
+    {
+      // update depConstraints based on your tags
+      depConstraints: [
+        // ...previous project type related rules
+        {
+          sourceTag: 'scope:store',
+          onlyDependOnLibsWithTags: [
+            'scope:store',
+            'scope:shared',
+            'scope:core',
+          ],
+          // this covers all @angular pacakges
+          bannedExternalImports: ['@angular/*'],
+        },
+        {
+          sourceTag: 'scope:admin',
+          onlyDependOnLibsWithTags: [
+            'scope:admin',
+            'scope:shared',
+            'scope:core',
+          ],
+          // this covers react, but also react-router-dom or react-helmet
+          bannedExternalImports: ['react*'],
+        },
+        {
+          sourceTag: 'scope:core',
+          onlyDependOnLibsWithTags: ['scope:shared'],
+          bannedExternalImports: ['@angular/*', 'react*'],
+        },
+        {
+          sourceTag: 'scope:shared',
+          onlyDependOnLibsWithTags: ['scope:shared'],
+          bannedExternalImports: ['@angular/*', 'react*'],
+        },
+      ],
+    },
+  ],
+
+  // ... more ESLint config here
+}
+```
+
+Using the wildcard `*` to match multiple projects e.g. `react*` we can save ourselves the effort of manually specifying every single project we want to ban.
 
 ## Restricting transitive dependencies
 
@@ -98,11 +270,53 @@ Our solution doesn’t contain only internal projects but also depends on variou
 
 Therefore it’s wise not to allow developers to import transitive dependencies in their projects. Our ESLint plugin provides a simple flag to turn this restriction on.
 
+```json5 {% fileName=".eslintrc.json" /%}
+{
+  // ... more ESLint config here
+
+  '@nrwl/nx/enforce-module-boundaries': [
+    'error',
+    {
+      // ... more rule config here
+      banTransitiveDependencies: true,
+    },
+  ],
+
+  // ... more ESLint config here
+}
+```
+
 If you now try to import a transitive dependency, your linter responds with an error. This flag is disabled by default for now, but we highly recommend you enable it.
 
 ## Overriding the overrides
 
 Sometimes, we just need to override this configuration for a given project. The scenario for this might be testing or during the development, if we are unsure yet how a certain project will be tagged. While we strongly encourage you to plan your architecture carefully and never override the boundaries configuration, you still have an option to bale out and override it.
+
+```json5 {% fileName=".eslintrc.json" /%}
+{
+  // ... default ESLint config here
+
+  overrides: [
+    {
+      files: ['*.ts', '*.tsx', '*.js', '*.jsx'],
+      rules: {
+        '@nrwl/nx/enforce-module-boundaries': [
+          'error',
+          {
+            // ignore any checks for these projects for now
+            allow: ['a-wip-project', 'this-one-is-broken-so-ignore-it'],
+            depConstraints: [
+              // ...dependency constraints here
+            ],
+          },
+        ],
+      },
+    },
+
+    // ... more ESLint overrides here
+  ],
+}
+```
 
 ## Summary
 

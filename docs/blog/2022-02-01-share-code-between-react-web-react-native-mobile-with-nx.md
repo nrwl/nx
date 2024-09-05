@@ -131,7 +131,7 @@ import **AsyncStorage** from '@react-native-async-storage/async-storage'; const 
   };
 ```
 
-### **History**
+### History
 
 On the React web app, we use [connected-react-router](https://github.com/supasate/connected-react-router) to put the router state into the Redux store. However, the [History API (windows.history)](https://developer.mozilla.org/en-US/docs/Web/API/History_API) is not supported by React Native. As an alternative, we can use `createMemoryHistory`.
 
