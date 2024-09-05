@@ -30,7 +30,7 @@ interface GitCommitAndTagOptions {
   stageChanges?: boolean;
   gitCommit?: boolean;
   gitCommitMessage?: string;
-  gitCommitArgs?: string;
+  gitCommitArgs?: string | string[];
   gitTag?: boolean;
   gitTagMessage?: string;
   gitTagArgs?: string;
