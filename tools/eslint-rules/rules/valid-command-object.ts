@@ -53,18 +53,12 @@ export const rule = ESLintUtils.RuleCreator(() => __filename)({
       'Property > :matches(Identifier[name="describe"], Identifier[name="description"], TaggedTemplateExpression)':
         (node: TSESTree.Identifier) => {
           const propertyNode = node.parent as TSESTree.Property;
-          const simplePropertyValue =
-            propertyNode.value.type === 'Literal' &&
-            typeof propertyNode.value.value !== 'boolean'
+          const stringToCheck =
+            (propertyNode.value.type === 'Literal' &&
+              typeof propertyNode.value.value !== 'boolean') ||
+            propertyNode.value.type === 'TemplateLiteral'
               ? ASTUtils.getStringIfConstant(propertyNode.value)
               : null;
-
-          let stringToCheck = simplePropertyValue;
-          if (!stringToCheck) {
-            if (propertyNode.value.type === 'TaggedTemplateExpression') {
-              stringToCheck = propertyNode.value.quasi.quasis[0].value.raw;
-            }
-          }
 
           // String description already ends with a . character (or some other form of punctuation)
           if (
