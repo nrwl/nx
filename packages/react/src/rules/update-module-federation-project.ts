@@ -27,7 +27,10 @@ export function updateModuleFederationProject(
     projectConfig.targets.build.executor = '@nx/rspack:rspack';
     projectConfig.targets.build.options = {
       ...projectConfig.targets.build.options,
-      main: maybeJs(options, `${options.appProjectRoot}/src/main.ts`),
+      main: maybeJs(
+        { js: options.js, useJsx: true },
+        `${options.appProjectRoot}/src/main.ts`
+      ),
       rspackConfig: `${options.appProjectRoot}/rspack.config.${
         options.typescriptConfiguration && !options.js ? 'ts' : 'js'
       }`,

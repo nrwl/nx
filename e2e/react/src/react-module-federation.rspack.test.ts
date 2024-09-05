@@ -770,9 +770,7 @@ describe('debugthis React Rspack Module Federation', () => {
         const remoteProcess = await runCommandUntil(
           `serve ${remote} --no-watch --verbose`,
           (output) => {
-            return output.includes(
-              `Web Development Server is listening at http://localhost:${remotePort}/`
-            );
+            return output.includes(`Loopback: http://localhost:${remotePort}/`);
           }
         );
         await killProcessAndPorts(remoteProcess.pid, remotePort);

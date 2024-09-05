@@ -36,10 +36,19 @@ export function addModuleFederationFiles(
   // Renaming original entry file so we can use `import(./bootstrap)` in
   // new entry file.
   host.rename(
-    joinPathFragments(options.appProjectRoot, maybeJs(options, 'src/main.tsx')),
     joinPathFragments(
       options.appProjectRoot,
-      maybeJs(options, 'src/bootstrap.tsx')
+      maybeJs(
+        { js: options.js, useJsx: options.bundler === 'rspack' },
+        'src/main.tsx'
+      )
+    ),
+    joinPathFragments(
+      options.appProjectRoot,
+      maybeJs(
+        { js: options.js, useJsx: options.bundler === 'rspack' },
+        'src/bootstrap.tsx'
+      )
     )
   );
 
@@ -47,7 +56,13 @@ export function addModuleFederationFiles(
     host,
     joinPathFragments(
       __dirname,
-      `../files/${options.js ? 'common' : 'common-ts'}`
+      `../files/${
+        options.js
+          ? options.bundler === 'rspack'
+            ? 'rspack-common'
+            : 'common'
+          : 'common-ts'
+      }`
     ),
     options.appProjectRoot,
     templateVariables

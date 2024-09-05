@@ -39,7 +39,16 @@ export function addModuleFederationFiles(
 
   generateFiles(
     host,
-    join(__dirname, `./files/${options.js ? 'common' : 'common-ts'}`),
+    join(
+      __dirname,
+      `./files/${
+        options.js
+          ? options.bundler === 'rspack'
+            ? 'rspack-common'
+            : 'common'
+          : 'common-ts'
+      }`
+    ),
     options.appProjectRoot,
     templateVariables
   );
@@ -126,8 +135,20 @@ export async function remoteGeneratorInternal(host: Tree, schema: Schema) {
   // Renaming original entry file so we can use `import(./bootstrap)` in
   // new entry file.
   host.rename(
-    join(options.appProjectRoot, maybeJs(options, 'src/main.tsx')),
-    join(options.appProjectRoot, maybeJs(options, 'src/bootstrap.tsx'))
+    join(
+      options.appProjectRoot,
+      maybeJs(
+        { js: options.js, useJsx: options.bundler === 'rspack' },
+        'src/main.tsx'
+      )
+    ),
+    join(
+      options.appProjectRoot,
+      maybeJs(
+        { js: options.js, useJsx: options.bundler === 'rspack' },
+        'src/bootstrap.tsx'
+      )
+    )
   );
 
   addModuleFederationFiles(host, options);
@@ -139,6 +160,7 @@ export async function remoteGeneratorInternal(host: Tree, schema: Schema) {
       project: options.projectName,
       serverPort: options.devServerPort,
       skipFormat: true,
+      bundler: options.bundler,
     });
     tasks.push(setupSsrTask);
 
@@ -151,10 +173,12 @@ export async function remoteGeneratorInternal(host: Tree, schema: Schema) {
 
     const projectConfig = readProjectConfiguration(host, options.projectName);
     if (options.bundler === 'rspack') {
+      projectConfig.targets.server.executor = '@nx/rspack:rspack';
       projectConfig.targets.server.options.rspackConfig = joinPathFragments(
         projectConfig.root,
         `rspack.server.config.${options.typescriptConfiguration ? 'ts' : 'js'}`
       );
+      delete projectConfig.targets.server.options.webpackConfig;
     } else {
       projectConfig.targets.server.options.webpackConfig = joinPathFragments(
         projectConfig.root,

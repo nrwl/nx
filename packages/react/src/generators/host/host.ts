@@ -126,10 +126,12 @@ export async function hostGeneratorInternal(
 
     const projectConfig = readProjectConfiguration(host, options.projectName);
     if (options.bundler === 'rspack') {
+      projectConfig.targets.server.executor = '@nx/rspack:rspack';
       projectConfig.targets.server.options.rspackConfig = joinPathFragments(
         projectConfig.root,
         `rspack.server.config.${options.typescriptConfiguration ? 'ts' : 'js'}`
       );
+      delete projectConfig.targets.server.options.webpackConfig;
     } else {
       projectConfig.targets.server.options.webpackConfig = joinPathFragments(
         projectConfig.root,

@@ -177,7 +177,7 @@ export async function createApplicationFiles(
 
   if (options.js) {
     toJS(host, {
-      useJsx: options.bundler === 'vite',
+      useJsx: options.bundler === 'vite' || options.bundler === 'rspack',
     });
   }
 
@@ -204,7 +204,13 @@ function createNxWebpackPluginOptions(
     ),
     index: './src/index.html',
     baseHref: '/',
-    main: maybeJs(options, `./src/main.tsx`),
+    main: maybeJs(
+      {
+        js: options.js,
+        useJsx: options.bundler === 'vite' || options.bundler === 'rspack',
+      },
+      `./src/main.tsx`
+    ),
     tsConfig: './tsconfig.app.json',
     assets: ['./src/favicon.ico', './src/assets'],
     styles:
