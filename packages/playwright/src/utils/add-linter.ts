@@ -13,9 +13,11 @@ import {
   addExtendsToLintConfig,
   addOverrideToLintConfig,
   addPluginsToLintConfig,
+  addPredefinedConfigToFlatLintConfig,
   findEslintFile,
   isEslintConfigSupported,
 } from '@nx/eslint/src/generators/utils/eslint-file';
+import { useFlatConfig } from '@nx/eslint/src/utils/flat-config';
 
 export interface PlaywrightLinterOptions {
   project: string;
@@ -76,12 +78,23 @@ export async function addLinterToPlaywrightProject(
     isEslintConfigSupported(tree, projectConfig.root) ||
     isEslintConfigSupported(tree)
   ) {
-    const addExtendsTask = addExtendsToLintConfig(
-      tree,
-      projectConfig.root,
-      'plugin:playwright/recommended'
-    );
-    tasks.push(addExtendsTask);
+    if (useFlatConfig(tree)) {
+      addPredefinedConfigToFlatLintConfig(
+        tree,
+        projectConfig.root,
+        'flat/recommended',
+        'playwright',
+        'eslint-plugin-playwright',
+        false
+      );
+    } else {
+      const addExtendsTask = addExtendsToLintConfig(
+        tree,
+        projectConfig.root,
+        'plugin:playwright/recommended'
+      );
+      tasks.push(addExtendsTask);
+    }
     if (options.rootProject) {
       addPluginsToLintConfig(tree, projectConfig.root, '@nx');
       addOverrideToLintConfig(tree, projectConfig.root, javaScriptOverride);
