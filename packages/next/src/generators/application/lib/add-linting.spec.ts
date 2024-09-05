@@ -90,17 +90,6 @@ describe('updateEslint', () => {
             ],
             "rules": {},
           },
-          {
-            "env": {
-              "jest": true,
-            },
-            "files": [
-              "*.spec.ts",
-              "*.spec.tsx",
-              "*.spec.js",
-              "*.spec.jsx",
-            ],
-          },
         ],
       }
     `);
@@ -115,6 +104,7 @@ describe('updateEslint', () => {
       .toMatchInlineSnapshot(`
       "const { FlatCompat } = require("@eslint/eslintrc");
       const js = require("@eslint/js");
+      const nx = require("@nx/eslint-plugin");
       const baseConfig = require("../eslint.config.js");
 
       const compat = new FlatCompat({
@@ -123,48 +113,9 @@ describe('updateEslint', () => {
       });
 
       module.exports = [
-      ...compat.extends("plugin:@nx/react-typescript", "next", "next/core-web-vitals"),
+      ...compat.extends("next", "next/core-web-vitals"),
           ...baseConfig,
-          {
-        "files": [
-          "**/*.ts",
-          "**/*.tsx",
-          "**/*.js",
-          "**/*.jsx"
-        ],
-        "rules": {
-          "@next/next/no-html-link-for-pages": [
-            "error",
-            "my-app/pages"
-          ]
-        }
-          },
-          {
-              files: [
-                  "**/*.ts",
-                  "**/*.tsx"
-              ],
-              rules: {}
-          },
-          {
-              files: [
-                  "**/*.js",
-                  "**/*.jsx"
-              ],
-              rules: {}
-          },
-      ...compat.config({ env: { jest: true } }).map(config => ({
-          ...config,
-          files: [
-              "**/*.spec.ts",
-              "**/*.spec.tsx",
-              "**/*.spec.js",
-              "**/*.spec.jsx"
-          ],
-          rules: {
-              ...config.rules
-          }
-      })),
+      ...nx.configs["flat/react-typescript"],
       { ignores: [".next/**/*"] }
       ];
       "

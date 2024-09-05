@@ -201,14 +201,17 @@ describe('convert-to-flat-config generator', () => {
         ...baseConfig,
         {
           files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
+          // Override or add rules here
           rules: {},
         },
         {
           files: ['**/*.ts', '**/*.tsx'],
+          // Override or add rules here
           rules: {},
         },
         {
           files: ['**/*.js', '**/*.jsx'],
+          // Override or add rules here
           rules: {},
         },
       ];
@@ -554,6 +557,7 @@ describe('convert-to-flat-config generator', () => {
         ...baseConfig,
         {
           files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
+          // Override or add rules here
           rules: {},
           languageOptions: {
             parserOptions: { project: ['apps/dx-assets-ui/tsconfig.*?.json'] },
@@ -561,10 +565,12 @@ describe('convert-to-flat-config generator', () => {
         },
         {
           files: ['**/*.ts', '**/*.tsx'],
+          // Override or add rules here
           rules: {},
         },
         {
           files: ['**/*.js', '**/*.jsx'],
+          // Override or add rules here
           rules: {},
         },
         { ignores: ['__fixtures__/**/*'] },

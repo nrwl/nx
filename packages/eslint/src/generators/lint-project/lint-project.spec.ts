@@ -43,6 +43,8 @@ describe('@nx/eslint:lint-project', () => {
   });
 
   it('should generate a flat eslint base config', async () => {
+    const originalEslintUseFlatConfigVal = process.env.ESLINT_USE_FLAT_CONFIG;
+    process.env.ESLINT_USE_FLAT_CONFIG = 'true';
     await lintProjectGenerator(tree, {
       ...defaultOptions,
       linter: Linter.EsLint,
@@ -76,13 +78,13 @@ describe('@nx/eslint:lint-project', () => {
           },
         },
         {
-          files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
-          // Add your rule overrides here
+          // Override or add rules here
           rules: {},
         },
       ];
       "
     `);
+    process.env.ESLINT_USE_FLAT_CONFIG = originalEslintUseFlatConfigVal;
   });
 
   it('should generate a eslint config (legacy)', async () => {

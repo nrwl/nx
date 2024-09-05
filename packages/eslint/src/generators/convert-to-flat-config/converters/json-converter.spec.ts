@@ -213,6 +213,7 @@ describe('convertEslintJsonToFlatConfig', () => {
                   "**/*.ts",
                   "**/*.tsx"
               ],
+              // Override or add rules here
               rules: {}
           },
           {
@@ -220,6 +221,7 @@ describe('convertEslintJsonToFlatConfig', () => {
                   "**/*.js",
                   "**/*.jsx"
               ],
+              // Override or add rules here
               rules: {}
           },
           {
