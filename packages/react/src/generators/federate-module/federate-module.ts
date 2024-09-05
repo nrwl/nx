@@ -6,6 +6,8 @@ import {
   readJson,
   runTasksInSerial,
   stripIndents,
+  offsetFromRoot,
+  joinPathFragments,
 } from '@nx/devkit';
 import { Schema } from './schema';
 
@@ -61,7 +63,13 @@ export async function federateModuleGenerator(tree: Tree, schema: Schema) {
   }
 
   // add path to exposes property
-  addPathToExposes(tree, projectRoot, schema.name, schema.path);
+  const offsetFromProjectRoot = offsetFromRoot(projectRoot);
+  addPathToExposes(
+    tree,
+    projectRoot,
+    schema.name,
+    joinPathFragments(offsetFromProjectRoot, schema.path)
+  );
 
   // Add new path to tsconfig
   const rootJSON = readJson(tree, getRootTsConfigPathInTree(tree));
