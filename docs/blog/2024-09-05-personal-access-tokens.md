@@ -31,16 +31,17 @@ pipelines.
 
 What we previously called "access tokens" will now be called "[CI access tokens](/ci/recipes/security/access-tokens)."
 They are still defined at the workspace
-level, but are designed for use in CI. These tokens can now be set as environment variables on your CI platform so that
-they're no longer committed to your repo.
+level, but are designed for use in CI. These tokens should be set as environment variables or secrets on your CI
+platform so that they're no longer committed to your repo.
 
 ## What are personal access tokens?
 
 [Personal access tokens](/ci/recipes/security/personal-access-tokens) are a new type of access token that is scoped to
 an individual user. This means that this token lives and dies with that member's access to your Nx Cloud workspace.
-Users must log in to Nx Cloud and confirm their access to a workspace before a personal access token can be created.
-Once created, we validate that token for access each time. As soon as a user loses access, the personal access token no
-longer works and access to the cache is removed.
+Users must log in to Nx Cloud and they are a member of a workspace before a personal access token can be created.
+Once created, we validate that token for access each time you use the distributed cache. As soon as a user loses access,
+the personal access token no
+longer works, and access to the cache is removed.
 
 This gets even more powerful when combined with the GitHub VCS integration. When a user's GitHub access is removed from
 a GitHub-connected organization, their access to Nx Cloud is removed, and their personal access token is invalidated.
@@ -57,21 +58,27 @@ By default, a workspace that opts in to personal access tokens will allow anonym
 access token defined) read-only access. This can be changed to disallow access to the cache for anonymous users
 in your workspace settings.
 
-User with personal access tokens will have read-only access to the cache. This can be changed to enable read-write
+Users with personal access tokens will have read-only access to the cache. This can be changed to enable read-write
 access in the workspace settings.
 
 ## Converting existing workspaces to use personal access tokens
 
-Personal access tokens can be enabled with _Nx versions 13+_. These steps will get you started, but you can [find more details in our docs](/ci/recipes/security/personal-access-tokens).
+Personal access tokens can be enabled with _Nx versions 13+_. These steps will get you started, but you
+can [find more details in our docs](/ci/recipes/security/personal-access-tokens).
 
-1. **Convert to using `nxCloudId` by running `npx nx-cloud convert-to-nx-cloud-id`** - Previously, your `nx.json` had a CI
+1. **Convert to using `nxCloudId` by running `npx nx-cloud convert-to-nx-cloud-id`** - Previously, your `nx.json` had a
+   CI
    access token defined in the `nxCloudAccessToken` property. This command will replace that with `nxCloudId`, a generic
    id that references your workspace but no longer provides access to the cache.
-2. **Generate a personal access token by running `npx nx-cloud login`** - Follow the directions in your terminal to log in
+2. **Generate a personal access token by running `npx nx-cloud login`** - Follow the directions in your terminal to log
+   in
    to Nx Cloud. Each contributor with access to the workspace will need to complete this step.
-3. **Move CI access tokens to environment variables** - Now that the access token is no longer committed to your `nx.json`,
-   you'll need to provide that CI access token via the `NX_CLOUD_ACCESS_TOKEN` [environment variable](/ci/reference/env-vars#nxcloudaccesstoken).
-4. **_Optional_ Disable anonymous access** - By default, anyone without a personal access token will have read-only access
+3. **Move CI access tokens to environment variables** - Now that the access token is no longer committed to your
+   `nx.json`,
+   you'll need to provide that CI access token via the
+   `NX_CLOUD_ACCESS_TOKEN` [environment variable](/ci/reference/env-vars#nxcloudaccesstoken).
+4. **_Optional_ Disable anonymous access** - By default, anyone without a personal access token will have read-only
+   access
    to your cached artifacts. Once everyone has a personal access token defined, you can disable this anonymous access in
    your Nx Cloud workspace settings.
 
