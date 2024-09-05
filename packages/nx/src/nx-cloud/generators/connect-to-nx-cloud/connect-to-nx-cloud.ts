@@ -48,28 +48,6 @@ function getNxInitDate(): string | null {
   }
 }
 
-async function createNxCloudWorkspaceV1(
-  workspaceName: string,
-  installationSource: string,
-  nxInitDate: string | null
-): Promise<{ token: string; url: string }> {
-  const apiUrl = getCloudUrl();
-  const response = await require('axios').post(
-    `${apiUrl}/nx-cloud/create-org-and-workspace`,
-    {
-      workspaceName,
-      installationSource,
-      nxInitDate,
-    }
-  );
-
-  if (response.data.message) {
-    throw new Error(response.data.message);
-  }
-
-  return response.data;
-}
-
 async function createNxCloudWorkspaceV2(
   workspaceName: string,
   installationSource: string,
@@ -123,29 +101,6 @@ export interface ConnectToNxCloudOptions {
   github?: boolean;
   directory?: string;
   generateToken?: boolean;
-}
-
-function addNxCloudOptionsToNxJson(
-  tree: Tree,
-  token: string,
-  directory: string = ''
-) {
-  const nxJsonPath = join(directory, 'nx.json');
-  if (tree.exists(nxJsonPath)) {
-    updateJson<NxJsonConfiguration>(
-      tree,
-      join(directory, 'nx.json'),
-      (nxJson) => {
-        const overrideUrl = process.env.NX_CLOUD_API || process.env.NRWL_API;
-        if (overrideUrl) {
-          nxJson.nxCloudUrl = overrideUrl;
-        }
-        nxJson.nxCloudAccessToken = token;
-
-        return nxJson;
-      }
-    );
-  }
 }
 
 function addNxCloudIdToNxJson(
@@ -208,41 +163,22 @@ export async function connectToNxCloud(
   )
     return null;
 
-  if (process.env.NX_ENABLE_LOGIN === 'true') {
-    responseFromCreateNxCloudWorkspaceV2 = await createNxCloudWorkspaceV2(
-      getRootPackageName(tree),
-      schema.installationSource,
-      getNxInitDate()
-    );
+  responseFromCreateNxCloudWorkspaceV2 = await createNxCloudWorkspaceV2(
+    getRootPackageName(tree),
+    schema.installationSource,
+    getNxInitDate()
+  );
 
-    addNxCloudIdToNxJson(
-      tree,
-      responseFromCreateNxCloudWorkspaceV2?.nxCloudId,
-      schema.directory
-    );
+  addNxCloudIdToNxJson(
+    tree,
+    responseFromCreateNxCloudWorkspaceV2?.nxCloudId,
+    schema.directory
+  );
 
-    await formatChangedFilesWithPrettierIfAvailable(tree, {
-      silent: schema.hideFormatLogs,
-    });
-    return responseFromCreateNxCloudWorkspaceV2.nxCloudId;
-  } else {
-    responseFromCreateNxCloudWorkspaceV1 = await createNxCloudWorkspaceV1(
-      getRootPackageName(tree),
-      schema.installationSource,
-      getNxInitDate()
-    );
-
-    addNxCloudOptionsToNxJson(
-      tree,
-      responseFromCreateNxCloudWorkspaceV1?.token,
-      schema.directory
-    );
-
-    await formatChangedFilesWithPrettierIfAvailable(tree, {
-      silent: schema.hideFormatLogs,
-    });
-    return responseFromCreateNxCloudWorkspaceV1.token;
-  }
+  await formatChangedFilesWithPrettierIfAvailable(tree, {
+    silent: schema.hideFormatLogs,
+  });
+  return responseFromCreateNxCloudWorkspaceV2.nxCloudId;
 }
 
 async function connectToNxCloudGenerator(
