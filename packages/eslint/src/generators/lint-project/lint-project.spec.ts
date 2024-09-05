@@ -43,9 +43,6 @@ describe('@nx/eslint:lint-project', () => {
   });
 
   it('should generate a flat eslint base config', async () => {
-    const originalEslintUseFlatConfig = process.env.ESLINT_USE_FLAT_CONFIG;
-    process.env.ESLINT_USE_FLAT_CONFIG = 'true';
-
     await lintProjectGenerator(tree, {
       ...defaultOptions,
       linter: Linter.EsLint,
@@ -86,14 +83,9 @@ describe('@nx/eslint:lint-project', () => {
       ];
       "
     `);
-
-    process.env.ESLINT_USE_FLAT_CONFIG = originalEslintUseFlatConfig;
   });
 
   it('should generate a eslint config (legacy)', async () => {
-    const originalEslintUseFlatConfig = process.env.ESLINT_USE_FLAT_CONFIG;
-    process.env.ESLINT_USE_FLAT_CONFIG = 'false';
-
     await lintProjectGenerator(tree, {
       ...defaultOptions,
       linter: Linter.EsLint,
@@ -123,8 +115,6 @@ describe('@nx/eslint:lint-project', () => {
       }
       "
     `);
-
-    process.env.ESLINT_USE_FLAT_CONFIG = originalEslintUseFlatConfig;
   });
 
   it('should generate a project config with lintFilePatterns if provided', async () => {

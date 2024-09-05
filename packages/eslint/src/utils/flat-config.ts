@@ -18,6 +18,7 @@ export function getRootESLintFlatConfigFilename(tree: Tree): string {
 
 export function useFlatConfig(tree?: Tree): boolean {
   // Prioritize taking ESLint's own environment variable into account when determining if we should use flat config
+  // If it is not defined, then default to true.
   if (process.env.ESLINT_USE_FLAT_CONFIG === 'true') {
     return true;
   } else if (process.env.ESLINT_USE_FLAT_CONFIG === 'false') {
