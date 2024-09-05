@@ -37,6 +37,7 @@ export interface NxArgs {
   type?: string;
   batch?: boolean;
   excludeTaskDependencies?: boolean;
+  skipSync?: boolean;
 }
 
 export function createOverrides(__overrides_unparsed__: string[] = []) {
