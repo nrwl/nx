@@ -14,6 +14,7 @@ describe('federate-module', () => {
     name: 'my-federated-module',
     remote: 'my-remote',
     path: 'apps/my-remote/src/my-federated-module.ts',
+    remoteDirectory: 'apps/my-remote',
   };
 
   describe('no remote', () => {
@@ -62,7 +63,10 @@ describe('federate-module', () => {
 
     beforeEach(async () => {
       remoteSchema.name = uniq('remote');
-      await remoteGenerator(tree, remoteSchema);
+      await remoteGenerator(tree, {
+        ...remoteSchema,
+        directory: `apps/${remoteSchema.name}`,
+      });
       tree.write(schema.path, `export const isEven = true;`);
     });
 

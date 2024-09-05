@@ -117,7 +117,7 @@ describe('StorybookConfiguration generator', () => {
     // add standalone component
     await componentGenerator(tree, {
       name: 'standalone',
-      project: libName,
+      directory: `${libName}/src/lib/standalone`,
       standalone: true,
       skipFormat: true,
     });
@@ -131,16 +131,14 @@ describe('StorybookConfiguration generator', () => {
     // add a regular component to the secondary entrypoint
     await componentGenerator(tree, {
       name: 'secondary-button',
-      project: libName,
-      path: `${libName}/secondary-entry-point/src/lib`,
+      directory: `${libName}/secondary-entry-point/src/lib/secondary-button`,
       export: true,
       skipFormat: true,
     });
     // add a standalone component to the secondary entrypoint
     await componentGenerator(tree, {
       name: 'secondary-standalone',
-      project: libName,
-      path: `${libName}/secondary-entry-point/src/lib`,
+      directory: `${libName}/secondary-entry-point/src/lib/secondary-standalone`,
       standalone: true,
       export: true,
       skipFormat: true,
@@ -159,7 +157,7 @@ describe('StorybookConfiguration generator', () => {
     // add standalone component
     await componentGenerator(tree, {
       name: 'standalone',
-      project: libName,
+      directory: `${libName}/src/lib/standalone`,
       standalone: true,
       skipFormat: true,
     });
@@ -173,16 +171,14 @@ describe('StorybookConfiguration generator', () => {
     // add a regular component to the secondary entrypoint
     await componentGenerator(tree, {
       name: 'secondary-button',
-      project: libName,
-      path: `${libName}/secondary-entry-point/src/lib`,
+      directory: `${libName}/secondary-entry-point/src/lib/secondary-button`,
       export: true,
       skipFormat: true,
     });
     // add a standalone component to the secondary entrypoint
     await componentGenerator(tree, {
       name: 'secondary-standalone',
-      project: libName,
-      path: `${libName}/secondary-entry-point/src/lib`,
+      directory: `${libName}/secondary-entry-point/src/lib/secondary-standalone`,
       standalone: true,
       export: true,
       skipFormat: true,

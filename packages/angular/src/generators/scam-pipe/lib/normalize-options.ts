@@ -15,7 +15,7 @@ export async function normalizeOptions(
     project: projectName,
   } = await determineArtifactNameAndDirectoryOptions(tree, {
     name: options.name,
-    directory: options.directory ?? options.path,
+    directory: options.directory,
     nameAndDirectoryFormat: options.nameAndDirectoryFormat,
     suffix: 'pipe',
   });

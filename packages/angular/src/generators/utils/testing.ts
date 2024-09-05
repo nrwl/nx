@@ -71,7 +71,7 @@ export async function createStorybookTestWorkspaceForLib(
 
   await componentGenerator(tree, {
     name: 'test-button',
-    project: libName,
+    directory: `${libName}/src/lib/test-button`,
     standalone: false,
     skipFormat: true,
   });
@@ -115,8 +115,7 @@ export class TestButtonComponent {
 
   await componentGenerator(tree, {
     name: 'barrel-button',
-    project: libName,
-    path: `${libName}/src/lib/barrel`,
+    directory: `${libName}/src/lib/barrel/barrel-button`,
     module: 'barrel',
     standalone: false,
     skipFormat: true,
@@ -148,8 +147,7 @@ export class BarrelModule {}`
 
   await componentGenerator(tree, {
     name: 'variable-declare-button',
-    project: libName,
-    path: `${libName}/src/lib/variable-declare`,
+    directory: `${libName}/src/lib/variable-declare/variable-declare-button`,
     module: 'variable-declare',
     standalone: false,
     skipFormat: true,
@@ -157,8 +155,7 @@ export class BarrelModule {}`
 
   await componentGenerator(tree, {
     name: 'variable-declare-view',
-    project: libName,
-    path: `${libName}/src/lib/variable-declare`,
+    directory: `${libName}/src/lib/variable-declare/variable-declare-view`,
     module: 'variable-declare',
     standalone: false,
     skipFormat: true,
@@ -192,8 +189,7 @@ export class VariableDeclareModule {}`
 
   await componentGenerator(tree, {
     name: 'variable-spread-declare-button',
-    project: libName,
-    path: `${libName}/src/lib/variable-spread-declare`,
+    directory: `${libName}/src/lib/variable-spread-declare/variable-spread-declare-button`,
     module: 'variable-spread-declare',
     standalone: false,
     skipFormat: true,
@@ -201,8 +197,7 @@ export class VariableDeclareModule {}`
 
   await componentGenerator(tree, {
     name: 'variable-spread-declare-view',
-    project: libName,
-    path: `${libName}/src/lib/variable-spread-declare`,
+    directory: `${libName}/src/lib/variable-spread-declare/variable-spread-declare-view`,
     module: 'variable-spread-declare',
     standalone: false,
     skipFormat: true,
@@ -210,8 +205,7 @@ export class VariableDeclareModule {}`
 
   await componentGenerator(tree, {
     name: 'variable-spread-declare-anotherview',
-    project: libName,
-    path: `${libName}/src/lib/variable-spread-declare`,
+    directory: `${libName}/src/lib/variable-spread-declare/variable-spread-declare-anotherview`,
     module: 'variable-spread-declare',
     standalone: false,
     skipFormat: true,
@@ -245,8 +239,7 @@ export class VariableSpreadDeclareModule {}`
 
   await componentGenerator(tree, {
     name: 'cmp1',
-    project: libName,
-    path: `${libName}/src/lib/static-member-declarations`,
+    directory: `${libName}/src/lib/static-member-declarations/cmp1`,
     module: 'static-member-declarations',
     standalone: false,
     skipFormat: true,
@@ -254,8 +247,7 @@ export class VariableSpreadDeclareModule {}`
 
   await componentGenerator(tree, {
     name: 'cmp2',
-    project: libName,
-    path: `${libName}/src/lib/static-member-declarations`,
+    directory: `${libName}/src/lib/static-member-declarations/cmp2`,
     module: 'static-member-declarations',
     standalone: false,
     skipFormat: true,
@@ -287,16 +279,15 @@ export class StaticMemberDeclarationsModule {
 
   await componentGenerator(tree, {
     name: 'nested-button',
-    project: libName,
     module: 'nested',
-    path: `${libName}/src/lib/nested`,
+    directory: `${libName}/src/lib/nested/nested-button`,
     standalone: false,
     skipFormat: true,
   });
 
   await componentGenerator(tree, {
     name: 'test-other',
-    project: libName,
+    directory: `${libName}/src/lib/test-other`,
     standalone: false,
     skipFormat: true,
   });

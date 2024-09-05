@@ -42,7 +42,7 @@ describe('angularStories generator: applications', () => {
   it('should generate stories file for scam component', async () => {
     await scamGenerator(tree, {
       name: 'my-scam',
-      project: appName,
+      directory: `${appName}/src/app/my-scam`,
       skipFormat: true,
     });
 
@@ -56,7 +56,7 @@ describe('angularStories generator: applications', () => {
   it('should ignore paths', async () => {
     await scamGenerator(tree, {
       name: 'my-scam',
-      project: appName,
+      directory: `${appName}/src/app/my-scam`,
       skipFormat: true,
     });
 
@@ -74,7 +74,7 @@ describe('angularStories generator: applications', () => {
   it('should ignore paths when full path to component is provided', async () => {
     await scamGenerator(tree, {
       name: 'my-scam',
-      project: appName,
+      directory: `${appName}/src/app/my-scam`,
       skipFormat: true,
     });
 
@@ -92,12 +92,12 @@ describe('angularStories generator: applications', () => {
   it('should ignore a path that has a nested component, but still generate nested component stories', async () => {
     await componentGenerator(tree, {
       name: 'component-a',
-      project: appName,
+      directory: `${appName}/src/app/component-a`,
       skipFormat: true,
     });
     await componentGenerator(tree, {
-      name: 'component-a/component-b',
-      project: appName,
+      name: 'component-b',
+      directory: `${appName}/src/app/component-a/component-b`,
       skipFormat: true,
     });
 
@@ -146,9 +146,8 @@ describe('angularStories generator: applications', () => {
       `
     );
     await componentGenerator(tree, {
-      name: 'component/component',
-      project: appName,
-      flat: true,
+      name: 'component',
+      directory: `${appName}/src/app/component`,
       skipFormat: true,
     });
 
@@ -172,7 +171,7 @@ describe('angularStories generator: applications', () => {
   it('should generate stories file for inline scam component', async () => {
     await scamGenerator(tree, {
       name: 'my-scam',
-      project: appName,
+      directory: `${appName}/src/app/my-scam`,
       inlineScam: true,
       skipFormat: true,
     });

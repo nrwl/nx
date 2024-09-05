@@ -18,7 +18,7 @@ describe('Cypress Migration - update-cy-tsconfig', () => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   });
   it('should do nothing if cypress/tsconfig.json exists', async () => {
-    await libraryGenerator(tree, { name: 'my-lib' });
+    await libraryGenerator(tree, { name: 'libs/my-lib' });
     addCyExecutor(tree, 'my-lib');
     const tsconfig = {
       extends: '../tsconfig.json',
@@ -30,6 +30,7 @@ describe('Cypress Migration - update-cy-tsconfig', () => {
       },
       include: ['**/*.ts', '**/*.js', '../cypress.config.ts'],
     };
+
     tree.write(
       'libs/my-lib/cypress/tsconfig.json',
       JSON.stringify(tsconfig, null, 2)
@@ -50,7 +51,7 @@ describe('Cypress Migration - update-cy-tsconfig', () => {
   });
 
   it('should move cypress/tsconfig.cy.json to cypress/tsconfig.json', async () => {
-    await libraryGenerator(tree, { name: 'my-lib' });
+    await libraryGenerator(tree, { name: 'libs/my-lib' });
     addCyExecutor(tree, 'my-lib');
     const tsconfig = {
       extends: '../tsconfig.json',
@@ -93,7 +94,7 @@ describe('Cypress Migration - update-cy-tsconfig', () => {
   });
 
   it('should move tsconfig.cy.json to cypress/tsconfig.json', async () => {
-    await libraryGenerator(tree, { name: 'my-lib' });
+    await libraryGenerator(tree, { name: 'libs/my-lib' });
     addCyExecutor(tree, 'my-lib');
     const tsconfig = {
       extends: './tsconfig.json',
@@ -150,7 +151,7 @@ describe('Cypress Migration - update-cy-tsconfig', () => {
   });
 
   it('should be idepotent', async () => {
-    await libraryGenerator(tree, { name: 'my-lib' });
+    await libraryGenerator(tree, { name: 'libs/my-lib' });
     addCyExecutor(tree, 'my-lib');
     const tsconfig = {
       extends: './tsconfig.json',

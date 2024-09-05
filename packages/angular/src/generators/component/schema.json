@@ -94,12 +94,6 @@
       "description": "Do not create `spec.ts` test files for the new component.",
       "default": false
     },
-    "flat": {
-      "type": "boolean",
-      "description": "Create the new files at the top level of the current project.",
-      "default": false,
-      "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. It will be removed in Nx v20."
-    },
     "skipImport": {
       "type": "boolean",
       "description": "Do not import this component into the owning NgModule.",

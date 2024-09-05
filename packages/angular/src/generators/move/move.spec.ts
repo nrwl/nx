@@ -377,28 +377,4 @@ describe('@nx/angular:move', () => {
       expect(moduleFile).toContain(`export class MyLibDemoModule {}`);
     });
   });
-
-  it('should move project correctly when --project-name-and-root-format=derived', async () => {
-    await generateTestLibrary(tree, {
-      name: 'mylib2',
-      buildable: true,
-      standalone: false,
-      skipFormat: true,
-    });
-    addProjectToGraph('mylib2');
-
-    await angularMoveGenerator(tree, {
-      projectName: 'mylib2',
-      destination: 'mynewlib',
-      updateImportPath: true,
-      projectNameAndRootFormat: 'derived',
-      skipFormat: true,
-    });
-
-    expect(tree.exists('libs/mynewlib/src/lib/mynewlib.module.ts')).toEqual(
-      true
-    );
-    const ngPackageJson = readJson(tree, 'libs/mynewlib/ng-package.json');
-    expect(ngPackageJson.dest).toEqual('../../dist/libs/mynewlib');
-  });
 });
