@@ -11,6 +11,7 @@ export * from './lib/customers/7eleven';
 export * from './lib/customers/adidas';
 export * from './lib/customers/adobe';
 export * from './lib/customers/american-airlines';
+export * from './lib/customers/amplify';
 export * from './lib/customers/aws';
 export * from './lib/customers/bill';
 export * from './lib/customers/bloomberg';
