@@ -2,7 +2,7 @@ use crate::native::glob::glob_group::GlobGroup;
 use crate::native::glob::glob_parser::parse_glob;
 use itertools::Itertools;
 use std::collections::HashSet;
-
+use itertools::Either::{Left, Right};
 use super::contains_glob_pattern;
 
 #[derive(Debug)]
@@ -113,31 +113,29 @@ fn build_segment(
     }
 }
 
-pub fn partition_glob(glob: &str) -> (String, Vec<String>) {
-    let (negated, groups) = parse_glob(glob).unwrap();
+pub fn partition_glob(glob: &str) -> anyhow::Result<(String, Vec<String>)> {
+    let (negated, groups) = parse_glob(glob)?;
     // Partition glob into leading directories and patterns that should be matched
-    let mut leading_dir_segments: Vec<String> = vec![];
-    let mut pattern_segments = vec![];
-    groups
+    let mut has_patterns = false;
+    let (leading_dir_segments, pattern_segments): (Vec<String>, _) = groups
         .into_iter()
         .filter(|group| !group.is_empty())
-        .for_each(|group| match &group[0] {
-            GlobGroup::NonSpecial(value) => {
-                if !contains_glob_pattern(&value) && pattern_segments.is_empty() {
-                    leading_dir_segments.push(value.to_string());
-                } else {
-                    pattern_segments.push(group);
+        .partition_map(|group| {
+            match &group[0] {
+                GlobGroup::NonSpecial(value) if !contains_glob_pattern(&value) && !has_patterns => {
+                    Left(value.to_string())
                 }
-            }
-            _ => {
-                pattern_segments.push(group);
+                _ => {
+                    has_patterns = true;
+                    Right(group)
+                }
             }
         });
 
-    (
+    Ok((
         leading_dir_segments.join("/"),
         convert_glob_segments(negated, pattern_segments),
-    )
+    ))
 }
 
 #[cfg(test)]
@@ -269,21 +267,28 @@ mod test {
 
     #[test]
     fn should_partition_glob_with_leading_dirs() {
-        let (leading_dirs, globs) = super::partition_glob("dist/app/**/!(README|LICENSE).(js|ts)");
+        let (leading_dirs, globs) = super::partition_glob("dist/app/**/!(README|LICENSE).(js|ts)").unwrap();
         assert_eq!(leading_dirs, "dist/app");
         assert_eq!(globs, ["!**/{README,LICENSE}.{js,ts}", "**/*.{js,ts}",]);
     }
 
     #[test]
     fn should_partition_glob_with_leading_dirs_and_simple_patterns() {
-        let (leading_dirs, globs) = super::partition_glob("dist/app/**/*.css");
+        let (leading_dirs, globs) = super::partition_glob("dist/app/**/*.css").unwrap();
         assert_eq!(leading_dirs, "dist/app");
         assert_eq!(globs, ["**/*.css"]);
     }
 
     #[test]
+    fn should_partition_glob_with_leading_dirs_dirs_and_patterns() {
+        let (leading_dirs, globs) = super::partition_glob("dist/app/**/js/*.js").unwrap();
+        assert_eq!(leading_dirs, "dist/app");
+        assert_eq!(globs, ["**/js/*.js"]);
+    }
+
+    #[test]
     fn should_partition_glob_with_leading_dirs_and_no_patterns() {
-        let (leading_dirs, globs) = super::partition_glob("dist/app/");
+        let (leading_dirs, globs) = super::partition_glob("dist/app/").unwrap();
         assert_eq!(leading_dirs, "dist/app");
         assert_eq!(globs, [] as [String; 0]);
     }

@@ -13,27 +13,26 @@ fn is_missing_prefix(output: &str) -> bool {
 
 #[napi]
 pub fn validate_outputs(outputs: Vec<String>) -> anyhow::Result<()> {
-    let (missing_prefix, workspace_globs) = outputs.iter().fold(
-        (vec![], vec![]),
-        |(mut missing_prefix, mut workspace_globs), output| {
-            if is_missing_prefix(output) {
-                missing_prefix.push(output);
-            }
+    let outputs_len = outputs.len();
+    let mut missing_prefix = Vec::with_capacity(outputs_len);
+    let mut workspace_globs = Vec::with_capacity(outputs_len);
 
+    for output in outputs.iter() {
+        if is_missing_prefix(output) {
+            missing_prefix.push(output);
+        } else {
             for prefix in ALLOWED_WORKSPACE_ROOT_OUTPUT_PREFIXES.iter() {
                 if let Some(trimmed) = output.strip_prefix(prefix) {
                     if contains_glob_pattern(&trimmed) {
-                        let (root, _) = partition_glob(&trimmed);
+                        let (root, _) = partition_glob(&trimmed)?;
                         if root.is_empty() {
                             workspace_globs.push(output);
                         }
                     }
                 }
             }
-
-            (missing_prefix, workspace_globs)
-        },
-    );
+        }
+    }
 
     if workspace_globs.is_empty() && missing_prefix.is_empty() {
         return Ok(());
