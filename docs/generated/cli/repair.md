@@ -34,8 +34,8 @@ Install `nx` globally to invoke the command directly using `nx`, or use `npx nx`
 
 ## Options
 
-| Option      | Type    | Description                                                           |
-| ----------- | ------- | --------------------------------------------------------------------- |
-| `--help`    | boolean | Show help                                                             |
-| `--verbose` | boolean | Prints additional information about the commands (e.g., stack traces) |
-| `--version` | boolean | Show version number                                                   |
+| Option      | Type    | Description                                                            |
+| ----------- | ------- | ---------------------------------------------------------------------- |
+| `--help`    | boolean | Show help.                                                             |
+| `--verbose` | boolean | Prints additional information about the commands (e.g., stack traces). |
+| `--version` | boolean | Show version number.                                                   |
