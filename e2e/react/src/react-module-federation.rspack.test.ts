@@ -19,13 +19,13 @@ import {
 import { join } from 'path';
 import { createTreeWithEmptyWorkspace } from 'nx/src/devkit-testing-exports';
 
-describe('debugthis React Rspack Module Federation', () => {
+describe('React Rspack Module Federation', () => {
   describe('Default Configuration', () => {
     beforeAll(() => {
       newProject({ packages: ['@nx/react'] });
     });
 
-    afterAll(() => cleanupProject());
+    // afterAll(() => cleanupProject());
 
     it.each`
       js
