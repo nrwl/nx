@@ -169,6 +169,7 @@
       - [Update Your Local Registry Setup to use Nx Release](/recipes/nx-release/update-local-registry-setup)
       - [Configure Changelog Format](/recipes/nx-release/configure-changelog-format)
       - [Publish a Custom Dist Directory](/recipes/nx-release/publish-custom-dist-directory)
+      - [Build Before Versioning](/recipes/nx-release/build-before-versioning)
     - [Other](/recipes/other)
       - [Rescope Packages from @nrwl to @nx](/recipes/other/rescope)
       - [Troubleshoot Nx Console Issues](/recipes/nx-console/console-troubleshooting)
