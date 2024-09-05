@@ -13,7 +13,7 @@ import { handleErrors } from '../../utils/params';
 
 export const yargsAffectedCommand: CommandModule = {
   command: 'affected',
-  describe: 'Run target for affected projects',
+  describe: 'Run target for affected projects.',
   builder: (yargs) =>
     linkToNxDevAndExamples(
       withAffectedOptions(

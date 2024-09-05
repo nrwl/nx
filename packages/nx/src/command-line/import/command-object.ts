@@ -12,30 +12,30 @@ export const yargsImportCommand: CommandModule = {
         yargs
           .positional('sourceRemoteUrl', {
             type: 'string',
-            description: 'The remote URL of the source to import',
+            description: 'The remote URL of the source to import.',
           })
           .positional('destination', {
             type: 'string',
             description:
-              'The directory in the current workspace to import into',
+              'The directory in the current workspace to import into.',
           })
           .option('source', {
             type: 'string',
             description:
-              'The directory in the source repository to import from',
+              'The directory in the source repository to import from.',
           })
           .option('ref', {
             type: 'string',
-            description: 'The branch from the source repository to import',
+            description: 'The branch from the source repository to import.',
           })
           .option('depth', {
             type: 'number',
             description:
-              'The depth to clone the source repository (limit this for faster git clone)',
+              'The depth to clone the source repository (limit this for faster git clone).',
           })
           .option('interactive', {
             type: 'boolean',
-            description: 'Interactive mode',
+            description: 'Interactive mode.',
             default: true,
           })
       ),
