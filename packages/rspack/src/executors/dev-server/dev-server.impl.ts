@@ -1,5 +1,6 @@
 import {
   ExecutorContext,
+  logger,
   parseTargetString,
   readTargetOptions,
 } from '@nx/devkit';
@@ -51,6 +52,8 @@ export default async function* runExecutor(
     port: devServerConfig.port,
   };
 
+  const baseUrl = `http://localhost:${options.port ?? 4200}`;
+
   return yield* createAsyncIterable(({ next }) => {
     const server = new RspackDevServer(
       {
@@ -58,13 +61,20 @@ export default async function* runExecutor(
         onListening: () => {
           next({
             success: true,
-            baseUrl: `http://localhost:${options.port ?? 4200}`,
+            baseUrl,
           });
         },
       },
 
       compiler
     );
+    server.compiler.hooks.done.tap('NX Rspack Dev Server', (stats) => {
+      if (stats.hasErrors()) {
+        logger.error(`NX Compilation failed. See above for more details.`);
+      } else {
+        logger.info(`NX Server ready at ${baseUrl}`);
+      }
+    });
     server.start();
   });
 }
