@@ -1,11 +1,11 @@
 ---
 title: 'login - CLI command'
-description: 'Login to Nx Cloud.'
+description: 'Login to Nx Cloud. This command is an alias for [`nx-cloud login`](/ci/reference/nx-cloud-cli#npx-nxcloud-login).'
 ---
 
 # login
 
-Login to Nx Cloud.
+Login to Nx Cloud. This command is an alias for [`nx-cloud login`](/ci/reference/nx-cloud-cli#npx-nxcloud-login).
 
 ## Usage
 
