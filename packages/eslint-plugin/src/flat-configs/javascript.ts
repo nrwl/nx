@@ -37,6 +37,9 @@ export default tseslint.config(
       },
     },
     plugins: { '@typescript-eslint': tseslint.plugin },
+  },
+  {
+    files: ['**/*.js', '**/*.jsx'],
     rules: {
       '@typescript-eslint/explicit-member-accessibility': 'off',
       '@typescript-eslint/explicit-module-boundary-types': 'off',

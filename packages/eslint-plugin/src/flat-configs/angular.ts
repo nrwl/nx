@@ -21,6 +21,6 @@ export default tseslint.config(...angularEslint.configs.tsRecommended, {
       ...globals.node,
     },
   },
+  processor: angularEslint.processInlineTemplates,
   plugins: { '@angular-eslint': angularEslint.tsPlugin },
-  rules: {},
 });

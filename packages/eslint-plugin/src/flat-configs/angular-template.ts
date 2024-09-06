@@ -1,4 +1,4 @@
-import angularEslint from 'angular-eslint';
+import angular from 'angular-eslint';
 import tseslint from 'typescript-eslint';
 
 /**
@@ -15,9 +15,11 @@ import tseslint from 'typescript-eslint';
  * This configuration is intended to be combined with other configs from this
  * package.
  */
-export default tseslint.config(...angularEslint.configs.templateRecommended, {
-  plugins: {
-    '@angular-eslint/template': angularEslint.templatePlugin,
-  },
+export default tseslint.config({
+  files: ['**/*.html'],
+  extends: [
+    ...angular.configs.templateRecommended,
+    ...angular.configs.templateAccessibility,
+  ],
   rules: {},
 });

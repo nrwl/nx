@@ -27,6 +27,9 @@ export default tseslint.config(
         tsconfigRootDir: workspaceRoot,
       },
     },
+  },
+  {
+    files: ['**/*.ts', '**/*.tsx'],
     rules: {
       '@typescript-eslint/explicit-member-accessibility': 'off',
       '@typescript-eslint/explicit-module-boundary-types': 'off',
