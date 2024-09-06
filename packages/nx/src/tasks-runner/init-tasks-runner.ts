@@ -24,7 +24,7 @@ export async function initTasksRunner(nxArgs: NxArgs) {
       tasks: Task[];
       parallel: number;
     }): Promise<{
-      status: number;
+      status: NodeJS.Process['exitCode'];
       taskGraph: TaskGraph;
       taskResults: Record<string, TaskResult>;
     }> => {
@@ -51,7 +51,7 @@ export async function initTasksRunner(nxArgs: NxArgs) {
         }, {} as any),
       };
 
-      const status = await invokeTasksRunner({
+      const taskResults = await invokeTasksRunner({
         tasks: opts.tasks,
         projectGraph,
         taskGraph,
@@ -63,9 +63,14 @@ export async function initTasksRunner(nxArgs: NxArgs) {
       });
 
       return {
-        status,
+        status: Object.values(taskResults).some(
+          (taskResult) =>
+            taskResult.status === 'failure' || taskResult.status === 'skipped'
+        )
+          ? 1
+          : 0,
         taskGraph,
-        taskResults: lifeCycle.getTaskResults(),
+        taskResults,
       };
     },
   };

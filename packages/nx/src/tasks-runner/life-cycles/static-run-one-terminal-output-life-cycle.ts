@@ -1,7 +1,7 @@
 import { output } from '../../utils/output';
 import { TaskStatus } from '../tasks-runner';
 import { getPrintableCommandArgsForTask } from '../utils';
-import type { LifeCycle } from '../life-cycle';
+import type { LifeCycle, TaskResult } from '../life-cycle';
 import { Task } from '../../config/task-graph';
 import { formatTargetsAndProjects } from './formatting-utils';
 
@@ -90,9 +90,7 @@ export class StaticRunOneTerminalOutputLifeCycle implements LifeCycle {
     }
   }
 
-  endTasks(
-    taskResults: { task: Task; status: TaskStatus; code: number }[]
-  ): void {
+  endTasks(taskResults: TaskResult[]): void {
     for (let t of taskResults) {
       if (t.status === 'failure') {
         this.failedTasks.push(t.task);
