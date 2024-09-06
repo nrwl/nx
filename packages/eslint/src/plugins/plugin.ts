@@ -169,13 +169,11 @@ const internalCreateNodes = async (
   };
 };
 
-let collectingLintableFilesPromise: Promise<void>;
 const internalCreateNodesV2 = async (
   configFilePath: string,
   options: EslintPluginOptions,
   context: CreateNodesContextV2,
   eslintConfigFiles: string[],
-  allProjectRoots: string[],
   projectRootsByEslintRoots: Map<string, string[]>,
   lintableFilesPerProjectRoot: Map<string, string[]>,
   projectsCache: Record<string, CreateNodesResult['projects']>
@@ -206,17 +204,6 @@ const internalCreateNodesV2 = async (
         // We can reuse the projects in the cache.
         Object.assign(projects, projectsCache[hash]);
         return;
-      }
-
-      if (!lintableFilesPerProjectRoot.size) {
-        collectingLintableFilesPromise ??= collectLintableFilesByProjectRoot(
-          lintableFilesPerProjectRoot,
-          allProjectRoots,
-          options,
-          context
-        );
-        await collectingLintableFilesPromise;
-        collectingLintableFilesPromise = null;
       }
 
       const eslint = new ESLint({
@@ -273,8 +260,11 @@ export const createNodesV2: CreateNodesV2<EslintPluginOptions> = [
 
     const { eslintConfigFiles, projectRoots, projectRootsByEslintRoots } =
       splitConfigFiles(configFiles);
-    const lintableFilesPerProjectRoot = new Map<string, string[]>();
-
+    const lintableFilesPerProjectRoot = await collectLintableFilesByProjectRoot(
+      projectRoots,
+      options,
+      context
+    );
     try {
       return await createNodesFromFiles(
         (configFile, options, context) =>
@@ -283,7 +273,6 @@ export const createNodesV2: CreateNodesV2<EslintPluginOptions> = [
             options,
             context,
             eslintConfigFiles,
-            projectRoots,
             projectRootsByEslintRoots,
             lintableFilesPerProjectRoot,
             targetsCache
@@ -360,11 +349,12 @@ function groupProjectRootsByEslintRoots(
 }
 
 async function collectLintableFilesByProjectRoot(
-  lintableFilesPerProjectRoot: Map<string, string[]>,
   projectRoots: string[],
   options: EslintPluginOptions,
   context: CreateNodesContext | CreateNodesContextV2
-): Promise<void> {
+): Promise<Map<string, string[]>> {
+  const lintableFilesPerProjectRoot = new Map<string, string[]>();
+
   const lintableFiles = await globWithWorkspaceContext(context.workspaceRoot, [
     `**/*.{${options.extensions.join(',')}}`,
   ]);
@@ -382,6 +372,8 @@ async function collectLintableFilesByProjectRoot(
       lintableFilesPerProjectRoot.get(projectRoot).push(file);
     }
   }
+
+  return lintableFilesPerProjectRoot;
 }
 
 function getRootForDirectory(
