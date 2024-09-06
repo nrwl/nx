@@ -168,8 +168,7 @@ describe('Linter', () => {
         runCLI(`generate @nx/eslint:workspace-rule ${newRuleName}`);
 
         // Ensure that the unit tests for the new rule are runnable
-        const unitTestsOutput = runCLI(`test eslint-rules`);
-        expect(unitTestsOutput).toContain('Successfully ran target test');
+        expect(() => runCLI(`test eslint-rules`)).not.toThrow();
 
         // Update the rule for the e2e test so that we can assert that it produces the expected lint failure when used
         const knownLintErrorMessage = 'e2e test known error message';
