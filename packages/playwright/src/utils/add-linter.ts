@@ -54,7 +54,6 @@ export async function addLinterToPlaywrightProject(
         tsConfigPaths: [joinPathFragments(projectConfig.root, 'tsconfig.json')],
         setParserOptionsProject: options.setParserOptionsProject,
         skipPackageJson: options.skipPackageJson,
-        rootProject: options.rootProject,
         addPlugin: options.addPlugin,
       })
     );
@@ -94,20 +93,21 @@ export async function addLinterToPlaywrightProject(
         'plugin:playwright/recommended'
       );
       tasks.push(addExtendsTask);
+
+      if (options.rootProject) {
+        addPluginsToLintConfig(tree, projectConfig.root, '@nx');
+        addOverrideToLintConfig(tree, projectConfig.root, javaScriptOverride);
+      }
+      addOverrideToLintConfig(tree, projectConfig.root, {
+        files: [`${options.directory}/**/*.{ts,js,tsx,jsx}`],
+        parserOptions: !options.setParserOptionsProject
+          ? undefined
+          : {
+              project: `${projectConfig.root}/tsconfig.*?.json`,
+            },
+        rules: {},
+      });
     }
-    if (options.rootProject) {
-      addPluginsToLintConfig(tree, projectConfig.root, '@nx');
-      addOverrideToLintConfig(tree, projectConfig.root, javaScriptOverride);
-    }
-    addOverrideToLintConfig(tree, projectConfig.root, {
-      files: [`${options.directory}/**/*.{ts,js,tsx,jsx}`],
-      parserOptions: !options.setParserOptionsProject
-        ? undefined
-        : {
-            project: `${projectConfig.root}/tsconfig.*?.json`,
-          },
-      rules: {},
-    });
   }
 
   return runTasksInSerial(...tasks);

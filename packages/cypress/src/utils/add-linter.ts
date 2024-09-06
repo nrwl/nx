@@ -65,7 +65,6 @@ export async function addLinterToCyProject(
         tsConfigPaths: [joinPathFragments(projectConfig.root, 'tsconfig.json')],
         setParserOptionsProject: options.setParserOptionsProject,
         skipPackageJson: options.skipPackageJson,
-        rootProject: options.rootProject,
         addPlugin: options.addPlugin,
       })
     );
@@ -92,11 +91,6 @@ export async function addLinterToCyProject(
     isEslintConfigSupported(tree)
   ) {
     const overrides = [];
-    if (options.rootProject) {
-      addPluginsToLintConfig(tree, projectConfig.root, '@nx');
-      overrides.push(typeScriptOverride);
-      overrides.push(javaScriptOverride);
-    }
     if (useFlatConfig(tree)) {
       addPredefinedConfigToFlatLintConfig(
         tree,
@@ -107,6 +101,11 @@ export async function addLinterToCyProject(
         false
       );
     } else {
+      if (options.rootProject) {
+        addPluginsToLintConfig(tree, projectConfig.root, '@nx');
+        overrides.push(typeScriptOverride);
+        overrides.push(javaScriptOverride);
+      }
       const addExtendsTask = addExtendsToLintConfig(
         tree,
         projectConfig.root,
@@ -130,7 +129,10 @@ export async function addLinterToCyProject(
 
     if (options.overwriteExisting) {
       overrides.unshift({
-        files: ['*.ts', '*.tsx', '*.js', '*.jsx'],
+        files: useFlatConfig(tree)
+          ? // For flat configs we don't need to specify the files
+            undefined
+          : ['*.ts', '*.tsx', '*.js', '*.jsx'],
         parserOptions: !options.setParserOptionsProject
           ? undefined
           : {
@@ -144,10 +146,13 @@ export async function addLinterToCyProject(
       replaceOverridesInLintConfig(tree, projectConfig.root, overrides);
     } else {
       overrides.unshift({
-        files: [
-          '*.cy.{ts,js,tsx,jsx}',
-          `${options.cypressDir}/**/*.{ts,js,tsx,jsx}`,
-        ],
+        files: useFlatConfig(tree)
+          ? // For flat configs we don't need to specify the files
+            undefined
+          : [
+              '*.cy.{ts,js,tsx,jsx}',
+              `${options.cypressDir}/**/*.{ts,js,tsx,jsx}`,
+            ],
         parserOptions: !options.setParserOptionsProject
           ? undefined
           : {
