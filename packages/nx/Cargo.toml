@@ -14,6 +14,7 @@ strip = "none"
 [dependencies]
 anyhow = "1.0.71"
 colored = "2"
+chrono = "0.4.38"
 crossbeam-channel = '0.5'
 dashmap = { version = "5.5.3", features = ["rayon"] }
 dunce = "1"

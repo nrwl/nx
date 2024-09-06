@@ -12,6 +12,7 @@ import {
   listPlugins,
 } from '../../utils/plugins';
 import { workspaceRoot } from '../../utils/workspace-root';
+import { listPowerpackPlugins } from '../../utils/plugins/output';
 
 export interface ListArgs {
   /** The name of an installed plugin to query  */
@@ -46,6 +47,7 @@ export async function listHandler(args: ListArgs): Promise<void> {
     }
     listPlugins(installedPlugins, 'Installed plugins:');
     listAlsoAvailableCorePlugins(installedPlugins);
+    listPowerpackPlugins();
 
     output.note({
       title: 'Community Plugins',

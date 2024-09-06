@@ -212,7 +212,8 @@ function parseArgs() {
       type: 'boolean',
       description:
         'Clear existing versions in the local registry so that you can republish the same version',
-      default: true,
+      // TODO(@FrozenPandaz): Change this back to true
+      default: false,
     })
     .option('local', {
       type: 'boolean',

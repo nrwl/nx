@@ -51,6 +51,7 @@ import { TasksRunner, TaskStatus } from './tasks-runner';
 import { shouldStreamOutput } from './utils';
 import chalk = require('chalk');
 import type { Observable } from 'rxjs';
+import { printPowerpackLicense } from '../utils/powerpack';
 
 async function getTerminalOutputLifeCycle(
   initiatingProject: string,
@@ -240,6 +241,8 @@ export async function runCommandForTasks(
   });
 
   await renderIsDone;
+
+  await printPowerpackLicense();
 
   return taskResults;
 }
