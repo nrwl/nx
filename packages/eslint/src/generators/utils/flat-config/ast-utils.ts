@@ -809,8 +809,11 @@ export function generateFlatOverride(
 
     const flatConfigOverride: Linter.FlatConfig = {
       files,
-      rules: override.rules,
     };
+
+    if (override.rules) {
+      flatConfigOverride.rules = override.rules;
+    }
 
     // Copy over everything that stays the same
     keysToCopy.forEach((key) => {
@@ -830,6 +833,10 @@ export function generateFlatOverride(
       if (Object.keys(languageOptions).length) {
         flatConfigOverride.languageOptions = languageOptions;
       }
+    }
+
+    if (override['languageOptions']) {
+      flatConfigOverride.languageOptions = override['languageOptions'];
     }
 
     if (override.excludedFiles) {
@@ -867,7 +874,12 @@ export function generateFlatOverride(
             ts.factory.createCallExpression(
               ts.factory.createIdentifier('require'),
               undefined,
-              [ts.factory.createStringLiteral(override.parser)]
+              [
+                ts.factory.createStringLiteral(
+                  override['languageOptions']?.['parserOptions']?.parser ??
+                    override.parser
+                ),
+              ]
             )
           );
         }

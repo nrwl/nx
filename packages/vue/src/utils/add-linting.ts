@@ -9,12 +9,15 @@ import {
 import { extraEslintDependencies } from './lint';
 import {
   addExtendsToLintConfig,
+  addOverrideToLintConfig,
+  addPredefinedConfigToFlatLintConfig,
   isEslintConfigSupported,
   lintConfigHasOverride,
   replaceOverridesInLintConfig,
   updateOverrideInLintConfig,
 } from '@nx/eslint/src/generators/utils/eslint-file';
 import type { Linter as EsLintLinter } from 'eslint';
+import { useFlatConfig } from '@nx/eslint/src/utils/flat-config';
 
 export async function addLinting(
   host: Tree,
@@ -46,24 +49,31 @@ export async function addLinting(
     });
     tasks.push(lintTask);
 
-    const addExtendsTask = addExtendsToLintConfig(host, options.projectRoot, [
-      'plugin:vue/vue3-essential',
-      'eslint:recommended',
-      '@vue/eslint-config-typescript',
-      '@vue/eslint-config-prettier/skip-formatting',
-    ]);
-    tasks.push(addExtendsTask);
+    if (useFlatConfig(host)) {
+    } else {
+      const addExtendsTask = addExtendsToLintConfig(
+        host,
+        options.projectRoot,
+        [
+          'plugin:vue/vue3-essential',
+          'eslint:recommended',
+          '@vue/eslint-config-typescript',
+          '@vue/eslint-config-prettier/skip-formatting',
+        ].filter(Boolean)
+      );
+      tasks.push(addExtendsTask);
+    }
+
     editEslintConfigFiles(host, options.projectRoot);
 
-    let installTask = () => {};
     if (!options.skipPackageJson) {
-      installTask = addDependenciesToPackageJson(
+      const installTask = addDependenciesToPackageJson(
         host,
         extraEslintDependencies.dependencies,
         extraEslintDependencies.devDependencies
       );
+      tasks.push(installTask);
     }
-    tasks.push(installTask);
 
     return runTasksInSerial(...tasks);
   } else {
@@ -92,30 +102,57 @@ function editEslintConfigFiles(tree: Tree, projectRoot: string) {
   };
 
   if (isEslintConfigSupported(tree, projectRoot)) {
-    if (
-      lintConfigHasOverride(
+    if (useFlatConfig(tree)) {
+      addPredefinedConfigToFlatLintConfig(
         tree,
         projectRoot,
-        (o) => o.parserOptions && !hasVueFiles(o),
-        true
-      )
-    ) {
-      updateOverrideInLintConfig(
-        tree,
-        projectRoot,
-        (o) => !!o.parserOptions,
-        (o) => {
-          addVueFiles(o);
-          return o;
-        }
+        'flat/recommended',
+        'vue',
+        'eslint-plugin-vue'
       );
-    } else {
-      replaceOverridesInLintConfig(tree, projectRoot, [
+      // This allows .vue files to be parsed
+      addOverrideToLintConfig(
+        tree,
+        projectRoot,
         {
-          files: ['*.ts', '*.tsx', '*.js', '*.jsx', '*.vue'],
-          rules: { 'vue/multi-word-component-names': 'off' },
-        },
-      ]);
+          files: ['**/*.vue'],
+          languageOptions: {
+            parserOptions: {
+              parser: '@typescript-eslint/parser',
+            },
+          },
+        } as unknown // languageOptions is not present on eslintrc override, but it is for flat config
+      );
+      // Add an empty rules object to users know how to add/override rules
+      addOverrideToLintConfig(tree, projectRoot, {
+        rules: { 'vue/multi-word-component-names': 'off' },
+      });
+    } else {
+      if (
+        lintConfigHasOverride(
+          tree,
+          projectRoot,
+          (o) => o.parserOptions && !hasVueFiles(o),
+          true
+        )
+      ) {
+        updateOverrideInLintConfig(
+          tree,
+          projectRoot,
+          (o) => !!o.parserOptions,
+          (o) => {
+            addVueFiles(o);
+            return o;
+          }
+        );
+      } else {
+        replaceOverridesInLintConfig(tree, projectRoot, [
+          {
+            files: ['*.ts', '*.tsx', '*.js', '*.jsx', '*.vue'],
+            rules: { 'vue/multi-word-component-names': 'off' },
+          },
+        ]);
+      }
     }
   }
 

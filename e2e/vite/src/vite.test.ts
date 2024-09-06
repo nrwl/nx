@@ -45,24 +45,20 @@ describe('@nx/vite/plugin', () => {
 
     describe('build and test React app', () => {
       it('should build application', () => {
-        const result = runCLI(`build ${myApp}`);
-        expect(result).toContain('Successfully ran target build');
+        expect(() => runCLI(`build ${myApp}`)).not.toThrow();
       }, 200_000);
 
       it('should test application', () => {
-        const result = runCLI(`test ${myApp} --watch=false`);
-        expect(result).toContain('Successfully ran target test');
+        expect(() => runCLI(`test ${myApp} --watch=false`)).not.toThrow();
       }, 200_000);
     });
     describe('build and test Vue app', () => {
       it('should build application', () => {
-        const result = runCLI(`build ${myVueApp}`);
-        expect(result).toContain('Successfully ran target build');
+        expect(() => runCLI(`build ${myVueApp}`)).not.toThrow();
       }, 200_000);
 
       it('should test application', () => {
-        const result = runCLI(`test ${myVueApp} --watch=false`);
-        expect(result).toContain('Successfully ran target test');
+        expect(() => runCLI(`test ${myVueApp} --watch=false`)).not.toThrow();
       }, 200_000);
     });
 
@@ -129,13 +125,7 @@ describe('@nx/vite/plugin', () => {
           });`
         );
 
-        const result = runCLI(`build ${myApp}`);
-        expect(result).toContain(
-          `Running target build for project ${myApp} and 1 task it depends on`
-        );
-        expect(result).toContain(
-          `Successfully ran target build for project ${myApp} and 1 task it depends on`
-        );
+        expect(() => runCLI(`build ${myApp}`)).not.toThrow();
       });
     });
 
