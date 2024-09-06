@@ -71,7 +71,7 @@ export async function addLinting(
   }
 }
 
-export function editEslintConfigFiles(tree: Tree, projectRoot: string) {
+function editEslintConfigFiles(tree: Tree, projectRoot: string) {
   const hasVueFiles = (
     o: EsLintLinter.ConfigOverride<EsLintLinter.RulesRecord>
   ) =>

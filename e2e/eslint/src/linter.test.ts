@@ -553,7 +553,7 @@ describe('Linter', () => {
         process.env.ESLINT_USE_FLAT_CONFIG = envVar;
       });
 
-      it('should generate new projects using flat config', () => {
+      it('xyz should generate new projects using flat config', () => {
         const reactLib = uniq('react-lib');
         const jsLib = uniq('js-lib');
 

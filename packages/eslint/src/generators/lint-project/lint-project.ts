@@ -55,6 +55,7 @@ interface LintProjectOptions {
    */
   addExplicitTargets?: boolean;
   addPackageJsonDependencyChecks?: boolean;
+  skipExtendedBaseConfig?: boolean;
 }
 
 export function lintProjectGenerator(tree: Tree, options: LintProjectOptions) {
@@ -193,7 +194,10 @@ function createEsLintConfiguration(
   rootProject: boolean
 ) {
   // we are only extending root for non-standalone projects or their complementary e2e apps
-  const extendedRootConfig = rootProject ? undefined : findEslintFile(tree);
+  const extendedRootConfig =
+    rootProject || options.skipExtendedBaseConfig
+      ? undefined
+      : findEslintFile(tree);
   const pathToRootConfig = extendedRootConfig
     ? `${offsetFromRoot(projectConfig.root)}${extendedRootConfig}`
     : undefined;

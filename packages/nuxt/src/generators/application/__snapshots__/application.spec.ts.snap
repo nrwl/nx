@@ -18,9 +18,8 @@ exports[`app generated files content - as-provided - my-app general application 
 }
 `;
 
-exports[`app generated files content - as-provided - my-app general application should configure eslint correctly 1`] = `
+exports[`app generated files content - as-provided - my-app general application should configure eslint correctly (eslintrc) 1`] = `
 "{
-  "extends": ["@nuxt/eslint-config", "../.eslintrc.json"],
   "ignorePatterns": ["!**/*", ".nuxt/**", ".output/**", "node_modules"],
   "overrides": [
     {
@@ -29,8 +28,28 @@ exports[`app generated files content - as-provided - my-app general application 
         "vue/multi-word-component-names": "off"
       }
     }
-  ]
+  ],
+  "extends": ["@nuxt/eslint-config"]
 }
+"
+`;
+
+exports[`app generated files content - as-provided - my-app general application should configure eslint correctly (flat config) 1`] = `
+"const { FlatCompat } = require('@eslint/eslintrc');
+const js = require('@eslint/js');
+
+const compat = new FlatCompat({
+  baseDirectory: __dirname,
+  recommendedConfig: js.configs.recommended,
+});
+
+module.exports = [
+  ...compat.extends('@nuxt/eslint-config'),
+  {
+    rules: { 'vue/multi-word-component-names': 'off' },
+  },
+  { ignores: ['.nuxt/**', '.output/**', 'node_modules'] },
+];
 "
 `;
 
@@ -358,9 +377,8 @@ exports[`app generated files content - as-provided - myApp general application s
 }
 `;
 
-exports[`app generated files content - as-provided - myApp general application should configure eslint correctly 1`] = `
+exports[`app generated files content - as-provided - myApp general application should configure eslint correctly (eslintrc) 1`] = `
 "{
-  "extends": ["@nuxt/eslint-config", "../.eslintrc.json"],
   "ignorePatterns": ["!**/*", ".nuxt/**", ".output/**", "node_modules"],
   "overrides": [
     {
@@ -369,8 +387,28 @@ exports[`app generated files content - as-provided - myApp general application s
         "vue/multi-word-component-names": "off"
       }
     }
-  ]
+  ],
+  "extends": ["@nuxt/eslint-config"]
 }
+"
+`;
+
+exports[`app generated files content - as-provided - myApp general application should configure eslint correctly (flat config) 1`] = `
+"const { FlatCompat } = require('@eslint/eslintrc');
+const js = require('@eslint/js');
+
+const compat = new FlatCompat({
+  baseDirectory: __dirname,
+  recommendedConfig: js.configs.recommended,
+});
+
+module.exports = [
+  ...compat.extends('@nuxt/eslint-config'),
+  {
+    rules: { 'vue/multi-word-component-names': 'off' },
+  },
+  { ignores: ['.nuxt/**', '.output/**', 'node_modules'] },
+];
 "
 `;
 
