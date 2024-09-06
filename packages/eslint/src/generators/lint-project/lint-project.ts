@@ -252,7 +252,13 @@ function createEsLintConfiguration(
       files: ['*.json'],
       parser: 'jsonc-eslint-parser',
       rules: {
-        '@nx/dependency-checks': 'error',
+        '@nx/dependency-checks': [
+          'error',
+          {
+            // With flat configs, we don't want to include imports in the eslint js/cjs/mjs files to be checked
+            ignoredFiles: ['**/*/*eslint*'],
+          },
+        ],
       },
     });
   }

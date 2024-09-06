@@ -877,6 +877,7 @@ export function generateFlatOverride(
               [
                 ts.factory.createStringLiteral(
                   override['languageOptions']?.['parserOptions']?.parser ??
+                    override['languageOptions']?.parser ??
                     override.parser
                 ),
               ]
