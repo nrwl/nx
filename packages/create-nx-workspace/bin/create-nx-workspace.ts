@@ -29,6 +29,7 @@ import { showNxWarning } from '../src/utils/nx/show-nx-warning';
 import { messages, recordStat } from '../src/utils/nx/ab-testing';
 import { mapErrorToBodyLines } from '../src/utils/error-utils';
 import { existsSync } from 'fs';
+import { detectInvokedPackageManager } from '../src/utils/package-manager';
 
 interface BaseArguments extends CreateWorkspaceOptions {
   preset: Preset;
@@ -913,29 +914,30 @@ async function determineNodeOptions(
 async function determinePackageBasedOrIntegratedOrStandalone(): Promise<
   'package-based' | 'integrated' | 'standalone'
 > {
+  const pkgMgmt = detectInvokedPackageManager();
+
   const { workspaceType } = await enquirer.prompt<{
     workspaceType: 'standalone' | 'integrated' | 'package-based';
   }>([
     {
       type: 'autocomplete',
       name: 'workspaceType',
-      message: `Package-based monorepo, integrated monorepo, or standalone project?`,
+      message: `${pkgMgmt} monorepo, Nx monorepo, or standalone project?`,
       initial: 0,
       choices: [
         {
           name: 'package-based',
-          message:
-            'Package-based Monorepo:     Nx makes it fast, but lets you run things your way.',
+          message: `Package-based Monorepo:     Creates a workspace that uses ${pkgMgmt} convenstions`,
         },
         {
           name: 'integrated',
           message:
-            'Integrated Monorepo:        Nx creates a monorepo that contains multiple projects.',
+            'Integrated Monorepo:        Creates a workspace that uses path aliases for connecting packages',
         },
         {
           name: 'standalone',
           message:
-            'Standalone:                 Nx creates a single project and makes it fast.',
+            'Standalone:                 Creates  a workspace for a single project',
         },
       ],
     },
