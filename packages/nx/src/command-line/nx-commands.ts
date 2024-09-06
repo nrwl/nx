@@ -1,6 +1,7 @@
 import * as chalk from 'chalk';
 import * as yargs from 'yargs';
 
+import { yargsActivatePowerpackCommand } from './activate-powerpack/command-object';
 import {
   yargsAffectedBuildCommand,
   yargsAffectedCommand,
@@ -63,6 +64,7 @@ export const commandsObject = yargs
   .parserConfiguration(parserConfiguration)
   .usage(chalk.bold('Smart Monorepos · Fast CI'))
   .demandCommand(1, '')
+  .command(yargsActivatePowerpackCommand)
   .command(yargsAddCommand)
   .command(yargsAffectedBuildCommand)
   .command(yargsAffectedCommand)

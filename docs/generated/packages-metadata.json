@@ -1860,6 +1860,17 @@
         "originalFilePath": "generated/cli/connect"
       },
       {
+        "id": "activate-powerpack",
+        "name": "activate-powerpack",
+        "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+        "file": "generated/packages/nx/documents/activate-powerpack",
+        "itemList": [],
+        "isExternal": false,
+        "path": "nx/documents/activate-powerpack",
+        "tags": ["cache-task-results"],
+        "originalFilePath": "generated/cli/activate-powerpack"
+      },
+      {
         "id": "reset",
         "name": "reset",
         "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
