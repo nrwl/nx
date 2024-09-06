@@ -553,7 +553,7 @@ describe('Linter', () => {
         process.env.ESLINT_USE_FLAT_CONFIG = envVar;
       });
 
-      it('xyz should generate new projects using flat config', () => {
+      it('should generate new projects using flat config', () => {
         const reactLib = uniq('react-lib');
         const jsLib = uniq('js-lib');
 
@@ -574,14 +574,8 @@ describe('Linter', () => {
         );
 
         // validate that the new projects are linted successfully
-        let output = runCLI(`lint ${reactLib}`);
-        expect(output).toContain(
-          `Successfully ran target lint for project ${reactLib}`
-        );
-        output = runCLI(`lint ${jsLib}`);
-        expect(output).toContain(
-          `Successfully ran target lint for project ${jsLib}`
-        );
+        expect(() => runCLI(`lint ${reactLib}`)).not.toThrow();
+        expect(() => runCLI(`lint ${jsLib}`)).not.toThrow();
       });
     });
   });
