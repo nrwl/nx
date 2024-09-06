@@ -290,7 +290,7 @@ describe('app', () => {
       });
       const projects = Object.fromEntries(getProjects(tree));
       expect(projects).toMatchObject({
-        'my-dir-my-node-app': {
+        'my-node-app': {
           tags: ['one', 'two'],
         },
       });
@@ -304,7 +304,7 @@ describe('app', () => {
       };
       await applicationGenerator(tree, {
         name: 'my-node-app',
-        directory: 'myDir',
+        directory: 'my-dir/my-node-app/',
         addPlugin: true,
       });
 
@@ -403,23 +403,6 @@ describe('app', () => {
         '/billing-api': { target: 'http://localhost:3000', secure: false },
       });
     });
-
-    it('should work with unnormalized project names', async () => {
-      await angularApplicationGenerator(tree, {
-        name: 'myFrontend',
-      });
-
-      await applicationGenerator(tree, {
-        name: 'my-node-app',
-        frontendProject: 'myFrontend',
-        addPlugin: true,
-      });
-
-      expect(tree.exists('my-frontend/proxy.conf.json')).toBeTruthy();
-      const project = readProjectConfiguration(tree, 'my-frontend');
-      const serve = project.targets.serve;
-      expect(serve.options.proxyConfig).toEqual('my-frontend/proxy.conf.json');
-    });
   });
 
   describe('--swcJest', () => {
@@ -517,7 +500,7 @@ describe('app', () => {
     it('should generate js files for nested libs as well', async () => {
       await applicationGenerator(tree, {
         name: 'my-node-app',
-        directory: 'myDir',
+        directory: 'my-dir/my-node-app/',
         js: true,
         addPlugin: true,
       } as Schema);

@@ -112,7 +112,7 @@ async function normalizeOptions(
     fileName: options.simpleModuleName
       ? projectNames.projectSimpleName
       : projectNames.projectFileName,
-    pascalCaseFiles: options.pascalCaseFiles,
+    pascalCaseFiles: false,
   });
 
   const parsedTags = options.tags

@@ -235,9 +235,6 @@ function addAppFiles(tree: Tree, options: NormalizedSchema) {
   if (options.js) {
     toJS(tree);
   }
-  if (options.pascalCaseFiles) {
-    logger.warn('NOTE: --pascalCaseFiles is a noop');
-  }
 }
 
 function addProxy(tree: Tree, options: NormalizedSchema) {
