@@ -4,6 +4,7 @@ slug: personal-access-tokens
 authors: ['Philip Fulcher']
 tags: [nx-cloud]
 cover_image: /blog/images/2024-09-05/personal-access-tokens-header.avif
+youtubeUrl: https://youtu.be/i51LPtagb2s
 ---
 
 Today, Nx Cloud gets a huge upgrade to managing access to your cached artifacts
