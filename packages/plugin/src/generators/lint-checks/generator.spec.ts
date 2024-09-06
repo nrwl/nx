@@ -156,7 +156,14 @@ describe('lint-checks generator', () => {
           ],
           "parser": "jsonc-eslint-parser",
           "rules": {
-            "@nx/dependency-checks": "error",
+            "@nx/dependency-checks": [
+              "error",
+              {
+                "ignoredFiles": [
+                  "**/*/*eslint*",
+                ],
+              },
+            ],
           },
         },
         {

@@ -64,7 +64,10 @@ describe('Linter', () => {
         });
         updateFile('.eslintrc.json', JSON.stringify(eslintrc, null, 2));
 
-        let out = runCLI(`lint ${myapp}`, { silenceError: true });
+        let out = runCLI(`lint ${myapp}`, {
+          silenceError: true,
+          env: { CI: 'false' },
+        });
         expect(out).toContain('Unexpected console statement');
 
         eslintrc.overrides.forEach((override) => {
@@ -75,7 +78,10 @@ describe('Linter', () => {
         updateFile('.eslintrc.json', JSON.stringify(eslintrc, null, 2));
 
         // 3. linting should not error when all rules are followed
-        out = runCLI(`lint ${myapp}`, { silenceError: true });
+        out = runCLI(`lint ${myapp}`, {
+          silenceError: true,
+          env: { CI: 'false' },
+        });
         expect(out).toContain('Successfully ran target lint');
       }, 1000000);
 
@@ -90,7 +96,10 @@ describe('Linter', () => {
         // should generate a default cache file
         let cachePath = path.join('apps', myapp, '.eslintcache');
         expect(() => checkFilesExist(cachePath)).toThrow();
-        runCLI(`lint ${myapp} --cache`, { silenceError: true });
+        runCLI(`lint ${myapp} --cache`, {
+          silenceError: true,
+          env: { CI: 'false' },
+        });
         expect(() => checkFilesExist(cachePath)).not.toThrow();
         expect(readCacheFile(cachePath)).toContain(
           path.normalize(`${myapp}/src/app/app.spec.tsx`)
@@ -101,6 +110,7 @@ describe('Linter', () => {
         expect(() => checkFilesExist(cachePath)).toThrow();
         runCLI(`lint ${myapp} --cache --cache-location="my-cache"`, {
           silenceError: true,
+          env: { CI: 'false' },
         });
         expect(() => checkFilesExist(cachePath)).not.toThrow();
         expect(readCacheFile(cachePath)).toContain(
@@ -126,6 +136,7 @@ describe('Linter', () => {
           `lint ${myapp} --output-file="${outputFile}" --format=json`,
           {
             silenceError: true,
+            env: { CI: 'false' },
           }
         );
         expect(stdout).not.toContain('Unexpected console statement');
@@ -187,6 +198,7 @@ describe('Linter', () => {
 
         const lintOutput = runCLI(`lint ${myapp} --verbose`, {
           silenceError: true,
+          env: { CI: 'false' },
         });
         expect(lintOutput).toContain(newRuleNameForUsage);
         expect(lintOutput).toContain(knownLintErrorMessage);
@@ -242,7 +254,10 @@ describe('Linter', () => {
       `
         );
 
-        const out = runCLI(`lint ${myapp}`, { silenceError: true });
+        const out = runCLI(`lint ${myapp}`, {
+          silenceError: true,
+          env: { CI: 'false' },
+        });
         expect(out).toContain(
           'Projects cannot be imported by a relative or absolute path, and must begin with a npm scope'
         );
@@ -389,6 +404,7 @@ describe('Linter', () => {
       it('should fix noSelfCircularDependencies', () => {
         const stdout = runCLI(`lint ${libC}`, {
           silenceError: true,
+          env: { CI: 'false' },
         });
         expect(stdout).toContain(
           'Projects should use relative imports to import from other files within the same project'
@@ -397,6 +413,7 @@ describe('Linter', () => {
         // fix them
         const fixedStout = runCLI(`lint ${libC} --fix`, {
           silenceError: true,
+          env: { CI: 'false' },
         });
         expect(fixedStout).toContain(
           `Successfully ran target lint for project ${libC}`
@@ -417,6 +434,7 @@ describe('Linter', () => {
       it('should fix noRelativeOrAbsoluteImportsAcrossLibraries', () => {
         const stdout = runCLI(`lint ${libB}`, {
           silenceError: true,
+          env: { CI: 'false' },
         });
         expect(stdout).toContain(
           'Projects cannot be imported by a relative or absolute path, and must begin with a npm scope'
@@ -425,6 +443,7 @@ describe('Linter', () => {
         // fix them
         const fixedStout = runCLI(`lint ${libB} --fix`, {
           silenceError: true,
+          env: { CI: 'false' },
         });
         expect(fixedStout).toContain(
           `Successfully ran target lint for project ${libB}`
@@ -478,7 +497,10 @@ describe('Linter', () => {
         const nxVersion = rootPackageJson.devDependencies.nx;
         const tslibVersion = rootPackageJson.dependencies['tslib'];
 
-        let out = runCLI(`lint ${mylib}`, { silenceError: true });
+        let out = runCLI(`lint ${mylib}`, {
+          silenceError: true,
+          env: { CI: 'false' },
+        });
         expect(out).toContain('Successfully ran target lint');
 
         // make an explict dependency to nx
@@ -495,7 +517,10 @@ describe('Linter', () => {
         });
 
         // output should now report missing dependency and obsolete dependency
-        out = runCLI(`lint ${mylib}`, { silenceError: true });
+        out = runCLI(`lint ${mylib}`, {
+          silenceError: true,
+          env: { CI: 'false' },
+        });
         expect(out).toContain('they are missing');
         expect(out).toContain('@nx/devkit');
         expect(out).toContain(
@@ -503,7 +528,10 @@ describe('Linter', () => {
         );
 
         // should fix the missing and obsolete dependency issues
-        out = runCLI(`lint ${mylib} --fix`, { silenceError: true });
+        out = runCLI(`lint ${mylib} --fix`, {
+          silenceError: true,
+          env: { CI: 'false' },
+        });
         expect(out).toContain(
           `Successfully ran target lint for project ${mylib}`
         );
@@ -528,13 +556,19 @@ describe('Linter', () => {
           json.dependencies['@nx/devkit'] = '100.0.0';
           return json;
         });
-        out = runCLI(`lint ${mylib}`, { silenceError: true });
+        out = runCLI(`lint ${mylib}`, {
+          silenceError: true,
+          env: { CI: 'false' },
+        });
         expect(out).toContain(
           'version specifier does not contain the installed version of "@nx/devkit"'
         );
 
         // should fix the version mismatch issue
-        out = runCLI(`lint ${mylib} --fix`, { silenceError: true });
+        out = runCLI(`lint ${mylib} --fix`, {
+          silenceError: true,
+          env: { CI: 'false' },
+        });
         expect(out).toContain(
           `Successfully ran target lint for project ${mylib}`
         );
@@ -589,12 +623,12 @@ describe('Linter', () => {
     afterEach(() => cleanupProject());
 
     function verifySuccessfulStandaloneSetup(myapp: string) {
-      expect(runCLI(`lint ${myapp}`, { silenceError: true })).toContain(
-        'Successfully ran target lint'
-      );
-      expect(runCLI(`lint e2e`, { silenceError: true })).toContain(
-        'Successfully ran target lint'
-      );
+      expect(
+        runCLI(`lint ${myapp}`, { silenceError: true, env: { CI: 'false' } })
+      ).toContain('Successfully ran target lint');
+      expect(
+        runCLI(`lint e2e`, { silenceError: true, env: { CI: 'false' } })
+      ).toContain('Successfully ran target lint');
       expect(() => checkFilesExist(`.eslintrc.base.json`)).toThrow();
 
       const rootEslint = readJson('.eslintrc.json');
@@ -606,15 +640,15 @@ describe('Linter', () => {
     }
 
     function verifySuccessfulMigratedSetup(myapp: string, mylib: string) {
-      expect(runCLI(`lint ${myapp}`, { silenceError: true })).toContain(
-        'Successfully ran target lint'
-      );
-      expect(runCLI(`lint e2e`, { silenceError: true })).toContain(
-        'Successfully ran target lint'
-      );
-      expect(runCLI(`lint ${mylib}`, { silenceError: true })).toContain(
-        'Successfully ran target lint'
-      );
+      expect(
+        runCLI(`lint ${myapp}`, { silenceError: true, env: { CI: 'false' } })
+      ).toContain('Successfully ran target lint');
+      expect(
+        runCLI(`lint e2e`, { silenceError: true, env: { CI: 'false' } })
+      ).toContain('Successfully ran target lint');
+      expect(
+        runCLI(`lint ${mylib}`, { silenceError: true, env: { CI: 'false' } })
+      ).toContain('Successfully ran target lint');
       expect(() => checkFilesExist(`.eslintrc.base.json`)).not.toThrow();
 
       const rootEslint = readJson('.eslintrc.base.json');

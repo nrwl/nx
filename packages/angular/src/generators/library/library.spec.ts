@@ -701,7 +701,14 @@ describe('lib', () => {
               ],
               "parser": "jsonc-eslint-parser",
               "rules": {
-                "@nx/dependency-checks": "error"
+                "@nx/dependency-checks": [
+                  "error",
+                  {
+                    "ignoredFiles": [
+                      "**/*/*eslint*"
+                    ]
+                  }
+                ]
               }
             }
           ]
@@ -1311,7 +1318,14 @@ describe('lib', () => {
                 ],
                 "parser": "jsonc-eslint-parser",
                 "rules": {
-                  "@nx/dependency-checks": "error",
+                  "@nx/dependency-checks": [
+                    "error",
+                    {
+                      "ignoredFiles": [
+                        "**/*/*eslint*",
+                      ],
+                    },
+                  ],
                 },
               },
             ],

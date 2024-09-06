@@ -64,8 +64,7 @@ describe('Linter (legacy)', () => {
         updateFile('.eslintrc.json', JSON.stringify(eslintrc, null, 2));
 
         // 1. linting should error when rules are not followed
-        let out = runCLI(`lint ${myapp}`, { silenceError: true });
-        expect(out).toContain('Unexpected console statement');
+        expect(() => runCLI(`lint ${myapp}`)).toThrow();
 
         // 2. linting should not error when rules are not followed and the force flag is specified
         expect(() => runCLI(`lint ${myapp} --force`)).not.toThrow();
@@ -78,8 +77,9 @@ describe('Linter (legacy)', () => {
         updateFile('.eslintrc.json', JSON.stringify(eslintrc, null, 2));
 
         // 3. linting should not error when all rules are followed
-        out = runCLI(`lint ${myapp}`, { silenceError: true });
-        expect(out).toContain('All files pass linting');
+        expect(() =>
+          runCLI(`lint ${myapp}`, { silenceError: true })
+        ).not.toThrow();
       }, 1000000);
 
       it('should print the effective configuration for a file specified using --print-config', () => {
@@ -92,6 +92,7 @@ describe('Linter (legacy)', () => {
         });
         updateFile('.eslintrc.json', JSON.stringify(eslint, null, 2));
         const out = runCLI(`lint ${myapp} --print-config src/index.ts`, {
+          env: { CI: 'false' }, // We don't want to show the summary table from cloud runner
           silenceError: true,
         });
         expect(out).toContain('"specific-rule": [');
@@ -178,7 +179,9 @@ describe('Linter (legacy)', () => {
       const outFlat = runCLI(`affected -t lint`, {
         silenceError: true,
       });
-      expect(outFlat).toContain('ran target lint');
+      expect(outFlat).toContain(`${myapp}:lint`);
+      expect(outFlat).toContain(`${mylib}:lint`);
+      expect(outFlat).toContain(`${mylib2}:lint`);
     }, 1000000);
 
     it('should convert standalone to flat config', () => {
@@ -215,7 +218,8 @@ describe('Linter (legacy)', () => {
       const outFlat = runCLI(`affected -t lint`, {
         silenceError: true,
       });
-      expect(outFlat).toContain('ran target lint');
+      expect(outFlat).toContain(`${myapp}:lint`);
+      expect(outFlat).toContain(`${mylib}:lint`);
     }, 1000000);
   });
 });

@@ -166,7 +166,12 @@ describe('@nx/eslint:lint-project', () => {
             "files": ["*.json"],
             "parser": "jsonc-eslint-parser",
             "rules": {
-              "@nx/dependency-checks": "error"
+              "@nx/dependency-checks": [
+                "error",
+                {
+                  "ignoredFiles": ["**/*/*eslint*"]
+                }
+              ]
             }
           }
         ]
