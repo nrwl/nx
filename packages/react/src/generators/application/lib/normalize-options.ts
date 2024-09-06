@@ -51,7 +51,7 @@ export async function normalizeOptions<T extends Schema = Schema>(
     ? options.tags.split(',').map((s) => s.trim())
     : [];
 
-  const fileName = options.pascalCaseFiles ? 'App' : 'app';
+  const fileName = 'app';
 
   const styledModule = /^(css|scss|less|tailwind|none)$/.test(options.style)
     ? null

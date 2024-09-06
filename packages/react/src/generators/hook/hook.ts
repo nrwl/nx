@@ -101,7 +101,6 @@ async function normalizeOptions(
   const {
     directory,
     fileName: _fileName,
-    nameAndDirectoryFormat,
     project: projectName,
   } = await determineArtifactNameAndDirectoryOptions(host, {
     name: options.name,
@@ -110,24 +109,17 @@ async function normalizeOptions(
     fileExtension: 'tsx',
   });
 
-  let base = _fileName;
-  if (base.startsWith('use-')) {
-    base = base.substring(4);
-  } else if (base.startsWith('use')) {
-    base = base.substring(3);
-  }
+  const { className, fileName } = names(_fileName);
 
-  const { className, fileName } = names(base);
   // If using `as-provided` file and directory, then don't normalize.
   // Otherwise, support legacy behavior of prefixing filename with `use-`.
-  const hookFilename =
-    nameAndDirectoryFormat === 'as-provided'
-      ? fileName
-      : options.pascalCaseFiles
-      ? 'use'.concat(className)
-      : 'use-'.concat(fileName);
-  const hookName = 'use'.concat(className);
-  const hookTypeName = 'Use'.concat(className);
+  const hookFilename = fileName;
+  const hookName = className.toLocaleLowerCase().startsWith('use')
+    ? className
+    : 'use'.concat(className);
+  const hookTypeName = className.toLocaleLowerCase().startsWith('use')
+    ? className
+    : 'Use'.concat(className);
   const project = getProjects(host).get(projectName);
 
   const { sourceRoot: projectSourceRoot, projectType } = project;
