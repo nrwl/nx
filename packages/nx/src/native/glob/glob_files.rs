@@ -4,7 +4,7 @@ use crate::native::glob::build_glob_set;
 use crate::native::types::FileData;
 
 /// Get workspace config files based on provided globs
-pub(super) fn glob_files(
+pub fn glob_files(
     files: &[FileData],
     globs: Vec<String>,
     exclude: Option<Vec<String>>,

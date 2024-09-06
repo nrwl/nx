@@ -21,7 +21,7 @@ use crate::native::{
 };
 use anyhow::anyhow;
 use dashmap::DashMap;
-use napi::bindgen_prelude::{Buffer, External};
+use napi::bindgen_prelude::*;
 use rayon::prelude::*;
 use tracing::{debug, trace, trace_span};
 
