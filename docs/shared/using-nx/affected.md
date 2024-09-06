@@ -1,5 +1,10 @@
 # Run Only Tasks Affected by a PR
 
+{% youtube
+src="https://youtu.be/q-cu5Lw3DoE"
+title="Only Run Tasks for Projects That Changed"
+ /%}
+
 As your workspace grows, re-testing, re-building, and re-linting **all projects becomes too slow**. To address this, Nx comes with an "affected" command. Using this command, Nx
 
 - determines the minimum set of **projects that are affected by the change**
