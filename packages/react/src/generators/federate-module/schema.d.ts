@@ -12,4 +12,5 @@ export interface Schema {
   skipFormat?: boolean;
   style?: SupportedStyles;
   unitTestRunner?: 'jest' | 'vitest' | 'none';
+  bundler?: 'rspack' | 'webpack';
 }

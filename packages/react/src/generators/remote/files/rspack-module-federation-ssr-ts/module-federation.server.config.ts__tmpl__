@@ -1,0 +1,10 @@
+import {ModuleFederationConfig} from '@nx/rspack/module-federation';
+
+const config: ModuleFederationConfig = {
+    name: '<%= projectName %>',
+    exposes: {
+        './Module': './src/remote-entry.<%= js ? 'js' : 'ts' %>',
+    },
+};
+
+export default config;

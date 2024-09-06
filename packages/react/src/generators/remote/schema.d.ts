@@ -28,6 +28,7 @@ export interface Schema {
   unitTestRunner: 'jest' | 'vitest' | 'none';
   typescriptConfiguration?: boolean;
   dynamic?: boolean;
+  bundler?: 'rspack' | 'webpack';
 }
 
 export interface NormalizedSchema extends ApplicationNormalizedSchema {

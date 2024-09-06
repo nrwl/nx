@@ -16,6 +16,7 @@ describe('federate-module', () => {
     path: 'my-remote/src/my-federated-module.ts',
     style: 'css',
     skipFormat: true,
+    bundler: 'webpack',
   };
   // TODO(@jaysoo): Turn this back to adding the plugin
   let originalEnv: string;
@@ -82,6 +83,7 @@ describe('federate-module', () => {
       linter: Linter.EsLint,
       style: 'css',
       unitTestRunner: 'none',
+      bundler: 'webpack',
     };
 
     beforeEach(async () => {
