@@ -43,42 +43,19 @@ export async function pageGenerator(host: Tree, schema: Schema) {
 }
 
 async function normalizeOptions(host: Tree, options: Schema) {
-  let isAppRouter: boolean;
-  let derivedDirectory: string;
-  let routerDirectory: string;
+  // Get the project name first so we can determine the router directory
+  const { project: determinedProjectName } =
+    await determineArtifactNameAndDirectoryOptions(host, {
+      name: options.name,
+      directory: options.directory,
+    });
 
-  if (options.project) {
-    // Legacy behavior, detect app vs page router from specified project.
-    // TODO(v20): remove this logic
-    const project = readProjectConfiguration(host, options.project);
-    // app/ is a reserved folder in nextjs so it is safe to check it's existence
-    isAppRouter =
-      host.exists(`${project.root}/app`) ||
-      host.exists(`${project.root}/src/app`);
+  const project = readProjectConfiguration(host, determinedProjectName);
 
-    routerDirectory = isAppRouter ? 'app' : 'pages';
-    derivedDirectory = options.directory
-      ? `${routerDirectory}/${options.directory}`
-      : `${routerDirectory}`;
-  } else {
-    // Get the project name first so we can determine the router directory
-    const { project: determinedProjectName } =
-      await determineArtifactNameAndDirectoryOptions(host, {
-        name: options.name,
-        directory: options.directory,
-      });
-
-    const project = readProjectConfiguration(host, determinedProjectName);
-
-    // app/ is a reserved folder in nextjs so it is safe to check it's existence
-    isAppRouter =
-      host.exists(`${project.root}/app`) ||
-      host.exists(`${project.root}/src/app`);
-
-    routerDirectory = isAppRouter ? 'app' : 'pages';
-    // New behavior, use directory as is without detecting whether we're using app or pages router.
-    derivedDirectory = options.directory;
-  }
+  // app/ is a reserved folder in nextjs so it is safe to check it's existence
+  const isAppRouter =
+    host.exists(`${project.root}/app`) ||
+    host.exists(`${project.root}/src/app`);
 
   const {
     project: projectName,

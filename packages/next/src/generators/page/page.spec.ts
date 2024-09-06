@@ -30,7 +30,7 @@ describe('component', () => {
     it('should generate component in pages directory', async () => {
       await pageGenerator(tree, {
         name: 'hello',
-        project: projectName,
+        directory: 'my-app/pages/hello',
         style: 'css',
       });
 
@@ -41,8 +41,7 @@ describe('component', () => {
     it('should support dynamic routes and directories', async () => {
       await pageGenerator(tree, {
         name: '[dynamic]',
-        directory: 'posts',
-        project: projectName,
+        directory: 'my-app/pages/posts/[dynamic]',
         style: 'css',
       });
 
@@ -79,8 +78,7 @@ describe('component', () => {
     it('should support dynamic routes and directories', async () => {
       await pageGenerator(tree, {
         name: '[dynamic]',
-        project: appRouterProjectName,
-        directory: 'posts',
+        directory: `${appRouterProjectName}/app/posts/[dynamic]`,
         style: 'css',
       });
 
