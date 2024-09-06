@@ -65,6 +65,7 @@ export async function addLinterToCyProject(
         tsConfigPaths: [joinPathFragments(projectConfig.root, 'tsconfig.json')],
         setParserOptionsProject: options.setParserOptionsProject,
         skipPackageJson: options.skipPackageJson,
+        rootProject: options.rootProject,
         addPlugin: options.addPlugin,
       })
     );
@@ -98,8 +99,10 @@ export async function addLinterToCyProject(
         'recommended',
         'cypress',
         'eslint-plugin-cypress/flat',
+        false,
         false
       );
+      addOverrideToLintConfig(tree, projectConfig.root, { rules: {} });
     } else {
       if (options.rootProject) {
         addPluginsToLintConfig(tree, projectConfig.root, '@nx');

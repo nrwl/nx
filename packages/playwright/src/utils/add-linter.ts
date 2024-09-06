@@ -54,6 +54,7 @@ export async function addLinterToPlaywrightProject(
         tsConfigPaths: [joinPathFragments(projectConfig.root, 'tsconfig.json')],
         setParserOptionsProject: options.setParserOptionsProject,
         skipPackageJson: options.skipPackageJson,
+        rootProject: options.rootProject,
         addPlugin: options.addPlugin,
       })
     );
@@ -84,8 +85,10 @@ export async function addLinterToPlaywrightProject(
         'flat/recommended',
         'playwright',
         'eslint-plugin-playwright',
+        false,
         false
       );
+      addOverrideToLintConfig(tree, projectConfig.root, { rules: {} });
     } else {
       const addExtendsTask = addExtendsToLintConfig(
         tree,
