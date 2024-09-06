@@ -76,6 +76,12 @@
       "host": {
         "type": "string",
         "description": "The host / shell application for this remote."
+      },
+      "bundler": {
+        "description": "The bundler to use.",
+        "type": "string",
+        "enum": ["rspack", "webpack"],
+        "default": "rspack"
       }
     },
     "required": ["name", "path", "remote"],
