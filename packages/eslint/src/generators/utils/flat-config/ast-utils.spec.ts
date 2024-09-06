@@ -70,11 +70,7 @@ describe('ast-utils', () => {
         getOutput({
           files: '*.ts', //  old single * syntax should be replaced by **/*
         })
-      ).toMatchInlineSnapshot(`
-        "{
-            files: ["**/*.ts"]
-        }"
-      `);
+      ).toMatchInlineSnapshot(`"{ files: ["**/*.ts"] }"`);
 
       expect(
         getOutput({

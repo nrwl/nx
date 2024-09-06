@@ -34,9 +34,8 @@ export const testingLibraryReactVersion = '15.0.6';
 
 export const reduxjsToolkitVersion = '1.9.3';
 export const reactReduxVersion = '8.0.5';
-export const reactTestRendererVersion = '18.2.0';
 
-export const eslintPluginImportVersion = '2.27.5';
+export const eslintPluginImportVersion = '2.30.0';
 export const eslintPluginJsxA11yVersion = '6.7.1';
 export const eslintPluginReactVersion = '7.35.0';
 export const eslintPluginReactHooksVersion = '4.6.0';
