@@ -1480,7 +1480,7 @@ import(myTag`react@${version}`);
         let root = PathBuf::from(ancestors.next().unwrap());
 
         let glob = build_glob_set(&["**/*.[jt]s"]).unwrap();
-        let files = nx_walker(root.clone())
+        let files = nx_walker(root.clone(), true)
             .filter(|file| glob.is_match(&file.full_path))
             .map(|file| file.full_path)
             .collect::<Vec<_>>();
