@@ -150,6 +150,8 @@ export declare export function getBinaryTarget(): string
  */
 export declare export function getFilesForOutputs(directory: string, entries: Array<string>): Array<string>
 
+export declare export function getTransformableOutputs(outputs: Array<string>): Array<string>
+
 export declare export function hashArray(input: Array<string>): string
 
 export interface HashDetails {
@@ -262,6 +264,8 @@ export interface UpdatedWorkspaceFiles {
   fileMap: FileMap
   externalReferences: NxWorkspaceFilesExternals
 }
+
+export declare export function validateOutputs(outputs: Array<string>): void
 
 export interface WatchEvent {
   path: string
