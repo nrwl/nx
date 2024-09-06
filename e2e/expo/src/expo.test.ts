@@ -114,9 +114,7 @@ describe('@nx/expo', () => {
     );
   });
 
-  // TODO(eslint): it's currently failing with peer dependency conflicts because
-  // eslint-plugin-import is not yet compatible with ESLint v9: https://github.com/import-js/eslint-plugin-import/issues/2948
-  xit('should install', async () => {
+  it('should install', async () => {
     // run install command
     let installResults = await runCLIAsync(
       `install ${appName} --no-interactive`
